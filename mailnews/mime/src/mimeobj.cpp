@@ -61,7 +61,7 @@ static int MimeObject_debug_print (MimeObject *, PRFileDesc *, PRInt32 depth);
 static int
 MimeObjectClassInitialize(MimeObjectClass *clazz)
 {
-  PR_ASSERT(!clazz->class_initialized);
+  NS_ASSERTION(!clazz->class_initialized, "class shouldn't already be initialized");
   clazz->initialize   = MimeObject_initialize;
   clazz->finalize     = MimeObject_finalize;
   clazz->parse_begin  = MimeObject_parse_begin;
@@ -82,7 +82,7 @@ static int
 MimeObject_initialize (MimeObject *obj)
 {
   /* This is an abstract class; it shouldn't be directly instanciated. */
-  PR_ASSERT(obj->clazz != &mimeObjectClass);
+  NS_ASSERTION(obj->clazz != &mimeObjectClass, "should directly instantiate abstract class");
 
   /* Set up the content-type and encoding. */
   if (!obj->content_type && obj->headers)
@@ -153,8 +153,8 @@ MimeObject_finalize (MimeObject *obj)
 	}
 
   /* Should have been freed by parse_eof, but just in case... */
-  PR_ASSERT(!obj->ibuffer);
-  PR_ASSERT(!obj->obuffer);
+  NS_ASSERTION(!obj->ibuffer, "buffer not freed");
+  NS_ASSERTION(!obj->obuffer, "buffer not freed");
   PR_FREEIF (obj->ibuffer);
   PR_FREEIF (obj->obuffer);
 
@@ -172,13 +172,13 @@ MimeObject_finalize (MimeObject *obj)
 static int
 MimeObject_parse_begin (MimeObject *obj)
 {
-  PR_ASSERT (!obj->closed_p);
+  NS_ASSERTION (!obj->closed_p, "object shouldn't be already closed");
 
   /* If we haven't set up the state object yet, then this should be
 	 the outermost object... */
   if (obj->options && !obj->options->state)
 	{
-	  PR_ASSERT(!obj->headers);  /* should be the outermost object. */
+	  NS_ASSERTION(!obj->headers, "headers should be null");  /* should be the outermost object. */
 
 	  obj->options->state = PR_NEW(MimeParseStateObject);
 	  if (!obj->options->state) return MIME_OUT_OF_MEMORY;
@@ -241,7 +241,7 @@ MimeObject_parse_begin (MimeObject *obj)
 static int
 MimeObject_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
 {
-  PR_ASSERT(!obj->closed_p);
+  NS_ASSERTION(!obj->closed_p, "object shouldn't be closed");
   if (obj->closed_p) return -1;
 
   return mime_LineBuffer (buffer, size,
@@ -258,7 +258,7 @@ static int
 MimeObject_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
   /* This method should never be called. */
-  PR_ASSERT(0);
+  NS_ASSERTION(0, "shouldn't call this method");
   return -1;
 }
 
@@ -266,7 +266,7 @@ static int
 MimeObject_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   if (obj->closed_p) return 0;
-  PR_ASSERT(!obj->parsed_p);
+  NS_ASSERTION(!obj->parsed_p, "obj already parsed");
 
   /* If there is still data in the ibuffer, that means that the last line of
 	 this part didn't end in a newline; so push it out anyway (this means that
@@ -295,7 +295,7 @@ MimeObject_parse_end (MimeObject *obj, PRBool abort_p)
 {
   if (obj->parsed_p)
 	{
-	  PR_ASSERT(obj->closed_p);
+	  NS_ASSERTION(obj->closed_p, "object should be closed");
 	  return 0;
 	}
 
@@ -315,7 +315,7 @@ MimeObject_parse_end (MimeObject *obj, PRBool abort_p)
 static PRBool
 MimeObject_displayable_inline_p (MimeObjectClass *clazz, MimeHeaders *hdrs)
 {
-  PR_ASSERT(0);  /* This method should never be called. */
+  NS_ASSERTION(0, "shouldn't call this method");  /* This method should never be called. */
   return PR_FALSE;
 }
 

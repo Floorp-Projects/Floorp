@@ -246,8 +246,8 @@ test(FILE *in, FILE *out,
 {
   int status = 0;
   MimeObject *obj = 0;
-  MimeDisplayOptions *opt = PR_NEW(MimeDisplayOptions);
-  memset(opt, 0, sizeof(*opt));
+  MimeDisplayOptions *opt = new MimeDisplayOptions;
+//  memset(opt, 0, sizeof(*opt));
 
   if (dexlate_p) html_p = PR_FALSE;
 

@@ -333,7 +333,7 @@ static int PR_CALLBACK
 mime_parse_stream_write ( nsMIMESession *stream, const char *buf, PRInt32 size )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream->data_object;  
-  PR_ASSERT ( mdd );
+  NS_ASSERTION ( mdd, "null mime draft data!" );
 
   if ( !mdd || !mdd->obj ) 
     return -1;
@@ -368,7 +368,7 @@ mime_free_attachments ( nsMsgAttachedFile *attachments, int count )
   int               i;
   nsMsgAttachedFile *cur = attachments;
 
-  PR_ASSERT ( attachments && count > 0 );
+  NS_ASSERTION ( attachments && count > 0, "freeing attachments but there aren't any");
   if ( !attachments || count <= 0 ) 
     return;
 
@@ -400,7 +400,7 @@ mime_draft_process_attachments(mime_draft_data *mdd)
   int                         i;
   PRInt32                     cleanupCount = 0;
 
-  PR_ASSERT ( mdd->attachments_count && mdd->attachments );
+  NS_ASSERTION ( mdd->attachments_count && mdd->attachments, "processing attachments but there aren't any" );
 
   if ( !mdd->attachments || !mdd->attachments_count )
   	return nsnull;
@@ -492,9 +492,9 @@ mime_fix_up_html_address( char **addr)
 		{
 			newLen = nsCRT::strlen(*addr) + 3 + 1;
 			*addr = (char *) PR_REALLOC(*addr, newLen);
-			PR_ASSERT (*addr);
+			NS_ASSERTION (*addr, "out of memory fixing up html address");
 			lt = PL_strchr(*addr, '<');
-			PR_ASSERT(lt);
+			NS_ASSERTION(lt, "couldn't find < char in address");
       nsCRT::memmove(lt+4, lt+1, newLen - 4 - (lt - *addr));
 			*lt++ = '&';
 			*lt++ = 'l';
@@ -1094,7 +1094,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   PRBool sign_p = PR_FALSE;		/* #### how do we determine this? */
   PRBool forward_inline = PR_FALSE;
   
-  PR_ASSERT (mdd);
+  NS_ASSERTION (mdd, "null mime draft data");
   
   if (!mdd) return;
   
@@ -1121,14 +1121,13 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #endif
     }
     
-    PR_ASSERT ( mdd->options == mdd->obj->options );
+    NS_ASSERTION ( mdd->options == mdd->obj->options, "mime draft options not same as obj->options" );
     mime_free (mdd->obj);
     mdd->obj = 0;
     if (mdd->options) 
     {
       // mscott: aren't we leaking a bunch of trings here like the charset strings and such?
-      PR_FREEIF (mdd->options->part_to_load);
-      PR_Free(mdd->options);
+      delete mdd->options;
       mdd->options = 0;
     }
     if (mdd->stream) 
@@ -1482,7 +1481,7 @@ static void PR_CALLBACK
 mime_parse_stream_abort (nsMIMESession *stream, int status )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream->data_object;  
-  PR_ASSERT (mdd);
+  NS_ASSERTION (mdd, "null mime draft data");
 
   if (!mdd) 
     return;
@@ -1496,13 +1495,12 @@ mime_parse_stream_abort (nsMIMESession *stream, int status )
     if ( !mdd->obj->parsed_p )
       mdd->obj->clazz->parse_end( mdd->obj, PR_TRUE );
     
-    PR_ASSERT ( mdd->options == mdd->obj->options );
+    NS_ASSERTION ( mdd->options == mdd->obj->options, "draft display options not same as mime obj" );
     mime_free (mdd->obj);
     mdd->obj = 0;
     if (mdd->options) 
     {
-      PR_FREEIF (mdd->options->part_to_load);
-      PR_Free(mdd->options);
+      delete mdd->options;
       mdd->options = 0;
     }
 
@@ -1529,12 +1527,12 @@ make_mime_headers_copy ( void *closure, MimeHeaders *headers )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) closure;
 
-  PR_ASSERT ( mdd && headers );
+  NS_ASSERTION ( mdd && headers, "null mime draft data and/or headers" );
   
   if ( !mdd || ! headers ) 
     return 0;
 
-  PR_ASSERT ( mdd->headers == NULL );
+  NS_ASSERTION ( mdd->headers == NULL , "non null mime draft data headers");
 
   mdd->headers = MimeHeaders_copy ( headers );
   mdd->options->done_parsing_outer_headers = PR_TRUE;
@@ -1554,7 +1552,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   PRBool creatingMsgBody = PR_TRUE;
   PRBool bodyPart = PR_FALSE;
   
-  PR_ASSERT (mdd && headers);
+  NS_ASSERTION (mdd && headers, "null mime draft data and/or headers");
   if (!mdd || !headers) 
     return -1;
 
@@ -1563,7 +1561,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     if (mdd->options->decompose_init_count) 
     {
       mdd->options->decompose_init_count++;
-      PR_ASSERT(mdd->curAttachment);
+      NS_ASSERTION(mdd->curAttachment, "missing attachment in mime_decompose_file_init_fn");
       if (mdd->curAttachment) {
         char *ct = MimeHeaders_get(headers, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
         if (ct)
@@ -1597,7 +1595,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     }
     
     mdd->messageBody = PR_NEWZAP (nsMsgAttachedFile);
-    PR_ASSERT (mdd->messageBody);
+    NS_ASSERTION (mdd->messageBody, "missing messageBody in mime_decompose_file_init_fn");
     if (!mdd->messageBody) 
       return MIME_OUT_OF_MEMORY;
     newAttachment = mdd->messageBody;
@@ -1610,7 +1608,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     needURL = PR_TRUE;
     if ( nAttachments ) 
     {
-      PR_ASSERT (mdd->attachments);
+      NS_ASSERTION (mdd->attachments, "no attachments");
       
       attachments = (nsMsgAttachedFile *)PR_REALLOC(mdd->attachments, 
 								                                    sizeof (nsMsgAttachedFile) * 
@@ -1621,7 +1619,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       mdd->attachments_count++;
     }
     else {
-      PR_ASSERT (!mdd->attachments);
+      NS_ASSERTION (!mdd->attachments, "have attachments but count is 0");
       
       attachments = (nsMsgAttachedFile *) PR_MALLOC ( sizeof (nsMsgAttachedFile) * 2);
       if (!attachments) 
@@ -1809,7 +1807,7 @@ mime_decompose_file_output_fn (char     *buf,
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream_closure;
   int ret = 0;
   
-  PR_ASSERT (mdd && buf);
+  NS_ASSERTION (mdd && buf, "missing mime draft data and/or buf");
   if (!mdd || !buf) return -1;
   if (!size) return 0;
   
@@ -1908,7 +1906,7 @@ mime_bridge_create_draft_stream(
   newPluginObj2->GetForwardInline(&mdd->forwardInline);
   newPluginObj2->GetIdentity(getter_AddRefs(mdd->identity));
   mdd->format_out = format_out;
-  mdd->options = PR_NEWZAP  ( MimeDisplayOptions );
+  mdd->options = new  MimeDisplayOptions ;
   if ( !mdd->options ) 
   {
     PR_FREEIF(mdd->url_name);
@@ -1946,8 +1944,7 @@ mime_bridge_create_draft_stream(
   if ( !obj ) 
   {
     PR_FREEIF(mdd->url_name);
-    PR_FREEIF(mdd->options->part_to_load);
-    PR_FREEIF(mdd->options);
+    delete mdd->options;
     PR_FREEIF(mdd );
     return nsnull;
   }
@@ -1959,8 +1956,7 @@ mime_bridge_create_draft_stream(
   if ( !stream ) 
   {
     PR_FREEIF(mdd->url_name);
-    PR_FREEIF( mdd->options->part_to_load );
-    PR_FREEIF ( mdd->options );
+    delete mdd->options;
     PR_FREEIF ( mdd );
     PR_FREEIF ( obj );
     return nsnull;
@@ -1979,8 +1975,7 @@ mime_bridge_create_draft_stream(
   {
     PR_FREEIF(mdd->url_name);
     PR_FREEIF ( stream );
-    PR_FREEIF( mdd->options->part_to_load );
-    PR_FREEIF ( mdd->options );
+    delete mdd->options;
     PR_FREEIF ( mdd );
     PR_FREEIF ( obj );
     return nsnull;

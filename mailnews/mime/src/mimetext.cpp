@@ -159,7 +159,7 @@ static int
 MimeInlineText_parse_eof (MimeObject *obj, PRBool abort_p)
 {
   if (obj->closed_p) return 0;
-  PR_ASSERT(!obj->parsed_p);
+  NS_ASSERTION(!obj->parsed_p, "obj already parsed");
 
   /* If there is still data in the ibuffer, that means that the last line of
 	 this part didn't end in a newline; so push it out anyway (this means that
@@ -342,13 +342,16 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
         input_autodetect = PR_TRUE;
       }
     }
+    const char *inputCharset = !nsCRT::strcasecmp(input_charset, "us-ascii") ? "ISO-8859-1" : input_charset;
+    PRBool useInputCharsetConverter = obj->options->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(inputCharset, obj->options->charsetForCachedInputDecoder);
 
 	  status = obj->options->charset_conversion_fn(input_autodetect, line, length,
-                           !nsCRT::strcasecmp(input_charset, "us-ascii") ? "ISO-8859-1" : input_charset,
+                           inputCharset,
 												   "UTF-8",
 												   &converted,
 												   &converted_len,
-												 obj->options->stream_closure);
+                           obj->options->stream_closure, (useInputCharsetConverter) ? obj->options->m_inputCharsetToUnicodeDecoder : nsnull,
+                         obj->options->m_unicodeToUTF8Encoder);
 	  if (status < 0)
 		{
 		  PR_FREEIF(converted);

@@ -30,6 +30,8 @@
 #include "mimebuf.h"
 #include "mimemoz2.h"
 #include "nsIMimeEmitter.h"
+#include "nsICharsetConverterManager2.h"
+#include "nsICharsetConverterManager.h"
 #include "nsCRT.h"
 #include "nsIPref.h"
 #include "nsEscape.h"
@@ -690,12 +692,36 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
     else if (opt->default_charset)
       inputCharset = opt->default_charset;
 
+    // check if we're converting from input charset to utf-8, and if so, cache converters.
+    if (!opt->m_unicodeToUTF8Encoder)
+    {
+      if (!nsCRT::strcasecmp(output_charset, "UTF-8"))
+      {
+        nsresult rv;
+        nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &rv);
+        if (NS_SUCCEEDED(rv)) 
+        {
+          nsCOMPtr <nsIAtom> sourceCharsetAtom;
+          nsCOMPtr <nsIAtom> destCharsetAtom;
 
+          opt->charsetForCachedInputDecoder = inputCharset;
+          nsAutoString sourceCharset, destCharset;
+          sourceCharset.AssignWithConversion(inputCharset);
+          destCharset.AssignWithConversion(output_charset);
+          rv = ccm2->GetCharsetAtom(sourceCharset.GetUnicode(), getter_AddRefs(sourceCharsetAtom));
+          rv = ccm2->GetCharsetAtom(destCharset.GetUnicode(), getter_AddRefs(destCharsetAtom));
+          ccm2->GetUnicodeDecoder(sourceCharsetAtom, getter_AddRefs(opt->m_inputCharsetToUnicodeDecoder));
+          ccm2->GetUnicodeEncoder(destCharsetAtom, getter_AddRefs(opt->m_unicodeToUTF8Encoder));
+        }
+      }
+    }
+
+    PRBool useInputCharsetConverter = opt->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(inputCharset, opt->charsetForCachedInputDecoder);
 	  int status =
 		opt->rfc1522_conversion_fn(input, input_length,
 								   inputCharset, output_charset,  /* no input charset? */
 								   &converted, &converted_len,
-								   opt->stream_closure);
+                   opt->stream_closure, (useInputCharsetConverter) ? opt->m_inputCharsetToUnicodeDecoder : nsnull, opt->m_unicodeToUTF8Encoder);
 	  if (status < 0)
 		{
 		  PR_FREEIF(converted);

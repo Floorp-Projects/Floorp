@@ -32,6 +32,7 @@
 #include "nsIMimeStreamConverter.h"
 #include "nsIPref.h"
 #include "mozITXTToHTMLConv.h"
+#include "nsICharsetConverterManager2.h"
 
 #define MIME_DRAFTS
 
@@ -71,7 +72,7 @@ typedef struct MimeHeaders
 								   <TITLE> tag. (Also works for giving names to RFC822 attachments) */
 } MimeHeaders;
 
-typedef struct MimeDisplayOptions MimeDisplayOptions;
+class MimeDisplayOptions;
 typedef struct MimeParseStateObject MimeParseStateObject;
 typedef struct MSG_AttachmentData MSG_AttachmentData;
 
@@ -139,11 +140,17 @@ typedef enum {
 typedef char *(*MimeHTMLGeneratorFunction) (const char *data, void *closure,
 											MimeHeaders *headers);
 
-struct MimeDisplayOptions
+class MimeDisplayOptions
 {
+public:
+  MimeDisplayOptions();
+  virtual ~MimeDisplayOptions();
   mozITXTToHTMLConv   *conv;        // For text conversion...
   nsIPref             *prefs;       /* Connnection to prefs service manager */
   nsMimeOutputType    format_out;   // The format out type
+  nsCString           charsetForCachedInputDecoder;
+  nsCOMPtr<nsIUnicodeDecoder>   m_inputCharsetToUnicodeDecoder;
+  nsCOMPtr<nsIUnicodeEncoder>   m_unicodeToUTF8Encoder;
 
   const char *url;			/* Base URL for the document.  This string should
 							   be freed by the caller, after the parser
@@ -268,7 +275,7 @@ struct MimeDisplayOptions
                 PRInt32 input_length, const char *input_charset,
 								const char *output_charset,
 								char **output_ret, PRInt32 *output_size_ret,
-								void *stream_closure);
+								void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder);
 
   /* A hook for the caller to perform both charset-conversion and decoding of
 	 MIME-2 header fields (using RFC-1522 encoding.)  Arguments and returned
@@ -278,7 +285,7 @@ struct MimeDisplayOptions
 								const char *input_charset,
 								const char *output_charset,
 								char **output_ret, PRInt32 *output_size_ret,
-								void *stream_closure);
+								void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder);
 
   /* A hook for the caller to translate a time string into a prettier or more
 	 compact or localized form. */

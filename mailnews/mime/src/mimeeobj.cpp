@@ -188,9 +188,13 @@ GOTTA STILL DO THIS FOR QUOTING!
      status = MimeHeaders_write_attachment_box (obj->headers, &newopt,
                                                  obj->content_type,
                                                  obj->encoding,
-                                                 id_name? id_name : id, id_url, 0
+                                                 id_name? id_name : id, id_url, 0)
 *****/
 
+    // obj->options really owns the storage for this.
+    newopt.part_to_load = nsnull;
+    newopt.default_charset = nsnull;
+    newopt.override_charset = nsnull;
     PR_FREEIF(id);
     PR_FREEIF(id_url);
     PR_FREEIF(id_name);

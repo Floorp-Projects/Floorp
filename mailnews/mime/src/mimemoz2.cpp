@@ -600,17 +600,78 @@ mime_file_type (const char *filename, void *stream_closure)
   return retType;
 }
 
+int ConvertUsingEncoderAndDecoder(const char *stringToUse, PRInt32 inLength, nsIUnicodeEncoder *encoder, nsIUnicodeDecoder *decoder, char **pConvertedString)
+{
+  // do the conversion
+  PRUnichar *unichars;
+  PRInt32 unicharLength;
+  PRInt32 srcLen = inLength;
+  PRInt32 dstLength = 0;
+  char *dstPtr;
+  nsresult rv;
+
+  rv = decoder->GetMaxLength(stringToUse, srcLen, &unicharLength);
+  // allocate temporary buffer to hold unicode string
+  unichars = new PRUnichar[unicharLength];
+  if (unichars == nsnull) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else {
+    // convert to unicode
+    rv = decoder->Convert(stringToUse, &srcLen, unichars, &unicharLength);
+    if (NS_SUCCEEDED(rv)) {
+      rv = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+      // allocale an output buffer
+      dstPtr = (char *) PR_Malloc(dstLength + 1);
+      if (dstPtr == nsnull) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
+      else {
+        PRInt32 buffLength = dstLength;
+        // convert from unicode
+        rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+        if (NS_SUCCEEDED(rv)) {
+          rv = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+          if (NS_SUCCEEDED(rv)) {
+            PRInt32 finLen = buffLength - dstLength;
+            rv = encoder->Finish((char *)(dstPtr+dstLength), &finLen);
+            if (NS_SUCCEEDED(rv)) {
+              dstLength += finLen;
+            }
+            dstPtr[dstLength] = '\0';
+            *pConvertedString = dstPtr;       // set the result string
+//                *outLength = dstLength;
+          }
+        }
+      }
+    }
+    delete [] unichars;
+  }
+
+  return NS_SUCCEEDED(rv) ? 0 : -1;
+}
+
+
 static int
 mime_convert_charset (const PRBool input_autodetect, const char *input_line, PRInt32 input_length,
                       const char *input_charset, const char *output_charset,
                       char **output_ret, PRInt32 *output_size_ret,
-                      void *stream_closure)
+                      void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder)
 {
-  // Now do conversion to UTF-8 for output
+  PRInt32 res;
   char  *convertedString = NULL;
   PRInt32 convertedStringLen;
-  PRInt32 res = MIME_ConvertCharset(input_autodetect, input_charset, "UTF-8", input_line, input_length, 
-                                    &convertedString, &convertedStringLen, NULL);
+  if (!input_autodetect && encoder && decoder)
+  {
+    res = ConvertUsingEncoderAndDecoder(input_line, input_length, encoder, decoder, &convertedString);
+    convertedStringLen = (convertedString) ? nsCRT::strlen(convertedString) : 0;
+  }
+  else
+  {
+  // Now do conversion to UTF-8 for output
+    res = MIME_ConvertCharset(input_autodetect, input_charset, "UTF-8", input_line, input_length, 
+                                      &convertedString, &convertedStringLen, NULL);
+  }
   if (res != 0)
   {
       *output_ret = 0;
@@ -625,16 +686,16 @@ mime_convert_charset (const PRBool input_autodetect, const char *input_line, PRI
   return 0;
 }
 
-
 static int
 mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
                       const char *input_charset, const char *output_charset,
                       char **output_ret, PRInt32 *output_size_ret,
-                      void *stream_closure)
+                      void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder)
 {
   char *converted;
   char *line;
   char charset[128];
+  PRBool useInputCharset = PR_TRUE;
   
   charset[0] = '\0';
 
@@ -668,6 +729,8 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
     stringToUse = line;
     charSetToUse = input_charset;
   }
+  else
+    useInputCharset = PR_FALSE;
   
   // If output_charset is NULL, then we should just return the decoded
   // header value
@@ -680,7 +743,16 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
   {
     char  *convertedString = NULL; 
   
-    PRInt32 res = MIME_ConvertString(charSetToUse, "UTF-8", stringToUse, &convertedString); 
+    PRInt32 res;
+
+    if (useInputCharset && encoder && decoder)
+    {
+      res = ConvertUsingEncoderAndDecoder(stringToUse, input_length, encoder, decoder, &convertedString);
+    }
+    else
+    {
+      res = MIME_ConvertString(charSetToUse, "UTF-8", stringToUse, &convertedString); 
+    }
     if ( (res != 0) || (!convertedString) )
     {
       *output_ret = nsCRT::strdup(stringToUse);
@@ -834,8 +906,10 @@ mime_display_stream_complete (nsMIMESession *stream)
 
     // Release the conversion object - this has to be done after
     // we finish processing data.
-    if ( (obj->options) && (obj->options->conv) )
-      NS_RELEASE(obj->options->conv);
+    if ( obj->options)
+    {
+      NS_IF_RELEASE(obj->options->conv);
+    }
 
     // Destroy the object now.
     PR_ASSERT(msd->options == obj->options);
@@ -843,10 +917,7 @@ mime_display_stream_complete (nsMIMESession *stream)
     obj = NULL;
     if (msd->options)
     {
-      PR_FREEIF(msd->options->part_to_load);
-      PR_FREEIF(msd->options->default_charset);
-      PR_FREEIF(msd->options->override_charset);
-      PR_Free(msd->options);
+      delete msd->options;
       msd->options = 0;
     }
   }
@@ -881,10 +952,7 @@ mime_display_stream_abort (nsMIMESession *stream, int status)
     mime_free(obj);
     if (msd->options)
     {
-      PR_FREEIF(msd->options->part_to_load);
-      PR_FREEIF(msd->options->default_charset);
-      PR_FREEIF(msd->options->override_charset);
-      PR_FREEIF(msd->options);
+      delete msd->options;
       msd->options = 0;
     }
   }
@@ -906,14 +974,14 @@ mime_insert_html_convert_charset (const PRBool input_autodetect, const char *inp
                                   PRInt32 input_length, const char *input_charset, 
                                   const char *output_charset,
                                   char **output_ret, PRInt32 *output_size_ret,
-                                  void *stream_closure)
+                                  void *stream_closure, nsIUnicodeDecoder *decoder, nsIUnicodeEncoder *encoder)
 {
   //struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
   
   return mime_convert_charset (input_autodetect, input_line, input_length,
                                input_charset, output_charset,
                                output_ret, output_size_ret,
-                               stream_closure);
+                               stream_closure, decoder, encoder);
 }
 
 static int
@@ -1233,6 +1301,94 @@ GetTextConverter(MimeDisplayOptions *opt)
   return opt->conv;
 }
 
+MimeDisplayOptions::MimeDisplayOptions()
+{
+  conv = nsnull;        // For text conversion...
+  prefs = nsnull;       /* Connnection to prefs service manager */
+  format_out = 0;   // The format out type
+  url = nsnull;	
+
+  memset(&headers,0, sizeof(headers));	
+  fancy_headers_p = PR_FALSE;
+
+  output_vcard_buttons_p = PR_FALSE;
+
+  fancy_links_p = PR_FALSE;
+
+  variable_width_plaintext_p = PR_FALSE;
+  wrap_long_lines_p = PR_FALSE;
+  rot13_p = PR_FALSE;
+  part_to_load = nsnull;
+
+  write_html_p = PR_FALSE;
+
+  dexlate_p = PR_FALSE;
+
+  nice_html_only_p = PR_FALSE;
+
+  whattodo = 0 ;
+  default_charset = nsnull;
+  override_charset = nsnull;
+  force_user_charset = PR_FALSE;
+  stream_closure = nsnull;
+
+  /* For setting up the display stream, so that the MIME parser can inform
+	 the caller of the type of the data it will be getting. */
+  output_init_fn = nsnull;
+  output_fn = nsnull;
+
+  output_closure = nsnull;
+
+  set_html_state_fn = nsnull;
+  charset_conversion_fn = nsnull;
+  rfc1522_conversion_fn = nsnull;
+  reformat_date_fn = nsnull;
+
+  file_type_fn = nsnull;
+
+  passwd_prompt_fn = nsnull;
+
+  html_closure = nsnull;
+
+  generate_header_html_fn = nsnull;
+  generate_post_header_html_fn = nsnull;
+  generate_footer_html_fn = nsnull;
+  generate_reference_url_fn = nsnull;
+  generate_mailto_url_fn = nsnull;
+  generate_news_url_fn = nsnull;
+
+  image_begin = nsnull;
+  image_end = nsnull;
+  image_write_buffer = nsnull;
+  make_image_html = nsnull;
+  state = nsnull;
+
+#ifdef MIME_DRAFTS
+  decompose_file_p = PR_FALSE;
+  done_parsing_outer_headers = PR_FALSE;
+  is_multipart_msg = PR_FALSE;
+  decompose_init_count = 0;
+
+  signed_p = PR_FALSE;
+  caller_need_root_headers = PR_FALSE; 
+  decompose_headers_info_fn = nsnull;
+  decompose_file_init_fn = nsnull;
+  decompose_file_output_fn = nsnull;
+  decompose_file_close_fn = nsnull;
+#endif /* MIME_DRAFTS */
+
+  attachment_icon_layer_id = 0;
+
+  missing_parts = PR_FALSE;
+
+}
+
+MimeDisplayOptions::~MimeDisplayOptions()
+{
+  PR_FREEIF(part_to_load);
+  PR_FREEIF(default_charset);
+  PR_FREEIF(override_charset);
+}
 ////////////////////////////////////////////////////////////////
 // Bridge routines for new stream converter XP-COM interface 
 ////////////////////////////////////////////////////////////////
@@ -1288,13 +1444,13 @@ mime_bridge_create_display_stream(
   msd->format_out = format_out;       // output format
   msd->pluginObj2 = newPluginObj2;    // the plugin object pointer 
   
-  msd->options = PR_NEW(MimeDisplayOptions);
+  msd->options = new MimeDisplayOptions;
   if (!msd->options)
   {
     PR_Free(msd);
     return 0;
   }
-  memset(msd->options, 0, sizeof(*msd->options));
+//  memset(msd->options, 0, sizeof(*msd->options));
   msd->options->format_out = format_out;     // output format
 
   rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(msd->options->prefs));
@@ -1430,8 +1586,7 @@ mime_bridge_create_display_stream(
   obj = mime_new ((MimeObjectClass *)&mimeMessageClass, (MimeHeaders *) NULL, MESSAGE_RFC822);
   if (!obj)
   {
-    PR_FREEIF(msd->options->part_to_load);
-    PR_Free(msd->options);
+    delete msd->options;
     PR_Free(msd);
     return 0;
   }
@@ -1445,8 +1600,7 @@ mime_bridge_create_display_stream(
   stream = PR_NEW(nsMIMESession);
   if (!stream)
   {
-    PR_FREEIF(msd->options->part_to_load);
-    PR_Free(msd->options);
+    delete msd->options;
     PR_Free(msd);
     PR_Free(obj);
     return 0;
@@ -1465,8 +1619,7 @@ mime_bridge_create_display_stream(
   if (status < 0)
   {
     PR_Free(stream);
-    PR_FREEIF(msd->options->part_to_load);
-    PR_Free(msd->options);
+    delete msd->options;
     PR_Free(msd);
     PR_Free(obj);
     return 0;
