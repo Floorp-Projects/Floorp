@@ -105,23 +105,21 @@ if (! defined $FORM{'product'}) {
     # Valid values are those products for which the user has permissions which appear
     # in the "product" drop-down menu on the report generation form.
     grep($_ eq $FORM{'product'}, @myproducts)
-      || DisplayError("You entered an invalid product name.") && exit;
+      || ThrowUserError("invalid_product_name", {product => $FORM{'product'}});
 
     # If usebuggroups is on, we don't want people to be able to view
     # reports for products they don't have permissions for...
     Param("usebuggroups") 
       && GroupExists($FORM{'product'}) 
       && !UserInGroup($FORM{'product'})
-      && DisplayError("You do not have the permissions necessary to view reports for this product.")
-      && exit;
+      && ThrowUserError("report_access_denied");
           
     # For security and correctness, validate the value of the "output" form variable.
     # Valid values are the keys from the %reports hash defined above which appear in
     # the "output" drop-down menu on the report generation form.
     $FORM{'output'} ||= "most_doomed"; # a reasonable default
     grep($_ eq $FORM{'output'}, keys %reports)
-      || DisplayError("You entered an invalid output type.") 
-      && exit;
+      || ThrowCodeError("invalid_output_type", {type => $FORM{'output'}});
 
     # We've checked that the product exists, and that the user can see it
     # This means that is OK to detaint

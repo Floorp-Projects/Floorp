@@ -680,24 +680,18 @@ sub CanSeeBug {
 
 sub ValidatePassword {
     # Determines whether or not a password is valid (i.e. meets Bugzilla's
-    # requirements for length and content).  If the password is valid, the
-    # function returns boolean false.  Otherwise it returns an error message
-    # (synonymous with boolean true) that can be displayed to the user.
-    
+    # requirements for length and content).    
     # If a second password is passed in, this function also verifies that
     # the two passwords match.
-
     my ($password, $matchpassword) = @_;
     
-    if ( length($password) < 3 ) {
-        return "The password is less than three characters long.  It must be at least three characters.";
-    } elsif ( length($password) > 16 ) {
-        return "The password is more than 16 characters long.  It must be no more than 16 characters.";
-    } elsif ( $matchpassword && $password ne $matchpassword ) { 
-        return "The two passwords do not match.";
+    if (length($password) < 3) {
+        ThrowUserError("password_too_short");
+    } elsif (length($password) > 16) {
+        ThrowUserError("password_too_long");
+    } elsif ($matchpassword && $password ne $matchpassword) { 
+        ThrowUserError("passwords_dont_match");
     }
-
-    return 0;
 }
 
 

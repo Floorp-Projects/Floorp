@@ -70,8 +70,7 @@ sub AddLink {
 $::FORM{'rankdir'} = "LR" if !defined $::FORM{'rankdir'};
 
 if (!defined($::FORM{'id'}) && !defined($::FORM{'doall'})) {
-    DisplayError("No bug numbers given.");
-    exit;
+    ThrowCodeError("missing_bug_id");
 }    
 
 my $filename = "data/webdot/$$.dot";

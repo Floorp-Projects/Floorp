@@ -143,6 +143,10 @@
     really make sense to mark a bug as a duplicate of itself, 
     does it?  
     
+  [% ELSIF error == "email_change_in_progress" %]
+    [% title = "Email Change Already In Progress" %]
+     Email change already in progress; please check your email. 
+        
   [% ELSIF error == "email_confirmation_failed" %]
     [% title = "Email Address Email Address Confirmation Failed" %]
     Email address confirmation failed.
@@ -336,6 +340,10 @@
     [% title = "Quip Required" %]
     Please enter a quip in the text field.
     
+  [% ELSIF error == "new_password_missing" %]
+    [% title = "New Password Missing" %]
+    You must enter a new password.
+    
   [% ELSIF error == "no_bugs_chosen" %]
     [% title = "No Bugs Chosen" %]
     You apparently didn't choose any bugs to modify.
@@ -392,12 +400,38 @@
      Either no products have been defined to enter bugs against or you have not
      been given access to any.
      
+  [% ELSIF error == "old_password_incorrect" %]
+    [% title = "Incorrect Old Password" %]
+     You did not enter your old password correctly.
+     
+  [% ELSIF error == "old_password_required" %]
+    [% title = "Old Password Required" %]
+    You must enter your old password to change email address.
+         
+  [% ELSIF error == "passwords_dont_match" %]
+    [% title = "Passwords Don't Match" %]
+     The two passwords you entered did not match.
+     
+  [% ELSIF error == "password_too_long" %]
+    [% title = "Password Too Long" %]
+    The password is more than 16 characters long. It must be no more than 
+    16 characters.
+    
+  [% ELSIF error == "password_too_short" %]
+    [% title = "Password Too Short" %]
+    The password is less than three characters long. It must be at least 
+    three characters.
+      
   [% ELSIF error == "patch_too_large" %]
     [% title = "File Too Large" %]
     The file you are trying to attach is [% filesize %] kilobytes (KB) in size.
     Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
     Try breaking your patch into several pieces.  
 
+  [% ELSIF error == "product_access_denied" %]
+    [% title = "Access Denied" %]
+     You do not have the permissions necessary to access that product.
+     
   [% ELSIF error == "query_name_missing" %]
     [% title = "No Query Name Specified" %]
     You must enter a name for your query.
@@ -408,6 +442,10 @@
     intentionally cleared out the "Reassign bug to" 
     field, [% Param("browserbugmessage") %]
 
+  [% ELSIF error == "report_access_denied" %]
+    [% title = "Access Denied" %]
+     You do not have the permissions necessary to view reports for this product.
+     
   [% ELSIF error == "requestee_too_short" %]
     [% title = "Requestee Name Too Short" %]
     One or two characters match too many users, so please enter at least 
@@ -433,6 +471,26 @@
      [% title = "Summary Needed" %]
      You must enter a summary for this bug.
 
+  [% ELSIF error == "sanity_check_access_denied" %]
+    [% title = "Access Denied" %]
+     You do not have the permissions necessary to run a sanity check.
+     
+  [% ELSIF error == "sidebar_supports_mozilla_only" %]
+     Sorry - sidebar.cgi currently only supports Mozilla based web browsers.
+     <a href="http://www.mozilla.org">Upgrade today</a>. :-)
+
+  [% ELSIF error == "too_many_votes_for_bug" %]
+     [% title = "Illegal Vote" %]
+     You may only use at most [% max %] votes for a single bug in the
+     <tt>[% prod FILTER html %]</tt> product, but you are trying to use 
+     [% votes %].
+     
+  [% ELSIF error == "too_many_votes_for_product" %]
+     [% title = "Illegal Vote" %]
+     You may only use at most [% max %] votes for bugs in the
+     <tt>[% prod FILTER html %]</tt> product, but you are trying to use 
+     [% votes %].
+     
   [% ELSIF error == "token_inexistent" %]
      [% title = "Token Does Not Exist" %]
      The token you submitted does not exist, has expired, or has
@@ -447,6 +505,10 @@
     [% title = "Unknown Tab" %]
     <code>[% current_tab_name FILTER html %]</code> is not a legal tab name.    
     
+  [% ELSIF error == "votes_must_be_nonnegative" %]
+    [% title = "Votes Must Be Non-negative" %]
+    Only use non-negative numbers for your bug votes.
+        
   [% ELSIF error == "wrong_token_for_cancelling_email_change" %]
     [% title = "Wrong Token" %]
     That token cannot be used to cancel an email address change.

@@ -113,11 +113,7 @@ if ( $::action eq 'chgpw' ) {
       && defined $::FORM{'matchpassword'}
       || ThrowUserError("require_new_password");
 
-     my $passworderror = ValidatePassword($::FORM{'password'}, $::FORM{'matchpassword'});
-     if ( $passworderror ) {
-         DisplayError($passworderror);
-         exit;
-     }
+    ValidatePassword($::FORM{'password'}, $::FORM{'matchpassword'});
 }
 
 ################################################################################

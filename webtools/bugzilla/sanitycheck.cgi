@@ -64,9 +64,7 @@ confirm_login();
 # prevents users with a legitimate interest in Bugzilla integrity
 # from accessing the script).
 UserInGroup("editbugs")
-  || DisplayError("You are not authorized to access this script,
-                   which is reserved for users with the ability to edit bugs.")
-  && exit;
+  || ThrowUserError("sanity_check_access_denied");
 
 print "Content-type: text/html\n";
 print "\n";

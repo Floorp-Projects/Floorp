@@ -125,6 +125,16 @@
     The target type was neither <em>bug</em> nor <em>attachment</em>
     but rather <em>[% variables.target_type FILTER html %]</em>.
   
+  [% ELSIF error == "invalid_field_name" %]
+    Can't use [% field FILTER html %] as a field name.
+    
+  [% ELSIF error == "invalid_output_type" %]
+    [% title = "Invalid Output Type" %]
+    Invalid output type [% type FILTER html %].
+    
+  [% ELSIF error == "missing_bug_id" %]
+    No bug ID was given.
+    
   [% ELSIF error == "no_y_axis_defined" %]
     No Y axis was defined when creating report. The X axis is optional,
     but the Y axis is compulsory.
@@ -138,6 +148,9 @@
   [% ELSIF error == "template_error" %]
     [% template_error_msg %]
 
+  [% ELSIF error == "unable_to_retrieve_password" %]
+     I was unable to retrieve your old password from the database.
+     
   [% ELSIF error == "undefined_field" %]
     [% field FILTER html %] was not defined; [% Param('browserbugmessage') %]
 

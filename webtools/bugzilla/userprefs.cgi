@@ -92,29 +92,19 @@ sub SaveAccount {
         my $old = SqlQuote($::FORM{'Bugzilla_password'});
         SendSQL("SELECT cryptpassword FROM profiles WHERE userid = $userid");
         my $oldcryptedpwd = FetchOneColumn();
-        if (!$oldcryptedpwd) {
-            DisplayError("I was unable to retrieve your old password from the database.");
-            exit;
-        }
+        $oldcryptedpwd || ThrowCodeError("unable_to_retrieve_password");
+
         if (crypt($::FORM{'Bugzilla_password'}, $oldcryptedpwd) ne 
                   $oldcryptedpwd) 
         {
-            DisplayError("You did not enter your old password correctly.");
-            exit;
+            ThrowUserError("old_password_incorrect");
         }
 
         if ($pwd1 ne "" || $pwd2 ne "")
         {
-            if ($pwd1 ne $pwd2) {
-                DisplayError("The two passwords you entered did not match.");
-                exit;
-            }
-            if ($::FORM{'new_password1'} eq '') {
-                DisplayError("You must enter a new password.");
-                exit;
-            }
-            my $passworderror = ValidatePassword($pwd1);
-            (DisplayError($passworderror) && exit) if $passworderror;
+            ($pwd1 eq $pwd2) || ThrowUserError("passwords_dont_match");
+            $::FORM{'new_password1'} || ThrowUserError("new_password_missing");
+            ValidatePassword($pwd1);
         
             my $cryptedpassword = SqlQuote(Crypt($pwd1));
             SendSQL("UPDATE profiles 
@@ -130,27 +120,20 @@ sub SaveAccount {
         my $new_login_name = trim($::FORM{'new_login_name'});
 
         if($old_login_name ne $new_login_name) {
-            if( $::FORM{'Bugzilla_password'} eq "") {
-                DisplayError("You must enter your old password to 
-                                             change email address.");
-                exit;
-            }
+            $::FORM{'Bugzilla_password'} 
+              || ThrowCodeError("old_password_required");
 
             use Token;
             # Block multiple email changes for the same user.
             if (Token::HasEmailChangeToken($userid)) {
-                DisplayError("Email change already in progress; 
-                                          please check your email.");
-                exit;
+                ThrowUserError("email_change_in_progress");
             }
 
             # Before changing an email address, confirm one does not exist.
             CheckEmailSyntax($new_login_name);
             trick_taint($new_login_name);
-            if (!ValidateNewUser($new_login_name)) {
-                DisplayError("Account $new_login_name already exists");
-                exit;
-            }
+            ValidateNewUser($new_login_name)
+              || ThrowUserError("account_exists", {email => $new_login_name});
 
             Token::IssueEmailChangeToken($userid,$old_login_name,
                                                  $new_login_name);
@@ -325,7 +308,7 @@ sub SaveFooter {
                         "AND name = " . SqlQuote($name));
             }
         } else {
-            DisplayError("Hmm, the $name query seems to have gone away.");
+            ThrowUserError("missing_query", {queryname => $name});
         }
     }
     SendSQL("UPDATE profiles SET mybugslink = " . 

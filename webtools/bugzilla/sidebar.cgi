@@ -68,8 +68,7 @@ if ($useragent =~ m:Mozilla/([1-9][0-9]*):i && $1 >= 5 && $useragent !~ m/compat
     $template->process("sidebar.xul.tmpl", $vars)
       || ThrowTemplateError($template->error());
 } else {
-    DisplayError("sidebar.cgi currently only supports Mozilla based web browsers");
-    exit;
+    ThrowUserError("sidebar_supports_mozilla_only");
 }
 
 

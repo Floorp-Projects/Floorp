@@ -57,9 +57,7 @@ if (!defined $::FORM{'product'}) {
 
     my $prodsize = scalar(keys %products);
     if ($prodsize == 0) {
-        DisplayError("Either no products have been defined ".
-                     "or you have not been given access to any.\n");
-        exit;
+        ThrowUserError("no_products");
     }
     elsif ($prodsize > 1) {
         $::vars->{'proddesc'} = \%products;
@@ -93,8 +91,7 @@ if (!$product_id) {
 if (Param("usebuggroups") && GroupExists($product)) {
     confirm_login() unless $::userid;
     UserInGroup($product)
-      || DisplayError("You are not authorized to access that product.")
-        && exit;
+      || ThrowUserError("product_access_denied");
 }
 
 ######################################################################

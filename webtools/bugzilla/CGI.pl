@@ -801,18 +801,6 @@ sub PutFooter {
 # ThrowUserError("some_tag", { bug_id => $bug_id, size => 127 });
 ###############################################################################
 
-# DisplayError is deprecated. Use ThrowCodeError, ThrowUserError or 
-# ThrowTemplateError instead.
-sub DisplayError {
-  ($vars->{'error'}, $vars->{'title'}) = (@_);
-
-  print "Content-type: text/html\n\n" if !$vars->{'header_done'};
-  $template->process("global/user-error.html.tmpl", $vars)
-    || ThrowTemplateError($template->error());   
-
-  return 1;
-}
-
 # For "this shouldn't happen"-type places in the code.
 # The contents of $extra_vars get printed out in the template - useful for
 # debugging info.

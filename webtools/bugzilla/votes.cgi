@@ -79,7 +79,7 @@ elsif ($action eq "vote") {
     show_user();
 }
 else {
-    DisplayError("Unknown action: " . html_quote($action));
+    ThrowCodeError("unknown_action", {action => $action});
 }
 
 exit;
@@ -87,8 +87,8 @@ exit;
 # Display the names of all the people voting for this one bug.
 sub show_bug {
     my $bug_id = $::FORM{'bug_id'} 
-                  || DisplayError("Please give a bug ID to show the votes for.")
-                  && exit;
+      || ThrowCodeError("missing_bug_id");
+      
     my $total = 0;
     my @users;
     
@@ -126,10 +126,7 @@ sub show_user {
     # After DBNameToIdAndCheck is templatised and prints a Content-Type, 
     # the above should revert to a call to that function, and this 
     # special error handling should go away.
-    if (!$who) {
-        DisplayError(html_quote($name) . " is not a valid username.\n");
-        exit;
-    }
+    $who || ThrowUserError("invalid_username", {name => $name});
     
     my $canedit = 1 if ($name eq $::COOKIE{'Bugzilla_login'});
     
@@ -255,8 +252,7 @@ sub record_votes {
     foreach my $id (@buglist) {
       ValidateBugID($id);
       detaint_natural($::FORM{$id})
-        || DisplayError("Only use non-negative numbers for your bug votes.")
-        && exit;
+        || ThrowUserError("votes_must_be_nonnegative");
     }
 
     ############################################################################
@@ -283,28 +279,20 @@ sub record_votes {
             $prodcount{$prod} += $::FORM{$id};
             
             # Make sure we haven't broken the votes-per-bug limit
-            if ($::FORM{$id} > $max) {                
-                $prod = html_quote($prod);
-                my $votes = html_quote($::FORM{$id});
-                
-                DisplayError("You may only use at most $max votes for a single
-                              bug in the <tt>$prod</tt> product, but you are
-                              trying to use $votes.", "Illegal vote");
-                exit();
-            } 
+            ($::FORM{$id} <= $max)               
+              || ThrowUserError("too_many_votes_for_bug",
+                                {max => $max, 
+                                 product => $prod, 
+                                 votes => $::FORM{$id}});
         }
 
         # Make sure we haven't broken the votes-per-product limit
         foreach my $prod (keys(%prodcount)) {
-            if ($prodcount{$prod} > $::prodmaxvotes{$prod}) {
-                $prod = html_quote($prod);
-                
-                DisplayError("You may only use at most $::prodmaxvotes{$prod}
-                              votes for bugs in the <tt>$prod</tt> product, 
-                              but you are trying to use $prodcount{$prod}.",
-                              "Illegal vote");
-                exit();
-            }
+            ($prodcount{$prod} <= $::prodmaxvotes{$prod})
+              || ThrowUserError("too_many_votes_for_product",
+                                {max => $::prodmaxvotes{$prod}, 
+                                 product => $prod, 
+                                 votes => $prodcount{$prod}});
         }
     }
 
