@@ -1048,7 +1048,7 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
   
   [self saveInternal: url.get()
         withDocument: nsnull
-   suggestedFilename: [aFilename cString]
+   suggestedFilename: [aFilename fileSystemRepresentation]
          bypassCache: YES
           filterView: aFilterView
           filterList: aFilterList];
@@ -1272,7 +1272,7 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
     location->GetHref(urlStr);
     nsCAutoString urlCStr; urlCStr.AssignWithConversion(urlStr);
     
-    return [NSString stringWithCString: urlCStr.get()];
+    return [NSString stringWithCharacters: urlStr.get() length: urlStr.Length()];
 }
 
 - (void)setActive: (BOOL)aIsActive

@@ -1214,8 +1214,8 @@ BookmarksService::PerformProxyDrop(BookmarkItem* parentItem, BookmarkItem* befor
   nsCOMPtr<nsIDOMElement> beforeElt;
   beforeElt = do_QueryInterface([beforeItem contentNode]);
 
-  nsAutoString url; url.AssignWithConversion([[data objectForKey:@"url"] cString]);
-  nsAutoString title; title.AssignWithConversion([[data objectForKey:@"title"] cString]);
+  nsAutoString url; NSStringTo_nsString([data objectForKey:@"url"], url);
+  nsAutoString title; NSStringTo_nsString([data objectForKey:@"title"], title);
   BookmarksService::AddBookmarkToFolder(url, title, parentElt, beforeElt);
   return YES;  
 }

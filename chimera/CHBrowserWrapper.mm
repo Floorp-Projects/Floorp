@@ -85,7 +85,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (IBAction)load:(id)sender
 {
-  [mBrowserView loadURI:[urlbar stringValue] referrer:nil flags:NSLoadFlagsNone];
+  [mBrowserView loadURI:[urlbar string] referrer:nil flags:NSLoadFlagsNone];
 }
 
 -(void)disconnectView
@@ -462,6 +462,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     }
 }
 
+//
+// sizeBrowserTo
+//
+// Sizes window so that browser has dimensions given by |dimensions|
+//
 - (void)sizeBrowserTo:(NSSize)dimensions
 {
   NSRect bounds = [self bounds];

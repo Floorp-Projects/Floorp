@@ -50,34 +50,34 @@
             CLASS = BrowserWindowController; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                mAddBookmarkCheckbox = id; 
-                mAddBookmarkFolderField = id; 
-                mAddBookmarkSheetWindow = id; 
-                mAddBookmarkTitleField = id; 
-                mBackItem = id; 
+                mAddBookmarkCheckbox = NSButton; 
+                mAddBookmarkFolderField = NSPopUpButton; 
+                mAddBookmarkSheetWindow = NSWindow; 
+                mAddBookmarkTitleField = NSTextField; 
+                mBackItem = NSMenuItem; 
                 mCachedBMDS = id; 
-                mForwardItem = id; 
-                mHistoryDataSource = id; 
-                mImageLinkMenu = id; 
-                mImageMenu = id; 
-                mInputMenu = id; 
-                mLinkMenu = id; 
-                mLocationSheetURLField = id; 
-                mLocationSheetWindow = id; 
-                mLocationToolbarView = id; 
+                mForwardItem = NSMenuItem; 
+                mHistoryDataSource = CHHistoryDataSource; 
+                mImageLinkMenu = NSMenu; 
+                mImageMenu = NSMenu; 
+                mInputMenu = NSMenu; 
+                mLinkMenu = NSMenu; 
+                mLocationSheetURLField = NSTextField; 
+                mLocationSheetWindow = NSWindow; 
+                mLocationToolbarView = NSView; 
                 mLock = NSImageView; 
-                mPageMenu = id; 
+                mPageMenu = NSMenu; 
                 mPersonalToolbar = CHBookmarksToolbar; 
                 mProgress = NSProgressIndicator; 
-                mSidebarBookmarksDataSource = id; 
+                mSidebarBookmarksDataSource = BookmarksDataSource; 
                 mSidebarBrowserView = id; 
                 mSidebarDrawer = NSDrawer; 
-                mSidebarSourceTabView = id; 
-                mSidebarTabView = id; 
+                mSidebarSourceTabView = NSTabView; 
+                mSidebarTabView = NSTabView; 
                 mStatus = NSTextField; 
                 mStatusBar = NSView; 
-                mTabBrowser = id; 
-                mURLBar = NSTextField; 
+                mTabBrowser = CHExtendedTabView; 
+                mURLBar = NSTextView; 
             }; 
             SUPERCLASS = NSWindowController; 
         }, 
@@ -88,6 +88,13 @@
             LANGUAGE = ObjC; 
             OUTLETS = {mProxyIcon = CHPageProxyIcon; }; 
             SUPERCLASS = NSTextField; 
+        }, 
+        {
+            ACTIONS = {onBlur = id; onResize = id; onRowClicked = id; }; 
+            CLASS = CHAutoCompleteTextView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {mProxyIcon = CHPageProxyIcon; }; 
+            SUPERCLASS = NSTextView; 
         }, 
         {
             CLASS = CHBookmarksOutlineView; 

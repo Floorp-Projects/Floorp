@@ -56,11 +56,9 @@
   // Get the href attribute.  This is the URL we want to load.
   nsAutoString href;
   mElement->GetAttribute(NS_LITERAL_STRING("href"), href);
-  nsCAutoString cref; cref.AssignWithConversion(href);
-  if (cref.IsEmpty())
+  if (href.IsEmpty())
     return;
-
-  NSString* url = [NSString stringWithCString: cref.get()];
+  NSString* url = [NSString stringWithCharacters: href.get() length: href.Length()];
 
   // Now load the URL in the window.
   [[[self window] windowController] loadURL: url referrer:nil];
