@@ -39,6 +39,7 @@
 #include "nsIRDFResource.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsHashtable.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -73,6 +74,7 @@ static char kChromePrefix[] = "chrome://";
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 
 class nsChromeRegistry;
 
@@ -180,6 +182,11 @@ nsChromeRegistry::nsChromeRegistry()
                                     (nsISupports**)&mRDFService);
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
 
+  rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
+                                    NS_GET_IID(nsIRDFContainerUtils),
+                                    (nsISupports**)&mRDFContainerUtils);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
+
   if (mRDFService) {
     rv = mRDFService->GetResource(kURICHROME_selectedSkin, getter_AddRefs(mSelectedSkin));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
@@ -207,6 +214,12 @@ nsChromeRegistry::~nsChromeRegistry()
     nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
     mRDFService = nsnull;
   }
+
+  if (mRDFContainerUtils) {
+    nsServiceManager::ReleaseService(kRDFContainerUtilsCID, mRDFContainerUtils);
+    mRDFContainerUtils = nsnull;
+  }
+
 }
 
 NS_IMPL_ISUPPORTS1(nsChromeRegistry, nsIChromeRegistry);
@@ -774,23 +787,6 @@ NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 		}
 	}
 
-  // Get our frames object
-	nsCOMPtr<nsIDOMWindowCollection> frames;
-	aWindow->GetFrames(getter_AddRefs(frames));
-	if (!frames)
-		return NS_OK;
-
-  // Walk the frames
-	PRUint32 length;
-	frames->GetLength(&length);
-  for (PRUint32 i = 0; i < length; i++) {
-    // For each frame, recur.
-		nsCOMPtr<nsIDOMWindow> childWindow;
-		frames->Item(i, getter_AddRefs(childWindow));
-		if (childWindow)
-			RefreshWindow(childWindow);
-  }
-
   return NS_OK;
 }
 
@@ -1178,22 +1174,160 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCAutoString& aP
   return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc, aUseProfile, aIsAdding);;
 }
    
-NS_IMETHODIMP nsChromeRegistry::InstallSkin(nsIURI* aBaseURL, PRBool aUseProfile)
+NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderType,
+                                                const nsCAutoString& aBaseURL,
+                                                PRBool aUseProfile)
 {
-  NS_ERROR("Write me!\n");
+  // Load the data source found at the base URL.
+  nsCOMPtr<nsIRDFDataSource> dataSource;
+  nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+                                                   nsnull,
+                                                   NS_GET_IID(nsIRDFDataSource),
+                                                   (void**) getter_AddRefs(dataSource));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(dataSource);
+  if (!remote)
+      return NS_ERROR_UNEXPECTED;
+
+  // We need to read this synchronously.
+  nsCAutoString key = aBaseURL;
+  key += "manifest.rdf";
+ 
+  rv = remote->Init(key);
+  rv = remote->Refresh(PR_TRUE);
+
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  // Load the data source that we wish to manipulate.
+  nsCOMPtr<nsIRDFDataSource> installSource;
+  nsCAutoString installStr = "all-";
+  installStr += aProviderType;
+  installStr += "s.rdf";
+  LoadDataSource(installStr, getter_AddRefs(installSource), aUseProfile);
+    
+  if (!installSource)
+    return NS_ERROR_FAILURE;
+
+  // Build the prefix string. Only resources with this prefix string will have their
+  // assertions copied.
+  nsCAutoString prefix = "urn:mozilla:";
+  prefix += aProviderType;
+  prefix += ":";
+
+  // Get all the resources
+  nsCOMPtr<nsISimpleEnumerator> resources;
+  dataSource->GetAllResources(getter_AddRefs(resources));
+
+  // For each resource
+  PRBool moreElements;
+  resources->HasMoreElements(&moreElements);
+  
+  while (moreElements) {
+    nsCOMPtr<nsISupports> supports;
+    resources->GetNext(getter_AddRefs(supports));
+
+    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(supports);
+    
+    // Check against the prefix string
+    const char* value;
+    resource->GetValueConst(&value);
+    nsCAutoString val(value);
+    if (val.Find(prefix) == 0) {
+      // It's valid.
+      
+      nsCOMPtr<nsIRDFContainer> container;
+      rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                            nsnull,
+                                            NS_GET_IID(nsIRDFContainer),
+                                            getter_AddRefs(container));
+      if (NS_SUCCEEDED(container->Init(dataSource, resource))) {
+        // XXX Deal with BAGS and ALTs? Aww, to hell with it. Who cares? I certainly don't.
+        // We're a SEQ. Different rules apply. Do an AppendElement instead.
+        // First do the decoration in the install data source.
+        nsCOMPtr<nsIRDFContainer> installContainer;
+        mRDFContainerUtils->MakeSeq(installSource, resource, getter_AddRefs(installContainer));
+        if (!installContainer) {
+          // Already exists. Create a container instead.
+          rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                            nsnull,
+                                            NS_GET_IID(nsIRDFContainer),
+                                            getter_AddRefs(installContainer));
+          installContainer->Init(installSource, resource);
+        }
+
+        // Put all our elements into the install container.
+        nsCOMPtr<nsISimpleEnumerator> seqKids;
+        container->GetElements(getter_AddRefs(seqKids));
+        PRBool moreKids;
+        seqKids->HasMoreElements(&moreKids);
+        while (moreKids) {
+          nsCOMPtr<nsISupports> supp;
+          seqKids->GetNext(getter_AddRefs(supp));
+          nsCOMPtr<nsIRDFNode> kid = do_QueryInterface(supp);
+          installContainer->AppendElement(kid);
+          seqKids->HasMoreElements(&moreKids);
+        }
+      }
+      else {
+        // We're not a seq. Get all of the arcs that go out.
+        nsCOMPtr<nsISimpleEnumerator> arcs;
+        dataSource->ArcLabelsOut(resource, getter_AddRefs(arcs));
+      
+        PRBool moreArcs;
+        arcs->HasMoreElements(&moreArcs);
+        while (moreArcs) {
+          nsCOMPtr<nsISupports> supp;
+          arcs->GetNext(getter_AddRefs(supp));
+          nsCOMPtr<nsIRDFResource> arc = do_QueryInterface(supp);
+
+          nsCOMPtr<nsIRDFNode> retVal;
+          installSource->GetTarget(resource, arc, PR_TRUE, getter_AddRefs(retVal));
+          nsCOMPtr<nsIRDFNode> newTarget;
+          dataSource->GetTarget(resource, arc, PR_TRUE, getter_AddRefs(newTarget));
+        
+          if (retVal)
+            installSource->Change(resource, arc, retVal, newTarget);
+          else {
+            // Do an ASSERT instead.
+            installSource->Assert(resource, arc, newTarget, PR_TRUE);
+          }
+      
+          arcs->HasMoreElements(&moreArcs);
+        }
+      }
+    }
+    resources->HasMoreElements(&moreElements);
+  }
+ 
+  // Flush the install source
+  nsCOMPtr<nsIRDFRemoteDataSource> remoteInstall = do_QueryInterface(installSource, &rv);
+  if (NS_FAILED(rv))
+    return NS_OK;
+  remoteInstall->Flush();
+
+  // XXX Handle the installation of overlays.
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::InstallLocale(nsIURI* aBaseURL, PRBool aUseProfile)
+NS_IMETHODIMP nsChromeRegistry::InstallSkin(const char* aBaseURL, PRBool aUseProfile)
 {
-  NS_ERROR("Write me!\n");
-  return NS_OK;
+  nsCAutoString provider("skin");
+  return InstallProvider(provider, aBaseURL, aUseProfile);
 }
 
-NS_IMETHODIMP nsChromeRegistry::InstallPackage(nsIURI* aBaseURL, PRBool aUseProfile)
+NS_IMETHODIMP nsChromeRegistry::InstallLocale(const char* aBaseURL, PRBool aUseProfile)
 {
-  NS_ERROR("Write me!\n");
-  return NS_OK;
+  nsCAutoString provider("locale");
+  return InstallProvider(provider, aBaseURL, aUseProfile);
+}
+
+NS_IMETHODIMP nsChromeRegistry::InstallPackage(const char* aBaseURL, PRBool aUseProfile)
+{
+  nsCAutoString provider("package");
+  return InstallProvider(provider, aBaseURL, aUseProfile);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const PRUnichar* aSkinName, PRBool aUseProfile)

@@ -30,6 +30,7 @@ class nsICSSLoader;
 class nsISimpleEnumerator;
 class nsSupportsHashtable;
 class nsIRDFContainer;
+class nsIRDFContainerUtils;
 class nsIDOMWindow;
 class nsIDocument;
 
@@ -101,6 +102,11 @@ private:
                                         nsIRDFResource* aSelectionArc, 
                                         PRBool aUseProfile, PRBool aIsAdding);
 
+  NS_IMETHOD InstallProvider(const nsCAutoString& aProviderType,
+                             const nsCAutoString& aBaseURL,
+                             PRBool aUseProfile);
+
+
 
 protected:
   PRBool mInstallInitialized;
@@ -113,6 +119,7 @@ protected:
 
   nsSupportsHashtable* mDataSourceTable;
   nsIRDFService* mRDFService;
+  nsIRDFContainerUtils* mRDFContainerUtils;
 
   // Resources
   nsCOMPtr<nsIRDFResource> mSelectedSkin;
