@@ -67,7 +67,7 @@
 #include "nsISecureBrowserUI.h"
 
 #ifdef MOZ_PHOENIX
-#include "nsBrowserCompsCID.h"
+#include "nsToolkitCompsCID.h"
 #endif
 
 static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);

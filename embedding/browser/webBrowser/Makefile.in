@@ -38,7 +38,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  uriloader \
 		  history \
-		  browsercomps \
+		  toolkitcomps \
 		  shistory \
 		  webshell \
 		  windowwatcher \
