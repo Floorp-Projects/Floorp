@@ -8,19 +8,77 @@
 
 <html:script language="JavaScript"
   src="chrome://sidebar/content/sidebarOverlay.js"/>
+<html:script language="JavaScript" src="chrome://sidebar/content/flash.js"/>
 
-  <box id="sidebarbox" align="vertical" persist="hidden width">
-    <box id="titlebox">
+  <!-- Overlay the sidebar panels -->
+  <box id="sidebar-box" align="vertical" persist="hidden width">
+    <splitter id="title-box" collapse="after"
+      onclick="sidebarOpenClosePanel(this)">
+      <html:div class="panel-bar">
+        &sidebar.panels.label;
+      </html:div>
       <spring flex="100%"/>
-      <titledbutton class="borderless"
-        value="&sidebar.reload.label;"
-        onclick="sidebarReload()" />
       <titledbutton class="borderless"
         value="&sidebar.customize.label;" 
         onclick="sidebarCustomize();" />
-      <spring flex="100%"/>
+    </splitter>
+
+    <box id="sidebar-panels" align="vertical" flex="100%"
+      datasources="chrome://sidebar/content/sidebar.rdf" 
+      ref="NC:SidebarRoot">
+      <!--<template>
+        <rule>
+          <box uri="rdf:*" align="vertical">
+          <splitter class="panel-bar"
+            collapse="after" resizeafter="grow"
+            onclick="sidebarSavePanelState(this)">
+            <titledbutton value="rdf:http://home.netscape.com/NC-rdf#title"
+              class="panel-bar"/>
+            <spring flex="100%"/>
+            <titledbutton class="borderless show-hide"
+              onclick="sidebarOpenClosePanel(this.parentNode)"/>
+          </splitter>
+          <html:iframe class="panel-frame"
+           src="rdf:http://home.netscape.com/NC-rdf#content"/>
+          </box>
+
+        </rule>
+      </template>-->
     </box>
-    <box id="sidebarpanels" align="vertical" flex='100%'/>
+
+    <splitter id="alerts-splitter" class="panel-bar"
+      collapse="after" chromeclass="extrachrome"
+      onclick="sidebarOpenClosePanel(this)"> 
+      <html:div class="panel-bar">
+        &sidebar.alerts.label;
+      </html:div>
+    </splitter>
+
+    <box id="alerts-panel" align="vertical" chromeclass="extrachrome">
+      <html:div flex="1">
+        <tree id="flash-tree"
+          ref="NC:FlashRoot"
+          datasources="rdf:null"
+          rdf:containment="http://home.netscape.com/NC-rdf#child" 
+          onclick="OpenURL(event.target.parentNode.parentNode);">
+          <template>
+            <treechildren>
+              <treeitem uri="rdf:*"
+                type="rdf:http://home.netscape.com/NC-rdf#type">
+                <treerow>
+                  <treecell indent="true" align="left"
+                    value="rdf:http://home.netscape.com/NC-rdf#description"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </template>
+        </tree>
+      </html:div>
+    </box>
   </box>
 
+  <!-- Some splitter attritutes -->
+  <splitter id="sidebar-splitter" collapse="before" persist="state hidden" 
+    chromeclass="extrachrome" onclick="sidebarSaveState(this)"/>
+  
 </overlay>
