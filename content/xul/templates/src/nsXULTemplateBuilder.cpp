@@ -845,7 +845,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 			}
 #endif
 
-			if ((tag == containmentAtom) && (nameSpaceID == kNameSpaceID_XUL))
+			if ((tag == containmentAtom.get()) && (nameSpaceID == kNameSpaceID_XUL))
 			{
 				if (NS_FAILED(rv = CreateResourceElement(nameSpaceID,
 					containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
