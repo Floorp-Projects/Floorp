@@ -346,7 +346,7 @@ function SetStateFromRow(row, state)
     // we need to escape the name because
     // some news servers have newsgroups with non ASCII names
     // we need to escape those name before calling SetState()
-    SetState(escape(name), state);
+    SetState(encodeURIComponent(name), state);
 }
 
 function SetSubscribeState(state)
