@@ -23,7 +23,7 @@ rem Contributor(s):
 if not exist %2\NUL echo Warning: %2 does not exist! (you may need to check it out)
 if not exist %2\NUL exit 1
 
-pushd %2
+cd %2
 
 goto NO_CAFE
 
@@ -41,4 +41,3 @@ del doit.bat
 
 :END
 
-popd
