@@ -44,14 +44,14 @@ EXTRA_DSO_LDOPTS = \
 		$(MKSHLIB_UNFORCE_ALL)	\
 		-lmailnewsmsgdb			\
 		-ljs					\
+		-ljsdom					\
 		-lxp					\
 		-lraptorbase			\
 		-lrdfutil_s				\
 		-lxpcom					\
 		-lreg					\
-		-lnspr21				\
-		-lplc21					\
-		-lplds21				\
+		-lappcores				\
+		$(NSPR_LIBS)			\
 		-L$(DIST)/bin			\
 		-L$(DIST)/lib			\
 		$(NULL)
