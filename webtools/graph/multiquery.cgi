@@ -250,7 +250,7 @@ sub show_graphs {
 
   # luna,sleestack,mecca,mocha
   print "<li>\n";
-  print "Multiqueries: (<a href=\"multiquery.cgi?&testname=startup&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet&points=$POINTS&days=$DAYS&units=$UNITS\">startup</a>, <a href=\"multiquery.cgi?&testname=xulwinopen&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet&points=$POINTS&days=$DAYS&units=$UNITS\">xulwinopen</a>, <a href=\"multiquery.cgi?&testname=pageload&tboxes=btek,64.236.138.128,64.236.138.100,64.236.139.180,64.236.139.71&points=$POINTS&days=$DAYS&units=$UNITS\">pageload</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi\">build your own multiquery</a>)";
+  print "Multiqueries: (<a href=\"multiquery.cgi?&testname=startup&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet&points=$POINTS&ltype=$LTYPE&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&avg=$AVG\">startup</a>, <a href=\"multiquery.cgi?&testname=xulwinopen&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet&points=$POINTS&ltype=$LTYPE&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&avg=$AVG\">xulwinopen</a>, <a href=\"multiquery.cgi?&testname=pageload&tboxes=btek,64.236.138.128,64.236.138.100,64.236.139.180,64.236.139.71&points=$POINTS&ltype=$LTYPE&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&avg=$AVG\">pageload</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi\">build your own multiquery</a>)";
   print "</li>\n";
 
   print "<li>\n";
