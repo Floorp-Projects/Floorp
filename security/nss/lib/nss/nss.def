@@ -625,6 +625,9 @@ NSS_Get_SEC_BooleanTemplate;
 NSS_Get_SEC_NullTemplate;
 NSS_Get_SEC_SignedCertificateTemplate;
 NSS_Get_SEC_UTF8StringTemplate;
+;+# for JSS
+PK11_ImportDERPrivateKeyInfoAndReturnKey;
+PK11_ImportPrivateKeyInfoAndReturnKey;
 SECKEY_DecodeDERSubjectPublicKeyInfo;
 ;+    local:
 ;+       *;
