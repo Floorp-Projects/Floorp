@@ -223,17 +223,17 @@ NS_IMETHODIMP nsSHEntry::SetCacheKey(nsISupports* aCacheKey)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetSaveHistoryStateFlag(PRBool * aFlag)
+NS_IMETHODIMP nsSHEntry::GetSaveLayoutStateFlag(PRBool * aFlag)
 {
    NS_ENSURE_ARG_POINTER(aFlag);
    
-   *aFlag = mSaveHistoryState;
+   *aFlag = mSaveLayoutState;
    return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::SetSaveHistoryStateFlag(PRBool  aFlag)
+NS_IMETHODIMP nsSHEntry::SetSaveLayoutStateFlag(PRBool  aFlag)
 {
-   mSaveHistoryState = aFlag;
+   mSaveLayoutState = aFlag;
    return NS_OK;
 }
 
@@ -273,7 +273,7 @@ nsSHEntry::Create(nsIURI * aURI, const PRUnichar * aTitle, nsIDOMDocument * aDOM
   SetIsSubFrame(PR_FALSE);
 
   // By default we save HistoryLayoutState
-  SetSaveHistoryStateFlag(PR_TRUE);
+  SetSaveLayoutStateFlag(PR_TRUE);
 
   //By default the page is not expired
   SetExpirationStatus(PR_FALSE);

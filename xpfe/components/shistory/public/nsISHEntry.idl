@@ -75,7 +75,7 @@ attribute unsigned long ID;
 attribute nsISupports cacheKey;
 
 /** attribute to indicate whether layoutHistoryState should be saved */
-attribute boolean saveHistoryStateFlag;
+attribute boolean saveLayoutStateFlag;
 
 /** attribute to indicate whether the page is already expired in cache */
 attribute boolean expirationStatus;
