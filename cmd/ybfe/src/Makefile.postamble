@@ -98,15 +98,3 @@
 # owned by the top-level Makefile API and no context has been set up for where 
 # derived files should go.
 #
-
-DEPTH  = ../../..
-MODULE  = ybfe
-
-include $(DEPTH)/config/config.mk
-
-REQUIRES  = \
-	nsprpub \
-	js \
-	$(NULL)
-
-include $(DEPTH)/config/rules.mk
