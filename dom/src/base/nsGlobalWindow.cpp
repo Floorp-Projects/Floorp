@@ -4769,8 +4769,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
 
   case JSTYPE_STRING:
   case JSTYPE_OBJECT:
-    if (!(expr = ::JS_ValueToString(cx, argv[0])))
-      return NS_ERROR_FAILURE;
+    expr = ::JS_ValueToString(cx, argv[0]);
     if (!expr)
       return NS_ERROR_OUT_OF_MEMORY;
     argv[0] = STRING_TO_JSVAL(expr);
