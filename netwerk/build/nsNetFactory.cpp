@@ -25,13 +25,15 @@
 #include "nsSocketTransportService.h"
 #include "nscore.h"
 #include "nsStandardUrl.h"
+#include "nsDnsService.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,       NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID,   NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kExternalModuleManagerCID, NS_NETMODULEMGR_CID);
+static NS_DEFINE_CID(kExternalModuleManagerCID,  NS_NETMODULEMGR_CID);
+static NS_DEFINE_CID(kDNSServiceCID,             NS_DNSSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +63,9 @@ NSGetFactory(nsISupports* aServMgr,
     }
     else if (aClass.Equals(kExternalModuleManagerCID)) {
         rv = NS_NewGenericFactory(&fact, nsNetModuleMgr::Create);
+    }
+    else if (aClass.Equals(kDNSServiceCID)) {
+        rv = NS_NewGenericFactory(&fact, nsDNSService::Create);
     }
     else {
         rv = NS_ERROR_FAILURE;

@@ -37,6 +37,10 @@ public:
     virtual ~nsDNSService();
     nsresult Init();
  
+    // Define a Create method to be used with a factory:
+    static NS_METHOD
+    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
+    
     // nsIDNSService methods:
     NS_IMETHOD Lookup(nsISupports *ctxt,
                       const char *hostname,

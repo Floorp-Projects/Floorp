@@ -91,6 +91,18 @@ nsDNSService::~nsDNSService()
 
 NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService::GetIID());
 
+NS_METHOD
+nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
+{
+    nsDNSService* ph = new nsDNSService();
+    if (ph == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(ph);
+    nsresult rv = ph->QueryInterface(aIID, aResult);
+    NS_RELEASE(ph);
+    return rv;
+}
+    
 ////////////////////////////////////////////////////////////////////////////////
 // nsIDNSService methods:
 
