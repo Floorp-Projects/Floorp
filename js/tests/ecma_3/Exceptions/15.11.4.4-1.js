@@ -17,7 +17,7 @@
 * Portions created by the Initial Developer are Copyright (C) 2001
 * the Initial Developer. All Rights Reserved.
 *
-* Contributor(s): d-russo@ti.com, pschwartau@netscape.com
+* Contributors: d-russo@ti.com, pschwartau@netscape.com, joerg.schaible@gmx.de
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +36,9 @@
 *
 * Date:    22 Jan 2002
 * SUMMARY: Testing Error.prototype.toString()
+*
+* Revised: 25 Nov 2002
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=181909
 *
 * Note that ECMA-262 3rd Edition Final, Section 15.11.4.4 states that 
 * Error.prototype.toString() returns an implementation-dependent string.
@@ -80,25 +83,25 @@ var EXPECTED_FORMAT = 0;
 
 status = inSection(1);
 var err1 = new Error('msg1');
-actual = examineThis(err1);
+actual = examineThis(err1, 'msg1');
 expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(2);
 var err2 = new Error(err1);
-actual = examineThis(err2);
+actual = examineThis(err2, err1);
 expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(3);
 var err3 = new Error();
-actual = examineThis(err3);
+actual = examineThis(err3, EMPTY_STRING);
 expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(4);
 var err4 = new Error(EMPTY_STRING);
-actual = examineThis(err4);
+actual = examineThis(err4, EMPTY_STRING);
 expect = EXPECTED_FORMAT;
 addThis();
 
@@ -110,7 +113,8 @@ try
 }
 catch(err5)
 {
- actual = examineThis(err5);
+ print(err5 + "\n");
+ actual = examineThis(err5, '.*');
 }
 expect = EXPECTED_FORMAT;
 addThis();
@@ -135,9 +139,9 @@ test();
  * you may have to modify |pattern| to take that into account -
  *
  */
-function examineThis(err)
+function examineThis(err, msg)
 {
-  var pattern = err.name + '\\s*:?\\s*' + err.message;
+  var pattern = err.name + '\\s*:?\\s*' + msg;
   return err.toString().search(RegExp(pattern));
 }
 
