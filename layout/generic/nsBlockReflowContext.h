@@ -142,6 +142,7 @@ protected:
   nscoord mTopMargin;
   nscoord mBottomMargin;
   nsSize mMaxElementSize;
+  PRBool mIsTable;
 };
 
 #endif /* nsBlockReflowContext_h___ */

@@ -107,6 +107,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   if (!aIsAdjacentWithTop) {
     reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
   }
+  mIsTable = NS_STYLE_DISPLAY_TABLE == reflowState.mStyleDisplay->mDisplay;
 
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the
@@ -332,22 +333,22 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
 #endif
 
   // See if the block will fit in the available space
-  PRBool fits;
+  PRBool fits = PR_TRUE;
+  nscoord x = mX;
+  nscoord y = mY;
   if (0 == mMetrics.height) {
     // Empty blocks do not have anything special done to them and they
     // always fit.
-    nsRect r(mX, mY, 0, 0);
+    nsRect r(x, y, 0, 0);
     mFrame->SetRect(r);
     aInFlowBounds = r;
     aCombinedRect = mMetrics.mCombinedArea;
+    aCombinedRect.x += x;
+    aCombinedRect.y += y;
     mTopMargin = 0;
     mBottomMargin = 0;
-    fits = PR_TRUE;
   }
   else {
-    nscoord x = mX;
-    nscoord y = mY;
-
     // Apply top margin unless it's going to be carried out.
 #ifndef SPECULATIVE_TOP_MARGIN
     if (aApplyTopMargin) {
@@ -358,8 +359,6 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     // See if the frame fit. If its the first frame then it always
     // fits.
     if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) {
-      fits = PR_TRUE;
-
       // Get style unit associated with the left and right margins
       nsStyleUnit leftUnit = mStyleSpacing->mMargin.GetLeftUnit();
       if (eStyleUnit_Inherit == leftUnit) {
@@ -393,38 +392,42 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
             }
           }
           else if (eStyleUnit_Auto != rightUnit) {
-#if XXX_not_in_css2
-            // When neither margin is auto then text-align applies
-            const nsStyleText* styleText = mOuterReflowState.mStyleText;
-            switch (styleText->mTextAlign) {
-              case NS_STYLE_TEXT_ALIGN_DEFAULT:
-              case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-                if (NS_STYLE_DIRECTION_RTL == mOuterReflowState.mDirection) {
-                  // When given a default alignment, and a right-to-left
-                  // direction, right align the frame.
+            PRBool mozCenter = PR_TRUE;/* XXX compatability-mode or ua.css hack */
+            PRUint8 direction = mOuterReflowState.mStyleDisplay->mDirection;
+            if (mozCenter && mIsTable) {
+              // When neither margin is auto then text-align applies
+              const nsStyleText* styleText;
+              mOuterReflowState.frame->GetStyleData(eStyleStruct_Text,
+                                            (const nsStyleStruct*&)styleText);
+              switch (styleText->mTextAlign) {
+                case NS_STYLE_TEXT_ALIGN_DEFAULT:
+                case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+                  if (NS_STYLE_DIRECTION_RTL == direction) {
+                    // When given a default alignment, and a right-to-left
+                    // direction, right align the frame.
+                    x += remainder;
+                  }
+                  break;
+                case NS_STYLE_TEXT_ALIGN_RIGHT:
                   x += remainder;
-                }
-                break;
-              case NS_STYLE_TEXT_ALIGN_RIGHT:
-                x += remainder;
-                break;
-              case NS_STYLE_TEXT_ALIGN_CENTER:
-                x += remainder / 2;
-                break;
-            }
-#else
-            // When neither margin is auto then the block is said to
-            // be over constrained, Depending on the direction, choose
-            // which margin to treat as auto.
-            if (NS_STYLE_DIRECTION_RTL ==
-                mOuterReflowState.mStyleDisplay->mDirection) {
-              // The left margin becomes auto
-              x += remainder;
+                  break;
+                case NS_STYLE_TEXT_ALIGN_CENTER:
+                  x += remainder / 2;
+                  break;
+              }
             }
             else {
-              // The right margin becomes auto which is a no-op
+              // When neither margin is auto then the block is said to
+              // be over constrained, Depending on the direction, choose
+              // which margin to treat as auto.
+              if (NS_STYLE_DIRECTION_RTL == direction) {
+                // The left margin becomes auto
+                x += remainder;
+              }
+              else {
+                // The right margin becomes auto which is a no-op
+              }
             }
-#endif
           }
         }
       }

@@ -1071,11 +1071,13 @@ nsHTMLReflowState::CalculateLeftRightMargin(const nsHTMLReflowState* cbrs,
     if (!isAutoLeftMargin && !isAutoRightMargin) {
       // Neither margin is 'auto' so we're over constrained. Use the
       // 'direction' property to tell which margin to ignore
+/*XXX*/      if (NS_STYLE_DISPLAY_TABLE != mStyleDisplay->mDisplay) {
       if (NS_STYLE_DIRECTION_LTR == mStyleDisplay->mDirection) {
         isAutoRightMargin = PR_TRUE;
       } else {
         isAutoLeftMargin = PR_TRUE;
       }
+/*XXX*/      }
     }
 
     if (isAutoLeftMargin) {
