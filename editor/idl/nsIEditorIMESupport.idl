@@ -1,0 +1,79 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+%{C++
+class nsIPrivateTextRangeList;
+struct nsTextEventReply;
+struct nsReconversionEventReply;
+%}
+
+[ptr] native nsIPrivateTextRangeListPtr(nsIPrivateTextRangeList);
+[ptr] native nsTextEventReplyPtr(nsTextEventReply);
+[ptr] native nsReconversionEventReplyPtr(nsReconversionEventReply);
+
+
+[scriptable, uuid(4805e680-49b9-11d3-9ce4-ed60bd6cb5bc)]
+
+interface nsIEditorIMESupport : nsISupports
+{
+
+
+  /**
+   * BeginComposition(nsTextEventReply* aReply) Handles the start of inline input composition.
+   */
+
+  [noscript] void BeginComposition(in nsTextEventReplyPtr aReply);
+
+  /**
+   * SetCompositionString() Sets the inline input composition string.
+   * BeginComposition must be called prior to this.
+   */
+
+  [noscript] void  SetCompositionString(in DOMString aCompositionString, in nsIPrivateTextRangeListPtr aTextRange, in nsTextEventReplyPtr aReply);
+
+  /**
+   * EndComposition() Handles the end of inline input composition.
+   */
+
+  [noscript] void  EndComposition();
+
+  /**
+   * QueryComposition()  Get the composition position
+   */
+  [noscript] void  QueryComposition(in nsTextEventReplyPtr aReply);
+
+  /**
+   * ForceCompositionEnd() force the composition end
+   */
+  [noscript] void  ForceCompositionEnd();
+  
+  /**
+   * GetReconvertionString()  Get the reconvertion string
+   */
+  [noscript] void  GetReconversionString(in nsReconversionEventReplyPtr aReply);
+};
+
+
+#endif // nsIEditorIMESupport_h__

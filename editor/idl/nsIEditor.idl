@@ -1,0 +1,497 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+#include "nsISelection.idl"
+#include "nsISelectionController.idl"
+#include "nsIFile.idl"
+#include "nsIAtom.idl"
+#include "nsIOutputStream.idl"
+#include "nsIDocumentStateListener.idl"
+%{C++
+
+//class nsIDOMDocument;
+//class nsIDOMElement;
+//class nsIDOMNode;
+class nsIPresShell;
+class nsIContent;
+class nsITransactionManager;
+class nsITransaction;
+class nsIEditorObserver;
+class nsITransaction;
+class nsIEditActionListener;
+typedef short EDirection;
+%}
+
+
+/*[ptr] native nsIDOMDocumentPtr(nsIDOMDocument);
+[ptr] native nsIDOMElementPtr(nsIDOMElement);
+[ptr] native nsIDOMNode(nsIDOMNode);*/
+[ptr] native nsIPresShellPtr(nsIPresShell);
+[ptr] native nsIContentPtr(nsIContent);
+[ptr] native nsITransactionManagerPtr(nsITransactionManager);
+[ptr] native nsITransactionPtr(nsITransaction);
+/*
+[ref] native nsReadStringRef(nsAReadableString);
+[ptr] native nsReadStringPtr(nsAReadableString);*/
+[ptr] native nsIEditorObserverPtr(nsIEditorObserver);
+[ptr] native nsIEditActionListenerPtr(nsIEditActionListener);
+
+
+[scriptable, uuid(06b979ce-1dd2-11b2-b6c7-a8bc47aa06b6)]
+
+interface nsIEditor  : nsISupports
+{
+%{C++
+  typedef short EDirection;
+%}
+  const short eNone = 0;
+  const short eNext = 1;
+  const short ePrevious = 2;
+  const short eNextWord = 3;
+  const short ePreviousWord = 4;
+  const short eToBeginningOfLine = 5;
+  const short eToEndOfLine = 6;
+
+  /**
+   * Init is to tell the implementation of nsIEditor to begin its services
+   * @param aDoc            The dom document interface being observed
+   * @param aPresShell      TEMP: The presentation shell displaying the document
+   *                        once events can tell us from what pres shell they originated, 
+   *                        this will no longer be necessary and the editor will no longer be
+   *                        linked to a single pres shell.
+   * @param aRoot           This is the root of the editable section of this document. if it is null then we get root from document body.
+   * @param aSelCon         this should be used to get the selection location
+   * @param aFlags          A bitmask of flags for specifying the behavior of the editor.
+   */
+  [noscript] void Init(in nsIDOMDocument doc, in nsIPresShellPtr shell, in nsIContentPtr aRoot, in nsISelectionController aSelCon, in unsigned long aFlags);
+
+  /**
+   * PostCreate should be called after Init, and is the time that the editor tells
+   * its documentStateObservers that the document has been created.
+   */
+  void PostCreate();
+
+  /**
+   * PreDestroy is called before the editor goes away, and gives the editor a chance
+   * to tell its documentStateObservers that the document is going away.
+   */
+  void PreDestroy();
+
+  /** return the edit flags for this editor */
+  void GetFlags(out unsigned long flags);
+
+  /** set the edit flags for this editor.  May be called at any time. */
+  void SetFlags(in unsigned long aFlags);
+
+  /**
+   * return the DOM Document this editor is associated with
+   *
+   * @param aDoc [OUT] the dom interface being observed, refcounted
+   */
+  void GetDocument(out nsIDOMDocument doc);
+
+  /** return the body element 
+   *  @param aElement return value for the root of the editable document
+  */
+  void GetRootElement(out nsIDOMElement element);
+
+  /**
+   * return the presentation shell this editor is associated with
+   *
+   * @param aPS [OUT] the pres shell, refcounted
+   */
+  //NS_IMETHOD GetPresShell(nsIPresShell **aPS);
+
+  /**
+   * return the selection controller for the current presentation
+   *
+   * @param aSelCon [OUT] the selection controller, refcounted
+   */
+  void GetSelectionController(out nsISelectionController selectioncontroller);
+
+
+  /** 
+   * return the DOM Selection for the presentation shell that has focus
+   * (or most recently had focus.)
+   * @param aSelection [OUT] the dom interface for the selection
+   */
+  void GetSelection(out nsISelection selection);
+
+
+  /* ------------ Selected content removal -------------- */
+
+  /** 
+   * DeleteSelection removes all nodes in the current selection.
+   * @param aDir  if eLTR, delete to the right (for example, the DEL key)
+   *              if eRTL, delete to the left (for example, the BACKSPACE key)
+   */
+  void DeleteSelection(in short action);
+
+
+  /* ------------ Document info and file methods -------------- */
+  
+  /** Returns true if the document has no *meaningful* content */
+  void GetDocumentIsEmpty(out boolean documentIsEmpty);
+  
+  /** Returns true if the document is modifed and needs saving */
+  void GetDocumentModified(out boolean outDocModified);
+
+  /** Returns the current 'Save' document character set */
+  void GetDocumentCharacterSet(out DOMString characterSet);
+
+  /** Sets the current 'Save' document character set */
+  void SetDocumentCharacterSet(in DOMString characterSet);
+
+  /** Save document to a file
+   *       Note: No UI is used
+   *  @param aFileSpec
+   *          The file to save to
+   *  @param aReplaceExisting
+   *          true if replacing an existing file, otherwise false.
+   *          If false and aFileSpec exists, SaveFile returns an error.
+   *  @param aSaveCopy       
+   *          true if we are saving off a copy of the document
+   *          without changing the disk file associated with the doc.
+   *          This would correspond to a 'Save Copy As' menu command
+   *          (currently not in our UI)
+   *  @param aFormat
+   *          Mime type to save (text/plain or text/html)
+   */
+  void SaveFile(in nsIFile fileSpec, in boolean replaceExisting, in boolean saveCopy, in DOMString format);
+
+  /* ------------ Transaction methods -------------- */
+
+  /** GetTransactionManagerDo() Get the transaction manager
+    *
+    * @return aTxnManager the transaction manager that the editor is using
+    */
+  [noscript]void GetTransactionManager(out nsITransactionManagerPtr txnManager);
+
+  /** Do() fires a transaction.  It is provided here so clients can create their own transactions.
+    * If a transaction manager is present, it is used.  
+    * Otherwise, the transaction is just executed directly.
+    *
+    * @param aTxn the transaction to execute
+    */
+  [noscript]void Do(in nsITransactionPtr txn);
+
+
+  /** turn the undo system on or off
+    * @param aEnable  if PR_TRUE, the undo system is turned on if it is available
+    *                 if PR_FALSE the undo system is turned off if it was previously on
+    * @return         if aEnable is PR_TRUE, returns NS_OK if the undo system could be initialized properly
+    *                 if aEnable is PR_FALSE, returns NS_OK.
+    */
+  void EnableUndo(in boolean enable);
+
+  /** Undo reverses the effects of the last Do operation, if Undo is enabled in the editor.
+    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
+    * If a transaction manager is present, it is told to undo and the result of
+    * that undo is returned.  
+    * Otherwise, the Undo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
+    *
+    */
+  void Undo(in unsigned long count);
+
+  /** returns state information about the undo system.
+    * @param aIsEnabled [OUT] PR_TRUE if undo is enabled
+    * @param aCanUndo   [OUT] PR_TRUE if at least one transaction is currently ready to be undone.
+    */
+  void CanUndo(out boolean isEnabled, out boolean canUndo);
+
+  /** Redo reverses the effects of the last Undo operation
+    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
+    * If a transaction manager is present, it is told to redo and the result of the previously undone
+    * transaction is reapplied to the document.
+    * If no transaction is available for Redo, or if the document has no transaction manager,
+    * the Redo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
+    *
+    */
+  void Redo(in unsigned long count);
+
+  /** returns state information about the redo system.
+    * @param aIsEnabled [OUT] PR_TRUE if redo is enabled
+    * @param aCanRedo   [OUT] PR_TRUE if at least one transaction is currently ready to be redone.
+    */
+  void CanRedo(out boolean isEnabled, out boolean canRedo);
+
+  /** BeginTransaction is a signal from the caller to the editor that the caller will execute multiple updates
+    * to the content tree that should be treated as a single logical operation,
+    * in the most efficient way possible.<br>
+    * All transactions executed between a call to BeginTransaction and EndTransaction will be undoable as
+    * an atomic action.<br>
+    * EndTransaction must be called after BeginTransaction.<br>
+    * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginUpdate.
+    */
+  void BeginTransaction();
+
+  /** EndTransaction is a signal to the editor that the caller is finished updating the content model.<br>
+    * BeginUpdate must be called before EndTransaction is called.<br>
+    * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginTransaction.
+    */
+  void EndTransaction();
+
+  void BeginPlaceHolderTransaction(in nsIAtom name);
+  void EndPlaceHolderTransaction();
+  void ShouldTxnSetSelection(out boolean result);
+
+  /* ------------ Clipboard methods -------------- */
+
+  /** cut the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+    */
+  void Cut();
+
+  /** Can we cut? True if the doc is modifiable, and we have a non-
+    * collapsed selection.
+    */
+  void CanCut(out boolean canCut);
+  
+  /** copy the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+    */
+  void Copy();
+  
+  /** Can we copy? True if we have a non-collapsed selection.
+    */
+  void CanCopy(out boolean aCanCopy);
+  
+  /** paste the text in the OS clipboard at the cursor position, replacing
+    * the selected text (if any)
+    */
+  void Paste(in long aSelectionType);
+
+  /** Can we paste? True if the doc is modifiable, and we have
+    * pasteable data in the clipboard.
+    */
+  void CanPaste(in long aSelectionType, out boolean aCanPaste);
+
+  /* ------------ Selection methods -------------- */
+
+  /** sets the document selection to the entire contents of the document */
+  void SelectAll();
+
+  /** sets the document selection to the beginning of the document */
+  void BeginningOfDocument();
+
+  /** sets the document selection to the end of the document */
+  void EndOfDocument();
+
+  /** Can we paste? True if the doc is modifiable, and we have
+     * pasteable data in the clipboard.
+     */
+   /* ------------ Drag/Drop methods -------------- */
+  
+   /** 
+    * CanDrag decides if a drag should be started
+    * (for example, based on the current selection and mousepoint).
+    */
+  void CanDrag(in nsIDOMEvent aEvent, out boolean aCanDrag);
+ 
+   /** 
+    * DoDrag transfers the relevant data (as appropriate)
+    * to a transferable so it can later be dropped.
+    */
+  void DoDrag(in nsIDOMEvent aEvent);
+ 
+   /** 
+    * InsertFromDrop looks for a dragsession and inserts the
+    * relevant data in response to a drop.
+    */
+  void InsertFromDrop(in nsIDOMEvent aEvent);
+
+  /* ------------ Node manipulation methods -------------- */
+
+  /**
+   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD
+   *   This does NOT consider CSS effect on display type
+   *
+   * @param aNode      the node to test
+   */
+  void NodeIsBlock(in nsIDOMNode node, out boolean isBlock);
+
+  /**
+   * SetAttribute() sets the attribute of aElement.
+   * No checking is done to see if aAttribute is a legal attribute of the node,
+   * or if aValue is a legal value of aAttribute.
+   *
+   * @param aElement    the content element to operate on
+   * @param aAttribute  the string representation of the attribute to set
+   * @param aValue      the value to set aAttribute to
+   */
+  void SetAttribute(in nsIDOMElement aElement, in DOMString attributestr, in DOMString attvalue);
+
+  /**
+   * GetAttributeValue() retrieves the attribute's value for aElement.
+   *
+   * @param aElement      the content element to operate on
+   * @param aAttribute    the string representation of the attribute to get
+   * @param aResultValue  the value of aAttribute.  only valid if aResultIsSet is PR_TRUE
+   * @param aResultIsSet  PR_TRUE if aAttribute is set on the current node, PR_FALSE if it is not.
+   */
+  void GetAttributeValue(in nsIDOMElement aElement, 
+                               in DOMString attributestr, 
+                               out DOMString resultValue, 
+                               out boolean resultIsSet);
+
+  /**
+   * RemoveAttribute() deletes aAttribute from the attribute list of aElement.
+   * If aAttribute is not an attribute of aElement, nothing is done.
+   *
+   * @param aElement      the content element to operate on
+   * @param aAttribute    the string representation of the attribute to get
+   */
+  void RemoveAttribute(in nsIDOMElement aElement, 
+                             in DOMString aAttribute);
+
+  /**
+   * CloneAttributes() is similar to nsIDOMNode::cloneNode(),
+   *   it assures the attribute nodes of the destination are identical with the source node
+   *   by copying all existing attributes from the source and deleting those not in the source.
+   *   This is used when the destination node (element) already exists
+   *
+   * The supplied nodes MUST BE ELEMENTS (most callers are working with nodes)
+   * @param aDestNode     the destination element to operate on
+   * @param aSourceNode   the source element to copy attributes from
+   */
+  void CloneAttributes(in nsIDOMNode destNode, in nsIDOMNode sourceNode);
+
+  /** 
+   * CreateNode instantiates a new element of type aTag and inserts it into aParent at aPosition.
+   * @param aTag      The type of object to create
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   * @param aNewNode  [OUT] The node created.  Caller must release aNewNode.
+   */
+  void CreateNode(in DOMString tag,
+                        in nsIDOMNode parent,
+                        in long         position,
+                        out nsIDOMNode newNode);
+
+  /** 
+   * InsertNode inserts aNode into aParent at aPosition.
+   * No checking is done to verify the legality of the insertion.  That is the 
+   * responsibility of the caller.
+   * @param aNode     The DOM Node to insert.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   */
+  void InsertNode(in nsIDOMNode vode,
+                        in nsIDOMNode parent,
+                        in long      aPosition);
+
+
+  /** 
+   * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
+   * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
+   * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
+   * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
+   */
+  void SplitNode(in nsIDOMNode existingRightNode,
+                       in long      offset,
+                       out nsIDOMNode newLeftNode);
+
+  /** 
+   * JoinNodes() takes 2 nodes and merge their content|children.
+   * @param aLeftNode     The left node.  It will be deleted.
+   * @param aRightNode    The right node. It will remain after the join.
+   * @param aParent       The parent of aExistingRightNode
+   *
+   *                      There is no requirement that the two nodes be of the same type.
+   *                      However, a text node can be merged only with another text node.
+   */
+  void JoinNodes(in nsIDOMNode leftNode,
+                       in nsIDOMNode rightNode,
+                       in nsIDOMNode parent);
+
+
+  /** 
+   * DeleteNode removes aChild from aParent.
+   * @param aChild    The node to delete
+   */
+  void DeleteNode(in nsIDOMNode child);
+
+  /** 
+   * InsertFormattingForNode() sets a special dirty attribute on the node.
+   * Usually this will be called immediately after creating a new node.
+   * @param aNode      The node for which to insert formatting.
+   */
+  void MarkNodeDirty(in nsIDOMNode node);
+
+  /* ------------ Output methods -------------- */
+
+  /**
+   * Output methods:
+   * aFormatType is a mime type, like text/plain.
+   */
+  void OutputToString(out DOMString outputString,
+                            [const]in DOMString formatType,
+                            in unsigned long flags);
+  void OutputToStream(in nsIOutputStream outputStream,
+                            [const] in DOMString formatType,
+                            [const] in DOMString charsetOverride,
+                            in unsigned long flags);
+
+
+
+  /* ------------ Various listeners methods -------------- */
+
+  /** add an EditorObserver to the editors list of observers. */
+  [noscript]void AddEditorObserver(in nsIEditorObserverPtr observer);
+
+  /** Remove an EditorObserver from the editor's list of observers. */
+  [noscript]void RemoveEditorObserver(in nsIEditorObserverPtr observer);
+
+  /** add an EditActionListener to the editors list of listeners. */
+  [noscript]void AddEditActionListener(in nsIEditActionListenerPtr listener);
+
+  /** Remove an EditActionListener from the editor's list of listeners. */
+  [noscript]void RemoveEditActionListener(in nsIEditActionListenerPtr listener);
+
+  /** Add a DocumentStateListener to the editors list of doc state listeners. */
+  [noscript]void AddDocumentStateListener(in nsIDocumentStateListener listener);
+
+  /** Remove a DocumentStateListener to the editors list of doc state listeners. */
+  [noscript]void RemoveDocumentStateListener(in nsIDocumentStateListener listener);
+
+
+  /* ------------ Debug methods -------------- */
+
+  /**
+   * And a debug method -- show us what the tree looks like right now
+   */
+  void DumpContentTree();
+
+  /** Dumps a text representation of the content tree to standard out */
+  void DebugDumpContent() ;
+
+  /* Run unit tests. Noop in optimized builds */
+  void DebugUnitTests(out long outNumTests, out long  outNumTestsFailed);
+
+};
