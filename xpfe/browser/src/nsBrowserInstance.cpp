@@ -243,6 +243,31 @@ nsBrowserAppCore::Init()
 }
 
 NS_IMETHODIMP    
+nsBrowserAppCore::SetTextZoom(float aTextZoom)
+{
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (docShell) 
+  {
+    nsCOMPtr<nsIContentViewer> childCV;
+    NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    if (childCV) 
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+      if (markupCV) {
+        NS_ENSURE_SUCCESS(markupCV->SetTextZoom(aTextZoom), NS_ERROR_FAILURE);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsBrowserAppCore::SetDocumentCharset(const PRUnichar *aCharset)
 {
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );

@@ -51,6 +51,14 @@ Contributor(s): ______________________________________. -->
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
 
+	<!-- View Menu -->
+	<key id="key_enlargeTextSize" xulkey="true"
+	     key="&enlargeTextSizeCmd.commandkey;"
+	     observes="Browser:EnlargeTextSize"/>
+	<key id="key_reduceTextSize" xulkey="true"
+	     key="&reduceTextSizeCmd.commandkey;"
+	     observes="Browser:ReduceTextSize"/>
+
 	<key id="goForwardKb"         xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoForward" />
 	<key id="goBackwardKb"        xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoBackwards" />
     <key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
@@ -83,6 +91,12 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="cmd_selectAll"/>
 	<broadcaster id="cmd_preferences"/>
 	
+	<!-- View Menu -->
+	<broadcaster id="Browser:EnlargeTextSize"
+	             oncommand="BrowserChangeTextZoom(1);"/>
+	<broadcaster id="Browser:ReduceTextSize"
+	             oncommand="BrowserChangeTextZoom(-1);"/>
+
 	<broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
 	<broadcaster id="cmd_viewpersonaltoolbar"  oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
 	<broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
@@ -181,10 +195,12 @@ Contributor(s): ______________________________________. -->
 		  </menu>
    
       <menuseparator />
-      <menuitem value="&enlargeTextSizeCmd.label;" disabled="true"
-        oncommand="BrowserReload();"/>
-      <menuitem value="&reduceTextSizeCmd.label;" disabled="true"
-        oncommand="BrowserReload();"/>
+      <menuitem value="&enlargeTextSizeCmd.label;"
+        key="key_enlargeTextSize"
+        observes="Browser:EnlargeTextSize"/>
+      <menuitem value="&reduceTextSizeCmd.label;"
+        key="key_reduceTextSize"
+        observes="Browser:ReduceTextSize"/>
       <menuseparator />
       <menu value="&useStyleSheetMenu.label;" disabled="true" oncommand="BrowserReload();">
         <menupopup>

@@ -53,6 +53,7 @@ interface nsIBrowserInstance : nsISupports {
     void init();
     void setContentWindow( in nsIDOMWindow aWindow );
     void setWebShellWindow( in nsIDOMWindow aWindow );
+    void setTextZoom( in float aTextZoom );
     void SetDocumentCharset(in wstring charset);
     
     // File.
