@@ -55,7 +55,7 @@ protected:
 
   // helper to get the data off the clipboard. Caller responsible for deleting
   // |outData| with delete[].
-  nsresult GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* outDataSize ) ;
+  nsresult GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt32* outDataSize ) ;
   
 }; // nsClipboard
 

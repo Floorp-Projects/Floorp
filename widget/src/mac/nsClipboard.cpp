@@ -189,10 +189,15 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
       // find MacOS flavor (don't add if not present)
       ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr, PR_FALSE);
     
-      char* clipboardData = nsnull;
-      long dataSize = 0L;
+      void* clipboardData = nsnull;
+      PRInt32 dataSize = 0L;
       nsresult loadResult = GetDataOffClipboard ( macOSFlavor, &clipboardData, &dataSize );
       if ( NS_SUCCEEDED(loadResult) && clipboardData ) {
+       
+        // the DOM only wants LF, so convert from MacOS line endings to DOM line
+        // endings.
+        nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &clipboardData, &dataSize );
+        
         // put it into the transferable
         nsCOMPtr<nsISupports> genericDataWrapper;
         nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );
@@ -217,19 +222,19 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
 //
 // 
 nsresult
-nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* outDataSize )
+nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt32* outDataSize )
 {
   if ( !outData || !inMacFlavor )
     return NS_ERROR_FAILURE;
 
   // check if it is on the clipboard
-  long offsetUnused = 0;
-  OSErr clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
+  PRInt32 offsetUnused = 0;
+  OSErr clipResult = ::GetScrap(NULL, inMacFlavor, NS_REINTERPRET_CAST(long*, &offsetUnused));
   if ( clipResult > 0 ) {
     Handle dataHand = ::NewHandle(0);
     if ( !dataHand )
       return NS_ERROR_OUT_OF_MEMORY;
-    long dataSize = ::GetScrap ( dataHand, inMacFlavor, &offsetUnused );
+    PRInt32 dataSize = ::GetScrap ( dataHand, inMacFlavor, NS_REINTERPRET_CAST(long*, &offsetUnused) );
     if ( dataSize > 0 ) {
       char* dataBuff = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(dataSize));
       if ( !dataBuff )
