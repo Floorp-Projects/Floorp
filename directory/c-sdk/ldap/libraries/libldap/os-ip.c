@@ -335,8 +335,8 @@ nsldapi_os_connect_with_to(LBER_SOCKET sockfd, struct sockaddr *saptr,
 			tval.tv_usec = 1000 * ( msec % 1000 );
 		} else {
 			tval.tv_sec = 0;
+			tval.tv_usec = 0;
 		}
-		tval.tv_usec = 0;
 #endif /* NSLDAPI_HAVE_POLL */
 	}
 
