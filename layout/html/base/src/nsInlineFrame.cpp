@@ -1284,6 +1284,14 @@ nsInlineFrame::DrainOverflow()
   nsInlineFrame* prevInFlow = (nsInlineFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
     if (prevInFlow->mOverflowFrames.NotEmpty()) {
+      // When pushing and pulling frames we need to check for whether any
+      // views need to be reparented.
+      // XXX Doing it this way means an extra pass over the frames. We could
+      // change InsertFrames() to do this, but that's a general purpose
+      // function and it doesn't seem like this functionality belongs there...
+      for (nsIFrame* f = prevInFlow->mOverflowFrames.FirstChild(); f; f->GetNextSibling(&f)) {
+        nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
+      }
       mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
       changedFirstFrame = PR_TRUE;
     }
