@@ -55,6 +55,7 @@ private:
                             PRBool *profileDirSet,
                             nsCString & profileURLStr);
     nsresult LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInterract);
+	nsresult ConfirmAutoMigration(PRBool *confirmed);
 	nsresult CopyDefaultFile(nsIFile *profDefaultsDir,
 	                         nsIFile *newProfDir,
 								const char *fileName);
