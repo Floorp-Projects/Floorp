@@ -1488,6 +1488,9 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   if (0 != (mState & TEXT_SKIP_LEADING_WS)) {
     PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
+#ifdef IBMBIDI
+    wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
     aTX.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
     // we trip this assertion in bug 31053, but I think it's unnecessary
     //NS_ASSERTION(isWhitespace, "mState and content are out of sync");
@@ -1525,6 +1528,9 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
 
+#ifdef IBMBIDI
+    wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
     // Get the next word
     bp = aTX.GetNextWord(inWord, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
     if (nsnull == bp) {
@@ -2245,7 +2251,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
                                      charType, level & 1, isBidiSystem);
       }
     }
-    if (0 != textLength) { // textLength might change due to the bidi formattimg
+    if (0 < textLength) { // textLength might change due to the bidi formattimg
 #endif // IBMBIDI
     if (!displaySelection || !isSelected ) //draw text normally
     { 
@@ -2313,11 +2319,16 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
           nscolor    currentFGColor = iter.CurrentForeGroundColor();
           nscolor    currentBKColor;
 
-          if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
-          {
 #ifdef IBMBIDI
+          if (currentlength > 0
+            && NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
+          {
+
             if (isRightToLeftOnBidiPlatform)
               currentX -= newWidth;
+#else // not IBMBIDI
+          if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
+          {
 #endif
             if (iter.CurrentBackGroundColor(currentBKColor) && !isPaginated)
             {//DRAW RECT HERE!!!
@@ -2338,7 +2349,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
           }
 
 #ifdef IBMBIDI
-            if (!isRightToLeftOnBidiPlatform)
+          if (!isRightToLeftOnBidiPlatform)
 #endif
           currentX+=newWidth;//increment twips X start
 
@@ -3981,6 +3992,9 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         keepSearching = PR_TRUE;
         tx.Init(this, mContent, aPos->mStartOffset);
         aPos->mContentOffset = mContentOffset;//initialize
+#ifdef IBMBIDI
+        wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
+#endif // IBMBIDI
         if (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace,
                            PR_FALSE) &&
           (aPos->mStartOffset - contentLen >= mContentOffset) ){
@@ -3993,11 +4007,17 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               aPos->mEatingWS = PR_FALSE;//if no real word then
             }
             else{
+#ifdef IBMBIDI
+              wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
+#endif // IBMBIDI
               while (isWhitespace &&
                      tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen,
                                     &isWhitespace, PR_FALSE)){
                 aPos->mContentOffset -= contentLen;
                 aPos->mEatingWS = PR_TRUE;
+#ifdef IBMBIDI
+                wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
+#endif // IBMBIDI
               }
               aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
               keepSearching = aPos->mContentOffset <= mContentOffset;
@@ -4024,6 +4044,9 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         tx.Init(this, mContent, aPos->mStartOffset );
         aPos->mContentOffset = mContentOffset + mContentLength;//initialize
 
+#ifdef IBMBIDI
+        wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
         if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE) &&
           (aPos->mStartOffset + contentLen <= (mContentLength + mContentOffset))){
 
@@ -4034,7 +4057,11 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             if ( sWordSelectEatSpaceAfter ) {
               keepSearching = PR_TRUE;
               aPos->mEatingWS = PR_TRUE;
-              if (!isWhitespace){
+            if (!isWhitespace){
+#ifdef IBMBIDI
+              wordLen = (mState & NS_FRAME_IS_BIDI)
+                      ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
                 while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
                 {
                   if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
@@ -4043,12 +4070,20 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
                     aPos->mContentOffset += contentLen;
                   else
                     break;
+#ifdef IBMBIDI
+                wordLen = (mState & NS_FRAME_IS_BIDI)
+                        ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
                 }
                 keepSearching = PR_FALSE;
                 found = PR_TRUE;
               }
               else  //we just need to jump the space, done here
               {
+#ifdef IBMBIDI
+              wordLen = (mState & NS_FRAME_IS_BIDI)
+                      ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
                 while(tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
                 {
                   if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
@@ -4058,6 +4093,9 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
                     aPos->mContentOffset += contentLen;		
                   else
                     break;
+#ifdef IBMBIDI
+            wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
                 }
                 keepSearching = PR_FALSE;
                 found = PR_TRUE;
@@ -4422,6 +4460,9 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       char*       bp1;
       PRUnichar*  bp2;
     };
+#ifdef IBMBIDI
+    wordLen = start;
+#endif // IBMBIDI
     bp2 = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace,
                           &wasTransformed, textRun.mNumSegments == 0);
 #ifdef IBMBIDI
@@ -5453,6 +5494,9 @@ nsTextFrame::ComputeWordFragmentDimensions(nsIPresContext* aPresContext,
   PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;
   nsTextDimensions dimensions;
+#ifdef IBMBIDI
+  wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
   PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
   if (!bp) {
     //empty text node, but we need to continue lookahead measurement

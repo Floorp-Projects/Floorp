@@ -933,7 +933,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
 
     if (doReverse) {
       rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
-                    NSBIDI_REMOVE_BIDI_CONTROLS | NSBIDI_DO_MIRRORING, &newLen);
+                                     NSBIDI_DO_MIRRORING, &newLen);
       if (NS_SUCCEEDED(rv) ) {
         aTextLength = newLen;
         nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
@@ -946,9 +946,6 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
         nsCRT::memcpy(aText, buffer, aTextLength * sizeof(PRUnichar) );
       }
     }
-  }
-  else {
-    StripBidiControlCharacters(aText, aTextLength);
   }
   return rv;
 }
@@ -1045,29 +1042,6 @@ nsBidiPresUtils::CalculateCharType(PRInt32& aOffset,
     aPrevCharType = eCharType_RightToLeftArabic;
   }
   aOffset = offset;
-}
-
-void
-nsBidiPresUtils::StripBidiControlCharacters(PRUnichar* aText,
-                                            PRInt32&   aTextLength) const
-{
-  if ( (nsnull == aText) || (aTextLength < 1) ) {
-    return;
-  }
-
-  PRInt32 stripLen = 0;
-  PRBool isBidiControl;
-
-  for (PRInt32 i = 0; i < aTextLength; i++) {
-    mUnicodeUtils->IsBidiControl(aText[i], &isBidiControl);
-    if (isBidiControl) {
-      ++stripLen;
-    }
-    else {
-      aText[i - stripLen] = aText[i];
-    }
-  }
-  aTextLength -= stripLen;
 }
 
 nsresult nsBidiPresUtils::GetBidiEngine(nsIBidi** aBidiEngine)

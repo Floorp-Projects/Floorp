@@ -54,6 +54,21 @@ class nsIWordBreaker;
 #define CH_ZWNJ	8204	//<!ENTITY zwnj    CDATA "&#8204;" -- zero width non-joiner, U+200C NEW RFC 2070#define CH_SHY  173
 #define CH_SHY  173
 
+#ifdef IBMBIDI
+#define CH_ZWJ  8205  //<!ENTITY zwj     CDATA "&#8205;" -- zero width joiner, U+200D NEW RFC 2070 -->
+#define CH_LRM  8206  //<!ENTITY lrm     CDATA "&#8206;" -- left-to-right mark, U+200E NEW RFC 2070 -->
+#define CH_RLM  8207  //<!ENTITY rlm     CDATA "&#8207;" -- right-to-left mark, U+200F NEW RFC 2070 -->
+#define CH_LRE  8234  //<!CDATA "&#8234;" -- left-to-right embedding, U+202A -->
+#define CH_RLE  8235  //<!CDATA "&#8235;" -- right-to-left embedding, U+202B -->
+#define CH_PDF  8236  //<!CDATA "&#8236;" -- pop directional format, U+202C -->
+#define CH_LRO  8237  //<!CDATA "&#8237;" -- left-to-right override, U+202D -->
+#define CH_RLO  8238  //<!CDATA "&#8238;" -- right-to-left override, U+202E -->
+
+#define IS_BIDI_CONTROL(_ch) \
+  (((_ch) >= CH_ZWNJ && (_ch) <= CH_RLM) \
+  || ((_ch) >= CH_LRE && (_ch) <= CH_RLO))
+#endif // IBMBIDI
+
 #define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 128 // used to be 256
 
 // Indicates whether the transformed text should be left as ascii
