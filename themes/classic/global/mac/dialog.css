@@ -88,7 +88,7 @@ dialogheader {
   -moz-border-bottom-colors: #9999FF #777777;
   padding: 12px 5px 12px 25px;
   background-color: #CCCCFF;
-  color: 000000;
+  color: #000000;
 }
 
 .header-large > .dialogheader-title {
