@@ -1305,6 +1305,7 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
         }
     }
     PR_Free(valueArray);
+	fileSpec->closeStream();
     return PREF_NOERROR;
 }
 
