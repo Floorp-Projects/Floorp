@@ -54,3 +54,31 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
+JAVA_CLS= \
+	org.mozilla.dom.DOMAccessor \
+	org.mozilla.dom.AttrImpl \
+	org.mozilla.dom.CharacterDataImpl \
+	org.mozilla.dom.DocumentImpl \
+	org.mozilla.dom.DocumentTypeImpl \
+	org.mozilla.dom.DOMImplementationImpl \
+	org.mozilla.dom.ElementImpl \
+	org.mozilla.dom.EntityImpl \
+	org.mozilla.dom.NamedNodeMapImpl \
+	org.mozilla.dom.NodeImpl \
+	org.mozilla.dom.NodeListImpl \
+	org.mozilla.dom.NotationImpl \
+	org.mozilla.dom.ProcessingInstructionImpl \
+	org.mozilla.dom.TextImpl \
+	org.mozilla.dom.events.EventImpl \
+	org.mozilla.dom.events.MouseEventImpl \
+	org.mozilla.dom.events.UIEventImpl \
+ $(NULL)
+
+JAVAH_PROG=$(JDKHOME)/bin/javah
+JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
+
+export::
+	$(JAVAH_PROG) $(JAVAH_FLAGS) $(JAVA_CLS)
+
+clobber::
+	rm -f org_*.h

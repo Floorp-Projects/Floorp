@@ -71,6 +71,27 @@ CPP_OBJS= \
 	.\$(OBJDIR)\org_mozilla_dom_events_MouseEventImpl.obj \
 $(NULL)
 
+JAVA_CLS= \
+	org.mozilla.dom.DOMAccessor \
+	org.mozilla.dom.AttrImpl \
+	org.mozilla.dom.CharacterDataImpl \
+	org.mozilla.dom.DocumentImpl \
+	org.mozilla.dom.DocumentTypeImpl \
+	org.mozilla.dom.DOMImplementationImpl \
+	org.mozilla.dom.ElementImpl \
+	org.mozilla.dom.EntityImpl \
+	org.mozilla.dom.NamedNodeMapImpl \
+	org.mozilla.dom.NodeImpl \
+	org.mozilla.dom.NodeListImpl \
+	org.mozilla.dom.NotationImpl \
+	org.mozilla.dom.ProcessingInstructionImpl \
+	org.mozilla.dom.TextImpl \
+	org.mozilla.dom.events.EventImpl \
+	org.mozilla.dom.events.MouseEventImpl \
+	org.mozilla.dom.events.UIEventImpl \
+ $(NULL)
+
+
 LINCS=
 
 MAKE_OBJ_TYPE = DLL
@@ -91,6 +112,12 @@ LLIBS= \
 include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
 
+JAVAH_PROG=$(JDKHOME)\bin\javah
+JAVAH_FLAGS=-jni -classpath $(CLASSPATH);$(JAVA_DESTPATH)
+
+export::
+	$(JAVAH_PROG) $(JAVAH_FLAGS) $(JAVA_CLS)
+
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
@@ -98,3 +125,4 @@ install:: $(DLL)
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f org_*.h
