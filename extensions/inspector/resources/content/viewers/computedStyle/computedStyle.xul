@@ -19,9 +19,11 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
   
   <outliner id="olStyles" flex="1"  onselect="viewer.onItemSelected()">
-    <outlinercol id="olcStyleName" label="Style" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="olcStyleValue" label="Value" flex="1"/>
+    <outlinercols>
+      <outlinercol id="olcStyleName" label="Style" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="olcStyleValue" label="Value" flex="1"/>
+    </outlinercols>
     <outlinerbody id="olbStyles" flex="1"/>
   </outliner>
 </page>

@@ -127,23 +127,25 @@
   </stack>
 
   <outliner flex="1" flags="dont-test-empty" id="outliner-proper">
-    <outlinercol id="NameColumn"
-                 class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
-                 flex="1"
-                 sort="rdf:http://home.netscape.com/NC-rdf#Name"
-                 sortActive="true"
-                 label="Name"
-                 persist="width hidden sortActive sortDirection"
-                 primary="true" />
+    <outlinercols>
+      <outlinercol id="NameColumn"
+                   class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+                   flex="1"
+                   sort="rdf:http://home.netscape.com/NC-rdf#Name"
+                   sortActive="true"
+                   label="Name"
+                   persist="width hidden sortActive sortDirection"
+                   primary="true" />
 
-    <splitter class="tree-splitter"/>
+      <splitter class="tree-splitter"/>
 
-    <outlinercol id="URLColumn"
-                 class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
-                 flex="1"
-                 sort="rdf:http://home.netscape.com/NC-rdf#URL"
-                 label="Location"
-                 persist="width hidden sortActive sortDirection" />
+      <outlinercol id="URLColumn"
+                   class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+                   flex="1"
+                   sort="rdf:http://home.netscape.com/NC-rdf#URL"
+                   label="Location"
+                   persist="width hidden sortActive sortDirection" />
+    </outlinercols>
 
     <outlinerbody id="tree" datasources="rdf:bookmarks rdf:internetsearch rdf:files" flex="1"
                   onclick="getItemRect(event);" ref="NC:BookmarksRoot">

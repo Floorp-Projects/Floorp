@@ -74,9 +74,11 @@
 <spacer flex="1" /></hbox>
 
 <outliner id="out" flex="1">
-  <outlinercol id="name" label="Name" flex="1"/>
-  <outlinercol id="purp" label="Purpose" flex="2"/>
-  <outlinercol id="comm" label="Comment" flex="1"/>
+  <outlinercols>
+    <outlinercol id="name" label="Name" flex="1"/>
+    <outlinercol id="purp" label="Purpose" flex="2"/>
+    <outlinercol id="comm" label="Comment" flex="1"/>
+  </outlinercols>
   <outlinerbody flex="1" onselect="sel_change()"/>
 </outliner>
 

@@ -34,10 +34,12 @@
   <spacer style="height: 16px"/>
 
   <outliner id="out" flex="1">
-    <outlinercol id="Col1" label="Col1" flex="1"/>
-    <outlinercol id="Col2" label="Col2" flex="1"/>
-  <outlinercol id="Col3" label="Col3" flex="1"/>
-    <outlinercol id="Col4" label="Col4" flex="1"/>
+    <outlinercols>
+      <outlinercol id="Col1" label="Col1" flex="1"/>
+      <outlinercol id="Col2" label="Col2" flex="1"/>
+      <outlinercol id="Col3" label="Col3" flex="1"/>
+      <outlinercol id="Col4" label="Col4" flex="1"/>
+    </outlinercols>
     <outlinerbody flex="1" onselect="dump('selection changed!\n')"/>
   </outliner>
 

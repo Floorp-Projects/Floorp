@@ -60,7 +60,7 @@ toolbox, menubar, toolbar, spinbuttons {
   -moz-user-focus: ignore;
 }
 
-outlinercol, outlinerrows,outlinerbody,
+outlinercol, outlinerrows, outlinerbody,
 radio {
   -moz-user-focus: none;
 }
@@ -431,6 +431,10 @@ outlinercol.outliner-columnpicker {
 outlinercol[hidden="true"] {
   visibility: collapse;
   display: -moz-box;
+}
+
+outlinercols {
+ -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercols");
 }
 
 /********** deck & stack *********/

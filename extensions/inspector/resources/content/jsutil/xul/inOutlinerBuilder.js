@@ -550,13 +550,13 @@ inOutlinerBuilder.prototype =
 
   buildColumns: function()
   {
-    var cols = this.mColumns;
+    var cols = document.createElementNS(kXULNSURI, "outlinercols");
     var col, val, split;
-    for (var i = 0; i < cols.length; i++) {
+    for (var i = 0; i < this.mColumns.length; i++) {
       col = document.createElementNS(kXULNSURI, "outlinercol");
-      col.setAttribute("id", "outlinercol-"+cols[i].name);
+      col.setAttribute("id", "outlinercol-"+this.mColumns[i].name);
       col.setAttribute("persist", "width");
-      col.setAttribute("label", cols[i].title);
+      col.setAttribute("label", this.mColumns[i].title);
 
       // mark first node as primary, if necessary
       if (i == 0 && this.mIsContainer)
@@ -569,14 +569,15 @@ inOutlinerBuilder.prototype =
       if (val)
         col.setAttribute("flex", val);
 
-      this.mOutliner.appendChild(col);
+      cols.appendChild(col);
 
-      if (this.mSplitters && i < cols.length-1) {
+      if (this.mSplitters && i < this.mColumns.length-1) {
         split = document.createElementNS(kXULNSURI, "splitter");
         split.setAttribute("class", "tree-splitter");
-        this.mOutliner.appendChild(split);
+        cols.appendChild(split);
       }
     }
+    this.mOutliner.appendChild(cols);
   },
 
   buildTemplate: function()

@@ -1194,28 +1194,32 @@ nsOutlinerContentView::GetColIndex(const PRUnichar* aColID, PRInt32* aResult)
     nsCOMPtr<nsIContent> parent;
     mRoot->GetParent(*getter_AddRefs(parent));
     if (parent) {
-      PRInt32 childCount;
-      parent->ChildCount(childCount);
-      PRInt32 j = 0;
-      for (PRInt32 i = 0; i < childCount; i++) {
-        nsCOMPtr<nsIContent> child;
-        parent->ChildAt(i, *getter_AddRefs(child));
-        nsCOMPtr<nsIAtom> tag;
-        child->GetTag(*getter_AddRefs(tag));
-        if (tag == nsXULAtoms::outlinercol) {
-          nsAutoString id;
-          child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
-          if (id.Equals(aColID)) {
-            // Found it, set "colIndex" attribute to speed up next call.
-            nsCOMPtr<nsIAtom> colIndexAtom;
-            colIndexAtom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("colIndex")));
-            nsAutoString colIndexValue;
-            colIndexValue.AppendInt(j);
-            child->SetAttr(kNameSpaceID_None, colIndexAtom, colIndexValue, PR_FALSE);
-            *aResult = j;
-            break;
+      nsCOMPtr<nsIContent> cols;
+      GetImmediateChild(parent, nsXULAtoms::outlinercols, getter_AddRefs(cols));
+      if (cols) {
+        PRInt32 childCount;
+        cols->ChildCount(childCount);
+        PRInt32 index = 0;
+        for (PRInt32 i = 0; i < childCount; i++) {
+          nsCOMPtr<nsIContent> child;
+          cols->ChildAt(i, *getter_AddRefs(child));
+          nsCOMPtr<nsIAtom> tag;
+          child->GetTag(*getter_AddRefs(tag));
+          if (tag == nsXULAtoms::outlinercol) {
+            nsAutoString id;
+            child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, id);
+            if (id.Equals(aColID)) {
+              // Found it, set "colIndex" attribute to speed up next call.
+              nsCOMPtr<nsIAtom> colIndexAtom;
+              colIndexAtom = dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("colIndex")));
+              nsAutoString colIndexValue;
+              colIndexValue.AppendInt(index);
+              child->SetAttr(kNameSpaceID_None, colIndexAtom, colIndexValue, PR_FALSE);
+              *aResult = index;
+              break;
+            }
+            index++;
           }
-          j++;
         }
       }
     }

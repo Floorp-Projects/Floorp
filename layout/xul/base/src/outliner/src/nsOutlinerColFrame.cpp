@@ -206,15 +206,19 @@ nsOutlinerColFrame::EnsureOutliner()
     // Get our parent node.
     nsCOMPtr<nsIContent> parent;
     mContent->GetParent(*getter_AddRefs(parent));
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(*getter_AddRefs(doc));
-    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
-    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(parent));
+    if (parent) {
+      nsCOMPtr<nsIContent> grandParent;
+      parent->GetParent(*getter_AddRefs(grandParent));
+      nsCOMPtr<nsIDocument> doc;
+      mContent->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(grandParent));
 
-    nsCOMPtr<nsIBoxObject> boxObject;
-    nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
+      nsCOMPtr<nsIBoxObject> boxObject;
+      nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
 
-    mOutliner = do_QueryInterface(boxObject);
+      mOutliner = do_QueryInterface(boxObject);
+    }
   }
 }
 

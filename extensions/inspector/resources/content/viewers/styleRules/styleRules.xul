@@ -45,15 +45,15 @@
 
   <outliner id="olStyleRules" flex="1" persist="height"
             onselect="viewer.onRuleSelect()">
-  
-    <outlinercol id="olcRule" label="Rule" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="olcFileURL" label="File" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="olcWeight" label="Weight"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="olcLine" label="Line"/>
-    
+    <outlinercols>
+      <outlinercol id="olcRule" label="Rule" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="olcFileURL" label="File" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="olcWeight" label="Weight"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="olcLine" label="Line"/>
+    </outlinercols>
     <outlinerbody id="olbStyleRules" flex="1"/>
   </outliner>
   
@@ -62,13 +62,13 @@
   </splitter>
 
   <outliner id="olStyleProps" flex="1"  persist="height" context="ppStylePropsContext">
-  
-    <outlinercol id="olcPropPriority" label="Priority" class="outlinercol-image"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="olcPropName" label="Style" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <outlinercol id="olcPropValue" label="Value" flex="1"/>
-    
+    <outlinercols>
+      <outlinercol id="olcPropPriority" label="Priority" class="outlinercol-image"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="olcPropName" label="Style" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="olcPropValue" label="Value" flex="1"/>
+    </outlinercols>
     <outlinerbody id="olbStyleProps" flex="1"/>
   </outliner>
 
