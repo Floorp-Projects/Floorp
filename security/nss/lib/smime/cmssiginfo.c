@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.3 2000/06/14 23:17:52 chrisk%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.4 2000/06/20 16:28:57 chrisk%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -48,6 +48,8 @@
 #include "prtime.h"
 #include "secerr.h"
 #include "cryptohi.h"
+
+#include "smime.h"
 
 /* =============================================================================
  * SIGNERINFO
@@ -674,11 +676,55 @@ NSS_CMSSignerInfo_AddSMIMECaps(NSSCMSSignerInfo *signerinfo)
 	goto loser;
 
     /* create new signing time attribute */
-    if (NSS_SMIMEUtil_GetSMIMECapabilities(poolp, smimecaps,
+    if (NSS_SMIMEUtil_CreateSMIMECapabilities(poolp, smimecaps,
 			    PK11_FortezzaHasKEA(signerinfo->cert)) != SECSuccess)
 	goto loser;
 
     if ((attr = NSS_CMSAttribute_Create(poolp, SEC_OID_PKCS9_SMIME_CAPABILITIES, smimecaps, PR_TRUE)) == NULL)
+	goto loser;
+
+    if (NSS_CMSSignerInfo_AddAuthAttr(signerinfo, attr) != SECSuccess)
+	goto loser;
+
+    PORT_ArenaUnmark (poolp, mark);
+    return SECSuccess;
+
+loser:
+    PORT_ArenaRelease (poolp, mark);
+    return SECFailure;
+}
+
+/* 
+ * NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs - add a SMIMEEncryptionKeyPreferences attribute to the
+ * authenticated (i.e. signed) attributes of "signerinfo". 
+ *
+ * This is expected to be included in outgoing signed messages for email (S/MIME).
+ */
+SECStatus
+NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs(NSSCMSSignerInfo *signerinfo, CERTCertificate *cert, CERTCertDBHandle *certdb)
+{
+    NSSCMSAttribute *attr;
+    SECItem *smimeekp = NULL;
+    void *mark;
+    PLArenaPool *poolp;
+
+    /* verify this cert for encryption */
+    if (CERT_VerifyCert(certdb, cert, PR_TRUE, certUsageEmailRecipient, PR_Now(), signerinfo->cmsg->pwfn_arg, NULL) != SECSuccess) {
+	return SECFailure;
+    }
+
+    poolp = signerinfo->cmsg->poolp;
+    mark = PORT_ArenaMark(poolp);
+
+    smimeekp = SECITEM_AllocItem(poolp, NULL, 0);
+    if (smimeekp == NULL)
+	goto loser;
+
+    /* create new signing time attribute */
+    if (NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs(poolp, smimeekp, cert) != SECSuccess)
+	goto loser;
+
+    if ((attr = NSS_CMSAttribute_Create(poolp, SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE, smimeekp, PR_TRUE)) == NULL)
 	goto loser;
 
     if (NSS_CMSSignerInfo_AddAuthAttr(signerinfo, attr) != SECSuccess)
@@ -699,7 +745,9 @@ loser:
  * 2. create new signerinfo with correct version, sid, digestAlg
  * 3. add message-digest authAttr, but NO content-type
  * 4. sign the authAttrs
- * 5. add the whole thing to original signerInfo's unAuthAttrs
+ * 5. DER-encode the new signerInfo
+ * 6. add the whole thing to original signerInfo's unAuthAttrs
+ *    as a SEC_OID_PKCS9_COUNTER_SIGNATURE attribute
  *
  * XXXX give back the new signerinfo?
  */
@@ -718,22 +766,51 @@ NSS_CMSSignerInfo_AddCounterSignature(NSSCMSSignerInfo *signerinfo,
 SECStatus
 NSS_SMIMESignerInfo_SaveSMIMEProfile(NSSCMSSignerInfo *signerinfo)
 {
-    CERTCertificate *cert;
+    CERTCertificate *cert = NULL;
     SECItem *profile = NULL;
     NSSCMSAttribute *attr;
-    SECItem *utc_stime;
+    SECItem *utc_stime = NULL;
+    SECItem *ekp;
+    CERTCertDBHandle *certdb;
     int save_error;
     SECStatus rv;
 
-    /* XXX sanity check - see if verification status is ok */
-    /* XXX 0 = unverified */
+    certdb = CERT_GetDefaultCertDB();
 
-    /* XXX find preferred encyption cert */
-
-    /* find the cert the signerinfo is signed with */
-    cert = NSS_CMSSignerInfo_GetSigningCertificate(signerinfo, NULL);
-    if (cert == NULL || cert->emailAddr == NULL)
+    /* sanity check - see if verification status is ok (unverified does not count...) */
+    if (signerinfo->verificationStatus != NSSCMSVS_GoodSignature)
 	return SECFailure;
+
+    /* find preferred encryption cert */
+    if (!NSS_CMSArray_IsEmpty((void **)signerinfo->authAttr) &&
+	(attr = NSS_CMSAttributeArray_FindAttrByOidTag(signerinfo->authAttr,
+			       SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE, PR_TRUE)) != NULL)
+    { /* we have a SMIME_ENCRYPTION_KEY_PREFERENCE attribute! */
+	ekp = NSS_CMSAttribute_GetValue(attr);
+	if (ekp == NULL)
+	    return SECFailure;
+
+	/* we assume that all certs coming with the message have been imported to the */
+	/* temporary database */
+	cert = NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference(certdb, ekp);
+	if (cert == NULL)
+	    return SECFailure;
+    }
+
+    if (cert == NULL) {
+	/* no preferred cert found?
+	 * find the cert the signerinfo is signed with instead */
+	cert = NSS_CMSSignerInfo_GetSigningCertificate(signerinfo, certdb);
+	if (cert == NULL || cert->emailAddr == NULL)
+	    return SECFailure;
+    }
+
+    /* verify this cert for encryption (has been verified for signing so far) */
+    if (CERT_VerifyCert(certdb, cert, PR_TRUE, certUsageEmailRecipient, PR_Now(), signerinfo->cmsg->pwfn_arg, NULL) != SECSuccess) {
+	return SECFailure;
+    }
+
+    /* XXX store encryption cert permanently? */
 
     /*
      * Remember the current error set because we do not care about

@@ -34,7 +34,7 @@
 /*
  * CMS attributes.
  *
- * $Id: cmsattr.c,v 1.2 2000/06/13 21:56:27 chrisk%netscape.com Exp $
+ * $Id: cmsattr.c,v 1.3 2000/06/20 16:28:57 chrisk%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -234,6 +234,9 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
 	theTemplate = SEC_AnyTemplate;
     } else {
 	switch (oiddata->offset) {
+	SEC_OID_PKCS9_SMIME_CAPABILITIES:
+	SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE:
+	    /* these guys need to stay DER-encoded */
 	default:
 	    /* same goes for OIDs that are not handled here */
 	    encoded = PR_TRUE;

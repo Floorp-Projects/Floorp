@@ -34,7 +34,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.3 2000/06/14 23:16:42 chrisk%netscape.com Exp $
+ * $Id: smimeutil.c,v 1.4 2000/06/20 16:28:57 chrisk%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -46,6 +46,7 @@
 #include "cert.h"
 #include "key.h"
 #include "secerr.h"
+#include "cms.h"
 
 /* various integer's ASN.1 encoding */
 static unsigned char asn1_int40[] = { SEC_ASN1_INTEGER, 0x01, 0x28 };
@@ -68,7 +69,7 @@ typedef struct {
     long cipher;		/* optimization */
 } NSSSMIMECapability;
 
-static const SEC_ASN1Template smime_capability_template[] = {
+static const SEC_ASN1Template NSSSMIMECapabilityTemplate[] = {
     { SEC_ASN1_SEQUENCE,
 	  0, NULL, sizeof(NSSSMIMECapability) },
     { SEC_ASN1_OBJECT_ID,
@@ -78,8 +79,48 @@ static const SEC_ASN1Template smime_capability_template[] = {
     { 0, }
 };
 
-static const SEC_ASN1Template smime_capabilities_template[] = {
-    { SEC_ASN1_SEQUENCE_OF, 0, smime_capability_template }
+static const SEC_ASN1Template NSSSMIMECapabilitiesTemplate[] = {
+    { SEC_ASN1_SEQUENCE_OF, 0, NSSSMIMECapabilityTemplate }
+};
+
+/*
+ * NSSSMIMEEncryptionKeyPreference - if we find one of these, it needs to prompt us
+ *  to store this and only this certificate permanently for the sender email address.
+ */
+typedef enum {
+    NSSSMIMEEncryptionKeyPref_IssuerSN,
+    NSSSMIMEEncryptionKeyPref_RKeyID,
+    NSSSMIMEEncryptionKeyPref_SubjectKeyID
+} NSSSMIMEEncryptionKeyPrefSelector;
+
+typedef struct {
+    NSSSMIMEEncryptionKeyPrefSelector selector;
+    union {
+	CERTIssuerAndSN			*issuerAndSN;
+	NSSCMSRecipientKeyIdentifier	*recipientKeyID;
+	SECItem				*subjectKeyID;
+    } id;
+} NSSSMIMEEncryptionKeyPreference;
+
+extern const SEC_ASN1Template NSSCMSRecipientKeyIdentifierTemplate[];
+
+static const SEC_ASN1Template smime_encryptionkeypref_template[] = {
+    { SEC_ASN1_CHOICE,
+	  offsetof(NSSSMIMEEncryptionKeyPreference,selector), NULL,
+	  sizeof(NSSSMIMEEncryptionKeyPreference) },
+    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | 0,
+	  offsetof(NSSSMIMEEncryptionKeyPreference,id.issuerAndSN),
+	  CERT_IssuerAndSNTemplate,
+	  NSSSMIMEEncryptionKeyPref_IssuerSN },
+    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | 1,
+	  offsetof(NSSSMIMEEncryptionKeyPreference,id.recipientKeyID),
+	  NSSCMSRecipientKeyIdentifierTemplate,
+	  NSSSMIMEEncryptionKeyPref_IssuerSN },
+    { SEC_ASN1_POINTER | SEC_ASN1_CONTEXT_SPECIFIC | 2,
+	  offsetof(NSSSMIMEEncryptionKeyPreference,id.subjectKeyID),
+	  SEC_OctetStringTemplate,
+	  NSSSMIMEEncryptionKeyPref_SubjectKeyID },
+    { 0, }
 };
 
 /* smime_cipher_map - map of SMIME symmetric "ciphers" to algtag & parameters */
@@ -369,10 +410,10 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
 	profile = CERT_FindSMimeProfile(rcerts[rcount]);
 
 	if (profile != NULL && profile->data != NULL && profile->len > 0) {
-	    /* we have a profile */
+	    /* we have a profile (still DER-encoded) */
 	    caps = NULL;
 	    /* decode it */
-	    if (SEC_ASN1DecodeItem(poolp, &caps, smime_capabilities_template, profile) == SECSuccess &&
+	    if (SEC_ASN1DecodeItem(poolp, &caps, NSSSMIMECapabilitiesTemplate, profile) == SECSuccess &&
 		    caps != NULL)
 	    {
 		/* walk the SMIME capabilities for this recipient */
@@ -514,7 +555,7 @@ NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts, SECOidTag *bulk
 }
 
 /*
- * NSS_SMIMEUtil_GetSMIMECapabilities - get S/MIME capabilities for this instance of NSS
+ * NSS_SMIMEUtil_CreateSMIMECapabilities - get S/MIME capabilities for this instance of NSS
  *
  * scans the list of allowed and enabled ciphers and construct a PKCS9-compliant
  * S/MIME capabilities attribute value.
@@ -527,7 +568,7 @@ NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts, SECOidTag *bulk
  * "includeFortezzaCiphers" - PR_TRUE if fortezza ciphers should be included
  */
 SECStatus
-NSS_SMIMEUtil_GetSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool includeFortezzaCiphers)
+NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool includeFortezzaCiphers)
 {
     NSSSMIMECapability *cap;
     NSSSMIMECapability **smime_capabilities;
@@ -582,7 +623,7 @@ NSS_SMIMEUtil_GetSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool inc
     /* XXX add key encipherment algorithms */
 
     smime_capabilities[capIndex] = NULL;	/* last one - now encode */
-    dummy = SEC_ASN1EncodeItem(poolp, dest, &smime_capabilities, smime_capabilities_template);
+    dummy = SEC_ASN1EncodeItem(poolp, dest, &smime_capabilities, NSSSMIMECapabilitiesTemplate);
 
     /* now that we have the proper encoded SMIMECapabilities (or not),
      * free the work data */
@@ -591,4 +632,83 @@ NSS_SMIMEUtil_GetSMIMECapabilities(PLArenaPool *poolp, SECItem *dest, PRBool inc
     PORT_Free(smime_capabilities);
 
     return (dummy == NULL) ? SECFailure : SECSuccess;
+}
+
+/*
+ * NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs - create S/MIME encryption key preferences attr value
+ *
+ * "poolp" - arena pool to create the attr value on
+ * "dest" - SECItem to put the data in
+ * "cert" - certificate that should be marked as preferred encryption key
+ *          cert is expected to have been verified for EmailRecipient usage.
+ */
+SECStatus
+NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs(PLArenaPool *poolp, SECItem *dest, CERTCertificate *cert)
+{
+    NSSSMIMEEncryptionKeyPreference ekp;
+    SECItem *dummy = NULL;
+    PLArenaPool *tmppoolp;
+
+    if (cert == NULL)
+	goto loser;
+
+    tmppoolp = PORT_NewArena(1024);
+    if (tmppoolp == NULL)
+	goto loser;
+
+    /* XXX hardcoded IssuerSN choice for now */
+    ekp.selector = NSSSMIMEEncryptionKeyPref_IssuerSN;
+    ekp.id.issuerAndSN = CERT_GetCertIssuerAndSN(tmppoolp, cert);
+    if (ekp.id.issuerAndSN == NULL)
+	goto loser;
+
+    dummy = SEC_ASN1EncodeItem(poolp, dest, &ekp, smime_encryptionkeypref_template);
+
+loser:
+    if (tmppoolp) PORT_FreeArena(tmppoolp, PR_FALSE);
+
+    return (dummy == NULL) ? SECFailure : SECSuccess;
+}
+
+/*
+ * NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference -
+ *				find cert marked by EncryptionKeyPreference attribute
+ *
+ * "certdb" - handle for the cert database to look in
+ * "DERekp" - DER-encoded value of S/MIME Encryption Key Preference attribute
+ *
+ * if certificate is supposed to be found among the message's included certificates,
+ * they are assumed to have been imported already.
+ */
+CERTCertificate *
+NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference(CERTCertDBHandle *certdb, SECItem *DERekp)
+{
+    PLArenaPool *tmppoolp = NULL;
+    CERTCertificate *cert = NULL;
+    NSSSMIMEEncryptionKeyPreference ekp;
+
+    tmppoolp = PORT_NewArena(1024);
+    if (tmppoolp == NULL)
+	return NULL;
+
+    /* decode DERekp */
+    if (SEC_ASN1DecodeItem(tmppoolp, &ekp, smime_encryptionkeypref_template, DERekp) != SECSuccess)
+	goto loser;
+
+    /* find cert */
+    switch (ekp.selector) {
+    case NSSSMIMEEncryptionKeyPref_IssuerSN:
+	cert = CERT_FindCertByIssuerAndSN(certdb, ekp.id.issuerAndSN);
+	break;
+    case NSSSMIMEEncryptionKeyPref_RKeyID:
+    case NSSSMIMEEncryptionKeyPref_SubjectKeyID:
+	/* XXX not supported yet - we need to be able to look up certs by SubjectKeyID */
+	break;
+    default:
+	PORT_Assert(0);
+    }
+loser:
+    if (tmppoolp) PORT_FreeArena(tmppoolp, PR_FALSE);
+
+    return cert;
 }
