@@ -2302,6 +2302,14 @@ nsStandardURL::SetFile(nsIFile *file)
 // nsStandardURL::nsIStandardURL
 //----------------------------------------------------------------------------
 
+inline PRBool
+IsUTFCharset(const char *aCharset)
+{
+    return ((aCharset[0] == 'U' || aCharset[0] == 'u') &&
+            (aCharset[1] == 'T' || aCharset[1] == 't') &&
+            (aCharset[2] == 'F' || aCharset[2] == 'f'));
+}
+
 NS_IMETHODIMP
 nsStandardURL::Init(PRUint32 urlType,
                     PRInt32 defaultPort,
@@ -2330,26 +2338,28 @@ nsStandardURL::Init(PRUint32 urlType,
     mDefaultPort = defaultPort;
     mURLType = urlType;
 
-    if (gAlwaysEncodeInUTF8)
-        mOriginCharset.Truncate();
-    else if (charset == nsnull || *charset == '\0') {
-        mOriginCharset.Truncate();
-        // check if baseURI provides an origin charset and use that.
-        if (baseURI)
-            baseURI->GetOriginCharset(mOriginCharset);
-    }
-    else
-        mOriginCharset = charset;
+    mOriginCharset.Truncate();
 
-    // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32, UTF-32-LE,
-    // UTF-32LE, UTF-32BE (yet?). Truncate mOriginCharset if it starts with
-    // "utf" (since an empty mOriginCharset implies UTF-8, this is safe even if
-    // mOriginCharset is UTF-8).
-    if (mOriginCharset.Length() >= 3 &&
-        (mOriginCharset[0] == 'U' || mOriginCharset[0] == 'u') &&
-        (mOriginCharset[1] == 'T' || mOriginCharset[1] == 't') &&
-        (mOriginCharset[2] == 'F' || mOriginCharset[2] == 'f'))
-        mOriginCharset.Truncate();
+    if (!gAlwaysEncodeInUTF8) {
+        if (charset == nsnull || *charset == '\0') {
+            // check if baseURI provides an origin charset and use that.
+            if (baseURI)
+                baseURI->GetOriginCharset(mOriginCharset);
+
+            // URI can't be encoded in UTF-16, UTF-16BE, UTF-16LE, UTF-32,
+            // UTF-32-LE, UTF-32LE, UTF-32BE (yet?). Truncate mOriginCharset if
+            // it starts with "utf" (since an empty mOriginCharset implies
+            // UTF-8, this is safe even if mOriginCharset is UTF-8).
+
+            if (mOriginCharset.Length() > 3 &&
+                IsUTFCharset(mOriginCharset.get())) {
+                mOriginCharset.Truncate();
+            }
+        }
+    }
+    else if (!IsUTFCharset(charset)) {
+        mOriginCharset = charset;
+    }
 
     if (baseURI) {
         PRUint32 start, end;
