@@ -21,6 +21,8 @@
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsIWin32Locale.h"
+#include "prmem.h"
+#include "plstr.h"
 #include <windows.h>
 
 
@@ -51,6 +53,20 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  OSVERSIONINFO os;
+  os.dwOSVersionInfoSize = sizeof(os);
+  ::GetVersionEx(&os);
+  if (VER_PLATFORM_WIN32_NT == os.dwPlatformId &&
+      os.dwMajorVersion >= 4) {
+    mW_API = PR_TRUE;
+  }
+  else {
+    mW_API = PR_FALSE;
+  }
+
+  // store local charset name
+  mCharset.SetString("ISO-8859-1"); //TODO: need to get this from locale
+
   // locale -> LCID 
   mLCID = 1033; // initialize to en-US
   if (locale != nsnull) {
@@ -77,27 +93,49 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
 nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength, 
                                        const nsString& stringIn, PRUint32* outLen)
 {
+  nsresult res = NS_OK;
   // Currently, no length change by the normalization.
   // API returns number of bytes when LCMAP_SORTKEY is specified 
-	*outLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
-                              (LPCWSTR) stringIn.GetUnicode(), (int) stringIn.Length(), NULL, 0);
+  if (mW_API) {
+    *outLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
+                                (LPCWSTR) stringIn.GetUnicode(), (int) stringIn.Length(), NULL, 0);
+  }
+  else {
+    char *Cstr = nsnull;
+    res = mCollation->UnicodeToChar(stringIn, &Cstr, mCharset);
+    if (NS_SUCCEEDED(res) && Cstr != nsnull) {
+      *outLen = LCMapStringA(mLCID, LCMAP_SORTKEY, Cstr, PL_strlen(Cstr), NULL, 0);
+      PR_Free(Cstr);
+    }
+  }
 
-  return NS_OK;
+  return res;
 }
 
 nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength, 
                                           const nsString& stringIn, PRUint8* key, PRUint32* outLen)
 {
   int byteLen;
+  nsresult res = NS_OK;
   nsAutoString stringNormalized(stringIn);
 
   if (mCollation != NULL && strength == kCollationCaseInSensitive) {
     mCollation->NormalizeString(stringNormalized);
   }
-  byteLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
-                            (LPCWSTR) stringNormalized.GetUnicode(), (int) stringNormalized.Length(), (LPWSTR) key, *outLen);
+
+  if (mW_API) {
+    byteLen = LCMapStringW(mLCID, LCMAP_SORTKEY, 
+                          (LPCWSTR) stringNormalized.GetUnicode(), (int) stringNormalized.Length(), (LPWSTR) key, *outLen);
+  }
+  else {
+    char *Cstr = nsnull;
+    res = mCollation->UnicodeToChar(stringIn, &Cstr, mCharset);
+    if (NS_SUCCEEDED(res) && Cstr != nsnull) {
+      byteLen = LCMapStringA(mLCID, LCMAP_SORTKEY, Cstr, PL_strlen(Cstr), (char *) key, (int) *outLen);
+      PR_Free(Cstr);
+    }
+  }
   *outLen = (PRUint32) byteLen;
 
-  return NS_OK;
+  return res;
 }
-
