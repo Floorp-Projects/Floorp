@@ -96,7 +96,8 @@ mailnews/compose/prefs/Makefile
 mailnews/compose/prefs/resources/Makefile
 mailnews/compose/prefs/resources/content/Makefile
 mailnews/compose/tests/Makefile
-mailnews/compose/tests/smtp/Makefile
 mailnews/compose/tests/compose/Makefile
+mailnews/compose/tests/sendpage/Makefile
+mailnews/compose/tests/smtp/Makefile
 mailnews/public/Makefile
 mailnews/idl/Makefile
