@@ -247,6 +247,7 @@ PR_MD_ASFILES=
 PR_MD_CSRCS=
 PR_MD_ARCH_DIR=unix
 AR_FLAGS='cr $@'
+AS='$(CC)'
 
 OS_TARGET=`uname -s`
 OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -576,6 +577,10 @@ case "$target" in
         AC_DEFINE(__alpha)
         CFLAGS="$CFLAGS -mieee"
         CXXFLAGS="$CXXFLAGS -mieee"
+        _OPTIMIZE_FLAGS=-O2
+        ;;
+    i?86)
+        PR_MD_ASFILES=os_Linux_x86.s
         _OPTIMIZE_FLAGS=-O2
         ;;
     m68k)
