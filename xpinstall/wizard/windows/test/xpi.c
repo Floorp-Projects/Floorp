@@ -31,16 +31,8 @@ typedef void    (_cdecl *XpiExit)(void);
 static XpiInit          pfnXpiInit;
 static XpiInstall       pfnXpiInstall;
 static XpiExit          pfnXpiExit;
-static HANDLE           hXPIStubInst;
 
-struct ExtractFilesDlgInfo
-{
-	HWND	hWndDlg;
-	int		nMaxFileBars;	    // maximum number of bars that can be displayed
-	int		nMaxArchiveBars;	// maximum number of bars that can be displayed
-	int		nFileBars;		    // current number of bars to display
-	int		nArchiveBars;		  // current number of bars to display
-} dlgInfo;
+extern HANDLE           hXPIStubInst;
 
 HRESULT InitializeXPIStub()
 {
@@ -109,6 +101,8 @@ HRESULT SmartUpdateJars(LPSTR szAppName, LPSTR szAppPath, LPSTR listArchive[])
   int       iTotalArchives;
   char      szBuf[MAX_BUF];
   HRESULT   hrResult;
+
+  hXPIStubInst = NULL;
 
   if((hrResult = InitializeXPIStub()) == TEST_OK)
   {
