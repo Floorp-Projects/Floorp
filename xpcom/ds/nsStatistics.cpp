@@ -21,7 +21,7 @@
 
 #include "nsStatistics.h"
 #include "nsISupportsUtils.h"
-#include "nsTraceRefCnt.h" // for NS_MeanAndStdDev
+#include "nsTraceRefcnt.h" // for NS_MeanAndStdDev
 #include "plhash.h"
 
 inline PLHashNumber
@@ -33,9 +33,9 @@ nsStatistics::HashPRInt32(const void* aKey)
 nsStatistics::nsStatistics(const char* aTopic)
     : mTopic(aTopic),
       mDistribution(nsnull),
+      mCount(0),
       mMinimum(0),
       mMaximum(0),
-      mCount(0),
       mSum(0),
       mSumOfSquares(0)
 {
@@ -88,7 +88,7 @@ nsStatistics::Print(FILE* aFile)
 {
     double mean, stddev;
     NS_MeanAndStdDev(mCount, mSum, mSumOfSquares, &mean, &stddev);
-    fprintf(aFile, "%s count=%d, minimum=%d, maximum=%d, mean=%0.2lf+/-%0.2lf\n",
+    fprintf(aFile, "%s count=%d, minimum=%d, maximum=%d, mean=%0.2f+/-%0.2f\n",
             mTopic, mCount, mMinimum, mMaximum, mean, stddev);
 
     for (PRInt32 i = mMinimum; i < mMaximum; ++i) {
