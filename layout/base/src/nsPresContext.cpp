@@ -189,7 +189,20 @@ nsPresContext::GetUserPreferences()
 
   if (NS_OK == mPrefs->GetIntPref("nglayout.widget.mode", &prefInt)) {
     mWidgetRenderingMode = (enum nsWidgetRendering)prefInt;  // bad cast
-  }
+  } else
+#if defined XP_UNIX
+    // XXX for Unix only (Gtk+) -- make the default rendering mode Gfx. The
+    // Gtk+ implementation is buggy, and we'll eventually be going in this
+    // direction anyway of using gfx to render controls. Need to take out 
+    // this #ifdef eventually for Win and Mac.
+    //
+    // To enable native widgets, edit ~/.mozilla/prefs50.js, and add the 
+    // line user_pref("nglayout.widget.mode", 1);. Syd 4/20/99
+
+    mWidgetRenderingMode = eWidgetRendering_Gfx;
+#else
+    mWidgetRenderingMode = eWidgetRendering_Native;
+#endif
 
   PRBool usePrefColors = PR_TRUE;
 #ifdef _WIN32
