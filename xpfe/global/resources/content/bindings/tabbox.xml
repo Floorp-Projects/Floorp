@@ -383,7 +383,7 @@
     <content>
       <xul:stack>
         <xul:spacer class="tabs-left"/>
-        <xul:toolbarbutton class="tabs-newbutton" xbl:inherits="oncommand=onnewtab,tooltiptext=tooltiptextnew"/>
+        <xul:toolbarbutton ondblclick="event.preventBubble();" class="tabs-newbutton" xbl:inherits="oncommand=onnewtab,tooltiptext=tooltiptextnew"/>
       </xul:stack>
       <xul:hbox flex="1" style="min-width: 1px;">
         <children/>
@@ -392,7 +392,7 @@
       <xul:stack>
         <xul:spacer class="tabs-right"/>
         <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
-          <xul:toolbarbutton class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
+          <xul:toolbarbutton ondblclick="event.preventBubble();" class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
         </xul:hbox>
       </xul:stack>
     </content>
