@@ -40,7 +40,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsLineLayout.h"
-#include "nsBlockFrame.h"
 #include "nsInlineFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLContainerFrame.h"
@@ -996,40 +995,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     NS_WARNING( "Reflow of frame failed in nsLineLayout" );
     return rv;
   }
-
-  // SEC: added this next block for bug 45152
-  // text frames don't know how to invalidate themselves on initial reflow.  Do it for them here.
-  // This only shows up in textareas, so do a quick check to see if we're inside one
-  if (eReflowReason_Initial == reflowState.reason)
-  {
-    if (nsLayoutAtoms::textFrame == frameType) 
-    { // aFrame is a text frame, see if it's inside a text control
-      // although this is a bit slow, the frame tree shouldn't be too deep, it's only called
-      // for the text frame's initial reflow (once in the text frame's lifetime)
-      // and we don't make any expensive calls.
-      // Doing it this way shields us from knowing anything about the frame structure inside a text control.
-      PRBool inTextControl = PR_FALSE;
-      for (nsIFrame *parentFrame = aFrame->GetParent(); parentFrame;
-           parentFrame = parentFrame->GetParent())
-      { 
-        if (nsLayoutAtoms::textInputFrame == parentFrame->GetType()) 
-        {
-          inTextControl = PR_TRUE; // found it
-          break;
-        }
-      }
-      if (inTextControl)
-      {
-        nsLineBox *currentLine=nsnull;
-        // use localResult because a failure here should not be propagated to my caller
-        nsresult localResult = nsBlockFrame::GetCurrentLine(mBlockRS, &currentLine);
-        if (NS_SUCCEEDED(localResult) && currentLine) {
-          currentLine->SetForceInvalidate(PR_TRUE);
-        }
-      }
-    }
-  }
-  // end fix for bug 45152
 
   pfd->mJustificationNumSpaces = mTextJustificationNumSpaces;
   pfd->mJustificationNumLetters = mTextJustificationNumLetters;
@@ -2860,18 +2825,6 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 
       case NS_STYLE_TEXT_ALIGN_RIGHT:
       case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
-        {
-          // fix for bug 50758
-          // right-aligned text in a text control doesn't know how to paint itself
-          // so we force the invalidate here.  Getting the current line is quick, 
-          // and at worst we're invalidating more of the line (and just that line) than we need to.
-          nsLineBox *currentLine=nsnull;
-          // use localResult because a failure here should not be propagated to my caller
-          nsresult localResult = nsBlockFrame::GetCurrentLine(mBlockRS, &currentLine);
-          if (NS_SUCCEEDED(localResult) && currentLine) {
-            currentLine->SetForceInvalidate(PR_TRUE);
-          }
-        }
         dx = remainingWidth;
         break;
 
