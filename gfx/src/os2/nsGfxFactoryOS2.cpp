@@ -67,6 +67,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
 
+static BOOL bIsDBCS;
 
 class nsGfxFactoryOS2 : public nsIFactory
 {   
@@ -100,6 +101,31 @@ nsGfxFactoryOS2::nsGfxFactoryOS2(const nsCID &aClass)
     }
   */
   }
+
+      // the following lines of code determine whether the system is a DBCS country
+      APIRET rc;
+      COUNTRYCODE ctrycodeInfo = {0};
+      CHAR        achDBCSInfo[12] = {0};                  // DBCS environmental vector
+      ctrycodeInfo.country  = 0;                          // current country
+      ctrycodeInfo.codepage = 0;                          // current codepage
+
+      rc = DosQueryDBCSEnv(sizeof(achDBCSInfo), &ctrycodeInfo, achDBCSInfo);
+      if (rc == NO_ERROR)
+      {
+          // NON-DBCS countries will have four bytes in the first four bytes of the
+          // DBCS environmental vector
+          if (achDBCSInfo[0] != 0 || achDBCSInfo[1] != 0 ||
+              achDBCSInfo[2] != 0 || achDBCSInfo[3] != 0)
+          {
+             bIsDBCS = TRUE;
+          }
+          else
+          {
+             bIsDBCS = FALSE;
+          }
+      } else {
+         bIsDBCS = FALSE;
+      } /* endif */
 
   NS_INIT_REFCNT();
   mClassID = aClass;
@@ -304,6 +330,8 @@ void nsGfxModuleData::Init()
    hpsScreen = WinGetScreenPS( HWND_DESKTOP);
    HDC hdc = GpiQueryDevice( hpsScreen);
    DevQueryCaps( hdc, CAPS_COLOR_BITCOUNT, 1, &lDisplayDepth);
+
+
 }
 
 nsGfxModuleData::~nsGfxModuleData()
@@ -363,4 +391,9 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
      printf("very bad");
   }
   return ulSize - cplen;
+}
+
+BOOL IsDBCS()
+{
+return bIsDBCS;
 }

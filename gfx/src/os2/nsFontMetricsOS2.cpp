@@ -290,6 +290,23 @@ static nsFontFamilyName gFamilyNameTable[] =
   { nsnull, nsnull }
 };
 
+static nsFontFamilyName gFamilyNameTableDBCS[] =
+{
+#ifdef MOZ_MATHML
+  { "-moz-math-text",   "Times New Roman" },
+  { "-moz-math-symbol", "Symbol" },
+#endif
+  { "times",           "Times New Roman" },
+  { "times roman",     "Times New Roman" },
+  { "times new roman", "Times New Roman" },
+  { "arial",           "Arial" },
+  { "helvetica",       "Helv Combined" },
+  { "courier",         "Courier" },
+  { "courier new",     "Courier New" },
+
+  { nsnull, nsnull }
+};
+
 PLHashTable*
 nsFontMetricsOS2::InitializeFamilyNames(void)
 {
@@ -301,7 +318,12 @@ nsFontMetricsOS2::InitializeFamilyNames(void)
     if (!gFamilyNames) {
       return nsnull;
     }
-    nsFontFamilyName* f = gFamilyNameTable;
+    nsFontFamilyName* f;
+    if (!IsDBCS()) {
+      f = gFamilyNameTableDBCS;
+    } else {
+      f = gFamilyNameTableDBCS;
+    } /* endif */
     while (f->mName) {
       nsString* name = new nsString;
       nsString* winName = new nsString;
