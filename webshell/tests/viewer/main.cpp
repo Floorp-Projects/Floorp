@@ -21,11 +21,9 @@
 #include "nsIImageManager.h"
 #include <stdlib.h>
 
-#define FILE_BASE_URL "file:////home/kmcclusk/mozilla/dist/Linux2.0.31_x86_DBG.OBJ/bin/res/samples"
 
 class nsMotifViewer : public nsViewer {
     virtual void AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview);
-    //virtual char* GetBaseURL();
 };
 
 //--------------------------------------------------------
@@ -68,30 +66,4 @@ void nsMotifViewer::AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview)
   CreateViewerMenus(XtParent((Widget)aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
 }
 
-/*
-char* nsMotifViewer::GetBaseURL()
-{
-    static char* protocol = "file:///";
-    static char url[MAXPATHLEN + sizeof(protocol)];
-    FILE *pp;
-
-   char location[MAXPATHLEN];
-
-   if (!(pp = popen("pwd", "r"))) {
-     printf("Error in nsMotifViewer::GetBaseURL 1\n");
-     return(0);
-   }
-   else {
-    if (fgets(location, MAXPATHLEN, pp)) {
-      location[strlen(location)-1] = 0;
-      sprintf(url, "%s%s%s", protocol,location, "/res/samples");
-      return(url); 
-    }
-    else
-     printf("Error in nsMotifViewer::GetBaseURL 2\n");
-     return(0);
-   }
-
-}
-*/
 
