@@ -252,6 +252,7 @@ int16 charSearch (char c, char* data) {
   return -1;
 }
 
+PRIVATE
 char* getMem(size_t x) {
   char* ans = (char *)calloc(1,(x));
   if (ans != NULL) {
@@ -262,6 +263,7 @@ char* getMem(size_t x) {
   return ans;
 }
 
+PRIVATE
 RL_Item makeRLItem (char* name, char* url) {
   RL_Item item = (RL_Item) getMem(sizeof(struct _RL_Item));
   if (item) {
@@ -272,6 +274,7 @@ RL_Item makeRLItem (char* name, char* url) {
   } else return NULL;
 }
 
+PRIVATE
 PRBool specialItemp (RL_Item item) {
   return ((item == gRLSpecial->loading) ||
           (item == gRLSpecial->noData) ||
@@ -279,7 +282,7 @@ PRBool specialItemp (RL_Item item) {
 }
 
 
-
+PRIVATE
 void readRLPrefs () {
   int32 autoload = -1;
 }
@@ -366,6 +369,7 @@ and will be */
   freeMem(win);
 }
 
+PRIVATE
 PRBool implicitDomainURL (char* url) {
   uint16 n = 7;
   uint16 size = strlen(url);
@@ -378,6 +382,7 @@ PRBool implicitDomainURL (char* url) {
 }
 
 
+PRIVATE
 PRBool relatedLinksEnabledURL (char* url) {
   if (url == NULL) return PR_FALSE;
   if (strlen(url) > 300) return PR_FALSE; 
@@ -389,6 +394,7 @@ PRBool relatedLinksEnabledURL (char* url) {
 }
 
 
+PRIVATE
 PRBool getRLURL (RL_Window win, char* url) {
   size_t n, m, l;
   memset(win->rlurl, '\0', RL_MAX_URL);
@@ -510,6 +516,7 @@ RL_Item RL_WindowItems (RL_Window win) {
   } else return gRLSpecial->noData;
 }
 
+PRIVATE
 void RL_PossiblyLoad (RL_Window win) {
   if ((win != NULL) && (win->diff < gMaxDiff) && enableRelatedLinksp &&
       (win->status == RL_STATUS_WAITING_TO_LOAD)) {
@@ -550,6 +557,7 @@ char* RL_ItemUrl(RL_Item item) {
 }
 
 
+PRIVATE
 char* RL_WinReferer(RL_Window win) {
   return win->rlurl;
 }
@@ -700,6 +708,7 @@ void parseNextRDFXMLBlob (RL_Window f, char* blob, int32 size) {
   }
 }
 
+PRIVATE
 void parseRDFProcessingInstruction (RL_Window win, char* token) {
   char* attlist[MAX_ATTRIBUTES+1];
   char* newServer;
