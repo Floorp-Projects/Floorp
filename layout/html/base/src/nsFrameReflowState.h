@@ -28,6 +28,9 @@ struct nsStyleDisplay;
 struct nsStyleSpacing;
 struct nsStyleText;
 
+//XXX deprecated class used soley by block and inline code so that the
+//nsInlineReflow class can access some common variables.
+
 class nsFrameReflowState : public nsHTMLReflowState {
 public:
   nsFrameReflowState(nsIPresContext& aPresContext,
