@@ -1155,7 +1155,6 @@ NS_IMETHODIMP nsLocalFile::GetParent(nsIFile * *aParent)
         if (iter < end)
           appendedNodes.Append(kPathSepUnichar);
       }
-      return NS_ERROR_FAILURE;
     }
     newFile = new nsLocalFile(mFSRef, appendedNodes);
   }
