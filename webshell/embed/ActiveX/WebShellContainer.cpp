@@ -28,6 +28,7 @@ static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 
 CWebShellContainer::CWebShellContainer(CMozillaBrowser *pOwner)
 {
+	NS_INIT_REFCNT();
 	m_pOwner = pOwner;
 	m_pEvents1 = m_pOwner;
 	m_pEvents2 = m_pOwner;
