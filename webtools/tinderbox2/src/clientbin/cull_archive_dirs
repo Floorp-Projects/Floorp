@@ -1,3 +1,6 @@
+#!/usr/local/bin/perl
+
+
 #!#perl# -T --
 
 # This script does not need to run under taint perl.
@@ -28,8 +31,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.3 $
-# $Date: 2001/10/05 22:10:14 $
+# $Revision: 1.4 $
+# $Date: 2001/10/05 22:42:12 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -81,7 +84,7 @@ EOF
 
     ;
 
-die $usage;
+print $usage;
 
 }
 
@@ -402,12 +405,12 @@ sub parse_args {
 	exit 1 ;
     }
 
-    if($version) {
+    if($Prog_Args{'version'}) {
 	print "Version: $VERSION\n";
 	exit 0;  
     }
     
-    if ($help) {
+    if ($Prog_Args{'help'}) {
 	usage();
     }
     
