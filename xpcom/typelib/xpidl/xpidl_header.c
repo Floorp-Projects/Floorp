@@ -287,7 +287,7 @@ interface(TreeState *state)
             if (!IDL_ATTR_DCL(data).f_readonly) {
                 fputs("; } \\\n", state->file); /* Terminate the previous one. */
                 write_indent(state->file);
-                if (!write_attr_accessor(data, state->file, TRUE, FALSE))
+                if (!write_attr_accessor(data, state->file, FALSE, FALSE))
                     return FALSE;
                 fputs(" { return _to ## ", state->file);
                 if (!write_attr_accessor(data, state->file, FALSE, TRUE))
@@ -626,7 +626,8 @@ forward_dcl(TreeState *state)
  * write 'foo(bar, sil)' rather than 'int foo(string bar, long sil)'
  */
 static gboolean
-write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call) {
+write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
+{
     struct _IDL_OP_DCL *op = &IDL_OP_DCL(method_tree);
     gboolean no_generated_args = TRUE;
     gboolean op_notxpcom =
