@@ -36,12 +36,11 @@
   xmlns="http://www.w3.org/TR/REC-html40"
   title="&bookmarks.title.label;"
   onload="Init();"
-  align="vertical"
-  width="300" height="200"> <!-- w&h hard coded so it doesn't look like crap -->
+  align="vertical">
 
   <script src="bm-props.js" />
 
-  <table style="width:100%;">
+  <table style="width:100%; margin:1em;">
     <tr>
       <td align="right">&bookmarks.name.label;</td>
       <td><input type="text" id="name" style="width:100%;"/></td>
@@ -60,8 +59,11 @@
     </tr>
   </table>
 
-  <xul:box align="horizontal" flex="100%">
-    <button class="defaultbutton" onclick="Commit();">&bookmarks.ok.label;</button>
-    <button class="cancelbutton" onclick="Cancel();">&bookmarks.cancel.label;</button>
+  <xul:box align="horizontal" flex="100%" style="margin-right:1em;">
+    <xul:spring flex="100%"/>
+    <xul:titledbutton class="defaultbutton" onclick="Commit();" 
+                      value="&bookmarks.ok.label;" />
+    <xul:titledbutton class="cancelbutton" onclick="Cancel();" 
+                      value="&bookmarks.cancel.label;" />
   </xul:box>
 </xul:window>
