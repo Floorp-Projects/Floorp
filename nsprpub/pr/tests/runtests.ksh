@@ -133,6 +133,7 @@ op_filnf
 op_filok
 op_nofil
 parent
+peek
 perf
 pipeping
 pipeself
