@@ -111,10 +111,11 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   nsStyleFont font;
   mStyleContext->GetStyle(eStyleStruct_Font, font);
   nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext->GetMetricsFor(font.mFont, getter_AddRefs(fm));
+  aReflowState.rendContext->SetFont(font.mFont);
+  aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
 
   nscoord axisHeight;
-  GetAxisHeight(fm, axisHeight);
+  GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
 
   // center about the axis
   aDesiredSize.ascent = aDesiredSize.height/2 + axisHeight;

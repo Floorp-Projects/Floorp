@@ -159,6 +159,26 @@ public:
       axisHeight = NSToCoordRound (250.000f/430.556f * axisHeight);
     }
 
+
+  static void
+  GetAxisHeight(nsIRenderingContext& aRenderingContext, 
+                nsIFontMetrics*       aFontMetrics,
+                nscoord&              aAxisHeight)
+  {
+    // get the bounding metrics of the minus sign, the rendering context
+    // is assumed to have been set with the font of the current style context
+    nsBoundingMetrics bm;
+    PRUnichar minus = '-';
+    nsresult rv = aRenderingContext.GetBoundingMetrics(&minus, PRUint32(1), bm);
+    if (NS_SUCCEEDED(rv)) {
+      aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
+    }
+    if (NS_FAILED(rv) || aAxisHeight <= 0) {
+      // fall-back to the other version
+      GetAxisHeight(aFontMetrics, aAxisHeight);
+    }
+  }
+
 protected:
   nsMathMLmtableOuterFrame();
   virtual ~nsMathMLmtableOuterFrame();

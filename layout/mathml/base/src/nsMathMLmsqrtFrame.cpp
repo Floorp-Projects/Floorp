@@ -45,11 +45,14 @@
 // <msqrt> and <mroot> -- form a radical - implementation
 //
 
-//TODO:
-//  The code assumes that TeX fonts are picked! Another separate version of
-//  Reflow() is needed as a fall-back for cases where TeX fonts (CMSY/CMEX)
-//  are not installed on the system, e.g., the fall-back could explicitly
-//  draw the branches of the radical using th default rule thickness.
+//NOTE:
+//  The code assumes that TeX fonts are picked.
+//  There is not fall-back to draw the branches of the sqrt explicitly
+//  in the case where TeX fonts are not there. In general, there is not
+//  fall-back(s) in MathML when some (freely-downloadable) fonts are missing.
+//  Otherwise, this will add much work and unnecessary complexity to the core
+//  MathML  engine. Assuming that authors have the free fonts is part of the
+//  deal. We are not responsible for cases of misconfigurations out there.
 
 // additional style context to be used by our MathMLChar.
 #define NS_SQR_CHAR_STYLE_CONTEXT_INDEX   0
@@ -90,7 +93,7 @@ nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
   rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
                                     aContext, aPrevInFlow);
 
-  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
   mSqrChar.SetEnum(aPresContext, eMathMLChar_Sqrt);
   ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSqrChar);
@@ -109,20 +112,26 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
 {
   nsresult rv = NS_OK;
 
-  
+  /////////////
+  // paint the content we are square-rooting
+  rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
+                                     aDirtyRect, aWhichLayer);
   /////////////
   // paint the sqrt symbol
-  if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) &&
-      !NS_MATHML_HAS_ERROR(mPresentationData.flags))
+  if (!NS_MATHML_HAS_ERROR(mPresentationData.flags))
   {
     mSqrChar.Paint(aPresContext, aRenderingContext,
                    aDirtyRect, aWhichLayer, this);
-    // paint the overline bar
-    nsStyleColor color;
-    mStyleContext->GetStyle(eStyleStruct_Color, color);
-    aRenderingContext.SetColor(color.mColor);
-    aRenderingContext.FillRect(mBarRect.x, mBarRect.y, 
-                               mBarRect.width, mBarRect.height);
+
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer)
+    {
+      // paint the overline bar
+      nsStyleColor color;
+      mStyleContext->GetStyle(eStyleStruct_Color, color);
+      aRenderingContext.SetColor(color.mColor);
+      aRenderingContext.FillRect(mBarRect.x, mBarRect.y, 
+                                 mBarRect.width, mBarRect.height);
+    }
 
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
@@ -144,10 +153,6 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
 #endif
   }
 
-  /////////////
-  // paint the content we are square-rooting
-  rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
-                                     aDirtyRect, aWhichLayer);
   return rv;
 }
 

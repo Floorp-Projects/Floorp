@@ -158,22 +158,20 @@ nsMathMLContainerFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
 {
   // get the bounding metrics of the overbar char, the rendering context
   // is assumed to have been set with the font of the current style context
-  nsBoundingMetrics bm;
+  nscoord xHeight;
+  aFontMetrics->GetXHeight(xHeight);
   PRUnichar overBar = 0x00AF;
+  nsBoundingMetrics bm;
   nsresult rv = aRenderingContext.GetBoundingMetrics(&overBar, PRUint32(1), bm);
   if (NS_SUCCEEDED(rv)) {
     aRuleThickness = bm.ascent + bm.descent;
   }
-  else {
-    printf("GetBoundingMetrics() failed in GetRuleThickness()\n");
+  if (NS_FAILED(rv) || aRuleThickness <= 0 || aRuleThickness >= xHeight) {
     // fall-back to the other version
     GetRuleThickness(aFontMetrics, aRuleThickness);
   }
  
 #if 0
-  nscoord xHeight;
-  aRuleThickness->GetXHeight(xHeight);
-
   nscoord oldRuleThickness;
   GetRuleThickness(aFontMetrics, oldRuleThickness);
 
@@ -183,6 +181,39 @@ nsMathMLContainerFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
 
   printf("xheight:%4d rule:%4d oldrule:%4d  sqrtrule:%4d\n",
           xHeight, aRuleThickness, oldRuleThickness, sqrtrule);
+#endif
+}
+
+void
+nsMathMLContainerFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext, 
+                                     nsIFontMetrics*       aFontMetrics,
+                                     nscoord&              aAxisHeight)
+{
+  // get the bounding metrics of the minus sign, the rendering context
+  // is assumed to have been set with the font of the current style context
+  nscoord xHeight;
+  aFontMetrics->GetXHeight(xHeight);
+  PRUnichar minus = '-';
+  nsBoundingMetrics bm;
+  nsresult rv = aRenderingContext.GetBoundingMetrics(&minus, PRUint32(1), bm);
+  if (NS_SUCCEEDED(rv)) {
+    aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
+  }
+  if (NS_FAILED(rv) || aAxisHeight <= 0 || aAxisHeight >= xHeight) {
+    // fall-back to the other version
+    GetAxisHeight(aFontMetrics, aAxisHeight);
+  }
+ 
+#if 0
+  nscoord oldAxis;
+  GetAxisHeight(aFontMetrics, oldAxis);
+
+  PRUnichar plus = '+';
+  rv = aRenderingContext.GetBoundingMetrics(&plus, PRUint32(1), bm);
+  nscoord plusAxis = bm.ascent - (bm.ascent + bm.descent)/2;;
+  
+  printf("xheight:%4d Axis:%4d oldAxis:%4d  plusAxis:%4d\n",
+          xHeight, aAxisHeight, oldAxis, plusAxis);
 #endif
 }
 
