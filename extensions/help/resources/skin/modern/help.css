@@ -138,3 +138,7 @@
 #print[disabled="true"] {
   -moz-image-region: rect(0, 199px, 33px, 150px) !important;
 }
+
+#helpsidebar-box {
+  min-width: 18em;
+}

@@ -105,3 +105,7 @@
 #helpHomeButton:hover:active {
   list-style-image: url("chrome://communicator/skin/bookmarks/home-active.gif");
 }
+
+#helpsidebar-box {
+  min-width: 18em;
+}
