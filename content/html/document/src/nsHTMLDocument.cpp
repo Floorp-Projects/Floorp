@@ -3514,7 +3514,7 @@ nsHTMLDocument::GetBodyContent()
 
       if (bodyStr.EqualsIgnoreCase(tagName)) {
         mBodyContent = child;
-        NS_ADDREF(mBodyContent);
+
         return PR_TRUE;
       }
     }
