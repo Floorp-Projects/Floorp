@@ -109,6 +109,9 @@ nsPluginTag::nsPluginTag()
 
 inline char* new_str(char* str)
 {
+  if(str == nsnull)
+    return nsnull;
+
 	char* result = new char[strlen(str) + 1];
 	if (result != nsnull)
 		return strcpy(result, str);
