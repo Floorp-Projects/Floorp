@@ -139,8 +139,8 @@ static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 // for figuring out 1 - 3 Clicks
 ////////////////////////////////////////////////////
 static POINT gLastMousePoint;
-static LONG  gLastMsgTime    = 0;
-static LONG  gLastClickCount = 0;
+static LONG  gLastMouseDownTime = 0L;
+static LONG  gLastClickCount    = 0L;
 ////////////////////////////////////////////////////
 
 #if 0
@@ -3841,15 +3841,17 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
     // now look to see if we want to convert this to a double- or triple-click
    
 #ifdef NS_DEBUG_XX
-    printf("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, gLastMsgTime, curMsgTime-gLastMsgTime, ::GetDoubleClickTime());
+    printf("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, gLastMouseDownTime, curMsgTime-gLastMouseDownTime, ::GetDoubleClickTime());
     printf("Mouse %d %d\n", abs(gLastMousePoint.x - mp.x), abs(gLastMousePoint.y - mp.y));
 #endif
-    if (((curMsgTime - gLastMsgTime) < (LONG)::GetDoubleClickTime()) && insideMovementThreshold) {
+    if (((curMsgTime - gLastMouseDownTime) < (LONG)::GetDoubleClickTime()) && insideMovementThreshold) {
       gLastClickCount ++;
     } else {
       // reset the click count, to count *this* click
       gLastClickCount = 1;
     }
+    // Set last Click time on MouseDown only
+    gLastMouseDownTime = curMsgTime;
   } else if (aEventType == NS_MOUSE_MOVE && !insideMovementThreshold) {
     gLastClickCount = 0;
   }
@@ -3858,8 +3860,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 #ifdef NS_DEBUG_XX
   printf("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
 #endif
-
-  gLastMsgTime = curMsgTime;
 
   nsPluginEvent pluginEvent;
 
