@@ -219,13 +219,13 @@ nsNNTPNewsgroupPost::SetPostMessageFile(nsFilePath& aFileName)
 {
     if (aFileName) {
 #ifdef DEBUG_NEWS
-	printf("SetPostMessageFile(%s)\n",(const char *)aFileName);
+        printf("SetPostMessageFile(%s)\n",(const char *)aFileName);
 #endif
-	m_fileName = aFileName;
-	return NS_OK;
+        m_fileName = aFileName;
+        return NS_OK;
     }
     else {
-	return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
     }
 }
 

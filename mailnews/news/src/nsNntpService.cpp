@@ -53,6 +53,12 @@
 
 #include "nsINetSupportDialogService.h"
 
+#include "nsIPref.h"
+
+#include "nsCRT.h"  // for nsCRT::strtok
+
+#define PREF_NETWORK_HOSTS_NNTP_SERVER	"network.hosts.nntp_server"
+
 #ifdef DEBUG_sspitzer_
 #define DEBUG_NEWS 1
 #endif
@@ -62,13 +68,13 @@
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
-static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
+static NS_DEFINE_CID(kCNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
-static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
-static NS_DEFINE_CID(kNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);   
+static NS_DEFINE_CID(kCNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
+static NS_DEFINE_CID(kCNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
+static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);   
+static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID); 
                      
 nsNntpService::nsNntpService()
 {
@@ -138,8 +144,8 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
   printf("nsNntpService::DisplayMessage(%s,...)\n",aMessageURI);
 #endif
 
-  nsString2 uri(aMessageURI, eOneByte);
-  nsString2 newsgroupName("", eOneByte);
+  nsString uri(aMessageURI, eOneByte);
+  nsString newsgroupName("", eOneByte);
   nsMsgKey key = nsMsgKey_None;
     
   if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0) {
@@ -158,8 +164,8 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
 
 nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, nsString &newsURI, nsString &newsgroupName, nsMsgKey *key)
 {
-  nsString2 hostname("", eOneByte);
-  nsString2 messageUriWithoutKey("", eOneByte);
+  nsString hostname("", eOneByte);
+  nsString messageUriWithoutKey("", eOneByte);
   nsresult rv = NS_OK;
 
   // messageURI is of the form:  "news_message://news.mcom.com/mcom.linux#1"
@@ -260,36 +266,158 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
 	return NS_OK;
 }
 
+nsresult nsNntpService::FindHostFromGroup(nsString &host, nsString &groupName)
+{
+  nsresult rv = NS_OK;
+  if (0) {
+    // we have "group"
+    // todo:  look for "group" in the newsrc files of all the hosts, starting with the default nntp host.
+    // for now, leave host blank so we'll just use the default nntp host.
+  }
+  
+  if (host == "") {
+    NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
+    if (NS_FAILED(rv) || (!prefs)) {
+      return rv;
+    } 
+    
+    char *default_nntp_server = nsnull; 
+    // if we get here, we know prefs is not null
+    rv = prefs->CopyCharPref(PREF_NETWORK_HOSTS_NNTP_SERVER, &default_nntp_server);
+    if (NS_FAILED(rv) || (!default_nntp_server)) {
+      // if all else fails, use "news" as the default_nntp_server
+      default_nntp_server = PR_smprintf("news");
+    }
+    host = default_nntp_server;
+    PR_FREEIF(default_nntp_server);
+  }
+  
+  if (host == "")
+    return NS_ERROR_FAILURE;
+  else 
+    return NS_OK;
+}
+
+nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *newsgroupNames)
+{
+  nsresult rv = NS_OK;
+  
+  if (!newsgroupNames) return NS_ERROR_NULL_POINTER;
+  if (PL_strlen(newsgroupNames) == 0) return NS_ERROR_FAILURE;
+
+#ifdef DEBUG_sspitzer
+  printf("newsgroupNames == %s\n",newsgroupNames);
+#endif
+  
+  // newsgroupNames can be a comma seperated list of these:
+  // news://host/group
+  // news://group
+  // host/group
+  // group
+  //
+  // we are not going to allow the user to cross post to multiple hosts.
+  // so as soon as we determine the host from newsgroupNames, we can stop.
+  //
+  // 1) explict (news://host/group or host/group)
+  // 2) context (if you reply to a message when reading it on host x, reply to that host.
+  // 3) no context look up news://group or group in the various newsrc files to determine host, with PREF_NETWORK_HOSTS_NNTP_SERVER being the first newrc file searched each time
+  // 4) use the default nntp server
+
+  //nsCRT::strtok is going destroy what we pass to it, so we need to make a copy of newsgroupNames.
+  char *list = PL_strdup(newsgroupNames);
+  char *token = nsnull;
+  char *rest = list;
+  nsString str("", eOneByte);
+
+  token = nsCRT::strtok(rest, ",", &rest);
+  while (token && *token) {
+    str = token;
+    str.StripWhitespace();
+
+    if (str != "") {
+#ifdef DEBUG_sspitzer
+      printf("value = %s\n", str.GetBuffer());
+#endif
+      nsString theRest("",eOneByte);
+
+      // does str start with "news:/"?
+      if (str.Find(kNewsRootURI) == 0) {
+        // we have news://group or news://host/group
+        // set theRest to what's after news://
+        str.Right(theRest, str.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */);
+      }
+      else {
+        theRest = str;
+      }
+      
+#ifdef DEBUG_sspitzer
+      printf("theRest == %s\n",theRest.GetBuffer());
+#endif
+      
+      // theRest is "group" or "host/group"
+      PRInt32 slashpos = theRest.Find('/');
+      if (slashpos > 0 ) {
+        // theRest is "host/group"
+        theRest.Left(host, slashpos);
+#ifdef DEBUG_sspitzer
+        printf("host == %s\n", host.GetBuffer());
+#endif
+      }
+      else {
+        // theRest is "group"
+        rv = FindHostFromGroup(host, str);
+        if (NS_FAILED(rv)) return rv;
+      }  
+      str = "";
+    }
+#ifdef DEBUG_sspitzer
+    else {
+        printf("nothing between two commas. ignore and keep going...\n");
+    }
+#endif
+    token = nsCRT::strtok(rest, ",", &rest);
+    
+    //we have our host, we're done.
+    //if (host != "") break;
+  }    
+  PR_Free(list);
+  
+  if (host != "")
+    return NS_OK;
+  else
+    return NS_ERROR_FAILURE;
+}
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsINntpService support
 ////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroupName, nsIUrlListener * aUrlListener, nsIURL **_retval)
+nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgroupNames, nsIUrlListener * aUrlListener, nsIURL **_retval)
 {
-#ifdef DEBUG_NEWS
-  printf("nsNntpService::PostMessage(%s,%s,%s,??,??)\n",(const char *)pathToFile,subject,newsgroupName);
+#ifdef DEBUG_sspitzer
+  printf("nsNntpService::PostMessage(%s,%s,??,??)\n",(const char *)pathToFile,newsgroupNames);
 #endif
-  
+  if (!newsgroupNames) return NS_ERROR_NULL_POINTER;
+  if (PL_strlen(newsgroupNames) == 0) return NS_ERROR_FAILURE;
+    
   NS_LOCK_INSTANCE();
   
   nsCOMPtr <nsINntpUrl> nntpUrl;
   nsresult rv = NS_OK;
   
-  rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(nntpUrl));
+  rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(nntpUrl));
   if (NS_FAILED(rv) || !nntpUrl) return rv;
-  
-  printf("hardcoding the server name.  right now, we can only post to news.mozilla.org\n");
-  char *urlstr = PR_smprintf("news://%s/%s","news.mozilla.org",newsgroupName);
+
+  nsString host("",eOneByte);
+
+  rv = DetermineHostForPosting(host, newsgroupNames);
+  if (NS_FAILED(rv) || (host == "")) return rv;
+
+#ifdef DEBUG_sspitzer
+  printf("post to this host: %s\n",host.GetBuffer());
+#endif
+
+  char *urlstr = PR_smprintf("%s/%s",kNewsRootURI,host.GetBuffer());
   nntpUrl->SetSpec(urlstr);
   PR_FREEIF(urlstr);
-  
-  nsCOMPtr <nsINNTPNewsgroup> newsgroup;
-  rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
-  if (NS_FAILED(rv) || !newsgroup) return rv;
-
-  newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
-  newsgroup->SetName((char *)newsgroupName);
-
-  nntpUrl->SetNewsgroup(newsgroup);
   
   if (aUrlListener) // register listener if there is one...
     nntpUrl->RegisterListener(aUrlListener);
@@ -303,22 +431,14 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
   rv = nntpProtocol->Initialize(nntpUrl);
   if (NS_FAILED(rv)) return rv;
   
-  // get the current identity from the news session....
-  NS_WITH_SERVICE(nsIMsgMailSession,newsSession,kCMsgMailSessionCID,&rv);
-  if (NS_FAILED(rv) || !newsSession) return rv;
-
-#ifdef DEBUG_NEWS
-  printf("post message as: %s,%s,%s\n",fullname,from,org);
-#endif
-      
   nsCOMPtr <nsINNTPNewsgroupPost> post;
-  rv = nsComponentManager::CreateInstance(kNNTPNewsgroupPostCID, nsnull, nsINNTPNewsgroupPost::GetIID(), getter_AddRefs(post));
+  rv = nsComponentManager::CreateInstance(kCNNTPNewsgroupPostCID, nsnull, nsINNTPNewsgroupPost::GetIID(), getter_AddRefs(post));
   if (NS_FAILED(rv) || !post) return rv;
-      
-  post->AddNewsgroup(newsgroupName);
-#ifdef DEBUG_NEWS
+
+#ifdef DEBUG_sspitzer
   printf("set file to post to %s\n",(const char *)pathToFile);
 #endif
+  
   rv = post->SetPostMessageFile(pathToFile);
   if (NS_FAILED(rv)) return rv;
   
@@ -345,18 +465,18 @@ nsNntpService::RunNewsUrl(nsString& urlString, nsString &newsgroupName, nsMsgKey
   nsCOMPtr <nsINntpUrl> nntpUrl;
   nsresult rv = NS_OK;
 
-  rv = nsComponentManager::CreateInstance(kNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(nntpUrl));
+  rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(nntpUrl));
   if (NS_FAILED(rv) || !nntpUrl) return rv;
   
   nntpUrl->SetSpec(nsAutoCString(urlString));
   
   nsCOMPtr <nsINNTPNewsgroup> newsgroup;
-  rv = nsComponentManager::CreateInstance(kNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
+  rv = nsComponentManager::CreateInstance(kCNNTPNewsgroupCID, nsnull, nsINNTPNewsgroup::GetIID(), getter_AddRefs(newsgroup));
   if (NS_FAILED(rv) || !newsgroup) return rv;                       
        
   rv = newsgroup->Initialize(nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */);
   
-  nsString2 newsgroupNameStr(newsgroupName,eOneByte);
+  nsString newsgroupNameStr(newsgroupName,eOneByte);
   
   newsgroup->SetName((char *)(newsgroupNameStr.GetBuffer()));
   nntpUrl->SetNewsgroup(newsgroup);
@@ -427,8 +547,8 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   }
 #endif
 
-  nsString2 uriStr(uri, eOneByte);
-  nsString2 newsgroupName("", eOneByte);
+  nsString uriStr(uri, eOneByte);
+  nsString newsgroupName("", eOneByte);
   
   NS_ASSERTION((uriStr.Find(kNewsRootURI) == 0), "uriStr didn't start with news:/");
   if (uriStr.Find(kNewsRootURI) == 0) {
@@ -451,7 +571,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(nsISupportsArray *messages, nsIUrlLi
   nsresult rv = NS_OK;
   PRUint32 count = 0;
 
-  NS_WITH_SERVICE(nsINetSupportDialogService,dialog,kNetSupportDialogCID,&rv);
+  NS_WITH_SERVICE(nsINetSupportDialogService,dialog,kCNetSupportDialogCID,&rv);
   if (NS_FAILED(rv)) return rv;
     
   if (!messages) {
@@ -494,7 +614,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(nsISupportsArray *messages, nsIUrlLi
     return NS_ERROR_FAILURE;
   }
   
-  nsString2 messageIds("", eOneByte);
+  nsString messageIds("", eOneByte);
   PRUint32 i;
   for (i = 0; i < count; i++) {
     nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));

@@ -73,7 +73,7 @@ class MSG_Master;
 #define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
 
 extern PRInt32 net_NewsChunkSize;
 
@@ -320,7 +320,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 	if (m_getOldMessages || !m_knownArts.set->IsMember(last_possible)) 
 	{
         nsresult rv = NS_OK;
-        NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+        NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
         if (NS_FAILED(rv) || (!prefs)) {
             return rv;
         }    

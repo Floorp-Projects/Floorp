@@ -1742,8 +1742,8 @@ nsMsgComposeAndSend::DeliverFileAsNews ()
     }
 
     nsFilePath    filePath (*mTempFileSpec);
-    rv = nntpService->PostMessage(filePath, mCompFields->GetSubject(), mCompFields->GetNewsgroups(), 
-                                  sendListener, nsnull);
+
+    rv = nntpService->PostMessage(filePath, mCompFields->GetNewsgroups(), sendListener, nsnull);
   }
 
   return;

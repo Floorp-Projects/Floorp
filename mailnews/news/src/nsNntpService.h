@@ -34,7 +34,7 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////
   // we suppport the nsINntpService Interface 
   ////////////////////////////////////////////////////////////////////////////////////////
-  NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL **_retval);
+  NS_IMETHOD PostMessage(nsFilePath &pathToFile, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
   NS_IMETHOD RunNewsUrl (nsString& urlString, nsString& newsgroupName, nsMsgKey aKey, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURL **_retval);
 
@@ -61,7 +61,10 @@ public:
                                          nsString &newsURI,
                                          nsString &newsgroupName,
                                          nsMsgKey *aKey);
-
+  
+  nsresult DetermineHostForPosting(nsString &host, const char *newsgroupNames);
+  nsresult FindHostFromGroup(nsString &host, nsString &groupName);
+  
   NS_DECL_ISUPPORTS  
 
 };
