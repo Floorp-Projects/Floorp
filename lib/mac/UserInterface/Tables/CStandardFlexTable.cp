@@ -807,8 +807,10 @@ void
 CStandardFlexTable::DoInlineEditing ( const STableCell &inCell, Rect & inTextRect )
 {
 	mRowBeingEdited = inCell.row;
-	if ( !CanDoInlineEditing() )		// bail if inline editing is temporarily turned off
+	if ( !CanDoInlineEditing() ) {				// bail if inline editing is temporarily turned off
+		mRowBeingEdited = LArray::index_Bad;
 		return;
+	}
 	
 #if 0
 	// erase the text rectangle so that when the text field shrinks, you won't see the old name
