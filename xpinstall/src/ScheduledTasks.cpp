@@ -251,6 +251,17 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
     renamedDoomedFile->Exists(&flagExists);
     if ( flagExists )
     {
+#ifdef XP_MACOSX
+      // If we clone an nsIFile, and move the clone, the FSRef of the *original*
+      // file is not what you would expect - it points to the moved file. This
+      // is despite the fact that the two FSRefs are independent objects. Until
+      // the OS X file impl is changed to not use FSRefs, need to do this.
+      nsCOMPtr<nsILocalFile> doomedFileLocal(do_QueryInterface(doomedFile));
+      nsCAutoString doomedFilePath;
+      rv = doomedFileLocal->GetNativePath(doomedFilePath);
+      if (NS_FAILED(rv))
+          return nsInstall::UNEXPECTED_ERROR;
+#endif
         tmpLocalFile = do_QueryInterface(renamedDoomedFile, &rv); // Convert to an nsILocalFile
 
         //get the leafname so we can convert its extension to .old
@@ -276,12 +287,11 @@ PRInt32 ReplaceFileNow(nsIFile* replacementFile, nsIFile* doomedFile )
         if (NS_FAILED(rv)) result = nsInstall::UNEXPECTED_ERROR;
         rv = renamedDoomedFile->MoveToNative(parent, uniqueLeafName);        
 
-        if (NS_SUCCEEDED(rv))
-        {
-            renamedDoomedFile = parent;                      //MoveTo on Mac doesn't reset the tmpFile object to 
-            renamedDoomedFile->AppendNative(uniqueLeafName); //the new name or location. That's why there's this 
-                                                             //explict assignment and Append call.
-        }
+#ifdef XP_MACOSX
+        rv = doomedFileLocal->InitWithNativePath(doomedFilePath);
+        if (NS_FAILED(rv))
+            result = nsInstall::UNEXPECTED_ERROR;
+#endif
 
         if (result == nsInstall::UNEXPECTED_ERROR)
             return result;
