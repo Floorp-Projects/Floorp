@@ -50,6 +50,8 @@ SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
 IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 
 DLLFLAGS += -DEF:nss.def
+RES = $(OBJDIR)/nss.res
+RESNAME = nss.rc
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 CRYPTOLIB=$(DIST)/lib/freebl.lib

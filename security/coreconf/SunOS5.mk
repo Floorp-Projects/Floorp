@@ -113,13 +113,12 @@ endif
 # Purify doesn't like -MDupdate
 NOMD_OS_CFLAGS += $(DSO_CFLAGS) $(OS_DEFINES) $(SOL_CFLAGS)
 
-MKSHLIB  = $(LD)
-MKSHLIB += $(DSO_LDOPTS)
+MKSHLIB  = $(LD) $(DSO_LDOPTS)
 
 # ld options:
 # -G: produce a shared object
 # -z defs: no unresolved symbols allowed
-DSO_LDOPTS += -G
+DSO_LDOPTS += -G -h $(notdir $@)
 
 # -KPIC generates position independent code for use in shared libraries.
 # (Similarly for -fPIC in case of gcc.)

@@ -43,16 +43,19 @@ include $(CORE_DEPTH)/coreconf/WIN32.mk
 PROCESSOR := $(shell uname -p)
 ifeq ($(PROCESSOR), I386)
 	CPU_ARCH   = x386
-	OS_CFLAGS += -W3 -nologo -D_X86_
+	OS_CFLAGS += -W3 -nologo
+	DEFINES += -D_X86_
 else 
 	ifeq ($(PROCESSOR), MIPS)
 		CPU_ARCH    = MIPS
-		#OS_CFLAGS += -W3 -nologo -D_MIPS_
+		#OS_CFLAGS += -W3 -nologo
+		#DEFINES += -D_MIPS_
 		OS_CFLAGS  += -W3 -nologo
 	else 
 		ifeq ($(PROCESSOR), ALPHA)
 			CPU_ARCH  = ALPHA
-			OS_CFLAGS += -W3 -nologo -D_ALPHA_=1
+			OS_CFLAGS += -W3 -nologo
+			DEFINES += -D_ALPHA_=1
 		else 
 			CPU_ARCH  = processor_is_undefined
 		endif
