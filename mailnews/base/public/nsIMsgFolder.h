@@ -11,6 +11,7 @@
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIMsgHdr.h" /* interface nsIMsgHdr */
 #include "nsIFolder.h" /* interface nsIFolder */
@@ -112,11 +113,11 @@ class nsIMsgFolder : public nsIFolder {
   /* void SummaryChanged (); */
   NS_IMETHOD SummaryChanged() = 0;
 
-  /* unsigned long GetNumUnread (in boolean deep); */
-  NS_IMETHOD GetNumUnread(PRBool deep, PRUint32 *_retval) = 0;
+  /* long GetNumUnread (in boolean deep); */
+  NS_IMETHOD GetNumUnread(PRBool deep, PRInt32 *_retval) = 0;
 
-  /* unsigned long GetTotalMessages (in boolean deep); */
-  NS_IMETHOD GetTotalMessages(PRBool deep, PRUint32 *_retval) = 0;
+  /* long GetTotalMessages (in boolean deep); */
+  NS_IMETHOD GetTotalMessages(PRBool deep, PRInt32 *_retval) = 0;
 
   /* readonly attribute unsigned long expungedBytesCount; */
   NS_IMETHOD GetExpungedBytesCount(PRUint32 *aExpungedBytesCount) = 0;
