@@ -38,12 +38,10 @@ nsStreamLoader::Init(nsIURI* aURL,
                      nsLoadFlags loadAttributes)
 {
   nsresult rv = NS_OK;
-  mObserver = observer;
-  mContext  = context;
-
+  
   rv = NS_OpenURI(this, nsnull, aURL, nsnull, aGroup, notificationCallbacks,
                   loadAttributes);
-  if (NS_FAILED(rv) && mObserver) {
+  if (NS_FAILED(rv) && observer) {
     // don't callback synchronously as it puts the caller
     // in a recursive situation and breaks the asynchronous
     // semantics of nsIStreamLoader
@@ -58,9 +56,11 @@ nsStreamLoader::Init(nsIURI* aURL,
               PROXY_ASYNC | PROXY_ALWAYS, getter_AddRefs(pObserver));
     if (NS_FAILED(rv2)) return rv2;
 
-    rv = pObserver->OnStreamComplete(this, mContext, rv, 0, nsnull);
+    rv = pObserver->OnStreamComplete(this, context, rv, 0, nsnull);
   }
 
+  mObserver = observer;
+  mContext  = context;
   return rv;
 }
 
@@ -115,9 +115,11 @@ nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 {
   nsresult rv;
   mRequest = request;
-  rv = mObserver->OnStreamComplete(this, mContext, aStatus, 
-                                   mData.Length(),
-                                   mData.get());
+  if (mObserver) {
+    rv = mObserver->OnStreamComplete(this, mContext, aStatus, 
+                                     mData.Length(),
+                                     mData.get());
+  }
   return rv;
 }
 
