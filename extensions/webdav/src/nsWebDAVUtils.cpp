@@ -47,6 +47,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMParser.h"
+#include "nsContentErrors.h"
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gDAVLog = nsnull;
@@ -65,6 +66,10 @@ NS_WD_GetElementByTagName(nsIDOMElement *parentElt, const nsAString &tagName,
     nsCOMPtr<nsIDOMNode> node;
     rv = list->Item(0, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!node) {
+        return NS_CONTENT_ATTR_NO_VALUE;
+    }
 
     return CallQueryInterface(node, elt);
 }
