@@ -65,7 +65,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 
-MODULE_NAME	= XMLTermModule
+MODULE_NAME	= mozXMLTermModule
 
 DEFINES += $(TK_CFLAGS)
 
