@@ -2417,6 +2417,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
     // unconstrained reflow or keep it around in a separate space manager...
     PRBool isBeginningLine = aState.mCurrentLine == begin_lines() ||
                              !aState.mCurrentLine.prev()->IsLineWrapped();
+    // XXXldb Add &&!aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)
     if (aState.GetFlag(BRS_COMPUTEMAXWIDTH) && isBeginningLine) {
       // First reflow the line with an unconstrained width. 
       nscoord oldY = aState.mY;
@@ -4995,6 +4996,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       availWidth = aState.mContentArea.width;
     }
     else {
+      // This quirk matches the one in nsBlockReflowState::FlowAndPlaceFloat
       // give tables only the available space
       // if they can shrink we may not be constrained to place
       // them in the next line
