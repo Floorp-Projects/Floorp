@@ -99,6 +99,10 @@ if [ ! -z ${DMG_BKGND_IMG} ]; then
 	cp -p ${DMG_BKGND_IMG} ${MOUNT_DIR}/.background/
 fi
 
+# make sure it's not world writeable
+echo "fixing permissions"
+chmod -R go-w ${MOUNT_DIR}
+
 # make the top window open itself on mount:
 if [ -x /usr/local/bin/openUp ]; then
     /usr/local/bin/openUp ${MOUNT_DIR}
