@@ -1501,6 +1501,11 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
     immediateParent = this;
 
   nsIFrame* currFrame;
+  // NOTE: If you crashed here due to a bogus |immediateParent| it is 
+  //       possible that the menu whose shortcut is being looked up has 
+  //       been destroyed already.  One strategy would be to 
+  //       setTimeout(<func>,0) as detailed in:
+  //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
   immediateParent->FirstChild(mPresContext, nsnull, &currFrame);
 
   while (currFrame) {

@@ -212,7 +212,7 @@ Contributor(s): ______________________________________. -->
           <menuitem id="printMenuItemToolbar" label="&printCmd.label;" accesskey="&printCmd.accesskey;"
                     default="true" oncommand="BrowserPrint()"/>
           <menuitem label="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;"
-                    oncommand="BrowserPrintPreview();"/>
+                    oncommand="setTimeout(BrowserPrintPreview, 0);"/>
         </menupopup>
       </toolbarbutton>
 
