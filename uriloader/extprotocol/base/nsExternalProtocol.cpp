@@ -133,3 +133,20 @@ nsresult nsExternalProtocol::LaunchViaHelper( nsIURI *pUri)
 	return( NS_ERROR_FAILURE);
 }
 
+
+
+#ifdef XP_UNIX
+// For some reason I cannot get the makefile for building the unix
+// static lib to work properly.  Rather than wastew many many hours
+// on it, just include the source here.  If anyone can figure out how
+// to get the makefile in extprotocol/unix to work then remove this
+// and add that library to the makefile in extprotocol/base - that is
+// how the windows build works
+
+#define UNIX_MAKEFILE_NO_WORKY	1
+
+#include "../unix/nsExternalProtocolUnix.cpp"
+
+#endif
+
+
