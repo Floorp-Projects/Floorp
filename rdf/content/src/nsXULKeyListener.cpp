@@ -1333,7 +1333,7 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 		if(keyName.IsEmpty())
 			break;
 
-        char tempChar[2];
+        PRUnichar tempChar[2];
         tempChar[0] = theChar;
         tempChar[1] = 0;
         nsAutoString tempChar2 = tempChar;
