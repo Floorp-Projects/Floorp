@@ -117,22 +117,42 @@ public:
   NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
 	
 protected:
-  nscolor 							mCurrentColor ;
-  nsTransform2D		  		*mTMatrix;					// transform that all the graphics drawn here will obey
-  float             		mP2T;
-  nsDrawingSurfaceMac		mRenderingSurface;  // main drawing surface,Can be a BackBuffer if Selected in
-  nsDrawingSurfaceMac		mFrontBuffer;				// current buffer to draw into
-	nsDrawingSurfaceMac		mOriSurface;
+  float             		mP2T; // Pixel to Twip conversion factor
+  
+  GraphicsState *           mCurStatePtr;      // Pointer to the current state, top of stack
+  
+  nsDrawingSurfaceMac       mOriginalSurface;
+  
   nsIDeviceContext			*mContext;
-  nsIFontMetrics				*mFontMetrics;
-  RgnHandle							mClipRegion;
-  RgnHandle							mMainRegion;
-  PRInt32               mCurrFontHandle;
-  PRInt32								mOffx;
-  PRInt32								mOffy;
+  
+  nsDrawingSurfaceMac		mFrontBuffer;      // current buffer to draw into
+  
+  /*
+  nscolor                   mCurrentColor;
+  nsTransform2D		  		*mTMatrix;         // transform that all the graphics drawn here will obey
+  
+  nsDrawingSurfaceMac		mRenderingSurface; // main drawing surface,Can be a BackBuffer if Selected in
+
+  
+  nsDrawingSurfaceMac		mRenderingSurface; // main drawing surface,Can be a BackBuffer if Selected in
+  
+  nsIFontMetrics			*mFontMetrics;
+  RgnHandle					mClipRegion;
+  RgnHandle					mMainRegion;
+  PRInt32                   mCurrFontHandle;
+  PRInt32                   mOffx;
+  PRInt32                   mOffy;
+  
+  // Mac specific state
+  RgnHandle                 mMacOriginRelativeClipRgn;
+  RgnHandle                 mMacPortRelativeClipRgn;
+  
+  PRInt32					mMacPortRelativeX;
+  PRInt32					mMacPortRelativeY;
+  */
 
   //state management
-  nsVoidArray       *mStateCache;
+  nsVoidArray               *mStateCache;
 };
 
 #endif /* nsRenderingContextMac_h___ */
