@@ -39,6 +39,7 @@ TOOLKIT_CPPSRCS = \
 	nsGTKMenu.cpp
 
 TOOLKIT_CFLAGS = $(TK_GTK_CFLAGS)
+TOOLKIT_LIBS   = $(TK_GTK_LIBS)
 else
 ifneq (,$(filter motif,$(MOZ_TOOLKIT)))
 TOOLKIT_CFLAGS = \
@@ -50,6 +51,7 @@ TOOLKIT_CPPSRCS = \
 	nsUnixMain.cpp
 
 TOOLKIT_CFLAGS = $(TK_MOTIF_CFLAGS)
+TOOLKIT_LIBS   = $(TK_MOTIF_LIBS)
 endif
 endif
 
@@ -114,9 +116,7 @@ EX_LIBS = \
 	-lnetlib \
 	-lnetutil \
 	-lnetwork \
-	-lnspr21 \
-	-lplc21 \
-	-lplds21 \
+	$(NSPR_LIBS) \
 	-lraptorwebwidget \
 	-lreg \
 	-lremoturl \
@@ -153,21 +153,17 @@ PROGS = main
 
 TARGETS = $(PROGS)
 
-ifeq ($(USE_NGLAYOUT_GTK),1)
-XLIBS += $(shell gtk-config --libs)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 $(PROGS): $(OBJS) #$(EX_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TK_MOTIF_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
+	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
 else
 ifeq ($(OS_ARCH),IRIX)
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TK_MOTIF_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
+	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIB) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
 else
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TK_MOTIF_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
+	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
 endif
 endif
 
