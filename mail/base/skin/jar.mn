@@ -15,6 +15,7 @@ classic.jar:
 +   skin/classic/messenger/subscribe.css            (subscribe.css)
 +   skin/classic/messenger/searchDialog.css         (searchDialog.css)
 +   skin/classic/messenger/msgSelectOffline.css     (msgSelectOffline.css)
++   skin/classic/messenger/dialogs.css              (dialogs.css)
 +   skin/classic/messenger/icons/new-mail-alert.png (icons/new-mail-alert.png)
     skin/classic/messenger/icons/mail-toolbar.png   (icons/mail-toolbar.png)
     skin/classic/messenger/icons/mail-toolbar-small.png  (icons/mail-toolbar-small.png)
