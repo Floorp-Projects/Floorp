@@ -70,7 +70,8 @@ public:
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
 													 TunnelInfo *aInfo) = 0;
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                   nsIImapUrl * aUrl) = 0;
+                                   nsIImapUrl * aUrl,
+                                   PRBool copySucceeded) = 0;
   NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
                          nsIMsgMailNewsUrl* aUrl,
                          PRBool isRunning,

@@ -120,7 +120,8 @@ public:
     NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
     NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocl,
-                                     nsIImapUrl * aUrl);
+                                     nsIImapUrl * aUrl,
+                                     PRBool copySucceeded);
 
     NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
                            nsIMsgMailNewsUrl* aUrl,
@@ -330,10 +331,12 @@ struct ProcessTunnelProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 struct CopyNextStreamMessageProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     CopyNextStreamMessageProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                    nsIImapUrl * aUrl);
+                                    nsIImapUrl * aUrl,
+                                    PRBool copySucceeded);
     virtual ~CopyNextStreamMessageProxyEvent();
     NS_IMETHOD HandleEvent();
     nsCOMPtr<nsIImapUrl> m_Url;
+    PRBool m_copySucceeded;
 };
 
 struct SetUrlStateProxyEvent : public nsImapMiscellaneousSinkProxyEvent

@@ -257,7 +257,8 @@ public:
                              TunnelInfo *aInfo);
 
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                   nsIImapUrl * aUrl);
+                                   nsIImapUrl * aUrl,
+                                   PRBool copySucceeded);
   NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
                          nsIMsgMailNewsUrl* aUrl,
                          PRBool isRunning,

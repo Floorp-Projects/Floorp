@@ -1159,7 +1159,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
   if (GetConnectionStatus() >= 0 && m_imapMiscellaneousSink && m_runningUrl)
   {
-      m_imapMiscellaneousSink->CopyNextStreamMessage(this, m_runningUrl);
+      m_imapMiscellaneousSink->CopyNextStreamMessage(this, m_runningUrl, GetServerStateParser().LastCommandSuccessful());
       WaitForFEEventCompletion();
   }
 

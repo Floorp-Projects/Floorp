@@ -4500,7 +4500,8 @@ nsImapMailFolder::ProcessTunnel(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                        nsIImapUrl * aUrl)
+                                        nsIImapUrl * aUrl,
+                                        PRBool copySucceeded)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!aUrl) return rv;
@@ -4513,9 +4514,19 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
     if (NS_FAILED(rv)) return rv;
 
     if (!mailCopyState->m_streamCopy) return NS_OK;
+    //remove the message that did not get copied successfully. 
+    if (mailCopyState->m_curIndex > 0 && !copySucceeded && mailCopyState->m_isMove)
+    {
+      rv = mailCopyState->m_messages->RemoveElementAt(mailCopyState->m_curIndex-1);
+      if (NS_SUCCEEDED(rv))
+      {
+        mailCopyState->m_curIndex--;
+        mailCopyState->m_totalCount--;
+      }
+    }
     if (mailCopyState->m_curIndex < mailCopyState->m_totalCount)
     {
-        nsCOMPtr<nsISupports> aSupport =
+       nsCOMPtr<nsISupports> aSupport =
             getter_AddRefs(mailCopyState->m_messages->ElementAt
                            (mailCopyState->m_curIndex));
         mailCopyState->m_message = do_QueryInterface(aSupport,
@@ -4526,7 +4537,7 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                    this, mailCopyState->m_msgWindow, mailCopyState->m_isMove);
         }
     }
-    else if (mailCopyState->m_isMove)
+    else if (mailCopyState->m_isMove)  
     {
         nsCOMPtr<nsIMsgFolder> srcFolder =
             do_QueryInterface(mailCopyState->m_srcSupport, &rv);
@@ -4540,9 +4551,6 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
           if (popFolder)   //needed if move pop->imap to notify FE
             srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
         }
-        
-
-
     }
     return rv;
 }
