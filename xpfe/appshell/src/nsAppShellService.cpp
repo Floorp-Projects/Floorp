@@ -293,6 +293,7 @@ nsAppShellService::CreateHiddenWindow()
     NS_RELEASE(url);
   }
   NS_ASSERTION(NS_SUCCEEDED(rv), "HiddenWindow not created");
+  return(rv);
 }
 
  NS_IMETHODIMP  nsAppShellService::EnumerateAndInitializeComponents(void)
