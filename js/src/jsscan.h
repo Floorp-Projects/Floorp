@@ -168,7 +168,8 @@ struct JSTokenStream {
     void                *listenerTSData;/* listener data for this TokenStream */
 };
 
-#define CURRENT_TOKEN(ts) ((ts)->tokens[(ts)->cursor])
+#define CURRENT_TOKEN(ts) ((ts)->tokens[((ts)->cursor + (ts)->lookahead) \
+                                       & NTOKENS_MASK])
 
 /* JSTokenStream flags */
 #define TSF_ERROR       0x01            /* fatal error while compiling */
