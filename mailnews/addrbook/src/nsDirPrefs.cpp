@@ -356,8 +356,6 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
     DIR_GetDirServers();
   if (dir_ServerList)
   {
-    PRInt32 count = dir_ServerList->Count();
-    
     NS_ConvertUCS2toUTF8 utf8str(dirName);
     server->description = ToNewCString(utf8str);
     server->position = kDefaultPosition; // don't set position so alphabetic sort will happen.
