@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   emk <VYV03354@nifty.ne.jp>
  */
 #include "nsICSSParser.h"
 #include "nsCSSProps.h"
@@ -55,6 +56,7 @@ static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 
+//#define ENABLE_OUTLINE  // un-comment this to enable the outline properties
 
 MOZ_DECL_CTOR_COUNTER(SelectorList);
 
@@ -214,7 +216,9 @@ protected:
   PRBool ParseBorderStyle(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBorderWidth(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseBorderRadius(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
+#ifdef ENABLE_OUTLINE
   PRBool ParseOutlineRadius(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
+#endif
   PRBool ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseContent(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseCounterData(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
@@ -227,7 +231,9 @@ protected:
   PRBool ParseListStyle(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseMargin(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseMarks(PRInt32& aErrorCode, nsCSSValue& aValue);
+#ifdef ENABLE_OUTLINE
   PRBool ParseOutline(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
+#endif
   PRBool ParsePadding(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParsePause(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParsePlayDuring(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
@@ -290,6 +296,10 @@ protected:
   nsISupportsArray* mGroupStack;
 
   nsString      mCharset;        // the charset we are using
+
+  PRBool  mParsingCompoundProperty;
+  void    SetParsingCompoundProperty(PRBool aBool) {mParsingCompoundProperty = aBool;};
+  PRBool  IsParsingCompoundProperty(void) {return mParsingCompoundProperty;};
 };
 
 NS_HTML nsresult
@@ -314,6 +324,7 @@ CSSParserImpl::CSSParserImpl()
     mChildLoader(nsnull),
     mSection(eCSSSection_Charset),
     mNavQuirkMode(PR_FALSE),
+    mParsingCompoundProperty(PR_FALSE),
     mCaseSensitive(PR_FALSE),
     mNameSpace(nsnull),
     mGroupStack(nsnull)
@@ -1872,8 +1883,8 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
       break;
   }
 
-  // try 'xxyyzz' without '#' prefix for compatibility with IE and Nav4x (bug 23236)
-  if (PR_TRUE == mNavQuirkMode) {
+  // try 'xxyyzz' without '#' prefix for compatibility with IE and Nav4x (bug 23236 and 45804)
+  if (mNavQuirkMode && !IsParsingCompoundProperty()) {
   	// - If the string starts with 'a-f', the nsCSSScanner builds the token
   	//   as a eCSSToken_Ident and we can parse the string as a 'xxyyzz' RGB color.
   	// - If it only contains '0-9' digits, the token is a eCSSToken_Number and it
@@ -2312,7 +2323,7 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
     aValue.SetIntValue(tk->mInteger, eCSSUnit_Integer);
     return PR_TRUE;
   }
-  if (PR_TRUE == mNavQuirkMode) { // NONSTANDARD: Nav interprets unitless numbers as px
+  if (mNavQuirkMode && !IsParsingCompoundProperty()) { // NONSTANDARD: Nav interprets unitless numbers as px
     if (((aVariantMask & VARIANT_LENGTH) != 0) &&
         (eCSSToken_Number == tk->mType)) {
       aValue.SetFloatValue(tk->mNumber, eCSSUnit_Pixel);
@@ -2328,7 +2339,7 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
     return PR_FALSE;
   }
   if ((aVariantMask & VARIANT_COLOR) != 0) {
-    if ((PR_TRUE == mNavQuirkMode) || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
+    if ((mNavQuirkMode && !IsParsingCompoundProperty()) || // NONSTANDARD: Nav interprets 'xxyyzz' values even without '#' prefix
     		(eCSSToken_ID == tk->mType) || 
         (eCSSToken_Ident == tk->mType) ||
         ((eCSSToken_Function == tk->mType) && 
@@ -2580,6 +2591,8 @@ PRInt32 CSSParserImpl::ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
                                    const nsCSSProperty aPropIDs[], PRInt32 aNumIDs)
 {
   PRInt32 found = 0;
+  SetParsingCompoundProperty(PR_TRUE);
+
   PRInt32 loop;
   for (loop = 0; loop < aNumIDs; loop++) {
     // Try each property parser in order
@@ -2615,6 +2628,8 @@ PRInt32 CSSParserImpl::ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
       }
     }
   }
+
+  SetParsingCompoundProperty(PR_FALSE);
   return found;
 }
 
@@ -2712,8 +2727,10 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
     return ParseBorderWidth(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty__moz_border_radius:
     return ParseBorderRadius(aErrorCode, aDeclaration, aChangeHint);
+#ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline_radius:
     return ParseOutlineRadius(aErrorCode, aDeclaration, aChangeHint);
+#endif
   case eCSSProperty_clip:
     return ParseClip(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_content:
@@ -2731,8 +2748,10 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
     return ParseListStyle(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_margin:
     return ParseMargin(aErrorCode, aDeclaration, aChangeHint);
+#ifdef ENABLE_OUTLINE
   case eCSSProperty_outline:
     return ParseOutline(aErrorCode, aDeclaration, aChangeHint);
+#endif
   case eCSSProperty_padding:
     return ParsePadding(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_pause:
@@ -2829,7 +2848,9 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_font:
   case eCSSProperty_list_style:
   case eCSSProperty_margin:
+#ifdef ENABLE_OUTLINE
   case eCSSProperty_outline:
+#endif
   case eCSSProperty_padding:
   case eCSSProperty_pause:
   case eCSSProperty_play_during:
@@ -2903,11 +2924,13 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty__moz_border_radius_bottomRight:
   case eCSSProperty__moz_border_radius_bottomLeft:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+#ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline_radius_topLeft:
   case eCSSProperty__moz_outline_radius_topRight:
   case eCSSProperty__moz_outline_radius_bottomRight:
   case eCSSProperty__moz_outline_radius_bottomLeft:
     return ParseVariant(aErrorCode, aValue, VARIANT_HLP, nsnull);
+#endif
   case eCSSProperty_bottom:
   case eCSSProperty_top:
   case eCSSProperty_left:
@@ -2937,11 +2960,11 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
     if (ParseVariant(aErrorCode, aValue, VARIANT_HOK, nsCSSProps::kDisplayKTable)) {
 			if (aValue.GetUnit() == eCSSUnit_Enumerated) {
 				switch (aValue.GetIntValue()) {
-					case NS_STYLE_DISPLAY_MARKER:   // bug 2055
-					case NS_STYLE_DISPLAY_RUN_IN:		// bug 2056
-					case NS_STYLE_DISPLAY_COMPACT:  // bug 14983
+					case NS_STYLE_DISPLAY_MARKER:        // bug 2055
+					case NS_STYLE_DISPLAY_RUN_IN:		 // bug 2056
+					case NS_STYLE_DISPLAY_COMPACT:       // bug 14983
 					case NS_STYLE_DISPLAY_INLINE_TABLE:  // bug 18218
-						aErrorCode = NS_CSS_PARSER_DROP_DECLARATION;  // bug 15432
+						//aErrorCode = NS_CSS_PARSER_DROP_DECLARATION;  // bug 15432 (commented out for bug 46562 and 38397)
 						return PR_FALSE;
 				}
 			}
@@ -3024,6 +3047,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_orphans:
   case eCSSProperty_widows:
     return ParseVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
+#ifdef ENABLE_OUTLINE
   case eCSSProperty_outline_color:
     return ParseVariant(aErrorCode, aValue, VARIANT_HCK, 
                         nsCSSProps::kOutlineColorKTable);
@@ -3033,6 +3057,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_outline_width:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKL,
                         nsCSSProps::kBorderWidthKTable);
+#endif
   case eCSSProperty_overflow:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHK,
                         nsCSSProps::kOverflowKTable);
@@ -3209,7 +3234,7 @@ PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode, nsICSSDeclaration* aD
         values[5].SetInheritValue();
       }
       else {
-        values[5].SetPercentValue(50.0f);
+        values[5].SetPercentValue(0.5f);
       }
     }
     else { // both x & y values
@@ -3539,12 +3564,13 @@ PRBool CSSParserImpl::ParseBorderRadius(PRInt32& aErrorCode, nsICSSDeclaration* 
   return ParseBoxProperties(aErrorCode, aDeclaration, kBorderRadiusIDs, aChangeHint);
 }
 
+#ifdef ENABLE_OUTLINE
 PRBool CSSParserImpl::ParseOutlineRadius(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 
                                        PRInt32& aChangeHint)
 {
   return ParseBoxProperties(aErrorCode, aDeclaration, kOutlineRadiusIDs, aChangeHint);
 }
-
+#endif
 
 PRBool CSSParserImpl::ParseClip(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration,
                                 PRInt32& aChangeHint)
@@ -4045,6 +4071,7 @@ PRBool CSSParserImpl::ParseMarks(PRInt32& aErrorCode, nsCSSValue& aValue)
   return PR_FALSE;
 }
 
+#ifdef ENABLE_OUTLINE
 PRBool CSSParserImpl::ParseOutline(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 
                                    PRInt32& aChangeHint)
 {
@@ -4078,6 +4105,7 @@ PRBool CSSParserImpl::ParseOutline(PRInt32& aErrorCode, nsICSSDeclaration* aDecl
   }
   return PR_TRUE;
 }
+#endif
 
 PRBool CSSParserImpl::ParsePadding(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, 
                                    PRInt32& aChangeHint)
