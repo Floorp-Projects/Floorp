@@ -102,6 +102,8 @@ NS_InitializeHttpURLFactory(nsINetService* inet)
     if (rv != NS_OK) goto done;
 
     // XXX Hacks until we have real urlf objects for these...
+    inet->RegisterProtocol(*new nsString("ftp"), urlf, NULL);
+    if (rv != NS_OK) goto done;
     inet->RegisterProtocol(*new nsString("resource"), urlf, NULL);
     if (rv != NS_OK) goto done;
     inet->RegisterProtocol(*new nsString("file"), urlf, NULL);
