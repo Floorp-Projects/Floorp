@@ -330,7 +330,8 @@ nsMemoryCacheDevice::EvictEntry(nsCacheEntry * entry, PRBool deleteEntry)
     // update statistics
     PRInt32 memoryRecovered = (PRInt32)entry->Size();
     mTotalSize    -= memoryRecovered;
-    mInactiveSize -= memoryRecovered;
+    if (!entry->IsDoomed())
+        mInactiveSize -= memoryRecovered;
     --mEntryCount;
     
     if (deleteEntry)  delete entry;
