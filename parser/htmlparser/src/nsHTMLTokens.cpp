@@ -1234,8 +1234,8 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
     #endif
           aString.Append(PRUnichar(value));
         }
+        return value;
       }//if
-      return value;
     }//if
   
   char cbuf[30];
