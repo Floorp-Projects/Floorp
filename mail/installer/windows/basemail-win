@@ -18,6 +18,7 @@ thunderbird\defaults\profile\mimeTypes.rdf
 [xpcom]
 thunderbird\xpcom.dll
 thunderbird\xpcom_compat.dll
+thunderbird\components\xpcom_compat_c.dll
 thunderbird\xpistub.dll
 thunderbird\components\jar50.dll
 thunderbird\components\xpcom_base.xpt
