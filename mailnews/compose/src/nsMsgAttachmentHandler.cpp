@@ -47,7 +47,10 @@ static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 ///////////////////////////////////////////////////////////////////////////
 // Mac Specific Attachment Handling for AppleDouble Encoded Files
 ///////////////////////////////////////////////////////////////////////////
-#ifdef XP_MAC
+// The implementation for this (below) is #ifdef RICHIE_XP_MAC.
+// It is not functional, but we are keeping the code here as a base for
+// bringing back the functionality.
+#if 0
 #include "xp.h"                 // mac only
 #include "errors.h"
 #include "m_cvstrm.h"

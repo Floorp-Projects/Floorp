@@ -100,9 +100,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 enum  { kDefaultMode = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE) };
 
 #ifdef XP_MAC
-#include "xp.h"                 // mac only 
-#include "errors.h"
-#include "m_cvstrm.h"
 
 static char* NET_GetLocalFileFromURL(char *url)
 {
