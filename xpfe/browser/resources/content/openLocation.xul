@@ -20,6 +20,8 @@ Rights Reserved.
 
 Contributor(s): ______________________________________. -->
 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/openLocation.dtd" >
