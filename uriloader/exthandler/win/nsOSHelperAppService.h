@@ -30,6 +30,7 @@
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
+#include <windows.h>
 
 class nsOSHelperAppService : public nsExternalHelperAppService
 {
@@ -57,6 +58,14 @@ protected:
   // Lookup a mime info by extension, using an optional type hint
   already_AddRefed<nsIMIMEInfo> GetByExtension(const char *aFileExt, const char *aTypeHint = nsnull);
   nsresult FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo);
+
+  /** Whether we're running on an OS that supports the *W registry functions */
+  static PRBool mIsNT;
+  /** Get the string value of a registry value and store it in result.
+   * @return PR_TRUE on success, PR_FALSE on failure
+   */
+  static PRBool GetValueString(HKEY hKey, PRUnichar* pValueName, nsAString& result);
+  static nsresult GetMIMEInfoFromRegistry(const nsAFlatString& fileType, nsIMIMEInfo *pInfo);
 };
 
 #endif // nsOSHelperAppService_h__
