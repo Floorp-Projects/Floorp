@@ -1662,7 +1662,10 @@ HTMLContentSink::SetTitle(const nsString& aValue)
     mTitle = new nsString(aValue);
   }
   else {
-    *mTitle = aValue;
+    // If the title was already set then don't try to overwrite it
+    // when a new title is encountered - For backwards compatiblity
+    //*mTitle = aValue;
+    return NS_OK;
   }
   ReduceEntities(*mTitle);
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
