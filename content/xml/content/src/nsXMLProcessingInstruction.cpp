@@ -133,7 +133,8 @@ nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags) const
   return !(aFlags & ~ePROCESSING_INSTRUCTION);
 }
 
-NS_IMETHODIMP_(PRBool)
+// virtual
+PRBool
 nsXMLProcessingInstruction::MayHaveFrame() const
 {
   return PR_FALSE;

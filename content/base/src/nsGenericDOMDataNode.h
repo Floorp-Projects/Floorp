@@ -241,7 +241,7 @@ public:
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                  PRBool aDeepSetDocument);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-  NS_IMETHOD_(PRBool) MayHaveFrame() const;
+  virtual PRBool MayHaveFrame() const;
 
   // nsITextContent
   virtual const nsTextFragment *Text();

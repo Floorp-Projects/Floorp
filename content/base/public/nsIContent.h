@@ -583,7 +583,7 @@ public:
    * The content node may use this to determine what MayHaveFrame
    * returns.
    */
-  NS_IMETHOD_(void) SetMayHaveFrame(PRBool aMayHaveFrame)
+  virtual void SetMayHaveFrame(PRBool aMayHaveFrame)
   {
   }
 
@@ -591,7 +591,7 @@ public:
    * Returns PR_TRUE if there is a chance that the content node has a
    * frame, PR_FALSE otherwise.
    */
-  NS_IMETHOD_(PRBool) MayHaveFrame() const
+  virtual PRBool MayHaveFrame() const
   {
     return PR_TRUE;
   }
