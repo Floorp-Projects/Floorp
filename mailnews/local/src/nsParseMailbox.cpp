@@ -1106,249 +1106,253 @@ nsresult nsParseMailMessageState::InternRfc822 (struct message_header *header,
 // into a single nsIMsgDBHdr to store in a database.
 int nsParseMailMessageState::FinalizeHeaders()
 {
-	int status = 0;
-	struct message_header *sender;
-	struct message_header *recipient;
-	struct message_header *subject;
-	struct message_header *id;
+  int status = 0;
+  struct message_header *sender;
+  struct message_header *recipient;
+  struct message_header *subject;
+  struct message_header *id;
   struct message_header *inReplyTo;
-	struct message_header *references;
-	struct message_header *date;
-	struct message_header *statush;
-	struct message_header *mozstatus;
-	struct message_header *mozstatus2;
-	struct message_header *priority;
-	struct message_header *ccList;
-	struct message_header *mdn_dnt;
-	struct message_header md5_header;
-	struct message_header *content_type;
-	unsigned char md5_bin [16];
-	char md5_data [50];
-
-	const char *s;
-	PRUint32 flags = 0;
-	PRUint32 delta = 0;
-	nsMsgPriorityValue priorityFlags = nsMsgPriority::notSet;
-
-	if (!m_mailDB)		// if we don't have a valid db, skip the header.
-		return 0;
-
-	struct message_header to;
-	GetAggregateHeader (m_toList, &to);
-	struct message_header cc;
-	GetAggregateHeader (m_ccList, &cc);
-
-	sender     = (m_from.length          ? &m_from :
-				m_sender.length        ? &m_sender :
-				m_envelope_from.length ? &m_envelope_from :
-				0);
-	recipient  = (to.length         ? &to :
-				cc.length         ? &cc :
-				m_newsgroups.length ? &m_newsgroups :
-				sender);
-	ccList	   = (cc.length ? &cc : 0);
-	subject    = (m_subject.length    ? &m_subject    : 0);
-	id         = (m_message_id.length ? &m_message_id : 0);
-	references = (m_references.length ? &m_references : 0);
-	statush    = (m_status.length     ? &m_status     : 0);
-	mozstatus  = (m_mozstatus.length  ? &m_mozstatus  : 0);
-	mozstatus2  = (m_mozstatus2.length  ? &m_mozstatus2  : 0);
-	date       = (m_date.length       ? &m_date :
-				m_envelope_date.length ? &m_envelope_date :
-				0);
-	priority   = (m_priority.length   ? &m_priority   : 0);
-	mdn_dnt	   = (m_mdn_dnt.length	  ? &m_mdn_dnt	  : 0);
+  struct message_header *references;
+  struct message_header *date;
+  struct message_header *statush;
+  struct message_header *mozstatus;
+  struct message_header *mozstatus2;
+  struct message_header *priority;
+  struct message_header *ccList;
+  struct message_header *mdn_dnt;
+  struct message_header md5_header;
+  struct message_header *content_type;
+  unsigned char md5_bin [16];
+  char md5_data [50];
+  
+  const char *s;
+  PRUint32 flags = 0;
+  PRUint32 delta = 0;
+  nsMsgPriorityValue priorityFlags = nsMsgPriority::notSet;
+  PRUint32 labelFlags = 0;
+  
+  if (!m_mailDB)		// if we don't have a valid db, skip the header.
+    return 0;
+  
+  struct message_header to;
+  GetAggregateHeader (m_toList, &to);
+  struct message_header cc;
+  GetAggregateHeader (m_ccList, &cc);
+  
+  sender     = (m_from.length          ? &m_from :
+  m_sender.length        ? &m_sender :
+  m_envelope_from.length ? &m_envelope_from :
+  0);
+  recipient  = (to.length         ? &to :
+  cc.length         ? &cc :
+  m_newsgroups.length ? &m_newsgroups :
+  sender);
+  ccList	   = (cc.length ? &cc : 0);
+  subject    = (m_subject.length    ? &m_subject    : 0);
+  id         = (m_message_id.length ? &m_message_id : 0);
+  references = (m_references.length ? &m_references : 0);
+  statush    = (m_status.length     ? &m_status     : 0);
+  mozstatus  = (m_mozstatus.length  ? &m_mozstatus  : 0);
+  mozstatus2  = (m_mozstatus2.length  ? &m_mozstatus2  : 0);
+  date       = (m_date.length       ? &m_date :
+  m_envelope_date.length ? &m_envelope_date :
+  0);
+  priority   = (m_priority.length   ? &m_priority   : 0);
+  mdn_dnt	   = (m_mdn_dnt.length	  ? &m_mdn_dnt	  : 0);
   inReplyTo = (m_in_reply_to.length ? &m_in_reply_to : 0);
-	content_type = (m_content_type.length ? &m_content_type : 0);
-
-	if (mozstatus) 
-	{
-		if (strlen(mozstatus->value) == 4) 
-		{
-			int i;
-			for (i=0,s=mozstatus->value ; i<4 ; i++,s++) 
-			{
-				flags = (flags << 4) | msg_UnHex(*s);
-			}
-			// strip off and remember priority bits.
-			flags &= ~MSG_FLAG_RUNTIME_ONLY;
-			priorityFlags = (nsMsgPriorityValue) ((flags & MSG_FLAG_PRIORITIES) >> 13);
-			flags &= ~MSG_FLAG_PRIORITIES;
-		}
-		delta = (m_headerstartpos +
-			 (mozstatus->value - m_headers.GetBuffer()) -
-			 (2 + X_MOZILLA_STATUS_LEN)		/* 2 extra bytes for ": ". */
-			 ) - m_envelope_pos;
-	}
-
-	if (mozstatus2)
-	{
-		PRUint32 flags2 = 0;
-		sscanf(mozstatus2->value, " %x ", &flags2);
-		flags |= flags2;
-	}
-
-	if (!(flags & MSG_FLAG_EXPUNGED))	// message was deleted, don't bother creating a hdr.
-	{
-		nsresult ret = m_mailDB->CreateNewHdr(m_envelope_pos, getter_AddRefs(m_newMsgHdr));
-		if (NS_SUCCEEDED(ret) && m_newMsgHdr)
-		{
+  content_type = (m_content_type.length ? &m_content_type : 0);
+  
+  if (mozstatus) 
+  {
+    if (strlen(mozstatus->value) == 4) 
+    {
+      int i;
+      for (i=0,s=mozstatus->value ; i<4 ; i++,s++) 
+      {
+        flags = (flags << 4) | msg_UnHex(*s);
+      }
+      // strip off and remember priority bits.
+      flags &= ~MSG_FLAG_RUNTIME_ONLY;
+      priorityFlags = (nsMsgPriorityValue) ((flags & MSG_FLAG_PRIORITIES) >> 13);
+      flags &= ~MSG_FLAG_PRIORITIES;
+    }
+    delta = (m_headerstartpos +
+      (mozstatus->value - m_headers.GetBuffer()) -
+      (2 + X_MOZILLA_STATUS_LEN)		/* 2 extra bytes for ": ". */
+      ) - m_envelope_pos;
+  }
+  
+  if (mozstatus2)
+  {
+    PRUint32 flags2 = 0;
+    sscanf(mozstatus2->value, " %x ", &flags2);
+    flags |= flags2;
+  }
+  
+  if (!(flags & MSG_FLAG_EXPUNGED))	// message was deleted, don't bother creating a hdr.
+  {
+    nsresult ret = m_mailDB->CreateNewHdr(m_envelope_pos, getter_AddRefs(m_newMsgHdr));
+    if (NS_SUCCEEDED(ret) && m_newMsgHdr)
+    {
       PRUint32 origFlags;
       (void)m_newMsgHdr->GetFlags(&origFlags);
-			if (origFlags & MSG_FLAG_HAS_RE)
-				flags |= MSG_FLAG_HAS_RE;
-			else
-				flags &= ~MSG_FLAG_HAS_RE;
-
+      if (origFlags & MSG_FLAG_HAS_RE)
+        flags |= MSG_FLAG_HAS_RE;
+      else
+        flags &= ~MSG_FLAG_HAS_RE;
+      
       flags &= ~MSG_FLAG_OFFLINE; // don't keep MSG_FLAG_OFFLINE for local msgs
-			if (mdn_dnt && !(origFlags & MSG_FLAG_READ) &&
-				!(origFlags & MSG_FLAG_MDN_REPORT_SENT))
-				flags |= MSG_FLAG_MDN_REPORT_NEEDED;
-
-			m_newMsgHdr->SetFlags(flags);
-			if (priorityFlags != nsMsgPriority::notSet)
-				m_newMsgHdr->SetPriority(priorityFlags);
-
-			if (delta < 0xffff) 
-			{		/* Only use if fits in 16 bits. */
-				m_newMsgHdr->SetStatusOffset((PRUint16) delta);
-				if (!m_IgnoreXMozillaStatus) {	// imap doesn't care about X-MozillaStatus
-                    PRUint32 offset;
-                    (void)m_newMsgHdr->GetStatusOffset(&offset);
-					NS_ASSERTION(offset < 10000, "invalid status offset"); /* ### Debugging hack */
-                }
-			}
-			if (sender)
-				m_newMsgHdr->SetAuthor(sender->value);
-			if (recipient == &m_newsgroups)
-			{
-			  /* In the case where the recipient is a newsgroup, truncate the string
-				 at the first comma.  This is used only for presenting the thread list,
-				 and newsgroup lines tend to be long and non-shared, and tend to bloat
-				 the string table.  So, by only showing the first newsgroup, we can
-				 reduce memory and file usage at the expense of only showing the one
-				 group in the summary list, and only being able to sort on the first
-				 group rather than the whole list.  It's worth it. */
-				char * ch;
-				NS_ASSERTION (recipient->length == (PRUint16) nsCRT::strlen(recipient->value), "invalid recipient");
-				ch = PL_strchr(recipient->value, ',');
-				if (ch)
-				{
-					*ch = 0;
-					recipient->length = nsCRT::strlen(recipient->value);
-				}
-				m_newMsgHdr->SetRecipients(recipient->value);
-                m_newMsgHdr->SetRecipientsIsNewsgroup(PR_FALSE);
-			}
-			else if (recipient)
-			{
-				// note that we're now setting the whole recipient list,
-				// not just the pretty name of the first recipient.
-				PRUint32 numAddresses;
-				char	*names;
-				char	*addresses;
-
-				ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, recipient->value, &names, &addresses, &numAddresses);
-				if (ret == NS_OK)
-				{
-					m_newMsgHdr->SetRecipientsArray(names, addresses, numAddresses);
-					PR_FREEIF(addresses);
-					PR_FREEIF(names);
-				}
-				else {	// hmm, should we just use the original string?
-					m_newMsgHdr->SetRecipients(recipient->value);
-                    m_newMsgHdr->SetRecipientsIsNewsgroup(PR_TRUE);
-                }
-			}
-			if (ccList)
-			{
-				PRUint32 numAddresses;
-				char	*names;
-				char	*addresses;
-
-				ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, ccList->value, &names, &addresses, &numAddresses);
-				if (ret == NS_OK)
-				{
-					m_newMsgHdr->SetCCListArray(names, addresses, numAddresses);
-					PR_FREEIF(addresses);
-					PR_FREEIF(names);
-				}
-				else	// hmm, should we just use the original string?
-					m_newMsgHdr->SetCcList(ccList->value);
-			}
-			status = InternSubject (subject);
-			if (status >= 0)
-			{
-				if (! id)
-				{
-					// what to do about this? we used to do a hash of all the headers...
+      if (mdn_dnt && !(origFlags & MSG_FLAG_READ) &&
+        !(origFlags & MSG_FLAG_MDN_REPORT_SENT))
+        flags |= MSG_FLAG_MDN_REPORT_NEEDED;
+      
+      m_newMsgHdr->SetFlags(flags);
+      if (priorityFlags != nsMsgPriority::notSet)
+        m_newMsgHdr->SetPriority(priorityFlags);
+  
+      // convert the flag values (0xE000000) to label values (0-5)
+      labelFlags = ((flags & MSG_FLAG_LABELS) >> 25);
+      m_newMsgHdr->SetLabel(labelFlags);
+      if (delta < 0xffff) 
+      {		/* Only use if fits in 16 bits. */
+        m_newMsgHdr->SetStatusOffset((PRUint16) delta);
+        if (!m_IgnoreXMozillaStatus) {	// imap doesn't care about X-MozillaStatus
+          PRUint32 offset;
+          (void)m_newMsgHdr->GetStatusOffset(&offset);
+          NS_ASSERTION(offset < 10000, "invalid status offset"); /* ### Debugging hack */
+        }
+      }
+      if (sender)
+        m_newMsgHdr->SetAuthor(sender->value);
+      if (recipient == &m_newsgroups)
+      {
+      /* In the case where the recipient is a newsgroup, truncate the string
+      at the first comma.  This is used only for presenting the thread list,
+      and newsgroup lines tend to be long and non-shared, and tend to bloat
+      the string table.  So, by only showing the first newsgroup, we can
+      reduce memory and file usage at the expense of only showing the one
+      group in the summary list, and only being able to sort on the first
+        group rather than the whole list.  It's worth it. */
+        char * ch;
+        NS_ASSERTION (recipient->length == (PRUint16) nsCRT::strlen(recipient->value), "invalid recipient");
+        ch = PL_strchr(recipient->value, ',');
+        if (ch)
+        {
+          *ch = 0;
+          recipient->length = nsCRT::strlen(recipient->value);
+        }
+        m_newMsgHdr->SetRecipients(recipient->value);
+        m_newMsgHdr->SetRecipientsIsNewsgroup(PR_FALSE);
+      }
+      else if (recipient)
+      {
+        // note that we're now setting the whole recipient list,
+        // not just the pretty name of the first recipient.
+        PRUint32 numAddresses;
+        char	*names;
+        char	*addresses;
+        
+        ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, recipient->value, &names, &addresses, &numAddresses);
+        if (ret == NS_OK)
+        {
+          m_newMsgHdr->SetRecipientsArray(names, addresses, numAddresses);
+          PR_FREEIF(addresses);
+          PR_FREEIF(names);
+        }
+        else {	// hmm, should we just use the original string?
+          m_newMsgHdr->SetRecipients(recipient->value);
+          m_newMsgHdr->SetRecipientsIsNewsgroup(PR_TRUE);
+        }
+      }
+      if (ccList)
+      {
+        PRUint32 numAddresses;
+        char	*names;
+        char	*addresses;
+        
+        ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, ccList->value, &names, &addresses, &numAddresses);
+        if (ret == NS_OK)
+        {
+          m_newMsgHdr->SetCCListArray(names, addresses, numAddresses);
+          PR_FREEIF(addresses);
+          PR_FREEIF(names);
+        }
+        else	// hmm, should we just use the original string?
+          m_newMsgHdr->SetCcList(ccList->value);
+      }
+      status = InternSubject (subject);
+      if (status >= 0)
+      {
+        if (! id)
+        {
+          // what to do about this? we used to do a hash of all the headers...
 #ifdef SIMPLE_MD5
-					HASH_HashBuf(HASH_AlgMD5, md5_bin, (unsigned char *)m_headers,
-						 (int) m_headers_fp);
+          HASH_HashBuf(HASH_AlgMD5, md5_bin, (unsigned char *)m_headers,
+            (int) m_headers_fp);
 #else
-					// ### TODO: is it worth doing something different?
-					nsCRT::memcpy(md5_bin, "dummy message id", sizeof(md5_bin));						
+          // ### TODO: is it worth doing something different?
+          nsCRT::memcpy(md5_bin, "dummy message id", sizeof(md5_bin));						
 #endif
-					PR_snprintf (md5_data, sizeof(md5_data),
-							   "<md5:"
-							   "%02X%02X%02X%02X%02X%02X%02X%02X"
-							   "%02X%02X%02X%02X%02X%02X%02X%02X"
-							   ">",
-							   md5_bin[0], md5_bin[1], md5_bin[2], md5_bin[3],
-							   md5_bin[4], md5_bin[5], md5_bin[6], md5_bin[7],
-							   md5_bin[8], md5_bin[9], md5_bin[10],md5_bin[11],
-							   md5_bin[12],md5_bin[13],md5_bin[14],md5_bin[15]);
-					md5_header.value = md5_data;
-					md5_header.length = nsCRT::strlen(md5_data);
-					id = &md5_header;
-				}
-
-			  /* Take off <> around message ID. */
-				if (id->value[0] == '<')
-					id->value++, id->length--;
-				if (id->value[id->length-1] == '>')
-					((char *) id->value) [id->length-1] = 0, id->length--; /* #### const */
-
-				m_newMsgHdr->SetMessageId(id->value);
-
-				if (!mozstatus && statush)
-				{
-				  /* Parse a little bit of the Berkeley Mail status header. */
-                    for (s = statush->value; *s; s++) {
-                        PRUint32 msgFlags = 0;
-                        (void)m_newMsgHdr->GetFlags(&msgFlags);
-                        switch (*s)
-                        {
-                          case 'R': case 'r':
-                            m_newMsgHdr->SetFlags(msgFlags | MSG_FLAG_READ);
-                            break;
-                          case 'D': case 'd':
-                            /* msg->flags |= MSG_FLAG_EXPUNGED;  ### Is this reasonable? */
-                            break;
-                          case 'N': case 'n':
-                          case 'U': case 'u':
-                            m_newMsgHdr->SetFlags(msgFlags & ~MSG_FLAG_READ);
-                            break;
-                        }
-                    }
-				}
-
+          PR_snprintf (md5_data, sizeof(md5_data),
+            "<md5:"
+            "%02X%02X%02X%02X%02X%02X%02X%02X"
+            "%02X%02X%02X%02X%02X%02X%02X%02X"
+            ">",
+            md5_bin[0], md5_bin[1], md5_bin[2], md5_bin[3],
+            md5_bin[4], md5_bin[5], md5_bin[6], md5_bin[7],
+            md5_bin[8], md5_bin[9], md5_bin[10],md5_bin[11],
+            md5_bin[12],md5_bin[13],md5_bin[14],md5_bin[15]);
+          md5_header.value = md5_data;
+          md5_header.length = nsCRT::strlen(md5_data);
+          id = &md5_header;
+        }
+        
+        /* Take off <> around message ID. */
+        if (id->value[0] == '<')
+          id->value++, id->length--;
+        if (id->value[id->length-1] == '>')
+          ((char *) id->value) [id->length-1] = 0, id->length--; /* #### const */
+        
+        m_newMsgHdr->SetMessageId(id->value);
+        
+        if (!mozstatus && statush)
+        {
+          /* Parse a little bit of the Berkeley Mail status header. */
+          for (s = statush->value; *s; s++) {
+            PRUint32 msgFlags = 0;
+            (void)m_newMsgHdr->GetFlags(&msgFlags);
+            switch (*s)
+            {
+            case 'R': case 'r':
+              m_newMsgHdr->SetFlags(msgFlags | MSG_FLAG_READ);
+              break;
+            case 'D': case 'd':
+              /* msg->flags |= MSG_FLAG_EXPUNGED;  ### Is this reasonable? */
+              break;
+            case 'N': case 'n':
+            case 'U': case 'u':
+              m_newMsgHdr->SetFlags(msgFlags & ~MSG_FLAG_READ);
+              break;
+            }
+          }
+        }
+        
         // use in-reply-to header as references, if there's no references header
-				if (references != nsnull)
-					m_newMsgHdr->SetReferences(references->value);
+        if (references != nsnull)
+          m_newMsgHdr->SetReferences(references->value);
         else if (inReplyTo != nsnull)
           m_newMsgHdr->SetReferences(inReplyTo->value);
-
-				if (date) {
-					PRTime resultTime;
-					PRStatus timeStatus = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
-					if (PR_SUCCESS == timeStatus)
-						m_newMsgHdr->SetDate(nsTime(resultTime));
-				}
-				if (priority)
-					m_newMsgHdr->SetPriorityString(priority->value);
-				else if (priorityFlags == nsMsgPriority::notSet)
-					m_newMsgHdr->SetPriority(nsMsgPriority::none);
+        
+        if (date) {
+          PRTime resultTime;
+          PRStatus timeStatus = PR_ParseTimeString (date->value, PR_FALSE, &resultTime);
+          if (PR_SUCCESS == timeStatus)
+            m_newMsgHdr->SetDate(nsTime(resultTime));
+        }
+        if (priority)
+          m_newMsgHdr->SetPriorityString(priority->value);
+        else if (priorityFlags == nsMsgPriority::notSet)
+          m_newMsgHdr->SetPriority(nsMsgPriority::none);
         if (content_type)
         {
           char *substring = PL_strstr(content_type->value, "charset");
@@ -1373,24 +1377,24 @@ int nsParseMailMessageState::FinalizeHeaders()
             }
           }
         }
-			}
-		} 
-		else
-		{
-			NS_ASSERTION(PR_FALSE, "error creating message header");
-			status = NS_ERROR_OUT_OF_MEMORY;	
-		}
-	}
-	else
-		status = 0;
+      }
+    } 
+    else
+    {
+      NS_ASSERTION(PR_FALSE, "error creating message header");
+      status = NS_ERROR_OUT_OF_MEMORY;	
+    }
+  }
+  else
+    status = 0;
 
-	//### why is this stuff const?
-	char *tmp = (char*) to.value;
-	PR_FREEIF(tmp);
-	tmp = (char*) cc.value;
-	PR_Free(tmp);
+  //### why is this stuff const?
+  char *tmp = (char*) to.value;
+  PR_FREEIF(tmp);
+  tmp = (char*) cc.value;
+  PR_Free(tmp);
 
-	return status;
+  return status;
 }
 
 nsParseNewMailState::nsParseNewMailState()
@@ -1776,8 +1780,9 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
 		default:
 			break;
 		}
-	PRBool loggingEnabled;
-	m_filterList->GetLoggingEnabled(&loggingEnabled);
+	PRBool loggingEnabled = PR_FALSE;
+        if (m_filterList)
+	  m_filterList->GetLoggingEnabled(&loggingEnabled);
 	if (loggingEnabled && !m_msgMovedByFilter && actionType != nsMsgFilterAction::MoveToFolder)
 		filter->LogRuleHit(GetLogFile(), msgHdr);
 	}
@@ -1988,8 +1993,9 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   }
   // We are logging the hit with the old mailHdr, which should work, as long
   // as LogRuleHit doesn't assume the new hdr.
-  PRBool loggingEnabled;
-  m_filterList->GetLoggingEnabled(&loggingEnabled);
+  PRBool loggingEnabled = PR_FALSE;
+  if (m_filterList)
+    m_filterList->GetLoggingEnabled(&loggingEnabled);
   if (loggingEnabled)
     filter->LogRuleHit(GetLogFile(), mailHdr);
   
