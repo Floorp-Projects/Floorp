@@ -232,7 +232,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnStatusChange(nsIChannel *channel, PRInt32 
 		}
 		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
 
-		m_pOwner->m_bBusy = FALSE;
+		m_pOwner->mBusyFlag = FALSE;
 
 		if (m_pCurrentURI)
 		{
@@ -316,7 +316,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, const char *aWi
 	}
 	else
 	{
-		m_pOwner->m_bBusy = TRUE;
+		m_pOwner->mBusyFlag = TRUE;
 	}
 
 	//NOTE:	The IE control fires a DownloadBegin after the first BeforeNavigate.  It then fires a 

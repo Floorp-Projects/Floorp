@@ -306,8 +306,6 @@ END_OLECOMMAND_TABLE()
 
 // Protected members
 protected:
-	// Flag to prevent multiple object registrations
-	static BOOL m_bRegistryInitialized;
 
 	// Pointer to web shell manager
 	CWebBrowserContainer	*	mWebBrowserContainer;
@@ -323,32 +321,34 @@ protected:
 	nsIEditor			*	mEditor;
     nsIServiceManager   *   mServiceManager;
 
+	// Flag to prevent multiple object registrations
+	static BOOL mRegistryInitializedFlag;
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 	// Flag that stops XPCOM from blowing up when called multiple times
-	static BOOL             m_bXPCOMInitialised;
+	static BOOL             mXPCOMInitializedFlag;
 #endif
 	// System registry key for various control settings
 	CRegKey                 mSystemRegKey;
 	// User registry key for various control settings
 	CRegKey                 mUserRegKey;
 	// Flag to indicate if browser is created or not
-	BOOL                    m_bValidBrowser;
+	BOOL                    mValidBrowserFlag;
 	// Indicates the browser is busy doing something
-	BOOL					m_bBusy;
+	BOOL					mBusyFlag;
 	// Flag to indicate if browser is in edit mode or not
-	BOOL					m_bEditorMode;
+	BOOL					mEditModeFlag;
 	// Flag to indicate if the browser has a drop target
-	BOOL                    m_bDropTarget;
+	BOOL                    mHaveDropTargetFlag;
 	// Contains an error message if startup went wrong
-	tstring					m_sErrorMessage;
+	tstring					mStartupErrorMessage;
 	// Property list
-	PropertyList			m_PropertyList;
+	PropertyList			mPropertyList;
 	// Ready status of control
-	READYSTATE				m_nBrowserReadyState;
+	READYSTATE				mBrowserReadyState;
 	// List of registered browser helper objects
-	ObjectList				m_cBrowserHelperList;
+	ObjectList				mBrowserHelperList;
 	// Post data from last navigate operation
-	CComVariant             m_vLastPostData;
+	CComVariant             mLastPostData;
 
 	virtual HRESULT Initialize();
 	virtual HRESULT Terminate();

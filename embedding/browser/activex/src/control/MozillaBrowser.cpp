@@ -86,9 +86,9 @@ GUID CGID_MSHTML_Moz =
 // CMozillaBrowser
 
 // Initialise static member variables
-BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
+BOOL CMozillaBrowser::mRegistryInitializedFlag = FALSE;
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
-BOOL CMozillaBrowser::m_bXPCOMInitialised = FALSE;
+BOOL CMozillaBrowser::mXPCOMInitializedFlag = FALSE;
 #endif
 
 //
@@ -107,23 +107,23 @@ CMozillaBrowser::CMozillaBrowser()
 	mRootDocShellAsWin = nsnull;
 	mPrefs = nsnull;
     mServiceManager = nsnull;
-	m_bValidBrowser = FALSE;
+	mValidBrowserFlag = FALSE;
 
 	// Ready state of control
-	m_nBrowserReadyState = READYSTATE_UNINITIALIZED;
+	mBrowserReadyState = READYSTATE_UNINITIALIZED;
 	
 	// Create the container that handles some things for us
 	mWebBrowserContainer = NULL;
 	mEditor = NULL;
 
 	// Controls starts off unbusy
-	m_bBusy = FALSE;
+	mBusyFlag = FALSE;
 
 	// Control starts off in non-edit mode
-	m_bEditorMode = FALSE;
+	mEditModeFlag = FALSE;
 
 	// Control starts off without being a drop target
-	m_bDropTarget = FALSE;
+	mHaveDropTargetFlag = FALSE;
 
  	// the IHTMLDocument, lazy allocation.
  	mIERootDocument = NULL;
@@ -227,7 +227,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	// TODO create and register a drop target
 
 	// Control is ready
-	m_nBrowserReadyState = READYSTATE_LOADED;
+	mBrowserReadyState = READYSTATE_LOADED;
 
 	// Load browser helpers
 	LoadBrowserHelpers();
@@ -286,7 +286,7 @@ HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
 	{
 		RECT& rc = *(RECT*)di.prcBounds;
 		Rectangle(di.hdcDraw, rc.left, rc.top, rc.right, rc.bottom);
-		DrawText(di.hdcDraw, m_sErrorMessage.c_str(), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+		DrawText(di.hdcDraw, mStartupErrorMessage.c_str(), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 	}
 
 	return S_OK;
@@ -601,7 +601,7 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 BOOL CMozillaBrowser::IsValid()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::IsValid);
-	return m_bValidBrowser;
+	return mValidBrowserFlag;
 }
 
 
@@ -611,7 +611,7 @@ HRESULT CMozillaBrowser::Initialize()
 	// Initialise XPCOM
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 	// Can't call NS_InitXPCom more than once or things go boom!
-	if (!m_bXPCOMInitialised)
+	if (!mXPCOMInitializedFlag)
 #endif
 	{
 		TCHAR szBinDirPath[MAX_PATH];
@@ -641,15 +641,15 @@ HRESULT CMozillaBrowser::Initialize()
 		}
 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
-		m_bXPCOMInitialised = TRUE;
+		mXPCOMInitializedFlag = TRUE;
 #endif
 	}
 
 	// Register components
-	if (!m_bRegistryInitialized)
+	if (!mRegistryInitializedFlag)
 	{
 		NS_SetupRegistry();
-		m_bRegistryInitialized = TRUE;
+		mRegistryInitializedFlag = TRUE;
 	}
 
 	// Create the Event Queue for the UI thread...
@@ -801,7 +801,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	{
 		NG_ASSERT(0);
 		NG_TRACE(_T("Could not create preference object rv=%08x\n"), (int) rv);
-		m_sErrorMessage = _T("Error - could not create preference object");
+		mStartupErrorMessage = _T("Error - could not create preference object");
 		return E_FAIL;
 	}
 
@@ -839,7 +839,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	mRootDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*) mWebBrowserContainer);
 	mRootDocShellAsWin->SetVisibility(PR_TRUE);
 
-	m_bValidBrowser = TRUE;
+	mValidBrowserFlag = TRUE;
 
 	return S_OK;
 }
@@ -849,7 +849,7 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 {
 	// TODO unregister drop target
 
-	m_bValidBrowser = FALSE;
+	mValidBrowserFlag = FALSE;
 
  	// Destroy the htmldoc
  	if (mIERootDocument != NULL)
@@ -892,7 +892,7 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::SetEditorMode);
 /*
-	m_bEditorMode = FALSE;
+	mEditModeFlag = FALSE;
 	if (bEnabled && mEditor == nsnull)
 	{
 		if (!IsValid())
@@ -928,7 +928,7 @@ HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 		result = mEditor->Init(pIDOMDocument, pIPresShell, 0);
 		if (NS_SUCCEEDED(result))
 		{
-			m_bEditorMode = TRUE;
+			mEditModeFlag = TRUE;
 		}
 
 		NS_RELEASE(pIPresShell);
@@ -955,7 +955,7 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 	static nsIAtom * propI = NS_NewAtom("i");     
 	static nsIAtom * propU = NS_NewAtom("u");     
 
-	if (!m_bEditorMode)
+	if (!mEditModeFlag)
 	{
 		return E_UNEXPECTED;
 	}
@@ -1177,7 +1177,7 @@ HRESULT CMozillaBrowser::LoadBrowserHelpers()
 
 		// Store in the list
 		CComUnkPtr cpUnk = cpObjectWithSite;
-		m_cBrowserHelperList.push_back(cpUnk);
+		mBrowserHelperList.push_back(cpUnk);
 	}
 		
 	return S_OK;
@@ -1188,7 +1188,7 @@ HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::UnloadBrowserHelpers);
 
-	for (ObjectList::const_iterator i = m_cBrowserHelperList.begin(); i != m_cBrowserHelperList.end(); i++)
+	for (ObjectList::const_iterator i = mBrowserHelperList.begin(); i != mBrowserHelperList.end(); i++)
 	{
 		CComUnkPtr cpUnk = *i;
 		CComQIPtr<IObjectWithSite, &IID_IObjectWithSite> cpObjectWithSite = cpUnk;
@@ -1197,7 +1197,7 @@ HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 			cpObjectWithSite->SetSite(NULL);
 		}
 	}
-	m_cBrowserHelperList.clear();
+	mBrowserHelperList.clear();
 
 	return S_OK;
 }
@@ -1525,10 +1525,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	}
 
 	// Extract the post data parameter
-	m_vLastPostData.Clear();
+	mLastPostData.Clear();
 	if (PostData)
 	{
-		m_vLastPostData.Copy(PostData);
+		mLastPostData.Copy(PostData);
 	}
 
 	nsIPostData *pIPostData = nsnull;
@@ -2093,7 +2093,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Busy(VARIANT_BOOL __RPC_FAR *pBoo
 		RETURN_E_INVALIDARG();
 	}
 
-	*pBool = (m_bBusy) ? VARIANT_TRUE : VARIANT_FALSE;
+	*pBool = (mBusyFlag) ? VARIANT_TRUE : VARIANT_FALSE;
 
 	return S_OK;
 }
@@ -2149,7 +2149,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT 
 		RETURN_E_INVALIDARG();
 	}
 	PropertyList::iterator i;
-	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
+	for (i = mPropertyList.begin(); i != mPropertyList.end(); i++)
 	{
 		// Is the property already in the list?
 		if (wcscmp((*i).szName, szProperty) == 0)
@@ -2164,7 +2164,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT 
 	p.szName = CComBSTR(szProperty);
 	p.vValue = vtValue;
 
-	m_PropertyList.push_back(p);
+	mPropertyList.push_back(p);
 	return S_OK;
 }
 
@@ -2189,7 +2189,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __
 	
 	VariantInit(pvtValue);
 	PropertyList::iterator i;
-	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
+	for (i = mPropertyList.begin(); i != mPropertyList.end(); i++)
 	{
 		// Is the property already in the list?
 		if (wcscmp((*i).szName, Property) == 0)
@@ -2624,7 +2624,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ReadyState(READYSTATE __RPC_FAR *
 		RETURN_E_INVALIDARG();
 	}
 
-	*plReadyState = m_nBrowserReadyState;
+	*plReadyState = mBrowserReadyState;
 
 	return S_OK;
 }
@@ -2756,7 +2756,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsDropTarget(VARIANT_BOOL
 		RETURN_E_INVALIDARG();
 	}
 
-	*pbRegister = m_bDropTarget ? VARIANT_TRUE : VARIANT_FALSE;
+	*pbRegister = mHaveDropTargetFlag ? VARIANT_TRUE : VARIANT_FALSE;
 	return S_OK;
 }
 
@@ -2782,7 +2782,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 	// Register the window as a drop target
 	if (bRegister == VARIANT_TRUE)
 	{
-		if (!m_bDropTarget)
+		if (!mHaveDropTargetFlag)
 		{
 			CDropTargetInstance *pDropTarget = NULL;
 			CDropTargetInstance::CreateInstance(&pDropTarget);
@@ -2800,7 +2800,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 					//if (spDocHostUIHandler->GetDropTarget(pDropTarget, &spDropTarget) != S_OK)
 					if (spDocHostUIHandler->GetDropTarget(pDropTarget, &spDropTarget) == S_OK)
 					{
-						m_bDropTarget = TRUE;
+						mHaveDropTargetFlag = TRUE;
 						::RegisterDragDrop(m_hWnd, spDropTarget);
 						//spDropTarget = pDropTarget;
 					}
@@ -2808,7 +2808,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 				else
 				//if (spDropTarget)
 				{
-					m_bDropTarget = TRUE;
+					mHaveDropTargetFlag = TRUE;
 					::RegisterDragDrop(m_hWnd, pDropTarget);
 					//::RegisterDragDrop(m_hWnd, spDropTarget);
 				}
@@ -2821,9 +2821,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
 	}
 	else
 	{
-		if (m_bDropTarget)
+		if (mHaveDropTargetFlag)
 		{
-			m_bDropTarget = FALSE;
+			mHaveDropTargetFlag = FALSE;
 			::RevokeDragDrop(m_hWnd);
 		}
 	}
