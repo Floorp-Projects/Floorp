@@ -136,3 +136,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CXXFLAGS        += $(TK_CFLAGS)
+endif
