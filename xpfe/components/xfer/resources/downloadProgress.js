@@ -335,11 +335,7 @@ function onCompletion( status ) {
     // Put progress meter at 100%.
     dialog.progress.setAttribute( "value", 100 );
     dialog.progress.setAttribute( "mode", "normal" );
-    try {
-        // Close the window in 2 seconds (to ensure user sees we're done).
-        window.setTimeout( "window.close();", 2000 );
-    } catch ( exception ) {
-    }
+    window.close();
 }
 
 function onStatus( status ) {
