@@ -883,7 +883,13 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
         }
         break;
 
+#ifdef DEBUG
       case GCX_STRING:
+        str = (JSString *)thing;
+        JS_ASSERT(!JSSTRING_IS_DEPENDENT(str));
+        break;
+#endif
+
       case GCX_MUTABLE_STRING:
         str = (JSString *)thing;
         if (JSSTRING_IS_DEPENDENT(str))

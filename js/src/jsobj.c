@@ -1871,32 +1871,31 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 #define CHECK_FOR_FUNNY_INDEX(id)                                             \
     JS_BEGIN_MACRO                                                            \
         if (!JSVAL_IS_INT(id)) {                                              \
-            JSAtom *_atom = (JSAtom *)id;                                     \
-            JSString *_str = ATOM_TO_STRING(_atom);                           \
-            const jschar *_cp = JSSTRING_CHARS(_str);                         \
-            JSBool _negative = (*_cp == '-');                                 \
-            if (_negative) _cp++;                                             \
-            if (JS7_ISDEC(*_cp) &&                                            \
-                JSSTRING_LENGTH(_str) - _negative                             \
-                <= sizeof(JSVAL_INT_MAX_STRING) - 1)                          \
+            JSAtom *atom_ = (JSAtom *)id;                                     \
+            JSString *str_ = ATOM_TO_STRING(atom_);                           \
+            const jschar *cp_ = str_->chars;                                  \
+            JSBool negative_ = (*cp_ == '-');                                 \
+            if (negative_) cp_++;                                             \
+            if (JS7_ISDEC(*cp_) &&                                            \
+                str_->length - negative_ <= sizeof(JSVAL_INT_MAX_STRING) - 1) \
             {                                                                 \
-                jsuint _index = JS7_UNDEC(*_cp++);                            \
-                jsuint _oldIndex = 0;                                         \
-                jsuint _c = 0;                                                \
-                if (_index != 0) {                                            \
-                    while (JS7_ISDEC(*_cp)) {                                 \
-                        _oldIndex = _index;                                   \
-                        _c = JS7_UNDEC(*_cp);                                 \
-                        _index = 10 * _index + _c;                            \
-                        _cp++;                                                \
+                jsuint index_ = JS7_UNDEC(*cp_++);                            \
+                jsuint oldIndex_ = 0;                                         \
+                jsuint c_ = 0;                                                \
+                if (index_ != 0) {                                            \
+                    while (JS7_ISDEC(*cp_)) {                                 \
+                        oldIndex_ = index_;                                   \
+                        c_ = JS7_UNDEC(*cp_);                                 \
+                        index_ = 10 * index_ + c_;                            \
+                        cp_++;                                                \
                     }                                                         \
                 }                                                             \
-                if (*_cp == 0 &&                                              \
-                    (_oldIndex < (JSVAL_INT_MAX / 10) ||                      \
-                     (_oldIndex == (JSVAL_INT_MAX / 10) &&                    \
-                      _c <= (JSVAL_INT_MAX % 10)))) {                         \
-                    if (_negative) _index = 0 - _index;                       \
-                    id = INT_TO_JSVAL((jsint)_index);                         \
+                if (*cp_ == 0 &&                                              \
+                    (oldIndex_ < (JSVAL_INT_MAX / 10) ||                      \
+                     (oldIndex_ == (JSVAL_INT_MAX / 10) &&                    \
+                      c_ <= (JSVAL_INT_MAX % 10)))) {                         \
+                    if (negative_) index_ = 0 - index_;                       \
+                    id = INT_TO_JSVAL((jsint)index_);                         \
                 }                                                             \
             } else {                                                          \
                 CHECK_FOR_EMPTY_INDEX(id);                                    \
