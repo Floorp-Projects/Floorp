@@ -301,7 +301,7 @@ nsEditor::EnableUndo(PRBool aEnable)
 
 nsresult nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 {
-  aIsEnabled = ((PRBool)((nsITransactionManager *)0!=mTxnMgr));
+  aIsEnabled = ((PRBool)((nsITransactionManager *)0!=mTxnMgr.get()));
   if (aIsEnabled)
   {
     PRInt32 numTxns=0;
@@ -316,7 +316,7 @@ nsresult nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 
 nsresult nsEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 {
-  aIsEnabled = ((PRBool)((nsITransactionManager *)0!=mTxnMgr));
+  aIsEnabled = ((PRBool)((nsITransactionManager *)0!=mTxnMgr.get()));
   if (aIsEnabled)
   {
     PRInt32 numTxns=0;
@@ -553,7 +553,7 @@ nsEditor::Do(nsITransaction *aTxn)
   nsresult result = NS_OK;
   if (nsnull!=aTxn)
   {
-    if ((nsITransactionManager *)nsnull!=mTxnMgr)
+    if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
     {
       result = mTxnMgr->Do(aTxn);
     }
@@ -569,7 +569,7 @@ nsresult
 nsEditor::Undo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
-  if ((nsITransactionManager *)nsnull!=mTxnMgr)
+  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     PRUint32 i=0;
     for ( ; i<aCount; i++)
@@ -586,7 +586,7 @@ nsresult
 nsEditor::Redo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
-  if ((nsITransactionManager *)nsnull!=mTxnMgr)
+  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     PRUint32 i=0;
     for ( ; i<aCount; i++)
@@ -609,7 +609,7 @@ nsEditor::BeginTransaction()
       mViewManager->DisableRefresh();
     mUpdateCount++;
   }
-  if ((nsITransactionManager *)nsnull!=mTxnMgr)
+  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->BeginBatch();
   }
@@ -626,7 +626,7 @@ nsEditor::EndTransaction()
     if (0==mUpdateCount)
       mViewManager->EnableRefresh();
   }  
-  if ((nsITransactionManager *)nsnull!=mTxnMgr)
+  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->EndBatch();
   }

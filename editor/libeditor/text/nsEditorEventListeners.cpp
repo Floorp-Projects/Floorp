@@ -210,7 +210,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
-          if ((nsITextEditor *)nsnull!=mEditor)
+          if ((nsITextEditor *)nsnull!=mEditor.get())
             mEditor->Undo(1);
         }
         break;
@@ -220,7 +220,7 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
         if (PR_TRUE==ctrlKey)
         {
           aProcessed=PR_TRUE;
-          if ((nsITextEditor *)nsnull!=mEditor)
+          if ((nsITextEditor *)nsnull!=mEditor.get())
             mEditor->Redo(1);
         }
         break;
