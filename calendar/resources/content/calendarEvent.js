@@ -99,8 +99,19 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
 {
       var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
             
+      if( !iCalLibComponent )
+      {
+         alert( "The ICAL Componenet is not registered properly. Please quit Mozilla, remove your component.reg file and restart Mozilla." );
+         return;
+      }
+
       this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
         
+      if( !this.gICalLib )
+      {
+         alert( "The ICAL Componenet is not registered properly. Please quit Mozilla, remove your component.reg file and restart Mozilla." );
+         return;
+      }
       /*
       ** FROM HERE TO "<<HERE" IS A HACK FROM JSLIB, REPLACE THIS IF YOU KNOW HOW
       */
