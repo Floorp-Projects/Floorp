@@ -980,7 +980,7 @@ void nsMenu::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, n
 	unicodeText = menuString.GetUnicode();
 	unicodeTextLengthInBytes = menuString.Length() * sizeof(PRUnichar);
 	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
-	scriptRunText = new char[scriptRunTextSizeInBytes];
+	scriptRunText = new char[scriptRunTextSizeInBytes + 1];
 	
 	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
 				unicodeTextLengthInBytes,unicodeText,
@@ -1001,7 +1001,11 @@ void nsMenu::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, n
 	if (err!=noErr) { delete [] scriptRunText; return; }
 	::GetFNum(themeFontName,&themeFontID);
 	err = ::SetMenuItemFontID(macMenuHandle,menuItem,themeFontID);
-	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: SetMenuItemFontID failed.");
+#if DEBUG
+	if (err != noErr)
+		NS_WARNING("nsMenu::NSStringSetMenuItemText: SetMenuItemFontID failed.");
+#endif
+
 	::SetMenuItemText(macMenuHandle,menuItem,c2pstr(scriptRunText));
 	
 	
