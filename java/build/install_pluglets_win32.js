@@ -51,9 +51,9 @@ logComment("Starting Install Process");
    var fComponents     = getFolder("Components");
    var fJavadev        = getFolder("Program","javadev");
    src = getFolder(fJavadev, "lib/javadom.dll");
-   err = copy(src, fComponents);
+   err = File.copy(src, fComponents);
    src = getFolder(fJavadev, "lib/pluglet.dll");
-   err = copy(src, fComponents);
+   err = File.copy(src, fComponents);
 
    // check return value
    if(err == SUCCESS)

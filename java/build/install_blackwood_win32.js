@@ -51,23 +51,19 @@
    var fComponents     = getFolder("Components");
    var fJavadev        = getFolder("Program","javadev");
    src = getFolder(fJavadev, "lib/javadom.dll");
-   err = copy(src, fComponents);
+   err = File.copy(src, fComponents);
    src = getFolder(fJavadev, "lib/pluglet.dll");
-   err = copy(src, fComponents);
+   err = File.copy(src, fComponents);
    src = getFolder(fJavadev, "lib/bcorb.dll");
-   err = copy(src, fComponents);
+   err = File.copy(src, fComponents);
    src = getFolder(fJavadev, "lib/bcjavastubs.dll");
-   err = copy(src, fComponents);
+   err = File.copy(src, fComponents);
    src = getFolder(fJavadev, "lib/javaloader.dll");
-   err = copy(src, fComponents);
-   src = getFolder(fJavadev, "lib/javaSample.dll");
-   err = copy(src, fComponents);
-   src = getFolder(fJavadev, "lib/bcTest.dll");
-   err = copy(src, fComponents);
+   err = File.copy(src, fComponents);
    src = getFolder(fJavadev, "lib/bcxpcomstubs.dll");
-   err = copy(src, fComponents);
+   err = File.copy(src, fComponents);
    src = getFolder(fJavadev, "regxpcom.exe");
-   err = copy(src, fProgram);
+   err = File.copy(src, fProgram);
 
    // check return value
    if(err == SUCCESS)
