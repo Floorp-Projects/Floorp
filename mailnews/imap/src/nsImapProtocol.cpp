@@ -4714,7 +4714,9 @@ void nsImapProtocol::OnAppendMsgFromFile()
         if (mailboxName)
         {
           imapMessageFlagsType flagsToSet = kImapMsgSeenFlag;
-          PRBool read;
+          // we assume true, for appending to sent/drafts folder, because
+          // in that case, we don't have a msg hdr (and we want the msg to be read)
+          PRBool read = PR_TRUE; 
           if (m_imapMessageSink)
             m_imapMessageSink->IsCurMoveCopyMessageRead(m_runningUrl, &read);
           if (!read)

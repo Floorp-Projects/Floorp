@@ -3653,27 +3653,28 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
       {
         PRUint32 msgFlags, newFlags;
         msgHdr->GetFlags(&msgFlags);
-        if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED)
-        {
-            msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
-            msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
-            nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
-            nsCOMPtr<nsIMimeHeaders> mimeHeaders;
+
             nsCOMPtr<nsIMsgMailNewsUrl> 
                 msgUrl(do_QueryInterface(imapUrl, &res));
             if (NS_SUCCEEDED(res))
             {
-                nsCOMPtr<nsIMsgWindow> msgWindow;
-
-                mdnGenerator =
-                    do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &res);
-                if (mdnGenerator)
+          nsCOMPtr<nsIMimeHeaders> mimeHeaders;
+          res = msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
+          if (NS_SUCCEEDED(res))
+          {
+            nsXPIDLCString mdnDnt;
+            mimeHeaders->ExtractHeader("Disposition-Notification-To",
+                                       PR_FALSE, getter_Copies(mdnDnt));
+            if (mdnDnt.Length() && !(msgFlags & MSG_FLAG_MDN_REPORT_SENT))
                 {
+              nsCOMPtr<nsIMsgWindow> msgWindow;
                     res = msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
                     if(NS_SUCCEEDED(res))
                     {
-                        res = msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
-                        if(NS_SUCCEEDED(res))
+                nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
+                mdnGenerator =
+                  do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &res);
+                if (mdnGenerator && !(msgFlags & MSG_FLAG_IMAP_DELETED))
                         {
                             mdnGenerator->Process(nsIMsgMdnGenerator::eDisplayed,
                                                   msgWindow, this, uidOfMessage, 
@@ -3681,6 +3682,8 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
                             msgUrl->SetMimeHeaders(nsnull);
                         }
                     }
+              msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+              msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
                 }
             }
         }
@@ -3688,7 +3691,6 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
         commit = PR_TRUE;
       }
     }
-
   }
   if (commit && mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
