@@ -8,6 +8,7 @@
 class nsIDOMNode;
 class nsIDOMHTMLInputElement;
 class nsIDOMHTMLSelectElement;
+class nsIDOMHTMLDivElement;
 class nsIPref;
 class nsIWebShellWindow;
 
@@ -37,6 +38,7 @@ class nsPrefWindow
 	  , eInt
 	  , eString
 	  , ePath
+	  , eColor
 	};
 
     static nsPrefWindow* Get();
@@ -57,6 +59,11 @@ class nsPrefWindow
 							 const char* inPrefName,
                              TypeOfPref inPrefType,
                              PRInt16 inPrefOrdinal);
+    nsresult             InitializeOneColorWidget(
+                             nsIDOMHTMLDivElement* inElement,
+                             const char* inPrefName,
+                             TypeOfPref inPrefType,
+                             PRUint32 inColor);
     nsresult             FinalizePrefWidgets();
     nsresult             FinalizeWidgetsRecursive(nsIDOMNode* inParentNode);
     nsresult             FinalizeOneInputWidget(
@@ -70,6 +77,11 @@ class nsPrefWindow
 							 const char* inPrefName,
                              TypeOfPref inPrefType,
                              PRInt16 inPrefOrdinal);
+    nsresult             FinalizeOneColorWidget(
+                             nsIDOMHTMLDivElement* inElement,
+                             const char* inPrefName,
+                             TypeOfPref inPrefType,
+                             PRUint32 inColor);
     char*                GetSubstitution(nsString& formatstr);
 
   protected:

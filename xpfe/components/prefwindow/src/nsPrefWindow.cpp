@@ -49,6 +49,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWebShellWindow.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMHTMLDivElement.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsCOMPtr.h"
 
 #include "plstr.h"
@@ -248,23 +250,55 @@ static PRBool CheckOrdinalAndStrip(nsString& ioString, PRInt16& outOrdinal)
     PRInt32 colonPos = ioString.FindChar(':');
     if (colonPos <= 0)
         return PR_FALSE;
-    char* intString = ioString.ToNewCString();
-    intString[colonPos] = 0;
-    if (!isdigit(*intString))
+    nsAutoCString intString(ioString);
+
+    if (!isdigit(intString[0]))
     {
         outOrdinal = 0;
         return PR_TRUE;
     }
     ioString.Cut(0, colonPos + 1);
-    PR_sscanf(intString, "%hd", &outOrdinal);
-    delete [] intString;
+    PR_sscanf((const char *)intString, "%hd", &outOrdinal);
     return PR_TRUE;
+}
+
+//----------------------------------------------------------------------------------------
+static PRBool CheckColorAndStrip(nsString& ioString, PRUint32& outColor)
+//----------------------------------------------------------------------------------------
+{
+    PRInt32 colonPos = ioString.FindChar(':');
+    if (colonPos <= 0)
+        return PR_FALSE;
+
+    // check for presence of a color beginning with '#'
+    PRUintn red, green, blue;
+    nsAutoCString colorString(ioString);
+    if (!(const char *)colorString)
+        return PR_FALSE;
+
+    PRUintn numberFound = PR_sscanf((const char *)colorString, "#%2x%2x%2x", &red, &green, &blue);
+
+    if ( numberFound != 3 )
+    {
+	      NS_ASSERTION(PR_FALSE,"more or less than 3 colors were found");
+        outColor = 0;
+        return PR_FALSE;
+    }
+    
+    outColor = red + (green<<8) + (blue<<16);
+
+    ioString.Cut(0, colonPos + 1);
+    //Find the next ':' and check for "color:"
+    if (CheckAndStrip(ioString, "color:"))
+        return PR_TRUE;
+    return PR_FALSE;
 }
 
 //----------------------------------------------------------------------------------------
 static PRBool ParseElementIDString(
     nsString& ioWidgetIDString,
     nsPrefWindow::TypeOfPref& outType,
+    PRUint32& outColor,
     PRInt16& outOrdinal)
 // If the id in the HTML is "pref:bool:general.startup.browser".
 //     outType will be set to eBool
@@ -293,6 +327,11 @@ static PRBool ParseElementIDString(
     if (CheckAndStrip(ioWidgetIDString, "path:"))
     {
         outType = nsPrefWindow::ePath;
+        return PR_TRUE;
+    }
+    if (CheckColorAndStrip(ioWidgetIDString, outColor))
+    {
+        outType = nsPrefWindow::eColor;
         return PR_TRUE;
     }
     return PR_FALSE;
@@ -369,6 +408,11 @@ nsresult nsPrefWindow::InitializeOneInputWidget(
                     inElement->SetValue(newValue);
                 }
             }
+            break;
+        }
+        case eColor:
+        {
+            NS_ASSERTION(0, "eNoType not handled");
             break;
         }
         case eString:
@@ -449,6 +493,11 @@ nsresult nsPrefWindow::InitializeOneSelectWidget(
             }
             break;
         }
+        case eColor:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
         case eString:
         {
           NS_ASSERTION(0,"not implemented yet!\n");
@@ -467,6 +516,75 @@ nsresult nsPrefWindow::InitializeOneSelectWidget(
     }
     return NS_OK;
 } // nsPrefWindow::InitializeOneSelectWidget
+
+//----------------------------------------------------------------------------------------
+nsresult nsPrefWindow::InitializeOneColorWidget(
+    nsIDOMHTMLDivElement* inElement,
+    const char* inPrefName,
+    TypeOfPref inPrefType,
+    PRUint32 inPrefColor)
+//----------------------------------------------------------------------------------------
+{
+    // See comments in FinalizeOneSelectWidget for an explanation of the subtree technique. When
+    // initializing a widget, we have to check the subtree first, to see if the user has
+    // visited that panel previously and changed the value.
+    char tempPrefName[TEMP_PREF_NAME_MAX_LEN];
+    PR_snprintf(tempPrefName, TEMP_PREF_NAME_MAX_LEN, "temp_tree.%s", inPrefName);
+    switch (inPrefType)
+    {
+        case eBool:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+        case eInt:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+        case eColor:
+        {
+            PRUint32 color;
+            // Check the subtree first, then the real tree.
+            // If the preference value is not set at all, check for default pref.
+            if (NS_SUCCEEDED(mPrefs->GetColorPrefDWord(tempPrefName, &color))
+            || NS_SUCCEEDED(mPrefs->GetColorPrefDWord(inPrefName, &color))
+            || NS_SUCCEEDED(mPrefs->GetDefaultColorPrefDWord(inPrefName, &color))
+            )
+            {
+                nsCOMPtr <nsIDOMCSSStyleDeclaration> prop;
+                nsresult rv = inElement->GetStyle(getter_AddRefs(prop));
+                if (NS_FAILED(rv))
+                  return rv;
+                if (!prop)
+                  return NS_ERROR_NULL_POINTER;
+
+                char charVal[CHAR_VAL_BUF_LEN];
+                PR_snprintf(charVal, CHAR_VAL_BUF_LEN, "#%02x%02x%02x", 
+                            NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
+                nsString newValue(charVal);
+                prop->SetProperty("background-color", newValue, "");
+            }
+            break;
+        }
+        case eString:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+        case ePath:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+    case eNoType:
+      {
+        NS_ASSERTION(0, "eNoType not handled");
+        break;
+      }
+    }
+    return NS_OK;
+} // nsPrefWindow::InitializeOneColorWidget
 
 //----------------------------------------------------------------------------------------
 nsresult nsPrefWindow::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
@@ -500,9 +618,10 @@ nsresult nsPrefWindow::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
         {
             nsString prefName;
             TypeOfPref prefType;
+            PRUint32 color;
             PRInt16 ordinal;
             inputElement->GetId( prefName);            
-            if (ParseElementIDString(prefName, prefType, ordinal))
+            if (ParseElementIDString(prefName, prefType, color, ordinal))
             {
                 nsString widgetType;
                 inputElement->GetType(widgetType);
@@ -517,15 +636,31 @@ nsresult nsPrefWindow::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
         if (selectElement) {
           nsString prefName;
           TypeOfPref prefType;
+          PRUint32 color;
           PRInt16 ordinal;
           selectElement->GetId( prefName);            
-          if (ParseElementIDString(prefName, prefType, ordinal))
+          if (ParseElementIDString(prefName, prefType, color, ordinal))
             {
               char* prefNameString = GetSubstitution(prefName);
               InitializeOneSelectWidget(selectElement, prefNameString, prefType, ordinal);
               PR_Free(prefNameString);
             }
           return NS_OK;
+        }
+        nsCOMPtr<nsIDOMHTMLDivElement> colorWellElement = do_QueryInterface(inParentNode);
+        if (colorWellElement) {
+            nsString prefName;
+            TypeOfPref prefType;
+            PRUint32 color;
+            PRInt16 ordinal;
+            colorWellElement->GetId( prefName );            
+            if (ParseElementIDString(prefName, prefType, color, ordinal))
+            {
+                char* prefNameString = GetSubstitution(prefName);
+                InitializeOneColorWidget(colorWellElement, prefNameString, prefType, color);
+                PR_Free(prefNameString);
+            }
+            return NS_OK;
         }
     }
     return NS_OK;
@@ -614,11 +749,15 @@ nsresult nsPrefWindow::FinalizeOneInputWidget(
                 nsresult rv = inElement->GetValue(fieldValue);
                 if (NS_FAILED(rv))
                     return rv;
-                char* s = fieldValue.ToNewCString();
-                mPrefs->SetIntPref(tempPrefName, atoi(s));
-                delete [] s;
+                nsAutoCString s(fieldValue);
+                mPrefs->SetIntPref(tempPrefName, atoi((const char *)s));
             }
             break;
+        }
+        case eColor:
+        {
+          NS_ASSERTION(0, "eColor not handled");
+          break;
         }
         case eString:
         {
@@ -626,9 +765,8 @@ nsresult nsPrefWindow::FinalizeOneInputWidget(
             nsresult rv = inElement->GetValue(fieldValue);
             if (NS_FAILED(rv))
                 return rv;
-            char* s = fieldValue.ToNewCString();
-            mPrefs->SetCharPref(tempPrefName, s);
-            delete [] s;
+            nsAutoCString s(fieldValue);
+            mPrefs->SetCharPref(tempPrefName, (const char *)s);
             break;
         }
         case ePath:
@@ -684,13 +822,16 @@ nsresult nsPrefWindow::FinalizeOneSelectWidget(
           nsresult rv = inElement->GetValue(fieldValue);
           if (NS_FAILED(rv))
             return rv;
-          char* s = fieldValue.ToNewCString();
+	  nsAutoCString s(fieldValue);
 #ifdef DEBUG_PREFWINDOW
-          printf("set %s to %d\n",tempPrefName,atoi(s));
+          printf("set %s to %d\n",tempPrefName,atoi((const char *)s));
 #endif
-          mPrefs->SetIntPref(tempPrefName, atoi(s));
-          delete [] s;
-          
+          mPrefs->SetIntPref(tempPrefName, atoi((const char *)s));
+          break;
+        }
+        case eColor:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
           break;
         }
         case eString:
@@ -711,6 +852,77 @@ nsresult nsPrefWindow::FinalizeOneSelectWidget(
     }
     return NS_OK;
 } // nsPrefWindow::FinalizeOneSelectWidget
+
+//----------------------------------------------------------------------------------------
+nsresult nsPrefWindow::FinalizeOneColorWidget(
+    nsIDOMHTMLDivElement* inElement,
+    const char* inPrefName,
+    TypeOfPref inPrefType,
+    PRUint32 inColor)
+//----------------------------------------------------------------------------------------
+{
+    // As each panel is replaced, the values of its widgets are written out to a subtree
+    // of the prefs tree with root at "temp_tree". This subtree is rather sparse, since it
+    // only contains prefs (if any) that are represented by widgets in panels that the user
+    // visits. If the user clicks "OK" at the end, then prefs in this subtree will be
+    // copied back over to the real tree. This subtree will be deleted at the end
+    // in either case (OK or Cancel).
+    char tempPrefName[TEMP_PREF_NAME_MAX_LEN];
+    PR_snprintf(tempPrefName, TEMP_PREF_NAME_MAX_LEN, "temp_tree.%s", inPrefName);
+    switch (inPrefType)
+    {
+        case eBool:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+            break;
+        }
+        case eInt:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+        case eColor:
+        {
+          nsCOMPtr <nsIDOMCSSStyleDeclaration> prop;
+          nsresult rv = inElement->GetStyle(getter_AddRefs(prop));
+          if (NS_FAILED(rv))
+            return rv;
+          if (!prop)
+            return NS_ERROR_NULL_POINTER;
+
+          nsString fieldValue;
+          prop->GetPropertyValue("background-color", fieldValue);
+          PRUint16 red, green, blue;
+	        nsAutoCString temp(fieldValue); // this will look something like: rgb(0,0,255)
+          if ( (const char *)temp )
+          {
+              PR_sscanf(temp + 4 /*skip past "rgb(" */, "%hu,%hu,%hu", &red, &green, &blue);
+          }
+          else
+              return NS_OK;
+            
+
+          mPrefs->SetColorPref(tempPrefName, red, green, blue);
+          break;
+        }
+        case eString:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+        case ePath:
+        {
+          NS_ASSERTION(0,"not implemented yet!\n");
+          break;
+        }
+    case eNoType:
+      {
+        NS_ASSERTION(0, "eNoType not handled");
+        break;
+      }
+    }
+    return NS_OK;
+} // nsPrefWindow::FinalizeOneColorWidget
 
 //----------------------------------------------------------------------------------------
 nsresult nsPrefWindow::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
@@ -744,9 +956,10 @@ nsresult nsPrefWindow::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
         {
             nsString prefName;
             TypeOfPref prefType;
+            PRUint32 color;
             PRInt16 ordinal;
             inputElement->GetId( prefName);            
-            if (ParseElementIDString(prefName, prefType, ordinal))
+            if (ParseElementIDString(prefName, prefType, color, ordinal))
             {
                 nsString widgetType;
                 inputElement->GetType(widgetType);
@@ -761,12 +974,29 @@ nsresult nsPrefWindow::FinalizeWidgetsRecursive(nsIDOMNode* inParentNode)
         {
             nsString prefName;
             TypeOfPref prefType;
+            PRUint32 color;
             PRInt16 ordinal;
             selectElement->GetId( prefName);            
-            if (ParseElementIDString(prefName, prefType, ordinal))
+            if (ParseElementIDString(prefName, prefType, color, ordinal))
             {
                 char* prefNameString = GetSubstitution(prefName);
                 FinalizeOneSelectWidget(selectElement, prefNameString, prefType, ordinal);
+                PR_Free(prefNameString);
+            }
+            return NS_OK;
+        }
+        nsCOMPtr<nsIDOMHTMLDivElement> colorWellElement = do_QueryInterface(inParentNode);
+        if (colorWellElement)
+        {
+            nsString prefName;
+            TypeOfPref prefType;
+            PRUint32 color;
+            PRInt16 ordinal;
+            colorWellElement->GetId( prefName);            
+            if (ParseElementIDString(prefName, prefType, color, ordinal))
+            {
+                char* prefNameString = GetSubstitution(prefName);
+                FinalizeOneColorWidget(colorWellElement, prefNameString, prefType, color);
                 PR_Free(prefNameString);
             }
             return NS_OK;
@@ -918,10 +1148,10 @@ char* nsPrefWindow::GetSubstitution(nsString& formatstr)
 //----------------------------------------------------------------------------------------
 {
 #define substring(_i) mSubStrings[_i] ? mSubStrings[_i] : ""
-	char *cformatstr = formatstr.ToNewCString();
+	nsAutoCString cformatstr(formatstr);
 	// for now use PR_smprintf and hardcode the strings as parameters
 	char* result = PR_smprintf(
-				cformatstr,
+				(const char *)cformatstr,
 				substring(0),
 				substring(1),
 				substring(2),
@@ -932,7 +1162,6 @@ char* nsPrefWindow::GetSubstitution(nsString& formatstr)
 				substring(7),
 				substring(8),
 				substring(9));
-	delete[] cformatstr;
 	return result;
 } // nsPrefWindow::GetSubstitution
 
