@@ -1361,8 +1361,9 @@ JS::ExprNode *JS::Parser::parsePostfixExpression(bool newExpression)
 
 
 // Parse and return a NonAssignmentExpression.
-// If the first token was peeked, it should be have been done with preferRegExp set to true.
-JS::ExprNode *JS::Parser::parseNonAssignmentExpression(bool noIn)
+// If the first token was peeked, it should be have been done with preferRegExp
+// set to true.
+JS::ExprNode *JS::Parser::parseNonAssignmentExpression(bool /* noIn */)
 {
 	checkStackSize();
 	syntaxError("***** parseNonAssignmentExpression not implemented yet *****");
@@ -1371,8 +1372,9 @@ JS::ExprNode *JS::Parser::parseNonAssignmentExpression(bool noIn)
 
 
 // Parse and return an AssignmentExpression.
-// If the first token was peeked, it should be have been done with preferRegExp set to true.
-JS::ExprNode *JS::Parser::parseAssignmentExpression(bool noIn)
+// If the first token was peeked, it should be have been done with
+// preferRegExp set to true.
+JS::ExprNode *JS::Parser::parseAssignmentExpression(bool /* noIn */)
 {
 	checkStackSize();
 	syntaxError("***** parseAssignmentExpression not implemented yet *****");
@@ -1381,8 +1383,9 @@ JS::ExprNode *JS::Parser::parseAssignmentExpression(bool noIn)
 
 
 // Parse and return an Expression.
-// If the first token was peeked, it should be have been done with preferRegExp set to true.
-JS::ExprNode *JS::Parser::parseExpression(bool noIn)
+// If the first token was peeked, it should be have been done with preferRegExp
+// set to true.
+JS::ExprNode *JS::Parser::parseExpression(bool /* noIn */)
 {
 	checkStackSize();
 	syntaxError("***** parseExpression not implemented yet *****");

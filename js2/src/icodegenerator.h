@@ -223,7 +223,7 @@ namespace ICG {
 
         void endSwitchStatement();
 
-        void beginLabelStatement(uint32 pos, const StringAtom &label)
+        void beginLabelStatement(uint32 /* pos */, const StringAtom &label)
         { statementLabels.push_back(&label); }
         void endLabelStatement() { statementLabels.pop_back(); }
 
@@ -233,7 +233,7 @@ namespace ICG {
         void continueStatement(uint32 pos, const StringAtom &label);
         void breakStatement(uint32 pos, const StringAtom &label);
 
-        void throwStatement(uint32 pos, Register expression)
+        void throwStatement(uint32 /* pos */, Register expression)
             { iCode->push_back(new Throw(expression)); }
 
         void beginTryStatement(uint32 pos, bool hasCatch, bool hasFinally);
@@ -350,8 +350,8 @@ namespace ICG {
 
     inline ICodeState::ICodeState(StateKind kind, ICodeGenerator *icg) 
         : stateKind(kind), registerBase(icg->getRegisterBase()),
-          breakLabel(NULL), continueLabel(NULL), 
-          statementLabelBase(icg->getStatementLabelBase()) { }
+          statementLabelBase(icg->getStatementLabelBase()), breakLabel(NULL),
+          continueLabel(NULL) { }
 
     inline SwitchCodeState::SwitchCodeState(Register control,
                                             ICodeGenerator *icg)

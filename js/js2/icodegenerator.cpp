@@ -469,7 +469,7 @@ namespace ICG {
         resetTopRegister();
     }
 
-    void ICodeGenerator::beginCaseStatement(uint32 pos)
+    void ICodeGenerator::beginCaseStatement(uint32 /* pos */)
     {
         SwitchCodeState *ics = 
             static_cast<SwitchCodeState *>(stitcher.back());
@@ -489,7 +489,7 @@ namespace ICG {
         resetTopRegister();
     }
 
-    void ICodeGenerator::beginDefaultStatement(uint32 pos)
+    void ICodeGenerator::beginDefaultStatement(uint32 /* pos */)
     {
         SwitchCodeState *ics = 
             static_cast<SwitchCodeState *>(stitcher.back());
@@ -582,7 +582,7 @@ namespace ICG {
 
     /************************************************************************/
 
-    void ICodeGenerator::breakStatement(uint32 pos)
+    void ICodeGenerator::breakStatement(uint32 /* pos */)
     {
         for (std::vector<ICodeState *>::reverse_iterator p =
                  stitcher.rbegin(); p != stitcher.rend(); p++) {
@@ -602,7 +602,8 @@ namespace ICG {
         NOT_REACHED("no break target available");
     }
 
-    void ICodeGenerator::breakStatement(uint32 pos, const StringAtom &label)
+    void ICodeGenerator::breakStatement(uint32 /* pos */,
+                                        const StringAtom &label)
     {
         uint32 statementLabelCeiling = statementLabels.size();
         
@@ -625,7 +626,7 @@ namespace ICG {
         NOT_REACHED("no break target available");
     }
 
-    void ICodeGenerator::continueStatement(uint32 pos)
+    void ICodeGenerator::continueStatement(uint32 /* pos */)
     {
         for (std::vector<ICodeState *>::reverse_iterator p =
                  stitcher.rbegin(); p != stitcher.rend(); p++) {
@@ -644,7 +645,8 @@ namespace ICG {
         NOT_REACHED("no continue target available");
     }    
 
-    void ICodeGenerator::continueStatement(uint32 pos, const StringAtom &label)
+    void ICodeGenerator::continueStatement(uint32 /* pos */,
+                                           const StringAtom &label)
     {
         uint32 statementLabelCeiling = statementLabels.size();
         
@@ -668,7 +670,8 @@ namespace ICG {
     }
     /********************************************************************/
 
-    void ICodeGenerator::beginTryStatement(uint32 pos, bool hasCatch, bool hasFinally)
+    void ICodeGenerator::beginTryStatement(uint32 /* pos */,
+                                           bool hasCatch, bool hasFinally)
     {
         addStitcher(new TryCodeState((hasCatch) ? getLabel() : NULL,
                                      (hasFinally) ? getLabel() : NULL, this));        
@@ -692,13 +695,13 @@ namespace ICG {
             setLabel(ics->beyondCatch);
     }
 
-    void ICodeGenerator::beginCatchStatement(uint32 pos)
+    void ICodeGenerator::beginCatchStatement(uint32 /* pos */)
     {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
     }
 
-    void ICodeGenerator::endCatchExpression(Register expression)
+    void ICodeGenerator::endCatchExpression(Register /* expression */)
     {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
@@ -710,7 +713,7 @@ namespace ICG {
         ASSERT(ics->stateKind == Try_state);
     }
 
-    void ICodeGenerator::beginFinallyStatement(uint32 pos)
+    void ICodeGenerator::beginFinallyStatement(uint32 /* pos */)
     {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
