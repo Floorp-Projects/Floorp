@@ -38,6 +38,7 @@ public:
   virtual PRInt32     GetWidth()          { return mWidth; }
   virtual PRUint8*    GetBits() ;          //{ return mImageBits; }
   virtual void*       GetBitInfo()        { return nsnull; }
+  virutal PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
   NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
@@ -90,6 +91,7 @@ private:
     
   // alpha layer members
   BitMap			*mAlphaPix;			// the alpha level pixel map
+  PRBook 			mIsTopToBottom;
   PRUint8			*mAlphaBits;        // the bits to set for the mask
   PRInt32			mARowBytes;			// rowbytes for the alpha layer
   PRInt8            mAlphaDepth;        // alpha layer depth
