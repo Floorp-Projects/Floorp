@@ -25,6 +25,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIChromeRegistry.h"
 #include "nsIChromeEntry.h"
+#include "nsChromeRegistry.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -66,6 +67,8 @@
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
+
+class nsChromeRegistry;
 
 #define CHROME_NAMESPACE_URI "http://chrome.mozilla.org/rdf#"
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, chrome);
@@ -172,11 +175,17 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISIMPLEENUMERATOR
 
-    nsChromeEntryEnumerator(nsISimpleEnumerator *aProfileArcs,
+    nsChromeEntryEnumerator(nsIRDFDataSource* aProfileDataSource,
+                            nsIRDFDataSource* aInstallDataSource,
+                            nsISimpleEnumerator *aProfileArcs,
                             nsISimpleEnumerator *aInstallArcs);
     virtual ~nsChromeEntryEnumerator();
 
 private:
+    nsCOMPtr<nsIRDFDataSource> mProfileDataSource;
+    nsCOMPtr<nsIRDFDataSource> mInstallDataSource;
+    nsCOMPtr<nsIRDFDataSource> mCurrentDataSource;
+
     nsCOMPtr<nsISimpleEnumerator> mProfileArcs;
     nsCOMPtr<nsISimpleEnumerator> mInstallArcs;
     nsCOMPtr<nsISimpleEnumerator> mCurrentArcs;
@@ -184,10 +193,16 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsChromeEntryEnumerator, nsISimpleEnumerator)
 
-nsChromeEntryEnumerator::nsChromeEntryEnumerator(nsISimpleEnumerator *aProfileArcs,
+nsChromeEntryEnumerator::nsChromeEntryEnumerator(nsIRDFDataSource* aProfileDataSource,
+                                                 nsIRDFDataSource* aInstallDataSource,
+                                                 nsISimpleEnumerator *aProfileArcs,
                                                  nsISimpleEnumerator *aInstallArcs)
 {
   NS_INIT_REFCNT();
+  mProfileDataSource = aProfileDataSource;
+  mInstallDataSource = aInstallDataSource;
+  mCurrentDataSource = mProfileDataSource;
+
   mProfileArcs = aProfileArcs;
   mInstallArcs = aInstallArcs;
   mCurrentArcs = mProfileArcs;
@@ -224,14 +239,18 @@ NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
 
   if (!mCurrentArcs) {
     mCurrentArcs = mInstallArcs;
+    mCurrentDataSource = mInstallDataSource;
+
     if (!mInstallArcs)
       return NS_ERROR_FAILURE;
   }
   else if (mCurrentArcs == mProfileArcs) {
     PRBool hasMore;
     mProfileArcs->HasMoreElements(&hasMore);
-    if (!hasMore)
+    if (!hasMore) {
       mCurrentArcs = mInstallArcs;
+      mCurrentDataSource = mInstallDataSource;
+    }
     if (!mInstallArcs)
       return NS_ERROR_FAILURE;
   }
@@ -258,6 +277,9 @@ NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
   // XXX Now that we have a resource, we must examine all of its outgoing
   // arcs and use the literals at the ends of the arcs to set the fields
   // of the chrome entry.
+  nsAutoString name;
+  nsChromeRegistry::GetChromeResource(mCurrentDataSource, name, resource, 
+                                      nsChromeRegistry::kCHROME_name);
 
 /*
   nsCOMPtr<nsIRDFLiteral> value = do_QueryInterface(supports, &rv);
@@ -281,77 +303,7 @@ NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
   return NS_OK;
 }
 
-class nsChromeRegistry : public nsIChromeRegistry
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIChromeRegistry methods:
-    NS_DECL_NSICHROMEREGISTRY
-
-    // nsChromeRegistry methods:
-    nsChromeRegistry();
-    virtual ~nsChromeRegistry();
-
-    static PRUint32 gRefCnt;
-    static nsIRDFService* gRDFService;
-    static nsIRDFResource* kCHROME_chrome;
-    static nsIRDFResource* kCHROME_skin;
-    static nsIRDFResource* kCHROME_content;
-    static nsIRDFResource* kCHROME_locale;
-    static nsIRDFResource* kCHROME_base;
-    static nsIRDFResource* kCHROME_main;
-    
-    static nsIRDFResource* kCHROME_name;
-    static nsIRDFResource* kCHROME_archive;
-    static nsIRDFResource* kCHROME_text;
-    static nsIRDFResource* kCHROME_version;
-    static nsIRDFResource* kCHROME_author;
-    static nsIRDFResource* kCHROME_siteURL;
-    static nsIRDFResource* kCHROME_previewImageURL;
-    
-    static nsSupportsHashtable *mDataSourceTable;
-
-protected:
-    NS_IMETHOD SelectProviderForPackage(const PRUnichar *aThemeFileName,
-                                        const PRUnichar *aPackageName, 
-                                        const PRUnichar *aProviderName);
-
-    NS_IMETHOD GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult);
-    NS_IMETHOD InitializeDataSource(nsString &aPackage,
-                                    nsString &aProvider,
-                                    nsIRDFDataSource **aResult,
-                                    PRBool aUseProfileDirOnly = PR_FALSE);
-
-    nsresult GetPackageTypeResource(const nsString& aChromeType, nsIRDFResource** aResult);
-    nsresult GetChromeResource(nsIRDFDataSource *aDataSource,
-                               nsString& aResult, nsIRDFResource* aChromeResource,
-                               nsIRDFResource* aProperty);
-    NS_IMETHOD RemoveOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource);
-    NS_IMETHOD RemoveOverlays(nsAutoString aPackage,
-                              nsAutoString aProvider,
-                              nsIRDFContainer *aContainer,
-                              nsIRDFDataSource *aDataSource);
-
-    NS_IMETHOD GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnumerator** aResult);
-
-private:
-    NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
-    NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
-                              PRBool aUseProfileDirOnly = PR_FALSE);
-
-    NS_IMETHOD CheckForProfileFile(const nsCAutoString& aFileName, nsCAutoString& aFileURL);
-    NS_IMETHOD GetProfileRoot(nsCAutoString& aFileURL);
-
-    NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
-
-		NS_IMETHOD ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument);
-
-    NS_IMETHOD GetArcs(nsIRDFDataSource* aDataSource,
-                          const nsCAutoString& aType,
-                          nsISimpleEnumerator** aResult);
-
-};
+////////////////////////////////////////////////////////////////////////////
 
 PRUint32 nsChromeRegistry::gRefCnt  ;
 nsIRDFService* nsChromeRegistry::gRDFService = nsnull;
@@ -1484,7 +1436,8 @@ nsChromeRegistry::GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnume
   GetArcs(installDataSource, type, getter_AddRefs(installArcs));
 
   // Build an nsChromeEntryEnumerator and return it.
-  *aResult = new nsChromeEntryEnumerator(profileArcs, installArcs);
+  *aResult = new nsChromeEntryEnumerator(profileDataSource, installDataSource, 
+                                         profileArcs, installArcs);
   NS_ADDREF(*aResult);
   
   return NS_OK;
