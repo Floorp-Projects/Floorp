@@ -9,6 +9,8 @@ var gDownloadListener = null;
 var gExtensionssView  = null;
 var gWindowState      = "";
 
+const PREF_EM_EXTENSIONS_DISABLED = "extensions.safeMode";
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
 function stripPrefix(aResourceURI)
@@ -240,7 +242,7 @@ var gExtensionsViewController = {
     case "cmd_update":
       return true;
     case "cmd_enable":
-      return selectedItem && selectedItem.disabled;
+      return selectedItem && selectedItem.disabled && !gExtensionManager.inSafeMode;
     case "cmd_disable":
       return selectedItem && selectedItem.getAttribute("blockDisable") != "true" && !selectedItem.disabled;
     case "cmd_movetop":
