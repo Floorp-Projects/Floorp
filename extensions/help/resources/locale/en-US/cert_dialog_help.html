@@ -20,7 +20,7 @@
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
-<p><a href="#Certificate_Details">Certificate Details</a></p>
+<p><a href="#Certificate_Details">Certificate Viewer</a></p>
 <p><a href="cert_dialog_help.html#Choose_Security_Device">Choose Security Device</a>
 <p><a href="cert_dialog_help.html#Certificate_Backup">Certificate Backup</a>
 <p><a href="#User_Identification_Request">User Identification Request</a></p>
@@ -34,12 +34,12 @@
 
 <p>&nbsp;</p>
 <a NAME="Certificate_Details"></a>
-<h2>Certificate Details</h2>
+<h2>Certificate Viewer</h2>
 
 
-<p>The Certificate Details window displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides sufficient information. The Details tab provides complete details on the certificate's contents&mdash;information normally of interest to IS professionals only.</p>
+<p>The Certificate Viewer displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides sufficient information. The Details tab provides complete details on the certificate's contents&mdash;information normally of interest to IS professionals only.</p>
 
-<p>If you are not currently viewing the Certificate Details window, follow these steps:
+<p>If you are not currently viewing the Certificate Viewer, follow these steps:
 
 <ol>
    <li>Open the Edit menu and choose Preferences.
@@ -68,10 +68,10 @@
 <a NAME="General_Tab"></a>
 <h3>General Tab</h3>
 
-<p>When you first open the Certificate Details window, the General tab displays several kinds of information about the selected certificate: </P>
+<p>When you first open the Certificate Viewer, the General tab displays several kinds of information about the selected certificate: </P>
 
 <ul>
-	<li><b>This certificate has been verified for the following uses:</b> See <a href="glossary.html#certificate_verification">certificate verification</a> for a discussion of how the Certificate Manager verifies certificates. Uses can include any of the following:
+	<li><b>This certificate has been verified for the following uses:</b> See <a href="glossary.html#certificate_verification">certificate verification</a> for a discussion of how the Certificate Manager verifies certificates. Uses can include any of the following:</li>
 <ul>
 <LI><B>SSL Client Certificate:</B> Certificate used to identify you to web sites.</LI>
 
@@ -86,13 +86,13 @@
 <LI><B>Certificate Authority:</B> Certificate used to identify a certificate authority&mdash;that is, a service that issues certificates for use as identification over computer networks.</LI>
 
 </ul>
-	<li><b>Issued To:</b> Summarizes the following information about the certificate:
+	<li><b>Issued To:</b> Summarizes the following information about the certificate:</li>
 	<ul>
-	<LI><p><B>Common Name:</B> The name of the person or other entity that the certificate identifies.</LI>
+	<LI><B>Common Name:</B> The name of the person or other entity that the certificate identifies.</LI>
 
-	<LI><p><B>Organization:</B> The name of the organization to which the entity belongs (such as the name of a company).</LI>
+	<LI><B>Organization:</B> The name of the organization to which the entity belongs (such as the name of a company).</LI>
 
-	<LI><p><B>Organizational Unit:</B> The name of the organizational unit to which the entity belongs (such as Accounting Department).</LI>
+	<LI><B>Organizational Unit:</B> The name of the organizational unit to which the entity belongs (such as Accounting Department).</LI>
 	<LI><B>Serial Number:</B> The certificate's serial number.</LI>
 	</UL>
 
@@ -106,7 +106,7 @@
 <a NAME="Details_Tab"></a>
 <h3>Details Tab</h3>
 
-<p>Click the Details tab at the top of the Certificate Details window to see more detailed information about the selected certificate. To examine information for any certificate in the Certificate Hierarchy area, select its name, select the field under Certificate Fields that you want to examine, and read the field's value under Field Value:
+<p>Click the Details tab at the top of the Certificate Viewer to see more detailed information about the selected certificate. To examine information for any certificate in the Certificate Hierarchy area, select its name, select the field under Certificate Fields that you want to examine, and read the field's value under Field Value:
 
 
 <ul>
@@ -115,7 +115,7 @@
 	<li><b>Field Value:</b> Displays the value of the field selected under Certificate Fields.
 </ul>
 
-<p>The Certificate Details tab displays basic ANSI types in human-readable form wherever possible. For fields whose contents the Certificate Manager cannot interpret, it displays the actual values contained in the certificate.</P>
+<p>The Certificate Viewer displays basic ANSI types in human-readable form wherever possible. For fields whose contents the Certificate Manager cannot interpret, it displays the actual values contained in the certificate.</P>
 
 
 <p>&nbsp;</p>
@@ -129,7 +129,30 @@
 <p>The Certificate Manager also supplies its own default, built-in security device, which can always be used no matter what additional devices are or aren't available.
 
 
+<p>&nbsp;</p>
+<a NAME="Encryption_Key_Copy"></a>
+<h2>Encryption Key Copy</h2>
 
+
+<p><a href="glossary.html#certificate_authority_(CA)">Certificate authorities (CAs)</a> that issue separate signing and encryption email certificates typically make backup copies of your private <a href="glossary.html#encryption_key">encryption key</a> during the certificate enrollment process. 
+
+<p>The Encryption Key Copy dialog box allows you to approve the creation of such a backup or cancel the ceritificate request. A CA that has archived a backup copy of your encryption key has the potential capability of decrypting any messages you receive that were encrypted with your corresponding public key. 
+
+<ul>
+	<li><b>View Certificate.</b> Click this button to view the certificate identifying the CA that is requesting the backup copy.
+</ul>
+
+
+<p>If you trust the CA identified by the the CA certificate with ability to decrypt encrypted messages that you receive, click OK. 
+
+<p>If you don't trust the CA that is requesting the backup copy, don't request a certificate from it. Click Cancel to stop both the backup procedure and the request for a certificate.
+
+<p>If you are not sure whether to trust the CA that is requesting the backup copy, talk to your system administrator.
+
+<p>After your CA makes a backup copy of the encryption key, you will be able to use that key to access your encrypted mail even if you lose your password or lose your own copy of the key. If no backup copy of your encryption key exists and you lose your password or the key, you will have no way of reading email messages that were encrypted with that key.
+
+
+  
 
 
 <p>&nbsp;</p>
@@ -155,40 +178,59 @@
 
 <P>Some web sites require that you identify yourself with a certificate rather than a name and password, because certificates provide a more reliable form of identification. This method of identifying yourself over the Internet is sometimes called <a href="glossary.html#client_authentication">client authentication</a>.
 
-<p>However, Certificate Manager may have more than one certificate on file that can be used for the purposes of identifying yourself to a web site. In this case, Certificate Manager presents the User Identification Request window, which allows you to select the appropriate certificate for the web site you want to visit.</P>
+<p>However, Certificate Manager may have more than one certificate on file that can be used for the purposes of identifying yourself to a web site. In this case, Certificate Manager presents the User Identification Request dialog box, which displays two kinds of information:</P>
 
-<p>Web sites can also use certificates to identify themselves. The certificate presented by the web site you want to visit is displayed in the top part of this window. The information provided includes the name of the CA that issued the certificate (labeled &quot;Issued Under&quot;).</P>
+<p><b>This site has requested that you identify yourself with a certificate:</b> This section of the dialog box lists the following information:</li>
+	<ul>
+		<li><b>Host name:</b> The name of the server requesting identification, used as part of its URL. For example, the host name for the Netscape web site is <tt>home.netscape.com</tt>.
+		<li><b>Organization:</b> The name of the organization that runs the web site.
+		<li><b>Issued under:</b> The name of the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued the certificate. 
+	</ul>
 
-<p>The certificates you have available for the purposes of identifying yourself to a web site are listed in the drop-down menu in the bottom part of the window. Choose the certificate that seems most likely to be recognized by the web site you want to visit.</P>
+<p><b>Choose a certificate to present as identification:</b> The certificates you have available for the purposes of identifying yourself to a web site are listed in the drop-down list in this section of the dialog box. Choose the certificate that seems most likely to be recognized by the web site you want to visit.
+	<p>To help you decide, the following details of the selected certificate are displayed:<?li>
+	<ul>
+		<li><b>Issued to:</b> Lists information about the person identified by the certificate (for example, your name and email address) and the certificate's serial number and validity dates.
+		<li><b>Issued by:</b> Summarizes information about the CA that issued the certificate, such as its name, location, and state.
+	</ul>
+</ul>
+	
 
 
 <p>&nbsp;</p>
 <a NAME="New_Certificate_Authority"></a>
 <h2>New Certificate Authority</h2>
 
-<p>The certificates that the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. When you decide to trust a CA, Certificate Manager files that CA's certificate and can then recognize the kinds of certificates you trust that CA to issue.</P>
+<p>The certificates that the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. 
 
-<p>Before accepting a new CA certificate, Certificate Manager displays a window that allows you to specify how you want to trust the certificate, if at all. You can click View to see the CA certificate, or Policy to see information about the CA's policies. 
+<p>When you decide to trust a CA, Certificate Manager downloads that CA's certificate and can then recognize the kinds of certificates you trust that CA to issue.</P>
 
-<p>Before you decide to trust a new CA, make sure that you know who is operating it. Make sure the CA's policies and procedures are appropriate for the kinds of certificates it issues. For example, if the CA issues certificates identifying web sites you use for financial transactions, make sure you are comfortable with the level of assurance the CA provides. 
-
-<p>You also need to decide what kinds of certificates issued by this CA you want to trust. You can select any of the following options:
+<p>Before downloading a new CA certificate, Certificate Manager allows you to specify the purposes for which you trust the certificate, if at all. You can select any of the following options:
 
 <ul>
-	<LI><B>Trust this CA to identify web sites. </B>Web site certificates for some sites, such as those that handle financial transactions, can be extremely important, and inappropriate or false identification can have negative consequences.</LI>
-	<LI><B>Trust this CA to identify email users. </B>If you intend to send email users confidential information in encrypted form, or if accurate identification of email users is important to you for any other reason, you should consider carefully the CA's procedures for identifying prospective certificate owners and whether they are appropriate for your purposes before selecting this option.</LI>
-	<LI><B>Trust this CA to identify software developers.</B> Selecting this option means that you trust the CA to issue certificates that identify the origin of Java applets and JavaScript scripts requesting special access to your computer, such as the ability to change files. Since such access privileges can be misused, for example to destroy data stored on your hard disk, be very careful about selecting this option unless you are certain that you trust the CA for this purpose.
+	<LI><B>Trust this CA to identify web sites: </B>Web site certificates for some sites, such as those that handle financial transactions, can be extremely important, and inappropriate or false identification can have negative consequences.</LI>
+	<LI><B>Trust this CA to identify email users: </B>If you intend to send email users confidential information in encrypted form, or if accurate identification of email users is important to you for any other reason, you should consider carefully the CA's procedures for identifying prospective certificate owners and whether they are appropriate for your purposes before selecting this option.</LI>
+	<LI><B>Trust this CA to identify software developers:</B> Selecting this option means that you trust the CA to issue certificates that identify the origin of Java applets and JavaScript scripts requesting special access to your computer, such as the ability to change files. Since such access privileges can be misused, for example to destroy data stored on your hard disk, be very careful about selecting this option unless you are certain that you trust the CA for this purpose.
 </ul>
+
+<p>Before you decide to trust a new CA, make sure that you know who is operating it. Make sure the CA's policies and procedures are appropriate for the kinds of certificates it issues. For example, if the CA issues certificates identifying web sites you use for financial transactions, make sure you are comfortable with the level of assurance the CA provides.
+
+<ul>
+	<li><b>View:</b> Click this button to view the CA certificate you are about to download. If you decide you don't want to download this certificate, click Cancel.
+</ul>  
+
+ 
+
 
 <p>&nbsp;</p>
 <a NAME="old_next_update_crl"></a>
-<h2>Browser Won't Accept CRL</h2>
+<h2>Browser Won&apos;t Accept CRL</h2>
 
-<p>A certificate revocation list (CRL) is list of revoked certificates. The browser uses the CRLs it has available to check the validity of certificates issued by the corresponding <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. If a certificate is listed as revoked, the browser won't accept it as evidence of identity.
+<p>A certificate revocation list (CRL) is list of revoked certificates. The browser uses the CRLs it has available to check the validity of certificates issued by the corresponding <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. If a certificate is listed as revoked, the browser won&quot;t accept it as evidence of identity.
 
 <p>A CA typically publishes an updated CRL at regular intervals. Every CRL includes a date, specified in the Next Update field, by which the CA will publish the next update of that CRL. If the date in the Next Update field is earlier than the current date, you should obtain the most recent version of the CRL.
 
-<p>Although the absence of the most recent CRL does not by itself invalidate a certificate, the browser can't accept a server certificate unless the corresponding CRL is the most recent available. In some situations, you may want to delete CRLs with Next Update dates earlier than the present. Speak to your system administrator for guidance on CRL management.
+<p>Although the absence of the most recent CRL does not by itself invalidate a certificate, the browser can&apos;t accept a server certificate unless the corresponding CRL is the most recent available. In some situations, you may want to delete CRLs with Next Update dates earlier than the present. Speak to your system administrator for guidance on CRL management.
 
 <p>For more information on CRLs and instructions for viewing or deleting them, see <a href="using_certs_help.html#Managing_CRLs">Managing CRLs</a>.
 
@@ -218,14 +260,17 @@
 
 <p>&nbsp;</p>
 <a NAME="New_Web_Site_Certificate"></a>
-<h3>New Web Site Certificate</h3>
+<h3>Web Site Certified by an Unknown Authority</h3>
 
 
-<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays an alert that allows you to examine the new web site certificate and decide what to do. 
+<p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays an alert that allows you to examine the new web site certificate and decide what to do:
 
-<p>To examine the certificate, click View Certificate. 
+<ul>
+	<li><b>View Certificate:</b> Click this button to view the web site's certificate.
+	<li><b>Remember this certificate permanently.</b> If you're sure that the certificate is valid, select this option and then click Continue. Certificate Manager will recognize this certificate as legitimate identification until the certificate expires.
+</ul>
 
-<p>You can take any of these actions:
+<p>To dismiss the alert and proceed with your work, click Continue or Cancel:
 
 <ul>
 
@@ -233,9 +278,9 @@
 
 	<p>Canceling might be appropriate, for example, if you perform financial transactions at the web site. In this case you might want to report the problem to the bank or other organization that runs the site and confirm that the site's certificate is valid before you go any further.
 
-	<li>If you wish to view the web site despite the problem, click Continue and proceed with caution. Certificate Manager will recognize this certificate as legitimate identification for this session only. You'll see the same alert the next time you visit the site.
-
-	<li>If you're sure that the certificate is valid, select "Remember this certificate permanently" and then click Continue. Certificate Manager will recognize this certificate as legitimate identification until it expires.
+	<li>If you wish to view the web site despite the problem, click Continue.</li> 
+	<p>If you selected "Remember this certificate permanently," Certificate Manager will recognize this certificate as legitimate identification until the certificate expires. 
+	<p>If you did not select "Remember this certificate permanently," Certificate Manager will recognize this certificate as legitimate identification for this session only. You'll see the same alert the next time you visit the site.
 
 </ul>
 
@@ -245,15 +290,12 @@
 
 <ol>
    <li>Open the Edit menu and choose Preferences.
-   <li>Under the Privacy &amp; Security category, click Certificates. (If no subcategories are visible, double-click the category to expand the list.) 
+   <li>Under the Privacy &amp; Security category, click Certificates. (If no subcategories are visible, double-click Privacy &amp; Security category to expand the list.) 
    <li>Click Manage Certificates.
    <li>Click the Authorities tab.
    <li>Select the CA certificate whose trust settings you want to edit.
    <li>Click the Edit button and select the appropriate trust settings.
 </ol>
-
-<p>For help deciding which trust settings you should select, click the Help button in the Edit dialog box or see <a href="certs_help.html#Edit_CA_Certificate_Settings">Edit CA Certificate Settings</a>.
-
 
 <p>&nbsp;</p>
 <a NAME="Expired_Web_Site_Certificate"></a>
@@ -304,7 +346,7 @@
 
 
 <hr>
-<p><i>11 January 2001</i></p>
+<p><i>25 April 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
