@@ -1855,8 +1855,11 @@ nsPostScriptObj::begin_page()
   fprintf(mScriptFP, "%%%%Page: %d %d\n", mPageNumber, mPageNumber);
   fprintf(mScriptFP, "%%%%BeginPageSetup\n");
   if(mPrintSetup->num_copies != 1) {
-    fprintf(mScriptFP, "1 dict dup /NumCopies %d put setpagedevice\n",
-      mPrintSetup->num_copies);
+    fprintf(mScriptFP, 
+      "/setpagedevice where\n"
+      "{ pop 1 dict dup /NumCopies %d put setpagedevice }\n"
+      "{ userdict /#copies %d put } ifelse\n",
+      mPrintSetup->num_copies, mPrintSetup->num_copies);
   }
   fprintf(mScriptFP,"/pagelevel save def\n");
   // Rescale the coordinate system from points to twips.
