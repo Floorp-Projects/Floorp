@@ -189,6 +189,10 @@
 <!ENTITY calendar.monthview.accesskey          "m" >
 <!ENTITY calendar.flat.topbar.multiweekview    "Vista Settimane Multiple" >
 <!ENTITY calendar.multiweekview.accesskey      "e" >
+<!ENTITY calendar.dayView.key                  "1" >
+<!ENTITY calendar.weekView.key                 "2" >
+<!ENTITY calendar.multiweekView.key            "3" >
+<!ENTITY calendar.monthView.key                "4" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Elimina Evento" >
 <!ENTITY calendar.tools.modify.tooltip         "Modifica Evento" >

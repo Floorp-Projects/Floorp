@@ -187,8 +187,12 @@
 <!ENTITY calendar.weekview.accesskey           "T" >
 <!ENTITY calendar.flat.topbar.monthview        "Mesačny wid" >
 <!ENTITY calendar.monthview.accesskey          "M" >
-<!ENTITY calendar.flat.topbar.multiweekview   "Multitydźeń" >
-<!ENTITY calendar.multiweekview.accesskey     "l" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Multitydźeń" >
+<!ENTITY calendar.multiweekview.accesskey      "l" >
+<!ENTITY calendar.dayView.key                  "1" >
+<!ENTITY calendar.weekView.key                 "2" >
+<!ENTITY calendar.multiweekView.key            "3" >
+<!ENTITY calendar.monthView.key                "4" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Podawk wotstronić" >
 <!ENTITY calendar.tools.modify.tooltip         "Podawk změnić" >

@@ -183,8 +183,12 @@
 <!ENTITY calendar.weekview.accesskey           "s" >
 <!ENTITY calendar.flat.topbar.monthview        "Ver mes" >
 <!ENTITY calendar.monthview.accesskey          "M" >
-<!ENTITY calendar.flat.topbar.multiweekview   "Multisemana" >
-<!ENTITY calendar.multiweekview.accesskey     "u" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Multisemana" >
+<!ENTITY calendar.multiweekview.accesskey      "u" >
+<!ENTITY calendar.dayView.key                  "1" >
+<!ENTITY calendar.weekView.key                 "2" >
+<!ENTITY calendar.multiweekView.key            "3" >
+<!ENTITY calendar.monthView.key                "4" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Borrar evento" >
 <!ENTITY calendar.tools.modify.tooltip         "Modificar evento" >

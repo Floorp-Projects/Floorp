@@ -157,10 +157,11 @@
   <key id="delete_key"           keycode="VK_DELETE"                     observes="delete_command_no_confirm"/>
   <key id="key_selectAll"        key="&calendar.selectall.key;"          observes="select_all_command"          modifiers="accel"/>
 
-  <key id="view_day_key"         keycode="VK_F1"                         observes="day_view_command"/>
-  <key id="view_week_key"        keycode="VK_F2"                         observes="week_view_command"/>
-  <key id="view_multiweek_key"   keycode="VK_F3"                         observes="multiweek_view_command"/>
-  <key id="view_month_key"       keycode="VK_F4"                         observes="month_view_command"/>
+# calendar.xpi adds shift as an accelerator to these 4 keys so we don't conflict with Seamonkey
+  <key id="view_day_key"         key="&calendar.dayView.key;"            observes="day_view_command"            modifiers="shift, accel"/>
+  <key id="view_week_key"        key="&calendar.weekView.key;"           observes="week_view_command"           modifiers="shift, accel"/>
+  <key id="view_multiweek_key"   key="&calendar.multiweekView.key;"      observes="multiweek_view_command"      modifiers="shift, accel"/>
+  <key id="view_month_key"       key="&calendar.monthView.key;"          observes="month_view_command"          modifiers="shift, accel"/>
 
   <key id="go_to_today_key"      keycode="VK_DOWN"                       observes="go_today_command"            modifiers="accel"/>
   <key id="go_to_date_key"       keycode="VK_UP"                         observes="go_date_command"             modifiers="accel"/>
