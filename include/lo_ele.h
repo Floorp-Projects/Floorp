@@ -1221,6 +1221,7 @@ typedef struct LO_Heading_struct {
     
     Bool is_end;
     int32 alignment;
+    Bool alignment_set;
 } LO_HeadingStruct;
 
 typedef struct LO_Span_struct {
