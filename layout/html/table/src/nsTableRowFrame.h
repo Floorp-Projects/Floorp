@@ -155,10 +155,8 @@ public:
 #endif
  
   void SetTallestCell(nscoord           aHeight,
-#ifdef MOZ_MATHML
                       nscoord           aAscent,
                       nscoord           aDescent,
-#endif
                       nsTableFrame*     aTableFrame = nsnull,
                       nsTableCellFrame* aCellFrame  = nsnull);
 
@@ -170,12 +168,11 @@ public:
   /** returns the tallest child in this row (ignoring any cell with rowspans) */
   nscoord GetTallestCell() const;
 
-#ifdef MOZ_MATHML
   // Support for cells with 'vertical-align: baseline'.
 
   /** 
    * returns the max-ascent amongst all the cells that have 
-   * 'vertical-align: baseline', including cells with rowspans.
+   * 'vertical-align: baseline', *including* cells with rowspans.
    * returns 0 if we don't have any cell with 'vertical-align: baseline'
    */
   nscoord GetMaxCellAscent() const;
@@ -183,11 +180,10 @@ public:
 #if 0 // nobody uses this
   /** 
    * returns the max-descent amongst all the cells that have
-   * 'vertical-align: baseline', ignoring any cell with rowspans.
+   * 'vertical-align: baseline', *ignoring* any cell with rowspans.
    * returns 0 if we don't have any cell with 'vertical-align: baseline'
    */
   nscoord GetMaxCellDescent() const;
-#endif
 #endif
 
   /** returns the ordinal position of this row in its table */
@@ -322,11 +318,9 @@ private:
   nscoord  mTallestCell;          // not my height, but the height of my tallest child
   nsSize   mMaxElementSize;       // cached max element size
 
-#ifdef MOZ_MATHML
   // max-ascent and max-descent amongst all cells that have 'vertical-align: baseline'
   nscoord mMaxCellAscent;  // does include cells with rowspan > 1
   nscoord mMaxCellDescent; // does *not* include cells with rowspan > 1
-#endif
 };
 
 inline PRInt32 nsTableRowFrame::GetRowIndex() const

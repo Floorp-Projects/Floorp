@@ -142,16 +142,11 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
-#ifndef MOZ_MATHML
-  virtual void VerticallyAlignChild(nsIPresContext*          aPresContext,
-                                    const nsHTMLReflowState& aReflowState);
-#else
   virtual void VerticallyAlignChild(nsIPresContext*          aPresContext,
                                     const nsHTMLReflowState& aReflowState,
                                     nscoord                  aMaxAscent);
 
   PRBool HasVerticalAlignBaseline();
-#endif
 
   /**
    * return the cell's specified row span. this is what was specified in the
@@ -207,9 +202,7 @@ public:
 
   /** return the desired size returned by this frame during its last reflow */
   virtual nsSize GetDesiredSize();
-#ifdef MOZ_MATHML
   virtual nscoord GetDesiredAscent();
-#endif
 
   /** set the desired size returned by this frame during its last reflow */
   virtual void SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize);
@@ -281,9 +274,7 @@ protected:
 
   /** these are the last computed desired and max element sizes */
   nsSize       mDesiredSize;
-#ifdef MOZ_MATHML
   nscoord      mDesiredAscent;
-#endif
 
   /** these are the Pass 1 maximum width and max element sizes */
   nscoord      mMaximumWidth;
@@ -329,18 +320,14 @@ inline void nsTableCellFrame::SetPriorAvailWidth(nscoord aPriorAvailWidth)
 inline nsSize nsTableCellFrame::GetDesiredSize()
 { return mDesiredSize; }
 
-#ifdef MOZ_MATHML
 inline nscoord nsTableCellFrame::GetDesiredAscent()
 { return mDesiredAscent; }
-#endif
 
 inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
 { 
   mDesiredSize.width = aDesiredSize.width;
   mDesiredSize.height = aDesiredSize.height;
-#ifdef MOZ_MATHML
   mDesiredAscent = aDesiredSize.ascent;
-#endif
 }
 
 inline nscoord nsTableCellFrame::GetMaximumWidth() const
