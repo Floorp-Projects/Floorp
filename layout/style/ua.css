@@ -29,6 +29,14 @@ frameset {
   overflow: hidden;
 }
 
+frame {
+  background-color: white;
+}
+
+iframe {
+  background-color: white;
+}
+
 /* blocks */
 
 p {

@@ -615,10 +615,12 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext&      aPresContext,
                              nsFramePaintLayer    aWhichLayer)
 {
   //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  // if there is not web shell paint all white.
+  // if there is not web shell paint based on our background color, 
+  // otherwise let the web shell paint the sub document 
   if (!mWebShell) {
-    nscolor white = NS_RGB(255, 255, 255);
-    aRenderingContext.SetColor(white);
+    const nsStyleColor* color =
+      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    aRenderingContext.SetColor(color->mBackgroundColor);
     aRenderingContext.FillRect(mRect);
   }
   return NS_OK;
@@ -866,6 +868,8 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
+  aStatus = NS_FRAME_COMPLETE;
+
   // resize the sub document
   if (mWebShell) {
     float t2p;
@@ -879,7 +883,6 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
     mWebShell->SetBounds(subBounds.x, subBounds.y,
                        subBounds.width, subBounds.height);
     mWebShell->Repaint(PR_TRUE); 
-    aStatus = NS_FRAME_COMPLETE;
 
     NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
       ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
