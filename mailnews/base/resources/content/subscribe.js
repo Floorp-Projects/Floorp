@@ -10,6 +10,11 @@ var gNameField = null;
 var gFolderDelimiter = ".";
 var gStatusFeedback = new nsMsgStatusFeedback;
 
+// used for caching the tree children (in typedown)
+var lastTreeChildrenValue = null;
+var lastTreeChildren = null;
+
+
 function SetUpRDF()
 {
 	if (!RDF) {
@@ -111,6 +116,11 @@ var MySubscribeListener = {
 function SetUpTree(forceToServer)
 {
 	//dump("SetUpTree()\n");
+	
+	// forget the cached tree children
+	lastTreeChildrenValue = null;
+	lastTreeChildren = null;
+
 	SetUpRDF();
 	
 	gStatusBar = document.getElementById('statusbar-icon');
@@ -356,18 +366,10 @@ function SubscribeOnClick(event)
 	}
 }
 
-// used for caching the tree children (in typedown)
-var lastTreeChildrenValue = null;
-var lastTreeChildren = null;
-
 function RefreshList()
 {
 	// force it to talk to the server
 	SetUpTree(true);
-	
-	// forget the cached tree children
-	lastTreeChildrenValue = null;
-	lastTreeChildren = null;
 }
 
 function trackGroupInTree()
