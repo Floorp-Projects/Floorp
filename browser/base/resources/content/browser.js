@@ -1521,8 +1521,6 @@ function applyTheme(themeName)
   catch(e) {
   }
 
-  var str = Components.classes["@mozilla.org/supports-wstring;1"]
-                      .createInstance(Components.interfaces.nsISupportsWString);
 
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   if (oldTheme) {
@@ -1536,7 +1534,9 @@ function applyTheme(themeName)
       var inUse = chromeRegistry.isSkinSelected(name, true);
 
       chromeRegistry.uninstallSkin( name, true );
-      // XXX - this sucks and should only be temporary.
+
+      var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                          .createInstance(Components.interfaces.nsISupportsWString);
 
       str.data = true;
       pref.setComplexValue("general.skins.removelist." + name,
@@ -1549,28 +1549,8 @@ function applyTheme(themeName)
     return;
   }
 
- // XXX XXX BAD BAD BAD BAD !! XXX XXX                                         
- // we STILL haven't fixed editor skin switch problems                         
- // hacking around it yet again                                                
-
- str.data = name;
- pref.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
- 
- // shut down quicklaunch so the next launch will have the new skin
- var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
- appShell = appShell.QueryInterface(Components.interfaces.nsIAppShellService);
- try {
-   appShell.nativeAppSupport.isServerMode = false;
- }
- catch(ex) {
- }
- 
- if (promptService) {                                                          
-   var dialogTitle = gNavigatorBundle.getString("switchskinstitle");           
-   var brandName = gBrandBundle.getString("brandShortName");                   
-   var msg = gNavigatorBundle.getFormattedString("switchskins", [brandName]);  
-   promptService.alert(window, dialogTitle, msg);                              
- }                                                                             
+chromeRegistry.selectSkin(name, true);                                        
+chromeRegistry.refreshSkins();
 }
 
 function getNewThemes()
