@@ -36,33 +36,14 @@
 //
 // ***** END LICENSE BLOCK *****
 
-// ******  Mozilla Update -- Configuration File  ******
-// All common PHP Variables/functions are defined here
-
+// ******  Mozilla Update -- Database Configuration File  ******
 
 // MySQL Server Configuration Variables
-include"dbconfig.php"; // Include Database Server Configuration File
+    $db_server = "localhost"; //MySQL Server Hostname
+    $db_user = ""; // MySQL Username
+    $db_pass = ""; // MySQL Password  
+    $db_name = "update-beta"; // MySQL Database Name
 
-// General Website Configuration Variables
-$websitepath = "/opt/update-beta/";                 // Local Path to Site Files
-$repositorypath = "/opt/update-beta/files/";        //Path to XPI/JAR Respository
-$sitehostname = "update-beta.mozilla.org";          // DNS Hostname
-$ftpurl = "http://ftp.mozilla.org/pub/mozilla.org"; // URL to FTP site
-
-// Page Header and Footer Path Variables
-$page_header = "$websitepath/core/inc_header.php";  // Path to Page Header on Disk
-$page_footer = "$websitepath/core/inc_footer.php";  // Path to Page Footer on Disk
-
-//Function: getmicrotime() - Page Load Timing Debug Function
-function getmicrotime() {
-	list($usec, $sec) = explode(" ", microtime());
-    return ((float)$usec + (float)$sec);
-}
-$time_start = getmicrotime();
-
-// Update Core Include Files
-include"inc_guids.php"; // GUID Handler
-include"inc_global.php"; // Global Functions
-include"sessionconfig.php"; //Start Session
-
+    $connection = mysql_connect("$db_server","$db_user","$db_pass") or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    $db = mysql_select_db("$db_name", $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
 ?>
