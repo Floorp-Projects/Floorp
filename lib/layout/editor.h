@@ -4036,7 +4036,10 @@ public:
     ~CEditImageLoader();
 
     void LoadImage();
+#if 0
     void SetImageInfo(int32 ele_id, int32 width, int32 height);
+#endif
+    void SetImageInfo(int32 width, int32 height);
 };
 
 //-----------------------------------------------------------------------------
@@ -4094,7 +4097,11 @@ public:
     //
     // inherited interface.
     //
+#if 0
     CFileSaveObject( MWContext *pContext, char *pSrcURL, ITapeFileSystem *tapeFS, XP_Bool bAutoSave,
+                     CEditSaveToTempData * ) ;
+#endif
+    CFileSaveObject( MWContext *pContext, ITapeFileSystem *tapeFS, XP_Bool bAutoSave,
                      CEditSaveToTempData * ) ;
     virtual ~CFileSaveObject();
 
@@ -4138,7 +4145,10 @@ public:
     intn OpenOutputFile(/*int iFile*/);
     // Net Callbacks
     int NetStreamWrite( const char *block, int32 length );
+#if 0
     void NetFetchDone( URL_Struct *pUrl, int status, MWContext *pContext );
+#endif
+    void NetFetchDone( int status );
 
 };
 
