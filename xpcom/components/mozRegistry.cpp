@@ -100,10 +100,7 @@ struct mozRegSubtreeEnumerator : public nsIEnumerator {
     NS_DECL_ISUPPORTS
 
     // This class implements the nsIEnumerator interface functions.
-    NS_IMETHOD First();
-    NS_IMETHOD Next();
-    NS_IMETHOD CurrentItem(nsISupports **aItem);
-    NS_IMETHOD IsDone();
+    NS_DECL_NSIENUMERATOR
 
     // ctor/dtor
     mozRegSubtreeEnumerator( HREG hReg, RKEY rKey, PRBool all );

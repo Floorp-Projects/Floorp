@@ -48,10 +48,7 @@ public:
 	nsMessageFromMsgHdrEnumerator(){} //Default constructor that does nothing so nsComPtr will work.
 	virtual ~nsMessageFromMsgHdrEnumerator();
 
-	NS_IMETHOD First(void);
-	NS_IMETHOD Next(void);
-	NS_IMETHOD CurrentItem(nsISupports **aItem);
-	NS_IMETHOD IsDone(void);
+  NS_DECL_NSIENUMERATOR
 };
 
 NS_MSG_BASE nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,

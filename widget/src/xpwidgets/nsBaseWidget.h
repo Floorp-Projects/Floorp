@@ -141,12 +141,8 @@ protected:
       Enumerator(nsBaseWidget & inParent);
       virtual ~Enumerator();
 
-      NS_IMETHOD First();
-      NS_IMETHOD Last();
-      NS_IMETHOD Next();
-      NS_IMETHOD Prev();
-      NS_IMETHOD CurrentItem(nsISupports **aItem);
-      NS_IMETHOD IsDone();
+      NS_DECL_NSIENUMERATOR
+      NS_DECL_NSIBIDIRECTIONALENUMERATOR
 
     private:
       PRUint32       mCurrentPosition;

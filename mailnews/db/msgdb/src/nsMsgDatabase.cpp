@@ -1573,10 +1573,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIEnumerator methods:
-    NS_IMETHOD First(void);
-    NS_IMETHOD Next(void);
-    NS_IMETHOD CurrentItem(nsISupports **aItem);
-    NS_IMETHOD IsDone(void);
+    NS_DECL_NSIENUMERATOR
 
     // nsMsgDBEnumerator methods:
     typedef nsresult (*nsMsgDBEnumeratorFilter)(nsIMsgDBHdr* hdr, void* closure);
@@ -1750,10 +1747,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIEnumerator methods:
-    NS_IMETHOD First(void);
-    NS_IMETHOD Next(void);
-    NS_IMETHOD CurrentItem(nsISupports **aItem);
-    NS_IMETHOD IsDone(void);
+    NS_DECL_NSIENUMERATOR
 
     // nsMsgDBEnumerator methods:
     typedef nsresult (*nsMsgDBThreadEnumeratorFilter)(nsIMsgThread* hdr, void* closure);

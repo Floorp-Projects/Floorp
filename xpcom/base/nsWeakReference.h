@@ -38,7 +38,7 @@ class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
 
       inline virtual ~nsSupportsWeakReference();
 
-      NS_IMETHOD GetWeakReference( nsIWeakReference** );
+      NS_DECL_NSISUPPORTSWEAKREFERENCE
 
     private:
       friend class nsWeakReference;
@@ -62,8 +62,7 @@ class NS_COM nsWeakReference : public nsIWeakReference
       NS_IMETHOD QueryInterface( const nsIID&, void** );
 
     // nsIWeakReference...
-      NS_IMETHOD QueryReferent( const nsIID&, void** );
-
+      NS_DECL_NSIWEAKREFERENCE
 
     private:
       friend class nsSupportsWeakReference;

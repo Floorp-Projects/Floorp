@@ -660,6 +660,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIBaseStream:
+    NS_DECL_NSIBASESTREAM
 
     NS_IMETHOD
     Close(void);

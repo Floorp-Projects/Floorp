@@ -28,14 +28,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIEnumerator methods:
-  NS_IMETHOD First(void);
-  NS_IMETHOD Next(void);
-  NS_IMETHOD CurrentItem(nsISupports **aItem);
-  NS_IMETHOD IsDone(void);
+  NS_DECL_NSIENUMERATOR
 
   // nsIBidirectionalEnumerator methods:
-  NS_IMETHOD Last(void);
-  NS_IMETHOD Prev(void);
+  NS_DECL_NSIBIDIRECTIONALENUMERATOR
 
   // nsConjoiningEnumerator methods:
   nsConjoiningEnumerator(nsIEnumerator* first, nsIEnumerator* second);
@@ -190,10 +186,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIEnumerator methods:
-  NS_IMETHOD First(void);
-  NS_IMETHOD Next(void);
-  NS_IMETHOD CurrentItem(nsISupports **aItem);
-  NS_IMETHOD IsDone(void);
+  NS_DECL_NSIENUMERATOR
 
   // nsIntersectionEnumerator methods:
   nsIntersectionEnumerator(nsIEnumerator* first, nsIEnumerator* second);
@@ -290,10 +283,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIEnumerator methods:
-  NS_IMETHOD First(void);
-  NS_IMETHOD Next(void);
-  NS_IMETHOD CurrentItem(nsISupports **aItem);
-  NS_IMETHOD IsDone(void);
+  NS_DECL_NSIENUMERATOR
 
   // nsUnionEnumerator methods:
   nsUnionEnumerator(nsIEnumerator* first, nsIEnumerator* second);

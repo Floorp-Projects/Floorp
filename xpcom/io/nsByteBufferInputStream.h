@@ -32,14 +32,14 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIBaseStream methods:
-    NS_IMETHOD Close(void);
+    NS_DECL_NSIBASESTREAM
 
     // nsIOutputStream methods:
-    NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, 
-                     PRUint32 *aWriteCount); 
+    NS_DECL_NSIOUTPUTSTREAM
+
+    // This method isn't in nsIOutputStream...
     NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
                          PRUint32 *aWriteCount);
-    NS_IMETHOD Flush(void);
 
     // nsByteBufferOutputStream methods:
     nsByteBufferOutputStream(nsByteBufferInputStream* in);
@@ -57,11 +57,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIBaseStream methods:
-    NS_IMETHOD Close(void);
+    NS_DECL_NSIBASESTREAM
 
     // nsIInputStream methods:
-    NS_IMETHOD GetLength(PRUint32 *aLength);
-    NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount); 
+    NS_DECL_NSIINPUTSTREAM
 
     // nsIByteBufferInputStream methods:
     NS_IMETHOD Fill(nsIInputStream* stream, PRUint32 aCount, PRUint32 *aWriteCount);

@@ -21,6 +21,7 @@
 [scriptable, uuid(6ccb17a0-e95e-11d1-beae-00805f8a66dc)]
 interface nsIBaseStream : nsISupports
 {
+    /** Close the stream. */
     void Close();
 };
 

@@ -2112,10 +2112,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIEnumerator methods:
-    NS_IMETHOD First(void);
-    NS_IMETHOD Next(void);
-    NS_IMETHOD CurrentItem(nsISupports **aItem);
-    NS_IMETHOD IsDone(void);
+    NS_DECL_NSIENUMERATOR
 
     // nsAddrDBEnumerator methods:
 

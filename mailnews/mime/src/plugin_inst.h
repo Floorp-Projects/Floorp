@@ -62,7 +62,7 @@ public:
 
 
     // nsIBaseStream interface
-    NS_IMETHOD    Close(void);
+    NS_DECL_NSIBASESTREAM
 
     ////////////////////////////////////////////////////////////////////////////
     // MimePluginInstance specific methods:

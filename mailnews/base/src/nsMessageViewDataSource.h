@@ -201,25 +201,7 @@ public:
 	nsMessageViewMessageEnumerator(nsIEnumerator *srcEnumerator, PRUint32 showStatus);
 	virtual ~nsMessageViewMessageEnumerator();
 
-	//nsIEnumerator interface	
-	/** First will reset the list. will return NS_FAILED if no items
-	*/
-	NS_IMETHOD First(void);
-
-	/** Next will advance the list. will return failed if already at end
-	*/
-	NS_IMETHOD Next(void);
-
-	/** CurrentItem will return the CurrentItem item it will fail if the list is empty
-	*  @param aItem return value
-	*/
-	NS_IMETHOD CurrentItem(nsISupports **aItem);
-
-	/** return if the collection is at the end.  that is the beginning following a call to Prev
-	*  and it is the end of the list following a call to next
-	*  @param aItem return value
-	*/
-	NS_IMETHOD IsDone(void);
+  NS_DECL_NSIENUMERATOR
 
 protected:
 	nsresult SetAtNextItem();
@@ -242,25 +224,7 @@ public:
 	nsMessageViewThreadEnumerator(nsIEnumerator *srcEnumerator, nsIMsgFolder *srcFolder);
 	virtual ~nsMessageViewThreadEnumerator();
 
-	//nsIEnumerator interface	
-	/** First will reset the list. will return NS_FAILED if no items
-	*/
-	NS_IMETHOD First(void);
-
-	/** Next will advance the list. will return failed if already at end
-	*/
-	NS_IMETHOD Next(void);
-
-	/** CurrentItem will return the CurrentItem item it will fail if the list is empty
-	*  @param aItem return value
-	*/
-	NS_IMETHOD CurrentItem(nsISupports **aItem);
-
-	/** return if the collection is at the end.  that is the beginning following a call to Prev
-	*  and it is the end of the list following a call to next
-	*  @param aItem return value
-	*/
-	NS_IMETHOD IsDone(void);
+  NS_DECL_NSIENUMERATOR
 
 protected:
 	nsresult GetMessagesForCurrentThread();

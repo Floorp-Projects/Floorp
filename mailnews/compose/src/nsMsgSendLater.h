@@ -74,11 +74,10 @@ public:
 	NS_DECL_ISUPPORTS
 
   //  nsIBaseStream interface
-  NS_IMETHOD Close(void);
+  NS_DECL_NSIBASESTREAM
 
   // nsIOutputStream interface
-  NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
-  NS_IMETHOD Flush(void);
+  NS_DECL_NSIOUTPUTSTREAM
 
   // nsIMsgSendLater support
   NS_IMETHOD                SendUnsentMessages(nsIMsgIdentity *identity,
