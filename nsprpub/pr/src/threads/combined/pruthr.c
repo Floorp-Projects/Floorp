@@ -20,6 +20,10 @@
 #include <signal.h>
 #include <string.h>
 
+#ifdef XP_MAC
+#include <LowMem.h>
+#endif
+
 /* _pr_activeLock protects the following global variables */
 PRLock *_pr_activeLock;
 PRInt32 _pr_primordialExitCount;   /* In PR_Cleanup(), the primordial thread
@@ -84,6 +88,8 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
 #else
 #if defined(SOLARIS) || defined (UNIXWARE) && defined (USR_SVR4_THREADS)
     stack->stackTop = (char*) &thread;
+#elif defined(XP_MAC)
+	stack->stackTop = (char*) LMGetCurStackBase();
 #else
     stack->stackTop = (char*) ((((long)&type + _pr_pageSize - 1)
                 >> _pr_pageShift) << _pr_pageShift);
@@ -1578,11 +1584,19 @@ PR_IMPLEMENT(void) PR_SuspendAll(void)
     _PR_MD_BEGIN_SUSPEND_ALL();
     for (qp = _PR_ACTIVE_LOCAL_THREADQ().next;
         qp != &_PR_ACTIVE_LOCAL_THREADQ(); qp = qp->next) {
+#ifdef XP_MAC
+        /* consider all threads on the Mac GCable. */
+        if (me != _PR_ACTIVE_THREAD_PTR(qp)) {
+            _PR_Suspend(_PR_ACTIVE_THREAD_PTR(qp));
+            PR_ASSERT((_PR_ACTIVE_THREAD_PTR(qp))->state != _PR_RUNNING);
+        }
+#else
         if ((me != _PR_ACTIVE_THREAD_PTR(qp)) && 
             (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD)) {
             _PR_Suspend(_PR_ACTIVE_THREAD_PTR(qp));
                 PR_ASSERT((_PR_ACTIVE_THREAD_PTR(qp))->state != _PR_RUNNING);
             }
+#endif
     }
     for (qp = _PR_ACTIVE_GLOBAL_THREADQ().next;
         qp != &_PR_ACTIVE_GLOBAL_THREADQ(); qp = qp->next) {
@@ -1609,9 +1623,14 @@ PR_IMPLEMENT(void) PR_ResumeAll(void)
     _PR_MD_BEGIN_RESUME_ALL();
     for (qp = _PR_ACTIVE_LOCAL_THREADQ().next;
         qp != &_PR_ACTIVE_LOCAL_THREADQ(); qp = qp->next) {
+#ifdef XP_MAC
+        if (me != _PR_ACTIVE_THREAD_PTR(qp))
+            _PR_Resume(_PR_ACTIVE_THREAD_PTR(qp));
+#else
         if ((me != _PR_ACTIVE_THREAD_PTR(qp)) && 
             (_PR_ACTIVE_THREAD_PTR(qp)->flags & _PR_GCABLE_THREAD))
             _PR_Resume(_PR_ACTIVE_THREAD_PTR(qp));
+#endif
     }
     for (qp = _PR_ACTIVE_GLOBAL_THREADQ().next;
         qp != &_PR_ACTIVE_GLOBAL_THREADQ(); qp = qp->next) {
