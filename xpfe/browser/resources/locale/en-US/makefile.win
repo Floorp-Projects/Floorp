@@ -30,9 +30,11 @@ install::
 	$(MAKE_INSTALL) viewSource.dtd $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigator.dtd $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmCheckYN.dtd $(DISTBROWSWER)
+	$(MAKE_INSTALL) navigator.properties $(DISTBROWSER)
 
 clobber::
   rm -f $(DISTBROWSER)\viewSource.dtd
   rm -f $(DISTBROWSER)\navigator.dtd
   rm -f $(DISTBROWSER)\NetSupportConfirmCheckYN.dtd
+  rm -f $(DISTBROWSER)\navigator.properties
 
