@@ -99,7 +99,11 @@ hack_nsIFile2URL(nsIFile* file, char * *aURL)
     // Escape the path with the directory mask
     nsCAutoString tmp(ePath);
     tmp.ReplaceChar(":", '|');
+#ifdef XP_MAC
     nsCAutoString escPath("file:///");
+#else
+    nsCAutoString escPath("file://");
+#endif
 	escPath += tmp;
 //    rv = nsURLEscape(ePath,nsIIOService::url_Directory + nsIIOService::url_Forced, escPath);
 //    if (NS_SUCCEEDED(rv)) {
