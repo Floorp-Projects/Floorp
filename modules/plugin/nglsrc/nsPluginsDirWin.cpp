@@ -277,6 +277,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
  */
 nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 {
+  nsresult res = NS_OK;
 	DWORD zerome, versionsize;
 	char* verbuf = nsnull;
 	const char* path = this->GetCString();
@@ -309,9 +310,11 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     info.fFileName = PL_strdup(path); // don't we need the full path too?
 	}
 	else
-		return NS_ERROR_FAILURE;
+		res = NS_ERROR_FAILURE;
 
-	return NS_OK;
+	PR_Free(verbuf);
+
+  return res;
 }
 
 
