@@ -2004,8 +2004,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
                        "Fatal ... bad message format\n");
         }
         
-        mCopyState->m_fileStream->write(start, end-start);
-        mCopyState->m_fileStream->write(MSG_LINEBREAK, MSG_LINEBREAK_LEN);   
+        mCopyState->m_fileStream->write(start, end-start+linebreak_len);
         if (mCopyState->m_parseMsgState)
             mCopyState->m_parseMsgState->ParseAFolderLine(start,
                                                   end-start+linebreak_len);
@@ -2019,8 +2018,22 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
             break;
         }
         end = PL_strstr(start, "\r");
+        if (end)
+        {
+          if (*(end+1) == LF)  //need to set the linebreak_len each time
+             linebreak_len = 2;  //CRLF
+          else
+             linebreak_len = 1;  //only CR
+        }
         if (!end)
-            end = PL_strstr(start, "\n");
+        {
+         end = PL_strstr(start, "\n");
+         if (end)
+            linebreak_len = 1;   //LF
+         else
+            linebreak_len =0;  //no LF
+        }
+
         if (start && !end)
         {
             mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
@@ -2030,8 +2043,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         }
     }
   }
-  
-	return rv;
+
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
