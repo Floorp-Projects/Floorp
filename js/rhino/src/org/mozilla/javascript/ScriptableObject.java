@@ -213,14 +213,17 @@ public abstract class ScriptableObject implements Scriptable {
      * @param value value to set the property to
      */
     public void put(String name, Scriptable start, Object value) {
-        int hash = name.hashCode();
-        Slot slot = getSlot(name, hash, false);
-        if (slot == null) {
-            if (start != this) {
-                start.put(name, start, value);
-                return;
+        Slot slot = lastAccess; // Get local copy
+        if (name != slot.stringKey || slot.wasDeleted != 0) {
+            int hash = name.hashCode();
+            slot = getSlot(name, hash, false);
+            if (slot == null) {
+                if (start != this) {
+                    start.put(name, start, value);
+                    return;
+                }
+                slot = getSlotToSet(name, hash, false);
             }
-            slot = getSlotToSet(name, hash, false);
         }
         if ((slot.attributes & ScriptableObject.READONLY) != 0)
             return;
