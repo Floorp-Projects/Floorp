@@ -68,6 +68,14 @@
     return self;
 }
 
+-(void) awakeFromNib
+{
+  // make sure these are disabled at the start since the outliner
+  // starts off with no selection.
+  [mEditBookmarkButton setEnabled:NO];
+  [mDeleteBookmarkButton setEnabled:NO];
+}
+
 -(void) windowClosing
 {
   if (mBookmarks) {
@@ -311,6 +319,18 @@
     if (NSRunAlertPanel(alert, message, okButton, cancelButton, nil) != NSAlertDefaultReturn)
       return;
   }
+  
+  // The alert panel was the key window.  As soon as we dismissed it, Cocoa will
+  // pick a new one for us.  Ideally, it'll be the window we were using when
+  // we clicked the delete button.  However, if by chance the BookmarkInfoController
+  // is visible, it will become the key window since it's a panel.  If we then delete
+  // the bookmark and try to close the window before we've setup a new bookmark,
+  // we'll trigger the windowDidResignKey message, which will try to update the bookmark
+  // we just deleted, and things will crash.  So, we'll trigger windowDidResignKey now
+  // and avoid the unpleasentness of a crash log.
+
+  if (![[mBrowserWindowController window] isKeyWindow])
+    [[mBrowserWindowController window] makeKeyWindow];
   
   // we'll run into problems if a parent item and one if its children are both selected.
   // A cheap way of having to avoid scanning the list to remove children is to have the
@@ -773,14 +793,14 @@
 
 -(void)outlineViewSelectionDidChange: (NSNotification*) aNotification
 {
+  BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController]; 
   int index = [mOutlineView selectedRow];
   if (index == -1) {
     [mEditBookmarkButton setEnabled:NO];
     [mDeleteBookmarkButton setEnabled:NO];
+    [bic close];
   }
   else {
-    BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController]; 
-
     [mEditBookmarkButton setEnabled:YES];
     [mDeleteBookmarkButton setEnabled:YES];
     if ([[bic window] isVisible]) 

@@ -78,32 +78,35 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
   [self commitChanges:[aNotification object]];
   [[mFieldEditor undoManager] removeAllActions];
 }
+-(void)windowDidBecomeKey:(NSNotification*) aNotification
+{
+  [[self window] makeFirstResponder:mNameField];
+}
 
 -(void)windowDidResignKey:(NSNotification*) aNotification
 {
-  [self commitChanges:nil];
+  [[self window] makeFirstResponder:[self window]];
 }
 
-// if changedField is nil, commit everything
 - (void)commitChanges:(id)changedField
 {
   if (![mBookmarkItem contentNode])
     return;
 
   // Name
-  if (!changedField || changedField == mNameField)
+  if (changedField == mNameField)
     [self commitField:mNameField toProperty:BookmarksService::gNameAtom];
   
   // Location
-  if (!changedField || changedField == mLocationField)
+  if (changedField == mLocationField)
     [self commitField:mLocationField toProperty:BookmarksService::gHrefAtom];
 
   // Keyword
-  if (!changedField || changedField == mKeywordField)
+  if (changedField == mKeywordField)
     [self commitField:mKeywordField toProperty:BookmarksService::gKeywordAtom];
 
   // Description
-  if (!changedField || changedField == mDescriptionField)
+  if (changedField == mDescriptionField)
     [self commitField:mDescriptionField toProperty:BookmarksService::gDescriptionAtom];
 
   [[mFieldEditor undoManager] removeAllActions];
@@ -211,6 +214,12 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 -(NSText *)windowWillReturnFieldEditor:(NSWindow *)aPanel toObject:(id)aObject
 {
   return mFieldEditor;
+}
+
+-(void) close
+{
+  mBookmarkItem = nil;
+  [super close];
 }
 
 

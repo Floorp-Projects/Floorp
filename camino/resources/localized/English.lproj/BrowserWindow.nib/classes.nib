@@ -12,7 +12,12 @@
             }; 
             CLASS = BookmarksDataSource; 
             LANGUAGE = ObjC; 
-            OUTLETS = {mBrowserWindowController = id; mOutlineView = id; }; 
+            OUTLETS = {
+                mBrowserWindowController = id; 
+                mDeleteBookmarkButton = id; 
+                mEditBookmarkButton = id; 
+                mOutlineView = id; 
+            }; 
             SUPERCLASS = NSObject; 
         }, 
         {CLASS = BookmarksToolbar; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
