@@ -2124,6 +2124,6 @@ PS_FontInfo *PSFE_MaskToFI[8] = {
 void 
 INTL_CharSetIDToName(int16 csid, char  *charset)
 {
-	//XXX: Fill me in with code from mozilla/lib/libi18n
+	/* XXX: Fill me in with code from mozilla/lib/libi18n */
 }
 
