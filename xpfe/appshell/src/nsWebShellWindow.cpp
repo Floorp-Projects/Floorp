@@ -37,6 +37,10 @@
 #include "nsIXULCommand.h"
 #include "nsIDOMCharacterData.h"
 
+#include "nsIMenuBar.h"
+#include "nsIMenu.h"
+#include "nsIMenuItem.h"
+
 // XXX: Only needed for the creation of the widget controller...
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
@@ -50,6 +54,10 @@
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
 static NS_DEFINE_IID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
+
+static NS_DEFINE_IID(kMenuBarCID,          NS_MENUBAR_CID);
+static NS_DEFINE_IID(kMenuCID,             NS_MENU_CID);
+static NS_DEFINE_IID(kMenuItemCID,         NS_MENUITEM_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -67,7 +75,9 @@ static NS_DEFINE_IID(kIXULCommandIID,         NS_IXULCOMMAND_IID);
 static NS_DEFINE_IID(kIDOMCharacterDataIID,   NS_IDOMCHARACTERDATA_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
-
+static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
+static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
+//static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
 #include "nsIWebShell.h"
 
@@ -491,6 +501,92 @@ void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aD
   UpdateButtonStatus(PR_FALSE);
 }
 
+// Load Menus
+void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow) 
+{
+  nsresult rv;
+  
+  nsIDOMNode * menubarNode = FindNamedParentFromDoc(aDOMDoc, nsAutoString("menubar"));
+  if (nsnull != menubarNode) {
+    nsIMenuBar * pnsMenuBar = nsnull;
+    rv = nsRepository::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID,
+            (void**)&pnsMenuBar);
+    if (NS_OK != rv) {
+      // Error
+    }
+    
+    //pnsMenuBar = new nsMenuBar();
+    if (nsnull != pnsMenuBar) {
+	  // TODO: set pnsMenuBar as a nsMenuListener on aParentWindow
+	  //aParentWindow->AddMenuListener(pnsMenuBar);
+	  
+			    nsIDOMNode * menuNode = nsnull;
+			    menubarNode->GetFirstChild(&menuNode);
+			    while (nsnull != menuNode) {
+			      nsIDOMElement * menuElement = nsnull;
+			      nsString menuNodeType;
+			      nsString menuName;
+			      if (NS_OK == menuNode->QueryInterface(kIDOMNodeIID, (void**) &menuElement)) {
+			        menuElement->GetNodeName(menuNodeType);
+			        if (menuNodeType.Equals("menu")) {
+			          menuElement->GetAttribute(nsAutoString("name"), menuName);
+			          printf("Menu [%s]\n", menuName.ToNewCString() );
+			          
+			          
+			          nsIMenu * pnsMenu = nsnull;
+		              rv = nsRepository::CreateInstance(kMenuCID, nsnull, kIMenuIID,
+                                (void**)&pnsMenu);
+					  if (NS_OK != rv) {
+					    // Error
+					  }
+			          
+			          // TODO: Set nsMenu Name
+			          pnsMenu->SetLabel(menuName);
+			          // TODO: Make nsMenu a child of nsMenuBar
+			          pnsMenuBar->AddMenu(pnsMenu);
+			        }
+			        NS_RELEASE(menuElement);
+			      }
+			      
+			      // Begin menuitem inner loop
+			      nsIDOMNode * menuitemNode = nsnull;
+			      menuNode->GetFirstChild(&menuitemNode);
+			      while(nsnull != menuitemNode){
+			        nsIDOMElement * menuitemElement = nsnull;
+			        nsString menuitemNodeType;
+			        nsString menuitemName;
+				    if (NS_OK == menuitemNode->QueryInterface(kIDOMNodeIID, (void**) &menuitemElement)) {
+				      if(menuitemElement){
+				          menuitemElement->GetNodeName(menuitemNodeType);
+				          if (menuitemNodeType.Equals("menuitem")) {
+				            menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
+				            printf("MenuItem [%s]\n", menuitemName.ToNewCString() );
+				            // TODO: set nsMenuItem name 
+				            // TODO: make nsMenuItem a child of nsMenu
+				          }
+				          NS_RELEASE(menuitemElement);
+				       }
+			        }
+				    nsIDOMNode * oldmenuitemNode = menuitemNode;
+			        oldmenuitemNode->GetNextSibling(&menuitemNode);
+			        NS_RELEASE(oldmenuitemNode);
+			      } // end menu item innner loop
+			      NS_IF_RELEASE(menuitemNode);
+			      
+			      nsIDOMNode * oldmenuNode = menuNode;
+			      oldmenuNode->GetNextSibling(&menuNode);
+			      NS_RELEASE(oldmenuNode);
+			    } // end while (nsnull != menuNode)
+			    NS_IF_RELEASE(menuNode);
+
+			    NS_RELEASE(menubarNode);
+			    
+			    // TODO: Give the aParentWindow this nsMenuBar to hold onto.
+			    
+    } // end if ( nsnull != pnsMenuBar )
+  } // end if (nsnull != node)
+}
+
 nsIXULCommand *  
 nsWebShellWindow::FindCommandByName(const nsString & aCmdName)
 {
@@ -640,7 +736,36 @@ nsIDOMDocument * nsWebShellWindow::GetNamedDOMDoc(const nsString & aWebShellName
 NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
 {
 
+  ///////////////////////////////
+  // Find the Menubar DOM  and Load all the commands
+  ///////////////////////////////
+  nsIWebShell* child = nsnull;
+  mWebShell->ChildAt(0, child);
+  nsIContentViewer* cv = nsnull;
+  child->GetContentViewer(&cv);
+  if (nsnull != cv) {
+    nsIDocumentViewer* docv = nsnull;
+    cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+    if (nsnull != docv) {
+      nsIDocument * doc;
+      docv->GetDocument(doc);
+      if (nsnull != doc) {
+        nsIDOMDocument * domDoc;
+        if (NS_OK == doc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
+          nsIWebShell* targetWS = nsnull;
+          mWebShell->ChildAt(1, targetWS);
+          LoadMenus(domDoc, mWindow);
+          NS_RELEASE(domDoc);
+        }
 
+        NS_RELEASE(doc);
+      }
+      NS_RELEASE(docv);
+    }
+    NS_RELEASE(cv);
+  }
+  NS_IF_RELEASE(child);
+  
   ///////////////////////////////
   // Find the Toolbar DOM  and Load all the commands
   ///////////////////////////////
