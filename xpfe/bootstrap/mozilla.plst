@@ -121,6 +121,8 @@
 			<string>Viewer</string>
 		</dict>
 	</array>
+ 	<key>CFBundleExecutable</key>
+ 	<string>Mozilla</string>
 	<key>CFBundleIconFile</key>
 	<string>128</string>
 	<key>CFBundleIdentifier</key>
@@ -132,10 +134,14 @@
 	<key>CFBundleSignature</key>
 	<string>MOZZ</string>
 	<key>CFBundleVersion</key>
-	<string>0.9.1</string>
+	<string>0.9.6+</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.9.6+</string>
+ 	<key>CFBundleGetInfoString</key>
+ 	<string>0.9.6+, © 1998-2001 The Mozilla Organization</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>©1998-2001The Mozilla Organization</string>
+	<string>©1998-2001 The Mozilla Organization</string>
 </dict>
 </plist>
