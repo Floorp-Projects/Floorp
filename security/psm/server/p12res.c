@@ -556,7 +556,7 @@ ssmpkcs12context_digestopen(void *arg, PRBool readData)
 
 #if defined(XP_UNIX)
     filePathSep = "/";
-#elif defined(WIN32)
+#elif defined(WIN32) || defined(XP_OS2)
     filePathSep = "\\";
 #elif defined(XP_MAC)
 	filePathSep = "";

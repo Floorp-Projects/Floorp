@@ -259,8 +259,13 @@ CMTStatus CMT_PKCS7DecoderFinish(PCMT_CONTROL control, CMUint32 connectionID,
             numTries++;
             goto poll_sockets;
         }
-#endif
-#ifdef XP_UNIX
+#elif defined(XP_OS2)
+        if (numTries < 20) {
+            DosSleep(100);
+            numTries++;
+            goto poll_sockets;
+        }
+#elif defined(XP_UNIX)
 	if (numTries < 25) {
 	  numTries += sleep(1);
 	  goto poll_sockets;

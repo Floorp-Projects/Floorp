@@ -34,7 +34,7 @@
 
 extern "C" int psm_main(int argc, char *argv[]);
 
-#if defined(XP_PC) && !defined(DEBUG)
+#if defined(XP_WIN) && !defined(DEBUG)
 #include <windows.h>
 
 int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
@@ -43,7 +43,7 @@ int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
 int main(int argc, char *argv[])
 #endif
 {
-#if defined(XP_PC) && !defined(DEBUG)
+#if defined(XP_WIN) && !defined(DEBUG)
     int argc = 0;
     char *argv[] = {"", NULL};
 #endif

@@ -63,6 +63,14 @@
 #endif /* vacpp */
 #endif
 #endif
+
+#ifdef XP_OS2
+#define INCL_DOSSESMGR
+#define INCL_DOSERRORS
+#define INCL_DOSPROCESS
+#include "os2.h"
+#endif
+
 #include "cmtclist.h"
 
 typedef void (*void_fun) (void);
