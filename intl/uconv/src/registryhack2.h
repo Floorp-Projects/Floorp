@@ -20,7 +20,7 @@
   mDecSize           = 20;
   mDecArray          = new ConverterInfo [mDecSize];
 
-  mDecArray[0].mCID  = &kLatin1ToUnicodeCID;
+  mDecArray[0].mCID  = &kISO88591ToUnicodeCID;
   mDecArray[1].mCID  = &kISO88592ToUnicodeCID;
   mDecArray[2].mCID  = &kISO88597ToUnicodeCID;
   mDecArray[3].mCID  = &kISO88599ToUnicodeCID;
@@ -46,7 +46,7 @@
   mEncSize           = 19;
   mEncArray          = new ConverterInfo [mEncSize];
 
-  mEncArray[0].mCID  = &kUnicodeToLatin1CID;
+  mEncArray[0].mCID  = &kUnicodeToISO88591CID;
   mEncArray[1].mCID  = &kUnicodeToISO88592CID;
   mEncArray[2].mCID  = &kUnicodeToISO88597CID;
   mEncArray[3].mCID  = &kUnicodeToISO88599CID;
