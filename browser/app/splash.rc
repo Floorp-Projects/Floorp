@@ -51,8 +51,8 @@ BEGIN
     ID_DDE_APPLICATION_NAME,            "Firefox Debug"
     IDS_STARTMENU_APPNAME,              "Firefox Debug"
 #else
-    ID_DDE_APPLICATION_NAME,            "Firefox Debug"
-    IDS_STARTMENU_APPNAME,              "Firefox Debug"
+    ID_DDE_APPLICATION_NAME,            "Firefox"
+    IDS_STARTMENU_APPNAME,              "Firefox"
 #endif
 END
 
