@@ -299,7 +299,9 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
             rv = PR_FAILURE;
     }
 
-#elif defined(XP_MACOSX)
+#else // Note, this must not be an #elif ...!
+
+#if defined(XP_MACOSX)
     if (count == 0) {
         FSSpec resolvedSpec;
         OSErr err = noErr;
@@ -366,6 +368,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
                                           NULL);
         }
     }
+#endif
 
     // free up our argv
     nsMemory::Free(my_argv);
