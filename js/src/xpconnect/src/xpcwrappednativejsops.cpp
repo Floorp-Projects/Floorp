@@ -500,7 +500,7 @@ XPC_WN_OnlyIWrite_PropertyStub(JSContext *cx, JSObject *obj, jsval idval, jsval 
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    // Avoid infinite recursion on getter/setter re-lookup.
+    // Allow only XPConnect to add the property
     if(ccx.GetResolveName() == idval)
         return JS_TRUE;
 
@@ -719,10 +719,6 @@ XPC_WN_NoHelper_Resolve(JSContext *cx, JSObject *obj, jsval idval)
     if(ccx.GetInterface() && !ccx.GetStaticMemberIsLocal())
         return JS_TRUE;
 
-    // Avoid infinite recursion on getter/setter re-lookup.
-    if(ccx.GetResolveName() == idval)
-        return JS_TRUE;
-
     return DefinePropertyIfFound(ccx, obj, idval,
                                  set, nsnull, nsnull, wrapper->GetScope(),
                                  JS_TRUE, wrapper, wrapper, nsnull,
@@ -906,10 +902,6 @@ XPC_WN_Helper_NewResolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
-
-    // Avoid infinite recursion on getter/setter re-lookup.
-    if(ccx.GetResolveName() == idval)
-        return JS_TRUE;
 
     jsval old = ccx.SetResolveName(idval);
 
@@ -1411,10 +1403,6 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext *cx, JSObject *obj, jsval idval)
     if(!ccx.IsValid())
         return JS_FALSE;
 
-    // Avoid infinite recursion on getter/setter re-lookup.
-    if(ccx.GetResolveName() == idval)
-        return JS_TRUE;
-
     XPCNativeScriptableInfo* si = self->GetScriptableInfo();
     uintN enumFlag = (si && si->GetFlags().DontEnumStaticProps()) ?
                                                 0 : JSPROP_ENUMERATE;
@@ -1471,6 +1459,7 @@ XPC_WN_OnlyIWrite_Proto_PropertyStub(JSContext *cx, JSObject *obj, jsval idval, 
     if(!ccx.IsValid())
         return JS_FALSE;
 
+    // Allow XPConnect to add the property only
     if(ccx.GetResolveName() == idval)
         return JS_TRUE;
 
@@ -1493,10 +1482,6 @@ XPC_WN_NoMods_Proto_Resolve(JSContext *cx, JSObject *obj, jsval idval)
     XPCCallContext ccx(JS_CALLER, cx);
     if(!ccx.IsValid())
         return JS_FALSE;
-
-    // Avoid infinite recursion on getter/setter re-lookup.
-    if(ccx.GetResolveName() == idval)
-        return JS_TRUE;
 
     XPCNativeScriptableInfo* si = self->GetScriptableInfo();
     uintN enumFlag = (si && si->GetFlags().DontEnumStaticProps()) ?
@@ -1575,10 +1560,6 @@ XPC_WN_TearOff_Resolve(JSContext *cx, JSObject *obj, jsval idval)
 
     if(!to || nsnull == (iface = to->GetInterface()))
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
-
-    // Avoid infinite recursion on getter/setter re-lookup.
-    if(ccx.GetResolveName() == idval)
-        return JS_TRUE;
 
     return DefinePropertyIfFound(ccx, obj, idval, nsnull, iface, nsnull,
                                  wrapper->GetScope(),
