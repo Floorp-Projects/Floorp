@@ -772,13 +772,20 @@ NS_NewPipe(nsIBufferInputStream* *inStrResult,
            PRUint32 maxSize)
 {
     nsresult rv;
-#ifdef XP_MAC
+    const nsCID* cid = &kAllocatorCID;
+#if 0
+    // Take the page manager out altogether because some unices don't
+    // know how to reserve VM -- only preallocate it which takes up a lot 
+    // of space.
+#ifndef XP_MAC
     // Don't use page buffers on the mac because we don't really have
     // VM there, and they end up being more wasteful:
-    NS_WITH_SERVICE(nsIAllocator, alloc, kAllocatorCID, &rv);
-#else
-    NS_WITH_SERVICE(nsIAllocator, alloc, kPageManagerCID, &rv);
+    if (segmentSize >= NS_PAGEMGR_PAGE_SIZE) {
+        cid = &kPageManagerCID;
+    }
 #endif
+#endif
+    NS_WITH_SERVICE(nsIAllocator, alloc, *cid, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsPipe* pipe = new nsPipe();
