@@ -181,7 +181,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   {
     // XXX Get correct color by finding the first parent that actually
     // specifies a color.
-    nsCSSRendering::Get3DColors(colors, color->mBackgroundColor);
+    NS_Get3DColors(colors, color->mBackgroundColor);
   }
 
   // Draw a "shadowed" box around the rule area

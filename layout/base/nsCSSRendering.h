@@ -54,31 +54,6 @@ public:
                               const nsRect& aBounds,
                               const nsStyleColor& aColor);
 
-  /**
-   * Special method to brighten a Color and have it shift to white when
-   * fully saturated.
-   */
-  static nscolor Brighten(nscolor inColor);
-
-  /**
-   * Special method to darken a Color and have it shift to black when
-   * darkest component underflows
-   */
-  static nscolor Darken(nscolor inColor);
-
-  // Weird color computing code stolen from winfe which was stolen
-  // from the xfe which was written originally by Eric Bina. So there.
-	static void Get3DColors(nscolor aResult[2], nscolor aColor);
-  static const int RED_LUMINOSITY;
-  static const int GREEN_LUMINOSITY;
-  static const int BLUE_LUMINOSITY;
-  static const int INTENSITY_FACTOR;
-  static const int LIGHT_FACTOR;
-  static const int LUMINOSITY_FACTOR;
-  static const int MAX_COLOR;
-  static const int COLOR_DARK_THRESHOLD;
-  static const int COLOR_LIGHT_THRESHOLD;
-
 protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor baseColor,
