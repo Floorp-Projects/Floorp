@@ -907,14 +907,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
             mSendSecureXSiteReferrer = cVar;
     }
 
-    /*
-    if (bChangedAll || PL_strcmp(pref, "network.http.connect.timeout") == 0)
-        prefs->GetIntPref("network.http.connect.timeout", &mConnectTimeout);
-
-    if (bChangedAll || PL_strcmp(pref, "network.http.request.timeout") == 0)
-        prefs->GetIntPref("network.http.request.timeout", &mRequestTimeout);
-    */
-
     if (PREF_CHANGED(HTTP_PREF("accept.default"))) {
         nsXPIDLCString accept;
         rv = prefs->GetCharPref(HTTP_PREF("accept.default"),

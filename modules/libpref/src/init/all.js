@@ -511,10 +511,6 @@ pref("network.http.max-persistent-connections-per-proxy", 4);
 // max-connections or max-connections-per-server has also been reached.
 pref("network.http.request.max-start-delay", 10);
 
-// http specific network timeouts (XXX currently unused)
-pref("network.http.connect.timeout",  30);	// in seconds
-pref("network.http.request.timeout", 120);	// in seconds
-
 // Headers
 pref("network.http.accept.default", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5");
 pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
