@@ -152,6 +152,7 @@ enum {
 
 nsEventStateManager::nsEventStateManager()
   : mGestureDownPoint(0,0),
+    mCurrentFocusFrame(nsnull),
     m_haveShutdown(PR_FALSE),
     mDOMEventLevel(0),
     mClearedFrameRefsDuringEvent(PR_FALSE)
@@ -299,6 +300,15 @@ nsEventStateManager::Observe(nsISupports *aSubject,
 
 NS_IMPL_ISUPPORTS3(nsEventStateManager, nsIEventStateManager, nsIObserver, nsISupportsWeakReference)
 
+inline void
+SetFrameExternalReference(nsIFrame* aFrame)
+{
+  nsFrameState state;
+  aFrame->GetFrameState(&state);
+  state |= NS_FRAME_EXTERNAL_REFERENCE;
+  aFrame->SetFrameState(state);
+}
+
 NS_IMETHODIMP
 nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext, 
                                     nsEvent *aEvent,
@@ -312,14 +322,10 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
   mCurrentTarget = aTargetFrame;
   mCurrentTargetContent = nsnull;
 
-  nsFrameState state;
-
   NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null.  this should not happen.  see bug #13007");
   if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
 
-  mCurrentTarget->GetFrameState(&state);
-  state |= NS_FRAME_EXTERNAL_REFERENCE;
-  mCurrentTarget->SetFrameState(state);
+  SetFrameExternalReference(mCurrentTarget);
 
   *aStatus = nsEventStatus_eIgnore;
 
@@ -483,6 +489,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         if (globalObject) {
           nsCOMPtr<nsIContent> currentFocus = mCurrentFocus;
           mCurrentFocus = nsnull;
+          mCurrentFocusFrame = nsnull;
           if(gLastFocusedDocument != mDocument) {
             mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
             if (currentFocus && currentFocus != gLastFocusedContent)
@@ -1565,20 +1572,19 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   // Otherwise, check for a focused content element
   nsCOMPtr<nsIContent> focusContent;
   if (mCurrentFocus) {
-    focusContent = mCurrentFocus;
+    GetFocusedFrame(&focusFrame);
   }
   else {
     // If there is no focused content, get the document content
     EnsureDocument(presShell);
     mDocument->GetRootContent(getter_AddRefs(focusContent));
+    if (!focusContent)
+      return NS_ERROR_FAILURE;
   }
   
-  if (!focusContent)
-    return NS_ERROR_FAILURE;
-
   if (aUseTargetFrame)
     focusFrame = aTargetFrame;
-  else
+  else if (!focusFrame)
     presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
 
   if (!focusFrame)
@@ -1737,10 +1743,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
   NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null");
   if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
 
-  nsFrameState state;
-  mCurrentTarget->GetFrameState(&state);
-  state |= NS_FRAME_EXTERNAL_REFERENCE;
-  mCurrentTarget->SetFrameState(state);
+  SetFrameExternalReference(mCurrentTarget);
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -2203,6 +2206,8 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
     }
     mCurrentTarget = nsnull;
   }
+  if (aFrame == mCurrentFocusFrame)
+    mCurrentFocusFrame = nsnull;
   if (mDOMEventLevel > 0) {
     mClearedFrameRefsDuringEvent = PR_TRUE;
   }
@@ -3007,6 +3012,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
   if (aStart) {
     mCurrentFocus = aStart;
+    mCurrentFocusFrame = nsnull;
 
     TabIndexFrom(mCurrentFocus, &mCurrentTabIndex);
   } else if (!mCurrentFocus) {  
@@ -3059,6 +3065,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
         mCurrentTabIndex = 0;
       else {
         mCurrentFocus = rootContent;
+        mCurrentFocusFrame = nsnull;
         mCurrentTabIndex = 1;
       }
     } 
@@ -3069,13 +3076,15 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 
   if (selectionFrame) 
     curFocusFrame = selectionFrame;
-  else if (mCurrentFocus && !docHasFocus)   // If selection is not found in doc, use mCurrentFocus 
-    presShell->GetPrimaryFrameFor(mCurrentFocus, &curFocusFrame);
+  else if (!docHasFocus)
+    GetFocusedFrame(&curFocusFrame);
 
   nsCOMPtr<nsIContent> nextFocus;
+  nsIFrame* nextFocusFrame;
   if (aForward || !docHasFocus || selectionFrame)
-    GetNextTabbableContent(rootContent, curFocusFrame, aForward, ignoreTabIndex,
-                         getter_AddRefs(nextFocus));
+    GetNextTabbableContent(rootContent, curFocusFrame, aForward,
+                           ignoreTabIndex, getter_AddRefs(nextFocus),
+                           &nextFocusFrame);
 
   // Clear out mCurrentTabIndex. It has a garbage value because of GetNextTabbableContent()'s side effects
   // It will be set correctly when focus is changed via ChangeFocus()
@@ -3105,8 +3114,6 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
     if (sub_shell) {
       SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
-      nsIFrame* nextFocusFrame = nsnull;
-      presShell->GetPrimaryFrameFor(nextFocus, &nextFocusFrame);
       presShell->ScrollFrameIntoView(nextFocusFrame,
                                      NS_PRESSHELL_SCROLL_ANYWHERE,
                                      NS_PRESSHELL_SCROLL_ANYWHERE);
@@ -3123,19 +3130,17 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 #ifdef DEBUG_DOCSHELL_FOCUS
       printf("focusing next focusable content: %p\n", nextFocus.get());
 #endif
-      presShell->GetPrimaryFrameFor(nextFocus, &mCurrentTarget);
+      mCurrentTarget = nextFocusFrame;
 
       //This may be new frame that hasn't been through the ESM so we
       //must set its NS_FRAME_EXTERNAL_REFERENCE bit.
-      if (mCurrentTarget) {
-        nsFrameState state;
-        mCurrentTarget->GetFrameState(&state);
-        state |= NS_FRAME_EXTERNAL_REFERENCE;
-        mCurrentTarget->SetFrameState(state);
-      }
+      if (mCurrentTarget)
+        SetFrameExternalReference(mCurrentTarget);
 
       nsCOMPtr<nsIContent> oldFocus(mCurrentFocus);
       ChangeFocus(nextFocus, eEventFocusedByKey);
+      mCurrentFocusFrame = nextFocusFrame;
+      SetFrameExternalReference(mCurrentFocusFrame);
 
       // It's possible that the act of removing focus from our previously
       // focused element caused nextFocus to be removed from the document.
@@ -3181,6 +3186,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
       // We need to move the caret to the document root, so that we don't 
       // tab from the most recently focused element next time around
       mCurrentFocus = rootContent;
+      mCurrentFocusFrame = nsnull;
       MoveCaretToFocus();
       mCurrentFocus = nsnull;
 
@@ -3195,6 +3201,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
         return NS_OK;
 
       mCurrentFocus = rootContent;
+      mCurrentFocusFrame = nsnull;
       mCurrentTabIndex = 0;
       MoveCaretToFocus();
       mCurrentFocus = nsnull;
@@ -3288,10 +3295,14 @@ void nsEventStateManager::TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex)
 
 
 nsresult
-nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, PRBool aIgnoreTabIndex, 
-                                            nsIContent** aResult)
+nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
+                                            nsIFrame* aFrame, PRBool forward,
+                                            PRBool aIgnoreTabIndex, 
+                                            nsIContent** aResultNode,
+                                            nsIFrame** aResultFrame)
 {
-  *aResult = nsnull;
+  *aResultNode = nsnull;
+  *aResultFrame = nsnull;
   PRBool keepFirstFrame = PR_FALSE;
   PRBool findLastFrame = PR_FALSE;
 
@@ -3321,18 +3332,11 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
   if (mCurrentFocus) {
     nsCOMPtr<nsIAtom> tag;
     mCurrentFocus->GetTag(*getter_AddRefs(tag));
-    if(nsHTMLAtoms::area==tag) {
+    if (nsHTMLAtoms::area==tag) {
       //Focus is in an imagemap area
-      nsCOMPtr<nsIPresShell> presShell;
-      if (mPresContext) {
-        nsIFrame* result = nsnull;
-        if (NS_SUCCEEDED(mPresContext->GetShell(getter_AddRefs(presShell))) && presShell) {
-          presShell->GetPrimaryFrameFor(mCurrentFocus, &result);
-        }
-        if (result == aFrame) {
-          //The current focus map area is in the current frame, don't skip over it.
-          keepFirstFrame = PR_TRUE;
-        }
+      if (aFrame == mCurrentFocusFrame) {
+        //The current focus map area is in the current frame, don't skip over it.
+        keepFirstFrame = PR_TRUE;
       }
     }
   }
@@ -3534,8 +3538,9 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
                       TabIndexFrom(childArea, &val);
                       if (mCurrentTabIndex == val) {
                         //tabindex == the current one, use it.
-                        *aResult = childArea;
-                        NS_IF_ADDREF(*aResult);
+                        *aResultNode = childArea;
+                        NS_IF_ADDREF(*aResultNode);
+                        *aResultFrame = currentFrame;
                         return NS_OK;
                       }
                     }
@@ -3607,8 +3612,9 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       if (!disabled && !hidden && (aIgnoreTabIndex ||
                                    mCurrentTabIndex == tabIndex) &&
           child != mCurrentFocus) {
-        *aResult = child;
-        NS_IF_ADDREF(*aResult);
+        *aResultNode = child;
+        NS_IF_ADDREF(*aResultNode);
+        *aResultFrame = currentFrame;
         return NS_OK;
       }
     }
@@ -3629,7 +3635,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
   }
   //else continue looking for next highest priority tab
   mCurrentTabIndex = GetNextTabIndex(aRootContent, forward);
-  return GetNextTabbableContent(aRootContent, nsnull, forward, aIgnoreTabIndex, aResult);
+  return GetNextTabbableContent(aRootContent, nsnull, forward,
+                                aIgnoreTabIndex, aResultNode, aResultFrame);
 }
 
 PRInt32
@@ -3693,12 +3700,8 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 
         //This may be new frame that hasn't been through the ESM so we
         //must set its NS_FRAME_EXTERNAL_REFERENCE bit.
-        if (mCurrentTarget) {
-          nsFrameState state;
-          mCurrentTarget->GetFrameState(&state);
-          state |= NS_FRAME_EXTERNAL_REFERENCE;
-          mCurrentTarget->SetFrameState(state);
-        }
+        if (mCurrentTarget)
+          SetFrameExternalReference(mCurrentTarget);
       }
     }
   }
@@ -3711,12 +3714,8 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 
       //This may be new frame that hasn't been through the ESM so we
       //must set its NS_FRAME_EXTERNAL_REFERENCE bit.
-      if (mCurrentTarget) {
-        nsFrameState state;
-        mCurrentTarget->GetFrameState(&state);
-        state |= NS_FRAME_EXTERNAL_REFERENCE;
-        mCurrentTarget->SetFrameState(state);
-      }
+      if (mCurrentTarget)
+        SetFrameExternalReference(mCurrentTarget);
     }
   }
 
@@ -4202,7 +4201,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
   gLastFocusedContent = aContent;
   NS_IF_ADDREF(gLastFocusedContent);
   mCurrentFocus = aContent;
- 
+  mCurrentFocusFrame = nsnull;
+
   // Moved widget focusing code here, from end of SendFocusBlur
   // This fixes the order of accessibility focus events, so that 
   // the window focus event goes first, and then the focus event for the control
@@ -4282,6 +4282,28 @@ NS_IMETHODIMP
 nsEventStateManager::SetFocusedContent(nsIContent* aContent)
 {
   mCurrentFocus = aContent;
+  mCurrentFocusFrame = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::GetFocusedFrame(nsIFrame** aFrame)
+{
+  if (!mCurrentFocusFrame && mCurrentFocus) {
+    nsCOMPtr<nsIDocument> doc;
+    mCurrentFocus->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIPresShell> shell;
+      doc->GetShellAt(0, getter_AddRefs(shell));
+      if (shell) {
+        shell->GetPrimaryFrameFor(mCurrentFocus, &mCurrentFocusFrame);
+        if (mCurrentFocusFrame)
+          SetFrameExternalReference(mCurrentFocusFrame);
+      }
+    }
+  }
+
+  *aFrame = mCurrentFocusFrame;
   return NS_OK;
 }
 
@@ -4294,6 +4316,7 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
     // in response to clicks or tabbing.
 
     mCurrentFocus = nsnull;
+    mCurrentFocusFrame = nsnull;
   }
 
   if (aContent == mHoverContent) {

@@ -131,6 +131,7 @@ public:
   NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState);
   NS_IMETHOD GetFocusedContent(nsIContent **aContent);
   NS_IMETHOD SetFocusedContent(nsIContent* aContent);
+  NS_IMETHOD GetFocusedFrame(nsIFrame **aFrame);
   NS_IMETHOD ContentRemoved(nsIContent* aContent);
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK);
 
@@ -171,7 +172,10 @@ protected:
   nsresult SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   nsresult CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   PRBool ChangeFocus(nsIContent* aFocus, PRInt32 aFocusedWith);
-  nsresult GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, PRBool ignoreTabIndex, nsIContent** aResult);
+  nsresult GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame,
+                                  PRBool forward, PRBool ignoreTabIndex,
+                                  nsIContent** aResultNode,
+                                  nsIFrame** aResultFrame);
 
   void TabIndexFrom(nsIContent *aFrom, PRInt32 *aOutIndex);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
@@ -265,6 +269,7 @@ protected:
   nsCOMPtr<nsIContent> mDragOverContent;
   nsCOMPtr<nsIContent> mURLTargetContent;
   nsCOMPtr<nsIContent> mCurrentFocus;
+  nsIFrame* mCurrentFocusFrame;
   PRInt32 mLastFocusedWith;
   PRInt32 mCurrentTabIndex;
   PRBool      mConsumeFocusEvents;
