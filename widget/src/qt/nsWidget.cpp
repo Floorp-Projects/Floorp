@@ -110,15 +110,28 @@ nsWidget::~nsWidget()
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWidget::WidgetToScreen()\n"));
-    // FIXME gdk_window_get_origin()   might do what we want.... ???
-    NS_NOTYETIMPLEMENTED("nsWidget::WidgetToScreen");
+
+    QPoint offset;
+
+    mWidget->mapToGlobal(offset);
+
+    aNewRect.x = aOldRect.x + offset.x();
+    aNewRect.y = aOldRect.y + offset.y();
+
     return NS_OK;
 }
 
 NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsWidget::ScreenToWidget()\n"));
-    NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
+
+    QPoint offset;
+
+    mWidget->mapFromGlobal(offset);
+
+    aNewRect.x = aOldRect.x + offset.x();
+    aNewRect.y = aOldRect.y + offset.y();
+
     return NS_OK;
 }
 
@@ -282,13 +295,18 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
         if (mWidget) 
         {
             mWidget->resize(aWidth, aHeight);
-        }            
+        }
+
+        if (mPixmap)
+        {
+            mPixmap->resize(aWidth, aHeight);
+        }
 
         if (aRepaint)
         {
             if (mWidget->isVisible())
             {
-                mWidget->repaint();
+                mWidget->repaint(false);
             }
         }
     }
@@ -331,10 +349,10 @@ PRBool nsWidget::OnResize(nsRect &aRect)
         event.eventStructType = NS_SIZE_EVENT;
         if (mWidget) 
         {
-            event.mWinWidth  = mWidget->width();
-            event.mWinHeight = mWidget->height();
-            event.point.x    = mWidget->x();
-            event.point.y    = mWidget->y();
+            event.mWinWidth  = aRect.width;
+            event.mWinHeight = aRect.height;
+            event.point.x    = 0;
+            event.point.y    = 0;
         } 
         else 
         {
@@ -580,9 +598,13 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
            PR_LOG_DEBUG, 
            ("nsWidget::Invalidate: invalidating the whole widget\n"));
 
+#if 0
+    mWidget->repaint(false);
+    mUpdateArea.SetRect(0, 0, 0, 0);
+#else
     if (aIsSynchronous) 
     {
-        mWidget->repaint();
+        mWidget->repaint(false);
         mUpdateArea.SetRect(0, 0, 0, 0);
     } 
     else 
@@ -590,6 +612,7 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
         mWidget->update();
         mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
     }
+#endif
 
     return NS_OK;
 }
@@ -598,8 +621,9 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsWidget::Invalidate %s\n",
-            mWidget ? mWidget->name() : "(null)"));
+           ("nsWidget::Invalidate %s (%p)\n",
+            mWidget ? mWidget->name() : "(null)",
+            mWidget));
     if (mWidget == nsnull) 
     {
         return NS_OK;  // mWidget is null during printing
@@ -613,16 +637,19 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
            aRect.width,
            aRect.height));
 
+#if 0
+    mWidget->repaint(aRect.x, aRect.y, aRect.width, aRect.height, false);
+#else
     if (aIsSynchronous) 
     {
-        mWidget->repaint(aRect.x, aRect.y, aRect.width, aRect.height);
+        mWidget->repaint(aRect.x, aRect.y, aRect.width, aRect.height, false);
     } 
     else 
     {
         mUpdateArea.UnionRect(mUpdateArea, aRect);
-        
         mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
     }
+#endif
 
     return NS_OK;
 }
@@ -631,8 +658,9 @@ NS_METHOD nsWidget::Update(void)
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsWidget::Update %s\n",
-            mWidget ? mWidget->name() : "(null)"));
+           ("nsWidget::Update %s(%p)\n",
+            mWidget ? mWidget->name() : "(null)",
+            mWidget));
     if (!mWidget)
     {
         return NS_OK;
@@ -655,6 +683,7 @@ NS_METHOD nsWidget::Update(void)
     }
     else 
     {
+        //mWidget->repaint();
         PR_LOG(QtWidgetsLM, 
                PR_LOG_DEBUG, 
                ("nsWidget::Update: avoided empty update\n"));
@@ -1201,8 +1230,8 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
 {
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
-           ("nsWidget::DispatchEvent %s\n",
-            mWidget ? mWidget->name() : "(null)"));
+           ("nsWidget::DispatchEvent: %s: event listener=%p\n",
+            mWidget ? mWidget->name() : "(null)", mEventListener));
     NS_ADDREF(event->widget);
 
     if (nsnull != mMenuListener) 
@@ -1217,14 +1246,28 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
     aStatus = nsEventStatus_eIgnore;
     if (nsnull != mEventCallback) 
     {
+        PR_LOG(QtWidgetsLM, 
+               PR_LOG_DEBUG, 
+               ("nsWidget::DispatchEvent %s: calling callback function\n",
+                mWidget ? mWidget->name() : "(null)"));   
         aStatus = (*mEventCallback)(event);
     }
 
     // Dispatch to event listener if event was not consumed
     if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) 
     {
+        PR_LOG(QtWidgetsLM, 
+               PR_LOG_DEBUG, 
+               ("nsWidget::DispatchEvent %s: calling event listener\n",
+                mWidget ? mWidget->name() : "(null)", aStatus));   
         aStatus = mEventListener->ProcessEvent(*event);
     }
+
+     PR_LOG(QtWidgetsLM, 
+           PR_LOG_DEBUG, 
+           ("nsWidget::DispatchEvent %s: status=%d\n",
+            mWidget ? mWidget->name() : "(null)", aStatus));   
+
     NS_RELEASE(event->widget);
     return NS_OK;
 }
