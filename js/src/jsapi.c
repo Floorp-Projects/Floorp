@@ -3169,6 +3169,20 @@ JS_ClearRegExpRoots(JSContext *cx)
 
 /************************************************************************/
 
+JS_PUBLIC_API(void)
+JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks)
+{
+    cx->localeCallbacks = callbacks;
+}
+
+JS_PUBLIC_API(JSLocaleCallbacks *) 
+JS_GetLocaleCallbacks(JSContext *cx)
+{
+    return cx->localeCallbacks;
+}
+
+/************************************************************************/
+
 JS_PUBLIC_API(JSBool)
 JS_IsExceptionPending(JSContext *cx)
 {
