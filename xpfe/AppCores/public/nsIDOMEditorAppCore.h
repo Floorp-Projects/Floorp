@@ -52,7 +52,7 @@ public:
 
   NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr)=0;
 
-  NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas)=0;
+  NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas)=0;
 
   NS_IMETHOD    Undo()=0;
 
@@ -65,6 +65,8 @@ public:
   NS_IMETHOD    Paste()=0;
 
   NS_IMETHOD    SelectAll()=0;
+
+  NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown)=0;
 
   NS_IMETHOD    BeginBatchChanges()=0;
 
@@ -102,13 +104,14 @@ public:
   NS_IMETHOD    SetEditorType(const nsString& aEditorType);  \
   NS_IMETHOD    SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue);  \
   NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr);  \
-  NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas);  \
+  NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas);  \
   NS_IMETHOD    Undo();  \
   NS_IMETHOD    Redo();  \
   NS_IMETHOD    Cut();  \
   NS_IMETHOD    Copy();  \
   NS_IMETHOD    Paste();  \
   NS_IMETHOD    SelectAll();  \
+  NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown);  \
   NS_IMETHOD    BeginBatchChanges();  \
   NS_IMETHOD    EndBatchChanges();  \
   NS_IMETHOD    ShowClipboard();  \
@@ -126,33 +129,34 @@ public:
 
 
 #define NS_FORWARD_IDOMEDITORAPPCORE(_to)  \
-  NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText) { return _to##GetContentsAsText(aContentsAsText); } \
-  NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML) { return _to##GetContentsAsHTML(aContentsAsHTML); } \
-  NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument) { return _to##GetEditorDocument(aEditorDocument); } \
-  NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection) { return _to##GetEditorSelection(aEditorSelection); } \
-  NS_IMETHOD    SetEditorType(const nsString& aEditorType) { return _to##SetEditorType(aEditorType); }  \
-  NS_IMETHOD    SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue) { return _to##SetTextProperty(aProp, aAttr, aValue); }  \
-  NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr) { return _to##RemoveTextProperty(aProp, aAttr); }  \
-  NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas) { return _to##GetTextProperty(aProp, aAttr, aValue, aFirstHas, aAnyHas, aAllHas); }  \
-  NS_IMETHOD    Undo() { return _to##Undo(); }  \
-  NS_IMETHOD    Redo() { return _to##Redo(); }  \
-  NS_IMETHOD    Cut() { return _to##Cut(); }  \
-  NS_IMETHOD    Copy() { return _to##Copy(); }  \
-  NS_IMETHOD    Paste() { return _to##Paste(); }  \
-  NS_IMETHOD    SelectAll() { return _to##SelectAll(); }  \
-  NS_IMETHOD    BeginBatchChanges() { return _to##BeginBatchChanges(); }  \
-  NS_IMETHOD    EndBatchChanges() { return _to##EndBatchChanges(); }  \
-  NS_IMETHOD    ShowClipboard() { return _to##ShowClipboard(); }  \
-  NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to##InsertText(aTextToInsert); }  \
-  NS_IMETHOD    InsertLink() { return _to##InsertLink(); }  \
-  NS_IMETHOD    InsertImage() { return _to##InsertImage(); }  \
-  NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn) { return _to##GetSelectedElement(aTagName, aReturn); }  \
-  NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn) { return _to##CreateElementWithDefaults(aTagName, aReturn); }  \
-  NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn) { return _to##InsertElement(aElement, aDeleteSelection, aReturn); }  \
-  NS_IMETHOD    Exit() { return _to##Exit(); }  \
-  NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to##SetToolbarWindow(aWin); }  \
-  NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to##SetContentWindow(aWin); }  \
-  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to##SetWebShellWindow(aWin); }  \
+  NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText) { return _to GetContentsAsText(aContentsAsText); } \
+  NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML) { return _to GetContentsAsHTML(aContentsAsHTML); } \
+  NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument) { return _to GetEditorDocument(aEditorDocument); } \
+  NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection) { return _to GetEditorSelection(aEditorSelection); } \
+  NS_IMETHOD    SetEditorType(const nsString& aEditorType) { return _to SetEditorType(aEditorType); }  \
+  NS_IMETHOD    SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue) { return _to SetTextProperty(aProp, aAttr, aValue); }  \
+  NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr) { return _to RemoveTextProperty(aProp, aAttr); }  \
+  NS_IMETHOD    GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas) { return _to GetTextProperty(aProp, aAttr, aValue, aFirstHas, aAnyHas, aAllHas); }  \
+  NS_IMETHOD    Undo() { return _to Undo(); }  \
+  NS_IMETHOD    Redo() { return _to Redo(); }  \
+  NS_IMETHOD    Cut() { return _to Cut(); }  \
+  NS_IMETHOD    Copy() { return _to Copy(); }  \
+  NS_IMETHOD    Paste() { return _to Paste(); }  \
+  NS_IMETHOD    SelectAll() { return _to SelectAll(); }  \
+  NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown) { return _to Find(aSearchTerm, aMatchCase, aSearchDown); }  \
+  NS_IMETHOD    BeginBatchChanges() { return _to BeginBatchChanges(); }  \
+  NS_IMETHOD    EndBatchChanges() { return _to EndBatchChanges(); }  \
+  NS_IMETHOD    ShowClipboard() { return _to ShowClipboard(); }  \
+  NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to InsertText(aTextToInsert); }  \
+  NS_IMETHOD    InsertLink() { return _to InsertLink(); }  \
+  NS_IMETHOD    InsertImage() { return _to InsertImage(); }  \
+  NS_IMETHOD    GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn) { return _to GetSelectedElement(aTagName, aReturn); }  \
+  NS_IMETHOD    CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn) { return _to CreateElementWithDefaults(aTagName, aReturn); }  \
+  NS_IMETHOD    InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn) { return _to InsertElement(aElement, aDeleteSelection, aReturn); }  \
+  NS_IMETHOD    Exit() { return _to Exit(); }  \
+  NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to SetToolbarWindow(aWin); }  \
+  NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to SetContentWindow(aWin); }  \
+  NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to SetWebShellWindow(aWin); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitEditorAppCoreClass(nsIScriptContext *aContext, void **aPrototype);

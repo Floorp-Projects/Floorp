@@ -489,9 +489,9 @@ nsEditorAppCore::RemoveTextProperty(const nsString& aProp, const nsString& aAttr
 	// OK, I'm really hacking now. This is just so that we can accept 'all' as input.
 	// this logic should live elsewhere.
 	static const char*	sAllKnownStyles[] = {
-		"b",
-		"i",
-		"u",
+		"B",
+		"I",
+		"U",
 		nsnull			// this null is important
 	};
 	
@@ -524,9 +524,10 @@ nsEditorAppCore::RemoveTextProperty(const nsString& aProp, const nsString& aAttr
 	return err;
 }
 
+
 NS_IMETHODIMP
 nsEditorAppCore::GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, 
-                                 PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas)
+                                nsString& aFirstHas, nsString& aAnyHas, nsString& aAllHas)
 {
 	nsIAtom		*styleAtom = nsnull;
 	nsresult	err = NS_NOINTERFACE;
@@ -558,9 +559,9 @@ nsEditorAppCore::GetTextProperty(const nsString& aProp, const nsString& aAttr, c
 			err = NS_ERROR_NOT_IMPLEMENTED;
 	}
 
-  if (aFirstHas) *aFirstHas = firstOfSelectionHasProp;
-	if (aAnyHas) *aAnyHas = anyOfSelectionHasProp;
-	if (aAllHas) *aAllHas = allOfSelectionHasProp;
+	aFirstHas = (firstOfSelectionHasProp) ? "true" : "false";
+	aAnyHas = (anyOfSelectionHasProp) ? "true" : "false";
+	aAllHas = (allOfSelectionHasProp) ? "true" : "false";
   	
 	NS_RELEASE(styleAtom);
 	return err;
@@ -889,6 +890,12 @@ nsEditorAppCore::InsertText(const nsString& textToInsert)
   return err;
 }
 
+
+NS_IMETHODIMP
+nsEditorAppCore::Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
@@ -1254,6 +1261,7 @@ nsEditorAppCore::ShowClipboard()
                                              kIClipboardIID,
                                              (nsISupports **)&clipboard);
 
+	// this is all so broken!
   FILE * fd = fopen("res/samples/ClipboardViewer.xul", "w");
   fprintf(fd, "<?xml version=\"1.0\"?> \n");
   fprintf(fd, "<?xml-stylesheet href=\"xul.css\" type=\"text/css\"?> \n"); 
