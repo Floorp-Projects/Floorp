@@ -291,8 +291,8 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArr
 
 nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
 {
-    PR_ASSERT (nsnull == m_offlineMailTable);
-    nsresult err = NewTable (&m_offlineMailTable);
+    NS_ASSERTION (nsnull == m_offlineMailTable, "offline mail table already initted");
+    nsresult err = NewTable (getter_AddRefs(m_offlineMailTable));
 
     if (NS_SUCCEEDED(err))
     {
@@ -413,8 +413,8 @@ nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
 
 nsresult nsMsgSearchValidityManager::InitOnlineMailTable ()
 {
-    PR_ASSERT (nsnull == m_onlineMailTable);
-    nsresult err = NewTable (&m_onlineMailTable);
+    NS_ASSERTION (nsnull == m_onlineMailTable, "Online mail table already initted!");
+    nsresult err = NewTable (getter_AddRefs(m_onlineMailTable));
 
     if (NS_SUCCEEDED(err))
     {
@@ -490,8 +490,8 @@ nsresult nsMsgSearchValidityManager::InitOnlineMailFilterTable ()
     // is supposed to be the same as offline mail, except that the body 
     // attribute is omitted
 
-    PR_ASSERT (nsnull == m_onlineMailFilterTable);
-    nsresult err = NewTable (&m_onlineMailFilterTable);
+    NS_ASSERTION (nsnull == m_onlineMailFilterTable, "online filter table already initted");
+    nsresult err = NewTable (getter_AddRefs(m_onlineMailFilterTable));
 
     if (NS_SUCCEEDED(err))
     {

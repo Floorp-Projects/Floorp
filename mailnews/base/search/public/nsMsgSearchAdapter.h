@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,9 +24,12 @@
 #define _nsMsgSearchAdapter_H_
 
 #include "nsMsgSearchCore.h"
-#include "nsIMsgSearchAdapter.h"
-#include "nsMsgSearchArray.h"
 
+#include "nsIMsgSearchAdapter.h"
+#include "nsIMsgSearchValidityTable.h"
+#include "nsIMsgSearchValidityManager.h"
+
+#include "nsMsgSearchArray.h"
 class nsIMsgSearchScopeTerm;
 class nsINNTPHost;
 
@@ -134,18 +137,12 @@ protected:
 //      servers
 //-----------------------------------------------------------------------------
 
-class nsMsgSearchValidityTable 
+class nsMsgSearchValidityTable : public nsIMsgSearchValidityTable
 {
 public:
 	nsMsgSearchValidityTable ();
-	void SetAvailable (int attrib, int op, PRBool);
-	void SetEnabled (int attrib, int op, PRBool);
-	void SetValidButNotShown (int attrib, int op, PRBool);
-	PRBool GetAvailable (int attrib, int op);
-	PRBool GetEnabled (int attrib, int op);
-	PRBool GetValidButNotShown (int attrib, int op);
-	nsresult ValidateTerms (nsMsgSearchTermArray&);
-	int GetNumAvailAttribs();   // number of attribs with at least one available operator
+    NS_DECL_NSIMSGSEARCHVALIDITYTABLE
+    NS_DECL_ISUPPORTS
 								  
 protected:
 	int m_numAvailAttribs;        // number of rows with at least one available operator
@@ -160,26 +157,32 @@ protected:
 
 // Using getters and setters seems a little nicer then dumping the 2-D array
 // syntax all over the code
-inline void nsMsgSearchValidityTable::SetAvailable (int a, int o, PRBool b)
-{ m_table [a][o].bitAvailable = b; }
-inline void nsMsgSearchValidityTable::SetEnabled (int a, int o, PRBool b)
-{ m_table [a][o].bitEnabled = b; }
-inline void nsMsgSearchValidityTable::SetValidButNotShown (int a, int o, PRBool b)
-{ m_table [a][o].bitValidButNotShown = b; }
+inline nsresult nsMsgSearchValidityTable::SetAvailable (int a, int o, PRBool b)
+{ m_table [a][o].bitAvailable = b; return NS_OK;}
+inline nsresult nsMsgSearchValidityTable::SetEnabled (int a, int o, PRBool b)
+{ m_table [a][o].bitEnabled = b; return NS_OK; }
+inline nsresult nsMsgSearchValidityTable::SetValidButNotShown (int a, int o, PRBool b)
+{ m_table [a][o].bitValidButNotShown = b; return NS_OK;}
 
-inline PRBool nsMsgSearchValidityTable::GetAvailable (int a, int o)
-{ return m_table [a][o].bitAvailable; }
-inline PRBool nsMsgSearchValidityTable::GetEnabled (int a, int o)
-{ return m_table [a][o].bitEnabled; }
-inline PRBool nsMsgSearchValidityTable::GetValidButNotShown (int a, int o)
-{ return m_table [a][o].bitValidButNotShown; }
+inline nsresult nsMsgSearchValidityTable::GetAvailable (int a, int o, PRBool *aResult)
+{ *aResult = m_table [a][o].bitAvailable; return NS_OK;}
+inline nsresult nsMsgSearchValidityTable::GetEnabled (int a, int o, PRBool *aResult)
+{  *aResult = m_table [a][o].bitEnabled; return NS_OK;}
+inline nsresult nsMsgSearchValidityTable::GetValidButNotShown (int a, int o, PRBool *aResult)
+{  *aResult = m_table [a][o].bitValidButNotShown; return NS_OK;}
 
-class nsMsgSearchValidityManager
+class nsMsgSearchValidityManager : public nsIMsgSearchValidityManager
 {
 public:
 	nsMsgSearchValidityManager ();
-	~nsMsgSearchValidityManager ();
+  
+protected:
+  virtual ~nsMsgSearchValidityManager ();
 
+public:
+    NS_DECL_NSIMSGSEARCHVALIDITYMANAGER
+    NS_DECL_ISUPPORTS
+  
 	nsresult GetTable (int, nsMsgSearchValidityTable**);
   
 	nsresult PostProcessValidityTable (nsINNTPHost*);
@@ -199,14 +202,14 @@ protected:
 	// this with static members of the adapter classes, but having a dedicated
 	// object makes cleanup of these tables (at shutdown-time) automagic.
 
-	nsMsgSearchValidityTable *m_offlineMailTable;
-	nsMsgSearchValidityTable *m_onlineMailTable;
-	nsMsgSearchValidityTable *m_onlineMailFilterTable;
-	nsMsgSearchValidityTable *m_newsTable;
-	nsMsgSearchValidityTable *m_newsExTable;
-	nsMsgSearchValidityTable *m_localNewsTable; // used for local news searching or offline news searching...
+    nsCOMPtr<nsIMsgSearchValidityTable> m_offlineMailTable;
+    nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailTable;
+    nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailFilterTable;
+    nsCOMPtr<nsIMsgSearchValidityTable> m_newsTable;
+    nsCOMPtr<nsIMsgSearchValidityTable> m_newsExTable;
+    nsCOMPtr<nsIMsgSearchValidityTable> m_localNewsTable; // used for local news searching or offline news searching...
 
-	nsresult NewTable (nsMsgSearchValidityTable **);
+	nsresult NewTable (nsIMsgSearchValidityTable **);
 
 	nsresult InitOfflineMailTable ();
 	nsresult InitOnlineMailTable ();
@@ -217,9 +220,5 @@ protected:
 
 	void EnableLdapAttribute (nsMsgSearchAttribValue, PRBool enabled = PR_TRUE);
 };
-
-extern nsMsgSearchValidityManager gValidityMgr;
-
-
 
 #endif

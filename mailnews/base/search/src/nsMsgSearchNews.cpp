@@ -90,8 +90,8 @@ char *nsMsgSearchNews::EncodeValue (const char *value)
 			if (nsCRT::IsAsciiAlpha(*value))
 			{
 				*walkValue++ = '[';
-				*walkValue++ = toupper(*value);
-				*walkValue++ = tolower(*value);
+				*walkValue++ = (char)nsCRT::ToUpper((PRUnichar)*value);
+				*walkValue++ = (char)nsCRT::ToLower((PRUnichar)*value);
 				*walkValue++ = ']';
 			}
 			else
@@ -311,7 +311,7 @@ void nsMsgSearchNews::PreExitFunction (URL_Struct * /*url*/, int status, MWConte
 PRBool nsMsgSearchNews::DuplicateHit(PRUint32 artNum)  
 // ASSUMES m_hits is sorted!!
 {
-	PRInt32 index;
+	PRUint32 index;
 	for (index = 0; index < m_hits.GetSize(); index++)
 		if (artNum == m_hits.ElementAt(index))
 			return PR_TRUE;
@@ -746,7 +746,7 @@ SEARCH_API int MSG_AddProfileGroup (MSG_Pane *pane, MSG_NewsHost* host,
 nsresult nsMsgSearchValidityManager::InitNewsTable ()
 {
 	NS_ASSERTION (nsnull == m_newsTable,"don't call this twice!");
-	nsresult err = NewTable (&m_newsTable);
+	nsresult err = NewTable (getter_AddRefs(m_newsTable));
 
 	if (NS_OK == err)
 	{
@@ -779,7 +779,7 @@ nsresult nsMsgSearchValidityManager::InitNewsExTable (nsINNTPHost *newsHost)
 	nsresult err = NS_OK;
 
 	if (!m_newsExTable)
-		err = NewTable (&m_newsExTable);
+		err = NewTable (getter_AddRefs(m_newsExTable));
 
 	if (NS_OK == err)
 	{

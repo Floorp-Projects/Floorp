@@ -32,6 +32,10 @@
 #include "nsMsgSearchTerm.h"
 #include "nsMsgResultElement.h"
 
+#include "nsMsgBaseCID.h"
+
+static NS_DEFINE_CID(kValidityManagerCID, NS_MSGSEARCHVALIDITYMANAGER_CID);
+
 extern "C"
 {
     extern int MK_MSG_SEARCH_STATUS;
@@ -252,8 +256,14 @@ nsresult nsMsgSearchIMAPOfflineMail::ValidateTerms ()
 //      if (!XP_Stat (m_scope->GetMailPath(), &fileStatus, xpMailFolder))
 //      {
             // Make sure the terms themselves are valid
-            nsMsgSearchValidityTable *table = nsnull;
-            err = gValidityMgr.GetTable (nsMsgSearchValidityManager::offlineMail, &table);
+            nsCOMPtr<nsIMsgValidityManager> validityManager =
+              do_GetService(kValidityManagerCID, &err);
+
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            nsCOMPtr<nsIMsgSearchValidityTable> table;
+            err = validityManager->GetTable (nsMsgSearchValidityManager::offlineMail,
+                                             getter_AddRefs(table));
             if (NS_OK == err)
             {
                 NS_ASSERTION (table, "found validity table");
@@ -304,8 +314,14 @@ nsresult nsMsgSearchOfflineMail::ValidateTerms ()
         if (!XP_Stat (m_scope->GetMailPath(), &fileStatus, xpMailFolder))
         {
             // Make sure the terms themselves are valid
-            nsMsgSearchValidityTable *table = nsnull;
-            err = gValidityMgr.GetTable (nsMsgSearchValidityManager::offlineMail, &table);
+            nsCOMPtr<nsIMsgValidityManager> validityManager =
+              do_GetService(kValidityManagerCID, &err);
+
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            nsCOMPtr<nsIMsgSearchValidityTable> table;
+            err = validityManager->GetTable(nsMsgSearchValidityManager::offlineMail,
+                                            getter_AddRefs(table));
             if (NS_OK == err)
             {
                 NS_ASSERTION (table, "didn't get validity table");

@@ -26,6 +26,7 @@
 
 nsMsgSearchValueImpl::nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue)
 {
+    NS_INIT_ISUPPORTS();
     mValue = *aInitialValue;
     // XXX TODO - make a copy of the string if it's a string attribute
     // (right now we dont' know when it's a string!)

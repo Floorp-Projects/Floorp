@@ -786,31 +786,41 @@ char *nsMsgSearchAdapter::TransformSpacesToStars (const char *spaceString, msg_T
 
 nsMsgSearchValidityTable::nsMsgSearchValidityTable ()
 {
+    NS_INIT_ISUPPORTS();
 	// Set everything to be unavailable and disabled
 	for (int i = 0; i < nsMsgSearchAttrib::kNumMsgSearchAttributes; i++)
     for (int j = 0; j < nsMsgSearchOp::kNumMsgSearchOperators; j++)
 		{
-			SetAvailable (i, j, FALSE);
-			SetEnabled (i, j, FALSE);
-			SetValidButNotShown (i,j, FALSE);
+			SetAvailable (i, j, PR_FALSE);
+			SetEnabled (i, j, PR_FALSE);
+			SetValidButNotShown (i,j, PR_FALSE);
 		}
 	m_numAvailAttribs = 0;   // # of attributes marked with at least one available operator
 }
 
-int nsMsgSearchValidityTable::GetNumAvailAttribs()
+NS_IMPL_ISUPPORTS1(nsMsgSearchValidityTable, nsIMsgSearchValidityTable)
+
+
+nsresult
+nsMsgSearchValidityTable::GetNumAvailAttribs(PRInt32 *aResult)
 {
 	m_numAvailAttribs = 0;
 	for (int i = 0; i < nsMsgSearchAttrib::kNumMsgSearchAttributes; i++)
-		for (int j = 0; j < nsMsgSearchOp::kNumMsgSearchOperators; j++)
-			if (GetAvailable(i, j))
+		for (int j = 0; j < nsMsgSearchOp::kNumMsgSearchOperators; j++) {
+            PRBool available;
+            GetAvailable(i, j, &available);
+			if (available)
 			{
 				m_numAvailAttribs++;
 				break;
 			}
-	return m_numAvailAttribs;
+        }
+	*aResult = m_numAvailAttribs;
+    return NS_OK;
 }
 
-nsresult nsMsgSearchValidityTable::ValidateTerms (nsMsgSearchTermArray &termList)
+nsresult
+nsMsgSearchValidityTable::ValidateTerms (nsMsgSearchTermArray &termList)
 {
 	nsresult err = NS_OK;
 
@@ -818,10 +828,16 @@ nsresult nsMsgSearchValidityTable::ValidateTerms (nsMsgSearchTermArray &termList
 	{
 		nsMsgSearchTerm *term = termList.ElementAt(i);
 //		XP_ASSERT(term->IsValid());
-		if (!GetEnabled(term->m_attribute, term->m_operator) || 
-			!GetAvailable(term->m_attribute, term->m_operator))
+        PRBool enabled;
+        PRBool available;
+        GetEnabled(term->m_attribute, term->m_operator, &enabled);
+        GetAvailable(term->m_attribute, term->m_operator, &available);
+		if (!enabled || !available)
 		{
-			if (!GetValidButNotShown(term->m_attribute, term->m_operator))
+            PRBool validNotShown;
+            GetValidButNotShown(term->m_attribute, term->m_operator,
+                                &validNotShown);
+            if (!validNotShown)
 				err = NS_MSG_ERROR_INVALID_SEARCH_SCOPE;
 		}
 	}
@@ -829,48 +845,56 @@ nsresult nsMsgSearchValidityTable::ValidateTerms (nsMsgSearchTermArray &termList
 	return err;
 }
 
+nsresult
+nsMsgSearchValidityTable::GetAvailableAttributes(PRInt32 *length,
+                                                 nsMsgSearchAttribValue **aResult)
+{
+    // count first
+    PRInt32 totalAttributes=0;
+    PRInt32 i, j;
+    for (i = 0; i< nsMsgSearchAttrib::kNumMsgSearchAttributes; i++) {
+        for (j=0; j< nsMsgSearchOp::kNumMsgSearchOperators; j++) {
+            if (m_table[i][j].bitAvailable) {
+                totalAttributes++;
+                break;
+            }
+        }
+    }
 
-// global variable with destructor allows automatic cleanup
-nsMsgSearchValidityManager gValidityMgr; 
+    nsMsgSearchAttribValue *array = new nsMsgSearchAttribValue[totalAttributes];
+    if (!array) return NS_ERROR_OUT_OF_MEMORY;
+
+    PRInt32 numStored=0;
+    
+    for (i = 0; i< nsMsgSearchAttrib::kNumMsgSearchAttributes; i++) {
+        for (j=0; j< nsMsgSearchOp::kNumMsgSearchOperators; j++) {
+            if (m_table[i][j].bitAvailable) {
+                array[numStored++] = i;
+                break;
+            }
+        }
+    }
+
+    NS_ASSERTION(totalAttributes == numStored, "Search Attributes not lining up");
+    *length = totalAttributes;
+    *aResult = array;
+
+    return NS_OK;
+}
 
 
 nsMsgSearchValidityManager::nsMsgSearchValidityManager ()
 {
-	m_offlineMailTable = nsnull;
-	m_onlineMailTable = nsnull;
-	m_onlineMailFilterTable = nsnull;
-	m_newsTable = nsnull;
-	m_localNewsTable = nsnull;
-#ifdef DOING_EXNEWSSEARCH
-	m_newsExTable = nsnull;
-#endif
-#ifdef DOING_LDAP
-	m_ldapTable = nsnull;
-#endif
+    NS_INIT_ISUPPORTS();
 }
 
 
 nsMsgSearchValidityManager::~nsMsgSearchValidityManager ()
 {
-	if (nsnull != m_offlineMailTable)
-		delete m_offlineMailTable;
-	if (nsnull != m_onlineMailTable)
-		delete m_onlineMailTable;
-	if (nsnull != m_onlineMailFilterTable)
-		delete m_onlineMailFilterTable;
-	if (nsnull != m_newsTable)
-		delete m_newsTable;
-	if (nsnull != m_localNewsTable)
-		delete m_localNewsTable;
-#ifdef DOING_EXNEWSSEARCH
-	if (nsnull != m_newsExTable)
-		delete m_newsExTable;
-#endif
-#ifdef DOING_LDAP
-	if (nsnull != m_ldapTable)
-		delete m_ldapTable;
-#endif
+    // tables released by nsCOMPtr
 }
+
+NS_IMPL_ISUPPORTS1(nsMsgSearchValidityManager, nsIMsgSearchValidityManager)
 
 
 //-----------------------------------------------------------------------------
@@ -879,7 +903,7 @@ nsMsgSearchValidityManager::~nsMsgSearchValidityManager ()
 // user actually searches that scope.
 //-----------------------------------------------------------------------------
 
-nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsMsgSearchValidityTable **ppOutTable)
+nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValidityTable **ppOutTable)
 {
 	NS_ENSURE_ARG(ppOutTable);
 
@@ -945,13 +969,15 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsMsgSearchValidi
 
 
 
-nsresult nsMsgSearchValidityManager::NewTable(nsMsgSearchValidityTable **aTable)
+nsresult
+nsMsgSearchValidityManager::NewTable(nsIMsgSearchValidityTable **aTable)
 {
 	NS_ENSURE_ARG (aTable);
 	*aTable = new nsMsgSearchValidityTable;
 	if (nsnull == *aTable)
 		return NS_ERROR_OUT_OF_MEMORY;
-  return NS_OK;
+    NS_ADDREF(*aTable);
+    return NS_OK;
 }
 
 
