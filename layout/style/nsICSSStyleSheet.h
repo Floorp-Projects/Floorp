@@ -49,6 +49,7 @@ public:
   NS_IMETHOD  Init(nsIURL* aURL) = 0;
   NS_IMETHOD  SetTitle(const nsString& aTitle) = 0;
   NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
+  NS_IMETHOD  ClearMedia(void) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 
   NS_IMETHOD  Clone(nsICSSStyleSheet*& aClone) const = 0;
