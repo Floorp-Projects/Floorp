@@ -1,8 +1,4 @@
 
-XML {
-  background-color: inherit;
-}
-
 
 Book {
   display: block;
@@ -260,7 +256,6 @@ Link {
 ListItem {
   margin-left: 25pt;
   display: list-item;
-  list-style-position: inside;
 }
 
 Literal {
