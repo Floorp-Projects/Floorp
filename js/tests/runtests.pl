@@ -221,13 +221,13 @@ sub setup_env {
     $test_dir = $ENV{"JS_TEST_DIR"};
 
     # if it's not set, look for it relative to $moz_src
-    if ( !test_dir ) {
+    if ( !$test_dir ) {
         $test_dir = $moz_src . '/mozilla/js/tests/';
     }
 
     # make sure that the test dir exists
     if ( ! -e $test_dir ) {
-        die "The JavaScript Test Library could not be found.\n" .
+        die "The JavaScript Test Library could not be found at $test_dir.\n" .
             "Check the tests out from /mozilla/js/tests or\n" .
             "Set the value of your JS_TEST_DIR environment variable\n " .
             "to the location of the test library.\n";
