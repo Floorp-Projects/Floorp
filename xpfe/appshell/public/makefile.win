@@ -23,6 +23,7 @@ MODULE=raptor
 
 EXPORTS =                         \
         nsAppShellCIDs.h          \
+        nsIXULCommand.h          \
         nsIAppShellService.h      \
         nsICmdLineService.h	  \
         nsIWidgetController.h     \
