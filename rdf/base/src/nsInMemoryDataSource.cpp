@@ -1469,6 +1469,13 @@ InMemoryDataSource::LockedUnassert(nsIRDFResource* aSource,
                     entry->mAssertions = next->mNext;
                 }
             }
+            else {
+                // If this second-level hash empties out, clean it up.
+                if (!root->u.hash.mPropertyHash->entryCount) {
+                    Assertion::Destroy(mAllocator, root);
+                    SetForwardArcs(aSource, nsnull);
+                }
+            }
         }
         else {
             prev->mNext = next->mNext;
@@ -2032,12 +2039,13 @@ InMemoryDataSource::Mark(nsIRDFResource* aSource,
 struct SweepInfo {
     Assertion* mUnassertList;
     PLDHashTable* mReverseArcs;
+    nsFixedSizeAllocator* mAllocator;
 };
 
 NS_IMETHODIMP
 InMemoryDataSource::Sweep()
 {
-    SweepInfo info = { nsnull, &mReverseArcs };
+    SweepInfo info = { nsnull, &mReverseArcs, &mAllocator};
 
     {
         // Remove all the assertions while holding the lock, but don't notify anyone.
@@ -2078,14 +2086,24 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
                                             PLDHashEntryHdr* aHdr,
                                             PRUint32 aNumber, void* aArg)
 {
+    PLDHashOperator result = PL_DHASH_NEXT;
     Entry* entry = NS_REINTERPRET_CAST(Entry*, aHdr);
     SweepInfo* info = NS_STATIC_CAST(SweepInfo*, aArg);
 
     Assertion* as = entry->mAssertions;
     if (as && (as->mHashEntry))
     {
-        // ignore any HASH_ENTRY assertions, they are only in the forward hash
-        as = as->mNext;
+        // Stuff in sub-hashes must be swept recursively (max depth: 1)
+        PL_DHashTableEnumerate(as->u.hash.mPropertyHash, 
+                               SweepForwardArcsEntries, info);
+
+        // If the sub-hash is now empty, clean it up.
+        if (!as->u.hash.mPropertyHash->entryCount) {
+            Assertion::Destroy(*info->mAllocator, as);
+            result = PL_DHASH_REMOVE;
+        }
+
+        return result;
     }
 
     Assertion* prev = nsnull;
@@ -2144,8 +2162,6 @@ InMemoryDataSource::SweepForwardArcsEntries(PLDHashTable* aTable,
             as = next;
         }
     }
-
-    PLDHashOperator result = PL_DHASH_NEXT;
 
     // if no more assertions exist for this resource, then unhash it.
     if (! entry->mAssertions)
