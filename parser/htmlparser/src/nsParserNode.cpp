@@ -26,26 +26,7 @@ const nsAutoString nsCParserNode::mEmptyString("");
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_NODE_IID); 
-static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID);
-
-/**
- *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsParser.
- *  
- *  @update  gess 3/25/98
- *  @param   nsIParser** ptr to newly instantiated parser
- *  @return  NS_xxx error result
- */
-NS_HTMLPARS nsresult NS_NewParserNode(nsIParserNode** aInstancePtrResult,CToken* aToken,PRInt32 aLineNumber)
-{
-  nsCParserNode *it = new nsCParserNode(aToken,aLineNumber);
-
-  if (it == 0) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return it->QueryInterface(kIParserNodeIID, (void **) aInstancePtrResult);
-}
+static NS_DEFINE_IID(kIParserNodeIID, NS_IPARSER_NODE_IID); 
 
 /**
  *  Default constructor
