@@ -678,7 +678,7 @@ DEFINES 	+= -DMOZ_USER_DIR=$(MOZ_USER_DIR)
 
 ######################################################################
 
-GARBAGE		= $(DEPENDENCIES) core $(wildcard core.[0-9]*) $(wildcard *.err)
+GARBAGE		= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err)
 
 ifndef SDK
 SDK		= $(DEPTH)/dist/sdk
@@ -779,4 +779,3 @@ ifeq ($(USE_PTHREADS), 1)
 OS_CFLAGS += -D_PR_PTHREADS -UHAVE_CVAR_BUILT_ON_SEM
 endif
 endif #!USE_AUTOCONF
-
