@@ -264,8 +264,8 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 
 }
 nsProxyEventObject::nsProxyEventObject()
-: mNext(nsnull),
-  mHashKey("")
+: mHashKey(""),
+  mNext(nsnull)
 {
      NS_WARNING("This constructor should never be called");
 }
@@ -276,8 +276,8 @@ nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
                                        nsProxyEventClass* aClass,
                                        nsProxyEventObject* root,
                                        const char * hashStr)
-    : mNext(nsnull),
-      mHashKey(hashStr)
+    : mHashKey(hashStr),
+      mNext(nsnull)
 {
     NS_INIT_REFCNT();
     

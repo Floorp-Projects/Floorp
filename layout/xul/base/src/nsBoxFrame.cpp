@@ -2560,7 +2560,7 @@ nsInfoListImpl::SanityCheck(nsFrameList& aFrameList)
 
 // ---- box info ------
 
-nsBoxInfo::nsBoxInfo():prefSize(0,0), minSize(0,0), flex(0), maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE)
+nsBoxInfo::nsBoxInfo():prefSize(0,0), minSize(0,0), maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE), flex(0)
 { 
 }
 

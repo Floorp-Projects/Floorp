@@ -141,11 +141,11 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aName,
                                const nsString& aValue)
-    : mNameSpaceID(aNameSpaceID),
+    : mContent(aContent),
+      mScriptObject(nsnull),
+      mNameSpaceID(aNameSpaceID),
       mName(aName),
-      mValue(nsnull),
-      mContent(aContent),
-      mScriptObject(nsnull)
+      mValue(nsnull)
 {
     NS_INIT_REFCNT();
     NS_IF_ADDREF(aName);
