@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.26 $ ';
+$::UtilsVersion = '$Revision: 1.27 $ ';
 
 package TinderUtils;
 
@@ -219,6 +219,8 @@ sub GetSystemInfo {
             $Settings::BuildName = "$host $Settings::OS/arm $os_ver $build_type";
         } elsif ($Settings::CPU eq 'ppc') {
             $Settings::BuildName = "$host $Settings::OS/$Settings::CPU $os_ver $build_type";
+        } elsif ($Settings::CPU eq 'i686') {
+            $Settings::BuildName = "$host $Settings::OS $build_type";
         } else {
             # $Settings::BuildName set above
         }
