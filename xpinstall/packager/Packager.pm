@@ -288,7 +288,7 @@ sub do_copyfile
 		chop($destpath);
 		mkpath ($destpath, 0, 0755) ||
 			die "Error: mkpath() failed: $!.  Exiting...\n";
-		# Put delimeter back for copying...
+		# Put delimiter back for copying...
 		$destpath = "$destpath$PD"; 
 	}
 

@@ -138,7 +138,7 @@ interface nsISanePluginInstance : nsISupports
     //////////////////////////////////////////////////////////////////////
     // Generic SANE Interface
 
-    // READ_ONLY: returns a colon delimeted list of option descriptions
+    // READ_ONLY: returns a colon delimited list of option descriptions
     //            where each option description is a comma delimited
     //            list of values
     attribute string DeviceOptions;

@@ -300,7 +300,7 @@ nsUnknownDecoder::nsSnifferEntry nsUnknownDecoder::sSnifferEntries[] = {
   SNIFFER_ENTRY("%!PS-Adobe-", APPLICATION_POSTSCRIPT),
   SNIFFER_ENTRY("%! PS-Adobe-", APPLICATION_POSTSCRIPT),
 
-  // Files that start with mailbox delimeters let's provisionally call
+  // Files that start with mailbox delimiters let's provisionally call
   // text/plain
   SNIFFER_ENTRY("From", TEXT_PLAIN),
   SNIFFER_ENTRY(">From", TEXT_PLAIN),
