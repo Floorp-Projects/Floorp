@@ -68,24 +68,18 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
                        nsIStyleContext* aContext,
                        nsIFrame*        aPrevInFlow)
 {
-  nsCOMPtr<nsIStyleContext> menuStyle;
-  nsresult rv = aPresContext.ResolvePseudoStyleContextFor(aContent, 
-                                                  nsXULAtoms::dropDownMenuPseudo, 
-                                                  aContext,
-                                                  PR_FALSE,
-                                                  getter_AddRefs(menuStyle));
-  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, menuStyle, aPrevInFlow);
+  nsresult rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // We default to being vertical.
-  nsString value;
+  /*nsString value;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
   mHorizontal = PR_FALSE;
   if (value.EqualsIgnoreCase("vertical"))
     mHorizontal = PR_FALSE;
   else if (value.EqualsIgnoreCase("horizontal"))
     mHorizontal = PR_TRUE;
-
-  CreateViewForFrame(aPresContext, this, menuStyle, PR_TRUE);
+*/
+  CreateViewForFrame(aPresContext, this, aContext, PR_TRUE);
 
   // Now that we've made a view, remove it and insert it at the correct
   // position in the view hierarchy (as the root view).  We do this so that we
@@ -184,7 +178,7 @@ NS_IMETHODIMP
 nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {
-  nsresult rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
+  nsresult rv = nsBlockFrame::DidReflow(aPresContext, aStatus);
   //SyncViewWithFrame();
   return rv;
 }

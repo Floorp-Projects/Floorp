@@ -18,7 +18,7 @@
 
 #include "nsXULAtoms.h"
 #include "nsMenuFrame.h"
-#include "nsAreaFrame.h"
+#include "nsBlockFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -69,7 +69,7 @@ nsMenuFrame::FirstChild(nsIAtom*   aListName,
   if (nsLayoutAtoms::popupList == aListName) {
     *aFirstChild = mPopupFrames.FirstChild();
   } else {
-    nsAreaFrame::FirstChild(aListName, aFirstChild);
+    nsBlockFrame::FirstChild(aListName, aFirstChild);
   }
   return NS_OK;
 }
@@ -98,12 +98,12 @@ nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
         // Remove this frame from the list and place it in the other list.
         frames.RemoveFrame(frame);
         mPopupFrames.AppendFrame(this, frame);
-        rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+        rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
         return rv;
       }
       frame->GetNextSibling(&frame);
     }
-    rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+    rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
   return rv;
 }
@@ -124,7 +124,7 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
     NS_ADDREF(*aListName);
     return NS_OK;
   }*/
-  return nsAreaFrame::GetAdditionalChildListName(aIndex, aListName);
+  return nsBlockFrame::GetAdditionalChildListName(aIndex, aListName);
 }
 
 NS_IMETHODIMP
@@ -132,7 +132,7 @@ nsMenuFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
    // Cleanup frames in popup child list
   mPopupFrames.DeleteFrames(aPresContext);
-  return nsAreaFrame::DeleteFrame(aPresContext);
+  return nsBlockFrame::DeleteFrame(aPresContext);
 }
 
 // Called to prevent events from going to anything inside the menu.
@@ -197,7 +197,7 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
 {
-  nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsresult rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   nsIFrame* frame = mPopupFrames.FirstChild();
     
   if (rv == NS_OK && frame) {
@@ -211,6 +211,9 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
      // Reflow child
     nscoord w = aDesiredSize.width;
     nscoord h = aDesiredSize.height;
+    nscoord maxWidth = aDesiredSize.maxElementSize->width;
+    nscoord maxHeight = aDesiredSize.maxElementSize->height;
+
     nsresult rv = ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
  
      // Set the child's width and height to its desired size
@@ -223,6 +226,8 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
     // Don't let it affect our size.
     aDesiredSize.width = w;
     aDesiredSize.height = h;
+    aDesiredSize.maxElementSize->width = maxWidth;
+    aDesiredSize.maxElementSize->height = maxHeight;
   }
   return rv;
 }
