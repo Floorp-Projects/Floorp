@@ -337,8 +337,6 @@ public:
     nsresult  CloseTransientStyles(eHTMLTags aChildTag);
     nsresult  PopStyle(eHTMLTags aTag);
 
-    nsresult  DoFragment(PRBool aFlag);
-
     nsresult  PushIntoMisplacedStack(CToken* aToken)
     {
       NS_ENSURE_ARG_POINTER(aToken);

@@ -126,7 +126,6 @@ public:
   NS_IMETHOD CloseFrameset();
   NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn);
   NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
-  NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD WillProcessTokens(void) { return NS_OK; }

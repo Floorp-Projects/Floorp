@@ -107,7 +107,6 @@ public:
   NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
   NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
-  NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
@@ -715,12 +714,6 @@ nsHTMLFragmentContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsHTMLFragmentContentSink::DoFragment(PRBool aFlag)
 {
   return NS_OK;
 }

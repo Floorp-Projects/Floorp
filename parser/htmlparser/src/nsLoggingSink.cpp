@@ -785,12 +785,6 @@ nsLoggingSink::GetNewCString(const nsAString& aValue, char** aResult)
   return result;
 }
 
-NS_IMETHODIMP
-nsLoggingSink::DoFragment(PRBool aFlag) 
-{
-  return NS_OK; 
-}
-
 /**
  * This gets called when handling illegal contents, especially
  * in dealing with tables. This method creates a new context.

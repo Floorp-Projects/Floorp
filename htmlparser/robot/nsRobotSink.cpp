@@ -113,7 +113,6 @@ public:
   NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
 
-  NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition){ return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition){ return NS_OK; }
 
@@ -400,10 +399,4 @@ void RobotSink::ProcessLink(const nsString& aLink)
   }
 }
 
-
-NS_IMETHODIMP
-RobotSink::DoFragment(PRBool aFlag) 
-{
-  return NS_OK; 
-}
 
