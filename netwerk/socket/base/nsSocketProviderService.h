@@ -26,7 +26,7 @@ class nsSocketProviderService : public nsISocketProviderService
 public:
   NS_DECL_ISUPPORTS
 
-  NS_DECL_ISOCKETPROVIDERSERVICE
+  NS_DECL_NSISOCKETPROVIDERSERVICE
 
   // nsISocketProviderService methods:
   nsSocketProviderService();
