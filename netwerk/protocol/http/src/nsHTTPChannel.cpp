@@ -1766,6 +1766,14 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   rv = channel->SetOriginalURI(mOriginalURI);
   if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsIChannel> tempChannel;
+  rv = mLoadGroup->GetDefaultLoadChannel(getter_AddRefs(tempChannel));
+  if (NS_SUCCEEDED(rv)) {
+    if (tempChannel == this) {
+      mLoadGroup->SetDefaultLoadChannel(channel);
+    }
+  }
+
   // Convey the referrer if one was used for this channel to the next one-
   nsXPIDLCString referrer;
   GetRequestHeader(nsHTTPAtoms::Referer, getter_Copies(referrer));
