@@ -333,6 +333,8 @@ public:
 
   nsRect           mClipRect;
 
+  nsImageAnimation mImgAnimationMode;
+
 private:
   PrintObject& operator=(const PrintObject& aOther); // not implemented
 
@@ -520,6 +522,7 @@ private:
   nsresult RemoveEventProcessorFromVMs(PrintObject* aPO);
   nsresult ShowDocList(PrintObject* aPO, PRBool aShow);
   void InstallNewPresentation();
+  void ReturnToGalleyPresentation();
   void TurnScriptingOn(PRBool aDoTurnOn);
 #endif
 
@@ -573,14 +576,15 @@ protected:
   PRBool            mIsPrinting;
   PrintData*        mPrt;
   nsPagePrintTimer* mPagePrintTimer;
-  nsIWidget*        mParentWidget;
 
 #ifdef NS_PRINT_PREVIEW
+  PRBool            mIsDoingPrintPreview; // per DocumentViewer
+  nsIWidget*        mParentWidget; // purposely won't be ref counted
   PrintData*        mPrtPreview;
 #endif
 
   // static memeber variables
-  static PRBool mIsDoingPrintPreview;
+  static PRBool mIsCreatingPrintPreview;
   static PRBool mIsDoingPrinting;
 
   // document management data
@@ -799,12 +803,17 @@ PrintObject::PrintObject() :
   mRect(0,0,0,0), mReflowRect(0,0,0,0),
   mParent(nsnull), mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE),
   mPrintAsIs(PR_FALSE), mSkippedPageEject(PR_FALSE), mSharedPresShell(PR_FALSE),
-  mClipRect(-1,-1, -1, -1)
+  mClipRect(-1,-1, -1, -1),
+  mImgAnimationMode(eImageAnimation_Normal)
 {
 }
 
 PrintObject::~PrintObject()
 {
+  if (mPresContext) {
+    mPresContext->SetImageAnimationMode(mImgAnimationMode);
+  }
+
   for (PRInt32 i=0;i<mKids.Count();i++) {
     PrintObject* po = (PrintObject*)mKids[i];
     NS_ASSERTION(po, "PrintObject can't be null!");
@@ -824,8 +833,8 @@ static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
 static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
 // Data members
-PRBool DocumentViewerImpl::mIsDoingPrintPreview = PR_FALSE;
-PRBool DocumentViewerImpl::mIsDoingPrinting     = PR_FALSE;
+PRBool DocumentViewerImpl::mIsCreatingPrintPreview = PR_FALSE;
+PRBool DocumentViewerImpl::mIsDoingPrinting        = PR_FALSE;
 
 nsresult
 NS_NewDocumentViewer(nsIDocumentViewer** aResult)
@@ -847,7 +856,10 @@ DocumentViewerImpl::DocumentViewerImpl()
 {
   NS_INIT_ISUPPORTS();
   PrepareToStartLoad();
+
+#ifdef NS_PRINT_PREVIEW
   mParentWidget = nsnull;
+#endif
 }
 
 void DocumentViewerImpl::PrepareToStartLoad() {
@@ -858,7 +870,8 @@ void DocumentViewerImpl::PrepareToStartLoad() {
   mIsPrinting       = PR_FALSE;
 
 #ifdef NS_PRINT_PREVIEW
-  mPrtPreview = nsnull;
+  mIsDoingPrintPreview = PR_FALSE;
+  mPrtPreview          = nsnull;
 #endif
 }
 
@@ -952,7 +965,9 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                          nsIDeviceContext* aDeviceContext,
                          const nsRect& aBounds)
 {
-  mParentWidget = aParentWidget;
+#ifdef NS_PRINT_PREVIEW
+  mParentWidget = aParentWidget; // not ref counted
+#endif
 
   nsresult rv;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
@@ -968,7 +983,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
   PRBool makeCX = PR_FALSE;
   if (!mPresContext) {
     // Create presentation context
-    if (mIsDoingPrintPreview) {
+    if (mIsCreatingPrintPreview) {
       mPresContext = do_CreateInstance(kPrintPreviewContextCID,&rv);
     } else {
       mPresContext = do_CreateInstance(kGalleyContextCID,&rv);
@@ -976,7 +991,11 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
     if (NS_FAILED(rv)) return rv;
 
     mPresContext->Init(aDeviceContext); 
+#ifdef NS_PRINT_PREVIEW
+    makeCX = !mIsDoingPrintPreview; // needs to be true except when we are already in PP
+#else
     makeCX = PR_TRUE;
+#endif
   }
 
   nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
@@ -2841,7 +2860,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   // create the PresContext
   PRBool containerIsSet = PR_FALSE;
   nsresult rv;
-  if (mIsDoingPrintPreview) {
+  if (mIsCreatingPrintPreview) {
     aPO->mPresContext = do_CreateInstance(kPrintPreviewContextCID,&rv);
     if (NS_FAILED(rv)) {
       return rv;
@@ -2926,9 +2945,9 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
 #ifdef NS_PRINT_PREVIEW
   // Here we decide whether we need scrollbars and 
   // what the parent will be of the widget
-  if (mIsDoingPrintPreview) {
+  if (mIsCreatingPrintPreview) {
     PRBool canCreateScrollbars = PR_FALSE;
-    nsIWidget* widget = mParentWidget;
+    nsCOMPtr<nsIWidget> widget = mParentWidget;
     // the top PrintObject's widget will always have scrollbars
     if (aPO->mParent != nsnull && aPO->mContent) {
       nsCOMPtr<nsIFrameManager> frameMan;
@@ -2943,7 +2962,7 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
         nsIView* view = nsnull;
         frame->GetView(aPO->mParent->mPresContext, &view);
         if (view != nsnull) {
-          view->GetWidget(widget);
+          view->GetWidget(*getter_AddRefs(widget));
           canCreateScrollbars = PR_FALSE;
         }
       }
@@ -2977,6 +2996,12 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
 
   // set it on the new pres shell
   aPO->mPresShell->SetHistoryState(layoutState);
+
+  // turn off animated GIFs
+  if (aPO->mPresContext) {
+    aPO->mPresContext->GetImageAnimationMode(&aPO->mImgAnimationMode);
+    aPO->mPresContext->SetImageAnimationMode(eImageAnimation_None);
+  }
 
   aPO->mPresShell->BeginObservingDocument();
 
@@ -3050,14 +3075,29 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
       // Dump all the frames and view to a a file
       FILE * fd = fopen(filename, "w");
       if (fd) {
-        nsIFrame  *theFrame;
-        aPO->mPresShell->GetRootFrame(&theFrame);
+        nsIFrame  *theRootFrame;
+        aPO->mPresShell->GetRootFrame(&theRootFrame);
         fprintf(fd, "Title: %s\n", docStr?docStr:"");
         fprintf(fd, "URL:   %s\n", urlStr?urlStr:"");
         fprintf(fd, "--------------- Frames ----------------\n");
         nsCOMPtr<nsIRenderingContext> renderingContext;
         mPrt->mPrintDocDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
-        DumpFrames(fd, aPO->mPresContext, renderingContext, theFrame, 0);
+        DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
+        fprintf(fd, "---------------------------------------\n\n");
+        fprintf(fd, "--------------- Views From Root Frame----------------\n");
+        nsIView * v;
+        theRootFrame->GetView(aPO->mPresContext, &v);
+        if (v) {
+          v->List(fd);
+        } else {
+          printf("View is null!\n");
+        }
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aPO->mWebShell));
+        if (docShell) {
+          fprintf(fd, "--------------- All Views ----------------\n");
+          DumpViews(docShell, fd);
+          fprintf(fd, "---------------------------------------\n\n");
+        }
         fclose(fd);
       }
       if (docStr) nsMemory::Free(docStr);
@@ -4555,6 +4595,75 @@ DocumentViewerImpl::InstallNewPresentation()
   ShowDocList(mPrt->mPrintObject, PR_TRUE);
 
 }
+
+void
+DocumentViewerImpl::ReturnToGalleyPresentation()
+{
+  if (!mIsDoingPrintPreview) {
+    NS_ASSERTION(0, "Wow, we should never get here!");
+    return;
+  }
+  delete mPrtPreview;
+  mPrtPreview = nsnull;
+
+  // Get the current size of what is being viewed
+  nsRect area;
+  mPresContext->GetVisibleArea(area);
+
+  nsRect bounds;
+  mWindow->GetBounds(bounds);
+
+  // In case we have focus focus the parent DocShell
+  // which in this case should always be chrome
+  nsCOMPtr<nsIDocShellTreeItem>  dstParentItem;
+  nsCOMPtr<nsIDocShellTreeItem>  dstItem(do_QueryInterface(mContainer));
+  if (dstItem) {
+    dstItem->GetParent(getter_AddRefs(dstParentItem));
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(dstParentItem));
+    if (docShell) {
+      docShell->SetHasFocus(PR_TRUE);
+    }
+  }
+
+  // Start to kill off the old Presentation
+  // by cleaning up the PresShell
+  if (mPresShell) {
+    // Break circular reference (or something)
+    mPresShell->EndObservingDocument();
+    nsCOMPtr<nsISelection> selection;
+    nsresult rv = GetDocumentSelection(getter_AddRefs(selection));
+    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
+    if (NS_SUCCEEDED(rv) && selPrivate && mSelectionListener) 
+      selPrivate->RemoveSelectionListener(mSelectionListener);
+    mPresShell->Destroy();
+  }
+
+  // clear weak references before we go away
+  if (mPresContext) {
+    mPresContext->SetContainer(nsnull);
+    mPresContext->SetLinkHandler(nsnull);
+  }
+
+  // Destroy the old Presentation
+  mPresShell    = nsnull;
+  mPresContext  = nsnull;
+  mViewManager  = nsnull;
+  mWindow       = nsnull;
+
+  // Very important! Turn On scripting
+  TurnScriptingOn(PR_TRUE);
+
+  nsresult rv = Init(mParentWidget, mDeviceContext, bounds);
+
+  // this needs to be set here not earlier,
+  // because it is needing when re-constructing the Galley Mode)
+  mIsDoingPrintPreview = PR_FALSE;
+
+  mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
+  Show();
+
+}
+
 #endif // NS_PRINT_PREVIEW
 
 /** ---------------------------------------------------
@@ -4578,20 +4687,27 @@ DocumentViewerImpl::PrintPreview()
   // another is still in here (the printing dialog is a good example).
   // the only time we can print more than one job at a time is the regression tests
   if (mIsDoingPrintPreview) {
+#if 0
     // Let the user know we are not ready to print.
     rv = NS_ERROR_NOT_AVAILABLE;
     ShowPrintErrorDialog(rv);
     return rv;
+#else
+    ReturnToGalleyPresentation();
+    return NS_OK;
+#endif
   }
   
   // Let's print ...
-  mIsDoingPrintPreview = PR_TRUE;
+  mIsCreatingPrintPreview = PR_TRUE;
+  mIsDoingPrintPreview    = PR_TRUE;
 
   mPrt = new PrintData();
   if (mPrt == nsnull) {
-    mIsDoingPrintPreview = PR_FALSE;
+    mIsCreatingPrintPreview = PR_FALSE;
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  mIsDoingPrintPreview = PR_TRUE;
 
   // Very important! Turn Off scripting
   TurnScriptingOn(PR_FALSE);
@@ -4608,7 +4724,8 @@ DocumentViewerImpl::PrintPreview()
   if (mPrt->mPrintDocList == nsnull) {
     mPrt->mPrintDocList = new nsVoidArray();
     if (mPrt->mPrintDocList == nsnull) {
-      mIsDoingPrintPreview = PR_FALSE;
+      mIsCreatingPrintPreview = PR_FALSE;
+      mIsDoingPrintPreview    = PR_FALSE;
       TurnScriptingOn(PR_TRUE);
       return NS_ERROR_FAILURE;
     }
@@ -4715,7 +4832,7 @@ DocumentViewerImpl::PrintPreview()
   }
   rv = DocumentReadyForPrinting();
 
-  mIsDoingPrintPreview = PR_FALSE;
+  mIsCreatingPrintPreview = PR_FALSE;
 
   /* cleaup on failure + notify user */
   if (NS_FAILED(rv)) {
@@ -4730,6 +4847,8 @@ DocumentViewerImpl::PrintPreview()
      */   
     ShowPrintErrorDialog(rv);
     TurnScriptingOn(PR_TRUE);
+    mIsCreatingPrintPreview = PR_FALSE;
+    mIsDoingPrintPreview    = PR_FALSE;
     return rv;
   }
 
@@ -4740,6 +4859,8 @@ DocumentViewerImpl::PrintPreview()
   // Noew create the new Presentation and display it
   InstallNewPresentation();
 
+  // PrintPreview was built using the mPrt (code reuse)
+  // then we assign it over
   mPrtPreview = mPrt;
   mPrt        = nsnull;
 
