@@ -1320,6 +1320,37 @@ nsBrowserWindow::NewWebShell(nsIWebShell*& aNewWebShell)
   return rv;
 }
 
+NS_IMETHODIMP
+nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
+{
+  PRInt32 i, n = gBrowsers.Count();
+
+  aResult = nsnull;
+  nsString aNameStr(aName);
+
+  for (i = 0; i < n; i++) {
+    nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(i);
+    nsIWebShell *ws;
+    
+    if (NS_OK == bw->GetWebShell(ws)) {
+      PRUnichar *name;
+      if (NS_OK == ws->GetName(&name)) {
+        if (aNameStr.Equals(name)) {
+          aResult = ws;
+          NS_ADDREF(aResult);
+          return NS_OK;
+        }
+      }      
+    }
+    if (NS_OK == ws->FindChildWithName(aName, aResult)) {
+      if (nsnull != aResult) {
+        return NS_OK;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 //----------------------------------------
 
 // Stream observer implementation

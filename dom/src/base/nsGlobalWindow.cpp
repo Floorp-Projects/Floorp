@@ -798,6 +798,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   nsTimeoutImpl *timeout, **insertion_point;
   jsdouble interval;
   PRInt64 now, delta;
+  JSPrincipals principals;
 
   if (argc >= 2) {
     if (!JS_ValueToNumber(cx, argv[1], &interval)) {
@@ -836,6 +837,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
         timeout->interval = (PRInt32)interval;
     timeout->expr = expr;
     timeout->funobj = funobj;
+    timeout->principals = nsnull;
     if (expr) {
       timeout->argv = 0;
       timeout->argc = 0;
@@ -929,7 +931,7 @@ GlobalWindowImpl::Open(JSContext *cx,
   PRUint32 mChrome = 0;
   PRInt32 mWidth, mHeight;
   PRInt32 mLeft, mTop;
-  nsAutoString mAbsURL, mName;
+  nsAutoString mAbsURL, name;
   JSString* str;
   *aReturn = nsnull;
 
@@ -961,14 +963,14 @@ GlobalWindowImpl::Open(JSContext *cx,
     if (nsnull == mJSStrName) {
       return NS_ERROR_FAILURE;
     }
-    mName.SetString(JS_GetStringChars(mJSStrName));
+    name.SetString(JS_GetStringChars(mJSStrName));
 
-    if (NS_OK != CheckWindowName(cx, mName)) {
+    if (NS_OK != CheckWindowName(cx, name)) {
       return NS_ERROR_FAILURE;
     }
   } 
   else {
-    mName.SetString("");
+    name.SetString("");
   }
 
   char *options;
@@ -1030,13 +1032,19 @@ GlobalWindowImpl::Open(JSContext *cx,
 
   nsIBrowserWindow *newWindow = nsnull;
   nsIScriptGlobalObject *newGlobalObject = nsnull;
-  nsIWebShell *newWebShell;
+  nsIWebShell *newWebShell = nsnull;
   nsIWebShellContainer *webShellContainer, *newContainer;
   
   /* XXX check for existing window of same name.  If exists, set url and 
    * update chrome */
-  if (NS_OK == mWebShell->GetContainer(webShellContainer)) {
-    if (NS_OK == webShellContainer->NewWebShell(newWebShell)) {
+  if (NS_OK == mWebShell->GetContainer(webShellContainer) && nsnull != webShellContainer) {
+    // Check for existing window of same name.
+    webShellContainer->FindWebShellWithName(name.GetUnicode(), newWebShell);
+    if (nsnull == newWebShell) {
+      // No window of that name so create a new one.
+      webShellContainer->NewWebShell(newWebShell);
+    }
+    if (nsnull != newWebShell) {
       if (NS_OK == newWebShell->GetContainer(newContainer) && nsnull != newContainer) {
         newContainer->QueryInterface(kIBrowserWindowIID, (void**)&newWindow);
         NS_RELEASE(newContainer);
@@ -1045,7 +1053,7 @@ GlobalWindowImpl::Open(JSContext *cx,
     NS_RELEASE(webShellContainer);
   }
 
-  if (nsnull != newWindow) {
+  if (nsnull != newWindow && nsnull != newWebShell) {
     //How should we do default size/pos
     newWindow->Hide();
     newWindow->SetChrome(mChrome);
@@ -1053,6 +1061,7 @@ GlobalWindowImpl::Open(JSContext *cx,
     newWindow->MoveTo(mLeft, mTop);
 
     newWebShell->LoadURL(mAbsURL);
+    newWebShell->SetName(name);
 
     newWindow->Show();
 
@@ -1068,14 +1077,12 @@ GlobalWindowImpl::Open(JSContext *cx,
       return NS_ERROR_FAILURE;
     }
 
-    newWebShell->SetName(mName);
-    
     NS_RELEASE(newWindow);
     NS_RELEASE(newWebShell);
     NS_RELEASE(newContextOwner);
   }
 
-  nsIDOMWindow *newDOMWindow;
+  nsIDOMWindow *newDOMWindow = nsnull;
   if (nsnull != newGlobalObject && NS_OK == newGlobalObject->QueryInterface(kIDOMWindowIID, (void**)&newDOMWindow)) {
     *aReturn = newDOMWindow;
   }

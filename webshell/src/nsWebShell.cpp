@@ -187,6 +187,7 @@ public:
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
   NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell);
+  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
 
   // nsILinkHandler
   NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
@@ -1349,6 +1350,14 @@ nsWebShell::NewWebShell(nsIWebShell *&aNewWebShell)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShell::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
+{
+  if (nsnull != mContainer) {
+    return mContainer->FindWebShellWithName(aName, aResult);
+  }
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 
@@ -1475,14 +1484,19 @@ nsWebShell::GetTarget(const PRUnichar* aName)
   }
   else {
     // Look from the top of the tree downward
-    nsIWebShell* top;
-    GetRootWebShell(top);
-    top->FindChildWithName(aName, target);
-    if (nsnull == target) {
-      target = this;
-      NS_ADDREF(target);
+    if (nsnull != mContainer) {
+      mContainer->FindWebShellWithName(aName, target);
+      if (nsnull == target) {
+        mContainer->NewWebShell(target);
+      }
+      if (nsnull != target) {
+        target->SetName(aName);      
+      }
+      else {
+        target = this;
+        NS_ADDREF(target);
+      }
     }
-    NS_RELEASE(top);
   }
 
   return target;
