@@ -32,7 +32,7 @@ treecell {
 } 
 
 treecell[selectedcell] { 
- background-color: blue; 
+ background-color: #BBBBCC; 
 } 
 
 treeitem[Status="new"] {
