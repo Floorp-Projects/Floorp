@@ -3835,6 +3835,17 @@ void npn_unregisterwindow(NPP npp, void* window)
 #endif
 }
 
+int16 npn_allocateMenuID(NPP npp, XP_Bool isSubmenu)
+{
+#ifdef XP_MAC
+    if (npp) {
+	np_instance* instance = (np_instance*) npp->ndata;
+	return FE_AllocateMenuID(instance->app->fe_data, isSubmenu);
+    }
+#endif
+    return 0;
+}
+
 XP_Bool
 npn_IsWindowless(np_handle* handle)
 {

@@ -195,6 +195,9 @@ npn_registerwindow(NPP npp, void* window);
 void NP_EXPORT
 npn_unregisterwindow(NPP npp, void* window);
 
+int16 NP_EXPORT
+npn_allocateMenuID(NPP npp, XP_Bool isSubmenu);
+
 #if defined(XP_MAC) && !defined(powerc)
 #pragma pointers_in_D0
 #endif
@@ -406,6 +409,9 @@ public:
 	
     NS_IMETHOD_(void)
     UnregisterWindow(void* window);	
+    
+    NS_IMETHOD_(PRInt16)
+	AllocateMenuID(PRBool isSubmenu);
 
     ////////////////////////////////////////////////////////////////////////////
     // Methods specific to NPILiveConnectPluginInstancePeer:
