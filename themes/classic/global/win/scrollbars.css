@@ -41,16 +41,6 @@ scrollbar[orient="vertical"]
    -moz-appearance: scrollbartrack-vertical;
 }
 
-/* ::::: slider ::::: */
-
-slider {
-  height: 16px;
-}
-
-slider[orient="vertical"] {
-  width: 16px;
-}
-
 /* ::::: borders for thumb and buttons ::::: */
 
 thumb,
