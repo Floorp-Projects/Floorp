@@ -20,6 +20,13 @@ download {
   margin-left: 17px;
 }
 
+listcell {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
 .link {
   text-decoration: underline;
   color: blue;
@@ -34,4 +41,10 @@ download {
 
 .link:focus {
   border: 1px dotted black;
+}
+
+#download-splitter {
+  border: none;
+  border-bottom: 1px solid ThreeDLightShadow;
+  -moz-appearance: toolbox;
 }
