@@ -444,6 +444,17 @@ class nsCOMPtr
     : private nsCOMPtr_base
 #endif
   {
+    enum { _force_even_compliant_compilers_to_fail_ = sizeof(T) };
+      /*
+        The declaration above exists specifically to make |nsCOMPtr<T>| _not_ compile with only
+        a forward declaration of |T|.  This should prevent Windows and Mac engineers from
+        breaking Solaris and other compilers that naturally have this behavior.  Thank
+        <law@netscape.com> for inventing this specific trick.
+
+        Of course, if you're using |nsCOMPtr| outside the scope of wanting to compile on
+        Solaris and old GCC, you probably want to remove the enum so you can exploit forward
+        declarations.
+      */
 
 #ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
     private:
