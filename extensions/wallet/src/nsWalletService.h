@@ -40,6 +40,7 @@ public:
   nsWalletlibService();
 
   /* Implementation of the nsIWalletService interface */
+ 
   NS_IMETHOD WALLET_PreEdit(nsAutoString& walletList);
   NS_IMETHOD WALLET_PostEdit(nsAutoString walletList);
   NS_IMETHOD WALLET_ChangePassword();
@@ -57,7 +58,7 @@ public:
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
      const char *urlname, nsIPrompt* dialog, PRBool *_retval);
 
-  NS_IMETHOD SI_RemoveUser(const char *URLName, PRUnichar *userName);
+  NS_IMETHOD SI_RemoveUser(const char *URLName, const PRUnichar *userName);
 
 
   NS_IMETHOD WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList);

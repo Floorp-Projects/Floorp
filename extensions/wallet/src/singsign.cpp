@@ -826,7 +826,7 @@ si_RemoveUser(char *URLName, nsAutoString userName, PRBool save) {
 }
 
 PUBLIC PRBool
-SINGSIGN_RemoveUser(const char *URLName, PRUnichar *userName) {
+SINGSIGN_RemoveUser(const char *URLName, const PRUnichar *userName) {
   return si_RemoveUser((char *)URLName, userName, PR_TRUE);
 }
 

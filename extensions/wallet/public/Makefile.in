@@ -28,8 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= wallet
 
-EXPORTS		= nsIWalletService.h
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+XPIDLSRCS   = \
+    nsIPasswordSink.idl \
+    nsIKeyedStreamGenerator.idl \
+    nsIWalletService.idl    \
+    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -61,7 +61,7 @@ SINGSIGN_Prompt
      const char *urlname,nsIPrompt* dialog, PRBool *returnValue);
 
 extern PRBool
-SINGSIGN_RemoveUser(const char *URLName, PRUnichar *userName);
+SINGSIGN_RemoveUser(const char *URLName, const PRUnichar *userName);
 
 XP_END_PROTOS
 

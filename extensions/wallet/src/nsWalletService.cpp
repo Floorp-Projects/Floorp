@@ -130,7 +130,7 @@ NS_IMETHODIMP nsWalletlibService::PromptURL
   return ::SINGSIGN_Prompt(text, defaultText, resultText, urlname, dialog, returnValue);
 }
 
-NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *URLName, PRUnichar *userName) {
+NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *URLName, const PRUnichar *userName) {
   ::SINGSIGN_RemoveUser(URLName, userName);
   return NS_OK;
 }

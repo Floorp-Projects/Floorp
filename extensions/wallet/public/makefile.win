@@ -19,14 +19,15 @@
 #
 # Contributor(s): 
 
-
-
 DEPTH=..\..\..
 
-EXPORTS =			\
-	nsIWalletService.h	\
-        $(NULL)			
+XPIDLSRCS= \
+        .\nsIKeyedStreamGenerator.idl  \
+        .\nsIPasswordSink.idl \
+        .\nsIWalletService.idl    \
+        $(NULL)
 
 MODULE = wallet
 
 include <$(DEPTH)\config\rules.mak>
+
