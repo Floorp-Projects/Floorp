@@ -97,8 +97,8 @@ outlinerbody:-moz-outliner-cell(breakpoint-col, func-start) {
     border-top: 1px grey solid;
 }
 
-outlinerbody:-moz-outliner-cell(breakpoint-col, func-end) {
-    border-bottom: 1px grey solid;
+outlinerbody:-moz-outliner-cell(breakpoint-col, func-after) {
+    border-top: 1px grey solid;
 }
 
 outlinerbody:-moz-outliner-cell(source-line-number) {
