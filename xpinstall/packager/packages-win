@@ -124,6 +124,8 @@ bin\components\signonviewer.xpt
 bin\components\streamconv.xpt
 bin\components\stremcnv.dll
 bin\components\strres.dll
+bin\components\tbmb.dll
+bin\components\tbmb.xpt 
 bin\components\txmgr.dll
 bin\components\txmgr.xpt
 bin\components\txtsvc.dll

@@ -110,6 +110,8 @@ bin/components/libwalletviewers.so
 bin/components/libxpconnect.so
 bin/components/libxpiflash.so
 bin/components/locale.xpt
+bin/components/libtbmb.so
+bin/components/tbmb.xpt
 bin/components/mime.xpt
 bin/components/mozbrwsr.xpt
 bin/components/mozcomps.xpt
