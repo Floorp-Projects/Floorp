@@ -239,6 +239,9 @@ NS_NewHTMLUListElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 extern nsresult
 NS_NewHTMLWBRElement(nsIHTMLContent** aResult, nsIAtom* aTag);
 
+extern nsresult
+NS_NewHTMLUnknownElement(nsIHTMLContent** aResult, nsIAtom* aTag);
+
 /**
  * Create a new content object for the given tag.
  * Returns NS_ERROR_NOT_AVAILABLE for an unknown/unhandled tag.
