@@ -40,6 +40,8 @@ class BrowserFrame :
 protected:
     DECLARE_EVENT_TABLE()
 
+    nsAutoString mContextLinkUrl;
+
     void OnBrowserUrl(wxCommandEvent &event);
     void OnBrowserGo(wxCommandEvent &event);
     void OnBrowserBack(wxCommandEvent &event);
@@ -47,6 +49,7 @@ protected:
     void OnBrowserReload(wxCommandEvent &event);
     void OnBrowserStop(wxCommandEvent &event);
     void OnBrowserHome(wxCommandEvent &event);
+    void OnBrowserOpenLinkInNewWindow(wxCommandEvent & event);
     void OnUpdateBrowserBack(wxUpdateUIEvent &event);
     void OnUpdateBrowserForward(wxUpdateUIEvent &event);
     void OnUpdateBrowserStop(wxUpdateUIEvent &event);
@@ -54,6 +57,9 @@ protected:
     void OnFilePrint(wxCommandEvent &event);
 public :
     BrowserFrame(wxWindow* aParent);
+
+    nsresult LoadURI(const char *aURI);
+    nsresult LoadURI(const wchar_t *aURI);
 
     // GeckoContainerUI overrides
     virtual nsresult CreateBrowserWindow(PRUint32 aChromeFlags,

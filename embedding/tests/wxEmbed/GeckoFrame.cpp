@@ -68,7 +68,6 @@ bool GeckoFrame::SetupGeckoWindow(GeckoWindow *aGeckoWindow, GeckoContainerUI *a
     PRUint32 aChromeFlags = nsIWebBrowserChrome::CHROME_ALL;
     geckoContainer->SetChromeFlags(aChromeFlags);
     geckoContainer->SetParent(nsnull);
-
     wxSize size = mGeckoWnd->GetClientSize();
 
     // Insert the browser

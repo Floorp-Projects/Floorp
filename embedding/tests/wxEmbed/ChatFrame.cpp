@@ -31,6 +31,8 @@
 
 #include "global.h"
 
+#include "wx/strconv.h"
+
 #include "nsIWebNavigation.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
@@ -68,10 +70,11 @@ void ChatFrame::OnChat(wxCommandEvent &event)
     wxTextCtrl *chatCtrl = (wxTextCtrl *) FindWindowById(XRCID("chat"), this);
     if (chatCtrl)
     {
-        wxString txt = chatCtrl->GetValue();
-        nsAutoString htmlFragment(NS_LITERAL_STRING("<p>Foo: "));
-        htmlFragment.AppendWithConversion(txt.c_str());
-        htmlDoc->Writeln(htmlFragment);
+        wxString html("<p>Foo: ");
+        html += chatCtrl->GetValue();
+        wxMBConv conv;
+        nsAutoString htmlU(conv.cWX2WC(html));
+        htmlDoc->Writeln(htmlU);
         chatCtrl->SetValue("");
     }
 }

@@ -33,6 +33,7 @@
 #include "GeckoContainer.h"
 
 #include "nsIWebBrowserChrome.h"
+#include "nsString.h"
 
 GeckoWindowCreator::GeckoWindowCreator()
 {
@@ -62,7 +63,7 @@ GeckoWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,
 
     nsCAutoString role;
     geckoContainer->GetRole(role);
-    if (role.EqualsIgnoreCase("browser"))
+    if (stricmp(role.get(), "browser") == 0)
     {
         GeckoContainerUI *pUI = NULL;
         geckoContainer->GetContainerUI(&pUI);

@@ -34,6 +34,7 @@
 #include "nsIProfile.h"
 #include "nsIWindowWatcher.h"
 #include "nsMemory.h"
+#include "nsEmbedString.h"
 
 #include "BrowserFrame.h"
 #include "MailFrame.h"
@@ -135,7 +136,7 @@ bool EmbedApp::OnInit()
     // Create the main frame window
     BrowserFrame* frame = new BrowserFrame(NULL);
     frame->Show(TRUE);
-
+    // frame->OnBrowserHome(wxCommandEvent());
 
     SetTopWindow(frame);
 
@@ -153,6 +154,7 @@ int EmbedApp::OnExit()
         profileService->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST); 
     }
     NS_TermEmbedding();
+
     return 0;
 }
 
