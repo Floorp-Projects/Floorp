@@ -124,6 +124,7 @@ static NS_DEFINE_CID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kCDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kCFontMetricsCID, NS_FONT_METRICS_CID);
 static NS_DEFINE_CID(kCFontEnumeratorCID, NS_FONT_ENUMERATOR_CID);
+static NS_DEFINE_CID(kCFontListCID, NS_FONTLIST_CID);
 static NS_DEFINE_CID(kCImageCID, NS_IMAGE_CID);
 static NS_DEFINE_CID(kCRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kCScriptableRegionCID, NS_SCRIPTABLE_REGION_CID);
@@ -223,6 +224,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCDeviceContextCID, "Device Context", "@mozilla.org/gfx/devicecontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontMetricsCID, "Font Metrics", "@mozilla.org/gfx/fontmetrics;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontEnumeratorCID, "Font Enumerator", "@mozilla.org/gfx/fontenumerator;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCFontListCID, "Font List", "@mozilla.org/gfx/fontlist;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCImageCID, "Image", "@mozilla.org/gfx/image;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCRegionCID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCScriptableRegionCID, "Region", "@mozilla.org/gfx/region;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
