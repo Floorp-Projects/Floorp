@@ -39,57 +39,22 @@
 
 #include "primpl.h"
 
-ULONG _os2_ticksPerSec = -1;
-PRIntn _os2_bitShift = 0;
-PRInt32 _os2_highMask = 0;
-
-
    
 void
 _PR_MD_INTERVAL_INIT()
 {
-   if (DosTmrQueryFreq(&_os2_ticksPerSec) == NO_ERROR)
-   {
-      while(_os2_ticksPerSec > PR_INTERVAL_MAX) {
-          _os2_ticksPerSec >>= 1;
-          _os2_bitShift++;
-          _os2_highMask = (_os2_highMask << 1)+1;
-      }
-   }
-   else
-      _os2_ticksPerSec = -1;
-
-   PR_ASSERT(_os2_ticksPerSec > PR_INTERVAL_MIN && _os2_ticksPerSec < PR_INTERVAL_MAX);
 }
 
 PRIntervalTime
 _PR_MD_GET_INTERVAL()
 {
-   QWORD count;
-
-   /* Sadly; nspr requires the interval to range from 1000 ticks per second
-    * to only 100000 ticks per second; Counter is too high
-    * resolution...
-    */
-    if (DosTmrQueryTime(&count) == NO_ERROR) {
-        PRInt32 top = count.ulHi & _os2_highMask;
-        top = top << (32 - _os2_bitShift);
-        count.ulLo = count.ulLo >> _os2_bitShift;   
-        count.ulHi = count.ulLo + top; 
-        return (PRUint32)count.ulLo;
-    }
-    else{
-       ULONG msCount = PR_FAILURE;
-       DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &msCount, sizeof(msCount));
-       return msCount;
-    }
+    ULONG msCount = PR_FAILURE;
+    DosQuerySysInfo(QSV_MS_COUNT, QSV_MS_COUNT, &msCount, sizeof(msCount));
+    return msCount;
 }
 
 PRIntervalTime
 _PR_MD_INTERVAL_PER_SEC()
 {
-    if(_os2_ticksPerSec != -1)
-       return _os2_ticksPerSec;
-    else
-       return 1000;
+    return 1000;
 }
