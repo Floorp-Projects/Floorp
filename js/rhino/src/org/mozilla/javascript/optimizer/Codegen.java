@@ -1400,10 +1400,6 @@ class BodyCodegen
                 --withNesting;
                 break;
 
-              case Token.CASE:
-              case Token.DEFAULT:
-                // XXX shouldn't these be StatementNodes?
-
               case Token.SCRIPT:
               case Token.BLOCK:
               case Token.EMPTY:
@@ -2112,38 +2108,37 @@ class BodyCodegen
                             +")V");
     }
 
-    private void acquireTargetLabel(Node.Target target)
+    private int getTargetLabel(Node.Target target)
     {
         if (target.labelId == -1) {
             target.labelId = cfw.acquireLabel();
         }
+        return target.labelId;
     }
 
     private void visitTarget(Node.Target target)
     {
-        acquireTargetLabel(target);
-        cfw.markLabel(target.labelId);
+        int label = getTargetLabel(target);
+        cfw.markLabel(label);
     }
 
     private void visitGOTO(Node.Jump node, int type, Node child)
     {
         Node.Target target = node.target;
-        acquireTargetLabel(target);
-        int targetLabel = target.labelId;
         if (type == Token.IFEQ || type == Token.IFNE) {
             if (child == null) throw Codegen.badTree();
+            int targetLabel = getTargetLabel(target);
             int fallThruLabel = cfw.acquireLabel();
             if (type == Token.IFEQ)
                 generateIfJump(child, node, targetLabel, fallThruLabel);
             else
                 generateIfJump(child, node, fallThruLabel, targetLabel);
             cfw.markLabel(fallThruLabel);
-        }
-        else {
+        } else {
             if (type == Token.JSR)
-                cfw.add(ByteCode.JSR, targetLabel);
+                addGoto(target, ByteCode.JSR);
             else
-                cfw.add(ByteCode.GOTO, targetLabel);
+                addGoto(target, ByteCode.GOTO);
         }
     }
 
@@ -2883,41 +2878,32 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.add(ByteCode.ATHROW);
     }
 
-    private void visitSwitch(Node.Jump node, Node child)
+    private void visitSwitch(Node.Jump switchNode, Node child)
     {
-        generateExpression(child, node);
+        // See comments in IRFactory.createSwitch() for description
+        // of SWITCH node
+
+        generateExpression(child, switchNode);
         // save selector value
         short selector = getNewWordLocal();
         cfw.addAStore(selector);
 
-        ObjArray cases = (ObjArray) node.getProp(Node.CASES_PROP);
-        for (int i=0; i < cases.size(); i++) {
-            Node thisCase = (Node) cases.get(i);
-            Node first = thisCase.getFirstChild();
-            generateExpression(first, thisCase);
+        for (Node.Jump caseNode = (Node.Jump)child.getNext();
+             caseNode != null;
+             caseNode = (Node.Jump)caseNode.getNext())
+        {
+            if (caseNode.getType() != Token.CASE)
+                throw Codegen.badTree();
+            Node test = caseNode.getFirstChild();
+            generateExpression(test, caseNode);
             cfw.addALoad(selector);
             addScriptRuntimeInvoke("shallowEq",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
                                    +")Z");
-            Node.Target target = new Node.Target();
-            thisCase.replaceChild(first, target);
-            acquireTargetLabel(target);
-            cfw.add(ByteCode.IFNE, target.labelId);
+            addGoto(caseNode.target, ByteCode.IFNE);
         }
         releaseWordLocal(selector);
-
-        Node defaultNode = (Node) node.getProp(Node.DEFAULT_PROP);
-        if (defaultNode != null) {
-            Node.Target defaultTarget = new Node.Target();
-            defaultNode.getFirstChild().addChildToFront(defaultTarget);
-            acquireTargetLabel(defaultTarget);
-            cfw.add(ByteCode.GOTO, defaultTarget.labelId);
-        }
-
-        Node.Target breakTarget = node.target;
-        acquireTargetLabel(breakTarget);
-        cfw.add(ByteCode.GOTO, breakTarget.labelId);
     }
 
     private void visitTypeofname(Node node)
@@ -3882,6 +3868,12 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.addDLoad(dcp_register + 1);
         addDoubleWrap();
         cfw.markLabel(beyond);
+    }
+
+    private void addGoto(Node.Target target, byte jumpcode)
+    {
+        int targetLabel = getTargetLabel(target);
+        cfw.add(jumpcode, targetLabel);
     }
 
     private void addObjectToDouble()

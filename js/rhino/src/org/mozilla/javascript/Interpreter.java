@@ -496,11 +496,6 @@ public class Interpreter
             break;
           }
 
-          case Token.CASE:
-            // Skip case condition
-            child = child.getNext();
-            // fallthrough
-          case Token.DEFAULT:
           case Token.SCRIPT:
           case Token.LABEL:
           case Token.LOOP:
@@ -1039,43 +1034,32 @@ public class Interpreter
 
     private void visitSwitch(Node.Jump switchNode)
     {
-        Node child = switchNode.getFirstChild();
+        // See comments in IRFactory.createSwitch() for description
+        // of SWITCH node
 
         updateLineNumber(switchNode);
-        visitExpression(child);
 
-        ObjArray cases = (ObjArray) switchNode.getProp(Node.CASES_PROP);
-        for (int i = 0; i < cases.size(); i++) {
-            Node thisCase = (Node)cases.get(i);
-            Node test = thisCase.getFirstChild();
-            // the case expression is the firstmost child
-            // the rest will be generated when the case
-            // statements are encountered as siblings of
-            // the switch statement.
+        Node child = switchNode.getFirstChild();
+        visitExpression(child);
+        for (Node.Jump caseNode = (Node.Jump)child.getNext();
+             caseNode != null;
+             caseNode = (Node.Jump)caseNode.getNext())
+        {
+            if (caseNode.getType() != Token.CASE)
+                throw badTree(caseNode);
+            Node test = caseNode.getFirstChild();
             addIcode(Icode_DUP);
             stackChange(1);
             visitExpression(test);
             addToken(Token.SHEQ);
             stackChange(-1);
-            Node.Target target = new Node.Target();
-            thisCase.addChildAfter(target, test);
             // If true, Icode_IFEQ_POP will jump and remove case value
             // from stack
-            addGoto(target, Icode_IFEQ_POP);
+            addGoto(caseNode.target, Icode_IFEQ_POP);
             stackChange(-1);
         }
         addIcode(Icode_POP);
         stackChange(-1);
-
-        Node defaultNode = (Node) switchNode.getProp(Node.DEFAULT_PROP);
-        if (defaultNode != null) {
-            Node.Target defaultTarget = new Node.Target();
-            defaultNode.getFirstChild().addChildToFront(defaultTarget);
-            addGoto(defaultTarget, Token.GOTO);
-        }
-
-        Node.Target breakTarget = switchNode.target;
-        addGoto(breakTarget, Token.GOTO);
     }
 
     private void visitCall(Node node)

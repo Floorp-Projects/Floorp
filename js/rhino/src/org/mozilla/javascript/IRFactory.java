@@ -86,21 +86,94 @@ final class IRFactory
 
     Node createSwitch(Node expr, int lineno)
     {
-        return new Node.Jump(Token.SWITCH, expr, lineno);
+        //
+        // The switch will be rewritten from:
+        //
+        // switch (expr) {
+        //   case test1: statements1;
+        //   ...
+        //   default: statementsDefault;
+        //   ...
+        //   case testN: statementsN;
+        // }
+        //
+        // to:
+        //
+        // {
+        //     switch (expr) {
+        //       case test1: goto label1;
+        //       ...
+        //       case testN: goto labelN;
+        //     }
+        //     goto labelDefault;
+        //   label1:
+        //     statements1;
+        //   ...
+        //   labelDefault:
+        //     statementsDefault;
+        //   ...
+        //   labelN:
+        //     statementsN;
+        //   breakLabel:
+        // }
+        //
+        // where inside switch each "break;" without label will be replaced
+        // by "goto breakLabel".
+        //
+        // If the original switch does not have the default label, then
+        // the transformed code would contain after the switch instead of
+        //     goto labelDefault;
+        // the following goto:
+        //     goto breakLabel;
+        //
+
+        Node.Jump switchNode = new Node.Jump(Token.SWITCH, expr, lineno);
+        Node block = new Node(Token.BLOCK, switchNode);
+        return block;
     }
 
-    void addSwitchCase(Node switchNode, Node expression, Node statements)
+    /**
+     * If caseExpression argument is null it indicate default label.
+     */
+    void addSwitchCase(Node switchBlock, Node caseExpression, Node statements)
     {
+        if (switchBlock.getType() != Token.BLOCK) throw Kit.codeBug();
+        Node.Jump switchNode = (Node.Jump)switchBlock.getFirstChild();
         if (switchNode.getType() != Token.SWITCH) throw Kit.codeBug();
-        Node caseNode = new Node(Token.CASE, expression, statements);
-        switchNode.addChildToBack(caseNode);
+
+        Node.Target gotoTarget = new Node.Target();
+        if (caseExpression != null) {
+            Node.Jump caseNode = new Node.Jump(Token.CASE, caseExpression);
+            caseNode.target = gotoTarget;
+            switchNode.addChildToBack(caseNode);
+        } else {
+            switchNode.setDefault(gotoTarget);
+        }
+        switchBlock.addChildToBack(gotoTarget);
+        switchBlock.addChildToBack(statements);
     }
 
-    void addSwitchDefault(Node switchNode, Node statements)
+    void closeSwitch(Node switchBlock)
     {
+        if (switchBlock.getType() != Token.BLOCK) throw Kit.codeBug();
+        Node.Jump switchNode = (Node.Jump)switchBlock.getFirstChild();
         if (switchNode.getType() != Token.SWITCH) throw Kit.codeBug();
-        Node defaultNode = new Node(Token.DEFAULT, statements);
-        switchNode.addChildToBack(defaultNode);
+
+        Node.Target switchBreakTarget = new Node.Target();
+        // switchNode.target is only used by NodeTransformer
+        // to detect switch end
+        switchNode.target = switchBreakTarget;
+
+        Node.Jump defaultGoto = new Node.Jump(Token.GOTO);
+        Node.Target defaultTarget = switchNode.getDefault();
+        if (defaultTarget != null) {
+            defaultGoto.target = defaultTarget;
+        } else {
+            defaultGoto.target = switchBreakTarget;
+        }
+
+        switchBlock.addChildAfter(defaultGoto, switchNode);
+        switchBlock.addChildToBack(switchBreakTarget);
     }
 
     Node createVariables(int lineno)

@@ -554,13 +554,11 @@ public class Parser
                     nf.addChildToBack(block, statement());
                 }
 
-                if (caseExpression != null) {
-                    nf.addSwitchCase(pn, caseExpression, block);
-                } else {
-                    nf.addSwitchDefault(pn, block);
-                }
+                // caseExpression == null => add default lable
+                nf.addSwitchCase(pn, caseExpression, block);
             }
             decompiler.addEOL(Token.RC);
+            nf.closeSwitch(pn);
             break;
         }
 

@@ -51,10 +51,8 @@ public class Node
         LOCAL_PROP         =  2,
         LOCAL_BLOCK_PROP   =  3,
         REGEXP_PROP        =  4,
-        CASES_PROP         =  5,
-        DEFAULT_PROP       =  6,
-        CASEARRAY_PROP     =  7,
-        SPECIAL_PROP_PROP  =  8,
+        CASEARRAY_PROP     =  5,
+        SPECIAL_PROP_PROP  =  6,
     /*
         the following properties are defined and manipulated by the
         optimizer -
@@ -67,15 +65,15 @@ public class Node
                           matches.
     */
 
-        TARGETBLOCK_PROP   =  9,
-        VARIABLE_PROP      = 10,
-        ISNUMBER_PROP      = 11,
-        DIRECTCALL_PROP    = 12,
-        SPECIALCALL_PROP   = 13,
-        SKIP_INDEXES_PROP  = 14, // array of skipped indexes of array literal
-        OBJECT_IDS_PROP    = 15, // array of properties for object literal
-        INCRDECR_PROP      = 16, // pre or post type of increment/decerement
-        LAST_PROP          = 16;
+        TARGETBLOCK_PROP   =  7,
+        VARIABLE_PROP      =  8,
+        ISNUMBER_PROP      =  9,
+        DIRECTCALL_PROP    = 10,
+        SPECIALCALL_PROP   = 11,
+        SKIP_INDEXES_PROP  = 12, // array of skipped indexes of array literal
+        OBJECT_IDS_PROP    = 13, // array of properties for object literal
+        INCRDECR_PROP      = 14, // pre or post type of increment/decerement
+        LAST_PROP          = 14;
 
     // values of ISNUMBER_PROP to specify
     // which of the children are Number types
@@ -156,6 +154,20 @@ public class Node
             if (label == null) Kit.codeBug();
             if (this.label != null) Kit.codeBug(); //only once
             this.label = label;
+        }
+
+        public final Target getDefault()
+        {
+            if (!(type == Token.SWITCH)) Kit.codeBug();
+            return target2;
+        }
+
+        public final void setDefault(Target defaultTarget)
+        {
+            if (!(type == Token.SWITCH)) Kit.codeBug();
+            if (defaultTarget == null) Kit.codeBug();
+            if (target2 != null) Kit.codeBug(); //only once
+            target2 = defaultTarget;
         }
 
         public final Target getFinally()
@@ -419,8 +431,6 @@ public class Node
                 case LOCAL_PROP:         return "local";
                 case LOCAL_BLOCK_PROP:   return "local_block";
                 case REGEXP_PROP:        return "regexp";
-                case CASES_PROP:         return "cases";
-                case DEFAULT_PROP:       return "default";
                 case CASEARRAY_PROP:     return "casearray";
                 case SPECIAL_PROP_PROP:  return "special_prop";
 

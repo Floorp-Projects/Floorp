@@ -144,37 +144,10 @@ public class NodeTransformer
 
               case Token.SWITCH:
               {
-                Node.Target breakTarget = new Node.Target();
-                parent.addChildAfter(breakTarget, node);
-
-                // make all children siblings except for selector
-                Node sib = node;
-                Node child = node.getFirstChild().next;
-                while (child != null) {
-                    Node next = child.next;
-                    node.removeChild(child);
-                    parent.addChildAfter(child, sib);
-                    sib = child;
-                    child = next;
-                }
-
-                ((Node.Jump)node).target = breakTarget;
-                loops.push(node);
+                Node.Jump switchNode = (Node.Jump)node;
+                Node breakTarget = switchNode.target;
+                loops.push(switchNode);
                 loopEnds.push(breakTarget);
-                node.putProp(Node.CASES_PROP, new ObjArray());
-                break;
-              }
-
-              case Token.DEFAULT:
-              case Token.CASE:
-              {
-                Node sw = (Node) loops.peek();
-                if (type == Token.CASE) {
-                    ObjArray cases = (ObjArray) sw.getProp(Node.CASES_PROP);
-                    cases.add(node);
-                } else {
-                    sw.putProp(Node.DEFAULT_PROP, node);
-                }
                 break;
               }
 
