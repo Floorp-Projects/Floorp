@@ -453,6 +453,7 @@ nsGenericHTMLElement::ParseAttributeString(const nsString& aStr,
                                            nsIAtom*& aName,
                                            PRInt32& aNameSpaceID)
 {
+  // XXX need to validate/strip namespace prefix
   nsAutoString  upper;
   aStr.ToUpperCase(upper);  
   aName = NS_NewAtom(upper);
@@ -477,10 +478,12 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
 {
   nsresult  result = NS_OK;
   NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
+               (kNameSpaceID_None == aNameSpaceID) || 
                (kNameSpaceID_Unknown == aNameSpaceID), 
                "html content only holds HTML attributes");
 
   if ((kNameSpaceID_HTML != aNameSpaceID) && 
+      (kNameSpaceID_None != aNameSpaceID) &&
       (kNameSpaceID_Unknown != aNameSpaceID)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -691,10 +694,12 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
   nsresult result = NS_OK;
 
   NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
+               (kNameSpaceID_None == aNameSpaceID) || 
                (kNameSpaceID_Unknown == aNameSpaceID), 
                "html content only holds HTML attributes");
 
   if ((kNameSpaceID_HTML != aNameSpaceID) && 
+      (kNameSpaceID_None != aNameSpaceID) &&
       (kNameSpaceID_Unknown != aNameSpaceID)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
@@ -744,10 +749,12 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                                    nsString &aResult) const
 {
   NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
+               (kNameSpaceID_HTML == aNameSpaceID) || 
                (kNameSpaceID_Unknown == aNameSpaceID), 
                "html content only holds HTML attributes");
 
   if ((kNameSpaceID_HTML != aNameSpaceID) && 
+      (kNameSpaceID_None != aNameSpaceID) &&
       (kNameSpaceID_Unknown != aNameSpaceID)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
