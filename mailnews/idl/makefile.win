@@ -17,8 +17,6 @@
 
 DEPTH=..\..
 
-MODULE=mailnews
-
 EXPORTS = MailNewsTypes.h \
 		rosetta_mailnews.h\
         $(NULL)
