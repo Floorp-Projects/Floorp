@@ -92,10 +92,6 @@ public class FunctionNode extends ScriptOrFnNode {
         itsFunctionType = functionType;
     }
 
-    public int getParameterCount() {
-        return getVariableTable().getParameterCount();
-    }
-
     protected void finishParsing(IRFactory irFactory) {
         super.finishParsing(irFactory);
         int functionCount = getFunctionCount();

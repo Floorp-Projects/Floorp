@@ -48,12 +48,11 @@ class OptFunctionNode extends FunctionNode {
 
     protected void finishParsing(IRFactory irFactory) {
         super.finishParsing(irFactory);
-        VariableTable vars = getVariableTable();
-        int N = vars.size();
+        int N = getParameterAndVarCount();
         int parameterCount = getParameterCount();
         optVars = new OptLocalVariable[N];
         for (int i = 0; i != N; ++i) {
-            String name = vars.getVariable(i);
+            String name = getParameterOrVarName(i);
             optVars[i] = new OptLocalVariable(name, i < parameterCount);
         }
     }
@@ -130,7 +129,7 @@ class OptFunctionNode extends FunctionNode {
     }
 
     OptLocalVariable getVar(String name) {
-        int index = getVariableTable().getOrdinal(name);
+        int index = getParameterOrVarIndex(name);
         if (index < 0) { return null; }
         return optVars[index];
     }

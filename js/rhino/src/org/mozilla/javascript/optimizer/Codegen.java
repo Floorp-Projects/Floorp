@@ -413,7 +413,6 @@ public class Codegen extends Interpreter {
         if (inFunction) {
             fnCurrent = (OptFunctionNode)scriptOrFn;
             inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
-            vars = fnCurrent.getVariableTable();
             this.name = fnCurrent.getClassName();
             classFile = new ClassFileWriter(name, superClassName, itsSourceFile);
             String name = fnCurrent.getFunctionName();
@@ -430,7 +429,7 @@ public class Codegen extends Interpreter {
                 addByteCode(ByteCode.ALOAD_1);
                 addByteCode(ByteCode.ALOAD_2);
                 addByteCode(ByteCode.ALOAD_3);
-                for (int i = 0; i < vars.getParameterCount(); i++) {
+                for (int i = 0; i < scriptOrFn.getParameterCount(); i++) {
                     push(i);
                     addByteCode(ByteCode.ALOAD, 4);
                     addByteCode(ByteCode.ARRAYLENGTH);
@@ -483,7 +482,7 @@ public class Codegen extends Interpreter {
                         markLabel(isObjectLabel);
                     }
                 }
-                generatePrologue(cx, true, vars.getParameterCount());
+                generatePrologue(cx, true, scriptOrFn.getParameterCount());
             } else {
                 startNewMethod("call",
                                "(Lorg/mozilla/javascript/Context;" +
@@ -498,7 +497,6 @@ public class Codegen extends Interpreter {
             // better be a script
             if (scriptOrFn.getType() != TokenStream.SCRIPT)
                 badTree();
-            vars = scriptOrFn.getVariableTable();
             boolean isPrimary = nameHelper.getTargetExtends() == null &&
                                 nameHelper.getTargetImplements() == null;
             this.name = getScriptClassName(null, isPrimary);
@@ -1118,7 +1116,6 @@ public class Codegen extends Interpreter {
     {
         trivialInit = true;
         boolean inCtor = false;
-        VariableTable vars = scriptOrFn.getVariableTable();
         if (methodName.equals("<init>")) {
             inCtor = true;
             setNonTrivialInit(methodName);
@@ -1148,27 +1145,25 @@ public class Codegen extends Interpreter {
                           "functionName", "Ljava/lang/String;");
         }
 
-        if (vars != null) {
-            int N = vars.size();
-            if (N != 0) {
-                setNonTrivialInit(methodName);
-                push(N);
-                addByteCode(ByteCode.ANEWARRAY, "java/lang/String");
-                for (int i = 0; i != N; i++) {
-                    addByteCode(ByteCode.DUP);
-                    push(i);
-                    push(vars.getVariable(i));
-                    addByteCode(ByteCode.AASTORE);
-                }
-                addByteCode(ByteCode.ALOAD_0);
-                addByteCode(ByteCode.SWAP);
-                classFile.add(ByteCode.PUTFIELD,
-                              "org/mozilla/javascript/NativeFunction",
-                              "argNames", "[Ljava/lang/String;");
+        int N = scriptOrFn.getParameterAndVarCount();
+        if (N != 0) {
+            setNonTrivialInit(methodName);
+            push(N);
+            addByteCode(ByteCode.ANEWARRAY, "java/lang/String");
+            for (int i = 0; i != N; i++) {
+                addByteCode(ByteCode.DUP);
+                push(i);
+                push(scriptOrFn.getParameterOrVarName(i));
+                addByteCode(ByteCode.AASTORE);
             }
+            addByteCode(ByteCode.ALOAD_0);
+            addByteCode(ByteCode.SWAP);
+            classFile.add(ByteCode.PUTFIELD,
+                          "org/mozilla/javascript/NativeFunction",
+                          "argNames", "[Ljava/lang/String;");
         }
 
-        int parmCount = vars == null ? 0 : vars.getParameterCount();
+        int parmCount = scriptOrFn.getParameterCount();
         if (parmCount != 0) {
             setNonTrivialInit(methodName);
             addByteCode(ByteCode.ALOAD_0);
@@ -1378,7 +1373,7 @@ public class Codegen extends Interpreter {
                         !((OptFunctionNode)scriptOrFn).requiresActivation();
         if (hasVarsInRegs) {
             // No need to create activation. Pad arguments if need be.
-            int parmCount = vars.getParameterCount();
+            int parmCount = scriptOrFn.getParameterCount();
             if (inFunction && parmCount > 0 && directParameterCount < 0) {
                 // Set up args array
                 // check length of arguments, pad if need be
@@ -3771,7 +3766,6 @@ public class Codegen extends Interpreter {
     private boolean itsForcedObjectParameters;
     private boolean trivialInit;
     private short itsLocalAllocationBase;
-    private VariableTable vars;
     private OptLocalVariable[] debugVars;
     private int epilogueLabel;
     private int optLevel;

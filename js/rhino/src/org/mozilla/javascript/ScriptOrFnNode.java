@@ -41,11 +41,6 @@ public class ScriptOrFnNode extends Node {
         super(nodeType);
     }
 
-    public final VariableTable getVariableTable() {
-        if (variableTable == null) { variableTable = new VariableTable(); }
-        return variableTable;
-    }
-
     public final String getSourceName() { return sourceName; }
 
     public final void setSourceName(String sourceName) {
@@ -125,6 +120,30 @@ public class ScriptOrFnNode extends Node {
     public final boolean hasParameterOrVar(String name) {
         if (variableTable == null) { return false; }
         return variableTable.hasVariable(name);
+    }
+
+    public final int getParameterOrVarIndex(String name) {
+        if (variableTable == null) { return -1; }
+        return variableTable.getOrdinal(name);
+    }
+
+    public final String getParameterOrVarName(int index) {
+        return variableTable.getVariable(index);
+    }
+
+    public final int getParameterCount() {
+        if (variableTable == null) { return 0; }
+        return variableTable.getParameterCount();
+    }
+
+    public final int getParameterAndVarCount() {
+        if (variableTable == null) { return 0; }
+        return variableTable.size();
+    }
+
+    public final String[] getParameterAndVarNames() {
+        if (variableTable == null) { return new String[0]; }
+        return variableTable.getAllVariables();
     }
 
     public final void addParameter(String name) {

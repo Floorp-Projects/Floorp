@@ -103,7 +103,6 @@ public class Interpreter {
 
         generateRegExpLiterals(cx, scope);
 
-        itsVariableTable = scriptOrFn.getVariableTable();
         generateICodeFromTree(scriptOrFn);
         if (Context.printICode) dumpICode(itsData);
 
@@ -129,7 +128,6 @@ public class Interpreter {
 
         itsData.itsNeedsActivation = theFunction.requiresActivation();
 
-        itsVariableTable = theFunction.getVariableTable();
         generateICodeFromTree(theFunction.getLastChild());
 
         itsData.itsName = theFunction.getFunctionName();
@@ -220,7 +218,7 @@ public class Interpreter {
             itsData.itsDoubleTable = tmp;
         }
 
-        itsData.itsMaxVars = itsVariableTable.size();
+        itsData.itsMaxVars = scriptOrFn.getParameterAndVarCount();
         // itsMaxFrameArray: interpret method needs this amount for its
         // stack and sDbl arrays
         itsData.itsMaxFrameArray = itsData.itsMaxVars
@@ -228,8 +226,8 @@ public class Interpreter {
                                    + itsData.itsMaxTryDepth
                                    + itsData.itsMaxStack;
 
-        itsData.argNames = itsVariableTable.getAllVariables();
-        itsData.argCount = itsVariableTable.getParameterCount();
+        itsData.argNames = scriptOrFn.getParameterAndVarNames();
+        itsData.argCount = scriptOrFn.getParameterCount();
     }
 
     private int updateLineNumber(Node node, int iCodeTop) {
@@ -676,7 +674,7 @@ public class Interpreter {
                 // use typeofname if an activation frame exists
                 // since the vars all exist there instead of in jregs
                 if (itsInFunctionFlag && !itsData.itsNeedsActivation)
-                    index = itsVariableTable.getOrdinal(name);
+                    index = scriptOrFn.getParameterOrVarIndex(name);
                 if (index == -1) {
                     iCodeTop = addByte(TokenStream.TYPEOFNAME, iCodeTop);
                     iCodeTop = addString(name, iCodeTop);
@@ -726,7 +724,7 @@ public class Interpreter {
                                                iCodeTop);
                             itsStackDepth--;
                         } else {
-                            int i = itsVariableTable.getOrdinal(name);
+                            int i = scriptOrFn.getParameterOrVarIndex(name);
                             iCodeTop = addByte(type == TokenStream.INC
                                                ? TokenStream.VARINC
                                                : TokenStream.VARDEC,
@@ -932,7 +930,7 @@ public class Interpreter {
                     iCodeTop = addByte(TokenStream.GETPROP, iCodeTop);
                     itsStackDepth--;
                 } else {
-                    int index = itsVariableTable.getOrdinal(name);
+                    int index = scriptOrFn.getParameterOrVarIndex(name);
                     iCodeTop = addByte(TokenStream.GETVAR, iCodeTop);
                     iCodeTop = addByte(index, iCodeTop);
                     itsStackDepth++;
@@ -951,7 +949,7 @@ public class Interpreter {
                     String name = child.getString();
                     child = child.getNext();
                     iCodeTop = generateICode(child, iCodeTop);
-                    int index = itsVariableTable.getOrdinal(name);
+                    int index = scriptOrFn.getParameterOrVarIndex(name);
                     iCodeTop = addByte(TokenStream.SETVAR, iCodeTop);
                     iCodeTop = addByte(index, iCodeTop);
                 }
@@ -2886,7 +2884,6 @@ public class Interpreter {
 
     private InterpreterData itsData;
     private ScriptOrFnNode scriptOrFn;
-    private VariableTable itsVariableTable;
     private int itsTryDepth = 0;
     private int itsStackDepth = 0;
     private String itsSourceFile;

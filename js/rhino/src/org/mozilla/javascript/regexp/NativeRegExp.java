@@ -1018,8 +1018,8 @@ System.out.println();
         case '*':
         case '+':
         case '}':
-        case '?':        
-            reportError("msg.bad.quant", 
+        case '?':
+            reportError("msg.bad.quant",
                         String.valueOf(src[state.cp - 1]), state);
             return false;
         default:

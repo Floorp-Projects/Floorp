@@ -305,8 +305,7 @@ public class JavaAdapter extends ScriptableObject {
                                 ScriptableObject.getProperty(p, "length"));
                 } else if (f instanceof FunctionNode) {
                     // This is used only by optimizer/Codegen
-                    length = ((FunctionNode) f).getVariableTable()
-                                .getParameterCount();
+                    length = ((FunctionNode)f).getParameterCount();
                 } else {
                     continue;
                 }
