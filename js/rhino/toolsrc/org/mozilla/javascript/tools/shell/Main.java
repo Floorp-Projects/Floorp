@@ -218,25 +218,16 @@ public class Main
                 }
                 if (opt == -2) {
                     // Compatibility with Cocoon Rhino fork
-                    shellContextFactory.setEnableContinuations(true);
                     opt = -1;
                 } else if (!Context.isValidOptimizationLevel(opt)) {
                     usageError = args[i];
                     break goodUsage;
                 }
                 shellContextFactory.setOptimizationLevel(opt);
-                if (opt >= 0) {
-                    shellContextFactory.setEnableContinuations(false);
-                }
                 continue;
             }
             if (arg.equals("-strict")) {
                 shellContextFactory.setStrictMode(true);
-                continue;
-            }
-            if (arg.equals("-continuations")) {
-                shellContextFactory.setEnableContinuations(true);
-                shellContextFactory.setOptimizationLevel(-1);
                 continue;
             }
             if (arg.equals("-e")) {

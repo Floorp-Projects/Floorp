@@ -40,7 +40,6 @@ import org.mozilla.javascript.tools.ToolErrorReporter;
 
 public class ShellContextFactory extends ContextFactory
 {
-    private boolean enableContinuations;
     private boolean strictMode;
     private int languageVersion;
     private int optimizationLevel;
@@ -51,8 +50,6 @@ public class ShellContextFactory extends ContextFactory
         switch (featureIndex) {
           case Context.FEATURE_STRICT_MODE:
             return strictMode;
-          case Context.FEATURE_INTERPRETER_CONTINUATIONS:
-            return enableContinuations;
         }
         return super.hasFeature(cx, featureIndex);
     }
@@ -65,12 +62,6 @@ public class ShellContextFactory extends ContextFactory
             cx.setErrorReporter(errorReporter);
         }
         super.onContextCreated(cx);
-    }
-
-    public void setEnableContinuations(boolean flag)
-    {
-        checkNotSealed();
-        this.enableContinuations = flag;
     }
 
     public void setStrictMode(boolean flag)

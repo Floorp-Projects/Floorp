@@ -69,7 +69,7 @@ See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=257128">Bugzilla 257128
 
 <h4>Experimental support for continuations in the interpreter</h4>
 <p>
-The interpreter mode in Rhino contains an experimental support for continuations. It is based on the original implementation of Christopher Oliver and ideas from <a href="http://sisc.sourceforge.net/">SISC</a> project. To enable the continuation support in Java application please refer to the following <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=258844#c8">comment</a> in <a href="http://bugzilla.mozilla.org/">Bugzilla</a>. To use continuations with <a href="shell.html">Rhino shell</a> pass <tt>-continuations</tt> flag when invoking the shell.
+The interpreter mode in Rhino contains an experimental support for continuations. It is based on the original implementation of Christopher Oliver and ideas from <a href="http://sisc.sourceforge.net/">SISC</a> project. To enable the continuation support make sure that the interpreter mode is selected when you use Rhino through <a href="apidocs/org/mozilla/javascript/Context.html#setOptimizationLevel(int)">setting</a> the optimization level to -1 or if you use <a href="shell.html">shell</a> by passing <tt>-opt -1</tt> to the shell command line.
 </p>
 <p> 
 Please note that the details of implementation and Java and JavaScript API for continuations may change in future in incompatible way.

@@ -231,22 +231,6 @@ public class Context
     public static final int FEATURE_DYNAMIC_SCOPE = 7;
 
     /**
-     * Control if experimental support for the continuations in the
-     * interpreter is enabled.
-     * If Rhino embedding enables this experimental features, then
-     * <tt>Continuation</tt> object will be available to scripts.
-     * When used with  pure interpretation mode (optimizatio level is -1)
-     * <tt>Continuation</tt>it allows to capture and restore continuations.
-     * <p> Note that currently implementation details/interfaces for
-     * continuation are subject to change and may not be backward compatible
-     * in future Rhino releases.
-     * <p>
-     * By default {@link #hasFeature(int)} returns false.
-     * @since 1.6 Release 1
-     */
-    public static final int FEATURE_INTERPRETER_CONTINUATIONS = 8;
-
-    /**
      * Control if strict mode is enabled.
      * With strict mode enabled Rhino reports runtime errors in the following
      * cases:
@@ -259,7 +243,7 @@ public class Context
      * By default {@link #hasFeature(int)} returns false.
      * @since 1.6 Release 1
      */
-    public static final int FEATURE_STRICT_MODE = 9;
+    public static final int FEATURE_STRICT_MODE = 8;
 
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
@@ -1843,6 +1827,10 @@ public class Context
     public final void setOptimizationLevel(int optimizationLevel)
     {
         if (sealed) onSealedMutation();
+        if (optimizationLevel == -2) {
+            // To be compatible with Cocoon fork
+            optimizationLevel = -1;
+        }
         checkOptimizationLevel(optimizationLevel);
         if (codegenClass == null)
             optimizationLevel = -1;
@@ -2135,7 +2123,6 @@ public class Context
      * @see #FEATURE_PARENT_PROTO_PROPRTIES
      * @see #FEATURE_E4X
      * @see #FEATURE_DYNAMIC_SCOPE
-     * @see #FEATURE_INTERPRETER_CONTINUATIONS
      * @see #FEATURE_STRICT_MODE
      */
     public boolean hasFeature(int featureIndex)

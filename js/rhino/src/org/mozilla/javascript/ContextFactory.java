@@ -266,9 +266,6 @@ public class ContextFactory
           case Context.FEATURE_DYNAMIC_SCOPE:
             return false;
 
-          case Context.FEATURE_INTERPRETER_CONTINUATIONS:
-            return false;
-
           case Context.FEATURE_STRICT_MODE:
             return false;
         }
