@@ -1171,10 +1171,17 @@ sub GroupIsActive {
 
 sub IsOpenedState {
     my ($state) = (@_);
-    if ($state =~ /^(NEW|REOPENED|ASSIGNED)$/ || $state eq $::unconfirmedstate) {
+    if (grep($_ eq $state, OpenStates())) {
         return 1;
     }
     return 0;
+}
+
+# This sub will return an array containing any status that
+# is considered an open bug.
+
+sub OpenStates {
+    return ('NEW', 'REOPENED', 'ASSIGNED', $::unconfirmedstate);
 }
 
 

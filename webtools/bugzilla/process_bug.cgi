@@ -507,7 +507,19 @@ sub ChangeStatus {
     my ($str) = (@_);
     if ($str ne $::dontchange) {
         DoComma();
-        if (IsOpenedState($str)) {
+        # Ugly, but functional.  We don't want to change Status if we are
+        # reasigning non-open bugs via the mass change form.
+        if ( ($::FORM{knob} eq 'reassign' || $::FORM{knob} eq 'reassignbycomponent') &&
+             ! defined $::FORM{id} && $str eq 'NEW' ) {
+            # If we got to here, we're dealing with a reassign from the mass
+            # change page.  We don't know (and can't easily figure out) if this
+            # bug is open or closed.  If it's closed, we don't want to change
+            # its status to NEW.  We have to put some logic into the SQL itself
+            # to handle that.
+            my @open_state = map(SqlQuote($_), OpenStates());
+            my $open_state = join(", ", @open_state);
+            $::query .= "bug_status = IF(bug_status IN($open_state), '$str', bug_status)";
+        } elsif (IsOpenedState($str)) {
             $::query .= "bug_status = IF(everconfirmed = 1, '$str', '$::unconfirmedstate')";
         } else {
             $::query .= "bug_status = '$str'";
