@@ -14,8 +14,7 @@ License.
 
 The Original Code is an OS/2 implementation of js_CompareAndSwap in assembly
 
-The Initial Developer of the Original Code is
-IBM Corporation.
+The Initial Developer of the Original Code is IBM Corporation.
 Portions created by the Initial Developer are Copyright (C) 2001
 the Initial Developer. All Rights Reserved.
 
