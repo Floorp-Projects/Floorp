@@ -2008,8 +2008,9 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
   nsCOMPtr<nsIViewObserver> obs;
   GetViewObserver(*getter_AddRefs(obs));
 
-  // if accessible event pass directly to the view observer
-  if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT || aEvent->message == NS_CONTEXTMENU_KEY) {
+  // accessibility events and key events are dispatched directly to the focused view
+  if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT || aEvent->message == NS_CONTEXTMENU_KEY
+      || NS_IS_KEY_EVENT(aEvent)) {
     nsEventStatus status = nsEventStatus_eIgnore;
     if (obs) {
        PRBool handled;
@@ -2061,11 +2062,7 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
         if (nsnull != obs) {
           obs->HandleEvent(v, aEvent, &status, i == targetViews.Count() - 1, handled);
         }
-      } else if (!NS_IS_KEY_EVENT(aEvent)) {
-        // Forward aEvent to v's ViewManager observer, but only if it
-        // isn't a key event, since that should always be dispatched
-        // to the widget that has focus.
-
+      } else {
         nsIViewObserver* vobs = nsnull;
         vVM->GetViewObserver(vobs);
         if (nsnull != vobs) {
