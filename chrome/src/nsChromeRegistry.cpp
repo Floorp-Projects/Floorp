@@ -68,6 +68,7 @@
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIPresShell.h"
+#include "nsIDocShell.h"
 #include "nsIStyleSet.h"
 #include "nsISupportsArray.h"
 #include "nsICSSLoader.h"
