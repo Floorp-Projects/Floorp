@@ -237,7 +237,7 @@ xpcom_type(TreeState *state)
         fputs("char", state->file);
         break;
       case IDLN_TYPE_WIDE_CHAR:
-        fputs("PRUint16", state->file); /* wchar_t? */
+        fputs("PRUnichar", state->file); /* wchar_t? */
         break;
       case IDLN_TYPE_WIDE_STRING:
         fputs("PRUnichar *", state->file);
@@ -434,12 +434,16 @@ xpcom_param(TreeState *state)
     IDL_tree param = state->tree;
     state->tree = IDL_PARAM_DCL(param).param_type_spec;
 
-    /* in string, wstring, explicitly marked [const], and nsid are const */
+    /* in string, wstring, nsid, and any explicitly marked [const] are const */
     if (IDL_PARAM_DCL(param).attr == IDL_PARAM_IN &&
         (IDL_NODE_TYPE(state->tree) == IDLN_TYPE_STRING ||
          IDL_NODE_TYPE(state->tree) == IDLN_TYPE_WIDE_STRING ||
          IDL_tree_property_get(IDL_OP_DCL(param).ident, "const") ||
          IDL_tree_property_get(state->tree, "nsid"))) {
+        fputs("const ", state->file);
+    }
+    else if (IDL_PARAM_DCL(param).attr == IDL_PARAM_OUT &&
+             IDL_tree_property_get(IDL_OP_DCL(param).ident, "shared")) {
         fputs("const ", state->file);
     }
 
