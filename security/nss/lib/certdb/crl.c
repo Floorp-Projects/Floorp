@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.45 2005/02/25 00:54:29 julien.pierre.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.46 2005/03/03 04:07:26 julien.pierre.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -1936,8 +1936,8 @@ static int SortCRLsByThisUpdate(const void* arg1, const void* arg2)
     SECStatus rv = SECSuccess;
     CachedCrl* a, *b;
 
-    a = (CachedCrl*) arg1;
-    b = (CachedCrl*) arg2;
+    a = *(CachedCrl**) arg1;
+    b = *(CachedCrl**) arg2;
 
     if (!a || !b)
     {
@@ -1982,8 +1982,8 @@ static int SortImperfectCRLs(const void* arg1, const void* arg2)
 {
     CachedCrl* a, *b;
 
-    a = (CachedCrl*) arg1;
-    b = (CachedCrl*) arg2;
+    a = *(CachedCrl**) arg1;
+    b = *(CachedCrl**) arg2;
 
     if (!a || !b)
     {
