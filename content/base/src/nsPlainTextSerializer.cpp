@@ -1017,7 +1017,7 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
   }
   else if (type == eHTMLTag_img) {
     /* Output (in decreasing order of preference)
-       alt, title or src (URI) attribute */
+       alt, title or nothing */
     // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
     nsAutoString desc, temp;
     if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::alt, desc))) {
@@ -1033,13 +1033,6 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
       desc.StripChars("\"");
       temp += desc;
       temp.Append(NS_LITERAL_STRING("] "));
-    }
-    else if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::src, desc))
-             && !desc.IsEmpty()) {
-      temp.Append(NS_LITERAL_STRING(" <"));
-      desc.StripChars("\"");
-      temp += desc;
-      temp.Append(NS_LITERAL_STRING("> "));
     }
     if (!temp.IsEmpty()) {
       Write(temp);
