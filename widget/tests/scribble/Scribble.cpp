@@ -70,7 +70,7 @@ static nsIImageRequest  *gImageReq = nsnull;
 #error GFXWIN_DLL must be defined
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #define TEXT_HEIGHT 30
 #define FILE_URL_PREFIX "file://"
