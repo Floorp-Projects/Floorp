@@ -74,6 +74,10 @@ class nsEditorShell :   public nsIEditorShell,
 {
   public:
 
+  	// These must map onto the button-order for nsICommonDialog::Confirm results
+    //  which are rather ugly right now (Cancel in the middle!)
+    typedef enum {eYes = 0, eCancel = 1, eNo = 2 } EConfirmResult;
+
     nsEditorShell();
     virtual ~nsEditorShell();
 
@@ -161,11 +165,14 @@ class nsEditorShell :   public nsIEditorShell,
 		NS_IMETHOD  	  PrepareDocumentForEditing(nsIURI *aUrl);
 		NS_IMETHOD      DoFind(PRBool aFindNext);
 
-    void    Alert(const nsString& aMsg, const nsString& aTitle);
+    void    Alert(const nsString& aTitle, const nsString& aMsg);
     // Bring up a Yes/No dialog WE REALLY NEED A Yes/No/Cancel dialog and would like to set our own caption as well!
-    PRBool  Confirm(const nsString& aQuestion, const nsString& aTitle);
+    PRBool  Confirm(const nsString& aTitle, const nsString& aQuestion);
     // Return value: No=0, Yes=1, Cancel=2
-    PRInt32 ConfirmWithCancel(const nsString& aQuestion, const nsString& aTitle);
+    // aYesString and aNoString are optional:
+    // if null, then "Yes" and "No" are used
+    EConfirmResult ConfirmWithCancel(const nsString& aTitle, const nsString& aQuestion,
+                                     const nsString *aYesString, const nsString *aNoString);
 
 		// this returns an AddReffed nsIScriptContext. You must relase it.
 		nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);

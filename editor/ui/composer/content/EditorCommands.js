@@ -553,7 +553,6 @@ function EditorInsertHTML()
 function EditorInsertLink()
 {
   window.openDialog("chrome://editor/content/EdLinkProps.xul","LinkDlg", "chrome,close,titlebar,modal");
-  dump("***************** Finished InsertLink dialog\n");
   contentWindow.focus();
 }
 

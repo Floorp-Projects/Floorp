@@ -85,12 +85,10 @@
 #include "nsEditorCID.h"
 
 #include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsTextServicesCID.h"
 #include "nsITextServicesDocument.h"
 #include "nsISpellChecker.h"
 #include "nsInterfaceState.h"
-#include "nsINetSupportDialogService.h"
 
 ///////////////////////////////////////
 
@@ -107,7 +105,6 @@ static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_CID(kCSpellCheckerCID,         NS_SPELLCHECKER_CID);
 static NS_DEFINE_IID(kCFileWidgetCID,           NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kCNetSupportDialogCID,     NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kDialogParamBlockCID,      NS_DialogParamBlock_CID);
 /* Define Interface IDs */
@@ -973,10 +970,9 @@ nsEditorShell::Open()
     case eHTMLTextEditorType:
     {
       // This was written for all local file getting
-      // TODO: NEED TO GET PROPER PARENT WINDOW
       PRUnichar *fileURLString = nsnull;
       nsAutoString filterType("html");
-      result = GetLocalFileURL(nsnull, filterType.GetUnicode(), &fileURLString);
+      result = GetLocalFileURL(mContentWindow, filterType.GetUnicode(), &fileURLString);
       if (NS_FAILED(result) || !fileURLString || !*fileURLString)
         return result;
 
@@ -1027,11 +1023,15 @@ nsEditorShell::CheckAndSaveDocument(PRBool *_retval)
       if (modCount > 0)
       {
         // Ask user if they want to save current changes
-        //nsString saveFileQuestion = GetString("SaveFilePrompt");
-        // TODO: THIS DIALOG SHOULD HAVE A CANCEL BUTTON AS WELL
-        if (Confirm(GetString("SaveFilePrompt"),GetString("SaveDocument")))
+        EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), GetString("SaveFilePrompt"),
+                                                  &GetString("Save"), &GetString("DontSave"));
+        if (result == eCancel)
+        {
+          *_retval = PR_FALSE;
+        } else if (result == eYes)
         {
           // Either save to existing file or prompt for name (as for SaveAs)
+          // We don't continue if we failed to save file (_retval is set to FALSE)
           rv = SaveDocument(PR_FALSE, PR_FALSE, _retval);
         }
       }
@@ -1080,7 +1080,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             {
               if (title->Length() == 0)
               {
-                Alert(GetString("NeedDocTitle"),GetString("DocumentTitle"));
+                Alert(GetString("DocumentTitle"), GetString("NeedDocTitle"));
                 // TODO: Popup a simple dialog and set the title
                 // Note that this involves inserting a <title> tag 
                 //  with a text nodechild in the <head> area of the document.
@@ -1129,7 +1129,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             fileWidget->SetFilterList(2, titles, filters);
 SkipFilters:
             nsFileDlgResults dialogResult;
-            dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
+            // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
+            dialogResult = fileWidget->PutFile(/*mContentWindow*/nsnull, promptString, docFileSpec);
           	delete [] titles;
 	          delete [] filters;
 
@@ -1153,7 +1154,7 @@ SkipFilters:
         res = editor->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML);
         if (NS_FAILED(res))
         {
-          Alert(GetString("SaveFileFailed"), GetString("SaveDocument"));
+          Alert(GetString("SaveDocument"), GetString("SaveFileFailed"));
         } else {
           // File was saved successfully
           *_retval = PR_TRUE;
@@ -1241,7 +1242,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
   *_retval = nsnull;
   
   // TODO: DON'T ACCEPT NULL PARENT AFTER WIDGET IS FIXED
-  if (/*!aParent||*/ !(htmlFilter || imgFilter))
+  if (parent|| !(htmlFilter || imgFilter))
     return NS_ERROR_NOT_INITIALIZED;
 
 
@@ -1276,18 +1277,18 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
       nsAutoString titles[] = {"HTML Files"};
       nsAutoString filters[] = {"*.htm; *.html; *.shtml"};
       fileWidget->SetFilterList(1, titles, filters);
-      dialogResult = fileWidget->GetFile(nsnull, title, fileSpec);
+      // First param should be Parent window, but type is nsIWidget*
+      // Bug is filed to change this to a more suitable window type
+      dialogResult = fileWidget->GetFile(/*parent*/ nsnull, title, fileSpec);
     } else {
       nsAutoString imgTitles[] = {"Image Files"};
       nsAutoString imgFilters[] = {"*.gif; *.jpg; *.jpeg; *.png"};
       fileWidget->SetFilterList(1, imgTitles, imgFilters);
-      dialogResult = fileWidget->GetFile(nsnull, title, fileSpec);
+      dialogResult = fileWidget->GetFile(/*parent*/ nsnull, title, fileSpec);
     }
     // Do this after we get this from preferences
     //fileWidget->SetDisplayDirectory(aDisplayDirectory);
     
-    // First param should be Parent window, but type is nsIWidget*
-    // Bug is filed to change this to a more suitable window type
     if (dialogResult != nsFileDlgResults_Cancel) 
     {
       // Get the platform-specific format
@@ -1739,7 +1740,7 @@ nsEditorShell::GetString(const PRUnichar *name, PRUnichar **_retval)
   if (!name || !_retval)
     return NS_ERROR_NULL_POINTER;
 
-  // Never fail, just return an empty string    
+  // Don't fail, just return an empty string    
   nsString empty("");
 
   if (mStringBundle)
@@ -1764,13 +1765,13 @@ nsEditorShell::GetString(const nsString& name)
   if (!ptmpString)
     ptmpString = new nsString();
 
+  // Don't fail, just return an empty string    
   *ptmpString = "";
   if (mStringBundle && (name != ""))
   {
     const PRUnichar *ptrtmp = name.GetUnicode();
     PRUnichar *ptrv = nsnull;
     nsresult res = mStringBundle->GetStringFromName(ptrtmp, &ptrv);
-    // Never fail, just return an empty string    
     if (NS_SUCCEEDED(res))
       *ptmpString = ptrv;
   }
@@ -1778,67 +1779,70 @@ nsEditorShell::GetString(const nsString& name)
 }
 
 // Utility to bring up a Yes/No/Cancel dialog.
-PRInt32
-nsEditorShell::ConfirmWithCancel(const nsString& aQuestion, const nsString& aTitle)
+nsEditorShell::EConfirmResult
+nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuestion, 
+                                 const nsString *aYesString, const nsString *aNoString)
 {
-  nsresult rv; 
-  PRInt32 buttonPressed = 0; 
+  nsEditorShell::EConfirmResult result = nsEditorShell::eCancel;
+  
   nsIDialogParamBlock* block = NULL; 
-  rv = nsComponentManager::CreateInstance(kDialogParamBlockCID, 
-                                          0, 
+  nsresult rv = nsComponentManager::CreateInstance(kDialogParamBlockCID, 0,
                                           nsIDialogParamBlock::GetIID(), 
                                           (void**)&block ); 
-
-  if ( NS_FAILED( rv ) ) 
-      return rv; 
-  // Stuff in Parameters 
-  block->SetInt( nsICommonDialogs::eNumberButtons,2 ); 
-  block->SetString( nsICommonDialogs::eMsg, aQuestion.GetUnicode()); 
-  nsString url( "chrome://global/skin/question-icon.gif"  ); 
-  block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
-
-  nsString yes("yes"); 
-  nsString no("no"); 
-  block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() ); 
-  block->SetString( nsICommonDialogs::eButton1Text, no.GetUnicode() ); 
-
-  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
-  if ( NS_SUCCEEDED( rv ) ) 
+  if ( NS_SUCCEEDED(rv) )
   { 
-    nsCOMPtr<nsIDOMWindow> parent = do_QueryInterface(mWebShellWin);
-    rv = dialog->DoDialog( parent, block, "chrome://global/content/commonDialog.xul" ); 
-    block->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed ); 
-  } 
-  NS_IF_RELEASE( block );
-  return buttonPressed; 
+    // Stuff in Parameters 
+    block->SetInt( nsICommonDialogs::eNumberButtons,3 ); 
+    block->SetString( nsICommonDialogs::eMsg, aQuestion.GetUnicode()); 
+    nsString url( "chrome://global/skin/question-icon.gif"  ); 
+    block->SetString( nsICommonDialogs::eIconURL, url.GetUnicode()); 
+
+    nsString yes = aYesString ? *aYesString : GetString("Yes");
+    nsString no = aNoString ? *aNoString : GetString("No");
+    nsString cancel = GetString("Cancel");
+    block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() ); 
+    // This is currently not good -- 2nd button is linked to Cancel
+    block->SetString( nsICommonDialogs::eButton1Text, cancel.GetUnicode() ); 
+    block->SetString( nsICommonDialogs::eButton2Text, no.GetUnicode() ); 
+
+    NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
+    if ( NS_SUCCEEDED( rv ) ) 
+    { 
+      PRInt32 buttonPressed = 0; 
+      rv = dialog->DoDialog( mContentWindow, block, "chrome://global/content/commonDialog.xul" ); 
+      block->GetInt( nsICommonDialogs::eButtonPressed, &buttonPressed ); 
+      // NOTE: If order of buttons changes in nsICommonDialogs,
+      //       then we must change the EConfirmResult enums in nsEditorShell.h
+      result = nsEditorShell::EConfirmResult(buttonPressed);
+    } 
+    NS_IF_RELEASE( block );
+  }
+  return result;
 } 
 
-// Utility to bring up a Yes/No dialog.
+// Utility to bring up a OK/Cancel dialog.
 PRBool    
-nsEditorShell::Confirm(const nsString& aQuestion, const nsString& aTitle)
+nsEditorShell::Confirm(const nsString& aTitle, const nsString& aQuestion)
 {
-  nsresult res;
+  nsresult rv;
   PRBool   result = PR_FALSE;
 
-  NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &res);  
-  if (NS_FAILED(res))
-    return NS_ERROR_FACTORY_NOT_REGISTERED;
-  
-  if (!dialog)
-    return NS_ERROR_FAILURE;
-
-  res = dialog->ConfirmYN(aQuestion.GetUnicode(), &result);
+  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
+  if (NS_SUCCEEDED(rv) && dialog)
+  {
+    rv = dialog->Confirm(mContentWindow, aTitle.GetUnicode(), aQuestion.GetUnicode(), &result);
+  }
   return result;
 }
 
 void    
-nsEditorShell::Alert(const nsString& aMsg, const nsString& aTitle)
+nsEditorShell::Alert(const nsString& aTitle, const nsString& aMsg)
 {
-  nsresult res;
-  NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &res);  
-  if (NS_SUCCEEDED(res) && dialog)
+  nsresult rv;
+  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv); 
+  if (NS_SUCCEEDED(rv) && dialog)
   {
-    res = dialog->Alert(aMsg.GetUnicode());
+    rv = dialog->Alert(mContentWindow, aTitle.GetUnicode(), aMsg.GetUnicode());
   }
 }
 
