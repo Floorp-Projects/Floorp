@@ -73,7 +73,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsTextFormatter.h"
 #include "nsStatistics.h"
-#include "nsStorageStream.h"
+#include "nsIStorageStream.h"
 #include "nsLinebreakConverter.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -162,7 +162,7 @@ void XXXNeverCalled()
     TestSegmentedBuffer();
 #endif
     NS_NewSizeOfHandler(0);
-    nsStorageStream();
+    NS_NewStorageStream(0,0, nsnull);
     NS_NewBinaryInputStream(0, 0);
     nsString foo;
     nsPrintfCString bar("");
