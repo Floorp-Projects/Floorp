@@ -3090,7 +3090,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     m_pop3ConData->pause_for_read = PR_TRUE;
 
     PRBool pauseForMoreData = PR_FALSE;
-    char * line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+    char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData, &rv, PR_TRUE);
     PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
     buffer_size = status;
 
@@ -3109,9 +3109,11 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
           if (NS_FAILED(rv))
             return (Error(POP3_MESSAGE_WRITE_ERROR));
 
-          // not really sure we always had CRLF in input since we
-          // also treat a single LF as line ending!
-          m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
+          // buffer_size already includes MSG_LINEBREAK_LEN so
+          // subtract and add CRLF
+          // but not really sure we always had CRLF in input since
+          // we also treat a single LF as line ending!
+          m_pop3ConData->parsed_bytes += buffer_size - MSG_LINEBREAK_LEN + 2;
         }
 
         // now read in the next line
@@ -3119,9 +3121,11 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
                                                 pauseForMoreData, &rv, PR_TRUE);
         PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
-        // not really sure we always had CRLF in input since we
-        // also treat a single LF as line ending!
-        status += (buffer_size+2); // including CRLF
+        // buffer_size already includes MSG_LINEBREAK_LEN so
+        // subtract and add CRLF
+        // but not really sure we always had CRLF in input since
+        // we also treat a single LF as line ending!
+        status += buffer_size - MSG_LINEBREAK_LEN + 2;
       } while (line);
     }
 
@@ -3155,9 +3159,11 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         // fixed to return errors)
 
         if (NS_FAILED(rv))
-            return (Error(POP3_MESSAGE_WRITE_ERROR));
+            return (Error((rv == NS_MSG_ERROR_COPYING_FROM_TMP_DOWNLOAD)
+                           ? POP3_TMP_DOWNLOAD_FAILED 
+                           : POP3_MESSAGE_WRITE_ERROR));
 
-        m_pop3ConData->msg_closure = 0;
+        m_pop3ConData->msg_closure = nsnull;
     }
     
     if (!m_pop3ConData->msg_closure)
