@@ -49,7 +49,6 @@ struct nsLineData {
   PRInt32 mLastContentOffset;
   nsRect mBounds;
   PRPackedBool mLastContentIsComplete;
-  PRPackedBool mHasBullet;
   PRPackedBool mIsBlock;
   nsVoidArray* mFloaters;  // placeholder frames for below current line floaters
 };

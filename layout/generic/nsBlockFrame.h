@@ -241,11 +241,6 @@ protected:
                            nsSize*             aMaxElementSize,
                            nsBlockReflowState& aState);
 
-  nsresult DoResizeReflow(nsBlockReflowState& aState,
-                          const nsSize&       aMaxSize,
-                          nsRect&             aDesiredRect,
-                          nsReflowStatus&     aStatus);
-
   void ComputeDesiredRect(nsBlockReflowState& aState,
                           const nsSize&       aMaxSize,
                           nsRect&             aDesiredRect);
