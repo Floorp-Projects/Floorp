@@ -30,6 +30,7 @@ prolock.h
 prpdce.h
 prprf.h
 prproces.h
+prrng.h
 prrwlock.h
 prshm.h
 prshma.h
