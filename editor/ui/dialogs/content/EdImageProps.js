@@ -1,9 +1,9 @@
 var editorShell;
 var insertNew = true;
-var imageWasInserted = false;
 var imageElement;
 var tagName = "img"
 var advanced = true;
+var wasEnableAll = false;
 
 // dialog initialization code
 function Startup()
@@ -28,14 +28,22 @@ function Startup()
 
   dialog.AdvancedButton = document.getElementById("AdvancedButton");
   dialog.AdvancedRow = document.getElementById("AdvancedRow");
+
+  dialog.customsizeRadio = document.getElementById( "customsizeRadio" );
+  dialog.imagewidthInput = document.getElementById( "imagewidthInput" );
+  dialog.imageheightInput = document.getElementById( "imageheightInput" );
   
+  dialog.imagelrInput = document.getElementById( "imageleftrightInput" );
+  dialog.imagetbInput = document.getElementById( "imagetopbottomInput" );
+  dialog.imageborderInput = document.getElementById( "imageborderInput" );
+
   // Start in the mode initialized in the "advanced" var above
   // THIS IS NOT WORKING NOW - After switching to "basic" mode,
   // then back to 
   if (advanced) {
-    dialog.AdvancedRow.style.visibility = "visible";
+    dialog.AdvancedRow.style.visibility = "inherit"; // visible
   } else {
-    dialog.AdvancedRow.style.visibility = "collapse";
+    dialog.AdvancedRow.style.visibility = "hidden"; // collapse
   }
 
   if (null == dialog.srcInput || 
@@ -53,33 +61,107 @@ function initDialog() {
   // Get a single selected anchor element
   imageElement = editorShell.GetSelectedElement(tagName);
 
-  if (imageElement) {
-    dump("Found existing image\n");
+  if (imageElement) 
+  {
     // We found an element and don't need to insert one
     insertNew = false;
-
-    // Set the controls to the image's attributes
-    dialog.srcInput.value = imageElement.getAttribute("src");
-    dialog.altTextInput.value = imageElement.getAttribute("alt");
-  } else {
+  } 
+  else
+  {
     insertNew = true;
     // We don't have an element selected, 
     //  so create one with default attributes
     dump("Element not selected - calling createElementWithDefaults\n");
     imageElement = editorShell.CreateElementWithDefaults(tagName);
+	  if( !imageElement )
+	  {
+	    dump("Failed to get selected element or create a new one!\n");
+	    window.close();
+	  }  
+  }
+	
+  // Set the controls to the image's attributes
+  str = imageElement.getAttribute("src");
+  if ( str == "null" )
+  {
+    str = "";
+  }
+  dialog.srcInput.value = str;
+  
+  str = imageElement.getAttribute("alt");
+  if ( str == "null" )
+  {
+    str = "";
+  }
+  dialog.altTextInput.value = str;
+  
+  // we want to force an update so initialize "wasEnabledAll" to be the opposite of what the actual state is
+  wasEnabledAll = !((dialog.srcInput.value.length > 0) && (dialog.altTextInput.value.length > 0));
+  
+  // set height and width
+  // note: need to set actual image size if no attributes
+  dimvalue = imageElement.getAttribute("width");
+  if ( dimvalue == "null" )
+  {
+    dimvalue = "";
+  }
+  dialog.imagewidthInput.value = dimvalue;
+  
+  dimvalue = imageElement.getAttribute("height");
+  if ( dimvalue == "null" )
+  {
+    dimvalue = "";
+  }
+  dialog.imageheightInput.value = dimvalue;
+  
+  // this is not the correct way to determine if custom or original
+  if ( dimvalue != "" )
+  {
+    dialog.customsizeRadio.checked = true;
   }
 
-  if(!imageElement) {
-    dump("Failed to get selected element or create a new one!\n");
-    window.close();
+  alignpopup = document.getElementById("image.alignType");
+  if ( alignpopup )
+  {
+    alignvalue = imageElement.getAttribute("align");
+    if ( alignvalue == "null" )
+    {
+      alignvalue = "bottom";
+    }
+  
+    alignpopup.value = alignvalue;
   }
+
+  // set spacing editfields
+  sizevalue = imageElement.getAttribute("hspace");
+  if ( sizevalue == "null" )
+  {
+    sizevalue = "";
+  }
+  dialog.imagelrInput.value = sizevalue;
+  
+  sizevalue = imageElement.getAttribute("vspace");
+  if ( sizevalue == "null" )
+  {
+    sizevalue = "";
+  }
+  dialog.imagetbInput.value = sizevalue;
+  
+  sizevalue = imageElement.getAttribute("border");
+  if ( sizevalue == "null" )
+  {
+    sizevalue = "";
+  }
+  dialog.imageborderInput.value = sizevalue;    
+
+ doOverallEnabling();
 }
 
 function chooseFile()
 {
   // Get a local file, converted into URL format
   fileName = editorShell.GetLocalFileURL(window, "img");
-  if (fileName != "") {
+  if (fileName && fileName != "") {
     dialog.srcInput.value = fileName;
   }
   // Put focus into the input field
@@ -93,48 +175,147 @@ function onAdvanced()
     advanced = false;
     // BUG: This works to hide the row, but
     //   setting visibility to "show" doesn't bring it back
-    dialog.AdvancedRow.style.visibility = "collapse";
+    dialog.AdvancedRow.style.visibility = "hidden"; // collapse
     //dialog.AdvancedRow.style.display = "none";
   } else {
     dump("Changing to ADVANCED mode\n");
     advanced = true;
     //dialog.AdvancedRow.style.display = "table-row";
-    dialog.AdvancedRow.style.visibility = "visible";
+    dialog.AdvancedRow.style.visibility = "inherit"; // visible
   }
 }
 
 function SelectWidthUnits()
 {
-   list = document.getElementByID("WidthUnits");
+   list = document.getElementById("WidthUnits");
    value = list.options[list.selectedIndex].value;
    dump("Selected item: "+value+"\n");
 }
 
 function OnChangeSrc()
 {
-  dump("*** Changed SRC field\n");
+  doOverallEnabling();
+}
+
+function doDimensionEnabling( doEnable )
+{
+  SetLabelEnabledByID( "originalsizeLabel", doEnable );
+  SetLabelEnabledByID( "customsizeLabel", doEnable );
+
+	customradio = document.getElementById( "customsizeRadio" );
+  if ( customradio )
+  {
+      // disable or enable custom setting controls
+    SetElementEnabledByID( "imagewidthInput", doEnable && customradio.checked );
+    SetElementEnabledByID( "widthunitSelect", doEnable && customradio.checked );
+    SetElementEnabledByID( "imageheightInput", doEnable && customradio.checked );
+    SetElementEnabledByID( "heightunitSelect", doEnable && customradio.checked );
+    SetElementEnabledByID( "constrainCheckbox", doEnable && customradio.checked );
+
+    SetLabelEnabledByID( "imagewidthLabel", doEnable && customradio.checked );
+    SetLabelEnabledByID( "imageheightLabel", doEnable && customradio.checked );
+    SetLabelEnabledByID( "constrainLabel", doEnable && customradio.checked );
+  }
+}
+
+function doOverallEnabling()
+{
+  var canEnableAll;
+  canEnableAll = (dialog.srcInput.value.length > 0);
+
+  if ( wasEnableAll == canEnableAll )
+    return;
+  
+  wasEnableAll = canEnableAll;
+
+  btn = document.getElementById("OK");
+  if ( btn )
+  {
+    btn.disabled = !canEnableAll;
+  }
+  
+	fieldset = document.getElementById("imagedimensionsFieldset");
+	if ( fieldset )
+  {
+    SetElementEnabledByID("imagedimensionsFieldset", canEnableAll );
+    doDimensionEnabling( canEnableAll );
+  }
+  
+//  SetLabelEnabledByID( "imagealignmentLabel", canEnableAll );
+  SetElementEnabledByID("image.alignType", canEnableAll );
+
+    // spacing fieldset
+  SetElementEnabledByID("spacing.fieldset", canEnableAll );
+  SetElementEnabledByID("imageleftrightInput", canEnableAll );
+  SetElementEnabledByID("imagetopbottomInput", canEnableAll );
+  SetElementEnabledByID("imageborderInput", canEnableAll );
+
+    // do spacing labels
+    // commented out since they all assert right now
+//  SetLabelEnabledByID( "leftrightLabel", canEnableAll );
+//  SetLabelEnabledByID( "leftrighttypeLabel", canEnableAll );
+//  SetLabelEnabledByID( "topbottomLabel", canEnableAll );
+//  SetLabelEnabledByID( "topbottomtypeLabel", canEnableAll );
+//  SetLabelEnabledByID( "borderLabel", canEnableAll );
+//  SetLabelEnabledByID( "bordertypeLabel", canEnableAll );
 }
 
 function onOK()
 {
-  // TODO: BE SURE Src AND AltText are completed!
-
   imageElement.setAttribute("src",dialog.srcInput.value);
   // We must convert to "file:///" format else image doesn't load!
-  imageElement.setAttribute("alt",dialog.altTextInput.value);  
+  
+  // TODO: we should confirm with user if no alt tag
+  imageElement.setAttribute("alt", dialog.altTextInput.value);
+  
+  // set width if custom size and width is greater than 0
+  if ( dialog.customsizeRadio.checked 
+     && ( dialog.imagewidthInput.value.length > 0 )
+     && ( dialog.imageheightInput.value.length > 0 ) )
+  {
+    imageElement.setAttribute( "width", dialog.imagewidthInput.value );
+    imageElement.setAttribute( "height", dialog.imageheightInput.value );
+  }
+  else
+  {
+    imageElement.removeAttribute( "width" );
+    imageElement.removeAttribute( "height" );
+  }
+  
+  // spacing attributes
+  if ( dialog.imagelrInput.length > 0 )
+    imageElement.setAttribute( "hspace", dialog.imagelrInput.value );
+  else
+    imageElement.removeAttribute( "hspace" );
+  dump ( "hspace is " + dialog.imagelrInput.value + "\n");
+  
+  if ( dialog.imagetbInput.length > 0 )
+    imageElement.setAttribute( "vspace", dialog.imagetbInput.value );
+  else
+    imageElement.removeAttribute( "vspace" );
+  dump ( "vspace is " + dialog.imagetbInput.value + "\n");
+  
+  // note this is deprecated and should be converted to stylesheets
+  if ( dialog.imageborderInput.length > 0 )
+    imageElement.setAttribute( "border", dialog.imageborderInput.value );
+  else
+    imageElement.removeAttribute( "border" );
+  dump ( "border is " + dialog.imageborderInput.value + "\n");
+
+  // handle insertion of new image
   if (insertNew) {
-    dump("Src="+imageElement.getAttribute("src")+" Alt="+imageElement.getAttribute("alt")+"\n");
+    dump("src="+imageElement.getAttribute("src")+" alt="+imageElement.getAttribute("alt")+"\n");
     editorShell.InsertElement(imageElement, true);
     // Select the newly-inserted image
     editorShell.SelectElement(imageElement);
     // Mark that we inserted so we can collapse the selection
     //  when dialog closes
-    imageWasInserted = true;
-  }
-  if (imageWasInserted) {
+
     // We selected the object, undo it by
     //  setting caret to just after the inserted element
     editorShell.SetSelectionAfterElement(imageElement);
   }
+
+  // dismiss dialog
   window.close();
 }
