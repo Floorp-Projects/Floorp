@@ -197,7 +197,7 @@ ssl_cov()
 
           is_selfserv_alive
           echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} \\"
-          echo "        -f -d . << ${REQUEST_FILE}"
+          echo "        -f -d . < ${REQUEST_FILE}"
           tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
                   -d . < ${REQUEST_FILE}
           html_msg $? 0 "${testname}"
