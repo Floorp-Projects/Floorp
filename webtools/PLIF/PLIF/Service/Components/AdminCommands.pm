@@ -74,11 +74,14 @@ sub cmdSetup {
     my($app) = @_;
     my $result;
     # call all the setup handlers until one fails:
+    # the setupX methods can call $app->output->setupProgress('name of component');
+    $app->getPipingServiceList('setup.events.start')->setupStarting($app);
     $result = $app->getSelectingServiceList('setup.configure')->setupConfigure($app);
     if (not $result) {
         $result = $app->getSelectingServiceList('setup.install')->setupInstall($app);
     }
-    # the setupConfigure and setupInstall methods can call $app->output->setupProgress('name of component');
+    $app->getPipingServiceList('setup.events.end')->setupEnding($app);
+    # report on the result
     if ($result) {
         $app->output->setupFailed($result);
     } else {

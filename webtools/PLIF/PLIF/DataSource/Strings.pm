@@ -39,8 +39,10 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     # XXX this class should provide a 'clear caches' service (as should some others)
-    return ($service eq 'dataSource.strings' or 
-            $service eq 'setup.install' or 
+    return ($service eq 'dataSource.strings' or
+            $service eq 'setup.install' or
+            $service eq 'setup.events.start' or
+            $service eq 'setup.events.end' or
             $class->SUPER::provides($service));
 }
 
@@ -49,6 +51,7 @@ sub init {
     $self->SUPER::init(@_);
     $self->variantsCache({});
     $self->stringsCache({});
+    $self->enabled(1);
 }
 
 sub databaseName {
@@ -60,37 +63,42 @@ sub get {
     my $self = shift;
     my($app, $session, $protocol, $string) = @_;
     # error handling makes code ugly :-)
-    my $variant;
-    if (defined($session)) {
-        $variant = $session->selectVariant($protocol);
-    }
-    if (not defined($variant)) {
-        # default session or $session didn't care, get stuff from
-        # $app->input instead
-        $variant = $self->selectVariant($app, $protocol);
-    }
-    if (not defined($self->stringsCache->{$variant})) {
-        $self->stringsCache->{$variant} = {};
-    }
-    if (not defined($self->stringsCache->{$variant}->{$string})) {
-        my @results;
-        eval {
-            @results = $self->getString($app, $variant, $string);
-        };
-        if ($@) {
-            # ok, so, er, it seems that didn't go to well
-            # XXX do we want to do an error here or something?
-            $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
+    if ($self->enabled) {
+        my $variant;
+        if (defined($session)) {
+            $variant = $session->selectVariant($protocol);
         }
-        if (not scalar(@results)) {
-            $self->dump(9, "Did not find a string for '$string', going to look in the defaults...");
-            @results = $self->getDefaultString($app, $protocol, $string);
-            $self->assert(scalar(@results), 1, "Couldn't find a string to display for '$string' in protocol '$protocol'");
+        if (not defined($variant)) {
+            # default session or $session didn't care, get stuff from
+            # $app->input instead
+            $variant = $self->selectVariant($app, $protocol);
         }
-        $self->stringsCache->{$variant}->{$string} = \@results;
-        return @results;
+        if (not defined($self->stringsCache->{$variant})) {
+            $self->stringsCache->{$variant} = {};
+        }
+        if (not defined($self->stringsCache->{$variant}->{$string})) {
+            my @results;
+            eval {
+                @results = $self->getString($app, $variant, $string);
+            };
+            if ($@) {
+                # ok, so, er, it seems that didn't go to well
+                # XXX do we want to do an error here or something?
+                $self->warn(4, "While I was looking for the string '$string' in protocol '$protocol' using variant '$variant', I failed with: $@");
+            }
+            if (not scalar(@results)) {
+                $self->dump(9, "Did not find a string for '$string', going to look in the defaults...");
+                @results = $self->getDefaultString($app, $protocol, $string);
+                $self->assert(scalar(@results), 1, "Couldn't find a string to display for '$string' in protocol '$protocol'");
+            }
+            $self->stringsCache->{$variant}->{$string} = \@results;
+            return @results;
+        } else {
+            return @{$self->stringsCache->{$variant}->{$string}};
+        }
     } else {
-        return @{$self->stringsCache->{$variant}->{$string}};
+        $self->dump(9, "String datasource is disabled, going to use default for string '$string'.");
+        return $self->getDefaultString($app, $protocol, $string);
     }
 }
 
@@ -144,6 +152,20 @@ sub variants {
         }
     }
     return $self->variantsCache->{$protocol};
+}
+
+# setup.events.start
+sub setupStarting {
+    my $self = shift;
+    my($app) = @_;
+    $self->enabled(0);
+}
+
+# setup.events.end
+sub setupEnding {
+    my $self = shift;
+    my($app) = @_;
+    $self->enabled(1);
 }
 
 
