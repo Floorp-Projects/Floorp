@@ -19,6 +19,7 @@
 #define nsLWBreakerFImp_h__
 
 
+
 #include "nsCom.h"
 #include "nsISupports.h"
 
@@ -28,7 +29,7 @@
 #include "nsIWordBreaker.h"
 
 
-class nsLWBreakerFImp : public nsILineBreakerFactory , nsIWordBreakerFactory
+class nsLWBreakerFImp : public nsILineBreakerFactory , public nsIWordBreakerFactory
 {
   NS_DECL_ISUPPORTS
 

@@ -39,7 +39,7 @@ class nsHTMLValue;
  *
  * @author  sclark
  */
-class nsTableCellFrame : public nsHTMLContainerFrame, nsITableCellLayout
+class nsTableCellFrame : public nsHTMLContainerFrame, public nsITableCellLayout
 {
 public:
 
