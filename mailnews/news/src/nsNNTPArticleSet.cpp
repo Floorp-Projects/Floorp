@@ -16,10 +16,15 @@
  * Reserved.
  */
 
-#include "msg.h"
-#include "newsset.h"
-#include "msgneoid.h"
-#include "newshost.h"
+#include "nsNNTPArticleSet.h"
+#include "nsIMsgNewsHost.h"
+
+#include "mkutils.h"
+
+#include "prmem.h"
+#include "prlog.h"
+#include "prprf.h"
+#include "plstr.h"
 
 extern "C" {
 	extern int MK_OUT_OF_MEMORY;
@@ -74,38 +79,38 @@ extern "C" {
 
 
 
-nsNNTPArticleSet::nsNNTPArticleSet(MSG_NewsHost* host)
+nsNNTPArticleSet::nsNNTPArticleSet(nsIMsgNewsHost* host)
 {
 	m_cached_value = -1;
 	m_cached_value_index = 0;
 	m_length = 0;
 	m_data_size = 10;
-	m_data = (PRInt32 *) PL_Malloc (sizeof (PRInt32) * m_data_size);
+	m_data = (PRInt32 *) PR_Malloc (sizeof (PRInt32) * m_data_size);
 	m_host = host;
 }
 
 
 nsNNTPArticleSet::~nsNNTPArticleSet()
 {
-	FREEIF(m_data);
+	PR_FREEIF(m_data);
 }
 
 
-XP_Bool nsNNTPArticleSet::Grow()
+PRBool nsNNTPArticleSet::Grow()
 {
 	PRInt32 new_size;
 	PRInt32 *new_data;
 	new_size = m_data_size * 2;
-	new_data = (PRInt32 *) XP_REALLOC (m_data, (size_t) (sizeof (PRInt32) * new_size));
+	new_data = (PRInt32 *) PR_REALLOC (m_data, (size_t) (sizeof (PRInt32) * new_size));
 	if (! new_data)
-		return FALSE;
+		return PR_FALSE;
 	m_data_size = new_size;
 	m_data = new_data;
-	return TRUE;
+	return PR_TRUE;
 }
 
 
-nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, MSG_NewsHost* host)
+nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, nsIMsgNewsHost* host)
 {
 	PRInt32 *head, *tail, *end;
 
@@ -114,7 +119,7 @@ nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, MSG_NewsHost* host)
 	m_cached_value_index = 0;
 	m_length = 0;
 	m_data_size = 10;
-	m_data = (PRInt32 *) PL_Malloc (sizeof (PRInt32) * m_data_size);
+	m_data = (PRInt32 *) PR_Malloc (sizeof (PRInt32) * m_data_size);
 	if (!m_data) return;
 
 	head = m_data;
@@ -134,7 +139,7 @@ nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, MSG_NewsHost* host)
 			/* out of room! */
 			PRInt32 tailo = tail - head;
 			if (!Grow()) {
-				FREEIF(m_data);
+				PR_FREEIF(m_data);
 				return;
 			}
 			/* data may have been relocated */
@@ -193,7 +198,7 @@ nsNNTPArticleSet::nsNNTPArticleSet(const char* numbers, MSG_NewsHost* host)
 
 
 nsNNTPArticleSet*
-nsNNTPArticleSet::Create(MSG_NewsHost* host)
+nsNNTPArticleSet::Create(nsIMsgNewsHost* host)
 {
 	nsNNTPArticleSet* set = new nsNNTPArticleSet(host);
 	if (set && set->m_data == NULL) {
@@ -205,7 +210,7 @@ nsNNTPArticleSet::Create(MSG_NewsHost* host)
 
 
 nsNNTPArticleSet*
-nsNNTPArticleSet::Create(const char* value, MSG_NewsHost* host)
+nsNNTPArticleSet::Create(const char* value, nsIMsgNewsHost* host)
 {
 	nsNNTPArticleSet* set = new nsNNTPArticleSet(value, host);
 	if (set && set->m_data == NULL) {
@@ -368,7 +373,7 @@ void nsNNTPArticleSet::SetLastMember(PRInt32 newHighWaterMark)
 {
 	if (newHighWaterMark < GetLastMember())
 	{
-		while (TRUE)
+		while (PR_TRUE)
 		{
 			if (m_length > 1)
 			{
@@ -445,16 +450,16 @@ nsNNTPArticleSet::GetFirstMember()
    decreasing) but will optimize the compression, for example, merging
    consecutive literals or ranges into one range.
 
-   Returns TRUE if successful, FALSE if there wasn't enough memory to
+   Returns PR_TRUE if successful, PR_FALSE if there wasn't enough memory to
    allocate scratch space.
 
    #### This should be changed to modify the buffer in place.
 
    Also note that we never call Optimize() unless we actually changed
-   something, so it's a great place to tell the MSG_NewsHost* that something
+   something, so it's a great place to tell the nsIMsgNewsHost* that something
    changed.
    */
-XP_Bool
+PRBool
 nsNNTPArticleSet::Optimize()
 {
 	PRInt32 input_size;
@@ -468,19 +473,19 @@ nsNNTPArticleSet::Optimize()
 	input_size = m_length;
 	output_size = input_size + 1;
 	input_tail = m_data;
-	output_data = (PRInt32 *) PL_Malloc (sizeof (PRInt32) * output_size);
+	output_data = (PRInt32 *) PR_Malloc (sizeof (PRInt32) * output_size);
 	output_tail = output_data;
 	input_end = input_tail + input_size;
 	output_end = output_data + output_size;
 
-	if (!output_data) return FALSE;
+	if (!output_data) return PR_FALSE;
 
 	/* We're going to modify the set, so invalidate the cache. */
 	m_cached_value = -1;
 
 	while (input_tail < input_end) {
 		PRInt32 from, to;
-		XP_Bool range_p = (*input_tail < 0);
+		PRBool range_p = (*input_tail < 0);
 
 		if (range_p) {
 			/* it's a range */
@@ -501,7 +506,7 @@ nsNNTPArticleSet::Optimize()
 		PR_ASSERT(output_tail < output_end);
 		if (output_tail >= output_end) {
 			PR_Free(output_data);
-			return FALSE;
+			return PR_FALSE;
 		}
 
 		/* As long as this chunk is followed by consecutive chunks,
@@ -517,7 +522,7 @@ nsNNTPArticleSet::Optimize()
 				output_tail++;
 				output_tail [-2] = 0;
 				output_tail [-1] = from;
-				range_p = TRUE;
+				range_p = PR_TRUE;
 			}
 
 			if (*input_tail > 0) { /* literal */
@@ -556,15 +561,15 @@ nsNNTPArticleSet::Optimize()
 	}
 
 	if (m_host) m_host->MarkDirty();
-	return TRUE;
+	return PR_TRUE;
 }
 
 
 
-XP_Bool
+PRBool
 nsNNTPArticleSet::IsMember(PRInt32 number)
 {
-	XP_Bool value = FALSE;
+	PRBool value = PR_FALSE;
 	PRInt32 size;
 	PRInt32 *head;
 	PRInt32 *tail;
@@ -589,11 +594,11 @@ nsNNTPArticleSet::IsMember(PRInt32 number)
 			PRInt32 to = from + (-(tail[0]));
 			if (from > number) {
 				/* This range begins after the number - we've passed it. */
-				value = FALSE;
+				value = PR_FALSE;
 				goto DONE;
 			} else if (to >= number) {
 				/* In range. */
-				value = TRUE;
+				value = PR_TRUE;
 				goto DONE;
 			} else {
 				tail += 2;
@@ -603,11 +608,11 @@ nsNNTPArticleSet::IsMember(PRInt32 number)
 			/* it's a literal */
 			if (*tail == number) {
 				/* bang */
-				value = TRUE;
+				value = PR_TRUE;
 				goto DONE;
 			} else if (*tail > number) {
 				/* This literal is after the number - we've passed it. */
-				value = FALSE;
+				value = PR_FALSE;
 				goto DONE;
 			} else {
 				tail++;
@@ -890,7 +895,7 @@ nsNNTPArticleSet::AddRange(PRInt32 start, PRInt32 end)
 	PRInt32* tail;
 	PRInt32 a;
 	PRInt32 b;
-	XP_Bool didit = FALSE;
+	PRBool didit = PR_FALSE;
 
 	/* We're going to modify the set, so invalidate the cache. */
 	m_cached_value = -1;
@@ -903,7 +908,7 @@ nsNNTPArticleSet::AddRange(PRInt32 start, PRInt32 end)
 	}
 
 	tmplength = m_length + 2;
-	tmp = (PRInt32*) PL_Malloc(sizeof(PRInt32) * tmplength);
+	tmp = (PRInt32*) PR_Malloc(sizeof(PRInt32) * tmplength);
 
 	if (!tmp) return MK_OUT_OF_MEMORY;
 
@@ -935,7 +940,7 @@ nsNNTPArticleSet::AddRange(PRInt32 start, PRInt32 end)
 			// No overlap, and we passed it.
 			EMIT(start, end);
 			EMIT(a, b);
-			didit = TRUE;
+			didit = PR_TRUE;
 			break;
 		} else {
 			// The ranges overlap.  Suck this range into our new range, and
@@ -1172,69 +1177,69 @@ nsNNTPArticleSet::test_adder (void)
 
   START("0-70,72-99,105,107,110-111,117-200");
 
-  FROB(205, TRUE);
-  FROB(206, TRUE);
-  FROB(207, TRUE);
-  FROB(208, TRUE);
-  FROB(208, TRUE);
-  FROB(109, TRUE);
-  FROB(72, TRUE);
+  FROB(205, PR_TRUE);
+  FROB(206, PR_TRUE);
+  FROB(207, PR_TRUE);
+  FROB(208, PR_TRUE);
+  FROB(208, PR_TRUE);
+  FROB(109, PR_TRUE);
+  FROB(72, PR_TRUE);
 
-  FROB(205, FALSE);
-  FROB(206, FALSE);
-  FROB(207, FALSE);
-  FROB(208, FALSE);
-  FROB(208, FALSE);
-  FROB(109, FALSE);
-  FROB(72, FALSE);
+  FROB(205, PR_FALSE);
+  FROB(206, PR_FALSE);
+  FROB(207, PR_FALSE);
+  FROB(208, PR_FALSE);
+  FROB(208, PR_FALSE);
+  FROB(109, PR_FALSE);
+  FROB(72, PR_FALSE);
 
-  FROB(72, TRUE);
-  FROB(109, TRUE);
-  FROB(208, TRUE);
-  FROB(208, TRUE);
-  FROB(207, TRUE);
-  FROB(206, TRUE);
-  FROB(205, TRUE);
+  FROB(72, PR_TRUE);
+  FROB(109, PR_TRUE);
+  FROB(208, PR_TRUE);
+  FROB(208, PR_TRUE);
+  FROB(207, PR_TRUE);
+  FROB(206, PR_TRUE);
+  FROB(205, PR_TRUE);
 
-  FROB(205, FALSE);
-  FROB(206, FALSE);
-  FROB(207, FALSE);
-  FROB(208, FALSE);
-  FROB(208, FALSE);
-  FROB(109, FALSE);
-  FROB(72, FALSE);
+  FROB(205, PR_FALSE);
+  FROB(206, PR_FALSE);
+  FROB(207, PR_FALSE);
+  FROB(208, PR_FALSE);
+  FROB(208, PR_FALSE);
+  FROB(109, PR_FALSE);
+  FROB(72, PR_FALSE);
 
-  FROB(100, TRUE);
-  FROB(101, TRUE);
-  FROB(102, TRUE);
-  FROB(103, TRUE);
-  FROB(106, TRUE);
-  FROB(104, TRUE);
-  FROB(109, TRUE);
-  FROB(108, TRUE);
+  FROB(100, PR_TRUE);
+  FROB(101, PR_TRUE);
+  FROB(102, PR_TRUE);
+  FROB(103, PR_TRUE);
+  FROB(106, PR_TRUE);
+  FROB(104, PR_TRUE);
+  FROB(109, PR_TRUE);
+  FROB(108, PR_TRUE);
   END();
 
-  START("1-6"); FROB(7, FALSE); END();
-  START("1-6"); FROB(6, FALSE); END();
-  START("1-6"); FROB(5, FALSE); END();
-  START("1-6"); FROB(4, FALSE); END();
-  START("1-6"); FROB(3, FALSE); END();
-  START("1-6"); FROB(2, FALSE); END();
-  START("1-6"); FROB(1, FALSE); END();
-  START("1-6"); FROB(0, FALSE); END();
+  START("1-6"); FROB(7, PR_FALSE); END();
+  START("1-6"); FROB(6, PR_FALSE); END();
+  START("1-6"); FROB(5, PR_FALSE); END();
+  START("1-6"); FROB(4, PR_FALSE); END();
+  START("1-6"); FROB(3, PR_FALSE); END();
+  START("1-6"); FROB(2, PR_FALSE); END();
+  START("1-6"); FROB(1, PR_FALSE); END();
+  START("1-6"); FROB(0, PR_FALSE); END();
 
-  START("1-3"); FROB(1, FALSE); END();
-  START("1-3"); FROB(2, FALSE); END();
-  START("1-3"); FROB(3, FALSE); END();
+  START("1-3"); FROB(1, PR_FALSE); END();
+  START("1-3"); FROB(2, PR_FALSE); END();
+  START("1-3"); FROB(3, PR_FALSE); END();
 
-  START("1,3,5-7,9,10"); FROB(5, FALSE); END();
-  START("1,3,5-7,9,10"); FROB(6, FALSE); END();
-  START("1,3,5-7,9,10"); FROB(7, FALSE); FROB(7, TRUE); FROB(8, TRUE);
-  FROB (4, TRUE); FROB (2, FALSE); FROB (2, TRUE);
+  START("1,3,5-7,9,10"); FROB(5, PR_FALSE); END();
+  START("1,3,5-7,9,10"); FROB(6, PR_FALSE); END();
+  START("1,3,5-7,9,10"); FROB(7, PR_FALSE); FROB(7, PR_TRUE); FROB(8, PR_TRUE);
+  FROB (4, PR_TRUE); FROB (2, PR_FALSE); FROB (2, PR_TRUE);
 
-  FROB (4, FALSE); FROB (5, FALSE); FROB (6, FALSE); FROB (7, FALSE);
-  FROB (8, FALSE); FROB (9, FALSE); FROB (10, FALSE); FROB (3, FALSE);
-  FROB (2, FALSE); FROB (1, FALSE); FROB (1, FALSE); FROB (0, FALSE);
+  FROB (4, PR_FALSE); FROB (5, PR_FALSE); FROB (6, PR_FALSE); FROB (7, PR_FALSE);
+  FROB (8, PR_FALSE); FROB (9, PR_FALSE); FROB (10, PR_FALSE); FROB (3, PR_FALSE);
+  FROB (2, PR_FALSE); FROB (1, PR_FALSE); FROB (1, PR_FALSE); FROB (0, PR_FALSE);
   END();
 }
 
@@ -1315,7 +1320,7 @@ nsNNTPArticleSet::test_ranges(void)
   delete [] s
 
 void
-nsNNTPArticleSet::test_member(XP_Bool with_cache)
+nsNNTPArticleSet::test_member(PRBool with_cache)
 {
   nsNNTPArticleSet *set;
   char *s;
@@ -1431,8 +1436,8 @@ nsNNTPArticleSet::RunTests ()
 
   test_ranges();
 
-  test_member (FALSE);
-  test_member (TRUE);
+  test_member (PR_FALSE);
+  test_member (PR_TRUE);
 
   // test_newsrc ("/u/montulli/.newsrc");
   /* test_newsrc ("/u/jwz/.newsrc");*/
