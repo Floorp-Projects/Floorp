@@ -101,10 +101,17 @@ NS_IMETHODIMP nsUnicodeToUEscape::Convert(const PRUnichar * aSrc, PRInt32 * aSrc
      {
        if( PRUnichar('\\') == *src)
        {
-           if((dest +2 ) >= destEnd)
-             goto error;
-           *dest++ = (char) '\\';
-           *dest++ = (char) '\\';
+           if(( PRUnichar('n') == *(1+src))||
+              ( PRUnichar('r') == *(1+src))||
+              ( PRUnichar('t') == *(1+src))) 
+           {
+             *dest++ = (char) *src;
+           } else {
+             if((dest +2 ) >= destEnd)
+               goto error;
+             *dest++ = (char) '\\';
+             *dest++ = (char) '\\';
+           }
        } else {
            *dest++ = (char) *src;
        }
