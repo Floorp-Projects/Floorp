@@ -845,17 +845,14 @@ extensions/typeaheadfind/src/Makefile
 extensions/typeaheadfind/Makefile
 "
 
-if [ "$MOZ_USE_OFFICIAL_BRANDING" ]; then
-    if [ "$MOZ_PHOENIX" ]; then
-    	MAKEFILES_firefox_branding="
-        	other-licenses/branding/firefox/Makefile
-	        other-licenses/branding/firefox/content/Makefile
-		"
-    fi
-    if [ "$MOZ_THUNDERBIRD" ]; then
-    	MAKEFILES_thunderbird_branding="other-licenses/branding/thunderbird/Makefile"
-    fi
-fi
+MAKEFILES_firefox_branding="
+other-licenses/branding/firefox/Makefile
+other-licenses/branding/firefox/content/Makefile
+"
+
+MAKEFILES_thunderbird_branding="
+other-licenses/branding/thunderbird/Makefile
+"
 
 MAKEFILES_phoenix="
 browser/Makefile
