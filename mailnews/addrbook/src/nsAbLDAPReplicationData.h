@@ -11,11 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is mozilla.org.code .
  *
  * The Initial Developer of the Original Code is
  * <rdayal@netscape.com>
- *
+ * 
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
@@ -36,42 +36,51 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#ifndef nsAbLDAPReplicationQuery_h__
-#define nsAbLDAPReplicationQuery_h__
+#ifndef nsAbLDAPReplicationData_h__
+#define nsAbLDAPReplicationData_h__
 
+#include "nsIAbLDAPReplicationData.h"
 #include "nsIWebProgressListener.h"
 #include "nsIAbLDAPReplicationQuery.h"
-#include "nsIAbLDAPReplicationData.h"
-#include "nsILDAPConnection.h"
-#include "nsILDAPOperation.h"
-#include "nsILDAPURL.h"
+#include "nsIAddrDatabase.h"
 #include "nsDirPrefs.h"
-#include "nsString.h"
 
-class nsAbLDAPReplicationQuery : public nsIAbLDAPReplicationQuery
+class nsAbLDAPProcessReplicationData : public nsIAbLDAPProcessReplicationData
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIABLDAPREPLICATIONQUERY
+  NS_DECL_NSIABLDAPPROCESSREPLICATIONDATA
+  NS_DECL_NSILDAPMESSAGELISTENER
 
-  nsAbLDAPReplicationQuery();
-  virtual ~nsAbLDAPReplicationQuery();
-
-  nsresult InitLDAPData();
-  nsresult ConnectToLDAPServer(nsILDAPURL * aURL);
-
+  nsAbLDAPProcessReplicationData();
+  virtual ~nsAbLDAPProcessReplicationData();
+  
 protected :
-  // pointer to interfaces used by this object
-  nsCOMPtr<nsILDAPConnection> mConnection;
-  nsCOMPtr<nsILDAPOperation> mOperation;
-  nsCOMPtr<nsILDAPURL> mURL;
+  nsCOMPtr<nsIAbLDAPReplicationQuery> mQuery;
 
-  nsCOMPtr<nsIAbLDAPProcessReplicationData> mDataProcessor;
+  // pointer to the interfaces used by this object
+  nsCOMPtr<nsIWebProgressListener> mListener;
 
-  PRBool          mInitialized; 
-  nsCString       mDirPrefName;
-  DIR_Server    * mDirServer;
+  nsCOMPtr<nsIAddrDatabase> mReplicationDB;
+  nsCOMPtr <nsILocalFile> mReplicationFile;
+  nsCOMPtr <nsIFile> mBackupReplicationFile;
 
+  // state of processing, protocol used and count of results
+  PRInt32         mState;
+  PRInt32         mProtocol;
+  PRInt32         mCount;
+  PRBool          mDBOpen;
+  PRBool          mInitialized;
+  
+  DIR_ReplicationInfo * mReplInfo;
+  
+  virtual nsresult OnLDAPBind(nsILDAPMessage *aMessage);
+  virtual nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);
+  virtual nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage);
+  
+  nsresult CreateABForReplicatedDir();
+  void Done(PRBool aSuccess);
 };
 
-#endif // nsAbLDAPReplicationQuery_h__
+
+#endif // nsAbLDAPReplicationData_h__

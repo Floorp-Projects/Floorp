@@ -133,13 +133,18 @@ CPPSRCS		+= \
 endif
 
 ifdef MOZ_LDAP_XPCOM
-REQUIRES	+= mozldap
+REQUIRES    += mozldap \
+               uriloader \
+               $(NULL)
 
 EXPORTS		+= nsAbLDAPDirectoryQuery.h \
 		nsAbLDAPDirectory.h \
 		nsAbLDAPDirFactory.h \
 		nsAbLDAPCard.h \
 		nsAbLDAPAutoCompFormatter.h \
+                nsAbLDAPReplicationService.h \
+                nsAbLDAPReplicationQuery.h \
+                nsAbLDAPReplicationData.h \
 		$(NULL)
 
 CPPSRCS		+= nsAbLDAPDirectory.cpp \
@@ -149,6 +154,9 @@ CPPSRCS		+= nsAbLDAPDirectory.cpp \
                 nsAbLDAPDirectoryQuery.cpp \
                 nsAbBoolExprToLDAPFilter.cpp \
 		nsAbLDAPAutoCompFormatter.cpp \
+                nsAbLDAPReplicationService.cpp \
+                nsAbLDAPReplicationQuery.cpp \
+                nsAbLDAPReplicationData.cpp \
 		$(NULL)
 endif
 

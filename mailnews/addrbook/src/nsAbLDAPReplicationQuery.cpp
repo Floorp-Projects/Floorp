@@ -39,7 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsAbLDAPReplicationQuery.h"
 #include "nsAbLDAPReplicationService.h"
-#include "nsAbLDAPProcessReplicationData.h"
+#include "nsAbLDAPReplicationData.h"
 #include "nsILDAPURL.h"
 #include "nsAbBaseCID.h"
 #include "nsAbLDAPProperties.h"
@@ -101,8 +101,6 @@ nsresult nsAbLDAPReplicationQuery::InitLDAPData()
         return rv;
 
     mOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) 
-        return rv;
 
     return rv;
 }
@@ -132,7 +130,7 @@ nsresult nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL * aURL)
     rv = aURL->GetDn(getter_Copies(dn));
     if (NS_FAILED(rv))
         return rv;
-    if (!dn.get())
+    if (dn.IsEmpty())
         return NS_ERROR_UNEXPECTED;
 
     // Initiate LDAP message listener to the current thread
@@ -146,9 +144,7 @@ nsresult nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL * aURL)
         return NS_ERROR_FAILURE;
 
     // initialize the LDAP connection
-    rv = mConnection->Init(host.get(), port, NS_ConvertUTF8toUCS2(dn).get(), listener);
-
-    return rv;    
+    return mConnection->Init(host.get(), port, NS_ConvertUTF8toUCS2(dn).get(), listener);
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWebProgressListener *aProgressListener)
@@ -171,11 +167,7 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWe
     // 'this' initialized
     mInitialized = PR_TRUE;
 
-    rv = mDataProcessor->Init(this, aProgressListener);
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    return rv;
+    return mDataProcessor->Init(this, aProgressListener);
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::DoReplicationQuery()
@@ -201,7 +193,7 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::QueryAllEntries()
     rv = mURL->GetDn(getter_Copies(dn));
     if (NS_FAILED(rv)) 
         return rv;
-    if (!dn.get())
+    if (dn.IsEmpty())
         return NS_ERROR_UNEXPECTED;
 
     PRInt32 scope;
@@ -214,11 +206,10 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::QueryAllEntries()
     if (NS_FAILED(rv)) 
         return rv;
 
-    rv = mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
+    return mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
                                NS_ConvertUTF8toUCS2(urlFilter).get(), 
                                attributes.GetSize(), attributes.GetArray(),
                                0, 0);
-    return rv;
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::CancelQuery()
@@ -226,8 +217,7 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::CancelQuery()
     if (!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv = mDataProcessor->Abort();
-    return rv;
+    return mDataProcessor->Abort();
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::Done(PRBool aSuccess)

@@ -30,6 +30,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  widget \
 		  mork \
+                  uriloader \
 		  docshell \
 		  pref \
 		  necko \
@@ -87,6 +88,9 @@ EXPORTS=								\
 			nsAbLDAPDirFactory.h	\
 			nsAbLDAPCard.h \
 			nsAbLDAPAutoCompFormatter.h \
+                        nsAbLDAPReplicationService.h \
+                        nsAbLDAPReplicationQuery.h \
+                        nsAbLDAPReplicationData.h \
 !endif
 			nsAbDirectoryRDFResource.h \
 			nsAbBooleanExpression.h \
@@ -134,6 +138,9 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAbLDAPDirectoryQuery.obj \
     .\$(OBJDIR)\nsAbBoolExprToLDAPFilter.obj \
     .\$(OBJDIR)\nsAbLDAPAutoCompFormatter.obj \
+    .\$(OBJDIR)\nsAbLDAPReplicationService.obj \
+    .\$(OBJDIR)\nsAbLDAPReplicationQuery.obj \
+    .\$(OBJDIR)\nsAbLDAPReplicationData.obj \
 !endif
     .\$(OBJDIR)\nsAbBooleanExpression.obj \
     .\$(OBJDIR)\nsAbDirectoryRDFResource.obj \
