@@ -219,7 +219,10 @@ public:
 
   virtual void ToHTMLString(nsString& aBuf) const;
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aCX, nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
   // nsIScriptObjectOwner interface
   virtual nsresult  GetScriptObject(JSContext *aContext, void** aScriptObject);
@@ -1309,10 +1312,19 @@ void Text::GetText(nsString& aBuf, PRInt32 aOffset, PRInt32 aCount)
 }
 #endif
 
-nsIFrame* Text::CreateFrame(nsIPresContext* aCX, nsIFrame* aParentFrame)
+nsresult
+Text::CreateFrame(nsIPresContext*  aPresContext,
+                  nsIFrame*        aParentFrame,
+                  nsIStyleContext* aStyleContext,
+                  nsIFrame*&       aResult)
 {
-  nsIFrame* rv = new TextFrame(this, aParentFrame);
-  return rv;
+  nsIFrame* frame = new TextFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 nsresult Text::GetScriptObject(JSContext *aContext, void** aScriptObject)

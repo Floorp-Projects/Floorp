@@ -28,8 +28,10 @@ public:
   typedef nsInput nsInputCheckboxSuper;
   nsInputCheckbox (nsIAtom* aTag, nsIFormManager* aManager);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*&       aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 

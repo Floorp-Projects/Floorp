@@ -94,12 +94,21 @@ nsrefcnt nsTableRowGroup::Release(void)
   return mRefCnt;
 }
 
-// nsTableRowGroupFrame checks arguments
-nsIFrame* nsTableRowGroup::CreateFrame( nsIPresContext* aPresContext,
-                                        nsIFrame* aParentFrame)
+nsresult
+nsTableRowGroup::CreateFrame(nsIPresContext* aPresContext,
+                             nsIFrame* aParentFrame,
+                             nsIStyleContext* aStyleContext,
+                             nsIFrame*& aResult)
 {
-  nsIFrame* rv;
-  nsresult status = nsTableRowGroupFrame::NewFrame(&rv, this, aParentFrame);
+  NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
+
+  nsIFrame* frame;
+  nsresult rv = nsTableRowGroupFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
   return rv;
 }
 

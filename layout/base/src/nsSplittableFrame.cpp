@@ -48,14 +48,20 @@ NS_METHOD nsSplittableFrame::IsSplittable(SplittableType& aIsSplittable) const
  *            the receiver's geometric parent
  * @return  the continuing frame or null if unsuccessful
  */
-NS_METHOD nsSplittableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                                   nsIFrame*       aParent,
-                                                   nsIFrame*&      aContinuingFrame)
+NS_METHOD
+nsSplittableFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                         nsIFrame*        aParent,
+                                         nsIStyleContext* aStyleContext,
+                                         nsIFrame*&       aContinuingFrame)
 {
   nsIContentDelegate* contentDelegate = mContent->GetDelegate(aPresContext);
 
-  aContinuingFrame = contentDelegate->CreateFrame(aPresContext, mContent, aParent);
+  nsresult rv = contentDelegate->CreateFrame(aPresContext, mContent, aParent,
+                                             aStyleContext, aContinuingFrame);
   NS_RELEASE(contentDelegate);
+  if (NS_OK != rv) {
+    return rv;
+  }
 
   // Append the continuing frame to the flow
   aContinuingFrame->AppendToFlow(this);
@@ -66,7 +72,7 @@ NS_METHOD nsSplittableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
   aContinuingFrame->SetStyleContext(aPresContext,styleContext);
   NS_RELEASE(styleContext);
 
-  return NS_OK;
+  return rv;
 }
 
 NS_METHOD nsSplittableFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const

@@ -76,8 +76,10 @@ class ImagePart : public nsHTMLTagContent {
 public:
   ImagePart(nsIAtom* aTag);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
@@ -565,11 +567,19 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
   }
 }
 
-nsIFrame* ImagePart::CreateFrame(nsIPresContext* aPresContext,
-                                 nsIFrame* aParentFrame)
+nsresult
+ImagePart::CreateFrame(nsIPresContext* aPresContext,
+                       nsIFrame* aParentFrame,
+                       nsIStyleContext* aStyleContext,
+                       nsIFrame*& aResult)
 {
-  ImageFrame* rv = new ImageFrame(this, aParentFrame);
-  return rv;
+  ImageFrame* frame = new ImageFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aResult = frame;
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  return NS_OK;
 }
 
 nsresult

@@ -177,9 +177,13 @@ NS_METHOD nsFrame::GetContent(nsIContent*& aContent) const
 NS_METHOD nsFrame::GetContentIndex(PRInt32& aIndexInParent) const
 {
   nsIContent* parent = mContent->GetParent();
-  
-  aIndexInParent = parent->IndexOf(mContent);
-  NS_RELEASE(parent);
+  if (nsnull != parent) {
+    aIndexInParent = parent->IndexOf(mContent);
+    NS_RELEASE(parent);
+  }
+  else {
+    aIndexInParent = 0;
+  }
   return NS_OK;
 }
 
@@ -733,13 +737,14 @@ NS_METHOD nsFrame::IsSplittable(SplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-NS_METHOD nsFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                         nsIFrame*       aParent,
-                                         nsIFrame*&      aContinuingFrame)
+NS_METHOD nsFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                         nsIFrame*        aParent,
+                                         nsIStyleContext* aStyleContext,
+                                         nsIFrame*&       aContinuingFrame)
 {
   NS_ERROR("not splittable");
   aContinuingFrame = nsnull;
-  return NS_OK;
+  return NS_OK;/* XXX return an invalid value? */
 }
 
 NS_METHOD nsFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const

@@ -319,11 +319,21 @@ nsString * nsTableCol::GetAllInternalAttributeNames ()
   return nsnull;
 }
 
-nsIFrame* nsTableCol::CreateFrame(nsIPresContext* aPresContext,
-                                  nsIFrame* aParentFrame)
+nsresult
+nsTableCol::CreateFrame(nsIPresContext* aPresContext,
+                        nsIFrame* aParentFrame,
+                        nsIStyleContext* aStyleContext,
+                        nsIFrame*& aResult)
 {
-  nsIFrame* rv;
-  nsresult status = nsTableColFrame::NewFrame(&rv, this, aParentFrame);
+  NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
+
+  nsIFrame* frame;
+  nsresult rv = nsTableColFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
   return rv;
 }
 

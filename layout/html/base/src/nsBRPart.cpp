@@ -134,8 +134,11 @@ public:
 
   virtual void UnsetAttribute(nsIAtom* aAttribute);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
   PRInt32 GetClear() {
     return mClear;
@@ -163,11 +166,19 @@ BRPart::~BRPart()
 {
 }
 
-nsIFrame* BRPart::CreateFrame(nsIPresContext* aPresContext,
-                              nsIFrame* aParentFrame)
+nsresult
+BRPart::CreateFrame(nsIPresContext*  aPresContext,
+                    nsIFrame*        aParentFrame,
+                    nsIStyleContext* aStyleContext,
+                    nsIFrame*&       aResult)
 {
-  nsIFrame* rv = new BRFrame(this, aParentFrame);
-  return rv;
+  nsIFrame* frame = new BRFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -68,12 +68,19 @@ nsInputFile::~nsInputFile()
   }
 }
 
-nsIFrame* 
+nsresult
 nsInputFile::CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame)
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult)
 {
-  nsIFrame* rv = new nsInputFileFrame(this, aParentFrame);
-  return rv;
+  nsIFrame* frame = new nsInputFileFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 void nsInputFile::GetType(nsString& aResult) const

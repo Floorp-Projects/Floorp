@@ -172,9 +172,10 @@ public:
   NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
                               nsReflowMetrics& aMetrics);
   NS_IMETHOD IsSplittable(SplittableType& aIsSplittable) const;
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
-                                   nsIFrame*       aParent,
-                                   nsIFrame*&      aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD VerifyTree() const;

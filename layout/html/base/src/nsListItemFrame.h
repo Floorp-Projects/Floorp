@@ -34,9 +34,10 @@ public:
                           nsRect& aDesiredRect,
                           nsSize* aMaxElementSize,
                           ReflowStatus& aStatus);
-  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aCX,
-                                   nsIFrame* aParent,
-                                   nsIFrame*& aContinuingFrame);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aCX,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
 
   /**
    * Return the reflow state for the list container that contains this

@@ -331,12 +331,21 @@ PRBool nsTableColGroup::IsCol(nsIContent * aContent) const
   return result;
 }
 
-nsIFrame* nsTableColGroup::CreateFrame(nsIPresContext* aPresContext,
-                                       nsIFrame* aParentFrame)
+nsresult
+nsTableColGroup::CreateFrame(nsIPresContext* aPresContext,
+                             nsIFrame* aParentFrame,
+                             nsIStyleContext* aStyleContext,
+                             nsIFrame*& aResult)
 {
-  nsIFrame* rv;
-  nsresult status = nsTableColGroupFrame::NewFrame(&rv, this, aParentFrame);
-  NS_ASSERTION(nsnull!=rv, "can't allocate a new frame");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
+
+  nsIFrame* frame;
+  nsresult rv = nsTableColGroupFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
   return rv;
 }
 

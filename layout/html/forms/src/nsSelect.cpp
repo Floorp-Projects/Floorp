@@ -74,8 +74,10 @@ public:
   typedef nsInput super;
   nsSelect (nsIAtom* aTag, nsIFormManager* aFormMan);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*&       aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
@@ -108,8 +110,10 @@ public:
 
   nsOption (nsIAtom* aTag);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*&       aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
@@ -299,12 +303,19 @@ void nsSelect::GetType(nsString& aResult) const
   aResult = "select";
 }
 
-nsIFrame* 
+nsresult
 nsSelect::CreateFrame(nsIPresContext* aPresContext,
-                     nsIFrame* aParentFrame)
+                      nsIFrame* aParentFrame,
+                      nsIStyleContext* aStyleContext,
+                      nsIFrame*& aResult)
 {
-  nsIFrame* rv = new nsSelectFrame(this, aParentFrame);
-  return rv;
+  nsIFrame* frame = new nsSelectFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 void nsSelect::SetAttribute(nsIAtom* aAttribute,
@@ -460,13 +471,20 @@ void nsOption::GetType(nsString& aResult) const
   aResult = "select";
 }
 
-nsIFrame* 
+nsresult
 nsOption::CreateFrame(nsIPresContext* aPresContext,
-                      nsIFrame* aParentFrame)
+                      nsIFrame* aParentFrame,
+                      nsIStyleContext* aStyleContext,
+                      nsIFrame*& aResult)
 {
   nsIFrame* frame;
-  nsFrame::NewFrame(&frame, this, aParentFrame);
-  return frame;
+  nsresult rv = nsFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 void nsOption::SetAttribute(nsIAtom* aAttribute,

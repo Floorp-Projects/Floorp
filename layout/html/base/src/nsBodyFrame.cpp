@@ -96,7 +96,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
     NS_ASSERTION(prevBody->ChildIsPseudoFrame(prevColumn), "bad previous column");
 
     // Create a continuing column
-    prevColumn->CreateContinuingFrame(aPresContext, this, mFirstChild);
+    prevColumn->CreateContinuingFrame(aPresContext, this, nsnull, mFirstChild);
     mChildCount = 1;
   }
 }
@@ -364,12 +364,17 @@ void nsBodyFrame::RemoveAnchoredItem(nsIFrame* aAnchoredItem)
   mChildCount--;
 }
 
-NS_METHOD nsBodyFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                             nsIFrame*       aParent,
-                                             nsIFrame*&      aContinuingFrame)
+NS_METHOD
+nsBodyFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame)
 {
   nsBodyFrame* cf = new nsBodyFrame(mContent, aParent);
-  PrepareContinuingFrame(aPresContext, aParent, cf);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
   aContinuingFrame = cf;
   return NS_OK;
 }

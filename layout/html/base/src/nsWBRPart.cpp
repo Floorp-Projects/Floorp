@@ -24,8 +24,10 @@ class WBRPart : public nsHTMLTagContent {
 public:
   WBRPart(nsIAtom* aTag);
 
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
 protected:
   virtual ~WBRPart();
@@ -40,14 +42,20 @@ WBRPart::~WBRPart()
 {
 }
 
-nsIFrame* WBRPart::CreateFrame(nsIPresContext* aPresContext, nsIFrame* aParentFrame)
+nsresult
+WBRPart::CreateFrame(nsIPresContext*  aPresContext,
+                     nsIFrame*        aParentFrame,
+                     nsIStyleContext* aStyleContext,
+                     nsIFrame*&       aResult)
 {
-  nsIFrame* frame;
+  nsIFrame* frame = nsnull;
   nsresult rv = nsFrame::NewFrame(&frame, this, aParentFrame);
-  if (NS_OK == rv) {
-    return frame;
+  if (NS_OK != rv) {
+    return rv;
   }
-  return nsnull;
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 nsresult

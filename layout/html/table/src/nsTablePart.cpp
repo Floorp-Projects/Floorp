@@ -998,10 +998,21 @@ PRInt32 nsTablePart::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCell *aCell)
 /**
  * Create a frame object that will layout this table.
  */
-nsIFrame* nsTablePart::CreateFrame(nsIPresContext* aPresContext, nsIFrame* aParentFrame)
+nsresult
+nsTablePart::CreateFrame(nsIPresContext* aPresContext,
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult)
 {
-  nsIFrame* rv;
-  nsresult status = nsTableOuterFrame::NewFrame(&rv, this, aParentFrame);
+  NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
+
+  nsIFrame* frame;
+  nsresult rv = nsTableOuterFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
   return rv;
 }
 

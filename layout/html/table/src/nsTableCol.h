@@ -76,8 +76,10 @@ public:
   virtual int GetType();
 
   /** @see nsIHTMLContent::CreateFrame */
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*&       aResult);
 
   /** return the number of columns this content object represents.  always >= 1*/
   virtual int GetRepeat ();

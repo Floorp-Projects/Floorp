@@ -202,11 +202,19 @@ nsInputText::GetTextType() const
   return mType;
 }
 
-nsIFrame* 
+nsresult
 nsInputText::CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame)
+                         nsIFrame* aParentFrame,
+                         nsIStyleContext* aStyleContext,
+                         nsIFrame*& aResult)
 {
-  return new nsInputTextFrame(this, aParentFrame);
+  nsIFrame* frame = new nsInputTextFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 PRInt32 

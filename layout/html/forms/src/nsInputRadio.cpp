@@ -185,13 +185,19 @@ nsInputRadio::SetChecked(PRBool aValue, PRBool aSetInitialValue)
   ((nsIRadioButton *)mWidget)->SetState(aValue);
 }
 
- 
-nsIFrame* 
+nsresult
 nsInputRadio::CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame)
+                          nsIFrame* aParentFrame,
+                          nsIStyleContext* aStyleContext,
+                          nsIFrame*& aResult)
 {
-  nsIFrame* rv = new nsInputRadioFrame(this, aParentFrame);
-  return rv;
+  nsIFrame* frame = new nsInputRadioFrame(this, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 void nsInputRadio::GetType(nsString& aResult) const

@@ -256,7 +256,11 @@ PRBool nsInlineFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
         // frame. This hooks the child into the flow
         nsIFrame* continuingFrame;
          
-        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+        nsIStyleContext* kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC);
+        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+                                        continuingFrame);
+        NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to the sibling list
@@ -440,7 +444,11 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
         // prepares it for reflow.
         nsIFrame* continuingFrame;
 
-        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+        nsIStyleContext* kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC);
+        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
+                                        continuingFrame);
+        NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to our sibling list and then push
@@ -568,12 +576,17 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
       kidStyleContext->GetData(kStylePositionSID);
 
     // Check whether it wants to floated or absolutely positioned
+    nsresult rv;
     if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
-      AbsoluteFrame::NewFrame(&kidFrame, kid, this);
-      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
+      rv = AbsoluteFrame::NewFrame(&kidFrame, kid, this);
+      if (NS_OK == rv) {
+        kidFrame->SetStyleContext(aPresContext, kidStyleContext);
+      }
     } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
-      PlaceholderFrame::NewFrame(&kidFrame, kid, this);
-      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
+      rv = PlaceholderFrame::NewFrame(&kidFrame, kid, this);
+      if (NS_OK == rv) {
+        kidFrame->SetStyleContext(aPresContext, kidStyleContext);
+      }
     } else if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel;
       switch (kidDisplay->mDisplay) {
@@ -590,18 +603,22 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
 
       case NS_STYLE_DISPLAY_INLINE:
         kidDel = kid->GetDelegate(aPresContext);
-        kidFrame = kidDel->CreateFrame(aPresContext, kid, this);
+        rv = kidDel->CreateFrame(aPresContext, kid, this,
+                                 kidStyleContext, kidFrame);
         NS_RELEASE(kidDel);
         break;
 
       default:
         NS_ASSERTION(nsnull == kidPrevInFlow, "bad prev in flow");
-        nsFrame::NewFrame(&kidFrame, kid, this);
+        rv = nsFrame::NewFrame(&kidFrame, kid, this);
+        if (NS_OK == rv) {
+          kidFrame->SetStyleContext(aPresContext, kidStyleContext);
+        }
         break;
       }
-      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else {
-      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
+      rv = kidPrevInFlow->CreateContinuingFrame(aPresContext, this,
+                                                kidStyleContext, kidFrame);
     }
     NS_RELEASE(kid);
     NS_RELEASE(kidStyleContext);

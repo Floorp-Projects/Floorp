@@ -537,7 +537,11 @@ nsLineLayout::SplitLine(PRInt32 aChildReflowStatus, PRInt32 aRemainingKids)
       // into our lines child list.
       nsIFrame* nextFrame;
       mPrevKidFrame->GetNextSibling(nextFrame);
-      mPrevKidFrame->CreateContinuingFrame(mPresContext, mBlock, nextInFlow);
+      nsIStyleContext* kidSC;
+      mPrevKidFrame->GetStyleContext(mPresContext, kidSC);
+      mPrevKidFrame->CreateContinuingFrame(mPresContext, mBlock, kidSC,
+                                           nextInFlow);
+      NS_RELEASE(kidSC);
       if (nsnull == nextInFlow) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -828,73 +832,60 @@ done:
 nsresult
 nsLineLayout::CreateFrameFor(nsIContent* aKid)
 {
-  nsresult rv = NS_OK;
-
-  // XXX what if kidSC ends up null?
   nsIStyleContextPtr kidSC =
-    mPresContext->ResolveStyleContextFor(aKid, mBlock);
+    mPresContext->ResolveStyleContextFor(aKid, mBlock);  // XXX bad API
+  if (nsnull == kidSC) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   nsStylePosition* kidPosition = (nsStylePosition*)
     kidSC->GetData(kStylePositionSID);
   nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
     kidSC->GetData(kStyleDisplaySID);
 
   // Check whether it wants to floated or absolutely positioned
-  // XXX don't lose error status from frame ctor's!
   PRBool isBlock = PR_FALSE;
   nsIFrame* kidFrame;
+  nsresult rv;
   if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
-    AbsoluteFrame::NewFrame(&kidFrame, aKid, mBlock);
-    kidFrame->SetStyleContext(mPresContext, kidSC);
+    rv = AbsoluteFrame::NewFrame(&kidFrame, aKid, mBlock);
+    if (NS_OK == rv) {
+      kidFrame->SetStyleContext(mPresContext, kidSC);
+    }
   } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
-    PlaceholderFrame::NewFrame(&kidFrame, aKid, mBlock);
-    kidFrame->SetStyleContext(mPresContext, kidSC);
+    rv = PlaceholderFrame::NewFrame(&kidFrame, aKid, mBlock);
+    if (NS_OK == rv) {
+      kidFrame->SetStyleContext(mPresContext, kidSC);
+    }
   } else if (nsnull == mKidPrevInFlow) {
     // Create initial frame for the child
-
-    // XXX refactor to just let delegate create frame (unless style is
-    // none) and then after that if it's a block frame and the child
-    // count is non-zero we return the break-before value.
-
     nsIContentDelegate* kidDel;
     switch (kidDisplay->mDisplay) {
+    case NS_STYLE_DISPLAY_NONE:
+      rv = nsFrame::NewFrame(&kidFrame, aKid, mBlock);
+      if (NS_OK == rv) {
+        kidFrame->SetStyleContext(mPresContext, kidSC);
+      }
+      break;
+
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
-#if 0
-      // XXX Do we still need this? Now that the body code is changed it
-      // causes a problem...
-      if (mBlockIsPseudo) {
-        // Don't create the frame! It doesn't belong in us.
-
-        // XXX the unfortunate thing here is that we waste the style
-        // lookup!
-
-        return NS_LINE_LAYOUT_PSEUDO_BREAK_BEFORE_BLOCK;
-      }
-#endif
-      kidDel = aKid->GetDelegate(mPresContext);
-      kidFrame = kidDel->CreateFrame(mPresContext, aKid, mBlock);
-      NS_RELEASE(kidDel);
       isBlock = PR_TRUE;
-      break;
-
-    case NS_STYLE_DISPLAY_INLINE:
-      // XXX pass in kidSC to speed things up *alot*!
-      // XXX fix CreateFrame API to return an nsresult!
+      // FALL THROUGH
+    default:
       kidDel = aKid->GetDelegate(mPresContext);
-      kidFrame = kidDel->CreateFrame(mPresContext, aKid, mBlock);
+      rv = kidDel->CreateFrame(mPresContext, aKid, mBlock, kidSC, kidFrame);
       NS_RELEASE(kidDel);
-      break;
-
-    default:/* XXX bzzt! */
-      nsFrame::NewFrame(&kidFrame, aKid, mBlock);
       break;
     }
-    kidFrame->SetStyleContext(mPresContext, kidSC);
   } else {
     // Since kid has a prev-in-flow, use that to create the next
     // frame.
-    mKidPrevInFlow->CreateContinuingFrame(mPresContext, mBlock, kidFrame);
+    rv = mKidPrevInFlow->CreateContinuingFrame(mPresContext, mBlock, kidSC,
+                                               kidFrame);
     NS_ASSERTION(0 == mLine->mChildCount, "bad continuation");
+  }
+  if (NS_OK != rv) {
+    return rv;
   }
 
   mKidFrame = kidFrame;

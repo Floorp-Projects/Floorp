@@ -38,16 +38,14 @@ void PageFrame::CreateFirstChild(nsIPresContext* aPresContext)
       // Create a frame
       nsIContentDelegate* cd = child->GetDelegate(aPresContext);
       if (nsnull != cd) {
-        mFirstChild = cd->CreateFrame(aPresContext, child, this);
-        if (nsnull != mFirstChild) {
+        nsIStyleContext* kidStyleContext =
+          aPresContext->ResolveStyleContextFor(child, this);
+        nsresult rv = cd->CreateFrame(aPresContext, child, this,
+                                      kidStyleContext, mFirstChild);
+        NS_RELEASE(kidStyleContext);
+        if (NS_OK == mFirstChild) {
           mChildCount = 1;
           mLastContentOffset = mFirstContentOffset;
-
-          // Resolve style and set the style context
-          nsIStyleContext* kidStyleContext =
-            aPresContext->ResolveStyleContextFor(child, this);
-          mFirstChild->SetStyleContext(aPresContext,kidStyleContext);
-          NS_RELEASE(kidStyleContext);
         }
         NS_RELEASE(cd);
       }
@@ -80,7 +78,12 @@ NS_METHOD PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
       prevPage->LastChild(prevLastChild);
 
       // Create a continuing child of the previous page's last child
-      prevLastChild->CreateContinuingFrame(aPresContext, this, mFirstChild);
+      nsIStyleContext* kidSC;
+      prevLastChild->GetStyleContext(aPresContext, kidSC);
+      nsresult rv = prevLastChild->CreateContinuingFrame(aPresContext, this,
+                                                         kidSC, mFirstChild);
+      NS_RELEASE(kidSC);
+
       mChildCount = 1;
       mLastContentOffset = mFirstContentOffset;
     }
@@ -154,12 +157,17 @@ NS_METHOD PageFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-NS_METHOD PageFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                           nsIFrame*       aParent,
-                                           nsIFrame*&      aContinuingFrame)
+NS_METHOD
+PageFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                 nsIFrame*        aParent,
+                                 nsIStyleContext* aStyleContext,
+                                 nsIFrame*&       aContinuingFrame)
 {
   PageFrame* cf = new PageFrame(mContent, aParent);
-  PrepareContinuingFrame(aPresContext, aParent, cf);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
   aContinuingFrame = cf;
   return NS_OK;
 }

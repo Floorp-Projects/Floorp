@@ -182,39 +182,38 @@ void nsHTMLContainer::Compact()
   //XXX I'll turn this on in a bit... mChildren.Compact();
 }
 
-nsIFrame* nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
-                                       nsIFrame* aParentFrame)
+nsresult
+nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
+                             nsIFrame* aParentFrame,
+                             nsIStyleContext* aStyleContext,
+                             nsIFrame*& aResult)
 {
-  // Resolve style for the piece of content
-  // XXX The caller has also resolved the style context, which means we're
-  // resolving it more than once. That's inefficient, and we need to fix it...
-  nsIStyleContext* styleContext =
-    aPresContext->ResolveStyleContextFor(this, aParentFrame);
   nsStyleDisplay* styleDisplay =
-    (nsStyleDisplay*)styleContext->GetData(kStyleDisplaySID);
+    (nsStyleDisplay*) aStyleContext->GetData(kStyleDisplaySID);
 
   // Use style to choose what kind of frame to create
-  nsIFrame* rv;
-  nsresult fr;
+  nsIFrame* frame = nsnull;
+  nsresult rv;
   switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
-    fr = nsBlockFrame::NewFrame(&rv, this, aParentFrame);
+    rv = nsBlockFrame::NewFrame(&frame, this, aParentFrame);
     break;
   case NS_STYLE_DISPLAY_INLINE:
-    fr = nsInlineFrame::NewFrame(&rv, this, aParentFrame);
+    rv = nsInlineFrame::NewFrame(&frame, this, aParentFrame);
     break;
   case NS_STYLE_DISPLAY_LIST_ITEM:
-    fr = nsListItemFrame::NewFrame(&rv, this, aParentFrame);
+    rv = nsListItemFrame::NewFrame(&frame, this, aParentFrame);
     break;
   default:
     // Create an empty frame for holding content that is not being
     // reflowed.
-    fr = nsFrame::NewFrame(&rv, this, aParentFrame);
+    rv = nsFrame::NewFrame(&frame, this, aParentFrame);
     break;
   }
-
-  rv->SetStyleContext(aPresContext,styleContext);
-  NS_RELEASE(styleContext);
+  if (NS_OK == rv) {
+    frame->SetStyleContext(aPresContext, aStyleContext);
+  }
+  aResult = frame;
   return rv;
 }
 

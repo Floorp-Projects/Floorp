@@ -637,9 +637,9 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
       {
         nsIContentDelegate* kidDel;
         kidDel = kid->GetDelegate(aPresContext);
-        kidFrame = kidDel->CreateFrame(aPresContext, kid, this);
+        nsresult rv = kidDel->CreateFrame(aPresContext, kid,
+                                          this, kidStyleContext, kidFrame);
         NS_RELEASE(kidDel);
-        kidFrame->SetStyleContext(aPresContext,kidStyleContext);
       }
 
       nsSize maxKidElementSize;
@@ -1058,7 +1058,10 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
           // frame. This hooks the child into the flow
           nsIFrame* continuingFrame;
            
-          kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+          nsIStyleContext* kidSC;
+          kidFrame->GetStyleContext(aPresContext, kidSC);
+          kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
+          NS_RELEASE(kidSC);
           NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
           // Add the continuing frame to the sibling list
@@ -1286,7 +1289,10 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
         // prepares it for reflow.
         nsIFrame* continuingFrame;
 
-        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+        nsIStyleContext* kidSC;
+        kidFrame->GetStyleContext(aPresContext, kidSC);
+        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
+        NS_RELEASE(kidSC);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to our sibling list and then push
@@ -1412,11 +1418,12 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel = nsnull;
       kidDel = kid->GetDelegate(aPresContext);
-      kidFrame = kidDel->CreateFrame(aPresContext, kid, this);
+      nsresult rv = kidDel->CreateFrame(aPresContext, kid, this,
+                                        kidStyleContext, kidFrame);
       NS_RELEASE(kidDel);
-      kidFrame->SetStyleContext(aPresContext, kidStyleContext);
     } else {
-      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
+      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidStyleContext,
+                                           kidFrame);
     }
 
     // Try to reflow the child into the available space. It might not
@@ -2039,12 +2046,17 @@ PRBool nsTableFrame::IsFirstPassValid() const
   return firstInFlow->mFirstPassValid;
 }
 
-NS_METHOD nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                              nsIFrame*       aParent,
-                                              nsIFrame*&      aContinuingFrame)
+NS_METHOD
+nsTableFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
+                                    nsIFrame*        aParent,
+                                    nsIStyleContext* aStyleContext,
+                                    nsIFrame*&       aContinuingFrame)
 {
   nsTableFrame* cf = new nsTableFrame(mContent, aParent);
-  PrepareContinuingFrame(aPresContext, aParent, cf);
+  if (nsnull == cf) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
   if (PR_TRUE==gsDebug) printf("nsTableFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   // set my width, because all frames in a table flow are the same width
   // code in nsTableOuterFrame depends on this being set
@@ -2074,9 +2086,10 @@ NS_METHOD nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
         aPresContext->ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
       nsIContentDelegate* kidDel = nsnull;
       kidDel = content->GetDelegate(aPresContext);                       // kidDel: REFCNT++
-      nsIFrame * duplicateFrame = kidDel->CreateFrame(aPresContext, content, cf);
+      nsIFrame* duplicateFrame;
+      nsresult rv = kidDel->CreateFrame(aPresContext, content, cf,
+                                        kidStyleContext, duplicateFrame);
       NS_RELEASE(kidDel);                                                // kidDel: REFCNT--
-      duplicateFrame->SetStyleContext(aPresContext,kidStyleContext);
       NS_RELEASE(kidStyleContext);                                       // kidStyleContenxt: REFCNT--
       
       if (nsnull==lastSib)

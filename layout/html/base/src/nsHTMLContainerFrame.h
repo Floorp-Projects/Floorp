@@ -61,8 +61,10 @@ protected:
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec);
 
-  nsIFrame* CreateFrameFor(nsIPresContext* aPresContext,
-                           nsIContent*     aContent);
+  nsresult CreateFrameFor(nsIPresContext*  aPresContext,
+                          nsIContent*      aContent,
+                          nsIStyleContext* aStyleContext,
+                          nsIFrame*&       aResult);
 };
 
 #endif /* nsHTMLContainerFrame_h___ */

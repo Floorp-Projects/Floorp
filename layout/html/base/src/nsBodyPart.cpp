@@ -27,8 +27,11 @@ public:
 
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame);
+
+  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
+                               nsIFrame* aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*& aResult);
 
 protected:
   virtual ~BodyPart();
@@ -57,12 +60,20 @@ nsrefcnt BodyPart::Release(void)
   return mRefCnt;
 }
 
-nsIFrame* BodyPart::CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame)
+nsresult
+BodyPart::CreateFrame(nsIPresContext*  aPresContext,
+                      nsIFrame*        aParentFrame,
+                      nsIStyleContext* aStyleContext,
+                      nsIFrame*&       aResult)
 {
-  nsIFrame* rv;
-  nsresult status = nsBodyFrame::NewFrame(&rv, this, aParentFrame);
-  return rv;
+  nsIFrame* frame = nsnull;
+  nsresult rv = nsBodyFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
+  return NS_OK;
 }
 
 nsresult

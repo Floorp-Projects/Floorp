@@ -76,13 +76,21 @@ int nsTableCaption::GetType()
   return nsITableContent::kTableCaptionType;
 }
 
-nsIFrame* nsTableCaption::CreateFrame(nsIPresContext* aPresContext,
-                                      nsIFrame* aParentFrame)
+nsresult
+nsTableCaption::CreateFrame(nsIPresContext* aPresContext,
+                            nsIFrame* aParentFrame,
+                            nsIStyleContext* aStyleContext,
+                            nsIFrame*& aResult)
 {
   NS_PRECONDITION(nsnull!=aPresContext, "bad arg");
-  nsIFrame* rv;
-  nsresult status = nsTableCaptionFrame::NewFrame(&rv, this, aParentFrame);
-  NS_ASSERTION(nsnull!=rv, "bad arg");
+
+  nsIFrame* frame;
+  nsresult rv = nsTableCaptionFrame::NewFrame(&frame, this, aParentFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  frame->SetStyleContext(aPresContext, aStyleContext);
+  aResult = frame;
   return rv;
 }
 

@@ -81,8 +81,10 @@ public:
    * Used by the html content's delegate to create a frame
    * for the content.
    */
-  virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
-                                nsIFrame* aParentFrame) = 0;
+  virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aParentFrame,
+                               nsIStyleContext* aStyleContext,
+                               nsIFrame*&       aResult) = 0;
 };
 
 #endif /* nsIHTMLContent_h___ */
