@@ -518,6 +518,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     // fire off another URL request for this local disk file and that will
     // take care of the conversion...
     //
+    // RICHIE - we need that plain text converter!
+    //
     mHTMLFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
 		if (!mHTMLFileSpec)
 			goto FAILMEM;
@@ -2528,6 +2530,13 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 
   strip_nonprintable(buf);
 
+  convbuf = nsEscape(buf, url_Path);
+  if (convbuf)
+  {
+      nsCRT::free(buf);
+      buf = convbuf;
+  }
+  
   nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && smtpService)

@@ -280,16 +280,8 @@ nsresult nsSmtpUrl::ParseUrl()
 
 	// the recipients should consist of just the path part up to to the query
     // part
-#ifdef BUG11892
-    //  ** jefft -- for ecoded word recipient the above assumption may be
-    //  incorrect. A typical ecoded word recipient has the following form
-    // =?iso-8859-1?Q?M=E5levi=E7h?= 2 <momoi@netscape.com>
-    // which definitely screws up the standard url parsing. The following
-    // statements are questionable.
 
 	rv = GetFileName(&m_toPart);
-#endif
-    rv = GetPath(&m_toPart);
 
 	// now parse out the search field...
 	char * searchPart = nsnull;
@@ -299,6 +291,10 @@ nsresult nsSmtpUrl::ParseUrl()
 		ParseMessageToPost(searchPart);
 		nsCRT::free(searchPart);
 	}
+    else if (m_toPart)
+    {
+        nsUnescape(m_toPart);
+    }
 
     NS_UNLOCK_INSTANCE();
     return rv;
