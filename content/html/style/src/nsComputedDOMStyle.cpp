@@ -95,7 +95,7 @@ NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle)
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle()
-  : mInner(nsnull), mPresShellWeak(nsnull), mT2P(0.0f)
+  : mInner(this), mPresShellWeak(nsnull), mT2P(0.0f)
 {
 }
 
@@ -116,55 +116,15 @@ nsComputedDOMStyle::Shutdown()
 }
 
 
-NS_IMETHODIMP
-nsComputedDOMStyle::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr) {
-    NS_ERROR("QueryInterface requires a non-NULL destination!");
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsISupports* inst;
-
-  if (aIID.Equals(NS_GET_IID(nsIComputedDOMStyle))) {
-    inst = NS_STATIC_CAST(nsIComputedDOMStyle*, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMCSSStyleDeclaration))) {
-    inst = NS_STATIC_CAST(nsIDOMCSSStyleDeclaration*, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMCSS2Properties))) {
-    if (!mInner) {
-      mInner = new CSS2PropertiesTearoff(this);
-      NS_ENSURE_TRUE(mInner, NS_ERROR_OUT_OF_MEMORY);
-    }
-    inst = NS_STATIC_CAST(nsIDOMCSS2Properties*,
-                          NS_STATIC_CAST(nsISupports*, mInner));
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMNSCSS2Properties))) {
-    if (!mInner) {
-      mInner = new CSS2PropertiesTearoff(this);
-      NS_ENSURE_TRUE(mInner, NS_ERROR_OUT_OF_MEMORY);
-    }
-    inst = NS_STATIC_CAST(nsIDOMNSCSS2Properties*,
-                          NS_STATIC_CAST(nsISupports*, mInner));
-  } else if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    inst = NS_STATIC_CAST(nsISupports*,
-                          NS_STATIC_CAST(nsIComputedDOMStyle*, this));
-  } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
-    inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_ComputedCSSStyleDeclaration_id);
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else {
-    inst = nsnull;
-  }
-
-  nsresult rv;
-  if (!inst) {
-    rv = NS_NOINTERFACE;
-  } else {
-    NS_ADDREF(inst);
-    rv = NS_OK;
-  }
-
-  *aInstancePtr = inst;
-  return rv;
-}
+// QueryInterface implementation for nsComputedDOMStyle
+NS_INTERFACE_MAP_BEGIN(nsComputedDOMStyle)
+  NS_INTERFACE_MAP_ENTRY(nsIComputedDOMStyle)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
+  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMCSS2Properties, &mInner)
+  NS_INTERFACE_MAP_ENTRY_AGGREGATED(nsIDOMNSCSS2Properties, &mInner)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIComputedDOMStyle)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ComputedCSSStyleDeclaration)
+NS_INTERFACE_MAP_END
 
 
 static void doDestroyComputedDOMStyle(nsComputedDOMStyle *aComputedStyle)

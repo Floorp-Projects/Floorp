@@ -38,17 +38,28 @@
 #ifndef nsDOMCSSDeclaration_h___
 #define nsDOMCSSSDeclaration_h___
 
-#include "nsISupports.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSS2Properties.h"
-
-#include "nsAgg.h"
-#include "nsCOMPtr.h"
 
 class nsCSSDeclaration;
 class nsICSSParser;
 class nsICSSLoader;
 class nsIURI;
+
+class CSS2PropertiesTearoff : public nsIDOMNSCSS2Properties
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIDOMCSS2PROPERTIES
+  NS_DECL_NSIDOMNSCSS2PROPERTIES
+
+  CSS2PropertiesTearoff(nsIDOMCSSStyleDeclaration *aOuter);
+  virtual ~CSS2PropertiesTearoff();
+
+private:
+  nsIDOMCSSStyleDeclaration* mOuter;
+};
 
 class nsDOMCSSDeclaration : public nsIDOMCSSStyleDeclaration
 {
@@ -99,21 +110,7 @@ protected:
   virtual ~nsDOMCSSDeclaration();
 
 private:
-  nsCOMPtr<nsISupports> mInner; // CSS2Properties
+  CSS2PropertiesTearoff mInner;
 };
-
-
-class CSS2PropertiesTearoff : public nsIDOMNSCSS2Properties
-{
-public:
-  NS_DECL_AGGREGATED
-
-  NS_DECL_NSIDOMCSS2PROPERTIES
-  NS_DECL_NSIDOMNSCSS2PROPERTIES
-
-  CSS2PropertiesTearoff(nsISupports *aOuter);
-  virtual ~CSS2PropertiesTearoff();
-};
-
 
 #endif // nsDOMCSSDeclaration_h___
