@@ -39,12 +39,9 @@ REQUIRES	= xpcom \
 		  uconv \
 		  expat \
 		  layout \
-		  content \
 		  dom \
 		  pref \
-		  nkcache \
 		  intl \
-		  widget \
 		  $(NULL)
 
 SHARED_LIBRARY_LIBS = \
