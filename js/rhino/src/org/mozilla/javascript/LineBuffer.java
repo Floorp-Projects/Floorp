@@ -87,19 +87,18 @@ final class LineBuffer {
 			            lastWasCR = true;
 			        }
 			    }
-                else { 
-                    if ((buffer[offset] == '\n') 
-                            || (buffer[offset] == Character.LINE_SEPARATOR) // 2028
-                            || (buffer[offset] == Character.PARAGRAPH_SEPARATOR)) // 2029
-                    {
-			            offset++;
-			            prevStart = lineStart;
-			            lineStart = offset;
-			            lineno++;
-			            return '\n';
+                else 
+                    if ((buffer[offset] != '\n') 
+                        && (buffer[offset] != '\u2028')
+                        && (buffer[offset] != '\u2029'))
+                    { 
+			            return (int) buffer[offset++];
 			        }
-			        return (int) buffer[offset++];
-                }
+			    offset++;
+			    prevStart = lineStart;
+			    lineStart = offset;
+			    lineno++;
+			    return '\n';
 			}
 			if ((buffer[offset] >= 128) 
 				&& Character.getType(buffer[offset]) == Character.FORMAT) {
