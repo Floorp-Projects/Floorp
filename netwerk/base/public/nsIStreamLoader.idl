@@ -57,12 +57,7 @@ interface nsIStreamLoader : nsISupports
     readonly attribute unsigned long numBytesRead;
 
     /**
-     * Gets the owner of this file
-     */
-    readonly attribute nsISupports owner;
-
-    /**
-     * Gets the channel
+     * Gets the channel that loaded this file
      */
     readonly attribute nsIChannel channel;
 

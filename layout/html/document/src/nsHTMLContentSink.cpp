@@ -4353,6 +4353,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
 
     nsCOMPtr<nsIChannel> channel;
     rv = aLoader->GetChannel(getter_AddRefs(channel));
+    NS_ASSERTION(channel, "StreamLoader's channel went away prematurely");
 
     if (channel) {
       httpChannel = do_QueryInterface(channel);
@@ -4434,7 +4435,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
 
       //-- Merge the principal of the script file with that of the document
       nsCOMPtr<nsISupports> owner;
-      aLoader->GetOwner(getter_AddRefs(owner));
+      channel->GetOwner(getter_AddRefs(owner));
       nsCOMPtr<nsIPrincipal> prin;
       if (owner)
       {
