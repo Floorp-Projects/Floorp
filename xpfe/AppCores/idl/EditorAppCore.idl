@@ -5,8 +5,7 @@ interface EditorAppCore : BaseAppCore
 
   readonly attribute wstring contentsAsText;
   readonly attribute wstring contentsAsHTML;
-
-	readonly attribute Document editorDocument;
+  readonly attribute Document editorDocument;
 	readonly attribute Selection editorSelection;
 	
 	void EditorAppCore();
@@ -35,6 +34,10 @@ interface EditorAppCore : BaseAppCore
 
 	void insertLink();
 	void insertImage();
+
+  Element getSelectedElement(in wstring tagName);
+  Element createElementWithDefaults(in wstring tagName);
+  Element insertElement(in Element element, in boolean deleteSelection);
 	
 	void exit();
 
