@@ -61,8 +61,17 @@ function openNewTabWith(href, linkNode, event, securityCheck)
   if (event && event.shiftKey)
     loadInBackground = !loadInBackground;
 
+  // As in openNewWindowWith(), we want to pass the charset of the
+  // current document over to a new tab. 
+  var wintype = document.firstChild.getAttribute('windowtype');
+  var originCharset;
+  if (wintype == "navigator:browser") {
+    originCharset = window._content.document.characterSet;
+  }
+
+  // open link in new tab
   var browser = top.document.getElementById("content");  
-  var theTab = browser.addTab(href, getReferrer(document));
+  var theTab = browser.addTab(href, getReferrer(document), originCharset);
   if (!loadInBackground)
     browser.selectedTab = theTab;
   
