@@ -272,6 +272,9 @@ SECMOD_FreeModuleSpecList(SECMODModule *parent, char **moduleSpecList)
     return SECSuccess;
 }
 
+/* internal function that loads a PKCS#11 module but does not add it to the
+   default NSS trust domain */
+
 SECMODModule *
 SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
 {
@@ -349,3 +352,43 @@ loser:
     }
     return module;
 }
+
+/* exported function that loads a PKCS#11 module and adds it to the default
+   NSS trust domain */
+
+SECMODModule *
+SECMOD_LoadUserModule(char *modulespec,SECMODModule *parent, PRBool recurse)
+{
+    SECStatus rv = SECSuccess;
+    SECMODModule * newmod = SECMOD_LoadModule(modulespec, parent, recurse);
+    if (newmod)
+    {
+        rv = STAN_AddModuleToDefaultTrustDomain(newmod);
+        if (SECSuccess != rv)
+        {
+            SECMOD_DestroyModule(newmod);
+            return NULL;
+        }
+    }
+    return newmod;
+}
+
+/* exported call that removes the PKCS#11 module from the default NSS trust
+   domain, call C_Finalize, and destroy the module structure */
+
+SECStatus SECMOD_UnloadUserModule(SECMODModule *mod)
+{
+    SECStatus rv = SECSuccess;
+    int atype = 0;
+    if (!mod)
+    {
+        return SECFailure;
+    }
+    rv = STAN_AddModuleToDefaultTrustDomain(mod);
+    if (SECSuccess != rv)
+    {
+        return SECFailure;
+    }
+    return SECMOD_DeleteModuleEx(NULL, mod, &atype, PR_FALSE);
+}
+

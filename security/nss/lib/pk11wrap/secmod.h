@@ -81,8 +81,11 @@ SEC_BEGIN_PROTOS
  */
 
 /* Initialization */
-extern SECMODModule *SECMOD_LoadModule(char *moduleSpec,SECMODModule *parent,
+extern SECMODModule *SECMOD_LoadUserModule(char *moduleSpec,SECMODModule *parent,
 							PRBool recurse);
+
+SECStatus SECMOD_UnloadUserModule(SECMODModule *mod);
+
 SECMODModule * SECMOD_CreateModule(char *lib, char *name, char *param, 
 								char *nss);
 extern void SECMOD_Shutdown(void);
@@ -91,6 +94,7 @@ extern void SECMOD_Shutdown(void);
 /* Module Management */
 char **SECMOD_GetModuleSpecList(SECMODModule *module);
 SECStatus SECMOD_FreeModuleSpecList(SECMODModule *module,char **moduleSpecList);
+
  
 /* protoypes */
 extern SECMODModuleList *SECMOD_GetDefaultModuleList(void);
