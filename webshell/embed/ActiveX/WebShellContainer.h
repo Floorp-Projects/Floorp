@@ -22,6 +22,7 @@
 // interfaces into the web shell and so forth.
 
 class CWebShellContainer :
+		public nsIBrowserWindow,
 		public nsIWebShellContainer,
 		public nsIStreamObserver,
 		public nsIDocumentLoaderObserver
@@ -44,22 +45,43 @@ public:
 	// nsISupports
 	NS_DECL_ISUPPORTS
 
+	// nsIBrowserWindow
+	NS_IMETHOD Init(nsIAppShell* aAppShell, nsIPref* aPrefs, const nsRect& aBounds, PRUint32 aChromeMask, PRBool aAllowPlugins = PR_TRUE);
+	NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
+	NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
+	NS_IMETHOD GetBounds(nsRect& aResult);
+	NS_IMETHOD GetWindowBounds(nsRect& aResult);
+	NS_IMETHOD Show();
+	NS_IMETHOD Hide();
+	NS_IMETHOD Close();
+	NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
+	NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
+	NS_IMETHOD SetTitle(const PRUnichar* aTitle);
+	NS_IMETHOD GetTitle(const PRUnichar** aResult);
+	NS_IMETHOD SetStatus(const PRUnichar* aStatus);
+	NS_IMETHOD GetStatus(const PRUnichar** aResult);
+	NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
+	NS_IMETHOD ShowMenuBar(PRBool aShow);
+	NS_IMETHOD IsMenuBarVisible(PRBool *aVisible);
+	NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
+	NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
+
 	// nsIWebShellContainer
 	NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
 	NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
 	NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
 	NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
 	NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-                         PRBool aVisible,
-                         nsIWebShell *&aNewWebShell);
+						PRBool aVisible,
+						nsIWebShell *&aNewWebShell);
 	NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
 	NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 	NS_IMETHOD ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameNode);
-  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow);
+	NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+						 PRInt32 aXPos, PRInt32 aYPos, 
+						 const nsString& aPopupType, const nsString& anAnchorAlignment,
+						 const nsString& aPopupAlignment,
+						 nsIDOMWindow* aWindow);
 
 	// nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
