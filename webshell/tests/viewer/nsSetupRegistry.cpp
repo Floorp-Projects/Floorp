@@ -276,7 +276,7 @@ NS_SetupRegistry()
 #ifndef NECKO
   nsComponentManager::RegisterComponentLib(kCNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 #else
-  nsComponentManager::RegisterComponentLib(kIOServiceCID, NULL, NULL, NECKO_DLL, PR_FALSE, PR_FALSE);
+//  nsComponentManager::RegisterComponentLib(kIOServiceCID, NULL, NULL, NECKO_DLL, PR_FALSE, PR_FALSE);
 #endif // NECKO
 
   // PLUGIN
