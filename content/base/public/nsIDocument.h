@@ -138,11 +138,6 @@ public:
   NS_IMETHOD SetBaseTarget(const nsAReadableString &aBaseTarget)=0;
 
   /**
-   * Return the content (mime) type of this document.
-   */
-  NS_IMETHOD GetContentType(nsAWritableString& aContentType) const = 0;
-
-  /**
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */

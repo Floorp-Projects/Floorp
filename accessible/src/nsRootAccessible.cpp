@@ -24,6 +24,7 @@
 #include "nsRootAccessible.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
@@ -401,8 +402,10 @@ NS_IMETHODIMP nsDocAccessibleMixin::GetTitle(nsAWritableString& aTitle)
 
 NS_IMETHODIMP nsDocAccessibleMixin::GetMimeType(nsAWritableString& aMimeType)
 {
-  if (mDocument)
-    return mDocument->GetContentType(aMimeType); 
+  nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(mDocument));
+  if (domnsDocument) {
+    return domnsDocument->GetContentType(aMimeType);
+  }
   return NS_ERROR_FAILURE;
 }
 

@@ -361,13 +361,6 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   return result;
 }
 
-NS_IMETHODIMP 
-nsHTMLDocument::GetContentType(nsAWritableString& aContentType) const
-{
-  aContentType.Assign(NS_LITERAL_STRING("text/html"));
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHTMLDocument::CreateShell(nsIPresContext* aContext,
                             nsIViewManager* aViewManager,

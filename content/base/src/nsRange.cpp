@@ -29,6 +29,7 @@
 
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -2305,8 +2306,9 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
           result = NS_NewHTMLFragmentContentSink(&sink);
           if (NS_SUCCEEDED(result)) {
             parser->SetContentSink(sink);
-            if (document) {
-              document->GetContentType(contentType);
+            nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(document));
+            if (domnsDocument) {
+              domnsDocument->GetContentType(contentType);
             }
             else {
               // Who're we kidding. This only works for html.

@@ -612,8 +612,11 @@ nsXULDocument::GetArena(nsIArena** aArena)
     return NS_OK;
 }
 
+// Override the nsDocument.cpp method to keep from returning the
+// "cached XUL" type which is completely internal and may confuse
+// people
 NS_IMETHODIMP
-nsXULDocument::GetContentType(nsAWritableString& aContentType) const
+nsXULDocument::GetContentType(nsAWritableString& aContentType)
 {
     aContentType.Assign(NS_LITERAL_STRING("application/vnd.mozilla.xul+xml"));
     return NS_OK;

@@ -708,6 +708,16 @@ nsDocument::StartDocumentLoad(const char* aCommand,
   if (aReset)
     rv = Reset(aChannel, aLoadGroup);
 
+  nsXPIDLCString contentType;
+  if (NS_SUCCEEDED(aChannel->GetContentType(getter_Copies(contentType)))) {
+    nsXPIDLCString::const_iterator start, end, semicolon;
+    contentType.BeginReading(start);
+    contentType.EndReading(end);
+    semicolon = start;
+    FindCharInReadable(';', semicolon, end);
+    CopyASCIItoUCS2(Substring(start, semicolon), mContentType);
+  }
+  
   PRBool have_contentLanguage = PR_FALSE;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
@@ -791,10 +801,10 @@ nsDocument::AddPrincipal(nsIPrincipal *aNewPrincipal)
 }
 
 NS_IMETHODIMP 
-nsDocument::GetContentType(nsAWritableString& aContentType) const
+nsDocument::GetContentType(nsAWritableString& aContentType)
 {
-  // Must be implemented by derived class.
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aContentType = mContentType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

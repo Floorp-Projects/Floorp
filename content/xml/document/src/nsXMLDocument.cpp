@@ -246,14 +246,6 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   return result;
 }
 
-NS_IMETHODIMP 
-nsXMLDocument::GetContentType(nsAWritableString& aContentType) const
-{
-  // XXX Should get document type from incoming stream
-  aContentType.Assign(NS_LITERAL_STRING("text/xml"));
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXMLDocument::GetInterface(const nsIID& aIID, void** aSink)
 {
