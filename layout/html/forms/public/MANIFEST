@@ -4,3 +4,4 @@
 
 nsIComboboxControlFrame.h
 nsIListControlFrame.h
+nsIFormControlFrame.h
