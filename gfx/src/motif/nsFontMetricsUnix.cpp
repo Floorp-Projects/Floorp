@@ -17,16 +17,23 @@
  */
 
 #include "nsFontMetricsUnix.h"
+#include "nsDeviceContextUnix.h"
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 nsFontMetricsUnix :: nsFontMetricsUnix()
 {
   NS_INIT_REFCNT();
+  mFont = nsnull;
 }
   
 nsFontMetricsUnix :: ~nsFontMetricsUnix()
 {
+  if (nsnull != mFont)
+  {
+    delete mFont;
+    mFont = nsnull;
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsUnix, kIFontMetricsIID)
@@ -36,68 +43,111 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
   mFont = new nsFont(aFont);
   mContext = aCX ;
 
-  QueryFont();
+  RealizeFont();
 
   return NS_OK;
 }
 
-void nsFontMetricsUnix::QueryFont()
+void nsFontMetricsUnix::RealizeFont()
 {
+  //mFontHandle = ::CreateFontIndirect(&logFont);
+
+  //mHeight = nscoord(metrics.tmHeight * p2t);
+  //mAscent = nscoord(metrics.tmAscent * p2t);
+  //mDescent = nscoord(metrics.tmDescent * p2t);
+  //mLeading = nscoord(metrics.tmInternalLeading * p2t);
+  //mMaxAscent = nscoord(metrics.tmAscent * p2t);
+  //mMaxDescent = nscoord(metrics.tmDescent * p2t);
+  //mMaxAdvance = nscoord(metrics.tmMaxCharWidth * p2t);
+
+
+  nsDrawingSurfaceUnix * aRenderingSurface = (nsDrawingSurfaceUnix *) ((nsDeviceContextUnix *)mContext)->GetDrawingSurface();
+
+  mFontHandle = ::XLoadFont(aRenderingSurface->display, "fixed");
+
+  XFontStruct * fs = ::XQueryFont(aRenderingSurface->display, mFontHandle);
+
+  mAscent = fs->ascent ;
+  mDescent = fs->descent ;
+
+  ::XSetFont(aRenderingSurface->display, aRenderingSurface->gc, mFontHandle);
+
+
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(char ch)
 {
-  return nsnull;
+  return mCharWidths[PRUint8(ch)];
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(PRUnichar ch)
 {
-  return 0;
+  if (ch < 256) {
+    return mCharWidths[ch];
+  }
+  return 0;/* XXX */
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const nsString& aString)
 {
-  return nsnull;
+  return GetWidth(aString.GetUnicode(), aString.Length());
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 {
-  return nsnull;
+  // XXX use native text measurement routine
+  nscoord sum = 0;
+  PRUint8 ch;
+  while ((ch = PRUint8(*aString++)) != 0) {
+    sum += mCharWidths[ch];
+  }
+  return sum;
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
 {
-  return nsnull;
+  // XXX use native text measurement routine
+  nscoord sum = 0;
+  while (aLength != 0) {
+    PRUnichar ch = *aString++;
+    if (ch < 256) {
+      sum += mCharWidths[ch];
+    } else {
+      // XXX not yet
+    }
+    --aLength;
+  }
+  return sum;
 }
 
 nscoord nsFontMetricsUnix :: GetHeight()
 {
-  return 0;
+  return mHeight;
 }
 
 nscoord nsFontMetricsUnix :: GetLeading()
 {
-  return 0;
+  return mLeading;
 }
 
 nscoord nsFontMetricsUnix :: GetMaxAscent()
 {
-  return 0;
+  return mMaxAscent;
 }
 
 nscoord nsFontMetricsUnix :: GetMaxDescent()
 {
-  return 0;
+  return mMaxDescent;
 }
 
 nscoord nsFontMetricsUnix :: GetMaxAdvance()
 {
-  return 0;
+  return mMaxAdvance;
 }
 
 const nscoord * nsFontMetricsUnix :: GetWidths()
 {
-  return nsnull;
+  return mCharWidths;
 }
 
 const nsFont& nsFontMetricsUnix :: GetFont()
@@ -111,5 +161,40 @@ nsFontHandle nsFontMetricsUnix :: GetFontHandle()
 }
 
 
+// XXX this function is a hack; the only logical font names we should
+// support are the one used by css.
+const char* nsFontMetricsUnix::MapFamilyToFont(const nsString& aLogicalFontName)
+{
+  if (aLogicalFontName.EqualsIgnoreCase("Times Roman")) {
+    return "Times New Roman";
+  }
+  if (aLogicalFontName.EqualsIgnoreCase("Times")) {
+    return "Times New Roman";
+  }
+  if (aLogicalFontName.EqualsIgnoreCase("Unicode")) {
+    return "Bitstream Cyberbit";
+  }
+  if (aLogicalFontName.EqualsIgnoreCase("Courier")) {
+    return "Courier New";
+  }
+
+  // the CSS generic names
+  if (aLogicalFontName.EqualsIgnoreCase("serif")) {
+    return "Times New Roman";
+  }
+  if (aLogicalFontName.EqualsIgnoreCase("sans-serif")) {
+    return "Arial";
+  }
+  if (aLogicalFontName.EqualsIgnoreCase("cursive")) {
+//    return "XXX";
+  }
+  if (aLogicalFontName.EqualsIgnoreCase("fantasy")) {
+//    return "XXX";
+  }
+  if (aLogicalFontName.EqualsIgnoreCase("monospace")) {
+    return "Courier New";
+  }
+  return "Arial";/* XXX for now */
+}
 
 

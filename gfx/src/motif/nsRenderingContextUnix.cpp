@@ -63,9 +63,9 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   ((nsDeviceContextUnix *)aContext)->SetDrawingSurface(mRenderingSurface);
   ((nsDeviceContextUnix *)aContext)->InstallColormap();
 
-#if 0
   mFontCache = mContext->GetFontCache();
-#endif 
+
+  // Select a default font here?
 }
 
 nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
@@ -90,6 +90,7 @@ void nsRenderingContextUnix :: Reset()
 
 nsIDeviceContext * nsRenderingContextUnix :: GetDeviceContext(void)
 {
+  NS_IF_ADDREF(mContext);
   return mContext;
 }
 
@@ -147,17 +148,16 @@ nscolor nsRenderingContextUnix :: GetColor() const
 
 void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 {
+  /*
   Font id = ::XLoadFont(mRenderingSurface->display, "fixed");
 
   XFontStruct * fs = ::XQueryFont(mRenderingSurface->display, id);
 
   ::XSetFont(mRenderingSurface->display, mRenderingSurface->gc, id);
+  */
 
-
-#if 0
   NS_IF_RELEASE(mFontMetrics);
   mFontMetrics = mFontCache->GetMetricsFor(aFont);
-#endif
 
 }
 

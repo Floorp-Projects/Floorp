@@ -58,12 +58,24 @@ public:
   virtual nsFontHandle GetFontHandle();
 
 protected:
+  void RealizeFont();
+  static const char* MapFamilyToFont(const nsString& aLogicalFontName);
+
+protected:
   void QueryFont();
 
   nsFont            *mFont;
   nsIDeviceContext  *mContext;
   XFontStruct       *mFontInfo;
   Font              mFontHandle;
+  nscoord           mCharWidths[256];
+  nscoord           mHeight;
+  nscoord           mAscent;
+  nscoord           mDescent;
+  nscoord           mLeading;
+  nscoord           mMaxAscent;
+  nscoord           mMaxDescent;
+  nscoord           mMaxAdvance;
 };
 
 #endif

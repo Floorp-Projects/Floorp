@@ -68,6 +68,7 @@ public:
   virtual float GetZoom() const;
 
   virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
+  virtual nsDrawingSurface GetDrawingSurface();
 
   //functions for handling gamma correction of output device
   virtual float GetGamma(void);
