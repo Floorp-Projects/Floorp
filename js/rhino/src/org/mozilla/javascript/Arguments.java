@@ -124,6 +124,16 @@ class Arguments extends ScriptableObject {
         super.delete(name);
     }
 
+    public void delete(int index) {
+        if (0 <= index && index < args.length) {
+            NativeFunction f = activation.funObj;
+            if (index < f.argCount)
+                activation.delete(f.argNames[index]);
+            else
+                args[index] = Undefined.instance;
+        }
+    }
+
     private NativeCall activation;
     private Object[] args;
     private boolean hasCaller;
