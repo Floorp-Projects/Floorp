@@ -151,9 +151,11 @@ public:
     // called when a socket event is handled
     void OnSocketEvent(PRUint32 type, nsresult status, nsISupports *param);
 
-private:
+protected:
 
     virtual ~nsSocketTransport();
+
+private:
 
     // event types
     enum {
