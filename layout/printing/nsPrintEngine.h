@@ -66,6 +66,10 @@ class nsPagePrintTimer;
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentViewerPrint.h"
 
+#ifdef MOZ_LAYOUTDEBUG
+#include "nsIDebugObject.h"
+#endif
+
 //------------------------------------------------------------------------
 // nsPrintEngine Class
 //
@@ -270,6 +274,19 @@ public:
   void   SetIsCreatingPrintPreview(PRBool aIsCreatingPrintPreview) { mIsCreatingPrintPreview = aIsCreatingPrintPreview; }
   PRBool GetIsCreatingPrintPreview()               { return mIsCreatingPrintPreview; }
 
+#ifdef MOZ_LAYOUTDEBUG
+  static nsresult TestRuntimeErrorCondition(PRInt16  aRuntimeID, 
+                                            nsresult aCurrentErrorCode, 
+                                            nsresult aNewErrorCode);
+
+  static PRBool   IsDoingRuntimeTesting();
+  static void     InitializeTestRuntimeError();
+protected:
+  static PRBool   mIsDoingRuntimeTesting;
+
+  static nsCOMPtr<nsIDebugObject> mLayoutDebugObj; // always de-referenced with the destructor
+#endif
+
 protected:
   static nsIPresShell* GetPresShellFor(nsIDocShell* aDocShell);
   void FirePrintCompletionEvent();
@@ -328,6 +345,17 @@ private:
   nsPrintEngine& operator=(const nsPrintEngine& aOther); // not implemented
 
 };
+
+#ifdef MOZ_LAYOUTDEBUG
+#define INIT_RUNTIME_ERROR_CHECKING() nsPrintEngine::InitializeTestRuntimeError();
+#define CHECK_RUNTIME_ERROR_CONDITION(_name, _currerr, _newerr) \
+  if (nsPrintEngine::IsDoingRuntimeTesting()) { \
+    _currerr = nsPrintEngine::TestRuntimeErrorCondition(_name, _currerr, _newerr); \
+  }
+#else
+#define CHECK_RUNTIME_ERROR_CONDITION
+#define INIT_RUNTIME_ERROR_CHECKING
+#endif
 
 #endif /* nsPrintEngine_h___ */
 
