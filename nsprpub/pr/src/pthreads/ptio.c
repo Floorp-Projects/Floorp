@@ -1080,6 +1080,34 @@ void _PR_InitIO()
 
 }  /* _PR_InitIO */
 
+void _PR_CleanupIO(void)
+{
+    _PR_Putfd(_pr_stdin);
+    _pr_stdin = NULL;
+    _PR_Putfd(_pr_stdout);
+    _pr_stdout = NULL;
+    _PR_Putfd(_pr_stderr); 
+    _pr_stderr = NULL;
+
+    _PR_CleanupFdCache();
+    
+    if (_pr_flock_cv)
+    {
+        PR_DestroyCondVar(_pr_flock_cv);
+        _pr_flock_cv = NULL;
+    }
+    if (_pr_flock_lock)
+    {
+        PR_DestroyLock(_pr_flock_lock);
+        _pr_flock_lock = NULL;
+    }
+    if (_pr_rename_lock)
+    {
+        PR_DestroyLock(_pr_rename_lock);
+        _pr_rename_lock = NULL;
+    }
+}  /* _PR_CleanupIO */
+
 PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
 {
     PRFileDesc *result = NULL;

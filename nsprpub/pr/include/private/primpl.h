@@ -1736,6 +1736,7 @@ extern void _PR_InitRWLocks(void);
 extern void _PR_NotifyCondVar(PRCondVar *cvar, PRThread *me);
 extern void _PR_CleanupThread(PRThread *thread);
 extern void _PR_CleanupEnv(void);
+extern void _PR_CleanupIO(void);
 extern void _PR_CleanupLayerCache(void);
 extern void _PR_CleanupStacks(void);
 extern void _PR_CleanupThreads(void);
