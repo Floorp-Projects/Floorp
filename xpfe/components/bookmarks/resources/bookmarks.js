@@ -141,12 +141,10 @@ function fillContextMenu(name)
 
     // remove the menu node (which tosses all of its kids);
     // do this in case any old command nodes are hanging around
-    var menuNode = popupNode.childNodes[0];
-    popupNode.removeChild(menuNode);
-
-    // create a new menu node
-    menuNode = document.createElement("menu");
-    popupNode.appendChild(menuNode);
+	for (var i = 0; i < popupNode.childNodes.length; i++) 
+	{
+	  popupNode.removeChild(popupNode.childNodes[0]);
+	}
 
     var treeNode = document.getElementById("bookmarksTree");
     if (!treeNode)    return(false);
@@ -242,7 +240,7 @@ function fillContextMenu(name)
         menuItem.setAttribute("value", cmdName);
         menuItem.setAttribute("oncommand", "return doContextCmd('" + cmdResource.Value + "');");
         
-        menuNode.appendChild(menuItem);
+        popupNode.appendChild(menuItem);
     }
 
     return(true);

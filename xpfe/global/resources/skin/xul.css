@@ -38,10 +38,6 @@ box {
   	font: inherit;
 }
 
-popup {
-	display: none;
-}
-
 template {
 	display: none;
 }
@@ -318,7 +314,7 @@ menuitem[disabled="true"] {
 	color: #999999;
 }
 
-menupopupset {
+popupset {
   display: block;
 }
 
@@ -326,7 +322,15 @@ menupopup {
   display: none;
 }
 
+popup {
+  display: none;
+}
+
 menupopup[menugenerated="true"] {
+  display: block;
+}
+
+popup[menugenerated="true"] {
   display: block;
 }
 
@@ -338,11 +342,23 @@ menupopup {
   border: 1px white outset;
 }
 
+popup {
+  font: inherit;
+  visibility: hidden; 
+  background-color: #CCCCDD;
+  color: inherit;
+  border: 1px white outset;
+}
+
 menupopup[menuactive="true"] {
   visibility: visible;
 }
 
-menupopup menu {
+popup[menuactive="true"] {
+  visibility: visible;
+}
+
+menupopup > menu {
   max-width: 400px;
   min-width: 125px;
   margin-left: 1px;
@@ -351,7 +367,25 @@ menupopup menu {
   margin-bottom: 0px;
 }
 
-menupopup menuitem {
+popup > menu {
+  max-width: 400px;
+  min-width: 125px;
+  margin-left: 1px;
+  margin-right: 1px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+menupopup > menuitem {
+  max-width: 400px;
+  min-width: 125px;
+  margin-left: 1px;
+  margin-right: 1px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+popup > menuitem {
   max-width: 400px;
   min-width: 125px;
   margin-left: 1px;
@@ -816,7 +850,6 @@ tabcontrol {
 
 /* all the debug stuff is here */
 
-
 /* always debug 
 
 *:-moz-horizontal-box-debug {
@@ -841,6 +874,7 @@ tabcontrol {
   border: 2px solid blue;
   border-top-width: 10px;
   color: white;
+>>>>>>> 1.56
 }
 
 *[debug="true"]:-moz-vertical-box-debug {
@@ -1243,6 +1277,11 @@ menupopup > menuitem {
   padding: 2px;
 }
 
+popup > menuitem {
+  border: 1px solid transparent;
+  padding: 2px;
+}
+
 menubar > menu[menuactive="true"] {
   border: 1px outset white;
   color:#333366;
@@ -1257,7 +1296,17 @@ menupopup > menu[menuactive="true"] {
   color: white;
 }
 
+popup > menu[menuactive="true"] {
+  background-color: #666699;
+  color: white;
+}
+
 menupopup > menuitem[menuactive="true"] {
+  background-color: #666699;
+  color: white;
+}
+
+popup > menuitem[menuactive="true"] {
   background-color: #666699;
   color: white;
 }

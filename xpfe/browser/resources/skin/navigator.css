@@ -5,10 +5,6 @@
 	display: none;
 }
 
-popup {
-	display: none;
-}
-
 titledbutton#translate-button {
 	list-style-image:url(resource:/res/toolbar/TB_Location.gif);
 }

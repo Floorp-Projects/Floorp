@@ -1240,7 +1240,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   nsString tagName;
   nsCOMPtr<nsIDOMElement> popupSetElement = do_QueryInterface(popupSet);
   popupSetElement->GetTagName(tagName);
-  if (tagName != "menupopupset")
+  if (tagName != "popupset")
     return NS_OK;
 
   // Now obtain the popup set frame.

@@ -47,14 +47,17 @@ Contributor(s): ______________________________________. -->
   </html:script>
 
 <!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
-<popup id="aTooltip" oncreate="return FillInTooltip(document.tooltipElement);">
- <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-         width="200" height="20" style="border: thin solid black"> 
-   <titledbutton id="replaceMe" align="left" class="borderless" value="" />
- </window>
-</popup>
+<popupset>
+  <popup id="aTooltip" oncreate="return FillInTooltip(document.tooltipElement);">
+ style="border: thin solid black;"> 
+   <titledbutton id="replaceMe" align="left" crop="right" class="borderless" value="" />
+ </popup>
+</popupset>
 
-
+<!-- This is for test purposes. -->
+<keyset>
+    <key id="openKey" key="x" command="true" onkeypress="BrowserOpenWindow()"/>
+</keyset>
 
 <html:script language="javascript">
   var gBookmarkPopup = null;
