@@ -224,36 +224,6 @@ void UninitMouseEvent(GdkEventButton *aGEB,
 }
 
 //==============================================================
-void InitDrawEvent(GdkRectangle *area,
-                            gpointer   p,
-                            nsPaintEvent &anEvent,
-                            PRUint32   aEventType)
-{
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_PAINT_EVENT;
-
-  if (area != NULL) {
-    nsRect *rect = new nsRect(area->x, area->y, area->width, area->height);
-    anEvent.rect = rect;
-  }
-}
-//==============================================================
-void UninitDrawEvent(GdkRectangle *area,
-                              gpointer  p,
-                              nsPaintEvent &anEvent,
-                              PRUint32   aEventType)
-{
-  if (area != NULL) {
-    delete anEvent.rect;
-  }
-  // While I'd think you should NS_RELEASE(anEvent.widget) here,
-  // if you do, it is a NULL pointer.  Not sure where it is getting
-  // released.
-}
-
-//==============================================================
 void InitExposeEvent(GdkEventExpose *aGEE,
                             gpointer   p,
                             nsPaintEvent &anEvent,
@@ -303,32 +273,6 @@ void InitMotionEvent(GdkEventMotion *aGEM,
 
 //==============================================================
 void UninitMotionEvent(GdkEventMotion *aGEM,
-                              gpointer   p,
-                              nsMouseEvent &anEvent,
-                              PRUint32     aEventType)
-{
-}
-
-//==============================================================
-void InitCrossingEvent(GdkEventCrossing *aGEC,
-                            gpointer   p,
-                            nsMouseEvent &anEvent,
-                            PRUint32   aEventType)
-{
-  anEvent.message = aEventType;
-  anEvent.widget  = (nsWidget *) p;
-
-  anEvent.eventStructType = NS_MOUSE_EVENT;
-
-  if (aGEC != NULL) {
-    anEvent.point.x = nscoord(aGEC->x);
-    anEvent.point.y = nscoord(aGEC->y);
-    anEvent.time = aGEC->time;
-  }
-}
-
-//==============================================================
-void UninitCrossingEvent(GdkEventCrossing *aGEC,
                               gpointer   p,
                               nsMouseEvent &anEvent,
                               PRUint32     aEventType)
@@ -486,21 +430,6 @@ gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
 }
 #endif
 
-gint handle_draw_event(GtkWidget *w, GdkRectangle *area, gpointer p)
-{
-  nsPaintEvent pevent;
-  InitDrawEvent(area, p, pevent, NS_PAINT);
-
-  nsWindow *win = (nsWindow *)p;
-  win->AddRef();
-  win->OnPaint(pevent);
-  win->Release();
-
-  UninitDrawEvent(area, p, pevent, NS_PAINT);
-
-  return PR_TRUE;
-}
-
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 {
   if (event->type == GDK_NO_EXPOSE)
@@ -629,36 +558,6 @@ gint handle_motion_notify_event(GtkWidget *w, GdkEventMotion * event, gpointer p
   win->Release();
 
   UninitMotionEvent(event, p, mevent, NS_MOUSE_MOVE);
-
-  return PR_TRUE;
-}
-
-//==============================================================
-gint handle_enter_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer p)
-{
-  nsMouseEvent mevent;
-  InitCrossingEvent(event, p, mevent, NS_MOUSE_ENTER);
-
-  nsWindow *win = (nsWindow *)p;
-  win->AddRef();
-  win->DispatchMouseEvent(mevent);
-  win->Release();
-
-  UninitCrossingEvent(event, p, mevent, NS_MOUSE_ENTER);
-
-  return PR_TRUE;
-}
-
-//==============================================================
-gint handle_leave_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer p)
-{
-  nsMouseEvent mevent;
-  InitCrossingEvent(event, p, mevent, NS_MOUSE_EXIT);
-
-  nsWindow *win = (nsWindow *)p;
-  win->AddRef();
-  win->DispatchMouseEvent(mevent);
-  win->Release();
 
   return PR_TRUE;
 }

@@ -91,6 +91,53 @@ public:
 
 protected:
 
+  //////////////////////////////////////////////////////////////////////
+  //
+  // Draw signal
+  // 
+  //////////////////////////////////////////////////////////////////////
+  void InitDrawEvent(GdkRectangle * aArea,
+                     nsPaintEvent & aPaintEvent,
+                     PRUint32       aEventType);
+
+  void UninitDrawEvent(GdkRectangle * area,
+                       nsPaintEvent & aPaintEvent,
+                       PRUint32       aEventType);
+  
+  static gint DrawSignal(GtkWidget *    aWidget,
+                         GdkRectangle * aArea,
+                         gpointer       aData);
+
+  virtual gint OnDrawSignal(GdkRectangle * aArea);
+
+  //////////////////////////////////////////////////////////////////////
+  //
+  // Crossing signals
+  // 
+  //////////////////////////////////////////////////////////////////////
+  void InitCrossingEvent(GdkEventCrossing * aGdkCrossingEvent,
+                         nsMouseEvent &     aMouseEvent,
+                         PRUint32           aEventType);
+
+  void UninitCrossingEvent(GdkEventCrossing * aGdkCrossingEvent,
+                           nsMouseEvent &     aMouseEvent,
+                           PRUint32           aEventType);
+
+
+  static gint EnterNotifySignal(GtkWidget *        aWidget, 
+                                GdkEventCrossing * aGdkCrossingEvent, 
+                                gpointer           aData);
+
+  virtual gint OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
+
+  static gint LeaveNotifySignal(GtkWidget *        aWidget, 
+                                GdkEventCrossing * aGdkCrossingEvent, 
+                                gpointer           aData);
+  
+  virtual gint OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent);
+
+  //////////////////////////////////////////////////////////////////////
+
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkWidget *parentWidget);
   nsresult     SetIcon();

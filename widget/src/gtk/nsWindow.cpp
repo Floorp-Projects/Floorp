@@ -288,18 +288,36 @@ void nsWindow::InitCallbacks(char * aName)
                      "motion_notify_event",
                      GTK_SIGNAL_FUNC(handle_motion_notify_event),
                      this);
+//   gtk_signal_connect(GTK_OBJECT(mWidget),
+//                      "enter_notify_event",
+//                      GTK_SIGNAL_FUNC(handle_enter_notify_event),
+//                      this);
+//   gtk_signal_connect(GTK_OBJECT(mWidget),
+//                      "leave_notify_event",
+//                      GTK_SIGNAL_FUNC(handle_leave_notify_event),
+//                      this);
+
+/*   gtk_signal_connect(GTK_OBJECT(mWidget), */
+/*                      "draw", */
+/*                      GTK_SIGNAL_FUNC(handle_draw_event), */
+/*                      this); */
+
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "enter_notify_event",
-                     GTK_SIGNAL_FUNC(handle_enter_notify_event),
-                     this);
+                     GTK_SIGNAL_FUNC(nsWindow::EnterNotifySignal),
+                     (gpointer) this);
+
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "leave_notify_event",
-                     GTK_SIGNAL_FUNC(handle_leave_notify_event),
-                     this);
+                     GTK_SIGNAL_FUNC(nsWindow::LeaveNotifySignal),
+                     (gpointer) this);
+
+
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "draw",
-                     GTK_SIGNAL_FUNC(handle_draw_event),
-                     this);
+                     GTK_SIGNAL_FUNC(nsWindow::DrawSignal),
+                     (gpointer) this);
+
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "expose_event",
                      GTK_SIGNAL_FUNC(handle_expose_event),
@@ -539,6 +557,181 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 }
 
 //----------------------------------------------------------------------
+
+
+//////////////////////////////////////////////////////////////////////
+//
+// Draw signal
+// 
+//////////////////////////////////////////////////////////////////////
+void 
+nsWindow::InitDrawEvent(GdkRectangle * aArea,
+						nsPaintEvent & aPaintEvent,
+						PRUint32       aEventType)
+{
+  aPaintEvent.message = aEventType;
+  aPaintEvent.widget  = (nsWidget *) this;
+
+  aPaintEvent.eventStructType = NS_PAINT_EVENT;
+
+  if (aArea != NULL) 
+  {
+    aPaintEvent.rect = new nsRect(aArea->x, 
+							  aArea->y, 
+							  aArea->width, 
+							  aArea->height);
+  }
+}
+//////////////////////////////////////////////////////////////////////
+void 
+nsWindow::UninitDrawEvent(GdkRectangle * area,
+						  nsPaintEvent & aPaintEvent,
+						  PRUint32       aEventType)
+{
+  if (area != NULL) 
+  {
+    delete aPaintEvent.rect;
+  }
+
+  // While I'd think you should NS_RELEASE(aPaintEvent.widget) here,
+  // if you do, it is a NULL pointer.  Not sure where it is getting
+  // released.
+}
+//////////////////////////////////////////////////////////////////////
+/* static */ gint
+nsWindow::DrawSignal(GtkWidget *    /* aWidget */,
+					 GdkRectangle * aArea,
+					 gpointer       aData)
+{
+  nsWindow * window = (nsWindow *) aData;
+
+  NS_ASSERTION(nsnull != window,"window is null");
+
+  return window->OnDrawSignal(aArea);
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ gint
+nsWindow::OnDrawSignal(GdkRectangle * aArea)
+{
+  //printf("nsWindow::OnDrawSignal()\n");
+
+  nsPaintEvent pevent;
+
+  InitDrawEvent(aArea, pevent, NS_PAINT);
+
+  nsWindow * win = (nsWindow *) this;
+
+  NS_ADDREF(win);
+
+  win->OnPaint(pevent);
+
+  NS_RELEASE(win);
+
+  UninitDrawEvent(aArea, pevent, NS_PAINT);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+//
+// Crossing signals
+// 
+//////////////////////////////////////////////////////////////////////
+void
+nsWindow::InitCrossingEvent(GdkEventCrossing * aGdkCrossingEvent,
+                            nsMouseEvent &     aMouseEvent,
+                            PRUint32           aEventType)
+{
+  aMouseEvent.message = aEventType;
+  aMouseEvent.widget  = (nsWidget *) this;
+  
+  aMouseEvent.eventStructType = NS_MOUSE_EVENT;
+
+  if (aGdkCrossingEvent != NULL) 
+  {
+    aMouseEvent.point.x = nscoord(aGdkCrossingEvent->x);
+    aMouseEvent.point.y = nscoord(aGdkCrossingEvent->y);
+    aMouseEvent.time = aGdkCrossingEvent->time;
+  }
+}
+//////////////////////////////////////////////////////////////////////
+void
+nsWindow::UninitCrossingEvent(GdkEventCrossing * aGdkCrossingEvent,
+							  nsMouseEvent &     aMouseEvent,
+							  PRUint32           aEventType)
+{
+}
+//////////////////////////////////////////////////////////////////////
+/* static */ gint 
+nsWindow::EnterNotifySignal(GtkWidget *        /* aWidget */, 
+							GdkEventCrossing * aGdkCrossingEvent, 
+							gpointer           aData)
+{
+  nsWindow * window = (nsWindow *) aData;
+
+  NS_ASSERTION(nsnull != window,"window is null");
+
+  return window->OnEnterNotifySignal(aGdkCrossingEvent);
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ gint
+nsWindow::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
+{
+  //printf("nsWindow::OnEnterNotifySignal()\n");
+
+  nsMouseEvent mevent;
+
+  InitCrossingEvent(aGdkCrossingEvent, mevent, NS_MOUSE_ENTER);
+
+  nsWindow * win = (nsWindow *) this;
+
+  NS_ADDREF(win);
+
+  win->DispatchMouseEvent(mevent);
+
+  NS_RELEASE(win);
+
+  UninitCrossingEvent(aGdkCrossingEvent, mevent, NS_MOUSE_ENTER);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
+/* static */ gint 
+nsWindow::LeaveNotifySignal(GtkWidget *        /* aWidget */, 
+							GdkEventCrossing * aGdkCrossingEvent, 
+							gpointer           aData)
+{
+  nsWindow * window = (nsWindow *) aData;
+
+  NS_ASSERTION(nsnull != window,"window is null");
+
+  return window->OnLeaveNotifySignal(aGdkCrossingEvent);
+}
+//////////////////////////////////////////////////////////////////////
+/* virtual */ gint
+nsWindow::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
+{
+  //printf("nsWindow::OnLeaveNotifySignal()\n");
+
+  nsMouseEvent mevent;
+
+  InitCrossingEvent(aGdkCrossingEvent, mevent, NS_MOUSE_EXIT);
+
+  nsWindow * win = (nsWindow *) this;
+
+  NS_ADDREF(win);
+
+  win->DispatchMouseEvent(mevent);
+
+  NS_RELEASE(win);
+
+  UninitCrossingEvent(aGdkCrossingEvent, mevent, NS_MOUSE_EXIT);
+
+  return PR_TRUE;
+}
+//////////////////////////////////////////////////////////////////////
+
 
 ChildWindow::ChildWindow()
 {
