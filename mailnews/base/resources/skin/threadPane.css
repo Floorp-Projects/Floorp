@@ -18,17 +18,12 @@
  * Rights Reserved.
  */
 
-window {
- display: block;
- background-color: white;
-}
-
 treeitem[Status=" "] > treerow {
-	font-weight: bold;
+	/*font-weight: bold;*/
 }
 
 treeitem[Status="new"] > treerow{
-	font-weight: bold;
+/*	font-weight: bold;*/
 }
 
 treeitem[Priority="Highest"] > treerow > treecell.prioritycol > .tree-button
