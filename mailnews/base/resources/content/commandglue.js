@@ -520,7 +520,7 @@ function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirectio
 	if(showPerformance) {
 	    var afterSortTime = new Date();
 	    var timeToSort = (afterSortTime.getTime() - beforeSortTime.getTime())/1000;
-		dump("timeToSort is " + timeToSort + "seconds\n");
+		dump("timeToSort is " + timeToSort + " seconds\n");
     }
 
 	RestoreThreadPaneSelection(selection);

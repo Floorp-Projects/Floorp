@@ -148,7 +148,7 @@ var folderListener = {
 				      var afterFolderLoadTime = new Date();
 				      var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
 					  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
-				  	  dump("of which scrolling to new is" + timeToScroll + "seconds\n");
+				  	  dump("of which scrolling to new is " + timeToScroll + " seconds\n");
 				  }
     				SetBusyCursor(window, false);
 				}
