@@ -69,6 +69,7 @@ public:
                           nsIDOMNode  *aRightNode,
                           nsIDOMNode  *aParent,
                           nsresult     aResult);
+
 };
 
 #endif // nsTSDNotifier_h__

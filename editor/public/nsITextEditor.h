@@ -32,6 +32,11 @@ class nsIAtom;
 class nsIOutputStream;
 class nsString;
 
+#define TEXT_EDITOR_FLAG_PLAINTEXT   0x01   // only plain text entry is allowed via events
+#define TEXT_EDITOR_FLAG_SINGLELINE  0x02   // enter key and CR-LF handled specially
+#define TEXT_EDITOR_FLAG_PASSWORD    0x04   // text is not entered into content, only a representative character
+#define TEXT_EDITOR_FLAG_READONLY    0x08   // editing events are disabled.  Editor may still accept focus.
+#define TEXT_EDITOR_FLAG_DISALBED    0x10   // all events are disabled (like scrolling).  Editor will not accept focus.
 /**
  * The general text editor interface. 
  * <P>
@@ -42,17 +47,24 @@ class nsString;
  * a single line plain text editor is instantiated by using the SingleLinePlainTextGUIManager 
  * to limit UI and the SingleLinePlainTextEditRules to filter input and output.
  */
-class nsITextEditor  : public nsISupports {
+class nsITextEditor  : public nsISupports 
+{
 public:
-  typedef enum {ePlainText=0, eRichText=1} TextType;
-  typedef enum {eSingleLine=0, eMultipleLines=1, ePassword=2} EditorType;
 	
   static const nsIID& GetIID() { static nsIID iid = NS_ITEXTEDITOR_IID; return iid; }
 
   /** Initialize the text editor 
-    *
+    * @param aDoc        the document being edited.  Cannot be changed after Init
+    * @param aPresShell  the presentation shell displaying aDoc.  Cannot be changed after Init
     */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)=0;
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, 
+                  nsIPresShell   *aPresShell)=0;
+
+  /** return the edit flags for this editor */
+  NS_IMETHOD GetFlags(PRUint32 *aFlags)=0;
+
+  /** set the edit flags for this editor.  May be called at any time. */
+  NS_IMETHOD SetFlags(PRUint32 aFlags)=0;
 
   /**
    * SetTextProperties() sets the aggregate properties on the current selection
@@ -116,6 +128,14 @@ public:
    * @param aString   the string to be inserted
    */
   NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
+
+  /**
+   * SetMaxTextLength sets a limit on the number of characters the document is allowed to contain.
+   * Any text insertion will truncate the inserted string to respect this number
+   * It is somewhat expensive to set this property, so do so only when necessary.
+   * A value of -1 means there is no limit.
+   */
+  NS_IMETHOD SetMaxTextLength(PRInt32 aMaxLength)=0;
 
   /**
    * The handler for the ENTER key.

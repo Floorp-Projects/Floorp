@@ -138,6 +138,7 @@ public:
   NS_IMETHOD InsertNode(nsIDOMNode * aNode,
                         nsIDOMNode * aParent,
                         PRInt32      aPosition);
+
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
 
   NS_IMETHOD BeginComposition(void);
@@ -200,7 +201,7 @@ public:
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);
 
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
-  
+
 /*END nsIEditor interfaces*/
 
 

@@ -34,7 +34,12 @@
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 
-
+#define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
+  if (mFlags & TEXT_EDITOR_FLAG_READONLY || mFlags & TEXT_EDITOR_FLAG_DISALBED) \
+  {                     \
+    *aCancel = PR_TRUE; \
+    return NS_OK;       \
+  };
 
 /********************************************************
  *  Constructor/Destructor 
@@ -43,6 +48,7 @@ static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 nsTextEditRules::nsTextEditRules()
 {
   mEditor = nsnull;
+  mFlags=0;
 }
 
 nsTextEditRules::~nsTextEditRules()
@@ -58,9 +64,27 @@ nsTextEditRules::~nsTextEditRules()
 NS_IMETHODIMP
 nsTextEditRules::Init(nsIEditor *aEditor)
 {
-  // null aNextRule is ok
   if (!aEditor) { return NS_ERROR_NULL_POINTER; }
   mEditor = (nsTextEditor*)aEditor;  // we hold a non-refcounted reference back to our editor
+  nsCOMPtr<nsIDOMSelection> selection;
+  mEditor->GetSelection(getter_AddRefs(selection));
+  NS_ASSERTION(selection, "editor cannot get selection");
+  nsresult result = CreateBogusNodeIfNeeded(selection);   // this method handles null selection, which should never happen anyway
+  return result;
+}
+
+NS_IMETHODIMP
+nsTextEditRules::GetFlags(PRUint32 *aFlags)
+{
+  if (!aFlags) { return NS_ERROR_NULL_POINTER; }
+  *aFlags = mFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextEditRules::SetFlags(PRUint32 aFlags)
+{
+  mFlags = aFlags;
   return NS_OK;
 }
 
@@ -68,14 +92,15 @@ NS_IMETHODIMP
 nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection, 
                               nsRulesInfo *aInfo, PRBool *aCancel)
 {
-  if (!aSelection || !aInfo) 
-    return NS_ERROR_NULL_POINTER;
+  if (!aSelection || !aInfo) { return NS_ERROR_NULL_POINTER; }
 
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
     
   switch (info->action)
   {
+    case kInsertBreak:
+      return WillInsertBreak(aSelection, aCancel);
     case kInsertText:
       return WillInsertText(aSelection, 
                             aCancel, 
@@ -105,6 +130,8 @@ nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
 
   switch (info->action)
   {
+   case kInsertBreak:
+     return DidInsertBreak(aSelection, aResult);
     case kInsertText:
       return DidInsertText(aSelection, aResult);
     case kDeleteSelection:
@@ -127,6 +154,8 @@ nsresult
 nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+
   // initialize out param
   *aCancel = PR_FALSE;
   
@@ -149,6 +178,27 @@ nsTextEditRules::DidInsert(nsIDOMSelection *aSelection, nsresult aResult)
 }
 
 nsresult
+nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+  if (mFlags & TEXT_EDITOR_FLAG_SINGLELINE) {
+    *aCancel = PR_TRUE;
+  }
+  else {
+    *aCancel = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+nsresult
+nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
+{
+  return NS_OK;
+}
+
+
+nsresult
 nsTextEditRules::WillInsertText(nsIDOMSelection  *aSelection, 
                                 PRBool          *aCancel,
                                 PlaceholderTxn **aTxn,
@@ -156,8 +206,8 @@ nsTextEditRules::WillInsertText(nsIDOMSelection  *aSelection,
                                 nsString       *outString,
                                 TypeInState    typeInState)
 {
-  if (!aSelection || !aCancel || !inString || !outString) 
-    return NS_ERROR_NULL_POINTER;
+  if (!aSelection || !aCancel || !inString || !outString) {return NS_ERROR_NULL_POINTER;}
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
     
   // initialize out params
   *aCancel = PR_FALSE;
@@ -442,21 +492,12 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
   return result;
 }
 
-
-/*
-nsresult
-nsTextEditRules::GetInsertBreakTag(nsIAtom **aTag)
-{
-  if (!aTag) { return NS_ERROR_NULL_POINTER; }
-  *aTag = NS_NewAtom("BR");
-  return NS_OK;
-}
-*/
-
 nsresult
 nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
+
   // initialize out param
   *aCancel = PR_FALSE;
   
@@ -482,71 +523,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
   // insert a special bogus text node with a &nbsp; character in it.
   if (NS_SUCCEEDED(result)) // only do this work if DeleteSelection completed successfully
   {
-    nsCOMPtr<nsIDOMDocument>doc;
-    mEditor->GetDocument(getter_AddRefs(doc));  
-    nsCOMPtr<nsIDOMNodeList>nodeList;
-    nsAutoString bodyTag = "body";
-    result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-    if ((NS_SUCCEEDED(result)) && nodeList)
-    {
-      PRUint32 count;
-      nodeList->GetLength(&count);
-      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
-      nsCOMPtr<nsIDOMNode>bodyNode;
-      result = nodeList->Item(0, getter_AddRefs(bodyNode));
-      if ((NS_SUCCEEDED(result)) && bodyNode)
-      { // now we've got the body tag.
-        // iterate the body tag, looking for editable content
-        // if no editable content is found, insert the bogus node
-        PRBool needsBogusContent=PR_TRUE;
-        nsCOMPtr<nsIDOMNode>bodyChild;
-        result = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
-        while ((NS_SUCCEEDED(result)) && bodyChild)
-        { 
-          if (PR_TRUE==nsEditor::IsEditable(bodyChild))
-          {
-            needsBogusContent = PR_FALSE;
-            break;
-          }
-          nsCOMPtr<nsIDOMNode>temp;
-          bodyChild->GetNextSibling(getter_AddRefs(temp));
-          bodyChild = do_QueryInterface(temp);
-        }
-        if (PR_TRUE==needsBogusContent)
-        {
-          // set mBogusNode to be the newly created <P>
-          result = mEditor->CreateNode(nsAutoString("P"), bodyNode, 0, 
-                                       getter_AddRefs(mBogusNode));
-          if ((NS_SUCCEEDED(result)) && mBogusNode)
-          {
-            nsCOMPtr<nsIDOMNode>newTNode;
-            result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), mBogusNode, 0, 
-                                         getter_AddRefs(newTNode));
-            if ((NS_SUCCEEDED(result)) && newTNode)
-            {
-              nsCOMPtr<nsIDOMCharacterData>newNodeAsText;
-              newNodeAsText = do_QueryInterface(newTNode);
-              if (newNodeAsText)
-              {
-                nsAutoString data;
-                data += 160;
-                newNodeAsText->SetData(data);
-                aSelection->Collapse(newTNode, 0);
-              }
-            }
-            // make sure we know the PNode is bogus
-            nsCOMPtr<nsIDOMElement>newPElement;
-            newPElement = do_QueryInterface(mBogusNode);
-            if (newPElement)
-            {
-              nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
-              nsAutoString val(nsEditor::kMOZEditorBogusNodeValue);
-              newPElement->SetAttribute(att, val);
-            }
-          }
-        }
-      }
-    }
+    result = CreateBogusNodeIfNeeded(aSelection);
     // if we don't have an empty document, check the selection to see if any collapsing is necessary
     if (!mBogusNode)
     {
@@ -615,6 +592,7 @@ nsresult
 nsTextEditRules::WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
   // initialize out param
   *aCancel = PR_FALSE;
   return NS_OK;
@@ -666,6 +644,7 @@ nsresult
 nsTextEditRules::WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  CANCEL_OPERATION_IF_READONLY_OR_DISABLED
   // initialize out param
   *aCancel = PR_FALSE;
   return NS_OK;
@@ -709,7 +688,77 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
 }
 
 
-
+nsresult
+nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
+{
+  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
+  nsCOMPtr<nsIDOMDocument>doc;
+  mEditor->GetDocument(getter_AddRefs(doc));  
+  nsCOMPtr<nsIDOMNodeList>nodeList;
+  nsAutoString bodyTag = "body";
+  nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  if ((NS_SUCCEEDED(result)) && nodeList)
+  {
+    PRUint32 count;
+    nodeList->GetLength(&count);
+    NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+    nsCOMPtr<nsIDOMNode>bodyNode;
+    result = nodeList->Item(0, getter_AddRefs(bodyNode));
+    if ((NS_SUCCEEDED(result)) && bodyNode)
+    { // now we've got the body tag.
+      // iterate the body tag, looking for editable content
+      // if no editable content is found, insert the bogus node
+      PRBool needsBogusContent=PR_TRUE;
+      nsCOMPtr<nsIDOMNode>bodyChild;
+      result = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
+      while ((NS_SUCCEEDED(result)) && bodyChild)
+      { 
+        if (PR_TRUE==nsEditor::IsEditable(bodyChild))
+        {
+          needsBogusContent = PR_FALSE;
+          break;
+        }
+        nsCOMPtr<nsIDOMNode>temp;
+        bodyChild->GetNextSibling(getter_AddRefs(temp));
+        bodyChild = do_QueryInterface(temp);
+      }
+      if (PR_TRUE==needsBogusContent)
+      {
+        // set mBogusNode to be the newly created <P>
+        result = mEditor->CreateNode(nsAutoString("P"), bodyNode, 0, 
+                                     getter_AddRefs(mBogusNode));
+        if ((NS_SUCCEEDED(result)) && mBogusNode)
+        {
+          nsCOMPtr<nsIDOMNode>newTNode;
+          result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), mBogusNode, 0, 
+                                       getter_AddRefs(newTNode));
+          if ((NS_SUCCEEDED(result)) && newTNode)
+          {
+            nsCOMPtr<nsIDOMCharacterData>newNodeAsText;
+            newNodeAsText = do_QueryInterface(newTNode);
+            if (newNodeAsText)
+            {
+              nsAutoString data;
+              data += 160;
+              newNodeAsText->SetData(data);
+              aSelection->Collapse(newTNode, 0);
+            }
+          }
+          // make sure we know the PNode is bogus
+          nsCOMPtr<nsIDOMElement>newPElement;
+          newPElement = do_QueryInterface(mBogusNode);
+          if (newPElement)
+          {
+            nsAutoString att(nsEditor::kMOZEditorBogusNodeAttr);
+            nsAutoString val(nsEditor::kMOZEditorBogusNodeValue);
+            newPElement->SetAttribute(att, val);
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
 
 
 

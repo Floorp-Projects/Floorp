@@ -52,6 +52,9 @@ public:
 //Initialization
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 
+  NS_IMETHOD GetFlags(PRUint32 *aFlags);
+  NS_IMETHOD SetFlags(PRUint32 aFlags);
+
 //============================================================================
 // Methods that are duplicates of nsEditor -- exposed here for convenience
 // Editing Operations
@@ -65,6 +68,7 @@ public:
   NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute);
   NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
+  NS_IMETHOD SetMaxTextLength(PRInt32 aMaxTextLength);
   NS_IMETHOD InsertBreak();
   NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
 
@@ -257,6 +261,9 @@ protected:
   NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
   NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
 
+  /** simple utility to handle any error with event listener allocation or registration */
+  void HandleEventListenerError();
+
   // this overrides the base class implementation. It is not exported in nsITextEditor.
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
@@ -269,7 +276,9 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mTextListenerP;
   nsCOMPtr<nsIDOMEventListener> mCompositionListenerP;
   nsCOMPtr<nsIDOMEventListener> mDragListenerP;
+  nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool						mIsComposing;
+  PRInt32 mMaxTextLength;
 
 // friends
 friend class nsTextEditRules;
