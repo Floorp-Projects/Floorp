@@ -147,6 +147,7 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mForegroundCount(0)
     , mLoadFlags(LOAD_NORMAL)
     , mStatus(NS_OK)
+    , mPriority(PRIORITY_NORMAL)
     , mIsCanceling(PR_FALSE)
 {
     NS_INIT_AGGREGATED(outer);
