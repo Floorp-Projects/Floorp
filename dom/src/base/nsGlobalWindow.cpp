@@ -3247,6 +3247,11 @@ NS_IMETHODIMP GlobalWindowImpl::GetTreeOwner(nsIBaseWindow** aTreeOwner)
 
    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
    docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+   if(!treeOwner)
+      {
+      *aTreeOwner = nsnull;
+      return NS_OK;
+      }
 
    return CallQueryInterface(treeOwner, aTreeOwner);
 }
