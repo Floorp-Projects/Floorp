@@ -677,13 +677,17 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
       while (1) {
         nsString substr;
         if (-1 == pos) {
+             // Single line, no carriage return.
           text.Right(substr, text.Length()-oldPos);
           aRenderingContext.DrawString(substr, x, y); 
           break;     
         } 
-        text.Left(substr, pos);
+          // Strip off substr up to carriage return
+        text.Mid(substr, oldPos, ((pos - oldPos) - 1));
+  
         aRenderingContext.DrawString(substr, x, y);
         y += textHeight;
+          // Advance to the next carriage return
         pos++;
         oldPos = pos;
         pos = text.Find('\n', pos);
