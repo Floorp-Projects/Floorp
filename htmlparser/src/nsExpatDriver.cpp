@@ -580,10 +580,15 @@ nsExpatDriver::HandleError(const char *aBuffer,
   nsParserMsgUtils::GetLocalizedStringByID(XMLPARSER_PROPERTIES, code, description);
 
   if (code == XML_ERROR_TAG_MISMATCH) {
-    description.Append(NS_LITERAL_STRING(". Expected: "));
-    description.Append(NS_LITERAL_STRING("</"));
-    description.Append((const PRUnichar*)XML_GetMismatchedTag(mExpatParser));
-    description.Append(NS_LITERAL_STRING(">."));
+    nsAutoString msg;
+    nsParserMsgUtils::GetLocalizedStringByName(XMLPARSER_PROPERTIES, "Expected", msg);
+    // . Expected: </%S>.
+    PRUnichar *message = nsTextFormatter::smprintf(msg.get(), (const PRUnichar*)XML_GetMismatchedTag(mExpatParser));
+    if (!message) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    description.Append(message);
+    nsTextFormatter::smprintf_free(message);
   }
   
   nsAutoString sourceLine;
