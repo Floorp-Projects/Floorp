@@ -26,11 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= TestTXMgr
+PROGRAM		= TestTXMgr$(BIN_SUFFIX)
 
 CPPSRCS		= TestTXMgr.cpp
 
-LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
+LIBS		= $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
