@@ -35,7 +35,6 @@
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
-#undef   REALLY_NOISY_HORIZONTAL_ALIGN
 #undef  NOISY_VERTICAL_ALIGN
 #undef   REALLY_NOISY_VERTICAL_ALIGN
 #undef  NOISY_REFLOW
@@ -47,20 +46,7 @@
 #undef   REALLY_NOISY_MAX_ELEMENT_SIZE
 #undef  NOISY_CAN_PLACE_FRAME
 #undef NOISY_TRIM
-#else
-#undef NOISY_HORIZONTAL_ALIGN
-#undef  REALLY_NOISY_HORIZONTAL_ALIGN
-#undef NOISY_VERTICAL_ALIGN
-#undef  REALLY_NOISY_VERTICAL_ALIGN
-#undef NOISY_REFLOW
-#undef  REALLY_NOISY_REFLOW
-#undef NOISY_PUSHING
-#undef  REALLY_NOISY_PUSHING
-#undef DEBUG_ADD_TEXT
-#undef NOISY_MAX_ELEMENT_SIZE
-#undef  REALLY_NOISY_MAX_ELEMENT_SIZE
-#undef NOISY_CAN_PLACE_FRAME
-#undef NOISY_TRIM
+#undef REALLY_NOISY_TRIM
 #endif
 
 nsTextRun::nsTextRun()
@@ -2020,22 +2006,47 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
   }
   pfd = pfd->Last();
   while (nsnull != pfd) {
-    if (pfd->mSpan) {
-      // Maybe the child span has the trailing white-space in it?
-      if (TrimTrailingWhiteSpaceIn(pfd->mSpan, aDeltaWidth)) {
-        // Shrink our span
-        if (psd->mFrame) {
-          psd->mFrame->mBounds.width -= *aDeltaWidth;
-          if (psd != mRootSpan) {
-            nsRect r;
-            psd->mFrame->mFrame->GetRect(r);
-            r.width -= *aDeltaWidth;
-            psd->mFrame->mFrame->SetRect(r);
-          }
-#ifdef NOISY_TRIM
-          nsFrame::ListTag(stdout, psd->mFrame->mFrame);
-          printf(": trimmed %d\n", *aDeltaWidth);
+#ifdef REALLY_NOISY_TRIM
+    nsFrame::ListTag(stdout, (psd == mRootSpan
+                              ? mBlockReflowState->frame
+                              : psd->mFrame->mFrame));
+    printf(": attempting trim of ");
+    nsFrame::ListTag(stdout, pfd->mFrame);
+    printf("\n");
 #endif
+    PerSpanData* childSpan = pfd->mSpan;
+    if (childSpan) {
+      // Maybe the child span has the trailing white-space in it?
+      if (TrimTrailingWhiteSpaceIn(childSpan, aDeltaWidth)) {
+        nscoord deltaWidth = *aDeltaWidth;
+        if (deltaWidth) {
+          // Adjust the child spans frame size
+          pfd->mBounds.width -= deltaWidth;
+          if (psd != mRootSpan) {
+            // When the child span is not a direct child of the block
+            // we need to update the child spans frame rectangle
+            // because it most likely will not be done again. Spans
+            // that are direct children of the block will be updated
+            // later, however, because the VerticalAlignFrames method
+            // will be run after this method.
+            nsRect r;
+            nsIFrame* f = pfd->mFrame;
+            f->GetRect(r);
+            r.width -= deltaWidth;
+            f->SetRect(r);
+          }
+
+          // Adjust the right edge of the span that contains the child span
+          psd->mX -= deltaWidth;
+
+          // Slide any frames that follow the child span over by the
+          // right amount. The only thing that can follow the child
+          // span is empty stuff, so we are just making things
+          // sensible (keeping the combined area honest).
+          while (pfd->mNext) {
+            pfd = pfd->mNext;
+            pfd->mBounds.x -= deltaWidth;
+          }
         }
         return PR_TRUE;
       }
@@ -2054,48 +2065,38 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         hr->TrimTrailingWhiteSpace(&mPresContext,
                                    *mBlockReflowState->rendContext,
                                    deltaWidth);
+#ifdef NOISY_TRIM
+        nsFrame::ListTag(stdout, (psd == mRootSpan
+                                  ? mBlockReflowState->frame
+                                  : psd->mFrame->mFrame));
+        printf(": trim of ");
+        nsFrame::ListTag(stdout, pfd->mFrame);
+        printf(" returned %d\n", deltaWidth);
+#endif
         if (deltaWidth) {
           pfd->mBounds.width -= deltaWidth;
-          if (psd != mRootSpan) {
-            // The text frame has already been placed in it's
-            // parent. Therefore we need to update its rectangle now.
-            pfd->mFrame->SetRect(pfd->mBounds);
-          }
-          else {
-            psd->mX -= deltaWidth;
-          }
           if (0 == pfd->mBounds.width) {
-            pfd->mIsNonEmptyTextFrame = PR_TRUE;
             pfd->mMaxElementSize.width = 0;
             pfd->mMaxElementSize.height = 0;
           }
 
-          // Slide any frames that follow over by the right amount. The
-          // only think that can follow this frame is empty stuff, so we
-          // are just making things sensible.
+          // See if the text frame has already been placed in its parent
+          if (psd != mRootSpan) {
+            // The frame was already placed during psd's
+            // reflow. Update the frames rectangle now.
+            pfd->mFrame->SetRect(pfd->mBounds);
+          }
+
+          // Adjust containing span's right edge
+          psd->mX -= deltaWidth;
+
+          // Slide any frames that follow the text frame over by the
+          // right amount. The only thing that can follow the text
+          // frame is empty stuff, so we are just making things
+          // sensible (keeping the combined area honest).
           while (pfd->mNext) {
             pfd = pfd->mNext;
             pfd->mBounds.x -= deltaWidth;
-          }
-
-#ifdef NOISY_TRIM
-          nsFrame::ListTag(stdout, pfd->mFrame);
-          printf(": trimmed %d\n", deltaWidth);
-#endif
-
-          // Shrink our span
-          if (psd->mFrame) {
-            psd->mFrame->mBounds.width -= deltaWidth;
-            if (psd != mRootSpan) {
-              nsRect r;
-              psd->mFrame->mFrame->GetRect(r);
-              r.width -= deltaWidth;
-              psd->mFrame->mFrame->SetRect(r);
-            }
-#ifdef NOISY_TRIM
-            nsFrame::ListTag(stdout, psd->mFrame->mFrame);
-            printf(": trimming %d (done by child)\n", deltaWidth);
-#endif
           }
         }
       }
@@ -2125,7 +2126,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
   nscoord availWidth = psd->mRightEdge;
   if (NS_UNCONSTRAINEDSIZE == availWidth) {
     // Don't bother horizontal aligning on pass1 table reflow
-#ifdef REALLY_NOISY_HORIZONTAL_ALIGN
+#ifdef NOISY_HORIZONTAL_ALIGN
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": skipping horizontal alignment in pass1 table reflow\n");
 #endif
@@ -2133,7 +2134,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
   }
   availWidth -= psd->mLeftEdge;
   nscoord remainingWidth = availWidth - aLineBounds.width;
-#ifdef REALLY_NOISY_HORIZONTAL_ALIGN
+#ifdef NOISY_HORIZONTAL_ALIGN
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": availWidth=%d lineWidth=%d delta=%d\n",
            availWidth, aLineBounds.width, remainingWidth);
