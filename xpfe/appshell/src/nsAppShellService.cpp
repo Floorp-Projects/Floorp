@@ -255,7 +255,7 @@ nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
     closerv = NS_ERROR_NULL_POINTER;
   else {
     nsWebShellWindow* window = (nsWebShellWindow *) data;
-    window->Close();
+    closerv = window->Close();
   }
 
   unregrv = UnregisterTopLevelWindow(aWindow);
