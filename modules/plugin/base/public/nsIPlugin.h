@@ -67,7 +67,7 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    Initialize(nsISupports* browserInterfaces) = 0;
+    Initialize() = 0;
 
     /**
      * Called when the browser is done with the plugin factory, or when

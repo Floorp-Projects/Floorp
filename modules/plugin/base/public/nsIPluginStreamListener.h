@@ -36,14 +36,8 @@
 
 #include "nsplugindefs.h"
 #include "nsISupports.h"
-
-class nsIPluginInputStream;
-
-struct nsPluginStreamInfo {
-    nsMIMEType  contentType;
-    PRBool      seekable;
-    // more...
-};
+#include "nsIPluginStreamInfo.h"
+#include "nsIInputStream.h"
 
 /**
  * The nsIPluginStreamListener interface defines the minimum set of functionality that
@@ -62,7 +56,7 @@ public:
      * used to cancel the URL load..
      */
     NS_IMETHOD
-    OnStartBinding(const char* url, const nsPluginStreamInfo* info) = 0;
+    OnStartBinding(const char* url, nsIPluginStreamInfo* pluginInfo) = 0;
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -75,12 +69,11 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnDataAvailable(const char* url, nsIPluginInputStream* input,
-                    PRUint32 offset, PRUint32 length) = 0;
+    OnDataAvailable(const char* url, nsIInputStream* input,
+                    PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo) = 0;
 
     NS_IMETHOD
     OnFileAvailable(const char* url, const char* fileName) = 0;
-
     /**
      * Notify the observer that the URL has finished loading.  This method is 
      * called once when the networking library has finished processing the 
@@ -93,8 +86,13 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnStopBinding(const char* url, nsresult status) = 0;
+    OnStopBinding(const char* url, nsresult status, nsIPluginStreamInfo* pluginInfo) = 0;
 
+    NS_IMETHOD
+    OnNotify(const char* url, nsresult status) = 0;
+
+    NS_IMETHOD
+    GetStreamType(nsPluginStreamType *result) = 0;
 };
 
 #define NS_IPLUGINSTREAMLISTENER_IID                 \

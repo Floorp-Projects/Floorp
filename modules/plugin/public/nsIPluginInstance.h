@@ -37,6 +37,10 @@
 #include "nsplugindefs.h"
 #include "nsIEventHandler.h"
 
+#ifdef NEW_PLUGIN_STREAM_API
+#include "nsIPluginStreamListener.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Instance Interface
 
@@ -67,7 +71,8 @@ public:
      * @param peer - the corresponding plugin instance peer
      * @result - NS_OK if this operation was successful
      */
-    NS_IMETHOD
+
+	NS_IMETHOD
     Initialize(nsIPluginInstancePeer* peer) = 0;
 
     /**
@@ -126,7 +131,19 @@ public:
     NS_IMETHOD
     SetWindow(nsPluginWindow* window) = 0;
 
-#ifndef NEW_PLUGIN_STREAM_API
+#ifdef NEW_PLUGIN_STREAM_API
+    /**
+     * Called to tell the plugin that the initial src/data stream is
+	 * ready.  Expects the plugin to return a nsIPluginStreamListener.
+     *
+     * (Corresponds to NPP_NewStream.)
+     *
+     * @param listener - listener the browser will use to give the plugin the data
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    NewStream(nsIPluginStreamListener** listener) = 0;
+#else
     /**
      * Called when a new plugin stream must be constructed in order for the plugin
      * instance to receive a stream of data from the browser. 

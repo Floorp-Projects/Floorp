@@ -46,22 +46,14 @@ public:
   LoadPlugins(void) = 0;
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner) = 0;
+  InstantiateEmbededPlugin(const char *aMimeType, nsString& aURLSpec, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsString& aURLSpec, nsIPluginInstanceOwner *aOwner) = 0;
+  InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner) = 0;
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsString& aURLSpec, nsIStreamListener *&aStreamListener, nsIPluginInstanceOwner *aOwner) = 0;
+  SetUpPluginInstance(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner) = 0;
 
-  NS_IMETHOD
-  NewPluginStream(const nsString& aURL, nsIPluginInstance *aInstance, void *aNotifyData) = 0;
-
-  NS_IMETHOD
-  NewPluginStream(const nsString& aURL, nsIPluginInstanceOwner *aOwner, void *aNotifyData) = 0;
-
-  NS_IMETHOD
-  NewPluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance, void *aNotifyData) = 0;
 };
 
-#endif
+#endif // nsIPluginHost_h___

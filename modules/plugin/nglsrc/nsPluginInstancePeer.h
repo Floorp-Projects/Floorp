@@ -20,14 +20,17 @@
 #define nsPluginInstancePeer_h___
 
 #include "nsIPluginInstancePeer.h"
+#include "nsIWindowlessPlugInstPeer.h"
 #include "nsIPluginTagInfo.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIJVMPluginTagInfo.h"
 
 
 class nsPluginInstancePeerImpl : public nsIPluginInstancePeer,
+								 public nsIWindowlessPluginInstancePeer,
                                  public nsIPluginTagInfo2,
                                  public nsIJVMPluginTagInfo
+								
 {
 public:
   nsPluginInstancePeerImpl();
@@ -54,6 +57,23 @@ public:
 
   NS_IMETHOD
   SetWindowSize(PRUint32 width, PRUint32 height);
+
+  // nsIWindowlessPluginInstancePeer
+
+  // (Corresponds to NPN_InvalidateRect.)
+  NS_IMETHOD
+  InvalidateRect(nsPluginRect *invalidRect);
+
+  // (Corresponds to NPN_InvalidateRegion.)
+  NS_IMETHOD
+  InvalidateRegion(nsPluginRegion invalidRegion);
+
+  // (Corresponds to NPN_ForceRedraw.)
+  NS_IMETHOD
+  ForceRedraw(void);
+
+  /* The tag info interfaces all pass through calls to the 
+     nsPluginInstanceOwner (see nsObjectFrame.cpp) */
 
   //nsIPluginTagInfo interface
 

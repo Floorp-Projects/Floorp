@@ -34,6 +34,8 @@
 #ifndef nsplugindefs_h___
 #define nsplugindefs_h___
 
+#define NEW_PLUGIN_STREAM_API
+
 #ifndef prtypes_h___
 #include "prtypes.h"
 #endif

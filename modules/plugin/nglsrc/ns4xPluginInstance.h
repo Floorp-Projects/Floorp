@@ -32,15 +32,6 @@ class ns4xPluginInstance : public nsIPluginInstance
 {
 public:
 
-    /**
-     * Construct a new 4.x plugin instance with the specified peer
-     * and callbacks.
-     */
-    ns4xPluginInstance(NPPluginFuncs* callbacks);
-
-    // Use Release() to destroy this
-    ~ns4xPluginInstance(void);
-
     NS_DECL_ISUPPORTS
 
     ////////////////////////////////////////////////////////////////////////
@@ -70,49 +61,61 @@ public:
     NS_IMETHOD
     SetWindow(nsPluginWindow* window);
 
+#ifdef NEW_PLUGIN_STREAM_API
     NS_IMETHOD
+    NewStream(nsIPluginStreamListener** listener);
+#else
+	NS_IMETHOD
     NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result);
+#endif
 
     NS_IMETHOD
     Print(nsPluginPrint* platformPrint);
 
-    NS_IMETHOD
-    HandleEvent(nsPluginEvent* event, PRBool* handled);
-
+#ifndef NEW_PLUGIN_STREAM_API
     NS_IMETHOD
     URLNotify(const char* url, const char* target,
               nsPluginReason reason, void* notifyData);
+#endif
 
     NS_IMETHOD
     GetValue(nsPluginInstanceVariable variable, void *value);
 
-    ////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD
+    HandleEvent(nsPluginEvent* event, PRBool* handled);
+    
+	////////////////////////////////////////////////////////////////////////
     // ns4xPluginInstance-specific methods
-
 
     /**
      * Return the 4.x-style interface object.
      */
-    NS_IMETHOD
-    GetNPP(NPP * aNPP) {
-        *aNPP = &fNPP;
-        return NS_OK;
-    };
+    nsresult
+    GetNPP(NPP * aNPP);
 
     /**
      * Return the callbacks for the plugin instance.
      */
-    NS_IMETHOD
-    GetCallbacks(const NPPluginFuncs ** aCallbacks) {
-        *aCallbacks = fCallbacks;
-        return NS_OK;
-    };
+    nsresult
+    GetCallbacks(const NPPluginFuncs ** aCallbacks);
 
-    NS_IMETHOD
+    nsresult
     SetWindowless(PRBool aWindowless);
 
-    NS_IMETHOD
+    nsresult
     SetTransparent(PRBool aTransparent);
+
+	nsresult
+	NewNotifyStream(nsIPluginStreamListener** listener, void* notifyData);
+
+	/**
+     * Construct a new 4.x plugin instance with the specified peer
+     * and callbacks.
+     */
+    ns4xPluginInstance(NPPluginFuncs* callbacks);
+
+    // Use Release() to destroy this
+    ~ns4xPluginInstance(void);
 
 protected:
 

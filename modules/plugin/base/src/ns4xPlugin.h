@@ -55,10 +55,11 @@ typedef NPError (PLUGIN_ENTRYPOINT_CALL_TYPE *NP_PLUGINSHUTDOWN)();
 /**
  * A 5.0 wrapper for a 4.x style plugin.
  */
-class ns4xPlugin : public nsILiveConnectPlugin
+
+class ns4xPlugin : public nsIPlugin
 {
 public:
-  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown);
+  ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, nsISupports* browserInterfaces);
   ~ns4xPlugin(void);
 
   NS_DECL_ISUPPORTS
@@ -73,8 +74,13 @@ public:
 
   //nsIPlugin interface
 
+#ifndef NEW_PLUGIN_STREAM_API
   NS_IMETHOD
   Initialize(nsISupports* browserInterfaces);
+#else
+  NS_IMETHOD
+  Initialize(void);
+#endif
 
   NS_IMETHOD
   Shutdown(void);
@@ -84,11 +90,6 @@ public:
 
   NS_IMETHOD
   GetValue(nsPluginVariable variable, void *value);
-
-  //nsILiveConnectPlugin interface
-
-  NS_IMETHOD
-  GetJavaClass(jclass *resultingClass);
 
   ////////////////////////////////////////////////////////////////////
   // ns4xPlugin-specific methods
