@@ -444,12 +444,18 @@ nsXPConnect::InitJSContext(JSContext* aJSContext,
     if(!aGlobalJSObj)
         aGlobalJSObj = JS_GetGlobalObject(aJSContext);
     if(aGlobalJSObj &&
-       !mContextMap->Find(aJSContext) &&
-       NewContext(aJSContext, aGlobalJSObj)&&
-       (!AddComponentsObject ||
-        NS_SUCCEEDED(AddNewComponentsObject(aJSContext, aGlobalJSObj))))
+       !mContextMap->Find(aJSContext))
     {
-        return NS_OK;
+        XPCContext* xpcc;
+        if(nsnull != (xpcc = NewContext(aJSContext, aGlobalJSObj)))
+        {
+            SET_CALLER_NATIVE(xpcc);
+            if(!AddComponentsObject ||
+               NS_SUCCEEDED(AddNewComponentsObject(aJSContext, aGlobalJSObj)))
+            {
+                return NS_OK;
+            }
+        }
     }
     XPC_LOG_ERROR(("nsXPConnect::InitJSContext failed"));
     return NS_ERROR_FAILURE;
@@ -468,6 +474,7 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
     if(!mContextMap->Find(aJSContext) &&
        nsnull != (xpcc = NewContext(aJSContext, nsnull, JS_FALSE)))
     {
+        SET_CALLER_NATIVE(xpcc);
         wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, 
                                                           aIID, nsnull);
         if(wrapper)
@@ -499,6 +506,7 @@ nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
                                     JSObject* aGlobalJSObj)
 {
     AUTO_PUSH_JSCONTEXT2(aJSContext, this);
+    SET_CALLER_NATIVE(aJSContext);
     JSBool success;
     nsresult rv;
 
@@ -590,6 +598,7 @@ nsXPConnect::WrapNative(JSContext* aJSContext,
     XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
     if(xpcc)
     {
+        SET_CALLER_NATIVE(xpcc);
         nsXPCWrappedNative* wrapper =
             nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, 
                                                     aIID, nsnull);
@@ -618,6 +627,7 @@ nsXPConnect::WrapJS(JSContext* aJSContext,
     XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
     if(xpcc)
     {
+        SET_CALLER_NATIVE(xpcc);
         nsXPCWrappedJS* wrapper =
             nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, aJSObj, aIID);
         if(wrapper)
@@ -639,6 +649,7 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext* aJSContext,
     NS_PRECONDITION(aJSContext,"bad param");
     NS_PRECONDITION(aJSObj,"bad param");
     NS_PRECONDITION(aWrapper,"bad param");
+    SET_CALLER_NATIVE(aJSContext);
 
     if(!(*aWrapper = nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(aJSContext,aJSObj)))
         return NS_ERROR_UNEXPECTED;
@@ -656,6 +667,7 @@ nsXPConnect::AbandonJSContext(JSContext* aJSContext)
     XPCContext* xpcc = mContextMap->Find(aJSContext);
     if(!xpcc)
     {
+        SET_CALLER_NATIVE(xpcc);
         NS_ASSERTION(0,"called AbandonJSContext for context that's not init'd");
         return NS_OK;
     }

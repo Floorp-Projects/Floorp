@@ -45,6 +45,38 @@ const char* XPCContext::mStrings[] = {
     XPC_QUERY_INTERFACE_STR // IDX_QUERY_INTERFACE_STRING
 };
 
+/***************************************************************************/
+
+AutoPushCallingLangType::AutoPushCallingLangType(JSContext* cx, 
+                                                 XPCContext::LangType type)
+    : mXPCContext(nsXPConnect::GetContext(cx))
+{
+    ctorCommon(type);
+}
+
+AutoPushCallingLangType::AutoPushCallingLangType(XPCContext* xpcc, 
+                                                 XPCContext::LangType type)
+    : mXPCContext(xpcc)
+{
+    ctorCommon(type);
+}
+
+AutoPushCallingLangType::~AutoPushCallingLangType()
+{
+    if(mXPCContext)
+    {
+#ifdef DEBUG
+        XPCContext::LangType type;
+        type = mXPCContext->SetCallingLangType(mOldCallingLangType);
+        NS_ASSERTION(type == mDebugPushedCallingLangType,"call type mismatch");
+#else
+        mXPCContext->SetCallingLangType(mOldCallingLangType);
+#endif
+    }
+}
+
+/***************************************************************************/
+
 // static
 XPCContext*
 XPCContext::newXPCContext(JSContext* aJSContext,
@@ -112,6 +144,7 @@ XPCContext::XPCContext(JSContext* aJSContext,
     mSecurityManager = nsnull;
     mSecurityManagerFlags = 0;
     mException = nsnull;
+    mCallingLangType = LANG_UNKNOWN;
 }
 
 JS_STATIC_DLL_CALLBACK(intN)

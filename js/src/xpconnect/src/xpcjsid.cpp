@@ -633,7 +633,9 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
     {
         nsIXPCSecurityManager* sm;
-        if(nsnull != (sm = xpcc->GetSecurityManager()) &&
+        NS_WARN_IF_FALSE(xpcc->CallerTypeIsKnown(),"missing caller type set somewhere");
+        if(xpcc->CallerTypeIsJavaScript() &&
+           nsnull != (sm = xpcc->GetSecurityManager()) &&
            (xpcc->GetSecurityManagerFlags() &
             nsIXPCSecurityManager::HOOK_CREATE_INSTANCE) &&
            NS_OK != sm->CanCreateInstance(cx, *cid))
@@ -834,7 +836,9 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     if(nsnull != (xpcc = nsXPConnect::GetContext(cx)))
     {
         nsIXPCSecurityManager* sm;
-        if(nsnull != (sm = xpcc->GetSecurityManager()) &&
+        NS_WARN_IF_FALSE(xpcc->CallerTypeIsKnown(),"missing caller type set somewhere");
+        if(xpcc->CallerTypeIsJavaScript() &&
+           nsnull != (sm = xpcc->GetSecurityManager()) &&
            (xpcc->GetSecurityManagerFlags() &
             nsIXPCSecurityManager::HOOK_GET_SERVICE) &&
            NS_OK != sm->CanGetService(cx, *cid))

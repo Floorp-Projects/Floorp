@@ -148,7 +148,9 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     // do the security check if necessary
 
     nsIXPCSecurityManager* sm;
-    if(nsnull != (sm = xpcc->GetSecurityManager()) &&
+    NS_WARN_IF_FALSE(xpcc->CallerTypeIsKnown(),"missing caller type set somewhere");
+    if(xpcc->CallerTypeIsJavaScript() &&
+       nsnull != (sm = xpcc->GetSecurityManager()) &&
        (xpcc->GetSecurityManagerFlags() &
         nsIXPCSecurityManager::HOOK_CREATE_WRAPPER) &&
        NS_OK != sm->CanCreateWrapper(xpcc->GetJSContext(), aIID, realObj))

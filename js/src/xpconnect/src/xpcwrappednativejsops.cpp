@@ -82,6 +82,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
 
     if (!wrapper) {
@@ -160,6 +161,7 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
                          uintN argc, jsval *argv, jsval *vp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     JSFunction *fun;
     jsid id;
     jsval idval;
@@ -193,6 +195,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsXPCWrappedNative* wrapper;
 
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -264,6 +267,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsXPCWrappedNative* wrapper;
 
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -311,6 +315,7 @@ WrappedNative_LookupProperty(JSContext *cx, JSObject *obj, jsid id,
                             )
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -349,6 +354,7 @@ WrappedNative_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          uintN attrs, JSProperty **propp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -377,6 +383,7 @@ WrappedNative_GetAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -404,6 +411,7 @@ WrappedNative_SetAttributes(JSContext *cx, JSObject *obj, jsid id,
                         JSProperty *prop, uintN *attrsp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -429,6 +437,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -456,6 +465,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_DefaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -476,6 +486,7 @@ WrappedNative_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                         jsval *statep, jsid *idp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsXPCWrappedNative* wrapper;
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
@@ -504,6 +515,7 @@ WrappedNative_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
                       JSAccessMode mode, jsval *vp, uintN *attrsp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
@@ -542,6 +554,7 @@ WrappedNative_Call(JSContext *cx, JSObject *obj,
                    uintN argc, jsval *argv, jsval *rval)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     // this is a hack to get the obj of the actual object not the object
     // that JS thinks is the 'this' (which it passes as 'obj').
     if(!(obj = (JSObject*)argv[-2]))
@@ -570,6 +583,7 @@ WrappedNative_Construct(JSContext *cx, JSObject *obj,
                         uintN argc, jsval *argv, jsval *rval)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     // this is a hack to get the obj of the actual object not the object
     // that JS thinks is the 'this' (which it passes as 'obj').
     if(!(obj = (JSObject*)argv[-2]))
@@ -598,6 +612,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_ClassHasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     //XXX our default policy is to just say no. Is this right?
     *bp = JS_FALSE;
     return JS_TRUE;
@@ -608,6 +623,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    SET_CALLER_JAVASCRIPT(cx);
     nsIXPCScriptable* ds;
     nsIXPCScriptable* as;
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
@@ -627,6 +643,8 @@ JS_STATIC_DLL_CALLBACK(void)
 WrappedNative_Finalize(JSContext *cx, JSObject *obj)
 {
     AUTO_PUSH_JSCONTEXT(cx);
+    // we don't want to be setting this in finalization.
+    // SET_CALLER_JAVASCRIPT(cx);
     nsXPCWrappedNative* wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx,obj);
     if(!wrapper)
         return;

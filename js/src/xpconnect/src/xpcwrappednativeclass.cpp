@@ -552,6 +552,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     // make sure we have what we need...
 
     // set up the method index and do the security check if needed
+    NS_WARN_IF_FALSE(xpcc->CallerTypeIsKnown(),"missing caller type set somewhere");
     securityManager = xpcc->GetSecurityManager();
     switch(callMode)
     {
@@ -561,6 +562,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(securityManager &&
                (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_CALL_METHOD) &&
+               xpcc->CallerTypeIsJavaScript() &&
                NS_OK !=
                 securityManager->CanCallMethod(cx, mIID, callee,
                                                mInfo, vtblIndex, desc->id))
@@ -576,6 +578,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(securityManager &&
                (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_GET_PROPERTY) &&
+               xpcc->CallerTypeIsJavaScript() &&
                NS_OK !=
                 securityManager->CanGetProperty(cx, mIID, callee,
                                                 mInfo, vtblIndex, desc->id))
@@ -594,6 +597,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(securityManager &&
                (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_SET_PROPERTY) &&
+               xpcc->CallerTypeIsJavaScript() &&
                NS_OK !=
                 securityManager->CanSetProperty(cx, mIID, callee,
                                                 mInfo, vtblIndex, desc->id))
