@@ -380,7 +380,7 @@
      <rdf:li>
        <rdf:Description ID="Composer:keyboard_shortcuts"
          nc:name="keyboard shortcuts"
-         nc:link="shortcuts.html#composer"/>
+         nc:link="shortcuts-composer.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="Composer:removing_text_styles"
@@ -910,7 +910,7 @@
      <rdf:li>
        <rdf:Description ID="keyboard_shortcuts"
          nc:name="keyboard shortcuts"
-	 nc:link="shortcuts.html"/>
+         nc:link="shortcuts.xhtml"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -920,27 +920,27 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="keyboard_shortcuts:Composer"
          nc:name="Composer keyboard shortcuts"
-	 nc:link="shortcuts.html#composer"/>
+         nc:link="shortcuts-composer.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="keyboard_shortcuts:general"
          nc:name="general keyboard shortcuts"
-	 nc:link="shortcuts.html#general"/>
+         nc:link="shortcuts.xhtml#general_mozilla_shortcuts"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="keyboard_shortcuts:help"
          nc:name="help keyboard shortcuts"
-	 nc:link="shortcuts.html#help"/>
+         nc:link="shortcuts.xhtml#using_shortcuts"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="keyboard_shortcuts:Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups keyboard shortcuts"
-         nc:link="shortcuts.html#mail"/>
+         nc:link="shortcuts-mailnews.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="keyboard_shortcuts:Navigator"
          nc:name="Navigator keyboard shortcuts"
-	 nc:link="shortcuts.html#navigator"/>
+         nc:link="shortcuts-navigator.xhtml"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>

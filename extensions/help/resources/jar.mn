@@ -83,7 +83,10 @@ en-US.jar:
         locale/en-US/help/images/help_nav.gif              (locale/en-US/images/help_nav.gif)
         locale/en-US/help/images/help_print.gif            (locale/en-US/images/help_print.gif)	
         locale/en-US/help/images/web-links.png             (locale/en-US/images/web-links.png)
-        locale/en-US/help/shortcuts.html                   (locale/en-US/shortcuts.html)
+        locale/en-US/help/shortcuts.xhtml                  (locale/en-US/shortcuts.xhtml)
+        locale/en-US/help/shortcuts-navigator.xhtml        (locale/en-US/shortcuts-navigator.xhtml)
+        locale/en-US/help/shortcuts-mailnews.xhtml         (locale/en-US/shortcuts-mailnews.xhtml)
+        locale/en-US/help/shortcuts-composer.xhtml         (locale/en-US/shortcuts-composer.xhtml)
 
 modern.jar:
         skin/modern/communicator/help.css                    (skin/modern/help.css)

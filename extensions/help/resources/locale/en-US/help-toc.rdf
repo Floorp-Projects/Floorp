@@ -17,7 +17,7 @@
         <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.html#sec_maintain"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="chrome://help/locale/using_certs_help.html"/> </rdf:li>
         <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="chrome://help/locale/profiles_help.html#managing_profiles"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="chrome://help/locale/shortcuts.html"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1171,12 +1171,12 @@
 <rdf:Description about="#shortcuts">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="shortcuts_using" nc:name="Using Shortcuts" nc:link="chrome://help/locale/shortcuts.html#using"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_general" nc:name="General Mozilla Shortcuts" nc:link="chrome://help/locale/shortcuts.html#general"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator" nc:name="Navigator Shortcuts" nc:link="chrome://help/locale/shortcuts.html#navigator"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_mail" nc:name="Mail &amp; Newsgroups Shortcuts" nc:link="chrome://help/locale/shortcuts.html#mail"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_composer" nc:name="Composer Shortcuts" nc:link="chrome://help/locale/shortcuts.html#composer"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_help" nc:name="Help Window Shortcuts" nc:link="chrome://help/locale/shortcuts.html#help"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_using" nc:name="Using Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml#using_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_general" nc:name="General Mozilla Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml#general_mozilla_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator" nc:name="Navigator Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail" nc:name="Mail &amp; Newsgroups Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_composer" nc:name="Composer Shortcuts" nc:link="chrome://help/locale/shortcuts-composer.xhtml"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_help" nc:name="Help Window Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml#help_window_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1184,11 +1184,11 @@
 <rdf:Description about="#shortcuts_navigator">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_bookmarks" nc:name="Bookmark Shortcuts" nc:link="chrome://help/locale/shortcuts.html#nav_bookmark"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_page_viewing" nc:name="Page Viewing Shortcuts" nc:link="chrome://help/locale/shortcuts.html#page_viewing"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_tabbed_browsing" nc:name="Tabbed Browsing Shortcuts" nc:link="chrome://help/locale/shortcuts.html#tabbed_browsing"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_sidebar" nc:name="Sidebar Shortcuts" nc:link="chrome://help/locale/shortcuts.html#sidebar"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_navigator_forms" nc:name="Forms Shortcuts" nc:link="chrome://help/locale/shortcuts.html#forms"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_bookmarks" nc:name="Bookmark Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#bookmarks_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_page_viewing" nc:name="Page Viewing Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#page_viewing_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_tabbed_browsing" nc:name="Tabbed Browsing Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#tabbed_browsing_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_sidebar" nc:name="Sidebar Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#sidebar_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_navigator_forms" nc:name="Forms Shortcuts" nc:link="chrome://help/locale/shortcuts-navigator.xhtml#forms_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1196,9 +1196,9 @@
 <rdf:Description about="#shortcuts_mail">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="shortcuts_mail_general" nc:name="General Mail Shortcuts" nc:link="chrome://help/locale/shortcuts.html#mail_general"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_mail_message_list" nc:name="Message List Shortcuts" nc:link="chrome://help/locale/shortcuts.html#mail_message_list"/> </rdf:li>
-        <rdf:li><rdf:Description ID="shortcuts_mail_message_compose" nc:name="Message Compose Shortcuts" nc:link="chrome://help/locale/shortcuts.html#mail_message_compose"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail_general" nc:name="General Mail Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#general_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail_message_list" nc:name="Message List Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#message_list_shortcuts"/> </rdf:li>
+        <rdf:li><rdf:Description ID="shortcuts_mail_message_compose" nc:name="Message Compose Shortcuts" nc:link="chrome://help/locale/shortcuts-mailnews.xhtml#message_compose_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
