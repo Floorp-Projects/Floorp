@@ -807,16 +807,6 @@ nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgroupsNames,
   if (aUrlListener) // register listener if there is one...
     mailnewsurl->RegisterListener(aUrlListener);
   
-  // almost there...now create a nntp protocol instance to run the url in...
-  nsCOMPtr <nsIURI> nntpURI = do_QueryInterface(nntpUrl);;
-  nsCOMPtr<nsINNTPProtocol> nntpProtocol ;
-  rv = GetProtocolForUri(nntpURI, aMsgWindow, getter_AddRefs(nntpProtocol));
-
-  if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
-  
-  rv = nntpProtocol->Initialize(mailnewsurl, aMsgWindow);
-  if (NS_FAILED(rv)) return rv;
-  
   nsCOMPtr <nsINNTPNewsgroupPost> post = do_CreateInstance(NS_NNTPNEWSGROUPPOST_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
   if (!post) return NS_ERROR_FAILURE;

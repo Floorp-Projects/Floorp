@@ -5197,7 +5197,10 @@ NS_IMETHODIMP nsNNTPProtocol::CloseConnection()
   // break some cycles
   CleanupNewsgroupList();
 
+  if (m_nntpServer) {
+    m_nntpServer->RemoveConnection(this);
   m_nntpServer = nsnull;
+  }
   m_newsFolder = nsnull;
   
   if (m_articleList) {

@@ -455,13 +455,12 @@ nsNntpIncomingServer::ConnectionTimeOut(nsINNTPProtocol* aConnection)
     LL_SUB(t, elapsedTime, cacheTimeoutLimits);
     if (LL_GE_ZERO(t))
     {
-        nsCOMPtr<nsINNTPProtocol> aProtocol(do_QueryInterface(aConnection,
-                                                              &rv));
-        if (NS_SUCCEEDED(rv) && aProtocol)
-        {
+#ifdef DEBUG_seth
+      printf("XXX connection timed out, close it, and remove it from the connection cache\n");
+#endif
+      aConnection->CloseConnection();
             m_connectionCache->RemoveElement(aConnection);
             retVal = PR_TRUE;
-        }
     }
     return retVal;
 }
