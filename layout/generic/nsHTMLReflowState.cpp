@@ -590,6 +590,7 @@ GetNearestContainingBlock(nsIFrame* aFrame, nsMargin& aContentArea)
   aFrame = aFrame->GetParent();
   while (aFrame) {
     nsIAtom*  frameType = aFrame->GetType();
+    // XXXldb Should this use nsIFrame::IsContainingBlock ?
     PRBool    isBlock =
       (frameType == nsLayoutAtoms::blockFrame) ||
       (frameType == nsLayoutAtoms::areaFrame);
