@@ -101,7 +101,14 @@ real tendency to bog down, so please use mirrors.  The current location
 at the time of this writing (02/17/99) can be found in Appendix A.
 
   Quality, general Perl module installation instructions can be found on
-the CPAN website, but basically you'll just need to:
+the CPAN website, but the easy thing to do is to just use the CPAN shell which does all the hard work for you
+
+To use the CPAN shell to install DBI:
+
+               1. Type perl -MCPAN -e 'install "DBI"'
+(replace DBI with the name of the module you wish to install, Data::Dumper, etc...)
+
+To do it the hard way:
 
         1. Untar the module tarball -- it should create its own directory
         2. Enter the following commands:
