@@ -777,12 +777,12 @@ nsresult nsRepository::CLSIDToProgID(nsCID *aClass,
 
     *aProgID = progidString; 
 	res = NS_OK;
-#endif /* USE_REGISTRY */
 
   done2:	
 	NR_RegClose(hreg);
   done1:
     delete[] cidStr;
+#endif /* USE_REGISTRY */
 	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: CLSIDToProgID() %s",
 		res == NS_OK ? "succeeded" : "FAILED"));
 	return res;
