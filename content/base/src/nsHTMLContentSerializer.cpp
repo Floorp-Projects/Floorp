@@ -190,8 +190,8 @@ nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableStr
   nsXPIDLCString escapedURI;
   aEscapedURI.Truncate(0);
 
-  // Loop and escape parts by avoiding escaping reserved characters (and '%').
-  while ((end = uri.FindCharInSet("%;/?:@&=+$,", start)) != -1) {
+  // Loop and escape parts by avoiding escaping reserved characters (and '%', '#' ).
+  while ((end = uri.FindCharInSet("%#;/?:@&=+$,", start)) != -1) {
     aURI.Mid(part, start, (end-start));
     if (textToSubURI && !part.IsASCII()) {
       rv = textToSubURI->ConvertAndEscape(documentCharset, part.GetUnicode(), getter_Copies(escapedURI));
