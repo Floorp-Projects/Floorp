@@ -414,6 +414,10 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
 PRBool
 nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
+  // DISABLED UNTIL THE SLOWDOWN IN TXUL, TP AND TS GETS RESOLVED
+  // (SEE BUG 156452).
+  return PR_TRUE;
+
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
 
   if (!doc) {

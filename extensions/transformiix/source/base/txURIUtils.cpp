@@ -320,6 +320,10 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
 // static
 MBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
+  // DISABLED UNTIL THE SLOWDOWN IN TXUL, TP AND TS GETS RESOLVED
+  // (SEE BUG 156452).
+  return PR_TRUE;
+
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
 
   if (!doc) {
