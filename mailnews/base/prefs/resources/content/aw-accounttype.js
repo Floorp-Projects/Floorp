@@ -51,7 +51,11 @@ function acctTypePageUnload() {
     gCurrentAccountData = null;
     setAccountTypeData();
     initializeIspData();
-    
+    setupWizardPanels();
+    return true;
+}
+
+function setupWizardPanels() {
     if (gCurrentAccountData && gCurrentAccountData.useOverlayPanels) {
       if ("testingIspServices" in this) {
         if ("SetPageMappings" in this && testingIspServices()) {
@@ -105,8 +109,6 @@ function acctTypePageUnload() {
       // make the account type page go to the very first of our approved wizard panels...this is usually going to
       // be accounttype --> identitypage unless we were configured to skip the identity page
       setNextPage("accounttype",wizardPanels[0]);
-
-    return true;
 }
 
 function initializeIspData()
