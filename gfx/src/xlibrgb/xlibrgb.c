@@ -72,6 +72,12 @@
 
 #include "xlibrgb.h"
 
+#ifdef XLIBRGB_ENABLE_MITSHM_SUPPORT
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <X11/extensions/XShm.h>
+#endif /* XLIBRGB_ENABLE_MITSHM_SUPPORT */
+
 /* check our endianness */
 #ifdef USE_MOZILLA_TYPES
 
@@ -120,7 +126,7 @@ typedef void (*XlibRgbConvFunc) (XlibRgbHandle *handle,
 
 #define IMAGE_WIDTH 256
 #define STAGE_ROWSTRIDE (IMAGE_WIDTH * 3)
-#define IMAGE_HEIGHT 64
+#define IMAGE_HEIGHT 128
 #define N_IMAGES 6
 
 /* Some of these fields should go, as they're not being used at all.
@@ -156,7 +162,7 @@ struct _XlibRgbHandle
   unsigned int      ngray_shades;
   unsigned int      nreserved;
 
-  unsigned int      bpp;
+  unsigned int      bpp; /* bytes per pixel */
   unsigned int      cmap_alloced;
   double            gamma_val;
 
@@ -189,7 +195,8 @@ struct _XlibRgbHandle
   Bool            xlib_rgb_verbose;      /* default: FALSE */
   XImage         *static_image[N_IMAGES];
   int             static_image_idx;
-
+  char           *static_buffer;
+  
   uint32         *DM_565;
 
   unsigned char  *colorcube;
@@ -199,7 +206,6 @@ struct _XlibRgbHandle
 
   /* image tiling code... */
   Bool            disallow_image_tiling; /* default: FALSE */
-
   int             horiz_idx;
   int             horiz_y;
   int             vert_idx;
@@ -209,11 +215,166 @@ struct _XlibRgbHandle
   int             tile_y1;
   int             tile_y2;
 
-#ifdef VERBOSE
-  int            sincelast;
-#endif /* VERBOSE */
+#ifdef XLIBRGB_ENABLE_MITSHM_SUPPORT
+  Bool            xlib_use_shm;
+#endif /* XLIBRGB_ENABLE_MITSHM_SUPPORT */
+  long            max_request_size;
 };
 
+static XImage *
+xxlib_normal_ximage(XlibRgbHandle *handle)
+{
+  XImage *ximage;
+
+  if (handle->bitmap) {
+    ximage = XCreateImage(handle->display,
+                          handle->x_visual_info->visual,
+                          1,
+                          XYBitmap,
+                          0, 0, IMAGE_WIDTH, IMAGE_HEIGHT,
+                          8,
+                          0);
+  }
+  else 
+  {  
+    ximage = XCreateImage(handle->display,
+                          handle->x_visual_info->visual,
+                          (unsigned int)handle->x_visual_info->depth,
+                          ZPixmap,
+                          0, 0,
+                          IMAGE_WIDTH,
+                          IMAGE_HEIGHT,
+                          32, 0);
+  }
+
+  if (!ximage)
+    return NULL;
+    
+  ximage->data = malloc(ximage->height * ximage->bytes_per_line);
+  if (!ximage->data)
+  {
+    XDestroyImage(ximage);
+    return NULL;
+  }
+  
+  ximage->bitmap_bit_order = MSBFirst;
+  ximage->byte_order = MSBFirst;
+    
+  return ximage;
+}
+
+#ifdef XLIBRGB_ENABLE_MITSHM_SUPPORT
+static XImage *
+xshm_image_new(XlibRgbHandle *handle)
+{
+  XShmSegmentInfo *shm_info;
+  XImage          *ximage;
+    
+  shm_info = calloc(1, sizeof(XShmSegmentInfo));
+  if (!shm_info)
+    return NULL;
+    
+  shm_info->readOnly = True;
+
+  if (handle->bitmap)
+  {
+    ximage = XShmCreateImage(handle->display,
+                             handle->x_visual_info->visual,
+                             1,
+                             XYBitmap, NULL, shm_info, IMAGE_WIDTH, IMAGE_HEIGHT);
+  }
+  else
+  {
+    ximage = XShmCreateImage(handle->display,
+                             handle->x_visual_info->visual,
+                             (unsigned int)handle->x_visual_info->depth,
+                             ZPixmap, NULL, shm_info, IMAGE_WIDTH, IMAGE_HEIGHT);
+  }
+
+  /* most likely shm extension is not loaded */
+  if (!ximage)
+  {
+    free(shm_info);
+    return NULL;
+  }
+
+  /* allocate a shm chunk of desired size... */
+  shm_info->shmid = shmget(IPC_PRIVATE,
+                           ximage->height * ximage->bytes_per_line,
+                           IPC_CREAT | 0777);
+
+  /* image is probably > SHMMAX */
+  if (shm_info->shmid == -1)
+  {
+    XDestroyImage(ximage);
+    free(shm_info);
+    return NULL;
+  }
+
+  /* find out where in memory it was placed */
+  shm_info->shmaddr = shmat(shm_info->shmid, NULL, 0);
+
+  if (shm_info->shmaddr == (void *)-1) {
+    XDestroyImage(ximage);
+    shmctl(shm_info->shmid, IPC_RMID, NULL);
+    free(shm_info);
+    return NULL;
+  }
+
+  /* image data in shared memory */
+  ximage->data = shm_info->shmaddr;
+  XShmAttach(handle->display, shm_info);
+  XSync(handle->display, False);
+
+  /* set the shm segment as deleted so that it's deleted automatically */
+  shmctl(shm_info->shmid, IPC_RMID, NULL);
+  
+  return ximage;
+}
+#endif /* XLIBRGB_ENABLE_MITSHM_SUPPORT */
+
+static void
+xxlib_image_put(XlibRgbHandle *handle,
+               Drawable drawable, GC gc,
+               XImage *image,
+               int xsrc, int ysrc,
+               int xdest, int ydest,
+               int width, int height)
+{
+#ifdef XLIBRGB_ENABLE_MITSHM_SUPPORT
+  if (handle->xlib_use_shm)
+  {
+    XShmPutImage(handle->display, drawable,
+                 gc, image,
+                 xsrc, ysrc, xdest, ydest, width, height, False);
+  }  
+  else
+#endif /* XLIBRGB_ENABLE_MITSHM_SUPPORT */  
+  {
+    XPutImage(handle->display, drawable, gc, image,
+              xsrc, ysrc, xdest, ydest,
+              (unsigned int)width, (unsigned int)height);
+  }
+}
+
+#ifdef XLIBRGB_ENABLE_MITSHM_SUPPORT
+static void
+xshm_image_check(XlibRgbHandle *handle, XlibRgbArgs *args)
+{
+  int dummy; 
+  
+  handle->xlib_use_shm = False;
+
+  if(!args->disallow_mit_shmem)
+    /* XlibRGB MIT-SHM support requires the image tiling hack */
+    if(!args->disallow_image_tiling)
+      if (getenv("MOZILLA_XXLIBRGB_DISABLE_MIT_SHM") == NULL)
+        if (XShmQueryExtension(handle->display))
+          if (XShmQueryVersion(handle->display,
+                               &dummy, &dummy, &dummy) == True)
+            handle->xlib_use_shm = True;
+}
+#endif /* XLIBRGB_ENABLE_MITSHM_SUPPORT */
 
 unsigned long
 xxlib_get_prec_from_mask(unsigned long val)
@@ -507,16 +668,51 @@ xxlib_rgb_colorcube_222 (XlibRgbHandle *handle)
   }
 }
 
+/* Make a 6 x 7 x 6 colorcube */
+static void
+xxlib_rgb_colorcube_676 (XlibRgbHandle *handle)
+{
+  int i = 0;
+  XColor color;
+  Colormap cmap;
+  int r, g, b, r_max, g_max, b_max;
+  unsigned long pixels[256];
+  
+  r_max = 6;
+  g_max = 7;
+  b_max = 6;
+
+  if (handle->cmap_alloced)
+    cmap = handle->cmap;
+  else
+    cmap = handle->default_colormap;
+
+  for (r = 0; r < r_max; r++)
+  {
+    for (g = 0; g < g_max; g++)
+    {
+      for (b = 0; b < b_max; b++)
+      {        
+        color.red   = r * 65535 / (r_max-1);
+        color.green = g * 65535 / (g_max-1);
+        color.blue  = b * 65535 / (b_max-1);
+        XAllocColor (handle->display, cmap, &color);
+        pixels[i++] = color.pixel;
+      }
+    }
+  }    
+      
+  handle->nred_shades   = r_max;
+  handle->ngreen_shades = g_max;
+  handle->nblue_shades  = b_max;
+  xxlib_rgb_make_colorcube   (handle, pixels, r_max, g_max, b_max);
+  xxlib_rgb_make_colorcube_d (handle, pixels, r_max, g_max, b_max);      
+}
+
 void
 xxlib_rgb_set_verbose (XlibRgbHandle *handle, Bool verbose)
 {
   handle->xlib_rgb_verbose = verbose;
-}
-
-void
-xxlib_rgb_set_install (XlibRgbHandle *handle, Bool install)
-{
-  handle->xlib_rgb_install_cmap = install;
 }
 
 void
@@ -545,6 +741,7 @@ static uint32
 xxlib_rgb_score_visual (XlibRgbHandle *handle, XVisualInfo *visual)
 {
   uint32 quality, speed, pseudo, sys;
+#ifdef DEBUG
   static const char* visual_names[] =
   {
     "static gray",
@@ -554,6 +751,7 @@ xxlib_rgb_score_visual (XlibRgbHandle *handle, XVisualInfo *visual)
     "true color",
     "direct color",
   };
+#endif /* DEBUG */
   
   quality = 0;
   speed = 1;
@@ -619,23 +817,25 @@ xxlib_rgb_score_visual (XlibRgbHandle *handle, XVisualInfo *visual)
   return (quality << 12) | (speed << 8) | (sys << 4) | pseudo;
 }
 
-static void
-xxlib_rgb_choose_visual (XlibRgbHandle *handle)
+static Bool
+xxlib_rgb_choose_visual (XlibRgbHandle *handle, XVisualInfo *xtemplate, long xtemplate_mask)
 {
   XVisualInfo *visuals;
   XVisualInfo *visual;
   XVisualInfo *best_visual;
   XVisualInfo *final_visual;
-  XVisualInfo template;
   int num_visuals;
   uint32 score, best_score;
   int cur_visual = 1;
   int i;
-  
-  template.screen = handle->screen_num;
-  visuals = XGetVisualInfo(handle->display, VisualScreenMask,
-                           &template, &num_visuals);
-  
+   
+  xtemplate_mask |= VisualScreenMask;
+  xtemplate->screen = handle->screen_num;
+  visuals = XGetVisualInfo(handle->display, xtemplate_mask,
+                           xtemplate, &num_visuals);
+  if (!visuals)
+    return False;
+    
   best_visual = visuals;
   best_score = xxlib_rgb_score_visual (handle, best_visual);
 
@@ -655,80 +855,8 @@ xxlib_rgb_choose_visual (XlibRgbHandle *handle)
   memcpy(final_visual, best_visual, sizeof(XVisualInfo));
   handle->x_visual_info = final_visual;
   XFree(visuals);
-  /* set up the shift and the precision for the red, green and blue.
-     this only applies to cool visuals like true color and direct color. */
-  if (handle->x_visual_info->class == TrueColor ||
-      handle->x_visual_info->class == DirectColor) {
-    handle->red_shift   = xxlib_get_shift_from_mask(handle->x_visual_info->red_mask);
-    handle->red_prec    = xxlib_get_prec_from_mask(handle->x_visual_info->red_mask);
-    handle->green_shift = xxlib_get_shift_from_mask(handle->x_visual_info->green_mask);
-    handle->green_prec  = xxlib_get_prec_from_mask(handle->x_visual_info->green_mask);
-    handle->blue_shift  = xxlib_get_shift_from_mask(handle->x_visual_info->blue_mask);
-    handle->blue_prec   = xxlib_get_prec_from_mask(handle->x_visual_info->blue_mask);
-  }
-}
-
-static void
-xxlib_rgb_choose_visual_for_xprint (XlibRgbHandle *handle, int aDepth)
-{
-  XVisualInfo *visuals;
-  XVisualInfo *visual;
-  XVisualInfo *best_visual;
-  XVisualInfo *final_visual;
-  XVisualInfo template;
-  int num_visuals;
-  uint32 score;
-  int cur_visual = 1;
-  int i;
-
-  XWindowAttributes win_att;
-  Status ret_stat;
-  Visual      *root_visual;
-
-  ret_stat = XGetWindowAttributes(handle->display, 
-                                  XRootWindow(handle->display, handle->screen_num),
-                                  &win_att);
-  root_visual = win_att.visual;
-  template.screen = handle->screen_num;
-  template.depth  = aDepth;
-  visuals = XGetVisualInfo(handle->display, 
-                           VisualScreenMask | ((aDepth!=-1)?(VisualDepthMask):(0)),
-                           &template, &num_visuals);
- 
-  /* depth not found ? try again - without it... */
-  if (!visuals && aDepth!=-1)
-  {
-    xxlib_rgb_choose_visual_for_xprint(handle, -1);
-    return;
-  }
   
-  best_visual = visuals;
-  if (best_visual->visual != root_visual) {
-     for (i = cur_visual; i < num_visuals; i++) {
-        visual = &visuals[i];
-        if (visual->visual == root_visual) {
-           best_visual = visual;
-           break;
-        }
-      }
-   }
-  /* make a copy of the visual so that we can free
-     the allocated visual list above. */
-  final_visual = malloc(sizeof(XVisualInfo));
-  memcpy(final_visual, best_visual, sizeof(XVisualInfo));
-  handle->x_visual_info = final_visual;
-  XFree(visuals);
-  /* set up the shift and the precision for the red, green and blue.
-     this only applies to cool visuals like true color and direct color. */
-  if (handle->x_visual_info->class == TrueColor ||
-      handle->x_visual_info->class == DirectColor) {
-    handle->red_shift   = xxlib_get_shift_from_mask(handle->x_visual_info->red_mask);
-    handle->red_prec    = xxlib_get_prec_from_mask(handle->x_visual_info->red_mask);
-    handle->green_shift = xxlib_get_shift_from_mask(handle->x_visual_info->green_mask);
-    handle->green_prec  = xxlib_get_prec_from_mask(handle->x_visual_info->green_mask);
-    handle->blue_shift  = xxlib_get_shift_from_mask(handle->x_visual_info->blue_mask);
-    handle->blue_prec   = xxlib_get_prec_from_mask(handle->x_visual_info->blue_mask);
-  }
+  return True;
 }
 
 static void xxlib_rgb_select_conv (XlibRgbHandle *handle, XImage *image, ByteOrder byte_order);
@@ -759,7 +887,7 @@ xxlib_rgb_set_gray_cmap (XlibRgbHandle *handle, Colormap cmap)
   /* Now, we make fake colorcubes - we ultimately just use the pseudocolor
      methods. */
 
-  handle->colorcube = malloc(sizeof(unsigned char) * 4096);
+  handle->colorcube = handle->colorcube_d = malloc(sizeof(unsigned char) * 4096);
 
   for (i = 0; i < 4096; i++)
   {
@@ -770,7 +898,7 @@ xxlib_rgb_set_gray_cmap (XlibRgbHandle *handle, Colormap cmap)
     b = (i << 4 & 0xf0);
     b = b | b >> 4;
     gray = (g + ((r + b) >> 1)) >> 1;
-    handle->colorcube[i] = pixels[gray];
+    handle->colorcube[i] = handle->colorcube_d[i] = pixels[gray];
   }
 }
 
@@ -796,7 +924,7 @@ xxlib_rgb_destroy_handle (XlibRgbHandle *handle)
   if (handle->colorcube)
     free(handle->colorcube);
 
-  if (handle->colorcube_d)
+  if (handle->colorcube_d && (handle->colorcube_d != handle->colorcube))
     free(handle->colorcube_d);
   
   if (handle->DM_565)
@@ -816,25 +944,28 @@ xxlib_rgb_destroy_handle (XlibRgbHandle *handle)
   free(handle); 
 }
 
-/* create a XlibRgbHandle object, see |xxlib_rgb_create_handle_with_depth()| for details */
-XlibRgbHandle *
-xxlib_rgb_create_handle (const char *name, Display *display, Screen *screen)
-{
-  int prefDepth = -1; /* let the function do the visual scoring */
-  return xxlib_rgb_create_handle_with_depth(name, display, screen, prefDepth);
-}
-
-/* create a XlibRgbHandle object
+/* Create a XlibRgbHandle object
  * It is possible to register the handle automagically with a |name|.
  * Handle names must be unique, but it is possible to register a handle 
  * with more than one name via |xxlib_register_handle()|.
- */
+ */                     
 XlibRgbHandle *
-xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *screen, int prefDepth)
+xxlib_rgb_create_handle(Display *display, Screen *screen,
+                        XlibRgbArgs *args)
 {
   XlibRgbHandle *handle = NULL;
   int i;
   static const int byte_order[1] = { 1 };
+
+#ifdef DEBUG
+  printf("xxlib_rgb_create_handle: pseudogray=%d, install_colormap=%d, "
+         "disallow_image_tiling=%d, disallow_mit_shmem=%d, verbose=%d\n",
+         (int)args->pseudogray,
+         (int)args->install_colormap,
+         (int)args->disallow_image_tiling,
+         (int)args->disallow_mit_shmem,
+         (int)args->verbose);
+#endif /* DEBUG */
 
   /* check endian sanity */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
@@ -850,29 +981,52 @@ xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *
     abort();
   }
 #endif /* G_BYTE_ORDER == G_BIG_ENDIAN */
-   
+
+#ifndef XLIBRGB_MIT_SHM_SUPPORT_HAS_BEEN_FIXED
+    /* We still have issues with MIT_SHM support on LSB platforms... ;-( */
+    args->disallow_mit_shmem = True;
+#endif /* XLIBRGB_MIT_SHM_SUPPORT_HAS_BEEN_FIXED */    
+       
     if (!(handle = malloc(sizeof(XlibRgbHandle))))
       return NULL;      
     memset(handle, 0, sizeof(XlibRgbHandle));
 
     /* should we register this handle ? */
-    if (name)
+    if (args->handle_name)
     {
-      if (!xxlib_register_handle(name, handle))
+      if (!xxlib_register_handle(args->handle_name, handle))
       {
+#ifdef DEBUG
+        puts("xxlib_rgb_create_handle: cannot register handle");
+#endif /* DEBUG */      
         free(handle);
         return NULL;
       }  
     }
     
+    /* Emulate StaticGray via PseudoColor visual ? */
+    if (args->pseudogray)
+    {
+      args->xtemplate.class = PseudoColor;
+      args->xtemplate.depth = 8;
+      args->xtemplate_mask |= VisualClassMask|VisualDepthMask;
+    } 
+        
     handle->display = display;
     handle->screen = screen;
     handle->screen_num = XScreenNumberOfScreen(screen);
     handle->x_visual_info = NULL;
-    handle->cmap = 0;
+    handle->cmap = None;
     handle->default_visualid = XDefaultVisual(display, handle->screen_num);
     handle->default_colormap = XDefaultColormap(display, handle->screen_num);
+    handle->max_request_size = XMaxRequestSize(display);
 
+#ifdef XLIBRGB_ENABLE_MITSHM_SUPPORT
+    xshm_image_check(handle, args);
+#endif /* XLIBRGB_ENABLE_MITSHM_SUPPORT */
+    handle->disallow_image_tiling  = args->disallow_image_tiling;
+    handle->xlib_rgb_install_cmap  = args->install_colormap;
+    
     handle->color_pixels = NULL;
     handle->gray_pixels = NULL;
     handle->reserved_pixels = NULL;
@@ -884,12 +1038,12 @@ xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *
     handle->nreserved = 0;
 
     handle->bpp = 0;
-    handle->cmap_alloced = FALSE;
+    handle->cmap_alloced = False;
     handle->gamma_val = 1.0;
 
     handle->stage_buf = NULL;
 
-    handle->own_gc = 0;
+    handle->own_gc = None;
     
     handle->red_shift = 0;
     handle->red_prec = 0;
@@ -904,20 +1058,64 @@ xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *
     handle->vert_x  = IMAGE_WIDTH;
     handle->tile_x  = IMAGE_WIDTH;
     handle->tile_y1 = IMAGE_HEIGHT;
-    handle->tile_y2 = IMAGE_HEIGHT;
+    handle->tile_y2 = IMAGE_HEIGHT;  
 
-    if (prefDepth != -1)
-      xxlib_rgb_choose_visual_for_xprint (handle, prefDepth);
-    else
-      xxlib_rgb_choose_visual (handle);
+    if (!xxlib_rgb_choose_visual (handle, &args->xtemplate, args->xtemplate_mask))
+    {
+#ifdef DEBUG
+      puts("xxlib_rgb_choose_visual failure");
+#endif /* DEBUG */
+      xxlib_rgb_destroy_handle(handle);
+      return NULL;
+    }
 
-    if ((handle->x_visual_info->class == PseudoColor ||
-         handle->x_visual_info->class == StaticColor) &&
-        handle->x_visual_info->depth < 8 &&
-        handle->x_visual_info->depth >= 3)
+    handle->bitmap = (handle->x_visual_info->depth == 1);
+      
+    /* set up the shift and the precision for the red, green and blue.
+       this only applies to cool visuals like true color and direct color. */
+    if (handle->x_visual_info->class == TrueColor ||
+        handle->x_visual_info->class == DirectColor) {
+      handle->red_shift   = xxlib_get_shift_from_mask(handle->x_visual_info->red_mask);
+      handle->red_prec    = xxlib_get_prec_from_mask(handle->x_visual_info->red_mask);
+      handle->green_shift = xxlib_get_shift_from_mask(handle->x_visual_info->green_mask);
+      handle->green_prec  = xxlib_get_prec_from_mask(handle->x_visual_info->green_mask);
+      handle->blue_shift  = xxlib_get_shift_from_mask(handle->x_visual_info->blue_mask);
+      handle->blue_prec   = xxlib_get_prec_from_mask(handle->x_visual_info->blue_mask);
+    }
+    
+    if (args->pseudogray)
+    {
+      if (handle->xlib_rgb_install_cmap)
+      {
+        handle->cmap = XCreateColormap(handle->display,
+                                       XRootWindow(handle->display, handle->screen_num),
+                                       handle->x_visual_info->visual,
+                                       AllocNone);
+        xxlib_rgb_set_gray_cmap (handle, handle->cmap);
+        handle->cmap_alloced = TRUE;
+      }
+      else
+      {
+        handle->cmap = handle->default_colormap;
+        xxlib_rgb_set_gray_cmap (handle, handle->cmap);
+      }  
+    }
+    else if ((handle->x_visual_info->class == PseudoColor ||
+           handle->x_visual_info->class == StaticColor) &&
+           handle->x_visual_info->depth < 8 &&
+           handle->x_visual_info->depth >= 3)
     {
       handle->cmap = handle->default_colormap;
       xxlib_rgb_colorcube_222 (handle);
+    }
+    else if (handle->x_visual_info->class == StaticColor)
+    {
+      handle->cmap = XCreateColormap(handle->display,
+                                     XRootWindow(handle->display, handle->screen_num),
+                                     handle->x_visual_info->visual,
+                                     AllocNone);
+      handle->cmap_alloced = TRUE;
+      xxlib_rgb_colorcube_676(handle);
     }
     else if (handle->x_visual_info->class == PseudoColor)
     {
@@ -930,6 +1128,7 @@ xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *
                                        AllocNone);
         handle->cmap_alloced = TRUE;
       }
+      
       if (!xxlib_rgb_do_colormaps (handle))
       {
         handle->cmap = XCreateColormap(handle->display,
@@ -959,71 +1158,67 @@ xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *
       handle->cmap_alloced = TRUE;
     }
 #endif /* ENABLE_GRAYSCALE */
+    else if (handle->x_visual_info->class != DirectColor && 
+             handle->x_visual_info->visualid == handle->default_visualid->visualid)
+    {
+      handle->cmap = handle->default_colormap;
+    }  
     else
     {
       /* Always install colormap in direct color. */
-      if (handle->x_visual_info->class != DirectColor && 
-          handle->x_visual_info->visualid == handle->default_visualid->visualid)
-        handle->cmap = handle->default_colormap;
-      else
+      handle->cmap = XCreateColormap(handle->display,
+                                     XRootWindow(handle->display, handle->screen_num),
+                                     handle->x_visual_info->visual,
+                                     AllocNone);
+      handle->cmap_alloced = TRUE;
+    }
+
+#ifdef XLIBRGB_ENABLE_MITSHM_SUPPORT
+    if (handle->xlib_use_shm)
+    {
+      /* try to allocate N_IMAGES shm X images */
+      for (i = 0; i < N_IMAGES; i++)
+      {
+        handle->static_image[i] = xshm_image_new(handle);
+        if (!handle->static_image[i])
         {
-          handle->cmap = XCreateColormap(handle->display,
-                                             XRootWindow(handle->display, handle->screen_num),
-                                             handle->x_visual_info->visual,
-                                             AllocNone);
-          handle->cmap_alloced = TRUE;
+          handle->xlib_use_shm = False;
+          break;
         }
-    }
-
-    handle->bitmap = (handle->x_visual_info->depth == 1);
-
-    for (i = 0; i < N_IMAGES; i++) {
-      if (handle->bitmap) {
-        /* Use malloc() instead of g_malloc since X will free() this mem */
-        handle->static_image[i] = XCreateImage(handle->display,
-                                       handle->x_visual_info->visual,
-                                       1,
-                                       XYBitmap,
-                                       0, 0, IMAGE_WIDTH, IMAGE_HEIGHT,
-                                       8,
-                                       0);
-        handle->static_image[i]->data = malloc(IMAGE_WIDTH * IMAGE_HEIGHT >> 3);
-        handle->static_image[i]->bitmap_bit_order = MSBFirst;
-        handle->static_image[i]->byte_order = MSBFirst;
       }
-      else {
-        handle->static_image[i] = XCreateImage(handle->display,
-                                       handle->x_visual_info->visual,
-                                       (unsigned int)handle->x_visual_info->depth,
-                                       ZPixmap,
-                                       0, 0,
-                                       IMAGE_WIDTH,
-                                       IMAGE_HEIGHT,
-                                       32, 0);
-        /* remove this when we are using shared memory.. */
-        handle->static_image[i]->data = malloc((size_t)IMAGE_WIDTH * IMAGE_HEIGHT * handle->x_visual_info->depth);
-        handle->static_image[i]->bitmap_bit_order = MSBFirst;
-        handle->static_image[i]->byte_order = MSBFirst;
+      
+      /* Failure ? Then clean-up and use the standard method below... */
+      if (!handle->xlib_use_shm)
+      {
+#ifdef DEBUG
+        printf("Failed to set-up MIT-SHMEM after %d images\n", i);
+#endif /* DEBUG */
+        for (i = 0; i < N_IMAGES; i++)
+        {
+          if (handle->static_image[i])
+          {
+            XDestroyImage(handle->static_image[i]);
+            handle->static_image[i] = NULL;
+          }  
+        } 
       }
-    }
+    }  
+
+    /* Allocate "normal" images "*/
+    if (!handle->xlib_use_shm)
+#endif /* XLIBRGB_ENABLE_MITSHM_SUPPORT */
+    {    
+      for (i = 0; i < N_IMAGES; i++) 
+      {
+        handle->static_image[i] = xxlib_normal_ximage(handle);
+      }
+    }  
+
     /* ok, so apparently, handle->bpp is actually
-       BYTES per pixel.  What fun! */
-    switch (handle->static_image[0]->bits_per_pixel) {
-    case 1:
-    case 8:
-      handle->bpp = 1;
-      break;
-    case 16:
-      handle->bpp = 2;
-      break;
-    case 24:
-      handle->bpp = 3;
-      break;
-    case 32:
-      handle->bpp = 4;
-      break;
-    }
-    xxlib_rgb_select_conv (handle, handle->static_image[0], MSB_FIRST);  
+     * BYTES per pixel.  What fun! */
+    handle->bpp = (handle->static_image[0]->bits_per_pixel + 7) / 8;
+
+    xxlib_rgb_select_conv (handle, handle->static_image[0], MSB_FIRST);
     
     return handle;
 }
@@ -1035,54 +1230,60 @@ xxlib_rgb_xpixel_from_rgb (XlibRgbHandle *handle, uint32 rgb)
   unsigned long pixel = 0;
 
   if (handle->bitmap)
-    {
-      return ((rgb & 0xff0000) >> 16) +
-        ((rgb & 0xff00) >> 7) +
-        (rgb & 0xff) > 510;
-    }
+  {
+    return ((rgb & 0xff0000) >> 16) +
+           ((rgb & 0xff00) >> 7) +
+            (rgb & 0xff) > 510;
+  }
   else if (handle->x_visual_info->class == PseudoColor)
     pixel = handle->colorcube[((rgb & 0xf00000) >> 12) |
-                     ((rgb & 0xf000) >> 8) |
-                     ((rgb & 0xf0) >> 4)];
+                              ((rgb & 0xf000) >> 8) |
+                              ((rgb & 0xf0) >> 4)];
   else if (handle->x_visual_info->depth < 8 &&
            handle->x_visual_info->class == StaticColor)
-    {
-      pixel = handle->colorcube_d[((rgb & 0x800000) >> 17) |
-                         ((rgb & 0x8000) >> 12) |
-                         ((rgb & 0x80) >> 7)];
-    }
+  {
+    pixel = handle->colorcube_d[((rgb & 0x800000) >> 17) |
+                                ((rgb & 0x8000) >> 12) |
+                                ((rgb & 0x80) >> 7)];
+  }
+  else if (handle->x_visual_info->class == StaticColor)
+  {
+    pixel = handle->colorcube[((rgb & 0xf00000) >> 12) |
+                              ((rgb & 0xf000) >> 8) |
+                              ((rgb & 0xf0) >> 4)];  
+  }
   else if (handle->x_visual_info->class == TrueColor ||
            handle->x_visual_info->class == DirectColor)
-    {
+  {
 #ifdef VERBOSE
-      printf ("shift, prec: r %d %d g %d %d b %d %d\n",
-              handle->red_shift,
-              handle->red_prec,
-              handle->green_shift,
-              handle->green_prec,
-              handle->blue_shift,
-              handle->blue_prec);
+    printf ("shift, prec: r %d %d g %d %d b %d %d\n",
+            handle->red_shift,
+            handle->red_prec,
+            handle->green_shift,
+            handle->green_prec,
+            handle->blue_shift,
+            handle->blue_prec);
 #endif
 
-      pixel = (((((rgb & 0xff0000) >> 16) >>
-                 (8 - handle->red_prec)) <<
-                handle->red_shift) +
-               ((((rgb & 0xff00) >> 8)  >>
-                 (8 - handle->green_prec)) <<
-                handle->green_shift) +
-               (((rgb & 0xff) >>
-                 (8 - handle->blue_prec)) <<
-                handle->blue_shift));
-    }
+    pixel = (((((rgb & 0xff0000) >> 16) >>
+               (8 - handle->red_prec)) <<
+              handle->red_shift) +
+             ((((rgb & 0xff00) >> 8)  >>
+               (8 - handle->green_prec)) <<
+              handle->green_shift) +
+             (((rgb & 0xff) >>
+               (8 - handle->blue_prec)) <<
+              handle->blue_shift));
+  }
   else if (handle->x_visual_info->class == StaticGray ||
            handle->x_visual_info->class == GrayScale)
-    {
-      int gray = ((rgb & 0xff0000) >> 16) +
-        ((rgb & 0xff00) >> 7) +
-        (rgb & 0xff);
+  {
+    int gray = ((rgb & 0xff0000) >> 16) +
+               ((rgb & 0xff00) >> 7) +
+                (rgb & 0xff);
 
-      return gray >> (10 - handle->x_visual_info->depth);
-    }
+    return gray >> (10 - handle->x_visual_info->depth);
+  }
 
   return pixel;
 }
@@ -3145,7 +3346,7 @@ xxlib_rgb_select_conv (XlibRgbHandle *handle, XImage *image, ByteOrder byte_orde
       conv = xxlib_rgb_convert_truecolor_msb;
       conv_d = xxlib_rgb_convert_truecolor_msb_d;
     }
-  else if (bpp == 8 && depth == 8 && (vtype == PseudoColor
+  else if (bpp == 8 && depth == 8 && (vtype == PseudoColor || vtype == StaticColor
 #ifdef ENABLE_GRAYSCALE
                                       || vtype == GrayScale
 #endif
@@ -3209,32 +3410,23 @@ xxlib_rgb_select_conv (XlibRgbHandle *handle, XImage *image, ByteOrder byte_orde
   handle->conv_indexed_d = conv_indexed_d;
 }
 
-/* Defining NO_FLUSH can cause inconsistent screen updates when 
- * images are put via MIT-SHM extension, but is useful
- * for performance evaluation.
- * NO_FLUSH is safe with plain XPutImage()...
- */
-
-#define NO_FLUSH
-
 static int
 xxlib_rgb_alloc_scratch_image (XlibRgbHandle *handle)
 {
   if (handle->static_image_idx == N_IMAGES)
   {
-#ifndef NO_FLUSH
-    XFlush(handle->display);
-#ifdef VERBOSE
-    printf ("flush, %d puts since last flush\n", sincelast);
-    sincelast = 0;
-#endif /* VERBOSE */
-#endif /* NO_FLUSH */
+#ifdef XLIBRGB_ENABLE_MITSHM_SUPPORT
+    if (handle->xlib_use_shm)
+      XFlush(handle->display);
+#endif /* XLIBRGB_ENABLE_MITSHM_SUPPORT */
+      
     handle->static_image_idx = 0;
     handle->horiz_y = IMAGE_HEIGHT;
     handle->vert_x  = IMAGE_WIDTH;
     handle->tile_x  = IMAGE_WIDTH;
     handle->tile_y1 = handle->tile_y2 = IMAGE_HEIGHT;
   }
+  
   return handle->static_image_idx++;
 }
 
@@ -3304,10 +3496,7 @@ xxlib_rgb_alloc_scratch (XlibRgbHandle *handle, int width, int height, int *ax, 
     }
   }
   image = handle->static_image[idx];
-#ifdef VERBOSE
-  printf ("index %d, x %d, y %d (%d x %d)\n", idx, *ax, *ay, width, height);
-  sincelast++;
-#endif /* VERBOSE */
+
   return image;
 }
 
@@ -3322,12 +3511,6 @@ xxlib_get_bits_per_pixel (XlibRgbHandle *handle, int depth)
   if (depth <= 16)
       return 16;
   return 32;
-}
-
-/* allow or disallow "image tiling" in xxlib_draw_rgb_image_core()... */
-void xxlib_disallow_image_tiling (XlibRgbHandle *handle, Bool disallow_it)
-{
-  handle->disallow_image_tiling = disallow_it;
 }
 
 /* Use optimized code... */   
@@ -3355,6 +3538,8 @@ xxlib_draw_rgb_image_core (XlibRgbHandle *handle,
                            int xdith,
                            int ydith)
 {
+  Bool do_tile;
+  
   if (handle->bitmap)
   {
     if (handle->own_gc == None)
@@ -3374,36 +3559,20 @@ xxlib_draw_rgb_image_core (XlibRgbHandle *handle,
     gc = handle->own_gc;
   }
 
-  /* guess what's more worse - six malloc()s or one XFlush() ?
-   * The idea of cutting images into "tiles" which fit info the preallocated 
-   * XImage buffers looks nice, but breaks a lot of stuff (dxcp/lbx image cache, 
-   * Xprint image scaling etc.) - and results in a dramatic performance loss 
-   * due excessive use of XFlush() (after each N_IMAGES'th tiles 
-   * (N_IMAGES==6) - which becomes a real problem for big images or when the 
-   * application renders a lot of images (Mozilla chrome during window 
-   * opening)).
-   * I prefer malloc()'ing the image buffers here because it's faster (than 
-   * the preallocated_buffer+XFlush() solution) and doesn't break anything
-   * - and malloc() is usually highly optimized - why should we work around 
-   * some code which is already fast enought ?
-   *
-   * Using preallocated buffers may be usefull for MIT-SHM (because 
-   * allocating shared memory _may_ be slower than plain malloc()) - but 
-   * not for plain XPutImage() which does not need shared memory...
-   * And even in this case it should listen to XShmCompletionEvent events 
-   * instead of killing performance with tons of XFlush()...
-   *
-   * That's why this "tiling" stuff can be turned-off here (see 
-   * xlib_disallow_image_tiling() above)...
+  /* Avoid image tiling for small images (1/32 of the maximum request size -
+   * guranteed to be at least 16384 bytes). Tiling buffers are rare - and 
+   * in the case of MIT-SHM require a XFlush() if all tile images have been used-up.
    */
-  if(!handle->disallow_image_tiling)
+  do_tile = ((handle->x_visual_info->depth+7)/8 * width * height) > (handle->max_request_size/32);
+      
+  if( (!handle->disallow_image_tiling) && do_tile )
   {
     int ay, ax;
     int xs0, ys0;
     int width1, height1;
     unsigned char *buf_ptr;
     XImage *image;
-    
+          
     for (ay = 0; ay < height; ay += IMAGE_HEIGHT)
     {
       height1 = MIN (height - ay, IMAGE_HEIGHT);
@@ -3418,9 +3587,10 @@ xxlib_draw_rgb_image_core (XlibRgbHandle *handle,
               x + ax + xdith, y + ay + ydith, cmap);
 
 #ifndef DONT_ACTUALLY_DRAW
-        XPutImage(handle->display, drawable, gc, image,
-                  xs0, ys0, x + ax, y + ay, (unsigned int)width1, (unsigned int)height1);
-#endif
+        xxlib_image_put(handle, drawable, gc, image,
+                       xs0, ys0, x + ax, y + ay,
+                       (unsigned int)width1, (unsigned int)height1);
+#endif /* !DONT_ACTUALLY_DRAW */
       }
     }
   }
@@ -3431,9 +3601,7 @@ xxlib_draw_rgb_image_core (XlibRgbHandle *handle,
    * by using a static buffer if possible - but uses malloc() when the image data are 
    * too large to fit info that buffer...
    */
-  {
-    static char   *static_buffer       = NULL;
-    
+  {    
     XImage ximage;
     int    format;
     int    depth;
@@ -3441,10 +3609,10 @@ xxlib_draw_rgb_image_core (XlibRgbHandle *handle,
     long   image_data_size;
     
     /* allocate static buffer if we do not have one yet... */      
-    if( static_buffer == NULL )
+    if( handle->static_buffer == NULL )
     {
-      static_buffer = malloc(XLIB_STATIC_IMAGE_BUFFER_SIZE);
-      if(!static_buffer)
+      handle->static_buffer = malloc(XLIB_STATIC_IMAGE_BUFFER_SIZE);
+      if(!handle->static_buffer)
         return; /* error - no memory */
     }
     
@@ -3506,7 +3674,7 @@ xxlib_draw_rgb_image_core (XlibRgbHandle *handle,
     }
     else
     {
-      ximage.data = static_buffer; 
+      ximage.data = handle->static_buffer; 
     }
 
     conv (handle, &ximage, 0, 0, width, height, buf, rowstride,
@@ -3518,7 +3686,7 @@ xxlib_draw_rgb_image_core (XlibRgbHandle *handle,
 #endif
 
     /* free any extra memory we may have allocated above */
-    if (ximage.data != static_buffer)
+    if (ximage.data != handle->static_buffer)
       free(ximage.data);
   }
 #else
@@ -3834,16 +4002,6 @@ Bool xxlib_register_handle(const char *name, XlibRgbHandle *handle)
     if (!registered_handles)
       abort();
     entry = &registered_handles[registered_handles_size-1];
-  
-#ifdef DEBUG
-    printf("xxlib_register_handle: new entry '%s' %p\n", name, entry);
-#endif /* DEBUG */
-  }
-  else
-  {
-#ifdef DEBUG
-    printf("xxlib_register_handle: reusing entry '%s' %p\n", name, entry);
-#endif /* DEBUG */
   }
 
   entry->name   = strdup(name);
@@ -3896,9 +4054,6 @@ void xxlib_deregister_handle_by_handle(XlibRgbHandle *handle)
 XlibRgbHandle *xxlib_find_handle(const char *name)
 {
   RegisteredHandle *entry = xxlib_find_registered_handle(name);
-#ifdef DEBUG
-  printf("xxlib_find_handle: '%s' entry %p\n", name, entry);
-#endif /* DEBUG */
   return (entry)?(entry->handle):(NULL);
 }
 

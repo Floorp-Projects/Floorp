@@ -30,11 +30,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <X11/extensions/XIElib.h>
 #include "prenv.h"
-/* why do I need this define? */
-#define USE_MOZILLA_TYPES
 #include "xlibrgb.h"
+#include <X11/extensions/XIElib.h>
 
 /* #define DEBUG_XIE 1 */
 static PRBool useXIE = PR_TRUE;
