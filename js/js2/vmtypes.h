@@ -81,7 +81,7 @@ namespace VM {
         SET_PROP, /* object, name, source */
         SUBTRACT, /* dest, source1, source2 */
         THROW, /* exception value */
-        TRY, /* catch target, finally target */
+        TRY /* catch target, finally target */
     };
     
     /********************************************************************/
@@ -139,7 +139,7 @@ namespace VM {
             return f;
         }
         
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/)
         {
             return f;
         }
@@ -173,10 +173,21 @@ namespace VM {
     typedef std::vector<Instruction *> InstructionStream;
     typedef InstructionStream::iterator InstructionIterator;
     
+    /**
+     * Helper to print Call operands.
+     */
+    struct ArgList {
+        const RegisterList& mList;
+        const JSValues& mRegisters;
+        ArgList(const RegisterList& rl, const JSValues& registers)
+            :   mList(rl), mRegisters(registers) {}
+    };        
+    
     /********************************************************************/
     
     Formatter& operator<< (Formatter& f, Instruction& i);
     Formatter& operator<< (Formatter& f, RegisterList& rl);
+    Formatter& operator<< (Formatter& f, ArgList& al);
     
     /********************************************************************/
     
@@ -329,7 +340,7 @@ namespace VM {
             f << opcodeNames[BRANCH] << "\t" << "Offset " << mOp1->mOffset;
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -399,7 +410,7 @@ namespace VM {
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << "RL" << mOp3;
+            f << "R" << mOp1 << " = " << registers[mOp1] << ", " << "R" << mOp2 << " = " << registers[mOp2] << ", " << ArgList(mOp3, registers);
             return f;
         }
     };
@@ -477,7 +488,7 @@ namespace VM {
             f << opcodeNames[ENDTRY];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -524,7 +535,7 @@ namespace VM {
             f << opcodeNames[JSR] << "\t" << "Offset " << mOp1->mOffset;
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -628,7 +639,7 @@ namespace VM {
             f << opcodeNames[NOP];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -675,7 +686,7 @@ namespace VM {
             f << opcodeNames[RETURN_VOID];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -690,7 +701,7 @@ namespace VM {
             f << opcodeNames[RTS];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -778,7 +789,7 @@ namespace VM {
             f << opcodeNames[TRY] << "\t" << "Offset " << mOp1->mOffset << ", " << "Offset " << mOp2->mOffset;
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
