@@ -250,12 +250,14 @@ __END_HEADER
   # Summary Table (name, count)
   #
   print "<table border=0 cellpadding=1 cellspacing=0>";
-  my $num_columns = 5;
+  my $num_columns = 6;
   my $num_per_column = $#who_list / $num_columns;
   for (my $ii=0; $ii <= $num_per_column; $ii++) {
     print "<tr>";
     for (my $jj=0; $jj < $num_columns; $jj++) {
-      my $who = $who_list[$ii+$jj*$num_per_column + 1];
+      my $index = $ii+$jj*$num_per_column + 1;
+      next if $index > $#who_list;
+      my $who = $who_list[$index];
       my $count = $who_count{$who};
       my $name = $who;
       $name =~ s/%.*//;
