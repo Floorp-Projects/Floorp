@@ -194,7 +194,7 @@ private:
   nsCOMPtr<nsIStreamListener> mInner;
   nsVoidArray mBindingRequests;
   
-  nsIDocument* mDocument;
+  nsCOMPtr<nsIWeakReference> mDocument;
   nsCOMPtr<nsIDocument> mBindingDocument;
 };
 
@@ -211,7 +211,7 @@ nsXBLStreamListener::nsXBLStreamListener(nsIStreamListener* aInner, nsIDocument*
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   mInner = aInner;
-  mDocument = aDocument;
+  mDocument = getter_AddRefs(NS_GetWeakReference(aDocument));
   mBindingDocument = aBindingDocument;
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -305,49 +305,55 @@ nsresult
 nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 {
   nsresult rv = NS_OK;
-
-  // Remove ourselves from the set of pending docs.
-  nsCOMPtr<nsIBindingManager> bindingManager;
-  mDocument->GetBindingManager(getter_AddRefs(bindingManager));
-  nsCOMPtr<nsIURI> uri(mBindingDocument->GetDocumentURL());
-  nsXPIDLCString str;
-  uri->GetSpec(getter_Copies(str));
-  bindingManager->RemoveLoadingDocListener((const char*)str);
-
+  PRUint32 i;
   PRUint32 count = mBindingRequests.Count();
   
-  nsCOMPtr<nsIContent> root = getter_AddRefs(mBindingDocument->GetRootContent());
-  if (root)
-    nsXBLService::StripWhitespaceNodes(root);
-
-  // Put our doc in the doc table.
-  nsCOMPtr<nsIXBLDocumentInfo> info;
-  NS_NewXBLDocumentInfo(mBindingDocument, getter_AddRefs(info));
- 
-  // If the doc is a chrome URI, then we put it into the XUL cache.
-  PRBool cached = PR_FALSE;
-  if (IsChromeURI(uri) && gXULUtils->UseXULCache()) {
-    cached = PR_TRUE;
-    gXULCache->PutXBLDocumentInfo(info);
-
-    // Cache whether or not this chrome XBL can execute scripts.
-    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
-    if (NS_SUCCEEDED(rv) && reg) {
-      PRBool allow = PR_TRUE;
-      reg->AllowScriptsForSkin(uri, &allow);
-      info->SetScriptAccess(allow);
-    }
+  // See if we're still alive.
+  nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
+  if (!doc) {
+    NS_WARNING("XBL load did not complete until after document went away! Modal dialog bug?\n");
   }
-  
-  if (!cached)
-    bindingManager->PutXBLDocumentInfo(info);
+  else {
+    // Remove ourselves from the set of pending docs.
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    doc->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIURI> uri(mBindingDocument->GetDocumentURL());
+    nsXPIDLCString str;
+    uri->GetSpec(getter_Copies(str));
+    bindingManager->RemoveLoadingDocListener((const char*)str);
 
-  // Notify all pending requests that their bindings are
-  // ready and can be installed.
-  PRUint32 i;
-  for (i = 0; i < count; i++) {
-    nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
-    req->DocumentLoaded(mBindingDocument);
+    nsCOMPtr<nsIContent> root = getter_AddRefs(mBindingDocument->GetRootContent());
+    if (root)
+      nsXBLService::StripWhitespaceNodes(root);
+
+    // Put our doc in the doc table.
+    nsCOMPtr<nsIXBLDocumentInfo> info;
+    NS_NewXBLDocumentInfo(mBindingDocument, getter_AddRefs(info));
+ 
+    // If the doc is a chrome URI, then we put it into the XUL cache.
+    PRBool cached = PR_FALSE;
+    if (IsChromeURI(uri) && gXULUtils->UseXULCache()) {
+      cached = PR_TRUE;
+      gXULCache->PutXBLDocumentInfo(info);
+
+      // Cache whether or not this chrome XBL can execute scripts.
+      nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
+      if (NS_SUCCEEDED(rv) && reg) {
+        PRBool allow = PR_TRUE;
+        reg->AllowScriptsForSkin(uri, &allow);
+        info->SetScriptAccess(allow);
+      }
+    }
+  
+    if (!cached)
+      bindingManager->PutXBLDocumentInfo(info);
+
+    // Notify all pending requests that their bindings are
+    // ready and can be installed.
+    for (i = 0; i < count; i++) {
+      nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
+      req->DocumentLoaded(mBindingDocument);
+    }
   }
   
   for (i = 0; i < count; i++) {
@@ -358,6 +364,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBindingDocument));
   rec->RemoveEventListener(NS_ConvertASCIItoUCS2("load"), (nsIDOMLoadListener*)this, PR_FALSE);
 
+  mBindingRequests.Clear();
   mDocument = nsnull;
   mBindingDocument = nsnull;
 
