@@ -17,6 +17,10 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/* nsMemStream. A memory based stream for use with memory objects 
+ *
+ * -Gagan Saksena 09/15/98.
+ */
 #ifndef nsMemStream_h__
 #define nsMemStream_h__
 
@@ -43,7 +47,10 @@ protected:
 private:
     nsMemStream(const nsMemStream& o);
     nsMemStream& operator=(const nsMemStream& o);
-    void*       m_pCurrent;
+
+    PRUint32    m_AllocSize; 
+    PRUint32    m_ReadOffset;
+    PRUint32    m_WriteOffset;
     void*       m_pStart;
     PRUint32    m_Size;
 };

@@ -17,6 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/* Another temporary class that needs to be replaced by a commonly 
+ * used one, or made a commonly used one. 
+ * 
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsEnumeration_h__
 #define nsEnumeration_h__
 

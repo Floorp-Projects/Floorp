@@ -17,6 +17,10 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/* Another common class that needs to be replaced/removed/recycled.
+ * 
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsIterator_h__
 #define nsIterator_h__
 

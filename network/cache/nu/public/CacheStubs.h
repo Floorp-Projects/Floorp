@@ -17,12 +17,13 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-/* Design and original implementation by Gagan Saksena '98 */
-
-/* Ideally we should be using the C++ api directly, but since the core of
-   Netlib is still in C, this file uses the stub functions that call the C++
-   API internally, allowing C programs to use the new cache architecture.
-   If you are accessing the cache, see if you can directly use the C++ api. */
+/* Design and original implementation by Gagan Saksena '98 
+ * Ideally we should be using the C++ api directly, but since the core of
+ * Netlib is still in C, this file uses the stub functions that call the C++
+ * API internally, allowing C programs to use the new cache architecture.
+ * If you are accessing the cache, see if you can directly use the C++ api. 
+ * -Gagan Saksena 09/15/98
+ */
 
 #ifndef CacheStubs_h__
 #define CacheStubs_h__
@@ -56,17 +57,18 @@ PR_BEGIN_EXTERN_C
     extern void*            CacheObject_Create(const char* i_url);
     extern void             CacheObject_Destroy(void* pThis);
     extern const char*      CacheObject_GetAddress(const void* pThis);
-    extern const char*      CacheObject_GetCharset(void* pThis);
-    extern const char*      CacheObject_GetContentEncoding(void* pThis);
-    extern PRUint32         CacheObject_GetContentLength(void* pThis);
-    extern const char*      CacheObject_GetContentType(void* pThis);
+    extern const char*      CacheObject_GetCharset(const void* pThis);
+    extern const char*      CacheObject_GetContentEncoding(const void* pThis);
+    extern PRUint32         CacheObject_GetContentLength(const void* pThis);
+    extern const char*      CacheObject_GetContentType(const void* pThis);
     extern const char*      CacheObject_GetEtag(const void* pThis);
     extern PRIntervalTime   CacheObject_GetExpires(const void* pThis);
     extern const char*      CacheObject_GetFilename(const void* pThis);
+    extern PRBool           CacheObject_GetIsCompleted(const void* pThis);
     extern PRIntervalTime   CacheObject_GetLastAccessed(const void* pThis);
     extern PRIntervalTime   CacheObject_GetLastModified(const void* pThis);
     extern PRInt16          CacheObject_GetModule(const void* pThis);
-    extern const char*      CacheObject_GetPageServicesURL(void* pThis);
+    extern const char*      CacheObject_GetPageServicesURL(const void* pThis);
     extern const char*      CacheObject_GetPostData(const void* pThis);
     extern PRUint32         CacheObject_GetPostDataLen(const void* pThis);
     extern PRUint32         CacheObject_GetSize(const void* pThis);
@@ -82,6 +84,7 @@ PR_BEGIN_EXTERN_C
     extern void             CacheObject_SetEtag(void* pThis, const char* i_Etag);
     extern void             CacheObject_SetExpires(void *pThis, const PRIntervalTime i_Time);
     extern void             CacheObject_SetFilename(void *pThis, const char* i_Filename);
+    extern void             CacheObject_SetIsCompleted(void *pThis, PRBool bComplete);
     extern void             CacheObject_SetLastModified(void* pThis, const PRIntervalTime i_Time);
     extern void             CacheObject_SetModule(void* pThis, const PRInt16 i_Module);
     extern void             CacheObject_SetPageServicesURL(void* pThis, const char* i_Url);

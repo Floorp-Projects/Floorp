@@ -16,14 +16,19 @@
  * Reserved.
  */
 
-#ifndef _CacheManager_H_
-#define _CacheManager_H_
 /* 
- * nsCacheManager
- * Design and original implementation 
- * by Gagan Saksena 02/02/98
+ * nsCacheManager- The boss of cache architecture. Contains all "external"
+ * functions for use by people who don't care/want to know the internals
+ * of the cache architecture. 
+ *
+ * - Gagan Saksena 09/15/98
+ *
+ * Design and original implementation by Gagan Saksena 02/02/98
  * 
  */
+
+#ifndef _CacheManager_H_
+#define _CacheManager_H_
 
 #if 0
 #   include "nsISupports.h"

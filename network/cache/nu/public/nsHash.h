@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/* A dummy class. Probably will be replaced/removed/recycled. 
+ * 
+ * -Gagan Saksena 09/15/98
+ */
 #ifndef nsHash_h__
 #define nsHash_h__
 

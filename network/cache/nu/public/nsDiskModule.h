@@ -16,14 +16,16 @@
  * Reserved.
  */
 
+/* 
+ * nsDiskModule. The disk cache module that stores the cache objects
+ * on the disk. 
+ *
+ * Gagan Saksena 02/03/98
+ * 
+ */
 #ifndef _nsDiskModule_H_
 #define _nsDiskModule_H_
-/* 
-* nsDiskModule
-*
-* Gagan Saksena 02/03/98
-* 
-*/
+
 #include "nsCacheModule.h"
 #include "nsCachePref.h"
 #include "mcom_db.h"

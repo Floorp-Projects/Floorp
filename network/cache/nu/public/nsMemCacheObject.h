@@ -16,11 +16,18 @@
  * Reserved.
  */
 
+/* The nsMemCacheObject class holds the actual nsCacheObject and a pointer
+ * to the next nsMemCacheObject. Pretty simple solution for the time being. 
+ * Should be replaced once the memory hash table stuff gets up and running. 
+ * 
+ * -Gagan Saksena 09/15/98.
+ */
+
 #ifndef _nsMemCacheObject_h_
 #define _nsMemCacheObject_h_
 
 #include "prtypes.h"
-
+#include "prlog.h"
 #include "nsCacheObject.h"
 
 class nsMemCacheObject
@@ -32,8 +39,6 @@ public:
     nsMemCacheObject(const char* i_url); 
     ~nsMemCacheObject();
 
-    void*               Data(void) const;
-    
     void                Next(nsMemCacheObject* pObject);
     void                Next(nsCacheObject* io_pObject);
     
@@ -44,7 +49,6 @@ public:
 private:
     nsMemCacheObject* m_pNextObject;
     nsCacheObject*  m_pObject;
-    void* m_pData;
 
     nsMemCacheObject& operator=(const nsMemCacheObject& mco);
     nsMemCacheObject(const nsMemCacheObject&);
@@ -53,29 +57,20 @@ private:
 
 inline nsMemCacheObject::nsMemCacheObject(void):
     m_pObject(new nsCacheObject()), 
-    m_pNextObject(0),
-    m_pData(0)
+    m_pNextObject(0)
 {
 }
 
 inline nsMemCacheObject::nsMemCacheObject(nsCacheObject* io_pObject):
     m_pObject(io_pObject),
-    m_pNextObject(0),
-    m_pData(0)
+    m_pNextObject(0)
 {
 }
 
 inline nsMemCacheObject::nsMemCacheObject(const char* i_url):
     m_pObject(new nsCacheObject(i_url)), 
-    m_pNextObject(0),
-    m_pData(0)
+    m_pNextObject(0)
 {
-}
-
-inline void* nsMemCacheObject::Data(void) const
-{
-//    PR_ASSERT(m_pData);
-    return m_pData;
 }
 
 inline nsMemCacheObject* nsMemCacheObject::Next(void) const
@@ -85,11 +80,13 @@ inline nsMemCacheObject* nsMemCacheObject::Next(void) const
 
 inline void nsMemCacheObject::Next(nsMemCacheObject* pObject)
 {
+    PR_ASSERT(0==m_pNextObject);
     m_pNextObject = pObject;
 }
 
 inline void nsMemCacheObject::Next(nsCacheObject* pObject)
 {
+    PR_ASSERT(0==m_pNextObject);
     m_pNextObject = new nsMemCacheObject(pObject);
 }
 

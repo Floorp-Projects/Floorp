@@ -16,15 +16,18 @@
  * Reserved.
  */
 
-#ifndef nsCacheModule_h__
-#define nsCacheModule_h__
-
 /* 
- * nsCacheModule
+ * nsCacheModule. A class that defines the way a cache module 
+ * should be written. Its the super class for any new modules. 
+ * Two sample modules derived from this one are nsMemModule and nsDiskModule.
  *
  * Gagan Saksena 02/03/98
  * 
  */
+
+#ifndef nsCacheModule_h__
+#define nsCacheModule_h__
+
 //#include <nsISupports.h>
 #include "nsCacheObject.h"
 #include "nsEnumeration.h"

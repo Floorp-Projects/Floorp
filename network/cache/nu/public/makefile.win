@@ -25,7 +25,7 @@ EXPORTS=nsCacheObject.h nsMemModule.h nsCacheManager.h  \
     nsCachePref.h nsCacheBkgThd.h nsBkgThread.h  	\
     CacheStubs.h nsCacheIterator.h nsIterator.h  	\
     nsMonitorable.h nsStream.h nsFileStream.h           \
-    nsMemStream.h                                       \
+    nsMemStream.h nsEnumeration.h                       \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

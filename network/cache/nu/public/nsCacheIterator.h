@@ -17,6 +17,12 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/* A simple cache iterator for cache architecture. This is a temporary class
+ * which will be (should be) replaced by more professional quality code, or 
+ * at least moved to a more common area later on. 
+ *
+ * -Gagan Saksena 09/15/98 
+ */
 #ifndef nsCacheIterator_h__
 #define nsCacheIterator_h__
 

@@ -17,6 +17,12 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/* A placeholder for the actual professional strength streams class. Works
+ * ok for me for now.
+ *
+ * -Gagan Saksena 09/15/98
+ */
+
 #ifndef nsStream_h__
 #define nsStream_h__
 
@@ -47,5 +53,16 @@ private:
     nsStream& operator=(const nsStream& o);
 };
 
+inline
+nsStream::nsStream(void)
+{
+    //noop
+}
+
+inline
+nsStream::~nsStream()
+{
+    //noop
+}
 #endif // nsStream_h__
 
