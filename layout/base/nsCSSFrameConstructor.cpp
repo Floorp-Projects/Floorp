@@ -6997,6 +6997,15 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                               aContent, aParentFrame, styleContext,
                               aFrameItems);
 
+  // Style resolution can normally happen lazily.  However, getting the
+  // Visibility struct can cause |SetBidiEnabled| to be called on the
+  // pres context, and this needs to happen before we start reflow, so
+  // do it now, when constructing frames.  See bug 115291.
+  {
+    const nsStyleVisibility *vis;
+    GetStyleData(styleContext, &vis);
+  }
+
   nsIFrame* lastChild = aFrameItems.lastChild;
 
   // Handle specific frame types
