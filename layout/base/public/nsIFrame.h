@@ -417,7 +417,6 @@ public:
                           nsEventStatus&  aEventStatus) = 0;
 
   NS_IMETHOD GetPosition(nsIPresContext&       aPresContext,
-                         nsIRenderingContext * aRendContext,
                          nsGUIEvent*           aEvent,
                          nsIFrame *            aNewFrame,
                          nsIContent **         aNewContent,

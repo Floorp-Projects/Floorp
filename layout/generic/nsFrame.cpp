@@ -878,30 +878,26 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-  nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
   if (NS_SUCCEEDED(rv) && shell) {
-    nsCOMPtr<nsIRenderingContext> acx;      
-    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
-    if (NS_SUCCEEDED(rv)){
-      PRInt32 startPos = 0;
-      PRUint32 contentOffset = 0;
-      PRInt32 contentOffsetEnd = 0;
-      nsCOMPtr<nsIContent> newContent;
-      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, getter_AddRefs(newContent), 
-                                   contentOffset, startPos, contentOffsetEnd))){
-        nsCOMPtr<nsIDOMSelection> selection;
-        if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
-          nsCOMPtr<nsIFrameSelection> frameselection;
-          frameselection = do_QueryInterface(selection);
-          if (frameselection) {
-            if (NS_SUCCEEDED( rv )){
-              frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-              frameselection->TakeFocus(newContent, startPos + contentOffset, contentOffsetEnd + contentOffset, inputEvent->isShift);
-            }
+    nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
+    PRInt32 startPos = 0;
+    PRUint32 contentOffset = 0;
+    PRInt32 contentOffsetEnd = 0;
+    nsCOMPtr<nsIContent> newContent;
+    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent, this, getter_AddRefs(newContent), 
+                                 contentOffset, startPos, contentOffsetEnd))){
+      nsCOMPtr<nsIDOMSelection> selection;
+      if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
+        nsCOMPtr<nsIFrameSelection> frameselection;
+        frameselection = do_QueryInterface(selection);
+        if (frameselection) {
+          if (NS_SUCCEEDED( rv )){
+            frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
+            frameselection->TakeFocus(newContent, startPos + contentOffset, contentOffsetEnd + contentOffset, inputEvent->isShift);
           }
         }
-        //no release 
       }
+      //no release 
     }
   }
   return NS_OK;
@@ -930,28 +926,24 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
-    nsCOMPtr<nsIRenderingContext> acx;      
-    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
-    if (NS_SUCCEEDED(rv)) {
-      PRInt32 startPos = 0;
-      PRUint32 contentOffset = 0;
-      PRInt32 contentOffsetEnd = 0;
-      nsCOMPtr<nsIContent> newContent;
-      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, getter_AddRefs(newContent), 
-                                   contentOffset, startPos, contentOffsetEnd))){
-        nsIDOMSelection *selection = nsnull;
-        if (NS_SUCCEEDED(shell->GetSelection(&selection))){
-          nsIFrameSelection* frameselection;
-          if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
-            if (NS_SUCCEEDED( rv )){
-              frameselection->TakeFocus(newContent, startPos + contentOffset, contentOffsetEnd + contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
-            }
-            NS_RELEASE(frameselection);
+    PRInt32 startPos = 0;
+    PRUint32 contentOffset = 0;
+    PRInt32 contentOffsetEnd = 0;
+    nsCOMPtr<nsIContent> newContent;
+    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent, this, getter_AddRefs(newContent), 
+                                 contentOffset, startPos, contentOffsetEnd))){
+      nsIDOMSelection *selection = nsnull;
+      if (NS_SUCCEEDED(shell->GetSelection(&selection))){
+        nsIFrameSelection* frameselection;
+        if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
+          if (NS_SUCCEEDED( rv )){
+            frameselection->TakeFocus(newContent, startPos + contentOffset, contentOffsetEnd + contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
           }
-          NS_RELEASE(selection);
+          NS_RELEASE(frameselection);
         }
-        //no release 
+        NS_RELEASE(selection);
       }
+      //no release 
     }
   }
   return NS_OK;
@@ -968,7 +960,6 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext,
 //-- GetPosition
 //--------------------------------------------------------------------------
 NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext&        aPresContext,
-                                   nsIRenderingContext *  aRendContext,
                                    nsGUIEvent *           aEvent,
                                    nsIFrame *             aNewFrame,
                                    nsIContent **          aNewContent,

@@ -119,6 +119,10 @@ public:
 
   NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc);
 
+  NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent);
+
+  NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset);
+
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();
   NS_IMETHOD    SetTarget(nsIDOMNode* aNode);

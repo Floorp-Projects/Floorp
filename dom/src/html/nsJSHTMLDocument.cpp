@@ -797,7 +797,7 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.open", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -847,7 +847,7 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -899,7 +899,7 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.write", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -956,7 +956,7 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.writeln", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1012,7 +1012,7 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1068,7 +1068,7 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.open", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1122,7 +1122,7 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.write", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -1176,7 +1176,7 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   nsIScriptSecurityManager *secMan;
   if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.writeln", &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
