@@ -402,7 +402,8 @@ EmbedWindow::SetTitle(const PRUnichar *aTitle)
   PtCallbackInfo_t  cbinfo;
   PtMozillaInfoCb_t   info;
   nsString mTitleString(aTitle);
-  char *str;
+  const char *str;
+	int to_free = 0;
 
   mTitle = aTitle;
 
@@ -419,19 +420,23 @@ EmbedWindow::SetTitle(const PRUnichar *aTitle)
 
 	/* see if the title is empty */
 	if( mTitleString.Length() == 0 ) {
-		if( moz->EmbedRef->mURI.Length() > 0 )
+		if( moz->EmbedRef->mURI.Length() > 0 ) {
 			str = ToNewCString( moz->EmbedRef->mURI );
+			to_free = 1;
+			}
 		else {
-			str = (char*) nsMemory::Alloc( 2 );
-			str[0] = ' '; str[1] = 0;
+			str = " ";
 			}
 		}
-  else str = ToNewCString(mTitleString);
+  else {
+		NS_ConvertUCS2toUTF8 theUnicodeString( mTitleString );
+		str = theUnicodeString.get( );
+		}
 
-  info.data = str;
+  info.data = (char*) str;
   PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
 
-  nsMemory::Free( (void*)str );
+  if( to_free ) nsMemory::Free( (void*)str );
 
   return NS_OK;
 }
