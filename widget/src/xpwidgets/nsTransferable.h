@@ -29,7 +29,7 @@ class nsIFormatConverter;
 
 
 /**
- * Native Win32 Transferable wrapper
+ * XP Transferable wrapper
  */
 
 class nsTransferable : public nsITransferable
@@ -43,10 +43,13 @@ public:
   NS_DECL_ISUPPORTS
   
   //nsITransferable
+    // Returns a copy of the flavor list
   NS_IMETHOD GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList);
   NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aFlavor);
 
+    // Transferable still owns |aData|. Do not delete it.
   NS_IMETHOD GetTransferData(nsIDataFlavor * aFlavor, void ** aData, PRUint32 * aDataLen);
+    // Transferable consumes |aData|. Do not delete it.
   NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen);
 
   NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor);
