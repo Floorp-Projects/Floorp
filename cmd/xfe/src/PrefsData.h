@@ -128,6 +128,20 @@ struct PrefsDataGeneralAdvanced
 	Widget     warn_cookie_toggle;
 };
 
+
+struct PrefsDataGeneralPrivacy
+{
+	MWContext *context;
+	Widget     prompt_dialog;
+	Widget     page;
+
+	Widget     always_accept_cookie_toggle;
+	Widget     no_foreign_cookie_toggle;
+	Widget     never_accept_cookie_toggle;
+	Widget     warn_cookie_toggle;
+};
+
+
 struct PrefsDataGeneralCache
 {
 	MWContext *context;

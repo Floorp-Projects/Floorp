@@ -2874,6 +2874,63 @@ void XFE_PrefsPageGeneralAdvanced::cb_toggleCookieState(Widget    w,
 		abort();	
 }
 
+// ********************************************************************
+// ************************  General/Privacy **************************
+// ********************************************************************
+
+
+XFE_PrefsPageGeneralPrivacy::XFE_PrefsPageGeneralPrivacy(XFE_PrefsDialog *dialog)
+	: XFE_PrefsPage(dialog),
+	  m_prefsDataGeneralPrivacy(0)
+{
+  m_toolbar_needs_updating = FALSE;
+}
+
+XFE_PrefsPageGeneralPrivacy::~XFE_PrefsPageGeneralPrivacy()
+{
+	delete m_prefsDataGeneralPrivacy;
+}
+
+
+void XFE_PrefsPageGeneralPrivacy::create()
+{
+	PrefsDataGeneralPrivacy *fep = NULL;
+    Widget form;
+
+    // Zap our data structure.
+	fep = new PrefsDataGeneralPrivacy;
+	memset(fep, 0, sizeof(PrefsDataGeneralPrivacy));
+	m_prefsDataGeneralPrivacy = fep;
+
+    // Form
+    form = XmCreateForm (m_wPageForm, "privacy", NULL, 0);
+    XtManageChild(form);
+    m_wPage = fep->page = form;
+
+    setCreated(TRUE);
+}
+
+void XFE_PrefsPageGeneralPrivacy::init()
+{
+
+  setInitialized(TRUE);
+}
+
+void XFE_PrefsPageGeneralPrivacy::install()
+{
+}
+
+void XFE_PrefsPageGeneralPrivacy::save()
+{
+
+  install();
+}
+
+PrefsDataGeneralPrivacy *XFE_PrefsPageGeneralPrivacy::getData()
+{
+  return m_prefsDataGeneralPrivacy;
+}
+
 // ************************************************************************
 // **************************    General/Appl   ***************************
 // ************************************************************************

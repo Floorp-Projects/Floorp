@@ -445,6 +445,34 @@ private:
 	XP_Bool    m_toolbar_needs_updating;
 };
 
+
+//  Moved some things from Advanced to Privacy pane.
+class XFE_PrefsPageGeneralPrivacy : public XFE_PrefsPage
+{
+public:
+
+	// Constructors, Destructors
+
+	XFE_PrefsPageGeneralPrivacy(XFE_PrefsDialog  *dialog);
+	virtual ~XFE_PrefsPageGeneralPrivacy();
+
+	// Manipulators
+	virtual void create();
+	virtual void init();
+	virtual void install();
+	virtual void save();
+
+	// Gets
+	PrefsDataGeneralPrivacy *getData();
+
+	// Callbacks - page General/Advanced
+  //static void cb_toggleCookieState(Widget, XtPointer, XtPointer);
+
+private:	
+	PrefsDataGeneralPrivacy  *m_prefsDataGeneralPrivacy;
+	XP_Bool m_toolbar_needs_updating;
+};
+
 // ************************* XFE_PrefsPageGeneralAppl  *************************
 
 class XFE_PrefsPageGeneralAppl : public XFE_PrefsPage

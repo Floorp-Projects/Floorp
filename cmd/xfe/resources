@@ -2299,8 +2299,8 @@ Show security information for this page
 *menuBar*viewReceipts.labelString:		Display Receipts
 *menuBar*viewReceipts.mnemonic:			R
 
-*menuBar*privacyTutorial.labelString:		Privacy Tutorial
-*menuBar*privacyTutorial.mnemonic:		T
+*menuBar*privacyTutorial.labelString:	About Privacy
+*menuBar*privacyTutorial.mnemonic:		B
 
 ! end Privacy Tools Submenu
 
@@ -5969,6 +5969,7 @@ for download.
 *pref.browser:						Navigator
 *pref.lang:							Languages
 *pref.applications:					Applications
+*pref.privacy:						Privacy
 *pref.mailNews:						Mail & Groups
 *pref.identity:						Identity
 *pref.messages:                     Messages
@@ -5998,6 +5999,7 @@ for download.
 *prefDesc.browser:					Specify the home page location
 *prefDesc.lang:						View web pages in different languages
 *prefDesc.applications:				Specify helper applications for different file types
+*prefDesc.privacy:					Establish your level of privacy protection
 *prefDesc.mailNews:					Change appearance settings for Mail & Groups
 *prefDesc.identity:					Set your name, email address, and signature file
 *prefDesc.composition:				Choose settings for outgoing messages

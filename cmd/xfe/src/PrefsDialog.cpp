@@ -72,6 +72,7 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_FONTS                "Fonts"
 #define CAT_COLORS               "Colors"
 #define CAT_APPS                 "Applications"
+#define CAT_PRIVACY              "Privacy"
 #define CAT_LANG                 "Languages"
 #define CAT_CACHE                "Cache"
 #define CAT_PROXIES              "Proxies"
@@ -102,6 +103,7 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_RESNAME_BROWSER              "pref.browser"
 #define CAT_RESNAME_LANG                 "pref.lang"
 #define CAT_RESNAME_APPS                 "pref.applications"
+#define CAT_RESNAME_PRIVACY              "pref.privacy"
 #define CAT_RESNAME_MAILNEWS             "pref.mailNews"
 #define CAT_RESNAME_MAILNEWS_IDENTITY    "pref.identity"
 #define CAT_RESNAME_MAILNEWS_MESSAGES    "pref.messages"
@@ -135,6 +137,7 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_RESCLASS_BROWSER              "Pref.Browser"
 #define CAT_RESCLASS_LANG                 "Pref.Lang"
 #define CAT_RESCLASS_APPS                 "Pref.Applications"
+#define CAT_RESCLASS_PRIVACY              "Pref.Privacy"
 #define CAT_RESCLASS_MAILNEWS             "Pref.MailNews"
 #define CAT_RESCLASS_MAILNEWS_IDENTITY    "Pref.Identity"
 #define CAT_RESCLASS_MAILNEWS_MESSAGES    "Pref.Messages"
@@ -168,6 +171,7 @@ static       char *TAG_BOLD = "BOLD";
 #define DESC_RESNAME_BROWSER              "prefDesc.browser"
 #define DESC_RESNAME_LANG                 "prefDesc.lang"
 #define DESC_RESNAME_APPS                 "prefDesc.applications"
+#define DESC_RESNAME_PRIVACY              "prefDesc.privacy"
 #define DESC_RESNAME_MAILNEWS             "prefDesc.mailNews"
 #define DESC_RESNAME_MAILNEWS_IDENTITY    "prefDesc.identity"
 #define DESC_RESNAME_MAILNEWS_MESSAGES    "prefDesc.messages"
@@ -201,6 +205,7 @@ static       char *TAG_BOLD = "BOLD";
 #define DESC_RESCLASS_BROWSER              "PrefDesc.Browser"
 #define DESC_RESCLASS_LANG                 "PrefDesc.Lang"
 #define DESC_RESCLASS_APPS                 "PrefDesc.Applications"
+#define DESC_RESCLASS_PRIVACY              "PrefDesc.Privacy"
 #define DESC_RESCLASS_MAILNEWS             "PrefDesc.MailNews"
 #define DESC_RESCLASS_MAILNEWS_IDENTITY    "PrefDesc.Identity"
 #define DESC_RESCLASS_MAILNEWS_MESSAGES    "PrefDesc.Messages"
@@ -235,6 +240,7 @@ typedef enum _prefsPageType {
 	PAGE_TYPE_BROWSER,
 	PAGE_TYPE_LANG,
 	PAGE_TYPE_APPS,
+	PAGE_TYPE_PRIVACY,
 	PAGE_TYPE_MAILNEWS,
 	PAGE_TYPE_MAILNEWS_IDENTITY,
 	PAGE_TYPE_MAILNEWS_MESSAGES,
@@ -469,6 +475,17 @@ struct _prefsCategory prefsBrowser[] = {
 		0,
 		PAGE_TYPE_APPS,
 	},
+	{
+		CAT_PRIVACY, 
+		CAT_RESNAME_PRIVACY, 
+		CAT_RESCLASS_PRIVACY, 
+		DESC_RESNAME_PRIVACY, 
+		DESC_RESCLASS_PRIVACY, 
+		TRUE,
+		NULL,
+		0,
+		PAGE_TYPE_PRIVACY,
+	}
 };
 
 struct _prefsCategory prefsAdvanced[] = {
@@ -1809,6 +1826,9 @@ void XFE_PrefsDialog::newPage(XFE_PrefsPage *&page,
 		break;
 	case PAGE_TYPE_APPS:
 		page = new XFE_PrefsPageGeneralAppl(this);
+		break;
+	case PAGE_TYPE_PRIVACY:
+		page = new XFE_PrefsPageGeneralPrivacy(this);
 		break;
 	case PAGE_TYPE_CACHE:
 		page = new XFE_PrefsPageGeneralCache(this);
