@@ -225,6 +225,21 @@ TypedRegister ICodeGenerator::loadBoolean(bool value)
     return dest;
 }
 
+TypedRegister ICodeGenerator::loadNull()
+{
+    TypedRegister dest(getTempRegister(), &Any_Type);
+    iCode->push_back(new LoadNull(dest));
+    return dest;
+}
+
+TypedRegister ICodeGenerator::loadType(JSType *type)
+{
+    TypedRegister dest(getTempRegister(), type);
+    iCode->push_back(new LoadType(dest, type));
+    return dest;
+}
+
+
 TypedRegister ICodeGenerator::newObject(TypedRegister constructor)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
@@ -535,7 +550,7 @@ TypedRegister ICodeGenerator::super()
 TypedRegister ICodeGenerator::cast(TypedRegister arg, JSType *toType)
 {
     TypedRegister dest(getTempRegister(), toType);
-    Cast *instr = new Cast(dest, arg, toType);
+    Cast *instr = new Cast(dest, arg, loadType(toType));
     iCode->push_back(instr);
     return dest;
 }
@@ -1248,6 +1263,9 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         }
         else
             ret = loadBoolean(false);
+        break;
+    case ExprNode::Null:
+        ret = loadNull();
         break;
     case ExprNode::parentheses:
         {

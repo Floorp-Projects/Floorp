@@ -175,6 +175,12 @@ $ops{"LOAD_NAME"} =
    rem    => "dest, name",
    params => [ ("TypedRegister", "const StringAtom*" ) ]
   };
+$ops{"LOAD_TYPE"} =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, type",
+   params => [ ("TypedRegister", "JSType*" ) ]
+  };
 $ops{"SUPER"} =
   {
    super  => "Instruction_1",
@@ -426,7 +432,7 @@ $ops{"CAST"} =
   {
    super  => "Instruction_3",
    rem    => "dest, rvalue, toType",
-   params => [ ("TypedRegister", "TypedRegister", "JSType*") ]
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };
 $ops{"CLASS"} =
   {

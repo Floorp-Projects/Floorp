@@ -108,12 +108,6 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
     JSValues emptyArgs;
     JSValue result;
         
-    // save off important member variables, to enable recursive call to interpret.
-    // this is a little stinky, but should be exception-safe.
-    autosaver<Activation*> activation(mActivation, 0);
-    autosaver<Linkage*> linkage(mLinkage, 0);
-    autosaver<InstructionIterator> pc(mPC);
-
     try {
         Arena a;
         Parser p(getWorld(), a, buffer, fileName);
@@ -133,11 +127,12 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
     	stdOut << '\n';
 /*******/
 
-	    // Generate code for parsedStatements, which is a linked 
+        // Generate code for parsedStatements, which is a linked 
         // list of zero or more statements
         ICodeModule* icm = genCode(parsedStatements, fileName);
         if (icm) {
-            result = interpret(icm, emptyArgs);
+            Context cx(getWorld(), getGlobalObject());
+            result = cx.interpret(icm, emptyArgs);
             delete icm;
         }
     } catch (Exception &e) {
@@ -538,8 +533,15 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case CAST:
                 {
                     Cast* c = static_cast<Cast*>(instruction);
-                    JSType *toType = op3(c);
-                    (*registers)[dst(c).first] = (*registers)[src1(c).first].convert(toType);
+                    JSValue toTypeValue = (*registers)[op3(c).first];
+                    ASSERT(toTypeValue.isType());
+                    (*registers)[dst(c).first] = (*registers)[src1(c).first].convert(toTypeValue.type);
+                }
+                break;
+            case LOAD_TYPE:
+                {
+                    LoadType *lt = static_cast<LoadType*>(instruction);
+                    (*registers)[dst(lt).first] = src1(lt);
                 }
                 break;
             case CLASS:
