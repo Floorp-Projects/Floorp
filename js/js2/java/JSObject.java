@@ -15,6 +15,10 @@ class JSObject extends JSValue {
         return indent + "JSObject : " + value + "\n";
     }
 
+    public String toString() {
+        return value + contents.toString();
+    }
+        
     void eval(Environment theEnv)
     {
         theEnv.theStack.push(this);
@@ -27,39 +31,23 @@ class JSObject extends JSValue {
             theEnv.theStack.push(new JSString("object"));
     }
     
-    JSValue defaultValue(String hint) {
-        return null;                    // XXX
-    }
-    
-    JSValue toPrimitive(String hint) {
-        JSValue result = defaultValue(hint);
-        if (result instanceof JSObject)
-            throw new JSException(new JSString("default value returned object"));
-        else
-            return result;
-    }
-    
-    JSBoolean toJSBoolean() {
+    JSBoolean toJSBoolean(Environment theEnv) {
         return JSBoolean.JSTrue;
     }
         
-    JSDouble toJSDouble() {
-        return toPrimitive("Number").toJSDouble();
-    }
-        
-    public String toString() {
-        return value + contents.toString();
+    JSDouble toJSDouble(Environment theEnv) {
+        return toPrimitive(theEnv, "Number").toJSDouble(theEnv);
     }
         
     void getProp(Environment theEnv) {
-        JSString id = theEnv.theStack.pop().toJSString();
+        JSString id = theEnv.theStack.pop().toJSString(theEnv);
         JSValue v = (JSValue)(contents.get(id.s));
         theEnv.theStack.push(v);
     }
         
     void putProp(Environment theEnv) {
         JSValue v = theEnv.theStack.pop();
-        JSString id = theEnv.theStack.pop().toJSString();
+        JSString id = theEnv.theStack.pop().toJSString(theEnv);
         contents.put(id.s, v);
     }
         

@@ -15,23 +15,23 @@ class JSInteger extends JSNumber {
         theEnv.theStack.push(this);
     }
 
-    JSBoolean toJSBoolean() {
+    JSBoolean toJSBoolean(Environment theEnv) {
         return (i != 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
     }
     
-    JSDouble toJSDouble() {
+    JSDouble toJSDouble(Environment theEnv) {
         return new JSDouble(i);
     }
     
-    JSInteger toJSInteger() {
+    JSInteger toJSInteger(Environment theEnv) {
         return this;
     }
     
-    JSValue toPrimitive() {
+    JSValue toPrimitive(Environment theEnv, String hint) {
         return this;
     }
     
-    JSString toJSString() {
+    JSString toJSString(Environment theEnv) {
         return new JSString(Integer.toString(i));
     }
     
@@ -41,32 +41,32 @@ class JSInteger extends JSNumber {
 
     void and(Environment theEnv) {
         JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i & vR.toJSInteger().i));
+        theEnv.theStack.push(new JSInteger(i & vR.toJSInteger(theEnv).i));
     }
     
     void or(Environment theEnv) {
         JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i | vR.toJSInteger().i));
+        theEnv.theStack.push(new JSInteger(i | vR.toJSInteger(theEnv).i));
     }
 
     void xor(Environment theEnv) {
         JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i ^ vR.toJSInteger().i));
+        theEnv.theStack.push(new JSInteger(i ^ vR.toJSInteger(theEnv).i));
     }
 
     void shl(Environment theEnv) {
         JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i >> vR.toJSInteger().i));
+        theEnv.theStack.push(new JSInteger(i >> vR.toJSInteger(theEnv).i));
     }
 
     void shr(Environment theEnv) {
         JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i << vR.toJSInteger().i));
+        theEnv.theStack.push(new JSInteger(i << vR.toJSInteger(theEnv).i));
     }
 
     void ushl(Environment theEnv) {
         JSValue vR = theEnv.theStack.pop();
-        theEnv.theStack.push(new JSInteger(i >>> vR.toJSInteger().i));
+        theEnv.theStack.push(new JSInteger(i >>> vR.toJSInteger(theEnv).i));
     }
 
     int i;

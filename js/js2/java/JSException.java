@@ -12,6 +12,11 @@ class JSException extends RuntimeException {
         return value;
     }
     
+    public String toString()
+    {
+        return value.toJSString(null).s;
+    }
+    
     JSValue value;
     
 }

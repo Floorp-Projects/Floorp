@@ -16,7 +16,7 @@ class JSString extends JSValue {
 
     void add(Environment theEnv)
     {
-        JSString vR = theEnv.theStack.pop().toJSString();
+        JSString vR = theEnv.theStack.pop().toJSString(theEnv);
         theEnv.theStack.push(new JSString(s + vR.s));
     }
 
@@ -24,74 +24,79 @@ class JSString extends JSValue {
         JSValue vR = theEnv.theStack.peek();
         if (vR instanceof JSString) {
             theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString().s) == 1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
+            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) == 1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
         }
         else
-            toJSDouble().gt(theEnv);
+            toJSDouble(theEnv).gt(theEnv);
     }
 
     void ge(Environment theEnv) {
         JSValue vR = theEnv.theStack.peek();
         if (vR instanceof JSString) {
             theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString().s) != -1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
+            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) != -1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
         }
         else
-            toJSDouble().ge(theEnv);
+            toJSDouble(theEnv).ge(theEnv);
     }
     
     void lt(Environment theEnv) {
         JSValue vR = theEnv.theStack.peek();
         if (vR instanceof JSString) {
             theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString().s) == -1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
+            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) == -1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
         }
         else
-            toJSDouble().lt(theEnv);
+            toJSDouble(theEnv).lt(theEnv);
     }
     
     void le(Environment theEnv) {
         JSValue vR = theEnv.theStack.peek();
         if (vR instanceof JSString) {
             theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString().s) != 1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
+            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) != 1) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
         }
         else
-            toJSDouble().le(theEnv);
+            toJSDouble(theEnv).le(theEnv);
     }
     
     void eq(Environment theEnv) {
         JSValue vR = theEnv.theStack.peek();
         if (vR instanceof JSString) {
             theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString().s) == 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
+            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) == 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
         }
         else
-            toJSDouble().eq(theEnv);
+            toJSDouble(theEnv).eq(theEnv);
     }
     
     void ne(Environment theEnv) {
         JSValue vR = theEnv.theStack.peek();
         if (vR instanceof JSString) {
             theEnv.theStack.pop();
-            theEnv.theStack.push((s.compareTo(vR.toJSString().s) != 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
+            theEnv.theStack.push((s.compareTo(vR.toJSString(theEnv).s) != 0) ? JSBoolean.JSTrue : JSBoolean.JSFalse);
         }
         else
-            toJSDouble().ne(theEnv);
+            toJSDouble(theEnv).ne(theEnv);
     }
     
-    JSDouble toJSDouble() {
+    JSDouble toJSDouble(Environment theEnv) {
         return new JSDouble(s);         // XXX Way More To Do, see Rhino ScriptRuntime.java
     }
     
-    JSString toJSString() {
+    JSString toJSString(Environment theEnv) {
         return this;
     }
     
-    JSValue toPrimitive() {
+    JSValue toPrimitive(Environment theEnv, String hint) {
         return this;
     }
     
+    String print(String indent)
+    {
+        return indent + "JSString : " + s + "\n";
+    }
+
     protected String s;
     
 }

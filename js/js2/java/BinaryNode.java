@@ -9,14 +9,17 @@ class BinaryNode extends ExpressionNode {
 
     void evalLHS(Environment theEnv)
     {
-        left.evalLHS(theEnv);
-        JSValue lV = theEnv.theStack.pop();
-        right.eval(theEnv);
-
-        if (op == ".")
-            lV.getProp(theEnv);
+        if (op == ".") {
+            left.eval(theEnv);
+            JSValue lV = theEnv.theStack.pop();
+            if (right instanceof JSIdentifier)
+                theEnv.theStack.push((JSValue)right);
+            else
+                right.eval(theEnv);
+            theEnv.theStack.push(lV);
+        }
         else
-            super.evalLHS(theEnv);
+            throw new RuntimeException("bad lValue operator " + op);
     }
     
     void eval(Environment theEnv)

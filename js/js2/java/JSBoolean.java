@@ -31,19 +31,19 @@ class JSBoolean extends JSValue {
         theEnv.theStack.push(new JSString("boolean"));
     }
 
-    JSBoolean toJSBoolean() {
+    JSBoolean toJSBoolean(Environment theEnv) {
         return this;
     }
     
-    JSValue toPrimitive(String hint) {
+    JSValue toPrimitive(Environment theEnv, String hint) {
         return this;
     }
     
-    JSString toJSString() {
+    JSString toJSString(Environment theEnv) {
         return (b) ? new JSString("true") : new JSString("false");
     }
     
-    JSDouble toJSDouble() {
+    JSDouble toJSDouble(Environment theEnv) {
         return (b) ? new JSDouble(1) : new JSDouble(0);
     }
             

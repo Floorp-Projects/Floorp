@@ -8,13 +8,13 @@ class LogicalNode extends BinaryNode {
     void eval(Environment theEnv)
     {
         left.eval(theEnv);
-        JSBoolean b = theEnv.theStack.pop().toJSBoolean();
+        JSBoolean b = theEnv.theStack.pop().toJSBoolean(theEnv);
         if (op == "&&") {
             if (b.isFalse())
                 theEnv.theStack.push(b);
             else {
                 right.eval(theEnv);
-                b = theEnv.theStack.pop().toJSBoolean();
+                b = theEnv.theStack.pop().toJSBoolean(theEnv);
                 if (b.isFalse())
                     theEnv.theStack.push(b);
                 else
@@ -26,7 +26,7 @@ class LogicalNode extends BinaryNode {
                 theEnv.theStack.push(b);
             else {
                 right.eval(theEnv);
-                b = theEnv.theStack.pop().toJSBoolean();
+                b = theEnv.theStack.pop().toJSBoolean(theEnv);
                 if (b.isTrue())
                     theEnv.theStack.push(b);
                 else
