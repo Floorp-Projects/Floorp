@@ -2884,6 +2884,10 @@ nsAbSync::ProcessPhoneNumbersTheyAreSpecial(nsIAbCard *aCard)
       aCard->SetCellularNumber(phoneNumber.get());
   }
 
+  // Reset the phone arrays for next card.
+  mPhoneValues->Clear();
+  mPhoneTypes->Clear();
+
   return NS_OK;
 }
 
