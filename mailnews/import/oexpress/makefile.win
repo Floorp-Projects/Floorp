@@ -16,6 +16,9 @@
 # Reserved.
 
 DEPTH=..\..\..
+
+DIRS=resources
+
 MODULE=importOE
 
 MAKE_OBJ_TYPE=DLL
@@ -33,6 +36,7 @@ CPP_OBJS=\
 		.\$(OBJDIR)\nsOERegUtil.obj			\
 		.\$(OBJDIR)\nsOE5File.obj			\
 		.\$(OBJDIR)\nsOESettings.obj		\
+		.\$(OBJDIR)\nsOEStringBundle.obj	\
         $(NULL)
 
 LLIBS=\

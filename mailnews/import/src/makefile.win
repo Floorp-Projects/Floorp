@@ -30,6 +30,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsImportMailboxDescriptor.obj \
         .\$(OBJDIR)\nsImportABDescriptor.obj	\
 		.\$(OBJDIR)\nsImportAddressBooks.obj	\
+		.\$(OBJDIR)\nsImportStringBundle.obj	\
         $(NULL)
 
 LLIBS=\

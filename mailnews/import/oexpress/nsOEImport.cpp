@@ -43,6 +43,8 @@
 #include "nsOE5File.h"
 #include "nsIAddrDatabase.h"
 #include "nsOESettings.h"
+#include "nsTextFormater.h"
+#include "nsOEStringBundle.h"
 
 #include "OEDebugLog.h"
 
@@ -73,15 +75,16 @@ public:
 	
 	/* void ImportMailbox (in nsIImportMailboxDescriptor source, in nsIFileSpec destination, out boolean fatalError); */
 	NS_IMETHOD ImportMailbox(nsIImportMailboxDescriptor *source, nsIFileSpec *destination, 
-								nsIOutputStream *pErrorLog, nsIOutputStream *pSuccessLog, PRBool *fatalError);
+								PRUnichar **pErrorLog, PRUnichar **pSuccessLog, PRBool *fatalError);
 	
 	/* unsigned long GetImportProgress (); */
 	NS_IMETHOD GetImportProgress(PRUint32 *_retval);
 	
-	/* wstring GetErrorString (); */
-	NS_IMETHOD GetErrorString(PRUnichar **_retval);
-
 private:
+	static void	ReportSuccess( nsString& name, PRInt32 count, nsString *pStream);
+	static void ReportError( PRInt32 errorNum, nsString& name, nsString *pStream);
+	static void	AddLinebreak( nsString *pStream);
+	static void	SetLogs( nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess);
 };
 
 class ImportAddressImpl : public nsIImportAddressBooks
@@ -121,8 +124,8 @@ public:
 	NS_IMETHOD ImportAddressBook(	nsIImportABDescriptor *source, 
 									nsIAddrDatabase *	destination, 
 									nsISupports *		fieldMap, 
-									nsIOutputStream *	errorLog,
-									nsIOutputStream *	successLog,
+									PRUnichar **		errorLog,
+									PRUnichar **		successLog,
 									PRBool *			fatalError);
 	
 	/* unsigned long GetImportProgress (); */
@@ -178,8 +181,9 @@ NS_IMETHODIMP nsOEImport::GetName( PRUnichar **name)
     if (! name)
         return NS_ERROR_NULL_POINTER;
 
-	nsString	title = "Outlook Express";
-	*name = title.ToNewUnicode();
+	// nsString	title = "Outlook Express";
+	// *name = title.ToNewUnicode();
+	*name = nsOEStringBundle::GetStringByID( OEIMPORT_NAME);
 		
     return NS_OK;
 }
@@ -190,8 +194,9 @@ NS_IMETHODIMP nsOEImport::GetDescription( PRUnichar **name)
     if (! name)
         return NS_ERROR_NULL_POINTER;
 
-	nsString	desc = "Outlook Express mail and address books";
-	*name = desc.ToNewUnicode();
+	// nsString	desc = "Outlook Express mail and address books";
+	// *name = desc.ToNewUnicode();
+	*name = nsOEStringBundle::GetStringByID( OEIMPORT_DESCRIPTION);
 		
     return NS_OK;
 }
@@ -228,6 +233,9 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 				rv = impSvc->CreateNewGenericMail( &pGeneric);
 				if (NS_SUCCEEDED( rv)) {
 					pGeneric->SetData( "mailInterface", pMail);
+					nsString name;
+					nsOEStringBundle::GetStringByID( OEIMPORT_NAME, name);
+					pGeneric->SetData( "name", (nsISupports *) name.GetUnicode());
 					rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
 				}
 			}
@@ -342,18 +350,66 @@ NS_IMETHODIMP ImportMailImpl::FindMailboxes( nsIFileSpec *pLoc, nsISupportsArray
 	return( NS_OK);
 }
 
+void ImportMailImpl::AddLinebreak( nsString *pStream)
+{
+	if (pStream)
+		pStream->Append( NS_LINEBREAK);
+}
+
+void ImportMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsString *pStream)
+{
+	if (!pStream)
+		return;
+	// load the success string
+	PRUnichar *pFmt = nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_SUCCESS);
+	PRUnichar *pText = nsTextFormater::smprintf( pFmt, name.GetUnicode(), count);
+	pStream->Append( pText);
+	nsTextFormater::smprintf_free( pText);
+	nsOEStringBundle::FreeString( pFmt);
+	AddLinebreak( pStream);
+}
+
+void ImportMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsString *pStream)
+{
+	if (!pStream)
+		return;
+	// load the error string
+	PRUnichar *pFmt = nsOEStringBundle::GetStringByID( errorNum);
+	PRUnichar *pText = nsTextFormater::smprintf( pFmt, name.GetUnicode());
+	pStream->Append( pText);
+	nsTextFormater::smprintf_free( pText);
+	nsOEStringBundle::FreeString( pFmt);
+	AddLinebreak( pStream);
+}
+
+
+void ImportMailImpl::SetLogs( nsString& success, nsString& error, PRUnichar **pError, PRUnichar **pSuccess)
+{
+	if (pError)
+		*pError = error.ToNewUnicode();
+	if (pSuccess)
+		*pSuccess = success.ToNewUnicode();
+}
 
 NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource, 
 												nsIFileSpec *pDestination, 
-												nsIOutputStream *pErrorLog,
-												nsIOutputStream *pSuccessLog,
+												PRUnichar **pErrorLog,
+												PRUnichar **pSuccessLog,
 												PRBool *fatalError)
 {
     NS_PRECONDITION(pSource != nsnull, "null ptr");
     NS_PRECONDITION(pDestination != nsnull, "null ptr");
     NS_PRECONDITION(fatalError != nsnull, "null ptr");
-    if (!pSource || !pDestination || !fatalError)
-        return NS_ERROR_NULL_POINTER;
+
+	nsString	success;
+	nsString	error;
+    if (!pSource || !pDestination || !fatalError) {
+		nsOEStringBundle::GetStringByID( OEIMPORT_MAILBOX_BADPARAM, error);
+		if (fatalError)
+			*fatalError = PR_TRUE;
+		SetLogs( success, error, pErrorLog, pSuccessLog);
+	    return NS_ERROR_NULL_POINTER;
+	}
       
     PRBool		abort = PR_FALSE;
     nsString	name;
@@ -366,11 +422,15 @@ NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource
 	PRUint32 mailSize = 0;
 	pSource->GetSize( &mailSize);
 	if (mailSize == 0) {
+		ReportSuccess( name, 0, &success);
+		SetLogs( success, error, pErrorLog, pSuccessLog);
 		return( NS_OK);
 	}
 
     nsIFileSpec	*	inFile;
     if (NS_FAILED( pSource->GetFileSpec( &inFile))) {
+		ReportError( OEIMPORT_MAILBOX_BADSOURCEFILE, name, &error);
+		SetLogs( success, error, pErrorLog, pSuccessLog);		
     	return( NS_ERROR_FAILURE);
     }
 
@@ -381,13 +441,14 @@ NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource
 	nsCRT::free( pPath);
 #endif
     
+	PRInt32	msgCount = 0;
     nsresult rv;
 	if (nsOE5File::IsLocalMailFile( inFile)) {
 		IMPORT_LOG1( "Importing OE5 mailbox: %S!\n", name.GetUnicode());
-		rv = nsOE5File::ImportMailbox( &abort, name, inFile, pDestination);
+		rv = nsOE5File::ImportMailbox( &abort, name, inFile, pDestination, &msgCount);
 	}
 	else {
-		if (CImportMailbox::ImportMailbox( &abort, name, inFile, pDestination)) {
+		if (CImportMailbox::ImportMailbox( &abort, name, inFile, pDestination, &msgCount)) {
     		rv = NS_OK;
 		}
 		else {
@@ -397,6 +458,15 @@ NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource
 	    
     inFile->Release();
     
+	if (NS_SUCCEEDED( rv)) {
+		ReportSuccess( name, msgCount, &success);
+	}
+	else {
+		ReportError( OEIMPORT_MAILBOX_CONVERTERROR, name, &error);
+	}
+
+	SetLogs( success, error, pErrorLog, pSuccessLog);
+
     return( rv);
 }
 
@@ -411,16 +481,6 @@ NS_IMETHODIMP ImportMailImpl::GetImportProgress( PRUint32 *pDoneSoFar)
 	// of the current mailbox.
 	*pDoneSoFar = 0;
 	return( NS_OK);
-}
-
-NS_IMETHODIMP ImportMailImpl::GetErrorString( PRUnichar **pDisplayError) 
-{ 
-    NS_PRECONDITION(pDisplayError != nsnull, "null ptr");
-    if (! pDisplayError)
-        return NS_ERROR_NULL_POINTER;
-	
-	*pDisplayError = nsnull;
-	return( NS_ERROR_FAILURE);
 }
 
 
@@ -527,8 +587,8 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISupp
 NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *source, 
 													nsIAddrDatabase *	destination, 
 													nsISupports *		fieldMap, 
-													nsIOutputStream *	errorLog,
-													nsIOutputStream *	successLog,
+													PRUnichar **		errorLog,
+													PRUnichar **		successLog,
 													PRBool *			fatalError)
 {
     NS_PRECONDITION(source != nsnull, "null ptr");

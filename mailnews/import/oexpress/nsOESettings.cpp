@@ -38,7 +38,7 @@
 #include "nsMsgCompCID.h"
 #include "nsISmtpService.h"
 #include "nsISmtpServer.h"
-
+#include "nsOEStringBundle.h"
 #include "OEDebugLog.h"
 
 static NS_DEFINE_IID(kISupportsIID,        	NS_ISUPPORTS_IID);
@@ -99,8 +99,7 @@ NS_IMETHODIMP nsOESettings::AutoLocate(PRUnichar **description, nsIFileSpec **lo
 	if (!description || !_retval)
 		return( NS_ERROR_NULL_POINTER);
 	
-	nsString	desc = "Outlook Express";
-	*description = nsCRT::strdup( desc.GetUnicode());
+	*description = nsOEStringBundle::GetStringByID( OEIMPORT_NAME);
 	*_retval = PR_FALSE;
 
 	if (location)
@@ -326,8 +325,12 @@ PRBool OESettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 		// Create the incoming server and an account for it?
 		rv = pMgr->CreateIncomingServer( "imap", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
+			rv = in->SetType( "imap");
 			rv = in->SetHostName( pServerName);
 			rv = in->SetUsername( (char *)pBytes);
+			
+			IMPORT_LOG2( "Created IMAP server named: %s, userName: %s\n", pServerName, (char *)pBytes);
+
 			BYTE *pAccName = nsOERegUtil::GetValueBytes( hKey, "Account Name");
 			nsString	prettyName;
 			if (pAccName) {
@@ -338,6 +341,9 @@ PRBool OESettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 				prettyName = (const char *)pServerName;
 
 			PRUnichar *pretty = prettyName.ToNewUnicode();
+			
+			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
+
 			rv = in->SetPrettyName( pretty);
 			nsCRT::free( pretty);
 			
@@ -346,6 +352,9 @@ PRBool OESettings::DoIMAPServer( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			rv = pMgr->CreateAccount( getter_AddRefs( account));
 			if (NS_SUCCEEDED( rv) && account) {
 				rv = account->SetIncomingServer( in);	
+				
+				IMPORT_LOG0( "Created an account and set the IMAP server as the incoming server\n");
+
 				// Fiddle with the identities
 				SetIdentities( pMgr, account, hKey);
 				result = PR_TRUE;
@@ -381,8 +390,12 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 		// Create the incoming server and an account for it?
 		rv = pMgr->CreateIncomingServer( "pop3", getter_AddRefs( in));
 		if (NS_SUCCEEDED( rv) && in) {
+			rv = in->SetType( "pop3");
 			rv = in->SetHostName( pServerName);
 			rv = in->SetUsername( (char *)pBytes);
+
+			IMPORT_LOG2( "Created POP3 server named: %s, userName: %s\n", pServerName, (char *)pBytes);
+
 			BYTE *pAccName = nsOERegUtil::GetValueBytes( hKey, "Account Name");
 			nsString	prettyName;
 			if (pAccName) {
@@ -393,6 +406,9 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 				prettyName = (const char *)pServerName;
 
 			PRUnichar *pretty = prettyName.ToNewUnicode();
+			
+			IMPORT_LOG1( "\tSet pretty name to: %S\n", pretty);
+
 			rv = in->SetPrettyName( pretty);
 			nsCRT::free( pretty);
 			
@@ -400,7 +416,10 @@ PRBool OESettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, char *pS
 			nsCOMPtr<nsIMsgAccount>	account;
 			rv = pMgr->CreateAccount( getter_AddRefs( account));
 			if (NS_SUCCEEDED( rv) && account) {
-				rv = account->SetIncomingServer( in);	
+				rv = account->SetIncomingServer( in);
+				
+				IMPORT_LOG0( "Created a new account and set the incoming server to the POP3 server.\n");
+					
 				// Fiddle with the identities
 				SetIdentities( pMgr, account, hKey);
 				result = PR_TRUE;
@@ -479,6 +498,10 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 			if (pReply)
 				id->SetReplyTo( pReply);
 			pAcc->AddIdentity( id);
+
+			IMPORT_LOG0( "Created identity and added to the account\n");
+			IMPORT_LOG1( "\tname: %s\n", pName);
+			IMPORT_LOG1( "\temail: %s\n", pEmail);
 		}
 	}
 	
@@ -495,18 +518,28 @@ void OESettings::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 {
 	nsresult	rv;
 
-/*
+
 	NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv); 
 	if (NS_SUCCEEDED(rv) && smtpService) {
-		nsCOMPtr<nsISmtpServer>		smtpServer;
+		nsCOMPtr<nsISmtpServer>		foundServer;
 	
+		rv = smtpService->FindServer( pServer, getter_AddRefs( foundServer));
+		if (NS_SUCCEEDED( rv) && foundServer) {
+			IMPORT_LOG1( "SMTP server already exists: %s\n", pServer);
+			return;
+		}
+		nsCOMPtr<nsISmtpServer>		smtpServer;
+		
 		rv = smtpService->CreateSmtpServer( getter_AddRefs( smtpServer));
 		if (NS_SUCCEEDED( rv) && smtpServer) {
 			smtpServer->SetHostname( pServer);
-			smtpServer->SetUsername( pUser);
+			if (pUser)
+				smtpServer->SetUsername( pUser);
+
+			IMPORT_LOG1( "Created new SMTP server: %s\n", pServer);
 		}
  	}
-*/
+
        /*
 		nsXPIDLCString				hostName;
         nsXPIDLCString				senderName;

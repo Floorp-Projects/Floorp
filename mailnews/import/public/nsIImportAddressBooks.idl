@@ -121,8 +121,8 @@ interface nsIImportAddressBooks : nsISupports
 	void 	ImportAddressBook( 	in nsIImportABDescriptor source, 
 						   		in nsIAddrDatabase destination,
 						   		in nsISupports fieldMap,
-								in nsIOutputStream errorLog,
-								in nsIOutputStream successLog,
+								out wstring errorLog,
+								out wstring successLog,
 						   		out boolean fatalError);
 	
 	/*

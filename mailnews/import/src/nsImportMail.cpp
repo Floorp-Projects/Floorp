@@ -46,10 +46,12 @@
 #include "nsISupportsArray.h"
 #include "nsIImportMail.h"
 #include "nsIImportGeneric.h"
-#include "nsIOutputStream.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIImportMailboxDescriptor.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "nsProxyObjectManager.h"
+#include "nsXPIDLString.h"
 
 #include "nsIFileSpec.h"
 #include "nsIFileLocator.h"
@@ -61,6 +63,8 @@
 #include "nsPOP3IncomingServer.h"
 #include "nsIProfile.h"
 #include "nsIMsgFolder.h"
+#include "nsImportStringBundle.h"
+#include "nsTextFormater.h"
 
 #include "ImportDebug.h"
 
@@ -70,6 +74,7 @@ static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
+static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +106,7 @@ public:
 	NS_IMETHOD WantsProgress(PRBool *_retval);
 
 	/* boolean BeginImport (in nsIOutputStream successLog, in nsIOutputStream errorLog); */
-	NS_IMETHOD BeginImport(nsIOutputStream *successLog, nsIOutputStream *errorLog, PRBool *_retval);
+	NS_IMETHOD BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool *_retval);
 
 	/* boolean ContinueImport (); */
 	NS_IMETHOD ContinueImport(PRBool *_retval);
@@ -118,6 +123,11 @@ private:
 	void	GetDefaultMailboxes( void);
 	void	GetDefaultLocation( void);
 	void	GetDefaultDestination( void);
+	void	GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsString& name);
+
+public:
+	static void	SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError);
+	static void ReportError( PRInt32 id, const PRUnichar *pName, nsString *pStream);
 
 private:
 	PRUnichar *			m_pName;	// module name that created this interface
@@ -130,8 +140,8 @@ private:
 	PRBool				m_userVerify;
 	nsIImportMail *		m_pInterface;
 	nsISupportsArray *	m_pMailboxes;
-	nsIOutputStream *	m_pSuccessLog;
-	nsIOutputStream *	m_pErrorLog;
+	nsISupportsWString *m_pSuccessLog;
+	nsISupportsWString *m_pErrorLog;
 	PRUint32			m_totalSize;
 	PRBool				m_doImport;
 	ImportThreadData *	m_pThreadData;
@@ -150,8 +160,8 @@ public:
 	PRBool					ownsAccount;
 	nsISupportsArray *		boxes;
 	nsIImportMail *			mailImport;
-	nsIOutputStream *		successLog;
-	nsIOutputStream *		errorLog;
+	nsISupportsWString *	successLog;
+	nsISupportsWString *	errorLog;
 
 	ImportThreadData();
 	~ImportThreadData();
@@ -480,19 +490,34 @@ NS_IMETHODIMP nsImportGenericMail::WantsProgress(PRBool *_retval)
 }
 
 
-NS_IMETHODIMP nsImportGenericMail::BeginImport(nsIOutputStream *successLog, nsIOutputStream *errorLog, PRBool *_retval)
+NS_IMETHODIMP nsImportGenericMail::BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool *_retval)
 {
 	NS_PRECONDITION(_retval != nsnull, "null ptr");
     if (!_retval)
         return NS_ERROR_NULL_POINTER;
 
+	nsString	success;
+	nsString	error;
+
 	if (!m_doImport) {
+		nsImportStringBundle::GetStringByID( IMPORT_NO_MAILBOXES, success);
+		SetLogs( success, error, successLog, errorLog);			
 		*_retval = PR_TRUE;
 		return( NS_OK);		
 	}
 	
-	if (!m_pInterface || !m_pMailboxes || !m_pDestFolder) {
+	if (!m_pInterface || !m_pMailboxes) {
 		IMPORT_LOG0( "*** Something is not set properly, interface, mailboxes, or destination.\n");
+		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOTINITIALIZED, error);
+		SetLogs( success, error, successLog, errorLog);
+		*_retval = PR_FALSE;
+		return( NS_OK);
+	}
+	
+	if (!m_pDestFolder) {
+		IMPORT_LOG0( "*** No import destination.\n");
+		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NODESTFOLDER, error);
+		SetLogs( success, error, successLog, errorLog);
 		*_retval = PR_FALSE;
 		return( NS_OK);
 	}
@@ -537,6 +562,8 @@ NS_IMETHODIMP nsImportGenericMail::BeginImport(nsIOutputStream *successLog, nsIO
 		m_pThreadData->DriverAbort();
 		m_pThreadData = nsnull;
 		*_retval = PR_FALSE;
+		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOTHREAD, error);
+		SetLogs( success, error, successLog, errorLog);
 	}
 	else
 		*_retval = PR_TRUE;
@@ -589,6 +616,50 @@ NS_IMETHODIMP nsImportGenericMail::GetProgress(PRInt32 *_retval)
 	return( NS_OK);
 }
 
+void nsImportGenericMail::ReportError( PRInt32 id, const PRUnichar *pName, nsString *pStream)
+{
+	if (!pStream)
+		return;
+	// load the error string
+	PRUnichar *pFmt = nsImportStringBundle::GetStringByID( id);
+	PRUnichar *pText = nsTextFormater::smprintf( pFmt, pName);
+	pStream->Append( pText);
+	nsTextFormater::smprintf_free( pText);
+	nsImportStringBundle::FreeString( pFmt);
+	pStream->Append( NS_LINEBREAK);
+}
+
+
+void nsImportGenericMail::SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError)
+{
+	nsString	str;
+	PRUnichar *	pStr = nsnull;
+	if (pSuccess) {
+		pSuccess->GetData( &pStr);
+		if (pStr) {
+			str = pStr;
+			nsCRT::free( pStr);
+			pStr = nsnull;
+			str.Append( success);
+			pSuccess->SetData( str.GetUnicode());
+		}
+		else {
+			pSuccess->SetData( success.GetUnicode());			
+		}
+	}
+	if (pError) {
+		pError->GetData( &pStr);
+		if (pStr) {
+			str = pStr;
+			nsCRT::free( pStr);
+			str.Append( error);
+			pError->SetData( str.GetUnicode());
+		}
+		else {
+			pError->SetData( error.GetUnicode());			
+		}
+	}	
+}
 
 NS_IMETHODIMP nsImportGenericMail::CancelImport(void)
 {
@@ -686,11 +757,29 @@ ImportMailThread( void *stuff)
 	char *			pStr;
 	
 	nsCOMPtr<nsIMsgFolder>  	curFolder( destRoot);
+	nsCOMPtr<nsIMsgFolder>		curProxy;
 
 	nsCOMPtr<nsIMsgFolder>		newFolder;
 	nsCOMPtr<nsIFileSpec>  		outBox;
 	nsCOMPtr<nsISupports>		subFolder;
 	PRBool						exists;
+	
+	nsString	success;
+	nsString	error;
+
+	// Initialize the curFolder proxy object
+    NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	if (NS_SUCCEEDED(rv)) {
+		rv = proxyMgr->GetProxyObject( nsnull, nsIMsgFolder::GetIID(),
+										curFolder, PROXY_SYNC, getter_AddRefs( curProxy));
+
+		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", rv);
+	}
+	else {
+		IMPORT_LOG0( "Unable to obtain proxy service to do import\n");
+		nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error);
+		pData->abort = PR_TRUE;
+	}
 
 	for (i = 0; (i < count) && !(pData->abort); i++) {
 		pSupports = pData->boxes->ElementAt( i);
@@ -707,16 +796,37 @@ ImportMailThread( void *stuff)
 				if (newDepth > depth) {
 					char *	pStr = lastName.ToNewCString();
 					IMPORT_LOG1( "* Finding folder for child named: %s\n", pStr);
-					rv = curFolder->GetChildNamed( pStr, getter_AddRefs( subFolder));
+					rv = curProxy->GetChildNamed( pStr, getter_AddRefs( subFolder));
 					nsCRT::free( pStr);
-					curFolder = do_QueryInterface( subFolder);
+					if (NS_FAILED( rv)) {
+						nsImportGenericMail::ReportError( IMPORT_ERROR_MB_FINDCHILD, lastName.GetUnicode(), &error);
+						pData->fatalError = PR_TRUE;
+						break;
+					}
+
+					rv = proxyMgr->GetProxyObject( nsnull, nsIMsgFolder::GetIID(), 
+													subFolder, PROXY_SYNC, getter_AddRefs( curProxy));
+					if (NS_FAILED( rv)) {
+						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error);
+						pData->fatalError = PR_TRUE;
+						break;
+					}
+
+					IMPORT_LOG1( "Created proxy for new subFolder: 0x%lx\n", rv);
 				}
 				else if (newDepth < depth) {
-					while (newDepth < depth) {
+					rv = NS_OK;
+					while ((newDepth < depth) && NS_SUCCEEDED( rv)) {
 						nsCOMPtr<nsIFolder> parFolder;
-						curFolder->GetParent( getter_AddRefs( parFolder));
-						curFolder = do_QueryInterface( parFolder);
+						curProxy->GetParent( getter_AddRefs( parFolder));
+						rv = proxyMgr->GetProxyObject( nsnull, nsIMsgFolder::GetIID(),
+														parFolder, PROXY_SYNC, getter_AddRefs( curProxy));
 						depth--;
+					}
+					if (NS_FAILED( rv)) {
+						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error);
+						pData->fatalError = PR_TRUE;
+						break;
 					}
 				}
 				depth = newDepth;
@@ -731,10 +841,10 @@ ImportMailThread( void *stuff)
 				
 				pStr = lastName.ToNewCString();
 				exists = PR_FALSE;
-				rv = curFolder->ContainsChildNamed( pStr, &exists);
+				rv = curProxy->ContainsChildNamed( pStr, &exists);
 				if (exists) {
 					char *pName = nsnull;
-					curFolder->GenerateUniqueSubfolderName( pStr, nsnull, &pName);
+					curProxy->GenerateUniqueSubfolderName( pStr, nsnull, &pName);
 					if (pName) {
 						nsCRT::free( pStr);
 						pStr = pName;
@@ -743,19 +853,46 @@ ImportMailThread( void *stuff)
 				lastName = pStr;
 				
 				IMPORT_LOG1( "* Creating new import folder: %s\n", pStr);
-
-				rv = curFolder->CreateSubfolder( pStr);
-				rv = curFolder->GetChildNamed( pStr, getter_AddRefs( subFolder));
-				newFolder = do_QueryInterface( subFolder);
-				if (newFolder)
-					newFolder->GetPath( getter_AddRefs( outBox));
 				
+				rv = curProxy->CreateSubfolder( pStr);
+				
+				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", rv);
+				if (NS_SUCCEEDED( rv)) {
+					rv = curProxy->GetChildNamed( pStr, getter_AddRefs( subFolder));
+					IMPORT_LOG1( "GetChildNamed for new folder returned rv: 0x%lx\n", rv);
+					if (NS_SUCCEEDED( rv)) {
+						newFolder = do_QueryInterface( subFolder);
+						if (newFolder) {
+							newFolder->GetPath( getter_AddRefs( outBox));
+							IMPORT_LOG0( "Got path for newly created folder\n");
+						}
+						else {
+							IMPORT_LOG0( "Newly created folder not found\n");
+						}
+					}
+				}
+				
+				if (NS_FAILED( rv)) {
+					nsImportGenericMail::ReportError( IMPORT_ERROR_MB_CREATE, lastName.GetUnicode(), &error);
+				}
+								
 				nsCRT::free( pStr);
 
-				if (size && import && newFolder && outBox) {
+				if (size && import && newFolder && outBox && NS_SUCCEEDED( rv)) {
 					PRBool fatalError = PR_FALSE;
 					pData->currentSize = size;
-					rv = pData->mailImport->ImportMailbox( box, outBox, pData->errorLog, pData->successLog, &fatalError);
+					PRUnichar *pSuccess = nsnull;
+					PRUnichar *pError = nsnull;
+					rv = pData->mailImport->ImportMailbox( box, outBox, &pError, &pSuccess, &fatalError);
+					if (pError) {
+						error.Append( pError);
+						nsCRT::free( pError);
+					}
+					if (pSuccess) {
+						success.Append( pSuccess);
+						nsCRT::free( pSuccess);
+					}
+
 					pData->currentSize = 0;
 					pData->currentTotal += size;
 					if (fatalError) {
@@ -767,6 +904,8 @@ ImportMailThread( void *stuff)
 		}
 	}
 	
+	nsImportGenericMail::SetLogs( success, error, pData->successLog, pData->errorLog);
+
 	if (pData->abort || pData->fatalError) {
 		if (pData->ownsDestRoot) {
 			destRoot->RecursiveDelete( PR_TRUE);
@@ -801,33 +940,50 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 		return( PR_FALSE);
 	}
 
-	nsCOMPtr<nsIMsgIdentity> identity;
-
-	rv = mailSession->GetCurrentIdentity( getter_AddRefs( identity));
-
-	if (NS_FAILED( rv)) {
-		IMPORT_LOG0( "*** Failed to get current identity\n");
-		return( PR_FALSE);
-	}	
-
 	// Create a new account for the import
-	
-	nsCOMPtr<nsIMsgIncomingServer> server;
-
-	rv = accMgr->CreateIncomingServer( "none", getter_AddRefs( server));
-
+	// TODO: Ensure that the named used for this server is unique.
+	// Get the default name from the import module.
 	nsString	prettyName;
 	if (m_pName)
 		prettyName = m_pName;
 	else
 		prettyName = "Imported Mail";
 	
-	char *pName = prettyName.ToNewCString();
-	server->SetPrettyName( (PRUnichar *) prettyName.GetUnicode());
-	server->SetHostName( "imported.mail");
-	server->SetUsername( "nobody");  
+	nsCOMPtr<nsIMsgIncomingServer> server;
 
-	nsCRT::free( pName);
+	// Let's find a host name we're not using yet for a new "none" server
+	int		count = 1;
+	char	hostName[30];
+	PR_snprintf( hostName, 30, "%s", "imported.mail");
+	while (count < 1000) {
+		rv = accMgr->FindServer( "import", hostName, "none", getter_AddRefs( server));
+		if (NS_SUCCEEDED( rv)) {
+			PR_snprintf( hostName, 30, "imported%d.mail", count);
+			count++;
+		}
+		else
+			break;
+	}
+	
+	if (NS_SUCCEEDED( rv)) {
+		IMPORT_LOG0( "*** Failed to find a unique 'none' server to create for importing\n");
+		return( PR_FALSE);
+	}
+	
+	rv = accMgr->CreateIncomingServer( "none", getter_AddRefs( server));
+	if (NS_FAILED( rv)) {
+		IMPORT_LOG0( "*** Failed to create a 'none' incoming server\n");
+		return( PR_FALSE);
+	}
+	server->SetType( "none");
+
+	// Let's get a reasonable "pretty name" that doesn't exist yet?
+	GetUniquePrettyName( accMgr, prettyName);
+	
+	server->SetPrettyName( (PRUnichar *) prettyName.GetUnicode());
+	server->SetHostName( hostName);
+	server->SetUsername( "import");  
+
 	
 	// create a new account with the server and identity.
 	nsCOMPtr<nsIMsgAccount>	account;
@@ -842,17 +998,6 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Error setting incoming server on account\n");
 	}
-	if (identity) {
-		rv = account->AddIdentity( identity);
-		if (NS_FAILED( rv)) {
-			IMPORT_LOG0( "*** Error adding identity to account\n");
-		}
-		rv = account->SetDefaultIdentity( identity);	
-		if (NS_FAILED( rv)) {
-			IMPORT_LOG0( "*** Error setting default identity for account\n");
-		}
-	}
-
 
 	nsCOMPtr<nsIFolder>	rootFolder;
 	rv = server->GetRootFolder( getter_AddRefs( rootFolder));
@@ -867,6 +1012,55 @@ PRBool nsImportGenericMail::GetAccount( nsIMsgFolder **ppFolder)
 	IMPORT_LOG0( "****** FAILED TO CREATE NEW ACCOUNT FOR IMPORT\n");
 
 	return( PR_FALSE);
+}
+
+void nsImportGenericMail::GetUniquePrettyName( nsIMsgAccountManager *pMgr, nsString& name)
+{
+	nsString	newName = name;
+	nsString	num;
+	int			count = 1;
+	
+	nsCOMPtr<nsISupportsArray>	array;
+
+	nsresult rv = pMgr->GetAllServers( getter_AddRefs( array));
+	if (NS_FAILED( rv))
+		return;
+
+	PRBool		found;
+	PRUint32	sz = 0;
+	rv = array->Count( &sz);
+	if (!sz)
+		return;
+
+	nsCOMPtr<nsISupports>			sup;
+	nsCOMPtr<nsIMsgIncomingServer>	server;
+
+	do {
+		found = PR_FALSE;
+		for (int i = 0; (i < (int) sz) && !found; i++) {
+			rv = array->GetElementAt( i, getter_AddRefs( sup));
+			if (NS_SUCCEEDED( rv) && sup) {
+				server = do_QueryInterface( sup);
+				if (server) {
+					nsXPIDLString	prettyName;
+					rv = server->GetPrettyName( getter_Copies( prettyName));
+					if (NS_SUCCEEDED( rv)) {
+						if (!newName.Compare( prettyName, PR_TRUE))
+							found = PR_TRUE;
+					}	
+				}
+			}
+		}
+		if (found) {
+			newName = name;
+			newName.Append( " ");
+			newName.Append( count);
+			count++;
+		}
+
+	} while (found == PR_TRUE);
+
+	name = newName;
 }
 
 PRBool nsImportGenericMail::FindAccount( nsIMsgFolder **ppFolder)

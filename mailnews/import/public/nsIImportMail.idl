@@ -80,8 +80,8 @@ interface nsIImportMail : nsISupports
 	*/
 	void 	ImportMailbox( in nsIImportMailboxDescriptor source, 
 						   in nsIFileSpec destination,
-						   in nsIOutputStream errorLog,
-						   in nsIOutputStream successLog, 
+						   out wstring errorLog,
+						   out wstring successLog, 
 						   out boolean fatalError);
 	
 	/*

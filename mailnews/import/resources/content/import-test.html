@@ -2,7 +2,30 @@
 <body>
 
 <script language="javascript">
+var intervalState = null;
+var	importMailInterface = null;
+
+function ContinueMailImport() {
+	clear = true;
+	if (importMailInterface) {
+		if (importMailInterface.ContinueImport() && (importMailInterface.GetProgress() < 100)) {
+			clear = false;
+			dump( ".");
+		}
+	}
+	if (clear == true) {
+		clearInterval( intervalState);
+		intervalState = null;
+		importMailInterface = null;		
+	}
+}
+
 function test1() {
+	if (importMailInterface || intervalState) {
+		dump( "Already importing mail, wait till this one is done!\n");
+		return;
+	}
+
 	dump( "test1\n");
 	dump( "Loading outlook express component\n");
 	var module = Components.classes["component://mozilla/import/import-oe"].createInstance();
@@ -25,14 +48,10 @@ function test1() {
 		if (mailInterface.BeginImport( null, null)) {
 			var count = 0;
 			dump( "Importing ");
-			while (mailInterface.ContinueImport() && (mailInterface.GetProgress() < 100)) {
-				count = count + 1;
-				if (count > 100) {
-					dump( ".");
-					count = 0;
-				}
-			}
-			dump( "\nImport finished\n");
+			importMailInterface = mailInterface;
+			intervalState = setInterval( "ContinueMailImport()", 100);
+	
+			dump( "\nWaiting for import to finish.....\n");
 		}
 		else {
 			dump( "BeginImport returned failure\n");

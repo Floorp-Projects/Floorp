@@ -42,6 +42,8 @@ private:
 	PRBool	CopyMbxFileBytes( PRUint32 numBytes);
 	PRBool	IsFromLineKey( PRUint8 *pBuf, PRUint32 max);
 
+public:
+	PRInt32				m_msgCount;
 
 protected:
 	nsString			m_name;
@@ -84,7 +86,7 @@ private:
 };
 
 
-PRBool CImportMailbox::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec * inFile, nsIFileSpec * outFile)
+PRBool CImportMailbox::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec * inFile, nsIFileSpec * outFile, PRInt32 *pCount)
 {
 	PRBool		done = PR_FALSE;
 	nsIFileSpec *idxFile;
@@ -100,8 +102,11 @@ PRBool CImportMailbox::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpe
 				
 		CIndexScanner *pIdxScanner = new CIndexScanner( name, idxFile, inFile, outFile);
 		if (pIdxScanner->Initialize()) {
-			if (pIdxScanner->DoWork( pAbort))
+			if (pIdxScanner->DoWork( pAbort)) {
 				done = PR_TRUE;
+				if (pCount)
+					*pCount = pIdxScanner->m_msgCount;
+			}
 			else {
 				IMPORT_LOG0( "CIndexScanner::DoWork() failed\n");
 			}
@@ -117,15 +122,18 @@ PRBool CImportMailbox::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpe
 	
 	if (done)
 		return( done);
-	
+
 	/* 
 		something went wrong with the index file, just scan the mailbox
 		file itself.
 	*/
 	CMbxScanner *pMbx = new CMbxScanner( name, inFile, outFile);
 	if (pMbx->Initialize()) {
-		if (pMbx->DoWork( pAbort))
+		if (pMbx->DoWork( pAbort)) {
 			done = PR_TRUE;
+			if (pCount)
+				*pCount = pMbx->m_msgCount;
+		}
 		else {
 			IMPORT_LOG0( "CMbxScanner::DoWork() failed\n");
 		}
@@ -170,164 +178,6 @@ PRBool CImportMailbox::GetIndexFile( nsIFileSpec* file)
 		return( PR_FALSE);
 }
 
-/* Find out if there is a matching index file.
-
-BOOL CImportMail::GetIndexFile( UFileLocation& mbxToIdx)
-{
-	CString		ext;
-	ext.LoadString( IDS_OUTLOOK_IDX_EXTENSION);
-	mbxToIdx.ReplaceExtension( ext);
-	return( mbxToIdx.FileExists());
-}
-*/
-
-
-/*
-	How to drive the scanners, special note that
-	if the idx scanner fails, we can try the mbx scanner
-	to see if it works.
-
-BOOL CImportMail::DoIdleWork( BOOL *pDone)
-{
-	BOOL	result;
-
-	*pDone = FALSE;
-	switch( m_state) {
-		case kStartState:
-			CalculateSizes();
-			m_state = kDoMailbox;
-		break;
-
-		case kDoMailbox:
-			if (!PrepMailboxImport( TRUE)) {
-				m_state = kMbxErrorState;
-			}
-		break;
-
-		case kScanIdx:
-			if (m_pIdxScanner) {
-				if (!m_pIdxScanner->DoWork( pDone)) {
-					// if the error was fatal then abort
-					*pDone = FALSE;
-					if (m_pIdxScanner->WasErrorFatal())
-						m_state = kMbxErrorState;
-					else
-						m_state = kPrepScanMbx;
-					delete m_pIdxScanner;
-					m_pIdxScanner = NULL;
-				}
-				else
-					m_bytesDone += m_pIdxScanner->BytesProcessed();
-				if (*pDone) {
-					delete m_pIdxScanner;
-					m_pIdxScanner = NULL;
-					m_state = kNextMailbox;
-					*pDone = FALSE;
-				}
-			}
-			else // should never get here
-				m_state = kAllDone;
-		break;
-
-		case kPrepScanMbx:
-			if (!PrepMailboxImport( FALSE))
-				m_state = kMbxErrorState;
-		break;
-
-		case kScanMbx:
-			if (m_pMbxScanner) {
-				result = m_pMbxScanner->DoWork( pDone);
-				m_bytesDone += m_pMbxScanner->BytesProcessed();
-				if (!result || *pDone) {
-					*pDone = FALSE;
-					delete m_pMbxScanner;
-					m_pMbxScanner = NULL;
-					if (!result)
-						m_state = kMbxErrorState;
-					else
-						m_state = kNextMailbox;
-				}
-			}
-			else // should never get here
-				m_state = kAllDone;
-		break;
-
-		case kNextMailbox:
-			m_bytesDone += kProgressBytesPerFile;
-			m_curFileIndex++;
-			if (m_curFileIndex >= m_pDst->GetSize()) {
-				// successful completion...
-				m_bDeleteWork = FALSE;
-				m_bytesDone = m_totalBytes;
-				m_state = kAllDone;
-			}
-			else
-				m_state = kDoMailbox;
-		break;
-
-		case kMbxErrorState:
-			if (ReportMbxError())
-				m_state = kNextMailbox;
-			else
-				return( FALSE);
-		break;
-
-		default:
-			*pDone = TRUE;
-	}
-
-	return( TRUE);
-}
-*/
-
-
-/* 
-	The basic scheme is to prep, the either do the idxscanner or mbxscanner
- 	depending upon which was available.  All fo this can be moved into a routine
- 	that just does it sequentially since our new concept is threads!
-
-BOOL CImportMail::PrepMailboxImport( BOOL prepIdx)
-{
-	// given the current source index
-	// set up to scan either the idx file or the mbx file...
-	UFileLocation	src;
-	UFileLocation	srcIdx;
-	UFileLocation	dst;
-	CString			name;
-
-	m_pSrc->GetAt( m_curFileIndex, src);
-	m_pDst->GetAt( m_curFileIndex, dst);
-	name = m_pNames->GetAt( m_curFileIndex);
-
-	srcIdx = src;
-	BOOL	doIdx = FALSE;
-	if (prepIdx && GetIndexFile( srcIdx)) {
-		m_pIdxScanner = new CIndexScanner( name, srcIdx, src, dst);
-		if (m_pIdxScanner->Initialize()) {
-			doIdx = TRUE;
-			m_state = kScanIdx;
-		}
-		else {
-			delete m_pIdxScanner;
-			m_pIdxScanner = NULL;
-		}
-	}
-	if (!doIdx) {
-		// blow off the index and go straight to the mbx file...
-		m_pMbxScanner = new CMbxScanner( name, src, dst);
-		if (m_pMbxScanner->Initialize()) {
-			m_state = kScanMbx;
-		}
-		else {
-			delete m_pMbxScanner;
-			m_pMbxScanner = NULL;
-			m_state = kMbxErrorState;
-		}
-	}
-
-	return( TRUE);
-}
-*/
 
 const char *CMbxScanner::m_pFromLine = "From ????@???? 1 Jan 1965 00:00:00\x0D\x0A";
 // let's try a 16K buffer and see how well that works?
@@ -336,6 +186,7 @@ const char *CMbxScanner::m_pFromLine = "From ????@???? 1 Jan 1965 00:00:00\x0D\x
 
 CMbxScanner::CMbxScanner( nsString& name, nsIFileSpec* mbxFile, nsIFileSpec* dstFile)
 {
+	m_msgCount = 0;
 	m_name = name;
 	m_mbxFile = mbxFile;
 	m_mbxFile->AddRef();
@@ -362,23 +213,11 @@ CMbxScanner::~CMbxScanner()
 void CMbxScanner::ReportWriteError( nsIFileSpec * file, PRBool fatal)
 {
 	m_fatalError = fatal;
-	/*
-	CString		path;
-	file.GetTextPath( path);
-	UDialogs::ErrMessage1( IDS_FILE_WRITE_ERROR, path);
-	*/
-	// FIXME: We should log errors of this kind?
 }
 
 void CMbxScanner::ReportReadError( nsIFileSpec * file, PRBool fatal)
 {
 	m_fatalError = fatal;
-	/*
-	CString		path;
-	file.GetTextPath( path);
-	UDialogs::ErrMessage1( IDS_FILE_READ_ERROR, path);
-	*/
-	// FIXME: We should log errors of this kind?
 }
 
 PRBool CMbxScanner::Initialize( void)
@@ -387,21 +226,17 @@ PRBool CMbxScanner::Initialize( void)
 	m_pInBuffer = new PRUint8[m_bufSz];
 	m_pOutBuffer = new PRUint8[m_bufSz];
 	if (!m_pInBuffer || !m_pOutBuffer) {
-		// UDialogs::ErrMessage0( IDS_NO_MEMORY);
-		// FIXME: Log the error message?
 		return( PR_FALSE);
 	}
 	
 	m_mbxFile->GetFileSize( &m_mbxFileSize);
 	// open the mailbox file...
 	if (NS_FAILED( m_mbxFile->OpenStreamForReading())) {
-		// FIXME: Log the error?
 		CleanUp();
 		return( PR_FALSE);
 	}
 	
 	if (NS_FAILED( m_dstFile->OpenStreamForWriting())) {
-		// FIXME: Log the error?
 		CleanUp();
 		return( PR_FALSE);
 	}
@@ -427,6 +262,7 @@ PRBool CMbxScanner::DoWork( PRBool *pAbort)
 		}
 		m_mbxOffset += msgSz;
 		m_didBytes += msgSz;
+		m_msgCount++;
 	}
 	
 	CleanUp();
@@ -467,24 +303,20 @@ PRBool CMbxScanner::WriteMailItem( PRUint32 flags, PRUint32 offset, PRUint32 siz
 	m_mbxFile->Failed( &failed);
 	
 	if (NS_FAILED( rv) || failed) {
-		// FIXME: Log errors?
-		// TRACE1( "Mbx seek error: 0x%lx\n", offset);
+		IMPORT_LOG1( "Mbx seek error: 0x%lx\n", offset);
 		return( PR_FALSE);
 	}
 	rv = m_mbxFile->Read( (char **) &pChar, cnt, &cntRead);
 	if (NS_FAILED( rv) || (cntRead != cnt)) {
-		// FIXME: Log errors?
-		// TRACE1( "Mbx read error at: 0x%lx\n", offset);
+		IMPORT_LOG1( "Mbx read error at: 0x%lx\n", offset);
 		return( PR_FALSE);
 	}
 	if (values[0] != 0x7F007F00) {
-		// FIXME: Log errors?
-		// TRACE2( "Mbx tag field doesn't match: 0x%lx, at offset: 0x%lx\n", values[0], offset);
+		IMPORT_LOG2( "Mbx tag field doesn't match: 0x%lx, at offset: 0x%lx\n", values[0], offset);
 		return( PR_FALSE);
 	}
 	if (size && (values[2] != size)) {
-		// FIXME: Log errors?
-		// TRACE3( "Mbx size doesn't match idx, mbx: %ld, idx: %ld, at offset: 0x%lx\n", values[2], size, offset);
+		IMPORT_LOG3( "Mbx size doesn't match idx, mbx: %ld, idx: %ld, at offset: 0x%lx\n", values[2], size, offset);
 		return( PR_FALSE);
 	}
 
@@ -665,7 +497,6 @@ PRBool CIndexScanner::Initialize( void)
 
 	nsresult 	rv = m_idxFile->OpenStreamForReading();
 	if (NS_FAILED( rv)) {
-		// FIXME: Log the error?
 		CleanUp();
 		return( PR_FALSE);
 	}
@@ -694,7 +525,7 @@ PRBool CIndexScanner::ValidateIdxFile( void)
 	if (NS_FAILED( rv) || (cntRead != cnt))
 		return( PR_FALSE);
 	if (subId != 0x00010004) {
-		// TRACE1( "Idx file subid doesn't match: 0x%lx\n", subId);
+		IMPORT_LOG1( "Idx file subid doesn't match: 0x%lx\n", subId);
 		return( PR_FALSE);
 	}
 	
@@ -703,7 +534,7 @@ PRBool CIndexScanner::ValidateIdxFile( void)
 	if (NS_FAILED( rv) || (cntRead != cnt))
 		return( PR_FALSE);
 	
-	// TRACE1( "Idx file num messages: %ld\n", m_numMessages);
+	IMPORT_LOG1( "Idx file num messages: %ld\n", m_numMessages);
 
 	m_didBytes += 80;
 	m_idxOffset = 80;
@@ -745,7 +576,7 @@ PRBool CIndexScanner::GetMailItem( PRUint32 *pFlags, PRUint32 *pOffset, PRUint32
 		return( PR_FALSE);
 		
 	if (values[3] != m_idxOffset) {
-		// TRACE2( "Self pointer invalid: m_idxOffset=0x%lx, self=0x%lx\n", m_idxOffset, values[3]);
+		IMPORT_LOG2( "Self pointer invalid: m_idxOffset=0x%lx, self=0x%lx\n", m_idxOffset, values[3]);
 		return( PR_FALSE);
 	}
 
@@ -792,12 +623,14 @@ PRBool CIndexScanner::DoWork( PRBool *pAbort)
 			return( PR_FALSE);
 		}
 		m_curItemIndex++;
-		if (!(flags & kOEDeletedFlag))
+		if (!(flags & kOEDeletedFlag)) {
 			if (!WriteMailItem( flags, offset, size))
 				failed = PR_TRUE;
-		else {
-			m_didBytes += size;
+			else {
+				m_msgCount++;
+			}
 		}
+		m_didBytes += size;
 	}
 	
 	CleanUp();

@@ -23,7 +23,7 @@
 #include "nsISupportsArray.h"
 #include "nsIImportAddressBooks.h"
 #include "nsIImportGeneric.h"
-#include "nsIOutputStream.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIImportABDescriptor.h"
 #include "nsCRT.h"
 #include "nsString.h"
@@ -39,6 +39,8 @@
 #include "nsRDFCID.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbDirectory.h"
+#include "nsImportStringBundle.h"
+#include "nsTextFormater.h"
 #include "ImportDebug.h"
 
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
@@ -82,7 +84,7 @@ public:
 	NS_IMETHOD WantsProgress(PRBool *_retval);
 
 	/* boolean BeginImport (in nsIOutputStream successLog, in nsIOutputStream errorLog); */
-	NS_IMETHOD BeginImport(nsIOutputStream *successLog, nsIOutputStream *errorLog, PRBool *_retval);
+	NS_IMETHOD BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool *_retval);
 
 	/* boolean ContinueImport (); */
 	NS_IMETHOD ContinueImport(PRBool *_retval);
@@ -97,6 +99,10 @@ private:
 	void	GetDefaultLocation( void);
 	void	GetDefaultBooks( void);
 
+public:
+	static void	SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError);
+	static void ReportError( PRUnichar *pName, nsString *pStream);
+
 private:
 	nsIImportAddressBooks *		m_pInterface;
 	nsISupportsArray *			m_pBooks;
@@ -106,8 +112,8 @@ private:
 	PRBool						m_gotLocation;
 	PRBool						m_found;
 	PRBool						m_userVerify;
-	nsIOutputStream *			m_pSuccessLog;
-	nsIOutputStream *			m_pErrorLog;
+	nsISupportsWString *		m_pSuccessLog;
+	nsISupportsWString *		m_pErrorLog;
 	PRUint32					m_totalSize;
 	PRBool						m_doImport;
 	AddressThreadData *			m_pThreadData;
@@ -124,8 +130,8 @@ public:
 	PRUint32					currentSize;
 	nsISupportsArray *			books;
 	nsIImportAddressBooks *		addressImport;
-	nsIOutputStream *			successLog;
-	nsIOutputStream *			errorLog;
+	nsISupportsWString *		successLog;
+	nsISupportsWString *		errorLog;
 	char *						pDestinationUri;
 
 	AddressThreadData();
@@ -437,19 +443,56 @@ NS_IMETHODIMP nsImportGenericAddressBooks::WantsProgress(PRBool *_retval)
 	return( NS_OK);
 }
 
+void nsImportGenericAddressBooks::SetLogs( nsString& success, nsString& error, nsISupportsWString *pSuccess, nsISupportsWString *pError)
+{
+	nsString	str;
+	PRUnichar *	pStr = nsnull;
+	if (pSuccess) {
+		pSuccess->GetData( &pStr);
+		if (pStr) {
+			str = pStr;
+			nsCRT::free( pStr);
+			pStr = nsnull;
+			str.Append( success);
+			pSuccess->SetData( str.GetUnicode());
+		}
+		else {
+			pSuccess->SetData( success.GetUnicode());			
+		}
+	}
+	if (pError) {
+		pError->GetData( &pStr);
+		if (pStr) {
+			str = pStr;
+			nsCRT::free( pStr);
+			str.Append( error);
+			pError->SetData( str.GetUnicode());
+		}
+		else {
+			pError->SetData( error.GetUnicode());			
+		}
+	}	
+}
 
-NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsIOutputStream *successLog, nsIOutputStream *errorLog, PRBool *_retval)
+NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsISupportsWString *successLog, nsISupportsWString *errorLog, PRBool *_retval)
 {
 	NS_PRECONDITION(_retval != nsnull, "null ptr");
     if (!_retval)
         return NS_ERROR_NULL_POINTER;
 
+	nsString	success;
+	nsString	error;
+	
 	if (!m_doImport) {
 		*_retval = PR_TRUE;
+		nsImportStringBundle::GetStringByID( IMPORT_NO_ADDRBOOKS, success);
+		SetLogs( success, error, successLog, errorLog);
 		return( NS_OK);		
 	}
 	
 	if (!m_pInterface || !m_pBooks) {
+		nsImportStringBundle::GetStringByID( IMPORT_ERROR_AB_NOTINITIALIZED, error);
+		SetLogs( success, error, successLog, errorLog);
 		*_retval = PR_FALSE;
 		return( NS_OK);
 	}
@@ -490,6 +533,8 @@ NS_IMETHODIMP nsImportGenericAddressBooks::BeginImport(nsIOutputStream *successL
 		m_pThreadData->DriverDelete();
 		m_pThreadData = nsnull;
 		*_retval = PR_FALSE;
+		nsImportStringBundle::GetStringByID( IMPORT_ERROR_AB_NOTHREAD, error);
+		SetLogs( success, error, successLog, errorLog);
 	}
 	else
 		*_retval = PR_TRUE;
@@ -727,6 +772,19 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 	*/
 }
 
+void nsImportGenericAddressBooks::ReportError( PRUnichar *pName, nsString *pStream)
+{
+	if (!pStream)
+		return;
+	// load the error string
+	PRUnichar *pFmt = nsImportStringBundle::GetStringByID( IMPORT_ERROR_GETABOOK);
+	PRUnichar *pText = nsTextFormater::smprintf( pFmt, pName);
+	pStream->Append( pText);
+	nsTextFormater::smprintf_free( pText);
+	nsImportStringBundle::FreeString( pFmt);
+	pStream->Append( NS_LINEBREAK);
+}
+
 PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 {
 	IMPORT_LOG0( "In Begin ImportAddressThread\n");
@@ -741,6 +799,9 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 	PRUint32					size;
 	nsCOMPtr<nsIAddrDatabase>	destDB( getter_AddRefs( GetAddressBookFromUri( pData->pDestinationUri)));
 	nsIAddrDatabase *			pDestDB = nsnull;
+	
+	nsString					success;
+	nsString					error;
 
 	for (i = 0; (i < count) && !(pData->abort); i++) {
 		pSupports = pData->books->ElementAt( i);
@@ -764,18 +825,32 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 						pDestDB = GetAddressBook( pName, PR_TRUE);
 					}
 
-					nsCRT::free( pName);
 
 					PRBool fatalError = PR_FALSE;
 					pData->currentSize = size;
 					if (pDestDB) {
+						PRUnichar *pSuccess = nsnull;
+						PRUnichar *pError = nsnull;
 						rv = pData->addressImport->ImportAddressBook(	book, 
 																	pDestDB, // destination
 																	nsnull, // fieldmap
-																	pData->errorLog,
-																	pData->successLog,
+																	&pError,
+																	&pSuccess,
 																	&fatalError);
+						if (pSuccess) {
+							success.Append( pSuccess);
+							nsCRT::free( pSuccess);
+						}
+						if (pError) {
+							error.Append( pError);
+							nsCRT::free( pError);
+						}
 					}
+					else {
+						nsImportGenericAddressBooks::ReportError( pName, &error);
+					}
+
+					nsCRT::free( pName);
 
 					pData->currentSize = 0;
 					pData->currentTotal += size;
@@ -790,7 +865,10 @@ PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff)
 			}
 		}
 	}
+
 	
+	nsImportGenericAddressBooks::SetLogs( success, error, pData->successLog, pData->errorLog);
+
 	if (pData->abort || pData->fatalError) {
 		// FIXME: do what is necessary to get rid of what has been imported so far.
 		// Nothing if we went into an existing address book!  Otherwise, delete

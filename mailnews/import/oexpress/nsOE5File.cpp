@@ -217,10 +217,13 @@ PRBool nsOE5File::IsFromLine( char *pLine, PRUint32 len)
 #define	kMailboxBufferSize	0x4000
 const char *nsOE5File::m_pFromLineSep = "From ????@???? 1 Jan 1965 00:00:00\x0D\x0A";
 
-nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *inFile, nsIFileSpec *pDestination)
+nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *inFile, nsIFileSpec *pDestination, PRInt32 *pCount)
 {
 	nsresult	rv;
-	
+	PRInt32		msgCount = 0;
+	if (pCount)
+		*pCount = 0;
+			
 	rv = inFile->OpenStreamForReading();
 	if (NS_FAILED( rv)) return( rv);
 	rv = pDestination->OpenStreamForWriting();
@@ -312,6 +315,8 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 					last2[0] = 13;
 					last2[1] = 10;
 				}
+
+				msgCount++;
 			}
 			else {
 				// Error reading message, should this be logged???
@@ -324,6 +329,9 @@ nsresult nsOE5File::ImportMailbox( PRBool *pAbort, nsString& name, nsIFileSpec *
 	delete [] pBuffer;
 	inFile->CloseStream();
 	pDestination->CloseStream();
+	
+	if (pCount)
+		*pCount = msgCount;
 
 	return( rv);
 }
