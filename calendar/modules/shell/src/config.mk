@@ -58,7 +58,7 @@ LD_LIBS += \
 	cal_core_ical10 \
 	$(XP_REG_LIB)
 
-ifeq($(OS_ARCH),Linux)
+ifeq ($(OS_ARCH),Linux)
 LD_LIBS += \
 	secfree stubnj stubsj util xp pwcac dbm
 endif
