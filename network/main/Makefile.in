@@ -45,7 +45,7 @@ CSRCS		= \
 	mkselect.c	\
 	mksockrw.c	\
 	mksort.c	\
-	mkstream.c      \
+	mkstream.c	\
 	mktrace.c	\
 	mkutils.c	\
 	prefetch.c	\

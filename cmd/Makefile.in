@@ -17,11 +17,14 @@
 
 DEPTH	= ..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= $(addsuffix fe, $(MOZ_FE)) patcher
+include $(topsrcdir)/config/config.mk
+
+DIRS = $(addsuffix fe, $(MOZ_FE)) patcher
 
 include $(topsrcdir)/config/rules.mk
+

@@ -104,6 +104,7 @@ CPPSRCS		= \
 		  HTMLView.cpp \
 		  HistoryFrame.cpp \
 		  IconGroup.cpp \
+		  Image.cpp \
 		  LocationDrag.cpp \
 		  Logo.cpp \
 		  Menu.cpp \
@@ -112,7 +113,6 @@ CPPSRCS		= \
 		  MozillaApp.cpp \
 		  NavCenterFrame.cpp \
 		  NavCenterView.cpp \
-		  RDFImage.cpp \
 		  Netcaster.cpp \
 		  NotificationCenter.cpp \
 		  Outliner.cpp \
@@ -128,7 +128,9 @@ CPPSRCS		= \
 		  PrefsDialogMailnews.cpp \
 		  PrefsLang.cpp \
 		  PrefsProxiesView.cpp \
+		  RDFImage.cpp \
 		  RDFView.cpp \
+		  RDFTreeView.cpp \
 		  RadioGroup.cpp \
 		  Splash.cpp \
 		  Toolbar.cpp \
@@ -289,6 +291,10 @@ endif
 
 ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
 DEFINES		+= -DXFE_PREF_ADVANCED_PASSIVE_FTP
+endif
+
+ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
+DEFINES		+= -DXFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
 endif
 
 ifdef MOZ_MAIL_NEWS

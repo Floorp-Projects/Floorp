@@ -55,7 +55,7 @@ AC_PROG_INSTALL
 AC_PROG_AWK
 AC_PROG_RANLIB
 
-AC_PATH_PROGS(EMACS, xemacs emacs, /bin/true)
+AC_PATH_PROGS(EMACS, xemacs lemacs emacs, /bin/true)
 AC_PATH_PROG(PERL, perl, /bin/true)
 AC_PATH_PROG(WHOAMI, whoami, /bin/true)
 AC_PATH_PROG(UNZIP, unzip, /bin/true)
@@ -186,7 +186,7 @@ dnl ========================================================
 AC_CHECK_LIB(c, strcpy)
 AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
-AC_CHECK_LIB(thread, thread_create)
+AC_CHECK_LIB(thread, thr_create)
 AC_CHECK_LIB(pthread, pthread_create)
 AC_CHECK_LIB(pcthreads, pthread_create)
 AC_CHECK_LIB(resolv, res_gethostbyaddr)
@@ -236,7 +236,17 @@ dnl Mozilla specific options
 dnl ========================================================
 AC_ARG_ENABLE(fe,
 [  --enable-fe=\$val	  enable \$val fe (defaults to x)],
-    [fe_list=`echo "$enableval" | sed -e 's/,/ /g' -e 's|$| |'`], fe_list="x ")
+    [fe_list=`echo "$enableval" | sed -e 's/,/ /g' -e 's|$| |'`], 
+    fe_list=USE_DEFAULT)
+
+if [ test "$fe_list" = "USE_DEFAULT" ]; then
+    res=`echo $target_os| grep -c "^Rhapsody"`
+    if [ test $res != 0 ]; then
+	fe_list="yb "
+    else
+	fe_list="x  "
+    fi
+fi
 
 for fe in $fe_list; do
     # Test whether such a subdir really exists.
@@ -648,7 +658,6 @@ modules/Makefile
 modules/calendar/Makefile
 modules/calendar/src/Makefile
 modules/calendar/src/libcal/Makefile
-modules/coreincl/Makefile
 modules/edtplug/Makefile
 modules/edtplug/classes/Makefile
 modules/edtplug/classes/netscape/Makefile

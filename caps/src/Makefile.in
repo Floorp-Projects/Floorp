@@ -25,7 +25,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= nspr xpcom security layer js jar zlib pref img util rdf caps 
+REQUIRES	= nspr xpcom security layer js jar pref img util rdf caps 
+
+ifndef MOZ_NATIVE_ZLIB
+REQUIRES += zlib
+endif
 
 CSRCS		=	        \
 		nsZip.c                         \
@@ -41,7 +45,7 @@ CSRCS		=	        \
 		jpermission.c                   \
 		nsUserTarget.c                  \
 		admin.c                         \
-		nsCaps.c			\
+		nsCaps.c                        \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

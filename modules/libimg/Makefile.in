@@ -23,7 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef STANDALONE_IMAGE_LIB
-DIRS = png public src 
+DIRS = png public src
 EXTRA_LIBS = libzlib.a libpng.a
 else
 DIRS = classes public src

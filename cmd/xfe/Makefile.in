@@ -233,7 +233,9 @@ XFE_WIDGETS_LIB		= $(DIST)/lib/libXfeWidgets.a
 XFE_WIDGETS_BM_LIB	= $(DIST)/lib/libXfeBm.a
 
 ifneq ($(OS_ARCH),IRIX) 
+ifneq ($(OS_ARCH),FreeBSD)
 DYNAMIC_SYMBOLS_F	= -rdynamic # default
+endif
 endif
 ifeq ($(OS_ARCH),SunOS) 
 ifdef NS_USE_NATIVE
@@ -241,6 +243,9 @@ DYNAMIC_SYMBOLS_F	= -Bdynamic
 else
 DYNAMIC_SYMBOLS_F	= # nothing for gcc
 endif
+endif
+ifeq ($(OS_ARCH),OSF1)
+DYNAMIC_SYMBOLS_F	=
 endif
 
 ifeq ($(OS_ARCH),AIX)
@@ -318,16 +323,16 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libreg.a \
 		  $(NULL)
 
-ifdef MOZ_NATIVE_PNG
-BASIC_LIBS	+= -lpng
-else
-BASIC_LIBS	+= $(DIST)/lib/libpng.a
-endif
-
 ifdef MOZ_NATIVE_JPEG
 BASIC_LIBS	+= -ljpeg
 else
 BASIC_LIBS	+= $(DIST)/lib/libjpeg.a
+endif
+
+ifdef MOZ_NATIVE_PNG
+BASIC_LIBS	+= -lpng
+else
+BASIC_LIBS	+= $(DIST)/lib/libpng.a
 endif
 
 BASIC_LIBS_2	= \
@@ -337,6 +342,17 @@ BASIC_LIBS_2	= \
 		  $(DIST)/lib/libxpcom.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(NULL)
+
+
+# jwz: link in libmime all the time.
+# but it needs to be before libnetutil, and I don't know how to do that,
+# so just link against libnetutil twice.
+
+BASIC_LIBS	+= \
+		  $(DIST)/lib/libmime.a		\
+		  $(DIST)/lib/libnetutil.a      \
+		  $(NULL)
+
 
 ifdef MOZ_MAIL_NEWS
 ifdef MOZ_SECURITY
@@ -370,8 +386,7 @@ ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libmsg.a \
 		$(NULL)
 endif
-BASIC_LIBS	+= $(DIST)/lib/libmime.a \
-		  $(DIST)/lib/libaddr.a \
+BASIC_LIBS	+= $(DIST)/lib/libaddr.a \
 		  $(DIST)/lib/libneo.a \
 		  $(DIST)/lib/libaddr.a \
 		  $(NULL)
@@ -435,8 +450,6 @@ endif
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libnsn.a \
 		  $(DIST)/lib/libnsc.a \
-		  $(DIST)/lib/libcaps.a \
-		  $(DIST)/lib/libxpcom.a \
 		  $(DIST)/lib/libjpw.a \
 		  $(DIST)/lib/libzpw.a \
 		  $(DIST)/lib/libiawt.a \
@@ -638,16 +651,16 @@ EXPORT_LDFLAGS				=\
 							$(EXPORT_LIB) \
 							$(BASIC_LIBS_2) \
 							$(BASIC_DSOS) \
-							$(OTHER_LIBS) \
-							$(NSPR_LIB)
+							$(NSPR_LIB) \
+							$(OTHER_LIBS)
 
 EXPORT_DYN_MOTIF_LDFLAGS 	=\
 							$(BASIC_LIBS) \
 							$(EXPORT_LIB) \
 							$(BASIC_LIBS_2) \
 							$(BASIC_DSOS) \
-							$(OTHER_DYN_MOTIF_LIBS) \
-							$(NSPR_LIB)
+							$(NSPR_LIB) \
+							$(OTHER_DYN_MOTIF_LIBS)
 
 EXPORT_DEPLIBS				=\
 							$(BASIC_LIBS) \
@@ -691,6 +704,12 @@ OTHER_LIBS	= /usr/X11R6/lib/libXm.a -L/usr/X11R6/lib -lXt -lXmu -lXext -lX11 -lS
 endif
 
 ########################################
+# NetBSD
+ifeq ($(OS_ARCH),NetBSD)
+OTHER_LIBS	= /usr/X11R6/lib/libXm.a -L/usr/X11R6/lib -lXt -lXmu -lXext -lX11 -lSM -lICE -lm $(OS_LIBS)
+endif
+
+########################################
 # BSDI
 ifeq ($(OS_ARCH),BSD_OS)
 OTHER_LIBS	= $(MOTIF)/libXm.a $(LOC_LIB_DIR)/libXt.a $(X11R6LIBS) $(LOC_LIB_DIR)/libXmu.a \
@@ -723,10 +742,6 @@ endif
 HPUX_RESOURCE_HACK	= -Wp,-H16384
 
 OTHER_LIBS	= $(HPUX_XLIBS) -lXm -L$(DIST)/lib -lXmu -lXt -lX11 -lXext $(OS_LIBS)
-
-ifdef NS_USE_GCC
-EXPORT_LDFLAGS        = $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
-endif
 
 ifndef NO_EDITOR
 
@@ -793,6 +808,13 @@ endif
 # Linux
 ifeq ($(OS_ARCH),Linux)
 
+# Override the definition of OS_LIBS in config/Linux.mk.
+ifeq ($(USE_PTHREADS),1)
+OS_LIBS			= -lpthread -lm -ldl -lc
+else
+OS_LIBS			= -lm -ldl
+endif
+
 XFE_MOTIF_LDFLAGS	=\
 					$(MOZILLA_XFE_GLIBC_BROKEN_LOCALE_FLAGS) \
 					$(MOZILLA_XFE_MOTIF_STATIC_FLAGS) \
@@ -810,8 +832,7 @@ XFE_X11_LDFLAGS		=\
 OTHER_LIBS			=\
 					$(XFE_MOTIF_LDFLAGS) \
 					$(XFE_X11_LDFLAGS) \
-					-lm \
-					-ldl
+					$(OS_LIBS)
 
 # Dynamic motif binary
 ifdef MOZILLA_XFE_MOTIF_HAVE_DYNAMIC_LIB
@@ -831,8 +852,7 @@ PLUGIN_DSO	+= $(DIST)/bin/libnullplugin-dynMotif.so
 OTHER_DYN_MOTIF_LIBS =\
 					$(XFE_DYN_MOTIF_LDFLAGS) \
 					$(XFE_X11_LDFLAGS) \
-					-lm \
-					-ldl
+					$(OS_LIBS)
 
 endif
 
@@ -873,8 +893,6 @@ ifeq ($(OS_ARCH),OSF1)
 # the process.
 # 
 OTHER_LIBS	= -lXm -lXmu -lXt -lX11 -lXext -ldnet_stub -lm -lots $(OS_LIBS)
-
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
 
 endif
 
@@ -963,7 +981,7 @@ endif
 
 EXPORT_LDFLAGS	= -z defs -L$(MOTIF)/lib -L$(USRLIBDIR) -R$(MOTIF)/lib \
 		  -R$(USRLIBDIR) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) \
-		  $(BASIC_DSOS) $(OTHER_LIBS) $(NSPR_LIB)
+		  $(BASIC_DSOS) $(NSPR_LIB) $(OTHER_LIBS)
 
 endif
 endif
@@ -982,10 +1000,16 @@ EXPORT_LDFLAGS	+= -lresolv -lsocket -lc /usr/ucblib/libucb.a
 
 endif
 
-#######################################################################
+########################################
+# Data General DG/UX
+ifeq ($(OS_ARCH),dgux)
+
+OTHER_LIBS	= $(MOTIFLIB) $(OS_LIBS)
+
+endif
 
 ifdef USE_AUTOCONF
-OTHER_LIBS      	= $(FE_X_LIBS) $(ACLFLAGS) $(ACLIBS)
+OTHER_LIBS		= $(FE_X_LIBS) $(ACLFLAGS) $(ACLIBS)
 OTHER_DYN_MOTIF_LIBS	= $(FE_X_LIBS) $(ACLFLAGS) $(ACLIBS)
 endif
 
@@ -1026,7 +1050,7 @@ endif
 # Rules to build config*.o files
 
 $(OBJDIR)/$(LITE_PREFIX)config-export.o: config.c versionn.h Makefile $(OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from $(srcdir)/config.c...;			      \
+	@echo Generating $@ from $(srcdir)/config.c...;				      \
 	X=' ';								      \
 	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' $(srcdir)/versionn.h` ; \
 	$(CC) -c $(CFLAGS) -o $@ $(srcdir)/config.c			      \
@@ -1036,7 +1060,7 @@ $(OBJDIR)/$(LITE_PREFIX)config-export.o: config.c versionn.h Makefile $(OBJS) $(
 		-UHAVE_NIS -UFRANCE_VERSION -DEXPORT_VERSION -UUS_VERSION -UVENDOR_ANIM
 
 $(OBJDIR)/$(LITE_PREFIX)config-nis-export.o: config.c versionn.h Makefile $(OBJS) $(NIS_OBJS) $(EXPORT_DEPLIBS)
-	@echo Generating $@ from $(srcdir)/config.c...;			      \
+	@echo Generating $@ from $(srcdir)/config.c...;				      \
 	X=' ';								      \
 	VN=`sed -n$$X 's/^#define VERSION_NUMBER[ 	]*\(.*\)$$/\1/p' $(srcdir)/versionn.h` ; \
 	$(CC) -c $(CFLAGS) -o $@ $(srcdir)/config.c			      \

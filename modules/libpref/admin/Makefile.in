@@ -17,8 +17,8 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -26,7 +26,7 @@ ifdef POLARIS
 SHARED_LIBRARY	= $(OBJDIR)/libAutoAdmin.so
 endif
 
-FEDIR		= $(DEPTH)/cmd/xfe
+XFEDIR		= $(DEPTH)/cmd/xfe
 
 CSRCS		= prefldap.c icondata.c
 
@@ -34,7 +34,7 @@ REQUIRES	= nspr dbm ldap js pref
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(FEDIR)/icons/$(OBJDIR)
+INCLUDES	+= -I$(topsrcdir)/cmd/xfe/icons -I$(DEPTH)/cmd/xfe/icons/$(OBJDIR)
 DEFINES		+= -DPOLARIS
 GARBAGE		+= icondata.c
 
@@ -51,5 +51,5 @@ polaris: $(SHARED_LIBRARY)
 
 icondata.c:
 	@rm -f icondata.c $(NOSUCHFILE)
-	@cd $(FEDIR)/icons; $(MAKE)
-	@ln -s $(FEDIR)/icons/$(OBJDIR)/icondata.c $@
+	@cd $(XFEDIR)/icons; $(MAKE)
+	@ln -s $(XFEDIR)/icons/$(OBJDIR)/icondata.c $@

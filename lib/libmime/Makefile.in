@@ -17,8 +17,8 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -54,10 +54,13 @@ CSRCS		= \
 		  mimetpla.c \
 		  mimetric.c \
 		  mimeunty.c \
-		  mimevcrd.c \
+		  addr.c \
 		  $(NULL)
 
-REQUIRES	= mime nspr dbm img util layer security pref js julian nls
+#		  mimevcrd.c \
+
+
+REQUIRES = mime nspr dbm img util layer security pref js julian nls xp network
 
 include $(topsrcdir)/config/rules.mk
 
@@ -68,56 +71,26 @@ ifdef MOZ_SECURITY
 INCLUDES	+= -I$(DEPTH)/lib/libmime -I$(DIST)/public/security
 endif
 
-INCLUDES	+= -I$(srcdir)/
+INCLUDES 	+= -I$(srcdir)/
+
+DEFINES += -DMOZILLA_30 -DNO_SECURITY
+
 #
 # Building the "mimefilt" executable, which reads a message from stdin and
 # writes HTML to stdout
-#
-LIBMSG_DIR	= ../libmsg
-LIBXP_DIR	= ../xp
-LIBXP_BIN_DIR	= $(LIBXP_DIR)/$(OBJDIR)
-LIBMSG_BIN_DIR	= $(LIBMSG_DIR)/$(OBJDIR)
 
-EXT_OBJECTS	= $(LIBMSG_BIN_DIR)/addr.o \
-		  $(LIBXP_BIN_DIR)/xp_file.o \
-		  $(LIBXP_BIN_DIR)/xp_str.o \
-		  $(LIBXP_BIN_DIR)/xp_intl.o \
-		  $(LIBXP_BIN_DIR)/xp_error.o \
-		  $(LIBXP_BIN_DIR)/xp_trace.o \
-		  $(LIBXP_BIN_DIR)/xp_reg.o \
-		  $(LIBXP_BIN_DIR)/xp_hash.o \
-		  $(LIBXP_BIN_DIR)/xp_list.o \
-		  $(NULL)
+FILT_LIBS=-L$(DIST)/lib -L$(DIST)/bin -li18n -lnetwork -lxp \
+	-lnspr21 -lplc21 -lplds21
 
-FILT_STUBS	= $(EXT_OBJECTS) \
-		  $(LIBXP_BIN_DIR)/allxpstr.o \
-		  $(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libsecmod.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libcert.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libkey.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libhash.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libssl.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libcrypto.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libdbm.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libaddr.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libnspr.$(LIB_SUFFIX) \
-		  $(NULL)
-
-$(EXT_OBJECTS):
-	@cd $(shell dirname $@)/../ ; \
-	$(MAKE_OBJDIR) ; \
-	$(MAKE) $(subst $(LIBXP_BIN_DIR)/,,$(subst $(LIBMSG_BIN_DIR)/,,$@))
-
-$(OBJDIR)/mimefilt: $(FILT_OBJS) $(LIBRARY) $(FILT_STUBS)
+$(OBJDIR)/mimefilt: $(FILT_OBJS) $(LIBRARY)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(CC) -o $@ $(CFLAGS) $(FILT_OBJS) $(LIBRARY) $(FILT_STUBS) $(LDFLAGS)
+	$(CC) -o $@ $(CFLAGS) $(FILT_OBJS) $(LIBRARY) $(FILT_LIBS) $(LDFLAGS)
 
-$(OBJDIR)/mimefilt.pure: $(LIBRARY) $(FILT_OBJS) $(FILT_STUBS)
+$(OBJDIR)/mimefilt.pure: $(LIBRARY) $(FILT_OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(PURIFY) $(CC) -o $@ $(NOMD_CFLAGS) $(FILT_OBJS) $(LIBRARY) $(FILT_STUBS) $(LDFLAGS)
+	$(PURIFY) $(CC) -o $@ $(NOMD_CFLAGS) $(FILT_OBJS) $(LIBRARY) $(FILT_LIBS) $(LDFLAGS)
 
 TAGS:: $(LIB_SRCS) $(FILT_SRCS) $(HEADERS)
 	$(ETAGS) $(LIB_SRCS) $(FILT_SRCS) $(HEADERS)

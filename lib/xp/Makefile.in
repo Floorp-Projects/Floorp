@@ -19,8 +19,8 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -30,7 +30,7 @@ MODULE		= xp
 LIBRARY_NAME	= xp
 
 ifndef MODULAR_NETLIB
-CSRCS	= \
+CSRCS		= \
 		  xp_alloc.c \
 		  xp_cntxt.c \
 		  xp_core.c \
@@ -46,17 +46,22 @@ CSRCS	= \
 		  xp_wrap.c \
 		  xpassert.c \
 		  xplocale.c \
+		  xp_linebuf.c \
 		  $(NULL)
 else
-CSRCS =                  xp_stub.c 
+CSRCS =		  xp_stub.c 
 endif
 
 CSRCS +=          \
-	xp_file.c \
-	xp_list.c \
-	xp_hash.c \
-	allxpstr.c \
-	$(NULL)
+	 	  xp_file.c \
+		  xp_list.c \
+		  xp_hash.c \
+		  allxpstr.c \
+		  $(NULL)
+
+EXPORTS=xp_linebuf.h
+
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf privacy
 
@@ -70,7 +75,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-EMACS		= lemacs
+#EMACS		= lemacs
 
 AUDIO_FILES	= $(wildcard $(srcdir)/*.au)
 GIF_FILES	= $(wildcard $(srcdir)/*.gif)

@@ -19,8 +19,8 @@
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -63,6 +63,7 @@ CSRCS		= autokr.c \
 		  kinsokud.c \
 		  kinsokuf.c \
 		  katakana.c \
+		  vietnam.c \
 		  $(NULL)
 
 REQUIRES	= i18n dbm nspr img util layer pref js

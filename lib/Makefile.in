@@ -19,8 +19,8 @@
 
 DEPTH	= ..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -42,8 +42,10 @@ endif
 
 DIRS	+= libparse xlate xp
 
+DIRS	+= libmime
+
 ifdef MOZ_MAIL_NEWS
-DIRS	+= libaddr libmime
+DIRS	+= libaddr
 endif
 
 DIRS	+= htmldlgs
@@ -66,11 +68,10 @@ DIRS	+= libpwcac
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef USE_AUTOCONF
+
 # This is a kludge so that running "make netscape-us" in this directory
 #   will rebuild the subdirectories, and then relink ../../cmd/xfe/netscape-us
 #
 junk=export libs install
 netscape-us netscape-export nav-us nav-export netscape-us.pure netscape-export.pure: $(junk)
 	cd $(DEPTH)/cmd/xfe; $(MAKE) $@
-endif
