@@ -426,7 +426,9 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
-    if (nsCRT::strcmp(scheme, "file") == 0) {
+    if (nsCRT::strcmp(scheme, "file") == 0 ||
+        nsCRT::strcmp(scheme, "resource") == 0) 
+    {
         PRBool enabled;
         if (NS_FAILED(IsCapabilityEnabled("UniversalFileRead", &enabled)))
             return NS_ERROR_FAILURE;
@@ -456,21 +458,23 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI,
         nsCRT::strcmp(scheme, "mailto")       == 0 ||
         nsCRT::strcmp(scheme, "news")         == 0)
     {
+        // everyone can access these schemes.
         return NS_OK;
     }
+
+    nsXPIDLCString scheme2;
+    if (NS_SUCCEEDED(aFromURI->GetScheme(getter_Copies(scheme2))) &&
+        nsCRT::strcmp(scheme, scheme2) == 0) 
+    {
+        // every scheme can access another URI from the same scheme
+        return NS_OK;
+    }
+
     if (nsCRT::strcmp(scheme, "about") == 0) {
         nsXPIDLCString spec;
         if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
             return NS_ERROR_FAILURE;
         if (nsCRT::strcmp(spec, "about:blank") == 0) {
-            return NS_OK;
-        }
-    }
-    if (nsCRT::strcmp(scheme, "file") == 0) {
-        nsXPIDLCString scheme2;
-        if (NS_SUCCEEDED(aFromURI->GetScheme(getter_Copies(scheme2))) &&
-            nsCRT::strcmp(scheme2, "file") == 0)
-        {
             return NS_OK;
         }
     }
