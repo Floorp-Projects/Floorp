@@ -1,5 +1,0 @@
-# @(#)README	10.2 (Sleepycat) 4/24/98
-
-DB log dump utility.  This utility dumps out a DB log in human readable
-form, a record at a time, to assist in recovery and transaction abort
-debugging.
