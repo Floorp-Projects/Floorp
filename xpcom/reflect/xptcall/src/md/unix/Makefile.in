@@ -180,8 +180,8 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 ifeq ($(OS_TEST),mips)
-CPPSRCS		:= xptcinvoke_mips.cpp xptcstubs_unsupported.cpp
-ASFILES		:= xptcinvoke_asm_mips.s
+CPPSRCS		:= xptcinvoke_mips.cpp xptcstubs_mips.cpp
+ASFILES		:= xptcinvoke_asm_mips.s xptcstubs_asm_mips.s
 #xptcstubs_mips.cpp
 # xptcstubs_asm_mips.s
 ifdef GNU_CC
@@ -279,6 +279,14 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+= -DEXPORT_XPTC_API
 
 INCLUDES	+= -I$(srcdir)/../..
+
+ifeq ($(OS_ARCH),Linux)
+ifeq ($(OS_TEST),mips)
+xptcstubs_asm_mips.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_mips.s.m4
+	m4 $(INCLUDES) $(srcdir)/xptcstubs_asm_mips.s.m4 > ./xptcstubs_asm_mips.s
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(srcdir)/xptcstubs_asm_mips.s
+endif
+endif
 
 ifeq ($(OS_ARCH),IRIX)
 # The assembler on IRIX (6.3 only?) seems to have trouble with the default command,
