@@ -65,6 +65,7 @@ class PythonComponentLoader:
     def __init__(self):
         self.com_modules = {} # Keyed by module's FQN as obtained from nsIFile.path
         self.moduleFactory = module.Module
+        self.num_modules_this_register = 0
 
     def _getCOMModuleForLocation(self, componentFile):
         fqn = componentFile.path
@@ -151,7 +152,7 @@ class PythonComponentLoader:
             return 1
 
         if self.num_modules_this_register == 0:
-            # New conponents may have just installed new Python
+            # New components may have just installed new Python
             # modules into the main python directory (including new .pth files)
             # So we ask Python to re-process our site directory.
             # Note that the pyloader does the equivalent when loading.
