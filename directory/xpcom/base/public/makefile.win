@@ -31,6 +31,8 @@ XPIDLSRCS= .\nsILDAPConnection.idl \
            .\nsILDAPURL.idl        \
            .\nsILDAPMessageListener.idl \
 	   .\nsILDAPErrors.idl \
+!if defined(ENABLE_LDAP_EXPERIMENTAL)
+!endif
            $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -17,6 +17,17 @@
 
 DEPTH=..\..
 
-DIRS=base
+# Note that for the time being "tests" require LDAP Experimental
+#
+DIRS = \
+  base \
+!if defined(ENABLE_LDAP_EXPERIMENTAL)
+  datasource \
+!if !defined(DISABLE_TESTS)
+  tests \
+!endif
+!endif
+  $(NULL)
+
 
 include <$(DEPTH)\config\rules.mak>

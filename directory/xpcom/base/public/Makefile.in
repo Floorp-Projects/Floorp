@@ -41,7 +41,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mozldap
 XPIDL_MODULE	= mozldap
 
-XPIDLSRCS	= 	nsILDAPConnection.idl \
+XPIDLSRCS	= 	\
+			nsILDAPConnection.idl \
 			nsILDAPOperation.idl \
 			nsILDAPMessage.idl \
 			nsILDAPMessageListener.idl \
@@ -49,6 +50,10 @@ XPIDLSRCS	= 	nsILDAPConnection.idl \
 			nsILDAPErrors.idl \
 			$(NULL)
 
+ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
+XPIDLSRCS	+=	\
+			$(NULL)
+endif
 EXPORTS		= \
 		nsLDAP.h \
 		$(NULL)

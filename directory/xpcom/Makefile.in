@@ -38,15 +38,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Note that for the time being "tests" require LDAP Experimental
+#
 DIRS		= \
 		base \
+		$(NULL)
+
+ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
+DIRS		+= \
 		datasource \
 		$(NULL)
 
-# uncomment this once test dir is created and populated
-#
-# ifdef ENABLE_TESTS
-DIRS		+= tests
-# endif
+ifdef ENABLE_TESTS
+DIRS		+= \
+		tests
+endif
+
+endif
 
 include $(topsrcdir)/config/rules.mk

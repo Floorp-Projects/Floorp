@@ -34,31 +34,33 @@
 
 #include "nsLDAPURL.h"
 #include "nsIGenericFactory.h"
-#include "nsLDAPProtocolHandler.h"
-#include "nsLDAPChannel.h"
-#include "nsLDAPService.h"
 #include "nsLDAPConnection.h"
 #include "nsLDAPOperation.h"
 #include "nsLDAPMessage.h"
 
+#ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
+#include "nsLDAPProtocolHandler.h"
+#include "nsLDAPChannel.h"
+#include "nsLDAPService.h"
+#endif
+
 // use the default constructor
 //
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPProtocolHandler);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPService, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPConnection);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPOperation);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPMessage);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPURL);
 
+#ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPProtocolHandler);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPService, Init);
+#endif
+
+
 // a table of the CIDs implemented by this module (in this case, just one)
 //
 static nsModuleComponentInfo components[] =
 {
-    { "LDAP Protocol Handler", NS_LDAPPROTOCOLHANDLER_CID, 
-          NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ldap", 
-          nsLDAPProtocolHandlerConstructor },   
-    { "LDAP Service", NS_LDAPSERVICE_CID, 
-          "@mozilla.org/network/ldap-service;1", nsLDAPServiceConstructor },
     { "LDAP Connection", NS_LDAPCONNECTION_CID,
           "@mozilla.org/network/ldap-connection;1", 
           nsLDAPConnectionConstructor },
@@ -67,6 +69,13 @@ static nsModuleComponentInfo components[] =
           nsLDAPOperationConstructor },
     { "LDAP Message", NS_LDAPMESSAGE_CID,
           "@mozilla.org/network/ldap-message;1", nsLDAPMessageConstructor },
+#ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL    
+    { "LDAP Protocol Handler", NS_LDAPPROTOCOLHANDLER_CID, 
+          NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ldap", 
+          nsLDAPProtocolHandlerConstructor },   
+    { "LDAP Service", NS_LDAPSERVICE_CID, 
+          "@mozilla.org/network/ldap-service;1", nsLDAPServiceConstructor },
+#endif
     { "LDAP URL", NS_LDAPURL_CID,
           "@mozilla.org/network/ldap-url;1", nsLDAPURLConstructor }
 };

@@ -28,15 +28,25 @@ LLIBS = $(LIBNSPR) \
 	$(DIST)\lib\nsldap32v40.lib \
 	$(NULL)
 
-CPP_OBJS = .\$(OBJDIR)\nsLDAPService.obj         \
-           .\$(OBJDIR)\nsLDAPProtocolHandler.obj \
+CPP_OBJS = .\$(OBJDIR)\nsLDAPURL.obj             \
            .\$(OBJDIR)\nsLDAPProtocolModule.obj  \
-           .\$(OBJDIR)\nsLDAPChannel.obj         \
-           .\$(OBJDIR)\nsLDAPURL.obj             \
            .\$(OBJDIR)\nsLDAPMessage.obj         \
-	   .\$(OBJDIR)\nsLDAPConnection.obj      \
+           .\$(OBJDIR)\nsLDAPConnection.obj      \
            .\$(OBJDIR)\nsLDAPOperation.obj       \
+!if defined(ENABLE_LDAP_EXPERIMENTAL)
+           .\$(OBJDIR)\nsLDAPProtocolHandler.obj \
+           .\$(OBJDIR)\nsLDAPChannel.obj         \
+           .\$(OBJDIR)\nsLDAPService.obj         \
+!endif
            $(NULL)
+
+!if defined(ENABLE_LDAP_EXPERIMENTAL)
+DEFINES = -DMOZ_LDAP_XPCOM_EXPERIMENTAL $(DEFINES)
+LCFLAGS = \
+	$(LCFLAGS) \
+	$(DEFINES) \
+	$(NULL)
+!endif
 
 C_OBJS = .\$(OBJDIR)\nsLDAPConnectionCallbacks.obj \
 	 $(NULL)

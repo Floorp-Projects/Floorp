@@ -46,15 +46,23 @@ REQUIRES	= xpcom string necko mime
 
 
 CPPSRCS		= \
-		nsLDAPService.cpp \
-		nsLDAPProtocolHandler.cpp \
 		nsLDAPProtocolModule.cpp \
-		nsLDAPChannel.cpp \
 		nsLDAPMessage.cpp \
 		nsLDAPConnection.cpp \
 		nsLDAPOperation.cpp \
 		nsLDAPURL.cpp \
 		$(NULL)
+
+ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
+DEFINES		+= -DMOZ_LDAP_XPCOM_EXPERIMENTAL
+
+CPPSRCS		+= \
+		nsLDAPProtocolHandler.cpp \
+		nsLDAPChannel.cpp \
+		nsLDAPService.cpp \
+		$(NULL)
+endif
+
 
 CSRCS		= \
 		nsLDAPConnectionCallbacks.c \
