@@ -27,6 +27,7 @@ XPIDL_MODULE=appshell
 
 XPIDLSRCS =                       \
 	nsIFileLocator.idl        \
+	nsIWindowMediator.idl           \
 	$(NULL)
 
 EXPORTS = \
@@ -39,7 +40,6 @@ EXPORTS = \
 	nsFileLocations.h             \
 	nsIDOMXPConnectFactory.h      \
 	nsINetSupportDialogService.h  \
-	nsIWindowMediator.h           \
 	nsISessionHistory.h           \
 	$(NULL)
 
