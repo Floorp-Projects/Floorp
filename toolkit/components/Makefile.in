@@ -60,6 +60,7 @@ DIRS +=	\
 	satchel \
 	typeaheadfind \
 	viewconfig \
+	downloads \
 	$(NULL)
 endif
 
@@ -68,7 +69,6 @@ DIRS += alerts
 endif
 
 DIRS += \
-	downloads \
 	commandlines \
 	startup \
 	build \
