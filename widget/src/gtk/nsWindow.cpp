@@ -29,6 +29,7 @@
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
+#include "nsMenuBar.h"
 
 #include "nsGtkEventHandler.h"
 #include "nsAppShell.h"
@@ -66,6 +67,7 @@ nsWindow::nsWindow():
   mFontMetrics(nsnull),
   mContext(nsnull),
   mWidget(nsnull),
+  mVBox(nsnull),
   mGC(nsnull),
   mEventCallback(nsnull),
   mIgnoreResize(PR_FALSE)
@@ -281,8 +283,12 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     fprintf(stderr, "StandardCreateWindow: creating toplevel\n");
 #endif
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+// VBox for the menu, etc.
+    mVBox = gtk_vbox_new(TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
+
     mWidget = gtk_layout_new(FALSE, FALSE);
-    gtk_container_add(GTK_CONTAINER(mainWindow), mWidget);
+    gtk_box_pack_end(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 5);
   } else {
 #ifdef DEBUG_shaver
     fprintf(stderr, "StandardCreateWindow: creating GtkLayout subarea\n");
@@ -477,6 +483,7 @@ NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
+  NS_NOTYETIMPLEMENTED("nsWindow::GetParent");
   // XXX: Implement this
   return nsnull;
 }
@@ -489,6 +496,7 @@ nsIWidget* nsWindow::GetParent(void)
 //-------------------------------------------------------------------------
 nsIEnumerator* nsWindow::GetChildren()
 {
+  NS_NOTYETIMPLEMENTED("nsWindow::GetChildren");
   //XXX: Implement this
   return nsnull;
 }
@@ -501,6 +509,7 @@ nsIEnumerator* nsWindow::GetChildren()
 //-------------------------------------------------------------------------
 void nsWindow::AddChild(nsIWidget* aChild)
 {
+  NS_NOTYETIMPLEMENTED("nsWindow::AddChild");
   // XXX:Implement this
 }
 
@@ -512,6 +521,7 @@ void nsWindow::AddChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 void nsWindow::RemoveChild(nsIWidget* aChild)
 {
+  NS_NOTYETIMPLEMENTED("nsWindow::RemoveChild");
   // XXX:Implement this
 }
 
@@ -569,6 +579,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
+  NS_NOTYETIMPLEMENTED("nsWindow::Move");
 #if 0
   mBounds.x = aX;
   mBounds.y = aY;
@@ -586,6 +597,7 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+  NS_NOTYETIMPLEMENTED("nsWindow::Resize");
 #if 0
   if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n",
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
@@ -606,6 +618,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+  NS_NOTYETIMPLEMENTED("nsWindow::Resize");
 #if 0
   mBounds.x      = aX;
   mBounds.y      = aY;
@@ -756,6 +769,7 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 {
+  NS_NOTYETIMPLEMENTED("nsWindow::SetFont");
 #if 0
     if (mContext == nsnull) {
       return NS_ERROR_FAILURE;
@@ -1136,6 +1150,10 @@ NS_METHOD nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 {
+// mWidget is *probibly* not the window... we will see
+  char * titleStr = aTitle.ToNewCString();
+  gtk_window_set_title(GTK_WINDOW(mWidget), titleStr);
+  delete[] titleStr;
   return NS_OK;
 }
 
@@ -1543,7 +1561,15 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 {
-  return NS_ERROR_FAILURE;
+  GtkWidget *menubar;
+  void *voidData;
+
+  aMenuBar->GetNativeData(voidData);
+  menubar = GTK_WIDGET(voidData);
+
+  gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 5);
+  printf("adding menu bar (%p) to vbox (%p)\n", menubar, mVBox);
+  return NS_OK;
 }
 
 NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)

@@ -207,6 +207,7 @@ protected:
   PRBool mLowerLeft;
 
   GtkWidget *mWidget;
+  GtkWidget *mVBox;
   GdkGC *mGC;
 
 private:
