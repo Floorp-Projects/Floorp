@@ -765,6 +765,11 @@ embedding/tests/mfcembed/Makefile
 embedding/tests/mfcembed/components/Makefile
 "
 
+MAKEFILES_minimo="
+embedding/minimo/Makefile
+embedding/minimo/chromelite/Makefile
+"
+
 MAKEFILES_psm2="
 security/manager/Makefile
 security/manager/boot/Makefile
@@ -1376,6 +1381,10 @@ fi
 if test -n "$MOZ_PROFILESHARING"; then
     add_makefiles "$MAKEFILES_transmngr"
     add_makefiles "$MAKEFILES_profilesharingsetup"
+fi
+
+if test -n "$MINIMO"; then
+    add_makefiles "$MAKEFILES_minimo"
 fi
 
 else

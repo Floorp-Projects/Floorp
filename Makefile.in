@@ -261,6 +261,10 @@ ifdef MOZ_XUL_APP
 tier_50_dirs	+= toolkit
 endif
 
+ifdef MINIMO
+tier_9_dirs	+= embedding/minimo
+endif
+
 ifdef MOZ_PHOENIX
 # xpfe/components/search depends on nsIBookmarksService.idl
 tier_50_dirs    += browser/components/bookmarks/public
