@@ -154,10 +154,6 @@ protected:
 
     nsresult exportBookmarks(nsISupportsArray *aArguments);
 
-    nsresult ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
-                                       const PRUnichar *iconURL,
-                                       nsIRDFNode** aTarget);
-
     void AnnotateBookmarkSchedule(nsIRDFResource* aSource,
                                   PRBool scheduleFlag);
 

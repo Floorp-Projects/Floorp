@@ -73,6 +73,10 @@ var kDSContractID;
 var kDSIID;
 var DS;
 
+var kIOContractID;
+var kIOIID;
+var IOSVC;
+
 // should be moved in a separate file
 function initServices()
 {
@@ -113,6 +117,9 @@ function initServices()
   kDSIID            = Components.interfaces.nsIDragService;
   DS                = Components.classes[kDSContractID].getService(kDSIID);
 
+  kIOContractID     = "@mozilla.org/network/io-service;1";
+  kIOIID            = Components.interfaces.nsIIOService;
+  IOSVC             = Components.classes[kIOContractID].getService(kIOIID);
 }
 
 function initBMService()
@@ -1351,6 +1358,32 @@ var BookmarksUtils = {
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
                "centerscreen,chrome,dialog,resizable,dependent", aTitle, aURL, null, aCharset,
                null, null, aIsWebPanel);
+  },
+ 
+  loadFavIcon: function (aURL, aFavIconURL) {
+    var urlLiteral = RDF.GetLiteral(aURL);
+    // don't do anything if this URI isn't bookmarked
+    var bmResources = BMSVC.GetSources(RDF.GetResource(NC_NS+"URL"), urlLiteral, true);
+    var toUpdate = 0;
+
+    while (bmResources.hasMoreElements()) {
+      var bmResource = bmResources.getNext();
+ 
+      // don't flag this as needing update if it already has a data: icon url set
+      var oldIcon = BMDS.GetTarget(bmResource, RDF.GetResource(NC_NS+"Icon"), true);
+      if (oldIcon && (oldIcon.QueryInterface(kRDFLITIID).Value.substring(0,5) == "data:"))
+        continue;
+
+      toUpdate++;
+    }
+
+    if (toUpdate == 0)
+      return;
+
+    var chan = IOSVC.newChannel(aFavIconURL, null, null);
+    var listener = new bookmarksFavIconLoadListener (aURL, aFavIconURL, chan);
+    chan.notificationCallbacks = listener;
+    chan.asyncOpen(listener, null);
   }
 }
 
@@ -1610,6 +1643,94 @@ var BookmarkEditMenuTxnListener =
     }
     node.setAttribute("label", transactionLabel);
   }
+}
+
+// favicon loaders
+
+function bookmarksFavIconLoadListener(uri, faviconurl, channel) {
+  this.mURI = uri;
+  this.mFavIconURL = faviconurl;
+  this.mCountRead = 0;
+  this.mChannel = channel;
+}
+
+bookmarksFavIconLoadListener.prototype = {
+  mURI : null,
+  mFavIconURL : null,
+  mCountRead : null,
+  mChannel : null,
+  mBytes : "",
+  mStream : null,
+
+  QueryInterface: function (iid) {
+    if (!iid.equals(Components.interfaces.nsISupports) &&
+        !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
+        !iid.equals(Components.interfaces.nsIRequestObserver) &&
+        !iid.equals(Components.interfaces.nsIHttpEventSink) &&
+        !iid.equals(Components.interfaces.nsIProgressEventSink) && // see below
+        !iid.equals(Components.interfaces.nsIStreamListener)) {
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+    return this;
+  },
+
+  // nsIInterfaceRequestor
+  getInterface: function (iid) {
+    try {
+      return this.QueryInterface(iid);
+    } catch (e) {
+      throw Components.results.NS_NOINTERFACE;
+    }
+  },
+
+  // nsIRequestObserver
+  onStartRequest : function (aRequest, aContext) {
+    this.mStream = Components.classes['@mozilla.org/binaryinputstream;1'].createInstance(Components.interfaces.nsIBinaryInputStream);
+  },
+
+  onStopRequest : function (aRequest, aContext, aStatusCode) {
+    var httpChannel = this.mChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
+    if ((httpChannel && httpChannel.requestSucceeded) &&
+        Components.isSuccessCode(aStatusCode) &&
+        this.mCountRead > 0)
+    {
+      var dataurl;
+      // XXX - arbitrary size beyond which we won't store a favicon.  This is /extremely/
+      // generous, and is probably too high.
+      if (this.mCountRead > 16384) {
+        dataurl = "data:";      // hack meaning "pretend this doesn't exist"
+      } else {
+        // build a data URL for the favicon
+        // we can't really trust contentType, but then, the image loader doesn't
+        // trust it either.
+        dataurl = "data:" + this.mChannel.contentType + ";base64," + btoa(this.mBytes);
+      }
+      BMSVC.updateBookmarkIcon(this.mURI, dataurl);
+    }
+
+    this.mChannel = null;
+  },
+
+  // nsIStreamObserver
+  onDataAvailable : function (aRequest, aContext, aInputStream, aOffset, aCount) {
+    // we could get a different aInputStream, so we don't save this;
+    // it's unlikely we'll get more than one onDataAvailable for a
+    // favicon anyway
+    this.mStream.setInputStream(aInputStream);
+    this.mBytes += this.mStream.readBytes(aCount);
+    this.mCountRead += aCount;
+  },
+
+  // nsIHttpEventSink
+  onRedirect : function (aHttpChannel, aNewChannel) {
+    this.mChannel = aNewChannel;
+  },
+
+  // nsIProgressEventSink: the only reason we support
+  // nsIProgressEventSink is to shut up a whole slew of xpconnect
+  // warnings in debug builds.  (see bug #253127)
+  onProgress : function (aRequest, aContext, aProgress, aProgressMax) { },
+  onStatus : function (aRequest, aContext, aStatus, aStatusArg) { }
 }
 
 #ifdef 0

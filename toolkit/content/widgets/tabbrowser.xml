@@ -477,7 +477,7 @@
                   p.onSecurityChange(webProgress, null, securityUI.state);
                 var listener = this.mTabListeners[this.mPanelContainer.selectedIndex];
                 if (listener.mIcon)
-                  p.onLinkIconAvailable(listener.mIcon);
+                  p.onLinkIconAvailable(newBrowser, listener.mIcon);
               }
             }
             this.mCurrentBrowser.userTypedClear = userTypedClear;
@@ -579,10 +579,11 @@
             if (!href)
               return;
 
+            const nsIContentPolicy = Components.interfaces.nsIContentPolicy;
             try {
               var contentPolicy =
                 Components.classes['@mozilla.org/layout/content-policy;1']
-                          .getService(Components.interfaces.nsIContentPolicy);
+                          .getService(nsIContentPolicy);
             } catch(e) {
               return; // Refuse to load if we can't do a security check.
             }
@@ -615,40 +616,42 @@
               return;
             }
 
-            var notifyListeners = true;
-            var i;
-
             // Security says okay, now ask content policy
-            if (tabBrowser.mTabbedMode) {
-              // We need to update a tab.
-              for (i = 0; i < this.childNodes.length; i++) {
-                if (this.childNodes[i].contentDocument == event.target.ownerDocument) {
-                  if (contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.TYPE_IMAGE,
-                                               uri, origURI, event.target,
-                                               safeGetProperty(event.target, "type"),
-                                               null) != Components.interfaces.nsIContentPolicy.ACCEPT)
-                    return;
-
-                  var listener = tabBrowser.mTabListeners[i];
-                  listener.mIcon = href;
-                  break;
-                }
-              }
-
-              notifyListeners = (this.childNodes[i] == tabBrowser.mCurrentBrowser);
-            }
-            else if ((this.contentDocument != safeGetProperty(event.originalTarget, "ownerDocument")) ||
-                     (contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.TYPE_IMAGE,
-                                               uri, origURI, event.target,
-                                               safeGetProperty(event.target, "type"),
-                                               null) != Components.interfaces.nsIContentPolicy.ACCEPT))
+            if (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
+                                         uri, origURI, event.target,
+                                         safeGetProperty(event.target, "type"),
+                                         null) != nsIContentPolicy.ACCEPT)
               return;
 
-            if (notifyListeners && tabBrowser.mProgressListeners) {
+            // var browserIndex = tabBrowser.getBrowserIndexForDocument(targetDoc);
+            var browserIndex = -1;
+            if (tabBrowser.mTabbedMode) {
+                for (var i = 0; i < tabBrowser.mPanelContainer.childNodes.length; i++) {
+                    if (tabBrowser.mPanelContainer.childNodes[i].contentDocument == targetDoc) {
+                        browserIndex = i;
+                        break;
+                    }
+                }
+            } else {
+                if (tabBrowser.mCurrentBrowser.contentDocument == targetDoc)
+                    browserIndex = 0;
+            }
+
+            // no browser? no favicon.
+            if (browserIndex == -1)
+              return;
+
+            var listener = tabBrowser.mTabListeners[browserIndex];
+            // there's no tab listener for non-tabbed mode browser 0
+            if (listener)
+              listener.mIcon = href;
+
+            if (tabBrowser.mProgressListeners) {
+              var targetBrowser = tabBrowser.mTabbedMode ? tabBrowser.mPanelContainer.childNodes[i] : tabBrowser.mCurrentBrowser;
               for (i = 0; i < tabBrowser.mProgressListeners.length; i++) {
                 var p = tabBrowser.mProgressListeners[i];
                 if (p)
-                  p.onLinkIconAvailable(href);
+                  p.onLinkIconAvailable(targetBrowser, href);
               }
             }
           ]]>

@@ -28,6 +28,7 @@
  *   Pierre Chanial           <chanial@noos.fr>
  *   Jan Varga                <varga@nixcorp.com>
  *   Benjamin Smedberg        <bsmedberg@covad.net>
+ *   Vladimir Vukicevic       <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -57,6 +58,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFXMLSerializer.h"
 #include "nsIRDFXMLSource.h"
+#include "nsIRDFPropagatableDataSource.h"
 #include "nsRDFCID.h"
 #include "nsISupportsPrimitives.h"
 #include "rdf.h"
@@ -2862,7 +2864,7 @@ nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *aIconU
         return rv;
 
     nsCOMPtr<nsISimpleEnumerator> bookmarks;
-    rv = GetSources(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmarks));
+    rv = mInner->GetSources(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmarks));
     if (NS_FAILED(rv))
         return rv;
 
@@ -2877,15 +2879,38 @@ nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *aIconU
         nsCOMPtr<nsIRDFResource> bookmark = do_QueryInterface(supports);
         if (bookmark) {
             nsCOMPtr<nsIRDFNode> iconNode;
-            rv = ProcessCachedBookmarkIcon(bookmark, aIconURL,
-                                           getter_AddRefs(iconNode));
+            rv = mInner->GetTarget(bookmark, kNC_Icon, PR_TRUE, getter_AddRefs(iconNode));
+            if (NS_SUCCEEDED(rv) && rv != NS_RDF_NO_VALUE) {
+                (void) mInner->Unassert(bookmark, kNC_Icon, iconNode);
+            }
+
+            // create a new literal for the url
+            nsCOMPtr<nsIRDFLiteral> urlLiteral;
+            rv = gRDF->GetLiteral(aIconURL, getter_AddRefs(urlLiteral));
             if (NS_FAILED(rv))
                 return rv;
 
-            if (iconNode) {
-                // Yes, that's right. Fake out RDF observers.
-                (void)OnAssert(this, bookmark, kNC_Icon, iconNode);
+            if (nsDependentString(aIconURL).Equals(NS_LITERAL_STRING("data:"))) {
+                // if it's just "data:", then don't send notifications, otherwise
+                // things will update with a null icon
+                nsCOMPtr<nsIRDFPropagatableDataSource> propDS = do_QueryInterface(mInner);
+                PRBool oldPropChanges = PR_TRUE;
+                if (propDS) {
+                    (void) propDS->GetPropagateChanges(&oldPropChanges);
+                    (void) propDS->SetPropagateChanges(PR_FALSE);
+                }
+
+                rv = mInner->Assert(bookmark, kNC_Icon, urlLiteral, PR_TRUE);
+
+                if (propDS)
+                    (void) propDS->SetPropagateChanges(oldPropChanges);
+            } else {
+                rv = mInner->Assert(bookmark, kNC_Icon, urlLiteral, PR_TRUE);
             }
+            if (NS_FAILED(rv))
+                return rv;
+
+            mDirty = PR_TRUE;
         }
     }
 
@@ -2893,7 +2918,7 @@ nsBookmarksService::UpdateBookmarkIcon(const char *aURL, const PRUnichar *aIconU
 }
 
 NS_IMETHODIMP
-nsBookmarksService::RemoveBookmarkIcon(const char *aURL, const PRUnichar *aIconURL)
+nsBookmarksService::RemoveBookmarkIcon(const char *aURL)
 {
     nsCOMPtr<nsIRDFLiteral> urlLiteral;
     nsresult rv = gRDF->GetLiteral(NS_ConvertUTF8toUCS2(aURL).get(),
@@ -2902,7 +2927,7 @@ nsBookmarksService::RemoveBookmarkIcon(const char *aURL, const PRUnichar *aIconU
         return rv;
 
     nsCOMPtr<nsISimpleEnumerator> bookmarks;
-    rv = GetSources(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmarks));
+    rv = mInner->GetSources(kNC_URL, urlLiteral, PR_TRUE, getter_AddRefs(bookmarks));
     if (NS_FAILED(rv))
         return rv;
 
@@ -2916,19 +2941,28 @@ nsBookmarksService::RemoveBookmarkIcon(const char *aURL, const PRUnichar *aIconU
 
         nsCOMPtr<nsIRDFResource> bookmark = do_QueryInterface(supports);
         if (bookmark) {
-            nsCOMPtr<nsIRDFLiteral> iconLiteral;
-            rv = gRDF->GetLiteral(aIconURL, getter_AddRefs(iconLiteral));
-            if (NS_FAILED(rv)) 
+            nsCOMPtr<nsISimpleEnumerator> iconEnumerator;
+            rv = mInner->GetTargets(bookmark, kNC_Icon, PR_TRUE, getter_AddRefs(iconEnumerator));
+            if (NS_FAILED(rv))
                 return rv;
 
-            PRBool hasThisIconURL = PR_FALSE;
-            rv = mInner->HasAssertion(bookmark, kNC_Icon, iconLiteral, PR_TRUE,
-                                      &hasThisIconURL);
-            if (NS_FAILED(rv)) 
+            PRBool hasMore = PR_FALSE;
+            rv = iconEnumerator->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv))
                 return rv;
+            while (hasMore) {
+                nsCOMPtr<nsISupports> supports;
+                rv = iconEnumerator->GetNext(getter_AddRefs(supports));
+                if (NS_FAILED(rv))
+                    return rv;
 
-            if (hasThisIconURL) {
-                (void)mInner->Unassert(bookmark, kNC_Icon, iconLiteral);
+                nsCOMPtr<nsIRDFNode> targetNode = do_QueryInterface(supports);
+                if (targetNode)
+                    (void)mInner->Unassert(bookmark, kNC_Icon, targetNode);
+
+                rv = iconEnumerator->HasMoreElements(&hasMore);
+                if (NS_FAILED(rv))
+                    return rv;
             }
         }
     }
@@ -3401,8 +3435,47 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
     }
     else if (aProperty == kNC_Icon)
     {
-        rv = ProcessCachedBookmarkIcon(aSource, nsnull, aTarget);
-        return rv;
+        if (!mBrowserIcons) {
+            // if the user has favicons turned off, don't return anything
+            return NS_RDF_NO_VALUE;
+        } else {
+            // the user doesn't have favicons turned off, but might have
+            // old non-data URLs for icons.  We only want to return the
+            // value if it's a data url.
+            rv = mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
+            if (NS_FAILED(rv) || rv == NS_RDF_NO_VALUE)
+                return rv;
+
+            nsCOMPtr<nsIRDFLiteral> iconLiteral = do_QueryInterface(*aTarget);
+            if (!iconLiteral) {
+                // erm, shouldn't happen
+                aTarget = nsnull;
+                return NS_RDF_NO_VALUE;
+            }
+
+            const PRUnichar *url = nsnull;
+            iconLiteral->GetValueConst(&url);
+            nsDependentString urlStr(url);
+
+            // if it's a data: url, all is well
+            if (Substring(urlStr, 0, 5).Equals(NS_LITERAL_STRING("data:"))) {
+                // XXX hack warning!  Sometimes we want to indicate that a site
+                // should have no favicon even though it wants to feed us goop.
+                // To avoid reloading said goop each time, we stick in a URL
+                // consisting of purely "data:".  So, if that's what we have,
+                // we pretend it has no icon.
+                if (urlStr.Length() == 5) {
+                    aTarget = nsnull;
+                    return NS_RDF_NO_VALUE;
+                }
+
+                return NS_OK;
+            }
+
+            // no data:? no icon!
+            aTarget = nsnull;
+            return NS_RDF_NO_VALUE;
+        }
     }
 
     rv = mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
@@ -3431,138 +3504,14 @@ nsBookmarksService::GetTargets(nsIRDFResource* aSource,
     return GetLastModifiedFolders(aTargets);
   }
 
+  if ((aProperty == kNC_Icon) && !mBrowserIcons) {
+    // if the user has favicons turned off, don't return anything
+    return NS_NewEmptyEnumerator(aTargets);
+  }
+
+
   return mInner->GetTargets(aSource, aProperty, aTruthValue, aTargets);
 
-}
-
-nsresult
-nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
-                                              const PRUnichar *iconURL, nsIRDFNode** aTarget)
-{
-    *aTarget = nsnull;
-
-    if (!mBrowserIcons)
-    {
-        return NS_RDF_NO_VALUE;
-    }
-
-    // if it is in fact a bookmark or favorite (but NOT a folder, or a separator, etc)...
-
-    nsCOMPtr<nsIRDFNode> nodeType;
-    GetSynthesizedType(aSource, getter_AddRefs(nodeType));
-    if ((nodeType != kNC_Bookmark) && (nodeType != kNC_IEFavorite))
-    {
-        return NS_RDF_NO_VALUE;
-    }
-
-    nsresult rv;
-    nsCAutoString path;
-    nsCOMPtr<nsIRDFNode>    oldIconNode;
-
-    // if we have a new icon URL, save it away into our internal graph
-    if (iconURL)
-    {
-        path.AssignWithConversion(iconURL);
-
-        nsCOMPtr<nsIRDFLiteral> iconLiteral;
-        if (NS_FAILED(rv = gRDF->GetLiteral(iconURL, getter_AddRefs(iconLiteral))))
-        {
-            return rv;
-        }
-
-        rv = mInner->GetTarget(aSource, kNC_Icon, PR_TRUE, getter_AddRefs(oldIconNode));
-        if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE) && (oldIconNode))
-        {
-            (void)mInner->Unassert(aSource, kNC_Icon, oldIconNode);
-        }
-        (void)mInner->Assert(aSource, kNC_Icon, iconLiteral, PR_TRUE);
-    }
-    else
-    {
-        // otherwise, just check and see if we have an internal icon reference
-        rv = mInner->GetTarget(aSource, kNC_Icon, PR_TRUE, getter_AddRefs(oldIconNode));
-    }
-    
-    if (oldIconNode)
-    {
-        nsCOMPtr<nsIRDFLiteral> tempLiteral = do_QueryInterface(oldIconNode);
-        if (tempLiteral)
-        {
-            const PRUnichar *uni = nsnull;
-            tempLiteral->GetValueConst(&uni);
-            if (uni)    path.AssignWithConversion(uni);
-        }
-    }
-
-    // if no internal icon reference, try and synthesize a URL
-    if (path.IsEmpty())
-    {
-        const char  *uri;
-        if (NS_FAILED(rv = aSource->GetValueConst( &uri )))
-        {
-            return rv;
-        }
-
-        nsCOMPtr<nsIURI>    nsURI;
-        if (NS_FAILED(rv = mNetService->NewURI(nsDependentCString(uri), nsnull, nsnull, getter_AddRefs(nsURI))))
-        {
-            return rv;
-        }
-        
-        // only allow http/https URLs for favicon
-        PRBool  isHTTP = PR_FALSE;
-        nsURI->SchemeIs("http", &isHTTP);
-        if (!isHTTP)
-        {
-            nsURI->SchemeIs("https", &isHTTP);
-        }
-        if (!isHTTP)
-        {
-            return NS_RDF_NO_VALUE;
-        }
-
-        nsCAutoString prePath;
-        if (NS_FAILED(rv = nsURI->GetPrePath(prePath)))
-        {
-            return rv;
-        }
-        path.Assign(prePath);
-        path.Append("/favicon.ico");
-    }
-
-    // only return favicon reference if its in the cache
-    // (that is, never go out onto the net)
-    if (!mCacheSession)
-    {
-        return NS_RDF_NO_VALUE;
-    }
-    nsCOMPtr<nsICacheEntryDescriptor> entry;
-    rv = mCacheSession->OpenCacheEntry(path.get(), nsICache::ACCESS_READ,
-                                       nsICache::NON_BLOCKING, getter_AddRefs(entry));
-    if (NS_FAILED(rv) || (!entry))
-    {
-        return NS_RDF_NO_VALUE;
-    }
-    if (entry) 
-    {
-        PRUint32 expTime;
-        entry->GetExpirationTime(&expTime);
-        if (expTime != PR_UINT32_MAX)
-            entry->SetExpirationTime(PR_UINT32_MAX);
-    }
-    entry->Close();
-
-    // ok, have a cached icon entry, so return the URL's associated favicon
-    nsAutoString litStr;
-    litStr.AssignWithConversion(path.get());
-    nsCOMPtr<nsIRDFLiteral> literal;
-    if (NS_FAILED(rv = gRDF->GetLiteral(litStr.get(), getter_AddRefs(literal))))
-    {
-        return rv;
-    }
-    *aTarget = literal;
-    NS_IF_ADDREF(*aTarget);
-    return NS_OK;
 }
 
 void
