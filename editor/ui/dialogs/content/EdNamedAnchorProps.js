@@ -2,7 +2,8 @@
 var editorShell;
 var insertNew = true;
 var inserted = false;
-var tagname = "TAG NAME"
+var tagName = "anchor"
+var anchorElement = null;
 
 // dialog initialization code
 function Startup()
@@ -20,58 +21,66 @@ function Startup()
   // Create dialog object to store controls for easy access
   dialog = new Object;
   // GET EACH CONTROL -- E.G.:
-  //dialog.editBox = document.getElementById("editBox");
+  dialog.nameInput = document.getElementById("name");
 
-  initDialog();
-  
-  // SET FOCUS TO FIRST CONTROL
-  //dialog.editBox.focus();
-}
-
-function initDialog() {
   // Get a single selected element of the desired type
-  element = editorShell.GetSelectedElement(tagName);
+  anchorElement = editorShell.GetSelectedElement(tagName);
 
-  if (element) {
+  if (anchorElement) {
     // We found an element and don't need to insert one
     insertNew = false;
-    dump("Found existing image\n");
+    dump("Found existing anchor\n");
+    dialog.nameInput.value = anchorElement.getAttribute("name");
   } else {
     insertNew = true;
     // We don't have an element selected, 
     //  so create one with default attributes
     dump("Element not selected - calling createElementWithDefaults\n");
-    element = appCore.createElementWithDefaults(tagName);
+    anchorElement = editorShell.CreateElementWithDefaults(tagName);
+    // Use the current selection as suggested name
+    name = editorShell.selectionAsText;
+    // Get 40 characters of the selected text and don't add "..."
+    name = TruncateStringAtWordEnd(name, 40, false);
+    // Replace whitespace with "_"
+    name = ReplaceWhitespace(name, "_");
+    dialog.nameInput.value = name;
   }
 
-  if(!element)
+  if(!anchorElement)
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
   }
-}
-function CreatePixelOrPercentMenu()
-{
-  dump("Creating PixelOrPercent popup menu\n");
+  
+  dialog.nameInput.focus();
 }
 
 function onOK()
 {
-// Set attribute example:
-//  imageElement.setAttribute("src",dialog.srcInput.value);
-  if (insertNew) {
-    editorShell.InsertElement(element, true);
-    // Select the newly-inserted image
-    editorShell.SelectElement(element);
-    // Mark that we inserted so we can collapse the selection
-    //  when dialog closes
-    inserted = true;
-  }
+  name = dialog.nameInput.value;
+  name = TrimString(name);
+  if (name.length == 0) {
+    dump("EMPTY ANCHOR STRING\n");
+    //TODO: POPUP ERROR DIALOG HERE
+  } else {
+    // Replace spaces with "_" else it causes trouble in URL parsing
+    name = ReplaceWhitespace(name, "_");
+    imageElement.setAttribute("name",name);
+    if (insertNew) {
+      // Don't delete selected text when inserting
+      editorShell.InsertElement(element, false);
+      // Select the newly-inserted image
+      editorShell.SelectElement(element);
+      // Mark that we inserted so we can collapse the selection
+      //  when dialog closes
+      inserted = true;
+    }
 
-  if (inserted) {
-    // We selected the object, undo it by
-    //  setting caret to just after the inserted element
-    editorShell.SetSelectionAfterElement(imageElement);
+    if (inserted) {
+      // We selected the object, undo it by
+      //  setting caret to just after the inserted element
+      editorShell.SetSelectionAfterElement(imageElement);
+    }
+    window.close();
   }
-  window.close();
 }

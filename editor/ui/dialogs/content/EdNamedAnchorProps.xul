@@ -2,11 +2,12 @@
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window>
-<!-- dialog containing a control requiring initial setup -->
-<xul:window width="260" height="140" title="Target Properties"
+<xul:window class="dialog" title="Target Properties"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
-    onload = "Startup()">
+    onload = "Startup()"
+    width="260" height="140"
+    align="vertical" flex="100%">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
@@ -15,25 +16,30 @@
   </script>
 
   <xul:broadcaster id="args" value=""/>
-
+  <div flex="100%">
   <table>
     <tr>
       <td>
-        Enter a name for this target:<br/>
+        <div class="spacedtext">
+        Enter a name for this target:
+        </div>
         <input type="text" id="name" size="30"/>
       </td>
     </tr>
     <tr>
-    <!-- THIS SHOULD BE A XUL FRAGMENT -->
-    <td  align = "right">
-      <hr width="100%"/>
-      <xul:box align="horizontal" id="status-bar" width="100%">
-        <button class="spaced" id="Advanced" onclick="onAdvanced()">Advanced Attributes</button>
-		    <xul:spring flex="100%"/>
-        <button class="spaced" id="OK" onclick="onOK()">OK</button>  
-        <button class="spaced" id="Cancel" onclick="onCancel()">Cancel</button>
-      </xul:box>
-    </td>
-  </tr>
-</table>
+      <!-- THIS SHOULD BE A XUL FRAGMENT -->
+      <td  align = "right">
+        <hr width="100%"/>
+        <!-- This box doesn't work inside a table cell,
+             but putting outside the table is real wacked -->
+        <xul:box align="horizontal" width="100%">
+          <button class="spaced" id="Advanced" onclick="onAdvanced()">More Attributes...</button>
+		      <xul:spring flex="100%"/>
+          <button class="spaced" id="OK" onclick="onOK()">OK</button>  
+          <button class="spaced" id="Cancel" onclick="onCancel()">Cancel</button>
+        </xul:box>
+      </td>
+    </tr>
+  </table>
+  </div>
 </xul:window>

@@ -469,13 +469,13 @@
 </popup>
 
 <popup id="AlignmentWindow" oncreate="OnCreateAlignmentPopup()">
-   <window class="popup" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="75" height="100">
-<!--  <box align="vertical" style="width: 100%; height: 100%"> -->
+   <window class="popup" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" align="vertical" width="80" height="100">
+     <html:div flex="100%">
      <titledbutton class="AlignButton" id="LeftAlign" value="Left" align="right" onclick="opener.EditorAlign('left'); window.close();"/><html:br/>
      <titledbutton class="AlignButton" id="CenterAlign" value="Center" align="right" onclick="opener.EditorAlign('center'); window.close();"/><html:br/>
      <titledbutton class="AlignButton" id="RightAlign" value="Right"  align="right" onclick="opener.EditorAlign('right'); window.close();"/><html:br/>
      <titledbutton class="AlignButton" id="JustifyAlign" value="Justify"  align="right" onclick="opener.EditorAlign('justify'); window.close();"/><html:br/>
-<!--   </box> -->
+     </html:div>
    </window>
 </popup>
 

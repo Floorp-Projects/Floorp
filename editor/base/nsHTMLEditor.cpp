@@ -1954,6 +1954,8 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                     if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                       bNodeFound = PR_TRUE;
                   }
+#if 0
+// Not sure if this kind of logic should be here or in JavaScript
                 } else if (TagName == "href")
                 {
                   // Check for a single image is inside a link
@@ -1989,6 +1991,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                       current = parent;
                     } while (notDone);
                   }
+#endif
                 }
               } else if (TagName == domTagName) { // All other tag names are handled here
                 bNodeFound = PR_TRUE;
@@ -2155,9 +2158,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     nsCOMPtr<nsIDOMSelection>selection;
     res = nsEditor::GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(res) && selection)
-    {
       selection->ClearSelection();    
-    }
   }
   PRBool isInline;
   
@@ -2171,6 +2172,8 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     {
       // The simple case of an inline node
       res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
+      if( NS_SUCCEEDED(res))
+        SetCaretAfterElement(aElement);
     }
   }
   return res;

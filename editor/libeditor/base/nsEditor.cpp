@@ -4439,6 +4439,14 @@ nsresult nsEditor::EndUpdateViewBatch()
   return NS_OK;
 }
 
+#if 0
+nsresult nsEditor::OpenDialog(const nsString &url)
+{
+  // Get the content window as the parent for the dialog
+  //nsWebShellWindow that lets you retrieve this.  GetContentWebShell 
+}
+#endif
+
 /******************************************************************************
  * nsAutoSelectionReset
  *****************************************************************************/

@@ -6,7 +6,7 @@
 <xul:window width="320" height="255" title="Insert HTML"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
-    onload = "Startup()">
+    onload = "Startup()" align="vertical" flex="100%">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
@@ -15,7 +15,7 @@
   </script>
 
   <xul:broadcaster id="args" value=""/>
-
+<div flex="100%>
   <table>
     <tr>
       <td>
@@ -35,4 +35,5 @@
       </td>
     </tr>
   </table>
+</div>
 </xul:window>

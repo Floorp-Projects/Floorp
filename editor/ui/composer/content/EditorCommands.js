@@ -54,12 +54,9 @@ function EditorStartup(editorType)
   SetupToolbarElements();
 
   // Set focus to the edit window
-  // (A bug currently prevents this from working,
-  //  the actual edit window is a child of the webshell window 
-  //  designated as the contentWindow)
-  dump("Setting focus to content window\n");
+  // This still doesn't work!
+  // It works after using a toolbar button, however!
   contentWindow.focus();
-  window.frames[0].focus();
 }
 
 function SetupToolbarElements()

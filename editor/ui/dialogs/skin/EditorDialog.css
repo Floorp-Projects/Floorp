@@ -1,13 +1,4 @@
 /* XUL ELEMENTS */
-window, WINDOW {
-	display: block;
-	width: 100%;
-	background: silver;
-	background-color: #CCCCCC; /* not working on Macintosh */ 
-	padding: 5px;
-  font-family: Sans-Serif;
-  font-size: 8pt;
-}
 
 /* values = margin, padding. Padding doesn't work yet */
 checkbox { margin: 5px 3px }
