@@ -77,6 +77,7 @@
 #include "nsIDOMMenuListener.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
+#include "nsIFocusableContent.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
 #include "nsXULTreeElement.h"
@@ -224,7 +225,8 @@ class RDFElementImpl : public nsIDOMXULElement,
                        public nsIScriptObjectOwner,
                        public nsIJSScriptObject,
                        public nsIStyledContent,
-                       public nsIXMLContent
+                       public nsIXMLContent,
+                       public nsIFocusableContent
 {
 public:
     RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag);
@@ -321,6 +323,10 @@ public:
                                    PRBool aUseCapture);
 
 
+    // nsIFocusableContent interface
+    NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+    NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+
     // nsIJSScriptObject
     virtual PRBool AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
     virtual PRBool DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -365,6 +371,8 @@ public:
     // Helper routine that crawls a parent chain looking for a tree element.
     NS_IMETHOD GetParentTree(nsIDOMXULTreeElement** aTreeElement);
 
+    PRBool IsFocusableContent();
+
 private:
     // pseudo-constants
     static nsrefcnt             gRefCnt;
@@ -383,6 +391,8 @@ private:
     static nsIAtom*             kTreeRowAtom;
     static nsIAtom*             kTreeCellAtom;
     static nsIAtom*             kTreeChildrenAtom;
+
+    static nsIAtom*             kTitledButtonAtom;
 
     static nsIAtom*             kSelectedAtom;
     
@@ -430,6 +440,7 @@ nsIAtom*             RDFElementImpl::kTreeRowAtom;
 nsIAtom*             RDFElementImpl::kTreeCellAtom;
 nsIAtom*             RDFElementImpl::kTreeChildrenAtom;
 nsIAtom*             RDFElementImpl::kSelectedAtom;
+nsIAtom*             RDFElementImpl::kTitledButtonAtom;
 nsIAtom*             RDFElementImpl::kPopupAtom;
 nsIAtom*             RDFElementImpl::kTooltipAtom;
 nsIAtom*             RDFElementImpl::kContextAtom;
@@ -524,6 +535,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kTreeCellAtom    = NS_NewAtom("treecell");
         kTreeChildrenAtom = NS_NewAtom("treechildren");
         kSelectedAtom    = NS_NewAtom("selected");
+        kTitledButtonAtom = NS_NewAtom("titledbutton");
         kPopupAtom       = NS_NewAtom("popup");
         kTooltipAtom     = NS_NewAtom("tooltip");
         kContextAtom     = NS_NewAtom("context");
@@ -606,6 +618,7 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kTreeCellAtom);
         NS_IF_RELEASE(kTreeChildrenAtom);
         NS_IF_RELEASE(kSelectedAtom);
+        NS_IF_RELEASE(kTitledButtonAtom);
         NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kContextAtom);
         NS_IF_RELEASE(kTooltipAtom);
@@ -679,6 +692,11 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
+    }
+    else if (iid.Equals(nsIFocusableContent::GetIID()) &&
+             (mNameSpaceID == kNameSpaceID_XUL) &&
+             IsFocusableContent()) {
+        *result = NS_STATIC_CAST(nsIFocusableContent*, this);
     }
     else if (iid.Equals(nsIDOMXULTreeElement::GetIID()) &&
              (mNameSpaceID == kNameSpaceID_XUL) &&
@@ -3392,4 +3410,36 @@ RDFElementImpl::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
   if (parent)
     return PR_TRUE;
   return PR_FALSE;
+}
+
+// nsIFocusableContent interface and helpers
+NS_IMETHODIMP
+RDFElementImpl::SetFocus(nsIPresContext* aPresContext)
+{
+  nsAutoString disabled;
+  GetAttribute("disabled", disabled);
+  if (disabled == "true")
+    return NS_OK;
+ 
+  nsIEventStateManager* esm;
+  if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
+    
+    esm->SetContentState((nsIStyledContent*)this, NS_EVENT_STATE_FOCUS);
+    NS_RELEASE(esm);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::RemoveFocus(nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+PRBool
+RDFElementImpl::IsFocusableContent()
+{
+  return (mTag == kTitledButtonAtom) || (mTag == kTreeCellAtom) ||
+         (mTag == kTreeAtom);
 }
