@@ -58,8 +58,11 @@ private:
   nsCOMPtr<nsIImage> mImage;
   nsPoint mOffset;
 
-  PRInt32 mTimeout;
+  PRInt32 mTimeout; // -1 means display forever
 
   PRPackedBool mInitalized;   // 8 bits
   gfx_format mFormat;         // 16 bits
+  
+  gfx_color mBackgroundColor;
+  PRInt32   mDisposalMethod;
 };

@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Chris Saari <saari@netscape.com>
  */
 
 #include "nsISupports.idl"
@@ -28,6 +29,8 @@
 %{C++
 #include "nsRect.h"
 %}
+
+interface gfxIImageFrame;
 
 /**
  * gfxIImageFrame interface
@@ -124,6 +127,16 @@ interface gfxIImageFrame : nsISupports
    */
   readonly attribute unsigned long alphaDataLength;
 
+  /* frame disposal method, used only by GIFs. Should probably subclass image frame
+   * and image container for GIFs special needs, but for simplicity it is here for the
+   * moment
+   */
+  attribute long frameDisposalMethod;
+
+  /* frame background color
+   */  
+  attribute gfx_color backgroundColor;
+
   // XXX do we copy here?  lets not...
   void getAlphaData([array, size_is(length)] out PRUint8 bits, out unsigned long length);
 
@@ -133,4 +146,25 @@ interface gfxIImageFrame : nsISupports
   void setAlphaData([array, size_is(length), const] in PRUint8 data,
                     in unsigned long length,
                     in long offset);
+   /**
+   * Lock image pixels before addressing the data directly
+   * @param mask If true, lock the mask bits, else lock image pixels.
+   */
+   void lockImagePixels(in boolean mask);
+   
+   /**
+   * Unlock image pixels
+   * @param mask If true, unlock the mask bits, else unlock image pixels.
+   */
+   void unlockImagePixels(in boolean mask);
+   
+   /**
+   * Blit this frame into another frame. Used for GIF animation compositing
+   * @param mask If true, unlock the mask bits, else unlock image pixels.
+   */
+   void drawTo(in gfxIImageFrame aDst, 
+               in long aDX, 
+               in long aDY, 
+               in long aDWidth, 
+               in long aDHeight);
 };
