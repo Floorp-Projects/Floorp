@@ -23,3 +23,5 @@ Rights Reserved.
 	<!ENTITY emailColumn.label "Email">
 	<!ENTITY workPhoneColumn.label "Work Phone">
 	<!ENTITY organizationColumn.label "Organization">
+        <!ENTITY composeEmail.label "Compose E-mail To...">
+        <!ENTITY composeEmail.accesskey "E">
