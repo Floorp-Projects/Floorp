@@ -20,9 +20,7 @@
 
 #include "xpcprivate.h"
 
-#if !defined(LINUX)
-#error "This code is for Linux x86 only"
-#endif
+#if defined(LINUX)
 
 static nsresult
 PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex, uint32* args)
@@ -125,3 +123,5 @@ nsresult nsXPCWrappedJS::Sentinel##n() \
 }
 
 #include "xpcstubsdef.inc"
+
+#endif
