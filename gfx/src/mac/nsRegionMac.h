@@ -20,6 +20,7 @@
 #define nsRegionMac_h___
 
 #include "nsIRegion.h"
+#include <quickdraw.h>
 
 enum nsRegionType {
   eRegionType_empty,
@@ -54,16 +55,16 @@ public:
   virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure);
 
-  //Region GetXRegion(void);
+  RgnHandle GetRegion(void);
 
 private:
-  //Region    mRegion;
+	RgnHandle			mRegion;
   nsRegionType  mRegionType;
 
-/*private:
+private:
   virtual void SetRegionType();
   virtual void SetRegionEmpty();
-  virtual Region CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);*/
+  virtual RgnHandle CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 
 };
 

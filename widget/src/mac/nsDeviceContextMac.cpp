@@ -26,7 +26,7 @@
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-
+//------------------------------------------------------------------------
 
 nsDeviceContextMac :: nsDeviceContextMac()
 {
@@ -44,16 +44,25 @@ double				pix_inch;
 	
 	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
 	mPixelsToTwips = 1.0f/mTwipsToPixels;
-
+	
+	mDepth = (**thepix).pixelSize;
+	
+	HUnlock((Handle)thegd);
 }
+
+//------------------------------------------------------------------------
 
 nsDeviceContextMac :: ~nsDeviceContextMac()
 {
 }
 
+//------------------------------------------------------------------------
+
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextMac, kDeviceContextIID)
 NS_IMPL_ADDREF(nsDeviceContextMac)
 NS_IMPL_RELEASE(nsDeviceContextMac)
+
+//------------------------------------------------------------------------
 
 nsresult nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 {
@@ -66,6 +75,7 @@ nsresult nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
   return NS_OK;
 }
 
+//------------------------------------------------------------------------
 
 float nsDeviceContextMac :: GetScrollBarWidth() const
 {
@@ -73,25 +83,30 @@ float nsDeviceContextMac :: GetScrollBarWidth() const
   return 240.0;
 }
 
+//------------------------------------------------------------------------
+
 float nsDeviceContextMac :: GetScrollBarHeight() const
 {
   // XXX Should we push this to widget library
   return 240.0;
 }
 
-
+//------------------------------------------------------------------------
 
 nsDrawingSurface nsDeviceContextMac :: GetDrawingSurface(nsIRenderingContext &aContext)
 {
   return aContext.CreateDrawingSurface(nsnull);
 }
 
+//------------------------------------------------------------------------
 
 NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
 {
   aDepth = 24;
   return NS_OK;
 }
+
+//------------------------------------------------------------------------
 
 NS_IMETHODIMP nsDeviceContextMac::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
 {
@@ -101,9 +116,13 @@ NS_IMETHODIMP nsDeviceContextMac::CreateILColorSpace(IL_ColorSpace*& aColorSpace
   return result;
 }
 
+//------------------------------------------------------------------------
 
 NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName)
 {
   return nsnull;
 }
+
+//------------------------------------------------------------------------
+
 
