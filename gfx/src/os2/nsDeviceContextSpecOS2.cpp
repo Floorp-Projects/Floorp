@@ -100,20 +100,26 @@ static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
 void SetupDevModeFromSettings(int printer, nsIPrintSettings* aPrintSettings)
 {
   if (aPrintSettings) {
-    PDJP_ITEM pDJP = new DJP_ITEM;
+    int bufferSize = 3 * sizeof(DJP_ITEM);
+    PBYTE pDJP_Buffer = new BYTE[bufferSize];
+    memset(pDJP_Buffer, 0, bufferSize);
+    PDJP_ITEM pDJP = (PDJP_ITEM) pDJP_Buffer;
+
     HDC hdc = nsDeviceContextSpecOS2::PrnDlg.GetDCHandle(printer);
+    char* driver = nsDeviceContextSpecOS2::PrnDlg.GetDriverType(printer);
 
     // Setup Orientation
     PRInt32 orientation;
     aPrintSettings->GetOrientation(&orientation);
-    pDJP->lType = DJP_CURRENT;
+    if (!strcmp(driver, "LASERJET"))
+      pDJP->lType = DJP_ALL;
+    else
+      pDJP->lType = DJP_CURRENT;
     pDJP->cb = sizeof(DJP_ITEM);
     pDJP->ulNumReturned = 1;
     pDJP->ulProperty = DJP_SJ_ORIENTATION;
     pDJP->ulValue = orientation == nsIPrintSettings::kPortraitOrientation?DJP_ORI_PORTRAIT:DJP_ORI_LANDSCAPE;
-    long rc = GreEscape (hdc, DEVESC_SETJOBPROPERTIES, sizeof (DJP_ITEM),
-                         pDJP, nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer), 
-                         PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+    pDJP++;
 
     // Setup Number of Copies
     PRInt32 copies;
@@ -123,11 +129,19 @@ void SetupDevModeFromSettings(int printer, nsIPrintSettings* aPrintSettings)
     pDJP->ulNumReturned = 1;
     pDJP->ulProperty = DJP_SJ_COPIES;
     pDJP->ulValue = copies;
-    rc = GreEscape (hdc, DEVESC_SETJOBPROPERTIES, sizeof (DJP_ITEM), pDJP,
-                    nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer), 
-                    PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+    pDJP++;
 
-    delete [] pDJP;
+    pDJP->cb = sizeof(DJP_ITEM);
+    pDJP->lType = DJP_NONE;
+    pDJP->ulNumReturned = 1;
+    pDJP->ulProperty = 0;
+    pDJP->ulValue = 0;
+
+    long rc = GreEscape (hdc, DEVESC_SETJOBPROPERTIES, bufferSize, pDJP_Buffer, 
+                         nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer), 
+                         PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+
+    delete [] pDJP_Buffer;
     DevCloseDC(hdc);
   }
 }
@@ -137,7 +151,11 @@ nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* a
   if (aPrintSettings == nsnull)
     return NS_ERROR_FAILURE;
 
-  PDJP_ITEM pDJP = new DJP_ITEM;
+  int bufferSize = 3 * sizeof(DJP_ITEM);
+  PBYTE pDJP_Buffer = new BYTE[bufferSize];
+  memset(pDJP_Buffer, 0, bufferSize);
+  PDJP_ITEM pDJP = (PDJP_ITEM) pDJP_Buffer;
+
   HDC hdc = nsDeviceContextSpecOS2::PrnDlg.GetDCHandle(printer);
   char* driver = nsDeviceContextSpecOS2::PrnDlg.GetDriverType(printer);
 
@@ -147,15 +165,7 @@ nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* a
   pDJP->ulNumReturned = 1;
   pDJP->ulProperty = DJP_SJ_COPIES;
   pDJP->ulValue = 1;
-  long rc = GreEscape(hdc, DEVESC_QUERYJOBPROPERTIES, sizeof(DJP_ITEM), 
-                      pDJP, nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer),
-                      PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
-
-  if ((rc == DEV_OK) || ((rc == DEV_WARNING) && (pDJP->lType > 0))) {
-    if (pDJP->ulProperty == DJP_SJ_COPIES) {
-      aPrintSettings->SetNumCopies(PRInt32(pDJP->ulValue));
-    }
-  }
+  pDJP++;
 
   //Get Orientation from Job Properties
   if (!strcmp(driver, "LASERJET"))
@@ -166,20 +176,35 @@ nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* a
   pDJP->ulNumReturned = 1;
   pDJP->ulProperty = DJP_SJ_ORIENTATION;
   pDJP->ulValue = 1;
-  rc = GreEscape(hdc, DEVESC_QUERYJOBPROPERTIES, sizeof(DJP_ITEM),
-                 pDJP, nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer),
-                 PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+  pDJP++;
 
-  if ((rc == DEV_OK) || ((rc == DEV_WARNING) && (pDJP->lType > 0))) { 
-    if (pDJP->ulProperty == DJP_SJ_ORIENTATION) {
-      if ((pDJP->ulValue == DJP_ORI_PORTRAIT) || (pDJP->ulValue == DJP_ORI_REV_PORTRAIT))
-         aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
-      else
+  pDJP->lType = DJP_NONE;
+  pDJP->cb = sizeof(DJP_ITEM);
+  pDJP->ulNumReturned = 1;
+  pDJP->ulProperty = 0;
+  pDJP->ulValue = 0;
+
+  long rc = GreEscape(hdc, DEVESC_QUERYJOBPROPERTIES, bufferSize, pDJP_Buffer, 
+                      nsDeviceContextSpecOS2::PrnDlg.GetPrintDriverSize(printer),
+                      PBYTE(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(printer)));
+
+  pDJP = (PDJP_ITEM) pDJP_Buffer;
+  if ((rc == DEV_OK) || (rc == DEV_WARNING)) { 
+    while (pDJP->lType != DJP_NONE) {
+      if ((pDJP->ulProperty == DJP_SJ_ORIENTATION) && (pDJP->lType > 0)){
+        if ((pDJP->ulValue == DJP_ORI_PORTRAIT) || (pDJP->ulValue == DJP_ORI_REV_PORTRAIT))
+          aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
+        else
          aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
+      }
+      if ((pDJP->ulProperty == DJP_SJ_COPIES) && (pDJP->lType > 0)){
+        aPrintSettings->SetNumCopies(PRInt32(pDJP->ulValue));
+      }
+      pDJP = DJP_NEXT_STRUCTP(pDJP);
     }
   }
-
-  delete [] pDJP;
+  
+  delete [] pDJP_Buffer;
   DevCloseDC(hdc);  
   return NS_OK;
 }
