@@ -116,9 +116,10 @@ PRInt32 nsOutputStream::write(const void* s, PRInt32 n)
 } // nsOutputStream::write
 
 //----------------------------------------------------------------------------------------
-void nsOutputStream::flush()
+nsresult nsOutputStream::flush()
 //----------------------------------------------------------------------------------------
 {
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------
@@ -363,11 +364,12 @@ void nsOutputFileStream::AssignFrom(nsISupports* stream)
 }
 
 //----------------------------------------------------------------------------------------
-void nsOutputFileStream::flush()
+nsresult nsOutputFileStream::flush()
 //----------------------------------------------------------------------------------------
 {
 	if (mFileOutputStream)
 		mFileOutputStream->Flush();
+    return error();
 }
 
 //----------------------------------------------------------------------------------------
