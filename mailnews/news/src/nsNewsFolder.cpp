@@ -62,6 +62,8 @@
 #include "nsXPIDLString.h"
 
 #include "nsIWalletService.h"
+#include "nsIURL.h"
+#include "nsINntpUrl.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -73,6 +75,7 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 #define PREF_NEWS_MAX_HEADERS_TO_SHOW "news.max_headers_to_show"
 #define PREF_NEWS_ABBREVIATE_PRETTY_NAMES "news.abbreviate_pretty_name"
@@ -1207,6 +1210,43 @@ NS_IMETHODIMP nsMsgNewsFolder::SetGroupPassword(const char *aGroupPassword)
     return NS_OK;    
 }
 
+nsresult nsMsgNewsFolder::CreateNewsgroupUsernameUrlForSignon(const char *inUriStr, char **result)
+{
+    return CreateNewsgroupUrlForSignon(inUriStr, "username", result);
+}
+
+nsresult nsMsgNewsFolder::CreateNewsgroupPasswordUrlForSignon(const char *inUriStr, char **result)
+{
+    return CreateNewsgroupUrlForSignon(inUriStr, "password", result);
+}
+
+nsresult nsMsgNewsFolder::CreateNewsgroupUrlForSignon(const char *inUriStr, const char *ref, char **result)
+{
+    nsresult rv;
+    PRInt32 port = 0;
+    nsXPIDLCString spec;
+
+    nsCOMPtr<nsIURL> url;
+    nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(url));
+
+    rv = url->SetSpec(inUriStr);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = url->GetPort(&port);
+    if (NS_FAILED(rv)) return rv;
+
+    if (port <= 0) {
+        rv = url->SetPort(NEWS_PORT);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = url->SetRef(ref);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = url->GetSpec(result);
+    return rv;
+}
+
 NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
 {
     nsresult rv;
@@ -1216,10 +1256,11 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupUsername()
     rv = SetGroupUsername(nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString signonURI(mURI);
-    signonURI += "#username";
+    nsXPIDLCString signonURL;
+    rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
+    if (NS_FAILED(rv)) return rv;
 
-    rv = walletservice->SI_RemoveUser((const char *)signonURI, PR_FALSE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)signonURL, PR_FALSE, nsnull);
     return rv;
 }
 
@@ -1232,10 +1273,11 @@ NS_IMETHODIMP nsMsgNewsFolder::ForgetGroupPassword()
     rv = SetGroupPassword(nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString signonURI(mURI);
-    signonURI += "#password";
+    nsXPIDLCString signonURL;
+    rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
+    if (NS_FAILED(rv)) return rv;
 
-    rv = walletservice->SI_RemoveUser((const char *)signonURI, PR_FALSE, nsnull);
+    rv = walletservice->SI_RemoveUser((const char *)signonURL, PR_FALSE, nsnull);
     return rv;
 }
 
@@ -1270,10 +1312,11 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
 
             PRBool okayValue = PR_TRUE;
             
-            nsCAutoString signonURI(mURI);
-            signonURI += "#password";
+            nsXPIDLCString signonURL;
+            rv = CreateNewsgroupPasswordUrlForSignon(mURI, getter_Copies(signonURL));
+            if (NS_FAILED(rv)) return rv;
 
-            rv = dialog->PromptPassword((const char *)signonURI, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupPassword), &okayValue);
+            rv = dialog->PromptPassword((const char *)signonURL, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupPassword), &okayValue);
             if (NS_FAILED(rv)) return rv;
 
             if (!okayValue) // if the user pressed cancel, just return NULL;
@@ -1321,10 +1364,11 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
 
             PRBool okayValue = PR_TRUE;
 
-            nsCAutoString signonURI(mURI);
-            signonURI += "#username";
+            nsXPIDLCString signonURL;
+            rv = CreateNewsgroupUsernameUrlForSignon(mURI, getter_Copies(signonURL));
+            if (NS_FAILED(rv)) return rv;
 
-            rv = dialog->Prompt((const char *)signonURI, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupUsername), &okayValue);
+            rv = dialog->Prompt((const char *)signonURL, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniGroupUsername), &okayValue);
             if (NS_FAILED(rv)) return rv;
 
             if (!okayValue) // if the user pressed cancel, just return NULL;

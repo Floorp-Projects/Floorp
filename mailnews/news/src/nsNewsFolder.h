@@ -124,6 +124,11 @@ protected:
 	// used for auth news
  	char 		*mGroupUsername;
 	char		*mGroupPassword;
+
+private:
+    nsresult CreateNewsgroupUsernameUrlForSignon(const char *inUriStr, char **result);
+    nsresult CreateNewsgroupPasswordUrlForSignon(const char *inUriStr, char **result);
+    nsresult CreateNewsgroupUrlForSignon(const char *inUriStr, const char *ref, char **result);
 };
 
 #endif // nsMsgNewsFolder_h__
