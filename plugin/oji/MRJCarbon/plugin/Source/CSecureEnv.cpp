@@ -34,14 +34,6 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-/*
-	CSecureEnv.cpp
-
-	Rewritten for use with MRJ plugin by Patrick C. Beard. Just forwards all
-	calls through the underlying JNIEnv that this wraps. Eventually, it will
-	communicate with the underlying threads using a message queue.
- */	
-
 #include "CSecureEnv.h"
 #include "nsISecurityContext.h"
 
@@ -49,16 +41,23 @@
 #include "MRJSession.h"
 #include "nsIThreadManager.h"
 #include "nsIJVMManager.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
 
 #include "MRJMonitor.h"
 #include "NativeMonitor.h"
 #include "JavaMessageQueue.h"
 
-#if 0
-static NS_DEFINE_IID(kISecureEnvIID, NS_ISECUREENV_IID);
-static NS_DEFINE_IID(kIRunnableIID, NS_IRUNNABLE_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-#endif
+#define PROXY_JNI_CALLS 1
+#define USE_LIVECONNECT_PROXY 1
+#define LOCAL_REFS_ARE_GLOBAL USE_LIVECONNECT_PROXY
+
+inline jobject ToGlobalRef(JNIEnv* env, jobject localRef)
+{
+    jobject globalRef = env->NewGlobalRef(localRef);
+    // env->DeleteLocalRef(localRef);   // not necessary from native methods. done en-masse.
+    return globalRef;
+}
 
 JavaMessageQueue::JavaMessageQueue(Monitor* monitor)
 	:	mFirst(NULL), mLast(NULL), mMonitor(monitor)
@@ -167,6 +166,19 @@ static void netscape_oji_JNIThread_run(JNIEnv* env, jobject self)
 	}
 }
 
+static jclass netscape_oji_JNIRunnable;
+static jmethodID netscape_oji_JNIRunnable_constructorID;
+static jfieldID netscape_oji_JNIRunnable_mJavaMessageID;
+
+static void netscape_oji_JNIRunnable_run(JNIEnv* env, jobject self)
+{
+    JavaMessage* msg = (JavaMessage*) env->GetIntField(self, netscape_oji_JNIRunnable_mJavaMessageID);
+    if (msg) {
+        msg->execute(env);
+        // what about upcalls?
+    }
+}
+
 static bool check_exceptions(JNIEnv* env)
 {
     jthrowable exc = env->ExceptionOccurred();
@@ -211,7 +223,66 @@ static void CreateJNIThread(CSecureEnv* secureEnv)
 				manager->Sleep();
 			}
 		}
+		env->DeleteLocalRef(JNIThreadClass);
 	}
+}
+
+static jobject CreateJNIRunnable(JNIEnv* env, JavaMessage* msg)
+{
+    // XXX:  does this have to be thread safe?
+    if (!netscape_oji_JNIRunnable) {
+    	jclass clazz = env->FindClass("netscape.oji.JNIRunnable");
+    	if (!clazz) return NULL;
+		JNINativeMethod method = { "run", "()V", &netscape_oji_JNIRunnable_run };
+		env->RegisterNatives(clazz, &method, 1);
+		netscape_oji_JNIRunnable_constructorID = env->GetMethodID(clazz, "<init>", "(I)V");
+        netscape_oji_JNIRunnable_mJavaMessageID = env->GetFieldID(clazz, "mJavaMessage", "I");
+		netscape_oji_JNIRunnable = (jclass) env->NewGlobalRef(clazz);
+		env->DeleteLocalRef(clazz);
+    }
+    check_exceptions(env);
+    return env->NewObject(netscape_oji_JNIRunnable, netscape_oji_JNIRunnable_constructorID, msg);
+}
+
+static jclass GetLiveConnectProxy(JNIEnv* env, nsICodebasePrincipal* codebasePrincipal)
+{
+    jclass liveConnectProxy = NULL;
+    jclass netscape_oji_ProxyClassLoaderFactory = env->FindClass("netscape/oji/ProxyClassLoaderFactory");
+    if (netscape_oji_ProxyClassLoaderFactory) {
+        jmethodID createClassLoaderID = env->GetStaticMethodID(netscape_oji_ProxyClassLoaderFactory,
+                                                               "createClassLoader", 
+                                                               "(Ljava/lang/String;)Ljava/lang/ClassLoader;");
+        if (createClassLoaderID) {
+            jstring codebaseUTF = NULL;
+            char* codebase;
+            nsresult rv = codebasePrincipal->GetOrigin(&codebase);
+            if (NS_SUCCEEDED(rv)) {
+                codebaseUTF = env->NewStringUTF(codebase);
+                delete[] codebase;
+            }
+            if (codebaseUTF) {
+                jobject classLoader = env->CallStaticObjectMethod(netscape_oji_ProxyClassLoaderFactory,
+                                                                  createClassLoaderID, codebaseUTF);
+                if (classLoader) {
+                    jclass clazz = env->GetObjectClass(classLoader);
+                    jmethodID loadClassID = env->GetMethodID(clazz, "loadClass",
+                                                             "(Ljava/lang/String;)Ljava/lang/Class;");
+                    if (loadClassID) {
+                        jstring className = env->NewStringUTF("netscape.oji.LiveConnectProxy");
+                        if (className) {
+                            liveConnectProxy = (jclass) env->CallObjectMethod(classLoader, loadClassID, className);
+                            env->DeleteLocalRef(className);
+                        }
+                    }
+                    env->DeleteLocalRef(clazz);
+                }
+                env->DeleteLocalRef(codebaseUTF);
+            }
+        }
+        env->DeleteLocalRef(netscape_oji_ProxyClassLoaderFactory);
+    }
+    check_exceptions(env);
+    return liveConnectProxy;
 }
 
 /**
@@ -319,7 +390,68 @@ NS_IMETHODIMP CSecureEnv::Run()
  */
 void CSecureEnv::sendMessageToJava(JavaMessage* msg)
 {
+#if USE_LIVECONNECT_PROXY
+    JNIEnv* env = mSession->getCurrentEnv();
+    // XXX this needs to be optimized up the wazoo.
+    // somehow, get the associated class loader for the codebase of the currently running
+    // script. doing this here would require us to use lots of unfrozen interfaces.
+    nsresult rv = NS_OK;
+    if (!mScriptSecurityManager) {
+        rv = MRJPlugin::GetService("@mozilla.org/scriptsecuritymanager;1",
+                                   NS_GET_IID(nsIScriptSecurityManager),
+                                   (void**)&mScriptSecurityManager);
+    }
+    // XXX Simple principal caching mechanism. If the principal is the same as
+    // last time, then keep using the same LiveConnect proxy class. This should
+    // be adequate for the simple cases of a single document using LiveConnect.
+    // There should also be some caching going on inside ProxyClassLoaderFactory,
+    // which should return the same class loader for the same URL, until this
+    // prinicipal changes. Idea:  could use a weak reference dictionary that
+    // only holds the class loader while there are other strong references to it.
+    if (NS_SUCCEEDED(rv)) {
+        nsIPrincipal* scriptPrincipal;
+        rv = mScriptSecurityManager->GetSubjectPrincipal(&scriptPrincipal);
+        if (NS_SUCCEEDED(rv)) {
+            if (scriptPrincipal != mScriptPrincipal) {
+                // invalidate our cached LiveConnectProxy class.
+                NS_IF_RELEASE(mScriptPrincipal);
+                mScriptPrincipal = scriptPrincipal;
+                if (mLiveConnectProxy) {
+                    env->DeleteGlobalRef(mLiveConnectProxy);
+                    mLiveConnectProxy = NULL;
+                }
+            }
+            if (!mLiveConnectProxy && scriptPrincipal) {
+                nsICodebasePrincipal* codebasePrincipal;
+                rv = scriptPrincipal->QueryInterface(NS_GET_IID(nsICodebasePrincipal), (void**)&codebasePrincipal);
+                if (NS_SUCCEEDED(rv)) {
+                    jclass liveConnectProxy = GetLiveConnectProxy(env, codebasePrincipal);
+                    NS_RELEASE(codebasePrincipal);
+                    if (liveConnectProxy) {
+                        mLiveConnectProxy = (jclass) env->NewGlobalRef(liveConnectProxy);
+                        env->DeleteLocalRef(liveConnectProxy);
+                    }
+                }
+            }
+        }
+    }
+    if (mLiveConnectProxy) {
+        jobject runnable = CreateJNIRunnable(env, msg);
+        if (runnable) {
+            jmethodID runID = env->GetStaticMethodID(mLiveConnectProxy, "run", "(Ljava/lang/Runnable;)V");
+            if (runID) {
+                env->CallStaticVoidMethod(mLiveConnectProxy, runID, runnable);
+                savePendingException(env);
+            }
+            env->DeleteLocalRef(runnable);
+        }
+    } else {
+        msg->execute(env);
+        savePendingException(env);
+    }
+#else
 	messageLoop(mProxyEnv, msg, mJavaQueue, mNativeQueue, true);
+#endif
 }
 
 /**
@@ -339,23 +471,13 @@ const InterfaceInfo CSecureEnv::sInterfaces[] = {
 };
 const UInt32 CSecureEnv::kInterfaceCount = sizeof(sInterfaces) / sizeof(InterfaceInfo);
 
-///=--------------------------------------------------------------------------=
-// CSecureEnv::CSecureEnv
-///=--------------------------------------------------------------------------=
-// Implements the CSecureJNI object for creating object, invoking method, 
-// getting/setting field in JNI with security context.
-//
-// parameters :
-//
-// return :
-// 
-// notes :
-//
 CSecureEnv::CSecureEnv(MRJPlugin* plugin, JNIEnv* proxyEnv, JNIEnv* javaEnv)
 	:	SupportsMixin(this, sInterfaces, kInterfaceCount),
 		mPlugin(plugin), mProxyEnv(proxyEnv), mJavaEnv(javaEnv),
 		mSession(plugin->getSession()), mThreadManager(plugin->getThreadManager()),
-		mIsRunning(NULL), mJavaQueue(NULL), mNativeQueue(NULL), mPendingException(NULL)
+		mIsRunning(NULL), mJavaQueue(NULL), mNativeQueue(NULL),
+		mPendingException(NULL),
+		mScriptSecurityManager(NULL), mScriptPrincipal(NULL), mLiveConnectProxy(NULL)
 {
 	// need to create the JNIThread for communicating with Java.
 	if (mJavaEnv != NULL)
@@ -365,18 +487,6 @@ CSecureEnv::CSecureEnv(MRJPlugin* plugin, JNIEnv* proxyEnv, JNIEnv* javaEnv)
 }
 
 
-///=--------------------------------------------------------------------------=
-// CSecureEnv::~CSecureEnv
-///=--------------------------------------------------------------------------=
-// Implements the CSecureEnv object for creating object, invoking method, 
-// getting/setting field in JNI with security context.
-//
-// parameters :
-//
-// return :
-// 
-// notes :
-//
 CSecureEnv::~CSecureEnv()  
 {
 	// Tell the Java thread to die.
@@ -384,6 +494,20 @@ CSecureEnv::~CSecureEnv()
 		*mIsRunning = false;
 		mJavaQueue->notify();
 	}
+
+    JNIEnv* env = mSession->getCurrentEnv();
+    if (mPendingException) {
+        env->DeleteGlobalRef(mPendingException);
+        mPendingException = NULL;
+    }
+    
+    if (mLiveConnectProxy) {
+        env->DeleteGlobalRef(mLiveConnectProxy);
+        mLiveConnectProxy = NULL;
+    }
+    
+    NS_IF_RELEASE(mScriptPrincipal);
+    NS_IF_RELEASE(mScriptSecurityManager);
 }
 
 void CSecureEnv::initialize(JNIEnv* javaEnv, jboolean* isRunning, JavaMessageQueue* javaQueue, JavaMessageQueue* nativeQueue)
@@ -418,12 +542,6 @@ CSecureEnv::Create(MRJPlugin* plugin, JNIEnv* proxyEnv, const nsIID& aIID, void*
 	return rv;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// from nsISecureJNI:
-//
-
-#define PROXY_JNI_CALLS 1
-
 ///=--------------------------------------------------------------------------=
 // CSecureEnv::NewObject
 ///=--------------------------------------------------------------------------=
@@ -455,6 +573,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
 		*result = env->NewObjectA(clazz, methodID, args);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -513,6 +634,9 @@ public:
 		switch (return_type) {
 		case jobject_type:
 			result->l = env->CallObjectMethodA(obj, methodID, args);
+#if LOCAL_REFS_ARE_GLOBAL
+            result->l = ToGlobalRef(env, result->l);
+#endif
 			break;
 		case jboolean_type:
 			result->z = env->CallBooleanMethodA(obj, methodID, args);
@@ -636,6 +760,9 @@ public:
 		switch (type) {
 		case jobject_type:
 			result->l = env->CallNonvirtualObjectMethodA(obj, clazz, methodID, args);
+#if LOCAL_REFS_ARE_GLOBAL
+            result->l = ToGlobalRef(env, result->l);
+#endif
 			break;
 		case jboolean_type:
 			result->z = env->CallNonvirtualBooleanMethodA(obj, clazz, methodID, args);
@@ -722,6 +849,9 @@ public:
 		switch (type) {
 		case jobject_type:
 			result->l = env->GetObjectField(obj, fieldID);
+#if LOCAL_REFS_ARE_GLOBAL
+            result->l = ToGlobalRef(env, result->l);
+#endif
 			break;
 		case jboolean_type:
 			result->z = env->GetBooleanField(obj, fieldID);
@@ -945,6 +1075,9 @@ public:
 		switch (type) {
 		case jobject_type:
 			result->l = env->CallStaticObjectMethodA(clazz, methodID, args);
+#if LOCAL_REFS_ARE_GLOBAL
+            result->l = ToGlobalRef(env, result->l);
+#endif
 			break;
 		case jboolean_type:
 			result->z = env->CallStaticBooleanMethodA(clazz, methodID, args);
@@ -1030,6 +1163,9 @@ public:
 		switch (type) {
 		case jobject_type:
 			result->l = env->GetStaticObjectField(clazz, fieldID);
+#if LOCAL_REFS_ARE_GLOBAL
+            result->l = ToGlobalRef(env, result->l);
+#endif
 			break;
 		case jboolean_type:
 			result->z = env->GetStaticBooleanField(clazz, fieldID);
@@ -1291,6 +1427,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
 		*result = env->FindClass(name);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = (jclass) ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -1464,6 +1603,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
         *result = secureEnv->getPendingException(env);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = (jthrowable) ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -1589,7 +1731,11 @@ public:
 
 	virtual void execute(JNIEnv* env)
 	{
+#if LOCAL_REFS_ARE_GLOBAL
+		env->DeleteGlobalRef(localRef);
+#else
 		env->DeleteLocalRef(localRef);
+#endif
 	}
 };
 
@@ -1653,6 +1799,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
 		*result = env->AllocObject(clazz);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -1685,6 +1834,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
 		*result = env->GetObjectClass(obj);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = (jclass) ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -1882,6 +2034,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
     	*result = env->NewString(unicode, len);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = (jstring) ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -2015,6 +2170,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
     	*result = env->NewStringUTF(utf);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = (jstring) ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -2186,6 +2344,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
 		*result = env->NewObjectArray(len, clazz, init);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = (jobjectArray) ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -2222,6 +2383,9 @@ public:
 	virtual void execute(JNIEnv* env)
 	{
         *result = env->GetObjectArrayElement(array, index);
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -2320,6 +2484,9 @@ public:
         default:
             *result = NULL;
         }
+#if LOCAL_REFS_ARE_GLOBAL
+        *result = (jarray) ToGlobalRef(env, *result);
+#endif
 	}
 };
 
@@ -2933,12 +3100,15 @@ void CSecureEnv::savePendingException(JNIEnv* env)
 {
     // first off, always restore the env to a known state.
     jthrowable pendingException = env->ExceptionOccurred();
-    env->ExceptionClear();
-    
-    if (mPendingException)
-        env->DeleteGlobalRef(mPendingException);
-
     if (pendingException) {
+#if USE_LIVECONNECT_PROXY    
+        env->ExceptionDescribe();
+#endif
+        env->ExceptionClear();
+        
+        if (mPendingException)
+            env->DeleteGlobalRef(mPendingException);
+
         mPendingException = (jthrowable) env->NewGlobalRef(pendingException);
         env->DeleteLocalRef(pendingException);
     }

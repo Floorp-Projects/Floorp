@@ -53,6 +53,8 @@ class MRJSession;
 class Monitor;
 class nsIThreadManager;
 class nsIJVMManager;
+class nsIScriptSecurityManager;
+class nsIPrincipal;
 
 class JavaMessage;
 class JavaMessageQueue;
@@ -397,19 +399,22 @@ public:
     void clearPendingException(JNIEnv* env);
     
 protected:
-
-    MRJPlugin*              mPlugin;
-    JNIEnv*                 mProxyEnv;
-    MRJSession*             mSession;
-    nsIThreadManager*       mThreadManager;
+    MRJPlugin*                  mPlugin;
+    JNIEnv*                     mProxyEnv;
+    MRJSession*                 mSession;
+    nsIThreadManager*           mThreadManager;
     
-    JNIEnv*                 mJavaEnv;
-    jboolean*               mIsRunning;
-    JavaMessageQueue*       mJavaQueue;
-    JavaMessageQueue*       mNativeQueue;
+    JNIEnv*                     mJavaEnv;
+    jboolean*                   mIsRunning;
+    JavaMessageQueue*           mJavaQueue;
+    JavaMessageQueue*           mNativeQueue;
 
-    jthrowable              mPendingException;
-
+    jthrowable                  mPendingException;
+    
+    nsIScriptSecurityManager*   mScriptSecurityManager;
+    nsIPrincipal*               mScriptPrincipal;
+    jclass                      mLiveConnectProxy;
+    
 private:
     // support for SupportsMixin.
     static const InterfaceInfo sInterfaces[];
