@@ -99,35 +99,6 @@ public class Algorithm {
         return parameterClass;
     }
 
-	/**
-	 * This method is used to report all algorithms associated with
-	 * the requested usage.
-	 * @param usage the designated export control policy
-	 */
-	protected static native long[] getAllAlgorithmIndices( Usage usage );
-
-	/**
-	 * This method is used to retrieve the maximum key size allowed for
-	 * this algorithm.
-	 * @param usage the designated export control policy
-	 */
-	public int getStrongestKeySize( Usage usage ) {
-		return getStrongestKeySize( usage, oidIndex );
-	}
-
-	/**
-	 * This method is used to determine whether or not this algorithm
-	 * may be used.
-	 * @param usage the designated export control policy
-	 */
-	public boolean isAllowed( Usage usage ) {
-		return isAllowed( usage, oidIndex );
-	}
-
-	private static native int getStrongestKeySize( Usage usage, int alg );
-
-	private static native boolean isAllowed( Usage usage, int alg );
-
     /**
      * Index into the SECOidTag array in Algorithm.c.
      */
@@ -182,27 +153,4 @@ public class Algorithm {
         SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_40_BIT_RC2_CBC=29;
     protected static final short SEC_OID_RC2_CBC=30;
     protected static final short CKM_PBA_SHA1_WITH_SHA1_HMAC=31;
-
-	// These must correspond one-to-one with "../Algorithm.h" enum values
-    public static final class Usage
-    {
-		private int id;
-
-        private Usage( int index ) {
-			id = index;
-		}
-
-		public int getID() {
-			return id;
-		}
-
-        public static final Usage JAVA_CERT_SIGNING        = new Usage( 1 );
-        public static final Usage JAVA_SSL_KEY_EXCHANGE    = new Usage( 2 );
-        public static final Usage JAVA_CRS_KEY_WRAP        = new Usage( 3 );
-        public static final Usage JAVA_CRS_BULK_ENCRYPTION = new Usage( 4 );
-        public static final Usage JAVA_PASSWORD_ENCRYPTION = new Usage( 5 );
-        public static final Usage JAVA_KRA_TRANSPORT       = new Usage( 6 );
-        public static final Usage JAVA_KRA_STORAGE         = new Usage( 7 );
-        public static final Usage JAVA_KRA_PKCS_12         = new Usage( 8 );
-    }
 }
