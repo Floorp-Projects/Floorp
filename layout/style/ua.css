@@ -266,7 +266,7 @@ sup {
   font-size: smaller;
 }
 ilayer {
-  position: absolute;
+  position: relative;
   display: inline;
 }
 nobr {
