@@ -1187,46 +1187,43 @@ function EditorInitFormatMenu()
   if (menuItem)
   {
     var element = GetSelectedElementOrParentCell();
-    if (element)
+    var menuStr = editorShell.GetString("ObjectProperties");
+    if (element && element.nodeName)
     {
-      dump("TagName="+element.nodeName+"\n");
-      if (element.nodeName)
+      var objStr = "";
+      menuItem.removeAttribute("disabled");
+      switch (element.nodeName)
       {
-        menuItem.removeAttribute("hidden");
-        menuItem.removeAttribute("disabled");
-
-        var objStr;
-        var menuStr = editorShell.GetString("ObjectProperties");
-        switch (element.nodeName)
-        {
-          case 'IMG':
-            objStr = editorShell.GetString("Image");
-            break;
-          case 'HR':
-            objStr = editorShell.GetString("HLine");
-            break;
-          case 'TABLE':
-            objStr = editorShell.GetString("Table");
-            break;
-          case 'TD':
-            objStr = editorShell.GetString("TableCell");
-            break;
-          case 'A':
-            if(element.href)
-              objStr = editorShell.GetString("Link");
-            else if (element.name)
-              objStr = editorShell.GetString("NamedAnchor");
-            break;
-        }
-        menuStr = menuStr.replace(/%obj%/,objStr);        
-        menuItem.setAttribute("value", menuStr)
+        case 'IMG':
+          objStr = editorShell.GetString("Image");
+          break;
+        case 'HR':
+          objStr = editorShell.GetString("HLine");
+          break;
+        case 'TABLE':
+          objStr = editorShell.GetString("Table");
+          break;
+        case 'TD':
+          objStr = editorShell.GetString("TableCell");
+          break;
+        case 'A':
+          if(element.href)
+            objStr = editorShell.GetString("Link");
+          else if (element.name)
+            objStr = editorShell.GetString("NamedAnchor");
+          break;
       }
-    } else {
-      // No element to set properties on - hide menu item
-      // This works only on Mac and Linux
-      menuItem.setAttribute("hidden","true");
+      menuStr = menuStr.replace(/%obj%/,objStr);        
+    }
+    else
+    {
+      // We show generic "Properties" string, but disable menu item
+      menuItem.setAttribute("disabled","true");
+      // Replace placeholder with "", then remaining space on left side
+      menuStr = menuStr.replace(/%obj%/,"").replace(/^\s+/, "");
 
     }
+    menuItem.setAttribute("value", menuStr)
   }
 }
 

@@ -24,7 +24,8 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-  $(MAKE_INSTALL) editor.css              $(DIST)\bin\chrome\editor\skin\default
+  $(MAKE_INSTALL) editor.css            $(DIST)\bin\chrome\editor\skin\default
+  $(MAKE_INSTALL) EditorToolbars.css    $(DIST)\bin\chrome\editor\skin\default
   $(MAKE_INSTALL) images\align.gif	    $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\bold.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\bullets.gif		$(DIST)\bin\chrome\editor\skin\default\images
@@ -73,6 +74,7 @@ install:: $(DLL)
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\editor.css
+  rm -f $(DIST)\bin\chrome\editor\skin\default\EditorToolbars.css
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\align.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\bold.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\bullets.gif			
