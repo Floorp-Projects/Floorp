@@ -35,6 +35,10 @@ class nsIDOMEditorAppCore : public nsIDOMBaseAppCore {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMEDITORAPPCORE_IID; return iid; }
 
+  NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText)=0;
+
+  NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML)=0;
+
   NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue)=0;
 
   NS_IMETHOD    Undo()=0;
@@ -52,6 +56,8 @@ public:
 
 
 #define NS_DECL_IDOMEDITORAPPCORE   \
+  NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);  \
+  NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);  \
   NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue);  \
   NS_IMETHOD    Undo();  \
   NS_IMETHOD    Redo();  \
@@ -63,6 +69,8 @@ public:
 
 
 #define NS_FORWARD_IDOMEDITORAPPCORE(_to)  \
+  NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText) { return _to##GetContentsAsText(aContentsAsText); } \
+  NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML) { return _to##GetContentsAsHTML(aContentsAsHTML); } \
   NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue) { return _to##SetAttribute(aAttr, aValue); }  \
   NS_IMETHOD    Undo() { return _to##Undo(); }  \
   NS_IMETHOD    Redo() { return _to##Redo(); }  \

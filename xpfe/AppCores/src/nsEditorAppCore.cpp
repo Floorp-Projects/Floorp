@@ -270,7 +270,8 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
 NS_IMETHODIMP    
 nsEditorAppCore::SetAttribute(const nsString& aAttr, const nsString& aValue)
 {
-	return NS_OK;
+
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
@@ -401,6 +402,32 @@ nsEditorAppCore::Redo()
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
+{
+	 nsresult	err = NS_OK;
+	 
+  if (mEditor)
+  {
+   	err = mEditor->OutputText(aContentsAsText);
+  }
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
+{
+	 nsresult	err = NS_OK;
+	 
+  if (mEditor)
+  {
+   	err = mEditor->OutputHTML(aContentsAsHTML);
+  }
+
+  return err;
 }
 
 //----------------------------------------
