@@ -540,8 +540,9 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
     {
       kidAvailSize.width = cellPosition->mWidth.GetCoordValue();
     }
-    NS_RELEASE(kidSC);
     */
+    NS_IF_RELEASE(kidSC);
+
     // Get the child's margins
     nsMargin  margin;
     nscoord   topMargin = 0;
@@ -575,7 +576,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
     if (gsDebug1) printf ("%p InitR: avail=%d\n", this, kidAvailSize.width);
     status = ReflowChild(kidFrame, &aPresContext, kidSize, kidReflowState);
     if (gsDebug1) 
-      printf ("%p InitR: desired=%d, MES=%d\n", 
+      printf ("%p Initial Reflow: desired=%d, MES=%d\n", 
              this, kidSize.width, kidMaxElementSize.width);
     ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
     ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
