@@ -133,10 +133,6 @@ nsRegistryDataSource::nsRegistryDataSource()
 
 nsRegistryDataSource::~nsRegistryDataSource()
 {
-    if (mRegistry) {
-        mRegistry->Close();
-    }
-
     if  (--gRefCnt == 0) {
         if (gRDF) nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
 
@@ -309,7 +305,7 @@ nsRegistryDataSource::OpenDefaultRegistry()
                                             getter_AddRefs(mRegistry));
     if (NS_FAILED(rv)) return rv;
 
-    rv = mRegistry->OpenDefault();
+    rv = mRegistry->OpenWellKnownRegistry(nsIRegistry::ApplicationRegistry);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -391,7 +387,7 @@ nsRegistryDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProper
                 switch (type) {
                 case nsIRegistry::String: {
                     nsXPIDLCString value;
-                    rv = mRegistry->GetString(key, path, getter_Copies(value));
+                    rv = mRegistry->GetStringUTF8(key, path, getter_Copies(value));
                     if (NS_FAILED(rv)) return rv;
 
                     nsCOMPtr<nsIRDFLiteral> literal;
