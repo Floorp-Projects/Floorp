@@ -83,6 +83,37 @@ END_COM_MAP()
         /* [in] */ REFIID riid,
         /* [out] */ void **ppvObject)
     {
+#ifdef DEBUG
+        ATLTRACE(_T("HTMLDocument::QueryService\n"));
+        if (IsEqualIID(riid, __uuidof(IWebBrowser)))
+        {
+            ATLTRACE(_T("  IWebBrowser\n"));
+        }
+        else if (IsEqualIID(riid, __uuidof(IWebBrowser2)))
+        {
+            ATLTRACE(_T("  IWebBrowser2\n"));
+        }
+        else if (IsEqualIID(riid, __uuidof(IWebBrowserApp)))
+        {
+            ATLTRACE(_T("  IWebBrowserApp\n"));
+        }
+        else if (IsEqualIID(riid, __uuidof(IHTMLWindow2)))
+        {
+            ATLTRACE(_T("  IHTMLWindow2\n"));
+        }
+        else if (IsEqualIID(riid, __uuidof(IHTMLDocument2)))
+        {
+            ATLTRACE(_T("  IHTMLDocument2\n"));
+        }
+        else
+        {
+            USES_CONVERSION;
+            LPOLESTR szClsid = NULL;
+            StringFromIID(riid, &szClsid);
+            ATLTRACE(_T("  Unknown interface %s\n"), OLE2T(szClsid));
+            CoTaskMemFree(szClsid);
+        }
+#endif
         return QueryInterface(riid, ppvObject);
     }
 
@@ -342,8 +373,8 @@ END_COM_MAP()
                 if (location &&
                     NS_SUCCEEDED(location->GetHref(href)))
                 {
-                    USES_CONVERSION;
-                    *p = ::SysAllocString(href.get());
+                    const PRUnichar *s = href.get();
+                    *p = ::SysAllocString(s);
                     return S_OK;
                 }
             }
