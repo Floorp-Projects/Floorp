@@ -149,7 +149,7 @@
       </rows>
     </grid>
   </titledbox>
-  <titledbox id="misc-sec" debug="true">
+  <titledbox id="misc-sec">
     <label><text value="&misc-sec.label;"/></label>
     <grid>
       <columns>
