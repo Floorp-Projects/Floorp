@@ -522,7 +522,9 @@ XlibRectStretch(PRInt32 srcWidth, PRInt32 srcHeight,
                                scaleEndY-scaleStartY,
                                aDepth);
 #ifdef MOZ_WIDGET_GTK2
-    gdk_drawable_set_colormap(GDK_DRAWABLE(aTmpImage), gdk_rgb_get_colormap());
+    if (aDepth != 1)
+      gdk_drawable_set_colormap(GDK_DRAWABLE(aTmpImage),
+                                gdk_rgb_get_colormap());
 #endif
   }
  
