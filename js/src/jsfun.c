@@ -228,7 +228,10 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
     slot = JSVAL_TO_INT(id);
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame *)
+         JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
+    if (!fp)
+        return JS_TRUE;
 
     switch (slot) {
       case ARGS_CALLEE:
@@ -259,7 +262,10 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
     slot = JSVAL_TO_INT(id);
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame *)
+         JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
+    if (!fp)
+        return JS_TRUE;
 
     switch (slot) {
       case ARGS_CALLEE:
@@ -292,7 +298,8 @@ args_enumerate(JSContext *cx, JSObject *obj)
     JSStackFrame *fp;
     uintN attrs, slot;
 
-    fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+    fp = (JSStackFrame *)
+         JS_GetInstancePrivate(cx, obj, &js_ArgumentsClass, NULL);
     if (!fp)
         return JS_TRUE;
 
@@ -661,21 +668,6 @@ static JSPropertySpec function_props[] = {
 };
 
 static JSBool
-fun_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    /* Make delete f.length fail even though length is in f.__proto__. */
-    if (!JSVAL_IS_INT(id)) {
-        if (id == ATOM_KEY(cx->runtime->atomState.arityAtom) ||
-            id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
-            id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
-            id == ATOM_KEY(cx->runtime->atomState.nameAtom)) {
-            *vp = JSVAL_FALSE;
-        }
-    }
-    return JS_TRUE;
-}
-
-static JSBool
 fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     jsint slot;
@@ -691,7 +683,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     slot = JSVAL_TO_INT(id);
 
     /* No valid function object should lack private data, but check anyway. */
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
     if (!fun)
         return JS_TRUE;
 
@@ -781,7 +773,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
         return JS_TRUE;
 
     /* No valid function object should lack private data, but check anyway. */
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    fun = (JSFunction *)JS_GetInstancePrivate(cx, obj, &js_FunctionClass, NULL);
     if (!fun || !fun->object)
         return JS_TRUE;
 
@@ -1125,7 +1117,7 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
 JSClass js_FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
-    JS_PropertyStub,  fun_delProperty,
+    JS_PropertyStub,  JS_PropertyStub,
     fun_getProperty,  JS_PropertyStub,
     JS_EnumerateStub, (JSResolveOp)fun_resolve,
     fun_convert,      fun_finalize,

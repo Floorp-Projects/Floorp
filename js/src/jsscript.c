@@ -158,6 +158,10 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uintN line;
     JSPrincipals *principals;
 
+    /* Make sure obj is a Script object. */
+    if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
+        return JS_FALSE;
+
     /* If no args, leave private undefined and return early. */
     if (argc == 0)
         goto out;
