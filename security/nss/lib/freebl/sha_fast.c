@@ -42,12 +42,40 @@
 #include "ssltrace.h"
 #endif
 
+#if defined(IS_LITTLE_ENDIAN) && defined(_MSC_VER) && defined(_X86_)
+#undef SHA_HTONL
+#ifndef FORCEINLINE
+#if (MSC_VER >= 1200)
+#define FORCEINLINE __forceinline
+#else
+#define FORCEINLINE __inline
+#endif
+#endif
+#define FASTCALL __fastcall
+
+static FORCEINLINE PRUint32 FASTCALL 
+swap4b(PRUint32 dwd) 
+{
+    __asm {
+    	mov   eax,dwd
+	bswap eax
+    }
+}
+
+#define SHA_HTONL(x) swap4b(x)
+#endif
+
 static void shaCompress(SHA1Context *ctx);
 
 #define W u.w
 #define B u.b
 
+#if defined(_MSC_VER) && defined(_X86_)
+#pragma intrinsic (_lrotr, _lrotl) 
+#define SHA_ROTL(x,n) _lrotl(x,n)
+#else
 #define SHA_ROTL(X,n) (((X) << (n)) | ((X) >> (32-(n))))
+#endif
 #define SHA_F1(X,Y,Z) ((((Y)^(Z))&(X))^(Z))
 #define SHA_F2(X,Y,Z) ((X)^(Y)^(Z))
 #define SHA_F3(X,Y,Z) (((X)&(Y))|((Z)&((X)|(Y))))
@@ -72,7 +100,6 @@ SHA1_Begin(SHA1Context *ctx)
   ctx->H[2] = 0x98badcfeL;
   ctx->H[3] = 0x10325476L;
   ctx->H[4] = 0xc3d2e1f0L;
-
 }
 
 
