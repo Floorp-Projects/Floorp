@@ -339,6 +339,7 @@ MSMap_Segment* getSymbolSection(MSMap_Module* inModule, MSMap_Symbol* inoutSymbo
                         **  We have the section.
                         */
                         retval = &inModule->mSegments[secLoop];
+                        break;
                     }
                 }
             }
