@@ -42,6 +42,16 @@ public:
                      PRInt32& aNumFragmentsResult) = 0;
 
   /**
+   * Get the length of the text content.
+   */
+  NS_IMETHOD GetTextLength(PRInt32* aLengthResult) = 0;
+
+  /**
+   * Make a copy of the text content in aResult.
+   */
+  NS_IMETHOD CopyText(nsString& aResult) = 0;
+
+  /**
    * Set the text to the given value. If aNotify is PR_TRUE then
    * the document is notified of the content change.
    */
