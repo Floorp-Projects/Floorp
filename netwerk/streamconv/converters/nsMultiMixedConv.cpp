@@ -82,6 +82,7 @@ protected:
   nsCOMPtr<nsILoadGroup>  mLoadGroup;
 
   nsCString               mContentType;
+  nsCString               mContentDisposition;
   PRInt32                 mContentLength;
 
   PRBool                  mIsByteRangeRequest;
@@ -317,6 +318,19 @@ nsPartChannel::SetContentLength(PRInt32 aContentLength)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPartChannel::GetContentDisposition(char * *aContentDisposition)
+{
+    *aContentDisposition = ToNewCString(mContentDisposition);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::SetContentDisposition(const char *aContentDisposition)
+{
+    mContentDisposition.Assign(aContentDisposition);
+    return NS_OK;
+}
 
 //
 // nsIByteRangeRequest implementation...
@@ -730,8 +744,14 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     rv = mPartChannel->SetContentType(mContentType.get());
     if (NS_FAILED(rv)) return rv;
 
-    mPartChannel->SetContentLength(mContentLength);
+    rv = mPartChannel->SetContentLength(mContentLength);
     if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIMultiPartChannel> partChannel(do_QueryInterface(mPartChannel));
+    if (partChannel) {
+        rv = partChannel->SetContentDisposition(mContentDisposition.get());
+        if (NS_FAILED(rv)) return rv;
+    }
 
     nsLoadFlags loadFlags = 0;
     mPartChannel->GetLoadFlags(&loadFlags);
@@ -878,6 +898,8 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                 nsCRT::free(tmpString);
             } else if (headerStr.EqualsIgnoreCase("content-length")) {
                 mContentLength = atoi(headerVal.get());
+            } else if (headerStr.EqualsIgnoreCase("content-disposition")) {
+                mContentDisposition = headerVal;
             } else if (headerStr.EqualsIgnoreCase("set-cookie")) {
                 // setting headers on the HTTP channel
                 // causes HTTP to notify, again if necessary,

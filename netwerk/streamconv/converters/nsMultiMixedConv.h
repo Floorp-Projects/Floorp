@@ -125,6 +125,7 @@ protected:
     nsCOMPtr<nsISupports> mContext;
     nsCString           mContentType;
     nsCString           mContentCharset;
+    nsCString           mContentDisposition;
     PRInt32             mContentLength;
     
     char                *mBuffer;

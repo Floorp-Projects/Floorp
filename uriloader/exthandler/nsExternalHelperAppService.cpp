@@ -60,8 +60,9 @@
 #include "nsNetCID.h"
 
 #include "nsMimeTypes.h"
-// used for http content header disposition information.
+// used for header disposition information.
 #include "nsIHttpChannel.h"
+#include "nsIMultiPartChannel.h"
 #include "nsIAtom.h"
 #include "nsIObserverService.h" // so we can be an xpcom shutdown observer
 
@@ -771,44 +772,74 @@ NS_IMETHODIMP nsExternalAppHandler::CloseProgressWindow()
 
 void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChannel)
 {
-  // if the channel is an http channel and we have a content disposition header set, 
-  // then use the file name suggested there as the preferred file name to SUGGEST to the user.
-  // we shouldn't actually use that without their permission...o.t. just use our temp file
-  // Try to get HTTP channel....if we have a content-disposition header then we can
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
+  /*
+   * If the channel is an http or part of a multipart channel and we
+   * have a content disposition header set, then use the file name
+   * suggested there as the preferred file name to SUGGEST to the
+   * user.  we shouldn't actually use that without their
+   * permission...o.t. just use our temp file
+   */
+  nsXPIDLCString disp;
+  nsresult rv = NS_OK;
+  // First see whether this is an http channel
+  nsCOMPtr<nsIHttpChannel> httpChannel( do_QueryInterface( aChannel ) );
   if ( httpChannel ) 
   {
-    // Get content-disposition response header and extract a file name if there is one...
-    // content-disposition: has format: disposition-type < ; filename=value >
-    nsXPIDLCString disp; 
-    nsresult rv = httpChannel->GetResponseHeader( "content-disposition", getter_Copies( disp ) );
-    if ( NS_SUCCEEDED( rv ) && disp ) 
+    rv = httpChannel->GetResponseHeader( "content-disposition", getter_Copies( disp ) );
+  }
+  if ( NS_FAILED(rv) || disp.IsEmpty() )
+  {
+    nsCOMPtr<nsIMultiPartChannel> multipartChannel( do_QueryInterface( aChannel ) );
+    if ( multipartChannel )
     {
-      nsCAutoString dispositionValue;
-      dispositionValue = disp;
-      PRInt32 pos = dispositionValue.Find("filename=", PR_TRUE);
-      if (pos != kNotFound)
-      {
-        // extract everything after the filename= part and treat that as the file name...
-        nsCAutoString dispFileName;
-        dispositionValue.Right(dispFileName, dispositionValue.Length() -
-                                             (pos + nsCRT::strlen("filename=")));
-        if (!dispFileName.IsEmpty()) // if we got a file name back..
-        {
-          pos = dispFileName.FindChar(';');
-          if (pos > 0)
-            dispFileName.Truncate(pos);
+      rv = multipartChannel->GetContentDisposition( getter_Copies( disp ) );
+    }
+  }
+  // content-disposition: has format:
+  // disposition-type < ; name=value >* < ; filename=value > < ; name=value >*
+  if ( NS_SUCCEEDED( rv ) && !disp.IsEmpty() ) 
+  {
+    nsACString::const_iterator start, end;
+    disp.BeginReading(start);
+    disp.EndReading(end);
+    nsACString::const_iterator iter = end;
+    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("filename="),
+                                      start,
+                                      iter))
+    {
+      // The value is either a string with no whitespace or a string
+      // in double quotes.  See RFC 2183 and bug 66181. 
 
-          // According to RFC 2183, filename can be given as filename=value,
-          // where value is token or quoted-string.  See bug 66181. 
-          dispFileName.StripChar('"');
-
-          // ONLY if we got here, will we remember the suggested file name...
-          mSuggestedFileName.AssignWithConversion(dispFileName.get());
+      // Search for the ';' if it's not in double quotes, then walk
+      // back past any whitespace
+      if (iter != end) { // otherwise our filename is empty...
+        char endChar = ';';
+        if (*iter == '"') {
+          endChar = '"';
+          ++iter; // since we had iter < end, this is not running us past the end of the string
         }
-      } // if we found a file name in the header disposition field
-    } // we had a disp header 
-  } // if we had an http channel
+        start = iter;
+        FindCharInReadable(endChar, iter, end);
+        // Now start points at the beginning of the filename.  iter
+        // points to just past its end if the name was quoted.  If we
+        // looked for a semicolon, we need to step back past
+        // whitespace.
+        if (endChar == ';' && iter != start) {
+          --iter;
+          while (iter != start && nsCRT::IsAsciiSpace(*iter)) {
+            iter--;
+          }
+          ++iter;
+        }
+
+        if (iter != start) { // not empty
+          // ONLY if we got here, will we remember the suggested file name...
+          // The filename must be ASCII, see RFC 2183, section 2.3
+          CopyASCIItoUCS2(Substring(start, iter), mSuggestedFileName);
+        }
+      }
+    } // if we found a file name in the header disposition field
+  } // we had a disp header 
 }
 
 nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
