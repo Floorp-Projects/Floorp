@@ -193,6 +193,8 @@ protected:
    NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, nsISupports *aOwner,
       nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
       nsIInputStream* aPostData);
+   NS_IMETHOD DoChannelLoad(nsIChannel* aChannel, nsURILoadCommand aLoadCmd,
+      const char* aWindowTarget, nsIURILoader *aURILoader);
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);
 
