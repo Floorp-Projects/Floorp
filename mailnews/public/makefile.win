@@ -16,12 +16,16 @@
 # Reserved.
 
 DEPTH=..\..
+MODULE=mailnewspublic
+
+XPIDLSRCS =				\
+		.\MailNewsTypes2.idl	\
+		$(NULL)
 
 EXPORTS = MailNewsTypes.h \
 		rosetta_mailnews.h\
         $(NULL)
 
-MODULE=mailnews
 
 include <$(DEPTH)\config\rules.mak>
 

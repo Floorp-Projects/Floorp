@@ -28,6 +28,7 @@ EXPORTS= MailNewsTypes.h\
 		$(NULL)
 
 XPIDLSRCS = \
+		MailNewsTypes2.idl \
 		$(NULL)
 
 

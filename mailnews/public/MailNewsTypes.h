@@ -21,13 +21,13 @@
 
 #include "msgCore.h"
 #include "prtypes.h"
+#include "MailNewsTypes2.h"
 
 /* nsMsgKey is a unique ID for a particular message in a folder.  If you want
    a handle to a message that will remain valid even after resorting the folder
    or otherwise changing their indices, you want one of these rather than a
    nsMsgViewIndex. nsMsgKeys don't survive local mail folder compression, however.
  */
-typedef PRUint32 nsMsgKey;
 const nsMsgKey nsMsgKey_None = 0xffffffff;
 
 /* nsMsgViewIndex
@@ -42,7 +42,6 @@ const nsMsgKey nsMsgKey_None = 0xffffffff;
  *  - AB_NameCompletionIndex
  */
 
-typedef PRUint32 nsMsgViewIndex;
 
 const nsMsgViewIndex nsMsgViewIndex_None = 0xFFFFFFFF;
 
