@@ -225,9 +225,9 @@ function createTree(parentElement, dirArray)
     /*    treeCell.setAttribute("indent", "true");*/
     treeCell.setAttribute("value", file.leafName);
     if (isDirectory)
-      treeCell.setAttribute("class", "directory");
+      treeCell.setAttribute("class", "directory treecell-iconic");
     else if (isFile)
-      treeCell.setAttribute("class", "file");
+      treeCell.setAttribute("class", "file treecell-iconic");
     treeRow.appendChild(treeCell);
 
     /* treeCell -- size */
