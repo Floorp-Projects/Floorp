@@ -189,12 +189,12 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
 
-  nscoord ruleThickness, leading;
+  nscoord ruleThickness, leading, em;
   GetRuleThickness(renderingContext, fm, ruleThickness);
 
   // get the leading to be left at the top of the resulting frame
   // this seems more reliable than using fm->GetLeading() on suspicious fonts               
-  float em = float(font->mFont.size);
+  GetEmHeight(fm, em);
   leading = nscoord(0.2f * em); 
 
   // Rule 11, App. G, TeXbook

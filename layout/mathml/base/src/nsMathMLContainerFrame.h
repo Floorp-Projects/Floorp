@@ -344,13 +344,10 @@ public:
                         nscoord& aSubScriptShift1, 
                         nscoord& aSubScriptShift2)
     {
-      GetSubShifts(fm, aSubScriptShift1, aSubScriptShift2);
-#if 0
-      // XXX for now an alias for GetSubscriptOffset
-      fm->GetSubscriptOffset (aSubScriptShift1);
-      aSubScriptShift2 = aSubScriptShift1 
-        = NSToCoordRound(0.5f * aSubScriptShift1);
-#endif
+      nscoord xHeight = 0;
+      fm->GetXHeight (xHeight);
+      aSubScriptShift1 = NSToCoordRound (150.000f/430.556f * xHeight);
+      aSubScriptShift2 = NSToCoordRound (247.217f/430.556f * xHeight);
     }
 
   // 3 levels of superscript shifts
@@ -360,13 +357,11 @@ public:
                         nscoord& aSupScriptShift2, 
                         nscoord& aSupScriptShift3)
     {
-      GetSupShifts(fm, aSupScriptShift1, aSupScriptShift2, aSupScriptShift3);
-#if 0
-      // XXX for now an alias for GetSupscriptOffset
-      fm->GetSuperscriptOffset (aSupScriptShift1);
-      aSupScriptShift2 = aSupScriptShift3 = aSupScriptShift1
-        = NSToCoordRound(0.75f * aSupScriptShift1); 
-#endif
+      nscoord xHeight = 0;
+      fm->GetXHeight (xHeight);
+      aSupScriptShift1 = NSToCoordRound (412.892f/430.556f * xHeight);
+      aSupScriptShift2 = NSToCoordRound (362.892f/430.556f * xHeight);
+      aSupScriptShift3 = NSToCoordRound (288.889f/430.556f * xHeight);
     }
 
   // these are TeX specific params not found in ordinary fonts
@@ -385,30 +380,6 @@ public:
       nscoord xHeight;
       fm->GetXHeight (xHeight);
       aSupDrop = NSToCoordRound(386.108f/430.556f * xHeight);
-    }
-
-  static void
-  GetSubShifts (nsIFontMetrics *fm, 
-                nscoord& aSubShift1, 
-                nscoord& aSubShift2)
-    {
-      nscoord xHeight = 0;
-      fm->GetXHeight (xHeight);
-      aSubShift1 = NSToCoordRound (150.000f/430.556f * xHeight);
-      aSubShift2 = NSToCoordRound (247.217f/430.556f * xHeight);
-    }
-
-  static void
-  GetSupShifts (nsIFontMetrics *fm, 
-                nscoord& aSupShift1, 
-                nscoord& aSupShift2, 
-                nscoord& aSupShift3)
-    {
-      nscoord xHeight = 0;
-      fm->GetXHeight (xHeight);
-      aSupShift1 = NSToCoordRound (412.892f/430.556f * xHeight);
-      aSupShift2 = NSToCoordRound (362.892f/430.556f * xHeight);
-      aSupShift3 = NSToCoordRound (288.889f/430.556f * xHeight);
     }
 
   static void
@@ -433,6 +404,19 @@ public:
       fm->GetXHeight (xHeight);
       denShift1 = NSToCoordRound (685.951f/430.556f * xHeight);
       denShift2 = NSToCoordRound (344.841f/430.556f * xHeight);
+    }
+
+  static void
+  GetEmHeight (nsIFontMetrics *fm,
+               nscoord& emHeight)
+    {
+#if 0 // should switch to this API in order to scale with changes of TextZoom
+      fm->GetEmHeight (emHeight);
+#else
+      const nsFont* font;
+      fm->GetFont(font);
+      emHeight = NSToCoordRound(float(font->size));
+#endif
     }
 
   static void
