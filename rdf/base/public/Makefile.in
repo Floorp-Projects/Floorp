@@ -37,6 +37,7 @@ EXPORTS =				\
 	nsIRDFXMLDataSource.h		\
         nsIRDFXMLSource.h       	\
         nsRDFResource.h                 \
+       rdf_qsort.h                 \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -64,6 +64,9 @@
 #include "rdf.h"
 #include "rdfutil.h"
 
+#include "nsVoidArray.h"
+#include "rdf_qsort.h"
+
 ////////////////////////////////////////////////////////////////////////
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
@@ -529,6 +532,76 @@ RDFTreeBuilderImpl::SetRootContent(nsIContent* aElement)
 }
 
 
+typedef	struct	_sortStruct	{
+    nsIRDFCompositeDataSource	*db;
+    nsIRDFResource		*sortProperty;
+    PRBool			descendingSort;
+} sortStruct, *sortPtr;
+
+
+int rdfSortCallback(const void *data1, const void *data2, void *data);
+
+
+int
+rdfSortCallback(const void *data1, const void *data2, void *sortData)
+{
+	int		sortOrder = 0;
+	nsresult	rv;
+
+	nsIRDFNode	*node1, *node2;
+	node1 = *(nsIRDFNode **)data1;
+	node2 = *(nsIRDFNode **)data2;
+	_sortStruct	*sortPtr = (_sortStruct *)sortData;
+
+	nsCOMPtr<nsIRDFResource> res1 = nsnull;
+	nsCOMPtr<nsIRDFResource> res2 = nsnull;
+	PRUnichar	*uniStr1 = nsnull, *uniStr2 = nsnull;
+
+	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) getter_AddRefs(res1))))
+	{
+		nsCOMPtr<nsIRDFNode>	nodeVal1 = nsnull;
+		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res1, sortPtr->sortProperty, PR_TRUE, getter_AddRefs(nodeVal1))))
+		{
+			nsCOMPtr<nsIRDFLiteral> literal1 = nsnull;
+			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) getter_AddRefs(literal1))))
+			{
+				literal1->GetValue(&uniStr1);
+			}
+		}
+	}
+	if (NS_SUCCEEDED(node2->QueryInterface(kIRDFResourceIID, (void **) getter_AddRefs(res2))))
+	{
+		nsCOMPtr<nsIRDFNode>	nodeVal2 = nsnull;
+		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res2, sortPtr->sortProperty, PR_TRUE, getter_AddRefs(nodeVal2))))
+		{
+			nsCOMPtr<nsIRDFLiteral> literal2 = nsnull;
+			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) getter_AddRefs(literal2))))
+			{
+				literal2->GetValue(&uniStr2);
+			}
+		}
+	}
+	if ((uniStr1 != nsnull) && (uniStr2 != nsnull))
+	{
+		nsAutoString	str1(uniStr1), str2(uniStr2);
+		sortOrder = (int)str1.Compare(str2, PR_TRUE);
+		if (sortPtr->descendingSort == PR_TRUE)
+		{
+			sortOrder = -sortOrder;
+		}
+	}
+	else if ((uniStr1 != nsnull) && (uniStr2 == nsnull))
+	{
+		sortOrder = -1;
+	}
+	else
+	{
+		sortOrder = 1;
+	}
+	return(sortOrder);
+}
+
+
 NS_IMETHODIMP
 RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
 {
@@ -598,29 +671,80 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
             NS_ERROR("unable to get targets for property");
             return rv;
         }
+// rjc - sort
+	nsVoidArray	*tempArray;
+        if ((tempArray = new nsVoidArray()) == nsnull)	break;
 
         while (NS_SUCCEEDED(rv = assertions->Advance())) {
             nsCOMPtr<nsIRDFNode> value;
             if (NS_FAILED(rv = assertions->GetValue(getter_AddRefs(value)))) {
                 NS_ERROR("unable to get cursor value");
-                return rv;
+                // return rv;
+                break;
             }
 
             nsCOMPtr<nsIRDFResource> valueResource;
             if (NS_SUCCEEDED(value->QueryInterface(kIRDFResourceIID, (void**) getter_AddRefs(valueResource)))
                 && IsTreeProperty(property)) {
-                if (NS_FAILED(rv = AddTreeRow(aElement, property, valueResource))) {
+                	tempArray->AppendElement(valueResource);
+/*                if (NS_FAILED(rv = AddTreeRow(aElement, property, valueResource))) {
                     NS_ERROR("unable to create tree row");
                     return rv;
                 }
+*/
             }
             else {
                 if (NS_FAILED(rv = SetCellValue(aElement, property, value))) {
                     NS_ERROR("unable to set cell value");
-                    return rv;
+                    // return rv;
+                    break;
                 }
             }
         }
+        unsigned long numElements = tempArray->Count();
+        if (numElements > 0)
+        {
+        	nsIRDFResource ** flatArray = (nsIRDFResource **)malloc(numElements * sizeof(void *));
+        	if (flatArray)
+        	{
+			_sortStruct		sortInfo;
+
+			// get sorting info (property to sort on, direction to sort, etc)
+
+			// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+			// XXX Note: currently hardcoded; should get from DOM, or... ?
+			// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+			sortInfo.db = mDB;
+			sortInfo.descendingSort = PR_FALSE;
+			if (NS_FAILED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#Name", &sortInfo.sortProperty)))
+			{
+				NS_ERROR("unable to create gSortProperty resource");
+				return rv;
+			}
+
+			// flatten array of resources, sort them, then add as tree elements
+        	        for (unsigned loop=0; loop<numElements; loop++)
+				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
+#ifdef	XP_MAC		// XXX only Mac for the moment, need to test on other platforms
+        		rdf_qsort((void *)flatArray, numElements, sizeof(void *), rdfSortCallback, (void *)&sortInfo);
+#endif
+        		for (unsigned long loop=0; loop<numElements; loop++)
+        		{
+				nsIRDFResource	*valueResource;
+				
+				if ((valueResource = (nsIRDFResource *)flatArray[loop]) != nsnull)
+				{
+					if (NS_FAILED(rv = AddTreeRow(aElement, property, valueResource)))
+					{
+						NS_ERROR("unable to create tree row");
+					}
+				}
+        		}
+        		free(flatArray);
+        	}
+        }
+        delete tempArray;
     }
 
     if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
