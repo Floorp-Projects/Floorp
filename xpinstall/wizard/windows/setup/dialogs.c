@@ -1793,11 +1793,15 @@ void ProcessWindowsMessages()
 }
 void ShowMessage(LPSTR szMessage, BOOL bShow)
 {
+  char szBuf[MAX_BUF];
+
   if(sgProduct.dwMode != SILENT)
   {
     if((bShow) && (hDlgMessage == NULL))
     {
-      InstantiateDialog(DLG_MESSAGE, "Message", DlgProcMessage);
+      ZeroMemory(szBuf, sizeof(szBuf));
+      NS_LoadString(hSetupRscInst, IDS_MB_MESSAGE_STR, szBuf, MAX_BUF);
+      InstantiateDialog(DLG_MESSAGE, szBuf, DlgProcMessage);
       SendMessage(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (LPARAM)szMessage);
     }
     else if(!bShow && hDlgMessage)

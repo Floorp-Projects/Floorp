@@ -33,34 +33,36 @@
 #        version
 #             - version to display on the blue background
 #
-#        UserAgent
-#             - user agent to use in the windows registry.  should be the same as the one
-#               built into the browser (ie "6.0b2 (en)")
-#
-#   ie: perl makecfgini.pl uninstall.it 6.0.0.1999120608 "6.0b2 (en)"
+#   ie: perl makeuninstallini.pl uninstall.it 6.0.0.1999120608
 #
 #
 
-print "argc: $#ARGV\n";
-
-if($#ARGV < 2)
+if($#ARGV < 1)
 {
-  die "usage: $0 <.it file> <version> <UserAgent>
+  die "usage: $0 <.it file> <version>
 
        .it file      : input ini template file
 
        version       : version to be shown in setup.  Typically the same version
-                       as show in mozilla.exe.
+                       as show in mozilla.exe.  This version string will be shown
+                       on the title of the main dialog.
 
-       UserAgent     : user agent to use in the windows registry.  should be the same as the one
-                       built into the browser (ie \"6.0b2 (en)\")
+                     ie: perl makeuninstallini.pl uninstall.it 6.0.0.1999120608
+                      or perl makeuninstallini.pl uninstall.it 6.0b2
        \n";
 }
 
 $inItFile         = $ARGV[0];
 $inVersion        = $ARGV[1];
-$inUserAgent      = $ARGV[2];
-$uaShort          = ParseUserAgentShort($inUserAgent);
+
+# get environment vars
+$userAgent        = $ENV{WIZ_userAgent};
+$nameCompany      = $ENV{WIZ_nameCompany};
+$nameProduct      = $ENV{WIZ_nameProduct};
+$fileMainExe      = $ENV{WIZ_fileMainExe};
+$fileUninstall    = $ENV{WIZ_fileUninstall};
+
+$userAgentShort   = ParseUserAgentShort($userAgent);
 
 # Get the name of the file replacing the .it extension with a .ini extension
 @inItFileSplit    = split(/\./,$inItFile);
@@ -80,8 +82,12 @@ while($line = <fpInIt>)
 {
   # For each line read, search and replace $Version$ with the version passed in
   $line =~ s/\$Version\$/$inVersion/i;
-  $line =~ s/\$UserAgentShort\$/$uaShort/i;
-  $line =~ s/\$UserAgent\$/$inUserAgent/i;
+  $line =~ s/\$UserAgent\$/$userAgent/i;
+  $line =~ s/\$UserAgentShort\$/$userAgentShort/i;
+  $line =~ s/\$CompanyName\$/$nameCompany/i;
+  $line =~ s/\$ProductName\$/$nameProduct/i;
+  $line =~ s/\$MainExeFile\$/$fileMainExe/i;
+  $line =~ s/\$UninstallFile\$/$fileUninstall/i;
   print fpOutIni $line;
 }
 

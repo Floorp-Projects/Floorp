@@ -7,7 +7,7 @@
 ;            values.
 Run Mode=Normal
 
-Product Name=Mozilla Seamonkey
+Product Name=$ProductName$
 
 ; Valid Path values:
 ;   PROGRAMFILESDIR
@@ -56,8 +56,8 @@ Decrypt Key=TRUE
 
 [Dialog Uninstall]
 Show Dialog=FALSE
-Title=Mozilla Seamonkey $UserAgentShort$ Uninstaller
-Message0=This will uninstall Mozilla Seamonkey from you system.  Click Uninstall to begin.
+Title=$ProductName$ $UserAgentShort$ Uninstaller
+Message0=This will uninstall %s from your system.  Click Uninstall to begin uninstallation.
 
 ;[Check Instance0]
 ;Class Name=NetscapeWindowClass
@@ -151,13 +151,13 @@ Message0=This will uninstall Mozilla Seamonkey from you system.  Click Uninstall
 ;[RunApp0]
 ;Timing=depend reboot
 ;Wait=FALSE
-;Target=[SETUP PATH]\mozilla.exe
+;Target=[SETUP PATH]\$MainExeFile$
 ;Parameters=-installer
 ;WorkingDir=[SETUP PATH]
 
 ;[Windows Registry0]
 ;Root Key=HKEY_LOCAL_MACHINE
-;Key=Software\Mozilla\Mozilla Seamonkey\$UserAgent$\Main
+;Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
 ;Name=Program Folder Path
 ;Name Value=[Default Folder]
 ;Type=REG_SZ

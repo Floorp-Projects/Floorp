@@ -25,12 +25,12 @@ function createShortcuts()
   winreg               = getWinRegistry();
   fWindows             = getFolder("Windows");
   fCommunicator        = getFolder("Communicator");
-  fTemp                = fCommunicator + "\\mozilla.exe";
+  fTemp                = fCommunicator + "\\$MainExeFile$";
   fileExe              = getFolder("file:///", fTemp);
-  scExeDesc            = "Mozilla Seamonkey";
+  scExeDesc            = "$ProductName$";
   scProfileDesc        = "Profile Manager";
   scProfileDescParam   = "-ProfileManager";
-  scFolderName         = "Mozilla Seamonkey";
+  scFolderName         = "$ProductName$";
   if(winreg != null) 
   {
     /* determine if the script is running under NT or not */
@@ -85,13 +85,13 @@ function createShortcuts()
     szFolderQuickLaunch = winreg.getValueString(subkey, valname);
 
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    subkey              = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$\\Main";
+    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
     valname             = "Program Folder Path";
     fFolderPathStr      = winreg.getValueString(subkey, valname);
     if((fFolderPathStr == "") || (fFolderPathStr == null))
     {
-      fTemp        = szStartMenuPrograms + "\\" + scFolderName;
-      fFolderPath  = getFolder("file:///", fTemp);
+      fTemp       = szStartMenuPrograms + "\\" + scFolderName;
+      fFolderPath = getFolder("file:///", fTemp);
     }
     else
     {
@@ -122,21 +122,21 @@ function createShortcuts()
 
     /* set the Program Folder Path in the Mozilla key in the Windows Registry */
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    subkey  = "SOFTWARE\\Mozilla";
+    subkey  = "SOFTWARE\\$CompanyName$";
     winreg.createKey(subkey,"");
 
     valname = "CurrentVersion";
-    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey";
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
     winreg.createKey(subkey,"");
 
     valname = "CurrentVersion";
     value   = "$UserAgent$";
     err     = winreg.setValueString(subkey, valname, value);
 
-    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$";
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
     winreg.createKey(subkey,"");
 
-    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$\\Main";
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
     winreg.createKey(subkey,"");
 
     valname = "Program Folder Path";
@@ -163,20 +163,20 @@ function updateWinReg()
   if(winreg != null) 
   {
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    subkey  = "SOFTWARE\\Mozilla";
+    subkey  = "SOFTWARE\\$CompanyName$";
     winreg.createKey(subkey,"");
 
-    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey";
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$";
     winreg.createKey(subkey,"");
 
     valname = "CurrentVersion";
     value   = "$UserAgent$";
     err     = winreg.setValueString(subkey, valname, value);
 
-    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$";
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$";
     winreg.createKey(subkey,"");
 
-    subkey  = "SOFTWARE\\Mozilla\\Mozilla Seamonkey\\$UserAgent$\\Main";
+    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
     winreg.createKey(subkey,"");
 
     valname = "Install Directory";
@@ -184,10 +184,10 @@ function updateWinReg()
     err     = winreg.setValueString(subkey, valname, value);
 
     // set the App Paths key here
-    subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\mozilla.exe";
+    subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\$MainExeFile$";
     winreg.createKey(subkey,"");
     valname = "";
-    value   = fCommunicator + "\\mozilla.exe";
+    value   = fCommunicator + "\\$MainExeFile$";
     err     = winreg.setValueString(subkey, valname, value);
 
     valname = "Path";
@@ -205,11 +205,11 @@ var fileComponentRegStr;
 var fileComponentReg;
 
 srDest = $SpaceRequired$:bin;
-err    = startInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
+err    = startInstall("$ProductName$", "Browser", "$Version$"); 
 logComment("startInstall: " + err);
 
-fCommunicator   = getFolder("Communicator");
-fWindowsSystem  = getFolder("Win System");
+fCommunicator  = getFolder("Communicator");
+fWindowsSystem = getFolder("Win System");
 logComment("fCommunicator: " + fCommunicator);
 
 if(verifyDiskSpace(fCommunicator, srDest) == true)

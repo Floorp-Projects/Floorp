@@ -50,7 +50,14 @@ $inXpiUrl             = "ftp://not.needed.com/because/the/xpi/files/will/be/loca
 
 $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
-$userAgent            = "5.0b2 (en)";
+$seuFileNameSpecific  = "MozillaUninstall.exe";
+
+# set environment vars for use by other .pl scripts called from this script.
+$ENV{WIZ_userAgent}            = "5.0b2 (en)";
+$ENV{WIZ_nameCompany}          = "Mozilla";
+$ENV{WIZ_nameProduct}          = "Mozilla Seamonkey";
+$ENV{WIZ_fileMainExe}          = "Mozilla.exe";
+$ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 
 # Check for existance of staging path
 if(!(-e "$inStagePath"))
@@ -58,10 +65,10 @@ if(!(-e "$inStagePath"))
   die "invalid path: $inStagePath\n";
 }
 
-# Make sure inDestPath exists
+# Make sure inDistPath exists
 if(!(-e "$inDistPath"))
 {
-  mkdir ("$inDestPath",0775);
+  mkdir ("$inDistPath",0775);
 }
 
 # Make .js files
@@ -75,6 +82,16 @@ MakeXpiFile("browser");
 MakeXpiFile("mail");
 
 MakeConfigFile();
+MakeUninstallIniFile();
+
+if(-e "$inDistPath\\uninstall")
+{
+  unlink <$inDistPath\\uninstall\\*>;
+}
+else
+{
+  mkdir ("$inDistPath\\uninstall",0775);
+}
 
 if(-e "$inDistPath\\setup")
 {
@@ -85,13 +102,24 @@ else
   mkdir ("$inDistPath\\setup",0775);
 }
 
+# Copy the uninstall files to the dist uninstall directory.
+system("xcopy /f uninstall.ini              $inDistPath\\");
+system("xcopy /f uninstall.ini              $inDistPath\\uninstall\\");
+system("xcopy /f $inDistPath\\uninstall.exe $inDistPath\\uninstall\\");
+
 # Copy the setup files to the dist setup directory.
 system("xcopy /f config.ini                 $inDistPath\\");
 system("xcopy /f config.ini                 $inDistPath\\setup\\");
 system("xcopy /f $inDistPath\\setup.exe     $inDistPath\\setup\\");
 system("xcopy /f $inDistPath\\setuprsc.dll  $inDistPath\\setup\\");
 
-# build the self-extracting .exe file.
+# build the self-extracting .exe (uninstaller) file.
+print "\nbuilding self-extracting uninstaller ($seuFileNameSpecific)...\n";
+system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seuFileNameSpecific");
+system("$inDistPath\\nszip.exe $inDistPath\\$seuFileNameSpecific $inDistPath\\uninstall\\*.*");
+system("xcopy /f $inDistPath\\$seuFileNameSpecific $inDistPath\\setup\\");
+
+# build the self-extracting .exe (installer) file.
 print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";
 system("copy $inDistPath\\$seiFileNameGeneric $inDistPath\\$seiFileNameSpecific");
 system("$inDistPath\\nszip.exe $inDistPath\\$seiFileNameSpecific $inDistPath\\setup\\*.* $inDistPath\\xpi\\*.*");
@@ -104,7 +132,16 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inDefaultVersion \"$userAgent\" $inStagePath $inDistPath\\xpi $inRedirIniUrl $inXpiUrl") != 0)
+  if(system("perl makecfgini.pl config.it $inDefaultVersion $inStagePath $inDistPath\\xpi $inRedirIniUrl $inXpiUrl") != 0)
+  {
+    exit(1);
+  }
+}
+
+sub MakeUninstallIniFile
+{
+  # Make config.ini file
+  if(system("perl makeuninstallini.pl uninstall.it $inDefaultVersion") != 0)
   {
     exit(1);
   }
@@ -115,7 +152,7 @@ sub MakeJsFile
   my($componentName) = @_;
 
   # Make .js file
-  if(system("perl makejs.pl $componentName.jst $inDefaultVersion \"$userAgent\" $inStagePath\\$componentName") != 0)
+  if(system("perl makejs.pl $componentName.jst $inDefaultVersion $inStagePath\\$componentName") != 0)
   {
     exit(1);
   }

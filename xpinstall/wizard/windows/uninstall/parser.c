@@ -26,6 +26,7 @@
 #include "parser.h"
 #include "extra.h"
 #include "ifuncns.h"
+#include "dialogs.h"
 
 sil *InitSilNodes(char *szInFile)
 {
@@ -58,6 +59,7 @@ sil *InitSilNodes(char *szInFile)
       SilNodeInsert(silHead, silTemp);
     }
 
+    ProcessWindowsMessages();
   }
   fclose(ifp);
   return(silHead);
@@ -85,6 +87,8 @@ void DeInitSilNodes(sil **silHead)
   {
     SilNodeDelete(silTemp);
     silTemp = (*silHead)->Prev;
+
+    ProcessWindowsMessages();
   }
   SilNodeDelete(silTemp);
 }
@@ -124,11 +128,6 @@ void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
 
     RegCloseKey(hkResult);
   }
-}
-
-void DeInitializeParser(sil **silHead)
-{
-  DeInitSilNodes(silHead);
 }
 
 void ParseForFile(LPSTR szString, LPSTR szKeyStr, LPSTR szShortFilename, DWORD dwShortFilenameBufSize)
@@ -225,7 +224,7 @@ void ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, DWORD d
   }
 }
 
-void DebugPrintFileNodes(sil* silFile)
+void Uninstall(sil* silFile)
 {
   sil   *silTemp;
   LPSTR szSubStr;
@@ -300,7 +299,96 @@ void DebugPrintFileNodes(sil* silFile)
         FileDelete(szShortFilename);
       }
 
+      ProcessWindowsMessages();
     }while(silTemp != silFile);
   }
+}
+
+DWORD GetLogFile(LPSTR szTargetPath, LPSTR szInFilename, LPSTR szOutBuf, DWORD dwOutBufSize)
+{
+  int             iFilenameOnlyLen;
+  char            szSearchFilename[MAX_BUF];
+  char            szSearchTargetFullFilename[MAX_BUF];
+  char            szFilenameOnly[MAX_BUF];
+  char            szFilenameExtensionOnly[MAX_BUF];
+  char            szNumber[MAX_BUF];
+  long            dwNumber;
+  long            dwMaxNumber;
+  LPSTR           szDotPtr;
+  HANDLE          hFile;
+  WIN32_FIND_DATA fdFile;
+  BOOL            bFound;
+
+  if(FileExists(szTargetPath))
+  {
+    /* zero out the memory */
+    ZeroMemory(szOutBuf,                dwOutBufSize);
+    ZeroMemory(szSearchFilename,        sizeof(szSearchFilename));
+    ZeroMemory(szFilenameOnly,          sizeof(szFilenameOnly));
+    ZeroMemory(szFilenameExtensionOnly, sizeof(szFilenameExtensionOnly));
+
+    /* parse for the filename w/o extention and also only the extension */
+    if((szDotPtr = strstr(szInFilename, ".")) != NULL)
+    {
+      *szDotPtr = '\0';
+      lstrcpy(szSearchFilename, szInFilename);
+      lstrcpy(szFilenameOnly, szInFilename);
+      lstrcpy(szFilenameExtensionOnly, &szDotPtr[1]);
+      *szDotPtr = '.';
+    }
+    else
+    {
+      lstrcpy(szFilenameOnly, szInFilename);
+      lstrcpy(szSearchFilename, szInFilename);
+    }
+
+    /* create the wild arg filename to search for in the szTargetPath */
+    lstrcat(szSearchFilename, "*.*");
+    lstrcpy(szSearchTargetFullFilename, szTargetPath);
+    AppendBackSlash(szSearchTargetFullFilename, sizeof(szSearchTargetFullFilename));
+    lstrcat(szSearchTargetFullFilename, szSearchFilename);
+
+    iFilenameOnlyLen = lstrlen(szFilenameOnly);
+    dwNumber         = 0;
+    dwMaxNumber      = -1;
+
+    /* find the largest numbered filename in the szTargetPath */
+    if((hFile = FindFirstFile(szSearchTargetFullFilename, &fdFile)) == INVALID_HANDLE_VALUE)
+      bFound = FALSE;
+    else
+      bFound = TRUE;
+
+    while(bFound)
+    {
+       ZeroMemory(szNumber, sizeof(szNumber));
+      if((lstrcmpi(fdFile.cFileName, ".") != 0) && (lstrcmpi(fdFile.cFileName, "..") != 0))
+      {
+        lstrcpy(szNumber, &fdFile.cFileName[iFilenameOnlyLen]);
+        dwNumber = atoi(szNumber);
+        if(dwNumber > dwMaxNumber)
+          dwMaxNumber = dwNumber;
+      }
+
+      bFound = FindNextFile(hFile, &fdFile);
+    }
+
+    FindClose(hFile);
+
+    lstrcpy(szOutBuf, szTargetPath);
+    AppendBackSlash(szOutBuf, dwOutBufSize);
+    lstrcat(szOutBuf, szFilenameOnly);
+    itoa(dwMaxNumber, szNumber, 10);
+    lstrcat(szOutBuf, szNumber);
+
+    if(*szFilenameExtensionOnly != '\0')
+    {
+      lstrcat(szOutBuf, ".");
+      lstrcat(szOutBuf, szFilenameExtensionOnly);
+    }
+  }
+  else
+    return(0);
+
+  return(FileExists(szOutBuf));
 }
 

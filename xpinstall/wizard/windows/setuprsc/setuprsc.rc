@@ -379,6 +379,7 @@ BEGIN
     IDS_STR_INSTALLING      "Currently installing %s"
     IDS_STR_COPYINGFILE     "Copying file: %s"
     IDS_MB_WARNING_STR      "Warning"
+    IDS_MB_MESSAGE_STR      "Message"
 END
 
 STRINGTABLE DISCARDABLE 
