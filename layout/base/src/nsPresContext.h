@@ -53,18 +53,9 @@ public:
   virtual float GetTwipsToPixels() const;
   virtual nsIDeviceContext* GetDeviceContext() const;
 
-  // nsPresContext methods
-  virtual void BeginLoadImageUpdate();
-
-  virtual void ImageUpdate(nsIFrame* aFrame);
-
-  virtual void EndLoadImageUpdate();
-
 protected:
   nsPresContext();
   virtual ~nsPresContext();
-
-  virtual void ProcessLoadImageUpdates();
 
   nsIPresShell*     mShell;
   nsRect            mVisibleArea;
@@ -73,10 +64,7 @@ protected:
   nsILinkHandler*   mLinkHandler;
   nsISupports*      mContainer;
   nsFont            mDefaultFont;
-
   nsVoidArray       mImageLoaders;
-  nsVoidArray       mPendingImageUpdates;
-  PRInt32           mImageUpdates;
 };
 
 #endif /* nsPresContext_h___ */
