@@ -53,7 +53,7 @@ extern void AddDefaultGateway(PyObject *instance, nsISupports *gateway);
 
 #define LOADER_LINKS_WITH_PYTHON
 
-#ifndef LOADER_LINKS_WITH_PYTHON
+#ifndef PYXPCOM_USE_PYGILSTATE
 extern void PyXPCOM_InterpreterState_Ensure();
 #endif
 

@@ -105,7 +105,7 @@ void AddStandardPaths()
 	// And now try and get Python to process this directory as a "site dir" 
 	// - ie, look for .pth files, etc
 	nsCAutoString cmdBuf(NS_LITERAL_CSTRING("import site;site.addsitedir(r'") + pathCBuf + NS_LITERAL_CSTRING("')\n"));
-	if (0 != PyRun_SimpleString(cmdBuf.get())) {
+	if (0 != PyRun_SimpleString((char *)cmdBuf.get())) {
 		LogError("The directory '%s' could not be added as a site directory", pathCBuf.get());
 		PyErr_Clear();
 	}
