@@ -137,37 +137,172 @@ function FetchInput()
 
 /*** =================== SELECTING AND DESELECTING ITEMS =================== ***/
 
-/* get the currently-selected schema */
-function CurrentSchema() {
+/* clear the list of selected schemas */
+var selectedSchemas = [];
+function ClearSelectedSchemas() {
+  selectedSchemas = [];
+  SetCurrentSchema(0);
+}
+
+/* clear the list of selected entries */
+var selectedEntries = [];
+function ClearSelectedEntries() {
+  selectedEntries = [];
+  SetCurrentEntry(0);
+}
+
+/* clear the list of selected synonyms */
+var selectedSynonyms = [];
+function ClearSelectedSynonyms() {
+  selectedSynonyms = [];
+  SetCurrentSynonym(0);
+}
+
+/* initialize the list of selected schemas */
+function InitSelectedSchemas() {
+  ClearSelectedSchemas();
   var schematree = document.getElementById("schematree");
-  if (schematree.selectedItems.length == 0) {
-    return 0;
+  var selitems = schematree.selectedItems;
+  for(var i = 0; i < selitems.length; i++) {
+    selectedSchemas[i] = schematree.selectedItems[i];
   }
-  var schema = schematree.selectedItems[0];
-  var idx = parseInt(schema.getAttribute("id").substring(5,schema.getAttribute("id").length));
-  return idx;
+  var sorted = false;
+  while (!sorted) {
+    sorted = true;
+    for (var i=0; i < selectedSchemas.length-1; i++) {
+      if (selectedSchemas[i].getAttribute("id") <
+          selectedSchemas[i+1].getAttribute("id")) {
+        temp = selectedSchemas[i+1];
+        selectedSchemas[i+1] = selectedSchemas[i];
+        selectedSchemas[i] = temp;
+        sorted = false;
+      }
+    }
+  }
+  return selitems.length;
 }
 
-/* get the currently-selected entry */
-function CurrentEntry() {
+/* initialize the list of selected entries */
+function InitSelectedEntries() {
+  ClearSelectedEntries();
   var entrytree = document.getElementById("entrytree");
-  if (entrytree.selectedItems.length == 0) {
-    return 0;
+  var selitems = entrytree.selectedItems;
+  for(var i = 0; i < selitems.length; i++) { 
+    selectedEntries[i] = entrytree.selectedItems[i];
   }
-  var entry = entrytree.selectedItems[0];
-  var idx = parseInt(entry.getAttribute("id").substring(5,entry.getAttribute("id").length));
-  return idx;
+  var sorted = false;
+  while (!sorted) {
+    sorted = true;
+    for (var i=0; i < selectedEntries.length-1; i++) {
+      if (selectedEntries[i].getAttribute("id") <
+          selectedEntries[i+1].getAttribute("id")) {
+        temp = selectedEntries[i+1];
+        selectedEntries[i+1] = selectedEntries[i];
+        selectedEntries[i] = temp;
+        sorted = false;
+      }
+    }
+  }
+  return selitems.length;
 }
 
-/* get the currently-selected synomym */
-function CurrentSynonym() {
+/* initialize the list of selected synonyms */
+function InitSelectedSynonyms() {
+  ClearSelectedSynonyms();
   var synonymtree = document.getElementById("synonymtree");
-  if (synonymtree.selectedItems.length == 0) {
+  var selitems = synonymtree.selectedItems;
+  for(var i = 0; i < selitems.length; i++) { 
+    selectedSynonyms[i] = synonymtree.selectedItems[i];
+  }
+  var sorted = false;
+  while (!sorted) {
+    sorted = true;
+    for (var i=0; i < selectedSynonyms.length-1; i++) {
+      if (selectedSynonyms[i].getAttribute("id") <
+          selectedSynonyms[i+1].getAttribute("id")) {
+        temp = selectedSynonyms[i+1];
+        selectedSynonyms[i+1] = selectedSynonyms[i];
+        selectedSynonyms[i] = temp;
+        sorted = false;
+      }
+    }
+  }
+  return selitems.length;
+}
+
+/* get the indicated selected schema */
+function SelectedSchema(i) {
+  if (selectedSchemas.length <= i) {
     return 0;
   }
-  var synonym = synonymtree.selectedItems[0];
-  var idx = parseInt(synonym.getAttribute("id").substring(5,synonym.getAttribute("id").length));
-  return idx;
+  var id = selectedSchemas[i].getAttribute("id");
+  return parseInt(id.substring(5, id.length));
+}
+
+/* get the indicated selected entry */
+function SelectedEntry(i) {
+  if (selectedEntries.length <= i) {
+    return 0;
+  }
+  var id = selectedEntries[i].getAttribute("id");
+  return parseInt(id.substring(5, id.length));
+}
+
+/* get the indicated selected synomym */
+function SelectedSynonym(i) {
+  if (selectedSynonyms.length <= i) {
+    return 0;
+  }
+  var id = selectedSynonyms[i].getAttribute("id");
+  return parseInt(id.substring(5, id.length));
+}
+
+/* get the first selected schema */
+function FirstSelectedSchema() {
+  return SelectedSchema(0);
+}
+
+/* get the first selected entry */
+function FirstSelectedEntry() {
+  return SelectedEntry(0);
+}
+
+/* get the first selected synonym */
+function FirstSelectedSynonym() {
+  return SelectedSynonym(0);
+}
+
+/* set current schema */
+var currentSchema = 0
+function SetCurrentSchema(schema) {
+  currentSchema = schema;
+}
+
+/* set current entry */
+var currentEntry = 0;
+function SetCurrentEntry(entry) {
+  currentEntry = entry;
+}
+
+/* set current synonym */
+var currentSynonym = 0;
+function SetCurrentSynonym(synonym) {
+  currentSynonym = synonym;
+}
+
+/* get current schema */
+function CurrentSchema() {
+  return currentSchema;
+}
+
+/* get current entry */
+function CurrentEntry() {
+  return currentEntry;
+}
+
+/* get current synonym */
+function CurrentSynonym() {
+  return currentSynonym;
 }
 
 /* a schema has just been selected */
@@ -240,9 +375,10 @@ function ViewEntries()
   SynonymDeselected();
   var i;
   var schematree = document.getElementById("schematree");
+  InitSelectedSchemas();
   if(schematree.selectedItems.length) {
-    var first = schemas[CurrentSchema()];
-    var lastPlusOne = schemas[CurrentSchema()+1];
+    var first = schemas[FirstSelectedSchema()];
+    var lastPlusOne = schemas[FirstSelectedSchema()+1];
     for (i=first; i<lastPlusOne; i++) {
       if (strings[entries[i]+1] != "") {
         AddItem("entrieslist", [strings[entries[i]+1]], "tree_", i-first); 
@@ -259,9 +395,11 @@ function ViewSynonyms()
   SynonymDeselected();
   var i;
   var entrytree = document.getElementById("entrytree");
+  InitSelectedSchemas();
+  InitSelectedEntries();
   if(entrytree.selectedItems.length) {
-    var first = entries[schemas[CurrentSchema()]+CurrentEntry()]+2;
-    var lastPlusOne = entries[schemas[CurrentSchema()]+CurrentEntry()+1]-1;
+    var first = entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+2;
+    var lastPlusOne = entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()+1]-1;
     for (i=first; i<lastPlusOne; i++) {
       AddItem("synonymslist", [strings[i]], "tree_", i-first);
     }
@@ -394,23 +532,23 @@ function AddEntry0() {
   if (text == "") {
     return;
   }
-  stringIndex = entries[schemas[CurrentSchema()]+CurrentEntry()];
-  if(strings[entries[schemas[CurrentSchema()]+CurrentEntry()]+1]=="") {
-    addString(entries[schemas[CurrentSchema()]+CurrentEntry()]+1, text);
+  stringIndex = entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()];
+  if(strings[entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+1]=="") {
+    addString(entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+1, text);
     return;
   }
 
-  addString(stringIndex, strings[entries[schemas[CurrentSchema()]]]);
+  addString(stringIndex, strings[entries[schemas[FirstSelectedSchema()]]]);
   addString(stringIndex+1, text);
   addString(stringIndex+2, "");
 
   entriesLength++;
-  for (i=entriesLength; i>schemas[CurrentSchema()]+CurrentEntry(); i--) {
+  for (i=entriesLength; i>schemas[FirstSelectedSchema()]+FirstSelectedEntry(); i--) {
     entries[i] = entries[i-1];
   }
-  entries[schemas[CurrentSchema()]+CurrentEntry()] = stringIndex;
+  entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()] = stringIndex;
 
-  for (i=CurrentSchema()+1; i<=schemasLength; i++) {
+  for (i=FirstSelectedSchema()+1; i<=schemasLength; i++) {
     schemas[i]++;
   }
 }
@@ -421,7 +559,7 @@ function AddSynonym0() {
   if (text == "") {
     return;
   }
-  addString(entries[schemas[CurrentSchema()]+CurrentEntry()]+2, text);
+  addString(entries[schemas[FirstSelectedSchema()]+FirstSelectedEntry()]+2, text);
 }
 
 function deleteString(stringToDelete) {
@@ -449,7 +587,6 @@ function addString(stringToAdd, text) {
       entries[i]++;
     }
   }
-
 }
 
 /* high-level add-schema routine */
@@ -459,6 +596,9 @@ function AddSchema() {
     return;
   }
 
+  InitSelectedSchemas();
+  ClearSelectedEntries();
+  ClearSelectedSynonyms();
   AddSchema0();
   ViewSchema(); //?? otherwise schema list doesn't get redrawn
 }
@@ -470,6 +610,9 @@ function AddEntry() {
     return;
   }
 
+  InitSelectedSchemas();
+  InitSelectedEntries();
+  ClearSelectedSynonyms();
   AddEntry0();
   ViewEntries(); //?? otherwise entry list doesn't get redrawn
 }
@@ -481,6 +624,9 @@ function AddSynonym() {
     return;
   }
 
+  InitSelectedSchemas();
+  InitSelectedEntries();
+  InitSelectedSynonyms();
   AddSynonym0();
   ViewSynonyms(); //?? otherwise synonym list doesn't get redrawn
   ViewSynonyms(); //?? otherwise entry list doesn't get redrawn (??even needed twice)
@@ -492,12 +638,16 @@ function DeleteSchema() {
   if( button.getAttribute("disabled") == "true" ) {
     return;
   }
-
-  DeleteSchema0();
+  var count = InitSelectedSchemas();
+  ClearSelectedEntries();
+  ClearSelectedSynonyms();
+  for (var i=0; i<count; i++) {
+    SetCurrentSchema(SelectedSchema(i));
+    DeleteSchema0();
+  }
   ClearList("entrieslist");
   ClearList("synonymslist");
-  DeleteItemSelected("schematree", "tree_", "schemalist");
-  ViewSchema(); //?? otherwise schema list doesn't get redrawn
+  ViewSchema();
 }
 
 /* high-level delete-entry routine */
@@ -506,11 +656,16 @@ function DeleteEntry() {
   if( button.getAttribute("disabled") == "true" ) {
     return;
   }
-
-  DeleteEntry0();
+  InitSelectedSchemas();
+  SetCurrentSchema(SelectedSchema(0));
+  var count = InitSelectedEntries();
+  ClearSelectedSynonyms();
+  for (var i=0; i<count; i++) {
+    SetCurrentEntry(SelectedEntry(i));
+    DeleteEntry0();
+  }
   ClearList("synonymslist");
-  DeleteItemSelected("entrytree", "tree_", "entrieslist");
-  ViewEntries(); //?? otherwise entry list doesn't get redrawn
+  ViewEntries();
 }
 
 /* high-level delete-synonym routine */
@@ -519,10 +674,16 @@ function DeleteSynonym() {
   if( button.getAttribute("disabled") == "true" ) {
     return;
   }
-
-  DeleteSynonym0();
-  DeleteItemSelected("synonymtree", "tree_", "synonymslist");
-  ViewSynonyms(); //?? otherwise entry list doesn't get redrawn
+  InitSelectedSchemas();
+  SetCurrentSchema(SelectedSchema(0));
+  InitSelectedEntries();
+  SetCurrentEntry(SelectedEntry(0));
+  var count = InitSelectedSynonyms();
+  for (var i=0; i<count; i++) {
+    SetCurrentSynonym(SelectedSynonym(i));
+    DeleteSynonym0();
+  }
+  ViewSynonyms();
 }
 
 /*** =================== DEBUGGING CODE =================== ***/
@@ -582,20 +743,10 @@ function AddItem(children,cells,prefix,idfier)
   kids.appendChild(item);
 }
 
-/* remove selected item for a tree */
-function DeleteItemSelected(tree, prefix, kids) {
-  var thistree = document.getElementById(tree);
-  selitems = thistree.selectedItems;
-  if (selitems.length > 0) {
-    var i = selitems[0];
-    document.getElementById(kids).removeChild
-      (document.getElementById(i.getAttribute("id")));
-  }
-}
-
 /* clear out a tree */
 function ClearList(kids) {
-  while (document.getElementById(kids).firstChild) {
-    document.getElementById(kids).removeChild(document.getElementById(kids).firstChild);
+  var list = document.getElementById(kids);
+  while (list.firstChild) {
+    list.removeChild(list.firstChild);
   }
 }
