@@ -96,6 +96,10 @@
           <textbox id="url" size="60" readonly="true" class="noborder"/>
         </row>
         <row>
+          <spacer/>
+          <checkbox id="behind_login" label="&reportForm.behind_login.title;"/>
+        </row>
+        <row>
           <label control="problem_type" value="&reportForm.problem_type.title;" accesskey="T"/>
           <!-- XXX: Perhaps this should eventually/maybe come from somewhere else?  Eh, not sure so lets just hardcode this for now. -->
           <menulist label="problem_type" id="problem_type" oncommand="validateForm()">
@@ -123,10 +127,6 @@
         <row>
           <label control="email" value="&reportForm.email.title;"/>
           <textbox id="email" size="60" class="noborder"/>
-        </row>
-        <row>
-          <spacer/>
-          <checkbox id="behind_login" label="&reportForm.behind_login.title;"/>
         </row>
       </rows>
     </grid>
