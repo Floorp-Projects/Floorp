@@ -1147,7 +1147,15 @@ PresShell::EndUpdate(nsIDocument *aDocument)
 
 NS_IMETHODIMP
 PresShell::BeginLoad(nsIDocument *aDocument)
-{
+{  
+#ifdef RAPTOR_PERF_METRICS
+  // Reset style resolution stopwatch maintained by style set
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
+  if (NS_SUCCEEDED(rv) && watch) {
+    watch->ResetTimer(NS_TIMER_STYLE_RESOLUTION);
+  }
+#endif
   return NS_OK;
 }
 
@@ -1155,13 +1163,20 @@ NS_IMETHODIMP
 PresShell::EndLoad(nsIDocument *aDocument)
 {
 #ifdef RAPTOR_PERF_METRICS
-  // NRA Dump reflow, style resolution and frame construction times here.
+  // Dump reflow, style resolution and frame construction times here.
   printf("Reflow time: ");
   mReflowWatch.Print();
   printf("\n");
   printf("Frame construction plus style resolution time: ");
   mFrameCreationWatch.Print();
   printf("\n");
+
+  // Print style resolution stopwatch maintained by style set
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
+  if (NS_SUCCEEDED(rv) && watch) {
+    watch->PrintTimer(NS_TIMER_STYLE_RESOLUTION);
+  }
 #endif
   return NS_OK;
 }
