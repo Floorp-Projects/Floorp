@@ -34,8 +34,9 @@ class nsIDOMCSSStyleDeclaration;
 class nsIRDFCompositeDataSource;
 class nsIXULTemplateBuilder;
 class nsIRDFResource;
-class nsIDOMNodeList;
+class nsIBoxObject;
 class nsIControllers;
+class nsIDOMNodeList;
 
 #define NS_IDOMXULELEMENT_IID \
  { 0x574ed81, 0xc088, 0x11d2, \
@@ -61,7 +62,7 @@ public:
 
   NS_IMETHOD    GetControllers(nsIControllers** aControllers)=0;
 
-  NS_IMETHOD    GetAnonymousContent(nsIDOMNodeList** aAnonymousContent)=0;
+  NS_IMETHOD    GetBoxObject(nsIBoxObject** aBoxObject)=0;
 
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
 
@@ -89,7 +90,7 @@ public:
   NS_IMETHOD    GetBuilder(nsIXULTemplateBuilder** aBuilder);  \
   NS_IMETHOD    GetResource(nsIRDFResource** aResource);  \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers);  \
-  NS_IMETHOD    GetAnonymousContent(nsIDOMNodeList** aAnonymousContent);  \
+  NS_IMETHOD    GetBoxObject(nsIBoxObject** aBoxObject);  \
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    DoCommand();  \
@@ -110,7 +111,7 @@ public:
   NS_IMETHOD    GetBuilder(nsIXULTemplateBuilder** aBuilder) { return _to GetBuilder(aBuilder); } \
   NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to GetResource(aResource); } \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers) { return _to GetControllers(aControllers); } \
-  NS_IMETHOD    GetAnonymousContent(nsIDOMNodeList** aAnonymousContent) { return _to GetAnonymousContent(aAnonymousContent); } \
+  NS_IMETHOD    GetBoxObject(nsIBoxObject** aBoxObject) { return _to GetBoxObject(aBoxObject); } \
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to AddBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to RemoveBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    DoCommand() { return _to DoCommand(); }  \

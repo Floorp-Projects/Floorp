@@ -15,10 +15,6 @@ nsIXULPopupListener.h
 nsIXULPrototypeCache.h
 nsIXULPrototypeDocument.h
 nsIXULContent.h
-nsIDOMXULTitledButtonElement.h
-nsIDOMXULCheckboxElement.h
-nsIDOMXULRadioElement.h
-nsIDOMXULRadioGroupElement.h
 nsIDOMXULMenuListElement.h
 
 
