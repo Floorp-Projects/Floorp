@@ -1,7 +1,3 @@
-        =====================
-        BUGZILLA 2.12 RELEASE
-        =====================
-	
 * This README is no longer used to house installation instructions.  Instead,
 it contains pointers to where you may find the information you need.
 
@@ -9,14 +5,12 @@ it contains pointers to where you may find the information you need.
 types available.  Please refer to these documents when installing, configuring,
 and maintaining your Bugzilla installation.  A helpful starting point is
 docs/txt/Bugzilla-Guide.txt, or with a web browser at docs/html/index.html.
-	
-* Release Notes for Bugzilla 2.12 are available at docs/rel_notes.txt.
+
+* Release notes for people upgrading to a new version of Bugzilla are
+available at docs/rel_notes.txt.
 
 * If you wish to contribute to the documentation, please read docs/README.docs.
 
 * The Bugzilla web site is at "http://www.mozilla.org/projects/bugzilla/".
-This site will contain the latest Bugzilla information.
-
-* Bugs in the latest version of Bugzilla can be reported at
-bugzilla.mozilla.org, in Product "Webtools" and Component "Bugzilla".
-Please be detailed.
+This site will contain the latest Bugzilla information, including how to
+report bugs and how to get help with Bugzilla.
