@@ -38,14 +38,20 @@ static PRInt32      gNameSpaceTableRefs;
 static nsHashtable* gURIToIDTable;
 static nsVoidArray* gURIArray;
 
+MOZ_DECL_CTOR_COUNTER(NameSpaceURIKey);
+
 class NameSpaceURIKey : public nsHashKey {
 public:
   NameSpaceURIKey(const nsString* aString)
     : mString(aString)
-  { }
+  {
+    MOZ_COUNT_CTOR(NameSpaceURIKey);
+  }
 
   virtual ~NameSpaceURIKey(void)
-  { }
+  {
+    MOZ_COUNT_DTOR(NameSpaceURIKey);
+  }
 
   virtual PRUint32 HashValue(void) const
   {
@@ -190,7 +196,6 @@ public:
   nsIAtom*              mPrefix;
   PRInt32               mID;
 };
-
 
 NameSpaceImpl::NameSpaceImpl(nsINameSpaceManager* aManager,
                              NameSpaceImpl* aParent, 
@@ -383,7 +388,6 @@ protected:
   virtual ~NameSpaceManagerImpl();
 
 };
-
 
 NameSpaceManagerImpl::NameSpaceManagerImpl()
 {

@@ -2307,7 +2307,6 @@ NS_IMPL_ADDREF(nsEnderFocusListener)
 
 NS_IMPL_RELEASE(nsEnderFocusListener)
 
-
 nsEnderFocusListener::nsEnderFocusListener()
 {
   NS_INIT_REFCNT();
@@ -2496,7 +2495,6 @@ NS_IMPL_ADDREF(nsEnderSelectionListener)
 
 NS_IMPL_RELEASE(nsEnderSelectionListener)
 
-
 nsEnderSelectionListener::nsEnderSelectionListener()
 {
   NS_INIT_REFCNT();
@@ -2581,6 +2579,12 @@ nsEnderSelectionListener::NotifySelectionChanged()
 
 NS_IMPL_ADDREF(EnderTempObserver);
 NS_IMPL_RELEASE(EnderTempObserver);
+
+EnderTempObserver::EnderTempObserver()
+{ 
+  NS_INIT_REFCNT(); 
+  mFirstCall = PR_TRUE;
+}
 
 EnderTempObserver::~EnderTempObserver()
 {

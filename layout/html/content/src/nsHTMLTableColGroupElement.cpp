@@ -95,18 +95,15 @@ NS_NewHTMLTableColGroupElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTa
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLTableColGroupElement);
 
 nsHTMLTableColGroupElement::nsHTMLTableColGroupElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLTableColGroupElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLTableColGroupElement::~nsHTMLTableColGroupElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLTableColGroupElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLTableColGroupElement)

@@ -105,13 +105,10 @@ PointerCompareKeys(void* key1, void* key2)
   return key1 == key2;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsSizeOfHandler);
-
 nsSizeOfHandler::nsSizeOfHandler()
   : mTotalSize(0),
     mTotalCount(0)
 {
-  MOZ_COUNT_CTOR(nsSizeOfHandler);
   NS_INIT_REFCNT();
   mTotalSize = 0;
   mSizeTable = PL_NewHashTable(32, (PLHashFunction) PointerHashKey,
@@ -146,7 +143,6 @@ nsSizeOfHandler::RemoveSizeEntry(PLHashEntry* he, PRIntn i, void* arg)
 
 nsSizeOfHandler::~nsSizeOfHandler()
 {
-  MOZ_COUNT_DTOR(nsSizeOfHandler);
   if (nsnull != mObjectTable) {
     PL_HashTableEnumerateEntries(mObjectTable, RemoveObjectEntry, 0);
     PL_HashTableDestroy(mObjectTable);

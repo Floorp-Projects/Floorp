@@ -90,11 +90,8 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult)
   return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsXMLCDATASection);
-
 nsXMLCDATASection::nsXMLCDATASection()
 {
-  MOZ_COUNT_CTOR(nsXMLCDATASection);
   NS_INIT_REFCNT();
   mInner.Init(this);
   mContentID = 0;
@@ -102,7 +99,6 @@ nsXMLCDATASection::nsXMLCDATASection()
 
 nsXMLCDATASection::~nsXMLCDATASection()
 {
-  MOZ_COUNT_DTOR(nsXMLCDATASection);
 }
 
 NS_IMPL_ADDREF(nsXMLCDATASection)

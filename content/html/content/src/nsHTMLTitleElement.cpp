@@ -90,18 +90,15 @@ NS_NewHTMLTitleElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLTitleElement);
 
 nsHTMLTitleElement::nsHTMLTitleElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLTitleElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLTitleElement::~nsHTMLTitleElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLTitleElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLTitleElement)

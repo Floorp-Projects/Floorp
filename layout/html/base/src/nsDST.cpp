@@ -18,6 +18,7 @@
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #include "nslayout.h"
 #include "nsDST.h"
+#include "nsISupports.h"
 #ifdef NS_DEBUG
 #include <string.h>
 #endif
@@ -50,16 +51,21 @@ inline void* nsDST::Node::operator new(size_t aSize, NodeArena& aArena)
 
 #define NS_DST_ARENA_BLOCK_SIZE   1024
 
+MOZ_DECL_CTOR_COUNTER(NodeArena);
+
 // Constructor
 nsDST::NodeArena::NodeArena()
   : mFreeList(0)
 {
+  MOZ_COUNT_CTOR(NodeArena);
   PL_INIT_ARENA_POOL(&mPool, "DSTNodeArena", NS_DST_ARENA_BLOCK_SIZE);
 }
 
 // Destructor
 nsDST::NodeArena::~NodeArena()
 {
+  MOZ_COUNT_DTOR(NodeArena);
+
   // Free the arena in the pool and finish using it
   PL_FinishArenaPool(&mPool);
 }
@@ -110,15 +116,19 @@ nsDST::NodeArena::FreeArenaPool()
 /////////////////////////////////////////////////////////////////////////////
 // Digital search tree for doing a radix-search of pointer-based keys
 
+MOZ_DECL_CTOR_COUNTER(nsDST);
+
 // Constructor
 nsDST::nsDST(PtrBits aLevelZeroBit)
   : mRoot(0), mLevelZeroBit(aLevelZeroBit)
 {
+  MOZ_COUNT_CTOR(nsDST);
 }
 
 // Destructor
 nsDST::~nsDST()
 {
+  MOZ_COUNT_DTOR(nsDST);
 }
 
 // Removes all nodes from the tree

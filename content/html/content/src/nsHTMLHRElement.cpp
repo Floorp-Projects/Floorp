@@ -91,18 +91,15 @@ NS_NewHTMLHRElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLHRElement);
 
 nsHTMLHRElement::nsHTMLHRElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLHRElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLHRElement::~nsHTMLHRElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLHRElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLHRElement)

@@ -100,11 +100,9 @@ NS_NewHTMLTableSectionElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLTableSectionElement);
 
 nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLTableSectionElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mRows = nsnull;
@@ -112,7 +110,6 @@ nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsIAtom* aTag)
 
 nsHTMLTableSectionElement::~nsHTMLTableSectionElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLTableSectionElement);
   if (nsnull!=mRows) {
     mRows->ParentDestroyed();
     NS_RELEASE(mRows);

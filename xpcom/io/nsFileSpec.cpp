@@ -817,11 +817,11 @@ void nsFileSpec::MakeUnique()
         = nsFileSpecHelpers::kMaxCoreLeafNameLength - nsCRT::strlen(suffix) - 1;
     if ((int)nsCRT::strlen(leafName) > (int)kMaxRootLength)
         leafName[kMaxRootLength] = '\0';
-    for (short index = 1; index < 1000 && Exists(); index++)
+    for (short indx = 1; indx < 1000 && Exists(); indx++)
     {
         // start with "Picture-1.jpg" after "Picture.jpg" exists
         char newName[nsFileSpecHelpers::kMaxFilenameLength + 1];
-        sprintf(newName, "%s-%d%s", leafName, index, suffix);
+        sprintf(newName, "%s-%d%s", leafName, indx, suffix);
         SetLeafName(newName);
     }
     if (*suffix)

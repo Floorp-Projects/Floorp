@@ -60,13 +60,16 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
+MOZ_DECL_CTOR_COUNTER(nsFormControlHelper);
 
 nsFormControlHelper::nsFormControlHelper()
 {
+  MOZ_COUNT_CTOR(nsFormControlHelper);
 }
 
 nsFormControlHelper::~nsFormControlHelper()
 {
+  MOZ_COUNT_DTOR(nsFormControlHelper);
 }
 
 void nsFormControlHelper::ForceDrawFrame(nsIFrame * aFrame)

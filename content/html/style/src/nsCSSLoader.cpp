@@ -50,12 +50,15 @@ static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT
 
 class CSSLoaderImpl;
 
+MOZ_DECL_CTOR_COUNTER(URLKey);
+
 class URLKey: public nsHashKey {
 public:
   URLKey(nsIURI* aURL)
     : nsHashKey(),
       mURL(aURL)
   {
+    MOZ_COUNT_CTOR(URLKey);
     NS_ADDREF(mURL);
     mHashValue = 0;
 
@@ -72,11 +75,13 @@ public:
       mURL(aKey.mURL),
       mHashValue(aKey.mHashValue)
   {
+    MOZ_COUNT_CTOR(URLKey);
     NS_ADDREF(mURL);
   }
 
   virtual ~URLKey(void)
   {
+    MOZ_COUNT_DTOR(URLKey);
     NS_RELEASE(mURL);
   }
 
@@ -102,22 +107,27 @@ public:
   PRUint32  mHashValue;
 };
 
+MOZ_DECL_CTOR_COUNTER(SupportsKey);
+
 class SupportsKey: public nsHashKey {
 public:
   SupportsKey(nsISupports* aSupports)
     : nsHashKey(),
       mSupports(aSupports)
   { // note: does not hold reference on supports pointer
+    MOZ_COUNT_CTOR(SupportsKey);
   }
 
   SupportsKey(const SupportsKey& aKey)
     : nsHashKey(),
       mSupports(aKey.mSupports)
   {
+    MOZ_COUNT_CTOR(SupportsKey);
   }
 
   virtual ~SupportsKey(void)
   {
+    MOZ_COUNT_DTOR(SupportsKey);
   }
 
   virtual PRUint32 HashValue(void) const
@@ -178,6 +188,8 @@ struct SheetLoadData {
   void*                   mCallbackData;
 };
 
+MOZ_DECL_CTOR_COUNTER(PendingSheetData);
+
 struct PendingSheetData {
   PendingSheetData(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
                    nsIContent* aElement)
@@ -186,12 +198,14 @@ struct PendingSheetData {
       mOwningElement(aElement),
       mNotify(PR_FALSE)
   {
+    MOZ_COUNT_CTOR(PendingSheetData);
     NS_ADDREF(mSheet);
     NS_IF_ADDREF(mOwningElement);
   }
 
   ~PendingSheetData(void)
   {
+    MOZ_COUNT_DTOR(PendingSheetData);
     NS_RELEASE(mSheet);
     NS_IF_RELEASE(mOwningElement);
   }
@@ -303,6 +317,8 @@ public:
 #endif
 };
 
+MOZ_DECL_CTOR_COUNTER(SheetLoadData);
+
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                              const nsString& aTitle, const nsString& aMedia,
                              PRInt32 aDefaultNameSpaceID,
@@ -327,6 +343,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mCallback(nsnull),
     mCallbackData(nsnull)
 {
+  MOZ_COUNT_CTOR(SheetLoadData);
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_IF_ADDREF(mOwningElement);
@@ -356,6 +373,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mCallback(nsnull),
     mCallbackData(nsnull)
 {
+  MOZ_COUNT_CTOR(SheetLoadData);
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_ADDREF(mParentSheet);
@@ -382,6 +400,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mCallback(aCallback),
     mCallbackData(nsnull)
 {
+  MOZ_COUNT_CTOR(SheetLoadData);
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
 }
@@ -389,6 +408,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
 
 SheetLoadData::~SheetLoadData(void)
 {
+  MOZ_COUNT_DTOR(SheetLoadData);
   NS_RELEASE(mLoader);
   NS_RELEASE(mURL);
   NS_IF_RELEASE(mOwningElement);

@@ -58,9 +58,12 @@ PRBool BasicTableLayoutStrategy::IsFixedWidth(const nsStylePosition* aStylePosit
                  (eStyleUnit_Coord==aStyleTable->mSpanWidth.GetUnit()));
 }
 
+MOZ_DECL_CTOR_COUNTER(BasicTableLayoutStrategy);
+
 
 BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame, PRBool aIsNavQuirks)
 {
+  MOZ_COUNT_CTOR(BasicTableLayoutStrategy);
   NS_ASSERTION(nsnull != aFrame, "bad frame arg");
 
   mTableFrame            = aFrame;
@@ -72,6 +75,7 @@ BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame, PRBool 
 
 BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 {
+  MOZ_COUNT_DTOR(BasicTableLayoutStrategy);
 }
 
 PRBool BasicTableLayoutStrategy::Initialize(nsSize*       aMaxElementSize, 

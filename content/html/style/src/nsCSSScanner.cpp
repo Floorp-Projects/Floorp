@@ -40,14 +40,14 @@ static const PRUint8 START_IDENT = 0x10;
 static const PRUint8 IS_IDENT = 0x20;
 static const PRUint8 IS_WHITESPACE = 0x40;
 
-static PRUint8* gLexTable;
+static PRBool gLexTableSetup = PR_FALSE;
+static PRUint8 gLexTable[256];
 
 static void BuildLexTable()
 {
-  PRUint8* lt = new PRUint8[256];
-  nsCRT::zero(lt, 256);
-  gLexTable = lt;
+  gLexTableSetup = PR_TRUE;
 
+  PRUint8* lt = gLexTable;
   int i;
   lt[CSS_ESCAPE] = START_IDENT;
   lt['-'] |= IS_IDENT;
@@ -137,10 +137,12 @@ nsCSSToken::AppendToString(nsString& aBuffer)
   }
 }
 
+MOZ_DECL_CTOR_COUNTER(nsCSSScanner);
 
 nsCSSScanner::nsCSSScanner()
 {
-  if (nsnull == gLexTable) {
+  MOZ_COUNT_CTOR(nsCSSScanner);
+  if (!gLexTableSetup) {
     // XXX need a monitor
     BuildLexTable();
   }
@@ -155,6 +157,7 @@ nsCSSScanner::nsCSSScanner()
 
 nsCSSScanner::~nsCSSScanner()
 {
+  MOZ_COUNT_DTOR(nsCSSScanner);
   Close();
   if (nsnull != mBuffer) {
     delete [] mBuffer;

@@ -205,7 +205,6 @@ protected:
   PRUint32 mContentID;
 };
 
-nsresult NS_NewCommentNode(nsIContent** aInstancePtrResult);
 nsresult
 NS_NewCommentNode(nsIContent** aInstancePtrResult)
 {

@@ -39,11 +39,8 @@
 #define REALLY_NOISY_FONTS
 #endif
 
-MOZ_DECL_CTOR_COUNTER(nsFontMetricsGTK);
-
 nsFontMetricsGTK::nsFontMetricsGTK()
 {
-  MOZ_COUNT_CTOR(nsFontMetricsGTK);
   NS_INIT_REFCNT();
   mDeviceContext = nsnull;
   mFont = nsnull;
@@ -68,8 +65,6 @@ nsFontMetricsGTK::nsFontMetricsGTK()
 
 nsFontMetricsGTK::~nsFontMetricsGTK()
 {
-  MOZ_COUNT_DTOR(nsFontMetricsGTK);
-
   if (nsnull != mFont) {
     delete mFont;
     mFont = nsnull;
@@ -99,35 +94,7 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
 
 }
 
-#undef LOG_REFCNTS
-#ifdef LOG_REFCNTS
-extern "C" {
-  void __log_addref(void* p, int oldrc, int newrc);
-  void __log_release(void* p, int oldrc, int newrc);
-}
-
-nsrefcnt nsFontMetricsGTK::AddRef(void)
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
-  return ++mRefCnt;
-}
-
-nsrefcnt nsFontMetricsGTK::Release(void)
-{
-  __log_release((void*) this, mRefCnt, mRefCnt - 1);
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  if (--mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
-
-NS_IMPL_QUERY_INTERFACE1(nsFontMetricsGTK, nsIFontMetrics)
-#else
 NS_IMPL_ISUPPORTS1(nsFontMetricsGTK, nsIFontMetrics)
-#endif
 
 #ifdef FONT_SWITCHING
 

@@ -23,7 +23,7 @@
 
 nsGenericDOMNodeList::nsGenericDOMNodeList() 
 {
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
   mScriptObject = nsnull;
 }
 

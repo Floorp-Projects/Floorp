@@ -86,18 +86,15 @@ NS_NewHTMLFrameSetElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLFrameSetElement);
 
 nsHTMLFrameSetElement::nsHTMLFrameSetElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLFrameSetElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLFrameSetElement::~nsHTMLFrameSetElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLFrameSetElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLFrameSetElement)

@@ -129,11 +129,9 @@ NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLButtonElement);
 
 nsHTMLButtonElement::nsHTMLButtonElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLButtonElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
@@ -142,7 +140,6 @@ nsHTMLButtonElement::nsHTMLButtonElement(nsIAtom* aTag)
 
 nsHTMLButtonElement::~nsHTMLButtonElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLButtonElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 
@@ -152,13 +149,7 @@ nsHTMLButtonElement::~nsHTMLButtonElement()
 
 // nsISupports
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsHTMLButtonElement::AddRef(void)
-{
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsHTMLButtonElement");
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(nsHTMLButtonElement);
 
 nsresult
 nsHTMLButtonElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)

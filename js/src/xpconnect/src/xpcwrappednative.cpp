@@ -46,7 +46,7 @@ nsXPCWrappedNative::AddRef(void)
     NS_PRECONDITION(mRoot, "bad root");
     XPCContext* xpcc;
     ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedNative");
+    NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedNative", sizeof(*this));
     if(1 == mRefCnt && mRoot != this)
         NS_ADDREF(mRoot);
     else if(2 == mRefCnt && nsnull != (xpcc = mClass->GetXPCContext()))

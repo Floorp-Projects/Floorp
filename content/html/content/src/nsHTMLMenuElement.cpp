@@ -89,18 +89,15 @@ NS_NewHTMLMenuElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLMenuElement);
 
 nsHTMLMenuElement::nsHTMLMenuElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLMenuElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLMenuElement::~nsHTMLMenuElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLMenuElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLMenuElement)

@@ -24,15 +24,22 @@
 #define kIsCollapsedRowsGrowSize 5
 // CellData 
 
+MOZ_DECL_CTOR_COUNTER(CellData);
+
 CellData::CellData()
 {
+  MOZ_COUNT_CTOR(CellData);
   mOrigCell    = nsnull;
   mRowSpanData = nsnull;
   mColSpanData = nsnull;
 }
 
 CellData::~CellData()
-{}
+{
+  MOZ_COUNT_DTOR(CellData);
+}
+
+MOZ_DECL_CTOR_COUNTER(nsCellMap);
 
 // nsCellMap
 
@@ -43,6 +50,8 @@ nsCellMap::nsCellMap(int aRowCount, int aColCount)
     mRowCount(0),
     mNextAvailRowIndex(0)
 {
+  MOZ_COUNT_CTOR(nsCellMap);
+
   mIsCollapsedRows = nsnull;
   mIsCollapsedCols = nsnull;
 
@@ -51,6 +60,8 @@ nsCellMap::nsCellMap(int aRowCount, int aColCount)
 
 nsCellMap::~nsCellMap()
 {
+  MOZ_COUNT_DTOR(nsCellMap);
+
   PRInt32 mapRowCount = mRows.Count();
   PRInt32 colCount    = mNumCellsOrigInCol.Count();
   PRInt32 colX;

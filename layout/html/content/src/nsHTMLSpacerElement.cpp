@@ -83,18 +83,15 @@ NS_NewHTMLSpacerElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLSpacerElement);
 
 nsHTMLSpacerElement::nsHTMLSpacerElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLSpacerElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLSpacerElement::~nsHTMLSpacerElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLSpacerElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLSpacerElement)

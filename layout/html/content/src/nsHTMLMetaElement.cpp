@@ -90,11 +90,9 @@ NS_NewHTMLMetaElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLMetaElement);
 
 nsHTMLMetaElement::nsHTMLMetaElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLMetaElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
@@ -102,7 +100,6 @@ nsHTMLMetaElement::nsHTMLMetaElement(nsIAtom* aTag)
 nsHTMLMetaElement::~nsHTMLMetaElement()
 {
 
-  MOZ_COUNT_DTOR(nsHTMLMetaElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLMetaElement)

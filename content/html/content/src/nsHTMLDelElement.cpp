@@ -86,18 +86,15 @@ NS_NewHTMLDelElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLDelElement);
 
 nsHTMLDelElement::nsHTMLDelElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLDelElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
 }
 
 nsHTMLDelElement::~nsHTMLDelElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLDelElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLDelElement)

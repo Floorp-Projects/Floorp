@@ -47,7 +47,11 @@ class nsFloaterCacheFreeList;
 class nsFloaterCache {
 public:
   nsFloaterCache();
+#ifdef DEBUG
+  ~nsFloaterCache();
+#else
   ~nsFloaterCache() { }
+#endif
 
   nsFloaterCache* Next() const { return mNext; }
 

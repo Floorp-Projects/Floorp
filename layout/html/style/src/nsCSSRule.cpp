@@ -16,13 +16,9 @@
  * Reserved.
  */
 #include "nsCSSRule.h"
-
 #include "nsCRT.h"
 #include "nsIArena.h"
 #include "nsICSSStyleSheet.h"
-
-
-//#define DEBUG_REFS
 
 void* nsCSSRule::operator new(size_t size)
 {
@@ -58,74 +54,25 @@ void nsCSSRule::operator delete(void* ptr)
   }
 }
 
-
-#ifdef DEBUG_REFS
-static PRInt32 gInstanceCount;
-static const PRInt32 kInstrument = 1075;
-#endif
-
-
 nsCSSRule::nsCSSRule(void)
   : mSheet(nsnull)
 {
   NS_INIT_REFCNT();
-
-#ifdef DEBUG_REFS
-  mInstance = gInstanceCount++;
-  fprintf(stdout, "%d of %d + CSSRule\n", mInstance, gInstanceCount);
-#endif
 }
 
 nsCSSRule::nsCSSRule(const nsCSSRule& aCopy)
   : mSheet(aCopy.mSheet)
 {
   NS_INIT_REFCNT();
-
-#ifdef DEBUG_REFS
-  mInstance = gInstanceCount++;
-  fprintf(stdout, "%d of %d + CSSRule\n", mInstance, gInstanceCount);
-#endif
 }
 
 
 nsCSSRule::~nsCSSRule(void)
 {
-#ifdef DEBUG_REFS
-  --gInstanceCount;
-  fprintf(stdout, "%d of %d - CSSStyleRule\n", mInstance, gInstanceCount);
-#endif
 }
 
-#ifdef DEBUG_REFS
-nsrefcnt 
-nsCSSRule::AddRef(void)                                
-{                                    
-  if (mInstance == kInstrument) {
-    fprintf(stdout, "%d AddRef CSSRule\n", mRefCnt + 1);
-  }
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsCSSRule");
-  return mRefCnt;
-}
-
-nsrefcnt 
-nsCSSRule::Release(void)                         
-{                                                      
-  if (mInstance == kInstrument) {
-    fprintf(stdout, "%d Release CSSRule\n", mRefCnt - 1);
-  }
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsCSSRule");
-  if (mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;                                          
-  }                                                    
-  return mRefCnt;                                      
-}
-#else
 NS_IMPL_ADDREF(nsCSSRule)
 NS_IMPL_RELEASE(nsCSSRule)
-#endif
 
 NS_IMETHODIMP
 nsCSSRule::GetStyleSheet(nsIStyleSheet*& aSheet) const

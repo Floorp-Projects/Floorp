@@ -19,6 +19,8 @@
 #define nslayout_h___
 
 #include "nscore.h"
+#include "nsISupports.h"
+#include "nsTraceRefcnt.h"
 
 // Note: For now, NS_LAYOUT and NS_HTML are joined at the hip
 #if defined(_IMPL_NS_LAYOUT) || defined(_IMPL_NS_HTML)

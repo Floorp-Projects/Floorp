@@ -19,11 +19,14 @@
 #include "nsXIFConverter.h"
 #include <fstream.h>
 
+MOZ_DECL_CTOR_COUNTER(nsXIFConverter);
 
 nsXIFConverter::nsXIFConverter(nsString& aBuffer)
   : mIndent(0),
     mBuffer(aBuffer)
 {
+  MOZ_COUNT_CTOR(nsXIFConverter);
+
   char* prolog = "<?xml version=\"1.0\"?>\n";
   char* doctype = "<!DOCTYPE xif>\n";
 
@@ -63,6 +66,7 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer)
 
 nsXIFConverter::~nsXIFConverter()
 {
+  MOZ_COUNT_DTOR(nsXIFConverter);
 #ifdef DEBUG
   WriteDebugFile();
 #endif

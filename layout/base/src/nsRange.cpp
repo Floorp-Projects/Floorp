@@ -267,7 +267,7 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
 /******************************************************
  * constructor/destructor
  ******************************************************/
- 
+
 nsRange::nsRange() :
   mIsPositioned(PR_FALSE),
   mStartOffset(0),
@@ -287,7 +287,7 @@ nsRange::~nsRange()
 } 
 
 /******************************************************
- * XPCOM cruft
+ * nsISupports
  ******************************************************/
  
 NS_IMPL_ADDREF(nsRange)

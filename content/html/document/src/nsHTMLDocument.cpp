@@ -685,11 +685,9 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
     nsISupports* container;
     if (NS_OK == cx->GetContainer(&container)) {
       if (nsnull != container) {
-        nsIWebShell* ws = nsnull;
-        container->QueryInterface(kIWebShellIID, (void**) &ws);
-        if (nsnull != ws) {
-          ws->SetTitle(aTitle.GetUnicode());
-          NS_RELEASE(ws);
+        nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(container);
+        if (webShell) {
+          webShell->SetTitle(aTitle.GetUnicode());
         }
         NS_RELEASE(container);
       }
@@ -1102,12 +1100,11 @@ NS_IMETHODIMP
 nsHTMLDocument::CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn)
 {
-  nsIHTMLContent* content;
-  nsresult rv = NS_CreateHTMLElement(&content, aTagName);
-  if (NS_OK != rv) {
-    return rv;
+  nsCOMPtr<nsIHTMLContent> content;
+  nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), aTagName);
+  if (NS_SUCCEEDED(rv)) {
+    rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
   }
-  rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
   return rv;
 }
 

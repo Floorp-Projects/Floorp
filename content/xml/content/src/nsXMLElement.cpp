@@ -76,7 +76,7 @@ nsXMLElement::~nsXMLElement()
 
 NS_IMETHODIMP 
 nsXMLElement::QueryInterface(REFNSIID aIID,
-			     void** aInstancePtr)
+                             void** aInstancePtr)
 {
   NS_IMPL_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this, nsIXMLContent)
   if (aIID.Equals(kIXMLContentIID)) {

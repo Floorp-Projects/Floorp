@@ -27,8 +27,11 @@
 #include "nsLayoutAtoms.h"
 #endif
 
+MOZ_DECL_CTOR_COUNTER(nsLineBox);
+
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
 {
+  MOZ_COUNT_CTOR(nsLineBox);
   mFirstChild = aFrame;
   mChildCount = aCount;
   mState = LINE_IS_DIRTY | flags;
@@ -43,6 +46,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
 
 nsLineBox::~nsLineBox()
 {
+  MOZ_COUNT_DTOR(nsLineBox);
 }
 
 static void
@@ -619,6 +623,8 @@ nsFloaterCacheFreeList::Append(nsFloaterCache* aFloater)
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR_COUNTER(nsFloaterCache);
+
 nsFloaterCache::nsFloaterCache()
   : mPlaceholder(nsnull),
     mIsCurrentLineFloater(PR_TRUE),
@@ -627,4 +633,12 @@ nsFloaterCache::nsFloaterCache()
     mCombinedArea(0, 0, 0, 0),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsFloaterCache);
 }
+
+#ifdef DEBUG
+nsFloaterCache::~nsFloaterCache()
+{
+  MOZ_COUNT_DTOR(nsFloaterCache);
+}
+#endif

@@ -19,8 +19,6 @@
 #include "nscore.h"  // needed for 'nsnull'
 #include "nsToolkit.h"
 
-MOZ_DECL_CTOR_COUNTER(nsToolkit);
-
 //-------------------------------------------------------------------------
 //
 // constructor
@@ -28,7 +26,6 @@ MOZ_DECL_CTOR_COUNTER(nsToolkit);
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()
 {
-  MOZ_COUNT_CTOR(nsToolkit);
   NS_INIT_REFCNT();
   mSharedGC = nsnull;
 }
@@ -40,7 +37,6 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-  MOZ_COUNT_DTOR(nsToolkit);
   if (mSharedGC)
     gdk_gc_unref(mSharedGC);
 }

@@ -485,7 +485,6 @@ nsCSSFrameConstructor::~nsCSSFrameConstructor(void)
 
 NS_IMPL_ISUPPORTS(nsCSSFrameConstructor, kIStyleFrameConstructionIID);
 
-
 NS_IMETHODIMP 
 nsCSSFrameConstructor::Init(nsIDocument* aDocument)
 {

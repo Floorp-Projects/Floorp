@@ -74,7 +74,7 @@ void nsMacNSPREventQueueHandler::StartPumping()
 	}
 
 	++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsMacNSPREventQueueHandler");
+  NS_LOG_ADDREF(this, mRefCnt, "nsMacNSPREventQueueHandler", sizeof(*this));
 	StartRepeating();
 }
 

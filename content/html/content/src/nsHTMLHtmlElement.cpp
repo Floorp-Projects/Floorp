@@ -89,17 +89,14 @@ NS_NewHTMLHtmlElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLHtmlElement);
 
 nsHTMLHtmlElement::nsHTMLHtmlElement()
 {
-  MOZ_COUNT_CTOR(nsHTMLHtmlElement);
   NS_INIT_REFCNT();
 }
 
 nsHTMLHtmlElement::~nsHTMLHtmlElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLHtmlElement);
 }
 
 NS_IMPL_ADDREF(nsHTMLHtmlElement)

@@ -62,7 +62,7 @@ NS_IMPL_QUERY_INTERFACE(nsTestCom, kITestComIID);
 nsrefcnt nsTestCom::AddRef() 
 {
   nsrefcnt res = ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsTestCom");
+  NS_LOG_ADDREF(this, mRefCnt, "nsTestCom", sizeof(*this));
   cout << "nsTestCom: Adding ref = " << res << "\n";
   return res;
 }

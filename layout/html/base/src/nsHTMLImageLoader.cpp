@@ -29,6 +29,8 @@
 #undef NOISY_IMAGE_LOADING
 #endif
 
+MOZ_DECL_CTOR_COUNTER(nsHTMLImageLoader);
+
 nsHTMLImageLoader::nsHTMLImageLoader()
   : mBaseURL(nsnull),
     mFrame(nsnull),
@@ -39,10 +41,12 @@ nsHTMLImageLoader::nsHTMLImageLoader()
     mIntrinsicImageSize(0, 0),
     mComputedImageSize(0, 0)
 {
+  MOZ_COUNT_CTOR(nsHTMLImageLoader);
 }
 
 nsHTMLImageLoader::~nsHTMLImageLoader()
 {
+  MOZ_COUNT_DTOR(nsHTMLImageLoader);
   NS_IF_RELEASE(mBaseURL);
   NS_IF_RELEASE(mImageLoader);
 }

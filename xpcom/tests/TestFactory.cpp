@@ -29,7 +29,6 @@ NS_DEFINE_IID(kTestClassIID, NS_ITESTCLASS_IID);
 
 int main(int argc, char **argv) {
   nsresult rv;
-  nsIServiceManager* servMgr;
 
   rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                         NULL /* default */);

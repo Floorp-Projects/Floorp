@@ -46,6 +46,7 @@
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
 //-----------------------------------------------------------------------------
+
 nsCaret::nsCaret()
 :	mPresShell(nsnull)
 ,	mBlinkTimer(nsnull)

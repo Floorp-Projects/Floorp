@@ -24,15 +24,19 @@
 
 static const PRUint32 kGrowArrayBy = 10;
 
+MOZ_DECL_CTOR_COUNTER(nsStyleChangeList);
+
 nsStyleChangeList::nsStyleChangeList(void)
   : mArray(mBuffer),
     mArraySize(kStyleChangeBufferSize),
     mCount(0)
 {
+  MOZ_COUNT_CTOR(nsStyleChangeList);
 }
 
 nsStyleChangeList::~nsStyleChangeList(void)
 {
+  MOZ_COUNT_DTOR(nsStyleChangeList);
   Clear();
 }
 

@@ -49,6 +49,7 @@ NS_IMPL_RELEASE(nsMenuBarListener)
 
 
 ////////////////////////////////////////////////////////////////////////
+
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
 :mAltKeyDown(PR_FALSE)
 {

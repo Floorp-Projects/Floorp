@@ -40,6 +40,7 @@ NS_IMPL_RELEASE(nsToolbarDragListener)
 //
 // Not much to do besides init member variables
 //
+
 nsToolbarDragListener :: nsToolbarDragListener ( nsToolbarFrame* inToolbar, nsIPresContext* inPresContext )
   : mToolbar(inToolbar), mPresContext(inPresContext), mCurrentDropLoc(-1)
 {

@@ -99,11 +99,9 @@ NS_NewHTMLFieldSetElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLFieldSetElement);
 
 nsHTMLFieldSetElement::nsHTMLFieldSetElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLFieldSetElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
@@ -111,7 +109,6 @@ nsHTMLFieldSetElement::nsHTMLFieldSetElement(nsIAtom* aTag)
 
 nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLFieldSetElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 

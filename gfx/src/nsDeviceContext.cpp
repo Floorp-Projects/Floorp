@@ -48,12 +48,8 @@ protected:
 
 NS_IMPL_ISUPPORTS1(DeviceContextImpl, nsIDeviceContext)
 
-MOZ_DECL_CTOR_COUNTER(DeviceContextImpl);
-
 DeviceContextImpl :: DeviceContextImpl()
 {
-  MOZ_COUNT_CTOR(DeviceContextImpl);
-
   NS_INIT_REFCNT();
   mFontCache = nsnull;
   mDevUnitsToAppUnits = 1.0f;
@@ -79,8 +75,6 @@ static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
 
 DeviceContextImpl :: ~DeviceContextImpl()
 {
-  MOZ_COUNT_DTOR(DeviceContextImpl);
-
   if (nsnull != mFontCache)
   {
     delete mFontCache;

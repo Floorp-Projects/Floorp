@@ -74,7 +74,6 @@ protected:
   PRUint32 mContentID;
 };
 
-nsresult NS_NewTextNode(nsIContent** aInstancePtrResult);
 nsresult
 NS_NewTextNode(nsIContent** aInstancePtrResult)
 {

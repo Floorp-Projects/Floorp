@@ -55,6 +55,8 @@ static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 
+MOZ_DECL_CTOR_COUNTER(SelectorList);
+
 // e.g. "P B, H1 B { ... }" has a selector list with two elements,
 // each of which has two selectors.
 struct SelectorList {
@@ -77,10 +79,12 @@ SelectorList::SelectorList(void)
   : mSelectors(nsnull),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(SelectorList);
 }
 
 SelectorList::~SelectorList()
 {
+  MOZ_COUNT_DTOR(SelectorList);
   nsCSSSelector*  sel = mSelectors;
   while (nsnull != sel) {
     nsCSSSelector* dead = sel;

@@ -299,13 +299,17 @@ public:
                             void **aResult);
 };   
 
+MOZ_DECL_CTOR_COUNTER(nsDocumentEncoderFactory);
+
 nsDocumentEncoderFactory::nsDocumentEncoderFactory()
 {
+  MOZ_COUNT_CTOR(nsDocumentEncoderFactory);
   mRefCnt = 0;
 }
 
 nsDocumentEncoderFactory::~nsDocumentEncoderFactory()
 {
+  MOZ_COUNT_DTOR(nsDocumentEncoderFactory);
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }
 

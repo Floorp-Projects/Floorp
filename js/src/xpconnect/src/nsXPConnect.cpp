@@ -42,36 +42,7 @@
 #define JS_CLASS_MAP_SIZE       256
 #define NATIVE_CLASS_MAP_SIZE   256
 
-#if 0
-extern "C" {
-  void __log_addref(void* p, int oldrc, int newrc);
-  void __log_release(void* p, int oldrc, int newrc);
-};
-
-NS_IMETHODIMP_(nsrefcnt) nsXPConnect::AddRef(void)
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-  __log_addref(this, mRefCnt, mRefCnt + 1);
-  ++mRefCnt;
-  return mRefCnt;
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsXPConnect::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  __log_release(this, mRefCnt, mRefCnt - 1);
-  --mRefCnt;
-  if (mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
-
-NS_IMPL_QUERY_INTERFACE1(nsXPConnect, nsIXPConnect)
-#else
 NS_IMPL_ISUPPORTS1(nsXPConnect, nsIXPConnect)
-#endif
 
 const char XPC_COMPONENTS_STR[] = "Components";
 

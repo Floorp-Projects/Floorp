@@ -40,11 +40,8 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
   gdk.height = ns.height; \
   PR_END_MACRO
 
-MOZ_DECL_CTOR_COUNTER(nsRenderingContextGTK);
-
 nsRenderingContextGTK::nsRenderingContextGTK()
 {
-  MOZ_COUNT_CTOR(nsRenderingContextGTK);
   NS_INIT_REFCNT();
 
   mFontMetrics = nsnull;
@@ -65,8 +62,6 @@ nsRenderingContextGTK::nsRenderingContextGTK()
 
 nsRenderingContextGTK::~nsRenderingContextGTK()
 {
-  MOZ_COUNT_DTOR(nsRenderingContextGTK);
-
   // Destroy the State Machine
   if (mStateCache)
   {

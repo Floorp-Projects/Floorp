@@ -29,9 +29,9 @@
 #include "nsVoidArray.h"
 #include "nsISizeOfHandler.h"
 
-//#define DEBUG_REFS
-
 static NS_DEFINE_IID(kIHTMLAttributesIID, NS_IHTML_ATTRIBUTES_IID);
+
+MOZ_DECL_CTOR_COUNTER(HTMLAttribute);
 
 struct HTMLAttribute {
   HTMLAttribute(void)
@@ -39,6 +39,7 @@ struct HTMLAttribute {
       mValue(),
       mNext(nsnull)
   {
+    MOZ_COUNT_CTOR(HTMLAttribute);
   }
 
   HTMLAttribute(nsIAtom* aAttribute, const nsString& aValue)
@@ -46,6 +47,7 @@ struct HTMLAttribute {
       mValue(aValue),
       mNext(nsnull)
   {
+    MOZ_COUNT_CTOR(HTMLAttribute);
     NS_IF_ADDREF(mAttribute);
   }
 
@@ -54,6 +56,7 @@ struct HTMLAttribute {
       mValue(aValue),
       mNext(nsnull)
   {
+    MOZ_COUNT_CTOR(HTMLAttribute);
     NS_IF_ADDREF(mAttribute);
   }
 
@@ -62,11 +65,13 @@ struct HTMLAttribute {
       mValue(aCopy.mValue),
       mNext(nsnull)
   {
+    MOZ_COUNT_CTOR(HTMLAttribute);
     NS_IF_ADDREF(mAttribute);
   }
 
   ~HTMLAttribute(void)
   {
+    MOZ_COUNT_DTOR(HTMLAttribute);
     NS_IF_RELEASE(mAttribute);
   }
 
@@ -222,25 +227,33 @@ struct HTMLAttribute {
 
 // ----------------
 
+MOZ_DECL_CTOR_COUNTER(nsClassList);
+
 struct nsClassList {
   nsClassList(nsIAtom* aAtom)
     : mAtom(aAtom), // take ref
       mNext(nsnull)
   {
+    MOZ_COUNT_CTOR(nsClassList);
   }
+
   nsClassList(const nsClassList& aCopy)
     : mAtom(aCopy.mAtom),
       mNext(nsnull)
   {
+    MOZ_COUNT_CTOR(nsClassList);
     NS_IF_ADDREF(mAtom);
     if (aCopy.mNext) {
       mNext = new nsClassList(*(aCopy.mNext));
     }
   }
+
   ~nsClassList(void)
   {
+    MOZ_COUNT_DTOR(nsClassList);
     Reset();
   }
+
   void Reset(void)
   {
     NS_IF_RELEASE(mAtom);
@@ -828,18 +841,7 @@ protected:
   nsClassList             mFirstClass;
 
   nsIAtom*                mNameBuffer[kNameBufferSize];
-
-#ifdef DEBUG_REFS
-  PRInt32 mInstance;
-#endif
 };
-
-
-#ifdef DEBUG_REFS
-static PRInt32  gInstanceCount = 0;
-static PRInt32  gInstrument = 4;
-#endif
-
 
 void* HTMLAttributesImpl::operator new(size_t size)
 {
@@ -875,7 +877,6 @@ void HTMLAttributesImpl::operator delete(void* ptr)
   }
 }
 
-
 HTMLAttributesImpl::HTMLAttributesImpl(void)
   : mAttrNames(mNameBuffer),
     mAttrCount(0),
@@ -886,11 +887,6 @@ HTMLAttributesImpl::HTMLAttributesImpl(void)
     mFirstClass(nsnull)
 {
   NS_INIT_REFCNT();
-
-#ifdef DEBUG_REFS
-  mInstance = ++gInstanceCount;
-  fprintf(stdout, "%d of %d + HTMLAttributes\n", mInstance, gInstanceCount);
-#endif
 }
 
 HTMLAttributesImpl::HTMLAttributesImpl(const HTMLAttributesImpl& aCopy)
@@ -929,51 +925,15 @@ HTMLAttributesImpl::HTMLAttributesImpl(const HTMLAttributesImpl& aCopy)
   }
 
   NS_IF_ADDREF(mID);
-
-#ifdef DEBUG_REFS
-  mInstance = ++gInstanceCount;
-  fprintf(stdout, "%d of %d + HTMLAttributes\n", mInstance, gInstanceCount);
-#endif
 }
 
 HTMLAttributesImpl::~HTMLAttributesImpl(void)
 {
   Reset();
-
-#ifdef DEBUG_REFS
-  fprintf(stdout, "%d of %d - HTMLAttributes\n", mInstance, gInstanceCount);
-  --gInstanceCount;
-#endif
 }
 
-#ifdef DEBUG_REFS
-nsrefcnt HTMLAttributesImpl::AddRef(void)                                
-{                                    
-  if ((gInstrument == -1) || (mInstance == gInstrument)) {
-    fprintf(stdout, "%d AddRef HTMLAttributes %d\n", mRefCnt + 1, mInstance);
-  }
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "HTMLAttributesImpl");
-  return mRefCnt;
-}
-
-nsrefcnt HTMLAttributesImpl::Release(void)                         
-{                                                      
-  if ((gInstrument == -1) || (mInstance == gInstrument)) {
-    fprintf(stdout, "%d Release HTMLAttributes %d\n", mRefCnt - 1, mInstance);
-  }
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "HTMLAttributesImpl");
-  if (mRefCnt == 0) {
-    delete this;                                       
-    return 0;                                          
-  }                                                    
-  return mRefCnt;                                      
-}
-#else
 NS_IMPL_ADDREF(HTMLAttributesImpl)
 NS_IMPL_RELEASE(HTMLAttributesImpl)
-#endif
 
 NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, kIHTMLAttributesIID);
 

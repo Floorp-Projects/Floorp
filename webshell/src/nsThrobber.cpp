@@ -111,7 +111,7 @@ public:
 //-----------------------------------------------
   nsrefcnt AddRefObject() {
     ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsThrobber");
+    NS_LOG_ADDREF(this, mRefCnt, "nsThrobber", sizeof(*this));
     return mRefCnt;
   }
 

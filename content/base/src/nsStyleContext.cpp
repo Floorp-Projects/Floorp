@@ -26,8 +26,6 @@
 
 #include "nsIFrame.h"
 
-//#define DEBUG_REFS
-
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
 #define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nsnull; }
@@ -1372,25 +1370,15 @@ protected:
   StyleContentImpl        mContent;
   StyleUserInterfaceImpl  mUserInterface;
 
-#ifdef DEBUG_REFS
-  PRInt32 mInstance;
-#endif
 };
 
 static PRInt32 gLastDataCode;
-
-#ifdef DEBUG_REFS
-static PRInt32 gInstanceCount;
-static PRInt32 gInstrument = 6;
-#endif
 
 static PRBool HashStyleRule(nsISupports* aRule, void* aData)
 {
   *((PRUint32*)aData) ^= PRUint32(aRule);
   return PR_TRUE;
 }
-
-MOZ_DECL_CTOR_COUNTER(StyleContextImpl);
 
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
                                    nsIAtom* aPseudoTag,
@@ -1413,8 +1401,6 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mContent(),
     mUserInterface()
 {
-  MOZ_COUNT_CTOR(StyleContextImpl);
-
   NS_INIT_REFCNT();
   NS_IF_ADDREF(mPseudoTag);
   NS_IF_ADDREF(mRules);
@@ -1430,17 +1416,10 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
   if (nsnull != mRules) {
     mRules->EnumerateForwards(HashStyleRule, &mRuleHash);
   }
-
-#ifdef DEBUG_REFS
-  mInstance = ++gInstanceCount;
-  fprintf(stdout, "%d of %d + StyleContext\n", mInstance, gInstanceCount);
-#endif
 }
 
 StyleContextImpl::~StyleContextImpl()
 {
-  MOZ_COUNT_DTOR(StyleContextImpl);
-
   NS_ASSERTION((nsnull == mChild) && (nsnull == mEmptyChild), "destructing context with children");
 
   if (mParent) {
@@ -1451,76 +1430,9 @@ StyleContextImpl::~StyleContextImpl()
   NS_IF_RELEASE(mPseudoTag);
 
   NS_IF_RELEASE(mRules);
-
-#ifdef DEBUG_REFS
-  fprintf(stdout, "%d of %d - StyleContext\n", mInstance, gInstanceCount);
-  --gInstanceCount;
-#endif
 }
 
-#ifdef LOG_ADDREF_RELEASE
-extern "C" {
-  void __log_addref(void* p, int oldrc, int newrc);
-  void __log_release(void* p, int oldrc, int newrc);
-}
-
-NS_IMPL_QUERY_INTERFACE(StyleContextImpl, kIStyleContextIID)
-
-nsrefcnt StyleContextImpl::AddRef(void)
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "StyleContextImpl");
-  return mRefCnt;
-}
-
-nsrefcnt StyleContextImpl::Release(void)
-{
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-  __log_release((void*) this, mRefCnt, mRefCnt - 1);
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "StyleContextImpl");
-  if (mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
-#else
-
-#ifdef DEBUG_REFS
-NS_IMPL_QUERY_INTERFACE(StyleContextImpl, kIStyleContextIID)
-
-nsrefcnt StyleContextImpl::AddRef(void)                                
-{                                    
-  if ((gInstrument == -1) || (mInstance == gInstrument)) {
-    fprintf(stdout, "%d AddRef StyleContext %d\n", mRefCnt + 1, mInstance);
-  }
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "StyleContextImpl");
-  return mRefCnt;
-}
-
-nsrefcnt StyleContextImpl::Release(void)                         
-{                                                      
-  if ((gInstrument == -1) || (mInstance == gInstrument)) {
-    fprintf(stdout, "%d Release StyleContext %d\n", mRefCnt - 1, mInstance);
-  }
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "StyleContextImpl");
-  if (mRefCnt == 0) {
-    delete this;                                       
-    return 0;                                          
-  }                                                    
-  return mRefCnt;                                      
-}
-#else
 NS_IMPL_ISUPPORTS(StyleContextImpl, kIStyleContextIID)
-#endif
-#endif
-
-
 
 nsIStyleContext* StyleContextImpl::GetParent(void) const
 {

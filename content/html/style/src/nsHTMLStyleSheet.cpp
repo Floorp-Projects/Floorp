@@ -318,15 +318,19 @@ public:
   } mHash;
 };
 
+MOZ_DECL_CTOR_COUNTER(AttributeKey);
+
 AttributeKey::AttributeKey(nsIHTMLMappedAttributes* aAttributes)
   : mAttributes(aAttributes)
 {
+  MOZ_COUNT_CTOR(AttributeKey);
   NS_ADDREF(mAttributes);
   mHash.mInitializer = 0;
 }
 
 AttributeKey::~AttributeKey(void)
 {
+  MOZ_COUNT_DTOR(AttributeKey);
   NS_RELEASE(mAttributes);
 }
 
@@ -503,8 +507,6 @@ void HTMLStyleSheetImpl::operator delete(void* ptr)
     }
   }
 }
-
-
 
 HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
   : nsIHTMLStyleSheet(),

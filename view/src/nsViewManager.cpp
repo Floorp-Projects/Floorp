@@ -83,12 +83,14 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 #endif
 }
 
+#if 0
 static void blinkRect(nsIRenderingContext* context, const nsRect& r)
 {
 	context->InvertRect(r);
 	::PR_Sleep(::PR_MillisecondsToInterval(100));
 	context->InvertRect(r);
 }
+#endif
 
 PRUint32 nsViewManager::mVMCount = 0;
 nsDrawingSurface nsViewManager::mDrawingSurface = nsnull;
@@ -102,20 +104,15 @@ PRInt32 nsViewManager::gBlendHeight = 0;
 
 static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
 
-MOZ_DECL_CTOR_COUNTER(nsViewManager);
-
 nsViewManager :: nsViewManager()
 {
-  MOZ_COUNT_CTOR(nsViewManager);
-
+  NS_INIT_REFCNT();
   mVMCount++;
   mUpdateBatchCnt = 0;
 }
 
 nsViewManager :: ~nsViewManager()
 {
-  MOZ_COUNT_DTOR(nsViewManager);
-
   if (nsnull != mTimer)
   {
     mTimer->Cancel();     //XXX this should not be necessary. MMP
@@ -201,12 +198,7 @@ nsViewManager :: ~nsViewManager()
 
 NS_IMPL_QUERY_INTERFACE(nsViewManager, knsViewManagerIID)
 
-nsrefcnt nsViewManager::AddRef(void)
-{
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsViewManager");
-  return mRefCnt;
-}
+NS_IMPL_ADDREF(nsViewManager);
 
 nsrefcnt nsViewManager::Release(void)
 {
@@ -217,6 +209,7 @@ nsrefcnt nsViewManager::Release(void)
      the destruction has finished to decrement the refcount
      prevents that.
   */
+  NS_LOG_RELEASE(this, mRefCnt - 1, "nsViewManager");
   if (mRefCnt == 1)
   {
     if (nsnull != mRootView) {
@@ -228,7 +221,6 @@ nsrefcnt nsViewManager::Release(void)
     return 0;
   }
   mRefCnt--;
-  NS_LOG_RELEASE(this, mRefCnt, "nsViewManager");
   return mRefCnt;
 }
 
@@ -2645,7 +2637,9 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
     view->GetParent(parent);
     view->GetZIndex(zindex);
     rect *= t2p;
-    printf("%snsIView@%08X [z=%d, x=%d, y=%d, w=%d, h=%d, p=%08X]\n", nest, view, zindex, rect.x, rect.y, rect.width, rect.height, parent);
+    printf("%snsIView@%p [z=%d, x=%d, y=%d, w=%d, h=%d, p=%p]\n",
+           nest, view, zindex,
+           rect.x, rect.y, rect.width, rect.height, parent);
 
     newnestcnt = nestcnt;
 

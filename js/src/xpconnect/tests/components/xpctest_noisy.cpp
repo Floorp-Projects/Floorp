@@ -58,7 +58,7 @@ NS_IMETHODIMP_(nsrefcnt) xpctestNoisy::AddRef(void)
 {
   NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
   ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "xpctestNoisy");
+  NS_LOG_ADDREF(this, mRefCnt, "xpctestNoisy", sizeof(*this));
   printf("Noisy %d - incremented refcount to %d\n", mID, mRefCnt);
   return mRefCnt;
 }

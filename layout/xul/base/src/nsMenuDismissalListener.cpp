@@ -30,6 +30,7 @@ NS_IMPL_RELEASE(nsMenuDismissalListener)
 
 
 ////////////////////////////////////////////////////////////////////////
+
 nsMenuDismissalListener::nsMenuDismissalListener() :
   mWidget(0), mEnabled(PR_TRUE)
 {

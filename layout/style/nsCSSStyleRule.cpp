@@ -79,10 +79,13 @@ static NS_DEFINE_IID(kCSSUserInterfaceSID, NS_CSS_USER_INTERFACE_SID);
 #define NS_IF_DELETE(ptr)   \
   if (nsnull != ptr) { delete ptr; ptr = nsnull; }
 
+MOZ_DECL_CTOR_COUNTER(nsAtomList);
+
 nsAtomList::nsAtomList(nsIAtom* aAtom)
   : mAtom(aAtom),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsAtomList);
   NS_IF_ADDREF(mAtom);
 }
 
@@ -90,6 +93,7 @@ nsAtomList::nsAtomList(const nsString& aAtomValue)
   : mAtom(nsnull),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsAtomList);
   mAtom = NS_NewAtom(aAtomValue);
 }
 
@@ -97,12 +101,14 @@ nsAtomList::nsAtomList(const nsAtomList& aCopy)
   : mAtom(aCopy.mAtom),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsAtomList);
   NS_IF_ADDREF(mAtom);
   NS_IF_COPY(mNext, aCopy.mNext, nsAtomList);
 }
 
 nsAtomList::~nsAtomList(void)
 {
+  MOZ_COUNT_DTOR(nsAtomList);
   NS_IF_RELEASE(mAtom);
   NS_IF_DELETE(mNext);
 }
@@ -123,6 +129,8 @@ PRBool nsAtomList::Equals(const nsAtomList* aOther) const
   return PR_FALSE;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsAttrSelector);
+
 nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
   : mNameSpace(aNameSpace),
     mAttr(nsnull),
@@ -131,6 +139,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr)
     mValue(),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsAttrSelector);
   mAttr = NS_NewAtom(aAttr);
 }
 
@@ -143,6 +152,7 @@ nsAttrSelector::nsAttrSelector(PRInt32 aNameSpace, const nsString& aAttr, PRUint
     mValue(aValue),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsAttrSelector);
   mAttr = NS_NewAtom(aAttr);
 }
 
@@ -154,12 +164,14 @@ nsAttrSelector::nsAttrSelector(const nsAttrSelector& aCopy)
     mValue(aCopy.mValue),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsAttrSelector);
   NS_IF_ADDREF(mAttr);
   NS_IF_COPY(mNext, aCopy.mNext, nsAttrSelector);
 }
 
 nsAttrSelector::~nsAttrSelector(void)
 {
+  MOZ_COUNT_DTOR(nsAttrSelector);
   NS_IF_RELEASE(mAttr);
   NS_IF_DELETE(mNext);
 }
@@ -184,6 +196,8 @@ PRBool nsAttrSelector::Equals(const nsAttrSelector* aOther) const
   return PR_FALSE;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsCSSSelector);
+
 nsCSSSelector::nsCSSSelector(void)
   : mNameSpace(kNameSpaceID_Unknown), mTag(nsnull), 
     mID(nsnull), 
@@ -193,6 +207,7 @@ nsCSSSelector::nsCSSSelector(void)
     mOperator(0),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSSelector);
 }
 
 nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy) 
@@ -204,6 +219,7 @@ nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy)
     mOperator(aCopy.mOperator),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSSelector);
   NS_IF_ADDREF(mTag);
   NS_IF_ADDREF(mID);
   NS_IF_COPY(mClassList, aCopy.mClassList, nsAtomList);
@@ -213,6 +229,7 @@ nsCSSSelector::nsCSSSelector(const nsCSSSelector& aCopy)
 
 nsCSSSelector::~nsCSSSelector(void)  
 {
+  MOZ_COUNT_DTOR(nsCSSSelector);
   Reset();
 }
 
@@ -548,8 +565,12 @@ protected:
   nsICSSStyleRule *mRule;
 };
 
+MOZ_DECL_CTOR_COUNTER(DOMCSSDeclarationImpl);
+
 DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(nsICSSStyleRule *aRule)
 {
+  MOZ_COUNT_CTOR(DOMCSSDeclarationImpl);
+
   // This reference is not reference-counted. The rule
   // object tells us when its about to go away.
   mRule = aRule;
@@ -557,6 +578,7 @@ DOMCSSDeclarationImpl::DOMCSSDeclarationImpl(nsICSSStyleRule *aRule)
 
 DOMCSSDeclarationImpl::~DOMCSSDeclarationImpl(void)
 {
+  MOZ_COUNT_DTOR(DOMCSSDeclarationImpl);
 }
 
 void 
@@ -731,7 +753,6 @@ protected:
   DOMCSSDeclarationImpl*  mDOMDeclaration;                          
   void*                   mScriptObject;                           
 };
-
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
   : nsCSSRule(),

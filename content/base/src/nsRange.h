@@ -15,6 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#ifndef nsRange_h___
+#define nsRange_h___
 
 /*
  * nsRange.h: interface of the nsRange object.
@@ -207,3 +209,5 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
                             nsCOMPtr<nsIDOMNode>* outParent,
                             PRInt32* outStartOffset,
                             PRInt32* outEndOffset);
+
+#endif /* nsRange_h___ */

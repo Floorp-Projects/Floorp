@@ -38,6 +38,8 @@ NS_IMPL_RELEASE(nsTreeTwistyListener)
 
 
 ////////////////////////////////////////////////////////////////////////
+
+
 nsTreeTwistyListener::nsTreeTwistyListener()
 {
   NS_INIT_REFCNT();

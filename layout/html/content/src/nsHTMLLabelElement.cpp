@@ -103,11 +103,9 @@ NS_NewHTMLLabelElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
   return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-MOZ_DECL_CTOR_COUNTER(nsHTMLLabelElement);
 
 nsHTMLLabelElement::nsHTMLLabelElement(nsIAtom* aTag)
 {
-  MOZ_COUNT_CTOR(nsHTMLLabelElement);
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
   mForm = nsnull;
@@ -115,7 +113,6 @@ nsHTMLLabelElement::nsHTMLLabelElement(nsIAtom* aTag)
 
 nsHTMLLabelElement::~nsHTMLLabelElement()
 {
-  MOZ_COUNT_DTOR(nsHTMLLabelElement);
   if (nsnull != mForm) {
     // prevent mForm from decrementing its ref count on us
     mForm->RemoveElement(this, PR_FALSE); 

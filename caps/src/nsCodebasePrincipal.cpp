@@ -36,7 +36,7 @@ nsCodebasePrincipal::AddRef(void)
 {
     NS_PRECONDITION(PRInt32(mJSPrincipals.refcount) >= 0, "illegal refcnt");
     ++mJSPrincipals.refcount;
-    NS_LOG_ADDREF(this, mJSPrincipals.refcount, "nsCodebasePrincipal");
+    NS_LOG_ADDREF(this, mJSPrincipals.refcount, "nsCodebasePrincipal", sizeof(*this));
     return mJSPrincipals.refcount;
 }
 
