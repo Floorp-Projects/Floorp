@@ -439,12 +439,6 @@ final class NativeDate extends IdScriptable
         return IsLeapYear(YearFromTime(t));
     }
 
-    private static int DayWithinYear(double t)
-    {
-        int year = YearFromTime(t);
-        return (int) (Day(t) - DayFromYear(year));
-    }
-
     private static double DayFromMonth(int m, int year)
     {
         int day = m * 30;
@@ -460,92 +454,81 @@ final class NativeDate extends IdScriptable
 
     private static int MonthFromTime(double t)
     {
-        int d, step;
+        int year = YearFromTime(t);
+        int d = (int)(Day(t) - DayFromYear(year));
 
-        d = DayWithinYear(t);
+        d -= 31 + 28;
+        if (d < 0) {
+            return (d < -28) ? 0 : 1;
+        }
 
-        if (d < (step = 31))
-            return 0;
+        if (IsLeapYear(year)) {
+            if (d == 0)
+                return 1; // 29 February
+            --d;
+        }
 
-        // Originally coded as step += (InLeapYear(t) ? 29 : 28);
-        // but some jits always returned 28!
-        if (InLeapYear(t))
-            step += 29;
-        else
-            step += 28;
-
-        if (d < step)
-            return 1;
-        if (d < (step += 31))
-            return 2;
-        if (d < (step += 30))
-            return 3;
-        if (d < (step += 31))
-            return 4;
-        if (d < (step += 30))
-            return 5;
-        if (d < (step += 31))
-            return 6;
-        if (d < (step += 31))
-            return 7;
-        if (d < (step += 30))
-            return 8;
-        if (d < (step += 31))
-            return 9;
-        if (d < (step += 30))
-            return 10;
-        return 11;
+        // d: date count from 1 March
+        int estimate = d / 30; // approx number of month since March
+        int mstart;
+        switch (estimate) {
+            case 0: return 2;
+            case 1: mstart = 31; break;
+            case 2: mstart = 31+30; break;
+            case 3: mstart = 31+30+31; break;
+            case 4: mstart = 31+30+31+30; break;
+            case 5: mstart = 31+30+31+30+31; break;
+            case 6: mstart = 31+30+31+30+31+31; break;
+            case 7: mstart = 31+30+31+30+31+31+30; break;
+            case 8: mstart = 31+30+31+30+31+31+30+31; break;
+            case 9: mstart = 31+30+31+30+31+31+30+31+30; break;
+            case 10: return 11; //Late december
+            default: throw Kit.codeBug();
+        }
+        // if d < mstart then real month since March == estimate - 1
+        return (d >= mstart) ? estimate + 2 : estimate + 1;
     }
 
     private static int DateFromTime(double t)
     {
-        int d, step, next;
+        int year = YearFromTime(t);
+        int d = (int)(Day(t) - DayFromYear(year));
 
-        d = DayWithinYear(t);
-        if (d <= (next = 30))
-            return d + 1;
-        step = next;
+        d -= 31 + 28;
+        if (d < 0) {
+            return (d < -28) ? d + 31 + 28 + 1 : d + 28 + 1;
+        }
 
-        // Originally coded as next += (InLeapYear(t) ? 29 : 28);
-        // but some jits always returned 28!
-        if (InLeapYear(t))
-            next += 29;
-        else
-            next += 28;
+        if (IsLeapYear(year)) {
+            if (d == 0)
+                return 29; // 29 February
+            --d;
+        }
 
-        if (d <= next)
-            return d - step;
-        step = next;
-        if (d <= (next += 31))
-            return d - step;
-        step = next;
-        if (d <= (next += 30))
-            return d - step;
-        step = next;
-        if (d <= (next += 31))
-            return d - step;
-        step = next;
-        if (d <= (next += 30))
-            return d - step;
-        step = next;
-        if (d <= (next += 31))
-            return d - step;
-        step = next;
-        if (d <= (next += 31))
-            return d - step;
-        step = next;
-        if (d <= (next += 30))
-            return d - step;
-        step = next;
-        if (d <= (next += 31))
-            return d - step;
-        step = next;
-        if (d <= (next += 30))
-            return d - step;
-        step = next;
-
-        return d - step;
-    }
+        // d: date count from 1 March
+        int mdays, mstart;
+        switch (d / 30) { // approx number of month since March
+            case 0: return d + 1;
+            case 1: mdays = 31; mstart = 31; break;
+            case 2: mdays = 30; mstart = 31+30; break;
+            case 3: mdays = 31; mstart = 31+30+31; break;
+            case 4: mdays = 30; mstart = 31+30+31+30; break;
+            case 5: mdays = 31; mstart = 31+30+31+30+31; break;
+            case 6: mdays = 31; mstart = 31+30+31+30+31+31; break;
+            case 7: mdays = 30; mstart = 31+30+31+30+31+31+30; break;
+            case 8: mdays = 31; mstart = 31+30+31+30+31+31+30+31; break;
+            case 9: mdays = 30; mstart = 31+30+31+30+31+31+30+31+30; break;
+            case 10:
+                return d - (31+30+31+30+31+31+30+31+30) + 1; //Late december
+            default: throw Kit.codeBug();
+        }
+        d -= mstart;
+        if (d < 0) {
+            // wrong estimate: sfhift to previous month
+            d += mdays;
+        }
+        return d + 1;
+     }
 
     private static int WeekDay(double t)
     {
