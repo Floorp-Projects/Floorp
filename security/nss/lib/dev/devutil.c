@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.9 $ $Date: 2002/04/22 14:14:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.10 $ $Date: 2002/04/22 15:21:06 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -1268,6 +1268,7 @@ nssTokenObjectCache_ImportObject
     PRUint32 count;
     nssCryptokiObjectAndAttributes **oa, ***otype;
     PRUint32 objectType;
+    PRBool haveIt = PR_FALSE;
     PZ_Lock(cache->lock);
     switch (objclass) {
     case CKO_CERTIFICATE:    objectType = cachedCerts; break;
@@ -1284,13 +1285,28 @@ nssTokenObjectCache_ImportObject
     count = 0;
     otype = &cache->objects[objectType]; /* index into array of types */
     oa = *otype; /* the array of objects for this type */
-    while (oa && *oa++) count++;
-    if (count > 0) {
-	*otype = nss_ZREALLOCARRAY(*otype,
-	                           nssCryptokiObjectAndAttributes *, 
-	                           count + 2);
+    while (oa && *oa) {
+	if (nssCryptokiObject_Equal((*oa)->object, object)) {
+	    haveIt = PR_TRUE;
+	    break;
+	}
+	count++;
+	oa++;
+    }
+    if (haveIt) {
+	/* Destroy the old entry */
+	(*oa)->object->token = NULL;
+	nssCryptokiObject_Destroy((*oa)->object);
+	nssArena_Destroy((*oa)->arena);
     } else {
-	*otype = nss_ZNEWARRAY(NULL, nssCryptokiObjectAndAttributes *, 2);
+	/* Create space for a new entry */
+	if (count > 0) {
+	    *otype = nss_ZREALLOCARRAY(*otype,
+	                               nssCryptokiObjectAndAttributes *, 
+	                               count + 2);
+	} else {
+	    *otype = nss_ZNEWARRAY(NULL, nssCryptokiObjectAndAttributes *, 2);
+	}
     }
     if (*otype) {
 	nssCryptokiObject *copyObject = nssCryptokiObject_Clone(object);
