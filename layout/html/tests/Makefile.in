@@ -52,7 +52,6 @@ LIBS = \
 	-lnetcache \
 	-lsockstuburl \
 	-lnetwork \
-	$(TK_LIBS) \
 	-lpref \
 	-lsecfree \
 	-l$(MOZ_LIB_JS_PREFIX)js \
@@ -67,6 +66,7 @@ LIBS = \
 	-lexpat \
 	-lxmltok \
 	-ljsurl \
+	$(TK_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
