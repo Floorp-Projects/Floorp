@@ -83,7 +83,7 @@ protected:
   nsresult          GetHistoryFile();
 
   PRBool            EntryHasExpired(HistoryEntry *entry);
-  static PRIntn     enumRemoveEntryIfExpired(nsHashKey *aKey, void *aData, void* closure);
+  static PRIntn PR_CALLBACK enumRemoveEntryIfExpired(nsHashKey *aKey, void *aData, void* closure);
 
 protected:
   PRBool            mDataIsLoaded;
