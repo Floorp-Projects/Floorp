@@ -69,3 +69,14 @@ li > ol:first-node {
   padding-top: 1em;
 }
 
+/* text input */
+input[type="text"] {
+  font-family:-moz-fixed;
+  border-width: 2px !important;
+  border-width: inset  !important;
+  border-color: rgb(204, 204, 204); 
+  padding-top:    1px;
+  padding-bottom: 0px;
+  padding-left:   0px;
+  padding-right:  0px;
+} 
