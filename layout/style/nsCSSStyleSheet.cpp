@@ -3068,7 +3068,8 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
         //            When style resolution due to state changes is optimized this
         //            should go back to QuirksMode only behavour (see also bug 75559)
         PRBool isSelectorGlobal = aSelector->mTag==nsnull ? PR_TRUE : PR_FALSE;
-        if ((!IsEventSensitive(pseudoClass->mAtom, data.mContentTag, isSelectorGlobal))){
+        if ((data.mIsHTMLContent) &&
+            (!IsEventSensitive(pseudoClass->mAtom, data.mContentTag, isSelectorGlobal))){
           result = localFalse;
         } else if (aTestState) {
           if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
