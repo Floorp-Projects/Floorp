@@ -17,16 +17,12 @@
        (grammar-argument :beta allow-in no-in)
        
        (%subsection "Identifiers")
-       (production :attribute-identifier ($identifier) attribute-identifier-identifier)
-       (production :attribute-identifier (get) attribute-identifier-get)
-       (production :attribute-identifier (set) attribute-identifier-set)
-
-       (production :identifier (:attribute-identifier) identifier-attribute-identifier)
-       (production :identifier (attribute) identifier-attribute)
-       (production :identifier (constructor) identifier-constructor)
-       (production :identifier (language) identifier-language)
-       (production :identifier (namespace) identifier-namespace)
-       (production :identifier (use) identifier-use)
+       (production :identifier ($identifier) identifier-identifier)
+       (production :identifier (get) identifier-get)
+       (production :identifier (set) identifier-set)
+       ;(production :identifier (constructor) identifier-constructor)
+       ;(production :identifier (namespace) identifier-namespace)
+       ;(production :identifier (use) identifier-use)
 
        (production :qualified-identifier (:identifier) qualified-identifier-identifier)
        (production :qualified-identifier (:qualifier \:\: :qualified-identifier) qualified-identifier-qualifier)
@@ -36,7 +32,7 @@
        (production :qualifier (package) qualifier-package)
        (production :qualifier (private) qualifier-private)
        (production :qualifier (super) qualifier-super)
-       (production :qualifier (:parenthesized-expression) qualifier-parenthesized-expression)
+       ;(production :qualifier (:parenthesized-expression) qualifier-parenthesized-expression)
        
        
        (%subsection "Primary Expressions")
@@ -48,15 +44,15 @@
        (production :primary-expression ($number :no-line-break $string) primary-expression-number-with-unit)
        (production :primary-expression ($string) primary-expression-string)
        (production :primary-expression (this) primary-expression-this)
-       (production :primary-expression (:qualified-identifier) primary-expression-qualified-identifier)
        (production :primary-expression ($regular-expression) primary-expression-regular-expression)
        (production :primary-expression (:parenthesized-expression) primary-expression-parenthesized-expression)
        (production :primary-expression (:parenthesized-expression :no-line-break $string) primary-expression-parenthesized-expression-with-unit)
        (production :primary-expression (:array-literal) primary-expression-array-literal)
        (production :primary-expression (:object-literal) primary-expression-object-literal)
        (production :primary-expression (:function-expression) primary-expression-function-expression)
+       (production :primary-expression (eval \( (:assignment-expression allow-in) \)) primary-expression-eval)
        
-       (production :parenthesized-expression (\( (:expression allow-in) \)) parenthesized-expression-expression)
+       (production :parenthesized-expression (\( (:list-expression allow-in) \)) parenthesized-expression-list-expression)
        
        
        (%subsection "Function Expressions")
@@ -89,21 +85,29 @@
        
        
        (%subsection "Postfix Unary Operators")
+       (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression)
        (production :postfix-expression (:full-postfix-expression) postfix-expression-full-postfix-expression)
        (production :postfix-expression (:short-new-expression) postfix-expression-short-new-expression)
        
+       (production :attribute-expression (:qualified-identifier) attribute-expression-qualified-identifier)
+       (production :attribute-expression (:attribute-expression :member-operator) attribute-expression-member-operator)
+       (production :attribute-expression (:attribute-expression :arguments) attribute-expression-call1)
+
        (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression)
        (production :full-postfix-expression (:full-new-expression) full-postfix-expression-full-new-expression)
        (production :full-postfix-expression (:full-postfix-expression :member-operator) full-postfix-expression-member-operator)
        (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call)
        (production :full-postfix-expression (:postfix-expression :no-line-break ++) full-postfix-expression-increment)
        (production :full-postfix-expression (:postfix-expression :no-line-break --) full-postfix-expression-decrement)
+       (production :full-postfix-expression (:postfix-expression @ :qualified-identifier) full-postfix-expression-coerce)
+       (production :full-postfix-expression (:postfix-expression @ :parenthesized-expression) full-postfix-expression-indirect-coerce)
        
        (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new)
        
        (production :short-new-expression (new :short-new-subexpression) short-new-expression-new)
        
        (production :full-new-subexpression (:primary-expression) full-new-subexpression-primary-expression)
+       (production :full-new-subexpression (:qualified-identifier) full-new-subexpression-qualified-identifier)
        (production :full-new-subexpression (:full-new-subexpression :member-operator) full-new-subexpression-member-operator)
        (production :full-new-subexpression (:full-new-expression) full-new-subexpression-full-new-expression)
        
@@ -113,28 +117,22 @@
        (production :member-operator ([ :argument-list ]) member-operator-array)
        (production :member-operator (\. :qualified-identifier) member-operator-property)
        (production :member-operator (\. :parenthesized-expression) member-operator-indirect-property)
-       (production :member-operator (@ :qualified-identifier) member-operator-coerce)
-       (production :member-operator (@ :parenthesized-expression) member-operator-indirect-coerce)
        
        (production :arguments (\( :argument-list \)) arguments-argument-list)
        
        (production :argument-list () argument-list-none)
-       (production :argument-list (:argument-list-prefix) argument-list-unnamed)
-       (production :argument-list (:named-argument-list-prefix) argument-list-named)
+       (production :argument-list ((:list-expression allow-in)) argument-list-unnamed)
+       (production :argument-list (:named-argument-list) argument-list-named)
        
-       (production :argument-list-prefix ((:assignment-expression allow-in)) argument-list-prefix-one)
-       (production :argument-list-prefix (:argument-list-prefix \, (:assignment-expression allow-in)) argument-list-prefix-more)
-       
-       (production :named-argument-list-prefix (:literal-field) named-argument-list-prefix-one)
-       (production :named-argument-list-prefix (:argument-list-prefix \, :literal-field) named-argument-list-prefix-unnamed)
-       (production :named-argument-list-prefix (:named-argument-list-prefix \, :literal-field) named-argument-list-prefix-more)
+       (production :named-argument-list (:literal-field) named-argument-list-one)
+       (production :named-argument-list ((:list-expression allow-in) \, :literal-field) named-argument-list-unnamed)
+       (production :named-argument-list (:named-argument-list \, :literal-field) named-argument-list-more)
        
        
        (%subsection "Prefix Unary Operators")
        (production :unary-expression (:postfix-expression) unary-expression-postfix)
        (production :unary-expression (delete :postfix-expression) unary-expression-delete)
        (production :unary-expression (typeof :unary-expression) unary-expression-typeof)
-       (production :unary-expression (eval :unary-expression) unary-expression-eval)
        (production :unary-expression (++ :postfix-expression) unary-expression-increment)
        (production :unary-expression (-- :postfix-expression) unary-expression-decrement)
        (production :unary-expression (+ :unary-expression) unary-expression-plus)
@@ -188,13 +186,9 @@
        
        (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and)
        (production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ (:bitwise-and-expression :beta)) bitwise-xor-expression-xor)
-       ;(production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ *) bitwise-xor-expression-null)
-       ;(production (:bitwise-xor-expression :beta) ((:bitwise-xor-expression :beta) ^ ?) bitwise-xor-expression-undefined)
        
        (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor)
        (production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| (:bitwise-xor-expression :beta)) bitwise-or-expression-or)
-       ;(production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| *) bitwise-or-expression-null)
-       ;(production (:bitwise-or-expression :beta) ((:bitwise-or-expression :beta) \| ?) bitwise-or-expression-undefined)
        
        
        (%subsection "Binary Logical Operators")
@@ -237,11 +231,11 @@
        (production :compound-assignment (\|\|=) compound-assignment-logical-or)
        
        
-       (%subsection "Expressions")
-       (production (:expression :beta) ((:assignment-expression :beta)) expression-assignment)
-       (production (:expression :beta) ((:expression :beta) \, (:assignment-expression :beta)) expression-comma)
+       (%subsection "Comma Expressions")
+       (production (:list-expression :beta) ((:assignment-expression :beta)) list-expression-assignment)
+       (production (:list-expression :beta) ((:list-expression :beta) \, (:assignment-expression :beta)) list-expression-comma)
        
-       (production :optional-expression ((:expression allow-in)) optional-expression-expression)
+       (production :optional-expression ((:list-expression allow-in)) optional-expression-expression)
        (production :optional-expression () optional-expression-empty)
        
        
@@ -258,7 +252,7 @@
        (grammar-argument :omega_2 abbrev full)
        
        (production (:top-statement :omega_2) ((:statement :omega_2)) top-statement-statement)
-       (production (:top-statement :omega_2) (:attribute-definition (:noninsertable-semicolon :omega_2)) top-statement-attribute-definition)
+       ;(production (:top-statement :omega_2) (:attribute-definition (:noninsertable-semicolon :omega_2)) top-statement-attribute-definition)
        (production (:top-statement :omega_2) (:language-declaration (:noninsertable-semicolon :omega_2)) top-statement-language-declaration)
        (production (:top-statement :omega_2) (:package-definition) top-statement-package-definition)
        
@@ -295,13 +289,13 @@
        
        
        (%subsection "Expression Statement")
-       (production :expression-statement ((:- function {) (:expression allow-in)) expression-statement-expression)
+       (production :expression-statement ((:- function {) (:list-expression allow-in)) expression-statement-list-expression)
        
        
        (%subsection "Block")
        (production :annotated-block (:block) annotated-block-block)
-       (production :annotated-block ((:- package) :attributes :block) annotated-block-attributes-and-block)
-       (production :annotated-block (package :no-line-break :block) annotated-block-package-and-block)
+       (production :annotated-block (#|(:- package)|# :attributes :no-line-break :block) annotated-block-attributes-and-block)
+       ;(production :annotated-block (package :no-line-break :block) annotated-block-package-and-block)
        
        (production :block ({ :top-statements }) block-top-statements)
        
@@ -329,7 +323,7 @@
        (production (:case-statement :omega_2) ((:statement :omega_2)) case-statement-statement)
        (production (:case-statement :omega_2) (:case-label) case-statement-case-label)
        
-       (production :case-label (case (:expression allow-in) \:) case-label-case)
+       (production :case-label (case (:list-expression allow-in) \:) case-label-case)
        (production :case-label (default \:) case-label-default)
        
        (production :case-statements () case-statements-none)
@@ -351,14 +345,14 @@
        (%subsection "For Statements")
        (production (:for-statement :omega) (for \( :for-initializer \; :optional-expression \; :optional-expression \)
                                                 (:statement :omega)) for-statement-c-style)
-       (production (:for-statement :omega) (for \( :for-in-binding in (:expression allow-in) \) (:statement :omega)) for-statement-in)
+       (production (:for-statement :omega) (for \( :for-in-binding in (:list-expression allow-in) \) (:statement :omega)) for-statement-in)
        
        (production :for-initializer () for-initializer-empty)
-       (production :for-initializer ((:expression no-in)) for-initializer-expression)
-       (production :for-initializer (:attributes :variable-definition-kind (:variable-binding-list no-in)) for-initializer-variable-definition)
+       (production :for-initializer ((:list-expression no-in)) for-initializer-expression)
+       (production :for-initializer (:attributes :no-line-break :variable-definition-kind (:variable-binding-list no-in)) for-initializer-variable-definition)
        
        (production :for-in-binding (:postfix-expression) for-in-binding-expression)
-       (production :for-in-binding (:attributes :variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
+       (production :for-in-binding (:attributes :no-line-break :variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
        
        
        (%subsection "With Statement")
@@ -375,11 +369,11 @@
        
        (%subsection "Return Statement")
        (production :return-statement (return) return-statement-default)
-       (production :return-statement (return :no-line-break (:expression allow-in)) return-statement-expression)
+       (production :return-statement (return :no-line-break (:list-expression allow-in)) return-statement-expression)
        
        
        (%subsection "Throw Statement")
-       (production :throw-statement (throw :no-line-break (:expression allow-in)) throw-statement-throw)
+       (production :throw-statement (throw :no-line-break (:list-expression allow-in)) throw-statement-throw)
        
        
        (%subsection "Try Statement")
@@ -406,10 +400,10 @@
        (production :import-binding (:identifier = :package-name) import-binding-named-package-name)
        
        (production :package-name ($string) package-name-string)
-       (production :package-name (:compound-package-name) package-name-compound)
+       ;(production :package-name (:compound-package-name) package-name-compound)
        
-       (production :compound-package-name (:identifier) compound-package-name-one)
-       (production :compound-package-name (:compound-package-name \. :identifier) compound-package-name-more)
+       ;(production :compound-package-name (:identifier) compound-package-name-one)
+       ;(production :compound-package-name (:compound-package-name \. :identifier) compound-package-name-more)
 
        
        (%subsection "Use Statement")
@@ -421,24 +415,28 @@
        
        (%section "Definitions")
        (production (:annotated-definition :omega) ((:definition :omega)) annotated-definition-definition)
-       (production (:annotated-definition :omega) ((:- package) :attributes (:definition :omega)) annotated-definition-attribute-and-definition)
-       (production (:annotated-definition :omega) (package :no-line-break (:annotated-definition :omega)) annotated-definition-package-and-definition)
+       (production (:annotated-definition :omega) (#|(:- package)|# :attributes :no-line-break (:definition :omega)) annotated-definition-attribute-and-definition)
+       ;(production (:annotated-definition :omega) (package :no-line-break (:annotated-definition :omega)) annotated-definition-package-and-definition)
        
+       #|
        (%text :grammar
          "The last two " (:grammar-symbol (:annotated-definition :omega)) " productions together have the same effect as "
          (:grammar-symbol (:annotated-definition :omega)) " " :derives-10 " " (:grammar-symbol :attributes) " " (:grammar-symbol (:definition :omega))
          " except that the latter would make the grammar non-LR(1).")
+       |#
 
-       (production :attributes (:attribute :no-line-break) attributes-one)
+       (production :attributes (:attribute) attributes-one)
        (production :attributes (:attribute :no-line-break :attributes) attributes-more)
 
-       (production :attribute (:attribute-identifier) attribute-attribute-identifier)
-       (production :attribute (final) attribute-final)
-       (production :attribute (package) attribute-package)
-       (production :attribute (private) attribute-private)
-       (production :attribute (public) attribute-public)
-       (production :attribute (static) attribute-static)
-       (production :attribute (volatile) attribute-volatile)
+       (production :attribute (:attribute-expression) attribute-attribute-expression)
+       (production :attribute (:keyword-attribute) attribute-keyword-attribute)
+
+       (production :keyword-attribute (final) keyword-attribute-final)
+       (production :keyword-attribute (package) keyword-attribute-package)
+       (production :keyword-attribute (private) keyword-attribute-private)
+       (production :keyword-attribute (public) keyword-attribute-public)
+       (production :keyword-attribute (static) keyword-attribute-static)
+       (production :keyword-attribute (volatile) keyword-attribute-volatile)
 
        (production (:definition :omega) (:export-definition (:semicolon :omega)) definition-export-definition)
        (production (:definition :omega) (:variable-definition (:semicolon :omega)) definition-variable-definition)
@@ -469,6 +467,7 @@
        
        (production (:variable-binding :beta) ((:typed-variable :beta)) variable-binding-simple)
        (production (:variable-binding :beta) ((:typed-variable :beta) = (:assignment-expression :beta)) variable-binding-initialized)
+       (production (:variable-binding :beta) ((:typed-variable :beta) = :attribute :no-line-break :attributes) variable-binding-attributes)
        
        (production (:typed-variable :beta) (:qualified-identifier) typed-variable-identifier)
        (production (:typed-variable :beta) (:qualified-identifier \: (:type-expression :beta)) typed-variable-identifier-and-type)
@@ -538,38 +537,37 @@
        (%subsection "Interface Definition")
        (production (:interface-definition :omega) (interface :qualified-identifier :extends-list :block) interface-definition-definition)
        (production (:interface-definition :omega) (interface :qualified-identifier (:semicolon :omega)) interface-definition-declaration)
+       
+       
+       (%subsection "Namespace Definition")
+       (production :namespace-definition (namespace :identifier :extends-list) namespace-definition-normal)
 
        (production :extends-list () extends-list-none)
        (production :extends-list (extends :type-expression-list) extends-list-one)
        
        
-       (%subsection "Namespace Definition")
-       (production :namespace-definition (namespace :no-line-break :identifier :extends-list) namespace-definition-normal)
-       
-       
-       (%subsection "Attribute Definition")
-       (production :attribute-definition (attribute :no-line-break :identifier =) attribute-definition-none)
-       (production :attribute-definition (default =) attribute-definition-default)
-       (production :attribute-definition (:attribute-definition :attribute) attribute-definition-identifier)
-       (production :attribute-definition (:attribute-definition namespace \( (:type-expression allow-in) \)) attribute-definition-namespace)
+       ;(%subsection "Attribute Definition")
+       ;(production :attribute-definition (attribute :no-line-break :identifier =) attribute-definition-none)
+       ;(production :attribute-definition (default =) attribute-definition-default)
+       ;(production :attribute-definition (:attribute-definition :attribute) attribute-definition-identifier)
+       ;(production :attribute-definition (:attribute-definition namespace \( (:type-expression allow-in) \)) attribute-definition-namespace)
        
        
        (%section "Language Declaration")
-       (production :language-declaration (language :no-line-break :language-ids :language-alternatives) language-declaration-one-or-more)
+       (production :language-declaration (use :language-alternatives) language-declaration-language-alternatives)
        
-       (production :language-alternatives () language-alternatives-none)
-       (production :language-alternatives (\|) language-alternatives-empty)
-       (production :language-alternatives (\| :language-ids :language-alternatives) language-alternatives-more)
+       (production :language-alternatives (:language-ids) language-alternatives-one)
+       (production :language-alternatives (:language-alternatives \| :language-ids) language-alternatives-more)
        
-       (production :language-ids (:language-id) language-ids-one)
-       (production :language-ids (:language-id :no-line-break :language-ids) language-ids-more)
+       (production :language-ids () language-ids-none)
+       (production :language-ids (:language-id :language-ids) language-ids-more)
        
        (production :language-id (:identifier) language-id-identifier)
        (production :language-id ($number) language-id-number)
        
        
        (%section "Package Definition")
-       (production :package-definition (package :no-line-break :package-name :block) package-definition-named)
+       (production :package-definition (package :package-name :block) package-definition-named)
 
        
        (%section "Programs")
@@ -632,7 +630,7 @@
   (labels
     ((production-first-terminal (production)
        (first (production-rhs production)))
-
+     
      (terminal-bin (terminal)
        (if (and terminal (symbolp terminal))
          (let ((name (symbol-name terminal)))
@@ -641,10 +639,7 @@
                (cond
                 ((char= first-char #\$) 0)
                 ((not (or (char= first-char #\_) (alphanumericp first-char))) 1)
-                ((or
-                  (member terminal (rule-productions (grammar-rule grammar ':attribute-identifier)) :key #'production-first-terminal)
-                  (member terminal (rule-productions (grammar-rule grammar ':identifier)) :key #'production-first-terminal))
-                 5)
+                ((member terminal (rule-productions (grammar-rule grammar ':identifier)) :key #'production-first-terminal) 5)
                 (t 3)))
              1))
          1))
@@ -660,7 +655,7 @@
            (terminals (remove-if #'lf-terminal? all-terminals)))
       (assert-true (= (length all-terminals) (1- (* 2 (length terminals)))))
       (setf (svref bins 2) (list '\# '&&= '-> '@ '^^ '^^= '\|\|=))
-      (setf (svref bins 4) (list 'abstract 'class 'const 'debugger 'enum 'export 'extends 'final 'goto 'implements 'import
+      (setf (svref bins 4) (list 'abstract 'class 'const 'debugger 'enum 'export 'extends 'final 'goto 'implements 'import 'include
                                  'interface 'native 'package 'private 'protected 'public 'static 'super 'synchronized
                                  'throws 'transient 'volatile))
       (do ((i (length terminals)))
