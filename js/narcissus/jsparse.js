@@ -436,11 +436,12 @@ function Statement(t, x) {
         }
         ss = x.stmtStack;
         i = ss.length;
-        if (n.label) {
+        label = n.label;
+        if (label) {
             do {
                 if (--i < 0)
                     throw t.newSyntaxError("Label not found");
-            } while (ss[i].label != n.label);
+            } while (ss[i].label != label);
         } else {
             do {
                 if (--i < 0) {
@@ -608,7 +609,6 @@ function ParenExpression(t, x) {
 
 var opPrecedence = {
     SEMICOLON: 0,
-
     COMMA: 1,
     ASSIGN: 2,
     HOOK: 3, COLON: 3, CONDITIONAL: 3,
@@ -622,14 +622,10 @@ var opPrecedence = {
     LSH: 11, RSH: 11, URSH: 11,
     PLUS: 12, MINUS: 12,
     MUL: 13, DIV: 13, MOD: 13,
-
     DELETE: 14, VOID: 14, TYPEOF: 14, // PRE_INCREMENT: 14, PRE_DECREMENT: 14,
     NOT: 14, BITWISE_NOT: 14, UNARY_PLUS: 14, UNARY_MINUS: 14,
-
     INCREMENT: 15, DECREMENT: 15,     // postfix
-
     NEW: 16,
-
     DOT: 17
 };
 
@@ -651,12 +647,9 @@ var opArity = {
     LSH: 2, RSH: 2, URSH: 2,
     PLUS: 2, MINUS: 2,
     MUL: 2, DIV: 2, MOD: 2,
-
     DELETE: 1, VOID: 1, TYPEOF: 1,  // PRE_INCREMENT: 1, PRE_DECREMENT: 1,
     NOT: 1, BITWISE_NOT: 1, UNARY_PLUS: 1, UNARY_MINUS: 1,
-
     INCREMENT: 1, DECREMENT: 1,     // postfix
-
     NEW: 1, NEW_WITH_ARGS: 2, DOT: 2, INDEX: 2, CALL: 2,
     ARRAY_INIT: 1, OBJECT_INIT: 1, GROUP: 1
 };
