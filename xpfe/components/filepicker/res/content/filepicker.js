@@ -100,7 +100,7 @@ function onOK()
     if (isFile) {
       retvals.directory = file.parent.path;
       ret = nsIFilePicker.returnOK;
-    } else if (isDirectory) {
+    } else if (isDir) {
       if (!sfile.equals(file)) {
         gotoDirectory(file.path);
       }
@@ -337,36 +337,4 @@ function gotoDirectory(directoryName) {
   sfile.initWithPath(directoryName);
   sfile.normalize();
   loadDirectory();
-}
-
-
-
-function textEntered(name) {
-  var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
-  file.initWithPath(name);
-  dump("*** " + file + "\n*** " + file.path + "\n");
-  if (file.exists()) {
-    if (file.isDirectory()) {
-      if (!sfile.equals(file)) {
-        gotoDirectory(name);
-      }
-      return;
-    } else if (file.isFile()) {
-      retvals.file = file;
-      window.close();
-    }
-  } else {
-    /* look for something in our current directory */
-    var nfile = sfile.clone();
-    nfile.append(file.path);
-    dump(nfile.path);
-    if (nfile.isFile()) {
-      retvals.file = nfile;
-      window.close();
-    } else if (nfile.isDirectory()) {
-      gotoDirectory(nfile.path);
-    } else {
-      dump("can't find file \"" + nfile.path + "\"");
-    }
-  }
 }

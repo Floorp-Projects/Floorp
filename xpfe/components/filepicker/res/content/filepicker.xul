@@ -41,7 +41,7 @@
 
 <box align="horizontal">
   <text value="File name:"/>
-  <html:input type="text" id="textInput" onkeyup="if (event.which == 13) { textEntered(event.target.value); }" flex="1"/>
+  <html:input type="text" id="textInput" onkeyup="if (event.which == 13) { onOK(); }" flex="1"/>
 </box>
 
 <box align="horizontal">
