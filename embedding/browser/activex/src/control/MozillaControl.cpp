@@ -33,9 +33,7 @@
 #include "MozillaControl.h"
 
 #include "MozillaControl_i.c"
-#ifdef USE_CONTROL
 #include "MozillaBrowser.h"
-#endif
 
 CComModule _Module;
 

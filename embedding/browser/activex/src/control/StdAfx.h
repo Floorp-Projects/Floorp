@@ -49,10 +49,6 @@ extern CComModule _Module;
 #include <docobj.h>
 #include <winsock2.h>
 
-#ifdef USE_PLUGIN
-#include <activscp.h>
-#endif
-
 // STL headers
 #include <vector>
 #include <list>
