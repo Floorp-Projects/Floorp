@@ -94,7 +94,7 @@ void parseCommandLine(int argc, char** argv, txOptions& aOptions)
         if (*argv[i] == '-' && arg.Length() > 1) {
             // clean up previous flag
             if (!flag.IsEmpty()) {
-                txOptionEntry* option = aOptions.AddEntry(flag);
+                aOptions.AddEntry(flag);
                 flag.Truncate();
             }
 
@@ -111,7 +111,7 @@ void parseCommandLine(int argc, char** argv, txOptions& aOptions)
     }
 
     if (!flag.IsEmpty()) {
-        txOptionEntry* option = aOptions.AddEntry(flag);
+        aOptions.AddEntry(flag);
     }
 }
 
