@@ -48,6 +48,13 @@ input[type="checkbox"]:hover:active {
   background-color: -moz-Dialog;
 }
 
+input[type="checkbox"]:focus {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDHighlight;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+}
+
 /* ..... disabled state ..... */
 
 input[type="checkbox"][disabled="true"] {

@@ -65,6 +65,10 @@ input[type="radio"]:hover:active {
   background-color: -moz-Dialog;
 }
 
+input[type="radio"]:focus > xul|*.input-radio-check-box2 {
+  border: 1px solid ThreeDDarkShadow;
+}
+
 /* ..... selected state ..... */
 
 input[type="radio"]:checked > xul|*.input-radio-check-box2 {
