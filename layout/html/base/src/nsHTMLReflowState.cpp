@@ -266,6 +266,7 @@ nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_TABLE:
+    case NS_STYLE_DISPLAY_TABLE_CAPTION:
       frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
 
@@ -282,7 +283,6 @@ nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
       break;
 
     case NS_STYLE_DISPLAY_TABLE_CELL:
-    case NS_STYLE_DISPLAY_TABLE_CAPTION:
     case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
     case NS_STYLE_DISPLAY_TABLE_COLUMN:
     case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
