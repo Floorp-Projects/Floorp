@@ -1,0 +1,51 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "MailNewsTypes2.idl"
+
+%{ C++
+#include "nsINNTPHost.h"
+#include "nsINNTPArticleList.h"
+#include "nsINNTPNewsgroup.h"
+#include "nsIMsgOfflineNewsState.h"
+#include "nsINNTPNewsgroupList.h"  
+#include "nsINNTPNewsgroupPost.h"
+#include "nsIMsgMailNewsUrl.h"
+%}
+
+interface nsIMsgDBHdr;
+interface nsINNTPHost;
+interface nsINNTPArticleList;
+interface nsINNTPNewsgroup;
+interface nsIMsgOfflineNewsState;
+interface nsINNTPNewsgroupList;
+interface nsINNTPNewsgroupPost;
+
+[scriptable, uuid(BDD12930-A682-11d2-804C-006008128C4E)]
+interface nsINntpUrl : nsISupports {
+  attribute nsINNTPHost nntpHost;
+  attribute nsINNTPArticleList nntpArticleList;
+  attribute nsINNTPNewsgroup newsgroup;
+  attribute nsIMsgOfflineNewsState offlineNewsState;
+  attribute nsINNTPNewsgroupList newsgroupList;
+  attribute nsINNTPNewsgroupPost messageToPost;
+  readonly attribute nsIMsgDBHdr messageHeader;
+  attribute nsMsgKey messageKey;
+  attribute string newsgroupName;
+};
