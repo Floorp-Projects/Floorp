@@ -250,6 +250,9 @@
 <!ENTITY historyButton.label            "History">
 <!ENTITY historyButton.tooltip          "Displays pages you've viewed recently">
 
+<!ENTITY webPanelsButton.label          "Web Panels">
+<!ENTITY webPanelsButton.tooltip        "Displays pages as sidebar panels">
+
 <!ENTITY newTabButton.tooltip           "Opens a new tab">
 <!ENTITY newWindowButton.tooltip        "Opens a new window">
 

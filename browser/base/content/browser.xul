@@ -171,6 +171,10 @@
     <broadcaster id="viewHistorySidebar" autoCheck="false" label="&historyButton.label;"
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
+
+    <broadcaster id="viewWebPanelsSidebar" autoCheck="false" label="&webPanelsButton.label;"
+                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
+                 oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
@@ -641,6 +645,7 @@
                     <menuitem key="key_openDownloadsSidebar" observes="viewDownloadsSidebar"/>
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar"/>
                     <menuitem key="key_gotoHistory" observes="viewHistorySidebar"/>
+                    <menuitem observes="viewWebPanelsSidebar"/>
                   </menupopup>
                 </menu>            
                 <menuseparator/>
