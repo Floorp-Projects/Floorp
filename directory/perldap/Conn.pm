@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.6 1998/07/29 09:00:51 leif Exp $
+# $Id: Conn.pm,v 1.7 1998/07/30 03:08:03 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -347,26 +347,23 @@ sub delete
 #
 sub add
 {
-  my ($self, $entry, @args) = @_;
-  my (@vals);
-  my ($ref, $key, $val);
+  my ($self, $entry) = @_;
+  my ($ref, $key, $val, %ent);
   my $ret = 1;
+  my $gotcha = 0;
 
   $ref = ref($entry);
   if (($ref eq "Mozilla::LDAP::Entry") || ($ref eq "HASH"))
     {
-      @args = ();
-      foreach $key (keys %$entry)
+      foreach $key (keys %{$entry})
 	{
 	  next if (($key eq "dn") || ($key =~ /^_.+_$/));
-	  @vals = @{$entry->{$key}};
-	  foreach $val (@vals)
-	    {
-	      push(@args, $key, $val);
-	    }
+	  $ent{$key} = $entry->{$key};
+	  $gotcha++;
 	}
+
+      $ret = ldap_add_s($self->{ld}, $entry->{dn}, %ent) if $gotcha;
     }
-  $ret = ldap_add_s($self->{ld}, $entry->{dn}, \@args) if ($#args > $[);
 
   return (!$ret);
 }
