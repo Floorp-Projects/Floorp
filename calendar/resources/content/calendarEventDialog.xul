@@ -258,20 +258,19 @@
                     </row>
              
                     <!-- Repeat -->    
-                    <!-- STARTING TO BE IMPLEMENTED	-->
-						  <row collapsed="false">
+                    <row collapsed="false">
                         <spacer />
                         <vbox>
                           <hbox id="repeat-box">
                             <checkbox id="repeat-checkbox" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
-                            <textbox id="repeat-length-field" value="1"  />
+                            <textbox id="repeat-length-field" onmousedownX="updateRepeatLength()" value="1"  />
                                     
                             <menulist  id="repeat-length-units" label="&repeat.units.days;" value="days" >
                                 <menupopup>
-                                    <menuitem label="&repeat.units.days;"   value="days" />
-                                    <menuitem label="&repeat.units.weeks;"  value="weeks" />
-                                    <menuitem label="&repeat.units.months;" value="months"  />
-                                    <menuitem label="&repeat.units.years;"  value="years" />
+                                    <menuitem id="repeat-days-menu-item" label="&repeat.units.day;"   value="days" />
+                                    <menuitem id="repeat-weeks-menu-item" label="&repeat.units.week;"  value="weeks" />
+                                    <menuitem id="repeat-months-menu-item" label="&repeat.units.month;" value="months"  />
+                                    <menuitem id="repeat-years-menu-item" label="&repeat.units.year;"  value="years" />
                                 </menupopup>
                             </menulist>
                           </hbox>

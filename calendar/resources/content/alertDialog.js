@@ -41,14 +41,17 @@ var gCalendarEvent = null;
 function onLoad()
 {
    gCalendarEvent = window.arguments[0];
+   
    createAlarmText( gCalendarEvent );
-   setupOkCancelButtons( onOkButton, 0 );
+   
+   doSetOKCancel( onOkButton, 0 );
+   
    window.resizeTo( 455, 150 );
 }
 
 function createAlarmText( )
 {
-   var Text = opener.penapplication.username+" has an event titled "+gCalendarEvent.title;
+   var Text = "You have an event titled "+gCalendarEvent.title;
    var TextBox = document.getElementById( "event-message-box" );
    var HtmlInBox = document.createElement( "description" );
    var TextInBox = document.createTextNode( Text );
@@ -65,17 +68,17 @@ function createAlarmText( )
 
 function onOkButton( )
 {
-   var RemindCheckbox = document.getElementById( "remind-again-checkbox" );
+   //var RemindCheckbox = document.getElementById( "remind-again-checkbox" );
 
-   if ( RemindCheckbox.getAttribute( "checked" ) == "true" ) 
-   {
-      snoozeAlarm();
-   }
-   else
-   {
-      acknowledgeAlarm();
-   }
-   return( true );
+   //if ( RemindCheckbox.getAttribute( "checked" ) == "true" ) 
+   //{
+   //   snoozeAlarm();
+   //}
+   //else
+   //{
+      return( acknowledgeAlarm() );
+   //}
+   
 }
 
 function acknowledgeAlarm( )
@@ -86,11 +89,13 @@ function acknowledgeAlarm( )
             
    //opener.gEventSource.modifyEvent( gCalendarEvent );
 
-   pendialog.getRoot().Root.gCalendarEventDataSource.respondAcknowledgeAlarm( gCalendarEvent );
+   //pendialog.getRoot().Root.gCalendarEventDataSource.respondAcknowledgeAlarm( gCalendarEvent );
    
    return( true );
 }
 
+/*  Currently not supported. */
+/*
 function snoozeAlarm( )
 {
    gCalendarEvent.alarmWentOff = true;
@@ -103,8 +108,6 @@ function snoozeAlarm( )
    
    snoozeTime = parseInt( snoozeTime );
 
-   //alert( snoozeTime );
-
    gCalendarEvent.snoozeTime = snoozeTime;
    
    gCalendarEvent.setUpAlarmTimer( this );
@@ -115,3 +118,4 @@ function snoozeAlarm( )
 
    return( true );
 }
+*/

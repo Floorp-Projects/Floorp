@@ -1189,7 +1189,7 @@ CalendarEventDataSource.prototype.setUpAlarmTimers = function( )
 
       var TimeToAlarmInMS = AlarmTimeInMS - Now.getTime();
       
-      this.timers[ this.timers.length ] = setTimeout( "CalendarEventDataSource.respondAlarmTimeout( "+this.alarmTable[i].id+" )", TimeToAlarmInMS );
+      this.timers[ this.timers.length ] = setTimeout( "gCalendarEventDataSource.respondAlarmTimeout( "+this.alarmTable[i].id+" )", TimeToAlarmInMS );
 
    }
    
@@ -1198,7 +1198,7 @@ CalendarEventDataSource.prototype.setUpAlarmTimers = function( )
       clearTimeout( this.checkAlarmIn24HoursTimeout );
 
 
-   this.checkAlarmIn24HoursTimeout = setTimeout( "CalendarEventDataSource.setUpAlarmTimers()", 1000 * 60 * 60 * 24 );
+   this.checkAlarmIn24HoursTimeout = setTimeout( "gCalendarEventDataSource.setUpAlarmTimers()", 1000 * 60 * 60 * 24 );
    
 }      
       
@@ -1228,50 +1228,25 @@ CalendarEventDataSource.prototype.respondAcknowledgeAlarm = function( calendarEv
 */
 
 
-CalendarEventDataSource.respondAlarmTimeout = function( calendarEventID )
-//function respondAlarmTimeout( calendarEventID )
+CalendarEventDataSource.prototype.respondAlarmTimeout = function( calendarEventID )
 {
    var calendarEvent = gCalendarEventDataSource.getCalendarEventById( calendarEventID );
    
-   //if( calendarEvent && calendarEvent.checkAlarm() )
-   //{
-      debug( "in CalendarEventDataSource.prototype.respondAlarmEvent\n+++++++++ALARM WENT OFF \n" + 
-                     calendarEvent.toSource() + 
-                     "\n at " + 
-                     calendarEvent.start 
-                     + "\n+++++++++\n" );
-      
-      // :TODO: The email sending stuff should be part of the CalendarEvent class
-      
-      if ( calendarEvent.alarmEmailAddress )
-      {
-         
-         //debug( "about to send an email to "+ calendarEvent.alarmEmailAddress + "with subject "+ calendarEvent.title );
-         
-         //calendar.sendEmail( "Calendar Event", 
-        //                     "Title: "+ calendarEvent.title + " @ "+ calendarEvent.start + "\nThis message sent from OECalendar.", 
-        //                     calendarEvent.alarmEmailAddress );
-      }
-   
+   var args = new Object;
 
-      for( var index in gCalendarEventDataSource.observerList )
-      {
-         var observer = gCalendarEventDataSource.observerList[ index ];
+   args = calendarEvent;
+
+   openDialog( "chrome://calendar/content/calendarEventAlertDialog.xul", "caEventAlarm", "chrome,modal", args );
+
+   for( var index in gCalendarEventDataSource.observerList )
+   {
+      var observer = gCalendarEventDataSource.observerList[ index ];
          
-         if( observer.onAlarm )
-         {
-            observer.onAlarm( calendarEvent );
-         }
+      if( observer.onAlarm )
+      {
+         observer.onAlarm( calendarEvent );
       }
-      
-   //}
-   //else
-   //{
-      // reset the timer if required
-      
-   //   if( calendarEvent )
-   //      calendarEvent.setUpAlarmTimer( this );
-   //}
+   }
 }
 
 
@@ -1834,8 +1809,6 @@ CalendarEvent.prototype.setUpAlarmTimer = function( dataSource )
          debug( "\n Setting alarm for MS:" + timeTillAlarm );
          
          this.timerID = window.setTimeout( "CalendarEventDataSource.respondAlarmTimeout(" + this.id + ")", timeTillAlarm  );
-
-
       }
       else if( nowMS < this.start.getTime() && !this.snoozeTime )
       {

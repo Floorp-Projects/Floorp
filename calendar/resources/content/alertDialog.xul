@@ -37,7 +37,7 @@
    - ***** END LICENSE BLOCK ***** -->
    
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
-<?xul-overlay href="chrome://penglobal/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
 <?xul-overlay href="chrome://penglobal/content/timepicker-overlay.xul"?>
 
@@ -88,7 +88,7 @@
 			<spacer flex="1"/>
 		</box>
                
-      <!-- standard-dialog-tips: from dialogOverlay.xul  Proper tip is shown in on load code-->
+      <!-- standard-dialog-tips: from dialogOverlay.xul-->
         
       <box id="standard-dialog-tips">
          <description id="tip-new">&event.tip.alert;</description>

@@ -655,6 +655,33 @@ function updateUntilItemEnabled()
 }
 
 
+/*
+** Just a silly idea I had to update the repeat menu items so they always show the right word
+*/
+/*
+function updateRepeatLength()
+{
+   RepeatLengthTextBox = document.getElementById( "repeat-length-field" );
+
+   if( RepeatLengthTextBox.value == "1" )
+   {
+      document.getElementById( "repeat-days-menu-item" ).setAttribute( "label", "Day" );
+      document.getElementById( "repeat-weeks-menu-item" ).setAttribute( "label", "Week" );
+      document.getElementById( "repeat-months-menu-item" ).setAttribute( "label", "Month" );
+      document.getElementById( "repeat-years-menu-item" ).setAttribute( "label", "Year" );
+   }
+   else
+   {
+      document.getElementById( "repeat-days-menu-item" ).setAttribute( "label", "Days" );
+      document.getElementById( "repeat-weeks-menu-item" ).setAttribute( "label", "Weeks" );
+      document.getElementById( "repeat-months-menu-item" ).setAttribute( "label", "Months" );
+      document.getElementById( "repeat-years-menu-item" ).setAttribute( "label", "Years" );
+
+   }
+}
+*/
+
+
 /**
 *   Enable/Disable Start/End items
 */
