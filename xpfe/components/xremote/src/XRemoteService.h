@@ -1,0 +1,63 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Christopher Blizzard
+ * <blizzard@mozilla.org>.  Portions created by Christopher Blizzard
+ * are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+#include <nsIXRemoteService.h>
+#include <nsHashtable.h>
+#include <nsIWidget.h>
+#include <nsCOMPtr.h>
+
+// {3dfe7324-1dd2-11b2-9ff2-8853f91e8a20}
+
+#define NS_XREMOTESERVICE_CID \
+  { 0x3dfe7324, 0x1dd2, 0x11b2, \
+  { 0x9f, 0xf2, 0x88, 0x53, 0xf9, 0x1e, 0x8a, 0x20 } }
+
+class XRemoteService : public nsIXRemoteService {
+ public:
+  XRemoteService();
+  virtual ~XRemoteService();
+
+  NS_DEFINE_STATIC_CID_ACCESSOR(NS_XREMOTESERVICE_CID);
+
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIXREMOTESERVICE
+
+ private:
+
+  // this builds a response for any parsing
+  char *BuildResponse(const char *aError, const char *aMessage);
+
+  // create and destroy the proxy window
+  void CreateProxyWindow();
+  void DestroyProxyWindow();
+
+  // hidden window for proxy requests
+  nsCOMPtr<nsIWidget> mProxyWindow;
+  
+  // native window to internal dom window map
+  nsHashtable mWindowList;
+  // internal dom window to native window map
+  nsHashtable mBrowserList;
+
+  // the number of non-proxy windows that are set up for X Remote
+  PRUint32 mNumWindows;
+
+};
