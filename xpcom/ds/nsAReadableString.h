@@ -220,6 +220,14 @@ class nsReadingIterator
         }
   };
 
+template <class Iterator>
+inline
+PRBool
+SameFragment( const Iterator& lhs, const Iterator& rhs )
+  {
+    return lhs.fragment().mStart == rhs.fragment().mStart;
+  }
+
 
   //
   // nsAReadable[C]String
@@ -963,7 +971,14 @@ nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFrag
     else if ( aRequest == kFragmentAt )
       aPosition += mStartPos;
 
-    return mString.GetReadableFragment(aFragment, aRequest, aPosition);
+    const CharT* position_ptr = mString.GetReadableFragment(aFragment, aRequest, aPosition);
+
+      // if there's more physical data in the returned fragment than I logically have left
+    size_t logical_size_forward = mLength - aPosition;
+    if ( aFragment.mEnd - position_ptr > logical_size_forward )
+      aFragment.mEnd = position_ptr + logical_size_forward;
+
+    return position_ptr;
   }
 
 
@@ -975,44 +990,24 @@ nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFrag
   // Global functions
   //
 
+template <class CharT>
+inline
+PRBool
+SameImplementation( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+  {
+    const void* imp_tag = lhs.Implementation();
+    return imp_tag && (imp_tag==rhs.Implementation());
+  }
+
 template <class InputIterator, class OutputIterator>
 OutputIterator
 copy_string( InputIterator first, InputIterator last, OutputIterator result )
   {
+    typedef nsCharSourceTraits<InputIterator> source_traits;
+    typedef nsCharSinkTraits<OutputIterator>  sink_traits;
+
     while ( first != last )
-      {
-        PRUint32 lengthToCopy = PRUint32( NS_MIN(first.size_forward(), result.size_forward()) );
-        if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
-
-        NS_ASSERTION(lengthToCopy, "|copy_string| will never terminate");
-
-        nsCharTraits<InputIterator::value_type>::copy(result.operator->(), first.operator->(), lengthToCopy);
-
-        first += PRInt32(lengthToCopy);
-        result += PRInt32(lengthToCopy);
-      }
-
-    return result;
-  }
-
-template <class InputIterator, class CharT>
-CharT*
-copy_string( InputIterator first, InputIterator last, CharT* result )
-  {
-    while ( first != last )
-      {
-        PRUint32 lengthToCopy = PRUint32(first.size_forward());
-        if ( first.fragment().mStart == last.fragment().mStart )
-          lengthToCopy = NS_MIN(lengthToCopy, PRUint32(last.operator->() - first.operator->()));
-
-        NS_ASSERTION(lengthToCopy, "|copy_string| will never terminate");
-
-        nsCharTraits<CharT>::copy(result, first.operator->(), lengthToCopy);
-
-        first += PRInt32(lengthToCopy);
-        result += PRInt32(lengthToCopy);
-      }
+      first += PRInt32(sink_traits::write(result, source_traits::read(first), source_traits::readable_size(first, last)));
 
     return result;
   }
@@ -1029,22 +1024,13 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
 
         NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
 
-        nsCharTraits<InputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+        nsCharTraits<OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
 
         last -= PRInt32(lengthToCopy);
         result -= PRInt32(lengthToCopy);
       }
 
     return result;
-  }
-
-template <class CharT>
-inline
-PRBool
-SameImplementation( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    const void* imp_tag = lhs.Implementation();
-    return imp_tag && (imp_tag==rhs.Implementation());
   }
 
 template <class CharT>
@@ -1164,18 +1150,6 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<
   }
 
 
-
-#if 0
-#ifdef STANDALONE_STRING_TESTS
-template <class CharT, class TraitsT>
-basic_ostream<CharT, TraitsT>&
-operator<<( basic_ostream<CharT, TraitsT>& os, const basic_nsAReadableString<CharT>& s )
-  {
-    copy(s.BeginReading(), s.EndReading(), ostream_iterator<CharT, CharT, TraitsT>(os));
-    return os;
-  }
-#endif
-#endif
 
 typedef basic_nsAReadableString<PRUnichar>  nsAReadableString;
 typedef basic_nsAReadableString<char>       nsAReadableCString;
