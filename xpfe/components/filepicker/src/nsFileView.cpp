@@ -649,7 +649,10 @@ nsFileView::FilterFiles()
       file->IsHidden(&isHidden);
     
     nsXPIDLString unicodeLeafName;
-    file->GetUnicodeLeafName(getter_Copies(unicodeLeafName));
+    if(NS_FAILED(file->GetUnicodeLeafName(getter_Copies(unicodeLeafName)))) {
+      // need to check return value for GetUnicodeLeafName()
+      continue;
+    }
     
     if (!isHidden) {
       for (PRInt32 j = 0; j < filterCount; ++j) {
