@@ -251,6 +251,19 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+                          nsIPresShell& aPresShell,
+                          nsIAtom* aListName,
+                          nsIFrame* aFrameList);
+  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+                          nsIPresShell& aPresShell,
+                          nsIAtom* aListName,
+                          nsIFrame* aPrevFrame,
+                          nsIFrame* aFrameList);
+  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+                         nsIPresShell& aPresShell,
+                         nsIAtom* aListName,
+                         nsIFrame* aOldFrame);
 
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const;
