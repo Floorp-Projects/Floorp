@@ -515,7 +515,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     char buf[100];
     PRInt64 intermediateValue;
 
-    LL_I2L(intermediateValue, PR_USEC_PER_SEC);
+    LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
     LL_MUL(usecs, modDate, intermediateValue);
     PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
 
