@@ -21,7 +21,6 @@
 
 #include "prmon.h"
 #include "nsIEditor.h"
-#include "nsIContextLoader.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMCharacterData.h"
@@ -652,13 +651,6 @@ class nsAutoSelectionReset
     /** destructor restores mSel to its former state */
     ~nsAutoSelectionReset();
 };
-
-
-/*
-factory method(s)
-*/
-
-nsresult NS_MakeEditorLoader(nsIContextLoader **aResult);
 
 
 #endif
