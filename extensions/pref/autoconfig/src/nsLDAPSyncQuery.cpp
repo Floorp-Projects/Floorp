@@ -402,6 +402,13 @@ nsresult nsLDAPSyncQuery::InitConnection()
         return NS_ERROR_FAILURE;
     }
         
+    PRUint32 options;
+    rv = mServerURL->GetOptions(&options);
+    if (NS_FAILED(rv)) {
+        FinishLDAPQuery();
+        return NS_ERROR_FAILURE;
+    }
+
     // get a proxy object so the callback happens on the main thread
     //
     rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
@@ -416,7 +423,9 @@ nsresult nsLDAPSyncQuery::InitConnection()
         return NS_ERROR_FAILURE;
     }
 
-    rv = mConnection->Init(host.get(), port, 0, selfProxy);
+    rv = mConnection->Init(host.get(), port, 
+                           (options & nsILDAPURL::OPT_SECURE) 
+                           ? PR_TRUE : PR_FALSE, 0, selfProxy);
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_UNEXPECTED; // this should never happen

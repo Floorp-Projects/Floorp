@@ -216,7 +216,7 @@ function AbEditSelectedDirectory()
                      selectedDirectoryString: null};
         args.selectedDirectoryString = mailingListUri.substr(ldapUrlPrefix.length, mailingListUri.length);
         window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
-                      "editDirectory", "chrome,modal=yes,resizable=no", args);
+                      "editDirectory", "chrome,modal=yes,resizable=no,centerscreen", args);
       }
     }
   }

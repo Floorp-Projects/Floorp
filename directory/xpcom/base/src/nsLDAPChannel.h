@@ -39,7 +39,6 @@
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsIChannel.h"
-#include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -48,6 +47,7 @@
 #include "nsIStreamListener.h"
 #include "nsILDAPMessageListener.h"
 #include "nsIProgressEventSink.h"
+#include "nsILDAPURL.h"
 
 // if the code related to the following #define ever gets removed, also
 // be sure to remove mCallback as well as the most (but not all) of the 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * 	Dan Mosedale <dmose@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,8 +53,8 @@
 NS_IMPL_ISUPPORTS1(nsAbLDAPReplicationQuery, nsIAbLDAPReplicationQuery)
 
 nsAbLDAPReplicationQuery::nsAbLDAPReplicationQuery()
- : mDirServer(nsnull),
-   mInitialized(PR_FALSE)
+    :  mInitialized(PR_FALSE),
+       mDirServer(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -130,6 +131,11 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, co
     if (!port)
         return NS_ERROR_UNEXPECTED;
 
+    PRUint32 options;
+    rv = aURL->GetOptions(&options);
+    if (NS_FAILED(rv))
+      return NS_ERROR_UNEXPECTED;
+
     // Initiate LDAP message listener to the current thread
     nsCOMPtr<nsILDAPMessageListener> listener;
     rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
@@ -159,7 +165,10 @@ NS_IMETHODIMP nsAbLDAPReplicationQuery::ConnectToLDAPServer(nsILDAPURL *aURL, co
     }
 
     // initialize the LDAP connection
-    return mConnection->Init(host.get(), port, PromiseFlatString(aAuthDN).get(), listener);
+    return mConnection->Init(host.get(), port, 
+			     (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE
+			     : PR_FALSE, PromiseFlatString(aAuthDN).get(),
+			     listener);
 }
 
 NS_IMETHODIMP nsAbLDAPReplicationQuery::Init(const nsACString & aPrefName, nsIWebProgressListener *aProgressListener)

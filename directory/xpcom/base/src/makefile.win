@@ -45,6 +45,9 @@ CPP_OBJS = .\$(OBJDIR)\nsLDAPURL.obj             \
            .\$(OBJDIR)\nsLDAPProtocolHandler.obj \
            .\$(OBJDIR)\nsLDAPChannel.obj         \
 !endif
+!if defined(BUILD_PSM) || defined(BUILD_PSM2)
+	   .\$(OBJDIR)\nsLDAPSecurityGlue.obj    \
+!endif
            $(NULL)
 
 # There might be some issues here with how DEFINES might get duplicated
@@ -56,11 +59,16 @@ LCFLAGS = \
 
 !if defined(ENABLE_LDAP_EXPERIMENTAL)
 DEFINES = -DMOZ_LDAP_XPCOM_EXPERIMENTAL $(DEFINES)
+!endif
+
+!if defined(BUILD_PSM) || defined(BUILD_PSM2)
+DEFINES = -DMOZ_PSM $(DEFINES)
+!endif
+
 LCFLAGS = \
 	$(LCFLAGS) \
 	$(DEFINES) \
 	$(NULL)
-!endif
 
 include <$(DEPTH)\config\rules.mak>
 

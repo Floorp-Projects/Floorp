@@ -32,7 +32,6 @@
  * GPL.
  */
 #include "nsLDAP.h"
-#include "nspr.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo *gLDAPLogModule;    // defn in nsLDAPProtocolModule.cpp

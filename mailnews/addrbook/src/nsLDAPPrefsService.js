@@ -34,6 +34,9 @@ const nsIPrefBranch      = Components.interfaces.nsIPrefBranch;
 const nsILDAPURL         = Components.interfaces.nsILDAPURL;
 const nsILDAPService     = Components.interfaces.nsILDAPService;
 
+const kDefaultLDAPPort = 389;
+const kDefaultSecureLDAPPort = 636;
+
 /* nsLDAPPrefs service */
 function nsLDAPPrefsService() {
   var arrayOfDirectories;
@@ -223,11 +226,24 @@ function () {
       }
       if (dn && ldapService)
         ldapUrl.dn = ldapService.UCS2toUTF8(dn);
+      var secure = false;
       try {
-        var port = gPrefInt.getIntPref(pref_string + ".port");
+        secure = gPrefInt.getBoolPref(pref_string + ".isSecure");
+      }
+      catch(ex) {// if this preference does not exist its ok
+      }
+      var port;
+      if (secure) {
+        ldapUrl.options |= ldapurl.OPT_SECURE;
+        port = kDefaultSecureLDAPPort;
+      }
+      else
+        port = kDefaultLDAPPort;
+      try {
+        port = gPrefInt.getIntPref(pref_string + ".port");
       }
       catch(ex) {
-        port = 389;
+	    // if this preference does not exist we will use default values.
       }
       ldapUrl.port = port;
       ldapUrl.scope = 2;

@@ -14,7 +14,7 @@ March 31, 1998.
 
 The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
- Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ Copyright (C) 1998-2002 Netscape Communications Corporation. All
 Rights Reserved.
 --> 
 
@@ -27,6 +27,10 @@ Rights Reserved.
 <!ENTITY directoryBaseDN.accesskey         "b">
 <!ENTITY findButton.label                  "Find">
 <!ENTITY findButton.accesskey              "f">
+<!ENTITY directorySecure.label             "Use secure connection (SSL)">
+<!ENTITY directorySecure.accesskey         "U">
+<!ENTITY directoryLogin.label              "Log in with user name and password">
+<!ENTITY directoryLogin.accesskey          "L">
 <!ENTITY advancedOptionsButton.label       "Advanced Options">
 <!ENTITY advancedOptionsButton.accesskey   "a">
 <!ENTITY General.tab                       "General">
@@ -47,4 +51,8 @@ Rights Reserved.
 <!ENTITY offlineText.label                 "You can download a local copy of this directory so that it is available for use when you are working offline.">
 <!ENTITY downloadNowButton.label           "Download Now">
 <!ENTITY downloadNowButton.accesskey       "D">
-
+<!-- Localization note: this is here because the width of the dialog 
+     is determined by the width of the base DN box; and that is likely
+     to vary somewhat with the language.
+-->
+<!ENTITY newDirectoryWidth                 "36em">

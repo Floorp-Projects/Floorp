@@ -541,6 +541,7 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     nsresult rv;
     nsCAutoString host;
     PRInt32 port;
+    PRUint32 options;
 
     // slurp out relevant pieces of the URL
     //
@@ -557,6 +558,20 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     }
     if (port == -1)
         port = LDAP_PORT;
+
+    // QI to nsILDAPURL so that we can call one of the methods on that iface
+    //
+    nsCOMPtr<nsILDAPURL> mLDAPURL = do_QueryInterface(mURI, &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::AsyncRead(): QI to nsILDAPURL failed\n");
+        return NS_ERROR_FAILURE;
+    }
+
+    rv = mLDAPURL->GetOptions(&options);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPChannel::AsyncRead(): mURI->GetOptions failed\n");
+        return NS_ERROR_FAILURE;
+    }
 
     rv = NS_CheckPortSafety(port, "ldap");
     if (NS_FAILED(rv))
@@ -625,7 +640,9 @@ nsLDAPChannel::AsyncOpen(nsIStreamListener* aListener,
     // initialize it with the defaults
     // XXXdmose - need to deal with bind name
     //
-    rv = mConnection->Init(host.get(), port, 0, this);
+    rv = mConnection->Init(host.get(), port,
+                           (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
+                           : PR_FALSE, nsnull, this);
     switch (rv) {
     case NS_OK:
         break;

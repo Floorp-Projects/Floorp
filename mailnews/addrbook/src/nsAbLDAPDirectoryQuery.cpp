@@ -24,6 +24,7 @@
  *
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Dan Mosedale <dmose@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -263,7 +264,7 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPInit(nsresult aStatus)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Bind
-    rv = ldapOperation->SimpleBind(NULL);
+    rv = ldapOperation->SimpleBind(nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;
@@ -536,14 +537,20 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     rv = directoryUrl->GetDn(getter_Copies (dn));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    PRUint32 options;
+    rv = directoryUrl->GetOptions(&options);
+    NS_ENSURE_SUCCESS(rv,rv);
+
     nsCString ldapSearchUrlString;
-    char* _ldapSearchUrlString = PR_smprintf ("ldap://%s:%d/%s?%s?%s?%s",
-            host.get (),
-            port,
-            dn.get (),
-            returnAttributes.get (),
-            scope.get (),
-            filter.get ());
+    char* _ldapSearchUrlString = 
+        PR_smprintf ("ldap%s://%s:%d/%s?%s?%s?%s",
+                     (options & nsILDAPURL::OPT_SECURE) ? "s" : "",
+                     host.get (),
+                     port,
+                     dn.get (),
+                     returnAttributes.get (),
+                     scope.get (),
+                     filter.get ());
     if (!_ldapSearchUrlString)
         return NS_ERROR_OUT_OF_MEMORY;
     ldapSearchUrlString = _ldapSearchUrlString;
@@ -555,7 +562,6 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 
     rv = url->SetSpec(ldapSearchUrlString);
     NS_ENSURE_SUCCESS(rv, rv);
-
 
     // Get the ldap connection
     nsCOMPtr<nsILDAPConnection> ldapConnection;
@@ -600,7 +606,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
 
     // Now lets initialize the LDAP connection properly. We'll kick
     // off the bind operation in the callback function, |OnLDAPInit()|.
-    rv = ldapConnection->Init(host.get(), port, NS_ConvertASCIItoUCS2(dn).get(),
+    rv = ldapConnection->Init(host.get(), port, options, nsnull,
                               messageListener);
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -28,7 +28,7 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-directory-add.dtd">
 
 <dialog id="addDirectory"
-        style="width: 30em"
+        style="width: &newDirectoryWidth;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newDirectoryTitle.label;"
         onload="Startup();"
@@ -49,6 +49,7 @@
       </tabs>
 	   
       <tabpanels id="directoryTabPanels" flex="1">
+	      <vbox>
              <grid flex="1">
                  <columns>
                      <column/>
@@ -77,8 +78,23 @@
                          <button label="&findButton.label;" 
                                  accesskey="&findButton.accesskey;" disabled="true"/>
                      </row>
+                     <row>
+                         <label value="&portNumber.label;" 
+                                accesskey="&portNumber.accesskey;"
+                                control="port"/>
+                         <hbox>
+                             <textbox id="port" size="6"/> 
+                         </hbox>
+                     </row>
                  </rows>
              </grid>
+             <separator/>
+             <checkbox id="secure" label="&directorySecure.label;"
+                       accesskey="&directorySecure.accesskey;"
+                       oncommand="onSecure();"/>
+             <checkbox id="login" label="&directoryLogin.label;"
+                       accesskey="&directoryLogin.accesskey;" hidden="true"/> 
+           </vbox>
            <vbox>
               <description>&offlineText.label;</description>
               <separator/>
@@ -96,14 +112,6 @@
              </columns>
       
              <rows>
-               <row>
-                 <label value="&portNumber.label;" 
-                        accesskey="&portNumber.accesskey;"
-                        control="port"/>
-                 <hbox>
-                   <textbox id="port" size="6"/> 
-                 </hbox>
-               </row>
                <row>
                  <label value="&return.label;" 
                        accesskey="&return.accesskey;"

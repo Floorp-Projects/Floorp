@@ -119,7 +119,8 @@ class nsLDAPConnection : public nsILDAPConnection,
     nsSupportsHashtable *mPendingOperations; // keep these around for callbacks
     nsLDAPConnectionLoop *mRunnable;    // nsIRunnable object
 
-    PRInt16 mPort;						// The LDAP port we're binding to
+    PRInt16 mPort;                      // The LDAP port we're binding to
+    PRBool mSSL;                        // the options
 
     nsCString mResolvedIP;              // Preresolved list of host IPs
     nsCOMPtr<nsILDAPMessageListener> mInitListener; // Init callback

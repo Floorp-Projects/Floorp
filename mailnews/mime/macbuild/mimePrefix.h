@@ -23,3 +23,7 @@
 
 
 #include "MacPrefix.h"
+
+#if defined(MOZ_PSM)
+#define ENABLE_SMIME
+#endif

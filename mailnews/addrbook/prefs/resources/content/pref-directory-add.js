@@ -3,9 +3,11 @@ var gPref_string_desc = "";
 var gPrefInt = null;
 var gCurrentDirectory = null;
 var gCurrentDirectoryString = null;
-var gPortNumber = 389;
-var gMaxHits = 100;
 var gLdapService = null;
+
+const kDefaultMaxHits = 100;
+const kDefaultLDAPPort = 389;
+const kDefaultSecureLDAPPort = 636;
 
 function Startup()
 {
@@ -91,21 +93,39 @@ function fillSettings()
         default:
           sub.radioGroup.selectedItem = sub; break;
       }
+      if (ldapUrl.options & ldapUrl.OPT_SECURE)
+        document.getElementById("secure").setAttribute("checked", "true");
     }
     try {
       prefValue = gPrefInt.getIntPref(gCurrentDirectoryString+ ".maxHits");
     }
     catch(ex) {
-      prefValue = gMaxHits;
+      prefValue = kDefaultMaxHits;
     }
     document.getElementById("results").value = prefValue;
+    try{
+      prefValue = gPrefInt.getBoolPref(gCurrentDirectoryString +".auth.enabled");
+    }
+    catch(ex){
+      prefValue = false;
+    }
+    document.getElementById("login").setAttribute("checked", prefValue);
   }
+}
+
+function onSecure()
+{
+  var port = document.getElementById("port");
+  if (document.getElementById("secure").checked)
+      port.value = kDefaultSecureLDAPPort;
+  else
+    port.value = kDefaultLDAPPort;
 }
 
 function fillDefaultSettings()
 {
-  document.getElementById("port").value = gPortNumber;
-  document.getElementById("results").value = gMaxHits;
+  document.getElementById("port").value = kDefaultLDAPPort;
+  document.getElementById("results").value = kDefaultMaxHits;
   var sub = document.getElementById("sub");
   sub.radioGroup.selectedItem = sub;
 }
@@ -210,6 +230,8 @@ function onAccept()
   var description = document.getElementById("description").value;
   var hostname = document.getElementById("hostname").value;
   var port = document.getElementById("port").value;
+  var secure = document.getElementById("secure");
+  var login = document.getElementById("login");
   var results = document.getElementById("results").value;
   var errorValue = null;
   gPref_string_desc = description;
@@ -260,8 +282,12 @@ function onAccept()
                           UCS2toUTF8(document.getElementById("search").value);
     ldapUrl.filter = pref_string_content;
   }
-  if (!port)
-    ldapUrl.port = gPortNumber;
+  if (!port) {
+    if (secure.checked)
+      ldapUrl.port = kDefaultSecureLDAPPort;
+    else
+      ldapUrl.port = kDefaultLDAPPort;
+  }
   else
     ldapUrl.port = port;
   if (document.getElementById("one").selected)
@@ -271,11 +297,13 @@ function onAccept()
   else {
       ldapUrl.scope = 2;
   }
+  if (secure.checked)
+    ldapUrl.options |= ldapUrl.OPT_SECURE;
   pref_string_title = gPref_string_desc + ".uri";
   gPrefInt.setCharPref(pref_string_title, ldapUrl.spec);
   pref_string_content = results;
   pref_string_title = gPref_string_desc + ".maxHits";
-  if (pref_string_content != gMaxHits) {
+  if (pref_string_content != kDefaultMaxHits) {
     gPrefInt.setIntPref(pref_string_title, pref_string_content);
   }
   else
@@ -286,12 +314,9 @@ function onAccept()
     catch(ex) {}
   }
   pref_string_title = gPref_string_desc + ".auth.enabled";
-  try{
-    pref_string_content = gPrefInt.getBoolPref(pref_string_title); 
-  }
-  catch(ex) {
-    pref_string_content = false;
-  }
+  pref_string_content = login.checked;
+  gPrefInt.setBoolPref(pref_string_title, pref_string_content);
+
   window.opener.gNewServer = description;
   window.opener.gNewServerString = gPref_string_desc;
   // set window.opener.gUpdate to true so that LDAP Directory Servers

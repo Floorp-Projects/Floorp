@@ -720,6 +720,7 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
     nsXPIDLString binddn;
     nsXPIDLString password;
     PRInt32 port;
+    PRUint32 options;
     nsresult rv;
 
     server = getter_AddRefs(aEntry->GetServer());
@@ -753,6 +754,10 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
         return NS_ERROR_FAILURE;
     }
 
+    rv = url->GetOptions(&options);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
     // Create a new connection for this server.
     //
     conn = do_CreateInstance(kLDAPConnectionCID, &rv);
@@ -764,7 +769,9 @@ nsLDAPService::EstablishConnection(nsLDAPServiceEntry *aEntry,
 
     // Here we need to provide the binddn, see bug #75990
     //
-    rv = conn->Init(host.get(), port, 0, this);
+    rv = conn->Init(host.get(), port, 
+                    (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE : PR_FALSE, 
+                    nsnull, this);
     if (NS_FAILED(rv)) {
         switch (rv) {
         // Only pass along errors we are aware of

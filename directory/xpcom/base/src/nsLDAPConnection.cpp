@@ -61,6 +61,7 @@ nsLDAPConnection::nsLDAPConnection()
       mBindName(0),
       mPendingOperations(0),
       mRunnable(0),
+      mSSL(PR_FALSE),
       mDNSRequest(0),
       mDNSFinished(PR_FALSE)
 {
@@ -168,10 +169,9 @@ nsLDAPConnection::Release(void)
 
 
 NS_IMETHODIMP
-nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
-                       const PRUnichar *aBindName,
+nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, PRBool aSSL,
+                       const PRUnichar *aBindName, 
                        nsILDAPMessageListener *aMessageListener)
-
 {
     nsCOMPtr<nsIDNSListener> selfProxy;
     nsresult rv;
@@ -203,6 +203,9 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort,
     // resolved the host part.
     //
     mPort = aPort;
+
+    // Save the SSL flag for later use
+    mSSL = aSSL;
 
     // Save the Init listener reference, we need it when the async
     // DNS resolver has finished.
@@ -643,27 +646,42 @@ CheckLDAPOperationResult(nsHashKey *aKey, void *aData, void* aClosure)
                 // the nsLDAPConnection to detect the error, and then
                 // create a new connection.
                 //
+                PR_LOG(gLDAPLogModule, PR_LOG_DEBUG, 
+                       ("CheckLDAPOperationResult(): ldap_result returned" 
+                        " LDAP_SERVER_DOWN"));
                 break;
 
             case LDAP_DECODING_ERROR:
                 consoleSvc->LogStringMessage(
                     NS_LITERAL_STRING("LDAP: WARNING: decoding error; possible corrupt data received").get());
-            NS_WARNING("CheckLDAPOperationResult(): ldaperrno = "
+                NS_WARNING("CheckLDAPOperationResult(): ldaperrno = "
                            "LDAP_DECODING_ERROR after ldap_result()");
                 break;
 
             case LDAP_NO_MEMORY:
-            NS_ERROR("CheckLDAPOperationResult(): Couldn't allocate memory"
-                     " while getting async operation result");
+                NS_ERROR("CheckLDAPOperationResult(): Couldn't allocate memory"
+                         " while getting async operation result");
                 // punt and hope things work out better next time around
                 break;
 
-            default:
-            NS_ERROR("CheckLDAPOperationResult(): ldaperrno set to "
-                           "unexpected value after ldap_result() "
-                           "call in nsLDAPConnection::Run()");
+            case LDAP_PARAM_ERROR:
+                // I think it's possible to hit a race condition where we're
+                // continuing to poll for a result after the C SDK connection
+                // has removed the operation because the connection has gone
+                // dead.  In theory we should fix this.  Practically, it's
+                // unclear to me whether it matters.
+                //
+                NS_WARNING("CheckLDAPOperationResult(): ldap_result returned"
+                           " LDAP_PARAM_ERROR");
                 break;
 
+            default:
+                NS_ERROR("CheckLDAPOperationResult(): lderrno set to "
+                           "unexpected value after ldap_result() "
+                           "call in nsLDAPConnection::Run()");
+                PR_LOG(gLDAPLogModule, PR_LOG_ERROR, 
+                       ("lderrno = 0x%x", lderrno));
+                break;
             }
             break;
 
@@ -945,7 +963,6 @@ nsLDAPConnection::OnStopLookup(nsISupports *aContext,
         //
         mConnectionHandle = ldap_init(mResolvedIP.get(),
                                       mPort == -1 ? LDAP_PORT : mPort);
-
         // Check that we got a proper connection, and if so, setup the
         // threading functions for this connection.
         //
@@ -958,6 +975,28 @@ nsLDAPConnection::OnStopLookup(nsISupports *aContext,
 #endif
         }
 
+#ifdef MOZ_PSM
+        // This code sets up the current connection to use PSM for SSL
+        // functionality.  Making this use libssldap instead for
+        // non-browser user shouldn't be hard.
+
+        extern nsresult nsLDAPInstallSSL(LDAP *ld, const char *aHostName);
+
+        if (mSSL) {
+            if (ldap_set_option(mConnectionHandle, LDAP_OPT_SSL, LDAP_OPT_ON)
+                != LDAP_SUCCESS ) {
+                NS_ERROR("nsLDAPConnection::OnStopLookup(): Error configuring"
+                         " connection to use SSL");
+                rv = NS_ERROR_UNEXPECTED;
+            }
+
+            rv = nsLDAPInstallSSL(mConnectionHandle, aHostName);
+            if (NS_FAILED(rv)) {
+                NS_ERROR("nsLDAPConnection::OnStopLookup(): Error installing"
+                         " secure LDAP routines for connection");
+            }
+        }
+#endif
         // Create a new runnable object, and increment the refcnt. The
         // thread will also hold a strong ref to the runnable, but we need
         // to make sure it doesn't get destructed until we are done with

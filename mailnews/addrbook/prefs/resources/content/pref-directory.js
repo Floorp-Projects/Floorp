@@ -343,7 +343,7 @@ function selectDirectory()
 function newDirectory()
 {
   window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
-                    "addDirectory", "chrome,modal=yes,resizable=no");
+                    "addDirectory", "chrome,modal=yes,resizable=no,centerscreen");
   if(gUpdate && gNewServer && gNewServerString) {
     var listbox = document.getElementById("directoriesList");
     var item = document.createElement('listitem');
@@ -367,7 +367,7 @@ function editDirectory()
     args.selectedDirectory = gCurrentDirectoryServer;
     args.selectedDirectoryString = gCurrentDirectoryServerId;
     window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
-                      "editDirectory", "chrome,modal=yes,resizable=no", args);
+                      "editDirectory", "chrome,modal=yes,resizable=no,centerscreen", args);
   }
   if(gUpdate) 
   {
