@@ -82,6 +82,11 @@
   -moz-border-left-colors: #333333 #AAAAAA;
 }
 
+.wizard-button[dlgtype="next"] > .button-box > .button-text,
+.wizard-button[dlgtype="back"] > .button-box > .button-text {
+  display: none;
+}
+
 .wizard-button[dlgtype="back"] {
   list-style-image: url("chrome://global/skin/wizard/wizard-btn-lft.gif");
 }
