@@ -1217,6 +1217,8 @@ nsPlaintextEditor::GetWrapWidth(PRInt32 *aWrapColumn)
   nsCOMPtr<nsIStyleContext> styleContext;
   res = GetBodyStyleContext(getter_AddRefs(styleContext));
   if (NS_FAILED(res)) return res;
+  NS_ASSERTION(styleContext, "styleContext is null!");
+  if (!styleContext) return NS_ERROR_FAILURE;
 
   const nsStyleText* styleText =
     (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
@@ -1232,15 +1234,9 @@ nsPlaintextEditor::GetWrapWidth(PRInt32 *aWrapColumn)
     if (stylePosition->mWidth.GetUnit() == eStyleUnit_Chars)
       *aWrapColumn = stylePosition->mWidth.GetIntValue(); 
     else 
-    {
-      *aWrapColumn = -1;
       return NS_ERROR_UNEXPECTED;
-    }
   }
-  else
-  {
-    *aWrapColumn = -1;
-  }
+
   return NS_OK;
 }
 
