@@ -155,16 +155,36 @@ VR_INTERFACE(REGERR) NR_RegAddKey(
          RKEY *newKey      /* if not null returns newly created key */
        );
 
+VR_INTERFACE(REGERR) NR_RegAddKeyRaw(
+         HREG hReg,        /* handle of open registry */
+         RKEY key,         /* root key */
+         char *keyname,    /* name of key to add */
+         RKEY *newKey      /* if not null returns newly created key */
+       );
+
 VR_INTERFACE(REGERR) NR_RegDeleteKey(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
          char *path        /* relative path of subkey to delete */
        );
 
+VR_INTERFACE(REGERR) NR_RegDeleteKeyRaw(
+         HREG hReg,        /* handle of open registry */
+         RKEY key,         /* root key */
+         char *keyname     /* name subkey to delete */
+       );
+
 VR_INTERFACE(REGERR) NR_RegGetKey(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
          char *path,       /* relative path of subkey to find */
+         RKEY *result      /* returns RKEY of specified sub-key */
+       );
+
+VR_INTERFACE(REGERR) NR_RegGetKeyRaw(
+         HREG hReg,        /* handle of open registry */
+         RKEY key,         /* root key */
+         char *keyname,       /* name of key to get */
          RKEY *result      /* returns RKEY of specified sub-key */
        );
 

@@ -36,8 +36,6 @@
 #define MAJOR_VERSION   1          /* major version for incompatible changes */
 #define MINOR_VERSION   2          /* minor ver for new (compatible) features */
 #define PATHDEL         '/'
-#define EQU             '='
-#define QUOTE	        '"'
 #define HDRRESERVE	    128        /* number of bytes reserved for hdr */
 #define INTSIZE         4
 #define DOUBLESIZE      8
@@ -73,7 +71,7 @@
 
 #define VALID_FILEHANDLE(fh)    ((fh) != NULL)
 
-#define INVALID_NAME_CHAR(p)    ( ((unsigned char)(p) < 0x20) || ((p) == '=') )
+#define INVALID_NAME_CHAR(p)    ( ((unsigned char)(p) < 0x20) )
 
 #define TYPE_IS_ENTRY(type)       ( (type) & REGTYPE_ENTRY )
 #define TYPE_IS_KEY(type)         ( !((type) & REGTYPE_ENTRY) )
