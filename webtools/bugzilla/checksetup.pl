@@ -46,6 +46,8 @@
 #     - automatically changes the table definitions of older BugZilla
 #       installations
 #     - populates the groups
+#     - put the first user into all groups so that the system can
+#       be administrated
 #     - changes already existing SQL tables if you change your local
 #       settings, e.g. when you add a new platform
 #
@@ -78,7 +80,6 @@
 
 
 
-
 ###########################################################################
 # Global definitions
 ###########################################################################
@@ -95,7 +96,7 @@ use strict;
 use vars qw(
     $webservergroup
     $db_host $db_port $db_name $db_user
-        @severities @priorities @opsys @platforms
+    @severities @priorities @opsys @platforms
 );
 
 
@@ -117,27 +118,27 @@ unless (eval "require 5.004") {
 
 unless (eval "require DBI") {
     die "Please install the DBI module. You can do this by running (as root)\n\n",
-    "   perl -MCPAN -eshell\n",
-    "   install DBI\n";
+        "       perl -MCPAN -eshell\n",
+        "       install DBI\n";
 }
 
 unless (eval "require Data::Dumper") {
     die "Please install the Data::Dumper module. You can do this by running (as root)\n\n",
-    "   perl -MCPAN -eshell\n",
-    "   install Data::Dumper\n";
+        "       perl -MCPAN -eshell\n",
+        "       install Data::Dumper\n";
 }
 
 unless (eval "require Mysql") {
     die "Please install the Mysql database driver. You can do this by running (as root)\n\n",
-    "   perl -MCPAN -eshell\n",
-    "   install Msql-Mysql\n\n",
-    "Be sure to enable the Mysql emulation!";
+        "       perl -MCPAN -eshell\n",
+        "       install Msql-Mysql\n\n",
+        "Be sure to enable the Mysql emulation!";
 }
 
 unless (eval "require Date::Parse") {
     die "Please install the Date::Parse module. You can do this by running (as root)\n\n",
-    "   perl -MCPAN -eshell\n",
-    "   install Date::Parse\n";
+        "       perl -MCPAN -eshell\n",
+        "       install Date::Parse\n";
 }
 
 # The following two modules are optional:
@@ -229,10 +230,10 @@ LocalVar('$db_host', '
 #
 # How to access the SQL database:
 #
-$db_host = "localhost";     # where is the database?
-$db_port = 3306;        # which port to use
-$db_name = "bugs";      # name of the MySQL database
-$db_user = "bugs";      # user to attach to the MySQL database
+$db_host = "localhost";         # where is the database?
+$db_port = 3306;                # which port to use
+$db_name = "bugs";              # name of the MySQL database
+$db_user = "bugs";              # user to attach to the MySQL database
 ');
 
 
@@ -242,13 +243,13 @@ LocalVar('@severities', '
 # Which bug and feature-request severities do you want?
 #
 @severities = (
-    "blocker",
-    "critical",
-    "major",
-    "normal",
-    "minor",
-    "trivial",
-    "enhancement"
+        "blocker",
+        "critical",
+        "major",
+        "normal",
+        "minor",
+        "trivial",
+        "enhancement"
 );
 ');
 
@@ -259,11 +260,11 @@ LocalVar('@priorities', '
 # Which priorities do you want to assign to bugs and feature-request?
 #
 @priorities = (
-    "P1",
-    "P2",
-    "P3",
-    "P4",
-    "P5"
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5"
 );
 ');
 
@@ -274,31 +275,31 @@ LocalVar('@opsys', '
 # What operatings systems may your products run on?
 #
 @opsys = (
-    "All",
-    "Windows 3.1",
-    "Windows 95",
-    "Windows 98",
-    "Windows NT",
-    "Mac System 7",
-    "Mac System 7.5",
-    "Mac System 7.6.1",
-    "Mac System 8.0",
-    "Mac System 8.5",
-    "Mac System 8.6",
-    "AIX",
-    "BSDI",
-    "HP-UX",
-    "IRIX",
-    "Linux",
-    "FreeBSD",
-    "OSF/1",
-    "Solaris",
-    "SunOS",
-    "Neutrino",
-    "OS/2",
-    "BeOS",
-    "OpenVMS",
-    "other"
+        "All",
+        "Windows 3.1",
+        "Windows 95",
+        "Windows 98",
+        "Windows NT",
+        "Mac System 7",
+        "Mac System 7.5",
+        "Mac System 7.6.1",
+        "Mac System 8.0",
+        "Mac System 8.5",
+        "Mac System 8.6",
+        "AIX",
+        "BSDI",
+        "HP-UX",
+        "IRIX",
+        "Linux",
+        "FreeBSD",
+        "OSF/1",
+        "Solaris",
+        "SunOS",
+        "Neutrino",
+        "OS/2",
+        "BeOS",
+        "OpenVMS",
+        "other"
 );
 ');
 
@@ -309,14 +310,14 @@ LocalVar('@platforms', '
 # What hardware platforms may your products run on?
 #
 @platforms = (
-    "All",
-    "DEC",
-    "HP",
-    "Macintosh",
-    "PC",
-    "SGI",
-    "Sun",
-    "Other"
+        "All",
+        "DEC",
+        "HP",
+        "Macintosh",
+        "PC",
+        "SGI",
+        "Sun",
+        "Other"
 );
 ');
 
@@ -325,10 +326,10 @@ LocalVar('@platforms', '
 
 if ($newstuff ne "") {
     print "This version of Bugzilla contains some variables that you may \n",
-	"to change and adapt to your local settings. Please edit the file\n",
-	"'localconfig' and return checksetup.pl\n\n",
-	"The following variables are new to localconfig since you last ran\n",
-	"checksetup.pl:  $newstuff\n";
+          "to change and adapt to your local settings. Please edit the file\n",
+          "'localconfig' and return checksetup.pl\n\n",
+          "The following variables are new to localconfig since you last ran\n",
+          "checksetup.pl:  $newstuff\n";
     exit;
 }
 
@@ -347,14 +348,15 @@ if ($newstuff ne "") {
 unless (-d 'data') {
     print "Creating data directory ...\n";
     mkdir 'data', 0770;
-	if ($webservergroup eq "") {
-		chmod 0777, 'data';
-	}
+    if ($webservergroup eq "") {
+        chmod 0777, 'data';
+    }
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
-	chmod 0666, glob('data/*');
+    chmod 0666, glob('data/*');
 }
+
 
 # Just to be sure ...
 unlink "data/versioncache";
@@ -380,19 +382,20 @@ unlink "data/versioncache";
 # +++ Can anybody tell me what a Windows Perl would do with this code?
 #
 
+if ($webservergroup) {
+    # Funny! getgrname returns the GID if fed with NAME ...
+    my $webservergid = getgrnam($webservergroup);
+    chown 0, $webservergid, glob('*');
+    chmod 0640, glob('*');
 
-# Funny! getgrname returns the GID if fed with NAME ...
+    chmod 0750, glob('*.cgi'),
+                'processmail',
+                'whineatnews.pl',
+                'collectstats.pl',
+                'checksetup.pl';
 
-if ($webservergroup ne "") {
-	my $webservergid = getgrnam($webservergroup);
-	chown 0, $webservergid, glob('*');
-	chmod 0640, glob('*');
-
-	chmod 0750, glob('*.cgi'),
-	'processmail',
-	'whineatnews.pl',
-	'collectstats.pl',
-	'checksetup.pl';
+    chmod 0770, 'data';
+    chmod 0666, glob('data/*');
 }
 
 
@@ -407,10 +410,11 @@ if ($webservergroup ne "") {
 # Check if we have access to --MYSQL--
 #
 
-# This settings are not yet changeable, because other code depends on it:
+# This settings are not yet changeable, because other code depends on
+# the fact that we use MySQL and not, say, PostgreSQL.
 
 my $db_base = 'mysql';
-my $db_pass = '';       # Password to attach to the MySQL database
+my $db_pass = '';               # Password to attach to the MySQL database
 
 use DBI;
 
@@ -423,19 +427,17 @@ my @databases = $drh->func($db_host, $db_port, '_ListDBs');
 unless (grep /^$db_name$/, @databases) {
     print "Creating database $db_name ...\n";
     $drh->func('createdb', $db_name, 'admin')
-    or die "The '$db_name' database does not exist. I tried to create the database,\n",
-		"but that didn't work, probably because of access rigths. Read the README\n",
-		"file and the documentation of $db_base to make sure that everything is\n",
-		"set up correctly.\n";
+        or die "The '$db_name' database does not exist. I tried to create the database,\n",
+               "but that didn't work, probably because of access rigths. Read the README\n",
+               "file and the documentation of $db_base to make sure that everything is\n",
+               "set up correctly.\n";
 }
 
-
- 
 # now get a handle to the database:
 my $connectstring = "dbi:$db_base:$db_name:host=$db_host:port=$db_port";
 my $dbh = DBI->connect($connectstring, $db_user, $db_pass)
     or die "Can't connect to the table '$connectstring'.\n",
-       "Have you read Bugzilla's README?  Have you read the doc of '$db_name'?\n";
+           "Have you read Bugzilla's README?  Have you read the doc of '$db_name'?\n";
 
 END { $dbh->disconnect if $dbh }
 
@@ -549,7 +551,7 @@ $table{cc} =
 $table{components} =
    'value tinytext,
     program varchar(64),
-    initialowner tinytext not null, # Should arguably be a mediumint!
+    initialowner tinytext not null,     # Should arguably be a mediumint!
     initialqacontact tinytext not null, # Should arguably be a mediumint!
     description mediumtext not null';
 
@@ -601,6 +603,7 @@ $table{products} =
     disallownew tinyint not null,
     votesperuser smallint not null';
 
+
 $table{profiles} =
    'userid mediumint not null auto_increment primary key,
     login_name varchar(255) not null,
@@ -640,6 +643,8 @@ $table{votes} =
 my @tables = $dbh->func('_ListTables');
 #print 'Tables: ', join " ", @tables, "\n";
 
+# add lines here if you add more --LOCAL-- config vars that end up in the enums:
+
 my $severities = '"' . join('", "', @severities) . '"';
 my $priorities = '"' . join('", "', @priorities) . '"';
 my $opsys      = '"' . join('", "', @opsys)      . '"';
@@ -649,13 +654,17 @@ my $platforms  = '"' . join('", "', @platforms)  . '"';
 while (my ($tabname, $fielddef) = each %table) {
     next if grep /^$tabname$/, @tables;
     print "Creating table $tabname ...\n";
+
+    # add lines here if you add more --LOCAL-- config vars that end up in
+    # the enums:
+
     $fielddef =~ s/\$severities/$severities/;
     $fielddef =~ s/\$priorities/$priorities/;
     $fielddef =~ s/\$opsys/$opsys/;
     $fielddef =~ s/\$platforms/$platforms/;
 
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n)")
-    or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
+        or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
 }
 
 
@@ -688,16 +697,16 @@ sub AddGroup ($$)
     # normalize bits
     my $bit;
     if (defined $row[0]) {
-    $bit = $row[0] << 1;
+        $bit = $row[0] << 1;
     } else {
-    $bit = 1;
+        $bit = 1;
     }
 
    
     print "Adding group $name ...\n";
     $sth = $dbh->prepare('INSERT INTO groups
-                (bit, name, description, userregexp)
-              VALUES (?, ?, ?, ?)');
+                          (bit, name, description, userregexp)
+                          VALUES (?, ?, ?, ?)');
     $sth->execute($bit, $name, $desc, "");
 }
 
@@ -710,7 +719,9 @@ AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editgroupmembers', 'Can put people in and out of groups that they are members of.';
 AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
-#AddGroup 'editproducts',    'Can create, destroy, and edit products.';
+
+
+
 
 
 ###########################################################################
@@ -719,16 +730,17 @@ AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 
 my $sth = $dbh->prepare("SELECT product FROM products");
 $sth->execute;
-if ($sth->rows == 0) {
+unless ($sth->rows) {
     print "Creating initial dummy product 'TestProduct' ...\n";
-    $sth = $dbh->prepare('INSERT INTO products(product, description) VALUES ("TestProduct", "This is a test product.  This ought to be blown away and replaced with real stuff in a finished installation of bugzilla.")');
-    $sth->execute();
-    $sth = $dbh->prepare('INSERT INTO versions (value, program) VALUES ("other", "TestProduct")');
-    $sth->execute();
-    $sth = $dbh->prepare('INSERT INTO components (value, program, description) VALUES ("TestComponent", "TestProduct", "This is a test component in the test product database.  This ought to be blown away and replaced with real stuff in a finished installation of bugzilla.")');
-    $sth->execute();
+    $dbh->do('INSERT INTO products(product, description) VALUES ("TestProduct",
+              "This is a test product.  This ought to be blown away and replaced with " .
+              "real stuff in a finished installation of bugzilla.")');
+    $dbh->do('INSERT INTO versions (value, program) VALUES ("other", "TestProduct")');
+    $dbh->do('INSERT INTO components (value, program, description) VALUES ("TestComponent", 
+              "TestProduct", "This is a test component in the test product database.  " .
+              "This ought to be blown away and replaced with real stuff in a finished " .
+              "installation of bugzilla.")');
 }
-
 
 
 
@@ -753,7 +765,7 @@ sub GetFieldDef ($$)
     while (my $ref = $sth->fetchrow_arrayref) {
         next if $$ref[0] ne $field;
         return $ref;
-    }
+   }
 }
 
 sub CheckEnumField ($$@)
@@ -762,7 +774,7 @@ sub CheckEnumField ($$@)
 
     my $ref = GetFieldDef($table, $field);
     #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
-
+    
     $_ = "enum('" . join("','", @against) . "')";
     if ($$ref[1] ne $_) {
         print "Updating field $field in table $table ...\n";
@@ -784,6 +796,31 @@ CheckEnumField('bugs', 'bug_severity', @severities);
 CheckEnumField('bugs', 'priority',     @priorities);
 CheckEnumField('bugs', 'op_sys',       @opsys);
 CheckEnumField('bugs', 'rep_platform', @platforms);
+
+
+
+
+
+###########################################################################
+# Promote first user into every group
+###########################################################################
+
+#
+# Assume you just logged in. Now how can you administrate the system? Just
+# execute checksetup.pl again. If there is only 1 user in bugzilla, then
+# this user is promoted into every group.
+#
+
+$sth = $dbh->prepare("SELECT login_name FROM profiles");
+$sth->execute;
+# when we have exactly one user ...
+if ($sth->rows == 1) {
+    my @row = $sth->fetchrow_array;
+    print "Putting user $row[0] into every group ...\n";
+    # are this enought f's for now?  :-)
+    $dbh->do("update profiles set groupset=0xffffffffffff");
+}
+
 
 
 
@@ -819,7 +856,7 @@ sub RenameField ($$$)
     my ($table, $field, $newname) = @_;
 
     my $ref = GetFieldDef($table, $field);
-    return unless $ref;         # already fixed?
+    return unless $ref; # already fixed?
     #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
 
     if ($$ref[1] ne $newname) {
@@ -861,7 +898,8 @@ sub DropField ($$)
 # 5/12/99 Added a pref to control how much email you get.  This needs a new
 # column in the profiles table, so feed the following to mysql:
 
-AddField('profiles', 'emailnotification', 'enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges"');
+AddField('profiles', 'emailnotification', 'enum("ExcludeSelfChanges", "CConly", 
+                      "All") not null default "ExcludeSelfChanges"');
 
 
 

@@ -287,8 +287,12 @@ web browser!).  You'll be prompted for logon info, and you should enter your
 email address and then select 'mail me my password'.  When you get the password
 mail, log in with it.  Don't finish entering that new bug.
 
-    Now, bring up MySQL, and add yourself to every group.  This will
-effectively make you 'superuser'.  The SQL to type is:
+    Now, add yourself to every group.  The magic checksetup.pl script can do
+this for you, if you run it again now.  That script will notice if there's
+exactly one user in the database, and if so, add that person to every group.
+
+    If you want to add someone to every group by hand, you can do it by
+typing the appropriate MySQL commands.  Run mysql, and type:
 
 	update profiles set groupset=0x7fffffffffffffff where login_name = 'XXX';
 
