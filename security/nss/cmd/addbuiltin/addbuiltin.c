@@ -34,7 +34,7 @@
 /*
  * Tool for converting builtin CA certs.
  *
- * $Id: addbuiltin.c,v 1.3 2001/06/29 14:09:25 mcgreer%netscape.com Exp $
+ * $Id: addbuiltin.c,v 1.4 2002/10/12 01:00:33 jpierre%netscape.com Exp $
  */
 
 #include "nss.h"
@@ -121,6 +121,13 @@ ConvertCertificate(SECItem *sdder, char *nickname, CERTCertTrust *trust)
     printf("CKA_CERT_MD5_HASH MULTILINE_OCTAL\n");
     dumpbytes(md5_hash,MD5_LENGTH);
     printf("END\n");
+
+    printf("CKA_ISSUER MULTILINE_OCTAL\n");
+    dumpbytes(cert->derIssuer.data,cert->derIssuer.len);
+    printf("END\n");
+    printf("CKA_SERIAL_NUMBER MULTILINE_OCTAL\n");
+    dumpbytes(cert->serialNumber.data,cert->serialNumber.len);
+    printf("END\n");
     
     printf("CKA_TRUST_SERVER_AUTH CK_TRUST %s\n",
 				 getTrustString(trust->sslFlags));
@@ -177,7 +184,7 @@ printheader() {
      "# may use your version of this file under either the MPL or the\n"
      "# GPL.\n"
      "#\n"
-     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.3 $ $Date: 2001/06/29 14:09:25 $ $Name:  $\"\n"
+     "CVS_ID \"@(#) $RCSfile: addbuiltin.c,v $ $Revision: 1.4 $ $Date: 2002/10/12 01:00:33 $ $Name:  $\"\n"
      "\n"
      "#\n"
      "# certdata.txt\n"
