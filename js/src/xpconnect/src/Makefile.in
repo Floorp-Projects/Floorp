@@ -42,7 +42,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpconnect
 LIBRARY_NAME	= xpconnect
 SHORT_LIBNAME	= xpconect
-REQUIRES	= xpcom js dom widget layout
+REQUIRES	= xpcom js dom widget layout caps
 
 CPPSRCS		= \
 		nsXPConnect.cpp \
