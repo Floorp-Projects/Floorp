@@ -457,9 +457,11 @@ GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShel
       nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aContainer);
       nsCOMPtr<nsIURI> uri;
       docShell->GetCurrentURI(getter_AddRefs(uri));
-      nsXPIDLCString spec;
-      uri->GetSpec(getter_Copies(spec));
-	  hEntry->Create(spec, aContainer, aReferrer, aParent, aSHist);
+      if (uri) {
+          nsXPIDLCString spec;
+          uri->GetSpec(getter_Copies(spec));
+	      hEntry->Create(spec, aContainer, aReferrer, aParent, aSHist);
+      }
    }
    
   // If the webshell has children, go thro' the child list and create 
@@ -473,7 +475,6 @@ GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShel
       nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
       docShellAsNode->GetChildAt(i, getter_AddRefs(docShellAsItem));
       nsCOMPtr<nsIWebShell> childWS(do_QueryInterface(docShellAsItem));
-      //nsHistoryEntry * hChild = nsnull;
       if (childWS) {
         GenerateTree(aStickyUrl, aStickyContainer, childWS, hEntry, aSHist, aReferrer);
       }
@@ -544,7 +545,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      prevShell = do_QueryInterface(prev);
    if (prevShell) {
      nsCOMPtr<nsIURI> pURI;
-     if (NS_SUCCEEDED(prevShell->GetCurrentURI(getter_AddRefs(pURI)))) {
+     if (NS_SUCCEEDED(prevShell->GetCurrentURI(getter_AddRefs(pURI))) && pURI) {
        nsXPIDLCString spec;
        if (NS_SUCCEEDED(pURI->GetSpec(getter_Copies(spec))))
          pSURL = spec;
@@ -556,9 +557,6 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
      cSURL = cURL;
    }
      
-//   NS_ADDREF(aPrevEntry);
-
-
    //Compare the URLs
    {
      if ((pSURL) == cURL)
