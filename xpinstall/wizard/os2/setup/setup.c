@@ -189,5 +189,8 @@ int main(int argc, char *argv[], char *envp[])
 
   WinDestroyMsgQueue( hmq );
   WinTerminate( hab ); 
+
+  /* Unset LIBPATHSTRICT just in case it didn't get unset elsewhere */
+  DosSetExtLIBPATH("F", LIBPATHSTRICT);
 }
 
