@@ -175,7 +175,7 @@ ifdef PROGRAMS
 endif
 
 ifndef TARGETS
-	ifeq ($(OS_ARCH), WINNT)
+	ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 		TARGETS = $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(PROGRAM)
 	else
 		TARGETS = $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM)
