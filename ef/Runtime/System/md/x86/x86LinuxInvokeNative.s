@@ -41,12 +41,10 @@ STATIC_ENTRY(CAT(sysInvokeNative,N));													\
 																						\
 		movl	$N,%edx;					/* %edx = nArgs                     */		\
 																						\
-SYMBOL_NAME_LABEL(CAT(top,N));															\
-																						\
-		leal	(16+4*N)(%esp),%ecx;		/* %ecx = %esp +  16 + 4 * nArgs    */		\
+1:		leal	(16+4*N)(%esp),%ecx;		/* %ecx = %esp +  16 + 4 * nArgs    */		\
 		pushl	(%ecx);						/* push original argument			*/		\
 		decl	%edx;						/* nArgs -= 1						*/		\
-		jne		SYMBOL_NAME(CAT(top,N));	/* loop over						*/		\
+		jne		1b;							/* loop over						*/		\
 		call	*%eax;						/* call the native function			*/		\
 																						\
 		movl	%ebp,%esp;					/**********************************	*/		\
