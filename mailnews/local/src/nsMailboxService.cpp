@@ -282,13 +282,13 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 			// set up the url spec and initialize the url with it.
 			nsFilePath filePath(folderPath); // convert to file url representation...
 
-            if (mPrintingOperation)
-                urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) filePath, msgKey);
-            else if (part)
-                urlSpec = PR_smprintf("mailbox://%s?number=%d&%s", (const char *)
-                                      filePath, msgKey, part);
-            else
-                urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
+      if (mPrintingOperation)
+          urlSpec = PR_smprintf("mailbox://%s?number=%d&header=print", (const char *) filePath, msgKey);
+      else if (part)
+          urlSpec = PR_smprintf("mailbox://%s?number=%d&%s", (const char *)
+                                filePath, msgKey, part);
+      else
+          urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
             
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
 			url->SetSpec(urlSpec);
@@ -302,9 +302,13 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 				rv = url->RegisterListener(aUrlListener);
 
 			url->SetMsgWindow(msgWindow);
-            nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(url);
-            if (msgUrl)
-                msgUrl->SetOriginalSpec(aSrcMsgMailboxURI);
+      nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(url);
+      if (msgUrl)
+      {
+        msgUrl->SetOriginalSpec(aSrcMsgMailboxURI);
+        msgUrl->SetUri(aSrcMsgMailboxURI);
+      }
+
 		} // if we got a url
 	} // if we got a url
 

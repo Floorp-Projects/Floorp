@@ -37,6 +37,10 @@
 #include "nsIMsgHdr.h"
 
 #include "nsXPIDLString.h"
+#include "nsIRDFService.h"
+#include "rdf.h"
+#include "nsIMsgFolder.h"
+#include "nsIMessage.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -129,52 +133,25 @@ nsMailboxUrl::nsMailboxUrl()
 	m_messageKey = 0;
 	m_messageSize = 0;
 	m_messageFileSpec = nsnull;
-    m_addDummyEnvelope = PR_FALSE;
-    m_canonicalLineEnding = PR_FALSE;
+  m_addDummyEnvelope = PR_FALSE;
+  m_canonicalLineEnding = PR_FALSE;
 }
  
 nsMailboxUrl::~nsMailboxUrl()
 {
 	if (m_filePath) delete m_filePath;
-
 	PR_FREEIF(m_messageID);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMailboxUrl, nsMsgMailNewsUrl)
 NS_IMPL_RELEASE_INHERITED(nsMailboxUrl, nsMsgMailNewsUrl)
-  
-nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) 
-	{
-        return NS_ERROR_NULL_POINTER;
-    }
- 
-    if (aIID.Equals(NS_GET_IID(nsIMailboxUrl)) || aIID.Equals(kISupportsIID)) 
-	{
-        *aInstancePtr = (void*) ((nsIMailboxUrl*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(NS_GET_IID(nsIMsgMessageUrl)))
-	{
-		*aInstancePtr = (void *) ((nsIMsgMessageUrl *) this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
 
-#if defined(NS_DEBUG)
-    /*
-     * Check for the debug-only interface indicating thread-safety
-     */
-    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
-    if (aIID.Equals(kIsThreadsafeIID)) {
-        return NS_OK;
-    }
-#endif
- 
-    return nsMsgMailNewsUrl::QueryInterface(aIID, aInstancePtr);
-}
+NS_INTERFACE_MAP_BEGIN(nsMailboxUrl)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMailboxUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIMailboxUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgMessageUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgI18NUrl)
+NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsIMailboxUrl specific support
@@ -245,20 +222,26 @@ nsresult nsMailboxUrl::SetMessageSize(PRUint32 aMessageSize)
 	return NS_OK;
 }
 
-
-NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
+NS_IMETHODIMP nsMailboxUrl::SetUri(const char * aURI)
 {
-	// function not implemented yet....
-	// when I get scott's function to take a path and a message id and turn it into
-	// a URI then we can add that code here.....
+  mURI= aURI;
+  return NS_OK;
+}
 
-	if (aURI)
+NS_IMETHODIMP nsMailboxUrl::GetUri(char ** aURI)
+{
+  // if we have been given a uri to associate with this url, then use it
+  // otherwise try to reconstruct a URI on the fly....
+
+  if (!mURI.IsEmpty())
+    *aURI = mURI.ToNewCString();
+  else
 	{
 		nsFileSpec * filePath = nsnull;
 		GetFileSpec(&filePath);
 		if (filePath)
 		{
-            char * baseuri = nsMailboxGetURI(m_file);
+      char * baseuri = nsMailboxGetURI(m_file);
 			char * baseMessageURI;
 			nsCreateLocalBaseMessageURI(baseuri, &baseMessageURI);
 			char * uri = nsnull;
@@ -272,7 +255,6 @@ NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 		}
 		else
 			*aURI = nsnull;
-
 	}
 
 	return NS_OK;
@@ -444,3 +426,29 @@ char * extractAttributeValue(const char * searchString, const char * attributeNa
 	return attributeValue;
 }
 
+// nsIMsgI18NUrl support
+
+NS_IMETHODIMP nsMailboxUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
+{
+  // if we have a RDF URI, then try to get the folder for that URI and then ask the folder
+  // for it's charset....
+
+  nsXPIDLCString uri;
+  GetUri(getter_Copies(uri));
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_PROGID "/rdf-service"); 
+  nsCOMPtr<nsIRDFResource> resource;
+  rdfService->GetResource(uri, getter_AddRefs(resource));
+
+  NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMessage> msg (do_QueryInterface(resource));
+  NS_ENSURE_TRUE(msg, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIMsgFolder> folder;
+  msg->GetMsgFolder(getter_AddRefs(folder));
+  NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
+  nsXPIDLString charset; 
+  folder->GetCharset(getter_Copies(charset));
+  *aCharacterSet = nsCRT::strdup(charset);
+
+  return NS_OK;
+}

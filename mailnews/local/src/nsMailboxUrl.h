@@ -30,7 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 
-class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl
+class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl, public nsIMsgI18NUrl
 {
 public:
 	// nsIURI over-ride...
@@ -45,21 +45,21 @@ public:
 	
 	NS_IMETHOD GetFileSpec(nsFileSpec ** aFilePath);
 	NS_IMETHOD GetMessageKey(nsMsgKey* aMessageKey);
-    NS_IMETHOD GetMessageSize(PRUint32 *aMessageSize);
+  NS_IMETHOD GetMessageSize(PRUint32 *aMessageSize);
 	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize);
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
 	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
 
-    // nsMailboxUrl
-    nsMailboxUrl();
-	virtual ~nsMailboxUrl();
-    NS_DECL_NSIMSGMESSAGEURL
-    NS_DECL_ISUPPORTS_INHERITED
-
+  // nsMailboxUrl
+  nsMailboxUrl();
+  virtual ~nsMailboxUrl();
+  NS_DECL_NSIMSGMESSAGEURL
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIMSGI18NURL
 
 protected:
 	// protocol specific code to parse a url...
-    virtual nsresult ParseUrl();
+  virtual nsresult ParseUrl();
 	virtual const char * GetUserName() { return nsnull;}
 
 	// mailboxurl specific state
@@ -75,12 +75,14 @@ protected:
 
 	// used by save message to disk
 	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
-    PRBool                m_addDummyEnvelope;
-    PRBool                m_canonicalLineEnding;
+  PRBool                m_addDummyEnvelope;
+  PRBool                m_canonicalLineEnding;
 	nsresult ParseSearchPart();
 
-    // truncated message support
-    nsXPIDLCString m_originalSpec;
+  // truncated message support
+  nsXPIDLCString m_originalSpec;
+
+  nsCString mURI; // the RDF URI associated with this url.
 };
 
 #endif // nsMailboxUrl_h__
