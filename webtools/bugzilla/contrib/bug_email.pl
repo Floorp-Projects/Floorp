@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.14 2002/09/22 17:15:03 bugreport%peshkin.net Exp $
+# $Id: bug_email.pl,v 1.15 2003/01/25 04:39:14 jake%bugzilla.org Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -640,7 +640,8 @@ sub dump_entity {
 	if(  $msg_part =~ /^attachment/ ) {
 	    # Attached File
 	    my $des = $entity->head->get('Content-Description');
-	    $des ||= "";
+	    $des ||= $entity->head->recommended_filename;
+	    $des ||= "unnamed attachment";
 
 	    if( defined( $body->path )) { # Data is on disk
 		$on_disk = 1;
