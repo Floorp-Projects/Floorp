@@ -565,7 +565,7 @@ rdfSortCallback(const void *data1, const void *data2, void *sortData)
 			nsCOMPtr<nsIRDFLiteral> literal1 = nsnull;
 			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) getter_AddRefs(literal1))))
 			{
-				literal1->GetValue(&uniStr1);
+				// literal1->GetValue(&uniStr1);
 			}
 		}
 	}
@@ -577,7 +577,7 @@ rdfSortCallback(const void *data1, const void *data2, void *sortData)
 			nsCOMPtr<nsIRDFLiteral> literal2 = nsnull;
 			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) getter_AddRefs(literal2))))
 			{
-				literal2->GetValue(&uniStr2);
+				// literal2->GetValue(&uniStr2);
 			}
 		}
 	}
@@ -724,12 +724,14 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
 			}
 
 			// flatten array of resources, sort them, then add as tree elements
-        	        for (unsigned loop=0; loop<numElements; loop++)
+			unsigned long loop;
+
+        	        for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
 #ifdef	XP_MAC		// XXX only Mac for the moment, need to test on other platforms
         		rdf_qsort((void *)flatArray, numElements, sizeof(void *), rdfSortCallback, (void *)&sortInfo);
 #endif
-        		for (unsigned long loop=0; loop<numElements; loop++)
+        		for (loop=0; loop<numElements; loop++)
         		{
 				nsIRDFResource	*valueResource;
 				
