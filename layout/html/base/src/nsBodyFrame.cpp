@@ -871,8 +871,15 @@ nsBodyFrame::CreateAbsoluteView(nsIStyleContext* aStyleContext) const
     view->Init(viewManager, nsRect(0, 0, 0, 0), containingView, nsnull,
                nsnull, nsnull, zIndex, pClip);
     viewManager->InsertChild(containingView, view, 0);
-    //XXX this needs to be conditional...
-    viewManager->SetViewContentTransparency(view, PR_FALSE);
+    // If the background color is transparent then mark the view as having
+    // transparent content.
+    // XXX We could try and be smarter about this and check whether there's
+    // a background image. If there is a background image and the image is
+    // fully opaque then we don't need to mark the view as having transparent
+    // content...
+    if (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) {
+      viewManager->SetViewContentTransparency(view, PR_TRUE);
+    }
     viewManager->SetViewOpacity(view, color->mOpacity);
     NS_RELEASE(viewManager);
   }
