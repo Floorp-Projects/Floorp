@@ -278,6 +278,21 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
 
   NSString* hrefStr = [NSString stringWithCharacters: href.get() length:nsCRT::strlen(href.get())];
   NSURL* linkURL = [NSURL URLWithString: hrefStr];
+  
+  // Hack to determine specific protocols handled by Chimera in the frontend
+  // until I can determine why the general unknown protocol handler handoff
+  // between Necko and uriloader isn't happening. 
+  if (([[linkURL scheme] isEqualToString:@"http"])  ||
+     ([[linkURL scheme]  isEqualToString:@"https"]) ||
+     ([[linkURL scheme]  isEqualToString:@"ftp"])   ||
+     ([[linkURL scheme]  isEqualToString:@"about"]) ||
+     ([[linkURL scheme]  isEqualToString:@"file"]) ||
+     ([[linkURL scheme]  isEqualToString:@"data"]) ||
+     ([[linkURL scheme]  isEqualToString:@"javascript"]))
+  { 
+    // Fall through and do whatever we'd normally do with this kind of URL
+  } else
+    [[NSWorkspace sharedWorkspace] openURL:linkURL];
 
   if ((metaKey && button == 0) || button == 1) {
     // The command key is down or we got a middle click.  Open the link in a new window or tab.
