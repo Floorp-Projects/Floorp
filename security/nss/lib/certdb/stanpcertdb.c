@@ -159,6 +159,7 @@ SEC_CertNicknameConflict(char *nickname, SECItem *derSubject,
 			 CERTCertDBHandle *handle)
 {
     /* XXX still an issue? */
+	return PR_FALSE;
 }
 
 SECStatus
@@ -234,13 +235,12 @@ CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
 	ret = SECFailure;
 	goto done;
     }
-    *cert->trust = *trust;
     if (PK11_IsReadOnly(cert->slot)) {
 	char *nickname = cert_parseNickname(cert->nickname);
 	/* XXX store it on a writeable token */
 	goto done;
     } else {
-	/* XXX reflect the trust change on the token */
+	STAN_ChangeCertTrust(cert->nssCertificate, trust);
     }
     ret = SECSuccess;
 done:
@@ -254,16 +254,26 @@ CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 		       CERTCertTrust *trust)
 {
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
-    /* hacky */
+    /* might as well keep these */
+    PORT_Assert(cert->istemp);
+    PORT_Assert(!cert->isperm);
+    if (SEC_CertNicknameConflict(nickname, &cert->derSubject, cert->dbhandle)){
+	return SECFailure;
+    }
     if (c->nickname && strcmp(nickname, c->nickname) != 0) {
 	nss_ZFreeIf(c->nickname);
 	c->nickname = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->arena);
-	/* now what about the inner cert? */
+	PORT_Free(cert->nickname);
+	cert->nickname = PORT_Strdup(nickname);
     }
-    if (memcmp(cert->trust, trust, sizeof (*trust)) != 0) {
-	STAN_ChangeCertTrust(c, trust);
-    }
+    /*
     nssTrustDomain_AddTempCertToPerm(c);
+    if (memcmp(cert->trust, trust, sizeof (*trust)) != 0) {
+    */
+	return STAN_ChangeCertTrust(c, trust);
+	/*
+    }
+    */
     return SECFailure;
 }
 
@@ -298,12 +308,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	goto loser;
     }
     NSSITEM_FROM_SECITEM(&c->encoding, derCert);
-    c->type = NSSCertificateType_PKIX;
-    dc = nssDecodedCert_Create(arena, &c->encoding, c->type);
-    if (!dc) {
-	goto loser;
-    }
-    cc = (CERTCertificate *)dc->data;
+    cc = STAN_GetCERTCertificate(c);
     c->arena = arena;
     nssItem_Create(arena, 
                    &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
@@ -311,10 +316,12 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
                    &c->subject, cc->derSubject.len, cc->derSubject.data);
     nssItem_Create(arena, 
                    &c->serial, cc->serialNumber.len, cc->serialNumber.data);
-    c->nickname = nssUTF8_Create(arena, 
-                                 nssStringType_UTF8String, 
-                                 (NSSUTF8 *)nickname, 
-                                 PORT_Strlen(nickname));
+    if (nickname) {
+	c->nickname = nssUTF8_Create(arena, 
+                                     nssStringType_UTF8String, 
+                                     (NSSUTF8 *)nickname, 
+                                     PORT_Strlen(nickname));
+    }
     if (cc->emailAddr) {
 	c->email = nssUTF8_Create(arena, 
 	                          nssStringType_PrintableString, 
