@@ -18,7 +18,9 @@ Communications Corporation. Portions created by Netscape are
 Copyright (C) 1998-2000 Netscape Communications Corporation. All
 Rights Reserved.
 
-Contributor(s): ______________________________________. -->
+Contributor(s):
+	Dean Tessman <dean_tessman@hotmail.com>
+-->
 
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
@@ -167,7 +169,9 @@ Contributor(s): ______________________________________. -->
                  ontextcommand="return handleURLBarCommand(eventParam, domEvent);"
                  ontextrevert="return handleURLBarRevert();"
                  onfocus="URLBarFocusHandler(event);"
-                 onblur="URLBarBlurHandler(event);">
+                 onblur="URLBarBlurHandler(event);"
+                 onmousedown="URLBarMouseDownHandler(event);"
+                 onmouseup="URLBarMouseUpHandler(event);">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
                    onclick="BookmarksUtils.addBookmarkForBrowser(getBrowser().webNavigation, true);"
