@@ -393,8 +393,10 @@ public:
     mdb_count* outCount) = 0;
 
   NS_IMETHOD AddWeakRef(nsIMdbEnv* ev) = 0;
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev) = 0;
 
   NS_IMETHOD CutWeakRef(nsIMdbEnv* ev) = 0;
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev) = 0;
   
   NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev) = 0; // called at strong refs zero
   NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen) = 0;

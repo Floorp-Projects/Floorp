@@ -556,7 +556,7 @@ morkStdioFile::AcquireBud(nsIMdbEnv * mdbev, nsIMdbHeap* ioHeap, nsIMdbFile **ac
       
 //#endif /*MORK_WIN*/
 
-      if ( ev->Good() && this->AddStrongRef(ev))
+      if ( ev->Good() && this->AddStrongRef(ev->AsMdbEnv()) )
       {
         outFile = this;
         AddRef();

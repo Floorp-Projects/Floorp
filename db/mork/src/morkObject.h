@@ -123,8 +123,10 @@ public: // morkNode virtual methods
     mdb_count* outCount);
 
   NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
   NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
   NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
   NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
