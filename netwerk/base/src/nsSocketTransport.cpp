@@ -2089,7 +2089,7 @@ nsSocketTransport::IsAlive (PRUint32 seconds, PRBool *alive)
         {
             PRErrorCode code = PR_GetError ();
 
-            if (rval == 0 || code == PR_WOULD_BLOCK_ERROR)
+            if (rval == 0 || code != PR_WOULD_BLOCK_ERROR)
                 *alive = PR_FALSE;
         }
     }
