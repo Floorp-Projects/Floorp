@@ -444,8 +444,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPHandler::RequestTransport."
-            "\tGot a socket transport for nsHTTPChannel [%x].\n",
-            i_Channel));
+            "\tGot a socket transport for nsHTTPChannel [%x]. %d Active transports.\n",
+            i_Channel, count+1));
 
     return rv;
 }
@@ -477,6 +477,11 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
     nsresult rv;
     PRUint32 count;
 
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+           ("nsHTTPHandler::ReleaseTransport."
+            "\tReleasing socket transport %x.\n",
+            i_pTrans));
+
     rv = mTransportList->RemoveElement(i_pTrans);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
 
@@ -502,6 +507,23 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
 
     return rv;
 }
+
+nsresult nsHTTPHandler::CancelPendingChannel(nsHTTPChannel* aChannel)
+{
+  PRBool ret;
+
+  // XXX: RemoveElement *really* returns a PRBool :-(
+  ret = (PRBool) mPendingChannelList->RemoveElement(aChannel);
+
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+         ("nsHTTPHandler::CancelPendingChannel."
+          "\tCancelling nsHTTPChannel [%x]\n",
+          aChannel));
+
+  return ret ? NS_OK : NS_ERROR_FAILURE;
+
+}
+
 
 nsresult
 nsHTTPHandler::GetProxyHost(const char* *o_ProxyHost) const

@@ -145,6 +145,8 @@ public:
     */
     virtual nsresult ReleaseTransport(nsIChannel* i_pTrans);
 
+    nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
+
 protected:
     // None
     nsHTTPHandler(void);
