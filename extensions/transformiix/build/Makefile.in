@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  htmlparser \
 		  docshell \
+		  unicharutil \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule
