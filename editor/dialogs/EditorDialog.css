@@ -1,21 +1,18 @@
 /* XUL ELEMENTS */
 window, WINDOW {
 	display: block;
-	width: 100%;
+/*	width: 100%; */
 	background: silver;
 	background-color: #CCCCCC; /* not working on Macintosh */ 
 	padding: 5px;
   font-family: Sans-Serif;
-  font-size: 8pt;
+  font-size: 10pt;
 }
 
-/* Defeat the default behavior of borderless until rollover */
-button { border: 2px outset }
-
-/* values = margin, padding. Padding doesn't work yet */
-checkbox, CHECKBOX { margin: 5px 3px }
-
-radio, RADIO { margin: 5px 3px }
+radio, RADIO, checkbox, CHECKBOX { 
+  margin-top:    5px;
+  margin-right:  3px;
+}
 
 tree, TREE {
 	display: table;
@@ -30,23 +27,25 @@ tree, TREE {
 /* Force all rows to line up cell contents at the top */
 tr, TR { vertical-align: top }
 
-/* FOR DEBUG PURPOSE -- SHOW CELL BORDER */
-td, TD { border-width: 0px; border-style: inset }
+/* FOR DEBUG PURPOSE -- SHOW CELL BORDER
+td, TD { border-width: 1px; padding: 0px; border-style: outset }
 
-table, TABLE { border-width: 0px }
+table, TABLE { border-width: 1px; padding: 0px; border-style: inset }
+*/
+
 
 p, br, td {
   font-family: Sans-Serif;
-  font-size: 8pt;
-  margin-top: 4px;
-  margin-bottom: 4px
+  font-size: 10pt;
+  margin: 0px;
 }
 
+
 fieldset, FIELDSET {
-  border-width: 3px;
+  border-width: 2px;
   border-style: groove;
-  padding: 3px;
-  margin: 5px;
+  padding: 2px;
+  margin:  0px;
   text-align: left;
 }
 
@@ -54,70 +53,30 @@ legend, LEGEND {
   font-family: Sans-Serif;
   font-size: 10pt;
   border-width: 0;
+  width: 100%
+  height: 100%
+/* BUG??? align can't be set - must use <legend align="left"> in the HTML */
   text-align: left;
 }
 
-/* CLASSES */
-[CLASS~=GrooveBorder] { border: 2px groove; padding: 3px }
 
-[CLASS~=RidgeBorder] { border: 2px ridge; padding: 3px  }
+/* CLASSES */ 
+[CLASS~=GrooveBorder] { border: 2px groove; padding: 3px } 
 
-[CLASS~=OutsetBorder] { border: 1px outset; padding: 3px  }
+[CLASS~=RidgeBorder] { border: 2px ridge; padding: 3px  } 
 
-[CLASS~=InsetBorder] { border: 1px inset; padding: 3px  }
+[CLASS~=OutsetBorder] { border: 1px outset; padding: 3px  } 
+
+[CLASS~=InsetBorder] { border: 1px inset; padding: 3px  } 
+
+/*
+3/31/99 These don't work because of a bug HYATT knows about
+.GrooveBorder { border: 2px groove; padding: 3px }
+.RidgeBorder { border: 2px ridge; padding: 3px  }
+.OutsetBorder { border: 1px outset; padding: 3px  }
+.InsetBorder { border: 1px inset; padding: 3px  }
 
 
 .tableCenterAlign {
   vertical-align: middle;
-}
-
-.genericbutton {
-  width: 80px;
-  height: 20px;
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-
-/* IDs only one button per dialog */
-#okbutton {
-  width: 80px; 
-  height: 20px;
-  left: 385px;
-  top: 320px;
-  align: right;
-  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}
-
-#cancelbutton {
-  width: 80px;
-  height: 20px;
-  left: 295px;
-  top: 320px;
-  align: right;
-  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}
-
-#applybutton {
-  width: 80px;
-  height: 20px;
-  left: 205px;
-  top: 320px;
-  align: right;  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}
-
-#helpbutton {
-  width: 80px;
-  height: 20px;
-  left: 10px;
-  top: 320px;
-  align : left;
-  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}
-
-#extrahtmlbutton {
-  width: 80px;
-  height: 20px;
-  align: right;
-  left: 385px;
-  font-style: normal; position: absolute; visibility: visible; z-index: auto
-}
+*/

@@ -30,7 +30,11 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIEnumerator.h"
+#include "nsIContent.h"
+#include "nsIContentIterator.h"
 #include "nsEditorCID.h"
+#include "nsLayoutCID.h"
+#include "nsIDOMRange.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -49,6 +53,8 @@ static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
 static NS_DEFINE_CID(kTextEditorCID,  NS_TEXTEDITOR_CID);
 static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
+static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -340,6 +346,12 @@ NS_IMETHODIMP nsHTMLEditor::OutputText(nsString& aOutputString)
 NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsString& aOutputString)
 {
   return nsTextEditor::OutputHTML(aOutputString);
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
+{
+  return nsTextEditor::CopyAttributes(aDestNode, aSourceNode);
 }
 
 //================================================================
@@ -745,63 +757,239 @@ nsHTMLEditor::InsertImage(nsString& aURL,
                           nsString& aAlignment)
 {
   nsresult res;
+
+  (void)nsEditor::BeginTransaction();
+
   nsCOMPtr<nsIDOMNode> newNode;
-
-  nsCOMPtr<nsIDOMDocument>doc;
-  res = GetDocument(getter_AddRefs(doc));
-  if (NS_SUCCEEDED(res))
+  nsAutoString tag("IMG");
+  res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+  if (!NS_SUCCEEDED(res) || !newNode)
   {
-    nsAutoString tag("IMG");
-    nsCOMPtr<nsIDOMElement>newElement;
-    res = doc->CreateElement(tag, getter_AddRefs(newElement));
-    if (NS_SUCCEEDED(res) && newElement)
-    {
-      newNode = do_QueryInterface(newElement);
-      nsCOMPtr<nsIDOMHTMLImageElement> image (do_QueryInterface(newNode));
-      // Set all the attributes now, before we insert into the tree:
-      if (image)
-      {
-        if (NS_SUCCEEDED(res = image->SetSrc(aURL)))
-          if (NS_SUCCEEDED(res = image->SetWidth(aWidth)))
-            if (NS_SUCCEEDED(res = image->SetHeight(aHeight)))
-              if (NS_SUCCEEDED(res = image->SetAlt(aAlt)))
-                if (NS_SUCCEEDED(res = image->SetBorder(aBorder)))
-                  if (NS_SUCCEEDED(res = image->SetAlign(aAlignment)))
-                    if (NS_SUCCEEDED(res = image->SetHspace(aHspace)))
-                      if (NS_SUCCEEDED(res = image->SetVspace(aVspace)))
-                        ;
-      }
-    }
-  }
-
-  // If any of these failed, then don't insert the new node into the tree
-  if (!NS_SUCCEEDED(res))
-  {
-#ifdef DEBUG_akkana
-    printf("Some failure creating the new image node\n");
-#endif
+    (void)nsEditor::EndTransaction();
     return res;
   }
 
-  //
-  // Now we're ready to insert the new image node:
-  // Starting now, don't return without ending the transaction!
-  //
-  (void)nsEditor::BeginTransaction();
-
-  nsCOMPtr<nsIDOMNode> parentNode;
-  PRInt32 offsetOfNewNode;
-  res = nsEditor::DeleteSelectionAndPrepareToCreateNode(parentNode,
-                                                        offsetOfNewNode);
-  if (NS_SUCCEEDED(res))
+  nsCOMPtr<nsIDOMHTMLImageElement> image (do_QueryInterface(newNode));
+  if (!image)
   {
-    // and insert it into the right place in the tree:
-    res = InsertNode(newNode, parentNode, offsetOfNewNode);
+#ifdef DEBUG_akkana
+    printf("Not an image element\n");
+#endif
+    (void)nsEditor::EndTransaction();
+    return NS_NOINTERFACE;
   }
+
+  // Can't return from any of these intermediates
+  // because then we won't hit the EndTransaction()
+  if (NS_SUCCEEDED(res = image->SetSrc(aURL)))
+    if (NS_SUCCEEDED(res = image->SetWidth(aWidth)))
+      if (NS_SUCCEEDED(res = image->SetHeight(aHeight)))
+        if (NS_SUCCEEDED(res = image->SetAlt(aAlt)))
+          if (NS_SUCCEEDED(res = image->SetBorder(aBorder)))
+            if (NS_SUCCEEDED(res = image->SetAlign(aAlignment)))
+              if (NS_SUCCEEDED(res = image->SetHspace(aHspace)))
+                if (NS_SUCCEEDED(res = image->SetVspace(aVspace)))
+                  ;
 
   (void)nsEditor::EndTransaction();  // don't return this result!
 
   return res;
 }
 
+  // This should replace InsertLink and InsertImage once it is working
+NS_IMETHODIMP
+nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn)
+{
+  if (!aReturn )
+    return NS_ERROR_NULL_POINTER;
+  
+  *aReturn = nsnull;
+  
+  nsAutoString TagName = aTagName;
+  TagName.ToLowerCase();
+  
+  //Note that this doesn't need to go through the transaction system
 
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  PRBool first=PR_TRUE;
+  nsCOMPtr<nsIDOMSelection>selection;
+  result = nsEditor::GetSelection(getter_AddRefs(selection));
+  if (!NS_SUCCEEDED(result) || !selection)
+    return result;
+
+  PRBool isCollapsed;
+  selection->GetIsCollapsed(&isCollapsed);
+  nsCOMPtr<nsIDOMElement> selectedElement;
+  PRBool bNodeFound = PR_FALSE;
+
+  // Don't bother to examine selection if it is collapsed
+  if (!isCollapsed)
+  {
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = do_QueryInterface(selection);
+    if (enumerator)
+    {
+      enumerator->First(); 
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && currentItem)
+      {
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        nsCOMPtr<nsIContentIterator> iter;
+        result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                                    kIContentIteratorIID, 
+                                                    getter_AddRefs(iter));
+        if ((NS_SUCCEEDED(result)) && iter)
+        {
+          iter->Init(range);
+          // loop through the content iterator for each content node
+          nsCOMPtr<nsIContent> content;
+          result = iter->CurrentNode(getter_AddRefs(content));
+          PRBool bOtherNodeTypeFound = PR_FALSE;
+
+          while (NS_COMFALSE == iter->IsDone())
+          {
+             // Query interface to cast nsIContent to nsIDOMNode
+             //  then get tagType to compare to  aTagName
+             // Clone node of each desired type and append it to the aDomFrag
+            selectedElement = do_QueryInterface(content);
+            if (selectedElement)
+            {
+              // If we already found a node, then we have another element,
+              //   so don't return an element
+              if (bNodeFound)
+              {
+                bNodeFound;
+                break;
+              }
+
+              nsAutoString domTagName;
+              selectedElement->GetNodeName(domTagName);
+
+              // The "A" tag is a pain,
+              //  used for both link(href is set) and "Named Anchor"
+              if (aTagName == "HREF" || (aTagName == "ANCHOR"))
+              {
+                // We could use GetAttribute, but might as well use anchor element directly
+                nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(selectedElement);
+                if (anchor)
+                {
+                  nsString tmpText;
+                  if( aTagName == "HREF")
+                  {
+                    if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText && tmpText != "")
+                      bNodeFound = PR_TRUE;
+                  } else if (aTagName == "ANCHOR")
+                  {
+                    if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText && tmpText != "")
+                      bNodeFound = PR_TRUE;
+                  }
+                }
+              } else if (aTagName == domTagName) { // All other tag names are handled here
+                bNodeFound = PR_TRUE;
+              }
+              if (!bNodeFound)
+              {
+                // Check if node we have is really part of the selection???
+                break;
+              }
+            }
+          }
+          if (!bNodeFound)
+            printf("No nodes of tag name = %s were found in selection\n", aTagName);
+        }
+      } else {
+        // Should never get here?
+        isCollapsed = PR_TRUE;
+        printf("isCollapsed was FALSE, but no elements found in selection\n");
+      }
+    } else {
+      printf("Could not create enumerator for GetSelectionProperties\n");
+    }
+  }
+  if (bNodeFound)
+  {
+    
+    *aReturn = selectedElement;  
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)
+{
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  if (aReturn)
+    *aReturn = nsnull;
+
+  if (aTagName == "" || !aReturn)
+    return NS_ERROR_NULL_POINTER;
+    
+  nsAutoString TagName = aTagName;
+  TagName.ToLowerCase();
+  nsAutoString realTagName;
+
+  PRBool isHREF = (TagName == "href");
+  PRBool isAnchor = (TagName == "anchor");
+  if (isHREF || isAnchor)
+  {
+    realTagName = "a";
+  } else {
+    realTagName = TagName;
+  }
+  //We don't use editor's CreateElement because we don't want to 
+  //  go through the transaction system
+
+  nsCOMPtr<nsIDOMElement>newElement;
+  result = mDoc->CreateElement(realTagName, getter_AddRefs(newElement));
+  if (!NS_SUCCEEDED(result) || !newElement)
+    return NS_ERROR_FAILURE;
+
+
+  // Set default values for new elements
+  // SHOULD THIS BE PUT IN "RULES" SYSTEM OR
+  //  ATTRIBUTES SAVED IN PREFS?
+  if (isAnchor)
+  {
+    // TODO: Get the text of the selection and build a suggested Name
+    //  Replace spaces with "_" 
+  }
+  // ADD OTHER DEFAULT ATTRIBUTES HERE
+
+  if (NS_SUCCEEDED(result))
+  {
+    *aReturn = newElement; //do_QueryInterface(newElement);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn)
+{
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  if (aReturn)
+    *aReturn = nsnull;
+  
+  if (!aElement || !aReturn)
+    return NS_ERROR_NULL_POINTER;
+  
+  result = nsEditor::BeginTransaction();
+  if (NS_FAILED(result))
+    return result;
+
+  nsCOMPtr<nsIDOMNode> parentSelectedNode;
+  PRInt32 offsetOfNewNode;
+
+  DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
+  if (NS_SUCCEEDED(result))
+  {
+    nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
+
+    result = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
+
+  }
+  (void)nsEditor::EndTransaction();
+  
+  return result;
+}

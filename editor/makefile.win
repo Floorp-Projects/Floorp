@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 !if defined(DISABLE_EDITOR)
 DIRS= public
 !else
-DIRS= public base guimgr txmgr
+DIRS= public base guimgr txmgr ui
 !endif
 
 include <$(DEPTH)\config\rules.mak>

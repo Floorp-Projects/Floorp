@@ -52,6 +52,8 @@ public:
 //Initialization
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 
+//============================================================================
+// Methods that are duplicates of nsEditor -- exposed here for convenience
 // Editing Operations
   NS_IMETHOD SetTextProperty(nsIAtom        *aProperty, 
                              const nsString *aAttribute,
@@ -64,6 +66,7 @@ public:
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertBreak();
+  NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);
 
 // Transaction control
   NS_IMETHOD EnableUndo(PRBool aEnable);
@@ -96,6 +99,8 @@ public:
   NS_IMETHOD OutputText(nsString& aOutputString);
   NS_IMETHOD OutputHTML(nsString& aOutputString);
 
+// End of methods implemented in nsEditor
+//=============================================================
 
 protected:
 
