@@ -514,6 +514,34 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           NS_IF_ADDREF(gLastFocusedContent);
         }
         
+        // Try to keep the focus controllers and the globals in synch
+        if(gLastFocusedDocument != mDocument && gLastFocusedDocument && mDocument) {
+          nsCOMPtr<nsIScriptGlobalObject> lastGlobal;
+          gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(lastGlobal));
+          nsCOMPtr<nsPIDOMWindow> lastWindow;
+          nsCOMPtr<nsIFocusController> lastController;
+          if(lastGlobal) {
+            lastWindow = do_QueryInterface(lastGlobal);
+
+            if(lastWindow)
+              lastWindow->GetRootFocusController(getter_AddRefs(lastController));
+          }
+          
+          nsCOMPtr<nsIScriptGlobalObject> nextGlobal;
+          mDocument->GetScriptGlobalObject(getter_AddRefs(nextGlobal));
+          nsCOMPtr<nsIFocusController> nextController;
+          if(nextGlobal) {
+            nsCOMPtr<nsPIDOMWindow> nextWindow = do_QueryInterface(nextGlobal);
+            if(nextWindow) {
+              nextWindow->GetRootFocusController(getter_AddRefs(nextController));
+            }
+          }
+          
+          if(lastController != nextController && lastController && nextController) {
+            lastController->SetActive(PR_FALSE);
+          }
+        }
+        
         NS_IF_RELEASE(gLastFocusedDocument);
         gLastFocusedDocument = mDocument;
         gLastFocusedPresContext = aPresContext;
