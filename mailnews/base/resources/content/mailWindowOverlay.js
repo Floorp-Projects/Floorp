@@ -1805,17 +1805,21 @@ function OnMsgLoaded(folder, msgURI)
 
 function MsgSearchMessages()
 {
-    var preselectedFolder = null;
-    if ("GetFirstSelectedMsgFolder" in window)
-      preselectedFolder = GetFirstSelectedMsgFolder();
+  var preselectedFolder = null;
+  if ("GetFirstSelectedMsgFolder" in window)
+    preselectedFolder = GetFirstSelectedMsgFolder();
 
-    var args = { folder: preselectedFolder };
-    OpenOrFocusWindow(args, "mailnews:search", "chrome://messenger/content/SearchDialog.xul");
+  var args = { folder: preselectedFolder };
+  OpenOrFocusWindow(args, "mailnews:search", "chrome://messenger/content/SearchDialog.xul");
 }
 
 function MsgJunkMail()
 {
-  var args = { folder: null };
+  var preselectedFolder = null;
+  if ("GetFirstSelectedMsgFolder" in window)
+    preselectedFolder = GetFirstSelectedMsgFolder();
+
+  var args = { folder: preselectedFolder };
   OpenOrFocusWindow(args, "mailnews:junk", "chrome://messenger/content/junkMail.xul");
 }
 
