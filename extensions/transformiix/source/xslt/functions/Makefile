@@ -12,8 +12,10 @@ XMLPARSER_PATH    = $(XML)/parser
 EXPAT_PARSER_PATH = $(XMLPARSER_PATH)/xmlparse
 
 ALL_OBJS = \
-	GenerateIdFunctionCall.o \
-	DocumentFunctionCall.o
+    CurrentFunctionCall.o      \
+	GenerateIdFunctionCall.o   \
+	DocumentFunctionCall.o     \
+    SystemPropertyFunctionCall.o
 
 INCLUDE_PATH = -I.           \
 			   -I$(BASE)     \
@@ -29,11 +31,17 @@ INCLUDE_PATH = -I.           \
 
 target: $(ALL_OBJS)
 
+CurrentFunctionCall.o: XSLTFunctions.h CurrentFunctionCall.cpp
+	$(CC) $(INCLUDE_PATH) -c CurrentFunctionCall.cpp
+
 GenerateIdFunctionCall.o: XSLTFunctions.h GenerateIdFunctionCall.cpp
 	$(CC) $(INCLUDE_PATH) -c GenerateIdFunctionCall.cpp
 
 DocumentFunctionCall.o: XSLTFunctions.h DocumentFunctionCall.cpp
 	$(CC) $(INCLUDE_PATH) -c DocumentFunctionCall.cpp
+
+SystemPropertyFunctionCall.o: XSLTFunctions.h SystemPropertyFunctionCall.cpp
+	$(CC) $(INCLUDE_PATH) -c SystemPropertyFunctionCall.cpp
 
 
 
