@@ -41,8 +41,6 @@
 #include "nsIStringStream.h"
 #include "nsNetUtil.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
 NS_IMPL_ISUPPORTS1(nsAboutBlank, nsIAboutModule);
 
 static const char kBlankPage[] = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
