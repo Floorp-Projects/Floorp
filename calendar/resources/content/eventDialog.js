@@ -309,7 +309,7 @@ function onOKCommand()
          /*
          ** advanced month repeating, either every day or every date
          */
-         if( getFieldValue( "advanced-repeat-dayofweek", "checked" ) == true )
+         if( getFieldValue( "advanced-repeat-dayofweek", "selected" ) == true )
          {
             gEvent.recurWeekNumber = getWeekNumberOfMonth();
          }
