@@ -584,56 +584,21 @@ BOOL bothFromSameWindow( HWND hwnd1, HWND hwnd2 )
 // the nsWindow procedure for all nsWindows in this toolkit
 //
 //-------------------------------------------------------------------------
-MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
+MRESULT EXPENTRY fnwpNSWindow( HWND hWnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
    MRESULT popupHandlingResult;
    if( nsWindow::DealWithPopups(msg, &popupHandlingResult) )
       return popupHandlingResult;
 
-   // Get the nsWindow for this hwnd
-   nsWindow *wnd = nsWindow::GetNSWindowPtr(hwnd);
+    // Get the window which caused the event and ask it to process the message
+    nsWindow *someWindow = nsWindow::GetNSWindowPtr(hWnd);
 
-   // check to see if we have a rollup listener registered
-   if( nsnull != gRollupListener && nsnull != gRollupWidget) {
-      if( msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN ||
-          msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
-      // Rollup if the event is outside the popup.
-      PRBool rollup = !nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget);
-      
-      // If we're dealing with menus, we probably have submenus and we don't
-      // want to rollup if the click is in a parent menu of the current submenu.
-      if (rollup) {
-        nsCOMPtr<nsIMenuRollup> menuRollup ( do_QueryInterface(gRollupListener) );
-        if ( menuRollup ) {
-          nsCOMPtr<nsISupportsArray> widgetChain;
-          menuRollup->GetSubmenuWidgetChain ( getter_AddRefs(widgetChain) );
-          if ( widgetChain ) {
-            PRUint32 count = 0;
-            widgetChain->Count(&count);
-            for ( PRUint32 i = 0; i < count; ++i ) {
-              nsCOMPtr<nsISupports> genericWidget;
-              widgetChain->GetElementAt ( i, getter_AddRefs(genericWidget) );
-              nsCOMPtr<nsIWidget> widget ( do_QueryInterface(genericWidget) );
-              if ( widget ) {
-                nsIWidget* temp = widget.get();
-                if ( nsWindow::EventIsInsideWindow((nsWindow*)temp) ) {
-                  rollup = PR_FALSE;
-                  break;
-                }
-              }
-            } // foreach parent menu widget
-          }
-        } // if rollup listener knows about menus
-      }
-      }
-      else if( msg == WM_SETFOCUS) {
-         if( !mp2 && 
-             !bothFromSameWindow( ((nsWindow*)gRollupWidget)->GetMainWindow(), 
-                                  (HWND)mp1) ) {
-            gRollupListener->Rollup();
-         }
-      }
-   }
+    // XXX This fixes 50208 and we are leaving 51174 open to further investigate
+    // why we are hitting this assert
+    if (nsnull == someWindow) {
+      NS_ASSERTION(someWindow, "someWindow is null, cannot call any CallWindowProc");      
+      return ::WinDefWindowProc(hWnd, msg, mp1, mp2);
+    }
 
    // Messages which get re-routed if their source was an nsWindow
    // (it's very bad to reroute messages whose source isn't an nsWindow,
@@ -645,32 +610,34 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
       case WM_VSCROLL: // !! potential problems here if canvas children
       {
          // assume parent == owner, true for our creations
-         HWND hwndChild = WinWindowFromID( hwnd, SHORT1FROMMP( mp1));
-         if( hwndChild)
+         HWND hwndChild = WinWindowFromID(hWnd, SHORT1FROMMP( mp1));
+         if (hwndChild)
          {
             nsWindow *w = nsWindow::GetNSWindowPtr(hwndChild);
-            if( w)
-               wnd = w;
+            if (w)
+               someWindow = w;
          }
          break;
       }
    }
 
-   MRESULT mRC = 0;
+    // hold on to the window for the life of this method, in case it gets
+    // deleted during processing. yes, it's a double hack, since someWindow
+    // is not really an interface.
+    nsCOMPtr<nsISupports> kungFuDeathGrip;
+    if (!someWindow->mIsDestroying) // not if we're in the destructor!
+      kungFuDeathGrip = do_QueryInterface((nsBaseWidget*)someWindow);
 
-   if( wnd)
-   {
-      if( PR_FALSE == wnd->ProcessMessage( msg, mp1, mp2, mRC) &&
-          WinIsWindow( (HAB)0, hwnd) && wnd->GetPrevWP())
-      {
-         mRC = (wnd->GetPrevWP())( hwnd, msg, mp1, mp2);
+   MRESULT retValue;
 
-      }
+   if (PR_TRUE == someWindow->ProcessMessage(msg, mp1, mp2, &retValue)) {
+       return retValue;
    }
-   else
-      /* erm */ mRC = WinDefWindowProc( hwnd, msg, mp1, mp2);
 
-   return mRC;
+   if (someWindow->GetPrevWP())
+      return (someWindow->GetPrevWP()) (hWnd, msg, mp1, mp2);
+   else
+      return ::WinDefWindowProc(hWnd, msg, mp1, mp2);
 }
 
 //-------------------------------------------------------------------------
@@ -2111,7 +2078,7 @@ void nsWindow::ConstrainZLevel(HWND *aAfter) {
 
 
 // 'Window procedure'
-PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
+PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT *rc)
 {
     PRBool result = PR_FALSE; // call the default window procedure
     PRBool isMozWindowTakingFocus = PR_TRUE;
@@ -2224,10 +2191,10 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
               point.x = 0;
               point.y = 0;
 
-              rc = (MRESULT)QCP_CONVERT;
+              *rc = (MRESULT)QCP_CONVERT;
             }
             else
-              rc = (MRESULT)QCP_NOCONVERT;
+              *rc = (MRESULT)QCP_NOCONVERT;
 
             result = PR_TRUE;
             break;
@@ -2330,6 +2297,9 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           } else {
             /* The window is being deactivated */
             gJustGotDeactivate = PR_TRUE;
+            if (gRollupListener && gRollupWidget) {
+               gRollupListener->Rollup();
+            }
           }
           break;
 
@@ -2396,7 +2366,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
     
         case WM_PRESPARAMCHANGED:
           // This is really for font-change notifies.  Do that first.
-          rc = GetPrevWP()( mWnd, msg, mp1, mp2);
+          *rc = GetPrevWP()( mWnd, msg, mp1, mp2);
           OnPresParamChanged( mp1, mp2);
           result = PR_TRUE;
           break;
@@ -3157,7 +3127,7 @@ void nsWindow::RemoveFromStyle( ULONG style)
 
 #define DispatchDragDropEvent(msg) DispatchStandardEvent(msg,NS_DRAGDROP_EVENT)
 
-PRBool nsWindow::OnDragOver(MPARAM mp1, MPARAM mp2, MRESULT &mr)
+PRBool nsWindow::OnDragOver(MPARAM mp1, MPARAM mp2, MRESULT *mr)
 {
   nsresult rv;
   USHORT usDrop = DOR_DROP;
@@ -3190,7 +3160,7 @@ PRBool nsWindow::OnDragOver(MPARAM mp1, MPARAM mp2, MRESULT &mr)
     usDrop = DOR_NEVERDROP;
   }
 
-  mr = MRFROM2SHORT(usDrop, usDefaultOp);
+  *mr = MRFROM2SHORT(usDrop, usDefaultOp);
 
   DispatchDragDropEvent(NS_DRAGDROP_OVER);
 
