@@ -25,13 +25,14 @@
 #ifdef XP_MAC
 #include "nsINetSupport.h"
 #include "nsIStreamListener.h"
-#endif
+#endif /* XP_MAC */
 #include "nsIServiceManager.h"
 #include "nsIFileLocator.h"
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h"
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
+#include "nsIProfile.h"
 
 #include "plhash.h"
 #include "prmem.h"
@@ -40,15 +41,19 @@
 #include "jsapi.h"
 
 #ifdef _WIN32
-    #include "windows.h"
+#include "windows.h"
 #endif /* _WIN32 */
 
 #define XP_QSORT qsort
+
+#define PREFS_HEADER_LINE_1 "// Mozilla User Preferences"
+#define PREFS_HEADER_LINE_2	"// This is a generated file!"
 
 #include "prefapi_private_data.h"
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -262,15 +267,79 @@ void nsPref::useDefaultPrefFile()
     }
     if (!prefsFile.Exists())
     {
-         nsOutputFileStream stream(prefsFile);
-         if (stream.is_open())
-         {
-             stream << "// This is an empty prefs file" << nsEndl
-                    << "// brought to you by your friendly prefs service" << nsEndl;
-         }
+      nsOutputFileStream stream(prefsFile);
+      if (stream.is_open()) {
+		NS_WITH_SERVICE(nsIProfile, profileService, kProfileCID, &rv);
+		if (NS_FAILED(rv)) {
+          stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
+		}
+		else {
+          char* currProfileName = nsnull;
+          rv = profileService->GetCurrentProfile(&currProfileName);
+          if (NS_FAILED(rv)) {
+            stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
+          }
+          else {
+            stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl
+                   << "user_pref(\"browser.startup.homepage\", \"http://www.mozilla.org\");" << nsEndl
+                   << "user_pref(\"mail.accountmanager.accounts\", \"account0,account1\");" << nsEndl
+                   << "user_pref(\"mail.account.account0.identities\", \"id1\");" << nsEndl
+                   << "user_pref(\"mail.account.account0.server\", \"server0\");" << nsEndl
+                   << "user_pref(\"mail.account.account1.identities\", \"id1\");" << nsEndl
+                   << "user_pref(\"mail.account.account1.server\", \"server1\");" << nsEndl
+                   << "user_pref(\"mail.identity.id1.fullName\", \"" << currProfileName <<"\");" << nsEndl
+                   << "user_pref(\"mail.identity.id1.organization\", \"mozilla.org\");" << nsEndl
+                   << "user_pref(\"mail.identity.id1.smtp_name\", \"" << currProfileName << "\");" << nsEndl
+                   << "user_pref(\"mail.identity.id1.smtp_server\", \"nsmail-2\");" << nsEndl
+                   << "user_pref(\"mail.identity.id1.useremail\", \"" << currProfileName << "@netscape.com\");" << nsEndl
+                   << "user_pref(\"mail.identity.id1.send_html\", true);" << nsEndl
+                   << "user_pref(\"mail.identity.id1.wrap_column\", 72);" << nsEndl
+                   << "user_pref(\"mail.server.server0.directory\", "
+#ifdef XP_UNIX
+                   << "\"/u/" << currProfileName << "/mozillaImapMail\");" 
+#else
+#ifdef XP_MAC
+                   << "\"HD:System Folder:Preferences:Netscape Users:" << currProfileName << ":ImapMail\");" 
+#else
+#ifdef XP_WIN
+                   << "\"c:\\\\program files\\\\netscape\\\\users\\\\" << currProfileName << "\\\\ImapMail\");" 
+#else
+#error you_need_to_edit_this_file_for_your_freak_os
+#endif /* XP_WIN */
+#endif /* XP_MAC */
+#endif /* XP_UNIX */
+                   << nsEndl
+                   << "user_pref(\"mail.server.server0.hostname\", \"nsmail-2\");" << nsEndl
+                   << "user_pref(\"mail.server.server0.password\", \"clear text password\");" << nsEndl
+                   << "user_pref(\"mail.server.server0.type\", \"imap\");" << nsEndl
+                   << "user_pref(\"mail.server.server0.userName\", \"" << currProfileName << "\");" << nsEndl
+                   << "user_pref(\"mail.server.server1.directory\", "
+#ifdef XP_UNIX
+                   << "\"/u/" << currProfileName << "\");" 
+#else
+#ifdef XP_MAC
+                   << "\"HD:System Folder:Preferences:Netscape Users:" << currProfileName << ":News\");" 
+#else
+#ifdef XP_WIN
+                   << "\"c:\\\\program files\\\\netscape\\\\users\\\\" << currProfileName << "\\\\News\");" 
+#else
+#error you_need_to_edit_this_file_for_your_freak_os
+#endif /* XP_WIN */
+#endif /* XP_MAC */
+#endif /* XP_UNIX */
+                   << nsEndl
+                   << "user_pref(\"mail.server.server1.hostname\", \"news.mozilla.org\");" << nsEndl
+                   << "user_pref(\"mail.server.server1.type\", \"nntp\");" << nsEndl
+                   << "user_pref(\"news.max_articles\",50);" << nsEndl
+                   << "user_pref(\"news.mark_old_read\",false);" << nsEndl
+                   << nsEndl;
+          }
+	  if (currProfileName) PR_DELETE(currProfileName);
+        }
+      }
     }
     if (prefsFile.Exists())
-         rv = StartUpWith(prefsFile);
+      rv = StartUpWith(prefsFile);
     return;
 } // nsPref::useDefaultPrefFile
 
@@ -1114,9 +1183,7 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
     if (!stream.is_open())
         return PREF_ERROR;
 
-    stream << "// Mozilla User Preferences" << nsEndl
-        << "// This is a generated file!  Do not edit."
-        << nsEndl << nsEndl;
+    stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
     
     /* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
     PR_HashTableEnumerateEntries(gHashTable, heSaveProc, valueArray);
