@@ -178,6 +178,14 @@ public class Main implements ContextListener
         debugGui.setSize(w, h);
     }
 
+    /**
+     * @deprecated Use {@link #setSize(int, int)} instead.
+     */
+    public void setSize(java.awt.Dimension dimension)
+    {
+        debugGui.setSize(dimension.width, dimension.height);
+    }
+
     public void setVisible(boolean flag)
     {
         debugGui.setVisible(flag);
