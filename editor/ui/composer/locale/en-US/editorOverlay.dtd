@@ -545,7 +545,7 @@
 <!ENTITY tablecellafter.accesskey "f">
 <!-- Delete SubMenu -->
 <!ENTITY tableDeleteMenu.label "Delete">
-<!ENTITY tabledeletemenu.accesskey "d">
+<!ENTITY tabledeletemenu.accesskey "e">
 
 <!ENTITY tableFix.label "Fix Table Layout">
 <!ENTITY tablefix.accesskey "f">
