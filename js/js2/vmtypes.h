@@ -58,6 +58,7 @@ namespace VM {
         COMPARE_LT, /* dest, source */
         COMPARE_NE, /* dest, source */
         DIVIDE, /* dest, source1, source2 */
+        ENDTRY, /* there is no try, only do */
         GET_ELEMENT, /* dest, array, index */
         GET_PROP, /* dest, object, prop name */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
@@ -74,6 +75,8 @@ namespace VM {
         SET_ELEMENT, /* base, source1, source2 */
         SET_PROP, /* object, name, source */
         SUBTRACT, /* dest, source1, source2 */
+        THROW,    /* exception object */
+        TRY,      /* catch */
     };
 
     
@@ -96,6 +99,7 @@ namespace VM {
         "COMPARE_LT    ",
         "COMPARE_NE    ",
         "DIVIDE        ",
+        "ENDTRY        ",
         "GET_ELEMENT   ",
         "GET_PROP      ",
         "LOAD_IMMEDIATE",
@@ -112,6 +116,8 @@ namespace VM {
         "SET_ELEMENT   ",
         "SET_PROP      ",
         "SUBTRACT      ",
+        "THROW         ",
+        "TRY           ",
     };
 
     /********************************************************************/
@@ -408,6 +414,12 @@ namespace VM {
         /* print() inherited from Arithmetic */
     };
 
+    class EndTry : public Instruction {
+    public:
+        EndTry () :
+            Instruction(ENDTRY) {};
+    };
+
     class GetElement : public Instruction_3<Register, Register, Register> {
     public:
         /* dest, array, index */
@@ -592,6 +604,23 @@ namespace VM {
             Arithmetic
             (SUBTRACT, aOp1, aOp2, aOp3) {};
         /* print() inherited from Arithmetic */
+    };
+
+    class Throw : public Instruction_1<Register> {
+    public:
+        Throw (Register aOp1) :
+            Instruction_1<Register>
+            (THROW, aOp1) {};
+        virtual Formatter& print (Formatter& f) {
+            f << opcodeNames[THROW] << "\t" << "R" << mOp1;
+            return f;
+        }
+    };
+
+    class Try : public GenericBranch {
+    public:
+        Try (Label *catchStart) :
+            GenericBranch(TRY, catchStart) {};
     };
 
 } /* namespace VM */
