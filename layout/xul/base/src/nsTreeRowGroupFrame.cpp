@@ -46,6 +46,8 @@
 #include "nsIDOMDragListener.h"
 #include "nsTreeItemDragCapturer.h"
 
+// define this to get some help
+#undef DEBUG_tree
 
 //
 // NS_NewTreeFrame
@@ -594,7 +596,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
 }
 
 void
-nsTreeRowGroupFrame::ComputeVisibleRowCount(PRInt32& aCount, nsIContent* aParent)
+nsTreeRowGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
 {
   // XXX Check for visibility collapse and for display none on all objects.
   // ARGH!
@@ -611,7 +613,7 @@ nsTreeRowGroupFrame::ComputeVisibleRowCount(PRInt32& aCount, nsIContent* aParent
     }
     else if (tag.get() == nsXULAtoms::treeitem) {
       // Descend into this row group and try to find the next row.
-      ComputeVisibleRowCount(aCount, childContent);
+      ComputeTotalRowCount(aCount, childContent);
     }
     else if (tag.get() == nsXULAtoms::treechildren) {
       // If it's open, descend into its treechildren.
@@ -621,7 +623,7 @@ nsTreeRowGroupFrame::ComputeVisibleRowCount(PRInt32& aCount, nsIContent* aParent
       childContent->GetParent(*getter_AddRefs(parent));
       parent->GetAttribute(kNameSpaceID_None, openAtom, isOpen);
       if (isOpen == "true")
-      ComputeVisibleRowCount(aCount, childContent);
+      ComputeTotalRowCount(aCount, childContent);
     }
   }
 }
@@ -629,7 +631,7 @@ nsTreeRowGroupFrame::ComputeVisibleRowCount(PRInt32& aCount, nsIContent* aParent
 NS_IMETHODIMP
 nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
     printf("PositionChanged from %d to %d\n", aOldIndex, aNewIndex);
 #endif
   if (aNewIndex < 0)
@@ -656,7 +658,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
   // Figure out how many rows we need to lose (if we moved down) or gain (if we moved up).
   PRInt32 delta = aNewIndex > aOldIndex ? aNewIndex - aOldIndex : aOldIndex - aNewIndex;
   
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
   printf("Scrolling, the delta is: %d\n", delta);
 #endif
 
@@ -728,7 +730,7 @@ nsTreeRowGroupFrame::PagedUpDown()
     char ch[100];
     sprintf(ch,"%d", rowGroupCount);
     
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
     printf("PagedUpDown, setting increment to %d\n", rowGroupCount);
 #endif
     scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::pageincrement, nsString(ch), PR_FALSE);
@@ -942,7 +944,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
   }
 
   mRowCount = 0;
-  ComputeVisibleRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
+  ComputeTotalRowCount(mRowCount, mContent); // XXX This sucks! Needs to be cheap!
 
   if (mShouldHaveScrollbar && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
       (mIsFull || mScrollbar)) {
@@ -1143,39 +1145,15 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     if (IsTableRowFrame(mTopFrame)) {
       nsCOMPtr<nsIContent> rowContent;
       mTopFrame->GetContent(getter_AddRefs(rowContent));
-      /*nsCOMPtr<nsIContent> cellContent;
-      rowContent->ChildAt(0, *getter_AddRefs(cellContent));
-      nsString value;
-      cellContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-      char namebuf[150];
-      namebuf[0] = 0;
-      value.ToCString(namebuf, sizeof(namebuf));
-      printf("Created a first row: %s\n", namebuf);
-*/
+      
       nsCOMPtr<nsIContent> topRowContent;
       PRInt32 delta = 1;
+      
       FindPreviousRowContent(delta, rowContent, nsnull, getter_AddRefs(topRowContent));
-      if (!topRowContent) {
-        PostAppendRow((nsTableRowFrame*)mTopFrame, aPresContext);
-      }
-      else {
-        // Retrieve the primary frame.
-        nsCOMPtr<nsIPresShell> shell;
-        aPresContext.GetShell(getter_AddRefs(shell));
 
-        nsIFrame* result = nsnull;
-        shell->GetPrimaryFrameFor(topRowContent, &result);
-        if (!result) {
-          PostAppendRow((nsTableRowFrame*)mTopFrame, aPresContext);
-        }
-        else {
-          // We have a primary frame. Get its row index. We're equal to that + 1.
-          nsTableRowFrame* rowFrame = (nsTableRowFrame*)result;
-          PRInt32 rowIndex = rowFrame->GetRowIndex();
-          rowIndex++;
-          tableFrame->InsertRowIntoMap((nsTableRowFrame*)mTopFrame, rowIndex);
-        }
-      }
+      AddRowToMap(tableFrame, aPresContext, topRowContent, mTopFrame);
+      
+      PostAppendRow(mTopFrame, aPresContext);
     }
     else if (IsTableRowGroupFrame(mTopFrame) && mContentChain) {
       // We have just instantiated a row group, and we have a content chain. This
@@ -1251,27 +1229,8 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
           nsCOMPtr<nsIContent> topRowContent;
           PRInt32 delta = 1;
           FindPreviousRowContent(delta, nextContent, nsnull, getter_AddRefs(topRowContent));
-          if (!topRowContent) {
-            PostAppendRow((nsTableRowFrame*)(*aResult), aPresContext);
-          }
-          else {
-            // Retrieve the primary frame.
-            nsCOMPtr<nsIPresShell> shell;
-            aPresContext.GetShell(getter_AddRefs(shell));
-
-            nsIFrame* result = nsnull;
-            shell->GetPrimaryFrameFor(topRowContent, &result);
-            if (!result) {
-              PostAppendRow((nsTableRowFrame*)(*aResult), aPresContext);
-            }
-            else {
-              // We have a primary frame. Get its row index. We're equal to that + 1.
-              nsTableRowFrame* rowFrame = (nsTableRowFrame*)result;
-              PRInt32 rowIndex = rowFrame->GetRowIndex();
-              rowIndex++;
-              tableFrame->InsertRowIntoMap((nsTableRowFrame*)(*aResult), rowIndex);
-            }
-          }
+          AddRowToMap(tableFrame, aPresContext, topRowContent, (*aResult));
+          PostAppendRow(*aResult, aPresContext);
         }
       }
     }
@@ -1474,7 +1433,7 @@ nsTreeRowGroupFrame::IndexOfRow(nsIPresContext& aPresContext,
   else {
     // We didn't find a frame.  This mean we have no choice but to crawl
     // the row group.
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
     printf("Searching for non-visible content node\n");
 #endif
   }
@@ -1503,7 +1462,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   if (mCurrentIndex <= aRowIndex && aRowIndex <= bottomIndex)
     return;
 
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
   printf("top = %d, bottom = %d, going to %d\n",
          mCurrentIndex, bottomIndex, aRowIndex);
 #endif
@@ -1515,7 +1474,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   if (aRowIndex < mCurrentIndex) {
     // row is above us, scroll up from mCurrentIndex
     // scroll such that mCurrentIndex = aRowIndex
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
     printf("row is above, scroll to %d\n", aRowIndex);
 #endif
     scrollTo=aRowIndex;
@@ -1524,8 +1483,8 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
     // row is below us, so scroll down from bottomIndex
     // scroll such that mCurrentIndex = (aRowIndex - aRowCount)
     NS_ASSERTION(aRowIndex - rows >=0, "scrolling to negative row?!");
-    scrollTo=aRowIndex - rows;
-#ifdef DEBUG_alecf
+    scrollTo=aRowIndex - rows + 1;
+#ifdef DEBUG_tree
     printf("row is below, scroll to %d\n", scrollTo);
 #endif
     
@@ -1533,7 +1492,7 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
 
   nsString value;
   
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
   // dump state
   scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, value);
   printf("maxpos = %s\n", value.ToNewCString());
@@ -1555,7 +1514,7 @@ void
 nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex, 
                                          nsTreeCellFrame** aResult)
 {
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
   printf("Looking for cell (%d, %d)..", aRowIndex, aColIndex);
 #endif
   // The screen index = (aRowIndex - mCurrentIndex)
@@ -1567,7 +1526,7 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
 
   nsTableCellFrame* cellFrame;
 
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
   printf("(screen index (%d,%d))\n", screenIndex, aColIndex);
 #endif
   
@@ -1580,14 +1539,15 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
     }
   }
 
-#ifdef DEBUG_alecf
+#ifdef DEBUG_tree
   printf("got cell frame %p\n", *aResult);
 #endif
 }
 
 void nsTreeRowGroupFrame::PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext)
 {
-  DidAppendRow((nsTableRowFrame*)aRowFrame);
+  // shouldn't need this anymore
+  // DidAppendRow((nsTableRowFrame*)aRowFrame);
 
   // Get the table frame.
   nsTableFrame* tableFrame;
@@ -1634,6 +1594,87 @@ nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* 
       presShell->AppendReflowCommand(reflowCmd);
     }
   }
+}
+
+
+// given a content node, insert a row into the cellmap
+// for wherever it belows in the map
+void
+nsTreeRowGroupFrame::AddRowToMap(nsTableFrame *aTableFrame,
+                                        nsIPresContext& aPresContext,
+                                        nsIContent *aContent,
+                                        nsIFrame* aCurrentFrame)
+{
+  PRInt32 insertionIndex =
+    GetInsertionIndexForContent(aTableFrame, aPresContext, aContent);
+  
+  aTableFrame->InsertRowIntoMap((nsTableRowFrame*)aCurrentFrame,
+                               insertionIndex);
+}
+
+
+// determine the appropriate index of this row in the row map
+PRInt32
+nsTreeRowGroupFrame::GetInsertionIndexForContent(nsTableFrame *aTableFrame,
+                                                 nsIPresContext& aPresContext,
+                                                 nsIContent *aContent)
+{
+
+  PRInt32 insertionIndex = -1;
+  
+  // see if there is a frame for aContent
+  if (aContent) {
+    // Retrieve the primary frame.
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext.GetShell(getter_AddRefs(shell));
+    
+    nsIFrame* result = nsnull;
+    shell->GetPrimaryFrameFor(aContent, &result);
+    if (result) {
+      // We have a primary frame. Get its row index. We're equal to that + 1.
+      nsTableRowFrame* rowFrame = (nsTableRowFrame*)result;
+      insertionIndex = rowFrame->GetRowIndex() + 1;
+    }
+  }
+  
+  // nope, no frame, so go find where it belongs by walking the frames
+  if (insertionIndex==-1)
+    insertionIndex = ((nsTreeFrame*)aTableFrame)->GetInsertionIndex(this);
+  
+  return insertionIndex;
+}
+
+// get the row index of aFrame
+// recurse into rowgroups, count rows
+PRInt32
+nsTreeRowGroupFrame::GetInsertionIndex(nsIFrame *aFrame, PRInt32 aCurrentIndex, PRBool& aDone)
+{
+  nsIFrame *child = mFrames.FirstChild();
+
+  PRInt32 index=aCurrentIndex;
+  while (child) {
+
+    // stop when we hit aFrame
+    if (child==aFrame) {
+      aDone=PR_TRUE;
+      return index;
+    }
+
+    // recurse into rowgroups
+    if (IsTableRowGroupFrame(child)) {
+        index = ((nsTreeRowGroupFrame*)child)->GetInsertionIndex(aFrame, index, aDone);
+        // short-circut the return
+        if (aDone) return index;
+    } 
+
+    // count rows
+    else if (IsTableRowFrame(child))
+        index++;
+
+    child->GetNextSibling(&child);
+  }
+
+  return index;
 }
 
 //

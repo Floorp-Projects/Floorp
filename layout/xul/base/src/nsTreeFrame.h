@@ -81,6 +81,8 @@ public:
   void SuppressReflow() { mSuppressReflow = PR_TRUE; };
   void UnsuppressReflow() { mSuppressReflow = PR_FALSE; };
 
+  PRInt32 GetInsertionIndex(nsIFrame *aFrame);
+
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();

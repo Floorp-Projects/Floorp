@@ -430,3 +430,27 @@ nsTreeFrame::ContainsFlexibleColumn(PRInt32 aStartIndex, PRInt32 aEndIndex,
 
   return PR_FALSE;
 }
+
+PRInt32
+nsTreeFrame::GetInsertionIndex(nsIFrame *aFrame)
+{
+  nsIFrame *child = mFrames.FirstChild();
+
+  PRInt32 index=0;
+  while (child) {
+    if (child==aFrame) {
+      return index;
+    }
+    const nsStyleDisplay *display;
+    child->GetStyleData(eStyleStruct_Display,
+                        (const nsStyleStruct*&)display);
+
+    if (display->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
+        PRBool done=PR_FALSE;
+        index = ((nsTreeRowGroupFrame*)child)->GetInsertionIndex(aFrame, index, done);
+        if (done) return index;
+    } 
+    child->GetNextSibling(&child);
+  }
+  return index;
+}
