@@ -135,7 +135,7 @@ $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) $(EXEFLAGS) $<
 else
-	$(CC) $(XCFLAGS) $< $(XLDOPTS) $(OUTOPTION)$@
+	$(CC) $(XCFLAGS) $< $(LDFLAGS) $(XLDOPTS) $(OUTOPTION)$@
 endif
 
 real_install:: nspr.m4
