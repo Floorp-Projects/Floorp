@@ -113,12 +113,12 @@ function bc_connect(host, port, bind, tcp_flag, observer)
 CBSConnection.prototype.disconnect =
 function bc_disconnect()
 {    
-    if (this.isConnected) {
-        this._inputStream.close();
-        /* .close() not implemented for output streams
-          this._outputStream.close();
-        */
-    }
+    this._inputStream.close();
+    /*
+    this._streamProvider.close();
+    if (this._streamProvider.isBlocked)
+      this._write_req.resume();
+    */
 }
 
 CBSConnection.prototype.sendData =
@@ -223,9 +223,20 @@ function StreamProvider(observer)
 StreamProvider.prototype.pendingData = "";
 StreamProvider.prototype.isBlocked = true;
 
+StreamProvider.prototype.close =
+function sp_close ()
+{
+    this.isClosed = true;
+}
+    
 StreamProvider.prototype.onDataWritable =
 function sp_datawrite (request, ctxt, ostream, offset, count)
 {
+    //dd ("StreamProvider.prototype.onDataWritable");
+ 
+    if (this.isClosed)
+        return Components.results.NS_BASE_STREAM_CLOSED;
+    
     if (!this.pendingData)
     {
         this.isBlocked = true;
@@ -254,6 +265,8 @@ function sp_stopreq (request, ctxt, status)
 {
     //dd ("StreamProvider::onStopRequest: " + request + ", " + ctxt + ", " +
     //    status);
+    if (this._observer)
+        this._observer.onStreamClose(status);
 }
 
 function StreamListener(observer)
