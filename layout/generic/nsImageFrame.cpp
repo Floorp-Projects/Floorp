@@ -607,9 +607,6 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
           inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
         }
 
-        nsRect damageRect;
-        damageRect.IntersectRect(inner, aDirtyRect);
-
         if (lowImage != nsnull && lowSrcLinesLoaded > 0) {
           //inner.height = lowSrcLinesLoaded;
           aRenderingContext.DrawImage(lowImage, inner);
