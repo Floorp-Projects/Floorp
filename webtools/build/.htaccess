@@ -1,4 +1,0 @@
-RewriteEngine on 
-RewriteBase /webtools/build/ 
-RewriteRule ^\.mozmyconfig\.sh$ config.cgi
-RewriteRule ^\myconfig\.sh$ config.cgi
