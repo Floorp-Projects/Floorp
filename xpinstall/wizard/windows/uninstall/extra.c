@@ -256,6 +256,9 @@ HRESULT Initialize(HINSTANCE hInstance)
     RemoveBackSlash(szTempDir);
   }
 
+  ugUninstall.bVerbose = FALSE;
+  ugUninstall.bUninstallFiles = TRUE;
+
   return(0);
 }
 
@@ -755,6 +758,8 @@ HRESULT InitUninstallGeneral()
     return(1);
   if((ugUninstall.szUninstallFilename       = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((ugUninstall.szAppID                   = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
 
   return(0);
 }
@@ -773,6 +778,7 @@ void DeInitUninstallGeneral()
   FreeMemory(&(ugUninstall.szCompanyName));
   FreeMemory(&(ugUninstall.szProductName));
   FreeMemory(&(ugUninstall.szWrMainKey));
+  FreeMemory(&(ugUninstall.szAppID));
   DeleteObject(ugUninstall.definedFont);
 }
 
@@ -888,6 +894,23 @@ void ParseCommandLine(LPSTR lpszCmdLine)
       SetUninstallRunMode("SETDEFAULT");
       if((i + 1) < iArgC)
         GetArgV(lpszCmdLine, ++i, ugUninstall.szDefaultComponent, MAX_BUF);
+    }
+    else if((lstrcmpi(szArgVBuf, "-app") == 0) || (lstrcmpi(szArgVBuf, "/app") == 0))
+    // Set the App ID
+    {
+      if((i + 1) < iArgC)
+        GetArgV(lpszCmdLine, ++i, ugUninstall.szAppID, MAX_BUF);
+    }
+    else if((lstrcmpi(szArgVBuf, "-reg_path") == 0) || (lstrcmpi(szArgVBuf, "/reg_path") == 0))
+    // Set the alternative Windows registry path
+    {
+      if((i + 1) < iArgC)
+        GetArgV(lpszCmdLine, ++i, ugUninstall.szWrMainKey, MAX_BUF);
+    }
+    else if((lstrcmpi(szArgVBuf, "-v") == 0) || (lstrcmpi(szArgVBuf, "/v") == 0))
+    // Set Verbose
+    {
+      ugUninstall.bVerbose = TRUE;
     }
 
     ++i;
@@ -1304,6 +1327,120 @@ HRESULT GetAppPath()
   return(0);
 }
 
+// For shared installs we maintain an app list, which is a glorified
+//   refcount of the apps which are using this version of the 
+//   shared app.  Processing the app list does two things:
+//
+//   1) Cleans up any registry entries for apps which are no longer
+//      installed.  The app list includes a representative file for
+//      each app.  If that file is not installed than the app is 
+//      assumed to have been removed from the system.
+//   2) Returns a count of the installed apps which depend upon this
+//      shared app.  If this app is not shared, there will be no app
+//      list so this will always return 0.
+DWORD CleanupAppList()
+{
+  typedef struct siAppListStruct siAppList;
+  struct siAppListStruct
+  {
+    char szAppID[MAX_BUF];
+    siAppList *Next;
+  };
+
+  siAppList *siALHead;
+  siAppList *siALPrev;
+  siAppList *siALTmp;
+
+  char      *szRv = NULL;
+  char      szKey[MAX_BUF];
+  char      szBuf[MAX_BUF];
+  HKEY      hkHandle;
+  DWORD     dwIndex;
+  DWORD     dwBufSize;
+  DWORD     dwTotalSubKeys;
+  DWORD     dwTotalValues;
+  DWORD     dwAppCount;
+  FILETIME  ftLastWriteFileTime;
+
+  hkHandle = ugUninstall.hWrMainRoot;
+  wsprintf(szKey, "%s\\%s\\AppList", ugUninstall.szWrMainKey, ugUninstall.szUserAgent);
+
+  if(RegOpenKeyEx(hkHandle, szKey, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
+  {
+    return(0);
+  }
+
+  siALHead = NULL;
+  dwAppCount = 0;
+  dwTotalSubKeys = 0;
+  dwTotalValues  = 0;
+  RegQueryInfoKey(hkHandle, NULL, NULL, NULL, &dwTotalSubKeys, NULL, NULL, &dwTotalValues, NULL, NULL, NULL, NULL);
+
+  for(dwIndex = 0; dwIndex < dwTotalSubKeys; dwIndex++)
+  {
+    dwBufSize = sizeof(szBuf);
+    if(RegEnumKeyEx(hkHandle, dwIndex, szBuf, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
+    {
+      if((siALTmp = NS_GlobalAlloc(sizeof(struct siAppListStruct))) == NULL)
+        exit(1);
+      lstrcpy(siALTmp->szAppID, szBuf);
+      siALTmp->Next = NULL;
+
+      if(siALHead == NULL)
+        siALHead = siALTmp; //New list, point the head at it.
+      else
+        siALPrev->Next = siALTmp;
+
+      siALPrev = siALTmp;
+    }
+  }
+
+  siALTmp = siALHead;
+  while(siALTmp != NULL)
+  {
+    // ProcessAppItem returns true if the App is installed
+    if(ProcessAppItem(ugUninstall.hWrMainRoot, siALTmp->szAppID))
+    {
+      dwAppCount++;
+    }
+
+    siALPrev = siALTmp;
+    siALTmp = siALTmp->Next;
+    FreeMemory(&siALPrev);
+  }
+
+  return(dwAppCount);
+}
+
+
+// If an app item is not installed this removes it from the app list.
+// Returns TRUE if the app item is installed, FALSE if the app is not installed.
+BOOL ProcessAppItem(HKEY hkRootKey, LPSTR szAppID)
+{
+  char szBuf[MAX_BUF];
+  char szKey[MAX_BUF];
+
+  wsprintf(szKey, "%s\\%s\\AppList\\%s", ugUninstall.szWrMainKey, ugUninstall.szUserAgent, szAppID);
+
+  GetWinReg(hkRootKey, szKey, "PathToExe", szBuf, sizeof(szBuf));
+  if(FileExists(szBuf))    
+    return TRUE;
+  // MREUser does not have a PathToExe, so we have to make a special check for it.
+  //   If we are looking at MREUser in the app list but uninstalling a real app we need
+  //   to return TRUE so it gets counted as an installed app.
+  else if( (lstrcmp(szAppID, "MREUser") == 0) && (ugUninstall.szAppID[0] != '\0') )
+    return TRUE;
+  else
+  {
+    RegDeleteKey(hkRootKey, szKey);
+
+    wsprintf(szKey, "%s\\%s\\AppList", ugUninstall.szWrMainKey, ugUninstall.szUserAgent);
+    RegDeleteKey(hkRootKey, szKey);
+
+    return FALSE;
+  }
+}
+
 HRESULT GetUninstallLogPath()
 {
   char szBuf[MAX_BUF];
@@ -1429,12 +1566,18 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
 
   GetPrivateProfileString("General", "Main Key",         "", szKeyCrypted, MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("General", "Decrypt Main Key", "", szBuf, MAX_BUF, szFileIniUninstall);
-  if(lstrcmpi(szBuf, "TRUE") == 0)
+
+  // If szWrMainKey is not null then it was set on the command-line and that is
+  //    what we want to use.
+  if(*ugUninstall.szWrMainKey == '\0') 
   {
-    DecryptString(ugUninstall.szWrMainKey, szKeyCrypted);
+    if(lstrcmpi(szBuf, "TRUE") == 0)
+    {
+      DecryptString(ugUninstall.szWrMainKey, szKeyCrypted);
+    }
+    else
+      strcpy(ugUninstall.szWrMainKey, szKeyCrypted);
   }
-  else
-    strcpy(ugUninstall.szWrMainKey, szKeyCrypted);
 
   RemoveBackSlash(ugUninstall.szWrMainKey);
 
@@ -1471,6 +1614,14 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   ugUninstall.definedFont = CreateFontIndirect( &lf ); 
 
   GetAppPath();
+
+  // CleanupAppList returns the number of installed apps dependant on this
+  //   shared app.
+  if(CleanupAppList() == 0)
+    ugUninstall.bUninstallFiles = TRUE;
+  else
+    ugUninstall.bUninstallFiles = FALSE;
+
   return(GetUninstallLogPath());
 }
 

@@ -133,6 +133,9 @@ typedef struct uninstallStruct
   LPSTR     szWrKey;
   LPSTR     szUserAgent;
   LPSTR     szDefaultComponent;
+  LPSTR     szAppID;
+  BOOL      bVerbose;
+  BOOL      bUninstallFiles;
   HFONT     definedFont;
 } uninstallGen;
 
