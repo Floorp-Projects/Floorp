@@ -39,6 +39,7 @@
 #define NS_EXPAT_DRIVER__
 
 #include "xmlparse.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIDTD.h"
 #include "nsITokenizer.h"
@@ -58,15 +59,16 @@ public:
   nsExpatDriver();
   virtual ~nsExpatDriver();
 
-  int HandleExternalEntityRef(const PRUnichar *openEntityNames,
-                              const PRUnichar *base,
-                              const PRUnichar *systemId,
-                              const PRUnichar *publicId);
+  int HandleExternalEntityRef(const PRUnichar *aOpenEntityNames,
+                              const PRUnichar *aBase,
+                              const PRUnichar *aSystemId,
+                              const PRUnichar *aPublicId);
   nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts);
   nsresult HandleEndElement(const PRUnichar *aName);
   nsresult HandleCharacterData(const PRUnichar *aCData, const PRUint32 aLength);
   nsresult HandleComment(const PRUnichar *aName);
-  nsresult HandleProcessingInstruction(const PRUnichar *aTarget, const PRUnichar *aData);
+  nsresult HandleProcessingInstruction(const PRUnichar *aTarget,
+                                       const PRUnichar *aData);
   nsresult HandleXMLDeclaration(const PRUnichar *aData, const PRUint32 aLength);
   nsresult HandleDefault(const PRUnichar *aData, const PRUint32 aLength);
   nsresult HandleStartCdataSection();
@@ -74,20 +76,20 @@ public:
   nsresult HandleStartDoctypeDecl();
   nsresult HandleEndDoctypeDecl();
 
-protected:
-
+private:
   // Load up an external stream to get external entity information
   nsresult OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
-                                          const PRUnichar* aURLStr, 
+                                          const PRUnichar* aURLStr,
                                           const PRUnichar* aBaseURL,
-                                          nsIInputStream** in, 
+                                          nsIInputStream** aStream,
                                           nsAString& aAbsURL);
 
   nsresult ParseBuffer(const char* aBuffer, PRUint32 aLength, PRBool aIsFinal);
   nsresult HandleError(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
-  void     GetLine(const char* aSourceBuffer, PRUint32 aLength, PRUint32 aOffset, nsString& aLine);
+  void GetLine(const char* aSourceBuffer, PRUint32 aLength, PRUint32 aOffset,
+               nsString& aLine);
 
-  XML_Parser       mExpatParser;  
+  XML_Parser       mExpatParser;
   nsString         mLastLine;
   nsString         mCDataText;
   nsString         mDoctypeText;
@@ -98,10 +100,10 @@ protected:
   PRInt32          mBytePosition;
   nsresult         mInternalState;
   PRUint32         mBytesParsed;
-  nsIExpatSink*    mSink;
+  nsCOMPtr<nsIExpatSink> mSink;
   const nsCatalogData* mCatalogData; // weak
-
 };
+
 nsresult NS_NewExpatDriver(nsIDTD** aDriver);
 
 #endif
