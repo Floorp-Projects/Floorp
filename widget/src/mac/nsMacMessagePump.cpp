@@ -753,10 +753,10 @@ void	nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 	   from popping up in empty space.
 	*/
 #if TARGET_CARBON
-	if (!::IsWindowCollapsed(whichWindow))
+	if (whichWindow == nil || !::IsWindowCollapsed(whichWindow))
 		DispatchOSEventToRaptor(anEvent, whichWindow);
 #else
-	if (!::EmptyRgn(((WindowRecord *) whichWindow)->contRgn))
+	if (whichWindow == nil || !::EmptyRgn(((WindowRecord *) whichWindow)->contRgn))
 		DispatchOSEventToRaptor(anEvent, whichWindow);
 #endif
 }
