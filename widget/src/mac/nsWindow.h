@@ -59,11 +59,9 @@ private:
 public:
                             nsWindow();
     virtual                 ~nsWindow();
-		// nsISupports
-		NS_IMETHOD_(nsrefcnt) AddRef();
-		NS_IMETHOD_(nsrefcnt) Release();
-		NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
+		
+		NS_DECL_ISUPPORTS_INHERITED
+		
     // nsIWidget interface
     NS_IMETHOD              Create(nsIWidget *aParent,
                                    const nsRect &aRect,
