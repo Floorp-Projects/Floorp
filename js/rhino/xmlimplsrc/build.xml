@@ -104,7 +104,7 @@ javax.xml.namespace.*, org.apache.xmlbeans.*  classes
     <unzip src="${xbean.zip}" dest="${xbean.tmp}">
       <patternset includes="xmlbeans-*/lib/xbean.jar" />
     </unzip>
-    <mkdir dir="${jarlib}" />
+    <mkdir dir="${lib}" />
     <copy tofile="${xbean.jar}">
       <fileset dir="${xbean.tmp}" includes="xmlbeans-*/lib/xbean.jar" />
     </copy>
