@@ -40,6 +40,10 @@ XPIDLSRCS	= \
 		nsIPrintSettings.idl \
 		$(NULL)
 
+ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
+XPIDLSRCS += nsIPrintSettingsX.idl
+endif
+
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
 XPIDLSRCS += nsIPrintSettingsWin.idl
 endif
