@@ -43,6 +43,38 @@
 class nsIDOMEvent;
 class nsIDOMNode;
 
+
+//
+// ThrobberHandler
+//
+// A helper class that handles animating the throbber when it's alive. It starts
+// automatically when you init it. To get it to stop, call |stopThrobber|. Calling
+// |release| is not enough because the timer used to animate the images holds a strong
+// ref back to the handler so it won't go away unless you break that cycle manually with
+// |stopThrobber|.
+//
+// This class must be separate from BrowserWindowController else the
+// same thing will happen there and the timer will cause it to stay alive and continue
+// loading the webpage even though the window has gone away.
+//
+@interface ThrobberHandler : NSObject
+{
+  NSTimer* mTimer;
+  NSArray* mImages;
+  int mFrame;
+}
+
+// public
+- (id)initWithToolbarItem:(NSToolbarItem*)inButton images:(NSArray*)inImages;
+- (void)stopThrobber;
+
+// internal
+- (void)startThrobber;
+- (void)pulseThrobber:(id)aSender;
+
+@end
+
+
 @interface BrowserWindowController : NSWindowController<CHFind>
 {
   IBOutlet id mTabBrowser;
@@ -105,9 +137,8 @@ class nsIDOMNode;
   id mCachedBMDS;
 
   // Throbber state variables.
-  NSTimer* mThrobberTimer;
+  ThrobberHandler* mThrobberHandler;
   NSArray* mThrobberImages;
-  int mThrobberFrame;
 }
 
 - (void)dealloc;
