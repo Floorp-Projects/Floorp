@@ -593,7 +593,7 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
     if (!Compare(attrString,*aAttribute,nsCaseInsensitiveStringComparator())) continue;
     // if it's a special _moz... attribute, keep looking
     attrString.Left(tmp,4);
-    if (!Compare(attrString,NS_LITERAL_STRING("_moz"),nsCaseInsensitiveStringComparator())) continue;
+    if (!Compare(tmp,NS_LITERAL_STRING("_moz"),nsCaseInsensitiveStringComparator())) continue;
     // otherwise, it's another attribute, so return false
     return PR_FALSE;
   }
