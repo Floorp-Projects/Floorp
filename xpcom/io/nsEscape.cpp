@@ -205,8 +205,8 @@ NS_COM PRInt32 nsUnescapeCount(char * str)
 NS_COM char *
 nsEscapeHTML(const char * string)
 {
-	// hardcoded max entity len
-	char *rv = (char *) nsMemory::Alloc(strlen(string)*7 + 1); /* The +1 is for the trailing null! */
+	/* XXX Hardcoded max entity len. The +1 is for the trailing null. */
+	char *rv = (char *) nsMemory::Alloc(strlen(string) * 6 + 1);
 	char *ptr = rv;
 
 	if(rv)
@@ -247,11 +247,9 @@ nsEscapeHTML(const char * string)
 			else if (*string == '\'')
 			  {
 				*ptr++ = '&';
-				*ptr++ = 'l';
-				*ptr++ = 's';
-				*ptr++ = 'q';
-				*ptr++ = 'u';
-				*ptr++ = 'o';
+				*ptr++ = '#';
+				*ptr++ = '3';
+				*ptr++ = '9';
 				*ptr++ = ';';
 			  }
 			else
@@ -273,8 +271,9 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
     aSourceBufferLen = nsCRT::strlen(aSourceBuffer); // ...then I will
   }
 
-  // hardcoded max entity len
-  PRUnichar *resultBuffer = (PRUnichar *)nsMemory::Alloc(aSourceBufferLen*7*sizeof(PRUnichar) + sizeof(PRUnichar('\0')));
+  /* XXX Hardcoded max entity len. */
+  PRUnichar *resultBuffer = (PRUnichar *)nsMemory::Alloc(aSourceBufferLen *
+                            6 * sizeof(PRUnichar) + sizeof(PRUnichar('\0')));
   PRUnichar *ptr = resultBuffer;
 
   if (resultBuffer) {
@@ -306,11 +305,9 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
         *ptr++ = ';';
       } else if (aSourceBuffer[i] == '\'') {
         *ptr++ = '&';
-        *ptr++ = 'l';
-        *ptr++ = 's';
-        *ptr++ = 'q';
-        *ptr++ = 'u';
-        *ptr++ = 'o';
+        *ptr++ = '#';
+        *ptr++ = '3';
+        *ptr++ = '9';
         *ptr++ = ';';
       } else {
         *ptr++ = aSourceBuffer[i];
