@@ -935,6 +935,29 @@ SECU_PrintGeneralizedTime(FILE *out, SECItem *t, char *m, int level)
     secu_PrintTime(out, time, m, level);
 }
 
+/*
+ * Format and print the UTC or Generalized Time "t".  If the tag message
+ * "m" is not NULL, do indent formatting based on "level" and add a newline
+ * afterward; otherwise just print the formatted time string only.
+ */
+void
+SECU_PrintTimeChoice(FILE *out, SECItem *t, char *m, int level)
+{
+    switch (t->type) {
+        case siUTCTime:
+            SECU_PrintUTCTime(out, t, m, level);
+            break;
+
+        case siGeneralizedTime:
+            SECU_PrintGeneralizedTime(out, t, m, level);
+            break;
+
+        default:
+            PORT_Assert(0);
+            break;
+    }
+}
+
 static void secu_PrintAny(FILE *out, SECItem *i, char *m, int level);
 
 void

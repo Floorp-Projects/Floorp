@@ -103,18 +103,18 @@ sv_PrintInteger(FILE *out, SECItem *i, char *m)
 
 
 int
-sv_PrintUTCTime(FILE *out, SECItem *t, char *m)
+sv_PrintTime(FILE *out, SECItem *t, char *m)
 {
     PRExplodedTime printableTime; 
     int64 time;
     char *timeString;
     int rv;
 
-    rv = DER_UTCTimeToTime(&time, t);
+    rv = CERT_DecodeTimeChoice(&time, t);
     if (rv) return rv;
 
-    /* Converse to local time */
-    PR_ExplodeTime(time, PR_GMTParameters, &printableTime);
+    /* Convert to local time */
+    PR_ExplodeTime(time, PR_LocalTimeParameters, &printableTime);
 
     timeString = (char *)PORT_Alloc(100);
 
@@ -127,17 +127,16 @@ sv_PrintUTCTime(FILE *out, SECItem *t, char *m)
     return SECFailure;
 }
 
-
 int
 sv_PrintValidity(FILE *out, CERTValidity *v, char *m)
 {
     int rv;
 
     fprintf(out, m);
-    rv = sv_PrintUTCTime(out, &v->notBefore, "notBefore=");
+    rv = sv_PrintTime(out, &v->notBefore, "notBefore=");
     if (rv) return rv;
     fprintf(out, m);
-    sv_PrintUTCTime(out, &v->notAfter, "notAfter=");
+    sv_PrintTime(out, &v->notAfter, "notAfter=");
     return rv;
 }
 
@@ -200,7 +199,7 @@ sv_PrintAttribute(FILE *out, SEC_PKCS7Attribute *attr, char *m)
                         sv_PrintObjectID(out, value, om);
                         break;
                     case SEC_OID_PKCS9_SIGNING_TIME:
-                        sv_PrintUTCTime(out, value, om);
+                        sv_PrintTime(out, value, om);
                         break;
                 }
             }
@@ -456,9 +455,9 @@ sv_PrintCRLInfo(FILE *out, CERTCrl *crl, char *m)
     fprintf(out, m);
     sv_PrintName(out, &(crl->name), "name=");
     fprintf(out, m);
-    sv_PrintUTCTime(out, &(crl->lastUpdate), "lastUpdate=");
+    sv_PrintTime(out, &(crl->lastUpdate), "lastUpdate=");
     fprintf(out, m);
-    sv_PrintUTCTime(out, &(crl->nextUpdate), "nextUpdate=");
+    sv_PrintTime(out, &(crl->nextUpdate), "nextUpdate=");
     
     if (crl->entries != NULL) {
         iv = 0;
@@ -466,7 +465,7 @@ sv_PrintCRLInfo(FILE *out, CERTCrl *crl, char *m)
             fprintf(out, "%sentry[%d].", m, iv); 
             sv_PrintInteger(out, &(entry->serialNumber), "serialNumber=");
             fprintf(out, "%sentry[%d].", m, iv); 
-            sv_PrintUTCTime(out, &(entry->revocationDate), "revocationDate=");
+            sv_PrintTime(out, &(entry->revocationDate), "revocationDate=");
             sprintf(om, "%sentry[%d].signedCRLEntriesExtensions.", m, iv++); 
             sv_PrintExtensions(out, entry->extensions, om);
         }

@@ -203,6 +203,13 @@ extern void SECU_PrintUTCTime(FILE *out, SECItem *t, char *m, int level);
 extern void SECU_PrintGeneralizedTime(FILE *out, SECItem *t, char *m,
 				      int level);
 
+/*
+ * Format and print the UTC or Generalized Time "t".  If the tag message
+ * "m" is not NULL, do indent formatting based on "level" and add a newline
+ * afterward; otherwise just print the formatted time string only.
+ */
+extern void SECU_PrintTimeChoice(FILE *out, SECItem *t, char *m, int level);
+
 /* callback for listing certs through pkcs11 */
 extern SECStatus SECU_PrintCertNickname(CERTCertListNode* cert, void *data);
 
