@@ -43,95 +43,60 @@
 #include "nsIWebShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIContentViewerFile.h"
-#include "pratom.h"
 #include "prprf.h"
-#include "nsIComponentManager.h"
 
 #include "nsIFocusController.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDOMDocument.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDOMHTMLDocument.h"
-#include "nsIDiskDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
-#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIStyleSheet.h"
-#include "nsIStyleSet.h"
-#include "nsIContent.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIURI.h"
-#include "nsCURILoader.h"
 #include "nsNetUtil.h"
-#include "nsIFileChannel.h"
-#include "nsILocalFile.h"
 
-#include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 
-#include "nsIServiceManager.h"
 #include "nsIURL.h"
-#include "nsIWidget.h"
-#include "nsIWindowMediator.h"
-#include "plevent.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 
-#include "nsIAppShell.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
-
 #include "nsIDocumentViewer.h"
-#include "nsIDOMHTMLImageElement.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 
-#include "nsIFilePicker.h"
 #include "nsIFindComponent.h"
-#include "nsIPrompt.h"
-#include "nsIDialogParamBlock.h"
 #include "nsIPromptService.h"
-#include "nsPIPromptService.h"
 
 #include "imgIContainer.h"
 
 #include "nsIEditorController.h"
-//#include "nsEditorController.h"
 #include "nsIControllers.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDocShellTreeNode.h"
 #include "nsITransactionManager.h"
-#include "nsIDocumentEncoder.h"
 
 #include "nsIRefreshURI.h"
 #include "nsIPref.h"
-
 #include "nsILookAndFeel.h"
-
 #include "nsIChromeRegistry.h"
-#include "nsCExternalHandlerService.h"
-#include "nsIMIMEService.h"
 
 ///////////////////////////////////////
 // Editor Includes
 ///////////////////////////////////////
-#include "nsIDOMEventCapturer.h"
 #include "nsString.h"
-#include "nsIDOMText.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindowCollection.h"
 #include "nsIWebProgress.h"
 
 #include "nsIEditor.h"
@@ -143,7 +108,6 @@
 
 #include "nsEditorCID.h"
 
-#include "nsIComponentManager.h"
 #include "nsTextServicesCID.h"
 #include "nsITextServicesDocument.h"
 #include "nsISpellChecker.h"
@@ -895,10 +859,11 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
   nsAutoString  theType(editorType);
   theType.ToLowerCase();
 
-  PRBool textMail = theType.EqualsWithConversion("textmail");
-  mMailCompose = theType.EqualsWithConversion("htmlmail") || textMail;
+  PRBool textMail = theType.Equals(NS_LITERAL_STRING("textmail"));
+  mMailCompose = textMail || theType.Equals(NS_LITERAL_STRING("htmlmail"));
 
-  if (mMailCompose ||theType.EqualsWithConversion("text") || theType.EqualsWithConversion("html") || theType.IsEmpty())
+  if (mMailCompose || theType.Equals(NS_LITERAL_STRING("text")) 
+      || theType.Equals(NS_LITERAL_STRING("html")) || theType.IsEmpty())
   {
     // We don't store a separate type for textmail
     if (textMail)
@@ -959,14 +924,14 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
 
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(aPresShell);
   
-  if (mEditorTypeString.EqualsWithConversion("text"))
+  if (mEditorTypeString.Equals(NS_LITERAL_STRING("text")))
   {
     PRInt16 flags = nsIPlaintextEditor::eEditorPlaintextMask | nsIPlaintextEditor::eEditorEnableWrapHackMask;
     if (mMailCompose) flags |= nsIPlaintextEditor::eEditorMailMask;
     rv = editor->Init(aDoc, aPresShell, nsnull, selCon, flags);
     mEditorType = ePlainTextEditorType;
   }
-  else if (mEditorTypeString.EqualsWithConversion("html") || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
+  else if (mEditorTypeString.Equals(NS_LITERAL_STRING("html")) || mEditorTypeString.IsEmpty())  // empty string default to HTML editor
   {
     PRUint32    editorFlags = 0;
     EEditorType editorType  = eHTMLTextEditorType;
@@ -983,7 +948,7 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     rv = editor->Init(aDoc, aPresShell, nsnull, selCon, editorFlags);
     mEditorType = editorType;
   }
-  else if (mEditorTypeString.EqualsWithConversion("htmlmail"))  //  HTML editor with special mail rules
+  else if (mEditorTypeString.Equals(NS_LITERAL_STRING("htmlmail")))  //  HTML editor with special mail rules
   {
     rv = editor->Init(aDoc, aPresShell, nsnull, selCon, nsIPlaintextEditor::eEditorMailMask);
     mEditorType = eHTMLTextEditorType;
@@ -992,9 +957,9 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
   {
     rv = NS_ERROR_INVALID_ARG;    // this is not an editor we know about
 #if DEBUG
-    nsAutoString  errorMsg; errorMsg.AssignWithConversion("Failed to init editor. Unknown editor type \"");
+    nsAutoString  errorMsg(NS_LITERAL_STRING("Failed to init editor. Unknown editor type \""));
     errorMsg += mEditorTypeString;
-    errorMsg.AppendWithConversion("\"\n");
+    errorMsg.Append(NS_LITERAL_STRING("\"\n"));
     char  *errorMsgCString = ToNewCString(errorMsg);
     NS_WARNING(errorMsgCString);
     nsCRT::free(errorMsgCString);
@@ -1215,7 +1180,7 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
   nsAutoString  aAttr(attr);
   
   allStr.ToLowerCase();
-  PRBool    doingAll = (allStr.EqualsWithConversion("all"));
+  PRBool    doingAll = (allStr.Equals(NS_LITERAL_STRING("all")));
   nsresult  err = NS_OK;
 
   if (doingAll)
@@ -1331,9 +1296,9 @@ nsEditorShell::GetListState(PRBool *aMixed, PRUnichar **_retval)
       if (!*aMixed)
       {
         nsAutoString tagStr;
-        if (bOL) tagStr.AssignWithConversion("ol");
-        else if (bUL) tagStr.AssignWithConversion("ul");
-        else if (bDL) tagStr.AssignWithConversion("dl");
+        if (bOL) tagStr.Assign(NS_LITERAL_STRING("ol"));
+        else if (bUL) tagStr.Assign(NS_LITERAL_STRING("ul"));
+        else if (bDL) tagStr.Assign(NS_LITERAL_STRING("dl"));
         *_retval = ToNewUnicode(tagStr);
       }
     }  
@@ -1359,9 +1324,9 @@ nsEditorShell::GetListItemState(PRBool *aMixed, PRUnichar **_retval)
       if (!*aMixed)
       {
         nsAutoString tagStr;
-        if (bLI) tagStr.AssignWithConversion("li");
-        else if (bDT) tagStr.AssignWithConversion("dt");
-        else if (bDD) tagStr.AssignWithConversion("dd");
+        if (bLI) tagStr.Assign(NS_LITERAL_STRING("li"));
+        else if (bDT) tagStr.Assign(NS_LITERAL_STRING("dt"));
+        else if (bDD) tagStr.Assign(NS_LITERAL_STRING("dd"));
         *_retval = ToNewUnicode(tagStr);
       }
     }  
@@ -1386,13 +1351,13 @@ nsEditorShell::GetAlignment(PRBool *aMixed, PRUnichar **_retval)
     {
       nsAutoString tagStr;
       if (firstAlign == nsIHTMLEditor::eLeft)        
-        tagStr.AssignWithConversion("left");
+        tagStr.Assign(NS_LITERAL_STRING("left"));
       else if (firstAlign == nsIHTMLEditor::eCenter) 
-        tagStr.AssignWithConversion("center");
+        tagStr.Assign(NS_LITERAL_STRING("center"));
       else if (firstAlign == nsIHTMLEditor::eRight)  
-        tagStr.AssignWithConversion("right");
+        tagStr.Assign(NS_LITERAL_STRING("right"));
       else if (firstAlign == nsIHTMLEditor::eJustify)
-        tagStr.AssignWithConversion("justify");
+        tagStr.Assign(NS_LITERAL_STRING("justify"));
       *_retval = ToNewUnicode(tagStr);
     }  
   }
@@ -4561,6 +4526,8 @@ nsEditorShell::OnStateChange(nsIWebProgress *aProgress,
                              PRInt32 aStateFlags,
                              nsresult aStatus)
 {
+  NS_ENSURE_ARG_POINTER(aProgress);
+
   //
   // A Request has started...
   //
@@ -4621,7 +4588,6 @@ nsEditorShell::OnLocationChange(nsIWebProgress *aProgress,
                                 nsIRequest *aRequest,
                                 nsIURI *aURI)
 {
-
   nsCOMPtr<nsIDocShell> docShell;
   nsresult rv = GetDocShellFromContentWindow(getter_AddRefs(docShell));
   if (!docShell) return NS_ERROR_FAILURE;
@@ -4797,14 +4763,14 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
       switch (mCantEditReason)
       {
         case eCantEditFramesets:
-          stringID.AssignWithConversion("CantEditFramesetMsg");
+          stringID.Assign(NS_LITERAL_STRING("CantEditFramesetMsg"));
           break;        
         case eCantEditMimeType:
-          stringID.AssignWithConversion("CantEditMimeTypeMsg");
+          stringID.Assign(NS_LITERAL_STRING("CantEditMimeTypeMsg"));
           break;
         case eCantEditOther:
         default:
-          stringID.AssignWithConversion("CantEditDocumentMsg");
+          stringID.Assign(NS_LITERAL_STRING("CantEditDocumentMsg"));
           break;
       }
       GetBundleString(stringID, alertMessage);
