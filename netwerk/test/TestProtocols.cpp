@@ -537,7 +537,7 @@ main(int argc, char* argv[])
       up the event queues. Copied from TestSocketIO.cpp
     */
 
-    rv = NS_InitXPCOM(nsnull, nsnull);
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     

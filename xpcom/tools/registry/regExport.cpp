@@ -45,7 +45,6 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsMemory.h"
-#include "nsIFileSpec.h"
 
 static void display( nsIRegistry *reg, nsRegistryKey root, const char *name );
 static void displayValues( nsIRegistry *reg, nsRegistryKey root );
@@ -70,7 +69,7 @@ int main( int argc, char *argv[] ) {
 
     // Initialize XPCOM
     nsIServiceManager *servMgr = NULL;
-    rv = NS_InitXPCOM(&servMgr, NULL);
+    rv = NS_InitXPCOM2(&servMgr, NULL, NULL);
     if (NS_FAILED(rv))
     {
         // Cannot initialize XPCOM

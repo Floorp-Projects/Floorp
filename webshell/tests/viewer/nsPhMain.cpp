@@ -185,7 +185,7 @@ int main(int argc, char **argv)
   signal(SIGABRT, abnormal_exit_handler);
 
   // Initialize XPCOM
-  nsresult rv = NS_InitXPCOM(nsnull, nsnull);
+  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
   if (NS_SUCCEEDED(rv)) {
     // The toolkit service in mozilla will look in the environment

@@ -34,11 +34,12 @@ REQUIRES	= libreg \
 		  $(NULL)
 
 CPPSRCS		= \
+		nsCategoryManager.cpp \
 		nsComponentManager.cpp \
 		nsGenericFactory.cpp \
 		nsNativeComponentLoader.cpp \
 		nsRegistry.cpp \
-		nsCategoryManager.cpp \
+		nsServiceManagerObsolete.cpp \
 		xcDll.cpp \
 		$(NULL)
 
@@ -52,7 +53,8 @@ EXPORTS		= \
 		nsComponentManagerUtils.h \
 		nsIGenericFactory.h \
 		nsIRegistryUtils.h \
-		nsIServiceManager.h \
+		nsIServiceManagerUtils.h \
+		nsIServiceManagerObsolete.h \
 		nsXPComFactory.h \
 		nsStaticComponent.h \
 		$(NULL)
@@ -66,6 +68,7 @@ XPIDLSRCS	= \
 		nsIFactory.idl \
 		nsIModule.idl \
 		nsIRegistry.idl \
+		nsIServiceManager.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

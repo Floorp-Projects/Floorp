@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsXPCom.h"
 #include "nsIRegistry.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -171,14 +172,13 @@ RegisterGenericFactory(nsIComponentManager* compMgr,
 }
 
 // Globals in xpcom
-
-nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 #ifndef XPCOM_STANDALONE
 nsICaseConversion *gCaseConv = NULL;
 #endif /* XPCOM_STANDALONE */
+
+nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 nsIProperties     *gDirectoryService = NULL;
-extern nsIServiceManager* gServiceManager;
-extern PRBool gShuttingDown;
+PRBool gXPCOMShuttingDown = PR_FALSE;
 
 // For each class that wishes to support nsIClassInfo, add a line like this
 // NS_DECL_CLASSINFO(nsMyClass)
@@ -353,19 +353,22 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
             return rv;
         }
         
-        gServiceManager = NS_STATIC_CAST(nsIServiceManager*, compMgr);
+        nsIServiceManager *serviceManager = NS_STATIC_CAST(nsIServiceManager*, compMgr);
         nsComponentManagerImpl::gComponentManager = compMgr;
         
         if (result) {
-        	NS_ADDREF(*result = gServiceManager);
+        	NS_ADDREF(*result = serviceManager);
         }
     }
 
+    nsIServiceManager *serviceManager = NS_STATIC_CAST(nsIServiceManager*, compMgr);
     nsCOMPtr<nsIMemory> memory = getter_AddRefs(nsMemory::GetGlobalMemoryService());
-    rv = gServiceManager->RegisterService(kMemoryCID, memory);
+
+    // dougt - these calls will be moved into a new interface when nsIComponentManager is frozen.
+    rv = compMgr->RegisterService(kMemoryCID, memory);
     if (NS_FAILED(rv)) return rv;
     
-    rv = gServiceManager->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
+    rv = compMgr->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
     if (NS_FAILED(rv)) return rv;
     
 #ifdef GC_LEAK_DETECTOR
@@ -455,8 +458,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
                  do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-            nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-            rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+            nsCOMPtr<nsIServiceManager> mgr;
+            rv = NS_GetServiceManager(getter_AddRefs(mgr));
             if (NS_SUCCEEDED(rv))
             {
                 nsAutoString topic;
@@ -479,15 +482,16 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // XPCOM is officially in shutdown mode NOW
     // Set this only after the observers have been notified as this
     // will cause servicemanager to become inaccessible.
-    gShuttingDown = PR_TRUE;
+    gXPCOMShuttingDown = PR_TRUE;
 
     // We may have AddRef'd for the caller of NS_InitXPCOM, so release it
     // here again:
     NS_IF_RELEASE(servMgr);
 
     // Shutdown global servicemanager
-    nsServiceManager::ShutdownGlobalServiceManager(NULL);
-    
+    nsComponentManagerImpl::gComponentManager->FreeServices();
+    nsServiceManager::ShutdownGlobalServiceManager(nsnull);
+
     if (currentQ) {
         currentQ->ProcessPendingEvents();
         currentQ = 0;

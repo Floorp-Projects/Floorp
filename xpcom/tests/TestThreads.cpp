@@ -330,7 +330,7 @@ main(int argc, char** argv)
     int retval = 0;
     nsresult rv;
     
-    rv = NS_InitXPCOM(nsnull, nsnull);
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return -1;
 
     if (argc > 1 && !strcmp(argv[1], "-stress")) {

@@ -89,7 +89,7 @@ void GetACookie(nsICookieService *cookieService, const char* aSpec, char* *aCook
 
 int main(PRInt32 argc, char *argv[])
 {
-    nsresult rv = NS_InitXPCOM(nsnull, nsnull);
+    nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return -1;
 
     // Create the Event Queue for this thread...

@@ -74,7 +74,7 @@ typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);
 typedef NS_CALLBACK_(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFuncs* pCallbacks, NPP_ShutdownUPP* unloadUpp);
 #endif
 
-class nsIServiceManager;
+class nsIServiceManagerObsolete;
 class nsIMemory;
 
 ////////////////////////////////////////////////////////////////////////
@@ -87,7 +87,7 @@ class ns4xPlugin : public nsIPlugin
 {
 public:
 
-  ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr);
+  ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManagerObsolete* serviceMgr);
   virtual ~ns4xPlugin(void);
 
   static void ReleaseStatics();
@@ -135,7 +135,7 @@ public:
    */
    
   static nsresult
-  CreatePlugin(nsIServiceManager* aServiceMgr,
+  CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
                const char* aFileName,
                PRLibrary* aLibrary,
                nsIPlugin** aResult);

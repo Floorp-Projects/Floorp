@@ -118,4 +118,9 @@ interface nsICategoryManager : nsISupports
   {0xb6, 0x93, 0xf3, 0x8b, 0x02, 0xc0, 0x21, 0xb2} }
 
 extern "C" NS_EXPORT nsresult NS_CategoryManagerGetFactory( nsIFactory** );
+
+NS_COM nsresult
+NS_CreateServicesFromCategory(const char *category,
+                              nsISupports *origin,
+                              const PRUnichar *observerTopic);
 %}

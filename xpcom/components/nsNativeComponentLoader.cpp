@@ -136,8 +136,8 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
     }
 
     /* Get service manager for factory */
-    nsIServiceManager* serviceMgr = NULL;
-    rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+    nsCOMPtr<nsIServiceManager> serviceMgr;
+    rv = NS_GetServiceManager(getter_AddRefs(serviceMgr));
     if (NS_FAILED(rv))
         return rv;      // XXX translate error code?
     
@@ -457,8 +457,9 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
     // Precondition: dll is not loaded already, unless we're deferred
     PR_ASSERT(deferred || dll->IsLoaded() == PR_FALSE);
 
-    nsIServiceManager* serviceMgr = NULL;
-    nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+    nsresult res;
+    nsCOMPtr<nsIServiceManager> serviceMgr;
+    res = NS_GetServiceManager(getter_AddRefs(serviceMgr));
     if (NS_FAILED(res)) return res;
 
     if (dll->Load() == PR_FALSE)
@@ -622,8 +623,9 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
 nsresult
 nsNativeComponentLoader::SelfUnregisterDll(nsDll *dll)
 {
-    nsIServiceManager* serviceMgr = NULL;
-    nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+    nsresult res;
+    nsCOMPtr<nsIServiceManager> serviceMgr;
+    res = NS_GetServiceManager(getter_AddRefs(serviceMgr));
     if (NS_FAILED(res)) return res;
 
     if (dll->Load() == PR_FALSE)
@@ -681,8 +683,8 @@ nsNativeComponentLoader::AutoUnregisterComponent(PRInt32 when,
              do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
     {
-      nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-      rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+      nsCOMPtr<nsIServiceManager> mgr;
+      rv = NS_GetServiceManager(getter_AddRefs(mgr));
       if (NS_SUCCEEDED(rv))
       {
         (void) observerService->Notify(mgr,
@@ -838,8 +840,8 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
                  do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-          nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-          rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+          nsCOMPtr<nsIServiceManager> mgr;
+          rv = NS_GetServiceManager(getter_AddRefs(mgr));
           if (NS_SUCCEEDED(rv))
           {
             // this string can't come from a string bundle, because we don't have string
@@ -867,8 +869,9 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         {
             // We loaded the old version of the dll and now we find that the
             // on-disk copy if newer. Try to unload the dll.
-            nsIServiceManager *serviceMgr = NULL;
-            nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+            nsCOMPtr<nsIServiceManager> serviceMgr;
+            rv = NS_GetServiceManager(getter_AddRefs(serviceMgr));
+          
             rv = nsFreeLibrary(dll, serviceMgr, when);
             if (NS_FAILED(rv))
             {

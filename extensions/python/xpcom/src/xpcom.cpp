@@ -179,10 +179,10 @@ PyXPCOMMethod_GetGlobalServiceManager(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
-	nsIServiceManager* sm;
+	nsIServiceManagerObsolete* sm;
 	nsresult rv;
 	Py_BEGIN_ALLOW_THREADS;
-	rv = nsServiceManager::GetGlobalServiceManager(&sm);
+	rv = nsServiceManager::GetGlobalServiceManager((nsIServiceManager**)&sm);
 	Py_END_ALLOW_THREADS;
 	if ( NS_FAILED(rv) )
 		return PyXPCOM_BuildPyException(rv);
@@ -509,10 +509,10 @@ PRBool PyXPCOM_Globals_Ensure()
 
 			nsCOMPtr<nsILocalFile> ns_bin_dir;
 			NS_NewLocalFile(landmark, PR_FALSE, getter_AddRefs(ns_bin_dir));
-			nsresult rv = NS_InitXPCOM(nsnull, ns_bin_dir);
+			nsresult rv = NS_InitXPCOM2(nsnull, ns_bin_dir, nsnull);
 #else
 			// Elsewhere, Mozilla can find it itself (we hope!)
-			nsresult rv = NS_InitXPCOM(nsnull, nsnull);
+			nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
 #endif // XP_WIN			
 			if (NS_FAILED(rv)) {
 				PyErr_SetString(PyExc_RuntimeError, "The XPCOM subsystem could not be initialized");

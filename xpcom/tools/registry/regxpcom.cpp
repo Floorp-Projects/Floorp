@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-    NS_InitXPCOM(NULL, NULL);
+    NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
     /* With no arguments, RegFactory will autoregister */
     if (argc <= 1)

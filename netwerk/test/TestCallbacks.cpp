@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
         cmdLineURL = PR_TRUE;
     }
 
-    rv = NS_InitXPCOM(nsnull, nsnull);
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     // Create the Event Queue for this thread...

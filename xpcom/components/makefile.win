@@ -35,7 +35,8 @@ EXPORTS =                         \
 	nsComponentManagerUtils.h \
         nsIGenericFactory.h       \
         nsIRegistryUtils.h        \
-        nsIServiceManager.h       \
+        nsIServiceManagerObsolete.h \
+        nsIServiceManagerUtils.h  \
         nsXPComFactory.h          \
 	nsNativeComponentLoader.h \
         nsStaticComponent.h       \
@@ -51,6 +52,7 @@ XPIDLSRCS =               \
 	.\nsIFactory.idl	\
         .\nsIModule.idl	  \
 	.\nsIRegistry.idl \
+        .\nsIServiceManager.idl \
         $(NULL)
 
 ################################################################################
@@ -74,7 +76,8 @@ CPP_OBJS =                                 \
         .\$(OBJDIR)\nsComponentManager.obj \
         .\$(OBJDIR)\nsGenericFactory.obj   \
         .\$(OBJDIR)\nsNativeComponentLoader.obj \
-		.\$(OBJDIR)\nsStaticComponentLoader.obj \
+        .\$(OBJDIR)\nsServiceManagerObsolete.obj \
+        .\$(OBJDIR)\nsStaticComponentLoader.obj \
         .\$(OBJDIR)\nsRegistry.obj         \
         .\$(OBJDIR)\nsCategoryManager.obj  \
         .\$(OBJDIR)\xcDll.obj              \

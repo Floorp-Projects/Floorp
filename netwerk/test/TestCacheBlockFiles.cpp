@@ -212,7 +212,7 @@ main(void)
     nsresult  rv = NS_OK;
   
     // Start up XPCOM
-    rv = NS_InitXPCOM(nsnull, nsnull);
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (NS_FAILED(rv)) return rv;
     
     // Register components

@@ -163,7 +163,7 @@ int main(int argc, char **argv)
     }
     filenames = argv + 1;
 
-    rv = NS_InitXPCOM(nsnull, nsnull);
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if(NS_FAILED(rv)) 
     {
         printf("NS_InitXPCOM failed!\n");

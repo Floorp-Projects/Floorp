@@ -49,7 +49,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prevInstance, LPSTR lpszCmdLine,
 	int retCode;
 
 	nsresult rv;
-	rv = NS_InitXPCOM(NULL, NULL);
+	rv = NS_InitXPCOM2(NULL, NULL, NULL);
 		{	//  Needed to scope all nsCOMPtr within XPCOM Init and Shutdown
 		if(NS_FAILED(rv))
 			{

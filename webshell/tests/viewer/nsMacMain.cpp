@@ -450,7 +450,7 @@ int main(int argc, char **argv)
 	NS_ASSERTION((err==noErr), "AEInstallEventHandler failed");
 
 	// Start up XPCOM?
- 	nsresult rv = NS_InitXPCOM(nsnull, nsnull);
+ 	nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
 
 	gTheApp = new nsNativeViewerApp();
