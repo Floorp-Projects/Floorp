@@ -2566,7 +2566,7 @@ nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
 void
 nsWebShell::ShowHistory()
 {
-#ifdef OLD_HISTORY
+#if defined(OLD_HISTORY) && defined(NS_DEBUG)
   if (WEB_LOG_TEST(gLogModule, WEB_TRACE_HISTORY)) {
     PRInt32 i, n = mHistory.Count();
     for (i = 0; i < n; i++) {
