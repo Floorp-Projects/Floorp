@@ -12,6 +12,7 @@ nsID.h
 nsIFactory.h
 nsISupports.h
 nsIPtr.h
+nsIRegistry.h
 nsIServiceManager.h
 nsISupportsArray.h
 nsRepository.h
