@@ -2151,6 +2151,20 @@ function AddAttachment(attachment)
 
     if (!attachment.name)
       attachment.name = gMsgCompose.AttachmentPrettyName(attachment.url);
+
+    // for security reasons, don't allow *-message:// uris to leak out
+    // we don't want to reveal the .slt path (for mailbox://), or the username or hostname
+    var messagePrefix = /^mailbox-message:|^imap-message:|^news-message:/i;
+    if (messagePrefix.test(attachment.name))
+      attachment.name = sComposeMsgsBundle.getString("messageAttachmentSafeName");
+    else {
+      // for security reasons, don't allow mail protocol uris to leak out
+      // we don't want to reveal the .slt path (for mailbox://), or the username or hostname
+      var mailProtocol = /^mailbox:|^imap:|^s?news:/i;
+      if (mailProtocol.test(attachment.name))
+        attachment.name = sComposeMsgsBundle.getString("partAttachmentSafeName");
+    }
+
     item.setAttribute("label", attachment.name);    //use for display only
     item.attachment = attachment;   //full attachment object stored here
     try {
