@@ -42,14 +42,7 @@
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
 #include "nsIDocumentViewer.h"
-/*
-#include "nsCURILoader.h"
- */
 #include "nsIDocument.h"
-/*
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDOMXULDocument.h"
-*/
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIContent.h"
@@ -100,12 +93,13 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS5(nsSecureBrowserUIImpl,
+NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
                    nsSecureBrowserUI,
                    nsIWebProgressListener,
                    nsIFormSubmitObserver,
                    nsIObserver,
-                   nsISupportsWeakReference);
+                   nsISupportsWeakReference,
+                   nsISSLStatusProvider);
 
 
 NS_IMETHODIMP
@@ -113,7 +107,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window,
                             nsIDOMElement *button)
 {
   nsresult rv = NS_OK;
-  mSecurityButton = button;
+  mSecurityButton = button;  /* may be null */
   mWindow = window;
 
   nsCOMPtr<nsIStringBundleService> service(do_GetService(kCStringBundleServiceCID, &rv));
@@ -129,8 +123,9 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window,
     rv = svc->AddObserver(this, NS_ConvertASCIItoUCS2(NS_FORMSUBMIT_SUBJECT).get());
   }
   
+  /* GetWebProgress(mWindow) */
   // hook up to the webprogress notifications.
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(window));
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(mWindow));
   if (!sgo) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDocShell> docShell;
@@ -139,6 +134,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindowInternal *window,
   
   nsCOMPtr<nsIWebProgress> wp(do_GetInterface(docShell));
   if (!wp) return NS_ERROR_FAILURE;
+  /* end GetWebProgress */
   
   wp->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
 
@@ -237,7 +233,7 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode,
   
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   document->GetScriptGlobalObject(getter_AddRefs(globalObject));
-  nsCOMPtr<nsIDOMWindowInternal> postingWindow(do_QueryInterface(globalObject));
+  nsCOMPtr<nsIDOMWindow> postingWindow(do_QueryInterface(globalObject));
   
   PRBool isChild;
   IsChildOfDomWindow(mWindow, postingWindow, &isChild);
@@ -309,6 +305,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     // starting to load a webpage
     mMixContentAlertShown = PR_FALSE;
 
+    // reset the current SSLStatus data (if any)
+    mSSLStatus = nsnull;
+
     return CheckProtocolContextSwitch(eventSink, aRequest, channel);
   }
 
@@ -318,6 +317,15 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       (IS_SECURE(mSecurityState) ||
        mSecurityState == STATE_IS_BROKEN))
     {
+      // Get SSL Status information if possible
+      nsCOMPtr<nsISupports> info;
+      channel->GetSecurityInfo(getter_AddRefs(info));
+      nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
+      if (sp) {
+        // Ignore result
+        sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
+      }
+
       if (IS_SECURE(mSecurityState)) {
         // XXX Shouldn't we do this even if the state is broken?
         // XXX Shouldn't we grab the pickled status at STATE_NET_TRANSFERRING?
@@ -326,15 +334,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
           // Everything looks okay.
           PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
           
-          if (mSecurityButton) {
-            if (mSecurityState == (STATE_IS_SECURE|STATE_SECURE_HIGH)) {
-              res = mSecurityButton->SetAttribute(NS_LITERAL_STRING("level"),
-                                                  NS_LITERAL_STRING("high"));
-            } else {
-              res = mSecurityButton->SetAttribute(NS_LITERAL_STRING("level"),
-                                                  NS_LITERAL_STRING("low"));
-            }
-          }
           
           if (eventSink)
             eventSink->OnSecurityChange(aRequest, mSecurityState);
@@ -342,6 +341,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
           if (!mSecurityButton)
             return res;
           
+          /* TNH - need event for changing the tooltip */
+
           // Do we really need to look at res here? What happens if there's an error?
           // We should still set the certificate authority display.
 
@@ -409,8 +410,8 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
                                         nsIRequest *aRequest,
                                         PRInt32 state)
 {
-  // I am the guy that created this notification - do nothing
-  
+  nsresult res = NS_OK;
+
 #if defined(DEBUG_dougt)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (!channel)
@@ -423,7 +424,33 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
   aURI->GetSpec(getter_Copies(temp));
   printf("OnSecurityChange: (%x) %s\n", state, (const char*)temp);
 #endif
-  
+  /* Deprecated support for mSecurityButton */
+  if (mSecurityButton) {
+    NS_NAMED_LITERAL_STRING(level, "level");
+
+    if (state == (STATE_IS_SECURE|STATE_SECURE_HIGH)) {
+      res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("high"));
+    } else if (state == (STATE_IS_SECURE|STATE_SECURE_LOW)) {
+      res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("low"));
+    } else if (state == STATE_IS_BROKEN) {
+      res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("mixed"));
+    } else {
+      res = mSecurityButton->RemoveAttribute(level);
+    }
+  }
+
+  return res;
+}
+
+// nsISSLStatusProvider methods
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::GetSSLStatus(nsISSLStatus** _result)
+{
+  NS_ASSERTION(_result, "non-NULL destination required");
+
+  *_result = mSSLStatus;
+  NS_IF_ADDREF(*_result);
+
   return NS_OK;
 }
 
@@ -583,14 +610,9 @@ nsSecureBrowserUIImpl::SetBrokenLockIcon(nsISecurityEventSink *eventSink,
 {
   nsresult rv = NS_OK;
   if (removeValue) {
-    if (mSecurityButton)
-      rv = mSecurityButton->RemoveAttribute(NS_LITERAL_STRING("level"));
     if (eventSink)
       (void) eventSink->OnSecurityChange(aRequest, STATE_IS_INSECURE);
   } else {
-    if (mSecurityButton)
-      rv = mSecurityButton->SetAttribute(NS_LITERAL_STRING("level"),
-                                         NS_LITERAL_STRING("broken"));
     if (eventSink)
       (void) eventSink->OnSecurityChange(aRequest, (STATE_IS_BROKEN));
   }
@@ -598,6 +620,8 @@ nsSecureBrowserUIImpl::SetBrokenLockIcon(nsISecurityEventSink *eventSink,
   nsAutoString tooltiptext;
   GetBundleString(NS_LITERAL_STRING("SecurityButtonTooltipText").get(),
                   tooltiptext);
+
+  /* TNH - need tooltip notification here */
   if (mSecurityButton)
     rv = mSecurityButton->SetAttribute(NS_LITERAL_STRING("tooltiptext"),
                                        tooltiptext);
@@ -614,16 +638,16 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  nsUIContext(nsIDOMWindowInternal *window);
+  nsUIContext(nsIDOMWindow *window);
   virtual ~nsUIContext();
 
 private:
-  nsCOMPtr<nsIDOMWindowInternal> mWindow;
+  nsCOMPtr<nsIDOMWindow> mWindow;
 };
 
 NS_IMPL_ISUPPORTS1(nsUIContext, nsIInterfaceRequestor)
 
-nsUIContext::nsUIContext(nsIDOMWindowInternal *aWindow)
+nsUIContext::nsUIContext(nsIDOMWindow *aWindow)
 : mWindow(aWindow)
 {
   NS_INIT_ISUPPORTS();
@@ -639,9 +663,12 @@ NS_IMETHODIMP nsUIContext::GetInterface(const nsIID & uuid, void * *result)
   nsresult rv;
 
   if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
+    nsCOMPtr<nsIDOMWindowInternal> internal = do_QueryInterface(mWindow, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     nsIPrompt *prompt;
 
-    rv = mWindow->GetPrompter(&prompt);
+    rv = internal->GetPrompter(&prompt);
     *result = prompt;
   } else {
     rv = NS_ERROR_NO_INTERFACE;

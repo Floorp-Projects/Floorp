@@ -30,12 +30,14 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsISSLSocketControl.h"
+#include "nsISSLStatus.h"
 
 class nsIChannel;
 
 class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsISSLSocketControl,
-                        public nsIInterfaceRequestor
+                        public nsIInterfaceRequestor,
+                        public nsISSLStatusProvider
 {
 public:
   nsNSSSocketInfo();
@@ -45,6 +47,7 @@ public:
   NS_DECL_NSITRANSPORTSECURITYINFO
   NS_DECL_NSISSLSOCKETCONTROL
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSISSLSTATUSPROVIDER
 
   nsresult SetHostName(const char *aHostName);
   nsresult SetProxyName(const char *aName);
@@ -61,6 +64,9 @@ public:
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
   
+  /* Set SSL Status values */
+  nsresult SetSSLStatus(nsISSLStatus *aSSLStatus);  
+
 protected:
   nsString mHostName;
   PRInt32 mHostPort;
@@ -74,6 +80,9 @@ protected:
   nsString mShortDesc;
   PRBool mForceHandshake;
   PRBool mForTLSStepUp;
+
+  /* SSL Status */
+  nsCOMPtr<nsISSLStatus> mSSLStatus;
 };
 
 nsresult nsSSLIOLayerNewSocket(const char *host,

@@ -136,10 +136,11 @@ nsNSSSocketInfo::~nsNSSSocketInfo()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsNSSSocketInfo,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSSocketInfo,
                               nsITransportSecurityInfo,
                               nsISSLSocketControl,
-                              nsIInterfaceRequestor)
+                              nsIInterfaceRequestor,
+                              nsISSLStatusProvider)
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetHostName(char * *aHostName)
@@ -318,6 +319,23 @@ nsresult nsNSSSocketInfo::GetFileDescPtr(PRFileDesc** aFilePtr)
 nsresult nsNSSSocketInfo::SetFileDescPtr(PRFileDesc* aFilePtr)
 {
   mFd = aFilePtr;
+  return NS_OK;
+}
+
+nsresult nsNSSSocketInfo::GetSSLStatus(nsISSLStatus** _result)
+{
+  NS_ASSERTION(_result, "non-NULL destination required");
+
+  *_result = mSSLStatus;
+  NS_IF_ADDREF(*_result);
+
+  return NS_OK;
+}
+
+nsresult nsNSSSocketInfo::SetSSLStatus(nsISSLStatus *aSSLStatus)
+{
+  mSSLStatus = aSSLStatus;
+
   return NS_OK;
 }
 

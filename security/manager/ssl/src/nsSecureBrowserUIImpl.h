@@ -32,7 +32,7 @@
 #include "nsIObserver.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsIDOMWindow.h"
 #include "nsIStringBundle.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIDocShell.h"
@@ -41,6 +41,7 @@
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
 #include "nsWeakReference.h"
+#include "nsISSLStatus.h"
 
 #define NS_SECURE_BROWSER_UI_CID \
 { 0xcc75499a, 0x1dd1, 0x11b2, {0x8a, 0x82, 0xca, 0x41, 0x0a, 0xc9, 0x07, 0xb8}}
@@ -50,7 +51,8 @@ class nsSecureBrowserUIImpl : public nsSecureBrowserUI,
                               public nsIWebProgressListener,
                               public nsIFormSubmitObserver,
                               public nsIObserver,
-                              public nsSupportsWeakReference
+                              public nsSupportsWeakReference,
+                              public nsISSLStatusProvider
 {
 public:
   
@@ -63,19 +65,22 @@ public:
   
   // nsIObserver
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSISSLSTATUSPROVIDER
+
   NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window,
                     nsIURI *actionURL, PRBool* cancelSubmit);
   
 protected:
   
-  nsCOMPtr<nsIDOMWindowInternal> mWindow;
+  nsCOMPtr<nsIDOMWindow> mWindow;
   nsCOMPtr<nsIDOMElement> mSecurityButton;
-  nsCOMPtr<nsIDocumentLoaderObserver> mOldWebShellObserver;
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIURI> mCurrentURI;
   
   PRBool mMixContentAlertShown;
   PRInt32 mSecurityState;
+
+  nsCOMPtr<nsISSLStatus> mSSLStatus;
 
   void GetBundleString(const PRUnichar* name, nsString &outString);
   
