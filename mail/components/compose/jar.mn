@@ -2,27 +2,14 @@ classic.jar:
 +   skin/classic/messenger/messengercompose/messengercompose.css   (skin/messengercompose.css)
     skin/classic/messenger/messengercompose/compose-toolbar.png    (skin/compose-toolbar.png)
     skin/classic/messenger/messengercompose/compose-toolbar-small.png   (skin/compose-toolbar-small.png)
+    skin/classic/messenger/messengercompose/smiley-menu.png             (skin/smiley-menu.png)
+		skin/classic/messenger/messengercompose/smiley-menu-pressed.png     (skin/smiley-menu-pressed.png)
 
 messenger.jar:
 *+  content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)
 *+  content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
 +   content/editor/images/tag-anchor.gif                           (content/icons/tag-anchor.gif)
-+   content/editor/images/smile_n.gif                              (content/icons/smile_n.gif)
-+   content/editor/images/frown_n.gif                              (content/icons/frown_n.gif)
-+   content/editor/images/wink_n.gif                               (content/icons/wink_n.gif)
-+   content/editor/images/tongue_n.gif                             (content/icons/tongue_n.gif)
-+   content/editor/images/laughing_n.gif                           (content/icons/laughing_n.gif)
-+   content/editor/images/embarrassed_n.gif                        (content/icons/embarrassed_n.gif)
-+   content/editor/images/undecided_n.gif                          (content/icons/undecided_n.gif)
-+   content/editor/images/surprise_n.gif                           (content/icons/surprise_n.gif)
-+   content/editor/images/kiss_n.gif                               (content/icons/kiss_n.gif)
-+   content/editor/images/yell_n.gif                               (content/icons/yell_n.gif)
-+   content/editor/images/cool_n.gif                               (content/icons/cool_n.gif)
-+   content/editor/images/money_n.gif                              (content/icons/money_n.gif)
-+   content/editor/images/foot_n.gif                               (content/icons/foot_n.gif)
-+   content/editor/images/innocent_n.gif                           (content/icons/innocent_n.gif)
-+   content/editor/images/cry_n.gif                                (content/icons/cry_n.gif)
-+   content/editor/images/sealed_n.gif                             (content/icons/sealed_n.gif)
+
 
 en-US.jar:
 +   locale/en-US/messenger/messengercompose/messengercompose.dtd   (locale/messengercompose.dtd)

@@ -461,7 +461,6 @@ treechildren::-moz-tree-image(remote-err) {
 
 #FormatToolbar > toolbarbutton {
   min-width: 32px;
-  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
 }
  
 #FormatToolbar > toolbarbutton > .toolbarbutton-text {
@@ -470,6 +469,7 @@ treechildren::-moz-tree-image(remote-err) {
 
 #DecreaseFontSizeButton {
   -moz-image-region: rect(64px 14px 80px 0px);
+	list-style-image: url("chrome://editor/skin/icons/btn2.gif");
 }
 
 #DecreaseFontSizeButton:hover {
@@ -485,6 +485,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #IncreaseFontSizeButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(81px 18px 98px 0px);
 }
 
@@ -501,6 +502,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #boldButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(16px 16px 32px 0px);
 }
 
@@ -521,6 +523,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #italicButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(98px 16px 114px 0px);
 }
 
@@ -541,6 +544,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #underlineButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(114px 16px 130px 0px);
 }
 
@@ -561,6 +565,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #ulButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(32px 16px 48px 0px);
 }
 
@@ -581,6 +586,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #olButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(194px 16px 210px 0px);
 }
 
@@ -601,6 +607,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #outdentButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(210px 16px 226px 0px);
 }
 
@@ -617,6 +624,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #indentButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(178px 16px 194px 0px);
 }
 
@@ -633,6 +641,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #align-left-button {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(146px 16px 162px 0px);
 }
 
@@ -653,6 +662,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #align-center-button {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(48px 16px 64px 0px);
 }
 
@@ -673,6 +683,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #align-right-button {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(162px 16px 178px 0px);
 }
 
@@ -693,6 +704,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #align-justify-button {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(130px 16px 146px 0px);
 }
 
@@ -713,6 +725,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #AlignPopupButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
@@ -729,6 +742,7 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #InsertPopupButton {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
   -moz-image-region: rect(244px 16px 260px 0px);
 }
 
@@ -745,19 +759,20 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #smileButtonMenu {
-  -moz-image-region: rect(227px 17px 244px 0px);
+  list-style-image: url("chrome://messenger/skin/messengercompose/smiley-menu.png");
 }
 
 #smileButtonMenu:hover {
-  -moz-image-region: rect(227px 34px 244px 17px);
+  list-style-image: url("chrome://messenger/skin/messengercompose/smiley-menu-pressed.png");
 }
 
 #smileButtonMenu[open="true"] {
-  -moz-image-region: rect(227px 51px 244px 34px) !important;
+  list-style-image: url("chrome://messenger/skin/messengercompose/smiley-menu-pressed.png");
 }
 
 #smileButtonMenu[disabled="true"] {
   -moz-image-region: rect(227px 68px 244px 51px) !important;
+	list-style-image: url("chrome://editor/skin/icons/btn2.gif");
 }
 
 /* ..... align menu ..... */
