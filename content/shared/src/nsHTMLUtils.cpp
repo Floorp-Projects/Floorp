@@ -96,57 +96,68 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
       }
     }
     else {
-      // Otherwise, we'll need to use aDocument to cough up a character
-      // set converter, and re-encode the relative portion of the URL as
-      // 8-bit characters.
-      nsCOMPtr<nsIUnicodeEncoder> encoder;
-
-      if (aDocument) {
-        nsCOMPtr<nsICharsetConverterManager> convmgr;
-        if (aConvMgr) {
-          convmgr = aConvMgr;
-        }
-        else {
-          convmgr = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
-        }
-
-        if (! convmgr)
-          return NS_ERROR_FAILURE;
-
-        nsAutoString charSetID;
-        aDocument->GetDocumentCharacterSet(charSetID);
-
-        convmgr->GetUnicodeEncoder(&charSetID, getter_AddRefs(encoder));
-      }
-
-      if (encoder) {
-        // Got the encoder: let's party.
-        PRInt32 len = aSpec.Length();
-        PRInt32 maxlen;
-        encoder->GetMaxLength(aSpec.GetUnicode(), len, &maxlen);
-
-        char buf[64], *p = buf;
-        if (maxlen > sizeof(buf) - 1)
-          p = new char[maxlen + 1];
-
-        if (! p)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-        encoder->Convert(aSpec.GetUnicode(), &len, p, &maxlen);
-        encoder->Finish(p, &len);
-        p[maxlen] = 0;
-
-        spec = p;
-
-        if (p != buf)
-          delete[] p;
-      }
-      else {
-        // No encoder, but we've got non-ASCII data. Let's UTF-8 encode
-        // by default.
+      // If the scheme is mailtourl then should not convert to a document charset
+      // because the charset cannot be passes to mailnews code, 
+      // use UTF-8 instead and apply URL escape.
+      static const char kMailToURI[] = "mailto";
+      if ((pos == (PRInt32)(sizeof kMailToURI - 1)) &&
+          (aSpec.Left(scheme, pos) != -1) &&
+           scheme.EqualsIgnoreCase(kMailToURI)) {
         spec = NS_ConvertUCS2toUTF8(aSpec.GetUnicode());
       }
+      else {
+        // Otherwise, we'll need to use aDocument to cough up a character
+        // set converter, and re-encode the relative portion of the URL as
+        // 8-bit characters.
+        nsCOMPtr<nsIUnicodeEncoder> encoder;
 
+        if (aDocument) {
+          nsCOMPtr<nsICharsetConverterManager> convmgr;
+          if (aConvMgr) {
+            convmgr = aConvMgr;
+          }
+          else {
+            convmgr = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
+          }
+
+          if (! convmgr)
+            return NS_ERROR_FAILURE;
+
+          nsAutoString charSetID;
+          aDocument->GetDocumentCharacterSet(charSetID);
+
+          convmgr->GetUnicodeEncoder(&charSetID, getter_AddRefs(encoder));
+        }
+
+        if (encoder) {
+          // Got the encoder: let's party.
+          PRInt32 len = aSpec.Length();
+          PRInt32 maxlen;
+          encoder->GetMaxLength(aSpec.GetUnicode(), len, &maxlen);
+
+          char buf[64], *p = buf;
+          if (maxlen > sizeof(buf) - 1)
+            p = new char[maxlen + 1];
+
+          if (! p)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+          encoder->Convert(aSpec.GetUnicode(), &len, p, &maxlen);
+          encoder->Finish(p, &len);
+          p[maxlen] = 0;
+
+          spec = p;
+
+          if (p != buf)
+            delete[] p;
+        }
+        else {
+          // No encoder, but we've got non-ASCII data. Let's UTF-8 encode
+          // by default.
+          spec = NS_ConvertUCS2toUTF8(aSpec.GetUnicode());
+        }
+
+      }
       // Now we need to URL-escape the string.  Make sure we've got an
       // nsIIOService.
       nsCOMPtr<nsIIOService> ioservice;

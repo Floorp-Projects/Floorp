@@ -242,12 +242,12 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
        rv = OpenComposeWindowWithValues(aMsgComposeWindowURL,
        									nsIMsgCompType::MailToUrl,
        									format,
-       									NS_ConvertASCIItoUCS2(aToPart).GetUnicode(), 
-                        NS_ConvertASCIItoUCS2(aCcPart).GetUnicode(),
-                        NS_ConvertASCIItoUCS2(aBccPart).GetUnicode(), 
+       									NS_ConvertUTF8toUCS2(aToPart).GetUnicode(), 
+                        NS_ConvertUTF8toUCS2(aCcPart).GetUnicode(),
+                        NS_ConvertUTF8toUCS2(aBccPart).GetUnicode(), 
                         aNewsgroup, 
-                        NS_ConvertASCIItoUCS2(aSubjectPart).GetUnicode(),
-                        NS_ConvertASCIItoUCS2(aBodyPart).GetUnicode(), 
+                        NS_ConvertUTF8toUCS2(aSubjectPart).GetUnicode(),
+                        NS_ConvertUTF8toUCS2(aBodyPart).GetUnicode(), 
                         aAttachmentPart,
                         nsnull);
     }
