@@ -3046,9 +3046,14 @@ then
 	MOZ_OPTIMIZE_FLAGS="-O"
 fi
 
-MOZ_ARG_ENABLE_BOOL(optimize,
-[  --enable-optimize       Enable code optimizations ],
-  [ MOZ_OPTIMIZE=1 ])
+MOZ_ARG_ENABLE_STRING(optimize,
+[  --enable-optimize(=val) Enable code optimizations level (val) ],
+    [ if test "$enableval" != "no"; then
+	MOZ_OPTIMIZE=1
+	if test -n "$enableval" && test "$enableval" != "yes"; then
+	    MOZ_OPTIMIZE_FLAGS="$enableval"
+	fi 
+    fi ])
 
 if test "$MOZ_OPTIMIZE"
 then
