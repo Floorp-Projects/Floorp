@@ -3,7 +3,8 @@
 #  . $topsrcdir/browser/config/mozconfig
 # to the top of your mozconfig file.
 
-export MOZ_PHOENIX=1
+set MOZ_PHOENIX=1
+export MOZ_PHOENIX
 mk_add_options MOZ_PHOENIX=1
 
 ac_add_options --disable-ldap
