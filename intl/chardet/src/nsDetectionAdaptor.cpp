@@ -98,8 +98,7 @@ NS_IMETHODIMP nsMyObserver::Notify(
       if(mNotifyByReload) {
         rv = mWebShellSvc->SetRendering( PR_FALSE);
         rv = mWebShellSvc->StopDocumentLoad();
-        rv = mWebShellSvc->ReloadDocument( aCharset, kCharsetFromAutoDetection,
-                       mCommand.Length()>0 ?  mCommand.GetBuffer() : nsnull);
+        rv = mWebShellSvc->ReloadDocument(aCharset, kCharsetFromAutoDetection);
       } else {
         nsAutoString newcharset(aCharset);
         if(mWeakRefDocument) {
