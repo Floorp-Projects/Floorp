@@ -75,9 +75,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 	CPPSRCS += nsURLHelperWin.cpp
 	CPPSRCS += nsNativeConnectionHelper.cpp
-ifndef GNU_CC
 	CPPSRCS += nsAutodialWin.cpp
-endif
 else
 	CPPSRCS += nsURLHelperUnix.cpp
 endif
