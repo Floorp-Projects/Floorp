@@ -49,6 +49,10 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsReadableUtils.h"
+#include "nsIDOMDocument.h"
+#include "nsIURI.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsDOMError.h"
 
 #include "nsIJSContextStack.h"
 #include "nsIDocShell.h"
@@ -348,6 +352,58 @@ nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
   }
 
   return sDOMScriptObjectFactory->GetClassInfoInstance(aID);
+}
+
+// static
+nsresult
+nsContentUtils::CheckSameOrigin(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
+{
+  nsCOMPtr<nsIDocument> doc1 = do_QueryInterface(aNode1);
+  if (!doc1) {
+    // Make sure that this is a real node.
+    nsCOMPtr<nsIContent> cont1 = do_QueryInterface(aNode1);
+    if (!cont1) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    nsCOMPtr<nsIDOMDocument> domDoc1;
+    aNode1->GetOwnerDocument(getter_AddRefs(domDoc1));
+    doc1 = do_QueryInterface(domDoc1);
+    if (!doc1) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  
+  nsCOMPtr<nsIDocument> doc2 = do_QueryInterface(aNode2);
+  if (!doc2) {
+    // Make sure that this is a real node.
+    nsCOMPtr<nsIContent> cont2 = do_QueryInterface(aNode2);
+    if (!cont2) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    nsCOMPtr<nsIDOMDocument> domDoc2;
+    aNode2->GetOwnerDocument(getter_AddRefs(domDoc2));
+    doc2 = do_QueryInterface(domDoc2);
+    if (!doc2) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  
+  if (doc1 == doc2)
+    return NS_OK;
+  
+  nsCOMPtr<nsIURI> uri1;
+  doc1->GetDocumentURL(getter_AddRefs(uri1));
+  nsCOMPtr<nsIURI> uri2;
+  doc2->GetDocumentURL(getter_AddRefs(uri2));
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return securityManager->CheckSameOriginURI(uri1, uri2);
 }
 
 // static

@@ -2698,6 +2698,12 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
                              PRBool aEntityReferenceExpansion,
                              nsIDOMTreeWalker **_retval)
 {
+  *_retval = nsnull;
+  
+  nsresult rv = nsContentUtils::CheckSameOrigin(this, aRoot);
+  if(NS_FAILED(rv))
+    return rv;
+
   return NS_NewTreeWalker(aRoot,
                           aWhatToShow,
                           aFilter,
