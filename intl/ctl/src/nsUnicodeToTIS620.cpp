@@ -52,6 +52,8 @@ nsUnicodeToTIS620::Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunLis
 
   for (ct = 0; ct < aSrcLen;) {
     tmpChunk = new textRun;
+    if (!tmpChunk)
+      break;
 
     if (aRunList->numRuns == 0)
       aRunList->head = tmpChunk;

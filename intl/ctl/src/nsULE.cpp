@@ -106,6 +106,8 @@ nsULE::ScriptsByRun(const PRUnichar *aSrcBuf,
 
   for (ct = 0; ct < aSrcLen;) {
     tmpChunk = new textRun;
+    if (!tmpChunk)
+      break;
 
     if (aRunList->numRuns == 0)
       aRunList->head = tmpChunk;

@@ -42,6 +42,8 @@ nsUnicodeToSunIndic::Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunL
 
   for (ct = 0; ct < aSrcLen;) {
     tmpChunk = new textRun;
+    if (!tmpChunk)
+      break;
 
     if (aRunList->numRuns == 0)
       aRunList->head = tmpChunk;
