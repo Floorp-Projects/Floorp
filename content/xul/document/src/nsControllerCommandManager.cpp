@@ -53,7 +53,14 @@ nsControllerCommandManager::RegisterCommand(const PRUnichar *commandName, nsICon
   nsStringKey commandKey(commandName);
   
   void* replacedCmd = mCommandsTable.Put(&commandKey, (void*)aCommand);
-  NS_ASSERTION(!replacedCmd, "Replacing existing command!");
+#if DEBUG
+  if (replacedCmd)
+  {
+    nsCAutoString msg("Replacing existing command -- ");
+    msg.AppendWithConversion(commandName);
+    NS_WARNING(msg);
+  }
+#endif
   
   return NS_OK;
 }
@@ -84,6 +91,73 @@ nsControllerCommandManager::FindCommandHandler(const PRUnichar *aCommandName, ns
   return NS_OK;
 }
 
+
+
+/* boolean isCommandEnabled (in wstring command); */
+NS_IMETHODIMP
+nsControllerCommandManager::IsCommandEnabled(const PRUnichar *aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aCommandName);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = PR_FALSE;
+      
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+  FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));  
+  if (!commandHandler)
+  {
+#if DEBUG
+    nsCAutoString msg("Controller command manager asked about a command that it does not handle -- ");
+    msg.AppendWithConversion(aCommandName);
+    NS_WARNING(msg);
+#endif
+    return NS_OK;    // we don't handle this command
+  }
+  
+  return commandHandler->IsCommandEnabled(aCommandName, aCommandRefCon, aResult);
+}
+
+/* boolean supportsCommand (in wstring command); */
+NS_IMETHODIMP
+nsControllerCommandManager::SupportsCommand(const PRUnichar *aCommandName, nsISupports *aCommandRefCon, PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aCommandName);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  // XXX: need to check the readonly and disabled states
+
+  *aResult = PR_FALSE;
+  
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+  FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
+
+  *aResult = (commandHandler.get() != nsnull);
+  return NS_OK;
+}
+
+/* void doCommand (in wstring command); */
+NS_IMETHODIMP
+nsControllerCommandManager::DoCommand(const PRUnichar *aCommandName, nsISupports *aCommandRefCon)
+{
+  NS_ENSURE_ARG_POINTER(aCommandName);
+
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+ FindCommandHandler(aCommandName, getter_AddRefs(commandHandler));
+  if (!commandHandler)
+  {
+#if DEBUG
+    nsCAutoString msg("Controller command manager asked to do a command that it does not handle -- ");
+    msg.AppendWithConversion(aCommandName);
+    NS_WARNING(msg);
+#endif
+    return NS_OK;    // we don't handle this command
+  }
+  
+  return commandHandler->DoCommand(aCommandName, aCommandRefCon);
+}
 
 
 nsresult
