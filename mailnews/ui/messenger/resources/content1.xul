@@ -11,56 +11,40 @@
 <script>
 function commit()
 {
-	var element;
-
-	element = document.getElementById("ProfileName");
-	parent.SetValue(element.id, element.value);
-
-	element = document.getElementById("ProfileDir");
-	data += "ProfileDir="+element.value+"%";
-	parent.SetValue(element.id, element.value);
 }
 </script>
 
 
-<table>
-	<tr>
-		<td >
-			If you create several profile you can tell them apart by the profile names
-		</td>
-	</tr>
-	
-	<tr>
-		<td >
-			Enter New Profile name
-		</td>
-	</tr>
-	
-	<tr>
-		<td>
-			<input type="text" id="ProfileName" size="30"/>
-		</td>
-	</tr>
-	
-	<tr>
-		<td >
-			Your user settings will be stored in the directory below
-		</td>
-	</tr>
+<b>Communicator Profile Manager</b>
+<p>
+Creating a New Profile
+<br></br>
+Communicator stores information about your settings, preferences, bookmarks and 
+<br></br>
+stored messages in your personal profile.
+</p>
 
-	<tr>
-		<td>
-			<input type="text" id="ProfileDir" size="30"/>
-		</td>
-	</tr>
+<p>
+If you are sharing this copy of Communicator with other users, you can use profiles 
+<br></br>
+to keep each user's information separate. To do this, each user should create his or 
+<br></br>
+her own profile and optionally protect it with a password.
+</p>
 
-	<tr>    
-		<td>
-			Please click Next to continue
-		</td>
-	</tr>
+<p>
+If you are the only person using this copy of Communicator, you must create atleast
+<br></br>
+one profile. If you would like, you can create multiple profiles for yourself to store 
+<br></br>
+different sets of setting and preferences. For example, you may want to have separate 
+<br></br>
+profiles for business and personal use.
+</p>
 
-</table>
+
+<p>
+To begin Creating your profile, click Next.
+</p>
 
 </xul:window>
-

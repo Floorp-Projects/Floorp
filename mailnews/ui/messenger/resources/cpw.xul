@@ -15,6 +15,7 @@
 
 var toolkitCore;
 nameGlobal = new Array();
+nameArray = new Array();
 count = 0;
 
 function Startup()
@@ -32,8 +33,27 @@ function Startup()
 
 function SetValue(name, value)
 {
-	nameGlobal[count] = name+"="+value+"%";
-	count++;
+	dump("Inside SetValue\n");
+	var found = false;
+	for (i = 0; i !=count; i++) {
+		if (nameArray[i] == name) {
+			dump("Name exists: "+nameGlobal[i]+"\n");
+			nameGlobal[i] = name+"="+value+"%";
+			dump("New values: "+name+"	"+value+"\n");
+			found = true;
+			break;
+		}
+	}
+
+
+	if (!found) {
+		dump("Name does not exist\n");
+		nameGlobal[count] = name+"="+value+"%";
+		dump("Name Value: "+name+"	"+value+"\n");
+
+		nameArray[count] = name;
+		count++;
+	}
 }
 
 function Finish()

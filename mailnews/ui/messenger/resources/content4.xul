@@ -12,47 +12,36 @@
 function commit()
 {
 	var element;
-	var value;
-	var data;
 
-dump("GRRRRRR.....frame 4 commit called\n");
-	element = document.getElementById("smtp");
-	parent.SetValue("smtp", element.value);
+	element = document.getElementById("SMTP");
+	parent.SetValue(element.id, element.value);
 }
 </script>
 
 
-<table>
-	<tr>
-		<td >
-			Please Enter information about your mail servers
-		</td>
-	</tr>
-	
-	<tr>
-		<td >
-			Outgoing SMTP server
-		</td>
-	</tr>
+<p>
+Communicator now has enough information to setup your basic profile. 
+<br></br>
+However, Communicator needs additional information if you want to 
+<br></br>
+send or receive email or use newsgroups. If you do not know the 
+<br></br>
+information requested, please contact your system administrator or 
+<br></br>
+Internet Service Provider.
+</p>
 
-	<tr>
-		<td>
-			<input type="text" id="smtp" size="30"/>
-		</td>
-	</tr>
+<p>
+Outgoing SMTP server
+<br></br>
+<input type="text" id="SMTP" size="30"/>
+</p>
 
-	<tr>    
-		<td>
-			Please click Next to continue entering information
-		</td>
-	</tr>
-    
-	<tr>    
-		<td>
-			Click Finish if you want to start communicator and enter your mail preferences later
-		</td>
-	</tr>
-
-</table>
+<p>
+<b>
+Click Exit and start apprunner again for this new profile
+to be used.
+</b>
+</p>
 
 </xul:window>
