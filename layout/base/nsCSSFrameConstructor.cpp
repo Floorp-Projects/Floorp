@@ -8624,38 +8624,27 @@ PRBool NotifyListBoxBody(nsIPresContext*    aPresContext,
   if (!aContainer)
     return PR_FALSE;
 
-  if (aChild->Tag() == nsXULAtoms::listitem) {
-    nsListBoxBodyFrame* listBoxBody = nsnull;
-    if (aChildFrame) {
-      // There is a frame for the removed content, so its parent frame is the listboxbody
-      nsIFrame* parentFrame = aChildFrame->GetParent();
-      if (parentFrame)
-        listBoxBody = (nsListBoxBodyFrame*)parentFrame;
-    } else {
-      // There is no frame for the removed/inserted content, so we need to dig
-      // further for the body frame. XBL insertion may not yet have taken
-      // place here (in the case of replacements), so our only connection
-      // to the listbox content is through aContainer.  Use the boxObject
-      // to get to the listboxbody frame so we can notify it of the removal or
-      // insertion.
-      nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aContainer));
-      if (xulEl) {
-        nsCOMPtr<nsIBoxObject> boxObject;
-        xulEl->GetBoxObject(getter_AddRefs(boxObject));
-        nsCOMPtr<nsIListBoxObject> listBoxObject(do_QueryInterface(boxObject));
-        nsIListBoxObject* bodyBoxObject = nsnull;
-        listBoxObject->GetListboxBody(&bodyBoxObject);
-        listBoxBody = NS_STATIC_CAST(nsListBoxBodyFrame*, bodyBoxObject);
-        NS_IF_RELEASE(bodyBoxObject);
+  if (aContainer->IsContentOfType(nsIContent::eXUL) &&
+      aChild->IsContentOfType(nsIContent::eXUL) &&
+      aContainer->Tag() == nsXULAtoms::listbox &&
+      aChild->Tag() == nsXULAtoms::listitem) {
+    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(aContainer);
+    nsCOMPtr<nsIBoxObject> boxObject;
+    xulElement->GetBoxObject(getter_AddRefs(boxObject));
+    nsCOMPtr<nsIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
+    if (listBoxObject) {
+      nsIListBoxObject* listboxBody;
+      listBoxObject->GetListboxBody(&listboxBody);
+      if (listboxBody) {
+        nsListBoxBodyFrame *listBoxBodyFrame = NS_STATIC_CAST(nsListBoxBodyFrame*, listboxBody);
+        if (aOperation == CONTENT_REMOVED)
+          listBoxBodyFrame->OnContentRemoved(aPresContext, aChildFrame, aIndexInContainer);
+        else
+          listBoxBodyFrame->OnContentInserted(aPresContext, aChild);
+        //NS_RELEASE(listBoxBodyFrame); frames aren't refcounted
       }
+      return PR_TRUE;
     }
-
-    if (listBoxBody)
-      if (aOperation == CONTENT_REMOVED)
-          listBoxBody->OnContentRemoved(aPresContext, aChildFrame, aIndexInContainer);
-      else
-          listBoxBody->OnContentInserted(aPresContext, aChild);
-    return PR_TRUE;
   }
 
   nsCOMPtr<nsIAtom> tag;
