@@ -335,52 +335,50 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
     char *cur_param = param_buf;
     IdlFunction *func = aInterface.GetFunctionAt(m);
 
-    // Don't generate a constructor method
-    if (strcmp(func->GetName(), aInterface.GetName()) == 0) {
-      continue;
-    }
-
-    int p, pcount = func->ParameterCount();
-    for (p = 0; p < pcount; p++) {
-      IdlParameter *param = func->GetParameterAt(p);
-
-      if (p > 0) {
-        strcpy(cur_param, kDelimiterStr);
-        cur_param += strlen(kDelimiterStr);
+    // Don't generate anything for a constructor
+    if (strcmp(func->GetName(), aInterface.GetName()) != 0) {
+      int p, pcount = func->ParameterCount();
+      for (p = 0; p < pcount; p++) {
+        IdlParameter *param = func->GetParameterAt(p);
+        
+        if (p > 0) {
+          strcpy(cur_param, kDelimiterStr);
+          cur_param += strlen(kDelimiterStr);
+        }
+        
+        GetParameterType(type_buf, *param);
+        GetCapitalizedName(name_buf, *param);
+        sprintf(cur_param, kParamStr, type_buf, name_buf);
+        cur_param += strlen(cur_param);
       }
-
-      GetParameterType(type_buf, *param);
-      GetCapitalizedName(name_buf, *param);
-      sprintf(cur_param, kParamStr, type_buf, name_buf);
-      cur_param += strlen(cur_param);
-    }
-
-    if (func->GetHasEllipsis()) {
-      if (pcount > 0) {
-        strcpy(cur_param, kDelimiterStr);
-        cur_param += strlen(kDelimiterStr);
+      
+      if (func->GetHasEllipsis()) {
+        if (pcount > 0) {
+          strcpy(cur_param, kDelimiterStr);
+          cur_param += strlen(kDelimiterStr);
+        }
+        sprintf(cur_param, kEllipsisParamStr);
+        cur_param += strlen(cur_param);
       }
-      sprintf(cur_param, kEllipsisParamStr);
-      cur_param += strlen(cur_param);
-    }
-
-    IdlVariable *rval = func->GetReturnValue();
-    if (rval->GetType() != TYPE_VOID) {
-      if ((pcount > 0) || func->GetHasEllipsis()) {
-        strcpy(cur_param, kDelimiterStr);
-        cur_param += strlen(kDelimiterStr);
+      
+      IdlVariable *rval = func->GetReturnValue();
+      if (rval->GetType() != TYPE_VOID) {
+        if ((pcount > 0) || func->GetHasEllipsis()) {
+          strcpy(cur_param, kDelimiterStr);
+          cur_param += strlen(kDelimiterStr);
+        }
+        GetVariableTypeForParameter(type_buf, *rval);
+        sprintf(cur_param, kReturnStr, type_buf,
+                rval->GetType() == TYPE_STRING ? "" : "*");
       }
-      GetVariableTypeForParameter(type_buf, *rval);
-      sprintf(cur_param, kReturnStr, type_buf,
-              rval->GetType() == TYPE_STRING ? "" : "*");
+      else {
+        *cur_param++ = '\0';
+      }
+      
+      GetCapitalizedName(name_buf, *func);
+      sprintf(buf, kMethodDeclStr, name_buf, param_buf);
+      *file << buf;
     }
-    else {
-      *cur_param++ = '\0';
-    }
- 
-    GetCapitalizedName(name_buf, *func);
-    sprintf(buf, kMethodDeclStr, name_buf, param_buf);
-    *file << buf;
   }
 }
 

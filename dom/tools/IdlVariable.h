@@ -40,7 +40,8 @@ enum Type {
   TYPE_OBJECT,
   TYPE_XPIDL_OBJECT,
   TYPE_FUNC,
-  TYPE_VOID
+  TYPE_VOID,
+  TYPE_UNKNOWN
 };
 
 class IdlVariable : public IdlObject {

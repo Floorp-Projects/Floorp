@@ -595,6 +595,9 @@ IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aT
     case STRING_TOKEN:
       attrObj->SetType(TYPE_STRING);
       break;
+    case UNKNOWN_TOKEN:
+      attrObj->SetType(TYPE_UNKNOWN);
+      break;
     // scoped name
     case IDENTIFIER_TOKEN:
       //if (aSpecification.ContainInterface(token->stringID)) {
@@ -674,6 +677,9 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &a
       break;
     case VOID_TOKEN:
       funcObj->SetReturnValue(TYPE_VOID);
+      break;
+    case UNKNOWN_TOKEN:
+      funcObj->SetReturnValue(TYPE_UNKNOWN);
       break;
     // scoped name
     case IDENTIFIER_TOKEN:
@@ -917,6 +923,9 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
     // string type
     case STRING_TOKEN:
       argObj->SetType(TYPE_STRING);
+      break;
+    case UNKNOWN_TOKEN:
+      argObj->SetType(TYPE_UNKNOWN);
       break;
     // scoped name
     case IDENTIFIER_TOKEN:
