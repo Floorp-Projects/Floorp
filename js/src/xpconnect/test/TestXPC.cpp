@@ -4,6 +4,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIXPCScriptable.h"
+#include "nsIServiceManager.h"
 #include "jsapi.h"
 #include <stdio.h>
 
@@ -17,8 +18,8 @@
 /***************************************************************************/
 // copying in the contents of nsAllocator.cpp as a test...
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
+static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 nsAllocator::nsAllocator(nsISupports* outer)
 {
@@ -38,7 +39,7 @@ nsAllocator::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
     if (aIID.Equals(kIAllocatorIID) || 
-        aIID.Equals(kISupportsIID)) {
+        aIID.Equals(nsISupports::IID())) {
         *aInstancePtr = (void*) this; 
         AddRef(); 
         return NS_OK; 
@@ -49,13 +50,13 @@ nsAllocator::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_METHOD
 nsAllocator::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-    if (outer && !aIID.Equals(kISupportsIID))
+    if (outer && !aIID.Equals(nsISupports::IID()))
         return NS_NOINTERFACE;   // XXX right error?
     nsAllocator* mm = new nsAllocator(outer);
     if (mm == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
     mm->AddRef();
-    if (aIID.Equals(kISupportsIID))
+    if (aIID.Equals(nsISupports::IID()))
         *aInstancePtr = mm->GetInner();
     else
         *aInstancePtr = mm;
@@ -202,19 +203,14 @@ NS_IMETHODIMP nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = NULL;
 
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kClassIID, NS_ITESTXPC_FOO_IID);
-  static NS_DEFINE_IID(kClass2IID, NS_ITESTXPC_FOO2_IID);
-  static NS_DEFINE_IID(kScriptableIID, NS_IXPCSCRIPTABLE_IID);
-
-  if (aIID.Equals(kClassIID) || 
-      aIID.Equals(kClass2IID) ||
-      aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsITestXPCFoo::IID()) || 
+      aIID.Equals(nsITestXPCFoo2::IID()) ||
+      aIID.Equals(nsISupports::IID())) {
     *aInstancePtr = (void*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kScriptableIID)) {
+  if (aIID.Equals(nsIXPCScriptable::IID())) {
     *aInstancePtr = (void*) new MyScriptable();
     return NS_OK;
   }
@@ -244,12 +240,99 @@ nsTestXPCFoo::nsTestXPCFoo()
     NS_ADDREF_THIS();
 }
 
-static NS_DEFINE_IID(kIFooIID, NS_ITESTXPC_FOO_IID);
-static NS_DEFINE_IID(kIFoo2IID, NS_ITESTXPC_FOO2_IID);
+/***************************************************************************/
 
-static NS_DEFINE_IID(kWrappedJSMethodsIID, NS_IXPCONNECT_WRAPPED_JS_METHODS_IID);
+class MyEcho : public nsIEcho
+{
+public:
+    NS_DECL_ISUPPORTS;
+    NS_IMETHOD SetReciever(nsIEcho* aReciever);
+    NS_IMETHOD SendOneString(const char* str);
+    NS_IMETHOD In2OutOneInt(int input, int* output);
+    NS_IMETHOD In2OutAddTwoInts(int input1, 
+                                int input2,
+                                int* output1,
+                                int* output2,
+                                int* result);
+    NS_IMETHOD In2OutOneString(const char* input, char** output);
+    NS_IMETHOD SimpleCallNoEcho();
+
+    MyEcho();
+private: 
+    nsIEcho* mReciever;
+    nsIAllocator* mAllocator;
+};
+
+NS_IMPL_ISUPPORTS(MyEcho, NS_IECHO_IID);
+
+MyEcho::MyEcho() 
+    : mReciever(NULL)
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+    nsServiceManager::GetService(kAllocatorCID,
+                                 kIAllocatorIID,
+                                 (nsISupports **)&mAllocator);
+}
+
+NS_IMETHODIMP MyEcho::SetReciever(nsIEcho* aReciever)
+{
+    if(mReciever)
+        NS_RELEASE(mReciever);
+    mReciever = aReciever;
+    if(mReciever)
+        NS_ADDREF(mReciever);
+    return NS_OK;
+}
+
+NS_IMETHODIMP MyEcho::SendOneString(const char* str)
+{
+    if(mReciever)
+        return mReciever->SendOneString(str);
+    return NS_OK;
+}
+
+NS_IMETHODIMP MyEcho::In2OutOneInt(int input, int* output)
+{
+    *output = input;
+    return NS_OK;
+}    
+
+NS_IMETHODIMP MyEcho::In2OutAddTwoInts(int input1, 
+                                       int input2,
+                                       int* output1,
+                                       int* output2,
+                                       int* result)
+{
+    *output1 = input1;
+    *output2 = input2;
+    *result = input1+input2;
+    return NS_OK;
+}
+
+NS_IMETHODIMP MyEcho::In2OutOneString(const char* input, char** output)
+{
+    char* p;
+    int len;
+    if(input && output && mAllocator &&
+       (NULL != (p = (char*)mAllocator->Alloc(len=strlen(input)+1))))
+    {
+        memcpy(p, input, len);
+        *output = p;
+        return NS_OK;
+    }
+    if(output)
+        *output = NULL;
+    return NS_ERROR_FAILURE;
+}    
+
+NS_IMETHODIMP MyEcho::SimpleCallNoEcho()
+{
+    return NS_OK;
+}    
 
 /***************************************************************************/
+
 FILE *gOutFile = NULL;
 FILE *gErrFile = NULL;
 
@@ -366,16 +449,16 @@ int main()
     nsIXPConnectWrappedNative* wrapper;
     nsIXPConnectWrappedNative* wrapper2;
 /*
-    if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, kIFooIID, &wrapper)))
+    if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, nsITestXPCFoo::IID(), &wrapper)))
 */
     // new code where global object is a wrapped xpcom object
-    if(NS_SUCCEEDED(xpc->InitJSContextWithNewWrappedGlobal(cx, foo, kIFooIID, 
-                                                           &wrapper)))
+    if(NS_SUCCEEDED(xpc->InitJSContextWithNewWrappedGlobal(
+                                    cx, foo, nsITestXPCFoo::IID(), &wrapper)))
     {
         wrapper->GetJSObject(&glob);
         JS_DefineFunctions(cx, glob, glob_functions);
 
-        if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, kIFoo2IID, &wrapper2)))
+        if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, nsITestXPCFoo2::IID(), &wrapper2)))
         {
             JSObject* js_obj;
             nsISupports* com_obj;
@@ -387,6 +470,15 @@ int main()
             jsval v;
             v = OBJECT_TO_JSVAL(js_obj);
             JS_SetProperty(cx, glob, "foo", &v);
+
+            // add the reflected native echo object (sans error checking :)
+            nsIXPConnectWrappedNative* echo_wrapper;
+            JSObject* echo_jsobj;
+            jsval echo_jsval;
+            xpc->WrapNative(cx, new MyEcho(), nsIEcho::IID(), &echo_wrapper);
+            echo_wrapper->GetJSObject(&echo_jsobj);
+            echo_jsval = OBJECT_TO_JSVAL(echo_jsobj);
+            JS_SetProperty(cx, glob, "echo", &echo_jsval);
 
             char* txt[] = {
               "load('testxpc.js');",
@@ -402,7 +494,7 @@ int main()
                 nsIXPConnectWrappedJS* wrapper;
                 if(NS_SUCCEEDED(xpc->WrapJS(cx,
                                        JSVAL_TO_OBJECT(v),
-                                       kIFooIID, &wrapper)))
+                                       nsITestXPCFoo::IID(), &wrapper)))
                 {
                     nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper;
                     int result;
@@ -412,7 +504,7 @@ int main()
     
                     nsIXPConnectWrappedJSMethods* methods;
 
-                    wrapper->QueryInterface(kWrappedJSMethodsIID, 
+                    wrapper->QueryInterface(nsIXPConnectWrappedJSMethods::IID(), 
                                             (void**) &methods);
                     methods->GetJSObject(&test_js_obj);
 

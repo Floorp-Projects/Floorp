@@ -147,6 +147,7 @@ private:
 
 class nsIXPCWrappedJSClass : public nsISupports
 {
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
     // no methods
 };
 
@@ -303,6 +304,7 @@ private:
 
 class nsIXPCWrappedNativeClass : public nsISupports
 {
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_NATIVE_CLASS_IID)
     // no methods
 };
 

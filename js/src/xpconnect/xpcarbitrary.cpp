@@ -22,7 +22,8 @@
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-NS_IMPL_ISUPPORTS(nsXPCArbitraryScriptable, NS_IXPCSCRIPTABLE_IID);
+static NS_DEFINE_IID(kArbitraryScriptableIID, NS_IXPCSCRIPTABLE_IID);
+NS_IMPL_ISUPPORTS(nsXPCArbitraryScriptable, kArbitraryScriptableIID)
 
 #define REAL_WRAPPER(w) ((nsXPCWrappedNative*)(w))
 

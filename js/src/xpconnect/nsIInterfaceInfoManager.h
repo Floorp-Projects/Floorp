@@ -31,6 +31,7 @@
 class nsIInterfaceInfoManager : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IINTERFACEINFO_MANAGER_IID)
 
     // nsIInformationInfo management services
     NS_IMETHOD GetInfoForIID(const nsIID* iid, nsIInterfaceInfo** info) = 0;

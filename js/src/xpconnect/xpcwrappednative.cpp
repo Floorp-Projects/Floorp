@@ -20,9 +20,8 @@
 
 #include "xpcprivate.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-NS_IMPL_QUERY_INTERFACE(nsXPCWrappedNative, NS_IXPCONNECT_WRAPPED_NATIVE_IID)
+static NS_DEFINE_IID(kWrappedNativeIID, NS_IXPCONNECT_WRAPPED_NATIVE_IID);
+NS_IMPL_QUERY_INTERFACE(nsXPCWrappedNative, kWrappedNativeIID)
 
 // do chained ref counting
 
@@ -97,7 +96,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     }
 
     // always find the native root
-    if(NS_FAILED(aObj->QueryInterface(kISupportsIID, (void**)&rootObj)))
+    if(NS_FAILED(aObj->QueryInterface(nsISupports::IID(), (void**)&rootObj)))
         return NULL;
 
     // look for the root wrapper
@@ -139,7 +138,8 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
         {
             // just a root wrapper
             nsXPCWrappedNativeClass* rootClazz;
-            rootClazz = nsXPCWrappedNativeClass::GetNewOrUsedClass(xpcc, kISupportsIID);
+            rootClazz = nsXPCWrappedNativeClass::GetNewOrUsedClass(
+                                                    xpcc, nsISupports::IID());
             if(!rootClazz)
                 goto return_wrapper;
 
@@ -241,7 +241,7 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
 nsXPCWrappedNative*
 nsXPCWrappedNative::Find(REFNSIID aIID)
 {
-    if(aIID.Equals(kISupportsIID))
+    if(aIID.Equals(nsISupports::IID()))
         return mRoot;
 
     nsXPCWrappedNative* cur = mRoot;

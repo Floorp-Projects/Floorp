@@ -43,6 +43,12 @@
 #define XPC_FRIEND_API(t)    XPC_PUBLIC_API(t)
 #define XPC_FRIEND_DATA(t)   XPC_PUBLIC_DATA(t)
 
+#ifndef NS_DEFINE_STATIC_IID_ACCESSOR
+#define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
+  public: \
+  static const nsIID& IID() {static nsIID iid = the_iid; return iid;}
+#endif
+
 // XXX break these up into separate files...
 // XXX declare them in XPIDL :)
 
@@ -59,6 +65,8 @@ class nsIInterfaceInfo;
 class nsIXPConnectWrappedNative : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_NATIVE_IID)
+
     // XXX add the rest of the fun methods
     NS_IMETHOD GetDynamicScriptable(nsIXPCScriptable** p) = 0;
     NS_IMETHOD GetArbitraryScriptable(nsIXPCScriptable** p) = 0;
@@ -77,6 +85,7 @@ public:
 
 class nsIXPConnectWrappedJS : public nsISupports
 {
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_IID)
     // no methods allowed since this has a shared vtbl!
     //
     // To manipulate this wrapper (as opposed to manipulating the wrapped
@@ -95,6 +104,8 @@ class nsIXPConnectWrappedJS : public nsISupports
 class nsIXPConnectWrappedJSMethods : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_METHODS_IID)
+
     // XXX add the rest of the fun methods
     NS_IMETHOD GetJSObject(JSObject** aJSObj) = 0;
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
@@ -110,6 +121,7 @@ public:
 class nsIXPConnect : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_IID)
 
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
                              JSObject* aGlobalJSObj) = 0;
