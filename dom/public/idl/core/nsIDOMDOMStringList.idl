@@ -38,14 +38,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * Corresponds to http://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030609
+ * Corresponds to http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407
  */
 
 #include "domstubs.idl"
 
-[scriptable, uuid(893f2075-b62b-11d7-af68-000a95687b38)]
+[scriptable, uuid(0bbae65c-1dde-11d9-8c46-000a95dc234c)]
 interface nsIDOMDOMStringList : nsISupports
 {
   DOMString          item(in unsigned long index);
   readonly attribute unsigned long   length;
+  boolean            contains(in DOMString str);
 };
