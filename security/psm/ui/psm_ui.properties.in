@@ -3584,7 +3584,7 @@ function launchCRLDialog()
 }
 // -->
 </script>
-<input type=button name=crlButton value='{text_crl_button}' onClick='launchCRLDialog();'>
+<input type=submit name=crlButton value='{text_crl_button}' onClick='launchCRLDialog();' width="72">
 :crlButtonHTML
 
 crlDialog_type=text/html
@@ -3606,7 +3606,7 @@ crl_dialog_main_content:
 {disable_right_click_js}
 </head>
 {formsubmit document.forms[0]}
-<body>
+<body bgcolor=white>
 <form name=crlDialog method=get action="formsubmit_handler" >
 <input type=hidden name="baseRef" value="windowclose_doclose_js">
 <input type=hidden name="formName" value="crlDialog">

@@ -1243,6 +1243,10 @@ SSMStatus SSMSecurityAdvisorContext_Process_cert_mine_form(
         if (button != NULL) {
             rv = SSMSecurityAdvisorContext_BackupAllMineCerts(res, req);
         }
+    } else if (SSM_HTTPParamValue(req, "crlButton", &button) == SSM_SUCCESS) {
+        if (button != NULL) {
+	    rv = SSM_HTTPReportError(req, HTTP_NO_CONTENT);
+	}
     }
     return rv;
 }
