@@ -104,8 +104,6 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   // Get style data
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)
     mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  const nsStyleColor* color = (const nsStyleColor*)
-    mStyleContext->GetStyleData(eStyleStruct_Color);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord x0 = borderPadding.left;
@@ -165,9 +163,23 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   }
   else
   {
-    // XXX Get correct color by finding the first parent that actually
+    // Get correct color by finding the first parent that actually
     // specifies a color.
-    NS_Get3DColors(colors, color->mBackgroundColor);
+    nsIFrame* frame = this;
+    while (nsnull != frame) {
+      const nsStyleColor* color;
+      nsresult rv = frame->GetStyleData(eStyleStruct_Color,
+                                        (const nsStyleStruct*&) color);
+      if (NS_SUCCEEDED(rv) && (nsnull != color)) {
+        if (0 == (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags)) {
+          NS_Get3DColors(colors, color->mBackgroundColor);
+          break;
+        }
+      }
+      // Try next parent (use content parent so that style is
+      // inherited properly!)
+      frame->GetContentParent(frame);
+    }
   }
 
   // Draw a "shadowed" box around the rule area
