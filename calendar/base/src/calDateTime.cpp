@@ -131,6 +131,7 @@ CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Minute)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Second)
 CAL_VALUETYPE_ATTR(calDateTime, PRBool, IsUtc)
 CAL_VALUETYPE_ATTR(calDateTime, PRBool, IsDate)
+CAL_VALUETYPE_ATTR(calDateTime, PRInt32, TimezoneOffset)
 
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Weekday)
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Yearday)
