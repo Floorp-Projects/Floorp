@@ -24,9 +24,7 @@
 #include "nsString.h"
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
-
-#define _MAX_NUM_PROFILES       100
-#define _MAX_4X_PROFILES		50
+#include "nsVoidArray.h"
 
 //typedef struct _profile_struct ProfileStruct;
 typedef struct _profile_struct {
@@ -44,7 +42,7 @@ class nsProfileAccess
 private:
 	nsCOMPtr <nsIRegistry> m_registry;
 
-	ProfileStruct	*mProfiles[_MAX_NUM_PROFILES];
+	nsVoidArray		*mProfiles;
 	PRInt32			mCount;
 	char*			mCurrentProfile;
 	char*			mVersion;
@@ -60,7 +58,7 @@ public:
 	PRBool			mForgetProfileCalled;
 	PRInt32			mNumProfiles;
 	PRInt32			mNumOldProfiles;
-	ProfileStruct	*m4xProfiles[_MAX_4X_PROFILES];
+	nsVoidArray		*m4xProfiles;
 
 	nsProfileAccess();
 	virtual ~nsProfileAccess();
@@ -89,7 +87,7 @@ public:
 	nsresult UpdateProfileArray();
 	void	 SetPREGInfo(const char* pregInfo);
 	void	 GetPREGInfo(char** pregInfo);
-	void	 FreeProfileMembers(ProfileStruct *aProfile[], PRInt32 numElems);
+	void	 FreeProfileMembers(nsVoidArray *aProfile, PRInt32 numElems);
 };
 
 #endif // __nsProfileAccess_h___

@@ -85,6 +85,8 @@ nsProfileAccess::nsProfileAccess()
 	mFixRegEntries		= PR_FALSE;
 	mProfileDataChanged	= PR_FALSE;
 	mForgetProfileCalled = PR_FALSE;
+	mProfiles = new nsVoidArray();
+	m4xProfiles = new nsVoidArray();
 
 	FillProfileInfo();
 }
@@ -111,21 +113,17 @@ nsProfileAccess::~nsProfileAccess()
 
 // Free up the member profile structs
 void
-nsProfileAccess::FreeProfileMembers(ProfileStruct *profiles[], PRInt32 numElems)
+nsProfileAccess::FreeProfileMembers(nsVoidArray *profiles, PRInt32 numElems)
 {
+
 	PRInt32 index = 0;
 
-	for (index=0; index < numElems; index++)
+	ProfileStruct* aProfile;
+	for (index = 0; index < numElems; index++)
 	{
-		CRTFREEIF(profiles[index]->profileName);
-		CRTFREEIF(profiles[index]->profileLocation);
-		CRTFREEIF(profiles[index]->isMigrated);
-		CRTFREEIF(profiles[index]->NCProfileName);
-		CRTFREEIF(profiles[index]->NCDeniedService);
-	
-		PR_FREEIF(profiles[index]);
+	        aProfile = (ProfileStruct *) profiles->ElementAt(index);
+	        delete aProfile;
 	}
-
 }
 
 // Close the registry.
@@ -183,20 +181,22 @@ nsProfileAccess::GetValue(const char* profileName, ProfileStruct** aProfile)
 		if (!*aProfile)
 			return NS_ERROR_OUT_OF_MEMORY;
 
+		ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+
 		(*aProfile)->profileName		= nsnull;
 		(*aProfile)->profileLocation	= nsnull;
 		(*aProfile)->isMigrated			= nsnull;
 		(*aProfile)->NCProfileName		= nsnull;
 		(*aProfile)->NCDeniedService	= nsnull;
 
-		(*aProfile)->profileName		= nsCRT::strdup(mProfiles[index]->profileName);
-		(*aProfile)->profileLocation	= nsCRT::strdup(mProfiles[index]->profileLocation);
-		(*aProfile)->isMigrated			= nsCRT::strdup(mProfiles[index]->isMigrated);
+		(*aProfile)->profileName		= nsCRT::strdup(profileItem->profileName);
+		(*aProfile)->profileLocation	= nsCRT::strdup(profileItem->profileLocation);
+		(*aProfile)->isMigrated			= nsCRT::strdup(profileItem->isMigrated);
 
-		if (mProfiles[index]->NCProfileName)
-			(*aProfile)->NCProfileName	= nsCRT::strdup(mProfiles[index]->NCProfileName);
-		if (mProfiles[index]->NCDeniedService)
-			(*aProfile)->NCProfileName	= nsCRT::strdup(mProfiles[index]->NCDeniedService);
+		if (profileItem->NCProfileName)
+			(*aProfile)->NCProfileName	= nsCRT::strdup(profileItem->NCProfileName);
+		if (profileItem->NCDeniedService)
+			(*aProfile)->NCProfileName	= nsCRT::strdup(profileItem->NCDeniedService);
 	}
 	else
 		*aProfile = nsnull;
@@ -217,51 +217,56 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
 	
 	if (index >= 0)
 	{
+                ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+
 		PRInt32 length = PL_strlen(aProfile->profileLocation);
-		mProfiles[index]->profileLocation = (char *) PR_Realloc(mProfiles[index]->profileLocation, length+1);
-		PL_strcpy(mProfiles[index]->profileLocation, aProfile->profileLocation);
+		profileItem->profileLocation = (char *) PR_Realloc(profileItem->profileLocation, length+1);
+		PL_strcpy(profileItem->profileLocation, aProfile->profileLocation);
 		
 		length = PL_strlen(aProfile->isMigrated);
-		mProfiles[index]->isMigrated = (char *) PR_Realloc(mProfiles[index]->isMigrated, length+1);
-		PL_strcpy(mProfiles[index]->isMigrated, aProfile->isMigrated);
+		profileItem->isMigrated = (char *) PR_Realloc(profileItem->isMigrated, length+1);
+		PL_strcpy(profileItem->isMigrated, aProfile->isMigrated);
 		
-		mProfiles[index]->updateProfileEntry = PR_TRUE;
+		profileItem->updateProfileEntry = PR_TRUE;
 
 		if (aProfile->NCProfileName)
 		{
 			length = PL_strlen(aProfile->NCProfileName);
-			mProfiles[index]->NCProfileName = (char *) PR_Realloc(mProfiles[index]->NCProfileName, length+1);
-			PL_strcpy(mProfiles[index]->NCProfileName, aProfile->NCProfileName);
+			profileItem->NCProfileName = (char *) PR_Realloc(profileItem->NCProfileName, length+1);
+			PL_strcpy(profileItem->NCProfileName, aProfile->NCProfileName);
 		}
 		if (aProfile->NCDeniedService)
 		{
 			length = PL_strlen(aProfile->NCDeniedService);
-			mProfiles[index]->NCDeniedService = (char *) PR_Realloc(mProfiles[index]->NCDeniedService, length+1);
-			PL_strcpy(mProfiles[mCount]->NCDeniedService, aProfile->NCDeniedService);
+			profileItem->NCDeniedService = (char *) PR_Realloc(profileItem->NCDeniedService, length+1);
+			PL_strcpy(profileItem->NCDeniedService, aProfile->NCDeniedService);
 		}
 	}
 	else
 	{
-		mProfiles[mCount] = (ProfileStruct *) PR_Malloc(sizeof(ProfileStruct));
-		if (!mProfiles[mCount])
+		ProfileStruct*	profileItem	= new ProfileStruct();
+		if (!profileItem)
 			return NS_ERROR_OUT_OF_MEMORY;
 
-		mProfiles[mCount]->profileName		= nsnull;
-		mProfiles[mCount]->profileLocation	= nsnull;
-		mProfiles[mCount]->isMigrated		= nsnull;
-		mProfiles[mCount]->NCProfileName	= nsnull;
-		mProfiles[mCount]->NCDeniedService	= nsnull;
+		profileItem->profileName		= nsnull;
+		profileItem->profileLocation	= nsnull;
+		profileItem->isMigrated			= nsnull;
+		profileItem->NCProfileName		= nsnull;
+		profileItem->NCDeniedService	= nsnull;
 
-		mProfiles[mCount]->profileName			= nsCRT::strdup(aProfile->profileName);
-		mProfiles[mCount]->profileLocation		= nsCRT::strdup(aProfile->profileLocation);
-		mProfiles[mCount]->isMigrated			= nsCRT::strdup(aProfile->isMigrated);
-		mProfiles[mCount]->updateProfileEntry	= PR_TRUE;
+		profileItem->profileName		= nsCRT::strdup(aProfile->profileName);
+		profileItem->profileLocation	= nsCRT::strdup(aProfile->profileLocation);
+		profileItem->isMigrated			= nsCRT::strdup(aProfile->isMigrated);
+		profileItem->updateProfileEntry	= PR_TRUE;
 
 		if (aProfile->NCProfileName)
-			mProfiles[index]->NCProfileName		= nsCRT::strdup(aProfile->NCProfileName);
+			profileItem->NCProfileName	= nsCRT::strdup(aProfile->NCProfileName);
 		if (aProfile->NCDeniedService)
-			mProfiles[mCount]->NCProfileName	= nsCRT::strdup(aProfile->NCDeniedService);
+			profileItem->NCProfileName	= nsCRT::strdup(aProfile->NCDeniedService);
 
+		if (!mProfiles)
+			mProfiles = new nsVoidArray();
+		mProfiles->AppendElement((void*)profileItem);
 		mCount++;
 	}
 	return NS_OK;
@@ -277,12 +282,12 @@ nsProfileAccess::SetValue(ProfileStruct* aProfile)
 nsresult 
 nsProfileAccess::FillProfileInfo()
 {
-	nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
 
-	// Make the fail: thing work
-	mProfiles[0] = nsnull;
+    // Make the fail: thing work
+    mProfiles = nsnull;
 
-	rv = OpenRegistry();
+    rv = OpenRegistry();
     if (NS_FAILED(rv)) return rv;       
 
     // Enumerate all subkeys (immediately) under the given node.
@@ -371,37 +376,40 @@ nsProfileAccess::FillProfileInfo()
             rv = m_registry->GetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, getter_Copies(NCProfileName));
             rv = m_registry->GetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, getter_Copies(NCDeniedService));
 
-			mProfiles[mCount] = (ProfileStruct *) PR_Malloc(sizeof(ProfileStruct));
-			if (!mProfiles[mCount])
-				return NS_ERROR_OUT_OF_MEMORY;
+            ProfileStruct*	profileItem	= new ProfileStruct();
+            if (!profileItem)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-			mProfiles[mCount]->profileName			= nsnull;
-			mProfiles[mCount]->profileLocation		= nsnull;
-			mProfiles[mCount]->isMigrated			= nsnull;
-			mProfiles[mCount]->NCProfileName		= nsnull;
-			mProfiles[mCount]->NCDeniedService		= nsnull;
-			mProfiles[mCount]->updateProfileEntry	= PR_TRUE;
+            profileItem->profileName			= nsnull;
+            profileItem->profileLocation		= nsnull;
+            profileItem->isMigrated			= nsnull;
+            profileItem->NCProfileName		= nsnull;
+            profileItem->NCDeniedService		= nsnull;
+            profileItem->updateProfileEntry	= PR_TRUE;
 	
-			mProfiles[mCount]->profileName			= nsCRT::strdup(profile);
-			mProfiles[mCount]->profileLocation		= nsCRT::strdup(directory);
-			mProfiles[mCount]->isMigrated			= nsCRT::strdup(isMigrated);
+            profileItem->profileName			= nsCRT::strdup(profile);
+            profileItem->profileLocation		= nsCRT::strdup(directory);
+            profileItem->isMigrated			= nsCRT::strdup(isMigrated);
 
-			if (NCProfileName)
-				mProfiles[mCount]->NCProfileName	= nsCRT::strdup(NCProfileName);
-			if (NCDeniedService)
-				mProfiles[mCount]->NCDeniedService	= nsCRT::strdup(NCDeniedService);
+            if (NCProfileName)
+            profileItem->NCProfileName	= nsCRT::strdup(NCProfileName);
+            if (NCDeniedService)
+            profileItem->NCDeniedService	= nsCRT::strdup(NCDeniedService);
 
+            if (PL_strcmp(isMigrated, REGISTRY_YES_STRING) == 0)
+		mNumProfiles++;
+ 	    else if (PL_strcmp(isMigrated, REGISTRY_NO_STRING) == 0)
+                mNumOldProfiles++;
 
-			if (PL_strcmp(isMigrated, REGISTRY_YES_STRING) == 0)
-				mNumProfiles++;
-			else if (PL_strcmp(isMigrated, REGISTRY_NO_STRING) == 0)
-				mNumOldProfiles++;
+            if (!mProfiles)
+                mProfiles = new nsVoidArray();
+            mProfiles->AppendElement((void*)profileItem);			
 			
-			mCount++;
-			CRTFREEIF(directory);
-		}
-	    rv = enumKeys->Next();
+            mCount++;
+            CRTFREEIF(directory);
 	}
+        rv = enumKeys->Next();
+     }
 
 	mFixRegEntries = PR_FALSE;
 	rv = CloseRegistry();
@@ -439,9 +447,11 @@ nsProfileAccess::GetFirstProfile(char **firstProfile)
 
 	for(index = 0; index < mCount; index++)
 	{
-		if (PL_strcmp(mProfiles[index]->isMigrated, REGISTRY_YES_STRING) == 0)
+		ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+
+		if (PL_strcmp(profileItem->isMigrated, REGISTRY_YES_STRING) == 0)
 		{
-			*firstProfile = nsCRT::strdup(mProfiles[index]->profileName);
+			*firstProfile = nsCRT::strdup(profileItem->profileName);
 			break;
 		}
 	}
@@ -468,7 +478,7 @@ nsProfileAccess::GetCurrentProfile(char **profileName)
 {
 
 	*profileName = nsnull;
-	
+
 	if (mCurrentProfile)
 	{
 		if ((PL_strcmp(mCurrentProfile,"") != 0) || mForgetProfileCalled)
@@ -494,19 +504,18 @@ nsProfileAccess::RemoveSubTree(const char* profileName)
 	// by moving the pointers with something like memmove
 	// decrement mCount if it works.
 	PRInt32	index = 0;
-	PRInt32 i = 0;
 	PRBool  isOldProfile = PR_FALSE;
 
 	index = FindProfileIndex(profileName);
 
 	if (index >= 0)
 	{
-		if (PL_strcmp(mProfiles[index]->isMigrated, REGISTRY_NO_STRING) == 0)
+		ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+
+		if (PL_strcmp(profileItem->isMigrated, REGISTRY_NO_STRING) == 0)
 			isOldProfile = PR_TRUE;
 
-		PRInt32	movePositions = mCount - index;
-		for (i=0; i < movePositions; i++,index++)
-			nsCRT::memmove(&mProfiles[index], &mProfiles[index+1], sizeof(ProfileStruct *));
+		mProfiles->RemoveElementAt(index);
 
 		mCount--;
 		if (isOldProfile)
@@ -583,7 +592,9 @@ nsProfileAccess::FindProfileIndex(const char* profileName)
 
 	for (index=0; index < mCount; index++)
 	{
-		if (PL_strcmp(profileName, mProfiles[index]->profileName) == 0)
+		ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+
+		if (PL_strcmp(profileName, profileItem->profileName) == 0)
 		{
 			retval = index;
 			break;
@@ -668,19 +679,21 @@ nsProfileAccess::UpdateRegistry()
         {
 			nsRegistryKey profKey;								
 
+			ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+
 			rv = m_registry->GetSubtree(profilesTreeKey, profile, &profKey);
 			if (NS_FAILED(rv)) return rv;
                                             
-			rv = m_registry->SetString(profKey, REGISTRY_DIRECTORY_STRING, mProfiles[index]->profileLocation);
+			rv = m_registry->SetString(profKey, REGISTRY_DIRECTORY_STRING, profileItem->profileLocation);
 			if (NS_FAILED(rv)) return rv;
 
-			rv = m_registry->SetString(profKey, REGISTRY_MIGRATED_STRING, mProfiles[index]->isMigrated);
+			rv = m_registry->SetString(profKey, REGISTRY_MIGRATED_STRING, profileItem->isMigrated);
 			if (NS_FAILED(rv)) return rv;
 
-            rv = m_registry->SetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, mProfiles[index]->NCProfileName);
-            rv = m_registry->SetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, mProfiles[index]->NCDeniedService);
+            rv = m_registry->SetString(profKey, REGISTRY_NC_PROFILE_NAME_STRING, profileItem->NCProfileName);
+            rv = m_registry->SetString(profKey, REGISTRY_NC_SERVICE_DENIAL_STRING, profileItem->NCDeniedService);
 
-			mProfiles[index]->updateProfileEntry = PR_FALSE;
+			profileItem->updateProfileEntry = PR_FALSE;
 		}
 	    rv = enumKeys->Next();
 	}
@@ -688,20 +701,22 @@ nsProfileAccess::UpdateRegistry()
 	// Take care of new nodes
 	for (int i = 0; i < mCount; i++)
 	{
-		if (mProfiles[i]->updateProfileEntry)
+		ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(i));
+
+		if (profileItem->updateProfileEntry)
 		{
 			nsRegistryKey profKey;								
 
-			rv = m_registry->AddSubtree(profilesTreeKey, mProfiles[i]->profileName, &profKey);
+			rv = m_registry->AddSubtree(profilesTreeKey, profileItem->profileName, &profKey);
 			if (NS_FAILED(rv)) return rv;
 
-			rv = m_registry->SetString(profKey, REGISTRY_DIRECTORY_STRING, mProfiles[i]->profileLocation);
+			rv = m_registry->SetString(profKey, REGISTRY_DIRECTORY_STRING, profileItem->profileLocation);
 			if (NS_FAILED(rv)) return rv;
 
-			rv = m_registry->SetString(profKey, REGISTRY_MIGRATED_STRING, mProfiles[i]->isMigrated);
+			rv = m_registry->SetString(profKey, REGISTRY_MIGRATED_STRING, profileItem->isMigrated);
 			if (NS_FAILED(rv)) return rv;
 
-			mProfiles[i]->updateProfileEntry = PR_FALSE;
+			profileItem->updateProfileEntry = PR_FALSE;
 		}
 	}
 
@@ -721,13 +736,15 @@ nsProfileAccess::GetProfileList(char **profileListStr)
 
 	for (PRInt32 index=0; index < mCount; index++)
 	{
+		ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+
 		if (index != 0)
 		{
 			profileList += ",";
 		}
-		profileList += mProfiles[index]->profileName;
+		profileList += profileItem->profileName;
 
-		if (PL_strcmp(mProfiles[index]->isMigrated, REGISTRY_NO_STRING) == 0)
+		if (PL_strcmp(profileItem->isMigrated, REGISTRY_NO_STRING) == 0)
 			profileList += " - migrate";
 	}
 
@@ -742,7 +759,8 @@ nsProfileAccess::ProfileExists(const char *profileName)
 
 	for (PRInt32 index=0; index < mCount; index++)
 	{
-		if (PL_strcmp(mProfiles[index]->profileName, profileName) == 0)
+		ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
+		if (PL_strcmp(profileItem->profileName, profileName) == 0)
 		{
 			exists = PR_TRUE;
 			break;
@@ -798,7 +816,17 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 		char *profile = nsnull;
         rv = node->GetName(&profile);
 		if (NS_FAILED(rv)) return rv;
-        
+
+		PRBool exists = PR_FALSE;;
+		exists = ProfileExists(profile);
+		if (exists)
+		{		
+			rv = enumKeys->Next();
+			if (NS_FAILED(rv)) return rv;
+			
+			continue;
+		}
+	
         nsRegistryKey key;								
         
         rv = oldReg->GetSubtree(nsIRegistry::Users, profile, &key);
@@ -813,27 +841,31 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         printf("oldProflie Location = %s\n", profLoc);
 #endif
                         
-		m4xProfiles[mNumOldProfiles] = (ProfileStruct *) PR_Malloc(sizeof(ProfileStruct));
-		if (!m4xProfiles[mNumOldProfiles])
-			return NS_ERROR_OUT_OF_MEMORY;
+        ProfileStruct*	profileItem	= new ProfileStruct();
+        if (!profileItem)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-		m4xProfiles[mNumOldProfiles]->profileName			= nsnull;
-		m4xProfiles[mNumOldProfiles]->profileLocation		= nsnull;
-		m4xProfiles[mNumOldProfiles]->isMigrated			= nsnull;
-		m4xProfiles[mNumOldProfiles]->NCProfileName			= nsnull;
-		m4xProfiles[mNumOldProfiles]->NCDeniedService		= nsnull;
-		m4xProfiles[mNumOldProfiles]->updateProfileEntry	= PR_TRUE;
+        profileItem->profileName			= nsnull;
+        profileItem->profileLocation		= nsnull;
+        profileItem->isMigrated			= nsnull;
+        profileItem->NCProfileName			= nsnull;
+        profileItem->NCDeniedService		= nsnull;
+        profileItem->updateProfileEntry	= PR_TRUE;
 
-		m4xProfiles[mNumOldProfiles]->profileName			= nsCRT::strdup(nsUnescape(profile));
-		m4xProfiles[mNumOldProfiles]->profileLocation		= nsCRT::strdup(profLoc);
-		m4xProfiles[mNumOldProfiles]->isMigrated			= nsCRT::strdup(REGISTRY_NO_STRING);
+        profileItem->profileName			= nsCRT::strdup(nsUnescape(profile));
+        profileItem->profileLocation		= nsCRT::strdup(profLoc);
+        profileItem->isMigrated			= nsCRT::strdup(REGISTRY_NO_STRING);
+
+        if (!m4xProfiles)
+                m4xProfiles = new nsVoidArray();
+        m4xProfiles->AppendElement((void*)profileItem);
 
         mNumOldProfiles++;
 
-		rv = enumKeys->Next();
+        rv = enumKeys->Next();
         if (NS_FAILED(rv)) return rv;
-	}
-	oldReg->Close();
+    }
+    oldReg->Close();
 
 #elif defined (XP_BEOS)
 #else
@@ -846,28 +878,39 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 	    unixProfileDirectory = PR_GetEnv(HOME_ENVIRONMENT_VARIABLE);
     }
 
+    PRBool exists = PR_FALSE;;
+    exists = ProfileExists(unixProfileName);
+    if (exists)
+	{		
+        return NS_OK;
+	}
+
     if (unixProfileName && unixProfileDirectory) {
 
-		m4xProfiles[mNumOldProfiles] = (ProfileStruct *) PR_Malloc(sizeof(ProfileStruct));
-		if (!m4xProfiles[mNumOldProfiles])
+		ProfileStruct*	profileItem	= new ProfileStruct();
+		if (!profileItem)
 			return NS_ERROR_OUT_OF_MEMORY;
 
-		m4xProfiles[mNumOldProfiles]->profileName			= nsnull;
-		m4xProfiles[mNumOldProfiles]->profileLocation		= nsnull;
-		m4xProfiles[mNumOldProfiles]->isMigrated			= nsnull;
-		m4xProfiles[mNumOldProfiles]->NCProfileName			= nsnull;
-		m4xProfiles[mNumOldProfiles]->NCDeniedService		= nsnull;
-		m4xProfiles[mNumOldProfiles]->updateProfileEntry	= PR_TRUE;
+		profileItem->profileName			= nsnull;
+		profileItem->profileLocation		= nsnull;
+		profileItem->isMigrated			= nsnull;
+		profileItem->NCProfileName			= nsnull;
+		profileItem->NCDeniedService		= nsnull;
+		profileItem->updateProfileEntry	= PR_TRUE;
 
-		m4xProfiles[mNumOldProfiles]->profileName			= nsCRT::strdup(nsUnescape(unixProfileName));
-		m4xProfiles[mNumOldProfiles]->profileLocation		= nsCRT::strdup(unixProfileDirectory);
+		profileItem->profileName			= nsCRT::strdup(nsUnescape(unixProfileName));
+		profileItem->profileLocation		= nsCRT::strdup(unixProfileDirectory);
 
 		PRInt32 length = PL_strlen(unixProfileDirectory) + PL_strlen("/.netscape");
-		m4xProfiles[mNumOldProfiles]->profileLocation = (char *) PR_Realloc(m4xProfiles[mNumOldProfiles]->profileLocation, length+1);
-		PL_strcpy(m4xProfiles[mNumOldProfiles]->profileLocation, unixProfileDirectory);
-		PL_strcat(m4xProfiles[mNumOldProfiles]->profileLocation, "/.netscape");
+		profileItem->profileLocation = (char *) PR_Realloc(profileItem->profileLocation, length+1);
+		PL_strcpy(profileItem->profileLocation, unixProfileDirectory);
+		PL_strcat(profileItem->profileLocation, "/.netscape");
 
-		m4xProfiles[mNumOldProfiles]->isMigrated			= nsCRT::strdup(REGISTRY_NO_STRING);
+		profileItem->isMigrated			= nsCRT::strdup(REGISTRY_NO_STRING);
+
+		if (!m4xProfiles)
+			m4xProfiles = new nsVoidArray();
+		m4xProfiles->AppendElement((void*)profileItem);
 
         mNumOldProfiles++;
 	}
@@ -892,10 +935,11 @@ nsProfileAccess::UpdateProfileArray()
 
 	for (PRInt32 idx = 0; idx < m4xCount; idx++)
 	{
-		nsFileSpec profileDir(m4xProfiles[idx]->profileLocation);
+		ProfileStruct* profileItem = (ProfileStruct *) (m4xProfiles->ElementAt(idx));		
+		nsFileSpec profileDir(profileItem->profileLocation);
 
 		PRBool exists;
-		exists = ProfileExists(m4xProfiles[idx]->profileName);
+		exists = ProfileExists(profileItem->profileName);
 		if (NS_FAILED(rv)) return rv;
     
 		// That profile already exists...
@@ -915,11 +959,11 @@ nsProfileAccess::UpdateProfileArray()
         {
 
 			PRInt32 length = PL_strlen(profileDirString);
-			m4xProfiles[idx]->profileLocation = (char *) PR_Realloc(m4xProfiles[idx]->profileLocation, length+1);
+			profileItem->profileLocation = (char *) PR_Realloc(profileItem->profileLocation, length+1);
 
-			PL_strcpy(m4xProfiles[idx]->profileLocation, profileDirString);
+			PL_strcpy(profileItem->profileLocation, profileDirString);
 
-			SetValue(m4xProfiles[idx]);
+			SetValue(profileItem);
 		}
 	}
 

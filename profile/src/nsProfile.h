@@ -62,5 +62,7 @@ public:
 	void FreeProfileStruct(ProfileStruct* aProfile);
 
 	nsresult AutoMigrate();
+
+	nsresult CreateDefaultProfile(void);
 };
 
