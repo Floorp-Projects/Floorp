@@ -23,6 +23,20 @@
  * Contributor(s): 
  */
 
+/*
+
+  A rule discrimination network implementation based on ideas from
+  RETE and TREAT.
+
+  RETE is described in Charles Forgy, "Rete: A Fast Algorithm for the
+  Many Patterns/Many Objects Match Problem", Artificial Intelligence
+  19(1): pp. 17-37, 1982.
+
+  TREAT is described in Daniel P. Miranker, "TREAT: A Better Match
+  Algorithm for AI Production System Matching", AAAI 1987: pp. 42-47.
+
+ */
+
 #ifndef nsRuleNetwork_h__
 #define nsRuleNetwork_h__
 
@@ -79,6 +93,8 @@ public:
     PRBool operator!=(nsISupports* aISupports) const { return !Equals(aISupports); }
     PRBool operator!=(const PRUnichar* aString) const { return !Equals(aString); }
 
+    Type GetType() const { return mType; }
+
     operator nsISupports*() const;
     operator const PRUnichar*() const;
 
@@ -110,6 +126,9 @@ protected:
 
 //----------------------------------------------------------------------
 
+/**
+ * A memory element that supports an instantiation
+ */
 class MemoryElement {
 public:
     MemoryElement() {}
@@ -131,6 +150,9 @@ public:
 
 //----------------------------------------------------------------------
 
+/**
+ * A collection of memory elements
+ */
 class MemoryElementSet {
 public:
     class ConstIterator;
@@ -236,6 +258,9 @@ public:
 
 //----------------------------------------------------------------------
 
+/**
+ * An assignment of a value to a variable
+ */
 class Binding {
 public:
     PRInt32 mVariable;
@@ -275,6 +300,9 @@ public:
 
 //----------------------------------------------------------------------
 
+/**
+ * A collection of value-to-variable assignments
+ */
 class BindingSet {
 public:
     class ConstIterator;
@@ -388,8 +416,10 @@ public:
 };
 
 
+//----------------------------------------------------------------------
+
 /**
- * A set of bindings from variables to values.
+ * A set of bindings with associated memory element support.
  */
 class Instantiation
 {
@@ -436,7 +466,7 @@ public:
 //----------------------------------------------------------------------
 
 /**
- * A set of intantiations
+ * A collection of intantiations
  */
 class InstantiationSet
 {
@@ -575,6 +605,9 @@ public:
 
 //----------------------------------------------------------------------
 
+/**
+ * A abstract base class for all nodes in the rule network
+ */
 class ReteNode
 {
 public:
@@ -587,6 +620,10 @@ public:
 
 //----------------------------------------------------------------------
 
+/**
+ * An abstract base class for an "inner node" in the rule
+ * network. Adds support for children and "upward" queries.
+ */
 class InnerNode : public ReteNode
 {
 public:
@@ -611,6 +648,9 @@ protected:
 
 //----------------------------------------------------------------------
 
+/**
+ * The root node in the rule network.
+ */
 class RootNode : public InnerNode
 {
 public:
@@ -627,6 +667,11 @@ public:
 
 //----------------------------------------------------------------------
 
+/**
+ * A node that joins to paths from the root node, and binds a
+ * variable from the left ancestor to a variable in the right
+ * ancestor.
+ */
 class JoinNode : public InnerNode
 {
 public:
@@ -663,6 +708,9 @@ protected:
 
 //----------------------------------------------------------------------
 
+/**
+ * A node that applies a test condition to a set of instantiations.
+ */
 class TestNode : public InnerNode
 {
 public:
@@ -689,6 +737,9 @@ protected:
 
 //----------------------------------------------------------------------
 
+/**
+ * A collection of nodes in the rule network
+ */
 class NodeSet
 {
 public:
