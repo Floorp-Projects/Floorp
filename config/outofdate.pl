@@ -26,14 +26,43 @@
 
 $found = 1;
 
+# GLOBALS
+$SEP = 0; # the paltform independent path separator
+$CFG = 0; # the value of the -cfg flag
+
+# determine the path separator
+$_ = $ENV{"PATH"};
+if (m|/|) {
+	$SEP = "/";
+}
+else {
+	$SEP = "\\";
+}
+
 if ($ARGV[0] eq '-d') {
     $classdir = $ARGV[1];
-    $classdir .= "/";
+    $classdir .= $SEP;
     shift;
     shift;
 } else {
-    $classdir = "./";
+    $classdir = "." . $SEP;
 }
+
+# if -cfg is specified, print out the contents of the cfg file to stdout
+if ($ARGV[0] eq '-cfg') {
+    $CFG = $ARGV[1];
+    shift;
+    shift;
+} 
+
+$_ = $ARGV[0];
+if (m/\*.java/) {
+	# Account for the fact that the shell didn't expand *.java by doing it
+	# manually.
+	&manuallyExpandArgument("java");
+}
+
+$printFile = 0;
 
 foreach $filename (@ARGV) {
     $classfilename = $classdir;
@@ -55,9 +84,47 @@ foreach $filename (@ARGV) {
      $ctime,$blksize,$blocks) = stat($classfilename);
 #    print $filename, " ", $mtime, ", ", $classfilename, " ", $classmtime, "\n";
     if ($mtime > $classmtime) {
+
+		# Only print the file header if we actually have some files to
+		# compile.
+		if (!$printFile) {
+			$printFile = 1;
+			&printFile($CFG);
+		}
         print $filename, " ";
         $found = 0;
     }
 }
 
 print "\n";
+
+# push onto $ARG array all filenames with extension $ext
+
+# @param ext the extension of the file
+
+sub manuallyExpandArgument {
+	local($ext) = @_;
+	$ext = "\." . $ext;			# put it in regexp
+
+	$result = opendir(DIR, ".");
+
+	@allfiles = grep(/$ext/, readdir(DIR));
+	$i = 0;
+	foreach $file (@allfiles) {
+		#skip emacs save files
+		$_ = $file;
+		if (!/~/) {
+			$ARGV[$i++] = $file;
+		}
+	}
+}
+
+sub printFile {
+	local($file) = @_;
+
+	$result = open(CFG, $file);
+	while (<CFG>) {
+		chop;
+		print $_;
+	}
+}

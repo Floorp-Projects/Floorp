@@ -25,16 +25,15 @@ goto NO_CAFE
 
 if "%MOZ_CAFE%"=="" goto NO_CAFE
 
-mkdir %MOZ_SRC%\ns\dist\classes\%2
-%MOZ_TOOLS%\bin\sj.exe -classpath %MOZ_SRC%\ns\dist\classes;%MOZ_SRC%\ns\sun-java\classsrc -d %MOZ_SRC%\ns\dist\classes *.java 
+mkdir %MOZ_SRC%\mozilla\dist\classes\%2
+%MOZ_TOOLS%\bin\sj.exe -classpath %MOZ_SRC%\mozilla\dist\classes;%MOZ_SRC%\mozilla\sun-java\classsrc -d %MOZ_SRC%\mozilla\dist\classes *.java 
 goto END
 
 :NO_CAFE
 
-
-%MOZ_TOOLS%\perl5\perl.exe %MOZ_SRC%\ns\config\outofdate.pl -d %MOZ_SRC%\ns\dist\classes\%2 *.java >> %1
-%MOZ_TOOLS%\bin\java.exe -argfile %1
-
+perl.exe %MOZ_SRC%\mozilla\config\outofdate.pl -d %MOZ_SRC%\mozilla\dist\classes\%2 -cfg %1 *.java > doit.bat
+call doit.bat
+del /F /A:A doit.bat
 
 :END
 
