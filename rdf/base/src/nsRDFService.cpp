@@ -36,6 +36,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIRDFXMLDataSource.h"
+#include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -886,13 +887,15 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         if (p)
             *p = '\0';
 
-        rv = nsComponentManager::CreateInstance(progID, nsnull,
-                                                nsIRDFDataSource::GetIID(),
-                                                getter_AddRefs(ds));
+        nsCOMPtr<nsISupports> isupports;
+        rv = nsServiceManager::GetService(progID, kISupportsIID, getter_AddRefs(isupports), nsnull);
 
         if (progID != buf)
             delete[] progID;
 
+        if (NS_FAILED(rv)) return rv;
+
+        ds = do_QueryInterface(isupports, &rv);
         if (NS_FAILED(rv)) return rv;
 
         rv = ds->Init(uri);
