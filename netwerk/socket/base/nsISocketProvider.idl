@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Malcolm Smith  <malsmith@cs.rmit.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,7 +43,7 @@
 /**
  * nsISocketProvider
  */
-[noscript, uuid(4c29772e-cf73-414a-98d9-661761a4511a)]
+[noscript, uuid(00b3df92-e830-11d8-d48e-0004e22243f8)]
 interface nsISocketProvider : nsISupports
 {
     /**
@@ -58,6 +59,8 @@ interface nsISocketProvider : nsISupports
      *        If non-null, the proxy hostname for this connection.
      * @param aProxyPort
      *        The proxy port for this connection.
+     * @param aFlags
+     *        Control flags that govern this connection (see below.)
      * @param aFileDesc
      *        The resulting PRFileDesc.
      * @param aSecurityInfo
@@ -69,25 +72,38 @@ interface nsISocketProvider : nsISupports
                    in long            aPort,
                    in string          aProxyHost,
                    in long            aProxyPort,
+                   in unsigned long   aFlags,
                    out nsFileDescStar aFileDesc, 
                    out nsISupports    aSecurityInfo);
 
     /**
      * addToSocket
      *
-     * This function is called to allow the socket provider to layer a PRFileDesc
-     * on top of another PRFileDesc.  For example, SSL via a SOCKS proxy.
+     * This function is called to allow the socket provider to layer a
+     * PRFileDesc on top of another PRFileDesc.  For example, SSL via a SOCKS
+     * proxy.
      *
-     * Parameters are the same as newSocket with the exception of aFileDesc, which
-     * is an in-param instead.
+     * Parameters are the same as newSocket with the exception of aFileDesc,
+     * which is an in-param instead.
      */
     void addToSocket(in long           aFamily,
                      in string         aHost, 
                      in long           aPort,
                      in string         aProxyHost,
                      in long           aProxyPort,
+                     in unsigned long  aFlags,
                      in nsFileDescStar aFileDesc, 
                      out nsISupports   aSecurityInfo);
+
+    /**
+     * PROXY_RESOLVES_HOST
+     *
+     * This flag is set if the proxy is to perform hostname resolution instead
+     * of the client.  When set, the hostname parameter passed when in this
+     * interface will be used instead of the address structure passed for a
+     * later connect et al. request.
+     */
+    const long PROXY_RESOLVES_HOST = 1 << 0;
 };
 
 %{C++

@@ -47,7 +47,7 @@ interface nsIURI;
  * nsIProtocolProxyService provides methods to access information about
  * various network proxies.
  */
-[scriptable, uuid(6b40d918-c01a-42a2-ab4d-4ea0b707f91f)]
+[scriptable, uuid(ec2da5ae-eb2e-11d8-9782-0004e22243f8)]
 interface nsIProtocolProxyService : nsISupports
 {
     /**
@@ -97,8 +97,12 @@ interface nsIProtocolProxyService : nsISupports
      *        The proxy hostname or IP address.
      * @param aPort
      *        The proxy port.
+     * @param aFlags
+     *        Flags associated with this connection.  See nsIProxyInfo.idl
+     *        for currently defined flags.
      */
-    nsIProxyInfo newProxyInfo(in ACString aType, in AUTF8String aHost, in long aPort);
+    nsIProxyInfo newProxyInfo(in ACString aType, in AUTF8String aHost,
+                              in long aPort, in unsigned long aFlags);
 
     /**
      * This method may be called to re-configure proxy settings given a URI

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Malcolm Smith <malsmith@cs.rmit.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -87,7 +88,7 @@ protected:
     NS_HIDDEN_(PRBool)       IsProxyDisabled(nsProxyInfo *);
     NS_HIDDEN_(nsresult)     ExaminePACForProxy(nsIURI *aURI, PRUint32 protoFlags, nsIProxyInfo **aResult);
     NS_HIDDEN_(nsresult)     GetProtocolInfo(const char *scheme, PRUint32 &flags, PRInt32 &defaultPort);
-    NS_HIDDEN_(nsresult)     NewProxyInfo_Internal(const char *type, const nsACString &host, PRInt32 port, nsIProxyInfo **);
+    NS_HIDDEN_(nsresult)     NewProxyInfo_Internal(const char *type, const nsACString &host, PRInt32 port, PRUint32 flags, nsIProxyInfo **);
     NS_HIDDEN_(void)         LoadFilters(const char *filters);
     NS_HIDDEN_(PRBool)       CanUseProxy(nsIURI *aURI, PRInt32 defaultPort);
     NS_HIDDEN_(void)         ConfigureFromWPAD();
@@ -150,6 +151,7 @@ protected:
     nsCString                    mSOCKSProxyHost;
     PRInt32                      mSOCKSProxyPort;
     PRInt32                      mSOCKSProxyVersion;
+    PRBool                       mSOCKSProxyRemoteDNS;
 
     nsCOMPtr<nsIProxyAutoConfig> mPAC;
     nsCString                    mPACURI;
