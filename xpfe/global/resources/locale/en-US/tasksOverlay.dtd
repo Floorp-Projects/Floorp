@@ -13,7 +13,6 @@
 <!ENTITY toolsMenu.label					"Tools"> 
 <!ENTITY historyCmd.label						"History">  
 <!ENTITY securityInfoCmd.label					".Security Info">  
-<!ENTITY messageCenterCmd.label					".Message Center">  
 <!ENTITY importUtilCmd.label					".Import Utility">  
 <!ENTITY javaConsoleCmd.label					"Java Console">
 
