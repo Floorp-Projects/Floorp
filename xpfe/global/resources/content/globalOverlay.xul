@@ -115,7 +115,7 @@
 				 </menupopup>
 			</menu>
 			-->
-			<menuitem value="&releaseCommCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/seamonkey/release-notes/m10.html')"/>
+			<menuitem value="&releaseCommCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/seamonkey/release-notes/')"/>
 			<menuitem value="&aboutCommCmd.label;" oncommand="goAboutDialog();"/>
 		</menupopup>
 	</menu>
