@@ -192,7 +192,7 @@ nsTextNode::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const
     nsAutoString tmp;
     ToCString(tmp, 0, mText.GetLength());
 
-    if(!tmp.EqualsWithConversion("\\n")) {
+    if(!tmp.Equals(NS_LITERAL_STRING("\\n"))) {
       fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
       if(aIndent) fputs("\n", out);
     }
