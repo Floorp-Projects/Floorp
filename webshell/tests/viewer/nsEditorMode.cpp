@@ -16,27 +16,19 @@
  * Reserved.
  */
 #include "nsEditorMode.h"
-#include "nsEditorInterfaces.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMEventCapturer.h"
 #include "nsString.h"
-#include "nsIDOMText.h"
-#include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 
-#include "nsIEditor.h"
+#include "nsITextEditor.h"
 #include "nsEditorCID.h"
 
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
 
-static nsIDOMDocument* kDomDoc;
-static nsIDOMNode* kCurrentNode;
+static nsITextEditor *gEditor;
 
-static nsIEditor *gEditor;
-
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
+static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
 static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
 static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 
@@ -55,6 +47,9 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
 {
   nsresult result = NS_OK;
   static needsInit=PR_TRUE;
+  if (gEditor)
+
+  gEditor=nsnull;
 
   NS_ASSERTION(nsnull!=aDOMDocument, "null document");
   NS_ASSERTION(nsnull!=aPresShell, "null presentation shell");
@@ -62,44 +57,41 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   if ((nsnull==aDOMDocument) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
+  /** temp code until the editor auto-registers **/
   if (PR_TRUE==needsInit)
   {
-    gEditor=(nsIEditor*)1;  // XXX: hack to get around null pointer problem
     needsInit=PR_FALSE;
+    result = nsRepository::RegisterFactory(kTextEditorCID, EDITOR_DLL, 
+                                           PR_FALSE, PR_FALSE);
+    if (NS_ERROR_FACTORY_EXISTS!=result)
+    {
+      if (NS_FAILED(result))
+        return result;
+    }
     result = nsRepository::RegisterFactory(kEditorCID, EDITOR_DLL, 
-                                           PR_TRUE, PR_TRUE);
-    if (NS_FAILED(result))
-      return result;
+                                           PR_FALSE, PR_FALSE);
+    if (NS_ERROR_FACTORY_EXISTS!=result)
+    {
+      if (NS_FAILED(result))
+        return result;
+    }
   }
-
-  NS_IF_RELEASE(kCurrentNode);
-  NS_IF_RELEASE(kDomDoc);
-  
-  kCurrentNode = nsnull;
-
-  kDomDoc = aDOMDocument;
-  NS_IF_ADDREF(kDomDoc);
-
-
+  /** end temp code **/
+/*
   nsISupports *isup = nsnull;
-
-  result = nsServiceManager::GetService(kEditorCID,
-                                        kIEditorIID, &isup);
-  if (NS_FAILED(result) || !isup) {
-    printf("ERROR: Failed to get Editor nsISupports interface.\n");
+  result = nsServiceManager::GetService(kTextEditorCID,
+                                        kITextEditorIID, &isup);
+*/
+  result = nsRepository::CreateInstance(kTextEditorCID,
+                                        nsnull,
+                                        kITextEditorIID, (void **)&gEditor);
+  if (NS_FAILED(result))
+    return result;
+  if (!gEditor) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  result = isup->QueryInterface(kIEditorIID, (void **)&gEditor);
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to get Editor interface. (%d)\n", result);
-    return result;
-  }
-  if (nsnull==gEditor) {
-    printf("ERROR: QueryInterface() returned NULL pointer.\n");
-    return NS_ERROR_NULL_POINTER;
-  } 
-  gEditor->Init(aDOMDocument, aPresShell);
+  gEditor->InitTextEditor(aDOMDocument, aPresShell);
   gEditor->EnableUndo(PR_TRUE);
 
   return result;
