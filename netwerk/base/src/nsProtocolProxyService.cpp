@@ -106,14 +106,17 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     if (!mPrefs) return;
 
     nsresult rv = NS_OK;
+    PRBool reloadPAC = PR_FALSE;
     nsXPIDLCString tempString;
 
     if (!pref || !PL_strcmp(pref, "network.proxy.type"))
     {
         PRInt32 type = -1;
         rv = mPrefs->GetIntPref("network.proxy.type",&type);
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv)) {
             mUseProxy = type; // type == 2 is autoconfig stuff
+            reloadPAC = PR_TRUE;
+        }
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.http"))
@@ -214,11 +217,12 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
             (void)LoadFilters((const char*)tempString);
     }
 
-    if (!pref || !PL_strcmp(pref, "network.proxy.autoconfig_url"))
+    if ((!pref || !PL_strcmp(pref, "network.proxy.autoconfig_url") || reloadPAC) && 
+        (mUseProxy == 2))
     {
         rv = mPrefs->CopyCharPref("network.proxy.autoconfig_url", 
                                   getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv)) {
+        if (NS_SUCCEEDED(rv) && (!reloadPAC || PL_strcmp(tempString, mPACURL))) {
             mPACURL = nsCRT::strdup(tempString);
 
             // create pac js component
