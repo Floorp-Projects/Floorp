@@ -2,9 +2,6 @@ customize-panel.js
 customize-panel.xul
 customize.js
 customize.xul
-panel-exists.xul
-panel-add-confirm.js
-panel-add-confirm.xul
 preview.css
 preview.js
 preview.xul
