@@ -189,6 +189,8 @@ sub get_generator {
             for $p (@params) {
                 if ($p eq "TypedRegister") {
                     push (@args, "TypedRegister(static_cast<Register>(node->operand[$arg_num].data), 0)");
+                } elsif ($p eq "ArgumentList") {
+                    push (@args, "*(reinterpret_cast<ArgumentList *>(node->operand[$arg_num].data))");
                 } elsif ($p =~ /\*$/) {
                     push (@args, "reinterpret_cast<$p>(node->operand[$arg_num].data)");
                 } else {
