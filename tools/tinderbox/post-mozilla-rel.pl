@@ -310,7 +310,22 @@ sub packit {
     } elsif (is_mac()) {
       system("mkdir -p $package_location");
       system("mkdir -p $stagedir");
-      TinderUtils::run_shell_command "cp $package_location/../*.dmg.gz $stagedir/";
+
+      # If .../*.dmg.gz exists, copy it to the staging directory.  Otherwise, copy
+      # .../*.dmg if it exists.
+      my @dmg;
+      @dmg = grep { -f $_ } <${package_location}/../*.dmg.gz>;
+      if ( scalar(@dmg) eq 0 ) {
+	@dmg = grep { -f $_ } <${package_location}/../*.dmg>;
+      }
+
+      if ( scalar(@dmg) gt 0 ) {
+	my $dmg_files = join(' ', @dmg);
+	TinderUtils::print_log "Copying $dmg_files to $stagedir/\n";
+	TinderUtils::run_shell_command "cp $dmg_files $stagedir/";
+      } else {
+	TinderUtils::print_log "No files to copy\n";
+      }
     } else {
       my $archive_loc = "$package_location/..";
       if ($Settings::package_creation_path eq "/xpinstall/packager") {
