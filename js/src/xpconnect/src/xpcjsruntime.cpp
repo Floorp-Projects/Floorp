@@ -52,6 +52,10 @@ const char* XPCJSRuntime::mStrings[] = {
     "Object",               // IDX_OBJECT
     "prototype",            // IDX_PROTOTYPE
     "createInstance"        // IDX_CREATE_INSTANCE
+#ifdef XPC_IDISPATCH_SUPPORT
+    , "ActiveXObject"       // IDX_ACTIVEX_OBJECT
+    , "COMObject"           // IDX_COMOBJECT
+#endif
 };
 
 /***************************************************************************/

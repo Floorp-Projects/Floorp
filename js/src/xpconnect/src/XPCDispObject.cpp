@@ -73,31 +73,33 @@ XPCDispObject::WrapIDispatch(IDispatch *pDispatch, XPCCallContext &ccx,
     return PR_TRUE;
 }
 
-HRESULT XPCDispObject::COMCreateInstance(BSTR className, PRBool enforceSecurity, IDispatch ** result)
+HRESULT XPCDispObject::COMCreateInstance(XPCCallContext & ccx, BSTR className,
+                                         PRBool enforceSecurity,
+                                         IDispatch ** result)
 {
     // Turn the string into a CLSID
     _bstr_t bstrName(className);
     CLSID classID = CLSID_NULL;
     HRESULT hr = CLSIDFromString(bstrName, &classID);
-    if (FAILED(hr))
+    if(FAILED(hr))
         hr = CLSIDFromProgID(bstrName, &classID);
     if(FAILED(hr) || ::IsEqualCLSID(classID, CLSID_NULL))
         return hr;
-
+    
     nsresult rv;
     nsCOMPtr<nsIDispatchSupport> dispSupport = do_GetService(NS_IDISPATCH_SUPPORT_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return E_UNEXPECTED;
+    if(NS_FAILED(rv)) return E_UNEXPECTED;
 
     PRUint32 hostingFlags = nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_NOTHING;
     dispSupport->GetHostingFlags(nsnull, &hostingFlags);
 
     PRBool allowSafeObjects;
-    if (hostingFlags & (nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS))
+    if(hostingFlags & (nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS))
         allowSafeObjects = PR_TRUE;
     else
         allowSafeObjects = PR_FALSE;
     PRBool allowAnyObjects;
-    if (hostingFlags & (nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_ALL_OBJECTS))
+    if(hostingFlags & (nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_ALL_OBJECTS))
         allowAnyObjects = PR_TRUE;
     else
         allowAnyObjects = PR_FALSE;
@@ -107,15 +109,19 @@ HRESULT XPCDispObject::COMCreateInstance(BSTR className, PRBool enforceSecurity,
     {
         return E_FAIL;
     }
+    PRBool classExists = PR_FALSE;
+    PRBool ok = PR_FALSE;
+    const nsCID & ourCID = XPCDispCLSID2nsCID(classID);
+    dispSupport->IsClassSafeToHost(ccx, ourCID, PR_FALSE, &classExists, &ok);
+    if(classExists && !ok)
+        return E_FAIL;
 
     // Test if the object is scriptable
     PRBool isScriptable = PR_FALSE;
     if(enforceSecurity && !allowAnyObjects)
     {
-        nsCID cid;
-        memcpy(&cid, &classID, sizeof(nsCID));
         PRBool classExists = PR_FALSE;
-        dispSupport->IsClassMarkedSafeForScripting(cid, &classExists, &isScriptable);
+        dispSupport->IsClassMarkedSafeForScripting(ourCID, &classExists, &isScriptable);
         if(!classExists)
             return REGDB_E_CLASSNOTREG;
     }
@@ -131,7 +137,7 @@ HRESULT XPCDispObject::COMCreateInstance(BSTR className, PRBool enforceSecurity,
     if(enforceSecurity && !allowAnyObjects && !isScriptable)
     {
         dispSupport->IsObjectSafeForScripting(disp, NSID_IDISPATCH, &isScriptable);
-        if (!isScriptable)
+        if(!isScriptable)
             return E_FAIL;
     }
 

@@ -100,25 +100,25 @@ JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj,
         jsval val;
         if(JS_GetElement(ccx, obj, index, &val))
         {
-            if (!JSVAL_IS_VOID(val))
+            if(!JSVAL_IS_VOID(val))
             {
-                if (!array)
+                if(!array)
                 {
                     // Create an array that starts at index, and has len 
                     // elements
                     array = SafeArrayCreateVector(VT_VARIANT, index, len - index);
-                    if (!array)
+                    if(!array)
                     {
                         err = NS_ERROR_OUT_OF_MEMORY;
                         return JS_FALSE;
                     }
-                    if (FAILED(SafeArrayAccessData(array, NS_REINTERPRET_CAST(void**,&varArray))))
+                    if(FAILED(SafeArrayAccessData(array, NS_REINTERPRET_CAST(void**,&varArray))))
                     {
                         err = NS_ERROR_FAILURE;
                         return JS_FALSE;
                     }
                 }
-                if (!JSToCOM(ccx, val, *varArray, err))
+                if(!JSToCOM(ccx, val, *varArray, err))
                 {
                     SafeArrayUnaccessData(array);
                     err = NS_ERROR_FAILURE;
@@ -127,7 +127,7 @@ JSBool XPCDispConvert::JSArrayToCOMArray(XPCCallContext& ccx, JSObject *obj,
                     return JS_FALSE;
                 }
             }
-            if (varArray)
+            if(varArray)
                 ++varArray;
         }
     }
@@ -312,7 +312,7 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
         {
             JSObject * obj = JSVAL_TO_OBJECT(src);
             IUnknown * pUnknown = nsnull;
-            if (!XPCConvert::JSObject2NativeInterface(
+            if(!XPCConvert::JSObject2NativeInterface(
                 ccx, 
                 (void**)&pUnknown, 
                 obj, 
@@ -348,7 +348,7 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
     }
     if(isByRef)
     {
-        if (!xpc_CopyVariantByRef(byRefVariant, dest))
+        if(!xpc_CopyVariantByRef(byRefVariant, dest))
         {
             // Avoid cleaning up garabage
             dest.vt = VT_EMPTY;

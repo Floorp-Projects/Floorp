@@ -41,11 +41,31 @@ static const char* const IDISPATCH_NAME = "IDispatch";
 PRBool XPCIDispatchExtension::mIsEnabled = PR_TRUE;
 
 static JSBool
-CommonConstructor(XPCCallContext &ccx, JSObject *obj, uintN argc, jsval *argv, 
-                     jsval *rval, PRBool enforceSecurity)
+CommonConstructor(JSContext *cx, int name, JSObject *obj, uintN argc,
+                  jsval *argv, jsval *rval, PRBool enforceSecurity)
 {
+    XPCCallContext ccx(JS_CALLER, cx, obj);
+    XPCJSRuntime *rt = ccx.GetRuntime();
+    if (!rt)
+    {
+        XPCThrower::Throw(NS_ERROR_UNEXPECTED, ccx);
+        return JS_FALSE;
+    } 
+    nsIXPCSecurityManager* sm = ccx.GetXPCContext()
+        ->GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CALL_METHOD);
+    XPCWrappedNative * wrapper = ccx.GetWrapper();
+    if(!sm || NS_FAILED(sm->CanAccess(nsIXPCSecurityManager::ACCESS_CALL_METHOD,
+                                      &ccx, ccx, ccx.GetFlattenedJSObject(),
+                                      wrapper->GetIdentityObject(),
+                                      wrapper->GetClassInfo(),
+                                      rt->GetStringJSVal(name),
+                                      wrapper->GetSecurityInfoAddr())))
+    {
+        // Security manager will have set an exception
+        return JS_FALSE;
+    }
     // Check if IDispatch is enabled, fail if not
-    if (!nsXPConnect::IsIDispatchEnabled())
+    if(!nsXPConnect::IsIDispatchEnabled())
     {
         XPCThrower::Throw(NS_ERROR_XPC_IDISPATCH_NOT_ENABLED, ccx);
         return JS_FALSE;
@@ -66,7 +86,8 @@ CommonConstructor(XPCCallContext &ccx, JSObject *obj, uintN argc, jsval *argv,
     }
     // Instantiate the desired COM object
     CComPtr<IDispatch> pDispatch;
-    HRESULT rv = XPCDispObject::COMCreateInstance(bstrClassName, enforceSecurity, &pDispatch);
+    HRESULT rv = XPCDispObject::COMCreateInstance(ccx, bstrClassName,
+                                                  enforceSecurity, &pDispatch);
     if(FAILED(rv))
     {
         XPCThrower::ThrowCOMError(ccx, rv, NS_ERROR_XPC_COM_CREATE_FAILED);
@@ -98,16 +119,16 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 COMObjectConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
                      jsval *rval)
 {
-    XPCCallContext ccx(JS_CALLER, cx, obj);
-    return CommonConstructor(ccx, obj, argc, argv, rval, PR_FALSE);
+    return CommonConstructor(cx, XPCJSRuntime::IDX_COM_OBJECT, obj, argc,
+                             argv, rval, PR_FALSE);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 ActiveXConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
                    jsval *rval)
 {
-    XPCCallContext ccx(JS_CALLER, cx, obj);
-    return CommonConstructor(ccx, obj, argc, argv, rval, PR_TRUE);
+    return CommonConstructor(cx, XPCJSRuntime::IDX_ACTIVEX_OBJECT, obj, argc, argv,
+                             rval, PR_TRUE);
 }
 
 JSBool XPCIDispatchExtension::Initialize(JSContext * aJSContext,

@@ -551,6 +551,10 @@ public:
         IDX_OBJECT                  ,
         IDX_PROTOTYPE               ,
         IDX_CREATE_INSTANCE         ,
+#ifdef XPC_IDISPATCH_SUPPORT
+        IDX_ACTIVEX_OBJECT          ,
+        IDX_COM_OBJECT              ,
+#endif
         IDX_TOTAL_COUNT // just a count of the above
     };
 

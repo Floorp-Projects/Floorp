@@ -219,7 +219,7 @@ AddXPCOMUCStringFinalizer()
     sXPCOMUCStringFinalizerIndex =
         JS_AddExternalStringFinalizer(FinalizeXPCOMUCString);
 
-    if (sXPCOMUCStringFinalizerIndex == -1)
+    if(sXPCOMUCStringFinalizerIndex == -1)
     {        
         return JS_FALSE;
     }

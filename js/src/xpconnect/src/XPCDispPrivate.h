@@ -999,6 +999,7 @@ public:
     JSBool Invoke(XPCCallContext & ccx, CallMode mode);
     /**
      * Instantiates a COM object given a class ID or a prog ID
+     * @param ccx an XPConnect call context
      * @param className a prog ID or a class ID in the form of 
      * {00000000-0000-0000-0000-000000000000}
      * @param enforceSecurity if true, will apply checks to ensure
@@ -1007,8 +1008,8 @@ public:
      * @param result pointer to the pointer to receive the interface pointer
      */
     static
-    HRESULT COMCreateInstance(BSTR className, 
-                               PRBool enforceSecurity, IDispatch ** result);
+    HRESULT COMCreateInstance(XPCCallContext & ccx, BSTR className,
+                              PRBool enforceSecurity, IDispatch ** result);
     /**
      * Wraps an IDispatch interface, returning the object as a jsval
      * @param pDispatch IDispatch pointer

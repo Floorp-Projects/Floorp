@@ -58,6 +58,7 @@
 native COMVARIANT(VARIANT);
 [ptr] native COMVARIANTPtr(VARIANT);
 native JSVal(jsval);
+[ptr] native JSContextPtr(JSContext);
 
 interface IDispatch;
 
@@ -79,19 +80,13 @@ interface nsIDispatchSupport : nsISupports
     void JSVal2COMVariant(in JSVal var, out COMVARIANT comvar);
     
     /**
-     * Instantiate a COM component.
-     * @param className ProgID or Class ID of the desired object to instantiate
-     * @return The IDispatch interface pointer if instantiated
-     */
-    IDispatch createInstance(in astring className);
-    
-    /**
      * Test if the class is safe to host.
      * @param clsid The nsID representation of the CLSID to test.
      * @param classExists Returns containing PR_FALSE if the class is
      *                    not registered.
      */
-    boolean isClassSafeToHost(in nsCIDRef cid, out boolean classExists);
+    boolean isClassSafeToHost(in JSContextPtr cx, in nsCIDRef cid,
+                              in boolean capsCheck, out boolean classExists);
     
     /**
      * Test if the specified class is marked safe for scripting.
@@ -99,7 +94,8 @@ interface nsIDispatchSupport : nsISupports
      * @param classExists Returns containing PR_FALSE if the class is not
      *                    registered.
      */
-    boolean isClassMarkedSafeForScripting(in nsCIDRef cid, out boolean classExists);
+    boolean isClassMarkedSafeForScripting(in nsCIDRef cid, 
+                                          out boolean classExists);
 
     /**
      * Test if the instantiated object is safe for scripting on the specified
@@ -116,7 +112,6 @@ interface nsIDispatchSupport : nsISupports
      *                only valid value is nsnull.
      */
     unsigned long getHostingFlags(in string aContext);
-
 };
 
 %{ C++

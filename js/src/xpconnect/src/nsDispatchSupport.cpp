@@ -81,7 +81,7 @@ ClassIsListed(HKEY hkeyRoot, const TCHAR *szKey, const CLSID &clsid, PRBool &lis
             // Class is listed
             return PR_TRUE;
         }
-    } while (1);
+    } while(1);
 
     // Class not found
     return PR_FALSE;
@@ -119,7 +119,7 @@ ClassImplementsCategory(const CLSID &clsid, const CATID &catid, PRBool &bClassEx
         return PR_FALSE;
 
     // CLSID exists, so try checking what categories it implements
-    bClassExists = TRUE;
+    bClassExists = PR_TRUE;
     CComPtr<ICatInformation> catInfo;
     HRESULT hr = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL,
         CLSCTX_INPROC_SERVER, __uuidof(ICatInformation), (LPVOID*) &catInfo);
@@ -134,7 +134,7 @@ ClassImplementsCategory(const CLSID &clsid, const CATID &catid, PRBool &bClassEx
     // Search for matching categories
     BOOL bFound = FALSE;
     CATID catidNext = GUID_NULL;
-    while (enumCATID->Next(1, &catidNext, NULL) == S_OK)
+    while(enumCATID->Next(1, &catidNext, NULL) == S_OK)
     {
         if(::IsEqualCATID(catid, catidNext))
             return PR_TRUE; // Match
@@ -185,15 +185,34 @@ NS_IMETHODIMP nsDispatchSupport::JSVal2COMVariant(jsval val, VARIANT * comvar)
 }
 
 /* boolean isClassSafeToHost (in nsCIDRef clsid, out boolean classExists); */
-NS_IMETHODIMP nsDispatchSupport::IsClassSafeToHost(const nsCID & cid, PRBool *classExists, PRBool *_retval)
+NS_IMETHODIMP nsDispatchSupport::IsClassSafeToHost(JSContext * cx,
+                                                   const nsCID & cid,
+                                                   PRBool ignoreException, 
+                                                   PRBool *classExists, 
+                                                   PRBool *aResult)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_ARG_POINTER(classExists);
 
-    *_retval = PR_FALSE;
+    *aResult = PR_FALSE;
 
     CLSID clsid = XPCDispnsCID2CLSID(cid);
 
+    // Ask security manager if it's ok to create this object
+    XPCCallContext ccx(JS_CALLER, cx);
+    nsIXPCSecurityManager* sm =
+            ccx.GetXPCContext()->GetAppropriateSecurityManager(
+                        nsIXPCSecurityManager::HOOK_CREATE_INSTANCE);
+    *aResult = sm && 
+        NS_SUCCEEDED(sm->CanCreateInstance(ccx, cid));
+
+    if(!*aResult)
+    {
+        if (ignoreException)
+            JS_ClearPendingException(ccx);
+        *classExists = PR_TRUE;
+        return NS_OK;
+    }
     *classExists = ClassExists(clsid);
 
     // Test the Internet Explorer black list
@@ -221,7 +240,7 @@ NS_IMETHODIMP nsDispatchSupport::IsClassSafeToHost(const nsCID & cid, PRBool *cl
                     if(dwFlags & kKillBit)
                     {
                         ::CoTaskMemFree(szCLSID);
-                        *_retval = PR_FALSE;
+                        *aResult = PR_FALSE;
                         return NS_OK;
                     }
                 }
@@ -230,52 +249,26 @@ NS_IMETHODIMP nsDispatchSupport::IsClassSafeToHost(const nsCID & cid, PRBool *cl
         }
     }
 
-    // Registry keys containing lists of controls that the Gecko explicitly does
-    // or does not support.
-
-    const TCHAR kControlsToDenyKey[] = _T("Software\\Mozilla\\ActiveX\\Blacklist\\CLSID");
-    const TCHAR kControlsToAllowKey[] = _T("Software\\Mozilla\\ActiveX\\Whitelist\\CLSID");
-
-    // Check if the CLSID belongs to a list that the Gecko does not support
-    
-    PRBool listIsEmpty = PR_FALSE;
-    if(ClassIsListed(HKEY_LOCAL_MACHINE, kControlsToDenyKey, clsid, listIsEmpty))
-    {
-        *_retval = PR_FALSE;
-        return NS_OK;
-    }
-
-    // Check if the CLSID is in the whitelist. This test only cares that the
-    // CLSID is not present when the whitelist is non-empty, to indicates that it is being used.
-
-    listIsEmpty = PR_FALSE;
-    if(!ClassIsListed(HKEY_LOCAL_MACHINE, kControlsToAllowKey, clsid, listIsEmpty) &&
-        !listIsEmpty)
-    {
-        *_retval = PR_FALSE;
-        return NS_OK;
-    }
-
-    *_retval = PR_TRUE;
+    *aResult = PR_TRUE;
     return NS_OK;
 }
 
 /* boolean isClassMarkedSafeForScripting (in nsCIDRef clsid, out boolean classExists); */
-NS_IMETHODIMP nsDispatchSupport::IsClassMarkedSafeForScripting(const nsCID & cid, PRBool *classExists, PRBool *_retval)
+NS_IMETHODIMP nsDispatchSupport::IsClassMarkedSafeForScripting(const nsCID & cid, PRBool *classExists, PRBool *aResult)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_ARG_POINTER(classExists);
     // Test the category the object belongs to
     CLSID clsid = XPCDispnsCID2CLSID(cid);
-    *_retval = ClassImplementsCategory(clsid, CATID_SafeForScripting, *classExists);
+    *aResult = ClassImplementsCategory(clsid, CATID_SafeForScripting, *classExists);
     return NS_OK;
 }
 
 /* boolean isObjectSafeForScripting (in voidPtr theObject, in nsIIDRef iid); */
-NS_IMETHODIMP nsDispatchSupport::IsObjectSafeForScripting(void * theObject, const nsIID & id, PRBool *_retval)
+NS_IMETHODIMP nsDispatchSupport::IsObjectSafeForScripting(void * theObject, const nsIID & id, PRBool *aResult)
 {
     NS_ENSURE_ARG_POINTER(theObject);
-    NS_ENSURE_ARG_POINTER(_retval);
+    NS_ENSURE_ARG_POINTER(aResult);
 
     // Test if the object implements IObjectSafety and is marked safe for scripting
     IUnknown *pObject = (IUnknown *) theObject;
@@ -285,7 +278,7 @@ NS_IMETHODIMP nsDispatchSupport::IsObjectSafeForScripting(void * theObject, cons
     CComQIPtr<IObjectSafety> objectSafety = pObject;
     if(!objectSafety)
     {
-        *_retval = PR_FALSE;
+        *aResult = PR_TRUE;
         return NS_OK;
     }
 
@@ -297,7 +290,7 @@ NS_IMETHODIMP nsDispatchSupport::IsObjectSafeForScripting(void * theObject, cons
             iid, &dwSupported, &dwEnabled)))
     {
         // Interface is not safe or failure.
-        *_retval = PR_FALSE;
+        *aResult = PR_FALSE;
         return NS_OK;
     }
 
@@ -307,19 +300,19 @@ NS_IMETHODIMP nsDispatchSupport::IsObjectSafeForScripting(void * theObject, cons
         // Object says it is not set to be safe, but supports unsafe calling,
         // try enabling it and asking again.
 
-        if (!(dwSupported & INTERFACESAFE_FOR_UNTRUSTED_CALLER) ||
+        if(!(dwSupported & INTERFACESAFE_FOR_UNTRUSTED_CALLER) ||
             FAILED(objectSafety->SetInterfaceSafetyOptions(
                 iid, INTERFACESAFE_FOR_UNTRUSTED_CALLER, INTERFACESAFE_FOR_UNTRUSTED_CALLER)) ||
             FAILED(objectSafety->GetInterfaceSafetyOptions(
                 iid, &dwSupported, &dwEnabled)) ||
             !(dwEnabled & dwSupported) & INTERFACESAFE_FOR_UNTRUSTED_CALLER)
         {
-            *_retval = PR_FALSE;
+            *aResult = PR_FALSE;
             return NS_OK;
         }
     }
 
-    *_retval = PR_TRUE;
+    *aResult = PR_TRUE;
     return NS_OK;
 }
 
@@ -327,40 +320,20 @@ static const PRUint32 kDefaultHostingFlags =
     nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_NOTHING;
 
 /* unsigned long getHostingFlags (in string aContext); */
-NS_IMETHODIMP nsDispatchSupport::GetHostingFlags(const char *aContext, PRUint32 *_retval)
+NS_IMETHODIMP nsDispatchSupport::GetHostingFlags(const char *aContext, PRUint32 *aResult)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
+    NS_ENSURE_ARG_POINTER(aResult);
 
     // Ask the activex security policy what the hosting flags are
     nsresult rv;
     nsCOMPtr<nsIActiveXSecurityPolicy> securityPolicy =
         do_GetService(NS_IACTIVEXSECURITYPOLICY_CONTRACTID, &rv);
     if(NS_SUCCEEDED(rv) && securityPolicy)
-        return securityPolicy->GetHostingFlags(aContext, _retval);
+        return securityPolicy->GetHostingFlags(aContext, aResult);
     
     // No policy so use the defaults
-    *_retval = kDefaultHostingFlags;
+    *aResult = kDefaultHostingFlags;
     return NS_OK;
-}
-
-/**
- * Creates an instance of an COM object, returning it as an IDispatch interface.
- * This also allows testing of scriptability.
- * @param className prog ID or class ID of COM component, class ID must be in
- * the form of {00000000-0000-0000-000000000000}
- * @param testScriptability if true this will only succeed if the object is in
- * the property category or supports the IObjectSafety interface
- * @param result pointer to an IDispatch to receive the pointer to the instance
- * @return nsresult
- */
-NS_IMETHODIMP nsDispatchSupport::CreateInstance(const nsAString & className,
-                                                IDispatch ** result)
-{
-    if (!nsXPConnect::IsIDispatchEnabled())
-        return NS_ERROR_XPC_IDISPATCH_NOT_ENABLED;
-    const nsPromiseFlatString & flat = PromiseFlatString(className);
-    CComBSTR name(flat.Length(), flat.get());
-    return XPCDispObject::COMCreateInstance(name, PR_TRUE, result);
 }
 
 nsDispatchSupport* nsDispatchSupport::GetSingleton()
