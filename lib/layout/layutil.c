@@ -3191,7 +3191,7 @@ lo_ConvertMochaEntities(MWContext * context, lo_DocState *state, PA_Tag * tag)
 	    return TRUE;
 
 	/* attempt to lock JS */
-	if (!LM_AttemptLockJS(lo_JSLockReleased, context))
+	if (!LM_AttemptLockJS(context, lo_JSLockReleased, context))
 	    return FALSE;
 
     /* 
@@ -3266,7 +3266,7 @@ lo_ConvertMochaEntities(MWContext * context, lo_DocState *state, PA_Tag * tag)
 	tag->data_len = XP_STRLEN((char *) tag->data);
 	PA_UNLOCK(tag->data);
 
-	LM_UnlockJS();
+	LM_UnlockJS(context);
 
 	return TRUE;
 
