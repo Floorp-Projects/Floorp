@@ -81,5 +81,20 @@
       </hbox>
     </vbox>
   </groupbox>
+  <groupbox>
+    <caption label="&header3.label;"/>
+    <description>&historyPages.label;</description>
+    <hbox align="center">
+      <label value="&pageHis.label;" accesskey="&pageHis.accesskey;" control="histDay"/>
+      <textbox id="histDay" size="3"
+                 preftype="int" prefstring="browser.history_expire_days"/>
+      <label value="&days.label;"/>
+      <spacer flex="1"/>
+      <button label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
+        oncommand="prefClearGlobalHistory(); this.disabled = true;"
+        id="browserClearHistory"
+        prefstring="pref.browser.history.disable_button.clear_hist"/>
+    </hbox>
+  </groupbox> 
 </page>
 
