@@ -603,8 +603,8 @@ nsOutputStreamWrapper::Init()
         if (!device) return NS_ERROR_NOT_AVAILABLE;
 
         // the entry has been truncated to zero bytes, inform the device.
-        PRInt32 delta = -cacheEntry->DataSize();
-        rv = device->OnDataSizeChange(cacheEntry, delta);
+        PRInt32 delta = cacheEntry->DataSize();
+        rv = device->OnDataSizeChange(cacheEntry, -delta);
         cacheEntry->SetDataSize(0);
     }
     return rv;
