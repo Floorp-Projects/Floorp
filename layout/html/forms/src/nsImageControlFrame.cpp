@@ -269,10 +269,10 @@ void
 nsImageControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   mGotFocus = aOn;
-  if (aRepaint) {
+  /*if (aRepaint) {
     nsRect rect(0, 0, mRect.width, mRect.height);
     Invalidate(rect, PR_TRUE);
-  }
+  }*/
 }
 
 void
