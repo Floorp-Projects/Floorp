@@ -97,14 +97,15 @@ OnLinkClickEvent::OnLinkClickEvent(LinkHandlerImpl* aHandler,
     NS_NewPostData(aPostData, &mPostData);
   }
 
+#ifdef XP_PC
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc) ::HandleEvent,
                (PLDestroyEventProc) ::DestroyEvent);
 
-#ifdef XP_PC
+
   PLEventQueue* eventQueue = PL_GetMainEventQueue();
-#endif
   PL_PostEvent(eventQueue, this);
+#endif
 }
 
 OnLinkClickEvent::~OnLinkClickEvent()
