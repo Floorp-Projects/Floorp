@@ -22,8 +22,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=mailnews
-LIBRARY_NAME=composebuild
+MODULE=msgcompose
+LIBRARY_NAME=msgcompose
+IS_COMPONENT=1
 
 CPPSRCS= \
 		nsMsgCompFactory.cpp \
@@ -31,6 +32,26 @@ CPPSRCS= \
 
 EXPORTS = \
 		nsMsgCompCID.h \
+		$(NULL)
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libmsgcompose_s.a	\
+		$(NULL)
+
+EXTRA_DSO_LDOPTS = \
+		$(MKSHLIB_FORCE_ALL)	\
+		$(SHARED_LIBRARY_LIBS)	\
+		$(MKSHLIB_UNFORCE_ALL)	\
+		$(NSPR_LIBS)			\
+		-L$(DIST)/bin			\
+		-L$(DIST)/lib			\
+		-lxpcom					\
+		-lraptorbase			\
+		-lmozjs					\
+		-ljsdom					\
+		-lxp					\
+		-lappcores				\
+		-lsecfree				\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
