@@ -295,6 +295,7 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
 
 #undef FROB
 
+    memset(&state->lazy, 0, sizeof state->lazy);
     return JS_TRUE;
 }
 
