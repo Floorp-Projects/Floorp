@@ -36,6 +36,15 @@
 	resultItemStart = "<LI>"
 >
 
+<INTERPRET
+	browserResultType = "result"
+	bannerStart="<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
+	bannerEnd="<!--/AD_TAG-->"
+	resultListStart = "The Google search engine found these pages."
+	resultListEnd = "</TD>"
+	resultItemStart = "<LI>"
+>
+
 </SEARCH>
 
-<browser alsomatch="http://search.netscape.com/search.tmpl">
+<browser alsomatch="http://search.netscape.com/search.tmpl http://google.netscape.com/netscape">
