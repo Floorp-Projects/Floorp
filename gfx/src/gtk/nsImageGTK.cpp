@@ -1215,7 +1215,7 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   }
 
   // draw the tile offscreen
-  CreateOffscreenPixmap(validWidth, validHeight);
+  CreateOffscreenPixmap(mWidth, mHeight);
   DrawImageOffscreen(validX, validY, validWidth, validHeight);
 
   if (mAlphaDepth == 1) {
