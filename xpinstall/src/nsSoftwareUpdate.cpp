@@ -183,10 +183,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
                 nsIEventQueue *eventQ;
                 eventQService->GetThreadEventQueue(PR_GetCurrentThread(), &eventQ);
 
-                PLEventQueue *plEventQ;
-                eventQ->GetPLEventQueue(&plEventQ);
-
-                rv = manager->GetProxyObject(plEventQ, nsIXPInstallProgress::GetIID(), dialogBase, PROXY_SYNC, (void**)&proxy);
+                rv = manager->GetProxyObject(eventQ, nsIXPInstallProgress::GetIID(), dialogBase, PROXY_SYNC, (void**)&proxy);
                 if (NS_SUCCEEDED(rv))
                 {
                     RegisterNotifier(proxy);
