@@ -69,7 +69,7 @@ $build{resources}       = 0;
 $options{transformiix}	= 0;
 $options{mathml}		= 0;
 $options{svg}			= 0;
-$options{mng}			= 0;
+$options{mng}			= 1;
 $options{ldap}			= 0;
 $options{xmlextras}		= 0;
 

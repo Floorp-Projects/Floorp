@@ -21,7 +21,7 @@
 DEPTH=..\.. 
 
 DIRS = public src public_com png pngcom jpgcom gifcom \
-!if defined(MOZ_MNG)
+!if !defined(MOZ_DISABLE_MNG)
 	mng mngcom	\
 !endif
 	$(NULL)

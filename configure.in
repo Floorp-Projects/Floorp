@@ -3369,12 +3369,15 @@ MOZ_ARG_ENABLE_BOOL(svg,
   AC_DEFINE(MOZ_SVG))
 
 dnl
-dnl --enable mng
+dnl --disable mng
 dnl
-MOZ_ARG_ENABLE_BOOL(mng,
-[  --enable-mng            Enable MNG ],
-  MOZ_MNG=1
-  AC_DEFINE(MOZ_MNG))
+MOZ_MNG=1
+MOZ_ARG_DISABLE_BOOL(mng,
+[  --disable-mng            Disable MNG ],
+  MOZ_MNG= )
+if test "$MOZ_MNG"; then
+  AC_DEFINE(MOZ_MNG)
+fi
 
 dnl
 dnl --enable xsl

@@ -87,6 +87,7 @@ viewer:Components:libpref.shlb
 viewer:Components:libpref.xpt 
 viewer:Components:libutil.xpt
 viewer:Components:lwbrk.shlb 
+viewer:Components:mngdecoder.shlb
 viewer:Components:mozBrowser.shlb 
 viewer:Components:mozBrowser.xpt 
 viewer:Components:mozcomps.xpt 

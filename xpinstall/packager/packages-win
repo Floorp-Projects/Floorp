@@ -121,6 +121,7 @@ bin\components\necko_res.xpt
 bin\components\nsgif.dll
 bin\components\nsjpg.dll
 bin\components\nslocale.dll
+bin\components\nsmng.dll
 bin\components\nspng.dll
 bin\components\nsprefm.dll
 bin\components\nsSidebar.js
