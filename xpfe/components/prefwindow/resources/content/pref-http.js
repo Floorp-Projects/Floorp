@@ -46,8 +46,6 @@ function checkPipelining()
 
     var doDisable = !(enableHTTP11.selected && enableKeepAlive.checked);
     enablePipelining.disabled = doDisable;
-    if (doDisable)
-      enablePipelining.checked = false;
   } catch(e) {}
 }
 
@@ -60,8 +58,6 @@ function checkPipeliningProxy()
 
     var doDisable = !(enableHTTP11.selected && enableKeepAlive.checked);
     enablePipelining.disabled = doDisable;
-    if (doDisable)
-      enablePipelining.checked = false;
   } catch(e) {}
 }
 
