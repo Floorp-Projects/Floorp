@@ -70,6 +70,7 @@ CPPSRCS =				\
 	nsVoidArray.cpp               \
 	nsXPIDLString.cpp             \
 	plvector.cpp                  \
+	nsTextFormater.cpp                  \
 	$(NULL)
 
 EXPORTS = \
@@ -101,6 +102,7 @@ EXPORTS = \
 	nsVoidArray.h              \
 	nsXPIDLString.h            \
 	plvector.h                 \
+	nsTextFormater.h                \
 	$(NULL)			
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
