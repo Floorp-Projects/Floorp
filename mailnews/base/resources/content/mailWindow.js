@@ -122,6 +122,9 @@ function CreateMailWindowGlobals()
   statusFeedback           = Components.classes[statusFeedbackContractID].createInstance();
   statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
+  /*
+    not in use unless we want the lock button back
+
   // try to create and register ourselves with a security icon...
   var securityIcon = document.getElementById("security-button");
   if (securityIcon) {
@@ -140,6 +143,7 @@ function CreateMailWindowGlobals()
     }
     catch (ex) {}
   }
+  */
 
   window.MsgWindowCommands = new nsMsgWindowCommands();
 
