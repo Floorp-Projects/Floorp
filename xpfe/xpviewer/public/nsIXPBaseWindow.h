@@ -41,18 +41,30 @@ struct nsRect;
 #define NS_XPBASE_WINDOW_CID \
 { 0x36c1fe51, 0x6f3e, 0x11d2, { 0x8d, 0xca, 0x0, 0x60, 0x97, 0x3, 0xc1, 0x4e } }
 
+enum nsXPBaseWindowType {   
+                  ///creates a window
+                eXPBaseWindowType_window,
+                  ///creates a dialog
+                eXPBaseWindowType_dialog,
+                  ///creates a modal dialog
+                eXPBaseWindowType_modalDialog,
+              }; 
+
+
+
 /**
  * API to a "XP window"
  */
 class nsIXPBaseWindow : public nsISupports {
 public:
-  NS_IMETHOD Init(nsIAppShell* aAppShell,
-                  nsIPref*        aPrefs,
-                  const nsString& aDialogURL,
-                  const nsString& aTitle,
-                  const nsRect&   aBounds,
-                  PRUint32        aChromeMask,
-                  PRBool          aAllowPlugins = PR_TRUE) = 0;
+  NS_IMETHOD Init(nsXPBaseWindowType aType,
+                  nsIAppShell*       aAppShell,
+                  nsIPref*           aPrefs,
+                  const nsString&    aDialogURL,
+                  const nsString&    aTitle,
+                  const nsRect&      aBounds,
+                  PRUint32           aChromeMask,
+                  PRBool             aAllowPlugins = PR_TRUE) = 0;
 
   NS_IMETHOD SetLocation(PRInt32 aX, PRInt32 aY) = 0;
 

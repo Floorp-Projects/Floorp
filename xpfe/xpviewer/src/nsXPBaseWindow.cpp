@@ -82,7 +82,7 @@ static NS_DEFINE_IID(kIDOMMouseListenerIID,   NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 
-//static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 
 //----------------------------------------------------------------------
 nsXPBaseWindow::nsXPBaseWindow() :
@@ -209,10 +209,10 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   // Create top level window
   nsresult rv;
   if (aType == eXPBaseWindowType_window) {
-    nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+    rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                                              (void**)&mWindow);
   } else {
-    nsRepository::CreateInstance(kDialogCID, nsnull, kIWidgetIID,
+    rv= nsRepository::CreateInstance(kDialogCID, nsnull, kIWidgetIID,
                                              (void**)&mWindow);
   }
 
