@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.3 $ $Date: 2001/09/19 19:08:29 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -89,6 +89,13 @@ struct NSSModuleStr {
 #define NSSSLOT_FLAGS_LOGIN_REQUIRED  0x0001 /* needLogin */
 /*#define NSSSLOT_FLAGS_READONLY        0x0002*/ /* readOnly */
 
+/* this should track global and per-transaction login information */
+struct nssSlotAuthInfoStr
+{
+    PRTime  lastLogin;
+    PRInt32 askPasswordTimeout;
+};
+
 struct NSSSlotStr
 {
     NSSArena   *arena;
@@ -100,6 +107,7 @@ struct NSSSlotStr
     void       *epv;
     CK_FLAGS    ckFlags; /* from CK_SLOT_INFO.flags */
     PRUint32    flags;
+    struct nssSlotAuthInfoStr authInfo;
 };
 
 struct NSSTokenStr

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.3 $ $Date: 2001/09/19 19:08:29 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -116,7 +116,7 @@ NSSToken_Create
 	}
     }
     /* Open a default session handle for the token. */
-    session = NSSSlot_CreateSession(parent, arena, PR_TRUE);
+    session = NSSSlot_CreateSession(parent, arena, PR_FALSE);
     if (session == NULL) {
 	goto loser;
     }
