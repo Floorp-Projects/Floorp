@@ -1376,7 +1376,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
         if( PL_strcasestr(mdd->messageBody->type, "text/html"))
           composeFormat = nsIMsgCompFormat::HTML;
         else if ( PL_strcasestr(mdd->messageBody->type, "text/plain") ||
-                  !PL_strcasecmp(mdd->messageBody->type, "text") )
+                  PL_strcasecmp(mdd->messageBody->type, "text") )
           composeFormat = nsIMsgCompFormat::PlainText;
         else
         {
@@ -1684,20 +1684,24 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   if (!mdd || !headers) 
     return -1;
 
-  if (mdd->options->decompose_init_count) 
+  if ( !mdd->options->is_multipart_msg ) 
   {
-    mdd->options->decompose_init_count++;
-    NS_ASSERTION(mdd->curAttachment, "missing attachment in mime_decompose_file_init_fn");
-    if (mdd->curAttachment) {
-      char *ct = MimeHeaders_get(headers, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
-      if (ct)
-        NS_MsgSACopy(&(mdd->curAttachment->type), ct);
-      PR_FREEIF(ct);
+    if (mdd->options->decompose_init_count) 
+    {
+      mdd->options->decompose_init_count++;
+      NS_ASSERTION(mdd->curAttachment, "missing attachment in mime_decompose_file_init_fn");
+      if (mdd->curAttachment) {
+        char *ct = MimeHeaders_get(headers, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
+        if (ct)
+          NS_MsgSACopy(&(mdd->curAttachment->type), ct);
+        PR_FREEIF(ct);
+      }
+      return 0;
     }
-    return 0;
+    else {
+      mdd->options->decompose_init_count++;
+    }
   }
-  else
-    mdd->options->decompose_init_count++;
 
   nAttachments = mdd->attachments_count;
 
@@ -1941,8 +1945,11 @@ mime_decompose_file_close_fn ( void *stream_closure )
   if ( !mdd || !mdd->tmpFileStream )
     return -1;
   
-  if ( --mdd->options->decompose_init_count > 0 )
+  if ( !mdd->options->is_multipart_msg ) 
+  {
+    if ( --mdd->options->decompose_init_count > 0 )
       return 0;
+  }
   
   if (mdd->decoder_data) {
     MimeDecoderDestroy(mdd->decoder_data, PR_FALSE);
@@ -1951,10 +1958,7 @@ mime_decompose_file_close_fn ( void *stream_closure )
 
   if (mdd->tmpFileStream->GetIStream())
     mdd->tmpFileStream->close();
-
   delete mdd->tmpFileStream;
-  mdd->tmpFileStream = nsnull;
-
   delete mdd->tmpFileSpec;
   mdd->tmpFileSpec = nsnull;
   
@@ -1969,8 +1973,8 @@ mime_bridge_create_draft_stream(
                           nsMimeOutputType    format_out)
 {
   int                     status = 0;
-  nsMIMESession           *stream = nsnull;
-  struct mime_draft_data  *mdd = nsnull;
+  nsMIMESession           *stream = NULL;
+  struct mime_draft_data  *mdd = NULL;
   MimeObject              *obj;
 
   if ( !uri ) 
