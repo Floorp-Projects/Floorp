@@ -45,6 +45,7 @@ CPPSRCS		= \
 		TestRes.cpp \
 		TestCallbacks.cpp \
 		TestDBMAccess.cpp \
+		TestPageLoad.cpp \
 		$(NULL)
 
 ifdef MOZ_NEW_CACHE
