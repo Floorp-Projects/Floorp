@@ -52,7 +52,7 @@
 #   define CCMAP_BITS_PER_ALU_LOG2 5
 #elif (ALU_SIZE==64)
 #   define ALU_TYPE                PRUint64
-#   define CCMAP_POW2(n)           (1LL<<(n))
+#   define CCMAP_POW2(n)           (1L<<(n))
 #   define CCMAP_BITS_PER_ALU_LOG2 6
 #else
 #   define ALU_TYPE                PRUint16
