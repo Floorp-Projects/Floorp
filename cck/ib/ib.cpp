@@ -50,9 +50,10 @@ int findXPI(CString xpiname, CString filename)
 	int found = FALSE;
 
 	for (int i=0; !found && i<=xpiLen; i++)
-		if (xpiList[i].xpiname == xpiname && 
-			xpiList[i].filename == filename)
-				found = TRUE;
+	//xpiList is an array of structures where each structure contains 
+	//the name of the xpi file and the subpath of the file within.
+		if (xpiList[i].xpiname == xpiname && xpiList[i].filename == filename)
+			found = TRUE;
 
 	if (!found)
 	{
@@ -72,7 +73,7 @@ int ExtractXPIFile(CString xpiname, CString xpifile)
 		return TRUE;
 
 	// Can use -d instead of change CWD???
-	CString xpiArchive = nscpxpiPath + "\\" + xpiname;
+	CString xpiArchive = nscpxpiPath + "\\" + xpiname; //xpiArchive = CCKTool\NSCPXPI
 	command = quotes +rootPath + "unzip.exe"+ quotes + "-o" + spaces + quotes + xpiArchive + quotes + spaces + quotes + xpifile + quotes;
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 
@@ -90,12 +91,14 @@ int ReplaceXPIFiles()
 	{
 		// This copy preserves the existing archive if it exists - do we
 		// need to delete it the first time through?
-		xpiArchive = nscpxpiPath + "\\" + xpiList[i].xpiname;
-		xpiArcDest = xpiDstPath + "\\" + xpiList[i].xpiname;
+		xpiArchive = nscpxpiPath + "\\" + xpiList[i].xpiname;//nscpxpiPath=CCKTool\NSCPXPI
+		xpiArcDest = xpiDstPath + "\\" + xpiList[i].xpiname; //xpiDstPath=CCKTool\Configs\ configName\Output\Core
 		if (!CopyFile(xpiArchive, xpiArcDest, TRUE))
 			DWORD e = GetLastError();
-
-		command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + quotes;
+		if ((strcmp(xpiList[i].filename,"bin/defaults/isp/Us") == 0) || (strcmp(xpiList[i].filename,"bin/defaults/isp") == 0))
+			command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + "/*.*" + quotes;
+		else
+			command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + quotes;
 		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	}
 
@@ -496,6 +499,61 @@ int interpret(char *cmd)
 			return TRUE;//*** Changed FALSE to TRUE
 		}
 	}
+
+// If the string in script.ib matches "addrdfFile" perform this code
+// This code decompresses the xpi files to which the rdf files must be 
+// added and copies the rdf files (mailaccount.rdf and newsaccount.rdf) 
+// from the Temp directory to the resulting directory after decompression
+	else if (strcmp(cmdname, "addrdfFile") == 0)
+	{
+		char *xpiname	= strtok(NULL, ",)");	// xpi file name
+		char *jname		= strtok(NULL, ",)");	// jar name within xpi file
+		char *xpifile	= strtok(NULL, ",)");	// directory path within jar file
+		char *value2    = strtok(NULL, ",)");	// name of rdf file to be added
+		char *value 	= strtok(NULL, ",)");	// variable which specifies the path of the Temp dir 
+		char *newvalue	= value;
+		CString jarname = jname;
+
+		if (value[0] == '%')
+		{
+			value++;
+			char *t = strchr(value, '%');
+			if (!t)
+				return TRUE;//*** Changed FALSE to TRUE
+			*t = '\0';
+			newvalue = (char *)(LPCTSTR) GetGlobal(value);
+		}
+
+		if (!xpiname || !xpifile || !newvalue)
+				return TRUE;//*** Changed FALSE to TRUE
+
+		CString command;
+
+		if (strcmp(value2,"newsaccount.rdf") != 0)
+		{
+			if (findXPI(xpiname, xpifile))
+				return TRUE;
+		}
+		// nscpxpipath = \CCKTool\NSCPXPI
+		CString xpiArchive = nscpxpiPath + "\\" + xpiname;
+		// decompress the XPI file
+		command = quotes +rootPath + "unzip.exe"+ quotes + "-o" + spaces + quotes + xpiArchive + quotes;
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+
+		CString xpifile1 = xpifile;
+		//CString newxpifile = xpifile1 + "/mailaccount.rdf";
+		CString tempval=value2;
+		
+		CString newxpifile = xpifile1 + "/" + tempval;
+		// copy rdf file from Temp directory
+		if (!CopyFile(newvalue, newxpifile, FALSE))
+		{
+			DWORD e = GetLastError();
+			return TRUE;//*** Changed FALSE to TRUE
+		}
+	}
+
+
 	else if ((strcmp(cmdname, "modifyDTD") == 0) ||
 			(strcmp(cmdname, "modifyJS") == 0) ||
 			(strcmp(cmdname, "modifyProperties") == 0))
@@ -918,6 +976,13 @@ int StartIB(CString parms, WIDGET *curWidget)
 	SetGlobal("HlpRDF",setHlpRDF);
 	CreateHelpMenu();
 
+	CString setIspRDF = tempPath +"\\mailaccount.rdf";
+	SetGlobal("IspRDF",setIspRDF);
+	CreateIspMenu();
+
+	CString setnewsRDF = tempPath +"\\newsaccount.rdf";
+	SetGlobal("NewsRDF",setnewsRDF);
+	CreateNewsMenu();
 
 	if (cdDir.Compare("1") ==0)
 	{
