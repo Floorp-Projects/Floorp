@@ -102,5 +102,7 @@ interface nsIInterfaceInfo : nsISupports
 
     PRUint8 getInterfaceIsArgNumberForParam(in PRUint16 methodIndex, 
                                             [const] in nsXPTParamInfoPtr param);
+
+    PRBool isIID(in nsIIDPtr IID);
 };
 

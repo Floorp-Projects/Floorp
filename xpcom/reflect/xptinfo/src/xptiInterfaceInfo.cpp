@@ -628,3 +628,13 @@ xptiInterfaceInfo::GetInterfaceIsArgNumberForParam(uint16 methodIndex,
     return NS_OK;
 }
 
+/* PRBool isIID (in nsIIDPtr IID); */
+NS_IMETHODIMP 
+xptiInterfaceInfo::IsIID(const nsIID * IID, PRBool *_retval)
+{
+    NS_PRECONDITION(IID, "bad pointer");
+    NS_PRECONDITION(_retval, "bad pointer");
+
+    *_retval = mIID.Equals(*IID);
+    return NS_OK;
+}
