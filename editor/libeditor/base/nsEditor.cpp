@@ -1481,7 +1481,20 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
   }
   else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
   {
-    result = Do(aggTxn);
+
+    // only execute the aggTxn if we actually populated it with at least one sub-txn
+    PRInt32 count=0;
+    aggTxn->GetCount(&count);
+    if (0!=count)
+    {
+      result = Do(aggTxn);
+    }
+    else
+    {
+      result = NS_OK;
+    }
+
+    // create the text node
     if (NS_SUCCEEDED(result))
     {
       nsCOMPtr<nsIDOMSelection> selection;
