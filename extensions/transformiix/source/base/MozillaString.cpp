@@ -87,7 +87,8 @@ MozillaString::MozillaString(const MozillaString& source)
 //
 MozillaString::MozillaString(const char* source)
 {
-  ptrNSString = new nsString(source);
+  ptrNSString = new nsString();
+  ptrNSString->AssignWithConversion(source);
 }
 
 //
@@ -138,7 +139,7 @@ String& MozillaString::operator=(const MozillaString& source)
 //
 String& MozillaString::operator=(const char* source)
 {
-  ptrNSString->Assign(source);
+  ptrNSString->AssignWithConversion(source);
   return *this;
 }
 
@@ -202,7 +203,7 @@ void MozillaString::append(const MozillaString& source)
 //
 void MozillaString::append(const char* source)
 {
-  ptrNSString->Append(source);
+  ptrNSString->AppendWithConversion(source);
 }
 
 //
@@ -275,7 +276,7 @@ void MozillaString::insert(Int32 offset, const String& source)
 //
 void MozillaString::insert(Int32 offset, const char* source)
 {
-  ptrNSString->Insert(source, offset);
+  ptrNSString->InsertWithConversion(source, offset);
 }
 
 //
@@ -355,7 +356,7 @@ void MozillaString::replace(Int32 offset, const char* source)
 {
   Int32 srcLength = strlen(source);
   ptrNSString->Cut(offset, srcLength);
-  ptrNSString->Insert(source, offset, srcLength);
+  ptrNSString->InsertWithConversion(source, offset, srcLength);
 }
 
 //
