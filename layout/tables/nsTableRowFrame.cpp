@@ -843,9 +843,18 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   
         // Calculate the available width for the table cell using the known
         // column widths
-        nscoord availWidth = CalculateCellAvailableWidth(aReflowState.tableFrame,
-                                                         kidFrame, cellColIndex,
-                                                         cellColSpan, cellSpacingX);
+        nscoord availWidth;
+        if (aDirtyOnly && (frameState & NS_FRAME_FIRST_REFLOW)) {
+          // This is the initial reflow for the cell and so we do an unconstrained
+          // reflow.
+          // Note: don't assume that we have known column widths. If we don't, then
+          // CalculateCellAvailableWidth() may assert if called now...
+          availWidth = NS_UNCONSTRAINEDSIZE;
+        } else {
+          availWidth = CalculateCellAvailableWidth(aReflowState.tableFrame,
+                                                   kidFrame, cellColIndex,
+                                                   cellColSpan, cellSpacingX);
+        }
         
         // remember the rightmost (ltr) or leftmost (rtl) column this cell spans into
         prevColIndex = (iter.IsLeftToRight()) ? cellColIndex + (cellColSpan - 1) : cellColIndex;
