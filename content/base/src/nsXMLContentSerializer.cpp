@@ -764,7 +764,9 @@ nsXMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
   NS_ENSURE_ARG_POINTER(aDocument);
 
   nsCOMPtr<nsIXMLDocument> xml(do_QueryInterface(aDocument));
-  NS_ENSURE_TRUE(xml, NS_ERROR_UNEXPECTED);
+  if (!xml) {
+    return NS_OK;
+  }
 
   nsAutoString version, encoding, standalone;
   xml->GetXMLDeclaration(version, encoding, standalone);
