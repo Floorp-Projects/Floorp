@@ -811,16 +811,13 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     }
   }
   
-  nsAutoString nameStr;
-  name->ToString(nameStr);
-
   nsIParserService* parserService = nsContentUtils::GetParserServiceWeakRef();
 
   if (parserService && (name.get() != nsHTMLAtoms::style)) {
     PRBool isContainer;
     PRInt32 id;
 
-    parserService->HTMLStringTagToId(nameStr, &id);
+    parserService->HTMLAtomTagToId(name, &id);
     parserService->IsContainer(id, isContainer);
     if (!isContainer) return NS_OK;
   }
@@ -837,6 +834,9 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   }
 
   EndIndentation(name, hasDirtyAttr, aStr);
+
+  nsAutoString nameStr;
+  name->ToString(nameStr);
 
   AppendToString(kEndTag, aStr);
   AppendToString(nameStr.get(), -1, aStr);
@@ -1073,12 +1073,10 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
       nsContentUtils::GetParserServiceWeakRef();
     
     if (parserService) {
-      nsAutoString str;
-      aName->ToString(str);
       PRBool res;
       PRInt32 id;
 
-      parserService->HTMLStringTagToId(str, &id);
+      parserService->HTMLAtomTagToId(aName, &id);
       parserService->IsBlock(id, res);
       return res;
     }
@@ -1176,12 +1174,10 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
       nsContentUtils::GetParserServiceWeakRef();
     
     if (parserService) {
-      nsAutoString str;
-      aName->ToString(str);
       PRBool res;
       PRInt32 id;
 
-      parserService->HTMLStringTagToId(str, &id);
+      parserService->HTMLAtomTagToId(aName, &id);
       parserService->IsBlock(id, res);
       return res;
     }
