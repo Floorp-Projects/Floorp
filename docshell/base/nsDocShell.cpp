@@ -2835,11 +2835,11 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         nsCOMPtr<nsITextToSubURI> textToSubURI(
                 do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv));
         if (NS_SUCCEEDED(rv))
-          rv = textToSubURI->UnEscapeURIForUI(charset, spec, formatStrs[0]);
-        if (NS_FAILED(rv)) {
-          CopyASCIItoUCS2(spec, formatStrs[0]);
-          rv = NS_OK;
-        }
+            // UnEscapeURIForUI always succeeds 
+            textToSubURI->UnEscapeURIForUI(charset, spec, formatStrs[0]);
+        else 
+            CopyUTF8toUTF16(spec, formatStrs[0]);
+        rv = NS_OK;
         formatStrCount = 1;
         error.AssignLiteral("fileNotFound");
     }

@@ -230,7 +230,12 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
   NS_UnescapeURL(PromiseFlatCString(aURIFragment), 
                  esc_SkipControl | esc_AlwaysCopy, unescapedSpec);
 
-  return convertURItoUnicode(PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval);
+  // in case of failure, return escaped URI
+  if (NS_FAILED(convertURItoUnicode(
+                PromiseFlatCString(aCharset), unescapedSpec, PR_TRUE, _retval)))
+    // assume UTF-8 instead of ASCII  because hostname (IDN) may be in UTF-8
+    CopyUTF8toUTF16(aURIFragment, _retval); 
+  return NS_OK;
 }
 
 NS_IMETHODIMP  nsTextToSubURI::UnEscapeNonAsciiURI(const nsACString & aCharset, 
