@@ -194,11 +194,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
       const nsStyleSpacing* spacing =
         (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-      
-        float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
-        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
- 
+       
         nsMargin border;
         if (!spacing->GetBorder(border)) {
           NS_NOTYETIMPLEMENTED("percentage border");

@@ -519,7 +519,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
            for (i=0; i < mChildInfosAfterCount; i++) 
                mChildInfosAfter[i].changed = mChildInfosAfter[i].current;
 
-            nscoord oldPos = pos;
+//            nscoord oldPos = pos;
 
             ResizeChildTo(pos, mChildInfosBefore, mChildInfosAfter, mChildInfosBeforeCount, mChildInfosAfterCount, bounded);
 

@@ -91,7 +91,7 @@ public:
     virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
     virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
-    void DisplayDebugInfoFor(nsIPresContext& aPresContext,
+    nsresult DisplayDebugInfoFor(nsIPresContext& aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
@@ -207,7 +207,7 @@ nsBoxFrame::GetInnerRect(nsRect& aInner)
 {
     const nsStyleSpacing* spacing;
 
-    nsresult rv = GetStyleData(eStyleStruct_Spacing,
+    GetStyleData(eStyleStruct_Spacing,
                    (const nsStyleStruct*&) spacing);
 
     nsMargin border(0,0,0,0);
@@ -232,7 +232,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFra
 {
   // add in the css min, max, pref
     const nsStylePosition* position;
-    nsresult rv = aFrame->GetStyleData(eStyleStruct_Position,
+    aFrame->GetStyleData(eStyleStruct_Position,
                   (const nsStyleStruct*&) position);
 
     // see if the width or height was specifically set
@@ -765,9 +765,10 @@ nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, ns
 
             // add in the css min, max, pref
             const nsStylePosition* position;
-            nsresult rv = aFrame->GetStyleData(eStyleStruct_Position,
+            aFrame->GetStyleData(eStyleStruct_Position,
                           (const nsStyleStruct*&) position);
     
+
             // same for min size. Unfortunately min size is always set to 0. So for now
             // we will assume 0 means not set.
             if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
@@ -803,7 +804,7 @@ nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, ns
 
             // add in the css min, max, pref
             const nsStylePosition* position;
-            nsresult rv = aFrame->GetStyleData(eStyleStruct_Position,
+            aFrame->GetStyleData(eStyleStruct_Position,
                           (const nsStyleStruct*&) position);
     
             // same for min size. Unfortunately min size is always set to 0. So for now
@@ -1695,7 +1696,7 @@ nsBoxDebugInner::PaintSprings(nsIPresContext& aPresContext, nsIRenderingContext&
     
         // remove our border
         const nsStyleSpacing* spacing;
-        nsresult rv = mOuter->GetStyleData(eStyleStruct_Spacing,
+        mOuter->GetStyleData(eStyleStruct_Spacing,
                        (const nsStyleStruct*&) spacing);
 
         nsMargin border(0,0,0,0);
@@ -2019,7 +2020,7 @@ nsBoxDebugInner::RemoveListener()
   reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),kIDOMMouseMotionListenerIID);
 }
 
-void
+nsresult
 nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)
@@ -2047,17 +2048,17 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
         }
       }
 
-     nsRect r;
-     parent->GetRect(r);
-     x -= r.x;
-     y -= r.y;
+     nsRect cr;
+     parent->GetRect(cr);
+     x -= cr.x;
+     y -= cr.y;
      parent->GetParent(&parent);
     }
 
     nsRect r(0,0,mOuter->mRect.width, mOuter->mRect.height);
 
     if (!r.Contains(nsPoint(x,y)))
-        return;
+        return NS_OK;
 
         int count = 0;
         nsIFrame* childFrame = mOuter->mFrames.FirstChild(); 
@@ -2073,7 +2074,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
                 aCursor = NS_STYLE_CURSOR_POINTER;
                    // found it but we already showed it.
                     if (mDebugChild == childFrame)
-                        return;
+                        return NS_OK;
 
                     nsCOMPtr<nsIContent> content;
                     mOuter->mInner->GetContentOf(childFrame, getter_AddRefs(content));
@@ -2118,6 +2119,10 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
                     const nsStylePosition* position;
                     nsresult rv = childFrame->GetStyleData(eStyleStruct_Position,
                                   (const nsStyleStruct*&) position);
+
+                    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get position");
+                    if (NS_FAILED(rv))
+                        return rv;
 
                     // see if the width or height was specifically set
                     if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
@@ -2208,8 +2213,12 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
             }
           nsresult rv = childFrame->GetNextSibling(&childFrame);
           NS_ASSERTION(rv == NS_OK,"failed to get next child");
+          if (NS_FAILED(rv))
+              return rv;
+
           count++;
         }
+        return NS_OK;
 }
 
 NS_IMETHODIMP

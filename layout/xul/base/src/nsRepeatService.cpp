@@ -78,7 +78,7 @@ void nsRepeatService::Notify(nsITimer *timer)
    // if the repeat delay is the initial one reset it.
   if (mRepeatTimer) {
      mRepeatTimer->Cancel();
-     nsresult rv = NS_NewTimer(getter_AddRefs(mRepeatTimer));
+     NS_NewTimer(getter_AddRefs(mRepeatTimer));
      mRepeatTimer->Init(this, REPEAT_DELAY);
   }
 
