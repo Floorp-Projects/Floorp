@@ -2452,9 +2452,6 @@ HRESULT ProcessXpinstallEngine()
 {
   HRESULT rv = WIZ_OK;
 
-  if(*siCFXpcomFile.szMessage != '\0')
-    ShowMessage(siCFXpcomFile.szMessage, TRUE);
-
   /* If product to be installed is _not_ GRE, then call ProcessGRE.
    * ProcessGre() will either install GRE or simply run the existing
    * GRE's installer that's already on the system.  This will setup
@@ -2462,6 +2459,9 @@ HRESULT ProcessXpinstallEngine()
    */
   if(lstrcmpi(sgProduct.szProductNameInternal, "GRE") != 0)
     rv = ProcessGre(&gGre);
+
+  if(*siCFXpcomFile.szMessage != '\0')
+    ShowMessage(siCFXpcomFile.szMessage, TRUE);
 
   if((WIZ_OK == rv) && (siCFXpcomFile.bStatus == STATUS_ENABLED))
     rv = ProcessXpcomFile();
@@ -5811,7 +5811,7 @@ HRESULT ShowMessageAndQuitProcess(HWND aHwndFW, char *aMsgQuitProcess, char *aMs
     {
       char msgTitleStr[MAX_BUF];
       GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", msgTitleStr, sizeof(msgTitleStr), szFileIniInstall);
-      MessageBox(hWndMain, aMsgQuitProcess, msgTitleStr, MB_ICONEXCLAMATION);
+      MessageBox(hWndMain, aMsgQuitProcess, msgTitleStr, MB_ICONEXCLAMATION | MB_SETFOREGROUND);
       break;
     }
 
@@ -5846,6 +5846,7 @@ HRESULT ShowMessageAndQuitProcess(HWND aHwndFW, char *aMsgQuitProcess, char *aMs
     if(aCloseAllWindows)
       CloseAllWindowsOfWindowHandle(aHwndFW, aMsgWait);
   }
+  Delay(2);
   return(WIZ_OK);
 }
 
@@ -5905,7 +5906,7 @@ HRESULT CheckInstances()
         GetPrivateProfileString("Messages", "MSG_FORCE_QUIT_PROCESS", "", message, sizeof(message), szFileIniInstall);
         if(*message != '\0')
         {
-          wsprintf(buf, message, prettyName, processName);
+          wsprintf(buf, message, prettyName, processName, prettyName, prettyName);
           ShowMessageAndQuitProcess(NULL, buf, msgWait, bCloseAllWindows, processName, CI_FORCE_QUIT_PROCESS);
           ++killProcessTries;
           instanceOfFoundProcess = index--;
@@ -5918,11 +5919,11 @@ HRESULT CheckInstances()
       GetPrivateProfileString("Messages", "MSG_FORCE_QUIT_PROCESS_FAILED", "", message, sizeof(message), szFileIniInstall);
       if(*message != '\0')
       {
-        wsprintf(buf, message, prettyName, processName);
+        wsprintf(buf, message, prettyName, processName, prettyName);
         switch(sgProduct.mode)
         {
           case NORMAL:
-            MessageBox(hWndMain, buf, msgTitleStr, MB_ICONEXCLAMATION);
+            MessageBox(hWndMain, buf, msgTitleStr, MB_ICONEXCLAMATION | MB_SETFOREGROUND);
             break;
 
           case AUTO:
