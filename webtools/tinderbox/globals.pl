@@ -354,7 +354,7 @@ sub make_build_table {
       if (defined($br = $build_table->[$ti][$bi])
           and not defined($br->{rowspan})) {
 
-        # If the cell immediatley after us is defined, then we 
+        # If the cell immediately after us is defined, then we 
         #  can have a previousbuildtime.
         if (defined($br1 = $build_table->[$ti+1][$bi])) {
           $br->{previousbuildtime} = $br1->{buildtime};
@@ -414,7 +414,7 @@ sub last_success_time {
 
   for (my $tt=1; $tt <= $time_count; $tt++) {
     my $br = $build_table->[$tt][$row];
-    next if not defined $br;
+    next unless defined $br;
     next unless $br->{buildstatus} eq 'success';
     return $build_time_times->[$tt + $br->{rowspan} ];
   }
@@ -425,10 +425,10 @@ sub last_status {
   my ($row) = @_;
 
   for (my $tt=1; $tt <= $time_count; $tt++) {
-    my $status = $build_table->[$tt][$row]->{buildstatus};
-    next if not defined $status;
-    next if $status eq 'building';
-    return $status;
+    my $br = $build_table->[$tt][$row];
+    next unless defined $br;
+    next unless $br->{buildstatus} =~ /^(success|busted|testfailed)$/;
+    return $br->{buildstatus};
   }
   return 'building';
 }
