@@ -1656,11 +1656,7 @@ void nsXIFDTD::AddCSSSelector(const nsIParserNode& aNode)
 {
   nsString value;
 
-  if (mCSSSelectorCount > 0)
-    mBuffer.Append(' ');
-
-  
-  if (GetAttribute(aNode, nsString("tag"), value))
+  if (GetAttribute(aNode, nsString("selectors"), value))
   {
     if (mLowerCaseAttributes == PR_TRUE)
       value.ToLowerCase();
@@ -1668,43 +1664,7 @@ void nsXIFDTD::AddCSSSelector(const nsIParserNode& aNode)
       value.ToUpperCase();
     value.CompressWhitespace();
     mBuffer.Append(value);
-  }
-
-  if (GetAttribute(aNode,nsString("id"),value))
-  {
-    if (mLowerCaseAttributes == PR_TRUE)
-      value.ToLowerCase();
-    else
-      value.ToUpperCase();
-    value.CompressWhitespace();
-    mBuffer.Append('#');
-    mBuffer.Append(value);
-  }
-  
-  if (GetAttribute(aNode,nsString("class"),value))
-  {
-    if (mLowerCaseAttributes == PR_TRUE)
-      value.ToLowerCase();
-    else
-      value.ToUpperCase();
-
-    value.CompressWhitespace();
-    mBuffer.Append('.');
-    mBuffer.Append(value);
-  }
-
-  if (GetAttribute(aNode,nsString("pseudo_class"),value))
-  {
-    if (mLowerCaseAttributes == PR_TRUE)
-      value.ToLowerCase();
-    else
-      value.ToUpperCase();
-
-    value.CompressWhitespace();
-    mBuffer.Append(':');
-    mBuffer.Append(value);
-  }
-  mCSSSelectorCount++;
+  }  
 }
 
 void nsXIFDTD::BeginCSSDeclarationList(const nsIParserNode& aNode)
