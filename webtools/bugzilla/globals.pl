@@ -887,7 +887,7 @@ sub quoteUrls {
     my $tmp;
 
     # non-mailto protocols
-    my $protocol_re = qr/(afs|cid|ftp|gopher|http|https|mid|news|nntp|prospero|telnet|wais)/i;
+    my $protocol_re = qr/(afs|cid|ftp|gopher|http|https|mid|news|nntp|prospero|telnet|view-source|wais)/i;
 
     $text =~ s~\b(${protocol_re}:  # The protocol:
                   [^\s<>\"]+       # Any non-whitespace
