@@ -177,7 +177,8 @@ nsHTMLEditor::DeleteRefToAnonymousNode(nsIDOMElement* aElement,
   if (aElement) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     if (content) {
-      aDocObserver->ContentRemoved(nsnull, aParentContent, content, -1);
+      aDocObserver->ContentRemoved(content->GetCurrentDoc(),
+                                   aParentContent, content, -1);
       content->SetParent(nsnull);
       content->SetBindingParent(nsnull);
       content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
