@@ -49,6 +49,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsHTMLIIDs.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSStyleRule.h"
@@ -3050,48 +3051,60 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           PRBool bIsXLink = PR_FALSE;
           nsAutoString base, href;
           nsresult attrState = 0;
+          nsCOMPtr<nsIDOMHTMLAnchorElement> anchor;
 
 	        if(!tagset) {
 	          tagset=PR_TRUE;
 	          aContent->GetTag(contentTag);
 	        }
-          if ((nsHTMLAtoms::a == contentTag) ||
+          if ((anchor = do_QueryInterface(aContent)) ||
               (bIsXLink = IsSimpleXlink(aContent,href)) ) {
             
-            if (bIsXLink != PR_TRUE) {
+            if (anchor) {
               // make sure this anchor has a link even if we are not testing state
               // if there is no link, then this anchor is not really a linkpseudo.
               // bug=23209
               attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
-              if (!(NS_CONTENT_ATTR_HAS_VALUE == attrState)) {
+              if (NS_CONTENT_ATTR_HAS_VALUE != attrState) {
                 result = PR_FALSE;
               }
-            } 
+              else {
+                anchor->GetHref(href);
+              }
+            }
+            else {
+              // It's an XLink. Resolve it relative to its document.
+              nsCOMPtr<nsIURI> baseURI = nsnull;
+              nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
+              if (htmlContent) {
+                // XXX why do this? will nsIHTMLContent's
+                // GetBaseURL() may return something different
+                // than the URL of the document it lives in?
+                htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
+              }
+              else {
+                nsCOMPtr<nsIDocument> doc;
+                aContent->GetDocument(*getter_AddRefs(doc));
+                if (doc) {
+                  doc->GetBaseURL(*getter_AddRefs(baseURI));
+                }
+              }
+
+              nsAutoString linkURI;
+              (void) NS_MakeAbsoluteURI(linkURI, href, baseURI, CSSStyleSheetInner::gIOService);
+
+              href = linkURI;
+            }
+
+            // Now 'href' will contain a canonical URI that we can
+            // look up in global history.
+
             if (aTestState) {
               if (! linkHandler) {
                 aPresContext->GetLinkHandler(&linkHandler);
                 if (linkHandler) {
                   if (NS_CONTENT_ATTR_HAS_VALUE == attrState || bIsXLink) {
-                    nsCOMPtr<nsIURI> baseURI = nsnull;
-                    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
-                    if (htmlContent) {
-                      // XXX why do this? will nsIHTMLContent's
-                      // GetBaseURL() may return something different
-                      // than the URL of the document it lives in?
-                      htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
-                    }
-                    else {
-                      nsCOMPtr<nsIDocument> doc;
-                      aContent->GetDocument(*getter_AddRefs(doc));
-                      if (doc) {
-                        doc->GetBaseURL(*getter_AddRefs(baseURI));
-                      }
-                    }
-
-                    nsAutoString linkURI;
-                    (void) NS_MakeAbsoluteURI(linkURI, href, baseURI, CSSStyleSheetInner::gIOService);
-
-                    linkHandler->GetLinkState(linkURI, linkState);
+                    linkHandler->GetLinkState(href, linkState);
                   }
                 }
                 else {
