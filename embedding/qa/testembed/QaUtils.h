@@ -53,6 +53,8 @@ public:
 	void static WebProgDOMWindowTest(nsIWebProgress *, const char *, 
 									 int displayMethod=1);
 
+	nsresult rv;
+
 	// Some helper methods
 
 	// Generated message map functions

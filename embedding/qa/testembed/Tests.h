@@ -34,6 +34,8 @@
 
 #include "BrowserView.h"
 #include "BrowserImpl.h"
+#include "StdAfx.h"
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CTESTS class
@@ -66,7 +68,7 @@ public:
 	nsresult rv;
 	CString strMsg;
 	char theUrl[200];
-	char * uriSpec;
+	char *uriSpec;
 	PRBool exists;
 	PRInt32 numEntries;
 	PRInt32 theIndex;
@@ -159,14 +161,20 @@ public:
 	void static CancelReqTest(nsIRequest *);
 	void static SetLoadGroupTest(nsIRequest *, nsILoadGroup *);
 	void static GetLoadGroupTest(nsIRequest *);
-
-	void static IsPendingReqTest(nsIChannel *);
-	void static GetStatusReqTest(nsIChannel *);
-	void static SuspendReqTest(nsIChannel *);
-	void static ResumeReqTest(nsIChannel *);
-	void static CancelReqTest(nsIChannel *);
-	void static SetLoadGroupTest(nsIChannel *, nsILoadGroup *);
-	void static GetLoadGroupTest(nsIChannel *);
 };
+
+
+typedef struct
+{
+	char		theUrl[1024];
+	bool		reqPend;
+	bool		reqStatus;
+	bool		reqSuspend;
+	bool		reqResume;
+	bool		reqCancel;
+	bool		reqSetLoadGroup;
+	bool		reqGetLoadGroup;	
+} Element;
+
 
 #endif //_TESTS_H

@@ -154,6 +154,7 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 			strcpy(theStateType, "STATE_START");
 
 			// a few nsIRequest tests
+			CQaUtils::QAOutput("Some nsIRequest tests thru web prog lstnr: ");
 			CTests::IsPendingReqTest(request);
 			CTests::GetStatusReqTest(request);
 
@@ -285,10 +286,10 @@ CBrowserImpl::OnStatusChange(nsIWebProgress* aWebProgress,
 	CQaUtils::RequestName(aRequest, stringMsg);
 
 			// status result test
-	CQaUtils::RvTestResult(aStatus, "OnStatusChange(): status result test", 2);
+	CQaUtils::FormatAndPrintOutput("OnStatusChange(): Status = ", aStatus, 1);
 
 			// web progress DOMWindow test
-	CQaUtils::WebProgDOMWindowTest(aWebProgress, "OnStatusChange()", 1);
+	CQaUtils::WebProgDOMWindowTest(aWebProgress, "OnStatusChange(): web prog DOM window test", 1);
 
 	m_pBrowserFrameGlue->UpdateStatusBarText(aMessage);
 

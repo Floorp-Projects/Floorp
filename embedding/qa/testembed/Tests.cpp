@@ -64,6 +64,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD2, OnToolsTestYourMethod2)
+	ON_COMMAND(ID_VERIFYBUGS_70228, OnVerifybugs70228)
     ON_COMMAND(ID_CLIPBOARDCMD_PASTE, OnPasteTest)
     ON_COMMAND(ID_CLIPBOARDCMD_COPYSELECTION, OnCopyTest)
     ON_COMMAND(ID_CLIPBOARDCMD_SELECTALL, OnSelectAllTest)
@@ -972,68 +973,101 @@ void CTests::GetSHTest()
 // ***********************************************************************
 //  nsIRequest iface
 
+//  table columns corrsp to: pending, status, suspend, resume, cancel,
+//  setLoadGroup & getLoadGroup tests respectively.
+
+Element UrlTable[] = {
+	{"http://www.netscape.com", 1, 1, 0, 0, 0, 1, 1},
+	{"http://www.yahoo.com",    0, 0, 1, 1, 0, 0, 0},
+	{"http://www.cisco.com",    0, 0, 0, 0, 1, 0, 0},
+	{"http://www.sun.com",      0, 0, 0, 0, 0, 1, 1},
+	{"http://www.intel.com",    1, 1, 1, 0, 0, 0, 0},
+	{"http://www.aol.com",      0, 1, 0, 0, 0, 1, 1}
+}; 
 
 void CTests::OnInterfacesNsirequest() 
 {
 
-	// note: individual nsIRequest tests are called in:
-	// 1) BrowserImplWebProgLstner.cpp, nsIWebProgressListener::OnStateChange().
-	// 2) BrowserImpl.cpp, nsIStreamListener::OnDataAvailable()
+	// note: nsIRequest tests are called:
+	// 1) in BrowserImpl.cpp, nsIStreamListener::OnDataAvailable()
+	// 2) as individual tests below
 
 	nsCString theSpec;
 	nsCOMPtr<nsIURI> theURI;
 	nsCOMPtr<nsIChannel> theChannel;
 	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-	nsCOMPtr<nsIRequest> theDefaultRequest;
+
+	int i=0;
 
     CQaUtils::QAOutput("Start nsIRequest tests.", 2);	
 
-	theSpec = "http://www.netscape.com";
-    CQaUtils::FormatAndPrintOutput("the uri spec = ", theSpec, 2);
-
-	rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
-	if (!theURI)
+//	theSpec = "http://www.netscape.com";
+	for (i=0; i<6; i++)
 	{
-       CQaUtils::QAOutput("We didn't get the URI. Test failed.", 1);
-	   return;
-	}
-	else
-	   CQaUtils::RvTestResult(rv, "NS_NewURI", 1);
+		theSpec = UrlTable[i].theUrl;
+		CQaUtils::FormatAndPrintOutput("the uri spec = ", theSpec, 2);
 
-    rv = NS_OpenURI(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
-	if (!theChannel)
-	{
-       CQaUtils::QAOutput("We didn't get the Channel. Test failed.", 1);
-	   return;
-	}
-	else if (!theLoadGroup)
-	{
-       CQaUtils::QAOutput("We didn't get the Load Group. Test failed.", 2);
-	   return;
-	}
-	else
-	   CQaUtils::RvTestResult(rv, "NS_OpenURI", 1);
-/*
-	IsPendingReqTest(theChannel);
-	GetStatusReqTest(theChannel);
+		rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
+		if (!theURI)
+		{
+		   CQaUtils::QAOutput("We didn't get the URI. Test failed.", 1);
+		   return;
+		}
+		else
+		   CQaUtils::RvTestResult(rv, "NS_NewURI", 1);
 
-	SuspendReqTest(theChannel);	
-	CQaUtils::QAOutput("nsIRequest: Between Suspend and Resume.");
-	ResumeReqTest(theChannel);	
+		rv = NS_OpenURI(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
+		if (!theChannel)
+		{
+		   CQaUtils::QAOutput("We didn't get the Channel. Test failed.", 1);
+		   return;
+		}
+		else if (!theLoadGroup)
+		{
+		   CQaUtils::QAOutput("We didn't get the Load Group. Test failed.", 2);
+		   return;
+		}
+		else
+		   CQaUtils::RvTestResult(rv, "NS_OpenURI", 1);
 
-//	CancelReqTest(theChannel);	
+		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
+		nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+		qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
 
-	SetLoadGroupTest(theChannel, theLoadGroup);	
-	GetLoadGroupTest(theChannel);
-*/
+		// this calls nsIStreamListener::OnDataAvailable()
+		rv = theChannel->AsyncOpen(listener, nsnull);
+		CQaUtils::RvTestResult(rv, "AsyncOpen()", 1);
 
-	nsCOMPtr<nsIStreamListener> sListener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
-    nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(sListener)));
-	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
+		// nsIRequest individual tests
 
-	rv = theChannel->AsyncOpen(sListener, nsnull);
-	CQaUtils::RvTestResult(rv, "AsyncOpen()", 1);
+		CQaUtils::QAOutput("***** Individual nsIRequest test begins. *****");
 
+		nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
+
+		if (UrlTable[i].reqPend == TRUE)
+			IsPendingReqTest(theRequest);
+
+		if (UrlTable[i].reqStatus == TRUE)
+			GetStatusReqTest(theRequest);
+
+		if (UrlTable[i].reqSuspend == TRUE)
+			SuspendReqTest(theRequest);	
+
+		if (UrlTable[i].reqResume == TRUE)
+			ResumeReqTest(theRequest);	
+
+		if (UrlTable[i].reqCancel == TRUE)
+			CancelReqTest(theRequest);	
+
+		if (UrlTable[i].reqSetLoadGroup == TRUE)
+			SetLoadGroupTest(theRequest, theLoadGroup);	
+
+		if (UrlTable[i].reqGetLoadGroup == TRUE)
+			GetLoadGroupTest(theRequest);
+
+		CQaUtils::QAOutput("- - - - - - - - - - - - - - - - - - - - -", 1);
+	} // end for loop
+    CQaUtils::QAOutput("End nsIRequest tests.", 2);
 }
 
 void CTests::IsPendingReqTest(nsIRequest *request)
@@ -1104,83 +1138,6 @@ void CTests::GetLoadGroupTest(nsIRequest *request)
 	nsCOMPtr<nsISimpleEnumerator> theSimpEnum;
 
 	rv = request->GetLoadGroup(getter_AddRefs(theLoadGroup));
-    CQaUtils::RvTestResult(rv, "nsIRequest::GetLoadGroup() rv test", 1);
-
-	rv = theLoadGroup->GetRequests(getter_AddRefs(theSimpEnum));
-    CQaUtils::RvTestResult(rv, "nsIRequest:: LoadGroups' GetRequests() rv test", 1);
-}
-
-// *********** 2nd set of implementations for nsIRequest methods *********
-// ******************* Using nsIChannel as the impl object ***************
-
-void CTests::IsPendingReqTest(nsIChannel *channel)
-{
-	PRBool	  reqPending;
-	nsresult rv;
-
-	rv = channel->IsPending(&reqPending);
-    CQaUtils::RvTestResult(rv, "nsIRequest::IsPending() rv test", 1);
-
-	if (!reqPending)
-		CQaUtils::QAOutput("Pending request = false.", 1);
-	else
-		CQaUtils::QAOutput("Pending request = true.", 1);
-}
-
-void CTests::GetStatusReqTest(nsIChannel *channel)
-{
-	nsresult	theStatusError;
-	nsresult	rv;
-
-	rv = channel->GetStatus(&theStatusError);
-    CQaUtils::RvTestResult(rv, "nsIRequest::GetStatus() test", 1);
-    CQaUtils::RvTestResult(rv, "the returned status error test", 1);
-
-} 
-
-void CTests::SuspendReqTest(nsIChannel *channel)
-{
-	nsresult	rv;
-
-	rv = channel->Suspend();
-    CQaUtils::RvTestResult(rv, "nsIRequest::Suspend() test", 1);
-}
-
-void CTests::ResumeReqTest(nsIChannel *channel)
-{
-	nsresult	rv;
-
-	rv = channel->Resume();
-    CQaUtils::RvTestResult(rv, "nsIRequest::Resume() test", 1);
-}
-
-void CTests::CancelReqTest(nsIChannel *channel)
-{
-	nsresult	rv;
-	nsresult	status = NS_BINDING_ABORTED;
-
-	rv = channel->Cancel(status);
-    CQaUtils::RvTestResult(rv, "nsIRequest::Cancel() rv test", 1);
-    CQaUtils::RvTestResult(status, "nsIRequest::Cancel() status test", 1);
-}
-
-void CTests::SetLoadGroupTest(nsIChannel *channel,
-							  nsILoadGroup *theLoadGroup)
-{
-	nsresult	rv;
-	nsCOMPtr<nsISimpleEnumerator> theSimpEnum;
-
-	rv = channel->SetLoadGroup(theLoadGroup);
-    CQaUtils::RvTestResult(rv, "nsIRequest::SetLoadGroup() rv test", 1);
-}
-
-void CTests::GetLoadGroupTest(nsIChannel *channel)
-{
-	nsCOMPtr<nsILoadGroup> theLoadGroup;
-	nsresult	rv;
-	nsCOMPtr<nsISimpleEnumerator> theSimpEnum;
-
-	rv = channel->GetLoadGroup(getter_AddRefs(theLoadGroup));
     CQaUtils::RvTestResult(rv, "nsIRequest::GetLoadGroup() rv test", 1);
 
 	rv = theLoadGroup->GetRequests(getter_AddRefs(theSimpEnum));
@@ -1340,27 +1297,18 @@ void CTests::canPasteTest()
 
 void CTests::OnVerifybugs70228() 
 {
-	CQaUtils::QAOutput("Not implemented yet.", 0);
-/*
-	nsCOMPtr<nsIHelperAppLauncherDialog> 
-			myHALD(do_GetService(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID));
-	if (!myHALD)
-		CQaUtils::QAOutput("Object not created. It's NOT a service!", 2);
-	else
-		CQaUtils::QAOutput("Object is created. But should it?! It's NOT a service!", 2);
-
 	nsCOMPtr<nsIHelperAppLauncherDialog> 
 			myHALD(do_CreateInstance(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID));
 	if (!myHALD)
 		CQaUtils::QAOutput("Object not created. It should be. It's a component!", 2);
 	else
 		CQaUtils::QAOutput("Object is created. It's a component!", 2);	
-*/
+
 /*
 nsCOMPtr<nsIHelperAppLauncher> 
 			myHAL(do_CreateInstance(NS_IHELPERAPPLAUNCHERDLG_CONTRACTID));
 
-	rv = myHALD->show(myHal, mySupp);
+	rv = myHALD->show(myHal, nsnull);
 */	
 }
 
