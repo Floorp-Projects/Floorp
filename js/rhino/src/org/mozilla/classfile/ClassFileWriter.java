@@ -830,6 +830,11 @@ public class ClassFileWriter {
         }
     }
 
+    public void addPush(boolean k)
+    {
+        add(k ? ByteCode.ICONST_1 : ByteCode.ICONST_0);
+    }
+
     /**
      * Generate code to load the given long on stack.
      *
