@@ -277,7 +277,7 @@ public class Main {
                     }
                 }
                 NativeArray h = global.history;
-                h.put((int)h.jsGet_length(), h, source);
+                h.put((int)h.getLength(), h, source);
             }
             global.getErr().println();
         } else processFile(cx, global, filename);

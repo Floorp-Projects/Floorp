@@ -629,7 +629,7 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
                 // Make a new java array, and coerce the JS array components
                 // to the target (component) type.
                 NativeArray array = (NativeArray) value;
-                long length = array.jsGet_length();
+                long length = array.getLength();
                 Class arrayType = type.getComponentType();
                 Object Result = Array.newInstance(arrayType, (int)length);
                 for (int i = 0 ; i < length ; ++i) {
