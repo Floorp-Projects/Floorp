@@ -33,7 +33,7 @@
 
 CORE_DEPTH = ../..
  
-MODULE = ninja
+MODULE = jss
  
 DIRS =  mozilla \
         $(NULL)

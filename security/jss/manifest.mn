@@ -33,7 +33,7 @@
 
 CORE_DEPTH = ..
  
-MODULE = ninja
+MODULE = jss
  
 IMPORTS =	svrcore/SVRCORE_2_5_1 \
 			security/NSS_2_8_4_RTM \
@@ -41,10 +41,10 @@ IMPORTS =	svrcore/SVRCORE_2_5_1 \
 			nspr20/v3.5.1 \
 			$(NULL)
 
-DIRS =  com     \
+DIRS =  org     \
         cmd     \
         $(NULL)
 
 PACKAGE_DIR = _TOP
  
-RELEASE = ninja
+RELEASE = jss
