@@ -75,8 +75,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.24 $ 
-# $Date: 2004/06/08 03:42:50 $ 
+# $Revision: 1.25 $ 
+# $Date: 2004/06/08 04:27:14 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -156,7 +156,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.24 $ )[1];
+$VERSION = ( qw $Revision: 1.25 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -527,7 +527,9 @@ sub render_authors {
             my $mailto_author=$author;
             $mailto_author = TreeData::VCName2MailAddress($author);
             
-            my @bug_numbers = keys %{ $authors{'bugs'}{$author} };
+            # sort numerically descending
+            my @bug_numbers = sort {$b <=> $a}
+            keys %{ $authors{'bugs'}{$author} };
 
             # sort numerically descending
             my @change_nums = sort {$b <=> $a}

@@ -38,8 +38,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.69 $ 
-# $Date: 2003/12/23 13:32:16 $ 
+# $Revision: 1.70 $ 
+# $Date: 2004/06/08 04:27:13 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -105,7 +105,7 @@ use HTMLPopUp;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.69 $ )[1];
+$VERSION = ( qw $Revision: 1.70 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -374,7 +374,7 @@ sub apply_db_updates {
       
       if ($log =~ m/$VC_BUGNUM_REGEXP/) {
           my $bug_number = $1;
-          $DATABASE{$tree}{$time}{'bugs'}{$bug_number} = 1;
+          $DATABASE{$tree}{$time}{'bugs'}{$author}{$bug_number} = 1;
       }
       
   } # foreach update
@@ -468,7 +468,6 @@ sub cell_data {
     my ($tree, $db_index, $last_time) = @_;
 
     my (%authors) = ();
-    my (%bugs) = ();
     my $last_treestate;
 
     while (1) {
@@ -492,23 +491,22 @@ sub cell_data {
         if (defined( $DATABASE{$tree}{$time}{'author'} )) {
             my $recs = $DATABASE{$tree}{$time}{'author'};
             foreach $author (keys %{ $recs }) {
-                foreach $file (keys %{ $recs->{$author} }) {
-                    my ($log) = $recs->{$author}{$file};
-                    $authors{$author}{$time}{$file} = $log;
-                }
+                $authors{$author}{'author'} = 1;
             }
         }
         
         if (defined( $DATABASE{$tree}{$time}{'bugs'} )) {
             $recs = $DATABASE{$tree}{$time}{'bugs'};
-            foreach $bug (keys %{ $recs }) {
-                $bugs{$bug} =1;
+            foreach $author (keys %{ $recs }) {
+                foreach $bug (keys %{ $recs->{$author} }) {
+                    $authors{$author}{'bugs'}{$bug} = 1;
+                }
             }
         }
 
     } # while (1)
 
-    return ($db_index, $last_treestate, \%authors, \%bugs,);
+    return ($db_index, $last_treestate, \%authors,);
 }
 
 
@@ -573,19 +571,7 @@ sub render_authors {
             my $mailto_author=$author;
             $mailto_author = TreeData::VCName2MailAddress($author);
             
-
-            my (@times) = sort {$b <=> $a} keys %{ $authors{$author} };   
-            my @bug_numbers;
-            # sort numerically descending
-            foreach $time (@times) {
-                foreach $file (keys %{ $authors{$author}{$time}}) {
-                    my ($log) = $authors{$author}{$time}{$file};
-                    if ($log =~ m/$VC_BUGNUM_REGEXP/) {
-                        push @bug_numbers, $1;
-                    }
-                }
-            }
-            @bug_numbers = main::uniq(@bug_numbers);
+            my @bug_numbers = keys %{ $authors{$author}{'bugs'} };
 
             # The Link Choices inside the popup.
 
@@ -854,7 +840,7 @@ sub status_table_row {
   # Find all the authors who changed code at any point in this cell
   # Find the tree state for this cell.
 
-  my ($db_index, $last_treestate, $authors, $bugs,) =
+  my ($db_index, $last_treestate, $authors,) =
       cell_data($tree, $NEXT_DB{$tree}, $row_times->[$row_index]);
 
   # Track the treestate between calls with a global variable.
@@ -917,7 +903,7 @@ sub status_table_row {
       $db_index = $next_db_index;
       $rowspan++ ;
       
-      ($next_db_index, $next_treestate, $next_authors, $next_bugs) =
+      ($next_db_index, $next_treestate, $next_authors,) =
           cell_data($tree, $db_index, 
                     $row_times->[$row_index+$rowspan]);
       
