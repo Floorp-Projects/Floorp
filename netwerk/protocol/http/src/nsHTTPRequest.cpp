@@ -53,7 +53,10 @@ static NS_DEFINE_CID(kHTTPHandlerCID,   NS_IHTTPHANDLER_CID);
 
 extern nsresult DupString(char* *o_Dest, const char* i_Src);
 
-nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
+nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, 
+        nsHTTPHandler* i_Handler, 
+        PRUint32 bufferSegmentSize, 
+        PRUint32 bufferMaxSize)
     :
     mBufferSegmentSize(bufferSegmentSize),
     mBufferMaxSize(bufferMaxSize),
