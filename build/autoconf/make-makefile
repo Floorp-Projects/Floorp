@@ -226,6 +226,7 @@ sub update_makefiles {
       $ac_dir_suffix = "/$ac_dir";
       $ac_dir_suffix =~ s%^/\./%/%;
       $ac_dots = $ac_dir_suffix;
+      $ac_dots =~ s%/[^/]*/\.\.%%g;
       $ac_dots =~ s%/[^/]*%../%g;
     }
     if ($ac_given_srcdir eq '.') {
