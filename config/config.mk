@@ -311,7 +311,7 @@ else
 # symbols in separate PDB files, rather than embedded into the binary.
 ifneq (,$(MOZ_PROFILE)$(MOZ_DEBUG_SYMBOLS))
 MOZ_OPTIMIZE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
-OS_LDFLAGS = /DEBUG /OPT:REF
+OS_LDFLAGS = /DEBUG /OPT:REF /OPT:nowin98
 ifdef MOZ_PROFILE
 OS_LDFLAGS += /PDB:NONE
 endif
