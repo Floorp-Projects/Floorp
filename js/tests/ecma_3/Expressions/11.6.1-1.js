@@ -117,15 +117,15 @@ function addThis()
  * any argument that is of string type. For example, suppose the
  * arguments were 11, 'a', 22. Then the eval string should be
  *
- *                   '11 + "a" + 22'
+ *              arg1 + quoteThis(arg2) + arg3
  *
  * If we didn't put double-quotes around the string argument,
  * we'd get this for an eval string:
  *
- *                   '11 + a + 22'
+ *                    '11 + a + 22'
  *
- * If we eval() the former, we get the right expression to test.
- * If we eval() the latter: 'ReferenceError: a is not defined'.
+ * If we eval() this, we get 'ReferenceError: a is not defined'.
+ * With the former, we get eval('11 + "a" + 22') as desired.
  */
 function sumThese()
 {
