@@ -230,13 +230,6 @@ NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext,
 
 //------------------------------------------------------------
 
-void nsImageMac::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation,nsBlendQuality aBlendQuality)
-{
-
-}
-
-//------------------------------------------------------------
-
 nsresult nsImageMac::Optimize(nsIDeviceContext* aContext)
 {
   return NS_OK;
