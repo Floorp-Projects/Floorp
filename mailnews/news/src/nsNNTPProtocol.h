@@ -19,8 +19,7 @@
 #ifndef nsNNTPProtocol_h___
 #define nsNNTPProtocol_h___
 
-#include "nsIStreamListener.h"
-#include "nsITransport.h"
+#include "nsMsgProtocol.h"
 #include "rosetta.h"
 #include HG40855
 
@@ -147,63 +146,33 @@ NNTP_ERROR,
 NEWS_FREE
 } StatesEnum;
 
-class nsNNTPProtocol : public nsIStreamListener
+class nsNNTPProtocol : public nsMsgProtocol
 {
 public:
-	// Creating a protocol instance requires the URL which needs to be run AND it requires
-	// a transport layer.  need to call Initialize after we do a new of nsNNTPProtocol
-	nsNNTPProtocol();
-	
+	// Creating a protocol instance requires the URL 
+	// need to call Initialize after we do a new of nsNNTPProtocol
+	nsNNTPProtocol();	
 	virtual ~nsNNTPProtocol();
 
-	// initialization function given a new url and transport layer
-	NS_IMETHOD Initialize(nsIURL * aURL, nsITransport * transportLayer);
+	// initialization function given a news url
+	NS_IMETHOD Initialize(nsIURL * aURL);
 
 	// aConsumer is typically a display stream you may want the results to be displayed into...
-	NS_IMETHOD LoadURL(nsIURL * aURL, nsISupports * aConsumer /* consumer of the url */, PRInt32 * status);
-    
-	NS_IMETHOD IsRunningUrl(PRBool * _retval) { *_retval = m_urlInProgress; return NS_OK;} // returns true if we are currently running a url and false otherwise...
-
-	NS_DECL_ISUPPORTS
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIStreamListener interface 
-	////////////////////////////////////////////////////////////////////////////////////////
-
-	// mscott; I don't think we need to worry about this yet so I'll leave it stubbed out for now
-	NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo) { return NS_OK;} ;
-	
-	// Whenever data arrives from the connection, core netlib notifies the protocol by calling
-	// OnDataAvailable. We then read and process the incoming data from the input stream. 
-	NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength);
-
-	NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer /* consumer of the url */, PRInt32 * status);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 	NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
-	// Ideally, a protocol should only have to support the stream listener methods covered above. 
-	// However, we don't have this nsIStreamListenerLite interface defined yet. Until then, we are using
-	// nsIStreamListener so we need to add stubs for the heavy weight stuff we don't want to use.
-
-	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
-	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK;}
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// End of nsIStreamListenerSupport
-	////////////////////////////////////////////////////////////////////////////////////////
-
 	char * m_ProxyServer;		/* proxy server hostname */
 
-	// Flag manipulators
-	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}
-	void   SetFlag   (PRUint32 flag) { m_flags |= flag; }
-	void   ClearFlag (PRUint32 flag) { m_flags &= ~flag; }
-
 private:
-	// the following flag is used to determine when a url is currently being run. It is cleared on calls
-	// to ::StopBinding and it is set whenever we call Load on a url
-	PRBool	m_urlInProgress;	
+	// over-rides from nsMsgProtocol
+	virtual nsresult ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
+	virtual nsresult CloseSocket();
+
+	// we have our own implementation of SendData which writes to the nntp log
+	// and then calls the base class to transmit the data
+	PRInt32 SendData(nsIURL * aURL, const char * dataBuffer);
 
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
@@ -213,23 +182,15 @@ private:
 	// News Event Sinks
     nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
     nsCOMPtr <nsINNTPArticleList> m_articleList;
-
 	nsCOMPtr <nsINNTPHost>	 m_newsHost;
 	nsCOMPtr <nsINNTPNewsgroup>	m_newsgroup;
 	nsCOMPtr <nsIMsgOfflineNewsState> m_offlineNewsState;
 
-	// Ouput stream for writing commands to the socket
-	nsITransport			* m_transport; 
-	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
-	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
-	nsIWebShell				* m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
-
+	nsCOMPtr<nsIWebShell> m_displayConsumer;
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
 
 	// the nsINntpURL that is currently running
-	nsINntpUrl				* m_runningURL;
-	
-	PRUint32 m_flags; // used to store flag information
+	nsCOMPtr<nsINntpUrl> m_runningURL;
 
 	// Generic state information -- What state are we in? What state do we want to go to
 	// after the next response? What was the last response code? etc. 
@@ -278,9 +239,6 @@ private:
 
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
-	PRInt32	  ProcessNewsState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
-	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
-
     PRInt32 PostMessageInFile(const nsFilePath &filePath);
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -288,10 +246,6 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line);
-
-	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
-	// but it also informs the consumer that the data has been written to the stream.
-	PRInt32 SendData(const char * dataBuffer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is 

@@ -358,24 +358,18 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 
 nsNNTPProtocol::nsNNTPProtocol() : m_tempArticleFile(ARTICLE_PATH)
 {
-  /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
 {
-	NS_IF_RELEASE(m_outputStream); 
-	NS_IF_RELEASE(m_outputConsumer);
-	NS_IF_RELEASE(m_transport);
-
-	// free our local state 
-	if (m_lineStreamBuffer)
-		delete m_lineStreamBuffer;
+	delete m_lineStreamBuffer;
 }
 
-nsresult nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
+nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
 {
     nsresult rv = NS_OK;
+	if (!aURL)
+		return NS_ERROR_NULL_POINTER;
     
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv) && prefs) {
@@ -390,61 +384,39 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer
 
 	NS_PRECONDITION(aURL, "invalid URL passed into NNTP Protocol");
 
-	m_flags = 0;
-
-	// grab a reference to the transport interface
-	m_transport = transportLayer;
-	if (m_transport)
-		NS_ADDREF(m_transport);
-
 	// Right now, we haven't written an nsNNTPURL yet. When we do, we'll pull the event sink
 	// data out of it and set our event sink member variables from it. For now, just set them
 	// to NULL. 
 	
 	// query the URL for a nsINNTPUrl
-	m_runningURL = nsnull; // initialize to NULL
-    
-	m_displayConsumer = nsnull;
-
-	if (aURL)
+   
+	rv = aURL->QueryInterface(nsINntpUrl::GetIID(), getter_AddRefs(m_runningURL));
+	if (NS_SUCCEEDED(rv) && m_runningURL)
 	{
-		rv = aURL->QueryInterface(nsINntpUrl::GetIID(), (void **)&m_runningURL);
-		if (NS_SUCCEEDED(rv) && m_runningURL)
-		{
-			// okay, now fill in our event sinks...Note that each getter ref counts before
-			// it returns the interface to us...we'll release when we are done
-			m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
-			m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
-			m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
-			m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
-			m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
-		}
-        else {
-            return rv;
-        }
+		// okay, now fill in our event sinks...Note that each getter ref counts before
+		// it returns the interface to us...we'll release when we are done
+		m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
+		m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
+		m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
+		m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
+		m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
 	}
+    else {
+      return rv;
+    }
 	
-	m_outputStream = NULL;
-	m_outputConsumer = NULL;
-
-	rv = m_transport->GetOutputStream(&m_outputStream);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
-    if (NS_FAILED(rv)) return rv;
-	rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
-    if (NS_FAILED(rv)) return rv;
-
-	// register self as the consumer for the socket...
-	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register NNTP instance as a consumer on the socket");
-    if (NS_FAILED(rv)) return rv;
-
 	const char * hostName = NULL;
 	aURL->GetHost(&hostName);
 	if (hostName)
 		m_hostName = nsCRT::strdup(hostName);
 	else
 		m_hostName = NULL;
+
+	PRUint32 port = NEWS_PORT;
+	aURL->GetHostPort(&port);
+
+	// call base class to set up the transport
+	rv = OpenNetworkSocket(aURL, port, m_hostName);
 
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
@@ -473,12 +445,14 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer
 	m_messageID = NULL;
 	m_articleNumber = 0;
 	m_originalContentLength = 0;
-	m_urlInProgress = PR_FALSE;
-
-    return NS_OK;
+	m_cancelID = NULL;
+	m_cancelFromHdr = NULL;
+	m_cancelNewsgroups = NULL;
+	m_cancelDistribution = NULL;
+	return NS_OK;
 }
 
-nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32 *status)
+nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer, PRInt32 *status)
 {
   PRBool bVal = FALSE;
   char * hostAndPort = 0;
@@ -497,31 +471,20 @@ nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 
   // Query the url for its nsINntpUrl interface...assert and fail to load if they passed us a non news url...
 
-  nsINntpUrl * nntpUrl = NULL;
   if (aConsumer) // did the caller pass in a display stream?
-	  aConsumer->QueryInterface(kIWebShell, (void **) &m_displayConsumer);
+	  aConsumer->QueryInterface(kIWebShell, getter_AddRefs(m_displayConsumer));
 
   if (aURL)
   {
-	  rv = aURL->QueryInterface(nsINntpUrl::GetIID(), (void **) &nntpUrl);
-	  if (NS_SUCCEEDED(rv) && nntpUrl)
-	  {
-		  // replace our old url with the new one...
-		  if (m_runningURL)  // release our current url if we have one...
-			NS_RELEASE(m_runningURL);
-		  
-		  m_runningURL = nntpUrl;
+	  m_runningURL = do_QueryInterface(aURL);
 
-		  // okay, now fill in our event sinks...Note that each getter ref counts before
-		  // it returns the interface to us...we'll release when we are done
-		  m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
-		  m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
-		  m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
-		  m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
-		  m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
-	  }
-	  else                      /* let rv fall through */
-		  NS_ASSERTION(0, "Invalid url type passed into NNTP Protocol Handler");
+	  // okay, now fill in our event sinks...Note that each getter ref counts before
+	  // it returns the interface to us...we'll release when we are done
+	  m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
+	  m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
+	  m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
+	  m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
+	  m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
   }
   else
 	  rv = NS_ERROR_FAILURE;
@@ -780,9 +743,6 @@ nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 
 
   m_nextState = SEND_FIRST_NNTP_COMMAND;
-  m_urlInProgress = PR_TRUE; // we are now running a URL. 
-
-
 
  FAIL:
 
@@ -811,10 +771,20 @@ nsresult nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32
 		  m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
 	  }
 	  else  // the connection is already open so we should begin processing our new url...
-		 *status = ProcessNewsState(m_runningURL, nsnull, 0); 
+		 *status = ProcessProtocolState(m_runningURL, nsnull, 0); 
 	  return NS_OK;
   }
 
+}
+
+// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
+NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+{
+	nsMsgProtocol::OnStopBinding(aURL, aStatus, aMsg);
+
+	// okay, we've been told that the send is done and the connection is going away. So 
+	// we need to release all of our state
+	return CloseSocket();
 }
 
 /* The main news load init routine, and URL parser.
@@ -1022,57 +992,6 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
   return status;
 
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-// we suppport the nsIStreamListener interface 
-////////////////////////////////////////////////////////////////////////////////////////////
-
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_ADDREF(nsNNTPProtocol)
-NS_IMPL_RELEASE(nsNNTPProtocol)
-NS_IMPL_QUERY_INTERFACE(nsNNTPProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
-
-// Whenever data arrives from the connection, core netlib notifices the protocol by calling
-// OnDataAvailable. We then read and process the incoming data from the input stream. 
-NS_IMETHODIMP nsNNTPProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
-{
-	// right now, this really just means turn around and process the url
-	ProcessNewsState(aURL, aIStream, aLength);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsNNTPProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
-{
-	// extract the appropriate event sinks from the url and initialize them in our protocol data
-	// the URL should be queried for a nsINewsURL. If it doesn't support a news URL interface then
-	// we have an error.
-
-	return NS_OK;
-
-}
-
-// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
-{
-	// what can we do? we can close the stream?
-	m_urlInProgress = PR_FALSE;  
-	m_runningURL->SetUrlState(PR_FALSE, aStatus);
-
-	
-	// don't close the connection...we may be re-using it.
-	// CloseConnection();
-
-	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
-	// available for another url if there is one....
-
-	return NS_OK;
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-// End of nsIStreamListenerSupport
-////////////////////////////////////////////////////////////////////////////////////////////
-
 /*
  * Writes the data contained in dataBuffer into the current output stream. It also informs
  * the transport layer that this data is now available for transmission.
@@ -1080,35 +999,10 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
  * stream, etc). We need to make another pass through this file to install an error system (mscott)
  */
 
-PRInt32 nsNNTPProtocol::SendData(const char * dataBuffer)
+PRInt32 nsNNTPProtocol::SendData(nsIURL * aURL, const char * dataBuffer)
 {
-	PRUint32 writeCount = 0; 
-	PRInt32 status = 0; 
-
-	NS_PRECONDITION(m_outputStream && m_outputConsumer, "no registered consumer for our output");
-	if (dataBuffer && m_outputStream)
-	{
-		nsresult rv;
-        
-        int len = PL_strlen(dataBuffer);
-        rv = m_outputStream->Write(dataBuffer, len, &writeCount);
-		if (NS_SUCCEEDED(rv) && (writeCount == (PRUint32)len))
-		{
-			// notify the consumer that data has arrived
-			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
-			nsCOMPtr <nsIInputStream> inputStream;
-			m_outputStream->QueryInterface(nsIInputStream::GetIID() , getter_AddRefs(inputStream));
-			if (inputStream) {
-				m_outputConsumer->OnDataAvailable(m_runningURL, inputStream, writeCount);
-			}
-			NNTP_LOG_WRITE(dataBuffer);  // write the data out to our log file...
-			status = 1; // mscott: we need some type of MK_OK? MK_SUCCESS? Arrgghhh
-		}
-		else // the write failed for some reason, returning 0 trips an error by the caller
-			status = 0; // mscott: again, I really want to add an error code here!!
-	}
-
-	return status;
+	NNTP_LOG_WRITE(dataBuffer);
+	return nsMsgProtocol::SendData(aURL, dataBuffer); // base class actually transmits the data
 }
 
 /* gets the response code from the nntp server and the
@@ -1264,7 +1158,7 @@ PRInt32 nsNNTPProtocol::LoginResponse()
 
 PRInt32 nsNNTPProtocol::SendModeReader()
 {  
-	nsresult status = SendData(NNTP_CMD_MODE_READER); 
+	nsresult status = SendData(m_runningURL, NNTP_CMD_MODE_READER); 
     m_nextState = NNTP_RESPONSE;
     m_nextStateAfterResponse = NNTP_SEND_MODE_READER_RESPONSE;
     SetFlag(NNTP_PAUSE_FOR_READ); 
@@ -1291,7 +1185,7 @@ PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 
 PRInt32 nsNNTPProtocol::SendListExtensions()
 {
-	PRInt32 status = SendData(NNTP_CMD_LIST_EXTENSIONS);
+	PRInt32 status = SendData(m_runningURL, NNTP_CMD_LIST_EXTENSIONS);
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = SEND_LIST_EXTENSIONS_RESPONSE;
@@ -1358,7 +1252,7 @@ PRInt32 nsNNTPProtocol::SendListSearches()
     rv = m_newsHost->QueryExtension("SEARCH",&searchable);
     if (NS_SUCCEEDED(rv) && searchable)
 	{
-		status = SendData(NNTP_CMD_LIST_SEARCHES);
+		status = SendData(m_runningURL, NNTP_CMD_LIST_SEARCHES);
 
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = SEND_LIST_SEARCHES_RESPONSE;
@@ -1419,7 +1313,7 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 
 PRInt32 nsNNTPProtocol::SendListSearchHeaders()
 {
-	PRInt32 status = SendData(NNTP_CMD_LIST_SEARCH_FIELDS);
+	PRInt32 status = SendData(m_runningURL, NNTP_CMD_LIST_SEARCH_FIELDS);
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_LIST_SEARCH_HEADERS_RESPONSE;
@@ -1472,7 +1366,7 @@ PRInt32 nsNNTPProtocol::GetProperties()
     rv = m_newsHost->QueryExtension("SETGET",&setget);
     if (NS_SUCCEEDED(rv) && setget)
 	{
-		status = SendData(NNTP_CMD_GET_PROPERTIES);
+		status = SendData(m_runningURL, NNTP_CMD_GET_PROPERTIES);
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = NNTP_GET_PROPERTIES_RESPONSE;
 		SetFlag(NNTP_PAUSE_FOR_READ);
@@ -1547,7 +1441,7 @@ PRInt32 nsNNTPProtocol::SendListSubscriptions()
 	if (0)
 #endif
 	{
-		status = SendData(NNTP_CMD_LIST_SUBSCRIPTIONS);
+		status = SendData(m_runningURL, NNTP_CMD_LIST_SUBSCRIPTIONS);
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = SEND_LIST_SUBSCRIPTIONS_RESPONSE;
 		SetFlag(NNTP_PAUSE_FOR_READ);
@@ -1862,7 +1756,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	}
 
     NET_SACat(&command, CRLF);
-	status = SendData(command);
+	status = SendData(m_runningURL, command);
     PR_Free(command);
 
 	m_nextState = NNTP_RESPONSE;
@@ -1934,7 +1828,7 @@ PRInt32 nsNNTPProtocol::SendGroupForArticle()
 			"GROUP %.512s" CRLF, 
 			m_currentGroup);
 
-  status = SendData(outputBuffer);
+  status = SendData(m_runningURL, outputBuffer);
 
   m_nextState = NNTP_RESPONSE;
   m_nextStateAfterResponse = NNTP_SEND_GROUP_FOR_ARTICLE_RESPONSE;
@@ -1959,7 +1853,7 @@ PRInt32 nsNNTPProtocol::SendArticleNumber()
 	PRInt32 status = 0; 
 	PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "ARTICLE %lu" CRLF, m_articleNumber);
 
-	status = SendData(outputBuffer);
+	status = SendData(m_runningURL, outputBuffer);
 
     m_nextState = NNTP_RESPONSE;
     m_nextStateAfterResponse = SEND_FIRST_NNTP_COMMAND_RESPONSE;
@@ -2268,7 +2162,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	NET_SACopy(&command, username);
 	NET_SACopy(&command, CRLF);
 
-	status = SendData(command);
+	status = SendData(m_runningURL, command);
 
 	PR_Free(command);
 	PR_Free(username);
@@ -2413,7 +2307,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		NET_SACat(&command, password);
 		NET_SACat(&command, CRLF);
 	
-		status = SendData(command);
+		status = SendData(m_runningURL, command);
 
 		PR_FREEIF(command);
 		PR_FREEIF(password);
@@ -2908,7 +2802,7 @@ PRInt32 nsNNTPProtocol::XoverSend()
 	NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_RECEIVE_LISTARTICLES));
 #endif
 
-	status = SendData(outputBuffer); 
+	status = SendData(m_runningURL, outputBuffer); 
 	return status;
 }
 
@@ -3056,7 +2950,7 @@ PRInt32 nsNNTPProtocol::ReadNewsgroup()
 
         SetFlag(NNTP_PAUSE_FOR_READ);
 
-        return SendData(outputBuffer);
+        return SendData(m_runningURL, outputBuffer);
     }
 }
 
@@ -3233,7 +3127,7 @@ PRInt32 nsNNTPProtocol::PostMessageInFile(const nsFilePath &filePath)
 				} while (line && bsize > 100);
               }
 
-			SendData(buffer); 
+			SendData(m_runningURL, buffer); 
 		}
 	} // if filePath
 
@@ -3244,7 +3138,7 @@ PRInt32 nsNNTPProtocol::PostMessageInFile(const nsFilePath &filePath)
 
 	// always issue a '.' and CRLF when we are done...
     PL_strcpy(m_dataBuf, CRLF "." CRLF);
-	SendData(m_dataBuf);
+	SendData(m_runningURL, m_dataBuf);
 #ifdef UNREADY_CODE
     NET_Progress(CE_WINDOW_ID,
                  XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
@@ -3411,7 +3305,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		char outputBuffer[OUTPUT_BUFFER_SIZE];
 
 		PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, m_currentGroup);
-		status = SendData(outputBuffer);
+		status = SendData(m_runningURL, outputBuffer);
 
 		percent = (m_newsRCListCount) ?
 					(PRInt32) (100.0 * ( (double)m_newsRCListIndex / (double)m_newsRCListCount )) :
@@ -3549,7 +3443,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 
 PRInt32 nsNNTPProtocol::StartCancel()
 {
-  PRInt32 status = SendData(NNTP_CMD_POST);
+  PRInt32 status = SendData(m_runningURL, NNTP_CMD_POST);
 
   m_nextState = NNTP_RESPONSE;
   m_nextStateAfterResponse = NEWS_DO_CANCEL;
@@ -3593,7 +3487,7 @@ PRInt32 nsNNTPProtocol::Cancel()
   										 and is only <CR> on a mac. This
 										 CRLF is the protocol delimiter 
 										 and not platform dependent  -km */
-  status = SendData(outputBuffer);
+  status = SendData(m_runningURL, outputBuffer);
   if (status < 0) return status;
   /* Now news_generate_html_header_fn should have been called, and these
 	 should have values. */
@@ -3725,7 +3619,7 @@ PRInt32 nsNNTPProtocol::Cancel()
                        from, newsgroups, subject, id,
                        other_random_headers, body);
     
-	status = SendData(data);
+	status = SendData(m_runningURL, data);
     PR_Free (data);
     if (status < 0)
 	{
@@ -3785,7 +3679,7 @@ PRInt32 nsNNTPProtocol::XPATSend()
 
 		/* send one term off to the server */
 		NNTP_LOG_WRITE(command);
-		status = SendData(unescapedCommand);
+		status = SendData(m_runningURL, unescapedCommand);
 
 		m_nextState = NNTP_RESPONSE;
 		m_nextStateAfterResponse = NNTP_XPAT_RESPONSE;
@@ -3873,7 +3767,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNames()
 			"LIST PRETTYNAMES %.512s" CRLF,
             NS_SUCCEEDED(rv) ? group_name : "");
     
-	status = SendData(outputBuffer);
+	status = SendData(m_runningURL, outputBuffer);
 #ifdef DEBUG_NEWS
 	printf(outputBuffer);
 #endif
@@ -3955,7 +3849,7 @@ PRInt32 nsNNTPProtocol::ListXActive()
 			OUTPUT_BUFFER_SIZE, 
 			"LIST XACTIVE %.512s" CRLF,
             group_name);
-	status = SendData(outputBuffer);
+	status = SendData(m_runningURL, outputBuffer);
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_LIST_XACTIVE_RESPONSE;
@@ -4106,7 +4000,7 @@ PRInt32 nsNNTPProtocol::ListGroup()
 
     m_articleList->Initialize(m_newsHost, m_newsgroup);
 	
-	status = SendData(outputBuffer); 
+	status = SendData(m_runningURL, outputBuffer); 
 
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_LIST_GROUP_RESPONSE;
@@ -4267,7 +4161,7 @@ PRInt32 nsNNTPProtocol::SetupForTransfer()
 // It returns a negative number (mscott: we'll change this to be an enumerated type which we'll coordinate
 // with the netlib folks?) when we are done processing.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
+nsresult nsNNTPProtocol::ProcessProtocolState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length)
 {
 	PRInt32 status = 0; 
 
@@ -4586,7 +4480,6 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 
 			   */
 				m_nextState = NEWS_FREE;
-				m_runningURL->SetUrlState(PR_FALSE, NS_OK);
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
 			  if (cd->stream)
 				COMPLETE_STREAM;
@@ -4664,15 +4557,22 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
 				break;
     
             case NEWS_FREE:
-				// keep going...we never close the connection...
-				SetFlag(NNTP_PAUSE_FOR_READ);
-				m_urlInProgress = PR_FALSE; // we are done with the current url...
-				/* status = CloseConnection(); */ 
+				// mscott: we really haven't worked out how we are going to 
+				// keep the news connection open. We probably want a news connection
+				// cache so we aren't creating new connections to process each request...
+				// but until that time, we always want to properly shutdown the connection
+
+				// SendData(m_runningURL, "quit"CRLF); // this will cause OnStopBinding to get called
+				if (m_transport)
+					m_transport->OnStopBinding(m_runningURL, 0, nsnull);
+				CloseSocket();
+				return NS_OK;
+				//SetFlag(NNTP_PAUSE_FOR_READ);
 				break;
 
             default:
                 /* big error */
-                return(-1);
+                return NS_ERROR_FAILURE;
           
 		} // end switch
 
@@ -4685,10 +4585,10 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
       
 	} /* end big while */
 
-	return(0); /* keep going */
+	return NS_OK; /* keep going */
 }
 
-PRInt32 nsNNTPProtocol::CloseConnection()
+nsresult nsNNTPProtocol::CloseSocket()
 {
   /* do we need to know if we're parsing xover to call finish xover?  */
   /* yes, I think we do! Why did I think we should??? */
@@ -4725,7 +4625,10 @@ PRInt32 nsNNTPProtocol::CloseConnection()
 	PR_FREEIF (m_cancelID);
 	PR_FREEIF (m_cancelFromHdr);
 	PR_FREEIF (m_cancelNewsgroups); 
-	PR_FREEIF (m_cancelDistribution);  
-	return(-1); /* all done */
+	PR_FREEIF (m_cancelDistribution);
+
+	m_runningURL = null_nsCOMPtr();
+
+	return nsMsgProtocol::CloseSocket();
 }
 
