@@ -189,10 +189,9 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
 #elif defined(XP_PC)
     // set its directory an aunt of the executable.
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    // That's "program files\Netscape\Communicator\Program"
-    nsFileSpec parent;
-    cwd.GetParent(parent); // "program files\Netscape\Communicator"
-    parent.GetParent(cwd); // "program files\Netscape\"
+
+    // Users50 directory is kept 1 level above the executable directory.
+    cwd.GetParent(cwd); 
 
     cwd += "Users50";
     if (!cwd.Exists())
