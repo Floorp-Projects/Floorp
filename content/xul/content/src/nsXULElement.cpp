@@ -4316,7 +4316,7 @@ nsXULElement::GetPersist(nsAString& aAttr)
 nsresult
 nsXULElement::SetPersist(const nsAString& aAttr)
 {
-  SetAttribute(NS_LITERAL_STRING("maxheight"), aAttr);
+  SetAttribute(NS_LITERAL_STRING("persist"), aAttr);
   return NS_OK;
 }
 
