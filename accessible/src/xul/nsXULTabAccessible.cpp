@@ -41,6 +41,8 @@
 #include "nsXULTabAccessible.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIFrame.h"
+#include "nsIStyleContext.h"
 
 /**
   * XUL Tab
@@ -87,7 +89,7 @@ NS_IMETHODIMP nsXULTabAccessible::AccDoAction(PRUint8 index)
     nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mDOMNode));
     if ( tab )
     {
-      tab->DoCommand();
+      tab->Click();
       return NS_OK;
     }
     return NS_ERROR_FAILURE;
@@ -109,7 +111,23 @@ NS_IMETHODIMP nsXULTabAccessible::GetAccState(PRUint32 *_retval)
 {
   // get focus and disable status from base class
   nsLeafAccessible::GetAccState(_retval);
-  *_retval |= STATE_FOCUSABLE;
+
+  // In the past, tabs have been focusable in classic theme
+  // They may be again in the future
+  // Check style for -moz-user-focus: normal to see if it's focusable
+  *_retval &= ~STATE_FOCUSABLE;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+  if (presShell && content) {
+    nsIFrame *frame = nsnull;
+    const nsStyleUserInterface* ui;
+    presShell->GetPrimaryFrameFor(content, &frame);
+    if (frame) {
+      frame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+      if (ui->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL)
+        *_retval |= STATE_FOCUSABLE;
+    }
+  }
   return NS_OK;
 }
 
@@ -173,13 +191,12 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccRole(PRUint32 *_retval)
 }
 
 /**
-  * Possible values: focused, focusable, unavailable
+  * Possible values: unavailable
   */
 NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccState(PRUint32 *_retval)
 {
   // get focus and disable status from base class -- skip container because we have state
   nsAccessible::GetAccState(_retval);
-  *_retval |= STATE_FOCUSABLE;
   return NS_OK;
 }
 
