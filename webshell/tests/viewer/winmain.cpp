@@ -306,7 +306,7 @@ void nsWin32Viewer::DoDebugSave(WindowData* aWindata)
     if (doc != nsnull)
     {
       nsString buffer;
-      doc->ToXIF(buffer,PR_FALSE);
+      doc->CreateXIF(buffer,PR_FALSE);
 
 
       nsIParser* parser;
