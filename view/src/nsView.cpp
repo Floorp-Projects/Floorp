@@ -168,20 +168,31 @@ nsView :: ~nsView()
   if (nsnull != mViewManager)
   {
     nsIView *rootView = mViewManager->GetRootView();
-    if (rootView == this) {
-      //This code should never be reached since there is a circular ref between nsView and nsViewManager\n");
-      mViewManager->SetRootView(nsnull);  // this resets our ref count to 0
-    }
-    else
+
+    if (nsnull != rootView)
     {
-      if (nsnull != mParent) {
-        mViewManager->RemoveChild(mParent, this);
+      if (rootView == this)
+      {
+        //This code should never be reached since there is a circular ref between nsView and nsViewManager
+        mViewManager->SetRootView(nsnull);  // this resets our ref count to 0
       }
-      NS_RELEASE(rootView);
+      else
+      {
+        if (nsnull != mParent)
+          mViewManager->RemoveChild(mParent, this);
+
+        NS_RELEASE(rootView);
+      }
     }
+    else if (nsnull != mParent)
+      mParent->RemoveChild(this);
+
     NS_RELEASE(mViewManager);
     mViewManager = nsnull;
   }
+  else if (nsnull != mParent)
+    mParent->RemoveChild(this);
+
   if (nsnull != mFrame) {
     // Temporarily raise our refcnt because the frame is going to
     // Release us.
@@ -190,10 +201,6 @@ nsView :: ~nsView()
     mRefCnt = 0;
   }
   if (nsnull != mInnerWindow) {
-    //if (nsnull != mWindow) {
-	  //  mWindow->Destroy();
-    //  mWindow = nsnull;
-	  //}
 	  NS_RELEASE(mInnerWindow); // this should destroy the widget and its native windows
   }
 }
@@ -241,7 +248,27 @@ nsrefcnt nsView::AddRef()
 
 nsrefcnt nsView::Release()
 {
-  if (--mRefCnt == 0)
+  mRefCnt--;
+
+  if ((mRefCnt == 1) && (nsnull != mViewManager))
+  {
+    nsIView *pRoot = mViewManager->GetRootView();
+
+    if (nsnull != pRoot)
+    {
+      if (pRoot == this)
+      {
+        nsIViewManager *vm = mViewManager;
+        mViewManager = nsnull;  //set to null so that we don't get in here again
+        NS_RELEASE(pRoot);      //set our ref count back to 1
+        NS_RELEASE(vm);         //kill the ViewManager
+      }
+      else
+        NS_RELEASE(pRoot);  //release root again
+    }
+  }
+
+  if (mRefCnt == 0)
   {
     delete this;
     return 0;
@@ -690,7 +717,7 @@ void nsView :: InsertChild(nsIView *child, nsIView *sibling)
   {
     if (nsnull != sibling)
     {
-      NS_ASSERTION(sibling->GetParent() != this, "tried to insert view with invalid sibling");
+      NS_ASSERTION(!(sibling->GetParent() != this), "tried to insert view with invalid sibling");
       //insert after sibling
       child->SetNextSibling(sibling->GetNextSibling());
       sibling->SetNextSibling(child);
@@ -726,6 +753,7 @@ void nsView :: RemoveChild(nsIView *child)
         found = PR_TRUE;
         break;
       }
+      prevKid = kid;
 	    kid = kid->GetNextSibling();
     }
     NS_ASSERTION(found, "tried to remove non child");
