@@ -1420,6 +1420,14 @@ skip-networking
   <section id="upgrading">
     <title>Upgrading to New Releases</title>
 
+    <warning>
+      <para>Upgrading is a one-way process. You should backup your database
+      and current Bugzilla directory before attempting the upgrade. If you wish
+      to revert to the old Bugzilla version for any reason, you will have to
+      restore from these backups.
+      </para>
+    </warning>
+
     <para>Upgrading Bugzilla is something we all want to do from time to time,
     be it to get new features or pick up the latest security fix. How easy
     it is to update depends on a few factors.
