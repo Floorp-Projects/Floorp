@@ -52,6 +52,8 @@ public:
                 nsIToolkit *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull);
 
+    virtual void SetForegroundColor(const nscolor &aColor);
+    virtual void SetBackgroundColor(const nscolor &aColor);
 
     virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool OnPaint(nsPaintEvent & aEvent);
