@@ -561,7 +561,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 #endif
   else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
            eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
-    accessible->GetState(&stateData.state);
+    accessible->GetFinalState(&stateData.state);
     stateData.enable = (stateData.state & STATE_CHECKED) != 0;
     stateData.state = STATE_CHECKED;
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
@@ -570,7 +570,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
   }
   else if (eventType.LowerCaseEqualsLiteral("openstatechange")) { // collapsed/expanded changed
-    accessible->GetState(&stateData.state);
+    accessible->GetFinalState(&stateData.state);
     stateData.enable = (stateData.state & STATE_EXPANDED) != 0;
     stateData.state = STATE_EXPANDED;
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
