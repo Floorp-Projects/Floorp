@@ -77,7 +77,7 @@ function tryThis()
     }
     finally
     {
-     print("In finally case of testThis() function");
+     print("In finally case of tryThis() function");
     }
   }
   return i;
