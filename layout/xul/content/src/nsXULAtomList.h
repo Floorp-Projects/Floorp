@@ -97,7 +97,6 @@ XUL_ATOM(observes, "observes") // The observes element
 XUL_ATOM(templateAtom, "template") // A XUL template
 
 XUL_ATOM(progressbar, "progressbar")
-XUL_ATOM(titledbutton, "titledbutton")
 XUL_ATOM(crop, "crop")
 
 XUL_ATOM(mode, "mode")
