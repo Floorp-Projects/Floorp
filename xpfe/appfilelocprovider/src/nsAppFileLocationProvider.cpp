@@ -23,6 +23,8 @@
  */
  
 #include "nsAppFileLocationProvider.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIAtom.h"
 #include "nsILocalFile.h"
 #include "nsString.h"
@@ -114,21 +116,21 @@ nsAppFileLocationProvider::nsAppFileLocationProvider()
     if (sInstanceCount++ == 0) {
     
       // Defaults
-        sApp_DefaultsFolder50        = NS_NewAtom("app.defaults.directory");
-        sApp_PrefDefaultsFolder50    = NS_NewAtom("app.pref.default.directory.5");
-        sApp_ProfileDefaultsFolder50 = NS_NewAtom("app.profile.default.directory.5");
-        sApp_ProfileDefaultsNoLocFolder50 = NS_NewAtom("app.profile.default_no_locale.directory.5");
+        sApp_DefaultsFolder50        = NS_NewAtom(NS_APP_DEFAULTS_50_DIR);
+        sApp_PrefDefaultsFolder50    = NS_NewAtom(NS_APP_PREF_DEFAULTS_50_DIR);
+        sApp_ProfileDefaultsFolder50 = NS_NewAtom(NS_APP_PROFILE_DEFAULTS_50_DIR);
+        sApp_ProfileDefaultsNoLocFolder50 = NS_NewAtom(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR);
  
       // Profile Root
-        sApp_DefaultUserProfileRoot50 = NS_NewAtom("app.profile.default.user.directory.5");
+        sApp_DefaultUserProfileRoot50 = NS_NewAtom(NS_APP_USER_PROFILES_ROOT_DIR);
             
       // Application Directories
-        sApp_ResDirectory            = NS_NewAtom("app.res.directory");
-        sApp_ChromeDirectory         = NS_NewAtom("app.chrome.directory");
-        sApp_PluginsDirectory        = NS_NewAtom("app.plugins.directory");
+        sApp_ResDirectory            = NS_NewAtom(NS_APP_RES_DIR);
+        sApp_ChromeDirectory         = NS_NewAtom(NS_APP_CHROME_DIR);
+        sApp_PluginsDirectory        = NS_NewAtom(NS_APP_PLUGINS_DIR);
       
       // Search
-        sApp_SearchDirectory50       = NS_NewAtom("app.search.directory.5");
+        sApp_SearchDirectory50       = NS_NewAtom(NS_APP_SEARCH_DIR);
     }
     
     nsresult rv;
@@ -140,7 +142,7 @@ nsAppFileLocationProvider::nsAppFileLocationProvider()
     
     NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
     if (NS_SUCCEEDED(rv))
-        rv = directoryService->Get("xpcom.currentProcessDirectory", NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
+        rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
 
     if (NS_FAILED(rv)) {
         nsCOMPtr<nsILocalFile> aLocalFile;
@@ -661,7 +663,14 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
     pBuffer[len + 1] = '\0';
 
     // Assign the directory
-    //char* outDirectory = MakeUpperCase(pBuffer);
+    char* outDirectory = MakeUpperCase(pBuffer);
+    nsCOMPtr<nsILocalFile> newFile;
+    rv = NS_NewLocalFile(outDirectory, TRUE, getter_AddRefs(newFile));
+    if (NS_FAILED(rv))
+        goto Clean;
+    *aFile = newFile;
+    NS_ADDREF(*aFile);
+    
     rv = NS_OK;
     
 Clean:
