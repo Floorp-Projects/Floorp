@@ -141,7 +141,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsCookieService.h"
-#include "nsCCookieManager.h"
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSingleton)
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1005,13 +1004,13 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
        nsCacheService::Create
     },
 
-    { "CookieManager",
+    { NS_COOKIEMANAGER_CLASSNAME,
       NS_COOKIEMANAGER_CID,
       NS_COOKIEMANAGER_CONTRACTID,
       nsCookieServiceConstructor
     },
 
-    { "CookieService",
+    { NS_COOKIESERVICE_CLASSNAME,
       NS_COOKIESERVICE_CID,
       NS_COOKIESERVICE_CONTRACTID,
       nsCookieServiceConstructor

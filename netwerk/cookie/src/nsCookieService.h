@@ -246,6 +246,4 @@ class nsCookieService : public nsICookieService
     friend PLDHashOperator PR_CALLBACK removeExpiredCallback(nsCookieEntry *aEntry, void *aArg);
 };
 
-#define NS_COOKIEMANAGER_CID {0xaaab6710,0xf2c,0x11d5,{0xa5,0x3b,0x0,0x10,0xa4,0x1,0xeb,0x10}}
-
 #endif // nsCookieService_h__

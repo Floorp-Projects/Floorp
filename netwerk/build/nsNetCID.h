@@ -658,4 +658,34 @@
     { 0xa2, 0x8a, 0x5b, 0xa2, 0x44, 0x7f, 0xba, 0xce } \
 }
 
+/******************************************************************************
+ * netwerk/cookie classes
+ */
+
+// service implementing nsICookieManager and nsICookieManager2.
+#define NS_COOKIEMANAGER_CLASSNAME \
+    "CookieManager"
+#define NS_COOKIEMANAGER_CONTRACTID \
+    "@mozilla.org/cookiemanager;1"
+#define NS_COOKIEMANAGER_CID                           \
+{ /* aaab6710-0f2c-11d5-a53b-0010a401eb10 */           \
+    0xaaab6710,                                        \
+    0x0f2c,                                            \
+    0x11d5,                                            \
+    { 0xa5, 0x3b, 0x00, 0x10, 0xa4, 0x01, 0xeb, 0x10 } \
+}
+
+// service implementing nsICookieService.
+#define NS_COOKIESERVICE_CLASSNAME \
+    "CookieService"
+#define NS_COOKIESERVICE_CONTRACTID \
+    "@mozilla.org/cookieService;1"
+#define NS_COOKIESERVICE_CID                           \
+{ /* c375fa80-150f-11d6-a618-0010a401eb10 */           \
+    0xc375fa80,                                        \
+    0x150f,                                            \
+    0x11d6,                                            \
+    { 0xa6, 0x18, 0x00, 0x10, 0xa4, 0x01, 0xeb, 0x10 } \
+}
+
 #endif // nsNetCID_h__

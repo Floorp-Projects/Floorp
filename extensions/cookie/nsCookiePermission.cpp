@@ -42,7 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsICookiePromptService.h"
 #include "nsICookieManager2.h"
-#include "nsCCookieManager.h"
+#include "nsNetCID.h"
 #include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"

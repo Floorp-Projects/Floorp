@@ -89,6 +89,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableView.h"
 
+#include "nsNetCID.h"
 #include "nsIIOService.h"
 #include "nsICookieService.h"
 

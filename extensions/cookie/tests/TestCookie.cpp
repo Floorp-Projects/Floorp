@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include "plstr.h"
 #include "nsNetUtil.h"
+#include "nsNetCID.h"
 #include "nsXPIDLString.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
