@@ -220,8 +220,9 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 	}
 	if (base != 10 && JSDOUBLE_IS_FINITE(d)) {
-            JSBool isNegative;
-            if (isNegative = (d < 0)) d = -d;
+            JSBool isNegative = (d < 0);
+            if (isNegative)
+		d = -d;
 	    ival = (unsigned int) js_DoubleToInteger(d);
 	    bp = buf + sizeof buf;
 	    for (*--bp = '\0'; ival != 0 && bp > buf; ival /= base) {
@@ -231,11 +232,11 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    if (*bp == '\0')
 		*--bp = '0';
             if (isNegative)
-                if (bp > buf) 
+                if (bp > buf)
                     *--bp = '-';
                 else
                     /* sacrifice the leading digit or lose the '-' ?*/
-                    *bp = '-'; 
+                    *bp = '-';
 	    str = JS_NewStringCopyZ(cx, bp);
 	} else {
 	    str = js_NumberToString(cx, d);
@@ -664,7 +665,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 		d = *cx->runtime->jsNegativeInfinity;
 #ifdef HPUX
         if (d == 0.0 && negative) {
-            /* 
+            /*
              * "-0", "-1e-2000" come out as positive zero
     		 * here on HPUX. Force a negative zero instead.
              */
