@@ -2908,13 +2908,11 @@ nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
 }
 
 // static
-nsIFormControlFrame *
-nsGenericHTMLElement::GetFormControlFrameFor(nsIContent *aContent,
-                                             nsIDocument *aDocument,
-                                             PRBool aFlushContent)
+nsIFrame *
+nsGenericHTMLElement::GetPrimaryFrameFor(nsIContent* aContent,
+                                         nsIDocument* aDocument,
+                                         PRBool aFlushContent)
 {
-  nsIFormControlFrame *form_frame = nsnull;
-
   if (aFlushContent) {
     // Cause a flush of content, so we get up-to-date frame
     // information
@@ -2928,13 +2926,26 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent *aContent,
   if (presShell) {
     nsIFrame *frame = nsnull;
     presShell->GetPrimaryFrameFor(aContent, &frame);
-
-    if (frame) {
-      CallQueryInterface(frame, &form_frame);
-    }
+    return frame;
   }
 
-  return form_frame;
+  return nsnull;
+}
+
+// static
+nsIFormControlFrame*
+nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
+                                             nsIDocument* aDocument,
+                                             PRBool aFlushContent)
+{
+  nsIFrame* frame = GetPrimaryFrameFor(aContent, aDocument, aFlushContent);
+  if (frame) {
+    nsIFormControlFrame* form_frame = nsnull;
+    CallQueryInterface(frame, &form_frame);
+    return form_frame;
+  }
+
+  return nsnull;
 }
 
 nsresult

@@ -565,6 +565,7 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    // XXX This should just use nsGenericHTMLElement::GetPrimaryFrame()
     if (mDocument) {
       // Make sure the presentation is up-to-date
       rv = mDocument->FlushPendingNotifications();

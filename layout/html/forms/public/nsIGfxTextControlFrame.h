@@ -53,7 +53,23 @@ public:
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
 
+  /**
+   * Tell whether the frame currently owns the value or the content does (for
+   * edge cases where the frame has just been created or is just going away).
+   *
+   * @param aOwnsValue whether the frame owns the value [out]
+   */
   NS_IMETHOD    OwnsValue(PRBool* aOwnsValue) = 0;
+
+  /**
+   * Get the current value, either from the editor or from the textarea.
+   *
+   * @param aValue the value [out]
+   * @param aIgnoreWrap whether to ignore the wrap attribute when getting the
+   *        value.  If this is true, linebreaks will not be inserted even if
+   *        wrap=hard.
+   */
+  NS_IMETHOD    GetValue(nsAString& aValue, PRBool aIgnoreWrap) = 0;
   
   NS_IMETHOD    GetTextLength(PRInt32* aTextLength) = 0;
   

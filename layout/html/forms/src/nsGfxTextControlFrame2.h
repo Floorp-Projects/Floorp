@@ -116,9 +116,8 @@ public:
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
 
-  // Utility methods to get and set current widget state
-  void GetTextControlFrameState(nsAString& aValue);
-  void SetTextControlFrameState(const nsAString& aValue);
+  // Utility methods to set current widget state
+  void SetValue(const nsAString& aValue);
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
@@ -153,6 +152,7 @@ public:
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor);
   NS_IMETHOD    OwnsValue(PRBool* aOwnsValue);
+  NS_IMETHOD    GetValue(nsAString& aValue, PRBool aIgnoreWrap);
   NS_IMETHOD    GetTextLength(PRInt32* aTextLength);
   NS_IMETHOD    SetSelectionStart(PRInt32 aSelectionStart);
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);

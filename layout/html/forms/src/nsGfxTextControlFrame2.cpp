@@ -1423,14 +1423,14 @@ nsGfxTextControlFrame2::PreDestroy(nsIPresContext* aPresContext)
     {
       // First get the frame state from the editor
       nsAutoString value;
-      GetTextControlFrameState(value);
+      GetValue(value, PR_TRUE);
 
       mUseEditor = PR_FALSE;
 
       // Next store the frame state in the control
       // (now that mUseEditor is false values get stored
       // in content).
-      SetTextControlFrameState(value);
+      SetValue(value);
     }
     mEditor->PreDestroy();
   }
@@ -1836,7 +1836,7 @@ nsGfxTextControlFrame2::SetInitialValue()
 
   // Get the current value of the textfield from the content.
   nsAutoString defaultValue;
-  GetTextControlFrameState(defaultValue);
+  GetValue(defaultValue, PR_TRUE);
 
   // Turn on mUseEditor so that subsequent calls will use the
   // editor.
@@ -1844,8 +1844,8 @@ nsGfxTextControlFrame2::SetInitialValue()
 
   // If we have a default value, insert it under the div we created
   // above, but be sure to use the editor so that '*' characters get
-  // displayed for password fields, etc. SetTextControlFrameState()
-  // will call the editor for us.
+  // displayed for password fields, etc. SetValue() will call the
+  // editor for us.
 
   if (!defaultValue.IsEmpty()) {
     PRUint32 editorFlags = 0;
@@ -1866,18 +1866,17 @@ nsGfxTextControlFrame2::SetInitialValue()
     if (NS_FAILED(rv))
       return rv;
 
-    // Now call SetTextControlFrameState() which will make the
-    // neccessary editor calls to set the default value.
-    // Make sure to turn off undo before setting the default
-    // value, and turn it back on afterwards. This will make
-    // sure we can't undo past the default value.
+    // Now call SetValue() which will make the neccessary editor calls to set
+    // the default value.  Make sure to turn off undo before setting the default
+    // value, and turn it back on afterwards. This will make sure we can't undo
+    // past the default value.
 
     rv = mEditor->EnableUndo(PR_FALSE);
 
     if (NS_FAILED(rv))
       return rv;
 
-    SetTextControlFrameState(defaultValue);
+    SetValue(defaultValue);
 
     rv = mEditor->EnableUndo(PR_TRUE);
     NS_ASSERTION(!rv,"Transaction Manager must have failed");
@@ -2584,7 +2583,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, 
         // has changed.
         SetValueChanged(PR_TRUE);
       }
-      SetTextControlFrameState(aValue);   // set new text value
+      SetValue(aValue);   // set new text value
       if (mEditor)  {
         mEditor->EnableUndo(PR_TRUE);     // fire up a new txn stack
       }
@@ -2599,13 +2598,14 @@ NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, 
   return NS_OK;
 }      
 
-NS_IMETHODIMP nsGfxTextControlFrame2::GetProperty(nsIAtom* aName, nsAString& aValue)
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetProperty(nsIAtom* aName, nsAString& aValue)
 {
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
 
   if (nsHTMLAtoms::value == aName) {
-    GetTextControlFrameState(aValue);
+    GetValue(aValue, PR_FALSE);
   }
   return NS_OK;
 }  
@@ -2635,7 +2635,7 @@ nsGfxTextControlFrame2::GetTextLength(PRInt32* aTextLength)
   NS_ENSURE_ARG_POINTER(aTextLength);
 
   nsAutoString   textContents;
-  GetTextControlFrameState(textContents);   // this is expensive!
+  GetValue(textContents, PR_FALSE);   // this is expensive!
   *aTextLength = textContents.Length();
   return NS_OK;
 }
@@ -3065,7 +3065,8 @@ nsGfxTextControlFrame2::GetText(nsString* aText)
   PRInt32 type;
   GetType(&type);
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-    GetTextControlFrameState(*aText);
+    // If we're going to remove newlines anyway, ignore the wrap property
+    GetValue(*aText, PR_TRUE);
     RemoveNewlines(*aText);
   } else {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mContent);
@@ -3244,7 +3245,8 @@ nsGfxTextControlFrame2::CallOnChange()
 //======
 //privates
 
-void nsGfxTextControlFrame2::GetTextControlFrameState(nsAString& aValue)
+NS_IMETHODIMP
+nsGfxTextControlFrame2::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
 {
   aValue.Truncate();  // initialize out param
   
@@ -3257,14 +3259,16 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAString& aValue)
       flags |= nsIDocumentEncoder::OutputBodyOnly;
     }
 
-    nsFormControlHelper::nsHTMLTextWrap wrapProp;
-    nsresult rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
     flags |= nsIDocumentEncoder::OutputPreformatted;
-    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
-    {
-      if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
-      {
-        flags |= nsIDocumentEncoder::OutputWrap;
+
+    if (!aIgnoreWrap) {
+      nsFormControlHelper::nsHTMLTextWrap wrapProp;
+      nsresult rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+      if (rv != NS_CONTENT_ATTR_NOT_THERE) {
+        if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
+        {
+          flags |= nsIDocumentEncoder::OutputWrap;
+        }
       }
     }
 
@@ -3288,18 +3292,20 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAString& aValue)
       }
     }
   }
+
+  return NS_OK;
 }
 
 
 // END IMPLEMENTING NS_IFORMCONTROLFRAME
 
 void
-nsGfxTextControlFrame2::SetTextControlFrameState(const nsAString& aValue)
+nsGfxTextControlFrame2::SetValue(const nsAString& aValue)
 {
   if (mEditor && mUseEditor) 
   {
     nsAutoString currentValue;
-    GetTextControlFrameState(currentValue);
+    GetValue(currentValue, PR_FALSE);
     if (IsSingleLineTextControl())
     {
       RemoveNewlines(currentValue); 

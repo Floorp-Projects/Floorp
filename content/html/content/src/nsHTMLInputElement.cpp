@@ -859,21 +859,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked)
   //
   // Notify the frame
   //
-  // If the document or parent is not there, don't even bother looking
-  // for the frame.  It won't (shouldn't) be there.
-  if (!mDocument || !mParent) {
-    return NS_OK;
-  }
-
-  // Get presentation shell 0
-  nsCOMPtr<nsIPresShell> presShell;
-  mDocument->GetShellAt(0, getter_AddRefs(presShell));
-  if (!presShell) {
-    return NS_OK;
-  }
-
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(this, &frame);
+  nsIFrame* frame = GetPrimaryFrame(PR_FALSE);
   if (!frame) {
     return NS_OK;
   }
