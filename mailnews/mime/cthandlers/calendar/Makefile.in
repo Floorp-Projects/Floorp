@@ -27,27 +27,72 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= calendar
+
+ifndef MOZ_STATIC_MAIL_BUILD
 LIBRARY_NAME	= calendar
-META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCalendarModule
 
-EXTRA_DSO_LIBS	= mimecthglue_s
+else
+LIBRARY_NAME = calendar_s
+endif
+
+META_COMPONENT = mail
+
+REQUIRES	= xpcom \
+                  xpcom_obsolete \
+		  string \
+		  mime \
+		  msgbase \
+		  msgbaseutil \
+		  uconv \
+		  necko \
+		  intl \
+		  pref \
+		  mailnews \
+		  msgdb \
+		  addrbook \
+		  $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+MAPFILE		= calendar.map
+DEFFILE		= $(srcdir)/calendar.def
+endif
+
+LOCAL_INCLUDES = -I$(srcdir)/../glue
 
 CPPSRCS		= \
 		mimecal.cpp \
-		nsCalendarFactory.cpp \
 		$(NULL)
+
+ifndef MOZ_STATIC_MAIL_BUILD
+
+CPPSRCS += nsCalendarFactory.cpp
+
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = msgbsutl
+else
+EXTRA_DSO_LIBS = msgbaseutil
+endif
+
+EXTRA_DSO_LIBS += mimecthglue_s
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(NULL)
+else
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+endif
+
+
 
 include $(topsrcdir)/config/rules.mk
-
-LOCAL_INCLUDES = $(srcdir)/../glue
 
