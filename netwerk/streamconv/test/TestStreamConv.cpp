@@ -277,37 +277,10 @@ main(int argc, char* argv[])
 
         // Enter the message pump to allow the URL load to proceed.
         while ( gKeepRunning ) {
-#ifdef XP_WIN
-            MSG msg;
-
-            if (GetMessage(&msg, NULL, 0, 0)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            } else
-                gKeepRunning = PR_FALSE;
-#else
-#ifdef XP_MAC
-            /* Mac stuff is missing here! */
-#else
-#ifdef XP_OS2
-            QMSG qmsg;
-
-            if (WinGetMsg(0, &qmsg, 0, 0, 0))
-                WinDispatchMsg(0, &qmsg);
-            else
-                gKeepRunning = PR_FALSE;
-#else
-#ifdef XP_UNIX
             PLEvent *gEvent;
-            rv = gEventQ->GetEvent(&gEvent);
-            rv = gEventQ->HandleEvent(gEvent);
+            gEventQ->WaitForEvent(&gEvent);
+            gEventQ->HandleEvent(gEvent);
             /* gKeepRunning = PR_FALSE; */
-#else
-            /* Other stuff is missing here! */
-#endif /* XP_UNIX */
-#endif /* XP_OS2 */
-#endif /* XP_MAC */
-#endif /* XP_WIN */
         }
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
