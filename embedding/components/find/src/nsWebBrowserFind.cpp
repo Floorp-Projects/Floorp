@@ -75,7 +75,6 @@ nsWebBrowserFind::nsWebBrowserFind() :
     mSearchSubFrames(PR_TRUE),
     mSearchParentFrames(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsWebBrowserFind::~nsWebBrowserFind()

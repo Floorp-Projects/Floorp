@@ -30,7 +30,6 @@
 nsCommandHandler::nsCommandHandler() :
     mWindow(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsCommandHandler::~nsCommandHandler()

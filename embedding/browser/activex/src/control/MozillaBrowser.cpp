@@ -1901,8 +1901,6 @@ HRESULT _stdcall CMozillaBrowser::EditCommandHandler(CMozillaBrowser *pThis, con
 
 SimpleDirectoryProvider::SimpleDirectoryProvider()
 {
-    NS_INIT_ISUPPORTS();
-
     nsCOMPtr<nsILocalFile> appDataDir;
 
     // Attempt to fill appDataDir with a meaningful value. Any error in the process
@@ -2037,7 +2035,6 @@ NS_IMPL_ISUPPORTS1(PrintListener, nsIWebProgressListener)
 
 PrintListener::PrintListener() : mComplete(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     /* member initializers and constructor code */
 }
 

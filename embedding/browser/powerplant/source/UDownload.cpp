@@ -64,7 +64,6 @@ CDownload::CDownload() :
     mUserCanceled(false),
     mStatus(NS_OK)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 CDownload::~CDownload()
@@ -278,7 +277,6 @@ void CDownload::CreateProgressView()
 
 CHelperAppLauncherDialog::CHelperAppLauncherDialog()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 CHelperAppLauncherDialog::~CHelperAppLauncherDialog()

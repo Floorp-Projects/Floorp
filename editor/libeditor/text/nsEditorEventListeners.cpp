@@ -102,7 +102,6 @@ NS_IMPL_RELEASE(nsTextEditorKeyListener)
 
 nsTextEditorKeyListener::nsTextEditorKeyListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -328,7 +327,6 @@ NS_IMPL_RELEASE(nsTextEditorMouseListener)
 
 nsTextEditorMouseListener::nsTextEditorMouseListener() 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -514,7 +512,6 @@ nsTextEditorTextListener::nsTextEditorTextListener()
 :   mCommitText(PR_FALSE),
    mInTransaction(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 
@@ -610,7 +607,6 @@ NS_IMPL_RELEASE(nsTextEditorDragListener)
 
 nsTextEditorDragListener::nsTextEditorDragListener() 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsTextEditorDragListener::~nsTextEditorDragListener() 
@@ -838,7 +834,6 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 
 nsTextEditorCompositionListener::nsTextEditorCompositionListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsTextEditorCompositionListener::~nsTextEditorCompositionListener() 
@@ -1056,7 +1051,6 @@ NS_IMPL_RELEASE(nsTextEditorFocusListener)
 
 nsTextEditorFocusListener::nsTextEditorFocusListener() 
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsTextEditorFocusListener::~nsTextEditorFocusListener() 

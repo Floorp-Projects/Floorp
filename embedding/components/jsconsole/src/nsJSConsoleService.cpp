@@ -53,7 +53,6 @@ NS_IMPL_ISUPPORTS1(nsJSConsoleService, nsIJSConsoleService)
 
 nsJSConsoleService::nsJSConsoleService()  
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsJSConsoleService::~nsJSConsoleService()

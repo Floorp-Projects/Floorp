@@ -60,8 +60,6 @@ nsHTMLEditorLog::nsHTMLEditorLog()
 {
   mLocked   = -1;
   mEditorTxnLog = 0;
-  
-  NS_INIT_ISUPPORTS();
 }
 
 nsHTMLEditorLog::~nsHTMLEditorLog()

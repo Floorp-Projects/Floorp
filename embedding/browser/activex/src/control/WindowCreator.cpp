@@ -45,7 +45,6 @@ NS_IMPL_ISUPPORTS1(CWindowCreator, nsIWindowCreator)
 
 CWindowCreator::CWindowCreator(void)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 CWindowCreator::~CWindowCreator()

@@ -67,7 +67,6 @@ CHeaderSniffer::CHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile, n
 , mBypassCache(aBypassCache)
 , mSaveFormat(aSaveFormat)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 CHeaderSniffer::~CHeaderSniffer()

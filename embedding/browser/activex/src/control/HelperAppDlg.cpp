@@ -268,7 +268,6 @@ public:
 
 ProgressDlg::ProgressDlg()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 ProgressDlg::~ProgressDlg() 
@@ -442,7 +441,6 @@ NS_IMPL_ISUPPORTS1(CHelperAppLauncherDlg, nsIHelperAppLauncherDialog)
 
 CHelperAppLauncherDlg::CHelperAppLauncherDlg()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 CHelperAppLauncherDlg::~CHelperAppLauncherDlg() 
@@ -528,7 +526,6 @@ NS_IMPL_ISUPPORTS1(CHelperAppLauncherDlgFactory, nsIFactory)
 
 CHelperAppLauncherDlgFactory::CHelperAppLauncherDlgFactory()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 CHelperAppLauncherDlgFactory::~CHelperAppLauncherDlgFactory()

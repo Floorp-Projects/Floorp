@@ -51,7 +51,6 @@ NS_NewControllerCommandManager(nsIControllerCommandManager** aResult);
 nsControllerCommandManager::nsControllerCommandManager()
 : mCommandsTable(NUM_COMMANDS_BOUNDS, PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 

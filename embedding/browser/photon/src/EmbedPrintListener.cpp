@@ -32,7 +32,6 @@
 
 EmbedPrintListener::EmbedPrintListener(void)
 {
-  NS_INIT_ISUPPORTS();
   mOwner = nsnull;
 }
 

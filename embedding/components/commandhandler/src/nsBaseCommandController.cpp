@@ -58,7 +58,6 @@ NS_INTERFACE_MAP_END
 nsBaseCommandController::nsBaseCommandController()
 : mCommandRefCon(nsnull), mImmutableManager(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();  
   nsresult rv;
   mCommandManager = 
     do_CreateInstance(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv);

@@ -56,8 +56,6 @@ static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount), mListeners(0)
 {
-  NS_INIT_ISUPPORTS();
-
   mMonitor = ::PR_NewMonitor();
 }
 

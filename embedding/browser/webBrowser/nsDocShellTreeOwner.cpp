@@ -119,7 +119,6 @@ nsDocShellTreeOwner::nsDocShellTreeOwner() :
    mChromeTooltipListener(nsnull),
    mChromeContextMenuListener(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsDocShellTreeOwner::~nsDocShellTreeOwner()
@@ -886,8 +885,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(DefaultTooltipTextProvider, nsITooltipTextProvider
 
 DefaultTooltipTextProvider::DefaultTooltipTextProvider()
 {
-    NS_INIT_ISUPPORTS();
-    
     // There are certain element types which we don't want to use
     // as tool tip text. 
     mTag_dialog       = getter_AddRefs(NS_NewAtom("dialog"));
@@ -966,8 +963,6 @@ ChromeTooltipListener :: ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWeb
      mMouseClientX(0), mMouseClientY(0),
      mShowingTooltip(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
-
   mTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID);
   if (!mTooltipTextProvider) {
     nsISupports *pProvider = (nsISupports *) new DefaultTooltipTextProvider;
@@ -1387,7 +1382,6 @@ ChromeContextMenuListener :: ChromeContextMenuListener ( nsWebBrowser* inBrowser
     mWebBrowser(inBrowser),
     mWebBrowserChrome(inChrome)
 {
-  NS_INIT_ISUPPORTS();
 } // ctor
 
 

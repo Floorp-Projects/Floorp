@@ -62,7 +62,6 @@ nsCommandParams::nsCommandParams()
 : mCurEntry(0)
 , mNumEntries(eNumEntriesUnknown)
 {
-  NS_INIT_ISUPPORTS();  
   // init the hash table later
 }
 

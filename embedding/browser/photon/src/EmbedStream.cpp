@@ -39,7 +39,6 @@ NS_IMPL_ISUPPORTS1(EmbedStream, nsIInputStream)
 
 EmbedStream::EmbedStream()
 {
-  NS_INIT_ISUPPORTS();
   mOwner       = nsnull;
   mOffset      = 0;
   mDoingStream = PR_FALSE;

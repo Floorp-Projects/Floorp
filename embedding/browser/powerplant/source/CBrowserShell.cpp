@@ -133,7 +133,6 @@ CBrowserShellProgressListener::CBrowserShellProgressListener(CBrowserShell* itsO
     mLoading(PR_FALSE), mUseRealProgFlag(PR_FALSE),
     mFinishedRequests(0), mTotalRequests(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 CBrowserShellProgressListener::~CBrowserShellProgressListener()

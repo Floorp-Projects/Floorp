@@ -85,8 +85,6 @@ CBrowserChrome::CBrowserChrome(CBrowserShell *aShell,
     mInModalLoop(false), mWindowVisible(false),
     mInitialLoadComplete(false)
 {
-	NS_INIT_ISUPPORTS();
-	
 	ThrowIfNil_(mBrowserShell);
 	mBrowserWindow = LWindow::FetchWindowObject(mBrowserShell->GetMacWindow());
 	StartListening();
