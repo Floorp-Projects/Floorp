@@ -92,7 +92,6 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
 {
   nsresult rv;
 
-  mMDG = nsnull;
   if (!mDependencies) {  
     rv = NS_NewArray(getter_AddRefs(mDependencies));
   } else {
@@ -100,23 +99,21 @@ nsXFormsControlStub::ProcessNodeBinding(const nsString          &aBindingAttr,
   }
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIModelElementPrivate> model;
   rv = nsXFormsUtils::EvaluateNodeBinding(mElement,
                                           kElementFlags,
                                           aBindingAttr,
                                           EmptyString(),
                                           aResultType,
-                                          getter_AddRefs(model),
+                                          getter_AddRefs(mModel),
                                           aResult,
                                           mDependencies);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (model) {
-    model->AddFormControl(this);
-    model->GetMDG(&mMDG);
+  if (mModel) {
+    mModel->AddFormControl(this);
     if (aModel) {
-      NS_ADDREF(*aModel = model);
+      NS_ADDREF(*aModel = mModel);
     }
   }
 
@@ -127,25 +124,19 @@ PRBool
 nsXFormsControlStub::GetReadOnlyState()
 {
   PRBool res = PR_FALSE;
-  if (mBoundNode && mMDG) {
-    const nsXFormsNodeState* ns = mMDG->GetNodeState(mBoundNode);
-    if (ns) {
-      res = ns->IsReadonly();
-    }
-  }
+  if (mElement) {
+    mElement->HasAttribute(NS_LITERAL_STRING("read-only"), &res);
+  }  
   return res;
 }
 
 PRBool
 nsXFormsControlStub::GetRelevantState()
 {
-  PRBool res = PR_TRUE;
-  if (mBoundNode && mMDG) {
-    const nsXFormsNodeState* ns = mMDG->GetNodeState(mBoundNode);
-    if (ns) {
-      res = ns->IsRelevant();
-    }
-  }
+  PRBool res = PR_FALSE;
+  if (mElement) {
+    mElement->HasAttribute(NS_LITERAL_STRING("enabled"), &res);
+  }  
   return res;
 }
 
@@ -153,8 +144,10 @@ void
 nsXFormsControlStub::ToggleProperty(const nsAString &aOn,
                                     const nsAString &aOff)
 {
-  mElement->SetAttribute(aOn, NS_LITERAL_STRING("1"));
-  mElement->RemoveAttribute(aOff);
+  if (mElement) {
+    mElement->SetAttribute(aOn, NS_LITERAL_STRING("1"));
+    mElement->RemoveAttribute(aOff);
+  }
 }
 
 NS_IMETHODIMP
@@ -220,7 +213,10 @@ nsXFormsControlStub::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 NS_IMETHODIMP
 nsXFormsControlStub::OnDestroyed()
 {
-  mMDG = nsnull;
+  if (mModel) {
+    mModel->RemoveFormControl(this);
+    mModel = nsnull;
+  }
   mElement = nsnull;
 
   return NS_OK;
@@ -258,9 +254,8 @@ nsXFormsControlStub::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
   if (aName == nsXFormsAtoms::model ||
       aName == nsXFormsAtoms::bind ||
       aName == nsXFormsAtoms::ref) {
-    nsCOMPtr<nsIModelElementPrivate> model = nsXFormsUtils::GetModel(mElement);
-    if (model)
-      model->RemoveFormControl(this);
+    if (mModel)
+      mModel->RemoveFormControl(this);
   }
 
   return NS_OK;

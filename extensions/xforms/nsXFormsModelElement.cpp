@@ -771,14 +771,25 @@ nsXFormsModelElement::FindInstanceElement(const nsAString &aID,
   return NS_OK;
 }
 
-nsresult
-nsXFormsModelElement::GetMDG(nsXFormsMDGEngine **aMDG)
-{
-  if (aMDG)
-    *aMDG = &mMDG;
-  return NS_OK;
+NS_IMETHODIMP
+nsXFormsModelElement::SetNodeValue(nsIDOMNode      *aContextNode,
+                                   const nsAString &aNodeValue,
+                                   PRBool          *aNodeChanged)
+{ 
+  return mMDG.SetNodeValue(aContextNode,
+                           aNodeValue,
+                           PR_TRUE,
+                           aNodeChanged);
 }
 
+NS_IMETHODIMP
+nsXFormsModelElement::GetNodeValue(nsIDOMNode *aContextNode,
+                                   nsAString  &aNodeValue)
+{
+  return mMDG.GetNodeValue(aContextNode,
+                           aNodeValue);
+}
+ 
 NS_IMETHODIMP
 nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
 {

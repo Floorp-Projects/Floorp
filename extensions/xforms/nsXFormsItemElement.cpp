@@ -52,7 +52,6 @@
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsIXFormsContextControl.h"
 #include "nsIModelElementPrivate.h"
-#include "nsXFormsMDGEngine.h"
 
 /**
  * nsXFormsItemElement implements the XForms \<item\> element.
@@ -322,12 +321,9 @@ nsXFormsItemElement::WriteSelectedItems(nsIDOMNode *aContainer)
   ///       @see https://bugzilla.mozilla.org/show_bug.cgi?id=278207
   ///       Wherever its final resting place might be, it should be shared
   ///       with the code in nsXFormsInputElement
-  nsXFormsMDGEngine* MDG;
-  model->GetMDG(&MDG);
-  NS_ENSURE_STATE(MDG);
 
   PRBool changed;
-  rv = MDG->SetNodeValue(textNode, value, PR_TRUE, &changed);
+  rv = model->SetNodeValue(textNode, value, &changed);
   NS_ENSURE_SUCCESS(rv, rv);
   if (changed) {
     rv = nsXFormsUtils::DispatchEvent(modelNode, eEvent_Recalculate);

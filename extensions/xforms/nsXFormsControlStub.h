@@ -47,15 +47,14 @@
 #include "nsIDOMNode.h"
 #include "nsIXTFElement.h"
 
+#include "nsIModelElementPrivate.h"
 #include "nsIXFormsControl.h"
 #include "nsXFormsStubElement.h"
 #include "nsXFormsUtils.h"
 
 class nsIDOMEvent;
 class nsIDOMXPathResult;
-class nsIModelElementPrivate;
 class nsIXTFXMLVisualWrapper;
-class nsXFormsMDGEngine;
 
 /**
  * Common stub for all XForms controls that inherit from nsIXFormsControl and
@@ -66,10 +65,6 @@ class nsXFormsMDGEngine;
  *
  * @todo nsIXFormsContextControl-stub should probably also be included here
  *       (mBoundNode is in fact also the context) (XXX)
- *
- * @todo I guess it would make sense to call 
- *       nsIModelElementPrivate->RemoveFormControl in OnDestroyed()? (XXX)
- *       We should possible save the model as a member variable...
  */
 class nsXFormsControlStub : public nsIXFormsControl,
                             public nsXFormsXMLVisualStub
@@ -110,8 +105,7 @@ public:
                               nsIXTFElement::NOTIFY_DOCUMENT_CHANGED |
                               nsIXTFElement::NOTIFY_PARENT_CHANGED |
                               nsIXTFElement::NOTIFY_HANDLE_DEFAULT),
-    kElementFlags(nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR),
-    mMDG(nsnull)
+    kElementFlags(nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR)
     {};
 
 protected:
@@ -134,8 +128,8 @@ protected:
    */
   nsCOMPtr<nsIMutableArray> mDependencies;
 
-  /** The MDG for the control */
-  nsXFormsMDGEngine        *mMDG;
+  /** The model for the control */
+  nsCOMPtr<nsIModelElementPrivate> mModel;
 
   /** Returns the read only state of the control (ie. mBoundNode) */
   PRBool GetReadOnlyState();

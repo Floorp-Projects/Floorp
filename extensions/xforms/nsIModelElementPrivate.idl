@@ -41,7 +41,7 @@
 interface nsIXFormsControl;
 interface nsISchemaType;
 interface nsIInstanceElementPrivate;
-interface nsXFormsMDGEngine;
+interface nsIDOMNode;
 
 /**
  * Private interface implemented by the model element for other
@@ -78,12 +78,17 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
   nsIInstanceElementPrivate findInstanceElement(in AString id);
 
   /**
-   * The model's MDG.
-   *
-   * @bug nsXFormsMDGEngine is not an interface.
-   *      @see https://bugzilla.mozilla.org/show_bug.cgi?id=278370
+   * Set the value of an instance node.
    */
-  readonly attribute nsXFormsMDGEngine MDG;
+  void setNodeValue(in nsIDOMNode contextNode,
+                    in AString nodeValue,
+                    out boolean nodeChanged);
+
+  /**
+   * Get the value of an instance node.
+   */
+  void getNodeValue(in nsIDOMNode contextNode,
+                    out AString  nodeValue);
 
   /**
    * Validates the instance node against the schemas loaded by the model.

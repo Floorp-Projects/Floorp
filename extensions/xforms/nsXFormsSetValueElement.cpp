@@ -104,13 +104,8 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
     n3->GetTextContent(value);
   }
 
-  nsXFormsMDGEngine* MDG;
-  modelPriv->GetMDG(&MDG);
-  if (!MDG)
-    return NS_ERROR_FAILURE;
-
   PRBool changed;
-  rv = MDG->SetNodeValue(singleNode, value, PR_TRUE, &changed);
+  rv = modelPriv->SetNodeValue(singleNode, value, &changed);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (changed) {

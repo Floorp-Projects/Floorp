@@ -56,7 +56,6 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIContent.h"
 #include "nsIDOMXPathExpression.h"
-#include "nsXFormsMDGEngine.h"
 
 /**
  * Implementation of the \<input\>, \<secret\>, and \<textarea\> elements.
@@ -224,7 +223,7 @@ nsXFormsInputElement::Focus(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 {
-  if (!mControl && !mBoundNode && !mMDG)
+  if (!mControl && !mBoundNode && !mModel)
     return NS_OK;
 
   nsAutoString value;
@@ -249,11 +248,10 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
   }
 
   PRBool changed;
-  nsresult rv = mMDG->SetNodeValue(mBoundNode, value, PR_TRUE, &changed);
+  nsresult rv = mModel->SetNodeValue(mBoundNode, value, &changed);
   NS_ENSURE_SUCCESS(rv, rv);
   if (changed) {
-    nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(mElement);
-    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(mModel);
  
     if (model) {
       rv = nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);
@@ -295,7 +293,7 @@ nsXFormsInputElement::Bind()
 NS_IMETHODIMP
 nsXFormsInputElement::Refresh()
 {
-  if (!mControl && !mMDG)
+  if (!mControl || !mModel)
     return NS_OK;
   
   nsAutoString text;
@@ -316,9 +314,7 @@ nsXFormsInputElement::Refresh()
 
     if (mType == eType_Input) {
       nsCOMPtr<nsISchemaType> type;
-      /// @todo: Enable type support. This will be moved away from the model,
-      /// will it not? (XXX)
-      // model->GetTypeForControl(this, getter_AddRefs(type));
+      mModel->GetTypeForControl(this, getter_AddRefs(type));
       nsCOMPtr<nsISchemaBuiltinType> biType = do_QueryInterface(type);
       PRUint16 typeValue = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
       if (biType)

@@ -56,7 +56,6 @@
 #include "nsIContent.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsNetUtil.h"
-#include "nsXFormsMDGEngine.h"
 
 static void
 ReleaseObject(void    *aObject,
@@ -213,7 +212,7 @@ nsXFormsUploadElement::Focus(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsUploadElement::Blur(nsIDOMEvent *aEvent)
 {
-  if (!mInput || mBoundNode || mMDG)
+  if (!mInput || !mBoundNode || !mModel)
     return NS_OK;
 
   nsAutoString value;
@@ -236,7 +235,8 @@ nsXFormsUploadElement::Blur(nsIDOMEvent *aEvent)
   // sync with what is actually submitted.
   nsCAutoString spec;
   NS_GetURLSpecFromFile(file, spec);
-  mMDG->SetNodeValue(mBoundNode, NS_ConvertUTF8toUTF16(spec));
+  PRBool changed;
+  mModel->SetNodeValue(mBoundNode, NS_ConvertUTF8toUTF16(spec), &changed);
   return NS_OK;
 }
 
