@@ -49,7 +49,7 @@
   <box align="horizontal">
     <html:input type="text" class="SpellCheckWord" id="ReplaceWord" size="24" onkeyup="ChangeReplaceWord()"/>
     <spring class="bigspacer"/>
-    <titledbutton class="push SizeToParent" id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
+    <button class="dialog" id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
     <spring flex="100%"/>
   </box>
   <spring class="spacer"/>
@@ -59,16 +59,16 @@
     <box align="vertical">
       <box align="horizontal"> 
         <spring class="bigspacer"/>
-        <titledbutton class="push SizeToParent" flex="100%" id="Ignore" onclick="Ignore()" value="&ignoreButton.label;"/>
+        <button class="dialog" flex="100%" id="Ignore" oncommand="Ignore()" value="&ignoreButton.label;"/>
         <spring class="bigspacer"/>
-        <titledbutton class="push SizeToParent" flex="100%" id="IgnoreAll" onclick="IgnoreAll()" value="&ignoreallButton.label;"/>
+        <button class="dialog" flex="100%" id="IgnoreAll" oncommand="IgnoreAll()" value="&ignoreallButton.label;"/>
       </box>
       <spring class="bigspacer"/>
       <box align="horizontal"> 
         <spring class="bigspacer"/>
-        <titledbutton class="push SizeToParent" flex="100%" id="Replace" onclick="Replace()" value="&changeButton.label;"/>
+        <button class="dialog" flex="100%" id="Replace" oncommand="Replace()" value="&changeButton.label;"/>
         <spring class="bigspacer"/>
-        <titledbutton class="push SizeToParent" flex="100%" id="ReplaceAll" onclick="ReplaceAll()" value="&changeallButton.label;"/>
+        <button class="dialog" flex="100%" id="ReplaceAll" oncommand="ReplaceAll()" value="&changeallButton.label;"/>
       </box>
       <spring class="bigspacer"/>
       <box align="horizontal"> 
@@ -77,9 +77,9 @@
       </box> 
       <box align="horizontal"> 
         <spring class="bigspacer"/>
-        <titledbutton class="push SizeToParent" flex="100%" id="AddToDictionary" onclick="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
+        <button class="dialog" flex="100%" id="AddToDictionary" oncommand="AddToDictionary()" value="&addtouserdictionaryButton.label;"/>
         <spring class="bigspacer"/>
-        <titledbutton class="push SizeToParent" flex="100%" id="EditDictionary" onclick="EditDictionary()" value="&edituserdictionaryButton.label;"/>
+        <button class="dialog" flex="100%" id="EditDictionary" oncommand="EditDictionary()" value="&edituserdictionaryButton.label;"/>
       </box>
     </box>
   </box>
@@ -89,9 +89,9 @@
       <option> &englishLanguagePopup.value; </option>
     </html:select>
     <spring class="bigspacer"/>
-    <titledbutton class="push SizeToParent"  id="Recheck" onclick="Recheck()" value="&recheckButton.label;"/>
+    <button class="dialog"  id="Recheck" oncommand="Recheck()" value="&recheckButton.label;"/>
     <spring class="bigspacer"/>
-    <titledbutton class="push SizeToParent"  id="Close" onclick="Close()" value="&closeButton.label;"/>
+    <button class="dialog"  id="Close" oncommand="Close()" value="&closeButton.label;"/>
     <spring class="bigspacer"/>
   </box> 
 </box>

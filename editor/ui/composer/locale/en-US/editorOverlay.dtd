@@ -307,6 +307,22 @@
 <!ENTITY stylesubscript.accesskey "s">
 <!ENTITY styleNonbreakingCmd.label "Nonbreaking">
 <!ENTITY stylenonbreaking.accesskey "n">
+<!ENTITY styleEm.label "Emphasis">
+<!ENTITY styleEm.accesskey "e">
+<!ENTITY styleStrong.label "Stronger Emphasis">
+<!ENTITY styleStrong.accesskey "t">
+<!ENTITY styleCite.label "Citation">
+<!ENTITY styleCite.accesskey "c">
+<!ENTITY styleAbbr.label "Abbreviation">
+<!ENTITY styleAbbr.accesskey "a">
+<!ENTITY styleAcronym.label "Acronym">
+<!ENTITY styleAcronym.accesskey "r">
+<!ENTITY styleCode.label "Code">
+<!ENTITY styleCode.accesskey "o">
+<!ENTITY styleSamp.label "Sample Output">
+<!ENTITY styleSamp.accesskey "m">
+<!ENTITY styleVar.label "Variable">
+<!ENTITY styleVar.accesskey "v">
 
 <!ENTITY fontColorMenu.label "Text Color">
 <!ENTITY formatcolormenu.accesskey "c">

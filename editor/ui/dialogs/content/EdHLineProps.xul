@@ -55,7 +55,7 @@
         <row vertical-align="baseline" autostretch="never">
           <text value="&widthEditField.label;"/>
           <textfield id="width" flex="1" onkeyup="forceInteger('width')"/>
-          <menulist id="pixelOrPercentMenulist"><menupopup/></menulist>
+          <menulist id="pixelOrPercentMenulist"/>
           <!-- menupopup and menuitems added by JS -->
         </row>
       </rows>

@@ -103,7 +103,7 @@
                 <spring class="spacer"/>
                 <html:label for="AddHTMLAttributeValueInput"> &AttValue.label;</html:label>
           	    <html:input type="text" flex="100%" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.which)"/>
-                <titledbutton class="push" id="AddHTMLAttribute" onclick="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+                <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>
           </box>
@@ -133,7 +133,7 @@
                 <spring class="spacer"/>
                 <html:label for="AddCSSAttributeValueInput"> &AttValue.label;</html:label>
           	    <html:input type="text" flex="100%" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.which)"/>
-                <titledbutton class="push" id="AddCSSAttribute" onclick="onAddCSSAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+                <button class="dialog" id="AddCSSAttribute" oncommand="onAddCSSAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>
           </box>
@@ -163,7 +163,7 @@
                 <spring class="spacer"/>
                 <html:label for="AddJSEAttributeValueInput"> &AttValue.label;</html:label>
           	    <html:input type="text" flex="100%" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.which)"/>
-                <titledbutton class="push" id="AddJSEAttribute" onclick="onAddJSEAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+                <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
               </box>
             </titledbox>
           </box>
@@ -173,7 +173,7 @@
   </tabcontrol>
 
   <box align="horizontal">
-    <html:div style="margin-top: 0.5em"><titledbutton class="push" value="&HTMLReference.label;"/></html:div>
+    <html:div style="margin-top: 0.5em"><button class="dialog" value="&HTMLReference.label;"/></html:div>
     <spring flex="100%"/>
     <!-- from global dialogOverlay -->
     <html:div style="margin-top: 0.5em">

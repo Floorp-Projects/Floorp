@@ -47,8 +47,8 @@
 
   <tabcontrol align="vertical">
 	  <tabbox align="horizontal" flex="100%">
-		  <tab id="TableTab" selected="true" onclick="SelectTableTab()" value="&tableTab.label;"/>
-		  <tab id="CellTab" onclick="SelectCellTab()" value="&cellTab.label;"/>
+		  <tab id="TableTab" selected="true" oncommand="SelectTableTab()" value="&tableTab.label;"/>
+		  <tab id="CellTab" oncommand="SelectCellTab()" value="&cellTab.label;"/>
 	  	<spring flex="1"/>
 	  </tabbox>
     <tabpanel class="Padding5" orient="vertical" id="TabPanel">
@@ -139,8 +139,8 @@
                 <image class="popup-trigger"/>
               </box>
     	        <menupopup>
-                <colorpicker id="tableBackgroundCP" palettename="standard" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this);"/>
-                <button class="dialog" value="&defaultColor.label;" onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this)"/>
+                <colorpicker id="tableBackgroundCP" palettename="standard" oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this);"/>
+                <button class="dialog" value="&defaultColor.label;" oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',this)"/>
     	        </menupopup>
             </menu>
             <spring class="spacer"/>
@@ -182,9 +182,9 @@
             </menupopup>
           </menulist>
           <spring class="bigspacer"/>
-          <button class="dialog MinWidth50" value="&cellSelectionPrevious.label;" onclick="SelectPrevious()" disabled="true"/>
+          <button class="dialog MinWidth50" value="&cellSelectionPrevious.label;" oncommand="SelectPrevious()" disabled="true"/>
           <spring class="bigspacer"/>
-          <button class="dialog MinWidth50" value="&cellSelectionNext.label;" onclick="SelectNext()" disabled="true"/>
+          <button class="dialog MinWidth50" value="&cellSelectionNext.label;" oncommand="SelectNext()" disabled="true"/>
         </titledbox>
         <!-- cell size titledbox -->
         <titledbox class="NoBottomPad"><title><text align="left" value="&size.label;"/></title>
@@ -266,9 +266,9 @@
               </box>
     	        <menupopup>
                 <colorpicker id="cellBackgroundCP" palettename="standard"
-                    onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
+                    oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
                 <button class="dialog" value="&defaultColor.label;"
-                    onclick="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
+                    oncommand="GetColorAndUpdate('cellBackgroundCP','cellBackgroundCW',this)"/>
     	        </menupopup>
             </menu>
             <spring class="spacer"/>

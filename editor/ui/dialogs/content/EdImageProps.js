@@ -123,8 +123,8 @@ function InitDialog()
   if ( SeeMore )
   {
 	  // setup the height and width widgets
-	  dialog.widthInput.value = InitPixelOrPercentPopup(globalElement, imageElement, "width", "widthUnitsMenulist");
-	  dialog.heightInput.value = InitPixelOrPercentPopup(globalElement, imageElement, "height", "heightUnitsMenulist");
+	  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, imageElement, "width", "widthUnitsMenulist");
+	  dialog.heightInput.value = InitPixelOrPercentMenulist(globalElement, imageElement, "height", "heightUnitsMenulist");
 	  
 	  // TODO: We need to get the actual image dimensions.
 	  //       If different from attribute dimensions, then "custom" is checked.

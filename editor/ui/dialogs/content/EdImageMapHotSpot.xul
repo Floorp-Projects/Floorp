@@ -53,7 +53,7 @@
         <input type="text" id="urlInput" value="http://" size="30"/>
       </td>
       <td valign="bottom">
-        <xul:titledbutton class="push dialog" id="Browse" onclick = "chooseFile()" value="&browseButton.label;"/>
+        <xul:button class="dialog dialog" id="Browse" oncommand = "chooseFile()" value="&browseButton.label;"/>
       </td>
     </tr>
     <tr>
@@ -75,7 +75,7 @@
       <td>
         <fieldset style="height:100%; padding:5">
           <legend class="dialog" id="commonLabel" align="center">&commonFieldset.label;</legend>
-          <select name="common_targets" id="commonInput" size="4" onclick="changeTarget()" onchange="changeTarget()">
+          <select name="common_targets" id="commonInput" size="4" oncommand="changeTarget()" onchange="changeTarget()">
             <option value="_self">Same Frame</option>
             <option value="_top">Whole Page</option>
             <option value="_blank">New Window</option>

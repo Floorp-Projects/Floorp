@@ -58,13 +58,13 @@
         <spring class="spacer"/>
         <!-- from EdDialogOverlay.xul -->
         <!-- The style: width setting is need to cover a bug in button width resizing when text changes -->
-        <titledbutton id="ChooseFile" style="width: 7em"/>
+        <button class="dialog" id="ChooseFile" style="width: 7em"/>
       </box>
       <spring class="spacer"/>
       <box>
-        <titledbutton class="push" id="MoreFewerButton" align="left" onclick="onMoreFewer()" persist="more"/>
+        <button class="dialog" id="MoreFewerButton" align="left" oncommand="onMoreFewer()" persist="more"/>
         <spring flex="1"/>
-        <titledbutton class="push" id="RemoveLink" onclick="RemoveLink()" value="&RemoveLinkButton.label;" style="width: 7em"/>
+        <button class="dialog" id="RemoveLink" oncommand="RemoveLink()" value="&RemoveLinkButton.label;" style="width: 7em"/>
       </box>
       <box id="MoreSection" align="vertical">
         <spring class="bigspacer"/>
