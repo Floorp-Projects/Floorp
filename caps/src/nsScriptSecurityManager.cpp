@@ -778,6 +778,9 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         };
 
         nsXPIDLString errorMsg;
+        // We need to keep our existing failure rv and not override it
+        // with a likely success code from the following string bundle
+        // call in order to throw the correct security exception later.
         nsresult rv2 = sStrBundle->FormatStringFromName(stringName.get(),
                                                         formatStrings,
                                                         NS_ARRAY_LENGTH(formatStrings),
@@ -2313,6 +2316,9 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
         NS_ConvertUTF8toUTF16 className(objClassInfo.GetName());
         const PRUnichar* formatStrings[] = { className.get() };
         nsXPIDLString errorMsg;
+        // We need to keep our existing failure rv and not override it
+        // with a likely success code from the following string bundle
+        // call in order to throw the correct security exception later.
         nsresult rv2 =
             sStrBundle->FormatStringFromName(strName.get(),
                                              formatStrings,
