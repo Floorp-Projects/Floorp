@@ -323,6 +323,8 @@ private:
 
   void DestroyNativeChildren(void);
 
+  GtkWindow *mTransientParent;
+
 };
 
 //
