@@ -25,6 +25,7 @@ PRIVATE_EXPORTS = \
 	nsCalUser.h \
 	nsCalUserList.h \
 	nsCalendarUser.h \
+    nsCalendarModel.h \
 	$(NULL)
 
 MODULE = trex

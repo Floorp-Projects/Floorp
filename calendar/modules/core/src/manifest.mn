@@ -29,6 +29,7 @@ CPPSRCS = \
 	nsLayerCollection.cpp \
 	nsCoreFactory.cpp \
 	nsCalendarUser.cpp \
+    nsCalendarModel.cpp \
 	$(NULL)
 
 

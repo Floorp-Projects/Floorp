@@ -15,33 +15,29 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-#ifndef nsCoreCIID_h__
-#define nsCoreCIID_h__
+#ifndef nsICalendarModel_h___
+#define nsICalendarModel_h___
 
 #include "nsISupports.h"
-#include "nsIFactory.h"
-#include "nsRepository.h"
-#include "nscalexport.h"
+#include "nsILayer.h"
 
-// d4797370-4cc8-11d2-924a-00805f8a7ab6
-#define NS_LAYER_CID   \
-{ 0xd4797370, 0x4cc8, 0x11d2, \
-  {0x92, 0x4a, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+//317353e0-4e66-11d2-924a-00805f8a7ab6
+#define NS_ICALENDAR_MODEL_IID   \
+{ 0x317353e0, 0x4e66, 0x11d2,    \
+{ 0x92, 0x4a, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6 } }
 
-// dabe52d0-4ccb-11d2-924a-00805f8a7ab6
-#define NS_LAYER_COLLECTION_CID   \
-{ 0xdabe52d0, 0x4ccb, 0x11d2, \
-  {0x92, 0x4a, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+class nsICalendarUser ;
 
-// 6858eab0-4cd8-11d2-924a-00805f8a7ab6
-#define NS_CALENDAR_USER_CID   \
-{ 0x6858eab0, 0x4cd8, 0x11d2, \
-  {0x92, 0x4a, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+class nsICalendarModel : public nsISupports
+{
 
-// fd439e90-4e67-11d2-924a-00805f8a7ab6
-#define NS_CALENDAR_MODEL_CID   \
-{ 0xfd439e90, 0x4e67, 0x11d2, \
-  {0x92, 0x4a, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+public:
+  NS_IMETHOD Init() = 0;
 
-#endif
+  NS_IMETHOD GetCalendarUser(nsICalendarUser *& aCalendarUser) = 0;
+  NS_IMETHOD SetCalendarUser(nsICalendarUser* aCalendarUser) = 0;
+
+};
+
+
+#endif /* nsICalendarModel */

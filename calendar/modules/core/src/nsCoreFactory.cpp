@@ -23,14 +23,15 @@
 
 #include "nsLayer.h"
 #include "nsCalendarUser.h"
+#include "nsCalendarModel.h"
 
-static NS_DEFINE_IID(kILayerIID,        NS_ILAYER_IID);
-static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,      NS_IFACTORY_IID);
-static NS_DEFINE_IID(kICalUSerIID,      NS_ICALENDAR_USER_IID);
-
-static NS_DEFINE_IID(kCLayerCID,        NS_LAYER_CID);
-static NS_DEFINE_IID(kCCalendarUserCID, NS_CALENDAR_USER_CID);
+static NS_DEFINE_IID(kILayerIID,         NS_ILAYER_IID);
+static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID,       NS_IFACTORY_IID);
+static NS_DEFINE_IID(kICalUSerIID,       NS_ICALENDAR_USER_IID);
+static NS_DEFINE_IID(kCLayerCID,         NS_LAYER_CID);
+static NS_DEFINE_IID(kCCalendarUserCID,  NS_CALENDAR_USER_CID);
+static NS_DEFINE_IID(kCCalendarModelCID, NS_CALENDAR_MODEL_CID);
 
 class nsCoreFactory : public nsIFactory
 {   
@@ -121,6 +122,8 @@ nsresult nsCoreFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)new nsLayer(aOuter);
   } else if (mClassID.Equals(kCCalendarUserCID)) {
     inst = (nsISupports *)new nsCalendarUser(aOuter);
+  } else if (mClassID.Equals(kCCalendarModelCID)) {
+    inst = (nsISupports *)new nsCalendarModel(aOuter);
   } 
 
   if (inst == NULL) {  

@@ -28,6 +28,7 @@ LD_LIBS += \
 	nscnv$(MOZ_BITS)30 \
 	nssb$(MOZ_BITS)30 \
     xpfc10 \
+    calcore10 \
 	$(XP_REG_LIB)
 
 AR_LIBS += \

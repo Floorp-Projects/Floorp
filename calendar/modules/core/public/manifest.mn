@@ -14,6 +14,7 @@ EXPORTS = \
 	nsILayer.h \
 	nsILayerCollection.h \
     nsICalendarUser.h \
+    nsICalendarModel.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

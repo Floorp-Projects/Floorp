@@ -110,6 +110,7 @@ nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :
   mImageRequest = nsnull;
 
   mView = nsnull;
+  mModel = nsnull;
 
 }
 
@@ -661,6 +662,17 @@ nsILayout * nsXPFCCanvas :: GetLayout()
 nsresult nsXPFCCanvas :: SetLayout(nsILayout * aLayout)
 {
   mLayout = aLayout;
+  return NS_OK;
+}
+
+nsIModel * nsXPFCCanvas :: GetModel()
+{
+    return mModel;
+}
+
+nsresult nsXPFCCanvas :: SetModel(nsIModel * aModel)
+{
+  mModel = aModel;
   return NS_OK;
 }
 

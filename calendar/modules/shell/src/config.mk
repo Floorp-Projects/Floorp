@@ -32,7 +32,6 @@ LD_LIBS += \
 	jpeg$(MOZ_BITS)$(VERSION_NUMBER) \
 	js$(MOZ_BITS)$(VERSION_NUMBER) \
 	jsdom \
-	jsj$(MOZ_BITS)$(VERSION_NUMBER) \
 	mimetype \
 	netlib \
 	remoturl \

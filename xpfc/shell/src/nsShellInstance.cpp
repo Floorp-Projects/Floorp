@@ -47,6 +47,7 @@
 #include "nsViewsCID.h"
 #include "nsPluginsCID.h"
 #include "nsIDeviceContext.h"
+#include "nsINetService.h"
 
 #ifdef NS_WIN32
 #include "direct.h"
@@ -234,6 +235,7 @@ nsresult nsShellInstance::RegisterFactories()
   #define PREF_DLL   "xppref32.dll"
   #define WEB_DLL    "raptorweb.dll"
   #define PLUGIN_DLL "raptorplugin.dll"
+  #define NETLIB_DLL "netlib.dll"  
 #else
   #define GFXWIN_DLL "libgfxunix.so"
   #define WIDGET_DLL "libwidgetunix.so"
@@ -242,6 +244,7 @@ nsresult nsShellInstance::RegisterFactories()
   #define PREF_DLL   "libpref.so"
   #define WEB_DLL    "libraptorweb.so"
   #define PLUGIN_DLL "raptorplugin.so"
+  #define NETLIB_DLL "netlib.so"
 #endif
 
 
@@ -254,6 +257,7 @@ nsresult nsShellInstance::RegisterFactories()
   static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
   static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
   static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
+  static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
   nsRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
@@ -314,6 +318,8 @@ nsresult nsShellInstance::RegisterFactories()
   nsRepository::RegisterFactory(kCViewManagerCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }

@@ -10,7 +10,7 @@
 GDEPTH = ..
 DEPTH  = ..
 
-DIRS =  core canvas command dialog layout network observer util parser chrome shell toolkit widget user
+DIRS =  core canvas command dialog layout network observer util parser chrome shell toolkit widget user model
 
 LIBRARY_NAME = xpfc
 

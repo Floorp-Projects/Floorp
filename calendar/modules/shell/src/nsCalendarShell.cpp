@@ -51,6 +51,8 @@
 #include "nsCoreCIID.h"
 #include "nsLayer.h"
 #include "nsCalUser.h"
+#include "nsCalendarUser.h"
+#include "nsCalendarModel.h"
 
 /* for CAPI to work in general form */
 #include "nsCapiCallbackReader.h"
@@ -92,6 +94,8 @@ static NS_DEFINE_IID(kCCapiLocalCID,            NS_CAPI_LOCAL_CID);
 static NS_DEFINE_IID(kCCapiCSTCID,              NS_CAPI_CST_CID);
 static NS_DEFINE_IID(kCLayerCID,                NS_LAYER_CID);
 static NS_DEFINE_IID(kCLayerCollectionCID,      NS_LAYER_COLLECTION_CID);
+static NS_DEFINE_IID(kCCalendarUserCID,         NS_CALENDAR_USER_CID);
+static NS_DEFINE_IID(kCCalendarModelCID,        NS_CALENDAR_MODEL_CID);
 
 // All Application Must implement this function
 nsresult NS_RegisterApplicationShellFactory()
@@ -695,6 +699,8 @@ nsresult nsCalendarShell::RegisterFactories()
   nsRepository::RegisterFactory(kCCapiCSTCID,   CAPI_DLL, PR_FALSE, PR_FALSE);
 
   // Register the Core Implementations
+  nsRepository::RegisterFactory(kCCalendarUserCID, CORE_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalendarModelCID, CORE_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCLayerCID, CORE_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCLayerCollectionCID, CORE_DLL, PR_FALSE, PR_FALSE);
 
