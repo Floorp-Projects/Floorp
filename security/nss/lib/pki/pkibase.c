@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.7 $ $Date: 2002/05/20 18:05:11 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.8 $ $Date: 2002/05/20 23:21:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -145,6 +145,23 @@ nssPKIObject_AddInstance
 	for (i=0; i<object->numInstances; i++) {
 	    if (nssCryptokiObject_Equal(object->instances[i], instance)) {
 		PZ_Unlock(object->lock);
+		if (instance->label) {
+		    if (!object->instances[i]->label ||
+		        !nssUTF8_Equal(instance->label,
+		                       object->instances[i]->label, NULL))
+		    {
+			/* Either the old instance did not have a label,
+			 * or the label has changed.
+			 */
+			nss_ZFreeIf(object->instances[i]->label);
+			object->instances[i]->label = instance->label;
+			instance->label = NULL;
+		    }
+		} else if (object->instances[i]->label) {
+		    /* The old label was removed */
+		    nss_ZFreeIf(object->instances[i]->label);
+		    object->instances[i]->label = NULL;
+		}
 		nssCryptokiObject_Destroy(instance);
 		return PR_SUCCESS;
 	    }

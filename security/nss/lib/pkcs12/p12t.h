@@ -111,7 +111,7 @@ struct sec_PKCS12SafeBagStr {
     unsigned int nAttribs;
 
     /* used for validation/importing */
-    PRBool problem, noInstall, validated, hasKey, removeExisting, installed;
+    PRBool problem, noInstall, validated, hasKey, unused, installed;
     int error;
 
     PRBool swapUnicodeBytes;

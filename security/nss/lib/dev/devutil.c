@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.14 $ $Date: 2002/04/26 12:59:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.15 $ $Date: 2002/05/20 23:21:34 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -1370,7 +1370,7 @@ nssTokenObjectCache_ImportObject
     return status;
 }
 
-NSS_IMPLEMENT PRStatus
+NSS_IMPLEMENT void
 nssTokenObjectCache_RemoveObject
 (
   nssTokenObjectCache *cache,
@@ -1408,7 +1408,6 @@ nssTokenObjectCache_RemoveObject
 	cache->objects[oType] = NULL;
     }
     PZ_Unlock(cache->lock);
-    return PR_SUCCESS;
 }
 
 /* XXX of course this doesn't belong here */
