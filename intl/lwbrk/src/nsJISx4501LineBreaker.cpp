@@ -24,6 +24,9 @@
 #include "pratom.h"
 #include "nsLWBRKDll.h"
 #include "jisx4501class.h"
+#define TH_UNICODE
+#include "th_char.h"
+#include "rulebrk.h"
 
 
 /* 
@@ -120,7 +123,28 @@
 
 
 
-   4. Now we use one bit to encode weather it is breakable, and use 2 bytes
+   4. We add THAI characters and make it breakable w/ all ther class
+
+   Class of
+   Leading    Class of Trialing Char Class
+   Char        
+
+              1 [a] 7  8  9 [b]15 16 18 THAI
+                                     
+        1     X  X  X  X  X  X  X  X  X
+      [a]        X                             
+        7        X  X                      
+        8        X              X    
+        9        X                                   
+      [b]        X                                  
+       15        X        X     X     X    
+       16        X                 X  X    
+       18        X              X  X  X    
+     THAI                                T
+      
+     T : need special handling
+
+   5. Now we use one bit to encode weather it is breakable, and use 2 bytes
       for one row, then the bit table will look like:
 
                  18    <-   1
@@ -134,6 +158,7 @@
       15  0000 0001 0101 0010  = 0x0152
       16  0000 0001 1000 0010  = 0x0182
       18  0000 0001 1100 0010  = 0x01C2
+    THAI  0000 0000 0000 0000  = 0x0000
 
    5. Now we map the class to number
       
@@ -146,9 +171,11 @@
       6: 15
       7: 16
       8: 18
+      9: THAI
+
 */
 
-#define MAX_CLASSES 9
+#define MAX_CLASSES 10
 
 static PRUint16 gPair[MAX_CLASSES] = {
   0x01FF, 
@@ -159,12 +186,14 @@ static PRUint16 gPair[MAX_CLASSES] = {
   0x0002, 
   0x0152, 
   0x0182, 
-  0x01C2
+  0x01C2,
+  0x0000
 };
 
 
 #define GETCLASSFROMTABLE(t, l) ((((t)[(l>>3)]) >> ((l & 0x0007)<<2)) & 0x000f)
 
+#define CLASS_THAI 9
 
 
 
@@ -182,6 +211,10 @@ PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
    {
      c = GETCLASSFROMTABLE(gLBClass00, l);
    } 
+   else if(th_isthai(u))
+   {
+     c = CLASS_THAI;
+   }
    else if( 0x2000 == h)
    {
      c = GETCLASSFROMTABLE(gLBClass20, l);
@@ -322,7 +355,15 @@ NS_IMETHODIMP nsJISx4501LineBreaker::BreakInBetween(
   else 
     c2 = this->GetClass(aText2[0]);
 
-  *oCanBreak = GetPair(c1,c2);
+  /* Handle cases for THAI */
+  if((CLASS_THAI == c1) && (CLASS_THAI == c2))
+  {
+     *oCanBreak = (0 == TrbWordBreakPos(aText1, aTextLen1, aText2, aTextLen2));
+  }
+  else 
+  {
+     *oCanBreak = GetPair(c1,c2);
+  }
   return NS_OK;
 }
 
@@ -355,6 +396,13 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Next(
                                   (cur<(aLen-1)) ?aText[cur+1]:0);
   } else  {
     c1 = this->GetClass(aText[cur]);
+  }
+  
+  if(CLASS_THAI == c1) 
+  {
+     *oNext = PRUint32(TrbFollowing(aText, aLen, aPos));
+     *oNeedMoreText = PR_FALSE;
+     return NS_OK;
   }
 
   for(cur++; cur <aLen; cur++)
@@ -405,6 +453,10 @@ NS_IMETHODIMP nsJISx4501LineBreaker::Prev(
   } else  {
     c1 = this->GetClass(aText[cur-1]);
   }
+  // To Do: 
+  //
+  // Should handle CLASS_THAI here
+  //
   for(cur--; cur > 0; cur--)
   {
      if(NEED_CONTEXTUAL_ANALYSIS(aText[cur-1]))
