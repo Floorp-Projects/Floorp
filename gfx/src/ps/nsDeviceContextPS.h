@@ -26,7 +26,7 @@
 #include "nsIRenderingContext.h"
 #include "nsPrintManager.h"
 
-class nsDeviceContextWin;
+class nsDeviceContextWin;       // need to be a friend of the class using us.
 
 class nsDeviceContextPS : public DeviceContextImpl
 {
@@ -40,7 +40,7 @@ public:
    * with a NativeWidget.
    * @update 12/21/98 dwc
    */
-  NS_IMETHOD  Init(nsNativeWidget aNativeWidget);  
+  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext);  
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
@@ -76,15 +76,16 @@ protected:
   PRUint32 							mDepth;
   MWContext             *mPrintContext; //XXX: Remove need for MWContext
   nsIDeviceContextSpec  *mSpec;
+  nsIDeviceContext      *mDelContext;   // since this is not really a device context, we ned a deligate
   PrintSetup            *mPrintSetup;
 
 
 
 public:
-  static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
+  //static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
   MWContext*    GetPrintContext() { return mPrintContext; }
 
-friend nsDeviceContextWin;
+friend nsDeviceContextWin;         // need to be a friend of the class using us.
 };
 
-#endif /* nsDeviceContextMac_h___ */
+#endif /* nsDeviceContextPS_h___ */
