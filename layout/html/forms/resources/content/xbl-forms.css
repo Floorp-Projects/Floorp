@@ -159,7 +159,7 @@ input[type="file"] > input[type="button"] {
  * The following rules are copied from forms.css, for widgets that aren't yet
  * defined in XBL.
  */
-*|*:fieldset-content {
+*|*:-moz-fieldset-content {
   display: block;
 }
 

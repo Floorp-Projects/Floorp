@@ -84,7 +84,7 @@ LAYOUT_ATOM(overflowList, "Overflow-list")
 LAYOUT_ATOM(popupList, "Popup-list")
 
   // Alphabetical list of pseudo tag names for non-element content
-LAYOUT_ATOM(canvasPseudo, ":canvas")
+LAYOUT_ATOM(canvasPseudo, ":-moz-canvas")
 LAYOUT_ATOM(commentTagName, "__moz_comment")
 LAYOUT_ATOM(dummyOptionPseudo, ":-moz-dummy-option")
 LAYOUT_ATOM(textTagName, "__moz_text")
@@ -93,9 +93,9 @@ LAYOUT_ATOM(pagePseudo, ":-moz-page")
 LAYOUT_ATOM(pageContentPseudo, ":-moz-pagecontent")
 LAYOUT_ATOM(pageSequencePseudo, ":-moz-page-sequence")
 LAYOUT_ATOM(processingInstructionTagName, "__moz_pi")
-LAYOUT_ATOM(scrolledContentPseudo, ":scrolled-content")
-LAYOUT_ATOM(viewportPseudo, ":viewport")
-LAYOUT_ATOM(viewportScrollPseudo, ":viewport-scroll")
+LAYOUT_ATOM(scrolledContentPseudo, ":-moz-scrolled-content")
+LAYOUT_ATOM(viewportPseudo, ":-moz-viewport")
+LAYOUT_ATOM(viewportScrollPseudo, ":-moz-viewport-scroll")
 LAYOUT_ATOM(selectScrolledContentPseudo, ":-moz-select-scrolled-content")
 
   // Alphabetical list of frame types

@@ -3373,7 +3373,6 @@ inline PRBool IsEventPseudo(nsIAtom* aAtom)
 {
   return PRBool ((nsCSSAtoms::activePseudo == aAtom)   || 
                  (nsCSSAtoms::dragOverPseudo == aAtom) || 
-//               (nsCSSAtoms::dragPseudo == aAtom)     ||   XXX not real yet
                  (nsCSSAtoms::focusPseudo == aAtom)    || 
                  (nsCSSAtoms::hoverPseudo == aAtom)); 
                  // XXX selected, enabled, disabled, selection?
