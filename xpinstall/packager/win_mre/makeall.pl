@@ -69,6 +69,14 @@ print "The raw version id is:  $inDefaultVersion\n";
 $inStagePath          = $ARGV[1];
 $inDistPath           = $ARGV[2];
 
+# Until we really figure out what to do with this batch file, this will get it
+#   into the installer, at least
+print "\n Copying runapp.bat $inStagePath\\mfcembed\\bin\n";
+if(system("copy runapp.bat $inStagePath\\mfcembed\\bin"))
+{
+  die "\n Error: copy runapp.bat $inStagePath\\mfcembed\\bin\n";
+}
+
 $inXpiURL = "";
 $inRedirIniURL = "";
 
@@ -568,7 +576,6 @@ sub MakeJsFile
 sub MakeXpiFile
 {
   my($mComponent);
-
   foreach $mComponent (@gComponentList)
   {
     # Make .js files
