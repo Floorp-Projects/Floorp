@@ -2485,23 +2485,39 @@ function OpenSelectedAttachment()
   var bucket = document.getElementById("attachmentBucket");
   if (bucket.selectedItems.length == 1) 
   {
-    var attachmentItem = bucket.getSelectedItem(0);
+    var attachmentUrl = bucket.getSelectedItem(0).attachment.url;
 
-    // turn the url into a nsIURL object then open it
-
-    var url = gIOService.newURI(attachmentItem.attachment.url, null, null);
-    url = url.QueryInterface( Components.interfaces.nsIURL );
-
-    if (url)
+    var messagePrefix = /^mailbox-message:|^imap-message:|^news-message:/i;
+    if (messagePrefix.test(attachmentUrl))
     {
-      var channel = gIOService.newChannelFromURI(url);
-      if (channel)
+      // we must be dealing with a forwarded attachment, treat this special
+      var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
+      messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+      var msgHdr = messenger.messageServiceFromURI(attachmentUrl).messageURIToMsgHdr(attachmentUrl);
+      if (msgHdr)
       {
-        var uriLoader = Components.classes["@mozilla.org/uriloader;1"].getService(Components.interfaces.nsIURILoader);
-        uriLoader.openURI(channel, true, new nsAttachmentOpener());
-      } // if channel
-    } // if url
+        var folderUri = msgHdr.folder.folderURL;
+        window.openDialog("chrome://messenger/content/messageWindow.xul", "_blank", "all,chrome,dialog=no,status,toolbar", 
+                          attachmentUrl, folderUri, null );
+      }
+    }
+    else
+    {
+      // turn the url into a nsIURL object then open it
 
+      var url = gIOService.newURI(attachmentUrl, null, null);
+      url = url.QueryInterface( Components.interfaces.nsIURL );
+
+      if (url)
+      {
+        var channel = gIOService.newChannelFromURI(url);
+        if (channel)
+        {
+          var uriLoader = Components.classes["@mozilla.org/uriloader;1"].getService(Components.interfaces.nsIURILoader);
+          uriLoader.openURI(channel, true, new nsAttachmentOpener());
+        } // if channel
+      } // if url 
+    }
   } // if one attachment selected
 }
 
