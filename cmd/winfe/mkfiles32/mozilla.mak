@@ -180,6 +180,9 @@ CFLAGS_RELEASE=/DNDEBUG /DCookieManagement /DSingleSignon \
 !else
 CFLAGS_RELEASE=/DNDEBUG \
 !endif
+!if defined(MOZ_FULLCIRCLE)
+	/DMOZ_FULLCIRCLE \
+!endif
 !IF "$(MOZ_BITS)"=="32"
     /MD /O1
 !ELSE
@@ -215,6 +218,9 @@ VERSTR=Dbg
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG) /DCookieManagement /DSingleSignon\
 !else
 CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
+!endif
+!if defined(MOZ_FULLCIRCLE)
+	/DMOZ_FULLCIRCLE \
 !endif
 !IF "$(MOZ_BITS)"=="32"
 	/Gm /Gi \
@@ -364,6 +370,9 @@ LINK_LIBS= \
 !endif
     $(DIST)\lib\xppref32.lib \
     $(DIST)\lib\libreg32.lib \
+!ifdef MOZ_FULLCIRCLE
+    $(DIST)\lib\fulls32.lib \
+!endif
 !ifdef MOZ_JAVA
     $(DIST)\lib\libapplet32.lib \
 !endif
@@ -1346,7 +1355,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\shcutdlg.cpp   
 	$(DEPTH)\cmd\winfe\slavewnd.cpp 
 	$(DEPTH)\cmd\winfe\splash.cpp 
-	$(DEPTH)\cmd\winfe\spiwrap.c 
 	$(DEPTH)\cmd\winfe\srvritem.cpp   
 	$(DEPTH)\cmd\winfe\statbar.cpp 
 !ifndef MOZ_NGLAYOUT
@@ -2839,6 +2847,9 @@ exports:
     -xcopy $(XPDIST)\public\js\*.h $(EXPORTINC) $(XCF)
 !if "$(MOZ_BITS)" == "32"
     -xcopy $(XPDIST)\public\jsdebug\*.h $(EXPORTINC) $(XCF)
+!ifdef MOZ_FULLCIRCLE
+    -xcopy $(XPDIST)\ns\fullsoft\public\*.h $(EXPORTINC) $(XCF)
+!endif
 !endif
     -xcopy $(XPDIST)\public\security\*.h $(EXPORTINC) $(XCF)
 !if defined(MOZ_JAVA)
