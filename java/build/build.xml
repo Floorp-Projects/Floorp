@@ -30,7 +30,7 @@
 
   <property name="Name" value="java.supplement.build"/>
   <property name="name" value="java.supplement.build"/>
-  <property name="version" value="20021002"/>
+  <property name="version" value="20021109"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -41,20 +41,54 @@
   <property name="package.home" value="${build.home}/../javadev"/>
   <property name="package.lib" value="${package.home}/lib"/>
   <property name="package.example" value="${package.home}/example"/>
+  <property name="package.manifest" value="${build.home}/META-INF/MANIFEST.MF"/>
+  <property name="package.version" value="1_3"/>
 
-  <target name="main" depends="build.webclient"/>
+  <target name="main" depends="prepare,build.webclient"/>
 
-  <target name="build.webclient">
+  <target name="prepare">
+
+    <condition property="short.os.name" value="win32">
+      <os family="dos" />
+    </condition>
 
     <mkdir dir="${package.home}"/>
     <mkdir dir="${package.lib}"/>
     <mkdir dir="${package.example}"/>
+    <mkdir dir="${build.home}/META-INF"/>
+
+  </target>
+
+  <target name="build.webclient" 
+          depends="create.webclient.manifest,build.webclient.jar">
 
   </target>
 
   <target name="clean">
 
     <delete dir="${package.home}"/>
+    <delete dir="${build.home}/META-INF"/>
+
+  </target>
+
+  <target name="create.webclient.manifest">
+
+    <echo file="${package.manifest}">Manifest-Version: 1.0
+Created-By: Webclient Build System
+Specification-Title: Webclient
+Specification-Version: 1.0
+Specification-Vendor: mozilla.org
+Implementation-Title: Webclient_mozilla
+Implementation-Version: ${package.version}
+Implementation-Vendor: mozilla.org
+</echo>
+
+  </target>
+
+  <target name="build.webclient.jar">
+
+    <jar jarfile="${package.lib}/webclient_${package.version}_${short.os.name}.jar"
+         basedir="${build.home}" manifest="${package.manifest}"/>
 
   </target>
 
