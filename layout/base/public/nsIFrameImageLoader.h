@@ -20,7 +20,7 @@
 
 #include "nslayout.h"
 #include "nsIImageObserver.h"
-#include "nscolor.h"
+#include "nsColor.h"
 class nsIFrame;
 class nsIImage;
 class nsIImageGroup;
