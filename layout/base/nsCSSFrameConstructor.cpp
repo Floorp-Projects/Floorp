@@ -4806,10 +4806,24 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       // Create display and button frames from the combobox's anonymous content.
       // The anonymous content is appended to existing anonymous content for this
       // element (the scrollbars).
+
+      // save the incoming pseudo frame state, so that we don't end up
+      // with those pseudoframes in childItems
+      nsPseudoFrames priorPseudoFrames; 
+      aState.mPseudoFrames.Reset(&priorPseudoFrames);
+
       nsFrameItems childItems;
       CreateAnonymousFrames(aPresShell, aPresContext, nsHTMLAtoms::combobox,
                             aState, aContent, comboboxFrame, PR_TRUE, childItems);
   
+      // process the current pseudo frame state
+      if (!aState.mPseudoFrames.IsEmpty()) {
+        ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, childItems);
+      }
+
+      // restore the incoming pseudo frame state 
+      aState.mPseudoFrames = priorPseudoFrames;
+      
       comboboxFrame->SetInitialChildList(aPresContext, nsnull,
                                          childItems.childList);
 
