@@ -256,7 +256,7 @@
   
       <menu id="insertMenu" command="cmd_insert"/>
 
-      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" command="cmd_insert">
+      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" command="cmd_format">
         <menupopup id="formatMenuPopup">
           <menu id="tableMenu"/>
           <menuseparator/>
