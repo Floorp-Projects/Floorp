@@ -68,15 +68,14 @@
     var maxSize = data['shistMax'].value;
     if (panelIsShown)
       maxSize = GetSHistValue();
-
-    if (maxSize < 0) {
+    if (maxSize < 0 || isNaN(maxSize) || maxSize == "") {
       // set the pref to 0 so the UI reflects the proper value
       if (panelIsShown)
-        document.getElementById("shistMax").value = "0";
+        document.getElementById("shistMax").value = "50";
       else
-        data['shistMax'].value = "0";
+        data['shistMax'].value = "50";
         
-      maxSize = 0;
+      maxSize = 50;
     }
     try {
       var SHistory = Components.classes["@mozilla.org/browser/shistory;1"]
