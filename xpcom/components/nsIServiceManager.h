@@ -223,8 +223,9 @@ public:
 class NS_EXPORT nsGetServiceByCID : public nsCOMPtr_helper
   {
     public:
-      nsGetServiceByCID( const nsCID& aCID, nsresult* aErrorPtr )
+      nsGetServiceByCID( const nsCID& aCID, nsISupports* aServiceManager, nsresult* aErrorPtr )
           : mCID(aCID),
+            mServiceManager( do_QueryInterface(aServiceManager) ),
             mErrorPtr(aErrorPtr)
         {
           // nothing else to do
@@ -233,22 +234,31 @@ class NS_EXPORT nsGetServiceByCID : public nsCOMPtr_helper
   	  virtual nsresult operator()( const nsIID&, void** ) const;
 
     private:
-      const nsCID& mCID;
-      nsresult*    mErrorPtr;
+      const nsCID&                mCID;
+      nsCOMPtr<nsIServiceManager> mServiceManager;
+      nsresult*                   mErrorPtr;
   };
 
 inline
 const nsGetServiceByCID
 do_GetService( const nsCID& aCID, nsresult* error = 0 )
   {
-    return nsGetServiceByCID(aCID, error);
+    return nsGetServiceByCID(aCID, 0, error);
+  }
+
+inline
+const nsGetServiceByCID
+do_GetService( const nsCID& aCID, nsISupports* aServiceManager, nsresult* error = 0 )
+  {
+    return nsGetServiceByCID(aCID, aServiceManager, error);
   }
 
 class NS_EXPORT nsGetServiceByProgID : public nsCOMPtr_helper
   {
     public:
-      nsGetServiceByProgID( const char* aProgID, nsresult* aErrorPtr )
+      nsGetServiceByProgID( const char* aProgID, nsISupports* aServiceManager, nsresult* aErrorPtr )
           : mProgID(aProgID),
+            mServiceManager( do_QueryInterface(aServiceManager) ),
             mErrorPtr(aErrorPtr)
         {
           // nothing else to do
@@ -257,16 +267,25 @@ class NS_EXPORT nsGetServiceByProgID : public nsCOMPtr_helper
   	  virtual nsresult operator()( const nsIID&, void** ) const;
 
     private:
-      const char* mProgID;
-      nsresult*   mErrorPtr;
+      const char*                 mProgID;
+      nsCOMPtr<nsIServiceManager> mServiceManager;
+      nsresult*                   mErrorPtr;
   };
 
 inline
 const nsGetServiceByProgID
 do_GetService( const char* aProgID, nsresult* error = 0 )
   {
-    return nsGetServiceByProgID(aProgID, error);
+    return nsGetServiceByProgID(aProgID, 0, error);
   }
+
+inline
+const nsGetServiceByProgID
+do_GetService( const char* aProgID, nsISupports* aServiceManager, nsresult* error = 0 )
+  {
+    return nsGetServiceByProgID(aProgID, aServiceManager, error);
+  }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // NS_WITH_SERVICE: macro to make using services easier. 
@@ -297,14 +316,7 @@ do_GetService( const char* aProgID, nsresult* error = 0 )
     nsCOMPtr<T> var = do_GetService(cid, rvAddr);
 
 #define NS_WITH_SERVICE1(T, var, isupportsServMgr, cid, rvAddr)     \
-    nsCOMPtr<T> var; \
-    { \
-        nsCOMPtr<nsIServiceManager> _servMgr = do_QueryInterface(isupportsServMgr, rvAddr); \
-        if (NS_SUCCEEDED(*rvAddr)) \
-        { \
-            *rvAddr = _servMgr->GetService(cid, NS_GET_IID(T), getter_AddRefs(var)); \
-        } \
-    }
+    nsCOMPtr<T> var = do_GetService(cid, isupportsServMgr, rvAddr);
     
 ////////////////////////////////////////////////////////////////////////////////
 // NS_NewServiceManager: For when you want to create a service manager

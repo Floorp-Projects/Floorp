@@ -31,7 +31,16 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 nsresult
 nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
   {
-    nsresult status = nsServiceManager::GetService(mCID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    nsresult status;
+    	// Too bad |nsServiceManager| isn't an |nsIServiceManager|, then this could have been one call
+    if ( mServiceManager )
+    	status = mServiceManager->GetService(mCID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    else
+    	status = nsServiceManager::GetService(mCID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+
+		if ( !NS_SUCCEEDED(status) )
+			*aInstancePtr = 0;
+
     if ( mErrorPtr )
       *mErrorPtr = status;
     return status;
@@ -42,7 +51,16 @@ nsGetServiceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) const
   {
     nsresult status;
     if ( mProgID )
-      status = nsServiceManager::GetService(mProgID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    	{
+    			// Too bad |nsServiceManager| isn't an |nsIServiceManager|, then this could have been one call
+    		if ( mServiceManager )
+    			status = mServiceManager->GetService(mProgID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+    		else
+    			status = nsServiceManager::GetService(mProgID, aIID, NS_REINTERPRET_CAST(nsISupports**, aInstancePtr), 0);
+
+        if ( !NS_SUCCEEDED(status) )
+      		*aInstancePtr = 0;
+      }
     else
       status = NS_ERROR_NULL_POINTER;
 
