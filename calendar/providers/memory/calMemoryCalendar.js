@@ -115,7 +115,7 @@ calMemoryCalendar.prototype = {
         var newObservers = Array();
         for (var i = 0; i < this.mObservers.length; i++) {
             if (this.mObservers[i].observer != aObserver)
-                newObservers.push(mObservers[i]);
+                newObservers.push(this.mObservers[i]);
         }
         this.mObservers = newObservers;
     },
@@ -258,9 +258,9 @@ calMemoryCalendar.prototype = {
         var item = this.mItems[aId];
         var iid = null;
 
-        if (item.QueryInterface(Components.interfaces.calIEvent)) {
+        if (item instanceof Components.interfaces.calIEvent) {
             iid = Components.interfaces.calIEvent;
-        } else if (item.QueryInterface(Components.interfaces.calITodo)) {
+        } else if (item instanceof Components.interfaces.calITodo) {
             iid = Components.interfaces.calITodo;
         } else {
             aListener.onOperationComplete (this,

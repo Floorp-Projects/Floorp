@@ -160,7 +160,7 @@ calICSCalendar.prototype = {
                     event.icalComponent = subComp;
                     this.addItem(event, null);
                     break;
-                case "VTODOnot":
+                case "VTODO":
                     // XXX Last time i tried, vtodo didn't work. Sadly no time to
                     // debug now.
                     var todo = Components.classes["@mozilla.org/calendar/todo;1"]
