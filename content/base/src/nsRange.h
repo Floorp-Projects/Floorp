@@ -91,7 +91,7 @@ public:
   
   static NS_METHOD    TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartOffset, PRInt32 aEndOffset, PRInt32 aReplaceLength);
 
-private:
+//private: I wish VC++ would give me a &&*@!#$ break
   PRBool       mIsPositioned;
   PRInt32      mStartOffset;
   PRInt32      mEndOffset;
