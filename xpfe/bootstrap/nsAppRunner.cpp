@@ -231,15 +231,16 @@ int main(int argc, char* argv[])
    *      components this will be specified in the XUL description...
    */
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull, widthVal, heightVal);
+  rv = appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull, widthVal, heightVal);
 
   NS_RELEASE(url);
+  if (NS_FAILED(rv)) goto done;
 
  
-   /*
-    * Start up the main event loop...
-    */
-   rv = appShell->Run();
+  /*
+   * Start up the main event loop...
+   */
+  rv = appShell->Run();
 
   /*
    * Shut down the Shell instance...  This is done even if the Run(...)
