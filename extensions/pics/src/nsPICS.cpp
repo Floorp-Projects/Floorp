@@ -152,7 +152,6 @@ public:
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );
 //  NS_IMETHOD OnConnectionsComplete();
 
 
@@ -915,20 +914,6 @@ nsPICS::OnEndURLLoad(nsIDocumentLoader* loader,
   }
 
  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPICS::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                 nsIChannel* channel, 
-                                 const char *aContentType,
-                                 const char *aCommand )
-{
-    // If we have a doc loader observer, let it respond to this.
-//    return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( mDocLoader, aURL, aContentType, aCommand )
-                              //: NS_ERROR_FAILURE;
-  if(!mPICSRatingsEnabled)
-    return NS_OK;
   return NS_OK;
 }
 
