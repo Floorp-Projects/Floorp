@@ -500,6 +500,9 @@ struct JSClass {
 #define JSCLASS_NEW_ENUMERATE   0x02    /* class has JSNewEnumerateOp method */
 #define JSCLASS_NEW_RESOLVE     0x04    /* class has JSNewResolveOp method */
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS 0x08  /* private slot is nsISupports* */
+/* Fill in null values for unused members. */
+#define JSCLASS_NO_OPTIONAL_MEMBERS \
+        0,0,0,0,0,0,{0,0}
 
 struct JSObjectOps {
     /* Mandatory non-null function pointer members. */
