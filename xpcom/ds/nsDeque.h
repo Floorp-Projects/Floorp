@@ -258,7 +258,16 @@ public:
    * @return  TRUE if NOT equal.
    */
   PRBool operator!=(nsDequeIterator& anIter);
-  
+
+  /**
+   * Compare 2 iterators for equivalence.
+   *
+   * @update	gess4/18/98
+   * @param   anIter is the other iterator to be compared to
+   * @return  TRUE if EQUAL
+   */
+  PRBool operator<(nsDequeIterator& anIter);
+
   /**
    * Compare 2 iterators for equivalence.
    *
@@ -267,6 +276,15 @@ public:
    * @return  TRUE if EQUAL
    */
   PRBool operator==(nsDequeIterator& anIter);
+  
+  /**
+   * Compare 2 iterators for equivalence.
+   *
+   * @update	gess4/18/98
+   * @param   anIter is the other iterator to be compared to
+   * @return  TRUE if EQUAL
+   */
+  PRBool operator>=(nsDequeIterator& anIter);
 
   /**
    * Pre-increment operator 
