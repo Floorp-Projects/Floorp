@@ -47,7 +47,7 @@ interface nsIDOMNSHTMLAreaElement : nsISupports
   readonly attribute DOMString        host;
   readonly attribute DOMString        hostname;  
   readonly attribute DOMString        pathname;
-  readonly attribute DOMString        search;
+           attribute DOMString        search;
   readonly attribute DOMString        port;
   readonly attribute DOMString        hash;
 };

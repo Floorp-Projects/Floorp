@@ -632,6 +632,34 @@ nsHTMLAnchorElement::GetSearch(nsAWritableString& aSearch)
   return result;
 }
 
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetSearch(const nsAReadableString& aSearch)
+{
+  nsAutoString href;
+
+  nsresult rv = GetHref(href);
+
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIURI> uri;
+
+    rv = NS_NewURI(getter_AddRefs(uri), href);
+
+    if (uri) {
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+
+      if (url) {
+        rv = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch).get());
+
+        nsXPIDLCString newHref;
+        uri->GetSpec(getter_Copies(newHref));
+        SetHref(NS_ConvertUTF8toUCS2(newHref));
+      }
+    }
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP    
 nsHTMLAnchorElement::GetPort(nsAWritableString& aPort)
 {
