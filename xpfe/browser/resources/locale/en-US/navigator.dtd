@@ -191,7 +191,7 @@
 <!ENTITY  homeButton.label            "Home">
 
 <!-- Statusbar -->
-<!ENTITY  statusText.label            "Document: Done">
+<!ENTITY  statusText.label            "Done">
 
 <!ENTITY historyCmd.label           "History">  
 <!ENTITY historyCmd.accesskey       "i">
