@@ -37,6 +37,7 @@ public:
   virtual ~nsUNIXCharset();
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
+  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
 
 private:
   nsString mCharset;
@@ -87,6 +88,12 @@ nsUNIXCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 {
    oResult = mCharset; 
    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+{
+	return NS_OK;
 }
 
 class nsUNIXCharsetFactory : public nsIFactory {

@@ -23,7 +23,8 @@ MAKE_OBJ_TYPE = EXE
 PROG1 = .\$(OBJDIR)\convperf.exe
 PROG2 = .\$(OBJDIR)\nsTestUConv.exe
 PROG3 = .\$(OBJDIR)\nsconv.exe
-PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
+PROG4 = .\$(OBJDIR)\plattest.exe 
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4)
 
 LCFLAGS=-DUSE_NSREG
 
@@ -47,3 +48,4 @@ clobber::
 $(PROG1): $(OBJDIR) convperf.cpp
 $(PROG2): $(OBJDIR) nsTestUConv.cpp
 $(PROG3): $(OBJDIR) nsconv.cpp
+$(PROG4): $(OBJDIR) plattest.cpp

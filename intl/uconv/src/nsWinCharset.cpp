@@ -23,7 +23,13 @@
 #include <windows.h>
 #include "nsUConvDll.h"
 #include "nsPlatformCharsetFactory.h"
+#include "nsIWin32Locale.h"
+#include "nsCOMPtr.h"
+#include "nsLocaleCID.h"
+#include "nsIComponentManager.h"
 
+NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
+NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 
 class nsWinCharset : public nsIPlatformCharset
 {
@@ -35,6 +41,7 @@ public:
   virtual ~nsWinCharset();
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
+  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
 private:
   nsString mCharset;
 };
@@ -76,6 +83,41 @@ nsWinCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 {
    oResult = mCharset;
    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+{
+	nsCOMPtr<nsIWin32Locale>	winLocale;
+	LCID						localeAsLCID;
+	char						acp_name[6];
+	nsString					charset("windows-1252");
+	nsString					localeAsNSString(localeName);
+
+	//
+	// convert locale name to a code page (through the LCID)
+	//
+	nsresult result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,nsnull,kIWin32LocaleIID,
+												getter_AddRefs(winLocale));
+	result = winLocale->GetPlatformLocale(&localeAsNSString,&localeAsLCID);
+	if (NS_FAILED(result)) { *_retValue = charset.ToNewUnicode(); return result; }
+
+	if (GetLocaleInfo(localeAsLCID,LOCALE_IDEFAULTANSICODEPAGE,acp_name,sizeof(acp_name))==0) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_FAILURE; }
+
+	//
+	// load property file and convert from LCID->charset
+	//
+
+	nsAutoString property_url("resource:/res/wincharset.properties");
+	nsURLProperties *charset_properties = new nsURLProperties(property_url);
+	if (!charset_properties) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
+
+     nsAutoString acp_key("acp.");
+	 acp_key.Append(acp_name);
+	 result = charset_properties->Get(acp_key,charset);
+	
+	 *_retValue = charset.ToNewUnicode();
+	 return result;
 }
 
 class nsWinCharsetFactory : public nsIFactory {
