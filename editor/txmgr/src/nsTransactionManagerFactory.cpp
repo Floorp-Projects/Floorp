@@ -28,7 +28,7 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCTransactionManagerFactory, NS_TRANSACTION_MANAGER_FACTORY_CID);
 
 class nsTransactionManagerFactory : public nsIFactory
-{   
+{
   public:   
 
     nsTransactionManagerFactory();   
@@ -45,31 +45,32 @@ class nsTransactionManagerFactory : public nsIFactory
     NS_IMETHOD LockFactory(PRBool aLock);   
 };   
 
-nsTransactionManagerFactory::nsTransactionManagerFactory()   
-{   
-}   
+nsTransactionManagerFactory::nsTransactionManagerFactory()
+{
+  mRefCnt = 0;
+}
 
-nsTransactionManagerFactory::~nsTransactionManagerFactory()   
-{   
+nsTransactionManagerFactory::~nsTransactionManagerFactory()
+{
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-}   
+}
 
 NS_IMPL_ADDREF(nsTransactionManagerFactory)
 NS_IMPL_RELEASE(nsTransactionManagerFactory)
 
 nsresult nsTransactionManagerFactory::QueryInterface(REFNSIID aIID,   
-                                                     void **aInstancePtr)   
-{   
+                                                     void **aInstancePtr)
+{
   if (nsnull == aInstancePtr)
     return NS_ERROR_NULL_POINTER;   
 
   *aInstancePtr = 0;   
 
-  if (aIID.Equals(kISupportsIID)) {   
+  if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
+  } else if (aIID.Equals(kIFactoryIID)) {
     *aInstancePtr = (void *)(nsIFactory*)this;   
-  }   
+  }
 
   if (nsnull == *aInstancePtr)
     return NS_NOINTERFACE;   
@@ -77,12 +78,12 @@ nsresult nsTransactionManagerFactory::QueryInterface(REFNSIID aIID,
   NS_ADDREF_THIS();
 
   return NS_OK;   
-}   
+}
 
 nsresult nsTransactionManagerFactory::CreateInstance(nsISupports *aOuter,  
                                                      REFNSIID aIID,  
-                                                     void **aResult)  
-{  
+                                                     void **aResult)
+{
   if (!aResult)
     return NS_ERROR_NULL_POINTER;  
 
@@ -90,31 +91,31 @@ nsresult nsTransactionManagerFactory::CreateInstance(nsISupports *aOuter,
   
   nsISupports *inst = new nsTransactionManager();
 
-  if (inst == NULL) {  
+  if (inst == NULL) {
     return NS_ERROR_OUT_OF_MEMORY;  
-  }  
+  }
 
   nsresult result = inst->QueryInterface(aIID, aResult);
 
-  if (NS_FAILED(result)) {  
+  if (NS_FAILED(result)) {
     // We didn't get the right interface, so clean up  
     delete inst;  
-  }  
+  }
 
   return result;  
-}  
+}
 
-nsresult nsTransactionManagerFactory::LockFactory(PRBool aLock)  
-{  
+nsresult nsTransactionManagerFactory::LockFactory(PRBool aLock)
+{
   // XXX: Not implemented yet.
   return NS_OK;
-}  
+}
 
 // return the proper factory to the caller
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_TRANSACTIONMANAGER nsresult NSGetFactory_TRANSACTIONMANAGER_DLL(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" /* NS_TRANSACTIONMANAGER */ nsresult NSGetFactory_TRANSACTIONMANAGER_DLL(const nsCID &aClass, nsIFactory **aFactory)
 #else
-extern "C" NS_TRANSACTIONMANAGER nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" /* NS_TRANSACTIONMANAGER */ nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 #endif
 {
   if (!aFactory)
