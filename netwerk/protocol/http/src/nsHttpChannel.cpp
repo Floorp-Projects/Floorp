@@ -837,7 +837,7 @@ nsHttpChannel::ProcessNormal()
     if (NS_FAILED(rv)) return rv;
 
     // install cache listener if we still have a cache entry open
-    if (mCacheEntry)
+    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE))
         rv = InstallCacheListener();
 
     return rv;
@@ -1194,7 +1194,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
 
     // Set the desired cache access mode accordingly...
     nsCacheAccessMode accessRequested;
-    if (offline)
+    if (offline || (mLoadFlags & INHIBIT_CACHING))
         accessRequested = nsICache::ACCESS_READ; // have no way of writing to cache
     else if (mLoadFlags & LOAD_BYPASS_CACHE)
         accessRequested = nsICache::ACCESS_WRITE; // replace cache entry
@@ -1345,7 +1345,9 @@ nsHttpChannel::CheckCache()
     buf.Adopt(0);
 
     // If we were only granted read access, then assume the entry is valid.
-    if (mCacheAccess == nsICache::ACCESS_READ) {
+    // unless it is INHBIT_CACHING
+    if (mCacheAccess == nsICache::ACCESS_READ &&
+        !(mLoadFlags & INHIBIT_CACHING)) {
         mCachedContentIsValid = PR_TRUE;
         return NS_OK;
     }
@@ -1608,7 +1610,9 @@ nsHttpChannel::InitCacheEntry()
     nsresult rv;
 
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_UNEXPECTED);
-    NS_ENSURE_TRUE(mCacheAccess & nsICache::ACCESS_WRITE, NS_ERROR_UNEXPECTED);
+    // if only reading, nothing to be done here.
+    if (mCacheAccess == nsICache::ACCESS_READ)
+        return NS_OK;
 
     // Don't cache the response again if already cached...
     if (mCachedContentIsValid)
