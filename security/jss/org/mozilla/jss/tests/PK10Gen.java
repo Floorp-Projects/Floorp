@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package org.mozilla.jss;
+package org.mozilla.jss.tests;
 
 import org.mozilla.jss.crypto.*;
 import org.mozilla.jss.CryptoManager;

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package org.mozilla.jss.crypto;
+package org.mozilla.jss.tests;
 
 import org.mozilla.jss.CryptoManager;
 

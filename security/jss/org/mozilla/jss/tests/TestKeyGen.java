@@ -66,9 +66,7 @@ public class TestKeyGen {
 
     public static void main(String[] args) {
       try {
-        CryptoToken token;
         CryptoManager manager;
-        KeyPairGenerator keyPairGenerator;
         java.security.KeyPair keyPair;
         Base64OutputStream base64;
 
@@ -105,12 +103,12 @@ public class TestKeyGen {
         DSAParams dsaParams;
         RSAParameterSpec rsaParams;
 
-        token = manager.getInternalKeyStorageToken();
-        keyPairGenerator = token.getKeyPairGenerator(KeyPairAlgorithm.RSA);
+        java.security.KeyPairGenerator kpg =
+            java.security.KeyPairGenerator.getInstance("RSA", "Mozilla-JSS");
 
         // 512-bit RSA with default exponent
-        keyPairGenerator.initialize(512);
-        keyPair = keyPairGenerator.genKeyPair();
+        kpg.initialize(512);
+        keyPair = kpg.genKeyPair();
         Assert.assert( keyPair.getPublic() instanceof RSAPublicKey);
         rsaPubKey = (RSAPublicKey) keyPair.getPublic();
         System.out.println("Generated 512-bit RSA KeyPair!");
@@ -118,8 +116,8 @@ public class TestKeyGen {
         System.out.println("Exponent: "+rsaPubKey.getPublicExponent());
 
         // 1024-bit RSA with default exponent
-        keyPairGenerator.initialize(1024);
-        keyPair = keyPairGenerator.genKeyPair();
+        kpg.initialize(1024);
+        keyPair = kpg.genKeyPair();
         Assert.assert( keyPair.getPublic() instanceof RSAPublicKey);
         rsaPubKey = (RSAPublicKey) keyPair.getPublic();
         System.out.println("Generated 1024-bit RSA KeyPair!");
@@ -128,8 +126,8 @@ public class TestKeyGen {
 
         // 512-bit RSA with exponent = 3
         rsaParams = new RSAParameterSpec(512, BigInteger.valueOf(3));
-        keyPairGenerator.initialize(rsaParams);
-        keyPair = keyPairGenerator.genKeyPair();
+        kpg.initialize(rsaParams);
+        keyPair = kpg.genKeyPair();
         Assert.assert( keyPair.getPublic() instanceof RSAPublicKey);
         rsaPubKey = (RSAPublicKey) keyPair.getPublic();
         System.out.println("Generated 512-bit RSA KeyPair with public exponent=3!");
@@ -137,9 +135,9 @@ public class TestKeyGen {
         System.out.println("Exponent: "+rsaPubKey.getPublicExponent());
 
         // 512-bit DSA
-        keyPairGenerator = token.getKeyPairGenerator(KeyPairAlgorithm.DSA);
-        keyPairGenerator.initialize(512);
-        keyPair = keyPairGenerator.genKeyPair();
+        kpg = java.security.KeyPairGenerator.getInstance("DSA", "Mozilla-JSS");
+        kpg.initialize(512);
+        keyPair = kpg.genKeyPair();
         Assert.assert( keyPair.getPublic() instanceof DSAPublicKey);
         dsaPubKey = (DSAPublicKey) keyPair.getPublic();
         System.out.println("Generated 512-bit DSA KeyPair!");
@@ -150,8 +148,8 @@ public class TestKeyGen {
         System.out.println("Y: "+dsaPubKey.getY());
 
         // 1024-bit DSA
-        keyPairGenerator.initialize(1024);
-        keyPair = keyPairGenerator.genKeyPair();
+        kpg.initialize(1024);
+        keyPair = kpg.genKeyPair();
         Assert.assert( keyPair.getPublic() instanceof DSAPublicKey);
         dsaPubKey = (DSAPublicKey) keyPair.getPublic();
         System.out.println("Generated 1024-bit DSA KeyPair!");

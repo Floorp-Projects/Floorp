@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package org.mozilla.jss.crypto;
+package org.mozilla.jss.tests;
 
 import java.security.*;
 import java.security.cert.X509Certificate;
