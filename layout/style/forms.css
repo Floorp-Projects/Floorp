@@ -233,6 +233,11 @@ optgroup[disabled] {
 /* hidden inputs */
 input[type="hidden"] {
   display: none;
+  padding: 0;
+  border: 0;
+  cursor: auto;
+  -moz-box-sizing: content-box;
+  -moz-user-focus: ignore;
   -moz-binding: none;
 }
 
