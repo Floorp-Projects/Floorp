@@ -1,4 +1,4 @@
-#!#perl# --
+#!#perl# -T --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
@@ -11,8 +11,8 @@
 # logs in compressed form for future reference.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2000/08/30 20:15:34 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/09/18 19:40:56 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
 # $Name:  $ 
@@ -42,9 +42,9 @@
 
 # Standard perl libraries
 use File::Basename;
-use Sys::Syslog;
 use Sys::Hostname;
 use File::stat;
+use Getopt::Long;
 
 # Tinderbox libraries
 use lib '#tinder_libdir#';
@@ -78,6 +78,14 @@ Informational Arguments
 
 --help		Show this usage page
 
+--force-time	Ignore the: 'starttime', 'timenow' attributes of the mail 
+		message and set new ones based off the current time. This 
+		option is  to allow for easier testing the functionality of 
+		the program. This flag is not recomended for production use.
+
+--skip-check	Turn off the strict checking of input files, to allow for
+		easier testing the functionality of the program. This flag is
+		not recomended for production use.
 
 Synopsis
 
@@ -104,7 +112,7 @@ locks are held by this code.
 
 Should errors occur during the processing of the mail message, the
 message is bounced by exiting with a non zero exit code and the error
-is written to the error log.
+is written to the error log and standard err.
 
 By convention all database update files are stored in a file name
 which matches the module name which will accept them.  We are creating
@@ -229,11 +237,16 @@ EOF
 sub fatal_mailprocessing_error {
 # all fatal errors come through this function
 
+# log errors to the log file on the server end and send them to stderr
+# so that sendmail can put the error message in the bounced mail.
+
   my  @error = @_;
   foreach $_ (@error) {
     print LOG "[$LOCALTIME] $_";
+    print STDERR "[$LOCALTIME] $_";
   }
   print LOG "\n";
+  print STDERR "\n";
 
   close(LOG);
   exit 9; 
@@ -242,9 +255,6 @@ sub fatal_mailprocessing_error {
 
 
 sub set_filenames{
-
-  #  $TMP_FILE{'buildupdate'} $FILE{'buildupdate'} must be on the
-  #  same  filesystem so that renaming them is atomic.
 
   # These are temporary files, used by the mail processsor and will be
   # erased before the program exits.  We use filenames which end in
@@ -287,6 +297,9 @@ sub set_filenames{
            'update_file' => (FileStructure::get_filename($tree, 'TinderDB_Dir').
                              "Build.Update.$uid"),
 
+           'update_time_stamp' => (FileStructure::get_filename($tree, 'update_time_stamp').
+                                   ""),
+
               );
 
   foreach $file ( (values %FILE), (values %TMP_FILE) ) {
@@ -308,13 +321,47 @@ sub set_filenames{
     ("$FileStructure::URLS{'gunzip'}?".
      "tree=$tree&full-log=$main::UID");
 
-  # record the basename of the log file
+  # record the basename of the log file (not used but useful for debugging.)
 
   $TINDERBOX{'full-log'} = File::Basename::basename($FILE{'full-log'});
   $TINDERBOX{'brief-log'} = File::Basename::basename($FILE{'brief-log'});
   
   return 1;
 }
+
+
+sub parse_args {
+
+  Getopt::Long::config('require_order', 'auto_abbrev', 'ignore_case');
+
+  %option_linkage = (
+		     "version" => \$version,
+		     "help" => \$help,
+		     "skip-check" => \$SKIP_CHECK,
+		     "force-time" => \$FORCE_TIME,
+		    );
+
+
+  GetOptions (\%option_linkage, qw(
+		  version! help! force-time! skip-check!
+		)) ||
+		    die("Illegal options in \@ARGV: '@ARGV',");
+
+  if ($version) {
+    print "$0: Version: $VERSION\n";
+    exit 0;  
+  }
+  
+  if ($help) {
+    usage();
+  }
+
+  if ($ENV{"REQUEST_METHOD"}) {
+    die("$0: is not a web program, can not be run from the webserver\n");
+  }
+
+  return 1;
+} # parse_args
 
 
 
@@ -397,6 +444,22 @@ sub parse_tinderbox_vars {
 }
 
 
+sub fix_nonunix_times {
+
+  foreach $key (keys %TINDERBOX) {
+
+    # convert dates in form "MM/DD/YY HH:MM:SS" to unix date
+
+    if( $TINDERBOX{$key} =~ 
+        /([0-9]+)\/([0-9]+)\/([0-9]+)\s+([0-9]+)\:([0-9]+)\:([0-9]+)/ ){
+      $TINDERBOX{$key} = timelocal($6,$5,$4,$2,$1-1,$3);
+    }
+
+  }
+
+  return 1;
+}
+
 # this function is used to change the tinderbox variables from the old
 # format into the new format. It will help ease transitions to the new
 # tinderbox code.  I believe the new format will be more maintainable
@@ -471,26 +534,28 @@ need to check that this update either
 sub check_required_vars {
 
   my ($err_string) = '';
-  
-  
-  
+
   my $build_start = '';
-  my $stamp_file = $FILE{'build_update_time_stamp'};
+  my $stamp_file = $FILE{'update_time_stamp'};
 
   if (-r $stamp_file) {
     open (STAMP, "<$stamp_file") ||
       die("Could not open file: $stamp_file, $!\n");
     
     $build_start = <STAMP>;
-    chmop $build_start;
+    chomp $build_start;
     
     close (STAMP) ||
       die("Could not close file: $stamp_file, $!\n");
     
-    ($build_start > $TINDERBOX{'starttime'} ) ||
+    ($build_start < $TINDERBOX{'starttime'} ) ||
       die("New build started before the previous one.  ".
           "Something is very wrong with the clock on the build machine, ".
-          "time is going backwards.\n");
+          "time is going backwards.\n".
+          "old starttime: $build_start, ".
+          "new starttime: $TINDERBOX{'starttime'},".
+          "delta: ". ($TINDERBOX{'starttime'}-$build_start).
+          "\n");
 
     # Keep the spacing between builds greater then our minumum HTML
     # grid spacing.  There can be very frequent updates but different
@@ -498,10 +563,19 @@ sub check_required_vars {
 
     ($build_start > ($TinderDB::MIN_TABLE_SPACING + (60*2)) ) ||
        die("New build started too frequently.  Builds must start".
-           "atleast ".($TinderDB::MIN_TABLE_SPACING + (60*2)).
+           "at least ".($TinderDB::MIN_TABLE_SPACING + (60*2)).
            " seconds apart.  Build not accepted.\n");
   }      
-  
+
+  # There is a small chance that we may run into update problems here
+  # because we do not lock out other instances of processmail from
+  # updating this file at the same time.  The odds are really low
+  # because overwrite_file will perform the update as atomically as
+  # possible, and new build times will only come in less then once
+  # every five minutes.  If mail were to queue on this sytem (and
+  # potentially many old mail messages were to be delivered at the
+  # same time) the developers would notice and complain.
+
   if ($build_start != $TINDERBOX{'starttime'} ) {
     overwrite_file( $stamp_file, 
                     "$TINDERBOX{'starttime'}\n");
@@ -522,17 +596,17 @@ sub check_required_vars {
       "an 'external' tree.\n";
   }
   
-  ($TINDERBOX{'timenow'}) ||
-    ($err_string .= "Variable: 'timenow' not set.\n");
-  
   ($TINDERBOX{'buildname'}) ||
-    ($err_string .= "Variable: 'tinderbox:buildname' not set.\n");
+    ($err_string .= "Variable: 'tinderbox: buildname:' not set.\n");
   
   ($TINDERBOX{'administrator'}) ||
-    ($err_string .= "Variable: 'BuildAdministrator' not set.\n");
+    ($err_string .= "Variable: 'tinderbox: administrator:' not set.\n");
   
+  ($TINDERBOX{'administrator'} =~ m/\@\w/) ||
+    ($err_string .= "Variable: 'tinderbox: administrator:' not a valid email address.\n");
+
   ($TINDERBOX{'errorparser'}) ||
-    ($err_string .= "Variable: 'tinderbox:errorparser' not set.\n");
+    ($err_string .= "Variable: 'tinderbox: errorparser:' not set.\n");
   
   my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::parse_errorline";
   my ($ignore) = eval &$func(@_);    
@@ -556,29 +630,43 @@ sub check_required_vars {
   # autoload for libaraies are messy since they cause variable run
   # time requirements.
   
-  #
-  # Grab the date in the form of mm/dd/yy hh:mm:ss
-  #
-  # Or a GMT unix date
-  #
-  if( $TINDERBOX{'starttime'} eq ''){
-    $err_string .= "Variable: 'tinderbox:starttime' not set.\n";
+  if ($TINDERBOX{'timenow'} eq '') {
+    $err_string .= "Variable: 'timenow' not set.\n";
   } else {
-    if( $TINDERBOX{'starttime'} =~ 
-        /([0-9]*)\/([0-9]*)\/([0-9]*)[ \t]*([0-9]*)\:([0-9]*)\:([0-9]*)/ ){
-      
-      $starttime = timelocal($6,$5,$4,$2,$1-1,$3);
-      
-    }
-    elsif( abs($TINDERBOX{'starttime'} - $TIME) < 60*60 ){
-      $starttime = $TINDERBOX{'starttime'};
-    }
-    else {
-      $err_string .= ("Variable: 'tinderbox:starttime',".
+    
+    if( abs($TINDERBOX{'timenow'} - $TIME) < (60*60*10) ){
+      $timenow = $TINDERBOX{'timenow'};
+    } else {
+      $err_string .= (
+                      "Variable: 'tinderbox: timenow:',".
                       " is not of the form ".
                       "MM/DD/YY HH:MM:SS, or unix date, ".
                       "or your clock is set incorrectly, ".
-                      "or the mail was delayed for a long time.\n");
+                      "or the mail was delayed for a long time.\n".
+                      "variable timenow: $TINDERBOX{'timenow'}, timenow: $TIME,  (".
+                      ( ($TINDERBOX{'timenow'}-$TIME) / 60 ).
+                      " minutes)\n".
+                     "");
+    }
+    
+  }
+
+  if( $TINDERBOX{'starttime'} eq ''){
+    $err_string .= "Variable: 'tinderbox: starttime' not set.\n";
+  } else {
+    if( abs($TINDERBOX{'starttime'} - $TIME) < (60*60*10) ){
+      $starttime = $TINDERBOX{'starttime'};
+    } else {
+      $err_string .= (
+                      "Variable: 'tinderbox: starttime:',".
+                      " is not of the form ".
+                      "MM/DD/YY HH:MM:SS, or unix date, ".
+                      "or your clock is set incorrectly, ".
+                      "or the mail was delayed for a long time.\n".
+                      "starttime: $TINDERBOX{'starttime'}, timenow: $TIME, (".
+                      ( ($TINDERBOX{'starttime'}-$TIME) / 60 ).
+                      " minutes)\n".
+                     "");
     }
     
   }
@@ -586,11 +674,12 @@ sub check_required_vars {
   # Build Status
   
   ($TINDERBOX{'status'}) ||
-    ($err_string .= "Variable: 'tinderbox:status' not set.\n");
+    ($err_string .= "Variable: 'tinderbox: status:' not set.\n");
   
      ( TinderDB::Build::is_status_valid($TINDERBOX{'status'}) ) ||
-     ($err_string .= "Variable: 'tinderbox:status' must be one of: ".
+     ($err_string .= "Variable: 'tinderbox: status:' must be one of: ".
       join( ', ', TinderDB::Build::get_all_status()).
+      "Variable: 'tinderbox: status is set to $TINDERBOX{status}', \n".
      "\n");
   
   # Report errors by bouncing mail
@@ -1104,22 +1193,13 @@ sub write_update_file {
 
   my ($update_file) = (FileStructure::get_filename($tree, 'TinderDB_Dir').
                        "/Build.Update.$uid");
-  my ($tmp_update_file) = (FileStructure::get_filename($tree, 'TinderDB_Dir').
-                           "/Tmp.Build.Update.$uid");
+
+  # We are done, tell the tinderserver about this build.  
 
   Persistence::save_structure( 
                               \%TINDERBOX,
-                              $tmp_update_file,
+                              $update_file,
                              );
-                               
-  # We are done, tell the tinderserver about this build.  
-
-  # Rename is atomic on the same unix filesystem, so the server never
-  # sees partially processed updates.
-
-  rename ($tmp_update_file, $update_file) || 
-    die("Could not rename: '$tmp_update_file".
-        "to '$update_file'. $!\n");
 
   # clean up all the temp files created in this script
   
@@ -1138,18 +1218,32 @@ sub write_update_file {
 {
   set_static_vars();
   get_env();
+  parse_args();
 
   $SIG{'__DIE__'} = \&fatal_mailprocessing_error;
 
   parse_mail_header();
   parse_tinderbox_vars();
+  fix_nonunix_times();
   backward_compatibility();
   set_filenames();
 
-#  check_required_vars();
+  # when we are testing turn off the checks
+
+  ($SKIP_CHECK) ||
+    check_required_vars();
 
   parse_mail_body();
   assemble_files();
+
+  # Testing is easier if the update files appear at the top of the
+  # status page, even though they are checked out of CVS.
+
+  if ($FORCE_TIME) {
+    $TINDERBOX{'starttime'} = time() - (10*60);
+    $TINDERBOX{'timenow'} = time() - 10;
+  }
+
   write_update_file();
 
   exit 0;
