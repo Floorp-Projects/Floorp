@@ -1627,8 +1627,6 @@ toolbar[iconsize="small"] #calendar-new-task-button:hover:active {
 /* Week View: Calendar Tree */
 
 /*
-
-/*
 overflow can be set to scroll instead of auto
 because fewer errors in the event position are
 then observed (ERic 20/06/03)
@@ -1638,11 +1636,14 @@ then observed (ERic 20/06/03)
    overflow             : auto;
    background-color     :#ffffff;
    -moz-user-focus      : normal;
-  padding		: 2px;
+   /*padding            : 2px;*/
+} 
+#week-view-header-box{
+  /*padding             : 2px 2px 0px 2px;*/
 }
 
-#week-view-content-holder{
-    margin-right: 3px;
+#week-view-content-holder,#week-view-header-holder{
+    /*margin-right: 3px;*/
     background-color: #ffffff;
    border-right        : 1px solid #2085c4;
 }

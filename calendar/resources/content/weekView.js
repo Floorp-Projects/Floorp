@@ -479,10 +479,12 @@ WeekView.prototype.refreshDisplay = function( )
       document.getElementById( "week-header-date-text-"+dayIndex ).setAttribute( "value", NewArrayOfDayNames[col] );
          
       if( isOnlyWorkDays && isDayOff[(Offset + col) % 7]) {
-            document.getElementById( "weekview-column-day-"+dayIndex ).setAttribute( "collapsed", "true" );
-         } else {
-            document.getElementById( "weekview-column-day-"+dayIndex ).removeAttribute( "collapsed" );
-         }
+         document.getElementById( "weekview-column-day-"+dayIndex ).setAttribute( "collapsed", "true" );
+         document.getElementById( "weekview-header-column-day-"+dayIndex ).setAttribute( "collapsed", "true" );
+      } else {
+         document.getElementById( "weekview-column-day-"+dayIndex ).removeAttribute( "collapsed" );
+         document.getElementById( "weekview-header-column-day-"+dayIndex ).removeAttribute( "collapsed" );
+      }
          
       // advance to next day 
       firstDayOfWeek.setDate( dateOfDay + 1 );

@@ -103,17 +103,111 @@
       
       </hbox>
    
-   
+
+      <!-- Week View: grid for day-of-week headers and allday items-->
+
+      <vbox id="week-view-header-box">
+        <grid id="week-view-header-holder">
+            <rows>
+               <row id="week-view-header-row" class="week-row-header-class"/>
+               <row id="week-view-allday-row" class="week-row-allday-class"/>
+            </rows>
+            <columns equalsize="always">
+               <!-- HOURS -->
+               <column id="weekview-header-column-hours">
+                   <box id="weekview-daynumber-spacer">
+                      <box id="weekview-header-spacer-left" flex="1" />
+                      <box id="weekview-daynumber-spacer-mid" />
+                   </box>
+
+                   <vbox id="weekview-daynumber-spacer-left">
+                      <label class="all-day-content-box-text-title" value="&allDayEvents.label;"/>
+                   </vbox>
+
+               </column>
+
+               <!-- DAY 0 -->
+               <column class="week-view-day-container-box" id="weekview-header-column-day-1" flex="1">
+                   <hbox flex="1" id="week-header-box-1" class="weekview-daynumber-class">
+                      <label id="week-header-date-1" class="week-header-date" value=""/>
+                      <label id="week-header-date-text-1" class="week-header-date-text" value="&day.1.DDD;" />
+                   </hbox>
+
+                   <hbox class="all-day-content-box-week" id="all-day-content-box-week-1" flex="1"/>
+
+               </column>
+
+               <!-- DAY 1 -->
+               <column class="week-view-day-container-box" id="weekview-header-column-day-2" flex="1">
+                   <hbox flex="1" id="week-header-box-2" class="weekview-daynumber-class">
+                      <label id="week-header-date-2" class="week-header-date" value="" />
+                      <label id="week-header-date-text-2" class="week-header-date-text" value="&day.2.DDD;" />
+                   </hbox>
+
+                   <hbox class="all-day-content-box-week" id="all-day-content-box-week-2" flex="1"/>
+
+               </column>
+
+               <!-- DAY 2 -->
+               <column class="week-view-day-container-box" id="weekview-header-column-day-3" flex="1">
+                   <hbox flex="1" id="week-header-box-3" class="weekview-daynumber-class">
+                      <label id="week-header-date-3" class="week-header-date" value="" />
+                      <label id="week-header-date-text-3" class="week-header-date-text" value="&day.3.DDD;" />
+                   </hbox>
+
+                   <hbox class="all-day-content-box-week" id="all-day-content-box-week-3" flex="1"/>
+               </column>
+
+               <!-- DAY 3 -->
+               <column class="week-view-day-container-box" id="weekview-header-column-day-4" flex="1">
+                   <hbox flex="1" id="week-header-box-4" class="weekview-daynumber-class">
+                      <label id="week-header-date-4" class="week-header-date" value="" />
+                      <label id="week-header-date-text-4" class="week-header-date-text" value="&day.4.DDD;" />
+                   </hbox>
+
+                   <hbox class="all-day-content-box-week" id="all-day-content-box-week-4" flex="1"/>
+               </column>
+
+               <!-- DAY 4 -->
+               <column class="week-view-day-container-box" id="weekview-header-column-day-5" flex="1">
+                   <hbox flex="1" id="week-header-box-5" class="weekview-daynumber-class">
+                      <label id="week-header-date-5" class="week-header-date" value="" />
+                      <label id="week-header-date-text-5" class="week-header-date-text" value="&day.5.DDD;" />
+                   </hbox>
+
+                   <hbox class="all-day-content-box-week" id="all-day-content-box-week-5" flex="1"/>
+               </column>
+
+               <!-- DAY 5 -->
+               <column class="week-view-day-container-box" id="weekview-header-column-day-6" flex="1">
+                   <hbox flex="1" id="week-header-box-6" class="weekview-daynumber-class">
+                      <label id="week-header-date-6" class="week-header-date" value="" />
+                      <label id="week-header-date-text-6" class="week-header-date-text" value="&day.6.DDD;" />
+                   </hbox>
+
+                   <hbox class="all-day-content-box-week" id="all-day-content-box-week-6" flex="1"/>
+               </column>
+
+               <!-- DAY 6 -->
+               <column class="week-view-day-container-box" id="weekview-header-column-day-7" flex="1">
+                   <hbox flex="1" id="week-header-box-7" class="weekview-daynumber-class">
+                      <label id="week-header-date-7" class="week-header-date" value="" />
+                      <label id="week-header-date-text-7" class="week-header-date-text" value="&day.7.DDD;" />
+                   </hbox>
+
+                   <hbox class="all-day-content-box-week" id="all-day-content-box-week-7" flex="1"/>
+               </column>
+            </columns>
+        </grid>         
+      </vbox>
 
     <!-- Week View: All Day Boxes -->
            
-    <vbox id="week-view-content-box" flex="1">    
-       <stack id="week-view-content-board" flex="1">    
+    <vbox id="week-view-content-box" flex="1" >
+      <stack id="week-view-content-board" flex="1">    
 
-       <grid id="week-view-content-holder" flex="1">
+        <grid id="week-view-content-holder" flex="1">
           <rows>
-             <row id="week-view-header-row" class="week-row-header-class"/>
-             <row id="week-view-allday-row" class="week-row-allday-class"/>
              <row id="week-view-row-0" class="week-row-class" flex="1"/>
              <row id="week-view-row-1" class="week-row-class" flex="1"/>
              <row id="week-view-row-2" class="week-row-class" flex="1"/>
@@ -141,19 +235,10 @@
            </rows>
 
            <columns equalsize="always">
-              <column id="week-view-top-left-box">
+              <column id="week-view-column-hours">
                  <!-- HOURS -->
-                 <box id="weekview-daynumber-spacer">
-                    <box id="weekview-header-spacer-left" flex="1" />
-                    <box id="weekview-daynumber-spacer-mid" />
-                 </box>
-
-                 <vbox id="weekview-daynumber-spacer-left">
-                    <label class="all-day-content-box-text-title" value="&allDayEvents.label;"/>
-                 </vbox>
-
                  <box class="week-view-hours-only-box-class" id="week-tree-hour-0">
-                    <label class="week-time-class-text" id="week-view-hour-0" value="&time.midnight;"/>
+                    <label class="week-time-class-text" id="week-view-hour-0"/>
                  </box>
                    
                  <box class="week-view-hours-only-box-class" id="week-tree-hour-1">
@@ -252,13 +337,6 @@
                    
               <!-- DAY 0 -->
               <column class="week-view-day-container-box" id="weekview-column-day-1" flex="1">
-	         <hbox flex="1" id="week-header-box-1" class="weekview-daynumber-class">
-                    <label id="week-header-date-1" class="week-header-date" value=""/>
-                    <label id="week-header-date-text-1" class="week-header-date-text" value="&day.1.DDD;" />
-                 </hbox>
-
-                 <hbox class="all-day-content-box-week" id="all-day-content-box-week-1" flex="1"/>
-
                  <box class="week-view-hour-box-class"
                       id="week-tree-day-0-item-0"
                       day="1"
@@ -504,13 +582,6 @@
                 
               <!-- DAY 1 -->
               <column id="weekview-column-day-2" class="week-view-day-container-box" flex="1">
-                 <hbox flex="1" id="week-header-box-2" class="weekview-daynumber-class">
-                    <label id="week-header-date-2" class="week-header-date" value="" />
-                    <label id="week-header-date-text-2" class="week-header-date-text" value="&day.2.DDD;" />
-                 </hbox>
-
-                 <hbox class="all-day-content-box-week" id="all-day-content-box-week-2" flex="1"/>
-            
                  <box class="week-view-hour-box-class"
                       id="week-tree-day-1-item-0"
                       day="2"
@@ -758,12 +829,6 @@
               <!-- DAY 2 -->
               <column id="weekview-column-day-3"
                       class="week-view-day-container-box" flex="1">
-                 <hbox flex="1" id="week-header-box-3" class="weekview-daynumber-class">
-                    <label id="week-header-date-3" class="week-header-date" value="" />
-                    <label id="week-header-date-text-3" class="week-header-date-text" value="&day.3.DDD;" />
-                 </hbox>
-
-                 <hbox class="all-day-content-box-week" id="all-day-content-box-week-3" flex="1"/>
 
                  <box class="week-view-hour-box-class"
                       id="week-tree-day-2-item-0"
@@ -1011,13 +1076,6 @@
    
               <!-- DAY 3 -->
               <column id="weekview-column-day-4" class="week-view-day-container-box" flex="1">
-                 <hbox flex="1" id="week-header-box-4" class="weekview-daynumber-class">
-                    <label id="week-header-date-4" class="week-header-date" value="" />
-                    <label id="week-header-date-text-4" class="week-header-date-text" value="&day.4.DDD;" />
-                 </hbox>
-
-                 <hbox class="all-day-content-box-week" id="all-day-content-box-week-4" flex="1"/>
-                 
                  <box class="week-view-hour-box-class"
                       id="week-tree-day-3-item-0"
                       day="4"
@@ -1264,13 +1322,6 @@
    
               <!-- DAY 4 -->
               <column id="weekview-column-day-5" class="week-view-day-container-box" flex="1">
-                 <hbox flex="1" id="week-header-box-5" class="weekview-daynumber-class">
-                    <label id="week-header-date-5" class="week-header-date" value="" />
-                    <label id="week-header-date-text-5" class="week-header-date-text" value="&day.5.DDD;" />
-                 </hbox>
-
-                 <hbox class="all-day-content-box-week" id="all-day-content-box-week-5" flex="1"/>
-
                  <box class="week-view-hour-box-class"
                       id="week-tree-day-4-item-0"
                       day="5"
@@ -1518,13 +1569,6 @@
               <!-- DAY 5 -->
               <column id="weekview-column-day-6"
                       class="week-view-day-container-box" flex="1">
-                 <hbox flex="1" id="week-header-box-6" class="weekview-daynumber-class">
-                    <label id="week-header-date-6" class="week-header-date" value="" />
-                    <label id="week-header-date-text-6" class="week-header-date-text" value="&day.6.DDD;" />
-                 </hbox>
-            
-                 <hbox class="all-day-content-box-week" id="all-day-content-box-week-6" flex="1"/>
-
                  <box class="week-view-hour-box-class"
                       id="week-tree-day-5-item-0"
                       day="6"
@@ -1771,13 +1815,6 @@
    
               <!-- DAY 6 -->
               <column id="weekview-column-day-7" class="week-view-day-container-box" flex="1">
-                 <hbox flex="1" id="week-header-box-7" class="weekview-daynumber-class">
-                    <label id="week-header-date-7" class="week-header-date" value="" />
-                    <label id="week-header-date-text-7" class="week-header-date-text" value="&day.7.DDD;" />
-                 </hbox>
-
-                 <hbox class="all-day-content-box-week" id="all-day-content-box-week-7" flex="1"/>
-
                  <box class="week-view-hour-box-class week-view-hour-box-class-last-day"
                       id="week-tree-day-6-item-0"
                       day="7"
