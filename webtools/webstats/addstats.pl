@@ -52,6 +52,9 @@ sub Flush {
     my $tick = 0;
     foreach my $name (keys %counts) {
         if ($tick++ % 100 == 0) {
+            if ($tick <= 1) {
+                print "\nAdding $date ";
+            }
             print "+";
         }
         my $id = $ids{$name};
@@ -98,6 +101,9 @@ while (<STDIN>) {
 	
     my ($day,$month,$year,$hours,$mins,$secs,$name) =
 	($1, $2, $3, $4, $5, $6, $7);
+    if (length($name) > 250) {
+        $name = substr($name, 0, 250);
+    }
 
     my $date = "$month $day, $year";
 
