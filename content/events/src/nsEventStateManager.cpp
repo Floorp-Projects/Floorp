@@ -3135,8 +3135,21 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
         mCurrentTarget->SetFrameState(state);
       }
 
+      nsCOMPtr<nsIContent> oldFocus(mCurrentFocus);
       ChangeFocus(nextFocus, eEventFocusedByKey);
-      
+
+      // It's possible that the act of removing focus from our previously
+      // focused element caused nextFocus to be removed from the document.
+      // In this case, we can restart the frame traversal from our previously
+      // focused content.
+
+      if (oldFocus) {
+        nsCOMPtr<nsIDocument> newElementDocument;
+        nextFocus->GetDocument(*getter_AddRefs(newElementDocument));
+        if (doc != newElementDocument)
+          return ShiftFocusInternal(aForward, oldFocus);
+      }
+
       mCurrentFocus = nextFocus;
 
       if (docHasFocus)
