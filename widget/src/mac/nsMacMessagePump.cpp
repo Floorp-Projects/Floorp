@@ -569,11 +569,18 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 				// grrr... DragWindow calls SelectWindow, no way to stop it. For now,
 				// we'll just let it come to the front and then push it back if necessary.
+				Point   oldTopLeft = {0, 0};
+				::LocalToGlobal(&oldTopLeft);
+				
+				nsWatchTask::GetTask().Suspend();
+
 				Rect screenRect;
-			  nsWatchTask::GetTask().Suspend();			  
 				::GetRegionBounds(::GetGrayRgn(), &screenRect);
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
-			  nsWatchTask::GetTask().Resume();			  
+				nsWatchTask::GetTask().Resume();
+
+				Point   newTopLeft = {0, 0};
+				::LocalToGlobal(&newTopLeft);
 
         // only activate if the command key is not down
         if (!(anEvent.modifiers & cmdKey))
@@ -584,19 +591,9 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
         }
         
 				// Dispatch the event because some windows may want to know that they have been moved.
-#if 0
-				// Hack: we can't use GetMouse here because by the time DragWindow returns, the mouse
-				// can be located somewhere else than in the drag bar.
-				::GetMouse(&anEvent.where);
-				::LocalToGlobal(&anEvent.where);
-#else
-				RgnHandle strucRgn = NewRgn();
-				::GetWindowRegion ( whichWindow, kWindowStructureRgn, strucRgn );
-				Rect strucRect;
-				::GetRegionBounds(strucRgn, &strucRect);
-				::SetPt(&anEvent.where, strucRect.left, strucRect.top);
-				::DisposeRgn ( strucRgn );
-#endif
+				anEvent.where.h += newTopLeft.h - oldTopLeft.h;
+				anEvent.where.v += newTopLeft.v - oldTopLeft.v;
+        
 				DispatchOSEventToRaptor(anEvent, whichWindow);
 				break;
 			}
