@@ -3182,4 +3182,22 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 
     return;
 }
+
+#else
+PUBLIC void
+SI_RestoreSignonData
+    (char* URLName, char* name, char** value)
+{
+}
+
+PUBLIC void
+SI_RememberSignonData
+       (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt)
+{
+}
+
+PUBLIC void
+SI_DisplaySignonInfoAsHTML(MWContext *context)
+{
+}
 #endif
