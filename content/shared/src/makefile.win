@@ -46,6 +46,7 @@ CPPSRCS =				\
   nsCSSKeywords.cpp \
   nsCSSProps.cpp \
   nsHTMLAtoms.cpp \
+  nsHTMLUtils.cpp \
   nsHTMLValue.cpp \
   nsImageMapUtils.cpp \
   nsLayoutAtoms.cpp \
@@ -62,6 +63,7 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsCSSKeywords.obj \
   .\$(OBJDIR)\nsCSSProps.obj \
   .\$(OBJDIR)\nsHTMLAtoms.obj \
+  .\$(OBJDIR)\nsHTMLUtils.obj \
   .\$(OBJDIR)\nsHTMLValue.obj \
   .\$(OBJDIR)\nsImageMapUtils.obj \
   .\$(OBJDIR)\nsLayoutAtoms.obj \

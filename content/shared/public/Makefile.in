@@ -38,6 +38,7 @@ nsCSSProps.h \
 nsHTMLAtomList.h \
 nsHTMLAtoms.h \
 nsHTMLValue.h \
+nsHTMLUtils.h \
 nsImageMapUtils.h \
 nsLayoutAtomList.h \
 nsLayoutAtoms.h \
