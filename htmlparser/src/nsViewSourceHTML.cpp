@@ -770,6 +770,7 @@ nsresult WriteNewline(nsIContentSink& aSink) {
   return NS_OK;
 }
 
+
 /**
  *  This method gets called when a tag needs to be sent out
  *  
@@ -777,7 +778,25 @@ nsresult WriteNewline(nsIContentSink& aSink) {
  *  @param   
  *  @return  result status
  */
-nsresult EmitText(CToken* aToken,nsIContentSink& aSink) {
+nsresult WriteNBSP(PRInt32 aCount, nsIContentSink& aSink) {
+  nsresult result=NS_OK;
+
+  CEntityToken theEntity("nbsp");
+  nsCParserNode theEntityNode(&theEntity,0);
+  int theIndex;
+  for(theIndex=0;theIndex<aCount;theIndex++)
+    result=aSink.AddLeaf(theEntityNode); 
+  return NS_OK;
+}
+
+/**
+ *  This method gets called when a tag needs to be sent out
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  result status
+ */
+nsresult WriteText(CToken* aToken,nsIContentSink& aSink) {
   nsresult result=NS_OK;
 
   nsString& theText=aToken->GetStringValueXXX();
@@ -786,7 +805,7 @@ nsresult EmitText(CToken* aToken,nsIContentSink& aSink) {
   if(-1<theOffset){
     while(-1!=theOffset){
       nsString temp;
-      theText.Mid(temp,theStart,theOffset-theStart);
+      theText.Mid(temp,theStart,theOffset-theStart-1);
       CTextToken theToken(temp);  
       nsCParserNode theNode((CToken*)&theToken,0);
       result=aSink.AddLeaf(theNode); //just dump the whole string...
@@ -802,8 +821,76 @@ nsresult EmitText(CToken* aToken,nsIContentSink& aSink) {
   CTextToken theToken(temp);  
   nsCParserNode theNode((CToken*)&theToken,0);
   result=aSink.AddLeaf(theNode); //just dump the whole string...
+
   return result;
 }
+
+/**
+ *  This method gets called when a comment needs to be saved.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  result status
+ */
+nsresult WriteComment(CToken* aToken,nsIContentSink& aSink) {
+  nsresult result=NS_OK;
+
+  SetColor("green",PR_TRUE,aSink);
+  SetStyle(eHTMLTag_i,PR_TRUE,aSink);
+
+  nsString&   theText=aToken->GetStringValueXXX();
+  CTextToken  theTextToken;
+  nsCParserNode theTextNode((CToken*)&theTextToken,0);
+  nsString&   temp=theTextToken.GetStringValueXXX();
+
+  PRInt32 theEnd=theText.Length();
+  PRInt32 theOffset=0;
+
+  while(theOffset<theEnd){
+    switch(theText[theOffset]){
+      case kCR:
+        {
+          if(temp.Length())
+            result=aSink.AddLeaf(theTextNode); //just dump the whole string...
+          WriteNewline(aSink);
+        }
+        temp="";
+        break;
+      case kSpace:
+        if(kSpace==theText[theOffset+1]) {
+          if(temp.Length())
+            result=aSink.AddLeaf(theTextNode); //just dump the whole string...
+          WriteNBSP(1,aSink);
+          temp="";
+          break;
+        }
+        //fall through...
+      default:
+          //scan ahead looking for valid chars...
+        temp+=theText[theOffset];
+        break;
+    }//switch...
+    theOffset++;
+  }
+  if(temp.Length())
+    result=aSink.AddLeaf(theTextNode); //just dump the whole string...
+  SetStyle(eHTMLTag_i,PR_FALSE,aSink);
+  SetStyle(eHTMLTag_font,PR_FALSE,aSink);
+
+  return result;
+}
+
+/*
+        {
+
+          PRInt32 theFirst=theOffset;
+          while((++theOffset<theEnd) && (kNewLine!=theText[theOffset]) && (kSpace!=theText[theOffset]));
+          theText.Mid(temp,theFirst,theOffset-theFirst);
+          CTextToken theToken(temp);  
+          nsCParserNode theNode((CToken*)&theToken,0);
+          
+        }
+*/
 
 /**
  *  This method gets called when a tag needs to be sent out
@@ -812,7 +899,7 @@ nsresult EmitText(CToken* aToken,nsIContentSink& aSink) {
  *  @param   
  *  @return  result status
  */
-PRBool EmitTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRBool aIsHTML) {
+PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRBool aIsHTML) {
   static nsString     theString;
   static nsAutoString theLTEntity("lt");
   static nsAutoString theGTEntity("gt");
@@ -904,11 +991,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
     case eToken_whitespace:
       {
         PRInt32 theLength=aToken->GetStringValueXXX().Length();
-        CEntityToken theEntity("nbsp");
-        nsCParserNode theEntityNode(&theEntity,mLineNumber);
-        int theIndex;
-        for(theIndex=0;theIndex<theLength;theIndex++)
-          result=mSink->AddLeaf(theEntityNode); 
+        WriteNBSP(theLength,*mSink);
       }
       break;
 
@@ -916,15 +999,17 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
       result=mSink->AddLeaf(theNode); 
       break;
 
-    case eToken_text:
-      EmitText(aToken,*mSink);
+    case eToken_comment:
+      WriteComment(aToken,*mSink);
       break;
 
-    case eToken_comment:
+    case eToken_text:
+      WriteText(aToken,*mSink);
+      break;
+
     case eToken_instruction:
       {
-        static const char* colors[] = {"orange","green"};
-        SetColor(colors[eToken_comment==theType],PR_TRUE,*mSink);
+        SetColor("orange",PR_TRUE,*mSink);
         SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
         CTextToken theTextToken(aToken->GetStringValueXXX());
         nsCParserNode theTextNode(&theTextToken,mLineNumber);
@@ -956,7 +1041,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
       //intentionally fall through...
 
     case eToken_end:
-      EmitTag(theNode,*mSink,theEndTag,mIsHTML);
+      WriteTag(theNode,*mSink,theEndTag,mIsHTML);
       break;
 
     case eToken_style:

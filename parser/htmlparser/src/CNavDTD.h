@@ -394,6 +394,14 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     virtual PRBool HasOpenContainer(eHTMLTags aContainer) const;
 
     /**
+     * Ask parser if a given container is open ANYWHERE on stack
+     * @update	gess5/11/98
+     * @param   id of container you want to test for
+     * @return  TRUE if the given container type is open -- otherwise FALSE
+     */
+    virtual PRBool HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) const;
+
+    /**
      * This method is used to determine the index on the stack of the
      * nearest container tag that can constrain autoclosure. It is possible
 	   * that no tag on the stack will gate autoclosure.
@@ -516,6 +524,7 @@ protected:
      * @return  error code - 0 if all went well.
      */
     nsresult AddLeaf(const nsIParserNode& aNode);
+    nsresult AddHeadLeaf(const nsIParserNode& aNode);
 
     /**
      * Causes auto-closures of context vector stack in order to find a 

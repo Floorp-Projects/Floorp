@@ -1203,29 +1203,33 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   PRInt32 value=0;
   PRInt32 theRadix[2]={16,10};
 
-  PRUnichar theChar=mTextValue[0];
-  PRBool    isDigit=nsString::IsDigit(theChar);
-  if(isDigit || (('x'==theChar) || ('X'==theChar))) {
-    PRInt32 err=0;
-    value=mTextValue.ToInteger(&err,theRadix[isDigit]);
-    if(0==err) {
-#ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
-      /* for some illegal, but popular usage */
-      if ((value >= 0x0080) && (value <= 0x009f)) {
-        value = PA_HackTable[value - 0x0080];
-      }
-#endif
-      aString.Append(PRUnichar(value));
+  if(mTextValue.Length()>1) {
+    PRUnichar theChar1=mTextValue[0];
+    PRUnichar theChar2=mTextValue[1];
+    PRBool    isDigit1=nsString::IsDigit(theChar1);
+
+    if(isDigit1 || (('x'==theChar1) || ('X'==theChar1))) 
+      if(nsString::IsDigit(theChar2)) {
+        PRInt32 err=0;
+        value=mTextValue.ToInteger(&err,theRadix[isDigit1]);
+        if(0==err) {
+    #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
+          /* for some illegal, but popular usage */
+          if ((value >= 0x0080) && (value <= 0x009f)) {
+            value = PA_HackTable[value - 0x0080];
+          }
+    #endif
+          aString.Append(PRUnichar(value));
+        }
     }
   }
-  else {
-    char cbuf[30];
-    mTextValue.ToCString(cbuf, sizeof(cbuf));
-    value = NS_EntityToUnicode(cbuf);
-    if(-1 != value) {
-      aString = PRUnichar(value);
-    } 
-  }
+  
+  char cbuf[30];
+  mTextValue.ToCString(cbuf, sizeof(cbuf));
+  value = NS_EntityToUnicode(cbuf);
+  if(-1 != value) {
+    aString = PRUnichar(value);
+  } 
   return value;
 }
 
