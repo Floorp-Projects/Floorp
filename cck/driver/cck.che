@@ -1,4 +1,4 @@
-CustomizationList=
+CustomizationList=foo
 CD image=1
 Network=0
 Include Internet Setup=0
@@ -15,8 +15,8 @@ HelpMenuCommandName=
 HelpMenuCommandURL=
 CustomBookmarkFile=C:\Cck\Configs\Default\Workspace\Bkmarks\bookmarks.html
 ProgramFolderName=Netscape
-CreateReadmeIcon=0
-CreateLicenseIcon=0
+CreateReadmeIcon=1
+CreateLicenseIcon=1
 ReadMeFile=C:\Cck\Configs\Default\Workspace\readme.txt
 LicenseFile=C:\Cck\Configs\Default\Workspace\license.txt
 InstallerCustomBitmapPath=C:\Cck\Configs\Default\Workspace\Installer\setup.bmp
