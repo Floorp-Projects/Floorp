@@ -44,14 +44,14 @@
 ;+#    And for AIX, the first ";" will also be removed.
 ;+#  This file is passed directly to windows. Since ';' is a comment, all UNIX
 ;+#   directives are hidden behind ";", ";+", and ";-"
-;+SOFTOKEN_3.4 {       # Softoken 3.4 release
+;+NSS_3.4 {       # NSS 3.4 release
 ;+    global:
 LIBRARY softokn3 ;-
-EXPORTS		;-
-NSC_GetFunctionList ;
-NSC_ModuleDBFunc ;
-FC_GetFunctionList  ;
-C_GetFunctionList  ; Make this function like a real PKCS #11 module as well
+EXPORTS ;-
+C_GetFunctionList; Make this function like a real PKCS #11 module as well
+FC_GetFunctionList;
+NSC_GetFunctionList;
+NSC_ModuleDBFunc;
 ;+    local:
 ;+       *;
 ;+};
