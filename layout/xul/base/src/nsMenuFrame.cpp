@@ -510,6 +510,16 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
     if (menuPopup) {
+      // Install a keyboard navigation listener if we're the root of the menu chain.
+      PRBool onMenuBar = PR_TRUE;
+      if (mMenuParent)
+        mMenuParent->IsMenuBar(onMenuBar);
+
+      if (mMenuParent && onMenuBar)
+        mMenuParent->InstallKeyboardNavigator();
+      else if (!mMenuParent)
+        menuPopup->InstallKeyboardNavigator();
+      
       // Tell the menu bar we're active.
       if (mMenuParent)
         mMenuParent->SetActive(PR_TRUE);
@@ -523,10 +533,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
       menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
 
-      PRBool onMenuBar = PR_TRUE;
-      if (mMenuParent)
-        mMenuParent->IsMenuBar(onMenuBar);
-
+      
       if (onMenuBar) {
         if (popupAnchor == "")
           popupAnchor = "bottomleft";
@@ -571,8 +578,18 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
     nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
     // Make sure we clear out our own items.
-    if (menuPopup)
+    if (menuPopup) {
       menuPopup->SetCurrentMenuItem(nsnull);
+
+      PRBool onMenuBar = PR_TRUE;
+      if (mMenuParent)
+        mMenuParent->IsMenuBar(onMenuBar);
+
+      if (mMenuParent && onMenuBar)
+        mMenuParent->RemoveKeyboardNavigator();
+      else if (!mMenuParent)
+        menuPopup->RemoveKeyboardNavigator();
+    }
 
     ActivateMenu(PR_FALSE);
 

@@ -455,6 +455,7 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
 
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
     UpdateDismissalListener(childPopup);
+    childPopup->InstallKeyboardNavigator();
   }
   else {
     if (!OnDestroy())
@@ -464,6 +465,11 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     if (nsMenuFrame::mDismissalListener) {
       nsMenuFrame::mDismissalListener->Unregister();
     }
+
+    // Remove any keyboard navigators
+    nsIFrame* activeChild = GetActiveChild();
+    nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
+    childPopup->RemoveKeyboardNavigator();
 
     ActivatePopup(PR_FALSE);
   }
@@ -553,5 +559,3 @@ nsPopupSetFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   // innermost menu popup frame is.
   nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
 }
-
-

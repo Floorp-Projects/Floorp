@@ -49,6 +49,18 @@ public:
   NS_IMETHOD HideChain() = 0;
 
   NS_IMETHOD CreateDismissalListener() = 0;
+
+  NS_IMETHOD InstallKeyboardNavigator() = 0;
+  NS_IMETHOD RemoveKeyboardNavigator() = 0;
+
+  // Used to move up, down, left, and right in menus.
+  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag) = 0;
+  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag) = 0;
+  // Called when the ESC key is held down to close levels of menus.
+  NS_IMETHOD Escape(PRBool& aHandledFlag) = 0;
+  // Called to execute a menu item.
+  NS_IMETHOD Enter() = 0;
+
 };
 
 #endif

@@ -20,9 +20,8 @@
  * Contributor(s): 
  */
 
-
+#include "nsMenuListener.h"
 #include "nsMenuBarFrame.h"
-
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -85,7 +84,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsToolbarFrame)
 // nsMenuBarFrame cntr
 //
 nsMenuBarFrame::nsMenuBarFrame()
-:mIsActive(PR_FALSE), mTarget(nsnull)
+:mIsActive(PR_FALSE), mTarget(nsnull), mKeyboardNavigator(nsnull), mMenuBarListener(nsnull)
 {
 
 } // cntr
@@ -108,11 +107,12 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
 
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);
+  NS_IF_ADDREF(mMenuBarListener);
   if (! mMenuBarListener)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // Hook up the menu bar as a key listener (capturer) on the whole document.  It will see every
-  // key press that occurs before anyone else does and will know when to take control.
+  // Hook up the menu bar as a key listener on the whole document.  It will see every
+  // key press that occurs, but after everyone else does.
   nsCOMPtr<nsIDocument> doc;
   aContent->GetDocument(*getter_AddRefs(doc));
   nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
@@ -122,14 +122,13 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
   // Also hook up the listener to the window listening for focus events. This is so we can keep proper
   // state as the user alt-tabs through processes.
   
-  target->AddEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);
+  target->AddEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_FALSE);
   
-  target->AddEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_TRUE);
+  target->AddEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);
 
-  target->AddEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE); 
-  target->AddEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);  
-  target->AddEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);   
-  NS_ADDREF(mMenuBarListener);
+  target->AddEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
+  target->AddEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
+  target->AddEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);   
   
   return rv;
 }
@@ -152,6 +151,11 @@ NS_IMETHODIMP
 nsMenuBarFrame::SetActive(PRBool aActiveFlag)
 {
   mIsActive = aActiveFlag;
+  if (mIsActive) {
+    InstallKeyboardNavigator();
+  }
+  else RemoveKeyboardNavigator();
+
   return NS_OK;
 }
 
@@ -166,11 +170,14 @@ nsMenuBarFrame::ToggleMenuActiveState()
       mCurrentMenu->OpenMenu(PR_FALSE);
       mCurrentMenu->SelectMenu(PR_FALSE);
       mCurrentMenu = nsnull;
+      RemoveKeyboardNavigator();
     }
   }
   else {
     // Activate the menu bar
     SetActive(PR_TRUE);
+
+    InstallKeyboardNavigator();
 
     // Set the active menu to be the top left item (e.g., the File menu).
     // We use an attribute called "active" to track the current active menu.
@@ -218,7 +225,7 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
   return nsnull;
 }
 
-void 
+NS_IMETHODIMP 
 nsMenuBarFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
   if (mCurrentMenu) {
@@ -227,7 +234,7 @@ nsMenuBarFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
     if (isOpen) {
       // No way this applies to us. Give it to our child.
       mCurrentMenu->ShortcutNavigation(aLetter, aHandledFlag);
-      return;
+      return NS_OK;
     }
   }
 
@@ -241,28 +248,30 @@ nsMenuBarFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
     result->OpenMenu(PR_TRUE);
     result->SelectFirstItem();
   }
+
+  return NS_OK;
 }
 
-void
-nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
+NS_IMETHODIMP
+nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 {
   if (!mCurrentMenu)
-    return;
+    return NS_OK;
   
   PRBool isContainer = PR_FALSE;
   PRBool isOpen = PR_FALSE;
   mCurrentMenu->MenuIsContainer(isContainer);
   mCurrentMenu->MenuIsOpen(isOpen);
 
-  PRBool handled = PR_FALSE;
+  aHandledFlag = PR_FALSE;
   
   if (isOpen) {
     // Let the child menu try to handle it.
-    mCurrentMenu->KeyboardNavigation(aDirection, handled);
+    mCurrentMenu->KeyboardNavigation(aDirection, aHandledFlag);
   }
 
-  if (handled)
-    return;
+  if (aHandledFlag)
+    return NS_OK;
 
   if (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT) {
     
@@ -287,6 +296,8 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
     mCurrentMenu->OpenMenu(PR_TRUE);
     mCurrentMenu->SelectFirstItem();
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -421,27 +432,27 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 }
 
 
-void 
-nsMenuBarFrame::Escape()
+NS_IMETHODIMP 
+nsMenuBarFrame::Escape(PRBool& aHandledFlag)
 {
   if (!mCurrentMenu)
-    return;
+    return NS_OK;
 
   // See if our menu is open.
   PRBool isOpen = PR_FALSE;
   mCurrentMenu->MenuIsOpen(isOpen);
   if (isOpen) {
     // Let the child menu handle this.
-    PRBool handled = PR_FALSE;
-    mCurrentMenu->Escape(handled);
-    if (!handled) {
+    aHandledFlag = PR_FALSE;
+    mCurrentMenu->Escape(aHandledFlag);
+    if (!aHandledFlag) {
       // Close up this menu but keep our current menu item
       // designation.
       mCurrentMenu->OpenMenu(PR_FALSE);
     }
 	if (nsMenuFrame::mDismissalListener)
       nsMenuFrame::mDismissalListener->Unregister();
-    return;
+    return NS_OK;
   }
 
   // It's us. Just set our active flag to false.
@@ -453,13 +464,15 @@ nsMenuBarFrame::Escape()
   // Clear out our dismissal listener
   if (nsMenuFrame::mDismissalListener)
     nsMenuFrame::mDismissalListener->Unregister();
+
+  return NS_OK;
 }
 
-void 
+NS_IMETHODIMP 
 nsMenuBarFrame::Enter()
 {
   if (!mCurrentMenu)
-    return;
+    return NS_OK;
 
   // See if our menu is open.
   PRBool isOpen = PR_FALSE;
@@ -467,12 +480,14 @@ nsMenuBarFrame::Enter()
   if (isOpen) {
     // Let the child menu handle this.
     mCurrentMenu->Enter();
-    return;
+    return NS_OK;
   }
 
   // It's us. Open the current menu.
   mCurrentMenu->OpenMenu(PR_TRUE);
   mCurrentMenu->SelectFirstItem();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -522,6 +537,39 @@ nsMenuBarFrame::CreateDismissalListener()
   NS_ADDREF(nsMenuFrame::mDismissalListener = new nsMenuDismissalListener());
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMenuBarFrame::InstallKeyboardNavigator()
+{
+  if (mKeyboardNavigator)
+    return NS_OK;
+
+  mKeyboardNavigator = new nsMenuListener(this);
+  NS_IF_ADDREF(mKeyboardNavigator);
+
+  mTarget->AddEventListener("keypress", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
+  mTarget->AddEventListener("keydown", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
+  mTarget->AddEventListener("keyup", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuBarFrame::RemoveKeyboardNavigator()
+{
+  if (!mKeyboardNavigator)
+    return NS_OK;
+
+  mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  
+  NS_IF_RELEASE(mKeyboardNavigator);
+
+  return NS_OK;
+}
+
+// helpers ///////////////////////////////////////////////////////////
 
 PRBool 
 nsMenuBarFrame::IsValidItem(nsIContent* aContent)

@@ -64,7 +64,6 @@ public:
 protected:
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   PRBool mAltKeyDown;            // Whether or not the ALT key is currently down.
-  PRBool mKeyboardNavigationActive; // Are we currently navigating via the keyboard
 };
 
 

@@ -66,6 +66,9 @@ public:
   // Hides the chain of cascaded menus without closing them up.
   NS_IMETHOD HideChain();
 
+  NS_IMETHOD InstallKeyboardNavigator();
+  NS_IMETHOD RemoveKeyboardNavigator();
+
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   // The dismissal listener gets created and attached to the window.
   NS_IMETHOD CreateDismissalListener();
@@ -84,23 +87,23 @@ public:
   void ToggleMenuActiveState();
   
   // Used to move up, down, left, and right in menus.
-  void KeyboardNavigation(PRUint32 aDirection);
-  
-  // Used to handle ALT+key combos
-  void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
-  nsIMenuFrame* FindMenuWithShortcut(PRUint32 aLetter);
-
+  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+  NS_IMETHOD ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
   // Called when the ESC key is held down to close levels of menus.
-  void Escape();
-
+  NS_IMETHOD Escape(PRBool& aHandledFlag);
   // Called to execute a menu item.
-  void Enter();
+  NS_IMETHOD Enter();
+
+  // Used to handle ALT+key combos
+  nsIMenuFrame* FindMenuWithShortcut(PRUint32 aLetter);
 
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
 
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
+  nsMenuListener* mKeyboardNavigator;
+
   PRBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
 
