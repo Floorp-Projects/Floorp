@@ -102,7 +102,7 @@ real_depend: depend
 pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout pull_plugin pull_autoconf
 
 pull_lizard:
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(CVSCO_LIZARD) mozilla/config; \
 	$(CVSCO_LIZARD) mozilla/dbm; \
 	$(CVSCO_LIZARD) mozilla/build/build_number; \
@@ -117,31 +117,31 @@ pull_lizard:
 	$(CVSCO_LIZARD) mozilla/modules/security/freenav; \
 
 pull_xpcom:
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(CVSCO) -A mozilla/modules/libreg; \
 	$(CVSCO) -A mozilla/xpcom; \
 	$(CVSCO_LIBPREF) mozilla/modules/libpref
 
 pull_imglib:
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(CVSCO_IMGLIB) mozilla/jpeg; \
 	$(CVSCO_IMGLIB) mozilla/modules/libutil; \
 	$(CVSCO_IMGLIB) mozilla/modules/libimg 
 
 pull_plugin:
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(CVSCO_LIZARD) mozilla/modules/oji; \
 	$(CVSCO_PLUGIN) mozilla/modules/plugin
 
 pull_netlib:
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(CVSCO_NETLIB) mozilla/lib/xp; \
 	$(CVSCO_NETLIB) mozilla/lib/libpwcac; \
 	$(CVSCO_NETLIB) mozilla/network; \
 	$(CVSCO_NETLIB) mozilla/include
 
 pull_nglayout:
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(CVSCO_NGLAYOUT) mozilla/base; \
 	$(CVSCO_NGLAYOUT) mozilla/dom; \
 	$(CVSCO_NGLAYOUT) mozilla/gfx; \
@@ -152,13 +152,13 @@ pull_nglayout:
 	$(CVSCO_NGLAYOUT) mozilla/widget
 
 pull_doc:
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(CVSCO_NGLAYOUT) README/nglayout; \
 	$(CVSCO_NGLAYOUT) mozilla/LICENSE; \
 	$(CVSCO_NGLAYOUT) mozilla/LEGAL
 
 pull_autoconf:
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(CVSCO_NGLAYOUT) mozilla/build/autoconf; \
 	$(CVSCO_NGLAYOUT) mozilla/Makefile.in; \
 	$(CVSCO_NGLAYOUT) mozilla/configure.in;
@@ -181,9 +181,9 @@ tarball: pull_all pull_doc clobber clobber_all real_tar
 
 real_tar:
 	@echo Making $(TARBALL)
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	rm -f $(TARBALL) $(TARBALL).gz; \
 	$(TAR) cf $(TARBALL) $(TARFILES)
 	@echo Making gzip of $(TARBALL); \
-	cd $(MOZ_SRC)/.; \
+	cd $(DEPTH)/..; \
 	$(GZIP) -9 -q $(TARBALL)
