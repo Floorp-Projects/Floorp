@@ -293,7 +293,10 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 
   // Configure the toolbox for the first time
   configureToolbox();
+
+#ifdef DEBUG_radha
   printf("Created the BrowserFrame\n");
+#endif
 }
 
 XFE_BrowserFrame::~XFE_BrowserFrame()
