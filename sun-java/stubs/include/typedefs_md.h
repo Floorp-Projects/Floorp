@@ -28,7 +28,7 @@
 
 PR_BEGIN_EXTERN_C
 
-#if (defined(__sun) && !defined(SOLARIS2_6)) || defined(HPUX9) || defined(HPUX10_10) || defined(XP_PC) || defined(AIX) || defined(OSF1) || defined(XP_MAC) || defined(SONY) || defined(SNI) || defined(UNIXWARE) || defined(LINUX)
+#if (defined(__sun) && !defined(SOLARIS2_6)) || defined(HPUX9) || defined(HPUX10_10) || defined(XP_PC) || defined(AIX) || defined(OSF1) || defined(XP_MAC) || defined(SONY) || defined(SNI) || defined(UNIXWARE) || defined(LINUX) || defined(DGUX)
 typedef int16 int16_t;
 typedef int32 int32_t;
 #endif
