@@ -1220,7 +1220,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 
   NS_ASSERTION(content, "GetAccessibleFor() called with no content.");
 
-  // ---- Try using frame to get IAccessible ----
+  // ---- Try using frame to get nsIAccessible ----
   nsIFrame* frame = nsnull;
   shell->GetPrimaryFrameFor(content, &frame);
   if (!frame)
@@ -1242,7 +1242,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   if (!newAcc) {
     nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(aNode));
     if (optionElement) {
-      // nsHTMLSelectionOptionAccessible's must be created via the parent
+      // nsHTMLSelectOptionAccessible's must be created via the parent
       nsCOMPtr<nsIDOMNode> parentNode;
       aNode->GetParentNode(getter_AddRefs(parentNode));
       if (parentNode) {

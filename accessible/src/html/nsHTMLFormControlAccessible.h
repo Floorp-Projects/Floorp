@@ -72,6 +72,7 @@ class nsHTMLButtonAccessible : public nsFormControlAccessible
 public:
   nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccName(nsAWritableString& _retval); 
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);

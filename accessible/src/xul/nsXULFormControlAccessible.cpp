@@ -152,6 +152,13 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccState(PRUint32 *_retval)
     }
   }
 
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(element, "No nsIDOMElement for button node!");
+  PRBool isDefault = PR_FALSE;
+  element->HasAttribute(NS_LITERAL_STRING("default"), &isDefault) ;
+  if (isDefault)
+    *_retval |= STATE_DEFAULT;
+
   return NS_OK;
 }
 
