@@ -676,7 +676,7 @@ DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp)
     
     /*
      * If a subsequent Annotation fails, what to do?
-     * - free all annotations, return PR_FALSE? (current behaviout)
+     * - free all annotations, return PR_FALSE? (current behaviour)
      * - free failed annotation only, return PR_FALSE (caller can check for
      *   non-NULL *annp on PR_FALSE return to detect partial annotation
      *   decoding)?
