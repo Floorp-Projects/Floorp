@@ -138,10 +138,12 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
                                             getter_AddRefs(parentDocAccessible));
           nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(parentDocAccessible));
           IAccessible *msaaParentDoc;
-          accessible->GetNativeInterface((void**)&msaaParentDoc);
-          HRESULT rv = msaaParentDoc->get_accChild(varChild, ppdispChild);
-          msaaParentDoc->Release();
-          return rv;
+          if (accessible) {
+            accessible->GetNativeInterface((void**)&msaaParentDoc);
+            HRESULT rv = msaaParentDoc->get_accChild(varChild, ppdispChild);
+            msaaParentDoc->Release();
+            return rv;
+          }
         }
       }
     }

@@ -45,8 +45,8 @@ interface nsISelectionController : nsISelectionDisplay
    const short SELECTION_IME_SELECTEDRAWTEXT=8;
    const short SELECTION_IME_CONVERTEDTEXT=16;
    const short SELECTION_IME_SELECTEDCONVERTEDTEXT=32;
-   const short NUM_SELECTIONTYPES=6;
-
+   const short SELECTION_ACCESSIBILITY=64; // For accessibility API usage
+   const short NUM_SELECTIONTYPES=8;
 
    const short SELECTION_ANCHOR_REGION = 0;
    const short SELECTION_FOCUS_REGION = 1;
