@@ -27,9 +27,9 @@ use CGI;
 
 $query = new CGI;
 $field_separator = '<<fs>>';
-$configure_in    = 'mozilla/configure.in';
+$configure_in    = 'configure-mirror/mozilla/configure.in';
 $chrome_color    = '#F0A000';
-$ENV{CVSROOT}    = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
+$CVSROOT         = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 #$ENV{PATH}       = "$ENV{PATH}:/usr/bin/ccs"; # for m4
 
 
@@ -197,7 +197,8 @@ sub print_script {
 }
 
 sub print_configure_form {
-  system "cvs co mozilla/configure.in";
+  mkdir 'configure-mirror', 0777 if not -d 'configure-mirror';
+  system "cd configure-mirror && cvs -d $CVSROOT co mozilla/configure.in";
 
   print qq(
     <HTML>
