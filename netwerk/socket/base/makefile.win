@@ -25,7 +25,6 @@ MAKE_OBJ_TYPE	= DLL
 include <$(DEPTH)/config/config.mak>
 
 LINCS = \
-	-I$(MOZ_INCLUDE) \
 	-I$(PUBLIC) \
 	$(NULL)
 
