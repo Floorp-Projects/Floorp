@@ -253,17 +253,10 @@ NS_IMETHODIMP CBrowserImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 
 	QAOutput("Entering nsIWebProgLstnr::OnLocationChange().");
 
-	nsresult rv;
-    nsCAutoString uriString;
-	rv = location->GetSpec(uriString);
-	if (NS_FAILED(rv))
-		QAOutput("Bad result for GetSpec().");
-	else
-		QAOutput("Good result for GetSpec().");
-
-	FormatAndPrintOutput("OnLocationChange(): The location url = ", uriString, 1);
+	// test nsIURI parameter
+	GetTheUri(location, 1);
  
-//	RequestName(aRequest, stringMsg);  // because of crash bug bugzilla 86521
+	RequestName(aRequest, stringMsg);  
 
 	PRBool isSubFrameLoad = PR_FALSE; // Is this a subframe load
 	if (aWebProgress) {
