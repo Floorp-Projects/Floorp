@@ -83,8 +83,8 @@ menu ul, menu ol, menu dir, menu menu, menu li {
 
 /* Note: this fix will fail once we implement marker box 
  * alignment correctly. */
-li > ul:first-node,
-li > ol:first-node {
+li > ul:-moz-first-node,
+li > ol:-moz-first-node {
   padding-top: 1em;
 }
 
@@ -118,54 +118,54 @@ td, th, tr {
 /* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
 
 /*
- * While it may seem simpler to use :first-node and :last-node without
- * tags, it's slower, since we have to do the :first-node or :last-node
+ * While it may seem simpler to use :-moz-first-node and :-moz-last-node without
+ * tags, it's slower, since we have to do the :-moz-first-node or :-moz-last-node
  * check on every single element in the document.  If we list all the
  * element names for which the UA stylesheet specifies a margin, the
  * selectors will be hashed in the RuleHash and things will be much more
  * efficient.
  */
-body > form:first-node, td > form:first-node, th > form:first-node,
-body > p:first-node, td > p:first-node, th > p:first-node,
-body > dl:first-node, td > dl:first-node, th > dl:first-node,
-body > multicol:first-node, td > multicol:first-node, th > multicol:first-node,
-body > blockquote:first-node, td > blockquote:first-node, th > blockquote:first-node,
-body > h1:first-node, td > h1:first-node, th > h1:first-node,
-body > h2:first-node, td > h2:first-node, th > h2:first-node,
-body > h3:first-node, td > h3:first-node, th > h3:first-node,
-body > h4:first-node, td > h4:first-node, th > h4:first-node,
-body > h5:first-node, td > h5:first-node, th > h5:first-node,
-body > h6:first-node, td > h6:first-node, th > h6:first-node,
-body > listing:first-node, td > listing:first-node, th > listing:first-node,
-body > plaintext:first-node, td > plaintext:first-node, th > plaintext:first-node,
-body > xmp:first-node, td > xmp:first-node, th > xmp:first-node,
-body > pre:first-node, td > pre:first-node, th > pre:first-node,
-body > ul:first-node, td > ul:first-node, th > ul:first-node,
-body > menu:first-node, td > menu:first-node, th > menu:first-node,
-body > dir:first-node, td > dir:first-node, th > dir:first-node,
-body > ol:first-node, td > ol:first-node, th > ol:first-node {
+body > form:-moz-first-node, td > form:-moz-first-node, th > form:-moz-first-node,
+body > p:-moz-first-node, td > p:-moz-first-node, th > p:-moz-first-node,
+body > dl:-moz-first-node, td > dl:-moz-first-node, th > dl:-moz-first-node,
+body > multicol:-moz-first-node, td > multicol:-moz-first-node, th > multicol:-moz-first-node,
+body > blockquote:-moz-first-node, td > blockquote:-moz-first-node, th > blockquote:-moz-first-node,
+body > h1:-moz-first-node, td > h1:-moz-first-node, th > h1:-moz-first-node,
+body > h2:-moz-first-node, td > h2:-moz-first-node, th > h2:-moz-first-node,
+body > h3:-moz-first-node, td > h3:-moz-first-node, th > h3:-moz-first-node,
+body > h4:-moz-first-node, td > h4:-moz-first-node, th > h4:-moz-first-node,
+body > h5:-moz-first-node, td > h5:-moz-first-node, th > h5:-moz-first-node,
+body > h6:-moz-first-node, td > h6:-moz-first-node, th > h6:-moz-first-node,
+body > listing:-moz-first-node, td > listing:-moz-first-node, th > listing:-moz-first-node,
+body > plaintext:-moz-first-node, td > plaintext:-moz-first-node, th > plaintext:-moz-first-node,
+body > xmp:-moz-first-node, td > xmp:-moz-first-node, th > xmp:-moz-first-node,
+body > pre:-moz-first-node, td > pre:-moz-first-node, th > pre:-moz-first-node,
+body > ul:-moz-first-node, td > ul:-moz-first-node, th > ul:-moz-first-node,
+body > menu:-moz-first-node, td > menu:-moz-first-node, th > menu:-moz-first-node,
+body > dir:-moz-first-node, td > dir:-moz-first-node, th > dir:-moz-first-node,
+body > ol:-moz-first-node, td > ol:-moz-first-node, th > ol:-moz-first-node {
   margin-top: 0;
 }
 
-td > form:last-node, th > form:last-node,
-td > p:last-node, th > p:last-node,
-td > dl:last-node, th > dl:last-node,
-td > multicol:last-node, th > multicol:last-node,
-td > blockquote:last-node, th > blockquote:last-node,
-td > h1:last-node, th > h1:last-node,
-td > h2:last-node, th > h2:last-node,
-td > h3:last-node, th > h3:last-node,
-td > h4:last-node, th > h4:last-node,
-td > h5:last-node, th > h5:last-node,
-td > h6:last-node, th > h6:last-node,
-td > listing:last-node, th > listing:last-node,
-td > plaintext:last-node, th > plaintext:last-node,
-td > xmp:last-node, th > xmp:last-node,
-td > pre:last-node, th > pre:last-node,
-td > ul:last-node, th > ul:last-node,
-td > menu:last-node, th > menu:last-node,
-td > dir:last-node, th > dir:last-node,
-td > ol:last-node, th > ol:last-node {
+td > form:-moz-last-node, th > form:-moz-last-node,
+td > p:-moz-last-node, th > p:-moz-last-node,
+td > dl:-moz-last-node, th > dl:-moz-last-node,
+td > multicol:-moz-last-node, th > multicol:-moz-last-node,
+td > blockquote:-moz-last-node, th > blockquote:-moz-last-node,
+td > h1:-moz-last-node, th > h1:-moz-last-node,
+td > h2:-moz-last-node, th > h2:-moz-last-node,
+td > h3:-moz-last-node, th > h3:-moz-last-node,
+td > h4:-moz-last-node, th > h4:-moz-last-node,
+td > h5:-moz-last-node, th > h5:-moz-last-node,
+td > h6:-moz-last-node, th > h6:-moz-last-node,
+td > listing:-moz-last-node, th > listing:-moz-last-node,
+td > plaintext:-moz-last-node, th > plaintext:-moz-last-node,
+td > xmp:-moz-last-node, th > xmp:-moz-last-node,
+td > pre:-moz-last-node, th > pre:-moz-last-node,
+td > ul:-moz-last-node, th > ul:-moz-last-node,
+td > menu:-moz-last-node, th > menu:-moz-last-node,
+td > dir:-moz-last-node, th > dir:-moz-last-node,
+td > ol:-moz-last-node, th > ol:-moz-last-node {
   margin-bottom: 0;
 }
 
@@ -173,47 +173,47 @@ td > ol:last-node, th > ol:last-node {
  *  collapse the bottom or top margins of empty elements
  *  - see bug 97361
  */
-body > form:empty:first-node, td > form:empty:first-node, th > form:empty:first-node,
-body > p:empty:first-node, td > p:empty:first-node, th > p:empty:first-node,
-body > dl:empty:first-node, td > dl:empty:first-node, th > dl:empty:first-node,
-body > multicol:empty:first-node, td > multicol:empty:first-node, th > multicol:empty:first-node,
-body > blockquote:empty:first-node, td > blockquote:empty:first-node, th > blockquote:empty:first-node,
-body > h1:empty:first-node, td > h1:empty:first-node, th > h1:empty:first-node,
-body > h2:empty:first-node, td > h2:empty:first-node, th > h2:empty:first-node,
-body > h3:empty:first-node, td > h3:empty:first-node, th > h3:empty:first-node,
-body > h4:empty:first-node, td > h4:empty:first-node, th > h4:empty:first-node,
-body > h5:empty:first-node, td > h5:empty:first-node, th > h5:empty:first-node,
-body > h6:empty:first-node, td > h6:empty:first-node, th > h6:empty:first-node,
-body > listing:empty:first-node, td > listing:empty:first-node, th > listing:empty:first-node,
-body > plaintext:empty:first-node, td > plaintext:empty:first-node, th > plaintext:empty:first-node,
-body > xmp:empty:first-node, td > xmp:empty:first-node, th > xmp:empty:first-node,
-body > pre:empty:first-node, td > pre:empty:first-node, th > pre:empty:first-node,
-body > ul:empty:first-node, td > ul:empty:first-node, th > ul:empty:first-node,
-body > menu:empty:first-node, td > menu:empty:first-node, th > menu:empty:first-node,
-body > dir:empty:first-node, td > dir:empty:first-node, th > dir:empty:first-node,
-body > ol:empty:first-node, td > ol:empty:first-node, th > ol:empty:first-node {
+body > form:empty:-moz-first-node, td > form:empty:-moz-first-node, th > form:empty:-moz-first-node,
+body > p:empty:-moz-first-node, td > p:empty:-moz-first-node, th > p:empty:-moz-first-node,
+body > dl:empty:-moz-first-node, td > dl:empty:-moz-first-node, th > dl:empty:-moz-first-node,
+body > multicol:empty:-moz-first-node, td > multicol:empty:-moz-first-node, th > multicol:empty:-moz-first-node,
+body > blockquote:empty:-moz-first-node, td > blockquote:empty:-moz-first-node, th > blockquote:empty:-moz-first-node,
+body > h1:empty:-moz-first-node, td > h1:empty:-moz-first-node, th > h1:empty:-moz-first-node,
+body > h2:empty:-moz-first-node, td > h2:empty:-moz-first-node, th > h2:empty:-moz-first-node,
+body > h3:empty:-moz-first-node, td > h3:empty:-moz-first-node, th > h3:empty:-moz-first-node,
+body > h4:empty:-moz-first-node, td > h4:empty:-moz-first-node, th > h4:empty:-moz-first-node,
+body > h5:empty:-moz-first-node, td > h5:empty:-moz-first-node, th > h5:empty:-moz-first-node,
+body > h6:empty:-moz-first-node, td > h6:empty:-moz-first-node, th > h6:empty:-moz-first-node,
+body > listing:empty:-moz-first-node, td > listing:empty:-moz-first-node, th > listing:empty:-moz-first-node,
+body > plaintext:empty:-moz-first-node, td > plaintext:empty:-moz-first-node, th > plaintext:empty:-moz-first-node,
+body > xmp:empty:-moz-first-node, td > xmp:empty:-moz-first-node, th > xmp:empty:-moz-first-node,
+body > pre:empty:-moz-first-node, td > pre:empty:-moz-first-node, th > pre:empty:-moz-first-node,
+body > ul:empty:-moz-first-node, td > ul:empty:-moz-first-node, th > ul:empty:-moz-first-node,
+body > menu:empty:-moz-first-node, td > menu:empty:-moz-first-node, th > menu:empty:-moz-first-node,
+body > dir:empty:-moz-first-node, td > dir:empty:-moz-first-node, th > dir:empty:-moz-first-node,
+body > ol:empty:-moz-first-node, td > ol:empty:-moz-first-node, th > ol:empty:-moz-first-node {
   margin-bottom: 0;
 }
 
-td > form:empty:last-node, th > form:empty:last-node,
-td > p:empty:last-node, th > p:empty:last-node,
-td > dl:empty:last-node, th > dl:empty:last-node,
-td > multicol:empty:last-node, th > multicol:empty:last-node,
-td > blockquote:empty:last-node, th > blockquote:empty:last-node,
-td > h1:empty:last-node, th > h1:empty:last-node,
-td > h2:empty:last-node, th > h2:empty:last-node,
-td > h3:empty:last-node, th > h3:empty:last-node,
-td > h4:empty:last-node, th > h4:empty:last-node,
-td > h5:empty:last-node, th > h5:empty:last-node,
-td > h6:empty:last-node, th > h6:empty:last-node,
-td > listing:empty:last-node, th > listing:empty:last-node,
-td > plaintext:empty:last-node, th > plaintext:empty:last-node,
-td > xmp:empty:last-node, th > xmp:empty:last-node,
-td > pre:empty:last-node, th > pre:empty:last-node,
-td > ul:empty:last-node, th > ul:empty:last-node,
-td > menu:empty:last-node, th > menu:empty:last-node,
-td > dir:empty:last-node, th > dir:empty:last-node,
-td > ol:empty:last-node, th > ol:empty:last-node {
+td > form:empty:-moz-last-node, th > form:empty:-moz-last-node,
+td > p:empty:-moz-last-node, th > p:empty:-moz-last-node,
+td > dl:empty:-moz-last-node, th > dl:empty:-moz-last-node,
+td > multicol:empty:-moz-last-node, th > multicol:empty:-moz-last-node,
+td > blockquote:empty:-moz-last-node, th > blockquote:empty:-moz-last-node,
+td > h1:empty:-moz-last-node, th > h1:empty:-moz-last-node,
+td > h2:empty:-moz-last-node, th > h2:empty:-moz-last-node,
+td > h3:empty:-moz-last-node, th > h3:empty:-moz-last-node,
+td > h4:empty:-moz-last-node, th > h4:empty:-moz-last-node,
+td > h5:empty:-moz-last-node, th > h5:empty:-moz-last-node,
+td > h6:empty:-moz-last-node, th > h6:empty:-moz-last-node,
+td > listing:empty:-moz-last-node, th > listing:empty:-moz-last-node,
+td > plaintext:empty:-moz-last-node, th > plaintext:empty:-moz-last-node,
+td > xmp:empty:-moz-last-node, th > xmp:empty:-moz-last-node,
+td > pre:empty:-moz-last-node, th > pre:empty:-moz-last-node,
+td > ul:empty:-moz-last-node, th > ul:empty:-moz-last-node,
+td > menu:empty:-moz-last-node, th > menu:empty:-moz-last-node,
+td > dir:empty:-moz-last-node, th > dir:empty:-moz-last-node,
+td > ol:empty:-moz-last-node, th > ol:empty:-moz-last-node {
   margin-top: 0;
 }
 
