@@ -306,6 +306,16 @@ public:
         return mStrings[index];
     }
 
+    enum LangType {LANG_UNKNOWN, LANG_JS, LANG_NATIVE};
+
+    LangType GetCallingLangType() const 
+        {return mCallingLangType;}
+    LangType SetCallingLangType(LangType lt) 
+        {LangType tmp = mCallingLangType; mCallingLangType = lt; return tmp;}
+    JSBool CallerTypeIsJavaScript() const {return LANG_JS == mCallingLangType;}
+    JSBool CallerTypeIsNative() const {return LANG_NATIVE == mCallingLangType;}
+    JSBool CallerTypeIsKnown() const {return LANG_UNKNOWN != mCallingLangType;}
+
     nsIXPCException* GetException()
         {
             NS_IF_ADDREF(mException);
@@ -365,6 +375,7 @@ private:
     PRUint16 mSecurityManagerFlags;
     nsIXPCException* mException;
     nsXPCNativeCallContext mNativeCallContext;
+    LangType mCallingLangType;
 };
 
 /***************************************************************************/
@@ -1126,6 +1137,53 @@ private:
     nsIJSContextStack* mContextStack;
     JSContext* mCX;
 };
+
+/***************************************************************************/
+// This class is used to track whether xpconnect was entered from JavaScCript
+// or native code. This information is used to determine whther or not to call
+// security hooks; i.e. the nsIXPCSecurityManager need not be called to protect
+// xpconnect activities initiated by native code. Instances of this class are
+// instatiated as auto objects at the various critical entry points of 
+// xpconnect. On entry they set a variable in the XPCContext to track the 
+// caller type and then restore the previous value upon destruction (when the 
+// scope is exited).
+
+class AutoPushCallingLangType
+{
+public:
+    AutoPushCallingLangType(JSContext* cx, XPCContext::LangType type);
+    AutoPushCallingLangType(XPCContext* xpcc, XPCContext::LangType type);
+    ~AutoPushCallingLangType();
+
+    XPCContext* GetXPCContext() const 
+        {return mXPCContext;}
+    JSContext*  GetJSContext() const 
+        {return mXPCContext ? nsnull : mXPCContext->GetJSContext();}
+
+private:
+    void ctorCommon(XPCContext::LangType type)
+    {
+        NS_WARN_IF_FALSE(mXPCContext,"bad context in AutoPushCallingLangType");
+        if(mXPCContext)
+            mOldCallingLangType = mXPCContext->SetCallingLangType(type);
+#ifdef DEBUG
+        mDebugPushedCallingLangType = type;
+#endif
+    }
+
+private:
+    XPCContext* mXPCContext;
+    XPCContext::LangType mOldCallingLangType;
+#ifdef DEBUG
+    XPCContext::LangType mDebugPushedCallingLangType;
+#endif
+};
+
+#define SET_CALLER_JAVASCRIPT(_context) \
+    AutoPushCallingLangType _APCLT(_context, XPCContext::LANG_JS)
+
+#define SET_CALLER_NATIVE(_context) \
+    AutoPushCallingLangType _APCLT(_context, XPCContext::LANG_NATIVE)
 
 /***************************************************************************/
 #define NS_JS_RUNTIME_SERVICE_CID \

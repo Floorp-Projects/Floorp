@@ -292,6 +292,7 @@ nsXPCWrappedJS::CallMethod(PRUint16 methodIndex,
                            const nsXPTMethodInfo* info,
                            nsXPTCMiniVariant* params)
 {
+    SET_CALLER_NATIVE(GetClass()->GetXPCContext());
     return GetClass()->CallMethod(this, methodIndex, info, params);
 }
 

@@ -934,6 +934,8 @@ JSBool JS_DLL_CALLBACK
 XPC_JSArgumentFormatter(JSContext *cx, const char *format,
                         JSBool fromJS, jsval **vpp, va_list *app)
 {
+    SET_CALLER_NATIVE(cx);
+
     jsval *vp;
     va_list ap;
 
