@@ -103,6 +103,16 @@
   list-style-image: url("chrome://messenger/skin/icons/folder-template-open.gif");
 }
 
+/* ..... Unsent Messages ..... */
+
+.folderTreeItem[SpecialFolder="Unsent Messages"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-outbox.gif");
+}
+
+.folderTreeItem[selected="true"][SpecialFolder="Unsent Messages"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-outbox-open.gif");
+}
+
 /* ..... Trash ..... */
 
 .folderTreeItem[SpecialFolder="Trash"] {

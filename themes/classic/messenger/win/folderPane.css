@@ -42,6 +42,11 @@ treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon
   list-style-image: url("chrome://messenger/skin/folder-sent.gif");
 }
 
+/* ..... Unsent ..... */
+
+.tree-cell-folderpane-icon[SpecialFolder="Unsent Messages"] {
+  list-style-image: url("chrome://messenger/skin/folder-outbox.gif");
+}
 
 /* ..... Drafts ..... */
 
