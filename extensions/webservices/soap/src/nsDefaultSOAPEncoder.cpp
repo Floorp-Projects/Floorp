@@ -886,7 +886,9 @@ static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag*
   }
 
   nsCOMPtr<nsISimpleEnumerator> e;
-  aPropertyBag->GetEnumerator(getter_AddRefs(e));
+  rc = aPropertyBag->GetEnumerator(getter_AddRefs(e));
+  if (NS_FAILED(rc))
+    return rc;
   PRBool more;
   rc = e->HasMoreElements(&more);
   if (NS_FAILED(rc))
