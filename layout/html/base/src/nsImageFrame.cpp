@@ -490,12 +490,21 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
   if (!useSizedBox) {
     // let the presShell handle converting this into the inline alt
     // text frame
-    // We have to try to get the primary frame for mContent, since for
-    // <object> the frame CantRenderReplacedElement wants is the
-    // ObjectFrame, not us (we're an anonymous frame then)....
     nsIFrame* primaryFrame = nsnull;
-    aPresShell->GetPrimaryFrameFor(mContent, &primaryFrame);
-    aPresShell->CantRenderReplacedElement(primaryFrame ? primaryFrame : this);
+    if (mContent->IsContentOfType(nsIContent::eHTML) &&
+        (mContent->Tag() == nsHTMLAtoms::object ||
+         mContent->Tag() == nsHTMLAtoms::embed)) {
+      // We have to try to get the primary frame for mContent, since for
+      // <object> the frame CantRenderReplacedElement wants is the
+      // ObjectFrame, not us (we're an anonymous frame then)....
+      aPresShell->GetPrimaryFrameFor(mContent, &primaryFrame);
+    }
+
+    if (!primaryFrame) {
+      primaryFrame = this;
+    }     
+    
+    aPresShell->CantRenderReplacedElement(primaryFrame);
     return NS_ERROR_FRAME_REPLACED;
   }
 
