@@ -1,3 +1,6 @@
+
+import java.util.Hashtable;
+
 class JSObject extends JSValue {
     
     static JSObject JSUndefined = new JSObject("undefined");
@@ -12,20 +15,16 @@ class JSObject extends JSValue {
         return indent + "JSObject : " + value + "\n";
     }
 
-    void evalLHS(Environment theEnv)
+    void eval(Environment theEnv)
     {
         theEnv.theStack.push(this);
     }
-    
-    void eval(Environment theEnv)
-    {
-        JSValue v = (JSValue)(theEnv.theGlobals.get(value));
-        if (v == null) {
-            System.out.println("Accessed undefined : " + value);
-            theEnv.theStack.push(JSUndefined);
-        }
+
+    void typeof(Environment theEnv) {
+        if (this == JSUndefined)
+            theEnv.theStack.push(new JSString("undefined"));
         else
-            theEnv.theStack.push(v);
+            theEnv.theStack.push(new JSString("object"));
     }
     
     JSValue defaultValue(String hint) {
@@ -48,106 +47,24 @@ class JSObject extends JSValue {
         return toPrimitive("Number").toJSDouble();
     }
         
-    void gt(Environment theEnv) {
-        JSValue lV = toPrimitive("Number");
-        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
-        if ((lV instanceof JSString) && (rV instanceof JSString)) {
-            theEnv.theStack.push(rV);
-            lV.gt(theEnv);
-        }
-        else {
-            theEnv.theStack.push(rV.toJSDouble());
-            lV.toJSDouble().gt(theEnv);
-        }
-    }
-
-    void ge(Environment theEnv) {
-        JSValue lV = toPrimitive("Number");
-        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
-        if ((lV instanceof JSString) && (rV instanceof JSString)) {
-            theEnv.theStack.push(rV);
-            lV.ge(theEnv);
-        }
-        else {
-            theEnv.theStack.push(rV.toJSDouble());
-            lV.toJSDouble().ge(theEnv);
-        }
-    }
-
-    void lt(Environment theEnv) {
-        JSValue lV = toPrimitive("Number");
-        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
-        if ((lV instanceof JSString) && (rV instanceof JSString)) {
-            theEnv.theStack.push(rV);
-            lV.lt(theEnv);
-        }
-        else {
-            theEnv.theStack.push(rV.toJSDouble());
-            lV.toJSDouble().lt(theEnv);
-        }
-    }
-
-    void le(Environment theEnv) {
-        JSValue lV = toPrimitive("Number");
-        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
-        if ((lV instanceof JSString) && (rV instanceof JSString)) {
-            theEnv.theStack.push(rV);
-            lV.le(theEnv);
-        }
-        else {
-            theEnv.theStack.push(rV.toJSDouble());
-            lV.toJSDouble().le(theEnv);
-        }
-    }
-
-    void eq(Environment theEnv) {
-        JSValue lV = toPrimitive("Number");
-        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
-        if ((lV instanceof JSString) && (rV instanceof JSString)) {
-            theEnv.theStack.push(rV);
-            lV.eq(theEnv);
-        }
-        else {
-            theEnv.theStack.push(rV.toJSDouble());
-            lV.toJSDouble().eq(theEnv);
-        }
-    }
-
-    void ne(Environment theEnv) {
-        JSValue lV = toPrimitive("Number");
-        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
-        if ((lV instanceof JSString) && (rV instanceof JSString)) {
-            theEnv.theStack.push(rV);
-            lV.ne(theEnv);
-        }
-        else {
-            theEnv.theStack.push(rV.toJSDouble());
-            lV.toJSDouble().ne(theEnv);
-        }
-    }
-
-    void add(Environment theEnv) {
-        JSValue lV = toPrimitive("");
-        JSValue rV = theEnv.theStack.pop().toPrimitive("");
-        if ((lV instanceof JSString) || (rV instanceof JSString)) {
-            theEnv.theStack.push(rV);
-            lV.ne(theEnv);
-        }
-        else {
-            theEnv.theStack.push(rV.toJSDouble());
-            lV.toJSDouble().add(theEnv);
-        }
-    }
-    
-    void subtract(Environment theEnv) {
-        theEnv.theStack.push(theEnv.theStack.pop().toJSDouble());
-        toJSDouble().subtract(theEnv);
-    }
-    
-    
     public String toString() {
-        return value;
+        return value + contents.toString();
     }
+        
+    void getProp(Environment theEnv) {
+        JSString id = theEnv.theStack.pop().toJSString();
+        JSValue v = (JSValue)(contents.get(id.s));
+        theEnv.theStack.push(v);
+    }
+        
+    void putProp(Environment theEnv) {
+        JSValue v = theEnv.theStack.pop();
+        JSString id = theEnv.theStack.pop().toJSString();
+        contents.put(id.s, v);
+    }
+        
+        
+    Hashtable contents = new Hashtable();
         
     String value;
     

@@ -23,6 +23,14 @@ class JSBoolean extends JSValue {
         return !b;
     }
     
+    void bang(Environment theEnv) {
+         theEnv.theStack.push((b) ? JSFalse : JSTrue);
+    }
+
+    void typeof(Environment theEnv) {
+        theEnv.theStack.push(new JSString("boolean"));
+    }
+
     JSBoolean toJSBoolean() {
         return this;
     }

@@ -7,10 +7,29 @@ class BinaryNode extends ExpressionNode {
         op = aOp;
     }
 
+    void evalLHS(Environment theEnv)
+    {
+        left.evalLHS(theEnv);
+        JSValue lV = theEnv.theStack.pop();
+        right.eval(theEnv);
+
+        if (op == ".")
+            lV.getProp(theEnv);
+        else
+            super.evalLHS(theEnv);
+    }
+    
     void eval(Environment theEnv)
     {
         left.eval(theEnv);
+        JSValue lV = theEnv.theStack.pop();
         right.eval(theEnv);
+        
+        if (op == ".")
+            lV.getProp(theEnv);
+        else
+            System.out.println("missing binary op " + op);
+        
     }
     
     String print(String indent)

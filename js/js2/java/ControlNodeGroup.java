@@ -55,15 +55,22 @@ class ControlNodeGroup {
         tails.removeAllElements();
     }
     
-    void fixContinues(ControlNode butt)
+    void fixContinues(ControlNode butt, String label)
     {
         int count = continueTails.size();
-        for (int i = 0; i < count; i++)
-        {
-            ControlNode aNode = (ControlNode)(continueTails.elementAt(i));
-            aNode.setNext(butt);
+        int i = 0;
+        while (i < count) {
+            ControlNode c = (ControlNode)(continueTails.elementAt(i));            
+            ExpressionNode e = c.getExpression();
+            String tgt = (e == null) ? null : ((JSIdentifier)e).s;
+            if ((tgt == null) || tgt.equals(label)) {
+                c.setNext(butt);
+                continueTails.removeElementAt(i);
+                count--;
+            }
+            else
+                i++;
         }
-        continueTails.removeAllElements();
     }
     
     void setHead(ControlNode aHead)
@@ -123,18 +130,19 @@ class ControlNodeGroup {
     void shiftBreakTails(String label)
     {
         int count = breakTails.size();
-        for (int i = 0; i < count; i++)
-        {
+        int i = 0;
+        while (i < count) {
             ControlNode c = (ControlNode)(breakTails.elementAt(i));
             ExpressionNode e = c.getExpression();
-            String tgt = (e == null) ? null : ((JSObject)e).value;
+            String tgt = (e == null) ? null : ((JSIdentifier)e).s;
             if ((tgt == null) || tgt.equals(label)) {
                 tails.addElement(c);
                 breakTails.removeElementAt(i);
-                i--;
                 count--;
             }
-        }
+            else
+                i++;
+        }        
     }
   
     ControlNode head;

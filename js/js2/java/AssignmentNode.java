@@ -13,9 +13,8 @@ class AssignmentNode extends BinaryNode {
         JSValue rValue = theEnv.theStack.pop();
         JSValue lValue = theEnv.theStack.pop();
         
-        theEnv.theGlobals.put(lValue.toString(), rValue);
-        
-        
+        theEnv.theStack.push(rValue);
+        lValue.putProp(theEnv);
     }
 
 }

@@ -45,7 +45,7 @@ options {
 // ********* Identifiers **********
 identifier returns [ExpressionNode e]
     { e = null; }
-	:	opI:IDENT       { e = new JSObject(opI.getText()); }
+	:	opI:IDENT       { e = new JSIdentifier(opI.getText()); }
 	|	"version"       { e = new JSObject("version"); }
 	|	"override"      { e = new JSObject("override"); }
 	|	"method"        { e = new JSObject("method"); }
@@ -454,7 +454,7 @@ statements[int scope, ControlNodeGroup container]
 // ********* Labeled Statements **********
 labeled_statement[boolean non_empty, ControlNodeGroup container]
     { ExpressionNode e = null; }
-	:	e = identifier ":" code_statement[non_empty, container, ((JSObject)e).value]
+	:	e = identifier ":" code_statement[non_empty, container, ((JSIdentifier)e).s]
 	;
 
 if_statement[boolean non_empty, ControlNodeGroup container]
