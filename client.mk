@@ -57,6 +57,7 @@ NSPR_CO_TAG = NSPRPUB_CLIENT_BRANCH
 PSM_CO_TAG = #We will now build PSM from the tip instead of a branch.
 NSS_CO_TAG = NSS_CLIENT_TAG
 LDAPCSDK_CO_TAG = LDAPCSDK_40_BRANCH
+ACCESSIBLE_CO_TAG = 
 GFX2_CO_TAG = 
 IMGLIB2_CO_TAG = 
 BUILD_MODULES = all
@@ -228,6 +229,16 @@ endif
 CVSCO_LDAPCSDK = cvs $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(LDAPCSDK_CO_MODULE)
 
 ####################################
+# CVS defines for the C LDAP SDK
+#
+ACCESSIBLE_CO_MODULE = mozilla/accessible
+ACCESSIBLE_CO_FLAGS := -P
+ifdef ACCESSIBLE_CO_TAG
+  ACCESSIBLE_CO_FLAGS := $(ACCESSIBLE_CO_FLAGS) -r $(ACCESSIBLE_CO_TAG)
+endif
+CVSCO_ACCESSIBLE = cvs $(CVS_FLAGS) co $(ACCESSIBLE_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(ACCESSIBLE_CO_MODULE)
+
+####################################
 # CVS defines for gfx2
 #
 GFX2_CO_MODULE = mozilla/gfx2
@@ -270,6 +281,9 @@ ifeq (,$(filter security security/manager, $(BUILD_MODULE_CVS)))
 endif
 ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_CVS)))
   CVSCO_LDAPCSDK :=
+endif
+ifeq (,$(filter accessible, $(BUILD_MODULE_CVS)))
+  CVSCO_ACCESSIBLE :=
 endif
 ifeq (,$(filter gfx2, $(BUILD_MODULE_CVS)))
   CVSCO_GFX2 :=
@@ -344,6 +358,7 @@ real_checkout:
 	cvs_co $(CVSCO_PSM) && \
 	cvs_co $(CVSCO_NSS) && \
         cvs_co $(CVSCO_LDAPCSDK) && \
+        cvs_co $(CVSCO_ACCESSIBLE) && \
         cvs_co $(CVSCO_GFX2) && \
         cvs_co $(CVSCO_IMGLIB2) && \
 	cvs_co $(CVSCO_SEAMONKEY) && \

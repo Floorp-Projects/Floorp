@@ -120,6 +120,7 @@ DIRS		+= \
 		sun-java \
 		profile \
 		themes \
+    	accessible \
 		$(NULL)
 
 # This must preceed xpfe

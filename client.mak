@@ -44,6 +44,7 @@ MOZ_OBJDIR = WIN32_O.OBJ
 #NSPR_CO_TAG=SeaMonkey_M17_BRANCH
 #PSM_CO_TAG=SeaMonkey_M17_BRANCH
 #LDAPCSDK_CO_TAG=SeaMonkey_M17_BRANCH
+#ACCESSIBLE_CO_TAG=SeaMonkey_M17_BRANCH
 #IMGLIB2_BRANCH=SeaMonkey_M17_BRANCH
 #GFX2_BRANCH=SeaMonkey_M17_BRANCH
 
@@ -164,6 +165,17 @@ LDAPCSDK_CO_FLAGS=-r LDAPCSDK_40_BRANCH
 CVSCO_LDAPCSDK = cvs -q $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) -P
 
 #//------------------------------------------------------------------------
+#// Figure out how to pull accessibility libs.
+#// If no ACCESSIBLE_CO_TAG is specified, use the default tag
+#//------------------------------------------------------------------------
+
+!if "$(ACCESSIBLE_CO_TAG)" != ""
+ACCESSIBLE_CO_FLAGS=-r $(ACCESSIBLE_CO_TAG)
+!endif
+
+CVSCO_ACCESSIBLE = cvs -q $(CVS_FLAGS) co $(ACCESSIBLE_CO_FLAGS) -P
+
+#//------------------------------------------------------------------------
 #// Figure out how to pull new image library.
 #// If no IMGLIB2_CO_TAG is specified, use the default tag
 #//------------------------------------------------------------------------
@@ -202,7 +214,7 @@ pull_and_build_all: pull_all depend build_all
 
 pull_clobber_and_build_all: pull_all clobber_all build_all
 
-pull_all: pull_nspr pull_psm pull_ldapcsdk pull_gfx2 pull_imglib2 pull_seamonkey
+pull_all: pull_nspr pull_psm pull_ldapcsdk pull_accessible pull_gfx2 pull_imglib2 pull_seamonkey
 
 pull_nspr: pull_clientmak
       cd $(MOZ_SRC)\.
@@ -222,6 +234,10 @@ pull_psm: pull_nss
 pull_ldapcsdk:
 	cd $(MOZ_SRC)\.
 	$(CVSCO_LDAPCSDK) mozilla/directory/c-sdk
+
+pull_accessible:
+	cd $(MOZ_SRC)\.
+	$(CVSCO_ACCESSIBLE) mozilla/accessible
 
 pull_gfx2:
   cd $(MOZ_SRC)\.
