@@ -86,7 +86,6 @@ private:
 
     nsDiskCacheBinding *        mBinding;
     nsDiskCacheDevice *         mDevice;
-    nsCOMPtr<nsCacheLock>       mDeviceLock;
     nsDiskCacheOutputStream *   mOutStream;
     PRInt32                     mInStreamCount;
     nsCOMPtr<nsILocalFile>      mLocalFile;
