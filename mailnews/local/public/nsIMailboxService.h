@@ -42,6 +42,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 class nsIURL;
 class nsIStreamListener;
+class nsIUrlListener;
 
 class nsIMailboxService : public nsISupports
 {
@@ -58,10 +59,12 @@ public:
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// Pass in a file path for the mailbox you wish to parse. You also need to pass in a mailbox 
-	// parser (the consumer).
+	// parser (the consumer). The url listener can be null if you have no interest in tracking
+	// the url.
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener * aMailboxParser, nsIURL ** aURL) = 0;
+	NS_IMETHOD ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener * aMailboxParser, 
+							nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	// When you want a message from the mailbox displayed, pass in the path to the mailbox, 
