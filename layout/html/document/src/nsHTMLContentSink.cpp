@@ -79,6 +79,10 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDOMHTMLTitleElement.h"
 
+#ifdef RAPTOR_PERF_METRICS
+#include "stopwatch.h"
+#endif
+
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
@@ -119,6 +123,30 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
   PR_END_MACRO
 
 #define SINK_TRACE_NODE(_bit,_msg,_node) SinkTraceNode(_bit,_msg,_node,this)
+
+#ifdef RAPTOR_PERF_METRICS
+  #define NS_RESET_AND_START_STOPWATCH()          \
+    mWatch.Start(PR_TRUE);
+
+  #define NS_START_STOPWATCH()                    \
+    mWatch.Start(PR_FALSE);
+
+  #define NS_STOP_STOPWATCH()                     \
+    mWatch.Stop();
+
+  #define NS_SAVE_STOPWATCH_STATE()               \
+    mWatch.SaveState();
+
+  #define NS_RESTORE_STOPWATCH_STATE()            \
+    mWatch.RestoreState();
+
+#else
+  #define NS_RESET_AND_START_STOPWATCH() 
+  #define NS_START_STOPWATCH()
+  #define NS_STOP_STOPWATCH()
+  #define NS_SAVE_STOPWATCH_STATE()
+  #define NS_RESTORE_STOPWATCH_STATE()
+#endif
 
 static void
 SinkTraceNode(PRUint32 aBit,
@@ -275,7 +303,10 @@ public:
     PRInt32 currentCount;
     mBody->ChildCount(currentCount);
     if (mBodyChildCount < currentCount) {
+      NS_SAVE_STOPWATCH_STATE()
+      NS_STOP_STOPWATCH()
       mDocument->ContentAppended(mBody, mBodyChildCount);
+      NS_RESTORE_STOPWATCH_STATE()
     }
     mBodyChildCount = currentCount;
   }
@@ -284,6 +315,10 @@ public:
     NotifyBody();
     mDirty = PR_FALSE;
   }
+#endif
+
+#ifdef RAPTOR_PERF_METRICS
+  Stopwatch mWatch; //  Measures content model creation time for current document
 #endif
 };
 
@@ -1624,10 +1659,14 @@ HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURI* aURL,
                       nsIWebShell* aContainer)
 {
+  // NRA Dump document and stopwatch start info here
+  NS_RESET_AND_START_STOPWATCH()
+
   NS_PRECONDITION(nsnull != aDoc, "null ptr");
   NS_PRECONDITION(nsnull != aURL, "null ptr");
   NS_PRECONDITION(nsnull != aContainer, "null ptr");
   if ((nsnull == aDoc) || (nsnull == aURL) || (nsnull == aContainer)) {
+    NS_STOP_STOPWATCH()
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -1654,6 +1693,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // Make root part
   nsresult rv = NS_NewHTMLHtmlElement(&mRoot, nsHTMLAtoms::html);
   if (NS_OK != rv) {
+    NS_STOP_STOPWATCH()
     return rv;
   }
   mRoot->SetDocument(mDocument, PR_FALSE);
@@ -1662,11 +1702,13 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // Make head part
   nsIAtom* atom = NS_NewAtom("head");
   if (nsnull == atom) {
+    NS_STOP_STOPWATCH()
     return NS_ERROR_OUT_OF_MEMORY;
   }
   rv = NS_NewHTMLHeadElement(&mHead, atom);
   NS_RELEASE(atom);
   if (NS_OK != rv) {
+    NS_STOP_STOPWATCH()
     return rv;
   }
   mRoot->AppendChildTo(mHead, PR_FALSE);
@@ -1687,6 +1729,8 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 #ifdef NECKO
   nsCRT::free(spec);
 #endif
+
+  NS_STOP_STOPWATCH()
   return NS_OK;
 }
 
@@ -1701,6 +1745,8 @@ HTMLContentSink::WillBuildModel(void)
 NS_IMETHODIMP
 HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
+  // NRA Dump stopwatch stop info here
+
   if (nsnull == mTitle) {
     mHTMLDocument->SetTitle("");
   }
@@ -2125,27 +2171,38 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
+  NS_START_STOPWATCH()
+  nsresult rv = NS_OK;
   // XXX work around parser bug
   if (eHTMLTag_frameset == aNode.GetNodeType()) {
+    NS_STOP_STOPWATCH()
     return OpenFrameset(aNode);
   }
-  return mCurrentContext->OpenContainer(aNode);
+  rv = mCurrentContext->OpenContainer(aNode);
+  NS_STOP_STOPWATCH()
+  return rv;
 }
 
 NS_IMETHODIMP
 HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
+  NS_START_STOPWATCH()
+  nsresult rv = NS_OK;
   // XXX work around parser bug
   if (eHTMLTag_frameset == aNode.GetNodeType()) {
+    NS_STOP_STOPWATCH()
     return CloseFrameset(aNode);
   }
-  return mCurrentContext->CloseContainer(aNode);
+  rv = mCurrentContext->CloseContainer(aNode);
+  NS_STOP_STOPWATCH()
+  return rv;
 }
 
 NS_IMETHODIMP
 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 {
-  nsresult rv;
+  NS_START_STOPWATCH()
+  nsresult rv;  
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   switch (nodeType) {
@@ -2174,14 +2231,16 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     break;
 
   case eHTMLTag_script:
-    mCurrentContext->FlushText();
-    rv = ProcessSCRIPTTag(aNode);
+    mCurrentContext->FlushText();    
+    rv = ProcessSCRIPTTag(aNode);    
     break;
 
   default:
     rv = mCurrentContext->AddLeaf(aNode);
     break;
   }
+
+  NS_STOP_STOPWATCH()
   return rv;
 }
 
@@ -2192,7 +2251,11 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
  * @return  error code
  */
 nsresult HTMLContentSink::AddComment(const nsIParserNode& aNode) {
-  return mCurrentContext->AddComment(aNode);
+  NS_START_STOPWATCH()
+  nsresult rv = NS_OK;
+  rv = mCurrentContext->AddComment(aNode);
+  NS_STOP_STOPWATCH();
+  return rv;
 }
 
 /**
@@ -2203,6 +2266,10 @@ nsresult HTMLContentSink::AddComment(const nsIParserNode& aNode) {
  */
 nsresult HTMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode) {
   nsresult result= NS_OK;
+  NS_START_STOPWATCH()
+  // Implementation of AddProcessingInstruction() should start here
+
+  NS_STOP_STOPWATCH();
   return result;
 }
 
@@ -2214,7 +2281,12 @@ nsresult HTMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode) {
 NS_IMETHODIMP
 HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
-  return NS_OK;
+  nsresult rv = NS_OK;
+  NS_START_STOPWATCH()
+  // Implementation of AddDocTypeDecl() should start here
+
+  NS_STOP_STOPWATCH();
+  return rv;
 }
 
 
@@ -3276,6 +3348,10 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       NS_RELEASE(text);
     }
   }
+
+  // Don't include script loading and evaluation in the stopwatch
+  // that is measuring content creation time
+  NS_STOP_STOPWATCH()
 
   // Don't process scripts that aren't JavaScript
   if (isJavaScript) {
