@@ -118,7 +118,7 @@
 #include "plbase64.h"
 #include "nsIUTF8ConverterService.h"
 #include "nsUConvCID.h"
-#ifdef XP_MAC
+#ifdef XP_MACOSX
 #include "nsIUnicodeNormalizer.h"
 #endif
 
@@ -3630,7 +3630,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, const char* charset
     nsFileSpec fileSpec(fileUrl);
     char* leafName = fileSpec.GetLeafName();
     NS_ENSURE_TRUE(leafName && *leafName, NS_ERROR_UNEXPECTED);
-#ifdef XP_MAC
+#ifdef XP_MACOSX
     nsAutoString decomposedName;
     CopyUTF8toUTF16(leafName, decomposedName);
     nsCOMPtr<nsIUnicodeNormalizer> normalizer (do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID));

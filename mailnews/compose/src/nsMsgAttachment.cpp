@@ -39,7 +39,7 @@
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
-#ifdef XP_MAC
+#ifdef XP_MACOSX
 #include "nsIUnicodeNormalizer.h"
 #endif
 
@@ -65,7 +65,7 @@ NS_IMETHODIMP nsMsgAttachment::GetName(nsAString & aName)
 
 NS_IMETHODIMP nsMsgAttachment::SetName(const nsAString & aName)
 {
-#ifndef XP_MAC
+#ifndef XP_MACOSX
   mName = aName;
 #else
   // Mac OS X filesystem uses NFD. When exporting names to the 'world',
