@@ -373,7 +373,7 @@ nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
         testKey = token;
         testKey.StripWhitespace();
 
-        if (testKey.Equals(token))
+        if (testKey.Equals(key))
           foundIdentity = PR_TRUE;
 
         token = nsCRT::strtok(newStr, ",", &newStr);
@@ -404,9 +404,58 @@ nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
 
 /* void removeIdentity (in nsIMsgIdentity identity); */
 NS_IMETHODIMP
-nsMsgAccount::RemoveIdentity(nsIMsgIdentity *identity)
+nsMsgAccount::RemoveIdentity(nsIMsgIdentity * aIdentity)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_TRUE(m_identities, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aIdentity);
+
+  PRUint32 count =0;
+  m_identities->Count(&count);
+
+  NS_ENSURE_TRUE(count > 1, NS_ERROR_FAILURE); // you must have at least one identity
+
+  nsXPIDLCString key;
+  nsresult rv = aIdentity->GetKey(getter_Copies(key));
+
+  // remove our identity
+  m_identities->RemoveElement(aIdentity);
+  count--;
+
+  // clear out the actual pref values associated with the identity
+  aIdentity->ClearAllValues();
+
+  // if we just deleted the default identity, clear it out so we pick a new one
+  if (m_defaultIdentity == aIdentity)
+    m_defaultIdentity = nsnull;
+
+  // now rebuild the identity pref
+  nsCAutoString identitiesKeyPref("mail.account.");
+  identitiesKeyPref.Append(m_accountKey);
+  identitiesKeyPref.Append(".identities");
+      
+  nsCAutoString newIdentityList;
+
+  // iterate over the remaining identities
+  for (PRUint32 index = 0; index < count; index++)
+  {
+    nsCOMPtr<nsIMsgIdentity> identity = do_QueryElementAt(m_identities, index, &rv);
+    if (identity)
+    {
+      identity->GetKey(getter_Copies(key));
+
+      if (!index)
+        newIdentityList = key;
+      else
+      {
+        newIdentityList.Append(',');
+        newIdentityList.Append(key);
+      }
+    }
+  }
+
+  m_prefs->SetCharPref(identitiesKeyPref.get(), newIdentityList.get());
+ 
+  return rv;
 }
 
 NS_IMPL_GETTER_STR(nsMsgAccount::GetKey, m_accountKey)
