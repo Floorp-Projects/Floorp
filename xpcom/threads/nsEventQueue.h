@@ -53,6 +53,8 @@ public:
     NS_IMETHOD RevokeEvents(void* owner);
 
     NS_IMETHOD GetPLEventQueue(PLEventQueue** aEventQueue);
+    
+    NS_IMETHOD IsQueueOnCurrentThread(PRBool *aResult);
 
 	// Helpers
 	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);

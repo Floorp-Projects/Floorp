@@ -104,6 +104,13 @@ nsEventQueueImpl::GetPLEventQueue(PLEventQueue** aEventQueue)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEventQueueImpl::IsQueueOnCurrentThread(PRBool *aResult)
+{
+    *aResult = PL_IsQueueOnCurrentThread( mEventQueue );
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()
