@@ -68,6 +68,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIJSContextStack.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIPref.h"
 #include "nsIPresShell.h"
@@ -106,8 +107,8 @@ GlobalWindowImpl::GlobalWindowImpl() : mScriptObject(nsnull),
    mPersonalbar(nsnull), mStatusbar(nsnull), mScrollbars(nsnull),
    mTimeouts(nsnull), mTimeoutInsertionPoint(nsnull), mRunningTimeout(nsnull),
    mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0), 
-   mFirstDocumentLoad(PR_TRUE), mXPConnectObjectHash(nsnull),
-   mGlobalObjectOwner(nsnull), mDocShell(nsnull), mChromeEventHandler(nsnull)
+   mFirstDocumentLoad(PR_TRUE), mGlobalObjectOwner(nsnull), mDocShell(nsnull),
+   mChromeEventHandler(nsnull)
 {
    NS_INIT_REFCNT();
 }
@@ -133,11 +134,6 @@ void GlobalWindowImpl::CleanUp()
    NS_IF_RELEASE(mLocation);
    NS_IF_RELEASE(mFrames);
    mOpener = nsnull; // Forces Release
-   if(mXPConnectObjectHash)
-      {
-      delete mXPConnectObjectHash;
-      mXPConnectObjectHash = nsnull;
-      }
 }
 
 //*****************************************************************************
@@ -205,12 +201,6 @@ NS_IMETHODIMP GlobalWindowImpl::GetContext(nsIScriptContext **aContext)
 
 NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
-   if(mXPConnectObjectHash)
-      {
-      delete mXPConnectObjectHash;
-      mXPConnectObjectHash = nsnull;
-      }
-
    if(mFirstDocumentLoad)
       {
       mFirstDocumentLoad = PR_FALSE;
@@ -1121,11 +1111,6 @@ NS_IMETHODIMP GlobalWindowImpl::Alert(JSContext* cx, jsval* argv, PRUint32 argc)
    else
       str.Assign("undefined");
 
-   //XXXEMBEDDING really we should just instantiate a prompter service
-   // don't bother calling up the stack.
-   // nsCOMPtr<nsIPrompt> prompter(do_CreateInstance(NS_PROMPT_PROGID));
-   // XXX This create instance should be the progid
-
    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
    GetTreeOwner(getter_AddRefs(treeOwner));
    NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
@@ -1148,11 +1133,6 @@ NS_IMETHODIMP GlobalWindowImpl::Confirm(JSContext* cx, jsval* argv,
       nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
    else
       str.Assign("undefined");
-
-   //XXXEMBEDDING really we should just instantiate a prompter service
-   // don't bother calling up the stack.
-   // nsCOMPtr<nsIPrompt> prompter(do_CreateInstance(NS_PROMPT_PROGID));
-   // XXX This create instance should be the progid
 
    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
    GetTreeOwner(getter_AddRefs(treeOwner));
@@ -1182,11 +1162,6 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
       else 
          initial.Assign("undefined");
       }
-
-   //XXXEMBEDDING really we should just instantiate a prompter service
-   // don't bother calling up the stack.
-   // nsCOMPtr<nsIPrompt> prompter(do_CreateInstance(NS_PROMPT_PROGID));
-   // XXX This create instance should be the progid
 
    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
    GetTreeOwner(getter_AddRefs(treeOwner));
@@ -1782,40 +1757,21 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn
 NS_IMETHODIMP GlobalWindowImpl::AddXPConnectObject(const nsString& aId, 
    nsISupports* aXPConnectObj)
 {
-   NS_ENSURE_SUCCESS(EnsureXPConnectObjectHash(), NS_ERROR_FAILURE);
-
-   nsStringKey key(aId);
-
-   mXPConnectObjectHash->Put(&key, aXPConnectObj);
-
-   return NS_OK;
+   NS_ERROR("XXX: Someone Still Calling the deprecated nsIDOMWindow AddXPConnectObject\r\n");
+   return SetXPConnectObject(aId.GetUnicode(), aXPConnectObj);
 }
 
 NS_IMETHODIMP GlobalWindowImpl::RemoveXPConnectObject(const nsString& aId)
 {
-   NS_ENSURE_STATE(mXPConnectObjectHash);
-
-   nsStringKey key(aId);
-    
-   mXPConnectObjectHash->Remove(&key);
-
-   return NS_OK;
+   NS_ERROR("XXX: Someone Still Calling the deprecated nsIDOMWindow RemoveXPConnectObject\r\n");
+   return SetXPConnectObject(aId.GetUnicode(), nsnull);
 }
 
 NS_IMETHODIMP GlobalWindowImpl::GetXPConnectObject(const nsString& aId,
    nsISupports** aXPConnectObj)
 {
-   NS_ENSURE_ARG_POINTER(aXPConnectObj);
-   *aXPConnectObj = nsnull;
-
-   if(!mXPConnectObjectHash)
-      return NS_OK;
-
-   nsStringKey key(aId);
-
-   *aXPConnectObj = (nsISupports*)mXPConnectObjectHash->Get(&key);
-   NS_IF_ADDREF(*aXPConnectObj);
-   return NS_OK;
+   NS_ERROR("XXX: Someone Still Calling the deprecated nsIDOMWindow GetXPConnectObject\r\n");
+   return GetXPConnectObject(aId.GetUnicode(), aXPConnectObj);
 }
 
 //*****************************************************************************
@@ -2226,6 +2182,63 @@ NS_IMETHODIMP GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
 
 // NS_IMETHODIMP GlobalWindowImpl::GetDocShell(nsIDocShell** aDocShell)
 // Implemented by nsIScriptGlobalObject
+
+NS_IMETHODIMP GlobalWindowImpl::SetXPConnectObject(const PRUnichar* aProperty, 
+   nsISupports* aXPConnectObj)
+{
+   // Get JSContext from stack.
+   nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+   NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
+
+   JSContext* cx;
+   NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
+
+   if(!cx)
+      {
+      stack->GetSafeJSContext(&cx);
+      NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+      }
+
+   jsval propertyVal = nsnull;
+
+   NS_IF_ADDREF(aXPConnectObj); // Convert Releases it (I know it's bad)
+   nsJSUtils::nsConvertXPCObjectToJSVal(aXPConnectObj, NS_GET_IID(nsISupports), 
+      cx, (JSObject*)mScriptObject, &propertyVal);
+   
+   NS_ENSURE_TRUE(JS_FALSE != JS_SetUCProperty(cx, (JSObject*)mScriptObject,
+      aProperty, nsCRT::strlen(aProperty), &propertyVal), NS_ERROR_FAILURE);
+      
+   return NS_OK;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::GetXPConnectObject(const PRUnichar* aProperty, 
+   nsISupports** aXPConnectObj)
+{
+   // Get JSContext from stack.
+   nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+   NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
+
+   JSContext* cx;
+   NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
+
+   if(!cx)
+      {
+      stack->GetSafeJSContext(&cx);
+      NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+      }
+
+   jsval propertyVal;
+
+   if(JS_FALSE == JS_LookupUCProperty(cx, (JSObject*)mScriptObject, aProperty,
+      nsCRT::strlen(aProperty), &propertyVal))
+      return NS_ERROR_FAILURE;
+
+   if(JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(aXPConnectObj, 
+      NS_GET_IID(nsISupports), cx, propertyVal))
+      return NS_ERROR_FAILURE;
+
+   return NS_OK;
+}
 
 NS_IMETHODIMP GlobalWindowImpl::Activate()
 {
@@ -3439,17 +3452,6 @@ NS_IMETHODIMP GlobalWindowImpl::GetWebBrowserChrome(nsIWebBrowserChrome**
    return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::EnsureXPConnectObjectHash()
-{
-   if(mXPConnectObjectHash)
-      return NS_OK;
-
-   mXPConnectObjectHash = new nsSupportsHashtable();
-   NS_ENSURE_TRUE(mXPConnectObjectHash, NS_ERROR_OUT_OF_MEMORY);
-
-   return NS_OK;
-}
-
 NS_IMETHODIMP GlobalWindowImpl::GetScrollInfo(nsIScrollableView** aScrollableView,
    float* aP2T, float* aT2P)
 {
@@ -4097,11 +4099,11 @@ nsDOMWindowController::nsDOMWindowController( nsIDOMWindow* aWindow)
 
 nsresult nsDOMWindowController::GetEditInterface(nsIContentViewerEdit** aEditInterface)
 {	 
-	nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(mWindow));
-   NS_ENSURE_TRUE(piwindow, NS_ERROR_FAILURE);
+	nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(mWindow));
+   NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIDocShell> docShell;
-   piwindow->GetDocShell(getter_AddRefs(docShell));
+   sgo->GetDocShell(getter_AddRefs(docShell));
    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIContentViewer> viewer;
@@ -4116,11 +4118,11 @@ nsresult nsDOMWindowController::GetEditInterface(nsIContentViewerEdit** aEditInt
 
 nsresult nsDOMWindowController::GetPresShell(nsIPresShell** aPresShell)
 {
-	nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(mWindow));
-   NS_ENSURE_TRUE(piwindow, NS_ERROR_FAILURE);
+	nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(mWindow));
+   NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsIDocShell> docShell;
-   piwindow->GetDocShell(getter_AddRefs(docShell));
+   sgo->GetDocShell(getter_AddRefs(docShell));
    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(docShell->GetPresShell(aPresShell), NS_ERROR_FAILURE);
