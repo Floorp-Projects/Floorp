@@ -364,7 +364,7 @@ struct PK11SlotStr {
     NSSLOWCERTCertDBHandle *certDB;
     NSSLOWKEYDBHandle	*keyDB;
     int			minimumPinLen;
-    PRInt32		sessionIDCount;  /* atomically incremeneted */
+    PRInt32		sessionIDCount;  /* atomically incremented */
     int			sessionIDConflict;  /* not protected by a lock */
     int			sessionCount;
     int			rwSessionCount;
