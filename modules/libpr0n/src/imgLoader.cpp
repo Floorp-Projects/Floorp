@@ -552,17 +552,15 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
   /* Is it a GIF? */
   if (aLength >= 4 && !nsCRT::strncmp(aContents, "GIF8", 4))  {
     *aContentType = nsCRT::strndup("image/gif", 9);
-    return NS_OK;
   }
 
   /* or a PNG? */
-  if (aLength >= 4 && ((unsigned char)aContents[0]==0x89 &&
+  else if (aLength >= 4 && ((unsigned char)aContents[0]==0x89 &&
                    (unsigned char)aContents[1]==0x50 &&
                    (unsigned char)aContents[2]==0x4E &&
                    (unsigned char)aContents[3]==0x47))
   { 
     *aContentType = nsCRT::strndup("image/png", 9);
-    return NS_OK;
   }
 
   /* maybe a JPEG (JFIF)? */
@@ -572,65 +570,64 @@ nsresult imgLoader::GetMimeTypeFromContent(const char* aContents, PRUint32 aLeng
    *
    * (JFIF is 0XFF 0XD8 0XFF 0XE0 <skip 2> 0X4A 0X46 0X49 0X46 0X00)
    */
-  if (aLength >= 3 &&
+  else if (aLength >= 3 &&
      ((unsigned char)aContents[0])==0xFF &&
      ((unsigned char)aContents[1])==0xD8 &&
      ((unsigned char)aContents[2])==0xFF)
   {
     *aContentType = nsCRT::strndup("image/jpeg", 10);
-    return NS_OK;
   }
 
   /* or how about ART? */
   /* ART begins with JG (4A 47). Major version offset 2.
    * Minor version offset 3. Offset 4 must be NULL.
    */
-  if (aLength >= 5 &&
+  else if (aLength >= 5 &&
    ((unsigned char) aContents[0])==0x4a &&
    ((unsigned char) aContents[1])==0x47 &&
    ((unsigned char) aContents[4])==0x00 )
   {
     *aContentType = nsCRT::strndup("image/x-jg", 10);
-    return NS_OK;
   }
 
-  if (aLength >= 2 && !nsCRT::strncmp(aContents, "BM", 2)) {
+  else if (aLength >= 2 && !nsCRT::strncmp(aContents, "BM", 2)) {
     *aContentType = nsCRT::strndup("image/bmp", 9);
-    return NS_OK;
   }
 
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.
-  if (aLength >= 4 && !memcmp(aContents, "\000\000\001\000", 4)) {
+  else if (aLength >= 4 && !memcmp(aContents, "\000\000\001\000", 4)) {
     *aContentType = nsCRT::strndup("image/x-icon", 12);
-    return NS_OK;
   }
 
-  if (aLength >= 4 && ((unsigned char)aContents[0]==0x8A &&
+  else if (aLength >= 4 && ((unsigned char)aContents[0]==0x8A &&
                    (unsigned char)aContents[1]==0x4D &&
                    (unsigned char)aContents[2]==0x4E &&
                    (unsigned char)aContents[3]==0x47))
   { 
     *aContentType = nsCRT::strndup("video/x-mng", 11);
-    return NS_OK;
   }
 
-  if (aLength >= 4 && ((unsigned char)aContents[0]==0x8B &&
+  else if (aLength >= 4 && ((unsigned char)aContents[0]==0x8B &&
                    (unsigned char)aContents[1]==0x4A &&
                    (unsigned char)aContents[2]==0x4E &&
                    (unsigned char)aContents[3]==0x47))
   { 
     *aContentType = nsCRT::strndup("image/x-jng", 11);
-    return NS_OK;
   }
 
-  if (aLength >= 8 && !nsCRT::strncmp(aContents, "#define ", 8)) {
+  else if (aLength >= 8 && !nsCRT::strncmp(aContents, "#define ", 8)) {
     *aContentType = nsCRT::strndup("image/x-xbitmap", 15);
+  }
+  else {
+    /* none of the above?  I give up */
+    /* don't raise an exception, simply return null */
     return NS_OK;
   }
 
-  /* none of the above?  I give up */
-  /* don't raise an exception, simply return null */
-  return NS_OK;
+  if (*aContentType)
+    return NS_OK;
+
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 /**
