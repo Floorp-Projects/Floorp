@@ -107,9 +107,22 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
 void
 nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 {
+  // XXX This is what we should be setting this to, but if we do
+  // it breaks the block and inline code
+#if 0
+  // Determine whether the values are constrained or unconstrained
+  // by looking at the maxSize
+  widthConstraint = NS_UNCONSTRAINEDSIZE == maxSize.width ?
+                      eHTMLFrameConstraint_Unconstrained :
+                      eHTMLFrameConstraint_Constrained;
+  heightConstraint = NS_UNCONSTRAINEDSIZE == maxSize.height ?
+                      eHTMLFrameConstraint_Unconstrained :
+                      eHTMLFrameConstraint_Constrained;
+#else
   // Assume that the values are unconstrained
   widthConstraint = eHTMLFrameConstraint_Unconstrained;
   heightConstraint = eHTMLFrameConstraint_Unconstrained;
+#endif
   minWidth = 0;
   minHeight = 0;
 
@@ -215,12 +228,24 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     }
 
     if (width > 0) {
+      // XXX If the size constraint is a fixed content width then we also
+      // need to set the max width as well, but then we bust tables...
+#if 0
+      minWidth = maxSize.width = width;
+#else
       minWidth = width;
-      widthConstraint = eHTMLFrameConstraint_Constrained;
+#endif
+      widthConstraint = eHTMLFrameConstraint_FixedContent;
     }
     if (height > 0) {
+      // XXX If the size constraint is a fixed content width then we also
+      // need to set the max height as well...
+#if 0
+      minHeight = maxSize.height = height;
+#else
       minHeight = height;
-      heightConstraint = eHTMLFrameConstraint_Constrained;
+#endif
+      heightConstraint = eHTMLFrameConstraint_FixedContent;
     }
   }
 
