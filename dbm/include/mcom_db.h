@@ -160,9 +160,6 @@
 #ifdef macintosh
 #include <stdio.h>
 #include "xp_mcom.h"
-#ifndef NSPR20
-#include "prmacos.h"
-#endif
 #define BIG_ENDIAN 4321
 #define LITTLE_ENDIAN 1234
 #define BYTE_ORDER BIG_ENDIAN

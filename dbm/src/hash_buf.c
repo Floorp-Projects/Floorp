@@ -74,12 +74,6 @@ static char sccsid[] = "@(#)hash_buf.c	8.5 (Berkeley) 7/15/94";
 #include "page.h"
 /* #include "extern.h" */
 
-#ifndef NSPR20
-#if defined(__sun)
-# include "sunos4.h"
-#endif /* __sun */
-#endif /* NSPR20 */
-
 static BUFHEAD *newbuf __P((HTAB *, uint32, BUFHEAD *));
 
 /* Unlink B from its place in the lru */
