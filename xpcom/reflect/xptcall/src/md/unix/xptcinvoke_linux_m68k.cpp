@@ -91,7 +91,7 @@ extern "C" {
         return result;
     }
 
-    static void
+    void
     invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
     {
         for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
@@ -148,7 +148,11 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "movl  %/a0, %/sp@-\n\t"
     "movl  %/a0@, %/a0\n\t"
     "movl  %2, %/d0\n\t"      /* function index */
-    "movl  %/a0@(8,%/d0:l:4), %/a0\n\t"
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+    "movl  %/a0@(%/d0:l:4), %/a0\n\t"
+#else /* not V3 */
+    "movl  %/a0@(8,%/d0:l:4), %/a0\n\t"		      
+#endif
     "jbsr  %/a0@\n\t"         /* safe to not cleanup sp */
     "movl  %/d0, %0\n\t"
     "addql #4, %/sp\n\t"
