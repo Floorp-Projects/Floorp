@@ -320,7 +320,7 @@ CreateSourceText(const nsParserError* aError, nsString& aSourceString)
 
   aSourceString.Append(aError->sourceLine);
   aSourceString.AppendWithConversion("\n");
-  for (int i = 0; i < errorPosition; i++)
+  for (PRInt32 i = 0; i < errorPosition - 1; i++)
     aSourceString.AppendWithConversion("-");
   aSourceString.AppendWithConversion("^");  
 
@@ -399,7 +399,8 @@ nsExpatTokenizer::PushXMLErrorTokens(const char *aBuffer, PRUint32 aLength, PRBo
     /* Fill in the values of the error token */
     error->code = XML_GetErrorCode(mExpatParser);
     error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
-    error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
+    // Adjust the column number so that it is one based rather than zero based.
+    error->colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
     error->description.AssignWithConversion(XML_ErrorString(error->code));
     if (!aIsFinal) {
       PRInt32 byteIndexRelativeToFile = 0;
