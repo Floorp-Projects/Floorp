@@ -127,7 +127,7 @@ nsNSSSocketInfo::nsNSSSocketInfo()
   : mFd(nsnull),
     mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
     mForceHandshake(PR_FALSE),
-    mUseTLS(PR_FALSE)
+    mForTLSStepUp(PR_FALSE)
 { 
   NS_INIT_ISUPPORTS();
 }
@@ -277,16 +277,16 @@ nsNSSSocketInfo::SetForceHandshake(PRBool forceHandshake)
 }
 
 nsresult
-nsNSSSocketInfo::GetUseTLS(PRBool* aResult)
+nsNSSSocketInfo::GetForTLSStepUp(PRBool* aResult)
 {
-  *aResult = mUseTLS;
+  *aResult = mForTLSStepUp;
   return NS_OK;
 }
 
 nsresult
-nsNSSSocketInfo::SetUseTLS(PRBool useTLS)
+nsNSSSocketInfo::SetForTLSStepUp(PRBool forTLSStepUp)
 {
-  mUseTLS = useTLS;
+  mForTLSStepUp = forTLSStepUp;
   return NS_OK;
 }
 
@@ -352,14 +352,14 @@ nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
     goto loser;
   }
   
-  PRBool forceHandshake, useTLS;
+  PRBool forceHandshake, forTLSStepUp;
   infoObject->GetForceHandshake(&forceHandshake);
-  infoObject->GetUseTLS(&useTLS);
+  infoObject->GetForTLSStepUp(&forTLSStepUp);
   
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Connect: forceHandshake = %d, useTLS = %d\n",
-                                    (void*)fd, forceHandshake, useTLS));
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Connect: forceHandshake = %d, forTLSStepUp = %d\n",
+                                    (void*)fd, forceHandshake, forTLSStepUp));
 
-  if (!useTLS && forceHandshake) {
+  if (!forTLSStepUp && forceHandshake) {
     // Kick-start the handshake in order to work around bug 66706
     PRInt32 res = PR_Write(fd,0,0);
     
@@ -520,7 +520,7 @@ nsSSLIOLayerNewSocket(const char *host,
                       PRInt32 proxyPort,
                       PRFileDesc **fd,
                       nsISupports** info,
-                      PRBool useTLS)
+                      PRBool forTLSStepUp)
 {
   if (firstTime) {
     nsresult rv = InitNSSMethods();
@@ -532,7 +532,7 @@ nsSSLIOLayerNewSocket(const char *host,
   if (!sock) return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = nsSSLIOLayerAddToSocket(host, port, proxyHost, proxyPort,
-                                        sock, info, useTLS);
+                                        sock, info, forTLSStepUp);
   if (NS_FAILED(rv)) {
     PR_Close(sock);
     return rv;
@@ -1510,7 +1510,7 @@ nsSSLIOLayerAddToSocket(const char* host,
                         PRInt32 proxyPort,
                         PRFileDesc* fd,
                         nsISupports** info,
-                        PRBool useTLS)
+                        PRBool forTLSStepUp)
 {
   PRFileDesc* layer = nsnull;
   nsresult rv;
@@ -1531,7 +1531,7 @@ nsSSLIOLayerAddToSocket(const char* host,
   infoObject->SetHostPort(port);
   infoObject->SetProxyName(proxyHost);
   infoObject->SetProxyPort(proxyPort);
-  infoObject->SetUseTLS(useTLS);
+  infoObject->SetForTLSStepUp(forTLSStepUp);
 
   PRFileDesc* sslSock = SSL_ImportFD(nsnull, fd);
   if (!sslSock) {
@@ -1566,9 +1566,18 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
-  if ((useTLS || proxyHost) &&
+  if ((forTLSStepUp || proxyHost) &&
       SECSuccess != SSL_OptionSet(sslSock, SSL_SECURITY, PR_FALSE))
     goto loser;
+
+  if (forTLSStepUp) {
+    if (SECSuccess != SSL_OptionSet(sslSock, SSL_ENABLE_SSL2, PR_FALSE)) {
+      goto loser;
+    }
+    if (SECSuccess != SSL_OptionSet(sslSock, SSL_V2_COMPATIBLE_HELLO, PR_FALSE)) {
+      goto loser;
+    }
+  }    
 
   if (SECSuccess != SSL_OptionSet(sslSock, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
     goto loser;
