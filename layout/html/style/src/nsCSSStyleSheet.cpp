@@ -50,6 +50,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsVoidArray.h"
 #include "nsHTMLIIDs.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLLinkElement.h"
+#include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSStyleRule.h"
@@ -81,6 +83,7 @@ static NS_DEFINE_IID(kIDOMCSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
+static PRBool IsValidLink(nsIContent *aContent,nsString &aHREF);
 static PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF);
 
 // ----------------------
@@ -3062,64 +3065,20 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
           } 
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {
-
-          PRBool bIsXLink = PR_FALSE;
-          nsAutoString base, href;
-          nsresult attrState = 0;
-          nsCOMPtr<nsIDOMHTMLAnchorElement> anchor;
-
 	        if(!tagset) {
 	          tagset=PR_TRUE;
 	          aContent->GetTag(contentTag);
 	        }
-          if ((anchor = do_QueryInterface(aContent)) ||
-              (bIsXLink = IsSimpleXlink(aContent,href)) ) {
-            
-            if (anchor) {
-              // make sure this anchor has a link even if we are not testing state
-              // if there is no link, then this anchor is not really a linkpseudo.
-              // bug=23209
-              attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
-              if (NS_CONTENT_ATTR_HAS_VALUE != attrState) {
-                result = PR_FALSE;
-              }
-              else {
-                anchor->GetHref(href);
-              }
-            }
-            else {
-              // It's an XLink. Resolve it relative to its document.
-              nsCOMPtr<nsIURI> baseURI = nsnull;
-              nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
-              if (htmlContent) {
-                // XXX why do this? will nsIHTMLContent's
-                // GetBaseURL() may return something different
-                // than the URL of the document it lives in?
-                htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
-              }
-              else {
-                nsCOMPtr<nsIDocument> doc;
-                aContent->GetDocument(*getter_AddRefs(doc));
-                if (doc) {
-                  doc->GetBaseURL(*getter_AddRefs(baseURI));
-                }
-              }
 
-              nsAutoString linkURI;
-              (void) NS_MakeAbsoluteURI(linkURI, href, baseURI, CSSStyleSheetInner::gIOService);
-
-              href = linkURI;
-            }
-
+          nsAutoString href;
+          if (IsValidLink(aContent,href)) {
             // Now 'href' will contain a canonical URI that we can
             // look up in global history.
             if ((PR_FALSE != result) && (aTestState)) {
               if (! linkHandler) {
                 aPresContext->GetLinkHandler(&linkHandler);
                 if (linkHandler) {
-                  if (NS_CONTENT_ATTR_HAS_VALUE == attrState || bIsXLink) {
-                    linkHandler->GetLinkState(href, linkState);
-                  }
+                  linkHandler->GetLinkState(href, linkState);
                 }
                 else {
                   // no link handler?  then all links are unvisited
@@ -3811,6 +3770,80 @@ CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
   return cascade;
 }
 
+/*static*/
+PRBool IsValidLink(nsIContent *aContent,nsString &aHREF)
+{
+  NS_ASSERTION(aContent, "null arg in IsValidLink");
+
+  // check for:
+  //  - HTML ANCHOR with valid HREF
+  //  - HTML LINK with valid HREF
+  //  - HTML AREA with valid HREF
+  //  - Simple XLink
+
+  // if the content is a valid link, set the href to the canonicalized form and return TRUE
+
+  PRBool result = PR_FALSE;
+  PRBool bIsXLink = PR_FALSE;
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor;
+  nsCOMPtr<nsIDOMHTMLAreaElement> area;
+  nsCOMPtr<nsIDOMHTMLLinkElement> link;
+
+    // is it an XLink?
+  if ((bIsXLink = IsSimpleXlink(aContent,aHREF))) {
+    // It's an XLink. Resolve it relative to its document.
+    nsCOMPtr<nsIURI> baseURI = nsnull;
+    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
+    if (htmlContent) {
+      // XXX why do this? will nsIHTMLContent's
+      // GetBaseURL() may return something different
+      // than the URL of the document it lives in?
+      htmlContent->GetBaseURL(*getter_AddRefs(baseURI));
+    }
+    else {
+      nsCOMPtr<nsIDocument> doc;
+      aContent->GetDocument(*getter_AddRefs(doc));
+      if (doc) {
+        doc->GetBaseURL(*getter_AddRefs(baseURI));
+      }
+    }
+
+    nsAutoString linkURI;
+    (void) NS_MakeAbsoluteURI(linkURI, aHREF, baseURI, CSSStyleSheetInner::gIOService);
+    aHREF = linkURI;
+    result = PR_TRUE;
+  } // if xlink
+
+  else if ((anchor = do_QueryInterface(aContent)) ||
+           (area = do_QueryInterface(aContent)) ||
+           (link = do_QueryInterface(aContent))) {
+    // if it is an anchor, area or link then check the href attribute
+    nsresult attrState = 0;
+    // make sure this anchor has a link even if we are not testing state
+    // if there is no link, then this anchor is not really a linkpseudo.
+    // bug=23209
+    attrState = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, aHREF);
+    if (NS_CONTENT_ATTR_HAS_VALUE != attrState) {
+      result = PR_FALSE;
+    } 
+    else {
+      if (anchor) {
+        anchor->GetHref(aHREF);
+        result = PR_TRUE;
+      } 
+      else if (area) {
+        area->GetHref(aHREF);
+        result = PR_TRUE;
+      }
+      else if (link) {
+        link->GetHref(aHREF);
+        result = PR_TRUE;
+      }
+    }
+  } // if anchor, area, link 
+
+  return result;
+}
 
 /*static*/ 
 PRBool IsSimpleXlink(nsIContent *aContent, nsString &aHREF)
