@@ -79,7 +79,7 @@ ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
     PL_DHashClearEntryStub(aTable, aEntry);
 }
 
-static PLDHashOperator
+static PLDHashOperator CRT_CALL
 RemoveEach(PLDHashTable* aTable, PLDHashEntryHdr* aEntry, PRUint32 aNumber, void* aArg)
 {
     return PL_DHASH_REMOVE;
