@@ -278,3 +278,5 @@ classic.jar:
   skin/classic/navigator/icons/btn1.gif                                 (navigator/icons/btn1.gif)
   skin/classic/forms/contents.rdf                                       (forms/contents.rdf)
   skin/classic/forms/forms.css                                          (forms/forms.css)
+  skin/classic/forms/select.css                                         (forms/select.css)
+  skin/classic/forms/select-dropdown.css                                (forms/select-dropdown.css)
