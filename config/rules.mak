@@ -722,7 +722,7 @@ clobber_all::
 !endif
 !endif
 
-
+################################################################################
 # Generate chrome building rules.
 #
 # You need to set these in your makefile.win to utilize this support:
@@ -745,6 +745,9 @@ clobber_all::
 #                  Top-level makefiles (the same one copying the rdf manifests
 #                  and generating the jar file) should define this macro.
 #                  This will notify the chrome registry of a new installation.
+
+chrome::
+
 !if "$(CHROME_DIR)" != "$(NULL)"
 
 # Figure out root of chrome dist dir.
@@ -865,17 +868,6 @@ chrome::
 !endif
 
 !endif # chrome
-
-!endif # CONFIG_RULES_MAK
-
-# Easier than typing it by hand, works from any directory:
-debug::
-        start msdev $(DIST)\bin\mozilla.exe
-
-# Easier than typing it by hand, works from any directory:
-run::
-        $(DIST)\bin\mozilla.exe
-
 ################################################################################
 ## JAR Manifests
 
@@ -901,4 +893,16 @@ chrome::
 
 install:: chrome
 
+################################################################################
+
+# Easier than typing it by hand, works from any directory:
+debug::
+        start msdev $(DIST)\bin\mozilla.exe
+
+# Easier than typing it by hand, works from any directory:
+run::
+        $(DIST)\bin\mozilla.exe
+
+################################################################################
+!endif # CONFIG_RULES_MAK
 ################################################################################
