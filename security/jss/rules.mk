@@ -5,6 +5,9 @@
 clean:: cleanJava
 release_classes:: releaseJava
 
+# always do a private_export
+export:: private_export
+
 PERL_VARIABLES=     \
     "SOURCE_PREFIX=$(SOURCE_PREFIX)" \
     "SOURCE_RELEASE_PREFIX=$(SOURCE_RELEASE_PREFIX)" \
