@@ -56,7 +56,7 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      * lastPageVisited
      * The last page that was visited in a top-level window.
      */
-    readonly attribute string lastPageVisited;
+    readonly attribute AUTF8String lastPageVisited;
 
     /**
      * count
