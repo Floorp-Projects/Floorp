@@ -257,7 +257,7 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _resul
             gFastLoadService->GetInputStream(getter_AddRefs(objectInput));
         
             rv = StartFastLoadingURI(aURI, nsIFastLoadService::NS_FASTLOAD_READ);
-            if (NS_SUCCEEDED (rv)) {
+            if (NS_SUCCEEDED(rv)) {
                 nsCOMPtr<nsIURI> oldURI;
                 gFastLoadService->SelectMuxedDocument(aURI, getter_AddRefs(oldURI));
 
@@ -663,7 +663,7 @@ nsXULPrototypeCache::WritePrototype(nsIXULPrototypeDocument* aPrototypeDocument)
 
     if (objectOutput) {
         rv = StartFastLoadingURI(protoURI, nsIFastLoadService::NS_FASTLOAD_WRITE);
-        if (NS_SUCCEEDED (rv)) {
+        if (NS_SUCCEEDED(rv)) {
             // Re-select the URL of the current prototype, as out-of-line script loads
             // may have changed
             nsCOMPtr<nsIURI> oldURI;
@@ -827,18 +827,16 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
 {
     nsresult rv;
 
-    PRBool isChrome = PR_FALSE;
     nsCAutoString path;
     aURI->GetPath(path);
-    PRInt32 length = path.Length();
     const nsACString& extn = Substring(path, path.Length()-4, 4);
     if (! extn.Equals(NS_LITERAL_CSTRING(".xul")))
         return NS_ERROR_NOT_AVAILABLE;
 
     nsIURIKey key(aURI);
 
-    // Test gFastLoadList to decide whether this is the first nsXULDocument
-    // participating in FastLoad.  If gFastLoadList is non-null, this document
+    // Test gFastLoadFile to decide whether this is the first nsXULDocument
+    // participating in FastLoad.  If gFastLoadFile is non-null, this document
     // must not be first, but it can join the FastLoad process.  Examples of
     // multiple master documents participating include hiddenWindow.xul and
     // navigator.xul on the Mac, and multiple-app-component (e.g., mailnews

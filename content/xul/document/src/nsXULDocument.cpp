@@ -5804,13 +5804,14 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         if (useXULCache)
             gXULCache->GetFastLoadService(getter_AddRefs(fastLoadService));
 
+        nsresult rv2 = NS_OK;
         if (fastLoadService) {
             nsCAutoString urispec;
             uri->GetAsciiSpec(urispec);
-            rv = fastLoadService->StartMuxedDocument(uri, urispec.get(),
-                                                     nsIFastLoadService::NS_FASTLOAD_WRITE);
-            NS_ASSERTION(rv != NS_ERROR_NOT_AVAILABLE, "reading FastLoad?!");
-            if (NS_SUCCEEDED(rv)) {
+            rv2 = fastLoadService->StartMuxedDocument(uri, urispec.get(),
+                                                      nsIFastLoadService::NS_FASTLOAD_WRITE);
+            NS_ASSERTION(rv2 != NS_ERROR_NOT_AVAILABLE, "reading FastLoad?!");
+            if (NS_SUCCEEDED(rv2)) {
                 nsCOMPtr<nsIURI> oldURI;
                 fastLoadService->SelectMuxedDocument(uri, getter_AddRefs(oldURI));
             }
@@ -5825,7 +5826,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         // XXXbe maybe we should...
         // NB: we don't need to Select mDocumentURL again, because scripts
         // load after their including prototype document has fully loaded.
-        if (fastLoadService)
+        if (fastLoadService && NS_SUCCEEDED(rv2))
             fastLoadService->EndMuxedDocument(uri);
 
         aStatus = rv;
@@ -5848,8 +5849,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             // not cache that script object without a prototype cache entry
             // containing a companion nsXULPrototypeScript node that owns a
             // GC root protecting the script object.  Otherwise, the script
-            // cache entry will dangle once uncached prototype document is
-            // released when its owning nsXULDocument is unloaded.
+            // cache entry will dangle once the uncached prototype document
+            // is released when its owning nsXULDocument is unloaded.
             //
             // (See http://bugzilla.mozilla.org/show_bug.cgi?id=98207 for
             // the true crime story.)

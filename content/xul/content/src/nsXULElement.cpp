@@ -5202,8 +5202,11 @@ nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
     nsCOMPtr<nsIFastLoadService> fastLoadService;
     cache->GetFastLoadService(getter_AddRefs(fastLoadService));
 
-    nsCOMPtr<nsIObjectInputStream> objectInput;
-    if (fastLoadService)
+    // Allow callers to pass null for aInput, meaning
+    // "use the FastLoad service's default input stream."
+    // See nsXULContentSink.cpp for one use of this.
+    nsCOMPtr<nsIObjectInputStream> objectInput = aInput;
+    if (! objectInput && fastLoadService)
         fastLoadService->GetInputStream(getter_AddRefs(objectInput));
 
     if (objectInput) {
@@ -5233,7 +5236,7 @@ nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
                 nsCAutoString spec;
                 mSrcURI->GetAsciiSpec(spec);
                 rv = fastLoadService->StartMuxedDocument(mSrcURI, spec.get(),
-                                                          nsIFastLoadService::NS_FASTLOAD_READ);
+                                                         nsIFastLoadService::NS_FASTLOAD_READ);
                 if (NS_SUCCEEDED(rv))
                     rv = fastLoadService->SelectMuxedDocument(mSrcURI, getter_AddRefs(oldURI));
             } else {
@@ -5247,8 +5250,9 @@ nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
                     rv = NS_ERROR_NOT_AVAILABLE;
             }
 
-            // Don't reflect errors into rv: mJSObject will be null
-            // after any error, which suffices to cause the script to
+            // We do reflect errors into rv, but our caller may want to
+            // ignore our return value, because mJSObject will be null
+            // after any error, and that suffices to cause the script to
             // be reloaded (from the src= URI, if any) and recompiled.
             // We're better off slow-loading than bailing out due to a
             // FastLoad error.
@@ -5258,7 +5262,7 @@ nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
             if (NS_SUCCEEDED(rv) && mSrcURI) {
                 rv = fastLoadService->EndMuxedDocument(mSrcURI);
 
-                if (NS_SUCCEEDED(rv)) {
+                if (NS_SUCCEEDED(rv) && oldURI) {
                     nsCOMPtr<nsIURI> tempURI;
                     rv = fastLoadService->SelectMuxedDocument(oldURI, getter_AddRefs(tempURI));
 
