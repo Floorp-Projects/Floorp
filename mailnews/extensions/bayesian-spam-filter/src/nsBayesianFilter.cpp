@@ -137,7 +137,7 @@ static PLDHashOperator PR_CALLBACK VisitEntry(PLDHashTable* table, PLDHashEntryH
 }
 
 // member variables
-static PLDHashTableOps gTokenTableOps = {
+static const PLDHashTableOps gTokenTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
     GetKey,
@@ -531,7 +531,7 @@ public:
       mCurMessageToClassify = 0;
       mNumMessagesToClassify = aNumMessagesToClassify;
       mMessageURIs = (char **) nsMemory::Alloc(sizeof(char *) * aNumMessagesToClassify);
-      for (PRInt32 i = 0; i < aNumMessagesToClassify; i++)
+      for (PRUint32 i = 0; i < aNumMessagesToClassify; i++)
         mMessageURIs[i] = PL_strdup(aMessageURIs[i]);
 
     }
@@ -616,7 +616,7 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
       listener->OnMessageClassified(messageURI, nsMsgJunkStatus(nsIJunkMailPlugin::JUNK));
       return;
     }
-    else if (listener && !mBadCount && !mBadTokens.countTokens()) {
+    if (listener && !mBadCount && !mBadTokens.countTokens()) {
       listener->OnMessageClassified(messageURI, nsMsgJunkStatus(nsIJunkMailPlugin::GOOD));
       return;
     }
