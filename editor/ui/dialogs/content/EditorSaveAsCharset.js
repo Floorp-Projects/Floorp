@@ -50,7 +50,7 @@ function Startup()
   //dialog.charsetRoot = document.getElementById('CharsetRoot'); 
 
   contenttypeElement = GetHTTPEquivMetaElement("content-type");
-  if(! contenttypeElement )
+  if(!contenttypeElement && (editorShell.contentsMIMEType != 'text/plain'))
   {
     contenttypeElement = CreateHTTPEquivMetaElement("content-type");
     if( ! contenttypeElement )
