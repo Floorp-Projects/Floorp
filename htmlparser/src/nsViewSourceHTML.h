@@ -81,6 +81,7 @@ class CViewSourceHTML: public nsIDTD {
      */
     virtual nsresult CreateNewInstance(nsIDTD** aInstancePtrResult);
 
+
     /**
      * This method is called to determine if the given DTD can parse
      * a document in a given source-type. 
