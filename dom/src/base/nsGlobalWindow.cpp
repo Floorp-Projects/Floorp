@@ -2842,35 +2842,23 @@ GlobalWindowImpl::CheckForAbusePoint ()
   if (!prefs)
     return PR_FALSE;
   
-  if (!mIsDocumentLoaded || mRunningTimeout) {
-    PRBool blockOpenOnLoad = PR_FALSE;
-    prefs->GetBoolPref("dom.disable_open_during_load", &blockOpenOnLoad);
-    if (blockOpenOnLoad) {        
+  PRInt32 clickDelay = 0;
+  prefs->GetIntPref("dom.disable_open_click_delay", &clickDelay);
+  if (clickDelay) {
+    PRTime now, ll_delta;
+    PRInt32 delta;
+    now = PR_Now();
+    LL_SUB(ll_delta, now, mLastMouseButtonAction);
+    LL_L2I(delta, ll_delta);
+    delta /= 1000;
+    if (delta > clickDelay)
+    {
 #ifdef DEBUG
-      printf ("*** Scripts executed during (un)load or as a result of "
-              "setTimeout() are potential javascript abuse points.\n");
+      printf ("*** Scripts executed more than %ims after a mouse button "
+              "action are potential javascript abuse points (%i.)\n",
+              clickDelay, delta);
 #endif
       return PR_TRUE;
-    }
-  } else {
-    PRInt32 clickDelay = 0;
-    prefs->GetIntPref("dom.disable_open_click_delay", &clickDelay);
-    if (clickDelay) {
-      PRTime now, ll_delta;
-      PRInt32 delta;
-      now = PR_Now();
-      LL_SUB(ll_delta, now, mLastMouseButtonAction);
-      LL_L2I(delta, ll_delta);
-      delta /= 1000;
-      if (delta > clickDelay)
-      {
-#ifdef DEBUG
-        printf ("*** Scripts executed more than %ims after a mouse button "
-                "action are potential javascript abuse points (%i.)\n",
-                clickDelay, delta);
-#endif
-        return PR_TRUE;
-      }
     }
   }
 
