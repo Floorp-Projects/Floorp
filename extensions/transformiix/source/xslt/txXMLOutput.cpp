@@ -160,7 +160,7 @@ void txXMLOutput::comment(const nsAString& aData)
         *mOut << endl;
 }
 
-void txXMLOutput::endDocument()
+void txXMLOutput::endDocument(nsresult aResult)
 {
 }
 

@@ -72,12 +72,12 @@ public:
     void Init(nsITransformObserver* aObserver);
     void AddScriptElement(nsIScriptElement* aElement);
     void AddStyleSheet(nsIStyleSheet* aStyleSheet);
-    void OnTransformEnd();
+    void OnTransformEnd(nsresult aResult = NS_OK);
     void OnTransformStart();
     void SetOutputDocument(nsIDOMDocument* aDocument);
 
 private:
-    void SignalTransformEnd();
+    void SignalTransformEnd(nsresult aResult = NS_OK);
 
     nsCOMPtr<nsIDOMDocument> mDocument;
     nsCOMPtr<nsITransformObserver> mObserver;

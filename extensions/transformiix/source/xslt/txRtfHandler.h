@@ -65,7 +65,7 @@ public:
 
     nsresult getAsRTF(txAExprResult** aResult);
 
-    void endDocument();
+    void endDocument(nsresult aResult);
     void startDocument();
 };
 

@@ -92,7 +92,7 @@ public:
      * Signals the end of a document. It is an error to call
      * this method more than once.
      */
-    virtual void endDocument() = 0;
+    virtual void endDocument(nsresult aResult) = 0;
 
     /**
      * Signals to receive the end of an element.
@@ -132,7 +132,7 @@ public:
                            const nsAString& aValue);                        \
     virtual void characters(const nsAString& aData, PRBool aDOE);           \
     virtual void comment(const nsAString& aData);                           \
-    virtual void endDocument();                                             \
+    virtual void endDocument(nsresult aResult = NS_OK);                     \
     virtual void endElement(const nsAString& aName, const PRInt32 aNsID);   \
     virtual void processingInstruction(const nsAString& aTarget,            \
                                        const nsAString& aData);             \
