@@ -1038,56 +1038,66 @@ nsresult nsAddrDatabase::CheckAndUpdateRecordKey()
 
 nsresult nsAddrDatabase::UpdateLowercaseEmailListName()
 {
-	nsresult err = NS_OK;
-	nsIMdbTableRowCursor* rowCursor = nsnull;
-	nsIMdbRow* findRow = nsnull;
- 	mdb_pos	rowPos = 0;
+  nsresult err = NS_OK;
+  nsIMdbTableRowCursor* rowCursor = nsnull;
+  nsIMdbRow* findRow = nsnull;
+  mdb_pos	rowPos = 0;
+  PRBool commitRequired = PR_FALSE;
+  
+  mdb_err merror = m_mdbPabTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+  
+  if (!(merror == NS_OK && rowCursor))
+    return NS_ERROR_FAILURE;
+  
+  mdb_count total = 0;
+  merror = rowCursor->GetCount(GetEnv(), &total);
+  
+  if (total == 0)
+  {
+    rowCursor->Release();
+    return NS_OK;
+  }
+  do
+  {   //add lowercase primary emial to each card and mailing list row
+    merror = rowCursor->NextRow(GetEnv(), &findRow, &rowPos);
+    if (merror ==NS_OK && findRow)
+    {
+      mdbOid rowOid;
+      
+      if (findRow->GetOid(GetEnv(), &rowOid) == NS_OK)
+      {
+        nsAutoString tempString;
+        if (IsCardRowScopeToken(rowOid.mOid_Scope))
+        {
+          err = GetStringColumn(findRow, m_LowerPriEmailColumnToken, tempString);
+          if (NS_SUCCEEDED(err))
+            break;
+          
+          err = ConvertAndAddLowercaseColumn(findRow, m_PriEmailColumnToken, 
+            m_LowerPriEmailColumnToken);
+          commitRequired = PR_TRUE;
+        }
+        else if (IsListRowScopeToken(rowOid.mOid_Scope))
+        {
+          err = GetStringColumn(findRow, m_LowerListNameColumnToken, tempString);
+          if (NS_SUCCEEDED(err))
+            break;
+          
+          err = ConvertAndAddLowercaseColumn(findRow, m_ListNameColumnToken, 
+            m_LowerListNameColumnToken);
+          commitRequired = PR_TRUE;
+        }
+      }
+      findRow->Release();
+    }
+  } while (findRow);
 
-	mdb_err merror = m_mdbPabTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-
-	if (!(merror == NS_OK && rowCursor))
-		return NS_ERROR_FAILURE;
-
-	mdb_count total = 0;
-	merror = rowCursor->GetCount(GetEnv(), &total);
-
-	if (total == 0)
-		return NS_OK;
-
-	do
-	{   //add lowercase primary emial to each card and mailing list row
-		merror = rowCursor->NextRow(GetEnv(), &findRow, &rowPos);
-		if (merror ==NS_OK && findRow)
-		{
-			mdbOid rowOid;
-
-			if (findRow->GetOid(GetEnv(), &rowOid) == NS_OK)
-			{
-				nsAutoString tempString;
-				if (IsCardRowScopeToken(rowOid.mOid_Scope))
-				{
-					err = GetStringColumn(findRow, m_LowerPriEmailColumnToken, tempString);
-					if (NS_SUCCEEDED(err))
-						return NS_OK;
-
-					err = ConvertAndAddLowercaseColumn(findRow, m_PriEmailColumnToken, 
-												m_LowerPriEmailColumnToken);
-				}
-				else if (IsListRowScopeToken(rowOid.mOid_Scope))
-				{
-					err = GetStringColumn(findRow, m_LowerListNameColumnToken, tempString);
-					if (NS_SUCCEEDED(err))
-						return NS_OK;
-
-					err = ConvertAndAddLowercaseColumn(findRow, m_ListNameColumnToken, 
-												m_LowerListNameColumnToken);
-				}
-			}
-		}
-	} while (findRow);
-
-	Commit(kLargeCommit);
-	return NS_OK;
+  if (findRow)
+    findRow->Release();
+  rowCursor->Release();
+  if (commitRequired)
+    Commit(kLargeCommit);
+  return NS_OK;
 }
 
 /*  
@@ -1961,9 +1971,11 @@ nsresult nsAddrDatabase::FindAttributeRow(nsIMdbTable* pTable, mdb_token columnT
 				*row = findRow;
 				return NS_OK;
 			}
+                        else
+                          findRow->Release();
 		}
 	} while (findRow);
-
+        rowCursor->Release();
 	return NS_ERROR_FAILURE;
 }
 
@@ -2699,27 +2711,27 @@ nsresult nsAddrDatabase::AddBoolColumn(nsIMdbRow* cardRow, mdb_column inColumn, 
 
 nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str)
 {
-	nsresult	err = NS_ERROR_FAILURE;
-	nsIMdbCell	*cardCell;
-
-	if (cardRow)	
-	{
-		err = cardRow->GetCell(GetEnv(), outToken, &cardCell);
-		if (err == NS_OK && cardCell)
-		{
-			struct mdbYarn yarn;
-			cardCell->AliasYarn(GetEnv(), &yarn);
-            NS_ConvertUTF8toUCS2 uniStr((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
-            if (uniStr.Length() > 0)
-                str.Assign(uniStr);
-            else
-                err = NS_ERROR_FAILURE;
-			cardCell->CutStrongRef(GetEnv()); // always release ref
-		}
-		else
-			err = NS_ERROR_FAILURE;
-	}
-	return err;
+  nsresult	err = NS_ERROR_FAILURE;
+  nsIMdbCell	*cardCell;
+  
+  if (cardRow)	
+  {
+    err = cardRow->GetCell(GetEnv(), outToken, &cardCell);
+    if (err == NS_OK && cardCell)
+    {
+      struct mdbYarn yarn;
+      cardCell->AliasYarn(GetEnv(), &yarn);
+      NS_ConvertUTF8toUCS2 uniStr((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+      if (uniStr.Length() > 0)
+        str.Assign(uniStr);
+      else
+        err = NS_ERROR_FAILURE;
+      cardCell->CutStrongRef(GetEnv()); // always release ref
+    }
+    else
+      err = NS_ERROR_FAILURE;
+  }
+  return err;
 }
 
 void nsAddrDatabase::YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult)
@@ -2899,35 +2911,37 @@ NS_IMETHODIMP nsAddrDatabase::SetAnonymousBoolAttribute
 
 NS_IMETHODIMP nsAddrDatabase::GetAnonymousStringAttribute(const char *attrname, char** value)
 {
-	if (m_mdbAnonymousTable)
-	{
-		nsIMdbRow* cardRow;
-		nsIMdbTableRowCursor* rowCursor;
-		mdb_pos rowPos;
-		nsAutoString tempString;
-
-		mdb_token anonymousColumnToken;
-		GetStore()->StringToToken(GetEnv(), attrname, &anonymousColumnToken);
-
-
-		m_mdbAnonymousTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-		do 
-		{
-			mdb_err err = rowCursor->NextRow(GetEnv(), &cardRow, &rowPos);
-
-			if (NS_SUCCEEDED(err) && cardRow)
-			{
-				err = GetStringColumn(cardRow, anonymousColumnToken, tempString);
-				if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
-				{
-					*value = ToNewUTF8String(tempString);
-					return NS_OK;
-				}
-				cardRow->CutStrongRef(GetEnv());
-			}
-		} while (cardRow);
-	}
-	return NS_ERROR_FAILURE;
+  if (m_mdbAnonymousTable)
+  {
+    nsIMdbRow* cardRow;
+    nsIMdbTableRowCursor* rowCursor;
+    mdb_pos rowPos;
+    nsAutoString tempString;
+    
+    mdb_token anonymousColumnToken;
+    GetStore()->StringToToken(GetEnv(), attrname, &anonymousColumnToken);
+    
+    
+    m_mdbAnonymousTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
+    do 
+    {
+      mdb_err err = rowCursor->NextRow(GetEnv(), &cardRow, &rowPos);
+      
+      if (NS_SUCCEEDED(err) && cardRow)
+      {
+        err = GetStringColumn(cardRow, anonymousColumnToken, tempString);
+        if (NS_SUCCEEDED(err) && !tempString.IsEmpty())
+        {
+          *value = ToNewUTF8String(tempString);
+          rowCursor->CutStrongRef(GetEnv());
+          return NS_OK;
+        }
+        cardRow->CutStrongRef(GetEnv());
+      }
+    } while (cardRow);
+    rowCursor->CutStrongRef(GetEnv());
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsAddrDatabase::GetAnonymousIntAttribute(const char *attrname, PRUint32* value)
@@ -2954,11 +2968,13 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousIntAttribute(const char *attrname, PRU
 				if (NS_SUCCEEDED(err))
 				{
 					*value = nValue;
+                                        rowCursor->CutStrongRef(GetEnv());
 					return err;
 				}
 				cardRow->CutStrongRef(GetEnv());
 			}
 		} while (cardRow);
+          rowCursor->CutStrongRef(GetEnv());
 	}
 	return NS_ERROR_FAILURE;
 }
@@ -2990,12 +3006,15 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousBoolAttribute(const char *attrname, PR
 						*value = PR_TRUE;
 					else
 						*value = PR_FALSE;
+                                        rowCursor->CutStrongRef(GetEnv());
 					return err;
 				}
 				cardRow->CutStrongRef(GetEnv());
 			}
 		} while (cardRow);
+                rowCursor->CutStrongRef(GetEnv());
 	}
+
 	return NS_ERROR_FAILURE;
 }
 
@@ -4171,6 +4190,7 @@ NS_IMETHODIMP nsAddrDatabase::RemoveExtraCardsInCab(PRUint32 cardTotal, PRUint32
 			}
 		}
 	} while (findRow);
+        rowCursor->CutStrongRef(GetEnv());
 
 	PRInt32 count = delCardArray.Count();
 	PRInt32 i;
