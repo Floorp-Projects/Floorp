@@ -42,7 +42,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   mParent = nsnull;
   mBounds.SetRect(0,0,0,0);
-  mVisible = PR_TRUE;
+  mVisible = PR_FALSE;
   mEnabled = PR_TRUE;
 	SetPreferredSize(0,0);
 
@@ -551,14 +551,19 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 		return;
 	mDrawing = PR_TRUE;
 
-	// make sure we have a rendering context
 	if (aRenderingContext == nsnull)
+	{
+		// make sure we have a rendering context
 		mTempRenderingContext = GetRenderingContext();
+	}
 	else
 	{
+		// if we already have a rendering context, save its state
 		NS_IF_ADDREF(aRenderingContext);
 		mTempRenderingContext = aRenderingContext;
 		mTempRenderingContext->PushState();
+
+		// set the environment to the current widget
 		mTempRenderingContext->Init(mContext, this);
 	}
 
@@ -622,8 +627,11 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 //		The window visRgn is expected to be set to whatever needs to be drawn
 //		(ie. if we are not between BeginUpdate/EndUpdate, we redraw the whole widget)
 //-------------------------------------------------------------------------
-NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
+NS_IMETHODIMP	nsWindow::Update()
 {
+	if (! mVisible)
+		return NS_OK;
+
 	// calculate the update region relatively to the window port rect
 	// (at this point, the grafPort origin should always be 0,0
 	// so mWindowRegion has to be converted to window coordinates)
@@ -640,16 +648,7 @@ NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
 	::SectRgn(mWindowPtr->visRgn, updateRgn, updateRgn);
 	if (!::EmptyRgn(updateRgn))
 	{
-		// make sure we have a rendering context
-		nsIRenderingContext* renderingContext;
-		if (aRenderingContext)
-		{
-			renderingContext = aRenderingContext;
-			NS_ADDREF(renderingContext);
-		}
-		else
-			renderingContext = GetRenderingContext();	// this sets the origin
-
+		nsIRenderingContext* renderingContext = GetRenderingContext();	// this sets the origin
 		if (renderingContext)
 		{
 			// initialize the paint event for that widget
@@ -688,7 +687,7 @@ NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
 				do
 				{
           if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))  {
-					  child->Update(renderingContext);
+					  child->Update();
           }
 				}
         while (NS_SUCCEEDED(children->Next()));			
