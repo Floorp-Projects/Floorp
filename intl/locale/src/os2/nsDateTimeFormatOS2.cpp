@@ -137,7 +137,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
   UniStrcat( uFmtD, (UniChar*)L" ");
   UniStrcat( uFmtD, uFmtT);
   int length = UniStrftime(locObj, buffer, NSDATETIME_FORMAT_BUFFER_LEN, uFmtD, tmTime);
-  UniFreeMem(locObj);
+  UniFreeLocaleObject(locObj);
 
   if ( length != 0) {
     stringOut.Assign(buffer, length);
