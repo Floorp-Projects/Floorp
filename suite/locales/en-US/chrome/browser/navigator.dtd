@@ -242,6 +242,7 @@
 <!ENTITY forwardButton.label "Forward">
 <!ENTITY reloadButton.label "Reload">
 <!ENTITY stopButton.label "Stop">
+<!ENTITY searchButton.label "Search">
 <!ENTITY printButton.label "Print">
 
 <!-- Toolbar items --> 

@@ -506,7 +506,7 @@ Contributor(s): ______________________________________. -->
             <spring flex="100%"/>
           </box>
 
-			<titledbutton id="search-button" align="top" value="Search" onclick="OpenSearch('internet', document.getElementById('urlbar').value);" />
+			<titledbutton id="search-button" align="top" value="&searchButton.label;" onclick="OpenSearch('internet', document.getElementById('urlbar').value);" />
 
           <titledbutton id="print-button" align="top" value="&printButton.label;"  
                 onclick="BrowserPrint()">
