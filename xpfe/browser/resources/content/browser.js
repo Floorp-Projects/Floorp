@@ -299,22 +299,25 @@ function BrowserSetForcedDetector(doReload)
     BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
 }
 
+var gFindInstData;
+function getFindInstData()
+{
+  if (!gFindInstData) {
+    gFindInstData = new nsFindInstData();
+    gFindInstData.browser = getBrowser();
+    // defaults for rootSearchWindow and currentSearchWindow are fine here
+  }
+  return gFindInstData;
+}
+
 function BrowserFind()
 {
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (!focusedWindow || focusedWindow == window)
-    focusedWindow = window._content;
-
-  findInPage(getBrowser(), window._content, focusedWindow)
+  findInPage(getFindInstData());
 }
 
 function BrowserFindAgain(reverse)
 {
-    var focusedWindow = document.commandDispatcher.focusedWindow;
-    if (!focusedWindow || focusedWindow == window)
-      focusedWindow = window._content;
-
-  findAgainInPage(getBrowser(), window._content, focusedWindow, reverse)
+  findAgainInPage(getFindInstData(), reverse);
 }
 
 function BrowserCanFindAgain()
