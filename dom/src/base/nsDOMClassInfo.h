@@ -141,35 +141,34 @@ protected:
   static PRInt32 GetArrayIndexFromId(JSContext *cx, jsval id,
                                      PRBool *aIsNumber = nsnull);
 
-  static inline PRBool IsReadonlyReplaceable(JSString *str)
+  static inline PRBool IsReadonlyReplaceable(jsval id)
   {
-    return (str == sTop_id          ||
-            str == sParent_id       ||
-            str == sScrollbars_id   ||
-            str == sContent_id      ||
-            str == sSidebar_id      ||
-            str == sMenubar_id      ||
-            str == sToolbar_id      ||
-            str == sLocationbar_id  ||
-            str == sPersonalbar_id  ||
-            str == sStatusbar_id    ||
-            str == sDirectories_id  ||
-            str == sControllers_id  ||
-            str == sScrollX_id      ||
-            str == sScrollY_id      ||
-            str == sLength_id);
+    return (id == sTop_id          ||
+            id == sScrollbars_id   ||
+            id == sContent_id      ||
+            id == sSidebar_id      ||
+            id == sMenubar_id      ||
+            id == sToolbar_id      ||
+            id == sLocationbar_id  ||
+            id == sPersonalbar_id  ||
+            id == sStatusbar_id    ||
+            id == sDirectories_id  ||
+            id == sControllers_id  ||
+            id == sScrollX_id      ||
+            id == sScrollY_id      ||
+            id == sLength_id);
   }
 
-  static inline PRBool IsWritableReplaceable(JSString *str)
+  static inline PRBool IsWritableReplaceable(jsval id)
   {
-    return (str == sInnerHeight_id  ||
-            str == sInnerWidth_id   ||
-            str == sOuterHeight_id  ||
-            str == sOuterWidth_id   ||
-            str == sScreenX_id      ||
-            str == sScreenY_id      ||
-            str == sStatus_id       ||
-            str == sName_id);
+    return (id == sInnerHeight_id  ||
+            id == sInnerWidth_id   ||
+            id == sOuterHeight_id  ||
+            id == sOuterWidth_id   ||
+            id == sScreenX_id      ||
+            id == sScreenY_id      ||
+            id == sStatus_id       ||
+            id == sName_id);
   }
 
   nsresult doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
@@ -182,66 +181,65 @@ protected:
   static nsIScriptSecurityManager *sSecMan;
 
   // nsIXPCScriptable code
-  static nsresult DefineStaticJSStrings(JSContext *cx);
+  static nsresult DefineStaticJSVals(JSContext *cx);
 
   static PRBool sIsInitialized;
 
-  static JSString *sTop_id;
-  static JSString *sParent_id;
-  static JSString *sScrollbars_id;
-  static JSString *sLocation_id;
-  static JSString *sComponents_id;
-  static JSString *s_content_id;
-  static JSString *sContent_id;
-  static JSString *sSidebar_id;
-  static JSString *sMenubar_id;
-  static JSString *sToolbar_id;
-  static JSString *sLocationbar_id;
-  static JSString *sPersonalbar_id;
-  static JSString *sStatusbar_id;
-  static JSString *sDirectories_id;
-  static JSString *sControllers_id;
-  static JSString *sLength_id;
-  static JSString *sInnerHeight_id;
-  static JSString *sInnerWidth_id;
-  static JSString *sOuterHeight_id;
-  static JSString *sOuterWidth_id;
-  static JSString *sScreenX_id;
-  static JSString *sScreenY_id;
-  static JSString *sStatus_id;
-  static JSString *sName_id;
-  static JSString *sOnmousedown_id;
-  static JSString *sOnmouseup_id;
-  static JSString *sOnclick_id;
-  static JSString *sOncontextmenu_id;
-  static JSString *sOnmouseover_id;
-  static JSString *sOnmouseout_id;
-  static JSString *sOnkeydown_id;
-  static JSString *sOnkeyup_id;
-  static JSString *sOnkeypress_id;
-  static JSString *sOnmousemove_id;
-  static JSString *sOnfocus_id;
-  static JSString *sOnblur_id;
-  static JSString *sOnsubmit_id;
-  static JSString *sOnreset_id;
-  static JSString *sOnchange_id;
-  static JSString *sOnselect_id;
-  static JSString *sOnload_id;
-  static JSString *sOnunload_id;
-  static JSString *sOnabort_id;
-  static JSString *sOnerror_id;
-  static JSString *sOnpaint_id;
-  static JSString *sOnresize_id;
-  static JSString *sOnscroll_id;
-  static JSString *sScrollIntoView_id;
-  static JSString *sScrollX_id;
-  static JSString *sScrollY_id;
-  static JSString *sOpen_id;
-  static JSString *sItem_id;
-  static JSString *sEnumerate_id;
-  static JSString *sNavigator_id;
-  static JSString *sDocument_id;
-  static JSString *sWindow_id;
+  static jsval sTop_id;
+  static jsval sScrollbars_id;
+  static jsval sLocation_id;
+  static jsval sComponents_id;
+  static jsval s_content_id;
+  static jsval sContent_id;
+  static jsval sSidebar_id;
+  static jsval sMenubar_id;
+  static jsval sToolbar_id;
+  static jsval sLocationbar_id;
+  static jsval sPersonalbar_id;
+  static jsval sStatusbar_id;
+  static jsval sDirectories_id;
+  static jsval sControllers_id;
+  static jsval sLength_id;
+  static jsval sInnerHeight_id;
+  static jsval sInnerWidth_id;
+  static jsval sOuterHeight_id;
+  static jsval sOuterWidth_id;
+  static jsval sScreenX_id;
+  static jsval sScreenY_id;
+  static jsval sStatus_id;
+  static jsval sName_id;
+  static jsval sOnmousedown_id;
+  static jsval sOnmouseup_id;
+  static jsval sOnclick_id;
+  static jsval sOncontextmenu_id;
+  static jsval sOnmouseover_id;
+  static jsval sOnmouseout_id;
+  static jsval sOnkeydown_id;
+  static jsval sOnkeyup_id;
+  static jsval sOnkeypress_id;
+  static jsval sOnmousemove_id;
+  static jsval sOnfocus_id;
+  static jsval sOnblur_id;
+  static jsval sOnsubmit_id;
+  static jsval sOnreset_id;
+  static jsval sOnchange_id;
+  static jsval sOnselect_id;
+  static jsval sOnload_id;
+  static jsval sOnunload_id;
+  static jsval sOnabort_id;
+  static jsval sOnerror_id;
+  static jsval sOnpaint_id;
+  static jsval sOnresize_id;
+  static jsval sOnscroll_id;
+  static jsval sScrollIntoView_id;
+  static jsval sScrollX_id;
+  static jsval sScrollY_id;
+  static jsval sOpen_id;
+  static jsval sItem_id;
+  static jsval sEnumerate_id;
+  static jsval sNavigator_id;
+  static jsval sDocument_id;
+  static jsval sWindow_id;
 
   static const JSClass *sObjectClass;
 
@@ -266,14 +264,16 @@ protected:
   {
   }
 
-  static PRBool ReallyIsEventName(JSString *jsstr, jschar aFirstChar);
+  static PRBool ReallyIsEventName(jsval id, jschar aFirstChar);
 
-  static inline PRBool IsEventName(JSString *jsstr)
+  static inline PRBool IsEventName(jsval id)
   {
-    jschar *str = ::JS_GetStringChars(jsstr);
+    NS_ASSERTION(JSVAL_IS_STRING(id), "Don't pass non-string jsval's here!");
+
+    jschar *str = ::JS_GetStringChars(JSVAL_TO_STRING(id));
 
     if (str[0] == 'o' && str[1] == 'n') {
-      return ReallyIsEventName(jsstr, str[2]);
+      return ReallyIsEventName(id, str[2]);
     }
 
     return PR_FALSE;
