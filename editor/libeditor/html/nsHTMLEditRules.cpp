@@ -1553,6 +1553,7 @@ nsHTMLEditRules::StandardBreakImpl(nsIDOMNode *aNode, PRInt32 aOffset, nsISelect
 {
   nsCOMPtr<nsIDOMNode> brNode;
   PRBool bAfterBlock = PR_FALSE;
+  PRBool bBeforeBlock = PR_FALSE;
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> node(aNode);
   nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
@@ -1569,8 +1570,12 @@ nsHTMLEditRules::StandardBreakImpl(nsIDOMNode *aNode, PRInt32 aOffset, nsISelect
     PRInt16 wsType;
     res = wsObj.PriorVisibleNode(node, aOffset, address_of(visNode), &visOffset, &wsType);
     if (NS_FAILED(res)) return res;
-    if (wsType==nsWSRunObject::eOtherBlock)
+    if (wsType & nsWSRunObject::eBlock)
       bAfterBlock = PR_TRUE;
+    res = wsObj.NextVisibleNode(node, aOffset, address_of(visNode), &visOffset, &wsType);
+    if (NS_FAILED(res)) return res;
+    if (wsType & nsWSRunObject::eBlock)
+      bBeforeBlock = PR_TRUE;
     if (mHTMLEditor->IsInLink(node, address_of(linkNode)))
     {
       // split the link
@@ -1588,10 +1593,11 @@ nsHTMLEditRules::StandardBreakImpl(nsIDOMNode *aNode, PRInt32 aOffset, nsISelect
   if (NS_FAILED(res)) return res;
   res = nsEditor::GetNodeLocation(brNode, address_of(node), &aOffset);
   if (NS_FAILED(res)) return res;
-  if (bAfterBlock)
+  if (bAfterBlock && bBeforeBlock)
   {
-    // we just placed a br after a block.  This is the one case where we want the 
-    // selection to be before the br we just placed, as the br will be on a new line,
+    // we just placed a br between block boundaries.  
+    // This is the one case where we want the selection to be before 
+    // the br we just placed, as the br will be on a new line,
     // rather than at end of prior line.
     selPriv->SetInterlinePosition(PR_TRUE);
     res = aSelection->Collapse(node, aOffset);
