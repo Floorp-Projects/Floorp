@@ -513,8 +513,11 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   // may have 'auto' for an offset
   ReflowAbsoluteFrames(aPresContext, reflowState);
 
-  // Compute our desired size taking into account any floaters
-  if (nsnull != mSpaceManager) {
+  // Compute our desired size taking into account any floaters. Note
+  // that if this frame has a height specified by CSS then we don't do
+  // this!
+  if ((nsnull != mSpaceManager) &&
+      (NS_UNCONSTRAINEDSIZE == reflowState.computedHeight)) {
     nscoord floaterYMost;
     mSpaceManager->YMost(floaterYMost);
     if (floaterYMost > 0) {
