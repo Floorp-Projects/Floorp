@@ -7,12 +7,10 @@ use DBI;
 # Get arguments
 #
 my %args;
-$args{prefix} = 'ul_';
 $args{drop} = 1;
 $args{create} = 1;
 $args{defaults} = 1;
 GetOptions(\%args, 'host|h:s', 'port|p:s', 'username|u:s', 'password|p:s',
-                   'prefix|P:s',
 		   'drop!', 'defaults!', 'create!',
 		   'help|h|?');
 
@@ -28,16 +26,15 @@ setup-mysql.pl [OPTIONS] dbname
 
   OPTIONS
   --help, -h, -?: Show this message.
-  --host:         The server postgres is running on (default: this machine)
-  --port:         The port postgres is running on (default: normal MySQL port)
-  --username, -u: The postgres username to use (default: current user)
-  --password, -p: The postgres password to use
-  --prefix, -P:   The prefix to add to all tablenames (default: ul_)
+  --host:         The server mysql is running on (default: this machine)
+  --port:         The port mysql is running on (default: normal MySQL port)
+  --username, -u: The mysql username to use (default: current user)
+  --password, -p: The mysql password to use
   --nodrop:       Don't perform dropping of tables (default: drop)
   --nocreate:     Don't perform creation of tables (default: create)
   --nodefaults:   Don't populate the system parameters with defaults (default: populate)
 
-If you don't know what dbname to use and you normally connect using "psql", use
+If you don't know what dbname to use and you normally connect using "mysql", use
 your unix username as the dbname.
 
 NOTE: population will not work unless UserLogin is installed.
@@ -142,9 +139,6 @@ sub read_tables_sequences {
 	while(<IN>) {
 		if(/^\s*create\s*table\s*(\S+)/i) {
 			$recent_table = $1;
-			if($recent_table =~ /^ul_(.+)/i) {
-				$recent_table = "$prefix$1";
-			}
 			unshift @tables, $recent_table;
 		}
 	}
@@ -164,26 +158,15 @@ sub populate_data {
 # Execute an SQL file in mysql
 #
 sub execute_sql_file {
-	# XXX This doesn't respect the password argument
 	my ($dbname, $args, $sql_file) = @_;
-	# Switch the prefix to the new prefix
-	open OLDFILE, $sql_file;
-	open NEWFILE, ">$sql_file.new";
-	while(<OLDFILE>) {
-		s/UL_/$args{prefix}/g;
-		print NEWFILE $_;
-	}
-	close NEWFILE;
-	close OLDFILE;
   my @exec_params = ('mysql');
 	push @exec_params, ("-h", $args{host}) if $args{host};
 	push @exec_params, ("-P", $args{port}) if $args{port};
 	push @exec_params, ("-u", $args{username}) if $args{username};
-	push @exec_params, ("-p", $args{password}) if $args{password};
+	push @exec_params, "--password=".$args{password} if $args{password};
   push @exec_params, $dbname;
   my $cmd = join(' ', @exec_params);
-  $cmd .= " < $sql_file.new";
+  $cmd .= " < $sql_file";
   print "Executing $cmd ...\n";
 	system($cmd);
-  unlink("$sql_file.new");
 }

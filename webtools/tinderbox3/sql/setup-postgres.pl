@@ -7,7 +7,6 @@ use DBI;
 # Get arguments
 #
 my %args;
-$args{prefix} = 'ul_';
 $args{drop} = 1;
 $args{create} = 1;
 $args{defaults} = 1;
@@ -129,9 +128,6 @@ sub read_tables_sequences {
 	while(<IN>) {
 		if(/^\s*create\s*table\s*(\S+)/i) {
 			$recent_table = $1;
-			if($recent_table =~ /^ul_(.+)/i) {
-				$recent_table = $1;
-			}
 			unshift @tables, $recent_table;
 		} elsif(/^\s*(\S+)\s*serial/i) {
 			my $seq;
