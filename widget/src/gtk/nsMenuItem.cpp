@@ -98,10 +98,11 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 //-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
-  NS_IF_RELEASE(mTarget);
+  //g_print("nsMenuItem::~nsMenuItem called\n");
+  //NS_IF_RELEASE(mTarget);
   gtk_widget_destroy(mMenuItem);
   mMenuItem = nsnull;
-  g_print("nsMenuItem::~nsMenuItem called\n");
+  //g_print("end nsMenuItem::~nsMenuItem\n");
 }
 
 //-------------------------------------------------------------------------
@@ -299,10 +300,10 @@ NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
   if(!mIsSeparator) {
-    g_print("nsMenuItem::MenuItemSelected\n");
+    //g_print("nsMenuItem::MenuItemSelected\n");
     DoCommand();
   }else{
-    g_print("nsMenuItem::MenuItemSelected is separator\n");
+    //g_print("nsMenuItem::MenuItemSelected is separator\n");
   }
   return nsEventStatus_eIgnore;
 }
@@ -312,13 +313,13 @@ nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
   if(mXULCommandListener)
     return mXULCommandListener->MenuSelected(aMenuEvent);
 
-  g_print("nsMenuItem::MenuSelected\n");
+  //g_print("nsMenuItem::MenuSelected\n");
   return nsEventStatus_eIgnore;
 }
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent &aMenuEvent)
 {
-  g_print("nsMenuItem::MenuDeselected\n");
+  //g_print("nsMenuItem::MenuDeselected\n");
   return nsEventStatus_eIgnore;
 }
 //-------------------------------------------------------------------------
@@ -327,13 +328,13 @@ nsEventStatus nsMenuItem::MenuConstruct(const nsMenuEvent &aMenuEvent,
                                         void *menuNode,
                                         void *aWebShell)
 {
-  g_print("nsMenuItem::MenuConstruct\n");
+  //g_print("nsMenuItem::MenuConstruct\n");
   return nsEventStatus_eIgnore;
 }
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent &aMenuEvent)
 {
-  g_print("nsMenuItem::MenuDestruct\n");
+  //g_print("nsMenuItem::MenuDestruct\n");
   return nsEventStatus_eIgnore;
 }
 
@@ -365,14 +366,14 @@ NS_METHOD nsMenuItem::DoCommand()
   contentViewerContainer = do_QueryInterface(mWebShell);
   if (!contentViewerContainer) {
     NS_ERROR("Webshell doesn't support the content viewer container interface");
-    g_print("Webshell doesn't support the content viewer container interface");
+    //g_print("Webshell doesn't support the content viewer container interface");
     return rv;
   }
 
   nsCOMPtr<nsIContentViewer> contentViewer;
   if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
     NS_ERROR("Unable to retrieve content viewer.");
-    g_print("Unable to retrieve content viewer.");
+    //g_print("Unable to retrieve content viewer.");
     return rv;
   }
 
@@ -380,14 +381,14 @@ NS_METHOD nsMenuItem::DoCommand()
   docViewer = do_QueryInterface(contentViewer);
   if (!docViewer) {
     NS_ERROR("Document viewer interface not supported by the content viewer.");
-    g_print("Document viewer interface not supported by the content viewer.");
+    //g_print("Document viewer interface not supported by the content viewer.");
     return rv;
   }
 
   nsCOMPtr<nsIPresContext> presContext;
   if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
     NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
-    g_print("Unable to retrieve the doc viewer's presentation context.");
+    //g_print("Unable to retrieve the doc viewer's presentation context.");
     return rv;
   }
 
@@ -400,12 +401,12 @@ NS_METHOD nsMenuItem::DoCommand()
   contentNode = do_QueryInterface(mDOMElement);
   if (!contentNode) {
     NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
-    g_print("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
+    //g_print("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
     return rv;
   }
 
   rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-  g_print("HandleDOMEvent called");
+  //g_print("HandleDOMEvent called");
   return rv;
 }
 
