@@ -2428,7 +2428,7 @@ public class Interpreter {
                         if (catchObj instanceof WrappedException) {
                             Object w = ((WrappedException) catchObj).unwrap();
                             if (w instanceof Throwable) {
-                                catchObj = (Throwable) w;
+                                catchObj = ex = (Throwable) w;
                                 continue;
                             }
                         }
