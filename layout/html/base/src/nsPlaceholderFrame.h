@@ -34,12 +34,20 @@ public:
   // Returns the associated anchored item
   nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
 
-  // Resize reflow methods
+  // nsIFrame overrides
+  NS_IMETHOD  ChildCount(PRInt32& aChildCount) const;
+  NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const;
+  NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const;
+  NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
+  NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
+  NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
+  NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const;
   NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
                            nsReflowMetrics& aDesiredSize,
                            const nsSize&    aMaxSize,
                            nsSize*          aMaxElementSize,
                            ReflowStatus&    aStatus);
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:

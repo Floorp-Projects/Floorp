@@ -79,16 +79,73 @@ NS_METHOD PlaceholderFrame::ResizeReflow(nsIPresContext*  aPresContext,
 
     // Resize reflow the anchored item into the available space
     // XXX Check for complete?
-    mAnchoredItem->ResizeReflow(aPresContext, aDesiredSize, aMaxSize, nsnull, aStatus);
+    mAnchoredItem->ResizeReflow(aPresContext, aDesiredSize, aMaxSize,
+                                nsnull, aStatus);
     mAnchoredItem->SizeTo(aDesiredSize.width, aDesiredSize.height);
 
     // Now notify our containing block that there's a new floater
     container->AddFloater(aPresContext, mAnchoredItem, this);
   } else {
+    // XXX This causes anchored-items sizes to get fixed up; this is
+    // not quite right because this class should be implementing one
+    // of the incremental reflow methods and propogating things down
+    // properly to the contained frame.
+    mAnchoredItem->ResizeReflow(aPresContext, aDesiredSize, aMaxSize,
+                                nsnull, aStatus);
+    mAnchoredItem->SizeTo(aDesiredSize.width, aDesiredSize.height);
     container->PlaceFloater(aPresContext, mAnchoredItem, this);
   }
 
   return nsFrame::ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, aStatus);
+}
+
+NS_METHOD
+PlaceholderFrame::ChildCount(PRInt32& aChildCount) const
+{
+  aChildCount = 1;
+  return NS_OK;
+}
+
+NS_METHOD
+PlaceholderFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
+{
+  aFrame = (0 == aIndex) ? mAnchoredItem : nsnull;
+  return NS_OK;
+}
+
+NS_METHOD
+PlaceholderFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
+{
+  aIndex = (aChild == mAnchoredItem) ? 0 : -1;
+  return NS_OK;
+}
+
+NS_METHOD
+PlaceholderFrame::FirstChild(nsIFrame*& aFirstChild) const
+{
+  aFirstChild = mAnchoredItem;
+  return NS_OK;
+}
+
+NS_METHOD
+PlaceholderFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
+{
+  aNextChild = nsnull;
+  return NS_OK;
+}
+
+NS_METHOD
+PlaceholderFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
+{
+  aPrevChild = nsnull;
+  return NS_OK;
+}
+
+NS_METHOD
+PlaceholderFrame::LastChild(nsIFrame*& aLastChild) const
+{
+  aLastChild = mAnchoredItem;
+  return NS_OK;
 }
 
 NS_METHOD PlaceholderFrame::ListTag(FILE* out) const
@@ -97,5 +154,32 @@ NS_METHOD PlaceholderFrame::ListTag(FILE* out) const
   PRInt32 contentIndex;
   GetContentIndex(contentIndex);
   fprintf(out, "(%d)@%p", contentIndex, this);
+  return NS_OK;
+}
+
+NS_METHOD
+PlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  PRInt32 i;
+
+  // Indent
+  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+
+  // Output the tag
+  ListTag(out);
+
+  // Output the rect
+  out << mRect;
+
+  // Output the children
+  if (nsnull != mAnchoredItem) {
+    fputs("<\n", out);
+    mAnchoredItem->List(out, aIndent + 1);
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fputs(">\n", out);
+  } else {
+    fputs("<>\n", out);
+  }
+
   return NS_OK;
 }
