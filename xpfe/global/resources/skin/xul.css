@@ -246,14 +246,6 @@ checkbox[depress] {
    border: 1px inset white;
 }
 
-/* kept generic enough to also cover vertical scrollbars */
-progressmeter {
-        display: inline;
-        color : #9999CC; 
-        border: 1px inset white;
-        background-color: grey;        
-}
-
 /* specify align="horizontal" for most common horizontal cases */
 progressmeter[align="horizontal"] {
         height: 1em;        
@@ -262,8 +254,7 @@ progressmeter[align="horizontal"] {
 progressmeter {
         display: inline;
         color : #9999CC; 
-        border: 1px inset white;
-        background-color: grey;        
+        background-color: #CCCCDD;        
 }
 
 div.pmBackground {
@@ -364,17 +355,6 @@ menuseparator {
   border-top: 1px gray solid; 
   margin: 2px;
 }
-
-progressmeter {
-        display:inline;
-        border: 1px #666699;
-        color : #9999CC;         
-}
-
-:progressmeter-stripe {
-	color: #BBBBCC;
-}
-
 
 /* titledbuttons are the preferred means of generating UI buttons in XUL (see below) */
 
