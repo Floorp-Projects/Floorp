@@ -140,7 +140,7 @@ CONFIG_OBJ_INC=1
         $(LINCS)
         $(LINCS_1)
         $(INCS)
-        -Fd$(PBDFILE)
+        -Fd$(PDBFILE)
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).c
 <<
@@ -167,7 +167,7 @@ CONFIG_OBJ_INC=1
         $(LINCS)
         $(LINCS_1)
         $(INCS)
-        -Fd$(PBDFILE)
+        -Fd$(PDBFILE)
         -Fe.\$(OBJDIR)\
         $(CURDIR)$(*B).c
 <<KEEP

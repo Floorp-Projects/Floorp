@@ -46,7 +46,7 @@ include <$(DEPTH)\config\rules.mak>
         $(INCS)
         $(LLIBS)
         $(OS_LIBS)
-        -Fd$(PBDFILE)
+        -Fd$(PDBFILE)
         -Fe.\$(OBJDIR)\
         -Fo.\$(OBJDIR)\
         $(CURDIR)$(*B).c
