@@ -19,6 +19,7 @@
    - 
    - Contributor(s):
    -->
+
 <!-- os2 version of platformDialogOverlay.xul -->
 
 <!DOCTYPE window SYSTEM "chrome://global-platform/locale/platformDialogOverlay.dtd">
@@ -54,14 +55,13 @@
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
   </hbox>
   
-  <hbox id="okCancelHelpButtonsRight">
+  <hbox id="okCancelHelpButtonsRight" halign="right">
     <spring flex="1"/>
     <button class="right exit-dialog" id="ok" label="&okButton.label;" default="true" oncommand="doOKButton();"/>
     <button class="exit-dialog" id="Button2" label="&cancelButton.label;" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="Button3" label="&cancelButton.label;" collapsed="true" oncommand="doButton3();"/>
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
     <button class="exit-dialog" id="help" label="&helpButton.label;" oncommand="doHelpButton();"/>
-    <spring flex="1"/>
   </hbox>
 
   <keyset id="dialogKeys">

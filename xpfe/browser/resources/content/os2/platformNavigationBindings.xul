@@ -16,8 +16,10 @@
 
     <!-- Supporting IE 'refresh' shortcut key -->
     <key keycode="VK_F5" oncommand="BrowserReload();"/>
+    <key keycode="VK_F5" modifiers="control" oncommand="BrowserReloadSkipCache();"/>
 
     <key id="goHome" keycode="VK_HOME" command="Browser:Home" modifiers="alt"/>
+
   </keyset>  
 
 </overlay>
