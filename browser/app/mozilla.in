@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.3 2004/02/20 18:13:45 pkw%us.ibm.com Exp $
+## $Id: mozilla.in,v 1.4 2004/05/30 17:58:39 mconnor%myrealbox.com Exp $
 ## 
 ## Usage:
 ##
@@ -118,6 +118,28 @@ script_args=""
 moreargs=""
 debugging=0
 MOZILLA_BIN="%MOZILLA-BIN%"
+
+# The following is to check for a currently running instance.
+# This is taken almost verbatim from the Mozilla RPM package's launch script.
+MOZ_CLIENT_PROGRAM=$curdir/mozilla-xremote-client
+function check_running() {
+    $MOZ_CLIENT_PROGRAM -a firefox 'ping()' 2>/dev/null >/dev/null
+    RETURN_VAL=$?
+    if [ "$RETURN_VAL" -eq "2" ]; then
+        echo 0
+        return 0
+    else
+        echo 1
+        return 1
+    fi
+}
+                                                                                   
+ALREADY_RUNNING=`check_running`
+                                                                                   
+if [ "${ALREADY_RUNNING}" -eq "1" ] && [ -z "$1" ]; then
+    exec $MOZ_CLIENT_PROGRAM "xfeDoCommand(openBrowser)" 2>/dev/null >/dev/null
+fi
+# End of section that checks for currently running instance. - jtg
 
 if [ "$OSTYPE" = "beos" ]; then
   mimeset -F $MOZILLA_BIN
