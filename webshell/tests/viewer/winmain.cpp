@@ -72,6 +72,8 @@ static char* class2Name = "PrintPreview";
 static HANDLE gInstance, gPrevInstance;
 static char* startURL;
 static nsVoidArray* gWindows;
+static PRBool gDoPurify;
+static PRBool gDoQuantify;
 
 // Debug Robot options
 static int gDebugRobotLoads = 5000;
@@ -180,29 +182,9 @@ static DocObserver* NewObserver(nsIWebWidget* ww)
 
 //----------------------------------------------------------------------
 
-
-
 /*
-*
-* BEGIN PURIFY METHODS
-*
-*/
-
-
-
-PRBool  DoPurifyTest()
-{
-#ifdef NS_WIN32
-  char*               name = "MOZ_PURIFY_TEST";
-  char                buffer[256];
-  int                 result;
-
-  result = GetEnvironmentVariable(name, buffer, 256);
-  return PRBool(result != 0);
-#endif
-  return PR_FALSE;
-}
-
+ * Purify methods
+ */
 
 void AddTestDocs(nsDocLoader* aDocLoader)
 {
@@ -214,15 +196,7 @@ void AddTestDocs(nsDocLoader* aDocLoader)
   }
 }
 
-/*
-*
-* END PURIFY METHODS
-*
-*/
-
-
-
-
+//----------------------------------------------------------------------
 
 static nsresult ShowPrintPreview(nsIWebWidget* ww, PRIntn aColumns);
 
@@ -717,10 +691,8 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 
 
   // Determine if we should run the purify test
-  PRBool  purify = DoPurifyTest();
   nsDocLoader* dl = nsnull;
-  if (purify)
-  {
+  if (gDoPurify) {
     dl = new nsDocLoader(wd->ww);
 
     // Add the documents to the loader
@@ -729,10 +701,25 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
     // Start the timer
     dl->StartTimedLoading();
   }
-  else
-  {
+  else {
     // Load the starting url if we have one
     wd->ww->LoadURL(startURL ? startURL : START_URL);
+    if (gDoQuantify) {
+      // Synthesize 20 ResizeReflow commands (+/- 10 pixels) and then
+      // exit.
+#define kNumReflows 20
+      for (PRIntn i = 0; i < kNumReflows; i++) {
+        nsRect r = wd->ww->GetBounds();
+        if (i & 1) {
+          r.width -= 10;
+        }
+        else {
+          r.width += 10;
+        }
+        wd->ww->SetBounds(r);
+      }
+      exit(0);
+    }
   }
 
   // Process messages
@@ -807,8 +794,24 @@ BOOL CreateRobotDialog(HWND hParent)
 
 void main(int argc, char **argv)
 {
-  if (argc > 1) {
-    startURL = argv[1];
+  for (int i = 1; i < argc; i++) {
+    if (argv[i][0] == '-') {
+      if (strcmp(argv[i], "-p") == 0) {
+        gDoPurify = PR_TRUE;
+      }
+      else if (strcmp(argv[i], "-q") == 0) {
+        gDoQuantify = PR_TRUE;
+      }
+      else {
+        fprintf(stderr, "Usage: %s [-p][-q] [starting url]\n", argv[0]);
+        exit(-1);
+      }
+    }
+    else
+      break;
+  }
+  if (i < argc) {
+    startURL = argv[i];
   }
   WinMain(GetModuleHandle(NULL), NULL, 0, SW_SHOW);
 }
