@@ -395,14 +395,14 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow)
 {
+/* make it real time drag for now due to problems
   nsILookAndFeel* lookAndFeel;
   if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel))) {
      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_DragFullWindow, realTimeDrag);
      NS_RELEASE(lookAndFeel);
   }
-  else {
+  else */
      realTimeDrag = 1;
-  }
 
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
