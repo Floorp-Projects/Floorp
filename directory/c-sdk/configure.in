@@ -1192,7 +1192,11 @@ case "$target" in
     PR_MD_ARCH_DIR=windows
     RESOLVE_LINK_SYMBOLS=1
     PROG_SUFFIX=.exe
-    NSINSTALL=nsinstall
+    CYGWIN_WRAPPER='sh $(topsrcdir)/config/cygwin-wrapper'
+    NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
+    if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
+        PERL='$(CYGWIN_WRAPPER) perl'
+    fi
 
     if test -n "$GNU_CC"; then
         CC="$CC -mno-cygwin"
@@ -1203,19 +1207,14 @@ case "$target" in
         RC="$WINDRES -O coff --use-temp-file"
     else
         CYGWIN_WRAPPER='sh $(topsrcdir)/config/cygwin-wrapper'
-        CC='$(CYGWIN_WRAPPER) cl'
-        CXX='$(CYGWIN_WRAPPER) cl'
-        LD='$(CYGWIN_WRAPPER) link'
+        CC=cl
+        CXX=cl
+        LD=link
         AR='lib -NOLOGO -OUT:"$@"'
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
-        NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
         RC='$(CYGWIN_WRAPPER) rc.exe'
-        PERL=perl
-        if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" = 0; then
-            PERL='$(CYGWIN_WRAPPER) perl'
-        fi
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
 	    OBJ_SUFFIX=obj
 	    LIB_SUFFIX=lib
@@ -2218,6 +2217,17 @@ if test -n "$USE_64"; then
 fi
 
 RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
+
+dnl ========================================================
+dnl Use cygwin wrapper for win32 builds
+dnl ========================================================
+case "$target_os" in
+mingw*|cygwin*|msvc*|mksnt*)
+    CC="\$(CYGWIN_WRAPPER) $CC"
+    CXX="\$(CYGWIN_WRAPPER) $CXX"
+    RC="\$(CYGWIN_WRAPPER) $RC"
+    ;;
+esac
 
 dnl ========================================================
 dnl Substitution of found variables.
