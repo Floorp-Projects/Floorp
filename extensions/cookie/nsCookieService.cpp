@@ -62,11 +62,7 @@ nsresult nsCookieService::Init()
   }
     
   nsresult rv;
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
-  if (NS_FAILED(rv)) return rv;
-  rv = eventQService->CreateThreadEventQueue();
-  if (NS_FAILED(rv)) return rv;
-  
+    
   // Make sure there exists the cookie http notify service
   nsCOMPtr<nsIHTTPNotify> cookieNotifier = do_GetService(NS_COOKIEHTTPNOTIFY_PROGID, &rv);
   if (NS_FAILED(rv)) return rv;
