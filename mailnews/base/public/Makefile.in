@@ -44,6 +44,8 @@ EXPORTS =				\
 		nsIMsgFolder.h		\
 		nsIMsgRDFFolder.h	\
 		nsIMsgMailNewsUrl.h	\
+		nsIUrlListener.h	\
+		nsIUrlListenerManager.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
