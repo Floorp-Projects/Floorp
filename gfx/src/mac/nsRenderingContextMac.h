@@ -185,6 +185,7 @@ public:
 
     // useful for determining if we're running on MacOSX
   static PRBool OnMacOSX();
+  static PRBool OnJaguar();
 
 protected:
   enum GraphicStateChanges {
