@@ -61,12 +61,7 @@ nsIDOMNode *nsAccessNode::gLastFocusedNode = 0;
 PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
 
-
-#ifdef OLD_HASH
-nsSupportsHashtable *nsAccessNode::gGlobalDocAccessibleCache = nsnull;
-#else
 nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *nsAccessNode::gGlobalDocAccessibleCache = nsnull;
-#endif
 
 /*
  * Class nsAccessNode
@@ -186,12 +181,8 @@ void nsAccessNode::InitXPAccessibility()
   }
   nsAccessibilityAtoms::AddRefAtoms();
 
-#ifdef OLD_HASH
-  gGlobalDocAccessibleCache = new nsSupportsHashtable(4);
-#else
   gGlobalDocAccessibleCache = new nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>;
   gGlobalDocAccessibleCache->Init(4); // Initialize for 4 entries
-#endif
 
   nsCOMPtr<nsIPref> prefService(do_GetService(kPrefCID));
   if (prefService) {
@@ -214,7 +205,7 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(gKeyStringBundle);
   NS_IF_RELEASE(gLastFocusedNode);
 
-  ClearCache(gGlobalDocAccessibleCache);
+  ClearCache(*gGlobalDocAccessibleCache);
   delete gGlobalDocAccessibleCache;
   gGlobalDocAccessibleCache = nsnull;
 
@@ -270,55 +261,6 @@ nsIFrame* nsAccessNode::GetFrame()
 
 /***************** Hashtable of nsIAccessNode's *****************/
 
-#ifdef OLD_HASH
-void nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell, 
-                                       nsIAccessibleDocument **aDocAccessible)
-{
-  *aDocAccessible = nsnull;
-  NS_ASSERTION(gGlobalDocAccessibleCache, "Global doc cache does not exist");
-
-  nsVoidKey key(NS_STATIC_CAST(void*, aPresShell));
-  nsCOMPtr<nsIAccessNode> accessNode = NS_STATIC_CAST(nsIAccessNode*, gGlobalDocAccessibleCache->Get(&key));
-  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(accessNode));
-  *aDocAccessible = accDoc;  // already addrefed
-}
- 
-void nsAccessNode::PutCacheEntry(nsSupportsHashtable *aCache, void* aUniqueID, 
-                                 nsIAccessNode *aAccessNode)
-{
-  nsVoidKey key(aUniqueID);
-#ifdef DEBUG
-  if (aCache->Exists(&key)) {
-    NS_ASSERTION(PR_FALSE, "This cache entry shouldn't exist already");
-    nsCOMPtr<nsIAccessNode> oldAccessNode;
-    GetCacheEntry(aCache, aUniqueID, getter_AddRefs(oldAccessNode));
-  }
-#endif
-  aCache->Put(&key, aAccessNode);
-}
-
-void nsAccessNode::GetCacheEntry(nsSupportsHashtable *aCache, void* aUniqueID, 
-                                 nsIAccessNode **aAccessNode)
-{
-  nsVoidKey key(aUniqueID);
-  *aAccessNode = NS_STATIC_CAST(nsIAccessNode*, aCache->Get(&key));  // AddRefs for us
-}
-
-PRIntn PR_CALLBACK nsAccessNode::ClearCacheEntry(nsHashKey *aKey, void *aAccessNode, 
-                                                 void* aClosure)
-{
-  nsIAccessNode* accessNode = NS_STATIC_CAST(nsIAccessNode*, aAccessNode);
-  accessNode->Shutdown();
-
-  return kHashEnumerateRemove;
-}
-
-void nsAccessNode::ClearCache(nsSupportsHashtable *aCache)
-{
-  aCache->Enumerate(ClearCacheEntry); 
-}
-
-#else
 void nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell, 
                                        nsIAccessibleDocument **aDocAccessible)
 {
@@ -332,34 +274,35 @@ void nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell,
   }
 }
  
-void nsAccessNode::PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache, 
+void nsAccessNode::PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> &aCache, 
                                  void* aUniqueID, 
                                  nsIAccessNode *aAccessNode)
 {
-  aCache->Put(aUniqueID, aAccessNode);
+#ifdef DEBUG
+  nsCOMPtr<nsIAccessNode> oldAccessNode;
+  GetCacheEntry(aCache, aUniqueID, getter_AddRefs(oldAccessNode));
+  NS_ASSERTION(!oldAccessNode, "This cache entry shouldn't exist already");
+#endif
+  aCache.Put(aUniqueID, aAccessNode);
 }
 
-void nsAccessNode::GetCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache, 
+void nsAccessNode::GetCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> &aCache, 
                                  void* aUniqueID, 
                                  nsIAccessNode **aAccessNode)
 {
-  aCache->Get(aUniqueID, aAccessNode);  // AddRefs for us
+  aCache.Get(aUniqueID, aAccessNode);  // AddRefs for us
 }
 
-PLDHashOperator ClearCacheEntry(void *const& aKey, nsCOMPtr<nsIAccessNode> aAccessNode, void* aUserArg)
+PLDHashOperator nsAccessNode::ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg)
 {
   aAccessNode->Shutdown();
 
   return PL_DHASH_REMOVE;
 }
 
-void nsAccessNode::ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache)
+void nsAccessNode::ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> &aCache)
 {
-  //aCache->EnumerateEntries(ClearCacheEntry, nsnull);  
-  aCache->EnumerateRead(ClearCacheEntry, nsnull);  
-  aCache->Clear();
+  aCache.Enumerate(ClearCacheEntry, nsnull);  
 }
 
-
-#endif
 
