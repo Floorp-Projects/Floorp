@@ -65,7 +65,6 @@ static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 nsIFrame * gCurrentlyFocusedTargetFrame = 0; 
 nsIContent * gCurrentlyFocusedContent = 0; // Weak because it mirrors the strong mCurrentFocus
-nsIPresContext * gCurrentlyFocusedPresContext = 0; // Strong
 
 nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
@@ -127,8 +126,6 @@ nsEventStateManager::~nsEventStateManager()
   if(mInstanceCount == 0) {
     NS_IF_RELEASE(gLastFocusedContent);
     NS_IF_RELEASE(gLastFocusedDocument);
-    
-	  NS_IF_RELEASE(gCurrentlyFocusedPresContext);
   }
 }
 
@@ -1710,10 +1707,10 @@ nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
 NS_IMETHODIMP
 nsEventStateManager::GetFocusedEventTarget(nsIFrame **aFrame)
 {
-  if (!gCurrentlyFocusedTargetFrame && gCurrentlyFocusedContent && gCurrentlyFocusedPresContext) {
+  if (!gCurrentlyFocusedTargetFrame && gCurrentlyFocusedContent && gLastFocusedPresContext) {
 	nsCOMPtr<nsIPresShell> shell;
-    if (gCurrentlyFocusedPresContext) {
-      nsresult rv = gCurrentlyFocusedPresContext->GetShell(getter_AddRefs(shell));
+    if (gLastFocusedPresContext) {
+      nsresult rv = gLastFocusedPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
         shell->GetPrimaryFrameFor(gCurrentlyFocusedContent, &gCurrentlyFocusedTargetFrame);
       }
@@ -1823,10 +1820,6 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       NS_IF_ADDREF(mCurrentFocus);
 
 	    gCurrentlyFocusedContent = mCurrentFocus;
-
-	    NS_IF_RELEASE(gCurrentlyFocusedPresContext);
-	    gCurrentlyFocusedPresContext = mPresContext;
-	    NS_IF_ADDREF(gCurrentlyFocusedPresContext);
     }
   }
 
