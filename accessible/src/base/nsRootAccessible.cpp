@@ -50,8 +50,8 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
@@ -336,7 +336,9 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible, nsID
   aAccessible->GetFinalRole(&role);
 
   // Fire focus if it changes, but always fire focus events for menu items
-  PRBool fireFocus = gLastFocusedNode != aNode || (role == ROLE_MENUITEM);
+  if (gLastFocusedNode == aNode && role != ROLE_MENUITEM) {
+    return;
+  }
 
   NS_IF_RELEASE(gLastFocusedNode);
   gLastFocusedNode = aNode;
@@ -646,6 +648,26 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
   }
   else if (eventType.LowerCaseEqualsLiteral("focus")) {
+    nsCOMPtr<nsIDOMXULSelectControlElement> selectControl =
+      do_QueryInterface(targetNode);
+    // Send focus to individual radio button or selected item
+    if (selectControl) {
+      nsCOMPtr<nsIDOMXULMenuListElement> menuList =
+        do_QueryInterface(targetNode);
+      if (!menuList) {
+        // Don't do this for menu lists, the items only get focused
+        // when the list is open, based on DOMMenuitemActive events
+        nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
+        selectControl->GetSelectedItem(getter_AddRefs(selectedItem));
+        targetNode = do_QueryInterface(selectedItem);
+
+        if (!targetNode ||
+            NS_FAILED(mAccService->GetAccessibleInShell(targetNode, eventShell,
+                      getter_AddRefs(accessible)))) {
+          return NS_OK;
+        }
+      }
+    }
     FireAccessibleFocusEvent(accessible, targetNode);
   }
   else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
