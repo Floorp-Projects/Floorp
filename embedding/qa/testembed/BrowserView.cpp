@@ -686,8 +686,8 @@ void CBrowserView::OnFileSaveAs()
 
         // Save the file
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
-		if(persist)
-			persist->SaveDocument(nsnull, pStrFullPath, pStrDataPath);
+//		if(persist)
+//			persist->SaveDocument(nsnull, pStrFullPath, pStrDataPath);
 	}
 }
 
@@ -816,8 +816,8 @@ void CBrowserView::OnSaveLinkAs()
 		CString strFullPath = cf.GetPathName();
 
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
-		if(persist)
-			persist->SaveURI(linkURI, nsnull, strFullPath.GetBuffer(0));
+//		if(persist)
+//			persist->SaveURI(linkURI, nsnull, strFullPath.GetBuffer(0));
 	}
 }
 
@@ -858,8 +858,8 @@ void CBrowserView::OnSaveImageAs()
 		CString strFullPath = cf.GetPathName();
 
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
-		if(persist)
-			persist->SaveURI(linkURI, nsnull, strFullPath.GetBuffer(0));
+//		if(persist)
+//			persist->SaveURI(linkURI, nsnull, strFullPath.GetBuffer(0));
 	}
 }
 

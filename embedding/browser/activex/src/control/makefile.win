@@ -79,7 +79,7 @@ OBJS =                                 \
     .\$(OBJDIR)\IEHtmlDocument.obj     \
     .\$(OBJDIR)\DropTarget.obj         \
     .\$(OBJDIR)\PropertyDlg.obj        \
-	.\$(OBJDIR)\PromptService.obj      \
+    .\$(OBJDIR)\PromptService.obj      \
     .\$(OBJDIR)\guids.obj              \
     $(NULL)
 

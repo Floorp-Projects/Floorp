@@ -509,8 +509,8 @@ NS_IMETHODIMP WebBrowserChrome::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt
 /* void setFocus (); */
 NS_IMETHODIMP WebBrowserChrome::SetFocus()
 {
-    nsCOMPtr<nsIBaseWindow> browserBaseWindow = do_QueryInterface(mWebBrowser);
-   return browserBaseWindow->SetFocus();
+    WebBrowserChromeUI::SetFocus(this);
+    return NS_OK;
 }
 
 /* attribute wstring title; */

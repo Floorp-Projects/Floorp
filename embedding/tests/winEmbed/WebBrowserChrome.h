@@ -50,6 +50,7 @@ public:
     static nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
     static void Destroy(nsIWebBrowserChrome* chrome);
     static void Destroyed(nsIWebBrowserChrome* chrome);
+    static void SetFocus(nsIWebBrowserChrome *chrome);
     static void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText);
     static void UpdateCurrentURI(nsIWebBrowserChrome *aChrome);
     static void UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy);
