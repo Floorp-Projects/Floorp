@@ -638,6 +638,9 @@ nsHTMLContentSerializer::LineBreakAfterOpen(nsIAtom* aName,
       (aName == nsHTMLAtoms::meta) ||
       (aName == nsHTMLAtoms::link) ||
       (aName == nsHTMLAtoms::script) ||
+      (aName == nsHTMLAtoms::img) ||
+      (aName == nsHTMLAtoms::map) ||
+      (aName == nsHTMLAtoms::area) ||
       (aName == nsHTMLAtoms::style)) {
     return PR_TRUE;
   }
@@ -690,6 +693,7 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
       (aName == nsHTMLAtoms::dd) ||
       (aName == nsHTMLAtoms::blockquote) ||
       (aName == nsHTMLAtoms::p) ||
+      (aName == nsHTMLAtoms::map) ||
       (aName == nsHTMLAtoms::div)) {
     return PR_TRUE;
   }
