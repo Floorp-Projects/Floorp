@@ -506,6 +506,7 @@ var BookmarksCommand = {
       return;
     for (var i=0; i<aSelection.length; ++i) {
       var type = aSelection.type[i];
+      dump("folder:"+aSelection.item[i].Value+"\n")
       if (aTargetBrowser == "properties")
         openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul",
                    "", "centerscreen,chrome,resizable=no", aSelection.item[i].Value);
@@ -616,9 +617,11 @@ var BookmarksCommand = {
   createNewFolder: function (aTarget)
   {
     var name      = BookmarksUtils.getLocaleString("ile_newfolder");
+    dump("name:"+name+"\n")
     var rFolder   = BMSVC.createFolder(name);
     var selection = BookmarksUtils.getSelectionFromResource(rFolder);
     var ok        = BookmarksUtils.insertSelection("newfolder", selection, aTarget);
+    dump("Value:"+selection.item[0].Value+", "+BookmarksUtils.getProperty(selection.item[0],NC_NS+"Name")+"\n")
     if (ok)
       this.openBookmark(selection, "properties");
   },
@@ -1592,6 +1595,13 @@ var BookmarksUtils = {
                "centerscreen,chrome,dialog=yes,resizable=no,dependent", title,
                url, null, docCharset);
   }, 
+
+  // should update the caller, aShowDialog is no more necessary
+  addBookmark: function (aURL, aTitle, aCharSet, aShowDialog)                   
+  {                                                                             
+    openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",     
+               "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharSet);
+  },                                                                          
 
   getBrowserTargetFromEvent: function (aEvent)
   {
