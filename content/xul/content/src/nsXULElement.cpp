@@ -2639,7 +2639,7 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
 
     nsIDOMEvent* domEvent = nsnull;
     if (NS_EVENT_FLAG_INIT & aFlags) {
-        if (aEvent->message == NS_XUL_COMMAND) {
+        if (aEvent->message == NS_XUL_COMMAND && Tag() != nsXULAtoms::command) {
             // See if we have a command elt.  If so, we execute on the command instead
             // of on our content element.
             nsAutoString command;
@@ -2649,7 +2649,9 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
                 nsCOMPtr<nsIDOMElement> commandElt;
                 domDoc->GetElementById(command, getter_AddRefs(commandElt));
                 nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
-                if (commandContent) {
+                if (commandContent &&
+                    commandContent->IsContentOfType(nsIContent::eXUL) &&
+                    commandContent->Tag() == nsXULAtoms::command) {
                     return commandContent->HandleDOMEvent(aPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, aEventStatus);
                 }
                 else {
