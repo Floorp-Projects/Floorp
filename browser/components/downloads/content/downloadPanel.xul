@@ -66,14 +66,13 @@
       </sidebarheader>
       <listbox id="downloadHistoryView" flex="1" class="plain" seltype="multiple"
                 datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"
-                enableColumnDrag="true" ondblclick="if (event.button == 0) goDoCommand('cmd_openfile');"
+                ondblclick="if (event.button == 0) goDoCommand('cmd_openfile');"
                 onselect="onSelect(event);" context="downloadHistoryPopup">
         <listcols>
           <listcol id="Name" primary="true"
-                       label="&name.label;"
-                       class="sortDirectionIndicator" width="3*" flex="3"
-                       sort="http://home.netscape.com/NC-rdf#Name"
-                       persist="width sortActive sortDirection"/>
+                   label="&name.label;"
+                   width="3*" flex="3"
+                   persist="width"/>
         </listcols>
         <template>
           <rule nc:DownloadState="1" parsetype="Integer">

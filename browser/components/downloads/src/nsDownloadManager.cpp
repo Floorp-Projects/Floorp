@@ -75,11 +75,12 @@ static nsIRDFResource* gNC_DownloadsRoot = nsnull;
 static nsIRDFResource* gNC_File = nsnull;
 static nsIRDFResource* gNC_URL = nsnull;
 static nsIRDFResource* gNC_Name = nsnull;
-static nsIRDFResource* gNC_ProgressMode = nsnull;
 static nsIRDFResource* gNC_ProgressPercent = nsnull;
 static nsIRDFResource* gNC_Transferred = nsnull;
 static nsIRDFResource* gNC_DownloadState = nsnull;
 static nsIRDFResource* gNC_StatusText = nsnull;
+static nsIRDFResource* gNC_DateStarted = nsnull;
+static nsIRDFResource* gNC_DateEnded = nsnull;
 
 static nsIRDFService* gRDFService = nsnull;
 static nsIObserverService* gObserverService = nsnull;
@@ -109,11 +110,12 @@ nsDownloadManager::~nsDownloadManager()
   NS_IF_RELEASE(gNC_File);                                                      
   NS_IF_RELEASE(gNC_URL);                                                       
   NS_IF_RELEASE(gNC_Name);                                                      
-  NS_IF_RELEASE(gNC_ProgressMode);
   NS_IF_RELEASE(gNC_ProgressPercent);
   NS_IF_RELEASE(gNC_Transferred);
   NS_IF_RELEASE(gNC_DownloadState);
   NS_IF_RELEASE(gNC_StatusText);
+  NS_IF_RELEASE(gNC_DateStarted);
+  NS_IF_RELEASE(gNC_DateEnded);
 
   NS_RELEASE(gRDFService);
   NS_RELEASE(gObserverService);
@@ -161,11 +163,12 @@ nsDownloadManager::Init()
   gRDFService->GetResource(NC_NAMESPACE_URI "File", &gNC_File);
   gRDFService->GetResource(NC_NAMESPACE_URI "URL", &gNC_URL);
   gRDFService->GetResource(NC_NAMESPACE_URI "Name", &gNC_Name);
-  gRDFService->GetResource(NC_NAMESPACE_URI "ProgressMode", &gNC_ProgressMode);
   gRDFService->GetResource(NC_NAMESPACE_URI "ProgressPercent", &gNC_ProgressPercent);
   gRDFService->GetResource(NC_NAMESPACE_URI "Transferred", &gNC_Transferred);
   gRDFService->GetResource(NC_NAMESPACE_URI "DownloadState", &gNC_DownloadState);
   gRDFService->GetResource(NC_NAMESPACE_URI "StatusText", &gNC_StatusText);
+  gRDFService->GetResource(NC_NAMESPACE_URI "DateStarted", &gNC_DateStarted);
+  gRDFService->GetResource(NC_NAMESPACE_URI "DateEnded", &gNC_DateEnded);
 
   nsCAutoString downloadsDB;
   rv = GetProfileDownloadsFileURL(downloadsDB);
@@ -195,6 +198,22 @@ nsDownloadManager::DownloadEnded(const char* aPath, const PRUnichar* aMessage)
 {
   nsCStringKey key(aPath);
   if (mCurrDownloads.Exists(&key)) {
+
+    // Assert the date and time that the download ended.    
+    nsCOMPtr<nsIRDFDate> dateLiteral;
+    if (NS_SUCCEEDED(gRDFService->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral)))) {    
+      nsCOMPtr<nsIRDFResource> res;
+      nsCOMPtr<nsIRDFNode> node;
+      
+      gRDFService->GetResource(aPath, getter_AddRefs(res));
+      
+      mDataSource->GetTarget(res, gNC_DateEnded, PR_TRUE, getter_AddRefs(node));
+      if (node)
+        mDataSource->Change(res, gNC_DateEnded, node, dateLiteral);
+      else
+        mDataSource->Assert(res, gNC_DateEnded, dateLiteral, PR_TRUE);
+    }
+
     AssertProgressInfoFor(aPath);
     
     nsDownload* download = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
@@ -307,23 +326,6 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPath)
   DownloadState state;
   internalDownload->GetDownloadState(&state);
  
-  // update progress mode
-  nsAutoString progressMode;
-  if (state == DOWNLOADING)
-    progressMode.Assign(NS_LITERAL_STRING("normal"));
-  else
-    progressMode.Assign(NS_LITERAL_STRING("none"));
-
-  gRDFService->GetLiteral(progressMode.get(), getter_AddRefs(literal));
-
-  rv = mDataSource->GetTarget(res, gNC_ProgressMode, PR_TRUE, getter_AddRefs(oldTarget));
-  
-  if (oldTarget)
-    rv = mDataSource->Change(res, gNC_ProgressMode, oldTarget, literal);
-  else
-    rv = mDataSource->Assert(res, gNC_ProgressMode, literal, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
-
   // update download state (not started, downloading, queued, finished, etc...)
   gRDFService->GetIntLiteral(state, getter_AddRefs(intLiteral));
 
@@ -334,35 +336,6 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPath)
     if (NS_FAILED(rv)) return rv;
   }
 
-  nsAutoString strKey;
-  if (state == NOTSTARTED)
-    strKey.Assign(NS_LITERAL_STRING("notStarted"));
-  else if (state == DOWNLOADING)
-    strKey.Assign(NS_LITERAL_STRING("downloading"));
-  else if (state == FINISHED)
-    strKey.Assign(NS_LITERAL_STRING("finished"));
-  else if (state == FAILED)
-    strKey.Assign(NS_LITERAL_STRING("failed"));
-  else if (state == CANCELED)
-    strKey.Assign(NS_LITERAL_STRING("canceled"));
-
-  nsXPIDLString value;
-  rv = mBundle->GetStringFromName(strKey.get(), getter_Copies(value));    
-  if (NS_FAILED(rv)) return rv;
-
-  gRDFService->GetLiteral(value, getter_AddRefs(literal));
-
-  rv = mDataSource->GetTarget(res, gNC_StatusText, PR_TRUE, getter_AddRefs(oldTarget));
-  
-  if (oldTarget) {
-    rv = mDataSource->Change(res, gNC_StatusText, oldTarget, literal);
-    if (NS_FAILED(rv)) return rv;
-  }
-  else {
-    rv = mDataSource->Assert(res, gNC_StatusText, literal, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-  }
-  
   // update percentage
   download->GetPercentComplete(&percentComplete);
 
@@ -386,7 +359,8 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPath)
     currBytes.get(),
     maxBytes.get()
   };
-  
+
+  nsXPIDLString value; 
   rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("transferred").get(),
                                      strings, 2, getter_Copies(value));
   if (NS_FAILED(rv)) return rv;
@@ -525,6 +499,20 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     rv = mDataSource->Change(downloadRes, gNC_DownloadState, node, intLiteral);
   else
     rv = mDataSource->Assert(downloadRes, gNC_DownloadState, intLiteral, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    downloads->IndexOf(downloadRes, &itemIndex);
+    downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
+    return rv;
+  }
+
+  nsCOMPtr<nsIRDFDate> dateLiteral;
+  rv = gRDFService->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral));
+  if (NS_FAILED(rv)) return rv;
+  mDataSource->GetTarget(downloadRes, gNC_DateStarted, PR_TRUE, getter_AddRefs(node));
+  if (node)
+    rv = mDataSource->Change(downloadRes, gNC_DateStarted, node, dateLiteral);
+  else
+    rv = mDataSource->Assert(downloadRes, gNC_DateStarted, dateLiteral, PR_TRUE);
   if (NS_FAILED(rv)) {
     downloads->IndexOf(downloadRes, &itemIndex);
     downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
