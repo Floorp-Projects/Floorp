@@ -189,6 +189,8 @@ HelperApps.prototype = {
               return gRDF.GetLiteral(typeInfo.primaryExtension.toUpperCase() + " file");
             }
             catch (e) { 
+              // Wow, this sucks, just show the MIME type as a last ditch effort to display
+              // the type of file that this is. 
               return gRDF.GetLiteral(typeInfo.MIMEType);
             }
           }
