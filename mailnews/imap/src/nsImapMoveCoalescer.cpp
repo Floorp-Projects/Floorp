@@ -103,7 +103,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 					rv = imapService->OnlineMessageCopy(eventQueue,
 													m_sourceFolder, messageIds,
 													destFolder, PR_TRUE, PR_TRUE,
-													urlListener, nsnull);
+													urlListener, nsnull, nsnull);
 					delete [] messageIds;
 				}
 				else
