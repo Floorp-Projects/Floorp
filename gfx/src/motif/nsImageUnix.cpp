@@ -370,6 +370,8 @@ nsresult nsImageUnix::BuildImage(nsDrawingSurface aDrawingSurface)
 
   ConvertImage(aDrawingSurface);
   CreateImage(aDrawingSurface);
+
+  return NS_OK;
 }
 
 //------------------------------------------------------------
