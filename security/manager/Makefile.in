@@ -84,13 +84,18 @@ SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile
 
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE	+= .nss_cleaned
+
 # Attempt to properly handle NSS' refusal to implement a dependency system
 export:: 
+	if test ! -f .nss_cleaned; then \
 	if test ! -f $(topsrcdir)/../cvsco.log ||  \
 		test `grep -c '^U mozilla/security/nss' $(topsrcdir)/../cvsco.log 2>/dev/null` != 0 -o \
 		`grep -c '^U mozilla/security/coreconf' $(topsrcdir)/../cvsco.log 2>/dev/null` != 0 ; then \
 		$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean ; \
 		$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean ; \
+		touch .nss_cleaned ; \
+	fi \
 	fi
 
 dependclean export::
