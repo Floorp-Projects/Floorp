@@ -105,7 +105,7 @@ protected:
   nsresult FlushCaches();
 
 private:
-  NS_IMETHOD LoadDataSource(const nsCString &aFileName, nsIRDFDataSource **aResult,
+  NS_IMETHOD LoadDataSource(const nsACString &aFileName, nsIRDFDataSource **aResult,
                             PRBool aUseProfileDirOnly = PR_FALSE, const char *aProfilePath = nsnull);
 
   NS_IMETHOD GetProfileRoot(nsCString& aFileURL);
@@ -198,6 +198,10 @@ protected:
   nsSupportsHashtable* mDataSourceTable;
   nsIRDFService* mRDFService;
   nsIRDFContainerUtils* mRDFContainerUtils;
+
+  // Boolean that indicates we should batch flushes of the main
+  // chrome.rdf file.
+  PRBool mBatchInstallFlushes;
 
   // Resources
   nsCOMPtr<nsIRDFResource> mSelectedSkin;
