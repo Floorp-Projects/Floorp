@@ -82,7 +82,6 @@ EXPORTS = \
 	nsHashtable.h              \
 	nsHashtableEnumerator.h    \
 	nsIArena.h                 \
-	nsIAtom.h                  \
 	nsIBuffer.h                \
 	nsIByteBuffer.h            \
 	nsIObserverList.h          \
