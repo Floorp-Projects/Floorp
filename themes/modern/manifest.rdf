@@ -15,13 +15,11 @@
         chrome:name="modern/1.0">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:skin:modern/1.0:packages">
-        <RDF:li resource="urn:mozilla:skin:modern/1.0:chatzilla"/>
         <RDF:li resource="urn:mozilla:skin:modern/1.0:communicator"/>
         <RDF:li resource="urn:mozilla:skin:modern/1.0:editor"/>
         <RDF:li resource="urn:mozilla:skin:modern/1.0:global"/>
         <RDF:li resource="urn:mozilla:skin:modern/1.0:messenger"/>
         <RDF:li resource="urn:mozilla:skin:modern/1.0:navigator"/>
-        <RDF:li resource="urn:mozilla:skin:modern/1.0:xmlterm"/>
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
