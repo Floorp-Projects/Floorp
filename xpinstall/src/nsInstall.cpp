@@ -102,10 +102,10 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 #define kInstallLocaleProperties "chrome://global/locale/commonDialogs.properties"
 
 /**
- * Request that an autoreg be performed at next startup. (Used
- * internally by XPI.)  This basically drops a files next to the
- * application.  Next time XPCOM sees this file, it will cause
- * an autoreg, then delete this file.
+ * Request that XPCOM perform an autoreg at startup. (Used
+ * internally by XPI.)  This basically drops a file next to the
+ * application.  The next time the application launches, XPCOM
+ * sees the file, deletes it and autoregisters components.
  */
 static void
 NS_SoftwareUpdateRequestAutoReg()
