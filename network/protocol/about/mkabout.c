@@ -200,7 +200,11 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 		&& !PL_strncasecmp(URL_s->content_type, "image", 5))
 	  {
 	/* Have a seat. Lie down.  Tell me about yourself. */
+#ifdef MODULAR_NETLIB
+	il_msg = NULL;
+#else
 	il_msg = IL_HTMLImageInfo(URL_s->address);
+#endif
 	if (il_msg) {
 	  StrAllocCat(output, "<HR>\n");
 	  StrAllocCat(output, il_msg);
@@ -365,12 +369,14 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		NET_RemoveAllAuthorizations();
 		return(-1);
 	  }
+#ifndef MODULAR_NETLIB
 	else if(!PL_strcasecmp(which, "image-cache"))
 	  {
 	IL_DisplayMemCacheInfoAsHTML(cur_entry->format_out, cur_entry->URL_s,
 				     cur_entry->window_id);
 		return(-1);
 	  }
+#endif
 #ifdef DEBUG
     else if(!PL_strcasecmp(which, "streams"))
       {
