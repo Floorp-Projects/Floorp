@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.38 $ ';
+$Version = '$Revision: 1.39 $ ';
 
 
 sub PrintUsage {
@@ -484,10 +484,18 @@ sub BuildIt {
 	  if ($RunTest) {
 		print LOG "export binary exists, build successful.\n";
 
-        # AliveTest.
+        # Mozilla AliveTest.
 		print LOG "Running AliveTest ...\n";
 		print "Running AliveTest ...\n";
 		$BuildStatus = &RunAliveTest($fe);
+
+		# ViewerTest.
+		if ($BuildStatus == 0 and $ViewerTest) {
+		  print LOG "Running ViewerTest ...\n";
+		  print "Running ViewerTest ...\n";
+		  $BuildStatus = &RunAliveTest('viewer');
+		}
+		
 
         # BloatTest.
 		if ($BuildStatus == 0 and $BloatStats) {
@@ -707,7 +715,7 @@ sub RunAliveTest {
   
   print LOG "$Binary\n";
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
-  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/mozilla-bin";
+  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/$fe";
   $BinaryLog = $BuildDir . '/runlog';
   
   # Fork off a child process.
@@ -734,32 +742,32 @@ sub RunAliveTest {
   sleep $waittime;
   $status = waitpid($pid, WNOHANG());
 
-  print LOG "Client quit Alive Test with status $status\n";
+  print LOG "$fe quit AliveTest with status $status\n";
   if ($status != 0) {
-    print LOG "$Binary has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
-    print LOG "----------- failure output from mozilla-bin for alive test --------------- \n";
+    print LOG "$fe has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
+    print LOG "----------- failure output from $fe for alive test --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
       print $_;
       print LOG $_;
     }
     close READRUNLOG;
-    print LOG "--------------- End of AliveTest Output -------------------- \n";
+    print LOG "--------------- End of AliveTest($fe) Output -------------------- \n";
     return 333;
   }
   
-  print LOG "Success! $Binary is still running.\n";
+  print LOG "Success! $fe is still running.\n";
 
   &killproc($pid);
 
-  print LOG "----------- success output from mozilla-bin for alive test --------------- \n";
+  print LOG "----------- success output from $fe for alive test --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
     print $_;
     print LOG $_;
   }
   close READRUNLOG;
-  print LOG "--------------- End of AliveTest Output -------------------- \n";
+  print LOG "--------------- End of AliveTest ($fe) Output -------------------- \n";
   return 0;
 
 } # RunAliveTest
