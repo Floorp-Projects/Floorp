@@ -867,7 +867,7 @@ private:
 
 // nsJSCID
 
-class nsJSCID : public nsIJSCID
+class nsJSCID : public nsIJSCID, public nsIXPCScriptable
 {
 public:
     NS_DECL_ISUPPORTS
@@ -877,6 +877,7 @@ public:
 
     // we implement the rest...
     NS_DECL_NSIJSCID
+    XPC_DECLARE_IXPCSCRIPTABLE
 
     static nsJSCID* NewID(const char* str);
 

@@ -246,7 +246,8 @@ nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
             if(xpc)
             {
-                if(NS_SUCCEEDED(xpc->WrapNative(cx, NS_STATIC_CAST(nsIJSID*,nsid),
+                if(NS_SUCCEEDED(xpc->WrapNative(cx, 
+                                                NS_STATIC_CAST(nsIJSID*,nsid),
                                                 NS_GET_IID(nsIJSIID),
                                                 &nsid_wrapper)))
                 {
@@ -482,7 +483,8 @@ nsXPCClasses::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
             if(xpc)
             {
-                if(NS_SUCCEEDED(xpc->WrapNative(cx, nsid,
+                if(NS_SUCCEEDED(xpc->WrapNative(cx, 
+                                                NS_STATIC_CAST(nsIJSID*,nsid),
                                                 nsIJSCID::GetIID(),
                                                 &nsid_wrapper)))
                 {
@@ -757,7 +759,8 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             nsXPConnect* xpc = nsXPConnect::GetXPConnect();
             if(xpc)
             {
-                if(NS_SUCCEEDED(xpc->WrapNative(cx, nsid,
+                if(NS_SUCCEEDED(xpc->WrapNative(cx, 
+                                                NS_STATIC_CAST(nsIJSID*,nsid),
                                                 nsIJSCID::GetIID(),
                                                 &nsid_wrapper)))
                 {
