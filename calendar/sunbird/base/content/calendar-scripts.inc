@@ -42,6 +42,7 @@
 # ***** END LICENSE BLOCK *****
 
   <script type="application/x-javascript">
+    var confirmDeleteAllEvents = "&calendar.confirm.deleteallevents;";
     var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
     var confirmDeleteUntitledEvent = "&calendar.confirm.deleteuntitledevent;";
     var defaultCalendarFileName = "&calendar.file.default.name;";
