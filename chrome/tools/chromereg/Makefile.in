@@ -19,22 +19,28 @@
 # Contributor(s): 
 #
 
-DEPTH		= ..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base util datasource resources build
+REQUIRES	= xpcom \
+		  chrome \
+		  necko \
+		  string \
+		  rdf \
+		  $(NULL)
 
-ifndef MOZ_XUL_APP
-DIRS            += chrome
-endif
+CPPSRCS		= regchrome.cpp
 
-ifdef ENABLE_TESTS
-DIRS		+= tests
-endif
+SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
+
+LIBS		= \
+		$(LIBS_DIR) \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

@@ -215,7 +215,7 @@ tier_9_dirs	+= \
 		$(NULL)
 
 ifdef MOZ_XUL_APP
-tier_9_dirs	+= toolkit/components/history/public
+tier_9_dirs	+= toolkit/components/history/public chrome
 else
 tier_9_dirs	+= xpfe/components/history/public
 endif
