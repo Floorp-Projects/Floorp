@@ -59,6 +59,12 @@ bin\plugins\npnul32.dll
 bin\res\cmessage.txt
 bin\regxpcom.exe
 bin\xpicleanup.exe
+
+; LDAP components need to be in the browser for AutoConfig
+bin\nsldap32v50.dll
+bin\nsldappr32v50.dll
+bin\components\mozldap.xpt
+
 bin\components\accessibility.xpt
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
@@ -254,8 +260,6 @@ bin\res\builtin\platformHTMLBindings.xml
 
 [mail]
 bin\components\mail.dll
-bin\nsldap32v50.dll
-bin\nsldappr32v50.dll
 bin\components\addrbook.xpt
 bin\components\mailnewspublic.xpt
 bin\components\mime.xpt
@@ -269,7 +273,6 @@ bin\components\msgsearch.xpt
 bin\components\import.xpt
 bin\components\absync.xpt
 bin\components\nsLDAPPrefsService.js
-bin\components\mozldap.xpt
 bin\components\msgsmime.xpt
 bin\components\smime-service.js
 bin\components\msgmdn.xpt

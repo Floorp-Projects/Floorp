@@ -53,6 +53,9 @@ bin/mozilla-xremote-client
 bin/xpicleanup
 bin/res/cmessage.txt
 
+bin/libldap50.so
+bin/libprldap50.so
+bin/liblber50.so
 
 bin/components/accessibility.xpt
 bin/components/bookmarks.xpt
@@ -170,6 +173,7 @@ bin/components/progressDlg.xpt
 bin/components/nsDownloadProgressListener.js
 bin/components/transformiix.xpt
 bin/components/filepicker.xpt
+bin/components/mozldap.xpt
 
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
@@ -235,13 +239,9 @@ bin/res/builtin/platformHTMLBindings.xml
 
 [mail]
 bin/components/libmeta_mail.so
-bin/libldap50.so
-bin/liblber50.so
-bin/libprldap50.so
 bin/components/addrbook.xpt
 bin/components/mailnews.xpt
 bin/components/mime.xpt
-bin/components/mozldap.xpt
 bin/components/msgbase.xpt
 bin/components/msgcompose.xpt
 bin/components/msgdb.xpt

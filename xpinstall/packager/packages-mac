@@ -238,6 +238,12 @@ viewer:Components:necko.xpt
 viewer:Components:Cache.shlb 
 viewer:Components:cache.xpt
 
+; LDAP components need to be in the browser for AutoConfig
+viewer:Components:mozldap.shlb
+viewer:Components:mozldap.xpt
+viewer:Components:ldapAutoComplete.xpt
+viewer:Essential Files:LDAPClient.shlb
+
 viewer:chrome:help.jar
 viewer:chrome:comm.jar
 viewer:chrome:content-packs.jar
@@ -347,10 +353,6 @@ viewer:Components:msgImportComm4xM.xpt
 viewer:Components:AbSyncSvc.shlb 
 viewer:Components:AbSyncSvc.xpt
 viewer:Components:nsLDAPPrefsService.js 
-viewer:Components:mozldap.shlb
-viewer:Components:mozldap.xpt
-viewer:Components:ldapAutoComplete.xpt
-viewer:Essential Files:LDAPClient.shlb
 viewer:Components:msgsmime.shlb
 viewer:Components:msgsmime.xpt
 viewer:Components:smime-service.js

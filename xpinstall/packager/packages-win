@@ -266,6 +266,12 @@ bin\components\transformiix.dll
 bin\ISimpleDOMNodeMarshal.dll
 bin\ISimpleDOMDocumentMarshal.dll
 
+; LDAP components need to be in the browser for AutoConfig
+bin\components\mozldap.dll
+bin\components\mozldap.xpt
+bin\nsldap32v50.dll
+bin\nsldappr32v50.dll
+
 ; chrome stuff
 bin\chrome\help.jar
 bin\chrome\comm.jar
@@ -368,10 +374,6 @@ bin\components\impComm4xMail.xpt
 bin\components\absyncsv.dll
 bin\components\absync.xpt
 bin\components\nsLDAPPrefsService.js
-bin\components\mozldap.dll
-bin\components\mozldap.xpt
-bin\nsldap32v50.dll
-bin\nsldappr32v50.dll
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
 bin\components\msgsmime.dll
