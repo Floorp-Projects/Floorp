@@ -129,6 +129,11 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	return res;
 }
 
+// 
+// From bug #5564, it looks likes these functions are no longer needed on Windows and actually case
+//  performance problems, so I'm ifdef-ing them out. 
+//
+#if 0
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
@@ -184,6 +189,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
 
 extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char * path)
 {
+
   nsresult rv;
 
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
@@ -214,3 +220,5 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
+
+#endif
