@@ -51,24 +51,19 @@ interface nsIScriptError : nsIConsoleMessage
     readonly attribute PRUint32 flags;
 
     readonly attribute string category;
+
+    void init(in wstring message,
+              in wstring sourceName,
+              in wstring sourcLine,
+              in PRUint32 lineNumber,
+              in PRUint32 columnNumber,
+              in PRUint32 flags,
+              in string category);
 };
 
-// jband asks: save more info for debuggy stuff in console?
-// e.g. title of window, maybe weak reference to originating window?
-// maybe just way to get from url to loaded document.
+%{ C++
+#define NS_SCRIPTERROR_CID \
+{ 0xe38e53b9, 0x5bb0, 0x456a, { 0xb5, 0x53, 0x57, 0x93, 0x70, 0xcb, 0x15, 0x67 }}
 
-
-
-//  struct JSErrorReport {
-//      const char      *filename;      /* source file name, URL, etc., or null */
-//      uintN           lineno;         /* source line number */
-//      const char      *linebuf;       /* offending source line without final \n */
-//      const char      *tokenptr;      /* pointer to error token in linebuf */
-//      const jschar    *uclinebuf;     /* unicode (original) line buffer */
-//      const jschar    *uctokenptr;    /* unicode (original) token pointer */
-//      uintN	    flags;          /* error/warning, etc. */
-//      uintN           errorNumber;    /* the error number, e.g. see js.msg */
-//      const jschar    *ucmessage;     /* the (default) error message */
-//      const jschar    **messageArgs;  /* arguments for the error message */
-//  };
-
+#define NS_SCRIPTERROR_PROGID "scripterror"
+%}

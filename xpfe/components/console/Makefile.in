@@ -47,7 +47,6 @@ XPIDLSRCS	=				\
 		nsIConsoleMessage.idl		\
 		nsIConsoleListener.idl		\
 		nsIScriptError.idl		\
-		nsIScriptErrorLogger.idl	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -24,13 +24,16 @@
  * 'lil description of this file.
  */
 
+#ifndef __nsconsoleservice_h__
+#define __nsconsoleservice_h__
+
+
 #include "nsSupportsArray.h"
 #include "nsCOMPtr.h"
 
 #include "nsIConsoleService.h"
-#include "nsIScriptErrorLogger.h"
 
-class nsConsoleService : public nsIConsoleService, nsIScriptErrorLogger
+class nsConsoleService : public nsIConsoleService
 {
 public:
     nsConsoleService();
@@ -38,7 +41,6 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLESERVICE
-    NS_DECL_NSISCRIPTERRORLOGGER
 
 private:
     // Circular buffer of saved messages
@@ -56,3 +58,5 @@ private:
     // Listeners to notify whenever a new message is logged.
     nsCOMPtr<nsSupportsArray> mListeners;
 };
+
+#endif /* __nsconsoleservice_h__ */

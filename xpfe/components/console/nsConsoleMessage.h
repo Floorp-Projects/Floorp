@@ -19,6 +19,9 @@
  *
  */
 
+#ifndef __nsconsolemessage_h__
+#define __nsconsolemessage_h__
+
 #include "nsIConsoleMessage.h"
 #include "nsString.h"
 
@@ -38,3 +41,5 @@ public:
 private:
     nsAutoString mMessage;
 };
+
+#endif /* __nsconsolemessage_h__ */
