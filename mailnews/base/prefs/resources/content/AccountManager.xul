@@ -44,7 +44,9 @@
          <button class="dialog" value="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"/>
          <button class="dialog" value="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
          <box align="horizontal">
+<!-- taking out for PR2
            <button class="dialog" disabled="true" value="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
+-->
            <button class="dialog" disabled="true" value="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"/>
          </box>
 		</box>

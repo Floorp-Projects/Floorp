@@ -324,6 +324,7 @@ function updateButtons(tree,serverId) {
 
 function setEnabled(control, enabled)
 {
+  if (!control) return;
   if (enabled)
     control.removeAttribute("disabled");
   else
