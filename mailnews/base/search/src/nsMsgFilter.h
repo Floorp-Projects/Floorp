@@ -55,10 +55,6 @@ public:
 	nsMsgFilterTypeType	GetType() {return m_type;}
 	void			SetType(nsMsgFilterTypeType	type) {m_type = type;}
 	PRBool			GetEnabled() {return m_enabled;}
-	nsresult		GetName(nsCString *name);
-	nsresult		SetName(nsCString *name);
-	nsresult		SetDescription(nsCString *desc);
-	nsresult		GetDescription(nsCString *desc);
 	void			SetFilterScript(nsCString *filterName) ;
 	void			SetFilterList(nsMsgFilterList *filterList) ;
 	PRBool			IsRule() 

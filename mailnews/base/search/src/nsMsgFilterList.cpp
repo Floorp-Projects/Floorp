@@ -69,11 +69,7 @@ NS_IMETHODIMP nsMsgFilterList::CreateFilter(const char *name,class nsIMsgFilter 
 	nsMsgFilter *filter = new nsMsgFilter;
 	*aFilter = filter;
 	if (filter)
-	{
-		nsCAutoString strName(name);
-		filter->SetName(&strName);
-		return NS_OK;
-	}
+		filter->SetFilterName(name);
 	return NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -435,7 +431,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 				break;
 			}
 			filter->SetFilterList(this);
-			filter->SetName(&value);
+			filter->SetFilterName(value.GetBuffer());
 			m_curFilter = filter;
 			m_filters->AppendElement(filter);
 		}
@@ -446,7 +442,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 			break;
 		case nsMsgFilterAttribDescription:
 			if (m_curFilter)
-				m_curFilter->SetDescription(&value);
+				m_curFilter->SetFilterDesc(value.GetBuffer());
 			break;
 		case nsMsgFilterAttribType:
 			if (m_curFilter)

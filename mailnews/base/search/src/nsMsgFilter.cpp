@@ -100,21 +100,29 @@ NS_IMETHODIMP nsMsgFilter::SetEnabled(PRBool enabled)
 
 NS_IMETHODIMP nsMsgFilter::GetFilterName(char **name)
 {
+    NS_ENSURE_ARG_POINTER(name);
+    
+    *name = m_filterName.ToNewCString();
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetFilterName(const char *name)
 {
+    m_filterName.Assign(name);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetFilterDesc(char **description)
 {
+    NS_ENSURE_ARG_POINTER(description);
+
+    *description = m_description.ToNewCString();
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::SetFilterDesc(const char *description)
 {
+    m_description.Assign(description);
 	return NS_OK;
 }
 
@@ -288,38 +296,6 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
 void nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)
 {
 	m_filterList = filterList;
-}
-
-nsresult nsMsgFilter::GetName(nsCString *name)
-{
-	if (!name)
-		return NS_ERROR_NULL_POINTER;
-	*name = m_filterName;
-	return NS_OK;
-}
-
-nsresult nsMsgFilter::SetName(nsCString *name)
-{
-	if (!name)
-		return NS_ERROR_NULL_POINTER;
-	m_filterName = *name;
-	return NS_OK;
-}
-
-nsresult nsMsgFilter::SetDescription(nsCString *desc)
-{
-	if (!desc)
-		return NS_ERROR_NULL_POINTER;
-	m_description = *desc;
-	return NS_OK;
-}
-
-nsresult nsMsgFilter::GetDescription(nsCString *desc)
-{
-	if (!desc)
-		return NS_ERROR_NULL_POINTER;
-	*desc = m_description;
-	return NS_OK;
 }
 
 void nsMsgFilter::SetFilterScript(nsCString *fileName) 
