@@ -855,23 +855,23 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
   nsCOMPtr <nsIAtom> folderCreateAtom;
   if (!suppressNotification)
   {
-  if(NS_SUCCEEDED(rv) && child)
-  {
-    nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
-    nsCOMPtr<nsISupports> folderSupports;
-    rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
-    if(childSupports && NS_SUCCEEDED(rv))
-    {
-      NotifyItemAdded(folderSupports, childSupports, "folderView");
-      folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateCompleted"));
-      child->NotifyFolderEvent(folderCreateAtom);
+    if(NS_SUCCEEDED(rv) && child)
+    { 
+      nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
+      nsCOMPtr<nsISupports> folderSupports;
+      rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
+      if(childSupports && NS_SUCCEEDED(rv))
+      {
+        NotifyItemAdded(folderSupports, childSupports, "folderView");
+        folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateCompleted"));
+        child->NotifyFolderEvent(folderCreateAtom);
+      }
     }
-  }
-  else
-  {
-    folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateFailed"));
-    NotifyFolderEvent(folderCreateAtom);
-  }
+    else
+    {
+      folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateFailed"));
+      NotifyFolderEvent(folderCreateAtom);
+    }
   }
   return rv;
 }
