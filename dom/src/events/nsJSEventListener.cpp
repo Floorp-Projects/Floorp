@@ -194,12 +194,15 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       if (!JSVAL_IS_VOID(rval)) {
         aEvent->PreventDefault();
 
-        if (JSVAL_IS_STRING(rval)) {
+        // Set the text in the beforeUnload event as long as it wasn't
+        // already set (through event.returnValue, which takes
+        // precedence over a value returned from a JS function in IE)
+        if (JSVAL_IS_STRING(rval) && beforeUnload->text.IsEmpty()) {
           beforeUnload->text = nsDependentJSString(JSVAL_TO_STRING(rval));
         }
       }
     } else if (JSVAL_IS_BOOLEAN(rval)) {
-      // if the handler returned false and its sense is not reversed,
+      // If the handler returned false and its sense is not reversed,
       // or the handler returned true and its sense is reversed from
       // the usual (false means cancel), then prevent default.
 

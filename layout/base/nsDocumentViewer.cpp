@@ -1078,7 +1078,8 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
     mInPermitUnload = PR_FALSE;
   }
 
-  if (NS_SUCCEEDED(rv) && event.flags & NS_EVENT_FLAG_NO_DEFAULT) {
+  if (NS_SUCCEEDED(rv) && (event.flags & NS_EVENT_FLAG_NO_DEFAULT ||
+                           !event.text.IsEmpty())) {
     // Ask the user if it's ok to unload the current page
 
     nsCOMPtr<nsIPrompt> prompt(do_GetInterface(mContainer));

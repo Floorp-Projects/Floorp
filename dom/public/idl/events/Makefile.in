@@ -65,6 +65,7 @@ XPIDLSRCS =					\
 	nsIDOMMutationEvent.idl			\
 	nsIDOMNSUIEvent.idl			\
 	nsIDOMPopupBlockedEvent.idl		\
+	nsIDOMBeforeUnloadEvent.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

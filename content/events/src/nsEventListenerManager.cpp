@@ -1689,6 +1689,11 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
     case NS_TEXT_EVENT:
       return NS_NewDOMTextEvent(aDOMEvent, aPresContext,
                                 NS_STATIC_CAST(nsTextEvent*,aEvent));
+    case NS_BEFORE_PAGE_UNLOAD_EVENT:
+      return
+        NS_NewDOMBeforeUnloadEvent(aDOMEvent, aPresContext,
+                                   NS_STATIC_CAST(nsBeforePageUnloadEvent*,
+                                                  aEvent));
     }
 
     // For all other types of events, create a vanilla event object.
