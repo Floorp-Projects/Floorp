@@ -21,10 +21,12 @@
 
 #include "nsISupports.h"
 #include "nsFont.h"
+
 class nsFormFrame;
 class nsIPresContext;
 class nsString;
 class nsIContent;
+class nsVoidArray;
 
 
 // IID for the nsIComboboxControlFrame class
@@ -45,25 +47,14 @@ public:
    * Sets the Drop Down List
    *
    */
-  NS_IMETHOD SetDropDown(nsIFrame* aPlaceHolderFrame, nsIFrame* aDropDownFrame) = 0;
-
-  /**
-   * Sets the Pseudo Style Contexts for the DropDown
-   *
-   */
-  NS_IMETHOD SetDropDownStyleContexts(nsIStyleContext * aVisible, nsIStyleContext * aHidden) = 0;
-
-  /**
-   * Sets the Pseudo Style Contexts for the Button
-   *
-   */
-  NS_IMETHOD SetButtonStyleContexts(nsIStyleContext * aOut, nsIStyleContext * aPressed) = 0;
+  NS_IMETHOD SetDropDown(nsIFrame* aDropDownFrame) = 0;
 
   /**
    * Notifies the Combobox the List was selected
    *
    */
   NS_IMETHOD ListWasSelected(nsIPresContext* aPresContext) = 0;
+
 
 };
 

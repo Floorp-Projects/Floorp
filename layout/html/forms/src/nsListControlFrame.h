@@ -43,13 +43,13 @@ public:
    // nsISupports
   NS_DECL_ISUPPORTS
 
+    // nsIFrame
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
 
-  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
-                          nsGUIEvent* aEvent,
-                          nsEventStatus& aEventStatus);
-  // nsIFrame
- 
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus);
+  
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
@@ -59,46 +59,23 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD Deselect();
-  
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext, nsDidReflowStatus aStatus);
 
-      // nsIFormControlFrame
+    // nsIFormControlFrame
+  NS_IMETHOD GetType(PRInt32* aType) const;
+  NS_IMETHOD GetName(nsString* aName);
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
-
-  NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
-
-  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
-                                           nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
-                                             float aPixToTwip, 
-                                             nscoord aInnerWidth,
-                                             nscoord aCharWidth) const;
-
-  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
-
+  NS_IMETHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                     nsFont&         aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-
-
-  /////////////////////////
-  // nsHTMLContainerFrame
-  /////////////////////////
-  virtual PRIntn GetSkipSides() const;
-
-  /////////////////////////
-  // nsIFormControlFrame
-  /////////////////////////
-  NS_IMETHOD GetType(PRInt32* aType) const;
-  NS_IMETHOD GetName(nsString* aName);
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void MouseClicked(nsIPresContext* aPresContext);
@@ -108,75 +85,85 @@ public:
   virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                  nsString* aValues, nsString* aNames);
   virtual void SetFormFrame(nsFormFrame* aFrame);
- 
-  // nsIListControlFrame
+  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+                                           nscoord aInnerHeight) const;
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+                                             float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const;
+  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
+
+    // nsHTMLContainerFrame
+  virtual PRIntn GetSkipSides() const;
+
+    // nsIListControlFrame
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
   NS_IMETHOD GetSelectedItem(nsString & aStr);
   NS_IMETHOD AboutToDropDown();
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
+  NS_IMETHOD GetMaximumSize(nsSize &aSize);
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
-  // Static Methods
+    // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
   static nsIDOMHTMLCollection*    GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull);
   static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRUint32 aIndex);
   static nsIContent* GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRUint32 aIndex);
   static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
 
-  nsIContent* GetOptionContent(PRUint32 aIndex);
-  PRBool IsContentSelected(nsIContent* aContent);
-  PRBool IsFrameSelected(PRUint32 aIndex);
-  void SetFrameSelected(PRUint32 aIndex, PRBool aSelected);
-  void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
-
 protected:
  
   nsListControlFrame();
   virtual ~nsListControlFrame();
 
-  // nsScrollFrame overrides
+   // nsScrollFrame overrides
    // Override the widget created for the list box so a Borderless top level widget is created
    // for drop-down lists.
-  virtual nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
-  virtual nsresult GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView);
-  PRInt32 GetNumberOfOptions();
+  virtual  nsresult CreateScrollingViewWidget(nsIView* aView,const nsStylePosition* aPosition);
+  virtual  nsresult GetScrollingParentView(nsIFrame* aParent, nsIView** aParentView);
+  PRInt32  GetNumberOfOptions();
 
-  nsIFrame * GetOptionFromChild(nsIFrame* aParentFrame);
-
+    // Utility methods
+  nsIContent* GetOptionContent(PRUint32 aIndex);
+  PRBool   IsContentSelected(nsIContent* aContent);
+  PRBool   IsFrameSelected(PRUint32 aIndex);
+  void     SetFrameSelected(PRUint32 aIndex, PRBool aSelected);
+  void     GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
+  nsresult Deselect();
+  nsIFrame *GetOptionFromChild(nsIFrame* aParentFrame);
   nsresult GetFrameForPointUsing(const nsPoint& aPoint,
                                  nsIAtom*       aList,
                                  nsIFrame**     aFrame);
-
-  // Utility methods
-  PRBool IsAncestor(nsIView* aAncestor, nsIView* aChild);
+  PRBool   IsAncestor(nsIView* aAncestor, nsIView* aChild);
   nsIView* GetViewFor(nsIWidget* aWidget);
   nsresult SyncViewWithFrame();
-  PRBool IsInDropDownMode();
-  PRBool IsOptionElement(nsIContent* aContent);
-  PRBool IsOptionElementFrame(nsIFrame *aFrame);
+  PRBool   IsInDropDownMode();
+  PRBool   IsOptionElement(nsIContent* aContent);
+  PRBool   IsOptionElementFrame(nsIFrame *aFrame);
   nsIFrame *GetSelectableFrame(nsIFrame *aFrame);
-  void DisplaySelected(nsIContent* aContent); 
-  void DisplayDeselected(nsIContent* aContent); 
-  void ForceRedraw();
-  PRBool IsOptionGroup(nsIFrame* aFrame);
-  void SingleSelection();
-  void MultipleSelection(PRBool aIsShift, PRBool aIsControl);
-  void SelectIndex(PRInt32 aIndex); 
-  void ToggleSelected(PRInt32 aIndex);
-  void ClearSelection();
-  void InitializeFromContent();
-  void ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue);
+  void     DisplaySelected(nsIContent* aContent); 
+  void     DisplayDeselected(nsIContent* aContent); 
+  void     ForceRedraw();
+  PRBool   IsOptionGroup(nsIFrame* aFrame);
+  void     SingleSelection();
+  void     MultipleSelection(PRBool aIsShift, PRBool aIsControl);
+  void     SelectIndex(PRInt32 aIndex); 
+  void     ToggleSelected(PRInt32 aIndex);
+  void     ClearSelection();
+  void     InitializeFromContent();
+  void     ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue);
 
-  NS_IMETHOD HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
-                                         nsGUIEvent*     aEvent,
-                                         nsEventStatus&  aEventStatus);
-  PRBool HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
-  void HandleListSelection(nsIPresContext& aPresContext, 
-                           nsGUIEvent*     aEvent,
-                           nsEventStatus&  aEventStatus);
-  NS_IMETHOD HandleLikeListEvent(nsIPresContext& aPresContext, 
-                                 nsGUIEvent*     aEvent,
-                                 nsEventStatus&  aEventStatus);
-  PRInt32 GetSelectedIndex(nsIFrame *aHitFrame);
+  nsresult HandleLikeDropDownListEvent(nsIPresContext& aPresContext, 
+                                       nsGUIEvent*     aEvent,
+                                       nsEventStatus&  aEventStatus);
+  PRBool   HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
+  void     HandleListSelection(nsIPresContext& aPresContext, 
+                               nsGUIEvent*     aEvent,
+                               nsEventStatus&  aEventStatus);
+  nsresult HandleLikeListEvent(nsIPresContext& aPresContext, 
+                               nsGUIEvent*     aEvent,
+                               nsEventStatus&  aEventStatus);
+  PRInt32  GetSelectedIndex(nsIFrame *aHitFrame);
 
   // Data Members
   nscoord      mBorderOffsetY;
@@ -194,6 +181,9 @@ protected:
   PRBool       mDisplayed;
   PRBool       mButtonDown;
   nsIFrame*    mLastFrame;
+  nscoord      mMaxWidth;
+  nscoord      mMaxHeight;
+  PRBool       mIsCapturingMouseEvents;
 };
 
 #endif /* nsListControlFrame_h___ */

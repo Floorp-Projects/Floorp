@@ -323,13 +323,20 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetFocus(void) = 0;
 
     /**
-     * Get this widget's dimension outside dimensions, or in otherswords
-     * the dimensions of the widget or window
+     * Get this widget's outside dimensions relative to it's parent widget
      *
      * @param aRect on return it holds the  x. y, width and height of this widget
      *
      */
     NS_IMETHOD GetBounds(nsRect &aRect) = 0;
+  
+    /**
+     * Get this widget's absolute outside dimensions, 
+     *
+     * @param aRect on return it holds the  x. y, width and height of this widget
+     *
+     */
+    NS_IMETHOD GetAbsoluteBounds(nsRect &aRect) = 0;
 
     /**
      * Get this widget's client area dimensions, if the window has a 3D border appearance

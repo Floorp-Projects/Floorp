@@ -67,6 +67,8 @@ nsFormControlFrame::nsFormControlFrame()
   mDidInit        = PR_FALSE;
   mWidget         = nsnull;
   mFormFrame      = nsnull;
+  mSuggestedWidth = NS_FORMSIZE_NOTSET;
+  mSuggestedHeight = NS_FORMSIZE_NOTSET;
 }
 
 nsFormControlFrame::~nsFormControlFrame()
@@ -734,4 +736,11 @@ nsresult nsFormControlFrame::RequiresWidget(PRBool & aRequiresWidget)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP nsFormControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+{
+  mSuggestedWidth = aWidth;
+  mSuggestedHeight = aHeight;
+  return NS_OK;
+}
 

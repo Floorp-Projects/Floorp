@@ -63,6 +63,12 @@ public:
    */
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents) = 0;
 
+  /**
+   * Returns the maximum width and height of an item in the listbox
+   */
+
+  NS_IMETHOD GetMaximumSize(nsSize &aSize) = 0;
+
 
 };
 

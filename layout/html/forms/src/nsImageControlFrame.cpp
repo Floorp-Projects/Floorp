@@ -117,6 +117,7 @@ public:
         // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 protected:
   void GetTranslatedRect(nsRect& aRect); // XXX this implementation is a copy of nsHTMLButtonControlFrame
@@ -450,5 +451,12 @@ NS_IMETHODIMP nsImageControlFrame::SetProperty(nsIAtom* aName, const nsString& a
 
 NS_IMETHODIMP nsImageControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImageControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
+{
+//  mSuggestedWidth = aWidth;
+//  mSuggestedHeight = aHeight;
   return NS_OK;
 }

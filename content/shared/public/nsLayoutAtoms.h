@@ -56,6 +56,7 @@ public:
   static nsIAtom* colGroupList;
   static nsIAtom* fixedList;
   static nsIAtom* floaterList;
+  static nsIAtom* popupList;
 
   // Alphabetical list of pseudo tag names for non-element content
   static nsIAtom* commentTagName;

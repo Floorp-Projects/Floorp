@@ -50,7 +50,6 @@ public:
       // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
-
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD Reflow(nsIPresContext&          aCX,
@@ -59,6 +58,7 @@ public:
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) { return NS_OK; };
 
   virtual PRInt32 GetMaxNumValues();
 

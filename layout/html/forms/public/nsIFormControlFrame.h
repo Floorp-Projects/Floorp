@@ -67,6 +67,25 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const = 0;
 
+
+  /**
+   * Set the suggested size for the form element. 
+   * This is used to control the size of the element during reflow if it hasn't had it's size
+   * explicitly set.
+   * @param aWidth width of the form element
+   * @param aHeight height of the form element
+   * @returns NS_OK 
+   */
+
+  NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) = 0;
+  
+  /**
+   * Determine if the control uses a native widget for rendering
+   * @param aRequiresWidget is set to PR_TRUE if it has a native widget, PR_FALSE otherwise.
+   * @returns NS_OK 
+   */
+
+
    /**
    * Determine if the control uses a native widget for rendering
    * @param aRequiresWidget is set to PR_TRUE if it has a native widget, PR_FALSE otherwise.
