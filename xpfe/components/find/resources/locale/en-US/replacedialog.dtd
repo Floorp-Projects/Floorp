@@ -1,7 +1,7 @@
 <!-- extracted from replacedialog.xul -->
 
-<!ENTITY replaceDialog.title "Replace in This Page">
-<!ENTITY replaceDialogFrame.title "Replace in This Frame">
+<!ENTITY replaceDialog.title "Find and Replace in this Page">
+<!ENTITY replaceDialogFrame.title "Find and Replace in this Frame">
 <!ENTITY findField.label "Find what:">
 <!ENTITY replaceField.label "Replace with:">
 <!ENTITY caseSensitiveCheckbox.label "Match upper/lower case">
