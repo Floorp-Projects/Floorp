@@ -343,7 +343,7 @@ nsStreamIOChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
   done:
     if (NS_FAILED(rv)) {
         nsresult rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);       // XXX fix error message
-        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveChannel failed");
+        NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
     }
@@ -403,7 +403,7 @@ nsStreamIOChannel::AsyncWrite(nsIInputStream *fromStream,
   done:
     if (NS_FAILED(rv)) {
         nsresult rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);       // XXX fix error message
-        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveChannel failed");
+        NS_ASSERTION(NS_SUCCEEDED(rv2), "RemoveChannel failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
     }
