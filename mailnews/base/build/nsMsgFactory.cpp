@@ -108,11 +108,12 @@ nsMsgFactory::nsMsgFactory(const nsCID &aClass,
 
 nsMsgFactory::~nsMsgFactory()   
 {
+
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
   
-  NS_IF_RELEASE(mServiceManager);
-  PL_strfree(mClassName);
-  PL_strfree(mProgID);
+	NS_IF_RELEASE(mServiceManager);
+	PL_strfree(mClassName);
+	PL_strfree(mProgID);
 }   
 
 nsresult
@@ -160,9 +161,7 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 	// do they want an RFC822 Parser interface ?
 	if (mClassID.Equals(kCMsgRFC822ParserCID)) 
 	{
-		res = NS_NewRFC822Parser((nsIMsgRFC822Parser **) &inst);
-		if (NS_FAILED(res))  // was there a problem creating the object ?
-		  return res;   
+		return NS_NewRFC822Parser(aIID, aResult);
 	}
 	else if (mClassID.Equals(kCMsgFolderEventCID)) 
 	{
@@ -171,61 +170,43 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 	}
 	else if (mClassID.Equals(kCMessengerBootstrapCID)) 
 	{
-		res = NS_NewMessengerBootstrap((nsIAppShellService**)&inst,
-                                   mServiceManager);
-		if (NS_FAILED(res)) return res;
+		return NS_NewMessengerBootstrap(aIID, aResult, mServiceManager);
 	}
 	else if (mClassID.Equals(kCMessengerCID)) 
 	{
-		res = NS_NewMessenger((nsIMessenger**)&inst);
-		if (NS_FAILED(res)) return res;
+		return NS_NewMessenger(aIID, aResult);
 	}
-#if 0                           // not implemented yet
-  else if (mClassID.Equals(kCMsgGroupRecordCID))
-  {
-    res = NS_NewMsgGroupRecord((nsIMsgGroupRecord **)&inst);
-    if (NS_FAILED(res)) return res;
-  }
-#endif
 	else if (mClassID.Equals(kCUrlListenerManagerCID))
 	{
 		nsUrlListenerManager * listener = nsnull;
 		listener = new nsUrlListenerManager();
 		if (listener == nsnull)
 			return NS_ERROR_OUT_OF_MEMORY;
-		listener->QueryInterface(nsIUrlListenerManager::GetIID(), (void **) &inst);
+		else
+			return listener->QueryInterface(aIID, aResult);
 	}
 	else if (mClassID.Equals(kCMsgMailSessionCID))
 	{
 		nsMsgMailSession * session = new nsMsgMailSession();
 		if (session == nsnull)
 			return NS_ERROR_OUT_OF_MEMORY;
-		session->QueryInterface(nsIMsgMailSession::GetIID(),  (void **) &inst);		
-
+		else
+			return session->QueryInterface(aIID,  aResult);		
 	}
 	else if (mClassID.Equals(kCMsgAppCoreCID)) 
 	{
-		res = NS_NewMsgAppCore((nsIDOMMsgAppCore **)&inst);
-		if (NS_FAILED(res)) return res;
+		return NS_NewMsgAppCore(aIID, aResult);
 	}
 	else if (mClassID.Equals(kCMessageViewDataSourceCID))
 	{
-		inst = NS_STATIC_CAST(nsIRDFCompositeDataSource*, new nsMessageViewDataSource());
-
+		nsMessageViewDataSource * msgView = new nsMessageViewDataSource();
+		if (msgView)
+			return msgView->QueryInterface(aIID, aResult);
+		else
+			return NS_ERROR_OUT_OF_MEMORY;
 	}
-	// End of checking the interface ID code....
-	if (inst) 
-	{
-		// so we now have the class that supports the desired interface...we need to turn around and
-		// query for our desired interface.....
-		res = inst->QueryInterface(aIID, aResult);
-		if (res != NS_OK)  // if the query interface failed for some reason, then the object did not get ref counted...delete it.
-			delete inst; 
-	}
-	else
-		res = NS_ERROR_OUT_OF_MEMORY;
-
-  return res;  
+	
+	return NS_NOINTERFACE;  
 }  
 
 nsresult
