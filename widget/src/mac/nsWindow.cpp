@@ -214,8 +214,6 @@ Rect		bounds;
 		mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
 		mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
 		
-		mWindowRegion = NewRgn();
-		SetRectRgn(mWindowRegion,0,0,bounds.right,bounds.bottom);
 
 		mWindowMadeHere = PR_TRUE;
 		mIsMainWindow = PR_TRUE;
@@ -227,6 +225,9 @@ Rect		bounds;
 		mWindowMadeHere = PR_FALSE;
 		mIsMainWindow = PR_TRUE;		
 		}
+		
+	mWindowRegion = NewRgn();
+	SetRectRgn(mWindowRegion,0,0,bounds.right,bounds.bottom);
 	
   InitDeviceContext(aContext, (nsNativeWidget)mWindowPtr);
 }
@@ -263,7 +264,6 @@ void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent,
 		aWidgetParent->AddChild(this);
 		mWindowRecord = (WindowRecord*)aNativeParent;
 		mWindowPtr = (WindowPtr)aNativeParent;
-		
 		}
  
 	mWindowRegion = NewRgn();
@@ -934,30 +934,20 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
  **/
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
-  nsresult result ;
+nsresult	result;
+nsRect 		rr;
 
   // call the event callback 
-  if (mEventCallback) {
-
-    nsRect rr ;
-
-    /* 
-     * Maybe  ... some day ... somone will pull the invalid rect
-     * out of the paint message rather than drawing the whole thing...
-     */
+  if (mEventCallback) 
+  	{
+  	// currently we only update the entire widget instead of just the invalidated region
     GetBounds(rr);
-
-    rr.x = 0;
-    rr.y = 0;
-    
     event.rect = &rr;
 
     event.renderingContext = nsnull;
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
     
-    printf("Painting the Widget\n");
-        
     if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, 
 					      nsnull, 
 					      kRenderingContextIID, 
@@ -1232,10 +1222,11 @@ nsRect		rect;
 }
 
 //-------------------------------------------------------------------------
-//
-// This window got a paint event, this will find out which children should also get the paint event
-//
-//-------------------------------------------------------------------------
+/*  Go thru this widget and its childern and find out who intersects the region, and generate paint event.
+ *  @update  dc 08/28/98
+ *  @param   aTheRegion -- The region to paint
+ *  @return  nothing is returned
+ */
 void 
 nsWindow::DoPaintWidgets(RgnHandle	aTheRegion)
 {
@@ -1254,15 +1245,13 @@ nsPaintEvent 	pevent;
 		// traverse through all the nsWindows to find who needs to be painted
 		if (mChildren) 
 			{
-	    mChildren->ResetToLast();
-	    child = (nsWindow*)mChildren->Previous();
+	    mChildren->Reset();
+	    child = (nsWindow*)mChildren->Next();
 	    while(child)
         { 
         if (child->RgnIntersects(aTheRegion,thergn) ) 
           {
-          // go down this windows list
-          child->DoPaintWidgets(aTheRegion);
-          
+          // first paint or update this widget
           bounds = (**thergn).rgnBBox;
           rect.x = bounds.left;
           rect.y = bounds.top;
@@ -1278,8 +1267,11 @@ nsPaintEvent 	pevent;
 			    pevent.rect = &rect;
 			    pevent.time = 0; 
 			    child->OnPaint(pevent);
+			    
+			    // now go check out the childern
+          child->DoPaintWidgets(aTheRegion);
           }
-        child = (nsWindow*)mChildren->Previous();	
+        child = (nsWindow*)mChildren->Next();	
         }
 			}
 		}

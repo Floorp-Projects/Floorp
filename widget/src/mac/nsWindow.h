@@ -261,13 +261,14 @@ protected:
   } mInner;
   friend InnerSupport;
 
-private:
+// MAC SPECIFIC MEMBERS
+protected:
+	RgnHandle			mWindowRegion;				// the region defining this window
 	// parent window -- this is only used for the main window widget
 	WindowRecord	*mWindowRecord;
 	WindowPtr			mWindowPtr;
 	PRBool				mWindowMadeHere;			// if main window and we created, true
 	PRBool				mIsMainWindow;				// top level Mac window
-	RgnHandle			mWindowRegion;				// the region defining this window
 	
 	void InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aParentWidget);
 	
