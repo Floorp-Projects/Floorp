@@ -28,6 +28,9 @@
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
 
+NS_IMPL_ISUPPORTS1(nsRenderingContextGTK, nsIRenderingContext)
+
+
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
   gdk.x = ns.x; \
@@ -36,7 +39,6 @@
   gdk.height = ns.height; \
   PR_END_MACRO
 
-static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
 nsRenderingContextGTK::nsRenderingContextGTK()
 {
@@ -87,9 +89,6 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
   }
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRenderingContextGTK, kRenderingContextIID)
-NS_IMPL_ADDREF(nsRenderingContextGTK)
-NS_IMPL_RELEASE(nsRenderingContextGTK)
 
 NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
                                           nsIWidget *aWindow)
@@ -103,7 +102,6 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 
   if (mSurface)
   {
-#ifndef NS_GTK_REF
     // we want to ref the window here so that we can unref in the drawing surface.
     // otherwise, we can not unref and that causes windows that are created in the
     // drawing surface not to be freed.
@@ -120,9 +118,6 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
                            gdk_rgb_get_visual()->depth);
     }
 
-#else
-    GdkDrawable *win = (GdkDrawable *)aWindow->GetNativeData(NS_NATIVE_WINDOW);
-#endif
     GdkGC *gc = (GdkGC *)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
     mSurface->Init(win,gc);
 

@@ -38,8 +38,8 @@
 #define GDK_COLOR_TO_NS_RGB(c) \
   ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+NS_IMPL_ISUPPORTS1(nsDeviceContextGTK, nsIDeviceContext)
 
 nsDeviceContextGTK::nsDeviceContextGTK()
 {
@@ -63,12 +63,7 @@ nsDeviceContextGTK::~nsDeviceContextGTK()
 {
 }
 
-NS_IMPL_QUERY_INTERFACE(nsDeviceContextGTK, kDeviceContextIID)
-NS_IMPL_ADDREF(nsDeviceContextGTK)
-NS_IMPL_RELEASE(nsDeviceContextGTK)
-
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 
 NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
@@ -83,7 +78,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   if (!initialized) {
     initialized = 1;
     nsIPref* prefs = nsnull;
-    nsresult res = nsServiceManager::GetService(kPrefCID, kIPrefIID,
+    nsresult res = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
       (nsISupports**) &prefs);
     if (NS_SUCCEEDED(res) && prefs) {
       PRInt32 intVal = 96;
@@ -414,7 +409,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
   
   rv = nsComponentManager::CreateInstance(kCDeviceContextPS,
                                           nsnull,
-                                          nsIDeviceContextPS::GetIID(),
+                                          NS_GET_IID(nsIDeviceContextPS),
                                           (void **)&dcps);
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
@@ -423,7 +418,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
   dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
                             (nsIDeviceContext*)this);
 
-  rv = dcps->QueryInterface(nsIDeviceContext::GetIID(),
+  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
                             (void **)&aContext);
 
   NS_RELEASE(dcps);

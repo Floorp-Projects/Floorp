@@ -27,8 +27,7 @@
 #endif /* USE_SHM */
 #include "nsDrawingSurfaceGTK.h"
 
-static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
-static NS_DEFINE_IID(kIDrawingSurfaceGTKIID, NS_IDRAWING_SURFACE_GTK_IID);
+NS_IMPL_ISUPPORTS2(nsDrawingSurfaceGTK, nsIDrawingSurface, nsIDrawingSurfaceGTK)
 
 nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 {
@@ -71,45 +70,6 @@ nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
   if (mImage)
     ::gdk_image_destroy(mImage);
 }
-
-NS_IMETHODIMP nsDrawingSurfaceGTK :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(kIDrawingSurfaceIID))
-  {
-    nsIDrawingSurface* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kIDrawingSurfaceGTKIID))
-  {
-    nsDrawingSurfaceGTK* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    nsIDrawingSurface* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsDrawingSurfaceGTK);
-NS_IMPL_RELEASE(nsDrawingSurfaceGTK);
-
 
   /**
    * Lock a rect of a drawing surface and return a

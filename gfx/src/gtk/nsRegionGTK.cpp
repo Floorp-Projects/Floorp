@@ -37,9 +37,7 @@ nsRegionGTK::~nsRegionGTK()
   mRegion = nsnull;
 }
 
-NS_IMPL_QUERY_INTERFACE1(nsRegionGTK, nsIRegion)
-NS_IMPL_ADDREF(nsRegionGTK)
-NS_IMPL_RELEASE(nsRegionGTK)
+NS_IMPL_ISUPPORTS1(nsRegionGTK, nsIRegion)
 
 nsresult nsRegionGTK::Init(void)
 {
