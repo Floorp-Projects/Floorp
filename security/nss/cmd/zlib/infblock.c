@@ -250,10 +250,12 @@ int r;
                              &s->sub.trees.tb, z);
       if (t != Z_OK)
       {
-	ZFREE(z, s->sub.trees.blens);
         r = t;
         if (r == Z_DATA_ERROR)
+        {
+          ZFREE(z, s->sub.trees.blens);
           s->mode = BAD;
+        }
         LEAVE
       }
       s->sub.trees.index = 0;
@@ -318,11 +320,13 @@ int r;
 #endif
         t = inflate_trees_dynamic(257 + (t & 0x1f), 1 + ((t >> 5) & 0x1f),
                                   s->sub.trees.blens, &bl, &bd, &tl, &td, z);
-	ZFREE(z, s->sub.trees.blens);
         if (t != Z_OK)
         {
           if (t == (uInt)Z_DATA_ERROR)
+          {
+            ZFREE(z, s->sub.trees.blens);
             s->mode = BAD;
+          }
           r = t;
           LEAVE
         }
@@ -339,6 +343,7 @@ int r;
         s->sub.decode.tl = tl;
         s->sub.decode.td = td;
       }
+      ZFREE(z, s->sub.trees.blens);
       s->mode = CODES;
     case CODES:
       UPDATE
