@@ -117,7 +117,6 @@ public:
                           PRBool aWidthTransient, PRBool aHeightTransient);
   NS_IMETHOD GetContentBounds(nsRect& aBounds);
   NS_IMETHOD GetWindowBounds(nsRect& aBounds);
-  NS_IMETHOD ShowModally(PRBool aPrepare);
   NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);

@@ -1892,13 +1892,6 @@ nsBrowserWindow::GetWindowBounds(nsRect& aBounds)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::ShowModally(PRBool aPrepare)
-{
-  // unsupported by viewer
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsBrowserWindow::SetChrome(PRUint32 aChromeMask)
 {
   mChromeMask = aChromeMask;
