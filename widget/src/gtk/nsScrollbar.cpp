@@ -87,24 +87,16 @@ NS_METHOD nsScrollbar::CreateNative (GtkWidget * parentWindow)
 //-------------------------------------------------------------------------
 nsresult nsScrollbar::QueryInterface (const nsIID & aIID, void **aInstancePtr)
 {
-  if (aInstancePtr == NULL)
-    {
-      return NS_ERROR_NULL_POINTER;
+    nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
+
+    static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
+    if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
+        *aInstancePtr = (void*) ((nsIScrollbar*)this);
+        NS_ADDREF_THIS();
+        result = NS_OK;
     }
 
-  // get parent's interface
-  nsresult result = nsWidget::QueryInterface (aIID, aInstancePtr);
-
-  static NS_DEFINE_IID (kInsScrollbarIID, NS_ISCROLLBAR_IID);
-  // if not asking for parent, check for our interface IID
-  if (result == NS_NOINTERFACE && aIID.Equals (kInsScrollbarIID))
-    {
-      *aInstancePtr = (void *) ((nsIScrollbar *) this);
-      AddRef ();
-      result = NS_OK;
-    }
-
-  return result;
+    return result;
 }
 
 //-------------------------------------------------------------------------

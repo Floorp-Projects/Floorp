@@ -43,48 +43,48 @@ struct nsKeyConverter {
 };
 
 struct nsKeyConverter nsKeycodes[] = {
-  NS_VK_CANCEL,     GDK_Cancel,
-  NS_VK_BACK,       GDK_BackSpace,
-  NS_VK_TAB,        GDK_Tab,
-  NS_VK_CLEAR,      GDK_Clear,
-  NS_VK_RETURN,     GDK_Return,
-  NS_VK_SHIFT,      GDK_Shift_L,
-  NS_VK_SHIFT,      GDK_Shift_R,
-  NS_VK_CONTROL,    GDK_Control_L,
-  NS_VK_CONTROL,    GDK_Control_R,
-  NS_VK_ALT,        GDK_Alt_L,
-  NS_VK_ALT,        GDK_Alt_R,
-  NS_VK_PAUSE,      GDK_Pause,
-  NS_VK_CAPS_LOCK,  GDK_Caps_Lock,
-  NS_VK_ESCAPE,     GDK_Escape,
-  NS_VK_SPACE,      GDK_space,
-  NS_VK_PAGE_UP,    GDK_Page_Up,
-  NS_VK_PAGE_DOWN,  GDK_Page_Down,
-  NS_VK_END,        GDK_End,
-  NS_VK_HOME,       GDK_Home,
-  NS_VK_LEFT,       GDK_Left,
-  NS_VK_UP,         GDK_Up,
-  NS_VK_RIGHT,      GDK_Right,
-  NS_VK_DOWN,       GDK_Down,
-  NS_VK_PRINTSCREEN, GDK_Print,
-  NS_VK_INSERT,     GDK_Insert,
-  NS_VK_DELETE,     GDK_Delete,
+  { NS_VK_CANCEL,     GDK_Cancel },
+  { NS_VK_BACK,       GDK_BackSpace },
+  { NS_VK_TAB,        GDK_Tab },
+  { NS_VK_CLEAR,      GDK_Clear },
+  { NS_VK_RETURN,     GDK_Return },
+  { NS_VK_SHIFT,      GDK_Shift_L },
+  { NS_VK_SHIFT,      GDK_Shift_R },
+  { NS_VK_CONTROL,    GDK_Control_L },
+  { NS_VK_CONTROL,    GDK_Control_R },
+  { NS_VK_ALT,        GDK_Alt_L },
+  { NS_VK_ALT,        GDK_Alt_R },
+  { NS_VK_PAUSE,      GDK_Pause },
+  { NS_VK_CAPS_LOCK,  GDK_Caps_Lock },
+  { NS_VK_ESCAPE,     GDK_Escape },
+  { NS_VK_SPACE,      GDK_space },
+  { NS_VK_PAGE_UP,    GDK_Page_Up },
+  { NS_VK_PAGE_DOWN,  GDK_Page_Down },
+  { NS_VK_END,        GDK_End },
+  { NS_VK_HOME,       GDK_Home },
+  { NS_VK_LEFT,       GDK_Left },
+  { NS_VK_UP,         GDK_Up },
+  { NS_VK_RIGHT,      GDK_Right },
+  { NS_VK_DOWN,       GDK_Down },
+  { NS_VK_PRINTSCREEN, GDK_Print },
+  { NS_VK_INSERT,     GDK_Insert },
+  { NS_VK_DELETE,     GDK_Delete },
 
-  NS_VK_MULTIPLY,   GDK_KP_Multiply,
-  NS_VK_ADD,        GDK_KP_Add,
-  NS_VK_SEPARATOR,  GDK_KP_Separator,
-  NS_VK_SUBTRACT,   GDK_KP_Subtract,
-  NS_VK_DECIMAL,    GDK_KP_Decimal,
-  NS_VK_DIVIDE,     GDK_KP_Divide,
-  NS_VK_RETURN,      GDK_KP_Enter,
+  { NS_VK_MULTIPLY,   GDK_KP_Multiply },
+  { NS_VK_ADD,        GDK_KP_Add },
+  { NS_VK_SEPARATOR,  GDK_KP_Separator },
+  { NS_VK_SUBTRACT,   GDK_KP_Subtract },
+  { NS_VK_DECIMAL,    GDK_KP_Decimal },
+  { NS_VK_DIVIDE,     GDK_KP_Divide },
+  { NS_VK_RETURN,      GDK_KP_Enter },
 
-  NS_VK_COMMA,      GDK_comma,
-  NS_VK_PERIOD,     GDK_period,
-  NS_VK_SLASH,      GDK_slash,
+  { NS_VK_COMMA,      GDK_comma },
+  { NS_VK_PERIOD,     GDK_period },
+  { NS_VK_SLASH,      GDK_slash },
 //XXX: How do you get a BACK_QUOTE?  NS_VK_BACK_QUOTE, GDK_backquote,
-  NS_VK_OPEN_BRACKET, GDK_bracketleft,
-  NS_VK_CLOSE_BRACKET, GDK_bracketright,
-  NS_VK_QUOTE, GDK_quotedbl
+  { NS_VK_OPEN_BRACKET, GDK_bracketleft },
+  { NS_VK_CLOSE_BRACKET, GDK_bracketright },
+  { NS_VK_QUOTE, GDK_quotedbl }
 
 };
 
@@ -327,17 +327,6 @@ void InitFocusEvent(GdkEventFocus *aGEF,
   ==============================================================
   =============================================================
   ==============================================================*/
-
-static gboolean reset_resize_handler (gpointer data)
-{
-  nsWindow *win = (nsWindow *)data;
-  GtkWidget *w = GTK_WIDGET(win->GetNativeData(NS_NATIVE_WIDGET));
-  gtk_signal_connect_after(GTK_OBJECT(w),
-                       "size_allocate",
-                       GTK_SIGNAL_FUNC(handle_size_allocate),
-                       win);
-  return FALSE;
-}
 
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
@@ -740,8 +729,8 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 //==============================================================
 gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
 {
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
   nsFileWidget * widgetWindow = (nsFileWidget *) p ;
   if (p != nsnull) {
     widgetWindow->OnCancel();
@@ -754,8 +743,8 @@ gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
 //==============================================================
 gint nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
 {
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
+  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
   nsFileWidget * widgetWindow = (nsFileWidget *) p;
   if (p != nsnull) {
     widgetWindow->OnOk();
