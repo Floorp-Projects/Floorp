@@ -2,6 +2,7 @@ var editorShell;
 var toolkitCore;
 var tagName = "hr";
 var hLineElement;
+var tempLineElement;
 var percentChar = "";
 var maxPixels = 10000;
 var shading = true;
@@ -24,6 +25,13 @@ function Startup()
   if (!hLineElement) {
     // We should never be here if not editing an existing HLine
     dump("HLine is not selected! Shouldn't be here!\n");
+    window.close();
+    return;
+  }
+  // Create a temporary element to use with Save Settings as default
+  tempLineElement = window.editorShell.editorDocument.createElement("HR");
+  if (!hLineElement) {
+    dump("Temporary HLine element was not created!\n");
     window.close();
     return;
   }
@@ -89,8 +97,10 @@ function SetPixelOrPercent(percentString)
 
 function onSaveDefault()
 {
-  if (ValidateData()) {
-    editorShell.SaveHLineSettings(hLineElement);
+  // "false" means set attributes on the tempLineElement,
+  //   not the real element being edited
+  if (ValidateData(false)) {
+    editorShell.SaveHLineSettings(tempLineElement);
     dump("Saving HLine settings to preferences\n");
   }
 }
@@ -100,7 +110,7 @@ function onAdvanced()
   //TODO: Call the generic attribute editor ("extra HTML")
 }
 
-function ValidateData()
+function ValidateData(setAttributes)
 {
   // Height is always pixels
   height = ValidateNumberString(dialog.heightInput.value, 1, maxPixels);
@@ -110,7 +120,11 @@ function ValidateData()
     return false;
   }
   dump("Setting height="+height+"\n");
-  hLineElement.setAttribute("height", height);
+  if (setAttributes) {
+    hLineElement.setAttribute("height", height);
+  } else {
+    hLineElement.setAttribute("height", height);
+  }
 
   var maxLimit;
   dump("Validate width. PercentChar="+percentChar+"\n");
@@ -128,7 +142,12 @@ function ValidateData()
   }
   width = width + percentChar;
   dump("Height="+height+" Width="+width+"\n");
-  hLineElement.setAttribute("width", width);
+  if (setAttributes) {
+    hLineElement.setAttribute("width", width);
+  } else {
+    tempLineElement.setAttribute("width", width);
+  }
+
 
   align = "left";
   if (dialog.centerAlign.checked) {
@@ -136,12 +155,24 @@ function ValidateData()
   } else if (dialog.rightAlign.checked) {
     align = "right";
   }
-  hLineElement.setAttribute("align", align);
+  if (setAttributes) {
+    hLineElement.setAttribute("align", align);
+  } else {
+    tempLineElement.setAttribute("align", align);
+  }
 
   if (dialog.shading.checked) {
-    hLineElement.removeAttribute("noshade");
+    if (setAttributes) {
+      hLineElement.removeAttribute("noshade");
+    } else {
+      tempLineElement.removeAttribute("noshade");
+    }
   } else {
-    hLineElement.setAttribute("noshade", "");
+    if (setAttributes) {
+      hLineElement.setAttribute("noshade", "");
+    } else {
+      tempLineElement.setAttribute("noshade", "");
+    }
   }
   return true;
 }
@@ -151,7 +182,7 @@ function onOK()
   // Since we only edit existing HLines, 
   //  ValidateData will set the new attributes
   //   so there's nothing else to do
-  if (ValidateData()) {
+  if (ValidateData(true)) {
     window.close();
     dump("CLOSING EdHLineProps\n");
   }  

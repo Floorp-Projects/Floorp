@@ -301,6 +301,20 @@
   <box id="outer-box" align="vertical">
     <toolbox>
       <toolbar>
+	      <titledbutton src="chrome://editor/skin/images/ED_NewFile.gif" align="bottom" value="New" class="popup" onclick="EditorNew()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_OpenFile.gif" align="bottom" value="Open" class="popup" onclick="EditorOpen()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_SaveFile.gif" align="bottom" value="Save" class="popup" onclick="EditorSave()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Publish.gif" align="bottom" value="Publish" class="popup"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Preview.gif" align="bottom" value="Preview" class="popup"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Print.gif" align="bottom" value="Print" class="popup"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Find.gif" align="bottom" value="Find" onclick="EditorFind()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" value="Link" onclick="EditorInsertLink()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" value="Image" onclick="EditorInsertImage()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Target.gif" align="bottom" value="Anchor" onclick="EditorInsertNamedAnchor()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="bottom" value="H.Line" onclick="EditorInsertHLine()"/>
+	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" value="Spell" class="popup" onclick="CheckSpelling()"/>
+      </toolbar>
+      <toolbar>
 		    <titledbutton id="ParagraphPopup" value="Paragraph" class="popup" align="left" popup="ParagraphMenu"/>
 		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceMenu"/>
 		    <titledbutton id="FontSizePopup" value="Size" class="popup" align="left" popup="FontSizeMenu"/>
@@ -317,10 +331,6 @@
 	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="bottom" onclick="EditorIndent('outdent')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="bottom" onclick="EditorIndent('indent')"/>
 	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="bottom" class="popup" popup="AlignmentMenu"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="bottom" onclick="EditorInsertLink()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="bottom" onclick= "EditorInsertImage()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="bottom" onclick= "EditorInsertHLine()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="bottom" class="popup" onclick="CheckSpelling()"/>
       </toolbar>
     </toolbox>
 

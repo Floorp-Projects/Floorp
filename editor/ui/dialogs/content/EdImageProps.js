@@ -101,7 +101,6 @@ function onAdvanced()
     //dialog.AdvancedRow.style.display = "table-row";
     dialog.AdvancedRow.style.visibility = "visible";
   }
-
 }
 
 function SelectWidthUnits()

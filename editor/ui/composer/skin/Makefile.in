@@ -56,6 +56,13 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/images/ED_BackColor.gif \
 	$(srcdir)/images/ED_Align.gif \
 	$(srcdir)/images/ED_ObjectPopup.gif \
+	$(srcdir)/images/ED_NewFile.gif \
+	$(srcdir)/images/ED_OpenFile.gif \
+	$(srcdir)/images/ED_SaveFile.gif \
+	$(srcdir)/images/ED_Publish.gif \
+	$(srcdir)/images/ED_Preview.gif \
+	$(srcdir)/images/ED_Print.gif \
+	$(srcdir)/images/ED_Find.gif \
 	$(NULL)
 
 install:: 
