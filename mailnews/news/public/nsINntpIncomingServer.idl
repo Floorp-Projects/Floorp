@@ -22,5 +22,8 @@
 [scriptable, uuid(21ea0654-f773-11d2-8aec-004005263078)]
 interface nsINntpIncomingServer : nsISupports {
 	/* the on-disk path to the newsrc file for this server */
-	attribute nsIFileSpec newsrcFilePath;  
+	attribute nsIFileSpec newsrcFilePath;
+
+    /* the newsrc root path (the directories all the newsrc files live) */
+    attribute nsIFileSpec newsrcRootPath;
 };

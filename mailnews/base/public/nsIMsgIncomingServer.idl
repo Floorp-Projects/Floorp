@@ -68,7 +68,7 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* the on-disk path to message storage for this server */
   attribute nsIFileSpec localPath;
-
+ 
   /* the RDF URI for the root mail folder */
   readonly attribute string serverURI;
 
@@ -79,6 +79,9 @@ interface nsIMsgIncomingServer : nsISupports {
      This is used to help us prevent multiple get new msg commands from
 	 going off at the same time. */
   attribute boolean serverBusy;
+
+  /* we use this to set the default local path.  we use this when migrating prefs */
+  void SetDefaultLocalPath(in nsIFileSpec aDefaultLocalPath);
 
   /* do a biff */
   void PerformBiff();

@@ -497,6 +497,23 @@ NS_IMETHODIMP nsMsgIncomingServer::GetPassword(PRBool aWithUI, char ** aPassword
 }
 
 NS_IMETHODIMP
+nsMsgIncomingServer::SetDefaultLocalPath(nsIFileSpec *aDefaultLocalPath)
+{
+    nsresult rv;
+    nsXPIDLCString type;
+    GetType(getter_Copies(type));
+
+    nsCAutoString progid(NS_MSGPROTOCOLINFO_PROGID_PREFIX);
+    progid += type;
+
+    NS_WITH_SERVICE(nsIMsgProtocolInfo, protocolInfo, progid, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = protocolInfo->SetDefaultLocalPath(aDefaultLocalPath);
+    return rv;
+}
+
+NS_IMETHODIMP
 nsMsgIncomingServer::GetLocalPath(nsIFileSpec **aLocalPath)
 {
     nsresult rv;
@@ -547,7 +564,7 @@ nsMsgIncomingServer::SetLocalPath(nsIFileSpec *spec)
         return SetFileValue("directory", spec);
     }
     else {
-	return NS_ERROR_NULL_POINTER;
+        return NS_ERROR_NULL_POINTER;
     }
 }
 

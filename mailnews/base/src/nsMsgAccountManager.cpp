@@ -27,7 +27,6 @@
 #include "nsCOMPtr.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "prenv.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgBiffManager.h"
@@ -93,12 +92,6 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #define NEW_MAIL_DIR_NAME	"Mail"
 #define NEW_NEWS_DIR_NAME	"News"
 #define NEW_IMAPMAIL_DIR_NAME	"ImapMail"
-
-#define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"
-#define PREF_MAIL_ROOT_POP3	"mail.root.pop3"
-#define PREF_MAIL_ROOT_IMAP	"mail.root.imap"
-#define PREF_MAIL_ROOT_NONE	"mail.root.none"
-#define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 
 /* we are going to clear these after migration */
 #define PREF_4X_MAIL_IDENTITY_USEREMAIL "mail.identity.useremail"
@@ -303,6 +296,8 @@ public:
 private:
 
   PRBool m_accountsLoaded;
+  PRBool m_alreadySetNntpDefaultLocalPath;
+  PRBool m_alreadySetImapDefaultLocalPath;
   
   nsISupportsArray *m_accounts;
   nsHashtable m_identities;
@@ -386,15 +381,14 @@ private:
   
   nsresult MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostname);
   
-  nsresult MigratePopAccounts(nsIMsgIdentity *identity);
+  nsresult MigratePopAccount(nsIMsgIdentity *identity);
   
-  nsresult MigrateLocalMailAccounts(nsIMsgIdentity *identity);
+  nsresult MigrateLocalMailAccount(nsIMsgIdentity *identity);
   nsresult MigrateOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
   
   nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
   nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, nsFileSpec &newsrcfile);
-  nsresult SetServerRootPref(const char *pref_name, nsFileSpec & dir);
 
   nsresult ProceedWithMigration(PRInt32 oldMailType);
   
@@ -442,6 +436,9 @@ nsMsgAccountManager::nsMsgAccountManager() :
 {
   NS_INIT_REFCNT();
   NS_NewISupportsArray(&m_accounts);
+
+  m_alreadySetImapDefaultLocalPath = PR_FALSE;
+  m_alreadySetNntpDefaultLocalPath = PR_FALSE;
 }
 
 nsMsgAccountManager::~nsMsgAccountManager()
@@ -1230,56 +1227,12 @@ nsMsgAccountManager::UpgradePrefs()
     rv = ProceedWithMigration(oldMailType);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_ACCOUNTMANAGER
-	printf("FAIL:  don't proceed with migration.\n");
+      printf("FAIL:  don't proceed with migration.\n");
 #endif
-	// because we are failing to migrate, the mail.root.* prefs
-	// will not be set.  we set them here.
-	NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-        if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
-
-        nsCOMPtr <nsIFileSpec> spec;
-        rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(spec));
-        if (NS_FAILED(rv) || !spec) return NS_ERROR_FAILURE; 
-
-	// both "none" and "pop3" are rooted at <profile>/Mail
-	rv = spec->AppendRelativeUnixPath(NEW_MAIL_DIR_NAME);
-	if (NS_FAILED(rv)) return rv;
-        NS_ASSERTION(m_prefs,"m_prefs is null");
-  	if (!m_prefs) return NS_ERROR_FAILURE;
-
-  	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_NONE, spec, PR_FALSE /* set default */);
-	if (NS_FAILED(rv)) return rv;
-  	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_POP3, spec, PR_FALSE /* set default */);
-	if (NS_FAILED(rv)) return rv;
- 
-	// "nntp" is rooted at <profile>/News
-	rv = spec->SetLeafName(NEW_NEWS_DIR_NAME);
-	if (NS_FAILED(rv)) return rv;
-  	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_NNTP, spec, PR_FALSE /* set default */);
-	if (NS_FAILED(rv)) return rv;
-
-	// root the newsrc files to <profile>/News, except on UNIX
-	// on UNIX, set it to ~.
-	// this may change
-#ifdef XP_UNIX
-	char *unixHomeDirectory = PR_GetEnv("HOME");
-	rv = m_prefs->SetCharPref(PREF_MAIL_NEWSRC_ROOT, unixHomeDirectory);
-        if (NS_FAILED(rv)) return rv;
-#else
-	rv = m_prefs->SetFilePref(PREF_MAIL_NEWSRC_ROOT, spec, PR_FALSE /* set default */);
-        if (NS_FAILED(rv)) return rv;
-#endif	/* XP_UNIX */
-
-	// "imap" is rooted at <profile>/ImapMail
-	rv = spec->SetLeafName(NEW_IMAPMAIL_DIR_NAME);
-	if (NS_FAILED(rv)) return rv;
-  	rv = m_prefs->SetFilePref(PREF_MAIL_ROOT_IMAP, spec, PR_FALSE /* set default */);
-	if (NS_FAILED(rv)) return rv;
-	
-	// return NS_ERROR_FAILURE because we failed to upgrade the pref.js
-	// by returning a failure code, this will case the Account Wizard
-	// to be automatically opened.
-	return NS_ERROR_FAILURE;
+      // return NS_ERROR_FAILURE because we failed to upgrade the pref.js
+      // by returning a failure code, this will case the Account Wizard
+      // to be automatically opened.
+      return rv;
     }
 #ifdef DEBUG_ACCOUNTMANAGER
     else {
@@ -1295,17 +1248,18 @@ nsMsgAccountManager::UpgradePrefs()
     rv = MigrateIdentity(identity);
     if (NS_FAILED(rv)) return rv;    
     
-    if ( oldMailType == POP_4X_MAIL_TYPE) {  
-      rv = MigratePopAccounts(identity);
+    if ( oldMailType == POP_4X_MAIL_TYPE) {
+      // in 4.x, you could only have one pop account
+      rv = MigratePopAccount(identity);
       if (NS_FAILED(rv)) return rv;
 	}
     else if (oldMailType == IMAP_4X_MAIL_TYPE) {
       rv = MigrateImapAccounts(identity);
       if (NS_FAILED(rv)) return rv;
       
-      // if they had IMAP, they also had "Local Mail"
+      // if they had IMAP, they also had one "Local Mail"
       // we need to migrate that, too.  
-      rv = MigrateLocalMailAccounts(identity);
+      rv = MigrateLocalMailAccount(identity);
       if (NS_FAILED(rv)) return rv;
 	}
     else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
@@ -1507,7 +1461,7 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
 }
 
 nsresult
-nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity) 
+nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity) 
 {
   nsresult rv;
   
@@ -1520,6 +1474,9 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = CreateIncomingServer("none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
+  // "none" is the type we use for migrate Local Mail
+  server->SetType("none");
+  server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
 
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
@@ -1546,10 +1503,6 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
   nsCOMPtr<nsINoIncomingServer> noServer;
   noServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) return rv;
-
-  // "none" is the type we use for migrate Local Mail
-  server->SetType("none");
-  server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
 
   // we don't want "nobody at Local Mail" to show up in the
   // folder pane, so we set the pretty name to "Local Mail"
@@ -1594,26 +1547,31 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
     }
   }
 
-  rv = SetServerRootPref(PREF_MAIL_ROOT_NONE, dir); 
-  if (NS_FAILED(rv)) return rv;
-
-  // at this point, dir == the directory that will contain the "Local Mail" folder.
-  // "Local Mail" in 4.x was under Users/sspitzer/Mail
-  // in 5.0, it's under Users50/sspitzer/Mail/Local Mail.
-  dir += LOCAL_MAIL_FAKE_HOST_NAME;
-  
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(mailDir));
   if (NS_FAILED(rv)) return rv;
-  
+
+  // set the default local path for "none"
+  server->SetDefaultLocalPath(mailDir);
+  if (NS_FAILED(rv)) return rv;
+
   rv = mailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
   
   if (!dirExists) {
     mailDir->CreateDir();
   }
+
+  // we want .../Mail/Local Mail, not .../Mail
+  // at this point, dir == the directory that will contain the "Local Mail" folder.
+  // "Local Mail" in 4.x was under Users/sspitzer/Mail
+  // in 5.0, it's under Users50/sspitzer/Mail/Local Mail.
+  rv = mailDir->AppendRelativeUnixPath(LOCAL_MAIL_FAKE_HOST_NAME);
+  if (NS_FAILED(rv)) return rv;
   
-  server->SetLocalPath(mailDir);
-  
+  // set the local path for this "none" server
+  rv = server->SetLocalPath(mailDir);
+  if (NS_FAILED(rv)) return rv;
+    
   rv = mailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
   
@@ -1625,7 +1583,7 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
 }
 
 nsresult
-nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
+nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
 {
   nsresult rv;
   
@@ -1666,6 +1624,9 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   if (NS_SUCCEEDED(rv)) {
     server->SetHostName(hostname);
   }
+  else {
+    return rv;
+  }
 
   rv = MigrateOldPopPrefs(server, hostname);
   if (NS_FAILED(rv)) return rv;
@@ -1704,16 +1665,14 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
       dir.CreateDir();
     }
   }
-  rv = SetServerRootPref(PREF_MAIL_ROOT_POP3, dir); 
-  if (NS_FAILED(rv)) return rv;
-  
-  // we want .../Mail/<hostname>, not .../Mail
-  dir += hostname;
-  PR_FREEIF(hostname);
-  
+
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(mailDir));
   if (NS_FAILED(rv)) return rv;
-  
+
+  // set the default local path for "pop3"
+  server->SetDefaultLocalPath(mailDir);
+  if (NS_FAILED(rv)) return rv;
+
   rv = mailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
   
@@ -1721,15 +1680,22 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     mailDir->CreateDir();
   }
 
-  server->SetLocalPath(mailDir);
+  // we want .../Mail/<hostname>, not .../Mail
+  rv = mailDir->AppendRelativeUnixPath(hostname);
+  PR_FREEIF(hostname);
+  if (NS_FAILED(rv)) return rv;
   
+  // set the local path for this "pop3" server
+  rv = server->SetLocalPath(mailDir);
+  if (NS_FAILED(rv)) return rv;
+    
   rv = mailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
   
   if (!dirExists) {
     mailDir->CreateDir();
   }
-
+    
   return NS_OK;
 }
 
@@ -1824,7 +1790,9 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = CreateIncomingServer("imap", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
-
+  server->SetType("imap");
+  server->SetHostName((char *)hostname);
+  
   // create the identity
   nsCOMPtr<nsIMsgIdentity> copied_identity;
   rv = CreateIdentity(getter_AddRefs(copied_identity));
@@ -1850,9 +1818,6 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   
   rv = profile->GetCurrentProfileDir(&profileDir);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  
-  server->SetType("imap");
-  server->SetHostName((char *)hostname);
   
   rv = MigrateOldImapPrefs(server, hostname);
   if (NS_FAILED(rv)) return rv;
@@ -1882,17 +1847,26 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     }
   }
 
-  rv = SetServerRootPref(PREF_MAIL_ROOT_IMAP, dir); 
-  if (NS_FAILED(rv)) return rv;
-  
-  // we want .../ImapMail/<hostname>, not .../ImapMail
-  dir += hostname;
-  
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(imapMailDir));
   if (NS_FAILED(rv)) return rv;
 
-  server->SetLocalPath(imapMailDir);
+  // we only need to do this once
+  if (!m_alreadySetImapDefaultLocalPath) {
+    // set the default local path for "imap"
+    server->SetDefaultLocalPath(imapMailDir);
+    if (NS_FAILED(rv)) return rv;
+
+    m_alreadySetImapDefaultLocalPath = PR_TRUE;
+  }
   
+  // we want .../ImapMail/<hostname>, not .../ImapMail
+  rv = imapMailDir->AppendRelativeUnixPath(hostname);
+  if (NS_FAILED(rv)) return rv;
+
+  // set the local path for this "imap" server
+  rv = server->SetLocalPath(imapMailDir);
+  if (NS_FAILED(rv)) return rv;
+   
   rv = imapMailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
   
@@ -1992,10 +1966,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 		newsHostsDir.CreateDir();
       }
     }
-
-    rv = SetServerRootPref(PREF_MAIL_ROOT_NNTP, newsHostsDir); 
-    if (NS_FAILED(rv)) return rv;
-
+    
 #ifdef USE_NEWSRC_MAP_FILE	
     // if we are using the fat file, it lives in the newsHostsDir.
     newsrcDir = newsHostsDir;
@@ -2151,9 +2122,6 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
     }
 #endif /* USE_NEWSRC_MAP_FILE */
 
-    rv = SetServerRootPref(PREF_MAIL_NEWSRC_ROOT, newsrcDir); 
-    if (NS_FAILED(rv)) return rv;
-
 	return NS_OK;
 }
 
@@ -2162,7 +2130,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 {  
 	nsresult rv;
 	nsFileSpec thisNewsHostsDir = newsHostsDir;
-        if (!identity) return NS_ERROR_NULL_POINTER;
+    if (!identity) return NS_ERROR_NULL_POINTER;
 	if (!hostname) return NS_ERROR_NULL_POINTER;
 
     // create the account
@@ -2174,9 +2142,42 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	nsCOMPtr<nsIMsgIncomingServer> server;
     rv = CreateIncomingServer("nntp", getter_AddRefs(server));
 	if (NS_FAILED(rv)) return rv;
+	// now upgrade all the prefs
+	server->SetType("nntp");
+    server->SetHostName((char *)hostname);
 
+    // we only need to do this once
+    if (!m_alreadySetNntpDefaultLocalPath) {
+      nsCOMPtr <nsIFileSpec>nntpRootDir;
+      rv = NS_NewFileSpecWithSpec(newsHostsDir, getter_AddRefs(nntpRootDir));
+      if (NS_FAILED(rv)) return rv;
+      
+      // set the default local path for "nntp"
+      server->SetDefaultLocalPath(nntpRootDir);
+      if (NS_FAILED(rv)) return rv;
+
+      // set the newsrc root for "nntp"
+      // we really want <profile>/News or /home/sspitzer/
+      // not <profile>/News/news.rc or /home/sspitzer/.newsrc-news
+      nsFileSpec newsrcFileDir;
+      newsrcfile.GetParent(newsrcFileDir);
+      if (NS_FAILED(rv)) return rv;
+      
+      nsCOMPtr <nsIFileSpec>newsrcRootDir;
+      rv = NS_NewFileSpecWithSpec(newsrcFileDir, getter_AddRefs(newsrcRootDir));
+      if (NS_FAILED(rv)) return rv;
+            
+      nsCOMPtr<nsINntpIncomingServer> nntpServer;
+      nntpServer = do_QueryInterface(server, &rv);
+      if (NS_FAILED(rv)) return rv;
+      rv = nntpServer->SetNewsrcRootPath(newsrcRootDir);
+      if (NS_FAILED(rv)) return rv;
+            
+      m_alreadySetNntpDefaultLocalPath = PR_TRUE;
+    }
+    
     // create the identity
-	nsCOMPtr<nsIMsgIdentity> copied_identity;
+    nsCOMPtr<nsIMsgIdentity> copied_identity;
     rv = CreateIdentity(getter_AddRefs(copied_identity));
 	if (NS_FAILED(rv)) return rv;
 
@@ -2192,10 +2193,6 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	account->SetIncomingServer(server);
 	account->AddIdentity(copied_identity);
 	
-	// now upgrade all the prefs
-	server->SetType("nntp");
-    server->SetHostName((char *)hostname);
-
     rv = MigrateOldNntpPrefs(server, hostname, newsrcfile);
     if (NS_FAILED(rv)) return rv;
 		
@@ -2212,8 +2209,10 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	rv = NS_NewFileSpecWithSpec(thisNewsHostsDir, getter_AddRefs(newsDir));
 	if (NS_FAILED(rv)) return rv;
 
-    server->SetLocalPath(newsDir);
-		
+    // set the local path for this "nntp" server
+    rv = server->SetLocalPath(newsDir);
+    if (NS_FAILED(rv)) return rv;
+    
 	rv = newsDir->Exists(&dirExists);
 	if (NS_FAILED(rv)) return rv;
     	
@@ -2503,22 +2502,6 @@ nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
   }
 
   return PR_TRUE;
-}
-
-nsresult
-nsMsgAccountManager::SetServerRootPref(const char *pref_name, nsFileSpec & dir)
-{
-  nsresult rv;
-  if (!pref_name) return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr <nsIFileSpec> dirForPrefs;
-  rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(dirForPrefs));
-  if (NS_FAILED(rv)) return rv;
-
-  NS_ASSERTION(m_prefs,"m_prefs is null");
-  if (!m_prefs) return NS_ERROR_FAILURE;
-  rv = m_prefs->SetFilePref(pref_name, dirForPrefs, PR_FALSE /* set default */);
-  return rv;
 }
 
 nsresult

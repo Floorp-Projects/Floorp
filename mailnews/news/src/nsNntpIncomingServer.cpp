@@ -19,14 +19,19 @@
 #include "nsNntpIncomingServer.h"
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
+#include "nsIProfile.h"
+#include "prenv.h"
 
 #ifdef DEBUG_seth
 #define DO_HASHING_OF_HOSTNAME 1
-#endif
+#endif /* DEBUG_seth */
 
 #ifdef DO_HASHING_OF_HOSTNAME
 #include "nsMsgUtils.h"
 #endif /* DO_HASHING_OF_HOSTNAME */
+
+#define NEW_NEWS_DIR_NAME        "News"
+#define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #define NEWSRC_FILE_PREFIX ".newsrc-"
@@ -34,7 +39,7 @@
 #define NEWSRC_FILE_PREFIX ""
 #endif /* XP_UNIX || XP_BEOS */
 
-static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);                            
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);                            
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
                             nsMsgIncomingServer,
@@ -58,28 +63,24 @@ nsNntpIncomingServer::GetNewsrcFilePath(nsIFileSpec **aNewsrcFilePath)
 	if (NS_SUCCEEDED(rv) && *aNewsrcFilePath) return rv;
 
 	nsCOMPtr<nsIFileSpec> path;
-        NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
-    	if (NS_FAILED(rv) || (!prefs)) {
-		return rv;
-    	}  
 
-	rv = prefs->GetFilePref("mail.newsrc_root", getter_AddRefs(path));
+	rv = GetNewsrcRootPath(getter_AddRefs(path));
 	if (NS_FAILED(rv)) return rv;
 
 	nsXPIDLCString hostname;
 	rv = GetHostName(getter_Copies(hostname));
 	if (NS_FAILED(rv)) return rv;
 
-        nsCAutoString newsrcFileName = NEWSRC_FILE_PREFIX;
+    nsCAutoString newsrcFileName = NEWSRC_FILE_PREFIX;
 	newsrcFileName += hostname;
 #ifdef DO_HASHING_OF_HOSTNAME
-    	NS_MsgHashIfNecessary(newsrcFileName);
+    NS_MsgHashIfNecessary(newsrcFileName);
 #endif /* DO_HASHING_OF_HOSTNAME */
 	path->AppendRelativeUnixPath(newsrcFileName);
 
 	SetNewsrcFilePath(path);
 
-        *aNewsrcFilePath = path;
+    *aNewsrcFilePath = path;
 	NS_ADDREF(*aNewsrcFilePath);
 
 	return NS_OK;
@@ -97,7 +98,7 @@ nsNntpIncomingServer::SetNewsrcFilePath(nsIFileSpec *spec)
     }
 }          
 
-nsresult
+NS_IMETHODIMP
 nsNntpIncomingServer::GetServerURI(char **uri)
 {
     nsresult rv;
@@ -119,5 +120,52 @@ nsNntpIncomingServer::GetServerURI(char **uri)
     return rv;
 }
 
+NS_IMETHODIMP
+nsNntpIncomingServer::SetNewsrcRootPath(nsIFileSpec *aNewsrcRootPath)
+{
+    nsresult rv;
+    
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefs) {
+        rv = prefs->SetFilePref(PREF_MAIL_NEWSRC_ROOT,aNewsrcRootPath, PR_FALSE /* set default */);
+        return rv;
+    }
+    else {
+        return NS_ERROR_FAILURE;
+    }
+}
 
+NS_IMETHODIMP
+nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
+{
+    nsresult rv;
+    nsFileSpec dir;
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->GetFilePref(PREF_MAIL_NEWSRC_ROOT, aNewsrcRootPath);
+    if (NS_SUCCEEDED(rv)) return rv;
+#ifdef XP_UNIX
+    // root the newsrc files to <profile>/News, except on UNIX
+    // on UNIX, set it to ~.
+    // this may change soon, and on UNIX, the default will also be <profile>/News
+    char *unixHomeDirectory = PR_GetEnv("HOME");
+    dir = unixHomeDirectory;
+#else
+    NS_WITH_SERVICE(nsIProfile, profile, NS_PROFILE_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = profile->GetCurrentProfileDir(&dir);
+    if (NS_FAILED(rv)) return rv;
+
+    dir += NEW_NEWS_DIR_NAME;
+#endif /* XP_UNIX */
+
+    rv = SetNewsrcRootPath(*aNewsrcRootPath);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = NS_NewFileSpecWithSpec(dir, aNewsrcRootPath);
+    return rv;
+}
 
