@@ -50,6 +50,7 @@
 #include "nsILocaleService.h"
 #include "plevent.h"
 #include "prmem.h"
+#include "prenv.h"
 #include "prnetdb.h"
 
 #include "nsCOMPtr.h"
@@ -355,6 +356,10 @@ static void InitializeMacOSXApp(int argc, char* argv[])
 }
 
 #endif /* XP_MACOSX */
+
+#ifdef MOZ_X11
+#include <X11/Xlib.h>
+#endif /* MOZ_X11 */
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
@@ -1392,7 +1397,7 @@ static nsresult DumpVersion(char *appname)
   nsresult rv = NS_OK;
   long buildID = NS_BUILD_ID;  // 10-digit number
 
-  printf("Mozilla %s, Copyright (c) 2003 mozilla.org", MOZILLA_VERSION);
+  printf("Mozilla %s, Copyright (c) 2003-2004 mozilla.org", MOZILLA_VERSION);
 
   if(buildID) {
     printf(", build %u\n", (unsigned int)buildID);
@@ -1569,6 +1574,30 @@ int main(int argc, char* argv[])
 #ifdef NS_TRACE_MALLOC
   argc = NS_TraceMallocStartupArgs(argc, argv);
 #endif
+
+#ifdef MOZ_X11
+  /* Init threadsafe mode of Xlib API on demand
+   * (currently this is only for testing, future builds may use this by
+   * default) */
+  PRBool x11threadsafe = PR_FALSE;
+  for (int i=1; i<argc; i++) {
+    if (PL_strcmp(argv[i], "-xinitthreads") == 0) {
+      x11threadsafe = PR_TRUE;
+      break;
+    }
+  }
+
+  if (PR_GetEnv("MOZILLA_X11_XINITTHREADS")) {
+    x11threadsafe = PR_TRUE;
+  }
+  
+  if (x11threadsafe) {
+    if (XInitThreads() == False) {
+      fprintf(stderr, "%s: XInitThreads failure.", argv[0]);
+      exit(EXIT_FAILURE);
+    }
+  }
+#endif /* MOZ_X11 */
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
   // setup for private colormap.  Ideally we'd like to do this
