@@ -10610,12 +10610,6 @@ fi
 
 
 
-
-LDFLAGS=`echo \
-	$_WARNINGS_CFLAGS \
-	$LDFLAGS \
-	$CFLAGS`
-
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
 	$_GPROF_CFLAGS \
