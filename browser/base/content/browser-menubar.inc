@@ -335,10 +335,10 @@
                   <menuitem label="&mailButton.readMail.label;" 
                                    id="readMailItem"
                                    accesskey="&mailButton.readMail.accesskey;"
-                                   key="key_newMessage" command="Browser:ReadMail"/>
+                                   command="Browser:ReadMail"/>
                   <menuitem label="&mailButton.newMessage.label;" 
                                    accesskey="&mailButton.newMessage.accesskey;"
-                                   command="Browser:NewMessage"/>
+                                   key="key_newMessage" command="Browser:NewMessage"/>
                   <menuitem label="&mailButton.sendLink.label;" 
                                    accesskey="&mailButton.sendLink.accesskey;"
                                    command="Browser:SendLink"/>
