@@ -145,24 +145,6 @@ nsHTMLReflowState::Init(nsIPresContext& aPresContext)
   InitConstraints(aPresContext);
 }
 
-PRBool
-nsHTMLReflowState::HaveFixedContentWidth() const
-{
-  const nsStylePosition* pos;
-  frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
-  // What about 'inherit'?
-  return eStyleUnit_Auto != pos->mWidth.GetUnit();
-}
-
-PRBool
-nsHTMLReflowState::HaveFixedContentHeight() const
-{
-  const nsStylePosition* pos;
-  frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
-  // What about 'inherit'?
-  return eStyleUnit_Auto != pos->mHeight.GetUnit();
-}
-
 const nsHTMLReflowState*
 nsHTMLReflowState::GetContainingBlockReflowState(const nsReflowState* aParentRS)
 {

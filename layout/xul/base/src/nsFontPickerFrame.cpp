@@ -86,13 +86,13 @@ nsFontPickerFrame :: GetDesiredSize(nsIPresContext* aPresContext,
   const int ATTR_NOTSET = -1;
 
   nsSize styleSize;
-  if (aReflowState.HaveFixedContentWidth()) {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
     styleSize.width = aReflowState.computedWidth;
   }
   else {
     styleSize.width = CSS_NOTSET;
   }
-  if (aReflowState.HaveFixedContentHeight()) {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
     styleSize.height = aReflowState.computedHeight;
   }
   else {
