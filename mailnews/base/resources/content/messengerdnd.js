@@ -57,6 +57,7 @@ function CanDropOnFolderOutliner(index)
     var targetFolder = targetResource.QueryInterface(Components.interfaces.nsIMsgFolder);
     var targetServer = targetFolder.server;
     var sourceServer;
+    var sourceResource;
 
     trans.addDataFlavor("text/nsmessageOrfolder");
    
@@ -84,7 +85,6 @@ function CanDropOnFolderOutliner(index)
         if (! sourceUri)
             continue;
 
-        var sourceResource;
         try
         {
             sourceResource = RDF.GetResource(sourceUri, true);
@@ -120,7 +120,7 @@ function CanDropOnFolderOutliner(index)
         }
 
         // we should only get here if we are dragging and dropping folders
-        var sourceResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+        sourceResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
         var sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
         sourceServer = sourceFolder.server;
 
