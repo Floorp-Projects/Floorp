@@ -487,7 +487,6 @@ sun-java/Makefile
 sun-java/stubs/Makefile
 sun-java/stubs/include/Makefile
 sun-java/stubs/jri/Makefile
-sun-java/stubs/src/Makefile
 "
 
 MAKEFILES_caps="
