@@ -32,13 +32,15 @@
 #include "nsIRenderingContext.h"
 #include "nsEventStateManager.h"
 #include "nsIURL.h"
-#include "nsILoadGroup.h"
 #include "nsIDocument.h"
 #include "nsIStyleContext.h"
 #include "nsLayoutAtoms.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
+#include "nsIURIContentListener.h"
+#include "nsIInterfaceRequestor.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -777,16 +779,14 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
     }
 
     // Initialize the image group
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    nsCOMPtr<nsIDocument> doc;
-    if (NS_SUCCEEDED(mShell->GetDocument(getter_AddRefs(doc)))) {
-      NS_ASSERTION(doc, "expect document here");
-      if (doc) {
-        doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      }
+    nsCOMPtr<nsIURIContentListener> loadHandler (do_GetInterface(mContainer, &rv));
+    if (NS_SUCCEEDED(rv) && loadHandler)
+    {
+      nsCOMPtr<nsISupports> loadContext;
+      loadHandler->GetLoadCookie(getter_AddRefs(loadContext));
+      rv = mImageGroup->Init(mDeviceContext, loadContext);
     }
-    if (rv == NS_OK)
-      rv = mImageGroup->Init(mDeviceContext, loadGroup);
+
     if (NS_OK != rv) {
       return rv;
     }
