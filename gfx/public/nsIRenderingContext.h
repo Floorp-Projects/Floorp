@@ -675,7 +675,7 @@ public:
 
 #ifdef MOZ_MATHML
 /* Struct used for accurate measurements of a string in order
-   to allow precise positionning when processing MathML.
+   to allow precise positioning when processing MathML.
 */
 struct nsBoundingMetrics {
 
@@ -716,17 +716,19 @@ struct nsBoundingMetrics {
           to follow the current one. Depending on the font, this
           could be greater than or less than the right bearing. */
 
-  nscoord supItalicCorrection, subItalicCorrection;
+  nscoord supItalicCorrection, subItalicCorrection, leftItalicCorrection;
        /* The horizontal gaps between the string in slanted style
           (italic) and the same string in upright style (normal).
 
-          If the font was designed with a slant angle (suh as that
-          provided by the XA_ITALIC_ANGLE property on X), then the
-          supItalicCorrection (useful for attaching a superscript) 
-          is obtained by multiplying cos(slantAngle) by the last
-          character's ascent, and the subItalicCorrection (useful 
-          for attaching a subscript) is obtained by multiplying 
-          cos(slantAngle) by the last character's descent.
+          If the font was designed with an italic angle, then the
+          subItalicCorrection (useful for attaching a subscript) 
+          is obtained by multiplying the tangent of the italic angle
+          by the last character's descent.
+
+          The supItalicCorrection (useful for attaching a superscript)
+          gives the amount of space to add after the italic string 
+          before immediately placing a superscript (or another string
+          in and upright style).
 
           These values are of opposite sign. For a forward-slanted
           font (italic style), supItalicCorrection >= 0 and 
@@ -734,6 +736,10 @@ struct nsBoundingMetrics {
 
           For a back-slanted font, supItalicCorrection <= 0 
           and subItalicCorrection >= 0.
+
+          The leftItalicCorrection gives the amount of space that should 
+          be added before the italic string when it is immediately to be
+          preceded by an upright string. 
        */
 
   //////////
@@ -745,12 +751,14 @@ struct nsBoundingMetrics {
     leftBearing = rightBearing = 0;
     ascent = descent = width = 0;
     supItalicCorrection = subItalicCorrection = 0;
+    leftItalicCorrection = 0;
   }
 
   /* Append another bounding metrics */
-  /* Notice that leftBearing is not set. The user must set
-     leftBearing on initialization and (repeatedly) use this 
-     operator to append other bounding metrics on the right.
+  /* Notice that leftBearing and leftItalicCorrection are not set. 
+     The user must set leftBearing and leftItalicCorrection on 
+     initialization and (repeatedly) use this operator to append 
+     other bounding metrics on the right.
    */
   void 
   operator += (const nsBoundingMetrics& bm) {
