@@ -362,53 +362,53 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFHTMLBuilderCID,
                                          "RDF HTML Builder",
-                                         NS_RDF_PROGID "|html-builder",
+                                         NS_RDF_PROGID "/html-builder",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFServiceCID,
                                          "RDF Service",
-                                         NS_RDF_PROGID "|rdf-service",
+                                         NS_RDF_PROGID "/rdf-service",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULSortServiceCID,
                                          "XUL Sort Service",
-                                         NS_RDF_PROGID "|xul-sort-service",
+                                         NS_RDF_PROGID "/xul-sort-service",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFTreeBuilderCID,
                                          "RDF Tree Builder",
-                                         NS_RDF_PROGID "|tree-builder",
+                                         NS_RDF_PROGID "/tree-builder",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFMenuBuilderCID,
                                          "RDF Menu Builder",
-                                         NS_RDF_PROGID "|menu-builder",
+                                         NS_RDF_PROGID "/menu-builder",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFToolbarBuilderCID,
                                          "RDF Toolbar Builder",
-                                         NS_RDF_PROGID "|toolbar-builder",
+                                         NS_RDF_PROGID "/toolbar-builder",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFXULBuilderCID,
                                          "RDF XUL Builder",
-                                         NS_RDF_PROGID "|xul-builder",
+                                         NS_RDF_PROGID "/xul-builder",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULContentSinkCID,
                                          "XUL Content Sink",
-                                         NS_RDF_PROGID "|xul-content-sink",
+                                         NS_RDF_PROGID "/xul-content-sink",
                                          aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULDocumentCID,
                                          "XUL Document",
-                                         NS_RDF_PROGID "|xul-document",
+                                         NS_RDF_PROGID "/xul-document",
                                          aPath, PR_TRUE, PR_TRUE);
 
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULDocumentInfoCID,
                                          "XUL Document Info",
-                                         NS_RDF_PROGID "|xul-document-info",
+                                         NS_RDF_PROGID "/xul-document-info",
                                          aPath, PR_TRUE, PR_TRUE);
   done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
