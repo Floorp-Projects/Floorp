@@ -717,6 +717,17 @@ public:
   //~~~
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd) = 0;
 
+  /**
+   * Copy an image to the RenderingContext in a tiled manner
+   * @param aImage image to copy
+   * @param aSrcXOffset x offset inside the source image to begin tiling from
+   * @param aSrcYOffset y offset inside the source image to begin tiling from
+   * @param aTileRect area to tile
+   */
+  NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
+                      nscoord aSrcYOffset, const nsRect &aTileRect) = 0;
+
+
 #ifdef MOZ_MATHML
   /**
    * Returns bounding metrics (in app units) of an 8-bit character string

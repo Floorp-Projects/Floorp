@@ -2273,12 +2273,14 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       }
     }
 
+#ifndef XP_UNIX
     // Setup clipping so that rendering doesn't leak out of the computed
     // dirty rect
     PRBool clipState;
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(dirtyRect, nsClipCombine_kIntersect,
                                   clipState);
+#endif
 
     // Compute the x and y starting points and limits for tiling
     nscoord x0, x1;
@@ -2353,8 +2355,19 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       }
     }
 
+#ifdef XP_UNIX
+    // Take the intersection again to paint only the required area
+    nsRect tileRect(x0,y0,(x1-x0),(y1-y0));
+    nsRect drawRect;
+    if (drawRect.IntersectRect(tileRect, dirtyRect)) {
+      PRInt32 xOffset = drawRect.x - x0,
+              yOffset = drawRect.y - y0;
+      aRenderingContext.DrawTile(image,xOffset,yOffset,drawRect);
+    }
+#else
+    aRenderingContext.DrawTile(image,x0,y0,x1,y1,tileWidth,tileHeight);
+#endif
 
-  aRenderingContext.DrawTile(image,x0,y0,x1,y1,tileWidth,tileHeight);
 
 #ifdef DOTILE
     nsIDrawingSurface  *theSurface,*ts=nsnull;
@@ -2458,8 +2471,10 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     }
 #endif
 
+#ifndef XP_UNIX
     // Restore clipping
     aRenderingContext.PopState(clipState);
+#endif
     NS_IF_RELEASE(image);
   } else {
     // See if there's a background color specified. The background color
