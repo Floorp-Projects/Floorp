@@ -75,7 +75,7 @@
   mDecArray[i++].mCID  = &kUCS4LEToUnicodeCID;
   mDecArray[i++].mCID  = &kT61ToUnicodeCID;
 
-  mEncSize           = 59;
+  mEncSize           = 60;
   mEncArray          = new ConverterInfo [mEncSize];
 
   i = 0;
