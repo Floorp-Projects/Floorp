@@ -43,7 +43,6 @@
 #include "nsISHistory.h"
 #endif  
 
-class nsIBrowserWindow;
 class nsIWebShell;
 class nsIScriptContext;
 class nsIDOMWindow;
