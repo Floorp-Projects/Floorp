@@ -21,6 +21,7 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 //PROTOTYPES
 void selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect);
+PRInt32 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd);
 
 
 class nsRangeListIterator;
@@ -414,9 +415,26 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame)
 PRInt32
 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
 {
-  if (frame && NS_SUCCEEDED(frame->GetContent(*getter_AddRefs(beginContent)))){
-    nsCOMPtr<nsIDOMNode>oldDomNode = oldContent;
-
+  return 0;
+  if (!aBegin || !aEnd)
+    return 0;
+  nsCOMPtr<nsIContent> beginContent;
+  if (NS_SUCCEEDED(aBegin->GetContent(*getter_AddRefs(beginContent)))){
+    nsCOMPtr<nsIDOMNode>beginNode (beginContent);
+    nsCOMPtr<nsIContent> endContent;
+    if (NS_SUCCEEDED(aEnd->GetContent(*getter_AddRefs(endContent)))){
+      nsCOMPtr<nsIDOMNode>endNode (endContent);
+      PRBool storage;
+      PRInt32 int1;
+      PRInt32 int2;
+      PRInt32 contentOffset1;
+      PRInt32 contentOffset2;
+      aBegin->GetSelected(&storage,&int1,&int2,&contentOffset1);
+      aEnd->GetSelected(&storage,&int1,&int2,&contentOffset2);
+      return ComparePoints(beginNode, contentOffset1, endNode, contentOffset2);
+    }
+  }
+  return 0;
 }
 
 
@@ -428,13 +446,6 @@ selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEn
   if (!aBegin || !aEnd)
     return;
   PRBool done = PR_FALSE;
-#if 1
-  printf("select frames");
-  if (!aSelect)
-    printf("deselect \n");
-  else
-    printf("select \n");
-#endif
   while (!done)
   {
     if (aBegin == aEnd)
@@ -472,8 +483,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
     if (domNode && NS_SUCCEEDED(aTracker->GetFocus(&frame, &anchor))){
       //traverse through document and unselect crap here
       if (!aContinueSelection){
-        if (anchor && frame && anchor != frame && aFrame != frame)//selected across frames, must "deselect" frames between in correct order
-        {
+        if (anchor && frame && anchor != frame && aFrame != frame){//selected across frames, must "deselect" frames between in correct order
           PRInt32 compareResult = compareFrames(anchor,frame);
           if ( compareResult < 0 )
             selectFrames(anchor,0,frame,-1,PR_FALSE); //unselect all between
@@ -486,7 +496,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
 #if 1
         nsCOMPtr<nsIContent>oldContent;
         if (frame && NS_SUCCEEDED(frame->GetContent(*getter_AddRefs(oldContent)))){
-          nsCOMPtr<nsIDOMNode>oldDomNode = oldContent;
+          nsCOMPtr<nsIDOMNode>oldDomNode(oldContent);
           if (oldDomNode  && oldDomNode == mFocusNode) {
             PRInt32 result1 = ComparePoints(domNode, aOffset + aContentOffset, mFocusNode, mFocusOffset);
             printf("result1 = %i\n",result1);
@@ -507,8 +517,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
 
             range->SetStart(domNode,aOffset + aContentOffset);
             range->SetEnd(domNode,aOffset + aContentOffset);
-            nsCOMPtr<nsISupports> rangeISupports;
-            rangeISupports = range;
+            nsCOMPtr<nsISupports> rangeISupports (range);
             if (rangeISupports) {
               AddItem(rangeISupports);
             }
@@ -526,22 +535,21 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
             aTracker->SetFocus(aFrame,anchor);
           }
   
-            nsCOMPtr<nsIContent>anchorContent;
-            if (anchor && NS_SUCCEEDED(anchor->GetContent(*getter_AddRefs(anchorContent)))){
-              nsCOMPtr<nsIDOMNode>anchorDomNode;
-              if ((anchorDomNode = anchorContent) && anchorDomNode == mAnchorNode) {
-                nsCOMPtr<nsIDOMRange> range;
-                if (NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
-                  if (domNode){
-                    mFocusNode = domNode;
-                    mFocusOffset = aOffset + aContentOffset;
-                    range->SetStart(anchorDomNode,mAnchorOffset);
-                    range->SetEnd(domNode,aOffset + aContentOffset);
-                    nsCOMPtr<nsISupports> rangeISupports;
-                    if (rangeISupports = range) {
-                      AddItem(rangeISupports);
-                      return NS_OK;
-                    }
+          nsCOMPtr<nsIContent>anchorContent;
+          if (anchor && NS_SUCCEEDED(anchor->GetContent(*getter_AddRefs(anchorContent)))){
+            nsCOMPtr<nsIDOMNode>anchorDomNode (anchorContent);
+            if (anchorDomNode && anchorDomNode == mAnchorNode) {
+              nsCOMPtr<nsIDOMRange> range;
+              if (NS_SUCCEEDED(nsRepository::CreateInstance(kRangeCID, nsnull, kIDOMRangeIID, getter_AddRefs(range)))){ //create an irange
+                if (domNode){
+                  mFocusNode = domNode;
+                  mFocusOffset = aOffset + aContentOffset;
+                  range->SetStart(anchorDomNode,mAnchorOffset);
+                  range->SetEnd(domNode,aOffset + aContentOffset);
+                  nsCOMPtr<nsISupports> rangeISupports(range);
+                  if (rangeISupports) {
+                    AddItem(rangeISupports);
+                    return NS_OK;
                   }
                 }
               }
@@ -551,12 +559,12 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         else if (frame){ //we need to check to see what the order is.
           nsCOMPtr<nsIContent>oldContent;
           if (NS_SUCCEEDED(frame->GetContent(*getter_AddRefs(oldContent)))){
-            nsCOMPtr<nsIDOMNode>oldDomNode;
-            if ((oldDomNode =  oldContent) && oldDomNode == mFocusNode) {
+            nsCOMPtr<nsIDOMNode>oldDomNode(oldContent);
+            if (oldDomNode && oldDomNode == mFocusNode) {
               nsCOMPtr<nsIContent>anchorContent;
               if (NS_SUCCEEDED(anchor->GetContent(*getter_AddRefs(anchorContent)))){
-                nsCOMPtr<nsIDOMNode>anchorDomNode;
-                if ((anchorDomNode = anchorContent) && anchorDomNode == mAnchorNode) {
+                nsCOMPtr<nsIDOMNode>anchorDomNode(anchorContent);
+                if (anchorDomNode && anchorDomNode == mAnchorNode) {
 
 
                   //get offsets
