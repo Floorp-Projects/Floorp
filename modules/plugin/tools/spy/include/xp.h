@@ -137,4 +137,8 @@ void XP_DeleteFile(char * szFileName);
 DWORD XP_WriteFile(XP_HFILE hFile, void * pBuf, int iSize);
 void XP_FlushFileBuffers(XP_HFILE hFile);
 
+
+// misc
+void * XP_GetSymbol(XP_HLIB hLib, char * szProcName);
+
 #endif

@@ -76,15 +76,15 @@ NPError NPP_New(NPMIMEType pluginType,
       return NPERR_GENERIC_ERROR;
     }
 
-    NP_GETENTRYPOINTS real_NP_GetEntryPoints = (NP_GETENTRYPOINTS)GetProcAddress(hLib, "NP_GetEntryPoints");
+    NP_GETENTRYPOINTS real_NP_GetEntryPoints = (NP_GETENTRYPOINTS)XP_GetSymbol(hLib, "NP_GetEntryPoints");
     if(!real_NP_GetEntryPoints)
       return NPERR_GENERIC_ERROR;
 
-    NP_INITIALIZE real_NP_Initialize = (NP_INITIALIZE)GetProcAddress(hLib, "NP_Initialize");
+    NP_INITIALIZE real_NP_Initialize = (NP_INITIALIZE)XP_GetSymbol(hLib, "NP_Initialize");
     if(!real_NP_Initialize)
       return NPERR_GENERIC_ERROR;
 
-    NP_SHUTDOWN real_NP_Shutdown = (NP_SHUTDOWN)GetProcAddress(hLib, "NP_Shutdown");
+    NP_SHUTDOWN real_NP_Shutdown = (NP_SHUTDOWN)XP_GetSymbol(hLib, "NP_Shutdown");
     if(!real_NP_Shutdown)
       return NPERR_GENERIC_ERROR;
 

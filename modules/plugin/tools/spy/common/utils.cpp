@@ -23,6 +23,8 @@
 
 #include "xp.h"
 
+// file utils
+
 BOOL XP_IsFile(char * szFileName)
 {
 #ifdef XP_WIN
@@ -99,4 +101,13 @@ void XP_FlushFileBuffers(XP_HFILE hFile)
 #else
   fflush(hFile);
 #endif 
+}
+
+// misc utils
+
+void * XP_GetSymbol(XP_HLIB hLib, char * szProcName)
+{
+#ifdef XP_WIN
+  return (void *)GetProcAddress(hLib, szProcName);
+#endif
 }
