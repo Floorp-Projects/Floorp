@@ -41,6 +41,9 @@
 
 #include "nsISupports.h"
 
+class nsISupportsArray;
+class nsIDOMElement;
+
 ////////////////////////////////////////////////////////////////////////
 // nsIXTFVisualWrapperPrivate: private interface for visual frames
 

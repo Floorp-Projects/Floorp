@@ -46,6 +46,7 @@
 #include "nsIDOMElement.h"
 #include "nsIXTFVisualWrapperPrivate.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsXTFFrameUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsXTFXMLBlockDisplayFrame
@@ -71,6 +72,7 @@ private:
 public:
   // nsIFrame
   virtual nsIFrame* GetContentInsertionFrame();
+  virtual already_AddRefed<nsIContent> GetContentInsertionNode();
 
   NS_IMETHOD  DidReflow(nsPresContext*           aPresContext,
                         const nsHTMLReflowState*  aReflowState,
@@ -108,22 +110,15 @@ NS_INTERFACE_MAP_END_INHERITING(nsXTFXMLBlockDisplayFrameBase)
 nsIFrame*
 nsXTFXMLBlockDisplayFrame::GetContentInsertionFrame()
 {
-  nsCOMPtr<nsIXTFVisualWrapperPrivate> visual = do_QueryInterface(mContent);
-  NS_ASSERTION(visual, "huh? associated content not implementing nsIXTFVisualWrapperPrivate");
-  
-  nsCOMPtr<nsIDOMElement> childInsertionPoint;
-  visual->GetInsertionPoint(getter_AddRefs(childInsertionPoint));
-  if (!childInsertionPoint) return nsnull; // we don't take visual child content
-  
-  nsCOMPtr<nsIContent> content = do_QueryInterface(childInsertionPoint);
-  NS_ASSERTION(content, "element not implementing nsIContent!?");
-
-  nsIFrame* insertionFrame = nsnull;
-  GetPresContext()->PresShell()->GetPrimaryFrameFor(content, &insertionFrame);
-  return insertionFrame;
+  return nsXTFFrameUtils::GetContentInsertionFrame(this);
 }
 
 
+already_AddRefed<nsIContent>
+nsXTFXMLBlockDisplayFrame::GetContentInsertionNode()
+{
+  return nsXTFFrameUtils::GetContentInsertionNode(this);
+}
 
 NS_IMETHODIMP
 nsXTFXMLBlockDisplayFrame::DidReflow(nsPresContext*           aPresContext,
@@ -174,6 +169,7 @@ private:
 public:
   // nsIFrame
   virtual nsIFrame* GetContentInsertionFrame();
+  virtual already_AddRefed<nsIContent> GetContentInsertionNode();
 
   NS_IMETHOD  DidReflow(nsPresContext*           aPresContext,
                         const nsHTMLReflowState*  aReflowState,
@@ -211,22 +207,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsXTFXMLInlineDisplayFrameBase)
 nsIFrame*
 nsXTFXMLInlineDisplayFrame::GetContentInsertionFrame()
 {
-  nsCOMPtr<nsIXTFVisualWrapperPrivate> visual = do_QueryInterface(mContent);
-  NS_ASSERTION(visual, "huh? associated content not implementing nsIXTFVisualWrapperPrivate");
-  
-  nsCOMPtr<nsIDOMElement> childInsertionPoint;
-  visual->GetInsertionPoint(getter_AddRefs(childInsertionPoint));
-  if (!childInsertionPoint) return nsnull; // we don't take visual child content
-  
-  nsCOMPtr<nsIContent> content = do_QueryInterface(childInsertionPoint);
-  NS_ASSERTION(content, "element not implementing nsIContent!?");
-
-  nsIFrame* insertionFrame = nsnull;
-  GetPresContext()->PresShell()->GetPrimaryFrameFor(content, &insertionFrame);
-  return insertionFrame;
+  return nsXTFFrameUtils::GetContentInsertionFrame(this);
 }
 
-
+already_AddRefed<nsIContent>
+nsXTFXMLInlineDisplayFrame::GetContentInsertionNode()
+{
+  return nsXTFFrameUtils::GetContentInsertionNode(this);
+}
 
 NS_IMETHODIMP
 nsXTFXMLInlineDisplayFrame::DidReflow(nsPresContext*           aPresContext,
