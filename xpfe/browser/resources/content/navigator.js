@@ -431,7 +431,6 @@ function UpdateHistory(event)
 	}
 }
 
-
 function savePage( url ) {
         // Default is to save current page.
         if ( !url ) {
@@ -1229,6 +1228,47 @@ function BrowserEditBookmarks()
 
 	appCore.loadUrl(document.getElementById('urlbar').value);
       
+  }
+
+  function readFromClipboard()
+  {
+    // Get clipboard.
+    var clipboard = Components
+                      .classes["component://netscape/widget/clipboard"]
+                        .getService ( Components.interfaces.nsIClipboard );
+    // Create tranferable that will transfer the text.
+    var trans = Components
+                   .classes["component://netscape/widget/transferable"]
+                     .createInstance( Components.interfaces.nsITransferable );
+    if ( !clipboard || !trans )
+      return;
+
+    trans.addDataFlavor( "text/plain" );
+    clipboard.getData(trans);
+
+	var data = new Object();
+	var dataLen = new Object();
+	trans.getTransferData("text/plain", data, dataLen);
+    var url = null;
+	if (data)
+    {
+      data = data.value.QueryInterface(Components.interfaces
+                                                    .nsISupportsString);
+      url = data.data.substring(0, dataLen.value);
+    }
+	return url;
+  }
+
+  function browserLoadClipboardURL()
+  {
+    var url = readFromClipboard();
+    dump ("URL on clipboard: '" + url + "'; length = " + url.length + "\n");
+    if (url.length > 0)
+    {
+      var urlBar = document.getElementById("urlbar");
+      urlBar.value = url;
+      BrowserLoadURL();
+    }
   }
 
   function OpenMessenger()
