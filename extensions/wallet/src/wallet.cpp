@@ -3112,14 +3112,10 @@ WLLT_OnSubmit(nsIContent* formNode) {
       if ((count>=3) && !wallet_GetWalletNotificationPref()) {
 
         /* conditions all met, now give notification */
-        PRUnichar * notification1 = Wallet_Localize("WalletNotification1");
-        PRUnichar * notification2 = Wallet_Localize("WalletNotification2");
-        nsString s = nsString(notification1) + nsString(notification2);
-        PRUnichar * message = (PRUnichar*)(s.GetUnicode());
+        PRUnichar * notification = Wallet_Localize("WalletNotification");
         wallet_SetWalletNotificationPref(PR_TRUE);
-        Wallet_Alert(message);
-        Recycle(notification1);
-        Recycle(notification2);
+        Wallet_Alert(notification);
+        Recycle(notification);
       }
 #else
       /* save form if it meets all necessary conditions */

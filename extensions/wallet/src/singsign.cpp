@@ -1903,17 +1903,14 @@ si_OkToSave(char *URLName, char *userName) {
   }
 
   if (!si_RememberSignons && !si_GetNotificationPref()) {
-    PRUnichar * notification1 = Wallet_Localize("PasswordNotification1");
-    PRUnichar * notification2 = Wallet_Localize("PasswordNotification2");
-    nsString s = nsString(notification1) + nsString(notification2);
-    PRUnichar * message = (PRUnichar*)(s.GetUnicode());
-    Recycle(notification1);
-    Recycle(notification2);
+    PRUnichar * notification = Wallet_Localize("PasswordNotification");
     si_SetNotificationPref(PR_TRUE);
-    if (!si_ConfirmYN(message)) {
+    if (!si_ConfirmYN(notification)) {
+      Recycle(notification);
       SI_SetBoolPref(pref_rememberSignons, PR_FALSE);
       return PR_FALSE;
     }
+    Recycle(notification);
     SI_SetBoolPref(pref_rememberSignons, PR_TRUE);
   }
 
