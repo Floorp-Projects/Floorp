@@ -2072,6 +2072,9 @@ static PRUint16 PA_HackTable[] = {
 };
 #endif /* PA_REMAP_128_TO_160_ILLEGAL_NCR */
 
+#define H_SURROGATE(s)  ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) >> 10) + (PRUnichar)0xd800)
+#define L_SURROGATE(s)  ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) & 0x3ff) + (PRUnichar)0xdc00)
+#define IS_IN_BMP(ucs4)   ((ucs4) < 0x10000)
 
 /*
  *  This method converts this entity into its underlying
@@ -2099,8 +2102,13 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
           value = PA_HackTable[value - 0x0080];
         }
   #endif
-        aString.Append(PRUnichar(value));
-      }//if
+        if (IS_IN_BMP(value))
+          aString.Append(PRUnichar(value));
+        else {
+          aString.Append(PRUnichar(H_SURROGATE(value)));
+          aString.Append(PRUnichar(L_SURROGATE(value)));
+        }
+      }
     }
     else{
       value = nsHTMLEntities::EntityToUnicode(mTextValue);
