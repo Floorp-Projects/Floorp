@@ -59,6 +59,8 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "txAtoms.h"
+#include "TxLog.h"
+#include "nsIConsoleService.h"
 #include "nsIDOMDocumentFragment.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
@@ -78,6 +80,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(const String& aRootName,
                                        nsIDOMDocument* aResultDocument,
                                        nsITransformObserver* aObserver)
     : mStyleSheetCount(0),
+      mBadChildLevel(0),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
@@ -96,6 +99,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(const String& aRootName,
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
                                        nsIDOMDocumentFragment* aFragment)
     : mStyleSheetCount(0),
+      mBadChildLevel(0),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
@@ -131,6 +135,10 @@ void txMozillaXMLOutput::attribute(const String& aName,
         // XXX Signal this? (can't add attributes after element closed)
         return;
 
+    if (mBadChildLevel) {
+        return;
+    }
+
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mCurrentNode);
     NS_ASSERTION(element, "No element to add the attribute to.");
     if (!element)
@@ -155,12 +163,20 @@ void txMozillaXMLOutput::characters(const String& aData)
 {
     closePrevious(eCloseElement);
 
+    if (mBadChildLevel) {
+        return;
+    }
+
     mText.Append(aData);
 }
 
 void txMozillaXMLOutput::comment(const String& aData)
 {
     closePrevious(eCloseElement | eFlushText);
+
+    if (mBadChildLevel) {
+        return;
+    }
 
     TX_ENSURE_CURRENTNODE;
 
@@ -207,6 +223,13 @@ void txMozillaXMLOutput::endDocument()
 void txMozillaXMLOutput::endElement(const String& aName, const PRInt32 aNsID)
 {
     TX_ENSURE_CURRENTNODE;
+
+    if (mBadChildLevel) {
+        --mBadChildLevel;
+        PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+               ("endElement, mBadChildLevel = %d\n", mBadChildLevel));
+        return;
+    }
     
 #ifdef DEBUG
     nsAutoString nodeName;
@@ -318,7 +341,22 @@ void txMozillaXMLOutput::startElement(const String& aName,
 {
     TX_ENSURE_CURRENTNODE;
 
+    if (mBadChildLevel) {
+        ++mBadChildLevel;
+        PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+               ("startElement, mBadChildLevel = %d\n", mBadChildLevel));
+        return;
+    }
+
     closePrevious(eCloseElement | eFlushText);
+
+    if (mBadChildLevel) {
+        // eCloseElement couldn't add the parent, we fail as well
+        ++mBadChildLevel;
+        PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+               ("startElement, mBadChildLevel = %d\n", mBadChildLevel));
+        return;
+    }
 
     nsresult rv;
 
@@ -411,7 +449,20 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
                 nsCOMPtr<nsIDOMNode> resultNode;
 
                 rv = mParentNode->AppendChild(mCurrentNode, getter_AddRefs(resultNode));
-                NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append node");
+                if (NS_FAILED(rv)) {
+                    mBadChildLevel = 1;
+                    mCurrentNode = mParentNode;
+                    PR_LOG(txLog::xslt, PR_LOG_DEBUG,
+                           ("closePrevious, mBadChildLevel = %d\n",
+                            mBadChildLevel));
+                    // warning to the console
+                    nsCOMPtr<nsIConsoleService> consoleSvc = 
+                        do_GetService("@mozilla.org/consoleservice;1", &rv);
+                    if (consoleSvc) {
+                        consoleSvc->LogStringMessage(
+                            NS_LITERAL_STRING("failed to create XSLT content").get());
+                    }
+                }
             }
         }
         mParentNode = nsnull;
