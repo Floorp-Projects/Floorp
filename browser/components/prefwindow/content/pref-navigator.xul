@@ -171,6 +171,17 @@
               prefstring="pref.browser.homepage.disable_button.blank_page"/>
     </hbox>
   </groupbox>
+
+  <groupbox>
+    <caption label="&fonts.label;"/>
+    <hbox align="center">
+      <description flex="1">&fontsInfo.label;</description>
+      <button label="&showFontsAndColors.label;" 
+              accesskey="&showFontsAndColors.accesskey;" 
+              oncommand="showFontsAndColors();"/>
+    </hbox>
+  </groupbox>    
+
 #ifdef XP_WIN
   <groupbox orient="horizontal">
     <caption label="&defaultBrowserGroup.label;"/>

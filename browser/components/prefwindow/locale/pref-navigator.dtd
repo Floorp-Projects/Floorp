@@ -23,3 +23,11 @@
 
 <!ENTITY proxiesInfo.label          "Set up Proxies for accessing the internet.">
 <!ENTITY connectionsInfo.caption    "Connection">
+
+<!-- XXXben can we do better than this text-wise? -->
+<!ENTITY fonts.label                        "Fonts &amp; Colors">
+<!ENTITY fontsInfo.caption                  "Fonts &amp; Colors Settings">
+<!ENTITY fontsInfo.label                    "Select default Fonts and Colors used when displaying pages.">
+
+<!ENTITY showFontsAndColors.label           "Fonts &amp; Colors...">
+<!ENTITY showFontsAndColors.accesskey       "f">
