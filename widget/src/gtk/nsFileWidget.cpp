@@ -412,17 +412,17 @@ nsFileDlgResults nsFileWidget::PutFile(nsIWidget *aParent,
   nsFileDlgResults theResult = nsFileDlgResults_Cancel;
   
   Create(aParent, promptString, eMode_save, nsnull, nsnull);
-  if (Show() == PR_TRUE)
-  {
+  if (Show() == PR_TRUE) {
     GetFile(theFileSpec);
-    if( theFileSpec.Exists() )
-    {
+
+    if (theFileSpec.IsDirectory()) {
+      // if the user hits ok with nothing in the filename field it returns the directory.
+      theResult = nsFileDlgResults_Cancel;
+    } else if (theFileSpec.Exists()) {
       PRBool result = AskReplace();
       theResult = result ? nsFileDlgResults_Replace : nsFileDlgResults_Cancel;
       // Ask for replace dialog
-    }
-    else
-    {
+    } else {
       theResult = nsFileDlgResults_OK;
     }
   }
