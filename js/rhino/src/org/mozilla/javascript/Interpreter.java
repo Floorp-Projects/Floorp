@@ -58,12 +58,11 @@ public class Interpreter {
         RETURN_UNDEF_ICODE              = TokenStream.LAST_TOKEN + 5,
 
     // Exception handling implementation
-        ENDTRY                          = TokenStream.LAST_TOKEN + 6,
-        GOSUB                           = TokenStream.LAST_TOKEN + 7,
-        RETSUB                          = TokenStream.LAST_TOKEN + 8,
+        GOSUB                           = TokenStream.LAST_TOKEN + 6,
+        RETSUB                          = TokenStream.LAST_TOKEN + 7,
 
     // Last icode
-        END_ICODE                       = TokenStream.LAST_TOKEN + 9;
+        END_ICODE                       = TokenStream.LAST_TOKEN + 8;
 
 
     public IRFactory createIRFactory(Context cx, TokenStream ts)
@@ -227,13 +226,20 @@ public class Interpreter {
                              itsDoubleTableTop);
             itsData.itsDoubleTable = tmp;
         }
+        if (itsExceptionTableTop != 0
+            && itsData.itsExceptionTable.length != itsExceptionTableTop)
+        {
+            int[] tmp = new int[itsExceptionTableTop];
+            System.arraycopy(itsData.itsExceptionTable, 0, tmp, 0,
+                             itsExceptionTableTop);
+            itsData.itsExceptionTable = tmp;
+        }
 
         itsData.itsMaxVars = scriptOrFn.getParamAndVarCount();
         // itsMaxFrameArray: interpret method needs this amount for its
         // stack and sDbl arrays
         itsData.itsMaxFrameArray = itsData.itsMaxVars
                                    + itsData.itsMaxLocals
-                                   + itsData.itsMaxTryDepth
                                    + itsData.itsMaxStack;
 
         itsData.argNames = scriptOrFn.getParamAndVarNames();
@@ -502,12 +508,6 @@ public class Interpreter {
 
             case TokenStream.JSR : {
                 Node target = (Node)(node.getProp(Node.TARGET_PROP));
-                // Bug 115717 is due to adding a GOSUB here before
-                // we insert an ENDTRY. I'm not sure of the best way
-                // to fix this; perhaps we need to maintain a stack
-                // of pending trys and have some knowledge of how
-                // many trys we need to close when we perform a
-                // GOTO or GOSUB.
                 iCodeTop = addGoto(target, GOSUB, iCodeTop);
                 break;
             }
@@ -829,9 +829,6 @@ public class Interpreter {
                 break;
 
             case TokenStream.TRY : {
-                itsTryDepth++;
-                if (itsTryDepth > itsData.itsMaxTryDepth)
-                    itsData.itsMaxTryDepth = itsTryDepth;
                 Node catchTarget = (Node)node.getProp(Node.TARGET_PROP);
                 Node finallyTarget = (Node)node.getProp(Node.FINALLY_PROP);
 
@@ -841,29 +838,16 @@ public class Interpreter {
                 iCodeTop = addShort(0, iCodeTop); // placeholder for finally pc
                 iCodeTop = addIndex(itsWithDepth, iCodeTop);
 
-                boolean insertedEndTry = false;
+                int tryEnd = -1;
                 while (child != null) {
-                    /*
-                        When the following child is the catchTarget
-                        (or the finallyTarget if there are no catches),
-                        the current child is the goto at the end of
-                        the try statemets, we need to emit the endtry
-                        before that goto.
-                    */
-                    Node nextSibling = child.getNext();
-                    if (!insertedEndTry && nextSibling != null &&
-                        (nextSibling == catchTarget ||
-                         nextSibling == finallyTarget))
-                    {
-                        iCodeTop = addByte(ENDTRY, iCodeTop);
-                        insertedEndTry = true;
-                    }
-
                     boolean generated = false;
 
                     if (child == catchTarget) {
                         if (child.getType() != TokenStream.TARGET)
                             Context.codeBug();
+
+                        if (tryEnd >= 0) Context.codeBug();
+                        tryEnd = iCodeTop;
 
                         int catchOffset = iCodeTop - tryStart;
                         recordJumpOffset(tryStart + 1, catchOffset);
@@ -875,10 +859,14 @@ public class Interpreter {
                         itsStackDepth = 1;
                         if (itsStackDepth > itsData.itsMaxStack)
                             itsData.itsMaxStack = itsStackDepth;
-                    }
-                    if (child == finallyTarget) {
+
+                    } else if (child == finallyTarget) {
                         if (child.getType() != TokenStream.TARGET)
                             Context.codeBug();
+
+                        if (tryEnd < 0) {
+                            tryEnd = iCodeTop;
+                        }
 
                         int finallyOffset = iCodeTop - tryStart;
                         recordJumpOffset(tryStart + 3, finallyOffset);
@@ -899,10 +887,18 @@ public class Interpreter {
                     if (!generated) {
                         iCodeTop = generateICode(child, iCodeTop);
                     }
-                    child = nextSibling;
+                    child = child.getNext();
                 }
                 itsStackDepth = 0;
-                itsTryDepth--;
+                // [tryStart, tryEnd) contains GOSUB to call finally when it
+                // presents at the end of try code and before return, break
+                // continue that transfer control outside try.
+                // After finally is executed the control will be
+                // transfered back into [tryStart, tryEnd) and exception
+                // handling assumes that the only code executed after
+                // finally returns will be a jump outside try which could not
+                // trigger exceptions.
+                addExceptionHandler(tryStart, tryEnd);
                 break;
             }
 
@@ -1147,6 +1143,23 @@ public class Interpreter {
         return iCodeTop;
     }
 
+    private void addExceptionHandler(int icodeStart, int icodeEnd)
+    {
+        int[] table = itsData.itsExceptionTable;
+        if (table == null) {
+            if (itsExceptionTableTop != 0) Context.codeBug();
+            table = new int[EXCEPTION_SLOT_SIZE * 2];
+            itsData.itsExceptionTable = table;
+        } else if (table.length == itsExceptionTableTop) {
+            table = new int[table.length * 2];
+            System.arraycopy(itsData.itsExceptionTable, 0, table, 0,
+                             itsExceptionTableTop);
+            itsData.itsExceptionTable = table;
+        }
+        table[itsExceptionTableTop++] = icodeStart;
+        table[itsExceptionTableTop++] = icodeEnd;
+    }
+
     private byte[] increaseICodeCapasity(int iCodeTop, int extraSize) {
         int capacity = itsData.itsICode.length;
         if (iCodeTop + extraSize <= capacity) Context.codeBug();
@@ -1178,6 +1191,27 @@ public class Interpreter {
         return pc - 1 + displacement;
     }
 
+    private static int getExceptionHandler(int[] exceptionTable, int pc)
+    {
+        // OPT: use binary search
+        if (exceptionTable == null) { return -1; }
+        int best = -1, bestStart = 0, bestEnd = 0;
+        for (int i = 0; i != exceptionTable.length; i += EXCEPTION_SLOT_SIZE) {
+            int start = exceptionTable[i];
+            int end = exceptionTable[i + 1];
+            if (start <= pc && pc < end) {
+                if (best < 0 || bestStart <= start) {
+                    // Check handlers are nested
+                    if (best >= 0 && bestEnd < end) Context.codeBug();
+                    best = i;
+                    bestStart = start;
+                    bestEnd = end;
+                }
+            }
+        }
+        return best;
+    }
+
     static PrintWriter out;
     static {
         if (Context.printICode) {
@@ -1201,7 +1235,6 @@ public class Interpreter {
                     case SHORTNUMBER_ICODE:  return "shortnumber";
                     case INTNUMBER_ICODE:    return "intnumber";
                     case RETURN_UNDEF_ICODE: return "return_undef";
-                    case ENDTRY:             return "endtry";
                     case GOSUB:              return "gosub";
                     case RETSUB:             return "retsub";
                     case END_ICODE:          return "end";
@@ -1370,7 +1403,6 @@ public class Interpreter {
             case TokenStream.ENTERWITH :
             case TokenStream.LEAVEWITH :
             case TokenStream.RETURN :
-            case ENDTRY :
             case TokenStream.CATCH:
             case TokenStream.THROW :
             case TokenStream.GETTHIS :
@@ -1578,16 +1610,13 @@ public class Interpreter {
         final int VAR_SHFT = 0;
         final int maxVars = idata.itsMaxVars;
         final int LOCAL_SHFT = VAR_SHFT + maxVars;
-        final int TRY_STACK_SHFT = LOCAL_SHFT + idata.itsMaxLocals;
-        final int STACK_SHFT = TRY_STACK_SHFT + idata.itsMaxTryDepth;
+        final int STACK_SHFT = LOCAL_SHFT + idata.itsMaxLocals;
 
 // stack[VAR_SHFT <= i < LOCAL_SHFT]: variables
 // stack[LOCAL_SHFT <= i < TRY_STACK_SHFT]: used for newtemp/usetemp
-// stack[TRY_STACK_SHFT <= i < STACK_SHFT]: stack of try scopes
 // stack[STACK_SHFT <= i < STACK_SHFT + idata.itsMaxStack]: stack data
 
-// sDbl[TRY_STACK_SHFT <= i < STACK_SHFT]: stack of try block pc, stored as doubles
-// sDbl[any other i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
+// sDbl[i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
 
         int maxFrameArray = idata.itsMaxFrameArray;
         if (maxFrameArray != STACK_SHFT + idata.itsMaxStack)
@@ -1597,7 +1626,6 @@ public class Interpreter {
         double[] sDbl = new double[maxFrameArray];
 
         int stackTop = STACK_SHFT - 1;
-        int tryStackTop = 0; // add TRY_STACK_SHFT to get real index
 
         int withDepth = 0;
 
@@ -1674,6 +1702,7 @@ public class Interpreter {
         // If javaException != null on exit, it will be throw instead of
         // normal return
         Throwable javaException = null;
+        int exceptionPC = -1;
 
         byte[] iCode = idata.itsICode;
         String[] strings = idata.itsStringTable;
@@ -1693,12 +1722,7 @@ public class Interpreter {
                 switch (iCode[pc] & 0xff) {
     // Back indent to ease imlementation reading
 
-    case ENDTRY :
-        tryStackTop--;
-        break;
     case TokenStream.TRY :
-        sDbl[TRY_STACK_SHFT + tryStackTop] = (double)pc;
-        ++tryStackTop;
         // Skip starting pc of catch/finally blocks and with depth
         pc += 6;
         break;
@@ -1711,11 +1735,10 @@ public class Interpreter {
         int pcTry = -1;
         int pcNew = -1;
         boolean doCatch = false;
-        if (tryStackTop > 0) {
-            // Decrease tryStackTop even if catch or finally would not
-            // be processed to properly deal with exceptions thrown
-            // by debuggerFrame.onExceptionThrown or cx.observeInstructionCount
-            --tryStackTop;
+        int handlerOffset = getExceptionHandler(idata.itsExceptionTable,
+                                                exceptionPC);
+
+        if (handlerOffset >= 0) {
 
             final int SCRIPT_CAN_CATCH = 0, ONLY_FINALLY = 1, OTHER = 2;
             int exType;
@@ -1737,7 +1760,7 @@ public class Interpreter {
                 // Do not allow for JS to interfere with Error instances
                 // (exType == OTHER), as they can be used to terminate
                 // long running script
-                pcTry = (int)sDbl[TRY_STACK_SHFT + tryStackTop];
+                pcTry = idata.itsExceptionTable[handlerOffset];
                 if (exType == SCRIPT_CAN_CATCH) {
                     // Allow JS to catch only JavaScriptException and
                     // EcmaError
@@ -1808,6 +1831,7 @@ public class Interpreter {
         --stackTop;
 
         javaException = new JavaScriptException(value);
+        exceptionPC = pc;
 
         if (instructionThreshold != 0) {
             instructionCount += pc + 1 - pcPrevBranch;
@@ -2007,6 +2031,7 @@ public class Interpreter {
         if (value != DBL_MRK) {
             // Invocation from exception handler, restore object to rethrow
             javaException = (Throwable)value;
+            exceptionPC = pc;
             newPC = getJavaCatchPC(iCode);
         } else {
             // Normal return from GOSUB
@@ -2635,8 +2660,9 @@ public class Interpreter {
                     }
                 }
 
-                pc = getJavaCatchPC(iCode);
                 javaException = ex;
+                exceptionPC = pc;
+                pc = getJavaCatchPC(iCode);
                 continue Loop;
             }
         }
@@ -2973,7 +2999,6 @@ public class Interpreter {
 
     private InterpreterData itsData;
     private ScriptOrFnNode scriptOrFn;
-    private int itsTryDepth = 0;
     private int itsStackDepth = 0;
     private int itsWithDepth = 0;
     private String itsSourceFile;
@@ -2982,6 +3007,9 @@ public class Interpreter {
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
     private String lastAddString;
+
+    private int itsExceptionTableTop = 0;
+    private static final int EXCEPTION_SLOT_SIZE = 2;
 
     private int version;
     private boolean inLineStepMode;
