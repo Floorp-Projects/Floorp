@@ -58,7 +58,6 @@ LLIBS   = \
     $(DIST)/lib/ssl.lib \
     $(DIST)/lib/certhi.lib \
     $(DIST)/lib/cryptohi.lib \
-    $(DIST)/lib/ssl.lib \
     $(DIST)/lib/pk11wrap.lib \
     $(DIST)/lib/certdb.lib \
     $(DIST)/lib/softoken.lib \
