@@ -41,10 +41,8 @@ NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTextListener)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMutationListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMutationListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMutationListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFormListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFormListener)
 NS_INTERFACE_MAP_END_INHERITING(nsAccessible)
 
 NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsAccessible);
@@ -133,7 +131,6 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
   return NS_OK;  
 }
 
-
 NS_IMETHODIMP nsRootAccessible::GetAccValue(PRUnichar * *aAccValue)
 {
   nsCOMPtr<nsIURI> pURI(mDocument->GetDocumentURL());
@@ -142,6 +139,7 @@ NS_IMETHODIMP nsRootAccessible::GetAccValue(PRUnichar * *aAccValue)
   *aAccValue = ToNewUnicode(nsLiteralCString(path));
   return NS_OK;
 }
+
 /* void addAccessibleEventListener (in nsIAccessibleEventListener aListener); */
 NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventListener *aListener)
 {
@@ -152,25 +150,7 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     nsCOMPtr<nsIDocument> document;
     shell->GetDocument(getter_AddRefs(document));
 
-    // use AddEventListenerByIID from the nsIDOMEventReceiver interface
-    nsCOMPtr<nsIDOMEventReceiver> receiver;
-    if (NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(receiver))) && receiver)
-    {
-      nsresult rv = NS_OK;
-      // add this as a FocusListener to the document
-      rv = receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *, this), NS_GET_IID(nsIDOMFocusListener));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-      // add this as a FormListener to the document
-      rv = receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFormListener*, this), NS_GET_IID(nsIDOMFormListener));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-      // add this as a TextListener to the document
-      rv = receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMTextListener*, this), NS_GET_IID(nsIDOMTextListener));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-      // add this as a MutationListener to the document
-      rv = receiver->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMutationListener*, this), NS_GET_IID(nsIDOMMutationListener));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-    }
-    // use AddEventListener from the nsIDOMEventTarget interface -- for UserDefinedTypes
+    // use AddEventListener from the nsIDOMEventTarget interface
     nsCOMPtr<nsIDOMEventTarget> target;
     if (NS_SUCCEEDED(document->QueryInterface(NS_GET_IID(nsIDOMEventTarget), getter_AddRefs(target))) && target)
     {
@@ -179,11 +159,17 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
       nsCOMPtr<nsIDOMEventListener> listener;
       rv = this->QueryInterface( NS_GET_IID(nsIDOMEventListener), getter_AddRefs(listener) );
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to QI");
-      // add ourself as a CheckboxStateChange listener
-      rv = target->AddEventListener( nsAutoString(NS_LITERAL_STRING("CheckboxStateChange")) , listener, PR_TRUE );
+      // capture DOM focus events 
+      rv = target->AddEventListener( NS_LITERAL_STRING("focus") , listener, PR_TRUE );
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
-      // add ourself as a RadiobuttonStateChange listener
-      rv = target->AddEventListener( nsAutoString(NS_LITERAL_STRING("RadiobuttonStateChange")) , listener, PR_TRUE );
+      // capture Form change events 
+      rv = target->AddEventListener( NS_LITERAL_STRING("change") , listener, PR_TRUE );
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+      // add ourself as a CheckboxStateChange listener ( custom event fired in nsHTMLInputElement.cpp )
+      rv = target->AddEventListener( NS_LITERAL_STRING("CheckboxStateChange") , listener, PR_TRUE );
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+      // add ourself as a RadiobuttonStateChange listener ( custom event fired in nsHTMLInputElement.cpp )
+      rv = target->AddEventListener( NS_LITERAL_STRING("RadiobuttonStateChange") , listener, PR_TRUE );
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
     }
   }
@@ -221,10 +207,6 @@ NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener(nsIAccessibleEvent
 
 // --------------- nsIDOMEventListener Methods (3) ------------------------
 
-/*
- * Leaving the check for focus here since we want a global perspective on it
- *  otherwise ask the target itself what event to pass to windows
- */
 NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 {
   if (mListener) {
@@ -291,16 +273,17 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+// ------- nsIDOMFocusListener Methods (2) -------------
+
 NS_IMETHODIMP nsRootAccessible::Focus(nsIDOMEvent* aEvent) 
 { 
-  // see this event when the focus changed from one element to another, although all
-  //  textareas seem to share the same focus and radio button groups do too
   return HandleEvent(aEvent);
 }
 
 NS_IMETHODIMP nsRootAccessible::Blur(nsIDOMEvent* aEvent) { return NS_OK; }
 
 // ------- nsIDOMFormListener Methods (5) -------------
+
 NS_IMETHODIMP nsRootAccessible::Submit(nsIDOMEvent* aEvent) { return NS_OK; }
 
 NS_IMETHODIMP nsRootAccessible::Reset(nsIDOMEvent* aEvent) { return NS_OK; }
@@ -308,39 +291,18 @@ NS_IMETHODIMP nsRootAccessible::Reset(nsIDOMEvent* aEvent) { return NS_OK; }
 NS_IMETHODIMP nsRootAccessible::Change(nsIDOMEvent* aEvent)
 {
   // get change events when the form elements changes its state, checked->not,
-  //  deleted text, new text, change in selection
+  //  deleted text, new text, change in selection for list/combo boxes
+  // this may be the event that we have the individual Accessible objects
+  //  handle themselves -- have list/combos figure out the change in selection
+  //  have textareas and inputs fire a change of state etc...
   return HandleEvent(aEvent);
 }
 
-NS_IMETHODIMP nsRootAccessible::Select(nsIDOMEvent* aEvent) 
-{ 
-  return NS_OK; 
-}
+// gets Select events when text is selected in a textarea or input
+NS_IMETHODIMP nsRootAccessible::Select(nsIDOMEvent* aEvent) { return NS_OK; }
 
-NS_IMETHODIMP nsRootAccessible::Input(nsIDOMEvent* aEvent)
-{
-  // get Input events when text is entered or deleted in a textarea
-  //return HandleEvent(aEvent);
-  return NS_OK;
-}
-
-// -------- nsIDOMTextListener -----------------
-NS_IMETHODIMP nsRootAccessible::HandleText(nsIDOMEvent* aTextEvent) { return NS_OK; }
-
-// -------- nsIDOMMutationEventListener -----------------
-NS_IMETHODIMP nsRootAccessible::SubtreeModified(nsIDOMEvent* aMutationEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::NodeInserted(nsIDOMEvent* aMutationEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::NodeRemoved(nsIDOMEvent* aMutationEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::NodeRemovedFromDocument(nsIDOMEvent* aMutationEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::NodeInsertedIntoDocument(nsIDOMEvent* aMutationEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::AttrModified(nsIDOMEvent* aMutationEvent) { return NS_OK; }
-
-NS_IMETHODIMP nsRootAccessible::CharacterDataModified(nsIDOMEvent* aMutationEvent) { return NS_OK; }
+// gets Input events when text is entered or deleted in a textarea or input
+NS_IMETHODIMP nsRootAccessible::Input(nsIDOMEvent* aEvent) { return NS_OK; }
 
 
 
