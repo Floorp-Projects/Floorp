@@ -237,7 +237,7 @@ public:
   /**
    * Return the current nsIDocLoadeObserver
    */
-  NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult) = 0;
+  NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver** aResult) = 0;
 
   /**
    * Set the nsIPref used to get/set preference values...
