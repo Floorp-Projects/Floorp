@@ -285,7 +285,11 @@
   <key id="key_copy"/>
   <key id="key_paste"/>
   <key id="key_delete" oncommand="goDoCommand('cmd_delete');" shift="false"/>
-  <key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')"/>
+   #ifdef XP_MACOSX
+     <key id="cmd_shiftDelete" keycode="VK_BACK" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
+   #else
+     <key id="cmd_shiftDelete" keycode="VK_DELETE" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
+   #endif
   <key id="key_selectAll"/>
   <key id="key_selectThread" key="&selectThreadCmd.key;"             oncommand="goDoCommand('cmd_selectThread');" modifiers="accel, shift"/>
   

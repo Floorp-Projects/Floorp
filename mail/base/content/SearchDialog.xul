@@ -24,7 +24,6 @@
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/platformMailnewsOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
 
@@ -69,7 +68,11 @@
 
   <keyset id="mailKeys">
     <key id="key_delete" oncommand="goDoCommand('cmd_delete');"/>
-    <key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete');"/>
+    #ifdef XP_MACOSX
+      <key id="cmd_shiftDelete" keycode="VK_BACK" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
+    #else
+      <key id="cmd_shiftDelete" keycode="VK_DELETE" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>
+    #endif
   </keyset>
 
   <broadcasterset id="mailBroadcasters">

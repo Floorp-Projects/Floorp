@@ -5,6 +5,7 @@ messenger.jar:
 *+  content/messenger/mailWindow.js                 (content/mailWindow.js)
 *+  content/messenger/mailWindowOverlay.js          (content/mailWindowOverlay.js)
 *+  content/messenger/mailWindowOverlay.xul         (content/mailWindowOverlay.xul)
++   content/messenger/mailOverlay.xul               (content/mailOverlay.xul)
 *+  content/messenger/messageWindow.xul             (content/messageWindow.xul)
 *+  content/messenger/folderPane.xul                (content/folderPane.xul)
 *+  content/messenger/messageWindow.js              (content/messageWindow.js)
@@ -67,8 +68,6 @@ en-US.jar:
 +   locale/en-US/global/brand.properties            (locale/brand.properties) 
 +   locale/en-US/global/brand.dtd                   (locale/brand.dtd) 
 +   locale/en-US/communicator/utilityOverlay.dtd    (locale/utilityOverlay.dtd)
-
-
 
 US.jar:
 +   locale/US/messenger-region/region.properties     (locale/region.properties)
