@@ -80,7 +80,7 @@
    height="700px"
    width="830px"
    persist="screenX screenY width height sizemode"
-   > 
+   context="context-menu"> 
  
 <broadcasterset>
   <broadcaster id="delete_command" disabled="false"/>
@@ -116,7 +116,17 @@
 <popup id="savetip"/>
 
 <popupset>
- <popup id="debug-menu">
+ <popup id="context-menu">
+   <menuitem label="&calendar.newevent.button.label;" oncommand="newEventCommand()"/>
+   <menuitem label="Edit Event" observes="modify_command" oncommand="unifinderModifyCommand()"/>
+   <menuitem label="Delete Event" observes="delete_command" oncommand="unifinderRemoveCommand()"/>
+   <menuseparator/>
+   <menuitem label="Go To Today" oncommand="gCalendarWindow.goToToday()"/>
+   <menuseparator/>
+   <menuitem label="&calendar.dayview.button.label;" oncommand="gCalendarWindow.switchToDayView()"/>
+   <menuitem label="&calendar.weekview.button.label;" oncommand="gCalendarWindow.switchToWeekView()"/>
+   <menuitem label="&calendar.monthview.button.label;" oncommand="gCalendarWindow.switchToMonthView()"/>
+   <menuseparator/>
    <menuitem label="Reload" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
  </popup>
  
@@ -162,7 +172,7 @@
 
 <!-- V I S I B L E  C O N T E N T  -->
 
-<vbox id="calendar-top-box" flex="1" context="debug-menu">
+<vbox id="calendar-top-box" flex="1">
   
   <!-- Calendar Controls-->
  
