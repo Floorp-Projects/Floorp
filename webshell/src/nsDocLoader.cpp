@@ -191,7 +191,7 @@ public:
                                nsIStreamListener** aDocListener,
                                nsIContentViewer** aDocViewer);
 
-    nsresult CreateRDFDocument(nsIURL* aURL, 
+    nsresult CreateRDFDocument(const char* aContentType, nsIURL* aURL, 
                                const char* aCommand,
                                nsIContentViewerContainer* aContainer,
                                nsIStreamListener** aDocListener,
@@ -225,7 +225,7 @@ NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 
 static char* gValidTypes[] = {"text/html","application/rtf",0};
 static char* gXMLTypes[] = {"text/xml", "application/xml", 0};
-static char* gRDFTypes[] = {"text/rdf", 0};
+static char* gRDFTypes[] = {"text/rdf", "text/xul", 0};
 
 static char* gImageTypes[] = {"image/gif", "image/jpeg", "image/png", 0 };
 
@@ -288,7 +288,7 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
     typeIndex = 0;
     while (gRDFTypes[typeIndex]) {
         if (0 == PL_strcmp(gRDFTypes[typeIndex++], aContentType)) {
-            return CreateRDFDocument(aURL, aCommand,
+            return CreateRDFDocument(aContentType, aURL, aCommand,
                                      aContainer,
                                      aDocListener,
                                      aDocViewer);
@@ -448,7 +448,7 @@ done:
 }
 
 nsresult
-nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL, 
+nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL, 
                                     const char* aCommand,
                                     nsIContentViewerContainer* aContainer,
                                     nsIStreamListener** aDocListener,
@@ -476,6 +476,10 @@ nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL,
                                                     kIRDFDocumentIID,
                                                     (void **)&rdfDoc)))
         goto done;
+
+	// Take the RDF document and set its document type (so it knows
+	// whether it's handling RDF or XUL.
+	rdfDoc->SetContentType(aContentType);
 
     if (NS_FAILED(rv = rdfDoc->QueryInterface(kIDocumentIID, (void**) &doc)))
         goto done;
