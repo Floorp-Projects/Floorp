@@ -8,19 +8,55 @@ function doEngineClick(node)
 	var contentArea = document.getElementById("content");
 	if (!contentArea)	return;
 
+	var html="";
+
 	var engineURI = node.getAttribute("id");
 	if (engineURI == "allEngines")
 	{
-		resultsTree.removeAttribute("style");
-		contentArea.setAttribute("style", "height: 100; width: 100%;");
 		dump("Show all engine results.\n");
+
+		resultsTree.setAttribute("style", "height: 70%; width: 100%;");
+		contentArea.setAttribute("style", "height: 100; width: 100%;");
+		html = "<HTML><BODY></BODY></HTML>\n";
 	}
 	else
 	{
 		dump("Show HTML for '" + engineURI + "'\n");
 		resultsTree.setAttribute("style", "display: none;");
 		contentArea.setAttribute("style", "height: 100%; width: 100%;");
+
+		try
+		{
+			var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+			if (rdf)
+			{
+				var internetSearchStore = rdf.GetDataSource("rdf:internetsearch");
+				if (internetSearchStore)
+				{
+					var src = rdf.GetResource(engineURI, true);
+					var htmlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#HTML", true);
+
+					html = internetSearchStore.GetTarget(src, htmlProperty, true);
+					if (html)	html = html.QueryInterface(Components.interfaces.nsIRDFLiteral);
+					if (html)	html = html.Value;
+
+				}
+			}
+		}
+		catch(ex)
+		{
+		}
 	}
+
+	if (html)
+	{
+		var doc = window.frames[0].document;
+		doc.open("text/html", "replace");
+		doc.writeln(html);
+		doc.close();
+	}
+
 }
 
 function doResultClick(node)
