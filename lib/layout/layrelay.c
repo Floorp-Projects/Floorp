@@ -1610,7 +1610,7 @@ lo_rl_FitLayer( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 			/* There is nothing on the cell's line list to reflow.  So, the float list should
 			   also be null.  The next element to be fitted is set to the end layer element. */
 			XP_ASSERT(cell->cell_float_list == NULL);
-			next = endLayer;
+			next = (LO_Element *) endLayer;
 		}		
 
 		/* Since the elements inside the layer are going to be reflowed while state->layer_nest_level
