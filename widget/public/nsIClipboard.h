@@ -34,25 +34,23 @@ class nsIClipboard : public nsISupports {
   public:
 
    /**
-    * Set the transferable object onto the clipboard, 
-    * it is used to get and set the data from the native clipboard
+    * Given a transferable, set the data on the native clipboard
     *
     * @param  aTransferable The transferable
     * @param  anOwner The owner of the transferable
     * @result NS_Ok if no errors
     */
   
-    NS_IMETHOD SetTransferable(nsITransferable * aTransferable, nsIClipboardOwner * anOwner) = 0;
+    NS_IMETHOD SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner) = 0;
 
    /**
-    * Gets the transferable object from the clipboard, 
-    * it is used to get and set the data from the native clipboard
+    * Given a transferable, get the clipboard data.
     *
     * @param  aTransferable The transferable
     * @result NS_Ok if no errors
     */
   
-    NS_IMETHOD GetTransferable(nsITransferable ** aTransferable) = 0;
+    NS_IMETHOD GetData(nsITransferable ** aTransferable) = 0;
 
    /**
     * Gets the data from the clipboard and put it into the transferable object
