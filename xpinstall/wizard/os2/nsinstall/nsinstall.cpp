@@ -198,6 +198,7 @@ void DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
   HDIR            hFile;
   FILEFINDBUF3    fdFile;
   ULONG           ulFindCount;
+  ULONG           ulAttrs;
   char            szDestTemp[MAX_BUF];
   BOOL            bFound;
 
@@ -208,7 +209,9 @@ void DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
     strcat(szDestTemp, "*");
 
     ulFindCount = 1;
-    if((DosFindFirst(szDestTemp, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+    hFile = HDIR_CREATE;
+    ulAttrs = FILE_READONLY | FILE_HIDDEN | FILE_SYSTEM | FILE_DIRECTORY | FILE_ARCHIVED;
+    if((DosFindFirst(szDestTemp, &hFile, ulAttrs, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
       bFound = FALSE;
     else
       bFound = TRUE;
