@@ -328,13 +328,11 @@ nsresult nsFolderCompactState::StartCompacting()
   {
     m_folder->NotifyCompactCompleted();
     m_folder->ThrowAlertMsg("compactFolderDeniedLock", m_window);
+    CleanupTempFilesAfterError();
     if (m_compactAll)
       return CompactNextFolder();
     else
-    {
-      CleanupTempFilesAfterError();
       return rv;
-    }
   }
   if (m_size > 0)
   {
