@@ -1550,9 +1550,18 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
     
+    <implementation>
+      <method name="removeOpenAttribute">
+        <parameter name="parentNode"/>
+        <body><![CDATA[
+          parentNode.removeAttribute("open");
+        ]]></body>
+      </method>
+    </implementation>
+
     <handlers>
       <handler event="popuphiding"><![CDATA[
-        parentNode.removeAttribute("open");
+        setTimeout(this.removeOpenAttribute, 0c, this.parentNode);
       ]]></handler>
     </handlers>
   </binding>
@@ -1576,9 +1585,9 @@
         <body><![CDATA[
           var textbox = document.getBindingParent(this);
           var kids = textbox.getElementsByTagName("menupopup");
-          if (kids.item(0)) {   // Open history popup
+          if (kids.item(0) && textbox.getAttribute("open") != "true") { // Open history popup
             kids[0].showPopup(textbox, -1, -1, "popup", "bottomleft", "topleft");
-            textbox.setAttribute("open", true);
+            textbox.setAttribute("open", "true");
           }
         ]]></body>
       </method>
