@@ -5,9 +5,9 @@
 # current time.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2001/01/04 00:19:53 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/02/15 23:53:33 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
 #
@@ -147,18 +147,18 @@ foreach $tree (@TREES) {
       my (%data) = (
 		    'ReportedBy' => "kestes\@staff.mail.com",
 		    'Bug#' => $bug_id,
-		    'Product' => "$tree",
+		    'Product' => $tree,
 		    'Priority' => "low",
-		    'Status' => '$status',
+		    'Status' => $status,
 		    'Platform' => "All",
 		    'Version' => "1.0",
-		    'Summary' => '$summary',
+		    'Summary' => $summary,
 		    'Component' => "rhcn",
 		    'Severity' => "low",
 		    'QAContact' => "matty\@box.net.au",
 		    
 		    'tinderbox_timenow' => $timenow,
-		    'tinderbox_status' => '$status',
+		    'tinderbox_status' => $status,
 		    'tinderbox_bug_id' => $bug_id,
 		    'tinderbox_bug_url' => "http://bugzilla.mozilla.org/show_bug.cgi?id=$bug_id",
 		    'tinderbox_tree' => "$tree",
