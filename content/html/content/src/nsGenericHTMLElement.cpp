@@ -2707,7 +2707,8 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
         nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
 
         nsCOMPtr<nsICSSStyleRule> rule;
-        result = cssParser->ParseStyleAttribute(aValue, baseURI,
+        result = cssParser->ParseStyleAttribute(aValue, doc->GetDocumentURI(),
+                                                baseURI,
                                                 getter_AddRefs(rule));
         if (cssLoader) {
           cssLoader->RecycleParser(cssParser);
@@ -3032,7 +3033,7 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
     &aData->mDisplayData->mOverflowX,
     &aData->mDisplayData->mOverflowY,
   };
-  for (PRInt32 i = 0; i < NS_ARRAY_LENGTH(overflowValues); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(overflowValues); ++i) {
     if (overflowValues[i]->GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::scrolling);
       if (value && value->Type() == nsAttrValue::eEnum) {

@@ -304,7 +304,9 @@ PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
     }
     rv = PRInt32(mBuffer[mOffset++]);
     if (((rv == '\n') && (mLastRead != '\r')) || (rv == '\r')) {
-      mLineNumber++;
+      // 0 is a magical line number meaning that we don't know (i.e., script)
+      if (mLineNumber != 0)
+        ++mLineNumber;
 #ifdef CSS_REPORT_PARSE_ERRORS
       mColNumber = 0;
 #endif

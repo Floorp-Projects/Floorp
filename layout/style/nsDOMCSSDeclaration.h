@@ -100,7 +100,8 @@ protected:
   
   // This will only fail if it can't get a parser.  This means it can
   // return NS_OK without aURI or aCSSLoader being initialized.
-  virtual nsresult GetCSSParsingEnvironment(nsIURI** aBaseURI,
+  virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
+                                            nsIURI** aBaseURI,
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser) = 0;
 

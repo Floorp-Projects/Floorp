@@ -112,10 +112,12 @@ public:
                    nsICSSStyleSheet*&     aResult);
 
   NS_IMETHOD ParseStyleAttribute(const nsAString&  aAttributeValue,
+                                 nsIURI*           aDocURL,
                                  nsIURI*           aBaseURL,
                                  nsICSSStyleRule** aResult);
   
   NS_IMETHOD ParseAndAppendDeclaration(const nsAString&  aBuffer,
+                                       nsIURI*           aSheetURL,
                                        nsIURI*           aBaseURL,
                                        nsCSSDeclaration* aDeclaration,
                                        PRBool            aParseOnlyOneDecl,
@@ -123,11 +125,13 @@ public:
                                        PRBool            aClearOldDecl);
 
   NS_IMETHOD ParseRule(const nsAString&   aRule,
+                       nsIURI*            aSheetURL,
                        nsIURI*            aBaseURL,
                        nsISupportsArray** aResult);
 
   NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,
+                           nsIURI* aSheetURL,
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
                            PRBool* aChanged);
@@ -629,6 +633,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
 NS_IMETHODIMP
 CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
+                                   nsIURI*                  aDocURL,
                                    nsIURI*                  aBaseURL,
                                    nsICSSStyleRule**        aResult)
 {
@@ -647,7 +652,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL, 1, aBaseURL); // XXX line number & URLs
+  rv = InitScanner(input, aDocURL, 0, aBaseURL); // XXX line number
   NS_RELEASE(input);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
@@ -692,6 +697,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
 
 NS_IMETHODIMP
 CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
+                                         nsIURI*           aSheetURL,
                                          nsIURI*           aBaseURL,
                                          nsCSSDeclaration* aDeclaration,
                                          PRBool            aParseOnlyOneDecl,
@@ -712,7 +718,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL, 1, aBaseURL); // XXX line number & URLs
+  rv = InitScanner(input, aSheetURL, 0, aBaseURL);
   NS_RELEASE(input);
   if (! NS_SUCCEEDED(rv)) {
     return rv;
@@ -753,6 +759,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
 
 NS_IMETHODIMP
 CSSParserImpl::ParseRule(const nsAString& aRule,
+                         nsIURI*            aSheetURL,
                          nsIURI*            aBaseURL,
                          nsISupportsArray** aResult)
 {
@@ -770,7 +777,7 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL, 1, aBaseURL); // XXX line number & URLs
+  rv = InitScanner(input, aSheetURL, 0, aBaseURL);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -809,6 +816,7 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
 NS_IMETHODIMP
 CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
+                             nsIURI* aSheetURL,
                              nsIURI* aBaseURL,
                              nsCSSDeclaration* aDeclaration,
                              PRBool* aChanged)
@@ -829,7 +837,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     return rv;
   }
 
-  rv = InitScanner(input, aBaseURL, 1, aBaseURL); // XXX line number & URLs
+  rv = InitScanner(input, aSheetURL, 0, aBaseURL);
   if (NS_FAILED(rv)) {
     return rv;
   }

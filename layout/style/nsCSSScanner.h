@@ -124,6 +124,8 @@ class nsCSSScanner {
   ~nsCSSScanner();
 
   // Init the scanner.
+  // |aLineNumber == 1| is the beginning of a file, use |aLineNumber == 0|
+  // when the line number is unknown.
   void Init(nsIUnicharInputStream* aInput, nsIURI* aURI, PRUint32 aLineNumber);
 
 #ifdef CSS_REPORT_PARSE_ERRORS

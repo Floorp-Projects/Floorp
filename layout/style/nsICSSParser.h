@@ -90,10 +90,12 @@ public:
   // languages.  aBaseURL is the base url to use for relative links in
   // the declaration.
   NS_IMETHOD ParseStyleAttribute(const nsAString&         aAttributeValue,
+                                 nsIURI*                  aDocURL,
                                  nsIURI*                  aBaseURL,
                                  nsICSSStyleRule**        aResult) = 0;
 
   NS_IMETHOD ParseAndAppendDeclaration(const nsAString&         aBuffer,
+                                       nsIURI*                  aSheetURL,
                                        nsIURI*                  aBaseURL,
                                        nsCSSDeclaration*        aDeclaration,
                                        PRBool                   aParseOnlyOneDecl,
@@ -101,11 +103,13 @@ public:
                                        PRBool                   aClearOldDecl) = 0;
 
   NS_IMETHOD ParseRule(const nsAString&   aRule,
+                       nsIURI*            aSheetURL,
                        nsIURI*            aBaseURL,
                        nsISupportsArray** aResult) = 0;
 
   NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,
+                           nsIURI* aSheetURL,
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
                            PRBool* aChanged) = 0;

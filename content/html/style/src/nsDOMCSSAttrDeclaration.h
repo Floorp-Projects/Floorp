@@ -63,7 +63,8 @@ public:
   // is owned by our current style rule.
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult GetCSSParsingEnvironment(nsIURI** aBaseURI,
+  virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
+                                            nsIURI** aBaseURI,
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);

@@ -137,12 +137,14 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
  * being initialized.
  */
 nsresult
-nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
+nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
+                                                       nsIURI** aBaseURI,
                                                        nsICSSLoader** aCSSLoader,
                                                        nsICSSParser** aCSSParser)
 {
   NS_ASSERTION(mContent, "Something is severely broken -- there should be an nsIContent here!");
   // null out the out params since some of them may not get initialized below
+  *aSheetURI = nsnull;
   *aBaseURI = nsnull;
   *aCSSLoader = nsnull;
   *aCSSParser = nsnull;
@@ -152,7 +154,8 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   // XXXbz GetOwnerDocument
   nsIDocument* doc = nsContentUtils::GetDocument(nodeInfo);
 
-  nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
+  nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
+  nsCOMPtr<nsIURI> sheetURI = doc->GetDocumentURI();
 
   if (doc) {
     NS_IF_ADDREF(*aCSSLoader = doc->GetCSSLoader());
@@ -176,7 +179,8 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
   (*aCSSParser)->SetCaseSensitive(!mContent->IsContentOfType(nsIContent::eHTML) ||
                                   nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
 
-  base.swap(*aBaseURI);
+  baseURI.swap(*aBaseURI);
+  sheetURI.swap(*aSheetURI);
 
   return NS_OK;
 }
