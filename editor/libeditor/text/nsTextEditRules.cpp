@@ -330,7 +330,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
         if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTCOLOR))
         {
           nsAutoString value;
-          value = aTypeInState.GetFontColor();
+          aTypeInState.GetFontColor(value);
           nsAutoString attr;
           nsIEditProperty::color->ToString(attr);
           result = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection);
@@ -338,7 +338,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
         if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTFACE))
         {
           nsAutoString value;
-          value = aTypeInState.GetFontFace();
+          aTypeInState.GetFontFace(value);
           nsAutoString attr;
           nsIEditProperty::face->ToString(attr);
           result = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection); 
@@ -346,7 +346,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
         if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTSIZE))
         {
           nsAutoString value;
-          value = aTypeInState.GetFontSize();
+          aTypeInState.GetFontSize(value);
           nsAutoString attr;
           nsIEditProperty::size->ToString(attr);
           result = CreateFontStyleForInsertText(newTextNode, attr, value, aSelection);

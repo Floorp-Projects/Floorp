@@ -42,6 +42,7 @@ nsIAtom * nsIEditProperty::sup;
 nsIAtom * nsIEditProperty::tt;
 nsIAtom * nsIEditProperty::u;
 // block tags
+nsIAtom * nsIEditProperty::blockquote;
 nsIAtom * nsIEditProperty::h1;
 nsIAtom * nsIEditProperty::h2;
 // properties
@@ -68,6 +69,7 @@ nsEditProperty::InstanceInit()
   nsIEditProperty::tt =   NS_NewAtom("TT");
   nsIEditProperty::u =    NS_NewAtom("U");
   // tags
+  nsIEditProperty::blockquote =    NS_NewAtom("BLOCKQUOTE");
   nsIEditProperty::h1 =    NS_NewAtom("H1");
   nsIEditProperty::h2 =    NS_NewAtom("H2");
   // properties
@@ -95,6 +97,7 @@ nsEditProperty::InstanceShutdown()
   NS_IF_RELEASE(nsIEditProperty::tt);
   NS_IF_RELEASE(nsIEditProperty::u);
   // tags
+  NS_IF_RELEASE(nsIEditProperty::blockquote);
   NS_IF_RELEASE(nsIEditProperty::h1);
   NS_IF_RELEASE(nsIEditProperty::h2);
   // properties

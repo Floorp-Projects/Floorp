@@ -1845,7 +1845,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
               }
             }
             // else we've found the style tag (referred to by "parent")
-            // nwMiddleNode is the node that is an ancestor to the selection
+            // newMiddleNode is the node that is an ancestor to the selection
             else
             {
               if (gNoisy) { printf("* this is the style node\n");}
@@ -2227,11 +2227,13 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState    &aTypeInState,
   if (!aPropName) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (nsIEditProperty::b==aPropName) 
+  PRUint32 propEnum;
+  aTypeInState.GetEnumForName(aPropName, propEnum);
+  if (nsIEditProperty::b==aPropName || nsIEditProperty::i==aPropName || nsIEditProperty::u==aPropName) 
   {
-    if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
+    if (PR_TRUE==aTypeInState.IsSet(propEnum))
     { // toggle currently set boldness
-      aTypeInState.UnSet(NS_TYPEINSTATE_BOLD);
+      aTypeInState.UnSet(propEnum);
     }
     else
     { // get the current style and set boldness to the opposite of the current state
@@ -2239,53 +2241,25 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState    &aTypeInState,
       PRBool all = PR_FALSE;
       PRBool first = PR_FALSE;
       GetTextProperty(aPropName, aAttribute, nsnull, first, any, all); // operates on current selection
-      aTypeInState.SetBold(!any);
+      aTypeInState.SetProp(propEnum, !any);
     }
-  }
-  else if (nsIEditProperty::i==aPropName) 
-  {
-    if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
-    { // toggle currently set italicness
-      aTypeInState.UnSet(NS_TYPEINSTATE_ITALIC);
-    }
-    else
-    { // get the current style and set italic proper to the opposite of the current state
-      PRBool any = PR_FALSE;
-      PRBool all = PR_FALSE;
-      PRBool first = PR_FALSE;
-      GetTextProperty(aPropName, aAttribute, nsnull, first, any, all); // operates on current selection
-      aTypeInState.SetItalic(!any);
-    }    
-  }
-  else if (nsIEditProperty::u==aPropName)
-  {
-    if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
-    { // toggle currently set italicness
-      aTypeInState.UnSet(NS_TYPEINSTATE_UNDERLINE);
-    }
-    else
-    { // get the current style and set underline prop to the opposite of the current state
-      PRBool any = PR_FALSE;
-      PRBool all = PR_FALSE;
-      PRBool first = PR_FALSE;
-      GetTextProperty(aPropName, aAttribute, nsnull, first, any, all); // operates on current selection
-      aTypeInState.SetUnderline(!any);
-    }    
   }
   else if (nsIEditProperty::font==aPropName)
   {
     if (!aAttribute) { return NS_ERROR_NULL_POINTER; }
     nsIAtom *attribute = NS_NewAtom(*aAttribute);
     if (!attribute) { return NS_ERROR_NULL_POINTER; }
-    if (nsIEditProperty::color==attribute)
+    PRUint32 attrEnum;
+    aTypeInState.GetEnumForName(attribute, attrEnum);
+    if (nsIEditProperty::color==attribute || nsIEditProperty::face==attribute || nsIEditProperty::size==attribute)
     {
-      if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_FONTCOLOR))
+      if (PR_TRUE==aTypeInState.IsSet(attrEnum))
       { 
         if (nsnull==aValue) {
-          aTypeInState.UnSet(NS_TYPEINSTATE_FONTCOLOR);
+          aTypeInState.UnSet(attrEnum);
         }
         else { // we're just changing the value of color
-          aTypeInState.SetFontColor(*aValue);
+          aTypeInState.SetPropValue(attrEnum, *aValue);
         }
       }
       else
@@ -2296,55 +2270,9 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState    &aTypeInState,
         PRBool first = PR_FALSE;
         GetTextProperty(aPropName, aAttribute, aValue, first, any, all); // operates on current selection
         if (PR_FALSE==all) {
-          aTypeInState.SetFontColor(*aValue);
+          aTypeInState.SetPropValue(attrEnum, *aValue);
         }
       }    
-    }
-    else if (nsIEditProperty::face==attribute)
-    {
-      if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_FONTFACE))
-      { 
-        if (nsnull==aValue) {
-          aTypeInState.UnSet(NS_TYPEINSTATE_FONTFACE);
-        }
-        else { // we're just changing the value of color
-          aTypeInState.SetFontFace(*aValue);
-        }
-      }
-      else
-      { // get the current style and set font color if it's needed
-        if (!aValue) { return NS_ERROR_NULL_POINTER; }
-        PRBool any = PR_FALSE;
-        PRBool all = PR_FALSE;
-        PRBool first = PR_FALSE;
-        GetTextProperty(aPropName, aAttribute, aValue, first, any, all); // operates on current selection
-        if (PR_FALSE==all) {
-          aTypeInState.SetFontFace(*aValue);
-        }
-      } 
-    }
-    if (nsIEditProperty::size==attribute)
-    {
-      if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_FONTSIZE))
-      { 
-        if (nsnull==aValue) {
-          aTypeInState.UnSet(NS_TYPEINSTATE_FONTSIZE);
-        }
-        else { // we're just changing the value of size
-          aTypeInState.SetFontSize(*aValue);
-        }
-      }
-      else
-      { // get the current style and set font color if it's needed
-        if (!aValue) { return NS_ERROR_NULL_POINTER; }
-        PRBool any = PR_FALSE;
-        PRBool all = PR_FALSE;
-        PRBool first = PR_FALSE;
-        GetTextProperty(aPropName, aAttribute, aValue, first, any, all); // operates on current selection
-        if (PR_FALSE==all) {
-          aTypeInState.SetFontSize(*aValue);
-        }
-      } 
     }
     else { return NS_ERROR_FAILURE; }
   }
