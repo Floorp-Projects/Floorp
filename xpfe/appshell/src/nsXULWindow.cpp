@@ -834,13 +834,13 @@ void nsXULWindow::OnChromeLoaded()
 
     PRBool positionSet = PR_TRUE;
     nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
-  #ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     // don't override WM placement on unix for independent, top-level windows
     // (however, we think the benefits of intelligent dependent window placement
     // trump that override.)
     if (!parentWindow)
       positionSet = PR_FALSE;
-  #endif
+#endif
     if (positionSet)
       positionSet = LoadPositionFromXUL();
     LoadSizeStateFromXUL();
