@@ -72,7 +72,7 @@ nsCookieService::nsCookieService()
 
 nsCookieService::~nsCookieService(void)
 {
-  COOKIE_Write(PR_FALSE); /* in case any deleted cookies didn't get removed from file yet */
+  COOKIE_Write();
   COOKIE_RemoveAll();
 }
 
@@ -127,7 +127,7 @@ nsCookieService::OnStateChange(nsIWebProgress* aWebProgress,
 {
     if (progressStateFlags & STATE_IS_DOCUMENT)
         if (progressStateFlags & STATE_STOP)
-            COOKIE_Write(PR_TRUE);
+            COOKIE_Notify();
     return NS_OK;
 }
 

@@ -123,7 +123,7 @@ nsresult nsCookieManager::Init()
 
 NS_IMETHODIMP nsCookieManager::RemoveAll(void) {
   ::COOKIE_RemoveAll();
-  ::COOKIE_Write(PR_FALSE);
+  ::COOKIE_Write();
   return NS_OK;
 }
 

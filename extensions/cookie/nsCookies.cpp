@@ -1578,7 +1578,7 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
 
 /* saves out the HTTP cookies to disk */
 PUBLIC nsresult
-COOKIE_Write(PRBool notify = PR_TRUE) {
+COOKIE_Write() {
   if (!cookie_changed) {
     return NS_OK;
   }
@@ -1654,14 +1654,16 @@ COOKIE_Write(PRBool notify = PR_TRUE) {
   strm.flush();
   strm.close();
 
-  /* Notify cookie manager dialog to update its display */
-  if (notify) {
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    if (os) {
-      os->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
-    }
-  }
+  return NS_OK;
+}
 
+/* Notify cookie manager dialog to update its display */
+PUBLIC nsresult
+COOKIE_Notify() {
+  nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+  if (os) {
+    os->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("cookies").get());
+  }
   return NS_OK;
 }
 
@@ -1756,6 +1758,7 @@ COOKIE_Read() {
     /* check for bad legacy cookies (domain not starting with a dot) */
     if (new_cookie->isDomain && *new_cookie->host != '.') {
       /* bad cookie, discard it */
+      deleteCookie((void*)new_cookie, nsnull);
       continue;
     }
 
@@ -1763,6 +1766,7 @@ COOKIE_Read() {
     if (!cookie_list) {
       cookie_list = new nsVoidArray();
       if (!cookie_list) {
+        deleteCookie((void*)new_cookie, nsnull);
         strm.close();
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1930,7 +1934,7 @@ COOKIE_Remove
         cookie_list->RemoveElementAt(count);
         deleteCookie((void*)cookie, nsnull);
         cookie_changed = PR_TRUE;
-        COOKIE_Write(PR_FALSE); // don't update cookie-manager display
+        COOKIE_Write();
         break;
       }
     }
