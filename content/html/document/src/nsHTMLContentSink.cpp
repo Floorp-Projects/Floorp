@@ -339,7 +339,6 @@ public:
   PRInt32 mNumOpenIFRAMES;
 
   nsCString           mRef;
-  nsScrollPreference  mOriginalScrollPreference;
 
   nsString            mBaseHREF;
   nsString            mBaseTarget;
@@ -3516,15 +3515,13 @@ HTMLContentSink::StartLayout()
   // Else, reset scrolling to default settings for this shell.
   // This must happen before the initial reflow, when we create the root frame
   nsresult rv;
-  if (mWebShell) {
-    nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mWebShell, &rv);
-    if (NS_SUCCEEDED(rv) && scrollableContainer) {
-      if (mFrameset) {
-        scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, NS_STYLE_OVERFLOW_HIDDEN);
-        scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X, NS_STYLE_OVERFLOW_HIDDEN);
-      } else {
-        scrollableContainer->ResetScrollbarPreferences();
-      }
+  nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mWebShell, &rv);
+  if (NS_SUCCEEDED(rv) && scrollableContainer) {
+    if (mFrameset) {
+      scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, NS_STYLE_OVERFLOW_HIDDEN);
+      scrollableContainer->SetCurrentScrollbarPreferences(nsIScrollable::ScrollOrientation_X, NS_STYLE_OVERFLOW_HIDDEN);
+    } else {
+      scrollableContainer->ResetScrollbarPreferences();
     }
   }
 
@@ -3568,7 +3565,7 @@ HTMLContentSink::StartLayout()
     }
   }
 
-  if ((nsnull != ref) || mFrameset) {
+  if (ref || mFrameset) {
     // XXX support more than one presentation-shell here
 
     // Get initial scroll preference and save it away; disable the
@@ -3586,10 +3583,6 @@ HTMLContentSink::StartLayout()
             nsIScrollableView* sview = nsnull;
             rootView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &sview);
             if (nsnull != sview) {
-              if (mFrameset)
-                mOriginalScrollPreference = nsScrollPreference_kNeverScroll;
-              else
-                sview->GetScrollPreference(mOriginalScrollPreference);
               sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
             }
           }
