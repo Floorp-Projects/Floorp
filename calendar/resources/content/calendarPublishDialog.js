@@ -79,10 +79,7 @@
 */
 
 
-var gCalendarObject;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
-
-var gMode = ''; //what mode are we in? new or edit...
 
 /*-----------------------------------------------------------------
 *   W I N D O W      F U N C T I O N S
@@ -92,41 +89,13 @@ var gMode = ''; //what mode are we in? new or edit...
 *   Called when the dialog is loaded.
 */
 
-function loadCalendarServerDialog()
+function loadCalendarPublishDialog()
 {
    // Get arguments, see description at top of file
    
    var args = window.arguments[0];
    
-   gMode = args.mode;
-   
    gOnOkFunction = args.onOk;
-   gCalendarObject = args.CalendarObject;
-   
-   // mode is "new or "edit" - show proper header
-   var titleDataItem = null;
-
-   if( "new" == args.mode )
-   {
-      titleDataItem = document.getElementById( "data-event-title-new" );
-   }
-   else
-   {
-      titleDataItem = document.getElementById( "data-event-title-edit" );
-
-      document.getElementById( "server-path-textbox" ).setAttribute( "readonly", "true" );
-   }
-   
-   document.getElementById( "calendar-serverwindow" ).setAttribute( "title", titleDataItem.getAttribute( "value" ) );
-
-   document.getElementById( "server-name-textbox" ).value = gCalendarObject.name;
-
-   if( gCalendarObject.remote == true )
-      document.getElementById( "server-path-textbox" ).value = gCalendarObject.remotePath;
-   else
-      document.getElementById( "server-path-textbox" ).value = gCalendarObject.path;
-   
-   // start focus on title
    
    var firstFocus = document.getElementById( "server-name-textbox" );
    firstFocus.focus();
@@ -140,50 +109,17 @@ function loadCalendarServerDialog()
 
 function onOKCommand()
 {
-   gCalendarObject.name = document.getElementById( "server-name-textbox" ).value;
+   var CalendarPublishObject = new Object();
 
-   gCalendarObject.path = document.getElementById( "server-path-textbox" ).value;
+   CalendarPublishObject.url = document.getElementById( "publish-url-textbox" ).value;
+   CalendarPublishObject.remotePath = document.getElementById( "publish-remotefilename-textbox" ).value;
+   CalendarPublishObject.username = document.getElementById( "publish-username-textbox" ).value;
+   CalendarPublishObject.password = document.getElementById( "publish-password-textbox" ).value;
 
-   //TODO: check that the gCalendarObject.path is actually a file, if its not, create it.
-   
    // call caller's on OK function
-   gOnOkFunction( gCalendarObject );
+   gOnOkFunction( CalendarPublishObject );
       
    // tell standard dialog stuff to close the dialog
    return true;
 }
 
-
-function launchFilePicker()
-{
-   // No show the 'Save As' dialog and ask for a filename to save to
-   const nsIFilePicker = Components.interfaces.nsIFilePicker;
-
-   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-
-   // caller can force disable of sand box, even if ON globally
-
-   fp.init(window, "Open", nsIFilePicker.modeOpen);
-
-   var ServerName = document.getElementById( "server-name-textbox" ).value;
-
-   if( ServerName == "" )
-      fp.defaultString = "MozillaCalendarFile.ics";
-   else
-      fp.defaultString = "MozillaCalendar"+ServerName+".ics";
-   
-   fp.defaultExtension = "ics";
-
-   const filterCalendar    = "Calendar Files";
-   const extensionCalendar = ".ics";
-   fp.appendFilter( filterCalendar, "*" + extensionCalendar );
-   
-   fp.show();
-
-   if (fp.file && fp.file.path.length > 0)
-   {
-      document.getElementById( "server-path-textbox" ).value = fp.file.path;
-
-      gCalendarObject.path = fp.file.path;
-   }
-}

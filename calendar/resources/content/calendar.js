@@ -770,19 +770,26 @@ function print()
 {
    // print sample monthcalendar if in month-view, and june is selected
    if( gCalendarWindow.currentView == gCalendarWindow.monthView && gCalendarWindow.getSelectedDate().getMonth() == 5)
-      printEventArray( 
-         gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/ecsJune.xsl" );
+      printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/ecsJune.xsl" );
    else
-   printEventArray(
-      gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
+      printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
 }
 
 
 function publishCalendarData()
 {
+   var args = new Object();
+   
+   args.onOk =  self.publishCalendarDataDialogResponse;
+   
+   openDialog("chrome://calendar/content/calendarPublishDialog.xul", "caPublishEvents", "chrome,modal", args );
+}
+
+function publishCalendarDataDialogResponse( CalendarPublishObject )
+{
    var calendarString = eventArrayToICalString( gCalendarWindow.EventSelection.selectedEvents );
    
-   calendarPublish(calendarString, "http://localhost/webdav/", "TestCalendar.ics", "", "", "text/calendar");
+   calendarPublish(calendarString, CalendarPublishObject.url, CalendarPublishObject.remotePath, CalendarPublishObject.username, CalendarPublishObject.password, "text/calendar");
 }
 
 /*

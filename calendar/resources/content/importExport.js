@@ -124,7 +124,7 @@ function loadEventsFromFile()
       
       var buttonPressed =      
       promptService.confirmEx(window, 
-           "Import", "About to import " + calendarEventArray.length + " event(s). Do you want to open all events to import before importing?", 
+           "Import", "About to import " + calendarEventArray.length + " event(s).\nDo you want to open all events to import before importing?", 
            (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
            (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
            (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 

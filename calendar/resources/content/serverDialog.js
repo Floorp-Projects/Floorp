@@ -117,6 +117,8 @@ function loadCalendarServerDialog()
       document.getElementById( "server-path-textbox" ).setAttribute( "readonly", "true" );
    }
    
+   document.getElementById( "calendar-serverwindow" ).setAttribute( "title", titleDataItem.getAttribute( "value" ) );
+
    document.getElementById( "server-name-textbox" ).value = gCalendarObject.name;
 
    if( gCalendarObject.remote == true )
@@ -161,7 +163,7 @@ function launchFilePicker()
 
    // caller can force disable of sand box, even if ON globally
 
-   fp.init(window, "Save As", nsIFilePicker.modeSave);
+   fp.init(window, "Open", nsIFilePicker.modeOpen);
 
    var ServerName = document.getElementById( "server-name-textbox" ).value;
 
