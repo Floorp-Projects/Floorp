@@ -94,6 +94,8 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
 		,	App_ChromeDirectory            = App_DirectoryBase +   31
 		,	App_PluginsDirectory           = App_DirectoryBase +   32
 
+        ,   App_UserChromeDirectory        = App_DirectoryBase +   40
+
 		,   App_FileBase                   = App_DirectoryBase + 1000
 		,   App_PreferencesFile30          = App_FileBase      +    1
 		,   App_PreferencesFile40          = App_FileBase      +    2
