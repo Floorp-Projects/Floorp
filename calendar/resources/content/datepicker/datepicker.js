@@ -395,11 +395,8 @@ oeDatePicker.redrawDays = function( )
          
          dayNumberItem.setAttribute( "value" , dayNumber );
          
-         // draw the day as selected, if the Original Day is visible
-         
-         if( dayNumber == oeDatePicker.gOriginalDate.getDate() &&
-             oeDatePicker.gSelectedDate.getYear() == oeDatePicker.gOriginalDate.getYear() && 
-             oeDatePicker.gSelectedDate.getMonth() == oeDatePicker.gOriginalDate.getMonth() ) 
+         // draw the day as selected
+         if( dayNumber == oeDatePicker.gSelectedDate.getDate() ) 
          {
             var dayNumberBoxItem = document.getElementById( "oe-date-picker-month-day-" + (dayIndex + 1) + "-box"  );
             oeDatePicker.selectDayItem( dayNumberBoxItem );
