@@ -119,6 +119,26 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFileTransportService::CreateTransportFromFileSystem(nsIFileSystem *fsObj,
+                                                      const char *command,
+                                                      nsIEventSinkGetter *getter,
+                                                      nsIChannel **result)
+{
+    nsresult rv;
+    nsFileTransport* trans = new nsFileTransport();
+    if (trans == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(trans);
+    rv = trans->Init(fsObj, command, getter);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(trans);
+        return rv;
+    }
+    *result = trans;
+    return NS_OK;
+}
+
 nsresult
 nsFileTransportService::ProcessPendingRequests(void)
 {

@@ -285,55 +285,55 @@ nsresult
 nsFileTransport::Init(nsFileSpec& spec, const char* command, nsIEventSinkGetter* getter)
 {
     nsresult rv;
-    if (mMonitor == nsnull) {
-        mMonitor = nsAutoMonitor::NewMonitor("nsFileTransport");
-        if (mMonitor == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
     mSpec = spec;
-    rv = nsLocalFileSystem::Create(spec, getter_AddRefs(mFileObject));
-    if (NS_FAILED(rv))
-        return rv;
-    if (getter) {
-        nsCOMPtr<nsISupports> sink;
-        (void)getter->GetEventSink(command, 
-            nsIProgressEventSink::GetIID(), getter_AddRefs(sink));
-        if (sink) 
-        {
-            // Now generate a proxied event sink-
-            NS_WITH_SERVICE(nsIProxyObjectManager, 
-                    proxyMgr, kProxyObjectManagerCID, &rv);
-            if (NS_SUCCEEDED(rv))
-            {
-                rv = proxyMgr->GetProxyObject(
-                                nsnull, // primordial thread - should change?
-                                NS_GET_IID(nsIProgressEventSink),
-                                sink,
-                                PROXY_ASYNC | PROXY_ALWAYS,
-                                getter_AddRefs(mProgress));
-            }
-        }
-    }
-    return NS_OK;
+    nsCOMPtr<nsIFileSystem> fsObj;
+    rv = nsLocalFileSystem::Create(spec, getter_AddRefs(fsObj));
+    if (NS_FAILED(rv)) return rv;
+    return Init(fsObj, command, getter);
 }
 
 nsresult
 nsFileTransport::Init(nsIInputStream* fromStream, const char* contentType,
                       PRInt32 contentLength, const char* command, nsIEventSinkGetter* getter)
 {
+    nsresult rv;
+    nsCOMPtr<nsIFileSystem> fsObj;
+    rv = nsInputStreamFileSystem::Create(fromStream, contentType, contentLength,
+                                         getter_AddRefs(fsObj));
+    if (NS_FAILED(rv)) return rv;
+    return Init(fsObj, command, getter);
+}
+
+nsresult
+nsFileTransport::Init(nsIFileSystem* fsObj,
+                      const char* command,
+                      nsIEventSinkGetter* getter)
+{
+    nsresult rv = NS_OK;
     if (mMonitor == nsnull) {
         mMonitor = nsAutoMonitor::NewMonitor("nsFileTransport");
         if (mMonitor == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    nsInputStreamFileSystem::Create(fromStream, contentType, contentLength,
-                                    getter_AddRefs(mFileObject));
+    mFileObject = fsObj;
     if (getter) {
         nsCOMPtr<nsISupports> sink;
-        (void)getter->GetEventSink(command, nsIProgressEventSink::GetIID(), getter_AddRefs(sink));
-        mProgress = (nsIProgressEventSink*)sink.get();
+        rv = getter->GetEventSink(command, 
+                                  nsIProgressEventSink::GetIID(), getter_AddRefs(sink));
+        if (NS_FAILED(rv)) return NS_OK;        // don't need a progress event sink
+
+        // Now generate a proxied event sink
+        NS_WITH_SERVICE(nsIProxyObjectManager, 
+                        proxyMgr, kProxyObjectManagerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = proxyMgr->GetProxyObject(nsnull, // primordial thread - should change?
+                                      NS_GET_IID(nsIProgressEventSink),
+                                      sink,
+                                      PROXY_ASYNC | PROXY_ALWAYS,
+                                      getter_AddRefs(mProgress));
     }
-    return NS_OK;
+    return rv;
 }
 
 nsFileTransport::~nsFileTransport()
