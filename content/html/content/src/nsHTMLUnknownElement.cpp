@@ -216,8 +216,8 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
   }
 
   if (aNotify && mDocument) {
-    result = mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
-                                         nsIDOMMutationEvent::MODIFICATION);
+    mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
+                                nsIDOMMutationEvent::MODIFICATION);
   }
 
   return result;

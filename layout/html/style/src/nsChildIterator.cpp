@@ -58,8 +58,7 @@ ChildIterator::Init(nsIContent*    aContent,
   if (! doc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIBindingManager> mgr;
-  doc->GetBindingManager(getter_AddRefs(mgr));
+  nsIBindingManager *mgr = doc->GetBindingManager();
   if (! mgr)
     return NS_ERROR_FAILURE;
 

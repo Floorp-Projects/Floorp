@@ -608,11 +608,8 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
   
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
 
-  nsCOMPtr<nsIURI> uri;
-  doc->GetDocumentURL(getter_AddRefs(uri));
-
   nsCAutoString realm;
-  if (!GetPasswordRealm(uri, realm))
+  if (!GetPasswordRealm(doc->GetDocumentURL(), realm))
     return NS_OK;
 
   SignonHashEntry* hashEnt;
@@ -748,11 +745,8 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
     return NS_OK;
 
   // Check the reject list
-  nsCOMPtr<nsIURI> uri;
-  aFormNode->GetDocument()->GetDocumentURL(getter_AddRefs(uri));
-
   nsCAutoString realm;
-  if (!GetPasswordRealm(uri, realm))
+  if (!GetPasswordRealm(aFormNode->GetDocument()->GetDocumentURL(), realm))
     return NS_OK;
 
   PRInt32 rejectValue;
@@ -1170,11 +1164,9 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
     aElement->GetOwnerDocument(getter_AddRefs(domDoc));
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-    nsCOMPtr<nsIURI> uri;
-    doc->GetDocumentURL(getter_AddRefs(uri));
 
     nsCAutoString realm;
-    if (!GetPasswordRealm(uri, realm)) {
+    if (!GetPasswordRealm(doc->GetDocumentURL(), realm)) {
       *aResult = nsnull;
       return NS_OK;
     }
@@ -1650,13 +1642,9 @@ nsPasswordManager::FillPassword(nsIDOMEvent* aEvent)
     return NS_OK;
 
   nsCOMPtr<nsIContent> fieldContent = do_QueryInterface(userField);
-  nsIDocument* doc = fieldContent->GetDocument();
-
-  nsCOMPtr<nsIURI> documentURL;
-  doc->GetDocumentURL(getter_AddRefs(documentURL));
 
   nsCAutoString realm;
-  if (!GetPasswordRealm(documentURL, realm))
+  if (!GetPasswordRealm(fieldContent->GetDocument()->GetDocumentURL(), realm))
     return NS_OK;
 
   nsAutoString userValue;

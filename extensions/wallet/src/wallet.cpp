@@ -2707,8 +2707,7 @@ static void
 wallet_InitializeCurrentURL(nsIDocument * doc) {
 
   /* get url */
-  nsCOMPtr<nsIURI> url;
-  doc->GetDocumentURL(getter_AddRefs(url));
+  nsIURI *url = doc->GetDocumentURL();
   if (wallet_lastUrl == url) {
     return;
   } else {
@@ -3436,8 +3435,7 @@ wallet_TraversalForPrefill
     if (NS_SUCCEEDED(result)) {
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
       if (doc) {
-        nsCOMPtr<nsIURI> url;
-        doc->GetDocumentURL(getter_AddRefs(url));
+        nsIURI *url = doc->GetDocumentURL();
         if (url) {
           wallet_GetHostFile(url, urlName);
         }
@@ -3911,8 +3909,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   if (!doc) {
     return;
   }
-  nsCOMPtr<nsIURI> docURL;
-  doc->GetDocumentURL(getter_AddRefs(docURL));
+  nsIURI *docURL = doc->GetDocumentURL();
   if (!docURL) {
     return;
   }

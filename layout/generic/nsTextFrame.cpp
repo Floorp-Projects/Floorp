@@ -2053,7 +2053,7 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsIPresContext*          aPresConte
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  doc->GetLineBreaker(aLineBreaker);
+  NS_IF_ADDREF(*aLineBreaker = doc->GetLineBreaker());
 
   aIsSelected = (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 
@@ -2508,9 +2508,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   }
 
   // Transform text from content into renderable form
-  nsCOMPtr<nsILineBreaker> lb;
-  doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(lb, nsnull, aPresContext);
+  nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
   PRInt32 textLength;
   PRInt32 numSpaces;
 
@@ -3407,9 +3405,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
 
       // Get the renderable form of the text
       nsCOMPtr<nsIDocument> doc(GetDocument(aCX));
-      nsCOMPtr<nsILineBreaker> lb;
-      doc->GetLineBreaker(getter_AddRefs(lb));
-      nsTextTransformer tx(lb, nsnull, aCX);
+      nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aCX);
       PRInt32 textLength;
       // no need to worry about justification, that's always on the slow path
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -3745,9 +3741,7 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
 
   // Transform text from content into renderable form
   nsCOMPtr<nsIDocument> doc(GetDocument(aPresContext));
-  nsCOMPtr<nsILineBreaker> lb;
-  doc->GetLineBreaker(getter_AddRefs(lb));
-  nsTextTransformer tx(lb, nsnull, aPresContext);
+  nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
   PRInt32 textLength;
   PRInt32 numSpaces;
 
@@ -3956,10 +3950,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       if (!doc) {
         return NS_OK;
       }
-      nsCOMPtr<nsILineBreaker> lb;
-      doc->GetLineBreaker(getter_AddRefs(lb));
-
-      nsTextTransformer tx(lb, nsnull, aPresContext);
+      nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
       if (textLength)//if no renderable length, you cant park here.
@@ -3986,10 +3977,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       if (!doc) {
         return NS_OK;
       }
-      nsCOMPtr<nsILineBreaker> lb;
-      doc->GetLineBreaker(getter_AddRefs(lb));
-
-      nsTextTransformer tx(lb, nsnull, aPresContext);
+      nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
       nsIFrame *frameUsed = nsnull;
@@ -4131,12 +4119,8 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         return result;
       }
 
-      nsCOMPtr<nsILineBreaker> lb;
-      doc->GetLineBreaker(getter_AddRefs(lb));
-      nsCOMPtr<nsIWordBreaker> wb;
-      doc->GetWordBreaker(getter_AddRefs(wb));
-
-      nsTextTransformer tx(lb, wb, aPresContext);
+      nsTextTransformer tx(doc->GetLineBreaker(),
+                           doc->GetWordBreaker(), aPresContext);
 
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
       nsIFrame *frameUsed = nsnull;
@@ -4415,11 +4399,8 @@ nsTextFrame::CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRIn
       return rv;
     if (!doc)
       return NS_ERROR_FAILURE;
-  //get the linebreaker
-    nsCOMPtr<nsILineBreaker> lb;
-    doc->GetLineBreaker(getter_AddRefs(lb));
   //create texttransformer
-    nsTextTransformer tx(lb, nsnull, aContext);
+    nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aContext);
   //create the buffers
     nsAutoTextBuffer paintBuffer;
     nsAutoIndexBuffer indexBuffer;
@@ -5313,12 +5294,11 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
     NS_WARNING("Content has no document.");
     return NS_ERROR_FAILURE; 
   }
-  nsCOMPtr<nsILineBreaker> lb;
-  doc->GetLineBreaker(getter_AddRefs(lb));
   PRBool forceArabicShaping = (ts.mSmallCaps ||
                                (0 != ts.mWordSpacing) ||
                                (0 != ts.mLetterSpacing) ||
                                ts.mJustifying);
+  nsILineBreaker *lb = doc->GetLineBreaker();
   nsTextTransformer tx(lb, nsnull, aPresContext);
   // Keep the text in ascii if possible. Note that if we're measuring small
   // caps text then transform to Unicode because the helper function only

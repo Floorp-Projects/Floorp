@@ -1342,9 +1342,9 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         }
 
         mFocusedWeakShell = do_GetWeakReference(presShell);
-        nsCOMPtr<nsIContent> docContent;
-        doc->GetRootContent(getter_AddRefs(docContent));
+        nsIContent *docContent = doc->GetRootContent();
         if (docContent) {
+          // XXXbryner Do we really want to focus the root content here?
           docContent->SetFocus(presContext);
         }
         // Get selection controller and selection for new frame/iframe
@@ -1493,7 +1493,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     rootContent = do_QueryInterface(bodyEl);
   }
   if (!rootContent) {
-    doc->GetRootContent(getter_AddRefs(rootContent));
+    rootContent = doc->GetRootContent();
   }
   nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootContent));
 
@@ -1981,15 +1981,11 @@ nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
     }
   }
 
-  nsCOMPtr<nsIDocument> parentDoc;
-  doc->GetParentDocument(getter_AddRefs(parentDoc));
+  nsIDocument *parentDoc = doc->GetParentDocument();
   if (parentDoc) {
-    nsCOMPtr<nsIContent> browserElContent;
     // get content for <browser>
-    parentDoc->FindContentForSubDocument(doc,
-                                         getter_AddRefs(browserElContent));
     nsCOMPtr<nsIDOMElement> browserElement =
-      do_QueryInterface(browserElContent);
+      do_QueryInterface(parentDoc->FindContentForSubDocument(doc));
 
     if (browserElement) {
       nsAutoString tagName, autoFind, test;
@@ -2483,9 +2479,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-  doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(ourGlobal));
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(doc->GetScriptGlobalObject()));
   nsCOMPtr<nsIDOMWindow> topContentWin;
   GetStartWindow(domWin, getter_AddRefs(topContentWin));
 
@@ -3015,8 +3009,7 @@ nsTypeAheadController::EnsureContentWindow(nsIDOMWindowInternal *aFocusedWin,
         docShell->GetPresContext(getter_AddRefs(presContext));
         NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-        nsCOMPtr<nsIContent> rootContent;
-        doc->GetRootContent(getter_AddRefs(rootContent));
+        nsIContent *rootContent = doc->GetRootContent();
         NS_ENSURE_TRUE(rootContent, NS_ERROR_FAILURE);
         rootContent->SetFocus(presContext);
       }

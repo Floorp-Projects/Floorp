@@ -134,12 +134,12 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
     GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
     // Get the document URI for the referrer...
-    nsCOMPtr<nsIURI> documentURI;
+    nsIURI *documentURI = nsnull;
     nsCOMPtr<nsIDocument> doc;
     if (mContent) {
       doc = mContent->GetDocument();
       if (doc) {
-        doc->GetDocumentURL(getter_AddRefs(documentURI));
+        documentURI = doc->GetDocumentURL();
       }
     }
 
@@ -1630,12 +1630,12 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
         GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
         // Get the document URI for the referrer...
-        nsCOMPtr<nsIURI> documentURI;
+        nsIURI* documentURI = nsnull;
         nsCOMPtr<nsIDocument> doc;
         if (mContent) {
           doc = mContent->GetDocument();
           if (doc) {
-            doc->GetDocumentURL(getter_AddRefs(documentURI));
+            documentURI = doc->GetDocumentURL();
           }
         }
 
@@ -1808,7 +1808,7 @@ nsBulletFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGr
   if (!doc)
     return;
 
-  doc->GetDocumentLoadGroup(aLoadGroup);
+  *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
 }
 
 

@@ -125,8 +125,7 @@ NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole)
   *aRole = ROLE_PANE;
 
   // If it's a <dialog>, use ROLE_DIALOG instead
-  nsCOMPtr<nsIContent> rootContent;
-  mDocument->GetRootContent(getter_AddRefs(rootContent));
+  nsIContent *rootContent = mDocument->GetRootContent();
   if (rootContent) {
     nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(rootContent));
     if (rootElement) {

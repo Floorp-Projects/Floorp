@@ -979,8 +979,8 @@ nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI,
 
   // get document charset
   nsCAutoString originCharset;
-  if (document && NS_FAILED(document->GetDocumentCharacterSet(originCharset)))
-    originCharset.Truncate();
+  if (document)
+    originCharset = document->GetDocumentCharacterSet();
  
   return NS_NewURI(aFullURI, aSrc, originCharset.get(), aBaseURI);
 }
@@ -1301,11 +1301,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
     if (! document)
       return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIScriptGlobalObject> globalScript;
-    rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
+    nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(document->GetScriptGlobalObject(), &rv));
 
     if (NS_SUCCEEDED(rv) &&
         NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::OBJECT,
@@ -1965,8 +1961,7 @@ nsObjectFrame::NotifyContentObjectWrapper()
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIScriptContext> scx;
@@ -2335,7 +2330,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   if (NS_SUCCEEDED(rv) && doc) {
     // XXX should this really be the document base URL?  Or the
     // content's base URL?
-    rv = doc->GetBaseURL(getter_AddRefs(baseURL));  // gets the document's url
+    baseURL = doc->GetBaseURL();  // gets the document's url
   } else {
     mOwner->GetFullURL(*getter_AddRefs(baseURL)); // gets the plugin's content url
   }
@@ -2635,10 +2630,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
 
-    nsCOMPtr<nsIURI> docURL;
-    doc->GetBaseURL(getter_AddRefs(docURL));  // should return base + doc url
-
-    rv = docURL->GetSpec(mDocumentBase);
+    rv = doc->GetBaseURL()->GetSpec(mDocumentBase);
   }
   if (rv == NS_OK)
     *result = ToNewCString(mDocumentBase);
@@ -2714,10 +2706,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get document");
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString charset;
-  rv = doc->GetDocumentCharacterSet(charset);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "can't get charset");
-  if (NS_FAILED(rv)) return rv;
+  const nsACString &charset = doc->GetDocumentCharacterSet();
 
   if (charset.IsEmpty()) return NS_OK;
 
@@ -2725,7 +2714,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentEncoding(const char* *result)
   if (charset == NS_LITERAL_CSTRING("us-acsii")) {
     *result = PL_strdup("US_ASCII");
   } else if (charset == NS_LITERAL_CSTRING("ISO-8859-1") ||
-      !nsCRT::strncmp(charset.get(), "UTF", 3)) {
+      !nsCRT::strncmp(PromiseFlatCString(charset).get(), "UTF", 3)) {
     *result = ToNewCString(charset);
   } else {
     if (!gCharsetMap) {

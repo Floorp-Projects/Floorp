@@ -1088,9 +1088,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
       shell->GetDocument(getter_AddRefs(doc));
       if (doc) {
         nsCAutoString str;
-        nsCOMPtr<nsIURI> uri;
-        doc->GetDocumentURL(getter_AddRefs(uri));
-        nsresult rv = uri->GetSpec(str);
+        nsresult rv = doc->GetDocumentURL()->GetSpec(str);
         if (NS_FAILED(rv)) {
           return rv;
         }

@@ -102,9 +102,7 @@ static nsresult SetUpEncoder(nsIDOMNode *aRoot, const char* aCharset, nsIDocumen
   if (aCharset) {
     charset = aCharset;
   } else {
-    rv = document->GetDocumentCharacterSet(charset);
-    if (NS_FAILED(rv))
-      return rv;
+    charset = document->GetDocumentCharacterSet();
   }
   rv = encoder->SetCharset(charset);
   if (NS_FAILED(rv))
@@ -150,10 +148,9 @@ nsresult CheckSameOrigin(nsIDOMNode *aRoot)
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(owner_doc));
 
     if (doc) {
-      nsCOMPtr<nsIPrincipal> principal;
       nsCOMPtr<nsIURI> root_uri;
 
-      doc->GetPrincipal(getter_AddRefs(principal));
+      nsIPrincipal *principal = doc->GetPrincipal();
 
       if (principal) {
         principal->GetURI(getter_AddRefs(root_uri));

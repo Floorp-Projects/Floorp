@@ -289,8 +289,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
 
   // nothing on the element or its parent style contexts, fall back to canvas frame for the whole page
   rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIContent> rootContent;
-  document->GetRootContent(getter_AddRefs(rootContent));
+  nsIContent *rootContent = document->GetRootContent();
   NS_ENSURE_TRUE(rootContent, NS_ERROR_FAILURE);
  
   presShell->GetPrimaryFrameFor(rootContent, &frame);

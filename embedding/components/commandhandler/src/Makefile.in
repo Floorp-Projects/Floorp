@@ -30,6 +30,7 @@ REQUIRES	= string \
 		  dom \
 		  widget \
 		  content \
+		  necko \
 		  xuldoc \
 		  caps \
 		  xpconnect \

@@ -1701,8 +1701,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     if (mDocument && aDeep) {
       // Notify XBL- & nsIAnonymousContentCreator-generated
       // anonymous content that the document is changing.
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      nsIBindingManager* bindingManager = mDocument->GetBindingManager();
       NS_ASSERTION(bindingManager, "No binding manager.");
       if (bindingManager) {
         bindingManager->ChangeDocumentFor(this, mDocument, aDocument);
@@ -1726,8 +1725,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
         nsCOMPtr<nsIAtom> prefix = mNodeInfo->GetPrefixAtom();
         PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
 
-        nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-        aDocument->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
+        nsINodeInfoManager* nodeInfoManager = aDocument->GetNodeInfoManager();
         if (nodeInfoManager) {
           nsCOMPtr<nsINodeInfo> newNodeInfo;
           nodeInfoManager->GetNodeInfo(name, prefix, nameSpaceID,
@@ -1856,8 +1854,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // determine the parent:
   nsCOMPtr<nsIContent> parent;
   if (mDocument) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsIBindingManager* bindingManager = mDocument->GetBindingManager();
     if (bindingManager) {
       // we have a binding manager -- do we have an anonymous parent?
       bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
@@ -2203,7 +2200,7 @@ nsGenericElement::GetBaseURL(nsIURI** aBaseURL) const
   } else if (doc) {
     // No parent, so just use the document (we must be the root or not in the
     // tree).
-    doc->GetBaseURL(getter_AddRefs(parentBase));
+    parentBase = doc->GetBaseURL();
   }
   
   // Now check for an xml:base attr 
@@ -2217,7 +2214,7 @@ nsGenericElement::GetBaseURL(nsIURI** aBaseURL) const
 
   nsCAutoString charset;
   if (doc) {
-    doc->GetDocumentCharacterSet(charset);
+    charset = doc->GetDocumentCharacterSet();
   }
 
   nsCOMPtr<nsIURI> ourBase;
@@ -3008,8 +3005,7 @@ nsresult
 nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (mDocument) {
-    nsCOMPtr<nsIBindingManager> manager;
-    mDocument->GetBindingManager(getter_AddRefs(manager));
+    nsIBindingManager* manager = mDocument->GetBindingManager();
     if (manager)
       return manager->GetBindingImplementation(this, aIID, aInstancePtr);
   }
@@ -3074,7 +3070,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
 
   // Try to get context from doc
   if (mDocument) {
-    if (NS_SUCCEEDED(mDocument->GetScriptGlobalObject(getter_AddRefs(global))) && global) {
+    if ((global = mDocument->GetScriptGlobalObject())) {
       NS_ENSURE_SUCCESS(global->GetContext(getter_AddRefs(context)), NS_ERROR_FAILURE);
     }
   }
@@ -3326,8 +3322,7 @@ PRBool nsGenericElement::HasMutationListeners(nsIContent* aContent,
   if (!doc)
     return PR_FALSE;
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  doc->GetScriptGlobalObject(getter_AddRefs(global));
+  nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
   if (!global)
     return PR_FALSE;
 
@@ -3437,10 +3432,8 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
   }
 
   if (mDocument) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
-    bindingManager->GetBinding(this, getter_AddRefs(binding));
+    mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(name, nameSpaceID, PR_FALSE, aNotify);
 
@@ -3627,10 +3620,8 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
     delete attr;
 
     if (mDocument) {
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
       nsCOMPtr<nsIXBLBinding> binding;
-      bindingManager->GetBinding(this, getter_AddRefs(binding));
+      mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
       if (binding)
         binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 
@@ -3734,8 +3725,7 @@ nsGenericContainerElement::List(FILE* out, PRInt32 aIndent) const
   fputs(">\n", out);
 
   if (mDocument) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsIBindingManager* bindingManager = mDocument->GetBindingManager();
     if (bindingManager) {
       nsCOMPtr<nsIDOMNodeList> anonymousChildren;
       bindingManager->GetAnonymousNodesFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsGenericContainerElement*, this)),

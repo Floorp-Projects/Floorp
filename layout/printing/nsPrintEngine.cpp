@@ -753,10 +753,7 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
     if (!printSilently) {
       nsCOMPtr<nsIPrintingPromptService> printPromptService(do_GetService(kPrintingPromptService));
       if (printPromptService) {
-        nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-        mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-        NS_ENSURE_TRUE(scriptGlobalObject, NS_ERROR_FAILURE);
-        nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(scriptGlobalObject); 
+        nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(mDocument->GetScriptGlobalObject()); 
         NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
 
         // Platforms not implementing a given dialog for the service may
@@ -1685,10 +1682,7 @@ nsPrintEngine::ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify)
   if (mPrt->mShowProgressDialog) {
     nsCOMPtr<nsIPrintingPromptService> printPromptService(do_GetService(kPrintingPromptService));
     if (printPromptService) {
-      nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-      mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-      if (!scriptGlobalObject) return;
-      nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(scriptGlobalObject); 
+      nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(mDocument->GetScriptGlobalObject()); 
       if (!domWin) return;
 
       nsCOMPtr<nsIWebBrowserPrint> wbp(do_QueryInterface(mDocViewerPrint));
@@ -1778,8 +1772,7 @@ nsPrintEngine::IsParentAFrameSet(nsIWebShell * aParent)
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      nsCOMPtr<nsIContent> rootContent;
-      doc->GetRootContent(getter_AddRefs(rootContent));
+      nsIContent *rootContent = doc->GetRootContent();
       if (rootContent) {
         if (NS_SUCCEEDED(mDocViewerPrint->FindFrameSetWithIID(rootContent, NS_GET_IID(nsIDOMHTMLFrameSetElement)))) {
           isFrameSet = PR_TRUE;
@@ -1857,14 +1850,12 @@ nsPrintEngine::GetWebShellTitleAndURL(nsIWebShell* aWebShell,
   *aTitle  = nsnull;
   *aURLStr = nsnull;
 
-  nsAutoString docTitle;
-  aDoc->GetDocumentTitle(docTitle);
+  const nsAString &docTitle = aDoc->GetDocumentTitle();
   if (!docTitle.IsEmpty()) {
     *aTitle = ToNewUnicode(docTitle);
   }
 
-  nsCOMPtr<nsIURI> url;
-  aDoc->GetDocumentURL(getter_AddRefs(url));
+  nsIURI* url = aDoc->GetDocumentURL();
   if (!url) return;
 
   nsCAutoString urlCStr;
@@ -1966,15 +1957,12 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aRootObject,
     return;
   }
 
-  nsCOMPtr<nsIDocument> subDoc;
-  doc->GetSubDocumentFor(aContent, getter_AddRefs(subDoc));
+  nsIDocument* subDoc = doc->GetSubDocumentFor(aContent);
 
   if (subDoc) {
-    nsCOMPtr<nsISupports> container;
-    subDoc->GetContainer(getter_AddRefs(container));
-
     nsIPresShell *presShell = subDoc->GetShellAt(0);
 
+    nsCOMPtr<nsISupports> container = subDoc->GetContainer();
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(container));
 
     if (presShell && webShell) {
@@ -3957,13 +3945,12 @@ nsPrintEngine::FindFocusedDOMWindowInternal()
 {
   nsCOMPtr<nsIDOMWindowInternal>  theDOMWin;
   nsCOMPtr<nsIDocument>           theDoc;
-  nsCOMPtr<nsIScriptGlobalObject> theSGO;
   nsCOMPtr<nsIFocusController>    focusController;
   nsIDOMWindowInternal *          domWin = nsnull;
 
   mDocViewer->GetDocument(getter_AddRefs(theDoc));
   if(theDoc){
-    theDoc->GetScriptGlobalObject(getter_AddRefs(theSGO));
+    nsIScriptGlobalObject* theSGO = theDoc->GetScriptGlobalObject();
     if(theSGO){
       nsCOMPtr<nsPIDOMWindow> theDOMWindow = do_QueryInterface(theSGO);
       if(theDOMWindow){
@@ -4448,11 +4435,10 @@ nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
   NS_ASSERTION(mDocument, "We MUST have a document.");
 
   // get the script global object
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObj;
-  nsresult rv = mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObj));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && scriptGlobalObj, "Can't get nsIScriptGlobalObject");
+  nsIScriptGlobalObject *scriptGlobalObj = mDocument->GetScriptGlobalObject();
+  NS_ASSERTION(scriptGlobalObj, "Can't get nsIScriptGlobalObject");
   nsCOMPtr<nsIScriptContext> scx;
-  rv = scriptGlobalObj->GetContext(getter_AddRefs(scx));
+  nsresult rv = scriptGlobalObj->GetContext(getter_AddRefs(scx));
   NS_ASSERTION(NS_SUCCEEDED(rv) && scx, "Can't get nsIScriptContext");
   scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
 }

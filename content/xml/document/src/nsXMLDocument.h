@@ -69,7 +69,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
+  virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand, nsIChannel* channel,
                                nsILoadGroup* aLoadGroup,
@@ -78,10 +78,10 @@ public:
                                PRBool aReset = PR_TRUE,
                                nsIContentSink* aSink = nsnull);
 
-  NS_IMETHOD EndLoad();
+  virtual void EndLoad();
 
-  NS_IMETHOD GetBaseTarget(nsAString &aBaseTarget);
-  NS_IMETHOD SetBaseTarget(const nsAString &aBaseTarget);
+  virtual void GetBaseTarget(nsAString &aBaseTarget) const;
+  virtual void SetBaseTarget(const nsAString &aBaseTarget);
 
   // nsIDOMNode interface
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
@@ -127,8 +127,8 @@ protected:
   // subclass hooks for sheet ordering
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
-  virtual already_AddRefed<nsIStyleSheet> InternalGetStyleSheetAt(PRInt32 aIndex);
-  virtual PRInt32 InternalGetNumberOfStyleSheets();
+  virtual nsIStyleSheet* InternalGetStyleSheetAt(PRInt32 aIndex) const;
+  virtual PRInt32 InternalGetNumberOfStyleSheets() const;
 
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
   

@@ -956,9 +956,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     mSkippedContent.Truncate();
   }
 
-  PRInt32 id;
-  mDocument->GetAndIncrementContentID(&id);
-  (*aResult)->SetContentID(id);
+  (*aResult)->SetContentID(mDocument->GetAndIncrementContentID());
 
   return rv;
 }
@@ -2094,12 +2092,10 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
   NS_ENSURE_TRUE(securityManager, PR_TRUE);
 
-  nsCOMPtr<nsIPrincipal> principal;
-  aDoc->GetPrincipal(getter_AddRefs(principal));
+  nsIPrincipal *principal = aDoc->GetPrincipal();
   NS_ENSURE_TRUE(principal, PR_TRUE);
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  aDoc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  nsCOMPtr<nsIScriptGlobalObject> globalObject = aDoc->GetScriptGlobalObject();
 
   // Getting context is tricky if the document hasn't had it's
   // GlobalObject set yet
@@ -2246,8 +2242,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Make root part
-  nsCOMPtr<nsIContent> doc_root;
-  mDocument->GetRootContent(getter_AddRefs(doc_root));
+  nsIContent *doc_root = mDocument->GetRootContent();
 
   if (doc_root) {
     // If the document already has a root we'll use it. This will
@@ -2412,8 +2407,7 @@ HTMLContentSink::DidBuildModel(void)
     }
   }
 
-  nsCOMPtr<nsIScriptLoader> loader;
-  mDocument->GetScriptLoader(getter_AddRefs(loader));
+  nsIScriptLoader *loader = mDocument->GetScriptLoader();
   if (loader) {
     loader->RemoveObserver(this);
   }
@@ -3940,7 +3934,7 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
     rv = mDocument->SetBaseURL(baseHrefURI);
 
     if (NS_SUCCEEDED(rv)) {
-      mDocument->GetBaseURL(getter_AddRefs(mDocumentBaseURL));
+      mDocumentBaseURL = mDocument->GetBaseURL();
     }
   } else {
     // NAV compatibility quirk
@@ -4040,9 +4034,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(result, result);
 
-    PRInt32 id;
-    mDocument->GetAndIncrementContentID(&id);
-    element->SetContentID(id);
+    element->SetContentID(mDocument->GetAndIncrementContentID());
 
     // Add in the attributes and add the style content object to the
     // head container.
@@ -4098,9 +4090,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     result = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
     NS_ENSURE_SUCCESS(result, result);
 
-    PRInt32 id;
-    mDocument->GetAndIncrementContentID(&id);
-    element->SetContentID(id);
+    element->SetContentID(mDocument->GetAndIncrementContentID());
 
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(element));
 
@@ -4431,9 +4421,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     return rv;
   }
 
-  PRInt32 id;
-  mDocument->GetAndIncrementContentID(&id);
-  element->SetContentID(id);
+  element->SetContentID(mDocument->GetAndIncrementContentID());
 
   // Add in the attributes and add the style content object to the
   // head container.
@@ -4476,7 +4464,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     // Fix bug 82498
     // We don't want to evaluate scripts in a frameset document.
     if (mDocument) {
-      mDocument->GetScriptLoader(getter_AddRefs(loader));
+      loader = mDocument->GetScriptLoader();
       if (loader) {
         loader->SetEnabled(PR_FALSE);
       }
@@ -4548,9 +4536,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   rv = NS_CreateHTMLElement(getter_AddRefs(element), nodeInfo, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 id;
-  mDocument->GetAndIncrementContentID(&id);
-  element->SetContentID(id);
+  element->SetContentID(mDocument->GetAndIncrementContentID());
 
   nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(element);
 
@@ -4663,7 +4649,7 @@ HTMLContentSink::SetDocumentCharset(nsACString& aCharset)
   }
 
   if (mDocument) {
-    return mDocument->SetDocumentCharacterSet(aCharset);
+    mDocument->SetDocumentCharacterSet(aCharset);
   }
 
   return NS_OK;
@@ -4685,8 +4671,7 @@ HTMLContentSink::DumpContentModel()
   FILE* out = ::fopen("rtest_html.txt", "a");
   if (out) {
     if (mDocument) {
-      nsIContent* root = nsnull;
-      mDocument->GetRootContent(&root);
+      nsIContent* root = mDocument->GetRootContent();
       if (root) {
         if (mDocumentURL) {
           nsCAutoString buf;
@@ -4697,7 +4682,6 @@ HTMLContentSink::DumpContentModel()
         fputs(";", out);
         result = root->DumpContent(out, 0, PR_FALSE);
         fputs(";\n", out);
-        NS_RELEASE(root);
       }
     }
 
@@ -4727,10 +4711,7 @@ HTMLContentSink::AddDummyParserRequest(void)
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   if (mDocument) {
-    rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    loadGroup = mDocument->GetDocumentLoadGroup();
   }
 
   if (loadGroup) {
@@ -4752,7 +4733,7 @@ HTMLContentSink::RemoveDummyParserRequest(void)
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   if (mDocument) {
-    rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    loadGroup = mDocument->GetDocumentLoadGroup();
   }
 
   if (loadGroup && mDummyParserRequest) {

@@ -573,11 +573,8 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
   if (binding) {
     binding->ChangeDocument(aOldDocument, aNewDocument);
     SetBinding(aContent, nsnull);
-    if (aNewDocument) {
-      nsCOMPtr<nsIBindingManager> otherManager;
-      aNewDocument->GetBindingManager(getter_AddRefs(otherManager));
-      otherManager->SetBinding(aContent, binding);
-    }
+    if (aNewDocument)
+      aNewDocument->GetBindingManager()->SetBinding(aContent, binding);
   }
 
   // Clear out insertion parents and content lists.
@@ -894,10 +891,8 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
   if (!ioService) return NS_ERROR_FAILURE;
   ioService->ExtractScheme(url, otherScheme);
 
-  nsCOMPtr<nsIURI> docURL;
-  aBoundDoc->GetDocumentURL(getter_AddRefs(docURL));
   nsCAutoString scheme;
-  docURL->GetScheme(scheme);
+  aBoundDoc->GetDocumentURL()->GetScheme(scheme);
 
   // First we need to load our binding.
   *aResult = nsnull;
@@ -988,10 +983,8 @@ nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   nsCOMPtr<nsIDocument> doc;
   aDocumentInfo->GetDocument(getter_AddRefs(doc));
 
-  nsCOMPtr<nsIURI> uri;
-  doc->GetDocumentURL(getter_AddRefs(uri));
   nsCAutoString str;
-  uri->GetSpec(str);
+  doc->GetDocumentURL()->GetSpec(str);
 
   StringToObjectEntry* entry = mDocumentTable.AddEntry(str);
   if (!entry) return NS_ERROR_OUT_OF_MEMORY;
@@ -1009,10 +1002,8 @@ nsBindingManager::RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
   nsCOMPtr<nsIDocument> doc;
   aDocumentInfo->GetDocument(getter_AddRefs(doc));
 
-  nsCOMPtr<nsIURI> uri;
-  doc->GetDocumentURL(getter_AddRefs(uri));
   nsCAutoString str;
-  uri->GetSpec(str);
+  doc->GetDocumentURL()->GetSpec(str);
 
   mDocumentTable.Remove(str);
   return NS_OK;
@@ -1181,8 +1172,7 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       if (!doc)
         return NS_NOINTERFACE;
 
-      nsCOMPtr<nsIScriptGlobalObject> global;
-      doc->GetScriptGlobalObject(getter_AddRefs(global));
+      nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
       if (!global)
         return NS_NOINTERFACE;
 

@@ -536,8 +536,7 @@ nsXBLBinding::GenerateAnonymousContent()
     if (! doc)
       return NS_OK;
     
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    doc->GetBindingManager(getter_AddRefs(bindingManager));
+    nsIBindingManager *bindingManager = doc->GetBindingManager();
 
     nsCOMPtr<nsIDOMNodeList> children;
     bindingManager->GetContentListFor(mBoundElement, getter_AddRefs(children));
@@ -949,8 +948,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       GetImmediateChild(nsXBLAtoms::implementation, getter_AddRefs(interfaceElement));
 
       if (interfaceElement) { 
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        aOldDocument->GetScriptGlobalObject(getter_AddRefs(global));
+        nsIScriptGlobalObject *global = aOldDocument->GetScriptGlobalObject();
         if (global) {
           nsCOMPtr<nsIScriptContext> context;
           global->GetContext(getter_AddRefs(context));
@@ -1296,8 +1294,7 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName,
   if (!receiver)
     return NS_OK;
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  document->GetScriptGlobalObject(getter_AddRefs(global));
+  nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
 
   // This can happen normally as part of teardown code.
   if (!global)

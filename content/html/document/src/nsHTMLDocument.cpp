@@ -375,31 +375,27 @@ nsHTMLDocument::Init()
 }
 
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
-  nsresult rv = nsDocument::Reset(aChannel, aLoadGroup);
+  nsDocument::Reset(aChannel, aLoadGroup);
 
-  if (NS_SUCCEEDED(rv) && aChannel) {
+  if (aChannel) {
     aChannel->GetLoadFlags(&mLoadFlags);
   }
-
-  return rv;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 {
   mLoadFlags = nsIRequest::LOAD_NORMAL;
 
-  nsresult rv = nsDocument::ResetToURI(aURI, aLoadGroup);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return BaseResetToURI(aURI);
+  nsDocument::ResetToURI(aURI, aLoadGroup);
+  BaseResetToURI(aURI);
 }
 
 
-nsresult
+void
 nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
 {
   nsresult rv = NS_OK;
@@ -454,8 +450,6 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
   // document, after all. Once we start getting data, this may be
   // changed.
   mContentType = "text/html";
-
-  return rv;
 }
 
 
@@ -1062,7 +1056,7 @@ nsHTMLDocument::DocumentWriteTerminationFunc(nsISupports *aRef)
   htmldoc->EndLoad();
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::EndLoad()
 {
   if (mParser) {
@@ -1096,14 +1090,14 @@ nsHTMLDocument::EndLoad()
           scx->SetTerminationFunction(DocumentWriteTerminationFunc,
                                       NS_STATIC_CAST(nsIDocument *, this));
 
-          return NS_OK;
+          return;
         }
       }
     }
   }
 
   mParser = nsnull;
-  return nsDocument::EndLoad();
+  nsDocument::EndLoad();
 }
 
 NS_IMETHODIMP
@@ -1263,14 +1257,12 @@ nsHTMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet,
   mStyleSheets.InsertObjectAt(aSheet, aIndex + 1);
 }
 
-already_AddRefed<nsIStyleSheet>
-nsHTMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex)
+nsIStyleSheet*
+nsHTMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex) const
 {
   PRInt32 count = InternalGetNumberOfStyleSheets();
   if (aIndex >= 0 && aIndex < count) {
-    nsIStyleSheet* sheet = mStyleSheets[aIndex + 1];
-    NS_ADDREF(sheet);
-    return sheet;
+    return mStyleSheets[aIndex + 1];
   } else {
     NS_ERROR("Index out of range");
     return nsnull;
@@ -1278,7 +1270,7 @@ nsHTMLDocument::InternalGetStyleSheetAt(PRInt32 aIndex)
 }
 
 PRInt32
-nsHTMLDocument::InternalGetNumberOfStyleSheets()
+nsHTMLDocument::InternalGetNumberOfStyleSheets() const
 {
   PRInt32 count = mStyleSheets.Count();
   if (count != 0 && mStyleAttrStyleSheet == mStyleSheets[count - 1])
@@ -1288,20 +1280,16 @@ nsHTMLDocument::InternalGetNumberOfStyleSheets()
   return count;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetBaseTarget(nsAString& aTarget)
+void
+nsHTMLDocument::GetBaseTarget(nsAString& aTarget) const
 {
   aTarget.Assign(mBaseTarget);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::SetBaseTarget(const nsAString& aTarget)
 {
   mBaseTarget = aTarget;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1359,7 +1347,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::ContentAppended(nsIContent* aContainer,
                                 PRInt32 aNewIndexInContainer)
 {
@@ -1373,10 +1361,10 @@ nsHTMLDocument::ContentAppended(nsIContent* aContainer,
     RegisterNamedItems(aContainer->GetChildAt(i));
   }
 
-  return nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
+  nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::ContentInserted(nsIContent* aContainer, nsIContent* aContent,
                                 PRInt32 aIndexInContainer)
 {
@@ -1385,13 +1373,13 @@ nsHTMLDocument::ContentInserted(nsIContent* aContainer, nsIContent* aContent,
   nsresult rv = RegisterNamedItems(aContent);
 
   if (NS_FAILED(rv)) {
-    return rv;
+    return;
   }
 
-  return nsDocument::ContentInserted(aContainer, aContent, aIndexInContainer);
+  nsDocument::ContentInserted(aContainer, aContent, aIndexInContainer);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::ContentReplaced(nsIContent* aContainer, nsIContent* aOldChild,
                                 nsIContent* aNewChild,
                                 PRInt32 aIndexInContainer)
@@ -1401,20 +1389,20 @@ nsHTMLDocument::ContentReplaced(nsIContent* aContainer, nsIContent* aOldChild,
   nsresult rv = UnregisterNamedItems(aOldChild);
 
   if (NS_FAILED(rv)) {
-    return rv;
+    return;
   }
 
   rv = RegisterNamedItems(aNewChild);
 
   if (NS_FAILED(rv)) {
-    return rv;
+    return;
   }
 
-  return nsDocument::ContentReplaced(aContainer, aOldChild,
-                                     aNewChild, aIndexInContainer);
+  nsDocument::ContentReplaced(aContainer, aOldChild,
+                              aNewChild, aIndexInContainer);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aContent,
                                PRInt32 aIndexInContainer)
 {
@@ -1423,13 +1411,13 @@ nsHTMLDocument::ContentRemoved(nsIContent* aContainer, nsIContent* aContent,
   nsresult rv = UnregisterNamedItems(aContent);
 
   if (NS_FAILED(rv)) {
-    return rv;
+    return;
   }
 
-  return nsDocument::ContentRemoved(aContainer, aContent, aIndexInContainer);
+  nsDocument::ContentRemoved(aContainer, aContent, aIndexInContainer);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
                                     nsIAtom* aAttribute)
 {
@@ -1447,7 +1435,7 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
       nsresult rv = RemoveFromNameTable(value, aContent);
 
       if (NS_FAILED(rv)) {
-        return rv;
+        return;
       }
     }
   } else if (aAttribute == aContent->GetIDAttributeName() &&
@@ -1455,14 +1443,14 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
     nsresult rv = RemoveFromIdTable(aContent);
 
     if (NS_FAILED(rv)) {
-      return rv;
+      return;
     }
   }
 
-  return nsDocument::AttributeWillChange(aContent, aNameSpaceID, aAttribute);
+  nsDocument::AttributeWillChange(aContent, aNameSpaceID, aAttribute);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute, PRInt32 aModType)
 {
@@ -1480,7 +1468,7 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
       nsresult rv = UpdateNameTableEntry(value, aContent);
 
       if (NS_FAILED(rv)) {
-        return rv;
+        return;
       }
     }
   } else if (aAttribute == aContent->GetIDAttributeName() &&
@@ -1495,16 +1483,15 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
       nsresult rv = AddToIdTable(value, aContent);
 
       if (NS_FAILED(rv)) {
-        return rv;
+        return;
       }
     }
   }
 
-  return nsDocument::AttributeChanged(aContent, aNameSpaceID, aAttribute,
-                                      aModType);
+  nsDocument::AttributeChanged(aContent, aNameSpaceID, aAttribute, aModType);
 }
 
-NS_IMETHODIMP
+void
 nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
                                           PRBool aUpdateViews)
 {
@@ -1531,11 +1518,12 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
     sink = mParser->GetContentSink();
     if (sink) {
       nsresult rv = sink->FlushPendingNotifications();
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv))
+        return;
     }
   }
 
-  return nsDocument::FlushPendingNotifications(aFlushReflows, aUpdateViews);
+  nsDocument::FlushPendingNotifications(aFlushReflows, aUpdateViews);
 }
 
 NS_IMETHODIMP_(PRBool)
@@ -2270,14 +2258,10 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
   nsresult rv = NS_OK;
   nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID, &rv);
   if (service && mDocumentURL) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObj;
     nsCOMPtr<nsIPrompt> prompt;
-    this->GetScriptGlobalObject(getter_AddRefs(globalObj));
-    if (globalObj) {
-      nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
-      if (window) {
-        window->GetPrompter(getter_AddRefs(prompt));
-      }
+    nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(GetScriptGlobalObject()));
+    if (window) {
+      window->GetPrompter(getter_AddRefs(prompt));
     }
 
     nsCOMPtr<nsIURI> codebaseURI;
@@ -2320,7 +2304,7 @@ nsHTMLDocument::GetSourceDocumentURL(nsIURI** sourceURL)
     return NS_OK; // No document in the window
   }
 
-  doc->GetDocumentURL(sourceURL);
+  NS_IF_ADDREF(*sourceURL = doc->GetDocumentURL());
 
   return sourceURL ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -2416,10 +2400,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   // the anonymous content (i.e. scrollbar elements) is set to
   // null.
 
-  rv = Reset(channel, group);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  Reset(channel, group);
 
   if (root) {
     // Tear down the frames for the root element.
@@ -2871,8 +2852,7 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
 {
   *aWidth = *aHeight = 0;
 
-  nsresult rv = FlushPendingNotifications();
-  NS_ENSURE_SUCCESS(rv, rv);
+  FlushPendingNotifications();
 
   // Find the <body> element: this is what we'll want to use for the
   // document's width and height values.
@@ -2884,7 +2864,7 @@ nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
 
   // Now grab its frame
   nsIFrame* frame;
-  rv = aShell->GetPrimaryFrameFor(body, &frame);
+  nsresult rv = aShell->GetPrimaryFrameFor(body, &frame);
   if (NS_SUCCEEDED(rv) && frame) {
     nsSize                    size;
     nsCOMPtr<nsIPresContext>  presContext;
@@ -3746,18 +3726,14 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 PRBool
 nsHTMLDocument::GetBodyContent()
 {
-  nsCOMPtr<nsIContent> root;
-
-  GetRootContent(getter_AddRefs(root));
-
-  if (!root) {
+  if (!mRootContent) {
     return PR_FALSE;
   }
 
-  PRUint32 i, child_count = root->GetChildCount();
+  PRUint32 i, child_count = mRootContent->GetChildCount();
 
   for (i = 0; i < child_count; ++i) {
-    nsIContent *child = root->GetChildAt(i);
+    nsIContent *child = mRootContent->GetChildAt(i);
     NS_ENSURE_TRUE(child, NS_ERROR_UNEXPECTED);
 
     if (child->IsContentOfType(nsIContent::eHTML) &&
@@ -3833,9 +3809,7 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
     channel->SetLoadFlags(mLoadFlags);
   }
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  rv = GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
 
   // Use the Parent document's loadgroup to trigger load notifications
   if (loadGroup && channel) {
@@ -3861,9 +3835,7 @@ nsHTMLDocument::RemoveWyciwygChannel(void)
 {
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  rv = GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
 
   // note there can be a write request without a load group if
   // this is a synchronously constructed about:blank document

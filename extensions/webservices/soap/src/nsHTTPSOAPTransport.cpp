@@ -112,9 +112,7 @@ nsresult ChangePrincipal(nsIDOMDocument* aDocument)
   nsCOMPtr<nsIDocument> targetDoc(do_QueryInterface(aDocument, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIURI> targetURI;
-  targetDoc->GetDocumentURL(getter_AddRefs(targetURI));
-  rv = secMgr->CheckSameOrigin(nsnull, targetURI);
+  rv = secMgr->CheckSameOrigin(nsnull, targetDoc->GetDocumentURL());
   // change the principal only if the script security 
   // manager has denied access.
   if (NS_FAILED(rv)) {

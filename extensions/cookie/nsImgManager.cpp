@@ -150,7 +150,6 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
     if (!needToCheck)
       return NS_OK;
 
-    nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aContext);
     NS_ASSERTION(content, "no content available");
@@ -168,8 +167,8 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
           return NS_OK;
       }
 
-      rv = doc->GetBaseURL(getter_AddRefs(baseURI));
-      if (NS_FAILED(rv) || !baseURI)
+      nsIURI *baseURI = doc->GetBaseURL();
+      if (!baseURI)
         return rv;
 
       nsCOMPtr<nsIDocShell> docshell;

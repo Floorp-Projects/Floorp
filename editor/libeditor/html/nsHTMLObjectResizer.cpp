@@ -402,9 +402,7 @@ nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (!doc) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  res = doc->GetScriptGlobalObject(getter_AddRefs(global));
-  if (NS_FAILED(res)) return res;
+  nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
   if (!global) { return NS_ERROR_NULL_POINTER; }
 
   mResizeEventListenerP = new DocumentResizeEventListener(this);
@@ -476,9 +474,7 @@ nsHTMLEditor::HideResizers(void)
   GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (!doc) { return NS_ERROR_NULL_POINTER; }
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  res = doc->GetScriptGlobalObject(getter_AddRefs(global));
-  if (NS_FAILED(res)) return res;
+  nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
   if (!global) { return NS_ERROR_NULL_POINTER; }
 
   nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(global);
@@ -686,9 +682,7 @@ nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt3
     return NS_ERROR_UNEXPECTED;
 
   // get the root content
-  nsCOMPtr<nsIContent> rootContent;
-  doc->GetRootContent(getter_AddRefs(rootContent));
-  nsCOMPtr<nsIDOMNSHTMLElement> nsElement = do_QueryInterface(rootContent);
+  nsCOMPtr<nsIDOMNSHTMLElement> nsElement = do_QueryInterface(doc->GetRootContent());
   if (!nsElement) {return NS_ERROR_NULL_POINTER; }
 
   // let's get the size of the document

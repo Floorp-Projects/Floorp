@@ -362,9 +362,7 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
     if (!mDocument)
       return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIContent> rootContent;
-    mDocument->GetRootContent(getter_AddRefs(rootContent));
-    rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
+    rv = esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
   }
 
   return rv;

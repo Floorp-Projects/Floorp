@@ -2985,7 +2985,7 @@ nsDOMClassInfo::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(native));
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+    sgo = doc->GetScriptGlobalObject();
 
     if (!sgo) {
       // There's no script global in the document. This means that
@@ -4441,8 +4441,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
 
     // Get the script global object from the document.
 
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+    nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
 
     if (!sgo) {
       // No global object reachable from this document, use the
@@ -4690,8 +4689,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // We must ensure that the XBL Binding is installed before we hand
   // back this object.
 
-  nsCOMPtr<nsIBindingManager> bindingManager;
-  doc->GetBindingManager(getter_AddRefs(bindingManager));
+  nsIBindingManager *bindingManager = doc->GetBindingManager();
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIXBLBinding> binding;

@@ -95,7 +95,7 @@ public:
                                PRBool              aReset = PR_TRUE,
                                nsIContentSink*     aSink = nsnull);
 
-  NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
+  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject);
 
   NS_DECL_NSIIMAGEDOCUMENT
 
@@ -253,7 +253,7 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 {
   if (!aScriptGlobalObject) {
@@ -273,16 +273,13 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
 
   // Set the script global object on the superclass before doing
   // anything that might require it....
-  nsresult rv = nsHTMLDocument::SetScriptGlobalObject(aScriptGlobalObject);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsHTMLDocument::SetScriptGlobalObject(aScriptGlobalObject);
 
   if (aScriptGlobalObject) {
     // Create synthetic document
-    rv = CreateSyntheticDocument();
+    nsresult rv = CreateSyntheticDocument();
     if (NS_FAILED(rv)) {
-      return rv;
+      return;
     }
 
     if (mImageResizingEnabled) {
@@ -294,8 +291,6 @@ nsImageDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObjec
       target->AddEventListener(NS_LITERAL_STRING("keypress"), this, PR_FALSE);
     }
   }
-
-  return NS_OK;
 }
 
 

@@ -1508,8 +1508,7 @@ nsMsgComposeAndSend::GetEmbeddedObjectInfo(nsIDOMNode *node, nsMsgAttachmentData
           return NS_ERROR_OUT_OF_MEMORY;
         
         nsCAutoString spec;
-        nsCOMPtr<nsIURI> uri;
-        doc->GetDocumentURL(getter_AddRefs(uri));
+        nsIURI *uri = doc->GetDocumentURL();
         
         if (!uri)
           return NS_ERROR_OUT_OF_MEMORY;

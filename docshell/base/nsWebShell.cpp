@@ -641,8 +641,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
   nsCOMPtr<nsIDocument> refererDoc(do_QueryInterface(refererOwnerDoc));
   NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIURI> referer;
-  refererDoc->GetDocumentURL(getter_AddRefs(referer));
+  nsIURI *referer = refererDoc->GetDocumentURL();
 
   // referer could be null here in some odd cases, but that's ok,
   // we'll just load the link w/o sending a referer in those cases.

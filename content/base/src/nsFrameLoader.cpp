@@ -172,16 +172,14 @@ nsFrameLoader::LoadFrame()
   }
 
   // Make an absolute URI
-  nsCOMPtr<nsIURI> base_uri;
-  doc->GetBaseURL(getter_AddRefs(base_uri));
+  nsIURI *base_uri = doc->GetBaseURL();
 
-  nsCAutoString doc_charset;
-  doc->GetDocumentCharacterSet(doc_charset);
+  const nsACString &doc_charset = doc->GetDocumentCharacterSet();
 
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), src,
                  doc_charset.IsEmpty() ? nsnull :
-                 doc_charset.get(), base_uri);
+                 PromiseFlatCString(doc_charset).get(), base_uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check for security
@@ -376,7 +374,7 @@ nsFrameLoader::GetPresContext(nsIPresContext **aPresContext)
 {
   *aPresContext = nsnull;
 
-  nsCOMPtr<nsIDocument> doc = mOwnerContent->GetDocument();
+  nsIDocument* doc = mOwnerContent->GetDocument();
 
   while (doc) {
     nsIPresShell *presShell = doc->GetShellAt(0);
@@ -387,10 +385,7 @@ nsFrameLoader::GetPresContext(nsIPresContext **aPresContext)
       return NS_OK;
     }
 
-    nsCOMPtr<nsIDocument> parent;
-    doc->GetParentDocument(getter_AddRefs(parent));
-
-    doc = parent;
+    doc = doc->GetParentDocument();
   }
 
   return NS_OK;

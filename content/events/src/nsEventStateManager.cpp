@@ -434,9 +434,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       if (mDocument) {
         if (gLastFocusedDocument && gLastFocusedPresContext) {
-          nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-          gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-          nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+          nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
 
           // If the focus controller is already suppressed, it means that we
           // are in the middle of an activate sequence. In this case, we do
@@ -520,8 +518,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         focusevent.eventStructType = NS_EVENT;
         focusevent.message = NS_FOCUS_CONTENT;
 
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        nsCOMPtr<nsIScriptGlobalObject> globalObject = mDocument->GetScriptGlobalObject();
         if (globalObject) {
           // We don't want there to be a focused content node while we're
           // dispatching the focus event.
@@ -551,25 +548,15 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         // Try to keep the focus controllers and the globals in synch
         if (gLastFocusedDocument && gLastFocusedDocument != mDocument) {
 
-          nsCOMPtr<nsIScriptGlobalObject> lastGlobal;
-          gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(lastGlobal));
           nsCOMPtr<nsIFocusController> lastController;
-          if (lastGlobal) {
-            nsCOMPtr<nsPIDOMWindow> lastWindow;
-            lastWindow = do_QueryInterface(lastGlobal);
+          nsCOMPtr<nsPIDOMWindow> lastWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
+          if (lastWindow)
+            lastWindow->GetRootFocusController(getter_AddRefs(lastController));
 
-            if (lastWindow)
-              lastWindow->GetRootFocusController(getter_AddRefs(lastController));
-          }
-
-          nsCOMPtr<nsIScriptGlobalObject> nextGlobal;
-          mDocument->GetScriptGlobalObject(getter_AddRefs(nextGlobal));
           nsCOMPtr<nsIFocusController> nextController;
-          if (nextGlobal) {
-            nsCOMPtr<nsPIDOMWindow> nextWindow = do_QueryInterface(nextGlobal);
-            if (nextWindow)
-              nextWindow->GetRootFocusController(getter_AddRefs(nextController));
-          }
+          nsCOMPtr<nsPIDOMWindow> nextWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
+          if (nextWindow)
+            nextWindow->GetRootFocusController(getter_AddRefs(nextController));
 
           if (lastController != nextController && lastController && nextController)
             lastController->SetActive(PR_FALSE);
@@ -616,14 +603,14 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         if (gLastFocusedContent) {
           nsIDocument* doc = gLastFocusedContent->GetDocument();
           if (doc)
-            doc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+            ourGlobal = doc->GetScriptGlobalObject();
           else {
-            mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+            ourGlobal = mDocument->GetScriptGlobalObject();
             NS_RELEASE(gLastFocusedContent);
           }
         }
         else
-          mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+          ourGlobal = mDocument->GetScriptGlobalObject();
 
         // Now fire blurs.  We fire a blur on the focused document, element,
         // and window.
@@ -661,8 +648,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             // get the window here, in case the event causes
             // gLastFocusedDocument to change.
 
-            nsCOMPtr<nsIScriptGlobalObject> globalObject;
-            gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+            nsCOMPtr<nsIScriptGlobalObject> globalObject = gLastFocusedDocument->GetScriptGlobalObject();
 
             gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext,
                                                  &event, nsnull,
@@ -692,9 +678,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
 
       EnsureDocument(aPresContext);
 
-      nsCOMPtr<nsIScriptGlobalObject> globalObj;
-      mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
-      nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+      nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
 
       if (!win) {
         NS_ERROR("win is null.  this happens [often on xlib builds].  see bug #79213");
@@ -716,11 +700,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         focusController->SetActive(PR_TRUE);
       }
 
-      if (!focusedWindow) {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        focusedWindow = do_QueryInterface(globalObject);
-      }
+      if (!focusedWindow)
+        focusedWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
 
       NS_WARN_IF_FALSE(focusedWindow,"check why focusedWindow is null!!!");
 
@@ -780,8 +761,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     {
       EnsureDocument(aPresContext);
 
-      nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-      mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+      nsCOMPtr<nsIScriptGlobalObject> ourGlobal = mDocument->GetScriptGlobalObject();
 
       // Suppress the focus controller for the duration of the
       // de-activation.  This will cause it to remember the last
@@ -1507,11 +1487,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 {
   if(!gLastFocusedDocument) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-  gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-  if(!ourGlobal) return NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
   if(!ourWindow) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMWindowInternal> rootWindow;
@@ -1640,7 +1616,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   else {
     // If there is no focused content, get the document content
     EnsureDocument(presShell);
-    mDocument->GetRootContent(getter_AddRefs(focusContent));
+    focusContent = mDocument->GetRootContent();
     if (!focusContent)
       return NS_ERROR_FAILURE;
   }
@@ -1767,8 +1743,7 @@ nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
 
   NS_ASSERTION(doc, "No document in prescontext!");
 
-  nsCOMPtr<nsIDocument> parentDoc;
-  doc->GetParentDocument(getter_AddRefs(parentDoc));
+  nsIDocument *parentDoc = doc->GetParentDocument();
 
   if (!parentDoc) {
     return NS_OK;
@@ -1779,9 +1754,8 @@ nsEventStateManager::GetParentScrollingView(nsMouseScrollEvent *aEvent,
 
   /* now find the content node in our parent docshell's document that
      corresponds to our docshell */
-  nsCOMPtr<nsIContent> frameContent;
 
-  parentDoc->FindContentForSubDocument(doc, getter_AddRefs(frameContent));
+  nsIContent *frameContent = parentDoc->FindContentForSubDocument(doc);
   NS_ENSURE_TRUE(frameContent, NS_ERROR_FAILURE);
 
   /*
@@ -2539,14 +2513,12 @@ nsEventStateManager::MaybeDispatchMouseEventToIframe(
   // (mouseover / mouseout) to the IFRAME element above us.  This will result
   // in over-out-over combo to the IFRAME but as long as IFRAMEs are native
   // windows this will serve as a workaround to maintain IFRAME mouseover state.
-  nsCOMPtr<nsIDocument> parentDoc;
   // If this is the first event in this window then mDocument might not be set
   // yet.  Call EnsureDocument to set it.
   EnsureDocument(aPresContext);
-  mDocument->GetParentDocument(getter_AddRefs(parentDoc));
+  nsIDocument *parentDoc = mDocument->GetParentDocument();
   if (parentDoc) {
-    nsCOMPtr<nsIContent> docContent;
-    parentDoc->FindContentForSubDocument(mDocument, getter_AddRefs(docContent));
+    nsIContent *docContent = parentDoc->FindContentForSubDocument(mDocument);
     if (docContent) {
       nsCOMPtr<nsIAtom> tag;
       docContent->GetTag(getter_AddRefs(tag));
@@ -3019,9 +2991,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   nsCOMPtr<nsIDocument> doc;
   presShell->GetDocument(getter_AddRefs(doc));
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  doc->GetScriptGlobalObject(getter_AddRefs(sgo));
-  nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
+  nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(doc->GetScriptGlobalObject));
 
   nsCOMPtr<nsIWidget> widget;
   nsIViewManager* vm = presShell->GetViewManager();
@@ -3071,8 +3041,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   EnsureDocument(mPresContext);
   NS_ASSERTION(mDocument, "no document");
 
-  nsCOMPtr<nsIContent> rootContent;
-  mDocument->GetRootContent(getter_AddRefs(rootContent));
+  nsCOMPtr<nsIContent> rootContent = mDocument->GetRootContent();
 
   nsCOMPtr<nsISupports> pcContainer;
   mPresContext->GetContainer(getter_AddRefs(pcContainer));
@@ -3175,13 +3144,10 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
     nsCOMPtr<nsIDocument> doc = nextFocus->GetDocument();
 
     if (doc) {
-      nsCOMPtr<nsIDocument> sub_doc;
-      doc->GetSubDocumentFor(nextFocus, getter_AddRefs(sub_doc));
+      nsIDocument *sub_doc = doc->GetSubDocumentFor(nextFocus);
 
       if (sub_doc) {
-        nsCOMPtr<nsISupports> container;
-        sub_doc->GetContainer(getter_AddRefs(container));
-
+        nsCOMPtr<nsISupports> container = sub_doc->GetContainer();
         sub_shell = do_QueryInterface(container);
       }
     }
@@ -3290,13 +3256,10 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
           nsCOMPtr<nsIPresShell> parentShell;
           parentDS->GetPresShell(getter_AddRefs(parentShell));
 
-          nsCOMPtr<nsIContent> docContent;
           nsCOMPtr<nsIDocument> parent_doc;
-
           parentShell->GetDocument(getter_AddRefs(parent_doc));
 
-          parent_doc->FindContentForSubDocument(mDocument,
-                                                getter_AddRefs(docContent));
+          nsIContent *docContent = parent_doc->FindContentForSubDocument(mDocument);
 
           nsCOMPtr<nsIPresContext> parentPC;
           parentShell->GetPresContext(getter_AddRefs(parentPC));
@@ -3616,11 +3579,9 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
           if (child) {
             nsCOMPtr<nsIDocument> doc = child->GetDocument();
             if (doc) {
-              nsCOMPtr<nsIDocument> subDoc;
-              doc->GetSubDocumentFor(child, getter_AddRefs(subDoc));
+              nsIDocument *subDoc = doc->GetSubDocumentFor(child);
               if (subDoc) {
-                nsCOMPtr<nsISupports> container;
-                subDoc->GetContainer(getter_AddRefs(container));
+                nsCOMPtr<nsISupports> container = subDoc->GetContainer();
                 nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
                 if (docShell) {
                   nsCOMPtr<nsIContentViewer> contentViewer;
@@ -4166,14 +4127,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
           if(gLastFocusedDocument && mDocument) {
             nsCOMPtr<nsIFocusController> newFocusController;
             nsCOMPtr<nsIFocusController> oldFocusController;
-            nsCOMPtr<nsPIDOMWindow> oldPIDOMWindow;
-            nsCOMPtr<nsPIDOMWindow> newPIDOMWindow;
-            nsCOMPtr<nsIScriptGlobalObject> oldGlobal;
-            nsCOMPtr<nsIScriptGlobalObject> newGlobal;
-            gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(oldGlobal));
-            mDocument->GetScriptGlobalObject(getter_AddRefs(newGlobal));
-            nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
-            nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
+            nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
+            nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
             if(newWindow)
               newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
             if(oldWindow)
@@ -4213,7 +4168,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
 
     if(gLastFocusedDocument)
-      gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+      globalObject = gLastFocusedDocument->GetScriptGlobalObject();
 
     EnsureDocument(presShell);
 
@@ -4227,14 +4182,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
       if (mDocument) {
         nsCOMPtr<nsIFocusController> newFocusController;
         nsCOMPtr<nsIFocusController> oldFocusController;
-        nsCOMPtr<nsPIDOMWindow> oldPIDOMWindow;
-        nsCOMPtr<nsPIDOMWindow> newPIDOMWindow;
-        nsCOMPtr<nsIScriptGlobalObject> oldGlobal;
-        nsCOMPtr<nsIScriptGlobalObject> newGlobal;
-        gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(oldGlobal));
-        mDocument->GetScriptGlobalObject(getter_AddRefs(newGlobal));
-        nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
-        nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
+        nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
+        nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(gLastFocusedDocument->GetScriptGlobalObject());
 
         if (newWindow)
           newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
@@ -4669,8 +4618,7 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       domNode->GetNodeType(&nodeType);
 
       if (nodeType == nsIDOMNode::TEXT_NODE) {      
-        nsCOMPtr<nsIContent> origStartContent(startContent), rootContent;
-        mDocument->GetRootContent(getter_AddRefs(rootContent));
+        nsCOMPtr<nsIContent> origStartContent(startContent);
         nsAutoString nodeValue;
         domNode->GetNodeValue(nodeValue);
 
@@ -4678,7 +4626,7 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
           startContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
 
         if (nodeValue.Length() == *aStartOffset && !isFormControl &&
-            startContent != rootContent) {
+            startContent != mDocument->GetRootContent()) {
           // Yes, indeed we were at the end of the last node
           nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
 
@@ -5112,8 +5060,7 @@ nsEventStateManager::IsFrameSetDoc(nsIDocShell* aDocShell)
     presShell->GetDocument(getter_AddRefs(doc));
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
     if (htmlDoc) {
-      nsCOMPtr<nsIContent> rootContent;
-      doc->GetRootContent(getter_AddRefs(rootContent));
+      nsIContent *rootContent = doc->GetRootContent();
       if (rootContent) {
         PRUint32 childCount = rootContent->GetChildCount();
         for (PRUint32 i = 0; i < childCount; ++i) {
@@ -5169,9 +5116,7 @@ nsEventStateManager::IsIFrameDoc(nsIDocShell* aDocShell)
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   NS_ASSERTION(doc, "DOM document not implementing nsIDocument");
 
-  nsCOMPtr<nsIContent> docContent;
-
-  parentDoc->FindContentForSubDocument(doc, getter_AddRefs(docContent));
+  nsIContent *docContent = parentDoc->FindContentForSubDocument(doc);
 
   if (!docContent)
     return PR_FALSE;
@@ -5427,8 +5372,7 @@ nsEventStateManager::ShiftFocusByDoc(PRBool aForward)
 already_AddRefed<nsIFocusController>
 nsEventStateManager::GetFocusControllerForDocument(nsIDocument* aDocument)
 {
-  nsCOMPtr<nsISupports> container;
-  aDocument->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = aDocument->GetContainer();
   nsCOMPtr<nsPIDOMWindow> windowPrivate = do_GetInterface(container);
   nsIFocusController* fc;
   if (windowPrivate)

@@ -408,7 +408,7 @@ NS_IMETHODIMP nsXPBaseWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* a
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      doc->GetRootContent(&mContentRoot);
+      NS_IF_ADDREF(mContentRoot = doc->GetRootContent());
       mDocIsLoaded = PR_TRUE;
       if (nsnull != mWindowListener) {
         mWindowListener->Initialize(this);

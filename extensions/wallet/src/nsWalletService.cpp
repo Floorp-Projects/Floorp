@@ -391,8 +391,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
             return NS_OK;
           }
   
-          nsCOMPtr<nsIURI> uri;
-          doc->GetDocumentURL(getter_AddRefs(uri));
+          nsIURI *uri = doc->GetDocumentURL();
           if (!uri) {
             NS_ASSERTION(0, "no URI available");
             return NS_OK;

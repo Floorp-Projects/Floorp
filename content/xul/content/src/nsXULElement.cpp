@@ -340,8 +340,7 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
   if (!doc)
     return PR_FALSE;
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  doc->GetScriptGlobalObject(getter_AddRefs(global));
+  nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
   if (!global)
     return PR_FALSE;
 
@@ -631,9 +630,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_OK;
     }
     else if (mDocument) {
-        nsCOMPtr<nsIBindingManager> manager;
-        mDocument->GetBindingManager(getter_AddRefs(manager));
-        return manager->GetBindingImplementation(this, iid, result);
+        return mDocument->GetBindingManager()->GetBindingImplementation(this, iid, result);
     } else {
         *result = nsnull;
         return NS_NOINTERFACE;
@@ -688,12 +685,10 @@ nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
 
     if (mDocument) {
         // XXX This is a mess because of our fun multiple inheritance heirarchy
-        nsCOMPtr<nsIContent> root;
-        mDocument->GetRootContent(getter_AddRefs(root));
         nsCOMPtr<nsIContent> thisIContent;
         QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(thisIContent));
 
-        if (root == thisIContent) {
+        if (mDocument->GetRootContent() == thisIContent) {
             // If we don't have a parent, and we're the root content
             // of the document, DOM says that our parent is the
             // document.
@@ -1576,22 +1571,18 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName,
 
     nsresult rv;
     nsCOMPtr<nsIScriptContext> context;
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    {
-        mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+    nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
 
-        // This can happen normally as part of teardown code.
-        if (! global)
-            return NS_OK;
+    // This can happen normally as part of teardown code.
+    if (! global)
+        return NS_OK;
 
-        rv = global->GetContext(getter_AddRefs(context));
-        if (NS_FAILED(rv)) return rv;
+    rv = global->GetContext(getter_AddRefs(context));
+    if (NS_FAILED(rv)) return rv;
 
-        if (!context) return NS_OK;
-    }
+    if (!context) return NS_OK;
 
-    nsCOMPtr<nsIContent> root;
-    mDocument->GetRootContent(getter_AddRefs(root));
+    nsIContent *root = mDocument->GetRootContent();
     nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
     if ((!root || root == content) && !NodeInfo()->Equals(nsXULAtoms::overlay)) {
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
@@ -1782,8 +1773,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
         if (mDocument) {
           // Notify XBL- & nsIAnonymousContentCreator-generated
           // anonymous content that the document is changing.
-          nsCOMPtr<nsIBindingManager> bindingManager;
-          mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+          nsIBindingManager *bindingManager = mDocument->GetBindingManager();
           NS_ASSERTION(bindingManager, "no binding manager");
           if (bindingManager) {
             bindingManager->ChangeDocumentFor(NS_STATIC_CAST(nsIStyledContent*, this), mDocument, aDocument);
@@ -2402,10 +2392,8 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
         UnregisterAccessKey(oldValue);
 
     if (mDocument) {
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
       nsCOMPtr<nsIXBLBinding> binding;
-      bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
+      mDocument->GetBindingManager()->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
 
       if (binding)
         binding->AttributeChanged(attrName, attrns, PR_FALSE, aNotify);
@@ -2711,10 +2699,8 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
 
     // Notify document
     if (mDocument) {
-        nsCOMPtr<nsIBindingManager> bindingManager;
-        mDocument->GetBindingManager(getter_AddRefs(bindingManager));
         nsCOMPtr<nsIXBLBinding> binding;
-        bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
+        mDocument->GetBindingManager()->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
         if (binding)
             binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE, aNotify);
 
@@ -2921,8 +2907,7 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
     fputs(">\n", out);
 
     if (mDocument) {
-        nsCOMPtr<nsIBindingManager> bindingManager;
-        mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+        nsIBindingManager *bindingManager = mDocument->GetBindingManager();
         if (bindingManager) {
             nsCOMPtr<nsIDOMNodeList> anonymousChildren;
             bindingManager->GetAnonymousNodesFor(NS_STATIC_CAST(nsIContent*, NS_CONST_CAST(nsXULElement*, this)),
@@ -3105,8 +3090,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     // determine the parent:
     nsCOMPtr<nsIContent> parent;
     if (mDocument) {
-        nsCOMPtr<nsIBindingManager> bindingManager;
-        mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+        nsIBindingManager* bindingManager = mDocument->GetBindingManager();
         if (bindingManager) {
             // we have a binding manager -- do we have an anonymous parent?
             bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
@@ -3260,10 +3244,11 @@ nsXULElement::GetBaseURL(nsIURI **aURI) const
 {
   // XXX TODO, should share the impl with nsGenericElement
   if (mDocument) {
-    return mDocument->GetBaseURL(aURI);
+      NS_IF_ADDREF(*aURI = mDocument->GetBaseURL());
+  } else {
+      *aURI = nsnull;
   }
 
-  *aURI = nsnull;
   return NS_OK;
 }
 
@@ -5134,10 +5119,9 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 
     // Use the enclosing document's principal
     // XXX is this right? or should we use the protodoc's?
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = aDocument->GetPrincipal(getter_AddRefs(principal));
-    if (NS_FAILED(rv))
-        return rv;
+    nsIPrincipal *principal = aDocument->GetPrincipal();
+    if (!principal)
+        return NS_ERROR_FAILURE;
 
     nsCAutoString urlspec;
     aURI->GetSpec(urlspec);

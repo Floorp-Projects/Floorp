@@ -191,9 +191,7 @@ nsHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> content_document;
-
-  mDocument->GetSubDocumentFor(this, getter_AddRefs(content_document));
+  nsIDocument* content_document = mDocument->GetSubDocumentFor(this);
 
   if (!content_document) {
     return NS_OK;
@@ -219,10 +217,7 @@ nsHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  doc->GetScriptGlobalObject(getter_AddRefs(globalObj));
-
-  nsCOMPtr<nsIDOMWindow> window (do_QueryInterface(globalObj));
+  nsCOMPtr<nsIDOMWindow> window (do_QueryInterface(doc->GetScriptGlobalObject()));
 
   *aContentWindow = window;
   NS_IF_ADDREF(*aContentWindow);

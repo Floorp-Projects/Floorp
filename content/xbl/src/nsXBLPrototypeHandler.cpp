@@ -280,9 +280,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
         if (!doc)
           return NS_ERROR_FAILURE;
 
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        privateWindow = do_QueryInterface(globalObject);
+        privateWindow = do_QueryInterface(doc->GetScriptGlobalObject());
       }
 
       privateWindow->GetRootFocusController(getter_AddRefs(focusController));
@@ -389,7 +387,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
         return NS_OK;
     }
 
-    boundDocument->GetScriptGlobalObject(getter_AddRefs(boundGlobal));
+    boundGlobal = boundDocument->GetScriptGlobalObject();
   }
 
   // If we still don't have a 'boundGlobal', we're doomed. bug 95465.

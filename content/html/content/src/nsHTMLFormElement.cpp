@@ -998,9 +998,7 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
     nsCOMPtr<nsISupports> inst;
     *aCancelSubmit = PR_FALSE;
 
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-    nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(globalObject);
+    nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(mDocument->GetScriptGlobalObject());
 
     PRBool loop = PR_TRUE;
     while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {
@@ -1274,8 +1272,7 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   }
 
   // Get base URL
-  nsCOMPtr<nsIURI> docURL;
-  mDocument->GetDocumentURL(getter_AddRefs(docURL));
+  nsIURI *docURL = mDocument->GetDocumentURL();
   NS_ENSURE_TRUE(docURL, NS_ERROR_UNEXPECTED);
 
   // If an action is not specified and we are inside

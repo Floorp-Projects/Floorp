@@ -947,14 +947,13 @@ PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem, nsIDocShellTreeItem*
 
   // Get target principal uri (including document.domain)
   nsCOMPtr<nsIDOMDocument> targetDOMDocument(do_GetInterface(aTargetTreeItem));
-  NS_ENSURE_TRUE(targetDOMDocument, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(targetDOMDocument, PR_TRUE);
 
   nsCOMPtr<nsIDocument> targetDocument(do_QueryInterface(targetDOMDocument));
-  NS_ENSURE_TRUE(targetDocument, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(targetDocument, PR_TRUE);
 
-  nsCOMPtr<nsIPrincipal> targetPrincipal;
-  rv = targetDocument->GetPrincipal(getter_AddRefs(targetPrincipal));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipal, rv);
+  nsIPrincipal *targetPrincipal = targetDocument->GetPrincipal();
+  NS_ENSURE_TRUE(targetPrincipal, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIURI> targetPrincipalURI;
   rv = targetPrincipal->GetURI(getter_AddRefs(targetPrincipalURI));
@@ -1337,9 +1336,7 @@ nsDocShell::GetCharset(char** aCharset)
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
     presShell->GetDocument(getter_AddRefs(doc));
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-    nsCAutoString charset;
-    NS_ENSURE_SUCCESS(doc->GetDocumentCharacterSet(charset), NS_ERROR_FAILURE);
-    *aCharset = ToNewCString(charset);
+    *aCharset = ToNewCString(doc->GetDocumentCharacterSet());
     if (!*aCharset) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2081,10 +2078,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     res = docv->GetDocument(getter_AddRefs(doc));
     if (NS_FAILED(res) || (!doc))
         return NS_OK;
-    nsCAutoString parentCS;
-    res = doc->GetDocumentCharacterSet(parentCS);
-    if (NS_FAILED(res))
-        return NS_OK;
+    const nsACString &parentCS = doc->GetDocumentCharacterSet();
 
     // set the child's parentCharset
     nsCOMPtr<nsIAtom> parentCSAtom(do_GetAtom(parentCS));
@@ -2092,10 +2086,7 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     if (NS_FAILED(res))
         return NS_OK;
 
-    PRInt32 charsetSource;
-    res = doc->GetDocumentCharacterSetSource(&charsetSource);
-    if (NS_FAILED(res))
-        return NS_OK;
+    PRInt32 charsetSource = doc->GetDocumentCharacterSetSource();
 
     // set the child's parentCharset
     res = dcInfo->SetParentCharsetSource(charsetSource);
@@ -3266,9 +3257,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
         nsCOMPtr<nsIDocument> pDoc;
         pPresShell->GetDocument(getter_AddRefs(pDoc));
 
-        nsCOMPtr<nsIContent> shellContent;
-        nsCOMPtr<nsISupports> shellISupports = do_QueryInterface(treeItem);
-        pDoc->FindContentForSubDocument(doc, getter_AddRefs(shellContent));
+        nsIContent *shellContent = pDoc->FindContentForSubDocument(doc);
         NS_ASSERTION(shellContent, "subshell not in the map");
 
         nsIFrame* frame;
@@ -4459,9 +4448,7 @@ nsDocShell::CreateAboutBlankContentViewer()
         Embed(viewer, "", 0);
         viewer->SetDOMDocument(domdoc);
 
-        nsCOMPtr<nsIURI> documentURI;
-        blankDoc->GetDocumentURL(getter_AddRefs(documentURI)); // about:blank, duh
-        SetCurrentURI(documentURI);
+        SetCurrentURI(blankDoc->GetDocumentURL());
         rv = NS_OK;
       }
     }
@@ -5276,12 +5263,10 @@ nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
     }
 
     //-- Get the document's principal
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = document->GetPrincipal(getter_AddRefs(principal));
-    if (NS_FAILED(rv) || !principal)
+    nsIPrincipal *principal = document->GetPrincipal();
+    if (!principal)
         return NS_ERROR_FAILURE;
-    rv = principal->QueryInterface(NS_GET_IID(nsISupports), (void **) aOwner);
-    return rv;
+    return principal->QueryInterface(NS_GET_IID(nsISupports), (void **) aOwner);
 }
 
 nsresult
@@ -5834,9 +5819,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
             nsCOMPtr<nsIDocument> doc;
             rv = docv->GetDocument(getter_AddRefs(doc));
             NS_ENSURE_SUCCESS(rv, rv);
-            nsCAutoString aCharset;
-            rv = doc->GetDocumentCharacterSet(aCharset);
-            NS_ENSURE_SUCCESS(rv, rv);
+            const nsACString &aCharset = doc->GetDocumentCharacterSet();
 
             nsCOMPtr<nsITextToSubURI> textToSubURI =
                 do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
@@ -5845,7 +5828,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
             // Unescape and convert to unicode
             nsXPIDLString uStr;
 
-            rv = textToSubURI->UnEscapeAndConvert(aCharset.get(),
+            rv = textToSubURI->UnEscapeAndConvert(PromiseFlatCString(aCharset).get(),
                                                   PromiseFlatCString(sNewRef).get(),
                                                   getter_Copies(uStr));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -6903,8 +6886,7 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
   presShell->GetDocument(getter_AddRefs(doc));
   if (!doc) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> rootContent;
-  doc->GetRootContent(getter_AddRefs(rootContent));
+  nsIContent *rootContent = doc->GetRootContent();
   if (!rootContent) return NS_ERROR_FAILURE;
 
   nsIFrame* frame;

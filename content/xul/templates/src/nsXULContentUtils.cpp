@@ -231,8 +231,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
         // We'll use rdf_MakeAbsolute() to translate this to a URL.
         nsCOMPtr<nsIDocument> doc = aElement->GetDocument();
 
-        nsCOMPtr<nsIURI> url;
-        doc->GetDocumentURL(getter_AddRefs(url));
+        nsIURI *url = doc->GetDocumentURL();
         NS_ASSERTION(url != nsnull, "element has no document");
         if (! url)
             return NS_ERROR_UNEXPECTED;
@@ -336,9 +335,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAString& aElem
     else {
         nsresult rv;
 
-        nsCOMPtr<nsIURI> docURL;
-        rv = aDocument->GetBaseURL(getter_AddRefs(docURL));
-        if (NS_FAILED(rv)) return rv;
+        nsIURI *docURL = aDocument->GetBaseURL();
 
         // XXX Urgh. This is so broken; I'd really just like to use
         // NS_MakeAbsolueURI(). Unfortunatly, doing that breaks
@@ -395,12 +392,8 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAString& aURI, 
     // DOM APIs.
     nsresult rv;
 
-    nsCOMPtr<nsIURI> docURL;
-    rv = aDocument->GetBaseURL(getter_AddRefs(docURL));
-    if (NS_FAILED(rv)) return rv;
-
     nsCAutoString spec;
-    docURL->GetSpec(spec);
+    aDocument->GetBaseURL()->GetSpec(spec);
 
     // XXX FIX ME to not do a copy
     nsAutoString str(aURI);

@@ -360,9 +360,11 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
 
   nsIDocument *doc = mNodeInfo->GetDocument();
 
-  PRInt32 id = PR_INT32_MAX;
+  PRInt32 id;
   if (doc) {
-    doc->GetAndIncrementContentID(&id);
+    id = doc->GetAndIncrementContentID();
+  } else {
+    id = PR_INT32_MAX;
   }
 
   aDst->SetContentID(id);
@@ -598,8 +600,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   } while (next);
 
 
-  nsCOMPtr<nsIContent> docElement;
-  mDocument->GetRootContent(getter_AddRefs(docElement));
+  nsIContent *docElement = mDocument->GetRootContent();
 
   // Find the frame parent whose content's tagName either matches
   // the tagName passed in or is the document element.
@@ -907,9 +908,7 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
   PRBool scripts_enabled = PR_FALSE;
 
   if (doc) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-
-    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+    nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
 
     if (sgo) {
       sgo->GetContext(getter_AddRefs(scx));
@@ -1463,9 +1462,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
             // window to the front.  We update the focus controller, but do
             // nothing else.
             nsCOMPtr<nsIFocusController> focusController;
-            nsCOMPtr<nsIScriptGlobalObject> globalObj;
-            mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
-            nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+            nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
             win->GetRootFocusController(getter_AddRefs(focusController));
             PRBool isActive = PR_FALSE;
             focusController->GetActive(&isActive);
@@ -1714,10 +1711,8 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
   result = mAttributes->SetAttributeFor(aAttribute, aValue, mapped,
                                           this, sheet);
   if (mDocument) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
-    bindingManager->GetBinding(this, getter_AddRefs(binding));
+    mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(aAttribute, aNameSpaceID, PR_FALSE, aNotify);
 
@@ -1806,10 +1801,8 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mDocument) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
-    bindingManager->GetBinding(this, getter_AddRefs(binding));
+    mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(localName, namespaceID, PR_FALSE, aNotify);
 
@@ -1963,10 +1956,8 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
       }
     }
 
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
-    bindingManager->GetBinding(this, getter_AddRefs(binding));
+    mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(aAttribute, kNameSpaceID_None, PR_TRUE,
                                 aNotify);
@@ -2084,10 +2075,8 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   }
 
   if (mDocument) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
     nsCOMPtr<nsIXBLBinding> binding;
-    bindingManager->GetBinding(this, getter_AddRefs(binding));
+    mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(aAttribute, aNameSpaceID, PR_TRUE, aNotify);
 
@@ -2349,10 +2338,11 @@ nsGenericHTMLElement::GetBaseURL(nsIURI** aBaseURL) const
   // base class -- our base URL is determined solely by the document base.
   if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
     if (doc) {
-      return doc->GetBaseURL(aBaseURL);
+      NS_IF_ADDREF(*aBaseURL = doc->GetBaseURL());
+    } else {
+      *aBaseURL = nsnull;
     }
 
-    *aBaseURL = nsnull;
     return NS_OK;
   }
   
@@ -2366,10 +2356,12 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
 {
   nsresult result = NS_OK;
 
-  nsCOMPtr<nsIURI> docBaseURL;
+  nsIURI* docBaseURL;
 
   if (aDocument) {
-    result = aDocument->GetBaseURL(getter_AddRefs(docBaseURL));
+    docBaseURL = aDocument->GetBaseURL();
+  } else {
+    docBaseURL = nsnull;
   }
 
   if (eHTMLUnit_String == aBaseHref.GetUnit()) {
@@ -2400,7 +2392,7 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
     }
   }
   if (nsnull != mDocument) {
-    result = mDocument->GetBaseTarget(aBaseTarget);
+    mDocument->GetBaseTarget(aBaseTarget);
   }
   else {
     aBaseTarget.Truncate();
@@ -2676,8 +2668,7 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
   // Get the history (don't bother with the key if the history is not there)
   //
   nsresult rv;
-  nsCOMPtr<nsISupports> container;
-  doc->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
   if (docShell) {
     rv = docShell->GetLayoutHistoryState(aHistory);
@@ -4607,14 +4598,11 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
   } else {
     // set the protocol to the protocol of the base URI.
 
-    nsCOMPtr<nsIURI> uri;
-
     if (aDocument) {
-      aDocument->GetBaseURL(getter_AddRefs(uri));
-    }
-
-    if (uri) {
-      uri->GetScheme(protocol);
+      nsIURI *uri = aDocument->GetBaseURL();
+      if (uri) {
+        uri->GetScheme(protocol);
+      }
     }
 
     if (protocol.IsEmpty()) {

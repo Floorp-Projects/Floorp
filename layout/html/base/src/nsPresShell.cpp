@@ -1992,13 +1992,11 @@ NS_IMETHODIMP
 PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
 {
   if (mDocument && mStyleSet) {
-    PRInt32 count = 0;
-    mDocument->GetNumberOfStyleSheets(PR_FALSE, &count);
+    PRInt32 count = mDocument->GetNumberOfStyleSheets(PR_FALSE);
     PRInt32 index;
     NS_NAMED_LITERAL_STRING(textHtml,"text/html");
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIStyleSheet> sheet;
-      mDocument->GetStyleSheetAt(index, PR_FALSE, getter_AddRefs(sheet));
+      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(index, PR_FALSE);
       PRBool complete;
       sheet->GetComplete(complete);
       if (complete) {
@@ -2029,13 +2027,11 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
 {
   // XXX should this be returning incomplete sheets?  Probably.
   if (mDocument) {
-    PRInt32 count = 0;
-    mDocument->GetNumberOfStyleSheets(PR_FALSE, &count);
+    PRInt32 count = mDocument->GetNumberOfStyleSheets(PR_FALSE);
     PRInt32 index;
     NS_NAMED_LITERAL_STRING(textHtml,"text/html");
     for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIStyleSheet> sheet;
-      mDocument->GetStyleSheetAt(index, PR_FALSE, getter_AddRefs(sheet));
+      nsIStyleSheet *sheet = mDocument->GetStyleSheetAt(index, PR_FALSE);
       if (sheet) {
         nsAutoString type;
         sheet->GetType(type);
@@ -2101,8 +2097,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+  nsIScriptGlobalObject *globalObj = mDocument->GetScriptGlobalObject();
 
   // If the document doesn't have a global object there's no need to
   // notify its presshell about changes to preferences since the
@@ -2641,17 +2636,13 @@ static void CheckForFocus(nsPIDOMWindow* aOurWindow,
   }
 
   while (curDoc) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    curDoc->GetScriptGlobalObject(getter_AddRefs(globalObject));
-    nsCOMPtr<nsIDOMWindowInternal> curWin = do_QueryInterface(globalObject);
+    nsCOMPtr<nsIDOMWindowInternal> curWin = do_QueryInterface(curDoc->GetScriptGlobalObject());
     if (curWin == ourWin || !curWin)
       break;
 
-    nsCOMPtr<nsIDocument> parentDoc;
-    curDoc->GetParentDocument(getter_AddRefs(parentDoc));
-    if (parentDoc == aDocument)
+    curDoc = curDoc->GetParentDocument();
+    if (curDoc == aDocument)
       return;
-    curDoc = parentDoc;
   }
 
   if (!curDoc) {
@@ -2747,14 +2738,12 @@ PresShell::GetDidInitialReflow(PRBool *aDidInitialReflow)
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
-  nsCOMPtr<nsIContent> root;
   mDidInitialReflow = PR_TRUE;
 
 #ifdef NS_DEBUG
   if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-    nsCOMPtr<nsIURI> uri;
     if (mDocument) {
-      mDocument->GetDocumentURL(getter_AddRefs(uri));
+      nsIURI *uri = mDocument->GetDocumentURL();
       if (uri) {
         nsCAutoString url;
         uri->GetSpec(url);
@@ -2776,9 +2765,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     mPresContext->SetVisibleArea(r);
   }
 
-  if (mDocument) {
-    mDocument->GetRootContent(getter_AddRefs(root));
-  }
+  nsIContent *root = mDocument ? mDocument->GetRootContent() : nsnull;
 
   // Get the root frame from the frame manager
   nsIFrame* rootFrame;
@@ -3084,8 +3071,7 @@ PresShell::FireResizeEvent()
   event.message = NS_RESIZE_EVENT;
   event.time = 0;
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+  nsCOMPtr<nsIScriptGlobalObject> globalObj = mDocument->GetScriptGlobalObject();
   if (globalObj) {
     globalObj->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
@@ -3759,8 +3745,7 @@ PresShell::AppendReflowCommand(nsHTMLReflowCommand* aReflowCommand)
     aReflowCommand->List(stdout);
     if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
       printf("Current content model:\n");
-      nsCOMPtr<nsIContent> rootContent;
-      mDocument->GetRootContent(getter_AddRefs(rootContent));
+      nsIContent *rootContent = mDocument->GetRootContent();
       if (rootContent) {
         rootContent->List(stdout, 0);
       }
@@ -4329,11 +4314,9 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   if (content) {
     nsIDocument* document = content->GetDocument();
     if (document){
-      nsCOMPtr<nsIFocusController> focusController;
-      nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-      document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-      nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+      nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(document->GetScriptGlobalObject());
       if(ourWindow) {
+        nsCOMPtr<nsIFocusController> focusController;
         ourWindow->GetRootFocusController(getter_AddRefs(focusController));
         if (focusController) {
           PRBool dontScroll;
@@ -4670,9 +4653,7 @@ PresShell::DoCopy()
     return rv;
 
   // Now that we have copied, update the Paste menu item
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  doc->GetScriptGlobalObject(getter_AddRefs(globalObject));  
-  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(globalObject);
+  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(doc->GetScriptGlobalObject());
   if (domWindow)
   {
     domWindow->UpdateCommands(NS_LITERAL_STRING("clipboard"));
@@ -4892,9 +4873,7 @@ PresShell::IsPaintingSuppressed(PRBool* aResult)
 void
 PresShell::UnsuppressAndInvalidate()
 {
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));  
-  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
   nsCOMPtr<nsIFocusController> focusController;
   if (ourWindow)
     ourWindow->GetRootFocusController(getter_AddRefs(focusController));
@@ -5391,14 +5370,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   // to be called again should a new root node be inserted for this
   // presShell. (Bug 167355)
 
-  if (mDocument) {
-    nsCOMPtr<nsIContent> rootContent;
-    mDocument->GetRootContent(getter_AddRefs(rootContent));
-
-    if (!rootContent) {
-      mDidInitialReflow = PR_FALSE;
-    }
-  }
+  if (mDocument && !mDocument->GetRootContent())
+    mDidInitialReflow = PR_FALSE;
 
   VERIFY_STYLE_TREE;
   DidCauseReflow();
@@ -5977,9 +5950,7 @@ PresShell::HandleEvent(nsIView         *aView,
           // to redraw pre-edit (composed) string
           // If Mozilla does not have input focus and event is IME,
           // sends IME event to pre-focused element
-          nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-          mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-          nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
+          nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
           if (ourWindow) {
             nsCOMPtr<nsIFocusController> focusController;
             ourWindow->GetRootFocusController(getter_AddRefs(focusController));
@@ -6001,7 +5972,7 @@ PresShell::HandleEvent(nsIView         *aView,
         }
 #endif /* defined(MOZ_X11) */
         if (!mCurrentEventContent) {
-          mDocument->GetRootContent(&mCurrentEventContent);
+          NS_IF_ADDREF(mCurrentEventContent = mDocument->GetRootContent());
         }
         mCurrentEventFrame = nsnull;
       }
@@ -6706,10 +6677,8 @@ PresShell::AddDummyLayoutRequest(void)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILoadGroup> loadGroup;
-    if (mDocument) {
-      rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      if (NS_FAILED(rv)) return rv;
-    }
+    if (mDocument)
+      loadGroup = mDocument->GetDocumentLoadGroup();
 
     if (loadGroup) {
       rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
@@ -6731,10 +6700,8 @@ PresShell::RemoveDummyLayoutRequest(void)
 
   if (gAsyncReflowDuringDocLoad) {
     nsCOMPtr<nsILoadGroup> loadGroup;
-    if (mDocument) {
-      rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      if (NS_FAILED(rv)) return rv;
-    }
+    if (mDocument)
+      loadGroup = mDocument->GetDocumentLoadGroup();
 
     if (loadGroup && mDummyLayoutRequest) {
       rv = loadGroup->RemoveRequest(mDummyLayoutRequest, nsnull, NS_OK);
@@ -7414,8 +7381,7 @@ PresShell::DumpReflows()
   if (mReflowCountMgr) {
     nsCAutoString uriStr;
     if (mDocument) {
-      nsCOMPtr<nsIURI> uri;
-      mDocument->GetDocumentURL(getter_AddRefs(uri));
+      nsIURI *uri = mDocument->GetDocumentURL();
       if (uri) {
         uri->GetPath(uriStr);
       }

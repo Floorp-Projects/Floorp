@@ -390,25 +390,20 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     }
 
     // Remove ourselves from the set of pending docs.
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    doc->GetBindingManager(getter_AddRefs(bindingManager));
-    nsCOMPtr<nsIURI> uri;
-    mBindingDocument->GetDocumentURL(getter_AddRefs(uri));
+    nsIBindingManager *bindingManager = doc->GetBindingManager();
+    nsIURI *uri = mBindingDocument->GetDocumentURL();
     nsCAutoString str;
     uri->GetSpec(str);
     bindingManager->RemoveLoadingDocListener(str);
 
-    nsCOMPtr<nsIContent> root;
-    mBindingDocument->GetRootContent(getter_AddRefs(root));
-    if (!root) {
+    if (!mBindingDocument->GetRootContent()) {
       NS_ERROR("*** XBL doc with no root element! Something went horribly wrong! ***");
       return NS_ERROR_FAILURE;
     }
 
     // Put our doc info in the doc table.
     nsCOMPtr<nsIXBLDocumentInfo> info;
-    nsCOMPtr<nsIBindingManager> xblDocBindingManager;
-    mBindingDocument->GetBindingManager(getter_AddRefs(xblDocBindingManager));
+    nsIBindingManager *xblDocBindingManager = mBindingDocument->GetBindingManager();
     xblDocBindingManager->GetXBLDocumentInfo(str, getter_AddRefs(info));
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
@@ -542,8 +537,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
   if (!document)
     return NS_OK;
 
-  nsCOMPtr<nsIBindingManager> bindingManager;
-  document->GetBindingManager(getter_AddRefs(bindingManager));
+  nsIBindingManager *bindingManager = document->GetBindingManager();
   
   nsCOMPtr<nsIXBLBinding> binding;
   bindingManager->GetBinding(aContent, getter_AddRefs(binding));
@@ -574,9 +568,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
   }
 
   // Security check - remote pages can't load local bindings, except from chrome
-  nsCOMPtr<nsIURI> docURI;
-  rv = document->GetDocumentURL(getter_AddRefs(docURI));
-  NS_ENSURE_SUCCESS(rv, rv); //XXX can a document have no URI here?
+  nsIURI *docURI = document->GetDocumentURL();
   PRBool isChrome = PR_FALSE;
   rv = docURI->SchemeIs("chrome", &isChrome);
 
@@ -666,8 +658,7 @@ nsXBLService::FlushStyleBindings(nsIContent* aContent)
   if (! document)
     return NS_OK;
 
-  nsCOMPtr<nsIBindingManager> bindingManager;
-  document->GetBindingManager(getter_AddRefs(bindingManager));
+  nsIBindingManager *bindingManager = document->GetBindingManager();
   
   nsCOMPtr<nsIXBLBinding> binding;
   bindingManager->GetBinding(aContent, getter_AddRefs(binding));
@@ -695,8 +686,7 @@ nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** 
 {
   nsIDocument* document = aContent->GetDocument();
   if (document) {
-    nsCOMPtr<nsIBindingManager> bindingManager;
-    document->GetBindingManager(getter_AddRefs(bindingManager));
+    nsIBindingManager *bindingManager = document->GetBindingManager();
   
     if (bindingManager)
       return bindingManager->ResolveTag(aContent, aNameSpaceID, aResult);
@@ -726,11 +716,8 @@ nsXBLService::GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundEle
   if (!*aResult) {
     // The second line of defense is the binding manager's document table.
     nsIDocument* boundDocument = aBoundElement->GetDocument();
-    if (boundDocument) {
-      nsCOMPtr<nsIBindingManager> bindingManager;
-      boundDocument->GetBindingManager(getter_AddRefs(bindingManager));
-      bindingManager->GetXBLDocumentInfo(aURLStr, aResult);
-    }
+    if (boundDocument)
+      boundDocument->GetBindingManager()->GetXBLDocumentInfo(aURLStr, aResult);
   }
   return NS_OK;
 }
@@ -994,10 +981,8 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
         // Look up the prefix.
         // We have a base class binding. Load it right now.
         NS_ConvertUCS2toUTF8 urlCString(value);
-        nsCOMPtr<nsIURI> docURI;
-        doc->GetDocumentURL(getter_AddRefs(docURI));
         nsCAutoString urlStr;
-        docURI->Resolve(urlCString, urlStr);
+        doc->GetDocumentURL()->Resolve(urlCString, urlStr);
         if (NS_FAILED(GetBindingInternal(aBoundElement, urlStr, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
           return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
         if (!aPeekOnly) {
@@ -1047,10 +1032,10 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
 
   if (!info) {
     // The second line of defense is the binding manager's document table.
-    nsCOMPtr<nsIBindingManager> bindingManager;
+    nsIBindingManager *bindingManager = nsnull;
 
     if (aBoundDocument) {
-      aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      bindingManager = aBoundDocument->GetBindingManager();
       bindingManager->GetXBLDocumentInfo(aURLStr, getter_AddRefs(info));
     }
 
@@ -1100,8 +1085,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
       FetchBindingDocument(aBoundElement, aBoundDocument, uri, aRef, aForceSyncLoad, getter_AddRefs(document));
    
       if (document) {
-        nsCOMPtr<nsIBindingManager> xblDocBindingManager;
-        document->GetBindingManager(getter_AddRefs(xblDocBindingManager));
+        nsIBindingManager *xblDocBindingManager = document->GetBindingManager();
         xblDocBindingManager->GetXBLDocumentInfo(aURLStr, getter_AddRefs(info));
         if (!info) {
           NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
@@ -1147,7 +1131,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   // Create an XML content sink and a parser. 
   nsCOMPtr<nsILoadGroup> loadGroup;
   if (aBoundDocument)
-    aBoundDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    loadGroup = aBoundDocument->GetDocumentLoadGroup();
 
   nsCOMPtr<nsIAtom> tagName;
   if (aBoundElement)
@@ -1192,9 +1176,12 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     rec->AddEventListener(NS_LITERAL_STRING("load"), (nsIDOMLoadListener*)xblListener, PR_FALSE);
 
     // Add ourselves to the list of loading docs.
-    nsCOMPtr<nsIBindingManager> bindingManager;
+    nsIBindingManager *bindingManager;
     if (aBoundDocument)
-      aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      bindingManager = aBoundDocument->GetBindingManager();
+    else
+      bindingManager = nsnull;
+
     nsCAutoString uri;
     aURI->GetSpec(uri);
     if (bindingManager)

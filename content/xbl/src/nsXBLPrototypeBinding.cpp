@@ -793,10 +793,9 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
     // First we have to locate this insertion point and use its index and its
     // count to detemine our precise position within the template.
     nsIDocument* doc = aBoundElement->GetDocument();
-    nsCOMPtr<nsIBindingManager> bm;
-    doc->GetBindingManager(getter_AddRefs(bm));
     nsCOMPtr<nsIXBLBinding> binding;
-    bm->GetBinding(aBoundElement, getter_AddRefs(binding));
+    doc->GetBindingManager()->GetBinding(aBoundElement,
+                                         getter_AddRefs(binding));
     
     nsCOMPtr<nsIXBLBinding> currBinding = binding;
     nsCOMPtr<nsIContent> anonContent;

@@ -494,18 +494,16 @@ NS_INTERFACE_MAP_END_INHERITING(nsXMLDocument)
 // nsIDocument interface
 //
 
-NS_IMETHODIMP
+void
 nsXULDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
     NS_NOTREACHED("Reset");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup)
 {
     NS_NOTREACHED("ResetToURI");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Override the nsDocument.cpp method to keep from returning the
@@ -518,14 +516,13 @@ nsXULDocument::GetContentType(nsAString& aContentType)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::SetContentType(const nsAString& aContentType)
 {
     NS_ASSERTION(aContentType.Equals(NS_LITERAL_STRING("application/vnd.mozilla.xul+xml")),
                  "xul-documents always has content-type application/vnd.mozilla.xul+xml");
     // Don't do anything, xul always has the mimetype
     // application/vnd.mozilla.xul+xml
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -673,14 +670,13 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULDocument::GetPrincipal(nsIPrincipal **aPrincipal)
+nsIPrincipal*
+nsXULDocument::GetPrincipal()
 {
-    *aPrincipal = nsnull;
     NS_ASSERTION(mMasterPrototype, "Missing master prototype. See bug 169036");
-    NS_ENSURE_TRUE(mMasterPrototype, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(mMasterPrototype, nsnull);
 
-    return mMasterPrototype->GetDocumentPrincipal(aPrincipal);
+    return mMasterPrototype->GetDocumentPrincipal();
 }
 
 NS_IMETHODIMP
@@ -690,7 +686,7 @@ nsXULDocument::SetPrincipal(nsIPrincipal *aPrincipal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::EndLoad()
 {
     nsresult rv;
@@ -700,7 +696,7 @@ nsXULDocument::EndLoad()
 
     nsCOMPtr<nsIURI> uri;
     rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return;
 
     // Remember if the XUL cache is on
     PRBool useXULCache;
@@ -716,7 +712,7 @@ nsXULDocument::EndLoad()
 
     nsCOMPtr<nsIXULChromeRegistry> reg =
         do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return;
 
     nsCOMPtr<nsISupportsArray> sheets;
     reg->GetStyleSheets(uri, getter_AddRefs(sheets));
@@ -746,14 +742,14 @@ nsXULDocument::EndLoad()
         // documents that raced to load the prototype, and awaited
         // its load completion via proto->AwaitLoadDone().
         rv = mCurrentPrototype->NotifyLoadDone();
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return;
     }
 
     // Now walk the prototype to build content.
     rv = PrepareToWalk();
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return;
 
-    return ResumeWalk();
+    ResumeWalk();
 }
 
 // Called back from nsXULPrototypeDocument::NotifyLoadDone for each XUL
@@ -1086,7 +1082,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
@@ -1096,12 +1092,12 @@ nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
     if ((aAttribute == nsXULAtoms::id) || (aAttribute == nsXULAtoms::ref)) {
 
         rv = mElementMap.Enumerate(RemoveElementsFromMapByContent, aElement);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return;
 
         // That'll have removed _both_ the 'ref' and 'id' entries from
         // the map. So add 'em back now.
         rv = AddElementToMap(aElement);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return;
     }
 
     // Synchronize broadcast listeners
@@ -1155,23 +1151,21 @@ nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
     // XXX Namespace handling broken :-(
     nsAutoString persist;
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::persist, persist);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         nsAutoString attr;
         rv = aAttribute->ToString(attr);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return;
 
         if (persist.Find(attr) >= 0) {
             rv = Persist(aElement, kNameSpaceID_None, aAttribute);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) return;
         }
     }
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::ContentAppended(nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)
 {
@@ -1181,26 +1175,26 @@ nsXULDocument::ContentAppended(nsIContent* aContainer,
     for (PRUint32 i = aNewIndexInContainer; i < count; ++i) {
         nsresult rv = AddSubtreeToDocument(aContainer->GetChildAt(i));
         if (NS_FAILED(rv))
-            return rv;
+            return;
     }
 
-    return nsXMLDocument::ContentAppended(aContainer, aNewIndexInContainer);
+    nsXMLDocument::ContentAppended(aContainer, aNewIndexInContainer);
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::ContentInserted(nsIContent* aContainer,
                                nsIContent* aChild,
                                PRInt32 aIndexInContainer)
 {
     nsresult rv = AddSubtreeToDocument(aChild);
     if (NS_FAILED(rv))
-        return rv;
+        return;
 
-    return nsXMLDocument::ContentInserted(aContainer, aChild,
-                                          aIndexInContainer);
+    nsXMLDocument::ContentInserted(aContainer, aChild,
+                                   aIndexInContainer);
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::ContentReplaced(nsIContent* aContainer,
                                nsIContent* aOldChild,
                                nsIContent* aNewChild,
@@ -1209,17 +1203,17 @@ nsXULDocument::ContentReplaced(nsIContent* aContainer,
     nsresult rv;
     rv = RemoveSubtreeFromDocument(aOldChild);
     if (NS_FAILED(rv))
-        return rv;
+        return;
 
     rv = AddSubtreeToDocument(aNewChild);
     if (NS_FAILED(rv))
-        return rv;
+        return;
 
-    return nsXMLDocument::ContentReplaced(aContainer, aOldChild, aNewChild,
-                                          aIndexInContainer);
+    nsXMLDocument::ContentReplaced(aContainer, aOldChild, aNewChild,
+                                   aIndexInContainer);
 }
 
-NS_IMETHODIMP
+void
 nsXULDocument::ContentRemoved(nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
@@ -1227,10 +1221,10 @@ nsXULDocument::ContentRemoved(nsIContent* aContainer,
     nsresult rv;
     rv = RemoveSubtreeFromDocument(aChild);
     if (NS_FAILED(rv))
-        return rv;
+        return;
 
-    return nsXMLDocument::ContentRemoved(aContainer, aChild,
-                                         aIndexInContainer);
+    nsXMLDocument::ContentRemoved(aContainer, aChild,
+                                  aIndexInContainer);
 }
 
 NS_IMETHODIMP
@@ -1497,10 +1491,7 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
     NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(elements);
     
-    nsCOMPtr<nsIContent> root;
-    GetRootContent(getter_AddRefs(root));
-
-    nsCOMPtr<nsIDOMNode> domRoot = do_QueryInterface(root);
+    nsCOMPtr<nsIDOMNode> domRoot = do_QueryInterface(mRootContent);
     NS_ASSERTION(domRoot, "no doc root");
 
     if (domRoot) {
@@ -1666,10 +1657,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
     nsSize size;
     nsIFrame* frame;
 
-    result = FlushPendingNotifications();
-    if (NS_FAILED(result)) {
-        return result;
-    }
+    FlushPendingNotifications();
 
     result = aShell->GetPrimaryFrameFor(mRootContent, &frame);
     if (NS_SUCCEEDED(result) && frame) {
@@ -3691,6 +3679,9 @@ nsXULDocument::AddPrototypeSheets()
         NS_ASSERTION(uri, "not a URI!!!");
         if (! uri)
             return NS_ERROR_UNEXPECTED;
+
+        nsCAutoString spec;
+        uri->GetAsciiSpec(spec);
 
         if (!IsChromeURI(uri)) {
             // These don't get to be in the prototype cache anyway...

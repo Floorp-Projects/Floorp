@@ -559,8 +559,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
 
   // We have some popup content. Obtain our window.
   nsCOMPtr<nsIScriptContext> context;
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  document->GetScriptGlobalObject(getter_AddRefs(global));
+  nsCOMPtr<nsIScriptGlobalObject> global = document->GetScriptGlobalObject();
   if (global) {
     if ((NS_OK == global->GetContext(getter_AddRefs(context))) && context) {
       // Get the DOM window

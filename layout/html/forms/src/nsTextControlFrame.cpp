@@ -383,11 +383,7 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
   nsCOMPtr<nsIDocument> doc = content->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  nsresult rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-  NS_ENSURE_TRUE(scriptGlobalObject, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject);
+  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(doc->GetScriptGlobalObject());
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
   return domWindow->UpdateCommands(commandsToUpdate);
@@ -1675,12 +1671,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (!elementFactory)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-  rv = doc->GetNodeInfoManager(getter_AddRefs(nodeInfoManager));
-
-  if (NS_FAILED(rv))
-    return rv;
-
+  nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;

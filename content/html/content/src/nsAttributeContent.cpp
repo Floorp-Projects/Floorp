@@ -388,10 +388,11 @@ nsAttributeContent::GetBaseURL(nsIURI** aURI) const
   }
 
   if (mDocument) {
-    return mDocument->GetBaseURL(aURI);
+    NS_IF_ADDREF(*aURI = mDocument->GetBaseURL());
+  } else {
+    *aURI = nsnull;
   }
 
-  *aURI = nsnull;
   return NS_OK;
 }
 

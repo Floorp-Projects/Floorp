@@ -45,6 +45,14 @@
 #include "nsCOMArray.h"
 #include "nsIDocumentObserver.h"
 #include "nsCOMPtr.h"
+#include "nsIURI.h"
+#include "nsIBindingManager.h"
+#include "nsINodeInfo.h"
+#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h"
+#include "nsILoadGroup.h"
+#include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 class nsIAtom;
 class nsIContent;
@@ -56,8 +64,6 @@ class nsIStreamObserver;
 class nsIStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
-class nsIURI;
-class nsILoadGroup;
 class nsIViewManager;
 class nsIScriptGlobalObject;
 class nsIDOMEvent;
@@ -70,10 +76,8 @@ class nsIWordBreaker;
 class nsISelection;
 class nsIChannel;
 class nsIPrincipal;
-class nsINodeInfoManager;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
-class nsIBindingManager;
 class nsIObserver;
 class nsISupportsArray;
 class nsIScriptLoader;
@@ -102,6 +106,13 @@ class nsIScriptEventManager;
 class nsIDocument : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  nsIDocument()
+    : mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
+      mNextContentID(NS_CONTENT_ID_COUNTER_BASE) { }
+
+  virtual ~nsIDocument() { }
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
@@ -116,18 +127,18 @@ public:
   /**
    * Return the title of the document. May return null.
    */
-  NS_IMETHOD GetDocumentTitle(nsAString& aTitle) const = 0;
+  const nsAString& GetDocumentTitle() const { return mDocumentTitle; }
 
   /**
    * Return the URL for the document. May return null.
    */
-  NS_IMETHOD GetDocumentURL(nsIURI** aURL) const = 0;
-  NS_IMETHOD SetDocumentURL(nsIURI* aURL) = 0;
+  nsIURI* GetDocumentURL() const { return mDocumentURL; }
+  void    SetDocumentURL(nsIURI* aURL) { mDocumentURL = aURL; }
 
   /**
    * Return the principal responsible for this document.
    */
-  NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal) = 0;
+  virtual nsIPrincipal* GetPrincipal() = 0;
 
   /**
    * Set the principal responsible for this document.
@@ -137,32 +148,38 @@ public:
   /**
    * Return the LoadGroup for the document. May return null.
    */
-  NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup** aGroup) const = 0;
+  already_AddRefed<nsILoadGroup> GetDocumentLoadGroup() const {
+    nsILoadGroup *group = nsnull;
+    if (mDocumentLoadGroup)
+      CallQueryReferent(mDocumentLoadGroup.get(), &group);
+    return group;
+  }
 
   /**
    * Return the base URL for relative URLs in the document (the document url
    * unless it's overridden by SetBaseURL, HTML <base> tags, etc.).  The
    * returned URL could be null if there is no document URL.
    */
-  NS_IMETHOD GetBaseURL(nsIURI** aURL) const = 0;
+  nsIURI* GetBaseURL() const { return mDocumentBaseURL ? mDocumentBaseURL : mDocumentURL; }
   NS_IMETHOD SetBaseURL(nsIURI* aURL) = 0;
 
   /**
    * Get/Set the base target of a link in a document.
    */
-  NS_IMETHOD GetBaseTarget(nsAString &aBaseTarget)=0;
-  NS_IMETHOD SetBaseTarget(const nsAString &aBaseTarget)=0;
+  virtual void GetBaseTarget(nsAString &aBaseTarget) const = 0;
+  virtual void SetBaseTarget(const nsAString &aBaseTarget) = 0;
 
   /**
    * Return a standard name for the document's character set. This
    * will trigger a startDocumentLoad if necessary to answer the
    * question.
    */
-  NS_IMETHOD GetDocumentCharacterSet(nsACString& oCharSetID) = 0;
-  NS_IMETHOD SetDocumentCharacterSet(const nsACString& aCharSetID) = 0;
+  const nsACString& GetDocumentCharacterSet() const { return mCharacterSet; }
+  virtual void SetDocumentCharacterSet(const nsACString& aCharSetID) = 0;
 
-  NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource) = 0;
-  NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource) = 0;
+  PRInt32 GetDocumentCharacterSetSource() const { return mCharacterSetSource; }
+  void    SetDocumentCharacterSetSource(PRInt32 aCharsetSource) { mCharacterSetSource = aCharsetSource; }
+
   /**
    * Add an observer that gets notified whenever the charset changes.
    */
@@ -175,18 +192,22 @@ public:
 
   /**
    * Get the Content-Type of this document.
+   * (This will always return NS_OK, but has this signature to be compatible
+   *  with nsIDOMNSDocument::GetContentType())
    */
   NS_IMETHOD GetContentType(nsAString& aContentType) = 0;
 
   /**
    * Set the Content-Type of this document.
    */
-  NS_IMETHOD SetContentType(const nsAString& aContentType) = 0;
+  virtual void SetContentType(const nsAString& aContentType) = 0;
 
   /**
    * Return the language of this document.
    */
-  NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const = 0;
+  void GetContentLanguage(nsAString& aContentLanguage) const {
+    CopyASCIItoUCS2(mContentLanguage, aContentLanguage);
+  }
 
   // The state BidiEnabled should persist across multiple views
   // (screen, print) of the same document.
@@ -195,7 +216,7 @@ public:
    * Check if the document contains bidi data.
    * If so, we have to apply the Unicode Bidi Algorithm.
    */
-  NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const = 0;
+  PRBool GetBidiEnabled() const { return mBidiEnabled; }
 
   /**
    * Indicate the document contains bidi data.
@@ -203,27 +224,27 @@ public:
    * it affects a frame model irreversibly, and plays even though
    * the document no longer contains bidi data.
    */
-  NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled) = 0;
+  void SetBidiEnabled(PRBool aBidiEnabled) { mBidiEnabled = aBidiEnabled; }
 
   /**
    * Return the Line Breaker for the document
    */
-  NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult) = 0;
-  NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) = 0;
-  NS_IMETHOD GetWordBreaker(nsIWordBreaker** aResult) = 0;
-  NS_IMETHOD SetWordBreaker(nsIWordBreaker* aWordBreaker) = 0;
+  virtual nsILineBreaker* GetLineBreaker() = 0;
+  virtual void SetLineBreaker(nsILineBreaker* aLineBreaker) = 0;
+  virtual nsIWordBreaker* GetWordBreaker() = 0;
+  virtual void SetWordBreaker(nsIWordBreaker* aWordBreaker) = 0;
 
   /**
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
    */
-  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsAString& aData) const = 0;
-  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsAString& aData) = 0;
+  virtual void GetHeaderData(nsIAtom* aHeaderField, nsAString& aData) const = 0;
+  virtual void SetHeaderData(nsIAtom* aheaderField, const nsAString& aData) = 0;
 
   /**
-   * Create a new presentation shell that will use aContext for it's
-   * presentation context (presentation context's <b>must not</b> be
-   * shared among multiple presentation shell's).
+   * Create a new presentation shell that will use aContext for its
+   * presentation context (presentation contexts <b>must not</b> be
+   * shared among multiple presentation shells).
    */
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager,
@@ -238,12 +259,12 @@ public:
    * unless this document is within a compound document and has a
    * parent. Note that this parent chain may cross chrome boundaries.
    */
-  NS_IMETHOD GetParentDocument(nsIDocument** aParent) = 0;
+  nsIDocument* GetParentDocument() const { return mParentDocument; }
 
   /**
    * Set the parent document of this document.
    */
-  NS_IMETHOD SetParentDocument(nsIDocument* aParent) = 0;
+  void SetParentDocument(nsIDocument* aParent) { mParentDocument = aParent; }
 
   /**
    * Set the sub document for aContent to aSubDoc.
@@ -253,20 +274,18 @@ public:
   /**
    * Get the sub document for aContent
    */
-  NS_IMETHOD GetSubDocumentFor(nsIContent *aContent,
-                               nsIDocument** aSubDoc) = 0;
+  virtual nsIDocument* GetSubDocumentFor(nsIContent *aContent) const = 0;
 
   /**
    * Find the content node for which aDocument is a sub document.
    */
-  NS_IMETHOD FindContentForSubDocument(nsIDocument *aDocument,
-                                       nsIContent **aContent) = 0;
+  virtual nsIContent* FindContentForSubDocument(nsIDocument *aDocument) const = 0;
 
   /**
    * Return the root content object for this document.
    */
-  NS_IMETHOD GetRootContent(nsIContent** aRoot) = 0;
-  NS_IMETHOD SetRootContent(nsIContent* aRoot) = 0;
+  nsIContent* GetRootContent() const { return mRootContent; }
+  virtual void SetRootContent(nsIContent* aRoot) = 0;
 
   /** 
    * Get the direct children of the document - content in
@@ -291,8 +310,7 @@ public:
    * @return the number of stylesheets
    * @throws no exceptions
    */
-  NS_IMETHOD GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets,
-                                    PRInt32* aCount) = 0;
+  virtual PRInt32 GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets) const = 0;
   
   /**
    * Get a particular stylesheet
@@ -302,8 +320,8 @@ public:
    * @return the stylesheet at aIndex.  Null if aIndex is out of range.
    * @throws no exceptions
    */
-  NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, PRBool aIncludeSpecialSheets,
-                             nsIStyleSheet** aSheet) = 0;
+  virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex,
+                                         PRBool aIncludeSpecialSheets) const = 0;
   
   /**
    * Insert a sheet at a particular spot in the stylesheet list (zero-based)
@@ -321,7 +339,7 @@ public:
    * @param aSheet the sheet to get the index of
    * @return aIndex the index of the sheet in the full list
    */
-  NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex) = 0;
+  virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const = 0;
 
   /**
    * Replace the stylesheets in aOldSheets with the stylesheets in
@@ -331,8 +349,8 @@ public:
    * may be null; if so the corresponding sheets in the first list
    * will simply be removed.
    */
-  NS_IMETHOD UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
-                               nsCOMArray<nsIStyleSheet>& aNewSheets) = 0;
+  virtual void UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
+                                 nsCOMArray<nsIStyleSheet>& aNewSheets) = 0;
 
   /**
    * Add a stylesheet to the document
@@ -356,13 +374,13 @@ public:
    * This is the context within which all scripts (during document 
    * creation and during event handling) will run.
    */
-  NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject** aGlobalObject) = 0;
-  NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
+  virtual nsIScriptGlobalObject* GetScriptGlobalObject() const = 0;
+  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
 
   /**
    * Get the script loader for this document
    */ 
-  NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader) = 0;
+  virtual nsIScriptLoader* GetScriptLoader() = 0;
 
   //----------------------------------------------------------------------
 
@@ -385,46 +403,46 @@ public:
   // BeginUpdate must be called before any batch of modifications of the
   // content model or of style data, EndUpdate must be called afterward.
   // To make this easy and painless, use the mozAutoDocUpdate helper class.
-  NS_IMETHOD BeginUpdate(nsUpdateType aUpdateType) = 0;
-  NS_IMETHOD EndUpdate(nsUpdateType aUpdateType) = 0;
-  NS_IMETHOD BeginLoad() = 0;
-  NS_IMETHOD EndLoad() = 0;
-  NS_IMETHOD ContentChanged(nsIContent* aContent,
-                            nsISupports* aSubContent) = 0;
+  virtual void BeginUpdate(nsUpdateType aUpdateType) = 0;
+  virtual void EndUpdate(nsUpdateType aUpdateType) = 0;
+  virtual void BeginLoad() = 0;
+  virtual void EndLoad() = 0;
+  virtual void ContentChanged(nsIContent* aContent,
+                              nsISupports* aSubContent) = 0;
   // notify that one or two content nodes changed state
   // either may be nsnull, but not both
-  NS_IMETHOD ContentStatesChanged(nsIContent* aContent1,
-                                  nsIContent* aContent2,
-                                  PRInt32 aStateMask) = 0;
-  NS_IMETHOD AttributeWillChange(nsIContent* aChild,
-                                 PRInt32 aNameSpaceID,
-                                 nsIAtom* aAttribute) = 0;
-  NS_IMETHOD AttributeChanged(nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              PRInt32 aModType) = 0;
-  NS_IMETHOD ContentAppended(nsIContent* aContainer,
-                             PRInt32 aNewIndexInContainer) = 0;
-  NS_IMETHOD ContentInserted(nsIContent* aContainer,
-                             nsIContent* aChild,
-                             PRInt32 aIndexInContainer) = 0;
-  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
-                             nsIContent* aOldChild,
-                             nsIContent* aNewChild,
-                             PRInt32 aIndexInContainer) = 0;
-  NS_IMETHOD ContentRemoved(nsIContent* aContainer,
-                            nsIContent* aChild,
-                            PRInt32 aIndexInContainer) = 0;
+  virtual void ContentStatesChanged(nsIContent* aContent1,
+                                    nsIContent* aContent2,
+                                    PRInt32 aStateMask) = 0;
+  virtual void AttributeWillChange(nsIContent* aChild,
+                                   PRInt32 aNameSpaceID,
+                                   nsIAtom* aAttribute) = 0;
+  virtual void AttributeChanged(nsIContent* aChild,
+                                PRInt32 aNameSpaceID,
+                                nsIAtom* aAttribute,
+                                PRInt32 aModType) = 0;
+  virtual void ContentAppended(nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer) = 0;
+  virtual void ContentInserted(nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer) = 0;
+  virtual void ContentReplaced(nsIContent* aContainer,
+                               nsIContent* aOldChild,
+                               nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer) = 0;
+  virtual void ContentRemoved(nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer) = 0;
 
   // Observation hooks for style data to propagate notifications
   // to document observers
-  NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aOldStyleRule,
-                              nsIStyleRule* aNewStyleRule) = 0;
-  NS_IMETHOD StyleRuleAdded(nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule) = 0;
-  NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
+  virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
+                                nsIStyleRule* aOldStyleRule,
+                                nsIStyleRule* aNewStyleRule) = 0;
+  virtual void StyleRuleAdded(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule) = 0;
+  virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
+                                nsIStyleRule* aStyleRule) = 0;
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 
@@ -432,47 +450,86 @@ public:
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus) = 0;
 
-  NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows=PR_TRUE,
-                                       PRBool aUpdateViews=PR_FALSE) = 0;
+  virtual void FlushPendingNotifications(PRBool aFlushReflows=PR_TRUE,
+                                         PRBool aUpdateViews=PR_FALSE) = 0;
 
-  NS_IMETHOD GetAndIncrementContentID(PRInt32* aID) = 0;
+  PRInt32 GetAndIncrementContentID() { return mNextContentID++; }
 
-  NS_IMETHOD GetBindingManager(nsIBindingManager** aResult) = 0;
+  nsIBindingManager* GetBindingManager() const { return mBindingManager; }
 
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) = 0;
+  nsINodeInfoManager* GetNodeInfoManager() const { return mNodeInfoManager; }
 
-  NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
-  NS_IMETHOD ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup) = 0;
+  virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) = 0;
+  virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup) = 0;
 
-  NS_IMETHOD AddReference(void *aKey, nsISupports *aReference) = 0;
-  NS_IMETHOD RemoveReference(void *aKey, nsISupports **aOldReference) = 0;
+  virtual void AddReference(void *aKey, nsISupports *aReference) = 0;
+  virtual already_AddRefed<nsISupports> RemoveReference(void *aKey) = 0;
 
   /**
    * Set the container (docshell) for this document.
    */
-  NS_IMETHOD SetContainer(nsISupports *aContainer) = 0;
+  void SetContainer(nsISupports *aContainer) {
+    mDocumentContainer = do_GetWeakReference(aContainer);
+  }
 
   /**
    * Get the container (docshell) for this document.
    */
-  NS_IMETHOD GetContainer(nsISupports **aContainer) = 0;
+  already_AddRefed<nsISupports> GetContainer() const {
+    nsISupports* container = nsnull;
+    if (mDocumentContainer)
+      CallQueryReferent(mDocumentContainer.get(), &container);
+    return container;
+  }
 
-  NS_IMETHOD GetScriptEventManager(nsIScriptEventManager **aResult) = 0;
+  virtual nsIScriptEventManager* GetScriptEventManager() = 0;
 
   /**
    * Set and get XML declaration. Notice that if version is empty,
    * there can be no XML declaration (it is a required part).
    */
-  NS_IMETHOD SetXMLDeclaration(const nsAString& aVersion,
-                               const nsAString& aEncoding,
-                               const nsAString& Standalone) = 0;
-  NS_IMETHOD GetXMLDeclaration(nsAString& aVersion,
-                               nsAString& aEncoding,
-                               nsAString& Standalone) = 0;
+  virtual void SetXMLDeclaration(const nsAString& aVersion,
+                                 const nsAString& aEncoding,
+                                 const nsAString& Standalone) = 0;
+  virtual void GetXMLDeclaration(nsAString& aVersion,
+                                 nsAString& aEncoding,
+                                 nsAString& Standalone) = 0;
 
   NS_IMETHOD_(PRBool) IsCaseSensitive() = 0;
 
   NS_IMETHOD_(PRBool) IsScriptEnabled() = 0;
+
+protected:
+  nsString mDocumentTitle;
+  nsCOMPtr<nsIURI> mDocumentURL;
+  nsCOMPtr<nsIURI> mDocumentBaseURL;
+
+  nsWeakPtr mDocumentLoadGroup;
+
+  nsWeakPtr mDocumentContainer;
+
+  nsCString mCharacterSet;
+  PRInt32 mCharacterSetSource;
+
+  // This is just a weak pointer; the parent document owns its children.
+  nsIDocument* mParentDocument;
+
+  // A weak reference to the only child element, or null if no
+  // such element exists.
+  nsIContent* mRootContent;
+
+  // A content ID counter used to give a monotonically increasing ID
+  // to the content objects in the document's content model
+  PRInt32 mNextContentID;
+
+  nsCOMPtr<nsIBindingManager> mBindingManager;
+  nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
+
+  // True if BIDI is enabled.
+  PRBool mBidiEnabled;
+
+  nsXPIDLCString mContentLanguage;
+  nsCString mContentType;
 };
 
 

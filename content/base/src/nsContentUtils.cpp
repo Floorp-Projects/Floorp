@@ -481,7 +481,7 @@ nsContentUtils::GetDocumentAndPrincipal(nsIDOMNode* aNode,
   }
 
   if (!*aPrincipal) {
-    (*aDocument)->GetPrincipal(aPrincipal);
+    NS_IF_ADDREF(*aPrincipal = (*aDocument)->GetPrincipal());
   }
 
   return NS_OK;
@@ -585,7 +585,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
   }
 
   if (!trustedPrincipal) {
-    trustedDoc->GetPrincipal(getter_AddRefs(trustedPrincipal));
+    trustedPrincipal = trustedDoc->GetPrincipal();
 
     if (!trustedPrincipal) {
       // If the trusted node doesn't have a principal we can't check
@@ -715,9 +715,7 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aChild,
   }
 
   if (aOldDocument) {
-    nsCOMPtr<nsISupports> old_ref;
-
-    aOldDocument->RemoveReference(aChild, getter_AddRefs(old_ref));
+    nsCOMPtr<nsISupports> old_ref = aOldDocument->RemoveReference(aChild);
 
     if (old_ref) {
       // Transfer the reference from aOldDocument to aNewDocument
@@ -748,8 +746,7 @@ nsresult GetContextFromDocument(nsIDocument *aDocument, JSContext **cx)
 {
   *cx = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-  aDocument->GetScriptGlobalObject(getter_AddRefs(sgo));
+  nsIScriptGlobalObject *sgo = aDocument->GetScriptGlobalObject();
 
   if (!sgo) {
     // No script global, no context.
@@ -804,10 +801,7 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   nsCOMPtr<nsISupports> new_parent;
 
   if (!aNewParent) {
-    nsCOMPtr<nsIContent> root;
-    old_doc->GetRootContent(getter_AddRefs(root));
-
-    if (root.get() == aContent) {
+    if (old_doc->GetRootContent() == aContent) {
       new_parent = old_doc;
     }
   } else {
@@ -1532,8 +1526,8 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
                                           nsIURI* aBaseURI)
 {
   nsCAutoString originCharset;
-  if (aDocument && NS_FAILED(aDocument->GetDocumentCharacterSet(originCharset)))
-    originCharset.Truncate();
+  if (aDocument)
+    originCharset = aDocument->GetDocumentCharacterSet();
 
   return NS_NewURI(aResult, NS_ConvertUCS2toUTF8(aSpec), originCharset.get(),
                    aBaseURI, sIOService);
@@ -1635,7 +1629,7 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
   }
 
   if (document) {
-    document->GetScriptGlobalObject(getter_AddRefs(sgo));
+    sgo = document->GetScriptGlobalObject();
   }
 
   if (!document && !sgo) {

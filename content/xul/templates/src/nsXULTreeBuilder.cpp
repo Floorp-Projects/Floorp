@@ -819,13 +819,12 @@ nsXULTreeBuilder::SetTree(nsITreeBoxObject* tree)
         return NS_ERROR_UNEXPECTED;
 
     // Grab the doc's principal...
-    nsCOMPtr<nsIPrincipal> docPrincipal;
-    nsresult rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
-    if (NS_FAILED(rv)) 
-        return rv;
+    nsIPrincipal* docPrincipal = doc->GetPrincipal();
+    if (!docPrincipal)
+        return NS_ERROR_FAILURE;
 
     PRBool isTrusted = PR_FALSE;
-    rv = IsSystemPrincipal(docPrincipal.get(), &isTrusted);
+    nsresult rv = IsSystemPrincipal(docPrincipal, &isTrusted);
     if (NS_SUCCEEDED(rv) && isTrusted) {
         // Get the datasource we intend to use to remember open state.
         nsAutoString datasourceStr;

@@ -165,7 +165,7 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
     aText->GetOwnerDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
     if (document) {
-      document->GetLineBreaker(getter_AddRefs(mLineBreaker));
+      mLineBreaker = document->GetLineBreaker();
     }
 
     if (!mLineBreaker) {
@@ -623,16 +623,13 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         // but that gets more complicated since we have to
         // search the tag list for CODEBASE as well.
         // For now, just leave them relative.
-        nsIDocument* document = aContent->GetDocument();
-        if (document) {
-          nsCOMPtr<nsIURI> uri;
-          document->GetBaseURL(getter_AddRefs(uri));
-          if (uri) {
-            nsAutoString absURI;
-            rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);
-            if (NS_SUCCEEDED(rv)) {
-              valueStr = absURI;
-            }
+        nsCOMPtr<nsIURI> uri;
+        aContent->GetBaseURL(getter_AddRefs(uri));
+        if (uri) {
+          nsAutoString absURI;
+          rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);
+          if (NS_SUCCEEDED(rv)) {
+            valueStr = absURI;
           }
         }
       }

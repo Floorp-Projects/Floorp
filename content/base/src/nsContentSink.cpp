@@ -171,10 +171,9 @@ nsContentSink::Init(nsIDocument* aDoc,
       new nsScriptLoaderObserverProxy(this);
   NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIScriptLoader> loader;
-  nsresult rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = loader->AddObserver(proxy);
+  nsIScriptLoader *loader = mDocument->GetScriptLoader();
+  NS_ENSURE_TRUE(loader, NS_ERROR_FAILURE);
+  nsresult rv = loader->AddObserver(proxy);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(aDoc));
@@ -186,7 +185,8 @@ nsContentSink::Init(nsIDocument* aDoc,
   // XXX if it isn't we need to set it here...
   ProcessHTTPHeaders(aChannel);
 
-  return aDoc->GetNodeInfoManager(getter_AddRefs(mNodeInfoManager));
+  mNodeInfoManager = aDoc->GetNodeInfoManager();
+  return mNodeInfoManager ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 
 }
 
@@ -349,10 +349,9 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     // We use the original codebase in case the codebase was changed
     // by SetDomain
 
-    nsCOMPtr<nsIPrincipal> docPrincipal;
-    rv = mDocument->GetPrincipal(getter_AddRefs(docPrincipal));
-    if (NS_FAILED(rv) || !docPrincipal) {
-      return rv;
+    nsIPrincipal *docPrincipal = mDocument->GetPrincipal();
+    if (!docPrincipal) {
+      return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsIPrincipal> systemPrincipal;
@@ -369,14 +368,10 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     rv = docPrincipal->GetURI(getter_AddRefs(codebaseURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIScriptGlobalObject> globalObj;
     nsCOMPtr<nsIPrompt> prompt;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
-    if (globalObj) {
-      nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
-      if (window) {
-        window->GetPrompter(getter_AddRefs(prompt));
-      }
+    nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(mDocument->GetScriptGlobalObject()));
+    if (window) {
+      window->GetPrompter(getter_AddRefs(prompt));
     }
 
     nsCOMPtr<nsIChannel> channel;
@@ -749,11 +744,10 @@ nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
   nsCOMPtr<nsIPrefetchService> prefetchService(do_GetService(NS_PREFETCHSERVICE_CONTRACTID));
   if (prefetchService) {
     // construct URI using document charset
-    nsCAutoString charset;
-    mDocument->GetDocumentCharacterSet(charset);
+    const nsACString &charset = mDocument->GetDocumentCharacterSet();
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref,
-              charset.IsEmpty() ? nsnull : charset.get(),
+              charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
               mDocumentBaseURL);
     if (uri) {
       prefetchService->PrefetchURI(uri, mDocumentURL, aExplicit);
@@ -764,7 +758,8 @@ nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
 
 // Convert the ref from document charset to unicode.
 static nsresult
-CharsetConvRef(const nsCString& aDocCharset, const nsCString& aRefInDocCharset,
+CharsetConvRef(const nsACString& aDocCharset,
+               const nsCString& aRefInDocCharset,
                nsString& aRefInUnicode)
 {
   nsresult rv;
@@ -778,7 +773,8 @@ CharsetConvRef(const nsCString& aDocCharset, const nsCString& aRefInDocCharset,
   }
 
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm->GetUnicodeDecoder(aDocCharset.get(), getter_AddRefs(decoder));
+  rv = ccm->GetUnicodeDecoder(PromiseFlatCString(aDocCharset).get(),
+                              getter_AddRefs(decoder));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -851,15 +847,12 @@ nsContentSink::ScrollToRef(PRBool aReallyScroll)
       // document's charset.
 
       if (NS_FAILED(rv)) {
-        nsCAutoString docCharset;
-        rv = mDocument->GetDocumentCharacterSet(docCharset);
+        const nsACString &docCharset = mDocument->GetDocumentCharacterSet();
 
-        if (NS_SUCCEEDED(rv)) {
-          rv = CharsetConvRef(docCharset, unescapedRef, ref);
+        rv = CharsetConvRef(docCharset, unescapedRef, ref);
 
-          if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-            rv = shell->GoToAnchor(ref, aReallyScroll);
-        }
+        if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
+          rv = shell->GoToAnchor(ref, aReallyScroll);
       }
       if (NS_SUCCEEDED(rv)) {
         didScroll = PR_TRUE;

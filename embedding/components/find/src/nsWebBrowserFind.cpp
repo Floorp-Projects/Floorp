@@ -634,10 +634,9 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
     nsCOMPtr<nsIDocument> theDoc = do_QueryInterface(domDoc);
     if (!theDoc) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIURI> docURI;
-    rv = theDoc->GetDocumentURL(getter_AddRefs(docURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
+    nsIURI *docURI = theDoc->GetDocumentURL();
+    NS_ENSURE_TRUE(docURI, NS_ERROR_FAILURE);
+
     // Get the security manager and do the same-origin check
     nsCOMPtr<nsIScriptSecurityManager> secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);

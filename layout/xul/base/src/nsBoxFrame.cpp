@@ -758,8 +758,7 @@ nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState,
       nsCOMPtr<nsIDocument> doc;
       presShell->GetDocument(getter_AddRefs(doc));
       if (!doc) return PR_FALSE;
-      nsCOMPtr<nsIURI> uri;
-      doc->GetDocumentURL(getter_AddRefs(uri));
+      nsIURI *uri = doc->GetDocumentURL();
       if (!uri) return PR_FALSE;
       uri->SchemeIs("chrome", &aIsChrome);
       return PR_TRUE;

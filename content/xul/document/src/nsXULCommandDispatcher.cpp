@@ -124,9 +124,7 @@ void
 nsXULCommandDispatcher::EnsureFocusController()
 {
   if (!mFocusController) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(global));
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(global));
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mDocument->GetScriptGlobalObject()));
   
     // An inelegant way to retrieve this to be sure, but we are
     // guaranteed that the focus controller outlives us, so it

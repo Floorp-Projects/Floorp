@@ -455,12 +455,12 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
   // Get the document URI for the referrer...
-  nsCOMPtr<nsIURI> documentURI;
+  nsIURI *documentURI = nsnull;
   nsCOMPtr<nsIDocument> doc;
   if (mContent) {
     doc = mContent->GetDocument();
     if (doc) {
-      doc->GetDocumentURL(getter_AddRefs(documentURI));
+      documentURI = doc->GetDocumentURL();
     }
   }
 
@@ -709,7 +709,7 @@ nsImageBoxFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoad
   if (!doc)
     return;
 
-  doc->GetDocumentLoadGroup(aLoadGroup);
+  *aLoadGroup = doc->GetDocumentLoadGroup().get(); // already_AddRefed
 }
 
 

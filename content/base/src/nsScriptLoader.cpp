@@ -362,8 +362,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   
   // Script evaluation can also be disabled in the current script
   // context even though it's enabled in the document.
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  nsIScriptGlobalObject *globalObject = mDocument->GetScriptGlobalObject();
   if (globalObject)
   {
     nsCOMPtr<nsIScriptContext> context;
@@ -444,8 +443,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     }
     
     // Check that the containing page is allowed to load this URI.
-    nsCOMPtr<nsIURI> docURI;
-    mDocument->GetDocumentURL(getter_AddRefs(docURI));
+    nsIURI *docURI = mDocument->GetDocumentURL();
     if (!docURI) {
       return FireErrorNotification(NS_ERROR_UNEXPECTED, aElement, aObserver);
     }
@@ -475,10 +473,8 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       // Add the request to our pending requests list
       mPendingRequests.AppendObject(request);
 
-      nsCOMPtr<nsILoadGroup> loadGroup;
+      nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
       nsCOMPtr<nsIStreamLoader> loader;
-
-      (void) mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
       nsCOMPtr<nsIDocShell> docshell;
       rv = globalObject->GetDocShell(getter_AddRefs(docshell));
@@ -486,10 +482,6 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
         mPendingRequests.RemoveObject(request);
         return FireErrorNotification(rv, aElement, aObserver);
       }
-
-      // Get the referrer url from the document
-      nsCOMPtr<nsIURI> documentURI;
-      mDocument->GetDocumentURL(getter_AddRefs(documentURI));
 
       nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
 
@@ -504,7 +496,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
           httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
                                         NS_LITERAL_CSTRING("*/*"),
                                         PR_FALSE);
-          httpChannel->SetReferrer(documentURI);
+          httpChannel->SetReferrer(mDocument->GetDocumentURL());
         }
         rv = NS_NewStreamLoader(getter_AddRefs(loader), channel, this, request);
       }
@@ -516,7 +508,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   } else {
     request->mLoading = PR_FALSE;
     request->mIsInline = PR_TRUE;
-    mDocument->GetDocumentURL(getter_AddRefs(request->mURI));
+    request->mURI = mDocument->GetDocumentURL();
 
     nsCOMPtr<nsIScriptElement> scriptElement(do_QueryInterface(aElement));
     if (scriptElement) {
@@ -641,8 +633,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
-  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  nsIScriptGlobalObject *globalObject = mDocument->GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIScriptContext> context;
@@ -651,8 +642,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPrincipal> principal;
-  mDocument->GetPrincipal(getter_AddRefs(principal));
+  nsIPrincipal *principal = mDocument->GetPrincipal();
   // We can survive without a principal, but we really should
   // have one.
   NS_ASSERTION(principal, "principal required for document");
@@ -834,10 +824,8 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
     if (characterSet.IsEmpty()) {
       // charset from document default
-      rv = mDocument->GetDocumentCharacterSet(characterSet);
+      characterSet = mDocument->GetDocumentCharacterSet();
     }
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get document charset!");
 
     if (characterSet.IsEmpty()) {
       // fall back to ISO-8851-1, see bug 118404
@@ -906,9 +894,8 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
       nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
 
       if (principal) {
-        nsCOMPtr<nsIPrincipal> docPrincipal;
-        rv = mDocument->GetPrincipal(getter_AddRefs(docPrincipal));
-        if (NS_SUCCEEDED(rv)) {
+        nsIPrincipal *docPrincipal = mDocument->GetPrincipal();
+        if (docPrincipal) {
           nsCOMPtr<nsIPrincipal> newPrincipal =
               IntersectPrincipalCerts(docPrincipal, principal);
 

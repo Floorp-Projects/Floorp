@@ -48,6 +48,7 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIChromeRegistry.h"
+#include "nsIPrincipal.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -338,7 +339,12 @@ nsXBLDocGlobalObject::GetPrincipal(nsIPrincipal** aPrincipal)
   rv = docInfo->GetDocument(getter_AddRefs(document));
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-  return document->GetPrincipal(aPrincipal);
+  *aPrincipal = document->GetPrincipal();
+  if (!*aPrincipal)
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(*aPrincipal);
+  return NS_OK;
 }
 
 static PRBool IsChromeOrResourceURI(nsIURI* aURI)
@@ -362,8 +368,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument
   mScriptAccess = PR_TRUE;
   mBindingTable = nsnull;
 
-  nsCOMPtr<nsIURI> uri;
-  mDocument->GetDocumentURL(getter_AddRefs(uri));
+  nsIURI *uri = mDocument->GetDocumentURL();
   if (IsChromeOrResourceURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
     nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
@@ -478,11 +483,8 @@ nsXBLDocumentInfo::ReportScriptError(nsIScriptError *errorObject)
 
 nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult)
 {
-  nsCOMPtr<nsIURI> url;
-  aDocument->GetDocumentURL(getter_AddRefs(url));
-  
   nsCAutoString str;
-  url->GetSpec(str);
+  aDocument->GetDocumentURL()->GetSpec(str);
 
   *aResult = new nsXBLDocumentInfo(str.get(), aDocument);
   

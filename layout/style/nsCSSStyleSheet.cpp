@@ -1224,8 +1224,7 @@ DOMMediaListImpl::GetMediaText(nsAString& aMediaText)
   }                                                            \
   /* XXXldb Pass something meaningful? */                      \
   if (doc) {                                                   \
-    rv = doc->StyleRuleChanged(sheet, nsnull, nsnull);         \
-    NS_ENSURE_SUCCESS(rv, rv);                                 \
+    doc->StyleRuleChanged(sheet, nsnull, nsnull);              \
   }
 
 
@@ -2780,8 +2779,7 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
       }
     }
     if (mDocument && notify) {
-      result = mDocument->StyleRuleAdded(this, cssRule);
-      NS_ENSURE_SUCCESS(result, result);
+      mDocument->StyleRuleAdded(this, cssRule);
     }
   }
   
@@ -2824,8 +2822,7 @@ CSSStyleSheetImpl::DeleteRule(PRUint32 aIndex)
         DidDirty();
 
         if (mDocument) {
-          result = mDocument->StyleRuleRemoved(this, rule);
-          NS_ENSURE_SUCCESS(result, result);
+          mDocument->StyleRuleRemoved(this, rule);
         }
       }
     }
@@ -2865,8 +2862,7 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
   DidDirty();
 
   if (mDocument) {
-    result = mDocument->StyleRuleRemoved(this, rule);
-    NS_ENSURE_SUCCESS(result, result);
+    mDocument->StyleRuleRemoved(this, rule);
   }
 
   return NS_OK;
@@ -2940,8 +2936,7 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
     rule = dont_AddRef((nsICSSRule*)rules->ElementAt(counter));
   
     if (mDocument) {
-      result = mDocument->StyleRuleAdded(this, rule);
-      NS_ENSURE_SUCCESS(result, result);
+      mDocument->StyleRuleAdded(this, rule);
     }
   }
 
@@ -2999,8 +2994,7 @@ CSSStyleSheetImpl::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
     // they do)!
     nsCOMPtr<nsIStyleRule> styleRule(do_QueryInterface(ownerRule));
     
-    nsresult rv = mDocument->StyleRuleAdded(this, styleRule);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mDocument->StyleRuleAdded(this, styleRule);
   }
 
   return NS_OK;
@@ -3567,24 +3561,24 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             // The content language can be a comma-separated list of
             // language codes.
             nsAutoString language;
-            if (NS_SUCCEEDED(doc->GetContentLanguage(language))) {
-              nsDependentString langString(pseudoClass->mString);
-              language.StripWhitespace();
-              PRInt32 begin = 0;
-              PRInt32 len = language.Length();
-              while (begin < len) {
-                PRInt32 end = language.FindChar(PRUnichar(','), begin);
-                if (end == kNotFound) {
-                  end = len;
-                }
-                if (DashMatchCompare(Substring(language, begin, end-begin),
-                                     langString,
-                                     PR_FALSE)) {
-                  result = localTrue;
-                  break;
-                }
-                begin = end + 1;
+            doc->GetContentLanguage(language);
+
+            nsDependentString langString(pseudoClass->mString);
+            language.StripWhitespace();
+            PRInt32 begin = 0;
+            PRInt32 len = language.Length();
+            while (begin < len) {
+              PRInt32 end = language.FindChar(PRUnichar(','), begin);
+              if (end == kNotFound) {
+                end = len;
               }
+              if (DashMatchCompare(Substring(language, begin, end-begin),
+                                   langString,
+                                   PR_FALSE)) {
+                result = localTrue;
+                break;
+              }
+              begin = end + 1;
             }
           }
         }

@@ -508,9 +508,7 @@ nsresult nsAccessible::GetFocusedNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aFo
   if (!document)
     document = do_QueryInterface(aCurrentNode);
   if (document) {
-    nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-    document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-    nsCOMPtr<nsPIDOMWindow> ourWindow(do_QueryInterface(ourGlobal));
+    nsCOMPtr<nsPIDOMWindow> ourWindow(do_QueryInterface(document->GetScriptGlobalObject()));
     if (ourWindow) 
       ourWindow->GetRootFocusController(getter_AddRefs(focusController));
   }

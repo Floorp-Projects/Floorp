@@ -419,12 +419,10 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
     return NS_OK;
   }
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   NS_WARN_IF_FALSE(loadGroup, "Could not get loadgroup; onload may fire too early");
 
-  nsCOMPtr<nsIURI> documentURI;
-  doc->GetDocumentURL(getter_AddRefs(documentURI));
+  nsIURI *documentURI = doc->GetDocumentURL();
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
@@ -524,9 +522,8 @@ nsImageLoadingContent::CanLoadImage(nsIURI* aURI, nsIDocument* aDocument)
   
   // Check with the content-policy things to make sure this load is permitted.
 
-  nsCOMPtr<nsIScriptGlobalObject> globalScript;
-  nsresult rv = aDocument->GetScriptGlobalObject(getter_AddRefs(globalScript));
-  if (NS_FAILED(rv)) {
+  nsIScriptGlobalObject *globalScript = aDocument->GetScriptGlobalObject();
+  if (!globalScript) {
     // just let it load.  Documents loaded as data should take care to
     // prevent image loading themselves.
     return NS_OK;
@@ -535,8 +532,8 @@ nsImageLoadingContent::CanLoadImage(nsIURI* aURI, nsIDocument* aDocument)
   nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
 
   PRBool shouldLoad = PR_TRUE;
-  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE, aURI, this,
-                                 domWin, &shouldLoad);
+  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE, aURI, this,
+                                          domWin, &shouldLoad);
   if (NS_SUCCEEDED(rv) && !shouldLoad) {
     return NS_ERROR_IMAGE_BLOCKED;
   }
@@ -582,13 +579,12 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // (2) Get the charset
-  nsCAutoString charset;
-  aDocument->GetDocumentCharacterSet(charset);
+  const nsACString &charset = aDocument->GetDocumentCharacterSet();
 
   // (3) Construct the silly thing
   return NS_NewURI(aURI,
                    aSpec,
-                   charset.IsEmpty() ? nsnull : charset.get(),
+                   charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
                    baseURL,
                    sIOService);
 }
@@ -682,8 +678,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
                                            getter_AddRefs(eventQ));
   NS_ENSURE_TRUE(eventQ, rv);
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  document->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup();
 
   nsIPresShell *shell = document->GetShellAt(0);
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
