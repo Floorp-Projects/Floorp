@@ -484,16 +484,20 @@ class JavaMembers {
             Modifier.isPublic(staticType.getModifiers()))
         {
             cl = staticType;
-            
-            // We can use the static type, and that is OK, but we'll trace
-            // back the java class chain here to look for something more suitable.
-            for (Class parentType = dynamicType; 
-                 parentType != null && parentType != ScriptRuntime.ObjectClass;
-                 parentType = parentType.getSuperclass())
+
+            // If the static type is an interface, use it
+            if( !cl.isInterface() )
             {
-                if (Modifier.isPublic(parentType.getModifiers())) {
-                   cl = parentType;
-                   break;
+                // We can use the static type, and that is OK, but we'll trace
+                // back the java class chain here to look for something more suitable.
+                for (Class parentType = dynamicType; 
+                     parentType != null && parentType != ScriptRuntime.ObjectClass;
+                     parentType = parentType.getSuperclass())
+                {
+                    if (Modifier.isPublic(parentType.getModifiers())) {
+                        cl = parentType;
+                        break;
+                    }
                 }
             }
         }
