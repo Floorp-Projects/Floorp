@@ -575,7 +575,7 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAWritableString& aUrl,
   }
   rv = NS_MakeAbsoluteURI(aUrl, href, baseURL);
 
-  if (*aIsAlternate) {
+  if (!*aIsAlternate) {
     if (!aTitle.IsEmpty()) {  // possibly preferred sheet
       nsAutoString prefStyle;
       mInner.mDocument->GetHeaderData(nsHTMLAtoms::headerDefaultStyle,
