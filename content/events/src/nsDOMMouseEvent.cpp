@@ -106,6 +106,25 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
        inputEvent->refPoint.x = aScreenX;
        inputEvent->refPoint.y = aScreenY;
        mButton = aButton;
+       // Now fix up mEvent->message, since nsDOMUIEvent::InitUIEvent
+       // doesn't have enough information to set it right.
+       // XXXbz AARGH.  No useful constants for the buttons!
+       if (mEvent->message == NS_MOUSE_LEFT_CLICK) {
+         if (mButton == 1) {  // Middle button
+           mEvent->message = NS_MOUSE_MIDDLE_CLICK;
+         }
+         else if (mButton == 2) {  // Right button
+           mEvent->message = NS_MOUSE_RIGHT_CLICK;
+         }
+       }
+       if (mEvent->message == NS_MOUSE_LEFT_DOUBLECLICK) {
+         if (mButton == 1) {  // Middle button
+           mEvent->message = NS_MOUSE_MIDDLE_DOUBLECLICK;
+         }
+         else if (mButton == 2) {  // Right button
+           mEvent->message = NS_MOUSE_RIGHT_DOUBLECLICK;
+         }
+       }
        if (mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
          nsMouseScrollEvent* scrollEvent = NS_STATIC_CAST(nsMouseScrollEvent*, mEvent);
          scrollEvent->delta = aDetail;
