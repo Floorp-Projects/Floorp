@@ -3418,11 +3418,11 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 						NET_SilentInterruptWindow(tmpEntry->window_id);
 					}
 	#endif /* MILAN */
+#ifdef MODULAR_NETLIB
+	                net_ReleaseContext(tmpEntry->window_id);
+#endif
 		  		}
 
-#ifdef MODULAR_NETLIB
-                net_ReleaseContext(tmpEntry->window_id);
-#endif
 				PR_Free(tmpEntry);  /* free the now non active entry */
 
 			} /* end if  rv < 0 */
