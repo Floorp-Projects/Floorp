@@ -105,7 +105,7 @@ int ReplaceINIFile()
 
 	CString Src = nscpxpiPath + "\\" +exeName;
 	CString Dst = cdPath + "\\" + exeName;
-	if (!CopyFile(Src, Dst, TRUE))
+	if (!CopyFile(Src, Dst, FALSE))
 		DWORD e = GetLastError();
 
 	command = rootPath + "nszip.exe " + exeName +  " config.ini";
@@ -116,6 +116,74 @@ int ReplaceINIFile()
 	return TRUE;
 }
 
+void ModifyPref(char *buffer, CString entity, CString newvalue)
+{
+	CString buf(buffer);
+	
+	int i = buf.Find(entity);
+	if (i == -1) return;
+
+	i = buf.Find('"', i+1);
+	if (i == -1) return;
+	i++;
+
+	i = buf.Find('"', i+1);
+	if (i == -1) return;
+	i++;
+
+	int j = buf.Find('"', i);
+	if (j == -1) return;
+	j--;
+
+	buf.Delete(i, j-i+1);
+	buf.Insert(i, newvalue);
+
+	strcpy(buffer, (char *)(LPCTSTR) buf);
+}
+
+int ModifyJS(CString xpifile, CString entity, CString newvalue)
+{
+	CString newfile = xpifile + ".new";
+	int rv = TRUE;
+	char *fgetsrv;
+
+	// Read in DTD file and make substitutions
+	FILE *srcf = fopen(xpifile, "r");
+	FILE *dstf = fopen(newfile, "w");
+	CString apost = '"';
+	entity.Insert(0,apost);
+	entity.Insert(1000,apost);
+
+	if (!srcf)
+		rv = FALSE;
+	else
+	{
+		int done = FALSE;
+		while (!done)
+		{
+			fgetsrv = fgets(buffer, sizeof(buffer), srcf);
+			done = feof(srcf);
+			if (!done)
+			{
+				if (!fgetsrv || ferror(srcf))
+				{
+					rv = FALSE;
+					break;
+				}
+				ModifyPref(buffer, entity, newvalue);
+				fputs(buffer, dstf);
+			}
+		}
+
+		fclose(srcf);
+		fclose(dstf);
+	}
+
+	remove(xpifile);
+	rename(newfile, xpifile);
+
+	return TRUE;
+}
 void ModifyEntity(char *buffer, CString entity, CString newvalue)
 {
 	CString buf(buffer);
@@ -234,7 +302,8 @@ int interpret(char *cmd)
 			return FALSE;
 		}
 	}
-	else if (strcmp(cmdname, "modifyDTD") == 0)
+	else if ((strcmp(cmdname, "modifyDTD") == 0) ||
+			(strcmp(cmdname, "modifyJS") == 0))
 	{
 		char *xpiname	= strtok(NULL, ",)");
 		char *xpifile	= strtok(NULL, ",)");
@@ -253,7 +322,10 @@ int interpret(char *cmd)
 		if (!xpiname || !xpifile || !entity || !newvalue)
 			return FALSE;
 		ExtractXPIFile(xpiname, xpifile);
-		ModifyDTD(xpifile, entity, newvalue);
+		if(strcmp(cmdname, "modifyJS") == 0)
+			ModifyJS(xpifile,entity,newvalue);
+		else
+			ModifyDTD(xpifile, entity, newvalue);
 	}
 	else if (strcmp(cmdname, "wrapXPI") == 0)
 	{
