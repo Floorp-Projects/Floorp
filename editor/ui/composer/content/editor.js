@@ -37,7 +37,7 @@ var DisplayModeNormal = 1;
 var DisplayModeAllTags = 2;
 var DisplayModeSource = 3;
 var PreviousNonSourceDisplayMode = 1;
-var EditorDisplayMode = 1;  // Normal Editor mode
+var gEditorDisplayMode = 1;  // Normal Editor mode
 var EditModeType = "";
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
@@ -45,6 +45,7 @@ var gContentWindow = 0;
 var gSourceContentWindow = 0;
 var gContentWindowDeck;
 var gFormatToolbar;
+var gEditModeBar;
 // Bummer! Can't get at enums from nsIDocumentEncoder.h
 var gOutputSelectionOnly = 1;
 var gOutputFormatted     = 2;
@@ -138,12 +139,13 @@ var DocumentStateListener =
 
 function EditorStartup(editorType, editorElement)
 {
-  gContentWindow = window.content;
-  gSourceContentWindow = document.getElementById("content-source");
   gIsHTMLEditor = (editorType == "html");
 
   if (gIsHTMLEditor)
   {
+    gSourceContentWindow = document.getElementById("content-source");
+
+    gEditModeBar       = document.getElementById("EditModeToolbar");
     gEditModeLabel     = document.getElementById("EditModeLabel"); 
     gNormalModeButton  = document.getElementById("NormalModeButton");
     gTagModeButton     = document.getElementById("TagModeButton");
@@ -152,19 +154,12 @@ function EditorStartup(editorType, editorElement)
 
     // The "type" attribute persists, so use that value
     //  to setup edit mode buttons
-dump("Edit Mode: "+gNormalModeButton.getAttribute('type')+"\n");
     ToggleEditModeType(gNormalModeButton.getAttribute("type"));
 
     // XUL elements we use when switching from normal editor to edit source
     gContentWindowDeck = document.getElementById("ContentWindowDeck");
     gFormatToolbar = document.getElementById("FormatToolbar");
   }
-
-  gIsWin = navigator.appVersion.indexOf("Win") != -1;
-  gIsUNIX = (navigator.appVersion.indexOf("X11") || 
-             navigator.appVersion.indexOf("nux")) != -1;
-  gIsMac = !gIsWin && !gIsUNIX;
-  dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
 
   // store the editor shell in the window, so that child windows can get to it.
   editorShell = editorElement.editorShell;
@@ -173,17 +168,14 @@ dump("Edit Mode: "+gNormalModeButton.getAttribute('type')+"\n");
   editorShell.SetEditorType(editorType);
 
   editorShell.webShellWindow = window;
-  editorShell.contentWindow = gContentWindow;
+  editorShell.contentWindow = window.content;
 
-  // hide UI that we don't have components for
-  HideInapplicableUIElements();
-
-  // set up JS-implemented commands
-  SetupControllerCommands();
-  
   // add a listener to be called when document is really done loading
   editorShell.RegisterDocumentStateListener( DocumentStateListener );
- 
+
+  // Startup also used by other editor users, such as Message Composer 
+  EditorSharedStartup()
+
   // set up our global prefs object
   GetPrefsService();
    
@@ -191,6 +183,26 @@ dump("Edit Mode: "+gNormalModeButton.getAttribute('type')+"\n");
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
   editorShell.LoadUrl(url);
+}
+
+// This is the only method also called by Message Composer
+function EditorSharedStartup()
+{
+  // set up JS-implemented commands
+  SetupControllerCommands();
+
+  // Just for convenience
+  gContentWindow = window.content;
+
+  gIsWin = navigator.appVersion.indexOf("Win") != -1;
+  gIsUNIX = (navigator.appVersion.indexOf("X11") || 
+             navigator.appVersion.indexOf("nux")) != -1;
+  gIsMac = !gIsWin && !gIsUNIX;
+  dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
+
+  // hide UI that we don't have components for
+  HideInapplicableUIElements();
+
 }
 
 function _EditorNotImplemented()
@@ -201,6 +213,7 @@ function _EditorNotImplemented()
 function EditorShutdown()
 {
   dump("In EditorShutdown..\n");
+  return editorShell.Shutdown();
 }
 
 // We use this alot!
@@ -701,6 +714,13 @@ function SetEditMode(mode)
 {
   if (gIsHTMLEditor)
   {
+    // Be sure toolbar is visible
+    gEditModeBar.setAttribute("hidden", "");
+    gEditModeBar.setAttribute("collapsed", "");
+    // Remember the state
+    document.persist("EditModeToolbar","hidden");
+    document.persist("EditModeToolbar","collapsed");
+
     var bodyNode = editorShell.editorDocument.getElementsByTagName("body").item(0);
     if (!bodyNode)
     {
@@ -709,7 +729,7 @@ function SetEditMode(mode)
     }
     // Switch the UI mode before inserting contents
     //   so user can't type in source window while new window is being filled
-    var previousMode = EditorDisplayMode;
+    var previousMode = gEditorDisplayMode;
     if (!SetDisplayMode(mode))
       return;
 
@@ -764,10 +784,10 @@ function SetDisplayMode(mode)
   {
     // Already in requested mode:
     //  return false to indicate we didn't switch
-    if (mode == EditorDisplayMode)
+    if (mode == gEditorDisplayMode)
       return false;
 
-    EditorDisplayMode = mode;
+    gEditorDisplayMode = mode;
 
     // Save the last non-source mode so we can cancel source editing easily
     if (mode != DisplayModeSource)
@@ -788,7 +808,8 @@ function SetDisplayMode(mode)
       // Switch to the sourceWindow (second in the deck)
       gContentWindowDeck.setAttribute("index","1");
 
-      // TODO: WE MUST DISABLE ALL KEYBOARD COMMANDS!
+      // TODO: WE MUST DISABLE APPROPRIATE COMMANDS
+      // and change UI to appropriate
 
       // THIS DOESN'T WORK!
       gSourceContentWindow.focus();
@@ -798,7 +819,8 @@ function SetDisplayMode(mode)
       // Switch to the normal editor (first in the deck)
       gContentWindowDeck.setAttribute("index","0");
 
-      // TODO: WE MUST ENABLE ALL KEYBOARD COMMANDS!
+      // TODO: WE MUST ENABLE APPROPRIATE COMMANDS
+      // and change UI back to "normal"
 
       gContentWindow.focus();
     }
@@ -827,13 +849,16 @@ function ToggleEditModeType()
       gTagModeButton.setAttribute("value","Show All Tags");
       gSourceModeButton.setAttribute("value","HTML Source");
       gPreviewModeButton.setAttribute("value","Edit Preview");
-      gEditModeLabel.removeAttribute("hidden");
+      gEditModeLabel.setAttribute("hidden","");
     }
 
     gNormalModeButton.setAttribute("type",EditModeType);
     gTagModeButton.setAttribute("type",EditModeType);
     gSourceModeButton.setAttribute("type",EditModeType);
     gPreviewModeButton.setAttribute("type",EditModeType);
+
+    // Remember the state
+    document.persist("NormalModeButton","type");
   }
 }
 
