@@ -1269,10 +1269,8 @@ nsChromeRegistry::LoadDataSource(const nsACString &aFileName,
 
   // Seed the datasource with the ``chrome'' namespace
   nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(*aResult);
-  if (sink) {
-    nsCOMPtr<nsIAtom> prefix = getter_AddRefs(NS_NewAtom("c"));
-    sink->AddNameSpace(prefix, NS_ConvertASCIItoUCS2(CHROME_URI));
-  }
+  if (sink)
+    sink->AddNameSpace(sCPrefix, NS_ConvertASCIItoUCS2(CHROME_URI));
 
   nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(*aResult);
   if (! remote)
