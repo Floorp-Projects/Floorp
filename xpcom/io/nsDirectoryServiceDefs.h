@@ -37,7 +37,7 @@
 #define NS_XPCOM_INIT_CURRENT_PROCESS_DIR       "MozBinD"   // Can be used to set NS_XPCOM_CURRENT_PROCESS_DIR
                                                             // CANNOT be used to GET a location
                                                                                                                        
-#define NS_XPCOM_CURRENT_PROCESS_DIR            "CurProcD"
+#define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
 #define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
 #define NS_XPCOM_COMPONENT_DIR                  "ComsD"
 
