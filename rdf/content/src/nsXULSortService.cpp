@@ -107,6 +107,20 @@ static const char kXULNameSpaceURI[]
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child);
 
 
+
+typedef	struct	_sortStruct	{
+    nsIRDFCompositeDataSource	*db;
+    nsIRDFResource		*sortProperty;
+    PRBool			descendingSort;
+    PRBool			naturalOrderSort;
+} sortStruct, *sortPtr;
+
+
+
+int	openSortCallback(const void *data1, const void *data2, void *sortData);
+int	inplaceSortCallback(const void *data1, const void *data2, void *sortData);
+
+
 ////////////////////////////////////////////////////////////////////////
 // ServiceImpl
 //
@@ -148,7 +162,7 @@ nsresult	GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &s
 nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
 nsresult	GetTreeCellValue(nsIContent *node, nsString & value);
 nsresult	RemoveAllChildren(nsIContent *node);
-nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, nsString sortDirection, PRInt32 indentLevel);
+nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, sortPtr sortInfo, PRInt32 indentLevel);
 nsresult	PrintTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel);
 
 public:
@@ -546,20 +560,6 @@ XULSortServiceImpl::RemoveAllChildren(nsIContent *container)
 
 
 
-typedef	struct	_sortStruct	{
-    nsIRDFCompositeDataSource	*db;
-    nsIRDFResource		*sortProperty;
-    PRBool			descendingSort;
-    PRBool			naturalOrderSort;
-} sortStruct, *sortPtr;
-
-
-
-int	openSortCallback(const void *data1, const void *data2, void *sortData);
-int	inplaceSortCallback(const void *data1, const void *data2, void *sortData);
-
-
-
 int
 openSortCallback(const void *data1, const void *data2, void *sortData)
 {
@@ -643,26 +643,12 @@ inplaceSortCallback(const void *data1, const void *data2, void *sortData)
 
 
 nsresult
-XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, nsString sortDirection, PRInt32 indentLevel)
+XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, sortPtr sortInfo, PRInt32 indentLevel)
 {
 	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
         nsCOMPtr<nsIContent>	child;
 	nsresult		rv;
 	nsVoidArray		*childArray;
-
-	_sortStruct		sortInfo;
-
-	if (sortDirection.Equals("natural"))
-	{
-		sortInfo.naturalOrderSort = PR_TRUE;
-		sortInfo.descendingSort = PR_FALSE;
-	}
-	else
-	{
-		sortInfo.naturalOrderSort = PR_FALSE;;
-		if (sortDirection.Equals("ascending"))		sortInfo.descendingSort = PR_FALSE;
-		else if (sortDirection.Equals("descending"))	sortInfo.descendingSort = PR_TRUE;
-	}
 
 	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
 
@@ -690,7 +676,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, ns
 							// hack:  always append cell value 1st as
 							//        that's what sort callback expects
 
-							if (sortInfo.naturalOrderSort == PR_TRUE)
+							if (sortInfo->naturalOrderSort == PR_TRUE)
 							{
 								// ???????????????????
 
@@ -714,7 +700,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, ns
 					//        that's what sort callback expects
 
 					PRBool	foundValue = PR_FALSE;
-					if (sortInfo.naturalOrderSort == PR_TRUE)
+					if (sortInfo->naturalOrderSort == PR_TRUE)
 					{
 						nsString	pos;
 						if (NS_OK == child->GetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos))
@@ -752,7 +738,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, ns
 		        for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIContent *)childArray->ElementAt(loop);
 			rdf_qsort((void *)flatArray, numElements/2, 2 * sizeof(void *),
-				inplaceSortCallback, (void *)&sortInfo);
+				inplaceSortCallback, (void *)sortInfo);
 
 			RemoveAllChildren(container);
 			if (NS_FAILED(rv = container->UnsetAttribute(kNameSpaceID_None,
@@ -792,7 +778,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, ns
 							continue;
 						if (tag.get() == kTreeChildrenAtom)
 						{
-							SortTreeChildren(child, colIndex, sortDirection, indentLevel+1);
+							SortTreeChildren(child, colIndex, sortInfo, indentLevel+1);
 						}
 					}
 				}
@@ -920,6 +906,12 @@ XULSortServiceImpl::PrintTreeChildren(nsIContent *container, PRInt32 colIndex, P
 	return(NS_OK);
 }
 
+
+
+// crap
+
+
+
 NS_IMETHODIMP
 XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
                            const nsString& sortDirection)
@@ -927,15 +919,39 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	PRInt32		colIndex, treeBodyIndex;
 	nsIContent	*contentNode, *treeNode, *treeBody, *treeParent;
 	nsresult	rv;
+	_sortStruct	sortInfo;
 
 	if (NS_FAILED(rv = node->QueryInterface(kIContentIID, (void**)&contentNode)))	return(rv);
 	if (NS_FAILED(rv = FindTreeElement(contentNode, &treeNode)))	return(rv);
+
+	nsString	currentSortDirection;
+
+	sortInfo.db = nsnull;
+	sortInfo.sortProperty = nsnull;
+	if (NS_SUCCEEDED(rv = GetSortColumnInfo(treeNode, sortResource, currentSortDirection)))
+	{
+		char *uri = sortResource.ToNewCString();
+		if (NS_FAILED(rv = gRDFService->GetResource(uri, &sortInfo.sortProperty)))	return(rv);
+		delete [] uri;
+	}
+	if (sortDirection.Equals("natural"))
+	{
+		sortInfo.naturalOrderSort = PR_TRUE;
+		sortInfo.descendingSort = PR_FALSE;
+	}
+	else
+	{
+		sortInfo.naturalOrderSort = PR_FALSE;;
+		if (sortDirection.Equals("ascending"))		sortInfo.descendingSort = PR_FALSE;
+		else if (sortDirection.Equals("descending"))	sortInfo.descendingSort = PR_TRUE;
+	}
+
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, &colIndex)))	return(rv);
 	if (NS_FAILED(rv = FindTreeBodyElement(treeNode, &treeBody)))	return(rv);
 	if (NS_FAILED(rv = treeBody->GetParent(treeParent)))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
 	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
-	if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, colIndex, sortDirection, 0)))
+	if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, colIndex, &sortInfo, 0)))
 	{
 	}
 
