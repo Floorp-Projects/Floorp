@@ -2580,7 +2580,7 @@ Formatter& operator<<(Formatter &f, string &s)
     return f;
 }
 
-ICodeModule *ICodeGenerator::readFunction(XMLNode *element, String &name, JSClass *thisClass)
+ICodeModule *ICodeGenerator::readFunction(XMLNode *element, JSClass *thisClass)
 {
     ICodeModule *result = NULL;
 
@@ -2670,7 +2670,7 @@ ICodeModule *ICodeGenerator::readICode(const char *fileName)
                 if (isConstructor || (element->name().compare(widenCString("method")) == 0)) {
                     String methodName;
                     node->getValue(widenCString("name"), methodName);
-                    ICodeModule *icm = readFunction(element, methodName, thisClass);
+                    ICodeModule *icm = readFunction(element, thisClass);
                     if (icm) {
                         if (isConstructor) {
                             thisClass->defineConstructor(methodName);
@@ -2731,7 +2731,7 @@ ICodeModule *ICodeGenerator::readICode(const char *fileName)
                 if (node->name().compare(widenCString("function")) == 0) {
                     String functionName;
                     node->getValue(widenCString("name"), functionName);
-                    ICodeModule *icm = readFunction(node, functionName, NULL);
+                    ICodeModule *icm = readFunction(node, NULL);
                     mContext->getGlobalObject()->defineFunction(functionName, icm);
                 }
                 else {

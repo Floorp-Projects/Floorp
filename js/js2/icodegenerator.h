@@ -285,7 +285,7 @@ namespace ICG {
         ICodeModule *genFunction(FunctionDefinition &function, bool isStatic, bool isConstructor, JSClass *superClass);
 
         
-        ICodeModule *readFunction(XMLNode *element, String &name, JSClass *thisClass);
+        ICodeModule *readFunction(XMLNode *element, JSClass *thisClass);
 
     public:
 
