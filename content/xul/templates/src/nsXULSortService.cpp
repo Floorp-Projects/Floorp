@@ -111,10 +111,12 @@ static NS_DEFINE_IID(kIDomXulElementIID,      NS_IDOMXULELEMENT_IID);
 static const char kXULNameSpaceURI[]
     = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 
 
 
 typedef	struct	_sortStruct	{
+    nsIRDFService		*rdfService;
     nsIRDFCompositeDataSource	*db;
     nsIRDFResource		*sortProperty;
     PRInt32			colIndex;
@@ -129,6 +131,7 @@ typedef	struct	_sortStruct	{
 
 int		openSortCallback(const void *data1, const void *data2, void *sortData);
 int		inplaceSortCallback(const void *data1, const void *data2, void *sortData);
+nsresult	getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsString &cellVal1);
 nsresult	GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell);
 nsresult	GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val);
 
@@ -619,8 +622,10 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
 			{
 				literal1->GetValue(&uniStr1);
+				NS_RELEASE(literal1);
 			}
 		}
+		NS_RELEASE(res1);
 	}
 	if (NS_SUCCEEDED(node2->QueryInterface(kIRDFResourceIID, (void **) &res2)))
 	{
@@ -631,8 +636,10 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) &literal2)))
 			{
 				literal2->GetValue(&uniStr2);
+				NS_RELEASE(literal2);
 			}
 		}
+		NS_RELEASE(res2);
 	}
 	if ((uniStr1 != nsnull) && (uniStr2 != nsnull))
 	{
@@ -656,10 +663,108 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 
 
 
+nsresult
+getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsString &cellVal1)
+{
+	nsIDOMXULElement	*dom1;
+	nsIRDFResource		*res1;
+	nsresult		rv;
+
+	cellVal1 = "";
+	if (NS_SUCCEEDED(rv = node1->QueryInterface(kIDomXulElementIID, (void **)&dom1)))
+	{
+		if (NS_SUCCEEDED(rv = dom1->GetResource(&res1)))
+		{
+			if ((sortInfo->naturalOrderSort == PR_FALSE) && (sortInfo->sortProperty))
+			{
+				nsIRDFNode	*target1 = nsnull;
+
+				// for any given property, first ask the graph for its value with "?sort=true" appended
+				// to indicate that if there is any distinction between its display value and sorting
+				// value, we want the sorting value (so that, for example, a mail datasource could strip
+				// off a "Re:" on a mail message subject)
+
+				const char	*sortPropertyURI;
+				sortInfo->sortProperty->GetValue(&sortPropertyURI);
+				if (sortPropertyURI)
+				{
+					nsAutoString	modSortProperty(sortPropertyURI);
+					modSortProperty += "?sort=true";
+					const char	*sortProp = modSortProperty.ToNewCString();
+					if (sortProp)
+					{
+						nsIRDFResource	*modSortRes = nsnull;
+						if (NS_SUCCEEDED(sortInfo->rdfService->GetResource(sortProp, &modSortRes)))
+						{
+							if (modSortRes)
+							{
+								if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, modSortRes, PR_TRUE, &target1)))
+								{
+									nsIRDFLiteral *literal1;
+									if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
+									{
+										const PRUnichar	*uniStr1 = nsnull;
+										literal1->GetValue(&uniStr1);
+										cellVal1 = uniStr1;
+										NS_RELEASE(literal1);
+									}
+									NS_RELEASE(target1);
+								}
+								NS_RELEASE(modSortRes);
+							}
+						}
+						delete []sortProp;
+					}
+				}
+
+				if (cellVal1.Length() == 0)
+				{
+					if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, sortProperty, PR_TRUE, &target1)))
+					{
+						nsIRDFLiteral *literal1;
+						if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
+						{
+							const PRUnichar	*uniStr1 = nsnull;
+							literal1->GetValue(&uniStr1);
+							cellVal1 = uniStr1;
+							NS_RELEASE(literal1);
+						}
+						NS_RELEASE(target1);
+					}
+					else
+					{
+					        nsIContent	*cell1 = nsnull;
+						if (NS_SUCCEEDED(rv = GetTreeCell(sortInfo, node1, sortInfo->colIndex, &cell1)))
+						{
+							if (cell1)
+							{
+								if (NS_SUCCEEDED(rv = GetTreeCellValue(sortInfo, cell1, cellVal1)))
+								{
+								}
+							}
+						}
+					}
+				}
+			}
+			else if (sortInfo->naturalOrderSort == PR_TRUE)
+			{
+				if (NS_OK == node1->GetAttribute(kNameSpaceID_None, sortInfo->kNaturalOrderPosAtom, cellVal1))
+				{
+				}
+			}
+			NS_RELEASE(res1);
+		}
+		NS_RELEASE(dom1);
+	}
+	return(rv);
+}
+
+
+
 int
 inplaceSortCallback(const void *data1, const void *data2, void *sortData)
 {
-	_sortStruct		*sortPtr = (_sortStruct *)sortData;
+	_sortStruct		*sortInfo = (_sortStruct *)sortData;
 	PRInt32			sortOrder = 0;
 	nsIContent		*node1 = *(nsIContent **)data1;
 	nsIContent		*node2 = *(nsIContent **)data2;
@@ -667,7 +772,36 @@ inplaceSortCallback(const void *data1, const void *data2, void *sortData)
 	nsIRDFResource		*res1 = nsnull, *res2 = nsnull;
 	nsAutoString		cellVal1(""), cellVal2("");
 	nsresult		rv;
+	PRBool			sortOnName = PR_FALSE;
 
+	if (NS_FAILED(rv = getNodeValue(node1, sortInfo->sortProperty, sortInfo, cellVal1)))
+	{
+		nsIRDFResource	*name;
+		sortInfo->rdfService->GetResource(kURINC_Name, &name);
+		if (name)
+		{
+			rv = getNodeValue(node1, name, sortInfo, cellVal1);
+			NS_RELEASE(name);
+		}
+	}
+	if (NS_FAILED(rv = getNodeValue(node2, sortInfo->sortProperty, sortInfo, cellVal2)))
+	{
+		nsIRDFResource	*name;
+		sortInfo->rdfService->GetResource(kURINC_Name, &name);
+		if (name)
+		{
+			rv = getNodeValue(node2, sortInfo->sortProperty, sortInfo, cellVal2);
+			NS_RELEASE(name);
+		}
+	}
+	sortOrder = (int)cellVal1.Compare(cellVal2, PR_TRUE);
+	if (sortInfo->descendingSort == PR_TRUE)
+	{
+		sortOrder = -sortOrder;
+	}
+	return(sortOrder);
+
+#if 0
 	if (NS_SUCCEEDED(rv = node1->QueryInterface(kIDomXulElementIID, (void **)&dom1)))
 	{
 		if (NS_SUCCEEDED(rv = dom1->GetResource(&res1)))
@@ -755,11 +889,12 @@ inplaceSortCallback(const void *data1, const void *data2, void *sortData)
 		NS_RELEASE(dom2);
 	}
 	sortOrder = (int)cellVal1.Compare(cellVal2, PR_TRUE);
-	if (sortPtr->descendingSort == PR_TRUE)
+	if (sortInfo->descendingSort == PR_TRUE)
 	{
 		sortOrder = -sortOrder;
 	}
 	return(sortOrder);
+#endif
 }
 
 
@@ -880,6 +1015,7 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 
 	if (NS_FAILED(rv = FindTreeElement(container, &treeNode)))	return(rv);
 
+	sortInfo.rdfService = gRDFService;
 	sortInfo.db = db;
 
 	sortInfo.kNaturalOrderPosAtom = kNaturalOrderPosAtom;
@@ -1006,6 +1142,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 
 	// get composite db for tree
 	nsIDOMXULTreeElement	*domXulTree;
+	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
 	if (NS_SUCCEEDED(rv = treeNode->QueryInterface(kIDomXulTreeElementIID, (void**)&domXulTree)))
 	{
