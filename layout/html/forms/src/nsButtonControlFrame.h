@@ -57,6 +57,8 @@ public:
   nsFileControlFrame* GetFileControlFrame() { return mFileControlFrame; }
   void SetFileControlFrame(nsFileControlFrame* aFrame) { mFileControlFrame = aFrame; }
   void GetDefaultLabel(nsString& aLabel);
+
+  PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual PRInt32 GetMaxNumValues();
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,

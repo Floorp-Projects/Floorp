@@ -114,7 +114,7 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   if (NS_FORM_TEXTAREA == type) {
     padding = (nscoord)(40 * aCharWidth / 100);
   } else {
-    padding = (nscoord)(55 * aCharWidth / 100);
+    padding = (nscoord)(95 * aCharWidth / 100);
   }
   nscoord min = NSIntPixelsToTwips(3, aPixToTwip);
   if (padding > min) {
@@ -191,9 +191,9 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     if (NS_CONTENT_ATTR_HAS_VALUE != GetSize(&width)) {
       width = 20;
     }
-    if (eCompatibility_NavQuirks == mode) {
-      width += 1;
-    }
+    //if (eCompatibility_NavQuirks == mode) {
+    //  width += 1;
+    //}
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, PR_FALSE, nsnull, 1);
     CalculateSize(aPresContext, this, styleSize, textSpec, size, 

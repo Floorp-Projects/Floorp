@@ -30,12 +30,56 @@ struct nsHTMLReflowState;
 class  nsFormControlFrame;
 class  nsRadioControlFrame;
 class  nsIFormControlFrame;
+class  nsIDOMHTMLFormElement;
+
+class nsIPresContext;
+class nsFormFrame;
+// XXX these structs and gFormFrameTable below provide a faster way to get from a form content to
+// the appropriate frame. Before replacing this mechanism with FindFrameWithContent, please test
+// a page with thousands of frames and hundreds of form controls.
+struct nsFormFrameTableEntry 
+{
+  nsIPresContext*        mPresContext;
+  nsIDOMHTMLFormElement* mFormElement;
+  nsFormFrame*           mFormFrame;
+  nsFormFrameTableEntry(nsIPresContext&        aPresContext, 
+                        nsIDOMHTMLFormElement& aFormElement,
+                        nsFormFrame&           aFormFrame) : mPresContext(&aPresContext), 
+                                                             mFormElement(&aFormElement), 
+                                                             mFormFrame(&aFormFrame) {}
+};
+struct nsFormFrameTable
+{
+  nsVoidArray mEntries;
+  nsFormFrameTable() {}
+  nsFormFrame* Get(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem) {
+    PRInt32 count = mEntries.Count();
+    for (PRInt32 i = 0; i < count; i++) {
+      nsFormFrameTableEntry* entry = (nsFormFrameTableEntry *)mEntries.ElementAt(i);
+      if ((entry->mPresContext == &aPresContext) && (entry->mFormElement == &aFormElem)) {
+        return entry->mFormFrame;
+      }
+    }
+    return nsnull;
+  }
+  void Put(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem, nsFormFrame& aFormFrame) {
+    mEntries.AppendElement(new nsFormFrameTableEntry(aPresContext, aFormElem, aFormFrame));
+  }
+  ~nsFormFrameTable() { 
+    PRInt32 count = mEntries.Count(); 
+    for (PRInt32 i = 0; i < count; i++) {
+      delete mEntries.ElementAt(i);
+    }
+  }
+};
 
 class nsFormFrame : public nsLeafFrame, 
                     public nsIFormManager
 {
 public:
   nsFormFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+
+  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -55,7 +99,8 @@ public:
 
   void OnRadioChecked(nsRadioControlFrame& aRadio); 
     
-  void Init(nsIPresContext& aPresContext, PRBool aReinit);
+  void AddFormControlFrame(nsIFormControlFrame& aFrame);
+  static void AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aFrame);
 
   PRBool CanSubmit(nsFormControlFrame& aFrame);
 
@@ -63,6 +108,15 @@ public:
   NS_IMETHOD GetEnctype(PRInt32* aEnctype);
   NS_IMETHOD GetTarget(nsString* aTarget);
   NS_IMETHOD GetAction(nsString* aAction);
+
+  static nsFormFrame* GetFormFrame(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem) { 
+    return gFormFrameTable->Get(aPresContext, aFormElem);
+  }
+
+  static void PutFormFrame(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem, 
+                           nsFormFrame& aFrame) { 
+    gFormFrameTable->Put(aPresContext, aFormElem, aFrame);
+  }
 
   // static helper functions for nsIFormControls
   
@@ -76,8 +130,8 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
   void RemoveRadioGroups();
-  void ProcessAsURLEncoded(PRBool aIsPost, nsString& aData);
-  void ProcessAsMultipart(nsString& aData);
+  void ProcessAsURLEncoded(PRBool aIsPost, nsString& aData, nsIFormControlFrame* aFrame);
+  void ProcessAsMultipart(nsString& aData, nsIFormControlFrame* aFrame);
   static const char* GetFileNameWithinPath(char* aPathName);
 
   // the following are temporary until nspr and/or netlib provide them
@@ -85,9 +139,10 @@ protected:
   static char* Temp_GenerateTempFileName(PRInt32 aMaxSize, char* aBuffer);
   static void  Temp_GetContentType(char* aPathName, char* aContentType);
 
+  static nsFormFrameTable* gFormFrameTable;
+
   nsVoidArray          mFormControls;
   nsVoidArray          mRadioGroups;
-  PRBool               mInited;
   nsIFormControlFrame* mTextSubmitter;
 };
 

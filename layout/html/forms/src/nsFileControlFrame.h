@@ -54,7 +54,7 @@ public:
   void  SetBrowseFrame(nsButtonControlFrame* aFrame) { mBrowseFrame = aFrame; }
   NS_IMETHOD GetName(nsString* aName);
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
-  virtual PRBool IsSuccessful();
+  virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual void Reset();
   NS_IMETHOD GetType(PRInt32* aType) const;
   void SetFocus(PRBool aOn, PRBool aRepaint);

@@ -68,6 +68,15 @@ nsButtonControlFrame::GetDefaultLabel(nsString& aString)
   }
 }
 
+PRBool
+nsButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
+{
+  if (this == (aSubmitter)) {
+    return nsFormControlFrame::IsSuccessful(aSubmitter);
+  } else {
+    return PR_FALSE;
+  }
+}
 
 PRInt32
 nsButtonControlFrame::GetMaxNumValues() 

@@ -84,7 +84,7 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 PRBool
-nsFileControlFrame::IsSuccessful()
+nsFileControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
   nsAutoString name;
   return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
