@@ -36,9 +36,9 @@ import grendel.ui.StoreFactory;
 public class Prefs {
   static Preferences   fPrefs = PreferencesFactory.Get();
 
-  static final String kUserName = "user.identity-0.username";
-  static final String kOrganization = "user.identity-0.organization";
-  static final String kEmailAddress = "user.identity-0.email";
+  static final String kUserName = "mail.identity-0.username";
+  static final String kOrganization = "mail.identity-0.organization";
+  static final String kEmailAddress = "mail.identity-0.email";
   //static final String kPopHost = "pop.host";
   //static final String kPopUser = "pop.user";
   //static final String kPopPassword = "pop.password";
