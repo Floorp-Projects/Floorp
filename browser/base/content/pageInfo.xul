@@ -159,7 +159,7 @@
         </tree>
         <splitter orient="vertical" collapse="after"/>
         <vbox flex="1">
-          <textbox class="header" id="formname"/>
+          <textbox readonly="true" class="header" id="formname"/>
           <grid>
             <columns>
               <column/>
