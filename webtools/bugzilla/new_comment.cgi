@@ -29,11 +29,21 @@ foreach $pair (@pairs)
     ($name, $value) = split(/=/, $pair);
 
     $value =~ tr/+/ /;
+    $value =~ s/^(\s*)//s;
+    $value =~ s/(\s*)$//s;
     $value =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
     $FORM{$name} = $value;
 }
-open(COMMENTS, ">>data/comments");
 $c=$FORM{"comment"};
+if ( (!defined $c) || ($c eq '') ) {
+    print "Content-type: text/html\n\n";
+    print "<TITLE>Nothing on your mind?</TITLE>";
+    print "<H1>Does your mind draw a blank?</H1>";
+	print "<H2> Hit back, and try again...</H2>";
+    exit 0;
+}
+
+open(COMMENTS, ">>data/comments");
 print COMMENTS $FORM{"comment"} . "\n";
 close(COMMENTS);
 print "Content-type: text/html\n\n";
