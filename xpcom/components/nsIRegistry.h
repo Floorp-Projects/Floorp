@@ -314,7 +314,9 @@ struct nsIRegistry : public nsISupports {
 |             using PR_Free.                                                   |
 ------------------------------------------------------------------------------*/
 struct nsIRegistryNode : public nsISupports {
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IREGISTRYNODE_IID)
     NS_IMETHOD GetName( char **result ) = 0;
+    NS_IMETHOD GetKey( nsIRegistry::Key *r_key ) = 0;
 }; // nsIRegistryNode
 
 /*------------------------------ nsIRegistryValue ------------------------------
