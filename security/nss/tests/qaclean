@@ -59,9 +59,9 @@ Kill()
 kill_by_name()
 {
 	echo "Killing all $1"
-
+ 
     for PID in `Ps | grep "$1" | grep -v grep | \
-        sed -e "s/^ *//g" -e "s/ .*//"`
+        sed -e "s/^[ 	]*//g" -e "s/[ 	].*//"`
     do
 		Kill $PID
     done
@@ -72,6 +72,7 @@ kill_the_rest()
 i=0
 while [ $i -lt $1 ]
 do
+	kill_by_name nssqa
 	kill_by_name selfserv
 	kill_by_name strsclnt
 	kill_by_name all.sh
@@ -82,6 +83,24 @@ do
 done
 }
 
+nt_warning()
+{
+os_name=`uname -s`
+case $os_name in
+	CYGWIN*|WIN*|Win*)
+		echo
+		echo
+		echo
+		echo "Another Windows problem... If you have not already done so"
+		echo "after this script completes, please reboot, and log in as"
+		echo "user svbld again"
+		echo
+		echo
+		echo
+		;;
+esac
+}
+
 case $1 in 
 	?*)
 		rsh $1 '/u/sonmi/bin/qaclean'
@@ -90,6 +109,7 @@ case $1 in
 esac
 
 uname -a
+echo
 
 if [ -f ${TMP}/nssqa.* ]
 then
@@ -103,3 +123,4 @@ fi
 kill_the_rest 3
 rm ${TMP}/nsstmp.* 2>/dev/null
 rm ${TMP}/certutilout.* 2>/dev/null
+nt_warning
