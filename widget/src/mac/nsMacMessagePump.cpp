@@ -19,7 +19,6 @@
 #include "nsMacMessagePump.h"
 #include "nsWindow.h"
 #include <LPeriodical.h>
-#include "net.h"	//¥¥¥TEMPORARY
 
 #define IsUserWindow(wp) (wp && ((((WindowPeek)wp)->windowKind) >= userKind))
 
@@ -72,8 +71,6 @@ unsigned char	evtype;
 	while(mRunning && stillrunning)
 		{			
 		haveevent = ::WaitNextEvent(everyEvent,&theevent,sleep,0l);
-
-		NET_PollSockets();	//¥¥¥TEMPORARY
 
 		if(haveevent)
 			{
@@ -175,6 +172,8 @@ WindowPtr			whichwindow;
 nsWindow			*thewindow;
 nsRect 				rect;
 RgnHandle			updateregion;
+Rect				bounds;
+nsPaintEvent 		pevent;
  
  	::GetPort(&curport);
 	whichwindow = (WindowPtr)aTheEvent->message;
@@ -189,7 +188,23 @@ RgnHandle			updateregion;
 			{
 			updateregion = whichwindow->visRgn;
 			thewindow->DoPaintWidgets(updateregion);
-	    }
+
+			bounds = (**updateregion).rgnBBox;
+			rect.x = bounds.left;
+			rect.y = bounds.top;
+			rect.width = bounds.left + (bounds.right-bounds.left);
+			rect.height = bounds.top + (bounds.bottom-bounds.top);
+          
+			// generate a paint event
+			pevent.message = NS_PAINT;
+			pevent.widget = thewindow;
+			pevent.eventStructType = NS_PAINT_EVENT;
+			pevent.point.x = 0;
+			pevent.point.y = 0;
+			pevent.rect = &rect;
+			pevent.time = 0; 
+			thewindow->OnPaint(pevent);
+	    	}
 		EndUpdate(whichwindow);
 		}
 	
