@@ -207,6 +207,7 @@ public:
 
   virtual nsIStyleContext*  GetParent(void) const = 0;
   virtual nsISupportsArray* GetStyleRules(void) const = 0;
+  virtual PRInt32 GetStyleRuleCount(void) const = 0;
 
   // get a style data struct by ID, may return null 
   virtual nsStyleStruct* GetData(const nsIID& aSID) = 0;

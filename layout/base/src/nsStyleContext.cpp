@@ -530,6 +530,7 @@ public:
 
   virtual nsIStyleContext*  GetParent(void) const;
   virtual nsISupportsArray* GetStyleRules(void) const;
+  virtual PRInt32 GetStyleRuleCount(void) const;
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
   virtual PRUint32  HashValue(void) const;
@@ -656,6 +657,14 @@ nsISupportsArray* StyleContextImpl::GetStyleRules(void) const
 {
   NS_IF_ADDREF(mRules);
   return mRules;
+}
+
+PRInt32 StyleContextImpl::GetStyleRuleCount(void) const
+{
+  if (nsnull != mRules) {
+    return mRules->Count();
+  }
+  return 0;
 }
 
 
