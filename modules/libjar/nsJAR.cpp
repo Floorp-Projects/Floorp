@@ -280,7 +280,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
     rv = outFile->GetPath(getter_Copies(path)); 
     if (NS_SUCCEEDED(rv)) 
     {
-      if (item->isSymlink) 
+      if (item->flags & ZIFLAG_SYMLINK) 
       {
         err = mZip.ResolveSymlink(path,item);
       }
