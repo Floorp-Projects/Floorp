@@ -860,6 +860,9 @@ nsImapIncomingServer::GetImapConnection(nsIEventQueue *aEventQueue,
   }
   else // cannot get anyone to handle the url queue it
   {
+    if (cnt >= (PRUint32) maxConnections)
+      nsImapProtocol::LogImapUrl("exceeded connection cache limit", aImapUrl);
+
       // caller will queue the url
   }
 

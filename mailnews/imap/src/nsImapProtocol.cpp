@@ -914,7 +914,6 @@ void nsImapProtocol::ReleaseUrlState(PRBool rerunning)
 NS_IMETHODIMP nsImapProtocol::Run()
 {
   nsImapProtocol *me = this;
-  nsresult result = NS_OK;
   NS_ASSERTION(me, "Yuk, me is null.\n");
     
   PR_CEnterMonitor(this);
@@ -932,15 +931,6 @@ NS_IMETHODIMP nsImapProtocol::Run()
   // call the platform specific main loop ....
   me->ImapThreadMainLoop();
 
-  nsCOMPtr<nsIMsgIncomingServer> me_server = do_QueryReferent(m_server);
-  if (me_server)
-  {
-      nsCOMPtr<nsIImapIncomingServer>
-          aImapServer(do_QueryInterface(me_server, &result));
-      if (NS_SUCCEEDED(result))
-          aImapServer->RemoveConnection(me);
-      me_server = nsnull;
-  }
       
   me->m_runningUrl = nsnull;
   CloseStreams();
@@ -977,6 +967,16 @@ void nsImapProtocol::CloseStreams()
   }
   m_channelInputStream = nsnull;
   m_channelOutputStream = nsnull;
+  nsCOMPtr<nsIMsgIncomingServer> me_server = do_QueryReferent(m_server);
+  if (me_server)
+  {
+      nsresult result;
+      nsCOMPtr<nsIImapIncomingServer>
+          aImapServer(do_QueryInterface(me_server, &result));
+      if (NS_SUCCEEDED(result))
+          aImapServer->RemoveConnection(this);
+      me_server = nsnull;
+  }
   m_server = nsnull;
 }
 
