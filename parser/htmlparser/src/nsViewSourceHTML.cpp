@@ -997,8 +997,8 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
     return NS_ERROR_FAILURE;
 
   if (kBeforeText[aTagType][0] != 0) {
-    theContext.mITextToken.SetIndirectString(
-        NS_ConvertASCIItoUTF16(kBeforeText[aTagType]));
+    NS_ConvertASCIItoUTF16 beforeText(kBeforeText[aTagType]);
+    theContext.mITextToken.SetIndirectString(beforeText);
     nsCParserNode theNode(&theContext.mITextToken, 0/*stack token*/);
     mSink->AddLeaf(theNode);
   }
@@ -1054,8 +1054,8 @@ nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRIn
   // Tokens are set in error if their ending > is not there, so don't output 
   // the after-text
   if (!aTagInError && kAfterText[aTagType][0] != 0) {
-    theContext.mITextToken.SetIndirectString(
-      NS_ConvertASCIItoUTF16(kAfterText[aTagType]));
+    NS_ConvertASCIItoUTF16 afterText(kAfterText[aTagType]);
+    theContext.mITextToken.SetIndirectString(afterText);
     nsCParserNode theNode(&theContext.mITextToken, 0/*stack token*/);
     mSink->AddLeaf(theNode);
   }
