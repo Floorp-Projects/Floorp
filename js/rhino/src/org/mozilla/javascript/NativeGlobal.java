@@ -57,12 +57,24 @@ public class NativeGlobal implements IdFunctionMaster {
         obj.scopeSlaveFlag = true;
 
         for (int id = 1; id <= LAST_SCOPE_FUNCTION_ID; ++id) {
-            String name = getMethodName(id);
-            IdFunction f = new IdFunction(obj, name, id);
-            f.setParentScope(scope);
-            if (sealed) { f.sealObject(); }
-            ScriptableObject.defineProperty(scope, name, f,
-                                            ScriptableObject.DONTENUM);
+            String name;
+            switch (id) {
+                case Id_decodeURI:          name = "decodeURI";          break;
+                case Id_decodeURIComponent: name = "decodeURIComponent"; break;
+                case Id_encodeURI:          name = "encodeURI";          break;
+                case Id_encodeURIComponent: name = "encodeURIComponent"; break;
+                case Id_escape:             name = "escape";             break;
+                case Id_eval:               name = "eval";               break;
+                case Id_isFinite:           name = "isFinite";           break;
+                case Id_isNaN:              name = "isNaN";              break;
+                case Id_parseFloat:         name = "parseFloat";         break;
+                case Id_parseInt:           name = "parseInt";           break;
+                case Id_unescape:           name = "unescape";           break;
+                default:
+                    Context.codeBug(); name = null;
+            }
+            IdFunction.define(scope, name, obj, id,
+                              ScriptableObject.DONTENUM, sealed);
         }
 
         ScriptableObject.defineProperty(scope, "NaN",
@@ -176,23 +188,6 @@ public class NativeGlobal implements IdFunctionMaster {
             }
         }
         return -1;
-    }
-
-    private static String getMethodName(int methodId) {
-        switch (methodId) {
-            case Id_decodeURI:           return "decodeURI";
-            case Id_decodeURIComponent:  return "decodeURIComponent";
-            case Id_encodeURI:           return "encodeURI";
-            case Id_encodeURIComponent:  return "encodeURIComponent";
-            case Id_escape:              return "escape";
-            case Id_eval:                return "eval";
-            case Id_isFinite:            return "isFinite";
-            case Id_isNaN:               return "isNaN";
-            case Id_parseFloat:          return "parseFloat";
-            case Id_parseInt:            return "parseInt";
-            case Id_unescape:            return "unescape";
-        }
-        return null;
     }
 
     /**
