@@ -60,13 +60,15 @@
 }
 
 #previewImageContainer {
-  padding: 2px;
   height: 93px; 
-  background-color: #000000; 
+  padding: 1px;
 }
 
 #previewImage {
-  max-width: 380px; 
+  max-width: 355px; 
+  min-width: 355px;
+  max-height: 85px;
+  min-height: 85px;
 }
 
 /* ::::: Fonts ::::: */
