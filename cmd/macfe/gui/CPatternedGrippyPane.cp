@@ -39,14 +39,18 @@ CPatternedGrippyPane::CPatternedGrippyPane(LStream* inStream)
 	ResIDT theBackgroundHiliteID;	
 	*inStream >> theBackgroundHiliteID;
 	
-	ResIDT theGrippyID;
-	*inStream >> theGrippyID;
-	Int16 theGrippyHiliteID;
-	*inStream >> theGrippyHiliteID;
+	ResIDT theTopPatternID;					// read in but ignore...unused...
+	*inStream >> theTopPatternID;
 	
-	ResIDT theTriangleID;
-	*inStream >> theTriangleID;
+	Int16 theTopPatternIndex;				// read in but ignore...unused...
+	*inStream >> theTopPatternIndex;
 	
+	ResIDT theBottomPatternID;				// read in but ignore...unused...
+	*inStream >> theBottomPatternID;
+	
+	Int16 theBottomPatternIndex;			// read in but ignore...unused...
+	*inStream >> theBottomPatternIndex;
+
 	mBackPattern = CSharedPatternWorld::CreateSharedPatternWorld(theBackgroundID);
 	ThrowIfNULL_(mBackPattern);
 	mBackPattern->AddUser(this);
@@ -54,14 +58,14 @@ CPatternedGrippyPane::CPatternedGrippyPane(LStream* inStream)
 	ThrowIfNULL_(mBackPatternHilite);
 	mBackPatternHilite->AddUser(this);
 
-	mGrippy = CSharedPatternWorld::CreateSharedPatternWorld(theGrippyID);
+	mGrippy = CSharedPatternWorld::CreateSharedPatternWorld(10002);
 	ThrowIfNULL_(mGrippy);
 	mGrippy->AddUser(this);
-	mGrippyHilite = CSharedPatternWorld::CreateSharedPatternWorld(theGrippyHiliteID);
+	mGrippyHilite = CSharedPatternWorld::CreateSharedPatternWorld(10003);
 	ThrowIfNULL_(mGrippyHilite);
 	mGrippyHilite->AddUser(this);
 
-	mTriangle = ::GetCIcon(theTriangleID);
+	mTriangle = ::GetCIcon(10001);
 	ThrowIfNULL_(mTriangle);
 
 	mMouseInside = false;
