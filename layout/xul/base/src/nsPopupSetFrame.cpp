@@ -464,7 +464,6 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
 
     // Close the menu. 
     nsIFrame* frame = GetActiveChild();
-    nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
     // Unregister.
     if (nsMenuFrame::mDismissalListener) {
