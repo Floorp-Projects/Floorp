@@ -1011,8 +1011,12 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
   PR_FREEIF(rsrcString);
 
 	rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
-	htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
+	// RICHIE - Once this is completed in the back end, we can enable the button again
+	// htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
+	//	                        vEscCard, rsrcString);
+	htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit disabled=\"true\" value=\"%s\"></INPUT></FORM>",
 		                        vEscCard, rsrcString);
+	
   PR_FREEIF(rsrcString);
 
 	if (!htmlLine1 && !htmlLine2)
