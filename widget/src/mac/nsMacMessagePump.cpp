@@ -57,7 +57,7 @@ NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWind
 bool IsUserWindow(WindowPtr);
 inline bool IsUserWindow(WindowPtr wp)
 {
-	return wp && (::GetWindowKind(wp) >= kApplicationWindowKind);
+	return wp && ((::GetWindowKind(wp) & kRaptorWindowKindBit) != 0);
 }
 
 
@@ -81,7 +81,7 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
  */
 nsMacMessagePump::~nsMacMessagePump()
 {
-  //¥¥¥ release the toolkits and sinks? not if we use COM_auto_ptr.
+  //¥TODO? release the toolkits and sinks? not if we use COM_auto_ptr.
 }
 
 //=================================================================
@@ -177,27 +177,14 @@ nsMacMessagePump::DoMessagePump()
 void nsMacMessagePump::DoUpdate(EventRecord &anEvent)
 {
 	WindowPtr whichWindow = (WindowPtr)anEvent.message;
-	if (IsUserWindow(whichWindow))
-	{
-		GrafPtr savePort;
-		::GetPort(&savePort);
-		::SetPort(whichWindow);
-		::BeginUpdate(whichWindow);
-#if 0		//¥¥¥test¥¥¥
-				static Boolean aBool = 1;
-				RGBColor green = {0,65535,0};
-				RGBColor red   = {65535,0,0};
-				::RGBForeColor((aBool ? &green : &red));
-				aBool ^= 1;
-				::PenSize(2,2);
-				::ClipRect(&whichWindow->portRect);
-				::FrameRgn(whichWindow->visRgn);
-#endif	//¥¥¥¥¥¥¥¥¥
-		// The app can do its own updates here
-		DispatchOSEventToRaptor(anEvent, whichWindow);
-		::EndUpdate(whichWindow);
-		::SetPort(savePort);
-	}
+	GrafPtr savePort;
+	::GetPort(&savePort);
+	::SetPort(whichWindow);
+	::BeginUpdate(whichWindow);
+	// The app can do its own updates here
+	DispatchOSEventToRaptor(anEvent, whichWindow);
+	::EndUpdate(whichWindow);
+	::SetPort(savePort);
 }
 
 
