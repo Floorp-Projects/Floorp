@@ -106,8 +106,10 @@
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsIBookmarksService.h"
+#ifdef MOZ_OLD_CACHE
 #include "nsINetDataCacheManager.h"
 #include "nsICachedNetData.h"
+#endif
 #include "nsIXMLContent.h" //for createelementNS
 #include "nsHTMLParts.h" //for createelementNS
 #include "nsLayoutCID.h"
@@ -433,7 +435,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
+#ifdef MOZ_OLD_CACHE
   nsCOMPtr<nsICachedNetData> cachedData;
+#endif
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer,
@@ -539,12 +543,14 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     rv = httpChannel->GetLoadFlags(&loadAttr);
     NS_ASSERTION(NS_SUCCEEDED(rv),"cannot get load attribute");
     if(NS_SUCCEEDED(rv)) {
+#ifdef MOZ_OLD_CACHE
       // copy from nsHTTPChannel.cpp
       if(loadAttr & nsIChannel::CACHE_AS_FILE)
         cacheFlags = nsINetDataCacheManager::CACHE_AS_FILE;
       else if(loadAttr & nsIRequest::INHIBIT_PERSISTENT_CACHING)
         cacheFlags = nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE;
       bTryCache = PR_TRUE;
+#endif
     }
 
     // Don't propogate the result code beyond here, since it
@@ -792,6 +798,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     if(bTryCache && urlSpec)
     {
+#ifdef MOZ_OLD_CACHE
        nsCOMPtr<nsINetDataCacheManager> cacheMgr;
        cacheMgr = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);       
        if(NS_SUCCEEDED(rv))
@@ -813,6 +820,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
           }
        }
        rv=NS_OK;
+#endif
     }
 
     if (kCharsetFromParentFrame > charsetSource) {
@@ -877,11 +885,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return rv;
   }
 
+#ifdef MOZ_OLD_CACHE
   if(cachedData) {
        rv=cachedData->SetAnnotation("charset",charset.Length()+1,
                                     NS_ConvertUCS2toUTF8(charset).get());
        NS_ASSERTION(NS_SUCCEEDED(rv),"cannot SetAnnotation");
   }
+#endif
 
   // Set the parser as the stream listener for the document loader...
   if (mParser) {
