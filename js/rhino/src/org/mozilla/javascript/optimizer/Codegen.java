@@ -1484,7 +1484,7 @@ class BodyCodegen
                 break;
 
               case Token.TRY:
-                visitTryCatchFinally(node, child);
+                visitTryCatchFinally((Node.Jump)node, child);
                 break;
 
               case Token.THROW:
@@ -1496,7 +1496,7 @@ class BodyCodegen
                 break;
 
               case Token.SWITCH:
-                visitSwitch(node, child);
+                visitSwitch((Node.Jump)node, child);
                 break;
 
               case Token.COMMA: {
@@ -1565,14 +1565,14 @@ class BodyCodegen
                 break;
 
               case Token.TARGET:
-                visitTarget(node);
+                visitTarget((Node.Target)node);
                 break;
 
               case Token.JSR:
               case Token.GOTO:
               case Token.IFEQ:
               case Token.IFNE:
-                visitGOTO(node, type, child);
+                visitGOTO((Node.Jump)node, type, child);
                 break;
 
               case Token.FINALLY:
@@ -1998,23 +1998,23 @@ class BodyCodegen
                             +")V");
     }
 
-    private void visitTarget(Node node)
+    private void visitTarget(Node.Target node)
     {
-        int label = node.getIntProp(Node.LABEL_PROP, -1);
+        int label = node.labelId;
         if (label == -1) {
             label = cfw.acquireLabel();
-            node.putIntProp(Node.LABEL_PROP, label);
+            node.labelId = label;
         }
         cfw.markLabel(label);
     }
 
-    private void visitGOTO(Node node, int type, Node child)
+    private void visitGOTO(Node.Jump node, int type, Node child)
     {
-        Node target = (Node)(node.getProp(Node.TARGET_PROP));
-        int targetLabel = target.getIntProp(Node.LABEL_PROP, -1);
+        Node.Target target = node.target;
+        int targetLabel = target.labelId;
         if (targetLabel == -1) {
             targetLabel = cfw.acquireLabel();
-            target.putIntProp(Node.LABEL_PROP, targetLabel);
+            target.labelId = targetLabel;
         }
         int fallThruLabel = cfw.acquireLabel();
 
@@ -2129,7 +2129,7 @@ class BodyCodegen
     private void resetTargets(Node node)
     {
         if (node.getType() == Token.TARGET) {
-            node.removeProp(Node.LABEL_PROP);
+            ((Node.Target)node).labelId = -1;
         }
         Node child = node.getFirstChild();
         while (child != null) {
@@ -2511,7 +2511,7 @@ class BodyCodegen
     }
 
 
-    private void visitTryCatchFinally(Node node, Node child)
+    private void visitTryCatchFinally(Node.Jump node, Node child)
     {
         /* Save the variable object, in case there are with statements
          * enclosed by the try block and we catch some exception.
@@ -2546,8 +2546,8 @@ class BodyCodegen
             child = child.getNext();
         }
 
-        Node catchTarget = (Node)node.getProp(Node.TARGET_PROP);
-        Node finallyTarget = (Node)node.getProp(Node.FINALLY_PROP);
+        Node.Target catchTarget = node.target;
+        Node.Target finallyTarget = node.getFinally();
 
         // control flow skips the handlers
         int realEnd = cfw.acquireLabel();
@@ -2558,7 +2558,7 @@ class BodyCodegen
         // catch area.
         if (catchTarget != null) {
             // get the label to goto
-            int catchLabel = catchTarget.getExistingIntProp(Node.LABEL_PROP);
+            int catchLabel = catchTarget.labelId;
 
             generateCatchBlock(JAVASCRIPT_EXCEPTION, savedVariableObject,
                                catchLabel, startLabel);
@@ -2591,8 +2591,7 @@ class BodyCodegen
             cfw.addAStore(exnLocal);
 
             // get the label to JSR to
-            int finallyLabel =
-                finallyTarget.getExistingIntProp(Node.LABEL_PROP);
+            int finallyLabel = finallyTarget.labelId;
             cfw.add(ByteCode.JSR, finallyLabel);
 
             // rethrow
@@ -2699,7 +2698,7 @@ class BodyCodegen
         cfw.add(ByteCode.GOTO, epilogueLabel);
     }
 
-    private void visitSwitch(Node node, Node child)
+    private void visitSwitch(Node.Jump node, Node child)
     {
         visitStatement(node);
         while (child != null) {
@@ -2721,26 +2720,26 @@ class BodyCodegen
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
                                    +")Ljava/lang/Boolean;");
-            Node target = new Node(Token.TARGET);
+            Node.Target target = new Node.Target();
             thisCase.replaceChild(first, target);
             generateGOTO(Token.IFEQ, target);
         }
 
         Node defaultNode = (Node) node.getProp(Node.DEFAULT_PROP);
         if (defaultNode != null) {
-            Node defaultTarget = new Node(Token.TARGET);
+            Node.Target defaultTarget = new Node.Target();
             defaultNode.getFirstChild().addChildToFront(defaultTarget);
             generateGOTO(Token.GOTO, defaultTarget);
         }
 
-        Node breakTarget = (Node) node.getProp(Node.BREAK_PROP);
+        Node.Target breakTarget = node.target;
         generateGOTO(Token.GOTO, breakTarget);
     }
 
-    private void generateGOTO(int type, Node target)
+    private void generateGOTO(int type, Node.Target target)
     {
-        Node GOTO = new Node(type);
-        GOTO.putProp(Node.TARGET_PROP, target);
+        Node.Jump GOTO = new Node.Jump(type);
+        GOTO.target = target;
         visitGOTO(GOTO, type, null);
     }
 
@@ -3748,17 +3747,11 @@ class BodyCodegen
         }
         Node temp = (Node) node.getProp(Node.TEMP_PROP);
         short local = getLocalFromNode(temp);
-
-        // if the temp node has a magic TARGET property,
-        // treat it as a RET to that temp.
-        if (node.getProp(Node.TARGET_PROP) != null)
-            cfw.add(ByteCode.RET, local);
-        else
-            cfw.addALoad(local);
+        cfw.addALoad(local);
         int n = temp.getIntProp(Node.USES_PROP, 0);
         if (n <= 1) {
-                    releaseWordLocal(local);
-            }
+            releaseWordLocal(local);
+        }
         if (n != 0 && n != Integer.MAX_VALUE) {
             temp.putIntProp(Node.USES_PROP, n - 1);
         }

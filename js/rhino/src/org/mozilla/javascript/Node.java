@@ -46,9 +46,10 @@ package org.mozilla.javascript;
 
 public class Node implements Cloneable {
 
-    private static class NumberNode extends Node {
-
-        NumberNode(double number) {
+    private static class NumberNode extends Node
+    {
+        NumberNode(double number)
+        {
             super(Token.NUMBER);
             this.number = number;
         }
@@ -58,13 +59,97 @@ public class Node implements Cloneable {
 
     private static class StringNode extends Node
     {
-
         StringNode(int type, String str) {
             super(type);
             this.str = str;
         }
 
         String str;
+    }
+
+    public static class Jump extends Node
+    {
+        public Jump(int type)
+        {
+            super(type);
+        }
+
+        Jump(int type, int lineno)
+        {
+            super(type, lineno);
+        }
+
+        Jump(int type, Node child)
+        {
+            super(type, child);
+        }
+
+        Jump(int type, Node child, int lineno)
+        {
+            super(type, child, lineno);
+        }
+
+        public final String getLabel()
+        {
+            if (!(type == Token.BREAK || type == Token.CONTINUE
+                  || type == Token.LABEL))
+            {
+                Context.codeBug();
+            }
+            return label;
+        }
+
+        public final void setLabel(String label)
+        {
+            if (!(type == Token.BREAK || type == Token.CONTINUE
+                  || type == Token.LABEL))
+            {
+                Context.codeBug();
+            }
+            if (label == null) Context.codeBug();
+            if (this.label != null) Context.codeBug(); //only once
+            this.label = label;
+        }
+
+        public final Target getFinally()
+        {
+            if (!(type == Token.TRY)) Context.codeBug();
+            return target2;
+        }
+
+        public final void setFinally(Target finallyTarget)
+        {
+            if (!(type == Token.TRY)) Context.codeBug();
+            if (finallyTarget == null) Context.codeBug();
+            if (target2 != null) Context.codeBug(); //only once
+            target2 = finallyTarget;
+        }
+
+        public final Target getContinue()
+        {
+            if (!(type == Token.LABEL || type == Token.LOOP)) Context.codeBug();                return target2;
+        }
+
+        public final void setContinue(Target continueTarget)
+        {
+            if (!(type == Token.LABEL || type == Token.LOOP)) Context.codeBug();                if (continueTarget == null) Context.codeBug();
+            if (target2 != null) Context.codeBug(); //only once
+            target2 = continueTarget;
+        }
+
+        public Target target;
+        private Target target2;
+        private String label;
+    }
+
+    public static class Target extends Node
+    {
+        public Target()
+        {
+            super(Token.TARGET);
+        }
+
+        public int labelId = -1;
     }
 
     private static class PropListItem
@@ -74,6 +159,7 @@ public class Node implements Cloneable {
         int intValue;
         Object objectValue;
     }
+
 
     public Node(int nodeType) {
         type = nodeType;
@@ -277,23 +363,17 @@ public class Node implements Cloneable {
     }
 
     public static final int
-        TARGET_PROP       =  1,
-        BREAK_PROP        =  2,
-        CONTINUE_PROP     =  3,
-        ENUM_PROP         =  4,
-        FUNCTION_PROP     =  5,
-        TEMP_PROP         =  6,
-        LOCAL_PROP        =  7,
-        CODEOFFSET_PROP   =  8,
-        FIXUPS_PROP       =  9,
-        USES_PROP         = 10,
-        REGEXP_PROP       = 11,
-        CASES_PROP        = 12,
-        DEFAULT_PROP      = 13,
-        CASEARRAY_PROP    = 14,
-        SPECIAL_PROP_PROP = 15,
-        LABEL_PROP        = 16,
-        FINALLY_PROP      = 17,
+        ENUM_PROP         =  1,
+        FUNCTION_PROP     =  2,
+        TEMP_PROP         =  3,
+        LOCAL_PROP        =  4,
+        FIXUPS_PROP       =  5,
+        USES_PROP         =  6,
+        REGEXP_PROP       =  7,
+        CASES_PROP        =  8,
+        DEFAULT_PROP      =  9,
+        CASEARRAY_PROP    = 10,
+        SPECIAL_PROP_PROP = 11,
     /*
         the following properties are defined and manipulated by the
         optimizer -
@@ -308,13 +388,13 @@ public class Node implements Cloneable {
                           matches.
     */
 
-        TARGETBLOCK_PROP  = 18,
-        VARIABLE_PROP     = 19,
-        LASTUSE_PROP      = 20,
-        ISNUMBER_PROP     = 21,
-        DIRECTCALL_PROP   = 22,
+        TARGETBLOCK_PROP  = 12,
+        VARIABLE_PROP     = 13,
+        LASTUSE_PROP      = 14,
+        ISNUMBER_PROP     = 15,
+        DIRECTCALL_PROP   = 16,
 
-        SPECIALCALL_PROP  = 23;
+        SPECIALCALL_PROP  = 17;
 
     public static final int    // this value of the ISNUMBER_PROP specifies
         BOTH = 0,               // which of the children are Number types
@@ -331,14 +411,10 @@ public class Node implements Cloneable {
             // If Context.printTrees is false, the compiler
             // can remove all these strings.
             switch (propType) {
-                case TARGET_PROP:        return "target";
-                case BREAK_PROP:         return "break";
-                case CONTINUE_PROP:      return "continue";
                 case ENUM_PROP:          return "enum";
                 case FUNCTION_PROP:      return "function";
                 case TEMP_PROP:          return "temp";
                 case LOCAL_PROP:         return "local";
-                case CODEOFFSET_PROP:    return "codeoffset";
                 case FIXUPS_PROP:        return "fixups";
                 case USES_PROP:          return "uses";
                 case REGEXP_PROP:        return "regexp";
@@ -346,8 +422,6 @@ public class Node implements Cloneable {
                 case DEFAULT_PROP:       return "default";
                 case CASEARRAY_PROP:     return "casearray";
                 case SPECIAL_PROP_PROP:  return "special_prop";
-                case LABEL_PROP:         return "label";
-                case FINALLY_PROP:       return "finally";
 
                 case TARGETBLOCK_PROP:   return "targetblock";
                 case VARIABLE_PROP:      return "variable";
@@ -490,9 +564,51 @@ public class Node implements Cloneable {
                 sb.append("] [end line: ");
                 sb.append(sof.getEndLineno());
                 sb.append(']');
-            } else if (type == Token.TARGET) {
+            } else if (this instanceof Jump) {
+                Jump jump = (Jump)this;
+                if (type == Token.BREAK || type == Token.CONTINUE) {
+                    String label = jump.getLabel();
+                    if (label != null) {
+                        sb.append(" [label: ");
+                        sb.append(label);
+                        sb.append(']');
+                    }
+                } else if (type == Token.TRY) {
+                    Node catchNode = jump.target;
+                    Node.Target finallyTarget = jump.getFinally();
+                    if (catchNode != null) {
+                        sb.append(" [catch: ");
+                        sb.append(catchNode);
+                        sb.append(']');
+                    }
+                    if (finallyTarget != null) {
+                        sb.append(" [finally: ");
+                        sb.append(finallyTarget);
+                        sb.append(']');
+                    }
+                } else if (type == Token.LABEL || type == Token.LOOP
+                           || type == Token.SWITCH)
+                {
+                    sb.append(" [break: ");
+                    sb.append(jump.target);
+                    sb.append(']');
+                    if (type == Token.LOOP) {
+                        sb.append(" [continue: ");
+                        sb.append(jump.getContinue());
+                        sb.append(']');
+                    }
+                } else {
+                    sb.append(" [target: ");
+                    sb.append(jump.target);
+                    sb.append(']');
+                }
+            } else if (this instanceof Target) {
+                Target target = (Target)this;
                 sb.append(' ');
                 sb.append(hashCode());
+                sb.append(" [labelId: ");
+                sb.append(target.labelId);
+                sb.append(']');
             } else if (type == Token.NUMBER) {
                 sb.append(' ');
                 sb.append(getDouble());

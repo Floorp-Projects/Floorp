@@ -86,15 +86,14 @@ public class NodeTransformer {
 
               case Token.LABEL:
               {
-                Node child = node.getFirstChild();
-                node.removeChild(child);
-                String id = child.getString();
+                Node.Jump labelNode = (Node.Jump)node;
+                String id = labelNode.getLabel();
 
                 // check against duplicate labels...
                 for (int i=loops.size()-1; i >= 0; i--) {
                     Node n = (Node) loops.get(i);
                     if (n.getType() == Token.LABEL) {
-                        String otherId = (String)n.getProp(Node.LABEL_PROP);
+                        String otherId = ((Node.Jump)n).getLabel();
                         if (id.equals(otherId)) {
                             Object[] messageArgs = { id };
                             reportError("msg.dup.label", messageArgs,
@@ -104,13 +103,11 @@ public class NodeTransformer {
                     }
                 }
 
-                node.putProp(Node.LABEL_PROP, id);
-
                 /* Make a target and put it _after_ the following
                  * node.  And in the LABEL node, so breaks get the
                  * right target.
                  */
-                Node breakTarget = new Node(Token.TARGET);
+                Node.Target breakTarget = new Node.Target();
                 Node parent = iter.getCurrentParent();
                 Node next = node.getNext();
                 while (next != null &&
@@ -120,11 +117,9 @@ public class NodeTransformer {
                 if (next == null)
                     break;
                 parent.addChildAfter(breakTarget, next);
-                node.putProp(Node.BREAK_PROP, breakTarget);
-
+                labelNode.target = breakTarget;
                 if (next.getType() == Token.LOOP) {
-                    node.putProp(Node.CONTINUE_PROP,
-                                 next.getProp(Node.CONTINUE_PROP));
+                    labelNode.setContinue(((Node.Jump)next).getContinue());
                 }
 
                 loops.push(node);
@@ -135,7 +130,7 @@ public class NodeTransformer {
 
               case Token.SWITCH:
               {
-                Node breakTarget = new Node(Token.TARGET);
+                Node.Target breakTarget = new Node.Target();
                 Node parent = iter.getCurrentParent();
                 parent.addChildAfter(breakTarget, node);
 
@@ -150,7 +145,7 @@ public class NodeTransformer {
                     child = next;
                 }
 
-                node.putProp(Node.BREAK_PROP, breakTarget);
+                ((Node.Jump)node).target = breakTarget;
                 loops.push(node);
                 loopEnds.push(breakTarget);
                 node.putProp(Node.CASES_PROP, new ObjArray());
@@ -176,7 +171,7 @@ public class NodeTransformer {
 
               case Token.LOOP:
                 loops.push(node);
-                loopEnds.push(node.getProp(Node.BREAK_PROP));
+                loopEnds.push(((Node.Jump)node).target);
                 break;
 
               case Token.WITH:
@@ -196,7 +191,8 @@ public class NodeTransformer {
 
               case Token.TRY:
               {
-                Node finallytarget = (Node)node.getProp(Node.FINALLY_PROP);
+                Node.Jump jump = (Node.Jump)node;
+                Node finallytarget = jump.getFinally();
                 if (finallytarget != null) {
                     hasFinally = true;
                     loops.push(node);
@@ -230,9 +226,9 @@ public class NodeTransformer {
                     Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
                     if (elemtype == Token.TRY) {
-                        Node jsrnode = new Node(Token.JSR);
-                        Object jsrtarget = n.getProp(Node.FINALLY_PROP);
-                        jsrnode.putProp(Node.TARGET_PROP, jsrtarget);
+                        Node.Jump jsrnode = new Node.Jump(Token.JSR);
+                        Node.Target jsrtarget = ((Node.Jump)n).getFinally();
+                        jsrnode.target = jsrtarget;
                         iter.addBeforeCurrent(jsrnode);
                     } else if (elemtype == Token.WITH) {
                         Node leave = new Node(Token.LEAVEWITH);
@@ -245,15 +241,9 @@ public class NodeTransformer {
               case Token.BREAK:
               case Token.CONTINUE:
               {
-                Node loop = null;
-                boolean labelled = node.hasChildren();
-                String id = null;
-                if (labelled) {
-                    /* get the label */
-                    Node child = node.getFirstChild();
-                    id = child.getString();
-                    node.removeChild(child);
-                }
+                Node.Jump jump = (Node.Jump)node;
+                Node.Jump loop = null;
+                String label = jump.getLabel();
 
                 int i;
                 for (i=loops.size()-1; i >= 0; i--) {
@@ -263,38 +253,44 @@ public class NodeTransformer {
                         Node leave = new Node(Token.LEAVEWITH);
                         iter.addBeforeCurrent(leave);
                     } else if (elemtype == Token.TRY) {
-                        Node jsrFinally = new Node(Token.JSR);
-                        Object jsrTarget = n.getProp(Node.FINALLY_PROP);
-                        jsrFinally.putProp(Node.TARGET_PROP, jsrTarget);
+                        Node.Jump tryNode = (Node.Jump)n;
+                        Node.Jump jsrFinally = new Node.Jump(Token.JSR);
+                        jsrFinally.target = tryNode.getFinally();
                         iter.addBeforeCurrent(jsrFinally);
-                    } else if (!labelled &&
-                               (elemtype == Token.LOOP ||
-                                (elemtype == Token.SWITCH &&
-                                 type == Token.BREAK)))
-                    {
-                        /* if it's a simple break/continue, break from the
-                         * nearest enclosing loop or switch
-                         */
-                        loop = n;
-                        break;
-                    } else if (labelled &&
-                               elemtype == Token.LABEL &&
-                               id.equals((String)n.getProp(Node.LABEL_PROP)))
-                    {
-                        loop = n;
-                        break;
+                    } else if (elemtype == Token.LABEL) {
+                        if (label != null) {
+                            Node.Jump labelNode = (Node.Jump)n;
+                            if (label.equals(labelNode.getLabel())) {
+                                loop = labelNode;
+                                break;
+                            }
+                        }
+                    } else if (elemtype == Token.LOOP) {
+                        if (label == null) {
+                               // break/continue the nearest loop if has no label
+                               loop = (Node.Jump)n;
+                               break;
+                        }
+                    } else if (elemtype == Token.SWITCH) {
+                        if (label == null && type == Token.BREAK) {
+                               // break the nearest switch if has no label
+                               loop = (Node.Jump)n;
+                               break;
+                        }
                     }
                 }
-                int propType = type == Token.BREAK
-                               ? Node.BREAK_PROP
-                               : Node.CONTINUE_PROP;
-                Node target = loop == null
-                              ? null
-                              : (Node) loop.getProp(propType);
+                Node.Target target;
+                if (loop == null) {
+                    target = null;
+                } else if (type == Token.BREAK) {
+                    target = loop.target;
+                } else {
+                    target = loop.getContinue();
+                }
                 if (loop == null || target == null) {
                     String messageId;
                     Object[] messageArgs = null;
-                    if (!labelled) {
+                    if (label == null) {
                         // didn't find an appropriate target
                         if (type == Token.CONTINUE) {
                             messageId = "msg.continue.outside";
@@ -304,15 +300,15 @@ public class NodeTransformer {
                     } else if (loop != null) {
                         messageId = "msg.continue.nonloop";
                     } else {
-                        messageArgs = new Object[] { id };
+                        messageArgs = new Object[] { label };
                         messageId = "msg.undef.label";
                     }
                     reportError(messageId, messageArgs, node, tree);
                     node.setType(Token.NOP);
                     break;
                 }
-                node.setType(Token.GOTO);
-                node.putProp(Node.TARGET_PROP, target);
+                jump.setType(Token.GOTO);
+                jump.target = target;
                 break;
               }
 

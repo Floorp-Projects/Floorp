@@ -366,7 +366,8 @@ public class Interpreter
                 break;
 
             case Token.SWITCH : {
-                iCodeTop = updateLineNumber(node, iCodeTop);
+                Node.Jump switchNode = (Node.Jump)node;
+                iCodeTop = updateLineNumber(switchNode, iCodeTop);
                 iCodeTop = generateICode(child, iCodeTop);
                 int theLocalSlot = allocateLocal();
                 iCodeTop = addToken(Token.NEWTEMP, iCodeTop);
@@ -374,7 +375,7 @@ public class Interpreter
                 iCodeTop = addToken(Token.POP, iCodeTop);
                 itsStackDepth--;
 
-                ObjArray cases = (ObjArray) node.getProp(Node.CASES_PROP);
+                ObjArray cases = (ObjArray) switchNode.getProp(Node.CASES_PROP);
                 for (int i = 0; i < cases.size(); i++) {
                     Node thisCase = (Node)cases.get(i);
                     Node first = thisCase.getFirstChild();
@@ -390,28 +391,27 @@ public class Interpreter
                         itsData.itsMaxStack = itsStackDepth;
                     iCodeTop = addToken(Token.SHEQ, iCodeTop);
                     itsStackDepth--;
-                    Node target = new Node(Token.TARGET);
+                    Node.Target target = new Node.Target();
                     thisCase.addChildAfter(target, first);
                     iCodeTop = addGoto(target, Token.IFEQ, iCodeTop);
                 }
 
-                Node defaultNode = (Node) node.getProp(Node.DEFAULT_PROP);
+                Node defaultNode = (Node) switchNode.getProp(Node.DEFAULT_PROP);
                 if (defaultNode != null) {
-                    Node defaultTarget = new Node(Token.TARGET);
+                    Node.Target defaultTarget = new Node.Target();
                     defaultNode.getFirstChild().
                         addChildToFront(defaultTarget);
                     iCodeTop = addGoto(defaultTarget, Token.GOTO,
                                        iCodeTop);
                 }
 
-                Node breakTarget = (Node) node.getProp(Node.BREAK_PROP);
-                iCodeTop = addGoto(breakTarget, Token.GOTO,
-                                   iCodeTop);
+                Node.Target breakTarget = switchNode.target;
+                iCodeTop = addGoto(breakTarget, Token.GOTO, iCodeTop);
                 break;
             }
 
             case Token.TARGET :
-                markTargetLabel(node, iCodeTop);
+                markTargetLabel((Node.Target)node, iCodeTop);
                 break;
 
             case Token.NEW :
@@ -491,13 +491,13 @@ public class Interpreter
                 itsStackDepth--;    // after the conditional GOTO, really
                     // fall thru...
             case Token.GOTO : {
-                Node target = (Node)(node.getProp(Node.TARGET_PROP));
+                Node.Target target = ((Node.Jump)node).target;
                 iCodeTop = addGoto(target, (byte) type, iCodeTop);
                 break;
             }
 
             case Token.JSR : {
-                Node target = (Node)(node.getProp(Node.TARGET_PROP));
+                Node.Target target = ((Node.Jump)node).target;
                 iCodeTop = addGoto(target, Icode_GOSUB, iCodeTop);
                 break;
             }
@@ -813,8 +813,9 @@ public class Interpreter
                 break;
 
             case Token.TRY : {
-                Node catchTarget = (Node)node.getProp(Node.TARGET_PROP);
-                Node finallyTarget = (Node)node.getProp(Node.FINALLY_PROP);
+                Node.Jump tryNode = (Node.Jump)node;
+                Node catchTarget = tryNode.target;
+                Node finallyTarget = tryNode.getFinally();
 
                 int tryStart = iCodeTop;
                 int tryEnd = -1;
@@ -825,14 +826,11 @@ public class Interpreter
                     boolean generated = false;
 
                     if (child == catchTarget) {
-                        if (child.getType() != Token.TARGET)
-                            Context.codeBug();
-
                         if (tryEnd >= 0) Context.codeBug();
                         tryEnd = iCodeTop;
                         catchStart = iCodeTop;
 
-                        markTargetLabel(child, iCodeTop);
+                        markTargetLabel((Node.Target)child, iCodeTop);
                         generated = true;
 
                         // Catch code has exception object on the stack
@@ -841,15 +839,12 @@ public class Interpreter
                             itsData.itsMaxStack = itsStackDepth;
 
                     } else if (child == finallyTarget) {
-                        if (child.getType() != Token.TARGET)
-                            Context.codeBug();
-
                         if (tryEnd < 0) {
                             tryEnd = iCodeTop;
                         }
                         finallyStart = iCodeTop;
 
-                        markTargetLabel(child, iCodeTop);
+                        markTargetLabel((Node.Target)child, iCodeTop);
                         generated = true;
 
                         // Adjust stack for finally code: on the top of the
@@ -1014,22 +1009,23 @@ public class Interpreter
     {
     }
 
-    private int getTargetLabel(Node target) {
-        int targetLabel = target.getIntProp(Node.LABEL_PROP, -1);
+    private int getTargetLabel(Node.Target target)
+    {
+        int targetLabel = target.labelId;
         if (targetLabel == -1) {
             targetLabel = itsLabels.acquireLabel();
-            target.putIntProp(Node.LABEL_PROP, targetLabel);
+            target.labelId = targetLabel;
         }
         return targetLabel;
     }
 
-    private void markTargetLabel(Node target, int iCodeTop)
+    private void markTargetLabel(Node.Target target, int iCodeTop)
     {
         int label = getTargetLabel(target);
         itsLabels.markLabel(label, iCodeTop);
     }
 
-    private int addGoto(Node target, int gotoOp, int iCodeTop)
+    private int addGoto(Node.Target target, int gotoOp, int iCodeTop)
     {
         int targetLabel = getTargetLabel(target);
 

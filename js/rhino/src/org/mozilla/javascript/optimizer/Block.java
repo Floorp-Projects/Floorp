@@ -137,7 +137,7 @@ public class Block {
             if ( (blockEndNodeType == Token.IFNE)
                         || (blockEndNodeType == Token.IFEQ)
                                 || (blockEndNodeType == Token.GOTO) ) {
-                Node target = (Node)(blockEndNode.getProp(Node.TARGET_PROP));
+                Node target = ((Node.Jump)blockEndNode).target;
                 FatBlock branchTargetBlock
                                     = (FatBlock)(theTargetBlocks.get(target));
                 target.putProp(Node.TARGETBLOCK_PROP,
