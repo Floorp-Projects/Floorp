@@ -532,8 +532,16 @@ DiskSpaceNeeded(void)
 	 */
 	for (i=0; i<kMaxComponents; i++)
 	{	
-		if ((gControls->cfg->comp[i].selected == true) && 
-			(gControls->cfg->st[instChoice].comp[i] == kInSetupType))
+		/* if "Custom Install" and it's selected... */
+		if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
+		{
+			if ((gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+				(gControls->cfg->comp[i].selected == true))
+				spaceNeeded += gControls->cfg->comp[i].size;
+		}
+		
+		/* or not custom install but in current setup type... */
+		else if (gControls->cfg->st[instChoice].comp[i] == kInSetupType)
 		{
 			spaceNeeded += gControls->cfg->comp[i].size;
 		}
@@ -629,7 +637,7 @@ pstrcmp(unsigned char* s1, unsigned char* s2)
 		return false;
 	
 	len = *s1;
-	for (i=0; i<=len; i++)
+	for (i=0; i<len; i++)
 	{
 		s1++;
 		s2++;
