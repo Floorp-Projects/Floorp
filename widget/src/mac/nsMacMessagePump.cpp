@@ -686,7 +686,17 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 	//}
 	//else
 	{
-		DispatchOSEventToRaptor(anEvent, ::FrontWindow());
+		PRBool handled = DispatchOSEventToRaptor(anEvent, ::FrontWindow());
+		if((!handled) && (anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0) )
+		{
+			// do a menu key command
+			long menuResult = ::MenuKey(theChar);
+			if (HiWord(menuResult) != 0)
+			{
+			    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
+				DoMenu(anEvent, menuResult);
+			}
+		}
 	}
 }
 
