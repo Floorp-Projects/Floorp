@@ -254,23 +254,6 @@ function RegisterTabOpenObserver()
 #endif
 function Startup()
 {
-  var webNavigation;
-  try {
-    // Create the browser instance component.
-    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
-                        .createInstance(Components.interfaces.nsIBrowserInstance);
-    if (!appCore)
-      throw "couldn't create a browser instance";
-
-    webNavigation = getWebNavigation();
-    if (!webNavigation)
-      throw "no XBL binding for browser";
-  } catch (e) {
-    alert("Error launching browser window:" + e);
-    window.close(); // Give up.
-    return;
-  }
-
   var uriToLoad = null;
   // Check for window.arguments[0]. If present, use that for uriToLoad.
   if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
@@ -345,6 +328,23 @@ function prepareForStartup()
   gNavigatorBundle = document.getElementById("bundle_browser");
   gProgressMeterPanel = document.getElementById("statusbar-progresspanel");
   gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
+
+  var webNavigation;
+  try {
+    // Create the browser instance component.
+    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
+                        .createInstance(Components.interfaces.nsIBrowserInstance);
+    if (!appCore)
+      throw "couldn't create a browser instance";
+
+    webNavigation = getWebNavigation();
+    if (!webNavigation)
+      throw "no XBL binding for browser";
+  } catch (e) {
+    alert("Error launching browser window:" + e);
+    window.close(); // Give up.
+    return;
+  }
 
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
