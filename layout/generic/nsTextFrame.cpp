@@ -1618,12 +1618,15 @@ NS_IMETHODIMP
 TextFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw)
 {
   if (aSelected){
-    if (aBeginOffset < 0)
-      aBeginOffset = 0;
+
+    aEndOffset = PR_MIN(aEndOffset,mContentLength);
+    aBeginOffset = PR_MIN(aBeginOffset,mContentLength);
+
     if (aEndOffset < 0)
       aEndOffset = mContentLength;
-    if ((PRInt32)aBeginOffset >= mContentLength)
+    if (aBeginOffset < 0)
       aBeginOffset = mContentLength;
+
     if (mSelectionOffset != aBeginOffset || mSelectionEnd != aEndOffset) {
       mSelectionOffset = aBeginOffset;
       mSelectionEnd = aEndOffset;
