@@ -1612,7 +1612,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
 
   // shut off the timer.
   if (mPluginTimer != nsnull) {
-    mPluginTimer->Cancel();
+    CancelTimer();
   }
 
   if (nsnull != mInstance)
@@ -3099,6 +3099,7 @@ void nsPluginInstanceOwner::CancelTimer()
 {
     if (mPluginTimer) {
         mPluginTimer->Cancel();
+        mPluginTimer = nsnull;
     }
 }
 
