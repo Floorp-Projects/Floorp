@@ -202,13 +202,20 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 	// this must not be a nsCOMPtr since we need to make sure that we do a QI.
     nsCOMPtr<nsISupports> rootObject;
 	if(NS_FAILED(rawObject->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(rootObject))))
-    return nsnull;
+        return nsnull;
+
+    NS_ASSERTION(rootObject, "where did my root object go!");
+    if (!rootObject) 
+        return nsnull;
 
     /* get our hash table */    
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-    if (manager == nsnull) return nsnull;
+    if (manager == nsnull) 
+        return nsnull;
+
     nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
-    if (realToProxyMap == nsnull) return nsnull;
+    if (realToProxyMap == nsnull) 
+        return nsnull;
 
     // we need to do make sure that we addref the passed in object as well as ensure
     // that it is of the requested IID;  
@@ -216,14 +223,16 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 
     nsCOMPtr<nsISupports> requestedInterface;
 	if(NS_FAILED(rawObject->QueryInterface(aIID, getter_AddRefs(requestedInterface))))
-    return nsnull;
+        return nsnull;
     
+    NS_ASSERTION(requestedInterface, "where did my requestedInterface object go!");
+    if (!rootObject) 
+        return nsnull;
 
     // this will be our key in the hash table.  
     // this must not be a nsCOMPtr since we need to make sure that we do a QI.
-    nsCOMPtr<nsISupports> destQRoot;
-    destQRoot = do_QueryInterface(destQueue, &rv);
-    if (NS_FAILED(rv))
+    nsCOMPtr<nsISupports> destQRoot = do_QueryInterface(destQueue, &rv);
+    if (NS_FAILED(rv) || !destQRoot)
         return nsnull;
 
     nsProxyEventKey rootkey(rootObject.get(), destQRoot.get(), proxyType);
