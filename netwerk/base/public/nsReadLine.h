@@ -54,7 +54,7 @@ NS_InitLineBuffer (nsLineBuffer ** aBufferPtr) {
 
 static nsresult
 NS_ReadLine (nsIInputStream* aStream, nsLineBuffer * aBuffer,
-             nsAWritableString & aLine, PRBool *more) {
+             nsAString & aLine, PRBool *more) {
   nsresult rv = NS_OK;
   PRUint32 bytesRead;
   nsAutoString temp;

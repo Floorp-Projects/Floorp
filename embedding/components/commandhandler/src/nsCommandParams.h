@@ -82,7 +82,7 @@ protected:
     nsString*               mString;
     nsCOMPtr<nsISupports>   mISupports;    
     
-    HashEntry(PRUint8 inType, const nsAReadableString& inEntryName)
+    HashEntry(PRUint8 inType, const nsAString& inEntryName)
     : mEntryType(inType)
     , mEntryName(inEntryName)
     , mString(nsnull)
@@ -138,11 +138,11 @@ protected:
   };
 
 
-  HashEntry*          GetNamedEntry(const nsAReadableString& name);
+  HashEntry*          GetNamedEntry(const nsAString& name);
   HashEntry*          GetIndexedEntry(PRInt32 index);
   PRUint32            GetNumEntries();
   
-  nsresult            GetOrMakeEntry(const nsAReadableString& name, PRUint8 entryType, HashEntry*& outEntry);
+  nsresult            GetOrMakeEntry(const nsAString& name, PRUint8 entryType, HashEntry*& outEntry);
   
 protected:
 

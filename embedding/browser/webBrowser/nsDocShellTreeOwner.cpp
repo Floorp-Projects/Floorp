@@ -1198,7 +1198,7 @@ ChromeTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
 // Tell the registered chrome that they should show the tooltip
 //
 NS_IMETHODIMP
-ChromeTooltipListener :: ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAReadableString & inTipText )
+ChromeTooltipListener :: ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAString & inTipText )
 {
   nsresult rv = NS_OK;
   

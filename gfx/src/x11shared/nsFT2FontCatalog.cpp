@@ -888,10 +888,10 @@ cleanup_and_return:
 }
 
 PRBool
-nsFT2FontCatalog::GetFontSummaryName(nsAReadableCString &aFontDirName,
-                                     nsAReadableCString &aFontSummariesDir,
-                                     nsAWritableCString &aFontSummaryFileName,
-                                     nsAWritableCString 
+nsFT2FontCatalog::GetFontSummaryName(const nsACString &aFontDirName,
+                                     const nsACString &aFontSummariesDir,
+                                     nsACString &aFontSummaryFileName,
+                                     nsACString 
                                                &aFallbackFontSummaryFileName)
 {
   int error;
@@ -1055,8 +1055,8 @@ nsFT2FontCatalog::GetRange2CharSetName(unsigned long aBit)
 PRBool
 nsFT2FontCatalog::HandleFontDir(FT_Library aFreeTypeLibrary, 
                                 nsFontCatalog *aFontCatalog,
-                                nsAReadableCString &aFontSummariesDir, 
-                                nsAReadableCString &aFontDirName)
+                                const nsACString &aFontSummariesDir, 
+                                const nsACString &aFontDirName)
 {
   int i, status = -1;
   PRBool rslt, current;
@@ -2405,7 +2405,7 @@ nsFT2FontCatalog::PrintPageBits(nsNameValuePairDB *aDB, PRUint16 *aCCMap,
 }
 
 PRBool
-nsFT2FontCatalog::ReadFontDirSummary(nsAReadableCString& aFontSummaryFilename,
+nsFT2FontCatalog::ReadFontDirSummary(const nsACString& aFontSummaryFilename,
                                      nsHashtable* aFontFileNamesHash)
 {
   nsNameValuePairDB fc;

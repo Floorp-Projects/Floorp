@@ -30,7 +30,7 @@
 #ifndef _nsCache_h_
 #define _nsCache_h_
 
-#include "nsAReadableString.h"
+#include "nsAString.h"
 #include "prtime.h"
 #include "nsError.h"
 #include "prlog.h"
@@ -57,7 +57,7 @@ extern PRUint32  SecondsFromPRTime(PRTime prTime);
 extern PRTime    PRTimeFromSeconds(PRUint32 seconds);
 
 
-extern nsresult  ClientIDFromCacheKey(const nsAReadableCString&  key, char ** result);
-extern nsresult  ClientKeyFromCacheKey(const nsAReadableCString& key, char ** result);
+extern nsresult  ClientIDFromCacheKey(const nsACString&  key, char ** result);
+extern nsresult  ClientKeyFromCacheKey(const nsACString& key, char ** result);
 
 #endif // _nsCache_h

@@ -192,7 +192,7 @@ private:
   NS_IMETHOD AddTooltipListener();
   NS_IMETHOD RemoveTooltipListener();
 
-  NS_IMETHOD ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAReadableString & inTipText ) ;
+  NS_IMETHOD ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAString & inTipText ) ;
   NS_IMETHOD HideTooltip ( ) ;
 
   nsWebBrowser* mWebBrowser;

@@ -151,7 +151,7 @@ public:
 
 private:
     // Get the application/http-index-format headers
-    nsresult GetHeaders(nsAWritableCString& str, nsIURI* uri);
+    nsresult GetHeaders(nsACString& str, nsIURI* uri);
 
     // util parsing methods
     PRInt8   MonthNumber(const char *aCStr);

@@ -40,6 +40,7 @@
 #include "nsIAuthPromptWrapper.h"
 #include "nsPrompt.h"
 #include "nsReadableUtils.h"
+#include "nsDependentString.h"
 
 
 nsresult

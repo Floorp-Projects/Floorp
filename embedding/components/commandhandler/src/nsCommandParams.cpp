@@ -148,7 +148,7 @@ NS_IMETHODIMP nsCommandParams::GetDoubleValue(const nsAString & name, double *_r
 }
 
 /* AString getStringValue (in AString name); */
-NS_IMETHODIMP nsCommandParams::GetStringValue(const nsAString & name, nsAWritableString & _retval)
+NS_IMETHODIMP nsCommandParams::GetStringValue(const nsAString & name, nsAString & _retval)
 {
   _retval.Truncate();
   HashEntry*  foundEntry = GetNamedEntry(name);
@@ -403,7 +403,7 @@ nsCommandParams::First()
 
 /* AString getNext (); */
 NS_IMETHODIMP
-nsCommandParams::GetNext(nsAWritableString & _retval)
+nsCommandParams::GetNext(nsAString & _retval)
 {
   HashEntry*    thisEntry = GetIndexedEntry(mCurEntry);
   if (!thisEntry)

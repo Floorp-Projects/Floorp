@@ -57,7 +57,7 @@
 #include "nspr.h"
 #include "nsHashtable.h"
 #include "nsReadableUtils.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsXPIDLString.h"
 #include "nsFT2FontCatalog.h"
 #include "nsFreeType.h"
@@ -4092,7 +4092,7 @@ nsFontMetricsGTK::FamilyExists(const nsString& aName)
 // convert a FFRE (Foundry-Family-Registry-Encoding) To XLFD Pattern
 //
 static void
-FFREToXLFDPattern(nsAWritableCString &aFFREName, nsAWritableCString &oPattern)
+FFREToXLFDPattern(nsACString &aFFREName, nsACString &oPattern)
 {
   oPattern.Append("-");
   oPattern.Append(aFFREName);
@@ -4106,7 +4106,7 @@ FFREToXLFDPattern(nsAWritableCString &aFFREName, nsAWritableCString &oPattern)
 // substitute the charset in a FFRE (Foundry-Family-Registry-Encoding)
 //
 static void
-FFRESubstituteCharset(nsAWritableCString &aFFREName,
+FFRESubstituteCharset(nsACString &aFFREName,
                       const char *aReplacementCharset)
 {
   PRInt32 charsetHyphen = aFFREName.FindChar('-');
@@ -4119,7 +4119,7 @@ FFRESubstituteCharset(nsAWritableCString &aFFREName,
 // substitute the encoding in a FFRE (Foundry-Family-Registry-Encoding)
 //
 static void
-FFRESubstituteEncoding(nsAWritableCString &aFFREName,
+FFRESubstituteEncoding(nsACString &aFFREName,
                        const char *aReplacementEncoding)
 {
   PRInt32 encodingHyphen = aFFREName.FindChar('-');
@@ -4130,7 +4130,7 @@ FFRESubstituteEncoding(nsAWritableCString &aFFREName,
 }
 
 nsFontGTK*
-nsFontMetricsGTK::TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar)
+nsFontMetricsGTK::TryNodes(nsACString &aFFREName, PRUnichar aChar)
 {
   FIND_FONT_PRINTF(("        TryNodes aFFREName = %s", 
                         PromiseFlatCString(aFFREName).get()));

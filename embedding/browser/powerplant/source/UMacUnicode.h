@@ -39,11 +39,11 @@ public:
      
      NS_IMETHOD SetCharsetSelector(nsPlatformCharsetSel aSel);
      
-     NS_IMETHOD UCSToPlatform(const nsAReadableString& aIn, nsAWritableCString& aOut);
-     NS_IMETHOD UCSToPlatform(const nsAReadableString& aIn, Str255& aOut);  
+     NS_IMETHOD UCSToPlatform(const nsAString& aIn, nsACString& aOut);
+     NS_IMETHOD UCSToPlatform(const nsAString& aIn, Str255& aOut);  
   
-     NS_IMETHOD PlatformToUCS(const nsAReadableCString& ain, nsAWritableString& aOut);  
-     NS_IMETHOD PlatformToUCS(const Str255& aIn, nsAWritableString& aOut);  
+     NS_IMETHOD PlatformToUCS(const nsACString& ain, nsAString& aOut);  
+     NS_IMETHOD PlatformToUCS(const Str255& aIn, nsAString& aOut);  
 
 private:
      static CPlatformUCSConversion *mgInstance;

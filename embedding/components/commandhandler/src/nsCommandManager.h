@@ -73,7 +73,7 @@ public:
 protected:
 
 
-  nsresult  GetControllerForCommand(const nsAReadableString& aCommand, nsIController** outController);
+  nsresult  GetControllerForCommand(const nsAString& aCommand, nsIController** outController);
 
 
 protected:

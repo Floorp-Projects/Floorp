@@ -33,7 +33,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsAReadableString.h"
+#include "nsAString.h"
 
 class nsCacheDevice;
 class nsCacheMetaData;
@@ -98,10 +98,10 @@ public:
     /**
      * Meta data accessors
      */
-    nsresult GetMetaDataElement( const nsAReadableCString&  key,
-                                 nsAReadableCString **      value);
-    nsresult SetMetaDataElement( const nsAReadableCString&  key,
-                                 const nsAReadableCString&  value);
+    nsresult GetMetaDataElement( const nsACString&   key,
+                                 const nsACString ** value);
+    nsresult SetMetaDataElement( const nsACString&  key,
+                                 const nsACString&  value);
 
     nsresult VisitMetaDataElements( nsICacheMetaDataVisitor * visitor);
 
