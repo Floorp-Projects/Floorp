@@ -18,7 +18,9 @@ DEPTH		= ../..
 
 MODULE		= xpcom
 
-EXPORTS		= nsCom.h \
+EXPORTS		= \
+		  COM_auto_ptr.h \
+		  nsCom.h \
 		  nsAgg.h \
 		  nsDebug.h \
 		  nsError.h \
