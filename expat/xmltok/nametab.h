@@ -1,3 +1,8 @@
+/*
+Copyright (c) 1998, 1999 Thai Open Source Software Center Ltd
+See the file COPYING for copying permission.
+*/
+
 static const unsigned namingBitmap[] = {
 0x00000000, 0x00000000, 0x00000000, 0x00000000,
 0x00000000, 0x00000000, 0x00000000, 0x00000000,
