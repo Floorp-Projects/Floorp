@@ -1122,7 +1122,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsZipReaderCache, nsIZipReaderCache)
 nsZipReaderCache::nsZipReaderCache()
   : mLock(nsnull),
     mZips(nsZipCacheEntry::Clone, nsnull, nsZipCacheEntry::Delete, nsnull),
-    mFreeCount(0)
+    mFreeCount(0), 
+    mFreeList(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -1130,7 +1131,11 @@ nsZipReaderCache::nsZipReaderCache()
 NS_IMETHODIMP
 nsZipReaderCache::Init(PRUint32 cacheSize)
 {
+#ifdef DEBUG_warren
+  mCacheSize = 1;//cacheSize;   // XXX hack
+#else
   mCacheSize = cacheSize;
+#endif
   mLock = PR_NewLock();
   return mLock ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1162,7 +1167,11 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   nsresult rv;
   nsAutoLock lock(mLock);
 
-  nsISupportsKey key(zipFile);
+  nsXPIDLCString path;
+  rv = zipFile->GetPath(getter_Copies(path));
+  if (NS_FAILED(rv)) return rv;
+
+  nsStringKey key(path);
   nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
   if (entry) {
     *result = entry->mZip;
@@ -1216,7 +1225,11 @@ nsZipReaderCache::ReleaseZip(nsIZipReader* zip)
   rv = zip->GetFile(getter_AddRefs(zipFile));
   if (NS_FAILED(rv)) return rv;
 
-  nsISupportsKey key(zipFile);
+  nsXPIDLCString path;
+  rv = zipFile->GetPath(getter_Copies(path));
+  if (NS_FAILED(rv)) return rv;
+
+  nsStringKey key(path);
   nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
   if (entry == nsnull)
     return NS_ERROR_FAILURE;
@@ -1229,7 +1242,7 @@ nsZipReaderCache::ReleaseZip(nsIZipReader* zip)
     entry->mNextOlder = mFreeList;
     mFreeList = entry;
 
-    if (++mFreeCount >= mCacheSize) {
+    if (++mFreeCount > mCacheSize) {
       // throw out the oldest one:
       nsZipCacheEntry** oldestPtr = &mFreeList;
       NS_ASSERTION(*oldestPtr, "null free list");
