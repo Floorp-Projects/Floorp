@@ -823,11 +823,6 @@ lo_InitDocState(lo_DocState *state, MWContext *context,
 	state->old_break_pos = -1;
 	state->old_break_width = 0;
 
-#ifdef DOM
-	state->current_span = NULL;
-	state->in_span = FALSE;
-#endif
-
 	state->current_named_anchor = NULL;
 	state->current_anchor = NULL;
 
@@ -1034,7 +1029,7 @@ lo_calc_push_right_for_justify(lo_DocState *state, int32 *remainder)
 	}
 }
 
-#ifndef DOM
+#if 0
 PRIVATE void
 lo_add_to_y_for_all_elements_in_line(lo_DocState *state, int32 y_add)
 {

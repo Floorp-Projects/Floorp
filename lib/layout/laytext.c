@@ -5371,10 +5371,6 @@ static uint32  lo_FindLineBreak ( MWContext * context, lo_DocState * state, LO_T
 /* the parsers */
 static void lo_ParseSingleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
 static void lo_ParseThaiText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
-#ifndef DOM
-static void lo_ParseSinglePreformattedText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
-static void lo_ParseDoublePreformattedText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
-#endif
 static void lo_ParseDoubleText ( lo_DocState * state, LO_TextBlock * block, Bool parseAllText, char * text );
 
 extern int32 lo_correct_text_element_width(LO_TextInfo *text_info);
@@ -8268,14 +8264,6 @@ lo_GetLineStart ( LO_TextBlock * block )
 	return &block->text_buffer[ block->last_line_break ];
 }
 
-#ifdef DOM
-static void
-lo_SkipCharacter ( LO_TextBlock * block )
-{
-	++block->buffer_read_index;
-}
-#endif
-
 static void
 lo_SetLineBreak ( LO_TextBlock * block, Bool skipSpace )
 {
@@ -8724,6 +8712,47 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
   return tptr;
 }
 
+#define GET_UNSHARED_TEXT_ATTR(new, old)                                      \
+PR_BEGIN_MACRO                                                                \
+  if ((old)->refcnt != 1) {                                                   \
+    (new) = lo_NewCopyTextAttr(state, (old));                                 \
+    (old)->refcnt--;                                                          \
+  } else {                                                                    \
+    (new) = (old);                                                            \
+  }                                                                           \
+PR_END_MACRO
+
+void lo_SetColor( LO_Element *ele, LO_Color *color, lo_DocState *state,
+                  Bool background)
+{
+  LO_TextAttr *new_attr;
+  switch (ele->lo_any.type)
+    {
+    case LO_TEXTBLOCK:
+      GET_UNSHARED_TEXT_ATTR(new_attr, ele->lo_textBlock.text_attr);
+      ele->lo_textBlock.text_attr = new_attr;
+      break;
+    case LO_TEXT:
+      GET_UNSHARED_TEXT_ATTR(new_attr, ele->lo_text.text_attr);
+      ele->lo_text.text_attr = new_attr;
+      break;
+    case LO_BULLET:
+      GET_UNSHARED_TEXT_ATTR(new_attr, ele->lo_bullet.text_attr);
+      ele->lo_bullet.text_attr = new_attr;
+      break;
+    default:
+      return;
+    }
+  if (background)
+    {
+      new_attr->bg = *color;
+      new_attr->no_background = FALSE;
+    }
+  else
+    {
+      new_attr->fg = *color;
+    }
+}
 #endif /* DOM */
 
 #ifdef TEST_16BIT

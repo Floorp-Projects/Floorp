@@ -491,14 +491,6 @@ lo_block_src_exit_fn(URL_Struct *url_struct, int status, MWContext *context)
     NET_FreeURLStruct(url_struct);
 }
 
-#ifndef DOM
-static void
-lo_free_stream(MWContext *context, NET_StreamClass *stream)
-{
-    XP_DELETE(stream);
-}
-#endif
-
 int32
 lo_GetEnclosingLayerWidth(lo_DocState *state)
 {

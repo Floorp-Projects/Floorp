@@ -1368,63 +1368,6 @@ lo_process_header_tag(MWContext *context, lo_DocState *state, PA_Tag *tag, int t
 }
 
 static void
-lo_process_span_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
-{
-  LO_SpanStruct *span;
-  PA_Block buff;
-  lo_DocLists *doc_lists;
-  
-  doc_lists = lo_GetCurrentDocLists(state);
-
-  span = (LO_SpanStruct*)lo_NewElement(context, state, LO_SPAN, NULL, 0);
-  XP_ASSERT(span);
-  if (!span) return;
-
-  span->lo_any.type = LO_SPAN;
-  span->lo_any.ele_id = NEXT_ELEMENT;
-  span->is_end = tag->is_end;
-
-  span->lo_any.x = state->x;
-  span->lo_any.y = state->y;
-  span->lo_any.x_offset = 0;
-  span->lo_any.y_offset = 0;
-  span->lo_any.width = 0;
-  span->lo_any.height = 0;
-  span->lo_any.line_height = 0;
-
-#ifdef DOM
-    span->name_rec = NULL;
-	if (tag->is_end == FALSE)
-	{		
-		/* get the span's ID. */
-		buff = lo_FetchParamValue(context, tag, PARAM_ID);
-		if (buff != NULL)
-		{
-		  state->in_span = TRUE;
-		  state->current_span = buff;
-		  if (lo_SetNamedSpan(state, buff))
-			{
-			  lo_BindNamedSpanToElement(state, buff, NULL);
-			  lo_ReflectSpan(context, state, tag,
-							 doc_lists->span_list,
-							 lo_CurrentLayerId(state));
-			  span->name_rec = doc_lists->span_list;
-			}
-
-		  PA_UNLOCK(buff);
-		}
-		lo_AppendToLineList(context, state, (LO_Element*)span, 0);
-		state->in_span = TRUE;
-	}
-	else
-	{
-		state->in_span = FALSE;
-		lo_AppendToLineList(context, state, (LO_Element*)span, 0);
-	}
-#endif
-}
-
-static void
 lo_process_div_tag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 {
   LO_DivStruct *div;
@@ -4397,12 +4340,6 @@ lo_IsEmptyTag(TagType type)
        || type == P_EMBED
        || type == P_KEYGEN
        || type == P_JAVA_APPLET
-#ifndef DOM
-       || type == P_LIST_ITEM   /* not really empty! */
-       || type == P_DESC_TITLE
-       || type == P_NSDT
-       || type == P_DESC_TEXT
-#endif
        || type == P_BASEFONT
        || type == P_AREA
        || type == P_BASE)
@@ -7548,9 +7485,6 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		 */
 		case P_SPAN:
 		{
-#ifdef DOM
-			lo_process_span_tag(context, state, tag);
-#endif
 			break;
 		}
 

@@ -48,7 +48,6 @@ CSRCS		= bullet.c \
 		  layobj.c \
 		  layscrip.c \
 		  layspace.c \
-		  layspan.c \
 		  laystyle.c \
 		  laysub.c \
 		  ptinpoly.c \

@@ -85,27 +85,25 @@ enum doc_slot {
     DOC_ANCHORS         = -5,
     DOC_APPLETS         = -6,
     DOC_EMBEDS          = -7,
-	DOC_SPANS			= -8,	/* Added for HTML SPAN DOM stuff */
-	DOC_TRANSCLUSIONS   = -9,	/* Added for XML Transclusion DOM stuff */
-    DOC_DOCELEMENT	    = -10,  /* Added for W3C DOM stuff */
-    DOC_TITLE           = -11,
-    DOC_URL             = -12,
-    DOC_REFERRER        = -13,
-    DOC_LAST_MODIFIED   = -14,
-    DOC_COOKIE          = -15,
-    DOC_DOMAIN          = -16,
+    DOC_DOCELEMENT	    = -8,  /* Added for W3C DOM stuff */
+    DOC_TITLE           = -9,
+    DOC_URL             = -10,
+    DOC_REFERRER        = -11,
+    DOC_LAST_MODIFIED   = -12,
+    DOC_COOKIE          = -13,
+    DOC_DOMAIN          = -14,
     /* slots below this line are not secured */
-    DOC_IMAGES          = -17,
-    DOC_LAYERS          = -18,
-    DOC_LOADED_DATE     = -19,
-    DOC_BG_COLOR        = -20,
-    DOC_FG_COLOR        = -21,
-    DOC_LINK_COLOR      = -22,
-    DOC_VLINK_COLOR     = -23,
-    DOC_ALINK_COLOR     = -24,
-    DOC_WIDTH           = -25,
-    DOC_HEIGHT          = -26,
-    DOC_BUILTINS	= -27
+    DOC_IMAGES          = -15,
+    DOC_LAYERS          = -16,
+    DOC_LOADED_DATE     = -17,
+    DOC_BG_COLOR        = -18,
+    DOC_FG_COLOR        = -19,
+    DOC_LINK_COLOR      = -20,
+    DOC_VLINK_COLOR     = -21,
+    DOC_ALINK_COLOR     = -22,
+    DOC_WIDTH           = -23,
+    DOC_HEIGHT          = -24,
+    DOC_BUILTINS	    = -25
 };
 	
 #endif
@@ -123,8 +121,6 @@ static JSPropertySpec doc_props[] = {
     {lm_images_str,  DOC_IMAGES,        JSPROP_ENUMERATE|JSPROP_READONLY},
     {lm_layers_str,  DOC_LAYERS,        JSPROP_ENUMERATE|JSPROP_READONLY},
 #ifdef DOM
-	{lm_spans_str,   DOC_SPANS,         JSPROP_ENUMERATE|JSPROP_READONLY},
-	{lm_transclusions_str,   DOC_TRANSCLUSIONS,         JSPROP_ENUMERATE|JSPROP_READONLY},
     {"documentElement",DOC_DOCELEMENT,	JSPROP_ENUMERATE|JSPROP_READONLY},
 #endif
     {"title",        DOC_TITLE,         JSPROP_ENUMERATE|JSPROP_READONLY},
@@ -305,35 +301,7 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
 
 #ifdef DOM
-      case DOC_SPANS:
-        *vp = OBJECT_TO_JSVAL(lm_GetSpanArray(decoder, obj));
-        active_layer_id = LM_GetActiveLayer(context);
-        LM_SetActiveLayer(context, doc->layer_id);
-        (void) LO_EnumerateSpans(context,doc->layer_id);
-        LM_SetActiveLayer(context, active_layer_id);
-        LO_UnlockLayout();
-        return JS_TRUE;
-
-	  case DOC_TRANSCLUSIONS:
-		/* We are assuming that by the time any JS sees document.transclusions[]
-		   all the transclusions have been reflected into JS.  So
-		   there is no need for the call to XMLEnumerateTransclusions that
-		   reflects all Transclusions into JS.
-		*/		
-        *vp = OBJECT_TO_JSVAL(lm_GetTransclusionArray(decoder, obj));
-        active_layer_id = LM_GetActiveLayer(context);
-        LM_SetActiveLayer(context, doc->layer_id);
-		/*
-        (void) XMLEnumerateTransclusions(context,doc->layer_id);
-		*/
-        LM_SetActiveLayer(context, active_layer_id); 
-        LO_UnlockLayout();
-        return JS_TRUE;
-        
       case DOC_DOCELEMENT:
-#ifdef DEBUG_shaver
-        fprintf(stderr, "getting document.documentElement\n");
-#endif
         *vp = OBJECT_TO_JSVAL(lm_DOMGetDocumentElement(decoder, obj));
         LO_UnlockLayout();
         return JS_TRUE;
@@ -1700,12 +1668,7 @@ lm_DefineDocument(MochaDecoder *decoder, int32 layer_id)
         !JS_AddNamedRoot(cx, &doc->applets, lm_applets_str) ||
         !JS_AddNamedRoot(cx, &doc->embeds,  lm_embeds_str) ||
         !JS_AddNamedRoot(cx, &doc->images,  lm_images_str) ||
-        !JS_AddNamedRoot(cx, &doc->layers,  lm_layers_str)
-#ifdef DOM
-		|| !JS_AddNamedRoot(cx, &doc->spans,   lm_spans_str)
-		|| !JS_AddNamedRoot(cx, &doc->transclusions,   lm_transclusions_str)
-#endif
-		) {
+        !JS_AddNamedRoot(cx, &doc->layers,  lm_layers_str)) {
         /* doc_finalize will clean up the rest. */
         return NULL;
     }
@@ -1791,10 +1754,6 @@ lm_CleanUpDocumentRoots(MochaDecoder *decoder, JSObject *obj)
     doc->embeds = NULL;
     doc->images = NULL;
     doc->layers = NULL;
-#ifdef DOM
-	doc->spans = NULL;
-	doc->transclusions = NULL;
-#endif
 }
 
 /* 

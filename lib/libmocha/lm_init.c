@@ -102,10 +102,6 @@ char lm_applets_str[]       = "applets";
 char lm_embeds_str[]        = "embeds";
 char lm_images_str[]        = "images";
 char lm_layers_str[]        = "layers";
-#ifdef DOM
-char lm_spans_str[]			= "spans";
-char lm_transclusions_str[] = "transclusions";
-#endif
 char lm_builtins_str[]     = "trees";
 char lm_location_str[]      = "location";
 char lm_navigator_str[]     = "navigator";
@@ -1211,11 +1207,6 @@ LM_PutMochaDecoder(MochaDecoder *decoder)
         CLEAR(decoder->option_prototype);
         CLEAR(decoder->rect_prototype);
         CLEAR(decoder->url_prototype);
-
-#ifdef DOM
-        CLEAR(decoder->span_prototype);
-        CLEAR(decoder->transclusion_prototype);
-#endif
 
         /* Clear window sub-object refs. */
         if (decoder->document)
