@@ -234,6 +234,9 @@ public:
     
     Boolean inPluginThread();
 	
+	NS_IMETHOD
+	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj);
+
 private:
 	nsIJVMManager* mManager;
 	nsIThreadManager* mThreadManager;
