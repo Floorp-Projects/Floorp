@@ -75,14 +75,14 @@ nsThread::Main(void* arg)
     NS_ASSERTION(rv == NS_OK, "failed to set thread self");
 
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThread %p start run %p\n", self, self->mRunnable));
+           ("nsIThread %p start run %p\n", self, self->mRunnable.get()));
     rv = self->mRunnable->Run();
     NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
     PRThreadState state;
     rv = self->GetState(&state);
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThread %p end run %p\n", self, self->mRunnable));
+           ("nsIThread %p end run %p\n", self, self->mRunnable.get()));
 }
 
 void
@@ -388,7 +388,7 @@ nsThreadPool::GetRequest()
             break;
         }
         PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-               ("nsIThreadPool thread %p waiting\n", th));
+               ("nsIThreadPool thread %p waiting\n", th.get()));
         PRStatus status = PR_Wait(mRequestMonitor, PR_INTERVAL_NO_TIMEOUT);
         if (status != PR_SUCCESS || mShuttingDown) {
             rv = NS_ERROR_FAILURE;
@@ -456,7 +456,7 @@ nsThreadPool::Shutdown()
     nsIThread::GetCurrent(getter_AddRefs(th));
 #endif
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThreadPool thread %p shutting down\n", th));
+           ("nsIThreadPool thread %p shutting down\n", th.get()));
 
     mShuttingDown = PR_TRUE;
     ProcessPendingRequests();
