@@ -114,11 +114,6 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
 
     show();
 
-#ifdef NOT_YET
-	_frame->registerInterest(XFE_View::chromeNeedsUpdating,
-                             this,
-                             (XFE_FunctionNotification)update_cb);
-
 	_frame->registerInterest(XFE_View::commandNeedsUpdating,
                              this,
                              (XFE_FunctionNotification)updateCommand_cb);
@@ -126,6 +121,10 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
     XFE_MozillaApp::theApp()->registerInterest(XFE_View::commandNeedsUpdating,
 											   this,
 											   (XFE_FunctionNotification)updateCommand_cb);
+#ifdef NOT_YET
+	_frame->registerInterest(XFE_View::chromeNeedsUpdating,
+                             this,
+                             (XFE_FunctionNotification)update_cb);
 
     XFE_MozillaApp::theApp()->registerInterest(XFE_MozillaApp::updateToolbarAppearance,
                                                this,
@@ -141,11 +140,6 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
 
 XFE_RDFToolbar::~XFE_RDFToolbar() 
 {
-#ifdef NOT_YET
-	_frame->unregisterInterest(XFE_View::chromeNeedsUpdating,
-                               this,
-                               (XFE_FunctionNotification)update_cb);
-
 	_frame->unregisterInterest(XFE_View::commandNeedsUpdating,
                                this,
                                (XFE_FunctionNotification)updateCommand_cb);
@@ -153,6 +147,11 @@ XFE_RDFToolbar::~XFE_RDFToolbar()
     XFE_MozillaApp::theApp()->unregisterInterest(XFE_View::commandNeedsUpdating,
 												 this,
 												 (XFE_FunctionNotification)updateCommand_cb);
+#ifdef NOT_YET
+	_frame->unregisterInterest(XFE_View::chromeNeedsUpdating,
+                               this,
+                               (XFE_FunctionNotification)update_cb);
+
 
     XFE_MozillaApp::theApp()->unregisterInterest(XFE_MozillaApp::updateToolbarAppearance,
                                                  this,
@@ -164,14 +163,45 @@ XFE_RDFToolbar::~XFE_RDFToolbar()
         this,
         (XFE_FunctionNotification)updateIconAppearance_cb);
 }
-#ifdef NOT_YET
 //////////////////////////////////////////////////////////////////////////
 XFE_CALLBACK_DEFN(XFE_RDFToolbar, updateCommand)(XFE_NotificationCenter */*obj*/, 
 					      void */*clientData*/, 
 					      void *callData)
 {
+	D(printf("In XFE_RDFToolbar::updateCommand(%s)\n",Command::getString(cmd));)
+
+	// Make sure the toolbar is alive
+    if (!XfeIsAlive(_toolbar)) return;
+	
+	Widget *		children;
+	Cardinal		num_children;
+	Cardinal		i;
+	CommandType		cmd = (CommandType) callData;
+
+	XfeChildrenGet(_toolbar,&children,&num_children);	
+	
+	for (i = 0; i < num_children; i ++)
+	{
+		if (XfeIsButton(children[i]) && !XfeIsPrivateComponent(children[i]))
+		{
+			XFE_ToolbarItem * item = 
+				(XFE_ToolbarItem *) XfeInstancePointer(children[i]);
+			
+            if (item)
+            {
+                HT_Resource entry = item->getHtResource();
+
+                if (XFE_RDFUtils::ht_IsFECommand(entry)
+                    && XFE_RDFUtils::ht_GetFECommand(entry) == cmd)
+                {
+                    item->setSensitive(_frame->isCommandEnabled(cmd));
+                }
+            }
+		}
+	}
 }
 //////////////////////////////////////////////////////////////////////////
+#ifdef NOT_YET
 XFE_CALLBACK_DEFN(XFE_RDFToolbar, update)(XFE_NotificationCenter */*obj*/, 
 									   void */*clientData*/, 
 									   void */*callData*/)

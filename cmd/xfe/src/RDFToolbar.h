@@ -51,8 +51,6 @@ public:
 #ifdef NOT_YET
 	// update all the commands in the toolbar.
 	XFE_CALLBACK_DECL(update)
-	// update a specific command in the toolbar.
-	XFE_CALLBACK_DECL(updateCommand)
     // update the toolbar appearance
     XFE_CALLBACK_DECL(updateToolbarAppearance)
 #endif
@@ -99,6 +97,9 @@ private:
     static void tooltipCB(Widget, XtPointer,  XmString *, Boolean *);
     static void docStringSetCB(Widget, XtPointer, XmString *, Boolean *);
     static void docStringCB(Widget, XtPointer, unsigned char, XmString);
+
+	// update a specific command in the toolbar.
+	XFE_CALLBACK_DECL(updateCommand)
 
 	// update the icon appearance
     XFE_CALLBACK_DECL(updateIconAppearance)
