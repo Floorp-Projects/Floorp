@@ -1210,7 +1210,9 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   // check if the event handler can be run on the object in question
   rv = securityManager->CheckFunctionAccess(mContext, aHandler, aTarget);
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
+    *aBoolResult = !aReverseReturnResult;
+  } else {
     jsval val;
     jsval funval = OBJECT_TO_JSVAL(aHandler);
     PRBool ok = ::JS_CallFunctionValue(mContext, (JSObject *)aTarget, funval,
