@@ -61,12 +61,13 @@ local $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
 
 local $os_type = &get_os_type;
 local $engine_command = &get_engine_command;
+local @test_list = &get_test_list;
+
 local $user_exit = 0;
 local $html = "";
 local @failed_tests;
 local $failures_reported = 0;
 local $tests_completed = 0;
-local @test_list = &get_test_list;
 local $exec_time_string;
 local $start_time = time;
 
@@ -81,10 +82,14 @@ if ($#test_list == -1) {
 &execute_tests (@test_list);
 
 local $exec_time = (time - $start_time);
+local $exec_hours = int($exec_time / 60 / 60);
 local $exec_mins = int($exec_time / 60);
 local $exec_secs = ($exec_time % 60);
 
-if ($exec_mins > 0) {
+if ($exec_hours > 0) {
+    $exec_time_string = "$exec_hours hours, $exec_mins minutes, " .
+      "$exec_secs seconds";
+} elsif ($exec_mins > 0) {
     $exec_time_string = "$exec_mins minutes, $exec_secs seconds";
 } else {
     $exec_time_string = "$exec_secs seconds";
@@ -110,10 +115,14 @@ sub execute_tests {
         local $got_exit, $exit_signal;
         local $bug_line;
 
+        # user selected [Q]uit from ^C handler.
         if ($user_exit) {
             return;
         }
         
+        # Append the shell.js files to the shell_command if they're there.
+        # (only check for their existance if the suite or test_dir has changed
+        # since the last time we looked.)
         if ($last_suite ne $suite || $last_test_dir ne $test_dir) {
             $shell_command = $engine_command;
             
@@ -139,9 +148,12 @@ sub execute_tests {
         close (OUTPUT);
         
         if ($os_type ne "WIN") {
+            # unix systems have signal information in the lower 8 bits
             $got_exit = ($? >> 8);
             $exit_signal = ($? & 255);
         } else {
+            # windows doesn't have signal information at all, $? is the exit code
+            # period.
             $got_exit = $?;
             $exit_signal = 0;
         }
@@ -151,15 +163,21 @@ sub execute_tests {
 
         foreach $line (@output) {
 
+            # watch for testcase to proclaim what exit code it expects to
+            # produce (0 by default)
             if ($line =~ /expect(ed)?\s*exit\s*code\s*\:?\s*(\n+)/i) {
                 $expected_exit = $1;
                 &dd ("Test case expects exit code $expect_exit");
             }
 
+            # watch for failures
             if ($line =~ /failed!/i) {
                 $failure_lines .= $line;
             }
 
+            # and watch for bugnumbers
+            # XXX This only allows 1 bugnumber per testfile, should be
+            # XXX modified to allow for multiple.
             if ($line =~ /bugnumber\s*\:?\s*(.*)/i) {
                 $1 =~ /(\n+)/;
                 $bug_line = "<a href='$opt_bug_url$1' target='other_window'>" .
@@ -173,12 +191,14 @@ sub execute_tests {
         }
 
         if ($got_exit != $expected_exit) {
+            # full testcase output dumped on mismatched exit codes,
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
                              "Testcase terminated with signal $exit_signal\n" .
                              "Complete testcase output was:\n" .
                              join ("\n",@output), $bug_line);
         } elsif ($failure_lines) {
+            # only offending lines if exit codes matched
             &report_failure ($test, "Failure messages were:\n" . $failure_lines,
                              $bug_line);
         }        
@@ -190,24 +210,41 @@ sub execute_tests {
 }
 
 sub write_results {
-    local $list_name = ($opt_test_list_file) ?
-      "List '$opt_test_list_file'" : "All tests";
+    local $list_name, $neglist_name;
     local $completion_date = localtime;
     local $failure_pct = int(($failures_reported / $tests_completed) * 10000) /
       100;
     &dd ("Writing output to $opt_output_file.");
 
+    if ($#opt_test_list_file == -1) {
+        $list_name = "All tests";
+    } elsif ($#opt_test_list_file < 10) {
+        $list_name = "List " . join (", ", @opt_test_list_file);
+    } else {
+        $list_name = "($#opt_test_list_file test files specified)";
+    }
+
+    if ($#opt_neg_list_file == -1) {
+        $neglist_name = "(none)";
+    } elsif ($#opt_test_list_file < 10) {
+        $neglist_name = "List " . join (", ", @opt_neg_list_file);
+    } else {
+        $neglist_name = "($#opt_neg_list_file skip files specified)";
+    }
+    
     open (OUTPUT, "> $opt_output_file") ||
       die ("Could not create output file $opt_output_file");
 
     print OUTPUT 
       ("<html><head>\n" .
-       "<title>Test results, $opt_engine_type, $list_name</title>\n" .
+       "<title>Test results, $opt_engine_type</title>\n" .
        "</head>\n" .
        "<body bgcolor='white'>\n" .
        "<a name='tippy_top'></a>\n" .
-       "<h2>Test results, $opt_engine_type, $list_name</h2><br>\n" .
+       "<h2>Test results, $opt_engine_type</h2><br>\n" .
        "<p class='results_summary'>\n" .
+       "Test List: $list_name<br>\n" .
+       "Skip List: $neglist_name<br>\n" .
        ($#test_list + 1) . " test(s) selected, $tests_completed test(s) " .
        "completed, $failures_reported failures reported " .
        "($failure_pct% failed)<br>\n" .
@@ -509,7 +546,9 @@ sub get_sm_engine_command {
             local $dir, $object_dir;
             local $pattern = ($opt_engine_type eq "smdebug") ?
               'DBG.OBJ' : 'OPT.OBJ';
-            
+
+            # scan for the first directory matching
+            # the pattern expected to hold this type (debug or opt) of engine
             foreach $dir (@src_dir_files) {
                 if ($dir =~ $pattern) {
                     $object_dir = $dir;
@@ -589,8 +628,7 @@ sub get_lc_engine_command {
     
 }
 
-sub get_os_type {
-    
+sub get_os_type {    
     local $uname = `uname -a`;
     
     if ($uname =~ /WIN/) {
