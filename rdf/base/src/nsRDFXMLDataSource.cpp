@@ -483,7 +483,7 @@ RDFXMLDataSourceImpl::Init()
     // should've defined the RDF namespace to be _something_, and we
     // should just look at _that_ and use it. Oh well.
     nsIAtom* rdfPrefix = NS_NewAtom("RDF");
-    AddNameSpace(rdfPrefix, NS_LITERAL_STRING(RDF_NAMESPACE_URI));
+    AddNameSpace(rdfPrefix, NS_ConvertASCIItoUCS2(RDF_NAMESPACE_URI));
     NS_IF_RELEASE(rdfPrefix);
 
     if (gRefCnt++ == 0) {
@@ -1512,10 +1512,6 @@ nsresult
 RDFXMLDataSourceImpl::SerializeContainer(nsIOutputStream* aStream,
                                          nsIRDFResource* aContainer)
 {
-static const char kRDFBag[] = "RDF:Bag";
-static const char kRDFSeq[] = "RDF:Seq";
-static const char kRDFAlt[] = "RDF:Alt";
-
     nsresult rv;
     const PRUnichar* tag;
 
@@ -1523,13 +1519,13 @@ static const char kRDFAlt[] = "RDF:Alt";
     // appropriate tag-open sequence
 
     if (IsA(mInner, aContainer, kRDF_Bag)) {
-        tag = NS_LITERAL_STRING(kRDFBag);
+        tag = NS_LITERAL_STRING("RDF:Bag");
     }
     else if (IsA(mInner, aContainer, kRDF_Seq)) {
-        tag = NS_LITERAL_STRING(kRDFSeq);
+        tag = NS_LITERAL_STRING("RDF:Seq");
     }
     else if (IsA(mInner, aContainer, kRDF_Alt)) {
-        tag = NS_LITERAL_STRING(kRDFAlt);
+        tag = NS_LITERAL_STRING("RDF:Alt");
     }
     else {
         NS_ASSERTION(PR_FALSE, "huh? this is _not_ a container.");
@@ -1677,9 +1673,7 @@ static const char kXMLNS[]    = "\n     xmlns";
 nsresult
 RDFXMLDataSourceImpl::SerializeEpilogue(nsIOutputStream* aStream)
 {
-static const char kCloseRDF[] = "</RDF:RDF>\n";
-
-    rdf_BlockingWrite(aStream, NS_LITERAL_STRING(kCloseRDF));
+    rdf_BlockingWrite(aStream, NS_LITERAL_STRING("</RDF:RDF>\n"));
     return NS_OK;
 }
 
