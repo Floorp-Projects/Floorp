@@ -92,7 +92,7 @@ Contributor(s): Pete Collins, Doug Turner, Brendan Eich, Warren Harris, Eric Pla
 const JSLIB_FILE                      = "file.js";
 
 const JSFILE_LOCAL_CID                = "@mozilla.org/file/local;1";
-const JSFILE_F_CHANNEL_CID            = "@mozilla.org/network/local-file-channel;1";
+const JSFILE_F_CHANNEL_CID            = "@mozilla.org/network/file-input-stream;1";
 const JSFILE_I_STREAM_CID             = "@mozilla.org/scriptableinputstream;1";
 
 const JSFILE_I_LOCAL_FILE             = "nsILocalFile";
