@@ -989,7 +989,8 @@ nsContentSink::StartLayout(PRBool aIsFrameset)
       if (vm) {
         nsIView* rootView = nsnull;
         vm->GetRootView(rootView);
-        nsCOMPtr<nsIScrollableView> sview(do_QueryInterface(rootView));
+        nsIScrollableView* sview;
+        CallQueryInterface(rootView, &sview);
 
         if (sview) {
           sview->SetScrollPreference(nsScrollPreference_kNeverScroll);

@@ -61,6 +61,50 @@ static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 //#define SHOW_VIEW_BORDERS
 //#define HIDE_ALL_WIDGETS
 
+// {34297A07-A8FD-d811-87C6-000244212BCB}
+#define VIEW_WRAPPER_IID \
+{ 0x34297a07, 0xa8fd, 0xd811, { 0x87, 0xc6, 0x0, 0x2, 0x44, 0x21, 0x2b, 0xcb } };
+
+
+/**
+ * nsISupports-derived helper class that allows to store and get a view
+ */
+class ViewWrapper : public nsISupports
+{
+  public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(VIEW_WRAPPER_IID)
+    NS_DECL_ISUPPORTS
+
+    ViewWrapper(nsView* aView) : mView(aView) {}
+
+    nsView* GetView() { return mView; }
+  private:
+    nsView* mView;
+};
+
+NS_IMPL_ISUPPORTS1(ViewWrapper, ViewWrapper);
+
+/**
+ * Given a widget, returns the stored ViewWrapper on it, or NULL if no
+ * ViewWrapper is there.
+ */
+static ViewWrapper* GetWrapperFor(nsIWidget* aWidget)
+{
+  // The widget's client data points back to the owning view
+  if (aWidget) {
+    void* clientData;
+    aWidget->GetClientData(clientData);
+    nsISupports* data = (nsISupports*)clientData;
+    
+    if (data) {
+      ViewWrapper* wrapper;
+      CallQueryInterface(data, &wrapper);
+      return wrapper;
+    }
+  }
+  return nsnull;
+}
+
 //
 // Main events handler
 //
@@ -162,6 +206,10 @@ nsView::~nsView()
   // Destroy and release the widget
   if (mWindow)
   {
+    // Release memory for the view wrapper
+    ViewWrapper* wrapper = GetWrapperFor(mWindow);
+    NS_IF_RELEASE(wrapper);
+
     mWindow->SetClientData(nsnull);
     mWindow->Destroy();
     NS_RELEASE(mWindow);
@@ -179,7 +227,7 @@ nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   
   *aInstancePtr = nsnull;
   
-  if (aIID.Equals(NS_GET_IID(nsIView)) || (aIID.Equals(NS_GET_IID(nsISupports)))) {
+  if (aIID.Equals(NS_GET_IID(nsIView))) {
     *aInstancePtr = (void*)(nsIView*)this;
     return NS_OK;
   }
@@ -187,35 +235,13 @@ nsresult nsView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-nsrefcnt nsView::AddRef() 
-{
-  NS_WARNING("not supported for views");
-  return 1;
-}
-
-nsrefcnt nsView::Release()
-{
-  NS_WARNING("not supported for views");
-  return 1;
-}
-
 nsView* nsView::GetViewFor(nsIWidget* aWidget)
 {           
   NS_PRECONDITION(nsnull != aWidget, "null widget ptr");
-	
-  // The widget's client data points back to the owning view
-  if (aWidget) {
-    void* clientData;
-    aWidget->GetClientData(clientData);
-    nsISupports* data = (nsISupports*)clientData;
-    
-    if (data) {
-      nsIView* view = nsnull;
-      if (NS_SUCCEEDED(data->QueryInterface(NS_GET_IID(nsIView), (void **)&view))) {
-        return NS_STATIC_CAST(nsView*, view);
-      }
-    }
-  }
+
+  ViewWrapper* wrapper = GetWrapperFor(aWidget);
+  if (wrapper)
+    return wrapper->GetView();  
   return nsnull;
 }
 
@@ -634,13 +660,23 @@ void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
 
 NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
 {
+  ViewWrapper* wrapper = new ViewWrapper(this);
+  if (!wrapper)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(wrapper); // Will be released in ~nsView or upon setting a new widget
+
+  // Destroy any old wrappers if there are any
+  ViewWrapper* oldWrapper = GetWrapperFor(aWidget);
+  NS_IF_RELEASE(oldWrapper);
+
+
   NS_IF_RELEASE(mWindow);
   mWindow = aWidget;
 
   if (nsnull != mWindow)
   {
     NS_ADDREF(mWindow);
-    mWindow->SetClientData((void *)this);
+    mWindow->SetClientData(wrapper);
   }
 
   return NS_OK;
@@ -651,11 +687,18 @@ NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
 //
 nsresult nsView::LoadWidget(const nsCID &aClassIID)
 {
-  nsresult rv = nsComponentManager::CreateInstance(aClassIID, nsnull, NS_GET_IID(nsIWidget), (void**)&mWindow);
+  ViewWrapper* wrapper = new ViewWrapper(this);
+  if (!wrapper)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(wrapper); // Will be released in ~nsView
 
-  if (NS_OK == rv) {
+  nsresult rv = CallCreateInstance(aClassIID, &mWindow);
+
+  if (NS_SUCCEEDED(rv)) {
     // Set the widget's client data
-    mWindow->SetClientData((void*)this);
+    mWindow->SetClientData(wrapper);
+  } else {
+    delete wrapper;
   }
 
   return rv;

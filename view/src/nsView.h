@@ -62,7 +62,6 @@ public:
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /**
@@ -272,9 +271,6 @@ protected:
   nsIRegion*      mDirtyRegion;
   PRPackedBool    mChildRemoved;
 
-private:
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
 };
 
 #endif

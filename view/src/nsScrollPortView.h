@@ -94,8 +94,6 @@ public:
   nsView*     GetScrolledView() const { return GetFirstChild(); }
 
 private:
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
   NS_IMETHOD  ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
 
   // data members
