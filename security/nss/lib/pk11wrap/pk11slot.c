@@ -1783,6 +1783,8 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 	if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
     }
 
+    nssToken_Refresh(slot->nssToken);
+
     if (!(slot->needLogin)) {
 	return pk11_CheckVerifyTest(slot);
     }
@@ -1824,6 +1826,7 @@ PK11_InitToken(PK11SlotInfo *slot, PRBool loadCerts)
 	    }
 	}
     }
+
 	
     return SECSuccess;
 }
@@ -1940,6 +1943,10 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
     /* permanent slots are always present */
     if (slot->isPerm && (slot->session != CK_INVALID_SESSION)) {
 	return PR_TRUE;
+    }
+
+    if (slot->nssToken) {
+	return nssToken_IsPresent(slot->nssToken);
     }
 
     /* removable slots have a flag that says they are present */

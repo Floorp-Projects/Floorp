@@ -702,7 +702,6 @@ PK11_GetCertFromPrivateKey(SECKEYPrivateKey *privKey)
     CK_OBJECT_HANDLE handle = privKey->pkcs11ID;
     CK_OBJECT_HANDLE certID = 
 		PK11_MatchItem(slot,handle,CKO_CERTIFICATE);
-    SECStatus rv;
     CERTCertificate *cert;
 
     if (certID == CK_INVALID_HANDLE) {
@@ -1378,6 +1377,10 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	nssTokenCertSearch search;
 	struct token_cbstr token_cb;
 	nssList *certList;
+
+	if (!PK11_IsPresent(slot)) {
+		return NULL;
+	}
 	if (!PK11_IsFriendly(slot)) {
 	    if (PK11_Authenticate(slot, PR_TRUE, wincx) != SECSuccess) {
 		PK11_FreeSlot(slot);

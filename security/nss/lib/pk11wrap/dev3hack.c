@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.7 $ $Date: 2002/03/04 22:39:25 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.8 $ $Date: 2002/03/06 01:44:49 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -174,6 +174,23 @@ nssSlot_IsPermanent
 }
 
 NSS_IMPLEMENT PRStatus
+nssToken_Refresh(NSSToken *token)
+{
+    PK11SlotInfo *nss3slot;
+
+    if (!token) {
+	return PR_SUCCESS;
+    }
+    nss3slot = token->pk11slot;
+    token->defaultSession = nssSession_ImportNSS3Session(token->slot->arena,
+                                                       nss3slot->session,
+                                                       nss3slot->sessionLock,
+                                                       nss3slot->defRWSession);
+    nssToken_DestroyCertList(token);
+    return nssToken_LoadCerts(token);
+}
+
+NSS_IMPLEMENT PRStatus
 nssSlot_Refresh
 (
   NSSSlot *slot
@@ -183,13 +200,9 @@ nssSlot_Refresh
     if (PK11_InitToken(nss3slot, PR_FALSE) != SECSuccess) {
 	return PR_FAILURE;
     }
-    slot->token->defaultSession = nssSession_ImportNSS3Session(slot->arena,
-                                                       nss3slot->session,
-                                                       nss3slot->sessionLock,
-                                                       nss3slot->defRWSession);
-    nssToken_DestroyCertList(slot->token);
-    return nssToken_LoadCerts(slot->token);
+    return nssToken_Refresh(slot->token);
 }
+
 
 
 NSSTrustDomain *
