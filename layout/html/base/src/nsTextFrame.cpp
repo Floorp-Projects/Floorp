@@ -1023,17 +1023,15 @@ DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
 
 // Flag indicating that whitespace was skipped
 #define TEXT_SKIP_LEADING_WS 0x01000000
-
 #define TEXT_HAS_MULTIBYTE   0x02000000
-
 #define TEXT_IN_WORD         0x04000000
-
 // This bit is set on the first frame in a continuation indicating
 // that it was chopped short because of :first-letter style.
 #define TEXT_FIRST_LETTER    0x08000000
+#define TEXT_WAS_TRANSFORMED 0x10000000
 
 // Bits in mState used for reflow flags
-#define TEXT_REFLOW_FLAGS    0x0F000000
+#define TEXT_REFLOW_FLAGS    0x1F000000
 
 #define TEXT_TRIMMED_WS      0x20000000
 
@@ -1198,13 +1196,33 @@ nsTextFrame::Paint(nsIPresContext* aPresContext,
       PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);
     }
     else {
-      // Choose rendering pathway based on rendering context
-      // performance hint.
+      // Get the text fragment
+      nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
+      const nsTextFragment* frag = nsnull;
+      if (tc.get()) {
+        tc->GetText(&frag);
+      }
+      if (!frag) {
+        return NS_ERROR_FAILURE;
+      }
+
+      // Choose rendering pathway based on rendering context performance
+      // hint, whether it needs to be transformed, and whether it's
+      // multi-byte
+      PRBool   hasMultiByteChars = (0 != (mState & TEXT_HAS_MULTIBYTE));
       PRUint32 hints = 0;
       aRenderingContext.GetHints(hints);
-      if ((TEXT_HAS_MULTIBYTE & mState) ||
-          (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
-        // Use PRUnichar rendering routine
+
+      // If we have ascii text that doesn't contain multi-byte characters
+      // and the text doesn't need transforming then always render as ascii
+      if ((0 == (mState & TEXT_WAS_TRANSFORMED)) && !frag->Is2b() && !hasMultiByteChars) {
+        PaintAsciiText(aPresContext, aRenderingContext, sc, ts, 0, 0);
+      
+      } else if (hasMultiByteChars || (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
+        // If it has multi-byte characters then we have to render it as Unicode
+        // regardless of whether the text fragment is 1-byte or 2-byte characters.
+        // Or if the text fragment requires transforming then leave it up to the
+        // rendering context's preference
         PaintUnicodeText(aPresContext, aRenderingContext, sc, ts, 0, 0);
       }
       else {
@@ -1240,9 +1258,9 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   // Skip over the leading whitespace
   PRInt32 n = mContentLength;
   if (0 != (mState & TEXT_SKIP_LEADING_WS)) {
-    PRBool isWhitespace;
+    PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
-    aTX.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace);
+    aTX.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
     NS_ASSERTION(isWhitespace, "mState and content are out of sync");
     if (isWhitespace) {
       if (nsnull != indexp) {
@@ -1267,11 +1285,11 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   PRInt32 dstOffset = 0;
   while (0 != n) {
     PRUnichar* bp;
-    PRBool isWhitespace;
+    PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
 
     // Get the next word
-    bp = aTX.GetNextWord(inWord, &wordLen, &contentLen, &isWhitespace);
+    bp = aTX.GetNextWord(inWord, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
     if (nsnull == bp) {
       break;
     }
@@ -1690,6 +1708,10 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   nscoord width = mRect.width;
 
   // Transform text from content into renderable form
+  // XXX If the text fragment is already Unicode and text text wasn't
+  // transformed when we formatted it, then there's no need to do all
+  // this and we should just render the text fragment directly. See
+  // PaintAsciiText()...
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
@@ -2257,11 +2279,24 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
                             TextStyle& aTextStyle,
                             nscoord dx, nscoord dy)
 {
+  NS_PRECONDITION(0 == (TEXT_HAS_MULTIBYTE & mState), "text is multi-byte");
   nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
 
   PRBool displaySelection;
+  PRBool isSelected;
   displaySelection = doc->GetDisplaySelection();
+  isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 
+  // Get the text fragment
+  nsCOMPtr<nsITextContent> tc = do_QueryInterface(mContent);
+  const nsTextFragment* frag = nsnull;
+  if (tc.get()) {
+    tc->GetText(&frag);
+  }
+  if (!frag) {
+    return;
+  }
+  
   // Make enough space to transform
   nsAutoTextBuffer unicodePaintBuffer;
   nsAutoIndexBuffer indexBuffer;
@@ -2271,37 +2306,68 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
     }
   }
 
-  // Transform text from content into renderable form
+  // Construct a text transformer
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
-  PRInt32 textLength;
-  PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
-                     &unicodePaintBuffer, &textLength);
 
-  // Translate unicode data into ascii for rendering
-  char paintBufMem[TEXT_BUF_SIZE];
-  char* paintBuf = paintBufMem;
-  if (textLength > TEXT_BUF_SIZE) {
-    paintBuf = new char[textLength];
-    if (!paintBuf) {
-      return;
+  // See if we need to transform the text. If the text fragment is ascii and
+  // wasn't transformed, then we can skip this step. If we're displaying the
+  // selection and the text is selected, then we need to do this step so we
+  // can create the index buffer
+  PRInt32     textLength;
+  const char* text;
+  char        paintBufMem[TEXT_BUF_SIZE];
+  char*       paintBuf = paintBufMem;
+  if (frag->Is2b() ||
+      (0 != (mState & TEXT_WAS_TRANSFORMED)) ||
+      (displaySelection && isSelected)) {
+    
+    // Transform text from content into Unicode renderable form
+    // XXX If the text fragment is ascii, then we should ask the
+    // text transformer to leave the text in ascii. That way we can
+    // elimninate the conversion from Unicode back to ascii...
+    PrepareUnicodeText(tx, (displaySelection ? &indexBuffer : nsnull),
+                       &unicodePaintBuffer, &textLength);
+
+
+    // Translate unicode data into ascii for rendering
+    if (textLength > TEXT_BUF_SIZE) {
+      paintBuf = new char[textLength];
+      if (!paintBuf) {
+        return;
+      }
     }
-  }
-  char* dst = paintBuf;
-  char* end = dst + textLength;
-  PRUnichar* src = unicodePaintBuffer.mBuffer;
-  while (dst < end) {
-    *dst++ = (char) ((unsigned char) *src++);
+    char* dst = paintBuf;
+    char* end = dst + textLength;
+    PRUnichar* src = unicodePaintBuffer.mBuffer;
+    while (dst < end) {
+      *dst++ = (char) ((unsigned char) *src++);
+    }
+
+    text = paintBuf;
+
+  } else {
+    text = frag->Get1b() + mContentOffset;
+    textLength = mContentLength;
+
+    // See if we should skip leading whitespace
+    if (0 != (mState & TEXT_SKIP_LEADING_WS)) {
+      while (XP_IS_SPACE(*text) && (textLength > 0)) {
+        text++;
+        textLength--;
+      }
+    }
+
+    // See if the text ends in a newline
+    if ((textLength > 0) && (text[textLength - 1] == '\n')) {
+      textLength--;
+    }
+    NS_ASSERTION(textLength >= 0, "bad text length");
   }
 
   nscoord width = mRect.width;
   PRInt32* ip = indexBuffer.mBuffer;
-  char* text = paintBuf;
-  nsFrameState  frameState;
-  PRBool        isSelected;
-  GetFrameState(&frameState);
-  isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 
   if (0 != textLength) {
     if (!displaySelection || !isSelected) { 
@@ -2370,8 +2436,12 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
           aRenderingContext.DrawString(currenttext, currentlength, currentX, dy);
 
           currentX+=newWidth;//increment twips X start
-
           iter.Next();
+        }
+        else
+        {
+          aRenderingContext.SetColor(aTextStyle.mColor->mColor);
+          aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy);
         }
       }
       else
@@ -3394,6 +3464,19 @@ struct TextRun {
     mNumSegments++;
   }
 };
+
+// Transforms characters in place from ascii to Unicode
+static
+TransformTextToUnicode(char* aText, PRInt32 aNumChars)
+{
+  // Go backwards over the characters and convert them.
+  unsigned char*  cp1 = (unsigned char*)aText + aNumChars - 1;
+  PRUnichar*      cp2 = (PRUnichar*)aText + (aNumChars - 1);
+  
+  while (aNumChars-- > 0) {
+    *cp2-- = PRUnichar(*cp1--);
+  }
+}
   
 nsReflowStatus
 nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
@@ -3436,11 +3519,19 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   aTextData.mX = 0;
   for (;;firstThing = PR_FALSE) {
     // Get next word/whitespace from the text
-    PRBool isWhitespace;
+    PRBool isWhitespace, wasTransformed;
     PRInt32 wordLen, contentLen;
-    PRUnichar* bp = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace,
-                                    textRun.mNumSegments == 0);
-    if (nsnull == bp) {
+    union {
+      char*       bp1;
+      PRUnichar*  bp2;
+    };
+    bp2 = aTx.GetNextWord(aTextData.mInWord, &wordLen, &contentLen, &isWhitespace,
+                          &wasTransformed, textRun.mNumSegments == 0);
+    // Remember if the text was transformed
+    if (wasTransformed) {
+      mState |= TEXT_WAS_TRANSFORMED;
+    }
+    if (nsnull == bp2) {
       if (textRun.IsBuffering()) {
         // Measure the remaining text
         goto MeasureTextRun;
@@ -3454,13 +3545,19 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       }
     }
     lastWordLen = wordLen;
-    lastWordPtr = bp;
+    lastWordPtr = bp2;
     aTextData.mInWord = PR_FALSE;
 
     // Measure the word/whitespace
     nscoord width;
+    PRUnichar firstChar;
+    if (aTx.TransformedTextIsAscii()) {
+      firstChar = *bp1;
+    } else {
+      firstChar = *bp2;
+    }
     if (isWhitespace) {
-      if ('\n' == bp[0]) {
+      if ('\n' == firstChar) {
         // We hit a newline. Stop looping.
         NS_WARN_IF_FALSE(aTs.mPreformatted, "newline w/o ts.mPreformatted");
         prevOffset = aTextData.mOffset;
@@ -3473,14 +3570,26 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         aTextData.mOffset += contentLen;
         aTextData.mSkipWhitespace = PR_FALSE;
 
+        if (wasTransformed) {
+          // As long as there were no discarded characters, then don't consider
+          // skipped leading whitespace as being transformed
+          if (wordLen == contentLen) {
+            mState &= ~TEXT_WAS_TRANSFORMED;
+          }
+        }
+
         // Only set flag when we actually do skip whitespace
         mState |= TEXT_SKIP_LEADING_WS;
         continue;
       }
-      if ('\t' == bp[0]) {
+      if ('\t' == firstChar) {
         // Expand tabs to the proper width
         wordLen = 8 - (7 & column);
         width = aTs.mSpaceWidth * wordLen;
+
+        // Because we have to expand the tab when rendering consider that
+        // a transformation of the text
+        mState |= TEXT_WAS_TRANSFORMED;
       }
       else if (textRun.IsBuffering()) {
         // Add a whitespace segment
@@ -3511,7 +3620,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       // See if the first thing in the section of text is a
       // non-breaking space (html nbsp entity). If it is then make
       // note of that fact for the line layout logic.
-      if (aTextData.mWrapping && firstThing && (bp[0] == ' ')) {
+      if (aTextData.mWrapping && firstThing && (firstChar == ' ')) {
         textStartsWithNBSP = PR_TRUE;
       }
       aTextData.mSkipWhitespace = PR_FALSE;
@@ -3519,7 +3628,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       if (aTextData.mFirstLetterOK) {
         // XXX need a lookup function here; plus look ahead using the
         // text-runs
-        if ((bp[0] == '\'') || (bp[0] == '\"')) {
+        if ((firstChar == '\'') || (firstChar == '\"')) {
           wordLen = 2;
           contentLen = 2;
         }
@@ -3543,11 +3652,15 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         }
         else {
           if (aTs.mSmallCaps) {
-            MeasureSmallCapsText(aReflowState, aTs, bp, wordLen, &width);
+            MeasureSmallCapsText(aReflowState, aTs, bp2, wordLen, &width);
           }
           else {
             // Measure just the one word
-            aReflowState.rendContext->GetWidth(bp, wordLen, width);
+            if (aTx.TransformedTextIsAscii()) {
+              aReflowState.rendContext->GetWidth(bp1, wordLen, width);
+            } else {
+              aReflowState.rendContext->GetWidth(bp2, wordLen, width);
+            }
             if (aTs.mLetterSpacing) {
               width += aTs.mLetterSpacing * wordLen;
             }
@@ -3594,10 +3707,17 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   MeasureTextRun:
 #ifdef _WIN32
     PRInt32 numCharsFit;
-    aReflowState.rendContext->GetWidth(aTx.GetWordBuffer(), textRun.mTotalNumChars,
-                                       maxWidth - aTextData.mX,
-                                       textRun.mBreaks, textRun.mNumSegments,
-                                       width, numCharsFit);
+    if (aTx.TransformedTextIsAscii()) {
+      aReflowState.rendContext->GetWidth((char*)aTx.GetWordBuffer(), textRun.mTotalNumChars,
+                                         maxWidth - aTextData.mX,
+                                         textRun.mBreaks, textRun.mNumSegments,
+                                         width, numCharsFit);
+    } else {
+      aReflowState.rendContext->GetWidth(aTx.GetWordBuffer(), textRun.mTotalNumChars,
+                                         maxWidth - aTextData.mX,
+                                         textRun.mBreaks, textRun.mNumSegments,
+                                         width, numCharsFit);
+    }
     // See how much of the text fit
     if ((0 != aTextData.mX) && aTextData.mWrapping && (aTextData.mX + width > maxWidth)) {
       // None of the text fits
@@ -3634,7 +3754,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
       break;
     }
 
-    if (nsnull == bp) {
+    if (nsnull == bp2) {
       // No more text so we're all finished. Advance the offset in case the last
       // call to GetNextWord() discarded characters
       aTextData.mOffset += contentLen;
@@ -3712,6 +3832,13 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
           PRUnichar* pWordBuf = lastWordPtr;
           PRUint32   wordBufLen = aTx.GetWordBufferLength() -
                                   (lastWordPtr - aTx.GetWordBuffer());
+
+          if (aTx.TransformedTextIsAscii()) {
+            // The text transform buffer contains ascii characters, so
+            // transform it to Unicode
+            NS_ASSERTION(wordBufLen >= PRUint32(lastWordLen), "no room to transform in place");
+            TransformTextToUnicode((char*)lastWordPtr, lastWordLen);
+          }
 
           // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
@@ -3897,7 +4024,10 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
-  nsresult rv = tx.Init(this, mContent, startingOffset);
+  // Keep the text in ascii if possible. Note that if we're measuring small
+  // caps text then transform to Unicode because the helper function only
+  // accepts Unicode text
+  nsresult rv = tx.Init(this, mContent, startingOffset, !ts.mSmallCaps);
   if (NS_OK != rv) {
     return rv;
   }
@@ -3967,7 +4097,6 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   if (tx.HasMultibyte()) {
     mState |= TEXT_HAS_MULTIBYTE;
   }
-
   mState &= ~TEXT_TRIMMED_WS;
 
   // Setup metrics for caller; store final max-element-size information
@@ -4212,10 +4341,10 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
 {
   nsTextTransformer tx(aLineBreaker, nsnull);
   tx.Init(aTextFrame, aContent, 0);
-  PRBool isWhitespace;
+  PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;
   PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen,
-                                 &isWhitespace);
+                                 &isWhitespace, &wasTransformed);
   if (!bp || isWhitespace) {
     // Don't bother measuring nothing
     *aStop = PR_TRUE;

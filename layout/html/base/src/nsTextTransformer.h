@@ -67,9 +67,10 @@ public:
  * <LI>capitalization
  * <LI>lowercasing
  * <LI>uppercasing
- * <LI>ascii to Unicode
+ * <LI>ascii to Unicode (if requested)
  * <LI>discarded characters
  * <LI>conversion of &nbsp that is not part of whitespace into a space
+ * <LI>tab and newline characters to space (normal text only)
  * </UL>
  *
  * Note that no transformations are applied that would impact word
@@ -90,10 +91,19 @@ public:
   /**
    * Initialize the text transform. Use GetNextWord() and GetPrevWord()
    * to iterate the text
+   *
+   * The default is to transform all text to Unicode; however, you can
+   * specify that the text should be left as ascii if possible. Note that
+   * we don't step the text down from Unicode to ascii (even if it doesn't
+   * contain multibyte characters) so this only happens for text fragments
+   * that contain 1-byte text.
+   * XXX This is currently not implemented for GetPreviousWord()
+   * @see TransformedTextIsAscii()
    */
   nsresult Init(nsIFrame* aFrame,
                 nsIContent* aContent,
-                PRInt32 aStartingOffset);
+                PRInt32 aStartingOffset,
+                PRBool aLeaveAsAscii = PR_FALSE);
 
   PRInt32 GetContentLength() const {
     return mFrag ? mFrag->GetLength() : 0;
@@ -103,9 +113,10 @@ public:
    * Iterates the next word in the text fragment.
    *
    * Returns a pointer to the word, the number of characters in the word, the
-   * content length of the word, and whether it is whitespace. The content
-   * length can be greater than the word length if whitespace compression
-   * occured or if characters were discarded
+   * content length of the word, whether it is whitespace, and whether the
+   * text was transformed (any of the transformations listed above). The content
+   * length can be greater than the word length if whitespace compression occured
+   * or if characters were discarded
    *
    * The default behavior is to reset the transform buffer to the beginning,
    * but you can choose to not reste it and buffer across multiple words
@@ -114,6 +125,7 @@ public:
                          PRInt32* aWordLenResult,
                          PRInt32* aContentLenResult,
                          PRBool* aIsWhitespaceResult,
+                         PRBool* aWasTransformed,
                          PRBool aResetTransformBuf = PR_TRUE,
                          PRBool aForLineBreak = PR_TRUE);
 
@@ -123,8 +135,20 @@ public:
                          PRBool* aIsWhitespaceResult,
                          PRBool aForLineBreak = PR_TRUE);
 
+  /**
+   * Returns PR_TRUE if any of the characters are multibyte (greater
+   * than 127)
+   */
   PRBool HasMultibyte() const {
     return mHasMultibyte;
+  }
+
+  /**
+   * Returns PR_TRUE if the text in the transform bufer is ascii (i.e., it
+   * doesn't contain any multibyte characters)
+   */
+  PRBool TransformedTextIsAscii() const {
+    return mTransformedTextIsAscii;
   }
 
   PRUnichar* GetWordBuffer() {
@@ -136,17 +160,21 @@ public:
   }
 
   static nsresult Initialize();
-
   static void Shutdown();
 
 protected:
   // Helper methods for GetNextWord (F == forwards)
   PRInt32 ScanNormalWhiteSpace_F();
-  PRInt32 ScanNormalAsciiText_F(PRInt32* aWordLen);
-  PRInt32 ScanNormalUnicodeText_F(PRBool aForLineBreak, PRInt32* aWordLen);
+  PRInt32 ScanNormalAsciiText_F(PRInt32* aWordLen,
+                                PRBool*  aWasTransformed);
+  PRInt32 ScanNormalUnicodeText_F(PRBool aForLineBreak,
+                                  PRInt32* aWordLen,
+                                  PRBool*  aWasTransformed);
   PRInt32 ScanPreWrapWhiteSpace_F(PRInt32* aWordLen);
-  PRInt32 ScanPreAsciiData_F(PRInt32* aWordLen);
-  PRInt32 ScanPreData_F(PRInt32* aWordLen);
+  PRInt32 ScanPreAsciiData_F(PRInt32* aWordLen,
+                             PRBool*  aWasTransformed);
+  PRInt32 ScanPreData_F(PRInt32* aWordLen,
+                        PRBool*  aWasTransformed);
 
   // Helper methods for GetPrevWord (B == backwards)
   PRInt32 ScanNormalWhiteSpace_B();
@@ -155,18 +183,15 @@ protected:
   PRInt32 ScanPreWrapWhiteSpace_B(PRInt32* aWordLen);
   PRInt32 ScanPreData_B(PRInt32* aWordLen);
 
-  // Set to true if at any point during GetNextWord or GetPrevWord we
-  // run across a multibyte (> 127) unicode character.
-  PRBool mHasMultibyte;
-
+  // Converts the current text in the transform buffer from ascii to
+  // Unicode
+  void ConvertTransformedTextToUnicode();
+  
   // The text fragment that we are looking at
   const nsTextFragment* mFrag;
 
   // Our current offset into the text fragment
   PRInt32 mOffset;
-
-  // The frame's text-transform state
-  PRUint8 mTextTransform;
 
   // The frame's white-space mode we are using to process text
   enum {
@@ -186,6 +211,20 @@ protected:
   // Our current position within the buffer. Used when iterating the next
   // word, because we may be requested to buffer across multiple words
   PRInt32 mBufferPos;
+  
+  // Indicates whether the transformed text should be left as ascii
+  // if possible
+  PRPackedBool mLeaveAsAscii;
+
+  // Set to true if at any point during GetNextWord or GetPrevWord we
+  // run across a multibyte (> 127) unicode character.
+  PRPackedBool mHasMultibyte;
+  
+  // Set to true if the text in the transform buffer is ascii
+  PRPackedBool mTransformedTextIsAscii;
+
+  // The frame's text-transform state
+  PRUint8 mTextTransform;
 
 #ifdef DEBUG
   static void SelfTest(nsILineBreaker* aLineBreaker,
