@@ -290,14 +290,6 @@ public:
     //-------------------------------------/
 
     /**
-     * Returns the parent of the given Node. This method is needed 
-     * beacuse with the DOM some nodes such as Attr do not have parents
-     * @param node the Node to find the parent of
-     * @return the parent of the given Node, or null if not found
-    **/
-    virtual Node* getParentNode(Node* node);
-
-    /**
      * Returns the value of a given variable binding within the current scope
      * @param the name to which the desired variable value has been bound
      * @return the ExprResult which has been bound to the variable with
