@@ -113,7 +113,7 @@ ifdef MOZ_MATHML
 INCLUDES += -I$(srcdir)/../mathml/content/src
 endif
 
-$(BUILD_DATE):	FORCE
+$(BUILD_DATE):
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
 
