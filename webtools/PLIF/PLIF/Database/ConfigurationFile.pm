@@ -147,12 +147,17 @@ sub DESTROY {
 sub doRead {
     my $self = shift;
     my($filename) = @_;
-    local *FILE; # ugh
-    $self->assert(open(FILE, "<$filename"), 1, "Could not open configuration file '$filename' for reading: $!");
-    local $/ = undef; # slurp entire file (no record delimiter)
-    my $settings = <FILE>;
-    $self->assert(close(FILE), 3, "Could not close configuration file '$filename': $!");
-    return $settings;
+    if (-e $filename) {
+        local *FILE; # ugh
+        $self->assert(open(FILE, "<$filename"), 1, "Could not open configuration file '$filename' for reading: $!");
+        local $/ = undef; # slurp entire file (no record delimiter)
+        my $settings = <FILE>;
+        $self->assert(close(FILE), 3, "Could not close configuration file '$filename': $!");
+        return $settings;
+    } else {
+        # file doesn't exist, so no configuration to read in
+        return '';
+    }
 }
 
 sub doWrite {
