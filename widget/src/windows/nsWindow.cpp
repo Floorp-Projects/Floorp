@@ -27,6 +27,9 @@
 #include "nsTransform2D.h"
 #include "nsStringUtil.h"
 #include <windows.h>
+//#include <winuser.h>
+#include <zmouse.h>
+//#include "sysmets.h"
 #include "nsGfxCIID.h"
 #include "resource.h"
 #include <commctrl.h>
@@ -85,6 +88,9 @@ nsWindow::nsWindow() : nsBaseWidget()
     mMenuBar            = nsnull;
     mMenuCmdId          = 0;
 
+    mHitMenu            = nsnull;
+    mHitSubMenus        = new nsVoidArray();
+    mVScrollbar         = nsnull;
 }
 
 
@@ -110,6 +116,8 @@ nsWindow::~nsWindow()
   if (NULL != mWnd) {
     Destroy();
   }
+
+  NS_IF_RELEASE(mHitMenu); // this should always have already been freed by the deselect
 
   //XXX Temporary: Should not be caching the font
   delete mFont;
@@ -1291,7 +1299,36 @@ void nsWindow::SetUpForPaint(HDC aHDC)
 }
 
 //-------------------------------------------------------------------------
-nsIMenuItem * FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
+nsIMenuItem * nsWindow::FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
+{
+  PRUint32 i, count;
+  aMenu->GetItemCount(count);
+  for (i=0;i<count;i++) {
+    nsISupports * item;
+    nsIMenuItem * menuItem;
+    nsIMenu     * menu;
+
+    aMenu->GetItemAt(i, item);
+    if (NS_OK == item->QueryInterface(kIMenuItemIID, (void **)&menuItem)) {
+      if (((nsMenuItem *)menuItem)->GetCmdId() == (PRInt32)aId) {
+        NS_RELEASE(item);
+        return menuItem;
+      }
+    } else if (NS_OK == item->QueryInterface(kIMenuIID, (void **)&menu)) {
+      nsIMenuItem * fndItem = FindMenuItem(menu, aId);
+      NS_RELEASE(menu);
+      if (nsnull != fndItem) {
+        NS_RELEASE(item);
+        return fndItem;
+      }
+    }
+    NS_RELEASE(item);
+  }
+  return nsnull;
+}
+
+//-------------------------------------------------------------------------
+static nsIMenuItem * FindMenuChild(nsIMenu * aMenu, PRInt32 aId)
 {
   PRUint32 i, count;
   aMenu->GetItemCount(count);
@@ -1299,22 +1336,27 @@ nsIMenuItem * FindMenuItem(nsIMenu * aMenu, PRUint32 aId)
     nsISupports * item;
     aMenu->GetItemAt(i, item);
     nsIMenuItem * menuItem;
-    nsIMenu     * menu;
     if (NS_OK == item->QueryInterface(kIMenuItemIID, (void **)&menuItem)) {
       if (((nsMenuItem *)menuItem)->GetCmdId() == (PRInt32)aId) {
+        NS_RELEASE(item);
         return menuItem;
       }
-    } else if (NS_OK == item->QueryInterface(kIMenuIID, (void **)&menu)) {
-      return FindMenuItem(menu, aId);
     }
+    NS_RELEASE(item);
   }
   return nsnull;
 }
 
 
 //-------------------------------------------------------------------------
-nsIMenu * FindMenu(nsIMenu * aMenu, HMENU aNativeMenu)
+nsIMenu * nsWindow::FindMenu(nsIMenu * aMenu, HMENU aNativeMenu, PRInt32 &aDepth)
 {
+  if (aNativeMenu == ((nsMenu *)aMenu)->GetNativeMenu()) {
+    NS_ADDREF(aMenu);
+    return aMenu;
+  }
+
+  aDepth++;
   PRUint32 i, count;
   aMenu->GetItemCount(count);
   for (i=0;i<count;i++) {
@@ -1326,13 +1368,253 @@ nsIMenu * FindMenu(nsIMenu * aMenu, HMENU aNativeMenu)
       if (nativeMenu == aNativeMenu) {
         return menu;
       } else {
-        return FindMenu(menu, aNativeMenu);
+        nsIMenu * fndMenu = FindMenu(menu, aNativeMenu, aDepth);
+        if (fndMenu) {
+          NS_RELEASE(item);
+          NS_RELEASE(menu);
+          return fndMenu;
+        }
       }
+      NS_RELEASE(menu);
     }
+    NS_RELEASE(item);
   }
   return nsnull;
 }
 
+//-------------------------------------------------------------------------
+static void AdjustMenus(nsIMenu * aCurrentMenu, nsIMenu * aNewMenu, nsMenuEvent & aEvent) 
+{
+  if (nsnull != aCurrentMenu) {
+    nsIMenuListener * listener;
+    if (NS_OK == aCurrentMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+      listener->MenuDeselected(aEvent);
+      NS_RELEASE(listener);
+    }
+  }
+
+  if (nsnull != aNewMenu)  {
+    nsIMenuListener * listener;
+    if (NS_OK == aNewMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+      listener->MenuSelected(aEvent);
+      NS_RELEASE(listener);
+    }
+  }
+}
+
+LONG baseTime = 0;
+
+//nsIMenu * mLastHitMenu = nsnull;
+
+//-------------------------------------------------------------------------
+nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aFlags, UINT aCommand)
+{
+  nsMenuEvent event;
+  event.mCommand = aCommand;
+  event.eventStructType = NS_MENU_EVENT;
+  InitEvent(event, NS_MENU_SELECTED);
+
+  if (baseTime == 0) {
+    baseTime = ::GetMessageTime();
+  }
+
+  // The MF_POPUP flag tells us if we are a menu item or a menu
+  // the uItems is either the command ID of the menu item or 
+  // the position of the menu as a child pf its parent
+  PRBool isMenuItem = !(aFlags & MF_POPUP);
+  /*printf("\n*********native 0x%x  ", aNativeMenu);
+  if (isMenuItem) {
+    printf("isItem %s  item %d  ", (isMenuItem?"True":"False"), aItemNum);
+  } else {
+    printf("isItem %s  cmd  %d  ", (isMenuItem?"True":"False"), aItemNum);
+  }
+  printf("TIME %d\n", (::GetMessageTime()-baseTime)/100);
+  */
+
+  // uItem is the position of the item that was clicked
+  // clickedMenu is a handle to the menu that was clicked
+  UINT  uItem       = aItemNum;
+  HMENU clickedMenu = aNativeMenu;
+
+  // if clickedMenu is NULL then the menu is being deselected
+  if (!clickedMenu) {
+    printf("///////////// Menu is NULL!\n");
+    // check to make sure something had been selected
+    AdjustMenus(mHitMenu, nsnull, event);
+    NS_RELEASE(mHitMenu);
+    // Clear All SubMenu items
+    while (mHitSubMenus->Count() > 0) {
+      PRUint32 inx = mHitSubMenus->Count()-1;
+      nsIMenu * menu = (nsIMenu *)mHitSubMenus->ElementAt(inx);
+      AdjustMenus(menu, nsnull, event);
+      NS_RELEASE(menu);
+      mHitSubMenus->RemoveElementAt(inx);
+    }
+    return NS_OK;
+  } else { // The menu is being selected
+    void * voidData;
+    mMenuBar->GetNativeData(voidData);
+    HMENU nativeMenuBar = (HMENU)voidData;
+
+    // first check to see if it is a member of the menubar
+    nsIMenu * hitMenu = nsnull;
+    if (clickedMenu == nativeMenuBar) {
+      mMenuBar->GetMenuAt(uItem, hitMenu);
+      if (mHitMenu != hitMenu) {
+        AdjustMenus(mHitMenu, hitMenu, event);
+        NS_IF_RELEASE(mHitMenu);
+        mHitMenu = hitMenu;
+      } else {
+        NS_IF_RELEASE(hitMenu);
+      }
+    } else {
+      // At this point we know we are inside a menu
+
+      /*printf("===================\n");
+      for (int inx=0;inx<mHitSubMenus->Count();inx++) {
+        nsIMenu * mm = (nsIMenu *)mHitSubMenus->ElementAt(inx);
+        nsString name;
+        mm->GetLabel(name);
+        for (int k=0;k<inx;k++) {
+          printf("  ");
+        }
+        printf("[%s] \n", name.ToNewCString());
+      }
+      printf("===================\n");
+      */
+
+      // Find the menu we are in (the parent menu)
+      nsIMenu * parentMenu = nsnull;
+      PRInt32 fndDepth = 0;
+      PRUint32 i, count;
+      mMenuBar->GetMenuCount(count);
+      for (i=0;i<count;i++) {
+        nsIMenu * menu;
+        mMenuBar->GetMenuAt(i, menu);
+        PRInt32 depth = 0;
+        parentMenu = FindMenu(menu, clickedMenu, depth);
+        if (parentMenu) {
+          //nsString name;
+          //parentMenu->GetLabel(name);
+          //printf("Found menu [%s] depth %d\n", name.ToNewCString(), depth);
+          fndDepth = depth;
+          break;
+        }
+        NS_RELEASE(menu);
+      }
+
+      if (nsnull != parentMenu) {
+
+        // Sometimes an event comes through for a menu that is being popup down
+        // So it its depth is great then the current hit list count it already gone.
+        if (fndDepth > mHitSubMenus->Count()) {
+          //printf("Depth > Count, bailing out....\n");
+          NS_RELEASE(parentMenu);
+          return NS_OK;
+        }
+
+        nsIMenu * newMenu  = nsnull;
+
+        // Skip if it is a menu item, otherwise, we get the menu by position
+        if (!isMenuItem) {
+          printf("Getting submenu by position %d from parentMenu\n", uItem);
+          nsISupports * item;
+          parentMenu->GetItemAt((PRUint32)uItem, item);
+          if (NS_OK != item->QueryInterface(kIMenuIID, (void **)&newMenu)) {
+            printf("Item was not a menu! What are we doing here? Return early....\n");
+            return NS_ERROR_FAILURE;
+          }
+        }
+
+        // Figure out if this new menu is in the list of popup'ed menus
+        PRBool newFound = PR_FALSE;
+        PRInt32 newLevel = 0;
+        for (newLevel=0;newLevel<mHitSubMenus->Count();newLevel++) {
+          if (newMenu == (nsIMenu *)mHitSubMenus->ElementAt(newLevel)) {
+            newFound = PR_TRUE;
+            break;
+          }
+        }
+        //printf("New Item Found %s in hit listlevel %d\n", (newFound?"Yes":"No"), newLevel);
+
+        // Figure out if the parent menu is in the list of popup'ed menus
+        PRBool found = PR_FALSE;
+        PRInt32 level = 0;
+        for (level=0;level<mHitSubMenus->Count();level++) {
+          if (parentMenu == (nsIMenu *)mHitSubMenus->ElementAt(level)) {
+            found = PR_TRUE;
+            break;
+          }
+        }
+        //printf("Found menu %s in hit listlevel %d\n", (found?"Yes":"No"), level);
+
+        // So now figure out were we are compared to the hit list depth
+        // we figure out how many items are open below
+        //
+        // If the parent was found then we use it
+        // if the parent was NOT found this means we are at the very first level (menu from the menubar)
+        // Windows will send an event for a parent AND child that is already in the hit list
+        // and we think we should be popping it down. So we check to see if the 
+        // new menu is already in the tree so it doesn't get removed and then added.
+        PRInt32 numToRemove = 0;
+        if (found) {
+          numToRemove = mHitSubMenus->Count() - level - 1;
+        } else {
+          // This means we got a menu event for a menubar menu
+          if (newFound) { // newFound checks to see if the new menu to be added is already in the hit list
+            numToRemove = mHitSubMenus->Count() - newLevel - 1;
+          } else {
+            numToRemove = mHitSubMenus->Count();
+          }
+        }
+        //printf("Rmv %d  Found is Last %s  \n", numToRemove, (parentMenu == (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1)?"Yes":"No"));
+
+        // If we are to remove 1 item && the new menu to be added is the 
+        // same as the one we would be removing, then don't remove it.
+        if (numToRemove == 1 && newMenu == (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1)) {
+          numToRemove = 0;
+        }
+        //printf("numToRemove %d\n", numToRemove);
+
+        // Now loop thru and removing the menu from thre list
+        PRInt32 ii;
+        for (ii=0;ii<numToRemove;ii++) {
+          nsIMenu * m = (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1 );
+          AdjustMenus(m, nsnull, event);
+          nsString name;
+          m->GetLabel(name);
+          //printf("Removing [%s]\n", name.ToNewCString());
+          NS_RELEASE(m);
+          mHitSubMenus->RemoveElementAt(mHitSubMenus->Count()-1);
+        }
+ 
+        // At this point we bail if we are a menu item
+        if (isMenuItem) {
+          return NS_OK;
+        }
+
+        // Here we know we have a menu, check one last time to see 
+        // if the new one is the last one in the list
+        // Add it if it isn't or skip adding it
+        nsString name;
+        newMenu->GetLabel(name);
+        if (newMenu != (nsIMenu *)mHitSubMenus->ElementAt(mHitSubMenus->Count()-1)) {
+          mHitSubMenus->AppendElement(newMenu);
+          NS_ADDREF(newMenu);
+          AdjustMenus(nsnull, newMenu, event);
+          //printf("Adding [%s]\n", name.ToNewCString());  
+        } else { // skip adding it
+          //printf("Skipping Adding [%s]\n", name.ToNewCString());      
+        }
+
+        NS_RELEASE(parentMenu);
+      } else {
+        printf("no menu was found. This is bad.\n");
+      }
+    }
+  }  
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1341,98 +1623,16 @@ nsIMenu * FindMenu(nsIMenu * aMenu, HMENU aNativeMenu)
 //-------------------------------------------------------------------------
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
+    static BOOL firstTime = TRUE;                // for mouse wheel logic
+    static int  iDeltaPerLine, iAccumDelta ;     // for mouse wheel logic
+    ULONG       ulScrollLines ;                  // for mouse wheel logic
+
     PRBool        result = PR_FALSE; // call the default nsWindow proc
     nsPaletteInfo palInfo;
-    static nsIMenu * mHitMenu = nsnull;
-
     *aRetValue = 0;
-//printf("msg: %d\n", msg);
+
     switch (msg) {
 
-#if 0
-    case WM_INITMENU: {
-          int x = 0;
-          printf("WM_INITMENU\n");
-          } break;
-
-        case WM_INITMENUPOPUP: {
-          int x = 0;
-          printf("WM_INITMENUPOPUP\n");
-          } break;
-
-        case WM_MENUSELECT: {
-          //printf("WM_MENUSELECT %d\n", ::GetMessageTime());
-          UINT fuFlags = (UINT) HIWORD(wParam);
-          /*if (fuFlags & MF_HILITE) {
-            printf("  MF_HILITE\n");
-          }
-          if (fuFlags & MF_MOUSESELECT) {
-            printf("  MF_MOUSESELECT\n");
-          }
-          if (fuFlags & MF_POPUP) {
-            printf("  MF_POPUP\n");
-          }*/
-          if (mMenuBar) {
-            nsMenuEvent event;
-            event.mCommand = LOWORD(wParam);
-            event.eventStructType = NS_MENU_EVENT;
-            InitEvent(event, NS_MENU_SELECTED);
-
-            UINT  uItem       = (UINT) LOWORD(wParam);
-            HMENU clickedMenu = (HMENU)lParam;
-            if (!clickedMenu) {
-              if (mHitMenu != nsnull) {
-                nsIMenuListener * listener;
-                if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
-                  listener->MenuDeselected(event);
-                  NS_RELEASE(listener);
-                }
-                NS_RELEASE(mHitMenu);
-                mHitMenu = nsnull;
-              }
-              int x = 0;
-            } else {
-              void * voidData;
-              mMenuBar->GetNativeData(voidData);
-              HMENU nativeMenuBar = (HMENU)voidData;
-
-              nsIMenu * hitMenu = nsnull;
-              if (clickedMenu == nativeMenuBar) {
-                mMenuBar->GetMenuAt(uItem, hitMenu);
-              } else {
-                PRUint32 i, count;
-                mMenuBar->GetMenuCount(count);
-                for (i=0;i<count;i++) {
-                  nsIMenu * menu;
-                  mMenuBar->GetMenuAt(i, menu);
-                  hitMenu = FindMenu(menu, (HMENU)lParam);
-                  if (hitMenu) {
-                    break;
-                  }
-                }
-              }
-              if (hitMenu) {
-                if (nsnull != mHitMenu) {
-                  nsIMenuListener * listener;
-                  if (NS_OK == mHitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
-                    listener->MenuDeselected(event);
-                    NS_RELEASE(listener);
-                  }
-                }
-                mHitMenu = hitMenu;
-                NS_ADDREF(mHitMenu);
-
-                nsIMenuListener * listener;
-                if (NS_OK == hitMenu->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
-                  listener->MenuSelected(event);
-                  NS_RELEASE(listener);
-                }
-                //NS_RELEASE(hitMenu);
-              }
-            }
-          }
-          } break;
-#endif
         case WM_COMMAND: {
           WORD wNotifyCode = HIWORD(wParam); // notification code 
           if (wNotifyCode == 0) { // Menu selection
@@ -1456,6 +1656,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                   }
                   NS_RELEASE(menuItem);
                 }
+                NS_RELEASE(menu);
               }
             }
             NS_RELEASE(event.widget);
@@ -1586,7 +1787,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_HSCROLL:
-        case WM_VSCROLL:
+        case WM_VSCROLL: 
 	          // check for the incoming nsWindow handle to be null in which case
 	          // we assume the message is coming from a horizontal scrollbar inside
 	          // a listbox and we don't bother processing it (well, we don't have to)
@@ -1686,6 +1887,70 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
             break;
         }
+#if 0 // these are needed for now
+        case WM_INITMENU: {
+          printf("WM_INITMENU\n");
+          } break;
+
+        case WM_INITMENUPOPUP: {
+          printf("WM_INITMENUPOPUP\n");
+          } break;
+#endif
+
+        case WM_MENUSELECT: 
+          if (mMenuBar) {
+            MenuHasBeenSelected((HMENU)lParam, (UINT)LOWORD(wParam), (UINT)HIWORD(wParam), (UINT) LOWORD(wParam));
+          }
+          break;
+
+        case WM_SETTINGCHANGE:
+          firstTime = TRUE;
+          // Fall through
+        case WM_MOUSEWHEEL: {
+         if (firstTime) {
+           firstTime = FALSE;
+            //printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ WM_SETTINGCHANGE\n");
+            SystemParametersInfo (104, 0, &ulScrollLines, 0) ;
+            //SystemParametersInfo (SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0) ;
+          
+            // ulScrollLines usually equals 3 or 0 (for no scrolling)
+            // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
+
+            if (ulScrollLines)
+              iDeltaPerLine = WHEEL_DELTA / ulScrollLines ;
+            else
+              iDeltaPerLine = 0 ;
+            //printf("ulScrollLines %d  iDeltaPerLine %d\n", ulScrollLines, iDeltaPerLine);
+
+            if (msg == WM_SETTINGCHANGE) {
+              return 0;
+            }
+         }
+         HWND scrollbar = NULL;
+         if (nsnull != mVScrollbar) {
+           scrollbar = (HWND)mVScrollbar->GetNativeData(NS_NATIVE_WINDOW);
+         }
+         if (scrollbar) {
+            if (iDeltaPerLine == 0)
+              break ;
+
+            iAccumDelta += (short) HIWORD (wParam) ;     // 120 or -120
+
+            while (iAccumDelta >= iDeltaPerLine) {    
+              //printf("iAccumDelta %d\n", iAccumDelta);
+              SendMessage (mWnd, WM_VSCROLL, SB_LINEUP, (LONG)scrollbar) ;
+              iAccumDelta -= iDeltaPerLine ;
+            }
+
+            while (iAccumDelta <= -iDeltaPerLine) {
+              //printf("iAccumDelta %d\n", iAccumDelta);
+              SendMessage (mWnd, WM_VSCROLL, SB_LINEDOWN, (LONG)scrollbar) ;
+              iAccumDelta += iDeltaPerLine ;
+            }
+         }
+            return 0 ;
+      } break;
+
 
         case WM_PALETTECHANGED:
             if ((HWND)wParam == mWnd) {
