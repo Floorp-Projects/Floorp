@@ -1103,7 +1103,9 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
   nsCOMPtr<nsIAtom> tag;
   currentElement = numChildren;
   PRUint32 childIndex;
-  for (childIndex = numChildren - 1; childIndex >= 0; --childIndex) {
+  // childIndex is unsigned, so childIndex >= 0 would always test true
+  for (childIndex = numChildren; childIndex > 0; ) {
+    --childIndex;
     nsIContent *child = container->GetChildAt(childIndex);
 
     if (child->IsContentOfType(nsIContent::eXUL)) {
@@ -1162,8 +1164,10 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
                      sizeof(contentSortInfo*), testSortCallback, (void*)sortInfo);
     }
 
-    for (childIndex = numChildren - 1; childIndex >= 0; childIndex--)
+    // childIndex is unsigned, so childIndex >= 0 would always test true
+    for (childIndex = numChildren; childIndex > 0; )
     {
+      --childIndex;
       nsIContent *child = container->GetChildAt(childIndex);
 
       if (child->IsContentOfType(nsIContent::eXUL)) {
