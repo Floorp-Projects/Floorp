@@ -556,8 +556,16 @@ JavaObject_setAttributes(JSContext *cx, JSObject *obj, jsid id,
 static JSBool
 JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-    JS_ReportError(cx, "Properties of JavaObject objects may not be deleted");
-    return JS_FALSE;
+    JSVersion version = JS_GetVersion(cx);
+    
+    if (!JSVERSION_IS_ECMA(version)) {
+        JS_ReportError(cx, "Properties of JavaObject objects may not be deleted");
+        return JS_FALSE;
+    } else {
+        /* Attempts to delete permanent properties are silently ignored
+           by ECMAScript. */
+        return JS_TRUE;
+    }
 }
 
 static JSBool
