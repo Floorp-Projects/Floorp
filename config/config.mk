@@ -488,7 +488,6 @@ endif
 endif # ! USE_AUTOCONF
 
 ifdef MOZ_MEDIUM
-MOZ_MAIL_COMPOSE	= 1
 ifndef MODULAR_NETLIB
 MOZ_SINGLESIGNON	= 1
 endif
