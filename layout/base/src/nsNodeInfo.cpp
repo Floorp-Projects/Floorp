@@ -108,7 +108,7 @@ nsNodeInfo::GetQualifiedName(nsString& aQualifiedName)
   if (mInner.mPrefix) {
     mInner.mPrefix->ToString(aQualifiedName);
 
-    aQualifiedName.Append(':');
+    aQualifiedName.Append(PRUnichar(':'));
   }
 
   nsAutoString tmp;
