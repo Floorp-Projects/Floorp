@@ -55,6 +55,10 @@ public:
                       const nsReflowState& aReflowState,
                       nsReflowMetrics& aDesiredSize);
 
+  PRBool GetLoadImageFailed() {
+    return mLoadImageFailed;
+  }
+
 protected:
   nsIFrameImageLoader* mImageLoader;
   PRPackedBool mLoadImageFailed;
