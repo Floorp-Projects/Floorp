@@ -55,7 +55,7 @@ nsHTTPRequestObserver::OnStopBinding(nsISupports* i_pContext,
     {
         //Prepare to receive the response!
         nsHTTPResponseListener* pListener = new nsHTTPResponseListener();
-        m_pTransport->AsyncRead(nsnull, nsnull /*gEventQ */, pListener);
+        m_pTransport->AsyncRead(0, -1, nsnull, nsnull /*gEventQ */, pListener);
         //TODO check this portion here...
         return pListener ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
