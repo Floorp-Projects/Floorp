@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentObserver.h"
