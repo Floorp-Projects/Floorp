@@ -794,8 +794,10 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
   default:
       if (smtpServer)
       {
+        // only forget the password if we didn't get here from the redirection.
+        if (mLogonCookie.IsEmpty())
           smtpServer->ForgetPassword();
-          m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
+        m_nextState = SMTP_SEND_AUTH_LOGIN_USERNAME;
       }
       else
       {
@@ -1557,9 +1559,12 @@ nsresult nsSmtpProtocol::RequestOverrideInfo(nsISmtpServer * aSmtpServer)
 	{
 		nsXPIDLCString password;
 		nsXPIDLCString userName;
+    PRBool requiresPassword = PR_TRUE;
 
 		aSmtpServer->GetUsername(getter_Copies(userName));
-		GetPassword(getter_Copies(password));
+    m_logonRedirector->RequiresPassword(userName, &requiresPassword);
+    if (requiresPassword)
+		  GetPassword(getter_Copies(password));
 		rv = m_logonRedirector->Logon(userName, password, NS_STATIC_CAST(nsIMsgLogonRedirectionRequester *, this), nsMsgLogonRedirectionServiceIDs::Smtp);
 	}
 
