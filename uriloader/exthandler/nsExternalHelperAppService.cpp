@@ -272,7 +272,7 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
 
   nsCOMPtr<nsIRDFResource> contentTypeHandlerNodeResource;
   aRDFService->GetResource(contentTypeHandlerNodeName, getter_AddRefs(contentTypeHandlerNodeResource));
-  NS_ENSURE_TRUE(contentTypeHandlerNodeName, NS_ERROR_FAILURE); // that's not good! we have an error in the rdf file
+  NS_ENSURE_TRUE(contentTypeHandlerNodeResource, NS_ERROR_FAILURE); // that's not good! we have an error in the rdf file
 
   // now process the application handler information
   aMIMEInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
@@ -299,7 +299,7 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   nsCOMPtr<nsIRDFResource> externalAppNodeResource;
   aRDFService->GetResource(externalAppNodeName, getter_AddRefs(externalAppNodeResource));
 
-  if (externalAppNodeName)
+  if (externalAppNodeResource)
   {
     FillLiteralValueFromTarget(externalAppNodeResource, kNC_PrettyName, &stringValue);
     if (stringValue)
