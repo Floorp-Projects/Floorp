@@ -673,80 +673,84 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         return NS_OK;
     }
     
-    if ( mInstalledFiles == NULL || mInstalledFiles->GetSize() == 0 ) 
+
+    if ( mInstalledFiles == NULL || mInstalledFiles->GetSize() > 0 )
+    {
+        if ( mUninstallPackage )
+        {
+            VR_UninstallCreateNode( (char*)(const char*) nsAutoCString(mRegistryPackageName), 
+                                    (char*)(const char*) nsAutoCString(mUIName));
+        }
+
+        // Install the Component into the Version Registry.
+        if (mVersionInfo)
+        {
+            nsString versionString;
+
+            mVersionInfo->ToString(versionString);
+
+            VR_Install( (char*)(const char*)nsAutoCString(mRegistryPackageName), 
+                        nsnull,  
+                        (char*)(const char*)nsAutoCString(versionString), 
+                        PR_FALSE );
+        }
+
+        PRInt32 result;
+        nsInstallObject* ie = nsnull;
+
+        PRUint32 i=0;
+        for (i=0; i < mInstalledFiles->GetSize(); i++) 
+        {
+            ie = (nsInstallObject*)mInstalledFiles->Get(i);
+            NS_ASSERTION(ie, "NULL object in install queue!");
+            if (ie == NULL)
+                continue;
+
+            char *objString = ie->toString();
+    
+            if (mNotifier)
+                mNotifier->FinalizeProgress(nsAutoString(objString).GetUnicode(),
+                                            i, mInstalledFiles->GetSize());
+
+            if (objString)
+                delete [] objString;
+
+            result = ie->Complete();
+
+            if (result != nsInstall::SUCCESS) 
+            {
+                if ( result == REBOOT_NEEDED )
+                {
+                    rebootNeeded = PR_TRUE;
+                    result = SUCCESS;
+                }
+                else
+                {
+                    InternalAbort( result );
+                    break;
+                }
+            }
+        }
+
+        if ( result != SUCCESS )
+            *aReturn = SaveError( result );
+        else if ( rebootNeeded )
+            *aReturn = SaveError( REBOOT_NEEDED );
+
+        if (mNotifier)
+            mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+
+    } 
+    else if ( mInstalledFiles == NULL || mInstalledFiles->GetSize() == 0 ) 
     {
         // no actions queued: don't register the package version
         // and no need for user confirmation
     
-        CleanUp();
         if (mNotifier)
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
-        return NS_OK; 
     }
 
-    if ( mUninstallPackage )
-    {
-        VR_UninstallCreateNode( (char*)(const char*) nsAutoCString(mRegistryPackageName), 
-                                (char*)(const char*) nsAutoCString(mUIName));
-    }
-
-    // Install the Component into the Version Registry.
-    if (mVersionInfo)
-    {
-        nsString versionString;
-
-        mVersionInfo->ToString(versionString);
-
-        VR_Install( (char*)(const char*)nsAutoCString(mRegistryPackageName), 
-                    nsnull,  
-                    (char*)(const char*)nsAutoCString(versionString), 
-                    PR_FALSE );
-    }
-
-    PRInt32 result;
-    nsInstallObject* ie = nsnull;
-
-    PRUint32 i=0;
-    for (i=0; i < mInstalledFiles->GetSize(); i++) 
-    {
-        ie = (nsInstallObject*)mInstalledFiles->Get(i);
-        NS_ASSERTION(ie, "NULL object in install queue!");
-        if (ie == NULL)
-            continue;
-    
-        char *objString = ie->toString();
-        
-        if (mNotifier)
-            mNotifier->FinalizeProgress(nsAutoString(objString).GetUnicode(),
-                                        i, mInstalledFiles->GetSize());
-
-        if (objString)
-            delete [] objString;
-
-        result = ie->Complete();
-
-        if (result != nsInstall::SUCCESS) 
-        {
-            if ( result == REBOOT_NEEDED )
-            {
-                rebootNeeded = PR_TRUE;
-                result = SUCCESS;
-            }
-            else
-            {
-                InternalAbort( result );
-                break;
-            }
-        }
-    }
-
-    if ( result != SUCCESS )
-        *aReturn = SaveError( result );
-    else if ( rebootNeeded )
-        *aReturn = SaveError( REBOOT_NEEDED );
-
-    if (mNotifier)
-        mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+    CleanUp();
 
     return NS_OK;
 }
