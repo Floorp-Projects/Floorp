@@ -2460,19 +2460,6 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
 NS_IMETHODIMP
 nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
 {
-    static const char *const invalidReferrerSchemes[] = {
-        "chrome",
-        "resource",
-        "file",
-        "mailbox",
-        "imap",
-        "news",
-        "snews",
-        "imaps",
-        "data",
-        nsnull
-    };
-
     NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
 
     if (nsHttpHandler::get()->ReferrerLevel() < referrerType)
@@ -2480,11 +2467,11 @@ nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
 
     nsCOMPtr<nsIURI> referrer = referrerIn;
 
-    // Strip off "wyciwyg://123/" from wyciwyg referrers.
     if (referrer) {
+        // Strip off "wyciwyg://123/" from wyciwyg referrers.
+        // XXX this really belongs elsewhere since wyciwyg URLs aren't part of necko.
         PRBool isWyciwyg = PR_FALSE;
         referrer->SchemeIs("wyciwyg", &isWyciwyg);
-
         if (isWyciwyg) {
             nsCAutoString path;
             nsresult rv = referrer->GetPath(path);
@@ -2505,24 +2492,25 @@ nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
             rv = NS_NewURI(getter_AddRefs(referrer), newReferrer.get());
             if (NS_FAILED(rv)) return rv;
         }
-    }
 
-    // don't remember this referrer if it's on our black list....
-    if (referrer) {
+        // don't remember this referrer if it's not on our white list....
+        static const char *const referrerWhiteList[] = {
+            "http",
+            "https",
+            "ftp",
+            "gopher",
+            nsnull
+        };
         PRBool match = PR_FALSE;
-
-        const char *const *scheme = invalidReferrerSchemes;
+        const char *const *scheme = referrerWhiteList;
         for (; *scheme && !match; ++scheme)
             referrer->SchemeIs(*scheme, &match);
-
-        if (match)
+        if (!match)
             return NS_OK; // kick out....
-    }
 
-    // Handle secure referrals.
-    // Support referrals from a secure server if this is a secure site
-    // and the host names are the same.
-    if (referrer) {
+        // Handle secure referrals.
+        // Support referrals from a secure server if this is a secure site
+        // and the host names are the same.
         PRBool isHTTPS = PR_FALSE;
         referrer->SchemeIs("https", &isHTTPS);
         if (isHTTPS) {
@@ -2539,7 +2527,6 @@ nsHttpChannel::SetReferrer(nsIURI *referrerIn, PRUint32 referrerType)
             if ((nsCRT::strcasecmp(referrerHost.get(), host.get()) != 0) &&
                 (!nsHttpHandler::get()->SendSecureXSiteReferrer()))
                 return NS_OK;
-
         }
     }
 
