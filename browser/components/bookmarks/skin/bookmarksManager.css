@@ -4,71 +4,71 @@
 }
 
 toolbarbutton#newbookmark {
-  -moz-image-region: rect(0px, 210px, 30px, 180px);
+  -moz-image-region: rect(0px, 140px, 20px, 120px);
 }
 toolbarbutton#newbookmark:hover {
-  -moz-image-region: rect(30px, 210px, 60px, 180px);
+  -moz-image-region: rect(20px, 140px, 40px, 120px);
 }
 toolbarbutton#newbookmark[disabled="true"] {
-  -moz-image-region: rect(60px, 210px, 90px, 180px);
+  -moz-image-region: rect(40px, 140px, 60px, 120px);
 }
 
 toolbarbutton#newfolder {
-  -moz-image-region: rect(0px, 30px, 30px, 0px);
+  -moz-image-region: rect(0px, 20px, 20px, 0px);
 }
 toolbarbutton#newfolder:hover {
-  -moz-image-region: rect(30px, 30px, 60px, 0px);
+  -moz-image-region: rect(20px, 20px, 40px, 0px);
 }
 toolbarbutton#newfolder[disabled="true"] {
-  -moz-image-region: rect(60px, 30px, 90px, 0px);
+  -moz-image-region: rect(40px, 20px, 60px, 0px);
 }
 
 toolbarbutton#newseparator {
-  -moz-image-region: rect(0px, 60px, 30px, 30px);
+  -moz-image-region: rect(0px, 40px, 20px, 20px);
 }
 toolbarbutton#newseparator:hover {
-  -moz-image-region: rect(30px, 60px, 60px, 30px);
+  -moz-image-region: rect(20px, 40px, 40px, 20px);
 }
 toolbarbutton#newseparator[disabled="true"] {
-  -moz-image-region: rect(60px, 60px, 90px, 30px);
+  -moz-image-region: rect(40px, 40px, 60px, 20px);
 }
 
 toolbarbutton#moveBookmark {
-  -moz-image-region: rect(0px, 90px, 30px, 60px);
+  -moz-image-region: rect(0px, 60px, 20px, 40px);
 }
 toolbarbutton#moveBookmark:hover {
-  -moz-image-region: rect(30px, 90px, 60px, 60px);
+  -moz-image-region: rect(20px, 60px, 40px, 40px);
 }
 toolbarbutton#moveBookmark[disabled="true"] {
-  -moz-image-region: rect(60px, 90px, 90px, 60px);
+  -moz-image-region: rect(40px, 60px, 60px, 40px);
 }
 
 toolbarbutton#properties {
-  -moz-image-region: rect(0px, 120px, 30px, 90px);
+  -moz-image-region: rect(0px, 80px, 20px, 60px);
 }
 toolbarbutton#properties:hover {
-  -moz-image-region: rect(30px, 120px, 60px, 90px);
+  -moz-image-region: rect(20px, 80px, 40px, 60px);
 }
 toolbarbutton#properties[disabled="true"] {
-  -moz-image-region: rect(60px, 120px, 90px, 90px);
+  -moz-image-region: rect(40px, 80px, 60px, 60px);
 }
 
 toolbarbutton#rename {
-  -moz-image-region: rect(0px, 150px, 30px, 120px);
+  -moz-image-region: rect(0px, 100px, 20px, 80px);
 }
 toolbarbutton#rename:hover {
-  -moz-image-region: rect(30px, 150px, 60px, 120px);
+  -moz-image-region: rect(20px, 100px, 40px, 80px);
 }
 toolbarbutton#rename[disabled="true"] {
-  -moz-image-region: rect(60px, 150px, 90px, 120px);
+  -moz-image-region: rect(40px, 100px, 60px, 80px);
 }
 
 toolbarbutton#delete {
-  -moz-image-region: rect(0px, 180px, 30px, 150px);
+  -moz-image-region: rect(0px, 120px, 20px, 100px);
 }
 toolbarbutton#delete:hover {
-  -moz-image-region: rect(30px, 180px, 60px, 150px);
+  -moz-image-region: rect(20px, 120px, 40px, 100px);
 }
 toolbarbutton#delete[disabled="true"] {
-  -moz-image-region: rect(60px, 180px, 90px, 150px);
+  -moz-image-region: rect(40px, 120px, 60px, 100px);
 }
