@@ -398,7 +398,7 @@ print "</TD></TR></TABLE>\n";
 if ($use_layers || $use_dom) {
   # Write out cvs log messages as a JS variables
   # or hidden <div>'s
-  print "<SCRIPT type='application/x-javascript'><--\n" if $use_layers;
+  print qq|<SCRIPT type="application/x-javascript"><!--\n| if $use_layers;
   while (my ($revision, $junk) = each %usedlog) {
     
     # Create a safe variable name for a revision log
@@ -452,7 +452,7 @@ sub print_top {
     print "<HTML><HEAD><TITLE>CVS Blame $title_text</TITLE>";
 
     print <<__TOP__ if $use_layers;
-<SCRIPT type='application/x-javascript'><!--
+<SCRIPT type="application/x-javascript"><!--
 var event = 0;	// Nav3.0 compatibility
 document.loaded = false;
 
