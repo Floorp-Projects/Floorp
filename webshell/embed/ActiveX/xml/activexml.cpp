@@ -7,8 +7,8 @@
 
 #include "stdafx.h"
 #include "resource.h"
-#include <initguid.h>
-#include "activexml.h"
+//#include <initguid.h>
+//#include "activexml.h"
 
 #include "activexml_i.c"
 #include "XMLDocument.h"
@@ -19,9 +19,9 @@
 CComModule _Module;
 
 BEGIN_OBJECT_MAP(ObjectMap)
-OBJECT_ENTRY(CLSID_XMLDocument, CXMLDocument)
-//OBJECT_ENTRY(CLSID_XMLElement, CXMLElement)
-//OBJECT_ENTRY(CLSID_XMLElementCollection, CXMLElementCollection)
+OBJECT_ENTRY(CLSID_MozXMLDocument, CXMLDocument)
+//OBJECT_ENTRY(CLSID_MozXMLElement, CXMLElement)
+//OBJECT_ENTRY(CLSID_MozXMLElementCollection, CXMLElementCollection)
 END_OBJECT_MAP()
 
 /////////////////////////////////////////////////////////////////////////////

@@ -1,17 +1,17 @@
 HKCR
 {
-	Mozilla.XMLDocument.1 = s 'XMLDocument Class'
+	Mozilla.XMLDocument.1 = s 'Mozilla XMLDocument Class'
 	{
 		CLSID = s '{45E5B41D-2805-11D3-9425-000000000000}'
 	}
-	Mozilla.XMLDocument = s 'XMLDocument Class'
+	Mozilla.XMLDocument = s 'Mozilla XMLDocument Class'
 	{
 		CLSID = s '{45E5B41D-2805-11D3-9425-000000000000}'
 		CurVer = s 'Mozilla.XMLDocument.1'
 	}
 	NoRemove CLSID
 	{
-		ForceRemove {45E5B41D-2805-11D3-9425-000000000000} = s 'XMLDocument Class'
+		ForceRemove {45E5B41D-2805-11D3-9425-000000000000} = s 'Mozilla XMLDocument Class'
 		{
 			ProgID = s 'Mozilla.XMLDocument.1'
 			VersionIndependentProgID = s 'Mozilla.XMLDocument'

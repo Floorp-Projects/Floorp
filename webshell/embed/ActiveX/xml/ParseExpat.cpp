@@ -1,21 +1,41 @@
 #include "stdafx.h"
 
+#define XML_UNICODE
 #include "xmlparse.h"
+
+#ifdef XML_UNICODE
+#define X2OLE W2COLE
+#define X2T W2T
+#else
+#define X2OLE A2COLE
+#define X2T A2T
+#endif
+
 
 struct ParserState
 {
 	CComQIPtr<IXMLDocument, &IID_IXMLDocument> spXMLDocument;
+	CComQIPtr<IXMLElement, &IID_IXMLElement> spXMLRoot;
 	CComQIPtr<IXMLElement, &IID_IXMLElement> spXMLParent;
 };
 
-ParserState cParserState;
+static ParserState cParserState;
 
+
+// XML data handlers
 static void OnStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
 static void OnEndElement(void *userData, const XML_Char *name);
 static void OnCharacterData(void *userData, const XML_Char *s, int len);
+static void OnDefault(void *userData, const XML_Char *s, int len);
 
 
-HRESULT ParseExpat(const char *pBuffer, unsigned long cbBufSize, IXMLDocument *pDocument)
+struct ParseData
+{
+	CComQIPtr<IXMLDocument, &IID_IXMLDocument> spDocument;
+	CComQIPtr<IXMLElement, &IID_IXMLElement> spRoot;
+};
+
+HRESULT ParseExpat(const char *pBuffer, unsigned long cbBufSize, IXMLDocument *pDocument, IXMLElement **ppElement)
 {
 	if (pDocument == NULL)
 	{
@@ -26,16 +46,20 @@ HRESULT ParseExpat(const char *pBuffer, unsigned long cbBufSize, IXMLDocument *p
 	HRESULT hr = S_OK;
 
 	cParserState.spXMLDocument = pDocument;
+	pDocument->get_root(&cParserState.spXMLParent);
 
 	// Initialise the XML parser
 	XML_SetUserData(parser, &cParserState);
+
+	// Initialise the data handlers
 	XML_SetElementHandler(parser, OnStartElement, OnEndElement);
 	XML_SetCharacterDataHandler(parser, OnCharacterData);
+	XML_SetDefaultHandler(parser, OnDefault);
 
 	// Parse the data
 	if (!XML_Parse(parser, pBuffer, cbBufSize, 1))
 	{
-		/* TODO Print error message
+		/* TODO Create error code
 		   fprintf(stderr,
 			"%s at line %d\n",
 		   XML_ErrorString(XML_GetErrorCode(parser)),
@@ -46,11 +70,16 @@ HRESULT ParseExpat(const char *pBuffer, unsigned long cbBufSize, IXMLDocument *p
 
 	// Cleanup
 	XML_ParserFree(parser);
+
+	cParserState.spXMLRoot->QueryInterface(IID_IXMLElement, (void **) ppElement);
 	cParserState.spXMLDocument.Release();
 	cParserState.spXMLParent.Release();
 
 	return S_OK;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 
 void OnStartElement(void *userData, const XML_Char *name, const XML_Char **atts)
@@ -65,7 +94,7 @@ void OnStartElement(void *userData, const XML_Char *name, const XML_Char **atts)
 		// Create a new element
 		pState->spXMLDocument->createElement(
 				CComVariant(XMLELEMTYPE_ELEMENT),
-				CComVariant(A2OLE(name)),
+				CComVariant(X2OLE(name)),
 				&spXMLElement);
 
 		if (spXMLElement)
@@ -75,17 +104,40 @@ void OnStartElement(void *userData, const XML_Char *name, const XML_Char **atts)
 			{
 				const XML_Char *pszName = atts[i];
 				const XML_Char *pszValue = atts[i+1];
-				spXMLElement->setAttribute(A2OLE(pszName), CComVariant(A2OLE(pszValue)));
+				spXMLElement->setAttribute((BSTR) X2OLE(pszName), CComVariant(X2OLE(pszValue)));
 			}
 
-			// Add the element to the end of the list
-			pState->spXMLParent->addChild(spXMLElement, -1, -1);
+			if (pState->spXMLRoot == NULL)
+			{
+				pState->spXMLRoot = spXMLElement;
+			}
+			if (pState->spXMLParent)
+			{
+				// Add the element to the end of the list
+				pState->spXMLParent->addChild(spXMLElement, -1, -1);
+			}
+			pState->spXMLParent = spXMLElement;
 		}
 	}
 }
 
 
 void OnEndElement(void *userData, const XML_Char *name)
+{
+	ParserState *pState = (ParserState *) userData;
+	if (pState)
+	{
+		CComQIPtr<IXMLElement, &IID_IXMLElement> spNewParent;
+		if (pState->spXMLParent)
+		{
+			pState->spXMLParent->get_parent(&spNewParent);
+			pState->spXMLParent = spNewParent;
+		}
+	}
+}
+
+
+void OnDefault(void *userData, const XML_Char *s, int len)
 {
 }
 
