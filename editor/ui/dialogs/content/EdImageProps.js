@@ -4,6 +4,7 @@ var tagName = "img"
 var advanced = true;
 var wasEnableAll = false;
 var hasAnyChanged = false;
+var oldSourceInt = 0;
 
 // dialog initialization code
 function Startup()
@@ -134,6 +135,8 @@ function initDialog() {
   sizevalue = imageElement.getAttribute("border");
   dialog.imageborderInput.value = sizevalue;    
 
+  // force wasEnableAll to be different so everything gets updated
+  wasEnableAll = !(dialog.srcInput.value.length > 0);
   doOverallEnabling();
 }
 
@@ -172,6 +175,7 @@ function doValueChanged()
   {
     hasAnyChanged = true;
     doOverallEnabling();
+    hasAnyChanged = false;
   }
 }
 
@@ -234,6 +238,11 @@ function doOverallEnabling()
     doDimensionEnabling( canEnableAll );
   }
   
+  // handle altText and advanced button
+//  SetLabelEnabledByID( "image.altTextLabel", canEnableAll );
+  SetElementEnabledByID("image.altTextInput", canEnableAll );
+  SetElementEnabledByID("AdvancedButton", canEnableAll );
+
     // commented out since it asserts right now
 //  SetLabelEnabledByID( "imagealignmentLabel", canEnableAll );
   SetElementEnabledByID("image.alignType", canEnableAll );
@@ -256,6 +265,38 @@ function doOverallEnabling()
 
 function SetImageAlignment()
 {
+}
+
+// constrainProportions contribution by pete@postpagan.com
+// needs to handle pixels/percent
+function constrainProportions( srcID, destID )
+{
+  srcElement = document.getElementById ( srcID );
+  if ( !srcElement )
+  	return;
+  
+  forceInteger( srcID );
+  
+  // now find out if we should be constraining or not
+  checkbox = document.getElementById( "constrainCheckbox" );
+  if ( !checkbox)
+  	return;
+  if ( !checkbox.checked )
+    return;
+  
+  destElement = document.getElementById( destID );
+  if ( !destElement )
+  	return;
+  
+  // set new value in the other edit field
+  // src / dest ratio mantained
+  // newDest = (newSrc * oldDest / oldSrc)
+  if ( oldSourceInt == 0 )
+    destElement.value = srcElement.value;
+  else
+    destElement.value = Math.round( srcElement.value * destElement.value / oldSourceInt );
+  
+  oldSourceInt = srcElement.value;
 }
 
 function onOK()
