@@ -1512,10 +1512,10 @@ public class Interpreter extends LabelTable {
                                              thisObj, args);
         }
 
-        InterpreterFrame frame = null;
+        DebugFrame frame = null;
         if (cx.debugger != null) {
-            frame = new InterpreterFrame(scope, theData, fnOrScript);
-            cx.pushFrame(frame);
+            frame = cx.debugger.enterFrame(cx, scope, thisObj, args,
+                                           (DebuggableScript)fnOrScript);
         }
 
         if (theData.itsNestedFunctions != null) {
@@ -2300,15 +2300,12 @@ public class Interpreter extends LabelTable {
                     break;
                 case LINE_ICODE :
                 case BREAKPOINT_ICODE : {
-                    int i = getShort(iCode, pc + 1);
-                    cx.interpreterLine = i;
-                    if (frame != null)
-                        frame.setLineNumber(i);
-                    if ((iCode[pc] & 0xff) == BREAKPOINT_ICODE ||
-                        cx.inLineStepMode)
-                    {
-                        cx.getDebuggableEngine().
-                            getDebugger().handleBreakpointHit(cx);
+                    int line = getShort(iCode, pc + 1);
+                    cx.interpreterLine = line;
+                    if (frame != null) {
+                        boolean breakpoint
+                            = ((iCode[pc] & 0xff) == BREAKPOINT_ICODE);
+                        frame.onLineChange(cx, line, breakpoint);
                     }
                     pc += 2;
                     break;
@@ -2367,8 +2364,8 @@ public class Interpreter extends LabelTable {
                     break;
                 }
 
-                if (exType != OTHER && cx.debugger != null) {
-                    cx.debugger.handleExceptionThrown(cx, ex);
+                if (exType != OTHER && frame != null) {
+                    frame.onExceptionThrown(cx, ex);
                 }
 
                 boolean rethrow = true;
@@ -2406,7 +2403,7 @@ public class Interpreter extends LabelTable {
 
                 if (rethrow) {
                     if (frame != null) {
-                        cx.popFrame();
+                        frame.onExit(cx, true, ex);
                     }
                     if (theData.itsNeedsActivation) {
                         ScriptRuntime.popActivation(cx);
@@ -2437,7 +2434,7 @@ public class Interpreter extends LabelTable {
             }
         }
         if (frame != null) {
-            cx.popFrame();
+            frame.onExit(cx, false, result);
         }
         if (theData.itsNeedsActivation) {
             ScriptRuntime.popActivation(cx);

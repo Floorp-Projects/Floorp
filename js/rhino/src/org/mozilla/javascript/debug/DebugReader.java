@@ -92,10 +92,6 @@ public class DebugReader extends Reader {
         reader.close();
     }
 
-    protected void finalize() throws Throwable {
-        reader = null;
-    }
-
     private BufferedReader reader;
     private StringBuffer saved;
 }

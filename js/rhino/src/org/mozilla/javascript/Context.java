@@ -1229,7 +1229,7 @@ public class Context {
 
     /**
      * Convert a JavaScript value into the desired type.
-     * Uses the semantics defined with LiveConnect3 and throws an 
+     * Uses the semantics defined with LiveConnect3 and throws an
      * Illegal argument exception if the conversion cannot be performed.
      * @param value the JavaScript value to convert
      * @param desired type the Java type to convert to. Primitive Java
@@ -1238,7 +1238,7 @@ public class Context {
      * @return the converted value
      * @throws IllegalArgumentException if the conversion cannot be performed
      */
-    public static Object toType(Object value, Class desiredType) 
+    public static Object toType(Object value, Class desiredType)
         throws IllegalArgumentException
     {
         return NativeJavaObject.coerceType(desiredType, value, false);
@@ -1663,12 +1663,33 @@ public class Context {
         return wrapHandler;
     }
 
-    public DebuggableEngine getDebuggableEngine() {
-        if (debuggableEngine == null)
-            debuggableEngine = new DebuggableEngineImpl(this);
-        return debuggableEngine;
+    /**
+     * Return the current debugger.
+     * @return the debugger, or null if none is attached.
+     */
+    public Debugger getDebugger() {
+        return debugger;
     }
 
+    /**
+     * Return the debugger context data associated with current context.
+     * @return the debugger data, or null if debugger is not attached
+     */
+    public Object getDebuggerContextData() {
+        return debuggerData;
+    }
+
+    /**
+     * Set the associated debugger.
+     * @param debugger the debugger to be used on callbacks from
+     * the engine.
+     * @param contextData arbitrary object that debugger can use to store
+     *        per Context data.
+     */
+    public void setDebugger(Debugger debugger, Object contextData) {
+        this.debugger = debugger;
+        debuggerData = contextData;
+    }
 
     /**
      * if hasFeature(FEATURE_NON_ECMA_GET_YEAR) returns true,
@@ -1760,18 +1781,6 @@ public class Context {
     protected void observeInstructionCount(int instructionCount) {}
 
     /********** end of API **********/
-
-    void pushFrame(DebugFrame frame) {
-        if (frameStack == null)
-            frameStack = new java.util.Stack();
-        frameStack.push(frame);
-    }
-
-    void popFrame() {
-        frameStack.pop();
-    }
-
-
 
     static String getMessage0(String messageId) {
         return getMessage(messageId, null);
@@ -2197,9 +2206,7 @@ public class Context {
     private int optimizationLevel;
     WrapHandler wrapHandler;
     Debugger debugger;
-    DebuggableEngine debuggableEngine;
-    boolean inLineStepMode;
-    java.util.Stack frameStack;
+    private Object debuggerData;
     private int enterCount;
     private Object[] listeners;
     private Hashtable hashtable;

@@ -37,15 +37,37 @@
 
 package org.mozilla.javascript.debug;
 
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Context;
 
+/**
+Interface to implement if the application is interested in receiving debug
+information during execution of a particular script or function.
+*/
 public interface DebugFrame {
 
-    public Scriptable getVariableObject();
+/**
+Called when executed code reaches new line in the source.
+@param cx current Context for this thread
+@param lineNumber current line number in the script source
+@param breakpoint true if line marked as breakpoint
+*/
+    public void onLineChange(Context cx, int lineNumber, boolean breakpoint);
 
-    public String getSourceName();
+/**
+Called when thrown exception is handled by the function or script.
+@param cx current Context for this thread
+@param ex exception object
+*/
+    public void onExceptionThrown(Context cx, Throwable ex);
 
-    public int getLineNumber();
+/**
+Called when the function or script for this frame is about to return.
+@param cx current Context for this thread
+@param byThrow if true function will leave by throwing exception, otherwise it
+       will execute normal return
+@param resultOrException function result in case of normal return or
+       exception object if about to throw exception
+*/
+    public void onExit(Context cx, boolean byThrow, Object resultOrException);
 
-    public DebuggableScript getScript();
 }
