@@ -29,7 +29,9 @@
 
 class nsIRDFMSGFolderDataSource : public nsIRDFDataSource {
 public:
-	static nsresult NS_NewRDFMSGFolderDataSource(nsIRDFDataSource** result);
 };
 
+extern NS_EXPORT nsresult NS_NewRDFMSGFolderDataSource(nsIRDFDataSource** result);
+
 #endif
+
