@@ -67,6 +67,8 @@ nsFilePicker::nsFilePicker()
   	mTypeLists[i] = 0L;
   
   mSelectedType = 0;
+  // If NavServces < 2.0 we need to play games with the mSelectedType
+  mTypeOffset = (NavLibraryVersion() < 0x02000000) ? 1 : 0;
 
   if (sCurrentProcessSignature == 0)
   {
@@ -200,7 +202,26 @@ void nsFilePicker :: HandleShowPopupMenuSelect(NavCBRecPtr callBackParms)
   if (callBackParms)
   {
     NavMenuItemSpec menuItemSpec = *(NavMenuItemSpec*)callBackParms->eventData.eventDataParms.param;
-    mSelectedType = menuItemSpec.menuType;
+    PRUint32        numMenuItems = mTitles.Count();
+    if (mTypeOffset && (numMenuItems != 0))
+    { // Special case Nav Services prior to 2.0
+      // Make sure the menu item selected was one of ours
+      if ((menuItemSpec.menuType != menuItemSpec.menuCreator) ||
+          (menuItemSpec.menuType < mTypeOffset) ||
+          (menuItemSpec.menuType > numMenuItems))
+      { // Doesn't appear to be one of our items selected so force it to be
+        NavMenuItemSpec  menuItem;
+        menuItem.version = kNavMenuItemSpecVersion;
+        menuItem.menuType = mSelectedType + mTypeOffset;
+        menuItem.menuCreator = mSelectedType + mTypeOffset;
+        menuItem.menuItemName[0] = 0;
+        (void)::NavCustomControl(callBackParms->context, kNavCtlSelectCustomType, &menuItem);
+      }
+      else
+        mSelectedType = menuItemSpec.menuType - mTypeOffset;
+    }
+    else
+      mSelectedType = menuItemSpec.menuType;
   }
 }
 
@@ -239,8 +260,8 @@ pascal void nsFilePicker :: FileDialogEventHandlerProc(NavEventCallbackMessage m
     {
       NavMenuItemSpec  menuItem;
       menuItem.version = kNavMenuItemSpecVersion;
-      menuItem.menuType = self->mSelectedType;
-      menuItem.menuCreator = self->mSelectedType;
+      menuItem.menuType = self->mSelectedType + self->mTypeOffset;
+      menuItem.menuCreator = self->mSelectedType + self->mTypeOffset;
       menuItem.menuItemName[0] = 0;
       (void)::NavCustomControl(cbRec->context, kNavCtlSelectCustomType, &menuItem);
     }
@@ -810,7 +831,9 @@ nsFilePicker::PutLocalFile(const nsString & inTitle, const nsString & inDefaultN
     else
     {
       dialogOptions.dialogOptionFlags &= ~kNavAllowStationery;  // remove Stationery option
-      creatorToSave = kNavGenericSignature;   // This supresses the default format menu items
+      // This supresses the default format menu items if we have NavServices 2.0 or later
+      if (NavLibraryVersion() >= 0x02000000)
+        creatorToSave = kNavGenericSignature;
       SetupFormatMenuItems(&dialogOptions);
     }
 
@@ -1034,8 +1057,8 @@ void nsFilePicker::SetupFormatMenuItems (NavDialogOptions* dialogOptions)
       nsMacControl::StringToStr255(titleWide, title);
       ::BlockMoveData(title, (*dialogOptions->popupExtension)[index].menuItemName, *title + 1);
 
-      (*dialogOptions->popupExtension)[index].menuCreator = OSType(index);
-      (*dialogOptions->popupExtension)[index].menuType = OSType(index);
+      (*dialogOptions->popupExtension)[index].menuCreator = OSType(index + mTypeOffset);
+      (*dialogOptions->popupExtension)[index].menuType = OSType(index + mTypeOffset);
     }
   }
 }

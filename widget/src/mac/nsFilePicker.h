@@ -108,6 +108,7 @@ protected:
   static OSType          sCurrentProcessSignature;
   
   PRInt32                mSelectedType;
+  PRInt32                mTypeOffset;       // Work around Nav Services 1.0 bug
 };
 
 #endif // nsFilePicker_h__
