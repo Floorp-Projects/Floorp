@@ -41,21 +41,14 @@ var xalan_field;
 
 function onLoad()
 {
-    view.tests_run = document.getElementById("tests_run");
-    view.tests_passed = document.getElementById("tests_passed");
-    view.tests_failed = document.getElementById("tests_failed");
-    view.tests_selected = document.getElementById("tests_selected");
     view.tree = document.getElementById('out');
     view.boxObject = view.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
-    // prune the spurious children of the iframe doc
     {  
-        var iframe = document.getElementById('hiddenHtml').contentDocument;
-        var children = iframe.childNodes;
-        var cn = children.length;
-        for (var i = cn-1; i >=0 ; i--) {
-            if (children[i] != iframe.documentElement)
-                iframe.removeChild(children[i]);
-        }
+        view.mIframe = document.getElementById('hiddenHtml');
+        view.mIframe.webNavigation.allowPlugins = false;
+        view.mIframe.webNavigation.allowJavascript = false;
+        view.mIframe.webNavigation.allowMetaRedirects = false;
+        view.mIframe.webNavigation.allowImages = false;
     }
     view.database = view.tree.database;
     view.builder = view.tree.builder.QueryInterface(nsIXULTemplateBuilder);

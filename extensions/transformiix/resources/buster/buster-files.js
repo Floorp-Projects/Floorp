@@ -78,6 +78,7 @@ var cmdFileController =
                 }
                 // replace NC:succ with NC:orig_succ, so the rdf stuff differs
                 var content = sink.content.replace(/NC:succ/g,"NC:orig_succ");
+                content = content.replace(/NC:failCount/g,"NC:orig_failCount");
                 var fp = doCreateRDFFP('Xalan results',
                                        nsIFilePicker.modeSave);
                 var res = fp.show();
