@@ -58,32 +58,16 @@ GDHandle			thegd;
 PixMapHandle	thepix;
 double				pix_inch;
 
-  // NS_ASSERTION(!(aNativeWidget == nsnull), "attempt to init devicecontext with null widget");
-
 	// this is a windowptr, or grafptr, native to macintosh only
 	mSurface = aNativeWidget;
 
-  // see IM Imaging with Quickdraw, chapter 5.  This is an incomplete implementation
-  // cps - see technote <http://developer.apple.com/technotes/tn/tn1118.html>
-  // Basically it says: don't unlock GDevice handles
+	// get depth and resolution
   thegd = ::GetMainDevice();
-  SInt8 hState = ::HGetState ((Handle) thegd);
-  ::HLock((Handle)thegd);
-	thepix = (**thegd).gdPMap;
-	
-  // Be sure to lock the PixMapHandle before dereferencing it
-  SInt8 PixMapHState = ::HGetState ((Handle) thepix);
-  ::HLock((Handle)thepix);
+	thepix = (**thegd).gdPMap;					// dereferenced handle: don't move memory below!
+	mDepth = (**thepix).pixelSize;
 	pix_inch = Fix2X((**thepix).hRes);
-	
 	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
 	mPixelsToTwips = 1.0f/mTwipsToPixels;
-	
-	mDepth = (**thepix).pixelSize;
-	
-  ::HSetState ((Handle)thepix,PixMapHState);
-  // cps - Unlocking GDeviceHandles is a no - no. See above.
-  ::HSetState ((Handle)thegd,hState);  
 	
   return DeviceContextImpl::Init(aNativeWidget);
 }
