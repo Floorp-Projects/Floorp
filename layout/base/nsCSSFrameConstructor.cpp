@@ -7886,45 +7886,33 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
   // Starting with aFrame, look for a frame that is absolutely positioned or
   // relatively positioned
   nsIFrame* containingBlock = nsnull;
-  for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
+  for (nsIFrame* frame = aFrame; frame && !containingBlock;
+       frame = frame->GetParent()) {
     // Is it positioned?
     // If it's a table then ignore it, because for the time being tables
     // are not containers for absolutely positioned child frames
     const nsStyleDisplay* disp = frame->GetStyleDisplay();
 
     if (disp->IsPositioned() && disp->mDisplay != NS_STYLE_DISPLAY_TABLE) {
-      nsIAtom* frameType = frame->GetType();
-      if (nsLayoutAtoms::scrollFrame == frameType) {
-        // We want the scrolled frame, not either of the two scroll frames
-        nsIFrame* scrolledFrame = frame->GetFirstChild(nsnull);
-        if (scrolledFrame) {
-          frameType = scrolledFrame->GetType();
-          if (nsLayoutAtoms::areaFrame == frameType) {
-            containingBlock = scrolledFrame;
-            break;
-          } else if (nsLayoutAtoms::scrollFrame == frameType) {
-            scrolledFrame = scrolledFrame->GetFirstChild(nsnull);
-            if (scrolledFrame) {
-              if (nsLayoutAtoms::areaFrame == scrolledFrame->GetType()) {
-                containingBlock = scrolledFrame;
-                break;
-              }
-            }
-          }
+      // Find the outermost wrapped block under this frame
+      for (nsIFrame* wrappedFrame = frame->GetContentInsertionFrame();
+           wrappedFrame != frame->GetParent();
+           wrappedFrame = wrappedFrame->GetParent()) {
+        nsIAtom* frameType = wrappedFrame->GetType();
+        if (nsLayoutAtoms::areaFrame == frameType ||
+            nsLayoutAtoms::blockFrame == frameType ||
+            nsLayoutAtoms::positionedInlineFrame == frameType) {
+          containingBlock = frame;
+        } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
+          // If the positioned frame is a fieldset, use the area frame inside it.
+          // We don't use GetContentInsertionFrame for fieldsets yet.
+          containingBlock = frame->GetFirstChild(nsnull);
         }
-      } else if ((nsLayoutAtoms::areaFrame == frameType) ||
-                 (nsLayoutAtoms::positionedInlineFrame == frameType)) {
-        containingBlock = frame;
-        break;
-      } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
-        // If the positioned frame is a fieldset, use the area frame inside it
-        containingBlock = frame->GetFirstChild(nsnull);
-        break;
       }
+
 #ifdef DEBUG
-      else {
+      if (!containingBlock)
         NS_WARNING("Positioned frame that does not handle positioned kids; looking further up the parent chain");
-      }
 #endif
     }
   }
@@ -12848,10 +12836,13 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
     blockFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
   }
 
-  // ...and that we're the absolute containing block.
-  // This makes absolute children of a block in columns be positioned
-  // relative to the container, not flowed into columns. I don't know if this
-  // is right...
+  // We should make the outer frame be the absolute containing block,
+  // if one is required. We have to do this because absolute
+  // positioning must be computed with respect to the CSS dimensions
+  // of the element, which are the dimensions of the outer block. But
+  // we can't really do that because only blocks can have absolute
+  // children. So use the block and try to compensate with hacks
+  // in nsBlockFrame::CalculateContainingBlockSizeForAbsolutes.
   nsFrameConstructorSaveState absoluteSaveState;
   if (aAbsPosContainer || !aState.mAbsoluteItems.containingBlock) {
     //    NS_ASSERTION(aRelPos, "should have made area frame for this");
