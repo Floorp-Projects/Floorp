@@ -21,10 +21,12 @@
 #define nsIFileLocator_h__
 
 #include "nsISupports.h"
-#include "nsFileLocations.h"
+#include "nscore.h"
+#include "prtypes.h"
 
 /* Forward declarations... */
 class nsIFactory;
+class nsFileSpec;
 
 // {7e44eb01-e600-11d2-915f-f08a208628fc}
 #define NS_IFILELOCATOR_IID \
@@ -43,7 +45,9 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILELOCATOR_IID)
 
   NS_IMETHOD GetFileLocation(
-      nsSpecialFileSpec::LocationType aType,
+      PRUint32 aType,
+          // NOTE: actually nsSpecialFileSpec:Type, see nsFileLocations.h. Declared as
+          // PRUint32 to make it ugly enough for COM use.
       nsFileSpec* outSpec) = 0;
 };
 
