@@ -259,9 +259,7 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	else if(name == "Templates")
 		folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 
-	nsCOMPtr<nsISupports> folderSupports = do_QueryInterface(folder);
-	if(folderSupports)
-		mSubFolders->AppendElement(folderSupports);
+	mSubFolders->AppendElement(folder);
 	folder->SetParent(this);
 	*child = folder;
 	NS_ADDREF(*child);
@@ -1169,10 +1167,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           if (NS_FAILED(rv)) return rv;
           for(PRUint32 i = 0; i < messageCount; i++)
           {
-              nsCOMPtr<nsISupports> msgSupports;
-              nsCOMPtr<nsIMessage> message;
-              msgSupports = getter_AddRefs(messages->ElementAt(i));
-              message = do_QueryInterface(msgSupports, &rv);
+			  nsCOMPtr<nsIMessage> message = getter_AddRefs((nsIMessage*)messages->ElementAt(i));
               if(message)
               {
                   DeleteMessage(message, txnMgr, PR_TRUE);
