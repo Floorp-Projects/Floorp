@@ -76,7 +76,6 @@ protected:
 private:
     nsCOMPtr<nsCachedNetData>    mCacheEntry;
     nsCOMPtr<nsILoadGroup>       mLoadGroup;
-    nsLoadFlags                  mLoadAttributes;
 };
 
 #endif // _nsCacheEntryChannel_h_
