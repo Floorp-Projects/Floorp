@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.16 2002/09/06 00:27:48 wtc%netscape.com Exp $
+ # $Id: dbinit.c,v 1.17 2002/10/10 20:11:09 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -275,7 +275,7 @@ static int rdbmapflags(int flags);
 static rdbfunc pk11_rdbfunc;
 
 /* NOTE: SHLIB_SUFFIX is defined on the command line */
-#define RDBLIB "rdb."SHLIB_SUFFIX
+#define RDBLIB SHLIB_PREFIX"rdb."SHLIB_SUFFIX
 
 DB * rdbopen(const char *appName, const char *prefix, 
 				const char *type, int flags)
