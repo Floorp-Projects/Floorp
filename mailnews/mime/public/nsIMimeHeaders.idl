@@ -1,0 +1,41 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsrootidl.idl"
+
+%{C++
+// {9C4DA772-07EB-11d3-8EE5-00A024669799}
+#define NS_IMIMEHEADERS_CID \
+    { 0x13e16677, 0x6648, 0x11d3, \
+    { 0xa7, 0x2f, 0x0, 0x60, 0xb0, 0xeb, 0x39, 0xb5 } }
+%}
+
+/* 
+ * nsIMimeHeaders Interface declaration 
+ */ 
+[scriptable, uuid(13E16676-6648-11d3-A72F-0060B0EB39B5)]
+interface nsIMimeHeaders : nsISupports {
+
+	void initialize([const] in string allHeaders);
+	string extractHeader ([const] in string headerName, in boolean getAllOfThem);
+};
+
+%{C++
+nsresult NS_NewMimeHeaders(const nsIID &aIID, void ** aInstancePtrResult);
+%}
