@@ -315,7 +315,9 @@ public:
 
   // Methods
   PRBool IsPrintable()  { return !mDontPrint; }
+  void   DestroyPresentation();
 
+  // Data Members
   nsCOMPtr<nsIWebShell>    mWebShell;
   PrintObjectType mFrameType;
   nsCOMPtr<nsIPresContext> mPresContext;
@@ -323,7 +325,6 @@ public:
   nsCOMPtr<nsIPresShell>   mPresShell;
   nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIWidget>      mWindow;
-  nsIView         *mView;
   nsIView         *mRootView;
 
   nsIContent      *mContent;
@@ -346,6 +347,8 @@ public:
   PRUint16         mImgAnimationMode;
   PRUnichar*       mDocTitle;
   PRUnichar*       mDocURL;
+  float            mShrinkRatio;
+  nscoord          mXMost;
 
 private:
   PrintObject& operator=(const PrintObject& aOther); // not implemented
@@ -391,13 +394,16 @@ public:
   PRPackedBool                mIsIFrameSelected;
   PRPackedBool                mIsParentAFrameSet;
   PRPackedBool                mPrintingAsIsSubDoc;
-  PRInt16                     mPrintFrameType;
   PRPackedBool                mOnStartSent;
   PRPackedBool                mIsAborted;
+  PRBool                      mShrinkToFit;
+  PRInt16                     mPrintFrameType;
   PRInt32                     mNumPrintableDocs;
   PRInt32                     mNumDocsPrinted;
   PRInt32                     mNumPrintablePages;
   PRInt32                     mNumPagesPrinted;
+  float                       mShrinkRatio;
+  float                       mOrigDCScale;
 
   nsCOMPtr<nsIPrintSettings>  mPrintSettings;
   nsCOMPtr<nsIPrintOptions>   mPrintOptions;
@@ -504,14 +510,14 @@ private:
   void BuildDocTree(nsIDocShellTreeNode * aParentNode, 
                     nsVoidArray *         aDocList, 
                     PrintObject *         aPO);
-  nsresult ReflowDocList(PrintObject * aPO);
+  nsresult ReflowDocList(PrintObject * aPO, PRBool aSetPixelScale, PRBool aDoCalcShrink);
   void SetClipRect(PrintObject*  aPO, 
                    const nsRect& aClipRect,
                    nscoord       aOffsetX,
                    nscoord       aOffsetY,
                    PRBool        aDoingSetClip);
 
-  nsresult ReflowPrintObject(PrintObject * aPO);
+  nsresult ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink);
   nsresult CalcPageFrameLocation(nsIPresShell * aPresShell,
                                   PrintObject*   aPO);
   PrintObject * FindPrintObjectByWS(PrintObject* aPO, nsIWebShell * aWebShell);
@@ -554,6 +560,10 @@ private:
                                nsIDeviceContext*     aDContext,
                                nsIDOMWindowInternal* aCurrentFocusedDOMWin);
   nsresult EnablePOsForPrinting();
+  PrintObject* FindXMostPO();
+  void FindXMostFrameSize(nsIPresContext* aPresContext, nsIRenderingContext* aRC, nsIFrame* aFrame, nscoord aX, nscoord aY, PRInt32& aMaxWidth);
+  void FindXMostFrameInList(nsIPresContext* aPresContext, nsIRenderingContext* aRC, nsIAtom* aList, nsIFrame* aFrame, 
+                             nscoord aX, nscoord aY, PRInt32& aMaxWidth);
 
   PRBool   PrintDocContent(PrintObject* aPO, nsresult& aStatus);
   nsresult DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDonePrinting);
@@ -782,11 +792,10 @@ static nsresult NS_NewUpdateTimer(nsPagePrintTimer **aResult)
 PrintData::PrintData() :
   mPrintView(nsnull), mDebugFilePtr(nsnull), mPrintObject(nsnull), mSelectedPO(nsnull),
   mShowProgressDialog(PR_TRUE), mPrintDocList(nsnull), mIsIFrameSelected(PR_FALSE),
-  mIsParentAFrameSet(PR_FALSE), mPrintingAsIsSubDoc(PR_FALSE),
-  mPrintFrameType(nsIPrintSettings::kFramesAsIs), mOnStartSent(PR_FALSE),
+  mIsParentAFrameSet(PR_FALSE), mPrintingAsIsSubDoc(PR_FALSE), mOnStartSent(PR_FALSE), 
+  mIsAborted(PR_FALSE), mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
-  mIsAborted(PR_FALSE)
-
+  mShrinkRatio(1.0), mOrigDCScale(1.0)
 {
 #ifdef DEBUG_PRINTING
   mDebugFD = fopen("printing.log", "w");
@@ -882,16 +891,15 @@ PrintData::DoOnProgressChange(nsVoidArray& aListeners,
 //-- PrintObject Class Impl
 //---------------------------------------------------
 PrintObject::PrintObject() : 
-  mWebShell(nsnull), mFrameType(eFrame),
-  mView(nsnull), mRootView(nsnull), mContent(nsnull),
+  mFrameType(eFrame),
+  mRootView(nsnull), mContent(nsnull),
   mSeqFrame(nsnull), mPageFrame(nsnull), mPageNum(-1), 
   mRect(0,0,0,0), mReflowRect(0,0,0,0),
   mParent(nsnull), mHasBeenPrinted(PR_FALSE), mDontPrint(PR_TRUE),
   mPrintAsIs(PR_FALSE), mSkippedPageEject(PR_FALSE), mSharedPresShell(PR_FALSE),
   mClipRect(-1,-1, -1, -1),
   mImgAnimationMode(imgIContainer::kNormalAnimMode),
-  mDocTitle(nsnull),
-  mDocURL(nsnull)
+  mDocTitle(nsnull), mDocURL(nsnull), mShrinkRatio(1.0), mXMost(0)
 {
 }
 
@@ -914,6 +922,18 @@ PrintObject::~PrintObject()
   if (mDocTitle) nsMemory::Free(mDocTitle);
   if (mDocURL) nsMemory::Free(mDocURL);
 
+}
+
+//------------------------------------------------------------------
+// Resets PO by destroying the presentation
+void PrintObject::DestroyPresentation()
+{
+  mWindow      = nsnull;
+  mPresContext = nsnull;
+  mPresShell->Destroy();
+  mPresShell   = nsnull;
+  mViewManager = nsnull;
+  mStyleSet    = nsnull;
 }
 
 //------------------------------------------------------------------
@@ -965,7 +985,7 @@ void DocumentViewerImpl::PrepareToStartLoad() {
 #ifdef NS_PRINT_PREVIEW
   mIsDoingPrintPreview = PR_FALSE;
   mPrtPreview          = nsnull;
-  mOldPrtPreview          = nsnull;
+  mOldPrtPreview       = nsnull;
 #endif
 
 #ifdef NS_DEBUG
@@ -1793,6 +1813,29 @@ int RemoveFilesInDir(const char * aDir)
 /** ---------------------------------------------------
  *  Dumps Frames for Printing
  */
+static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
+{
+  if((nsnull == aPresContext) || (nsnull == out))
+    return;
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  if (nsnull != shell) {
+    nsIFrame* frame;
+    shell->GetRootFrame(&frame);
+    if(nsnull != frame) {
+      nsIFrameDebug* debugFrame;
+      nsresult rv;
+      rv = frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&debugFrame);
+      if(NS_SUCCEEDED(rv))
+        debugFrame->List(aPresContext, out, aIndent);
+    }
+  }
+}
+
+/** ---------------------------------------------------
+ *  Dumps Frames for Printing
+ */
 static void DumpFrames(FILE*                 out, 
                        nsIPresContext*       aPresContext, 
                        nsIRenderingContext * aRendContext, 
@@ -1916,7 +1959,8 @@ void DumpLayoutData(char*              aTitleStr,
     fprintf(fd, "--------------- Frames ----------------\n");
     nsCOMPtr<nsIRenderingContext> renderingContext;
     aDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
-    DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);
+    RootFrameList(aPresContext, fd, 0);
+    //DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);
     fprintf(fd, "---------------------------------------\n\n");
     fprintf(fd, "--------------- Views From Root Frame----------------\n");
     nsIView * v;
@@ -3100,12 +3144,24 @@ DocumentViewerImpl::SetClipRect(PrintObject*  aPO,
 // Recursively reflow each sub-doc and then calc
 // all the frame locations of the sub-docs
 nsresult 
-DocumentViewerImpl::ReflowDocList(PrintObject* aPO)
+DocumentViewerImpl::ReflowDocList(PrintObject* aPO, PRBool aSetPixelScale, PRBool aDoCalcShrink)
 {
   NS_ASSERTION(aPO, "Pointer is null!");
 
+  // Here is where we set the shrinkage value into the DC 
+  // and this is what actually makes it shrink
+  if (aSetPixelScale && aPO->mFrameType != eIFrame) {
+    float ratio;
+    if (mPrt->mPrintFrameType == nsIPrintSettings::kFramesAsIs || mPrt->mPrintFrameType == nsIPrintSettings::kNoFrames) {
+      ratio = mPrt->mShrinkRatio - 0.005f; // round down
+    } else {
+      ratio = aPO->mShrinkRatio - 0.005f; // round down
+    }
+    mPrt->mPrintDC->SetCanonicalPixelScale(ratio*mPrt->mOrigDCScale);
+  }
+
   // Reflow the PO 
-  if (NS_FAILED(ReflowPrintObject(aPO))) {
+  if (NS_FAILED(ReflowPrintObject(aPO, aDoCalcShrink))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -3116,7 +3172,7 @@ DocumentViewerImpl::ReflowDocList(PrintObject* aPO)
 
   PRInt32 cnt = aPO->mKids.Count();
   for (PRInt32 i=0;i<cnt;i++) {
-    if (NS_FAILED(ReflowDocList((PrintObject *)aPO->mKids[i]))) {
+    if (NS_FAILED(ReflowDocList((PrintObject *)aPO->mKids[i], aSetPixelScale, aDoCalcShrink))) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -3126,7 +3182,7 @@ DocumentViewerImpl::ReflowDocList(PrintObject* aPO)
 //-------------------------------------------------------
 // Reflow a PrintObject
 nsresult
-DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
+DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
 {
   NS_ASSERTION(aPO, "Pointer is null!");
 
@@ -3351,6 +3407,58 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
           }
         }
       }
+
+      // If we are trying to shrink the contents to fit on the page
+      // we must first locate the "pageContent" frame
+      // Then we walk the frame tree and look for the "xmost" frame
+      // this is the frame where the right-hand side of the frame extends
+      // the furthest
+      if (mPrt->mShrinkToFit) {
+        // find pageContent frame
+        nsIFrame* rootFrame;
+        aPO->mPresShell->GetRootFrame(&rootFrame);
+        NS_ASSERTION(rootFrame, "There has to be a root frame!");
+        if (rootFrame) {
+          nsIFrame* child;
+          rootFrame->FirstChild(aPO->mPresContext, nsnull, &child);
+          while (child) {
+            nsCOMPtr<nsIAtom> frameType;
+            child->GetFrameType(getter_AddRefs(frameType));
+            if (nsLayoutAtoms::pageContentFrame == frameType.get()) { // placeholder
+              break;
+            }
+            child->FirstChild(aPO->mPresContext, nsnull, &child);
+          }
+          NS_ASSERTION(child, "There has to be a page content frame!");
+          // Now get it's first child (area frame)
+          // then gets it size which would be the size it is suppose to be to fit
+          if (child) {
+            child->FirstChild(aPO->mPresContext, nsnull, &child);
+            NS_ASSERTION(child, "There has to be a child frame!");
+            if (child) {
+              nsRect rect;
+              child->GetRect(rect);
+              // Create a RenderingContext and set the PresContext 
+              // appropriately if we are printing selection
+              nsCOMPtr<nsIRenderingContext> rc;
+              if (nsIPrintSettings::kRangeSelection == printRangeType) {
+                aPO->mPresContext->SetIsRenderingOnlySelection(PR_TRUE);
+                mPrt->mPrintDocDC->CreateRenderingContext(*getter_AddRefs(rc));
+              }
+              // Find the Size of the XMost frame
+              // then calc the ratio for shrinkage
+              nscoord maxWidth = 0;
+              FindXMostFrameSize(aPO->mPresContext, rc, child, 0, 0, maxWidth);
+              float ratio = float(rect.width) / float(maxWidth);
+              aPO->mXMost = maxWidth;
+              aPO->mShrinkRatio = PR_MIN(ratio, 1.0f);
+#ifdef DEBUG_PRINTING
+              printf("PO %p ****** RW: %d MW: %d  xMost %d  width: %d  %10.4f\n", aPO, rect.width, maxWidth, aPO->mXMost, rect.width, ratio*100.0);
+#endif
+            }
+          }
+        }
+      }
     }
 
 #ifdef DEBUG_rods
@@ -3370,7 +3478,8 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
         fprintf(fd, "--------------- Frames ----------------\n");
         nsCOMPtr<nsIRenderingContext> renderingContext;
         mPrt->mPrintDocDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
-        DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
+        RootFrameList(aPO->mPresContext, fd, 0);
+        //DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
         fprintf(fd, "---------------------------------------\n\n");
         fprintf(fd, "--------------- Views From Root Frame----------------\n");
         nsIView * v;
@@ -3657,6 +3766,122 @@ DocumentViewerImpl::EnablePOsForPrinting()
   return NS_OK;
 }
 
+//---------------------------------------------------
+// Find the Frame in a Frame List that is XMost
+void 
+DocumentViewerImpl::FindXMostFrameInList(nsIPresContext* aPresContext, 
+                                         nsIRenderingContext* aRC,
+                                         nsIAtom*        aList,
+                                         nsIFrame*       aFrame, 
+                                         nscoord         aX,
+                                         nscoord         aY,
+                                         PRInt32&        aMaxWidth)
+{
+  nsIFrame * child;
+  aFrame->FirstChild(aPresContext, aList, &child);
+  while (child) {
+    PRBool isVisible = PR_TRUE;
+    // If the aRC is nsnull, then we skip the more expensive check and 
+    // just check visibility
+    if (aRC) {
+      child->IsVisibleForPainting(aPresContext, *aRC, PR_TRUE, &isVisible);
+    } else {
+      nsCOMPtr<nsIStyleContext> sc;
+      child->GetStyleContext(getter_AddRefs(sc));
+      if (sc) {
+        const nsStyleVisibility* vis = (const nsStyleVisibility*)sc->GetStyleData(eStyleStruct_Visibility);
+        isVisible = vis->IsVisible();
+      }
+    }
+
+    if (isVisible) {
+      nsRect rect;
+      child->GetRect(rect);
+      rect.x += aX;
+      rect.y += aY;
+      nscoord xMost = rect.XMost();
+
+#ifdef DEBUG_PRINTING_X // keep this here but leave it turned off
+      nsAutoString tmp;
+      nsIFrameDebug*  frameDebug;
+      if (NS_SUCCEEDED(CallQueryInterface(child, &frameDebug))) {
+        frameDebug->GetFrameName(tmp);
+      }
+      printf("%p - %d,%d,%d,%d %s (%d > %d)\n", child, rect.x, rect.y, rect.width, rect.height, NS_LossyConvertUCS2toASCII(tmp).get(), xMost, aMaxWidth);
+#endif
+
+      if (xMost > aMaxWidth) {
+        aMaxWidth = xMost;
+#ifdef DEBUG_PRINTING_X // keep this here but leave it turned off
+        printf("%p - %d %s ", child, aMaxWidth, NS_LossyConvertUCS2toASCII(tmp).get());
+        if (aList == nsLayoutAtoms::overflowList) printf(" nsLayoutAtoms::overflowList\n");
+        if (aList == nsLayoutAtoms::floaterList) printf(" nsLayoutAtoms::floaterList\n");
+        if (aList == nsLayoutAtoms::fixedList) printf(" nsLayoutAtoms::fixedList\n");
+        if (aList == nsLayoutAtoms::absoluteList) printf(" nsLayoutAtoms::absoluteList\n");
+        if (aList == nsnull) printf(" nsnull\n");
+#endif
+      }
+      FindXMostFrameSize(aPresContext, aRC, child, rect.x, rect.y, aMaxWidth);
+    }
+    child->GetNextSibling(&child);
+  }
+}
+
+//---------------------------------------------------
+// Find the Frame that is XMost
+void 
+DocumentViewerImpl::FindXMostFrameSize(nsIPresContext* aPresContext, 
+                                       nsIRenderingContext* aRC,
+                                       nsIFrame*      aFrame, 
+                                       nscoord        aX,
+                                       nscoord        aY,
+                                       PRInt32&       aMaxWidth)
+{
+  NS_ASSERTION(aPresContext, "Pointer is null!");
+  NS_ASSERTION(aFrame, "Pointer is null!");
+
+  // loop thru named child lists
+  nsIAtom* childListName = nsnull;
+  PRInt32  childListIndex = 0;
+  do {
+    FindXMostFrameInList(aPresContext, aRC, childListName, aFrame, aX, aY, aMaxWidth);
+    NS_IF_RELEASE(childListName);
+    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+  } while (childListName); 
+
+}
+
+
+//-------------------------------------------------------
+// Return the PrintObject with that is XMost (The widest frameset frame) AND 
+// contains the XMost (widest) layout frame 
+PrintObject* 
+DocumentViewerImpl::FindXMostPO()
+{
+  nscoord xMostForPO   = 0;
+  nscoord xMost        = 0;
+  PrintObject* xMostPO = nsnull;
+
+  for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
+    PrintObject* po = (PrintObject*)mPrt->mPrintDocList->ElementAt(i);
+    NS_ASSERTION(po, "PrintObject can't be null!");
+    if (po->mFrameType != eFrameSet && po->mFrameType != eIFrame) {
+      if (po->mRect.XMost() >= xMostForPO) {
+        if (po->mRect.XMost() > xMostForPO || (po->mRect.XMost() == xMostForPO && po->mXMost > xMost)) {
+          xMostForPO = po->mRect.XMost();
+          xMost      = po->mXMost;
+          xMostPO    = po;
+        }
+      }
+    }
+  }
+
+#ifdef DEBUG_PRINTING
+  if (xMostPO) printf("*PO: %p  Type: %d  XM: %d  XM2: %d  %10.3f\n", xMostPO, xMostPO->mFrameType, xMostPO->mRect.XMost(), xMostPO->mXMost, xMostPO->mShrinkRatio);
+#endif
+  return xMostPO;
+}
+
 //-------------------------------------------------------
 nsresult
 DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
@@ -3678,9 +3903,60 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
   }
   DUMP_DOC_LIST("\nAfter Enable------------------------------------------");
 
+  // This is an Optimization
+  // If we are in PP then we already know all the shrinkage information
+  // so just transfer it to the PrintData and we will skip the extra shrinkage reflow
+  //
+  // doSetPixelScale tells Reflow whether to set the shrinkage value into the DC
+  // The first tru we do not want to do this, the second time thru we do
+  PRBool doSetPixelScale = PR_FALSE;
+  PRBool ppIsShrinkToFit = mPrtPreview && mPrtPreview->mShrinkToFit;
+  if (ppIsShrinkToFit) {
+    mPrt->mShrinkRatio = mPrtPreview->mShrinkRatio;
+    doSetPixelScale = PR_TRUE;
+  }
+
   // Here we reflow all the PrintObjects
-  if (NS_FAILED(ReflowDocList(mPrt->mPrintObject))) {
+  if (NS_FAILED(ReflowDocList(mPrt->mPrintObject, doSetPixelScale, mPrt->mShrinkToFit))) {
     return NS_ERROR_FAILURE;
+  }
+
+  // Here is where we do the extra reflow for shrinking the content
+  // But skip this step if we are in PrintPreview
+  if (mPrt->mShrinkToFit && !ppIsShrinkToFit) {
+    if (mPrt->mPrintDocList->Count() > 1 && mPrt->mPrintObject->mFrameType == eFrameSet) {
+      PrintObject* xMostPO = FindXMostPO();
+      NS_ASSERTION(xMostPO, "There must always be an XMost PO!");
+      if (xMostPO) {
+        // The margin is included in the PO's mRect so we need to subtract it
+        nsMargin margin(0,0,0,0);
+        mPrt->mPrintSettings->GetMarginInTwips(margin);
+        nsRect rect = xMostPO->mRect;
+        rect.x -= margin.left;
+        // Calc the shrinkage based on the entire content area
+        mPrt->mShrinkRatio = float(rect.XMost()) / float(rect.x + xMostPO->mXMost);
+      }
+    } else {
+      // Single document so use the Shrink as calculated for the PO
+      mPrt->mShrinkRatio = mPrt->mPrintObject->mShrinkRatio;
+    }
+
+    // Only Shrink if we are smaller
+    if (mPrt->mShrinkRatio < 1.0f) {
+      for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
+        PrintObject* po = (PrintObject*)mPrt->mPrintDocList->ElementAt(i);
+        NS_ASSERTION(po, "PrintObject can't be null!");
+        // Wipe out the presentation before we reflow
+        po->DestroyPresentation();
+      }
+
+      // Here we reflow all the PrintObjects a second time
+      // this time using the shrinkage values
+      // The last param here tells reflow to NOT calc the shrinkage values
+      if (NS_FAILED(ReflowDocList(mPrt->mPrintObject, PR_TRUE, PR_FALSE))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
   }
 
   DUMP_DOC_LIST("\nAfter Reflow------------------------------------------");
@@ -3718,7 +3994,6 @@ DocumentViewerImpl::SetupToPrintContent(nsIWebShell*          aParent,
 #endif
 #endif
 
-  mPrt->mPrintDocDC = aDContext;
   mPrt->mPrintDocDW = aCurrentFocusedDOMWin;
 
   // This will print the webshell document
@@ -5294,6 +5569,8 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   // Setup print options for UI
   rv = NS_ERROR_FAILURE;
   if (mPrt->mPrintSettings != nsnull) {
+    mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
+
     if (mPrt->mIsParentAFrameSet) {
       if (mPrt->mCurrentFocusWin) {
         mPrt->mPrintSettings->SetHowToEnableFrameUI(nsIPrintSettings::kFrameEnableAll);
@@ -5341,10 +5618,13 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
       if (NS_SUCCEEDED(rv)) {
         mDeviceContext->SetAltDevice(ppDC);
         if (mPrt->mPrintSettings != nsnull) {
-          double scaling;
-          mPrt->mPrintSettings->GetScaling(&scaling);
-          if (scaling < 1.0) {
-            mDeviceContext->SetCanonicalPixelScale(float(scaling));
+          // Shrink to Fit over rides and scaling values
+          if (!mPrt->mShrinkToFit) {
+            double scaling;
+            mPrt->mPrintSettings->GetScaling(&scaling);
+            if (scaling < 1.0) {
+              mDeviceContext->SetCanonicalPixelScale(float(scaling));
+            }
           }
         }
         ppDC->GetDeviceSurfaceDimensions(width, height);
@@ -5363,7 +5643,9 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
     mPrt->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
   }
 
-  mPrt->mPrintDC = mDeviceContext; // XXX why?
+  mPrt->mPrintDC = mDeviceContext; 
+  // Get the Original PixelScale incase we need to start changing it
+  mPrt->mPrintDC->GetCanonicalPixelScale(mPrt->mOrigDCScale);
 
   if (mDeviceContext) {
     mDeviceContext->SetUseAltDC(kUseAltDCFor_FONTMETRICS, PR_TRUE);
@@ -5576,6 +5858,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     }
   }
   mPrt->mPrintSettings->SetIsCancelled(PR_FALSE);
+  mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
 
   // Let's print ...
   mIsDoingPrinting = PR_TRUE;
@@ -5690,12 +5973,15 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       if (NS_SUCCEEDED(rv)) {
         rv = dx->GetDeviceContextFor(devspec, *getter_AddRefs(mPrt->mPrintDC));
         if (NS_SUCCEEDED(rv)) {
-          double scaling;
-          mPrt->mPrintSettings->GetScaling(&scaling);
-          if (scaling <= 1.0) {
-            float oldScale = 1.0f;
-            mPrt->mPrintDC->GetCanonicalPixelScale(oldScale);
-            mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*oldScale);
+          // Get the Original PixelScale incase we need to start changing it
+          mPrt->mPrintDC->GetCanonicalPixelScale(mPrt->mOrigDCScale);
+          // Shrink to Fit over rides and scaling values
+          if (!mPrt->mShrinkToFit) {
+            double scaling;
+            mPrt->mPrintSettings->GetScaling(&scaling);
+            if (scaling <= 1.0) {
+              mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
+            }
           }
 
           if(webContainer) {

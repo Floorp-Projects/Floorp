@@ -167,7 +167,8 @@ interface nsIPrintSettings : nsISupports
   attribute boolean isCancelled;         /* indicates whether the print job has been cancelled */
   attribute short   printFrameTypeUsage; /* indicates whether to use the interal value or not  */
   attribute short   printFrameType;
-  attribute boolean printSilent;	/* print without putting up the dialog */
+  attribute boolean printSilent;	     /* print without putting up the dialog */
+  attribute boolean shrinkToFit;	     /* shrinks content to fit on page      */
 
   /* Additional XP Related */
   attribute short   paperSizeType; /* use native data or is defined here */

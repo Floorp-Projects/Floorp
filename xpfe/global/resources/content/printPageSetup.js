@@ -53,6 +53,7 @@ function initDialog()
   gDialog.orientation     = document.getElementById("orientation");
   gDialog.printBGColors   = document.getElementById("printBGColors");
   gDialog.printBGImages   = document.getElementById("printBGImages");
+  gDialog.shrinkToFit     = document.getElementById("shrinkToFit");
 
   gDialog.topInput        = document.getElementById("topInput");
   gDialog.bottomInput     = document.getElementById("bottomInput");
@@ -67,6 +68,7 @@ function initDialog()
   gDialog.fCenterInput    = document.getElementById("fCenterInput");
   gDialog.fRightInput     = document.getElementById("fRightInput");
 
+  gDialog.scalingLabel    = document.getElementById("scalingInput");
   gDialog.scalingInput    = document.getElementById("scalingInput");
 
   gDialog.enabled         = false;
@@ -90,6 +92,18 @@ function getDoubleStr(val, dec)
   var str = val.toString();
   var inx = str.indexOf(".");
   return str.substring(0, inx+dec+1);
+}
+
+//---------------------------------------------------
+function doEnableScaling(value)
+{
+  if (value) {
+    gDialog.scalingLabel.removeAttribute("disabled");
+    gDialog.scalingInput.removeAttribute("disabled");
+  } else {
+    gDialog.scalingLabel.setAttribute("disabled","true");
+    gDialog.scalingInput.setAttribute("disabled","true");
+  }
 }
 
 //---------------------------------------------------
@@ -121,7 +135,8 @@ function loadDialog()
 
   gDialog.printBGColors.checked = gPrintSettings.printBGColors;
   gDialog.printBGImages.checked = gPrintSettings.printBGImages;
-
+  gDialog.shrinkToFit.checked   = gPrintSettings.shrinkToFit;
+  doEnableScaling(!gDialog.shrinkToFit.checked);
 
   if (print_orientation == gPrintSettingsInterface.kPortraitOrientation) {
     gDialog.orientation.selectedIndex = 0;
@@ -192,6 +207,7 @@ function onAccept()
 
     gPrintSettings.printBGColors = gDialog.printBGColors.checked;
     gPrintSettings.printBGImages = gDialog.printBGImages.checked;
+    gPrintSettings.shrinkToFit   = gDialog.shrinkToFit.checked;
 
     var scaling = document.getElementById("scalingInput").value;
     if (scaling < 50.0 || scaling > 100.0) {

@@ -204,6 +204,9 @@ Contributor(s):
           </row>
         </rows>
       </grid>
+      <hrow>
+        <checkbox id="shrinkToFit" label="&shrinkToFitInput.label;" oncommand="doEnableScaling(!this.checked);"/>
+      </hrow>
       </groupbox>
     </hbox>
   </vbox>
