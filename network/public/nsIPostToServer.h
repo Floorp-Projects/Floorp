@@ -33,6 +33,8 @@
 
 struct nsIPostToServer : public nsISupports
 {
+	static const nsIID& GetIID() { static nsIID iid = NS_IPOSTTOSERVER_IID; return iid; }
+
     NS_IMETHOD SendFile(const char *aFile) = 0;
     NS_IMETHOD SendData(const char *aBuffer, PRUint32 aLength) = 0;
     NS_IMETHOD SendDataFromFile(const char *aFile) = 0;
