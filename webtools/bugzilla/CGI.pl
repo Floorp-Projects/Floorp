@@ -561,7 +561,7 @@ sub confirm_login {
 
        $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
        my $cookiepath = Param("cookiepath");
-       print "Set-Cookie: Bugzilla_login=$enteredlogin ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+       print "Set-Cookie: Bugzilla_login= " . url_quote($enteredlogin) . " ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
        print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
     }
 
