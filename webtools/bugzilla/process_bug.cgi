@@ -1263,7 +1263,7 @@ foreach my $id (@idlist) {
         ($vars->{'operations'}) = GetBugActivity($::FORM{'id'}, $::FORM{'delta_ts'});
 
         $vars->{'start_at'} = $::FORM{'longdesclength'};
-        $vars->{'comments'} = GetComments($id);
+        $vars->{'comments'} = Bugzilla::Bug::GetComments($id);
 
         $::FORM{'delta_ts'} = $delta_ts;
         $vars->{'form'} = \%::FORM;

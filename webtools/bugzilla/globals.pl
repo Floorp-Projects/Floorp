@@ -1147,35 +1147,6 @@ sub GetLongDescriptionAsText {
     return ($result, $anyprivate);
 }
 
-sub GetComments {
-    my ($id) = (@_);
-    my @comments;
-    SendSQL("SELECT  profiles.realname, profiles.login_name, 
-                     date_format(longdescs.bug_when,'%Y.%m.%d %H:%i'), 
-                     longdescs.thetext, longdescs.work_time,
-                     isprivate,
-                     date_format(longdescs.bug_when,'%Y%m%d%H%i%s') 
-            FROM     longdescs, profiles
-            WHERE    profiles.userid = longdescs.who 
-              AND    longdescs.bug_id = $id 
-            ORDER BY longdescs.bug_when");
-             
-    while (MoreSQLData()) {
-        my %comment;
-        ($comment{'name'}, $comment{'email'}, $comment{'time'}, 
-        $comment{'body'}, $comment{'work_time'},
-        $comment{'isprivate'}, $comment{'when'}) = FetchSQLData();
-        
-        $comment{'email'} .= Param('emailsuffix');
-        $comment{'name'} = $comment{'name'} || $comment{'email'};
-         
-        push (@comments, \%comment);
-    }
-    
-    return \@comments;
-}
-
-
 # Fills in a hashtable with info about the columns for the given table in the
 # database.  The hashtable has the following entries:
 #   -list-  the list of column names

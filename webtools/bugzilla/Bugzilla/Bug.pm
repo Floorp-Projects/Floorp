@@ -308,7 +308,7 @@ sub longdescs {
 
     return $self->{'longdescs'} if exists $self->{'longdescs'};
 
-    $self->{'longdescs'} = &::GetComments($self->{bug_id});
+    $self->{'longdescs'} = GetComments($self->{bug_id});
 
     return $self->{'longdescs'};
 }
@@ -502,6 +502,38 @@ sub ValidateTime {
   if ($time > 99999.99 || $time < 0 || !($time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/)) {
     ThrowUserError("need_positive_number", {field => "$field"}, "abort");
   }
+}
+
+sub GetComments {
+    my ($id) = (@_);
+    my $dbh = Bugzilla->dbh;
+    my @comments;
+    my $sth = $dbh->prepare(
+            "SELECT  profiles.realname AS name, profiles.login_name AS email,
+                     date_format(longdescs.bug_when,'%Y.%m.%d %H:%i') AS time,
+                     longdescs.thetext AS body, longdescs.work_time,
+                     isprivate,
+                     date_format(longdescs.bug_when,'%Y%m%d%H%i%s')
+            FROM     longdescs, profiles
+            WHERE    profiles.userid = longdescs.who
+              AND    longdescs.bug_id = ?
+            ORDER BY longdescs.bug_when");
+    $sth->execute($id);
+
+    while (my $comment_ref = $sth->fetchrow_hashref()) {
+        my %comment = %$comment_ref;
+
+        # Can't use "when" as a field name in MySQL
+        $comment{'when'} = $comment{'bug_when'};
+        delete($comment{'bug_when'});
+
+        $comment{'email'} .= Param('emailsuffix');
+        $comment{'name'} = $comment{'name'} || $comment{'email'};
+
+        push (@comments, \%comment);
+    }
+
+    return \@comments;
 }
 
 sub AUTOLOAD {
