@@ -65,6 +65,7 @@ enum eCRCQuality {
   eCRCPoor
 };
 
+
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 
 /**
@@ -113,17 +114,6 @@ class nsIParser : public nsISupports {
      *  @return	 nada
      */
     virtual void SetCommand(const char* aCommand)=0;
-
-    /**
-     *  This internal method is used when the parser needs to determine the
-	   *  type of content it's being asked to parse.
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aBuffer -- contains data to be tested (autodetected) for type
-	   *  @param	 aType -- string where you store the detected type (if any)
-     *  @return  autodetect enum (valid, invalid, unknown)
-     */
-    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType)=0;
 
 
     /******************************************************************************************

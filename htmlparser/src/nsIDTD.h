@@ -39,6 +39,14 @@
 #define NS_IDTD_IID \
  { 0xa6cf9053, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
+enum eAutoDetectResult {
+  eUnknownDetect, 
+  eValidDetect,   
+  ePrimaryDetect,
+  eInvalidDetect
+};
+
+
 class nsIParser;
 class CToken;
 class nsIDTDDebug;
@@ -46,9 +54,6 @@ class nsIURL;
 class nsString;
 class nsITagHandler;
 class nsIContentSink;
-
-enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
-
 
 
 class nsIDTD : public nsISupports {
@@ -80,18 +85,7 @@ class nsIDTD : public nsISupports {
      * @param   aContentType -- string representing type of doc to be converted (ie text/html)
      * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
      */
-    virtual PRBool CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion)=0;
-
-    /**
-     * This method, typically called by the parser, is used to try to autodetect the 
-	 * type of data contained in the given buffer. The implementor should look at the
-	 * buffers contents to try to determine its encoding type. 
-     * @update	gess7/7/98
-     * @param	aBuffer-contains data to be scanned to autodetect type
-	 * @param	aType-will hold the result if type is autodetected
-     * @return	eValid (if detected), eInvalid (if not) or eUnknown (if nothing can be done)
-     */
-    virtual eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType)=0;
+    virtual eAutoDetectResult CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion)=0;
 
     /**
      * Called by the parser just before the parsing process begins

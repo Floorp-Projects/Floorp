@@ -242,23 +242,14 @@ nsresult CRtfDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CRtfDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=aContentType.Equals(kRTFTextContentType);
-  return result;
-}
-
-
-/**
- * 
- * @update	gess7/7/98
- * @param 
- * @return
- */
-eAutoDetectResult CRtfDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
+eAutoDetectResult CRtfDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
-  if(kNotFound!=aBuffer.Find(kRTFDocHeader))
-    if(PR_TRUE==aType.Equals(kRTFTextContentType))
-      result=eValidDetect;
+  if(aContentType.Equals(kRTFTextContentType)) {
+    result=ePrimaryDetect;
+  }
+  else if(kNotFound!=aBuffer.Find(kRTFDocHeader)) {
+    result=ePrimaryDetect;
+  }
   return result;
 }
 

@@ -177,20 +177,9 @@ nsresult COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool COtherDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  return CNavDTD::CanParse(aContentType,aCommand,aVersion);
+eAutoDetectResult COtherDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
+  return CNavDTD::CanParse(aContentType,aCommand,aBuffer,aVersion);
 }
-
-/**
- * 
- * @update	gess7/7/98
- * @param 
- * @return
- */
-eAutoDetectResult COtherDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
-  return CNavDTD::AutoDetectContentType(aBuffer,aType);
-}
-
 
 /**
  *  This method gets called when a start token has been 

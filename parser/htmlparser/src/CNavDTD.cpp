@@ -437,39 +437,28 @@ PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=PR_FALSE;
-  if(!aCommand.Equals(kViewSourceCommand)) {
-    if(PR_TRUE==aContentType.Equals(kHTMLTextContentType) || PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
-      result=PR_TRUE;
-    }
-  }
-  return result;
-}
-
-/**
- * 
- * @update  gess7/7/98
- * @param 
- * @return
- */
-eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
+eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
-  if(PR_TRUE==aType.Equals(kHTMLTextContentType) ||
-    PR_TRUE==aType.Equals(kPlainTextContentType)) {
-    result=eValidDetect;
-  }
-  else {
-    //otherwise, look into the buffer to see if you recognize anything...
-    if(BufferContainsHTML(aBuffer)){
+  if(!aCommand.Equals(kViewSourceCommand)) {
+    if(PR_TRUE==aContentType.Equals(kHTMLTextContentType)) {
+      result=ePrimaryDetect;
+    }
+    else if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
       result=eValidDetect;
-      if(0==aType.Length())
-        aType=kHTMLTextContentType;
+    }
+    else {
+      //otherwise, look into the buffer to see if you recognize anything...
+      if(BufferContainsHTML(aBuffer)){
+        result=ePrimaryDetect;
+        if(0==aContentType.Length())
+          aContentType=kHTMLTextContentType;
+      }
     }
   }
   return result;
 }
+
 
 /**
  * 
@@ -558,17 +547,21 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
       }
 
-      result = mSink->DidBuildModel(1);
-
-#ifdef DEBUG
+#ifdef NS_DEBUG
       if(mComputedCRC32!=mExpectedCRC32) {
         if(mExpectedCRC32!=0) {
           printf("Expected CRC: %u,",mExpectedCRC32);
+          result = mSink->DidBuildModel(2);
+        } 
+        else {
+          printf("Computed CRC: %u.\n",mComputedCRC32);
+          result = mSink->DidBuildModel(3);
         }
-        printf("Computed CRC: %u.\n",mComputedCRC32);
       }
+      else result = mSink->DidBuildModel(0);
+#else
+  result = mSink->DidBuildModel(3);
 #endif
-
       if(mDTDDebug) {
         mDTDDebug->DumpVectorRecord();
       }
@@ -631,7 +624,7 @@ nsresult CNavDTD::ReleaseTokenPump(nsITagHandler* aHandler){
   nsresult result=NS_OK;
   return result;
 }
-
+ 
 /**
  * This gets called after we've handled a given start tag.
  * It's a generic hook to let us to post processing.
@@ -639,7 +632,7 @@ nsresult CNavDTD::ReleaseTokenPump(nsITagHandler* aHandler){
  * @param   aChildTag is the tag itself.
  * @return  status
  */
-nsresult CNavDTD::DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag){
+nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
   CToken* theNextToken=mTokenizer->PeekToken();
@@ -676,10 +669,9 @@ nsresult CNavDTD::DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag){
       case eHTMLTag_plaintext:
       case eHTMLTag_xmp:
         //grab the skipped content and dump it out as text...
-        if(theNextToken && mSink){
-          eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
-          if(eToken_skippedcontent==theType){
-            nsString& theText=((CAttributeToken*)theNextToken)->GetKey();
+        {
+          const nsString& theText=aNode.GetSkippedContent();
+          if(0<theText.Length()) {
             CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE);
           }
         }
@@ -1061,7 +1053,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       } //switch
       //now do any post processing necessary on the tag...
       if(NS_OK==result)
-        DidHandleStartTag(aToken,theChildTag);
+        DidHandleStartTag(attrNode,theChildTag);
     }
   } //if
 

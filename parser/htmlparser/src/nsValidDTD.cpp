@@ -176,11 +176,10 @@ nsresult CValidDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CValidDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=aContentType.Equals(kXMLTextContentType);
+eAutoDetectResult CValidDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
+  eAutoDetectResult result=eUnknownDetect;
   return result;
 }
-
 
 /**
  * This method is called to determine if the given DTD can perform
@@ -192,17 +191,6 @@ PRBool CValidDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 a
  */
 PRBool CValidDTD::CanConvert(nsString& aSourceType, nsString& aTargetType, PRInt32 aVersion){
   PRBool result=PR_TRUE;
-  return result;
-}
-
-/**
- * 
- * @update	gess7/7/98
- * @param 
- * @return
- */
-eAutoDetectResult CValidDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
-  eAutoDetectResult result=eUnknownDetect;
   return result;
 }
 

@@ -179,38 +179,27 @@ nsresult CWellFormedDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-PRBool CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=PR_FALSE;
-  if(!aCommand.Equals(kViewSourceCommand)) {
-    result=(aContentType.Equals(kXMLTextContentType) ||
-            aContentType.Equals(kRDFTextContentType) ||
-			      aContentType.Equals(kXULTextContentType));
-  }
-  return result;
-}
-
-
-/**
- * 
- * @update	gess7/7/98
- * @param 
- * @return
- */
-eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
+eAutoDetectResult CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
-  if(PR_TRUE==aType.Equals(kXMLTextContentType) ||
-     PR_TRUE==aType.Equals(kRDFTextContentType) ||
-     PR_TRUE==aType.Equals(kXULTextContentType)) {
-    result=eValidDetect;
-  }
-  else {
-    if(-1<aBuffer.Find("<?xml ")) {
-      aType = kXMLTextContentType;
+
+  if(!aCommand.Equals(kViewSourceCommand)) {
+    if(aContentType.Equals(kXMLTextContentType) ||
+       aContentType.Equals(kRDFTextContentType) ||
+       aContentType.Equals(kXULTextContentType)) {
       result=eValidDetect;
+    }
+    else {
+      if(-1<aBuffer.Find("<?xml ")) {
+        if(0==aContentType.Length()) {
+          aContentType = kXMLTextContentType; //only reset it if it's empty
+        }
+        result=eValidDetect;
+      }
     }
   }
   return result;
 }
+
 
 /**
  * 
