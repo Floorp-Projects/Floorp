@@ -121,55 +121,18 @@ nsImapMailFolder::~nsImapMailFolder()
 
 NS_IMPL_ADDREF_INHERITED(nsImapMailFolder, nsMsgDBFolder)
 NS_IMPL_RELEASE_INHERITED(nsImapMailFolder, nsMsgDBFolder)
+NS_IMPL_QUERY_HEAD(nsImapMailFolder)
+    NS_IMPL_QUERY_BODY(nsIMsgImapMailFolder)
+    NS_IMPL_QUERY_BODY(nsICopyMessageListener)
+    NS_IMPL_QUERY_BODY(nsIImapMailFolderSink)
+    NS_IMPL_QUERY_BODY(nsIImapMessageSink)
+    NS_IMPL_QUERY_BODY(nsIImapExtensionSink)
+    NS_IMPL_QUERY_BODY(nsIImapMiscellaneousSink)
+    NS_IMPL_QUERY_BODY(nsIUrlListener)
+    NS_IMPL_QUERY_BODY(nsIMsgFilterHitNotify)
+NS_IMPL_QUERY_TAIL_INHERITING(nsMsgDBFolder)
 
-NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-  *aInstancePtr = nsnull;
-
-    if (aIID.Equals(NS_GET_IID(nsIMsgImapMailFolder)))
-  {
-    *aInstancePtr = NS_STATIC_CAST(nsIMsgImapMailFolder*, this);
-  }              
-  else if(aIID.Equals(NS_GET_IID(nsICopyMessageListener)))
-  {
-    *aInstancePtr = NS_STATIC_CAST(nsICopyMessageListener*, this);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIImapMailFolderSink)))
-  {
-    *aInstancePtr = NS_STATIC_CAST(nsIImapMailFolderSink*, this);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIImapMessageSink)))
-  {
-    *aInstancePtr = NS_STATIC_CAST(nsIImapMessageSink*, this);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIImapExtensionSink)))
-  {
-    *aInstancePtr = NS_STATIC_CAST(nsIImapExtensionSink*, this);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIImapMiscellaneousSink)))
-  {
-    *aInstancePtr = NS_STATIC_CAST(nsIImapMiscellaneousSink*, this);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIUrlListener)))
-  {
-    *aInstancePtr = NS_STATIC_CAST(nsIUrlListener *, this);
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIMsgFilterHitNotify)))
-  {
-    *aInstancePtr = NS_STATIC_CAST(nsIMsgFilterHitNotify *, this);
-  }
-  if(*aInstancePtr)
-  {
-    AddRef();
-    return NS_OK;
-  }
-
-  return nsMsgDBFolder::QueryInterface(aIID, aInstancePtr);
-}
-
-
-
+   
 NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)
 {
 #if 0
@@ -1466,7 +1429,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         else
         {
           mDatabase->DeleteMessages(&srcKeyArray,NULL);
-          NotifyDeleteOrMoveMessagesCompleted(this);
+          NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
         }
       }
      }
@@ -1934,7 +1897,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
         {
           if (m_filterList)
             m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
-              headers, headersSize, this);
+                                            headers, headersSize, this);
         }
       }
     }
@@ -3123,7 +3086,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                     if (msgTxn)
                         msgTxn->GetSrcKeyArray(srcKeyArray);
                     srcDB->DeleteMessages(&srcKeyArray, nsnull);
-                    NotifyDeleteOrMoveMessagesCompleted(srcFolder);
+                    NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
                 }
               }
               if (m_transactionManager)
@@ -3136,7 +3099,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           // this isn't really right - we'd like to know we were 
           // deleting a message to start with, but it probably
           // won't do any harm.
-            NotifyDeleteOrMoveMessagesCompleted(this);
+            NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
 
           break;
         case nsIImapUrl::nsImapAppendMsgFromFile:

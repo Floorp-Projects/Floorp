@@ -63,8 +63,8 @@ interface nsIFolder : nsICollection {
 
   void NotifyFolderEvent(in nsIAtom event);
   
-  void NotifyFolderLoaded();
-  void NotifyDeleteOrMoveMessagesCompleted(in nsIFolder folder);
+  //  void NotifyFolderLoaded();
+  //  void NotifyDeleteOrMoveMessagesCompleted(in nsIFolder folder);
 
   
 	void Shutdown(in boolean shutdownChildren);

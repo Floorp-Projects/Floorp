@@ -255,18 +255,6 @@ nsMsgNotificationManager::OnItemEvent(nsIFolder *folder, nsIAtom *aEvent)
 }
   
 
-NS_IMETHODIMP nsMsgNotificationManager::OnFolderLoaded(nsIFolder *folder)
-{
-	nsresult rv = NS_OK;
-	return rv;
-}
-
-NS_IMETHODIMP nsMsgNotificationManager::OnDeleteOrMoveMessagesCompleted(nsIFolder *folder)
-{
-	nsresult rv = NS_OK;
-	return rv;
-}
-
 nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 {
 	nsresult rv;

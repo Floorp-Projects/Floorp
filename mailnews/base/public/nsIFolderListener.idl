@@ -63,6 +63,6 @@ interface nsIFolderListener : nsISupports {
 
   void OnItemEvent(in nsIFolder item, in nsIAtom event);
   
-	void OnFolderLoaded(in nsIFolder aFolder);
-	void OnDeleteOrMoveMessagesCompleted(in nsIFolder aFolder);
+  //	void OnFolderLoaded(in nsIFolder aFolder);
+  //	void OnDeleteOrMoveMessagesCompleted(in nsIFolder aFolder);
 };

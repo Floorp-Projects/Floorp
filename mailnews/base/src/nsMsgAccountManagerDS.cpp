@@ -904,17 +904,6 @@ nsMsgAccountManagerDataSource::OnItemAdded(nsISupports *, nsISupports *, const c
     return NS_OK;
 }
 
-nsresult
-nsMsgAccountManagerDataSource::OnDeleteOrMoveMessagesCompleted(nsIFolder *)
-{
-    return NS_OK;
-}
-
-nsresult
-nsMsgAccountManagerDataSource::OnFolderLoaded(nsIFolder *)
-{
-    return NS_OK;
-}
 
 nsresult
 nsMsgAccountManagerDataSource::OnItemBoolPropertyChanged(nsISupports *aItem,

@@ -777,18 +777,6 @@ nsMsgMessageDataSource::OnItemEvent(nsIFolder *aFolder, nsIAtom *aEvent)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMessageDataSource::OnFolderLoaded(nsIFolder *folder)
-{
-	nsresult rv = NS_OK;
-	return rv;
-}
-
-NS_IMETHODIMP nsMsgMessageDataSource::OnDeleteOrMoveMessagesCompleted(nsIFolder *folder)
-{
-	nsresult rv = NS_OK;
-	return rv;
-}
-
 nsresult nsMsgMessageDataSource::OnChangeStatus(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag)
 {
 	OnChangeStatusString(resource, oldFlag, newFlag);

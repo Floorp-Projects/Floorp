@@ -90,11 +90,15 @@ protected:
 	nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
 	nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
 protected:
-	nsCOMPtr<nsIMsgDatabase> mDatabase;  
+	nsCOMPtr<nsIMsgDatabase> mDatabase;
 	nsString mCharset;
 	PRBool mAddListener;
 
+  static nsIAtom* mFolderLoadedAtom;
+  static nsIAtom* mDeleteOrMoveMsgCompletedAtom;
 
+private:
+  static nsrefcnt mInstanceCount;
 };
 
 #endif

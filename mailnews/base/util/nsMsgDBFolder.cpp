@@ -48,39 +48,34 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
+nsIAtom* nsMsgDBFolder::mFolderLoadedAtom=nsnull;
+nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgCompletedAtom=nsnull;
+nsrefcnt nsMsgDBFolder::mInstanceCount=0;
+
 NS_IMPL_ADDREF_INHERITED(nsMsgDBFolder, nsMsgFolder)
 NS_IMPL_RELEASE_INHERITED(nsMsgDBFolder, nsMsgFolder)
 
-NS_IMETHODIMP nsMsgDBFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-	*aInstancePtr = nsnull;
-	if (aIID.Equals(NS_GET_IID(nsIDBChangeListener)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIDBChangeListener*, this);
-	}              
-	else if (aIID.Equals(NS_GET_IID(nsIUrlListener)))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIUrlListener*, this);
-	}              
-
-	if(*aInstancePtr)
-	{
-		AddRef();
-		return NS_OK;
-	}
-
-	return nsMsgFolder::QueryInterface(aIID, aInstancePtr);
-}
+NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMsgDBFolder,
+                                   nsMsgFolder,
+                                   nsIDBChangeListener,
+                                   nsIUrlListener)
+                                     
 
 nsMsgDBFolder::nsMsgDBFolder(void)
 : mAddListener(PR_TRUE)
 {
-
+  if (mInstanceCount++ <=0) {
+    mFolderLoadedAtom = NS_NewAtom("FolderLoaded");
+    mDeleteOrMoveMsgCompletedAtom = NS_NewAtom("DeleteOrMoveMsgCompleted");
+  }
 }
 
 nsMsgDBFolder::~nsMsgDBFolder(void)
 {
+  if (--mInstanceCount == 0) {
+    NS_IF_RELEASE(mFolderLoadedAtom);
+    NS_IF_RELEASE(mDeleteOrMoveMsgCompletedAtom);
+  }
 	//shutdown but don't shutdown children.
 	Shutdown(PR_FALSE);
 }
@@ -354,7 +349,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 	// the DBs all the time, if we have to open it once, get everything
 	// we might need while we're here
 
-	nsresult result;
+	nsresult result=NS_ERROR_FAILURE;
 
 	// don't need to reload from cache if we've already read from cache,
 	// and, we might get stale info, so don't do it.
@@ -892,7 +887,7 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 		PRBool updatingFolder = PR_FALSE;
 		if (NS_SUCCEEDED(mailUrl->GetUpdatingFolder(&updatingFolder)) && updatingFolder)
 		{
-			NotifyFolderLoaded();
+      NotifyFolderEvent(mFolderLoadedAtom);
 		}
 
     // be sure to remove ourselves as a url listener

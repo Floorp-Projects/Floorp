@@ -228,41 +228,6 @@ NS_IMETHODIMP nsMsgMailSession::OnItemRemoved(nsISupports *parentItem, nsISuppor
 
 }
 
-NS_IMETHODIMP  nsMsgMailSession::OnFolderLoaded(nsIFolder *folder)
-{
-
-	nsresult rv;
-	PRUint32 count;
-	rv = mListeners->Count(&count);
-	if (NS_FAILED(rv)) return rv;
-
-	
-	for(PRUint32 i = 0; i < count; i++)
-	{
-		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
-		listener->OnFolderLoaded(folder);
-	}
-	return NS_OK;
-
-
-}
-
-NS_IMETHODIMP  nsMsgMailSession::OnDeleteOrMoveMessagesCompleted(nsIFolder *folder)
-{
-
-	nsresult rv;
-	PRUint32 count;
-	rv = mListeners->Count(&count);
-	if (NS_FAILED(rv)) return rv;
-
-	
-	for(PRUint32 i = 0; i < count; i++)
-	{
-		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
-		listener->OnDeleteOrMoveMessagesCompleted(folder);
-	}
-	return NS_OK;
-}
 
 NS_IMETHODIMP nsMsgMailSession::OnItemEvent(nsIFolder *aFolder,
                                                   nsIAtom *aEvent)

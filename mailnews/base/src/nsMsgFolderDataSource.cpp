@@ -874,18 +874,6 @@ nsMsgFolderDataSource::OnItemEvent(nsIFolder *aFolder, nsIAtom *aEvent)
 }
 
 
-NS_IMETHODIMP nsMsgFolderDataSource::OnFolderLoaded(nsIFolder *folder)
-{
-	nsresult rv = NS_OK;
-	return rv;
-}
-
-NS_IMETHODIMP nsMsgFolderDataSource::OnDeleteOrMoveMessagesCompleted(nsIFolder *folder)
-{
-	nsresult rv = NS_OK;
-	return rv;
-}
-
 nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
                                                  nsIRDFResource* property,
                                                  nsIRDFNode** target)

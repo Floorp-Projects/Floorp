@@ -789,7 +789,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 			else
 			{
 				//We must have loaded the folder so send a notification
-				NotifyFolderLoaded();
+        NotifyFolderEvent(mFolderLoadedAtom);
 				//Otherwise we have a valid database so lets extract necessary info.
 				UpdateSummaryTotals(PR_TRUE);
 			}
@@ -807,7 +807,7 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 	if(!mDatabase)
 		rv = GetDatabase(aWindow); // this will cause a reparse, if needed.
 	else
-		NotifyFolderLoaded();
+    NotifyFolderEvent(mFolderLoadedAtom);
 	return rv;
 }
 
@@ -1668,7 +1668,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
               }
           }
 		  if(!isMove)
-			  NotifyDeleteOrMoveMessagesCompleted(this);
+        NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
   }
   return rv;
@@ -2330,7 +2330,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
 			nsCOMPtr<nsIFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
 			if(srcFolder)
 			{
-					srcFolder->NotifyDeleteOrMoveMessagesCompleted(srcFolder);
+        srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
 			}
 
 			//passing in NS_OK because we only get in here if copy portion succeeded
