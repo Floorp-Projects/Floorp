@@ -471,10 +471,6 @@ NS_IMETHODIMP nsHTMLEditor::Copy()
 
 NS_IMETHODIMP nsHTMLEditor::Paste()
 {
-#ifdef DEBUG_akkana
-  printf("nsHTMLEditor::Paste()\n");
-#endif
-
 #ifdef ENABLE_JS_EDITOR_LOG
   nsAutoJSEditorLogLock logLock(mJSEditorLog);
 
@@ -502,7 +498,8 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
     // Get the nsITransferable interface for getting the data from the clipboard
     if (trans)
     {
-      // Create the desired DataFlavor for the type of data we want to get out of the transferable
+      // Create the desired DataFlavor for the type of data
+      // we want to get out of the transferable
       nsAutoString htmlFlavor(kHTMLMime);
       nsAutoString textFlavor(kTextMime);
       nsAutoString imageFlavor(kJPEGImageMime);
@@ -540,9 +537,10 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
           }
           else if (flavor.Equals(imageFlavor))
           {
-            image = (nsIImage *)data;
             // Insert Image code here
-            NS_RELEASE(image);
+            printf("Don't know how to insert an image yet!\n");
+            //image = (nsIImage *)data;
+            //NS_RELEASE(image);
             rv = NS_ERROR_FAILURE; // for now give error code
           }
         }
@@ -552,9 +550,6 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
   }
   nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
 
-  //printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
-
-  // Now let InsertText handle the hard stuff:
   return rv;
 }
 
@@ -2699,9 +2694,6 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   if (!aNodeList)
     return NS_ERROR_NULL_POINTER;
 
-#if 0
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else
   nsresult res;
 
   res = NS_NewISupportsArray(aNodeList);
@@ -2751,6 +2743,14 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
         else if (tagName == "a")
         {
           // XXX Only include links if they're links to file: URLs
+          nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(content));
+          if (anchor)
+          {
+            nsAutoString href;
+            if (NS_SUCCEEDED(anchor->GetHref(href)))
+              if (href.Compare("file:", PR_TRUE, 5) == 0)
+                (*aNodeList)->AppendElement(node);
+          }
         }
       }
       iter->Next();
@@ -2758,7 +2758,6 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
   }
 
   return res;
-#endif
 }
 
 NS_IMETHODIMP
