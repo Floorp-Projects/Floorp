@@ -1,0 +1,392 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 34;
+	objects = {
+		014CEA440018CDF011CA2923 = {
+			buildRules = (
+			);
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "\U0001 -DDEBUG -DTRACING";
+			};
+			isa = PBXBuildStyle;
+			name = Development;
+		};
+		014CEA450018CDF011CA2923 = {
+			buildRules = (
+			);
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+			};
+			isa = PBXBuildStyle;
+			name = Deployment;
+		};
+//010
+//011
+//012
+//013
+//014
+//030
+//031
+//032
+//033
+//034
+		034768DFFF38A50411DB9C8B = {
+			children = (
+				034768E0FF38A50411DB9C8B,
+			);
+			isa = PBXGroup;
+			name = Products;
+			path = "";
+			refType = 2;
+		};
+		034768E0FF38A50411DB9C8B = {
+			isa = PBXFrameworkReference;
+			name = NSBrowserView.framework;
+			path = build;
+			refType = 2;
+		};
+//030
+//031
+//032
+//033
+//034
+//080
+//081
+//082
+//083
+//084
+		0867D690FE84028FC02AAC07 = {
+			buildStyles = (
+				014CEA440018CDF011CA2923,
+				014CEA450018CDF011CA2923,
+			);
+			isa = PBXProject;
+			mainGroup = 0867D691FE84028FC02AAC07;
+			productRefGroup = 034768DFFF38A50411DB9C8B;
+			projectDirPath = "";
+			targets = (
+				0867D69CFE84028FC02AAC07,
+			);
+		};
+		0867D691FE84028FC02AAC07 = {
+			children = (
+				08FB77AEFE84172EC02AAC07,
+				F6BA6D4C01B2EFCE01A962F7,
+				089C1665FE841158C02AAC07,
+				0867D69AFE84028FC02AAC07,
+				034768DFFF38A50411DB9C8B,
+			);
+			isa = PBXGroup;
+			name = NSBrowserView;
+			refType = 4;
+		};
+		0867D69AFE84028FC02AAC07 = {
+			children = (
+				1058C7B0FEA5585E11CA2CBB,
+				1058C7B2FEA5585E11CA2CBB,
+			);
+			isa = PBXGroup;
+			name = "External Frameworks and Libraries";
+			refType = 4;
+		};
+		0867D69BFE84028FC02AAC07 = {
+			isa = PBXFrameworkReference;
+			name = Foundation.framework;
+			path = /System/Library/Frameworks/Foundation.framework;
+			refType = 0;
+		};
+		0867D69CFE84028FC02AAC07 = {
+			buildPhases = (
+				0867D69DFE84028FC02AAC07,
+				0867D69EFE84028FC02AAC07,
+				0867D69FFE84028FC02AAC07,
+				0867D6A0FE84028FC02AAC07,
+				0867D6A2FE84028FC02AAC07,
+			);
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = "";
+				FRAMEWORK_VERSION = A;
+				HEADER_SEARCH_PATHS = "../../../../dist/include/xpcom ../../../../dist/include/string ../../../../dist/include/docshell ../../../../dist/include/webshell ../../../../dist/include/necko ../../../../dist/include/widget ../../../../dist/include/dom ../../../../dist/include/gfx ../../../../dist/include/layout ../../../../dist/include/content ../../../../dist/include/uriloader ../../../../dist/include/webbrwsr ../../../../dist/include/shistory ../../../../dist/include/embed_base ../../../../dist/include/pref ../../../../dist/include/windowwatcher ../../../../dist/include/mpfilelocprovider ../../../../dist/include ../../../../dist/include/nspr";
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				LIBRARY_SEARCH_PATHS = "../../../../dist/bin ../../../../dist/lib";
+				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\"";
+				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				PRODUCT_NAME = NSBrowserView;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -Wno-long-long";
+				WRAPPER_EXTENSION = framework;
+			};
+			dependencies = (
+			);
+			isa = PBXFrameworkTarget;
+			name = NSBrowserView;
+			productInstallPath = "$(HOME)/Library/Frameworks";
+			productName = NSBrowserView;
+			productReference = 034768E0FF38A50411DB9C8B;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
+<plist version=\"0.9\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleDocumentTypes</key>
+	<array/>
+	<key>CFBundleExecutable</key>
+	<string>NSBrowserView</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string></string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>FMWK</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>0.0.1d1</string>
+	<key>NSPrincipalClass</key>
+	<string></string>
+</dict>
+</plist>
+";
+			shouldUseHeadermap = 1;
+		};
+		0867D69DFE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				F6BA6D4B01B2EF8B01A962F7,
+			);
+			isa = PBXHeadersBuildPhase;
+			name = Headers;
+		};
+		0867D69EFE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				089C1668FE841158C02AAC07,
+				F64C5F2901B5904701A962F7,
+			);
+			isa = PBXResourcesBuildPhase;
+			name = "Bundle Resources";
+		};
+		0867D69FFE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				F68BA93201AC680701A962F7,
+				F6BA6D4001B20A7D01A962F7,
+				F64C5F1B01B58AC001A962F7,
+			);
+			isa = PBXSourcesBuildPhase;
+			name = Sources;
+		};
+		0867D6A0FE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				F6BA6D4501B2115301A962F7,
+				F6BA6D6001B3008E01A962F7,
+			);
+			isa = PBXFrameworksBuildPhase;
+			name = "Frameworks & Libraries";
+		};
+		0867D6A2FE84028FC02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			name = "ResourceManager Resources";
+		};
+		0867D6A5FE840307C02AAC07 = {
+			isa = PBXFrameworkReference;
+			name = AppKit.framework;
+			path = /System/Library/Frameworks/AppKit.framework;
+			refType = 0;
+		};
+		089C1665FE841158C02AAC07 = {
+			children = (
+				089C1666FE841158C02AAC07,
+				F64C5F2701B5904701A962F7,
+			);
+			isa = PBXGroup;
+			name = Resources;
+			refType = 4;
+		};
+		089C1666FE841158C02AAC07 = {
+			children = (
+				089C1667FE841158C02AAC07,
+			);
+			isa = PBXVariantGroup;
+			name = InfoPlist.strings;
+			refType = 4;
+		};
+		089C1667FE841158C02AAC07 = {
+			fileEncoding = 10;
+			isa = PBXFileReference;
+			name = English;
+			path = English.lproj/InfoPlist.strings;
+			refType = 4;
+		};
+		089C1668FE841158C02AAC07 = {
+			fileRef = 089C1666FE841158C02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		08FB77AEFE84172EC02AAC07 = {
+			children = (
+				F68BA93101AC680701A962F7,
+				F64C5F1A01B58AC001A962F7,
+				F6BA6D3F01B20A7D01A962F7,
+				F6BA6D4401B2115301A962F7,
+			);
+			isa = PBXGroup;
+			name = Classes;
+			refType = 4;
+		};
+//080
+//081
+//082
+//083
+//084
+//100
+//101
+//102
+//103
+//104
+		1058C7B0FEA5585E11CA2CBB = {
+			children = (
+				1058C7B1FEA5585E11CA2CBB,
+			);
+			isa = PBXGroup;
+			name = "Linked Frameworks";
+			refType = 4;
+		};
+		1058C7B1FEA5585E11CA2CBB = {
+			isa = PBXFrameworkReference;
+			name = Cocoa.framework;
+			path = /System/Library/Frameworks/Cocoa.framework;
+			refType = 0;
+		};
+		1058C7B2FEA5585E11CA2CBB = {
+			children = (
+				0867D69BFE84028FC02AAC07,
+				0867D6A5FE840307C02AAC07,
+			);
+			isa = PBXGroup;
+			name = "Other Frameworks";
+			refType = 4;
+		};
+//100
+//101
+//102
+//103
+//104
+//F60
+//F61
+//F62
+//F63
+//F64
+		F64C5F1A01B58AC001A962F7 = {
+			isa = PBXFileReference;
+			path = nsAlertController.mm;
+			refType = 2;
+		};
+		F64C5F1B01B58AC001A962F7 = {
+			fileRef = F64C5F1A01B58AC001A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F64C5F2701B5904701A962F7 = {
+			children = (
+				F64C5F2801B5904701A962F7,
+			);
+			isa = PBXVariantGroup;
+			name = alert.nib;
+			path = "";
+			refType = 2;
+		};
+		F64C5F2801B5904701A962F7 = {
+			isa = PBXFileReference;
+			name = English;
+			path = English.lproj/alert.nib;
+			refType = 4;
+		};
+		F64C5F2901B5904701A962F7 = {
+			fileRef = F64C5F2701B5904701A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F68BA93101AC680701A962F7 = {
+			isa = PBXFileReference;
+			path = NSBrowserView.mm;
+			refType = 4;
+		};
+		F68BA93201AC680701A962F7 = {
+			fileRef = F68BA93101AC680701A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F6BA6D3F01B20A7D01A962F7 = {
+			isa = PBXFileReference;
+			path = nsCocoaBrowserService.mm;
+			refType = 2;
+		};
+		F6BA6D4001B20A7D01A962F7 = {
+			fileRef = F6BA6D3F01B20A7D01A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F6BA6D4401B2115301A962F7 = {
+			isa = PBXFileReference;
+			name = libembed_base_s.a;
+			path = ../../../base/libembed_base_s.a;
+			refType = 2;
+		};
+		F6BA6D4501B2115301A962F7 = {
+			fileRef = F6BA6D4401B2115301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F6BA6D4A01B2EF8B01A962F7 = {
+			isa = PBXFileReference;
+			path = NSBrowserView.h;
+			refType = 2;
+		};
+		F6BA6D4B01B2EF8B01A962F7 = {
+			fileRef = F6BA6D4A01B2EF8B01A962F7;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F6BA6D4C01B2EFCE01A962F7 = {
+			children = (
+				F6BA6D4A01B2EF8B01A962F7,
+			);
+			isa = PBXGroup;
+			name = Headers;
+			path = "";
+			refType = 4;
+		};
+		F6BA6D6001B3008E01A962F7 = {
+			fileRef = 1058C7B1FEA5585E11CA2CBB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+	};
+	rootObject = 0867D690FE84028FC02AAC07;
+}
