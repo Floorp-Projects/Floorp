@@ -267,7 +267,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     foundInterface = 0;                                                  \
   nsresult status;                                                       \
   if ( !foundInterface )                                                 \
-    status = _baseclass::QueryInterface(aIID, (void**)&foundInterface);       \
+    status = _baseclass::QueryInterface(aIID, (void**)&foundInterface);  \
   else                                                                   \
     {                                                                    \
       NS_ADDREF(foundInterface);                                         \
@@ -545,40 +545,23 @@ NS_IMETHODIMP_(nsrefcnt) Class::Release(void)                               \
   return Super::Release();                                                  \
 }                                                                           \
 
-#define NS_IMPL_QUERY_INHERITED_HEAD(Class)                                 \
-  NS_IMPL_QUERY_HEAD(Class)                                                 \
-
-#define NS_IMPL_QUERY_INHERITED_TAIL(Class, Super)                          \
-    foundInterface = 0;                                                     \
-  nsresult status;                                                          \
-  if ( !foundInterface )                                                    \
-    return Super::QueryInterface(aIID, aInstancePtr);                       \
-  else                                                                      \
-    {                                                                       \
-      NS_ADDREF(foundInterface);                                            \
-      status = NS_OK;                                                       \
-    }                                                                       \
-  *aInstancePtr = foundInterface;                                           \
-  return status;                                                            \
-}                                                                           \
-
 #define NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, i1)                 \
   NS_IMPL_QUERY_INTERFACE_INHERITED1(Class, Super, i1)                      \
 
 #define NS_IMPL_QUERY_INTERFACE_INHERITED0(Class, Super)                    \
-  NS_IMPL_QUERY_INHERITED_HEAD(Class)                                       \
-  NS_IMPL_QUERY_INHERITED_TAIL(Class, Super)                                \
+  NS_IMPL_QUERY_HEAD(Class)                                       \
+  NS_IMPL_QUERY_TAIL_INHERITING(Super)                                \
 
 #define NS_IMPL_QUERY_INTERFACE_INHERITED1(Class, Super, i1)                \
-  NS_IMPL_QUERY_INHERITED_HEAD(Class)                                       \
+  NS_IMPL_QUERY_HEAD(Class)                                       \
   NS_IMPL_QUERY_BODY(i1)                                                    \
-  NS_IMPL_QUERY_INHERITED_TAIL(Class, Super)                                \
+  NS_IMPL_QUERY_TAIL_INHERITING(Super)                                \
 
 #define NS_IMPL_QUERY_INTERFACE_INHERITED2(Class, Super, i1, i2)            \
-  NS_IMPL_QUERY_INHERITED_HEAD(Class)                                       \
+  NS_IMPL_QUERY_HEAD(Class)                                       \
   NS_IMPL_QUERY_BODY(i1)                                                    \
   NS_IMPL_QUERY_BODY(i2)                                                    \
-  NS_IMPL_QUERY_INHERITED_TAIL(Class, Super)                                \
+  NS_IMPL_QUERY_TAIL_INHERITING(Super)                                \
 
 #define NS_IMPL_QUERY_INTERFACE_INHERITED3(Class, Super, i1, i2, i3)        \
   NS_IMPL_QUERY_INHERITED_HEAD(Class)                                       \
