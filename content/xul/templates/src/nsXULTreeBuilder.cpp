@@ -1400,7 +1400,7 @@ nsXULTreeBuilder::CompileCondition(nsIAtom* aTag,
 {
     nsresult rv;
 
-    if (aTag == nsXULAtoms::treeitem)
+    if (aTag == nsXULAtoms::content || aTag == nsXULAtoms::treeitem)
         rv = CompileTreeRowCondition(aRule, aCondition, aParentNode, aResult);
     else
         rv = nsXULTemplateBuilder::CompileCondition(aTag, aRule, aCondition, aParentNode, aResult);
@@ -1414,9 +1414,9 @@ nsXULTreeBuilder::CompileTreeRowCondition(nsTemplateRule* aRule,
                                                   InnerNode* aParentNode,
                                                   TestNode** aResult)
 {
-    // Compile a <treeitem> condition, which must be of the form:
+    // Compile a <content> condition, which must be of the form:
     //
-    //   <treeitem uri="?uri" />
+    //   <content uri="?uri" />
     //
     // Right now, exactly one <row> condition is required per rule. It
     // creates an nsTreeRowTestNode, binding the test's variable
