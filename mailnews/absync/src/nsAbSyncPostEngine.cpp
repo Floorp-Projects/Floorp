@@ -319,7 +319,9 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, nsPostCompletionCallback  cb,
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
-  httpChannel->SetRequestMethod(HM_POST);
+  nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
+
+  httpChannel->SetRequestMethod(method);
   httpChannel->SetUploadStream(postStream);
 **/
 
