@@ -445,7 +445,7 @@
     <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
           ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
-          oncommand="BookmarksMenu.loadBookmark(event.target, this.database)"
+          oncommand="BookmarksMenu.loadBookmark(event, this.database)"
           ondraggesture="nsDragAndDrop.startDrag(event, BookmarksMenuDNDObserver)"
           ondragdrop="nsDragAndDrop.drop(event, BookmarksMenuDNDObserver); event.preventBubble()"
           ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
