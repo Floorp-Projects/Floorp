@@ -114,15 +114,15 @@ void FilesTest::WriteStuff(nsOutputStream& s)
     
     // Initialize a native file spec from a URL
     nsFileSpec fileSpec(fileURL);
-    s << "As a file spec:               " << fileSpec << nsEndl;
+    s << "As a file spec:               " << fileSpec.GetNativePathCString() << nsEndl;
     
     // Make the spec unique (this one has no suffix).
     fileSpec.MakeUnique();
-    s << "Unique file spec:             " << fileSpec << nsEndl;
+    s << "Unique file spec:             " << fileSpec.GetNativePathCString() << nsEndl;
     
     // Assign the spec to a URL
     fileURL = fileSpec;
-    s << "File URL assigned from spec: \"" << fileURL << "\""<< nsEndl;
+    s << "File URL assigned from spec: \"" << fileURL.GetURLString() << "\""<< nsEndl;
     
     // Assign a unix path using a string with a suffix.
     filePath = "/Development/MPW/SysErrs.err";
@@ -130,11 +130,11 @@ void FilesTest::WriteStuff(nsOutputStream& s)
     
     // Assign to a file spec using a unix path.
     fileSpec = filePath;
-    s << "File spec reassigned to:      " << fileSpec << nsEndl;
+    s << "File spec reassigned to:      " << fileSpec.GetNativePathCString() << nsEndl;
     
     // Make this unique (this one has a suffix).
     fileSpec.MakeUnique();
-    s << "File spec made unique:        " << fileSpec << nsEndl;
+    s << "File spec made unique:        " << fileSpec.GetNativePathCString() << nsEndl;
 } // WriteStuff
 
 //----------------------------------------------------------------------------------------
