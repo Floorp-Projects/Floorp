@@ -1861,8 +1861,9 @@ public class ScriptRuntime {
             
             for (int i=funObj.names.length-1; i > 0; i--) {
                 String name = funObj.names[i];
-                if (scope.get(name, scope) == Scriptable.NOT_FOUND) 
-                {
+                // Don't overwrite existing def if already defined in object
+                // or prototypes of object.
+                if (getProp(scope, name, scope) == Scriptable.NOT_FOUND) {
                     if (so != null)
                         so.defineProperty(name, Undefined.instance, 
                                           ScriptableObject.PERMANENT);
