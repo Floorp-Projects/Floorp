@@ -43,7 +43,8 @@ NS_DECLARE_ID(kPlatformCharsetCID,
 typedef enum {
      kPlatformCharsetSel_PlainTextInClipboard = 0,
      kPlatformCharsetSel_FileName = 1,
-     kPlatformCharsetSel_Menu = 2
+     kPlatformCharsetSel_Menu = 2,
+     kPlatformCharsetSel_4xBookmarkFile = 3
 } nsPlatformCharsetSel;
 
 class nsIPlatformCharset : public nsISupports
