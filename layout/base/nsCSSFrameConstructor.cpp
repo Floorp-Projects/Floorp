@@ -9038,6 +9038,90 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIPresContext* aPresContex
   return DeletingFrameSubtree(aPresContext, presShell, frameManager, aRemovedFrame);
 }
 
+static PRBool
+HasPseudoStyle(nsIPresContext* aPresContext,
+               nsIContent* aContent,
+               nsIStyleContext* aStyleContext,
+               nsIAtom* aPseudoElement)
+{
+  nsCOMPtr<nsIStyleContext> pseudoStyleContext;
+  if (aContent) {
+    aPresContext->ProbePseudoStyleContextFor(aContent,
+                                             aPseudoElement,
+                                             aStyleContext, PR_FALSE,
+                                             getter_AddRefs(pseudoStyleContext));
+  }
+  return pseudoStyleContext != nsnull;
+}
+
+static void
+RemoveGeneratedContentFrameSiblings(nsIPresContext *aPresContext, nsIPresShell *aPresShell, nsIFrameManager *aFrameManager, nsIFrame *aInsertionPoint, nsIFrame *aFrame)
+{
+  NS_ASSERTION(aPresContext && aPresShell && aFrameManager && aFrame, "Null arg pointer!");
+
+  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsIStyleContext> styleContext;
+
+  aFrame->GetContent(getter_AddRefs(content));
+  aFrame->GetStyleContext(getter_AddRefs(styleContext));
+
+  if (!content || !content->IsContentOfType(nsIContent::eELEMENT) || !styleContext)
+    return;
+
+  //
+  // Remove any :before generated content frame that precedes aFrame.
+  //
+
+  if (HasPseudoStyle(aPresContext, content, styleContext,
+                     nsCSSAtoms::beforePseudo)) {
+    nsIFrame *beforeFrame = nsnull;
+    nsIFrame *frame = nsnull;
+    aFrame->GetParent(&frame);
+
+    // Find aFrame's previous sibling.
+    // XXX: Is there a better way to do this?
+
+    if (frame) {
+      nsIFrame *prev = nsnull;
+      frame->FirstChild(aPresContext, nsnull, &frame);
+
+      while (frame) {
+        if (frame == aFrame) {
+          beforeFrame = prev;
+          break;
+        }
+  
+        prev = frame;
+        frame->GetNextSibling(&frame);
+      }
+    }
+
+    if (beforeFrame &&
+        IsGeneratedContentFor(content, beforeFrame, nsCSSAtoms::beforePseudo)) {
+      aFrameManager->RemoveFrame(aPresContext, *aPresShell,
+                                 aInsertionPoint, nsnull,
+                                 beforeFrame);
+    }
+  }
+
+  //
+  // Remove any :after generated content frame that follows aFrame.
+  //
+
+  if (HasPseudoStyle(aPresContext, content, styleContext,
+                     nsCSSAtoms::afterPseudo)) {
+    nsIFrame *afterFrame = nsnull;
+    aFrame->GetNextSibling(&afterFrame);
+
+    if (afterFrame &&
+        IsGeneratedContentFor(content, afterFrame, nsCSSAtoms::afterPseudo)) {
+      aFrameManager->RemoveFrame(aPresContext, *aPresShell,
+                                 aInsertionPoint, nsnull,
+                                 afterFrame);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                       nsIContent*     aContainer,
@@ -9367,6 +9451,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                          nsLayoutAtoms::captionList, childFrame);
         }
         else {
+          RemoveGeneratedContentFrameSiblings(aPresContext, shell, frameManager, insertionPoint, childFrame);
           rv = frameManager->RemoveFrame(aPresContext, *shell, insertionPoint,
                                          nsnull, childFrame);
         }
@@ -11468,18 +11553,8 @@ nsCSSFrameConstructor::HaveFirstLetterStyle(nsIPresContext* aPresContext,
                                             nsIContent* aContent,
                                             nsIStyleContext* aStyleContext)
 {
-  nsCOMPtr<nsIStyleContext> fls;
-  if (aContent) {
-    aPresContext->ProbePseudoStyleContextFor(aContent,
-                                             nsHTMLAtoms::firstLetterPseudo,
-                                             aStyleContext, PR_FALSE,
-                                             getter_AddRefs(fls));
-  }
-  PRBool result = PR_FALSE;
-  if (fls) {
-    result = PR_TRUE;
-  }
-  return result;
+  return HasPseudoStyle(aPresContext, aContent, aStyleContext,
+                        nsHTMLAtoms::firstLetterPseudo);
 }
 
 PRBool
@@ -11487,18 +11562,8 @@ nsCSSFrameConstructor::HaveFirstLineStyle(nsIPresContext* aPresContext,
                                           nsIContent* aContent,
                                           nsIStyleContext* aStyleContext)
 {
-  nsCOMPtr<nsIStyleContext> fls;
-  if (aContent) {
-    aPresContext->ProbePseudoStyleContextFor(aContent,
-                                             nsHTMLAtoms::firstLinePseudo,
-                                             aStyleContext, PR_FALSE,
-                                             getter_AddRefs(fls));
-  }
-  PRBool result = PR_FALSE;
-  if (fls) {
-    result = PR_TRUE;
-  }
-  return result;
+  return HasPseudoStyle(aPresContext, aContent, aStyleContext,
+                        nsHTMLAtoms::firstLinePseudo);
 }
 
 void
