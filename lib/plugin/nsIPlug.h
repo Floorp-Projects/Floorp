@@ -155,6 +155,8 @@ struct nsRect {
 
 #ifdef XP_UNIX
 
+#include <stdio.h>
+
 /*
  * Callback Structures.
  *
