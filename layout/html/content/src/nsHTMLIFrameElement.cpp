@@ -327,7 +327,7 @@ nsHTMLIFrameElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
     aHint = NS_STYLE_HINT_REFLOW;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    aHint = NS_STYLE_HINT_REFLOW;
+    aHint = NS_STYLE_HINT_FRAMECHANGE;
   }
   else if (aAttribute == nsHTMLAtoms::frameborder) {
     aHint = NS_STYLE_HINT_REFLOW;
