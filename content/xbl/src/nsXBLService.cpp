@@ -949,6 +949,10 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   else
     protoBinding->GetBindingElement(getter_AddRefs(child));
 
+  NS_ASSERTION(protoBinding, "Unable to locate an XBL binding.");
+  if (!protoBinding)
+    return NS_ERROR_FAILURE;
+
   // If our prototype already has a base, then don't check for an "extends" attribute.
   nsCOMPtr<nsIXBLBinding> baseBinding;
   nsCOMPtr<nsIXBLPrototypeBinding> baseProto;
