@@ -1,6 +1,7 @@
 file:///s:/mozilla/layout/html/tests/table/core/backgrounds.html
 file:///s:/mozilla/layout/html/tests/table/core/bloomberg.html
 file:///s:/mozilla/layout/html/tests/table/core/borders.html
+file:///s:/mozilla/layout/html/tests/table/core/box_sizing.html
 file:///s:/mozilla/layout/html/tests/table/core/captions.html
 file:///s:/mozilla/layout/html/tests/table/core/cell_heights.html
 file:///s:/mozilla/layout/html/tests/table/core/columns.html
