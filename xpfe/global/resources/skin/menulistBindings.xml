@@ -77,10 +77,40 @@
   BINDING : menubutton-dual
   XUL REPRESENTATION : <menubutton class="menubutton-dual">
   -->
-  <binding id="menubutton-dual">
+  <binding id="menubutton-dual-top">
     <content excludes="template,observes,menupopup">
       <xul:box class="menubutton-internal-box">
-        <xul:button class="menubutton-dual-button" allowevents="true" 
+        <xul:button class="menubutton-dual-button top" allowevents="true" 
+                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
+        <xul:image class="menubutton-dropmarker"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="menubutton-dual-left">
+    <content excludes="template,observes,menupopup">
+      <xul:box class="menubutton-internal-box">
+        <xul:button class="menubutton-dual-button left" allowevents="true" 
+                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
+        <xul:image class="menubutton-dropmarker"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="menubutton-dual-right">
+    <content excludes="template,observes,menupopup">
+      <xul:box class="menubutton-internal-box">
+        <xul:button class="menubutton-dual-button right" allowevents="true" 
+                    inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
+        <xul:image class="menubutton-dropmarker"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="menubutton-dual-bottom">
+    <content excludes="template,observes,menupopup">
+      <xul:box class="menubutton-internal-box">
+        <xul:button class="menubutton-dual-button bottom" allowevents="true" 
                     inherits="buttontooltiptext:tooltiptext,buttonaction:oncommand,src,value,crop,accesskey"/>
         <xul:image class="menubutton-dropmarker"/>
       </xul:box>
