@@ -242,7 +242,6 @@ Contributor(s):
   
     <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" 
              grippytooltiptext="&personalToolbar.tooltip;" tbalign="stretch"
-             oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)"
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
              ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
              ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
@@ -265,6 +264,7 @@ Contributor(s):
                      persist="hidden" label="&bookmarksButton.label;"
                      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                      ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
+                     oncommand="OpenBookmarkURL(event.target, this.database)" 
                      template="bookmarksMenuTemplate"
                      ondraggesture="if (event.target.id=='bookmarks-button') event.preventBubble()">
         <menupopup onpopupshowing="checkBookmarksMenuTemplateBuilder(); updateGroupmarkMenuitem('PT_bookmarks_groupmark');">
@@ -278,9 +278,10 @@ Contributor(s):
       </toolbarbutton>
 
       <!-- Personal toolbar items -->
-      <hbox id="innermostBox" flex="1" style="min-width: 1px;" context="bmContext" 
+      <hbox id="NC:PersonalToolbarFolder" flex="1" style="min-width: 1px;" context="bmContext" 
            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
            ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
+           oncommand="OpenBookmarkURL(event.target, this.database)"
            rdf:type="http://home.netscape.com/NC-rdf#Folder">
         <tooltip id="ptTooltip" noautohide="true" onpopupshowing="return FillInPTTooltip(document.tooltipNode)">
           <vbox id="ptTooltipTextBox" flex="1">  

@@ -62,15 +62,10 @@ const NC_NS_CMD = NC_NS + "command?cmd=";
  * and I WILL come after you with a knife. 
  */
 
-function NODE_ID (aElement)
-{
-  return aElement.getAttribute("ref") || aElement.id;
-}
-
 function LITERAL (aDB, aElement, aPropertyID)
 {
   var RDF = BookmarksUIElement.prototype.RDF;
-  var rSource = RDF.GetResource(NODE_ID(aElement));
+  var rSource = RDF.GetResource(aElement.id);
   var rProperty = RDF.GetResource(aPropertyID);
   var node = aDB.GetTarget(rSource, rProperty, true);
   return node ? node.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
@@ -134,8 +129,7 @@ BookmarksUIElement.prototype = {
     var selection = this.getContextSelection (itemNode);
     var commonCommands = [];
     for (var i = 0; i < selection.length; ++i) {
-      var nodeURI = NODE_ID(selection[i]);
-      var commands = this.getAllCmds(nodeURI);
+      var commands = this.getAllCmds(selection[i].id);
       if (!commands) {
         aEvent.preventDefault();
         return;
@@ -333,8 +327,7 @@ BookmarksUIElement.prototype = {
     case "bm_setnewbookmarkfolder":
     case "bm_setpersonaltoolbarfolder":
     case "bm_setnewsearchfolder":
-      BookmarksUtils.doBookmarksCommand(NODE_ID(selectedItem),
-                                        NC_NS_CMD + aCommandID, args);
+      BookmarksUtils.doBookmarksCommand(selectedItem.id, NC_NS_CMD + aCommandID, args);
       // XXX - The containing node seems to be closed here and the 
       //       focus/selection is destroyed.
       this.selectElement(selectedItem);
@@ -364,16 +357,16 @@ BookmarksUIElement.prototype = {
                  "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, folder, null, "selectFolder", rv);
       if (rv.selectedFolder) {
         for (var k = 0; k < selection.length; ++k) {
-          if (NODE_ID(selection[k]) == rv.selectedFolder) 
+          if (selection[k].id == rv.selectedFolder)
             return; // Selection contains the target folder. Just fail silently.
         }
         var additiveFlag = false;
         var selectedItems = [].concat(this.getSelection())
         for (var i = 0; i < selectedItems.length; ++i) {
           var currItem = selectedItems[i];
-          var currURI = NODE_ID(currItem);
+          var currURI = currItem.id;
           var parent = gBookmarksShell.findRDFNode(currItem, false);
-          gBookmarksShell.moveBookmark(currURI, NODE_ID(parent), rv.selectedFolder);
+          gBookmarksShell.moveBookmark(currURI, parent.id, rv.selectedFolder);
           gBookmarksShell.selectFolderItem(rv.selectedFolder, currURI, additiveFlag);
           if (!additiveFlag) additiveFlag = true;
         }
@@ -393,9 +386,8 @@ BookmarksUIElement.prototype = {
       nfseln = this.getBestItem();
       var parentNode = this.findRDFNode(nfseln, false);
       args = [{ property: NC_NS + "parent", 
-                resource: NODE_ID(parentNode) }];
-      BookmarksUtils.doBookmarksCommand(NODE_ID(nfseln), 
-                                        NC_NS_CMD + "newseparator", args);
+                resource: parentNode.id }];
+      BookmarksUtils.doBookmarksCommand(nfseln.id, NC_NS_CMD + "newseparator", args);
       break;
     case "bm_import":
     case "bm_export":
@@ -420,7 +412,7 @@ BookmarksUIElement.prototype = {
       }
       var seln = this.getBestItem();
       args = [{ property: NC_NS + "URL", literal: fileName}];
-      BookmarksUtils.doBookmarksCommand(NODE_ID(seln), NC_NS_CMD + aCommandID, args);
+      BookmarksUtils.doBookmarksCommand(seln.id, NC_NS_CMD + aCommandID, args);
       break;
     }
   },
@@ -428,7 +420,7 @@ BookmarksUIElement.prototype = {
   openFolderInNewWindow: function (aSelectedItem)
   {
     openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", 
-               "", "chrome,all,dialog=no", NODE_ID(aSelectedItem));
+               "", "chrome,all,dialog=no", aSelectedItem.id);
   },
   
   copySelection: function (aSelection)
@@ -447,7 +439,7 @@ BookmarksUIElement.prototype = {
     for (var i = 0; i < aSelection.length; ++i) {
       var url = LITERAL(this.db, aSelection[i], NC_NS + "URL");
       var name = LITERAL(this.db, aSelection[i], NC_NS + "Name");
-      sBookmarkItem += NODE_ID(aSelection[i]) + "\n";
+      sBookmarkItem += aSelection[i].id + "\n";
       sTextUnicode += url + "\n";
       sTextHTML += "<A HREF=\"" + url + "\">" + name + "</A>";
     }    
@@ -509,8 +501,8 @@ BookmarksUIElement.prototype = {
     
     const lastSelected = aSelection[aSelection.length-1];  
     const kParentNode = this.resolvePasteFolder(aSelection);
-    const krParent = this.RDF.GetResource(NODE_ID(kParentNode));
-    const krSource = this.RDF.GetResource(NODE_ID(lastSelected));
+    const krParent = this.RDF.GetResource(kParentNode.id);
+    const krSource = this.RDF.GetResource(lastSelected.id);
     
     const kRDFCContractID = "@mozilla.org/rdf/container;1";
     const kRDFCIID = Components.interfaces.nsIRDFContainer;
@@ -616,7 +608,7 @@ BookmarksUIElement.prototype = {
     var selectionLength = aSelection.length;
     while (aSelection.length && aSelection[count]) {
       const currParent = this.findRDFNode(aSelection[count], false);
-      const kSelectionURI = NODE_ID(aSelection[count]);
+      const kSelectionURI = aSelection[count].id;
 
       // Disallow the removal of certain 'special' nodes
       if (kSelectionURI == "NC:BookmarksRoot") {
@@ -634,7 +626,7 @@ BookmarksUIElement.prototype = {
         kPrefSvc.setBoolPref("browser.bookmarks.import_system_favorites", false);
       }
         
-      const krParent = this.RDF.GetResource(NODE_ID(currParent));
+      const krParent = this.RDF.GetResource(currParent.id);
       const krBookmark = this.RDF.GetResource(kSelectionURI);
       const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
 
@@ -693,8 +685,7 @@ BookmarksUIElement.prototype = {
   {
     if (aBookmarkItem.getAttribute("type") != NC_NS + "BookmarkSeparator") 
       openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
-                 "", "centerscreen,chrome,resizable=no", 
-                 NODE_ID(aBookmarkItem));
+                 "", "centerscreen,chrome,resizable=no", aBookmarkItem.id);
   },
 
   findInBookmarks: function ()
