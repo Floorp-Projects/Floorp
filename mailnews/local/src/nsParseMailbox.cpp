@@ -1602,7 +1602,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 			NS_ADDREF(inbox);
 		char * headers = m_headers.GetBuffer();
 		PRUint32 headersSize = m_headers.GetBufferPos();
-		nsresult matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterInboxRule, msgHdr, inbox, 
+		nsresult matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, msgHdr, inbox, 
 											m_mailDB, headers, headersSize, this);
 		NS_IF_RELEASE(inbox);
 	}
@@ -1638,7 +1638,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 		PRBool isRead = (msgFlags & MSG_FLAG_READ);
 		switch (actionType)
 		{
-		case nsMsgFilterActionDelete:
+		case nsMsgFilterAction::Delete :
 		{
 			nsCOMPtr <nsIMsgFolder> trash;
 			// set value to trash folder
@@ -1657,7 +1657,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 
 			msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);	// mark read in trash.
 		}
-		case nsMsgFilterActionMoveToFolder:
+		case nsMsgFilterAction::MoveToFolder:
 			// if moving to a different file, do it.
 			if (value && PL_strcasecmp(m_mailboxName, (char *) value))
 			{
@@ -1709,28 +1709,28 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 
 			}
 			break;
-		case nsMsgFilterActionMarkRead:
+		case nsMsgFilterAction::MarkRead:
 			MarkFilteredMessageRead(msgHdr);
 			break;
-		case nsMsgFilterActionKillThread:
+		case nsMsgFilterAction::KillThread:
 			// for ignore and watch, we will need the db
 			// to check for the flags in msgHdr's that
 			// get added, because only then will we know
 			// the thread they're getting added to.
 			msgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
 			break;
-		case nsMsgFilterActionWatchThread:
+		case nsMsgFilterAction::WatchThread:
 			msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
 			break;
-		case nsMsgFilterActionChangePriority:
+		case nsMsgFilterAction::ChangePriority:
 			msgHdr->SetPriority(*(nsMsgPriority *) &value);
 			break;
 		default:
 			break;
 		}
 	PRBool loggingEnabled;
-	m_filterList->LoggingEnabled(&loggingEnabled);
-	if (loggingEnabled && !m_msgMovedByFilter && actionType != nsMsgFilterActionMoveToFolder)
+	m_filterList->GetLoggingEnabled(&loggingEnabled);
+	if (loggingEnabled && !m_msgMovedByFilter && actionType != nsMsgFilterAction::MoveToFolder)
 		filter->LogRuleHit(GetLogFile(), msgHdr);
 	}
 	return rv;
@@ -1915,7 +1915,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	// We are logging the hit with the old mailHdr, which should work, as long
 	// as LogRuleHit doesn't assume the new hdr.
 	PRBool loggingEnabled;
-	m_filterList->LoggingEnabled(&loggingEnabled);
+	m_filterList->GetLoggingEnabled(&loggingEnabled);
 	if (loggingEnabled)
 		filter->LogRuleHit(GetLogFile(), mailHdr);
 
