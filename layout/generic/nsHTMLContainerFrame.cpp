@@ -316,6 +316,16 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
             !display->mVisible) {
           viewManager->SetViewContentTransparency(view, PR_TRUE);
         }
+        // XXX If it's relatively positioned or absolutely positioned then we
+        // need to mark it as having transparent content, too. See bug #2502
+        const nsStylePosition* position = (const nsStylePosition*)
+          aStyleContext->GetStyleData(eStyleStruct_Position);
+
+        if ((NS_STYLE_POSITION_RELATIVE == position->mPosition) ||
+            (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)) {
+          viewManager->SetViewContentTransparency(view, PR_TRUE);
+        }
+
         viewManager->SetViewOpacity(view, color->mOpacity);
         NS_RELEASE(viewManager);
       }
