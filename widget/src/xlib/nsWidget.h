@@ -103,6 +103,8 @@ public:
   static nsWidget        *getWidgetForWindow(Window aWindow);
 protected:
   // create the native window for this class
+  virtual void CreateNativeWindow(Window aParent, nsRect aRect,
+                                  XSetWindowAttributes aAttr, unsigned long aMask);
   virtual void CreateNative(Window aParent, nsRect aRect);
   virtual void DestroyNative(void);
 

@@ -49,16 +49,12 @@ public:
 
 nsWidget::nsWidget() : nsBaseWidget()
 {
-  int r, g, b;
-  r =(int)(255.0*rand()/(RAND_MAX+1.0));
-  g =(int)(255.0*rand()/(RAND_MAX+1.0));
-  b =(int)(255.0*rand()/(RAND_MAX+1.0));
   mPreferredWidth = 0;
   mPreferredHeight = 0;
   mBaseWindow = 0;
-  mBackground = NS_RGB(r, g, b);
+  mBackground = NS_RGB(192, 192, 192);
   bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
-  mBackground = NS_RGB(r, g, b);
+  mBackground = NS_RGB(192, 192, 192);
   border_pixel = xlib_rgb_xpixel_from_rgb(border_rgb);
   mGC = 0;
   parentWidget = nsnull;
@@ -118,7 +114,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                nsWidgetInitData *aInitData,
                                nsNativeWidget aNativeParent)
 {
-
+  
   Window parent;
 
   // set up the BaseWidget parts.
@@ -392,14 +388,8 @@ nsIWidget *nsWidget::GetParent(void)
 void nsWidget::CreateNative(Window aParent, nsRect aRect)
 {
   XSetWindowAttributes attr;
-  unsigned long        attr_mask;
-  int width;
-  int height;
+  unsigned long attr_mask;
 
-  printf("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", name);
-  if (!strcmp(name, "unnamed")) {
-    printf("What freaking widget is this, anyway?\n");
-  }
   // on a window resize, we don't want to window contents to
   // be discarded...
   attr.bit_gravity = NorthWestGravity;
@@ -415,7 +405,21 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   // check to see if there was actually a colormap.
   if (attr.colormap)
     attr_mask |= CWColormap;
-  
+
+  CreateNativeWindow(aParent, mBounds, attr, attr_mask);
+}
+                            
+
+void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
+                                  XSetWindowAttributes aAttr, unsigned long aMask)
+{
+  int width;
+  int height;
+
+  printf("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", name);
+  if (!strcmp(name, "unnamed")) {
+    printf("What freaking widget is this, anyway?\n");
+  }
   printf("Creating XWindow: x %d y %d w %d h %d\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
   if (aRect.width <= 0) {
@@ -441,8 +445,8 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
                               gDepth,
                               InputOutput,    // class
                               gVisual, // visual
-                              attr_mask,
-                              &attr);
+                              aMask,
+                              &aAttr);
   printf("nsWidget: Created window 0x%lx with parent 0x%lx\n",
          mBaseWindow, aParent);
   // XXX when we stop getting lame values for this remove it.

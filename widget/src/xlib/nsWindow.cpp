@@ -24,6 +24,10 @@ nsWindow::nsWindow() : nsWidget()
 {
   NS_INIT_REFCNT();
   name = "nsWindow";
+  mBackground = NS_RGB(255, 255, 255);
+  bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBackground = NS_RGB(255, 255, 255);
+  border_pixel = xlib_rgb_xpixel_from_rgb(border_rgb);
 }
 
 nsWindow::~nsWindow()
@@ -41,14 +45,11 @@ nsWindow::DestroyNative(void)
   }
 }
 
-
-void
-nsWindow::CreateNative(Window aParent, nsRect aRect)
+void nsWindow::CreateNative(Window aParent, nsRect aRect)
 {
   XSetWindowAttributes attr;
-  unsigned long        attr_mask;
-  int width;
-  int height;
+  unsigned long attr_mask;
+
   // on a window resize, we don't want to window contents to
   // be discarded...
   attr.bit_gravity = NorthWestGravity;
@@ -65,41 +66,7 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
   if (attr.colormap)
     attr_mask |= CWColormap;
 
-  printf("Creating XWindow: x %d y %d w %d h %d\n",
-         aRect.x, aRect.y, aRect.width, aRect.height);
-  if (aRect.width <= 0) {
-    printf("*** Fixing width from %d...\n", aRect.width);
-    width = 1;
-  }
-  else {
-    width = aRect.width;
-  }
-  if (aRect.height <= 0) {
-    printf("*** Fixing height from %d...\n", aRect.height);
-    height = 1;
-  }
-  else {
-    height = aRect.height;
-  }
-  
-  mBaseWindow = XCreateWindow(gDisplay,
-                              aParent,
-                              aRect.x, aRect.y,
-                              width, height,
-                              0, // border width
-                              gDepth,
-                              InputOutput,    // class
-                              gVisual,        // get the visual from xlibrgb
-                              attr_mask,
-                              &attr);
-  printf("nsWindow Created window 0x%lx with parent 0x%lx\n",
-         mBaseWindow, aParent);
-  // XXX when we stop getting lame values for this remove it.
-  // sometimes the dimensions have been corrected by the code above.
-  mBounds.height = height;
-  mBounds.width = width;
-  // add the callback for this
-  AddWindowCallback(mBaseWindow, this);
+  CreateNativeWindow(aParent, mBounds, attr, attr_mask);
 }
 
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
