@@ -50,6 +50,8 @@ $Mac::AppleEvents::Simple::SWITCH = 0;
 # supply your own path to the source here
 #_test('PowerPudgeIV:mozilla:mozilla:');
 
+# If you want to understand the gobbldeygook that's used to build Apple Events,
+# you should start by reading the AEGizmos documentation.
 
 =pod
 
