@@ -1816,9 +1816,11 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 													nsIPluginInstanceOwner *aOwner)
 {
 	nsresult result = NS_ERROR_FAILURE;
+       nsIPluginInstance* instance = NULL;
 	nsIPlugin* plugin = NULL;
 	const char* mimetype;
-
+       nsString2 strProgID (NS_INLINE_PLUGIN_PROGID_PREFIX);
+       char buf[255];  // todo: need to use a const
 		
 	if(!aURL)
 		return NS_ERROR_FAILURE;
@@ -1850,30 +1852,43 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 	else
 		mimetype = aMimeType;
 
+    strProgID += mimetype;
+    strProgID.ToCString(buf, 255);     // todo: need to use a const
+  
+    result = nsComponentManager::CreateInstance(buf,
+                                                nsnull,
+                                                nsIPluginInstance::GetIID(),
+                                                (void**)&instance);
 
-  if(GetPluginFactory(mimetype, &plugin) == NS_OK)
-  {
-		// instantiate a plugin.
-		nsIPluginInstance* instance = NULL;
-    if(plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance) == NS_OK) 
-    {
-			aOwner->SetInstance(instance);
+    // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
+    if (NS_FAILED(result)) {
+      if(GetPluginFactory(mimetype, &plugin) == NS_OK){
+        result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
+        NS_RELEASE(plugin);
+      }
+      return result;
+    }
 
-			nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
+    // neither an XPCOM or legacy plugin could be instantiated, so return the failure
+    if (NS_FAILED(result)) {
+      return result;
+    }
 
-			// set up the peer for the instance
-			peer->Initialize(aOwner, mimetype);     // this will not add a ref to the instance (or owner). MMP
+    aOwner->SetInstance(instance);
 
-			// tell the plugin instance to initialize itself and pass in the peer.
-			instance->Initialize(peer);
+    nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
 
-      AddInstanceToActiveList(instance, aURL);
-      //NS_RELEASE(instance);
-			result = NS_OK;
-     }
-    NS_RELEASE(plugin);
-	}
-	return result;
+    // set up the peer for the instance
+    peer->Initialize(aOwner, mimetype);     
+
+    // tell the plugin instance to initialize itself and pass in the peer.
+    instance->Initialize(peer);  // this will not add a ref to the instance (or owner). MMP
+
+    AddInstanceToActiveList(instance, aURL);
+
+    //NS_RELEASE(instance);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
