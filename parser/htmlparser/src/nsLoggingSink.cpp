@@ -79,6 +79,7 @@ public:
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD NotifyError(nsresult aErrorResult);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
 
@@ -239,6 +240,12 @@ NS_IMETHODIMP
 nsLoggingSink::AddLeaf(const nsIParserNode& aNode)
 {
   return LeafNode(aNode);
+}
+
+NS_IMETHODIMP 
+nsLoggingSink::NotifyError(nsresult aErrorResult)
+{
+  return NS_OK;
 }
 
 

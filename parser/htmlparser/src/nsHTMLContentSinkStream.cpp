@@ -908,7 +908,11 @@ nsHTMLContentSinkStream::WillResume(void) {
   return NS_OK;
 }
 
-
+NS_IMETHODIMP 
+nsHTMLContentSinkStream::NotifyError(nsresult aErrorResult)
+{
+  return NS_OK;
+}
 
 
 /**

@@ -67,6 +67,7 @@ public:
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD NotifyError(nsresult aErrorResult);
   NS_IMETHOD CloseTopmostContainer();
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
@@ -247,6 +248,11 @@ NS_IMETHODIMP RobotSink::CloseTopmostContainer()
 }
 
 NS_IMETHODIMP RobotSink::AddLeaf(const nsIParserNode& aNode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP RobotSink::NotifyError(nsresult aErrorResult)
 {
   return NS_OK;
 }
