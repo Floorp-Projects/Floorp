@@ -525,7 +525,7 @@ void
 morkParser::ReadCell(morkEnv* ev)
 {
   mParser_CellMid.ClearMid();
-  this->StartSpanOnLastByte(ev, &mParser_CellSpan);
+  // this->StartSpanOnLastByte(ev, &mParser_CellSpan);
   morkMid* cellMid = 0; // if mid syntax is used for column
   morkBuf* cellBuf = 0; // if naked string is used for column
 
@@ -533,7 +533,7 @@ morkParser::ReadCell(morkEnv* ev)
   register int c;
   if ( (c = s->Getc(ev)) != EOF && ev->Good() )
   {
-    this->StartSpanOnLastByte(ev, &mParser_ColumnSpan);
+    // this->StartSpanOnLastByte(ev, &mParser_ColumnSpan);
     if ( c == '^' )
     {
       cellMid = &mParser_CellMid;
@@ -547,7 +547,7 @@ morkParser::ReadCell(morkEnv* ev)
     }
     if ( ev->Good() )
     {
-      this->EndSpanOnThisByte(ev, &mParser_ColumnSpan);
+      // this->EndSpanOnThisByte(ev, &mParser_ColumnSpan);
 
       mParser_InCell = morkBool_kTrue;
       this->OnNewCell(ev, *mParser_CellSpan.AsPlace(),
@@ -556,13 +556,13 @@ morkParser::ReadCell(morkEnv* ev)
       mParser_CellChange = morkChange_kNil;
       if ( (c = this->NextChar(ev)) != EOF && ev->Good() )
       {
-        this->StartSpanOnLastByte(ev, &mParser_SlotSpan);
+        // this->StartSpanOnLastByte(ev, &mParser_SlotSpan);
         if ( c == '=' )
         {
           morkBuf* buf = this->ReadValue(ev);
           if ( buf )
           {
-            this->EndSpanOnThisByte(ev, &mParser_SlotSpan);
+            // this->EndSpanOnThisByte(ev, &mParser_SlotSpan);
             this->OnValue(ev, mParser_SlotSpan, *buf);
           }
         }
@@ -570,7 +570,7 @@ morkParser::ReadCell(morkEnv* ev)
         {
           if ( this->ReadMid(ev, &mParser_Mid) )
           {
-            this->EndSpanOnThisByte(ev, &mParser_SlotSpan);
+            // this->EndSpanOnThisByte(ev, &mParser_SlotSpan);
             if ( (c = this->NextChar(ev)) != EOF && ev->Good() )
             {
               if ( c != ')' )
@@ -593,7 +593,7 @@ morkParser::ReadCell(morkEnv* ev)
         }
       }
       
-      this->EndSpanOnThisByte(ev, &mParser_CellSpan);
+      // this->EndSpanOnThisByte(ev, &mParser_CellSpan);
       mParser_InCell = morkBool_kFalse;
       this->OnCellEnd(ev, mParser_CellSpan);
     }
@@ -623,7 +623,7 @@ void morkParser::ReadRow(morkEnv* ev, int c)
 {
   if ( ev->Good() )
   {
-    this->StartSpanOnLastByte(ev, &mParser_RowSpan);
+    // this->StartSpanOnLastByte(ev, &mParser_RowSpan);
     if ( mParser_Change )
       mParser_RowChange = mParser_Change;
 
@@ -683,7 +683,7 @@ void morkParser::ReadRow(morkEnv* ev, int c)
             mParser_Stream->Ungetc(c);
         }
         
-        this->EndSpanOnThisByte(ev, &mParser_RowSpan);
+        // this->EndSpanOnThisByte(ev, &mParser_RowSpan);
         mParser_InRow = morkBool_kFalse;
         this->OnRowEnd(ev, mParser_RowSpan);
 
@@ -710,7 +710,7 @@ void morkParser::ReadRow(morkEnv* ev, int c)
             s->Ungetc(c);
         }
 
-        this->EndSpanOnThisByte(ev, &mParser_RowSpan);
+        // this->EndSpanOnThisByte(ev, &mParser_RowSpan);
         mParser_InRow = morkBool_kFalse;
         this->OnRowEnd(ev, mParser_RowSpan);
       }
@@ -728,7 +728,7 @@ void morkParser::ReadTable(morkEnv* ev)
 // zm:TableItem ::= zm:MetaTable | zm:RowRef | zm:Row
 // zm:MetaTable ::= zm:S? '{' zm:S? zm:Cell* zm:S? '}' /* meta attributes */
 {
-  this->StartSpanOnLastByte(ev, &mParser_TableSpan);
+  // this->StartSpanOnLastByte(ev, &mParser_TableSpan);
 
   if ( mParser_Change )
     mParser_TableChange = mParser_Change;
@@ -787,7 +787,7 @@ void morkParser::ReadTable(morkEnv* ev)
       }
     }
 
-    this->EndSpanOnThisByte(ev, &mParser_TableSpan);
+    // this->EndSpanOnThisByte(ev, &mParser_TableSpan);
     mParser_InTable = morkBool_kFalse;
     this->OnTableEnd(ev, mParser_TableSpan);
 
@@ -930,7 +930,7 @@ void morkParser::ReadAlias(morkEnv* ev)
 // zm:Alias     ::= zm:S? '(' ('#')? zm:Hex+ zm:S? zm:Value ')'
 // zm:Value   ::= '=' ([^)$\] | '\' zm:NonCRLF | zm:Continue | zm:Dollar)*
 {
-  this->StartSpanOnLastByte(ev, &mParser_AliasSpan);
+  // this->StartSpanOnLastByte(ev, &mParser_AliasSpan);
 
   int nextChar;
   mork_id hex = this->ReadHex(ev, &nextChar);
@@ -949,7 +949,7 @@ void morkParser::ReadAlias(morkEnv* ev)
       mParser_Mid.mMid_Buf = this->ReadValue(ev);
       if ( mParser_Mid.mMid_Buf )
       {
-        this->EndSpanOnThisByte(ev, &mParser_AliasSpan);
+        // this->EndSpanOnThisByte(ev, &mParser_AliasSpan);
         this->OnAlias(ev, mParser_AliasSpan, mParser_Mid);
       }
     }
@@ -963,7 +963,7 @@ void morkParser::ReadMeta(morkEnv* ev, int inEndMeta)
 // zm:MetaTable ::= zm:S? '{' zm:S? zm:Cell* zm:S? '}' /* meta attributes */
 // zm:MetaRow   ::= zm:S? '[' zm:S? zm:Cell* zm:S? ']' /* meta attributes */
 {
-  this->StartSpanOnLastByte(ev, &mParser_MetaSpan);
+  // this->StartSpanOnLastByte(ev, &mParser_MetaSpan);
   mParser_InMeta = morkBool_kTrue;
   this->OnNewMeta(ev, *mParser_MetaSpan.AsPlace());
 
@@ -1014,7 +1014,7 @@ void morkParser::ReadMeta(morkEnv* ev, int inEndMeta)
     }
   }
 
-  this->EndSpanOnThisByte(ev, &mParser_MetaSpan);
+  // this->EndSpanOnThisByte(ev, &mParser_MetaSpan);
   mParser_InMeta = morkBool_kFalse;
   this->OnMetaEnd(ev, mParser_MetaSpan);
 }
@@ -1062,7 +1062,7 @@ mork_bool morkParser::FindGroupEnd(morkEnv* ev)
   {
     if ( c == '@' ) // maybe start of group ending?
     {
-      this->EndSpanOnThisByte(ev, &mParser_GroupSpan);
+      // this->EndSpanOnThisByte(ev, &mParser_GroupSpan);
       if ( (c = s->Getc(ev)) == '$' ) // '$' follows '@' ?
       {
         if ( (c = s->Getc(ev)) == '$' ) // '$' follows "@$" ?
@@ -1070,7 +1070,7 @@ mork_bool morkParser::FindGroupEnd(morkEnv* ev)
           if ( (c = s->Getc(ev)) == '}' )
           {
             foundEnd = this->ReadEndGroupId(ev);
-            this->EndSpanOnThisByte(ev, &mParser_GroupSpan);
+            // this->EndSpanOnThisByte(ev, &mParser_GroupSpan);
 
           }
           else
@@ -1095,6 +1095,7 @@ void morkParser::ReadGroup(morkEnv* ev)
      register int c;
     if ( (c = s->Getc(ev)) == '@' )
     {
+    	// we really need the following span inside morkBuilder::OnNewGroup():
       this->StartSpanOnThisByte(ev, &mParser_GroupSpan);
       mork_pos startPos = mParser_GroupSpan.mSpan_Start.mPlace_Pos;
 
@@ -1216,7 +1217,7 @@ void morkParser::ReadDict(morkEnv* ev)
   mParser_Change = morkChange_kNil;
   mParser_AtomChange = morkChange_kNil;
   
-  this->StartSpanOnLastByte(ev, &mParser_DictSpan);
+  // this->StartSpanOnLastByte(ev, &mParser_DictSpan);
   mParser_InDict = morkBool_kTrue;
   this->OnNewDict(ev, *mParser_DictSpan.AsPlace());
   
@@ -1239,7 +1240,7 @@ void morkParser::ReadDict(morkEnv* ev)
     }
   }
 
-  this->EndSpanOnThisByte(ev, &mParser_DictSpan);
+  // this->EndSpanOnThisByte(ev, &mParser_DictSpan);
   mParser_InDict = morkBool_kFalse;
   this->OnDictEnd(ev, mParser_DictSpan);
   
@@ -1476,3 +1477,4 @@ morkParser::ParseMore( // return count of bytes consumed now
 }
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+

@@ -174,7 +174,7 @@ morkAtomSpace::CutAllAtoms(morkEnv* ev, morkPool* ioPool)
 
 morkBookAtom*
 morkAtomSpace::MakeBookAtomCopyWithAid(morkEnv* ev,
-   const morkBigBookAtom& inAtom,  mork_aid inAid)
+   const morkFarBookAtom& inAtom,  mork_aid inAid)
 // Make copy of inAtom and put it in both maps, using specified ID.
 {
   morkBookAtom* outAtom = 0;
@@ -182,7 +182,7 @@ morkAtomSpace::MakeBookAtomCopyWithAid(morkEnv* ev,
   if ( ev->Good() && store )
   {
     morkPool* pool = this->GetSpaceStorePool();
-    outAtom = pool->NewBookAtomCopy(ev, inAtom, &store->mStore_Zone);
+    outAtom = pool->NewFarBookAtomCopy(ev, inAtom, &store->mStore_Zone);
     if ( outAtom )
     {
       if ( store->mStore_CanDirty )
@@ -207,7 +207,7 @@ morkAtomSpace::MakeBookAtomCopyWithAid(morkEnv* ev,
 }
 
 morkBookAtom*
-morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
+morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkFarBookAtom& inAtom)
 // make copy of inAtom and put it in both maps, using a new ID as needed.
 {
   morkBookAtom* outAtom = 0;
@@ -217,7 +217,7 @@ morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
     if ( store->mStore_CanAutoAssignAtomIdentity )
     {
       morkPool* pool = this->GetSpaceStorePool();
-      morkBookAtom* atom = pool->NewBookAtomCopy(ev, inAtom, &mSpace_Store->mStore_Zone);
+      morkBookAtom* atom = pool->NewFarBookAtomCopy(ev, inAtom, &mSpace_Store->mStore_Zone);
       if ( atom )
       {
         mork_aid id = this->MakeNewAtomId(ev, atom);
@@ -289,3 +289,4 @@ morkAtomSpaceMap::morkAtomSpaceMap(morkEnv* ev, const morkUsage& inUsage,
 
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+

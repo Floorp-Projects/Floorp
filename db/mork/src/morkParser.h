@@ -504,6 +504,19 @@ protected: // protected parser helper methods
   
   void StartSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan);
   
+  
+  // void EndSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan)
+  // { MORK_USED_2(ev,ioSpan); }
+  
+  // void EndSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan)
+  // { MORK_USED_2(ev,ioSpan); }
+  
+  // void StartSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan)
+  // { MORK_USED_2(ev,ioSpan); }
+  
+  // void StartSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan)
+  // { MORK_USED_2(ev,ioSpan); }
+  
   int eat_line_break(morkEnv* ev, int inLast);
   int eat_line_continue(morkEnv* ev); // last char was '\\'
   int eat_comment(morkEnv* ev); // last char was '/'
@@ -532,3 +545,4 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MORKPARSER_ */
+

@@ -41,6 +41,7 @@ class morkHandle;
 class morkHandleFrame;
 class morkHandleFace; // just an opaque cookie type
 class morkBigBookAtom;
+class morkFarBookAtom;
 
 #define morkDerived_kPool     /*i*/ 0x706C /* ascii 'pl' */
 
@@ -149,6 +150,11 @@ public: // other pool methods
     // make the smallest kind of book atom that can hold content in inAtom.
     // The inAtom parameter is often expected to be a staged book atom in
     // the store, which was used to search an atom space for existing atoms.
+    
+  morkBookAtom* NewFarBookAtomCopy(morkEnv* ev, const morkFarBookAtom& inAtom, morkZone* ioZone);
+    // make the smallest kind of book atom that can hold content in inAtom.
+    // The inAtom parameter is often expected to be a staged book atom in
+    // the store, which was used to search an atom space for existing atoms.
 
 public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotWeakPool(morkPool* me,
@@ -163,3 +169,4 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MORKPOOL_ */
+

@@ -38,6 +38,7 @@
 #define morkAtom_kKindBigAnon  'A'  /* means morkBigAnonAtom subclass */
 #define morkAtom_kKindWeeBook  'b'  /* means morkWeeBookAtom subclass */
 #define morkAtom_kKindBigBook  'B'  /* means morkBigBookAtom subclass */
+#define morkAtom_kKindFarBook  'f'  /* means morkFarBookAtom subclass */
 #define morkAtom_kKindRowOid   'r'  /* means morkOidAtom subclass */
 #define morkAtom_kKindTableOid 't'  /* means morkOidAtom subclass */
 
@@ -59,6 +60,7 @@ public:
   mork_bool IsBigAnon() const { return mAtom_Kind == morkAtom_kKindBigAnon; }
   mork_bool IsWeeBook() const { return mAtom_Kind == morkAtom_kKindWeeBook; }
   mork_bool IsBigBook() const { return mAtom_Kind == morkAtom_kKindBigBook; }
+  mork_bool IsFarBook() const { return mAtom_Kind == morkAtom_kKindFarBook; }
   mork_bool IsRowOid() const { return mAtom_Kind == morkAtom_kKindRowOid; }
   mork_bool IsTableOid() const { return mAtom_Kind == morkAtom_kKindTableOid; }
 
@@ -233,9 +235,11 @@ public: // Hash() and Equal() for atom ID maps are same for all subclasses:
 
 public: // Hash() and Equal() for atom body maps know about subclasses:
   
+  // YOU CANNOT SUBCLASS morkBookAtom WITHOUT FIXING Hash and Equal METHODS:
+
   mork_u4 HashFormAndBody(morkEnv* ev) const;
   mork_bool EqualFormAndBody(morkEnv* ev, const morkBookAtom* inAtom) const;
-
+  
 public: // separation from containing space
 
   void CutBookAtomFromSpace(morkEnv* ev);
@@ -243,6 +247,43 @@ public: // separation from containing space
 private: // copying is not allowed
   morkBookAtom(const morkBookAtom& other);
   morkBookAtom& operator=(const morkBookAtom& other);
+};
+
+/*| FarBookAtom: this alternative format for book atoms was introduced
+**| in May 2000 in order to support finding atoms in hash tables without
+**| first copying the strings from original parsing buffers into a new
+**| atom format.  This was consuming too much time.  However, we can
+**| use morkFarBookAtom to stage a hash table query, as long as we then
+**| fix HashFormAndBody() and EqualFormAndBody() to use morkFarBookAtom
+**| correctly.
+**|
+**|| Note we do NOT intend that instances of morkFarBookAtom will ever
+**| be installed in hash tables, because this is not space efficient.
+**| We only expect to create temp instances for table lookups.
+|*/
+class morkFarBookAtom : public morkBookAtom { //
+  
+  // mork_u1       mAtom_Kind;      // identifies a specific atom subclass
+  // mork_u1       mAtom_CellUses;  // number of persistent uses in a cell
+  // mork_change   mAtom_Change;    // how has this atom been changed?
+  // mork_u1       mAtom_Size;      // NOT USED IN "BIG" format atoms
+
+  // morkAtomSpace* mBookAtom_Space; // mBookAtom_Space->SpaceScope() is scope 
+  // mork_aid       mBookAtom_Id;    // identity token for this shared atom
+  
+public:
+  mork_cscode   mFarBookAtom_Form;      // charset format encoding
+  mork_size     mFarBookAtom_Size;      // size of content vector
+  mork_u1*      mFarBookAtom_Body;      // bytes are elsewere, out of line
+
+public: // empty construction does nothing
+  morkFarBookAtom() { }
+  void InitFarBookAtom(morkEnv* ev, const morkBuf& inBuf,
+    mork_cscode inForm, morkAtomSpace* ioSpace, mork_aid inAid);
+  
+private: // copying is not allowed
+  morkFarBookAtom(const morkFarBookAtom& other);
+  morkFarBookAtom& operator=(const morkFarBookAtom& other);
 };
 
 /*| WeeBookAtom: .
@@ -339,3 +380,4 @@ private: // copying is not allowed
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MORKATOM_ */
+

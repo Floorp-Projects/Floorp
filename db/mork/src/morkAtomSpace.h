@@ -151,10 +151,10 @@ public: // other space methods
   // CutAllAtoms() puts all the atoms back in the pool.
   
   morkBookAtom* MakeBookAtomCopyWithAid(morkEnv* ev,
-     const morkBigBookAtom& inAtom,  mork_aid inAid);
+     const morkFarBookAtom& inAtom,  mork_aid inAid);
   // Make copy of inAtom and put it in both maps, using specified ID.
   
-  morkBookAtom* MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom);
+  morkBookAtom* MakeBookAtomCopy(morkEnv* ev, const morkFarBookAtom& inAtom);
   // Make copy of inAtom and put it in both maps, using a new ID as needed.
 
   mork_aid MakeNewAtomId(morkEnv* ev, morkBookAtom* ioAtom);
@@ -233,3 +233,4 @@ public:
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MORKATOMSPACE_ */
+

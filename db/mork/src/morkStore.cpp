@@ -404,8 +404,8 @@ morkStore::AcquireStoreHandle(morkEnv* ev)
 }
 
 
-morkMaxBookAtom*
-morkStore::StageAliasAsBookAtom(morkEnv* ev, const morkMid* inMid,
+morkFarBookAtom*
+morkStore::StageAliasAsFarBookAtom(morkEnv* ev, const morkMid* inMid,
    morkAtomSpace* ioSpace, mork_cscode inForm)
 {
   if ( inMid && inMid->mMid_Buf )
@@ -415,19 +415,22 @@ morkStore::StageAliasAsBookAtom(morkEnv* ev, const morkMid* inMid,
     if ( length <= morkBookAtom_kMaxBodySize )
     {
       mork_aid dummyAid = 1;
-      mStore_BookAtom.InitMaxBookAtom(ev, *buf, 
+      //mStore_BookAtom.InitMaxBookAtom(ev, *buf, 
+      //  inForm, ioSpace, dummyAid);
+       
+      mStore_FarBookAtom.InitFarBookAtom(ev, *buf, 
         inForm, ioSpace, dummyAid);
-      return &mStore_BookAtom;
+      return &mStore_FarBookAtom;
     }
   }
   else
     ev->NilPointerError();
     
-  return (morkMaxBookAtom*) 0;
+  return (morkFarBookAtom*) 0;
 }
 
-morkMaxBookAtom*
-morkStore::StageYarnAsBookAtom(morkEnv* ev, const mdbYarn* inYarn,
+morkFarBookAtom*
+morkStore::StageYarnAsFarBookAtom(morkEnv* ev, const mdbYarn* inYarn,
    morkAtomSpace* ioSpace)
 {
   if ( inYarn && inYarn->mYarn_Buf )
@@ -437,25 +440,22 @@ morkStore::StageYarnAsBookAtom(morkEnv* ev, const mdbYarn* inYarn,
     {
       morkBuf buf(inYarn->mYarn_Buf, length);
       mork_aid dummyAid = 1;
-      mStore_BookAtom.InitMaxBookAtom(ev, buf, 
+      //mStore_BookAtom.InitMaxBookAtom(ev, buf, 
+      //  inYarn->mYarn_Form, ioSpace, dummyAid);
+      mStore_FarBookAtom.InitFarBookAtom(ev, buf, 
         inYarn->mYarn_Form, ioSpace, dummyAid);
-      return &mStore_BookAtom;
+      return &mStore_FarBookAtom;
     }
   }
   else
     ev->NilPointerError();
     
-  return (morkMaxBookAtom*) 0;
+  return (morkFarBookAtom*) 0;
 }
 
-morkMaxBookAtom*
-morkStore::StageStringAsBookAtom(morkEnv* ev, const char* inString,
+morkFarBookAtom*
+morkStore::StageStringAsFarBookAtom(morkEnv* ev, const char* inString,
    mork_cscode inForm, morkAtomSpace* ioSpace)
-// StageStringAsBookAtom() returns &mStore_BookAtom if inString is small
-// enough, such that strlen(inString) < morkBookAtom_kMaxBodySize.  And
-// content inside mStore_BookAtom will be the valid atom format for
-// inString. This method is the standard way to stage a string as an
-// atom for searching or adding new atoms into an atom space hash table.
 {
   if ( inString )
   {
@@ -464,14 +464,15 @@ morkStore::StageStringAsBookAtom(morkEnv* ev, const char* inString,
     {
       morkBuf buf(inString, length);
       mork_aid dummyAid = 1;
-      mStore_BookAtom.InitMaxBookAtom(ev, buf, inForm, ioSpace, dummyAid);
-      return &mStore_BookAtom;
+      //mStore_BookAtom.InitMaxBookAtom(ev, buf, inForm, ioSpace, dummyAid);
+      mStore_FarBookAtom.InitFarBookAtom(ev, buf, inForm, ioSpace, dummyAid);
+      return &mStore_FarBookAtom;
     }
   }
   else
     ev->NilPointerError();
     
-  return (morkMaxBookAtom*) 0;
+  return (morkFarBookAtom*) 0;
 }
 
 morkAtomSpace* morkStore::LazyGetOidAtomSpace(morkEnv* ev)
@@ -727,8 +728,8 @@ morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn)
     morkAtomSpace* groundSpace = this->LazyGetGroundAtomSpace(ev);
     if ( groundSpace )
     {
-      morkMaxBookAtom* keyAtom =
-        this->StageYarnAsBookAtom(ev, inYarn, groundSpace);
+      morkFarBookAtom* keyAtom =
+        this->StageYarnAsFarBookAtom(ev, inYarn, groundSpace);
         
       if ( keyAtom )
       {
@@ -775,8 +776,8 @@ morkStore::MidToOid(morkEnv* ev, const morkMid& inMid, mdbOid* outOid)
       {
         mork_cscode form = 0; // default
         mork_aid aid = 1; // dummy
-        mStore_BookAtom.InitMaxBookAtom(ev, *buf, form, groundSpace, aid);
-        morkMaxBookAtom* keyAtom = &mStore_BookAtom;
+        mStore_FarBookAtom.InitFarBookAtom(ev, *buf, form, groundSpace, aid);
+        morkFarBookAtom* keyAtom = &mStore_FarBookAtom;
         morkAtomBodyMap* map = &groundSpace->mAtomSpace_AtomBodies;
         morkBookAtom* bookAtom = map->GetAtom(ev, keyAtom);
         if ( bookAtom )
@@ -961,8 +962,8 @@ morkStore::AddAlias(morkEnv* ev, const morkMid& inMid, mork_cscode inForm)
     morkAtomSpace* atomSpace = this->LazyGetAtomSpace(ev, oid->mOid_Scope);
     if ( atomSpace )
     {
-      morkMaxBookAtom* keyAtom =
-        this->StageAliasAsBookAtom(ev, &inMid, atomSpace, inForm);
+      morkFarBookAtom* keyAtom =
+        this->StageAliasAsFarBookAtom(ev, &inMid, atomSpace, inForm);
       if ( keyAtom )
       {
          morkAtomAidMap* map = &atomSpace->mAtomSpace_AtomAids;
@@ -1040,12 +1041,13 @@ morkStore::BufToToken(morkEnv* ev, const morkBuf* inBuf)
       morkAtomSpace* space = this->LazyGetGroundColumnSpace(ev);
       if ( space )
       {
-        morkMaxBookAtom* keyAtom = 0;
+        morkFarBookAtom* keyAtom = 0;
         if ( length <= morkBookAtom_kMaxBodySize )
         {
           mork_aid aid = 1; // dummy
-          mStore_BookAtom.InitMaxBookAtom(ev, *inBuf, form, space, aid);
-          keyAtom = &mStore_BookAtom;
+          //mStore_BookAtom.InitMaxBookAtom(ev, *inBuf, form, space, aid);
+          mStore_FarBookAtom.InitFarBookAtom(ev, *inBuf, form, space, aid);
+          keyAtom = &mStore_FarBookAtom;
         }
         if ( keyAtom )
         {
@@ -1087,8 +1089,8 @@ morkStore::StringToToken(morkEnv* ev, const char* inTokenName)
       morkAtomSpace* groundSpace = this->LazyGetGroundColumnSpace(ev);
       if ( groundSpace )
       {
-        morkMaxBookAtom* keyAtom =
-          this->StageStringAsBookAtom(ev, inTokenName, form, groundSpace);
+        morkFarBookAtom* keyAtom =
+          this->StageStringAsFarBookAtom(ev, inTokenName, form, groundSpace);
         if ( keyAtom )
         {
           morkAtomBodyMap* map = &groundSpace->mAtomSpace_AtomBodies;
@@ -1129,8 +1131,8 @@ morkStore::QueryToken(morkEnv* ev, const char* inTokenName)
       morkAtomSpace* groundSpace = this->LazyGetGroundColumnSpace(ev);
       if ( groundSpace )
       {
-        morkMaxBookAtom* keyAtom =
-          this->StageStringAsBookAtom(ev, inTokenName, form, groundSpace);
+        morkFarBookAtom* keyAtom =
+          this->StageStringAsFarBookAtom(ev, inTokenName, form, groundSpace);
         if ( keyAtom )
         {
           morkAtomBodyMap* map = &groundSpace->mAtomSpace_AtomBodies;
@@ -1334,3 +1336,4 @@ morkStore::OidToTable(morkEnv* ev, const mdbOid* inOid,
 }
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+

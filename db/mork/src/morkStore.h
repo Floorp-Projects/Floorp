@@ -178,7 +178,9 @@ public: // state is public because the entire Mork system is private
   morkPool         mStore_Pool;
 
   // we alloc a max size book atom to reuse space for atom map key searches:
-  morkMaxBookAtom  mStore_BookAtom; // staging area for atom map searches
+  // morkMaxBookAtom  mStore_BookAtom; // staging area for atom map searches
+  
+  morkFarBookAtom  mStore_FarBookAtom; // staging area for atom map searches
   
   // GroupIdentity should be one more than largest seen in a parsed db file:
   mork_gid         mStore_CommitGroupIdentity; // transaction ID number
@@ -241,21 +243,16 @@ public: // setting store and all subspaces canDirty:
  
   void SetStoreAndAllSpacesCanDirty(morkEnv* ev, mork_bool inCanDirty);
 
-public: // building an atom inside mStore_BookAtom from a char* string
+public: // building an atom inside mStore_FarBookAtom from a char* string
 
-  morkMaxBookAtom* StageAliasAsBookAtom(morkEnv* ev,
+  morkFarBookAtom* StageAliasAsFarBookAtom(morkEnv* ev,
     const morkMid* inMid, morkAtomSpace* ioSpace, mork_cscode inForm);
 
-  morkMaxBookAtom* StageYarnAsBookAtom(morkEnv* ev,
+  morkFarBookAtom* StageYarnAsFarBookAtom(morkEnv* ev,
     const mdbYarn* inYarn, morkAtomSpace* ioSpace);
 
-  morkMaxBookAtom* StageStringAsBookAtom(morkEnv* ev,
+  morkFarBookAtom* StageStringAsFarBookAtom(morkEnv* ev,
     const char* inString, mork_cscode inForm, morkAtomSpace* ioSpace);
-  // StageStringAsBookAtom() returns &mStore_BookAtom if inString is small
-  // enough, such that strlen(inString) < morkBookAtom_kMaxBodySize.  And
-  // content inside mStore_BookAtom will be the valid atom format for
-  // inString. This method is the standard way to stage a string as an
-  // atom for searching or adding new atoms into an atom space hash table.
 
 public: // determining whether incremental writing is a good use of time:
 
@@ -410,3 +407,4 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MORKSTORE_ */
+

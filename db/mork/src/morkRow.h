@@ -105,6 +105,9 @@ public: // flags bit twiddling
   
   mork_bool IsRowDirty() const
   { return ( mRow_Flags & morkRow_kDirtyBit ) != 0; }
+  
+  mork_bool IsRowUsed() const
+  { return mRow_GcUses != 0; }
 
 public: // other row methods
   morkRow( ) { }
@@ -172,6 +175,13 @@ public: // external row methods
   void AddColumn(morkEnv* ev, mdb_column inColumn,
     const mdbYarn* inYarn, morkStore* ioStore);
 
+  morkAtom* GetColumnAtom(morkEnv* ev, mdb_column inColumn);
+
+  void NextColumn(morkEnv* ev, mdb_column* ioColumn, mdbYarn* outYarn);
+
+  void SeekColumn(morkEnv* ev, mdb_pos inPos, 
+	  mdb_column* outColumn, mdbYarn* outYarn);
+
   void CutColumn(morkEnv* ev, mdb_column inColumn);
 
   morkRowCellCursor* NewRowCellCursor(morkEnv* ev, mdb_pos inPos);
@@ -229,3 +239,4 @@ private: // copying is not allowed
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MORKROW_ */
+

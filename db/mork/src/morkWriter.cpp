@@ -547,7 +547,56 @@ morkWriter::WriteAtomSpaceAsDict(morkEnv* ev, morkAtomSpace* ioSpace)
     ++mWriter_LineSize;
   }
 }
- 
+
+/*
+(I'm putting the text of this message in file morkWriter.cpp.)
+
+I'm making a change which should cause rows and tables to go away
+when a Mork db is compress committed, when the rows and tables
+are no longer needed.  Because this is subtle, I'm describing it
+here in case misbehavior is ever observed.  Otherwise you'll have
+almost no hope of fixing a related bug.
+
+This is done entirely in morkWriter.cpp: morkWriter::DirtyAll(),
+which currently marks all rows and tables dirty so they will be
+written in a later phase of the commit.  My change is to merely
+selectively not mark certain rows and tables dirty, when they seem
+to be superfluous.
+
+A row is no longer needed when the mRow_GcUses slot hits zero, and
+this is used by the following inline morkRow method:
+
+  mork_bool IsRowUsed() const { return mRow_GcUses != 0; }
+
+Naturally disaster ensues if mRow_GcUses is ever smaller than right.
+
+Similarly, we should drop tables when mTable_GcUses hits zero, but
+only when a table contains no row members.  We consider tables to
+self reference (and prevent collection) when they contain content.
+Again, disaster ensues if mTable_GcUses is ever smaller than right.
+
+  mork_count GetRowCount() const
+  { return mTable_RowArray.mArray_Fill; }
+
+  mork_bool IsTableUsed() const
+  { return (mTable_GcUses != 0 || this->GetRowCount() != 0); }
+
+Now let's question why the design involves filtering what gets set
+to dirty.  Why not apply a filter in the later phase when we write
+content?  Because I'm afraid of missing some subtle interaction in
+updating table and row relationships.  It seems safer to write a row
+or table when it starts out dirty, before morkWriter::DirtyAll() is
+called.  So this design calls for writing out rows and tables when
+they are still clearly used, and additionally, <i>when we have just
+been actively writing to them right before this commit</i>.
+
+Presumably if they are truly useless, they will no longer be dirtied
+in later sessions and will get collected during the next compress
+commit.  So we wait to collect them until they become all dead, and
+not just mostly dead.  (At which time you can feel free to go through
+their pockets looking for loose change.)
+*/
+
 mork_bool
 morkWriter::DirtyAll(morkEnv* ev)
   // DirtyAll() visits every store sub-object and marks 
@@ -638,10 +687,13 @@ morkWriter::DirtyAll(morkEnv* ev)
               for ( c = ri->FirstRow(ev, &row); c && ev->Good();
                     c = ri->NextRow(ev, &row) )
               {
-                if ( row && row->IsRow() )
+                if ( row && row->IsRow() ) // need to dirty row?
                 {
-                  row->DirtyAllRowContent(ev);
-                  ++mWriter_TotalCount;
+                	if ( row->IsRowUsed() || row->IsRowDirty() )
+                	{
+	                  row->DirtyAllRowContent(ev);
+	                  ++mWriter_TotalCount;
+                	}
                 }
                 else
                   row->NonRowTypeWarning(ev);
@@ -666,13 +718,16 @@ morkWriter::DirtyAll(morkEnv* ev)
                     c = ti->NextTable(ev, tableKey, &table) )
 #endif /*MORK_BEAD_OVER_NODE_MAPS*/
               {
-                if ( table && table->IsTable() )
+                if ( table && table->IsTable() ) // need to dirty table?
                 {
-                  // table->DirtyAllTableContent(ev);
-                  // only necessary to mark table itself dirty:
-                  table->SetTableDirty();
-                  table->SetTableRewrite();
-                  ++mWriter_TotalCount;
+                	if ( table->IsTableUsed() || table->IsTableDirty() )
+                	{
+	                  // table->DirtyAllTableContent(ev);
+	                  // only necessary to mark table itself dirty:
+	                  table->SetTableDirty();
+	                  table->SetTableRewrite();
+	                  ++mWriter_TotalCount;
+                	}
                 }
                 else
                   table->NonTableTypeWarning(ev);
@@ -1043,7 +1098,7 @@ morkWriter::WriteAllStoreTables(morkEnv* ev)
               if ( row && row->IsRow() )
               {
                 // later we should also check that table use count is nonzero:
-                if ( row->IsRowDirty() )
+                if ( row->IsRowDirty() ) // && row->IsRowUsed() ??
                 {
                   mWriter_BeVerbose = ev->mEnv_BeVerbose;
                   if ( this->PutRowDict(ev, row) )
@@ -2107,3 +2162,4 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
 }
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+

@@ -143,7 +143,7 @@ public: // state is public because the entire Mork system is private
   mork_u1         mTable_Pad;      // for u4 alignment
 
 public: // flags bit twiddling
-
+  
   void SetTableUnique() { mTable_Flags |= morkTable_kUniqueBit; }
   void SetTableVerbose() { mTable_Flags |= morkTable_kVerboseBit; }
   void SetTableNoted() { mTable_Flags |= morkTable_kNotedBit; }
@@ -259,6 +259,9 @@ public: // other table methods
   nsIMdbTable* AcquireTableHandle(morkEnv* ev); // mObject_Handle
   
   mork_count GetRowCount() const { return mTable_RowArray.mArray_Fill; }
+
+  mork_bool IsTableUsed() const
+  { return (mTable_GcUses != 0 || this->GetRowCount() != 0); }
 
   void GetTableOid(morkEnv* ev, mdbOid* outOid);
   mork_pos  ArrayHasOid(morkEnv* ev, const mdbOid* inOid);
@@ -441,3 +444,4 @@ public:
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #endif /* _MORKTABLE_ */
+
