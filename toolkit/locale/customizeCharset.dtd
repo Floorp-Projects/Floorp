@@ -37,10 +37,10 @@
 #
 #***** END LICENSE BLOCK ***** -->
 
-# LOCALIZATION NOTE  Charset Coding Preferences Dialog: Do NOT localize the term "Character Coding"
-<!ENTITY title.label      "Customize Character Coding">
-<!ENTITY left.header      "Character Coding">
-<!ENTITY current.label    "Active Character Codings:">
+# LOCALIZATION NOTE  Character Encoding Preferences Dialog: Do NOT localize the term "Character Encoding"
+<!ENTITY title.label      "Customize Character Encoding">
+<!ENTITY left.header      "Character Encoding">
+<!ENTITY current.label    "Active Character Encodings:">
 <!ENTITY remove.label     "Remove">
-<!ENTITY additional.label "Available Character Codings:">
+<!ENTITY additional.label "Available Character Encodings:">
 <!ENTITY add.label        "Add">
