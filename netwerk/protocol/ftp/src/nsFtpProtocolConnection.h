@@ -57,6 +57,8 @@ typedef enum _FTP_STATE {
 	FTP_R_SYST,
     FTP_S_ACCT,		// send account
     FTP_R_ACCT,
+	FTP_S_MACB,
+	FTP_R_MACB,
 	FTP_S_PWD ,		// send parent working directory (pwd)
 	FTP_R_PWD ,
     FTP_S_PASV,		// send passive
@@ -113,6 +115,7 @@ protected:
     PLEventQueue*           mEventQueue;
     PRInt32                 mServerType;
     PRBool                  mPasv;
+	PRBool					mList;					// use LIST instead of NLST
     PRBool                  mConnected;
     FTP_STATE               mState;
     nsITransport*           mCPipe;                 // the command channel
