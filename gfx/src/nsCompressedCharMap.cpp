@@ -359,7 +359,6 @@ void
 nsCompressedCharMap::SetChars(PRUint16* aCCMap)
 {
   int i, j;
-  unsigned int k;
 
   //
   // Copy the input CCMap
@@ -458,7 +457,6 @@ printCCMap(PRUint16* aCCMap)
   }
 }
 #endif
-
 
 // Non-BMP unicode support extension, create ccmap for both BMP and extended planes 
 PRUint16*
@@ -561,6 +559,20 @@ MapToCCMapExt(PRUint32* aBmpPlaneMap, PRUint32** aOtherPlaneMaps, PRUint32 aOthe
     NS_ASSERTION(oldb==newb,"failed to generate map correctly");
   }
 
+  //testing for extension plane 
+  for (k = 0x10000; k < 0x100000; k++) {
+    plane = k/0x10000;
+    if (plane > aOtherPlaneNum)
+      break;
+    if (aOtherPlaneMaps[plane-1])
+      oldb = IS_REPRESENTABLE(aOtherPlaneMaps[plane-1], k&0xffff);
+    else
+      oldb = 0;
+    newb = CCMAP_HAS_CHAR_EXT(ccmap, k);
+    NS_ASSERTION(oldb==newb, "failed to generate extension map correctly");
+  }
+
+  
   // testing for non-BMP plane
     for (h = 0; h < 0x400; h++) {
       for (l = 0; l < 0x400; l++) {
@@ -570,7 +582,7 @@ MapToCCMapExt(PRUint32* aBmpPlaneMap, PRUint32** aOtherPlaneMaps, PRUint32 aOthe
           oldb = IS_REPRESENTABLE(aOtherPlaneMaps[plane], offset);
         else
           oldb = 0;
-        newb = CCMAP_HAS_CHAR_EXT(ccmap, h+0xd800, l+0xdc00);
+        newb = CCMAP_HAS_CHAR_EXT2(ccmap, h+0xd800, l+0xdc00);
         NS_ASSERTION(oldb==newb, "failed to generate extension map correctly");
       }
     }

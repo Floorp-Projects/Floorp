@@ -2274,7 +2274,7 @@ nsFontMetricsWin::SameAsPreviousMap(int aIndex)
 }
 
 nsFontWin*
-nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
+nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUint32 c)
 {
   //now try global font
   if (!gGlobalFonts) {
@@ -2307,7 +2307,7 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
         continue;
       }
     }
-    if (CCMAP_HAS_CHAR(font->ccmap, c)) {
+    if (CCMAP_HAS_CHAR_EXT(font->ccmap, c)) {
       return LoadGlobalFont(aDC, font);
     }
   }
@@ -2318,7 +2318,7 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
 // map to see if we can skip the lookup in FindGlobalFont(), and remember
 // to clear the map in UpdateFontList() when new fonts are installed
 nsFontWin*
-nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
+nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUint32 c)
 {
   /*
   When this function is called, it means all other alternatives have
@@ -2798,7 +2798,7 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
 // ------------ End of font weight utilities
 
 nsFontWin*
-nsFontMetricsWin::FindUserDefinedFont(HDC aDC, PRUnichar aChar)
+nsFontMetricsWin::FindUserDefinedFont(HDC aDC, PRUint32 aChar)
 {
   if (mIsUserDefined) {
     // the user-defined font is always loaded as the first font
@@ -2899,7 +2899,7 @@ nsFontMetricsWin::InitializeFamilyNames(void)
 }
 
 nsFontWin*
-nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
+nsFontMetricsWin::FindLocalFont(HDC aDC, PRUint32 aChar)
 {
   if (!gFamilyNames) {
     if (!InitializeFamilyNames()) {
@@ -2927,7 +2927,7 @@ nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
 }
 
 nsFontWin*
-nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName)
+nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUint32 aChar, nsString* aName)
 {
   for (int i = mLoadedFonts.Count()-1; i >= 0; --i) {
     if (aName->EqualsIgnoreCase(((nsFontWin*)mLoadedFonts[i])->mName)) {
@@ -2944,7 +2944,7 @@ nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName)
 struct GenericFontEnumContext
 {
   HDC               mDC;
-  PRUnichar         mChar;
+  PRUint32          mChar;
   nsFontWin*        mFont;
   nsFontMetricsWin* mMetrics;
 };
@@ -2954,7 +2954,7 @@ GenericFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void* aData)
 {
   GenericFontEnumContext* context = (GenericFontEnumContext*)aData;
   HDC dc = context->mDC;
-  PRUnichar ch = context->mChar;
+  PRUint32 ch = context->mChar;
   nsFontMetricsWin* metrics = context->mMetrics;
   context->mFont = metrics->LoadGenericFont(dc, ch, (nsString*)&aFamily);
   if (context->mFont) {
@@ -3003,7 +3003,7 @@ AppendGenericFontFromPref(nsString& aFontname,
 }
 
 nsFontWin*
-nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
+nsFontMetricsWin::FindGenericFont(HDC aDC, PRUint32 aChar)
 {
   if (mTriedAllGenerics) {
     // don't bother anymore because mLoadedFonts[] already has all our generic fonts
@@ -3044,7 +3044,7 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
 }
 
 nsFontWin*
-nsFontMetricsWin::FindPrefFont(HDC aDC, PRUnichar aChar)
+nsFontMetricsWin::FindPrefFont(HDC aDC, PRUint32 aChar)
 {
   if (mTriedAllPref) {
     // don't bother anymore because mLoadedFonts[] already has all our pref fonts
@@ -3092,7 +3092,7 @@ nsFontMetricsWin::FindPrefFont(HDC aDC, PRUnichar aChar)
 }
 
 nsFontWin*
-nsFontMetricsWin::FindFont(HDC aDC, PRUnichar aChar)
+nsFontMetricsWin::FindFont(HDC aDC, PRUint32 aChar)
 {
   nsFontWin* font = FindUserDefinedFont(aDC, aChar);
   if (!font) {
@@ -3433,7 +3433,7 @@ nsFontMetricsWin::GetFontHandle(nsFontHandle &aHandle)
 }
 
 nsFontWin*
-nsFontMetricsWin::LocateFont(HDC aDC, PRUnichar aChar, PRInt32 & aCount)
+nsFontMetricsWin::LocateFont(HDC aDC, PRUint32 aChar, PRInt32 & aCount)
 {
   nsFontWin *font;
   PRInt32 i;
@@ -3452,6 +3452,10 @@ nsFontMetricsWin::LocateFont(HDC aDC, PRUnichar aChar, PRInt32 & aCount)
   return font;
 }
 
+#define IS_HIGH_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xd800 && (PRUnichar)(u) <= (PRUnichar)0xdbff)
+#define IS_LOW_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xdc00 && (PRUnichar)(u) <= (PRUnichar)0xdfff)
+#define SURROGATE_TO_UCS4(h, l)  ((((PRUint32)(h)-(PRUint32)0xd800) << 10) +  \
+                                    (PRUint32)(l) - (PRUint32)(0xdc00) + 0x10000)
 nsresult
 nsFontMetricsWin::ResolveForwards(HDC                  aDC,
                                   const PRUnichar*     aString,
@@ -3473,12 +3477,20 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
 
   count = mLoadedFonts.Count();
 
-  currFont = LocateFont(aDC, *currChar, count);
+  if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    currFont = LocateFont(aDC, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
+    currChar += 2;
+  }
+  else {
+    currFont = LocateFont(aDC, *currChar, count);
+    ++currChar;
+  }
 
   //This if block is mean to speedup the process in normal situation, when
   //most characters can be found in first font
   if (currFont == mLoadedFonts[0]) {
-    while (++currChar < lastChar && currFont->HasGlyph(*currChar)) ;
+    while (currChar < lastChar && (currFont->HasGlyph(*currChar)))
+      ++currChar;
     fontSwitch.mFontWin = currFont;
     if (!(*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData))
       return NS_OK;
@@ -3486,12 +3498,26 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
       return NS_OK;
     // continue with the next substring, re-using the available loaded fonts
     firstChar = currChar;
-    currFont = LocateFont(aDC, *currChar, count);
+    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+      currFont = LocateFont(aDC, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
+      currChar += 2;
+    }
+    else {
+      currFont = LocateFont(aDC, *currChar, count);
+      ++currChar;
+    }
   }
 
   // see if we can keep the same font for adjacent characters
-  while (++currChar < lastChar) {
-    nextFont = LocateFont(aDC, *currChar, count);
+  while (currChar < lastChar) {
+    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+      nextFont = LocateFont(aDC, SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
+      currChar += 2;
+    }
+    else {
+      nextFont = LocateFont(aDC, *currChar, count);
+      ++currChar;
+    }
     if (nextFont != currFont) {
       // We have a substring that can be represented with the same font, and
       // we are about to switch fonts, it is time to notify our caller.
