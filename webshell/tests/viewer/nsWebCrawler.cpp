@@ -445,9 +445,7 @@ nsWebCrawler::OnStateChange(nsIWebProgress* aWebProgress,
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
       if (vm) {
-        nsIView* rootView;
-        vm->GetRootView(rootView);
-        vm->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
+        vm->UpdateView(vm->RootView(), NS_VMREFRESH_IMMEDIATE);
       }
 
       if (mJiggleLayout) {

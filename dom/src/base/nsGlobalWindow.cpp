@@ -4279,29 +4279,6 @@ GlobalWindowImpl::GetObjectProperty(const PRUnichar *aProperty,
 nsresult
 GlobalWindowImpl::Activate()
 {
-/*
-   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-   if(treeOwnerAsWin)
-      treeOwnerAsWin->SetVisibility(PR_TRUE);
-
-   nsCOMPtr<nsIPresShell> presShell;
-   mDocShell->GetPresShell(getter_AddRefs(presShell));
-   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-   nsIViewManager* vm = presShell->GetViewManager();
-   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
-
-   nsIView* rootView;
-   vm->GetRootView(rootView);
-   NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
-
-   nsIWidget* widget = rootView->GetWidget();
-   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-   return widget->SetFocus();
-
- */
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   if (treeOwnerAsWin) {
@@ -4324,9 +4301,7 @@ GlobalWindowImpl::Activate()
   nsIViewManager* vm = presShell->GetViewManager();
   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-  nsIView *rootView;
-  vm->GetRootView(rootView);
-  NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+  nsIView *rootView = vm->RootView();
 
   // We're holding a STRONG REF to the widget to ensure it doesn't go away
   // during event processing
@@ -4353,9 +4328,7 @@ GlobalWindowImpl::Deactivate()
   nsIViewManager* vm = presShell->GetViewManager();
   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-  nsIView *rootView;
-  vm->GetRootView(rootView);
-  NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+  nsIView *rootView = vm->RootView();
 
   // Hold a STRONG REF to keep the widget around during event processing
   nsCOMPtr<nsIWidget> widget = rootView->GetWidget();
@@ -5696,9 +5669,7 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
     nsIViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-    nsIView *rootView;
-    vm->GetRootView(rootView);
-    NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+    nsIView *rootView = vm->RootView();
 
     nsIWidget* widget = rootView->GetWidget();
     NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);

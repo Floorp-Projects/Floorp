@@ -123,12 +123,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(nsIDeviceContext* aContext);
+  virtual nsresult Init(nsIDeviceContext* aContext, nsIView* aParent);
 
-  NS_IMETHOD  GetRootView(nsIView *&aView);
-  NS_IMETHOD  SetRootView(nsIView *aView);
-
-  NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
 
   NS_IMETHOD  ResetScrolling(void);
@@ -351,7 +347,7 @@ private:
   void GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const;
 
 public: // NOT in nsIViewManager, so private to the view module
-  nsView* GetRootView() const { return mRootView; }
+  nsView* RootView() const { return NS_STATIC_CAST(nsView*, mRootView); }
   nsView* GetMouseEventGrabber() const { return mMouseGrabber; }
 	nsView* GetKeyEventGrabber() const { return mKeyGrabber; }
 
@@ -377,11 +373,11 @@ public: // NOT in nsIViewManager, so private to the view module
 
 private:
   nsIDeviceContext  *mContext;
+  nsView            *mMouseGrabber;
+  nsView            *mKeyGrabber;
   float             mTwipsToPixels;
   float             mPixelsToTwips;
   nsIViewObserver   *mObserver;
-  nsView            *mMouseGrabber;
-  nsView            *mKeyGrabber;
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
   nsIScrollableView *mRootScrollable;
@@ -391,7 +387,6 @@ private:
   nsCOMPtr<nsIBlender> mBlender;
   nsISupportsArray  *mCompositeListeners;
   nsCOMPtr<nsIFactory> mRegionFactory;
-  nsView            *mRootView;
   nsCOMPtr<nsIEventQueueService>  mEventQueueService;
   nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
   PRPackedBool      mRefreshEnabled;

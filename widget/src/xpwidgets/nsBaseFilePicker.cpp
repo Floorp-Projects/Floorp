@@ -85,12 +85,8 @@ nsIWidget *nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw)
       nsresult rv = docShell->GetPresShell(getter_AddRefs(presShell));
 
       if (NS_SUCCEEDED(rv) && presShell) {
-        nsIView *view;
-        rv = presShell->GetViewManager()->GetRootView(view);
-              
-        if (NS_SUCCEEDED(rv)) {
+        nsIView *view = presShell->GetViewManager()->RootView();
           return view->GetWidget();
-        }
       }
     }
   }

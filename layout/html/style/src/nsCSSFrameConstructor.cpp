@@ -3645,9 +3645,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
   // Bind the viewport frame to the root view
   nsIViewManager* viewManager = aPresContext->GetViewManager();
-  nsIView*        rootView;
+  nsIView*        rootView = viewManager->RootView();
 
-  viewManager->GetRootView(rootView);
   viewportFrame->SetView(rootView);
 
   nsContainerFrame::SyncFrameViewProperties(aPresContext, viewportFrame,

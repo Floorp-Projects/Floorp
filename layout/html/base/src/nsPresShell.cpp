@@ -208,7 +208,6 @@ static void ColorToString(nscolor aColor, nsAutoString &aString);
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
 
 #undef NOISY
 
@@ -5805,9 +5804,7 @@ PresShell::HandleEvent(nsIView         *aView,
       // from the root views widget. This is necessary to prevent us from 
       // dispatching the SysColorChanged notification for each child window 
       // which may be redundant.
-      nsIView *view;
-      vm->GetRootView(view);
-      if (view == aView) {
+      if (aView->IsRoot()) {
         aHandled = PR_TRUE;
         *aEventStatus = nsEventStatus_eConsumeDoDefault;
         return mPresContext->SysColorChanged();
@@ -6434,9 +6431,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     if (GetVerifyReflowEnable()) {
       // First synchronously render what we have so far so that we can
       // see it.
-      nsIView* rootView;
-      mViewManager->GetRootView(rootView);
-      mViewManager->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
+      mViewManager->UpdateView(mViewManager->RootView(), NS_VMREFRESH_IMMEDIATE);
 
       mInVerifyReflow = PR_TRUE;
       PRBool ok = VerifyIncrementalReflow();
@@ -7023,43 +7018,27 @@ PresShell::VerifyIncrementalReflow()
   rv = cx->Init(dc);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get our scrolling preference
-  nsScrollPreference scrolling;
-  nsIView* rootView;
-  mViewManager->GetRootView(rootView);
-  nsIScrollableView* scrollView;
-  rv = rootView->QueryInterface(NS_GET_IID(nsIScrollableView),
-                                (void**)&scrollView);
-  if (NS_SUCCEEDED (rv)) {
-    scrollView->GetScrollPreference(scrolling);
-  }
-  void* nativeParentWidget = rootView->GetWidget()->GetNativeData(NS_NATIVE_WIDGET);
+  void* nativeParentWidget = mViewManager->RootView()->GetWidget()
+    ->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.
   rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull,
                                           NS_GET_IID(nsIViewManager),
                                           (void**) &vm);
   NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create view manager");
-  rv = vm->Init(dc);
+  rv = vm->Init(dc, nsnull);
   NS_ASSERTION(NS_SUCCEEDED (rv), "failed to init view manager");
 
   // Create a child window of the parent that is our "root view/window"
   // Create a view
   nsRect tbounds = mPresContext->GetVisibleArea();
-  nsIView* view;
-  rv = nsComponentManager::CreateInstance(kViewCID, nsnull,
-                                          NS_GET_IID(nsIView),
-                                          (void **) &view);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create scroll view");
-  rv = view->Init(vm, tbounds, nsnull);
+  rv = vm->ResizeView(vm->RootView(), tbounds);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to init scroll view");
 
   //now create the widget for the view
-  rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget, PR_TRUE);
+  rv = vm->RootView()->CreateWidget(kWidgetCID, nsnull, nativeParentWidget, PR_TRUE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create scroll view widget");
-
-  // Setup hierarchical relationship in view manager
-  vm->SetRootView(view);
 
   // Make the new presentation context the same size as our
   // presentation context.
