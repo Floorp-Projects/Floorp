@@ -2635,22 +2635,14 @@ nsresult nsImapService::CreateSubscribeURI(nsIMsgIncomingServer *server, char *f
 }
 
 // this method first tries to find an exact username and hostname match with the given url
-// then, tries to find any accoutn on the passed in imap host in case this is a url to 
+// then, tries to find any account on the passed in imap host in case this is a url to 
 // a shared imap folder.
 nsresult nsImapService::GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingServer **aServer)
 {
     nsCAutoString userPass;
     nsCAutoString hostName;
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
-    
-    // extract the user name and host name information...
-    nsresult rv = mailnewsUrl->GetAsciiHost(hostName);
-    if (NS_FAILED(rv)) return rv;
-    rv = mailnewsUrl->GetUserPass(userPass);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!userPass.IsEmpty())
-      NS_UnescapeURL(userPass); // hopefully we're not unescaping ':' or nasty control chars
+    nsresult rv;
     
     nsXPIDLCString folderName;
 
@@ -2666,7 +2658,7 @@ nsresult nsImapService::GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingSer
     if (NS_FAILED(rv)) 
       return rv;
     
-    rv = accountManager->FindServer(userPass.get(), hostName.get(), "imap", aServer);
+    rv = accountManager->FindServerByURI(mailnewsUrl, PR_FALSE, aServer);
 
     // look for server with any user name, in case we're trying to subscribe
     // to a folder with some one else's user name like the following
@@ -2674,7 +2666,16 @@ nsresult nsImapService::GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingSer
 
     if (NS_FAILED(rv) || !aServer)
     {
-      rv = accountManager->FindServer("", hostName.get(), "imap", aServer);
+      nsCAutoString turl;
+      nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      mailnewsUrl->GetSpec(turl);
+      rv = url->SetSpec(turl);
+      if (NS_FAILED(rv)) return rv;
+
+      url->SetUserPass(NS_LITERAL_CSTRING(""));
+      rv = accountManager->FindServerByURI(url, PR_FALSE, aServer);
       if (*aServer)
         aImapUrl->SetExternalLinkUrl(PR_TRUE);
     }

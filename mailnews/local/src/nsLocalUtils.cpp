@@ -52,19 +52,23 @@
 #include "nsMsgBaseCID.h"
 
 #include "nsMsgUtils.h"
-
+#include "nsNetCID.h"
 
 // it would be really cool to:
 // - cache the last hostname->path match
 // - if no such server exists, behave like an old-style mailbox URL
 // (i.e. return the mail.directory preference or something)
 static nsresult
-nsGetMailboxServer(char *username, char *hostname, nsIMsgIncomingServer** aResult)
+nsGetMailboxServer(const char *uriStr, nsIMsgIncomingServer** aResult)
 {
   nsresult rv = NS_OK;
-  
-  nsUnescape(username);
-  nsUnescape(hostname);
+
+  nsCOMPtr<nsIURL> aUrl = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = aUrl->SetSpec(nsDependentCString(uriStr));  
+  if (NS_FAILED(rv)) return rv;
+
   // retrieve the AccountManager
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
     do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
@@ -72,39 +76,35 @@ nsGetMailboxServer(char *username, char *hostname, nsIMsgIncomingServer** aResul
   
   // find all local mail "no servers" matching the given hostname
   nsCOMPtr<nsIMsgIncomingServer> none_server;
-  rv = accountManager->FindServer(username,
-    hostname,
-    "none",
-    getter_AddRefs(none_server));
+  aUrl->SetScheme(NS_LITERAL_CSTRING("none"));
+  // No unescaping of username or hostname done here.
+  // The unescaping is done inside of FindServerByURI
+  rv = accountManager->FindServerByURI(aUrl, PR_FALSE,
+                                  getter_AddRefs(none_server));
   if (NS_SUCCEEDED(rv)) {
-    *aResult = none_server;
-    NS_ADDREF(*aResult);
+    NS_ADDREF(*aResult = none_server);
     return rv;
   }
   
   // if that fails, look for the rss hosts matching the given hostname
   nsCOMPtr<nsIMsgIncomingServer> rss_server;
-  rv = accountManager->FindServer(username,
-    hostname,
-    "rss",
-    getter_AddRefs(rss_server));
+  aUrl->SetScheme(NS_LITERAL_CSTRING("rss"));
+  rv = accountManager->FindServerByURI(aUrl, PR_FALSE,
+                                  getter_AddRefs(rss_server));
   if (NS_SUCCEEDED(rv))
   {
-     *aResult = rss_server;
-     NS_ADDREF(*aResult);
+     NS_ADDREF(*aResult = rss_server);
      return rv;
   }
 #ifdef HAVE_MOVEMAIL
   // find all movemail "servers" matching the given hostname
   nsCOMPtr<nsIMsgIncomingServer> movemail_server;
-  rv = accountManager->FindServer(username,
-                                  hostname,
-                                  "movemail",
+  aUrl->SetScheme(NS_LITERAL_CSTRING("movemail"));
+  rv = accountManager->FindServerByURI(aUrl, PR_FALSE,
                                   getter_AddRefs(movemail_server));
   if (NS_SUCCEEDED(rv)) {
-	   *aResult = movemail_server;
-           NS_ADDREF(*aResult);
-           return rv;
+    NS_ADDREF(*aResult = movemail_server);
+    return rv;
   }
 #endif /* HAVE_MOVEMAIL */
 
@@ -112,27 +112,24 @@ nsGetMailboxServer(char *username, char *hostname, nsIMsgIncomingServer** aResul
   nsCOMPtr<nsIMsgIncomingServer> server;
   if (NS_FAILED(rv)) 
   {
-    rv = accountManager->FindServer(username,
-      hostname,
-      "pop3",
-      getter_AddRefs(server));
-  
+    aUrl->SetScheme(NS_LITERAL_CSTRING("pop3"));
+    rv = accountManager->FindServerByURI(aUrl, PR_FALSE,
+                                    getter_AddRefs(server));
+
     // if we can't find a pop server, maybe it's a local message 
-    // in an imap hiearchy. look for an imap server.
+    // in an imap hierarchy. look for an imap server.
     if (NS_FAILED(rv)) 
     {
-      rv = accountManager->FindServer(username,
-        hostname,
-        "imap",
-        getter_AddRefs(server));
+      aUrl->SetScheme(NS_LITERAL_CSTRING("imap"));
+      rv = accountManager->FindServerByURI(aUrl, PR_FALSE,
+                                    getter_AddRefs(server));
     }
   }
   if (NS_SUCCEEDED(rv)) 
   {
-		  *aResult = server;
-                  NS_ADDREF(*aResult);
-                  return rv;
-}
+    NS_ADDREF(*aResult = server);
+    return rv;
+  }
 
 // if you fail after looking at all "pop3", "movemail" and "none" servers, you fail.
 return rv;
@@ -144,60 +141,11 @@ nsLocalURI2Server(const char* uriStr,
 {
   nsresult rv;
 
-  // start parsing the uriStr
-  const char* curPos = uriStr;
-  
-  // skip past schema xxx://
-  while (*curPos != ':') curPos++;
-  curPos++;
-  while (*curPos == '/') curPos++;
-
-  // extract userid from userid@hostname...
-  // this is so amazingly ugly, please forgive me....
-  // I'll fix this post-M7 -alecf@netscape.com
-  char *atPos = PL_strchr(curPos, '@');
-  NS_ASSERTION(atPos!=nsnull, "URI with no userid!");
-  
-  int length;
-  if (atPos)
-    length = (atPos - curPos) + 1;
-  else {
-    length = 1;
-  }
-
-  char *username = new char[length];
-  if (!username) return NS_ERROR_OUT_OF_MEMORY;
-
-  if (atPos) {
-    PL_strncpyz(username, curPos, length);
-    curPos = atPos;
-    curPos++;
-  }    
-  else
-    username[0] = '\0';
-
-  // extract hostname
-  char *slashPos = PL_strchr(curPos, '/');
-
-  // if there are no more /'s then we just copy the rest of the string
-  if (slashPos)
-    length = (slashPos - curPos) + 1;
-  else
-    length = PL_strlen(curPos) + 1;
-
-  char* hostname = new char[length];
-  if(!hostname)
-	  return NS_ERROR_OUT_OF_MEMORY;
-
-  PL_strncpyz(hostname, curPos, length);
 
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = nsGetMailboxServer(username, hostname, getter_AddRefs(server));
-  delete[] username;
-  delete[] hostname;
+  rv = nsGetMailboxServer(uriStr, getter_AddRefs(server));
 
-  *aResult = server;
-  NS_IF_ADDREF(*aResult);
+  NS_IF_ADDREF(*aResult = server);
 
   return rv;
 }
@@ -226,7 +174,7 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
   rv = nsLocalURI2Server(uriStr, getter_AddRefs(server));
 
   if (NS_FAILED(rv))
-  	return rv;
+    return rv;
   
   // now ask the server what it's root is
   // and begin pathResult with the mailbox root
@@ -275,62 +223,62 @@ nsresult nsParseLocalMessageURI(const char* uri,
                                 nsCString& folderURI,
                                 PRUint32 *key)
 {
-	if(!key)
-		return NS_ERROR_NULL_POINTER;
+  if(!key)
+    return NS_ERROR_NULL_POINTER;
 
-	nsCAutoString uriStr(uri);
-	PRInt32 keySeparator = uriStr.FindChar('#');
-	if(keySeparator != -1)
-	{
+  nsCAutoString uriStr(uri);
+  PRInt32 keySeparator = uriStr.FindChar('#');
+  if(keySeparator != -1)
+  {
     PRInt32 keyEndSeparator = uriStr.FindCharInSet("?&", 
                                                    keySeparator); 
-		nsAutoString folderPath;
-		uriStr.Left(folderURI, keySeparator);
+    nsAutoString folderPath;
+    uriStr.Left(folderURI, keySeparator);
         folderURI.Cut(7, 8);    // cut out the -message part of mailbox-message:
 
-		nsCAutoString keyStr;
+    nsCAutoString keyStr;
     if (keyEndSeparator != -1)
         uriStr.Mid(keyStr, keySeparator+1, 
                    keyEndSeparator-(keySeparator+1));
     else
         uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
-		PRInt32 errorCode;
-		*key = keyStr.ToInteger(&errorCode);
+    PRInt32 errorCode;
+    *key = keyStr.ToInteger(&errorCode);
 
-		return errorCode;
-	}
-	return NS_ERROR_FAILURE;
+    return errorCode;
+  }
+  return NS_ERROR_FAILURE;
 
 }
 
 nsresult nsBuildLocalMessageURI(const char *baseURI, PRUint32 key, nsCString& uri)
 {
-	
-	// need to convert mailbox://hostname/.. to mailbox-message://hostname/..
+  
+  // need to convert mailbox://hostname/.. to mailbox-message://hostname/..
 
-	uri.Append(baseURI);
-	uri.Append('#');
-	uri.AppendInt(key);
-	return NS_OK;
+  uri.Append(baseURI);
+  uri.Append('#');
+  uri.AppendInt(key);
+  return NS_OK;
 }
 
 nsresult nsCreateLocalBaseMessageURI(const char *baseURI, char **baseMessageURI)
 {
-	if(!baseMessageURI)
-		return NS_ERROR_NULL_POINTER;
+  if(!baseMessageURI)
+    return NS_ERROR_NULL_POINTER;
 
-	nsCAutoString tailURI(baseURI);
+  nsCAutoString tailURI(baseURI);
 
-	// chop off mailbox:/
-	if (tailURI.Find(kMailboxRootURI) == 0)
-		tailURI.Cut(0, PL_strlen(kMailboxRootURI));
-	
-	nsCAutoString baseURIStr(kMailboxMessageRootURI);
-	baseURIStr += tailURI;
+  // chop off mailbox:/
+  if (tailURI.Find(kMailboxRootURI) == 0)
+    tailURI.Cut(0, PL_strlen(kMailboxRootURI));
+  
+  nsCAutoString baseURIStr(kMailboxMessageRootURI);
+  baseURIStr += tailURI;
 
-	*baseMessageURI = ToNewCString(baseURIStr);
-	if(!*baseMessageURI)
-		return NS_ERROR_OUT_OF_MEMORY;
+  *baseMessageURI = ToNewCString(baseURIStr);
+  if(!*baseMessageURI)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	return NS_OK;
+  return NS_OK;
 }

@@ -77,7 +77,7 @@ nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 
 nsMsgMailNewsUrl::~nsMsgMailNewsUrl()
 {
-	PR_FREEIF(m_errorMessage);
+  PR_FREEIF(m_errorMessage);
 }
   
 NS_IMPL_THREADSAFE_ADDREF(nsMsgMailNewsUrl)
@@ -96,10 +96,10 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsresult nsMsgMailNewsUrl::GetUrlState(PRBool * aRunningUrl)
 {
-	if (aRunningUrl)
-		*aRunningUrl = m_runningUrl;
+  if (aRunningUrl)
+    *aRunningUrl = m_runningUrl;
 
-	return NS_OK;
+  return NS_OK;
 }
 
 nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
@@ -141,74 +141,71 @@ nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 
 nsresult nsMsgMailNewsUrl::RegisterListener (nsIUrlListener * aUrlListener)
 {
-	if (m_urlListeners)
-		m_urlListeners->RegisterListener(aUrlListener);
-	return NS_OK;
+  if (m_urlListeners)
+    m_urlListeners->RegisterListener(aUrlListener);
+  return NS_OK;
 }
 
 nsresult nsMsgMailNewsUrl::UnRegisterListener (nsIUrlListener * aUrlListener)
 {
-	if (m_urlListeners)
-		m_urlListeners->UnRegisterListener(aUrlListener);
-	return NS_OK;
+  if (m_urlListeners)
+    m_urlListeners->UnRegisterListener(aUrlListener);
+  return NS_OK;
 }
 
 nsresult nsMsgMailNewsUrl::SetErrorMessage (const char * errorMessage)
 {
-	// functionality has been moved to nsIMsgStatusFeedback
-	return NS_ERROR_NOT_IMPLEMENTED;
+  // functionality has been moved to nsIMsgStatusFeedback
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage)
 {
-	// functionality has been moved to nsIMsgStatusFeedback
-	return NS_ERROR_NOT_IMPLEMENTED;
+  // functionality has been moved to nsIMsgStatusFeedback
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServer)
 {
-	// mscott --> we could cache a copy of the server here....but if we did, we run
-	// the risk of leaking the server if any single url gets leaked....of course that
-	// shouldn't happen...but it could. so i'm going to look it up every time and
-	// we can look at caching it later.
+  // mscott --> we could cache a copy of the server here....but if we did, we run
+  // the risk of leaking the server if any single url gets leaked....of course that
+  // shouldn't happen...but it could. so i'm going to look it up every time and
+  // we can look at caching it later.
 
-	nsCAutoString host;
-	nsCAutoString scheme;
-	nsCAutoString userName;
+  nsresult rv;
+  nsCAutoString urlstr;
+  nsCAutoString scheme;
 
-	nsresult rv = GetAsciiHost(host);
+  nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-	/* GetUsername() returns an escaped string, so we need to manually unescape it.
-	 */
-	GetUsername(userName);
-	NS_UnescapeURL(userName); // XXX may result in non-ASCII octets!
-
-	rv = GetScheme(scheme);
+  m_baseURL->GetSpec(urlstr);
+  rv = url->SetSpec(urlstr);
+  if (NS_FAILED(rv)) return rv;
+  rv = GetScheme(scheme);
     if (NS_SUCCEEDED(rv))
     {
-        if (scheme.Equals("pop"))
+        if (scheme.EqualsLiteral("pop"))
           scheme.Assign("pop3");
         // we use "nntp" in the server list so translate it here.
-        if (scheme.Equals("news"))
+        if (scheme.EqualsLiteral("news"))
           scheme.Assign("nntp");
+        url->SetScheme(scheme);
         nsCOMPtr<nsIMsgAccountManager> accountManager = 
                  do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
         
         nsCOMPtr<nsIMsgIncomingServer> server;
-        rv = accountManager->FindServer(userName.get(),
-                                        host.get(),
-                                        scheme.get(),
+        rv = accountManager->FindServerByURI(url, PR_FALSE,
                                         aIncomingServer);
-        if (!*aIncomingServer && scheme.Equals("imap"))
+        if (!*aIncomingServer && scheme.EqualsLiteral("imap"))
         {
           // look for any imap server with this host name so clicking on 
           // other users folder urls will work. We could override this method
           // for imap urls, or we could make caching of servers work and
           // just set the server in the imap code for this case.
-          rv = accountManager->FindServer("",
-                                          host.get(),
-                                          scheme.get(),
+          url->SetUserPass(NS_LITERAL_CSTRING(""));
+          rv = accountManager->FindServerByURI(url, PR_FALSE,
                                           aIncomingServer);
         }
     }
@@ -218,63 +215,63 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeedback)
 {
-	if (aMsgFeedback)
-		m_statusFeedback = do_QueryInterface(aMsgFeedback);
-	return NS_OK;
+  if (aMsgFeedback)
+    m_statusFeedback = do_QueryInterface(aMsgFeedback);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgWindow(nsIMsgWindow **aMsgWindow)
 {
   NS_ENSURE_ARG_POINTER(aMsgWindow);
-	
-	// note: it is okay to return a null msg window and not return an error
-	// it's possible the url really doesn't have msg window
+  
+  // note: it is okay to return a null msg window and not return an error
+  // it's possible the url really doesn't have msg window
 
-		*aMsgWindow = m_msgWindow;
-		NS_IF_ADDREF(*aMsgWindow);
-	
+  *aMsgWindow = m_msgWindow;
+  NS_IF_ADDREF(*aMsgWindow);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetMsgWindow(nsIMsgWindow *aMsgWindow)
 {
-	if (aMsgWindow)
-		m_msgWindow = do_QueryInterface(aMsgWindow);
-	return NS_OK;
+  if (aMsgWindow)
+    m_msgWindow = do_QueryInterface(aMsgWindow);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFeedback)
 {
-	nsresult rv = NS_OK;
-	// note: it is okay to return a null status feedback and not return an error
-	// it's possible the url really doesn't have status feedback
-	if (!m_statusFeedback)
-	{
+  nsresult rv = NS_OK;
+  // note: it is okay to return a null status feedback and not return an error
+  // it's possible the url really doesn't have status feedback
+  if (!m_statusFeedback)
+  {
 
-		if(m_msgWindow)
-		{
-			m_msgWindow->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
-		}
-	}
-	if (aMsgFeedback)
-	{
-		*aMsgFeedback = m_statusFeedback;
-		NS_IF_ADDREF(*aMsgFeedback);
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv;
+    if(m_msgWindow)
+    {
+      m_msgWindow->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+    }
+  }
+  if (aMsgFeedback)
+  {
+    *aMsgFeedback = m_statusFeedback;
+    NS_IF_ADDREF(*aMsgFeedback);
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
 {
-	nsresult rv = NS_OK;
-	// note: it is okay to return a null load group and not return an error
-	// it's possible the url really doesn't have load group
-	if (!m_loadGroup)
-	{
-		if (m_msgWindow)
-		{
+  nsresult rv = NS_OK;
+  // note: it is okay to return a null load group and not return an error
+  // it's possible the url really doesn't have load group
+  if (!m_loadGroup)
+  {
+    if (m_msgWindow)
+    {
             nsCOMPtr<nsIDocShell> docShell;
             m_msgWindow->GetRootDocShell(getter_AddRefs(docShell));
             nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
@@ -302,101 +299,101 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
               }
             }
 #endif
-			if (webShell)
-			{
-				nsCOMPtr <nsIDocumentLoader> docLoader;
-				webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-				if (docLoader)
-					docLoader->GetLoadGroup(getter_AddRefs(m_loadGroup));
-			}
-		}
-	}
+      if (webShell)
+      {
+        nsCOMPtr <nsIDocumentLoader> docLoader;
+        webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+        if (docLoader)
+          docLoader->GetLoadGroup(getter_AddRefs(m_loadGroup));
+      }
+    }
+  }
 
-	if (aLoadGroup)
-	{
-		*aLoadGroup = m_loadGroup;
-		NS_IF_ADDREF(*aLoadGroup);
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv;
+  if (aLoadGroup)
+  {
+    *aLoadGroup = m_loadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+  return rv;
 
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetUpdatingFolder(PRBool *aResult)
 {
   NS_ENSURE_ARG(aResult);
-	*aResult = m_updatingFolder;
-	return NS_OK;
+  *aResult = m_updatingFolder;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetUpdatingFolder(PRBool updatingFolder)
 {
-	m_updatingFolder = updatingFolder;
-	return NS_OK;
+  m_updatingFolder = updatingFolder;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetAddToMemoryCache(PRBool *aAddToCache)
 {
   NS_ENSURE_ARG(aAddToCache); 
-	*aAddToCache = m_addContentToCache;
-	return NS_OK;
+  *aAddToCache = m_addContentToCache;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetAddToMemoryCache(PRBool aAddToCache)
 {
-	m_addContentToCache = aAddToCache;
-	return NS_OK;
+  m_addContentToCache = aAddToCache;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgIsInLocalCache(PRBool *aMsgIsInLocalCache)
 {
   NS_ENSURE_ARG(aMsgIsInLocalCache); 
-	*aMsgIsInLocalCache = m_msgIsInLocalCache;
-	return NS_OK;
+  *aMsgIsInLocalCache = m_msgIsInLocalCache;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetMsgIsInLocalCache(PRBool aMsgIsInLocalCache)
 {
-	m_msgIsInLocalCache = aMsgIsInLocalCache;
-	return NS_OK;
+  m_msgIsInLocalCache = aMsgIsInLocalCache;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetSuppressErrorMsgs(PRBool *aSuppressErrorMsgs)
 {
   NS_ENSURE_ARG(aSuppressErrorMsgs); 
-	*aSuppressErrorMsgs = m_suppressErrorMsgs;
-	return NS_OK;
+  *aSuppressErrorMsgs = m_suppressErrorMsgs;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetSuppressErrorMsgs(PRBool aSuppressErrorMsgs)
 {
-	m_suppressErrorMsgs = aSuppressErrorMsgs;
-	return NS_OK;
+  m_suppressErrorMsgs = aSuppressErrorMsgs;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::IsUrlType(PRUint32 type, PRBool *isType)
 {
-	//base class doesn't know about any specific types
-	NS_ENSURE_ARG(isType);
-	*isType = PR_FALSE;
-	return NS_OK;
+  //base class doesn't know about any specific types
+  NS_ENSURE_ARG(isType);
+  *isType = PR_FALSE;
+  return NS_OK;
 
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetSearchSession(nsIMsgSearchSession *aSearchSession)
 {
-	if (aSearchSession)
-		m_searchSession = do_QueryInterface(aSearchSession);
-	return NS_OK;
+  if (aSearchSession)
+    m_searchSession = do_QueryInterface(aSearchSession);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetSearchSession(nsIMsgSearchSession **aSearchSession)
 {
   NS_ENSURE_ARG(aSearchSession);
-	*aSearchSession = m_searchSession;
-	NS_IF_ADDREF(*aSearchSession);
-	return NS_OK;
+  *aSearchSession = m_searchSession;
+  NS_IF_ADDREF(*aSearchSession);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -410,7 +407,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetSearchSession(nsIMsgSearchSession **aSearchSe
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetSpec(nsACString &aSpec)
 {
-	return m_baseURL->GetSpec(aSpec);
+  return m_baseURL->GetSpec(aSpec);
 }
 
 #define FILENAME_PART "&filename="
@@ -423,7 +420,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetSpec(const nsACString &aSpec)
   char *start, *end;
   start = PL_strcasestr(spec.BeginWriting(),FILENAME_PART);
   if (start)
-  {	// Make sure we only get our own value.
+  { // Make sure we only get our own value.
     end = PL_strcasestr((char*)(start+FILENAME_PART_LEN),"&");
     if (end)
     {
@@ -440,89 +437,89 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetSpec(const nsACString &aSpec)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetPrePath(nsACString &aPrePath)
 {
-	return m_baseURL->GetPrePath(aPrePath);
+  return m_baseURL->GetPrePath(aPrePath);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetScheme(nsACString &aScheme)
 {
-	return m_baseURL->GetScheme(aScheme);
+  return m_baseURL->GetScheme(aScheme);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetScheme(const nsACString &aScheme)
 {
-	return m_baseURL->SetScheme(aScheme);
+  return m_baseURL->SetScheme(aScheme);
 }
 
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetUserPass(nsACString &aUserPass)
 {
-	return m_baseURL->GetUserPass(aUserPass);
+  return m_baseURL->GetUserPass(aUserPass);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetUserPass(const nsACString &aUserPass)
 {
-	return m_baseURL->SetUserPass(aUserPass);
+  return m_baseURL->SetUserPass(aUserPass);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetUsername(nsACString &aUsername)
 {
-	/* note:  this will return an escaped string */
-	return m_baseURL->GetUsername(aUsername);
+  /* note:  this will return an escaped string */
+  return m_baseURL->GetUsername(aUsername);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetUsername(const nsACString &aUsername)
 {
-	return m_baseURL->SetUsername(aUsername);
+  return m_baseURL->SetUsername(aUsername);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetPassword(nsACString &aPassword)
 {
-	return m_baseURL->GetPassword(aPassword);
+  return m_baseURL->GetPassword(aPassword);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetPassword(const nsACString &aPassword)
 {
-	return m_baseURL->SetPassword(aPassword);
+  return m_baseURL->SetPassword(aPassword);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetHostPort(nsACString &aHostPort)
 {
-	return m_baseURL->GetHostPort(aHostPort);
+  return m_baseURL->GetHostPort(aHostPort);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetHostPort(const nsACString &aHostPort)
 {
-	return m_baseURL->SetHostPort(aHostPort);
+  return m_baseURL->SetHostPort(aHostPort);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetHost(nsACString &aHost)
 {
-	return m_baseURL->GetHost(aHost);
+  return m_baseURL->GetHost(aHost);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetHost(const nsACString &aHost)
 {
-	return m_baseURL->SetHost(aHost);
+  return m_baseURL->SetHost(aHost);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetPort(PRInt32 *aPort)
 {
-	return m_baseURL->GetPort(aPort);
+  return m_baseURL->GetPort(aPort);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetPort(PRInt32 aPort)
 {
-	return m_baseURL->SetPort(aPort);
+  return m_baseURL->SetPort(aPort);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetPath(nsACString &aPath)
 {
-	return m_baseURL->GetPath(aPath);
+  return m_baseURL->GetPath(aPath);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetPath(const nsACString &aPath)
 {
-	return m_baseURL->SetPath(aPath);
+  return m_baseURL->SetPath(aPath);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetAsciiHost(nsACString &aHostA)
@@ -590,7 +587,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
   rv = GetSpec(urlSpec);
   if (NS_FAILED(rv)) return rv;
   return ioService->NewURI(urlSpec, nsnull, nsnull, _retval);
-}	
+} 
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const nsACString &relativePath, nsACString &result) 
 {
@@ -626,13 +623,13 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const nsACString &relativePath, nsACStri
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetDirectory(nsACString &aDirectory)
 {
-	return m_baseURL->GetDirectory(aDirectory);
+  return m_baseURL->GetDirectory(aDirectory);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetDirectory(const nsACString &aDirectory)
 {
 
-	return m_baseURL->SetDirectory(aDirectory);
+  return m_baseURL->SetDirectory(aDirectory);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(nsACString &aFileName)
@@ -647,12 +644,12 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(nsACString &aFileName)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileBaseName(nsACString &aFileBaseName)
 {
-	return m_baseURL->GetFileBaseName(aFileBaseName);
+  return m_baseURL->GetFileBaseName(aFileBaseName);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileBaseName(const nsACString &aFileBaseName)
 {
-	return m_baseURL->SetFileBaseName(aFileBaseName);
+  return m_baseURL->SetFileBaseName(aFileBaseName);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(nsACString &aFileExtension)
@@ -673,7 +670,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(nsACString &aFileExtension)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileExtension(const nsACString &aFileExtension)
 {
-	return m_baseURL->SetFileExtension(aFileExtension);
+  return m_baseURL->SetFileExtension(aFileExtension);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(const nsACString &aFileName)
@@ -684,42 +681,42 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(const nsACString &aFileName)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetParam(nsACString &aParam)
 {
-	return m_baseURL->GetParam(aParam);
+  return m_baseURL->GetParam(aParam);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetParam(const nsACString &aParam)
 {
-	return m_baseURL->SetParam(aParam);
+  return m_baseURL->SetParam(aParam);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetQuery(nsACString &aQuery)
 {
-	return m_baseURL->GetQuery(aQuery);
+  return m_baseURL->GetQuery(aQuery);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetQuery(const nsACString &aQuery)
 {
-	return m_baseURL->SetQuery(aQuery);
+  return m_baseURL->SetQuery(aQuery);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetRef(nsACString &aRef)
 {
-	return m_baseURL->GetRef(aRef);
+  return m_baseURL->GetRef(aRef);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetRef(const nsACString &aRef)
 {
-	return m_baseURL->SetRef(aRef);
+  return m_baseURL->SetRef(aRef);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFilePath(nsACString &o_DirFile)
 {
-	return m_baseURL->GetFilePath(o_DirFile);
+  return m_baseURL->GetFilePath(o_DirFile);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFilePath(const nsACString &i_DirFile)
 {
-	return m_baseURL->SetFilePath(i_DirFile);
+  return m_baseURL->SetFilePath(i_DirFile);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetCommonBaseSpec(nsIURI *uri2, nsACString &result)
@@ -1009,13 +1006,13 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFolder(nsIMsgFolder ** /* aFolder */)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgHeaderSink(nsIMsgHeaderSink * *aMsgHdrSink)
 {
-	NS_ENSURE_ARG_POINTER(aMsgHdrSink);
-	NS_IF_ADDREF(*aMsgHdrSink = mMsgHeaderSink);
-	return NS_OK;
+    NS_ENSURE_ARG_POINTER(aMsgHdrSink);
+    NS_IF_ADDREF(*aMsgHdrSink = mMsgHeaderSink);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetMsgHeaderSink(nsIMsgHeaderSink * aMsgHdrSink)
 {
-	mMsgHeaderSink = aMsgHdrSink;
-	return NS_OK;
+    mMsgHeaderSink = aMsgHdrSink;
+    return NS_OK;
 }

@@ -44,6 +44,7 @@
 #include "prsystem.h"
 #include "nsEscape.h"
 #include "nsIFileSpec.h"
+#include "nsNetCID.h"
 
 // stuff for temporary root folder hack
 #include "nsIMsgAccountManager.h"
@@ -61,10 +62,14 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   nsresult rv;
   
   nsAutoString sbdSep;
-  
+  nsCOMPtr<nsIURL> url;
+ 
   rv = nsGetMailFolderSeparator(sbdSep);
   if (NS_FAILED(rv)) 
     return rv;
+  
+  url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
   
   nsCAutoString uri(uriStr);
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
@@ -77,56 +82,23 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     rv = NS_ERROR_FAILURE; 
   }
   
-  // the server name is the first component of the path, so extract it out
-  PRInt32 hostStart;
-  
-  hostStart = uri.FindChar('/');
-  if (hostStart <= 0) return NS_ERROR_FAILURE;
-  
-  // skip past all //
-  while (uri.CharAt(hostStart) =='/') hostStart++;
-  
-  // cut imap://[userid@]hostname/folder -> [userid@]hostname/folder
-  nsCAutoString hostname;
-  uri.Right(hostname, uri.Length() - hostStart);
-  
-  nsCAutoString username;
-  
-  PRInt32 atPos = hostname.FindChar('@');
-  if (atPos != -1) {
-    hostname.Left(username, atPos);
-    hostname.Cut(0, atPos+1);
-  }
-  
+  // Set our url to the string given
+  rv = url->SetSpec(nsDependentCString(uriStr));
+  if (NS_FAILED(rv)) return rv;
+
+  // Set the folder to the url path
   nsCAutoString folder;
-  // folder comes after the hostname, after the '/'
-  // cut off first '/' and everything following it
-  // hostname/folder -> hostname
-  PRInt32 hostEnd = hostname.FindChar('/');
-  if (hostEnd > 0) 
-  {
-    hostname.Right(folder, hostname.Length() - hostEnd - 1);
-    hostname.Truncate(hostEnd);
-  }
+  rv = url->GetPath(folder);
   
+  // Now find the server from the URL
   nsCOMPtr<nsIMsgIncomingServer> server;
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
     do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if(NS_FAILED(rv)) return rv;
   
-  char *unescapedUserName = ToNewCString(username);
-  if (unescapedUserName)
-  {
-    nsUnescape(unescapedUserName);
-    rv = accountManager->FindServer(unescapedUserName,
-      hostname.get(),
-      "imap",
-      getter_AddRefs(server));
-    PR_Free(unescapedUserName);
-  }
-  else
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  
+  rv = accountManager->FindServerByURI(url, PR_FALSE,
+    getter_AddRefs(server));
+
   if (NS_FAILED(rv)) return rv;
   
   if (server) 

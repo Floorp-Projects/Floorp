@@ -364,8 +364,8 @@ nsSmtpServer::GetPassword(char * *aPassword)
             GetHostname(getter_Copies(hostName));
             GetUsername(getter_Copies(userName));
             if (useMatchingHostNameServer)
-              // pass in empty type, to match imap and pop3.
-              accountManager->FindRealServer(userName, hostName, "", getter_AddRefs(incomingServerToUse));
+              // pass in empty type and port=0, to match imap and pop3.
+              accountManager->FindRealServer(userName, hostName, "", 0, getter_AddRefs(incomingServerToUse));
             PRInt32 dotPos = -1;
             if (!incomingServerToUse && useMatchingDomainServer 
               && (dotPos = hostName.FindChar('.')) != kNotFound)

@@ -370,7 +370,7 @@ function checkUserServerChanges(showAlert) {
 
   // If something is changed then check if the new user/host already exists.
   if ( (oldUser != newUser) || (oldHost != newHost) ) {
-    var newServer = accountManager.findRealServer(newUser, newHost, newType);
+    var newServer = accountManager.findRealServer(newUser, newHost, newType, 0);
     if (newServer) {
       if (showAlert) {
         var alertText = gPrefsBundle.getString("modifiedAccountExists");

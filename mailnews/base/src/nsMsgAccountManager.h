@@ -106,9 +106,10 @@ private:
   nsCOMPtr <nsIMsgIncomingServer> m_lastFindServerResult;
   nsCString m_lastFindServerHostName;
   nsCString m_lastFindServerUserName;
+  PRInt32 m_lastFindServerPort;
   nsCString m_lastFindServerType;
 
-  nsresult SetLastServerFound(nsIMsgIncomingServer *server, const char *hostname, const char *username, const char *type);
+  nsresult SetLastServerFound(nsIMsgIncomingServer *server, const char *hostname, const char *username, const PRInt32 port, const const char *type);
 
   /* internal creation routines - updates m_identities and m_incomingServers */
   nsresult createKeyedAccount(const char* key,
@@ -191,6 +192,9 @@ private:
 
   // find the server given by {username, hostname, type}
   static PRBool findServer(nsISupports *aElement, void *data);
+
+  // find the server given by {username, hostname, port, type}
+  static PRBool findServerUrl(nsISupports *aElement, void *data);
 
   // write out the server's cache through the given folder cache
   static PRBool PR_CALLBACK writeFolderCache(nsHashKey *aKey, void *aData, void *closure);

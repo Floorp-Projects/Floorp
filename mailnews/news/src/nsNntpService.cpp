@@ -619,29 +619,15 @@ nsNntpService::GetFolderFromUri(const char *aUri, nsIMsgFolder **aFolder)
   nsresult rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aUri));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCAutoString hostName;
-  rv = uri->GetAsciiHost(hostName);
-  NS_ENSURE_SUCCESS(rv,rv);
-
   nsCAutoString path;
   rv = uri->GetPath(path);
   NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCAutoString userPass;
-  rv = uri->GetUserPass(userPass);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  char *unescapedUserPass = ToNewCString(userPass);
-  if (!unescapedUserPass)
-    return NS_ERROR_OUT_OF_MEMORY;
-  nsUnescape(unescapedUserPass);
 
   nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIMsgIncomingServer> server;
-  rv = accountManager->FindServer(unescapedUserPass, hostName.get(), "nntp", getter_AddRefs(server));
-  PR_Free(unescapedUserPass);
+  rv = accountManager->FindServerByURI(uri, PR_FALSE, getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIMsgFolder> rootFolder;
@@ -1136,17 +1122,13 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   //
   // xxx todo what if we have two servers on the same host, but different ports?
   // or no port, but isSecure (snews:// vs news://) is different?
-  rv = accountManager->FindServer("",
-                                hostName.get(),
-                                "nntp",
+  rv = accountManager->FindServerByURI(aUri, PR_FALSE,
                                 getter_AddRefs(server));
 
   if (!server)
   {
     // try the "real" settings ("realservername" and "realusername")
-    rv = accountManager->FindRealServer("",
-                                hostName.get(),
-                                "nntp",
+    rv = accountManager->FindServerByURI(aUri, PR_TRUE,
                                 getter_AddRefs(server));
   }
 
@@ -1159,7 +1141,7 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
     NS_ENSURE_SUCCESS(rv,rv);
 
     // until we support default news servers, use the first nntp server we find
-    rv = accountManager->FindServer("","","nntp", getter_AddRefs(server));
+    rv = accountManager->FindServerByURI(aUri, PR_FALSE, getter_AddRefs(server));
     if (NS_FAILED(rv) || !server)
     {
         // step 2, set the uri's hostName and the local variable hostName

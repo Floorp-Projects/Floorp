@@ -47,7 +47,7 @@
 interface nsIMsgFolderCache;
 interface nsIFolderListener;
 
-[scriptable, uuid(6ed2cc00-e623-11d2-b7fc-00805f05ffa5)]
+[scriptable, uuid(0dc74b96-c2fc-4ce0-baed-c6f03c69026e)]
 interface nsIMsgAccountManager : nsISupports {
 
   nsIMsgAccount createAccount();
@@ -125,11 +125,20 @@ interface nsIMsgAccountManager : nsISupports {
       FindServer(in string userName, in string hostname, in string type);
 
   /*
+   * search for the server with the given uri
+   * an analog to FindServer()
+   * The boolean flag selects whether we compare input against the    
+   * 'realhostname' and 'realuserName' pref settings.
+   */
+  nsIMsgIncomingServer
+      findServerByURI(in nsIURI aURI, in boolean aRealFlag);
+
+  /*
    * Same as FindServer() except it compares the input values against
    * 'realhostname' and 'realuserName' pref settings.
    */
   nsIMsgIncomingServer
-      findRealServer(in string userName, in string hostname, in string type);
+      findRealServer(in string userName, in string hostname, in string type, in long port );
 
   /**
    * find the index of this server in the (ordered) list of accounts
@@ -210,7 +219,7 @@ interface nsIMsgAccountManager : nsISupports {
 interface nsIMsgAccountManagerExtension : nsISupports
 {
     readonly attribute string name;   // examples:  mdn
-	boolean showPanel(in nsIMsgIncomingServer server);
-	readonly attribute string chromePackageName;  // example:  messenger, chrome://messenger/content/am-mdn.xul and chrome://messenger/locale/am-mdn.properties
+    boolean showPanel(in nsIMsgIncomingServer server);
+    readonly attribute string chromePackageName;  // example:  messenger, chrome://messenger/content/am-mdn.xul and chrome://messenger/locale/am-mdn.properties
 };
 

@@ -720,7 +720,7 @@ function AccountExists(userName,hostName,serverType)
   var accountExists = false;
   var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
   try {
-        var server = accountManager.findRealServer(userName,hostName,serverType);
+        var server = accountManager.findRealServer(userName,hostName,serverType,0);
         if (server) {
                 accountExists = true;
         }
