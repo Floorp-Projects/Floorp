@@ -1946,7 +1946,6 @@ void DumpLayoutData(char*              aTitleStr,
   }
 #endif
 
-
   NS_ASSERTION(aRootFrame, "Pointer is null!");
   NS_ASSERTION(aWebShell, "Pointer is null!");
 
@@ -2087,12 +2086,14 @@ static void DumpPrintObjectsTreeLayout(PrintObject * aPO,
     for (PRInt32 k=0;k<aLevel;k++) fprintf(fd, "  ");
     fprintf(fd, "%s %p %p %p %p %d %d,%d,%d,%d\n", types[aPO->mFrameType], aPO, aPO->mWebShell, aPO->mSeqFrame,
            aPO->mPageFrame, aPO->mPageNum, aPO->mRect.x, aPO->mRect.y, aPO->mRect.width, aPO->mRect.height); 
-    char * docStr;
-    char * urlStr;
-    GetDocTitleAndURL(aPO, docStr, urlStr);
-    DumpLayoutData(docStr, urlStr, aPO->mPresContext, aDC, rootFrame, aPO->mWebShell, fd);
-    if (docStr) nsMemory::Free(docStr);
-    if (urlStr) nsMemory::Free(urlStr);
+    if (aPO->IsPrintable()) {
+      char * docStr;
+      char * urlStr;
+      GetDocTitleAndURL(aPO, docStr, urlStr);
+      DumpLayoutData(docStr, urlStr, aPO->mPresContext, aDC, rootFrame, aPO->mWebShell, fd);
+      if (docStr) nsMemory::Free(docStr);
+      if (urlStr) nsMemory::Free(urlStr);
+    }
     fprintf(fd, "<***************************************************>\n");
 
     PRInt32 cnt = aPO->mKids.Count();
@@ -2719,17 +2720,18 @@ DocumentViewerImpl::PrintPage(nsIPresContext*   aPresContext,
     for (PRInt32 i=0;i<cnt;i++) {
       PrintObject* po = (PrintObject*)aPO->mKids[i];
       NS_ASSERTION(po, "PrintObject can't be null!");
+      if (po->IsPrintable()) {
+        // Now verify that SubDoc's PageNum matches the
+        // page num of it's parent doc
+        curPageSeq->GetCurrentPageNum(&pageNum);
+        nsIFrame* fr;
+        CallQueryInterface(curPageSeq, &fr);
 
-      // Now verify that SubDoc's PageNum matches the
-      // page num of it's parent doc
-      curPageSeq->GetCurrentPageNum(&pageNum);
-      nsIFrame* fr;
-      CallQueryInterface(curPageSeq, &fr);
-
-      if (fr == po->mSeqFrame && pageNum == po->mPageNum) {
-        PRBool donePrintingSubDoc;
-        DoPrint(po, PR_TRUE, donePrintingSubDoc); // synchronous printing, it changes the value mPageSeqFrame
-        po->mHasBeenPrinted = PR_TRUE;
+        if (fr == po->mSeqFrame && pageNum == po->mPageNum) {
+          PRBool donePrintingSubDoc;
+          DoPrint(po, PR_TRUE, donePrintingSubDoc); // synchronous printing, it changes the value mPageSeqFrame
+          po->mHasBeenPrinted = PR_TRUE;
+        }
       }
     } // while
     mPageSeqFrame = curPageSeq;
@@ -3391,6 +3393,11 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
         adjRect.SetRect(aPO->mRect.x != 0?margin.left:0, aPO->mRect.y != 0?margin.top:0, width, height);
       }
     }
+  }
+
+  if (!adjRect.width || !adjRect.height) {
+    aPO->mDontPrint = PR_TRUE;
+    return NS_OK;
   }
 
   aPO->mPresContext->SetPageDim(&adjRect);
@@ -4166,7 +4173,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
       poPresShell->GetRootFrame(&rootFrame);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dconeX)
-      {
+      if (aPO->IsPrintable()) {
         char * docStr;
         char * urlStr;
         GetDocTitleAndURL(aPO, docStr, urlStr);
