@@ -82,13 +82,19 @@ void bcJavaGlobal::StartJVM() {
     char classpath[1024];
     JavaVMInitArgs vm_args;
     JavaVMOption options[2];
-    sprintf(classpath, "-Djava.class.path=%s",PR_GetEnv("CLASSPATH"));
-    PR_LOG(l,PR_LOG_DEBUG,("--[c++] classpath %s\n",classpath));
-    options[0].optionString = classpath;
-    options[1].optionString=""; //-Djava.compiler=NONE";
+    char * classpathEnv = PR_GetEnv("CLASSPATH");
+    if (classpathEnv != NULL) {
+        sprintf(classpath, "-Djava.class.path=%s",classpathEnv);
+        PR_LOG(l,PR_LOG_DEBUG,("--[c++] classpath %s\n",classpath));
+        options[0].optionString = classpath;
+        options[1].optionString=""; //-Djava.compiler=NONE";
+        vm_args.options = options;
+        vm_args.nOptions = 2;
+    } else {
+        vm_args.nOptions = 0;
+    }
+
     vm_args.version = 0x00010002;
-    vm_args.options = options;
-    vm_args.nOptions = 2;
     vm_args.ignoreUnrecognized = JNI_TRUE;
     /* Create the Java VM */
     res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);

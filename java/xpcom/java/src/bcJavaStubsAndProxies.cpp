@@ -108,6 +108,9 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIOR
     if (!componentLoader) {
         Init();
     }
+    if (!componentLoader) {
+        return NS_ERROR_FAILURE;
+    }
     bcOIDKey *key = new bcOIDKey(oid);
     void *tmp = oid2objectMap->Get(key);
     delete key;
@@ -129,7 +132,9 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetInterface(const nsIID &iid,  jclass *cla
     if (!componentLoader) {
         Init();
     }
-
+    if (!componentLoader) {
+        return NS_ERROR_FAILURE;
+    }
     JNIEnv * env = bcJavaGlobal::GetJNIEnv();
     jobject jiid = bcIIDJava::GetObject((nsIID*)&iid);
     *clazz = (jclass)env->CallStaticObjectMethod(proxyFactory,getInterfaceID, jiid);
@@ -167,6 +172,9 @@ NS_IMETHODIMP bcJavaStubsAndProxies::GetOID(char *location, bcOID *oid) {
     
     if (!componentLoader) {
         Init();
+    }
+    if (!componentLoader) {
+        return NS_ERROR_FAILURE;
     }
     //location[strlen(location)-5] = 0; //nb dirty hack. location is xyz.jar.info
     strcpy(location + strlen(location)-4,"comp");

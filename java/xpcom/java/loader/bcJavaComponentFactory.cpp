@@ -69,10 +69,16 @@ NS_IMETHODIMP bcJavaComponentFactory::CreateInstance(nsISupports *aOuter, const 
     _orb->GetORB(&orb);
     bcOID oid;
     r = javaStubsAndProxies->GetOID(location, &oid);
+    if (NS_FAILED(r)) {
+        return r;
+    }
     printf("--bcJavaComponentFactory::CreateInstance after GetOID");
     nsISupports *proxy;
     printf("--[c++]bcJavaComponentFactory::CreateInstance iid:%s\n",iid.ToString());
     xpcomStubsAndProxies->GetProxy(oid, iid, orb, &proxy);
+    if (NS_FAILED(r)) {
+        return r;
+    }
     *result = proxy;
     printf("--bcJavaComponentFactory::CreateInstance end");
     return NS_OK;
