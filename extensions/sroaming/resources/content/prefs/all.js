@@ -174,7 +174,7 @@ RoamingPrefs.prototype =
       registry.openWellKnownRegistry(registry.ApplicationRegistry);
       this.registry = registry;
       var profMan = Components.classes["@mozilla.org/profile/manager;1"]
-		                          .getService(Components.interfaces.nsIProfile);
+		              .getService(Components.interfaces.nsIProfile);
       var regkey = registry.getKey(registry.Common, this.kRegTreeProfile);
       regkey = registry.getKey(regkey, profMan.currentProfile);
       this.regkeyProf = regkey;
