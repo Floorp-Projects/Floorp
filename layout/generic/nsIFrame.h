@@ -56,8 +56,9 @@ struct PRLogModuleInfo;
  * @see #GetReflowMetrics()
  */
 struct nsReflowMetrics {
-  nscoord width, height;
+  nscoord width, height;  // desired width and height
   nscoord ascent, descent;
+  nsSize* maxElementSize;
 };
 
 /**
@@ -68,13 +69,25 @@ struct nsReflowMetrics {
  */
 #define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
 
+enum nsReflowReason {
+  eReflowReason_Initial,     // initial reflow of a newly created frame
+  eReflowReason_Incremental, // an incremental change has occured. see the reflow command for details
+  eReflowReason_Resize       // general request to determine a desired size
+};
+
+struct nsReflowState {
+  nsReflowReason   reason;         // the reason for the reflow
+  nsReflowCommand& reflowCommand;  // only used for incremental changes
+  nsSize           maxSize;        // the available space in which to reflow
+};
+
 //----------------------------------------------------------------------
 
 /**
  * Reflow status returned by the reflow methods.
  *
  * NS_FRAME_NOT_COMPLETE bit flag means the frame does not map all its
- * content and that the parent frame should create a continuing frame.
+ * content, and that the parent frame should create a continuing frame.
  * If this bit isn't set it means the frame does map all its content.
  *
  * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is
@@ -125,7 +138,7 @@ typedef PRBool nsDidReflowStatus;
  * objects.
  *
  * Frames are NOT reference counted. Use the DeleteFrame() member function
- * instead
+ * to delete a frame
  */
 class nsIFrame : private nsISupports
 {
@@ -261,6 +274,15 @@ public:
    */
   NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
                         nsDidReflowStatus aStatus) = 0;
+
+  /**
+   *
+   *
+   */
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
+                    nsReflowMetrics&     aDesiredSize,
+                    const nsReflowState& aReflowState,
+                    nsReflowStatus&      aStatus) = 0;
 
   /**
    * Resize reflow. The frame is given a maximum size and asked for its desired
