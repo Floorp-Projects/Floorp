@@ -158,6 +158,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	FAIL:
 	  PR_FREEIF(id);
 	  PR_FREEIF(id_url);
+	  PR_FREEIF(id_imap);
 	  if (status < 0) return status;
 	}
 

@@ -158,6 +158,9 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
       urlSpec = mime_set_url_part(aMessageURL, part, PR_TRUE);
     }
   
+	PR_Free(part);
+	PR_FREEIF(imappart);
+
     if (!urlSpec)
       return NS_ERROR_OUT_OF_MEMORY;
 

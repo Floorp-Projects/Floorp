@@ -1040,14 +1040,11 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 			converted, s_unique);
 	}
 
-	if (converted != rsrcString)
+  if (converted != rsrcString)
   {
 		PR_FREEIF(converted);
   }
-  else
-  {
-    PR_FREEIF(rsrcString);
-  }
+  PR_FREEIF(rsrcString);
 
 	rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
 
@@ -1059,14 +1056,11 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
 		vEscCard, converted);
 
-	if (converted != rsrcString)
+  if (converted != rsrcString)
   {
 		PR_FREEIF(converted);
   }
-  else
-  {
-    PR_FREEIF(rsrcString);
-  }
+  PR_FREEIF(rsrcString);
 
 	if (!htmlLine1 && !htmlLine2)
 	{
