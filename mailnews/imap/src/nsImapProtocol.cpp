@@ -5632,6 +5632,18 @@ PRBool nsImapProtocol::FolderIsSelected(const char *mailboxName)
 
 void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
 {
+
+  if (FolderIsSelected(mailboxName))
+  {
+    PRInt32 prevNumMessages = GetServerStateParser().NumberOfMessages();
+    Noop();
+    // OnNewIdleMessages will cause the ui thread to update the folder
+    if (m_imapMailFolderSink && GetServerStateParser().NumberOfRecentMessages()
+          || prevNumMessages != GetServerStateParser().NumberOfMessages())
+      m_imapMailFolderSink->OnNewIdleMessages();
+    return;
+  }
+
   IncrementCommandTagNumber();
 
   nsCAutoString command(GetServerCommandTag());

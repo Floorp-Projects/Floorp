@@ -183,6 +183,7 @@ void nsImapServerResponseParser::InitializeState()
 {
   fProcessingTaggedResponse = PR_FALSE;
   fCurrentCommandFailed = PR_FALSE;
+  fNumberOfRecentMessages = 0;
 }
 
 void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentCommand, PRBool aIgnoreBadAndNOResponses)
