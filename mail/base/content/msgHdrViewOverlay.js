@@ -151,7 +151,7 @@ var currentHeaderData = {};
 // .contentType --> the content type of the attachment
 // url --> an imap, or mailbox url which can be used to fetch the message
 // uri --> an RDF URI which refers to the message containig the attachment
-// notDownloaded --> boolean flag stating whether the attachment is downloaded or not.
+// isExternalAttachment --> boolean flag stating whether the attachment is an attachment which is a URL that refers to the attachment location
 var currentAttachments = new Array();
 
 // createHeaderEntry --> our constructor method which creates a header Entry 
@@ -413,7 +413,7 @@ var messageHeaderSink = {
       this.onEndHeaders();
     },
 
-    handleAttachment: function(contentType, url, displayName, uri, notDownloaded) 
+    handleAttachment: function(contentType, url, displayName, uri, isExternalAttachment) 
     {
       // presentation level change....don't show vcards as external attachments in the UI.
       // libmime already renders them inline.
@@ -430,7 +430,7 @@ var messageHeaderSink = {
         }
       }
 
-      currentAttachments.push (new createNewAttachmentInfo(contentType, url, displayName, uri, notDownloaded));
+      currentAttachments.push (new createNewAttachmentInfo(contentType, url, displayName, uri, isExternalAttachment));
       // if we have an attachment, set the MSG_FLAG_ATTACH flag on the hdr
       // this will cause the "message with attachment" icon to show up
       // in the thread pane
@@ -1056,13 +1056,13 @@ function CreateFilter(emailAddressNode)
 
 // createnewAttachmentInfo --> constructor method for creating new attachment object which goes into the
 // data attachment array.
-function createNewAttachmentInfo(contentType, url, displayName, uri, notDownloaded)
+function createNewAttachmentInfo(contentType, url, displayName, uri, isExternalAttachment)
 {
   this.contentType = contentType;
   this.url = url;
   this.displayName = displayName;
   this.uri = uri;
-  this.notDownloaded = notDownloaded;
+  this.isExternalAttachment = isExternalAttachment;
 }
 
 function dofunc(aFunctionName, aFunctionArg)
@@ -1080,7 +1080,7 @@ function saveAttachment(aAttachment)
   messenger.saveAttachment(aAttachment.contentType, 
                            aAttachment.url, 
                            encodeURIComponent(aAttachment.displayName), 
-                           aAttachment.messageUri);
+                           aAttachment.messageUri, aAttachment.isExternalAttachment);
 }
 
 function openAttachment(aAttachment)
@@ -1088,7 +1088,7 @@ function openAttachment(aAttachment)
   messenger.openAttachment(aAttachment.contentType, 
                            aAttachment.url, 
                            encodeURIComponent(aAttachment.displayName), 
-                           aAttachment.messageUri);
+                           aAttachment.messageUri, aAttachment.isExternalAttachment);
 }
 
 function printAttachment(aAttachment)
@@ -1167,6 +1167,7 @@ function cloneAttachment(aAttachment)
   obj.url = aAttachment.url;
   obj.displayName = aAttachment.displayName;
   obj.messageUri = aAttachment.uri;
+  obj.isExternalAttachment = aAttachment.isExternalAttachment;
   return obj;
 }
 

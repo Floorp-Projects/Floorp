@@ -368,7 +368,7 @@ nsresult
 nsMimeHtmlDisplayEmitter::StartAttachment(const char *name,
                                           const char *contentType,
                                           const char *url,
-                                          PRBool aNotDownloaded)
+                                          PRBool aIsExternalAttachment)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
@@ -412,7 +412,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name,
 
     headerSink->HandleAttachment(contentType, url /* was escapedUrl */,
                                  unicodeHeaderValue, uriString,
-                                 aNotDownloaded);
+                                 aIsExternalAttachment);
 
     nsCRT::free(escapedUrl);
     mSkipAttachment = PR_TRUE;

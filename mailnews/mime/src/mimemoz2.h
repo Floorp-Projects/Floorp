@@ -184,7 +184,7 @@ extern "C" nsresult     mimeEmitterAddAttachmentField(MimeDisplayOptions *opt, c
 extern "C" nsresult     mimeEmitterAddHeaderField(MimeDisplayOptions *opt, const char *field, const char *value);
 extern "C" nsresult     mimeEmitterAddAllHeaders(MimeDisplayOptions *opt, const char *allheaders, const PRInt32 allheadersize);
 extern "C" nsresult     mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url,
-                                                   PRBool aNotDownloaded);
+                                                   PRBool aIsExternalAttachment);
 extern "C" nsresult     mimeEmitterEndAttachment(MimeDisplayOptions *opt);
 extern "C" nsresult		  mimeEmitterEndAllAttachments(MimeDisplayOptions *opt);
 extern "C" nsresult     mimeEmitterStartBody(MimeDisplayOptions *opt, PRBool bodyOnly, const char *msgID, const char *outCharset);

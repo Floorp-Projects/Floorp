@@ -47,7 +47,7 @@ interface nsIDOMWindowInternal;
 interface nsITransactionManager;
 interface nsIMsgMessageService;
 
-[scriptable, uuid(f0f5b18b-9fb8-44d8-ad41-8d837d89fa0c)]
+[scriptable, uuid(15AECD24-4687-43d6-84DC-0BA21F093244)]
 interface nsIMessenger : nsISupports {
 
     const long eUnknown = 0;
@@ -101,8 +101,8 @@ interface nsIMessenger : nsISupports {
     void sendUnsentMessages(in nsIMsgIdentity aIdentity, in nsIMsgWindow aMsgWindow);
     void SetDocumentCharset(in string characterSet);
     void saveAs(in string aURI, in boolean aAsFile, in nsIMsgIdentity aIdentity, in wstring aMsgFilename);
-    void openAttachment(in string contentTpe, in string url, in string displayName, in string messageUri);
-    void saveAttachment(in string contentTpe, in string url, in string displayName, in string messageUri);
+    void openAttachment(in string contentTpe, in string url, in string displayName, in string messageUri, in boolean isExternalAttachment);
+    void saveAttachment(in string contentTpe, in string url, in string displayName, in string messageUri, in boolean isExternalAttachment);
     void saveAllAttachments(in unsigned long count, [array, size_is(count)] in string contentTypeArray,
                             [array, size_is(count)] in string urlArray, [array, size_is(count)] in string displayNameArray,
                             [array, size_is(count)] in string messageUriArray);

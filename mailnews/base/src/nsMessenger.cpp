@@ -722,15 +722,22 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
 
 NS_IMETHODIMP
 nsMessenger::OpenAttachment(const char * aContentType, const char * aURL, const
-                            char * aDisplayName, const char * aMessageUri)
+                            char * aDisplayName, const char * aMessageUri, PRBool aIsExternalAttachment)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr <nsIMsgMessageService> messageService;
-  rv = GetMessageServiceFromURI(aMessageUri, getter_AddRefs(messageService));
-  if (messageService)
+
+  // open external attachments inside our message pane which in turn should trigger the
+  // helper app dialog...
+  if (aIsExternalAttachment)
+    rv = OpenURL(aURL); 
+  else
   {
-    rv = messageService->OpenAttachment(aContentType, aDisplayName, aURL, aMessageUri, mDocShell, mMsgWindow, nsnull);
+    nsCOMPtr <nsIMsgMessageService> messageService;
+    rv = GetMessageServiceFromURI(aMessageUri, getter_AddRefs(messageService));
+    if (messageService)
+      rv = messageService->OpenAttachment(aContentType, aDisplayName, aURL, aMessageUri, mDocShell, mMsgWindow, nsnull);
   }
+
 	return rv;
 }
 
@@ -767,13 +774,14 @@ nsMessenger::SaveAttachmentToFolder(const char * contentType, const char * url, 
 
 NS_IMETHODIMP
 nsMessenger::SaveAttachment(const char * contentType, const char * url,
-                            const char * displayName, const char * messageUri)
+                            const char * displayName, const char * messageUri, PRBool aIsExternalAttachment)
 {
   NS_ENSURE_ARG_POINTER(url);
 
-#ifdef DEBUG_MESSENGER
-  printf("nsMessenger::SaveAttachment(%s)\n",url);
-#endif    
+  // open external attachments inside our message pane which in turn should trigger the
+  // helper app dialog...
+  if (aIsExternalAttachment)
+    return OpenURL(url); 
 
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   nsCOMPtr<nsIFilePicker> filePicker =

@@ -112,6 +112,7 @@ void getMsgHdrForCurrentURL(MimeDisplayOptions *opts, nsIMsgDBHdr ** aMsgHdr);
 #endif
 
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
+#define	EXTERNAL_ATTACHMENT_URL_HEADER "X-Mozilla-External-Attachment-URL"
 
 /* ==========================================================================
    Allocation and destruction
@@ -1069,14 +1070,23 @@ mime_part_address(MimeObject *obj)
 char *
 mime_imap_part_address(MimeObject *obj)
 {
-	char *imap_part = 0;
-	if (!obj || !obj->headers)
-		return 0;
-	
-	imap_part = MimeHeaders_get(obj->headers,
-		IMAP_EXTERNAL_CONTENT_HEADER, PR_FALSE, PR_FALSE);
+  if (!obj || !obj->headers)
+    return 0;
+  else
+    return MimeHeaders_get(obj->headers, IMAP_EXTERNAL_CONTENT_HEADER, PR_FALSE, PR_FALSE);
+}
 
-	return imap_part;
+/* Returns a full URL if the current mime object has a EXTERNAL_ATTACHMENT_URL_HEADER
+   header. 
+   Return value must be freed by the caller.
+*/
+char * 
+mime_external_attachment_url(MimeObject *obj)
+{
+  if (!obj || !obj->headers)
+    return 0;
+  else
+    return MimeHeaders_get(obj->headers, EXTERNAL_ATTACHMENT_URL_HEADER, PR_FALSE, PR_FALSE);
 }
 
 #ifdef ENABLE_SMIME

@@ -62,7 +62,7 @@ public:
 
     // Attachment handling routines
     NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url,
-                                  PRBool aNotDownloaded);
+                                  PRBool aIsExternalAttachment);
     NS_IMETHOD    AddAttachmentField(const char *field, const char *value);
     NS_IMETHOD    EndAttachment();
 	  NS_IMETHOD	  EndAllAttachments();

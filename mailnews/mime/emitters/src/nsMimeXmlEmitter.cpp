@@ -186,7 +186,7 @@ nsMimeXmlEmitter::EndHeader()
 // Attachment handling routines
 nsresult
 nsMimeXmlEmitter::StartAttachment(const char *name, const char *contentType, const char *url,
-                                  PRBool aNotDownloaded)
+                                  PRBool aIsExternalAttachment)
 {
   char    buf[128];
 

@@ -195,8 +195,6 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
       // if this is an IMAP part. 
       tmpURL = mime_set_url_imap_part(url, id_imap, id);
       rv = nsMimeNewURI(&(tmp->url), tmpURL, nsnull);
-
-      tmp->notDownloaded = PR_TRUE;
     }
     else
     {
@@ -304,6 +302,7 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
   nsXPIDLCString imappart;
   nsXPIDLCString part;
   PRBool isIMAPPart;
+  PRBool isExternalAttachment = PR_FALSE;
 
   /* be sure the object has not be marked as Not to be an attachment */
   if (object->dontShowAsAttachment)
@@ -333,7 +332,15 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
       PR_Free(no_part_url);
     }
     else
-      urlSpec = mime_set_url_part(aMessageURL, part.get(), PR_TRUE);
+    {
+      // if the mime object contains an external attachment URL, then use it, otherwise
+      // fall back to creating an attachment url based on the message URI and the 
+      // part number.
+      urlSpec = mime_external_attachment_url(object);
+      isExternalAttachment = urlSpec ? PR_TRUE : PR_FALSE;
+      if (!urlSpec)
+        urlSpec = mime_set_url_part(aMessageURL, part.get(), PR_TRUE);
+    }
   }
 
   if (!urlSpec)
@@ -341,6 +348,7 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
 
   if ((options->format_out == nsMimeOutput::nsMimeMessageBodyDisplay) && (nsCRT::strncasecmp(aMessageURL, urlSpec, strlen(urlSpec)) == 0))
     return NS_OK;
+  
   nsMsgAttachmentData *tmp = &(aAttachData[attIndex++]);
   nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec, nsnull);
 
@@ -351,6 +359,7 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
 
   tmp->real_type = object->content_type ? nsCRT::strdup(object->content_type) : nsnull;
   tmp->real_encoding = object->encoding ? nsCRT::strdup(object->encoding) : nsnull;
+  tmp->isExternalAttachment = isExternalAttachment;
   
   PRInt32 i;
   char *charset = nsnull;
@@ -452,13 +461,6 @@ GenerateAttachmentData(MimeObject *object, const char *aMessageURL, MimeDisplayO
       tmp->real_name = mime_part_address(object);
   }
   ValidateRealName(tmp, object->headers);
-
-  if (isIMAPPart)
-  {
-    // If we get here, we should mark this attachment as not being
-    // downloaded. 
-    tmp->notDownloaded = PR_TRUE;
-  }
 
   return NS_OK;
 }
@@ -629,7 +631,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
     if ( tmp->url ) 
       tmp->url->GetSpec(spec);
 
-    mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec.get(), tmp->notDownloaded);
+    mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec.get(), tmp->isExternalAttachment);
     mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, spec.get());
 
     if ( (opt->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
@@ -1799,7 +1801,7 @@ mimeEmitterAddAllHeaders(MimeDisplayOptions *opt, const char *allheaders, const 
 
 extern "C" nsresult     
 mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char *contentType, const char *url,
-                           PRBool aNotDownloaded)
+                           PRBool aIsExternalAttachment)
 {
   // Check for draft processing...
   if (NoEmitterProcessing(opt->format_out))
@@ -1812,7 +1814,7 @@ mimeEmitterStartAttachment(MimeDisplayOptions *opt, const char *name, const char
   if (msd->output_emitter)
   {
     nsIMimeEmitter *emitter = (nsIMimeEmitter *)msd->output_emitter;
-    return emitter->StartAttachment(name, contentType, url, aNotDownloaded);
+    return emitter->StartAttachment(name, contentType, url, aIsExternalAttachment);
   }
 
   return NS_ERROR_FAILURE;

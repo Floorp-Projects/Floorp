@@ -42,6 +42,8 @@ const SECONDS_TO_MILLISECONDS = 1000;
 const MINUTES_TO_MILLISECONDS = MINUTES_TO_SECONDS * SECONDS_TO_MILLISECONDS;
 const HOURS_TO_MILLISECONDS = HOURS_TO_MINUTES * MINUTES_TO_MILLISECONDS;
 const MSG_FLAG_NEW      = 0x10000;
+const ENCLOSURE_BOUNDARY_PREFIX = "--------------";  // 14 dashes
+const ENCLOSURE_HEADER_BOUNDARY_PREFIX = "------------"; // 12 dashes
 
 const MESSAGE_TEMPLATE = "\n\
 <html>\n\
@@ -108,6 +110,7 @@ FeedItem.prototype =
   feed: null,
   description: null,
   content: null,
+  enclosure: null,  // we currently only support one enclosure per feed item...
   title: "(no subject)",  // TO DO: this needs to be localized
   author: "anonymous",
   mURL: null,
@@ -400,12 +403,26 @@ FeedItem.prototype =
       'From: ' + this.author + '\n' +
       'MIME-Version: 1.0\n' +
       'Subject: ' + this.title + '\n' +
-      'Content-Type: text/html; charset=' + this.characterSet + '\n' +
       'Content-Transfer-Encoding: 8bit\n' +
-      'Content-Base: ' + this.mURL + '\n' +
-      '\n' +
-      this.content;
-    
+      'Content-Base: ' + this.mURL + '\n';
+
+    if (this.enclosure && this.enclosure.mFileName)
+    {
+      var boundaryID = source.length + this.enclosure.mLength;
+      source += 'Content-Type: multipart/mixed;\n boundary="' + ENCLOSURE_HEADER_BOUNDARY_PREFIX + boundaryID + '"' + '\n\n' +
+                'This is a multi-part message in MIME format.\n' + ENCLOSURE_BOUNDARY_PREFIX + boundaryID + '\n' +
+                'Content-Type: text/html; charset=' + + this.characterSet + '\n' +
+                'Content-Transfer-Encoding: 8bit\n' + 
+                this.content;
+      source += this.enclosure.convertToAttachment(boundaryID);
+    }
+    else
+    {
+      source += 'Content-Type: text/html; charset=' + this.characterSet + '\n' +
+                '\n' + this.content;
+               
+    }
+
     debug(this.identity + " is " + source.length + " characters long");
 
     // Get the folder and database storing the feed's messages and headers.
@@ -414,6 +431,48 @@ FeedItem.prototype =
     // source is a unicode string, we want to save a char * string in the original charset. So convert back
     folder.addMessage(this.mUnicodeConverter.ConvertFromUnicode(source));
     this.markStored();
+  }
+};
+
+
+// A feed enclosure is to RSS what an attachment is for e-mail. We make enclosures look
+// like attachments in the UI.
+
+function FeedEnclosure(aURL, aContentType, aLength) 
+{
+  this.mURL = aURL;
+  this.mContentType = aContentType;
+  this.mLength = aLength;
+
+  // generate a fileName from the URL
+  if (this.mURL)
+  {
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var enclosureURL  = ioService.newURI(this.mURL, null, null).QueryInterface(Components.interfaces.nsIURL);
+    if (enclosureURL)
+      this.mFileName = enclosureURL.fileName;
+  }
+}
+
+FeedEnclosure.prototype = 
+{
+  mURL: "",
+  mContentType: "",
+  mLength: 0,
+  mFileName: "",
+
+  // returns a string that looks like an e-mail attachment
+  // which represents the enclosure.
+  convertToAttachment: function(aBoundaryID)
+  {
+    return '\n' +
+                  ENCLOSURE_BOUNDARY_PREFIX + aBoundaryID + '\n' +
+                  'Content-Type: ' + this.mContentType + '; name="' + this.mFileName + '"\n' + 
+                  'X-Mozilla-External-Attachment-URL: ' + this.mURL + '\n' +
+                  'Content-Disposition: attachment; filename="' + this.mFileName + '"\n\n' + 
+                  'This MIME attachment is stored separately from the message.\n' +
+                  ENCLOSURE_BOUNDARY_PREFIX + aBoundaryID + '--' + '\n';
+
   }
 };
 

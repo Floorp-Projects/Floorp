@@ -162,6 +162,12 @@ FeedParser.prototype =
       if (content)
         item.content = converter.ConvertFromUnicode(content);
 
+      // Handle an enclosure (if present)
+      var enclosureNode = itemNode.getElementsByTagName("enclosure")[0];
+      if (enclosureNode)
+        item.enclosure = new FeedEnclosure(enclosureNode.getAttribute("url"), 
+                                          enclosureNode.getAttribute("type"),
+                                          enclosureNode.getAttribute("length"));
       parsedItems[i] = item;
     }
 

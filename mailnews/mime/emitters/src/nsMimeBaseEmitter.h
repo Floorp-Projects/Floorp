@@ -73,7 +73,7 @@ typedef struct {
   char      *displayName;
   char      *urlSpec;
   char      *contentType;
-  PRBool    notDownloaded;
+  PRBool    isExternalAttachment;
 } attachmentInfoType;
 
 //

@@ -301,6 +301,8 @@ extern char *mime_part_address(MimeObject *obj);
  */
 extern char *mime_imap_part_address(MimeObject *obj);
 
+extern char *mime_external_attachment_url(MimeObject *obj);
+
 /* Puts a part-number into a URL.  If append_p is true, then the part number
    is appended to any existing part-number already in that URL; otherwise,
    it replaces it.
