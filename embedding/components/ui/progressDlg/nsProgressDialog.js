@@ -719,9 +719,7 @@ nsProgressDialog.prototype = {
 
     // Convert raw rate (bytes/sec) to Kbytes/sec (to nearest tenth).
     rateToKRate: function( rate ) {
-         var kRate = rate / 1024; // KBytes/sec
-         var fraction = parseInt( ( kRate - ( kRate = parseInt( kRate ) ) ) * 10 + 0.5 );
-         return kRate + "." + fraction;
+        return ( rate / 1024 ).toFixed(1);
     },
 
     // Format number of seconds in hh:mm:ss form.
