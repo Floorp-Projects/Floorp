@@ -865,33 +865,34 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
     PR_FREEIF(tString);
 		if (status < 0) return status;
 		prop2 = isAPropertyOf(prop, VCUseServer);
-		if (prop2)
-		{
-			if (VALUE_TYPE(prop2)) {
-				namestring  = fakeCString (vObjectUStringZValue(prop2));
+    if (prop2)
+    {
+      if (VALUE_TYPE(prop2)) 
+      {
+        namestring  = fakeCString (vObjectUStringZValue(prop2));
         char *tString1 = NULL;
-				if (nsCRT::strcmp (namestring, "0") == 0)
+        if (nsCRT::strcmp (namestring, "0") == 0)
         {
           tString1 = VCardGetStringByID(VCARD_ADDR_DEFAULT_DLS);
         }
-				else 
+        else 
         {
-					if (nsCRT::strcmp (namestring, "1") == 0)
-						tString1 = VCardGetStringByID(VCARD_ADDR_SPECIFIC_DLS);
-					else
-						if (nsCRT::strcmp (namestring, "2") == 0)
-							tString1 = VCardGetStringByID(VCARD_ADDR_HOSTNAMEIP);
-				}
-
-	NS_ASSERTION(tString1,"don't write null line to stream");
-        if (tString1) {
-		status = WriteLineToStream (obj, tString1);
-	}
+          if (nsCRT::strcmp (namestring, "1") == 0)
+            tString1 = VCardGetStringByID(VCARD_ADDR_SPECIFIC_DLS);
+          else
+            if (nsCRT::strcmp (namestring, "2") == 0)
+              tString1 = VCardGetStringByID(VCARD_ADDR_HOSTNAMEIP);
+        }
+        
+        if (tString1) 
+        {
+          status = WriteLineToStream (obj, tString1);
+        }
         PR_FREEIF(tString1);
-				PR_FREEIF (namestring);
-				if (status < 0) return status;
-			}
-		}
+        PR_FREEIF (namestring);
+        if (status < 0) return status;
+      }
+    }
 		status = OutputVcardAttribute (obj, prop, VCCooltalkAddress);
 		if (status < 0) return status;
 	}
@@ -1731,28 +1732,28 @@ static int WriteOutVCardProperties (MimeObject *obj, VObject* v, int* numEmail)
 
 static int WriteLineToStream (MimeObject *obj, const char *line)
 {
-	int     status = 0;
-	char    *htmlLine;
-	int     htmlLen =0;
+  int     status = 0;
+  char    *htmlLine;
+  int     htmlLen =0;
+  
+  if ( (!line) || (!*line) )
+    return 0;
 
-    if (line) htmlLen += nsCRT::strlen(line);
-    
-    htmlLen += nsCRT::strlen("<DT></DT>") + 1;
-
-	htmlLine = (char *) PR_MALLOC (htmlLen);
-	if (htmlLine)
-	{
+  htmlLen = nsCRT::strlen(line) + nsCRT::strlen("<DT></DT>") + 1;
+  htmlLine = (char *) PR_MALLOC (htmlLen);
+  if (htmlLine)
+  {
     htmlLine[0] = '\0';
     PL_strcat (htmlLine, "<DT>");
     PL_strcat (htmlLine, line);
     PL_strcat (htmlLine, "</DT>");
     status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
     PR_Free ((void*) htmlLine);
-	}
-	else
-		status = VCARD_OUT_OF_MEMORY;
-
-	return status;
+  }
+  else
+    status = VCARD_OUT_OF_MEMORY;
+  
+  return status;
 }
 
 static int WriteAttribute (MimeObject *obj, const char *attrib)
