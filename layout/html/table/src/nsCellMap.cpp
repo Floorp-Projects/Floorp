@@ -574,8 +574,13 @@ nsCellMap::InsertRows(nsIPresContext* aPresContext,
   PRInt32 numCols = aMap.GetColCount();
 
   if (aFirstRowIndex > mRowCount) {
-    NS_ASSERTION(PR_FALSE, "nsCellMap::InsertRows bad first row index");
-    return;
+    // create (aFirstRowIndex - mRowCount) empty rows up to aFirstRowIndex
+    PRInt32 numEmptyRows = aFirstRowIndex - mRowCount;
+    if (!Grow(aMap, numEmptyRows, mRowCount)) {
+      return;
+    }
+    // update mRowCount, since non-empty rows will be added
+    mRowCount += numEmptyRows;
   }
 
   if (!aConsiderSpans) {
