@@ -71,6 +71,14 @@ public class Main {
      * execute scripts.
      */
     public static void main(String args[]) {
+        int result = exec(args);
+        System.exit(result);
+    }
+
+    /**
+     *  Execute the given arguments, but don't exit at the end.
+     */
+    public static int exec(String args[]) {
         Context cx = Context.enter();
 
         errorReporter = new ToolErrorReporter(false, err);
@@ -138,7 +146,7 @@ public class Main {
             processSource(cx, args.length == 0 ? null : args[0]);
 
         cx.exit();
-        System.exit(global.exitCode);
+        return global.exitCode;
     }
 
     /**
