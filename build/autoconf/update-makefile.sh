@@ -29,34 +29,39 @@
 # Send comments, improvements, bugs to ramiro@netscape.com
 # 
 
+root_path=`pwd`
+
 # Make sure a Makefile exists
-if [ ! -f Makefile ]
+basemakefile=$root_path/Makefile
+
+if [ -f $basemakefile ]
 then
+    makefile=$basemakefile
+elif [ -f $root_path/Makefile.in ]
+then
+    makefile=$root_path/Makefile.in
+else
 	echo
-	echo "There ain't no 'Makefile' over here: $pwd"
+	echo "There ain't no 'Makefile' or 'Makefile.in' over here: $pwd"
 	echo
 
 	exit
 fi
 
 # Use DEPTH in the Makefile to determine the depth
-depth=`egrep '^DEPTH[ 	]*=[ 	]*\.' Makefile | awk -F= '{ print $2; }'`
-
-# Get the full path to the Makefile
-makefile=`pwd`/Makefile
+depth=`egrep '^DEPTH[ 	]*=[ 	]*\.' $makefile | awk -F= '{ print $2; }'`
 
 # 'cd' to the root of the tree
-echo depth=$depth
 cd $depth
 
-# Strip the tree root off the Makefile's path
 root_path=`pwd`
-makefile=`expr $makefile : $root_path'/\(.*\)'`
+# Strip the tree root off the Makefile's path
+basemakefile=`expr $basemakefile : $root_path'/\(.*\)'`
 
 # Make sure config.status exists
 if [ -f config.status ]
 then
-	CONFIG_FILES=$makefile ./config.status
+	CONFIG_FILES=$basemakefile ./config.status
 else
 	echo
 	echo "There ain't no 'config.status' over here: $pwd"
