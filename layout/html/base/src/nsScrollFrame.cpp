@@ -287,6 +287,18 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   nsRect rect(border.left, border.top, aDesiredSize.width, aDesiredSize.height);
   mFirstChild->SetRect(rect);
 
+  // If this is a resize reflow then repaint the scrolled frame
+  if (eReflowReason_Resize == aReflowState.reason) {
+    nsIView*        scrolledView;
+    nsIViewManager* viewManager;
+    nsRect          damageRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+
+    mFirstChild->GetView(scrolledView);
+    scrolledView->GetViewManager(viewManager);
+    viewManager->UpdateView(scrolledView, damageRect, NS_VMREFRESH_NO_SYNC);
+    NS_RELEASE(viewManager);
+  }
+
   // Compute our desired size
   aDesiredSize.width = kidMaxSize.width + lr;
   if (NS_UNCONSTRAINEDSIZE == kidMaxSize.height) {
