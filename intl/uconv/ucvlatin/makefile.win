@@ -36,8 +36,11 @@ CPPSRCS =				\
 	nsISO88597ToUnicode.cpp		\
 	nsISO88598ToUnicode.cpp		\
 	nsISO88599ToUnicode.cpp		\
+	nsISO885910ToUnicode.cpp	\
+	nsISO885913ToUnicode.cpp	\
 	nsISO885914ToUnicode.cpp	\
 	nsISO885915ToUnicode.cpp	\
+	nsISOIR111ToUnicode.cpp	\
 	nsCP1250ToUnicode.cpp		\
 	nsCP1251ToUnicode.cpp		\
 	nsCP1252ToUnicode.cpp		\
@@ -64,6 +67,8 @@ CPPSRCS =				\
 	nsTCVN5712ToUnicode.cpp		\
 	nsVISCIIToUnicode.cpp		\
 	nsVPSToUnicode.cpp		\
+	nsVIQRToUnicode.cpp		\
+	nsVNIToUnicode.cpp		\
 	nsUTF8ToUnicode.cpp		\
 	nsUTF7ToUnicode.cpp		\
 	nsMUTF7ToUnicode.cpp		\
@@ -72,6 +77,7 @@ CPPSRCS =				\
 	nsUCS4BEToUnicode.cpp		\
 	nsUCS4LEToUnicode.cpp		\
 	nsT61ToUnicode.cpp		\
+	nsUserDefinedToUnicode.cpp		\
 	nsUnicodeToISO88591.cpp		\
 	nsUnicodeToISO88592.cpp		\
 	nsUnicodeToISO88593.cpp		\
@@ -81,8 +87,11 @@ CPPSRCS =				\
 	nsUnicodeToISO88597.cpp		\
 	nsUnicodeToISO88598.cpp		\
 	nsUnicodeToISO88599.cpp		\
+	nsUnicodeToISO885910.cpp	\
+	nsUnicodeToISO885913.cpp	\
 	nsUnicodeToISO885914.cpp	\
 	nsUnicodeToISO885915.cpp	\
+	nsUnicodeToISOIR111.cpp	\
 	nsUnicodeToCP1250.cpp		\
 	nsUnicodeToCP1251.cpp		\
 	nsUnicodeToCP1252.cpp		\
@@ -117,6 +126,9 @@ CPPSRCS =				\
 	nsUnicodeToTCVN5712.cpp		\
 	nsUnicodeToVISCII.cpp		\
 	nsUnicodeToVPS.cpp		\
+	nsUnicodeToVIQR.cpp		\
+	nsUnicodeToVNI.cpp		\
+	nsUnicodeToUserDefined.cpp		\
 	ns1ByteToUnicodeBase.cpp	\
 	nsUCvLatinSupport.cpp		\
 	nsUCvLatinDll.cpp		\
@@ -132,8 +144,11 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsISO88597ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88598ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO88599ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO885910ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISO885913ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO885914ToUnicode.obj 		\
 	.\$(OBJDIR)\nsISO885915ToUnicode.obj 		\
+	.\$(OBJDIR)\nsISOIR111ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1250ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1251ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1252ToUnicode.obj 		\
@@ -168,6 +183,9 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsTCVN5712ToUnicode.obj		\
 	.\$(OBJDIR)\nsVISCIIToUnicode.obj		\
 	.\$(OBJDIR)\nsVPSToUnicode.obj			\
+	.\$(OBJDIR)\nsVIQRToUnicode.obj			\
+	.\$(OBJDIR)\nsVNIToUnicode.obj			\
+	.\$(OBJDIR)\nsUserDefinedToUnicode.obj			\
 	.\$(OBJDIR)\nsUnicodeToISO88591.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88592.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88593.obj		\
@@ -177,8 +195,11 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToISO88597.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88598.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO88599.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO885910.obj		\
+	.\$(OBJDIR)\nsUnicodeToISO885913.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO885914.obj		\
 	.\$(OBJDIR)\nsUnicodeToISO885915.obj		\
+	.\$(OBJDIR)\nsUnicodeToISOIR111.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1250.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1251.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1252.obj		\
@@ -213,6 +234,9 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToTCVN5712.obj		\
 	.\$(OBJDIR)\nsUnicodeToVISCII.obj		\
 	.\$(OBJDIR)\nsUnicodeToVPS.obj			\
+	.\$(OBJDIR)\nsUnicodeToVIQR.obj			\
+	.\$(OBJDIR)\nsUnicodeToVNI.obj			\
+	.\$(OBJDIR)\nsUnicodeToUserDefined.obj			\
 	.\$(OBJDIR)\ns1ByteToUnicodeBase.obj 		\
 	.\$(OBJDIR)\nsUCvLatinSupport.obj		\
 	.\$(OBJDIR)\nsUCvLatinDll.obj 			\

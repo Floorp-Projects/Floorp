@@ -30,6 +30,14 @@ CPPSRCS =				\
 	nsGB2312ToUnicode.cpp		\
 	nsUnicodeToGB2312.cpp		\
 	nsUnicodeToGB2312GL.cpp		\
+	nsGBKToUnicode.cpp		\
+	nsUnicodeToGBK.cpp		\
+	nsISO2022CNToUnicode.cpp		\
+	nsUnicodeToISO2022CN.cpp		\
+	nsHZToUnicode.cpp		\
+	nsUnicodeToHZ.cpp		\
+	nsCP936ToUnicode.cpp		\
+	nsUnicodeToCP936.cpp		\
 	nsUCvCnSupport.cpp		\
 	nsUCvCnDll.cpp			\
 	$(NULL)
@@ -38,6 +46,14 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsGB2312ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToGB2312.obj		\
 	.\$(OBJDIR)\nsUnicodeToGB2312GL.obj		\
+	.\$(OBJDIR)\nsGBKToUnicode.obj 		\
+	.\$(OBJDIR)\nsUnicodeToGBK.obj		\
+	.\$(OBJDIR)\nsISO2022CNToUnicode.obj 		\
+	.\$(OBJDIR)\nsUnicodeToISO2022CN.obj		\
+	.\$(OBJDIR)\nsHZToUnicode.obj 		\
+	.\$(OBJDIR)\nsUnicodeToHZ.obj		\
+	.\$(OBJDIR)\nsCP936ToUnicode.obj 		\
+	.\$(OBJDIR)\nsUnicodeToCP936.obj		\
 	.\$(OBJDIR)\nsUCvCnSupport.obj			\
 	.\$(OBJDIR)\nsUCvCnDll.obj 			\
 	$(NULL)
