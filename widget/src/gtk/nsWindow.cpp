@@ -37,6 +37,8 @@
 
 #include "stdio.h"
 
+#include "mozicon.xpm"
+
 //#define DBG 0
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -44,6 +46,8 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 extern GtkWidget *gAppContext;
 
 void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data);
+static void window_realize_callback(GtkWidget *window, gpointer data);
+static void set_icon (GdkWindow * w);
 
 //-------------------------------------------------------------------------
 //
@@ -118,6 +122,70 @@ NS_METHOD nsWindow::RemoveTooltips()
   return NS_OK;
 }
 
+static void window_realize_callback(GtkWidget *window, gpointer data)
+{
+  if (window->window)
+    set_icon(window->window);
+}
+
+static void set_icon (GdkWindow * w)
+{
+  GdkWindow *ic_win;
+  GdkWindowAttr att;
+  XIconSize *is;
+  gint i, count, j;
+  GdkPixmap *pmap, *mask;
+
+
+  if ((XGetIconSizes (GDK_DISPLAY (), GDK_ROOT_WINDOW (), &is, &count)) &&
+      (count > 0))
+    {
+      i = 0;			/* use first icon size - not much point using the others */
+      att.width = is[i].max_width;
+      att.height = is[i].max_height;
+      /*
+       * raster had:
+       * att.height = 3 * att.width / 4;
+       * but this didn't work  (it scaled the icons incorrectly
+       */
+
+      /* make sure the icon is inside the min and max sizes */
+      if (att.height < is[i].min_height)
+	att.height = is[i].min_height;
+      if (att.height > is[i].max_height)
+	att.height = is[i].max_height;
+      if (is[i].width_inc > 0)
+	{
+	  j = ((att.width - is[i].min_width) / is[i].width_inc);
+	  att.width = is[i].min_width + (j * is[i].width_inc);
+	}
+      if (is[i].height_inc > 0)
+	{
+	  j = ((att.height - is[i].min_height) / is[i].height_inc);
+	  att.height = is[i].min_height + (j * is[i].height_inc);
+	}
+      XFree (is);
+    }
+  else
+    /* no icon size hints at all? ok - invent our own size */
+    {
+      att.width = 32;
+      att.height = 24;
+    }
+  att.wclass = GDK_INPUT_OUTPUT;
+  att.window_type = GDK_WINDOW_TOPLEVEL;
+  att.x = 0;
+  att.y = 0;
+  att.visual = gdk_rgb_get_visual ();
+  att.colormap = gdk_rgb_get_cmap ();
+  ic_win = gdk_window_new (NULL, &att, GDK_WA_VISUAL | GDK_WA_COLORMAP);
+  gdk_window_set_icon (w, ic_win, NULL, NULL);
+  pmap = gdk_pixmap_create_from_xpm_d(w, &mask, 0, mozilla_icon_xpm);
+  gdk_window_set_back_pixmap (ic_win, pmap, FALSE);
+  gdk_window_clear (ic_win);
+  gdk_window_shape_combine_mask (ic_win, mask, 0, 0);
+  gdk_pixmap_unref(pmap);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -142,6 +210,11 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   if (!parentWidget) {
 
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_signal_connect(GTK_OBJECT(mainWindow),
+                       "realize",
+		       GTK_SIGNAL_FUNC(window_realize_callback),
+		       NULL);
+
 // VBox for the menu, etc.
     mVBox = gtk_vbox_new(FALSE, 0);
     gtk_widget_show (mVBox);
@@ -802,7 +875,6 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 
   gtk_box_pack_start(GTK_BOX(mVBox), menubar, FALSE, FALSE, 0);
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
-  printf("adding menu bar (%p) to vbox (%p)\n", menubar, mVBox);
   return NS_OK;
 }
 
