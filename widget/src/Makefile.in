@@ -48,6 +48,7 @@ DIRS		+= motif
 endif
 
 ifdef MOZ_ENABLE_XLIB
+DIRS		+= xlibxtbin
 DIRS		+= xlib
 endif
 
