@@ -1944,9 +1944,11 @@ RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
 nsresult
 nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
 {
+    nsresult rv;
     mRegistry->SetBufferSize( 500*1024 );
-    AutoRegisterImpl(when, inDirSpec);
+    rv = AutoRegisterImpl(when, inDirSpec);
     mRegistry->SetBufferSize( 10*1024 );
+    return rv;
 }
 
 nsresult
