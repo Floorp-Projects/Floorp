@@ -32,6 +32,7 @@ EXPORTS =                         \
         nsIStreamObserver.h       \
         nsITransport.h            \
         nsIUrl.h                  \
+	netCore.h		  \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
