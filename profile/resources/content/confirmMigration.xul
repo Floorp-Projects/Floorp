@@ -14,23 +14,24 @@
 	onload="onLoad()"
 	class="dialog"> 
 
-<html:script language="javascript" src="chrome://profile/content/confirmMigration.js"/> 
+  <html:script language="javascript" src="chrome://profile/content/confirmMigration.js"/> 
+  <html:script language="javascript" src="chrome://global/content/strres.js"/> 
     
-    <box align="horizontal" flex="100%">
-	<html:div>
-    	<html:img src="chrome://global/skin/question-icon.gif"/>
-	</html:div>
-        <spring style="height: 4em;"/>
-    	<box align="vertical" flex="100%">
-		<html:center>
-		<html:div> &confirmMigrationPart1.label; </html:div>
-		<html:div> &confirmMigrationPart2.label; </html:div>
-		<html:div> &confirmMigrationPart3.label; </html:div>
-		<html:div> &confirmMigrationPart4.label; </html:div>
-		</html:center>
-	</box>
-    </box>
-    <spring style="height: 1em;"/>
-    <box id="okCancelButtons"/>
-    <spring style="height: 1em;"/>
+  <spring style="height: 1em"/>
+  <box align="horizontal" flex="100%" style="width: 400px;">
+    <spring style="width: 1em;"/>
+  	<html:div>
+      <titledbutton class="message-icon plain"/>
+  	</html:div>
+    <spring style="width: 1em;"/>
+  	<box align="vertical" flex="100%">
+		  <html:div> &confirmMigrationPart1.label; </html:div>
+      <spring style="height: 1em"/>
+  		<html:div> &confirmMigrationPart2.label; </html:div>
+  	</box>
+    <spring style="width: 1em;"/>
+  </box>
+  <spring style="height: 1em;"/>
+  <box id="okCancelButtons"/>
+  <spring style="height: 1em;"/>
 </window>
