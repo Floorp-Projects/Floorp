@@ -44,7 +44,8 @@ menuitem[default="true"] {
   font-weight: bold;
 }
 
-menu[disabled="true"], menuitem[disabled="true"] {
+menu[disabled="true"],
+menuitem[disabled="true"] {
   color: GrayText;
 }
 
@@ -52,12 +53,12 @@ menubar > menu {
   padding: 0px 6px 0px 4px;
 }
 
+/*
 menu[_moz-menuactive="true"],
 menuitem[_moz-menuactive="true"] {
-  /* dummy rule to force repainting when _moz-menuactive changes */
-  border-color: transparent;
-  /* color: HighlightText; should be fg[PRELIGHT] */
+  color: HighlightText; should be fg[PRELIGHT]
 }
+*/
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
