@@ -84,22 +84,12 @@ typedef PRUint32 nsrefcnt;
 #include "nsTraceRefcnt.h"
 
 /**
- * Base class for all XPCOM objects to use. This macro forces the C++
- * compiler to use a compatible vtable layout for all XPCOM objects.
- */
-#ifdef XP_MAC
-#define XPCOM_OBJECT : public __comobject
-#else
-#define XPCOM_OBJECT
-#endif
-
-/**
  * Basic component object model interface. Objects which implement
  * this interface support runtime interface discovery (QueryInterface)
  * and a reference counted memory model (AddRef/Release). This is
  * modelled after the win32 IUnknown API.
  */
-class nsISupports XPCOM_OBJECT {
+class nsISupports {
 public:
 
 #ifndef NSCAP_FEATURE_HIDE_NSISUPPORTS_GETIID

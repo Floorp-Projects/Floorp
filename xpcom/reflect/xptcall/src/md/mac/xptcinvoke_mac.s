@@ -80,7 +80,7 @@
 		lwz	r4,0(r3)				# get vTable from 'that'
 		lwz	r5,164(r31)				# methodIndex
 		slwi	r5,r5,2					# methodIndex * 4
-		addi	r5,r5,4					# step over junk at start of vTable !
+		addi	r5,r5,8					# step over junk at start of vTable !
 		lwzx	r12,r5,r4				# get function pointer
 		
 		lwz	r4,28(sp)
