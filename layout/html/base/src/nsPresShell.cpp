@@ -82,6 +82,14 @@
 #include "nsIFrameDebug.h"
 #endif
 
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#ifdef INCLUDE_XUL
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#endif // INCLUDE_XUL
+
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
@@ -1089,6 +1097,61 @@ PresShell::EndObservingDocument()
 char* nsPresShell_ReflowStackPointerTop;
 #endif
 
+#ifdef INCLUDE_XUL
+static void CheckForFocus(nsIDocument* aDocument)
+{
+  // Now that we have a root frame, set focus in to the presshell, but
+  // only do this if our window is currently focused
+  // Restore focus if we're the active window or a parent of a previously
+  // active window.
+  // XXX The XUL dependency will go away when the focus tracking portion
+  // of the command dispatcher moves into the embedding layer.
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  aDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));  
+  nsCOMPtr<nsIDOMWindow> rootWindow;
+  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
+  ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
+  nsCOMPtr<nsIDOMDocument> rootDocument;
+  rootWindow->GetDocument(getter_AddRefs(rootDocument));
+
+  nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+  if (xulDoc) {
+    // See if we have a command dispatcher attached.
+    xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+    if (commandDispatcher) {
+      // Suppress the command dispatcher.
+      commandDispatcher->SetSuppressFocus(PR_TRUE);
+      nsCOMPtr<nsIDOMWindow> focusedWindow;
+      commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
+      
+      // See if the command dispatcher is holding on to an orphan window.
+      // This happens when you move from an inner frame to an outer frame
+      // (e.g., _parent, _top)
+      if (focusedWindow) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        focusedWindow->GetDocument(getter_AddRefs(domDoc));
+        if (!domDoc) {
+          // We're pointing to garbage. Go ahead and let this
+          // presshell take the focus.
+          focusedWindow = do_QueryInterface(ourWindow);
+          commandDispatcher->SetFocusedWindow(focusedWindow);
+        }
+      }
+
+      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(ourWindow);
+      if (domWindow == focusedWindow) {
+        // We need to restore focus and make sure we null
+        // out the focused element.
+        commandDispatcher->SetFocusedElement(nsnull);
+        domWindow->Focus();
+      }
+      commandDispatcher->SetSuppressFocus(PR_FALSE);
+    }
+  }
+}
+#endif
+
 NS_IMETHODIMP
 PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
@@ -1138,6 +1201,10 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       mStyleSet->ConstructRootFrame(mPresContext, root, rootFrame);
       mFrameManager->SetRootFrame(rootFrame);
     }
+
+#ifdef INCLUDE_XUL
+    CheckForFocus(mDocument);
+#endif
 
     // Have the style sheet processor construct frame for the root
     // content object down
