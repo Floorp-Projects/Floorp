@@ -31,6 +31,8 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"
 class nsUnicodeFontMappingMac;
 
 class nsFontMetricsMac : public nsIFontMetrics
@@ -43,7 +45,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aContext);
   NS_IMETHOD  Destroy();
 
   NS_IMETHOD  GetXHeight(nscoord& aResult);
@@ -58,6 +60,7 @@ public:
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetWidths(const nscoord *&aWidths);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
+  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
   virtual nsresult  GetSpaceWidth(nscoord &aSpaceWidth);
 	// fill a native TextStyle record with the font, size and style (not color)
@@ -80,7 +83,7 @@ protected:
   nscoord           mMaxDescent;
   nscoord           mMaxAdvance;
   nscoord						mSpaceWidth;
-
+  nsCOMPtr<nsIAtom> mLangGroup;
   nsFont            *mFont;
   nsIDeviceContext  *mContext;
 };

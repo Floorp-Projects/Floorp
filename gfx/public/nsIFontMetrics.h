@@ -29,6 +29,7 @@
 struct nsFont;
 class nsString;
 class nsIDeviceContext;
+class nsIAtom;
 
 // IID for the nsIFontMetrics interface
 #define NS_IFONT_METRICS_IID   \
@@ -52,7 +53,7 @@ class nsIFontMetrics : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFONT_METRICS_IID)
 
-#ifdef XP_PC
+#if defined( XP_PC ) || defined( XP_MAC )
   /**
    * Initialize the font metrics. Call this after creating the font metrics.
    * Font metrics you get from the font cache do NOT need to be initialized
@@ -144,7 +145,7 @@ public:
    */
   NS_IMETHOD  GetFont(const nsFont *&aFont) = 0;
 
-#ifdef XP_PC
+#if defined( XP_PC ) || defined( XP_MAC )
   /**
    * Returns the language group associated with these metrics
    */

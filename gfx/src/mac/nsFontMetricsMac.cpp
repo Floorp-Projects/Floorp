@@ -52,11 +52,12 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
 
 NS_IMPL_ISUPPORTS(nsFontMetricsMac, kIFontMetricsIID);
 
-NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
+NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aCX)
 {
   NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
 
   mFont = new nsFont(aFont);
+  mLangGroup = aLangGroup;
   mContext = aCX;
   RealizeFont();
 	
@@ -125,9 +126,11 @@ nsUnicodeFontMappingMac* nsFontMetricsMac :: GetUnicodeFontMapping()
 	// the lang attribute from the tag level to here.
 	// XXX hard code to some value till peterl pass them down.
 	nsAutoString lang("");
-	nsAutoString documentCharset("ISO-8859-1");
+	nsAutoString langGroup("ja");
+	if(mLangGroup)
+		mLangGroup->ToString(langGroup);
 	if(! mFontMapping)
-		mFontMapping = nsUnicodeFontMappingMac::GetCachedInstance(mFont, mContext,documentCharset, lang);
+		mFontMapping = nsUnicodeFontMappingMac::GetCachedInstance(mFont, mContext,langGroup, lang);
 	return mFontMapping;
 }
 
@@ -300,6 +303,18 @@ NS_IMETHODIMP nsFontMetricsMac :: GetFont(const nsFont *&aFont)
   aFont = mFont;
   return NS_OK;
 }
+NS_IMETHODIMP nsFontMetricsMac::GetLangGroup(nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsFontMetricsMac :: GetWidths(const nscoord *&aWidths)
 {
