@@ -20,16 +20,14 @@ topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
-DIRS	= components
-
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = TestXPC
+MODULE = xpcshell
 
-SIMPLE_PROGRAMS = TestXPC
+SIMPLE_PROGRAMS = xpcshell
 
 CPPSRCS = \
-	TestXPC.cpp \
+	xpcshell.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -53,8 +51,6 @@ LIBS		= 		\
 
 # PROGS = $(OBJDIR)/TestXPC
 
-TEST_FILES = testxpc.js xpctest_echo.js
-
 # TARGETS= $(PROGS)
 
 include $(topsrcdir)/config/rules.mk
@@ -65,9 +61,6 @@ include $(topsrcdir)/config/rules.mk
 #$(PROGS): $(OBJS)
 #	@$(MAKE_OBJDIR)
 #	$(CC) -o $@ $(OBJS) $(LD_FLAGS) -L$(DIST)/lib $(LIBS) $(OS_LIBS)
-
-export::
-	$(INSTALL) $(TEST_FILES) $(DIST)/bin
 
 # export:: $(TARGETS)
 # 	$(INSTALL) $(PROGS) $(DIST)/bin

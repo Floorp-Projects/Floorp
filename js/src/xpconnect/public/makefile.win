@@ -25,6 +25,7 @@ EXPORTS = \
     xpccomponents.h     \
     xpcjsid.h           \
     xpclog.h            \
+    xpctest.h           \
     nsrootidl.h         \
     $(NULL)
 

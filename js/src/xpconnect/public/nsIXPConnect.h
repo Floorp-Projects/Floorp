@@ -54,6 +54,21 @@
 // forward declarations...
 class nsIXPCScriptable;
 class nsIInterfaceInfo;
+class nsIXPConnectWrappedNative;
+class nsIXPConnectFinalizeListener;
+
+
+// {1B2DDB00-EEE8-11d2-BAA4-00805F8A5DD7}
+#define NS_IXPCONNECT_FINALIZE_LISTENER_IID   \
+{ 0x1b2ddb00, 0xeee8, 0x11d2, \
+  { 0xba, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
+class nsIXPConnectFinalizeListener : public nsISupports
+{
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_FINALIZE_LISTENER_IID)
+
+    NS_IMETHOD AboutToRelease(nsISupports* aObj) = 0;
+};
 
 // {215DBE02-94A7-11d2-BA58-00805F8A5DD7}
 #define NS_IXPCONNECT_WRAPPED_NATIVE_IID   \
@@ -72,6 +87,8 @@ public:
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
     NS_IMETHOD GetIID(nsIID** iid) = 0; // returns IAllocatator alloc'd copy
     NS_IMETHOD DebugDump(int depth) = 0;
+    NS_IMETHOD SetFinalizeListener(nsIXPConnectFinalizeListener* aListener) = 0;
+
     // XXX other methods?
 };
 
@@ -119,12 +136,17 @@ public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_IID)
 
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
-                             JSObject* aGlobalJSObj) = 0;
+                             JSObject* aGlobalJSObj,
+                             JSBool AddComponentsObject) = 0;
 
     NS_IMETHOD InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
+                          JSBool AddComponentsObject,
                           nsIXPConnectWrappedNative** aWrapper) = 0;
+
+    NS_IMETHOD AddNewComponentsObject(JSContext* aJSContext,
+                                      JSObject* aGlobalJSObj) = 0;
 
     // XXX add 'AbandonJSContext' method and all that implies?
 

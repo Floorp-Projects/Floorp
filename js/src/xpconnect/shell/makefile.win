@@ -19,14 +19,11 @@ DEPTH=..\..\..\..
 
 IGNORE_MANIFEST=1
 
-DIRS	= components
-
 MAKE_OBJ_TYPE	= EXE
-PROG1 = .\$(OBJDIR)\TestXPC.exe
+PROG1 = .\$(OBJDIR)\xpcshell.exe
 PROGRAMS = $(PROG1)
-TESTCASES = testxpc.js simpletest.js xpctest_echo.js
 
-LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN -DJS_THREADSAFE -DJSFILE
+LCFLAGS=-DUSE_NSREG -DWIN32_LEAN_AND_MEAN
 
 REQUIRES=xpcom js xpconnect
 
@@ -38,13 +35,13 @@ LLIBS=					\
  $(LIBNSPR)				\
  $(DIST)\lib\js3250.lib \
  $(DIST)\lib\xpc3250.lib \
+ $(DIST)\lib\raptorbase.lib \
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
-	-for %p in ($(TESTCASES)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
@@ -65,4 +62,4 @@ clobber::
         $(CURDIR)$(*B).cpp
 <<KEEP
 
-$(PROG1): $(OBJDIR) TestXPC.cpp
+$(PROG1): $(OBJDIR) xpcshell.cpp

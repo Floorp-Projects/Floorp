@@ -201,8 +201,8 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
       mClass(aClass),
       mDynamicScriptable(NULL),
       mRoot(root ? root : this),
-      mNext(NULL)
-
+      mNext(NULL),
+      mFinalizeListener(NULL)
 {
     NS_PRECONDITION(mObj, "bad object to wrap");
     NS_PRECONDITION(mClass, "bad class for wrapper");
@@ -272,6 +272,12 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
         NS_RELEASE(mDynamicScriptable);
     if(mClass)
         NS_RELEASE(mClass);
+    if(mFinalizeListener)
+    {
+        if(mObj)
+            mFinalizeListener->AboutToRelease(mObj);
+        NS_RELEASE(mFinalizeListener);
+    }
     if(mObj)
         NS_RELEASE(mObj);
 }
@@ -368,6 +374,22 @@ nsXPCWrappedNative::GetIID(nsIID** iid)
     *iid = (nsIID*) nsAllocator::Clone(&GetIID(), sizeof(nsIID));
     return *iid ? NS_OK : NS_ERROR_UNEXPECTED;
 }
+
+NS_IMETHODIMP
+nsXPCWrappedNative::SetFinalizeListener(nsIXPConnectFinalizeListener* aListener)
+{
+    if(mFinalizeListener && aListener)
+    {
+        NS_ASSERTION(0,"tried to set two FinalizeListeners on a wrapper");
+        return NS_ERROR_FAILURE;
+    }
+    if(mFinalizeListener)
+        NS_RELEASE(mFinalizeListener);
+    mFinalizeListener = aListener;
+    if(mFinalizeListener)
+        NS_ADDREF(mFinalizeListener);
+    return NS_OK;
+}        
 
 NS_IMETHODIMP
 nsXPCWrappedNative::DebugDump(int depth)

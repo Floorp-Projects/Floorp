@@ -23,7 +23,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS		= public src
 
 ifdef ENABLE_TESTS
-DIRS		+= tests
+DIRS		+= tests shell
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -22,10 +22,7 @@
 
 class nsIXPCInterfaces : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IXPCINTERFACES_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCINTERFACES_IID)
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
@@ -43,10 +40,7 @@ class nsIXPCInterfaces : public nsISupports {
 
 class nsIXPCClasses : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IXPCCLASSES_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCCLASSES_IID)
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
@@ -64,32 +58,46 @@ class nsIXPCClasses : public nsISupports {
 
 class nsIXPCComponents : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IXPCCOMPONENTS_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCCOMPONENTS_IID)
 
   /* readonly attribute nsIXPCInterfaces interfaces; */
   NS_IMETHOD GetInterfaces(nsIXPCInterfaces * *aInterfaces) = 0;
 
   /* readonly attribute nsIXPCClasses classes; */
   NS_IMETHOD GetClasses(nsIXPCClasses * *aClasses) = 0;
+
   enum { RESULT_NS_OK = 0 };
+
   enum { RESULT_NS_COMFALSE = 1 };
+
   enum { RESULT_NS_ERROR_NOT_IMPLEMENTED = -2147467263 };
+
   enum { RESULT_NS_NOINTERFACE = -2147467262 };
+
   enum { RESULT_NS_ERROR_NO_INTERFACE = -2147467262 };
+
   enum { RESULT_NS_ERROR_INVALID_POINTER = -2147467261 };
+
   enum { RESULT_NS_ERROR_NULL_POINTER = -2147467261 };
+
   enum { RESULT_NS_ERROR_ABORT = -2147467260 };
+
   enum { RESULT_NS_ERROR_FAILURE = -2147467259 };
+
   enum { RESULT_NS_ERROR_UNEXPECTED = -2147418113 };
+
   enum { RESULT_NS_ERROR_OUT_OF_MEMORY = -2147024882 };
+
   enum { RESULT_NS_ERROR_ILLEGAL_VALUE = -2147024809 };
+
   enum { RESULT_NS_ERROR_INVALID_ARG = -2147024809 };
+
   enum { RESULT_NS_ERROR_NO_AGGREGATION = -2147221232 };
+
   enum { RESULT_NS_ERROR_NOT_AVAILABLE = -2147221231 };
+
   enum { RESULT_NS_ERROR_FACTORY_NOT_REGISTERED = -2147221164 };
+
   enum { RESULT_NS_ERROR_FACTORY_NOT_LOADED = -2147221000 };
 
 #ifdef XPIDL_JS_STUBS
