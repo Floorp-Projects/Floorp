@@ -1363,20 +1363,38 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
         rv = NS_ERROR_IN_PROGRESS;
     
     nsCOMPtr<nsIStreamListener> listener;
+    nsCOMPtr<nsIStreamObserver> observer;
 
-    if (NS_SUCCEEDED(rv))
-        rv = NS_NewStreamListenerProxy(getter_AddRefs(listener),
-                                       aListener, nsnull,
-                                       mBufferSegmentSize,
-                                       mBufferMaxSize);
+    if (NS_SUCCEEDED(rv)) {
+        // Proxy the stream listener and observer methods by default.
+        if (!(aFlags & nsITransport::DONT_PROXY_STREAM_OBSERVER)) {
+            // Cannot proxy the listener unless the observer part is also proxied.
+            if (!(aFlags & nsITransport::DONT_PROXY_STREAM_PROVIDER)) {
+                rv = NS_NewStreamListenerProxy(getter_AddRefs(listener),
+                                               aListener, nsnull,
+                                               mBufferSegmentSize,
+                                               mBufferMaxSize);
+                observer = do_QueryInterface(listener);
+            }
+            else {
+                rv = NS_NewStreamObserverProxy(getter_AddRefs(observer), aListener);
+                listener = aListener;
+            }
+        }
+        else {
+            listener = aListener;
+            observer = do_QueryInterface(aListener);
+        }
+    }
 
     if (NS_SUCCEEDED(rv)) {
         NS_NEWXPCOM(mReadRequest, nsSocketReadRequest);
         if (mReadRequest) {
             NS_ADDREF(mReadRequest);
             mReadRequest->SetTransport(this);
+            mReadRequest->SetObserver(observer);
+            mReadRequest->SetContext(aContext);
             mReadRequest->SetListener(listener);
-            mReadRequest->SetListenerContext(aContext);
             //mReadRequest->SetTransferCount(aCount);
         }
         else
@@ -1421,20 +1439,38 @@ nsSocketTransport::AsyncWrite(nsIStreamProvider* aProvider,
         rv = NS_ERROR_IN_PROGRESS;
 
     nsCOMPtr<nsIStreamProvider> provider;
+    nsCOMPtr<nsIStreamObserver> observer;
     
-    if (NS_SUCCEEDED(rv))
-        rv = NS_NewStreamProviderProxy(getter_AddRefs(provider),
-                                       aProvider, nsnull,
-                                       mBufferSegmentSize,
-                                       mBufferMaxSize);
+    if (NS_SUCCEEDED(rv)) {
+        // Proxy the stream provider and observer methods by default.
+        if (!(aFlags & nsITransport::DONT_PROXY_STREAM_OBSERVER)) {
+            // Cannot proxy the provider unless the observer part is also proxied.
+            if (!(aFlags & nsITransport::DONT_PROXY_STREAM_PROVIDER)) {
+                rv = NS_NewStreamProviderProxy(getter_AddRefs(provider),
+                                               aProvider, nsnull,
+                                               mBufferSegmentSize,
+                                               mBufferMaxSize);
+                observer = do_QueryInterface(provider);
+            }
+            else {
+                rv = NS_NewStreamObserverProxy(getter_AddRefs(observer), aProvider);
+                provider = aProvider;
+            }
+        }
+        else {
+            provider = aProvider;
+            observer = do_QueryInterface(aProvider);
+        }
+    }
 
     if (NS_SUCCEEDED(rv)) {
         NS_NEWXPCOM(mWriteRequest, nsSocketWriteRequest);
         if (mWriteRequest) {
             NS_ADDREF(mWriteRequest);
             mWriteRequest->SetTransport(this);
+            mWriteRequest->SetObserver(observer);
+            mWriteRequest->SetContext(aContext);
             mWriteRequest->SetProvider(provider);
-            mWriteRequest->SetProviderContext(aContext);
             //mWriteRequest->SetTransferCount(aCount);
         }
         else
@@ -1689,7 +1725,7 @@ nsSocketTransport::OnStatus(nsresult message)
         req = mWriteRequest;
 
     NS_ENSURE_TRUE(req, NS_ERROR_NOT_INITIALIZED);
-    return OnStatus(req, req->GetContext(), message);
+    return OnStatus(req, req->Context(), message);
 }
 
 //
@@ -1799,8 +1835,8 @@ tryRead:
     }
     /*
     if (mTransport && total) {
-        mTransport->OnStatus(this, mListenerContext, NS_NET_STATUS_RECEIVING_FROM);
-        mTransport->OnProgress(this, mListenerContext, mOffset);
+        mTransport->OnStatus(this, mContext, NS_NET_STATUS_RECEIVING_FROM);
+        mTransport->OnProgress(this, mContext, mOffset);
     }
     */
     *aBytesRead = (PRUint32) total;
@@ -1887,8 +1923,8 @@ tryWrite:
     }
     /*
     if (mTransport && total) {
-        mTransport->OnStatus(this, mListenerContext, NS_NET_STATUS_SENDING_TO);
-        mTransport->OnProgress(this, mListenerContext, mOffset);
+        mTransport->OnStatus(this, mContext, NS_NET_STATUS_SENDING_TO);
+        mTransport->OnProgress(this, mContext, mOffset);
     }
     */
     *aBytesWritten = (PRUint32) total;
@@ -2042,6 +2078,18 @@ nsSocketOS::nsSocketOS()
     NS_INIT_ISUPPORTS();
 }
 
+NS_METHOD
+nsSocketOS::WriteFromSegments(nsIInputStream *input,
+                              void *closure,
+                              const char *fromSegment,
+                              PRUint32 offset,
+                              PRUint32 count,
+                              PRUint32 *countRead)
+{
+    nsSocketOS *self = NS_REINTERPRET_CAST(nsSocketOS *, closure);
+    return self->Write(fromSegment, count, countRead);
+}
+
 NS_IMETHODIMP
 nsSocketOS::Close()
 {
@@ -2085,8 +2133,7 @@ nsSocketOS::Write(const char *aBuf, PRUint32 aCount, PRUint32 *aBytesWritten)
 NS_IMETHODIMP
 nsSocketOS::WriteFrom(nsIInputStream *aIS, PRUint32 aCount, PRUint32 *aBytesWritten)
 {
-    NS_NOTREACHED("nsSocketOS::WriteFrom");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return aIS->ReadSegments(WriteFromSegments, this, aCount, aBytesWritten);
 }
 
 NS_IMETHODIMP
@@ -2162,24 +2209,24 @@ nsSocketRequest::SetTransport(nsSocketTransport *aTransport)
 }
 
 nsresult
-nsSocketRequest::OnStart(nsIStreamObserver *aObserver, nsISupports *aContext)
+nsSocketRequest::OnStart()
 {
-    if (aObserver) {
-        aObserver->OnStartRequest(this, aContext);
+    if (mObserver && !mStartFired) {
+        mObserver->OnStartRequest(this, mContext);
         mStartFired = PR_TRUE;
     }
     return NS_OK;
 }
 
 nsresult
-nsSocketRequest::OnStop(nsIStreamObserver *aObserver, nsISupports *aContext)
+nsSocketRequest::OnStop()
 {
-    if (aObserver) {
+    if (mObserver) {
         if (!mStartFired) {
-            aObserver->OnStartRequest(this, aContext);
+            mObserver->OnStartRequest(this, mContext);
             mStartFired = PR_TRUE;
         }
-        aObserver->OnStopRequest(this, aContext, mStatus, nsnull);
+        mObserver->OnStopRequest(this, mContext, mStatus, nsnull);
     }
     return NS_OK;
 }
@@ -2323,7 +2370,7 @@ nsSocketReadRequest::OnRead()
         this, offset, amount));
 
     rv = mListener->OnDataAvailable(this,
-                                    mListenerContext,
+                                    mContext,
                                     mInputStream,
                                     offset,
                                     amount);
@@ -2358,8 +2405,8 @@ nsSocketReadRequest::OnRead()
         }
 
         if (mTransport && total) {
-            mTransport->OnStatus(this, mListenerContext, NS_NET_STATUS_RECEIVING_FROM);
-            mTransport->OnProgress(this, mListenerContext, offset);
+            mTransport->OnStatus(this, mContext, NS_NET_STATUS_RECEIVING_FROM);
+            mTransport->OnProgress(this, mContext, offset);
         }
     }
     return rv;
@@ -2410,7 +2457,7 @@ nsSocketWriteRequest::OnWrite()
     PRUint32 offset = mOutputStream->GetOffset();
 
     rv = mProvider->OnDataWritable(this,
-                                   mProviderContext,
+                                   mContext,
                                    mOutputStream,
                                    offset,
                                    MAX_IO_TRANSFER_SIZE);
@@ -2445,8 +2492,8 @@ nsSocketWriteRequest::OnWrite()
         }
 
         if (mTransport && total) {
-            mTransport->OnStatus(this, mProviderContext, NS_NET_STATUS_SENDING_TO);
-            mTransport->OnProgress(this, mProviderContext, offset);
+            mTransport->OnStatus(this, mContext, NS_NET_STATUS_SENDING_TO);
+            mTransport->OnProgress(this, mContext, offset);
         }
     }
     return rv;

@@ -64,7 +64,7 @@ public:
         if (NS_FAILED(rv)) return rv;
 
         if (avail == 0) {
-            NS_STATIC_CAST(nsFtpControlConnection*, aContext)->mSuspendedWrite = PR_TRUE;
+            NS_STATIC_CAST(nsFtpControlConnection*, aContext)->mSuspendedWrite = 1;
             return NS_BASE_STREAM_WOULD_BLOCK;
         }
         PRUint32 bytesWritten;
@@ -156,7 +156,9 @@ nsFtpControlConnection::Connect()
 
     rv = mCPipe->AsyncWrite(provider, 
                             NS_STATIC_CAST(nsISupports*, this),
-                            0, 0, 0, 
+                            0, -1,
+                            nsITransport::DONT_PROXY_STREAM_PROVIDER |
+                            nsITransport::DONT_PROXY_STREAM_OBSERVER, 
                             getter_AddRefs(mWriteRequest));
     if (NS_FAILED(rv)) return rv;
 
@@ -193,10 +195,9 @@ nsFtpControlConnection::Write(nsCString& command)
     PRUint32 cnt;
     nsresult rv = mOutStream->Write(command.get(), len, &cnt);
     if (NS_SUCCEEDED(rv) && len==cnt) {
-        if (mSuspendedWrite) {
-            mSuspendedWrite = PR_FALSE;
+        PRInt32 writeWasSuspended = PR_AtomicSet(&mSuspendedWrite, 0);
+        if (writeWasSuspended)
             mWriteRequest->Resume();
-        }
         return NS_OK;
     }
 
