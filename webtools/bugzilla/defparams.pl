@@ -844,6 +844,14 @@ Reason: %reason%
   },
 
   {
+   name => 'commentoncreate',
+   desc => 'If this option is on, the user needs to enter a description ' .
+           'when entering a new bug',
+   type => 'b',
+   default => 0
+  },
+
+  {
    name => 'commentonaccept',
    desc => 'If this option is on, the user needs to enter a short comment if ' .
            'he accepts the bug',

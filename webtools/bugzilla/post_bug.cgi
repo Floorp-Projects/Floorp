@@ -76,6 +76,10 @@ my $format = GetFormat("bug/create/comment", $::FORM{'format'}, "txt");
 $template->process($format->{'template'}, $vars, \$comment)
   || ThrowTemplateError($template->error());
 
+# Check that if required a description has been provided
+if (Param("commentoncreate") && !trim($::FORM{'comment'})) {
+    ThrowUserError("description_required");
+}
 ValidateComment($comment);
 
 my $product = $::FORM{'product'};

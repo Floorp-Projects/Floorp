@@ -150,6 +150,10 @@
     [% title = "Dependency Loop Detected" %]
     You can't make [% terms.abug %] blocked or dependent on itself.
 
+  [% ELSIF error == "description_required" %]
+    [% title = "Description Required" %]
+    You must provide a description of the [% terms.bug %].
+
   [% ELSIF error == "dupe_invalid_bug_id" %]
     [% title = BLOCK %]Valid [% terms.Bug %] Number Required[% END %]
     You must specify a valid [% terms.bug %] number of which this 
