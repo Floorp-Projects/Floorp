@@ -26,7 +26,7 @@ package Support::Files;
 # exclude_deps is a hash of arrays listing the files to be excluded
 # if a module is not available
 #
-@additional_files = ('syncshadowdb','processmail');
+@additional_files = ();
 %exclude_deps = (
     'XML::Parser' => ['importxml.pl'],
 );

@@ -52,11 +52,8 @@ foreach my $file (@testitems) {
         ok(1,"$file does not have a shebang");	
     } else {
         my $flags;
-        if ($file eq "processmail") {
-            # special case processmail, which is tainted checked
-            $flags = "wT";
-        } elsif (!defined $ext || $ext eq "pl") {
-            # standalone programs (eg syncshadowdb) aren't taint checked yet
+        if (!defined $ext || $ext eq "pl") {
+            # standalone programs aren't taint checked yet
             $flags = "w";
         } elsif ($ext eq "pm") {
             ok(0, "$file is a module, but has a shebang");
