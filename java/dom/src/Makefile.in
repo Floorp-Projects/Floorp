@@ -62,10 +62,10 @@ ifeq ($(OS_ARCH),Linux)
  INCLUDES	+= -I$(JAVAHOME)/include -I$(JAVAHOME)/include/linux
  DSO_LDOPTS	+= \
 	-L$(JAVAHOME)/jre/lib/i386 \
-	-L$(JAVAHOME)/jre/lib/i386/classic \
+	-L$(JAVAHOME)/jre/lib/i386/client \
 	-L$(JAVAHOME)/jre/lib/i386/native_threads \
 	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386 \
-	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386/classic \
+	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386/client \
 	-Xlinker -rpath $(JAVAHOME)/jre/lib/i386/native_threads \
 	-ljvm -lhpi
  DEFINES	+= -DDISABLE_JIT

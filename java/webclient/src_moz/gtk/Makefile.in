@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME	= webclientstub
 
 CPPSRCS = \
-	GtkBrowserControlCanvasStub.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -69,10 +69,11 @@ EmbedWindow::Init(NativeBrowserControl *aOwner)
 nsresult
 EmbedWindow::CreateWindow_(void)
 {
-  nsresult rv;
-  int width, height;
+    nsresult rv;
+    int width, height;
 #ifdef XP_UNIX
-    GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->parentHwnd));
+    PR_ASSERT(PR_FALSE);
+    GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->parentHWnd));
     width = ownerAsWidget->allocation.width;
     height = ownerAsWidget->allocation.height;
 #else 
@@ -354,7 +355,7 @@ NS_IMETHODIMP
 EmbedWindow::GetSiteWindow(void **aSiteWindow)
 {
 #ifdef XP_UNIX
-    GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->parentHwnd));
+    GtkWidget *ownerAsWidget (GTK_WIDGET(mOwner->parentHWnd));
 #else 
     HWND ownerAsWidget = mOwner->parentHWnd;
 #endif

@@ -114,10 +114,12 @@ NativeWrapperFactory::Init(JNIEnv * env, jobject newNativeEventThread)
                 mFailureCode));
         
 #ifdef XP_UNIX
+        /************
         gdk_input_add(EQueue->GetEventQueueSelectFD(),
                       GDK_INPUT_READ,
                       event_processor_callback,
                       EQueue);
+        ************/
 #endif
         
         PLEventQueue * plEventQueue = nsnull;
