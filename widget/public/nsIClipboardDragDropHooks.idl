@@ -55,8 +55,8 @@ interface nsIDOMEvent;
  *      command:  cmd_clipboardDragDropHook
  *
  *      params        value type   possible values
- *      "addhook"     isupports    nsITransferableOverride as nsISupports
- *      "removehook"  isupports    nsITransferableOverride as nsISupports
+ *      "addhook"     isupports    nsIClipboardDragDropHooks as nsISupports
+ *      "removehook"  isupports    nsIClipboardDragDropHooks as nsISupports
  *
  * Notes:
  *  * Overrides/hooks need to be added to each window (as appropriate).
