@@ -63,36 +63,36 @@ NS_IMPL_RELEASE_INHERITED(nsNewsDatabase, nsMsgDatabase)
 
 NS_IMETHODIMP nsNewsDatabase::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-	*aInstancePtr = nsnull;   
-
- 	if (aIID.Equals(NS_GET_IID(nsINewsDatabase)))
-        {
-                *aInstancePtr = NS_STATIC_CAST(nsINewsDatabase *, this);
-        }
-
-        if(*aInstancePtr)
-        {
-                AddRef();
-                return NS_OK;
-        }     
-
-	return nsMsgDatabase::QueryInterface(aIID, aInstancePtr);
+  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+  *aInstancePtr = nsnull;   
+  
+  if (aIID.Equals(NS_GET_IID(nsINewsDatabase)))
+  {
+    *aInstancePtr = NS_STATIC_CAST(nsINewsDatabase *, this);
+  }
+  
+  if(*aInstancePtr)
+  {
+    AddRef();
+    return NS_OK;
+  }     
+  
+  return nsMsgDatabase::QueryInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
-  nsNewsDatabase	        *newsDB;
+  nsNewsDatabase *newsDB;
   
   if (!aNewsgroupName)
     return NS_ERROR_NULL_POINTER;
   
-  nsFileSpec				newsgroupName;
+  nsFileSpec  newsgroupName;
   aNewsgroupName->GetFileSpec(&newsgroupName);
   
-  nsNewsSummarySpec	        summarySpec(newsgroupName);
-  nsresult                  err = NS_OK;
-  PRBool			newFile = PR_FALSE;
+  nsNewsSummarySpec summarySpec(newsgroupName);
+  nsresult  err = NS_OK;
+  PRBool    newFile = PR_FALSE;
   
 #ifdef DEBUG_NEWS_DATABASE
   printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
@@ -105,7 +105,8 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
   *pMessageDB = nsnull;
   
   newsDB = (nsNewsDatabase *) FindInCache(dbPath);
-  if (newsDB) {
+  if (newsDB)
+  {
     *pMessageDB = newsDB;
     //FindInCache does the AddRef'ing
     //newsDB->AddRef();
@@ -212,14 +213,14 @@ PRUint32 nsNewsDatabase::GetCurVersion()
 
 NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 {
-	NS_ASSERTION(pRead, "null out param in IsRead");
-	if (!pRead) return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION(pRead, "null out param in IsRead");
+  if (!pRead) return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(m_readSet, "set is null!");
-    if (!m_readSet) return NS_ERROR_FAILURE;
-    
-	*pRead = m_readSet->IsMember(key);
-	return NS_OK;
+  NS_ASSERTION(m_readSet, "set is null!");
+  if (!m_readSet) return NS_ERROR_FAILURE;
+  
+  *pRead = m_readSet->IsMember(key);
+  return NS_OK;
 }
 
 nsresult nsNewsDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
@@ -239,10 +240,9 @@ nsresult nsNewsDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
 // return highest article number we've seen.
 NS_IMETHODIMP nsNewsDatabase::GetHighWaterArticleNum(nsMsgKey *key)
 {
-  PR_ASSERT(m_dbFolderInfo);
-  if (!m_dbFolderInfo) {
+  NS_ASSERTION(m_dbFolderInfo, "null db folder info");
+  if (!m_dbFolderInfo) 
     return NS_ERROR_FAILURE;
-  }
   return m_dbFolderInfo->GetHighWater(key);    
 }
 
@@ -274,11 +274,11 @@ NS_IMETHODIMP nsNewsDatabase::GetLowWaterArticleNum(nsMsgKey *key)
  
 nsresult		nsNewsDatabase::ExpireUpTo(nsMsgKey expireKey)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 nsresult		nsNewsDatabase::ExpireRange(nsMsgKey startRange, nsMsgKey endRange)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // used to handle filters editing on open news groups.
@@ -306,8 +306,6 @@ nsNewsDatabase::ThreadBySubjectWithoutRe()
 NS_IMETHODIMP nsNewsDatabase::GetReadSet(nsMsgKeySet **pSet)
 {
     if (!pSet) return NS_ERROR_NULL_POINTER;
-    
-    
     *pSet = m_readSet;
     return NS_OK;
 }
