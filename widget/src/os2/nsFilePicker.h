@@ -42,6 +42,8 @@ public:
   nsFilePicker(); 
   virtual ~nsFilePicker();
 
+  static void ReleaseGlobals();
+
   NS_DECL_ISUPPORTS
 
     // nsIFilePicker (less what's in nsBaseFilePicker)
@@ -85,9 +87,6 @@ protected:
   PRInt16                mSelectedType;
   nsCOMPtr <nsISupportsArray> mFiles;
   static char            mLastUsedDirectory[];
-
-  char    pszFDFileExists[256];
-  char    pszFDSaveCaption[256];
 };
 
 #endif // nsFilePicker_h__
