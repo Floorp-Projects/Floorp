@@ -2342,10 +2342,12 @@ PRInt32 _MD_open(const char *name, PRIntn flags, PRIntn mode)
 	if (flags & PR_TRUNCATE)
 		osflags |= O_TRUNC;
 	if (flags & PR_SYNC) {
-#if defined(FREEBSD)
+#if defined(O_SYNC)
+		osflags |= O_SYNC;
+#elif defined(O_FSYNC)
 		osflags |= O_FSYNC;
 #else
-		osflags |= O_SYNC;
+#error "Neither O_SYNC nor O_FSYNC is defined on this platform"
 #endif
 	}
 

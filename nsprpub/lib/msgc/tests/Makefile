@@ -203,7 +203,7 @@ ifeq ($(OS_ARCH), UNIXWARE)
 export LD_RUN_PATH = $(PWD)/$(DIST)/lib
 endif
 
-ifeq ($(OS_ARCH),BSD_386)
+ifeq ($(OS_ARCH),BSD_OS)
 EXTRA_LIBS = -ldl
 endif
 

@@ -47,7 +47,7 @@ ifeq ($(OS_ARCH),AIX)
 MDCPUCFG_H = _aix.cfg
 endif
 
-ifeq ($(OS_ARCH),BSD_386)
+ifeq ($(OS_ARCH),BSD_OS)
 MDCPUCFG_H = _bsdi.cfg
 endif
 

@@ -297,7 +297,7 @@ EXTRA_LIBS = -lc_r
 endif
 endif
 
-ifeq ($(OS_ARCH),BSD_386)
+ifeq ($(OS_ARCH),BSD_OS)
 EXTRA_LIBS = -ldl
 endif
 
