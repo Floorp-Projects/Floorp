@@ -71,6 +71,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
 #include "nsDOMPropEnums.h"
+#include "nsIScrollableView.h"
 
 #include "nsIIOService.h"
 #include "nsICookieService.h"

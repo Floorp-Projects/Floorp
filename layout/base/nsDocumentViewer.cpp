@@ -79,6 +79,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIFrameManager.h"
+#include "nsIParser.h"
 #include "nsIPrintContext.h"
 
 #include "nsIChromeRegistry.h"

@@ -48,6 +48,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
+#include "nsIChannel.h"
 
 /////////////////////////////////////////////////////////////////////////
 // nsMsgPrintEngine implementation

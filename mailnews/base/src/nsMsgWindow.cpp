@@ -41,6 +41,8 @@
 #include "nsIPrompt.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
+#include "nsIChannel.h"
+#include "nsIStreamObserver.h"
 
 #include "plbase64.h"
 #include "nsMsgI18N.h"

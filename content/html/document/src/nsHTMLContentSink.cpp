@@ -30,6 +30,7 @@
 #include "nsICSSLoaderObserver.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
+#include "nsIUnicharInputStream.h"
 #include "nsIURL.h"
 #include "nsIStreamLoader.h"
 #include "nsNetUtil.h"

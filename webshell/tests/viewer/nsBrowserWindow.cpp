@@ -75,6 +75,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 #include "nsXPIDLString.h"
+#include "nsIViewManager.h"
 
 #include "nsCWebBrowser.h"
 

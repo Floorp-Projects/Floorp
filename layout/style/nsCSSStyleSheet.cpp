@@ -43,6 +43,7 @@
 #include "nsIFrame.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsIUnicharInputStream.h"
 #include "nsHTMLIIDs.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLLinkElement.h"

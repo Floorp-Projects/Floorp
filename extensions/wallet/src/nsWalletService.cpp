@@ -43,6 +43,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
+#include "nsIChannel.h"
 #include "nsIProfileChangeStatus.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell

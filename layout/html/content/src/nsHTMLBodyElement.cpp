@@ -50,6 +50,7 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
+#include "nsIView.h"
 
 
 //----------------------------------------------------------------------

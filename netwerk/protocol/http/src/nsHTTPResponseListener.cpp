@@ -443,9 +443,9 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
         const char * cp = mHeaderBuffer.GetBuffer() ;
         nsCOMPtr<nsIByteArrayInputStream>   is;
 
-        nsresult rv1 = 
-            NS_NewByteArrayInputStream(getter_AddRefs(is) , strdup(cp) ,
-                    mHeaderBuffer.Length()) ;            
+        nsresult rv1 = NS_NewByteArrayInputStream(getter_AddRefs(is),
+                                                  nsCRT::strdup(cp),
+                                                  mHeaderBuffer.Length());
         
         NS_ASSERTION(mResponseDataListener, "No data listener! Did we abort?");
         if (NS_SUCCEEDED(rv1) && mResponseDataListener) 
