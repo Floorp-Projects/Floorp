@@ -117,9 +117,7 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
   {
-    const nsStyleTable* tableStyle;
-    tableFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)tableStyle)); 
-    if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse)
+    if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle())
     {
       PRInt32 rowspan = GetRowSpan();
       PRInt32 i;
@@ -231,7 +229,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
         {
           const nsStyleTable* tableStyle;
           tableFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)tableStyle)); 
-          if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
+          if (NS_STYLE_BORDER_SEPARATE == tableFrame->GetBorderCollapseStyle())
           {
             nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *mySpacing, mStyleContext, skipSides);

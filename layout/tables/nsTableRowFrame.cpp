@@ -332,8 +332,6 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
   if (gsDebug) printf("Row DidReflow: cellHeight=%d\n", rowCellHeight);
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
-  const nsStyleTable* tableStyle;
-  tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
 
   nsTableIterator iter(*this, eTableDIR);
   nsIFrame* cellFrame = iter.First();
@@ -380,7 +378,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
         //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
         ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild();
         /* if we're collapsing borders, notify the cell that the border edge length has changed */
-        if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse) {
+        if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle()) {
           ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
                                                                  GetRowIndex(),
                                                                  cellHeight);
