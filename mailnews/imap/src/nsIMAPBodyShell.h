@@ -38,7 +38,7 @@ typedef enum _nsIMAPBodypartType {
 class nsIMAPGenericParser;
 class nsIMAPBodyShell;
 class nsIMAPBodypartMessage;
-typedef struct xp_HashTable *XP_HashTable;
+class nsHashtable;
 
 
 class nsIMAPBodypart : public nsIMAPGenericParser
@@ -322,7 +322,7 @@ protected:
 
 protected:
 	nsVoidArray		*m_shellList;	// For maintenance
-	XP_HashTable	m_shellHash;	// For quick lookup based on UID
+	nsHashtable		*m_shellHash;	// For quick lookup based on UID
 
 };
 

@@ -21,7 +21,7 @@
 #include "nsIMAPBodyShell.h"
 #include "nsImapProtocol.h"
 
-#include "xp_hash.h" // OK, probably evil. what should we use instead?
+#include "nsHashtable.h"
 #include "net.h" /* should be defined into msgCore.h? - need MESSAGE_RFC822 */
 
 // need to talk to Rich about this...
@@ -1478,7 +1478,7 @@ imap_shell_cache_strcmp (const void *a, const void *b)
 
 nsIMAPBodyShellCache::nsIMAPBodyShellCache()
 {
-	m_shellHash = XP_HashTableNew(20, XP_StringHash, imap_shell_cache_strcmp);
+	m_shellHash = new nsHashtable(20); /* , XP_StringHash, imap_shell_cache_strcmp); */
 	m_shellList = new nsVoidArray();
 }
 
@@ -1494,7 +1494,8 @@ nsIMAPBodyShellCache::nsIMAPBodyShellCache()
 nsIMAPBodyShellCache::~nsIMAPBodyShellCache()
 {
 	while (EjectEntry()) ;
-	XP_HashTableDestroy(m_shellHash);
+	if (m_shellHash)
+		delete m_shellHash;
 	delete m_shellList;
 }
 
@@ -1508,7 +1509,8 @@ PRBool nsIMAPBodyShellCache::EjectEntry()
 
 	nsIMAPBodyShell *removedShell = (nsIMAPBodyShell *) (m_shellList->ElementAt(0));
 	m_shellList->RemoveElementAt(0);
-	XP_Remhash(m_shellHash, removedShell->GetUID());
+	nsCStringKey hashKey (removedShell->GetUID());
+	m_shellHash->Remove(&hashKey);
 	delete removedShell;
 
 	return TRUE;
@@ -1527,16 +1529,20 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 	// First, for safety sake, remove any entry with the given UID,
 	// just in case we have a collision between two messages in different
 	// folders with the same UID.
-	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) XP_Gethash(m_shellHash, shell->GetUID(), NULL);
+	nsCStringKey hashKey1(shell->GetUID());
+	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey1);
 	if (foundShell)
 	{
-		XP_Remhash(m_shellHash, foundShell);
+		nsCStringKey hashKey(foundShell->GetUID());
+		m_shellHash->Remove(&hashKey);
 		m_shellList->RemoveElement(foundShell);
 	}
 
 	// Add the new one to the cache
 	m_shellList->AppendElement(shell);
-	XP_Puthash(m_shellHash, shell->GetUID(), shell);
+	
+	nsCStringKey hashKey2 (shell->GetUID());
+	m_shellHash->Put(&hashKey2, shell);
 	shell->SetIsCached(TRUE);
 
 	// while we're not over our size limit, eject entries
@@ -1555,7 +1561,8 @@ nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(const char *UID, const ch
 	if (!UID)
 		return NULL;
 
-	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) XP_Gethash(m_shellHash, UID, NULL);
+	nsCStringKey hashKey(UID);
+	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey);
 
 	if (!foundShell)
 		return NULL;
