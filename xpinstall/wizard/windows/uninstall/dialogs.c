@@ -89,9 +89,9 @@ LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       SetWindowText(hDlg, diUninstall.szTitle);
       wsprintf(szBuf, diUninstall.szMessage0, ugUninstall.szDescription);
       SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
-      GetPrivateProfileString("Dialog Uninstall", "Uninstall", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      GetPrivateProfileString("Dialog Uninstall", "Yes", "", szBuf, sizeof(szBuf), szFileIniUninstall);
       SetDlgItemText(hDlg, IDWIZNEXT, szBuf);
-      GetPrivateProfileString("Dialog Uninstall", "Cancel", "", szBuf, sizeof(szBuf), szFileIniUninstall);
+      GetPrivateProfileString("Dialog Uninstall", "No", "", szBuf, sizeof(szBuf), szFileIniUninstall);
       SetDlgItemText(hDlg, IDCANCEL, szBuf);
       SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
       SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)ugUninstall.definedFont, 0L); 
