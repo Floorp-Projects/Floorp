@@ -21,13 +21,13 @@ include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
 	nsBrowserWindow.cpp	\
-	nsDocLoader.cpp		\
 	nsEditorMode.cpp	\
 	nsEditorInterfaces.cpp	\
 	nsMotifMenu.cpp		\
 	nsSetupRegistry.cpp	\
 	nsUnixMain.cpp		\
 	nsViewerApp.cpp		\
+	nsWebCrawler.app	\
 	$(NULL)
 
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom \
