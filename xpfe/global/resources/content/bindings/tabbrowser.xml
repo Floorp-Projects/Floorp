@@ -64,7 +64,9 @@
             <xul:menuseparator/>
             <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeAllTabsBut(document.popupNode);"/>
           </xul:menupopup>
-          <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1">
+          <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1"
+                    ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode); event.stopPropagation();"
+                    ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode); event.stopPropagation();">
             <xul:tab maxwidth="250" width="0" minwidth="30" flex="100000" class="tabbrowser-tab" label="(Untitled)" crop="end"/>
           </xul:tabs>
         </xul:stack>
@@ -569,6 +571,25 @@
         </body>
       </method>
 
+      <method name="getBrowserForTab">
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          if (this.mCurrentTab == aTab)
+            return this.mCurrentBrowser;
+
+          var i = -1;
+          for (i = 0; i < this.mTabContainer.childNodes.length; i++) {
+            if (this.mTabContainer.childNodes[i] == aTab)
+              break;
+          }
+
+          if (i >= 0 && i < this.mPanelContainer.childNodes.length)
+            return this.mPanelContainer.childNodes[i];
+        ]]>
+        </body>
+      </method>
+
       <property name="selectedTab">
         <getter>
           return this.mTabBox.selectedTab;
@@ -582,6 +603,91 @@
         </setter>
       </property>
 
+      <!-- Drag and drop observer API -->
+      <!--<method name="onDragStart">
+        <parameter name="aEvent"/>
+        <parameter name="aXferData"/>
+        <parameter name="aDragAction"/>
+        <body/>
+      </method>-->
+
+      <method name="onDragOver">
+        <parameter name="aEvent"/>
+        <parameter name="aFlavour"/>
+        <parameter name="aDragSession"/>
+        <body>
+        <![CDATA[
+          return; // Just having this makes our feedback correct.
+        ]]>
+        </body>
+      </method>
+
+      <method name="onDrop">
+        <parameter name="aEvent"/>
+        <parameter name="aXferData"/>
+        <parameter name="aDragSession"/>
+        <body>
+          <![CDATA[
+            var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+
+            // valid urls don't contain spaces ' '; if we have a space it isn't a valid url so bail out
+            if (!url || !url.length || url.indexOf(" ", 0) != -1) 
+              return;
+            
+            var pref = Components.classes['@mozilla.org/preferences;1'].getService(Components.interfaces.nsIPrefService).getBranch(null);
+            var bgLoad = pref.getBoolPref("browser.tabs.loadInBackground");
+
+            if (aEvent.target.localName == "tabs") {
+              // We're adding a new tab.
+              var tab = this.addTab(getShortcutOrURI(url));
+              if (!bgLoad)
+                this.selectedTab = tab;
+            }
+            else if (aEvent.target.localName == "tab") {
+              // Load in an existing tab.
+              this.getBrowserForTab(aEvent.target).loadURI(getShortcutOrURI(url));
+              if (this.mCurrentTab != aEvent.target && !bgLoad)
+                this.selectedTab = aEvent.target;
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="getSupportedFlavours">
+        <body>
+        <![CDATA[
+          var flavourSet = new FlavourSet();
+          flavourSet.appendFlavour("text/x-moz-url");
+          flavourSet.appendFlavour("text/unicode");
+          flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+          return flavourSet;
+        ]]>
+        </body>
+      </method>
+
+      <method name="retrieveURLFromData">
+        <parameter name="aData"/>
+        <parameter name="aFlavour"/>
+        <body>
+        <![CDATA[
+          switch (aFlavour) {
+          case "text/unicode":
+            // this might not be a url, but we'll return it anyway
+            return aData;
+          case "text/x-moz-url":
+            var data = aData.toString();
+            var separator = data.indexOf("\n");
+            if (separator != -1)
+              data = data.substr(0, separator);
+            return data;
+          case "application/x-moz-file":
+            return aData.URL;
+          }             
+          return null;
+       ]]>
+       </body>
+     </method> 
+                                                               
       <!-- BEGIN FORWARDED BROWSER PROPERTIES.  IF YOU ADD A PROPERTY TO THE BROWSER ELEMENT
            MAKE SURE TO ADD IT HERE AS WELL. -->
       <property name="canGoBack"
