@@ -49,6 +49,12 @@
       <handler type="keypress" id="key_rightshiftmeta" keycode="VK_RIGHT" meta="true" alt="false" shift="true" control="false"
         command="cmd_selectEndLine"/>
 
+      <!-- Emacsish single-line motion and delete keys -->
+      <handler type="keypress" id="key_delback" key="h" control="true"
+        command="cmd_deleteCharBackward"/>
+      <handler type="keypress" id="key_delforw" key="d" control="true"
+        command="cmd_deleteCharForward"/>
+
     </handlers>
   </binding>
 
@@ -89,6 +95,12 @@
         command="cmd_selectBeginLine"/>
       <handler type="keypress" id="key_rightshiftmeta" keycode="VK_RIGHT" meta="true" alt="false" shift="true" control="false"
         command="cmd_selectEndLine"/>
+
+      <!-- Emacsish single-line motion and delete keys -->
+      <handler type="keypress" id="key_delback" key="h" control="true"
+        command="cmd_deleteCharBackward"/>
+      <handler type="keypress" id="key_delforw" key="d" control="true"
+        command="cmd_deleteCharForward"/>
 
     </handlers>
   </binding>
