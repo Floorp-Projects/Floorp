@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.3 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -77,7 +77,7 @@ NSS_EXTERN_DATA const NSSItem g_ck_class_privkey;
 
 /* Get an array of attributes from an object. */
 NSS_EXTERN PRStatus 
-NSSCKObject_GetAttributes
+nssCKObject_GetAttributes
 (
   CK_OBJECT_HANDLE object,
   CK_ATTRIBUTE_PTR obj_template,

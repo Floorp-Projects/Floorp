@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.3 $ $Date: 2001/09/19 21:47:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -76,7 +76,7 @@ NSS_IMPLEMENT_DATA const NSSItem
 g_ck_class_privkey = { (CK_VOID_PTR)&s_class_privkey, sizeof(s_class_privkey) };
 
 NSS_IMPLEMENT PRStatus 
-NSSCKObject_GetAttributes
+nssCKObject_GetAttributes
 (
   CK_OBJECT_HANDLE object,
   CK_ATTRIBUTE_PTR obj_template,

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.4 $ $Date: 2001/09/19 21:37:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.5 $ $Date: 2001/09/19 21:47:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -63,7 +63,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.4 $ $Date:
  * any uses of slots where independence is needed?
  */
 NSS_IMPLEMENT NSSToken *
-NSSToken_Create
+nssToken_Create
 (
   NSSArena *arenaOpt,
   CK_SLOT_ID slotID,
@@ -116,7 +116,7 @@ NSSToken_Create
 	}
     }
     /* Open a default session handle for the token. */
-    session = NSSSlot_CreateSession(parent, arena, PR_FALSE);
+    session = nssSlot_CreateSession(parent, arena, PR_FALSE);
     if (session == NULL) {
 	goto loser;
     }
@@ -156,7 +156,7 @@ loser:
 }
 
 NSS_IMPLEMENT PRStatus
-NSSToken_Destroy
+nssToken_Destroy
 (
   NSSToken *tok
 )
@@ -191,7 +191,7 @@ examine_cert_callback(NSSToken *t, nssSession *session,
     PRStatus cbrv;
     NSSCertificate *cert;
     struct certCallbackStr *ccb = (struct certCallbackStr *)arg;
-    /* maybe it should be NSSToken_CreateCertificate(token, handle); */
+    /* maybe it should be nssToken_CreateCertificate(token, handle); */
     cert = NSSCertificate_CreateFromHandle(h, session, t->slot);
     if (!cert) {
 	goto loser;
@@ -268,7 +268,7 @@ loser:
 }
 
 NSS_IMPLEMENT PRStatus *
-NSSToken_TraverseCertificates
+nssToken_TraverseCertificates
 (
   NSSToken *tok,
   nssSession *sessionOpt,
@@ -294,7 +294,7 @@ NSSToken_TraverseCertificates
 }
 
 NSS_IMPLEMENT NSSCertificate **
-NSSToken_FindCertificatesByTemplate
+nssToken_FindCertificatesByTemplate
 (
   NSSToken *tok,
   nssSession *sessionOpt,
