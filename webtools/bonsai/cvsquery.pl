@@ -132,6 +132,9 @@ sub query_checkins {
         if ($query_branchtype eq 'regexp') {
             $qstring .=
                 " and branches.branch regexp '$q'";
+        } elsif ($query_branchtype eq 'notregexp') {
+            $qstring .=
+                " and not (branches.branch regexp '$q') ";
         } else {
             $qstring .=
                 " and (branches.branch = '$q' or branches.branch = 'T$q')";
@@ -150,6 +153,10 @@ sub query_checkins {
         my $q = SqlQuote($query_who);
         if ($query_whotype eq 'regexp') {
             $qstring .= " and people.who regexp '$q'";
+        }
+        elsif ($query_whotype eq 'notregexp') {
+            $qstring .= " and not (people.who regexp '$q')";
+
         } else {
             $qstring .= " and people.who = '$q'";
         }

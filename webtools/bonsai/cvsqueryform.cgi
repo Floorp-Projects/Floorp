@@ -262,13 +262,23 @@ sub dateTest {
 
 sub regexpradio {
     my($name) = @_;
-    my $useregexp = ($form{$name} eq 'regexp');
-    my $c1 = $useregexp ? "" : "checked";
-    my $c2 = $useregexp ? "checked" : "";
+    my $c1,$c2,$c3;
+    $c1 = $c2 = $c3 = "";
+    if( $form{$name} eq 'regexp'){
+        $c2 = "checked";
+    }
+    elsif( $form{$name} eq 'notregexp'){
+        $c3 = "checked";
+    }
+    else {
+        $c1 = "checked";
+    }
     return "
 <input type=radio name=$name value=match $c1>Exact match
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<input type=radio name=$name value=regexp $c2><a href=cvsregexp.html>Regular expression</a>";
+<input type=radio name=$name value=regexp $c2><a href=cvsregexp.html>Regular&nbsp;expression</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type=radio name=$name value=notregexp $c3>Doesn't&nbsp;match&nbsp;<a href=cvsregexp.html>Reg&nbsp;Exp</a>";
 }
 
 
