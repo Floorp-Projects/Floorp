@@ -103,6 +103,7 @@ private:
   PRUint8 mBackgroundRGBIndex;
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
+  PRPackedBool mGIFOpen;
 };
 
 void nsGifShutdown();
