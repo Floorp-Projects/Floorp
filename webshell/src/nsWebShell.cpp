@@ -2216,37 +2216,39 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
           rv = NS_NewURI(getter_AddRefs(uri), keywordSpec, nsnull);
       }
 
-      PRInt32 colon, fSlash = urlSpec.FindChar('/');
-      PRUnichar port;
-      // if no scheme (protocol) is found, assume http.
-      if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
-           || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
-           || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
-                && ((port=urlSpec.CharAt(colon+1)) <= '9')
-                && (port > '0') )) {
-        // find host name
-        PRInt32 hostPos = urlSpec.FindCharInSet("./:");
-        if (hostPos == -1) {
-          hostPos = urlSpec.Length();
-        }
+      if (NS_FAILED(rv)) {
+          PRInt32 colon, fSlash = urlSpec.FindChar('/');
+          PRUnichar port;
+          // if no scheme (protocol) is found, assume http.
+          if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
+               || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
+               || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
+                    && ((port=urlSpec.CharAt(colon+1)) <= '9')
+                    && (port > '0') )) {
+            // find host name
+            PRInt32 hostPos = urlSpec.FindCharInSet("./:");
+            if (hostPos == -1) {
+              hostPos = urlSpec.Length();
+            }
 
-        // extract host name
-        nsAutoString hostSpec;
-        urlSpec.Left(hostSpec, hostPos);
+            // extract host name
+            nsAutoString hostSpec;
+            urlSpec.Left(hostSpec, hostPos);
 
-        // insert url spec corresponding to host name
-        if (hostSpec.EqualsIgnoreCase("ftp")) {
-          urlSpec.Insert("ftp://", 0, 6);
-        } else {
-          urlSpec.Insert("http://", 0, 7);
-        }
-      } // end if colon
-      rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
+            // insert url spec corresponding to host name
+            if (hostSpec.EqualsIgnoreCase("ftp")) {
+              urlSpec.Insert("ftp://", 0, 6);
+            } else {
+              urlSpec.Insert("http://", 0, 7);
+            }
+          } // end if colon
+          rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
 
-	  nsAutoString  url(aURLSpec);
-	  if (((url.Find("mailto:", PR_TRUE))<0) && (NS_FAILED(rv))) {
-        // no dice, even more tricks?
-        return rv;
+	      nsAutoString  url(aURLSpec);
+	      if (((url.Find("mailto:", PR_TRUE))<0) && (NS_FAILED(rv))) {
+            // no dice, even more tricks?
+            return rv;
+          }
       }
     }
 
