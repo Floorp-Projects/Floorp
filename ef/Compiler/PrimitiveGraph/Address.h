@@ -120,10 +120,10 @@ inline addr functionAddress(void (*f)())
 {
   #if BATCH_COMPILATION
 	Address a;
-	a.setBase(reinterpret_cast<obj>(f));
+	a.setBase((obj)f);
 	return a;
   #else
-	return reinterpret_cast<addr>(f);
+	return (addr)f;
   #endif
 }
 
