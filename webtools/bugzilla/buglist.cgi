@@ -529,11 +529,14 @@ $fields =~ s/[&?]order=[^&]*//g;
 $fields =~ s/[&?]cmdtype=[^&]*//g;
 
 
+my $orderpart;
 my $oldorder;
 
 if (defined $::FORM{'order'} && trim($::FORM{'order'}) ne "") {
+    $orderpart = "&order=" . url_quote("$::FORM{'order'}");
     $oldorder = url_quote(", $::FORM{'order'}");
 } else {
+    $orderpart = "";
     $oldorder = "";
 }
 
@@ -894,7 +897,7 @@ if ($count > 0) {
 &nbsp;&nbsp;<A HREF=\"enter_bug.cgi\">Enter New Bug</A>
 &nbsp;&nbsp;<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>";
     if (!$dotweak && $count > 1) {
-        print "&nbsp;&nbsp;<A HREF=\"buglist.cgi?$fields&tweak=1\">";
+        print "&nbsp;&nbsp;<A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
         print "Change several bugs at once</A>\n";
     }
     print "</FORM>\n";
