@@ -27,14 +27,14 @@ CPPSRCS		= regExport.cpp regxpcom.cpp
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
 ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
+LOST_SYM_LIBS	= -lxpcomds_s -lmozreg_s
 endif
 
 LIBS		= \
 		-lxpcom \
 		-lmozjs \
-		$(TK_LIBS) \
 		$(LOST_SYM_LIBS) \
+		$(TK_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
