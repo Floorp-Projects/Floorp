@@ -24,7 +24,6 @@
 #   Neil Rashbrook <neil@parkwaycc.co.uk> (ass'td polish fix)
 
 <?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?>
-<?xml-stylesheet href="chrome://editor/skin/editorFormatToolbar.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 
@@ -583,37 +582,37 @@
                      observes="cmd_smiley"
                      tooltiptext="&SmileButton.tooltip;">
         <menupopup id="smilyPopup">
-          <menuitem class="smiley insert-smile menuitem-iconic" label="&smiley1Cmd.label;" 
+          <menuitem id="smileySmile" class="menuitem-iconic" label="&smiley1Cmd.label;" 
                     oncommand="doStatefulCommand('cmd_smiley', ':-)'  )"/>
-          <menuitem class="smiley insert-frown menuitem-iconic" label="&smiley2Cmd.label;"
+          <menuitem id="smileyFrown" class="menuitem-iconic" label="&smiley2Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-('  )"/>                                              
-          <menuitem class="smiley insert-wink menuitem-iconic" label="&smiley3Cmd.label;"
+          <menuitem id="smileyWink" class="menuitem-iconic" label="&smiley3Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ';-)'  )"/>                       
-          <menuitem class="smiley insert-tongue menuitem-iconic" label="&smiley4Cmd.label;"
+          <menuitem id="smileyTongue" class="menuitem-iconic" label="&smiley4Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-P'  )"/>
-          <menuitem class="smiley insert-laughing menuitem-iconic" label="&smiley5Cmd.label;"
+          <menuitem id="smileyLaughing" class="menuitem-iconic" label="&smiley5Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-D'  )"/>
-          <menuitem class="smiley insert-embarrassed menuitem-iconic" label="&smiley6Cmd.label;"
+          <menuitem id="smileyEmbarassed" class="menuitem-iconic" label="&smiley6Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-['  )"/>
-          <menuitem class="smiley insert-undecided menuitem-iconic" label="&smiley7Cmd.label;"
+          <menuitem id="smileyUndecided" class="menuitem-iconic" label="&smiley7Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-\\' )"/>
-          <menuitem class="smiley insert-surprise menuitem-iconic" label="&smiley8Cmd.label;"
+          <menuitem id="smileySurprise" class="menuitem-iconic" label="&smiley8Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', '=-O' )"/>           
-          <menuitem class="smiley insert-kiss menuitem-iconic" label="&smiley9Cmd.label;"
+          <menuitem id="smileyKiss" class="menuitem-iconic" label="&smiley9Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-*' )"/>           
-          <menuitem class="smiley insert-yell menuitem-iconic" label="&smiley10Cmd.label;"
+          <menuitem id="smileyYell" class="menuitem-iconic" label="&smiley10Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', '>:o' )"/>           
-          <menuitem class="smiley insert-cool menuitem-iconic" label="&smiley11Cmd.label;"
+          <menuitem id="smileyCool" class="menuitem-iconic" label="&smiley11Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', '8-)' )"/>           
-          <menuitem class="smiley insert-money menuitem-iconic" label="&smiley12Cmd.label;"
+          <menuitem id="smileyMoney" class="menuitem-iconic" label="&smiley12Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-$' )"/>           
-          <menuitem class="smiley insert-foot menuitem-iconic" label="&smiley13Cmd.label;"
+          <menuitem id="smileyFoot" class="menuitem-iconic" label="&smiley13Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-!' )"/>           
-          <menuitem class="smiley insert-innocent menuitem-iconic" label="&smiley14Cmd.label;"
+          <menuitem id="smileyInnocent" class="menuitem-iconic" label="&smiley14Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', 'O:-)' )"/>           
-          <menuitem class="smiley insert-cry menuitem-iconic" lbel="&smiley15Cmd.label;"
+          <menuitem id="smileyCry" class="menuitem-iconic" label="&smiley15Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':\'(' )"/>
-          <menuitem class="smiley insert-sealed menuitem-iconic" label="&smiley16Cmd.label;"
+          <menuitem id="smileySealed" class="menuitem-iconic" label="&smiley16Cmd.label;"
                     oncommand="doStatefulCommand('cmd_smiley', ':-X' )"/>           
         </menupopup>
       </toolbarbutton>
@@ -637,4 +636,3 @@
   </statusbar>
 
 </window>
-
