@@ -3715,10 +3715,9 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 	nsresult res;
 	char *dstPtr = nsnull;
 	PRInt32 dstLength = 0;
-	static PRBool tryCharsetConversion = PR_FALSE;
-#ifdef DEBUG_bienvenu
-	tryCharsetConversion = PR_TRUE;
-#endif
+	// this seems to work, but we'll leave this for a little while in in case we
+	// need to disable it
+	static PRBool tryCharsetConversion = PR_TRUE;
     // ***** temporary **** Fix me ****
 	if (!tryCharsetConversion)
 	{
@@ -3757,13 +3756,14 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 				else 
 				{
 					res = decoder->Convert(unichars, 0, &unicharLength, aSourceString, 0, &srcLen);
-					unichars[srcLen] = 0;
+					unichars[unicharLength] = 0;
 				}
 				NS_IF_RELEASE(decoder);
+				// convert the unicode to 8 bit ascii.
 				nsString2 unicodeStr(unichars, eTwoByte);
-				convertedString = (char *) PR_Malloc(srcLen + 1);
+				convertedString = (char *) PR_Malloc(unicharLength + 1);
 				if (convertedString)
-					unicodeStr.ToCString(convertedString, srcLen + 1, 0);
+					unicodeStr.ToCString(convertedString, unicharLength + 1, 0);
 			}
 		}
 		else
