@@ -32,8 +32,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.6 $
-# $Date: 2001/03/30 22:44:10 $
+# $Revision: 1.7 $
+# $Date: 2001/03/30 22:44:54 $
 # $Author: kestes%tradinglinx.com $
 # $Name:  $
 
@@ -441,7 +441,8 @@ sub mail_tinderbox_cmdlog {
   #	    " TreeName and BuildName.\n");
 
 
-  # remove duplicate printing of unmonitored build list.
+  # Do not have blank lines before the mail headers, 
+  # postfix will choke.
 
   my ($message) = <<"EOF";
 From: $MAIL_FROM
