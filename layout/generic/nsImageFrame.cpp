@@ -921,7 +921,10 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
     GetFrameType(getter_AddRefs(fType));
     // split an image frame but not an image control frame
     if (nsLayoutAtoms::imageFrame == fType.get()) {
-      aMetrics.height = aReflowState.availableHeight;
+      float p2t;
+      aPresContext->GetScaledPixelsToTwips(&p2t);
+      // our desired height was greater than 0, so to avoid infinite splitting, use 1 pixel as the min
+      aMetrics.height = PR_MAX(NSToCoordRound(p2t), aReflowState.availableHeight);
       aStatus = NS_FRAME_NOT_COMPLETE;
     }
   }
