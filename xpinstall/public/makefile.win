@@ -22,7 +22,7 @@
 #     Daniel Veditz <dveditz@netscape.com>
 #     Douglas Turner <dougt@netscape.com>
 
-MODULE=xpinstall 
+MODULE=nsxpi
 DEPTH=..\..
 
 EXPORTS=    nsIDOMInstallTriggerGlobal.h \
@@ -36,7 +36,6 @@ XPIDLSRCS =                              \
             .\nsIXPIProgressDlg.idl      \
             $(NULL) 
 
-include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
 
 libs::

@@ -29,7 +29,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = xpinstall
+MODULE = nsxpi
 
 XPIDLSRCS = nsIXPINotifier.idl nsIXPIProgressDlg.idl
 
@@ -46,7 +46,5 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 PREF_JS_EXPORTS	= 	$(srcdir)/xpinstall.js \
 			        $(NULL)
 
-
-include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
