@@ -43,6 +43,10 @@ nsFileTransportService::nsFileTransportService()
 
 #define NS_FILE_TRANSPORT_WORKER_STACK_SIZE     (64 * 1024) /* (8*1024) */
 
+#ifdef DEBUG
+extern "C" NS_EXPORT void* NS_CurrentThread(void);
+#endif
+
 nsresult
 nsFileTransportService::Init()
 {
@@ -50,7 +54,9 @@ nsFileTransportService::Init()
     rv = NS_NewThreadPool(getter_AddRefs(mPool), NS_FILE_TRANSPORT_WORKER_COUNT,
                           NS_FILE_TRANSPORT_WORKER_COUNT,
                           NS_FILE_TRANSPORT_WORKER_STACK_SIZE);
+#ifdef DEBUG
     static void* th = NS_CurrentThread();       // XXX experiment -- is this exported on mac?
+#endif
     return rv;
 }
 
