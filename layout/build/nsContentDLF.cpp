@@ -294,56 +294,74 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
 }
 
 NS_IMETHODIMP
-nsContentDLF::CreateBlankDocument(nsIDocument **aDocument)
+nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocument)
 {
   *aDocument = nsnull;
 
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // create a new blank HTML document
   nsCOMPtr<nsIDocument> blankDoc(do_CreateInstance(kHTMLDocumentCID));
-  if (!blankDoc)
-    return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsINodeInfoManager> nim;
-  blankDoc->GetNodeInfoManager(*getter_AddRefs(nim));
+  if (blankDoc) {
+    // initialize
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), "about:blank", 0);
+    if (uri)
+      rv = blankDoc->ResetToURI(uri, aLoadGroup);
+  }
 
-  nsCOMPtr<nsINodeInfo> htmlNodeInfo;
+  // add some simple content structure
+  if (NS_SUCCEEDED(rv)) {
+    rv = NS_ERROR_FAILURE;
 
-  // generate an html html element
-  nsCOMPtr<nsIHTMLContent> htmlElement;
-  nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
-                   *getter_AddRefs(htmlNodeInfo));
-  NS_NewHTMLHtmlElement(getter_AddRefs(htmlElement), htmlNodeInfo);
+    nsCOMPtr<nsINodeInfoManager> nim;
+    blankDoc->GetNodeInfoManager(*getter_AddRefs(nim));
 
-  // generate an html head element
-  nsCOMPtr<nsIHTMLContent> headElement;
-  nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
-                   *getter_AddRefs(htmlNodeInfo));
-  NS_NewHTMLHeadElement(getter_AddRefs(headElement), htmlNodeInfo);
+    if (nim) {
+      nsCOMPtr<nsINodeInfo> htmlNodeInfo;
 
-  // generate an html body element
-  nsCOMPtr<nsIHTMLContent> bodyElement;
-  nim->GetNodeInfo(nsHTMLAtoms::body, 0, kNameSpaceID_None,
-                   *getter_AddRefs(htmlNodeInfo));
-  NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), htmlNodeInfo);
+      // generate an html html element
+      nsCOMPtr<nsIHTMLContent> htmlElement;
+      nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
+                      *getter_AddRefs(htmlNodeInfo));
+      NS_NewHTMLHtmlElement(getter_AddRefs(htmlElement), htmlNodeInfo);
 
-  // hook it all up
-  if (htmlElement && headElement && bodyElement) {
-    htmlElement->SetDocument(blankDoc, PR_FALSE, PR_TRUE);
-    blankDoc->SetRootContent(htmlElement);
+      // generate an html head element
+      nsCOMPtr<nsIHTMLContent> headElement;
+      nim->GetNodeInfo(nsHTMLAtoms::head, 0, kNameSpaceID_None,
+                      *getter_AddRefs(htmlNodeInfo));
+      NS_NewHTMLHeadElement(getter_AddRefs(headElement), htmlNodeInfo);
 
-    headElement->SetDocument(blankDoc, PR_FALSE, PR_TRUE);
-    htmlElement->AppendChildTo(headElement, PR_FALSE, PR_FALSE);
+      // generate an html body element
+      nsCOMPtr<nsIHTMLContent> bodyElement;
+      nim->GetNodeInfo(nsHTMLAtoms::body, 0, kNameSpaceID_None,
+                      *getter_AddRefs(htmlNodeInfo));
+      NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), htmlNodeInfo);
 
-    PRInt32 id;
-    blankDoc->GetAndIncrementContentID(&id);
-    bodyElement->SetContentID(id);
-    bodyElement->SetDocument(blankDoc, PR_FALSE, PR_TRUE);
-    htmlElement->AppendChildTo(bodyElement, PR_FALSE, PR_FALSE);
+      // blat in the structure
+      if (htmlElement && headElement && bodyElement) {
+        htmlElement->SetDocument(blankDoc, PR_FALSE, PR_TRUE);
+        blankDoc->SetRootContent(htmlElement);
 
+        htmlElement->AppendChildTo(headElement, PR_FALSE, PR_FALSE);
+
+        PRInt32 id;
+        blankDoc->GetAndIncrementContentID(&id);
+        bodyElement->SetContentID(id);
+        htmlElement->AppendChildTo(bodyElement, PR_FALSE, PR_FALSE);
+
+        rv = NS_OK;
+      }
+    }
+  }
+
+  // add a nice bow
+  if (NS_SUCCEEDED(rv)) {
     *aDocument = blankDoc;
     NS_ADDREF(*aDocument);
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 
