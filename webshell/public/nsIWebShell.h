@@ -124,8 +124,7 @@ public:
 
   /**
    * Returns the top level window (this would be the containing window
-   * the same object that implements nsIWebShellContainer, nsIWebShellWindow, 
-   * and nsIBrowserWindow).
+   * the same object that implements nsIWebShellContainer, nsIWebShellWindow).
    */
   NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aTopLevelWindow) = 0;
 
