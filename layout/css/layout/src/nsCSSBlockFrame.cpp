@@ -135,9 +135,6 @@ public:
                             PRInt32         aIndexInParent);
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD VerifyTree() const;
@@ -682,12 +679,19 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
   mUnconstrainedWidth = maxSize.width == NS_UNCONSTRAINEDSIZE;
   mUnconstrainedHeight = maxSize.height == NS_UNCONSTRAINEDSIZE;
 #ifdef NS_DEBUG
-  if (!mUnconstrainedWidth && (maxSize.width > 1000000)) {
+  if (!mUnconstrainedWidth && (maxSize.width > 100000)) {
     mBlock->ListTag(stdout);
     printf(": bad parent: maxSize WAS %d,%d\n",
            maxSize.width, maxSize.height);
     maxSize.width = NS_UNCONSTRAINEDSIZE;
     mUnconstrainedWidth = PR_TRUE;
+  }
+  if (!mUnconstrainedHeight && (maxSize.height > 100000)) {
+    mBlock->ListTag(stdout);
+    printf(": bad parent: maxSize WAS %d,%d\n",
+           maxSize.width, maxSize.height);
+    maxSize.height = NS_UNCONSTRAINEDSIZE;
+    mUnconstrainedHeight = PR_TRUE;
   }
 #endif
   mComputeMaxElementSize = aComputeMaxElementSize;
@@ -2158,7 +2162,12 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     availSize.width = aState.mInnerSize.width -
       (childMargin.left + childMargin.right);
   }
-  availSize.height = aState.mBottomEdge - (y + childBottomMargin);
+  if (aState.mUnconstrainedHeight) {
+    availSize.height = NS_UNCONSTRAINEDSIZE;
+  }
+  else {
+    availSize.height = aState.mBottomEdge - (y + childBottomMargin);
+  }
   NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
      ("nsCSSBlockFrame::ReflowBlockFrame: availSize={%d,%d}",
       availSize.width, availSize.height));
@@ -3849,30 +3858,6 @@ nsCSSBlockFrame::PaintChildren(nsIPresContext&      aPresContext,
   if (hidden) {
     aRenderingContext.PopState();
   }
-}
-
-// XXX move into nsFrame
-NS_IMETHODIMP
-nsCSSBlockFrame::HandleEvent(nsIPresContext& aPresContext, 
-                             nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus)
-{
-  aEventStatus = nsEventStatus_eIgnore;
-
-  nsIFrame* kid = (nsnull == mLines) ? nsnull : mLines->mFirstChild;
-  while (nsnull != kid) {
-    nsRect kidRect;
-    kid->GetRect(kidRect);
-    if (kidRect.Contains(aEvent->point)) {
-      aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
-      kid->HandleEvent(aPresContext, aEvent, aEventStatus);
-      aEvent->point.MoveBy(kidRect.x, kidRect.y);
-      break;
-    }
-    kid->GetNextSibling(kid);
-  }
-
-  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////
