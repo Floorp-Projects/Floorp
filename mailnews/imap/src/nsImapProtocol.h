@@ -33,6 +33,8 @@
 #include "nsIBufferInputStream.h"
 #include "nsImapCore.h"
 #include "nsString.h"
+#include "nsIProgressEventSink.h"
+#include "nsIInterfaceRequestor.h"
 
 // imap event sinks
 #include "nsIImapMailFolderSink.h"
@@ -223,7 +225,7 @@ public:
 	void ProgressEventFunctionUsingId(PRUint32 aMsgId);
 	void ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const char *
                                                 aExtraInfo);
-	void PercentProgressUpdateEvent(PRUnichar *message, PRInt32 percent);
+	void PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentProgress, PRInt32 maxProgress);
 	void ShowProgress();
 
 	// utility function calls made by the server
@@ -516,11 +518,11 @@ private:
 
   PRBool m_fromHeaderSeen;
 
-    // these settings allow clients to override various pieces of the connection info from the url
-    PRBool m_overRideUrlConnectionInfo;
+  // these settings allow clients to override various pieces of the connection info from the url
+  PRBool m_overRideUrlConnectionInfo;
 
 	nsCString m_logonHost;
-    nsCString m_logonCookie;
+  nsCString m_logonCookie;
 	PRInt16 m_logonPort;
 
 	// progress stuff
@@ -596,6 +598,8 @@ protected:
   nsISupports * m_channelContext;
   nsresult m_cancelStatus;
   nsLoadFlags mLoadAttributes;
+  nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 };
 
 #endif  // nsImapProtocol_h___

@@ -522,7 +522,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         if (!m_server)
     {
       nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
-            rv = mailnewsUrl->GetServer(getter_AddRefs(m_server));
+      rv = mailnewsUrl->GetServer(getter_AddRefs(m_server));
       if (m_server)
         m_imapServer = do_QueryInterface(m_server);
     }
@@ -4004,7 +4004,7 @@ nsImapProtocol::ShowProgress()
 		  progressString = nsTextFormatter::smprintf(m_progressString, (const PRUnichar *) unicodeMailboxName, ++m_progressIndex, m_progressCount);
 		  if (progressString)
 		  {
-			PercentProgressUpdateEvent(progressString,(100*(m_progressIndex))/m_progressCount );
+			PercentProgressUpdateEvent(progressString, m_progressIndex,m_progressCount);
 			nsTextFormatter::smprintf_free(progressString);
 		  }
 	  }
@@ -4035,10 +4035,11 @@ nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
 }
 
 void
-nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 percent)
+nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentProgress, PRInt32 maxProgress)
 {
 
   PRInt64 nowMS;
+  PRInt32 percent = (100 * currentProgress) / maxProgress;
   if (percent == m_lastPercent)
     return; // hasn't changed, right? So just return. Do we need to clear this anywhere?
 
@@ -4055,14 +4056,15 @@ nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 percent)
       return;
   }
 
-    ProgressInfo aProgressInfo;
-    aProgressInfo.message = message;
-    aProgressInfo.percent = percent;
+  ProgressInfo aProgressInfo;
+  aProgressInfo.message = message;
+  aProgressInfo.currentProgress = currentProgress;
+  aProgressInfo.maxProgress = maxProgress;
   m_lastPercent = percent;
   m_lastProgressTime = nowMS;
 
-    if (m_imapMiscellaneousSink)
-        m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
+  if (m_imapMiscellaneousSink)
+      m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
 }
 
 
@@ -4685,13 +4687,13 @@ void nsImapProtocol::OnRefreshAllACLs()
 				OnRefreshACLForFolder(onlineName);
 				nsCRT::free(onlineName);
 			}
-			PercentProgressUpdateEvent(NULL, (count*100)/total);
+			PercentProgressUpdateEvent(NULL, count, total);
 			delete mb;
 			count++;
 		}
 	} while (mb);
 	
-	PercentProgressUpdateEvent(NULL, 100);
+	PercentProgressUpdateEvent(NULL, 100, 100);
 	GetServerStateParser().SetReportingErrors(PR_TRUE);
 	m_hierarchyNameState = kNoOperationInProgress;
 }
@@ -5411,7 +5413,7 @@ void nsImapProtocol::DiscoverMailboxList()
               PR_Free(onlineName);
             }
           }
-          PercentProgressUpdateEvent(NULL, (cnt*100)/total);
+          PercentProgressUpdateEvent(NULL, cnt, total);
           delete mb;  // this is the last time we're using the list, so delete the entries here
           cnt++;
         }
@@ -6374,6 +6376,13 @@ NS_IMETHODIMP nsImapMockChannel::Close()
     return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMockChannel::GetProgressEventSink(nsIProgressEventSink ** aProgressEventSink)
+{
+  *aProgressEventSink = mProgressEventSink;
+  NS_IF_ADDREF(*aProgressEventSink);
+  return NS_OK;
+}
+
 NS_IMETHODIMP  nsImapMockChannel::GetChannelListener(nsIStreamListener **aChannelListener)
 {
     *aChannelListener = m_channelListener;
@@ -6431,6 +6440,15 @@ NS_IMETHODIMP nsImapMockChannel::GetURI(nsIURI* *aURI)
 NS_IMETHODIMP nsImapMockChannel::SetURI(nsIURI* aURI)
 {
     m_url = aURI;
+
+    // if we don't have a progress event sink yet, get it from the url for now...
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+    if (mailnewsUrl && !mProgressEventSink)
+    {
+      nsCOMPtr<nsIMsgStatusFeedback> statusFeedback;
+      mailnewsUrl->GetStatusFeedback(getter_AddRefs(statusFeedback));
+      mProgressEventSink = do_QueryInterface(statusFeedback);
+    }
     return NS_OK; 
 }
  
@@ -6744,14 +6762,28 @@ NS_IMETHODIMP nsImapMockChannel::Resume()
 NS_IMETHODIMP
 nsImapMockChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
-    NS_NOTREACHED("nsImapMockChannel::GetNotificationCallbacks");
-    return NS_ERROR_NOT_IMPLEMENTED;
+  *aNotificationCallbacks = mCallbacks.get();
+  NS_IF_ADDREF(*aNotificationCallbacks);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
-  return NS_OK;       // don't fail when trying to set this
+  nsresult rv = NS_OK;
+  mCallbacks = aNotificationCallbacks;
+
+  // Verify that the event sink is http
+  if (mCallbacks) 
+  {
+      nsCOMPtr<nsIProgressEventSink> progressSink;
+     (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink),
+                                   getter_AddRefs(progressSink));
+     // only replace our current progress event sink if we were given a new one..
+     if (progressSink) mProgressEventSink  = progressSink;
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
