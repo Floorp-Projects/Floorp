@@ -24,7 +24,7 @@
 #include "prmem.h"
 #include "nsIServiceManager.h"
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
 
@@ -171,7 +171,7 @@ nsMemoryImpl::UnregisterObserver(nsIMemoryPressureObserver* obs)
 NS_IMETHODIMP
 nsMemoryImpl::IsLowMemory(PRBool *result)
 {
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
     *result = ((float)stat.dwAvailPageFile / stat.dwTotalPageFile) < 0.1;
