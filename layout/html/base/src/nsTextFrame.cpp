@@ -3791,20 +3791,30 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   }
   else
   {
+    PRInt32 hitLength = ip[inOffset] - mContentOffset;
     if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing) || ts.mJustifying)
     {
       nsTextDimensions dimensions;
-      GetTextDimensions(*inRendContext, ts,
-               paintBuffer.mBuffer, ip[inOffset]-mContentOffset,
-               &dimensions);
+      GetTextDimensions(*inRendContext, ts, paintBuffer.mBuffer, hitLength, &dimensions);
       width = dimensions.width;
     }
     else
     {
-      if (inOffset >=0)
-        inRendContext->GetWidth(paintBuffer.mBuffer, ip[inOffset]-mContentOffset,width);
+      PRInt32 totalLength = 0; // length up to the last-in-flow frame
+      nsCOMPtr<nsITextContent> tc(do_QueryInterface(mContent));
+      if (tc) {
+        const nsTextFragment* frag;
+        tc->GetText(&frag);
+        totalLength = frag->GetLength(); // raw value which includes whitespace
+      }
+      if ((hitLength == textLength) && (inOffset = mContentLength) &&
+          (mContentOffset + mContentLength == totalLength)) {
+        // no need to re-measure when at the end of the last-in-flow
+      }
+      else
+        inRendContext->GetWidth(paintBuffer.mBuffer, hitLength, width);
     }
-    if (inOffset > textLength && (TEXT_TRIMMED_WS & mState)){
+    if ((hitLength == textLength) && (TEXT_TRIMMED_WS & mState)) {
       //
       // Offset must be after a space that has
       // been trimmed off the end of the frame.
@@ -3825,6 +3835,8 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   }
   else
 #endif // IBMBIDI
+  //XXX callers need to safeguard themselves against empty frames, I noted that
+  //the caret can be locked when leftarrow'ing in: <span>...</span>\n<br>line
   if (width > mRect.width)
     outPoint->x = mRect.width;
   else
