@@ -1651,7 +1651,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
             m_allday = true;
             m_start->SetHour( 0 );
             m_start->SetMinute( 0 );
-            m_start->m_datetime.is_date == false; //Because currently we depend on m_datetime being a complete datetime value.
+            m_start->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
         }
     } else {
         m_start->m_datetime = icaltime_null_time();
@@ -1926,6 +1926,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     if( !icaltime_is_null_time( m_lastalarmack ) ) {
         prop = icalproperty_new_x( icaltime_as_ical_string(m_lastalarmack ));
         icalproperty_set_x_name( prop, XPROP_LASTALARMACK);
+	icalcomponent_add_property( vevent, prop );
     }
 
     //inviteemail
