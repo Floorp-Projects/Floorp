@@ -448,8 +448,8 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx,
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
-    if (nsCRT::strcmp(scheme, "file") == 0 ||
-        nsCRT::strcmp(scheme, "resource") == 0) 
+    if (nsCRT::strcasecmp(scheme, "file") == 0 ||
+        nsCRT::strcasecmp(scheme, "resource") == 0) 
     {
         PRBool enabled;
         if (NS_FAILED(IsCapabilityEnabled("UniversalFileRead", &enabled)))
@@ -475,9 +475,9 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         return NS_ERROR_FAILURE;
 
     if (aDisallowFromMail && 
-        (nsCRT::strcmp(fromScheme, "mailbox")  == 0 ||
-         nsCRT::strcmp(fromScheme, "imap")     == 0 ||
-         nsCRT::strcmp(fromScheme, "news")     == 0))
+        (nsCRT::strcasecmp(fromScheme, "mailbox")  == 0 ||
+         nsCRT::strcasecmp(fromScheme, "imap")     == 0 ||
+         nsCRT::strcasecmp(fromScheme, "news")     == 0))
     {
         return NS_ERROR_DOM_BAD_URI;
     }
@@ -485,29 +485,29 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
-    if (nsCRT::strcmp(scheme, "http")         == 0 ||
-        nsCRT::strcmp(scheme, "https")        == 0 ||
-        nsCRT::strcmp(scheme, "javascript")   == 0 ||
-        nsCRT::strcmp(scheme, "ftp")          == 0 ||
-        nsCRT::strcmp(scheme, "mailto")       == 0 ||
-        nsCRT::strcmp(scheme, "finger")       == 0 ||
-        nsCRT::strcmp(scheme, "news")         == 0)
+    if (nsCRT::strcasecmp(scheme, "http")         == 0 ||
+        nsCRT::strcasecmp(scheme, "https")        == 0 ||
+        nsCRT::strcasecmp(scheme, "javascript")   == 0 ||
+        nsCRT::strcasecmp(scheme, "ftp")          == 0 ||
+        nsCRT::strcasecmp(scheme, "mailto")       == 0 ||
+        nsCRT::strcasecmp(scheme, "finger")       == 0 ||
+        nsCRT::strcasecmp(scheme, "news")         == 0)
     {
         // everyone can access these schemes.
         return NS_OK;
     }
 
     nsXPIDLCString scheme2;
-    if (nsCRT::strcmp(scheme, fromScheme) == 0) {
+    if (nsCRT::strcasecmp(scheme, fromScheme) == 0) {
         // every scheme can access another URI from the same scheme
         return NS_OK;
     }
 
-    if (nsCRT::strcmp(scheme, "about") == 0) {
+    if (nsCRT::strcasecmp(scheme, "about") == 0) {
         nsXPIDLCString spec;
         if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
             return NS_ERROR_FAILURE;
-        if (nsCRT::strcmp(spec, "about:blank") == 0) {
+        if (nsCRT::strcasecmp(spec, "about:blank") == 0) {
             return NS_OK;
         }
     }
@@ -639,9 +639,9 @@ nsScriptSecurityManager::CanExecuteScripts(nsIPrincipal *principal,
         nsXPIDLCString scheme;
         if (NS_FAILED(uri->GetScheme(getter_Copies(scheme))))
             return NS_ERROR_FAILURE;
-        if (nsCRT::strcmp(scheme, "imap") == 0 || 
-            nsCRT::strcmp(scheme, "mailbox") == 0 ||
-            nsCRT::strcmp(scheme, "news") == 0) 
+        if (nsCRT::strcasecmp(scheme, "imap") == 0 || 
+            nsCRT::strcasecmp(scheme, "mailbox") == 0 ||
+            nsCRT::strcasecmp(scheme, "news") == 0) 
         {
             *result = mIsMailJavaScriptEnabled;
             return NS_OK;
@@ -1171,7 +1171,7 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
         nsXPIDLCString origin;
         if (NS_FAILED(objectCodebase->GetOrigin(getter_Copies(origin))))
             return NS_ERROR_FAILURE;
-        if (nsCRT::strcmp(origin, "about:blank") == 0) {
+        if (nsCRT::strcasecmp(origin, "about:blank") == 0) {
             return NS_OK;
         }
     }
