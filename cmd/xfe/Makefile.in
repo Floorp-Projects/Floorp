@@ -393,11 +393,6 @@ endif
 #endif
 #endif
 
-BASIC_LIBS	+= \
-		  $(DIST)/lib/libmisc.a \
-		  $(DIST)/lib/libprgrss.a \
-		  $(NULL)
-
 ifdef MOZ_LDAP
 BASIC_LIBS	+= \
 		$(DIST)/lib/libldap.a \
@@ -453,6 +448,8 @@ BASIC_LIBS	+= \
 endif
 
 BASIC_LIBS	+= \
+		  $(DIST)/lib/libmisc.a \
+		  $(DIST)/lib/libprgrss.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)plug.a \
 		  $(DIST)/lib/libutil.a \
 		  $(DIST)/lib/libfont.a \
