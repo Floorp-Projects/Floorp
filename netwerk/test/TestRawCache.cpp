@@ -701,7 +701,7 @@ PRBool initPref ()
     if (NS_FAILED(rv))
         return false;
                             
-    nsCString defaultPrefFile = PR_GetEnv ("MOZILLA_FIVE_HOME");
+    nsCString defaultPrefFile(PR_GetEnv ("MOZILLA_FIVE_HOME"));
     if (defaultPrefFile.Length())
         defaultPrefFile += "/";
     else
