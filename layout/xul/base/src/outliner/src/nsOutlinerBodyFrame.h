@@ -136,8 +136,9 @@ public:
   virtual ~nsOutlinerColumn() { delete mNext; };
 
   void SetNext(nsOutlinerColumn* aNext) { mNext = aNext; };
+  nsOutlinerColumn* GetNext() { return mNext; };
 
-  nscoord GetColumnWidth();
+  nscoord GetWidth();
 };
 
 // The actual frame that paints the cells and rows.
@@ -167,7 +168,8 @@ public:
 
   // This method paints a specific cell in a given row of the outliner.
   NS_IMETHOD PaintCell(int aRowIndex, 
-                       const PRUnichar* aColID, 
+                       nsOutlinerColumn*    aColumn,
+                       const nsRect& aCellRect,
                        nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,

@@ -147,8 +147,13 @@ nsOutlinerColumn::nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame)
     mIsCyclerCol = PR_TRUE;
 }
 
-nscoord nsOutlinerColumn::GetColumnWidth()
+inline nscoord nsOutlinerColumn::GetWidth()
 {
+  if (mColFrame) {
+    nsRect rect;
+    mColFrame->GetRect(rect);
+    return rect.width;
+  }
   return 0;
 }
 
@@ -379,6 +384,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
     return NS_OK;
 
   // Now obtain the properties for our row.
+  // XXX Automatically fill in the following props: open, container, selected, focused
   mScratchArray->Clear();
   mView->GetRowProperties(aRowIndex, mScratchArray);
 
@@ -401,12 +407,20 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
     PaintBackgroundLayer(rowContext, aPresContext, aRenderingContext, rowRect, aDirtyRect);
 
   // Now loop over our cells. Only paint a cell if it intersects with our dirty rect.
+  nscoord currX = rowRect.x;
+  for (nsOutlinerColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+    nsRect cellRect(currX, rowRect.y, currCol->GetWidth(), rowRect.height);
+    nsRect dirtyRect;
+    if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
+      PaintCell(aRowIndex, currCol, cellRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+  }
 
   return NS_OK;
 }
   
 NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex, 
-                                             const PRUnichar* aColID, 
+                                             nsOutlinerColumn*    aColumn,
+                                             const nsRect& aCellRect,
                                              nsIPresContext*      aPresContext,
                                              nsIRenderingContext& aRenderingContext,
                                              const nsRect&        aDirtyRect,
