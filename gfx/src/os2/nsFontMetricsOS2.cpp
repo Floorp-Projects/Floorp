@@ -662,16 +662,9 @@ nsFontMetricsOS2::LoadFont( HPS aPS, nsString* aFontname )
     tempname.Append( NS_LITERAL_STRING(" ") );
   }
     
-  PRInt32 res = gCollation->GetSortKeyLen(kCollationCaseInSensitive, 
-                                 tempname, &keylen);
-
-  if( NS_SUCCEEDED(res) )
-  {
-    key = (PRUint8*) nsMemory::Alloc(keylen * sizeof(PRUint8));
-    res = gCollation->CreateRawSortKey( kCollationCaseInSensitive, 
-                                       tempname, key,
-                                       &keylen );
-  }
+  PRInt32 res = gCollation->AllocateRawSortKey( kCollationCaseInSensitive, 
+                                          tempname, &key,
+                                          &keylen );
   NS_ASSERTION( NS_SUCCEEDED(res), "Create collation keys failed!" );
  
   int i = gCachedIndex;
@@ -758,12 +751,9 @@ nsFontMetricsOS2::LoadFont( HPS aPS, nsString* aFontname )
       i = font->nextFamily + count;
   }   // end while
 
+  PR_FREEIF(key);
   if( fh )
-  {
-    if( key )
-      nsMemory::Free(key);
     return fh;
-  }
 
    // If a font was not found, then maybe "familyname" is really a face name.
    // See if a font with that facename exists on system and fake any applied
@@ -1923,16 +1913,11 @@ nsFontMetricsOS2::InitializeGlobalFonts()
     }
 
      // Create collation sort key
-    res = gCollation->GetSortKeyLen(kCollationCaseInSensitive, 
-                                   font->name, &font->len);
+    res = gCollation->AllocateRawSortKey(kCollationCaseInSensitive,
+                                         font->name, &font->key, &font->len);
 
     if (NS_SUCCEEDED(res))
     {
-      font->key = (PRUint8*) nsMemory::Alloc(font->len * sizeof(PRUint8));
-      res = gCollation->CreateRawSortKey( kCollationCaseInSensitive, 
-                                         font->name, font->key,
-                                         &font->len );
-
        // reset DBCS name to actual value
       if (fontptr[0] == '@')
         font->name.Insert( NS_LITERAL_STRING("@"), 0 );

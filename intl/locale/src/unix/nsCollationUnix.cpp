@@ -168,53 +168,65 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
   return NS_OK;
 };
- 
 
-nsresult nsCollationUnix::GetSortKeyLen(const nsCollationStrength strength, 
-                                        const nsAString& stringIn,
-                                        PRUint32* outLen)
+
+nsresult nsCollationUnix::CompareString(const nsCollationStrength strength,
+                                        const nsAString& string1,
+                                        const nsAString& string2,
+                                        PRInt32* result) 
 {
   nsresult res = NS_OK;
 
-  // this may not necessary because collation key length 
-  // probably will not change by this normalization
-  nsAutoString stringNormalized;
+  nsAutoString stringNormalized1, stringNormalized2;
   if (strength != kCollationCaseSensitive) {
-    res = mCollation->NormalizeString(stringIn, stringNormalized);
+    res = mCollation->NormalizeString(string1, stringNormalized1);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    res = mCollation->NormalizeString(string2, stringNormalized2);
+    if (NS_FAILED(res)) {
+      return res;
+    }
   } else {
-    stringNormalized = stringIn;
+    stringNormalized1 = string1;
+    stringNormalized2 = string2;
   }
 
   // convert unicode to charset
-  char *str;
+  char *str1, *str2;
 
-  res = mCollation->UnicodeToChar(stringNormalized, &str);
-  if (NS_SUCCEEDED(res) && str != NULL) {
-    if (mUseCodePointOrder) {
-      *outLen = strlen(str);
+  res = mCollation->UnicodeToChar(stringNormalized1, &str1);
+  if (NS_SUCCEEDED(res) && str1 != NULL) {
+    res = mCollation->UnicodeToChar(stringNormalized2, &str2);
+    if (NS_SUCCEEDED(res) && str2 != NULL) {
+      if (mUseCodePointOrder) {
+        *result = strcmp(str1, str2);
+      }
+      else {
+        DoSetLocale();
+        *result = strcoll(str1, str2);
+        DoRestoreLocale();
+      }
+      PR_Free(str2);
     }
-    else {
-      DoSetLocale();
-      // call strxfrm to calculate a key length 
-      int len = strxfrm(NULL, str, 0) + 1;
-      DoRestoreLocale();
-      *outLen = (len == -1) ? 0 : (PRUint32)len;
-    }
-    PR_Free(str);
+    PR_Free(str1);
   }
 
   return res;
 }
 
-nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength, 
-                                           const nsAString& stringIn,
-                                           PRUint8* key, PRUint32* outLen)
+
+nsresult nsCollationUnix::AllocateRawSortKey(const nsCollationStrength strength, 
+                                             const nsAString& stringIn,
+                                             PRUint8** key, PRUint32* outLen)
 {
   nsresult res = NS_OK;
 
   nsAutoString stringNormalized;
   if (strength != kCollationCaseSensitive) {
     res = mCollation->NormalizeString(stringIn, stringNormalized);
+    if (NS_FAILED(res))
+      return res;
   } else {
     stringNormalized = stringIn;
   }
@@ -224,21 +236,25 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
   res = mCollation->UnicodeToChar(stringNormalized, &str);
   if (NS_SUCCEEDED(res) && str != NULL) {
     if (mUseCodePointOrder) {
-      *outLen = strlen(str);
-      memcpy(key, str, *outLen);
-    }
-    else {
+      *key = (PRUint8 *)str;
+      *outLen = strlen(str) + 1;
+    } else {
       DoSetLocale();
       // call strxfrm to generate a key 
-      int len = strxfrm((char *) key, str, *outLen);
-      DoRestoreLocale();
-      if (PRUint32(len) >= *outLen) {
-	res = NS_ERROR_FAILURE;
-	len = -1;
+      size_t len = strxfrm(nsnull, str, 0) + 1;
+      void *buffer = PR_Malloc(len);
+      if (!buffer) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      } else if (strxfrm((char *)buffer, str, len) >= len) {
+        PR_Free(buffer);
+        res = NS_ERROR_FAILURE;
+      } else {
+        *key = (PRUint8 *)buffer;
+        *outLen = len;
       }
-      *outLen = (len == -1) ? 0 : (PRUint32)len;
+      DoRestoreLocale();
+      PR_Free(str);
     }
-    PR_Free(str);
   }
 
   return res;

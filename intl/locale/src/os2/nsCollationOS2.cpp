@@ -73,47 +73,47 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
   return NS_OK;
 }
 
- 
-nsresult nsCollationOS2::GetSortKeyLen(const nsCollationStrength strength, 
-                                       const nsAString& stringIn, PRUint32* outLen)
-{ 
-  // this may not necessary because collation key length 
-  // probably will not change by this normalization
-  nsresult res = NS_OK;
-  nsAutoString stringNormalized;
+
+nsresult nsCollationOS2::CompareString(const nsCollationStrength strength, 
+                                       const nsAString& string1, const nsAString& string2, PRInt32* result)
+{
+  nsAutoString stringNormalized1, stringNormalized2;
   if (strength != kCollationCaseSensitive) {
-    res = mCollation->NormalizeString(stringIn, stringNormalized);
+    nsresult res;
+    res = mCollation->NormalizeString(string1, stringNormalized1);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    res = mCollation->NormalizeString(string2, stringNormalized2);
+    if (NS_FAILED(res)) {
+      return res;
+    }
   } else {
-    stringNormalized = stringIn;
+    stringNormalized1 = string1;
+    stringNormalized2 = string2;
   }
 
   LocaleObject locObj = NULL;
   int ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
   if (ret != ULS_SUCCESS)
     UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"en_US", &locObj);
-  int uLen = UniStrxfrm(locObj, NULL, NS_REINTERPRET_CAST(const UniChar *, stringNormalized.get()), 0);
-  if ( uLen > 0 ) {
-    uLen += 5;      // Allow for the "extra" chars UniStrxfrm() will out put
-                    // (overrunning the buffer if you let it...)
-    uLen *= 2;      // And then adjust uLen to be the size in bytes,
-                    // not unicode character count
-  } else {
-    uLen = 0;
-  }  
-  *outLen = uLen;
-  UniFreeLocaleObject(locObj);
-  return res;
+
+  *result = UniStrcoll(locObj, (UniChar *)stringNormalized1.get(), (UniChar *)stringNormalized2.get());
+
+  return NS_OK;
 }
+ 
 
-
-nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength, 
-                                          const nsAString& stringIn, PRUint8* key, PRUint32* outLen)
+nsresult nsCollationOS2::AllocateRawSortKey(const nsCollationStrength strength, 
+                                            const nsAString& stringIn, PRUint8** key, PRUint32* outLen)
 {
   nsresult res = NS_OK;
 
   nsAutoString stringNormalized;
   if (strength != kCollationCaseSensitive) {
     res = mCollation->NormalizeString(stringIn, stringNormalized);
+    if (NS_FAILED(res))
+      return res;
   } else {
     stringNormalized = stringIn;
   }
@@ -148,29 +148,13 @@ nsresult nsCollationOS2::CreateRawSortKey(const nsCollationStrength strength,
       // See how big the result really is
       uLen = UniStrlen(pLocalBuffer);
       // make sure it will fit in the output buffer...
-      if (uLen < length)
+      if (uLen < iBufferLength) {
           // Success!
           // Give 'em the real size in bytes...
-          *outLen = uLen * 2;
-          // And copy the string, byte reversed, so that it can be
-          // memcmp'ed
-          char *srcLow, *srcHi, *dst;
-          srcLow = (char*) pLocalBuffer;
-          srcHi = srcLow+1;
-          dst = (char*) key;
-          while( uLen ) {
-            *dst = *srcHi;
-            dst++;
-            *dst = *srcLow;
-            dst++;
-            srcLow += 2;
-            srcHi += 2;
-            uLen--;
-          }
-          *dst = 0;
-          dst++;
-          *dst = 0;
+          *key = (PRUint8 *)nsCRT::strdup((PRUnichar*) pLocalBuffer);
+          *outLen = uLen * 2 + 2;
           res = NS_OK;
+      }
     }
   }
   UniFreeLocaleObject(locObj);

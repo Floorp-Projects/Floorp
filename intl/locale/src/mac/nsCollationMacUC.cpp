@@ -51,6 +51,8 @@ NS_IMPL_ISUPPORTS1(nsCollationMacUC, nsICollation);
 nsCollationMacUC::nsCollationMacUC() 
   : mInit(PR_FALSE)
   , mHasCollator(PR_FALSE)
+  , mBuffer(nsnull)
+  , mBufferLen(1)
 {
 }
 
@@ -62,6 +64,7 @@ nsCollationMacUC::~nsCollationMacUC()
     mHasCollator = PR_FALSE;
     NS_ASSERTION((err == noErr), "UCDisposeCollator failed");
   }
+  PR_FREEIF(mBuffer);
 }
 
 nsresult nsCollationMacUC::StrengthToOptions(
@@ -70,27 +73,13 @@ nsresult nsCollationMacUC::StrengthToOptions(
 {
   NS_ENSURE_ARG_POINTER(aOptions);
   NS_ENSURE_TRUE((aStrength < 4), NS_ERROR_FAILURE);
-  // set our default collaion option
-  UCCollateOptions defaultOption = kUCCollateStandardOptions | kUCCollatePunctuationSignificantMask;
-  switch (aStrength) {
-    case kCollationCaseInsensitiveAscii:
-      *aOptions = defaultOption 
-                  | kUCCollateCaseInsensitiveMask;
-      break;
-    case kCollationAccentInsenstive:
-      *aOptions = defaultOption 
-                  | kUCCollateDiacritInsensitiveMask;
-      break;
-    case kCollationCaseInSensitive:
-      *aOptions = defaultOption 
-                  | kUCCollateCaseInsensitiveMask
-                  | kUCCollateDiacritInsensitiveMask;
-      break;
-    case kCollationCaseSensitive:
-    default:
-      *aOptions =  defaultOption;
-      break;
-  }
+  // set our default collation options
+  UCCollateOptions options = kUCCollateStandardOptions | kUCCollatePunctuationSignificantMask;
+  if (aStrength & kCollationCaseInsensitiveAscii)
+    options |= kUCCollateCaseInsensitiveMask;
+  if (aStrength & kCollationAccentInsensitive)
+    options |= kUCCollateDiacritInsensitiveMask;
+  *aOptions = options;
   return NS_OK;
 }
 
@@ -167,87 +156,52 @@ NS_IMETHODIMP nsCollationMacUC::Initialize(
 };
  
 
-NS_IMETHODIMP nsCollationMacUC::GetSortKeyLen(
-  const nsCollationStrength strength, 
-  const nsAString& stringIn, 
-  PRUint32* outLen)
-{
-  NS_ENSURE_ARG_POINTER(outLen);
-
-  // If possible, a length is estimated by actually creating a key (and cache the result).
-  // If the string is too big then return the length by the formula.
-
-  mCachedStringLen = stringIn.Length();
-  // Set the default value for an output length.
-  *outLen = (1 + mCachedStringLen) * kCollationValueSizeFactor * sizeof(UCCollationValue);
-    
-  if (mCachedStringLen > kCacheSize)
-  {
-    mCachedStringLen = mCachedKeyLen = 0;  // indicate key is not cached
-    return NS_OK;
-  }
-
-  nsresult res = EnsureCollator(strength);
-  NS_ENSURE_SUCCESS(res, res);
-
-  ItemCount actual;
-  memcpy((void *) mCachedString, (void *) PromiseFlatString(stringIn).get(), 
-         mCachedStringLen * sizeof(UniChar));
-  OSErr err = ::UCGetCollationKey(mCollator, (const UniChar *) mCachedString,
-                           (ItemCount) mCachedStringLen,
-                           kCacheSize * kCollationValueSizeFactor,
-                           &actual, (UCCollationValue *) mCachedKey);
-  if (err == noErr)
-    *outLen = mCachedKeyLen = actual * sizeof(UCCollationValue);
-  else
-    mCachedStringLen = mCachedKeyLen = 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsCollationMacUC::CreateRawSortKey(
-  const nsCollationStrength strength, 
-  const nsAString& stringIn, 
-  PRUint8* key, 
+NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(
+  const nsCollationStrength strength,
+  const nsAString& stringIn,
+  PRUint8** key,
   PRUint32* outLen)
 {
   NS_ENSURE_TRUE(mInit, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(key);
   NS_ENSURE_ARG_POINTER(outLen);
-  *outLen = 0;
 
   nsresult res = EnsureCollator(strength);
   NS_ENSURE_SUCCESS(res, res);
 
-  OSStatus err;
-  
-  // If we already get a key at the estimation then just copy the cached data.
   PRUint32 stringInLen = stringIn.Length();
-  if (mCachedKeyLen && 
-      mCachedStringLen == stringInLen &&
-      !memcmp((void *) mCachedString, 
-              (void *) (const UniChar*) PromiseFlatString(stringIn).get(), stringInLen*sizeof(UniChar)))
-  {
-    memcpy((void *) key, (void *) mCachedKey, mCachedKeyLen);
-    *outLen = mCachedKeyLen;
-    return NS_OK;
+  PRUint32 maxKeyLen = (1 + stringInLen) * kCollationValueSizeFactor * sizeof(UCCollationValue);
+  if (maxKeyLen > mBufferLen) {
+    PRUint32 newBufferLen = mBufferLen;
+    do newBufferLen *= 2;
+    while (maxKeyLen > newBufferLen);
+    void *newBuffer = PR_Malloc(newBufferLen);
+    if (!newBuffer)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    PR_FREEIF(mBuffer);
+    mBuffer = newBuffer;
+    mBufferLen = newBufferLen;
   }
 
-  // If not cached then call the API.
-  PRUint32 keyLength = (1 + stringInLen) * kCollationValueSizeFactor * sizeof(UCCollationValue);
   ItemCount actual;
-  
-  err = ::UCGetCollationKey(mCollator, (const UniChar*) PromiseFlatString(stringIn).get(),
-                           (UniCharCount) stringInLen,
-                           (ItemCount) (keyLength / sizeof(UCCollationValue)),
-                           &actual, (UCCollationValue *)key);
+  OSStatus err = ::UCGetCollationKey(mCollator, (const UniChar*) PromiseFlatString(stringIn).get(),
+                                     (UniCharCount) stringInLen,
+                                     (ItemCount) (mBufferLen / sizeof(UCCollationValue)),
+                                     &actual, (UCCollationValue *)key);
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
 
-  *outLen = actual * sizeof(UCCollationValue);
+  PRUint32 keyLength = actual * sizeof(UCCollationValue);
+  void *newKey = PR_Malloc(keyLength);
+  if (!newKey)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  memcpy(newKey, mBuffer, keyLength);
+  *key = (PRUint8 *)newKey;
+  *outLen = keyLength;
 
   return NS_OK;
 }
-
 
     
 NS_IMETHODIMP nsCollationMacUC::CompareString(
@@ -262,19 +216,15 @@ NS_IMETHODIMP nsCollationMacUC::CompareString(
 
   nsresult res = EnsureCollator(strength);
   NS_ENSURE_SUCCESS(res, res);
-
-  SInt32 order;
+  *result = 0;
 
   OSStatus err;
   err = ::UCCompareText(mCollator, 
                         (const UniChar *) PromiseFlatString(string1).get(), (UniCharCount) string1.Length(),
                         (const UniChar *) PromiseFlatString(string2).get(), (UniCharCount) string2.Length(),
-                        NULL, &order);
+                        NULL, &result);
 
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
-  // order could be -2, -1, 0, 1, or 2, 
-  // *result can only be -1, 0 or 1
-  *result = (order == 0) ? 0 : ((order > 0) ? 1 : -1);
   return NS_OK;
 }
 
@@ -290,17 +240,12 @@ NS_IMETHODIMP nsCollationMacUC::CompareRawSortKey(
   NS_ENSURE_ARG_POINTER(result);
   *result = 0;
   
-  SInt32 order;
-
   OSStatus err;
   err = ::UCCompareCollationKeys((const UCCollationValue*) key1, (ItemCount) len1,
                                  (const UCCollationValue*) key2, (ItemCount) len2,
-                                 NULL, &order);
+                                 NULL, &result);
 
   NS_ENSURE_TRUE((err == noErr), NS_ERROR_FAILURE);
-  // order could be -2, -1, 0, 1, or 2, 
-  // *result can only be -1, 0 or 1
-  *result = (order == 0) ? 0 : ((order > 0) ? 1 : -1);
   return NS_OK;
 }
 

@@ -792,17 +792,7 @@ nsresult nsAbDirectoryDataSource::CreateCollationKey(const nsString &aSource,  P
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, aSource, aLength);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (*aLength == 0)
-    return NS_ERROR_FAILURE;
-
-  *aKey = (PRUint8 *) PR_Malloc(*aLength);
-  if (!aKey)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, aSource, *aKey, aLength);
+  return mCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, aSource, aKey, aLength);
 }
 
 nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsISupportsArray *parentDirs, nsISupportsArray *delDirs)

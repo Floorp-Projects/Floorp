@@ -127,10 +127,8 @@ nsresult nsAbView::RemoveCardAt(PRInt32 row)
   AbCard *abcard = (AbCard*) (mCards.ElementAt(row));
   NS_IF_RELEASE(abcard->card);
   mCards.RemoveElementAt(row);
-  if (abcard->primaryCollationKey)
-    nsMemory::Free(abcard->primaryCollationKey);
-  if (abcard->secondaryCollationKey)
-    nsMemory::Free(abcard->secondaryCollationKey);
+  PR_FREEIF(abcard->primaryCollationKey);
+  PR_FREEIF(abcard->secondaryCollationKey);
   PR_FREEIF(abcard);
 
   if (mAbViewListener && !mSuppressCountChange) {
@@ -815,14 +813,7 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, 
 
   // XXX can we avoid this copy?
   nsAutoString sourceString(aSource);
-  rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, aKeyLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aKey = (PRUint8*) nsMemory::Alloc(*aKeyLen);
-  if (!aKey)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  rv = mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, *aKey, aKeyLen);
+  rv = mCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, sourceString, aKey, aKeyLen);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to generate a raw sort key, see bug #121868");
   return NS_OK;
 }

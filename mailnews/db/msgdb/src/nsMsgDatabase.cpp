@@ -2874,8 +2874,7 @@ nsIMimeConverter *nsMsgDatabase::GetMimeConverter()
   if (!m_mimeConverter)
   {
     // apply mime decode
-    nsComponentManager::CreateInstance(NS_MIME_CONVERTER_CONTRACTID, nsnull, 
-      NS_GET_IID(nsIMimeConverter), getter_AddRefs(m_mimeConverter));
+    m_mimeConverter = do_GetService(NS_MIME_CONVERTER_CONTRACTID);
   }
   return m_mimeConverter;
 }
@@ -3015,13 +3014,7 @@ nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUint8 **resul
   if (!m_collationKeyGenerator) return NS_ERROR_FAILURE;
 
   nsAutoString sourceStr(sourceString);
-  err = m_collationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceStr, len);
-  NS_ENSURE_SUCCESS(err,err);
-
-  *result = (PRUint8 *) PR_Malloc(*len);
-  if (!result) return NS_ERROR_OUT_OF_MEMORY;
-
-  err = m_collationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceStr, *result, len);
+  err = m_collationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, sourceStr, result, len);
   NS_ENSURE_SUCCESS(err,err);
   return err;
 }

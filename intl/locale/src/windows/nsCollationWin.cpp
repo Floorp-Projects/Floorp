@@ -49,7 +49,7 @@
 #include "prmem.h"
 #include "plstr.h"
 #include <windows.h>
-
+#undef CompareString
 
 NS_IMPL_ISUPPORTS1(nsCollationWin, nsICollation);
 
@@ -139,38 +139,54 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
 
   return NS_OK;
 };
- 
 
-nsresult nsCollationWin::GetSortKeyLen(const nsCollationStrength strength, 
-                                       const nsAString& stringIn, PRUint32* outLen)
+
+nsresult nsCollationWin::CompareString(const nsCollationStrength strength,
+                                       const nsAString& string1, const nsAString& string2, PRInt32* result)
 {
-  nsresult res = NS_OK;
+  int retval;
+  nsresult res;
   DWORD dwMapFlags = LCMAP_SORTKEY;
 
   if (strength == kCollationCaseInSensitive)
     dwMapFlags |= NORM_IGNORECASE;
 
   if (mW_API) {
-    *outLen = LCMapStringW(mLCID, dwMapFlags, 
-                           (LPCWSTR) PromiseFlatString(stringIn).get(),
-                           (int) stringIn.Length(), NULL, 0);
-  }
-  else {
-    char *Cstr = nsnull;
-    res = mCollation->UnicodeToChar(stringIn, &Cstr);
-    if (NS_SUCCEEDED(res) && Cstr != nsnull) {
-      *outLen = LCMapStringA(mLCID, dwMapFlags, Cstr, PL_strlen(Cstr), NULL, 0);
-      PR_Free(Cstr);
+    retval = CompareStringW(mLCID, dwMapFlags,
+                            (LPCWSTR) PromiseFlatString(string1).get(), -1,
+                            (LPCWSTR) PromiseFlatString(string2).get(), -1);
+    if (retval) {
+      res = NS_OK;
+      *result = retval - 2;
+    } else {
+      res = NS_ERROR_FAILURE;
+    }
+  } else {
+    char *Cstr1 = nsnull, *Cstr2 = nsnull;
+    res = mCollation->UnicodeToChar(string1, &Cstr1);
+    if (NS_SUCCEEDED(res) && Cstr1 != nsnull) {
+      res = mCollation->UnicodeToChar(string2, &Cstr2);
+      if (NS_SUCCEEDED(res) && Cstr2 != nsnull) {
+        retval = CompareStringA(mLCID, dwMapFlags, Cstr1, -1, Cstr2, -1);
+        if (retval)
+          *result = retval - 2;
+        else
+          res = NS_ERROR_FAILURE;
+        PR_Free(Cstr2);
+      }
+      PR_Free(Cstr1);
     }
   }
 
   return res;
 }
+ 
 
-nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength, 
-                                          const nsAString& stringIn, PRUint8* key, PRUint32* outLen)
+nsresult nsCollationWin::AllocateRawSortKey(const nsCollationStrength strength, 
+                                            const nsAString& stringIn, PRUint8** key, PRUint32* outLen)
 {
   int byteLen;
+  void *buffer;
   nsresult res = NS_OK;
   DWORD dwMapFlags = LCMAP_SORTKEY;
 
@@ -179,17 +195,33 @@ nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength,
 
   if (mW_API) {
     byteLen = LCMapStringW(mLCID, dwMapFlags, 
-                          (LPCWSTR) PromiseFlatString(stringIn).get(), (int) stringIn.Length(), (LPWSTR) key, *outLen);
+                           (LPCWSTR) PromiseFlatString(stringIn).get(),
+                           -1, NULL, 0);
+    buffer = PR_Malloc(byteLen);
+    if (!buffer) {
+      res = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      *key = (PRUint8 *)buffer;
+      *outLen = LCMapStringW(mLCID, dwMapFlags, 
+                             (LPCWSTR) PromiseFlatString(stringIn).get(),
+                             -1, (LPWSTR) buffer, byteLen);
+    }
   }
   else {
     char *Cstr = nsnull;
     res = mCollation->UnicodeToChar(stringIn, &Cstr);
     if (NS_SUCCEEDED(res) && Cstr != nsnull) {
-      byteLen = LCMapStringA(mLCID, dwMapFlags, Cstr, PL_strlen(Cstr), (char *) key, (int) *outLen);
+      byteLen = LCMapStringA(mLCID, dwMapFlags, Cstr, -1, NULL, 0);
+      buffer = PR_Malloc(byteLen);
+      if (!buffer) {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        *key = (PRUint8 *)buffer;
+        *outLen = LCMapStringA(mLCID, dwMapFlags, Cstr, -1, (char *) buffer, byteLen);
+      }
       PR_Free(Cstr);
     }
   }
-  *outLen = (PRUint32) byteLen;
 
   return res;
 }

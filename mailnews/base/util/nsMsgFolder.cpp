@@ -2777,17 +2777,7 @@ nsMsgFolder::CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint
   if (!kCollationKeyGenerator)
     return NS_ERROR_NULL_POINTER;
 
-  rv = kCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, aSource, aLength);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (*aLength == 0)
-    return NS_ERROR_FAILURE;
-
-  *aKey = (PRUint8 *) PR_Malloc(*aLength);
-  if (!aKey)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return kCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, aSource, *aKey, aLength);
+  return kCollationKeyGenerator->AllocateRawSortKey(kCollationCaseInSensitive, aSource, aKey, aLength);
 }
 
 NS_IMETHODIMP nsMsgFolder::CompareSortKeys(nsIMsgFolder *aFolder, PRInt32 *sortOrder)

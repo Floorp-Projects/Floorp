@@ -51,19 +51,6 @@ public:
   
   ~nsCollation();
 
-  nsresult CreateASCIISortKey(nsICollation *inst, const nsCollationStrength strength, 
-                              const PRUnichar* stringIn, char* key, PRUint32 *outLen);
-
-  // compare two strings
-  // result is same as strcmp
-  nsresult CompareString(nsICollation *inst, const nsCollationStrength strength, 
-                         const nsAString& string1, const nsAString& string2, PRInt32* result);
-
-  // compare two sort keys
-  // length is a byte length, result is same as strcmp
-  PRInt32 CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
-                            const PRUint8* key2, const PRUint32 len2);
-
   // normalize string before collation key generation
   nsresult NormalizeString(const nsAString& stringIn, nsAString& stringOut);
 
