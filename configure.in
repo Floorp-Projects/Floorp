@@ -2094,6 +2094,22 @@ else
    MOZ_NATIVE_NSPR=1
 fi
 
+
+dnl
+dnl Indicate that platform requires special thread safe 
+dnl locking when starting up the OJI JVM 
+dnl (see mozilla/modules/oji/src/nsJVMManager.cpp)
+dnl ========================================================
+
+   case "$target" in
+	*-hpux*)      
+		AC_DEFINE(MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP)
+		;;
+	*)
+		;;
+   esac
+
+
 dnl See if mmap sees writes
 dnl ========================================================
 dnl For cross compiling, just define it as no, which is a safe default
