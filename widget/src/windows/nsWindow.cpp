@@ -799,6 +799,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mWindowType         = eWindowType_child;
     mBorderStyle        = eBorderStyle_default;
     mBorderlessParent   = 0;
+    mUnicodeWidget      = PR_TRUE;
     mIsInMouseCapture   = PR_FALSE;
     mIsInMouseWheelProcessing = PR_FALSE;
     mLastSize.width = 0;
@@ -1574,6 +1575,8 @@ NS_METHOD nsWindow::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+    if (aInitData)
+      mUnicodeWidget = aInitData->mUnicode;
     return(StandardWindowCreate(aParent, aRect, aHandleEventFunction,
                          aContext, aAppShell, aToolkit, aInitData,
                          nsnull));
@@ -1594,6 +1597,8 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
                          nsIToolkit *aToolkit,
                          nsWidgetInitData *aInitData)
 {
+    if (aInitData)
+      mUnicodeWidget = aInitData->mUnicode;
     return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
                          aContext, aAppShell, aToolkit, aInitData,
                          aParent));
@@ -4921,7 +4926,11 @@ void nsWindow::SubclassWindow(BOOL bState)
     if (bState) {
         // change the nsWindow proc
 #ifdef MOZ_UNICODE
-        mPrevWndProc = (WNDPROC)nsToolkit::mSetWindowLong(mWnd, GWL_WNDPROC, 
+        if (mUnicodeWidget)
+          mPrevWndProc = (WNDPROC)nsToolkit::mSetWindowLong(mWnd, GWL_WNDPROC, 
+                                                 (LONG)nsWindow::WindowProc);
+        else
+          mPrevWndProc = (WNDPROC)::SetWindowLong(mWnd, GWL_WNDPROC, 
                                                  (LONG)nsWindow::WindowProc);
 #else
         mPrevWndProc = (WNDPROC)::SetWindowLong(mWnd, GWL_WNDPROC, 
@@ -4933,7 +4942,10 @@ void nsWindow::SubclassWindow(BOOL bState)
     } 
     else {
 #ifdef MOZ_UNICODE
-        nsToolkit::mSetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        if (mUnicodeWidget)
+          nsToolkit::mSetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        else
+          ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
 #else
         ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
 #endif
