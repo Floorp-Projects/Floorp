@@ -30,6 +30,7 @@
 #include "nsIDOMXULTreeElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
+#include "nsBoxFrame.h"
 
 //
 // NS_NewTreeOuterFrame
@@ -90,3 +91,94 @@ nsTreeOuterFrame::HandleEvent(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTreeOuterFrame::Reflow(nsIPresContext*          aPresContext,
+							      nsHTMLReflowMetrics&     aDesiredSize,
+							      const nsHTMLReflowState& aReflowState,
+							      nsReflowStatus&          aStatus)
+{
+  NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE, 
+               "Reflowing outer tree frame with unconstrained width!!!!");
+  
+  NS_ASSERTION(aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE, 
+               "Reflowing outer tree frame with unconstrained height!!!!");
+
+  //printf("TOF Width: %d, TOF Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+
+  return nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+}
+
+/**
+ * Ok return our dimensions
+ */
+NS_IMETHODIMP
+nsTreeOuterFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+{
+  aSize.minSize.width = 0;
+  aSize.minSize.height = 0;
+  aSize.prefSize.width = 100;
+  aSize.prefSize.height = 100;
+
+  ((nsCalculatedBoxInfo&)aSize).prefWidthIntrinsic = PR_FALSE;
+  ((nsCalculatedBoxInfo&)aSize).prefHeightIntrinsic = PR_FALSE;
+
+  return NS_OK;
+}
+
+/**
+ * We can be a nsIBox
+ */
+NS_IMETHODIMP 
+nsTreeOuterFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{           
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(NS_GET_IID(nsIBox))) {                                         
+    *aInstancePtr = (void*)(nsIBox*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
+  return nsTableOuterFrame::QueryInterface(aIID, aInstancePtr);                                     
+}
+
+NS_IMETHODIMP
+nsTreeOuterFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+{
+  incrementalChild = this;
+  return NS_OK;
+}
+
+/*
+ * We are a frame and we do not maintain a ref count
+ */
+NS_IMETHODIMP_(nsrefcnt) 
+nsTreeOuterFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsTreeOuterFrame::Release(void)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsTreeOuterFrame::FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
+                                    nsHTMLReflowState& aChildReflowState)
+{
+  if (aParentReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) {
+    aChildReflowState.mComputedWidth = aParentReflowState.mComputedWidth;
+  }
+
+  if (aParentReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE) {
+    aChildReflowState.mComputedHeight = aParentReflowState.mComputedHeight;
+  }
+  
+  return NS_OK;
+}

@@ -201,6 +201,13 @@ nsTreeRowFrame::Reflow(nsIPresContext*          aPresContext,
   i++;
   printf("Full row reflow! Number %d\n", i);
 */
+
+  // Debugging info.
+  NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE, 
+               "Reflowing tree row frame with unconstrained width!!!!");
+  
+  //printf("Tree Row Width: %d, Tree Row Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+
   if (mState & NS_FRAME_FIRST_REFLOW) {
     // Newly inserted frame
     ((nsHTMLReflowState&)aReflowState).reason = eReflowReason_Initial;

@@ -571,9 +571,7 @@ Rights Reserved.
           <box align="vertical" flex="1">
      
 
-		<html:div id="results_box" style="width:100px;height:0px" flex="2" >
-		  <tree id="threadTree"/>
-		 </html:div>
+		<tree id="threadTree" flex="2" style="height:0px"/>
 
 		<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() -->
 	    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"
