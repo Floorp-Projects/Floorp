@@ -26,7 +26,6 @@ var numItems;
 var list;
 
 function selectDialogOnLoad() {
-  dump("selectDialogOnLoad \n");
   doSetOKCancel( commonDialogOnOK, commonDialogOnCancel );
 
   param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
@@ -34,7 +33,6 @@ function selectDialogOnLoad() {
   dump( " error getting param block interface\n" );
 
   var messageText = param.GetString( 1 );
-  dump("message: "+ messageText +"\n");
   {
     var messageFragment;
 
@@ -47,7 +45,6 @@ function selectDialogOnLoad() {
       if (breakIndex == 0) {
         // Ignore break at the first character
         messageText = messageText.slice(1);
-        dump("Found break at begining\n");
         messageFragment = "";
       } else if (breakIndex > 0) {
         // The fragment up to the break
@@ -65,7 +62,6 @@ function selectDialogOnLoad() {
   }
 
   var windowTitle = param.GetString( 0 );
-  dump("title: "+ windowTitle +"\n");
   window.title = windowTitle;
 
   list = document.getElementById("list");
@@ -76,7 +72,6 @@ function selectDialogOnLoad() {
     if (newString == "") {
       newString = "<>";
     }
-    dump("setting string "+newString+"\n");
     elements[i-2] = AppendStringToTreelist(list, newString);
   }
   list.selectItem(elements[0]);
@@ -91,7 +86,6 @@ function selectDialogOnLoad() {
 }
 
 function commonDialogOnOK() {
-  dump("commonDialogOnOK \n");
   for (var i=0; i<numItems; i++) {
     if (elements[i] == list.selectedItems[0]) {
       param.SetInt(2, i );
@@ -103,7 +97,6 @@ function commonDialogOnOK() {
 }
 
 function commonDialogOnCancel() {
-  dump("commonDialogOnCancel \n");
   for (var i=0; i<numItems; i++) {
     if (elements[i]) {
       param.SetInt(2, i );
