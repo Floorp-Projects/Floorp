@@ -3667,19 +3667,29 @@ PresShell::GetViewToScroll(nsLayoutUtils::Direction aDirection)
   nsIScrollableView* scrollView = nsnull;
   nsCOMPtr<nsIContent> focusedContent;
   esm->GetFocusedContent(getter_AddRefs(focusedContent));
+  if (!focusedContent && mSelection) {
+    nsCOMPtr<nsISelection> domSelection;
+    mSelection->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                             getter_AddRefs(domSelection));
+    if (domSelection) {
+      nsCOMPtr<nsIDOMNode> focusedNode;
+      domSelection->GetFocusNode(getter_AddRefs(focusedNode));
+      focusedContent = do_QueryInterface(focusedNode);
+    }
+  }
   if (focusedContent) {
     nsIFrame* startFrame = nsnull;
     GetPrimaryFrameFor(focusedContent, &startFrame);
     if (startFrame) {
       nsCOMPtr<nsIScrollableViewProvider> svp = do_QueryInterface(startFrame);
-      if (svp) {
-        scrollView = svp->GetScrollableView();
-      } else {
-        nsIView* startView = startFrame->GetClosestView();
-        if (startView)
-          scrollView =
-            nsLayoutUtils::GetNearestScrollingView(startView, aDirection);
-      }
+      // If this very frame provides a scroll view, start there instead of frame's
+      // closest view, because the scroll view may be inside a child frame.
+      // For example, this happens in the case of overflow:scroll.
+      // In that case we still use GetNearestScrollingView() because
+      // we need a scrolling view that matches aDirection.
+      nsIView* startView = svp? svp->GetScrollableView()->View() : startFrame->GetClosestView();
+      NS_ASSERTION(startView, "No view to start searching for scrollable view from");
+      scrollView = nsLayoutUtils::GetNearestScrollingView(startView, aDirection);
     }
   }
   if (!scrollView) {

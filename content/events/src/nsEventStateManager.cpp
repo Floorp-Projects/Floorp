@@ -1874,7 +1874,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             break;
           }
 
-          if (currFrame->IsFocusable()) {
+          PRInt32 tabIndexUnused;
+          if (currFrame->IsFocusable(&tabIndexUnused, PR_TRUE)) {
             newFocus = currFrame->GetContent();
             nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
             if (domElement)
