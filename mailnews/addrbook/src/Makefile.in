@@ -26,11 +26,15 @@ MODULE=mailnewsaddrbook
 LIBRARY_NAME=mailnewsaddrbook_s
 
 EXPORTS = \
+	nsAbCard.h \
+	nsCardDataSource.h \
+	nsAbDirectory.h \
+	nsDirectoryDataSource.h \
 	$(NULL)
 
 CPPSRCS = \
 	nsDirectoryDataSource.cpp	\
-	nsAbdirectory.cpp	\
+	nsAbDirectory.cpp	\
 	nsCardDataSource.cpp	\
 	nsAbCard.cpp	\
 	$(NULL)

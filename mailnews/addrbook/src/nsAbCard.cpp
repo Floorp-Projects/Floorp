@@ -18,7 +18,7 @@
 
 #include "msgCore.h"    // precompiled header...
 
-#include "nsABCard.h"	 
+#include "nsAbCard.h"	 
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"

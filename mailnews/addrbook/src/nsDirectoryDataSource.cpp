@@ -20,7 +20,7 @@
 
 #include "nsDirectoryDataSource.h"
 #include "nsAbBaseCID.h"
-#include "nsAbdirectory.h"
+#include "nsAbDirectory.h"
 
 #include "nsIMsgDatabase.h"
 

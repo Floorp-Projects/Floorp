@@ -62,7 +62,6 @@ EXTRA_DSO_LDOPTS = \
 		-lnetcnvts		\
 		-lmimetype		\
 		-lsockstuburl	\
-		-lnetutil		\
 		-lpwcac			\
 		-lnetcache		\
 		-lpref			\
