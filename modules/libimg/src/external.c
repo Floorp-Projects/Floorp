@@ -113,9 +113,10 @@ NET_StreamClass *
 IL_ViewStream(FO_Present_Types format_out, void *newshack, URL_Struct *urls,
               OPAQUE_CONTEXT *cx)
 {
-    IL_Stream *stream = nil, *viewstream;
-	il_container *ic = nil;
-	char *org_content_type;
+    IL_Stream *stream = nil,
+              *viewstream = nil;
+    il_container *ic = nil;
+    char *org_content_type;
     char *image_url;
 
 	/* multi-part reconnect hack */
@@ -188,13 +189,13 @@ IL_ViewStream(FO_Present_Types format_out, void *newshack, URL_Struct *urls,
     image_url = (char*) XP_ALLOC(XP_STRLEN(urls->address) + 29);
     if (!image_url) {
         XP_FREE(stream);
-        XP_FREE(viewstream);
+        XP_FREEIF(viewstream);
         return NULL;
     }
     XP_SPRINTF(image_url, "internal-external-reconnect:%s", urls->address);
     if (!il_load_image(cx, image_url, urls->force_reload)) {
         XP_FREE(stream);
-        XP_FREE(viewstream);
+        XP_FREEIF(viewstream);
         return NULL;
     }
     XP_FREE(image_url);
@@ -219,6 +220,7 @@ IL_ViewStream(FO_Present_Types format_out, void *newshack, URL_Struct *urls,
 		urls->content_type = org_content_type;
 	} /* !newshack */
 
+    XP_FREEIF(viewstream);
     return stream;
 }
 
