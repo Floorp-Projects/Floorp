@@ -398,7 +398,7 @@ proc WriteCheckins {} {
     set fid [open $filename "w"]
     chmod 0666 $filename
     foreach i [lsort [array names person]] {
-        puts $fid $i
+        puts $fid [EmailFromUsername $i]
     }
     puts $fid "bonsai-hookinterest@glacier"
     puts $fid "mcom.dev.client.build.busted"
@@ -692,4 +692,15 @@ proc MungeTagName {name} {
         }
     }
     return $result
+}
+
+
+# Given a person's username, get back their full email address.
+# ### This needs to be paramaterized...
+proc EmailFromUsername {name} {
+    regsub {%} $name {@} name
+    if {[string first "@" $name] < 0} {
+        append name "@netscape.com"
+    }
+    return $name
 }

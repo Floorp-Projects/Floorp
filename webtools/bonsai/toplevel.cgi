@@ -122,9 +122,11 @@ puts "<b><a href=editwhiteboard.cgi[BatchIdPart ?]>Free-for-all whiteboard:</a><
 
 foreach c $checkinlist {
     upvar #0 $c info
-    lappend people($info(person)) $c
+    set addr [EmailFromUsername $info(person)]
+    set username($addr) $info(person)
+    lappend people($addr) $c
     if {!$info(treeopen)} {
-        lappend closedcheckin($info(person)) $c
+        lappend closedcheckin($addr) $c
     }
 }
 
@@ -135,8 +137,9 @@ proc GetInfoForPeople {peoplelist} {
         return
     }
     set query "(| "
+    set isempty 1
     foreach p $peoplelist {
-        append query "(mail=$p@netscape.com) "
+        append query "(mail=$p) "
         set fullname($p) ""
         set curcontact($p) ""
     }
@@ -153,7 +156,7 @@ proc GetInfoForPeople {peoplelist} {
                 }
                 set doingcontactinfo 0
             }
-            if {[regexp -- {^mail: (.*)@} $line foo n]} {
+            if {[regexp -- {^mail: (.*@.*)$} $line foo n]} {
                 set curperson $n
             } elseif {[regexp -- {^cn: (.*)$} $line foo n]} {
                 set fullname($curperson) $n
@@ -199,12 +202,15 @@ if {[info exists people]} {
             set extra ""
         }
 
+        set uname $username($p)
+        set namepart $p
+        regsub {@.*$} $namepart {} namepart
         puts "
 <tr>
 <td>$fullname($p)</a></td>
-<td><a href=\"http://phonebook/ds/dosearch/phonebook/uid=[url_quote "$p,ou=People,o= Netscape Communications Corp.,c=US"]\">
-$p</td>
-<td><a href=\"showcheckins.cgi?person=$p[BatchIdPart]\">[llength $people($p)]
+<td><a href=\"http://phonebook/ds/dosearch/phonebook/uid=[url_quote "$namepart,ou=People,o= Netscape Communications Corp.,c=US"]\">
+$uname</td>
+<td><a href=\"showcheckins.cgi?person=$uname[BatchIdPart]\">[llength $people($p)]
 [Pluralize change [llength $people($p)]]</a>$extra</td>"
         puts "
 <td>$curcontact($p)
@@ -215,16 +221,9 @@ $p</td>
     puts "[llength $checkinlist] checkins."
 
     if {[cequal $treeid default]} {
-        set mailaddr "bonsai-hook"
+        set mailaddr "bonsai-hook@warp"
     } else {
-        set f [open data/$treeid/hooklist r]
-        set fileEOF [gets $f hookentry]
-        set theHookList {}
-        while { $fileEOF != -1 } {
-                set theHookList [concat $theHookList $hookentry]
-                set fileEOF [gets $f hookentry]
-        }
-        set mailaddr "$theHookList"
+	set mailaddr [join $peoplelist ","]
     }
     puts "<p>"
     puts "<a href=showcheckins.cgi[BatchIdPart ?]>Show all checkins.</a><br>"
