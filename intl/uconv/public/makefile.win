@@ -23,9 +23,9 @@ EXPORTS =				\
 	nsIUnicodeDecoder.h		\
 	nsIUnicodeDecodeUtil.h		\
 	nsIUnicodeEncoder.h		\
+	nsIUnicodeEncodeHelper.h	\
 	nsIPlatformCharset.h		\
-	nsConverterCID.h		\
-	uconvutil.h	\
+	uconvutil.h			\
         $(NULL)
 
 MODULE=uconv 

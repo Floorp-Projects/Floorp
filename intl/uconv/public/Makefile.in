@@ -24,13 +24,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= uconv
 
 EXPORTS		= \
-                  nsICharsetConverterInfo.h \
                   nsICharsetConverterManager.h \
+                  nsICharsetConverterInfo.h \
                   nsIUnicodeDecoder.h \
                   nsIUnicodeDecodeUtil.h \
                   nsIUnicodeEncoder.h \
+                  nsIUnicodeEncodeHelper.h \
                   nsIPlatformCharset.h \
-                  nsConverterCID.h \
                   uconvutil.h \
 		  $(NULL)
 
