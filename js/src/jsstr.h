@@ -137,22 +137,8 @@ typedef enum JSCharType {
 #define JS_ISUPPER(c)   (JS_CTYPE(c) == JSCT_UPPERCASE_LETTER)
 #define JS_ISLOWER(c)   (JS_CTYPE(c) == JSCT_LOWERCASE_LETTER)
 
-#ifdef __GNUC__
-
-#define JS_TOUPPER(c)   ({uint32 _v = JS_CCODE(c);                            \
-			  (_v & 0x00100000) ? (c) - ((int32)_v >> 22) : (c);})
-#define JS_TOLOWER(c)   ({uint32 _v = JS_CCODE(c);                            \
-			  (_v & 0x00200000) ? (c) + ((int32)_v >> 22) : (c);})
-
-#else  /* !__GNUC__ */
-
-#define JS_TOUPPER(c)   js_ToUpper((jschar)c)
-#define JS_TOLOWER(c)   js_ToLower((jschar)c)
-
-extern jschar js_ToUpper(jschar c);
-extern jschar js_ToLower(jschar c);
-
-#endif /* !__GNUC__ */
+#define JS_TOUPPER(c)   ((JS_CCODE(c) & 0x00100000) ? (c) - ((int32)JS_CCODE(c) >> 22) : (c))
+#define JS_TOLOWER(c)   ((JS_CCODE(c) & 0x00200000) ? (c) + ((int32)JS_CCODE(c) >> 22) : (c))
 
 #define JS_TOCTRL(c)    ((c) ^ 64)      /* XXX unsafe! requires uppercase c */
 
@@ -285,6 +271,10 @@ js_GetStringBytes(JSString *str);
  * */
 char*
 js_escape(JSContext *cx, JSObject *obj, char *str);
+
+
+JSBool
+str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
 JS_END_EXTERN_C
 
