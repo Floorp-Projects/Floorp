@@ -63,11 +63,6 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 
-const char *kDirectoryDataSourceRoot = kDirectoryRoot;
-const char *kCardDataSourceRoot = kCardRoot;
-
-//use this for creating new address book or directory
-static const char *kBSDDirectoryRoot = "abdirectory://";
 
 static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISupportsArray **resourceArray)
 {
@@ -172,7 +167,7 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
   NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIRDFResource> parentResource;
-	char *parentUri = PR_smprintf("%s", kBSDDirectoryRoot);
+	char *parentUri = PR_smprintf("%s", kAllDirectoryRoot);
 	rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
 	if (parentUri)
 		PR_smprintf_free(parentUri);
@@ -305,7 +300,7 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDataba
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsAutoString file; file.AssignWithConversion(&(uri[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(uri[PL_strlen(kMDBDirectoryRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			file.Truncate(pos);
@@ -507,7 +502,7 @@ nsresult AddressBookParser::ParseFile()
 				i++;
 		}
 		if (leafName)
-			mDbUri = PR_smprintf("%s%s.mab", kDirectoryDataSourceRoot, leafName);
+			mDbUri = PR_smprintf("%s%s.mab", kMDBDirectoryRoot, leafName);
 	}
 
 	// to do: we should use only one "return rv;" at the very end, instead of this
@@ -535,7 +530,7 @@ nsresult AddressBookParser::ParseFile()
   NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	NS_ENSURE_SUCCESS(rv, rv);
 	nsCOMPtr<nsIRDFResource> parentResource;
-	char *parentUri = PR_smprintf("%s", kBSDDirectoryRoot);
+	char *parentUri = PR_smprintf("%s", kAllDirectoryRoot);
 	rv = rdfService->GetResource(parentUri, getter_AddRefs(parentResource));
 	nsCOMPtr<nsIAbDirectory> parentDir = do_QueryInterface(parentResource);
 	if (!parentDir)

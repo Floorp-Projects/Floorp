@@ -62,12 +62,6 @@ static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
-/* The definition is nsAddressBook.cpp */
-extern const char *kCardDataSourceRoot;
-extern const char *kDirectoryDataSourceRoot;
-
-/* The definition is nsAddrDatabase.cpp */
-extern const char *kMainPersonalAddressBook;
 
 #define ID_PAB_TABLE			1
 #define ID_ANONYMOUS_TABLE		2
@@ -763,7 +757,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenAnonymousDB(nsIAddrDatabase **pCardDB)
 		nsFileSpec* dbPath;
 		abSession->GetUserProfileDirectory(&dbPath);
 
-		(*dbPath) += kMainPersonalAddressBook;
+		(*dbPath) += kPersonalAddressbook;
 
 		Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
 
@@ -1756,7 +1750,7 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
 					file = m_dbName.GetLeafName();
 					if (file)
 					{
-						cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, cardOid.mOid_Id);
+						cardURI = PR_smprintf("%s%s/Card%ld", kMDBCardRoot, file, cardOid.mOid_Id);
 						NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &err);
 						if (NS_SUCCEEDED(err) && cardURI)
 						{
@@ -2527,7 +2521,7 @@ NS_IMETHODIMP nsAddrDatabase::EditMailList(nsIAbDirectory *mailList, PRBool noti
 		char* listCardURI = nsnull;
 		char* file = nsnull;
 		file = m_dbName.GetLeafName();
-		listCardURI = PR_smprintf("%s%s/ListCard%ld", kCardDataSourceRoot, file, rowOid.mOid_Id);
+		listCardURI = PR_smprintf("%s%s/ListCard%ld", kMDBCardRoot, file, rowOid.mOid_Id);
 		NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &err);
 		if(NS_FAILED(err))
 			return err;
@@ -3736,9 +3730,9 @@ nsresult nsAddrDatabase::CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbC
 
 		file = m_dbName.GetLeafName();
 		if (listRowID > 0)
-			cardURI = PR_smprintf("%s%s/MailList%ld/Card%ld", kCardDataSourceRoot, file, listRowID, rowID);
+			cardURI = PR_smprintf("%s%s/MailList%ld/Card%ld", kMDBCardRoot, file, listRowID, rowID);
 		else
-			cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, rowID);
+			cardURI = PR_smprintf("%s%s/Card%ld", kMDBCardRoot, file, rowID);
 
 		nsCOMPtr<nsIAbCard> personCard;
 		nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory,&rv));
@@ -3806,8 +3800,8 @@ nsresult nsAddrDatabase::CreateABListCard(nsIMdbRow* listRow, nsIAbCard **result
 	char* listURI = nsnull;
 	char* file = nsnull;
 	file = m_dbName.GetLeafName();
-	cardURI = PR_smprintf("%s%s/ListCard%ld", kCardDataSourceRoot, file, rowID);
-	listURI = PR_smprintf("%s%s/MailList%ld", kDirectoryDataSourceRoot, file, rowID);
+	cardURI = PR_smprintf("%s%s/ListCard%ld", kMDBCardRoot, file, rowID);
+	listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, file, rowID);
 
 	nsCOMPtr<nsIAbCard> personCard;
 	nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
@@ -3868,7 +3862,7 @@ nsresult nsAddrDatabase::CreateABList(nsIMdbRow* listRow, nsIAbDirectory **resul
 	char* file = nsnull;
 
 	file = m_dbName.GetLeafName();
-	listURI = PR_smprintf("%s%s/MailList%ld", kDirectoryDataSourceRoot, file, rowID);
+	listURI = PR_smprintf("%s%s/MailList%ld", kMDBDirectoryRoot, file, rowID);
 
 	nsCOMPtr<nsIAbDirectory> mailList;
 	nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory, &rv));
@@ -4048,7 +4042,7 @@ NS_IMETHODIMP nsAddrDatabase::AddListDirNode(nsIMdbRow * listRow)
 		nsCOMPtr<nsIRDFResource>	parentResource;
 
 		char* file = m_dbName.GetLeafName();
-		char *parentUri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, file);
+		char *parentUri = PR_smprintf("%s%s", kMDBDirectoryRoot, file);
 		rv = rdfService->GetResource( parentUri, getter_AddRefs(parentResource));
 		nsCOMPtr<nsIAbDirectory> parentDir;
 		rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),

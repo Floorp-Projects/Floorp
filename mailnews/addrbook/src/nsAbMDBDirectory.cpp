@@ -42,8 +42,6 @@
 #include "prprf.h"
 #include "prmem.h"
 
-/* The definition is nsAddressBook.cpp */
-extern const char *kDirectoryDataSourceRoot;
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAbCardCID, NS_ABMDBCARD_CID);
@@ -61,7 +59,7 @@ nsAbMDBDirectory::nsAbMDBDirectory(void)
 
 nsAbMDBDirectory::~nsAbMDBDirectory(void)
 {
-	if (mURI && PL_strcmp(mURI, kDirectoryDataSourceRoot))
+	if (mURI && PL_strcmp(mURI, kMDBDirectoryRoot))
 	{
 		nsresult rv = NS_OK;
 
@@ -343,7 +341,7 @@ NS_IMETHODIMP nsAbMDBDirectory::GetChildCards(nsIEnumerator* *result)
 {
 	if (mURI && mIsMailingList == -1)
 	{
-		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kMDBDirectoryRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			mIsMailingList = 1;
@@ -715,7 +713,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* card, nsIAbCard **_retval)
 
 	if (mURI && mIsMailingList == -1)
 	{
-		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kMDBDirectoryRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			mIsMailingList = 1;

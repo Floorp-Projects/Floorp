@@ -40,7 +40,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 /* The definition is nsAddrDatabase.cpp */
-extern const char *kMainPersonalAddressBook;
 extern const char *kFirstNameColumn;
 extern const char *kLastNameColumn;
 extern const char *kDisplayNameColumn;

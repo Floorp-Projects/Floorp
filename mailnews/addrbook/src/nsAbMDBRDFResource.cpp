@@ -34,12 +34,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
-/* The definition is nsAddressBook.cpp */
-extern const char *kDirectoryDataSourceRoot;
-
-/* The definition is nsAddrDatabase.cpp */
-extern const char *kMainPersonalAddressBook;
-
 
 nsAbMDBRDFResource::nsAbMDBRDFResource(void)
 {
@@ -95,7 +89,7 @@ nsresult nsAbMDBRDFResource::GetAbDatabase()
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kMDBDirectoryRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			file.Truncate(pos);

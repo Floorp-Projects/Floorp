@@ -40,7 +40,6 @@
 #include "prmem.h"
 #include "prprf.h"
 
-extern const char *kDirectoryDataSourceRoot;
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -130,7 +129,7 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
  	      migrator->UpgradePrefs();
     }*/
 
-		if (!PL_strcmp(mURI, "abdirectory://") && GetDirList())
+		if (!PL_strcmp(mURI, kAllDirectoryRoot) && GetDirList())
 		{
 			PRInt32 count = GetDirList()->Count();
 			/* check: only show personal address book for now */
@@ -148,7 +147,7 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
 						continue;
 
 					char* uriStr = nsnull;
-					uriStr = PR_smprintf("%s%s", kDirectoryDataSourceRoot, server->fileName);
+					uriStr = PR_smprintf("%s%s", kMDBDirectoryRoot, server->fileName);
 					if (uriStr == nsnull) 
 						return NS_ERROR_OUT_OF_MEMORY;
 
@@ -276,7 +275,7 @@ nsresult nsAbBSDirectory::CreateDirectoryPAB(const PRUnichar *displayName, const
 
   DIR_AddNewAddressBook(displayName, fileName, migrating, dirType, &server);
 
-  char *uri = PR_smprintf("%s%s",kDirectoryDataSourceRoot, server->fileName);
+  char *uri = PR_smprintf("%s%s",kMDBDirectoryRoot, server->fileName);
 
   nsCOMPtr<nsIAbDirectory> newDir;
   nsresult rv = AddDirectory(uri, getter_AddRefs(newDir));
@@ -303,9 +302,9 @@ NS_IMETHODIMP nsAbBSDirectory::CreateDirectoryByURI(const PRUnichar *displayName
 	DIR_Server * server = nsnull;
 	DirectoryType dirType = PABDirectory;
   const char* fileName = nsnull;
-  if (PL_strstr(uri, kDirectoryDataSourceRoot)) // for abmdbdirectory://
+  if (PL_strstr(uri, kMDBDirectoryRoot)) // for abmdbdirectory://
   {
-    fileName = &(uri[PL_strlen(kDirectoryDataSourceRoot)]);
+    fileName = &(uri[PL_strlen(kMDBDirectoryRoot)]);
     dirType = PABDirectory;
   }
   DIR_AddNewAddressBook(displayName, fileName, migrating, dirType, &server);

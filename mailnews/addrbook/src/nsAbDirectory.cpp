@@ -40,8 +40,6 @@
 #include "prprf.h"
 #include "prmem.h"
 
-/* The definition is nsAddressBook.cpp */
-extern const char *kDirectoryDataSourceRoot;
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARD_CID);
@@ -59,7 +57,7 @@ nsAbDirectory::nsAbDirectory(void)
 
 nsAbDirectory::~nsAbDirectory(void)
 {
-	if (mURI && PL_strcmp(mURI, kDirectoryDataSourceRoot))
+	if (mURI && PL_strcmp(mURI, kMDBDirectoryRoot))
 	{
 		nsresult rv = NS_OK;
 
@@ -167,7 +165,7 @@ NS_IMETHODIMP nsAbDirectory::GetChildNodes(nsIEnumerator* *result)
 {
 	if (!mInitialized) 
 	{
-		if (!PL_strcmp(mURI, kDirectoryDataSourceRoot) && GetDirList())
+		if (!PL_strcmp(mURI, kMDBDirectoryRoot) && GetDirList())
 		{
 			PRInt32 count = GetDirList()->Count();
 			/* check: only show personal address book for now */
@@ -283,7 +281,7 @@ NS_IMETHODIMP nsAbDirectory::GetChildCards(nsIEnumerator* *result)
 {
 	if (mURI && mIsMailingList == -1)
 	{
-		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsAutoString file; file.AssignWithConversion(&(mURI[PL_strlen(kMDBDirectoryRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			mIsMailingList = 1;
@@ -312,7 +310,7 @@ NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const PRUnichar *dirName, const 
 	nsresult rv = DIR_AddNewAddressBook(dirName, fileName, PABDirectory, &server);
 
 	nsCOMPtr<nsIAbDirectory> newDir;
-	char *uri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, server->fileName);
+	char *uri = PR_smprintf("%s%s", kMDBDirectoryRoot, server->fileName);
 	if (uri)
 	{
 		nsCOMPtr<nsIAddrDatabase>  database;  

@@ -1549,7 +1549,7 @@ nsAbSync::AnalyzeTheLocalAddressBook()
   // this should not be hardcoded to abook.mab
   // this works for any address book...not sure why
   // absync on go againt abook.mab - candice
-  rv = rdfService->GetResource("abmdbdirectory://abook.mab", getter_AddRefs(resource));
+  rv = rdfService->GetResource(kPersonalAddressbookUri, getter_AddRefs(resource));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
   
@@ -1808,7 +1808,7 @@ nsAbSync::DeleteCardByServerID(PRInt32 aServerID)
   // this should not be hardcoded to abook.mab
   // this works for any address book...not sure why
   // absync on go againt abook.mab - candice
-  rv = rdfService->GetResource("abmdbdirectory://abook.mab", getter_AddRefs(resource));
+  rv = rdfService->GetResource(kPersonalAddressbookUri, getter_AddRefs(resource));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
   
@@ -2569,7 +2569,7 @@ nsAbSync::AddNewUsers()
   // this should not be hardcoded to abook.mab
   // this works for any address book...not sure why
   // absync on go againt abook.mab - candice
-  rv = rdfService->GetResource("abmdbdirectory://abook.mab", getter_AddRefs(resource));
+  rv = rdfService->GetResource(kPersonalAddressbookUri, getter_AddRefs(resource));
   if (NS_FAILED(rv)) 
     goto EarlyExit;
   

@@ -37,12 +37,17 @@ PRInt32 INTL_ConvertFromUnicode(const PRUnichar* uniBuffer,
 #define PREF_LDAP_VERSION_NAME     "ldap_2.version"
 #define PREF_LDAP_SERVER_TREE_NAME "ldap_2.servers"
 
-#define kCardRoot                  "abmdbcard://"
-#define kDirectoryRoot		         "abmdbdirectory://"
-#define kPersonalAddressbook		   "abook.mab"
-#define kPersonalAddressbookUri	   "abmdbdirectory://abook.mab"
-#define kCollectedAddressbook		   "history.mab"
-#define kCollectedAddressbookUri	 "abmdbdirectory://history.mab"
+/* RDF roor for all types of address books */
+/* use this to get all directories, create new directory*/
+#define kAllDirectoryRoot          "abdirectory://" 
+
+#define kMDBCardRoot               "abmdbcard://"
+#define kMDBDirectoryRoot          "abmdbdirectory://"
+#define kPersonalAddressbook       "abook.mab"
+#define kPersonalAddressbookUri    "abmdbdirectory://abook.mab"
+#define kCollectedAddressbook      "history.mab"
+#define kCollectedAddressbookUri   "abmdbdirectory://history.mab"
+
 
 /* DIR_Server.dirType */
 typedef enum

@@ -34,8 +34,6 @@
 #include "nsIMsgIdentity.h"
 #include "nsIPref.h"
 
-/* The definition is nsAddressBook.cpp */
-extern const char *kDirectoryDataSourceRoot;
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -398,7 +396,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, nsAbAutoCo
     nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    if (!fileName.EqualsWithConversion("abdirectory://"))
+    if (!fileName.EqualsWithConversion(kAllDirectoryRoot))
         rv = SearchCards(directory, searchStr, results);
     
     if (!searchSubDirectory)
@@ -529,7 +527,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     if (NS_SUCCEEDED(rv))
 		  if (NS_FAILED(SearchPreviousResults(&searchStrings, previousSearchResult, results)))
 		  {
-			  nsAutoString root; root.AssignWithConversion("abdirectory://");
+			  nsAutoString root; root.AssignWithConversion(kAllDirectoryRoot);
 			  rv = SearchDirectory(root, &searchStrings, results, PR_TRUE);
 		  }
                 

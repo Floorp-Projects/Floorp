@@ -62,9 +62,6 @@ static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_WSTRING_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
-static const char *kDirectoryDataSourceRoot = "abdirectory://";
-// static const char *kCardDataSourceRoot = "abcard://";
-
 ////////////////////////////////////////////////////////////////////////
 
 PR_STATIC_CALLBACK( void) ImportAddressThread( void *stuff);
@@ -809,7 +806,7 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		NS_WITH_PROXIED_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, NS_UI_THREAD_EVENTQ, &rv);
 		if (NS_SUCCEEDED(rv)) {
 			nsCOMPtr<nsIRDFResource>	parentResource;
-			char *parentUri = PR_smprintf( "%s", kDirectoryDataSourceRoot);
+			char *parentUri = PR_smprintf( "%s", kAllDirectoryRoot);
 			rv = rdfService->GetResource( parentUri, getter_AddRefs(parentResource));
 			nsCOMPtr<nsIAbDirectory> parentDir;
 			rv = proxyMgr->GetProxyForObject( NS_UI_THREAD_EVENTQ, NS_GET_IID( nsIAbDirectory),

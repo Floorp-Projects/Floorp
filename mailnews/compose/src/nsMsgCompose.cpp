@@ -2594,7 +2594,7 @@ static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase,
 nsresult nsMsgCompose::GetABDirectories(const char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory)
 {
   static PRBool collectedAddressbookFound;
-  if (nsCRT::strcmp(dirUri, kDirectoryRoot) == 0)
+  if (nsCRT::strcmp(dirUri, kMDBDirectoryRoot) == 0)
     collectedAddressbookFound = PR_FALSE;
 
   nsresult rv = NS_OK;
@@ -2833,7 +2833,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
   if (NS_SUCCEEDED(rv) && addrbookDirArray)
   {
     nsString dirPath;
-    GetABDirectories(kDirectoryRoot, addrbookDirArray, PR_TRUE);
+    GetABDirectories(kAllDirectoryRoot, addrbookDirArray, PR_TRUE);
     PRUint32 nbrRecipients;
 
     PRUint32 nbrAddressbook;

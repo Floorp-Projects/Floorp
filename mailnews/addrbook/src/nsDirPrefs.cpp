@@ -53,7 +53,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
    file operation routines */
 #define ABFileName_kPreviousSuffix ".na2" /* final v2 address book format */
 
-const char *kMainPersonalAddressBook = kPersonalAddressbook; /* v3 main personal address book file */
 const char *kMainLdapAddressBook = "ldap.mab"; /* v3 main ldap address book file */
 
 #define ABFileName_kCurrentSuffix ".mab" /* v3 address book extension */
@@ -380,7 +379,7 @@ static nsresult dir_ConvertToMabFileName()
 					DIR_SavePrefsForOneServer(newServer);
 
 					PR_FREEIF (server->fileName);
-					server->fileName = PL_strdup(kMainPersonalAddressBook);
+					server->fileName = PL_strdup(kPersonalAddressbook);
 					DIR_SavePrefsForOneServer(server);
 				}
 			}
@@ -469,7 +468,7 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
 		if (fileName)
 			server->fileName = PL_strdup(fileName);
 		else
-			DIR_SetFileName(&server->fileName, kMainPersonalAddressBook);
+			DIR_SetFileName(&server->fileName, kPersonalAddressbook);
 
 		dir_ServerList->AppendElement(server);
 		if (!migrating) {
@@ -2875,7 +2874,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 
 		/* set default personal address book file name*/
 		if (server->position == 1)
-			server->fileName = PL_strdup(kMainPersonalAddressBook);
+			server->fileName = PL_strdup(kPersonalAddressbook);
 		else
 		{
 			/* now use the pref name as the file name since we know the pref name
@@ -2901,7 +2900,7 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 			if (server->dirType == LDAPDirectory)
 				DIR_SetFileName(&(server->fileName), kMainLdapAddressBook); /* generates file name with an ldap prefix */
 			else
-				DIR_SetFileName(&(server->fileName), kMainPersonalAddressBook);
+				DIR_SetFileName(&(server->fileName), kPersonalAddressbook);
 		}
 	}
 }

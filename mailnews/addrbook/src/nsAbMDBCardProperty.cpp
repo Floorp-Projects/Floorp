@@ -41,9 +41,6 @@ static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 
-/* The definition is nsAddressBook.cpp */
-extern const char *kDirectoryDataSourceRoot;
-extern const char *kCardDataSourceRoot;
 
 nsAbMDBCardProperty::nsAbMDBCardProperty(void)
 {
@@ -284,9 +281,9 @@ NS_IMETHODIMP nsAbMDBCardProperty::GetCardURI(char **uri)
 			if (file && m_dbRowID)
 			{
 				if (m_bIsMailList)
-					cardURI = PR_smprintf("%s%s/ListCard%ld", kCardDataSourceRoot, file, m_dbRowID);
+					cardURI = PR_smprintf("%s%s/ListCard%ld", kMDBCardRoot, file, m_dbRowID);
 				else
-					cardURI = PR_smprintf("%s%s/Card%ld", kCardDataSourceRoot, file, m_dbRowID);
+					cardURI = PR_smprintf("%s%s/Card%ld", kMDBCardRoot, file, m_dbRowID);
 			}
 			if (file)
 				nsCRT::free(file);
@@ -517,7 +514,7 @@ nsresult nsAbMDBCardProperty::GetCardDatabase(const char *uri)
 		abSession->GetUserProfileDirectory(&dbPath);
 
 		const char* file = nsnull;
-		file = &(uri[PL_strlen(kDirectoryDataSourceRoot)]);
+		file = &(uri[PL_strlen(kMDBDirectoryRoot)]);
 		(*dbPath) += file;
 		
 		if (dbPath->Exists())
