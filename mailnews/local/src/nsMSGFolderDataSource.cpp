@@ -211,7 +211,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 		{
 			rootFolder->SetName("Mail and News");
 			rootFolder->SetDepth(0);
-			nsNativeFileSpec startPath("h:\\user\\warren\\Mail", PR_FALSE);
+			nsNativeFileSpec startPath("c:\\Program Files\\Netscape\\Users\\mscott\\Mail", PR_FALSE);
 			if (NS_FAILED(rv = InitLocalFolders(rootFolder, startPath, 1)))
 				return rv;
 
@@ -261,7 +261,8 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 		if (peq(kNC_Name, property)) {
 			char *name;
 			rv = folder->GetName(&name);
-			createNode(name, target);
+			nsString nameString(name);
+			createNode(nameString, target);
       PR_FREEIF(name);
 		}
 		else {
