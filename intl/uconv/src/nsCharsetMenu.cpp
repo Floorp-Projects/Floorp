@@ -118,7 +118,6 @@ private:
   nsObjectArray mBrowserMenu;
   nsObjectArray mBrowserMoreMenu;
   PRInt32       mStaticCount;
-  PRInt32       mCurrentCharset;
 
   nsresult Init();
   nsresult Done();
@@ -154,6 +153,7 @@ private:
       nsICharsetConverterManager * aCCMan, nsObjectArray * aObjectArray, 
       nsIRDFContainer * aContainer, char * aKey, nsString ** aDecs, 
       PRInt32 aCount);
+  nsresult AddCharsetToCache(nsObjectArray * aArray, nsString * aCharset);
   nsresult RemoveFlaggedCharsets(nsString ** aList, PRInt32 aCount, 
       nsICharsetConverterManager * aCCMan, nsString * aProp);
   nsresult RemoveStaticCharsets(nsString ** aList, PRInt32 aCount, 
@@ -294,7 +294,7 @@ nsIRDFResource * nsCharsetMenu::kNC_BookmarkSeparator = NULL;
 nsIRDFResource * nsCharsetMenu::kRDF_type = NULL;
 
 nsCharsetMenu::nsCharsetMenu() 
-:mStaticCount(0), mCurrentCharset(-1)
+:mStaticCount(0)
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
@@ -512,37 +512,37 @@ nsresult nsCharsetMenu::InitBrowserMoreXMenu(nsIRDFService * aRDFServ,
   res = NewRDFContainer(mInner, kNC_BrowserMore1CharsetMenuRoot, 
       getter_AddRefs(container1));
   if (NS_FAILED(res)) return res;
-  AddFromStringToMenu(cs1, aRDFServ, aCCMan, &mBrowserMenu, container1, 
+  AddFromStringToMenu(cs1, aRDFServ, aCCMan, &mBrowserMore1Menu, container1, 
       aDecs, aCount);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore2CharsetMenuRoot, 
       getter_AddRefs(container2));
   if (NS_FAILED(res)) return res;
-  AddFromStringToMenu(cs2, aRDFServ, aCCMan, &mBrowserMenu, container2, 
+  AddFromStringToMenu(cs2, aRDFServ, aCCMan, &mBrowserMore2Menu, container2, 
       aDecs, aCount);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore3CharsetMenuRoot, 
       getter_AddRefs(container3));
   if (NS_FAILED(res)) return res;
-  AddFromStringToMenu(cs3, aRDFServ, aCCMan, &mBrowserMenu, container3, 
+  AddFromStringToMenu(cs3, aRDFServ, aCCMan, &mBrowserMore3Menu, container3, 
       aDecs, aCount);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore4CharsetMenuRoot, 
       getter_AddRefs(container4));
   if (NS_FAILED(res)) return res;
-  AddFromStringToMenu(cs4, aRDFServ, aCCMan, &mBrowserMenu, container4, 
+  AddFromStringToMenu(cs4, aRDFServ, aCCMan, &mBrowserMore4Menu, container4, 
       aDecs, aCount);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore5CharsetMenuRoot, 
       getter_AddRefs(container5));
   if (NS_FAILED(res)) return res;
-  AddFromStringToMenu(cs5, aRDFServ, aCCMan, &mBrowserMenu, container5, 
+  AddFromStringToMenu(cs5, aRDFServ, aCCMan, &mBrowserMore5Menu, container5, 
       aDecs, aCount);
 
   res = NewRDFContainer(mInner, kNC_BrowserMore6CharsetMenuRoot, 
       getter_AddRefs(container6));
   if (NS_FAILED(res)) return res;
-  AddFromStringToMenu(cs6, aRDFServ, aCCMan, &mBrowserMenu, container6, 
+  AddFromStringToMenu(cs6, aRDFServ, aCCMan, &mBrowserMore6Menu, container6, 
       aDecs, aCount);
 
   return res;
@@ -644,10 +644,16 @@ nsresult nsCharsetMenu::AddItemToArray(nsICharsetConverterManager * aCCMan,
     goto done;
   }
 
-  item->mName = new nsString(*aCharset);
-  if (item->mName  == NULL) {
-    res = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
+  // XXX positively hacky
+  if (aObjectArray == &mBrowserMenu) {
+    item->mName = new nsString("charset.");
+    item->mName->Append(*aCharset);
+  } else {
+    item->mName = new nsString(*aCharset);
+    if (item->mName  == NULL) {
+      res = NS_ERROR_OUT_OF_MEMORY;
+      goto done;
+    }
   }
 
   res = aCCMan->GetCharsetTitle(aCharset, &item->mTitle);
@@ -798,6 +804,36 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(nsIPref * aPref,
   return res;
 }
 
+nsresult nsCharsetMenu::AddCharsetToCache(nsObjectArray * aArray, 
+                                          nsString * aCharset)
+{
+  PRInt32 i;
+  nsresult res = NS_OK;
+
+  nsAutoString charset("charset.");
+  charset.Append(*aCharset);
+  i = FindItem(aArray, &charset, NULL);
+  if (i >= 0) return res;
+
+  nsCOMPtr<nsIRDFContainer> container;
+
+  NS_WITH_SERVICE(nsIRDFService, rdfServ, kRDFServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccMan, kCharsetConverterManagerCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  res = NewRDFContainer(mInner, kNC_BrowserCharsetMenuRoot, getter_AddRefs(container));
+  if (NS_FAILED(res)) return res;
+
+
+  // XXX insert into first cache position, not at the end
+  // XXX iff too many items, remove last one.
+  res = AddItemToMenu(rdfServ, ccMan, aArray, container, aCharset);
+
+  return res;
+}
+
 nsresult nsCharsetMenu::RemoveFlaggedCharsets(nsString ** aList, PRInt32 aCount,
                                               nsICharsetConverterManager * aCCMan,
                                               nsString * aProp)
@@ -838,7 +874,7 @@ nsresult nsCharsetMenu::RemoveStaticCharsets(nsString ** aList, PRInt32 aCount,
 }
 
 PRInt32 nsCharsetMenu::FindItem(nsObjectArray * aArray,
-                                 nsString * aCharset, nsMenuItem ** aResult)
+                                nsString * aCharset, nsMenuItem ** aResult)
 {
   PRInt32 size = aArray->GetUsage();
   nsMenuItem ** array = (nsMenuItem **)aArray->GetArray();
@@ -909,23 +945,9 @@ nsresult nsCharsetMenu::NewRDFContainer(nsIRDFDataSource * aDataSource,
 
 NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
 {
-  nsString * oldCurrent = NULL;
-  nsAutoString newCurrent(aCharset);  // this is the incoming current charset
-  nsMenuItem * item = (nsMenuItem *) mBrowserMoreMenu.GetObject(mCurrentCharset);
-  if (item != NULL) oldCurrent = item->mName;
-  
-  // turn off checkmark on old current
-  if (oldCurrent != NULL) SetCharsetCheckmark(oldCurrent, PR_FALSE);
-
-  // XXX iff necessary, add new charset item, freeing a position if needed
-
-  // set the new current
-  mCurrentCharset = FindItem(&mBrowserMenu, &newCurrent, NULL);
-
-  // turn on checkmark on current charset
-  SetCharsetCheckmark(&newCurrent, PR_TRUE);
-
-  return NS_OK;
+  // iff necessary, add new charset item, freeing a position if needed
+  nsAutoString charset(aCharset);
+  return AddCharsetToCache(&mBrowserMenu, &charset);
 }
 
 //----------------------------------------------------------------------------
