@@ -167,9 +167,11 @@ nsAttrAndChildArray::ReplaceChildAt(nsIContent* aChild, PRUint32 aPos)
   NS_ASSERTION(aPos < ChildCount(), "out-of-bounds");
   void** pos = mImpl->mBuffer + AttrSlotsSize() + aPos;
   nsIContent* child = NS_STATIC_CAST(nsIContent*, *pos);
-  NS_RELEASE(child);
   *pos = aChild;
+
+  // Make sure to addref first, in case aChild == child
   NS_ADDREF(aChild);
+  NS_RELEASE(child);
 }
 
 PRInt32
