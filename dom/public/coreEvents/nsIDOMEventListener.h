@@ -35,6 +35,8 @@ class nsIDOMEventListener : public nsISupports {
 
 public:
 
+  static const nsIID& IID() { static nsIID iid = NS_IDOMEVENTLISTENER_IID; return iid; }
+
  /**
   * Processes all events excepting mouse and key events. 
   * @param anEvent the event to process. @see nsIDOMEvent.h for event types.
