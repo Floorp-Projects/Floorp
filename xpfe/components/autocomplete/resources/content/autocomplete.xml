@@ -11,7 +11,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="autocomplete" display="xul:menu"
-           extends="chrome://global/content/xulBindings.xml#textbox">
+           extends="chrome://global/content/bindings/textbox.xml#textbox">
     <resources>
       <stylesheet src="chrome://global/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
@@ -1022,7 +1022,7 @@
     </handlers>
   </binding> 
 
-  <binding id="autocomplete-result-popup" extends="chrome://global/content/xulBindings.xml#popups">
+  <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <resources>
       <stylesheet src="chrome://global/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
@@ -1177,7 +1177,7 @@
     </handlers>
   </binding>
 
-  <binding id="autocomplete-outliner" extends="chrome://global/content/outlinerBindings.xml#outliner">
+  <binding id="autocomplete-outliner" extends="chrome://global/content/bindings/outliner.xml#outliner">
     <resources>
       <stylesheet src="chrome://global/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
@@ -1208,6 +1208,8 @@
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
 
+      <property name="mLastMoveTime">new Date()</property>
+
       <method name="getHoverCell">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -1228,8 +1230,12 @@
       <handler event="mouseup" action="this.textbox.onResultClick();"/>
 
       <handler event="mousemove"><![CDATA[
-        var rc = this.getHoverCell(event);
-        this.textbox.view.selectedIndex = rc.row;
+        if (new Date() - this.mLastMoveTime > 30) {
+          var rc = this.getHoverCell(event);
+          if (rc.row != this.textbox.view.selectedIndex)
+            this.textbox.view.selectedIndex = rc.row;
+          this.mLastMoveTime = new Date();
+        }
       ]]></handler>
     </handlers>
   </binding>
@@ -1255,7 +1261,7 @@
     </resources>
   </binding>
 
-  <binding id="autocomplete-history-popup" extends="chrome://global/content/xulBindings.xml#popups">
+  <binding id="autocomplete-history-popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <resources>
       <stylesheet src="chrome://global/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
