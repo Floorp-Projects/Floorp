@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.60 2003/01/08 21:48:40 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.61 2003/02/20 16:58:53 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -481,7 +481,6 @@ loser:
 #endif
 	pk11sdr_Init();
 	cert_CreateSubjectKeyIDHashTable();
-	SECMOD_InitCallOnce();
 	nss_IsInitted = PR_TRUE;
     }
     return rv;
@@ -555,7 +554,6 @@ NSS_Shutdown(void)
     SECOID_Shutdown();
     status = STAN_Shutdown();
     cert_DestroySubjectKeyIDHashTable();
-    SECMOD_CleanupCallOnce();
     rv = SECMOD_Shutdown();
     pk11sdr_Shutdown();
     if (status == PR_FAILURE) {
