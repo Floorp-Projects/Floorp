@@ -54,6 +54,7 @@ function onLoad() {
     sfile.initWithPath("/");
   }
 
+  retvals.buttonStatus = nsIFilePicker.returnCancel;
   addToHistory(sfile.path);
 
   getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
@@ -83,8 +84,11 @@ function onOK()
     isFile = file.isFile();
   } else {
     /* look for something in our current directory */
-    var nfile = sfile.clone();
-    nfile.append(file.path);
+    var nfile = sfile.clone().QueryInterface(nsILocalFile);
+    if (file.path[0] == '/')   /* an absolute path was entered */
+      nfile.initWithPath(file.path)
+    else
+      nfile.appendRelativePath(file.path);
     /*    dump(nfile.path); */
     if (nfile.exists()) {
       file = nfile;
