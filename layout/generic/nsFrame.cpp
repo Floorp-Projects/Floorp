@@ -766,7 +766,7 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEve
   // Test if special 'table selection' key is pressed
   PRBool doTableSelection;
   
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   doTableSelection = aMouseEvent->isMeta;
 #else
   doTableSelection = aMouseEvent->isControl;
@@ -1079,7 +1079,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
   if (me->isControl)
     return NS_OK;//short ciruit. hard coded for mac due to time restraints.
 #endif
