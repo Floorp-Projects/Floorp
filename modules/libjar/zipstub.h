@@ -57,7 +57,7 @@
 #define PL_strcpy         strcpy
 #define PL_strlen         strlen
 
-#define PR_Open(a,b,c)    fopen((a),(b))
+#define PR_Open(a,b,c)    fopen((a),(b)) // XXX Ignores mode
 #define PR_Read(f,d,n)    fread((d),1,(n),(f))
 #define PR_Write(f,s,n)   fwrite((s),1,(n),(f))
 #define PR_Close          fclose

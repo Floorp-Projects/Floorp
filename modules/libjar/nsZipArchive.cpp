@@ -105,6 +105,7 @@ char * strdup(const char *src)
 #endif /* STANDALONE */
 
 #ifdef XP_UNIX
+    #include <sys/types.h>
     #include <sys/stat.h>
     #include <limits.h>
     #include <unistd.h>
@@ -478,7 +479,7 @@ PRInt32 nsZipArchive::OpenArchive(const char * aArchiveName)
     return ZIP_ERR_PARAM;
 
   //-- open the physical file
-  mFd = PR_Open(aArchiveName, PR_RDONLY, 0);
+  mFd = PR_Open(aArchiveName, PR_RDONLY, 0000);
   if (mFd == 0)
     return ZIP_ERR_DISK;
 
@@ -656,12 +657,26 @@ PRUint32 nsZipReadState::Available()
 PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname,
                                   PRFileDesc* aFd)
 {
-  PRFileDesc* fOut = PR_Open(aOutname, ZFILE_CREATE, 0644);
+  //-- Find item in archive
+  nsZipItem* item = GetFileItem(zipEntry);
+  if (!item)
+    return ZIP_ERR_FNF;
+
+  // delete any existing file so that we overwrite the file permissions
+  PR_Delete(aOutname);
+
+  PRFileDesc* fOut = PR_Open(aOutname, ZFILE_CREATE, item->mode);
   if (fOut == 0)
     return ZIP_ERR_DISK;
 
-  nsZipItem *item = 0;
-  PRInt32 status = ExtractFileToFileDesc(zipEntry, fOut, &item, aFd);
+#if defined(XP_UNIX) && defined(STANDALONE)
+  // When STANDALONE is defined, PR_Open ignores its 3d argument.
+  mode_t msk = umask(0);
+  umask(msk);
+  chmod(aOutname, item->mode & ~msk);
+#endif
+
+  PRInt32 status = ExtractItemToFileDesc(item, fOut, aFd);
   PR_Close(fOut);
 
   if (status != ZIP_OK)
@@ -673,29 +688,22 @@ PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname,
   {
     if (ZIFLAG_SYMLINK & item->flags)
     {
-       status = ResolveSymlink(aOutname,item);
+      status = ResolveSymlink(aOutname, item);
     }
-    //-- set extracted file permissions
-    chmod(aOutname, item->mode);
   }
 #endif
   return status;
 }
 
 PRInt32
-nsZipArchive::ExtractFileToFileDesc(const char * zipEntry, PRFileDesc* outFD,
-                                    nsZipItem **outItem, PRFileDesc* aFd)
+nsZipArchive::ExtractItemToFileDesc(nsZipItem* item, PRFileDesc* outFD,
+                                    PRFileDesc* aFd)
 {
   //-- sanity check arguments
-  if (zipEntry == 0 || outFD == 0 || outItem == 0)
+  if (item == 0 || outFD == 0)
     return ZIP_ERR_PARAM;
 
   PRInt32 status;
-
-  //-- Find item in archive
-  nsZipItem* item = GetFileItem(zipEntry);
-  if (!item)
-    return ZIP_ERR_FNF;
 
   //-- extract the file using the appropriate method
   switch(item->compression)
@@ -713,7 +721,6 @@ nsZipArchive::ExtractFileToFileDesc(const char * zipEntry, PRFileDesc* outFD,
       return ZIP_ERR_UNSUPPORTED;
   }
 
-  *outItem = item;
   return status;
 }
 
@@ -833,7 +840,7 @@ PRInt32 nsZipArchive::ResolveSymlink(const char *path, nsZipItem *item)
   if (item->flags & ZIFLAG_SYMLINK)
   {
     char buf[PATH_MAX+1];
-    PRFileDesc * fIn = PR_Open(path, PR_RDONLY, 0644);
+    PRFileDesc * fIn = PR_Open(path, PR_RDONLY, 0000);
     if (fIn)
     {
       PRInt32 length = PATH_MAX;
