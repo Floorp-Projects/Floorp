@@ -1293,6 +1293,13 @@ nsMathMLChar::SetStyleContext(nsStyleContext* aStyleContext)
     if (aStyleContext) {
       mStyleContext = aStyleContext;
       aStyleContext->AddRef();
+
+      // Sync the pointers of child chars.
+      nsMathMLChar* child = mSibling;
+      while (child) {
+        child->mStyleContext = mStyleContext;
+        child = child->mSibling;
+      }
     }
   }
 }
