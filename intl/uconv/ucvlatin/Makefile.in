@@ -30,10 +30,31 @@ CSRCS		=  \
 
 CPPSRCS		= \
                   nsLatin1ToUnicode.cpp \
+                  nsISO88592ToUnicode.cpp \
                   nsISO88597ToUnicode.cpp \
+                  nsISO88599ToUnicode.cpp \
+                  nsCP1250ToUnicode.cpp \
+                  nsCP1252ToUnicode.cpp \
                   nsCP1253ToUnicode.cpp \
+                  nsCP1254ToUnicode.cpp \
+                  nsMacRomanToUnicode.cpp \
+                  nsMacCEToUnicode.cpp \
+                  nsMacGreekToUnicode.cpp \
+                  nsMacTurkishToUnicode.cpp \
                   nsUTF8ToUnicode.cpp \
                   nsUnicodeToLatin1.cpp \
+                  nsUnicodeToISO88592.cpp \
+                  nsUnicodeToISO88597.cpp \
+                  nsUnicodeToISO88599.cpp \
+                  nsUnicodeToCP1250.cpp \
+                  nsUnicodeToCP1252.cpp \
+                  nsUnicodeToCP1253.cpp \
+                  nsUnicodeToCP1254.cpp \
+                  nsUnicodeToMacRoman.cpp \
+                  nsUnicodeToMacCE.cpp \
+                  nsUnicodeToMacGreek.cpp \
+                  nsUnicodeToMacTurkish.cpp \
+                  nsUnicodeToUTF8.cpp \
                   ns1ByteToUnicodeBase.cpp \
 		  nsUCvLatinSupport.cpp \
                   nsUCvLatinDll.cpp \
