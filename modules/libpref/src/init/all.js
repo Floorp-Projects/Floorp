@@ -152,12 +152,6 @@ pref("browser.tabs.loadGroup", 1);
 pref("browser.tabs.loadOnNewTab", 0);
 pref("browser.windows.loadOnNewWindow", 1);
 
-// link handling in tabbed browsers. values from nsIBrowserDOMWindow.
-pref("browser.link.open_external", 1);
-pref("browser.link.open_newwindow", 2);
-pref("browser.link.open_newwindow.ui", 3); // prefs UI version
-pref("browser.link.open_newwindow.restriction", 0); // values from GlobalWindow
-
 // view source
 pref("view_source.syntax_highlight", true);
 pref("view_source.wrap_long_lines", false);
