@@ -48,9 +48,7 @@ use Token;
 
 # Throw an error if the form does not contain an "action" field specifying
 # what the user wants to do.
-$::FORM{'a'}
-  || DisplayError("I could not figure out what you wanted to do.")
-  && exit;
+$::FORM{'a'} || ThrowCodeError("unknown_action");
 
 # Assign the action to a global variable.
 $::action = $::FORM{'a'};
@@ -65,8 +63,7 @@ if ($::FORM{'t'}) {
   # Make sure the token contains only valid characters in the right amount.
   my $validationerror = ValidatePassword($::token);
   if ($validationerror) {
-      DisplayError('The token you entered is invalid.');
-      exit;
+      ThrowUserError("token_invalid");
   }
 
 
@@ -74,29 +71,22 @@ if ($::FORM{'t'}) {
 
   # Make sure the token exists in the database.
   SendSQL( "SELECT tokentype FROM tokens WHERE token = $::quotedtoken" );
-  (my $tokentype = FetchSQLData())
-    || DisplayError("The token you submitted does not exist, has expired, or has been cancelled.")
-    && exit;
+  (my $tokentype = FetchSQLData()) || ThrowUserError("token_inexistent");
 
   # Make sure the token is the correct type for the action being taken.
   if ( grep($::action eq $_ , qw(cfmpw cxlpw chgpw)) && $tokentype ne 'password' ) {
-    DisplayError("That token cannot be used to change your password.");
-    Token::Cancel($::token, "user tried to use token to change password");
-    exit;
+    Token::Cancel($::token, "wrong_token_for_changing_passwd");
+    ThrowUserError("wrong_token_for_changing_passwd");
   }
   if ( ($::action eq 'cxlem') 
       && (($tokentype ne 'emailold') && ($tokentype ne 'emailnew')) ) {
-    DisplayError("That token cannot be used to cancel an email address change.");
-    Token::Cancel($::token, 
-                  "user tried to use token to cancel email address change");
-    exit;
+    Token::Cancel($::token, "wrong_token_for_cancelling_email_change");
+    ThrowUserError("wrong_token_for_cancelling_email_change");
   }
   if ( grep($::action eq $_ , qw(cfmem chgem)) 
       && ($tokentype ne 'emailnew') ) {
-    DisplayError("That token cannot be used to change your email address.");
-    Token::Cancel($::token, 
-                  "user tried to use token to confirm email address change");
-    exit;
+    Token::Cancel($::token, "wrong_token_for_confirming_email_change");
+    ThrowUserError("wrong_token_for_confirming_email_change");
   }
 }
 
@@ -104,8 +94,7 @@ if ($::FORM{'t'}) {
 # their login name and it exists in the database.
 if ( $::action eq 'reqpw' ) {
     defined $::FORM{'loginname'}
-      || DisplayError("You must enter a login name when requesting to change your password.")
-      && exit;
+      || ThrowUserError("login_needed_for_password_change");
 
     # Make sure the login name looks like an email address.  This function
     # displays its own error and stops execution if the login name looks wrong.
@@ -114,8 +103,7 @@ if ( $::action eq 'reqpw' ) {
     my $quotedloginname = SqlQuote($::FORM{'loginname'});
     SendSQL("SELECT userid FROM profiles WHERE login_name = $quotedloginname");
     FetchSQLData()
-      || DisplayError("There is no Bugzilla account with that login name.")
-      && exit;
+      || ThrowUserError("account_inexistent");
 }
 
 # If the user is changing their password, make sure they submitted a new
@@ -123,8 +111,7 @@ if ( $::action eq 'reqpw' ) {
 if ( $::action eq 'chgpw' ) {
     defined $::FORM{'password'}
       && defined $::FORM{'matchpassword'}
-      || DisplayError("You cannot change your password without submitting a new one.")
-      && exit;
+      || ThrowUserError("require_new_password");
 
      my $passworderror = ValidatePassword($::FORM{'password'}, $::FORM{'matchpassword'});
      if ( $passworderror ) {
@@ -159,7 +146,7 @@ if ($::action eq 'reqpw') {
     # If the action that the user wants to take (specified in the "a" form field)
     # is none of the above listed actions, display an error telling the user 
     # that we do not understand what they would like to do.
-    DisplayError("I could not figure out what you wanted to do.");
+    ThrowCodeError("unknown_action");
 }
 
 exit;
@@ -187,9 +174,8 @@ sub confirmChangePassword {
 }
 
 sub cancelChangePassword {    
-    Token::Cancel($::token, "user requested cancellation");
-
     $vars->{'message'} = "password_change_canceled";
+    Token::Cancel($::token, $vars->{'message'});
 
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
@@ -244,15 +230,14 @@ sub changeEmail {
 
     # Check the user entered the correct old email address
     if($::FORM{'email'} ne $old_email) {
-        DisplayError("Email Address confirmation failed");
-        exit;
+        ThrowUserError("email_confirmation_failed");
     }
     # The new email address should be available as this was 
     # confirmed initially so cancel token if it is not still available
     if (! ValidateNewUser($new_email,$old_email)) {
-        DisplayError("Account $new_email already exists.");
-        Token::Cancel($::token,"Account $new_email already exists.");
-        exit;
+        $vars->{'email'} = $new_email;
+        Token::Cancel($::token,"account_exists");
+        ThrowUserError("account_exists");
     } 
 
     # Update the user's login name in the profiles table and delete the token
@@ -286,8 +271,7 @@ sub cancelChangeEmail {
     my ($old_email, $new_email) = split(/:/,$eventdata);
 
     if($tokentype eq "emailold") {
-        $vars->{'message'} = "The request to change the email address " .
-            "for your account to $new_email has been cancelled.";
+        $vars->{'message'} = "emailold_change_cancelled";
 
         SendSQL("SELECT login_name FROM profiles WHERE userid = $userid");
         my $actualemail = FetchSQLData();
@@ -302,14 +286,15 @@ sub cancelChangeEmail {
                  WHERE    userid = $userid");
             SendSQL("UNLOCK TABLES");
             DeriveGroup($userid);
-            $vars->{'message'} .= 
-                "  Your old account settings have been reinstated.";
+            $vars->{'message'} = "email_change_cancelled_reinstated";
         } 
     } 
     else {
-        $vars->{'message'} = "The request to change the email address " .
-            "for the $old_email account to $new_email has been cancelled.";
-    }
+        $vars->{'message'} = 'email_change_cancelled'
+     }
+
+    $vars->{'old_email'} = $old_email;
+    $vars->{'new_email'} = $new_email;
     Token::Cancel($::token, $vars->{'message'});
 
     SendSQL("LOCK TABLES tokens WRITE");
@@ -320,8 +305,6 @@ sub cancelChangeEmail {
 
     # Return HTTP response headers.
     print "Content-Type: text/html\n\n";
-
-    $vars->{'title'} = "Cancel Request to Change Email Address";
 
     $template->process("global/message.html.tmpl", $vars)
       || ThrowTemplateError($template->error());

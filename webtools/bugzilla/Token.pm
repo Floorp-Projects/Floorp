@@ -176,8 +176,7 @@ sub GenerateUniqueToken {
 
         ++$tries;
         if ($tries > 100) {
-            &::DisplayError("Something is seriously wrong with the token generation system.");
-            exit;
+            &::ThrowCodeError("token_generation_error");
         }
 
         $token = &::GenerateRandomPassword();

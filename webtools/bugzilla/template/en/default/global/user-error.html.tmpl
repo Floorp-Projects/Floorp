@@ -48,8 +48,17 @@
             
   [% ELSIF error == "account_exists" %]
     [% title = "Account Already Exists" %]
-    That account already exists.
+    There is already an account with
+    [% IF email %]
+      the login name [% email FILTER html %].
+    [% ELSE %]
+      that login name.
+    [% END %]
                   
+  [% ELSIF error == "account_inexistent" %]
+    [% title = "Account Does Not Exist" %]
+    There is no Bugzilla account with that login name.
+
   [% ELSIF error == "alias_has_comma_or_space" %]
     [% title = "Invalid Characters In Alias" %]
     The alias you entered, <em>[% alias FILTER html %]</em>,
@@ -134,6 +143,10 @@
     really make sense to mark a bug as a duplicate of itself, 
     does it?  
     
+  [% ELSIF error == "email_confirmation_failed" %]
+    [% title = "Email Address Email Address Confirmation Failed" %]
+    Email address confirmation failed.
+
   [% ELSIF error == "file_not_specified" %]
     [% title = "No File Specified" %]
     You did not specify a file to attach.
@@ -259,6 +272,10 @@
     [% title = "Invalid Username Or Password" %]
     The username or password you entered is not valid.
                     
+  [% ELSIF error == "login_needed_for_password_change" %]
+    [% title = "Login Name Required" %]
+    You must enter a login name when requesting to change your password.
+
   [% ELSIF error == "milestone_required" %]
     [% title = "Milestone Required" %]
     You must determine a target milestone for bug [% bug_id %]
@@ -366,6 +383,15 @@
       100 users.  Enter more of the name to bring the number of matches 
       down to a reasonable amount.
   
+  [% ELSIF error == "require_new_password" %]
+     [% title = "New Password Needed" %]
+     You cannot change your password without submitting a new one.
+
+  [% ELSIF error == "token_inexistent" %]
+     [% title = "Token Does Not Exist" %]
+     The token you submitted does not exist, has expired, or has
+     been cancelled.
+
   [% ELSIF error == "unknown_keyword" %]
     [% title = "Unknown Keyword" %]
     <code>[% keyword FILTER html %]</code> is not a known keyword. 
@@ -375,6 +401,18 @@
     [% title = "Unknown Tab" %]
     <code>[% current_tab_name FILTER html %]</code> is not a legal tab name.    
     
+  [% ELSIF error == "wrong_token_for_cancelling_email_change" %]
+    [% title = "Wrong Token" %]
+    That token cannot be used to cancel an email address change.
+
+  [% ELSIF error == "wrong_token_for_changing_passwd" %]
+    [% title = "Wrong Token" %]
+    That token cannot be used to change your password.
+
+  [% ELSIF error == "wrong_token_for_confirming_email_change" %]
+    [% title = "Wrong Token" %]
+    That token cannot be used to change your email address.
+
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]
     The file you are trying to attach is empty!    

@@ -127,6 +127,9 @@
   [% ELSIF error == "request_queue_group_invalid" %]
     The group field <em>[% group FILTER html %]</em> is invalid.
 
+  [% ELSIF error == "token_generation_error" %]
+    Something is seriously wrong with the token generation system.
+
   [% ELSIF error == "template_error" %]
     [% template_error_msg %]
 
@@ -134,7 +137,11 @@
     [% field FILTER html %] was not defined; [% Param('browserbugmessage') %]
 
   [% ELSIF error == "unknown_action" %]
-    Unknown action [% action FILTER html %]!
+    [% IF action %]
+       Unknown action [% action FILTER html %]!
+    [% ELSE %]
+       I could not figure out what you wanted to do.
+    [% END %]
     
   [% ELSIF error == "unknown_component" %]
     [% title = "Unknown Component" %]

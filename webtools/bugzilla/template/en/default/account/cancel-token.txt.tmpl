@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s):     John Vandenberg <zeroj@null.net>
+  #                     Tobias Burnus <burnus@net-b.de>
   #%]
 From: bugzilla-admin-daemon
 To: [% emailaddress %]
@@ -34,6 +35,47 @@ to [% maintainer %] if you suspect foul play.
              User: [% emailaddress %]
        Issue Date: [% issuedate %]
        Event Data: [% eventdata %]
-Cancelled Because: [% cancelaction %]
+Cancelled Because:
+[% PROCESS cancelactionmessage %]
 
+[% BLOCK cancelactionmessage %]
+  [% IF    cancelaction == 'account_exists' %]
+    Account [% email %] already exists.
 
+  [% ELSIF cancelaction == 'email_change_cancelled' %]
+    The request to change the email address for the
+    [% old_email %] account to [% new_email %]
+    has been cancelled.
+
+  [% ELSIF cancelaction == 'email_change_cancelled_reinstated' %]
+    The request to change the email address for your account to
+    [% new_email %] has been cancelled. Your old account
+    settings have been reinstated.
+
+  [% ELSIF cancelaction == 'emailold_change_cancelled' %]
+    The request to change the email address for your account
+    to [% new_email %] has been cancelled.
+
+  [% ELSIF cancelaction == 'password_change_canceled' %]
+    The user requested cancellation.
+
+  [% ELSIF cancelaction == 'wrong_token_for_changing_passwd' %]
+    The user tried to use the token to change the password.
+
+  [% ELSIF cancelaction == 'wrong_token_for_cancelling_email_change' %]
+    The user tried to use the token to cancel the email address change.
+
+  [% ELSIF cancelaction == 'wrong_token_for_confirming_email_change' %]
+    The user tried to use the token to confirm the email address change.
+
+  [% ELSE %]
+    [%# Give sensible error if the cancel-token function is used incorrectly.
+      #%]        
+    You are using Bugzilla's cancel-token function incorrectly. You
+    passed in the string '[% cancelaction %]'. The correct use is to pass
+    in a tag, and define that tag in the file cancel-token.txt.tmpl.
+
+    If you are a Bugzilla end-user seeing this message, please forward this
+    email to [% Param('maintainer') %].
+  [% END %]
+[% END %]
