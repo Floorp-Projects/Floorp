@@ -4268,7 +4268,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   // layout model) or aVPercent is not NS_PRESSHELL_SCROLL_ANYWHERE, we need to
   // change the top of the bounds to include the whole line.
   if (frameBounds.height == 0 || aVPercent != NS_PRESSHELL_SCROLL_ANYWHERE) {
-    nsIAtom* frameType;
+    nsIAtom* frameType = NULL;
     nsIFrame *prevFrame = aFrame;
     nsIFrame *frame = aFrame;
 
@@ -6294,9 +6294,9 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 #endif
 
     // If reflow is interruptible, then make a note of our deadline.
-    PRIntervalTime deadline;
-    if (aInterruptible)
-      deadline = PR_IntervalNow() + PR_MicrosecondsToInterval(gMaxRCProcessingTime);
+    const PRIntervalTime deadline = aInterruptible
+        ? PR_IntervalNow() + PR_MicrosecondsToInterval(gMaxRCProcessingTime)
+        : (PRIntervalTime)0;
 
     // force flushing of any pending notifications
     mDocument->BeginUpdate(UPDATE_ALL);
