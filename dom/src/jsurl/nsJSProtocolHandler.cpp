@@ -227,14 +227,14 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     nsCOMPtr<nsIPrincipal> principal;
     nsCOMPtr<nsIURI> referringUri;
     if (originalURI) {
+      // XXX this is wrong: see bugs 31818 and 29831. warren is looking at it.
       referringUri = originalURI;
     } else {
-      nsCOMPtr<nsIDocShell> docShell;
-      docShell = do_QueryInterface(globalOwner);
-      if (!docShell)
-        return NS_ERROR_FAILURE;
-      if (NS_FAILED(docShell->GetCurrentURI(getter_AddRefs(referringUri))))
-        return NS_ERROR_FAILURE;
+      // No referrer available. Use the current javascript: URI, which will mean 
+      // that this script will be in another trust domain than any other script
+      // since SameOrigin should be false for anything other than the same
+      // javascript: URI.
+      referringUri = uri;
     }
     if (NS_FAILED(securityManager->GetCodebasePrincipal(referringUri, 
                                                         getter_AddRefs(principal))))
