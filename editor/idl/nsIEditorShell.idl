@@ -38,10 +38,7 @@
  
 #include "nsISupports.idl"
 
-interface nsIFile;
 interface nsIDocumentStateListener;
-interface nsISelectionController;
-interface nsITransactionManager;
 interface nsIDOMWindowInternal;
 interface nsIDOMDocument;
 interface nsISelection;
@@ -60,8 +57,6 @@ interface nsIEditorShell : nsISupports
 {
   readonly attribute nsIDOMDocument         editorDocument;
   readonly attribute nsISelection           editorSelection;
-  readonly attribute nsISelectionController selectionController;
-  readonly attribute nsITransactionManager  transactionManager;
   
   attribute nsIDOMWindowInternal webShellWindow;
   attribute nsIDOMWindowInternal contentWindow;
@@ -77,7 +72,6 @@ interface nsIEditorShell : nsISupports
     eDocumentStatusModified
   };
 %}
-  readonly attribute boolean              documentModified;
   readonly attribute boolean              documentIsEmpty;
 
   /** Use attribute boolean isDocumentEditable in nsIEditor instead of documentEditable */
@@ -132,15 +126,6 @@ interface nsIEditorShell : nsISupports
   /* Commands */
   void Print();
   
-  void Undo();
-  void Redo();
-  
-  void Cut();
-  void Copy();
-  void Paste(in long selectionType);
-  void PasteAsQuotation(in long selectionType);
-  void PasteAsCitedQuotation(in wstring cite, in long selectionType);
-  
   void InsertAsQuotation(in wstring quotedText, out nsIDOMNode nodeInserted);
   void InsertAsCitedQuotation(in wstring quotedText, in wstring cite,
                               in boolean insertHTML, in wstring charset,
@@ -165,18 +150,7 @@ interface nsIEditorShell : nsISupports
   void InsertText(in wstring textToInsert);
   /* Insert HTML source at current location (replace current selection) */
   void InsertSource(in wstring textToInsert);
-  void InsertSourceWithCharset(in wstring textToInsert, in wstring charset);
-
-  /** Rebuild the entire document from source HTML
-   *  Needed to be able to edit HEAD and other outside-of-BODY content
-   *  @param source: HTML source string of the entire new document
-   */
-  void RebuildDocumentFromSource(in wstring source);
-
-  void InsertBreak();
   
-  void MakeOrChangeList(in wstring listType, in PRBool entireList, in wstring bulletType);
-  void RemoveList(in wstring listType);
   void Indent(in wstring indent);
   void Align(in wstring align);
   
@@ -198,28 +172,6 @@ interface nsIEditorShell : nsISupports
     *      (an "A" tag with the "name" attribute set)
     */
   nsIDOMElement GetSelectedElement(in wstring tagName);
-
-  /** Get first selected node from first selection range.
-    * Assumes cell-selection model where each cell
-    * is in a separate range (selection parent node is table row)
-    * Returns null if ranges don't contain cell selections
-    */
-  nsIDOMElement GetFirstSelectedCell();
-  
-  /** Get first selected cell in table: the upper-left-most cell
-    * Returns null if ranges don't contain cell selections
-    * rowIndex and colIndex are those of the cell if found
-    */
-  nsIDOMElement GetFirstSelectedCellInTable(out PRInt32 rowIndex, out PRInt32 colIndex );
-
-  /** Get next selected cell element from first selection range.
-    * Assumes cell-selection model where each cell
-    * is in a separate range (selection parent node is table row)
-    * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
-    * Returns null if after last cell or 
-    *   ranges don't contain cell selections
-    */
-  nsIDOMElement GetNextSelectedCell();
 
   /** Return the input node or a parent matching the given aTagName,
     *   starting the search at the supplied node.
@@ -296,15 +248,6 @@ interface nsIEditorShell : nsISupports
     */
   void DeleteElement(in nsIDOMElement element);
 
-  /** 
-    * Deletion methods which need to be accessible to JS:
-    */
-  void DeleteCharForward();
-  void DeleteCharBackward();
-  void DeleteWordForward();
-  void DeleteWordBackward();
-  void DeleteToBeginningOfLine();
-  void DeleteToEndOfLine();
 
   void SelectElement(in nsIDOMElement element);
   void SetSelectionAfterElement(in nsIDOMElement element);
@@ -473,35 +416,9 @@ interface nsIEditorShell : nsISupports
 
   /* Formatting */
   void SetAttribute(in nsIDOMElement element, in wstring attr, in wstring value);
-  void RemoveAttribute(in nsIDOMElement element, in wstring attr);
   void SetTextProperty(in wstring prop, in wstring attr, in wstring value);
   void RemoveTextProperty(in wstring prop, in wstring attr);
   void GetTextProperty(in wstring prop, in wstring attr, in wstring value, out boolean firstHas, out boolean anyHas, out boolean allHas);
-  void IncreaseFontSize();
-  void DecreaseFontSize();
-  void SetParagraphFormat(in wstring paragraphFormat); 
-  void SetBodyAttribute(in wstring attr, in wstring value);
-  void SetBackgroundColor(in wstring color);
-
-  /** Get block state information:
-    * Returns the tagname if part selection is within a 
-    *   paragraph or list block tag,
-    *   or empty string if none of selection isn't within the block
-    *
-    *   mixed    true if only part of selection has the state
-    */
-
-  /* Returns "p","blockquote", "address", "pre", "dt", "dd" 
-     or "h1" through "h6" */
-  wstring GetParagraphState(out boolean mixed);
-  /* Returns "ol", "ul", or "dl" */
-  wstring GetListState(out boolean mixed);
-  /* Returns "li", "dt", or "dd" */
-  wstring GetListItemState(out boolean mixed);
-  /* Returns "left", "center", or "right" */
-  wstring GetAlignment(out boolean mixed);
-
-  void ApplyStyleSheet(in wstring url);
 
   /* Output.
    * format is mime type, e.g. text/html;
@@ -511,24 +428,10 @@ interface nsIEditorShell : nsISupports
    */
   wstring GetContentsAs(in wstring format, in PRUint32 flags);
 
-  /* Get the contents of the <head> section of the document 
-   * Format is text/html
-   */
-  wstring GetHeadContentsAsHTML();
-
   /* Replace all contents in head with the HTML string supplied
    * It will be inserted using InsertSource
    */
   void ReplaceHeadContentsWithHTML(in wstring textToInsert);
-
-  /* Debugging: dump content tree to stdout */
-  void DumpContentTree();
-
-  /**
-   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD
-   *   This does NOT consider CSS effect on display type
-   */
-  boolean NodeIsBlock(in nsIDOMNode node);
 
   /**
    * This is similar to nsIDOMNode::cloneNode(),
@@ -545,9 +448,6 @@ interface nsIEditorShell : nsISupports
   void BeginBatchChanges();
   void EndBatchChanges();
   void RunUnitTests();
-
-  void StartLogging(in nsIFile logFile);
-  void StopLogging();
   
   void CloseWindowWithoutSaving();
 };
