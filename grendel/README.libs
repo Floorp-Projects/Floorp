@@ -1,19 +1,27 @@
 The following packages are required for Grendel:
 
-For Java 1.1.x:
-	JFC/Swing 1.1
-	JavaMail 1.1
-	JavaBeans Activation Framework (JAF)
+JDK 1.1.6+ or Java 2
+* http://java.sun.com/products/jdk/1.1/
+* http://java.sun.com/products/jdk/1.2/
 
-For Java 2:
-	Swing 1.1 is shipped with Java 2 as part of the Java Standard
-	Extensions
-	JavaMail 1.1 and
-	JavaBeans Activation Framework (JAF) are separate downloads	
+JFC/Swing 1.1
+- Only for jdk 1.1.x not for jdk 1.2/Java 2 as it's already included
+* http://java.sun.com/products/jfc/
+  
+JavaBeans Activation Framework (JAF) 1.0
+* http://java.sun.com/beans/glasgow/jaf.html
 
-Note that the Grendel sources have been updated to use the new package names for the Java Standard Extensions (javax.swing, etc.), so unless you want to change all the imports in every source file back, you won't be able to compile Grendel with older versions of the packages than are listed above.
+JavaMail 1.1.1
+* http://java.sun.com/products/javamail/
 
-Make sure you have the appropriate packages available on your system, and edit the paths in the grendel/rules.mk file to the correct paths for your system. You'll also need to include some of the packages in your <netscape_install_dir>/java/classes directory, as parts of Grendel depend on some of the classes in those packages.
+POP3 provider 1.0
+* http://java.sun.com/products/javamail/
 
---Jeff Galyan <jeffrey.galyan@sun.com>
+Netscape Directory SDK for Java 3.05
+* http://www.mozilla.org/directory/
 
+Java Project X Technology Release 1
+* http://developer.java.sun.com/developer/earlyAccess/xml/index.html
+
+ORO Matcher
+* http://www.oroinc.com/
