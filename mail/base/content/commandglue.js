@@ -107,7 +107,7 @@ function setTitleFromFolder(msgfolder, subject)
     // and the product but not the account name: "Re: New window Title - Mozilla Thunderbird"
 
     if (wintype == "mail:messageWindow")  
-      title = subject;
+      title = subject ? subject : "";
     else if (msgfolder)
     {
       title = msgfolder.prettyName;
