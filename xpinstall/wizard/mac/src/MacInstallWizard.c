@@ -94,7 +94,7 @@ void Init(void)
 #endif /* CFG_IS_REMOTE == 1 */
 
 	gWPtr = GetNewCWindow(rRootWin, NULL, (WindowPtr) -1);	
-    GetIndString( winTitle, rStringList, sNSInstTitle);
+    GetIndString( winTitle, rTitleStrList, sNSInstTitle);
 	SetWTitle( gWPtr, winTitle );	
 	SetWRefCon(gWPtr, kMIWMagic);
 	MakeMenus();
@@ -215,19 +215,19 @@ void MakeMenus(void)
 	
 	SetMenuBar(mbarHdl);
 	
-	if (menuHdl = GetMenuHandle(mApple)) 
+	if ( (menuHdl = GetMenuHandle(mApple)) != nil) 
 	{
 		AppendResMenu(menuHdl, 'DRVR');
 	}
 	else
 		ErrorHandler(); 
 		
-	if (menuHdl = GetMenuHandle(mFile))
+	if ( (menuHdl = GetMenuHandle(mFile)) != nil)
 		DisableItem(menuHdl, 0);
 	else
 		ErrorHandler();
 		
-	if (menuHdl = GetMenuHandle(mEdit))
+	if ( (menuHdl = GetMenuHandle(mEdit)) != nil)
 		DisableItem(menuHdl, 0);
 	else
 		ErrorHandler();

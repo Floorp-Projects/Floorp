@@ -30,10 +30,7 @@
  *-----------------------------------------------------------*/
 
 /* XPI Stub Entry Points */
-typedef		nsresult (*XPI_InitProc)(const FSSpec& aXPIStubDir, const FSSpec& aProgramDir,
-									 pfnXPIStart startCB, 
-								 	 pfnXPIProgress progressCB, 
-								 	 pfnXPIFinal finalCB);
+typedef		nsresult (*XPI_InitProc)(const FSSpec& aXPIStubDir, const FSSpec& aProgramDir, pfnXPIProgress progressCB);
 typedef 	nsresult (*XPI_InstallProc)(const FSSpec& file, const char* args,long flags);
 typedef		nsresult (*XPI_ExitProc)();
 
@@ -46,11 +43,11 @@ OSErr		LoadXPIStub(XPI_InitProc* pfnInit,
 Boolean		UnloadXPIStub(CFragConnectionID* connID);
 OSErr		RunXPI(FSSpec&, XPI_InstallProc*);
 Boolean		IsArchiveXPI(StringPtr archive);
+void 		ProgressMsgInit();
 
 /* Progress Bar Callbacks */
-void 		xpicbStart(const char *URL, const char* UIName);
 void	 	xpicbProgress(const char* msg, PRInt32 val, PRInt32 max);
-void 		xpicbFinal(const char *URL, PRInt32 finalStatus);
+
 
 #define XPI_ERR_CHECK(_call) 	\
 rv = _call;						\
@@ -67,9 +64,10 @@ if (NS_FAILED(rv))				\
 #endif
 
 static Boolean bMaxDiscovered = false;
+static Boolean bProgMsgInit = false;
 
 void 		
-xpicbStart(const char *URL, const char* UIName)
+ProgressMsgInit()
 {
 	Rect	r;
 	Str255	installingStr;
@@ -83,16 +81,17 @@ xpicbStart(const char *URL, const char* UIName)
 				(*gControls->tw->progressMsg)->viewRect.bottom );
 		HUnlock((Handle)gControls->tw->progressMsg);
 		
-		/* Installing <UIName> */
-		GetIndString(installingStr, rStringList, sInstalling);
+		/* Preparing to install... */
+		GetIndString(installingStr, rStringList, sPrep2Inst);
 		
 		EraseRect(&r);
 		if (installingStr[0] > 0)
 			TESetText(&installingStr[1], installingStr[0], gControls->tw->progressMsg);
-		if (UIName)
-			TEInsert(UIName, strlen(UIName), gControls->tw->progressMsg);
+
 		TEUpdate(&r, gControls->tw->progressMsg);
 	}
+	
+	bProgMsgInit = true;
 	
 	return;
 }
@@ -112,6 +111,9 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 		SetPort(gWPtr);
 		if (gControls->tw->progressBar)
 		{
+			if (!bProgMsgInit)
+				ProgressMsgInit();
+				
 			if (max!=0 && !bMaxDiscovered)
 			{
 				SetControlData(gControls->tw->progressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
@@ -183,17 +185,8 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 	return;
 }
 
-void 		
-xpicbFinal(const char *URL, PRInt32 finalStatus)
-{
-	// TO DO
-	
-	bMaxDiscovered = false;
-	return;
-}
-
 OSErr
-RunAllXPIs(short vRefNum, long dirID)
+RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 {
 	OSErr 				err = noErr;
 	FSSpec				tgtDirSpec, xpiStubDirSpec, xpiSpec;
@@ -210,7 +203,7 @@ RunAllXPIs(short vRefNum, long dirID)
 	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, 0, &tgtDirSpec);	/* program dir */
 	
 	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec), err);
-	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, xpicbStart, xpicbProgress, xpicbFinal ));
+	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, xpicbProgress ));
 	
 	// enumerate through all .xpi's
 	// loop through 0 to kMaxComponents
@@ -234,7 +227,7 @@ RunAllXPIs(short vRefNum, long dirID)
 	
 				isCurrXPI = IsArchiveXPI(pcurrArchive);
 							
-				err = FSMakeFSSpec(vRefNum, dirID, pcurrArchive, &xpiSpec);
+				err = FSMakeFSSpec(xpiVRefNum, xpiDirID, pcurrArchive, &xpiSpec);
 				if (err==noErr && isCurrXPI)
 					RunXPI(xpiSpec, &xpi_installProc);
 				if (pcurrArchive)
