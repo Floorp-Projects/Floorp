@@ -21,6 +21,8 @@
 
 XP_BEGIN_PROTOS
 
+#include "mkgeturl.h"
+
 extern void   NET_CleanupCache (char * filename);
 extern int    NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt);
 extern void   NET_RefreshCacheFileExpiration(URL_Struct * URL_s);
