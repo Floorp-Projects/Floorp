@@ -263,7 +263,7 @@ public class NativeFunction extends ScriptableObject implements Function {
                 if (!justbody) {
                     result.append("function ");
 
-                    /* version < 1.2 Function constructor behavior - if
+                    /* version != 1.2 Function constructor behavior - if
                      * there's no function name in the source info, and
                      * the names[0] entry is the empty string, then it must
                      * have been created by the Function constructor;
@@ -275,7 +275,7 @@ public class NativeFunction extends ScriptableObject implements Function {
                     if (nextIs(i, TokenStream.LP)
                         && this.version != Context.VERSION_1_2
                         && this.names != null 
-                        && this.names[0].length() == 0)
+                        && this.names[0].equals("anonymous"))
                         result.append("anonymous");
                     i++;
                 } else {
@@ -899,8 +899,7 @@ public class NativeFunction extends ScriptableObject implements Function {
 
         if (fn.names == null)
             fn.names = new String[1];
-        fn.names[0] = "";
-
+        fn.names[0] = "anonymous";
         fn.setPrototype(getFunctionPrototype(global));
         fn.setParentScope(global);
 
