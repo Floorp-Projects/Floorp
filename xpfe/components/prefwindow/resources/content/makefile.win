@@ -57,6 +57,7 @@ install::
 	$(MAKE_INSTALL) pref.js  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) preftree.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-mousewheel.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-mousewheel.js  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) fontScalingOverlay.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) prefutilities.js  $(DIST)\bin\chrome\pref\content\default
 
