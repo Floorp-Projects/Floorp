@@ -22,6 +22,15 @@
 #include "xpt_struct.h"
 #include <string.h>
 
+#define CURS_POOL_OFFSET_RAW(cursor)                                          \
+  ((cursor)->pool == XPT_HEADER                                               \
+   ? (cursor)->offset                                                         \
+   : (PR_ASSERT((cursor)->state->data_offset),                                \
+      (cursor)->offset + (cursor)->state->data_offset))
+
+#define CURS_POOL_OFFSET(cursor)                                              \
+  (CURS_POOL_OFFSET_RAW(cursor) - 1)
+
 uint32
 XPT_SizeOfHeader(XPTHeader *header)
 {
@@ -31,8 +40,15 @@ XPT_SizeOfHeader(XPTHeader *header)
         2 /* num_interfaces */ + 4 /* file_length */ +
         4 /* interface_directory */ + 4 /* data_pool */;
 
-    /* XXX annotations */
+    fprintf(stderr, "header size is %d ", size);
+    ann = header->annotations;
+    do {
+        size += 1; /* Annotation prefix */
+        if (XPT_ANN_IS_PRIVATE(ann->flags))
+            size += 2 + ann->creator->length + 2 + ann->private_data->length;
+    } while (!XPT_ANN_IS_LAST(ann->flags));
     
+    fprintf(stderr, " (%d with annotations)\n", size);
     return size;
 }
 
@@ -114,19 +130,21 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
             goto error;
     }
 
-    /* XXX handle annotations */
+    if (!XPT_DoAnnotation(cursor, &header->annotations))
+        goto error;
 
     /* shouldn't be necessary now, but maybe later */
     XPT_SeekTo(cursor, ide_offset); 
 
     for (i = 0; i < header->num_interfaces; i++) {
-        if (!XPT_DoInterfaceDirectoryEntry(&cursor, 
+        if (!XPT_DoInterfaceDirectoryEntry(cursor, 
                                            &header->interface_directory[i]))
             goto error;
     }
     
     return PR_TRUE;
 
+    /* XXX need to free child data sometimes! */
     XPT_ERROR_HANDLE(header);    
 }   
 
@@ -145,26 +163,20 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
 /* InterfaceDirectoryEntry records go in the header */
 PRBool
 XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
-                              XPTInterfaceDirectoryEntry **idep)
+                              XPTInterfaceDirectoryEntry *ide)
 {    
     XPTMode mode = cursor->state->mode;
-    XPTInterfaceDirectoryEntry *ide;
-
-    if (mode == XPT_DECODE)
-        ide = PR_NEWZAP(XPTInterfaceDirectoryEntry);
-    else
-        ide = *idep;
     
     /* write the IID in our cursor space */
-    if (!XPT_DoIID(cursor, &ide->iid) ||
+    if (!XPT_DoIID(cursor, &(ide->iid)) ||
         
         /* write the name string in the data pool, and the offset in our
            cursor space */
-        !XPT_DoCString(&cursor, &ide->name) ||
+        !XPT_DoCString(cursor, &(ide->name)) ||
         
         /* write the namespace string in the data pool, and the offset in our
            cursor space */
-        !XPT_DoCString(&cursor, &ide->namespace)) {
+        !XPT_DoCString(cursor, &(ide->namespace))) {
         
         goto error;
     }
@@ -172,7 +184,7 @@ XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
     /* write the InterfaceDescriptor in the data pool, and the offset
        in our cursor space, but only if we're encoding. */
     if (mode == XPT_ENCODE) {
-        if (!XPT_DoInterfaceDescriptor(&cursor, 
+        if (!XPT_DoInterfaceDescriptor(cursor, 
                                        &ide->interface_descriptor)) {
             goto error;
         }
@@ -224,30 +236,65 @@ XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
     return NULL;
 }
 
-PRBool
-XPT_DoInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor **idp)
+uint32
+XPT_SizeOfMethodDescriptor(XPTMethodDescriptor *md)
 {
-    XPTMode mode = cursor->state->mode;
-    XPTInterfaceDescriptor *id;
-    int i;
+    return 1 /* flags */ + 4 /* name */ + 1 /* num_args */
+        + ((md->num_args + 1) * XPT_PARAMDESCRIPTOR_SIZE);
+}
 
-    if (mode == XPT_DECODE)
+uint32
+XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd)
+{
+    return 0;
+}
+
+uint32
+XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id)
+{
+    uint32 size = 4 /* parent interface */ + 2 /* num_methods */
+        + 2 /* num_constants */, i;
+    for (i = 0; i < id->num_methods; i++)
+        size += XPT_SizeOfMethodDescriptor(&id->method_descriptors[i]);
+    for (i = 0; i < id->num_constants; i++)
+        size += XPT_SizeOfConstDescriptor(&id->const_descriptors[i]);
+    return size;
+}
+
+PRBool
+XPT_DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
+{
+    XPTMode mode = outer->state->mode;
+    XPTInterfaceDescriptor *id;
+    XPTCursor curs, *cursor = &curs;
+    uint32 i, id_sz = 0;
+
+    if (mode == XPT_DECODE) {
         id = PR_NEWZAP(XPTInterfaceDescriptor);
-    else
+        if (!id)
+            return PR_FALSE;
+    } else {
         id = *idp;
+        id_sz = XPT_SizeOfInterfaceDescriptor(id);
+    }
+
+    if (!XPT_MakeCursor(outer->state, XPT_DATA, id_sz, cursor))
+        goto error;
 
     if(!XPT_Do32(cursor, &id->parent_interface) ||
        !XPT_Do16(cursor, &id->num_methods)) {
-     
         goto error;
     }
 
-    if (mode == XPT_DECODE)
-        id->method_descriptors = PR_CALLOC(id->num_methods * 
+    if (mode == XPT_DECODE && id->num_methods) {
+        id->method_descriptors = PR_CALLOC(id->num_methods *
                                            sizeof(XPTMethodDescriptor));
+        if (!id->method_descriptors)
+            goto error;
+    }
     
     for (i = 0; i < id->num_methods; i++) {
-        if (!XPT_DoMethodDescriptor(&cursor, &id->method_descriptors[i]))
+        if (!XPT_DoMethodDescriptor(cursor, &id->method_descriptors[i]))
             goto error;   
     }
     
@@ -283,60 +330,54 @@ XPT_FillConstDescriptor(XPTConstDescriptor *cd, char *name,
 }
 
 PRBool
-XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
+XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd)
 {
     XPTMode mode = cursor->state->mode;
-    XPTConstDescriptor *cd;
 
-    if (mode == XPT_DECODE)
-        cd = PR_NEWZAP(XPTConstDescriptor);
-    else
-        cd = *cdp;
-    
     if (!XPT_DoCString(&cursor, &cd->name) ||
         !XPT_DoTypeDescriptor(&cursor, &cd->type)) {
 
         goto error;
     }
 
-    switch(cd->type.prefix.tag) {
-    case TD_INT8:
+    switch(XPT_TDP_TAG(cd->type.prefix)) {
+      case TD_INT8:
         XPT_Do8(cursor, &cd->value.i8);
         break;
-    case TD_INT16:
+      case TD_INT16:
         XPT_Do16(cursor, &cd->value.i16);
         break;
-    case TD_INT32:
+      case TD_INT32:
         XPT_Do32(cursor, &cd->value.i32);
         break;
-    case TD_INT64:
+      case TD_INT64:
         XPT_Do64(cursor, &cd->value.i64);
         break;
-    case TD_UINT8:
+      case TD_UINT8:
         XPT_Do8(cursor, &cd->value.ui8);
         break;
-    case TD_UINT16:
+      case TD_UINT16:
         XPT_Do16(cursor, &cd->value.ui16);
         break;
-    case TD_UINT32:
+      case TD_UINT32:
         XPT_Do32(cursor, &cd->value.ui32);
         break;
-    case TD_UINT64:
+      case TD_UINT64:
         XPT_Do64(cursor, &cd->value.ui64);
         break;
-    case TD_CHAR:
+      case TD_CHAR:
         XPT_Do8(cursor, &cd->value.ch);
         break;
-    case TD_WCHAR:
+      case TD_WCHAR:
         XPT_Do16(cursor, &cd->value.wch);
         break;
-    case TD_PBSTR:
-        if (cd->type.prefix.is_pointer == 1) {
+      case TD_PBSTR:
+        if (cd->type.prefix.flags & XPT_TDP_POINTER) {
             XPT_DoString(cursor, &cd->value.string);
             break;
         }
-        goto error;
-    default:
+      default:
+        fprintf(stderr, "illegal type!\n");
         goto error;
     }
 
@@ -346,23 +387,21 @@ XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
 }
 
 PRBool
-XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRBool is_getter,
-                         PRBool is_setter, PRBool is_varargs,
-                         PRBool is_constructor, PRBool is_hidden, char *name,
+XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, uint8 flags, char *name,
                          uint8 num_args)
 {
-    meth->is_getter = is_getter;
-    meth->is_setter = is_setter;
-    meth->is_constructor = is_constructor;
-    meth->is_hidden = is_hidden;
-    meth->reserved = 0;
+    meth->flags = flags & XPT_MD_FLAGMASK;
     meth->name = strdup(name);
     if (!name)
         return PR_FALSE;
     meth->num_args = num_args;
-    meth->params = PR_CALLOC(num_args * sizeof(XPTParamDescriptor));
-    if (!meth->params)
-        goto free_name;
+    if (meth->num_args) {
+        meth->params = PR_CALLOC(num_args * sizeof(XPTParamDescriptor));
+        if (!meth->params)
+            goto free_name;
+    } else {
+        meth->params = NULL;
+    }
     meth->result = PR_NEWZAP(XPTParamDescriptor);
     if (!meth->result)
         goto free_params;
@@ -376,128 +415,92 @@ XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRBool is_getter,
 }
 
 PRBool
-XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor **mdp)
+XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
 {
     XPTMode mode = cursor->state->mode;
-    XPTMethodDescriptor *md;
     uintn scratch;
     int i;
 
-    if (mode == XPT_DECODE)
-        md = PR_NEWZAP(XPTMethodDescriptor);
-    else
-        md = *mdp;
+#ifdef DEBUG_shaver_method
+    if (mode == XPT_ENCODE)
+        fprintf(stderr, "wrote method \"%s\" at offset %x\n",
+                md->name, CURS_POOL_OFFSET(cursor));
+#endif
 
-    if (!XPT_DO_BITS(&cursor, md->is_getter, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, md->is_setter, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, md->is_varargs, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, md->is_constructor, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, md->is_hidden, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, md->reserved, 3, scratch) ||
-        !XPT_DoCString(&cursor, &md->name) ||
-        !XPT_Do8(cursor, &md->num_args)) {
-      
-        goto error;
+    if (!XPT_Do8(cursor, &md->flags) ||
+        !XPT_DoCString(cursor, &md->name) ||
+        !XPT_Do8(cursor, &md->num_args))
+        return PR_FALSE;
+
+    if (mode == XPT_DECODE) {
+        if (md->num_args)
+            md->params = PR_CALLOC(md->num_args * sizeof(XPTParamDescriptor));
+        if (!md->params)
+            return PR_FALSE;
     }
 
-    if (mode == XPT_DECODE)
-        (uint8)md->num_args = PR_CALLOC(md->num_args * (int)sizeof(XPTParamDescriptor));
-    
     for(i = 0; i < md->num_args; i++) {
-        if (!XPT_DoParamDescriptor(&cursor, &md->params))
+        if (!XPT_DoParamDescriptor(cursor, &md->params[i]))
             goto error;
     }
     
-    if (!XPT_DoParamDescriptor(&cursor, &md->result))
+    if (!XPT_DoParamDescriptor(cursor, md->result))
         goto error;
     
     return PR_TRUE;
     
-    XPT_ERROR_HANDLE(md);    
+    XPT_ERROR_HANDLE(md->params);    
 }
 
 PRBool
-XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRBool in, PRBool out,
-                        PRBool retval, XPTTypeDescriptor type)
+XPT_FillParamDescriptor(XPTParamDescriptor *pd, uint8 flags,
+                        XPTTypeDescriptor *type)
 {
-    pd->in = in;
-    pd->out = out;
-    pd->retval = retval;
-    pd->reserved = 0;
-    XPT_COPY_TYPE(pd->type, type);
+    pd->flags = flags & XPT_PD_FLAGMASK;
+    XPT_COPY_TYPE(pd->type, *type);
+    return PR_TRUE;
 }
 
 PRBool
-XPT_DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor **pdp)
+XPT_DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd)
 {
     XPTMode mode = cursor->state->mode;
-    XPTParamDescriptor *pd;
     uintn scratch;
 
-    if (mode == XPT_DECODE)
-        pd = PR_NEWZAP(XPTParamDescriptor);
-    else
-        pd = *pdp;
-
-    if (!XPT_DO_BITS(&cursor, pd->in, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, pd->out, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, pd->retval, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, pd->reserved, 5, scratch) ||
-        !XPT_DoTypeDescriptor(&cursor, &pd->type)) {
-
-        goto error;
-    }
+#ifdef DEBUG_shaver_param
+    if (mode == XPT_ENCODE)
+        fprintf(stderr, "wrote param %02x%02x at offset %x\n",
+                pd->flags, pd->type.prefix.flags, CURS_POOL_OFFSET(cursor));
+#endif
+    
+    if (!XPT_Do8(cursor, &pd->flags) ||
+        !XPT_DoTypeDescriptor(cursor, &pd->type))
+        return PR_FALSE;
         
     return PR_TRUE;
+}
 
-    XPT_ERROR_HANDLE(pd);    
+/* XXX when we lose the useless TDP wrapper struct, #define this to Do8 */
+PRBool
+XPT_DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix *tdp)
+{
+    return XPT_Do8(cursor, &tdp->flags);
 }
 
 PRBool
-XPT_DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix **tdpp)
+XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td)
 {
     XPTMode mode = cursor->state->mode;
-    XPTTypeDescriptorPrefix *tdp;
-    uintn scratch;
-    
-    if (mode == XPT_DECODE)
-        tdp = PR_NEWZAP(XPTTypeDescriptorPrefix);
-    else
-        tdp = *tdpp;
-    
-    if (!XPT_DO_BITS(&cursor, tdp->is_pointer, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, tdp->is_unique_pointer, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, tdp->is_reference, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, tdp->tag, 5, scratch)) { 
-
-        goto error;
-    }
-    
-    return PR_TRUE;
-
-    XPT_ERROR_HANDLE(tdp);    
-}
-
-PRBool
-XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor **tdp)
-{
-    XPTMode mode = cursor->state->mode;
-    XPTTypeDescriptor *td;
-    
-    if (mode == XPT_DECODE)
-        td = PR_NEWZAP(XPTTypeDescriptor);
-    else
-        td = *tdp;
     
     if (!XPT_DoTypeDescriptorPrefix(cursor, &td->prefix)) {
         goto error;
     }
     
-    if (td->prefix.tag == TD_INTERFACE_TYPE) {
+    if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
         if (!XPT_Do32(cursor, &td->type.interface))
             goto error;
     } else {
-        if (td->prefix.tag == TD_INTERFACE_IS_TYPE) {
+        if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE) {
             if (!XPT_Do8(cursor, &td->type.argnum))
                 goto error;
         }
@@ -509,102 +512,69 @@ XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor **tdp)
 }
 
 XPTAnnotation *
-XPT_NewAnnotation(PRBool is_last, PRBool is_empty, XPTString *creator,
-                  XPTString *private_data)
+XPT_NewAnnotation(uint8 flags, XPTString *creator, XPTString *private_data)
 {
     XPTAnnotation *ann = PR_NEWZAP(XPTAnnotation);
     if (!ann)
         return NULL;
-    ann->prefix.is_last = is_last;
-    ann->prefix.tag = is_empty ? 0 : 1;
-    if (!is_empty) {
-        ann->private.creator = creator;
-        ann->private.private_data = private_data;
+    ann->flags = flags;
+    if (XPT_ANN_IS_PRIVATE(flags)) {
+        ann->creator = creator;
+        ann->private_data = private_data;
     }
     return ann;
 }
 
 PRBool
-XPT_DoAnnotationPrefix(XPTCursor *cursor, XPTAnnotationPrefix **app)
+XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp)
 {
     XPTMode mode = cursor->state->mode;
-    XPTAnnotationPrefix *ap;
-    uintn scratch;
+    XPTAnnotation *ann;
     
-    if (mode == XPT_DECODE)
-        ap = PR_NEWZAP(XPTAnnotationPrefix);
-    else
-        ap = *app;
-    
-    if (!XPT_DO_BITS(&cursor, ap->is_last, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, ap->tag, 7, scratch)) {
-
-        goto error;
+    fprintf(stderr, "DoAnnotation\n");
+    if (mode == XPT_DECODE) {
+        ann = PR_NEWZAP(XPTAnnotation);
+        if (!ann)
+            return PR_FALSE;
+        *annp = ann;
+    } else {
+        ann = *annp;
     }
+    
+    if (!XPT_Do8(cursor, &ann->flags))
+        goto error;
+
+    if (XPT_ANN_IS_PRIVATE(ann->flags)) {
+        if (!XPT_DoStringInline(cursor, &ann->creator) ||
+            !XPT_DoStringInline(cursor, &ann->private_data))
+            goto error_2;
+    }
+    
+    /*
+     * If a subsequent Annotation fails, what to do?
+     * - free all annotations, return PR_FALSE? (current behaviout)
+     * - free failed annotation only, return PR_FALSE (caller can check for
+     *   non-NULL *annp on PR_FALSE return to detect partial annotation
+     *   decoding)?
+     */
+    if (!XPT_ANN_IS_LAST(ann->flags) &&
+        !XPT_DoAnnotation(cursor, &ann->next))
+        goto error_2;
 
     return PR_TRUE;
-    
-    XPT_ERROR_HANDLE(ap);
-}
 
-PRBool
-XPT_DoPrivateAnnotation(XPTCursor *cursor, XPTPrivateAnnotation **pap)
-{
-    XPTMode mode = cursor->state->mode;
-    XPTPrivateAnnotation *pa;
-    
-    if (mode == XPT_DECODE)
-        pa = PR_NEWZAP(XPTPrivateAnnotation);
-    else
-        pa = *pap;
-    
-    if (!XPT_DoString(cursor, &pa->creator) ||
-        !XPT_DoString(cursor, &pa->private_data)) {
-
-        goto error;
+ error_2:
+    if (ann && XPT_ANN_IS_PRIVATE(ann->flags)) {
+        PR_FREEIF(ann->creator);
+        PR_FREEIF(ann->private_data);
     }
-    
-    return PR_TRUE;
-
-    XPT_ERROR_HANDLE(pa);
-}
-
-PRBool
-XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **ap)
-{
-    XPTMode mode = cursor->state->mode;
-    XPTAnnotation *a;
-    
-    if (mode == XPT_DECODE)
-        a = PR_NEWZAP(XPTAnnotation);
-    else
-        a = *ap;
-    
-    if (!XPT_DoAnnotationPrefix(cursor, &a->prefix)) {
-        goto error;
-    }
-    
-    if (a->prefix.tag == PRIVATE_ANNOTATION) {
-        if (!XPT_DoPrivateAnnotation(cursor, &a->private)) {
-            goto error;
-        }
-    }
-    
-    return PR_TRUE;
-
-    XPT_ERROR_HANDLE(a);
+    XPT_ERROR_HANDLE(ann);
 }
 
 PRBool 
 XPT_DoAnnotations(XPTCursor *cursor, XPTAnnotation **ap)
 {
     return PR_FALSE;
-}
-
-int
-XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *idp)
-{
-    return 0;
 }
 
 XPTInterfaceDescriptor *
