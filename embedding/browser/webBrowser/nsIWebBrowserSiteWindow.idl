@@ -1,0 +1,95 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Adam Lock <adamlock@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIWebBrowserSiteWindow is implemented by the embedder on the chrome
+ * object to provide the web browser with the means to resize the host window,
+ * and to the query for some of its properties.
+ */
+
+[scriptable, uuid(3E5432CD-9568-4bd1-8CBE-D50ABA110743)]
+interface nsIWebBrowserSiteWindow : nsISupports
+{
+    /*
+    Tell the window that it should destroy itself.  This call should not be
+    necessary as it will happen implictly when final release occurs on the
+    object.  If for some reaons you want the window destroyed prior to release
+    due to cycle or ordering issues, then this call provides that ability.
+
+    @return    NS_OK - Everything destroyed properly.
+                NS_ERROR_UNEXPECTED - This call was unexpected at this time.
+                    Perhaps create() has not been called yet.
+    */
+    void destroy();
+
+    /*
+    Sets the current x and y coordinates of the control.  This is relative to
+    the parent window.
+    */
+    void setPosition(in long x, in long y);
+
+    /*
+    Gets the current x and y coordinates of the control.  This is relatie to the
+    parent window.
+    */
+    void getPosition(out long x, out long y);
+
+    /*
+    Sets the width and height of the control.
+    */
+    void setSize(in long cx, in long cy, in boolean fRepaint);
+
+    /*
+    Gets the width and height of the control.
+    */
+    void getSize(out long cx, out long cy);
+
+    /*
+    Convenience function combining the SetPosition and SetSize into one call.
+    Also is more efficient than calling both.
+    */
+    void setPositionAndSize(in long x, in long y, in long cx, in long cy, 
+        in boolean fRepaint);
+        
+    /*
+    Convenience function combining the GetPosition and GetSize into one call.
+    Also is more efficient than calling both.
+    */
+    void getPositionAndSize(out long x, out long y, out long cx, out long cy);
+     
+    /**
+    * Give the window focus.
+    */
+    void setFocus();
+
+    /*
+    Title of the window.
+    */
+    attribute wstring title;
+
+    /*
+    Native window handle returned in a void pointer
+    */
+    [noscript] readonly attribute voidPtr siteWindow;
+};
