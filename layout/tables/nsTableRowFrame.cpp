@@ -415,9 +415,10 @@ void nsTableRowFrame::PlaceChild(nsIPresContext&    aPresContext,
  * Called for a resize reflow. Typically because the column widths have
  * changed. Reflows all the existing table cell frames
  */
-nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
-                                       RowReflowState&  aReflowState,
-                                       nsHTMLReflowMetrics& aDesiredSize)
+NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
+                                        nsHTMLReflowMetrics& aDesiredSize,
+                                        RowReflowState&      aReflowState,
+                                        nsReflowStatus&      aStatus)
 {
   if (nsnull == mFirstChild)
     return NS_OK;
@@ -604,10 +605,13 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
  * Called for the initial reflow. Creates each table cell frame, and
  * reflows it to gets its minimum and maximum sizes
  */
-nsresult
-nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
-                               RowReflowState&  aReflowState,
-                               nsHTMLReflowMetrics& aDesiredSize)
+NS_METHOD
+nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
+                               nsHTMLReflowMetrics& aDesiredSize,
+                               RowReflowState&      aReflowState,
+                               nsReflowStatus&      aStatus,
+                               nsTableCellFrame *   aStartFrame,
+                               PRBool               aDoSiblings)
 {
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize(0,0);
@@ -620,8 +624,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   PRBool    isFirst=PR_TRUE;
   PRBool    tableLayoutStrategy=NS_STYLE_TABLE_LAYOUT_AUTO; 
   nsTableFrame* table = nsnull;
-  nsresult  result = nsTableFrame::GetTableFrame(this, table);
-  if ((NS_OK==result) && (table != nsnull))
+  nsresult  rv = nsTableFrame::GetTableFrame(this, table);
+  if ((NS_OK==rv) && (table != nsnull))
   {
     nsStyleTable* tableStyle;
     table->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
@@ -630,7 +634,13 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   else
     return NS_ERROR_UNEXPECTED;
 
-  for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
+  nsIFrame* kidFrame;
+  if (nsnull==aStartFrame)
+    kidFrame = mFirstChild;
+  else
+    kidFrame = aStartFrame;
+
+  for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
   {
     const nsStyleDisplay *kidDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)kidDisplay));
@@ -669,8 +679,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
                                        eReflowReason_Initial);
 
       if (gsDebug) printf ("%p InitR: avail=%d\n", this, kidAvailSize.width);
-      nsresult status;
-      ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);
+      rv = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
       if (gsDebug) 
         printf ("TR %p for cell %p Initial Reflow: desired=%d, MES=%d\n", 
                this, kidFrame, kidSize.width, kidMaxElementSize.width);
@@ -682,12 +691,12 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
         kidSize.height = kidMaxElementSize.height;
       ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
       ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected child reflow status");
+      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "unexpected child reflow status");
 
       if (gsDebug) 
       {
         printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
-               NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+               NS_FRAME_IS_COMPLETE(aStatus)?"complete":"NOT complete", 
                kidSize.width, kidSize.height, 
                kidMaxElementSize.width, kidMaxElementSize.height);
       }
@@ -698,6 +707,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
       PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
                  &kidMaxElementSize);
       x += kidSize.width + margin.right;
+      if (PR_FALSE==aDoSiblings)
+        break;
     }
   }
 
@@ -707,7 +718,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
   aDesiredSize.width = x;
   aDesiredSize.height = aReflowState.maxCellVertSpace;   
 
-  return result;
+  return rv;
 }
 
 // Recover the reflow state to what it should be if aKidFrame is about
@@ -717,11 +728,11 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
 // - maxCellHeight
 // - maxVertCellSpace
 // - x
-nsresult nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
-                                       RowReflowState& aReflowState,
-                                       nsIFrame*       aKidFrame,
-                                       nscoord&        aMaxCellTopMargin,
-                                       nscoord&        aMaxCellBottomMargin)
+NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
+                                        RowReflowState& aReflowState,
+                                        nsIFrame*       aKidFrame,
+                                        nscoord&        aMaxCellTopMargin,
+                                        nscoord&        aMaxCellBottomMargin)
 {
   aMaxCellTopMargin = aMaxCellBottomMargin = 0;
 
@@ -808,7 +819,7 @@ nsresult nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
 
 NS_METHOD nsTableRowFrame::IncrementalReflow(nsIPresContext&       aPresContext,
                                              nsHTMLReflowMetrics&  aDesiredSize,
-                                             RowReflowState& aReflowState,
+                                             RowReflowState&       aReflowState,
                                              nsReflowStatus&       aStatus)
 {
   if (PR_TRUE==gsDebugIR) printf("\nTRF IR: IncrementalReflow\n");
@@ -851,7 +862,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
     {
       rv = IR_CellInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                           objectFrame, PR_FALSE);
+                           (nsTableCellFrame *)objectFrame, PR_FALSE);
     }
     else
     {
@@ -863,7 +874,8 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   case nsIReflowCommand::FrameAppended :
     if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
     {
-      rv = IR_CellAppended(aPresContext, aDesiredSize, aReflowState, aStatus, objectFrame);
+      rv = IR_CellAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                           (nsTableCellFrame *)objectFrame);
     }
     else
     { // no optimization to be done for Unknown frame types, so just reuse the Inserted method
@@ -881,7 +893,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
     {
       rv = IR_CellRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                          objectFrame);
+                          (nsTableCellFrame *)objectFrame);
     }
     else
     {
@@ -918,14 +930,33 @@ NS_METHOD nsTableRowFrame::IR_CellInserted(nsIPresContext&      aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,
                                            RowReflowState&      aReflowState,
                                            nsReflowStatus&      aStatus,
-                                           nsIFrame *           aInsertedFrame,
+                                           nsTableCellFrame *   aInsertedFrame,
                                            PRBool               aReplace)
 {
-  nsresult rv=NS_OK;
+  if (PR_TRUE==gsDebugIR) printf("\nTRF IR: IR_CellInserted\n");
+  nsresult rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState,
+                                        aStatus, (nsIFrame*)aInsertedFrame, aReplace);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // do a pass-1 layout of the cell
+  //XXX: check the table frame to see if we can skip this
+  rv = InitialReflow(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                     aInsertedFrame, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsTableFrame *tableFrame=nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if (NS_FAILED(rv) || nsnull==tableFrame)
+    return rv;
+  tableFrame->InvalidateCellMap();
+  tableFrame->InvalidateColumnCache();
+
   return rv;
 }
 
-NS_METHOD nsTableRowFrame::IR_DidAppendCell(nsTableRowFrame *aRowFrame)
+NS_METHOD nsTableRowFrame::IR_DidAppendCell(nsTableCellFrame *aRowFrame)
 {
   nsresult rv=NS_OK;
   return rv;
@@ -936,8 +967,33 @@ NS_METHOD nsTableRowFrame::IR_CellAppended(nsIPresContext&      aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,
                                            RowReflowState&      aReflowState,
                                            nsReflowStatus&      aStatus,
-                                           nsIFrame *           aAppendedFrame)
+                                           nsTableCellFrame *   aAppendedFrame)
 {
+
+  if (PR_TRUE==gsDebugIR) printf("\nTRF IR: IR_CellInserted\n");
+  nsresult rv = IR_UnknownFrameInserted(aPresContext, aDesiredSize, aReflowState,
+    aStatus, (nsIFrame*)aAppendedFrame, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // do a pass-1 layout of the cell
+  //XXX: check the table frame to see if we can skip this
+  rv = InitialReflow(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                     aAppendedFrame, PR_FALSE);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsTableFrame *tableFrame=nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if (NS_FAILED(rv) || nsnull==tableFrame)
+    return rv;
+  tableFrame->InvalidateCellMap();
+  tableFrame->InvalidateColumnCache();
+
+  return rv;
+
+
+#if 0
   nsresult rv=NS_OK;
   // hook aAppendedFrame into the child list
   nsIFrame *lastChild = mFirstChild;
@@ -962,43 +1018,61 @@ NS_METHOD nsTableRowFrame::IR_CellAppended(nsIPresContext&      aPresContext,
   // the table will see that it's cached info is bogus and rebuild the cell map,
   // and do a reflow
 
-#if 0
+
   // find the col index of the new cell
   
   // account for the new cell 
   nsresult rv = DidAppendCell((nsTableCellFrame*)aAppendedFrame);
 
   // need to increment the row index of all subsequent rows
-#endif 
+
 
   return rv;
+#endif
 }
 
 NS_METHOD nsTableRowFrame::IR_CellRemoved(nsIPresContext&      aPresContext,
                                           nsHTMLReflowMetrics& aDesiredSize,
                                           RowReflowState&      aReflowState,
                                           nsReflowStatus&      aStatus,
-                                          nsIFrame *           aDeletedFrame)
+                                          nsTableCellFrame *   aDeletedFrame)
 {
-  nsresult rv=NS_OK;
+  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_RowRemoved\n");
+  nsresult rv = IR_UnknownFrameRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
+                                       aDeletedFrame);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsTableFrame *tableFrame=nsnull;
+    rv = nsTableFrame::GetTableFrame(this, tableFrame);
+    if (NS_FAILED(rv) || nsnull==tableFrame)
+      return rv;
+    tableFrame->InvalidateCellMap();
+    tableFrame->InvalidateColumnCache();
+
+    // if any column widths have to change due to this, rebalance column widths
+    //XXX need to calculate this, but for now just do it
+    tableFrame->InvalidateColumnWidths();
+  }
+
   return rv;
 }
 
 //XXX: handle aReplace
 NS_METHOD nsTableRowFrame::IR_UnknownFrameInserted(nsIPresContext&      aPresContext,
                                                    nsHTMLReflowMetrics& aDesiredSize,
-                                                   RowReflowState& aReflowState,
+                                                   RowReflowState&      aReflowState,
                                                    nsReflowStatus&      aStatus,
                                                    nsIFrame *           aInsertedFrame,
                                                    PRBool               aReplace)
 {
+  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_UnknownFrameInserted\n");
   nsIReflowCommand::ReflowType type;
   aReflowState.reflowState.reflowCommand->GetType(type);
   // we have a generic frame that gets inserted but doesn't effect reflow
   // hook it up then ignore it
   if (nsIReflowCommand::FrameAppended==type)
   { // frameAppended reflow -- find the last child and make aInsertedFrame its next sibling
-    if (PR_TRUE==gsDebugIR) printf("TRF IR: FrameAppended adding unknown frame type.\n");
+    if (PR_TRUE==gsDebugIR) printf("TRGF IR: FrameAppended adding unknown frame type.\n");
     nsIFrame *lastChild=mFirstChild;
     nsIFrame *nextChild=mFirstChild;
     while (nsnull!=nextChild)
@@ -1014,7 +1088,7 @@ NS_METHOD nsTableRowFrame::IR_UnknownFrameInserted(nsIPresContext&      aPresCon
   else
   { // frameInserted reflow -- hook up aInsertedFrame as prevSibling's next sibling, 
     // and be sure to hook in aInsertedFrame's nextSibling (from prevSibling)
-    if (PR_TRUE==gsDebugIR) printf("TRF IR: FrameInserted adding unknown frame type.\n");
+    if (PR_TRUE==gsDebugIR) printf("TRGF IR: FrameInserted adding unknown frame type.\n");
     nsIFrame *prevSibling=nsnull;
     nsresult rv = aReflowState.reflowState.reflowCommand->GetPrevSiblingFrame(prevSibling);
     if (NS_SUCCEEDED(rv) && (nsnull!=prevSibling))
@@ -1026,14 +1100,13 @@ NS_METHOD nsTableRowFrame::IR_UnknownFrameInserted(nsIPresContext&      aPresCon
     }
     else
     {
-      nsIFrame *nextSibling=nsnull;
-      if (nsnull!=mFirstChild)
-        mFirstChild->GetNextSibling(nextSibling);
+      nsIFrame *nextSibling=mFirstChild;
       mFirstChild = aInsertedFrame;
       aInsertedFrame->SetNextSibling(nextSibling);
     }
   }
-  return NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
 }
 
 NS_METHOD nsTableRowFrame::IR_UnknownFrameRemoved(nsIPresContext&      aPresContext,
@@ -1042,9 +1115,10 @@ NS_METHOD nsTableRowFrame::IR_UnknownFrameRemoved(nsIPresContext&      aPresCont
                                                   nsReflowStatus&      aStatus,
                                                   nsIFrame *           aRemovedFrame)
 {
+  if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_UnknownFrameRemoved\n");
   // we have a generic frame that gets removed but doesn't effect reflow
   // unhook it then ignore it
-  if (PR_TRUE==gsDebugIR) printf("TRF IR: FrameRemoved removing unknown frame type.\n");
+  if (PR_TRUE==gsDebugIR) printf("TRGF IR: FrameRemoved removing unknown frame type.\n");
   nsIFrame *prevChild=nsnull;
   nsIFrame *nextChild=mFirstChild;
   while (nextChild!=aRemovedFrame)
@@ -1058,9 +1132,9 @@ NS_METHOD nsTableRowFrame::IR_UnknownFrameRemoved(nsIPresContext&      aPresCont
     mFirstChild = nextChild;
   else
     prevChild->SetNextSibling(nextChild);
-  return NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
 }
-
 NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
                                             nsHTMLReflowMetrics& aDesiredSize,
                                             RowReflowState&      aReflowState,
@@ -1237,13 +1311,13 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
   // Do the reflow
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
-    rv = InitialReflow(aPresContext, state, aDesiredSize);
+    rv = InitialReflow(aPresContext, aDesiredSize, state, aStatus, nsnull, PR_TRUE);
     GetMinRowSpan(tableFrame);
     FixMinCellHeight(tableFrame);
     break;
 
   case eReflowReason_Resize:
-    rv = ResizeReflow(aPresContext, state, aDesiredSize);
+    rv = ResizeReflow(aPresContext, aDesiredSize, state, aStatus);
     break;
 
   case eReflowReason_Incremental:
