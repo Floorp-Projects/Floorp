@@ -1706,7 +1706,7 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID, &rv)); 
   if (NS_SUCCEEDED(rv) && pNetService)
   {
-    if (PL_strstr(aSpec, "://") == nsnull)
+    if (PL_strstr(aSpec, "://") == nsnull && strncmp(aSpec, "data:", 5))
     {
       //XXXjag Temporary fix for bug 139362 until the real problem(bug 70083) get fixed
       nsCAutoString uri(NS_LITERAL_CSTRING("http://") + nsDependentCString(aSpec));
