@@ -5,8 +5,8 @@
 # application MajorCool.
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/05/02 23:15:46 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/12/10 19:45:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolWindow.pm,v $ 
 # $Name:  $ 
@@ -344,19 +344,12 @@ sub Link {
   my (%args) = @_;
   my $out = '';
 
-  my $name ="";
-
-  if ($args{'name'}) {
-    $name = "name=\"$args{'name'}\"";
-  }
-
-
 #  if (! scalar(@POPUPTXT)) {
 #   # the first item must be blank so we can shut down the windows.
 #    push @POPUPTXT, '';
 #  }
 
-  $out .= "<A $name HREF=\"$args{'href'}\" ";
+  my $popup = '';
 
   if (($args{'statuslinetxt'}) || ($args{'windowtxt'})) {
 
@@ -391,11 +384,11 @@ sub Link {
 
     #
 
-    $out .= "onMouseOver=\" ";
+    $popup .= "onMouseOver=\" ";
     ($args{'statuslinetxt'}) &&
-      ($out .= "msg(\'$args{'statuslinetxt'}\'); ");
+      ($popup .= "msg(\'$args{'statuslinetxt'}\'); ");
     ($args{'windowtxt'}) &&
-      ($out .= "tip(".(
+      ($popup .= "tip(".(
                        "\'TOP\',".
                        "\'$args{'windowtitle'}\',".
                        "\'$args{'windowtxt'}\',".
@@ -404,25 +397,37 @@ sub Link {
                        "1".
                       "").
        "); ");
-    $out .= "return true\" ";
+    $popup .= "return true\" ";
 
-    $out .= "onMouseOut=\" ";
+    $popup .= "onMouseOut=\" ";
     ($args{'statuslinetxt'}) &&
-      ($out .= "msg(''); ");
+      ($popup .= "msg(''); ");
     ($args{'windowtxt'}) &&
-      ($out .= "tip('TOP','','',0,0,0); ");
-    $out .= "return true\" ";
+      ($popup .= "tip('TOP','','',0,0,0); ");
+    $popup .= "return true\" ";
 
-    $out .= "onClick=\" ";
+    $popup .= "onClick=\" ";
     ($args{'statuslinetxt'}) &&
-      ($out .= "msg(''); ");
+      ($popup .= "msg(''); ");
     ($args{'windowtxt'}) &&
-      ($out .= "tip('TOP','','',0,0,0); ");
-    $out .= "return true\"";
+      ($popup .= "tip('TOP','','',0,0,0); ");
+    $popup .= "return true\"";
 
   }
 
-  $out .= ">$args{'linktxt'}</a>";
+  my $name = '';
+  if ($args{'name'}) {
+    $name = "name=\"$args{'name'}\"";
+  }
+
+  my $href = '';
+  if ($args{'href'}) {
+      $href = "HREF=\"$args{'href'}\"";
+  }
+
+  my $linktxt =  $args{'linktxt'} || '';
+
+  $out .= "<A $name $href $popup>$linktxt</a>";
 
   return $out;
 }
