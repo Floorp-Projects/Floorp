@@ -104,7 +104,15 @@ REQUIRES	=\
 		  style \
 		  util \
 		  java \
+		  $(NULL)
+
+ifdef MOZ_LDAP
+REQUIRES += \
 		  ldap \
+		  $(NULL)
+endif
+
+REQUIRES += \
 		  xfeicons \
 		  progress \
 		  $(NULL)
