@@ -86,30 +86,42 @@ RDFContainer.prototype.addContainer = function(aContainer, aType)
 };
 
 RDFContainer.prototype.getNode = function(aNode) {
-	var rv = null;
+  var rv = null;
   if(this.isValid()) {
-		var res = this.RDF.GetResource(this.subject+":"+aNode);
-		if(res) {
-			return new RDFResource("node", this.subject+":"+aNode, this.subject, this.dsource);
-		}
-	} else {
+    var res = this.RDF.GetResource(this.subject+":"+aNode);
+    if(res) {
+      return new RDFResource("node", this.subject+":"+aNode, this.subject, this.dsource);
+    }
+  } else {
       jslibError(null, "RDFContainer is no longer valid!\n", "NS_ERROR_UNEXPECTED",
             JS_RDFCONTAINER_FILE+":getNode");
-		return null;
-	}
+    return null;
+  }
 };
 
 RDFContainer.prototype.addNode = function(aNode) {
   if(this.isValid()) {
-		var res = this.RDF.GetResource(this.subject+":"+aNode);
-		this.RDFC.Init(this.dsource, this.resource);
-		this.RDFC.AppendElement(res);
-		return new RDFResource("node", this.subject+":"+aNode, this.subject, this.dsource);
-	} else {
+    var res = this.RDF.GetResource(this.subject+":"+aNode);
+    this.RDFC.Init(this.dsource, this.resource);
+    this.RDFC.AppendElement(res);
+    return new RDFResource("node", this.subject+":"+aNode, this.subject, this.dsource);
+  } else {
       jslibError(null, "RDFContainer is no longer valid!\n", "NS_ERROR_UNEXPECTED",
             JS_RDFCONTAINER_FILE+":addNode");
-		return null;
-	}
+    return null;
+  }
+};
+
+RDFContainer.prototype.addResource = function(aResource) {
+  if(this.isValid()) {
+    var res = aResource.getResource();
+    this.RDFC.Init(this.dsource, this.resource);
+    this.RDFC.AppendElement(res);
+  } else {
+      jslibError(null, "RDFContainer is no longer valid!\n", "NS_ERROR_UNEXPECTED",
+            JS_RDFCONTAINER_FILE+":addNode");
+    return null;
+  }
 };
 
 // FIXME  add a getSeq("relative:path");
@@ -141,118 +153,118 @@ RDFContainer.prototype.getSubNodes = function()
 
 RDFContainer.prototype.getSubResources = function(aType)
 {
-	if(this.isValid()) {
-		var list = new Array;
+  if(this.isValid()) {
+    var list = new Array;
 
-		this.RDFC.Init(this.dsource, this.resource);
+    this.RDFC.Init(this.dsource, this.resource);
 
-		var elems = this.RDFC.GetElements();
-		while(elems.hasMoreElements()) {
-			var elem = elems.getNext();
-			elem = elem.QueryInterface(Components.interfaces.nsIRDFResource);
-			if(aType == "bag") {
-				if(this.RDFCUtils.IsBag(this.dsource, elem)) {
-					list.push(new RDFContainer(aType, elem.Value, this.subject, this.dsource));
-				}
-			} else if(aType == "alt") {
-				if(this.RDFCUtils.IsAlt(this.dsource, elem)) {
-					list.push(new RDFContainer(aType, elem.Value, this.subject, this.dsource));
-				}
-			} else if(aType == "seq") {
-				if(this.RDFCUtils.IsSeq(this.dsource, elem)) {
-					list.push(new RDFContainer(aType, elem.Value, this.subject, this.dsource));
-				}
-			} else if(aType == "all") {
-				if(this.RDFCUtils.IsContainer(this.dsource, elem)) {
-					list.push(new RDFContainer(aType, elem.Value, this.subject, this.dsource));
-				}
-			} else {
-				if(!this.RDFCUtils.IsContainer(this.dsource, elem)) {
-					list.push(new RDFResource(aType, elem.Value, this.subject, this.dsource));
-				}
-			}
-		}
-		return list;
-	} else {
+    var elems = this.RDFC.GetElements();
+    while(elems.hasMoreElements()) {
+      var elem = elems.getNext();
+      elem = elem.QueryInterface(Components.interfaces.nsIRDFResource);
+      if(aType == "bag") {
+        if(this.RDFCUtils.IsBag(this.dsource, elem)) {
+          list.push(new RDFContainer(aType, elem.Value, this.subject, this.dsource));
+        }
+      } else if(aType == "alt") {
+        if(this.RDFCUtils.IsAlt(this.dsource, elem)) {
+          list.push(new RDFContainer(aType, elem.Value, this.subject, this.dsource));
+        }
+      } else if(aType == "seq") {
+        if(this.RDFCUtils.IsSeq(this.dsource, elem)) {
+          list.push(new RDFContainer(aType, elem.Value, this.subject, this.dsource));
+        }
+      } else if(aType == "all") {
+        if(this.RDFCUtils.IsContainer(this.dsource, elem)) {
+          list.push(new RDFContainer(aType, elem.Value, this.subject, this.dsource));
+        }
+      } else {
+        if(!this.RDFCUtils.IsContainer(this.dsource, elem)) {
+          list.push(new RDFResource(aType, elem.Value, this.subject, this.dsource));
+        }
+      }
+    }
+    return list;
+  } else {
       jslibError(null, "RDFContainer is no longer valid!\n", "NS_ERROR_UNEXPECTED",
             JS_RDFCONTAINER_FILE+":getSubResources");
-		return null;
-	}
+    return null;
+  }
 };
 
-RDFContainer.prototype.remove_recursive = function(aPath) 
+RDFContainer.prototype.remove_recursive = function(aPath)
 {
   if(this.isValid()) {
-		var res = this.RDF.GetResource(aPath);
-		this.RDFC.Init(this.dsource, res);
+    var res = this.RDF.GetResource(aPath);
+    this.RDFC.Init(this.dsource, res);
 
-		var elems = this.RDFC.GetElements();
-		while(elems.hasMoreElements()) {
-			var elem = elems.getNext();
-			if(this.RDFCUtils.IsContainer(this.dsource, elem)) {
-				this.remove_recursive(elem.QueryInterface(Components.interfaces.nsIRDFResource).Value);
-				this.RDFC.Init(this.dsource, res);
-			}
-			var arcs = this.dsource.ArcLabelsOut(elem);
-			while(arcs.hasMoreElements()) {
-				var arc = arcs.getNext();
-				var targets = this.dsource.GetTargets(elem, arc, true);
-				while (targets.hasMoreElements()) {
-					var target = targets.getNext();
-					this.dsource.Unassert(elem, arc, target, true);
-				}
-			}
-			this.RDFC.RemoveElement(elem, false);
-		}
-		this.RDFC.RemoveElement(res, false);
-	} else {
+    var elems = this.RDFC.GetElements();
+    while(elems.hasMoreElements()) {
+      var elem = elems.getNext();
+      if(this.RDFCUtils.IsContainer(this.dsource, elem)) {
+        this.remove_recursive(elem.QueryInterface(Components.interfaces.nsIRDFResource).Value);
+        this.RDFC.Init(this.dsource, res);
+      }
+      var arcs = this.dsource.ArcLabelsOut(elem);
+      while(arcs.hasMoreElements()) {
+        var arc = arcs.getNext();
+        var targets = this.dsource.GetTargets(elem, arc, true);
+        while (targets.hasMoreElements()) {
+          var target = targets.getNext();
+          this.dsource.Unassert(elem, arc, target, true);
+        }
+      }
+      this.RDFC.RemoveElement(elem, false);
+    }
+    this.RDFC.RemoveElement(res, false);
+  } else {
       jslibError(null, "RDFContainer is no longer valid!\n", "NS_ERROR_UNEXPECTED",
             JS_RDFCONTAINER_FILE+":remove");
-		return null;
-	}
+    return null;
+  }
 };
 
 
 RDFContainer.prototype.remove = function(aDeep)
 {
   if(this.isValid()) {
-		if(this.parent != null) {
-			var parentres = this.RDF.GetResource(this.parent);
-			this.RDFC.Init(this.dsource, parentres);
-		}
+    if(this.parent != null) {
+      var parentres = this.RDF.GetResource(this.parent);
+      this.RDFC.Init(this.dsource, parentres);
+    }
 
       if(aDeep) {
          this.remove_recursive(this.subject);
       }
 
-		var arcs = this.dsource.ArcLabelsOut(this.resource);
-		while(arcs.hasMoreElements()) {
-			var arc = arcs.getNext();
-			var targets = this.dsource.GetTargets(this.resource, arc, true);
-			while (targets.hasMoreElements()) {
-				var target = targets.getNext();
-				this.dsource.Unassert(this.resource, arc, target, true);
-			}
-		}
+    var arcs = this.dsource.ArcLabelsOut(this.resource);
+    while(arcs.hasMoreElements()) {
+      var arc = arcs.getNext();
+      var targets = this.dsource.GetTargets(this.resource, arc, true);
+      while (targets.hasMoreElements()) {
+        var target = targets.getNext();
+        this.dsource.Unassert(this.resource, arc, target, true);
+      }
+    }
 
-		if(this.parent != null) {
-			this.RDFC.RemoveElement(this.resource, false);
-		}
+    if(this.parent != null) {
+      this.RDFC.RemoveElement(this.resource, false);
+    }
       this.setValid(false);
-	} else {
+  } else {
       jslibError(null, "RDFContainer is no longer valid!\n", "NS_ERROR_UNEXPECTED",
             JS_RDFCONTAINER_FILE+":remove");
-		return null;
-	}
+    return null;
+  }
 };
 
-jslib_debug('*** load: '+JS_RDFCONTAINER_FILE+' OK');
+jslibDebug('*** load: '+JS_RDFCONTAINER_FILE+' OK');
 
 } // END BLOCK JS_LIB_LOADED CHECK
 
 else
 {
-    dump("JS_RDF library not loaded:\n"                                +
+    jslibPrint("JS_RDF library not loaded:\n"                                +
          " \tTo load use: chrome://jslib/content/jslib.js\n"            +
          " \tThen: include('chrome://jslib/content/rdf/rdf.js');\n\n");
 }

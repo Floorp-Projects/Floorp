@@ -80,7 +80,7 @@ Instructions:
 */
 
 // Make sure jslib is loaded
-if(typeof(JS_LIB_LOADED)=='boolean')
+if (typeof(JS_LIB_LOADED)=='boolean')
 {
 
 /****************** Globals **********************/
@@ -112,11 +112,14 @@ const JS_FILEUTILS_I_PROCESS               = C.interfaces.nsIProcess;
 
 /****************** FileUtils Object Class *********************/
 function FileUtils() {
+  include (jslib_dirutils);
+  this.mDirUtils = new DirUtils();
 } // constructor
 
 FileUtils.prototype  = {
 
   mFileInst        : null,
+  mDirUtils        : null,
 
 /********************* CHROME_TO_PATH ***************************/
 // this is here for backward compatability but is deprecated --pete
@@ -124,41 +127,41 @@ chrome_to_path : function (aPath) { return this.chromeToPath(aPath); },
 
 chromeToPath : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":chromeToPath");
     return null;
   }
 
   var uri = C.classes[JS_FILEUTILS_SIMPLEURI_PROGID].createInstance(JS_FILEUTILS_I_URI);
-  var path;
+  var rv;
 
-  if(aPath.search(/^chrome:/) == 0) {
+  if (/^chrome:/.test(aPath)) {
     try {
       var cr        = C.classes[JS_FILEUTILS_CHROME_REG_PROGID].getService();
       if (cr) {
         cr          = cr.QueryInterface(C.interfaces.nsIChromeRegistry);
         uri.spec    = aPath;
         uri.spec    = cr.convertChromeURL(uri);
-        path        = uri.path;
+        rv         = uri.path;
       }
     } catch(e) {}
 
-    var rv;
-
-    try {
-      var dir   = new C.Constructor(JS_FILEUTILS_DR_PROGID, JS_FILEUTILS_I_PROPS);
-      rv        = (new dir()).get(JS_FILEUTILS_CHROME_DIR, C.interfaces.nsIFile).path;
-      rv        = path.replace(/\/chrome/, rv);
-    } catch (e) {
-      jslibError(e, "(problem getting file instance)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":chromeToPath");
-      rv        = null;
+    if (/^\/|\\|:chrome/.test(rv)) {
+      try {
+        // prepend the system path to this process dir
+        rv        = "file://"+this.mDirUtils.getCurProcDir()+rv;
+      } catch (e) {
+        jslibError(e, "(problem getting file instance)", "NS_ERROR_UNEXPECTED", 
+                        JS_FILEUTILS_FILE+":chromeToPath");
+        rv        = "";
+      }
     }
   } 
 
-  else if(aPath.search(/^file:/) == 0) {
-      rv=this.urlToPath(aPath); 
+  else if (/^file:/.test(aPath)) {
+      rv = this.urlToPath(aPath); 
   } else
-      rv=null;
+      rv = "";
   
   return rv;
 },
@@ -168,13 +171,13 @@ URL_to_path : function (aPath){ return this.urlToPath(aPath); },
 
 urlToPath : function (aPath)
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":urlToPath");
     return null;
   }
 
   var rv;
-  if(aPath.search(/^file:/) == 0) {
+  if (aPath.search(/^file:/) == 0) {
     try {
      var uri = C.classes[JS_FILEUTILS_NETWORK_STD_CID].createInstance(JS_FILEUTILS_I_FILEURL);
      uri.spec = aPath;
@@ -191,7 +194,7 @@ urlToPath : function (aPath)
 /********************* EXISTS ***************************/
 exists : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":exists");
     return null;
   }
@@ -213,12 +216,12 @@ rm : function (aPath) { return this.remove(aPath); },
 
 remove : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":remove");
     return null;
   }
 
-  if(!this.exists(aPath)) {
+  if (!this.exists(aPath)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":remove");
     return null;
   }
@@ -227,7 +230,7 @@ remove : function (aPath)
 
   try { 
     var fileInst = new JS_FILEUTILS_FilePath(aPath);
-    if(fileInst.isDirectory()) {
+    if (fileInst.isDirectory()) {
       jslibError(null, "path is a dir. use rmdir()", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":remove");
       return null;
     }
@@ -245,12 +248,12 @@ remove : function (aPath)
 /********************* COPY *****************************/
 copy  : function (aSource, aDest) 
 {
-  if(!aSource || !aDest) {
+  if (!aSource || !aDest) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":copy");
     return null;
   }
 
-  if(!this.exists(aSource)) {
+  if (!this.exists(aSource)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":copy");
     return null;
   }
@@ -262,27 +265,27 @@ copy  : function (aSource, aDest)
     var dir           = new JS_FILEUTILS_FilePath(aDest);
     var copyName      = fileInst.leafName;
 
-    if(fileInst.isDirectory()) {
+    if (fileInst.isDirectory()) {
       jslibError(null, "(cannot copy directory)", "NS_ERROR_FAILURE", JS_FILEUTILS_FILE+":copy");
       return null;
     }
 
-    if(!this.exists(aDest) || !dir.isDirectory()) {
+    if (!this.exists(aDest) || !dir.isDirectory()) {
       copyName          = dir.leafName;
       dir               = new JS_FILEUTILS_FilePath(dir.path.replace(copyName,''));
 
-      if(!this.exists(dir.path)) {
+      if (!this.exists(dir.path)) {
         jslibError(null, "(dest "+dir.path+" doesn't exist)", "NS_ERROR_FAILURE", JS_FILEUTILS_FILE+":copy");
         return null;
       }
 
-      if(!dir.isDirectory()) {
+      if (!dir.isDirectory()) {
         jslibError(null, "(dest "+dir.path+" is not a valid path)", "NS_ERROR_FAILURE", JS_FILEUTILS_FILE+":copy");
         return null;
       }
     }
 
-    if(this.exists(this.append(dir.path, copyName))) {
+    if (this.exists(this.append(dir.path, copyName))) {
       jslibError(null, "(dest "+this.append(dir.path, copyName)+" already exists)", "NS_ERROR_FAILURE", JS_FILEUTILS_FILE+":copy");
       return null;
     }
@@ -300,12 +303,12 @@ copy  : function (aSource, aDest)
 /********************* LEAF *****************************/
 leaf  : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":leaf");
     return null;
   }
 
-  if(!this.exists(aPath)) {
+  if (!this.exists(aPath)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":leaf");
     return null;
   }
@@ -328,12 +331,12 @@ leaf  : function (aPath)
 /********************* APPEND ***************************/
 append : function (aDirPath, aFileName) 
 {
-  if(!aDirPath || !aFileName) {
+  if (!aDirPath || !aFileName) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":append");
     return null;
   }
 
-  if(!this.exists(aDirPath)) {
+  if (!this.exists(aDirPath)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":append");
     return null;
   }
@@ -342,7 +345,7 @@ append : function (aDirPath, aFileName)
 
   try { 
     var fileInst  = new JS_FILEUTILS_FilePath(aDirPath);
-    if(fileInst.exists() && !fileInst.isDirectory()) {
+    if (fileInst.exists() && !fileInst.isDirectory()) {
       jslibError(null, aDirPath+" is not a dir", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":append");
       return null;
     }
@@ -370,12 +373,12 @@ validatePermissions : function(aNum)
 /********************* PERMISSIONS **********************/
 permissions : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":permissions");
     return null;
   }
 
-  if(!this.exists(aPath)) {
+  if (!this.exists(aPath)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":permissions");
     return null;
   }
@@ -395,12 +398,12 @@ permissions : function (aPath)
 /********************* MODIFIED *************************/
 dateModified  : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":dateModified");
     return null;
   }
 
-  if(!this.exists(aPath)) {
+  if (!this.exists(aPath)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":dateModified");
     return null;
   }
@@ -421,12 +424,12 @@ dateModified  : function (aPath)
 /********************* SIZE *****************************/
 size  : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":size");
     return null;
   }
 
-  if(!this.exists(aPath)) {
+  if (!this.exists(aPath)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":size");
     return null;
   }
@@ -448,12 +451,12 @@ extension  : function (aPath){ return this.ext(aPath); },
 
 ext  : function (aPath)
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":ext");
     return null;
   }
 
-  if(!this.exists(aPath)) {
+  if (!this.exists(aPath)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", JS_FILEUTILS_FILE+":ext");
     return null;
   }
@@ -477,7 +480,7 @@ dirPath   : function (aPath){ return this.parent(aPath); },
 
 parent   : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":parent");
     return null;
   }
@@ -487,15 +490,15 @@ parent   : function (aPath)
   try { 
     var fileInst            = new JS_FILEUTILS_FilePath(aPath);
 
-    if(!fileInst.exists()) {
+    if (!fileInst.exists()) {
       jslibError(null, "(file doesn't exist)", "NS_ERROR_FAILURE", JS_FILEUTILS_FILE+":parent");
       return null;
     }
 
-    if(fileInst.isFile())
+    if (fileInst.isFile())
       rv=fileInst.parent.path;
 
-    else if(fileInst.isDirectory())
+    else if (fileInst.isDirectory())
       rv=fileInst.path;
 
     else
@@ -521,13 +524,13 @@ spawn : function (aPath, aArgs)
  *
  */
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", 
 		           JS_FILEUTILS_FILE+":spawn");
     return null;
   }
 
-  if(!this.exists(aPath)) {
+  if (!this.exists(aPath)) {
     jslibError(null, "(file doesn't exist)", "NS_ERROR_UNEXPECTED", 
 		           JS_FILEUTILS_FILE+":spawn");
     return null;
@@ -535,7 +538,7 @@ spawn : function (aPath, aArgs)
 
   var len=0;
 
-  if(aArgs)
+  if (aArgs)
     len = aArgs.length;
   else
     aArgs=null;
@@ -545,13 +548,13 @@ spawn : function (aPath, aArgs)
   try { 
     var fileInst            = new JS_FILEUTILS_FilePath(aPath);
 
-    if(!fileInst.isExecutable()) {
+    if (!fileInst.isExecutable()) {
       jslibError(null, "(File is not executable)", "NS_ERROR_INVALID_ARG", 
 			           JS_FILEUTILS_FILE+":spawn");
       return null;
     }
 
-    if(fileInst.isDirectory()) {
+    if (fileInst.isDirectory()) {
       jslibError(null, "(File is not a program)", "NS_ERROR_UNEXPECTED", 
 			           JS_FILEUTILS_FILE+":spawn");
       return null;
@@ -590,7 +593,7 @@ spawn : function (aPath, aArgs)
 /********************* nsIFILE **************************/
 nsIFile : function (aPath) 
 {
-  if(!aPath) {
+  if (!aPath) {
     jslibError(null, "(no path defined)", "NS_ERROR_INVALID_ARG", JS_FILEUTILS_FILE+":nsIFile");
     return null;
   }

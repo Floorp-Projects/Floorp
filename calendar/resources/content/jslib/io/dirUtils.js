@@ -72,6 +72,12 @@ const NS_APP_IMAP_MAIL_50_DIR             = "IMapMD"; // /root/.mozilla/Default 
 const NS_APP_NEWS_50_DIR                  = "NewsD"; // /root/.mozilla/Default User/k1m30xaf.slt/News
 const NS_APP_MESSENGER_FOLDER_CACHE_50_DIR = "MFCaD"; // /root/.mozilla/Default User/k1m30xaf.slt/panacea.dat
 
+// Useful OS System Dirs
+const NS_OS_CURRENT_PROCESS_DIR = "CurProcD"; // /usr/src/mozilla/dist/bin
+const NS_OS_HOME_DIR = "Home"; // /root
+const NS_OS_TEMP_DIR = "TmpD"; // /tmp
+const NS_XPCOM_COMPONENT_DIR = "ComsD"; // /usr/src/mozilla/dist/bin/components
+
 const JS_DIRUTILS_FilePath  = new C.Constructor(JS_DIRUTILS_FILE_LOCAL_CID,
                                                 JS_DIRUTILS_FILE_I_LOCAL_FILE,
                                                 JS_DIRUTILS_INIT_W_PATH);
@@ -127,6 +133,10 @@ getUserMailDir : function () { return this.getPath(NS_APP_MAIL_50_DIR); },
 getUserImapDir : function () { return this.getPath(NS_APP_IMAP_MAIL_50_DIR); },
 getUserNewsDir : function () { return this.getPath(NS_APP_NEWS_50_DIR); },
 getMessengerFolderCache : function () { return this.getPath(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR); },
+getCurProcDir : function () { return this.getPath(NS_OS_CURRENT_PROCESS_DIR); },
+getHomeDir : function () { return this.getPath(NS_OS_HOME_DIR); },
+getTmpDir : function () { return this.getPath(NS_OS_TEMP_DIR); },
+getComponentsDir : function () { return this.getPath(NS_XPCOM_COMPONENT_DIR); },
 
 get help() {
   const help =

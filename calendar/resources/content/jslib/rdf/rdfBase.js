@@ -60,7 +60,7 @@ RDFBase.prototype = {
     this.dsource = aDatasource;
   },
 
-  getDatasource : function() 
+  getDatasource : function()
   {
     return this.dsource;
   },
@@ -83,12 +83,46 @@ RDFBase.prototype = {
   flush : function()
   {
     if(this.isValid()) {
-			        this.dsource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
+              this.dsource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
     }
   }
 
 };
 
+RDFBase.prototype.getAnonymousResource = function()
+{
+  jslibDebug("entering getAnonymousNode");
+  if(this.isValid()) {
+    var res = this.RDF.GetAnonymousResource();
+    return new RDFResource("node", res.Value, null, this.dsource);
+  } else {
+      jslibError(null, "RDF is no longer valid!\n", "NS_ERROR_UNEXPECTED",
+            JS_RDF_FILE+":getNode");
+    return null;
+  }
+};
+
+RDFBase.prototype.getAnonymousContainer = function(aType)
+{
+  jslibDebug("entering getAnonymousContainer");
+  if(this.isValid()) {
+    var res = this.getAnonymousResource();
+    jslibDebug("making Container");
+    if(aType == "bag") {
+      this.RDFCUtils.MakeBag(this.dsource, res.getResource());
+    } else if(aType == "alt") {
+      this.RDFCUtils.MakeAlt(this.dsource, res.getResource());
+    } else {
+      this.RDFCUtils.MakeSeq(this.dsource, res.getResource());
+    }
+    jslibPrint("* made cont ..."+res.getSubject()+"\n");
+    return new RDFContainer(aType, res.getSubject(),null, this.dsource);
+  } else {
+      jslibError(null, "RDF is no longer valid!\n", "NS_ERROR_UNEXPECTED",
+            JS_RDF_FILE+":getNode");
+    return null;
+  }
+};
 
 jslibDebug('*** load: '+JS_RDFBASE_FILE+' OK');
 
@@ -96,7 +130,7 @@ jslibDebug('*** load: '+JS_RDFBASE_FILE+' OK');
 
 else
 {
-    dump("JS_RDFBase library not loaded:\n"                                +
+    jslibPrint("JS_RDFBase library not loaded:\n"                                +
          " \tTo load use: chrome://jslib/content/jslib.js\n"            +
          " \tThen: include('chrome://jslib/content/rdf/rdf.js');\n\n");
 }
