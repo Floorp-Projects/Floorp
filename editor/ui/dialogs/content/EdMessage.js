@@ -85,6 +85,9 @@ function Startup()
   InitButton(4,"button2", false);
   InitButton(5,"button3", false);
   InitButton(6,"button4", false);
+  
+  // Resize content to adjust for added message
+  window.sizeToContent();
 }
 
 function InitButton(argIndex, buttonID, useOK)

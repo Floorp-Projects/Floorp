@@ -18,8 +18,15 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
+   -   Ben Goodger
   -->
 
-<!ENTITY WindowTitle.label  "Advanced Property Editor">
-<!ENTITY AddAttributeMsg.label "Name for attribute to add:">
-<!ENTITY AddAttributeButton.label "Add">
+<!ENTITY WindowTitle.label              "Advanced Property Editor">
+<!ENTITY AddAttributeLabel.label        "Add an Attribute">
+<!ENTITY AttName.label                  "Name: ">
+<!ENTITY AttValue.label                 "Value: ">
+<!ENTITY AddAttributeButton.label       "Add">
+<!ENTITY HTMLReference.label            "HTML Reference...">
+<!ENTITY currentattributesfor.label     "Current attributes for: ">
+<!ENTITY tree.attributeHeader.label     "Attribute">
+<!ENTITY tree.valueHeader.label         "Value">

@@ -85,11 +85,9 @@ function InitDialog()
 
 function AnchorNameExists(name)
 {
-  anchorList = editorShell.editorDocument.anchors; // getElementsByTagName("A");
+  anchorList = editorShell.editorDocument.anchors;
   if (anchorList) {
-    dump("We have an anchor list\n");
     for (i=0; i < anchorList.length; i++) {
-      dump("Anchor name: "+anchorList[i].name+"\n");
       if (anchorList[i].name == name)
         return true;
     }

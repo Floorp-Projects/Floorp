@@ -18,7 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *   Pete Collins
+ *   Pete Collins, Ben Goodger
  */
 
 
@@ -341,15 +341,6 @@ select.SpellCheckList, select.SpellCheckLanguage, input.SpellCheckWord {
 
 radio { margin: 5px 3px }
 
-tree  {
-    display:                    table;
-    background-color:           #000000;
-    border:                     none;
-    border-spacing:             0px;
-    border-collapse:            collapse;
-    width:                              100%;
-}
-
 /* HTML ELEMENTS */
 
 table { cell-spacing: 5px; }
@@ -632,5 +623,96 @@ spring.bigspacer {
       height:                   10px;
 }
 
-// Override any I-Beam cursors in text
-div, p, br, label, box, td { cursor: default; }
+div.spacer [align~=horizontal] {
+    border                    : 1px inset white;
+    height                    : 2px;
+}
+
+div.tagname {
+    font-weight               : bold;
+    font-size                 : 17px;
+}
+
+div#tagLabel {
+    font-weight               : bold;
+}
+
+/* styles for an attribute tree-table */
+tree.AttributesTree {
+    min-width                 : 200px;
+    min-height                : 200px;
+    border                    : 1px inset white;
+}
+
+tree.AttributesTree treecell {
+    color                     : black;
+    padding-left              : 10px;
+    padding-top               : 2px;
+    padding-bottom            : 2px;
+    padding-right             : 2px;
+}
+
+tree.AttributesTree > treehead > treerow > treecell {
+    border                    : 1px outset white;
+    background-color          : #CCCCDD;
+}
+
+tree.AttributesTree > treehead > treerow > treecell:active {
+    border-left               : 1px inset white; /*inset white;*/
+    border-top                : 1px inset white;
+    border-right              : 1px solid #CCCCDD;
+    border-bottom             : 1px solid #CCCCDD;
+    padding-left              : 11px;
+    padding-top               : 3px;
+    padding-right             : 1px;
+    padding-bottom            : 1px;
+}
+
+
+/* FILES/MOZILLAE/M96/BIN/chrome/editor/content/default/EdAdvancedEdit.xul */
+tree.AttributesTree treechildren > treeitem > treerow > treecell {
+    border-right              : 1px solid #CCCCDD;
+    border-bottom             : 1px solid #CCCCDD;
+    color                     : black;
+    background-color          : #FFFFFF;
+    padding-left              : 10px;
+    padding-top               : 2px;
+    padding-bottom            : 2px;
+    padding-right             : 2px;
+}
+
+tree.AttributesTree treechildren > treeitem > treerow > treecell.value {
+    border-bottom             : 1px solid #CCCCDD;
+    color                     : black;
+    background-color          : #FFFFFF;
+    padding-left              : 0px;
+    padding-top               : 0px;
+    padding-bottom            : 0px;
+    padding-right             : 0px;
+    margin-left               : 0px;
+}
+
+
+tree.AttributesTree treechildren > treeitem > treerow [selected ~= false] {
+    color                     : black;
+    background-color          : #FFFFFF;
+}
+
+tree.AttributesTree treechildren > treeitem > treerow [selected ~= true] {
+    color                     : white;
+    background-color          : #666699;
+}
+
+input.AttributesCell {
+    width                     : 95%;
+    border                    : none;
+    height                    : 100%;
+}
+
+input.AttributesCell:active {
+    border:                     1px white inset;
+}
+
+input.AttributesCell:hover {
+    border:                     1px white inset;
+}
