@@ -1718,7 +1718,7 @@ SECU_PrintCertificate(FILE *out, SECItem *der, char *m, int level)
 
     /* Pretty print it out */
     SECU_Indent(out, level); fprintf(out, "%s:\n", m);
-    iv = DER_GetInteger(&c->version);
+    iv = c->version.len ? DER_GetInteger(&c->version) : 0;  /* version is optional */
     SECU_Indent(out, level+1); fprintf(out, "%s: %d (0x%x)\n", "Version", iv + 1, iv);
 
     SECU_PrintInteger(out, &c->serialNumber, "Serial Number", level+1);
