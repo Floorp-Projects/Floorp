@@ -24,13 +24,15 @@ DEPTH=..\..
 
 DIRS=base coreDom coreEvents range events html css
 
-XPIDLSRCS = .\domstubs.idl
+XPIDLSRCS = .\domstubs.idl \
+				.\nsIScriptContextOwner.idl \
+				$(NULL)
+
 
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsIScriptContext.h 		\
 	nsIJSScriptObject.h 		\
 	nsIJSNativeInitializer.h	\
-	nsIScriptObjectOwner.h 		\
         nsIScriptGlobalObject.h 	\
 	nsIScriptContextOwner.h 	\
 	nsIScriptEventListener.h 	\
