@@ -1016,7 +1016,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         switch (saveAsFileType) {
         case 0:
         default:
-            rv = messageService->SaveMessageToDisk(url, fileSpec, PR_TRUE,
+            rv = messageService->SaveMessageToDisk(url, fileSpec, PR_FALSE,
                                                    urlListener, nsnull,
                                                    PR_FALSE, mMsgWindow);
             break;
