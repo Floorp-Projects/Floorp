@@ -674,6 +674,9 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
   nsresult result=NS_OK;
   
   if(attrCount){ //go collect the attributes...
+
+    CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
+
     int attr=0;
     for(attr=0;attr<attrCount;attr++){
       CToken* theToken=mTokenizer->PeekToken();
@@ -681,6 +684,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
         eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
         if(eToken_attribute==theType){
           mTokenizer->PopToken(); //pop it for real...
+          theContext.mTokenNode.AddAttribute(theToken);  //and add it to the node.
 
           CAttributeToken* theAttrToken=(CAttributeToken*)theToken;
           CToken theKeyToken(theAttrToken->GetKey());
@@ -697,6 +701,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
 
   return result;
 }
+
 
 /**
  *  This method gets called when a tag needs to be sent out
@@ -841,7 +846,21 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
   switch(theType) {
     
     case eToken_start:
+
       result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
+      if(mParser && (NS_OK==result)) {
+        nsAutoString      charsetValue;
+        nsCharsetSource   charsetSource;
+        CObserverService& theService=mParser->GetObserverService();
+        CParserContext*   pc=mParser->PeekContext(); 
+        void*             theDocID=(pc)? pc->mKey:0; 
+  
+        mParser->GetDocumentCharset(charsetValue,charsetSource);
+        eHTMLTags  theTag = (eHTMLTags)aToken->GetTypeID();
+        result=theService.Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,
+                                 kViewSourceCommand,charsetValue,charsetSource);
+      }
+      theContext.mTokenNode.Init(0,0,gTokenRecycler);  //now recycle.
       break;
 
     case eToken_end:
