@@ -33,6 +33,7 @@ static NS_DEFINE_IID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 static nsICaseConversion* gCaseConv =  nsnull;
 
+//#define DEBUG_GETPREVWORD
 // XXX I'm sure there are other special characters
 #define CH_NBSP 160
 
@@ -136,7 +137,7 @@ nsTextTransformer::Init(/*nsTextRun& aTextRun, XXX*/
 }
 
 PRBool
-nsTextTransformer::GrowBuffer()
+nsTextTransformer::GrowBuffer(PRBool aForNextWord)
 {
   PRInt32 newLen = mBufferLength * 2;
   if (newLen <= 100) {
@@ -147,7 +148,10 @@ nsTextTransformer::GrowBuffer()
     return PR_FALSE;
   }
   if (0 != mBufferLength) {
-    nsCRT::memcpy(newBuffer, mBuffer, sizeof(PRUnichar) * mBufferLength);
+    if(aForNextWord)
+      nsCRT::memcpy(newBuffer, mBuffer, sizeof(PRUnichar) * mBufferLength);
+    else
+      nsCRT::memcpy(&newBuffer[mBufferLength], mBuffer, sizeof(PRUnichar) * mBufferLength);
     if (mBuffer != mAutoBuffer) {
       delete [] mBuffer;
     }
@@ -417,8 +421,8 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
     return nsnull;
   }
 
-  PRUnichar* bp = mBuffer;
-  PRUnichar* bufEnd = mBuffer + mBufferLength;
+  PRUnichar* bp = mBuffer+mBufferLength-1;
+  PRUnichar* bufEnd = mBuffer ;
   const nsTextFragment* frag = mCurrentFrag;
   const nsTextFragment* lastFrag = mFrags;//1st is the last
   PRInt32 wordLen = 1;
@@ -430,7 +434,10 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   PRUnichar firstChar;
   if (frag->Is2b()) {
     const PRUnichar* up = frag->Get2b();
-    firstChar = up[offset];
+    if (offset > 0)
+       firstChar = up[offset];
+    else 
+       firstChar = up[0];
   }
   else {
     const unsigned char* cp = (const unsigned char*) frag->Get1b();
@@ -463,7 +470,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
     firstChar = ' ';
   }
   if(firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
-  *bp++ = firstChar;
+  *bp-- = firstChar;
   mCurrentFragOffset = offset +1;
   if (offset < 0) {
     if (mCurrentFrag == mFrags){
@@ -500,35 +507,64 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
         contentLen += numChars;
       }
       else {
-        while (cp >= end) {
-          PRUnichar ch = *cp;
-          if (!XP_IS_SPACE(ch)) {
-            if (CH_NBSP == ch) ch = ' ';
-            if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
-            cp--;
+         if(wordLen > 0) {
+            nsresult res = NS_OK;
+            PRBool breakBetween = PR_FALSE;
+            if(aForLineBreak)
+                res = mLineBreaker->BreakInBetween(
+                              cp0, offset+1, 
+                              &(mBuffer[mBufferLength-wordLen]), wordLen,
+                              &breakBetween);
+            else
+                res = mWordBreaker->BreakInBetween(
+                              cp0, offset+1, 
+                              &(mBuffer[mBufferLength-wordLen]), wordLen,
+                              &breakBetween);
+            if ( breakBetween )
+              goto done;
 
-            // Store character in buffer; grow buffer if we have to
-            NS_ASSERTION(bp < bufEnd, "whoops");
-            *bp++ = ch;
-            if (bp == bufEnd) {
-              PRInt32 delta = bp - mBuffer;
-              if (!GrowBuffer()) {
-                goto done;
+            PRBool tryPrevFrag = PR_FALSE;
+            PRUint32 prev;
+
+            // Find prev position
+
+            if(aForLineBreak)
+                res = mLineBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
+            else
+                res = mWordBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
+
+
+            numChars = (offset - prev)+1;
+            // check buffer size before copy
+            while((bp - numChars ) < bufEnd) {
+              PRInt32 delta = (&(mBuffer[mBufferLength])) - bp -1 ;
+              if(!GrowBuffer()) {
+                 goto done;
               }
-              bp = mBuffer + delta;
-              bufEnd = mBuffer + mBufferLength;
+              bp = (&(mBuffer[mBufferLength])) - delta - 1;
+              bufEnd = mBuffer;
             }
-            continue;
-          }
-          numChars = (cp0 + offset) - cp;
-          wordLen += numChars;
-          contentLen += numChars;
-          mCurrentFragOffset -= numChars;
-          goto done;
+
+            wordLen += numChars;
+            mCurrentFragOffset -= numChars;
+            contentLen += numChars;
+            end = cp - numChars;
+
+            // 1. convert nbsp into space
+            // 2. check mHasMultibyte flag
+            // 3. copy buffer
+
+            while(cp > end) {
+                    PRUnichar ch = *cp--;
+              if (CH_NBSP == ch) ch = ' ';
+              if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+              *bp-- = ch;
+            }
+            if(! tryPrevFrag) {
+              // can decide break position inside this TextFrag
+              goto done;
+            }
         }
-        numChars = (cp0 + offset) - cp;
-        wordLen += numChars;
-        contentLen += numChars;
       }
     }
     else {
@@ -559,15 +595,15 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
             cp--;
 
             // Store character in buffer; grow buffer if we have to
-            NS_ASSERTION(bp < bufEnd, "whoops");
-            *bp++ = ch;
+            NS_ASSERTION(bp > bufEnd, "whoops");
+            *bp-- = ch;
             if (bp == bufEnd) {
-              PRInt32 delta = bp - mBuffer;
-              if (!GrowBuffer()) {
+              PRInt32 delta = (&(mBuffer[mBufferLength])) - bp - 1;
+              if (!GrowBuffer(PR_FALSE)) {
                 goto done;
               }
-              bp = mBuffer + delta;
-              bufEnd = mBuffer + mBufferLength;
+              bp = (&(mBuffer[mBufferLength])) - delta - 1;
+              bufEnd = mBuffer;
             }
             continue;
           }
@@ -603,13 +639,19 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
      switch(mTextTransform)
      {
        case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
-           gCaseConv->ToTitle(mBuffer, mBuffer, wordLen, !aInWord);
+           gCaseConv->ToTitle(&(mBuffer[mBufferLength-wordLen]), 
+                              &(mBuffer[mBufferLength-wordLen]),
+                              wordLen, !aInWord);
          break;
        case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
-           gCaseConv->ToLower(mBuffer, mBuffer, wordLen );
+           gCaseConv->ToLower(&(mBuffer[mBufferLength-wordLen]), 
+                              &(mBuffer[mBufferLength-wordLen]), 
+                              wordLen );
          break;
        case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
-           gCaseConv->ToUpper(mBuffer, mBuffer, wordLen );
+           gCaseConv->ToUpper(&(mBuffer[mBufferLength-wordLen]), 
+                              &(mBuffer[mBufferLength-wordLen]), 
+                              wordLen );
          break;
        default:
          break;
@@ -624,7 +666,25 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   aContentLenResult = contentLen;
   aIsWhitespaceResult = isWhitespace;
 
-  return mBuffer;
+
+#ifdef DEBUG_GETPREVWORD
+{
+  printf(aIsWhitespaceResult ? "#1 WHITESPACE\n": "NOT WHITESPACE\n");
+  if(! aIsWhitespaceResult)
+  {
+     PRUnichar* wordBufMem =  &(mBuffer[mBufferLength-wordLen]);
+     PRInt32 ax;
+     for(ax=0; ax<wordLen; ax++) {
+        if(wordBufMem[ax] < 0x080)
+           printf("%c", (char)wordBufMem[ax]);
+        else
+           printf("[U+%04X]", wordBufMem[ax]);
+     }
+     printf("(%d)\n",wordLen);
+  }
+}
+#endif
+  return &(mBuffer[mBufferLength-wordLen]);
 }
 
 PRUnichar*

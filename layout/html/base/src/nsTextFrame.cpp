@@ -70,6 +70,8 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 #undef DEBUG_WORD_WRAPPING
 #endif
 
+// #define DEBUGWORDJUMP
+
 #define WORD_BUF_SIZE 100
 #define TEXT_BUF_SIZE 1000
 
@@ -2144,13 +2146,28 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
     }
     else if (aDirection == eDirNext){
       tx.Init(this, aStartOffset );
+
+#ifdef DEBUGWORDJUMP
+printf("Next- Start=%d aEatingWS=%s\n", aStartOffset, aEatingWS ? "TRUE" : "FALSE");
+#endif
+
       if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
+
+#ifdef DEBUGWORDJUMP
+printf("GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n", 
+       wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
+#endif
+
         if ((aEatingWS && isWhitespace) || !aEatingWS){
           *aContentOffset = aStartOffset + contentLen;
           //check for whitespace next.
           keepSearching = PR_TRUE;
           isWhitespace = PR_TRUE;
           while (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE) && isWhitespace){
+#ifdef DEBUGWORDJUMP
+printf("2-GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n", 
+       wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
+#endif
             *aContentOffset += contentLen;
             keepSearching = PR_FALSE;
             isWhitespace = PR_FALSE;
@@ -2169,6 +2186,9 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
       frameUsed = GetNextInFlow();
       start = 0;
     }
+#ifdef DEBUGWORDJUMP
+printf("aEatingWS = %s\n" , aEatingWS ? "TRUE" : "FALSE");
+#endif
     if (!found || (*aContentOffset > (mContentOffset + mContentLength)) || (*aContentOffset < mContentOffset)){ //gone too far
       if (frameUsed){
         result = frameUsed->PeekOffset(aTracker, aDesiredX, aAmount, aDirection,  start, aResultContent, 
@@ -2414,11 +2434,12 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   mColumn = column;
   PRBool breakable = lineLayout.LineIsBreakable();
   PRInt32 lastWordLen;
+  PRUnichar* bp = nsnull;
   for (;;) {
     // Get next word/whitespace from the text
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
-    PRUnichar* bp = tx.GetNextWord(inWord, wordLen, contentLen, isWhitespace);
+    bp = tx.GetNextWord(inWord, wordLen, contentLen, isWhitespace);
     if (nsnull == bp) {
       break;
     }
@@ -2551,15 +2572,23 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
           fputs(tmp, stdout);
           printf("' baseWidth=%d [%d,%d]\n", lastWordWidth, prevOffset, offset);
 #endif
+          PRUnichar* pWordBuf = wordBuf;
+          PRUint32   aWordBufLen = WORD_BUF_SIZE;
+          if((nsnull !=bp) && (bp != wordBuf))
+          {
+             pWordBuf = bp;            
+             // XXX To Do:
+             // make the aWordBufLen equal to mBufferLength of nsTextTransformer here
+          }
           // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
           // at the first breakable point.
           nscoord wordWidth = ComputeTotalWordWidth(&aPresContext, lineLayout,
                                                     aReflowState, next,
                                                     lastWordWidth,
-                                                    wordBuf,
+                                                    pWordBuf,
                                                     lastWordLen,
-                                                    WORD_BUF_SIZE
+                                                    aWordBufLen
                                                     );
           if (!breakable || (x - lastWordWidth + wordWidth <= maxWidth)) {
             // The fully joined word has fit. Account for the joined
