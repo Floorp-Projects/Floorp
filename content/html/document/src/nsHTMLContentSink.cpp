@@ -786,7 +786,7 @@ public:
   HTMLContentSink* mSink;
   PRBool mPreAppend;
   PRInt32 mNotifyLevel;
-  nsIContent* mLastTextNode;
+  nsCOMPtr<nsITextContent> mLastTextNode;
   PRInt32 mLastTextNodeSize;
 
   struct Node {
@@ -1413,7 +1413,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 MOZ_DECL_CTOR_COUNTER(SinkContext)
 
 SinkContext::SinkContext(HTMLContentSink* aSink)
-  : mSink(aSink), mPreAppend(PR_FALSE), mNotifyLevel(0), mLastTextNode(nsnull),
+  : mSink(aSink), mPreAppend(PR_FALSE), mNotifyLevel(0),
     mLastTextNodeSize(0), mStack(nsnull), mStackSize(0), mStackPos(0),
     mText(nsnull), mTextLength(0), mTextSize(0)
 {
@@ -1432,8 +1432,6 @@ SinkContext::~SinkContext()
   }
 
   delete [] mText;
-
-  NS_IF_RELEASE(mLastTextNode);
 }
 
 nsresult
@@ -2182,7 +2180,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
     if (mLastTextNode) {
       if ((mLastTextNodeSize + mTextLength) > mSink->mMaxTextRun) {
         mLastTextNodeSize = 0;
-        NS_RELEASE(mLastTextNode);
+        mLastTextNode = nsnull;
         FlushText(aDidFlush, aReleaseLast);
       } else {
         nsCOMPtr<nsIDOMCharacterData> cdata(do_QueryInterface(mLastTextNode));
@@ -2196,18 +2194,19 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         }
       }
     } else {
-      nsITextContent* content;
-      rv = NS_NewTextNode(&content);
+      nsCOMPtr<nsITextContent> textContent;
+      rv = NS_NewTextNode(getter_AddRefs(textContent));
       NS_ENSURE_SUCCESS(rv, rv);
 
+      mLastTextNode = textContent;
+
       // Set the content's document
-      content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
+      mLastTextNode->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
       // Set the text in the text node
-      content->SetText(mText, mTextLength, PR_FALSE);
+      mLastTextNode->SetText(mText, mTextLength, PR_FALSE);
 
       // Eat up the rest of the text up in state.
-      mLastTextNode = content;
       mLastTextNodeSize += mTextLength;
       mTextLength = 0;
 
@@ -2219,15 +2218,16 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
 
       nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
       if (mStack[mStackPos - 1].mInsertionPoint != -1) {
-        parent->InsertChildAt(content, mStack[mStackPos - 1].mInsertionPoint++,
+        parent->InsertChildAt(mLastTextNode,
+                              mStack[mStackPos - 1].mInsertionPoint++,
                               PR_FALSE, PR_FALSE);
       } else {
-        parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
+        parent->AppendChildTo(mLastTextNode, PR_FALSE, PR_FALSE);
       }
 
       didFlush = PR_TRUE;
 
-      DidAddContent(content, PR_FALSE);
+      DidAddContent(mLastTextNode, PR_FALSE);
     }
   }
 
@@ -2235,9 +2235,9 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
     *aDidFlush = didFlush;
   }
 
-  if (aReleaseLast && mLastTextNode) {
+  if (aReleaseLast) {
     mLastTextNodeSize = 0;
-    NS_RELEASE(mLastTextNode);
+    mLastTextNode = nsnull;
   }
 
 #ifdef DEBUG
