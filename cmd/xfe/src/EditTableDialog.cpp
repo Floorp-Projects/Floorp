@@ -1653,7 +1653,7 @@ fe_bg_group_get(fe_bgGroup* group,
 					tmp = NULL;
 				}
                 if (cell_data)
-                    FE_SET_BIT(cell_data->mask, CF_BACK_COLOR); 
+                    FE_SET_BIT(cell_data->mask, CF_BACK_IMAGE); 
 			}
 		}
 			
