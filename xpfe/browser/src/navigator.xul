@@ -78,12 +78,20 @@
     dump("Browser enabling buttons\n");
   }
 
+
+  function RefreshUrlbar()
+  {
+   //Refresh the urlbar bar
+    document.getElementById('urlbar').value = window.frames[0].location.href;
+  }
+
   function BrowserBack()
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
 	    dump("Going Back\n");
       appCore.back();
+      RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -95,9 +103,16 @@
     if (appCore != null) {
 	    dump("Going Forward\n");
       appCore.forward();
+      RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
+  }
+
+  function BrowserHome()
+  {
+   window.frames[0].home();
+   RefreshUrlbar();
   }
 
   function BrowserNewWindow()
@@ -258,7 +273,7 @@
 	      </titledbutton>
 
 	      <titledbutton src="resource:/res/toolbar/TB_Home.gif" align="bottom" value="Home" 
-				onclick="window.frames[0].home()"/>
+				onclick="BrowserHome()"/>
 
 	      <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
 				onclick="window.frames[0].print()">
@@ -268,11 +283,11 @@
 	  
 	  <html:td style="vertical-align:center">
 		  <html:input id="urlbar" html:style="vertical-align: center; width: 100%" html:type="text" 
-			  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementById('urlbar').value; }"/>   
+			  html:onkeyup="if (event.which == 13) {window.frames[0].location.href=document.getElementById('urlbar').value; }"/>   
 	  </html:td>
 	  
 	  <html:td width="65px">	  
-	      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="window.frames[0].home()"/>        
+	      <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onClick="BrowserHome()"/>        
       </html:td>
  
       </html:tr></html:table>
