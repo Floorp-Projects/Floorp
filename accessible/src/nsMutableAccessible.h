@@ -24,6 +24,7 @@
 #define _nsMutableAccessible_H_
 
 #include "nsAccessible.h"
+#include "nsString.h"
 
 #include "nsIMutableAccessible.h"
 
