@@ -99,11 +99,17 @@ sub createArgument {
             my $value = $term->readline(''); # (the parameter passed is the prompt, if any)
             # if we cached the input device:
             # $term->addhistory($value);
-            if ($value eq '') {
-                # use default
-                $self->setArgument(@_);
+            if (defined($value)) {
+                if ($value eq '') {
+                    # use default
+                    $self->setArgument(@_);
+                } else {
+                    $self->setArgument($argument, $value);
+                }
             } else {
-                $self->setArgument($argument, $value);
+                # end of file -- give up with this argument and then switch to batch mode
+                $self->SUPER::createArgument(@_);
+                $self->setArgument($argument, 1);
             }
         }
     }
