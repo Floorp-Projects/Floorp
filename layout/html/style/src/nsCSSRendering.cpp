@@ -2184,7 +2184,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
     // Restore clipping
     aRenderingContext.PopState(clipState);
-
+    NS_IF_RELEASE(image);
   } else {
     // See if there's a background color specified. The background color
     // is rendered over the 'border' 'padding' and 'content' areas
@@ -2214,6 +2214,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       aRenderingContext.FillRect(aBorderArea);
     }
   }
+
 }
 
 /** ---------------------------------------------------

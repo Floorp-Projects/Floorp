@@ -537,6 +537,8 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 #endif
     }
 
+    NS_IF_RELEASE(image);
+
     if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
       PRBool clipState;
       aRenderingContext.PopState(clipState);
