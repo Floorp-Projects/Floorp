@@ -394,6 +394,9 @@ si_SelectDialog(const PRUnichar* szMessage, nsIPrompt* dialog, PRUnichar** pList
   PRUnichar * title_string = Wallet_Localize("SelectUserTitleLine");
   rv = dialog->Select( title_string, szMessage, *pCount, NS_CONST_CAST(const PRUnichar**, pList), &selectedIndex, &rtnValue );
   Recycle(title_string);
+  if (selectedIndex >= *pCount) {
+    return PR_FALSE; // out-of-range selection
+  }
   *pCount = selectedIndex;
   si_UserHasBeenSelected = PR_TRUE;
   return rtnValue;  
