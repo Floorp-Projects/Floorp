@@ -1034,6 +1034,9 @@ if ($::FORM{'keywords'}) {
 }
 
 my $keywordaction = $::FORM{'keywordaction'} || "makeexact";
+if (!grep($keywordaction eq $_, qw(add delete makeexact))) {
+    $keywordaction = "makeexact";
+}
 
 if ($::comma eq ""
     && (! @groupAdd) && (! @groupDel)
@@ -1174,6 +1177,23 @@ foreach my $id (@idlist) {
         $i++;
     }
 
+    # When editing multiple bugs, users can specify a list of keywords to delete
+    # from bugs.  If the list matches the current set of keywords on those bugs,
+    # CheckCanChangeField above will fail to check permissions because it thinks
+    # the list hasn't changed.  To fix that, we have to call CheckCanChangeField
+    # again with old!=new if the keyword action is "delete" and old=new.
+    if ($keywordaction eq "delete"
+        && exists $::FORM{keywords}
+        && length(@keywordlist) > 0
+        && $::FORM{keywords} eq $oldhash{keywords}
+        && !CheckCanChangeField("keywords", $id, "old is not", "equal to new"))
+    {
+        $vars->{'oldvalue'} = $oldhash{keywords};
+        $vars->{'newvalue'} = "no keywords";
+        $vars->{'field'} = "keywords";
+        ThrowUserError("illegal_change", $vars, "abort");
+    }
+
     $oldhash{'product'} = get_product_name($oldhash{'product_id'});
     if (!CanEditProductId($oldhash{'product_id'})) {
         ThrowUserError("product_edit_denied",
@@ -1311,7 +1331,7 @@ foreach my $id (@idlist) {
         $bug_changed = 1;
     }
 
-    if (@::legal_keywords) {
+    if (@::legal_keywords && exists $::FORM{keywords}) {
         # There are three kinds of "keywordsaction": makeexact, add, delete.
         # For makeexact, we delete everything, and then add our things.
         # For add, we delete things we're adding (to make sure we don't
