@@ -87,7 +87,7 @@ nsSocketState gStateTable[eSocketOperation_Max][eSocketState_Max] = {
 #define CONNECT_TIMEOUT_IN_MS 20
 
 static int gTimeoutIsInitialized = 0;
-static PRIntervalTime gConnectTimeout = -1;
+static PRIntervalTime gConnectTimeout = PR_INTERVAL_NO_TIMEOUT;
 
 //
 // This is the global buffer used by all nsSocketTransport instances when
