@@ -1,4 +1,2 @@
-#include "DefinesMac.h"
-#include "DefinesMozilla.h"
-#include "IDE_Options.h"
-#include "ansi_prefix.mac.h"
+
+#include "MacPrefix.h"
