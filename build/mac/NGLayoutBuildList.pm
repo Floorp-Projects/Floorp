@@ -1557,6 +1557,13 @@ sub BuildAppRunner()
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 	BuildOneProject(":mozilla:xpfe:bootstrap:macbuild:apprunner.mcp",			"apprunner$D", "apprunner.toc", 0, 0, 1);
+
+
+	# build tool to create Component Registry in release builds only.
+	if (!($main::DEBUG)) {
+		BuildOneProject(":mozilla:xpcom:tools:registry:macbuild:RegXPCOM.mcp", "RegXPCOM", "regxpcom.toc", 0, 0, 1);
+	}
+	
 	
 	# copy command line documents into the Apprunner folder and set correctly the signature
 	my($dist_dir) = _getDistDirectory();
