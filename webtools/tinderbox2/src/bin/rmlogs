@@ -1,0 +1,130 @@
+#!#perl# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+# rmlogs - remove the log files which are older then the number of
+#          days set in TinderConfig.  This program should be run from cron.
+
+# $Revision: 1.1 $ 
+# $Date: 2000/09/10 17:30:40 $ 
+# $Author: kestes%staff.mail.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/rmlogs,v $ 
+# $Name:  $ 
+
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Tinderbox build tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+
+# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# Contributor(s): 
+
+
+
+# Standard perl libraries
+use File::Find;
+
+# Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
+use TinderConfig;
+use TreeData;
+use FileStructure;
+use Utils;
+
+
+
+
+$BRIEF_TRIM = $TinderConfig::BRIEF_LOG_TRIM_DAYS || 1;
+$FULL_TRIM = $TinderConfig::FULL_LOG_TRIM_DAYS || 7;
+
+
+
+
+
+# If the argument to this function is a log file which is older then
+# $old_days, we remove the file.
+
+sub rm_logfile {
+  my ($old_days, $file) = @_;
+
+  # there may be other files in the directory besides our logs, 
+  # skip them.
+  
+  ($file =~ m/\.html\.gz$/) || 
+    return 1;
+  
+  # save stat info for the file, incase we need it in the future.
+
+  my ($dev,$ino,$mode,$nlink,$uid,$gid) = lstat($file);
+  
+  ( -f _ ) ||
+    return 1;
+      
+  # Remove files older than 7 days
+  if ( -M _ > $old_days) {
+    unlink($_) || 
+      die("Could not remove file: $_\n;");
+  }
+
+  return 1;
+}
+
+
+# search all the log file directories for files which need to be removed.
+
+sub rm_old_logs {
+  my ($dir_type, $old_days, @dirs) = @_;
+
+  my (@trees) = TreeData::get_all_trees();
+  my (%dirs) = ();
+  
+  foreach $tree (@trees) {
+    my ($dir_full) = FileStructure::get_filename($tree, $dir_type);
+    $dirs{$dir_full} = 1;
+  } 
+
+  # we traverse each directory only once.
+  foreach $dir (keys %dirs) {
+    
+    opendir(DIR, $dir) ||
+      die("Could not open: $dir. $!\n");
+    
+    while (defined ($file = readdir(DIR))) {
+      rm_logfile($old_days, $file);
+    }
+    
+    close(DIR) ||
+      die("Could not close: $dir. $!\n");
+    
+  }
+
+  return 1;
+}
+
+
+
+# --------------------main-------------------------
+{
+  set_static_vars();
+  get_env();
+
+  rm_old_logs('full-log', $FULL_TRIM, (keys %dirs));
+  rm_old_logs('brief-log', $BRIEF_TRIM, (keys %dirs));
+
+  exit 0;
+}
