@@ -133,6 +133,11 @@ function nsXULBrowserWindow()
   this.defaultStatus = gNavigatorBundle.getString("defaultStatus");
 }
 
+function updateOverLink() {
+  window.XULBrowserWindow.updateStatusField();
+  window.XULBrowserWindow.statusTimeoutInEffect = false;
+}
+
 nsXULBrowserWindow.prototype =
 {
   useRealProgressFlag : false,
@@ -146,6 +151,8 @@ nsXULBrowserWindow.prototype =
   overLink : "",
   startTime : 0,
 
+  statusTimeoutInEffect : false,
+
   hideAboutBlank : true,
 
   QueryInterface : function(iid)
@@ -158,7 +165,7 @@ nsXULBrowserWindow.prototype =
   setJSStatus : function(status)
   {
     this.jsStatus = status;
-    this.updateStatusField();
+	this.updateStatusField();
     // Status is now on status bar; don't use it next time.
     // This will cause us to revert to defaultStatus/jsDefaultStatus when the
     // user leaves the link (e.g., if the script set window.status in onmouseover).
@@ -177,7 +184,7 @@ nsXULBrowserWindow.prototype =
     this.updateStatusField();
   },
 
-  setOverLink : function(link)
+  setOverLink : function(link, b)
   {
     this.overLink = link;
     this.updateStatusField();
@@ -190,7 +197,9 @@ nsXULBrowserWindow.prototype =
     if (!statusTextFld)
       statusTextFld = document.getElementById("statusbar-display");
 
-    statusTextFld.setAttribute("value", text);
+    if (statusTextFld.getAttribute("value") != text) {
+	  statusTextFld.setAttribute("value", text);
+	}
   },
 
   onProgress : function (request, current, max)
@@ -202,15 +211,15 @@ nsXULBrowserWindow.prototype =
       statusMeter = document.getElementById("statusbar-icon");
 
     if (max > 0) {
-      if (statusMeter.getAttribute("mode") != "normal")
-        statusMeter.setAttribute("mode", "normal");
+      statusMeter.mode = "normal";
 
+      // This is highly optimized.  Don't touch this code unless
+	  // you are intimately familiar with the cost of setting
+	  // attrs on XUL elements. -- hyatt
       var percentage = (current * 100) / max ;
-      statusMeter.value = percentage;
-      statusMeter.progresstext = Math.round(percentage) + "%";
+	  statusMeter.value = percentage;
     } else {
-      if (statusMeter.getAttribute("mode") != "undetermined")
-        statusMeter.setAttribute("mode","undetermined");
+      statusMeter.mode = "undetermined";
     }
   },
 
@@ -235,7 +244,7 @@ nsXULBrowserWindow.prototype =
         this.startTime = (new Date()).getTime();
 
         // Turn progress meter on.
-        statusMeter.setAttribute("mode","undetermined");
+        statusMeter.mode = "undetermined";
         throbberElement.setAttribute("busy", true);
 
         // XXX: These need to be based on window activity...
@@ -244,7 +253,6 @@ nsXULBrowserWindow.prototype =
         stopContext.setAttribute("disabled", false);
 
         // Initialize the progress stuff...
-        statusMeter.setAttribute("mode","undetermined");
         this.useRealProgressFlag = false;
         this.totalRequests = 0;
         this.finishedRequests = 0;
@@ -273,9 +281,8 @@ nsXULBrowserWindow.prototype =
         this.setDefaultStatus(msg);
 
         // Turn progress meter off.
-        statusMeter.setAttribute("mode","normal");
+        statusMeter.mode = "normal";
         statusMeter.value = 0;  // be sure to clear the progress bar
-        statusMeter.progresstext = "";
         throbberElement.removeAttribute("busy");
 
         // XXX: These need to be based on window activity...
@@ -293,7 +300,7 @@ nsXULBrowserWindow.prototype =
         if (ctype != "text/html")
           this.useRealProgressFlag = true;
 
-        statusMeter.setAttribute("mode", "normal");
+		statusMeter.mode = "normal";
       }
 
       if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
@@ -320,8 +327,11 @@ nsXULBrowserWindow.prototype =
 
   onStatus : function(request, status, msg)
   {
-    this.setOverLink(msg);
-    //this.setDefaultStatus(msg);
+    this.overLink = msg;
+	if (!this.statusTimeoutInEffect) {
+	  this.statusTimeoutInEffect = true;
+      setTimeout(updateOverLink, 400);
+	}
   }
 }
 

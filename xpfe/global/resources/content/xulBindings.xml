@@ -226,11 +226,25 @@
       </xul:box>
     </content>
     <implementation>
-      <property name="progresstext"   onset="this.setAttribute('progresstext',val); return val;"
+      <property name="progresstext"   onset="if (this.progresstext != val) this.setAttribute('progresstext',val); return val;"
                                       onget="return this.getAttribute('progresstext');"/>
-      <property name="value"          onset="this.setAttribute('value',val); return val;"
-                                      onget="return this.getAttribute('value');"/>
-      <property name="mode"           onset="this.setAttribute('mode', val); return val;"
+      <property name="value" onget="return this.getAttribute('value');">
+	    <setter>
+		  <![CDATA[
+		    var p = Math.round(val);
+			var c = this.value; 
+			if (p != c) {
+			  var delta = p - c;
+			  if (delta < 0) delta = -delta;
+			  if (delta > 3 || p == 0 || p == 100) {
+			    this.setAttribute('value',p); 
+			  }
+		    }
+			return p;
+		  ]]>
+		</setter>
+	  </property>
+      <property name="mode"           onset="if (this.mode != val) this.setAttribute('mode', val); return val;"
                                       onget="return this.getAttribute('mode');"/>
     </implementation>
   </binding>

@@ -3858,6 +3858,11 @@ nsXULElement::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAReada
     // Now we execute the onchange handler in the context of the
     // observer. We need to find the observer in order to
     // execute the handler.
+    nsAutoString obs;
+    anElement->GetAttribute(NS_LITERAL_STRING("observes"), obs);
+    if (obs.Length() > 0)
+      return NS_OK;
+
     nsCOMPtr<nsIDOMNodeList> nodeList;
     if (NS_SUCCEEDED(anElement->GetElementsByTagName(NS_LITERAL_STRING("observes"),
                                                      getter_AddRefs(nodeList)))) {
@@ -4159,7 +4164,8 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 {
     aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
 
-    if (aAttribute == nsXULAtoms::value) {
+    if (aAttribute == nsXULAtoms::value || aAttribute == nsXULAtoms::flex ||
+        aAttribute == nsXULAtoms::progresstext) {
       // VERY IMPORTANT! This has a huge positive performance impact!
       aHint = NS_STYLE_HINT_ATTRCHANGE;
     }
