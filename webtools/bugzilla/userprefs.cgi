@@ -33,8 +33,6 @@ use Bugzilla::User;
 
 require "CGI.pl";
 
-use Bugzilla::RelationSet;
-
 # Use global template variables.
 use vars qw($template $vars $userid);
 
@@ -142,11 +140,14 @@ sub SaveAccount {
 
 
 sub DoEmail {
+    my $dbh = Bugzilla->dbh;
+
     if (Param("supportwatchers")) {
-        my $watcheduserSet = new Bugzilla::RelationSet;
-        $watcheduserSet->mergeFromDB("SELECT watched FROM watch WHERE" .
-                                    " watcher=$userid");
-        $vars->{'watchedusers'} = $watcheduserSet->toString();
+        my $watched_ref = $dbh->selectcol_arrayref(
+            "SELECT profiles.login_name FROM watch, profiles"
+          . " WHERE watcher = ? AND watch.watched = profiles.userid",
+            undef, $userid);
+        $vars->{'watchedusers'} = join(',', @$watched_ref);
     }
 
     SendSQL("SELECT emailflags FROM profiles WHERE userid = $userid");
@@ -232,20 +233,32 @@ sub SaveEmail {
         $dbh->bz_lock_tables('watch WRITE', 'profiles READ');
 
         # what the db looks like now
-        my $origWatchedUsers = new Bugzilla::RelationSet;
-        $origWatchedUsers->mergeFromDB("SELECT watched FROM watch WHERE" .
-                                       " watcher=$userid");
+        my $old_watch_ids =
+            $dbh->selectcol_arrayref("SELECT watched FROM watch"
+                                   . " WHERE watcher = ?", undef, $userid);
+ 
+       # The new information given to us by the user.
+        my @new_watch_names = split(/[,\s]+/, $cgi->param('watchedusers'));
+        my @new_watch_ids = ();
+        foreach my $username (@new_watch_names) {
+            my $watched_userid = DBNameToIdAndCheck(trim($username));
+            push(@new_watch_ids, $watched_userid);
+        }
+        my ($removed, $added) = diff_arrays($old_watch_ids, \@new_watch_ids);
 
-        # Update the database to look like the form
-        my $newWatchedUsers = new Bugzilla::RelationSet($cgi->param('watchedusers'));
-        my @CCDELTAS = $origWatchedUsers->generateSqlDeltas(
-                                                         $newWatchedUsers, 
-                                                         "watch", 
-                                                         "watcher", 
-                                                         $userid,
-                                                         "watched");
-        ($CCDELTAS[0] eq "") || SendSQL($CCDELTAS[0]);
-        ($CCDELTAS[1] eq "") || SendSQL($CCDELTAS[1]);
+        # Remove people who were removed.
+        my $delete_sth = $dbh->prepare('DELETE FROM watch WHERE watched = ?'
+                                     . ' AND watcher = ?');
+        foreach my $remove_me (@$removed) {
+            $delete_sth->execute($remove_me, $userid);
+        }
+
+        # Add people who were added.
+        my $insert_sth = $dbh->prepare('INSERT INTO watch (watched, watcher)'
+                                     . ' VALUES (?, ?)');
+        foreach my $add_me (@$added) {
+            $insert_sth->execute($add_me, $userid);
+        }
 
         $dbh->bz_unlock_tables();
     }

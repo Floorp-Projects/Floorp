@@ -33,6 +33,7 @@ use base qw(Exporter);
                              html_quote url_quote value_quote xml_quote
                              css_class_quote
                              lsearch max min
+                             diff_arrays
                              trim diff_strings wrap_comment
                              format_time format_time_decimal
                              file_mod_time);
@@ -166,6 +167,29 @@ sub min {
     return $min;
 }
 
+sub diff_arrays {
+    my ($old_ref, $new_ref) = @_;
+
+    my @old = @$old_ref;
+    my @new = @$new_ref;
+
+    # For each pair of (old, new) entries:
+    # If they're equal, set them to empty. When done, @old contains entries
+    # that were removed; @new contains ones that got added.
+    foreach my $oldv (@old) {
+        foreach my $newv (@new) {
+            next if ($newv eq '');
+            if ($oldv eq $newv) {
+                $newv = $oldv = '';
+            }
+        }
+    }
+
+    my @removed = grep { $_ ne '' } @old;
+    my @added = grep { $_ ne '' } @new;
+    return (\@removed, \@added);
+}
+
 sub trim {
     my ($str) = @_;
     if ($str) {
@@ -184,20 +208,10 @@ sub diff_strings {
     my @old = split(" ", $oldstr);
     my @new = split(" ", $newstr);
 
-    # For each pair of (old, new) entries:
-    # If they're equal, set them to empty. When done, @old contains entries
-    # that were removed; @new contains ones that got added.
+    my ($rem, $add) = diff_arrays(\@old, \@new);
 
-    foreach my $oldv (@old) {
-        foreach my $newv (@new) {
-            next if ($newv eq '');
-            if ($oldv eq $newv) {
-                $newv = $oldv = '';
-            }
-        }
-    }
-    my $removed = join (", ", grep { $_ ne '' } @old);
-    my $added = join (", ", grep { $_ ne '' } @new);
+    my $removed = join (", ", @$rem);
+    my $added = join (", ", @$add);
 
     return ($removed, $added);
 }
@@ -302,6 +316,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
   $loc = lsearch(\@arr, $val);
   $val = max($a, $b, $c);
   $val = min($a, $b, $c);
+
+  # Data manipulation
+  ($removed, $added) = diff_arrays(\@old, \@new);
 
   # Functions for manipulating strings
   $val = trim(" abc ");
@@ -412,6 +429,24 @@ Returns the maximum from a set of values.
 =item C<min($a, $b, ...)>
 
 Returns the minimum from a set of values.
+
+=back
+
+=head2 Data Manipulation
+
+=over 4
+
+=item C<diff_arrays(\@old, \@new)>
+
+ Description: Takes two arrayrefs, and will tell you what it takes to 
+              get from @old to @new.
+ Params:      @old = array that you are changing from
+              @new = array that you are changing to
+ Returns:     A list of two arrayrefs. The first is a reference to an 
+              array containing items that were removed from @old. The
+              second is a reference to an array containing items
+              that were added to @old. If both returned arrays are 
+              empty, @old and @new contain the same values.
 
 =back
 
