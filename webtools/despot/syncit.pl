@@ -229,7 +229,7 @@ while (@reprow = $repquery->fetchrow()) {
             $query = Query("select id,name,description,newsgroups,doclinks from partitions where repositoryid = '$repid' order by name");
             while (@row = $query->fetchrow()) {
                 ($id,$name,$desc,$newsgroups,$doclinks) = (@row);
-                if ($name eq "default" || $name eq "despotdaemon") {
+                if ($name eq "default" || $name eq "despotaccess") {
                     next;
                 }
                 my $fullname = $name;
