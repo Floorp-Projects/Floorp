@@ -700,8 +700,8 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
 
         mCurrentTarget->GetContent(&targetContent);
 
-        if (nsnull != mLastDragOverFrame) {
-          //fire mouseout
+        if ( mLastDragOverFrame ) {
+          //fire drag exit
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
           event.eventStructType = NS_DRAGDROP_EVENT;
@@ -716,22 +716,20 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
 
           if (lastContent != targetContent) {
             //XXX This event should still go somewhere!!
-            if (nsnull != lastContent) {
+            if (lastContent)
               lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-            }
           }
 
+#if 0
           if (nsEventStatus_eConsumeNoDefault != status) {
             SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
           }
-          //Now dispatch to the frame
-          if (nsnull != mLastDragOverFrame) {
-            //XXX Get the new frame
-            mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
-          }
+#endif
+         //Now dispatch to the frame
+          mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
         }
 
-        //fire dragover
+        //fire drag enter
         nsEventStatus status = nsEventStatus_eIgnore;
         nsMouseEvent event;
         event.eventStructType = NS_DRAGDROP_EVENT;
@@ -744,9 +742,8 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         //The frame has change but the content may not have.  Check before dispatching to content
         if (lastContent != targetContent) {
           //XXX This event should still go somewhere!!
-          if (nsnull != targetContent) {
+          if ( targetContent ) 
             targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-          }
 
           if (nsEventStatus_eConsumeNoDefault != status) {
             SetContentState(targetContent, NS_EVENT_STATE_DRAGOVER);
@@ -754,7 +751,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsG
         }
 
        //Now dispatch to the frame
-        if (nsnull != mCurrentTarget) {
+        if (mCurrentTarget) {
           //XXX Get the new frame
           mCurrentTarget->HandleEvent(aPresContext, &event, status);
         }
