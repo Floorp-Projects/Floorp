@@ -67,7 +67,7 @@ function onOK()
     anchorElement.setAttribute("name",name);
     if (insertNew) {
       // Don't delete selected text when inserting
-      editorShell.InsertElement(element, false);
+      editorShell.InsertElement(anchorElement, false);
     }
     window.close();
   }
