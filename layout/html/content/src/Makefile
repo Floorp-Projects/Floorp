@@ -20,14 +20,19 @@ DEPTH=../../../..
 LIBRARY_NAME = nglhtmlcon_s
 
 # Note the sophisticated alphabetical ordering :-|
-CPPSRCS =				\
+CPPSRCS=				\
 	nsHTMLAnchor.cpp		\
 	nsHTMLApplet.cpp		\
 	nsHTMLArea.cpp			\
+	nsHTMLBR.cpp			\
 	nsHTMLBase.cpp			\
 	nsHTMLBaseFont.cpp		\
-	nsHTMLBR.cpp			\
+	nsHTMLBody.cpp			\
 	nsHTMLComment.cpp		\
+	nsHTMLDList.cpp			\
+	nsHTMLDel.cpp			\
+	nsHTMLDirectory.cpp		\
+	nsHTMLDiv.cpp			\
 	nsHTMLEmbed.cpp			\
 	nsHTMLGenericContent.cpp	\
 	nsHTMLHead.cpp			\
