@@ -68,7 +68,6 @@
 
 #include "nsIDataFlavor.h"
 
-#ifdef NEW_CLIPBOARD_SUPPORT
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
@@ -87,7 +86,6 @@ static NS_DEFINE_IID(kIDataFlavorIID,      NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kCDataFlavorCID,      NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCXIFConverterCID,    NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
-#endif
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -325,11 +323,7 @@ public:
                                  PRInt32   aHOffsetPercent, 
                                  PRUint32  aHFlags) const;
 
-#ifdef NEW_CLIPBOARD_SUPPORT
   NS_IMETHOD DoCopy();
-#else
-  NS_IMETHOD DoCopy(nsISelectionMgr* aSelectionMgr);
-#endif
 
   //nsIViewObserver interface
 
@@ -1542,10 +1536,6 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
 }
 
 
-
-
-#ifdef NEW_CLIPBOARD_SUPPORT
-// New way
 NS_IMETHODIMP
 PresShell::DoCopy()
 {
@@ -1617,75 +1607,6 @@ PresShell::DoCopy()
   }
   return NS_OK;
 }
-#else
-
-// Old SelectionMgr implementation.
-NS_IMETHODIMP
-PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
-{
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(getter_AddRefs(doc));
-  if (doc) {
-    nsString buffer;
-    
-    nsIDOMSelection* sel = nsnull;
-    GetSelection(&sel);
-      
-    if (sel != nsnull)
-      doc->CreateXIF(buffer,sel);
-    NS_IF_RELEASE(sel);
-
-    nsIParser* parser;
-
-    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-    nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                               nsnull, 
-                                               kCParserIID, 
-                                               (void **)&parser);
-    if (NS_OK != rv)
-      return rv;
-
-    nsIHTMLContentSink* sink = nsnull;
-
-//  rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
-//  Changed to do plain text only for Dogfood -- gpk 3/14/99
-    rv = NS_New_HTMLToTXT_SinkStream(&sink);
-
-    ostream* copyStream;
-    rv = aSelectionMgr->GetCopyOStream(&copyStream);
-    if (!NS_SUCCEEDED(rv))
-    {
-      NS_IF_RELEASE(sink);
-      return rv;
-    }
-
-//  Changed to do plain text only for Dogfood -- gpk 3/14/99
-//  ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
-    ((nsHTMLToTXTSinkStream*)sink)->SetOutputStream(*copyStream);
-
-    if (NS_OK == rv) {
-      parser->SetContentSink(sink);
-	  
-      nsIDTD* dtd = nsnull;
-      rv = NS_NewXIFDTD(&dtd);
-      if (NS_OK == rv) 
-      {
-        parser->RegisterDTD(dtd);
-        parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
-      }
-      NS_IF_RELEASE(dtd);
-      aSelectionMgr->CopyToClipboard();
-    }
-    NS_IF_RELEASE(sink);
-    NS_RELEASE(parser);
-
-  }
-  return NS_OK;
-}
-
-#endif  // NEW_CLIPBOARD_SUPPORT
 
 
 NS_IMETHODIMP
