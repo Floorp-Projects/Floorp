@@ -145,6 +145,10 @@
 /* plugins:  */
 #include "np.h"
 
+#ifdef MODULAR_NETLIB
+void net_ReleaseContext(MWContext *context);
+#endif
+
 /* for XP_GetString() */
 #include "xpgetstr.h"
 extern int MK_CONNECTION_REFUSED;
@@ -1155,6 +1159,9 @@ net_push_url_on_wait_queue(int                 url_type,
 							MK_OUT_OF_MEMORY,
 							format_out,
 							context);
+#ifdef MODULAR_NETLIB
+        net_ReleaseContext(wus->window_id);
+#endif
 		return(MK_OUT_OF_MEMORY);
 	  }
 
@@ -1406,7 +1413,9 @@ net_AbortWaitingURL(MWContext * window_id, Bool all, XP_List *list)
 			 * funky doubly linked list stuff.
 			 */
 			XP_ListRemoveObject(list, wus);
-
+#ifdef MODULAR_NETLIB
+            net_ReleaseContext(wus->window_id);
+#endif
 			FREE(wus);
 		  }
 		else
@@ -1686,6 +1695,9 @@ NET_ShutdownNetLib(void)
 							 tmpEntry->status,
 							 tmpEntry->format_out,
 							 tmpEntry->window_id);
+#ifdef MODULAR_NETLIB
+        net_ReleaseContext(tmpEntry->window_id);
+#endif
 	 	PR_Free(tmpEntry);  /* free the no longer active entry */
       }
 
@@ -1878,6 +1890,9 @@ NET_GetURL (URL_Struct *URL_s,
 								MK_INTERRUPTED,
 								output_format,
 								window_id);
+#ifdef MODULAR_NETLIB
+            net_ReleaseContext(window_id);
+#endif
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
 		}
 	}
@@ -2015,6 +2030,9 @@ NET_GetURL (URL_Struct *URL_s,
 	  NET_TotalNumberOfProcessingURLs++;
 	  net_CheckForWaitingURL(window_id, 0, load_background);
 
+#ifdef MODULAR_NETLIB
+      net_ReleaseContext(window_id);
+#endif
 	  LIBNET_UNLOCK_AND_RETURN(MK_MALFORMED_URL_ERROR);
 	}
 
@@ -2167,6 +2185,9 @@ NET_GetURL (URL_Struct *URL_s,
 
 			net_CheckForWaitingURL(window_id, 0, load_background);
 
+#ifdef MODULAR_NETLIB
+            net_ReleaseContext(window_id);
+#endif
 		LIBNET_UNLOCK_AND_RETURN(MK_TIMEBOMB_URL_PROHIBIT);
 		  }
 	  }
@@ -2250,6 +2271,9 @@ NET_GetURL (URL_Struct *URL_s,
 									window_id);
 		net_CheckForWaitingURL(window_id, 0, load_background);
 
+#ifdef MODULAR_NETLIB
+        net_ReleaseContext(window_id);
+#endif
 		LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
 		      }
 		  }
@@ -2275,6 +2299,9 @@ NET_GetURL (URL_Struct *URL_s,
 								output_format,
 								window_id);
 			
+#ifdef MODULAR_NETLIB
+            net_ReleaseContext(window_id);
+#endif
 			LIBNET_UNLOCK_AND_RETURN(MK_OUT_OF_MEMORY);
 		}       
 
@@ -2294,6 +2321,9 @@ NET_GetURL (URL_Struct *URL_s,
 							    MK_INTERRUPTED,
 							    output_format,
 							    window_id);
+#ifdef MODULAR_NETLIB
+        net_ReleaseContext(window_id);
+#endif
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
 	}
 #endif
@@ -2641,6 +2671,9 @@ NET_GetURL (URL_Struct *URL_s,
 								window_id);
 			net_CheckForWaitingURL(window_id, type, load_background);
 
+#ifdef MODULAR_NETLIB
+            net_ReleaseContext(window_id);
+#endif
 			LIBNET_UNLOCK_AND_RETURN(MK_OBJECT_NOT_IN_CACHE);
 		  }
 		else
@@ -2677,6 +2710,9 @@ NET_GetURL (URL_Struct *URL_s,
 							output_format,
 							window_id);
 
+#ifdef MODULAR_NETLIB
+        net_ReleaseContext(window_id);
+#endif
 		LIBNET_UNLOCK_AND_RETURN(MK_OUT_OF_MEMORY);
 	  }
 
@@ -2736,6 +2772,9 @@ NET_GetURL (URL_Struct *URL_s,
 				net_CheckForWaitingURL(window_id, this_entry->protocol, 
 									   load_background);
 
+#ifdef MODULAR_NETLIB
+                net_ReleaseContext(window_id);
+#endif
 				PR_Free(this_entry);  /* not needed any more */
 
 				LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
@@ -2771,6 +2810,9 @@ NET_GetURL (URL_Struct *URL_s,
 			net_CheckForWaitingURL(window_id, this_entry->protocol,
 								   load_background);
 
+#ifdef MODULAR_NETLIB
+            net_ReleaseContext(window_id);
+#endif
 			PR_Free(this_entry);  /* not needed any more */
 
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
@@ -2963,6 +3005,9 @@ redo_load_switch:   /* come here on file/ftp retry */
 							   this_entry->protocol,
 							   load_background);
 
+#ifdef MODULAR_NETLIB
+        net_ReleaseContext(this_entry->window_id);
+#endif
 		PR_Free(this_entry);
 		LIBNET_UNLOCK_AND_RETURN(MK_OFFLINE);
       }
@@ -2985,6 +3030,9 @@ redo_load_switch:   /* come here on file/ftp retry */
 		net_CheckForWaitingURL(this_entry->window_id, 
 							   this_entry->protocol,
 							   load_background);
+#ifdef MODULAR_NETLIB
+        net_ReleaseContext(this_entry->window_id);
+#endif
 		PR_Free(this_entry);  /* not needed any more */
       }
 
@@ -3372,6 +3420,9 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 	#endif /* MILAN */
 		  		}
 
+#ifdef MODULAR_NETLIB
+                net_ReleaseContext(tmpEntry->window_id);
+#endif
 				PR_Free(tmpEntry);  /* free the now non active entry */
 
 			} /* end if  rv < 0 */
@@ -3441,6 +3492,9 @@ net_InterruptActiveStream (ActiveEntry *entry, Bool show_warning)
 		FE_AllConnectionsComplete(entry->window_id);
 
 	/* free the no longer active entry */
+#ifdef MODULAR_NETLIB
+    net_ReleaseContext(entry->window_id);
+#endif
 	PR_Free(entry);
 
 	return 0;
@@ -3605,6 +3659,9 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
 		if(!NET_AreThereActiveConnectionsForWindow(old_window_id))
 				FE_AllConnectionsComplete(old_window_id);
 
+#ifdef MODULAR_NETLIB
+        net_ReleaseContext(old_window_id);
+#endif
 			LIBNET_UNLOCK();
 	    return(0);
 	  }
