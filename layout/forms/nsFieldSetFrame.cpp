@@ -59,6 +59,7 @@
 #include "nsStyleUtil.h"
 #include "nsFont.h"
 #include "nsCOMPtr.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
  
@@ -102,6 +103,7 @@ public:
                            nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
+  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
     return MakeFrameName(NS_LITERAL_STRING("FieldSet"), aResult);
@@ -673,6 +675,15 @@ nsFieldSetFrame::ReplaceFrame(nsIPresContext* aPresContext,
                                      aListName,
                                      aOldFrame,
                                      aNewFrame);
+}
+
+NS_IMETHODIMP
+nsFieldSetFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::fieldSetFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 

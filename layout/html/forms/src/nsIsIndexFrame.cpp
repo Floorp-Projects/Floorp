@@ -49,6 +49,7 @@
 #include "nsIComponentManager.h"
 #include "nsIView.h"
 #include "nsHTMLParts.h"
+#include "nsLayoutAtoms.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
@@ -384,6 +385,16 @@ nsIsIndexFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("IsIndex"), aResult);
 }
 #endif
+
+
+NS_IMETHODIMP
+nsIsIndexFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::isIndexFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 // submission
 // much of this is cut and paste from nsFormFrame::OnSubmit

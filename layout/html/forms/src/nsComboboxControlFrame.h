@@ -131,6 +131,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
+  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
                         nsIAtom*        aListName,

@@ -39,6 +39,7 @@
 #include "nsIPresShell.h"
 #include "nsFormControlFrame.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsLayoutAtoms.h"
 
 typedef nsInlineFrame nsLabelFrameSuper;
 
@@ -65,7 +66,7 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("Label"), aResult);
   }
 #endif
-
+  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
 };
 
 nsresult
@@ -169,4 +170,12 @@ nsLabelFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   }
 
   return rv;
+}
+NS_IMETHODIMP
+nsLabelFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::labelFrame;
+  NS_ADDREF(*aType);
+  return NS_OK;
 }

@@ -61,6 +61,7 @@ private:
 public:
   nsGfxRadioControlFrame();
   ~nsGfxRadioControlFrame();
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
    //nsIRadioControlFrame methods
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

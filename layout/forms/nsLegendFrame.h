@@ -76,6 +76,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
+  NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
 
   PRInt32 GetAlign();
 
