@@ -16,47 +16,17 @@
  * Reserved.
  */
 
-#include "nsCRT.h"
-#include "prlog.h"
-#include <stdio.h>
-#include <limits.h>
-#include "nsTimerQT.h"
+#include "nsTimerQt.h"
+
 #include <qtimer.h>
+
+#include <stdio.h>
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
-nsTimerEventHandler::nsTimerEventHandler(nsITimer * aTimer,
-                                         nsTimerCallbackFunc aFunc,
-                                         void *aClosure,
-                                         nsITimerCallback *aCallback)
+nsTimerQt::nsTimerQt()
 {
-    mTimer    = aTimer;
-    mFunc     = aFunc;
-    mClosure  = aClosure;
-    mCallback = aCallback;
-}
-    
-void nsTimerEventHandler::FireTimeout()
-{
-    //debug("nsTimerEventHandler::FireTimeout called");
-    if (mFunc != NULL) 
-    {
-        (*mFunc)(mTimer, mClosure);
-    }
-    else if (mCallback != NULL) 
-    {
-        mCallback->Notify(mTimer); // Fire the timer
-    }
-    
-// Always repeating here
-    
-// if (mRepeat)
-//  mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
-}
-
-TimerImpl::TimerImpl() //: QObject()
-{
-    //debug("TimerImpl::TimerImpl called for %p", this);
+    //debug("nsTimerQt::nsTimerQt called for %p", this);
     NS_INIT_REFCNT();
     mFunc         = nsnull;
     mCallback     = nsnull;
@@ -67,9 +37,9 @@ TimerImpl::TimerImpl() //: QObject()
     mEventHandler = nsnull;
 }
 
-TimerImpl::~TimerImpl()
+nsTimerQt::~nsTimerQt()
 {
-    //debug("TimerImpl::~TimerImpl called for %p", this);
+    //debug("nsTimerQt::~nsTimerQt called for %p", this);
     Cancel();
     NS_IF_RELEASE(mCallback);
     if (mEventHandler);
@@ -84,12 +54,12 @@ TimerImpl::~TimerImpl()
 }
 
 nsresult 
-TimerImpl::Init(nsTimerCallbackFunc aFunc,
+nsTimerQt::Init(nsTimerCallbackFunc aFunc,
                 void *aClosure,
 //              PRBool aRepeat, 
                 PRUint32 aDelay)
 {
-    //debug("TimerImpl::Init called with func + closure with %u delay", aDelay);
+    //debug("nsTimerQt::Init called with func + closure with %u delay", aDelay);
     mFunc = aFunc;
     mClosure = aClosure;
     // mRepeat = aRepeat;
@@ -105,11 +75,11 @@ TimerImpl::Init(nsTimerCallbackFunc aFunc,
 }
 
 nsresult 
-TimerImpl::Init(nsITimerCallback *aCallback,
+nsTimerQt::Init(nsITimerCallback *aCallback,
 //              PRBool aRepeat, 
                 PRUint32 aDelay)
 {
-    //debug("TimerImpl::Init called with callback only with %u delay", aDelay);
+    //debug("nsTimerQt::Init called with callback only with %u delay", aDelay);
     mCallback = aCallback;
     NS_ADDREF(mCallback);
     // mRepeat = aRepeat;
@@ -125,9 +95,9 @@ TimerImpl::Init(nsITimerCallback *aCallback,
 }
 
 nsresult
-TimerImpl::Init(PRUint32 aDelay)
+nsTimerQt::Init(PRUint32 aDelay)
 {
-    //debug("TimerImpl::Init called with delay %d only for %p", aDelay, this);
+    //debug("nsTimerQt::Init called with delay %d only for %p", aDelay, this);
 
     mEventHandler = new nsTimerEventHandler(this, mFunc, mClosure, mCallback);
 
@@ -144,25 +114,26 @@ TimerImpl::Init(PRUint32 aDelay)
     mTimer->start(aDelay);
 
     mDelay = aDelay;
-    //NS_ADDREF(this);
+    NS_ADDREF(this);
 
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
+NS_IMPL_ISUPPORTS(nsTimerQt, kITimerIID)
 
 
 void
-TimerImpl::Cancel()
+nsTimerQt::Cancel()
 {
-    //debug("TimerImpl::Cancel called for %p", this);
+    //debug("nsTimerQt::Cancel called for %p", this);
     if (mTimer) 
     {
         mTimer->stop();
     }
 }
 
-NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
+#ifdef MOZ_MONOLITHIC_TOOLKIT
+nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) 
@@ -170,7 +141,7 @@ NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
         return NS_ERROR_NULL_POINTER;
     }  
 
-    TimerImpl *timer = new TimerImpl();
+    nsTimerQt *timer = new nsTimerQt();
     if (nsnull == timer) 
     {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -178,3 +149,13 @@ NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
+
+int NS_TimeToNextTimeout(struct timeval *aTimer) 
+{
+  return 0;
+}
+
+void NS_ProcessTimeouts(void) 
+{
+}
+#endif /* MOZ_MONOLITHIC_TOOLKIT */

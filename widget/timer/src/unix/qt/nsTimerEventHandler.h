@@ -16,15 +16,18 @@
  * Reserved.
  */
 
+#ifndef __nsTimerEventHandler_h__
+#define __nsTimerEventHandler_h__
+
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
-
 
 #include <qobject.h>
 
 class nsTimerEventHandler : public QObject
 {
     Q_OBJECT
+
 public:
     nsTimerEventHandler(nsITimer * aTimer,
                         nsTimerCallbackFunc aFunc,
@@ -41,49 +44,5 @@ private:
     nsITimer          * mTimer;
 };
 
-/*
- * Implementation of timers using Qt QTimer class 
- */
-class TimerImpl : //public QObject,
-				  public nsITimer
-                  
-{
-//    Q_OBJECT
-public:
+#endif // __nsTimerEventHandler_h__
 
-public:
-    TimerImpl();
-    virtual ~TimerImpl();
-    
-    virtual nsresult Init(nsTimerCallbackFunc aFunc,
-                          void *aClosure,
-//                        PRBool aRepeat, 
-                          PRUint32 aDelay);
-    
-    virtual nsresult Init(nsITimerCallback *aCallback,
-//                        PRBool aRepeat, 
-                          PRUint32 aDelay);
-    
-    NS_DECL_ISUPPORTS
-    
-    virtual void Cancel();
-    virtual PRUint32 GetDelay() { return mDelay; }
-    virtual void SetDelay(PRUint32 aDelay) { mDelay=aDelay; };
-    virtual void* GetClosure() { return mClosure; }
-
-//public slots:    
-    void FireTimeout();
-    
-private:
-    nsresult Init(PRUint32 aDelay);
-    
-private:
-    PRUint32            mDelay;
-    nsTimerCallbackFunc mFunc;
-    void              * mClosure;
-    nsITimerCallback  * mCallback;
-    PRBool              mRepeat;
-    TimerImpl         * mNext;
-    QTimer            * mTimer;
-    nsTimerEventHandler  * mEventHandler;
-};
