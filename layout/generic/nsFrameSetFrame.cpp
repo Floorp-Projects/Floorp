@@ -63,6 +63,45 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 /*******************************************************************************
+ * nsFramesetDrag
+ ******************************************************************************/
+nsFramesetDrag::nsFramesetDrag() 
+{
+  UnSet();
+}
+
+nsFramesetDrag::nsFramesetDrag(PRBool               aVertical, 
+                               PRInt32              aIndex, 
+                               PRInt32              aChange, 
+                               nsHTMLFramesetFrame* aSource) 
+{
+  mVertical = aVertical;
+  mIndex    = aIndex;
+  mChange   = aChange; 
+  mSource   = aSource;
+}
+void nsFramesetDrag::Reset(PRBool               aVertical, 
+                           PRInt32              aIndex, 
+                           PRInt32              aChange, 
+                           nsHTMLFramesetFrame* aSource) 
+{
+  mVertical = aVertical;
+  mIndex    = aIndex;
+  mChange   = aChange;
+  mSource   = aSource;
+  mActive   = PR_TRUE;
+}
+
+void nsFramesetDrag::UnSet()
+{
+  mVertical = PR_TRUE;
+  mIndex    = -1;
+  mChange   = 0;
+  mSource   = nsnull;
+  mActive   = PR_FALSE;
+}
+
+/*******************************************************************************
  * nsHTMLFramesetBorderFrame
  ******************************************************************************/
 class nsHTMLFramesetBorderFrame : public nsLeafFrame {
@@ -120,10 +159,10 @@ class nsHTMLFramesetBlankFrame : public nsLeafFrame {
 public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -132,9 +171,9 @@ public:
 
 protected:
   virtual ~nsHTMLFramesetBlankFrame();
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics&     aDesiredSize);
   friend class nsHTMLFramesetFrame;
   friend class nsHTMLFrameset;
 };
@@ -148,19 +187,19 @@ PRBool  nsHTMLFramesetFrame::gDragInProgress = PR_FALSE;
 nsHTMLFramesetFrame::nsHTMLFramesetFrame()
   : nsHTMLContainerFrame()
 {
-  mNumRows  = 0;
-  mRowSpecs = nsnull;
-  mRowSizes = nsnull;
-  mNumCols  = 0;
-  mColSpecs = nsnull;
-  mColSizes = nsnull;
-  mEdgeVisibility = 0;
-  mEdgeColors.Set(NO_COLOR);
+  mNumRows           = 0;
+  mRowSpecs          = nsnull;
+  mRowSizes          = nsnull;
+  mNumCols           = 0;
+  mColSpecs          = nsnull;
+  mColSizes          = nsnull;
+  mEdgeVisibility    = 0;
   mParentFrameborder = eFrameborder_Yes; // default
   mParentBorderWidth = -1; // default not set
   mParentBorderColor = NO_COLOR; // default not set
-  mLastDragPoint.x = mLastDragPoint.y = 0;
-  mMinDrag = 0;
+  mLastDragPoint.x   = mLastDragPoint.y = 0;
+  mMinDrag           = 0;
+  mEdgeColors.Set(NO_COLOR);
 }
 
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
@@ -174,7 +213,8 @@ nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
   mRowSpecs = mColSpecs = nsnull;
 }
 
-nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID, 
+                                             void**       aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -186,9 +226,38 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID, void** aInstance
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
+NS_IMETHODIMP
+nsHTMLFramesetFrame::Init(nsIPresContext&  aPresContext,
+                          nsIContent*      aContent,
+                          nsIFrame*        aParent,
+                          nsIStyleContext* aContext,
+                          nsIFrame*        aPrevInFlow)
+{
+  nsHTMLContainerFrame::Init(aPresContext, aContent, aParent,
+                             aContext, aPrevInFlow);
+  // find the highest ancestor that is a frameset
+  nsresult rv = NS_OK;
+  nsIFrame* parentFrame = nsnull;
+  GetParent((nsIFrame**)&parentFrame);
+  mTopLevelFrameset = (nsHTMLFramesetFrame*)this;
+  while (parentFrame) {
+    nsHTMLFramesetFrame* frameset;
+    rv = parentFrame->QueryInterface(kIFramesetFrameIID, (void**)&frameset);
+    if (NS_SUCCEEDED(rv)) {
+      mTopLevelFrameset = frameset;
+      parentFrame->GetParent((nsIFrame**)&parentFrame);
+    } else {
+      break;
+    }
+  }
+  return rv;
+}
+
 // XXX should this try to allocate twips based on an even pixel boundary?
-void nsHTMLFramesetFrame::Scale(nscoord aDesired, PRInt32 aNumIndicies, 
-                                PRInt32* aIndicies, PRInt32* aItems)
+void nsHTMLFramesetFrame::Scale(nscoord  aDesired, 
+                                PRInt32  aNumIndicies, 
+                                PRInt32* aIndicies, 
+                                PRInt32* aItems)
 {
   PRInt32 actual = 0;
   PRInt32 i, j;
@@ -226,9 +295,11 @@ void nsHTMLFramesetFrame::Scale(nscoord aDesired, PRInt32 aNumIndicies,
   * specifier - fixed sizes have the highest priority, percentage sizes have the next
   * highest priority and relative sizes have the lowest.
   */
-void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, nscoord aSize, 
-                                          PRInt32 aNumSpecs, nsFramesetSpec* aSpecs, 
-                                          nscoord* aValues)
+void nsHTMLFramesetFrame::CalculateRowCol(nsIPresContext* aPresContext, 
+                                          nscoord         aSize, 
+                                          PRInt32         aNumSpecs, 
+                                          nsFramesetSpec* aSpecs, 
+                                          nscoord*        aValues)
 {
   PRInt32  fixedTotal = 0;
   PRInt32  numFixed = 0;
@@ -346,9 +417,9 @@ nsHTMLFramesetFrame::GetSkipSides() const
 }
 
 void 
-nsHTMLFramesetFrame::GetDesiredSize(nsIPresContext* aPresContext,
+nsHTMLFramesetFrame::GetDesiredSize(nsIPresContext*          aPresContext,
                                     const nsHTMLReflowState& aReflowState,
-                                    nsHTMLReflowMetrics& aDesiredSize)
+                                    nsHTMLReflowMetrics&     aDesiredSize)
 {
   nsHTMLFramesetFrame* framesetParent = GetFramesetParent(this);
   if (nsnull == framesetParent) {
@@ -397,7 +468,9 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
 }
 
 // only valid for non border children
-void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32 aIndexInParent, nsSize& aSize, nsPoint& aCellIndex)
+void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32  aIndexInParent, 
+                                           nsSize&  aSize, 
+                                           nsPoint& aCellIndex)
 {
   PRInt32 row = aIndexInParent / mNumCols;
   PRInt32 col = aIndexInParent - (row * mNumCols); // remainder from dividing index by mNumCols
@@ -413,7 +486,7 @@ void nsHTMLFramesetFrame::GetSizeOfChildAt(PRInt32 aIndexInParent, nsSize& aSize
 
 // only valid for non border children
 void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild, 
-                                         nsSize& aSize)
+                                         nsSize&   aSize)
 {
   // Reflow only creates children frames for <frameset> and <frame> content.
   // this assumption is used here
@@ -433,8 +506,8 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
 
   
 NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                           nsGUIEvent* aEvent,
-                                           nsEventStatus& aEventStatus)
+                                           nsGUIEvent*     aEvent,
+                                           nsEventStatus&  aEventStatus)
 {
   if (mDragger) {
     // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN
@@ -453,11 +526,11 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint, 
-                                            nsIFrame**     aFrame)
+#if 0
+PRBool 
+nsHTMLFramesetFrame::IsGrabbingMouse()
 {
-  //XXX Temporary to deal with event handling in both this and FramsetBorderFrame
+  PRBool result = PR_FALSE;
   nsIView* view;
   GetView(&view);
   if (view) {
@@ -468,21 +541,46 @@ nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint,
       viewMan->GetMouseEventGrabber(grabber);
       if (grabber == view) {
         // the nsFramesetBorderFrame has captured NS_MOUSE_DOWN
-        *aFrame = this;
-        NS_RELEASE(viewMan);
-        return NS_OK;
+        result = PR_TRUE;
       }
       NS_RELEASE(viewMan);
     }
   }
-  return nsContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  return result;
+}
+#endif
+
+NS_IMETHODIMP
+nsHTMLFramesetFrame::GetCursor(nsIPresContext& aPresContext,
+                               nsPoint&        aPoint,
+                               PRInt32&        aCursor)
+{
+  if (mDragger) {
+    aCursor = (mDragger->mVertical) ? NS_STYLE_CURSOR_W_RESIZE : NS_STYLE_CURSOR_N_RESIZE;
+  } else {
+    aCursor = NS_STYLE_CURSOR_DEFAULT;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint, 
+                                      nsIFrame**     aFrame)
+{
+  //XXX Temporary to deal with event handling in both this and FramsetBorderFrame
+  if (mDragger) { 
+    *aFrame = this;
+    return NS_OK;
+  } else {
+    return nsContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  }
 }
 
 NS_IMETHODIMP
-nsHTMLFramesetFrame::Paint(nsIPresContext& aPresContext,
+nsHTMLFramesetFrame::Paint(nsIPresContext&      aPresContext,
                            nsIRenderingContext& aRenderingContext,
-                           const nsRect& aDirtyRect,
-                           nsFramePaintLayer aWhichLayer)
+                           const nsRect&        aDirtyRect,
+                           nsFramePaintLayer    aWhichLayer)
 {
   //printf("frameset paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
@@ -522,7 +620,8 @@ void nsHTMLFramesetFrame::ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, ns
   * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
   */
 PRInt32 
-nsHTMLFramesetFrame::ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues, 
+nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec, 
+                                     PRInt32         aMaxNumValues, 
                                      nsFramesetSpec* aSpecs) 
 {
   static const PRUnichar ASTER('*');
@@ -594,13 +693,9 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
                                       const nsHTMLReflowState& aReflowState,
                                       nsPoint&                 aOffset,
                                       nsSize&                  aSize,
-                                      nsFramesetDrag*          aDrag,
                                       nsPoint*                 aCellIndex)
 {
-  PRBool needFramesetReflow = PR_FALSE;
-  nsFramesetDrag* childDrag = nsnull;
-
-  if (aDrag && aCellIndex && ChildIsFrameset(aChild)) {
+  if (mDrag.mActive && aCellIndex && ChildIsFrameset(aChild)) {
     nsIContent* childContent;
     aChild->GetContent(&childContent);
     if (childContent) {
@@ -608,89 +703,63 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
       childContent->GetTag(tag);
       if (nsHTMLAtoms::frameset == tag) {
         nsHTMLFramesetFrame* childFS = (nsHTMLFramesetFrame*)aChild;
-        if (!aDrag->mConsumed) {
-          PRBool  vertical = PR_TRUE;
-          PRInt32 side     = RIGHT_EDGE;
-          if (aDrag->mVertical) {
-            if (aDrag->mIndex == aCellIndex->x) {
-              childFS->mColSizes[childFS->mNumCols-1] += aDrag->mChange;
-            } else if (aDrag->mIndex == RIGHT_EDGE) {
-              //aSize.width += aDrag->mChange;
-              childFS->mColSizes[childFS->mNumCols-1] += aDrag->mChange;
-            } else if (aDrag->mIndex+1 == aCellIndex->x) {
-              side = LEFT_EDGE;
-              childFS->mColSizes[0] -= aDrag->mChange;
-            } else if (aDrag->mIndex == LEFT_EDGE) {
-              side = LEFT_EDGE;
-              //aSize.width -= aDrag->mChange;
-              childFS->mColSizes[0] -= aDrag->mChange;
-              //aOffset.x   += aDrag->mChange;
-            }
-          } else {
-            vertical = PR_FALSE;
-            if (aDrag->mIndex == aCellIndex->y) {
-              childFS->mRowSizes[childFS->mNumRows-1] += aDrag->mChange;
-            } else if (aDrag->mIndex == RIGHT_EDGE) {
-              //aSize.height += aDrag->mChange;
-              childFS->mRowSizes[childFS->mNumRows-1] += aDrag->mChange;
-            } else if (aDrag->mIndex+1 == aCellIndex->y) { 
-              side = LEFT_EDGE;
-              childFS->mRowSizes[0] -= aDrag->mChange;
-            } else if (aDrag->mIndex == LEFT_EDGE) {
-              side = LEFT_EDGE;
-              //aSize.height -= aDrag->mChange;
-              childFS->mRowSizes[0] -= aDrag->mChange;
-              //aOffset.y    += aDrag->mChange;
-            }
+        PRBool  vertical = PR_TRUE;
+        PRInt32 side     = RIGHT_EDGE;
+        if (mDrag.mVertical) {
+          if (mDrag.mIndex == aCellIndex->x) {
+            childFS->mColSizes[childFS->mNumCols-1] += mDrag.mChange;
+          } else if (mDrag.mIndex == RIGHT_EDGE) {
+            childFS->mColSizes[childFS->mNumCols-1] += mDrag.mChange;
+          } else if (mDrag.mIndex+1 == aCellIndex->x) {
+            side = LEFT_EDGE;
+            childFS->mColSizes[0] -= mDrag.mChange;
+          } else if (mDrag.mIndex == LEFT_EDGE) {
+            side = LEFT_EDGE;
+            childFS->mColSizes[0] -= mDrag.mChange;
           }
-          childDrag = new nsFramesetDrag(vertical, side, aDrag->mChange, aDrag->mSource);
         } else {
-          childDrag = new nsFramesetDrag();  // consumed drag
+          vertical = PR_FALSE;
+          if (mDrag.mIndex == aCellIndex->y) {
+            childFS->mRowSizes[childFS->mNumRows-1] += mDrag.mChange;
+          } else if (mDrag.mIndex == RIGHT_EDGE) {
+            childFS->mRowSizes[childFS->mNumRows-1] += mDrag.mChange;
+          } else if (mDrag.mIndex+1 == aCellIndex->y) { 
+            side = LEFT_EDGE;
+            childFS->mRowSizes[0] -= mDrag.mChange;
+          } else if (mDrag.mIndex == LEFT_EDGE) {
+            side = LEFT_EDGE;
+            childFS->mRowSizes[0] -= mDrag.mChange;
+          }
         }
-        needFramesetReflow = PR_TRUE;
+        childFS->GetDrag().Reset(vertical, side, mDrag.mChange, mDrag.mSource);
       }
       NS_IF_RELEASE(tag);
       NS_RELEASE(childContent);
     }
   }
 
-  nsHTMLReflowState  reflowState(aPresContext, aReflowState, aChild, aSize);
-  nsIHTMLReflow*     htmlReflow;
-
+  // reflow and place the child
+  nsIHTMLReflow* htmlReflow;
   if (NS_OK == aChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    nsHTMLReflowState  reflowState(aPresContext, aReflowState, aChild, aSize);
     nsHTMLReflowMetrics metrics(nsnull);
     metrics.width = aSize.width;
     metrics.height= aSize.height;
     nsReflowStatus status;
-
-    if (needFramesetReflow) {
-      htmlReflow->WillReflow(aPresContext);
-      status = ((nsHTMLFramesetFrame*)aChild)->Reflow(aPresContext, childDrag, metrics, 
-                                                      reflowState, status);
-    } else {
-      ReflowChild(aChild, aPresContext, metrics, reflowState, status);
-    }
+  
+    ReflowChild(aChild, aPresContext, metrics, reflowState, status);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
-
-    if (childDrag) {
-      delete childDrag;
-    }
   
     // Place and size the child
     nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
-    // XXX We shouldn't just whack the frame set bits. Clear just the bits
-    // we need to clear...
-#if 0
-    aChild->SetFrameState(NS_FRAME_SYNC_FRAME_AND_VIEW);
-#endif
     aChild->SetRect(rect);
-    htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // XXX do we need this
+    htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // this call is needed
   }
-
 }
 
 static
-nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent, PRBool aStandardMode)
+nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent, 
+                                   PRBool          aStandardMode)
 {
   if (nsnull != aContent) {
     nsHTMLValue value;
@@ -727,14 +796,14 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(PRBool aStandardMode)
     result = GetFrameBorderHelper(content, aStandardMode);
     NS_RELEASE(content);
   }
-  // XXX if we get here, check for nsIDOMFRAMEElement interface
   if (eFrameborder_Notset == result) {
     return mParentFrameborder;
   }
   return result;
 }
 
-nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent, PRBool aStandardMode)
+nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent, 
+                                                  PRBool      aStandardMode)
 {
   nsFrameborder result = eFrameborder_Notset;
   nsIHTMLContent* content = nsnull;
@@ -743,7 +812,6 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent, PRBool a
     result = GetFrameBorderHelper(content, aStandardMode);
     NS_RELEASE(content);
   }
-  // XXX if we get here, check for nsIDOMFRAMEElement interface
   if (eFrameborder_Notset == result) {
     return GetFrameBorder(aStandardMode);
   }
@@ -807,23 +875,12 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
 #define FRAME 1
 #define BLANK 2
 
-NS_IMETHODIMP
-nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus)
-{
-  //printf("FramesetFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
-  return Reflow(aPresContext, nsnull, aDesiredSize, aReflowState, aStatus);
-}
-
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
-                            nsFramesetDrag*          aDrag,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
@@ -831,7 +888,6 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
-
   PRBool firstTime = (0 == mNumRows);
 
   if (firstTime) { 
@@ -873,7 +929,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   width  -= (mNumCols - 1) * borderWidth;
   height -= (mNumRows - 1) * borderWidth;
 
-  if (!aDrag && ( (firstTime) ||
+  if (!mDrag.mActive && ( (firstTime) ||
                   ( (mRect.width != 0) && (mRect.height != 0) &&
                     (aDesiredSize.width != 0) && (aDesiredSize.height != 0) &&
                     ((aDesiredSize.width != mRect.width) || (aDesiredSize.height != mRect.height))) ) )  { 
@@ -983,13 +1039,12 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
       mNonBlankChildCount = mChildCount;
       // add blank frames for frameset cells that had no content provided
       for (int blankX = mChildCount; blankX < numCells; blankX++) {
-        // XXX the blank frame is using the content of its parent - at some point it should just have null content
+        // XXX the blank frame is using the content of its parent - at some point it 
+        // should just have null content, if we support that
         nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame;
         nsIStyleContext* pseudoStyleContext;
-        aPresContext.ResolvePseudoStyleContextFor(mContent,
-                                            nsHTMLAtoms::framesetBlankPseudo,
-                                                  mStyleContext,
-                                                  PR_FALSE,
+        aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
+                                                  mStyleContext, PR_FALSE,
                                                   &pseudoStyleContext);
         blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
         NS_RELEASE(pseudoStyleContext);
@@ -1080,7 +1135,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
       }
     }
 
-    ReflowPlaceChild(child, aPresContext, aReflowState, offset, size, aDrag, &cellIndex);
+    ReflowPlaceChild(child, aPresContext, aReflowState, offset, size, &cellIndex);
 
     if (firstTime) {
       PRInt32 childVis; 
@@ -1204,6 +1259,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   aStatus = NS_FRAME_COMPLETE;
+  mDrag.UnSet();
   return NS_OK;
 }
 
@@ -1220,7 +1276,8 @@ nsHTMLFramesetFrame::ChildIsFrameset(nsIFrame* aChild)
 
 
 PRBool 
-nsHTMLFramesetFrame::CanResize(PRBool aVertical, PRBool aLeft) 
+nsHTMLFramesetFrame::CanResize(PRBool aVertical, 
+                               PRBool aLeft) 
 {
   nsIFrame* child;
   PRInt32 childX;
@@ -1268,7 +1325,10 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
 }
 
 PRBool 
-nsHTMLFramesetFrame::CanChildResize(PRBool aVertical, PRBool aLeft, PRInt32 aChildX, PRBool aFrameset) 
+nsHTMLFramesetFrame::CanChildResize(PRBool  aVertical, 
+                                    PRBool  aLeft, 
+                                    PRInt32 aChildX, 
+                                    PRBool  aFrameset) 
 {
   nsIFrame* child = mFrames.FrameAt(aChildX);
   if (aFrameset) {
@@ -1279,7 +1339,8 @@ nsHTMLFramesetFrame::CanChildResize(PRBool aVertical, PRBool aLeft, PRInt32 aChi
 }
 
 void 
-nsHTMLFramesetFrame::SetBorderResize(PRInt32* aChildTypes, nsHTMLFramesetBorderFrame* aBorderFrame)
+nsHTMLFramesetFrame::SetBorderResize(PRInt32*                   aChildTypes, 
+                                     nsHTMLFramesetBorderFrame* aBorderFrame)
 {
   if (aBorderFrame->mVertical) {
     for (int rowX = 0; rowX < mNumRows; rowX++) {
@@ -1316,8 +1377,9 @@ nsHTMLFramesetFrame::VerifyTree() const
 }
 
 void
-nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext& aPresContext, nsHTMLFramesetBorderFrame* aBorder, 
-                                    nsGUIEvent* aEvent)
+nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext&            aPresContext, 
+                                    nsHTMLFramesetBorderFrame* aBorder, 
+                                    nsGUIEvent*                aEvent)
 {
   if (mMinDrag == 0) {
     float p2t;
@@ -1354,7 +1416,8 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext& aPresContext, nsHTMLFrameset
   
 
 void
-nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
+nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, 
+                               nsGUIEvent*     aEvent)
 {
   if ((mLastDragPoint.x == NULL_POINT_X) &&
       (mLastDragPoint.y == NULL_POINT_Y)) {
@@ -1409,26 +1472,10 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
   }
 
   if (change != 0) {
-    nsHTMLReflowMetrics metrics(nsnull);
-    nsSize size;
-    GetSize(size);
+    mDrag.Reset(mDragger->mVertical, mDragger->mPrevNeighbor, change, this);
     nsCOMPtr<nsIPresShell> shell;
-    nsIRenderingContext *acx;
     aPresContext.GetShell(getter_AddRefs(shell));
-    shell->CreateRenderingContext(this, &acx);
-    // XXX this can't possibly be right, but oh well...
-    nsHTMLReflowState state(aPresContext, this, eReflowReason_Initial,
-                            acx, size);
-    state.reason = eReflowReason_Incremental;
-    nsReflowStatus status;
-    nsDidReflowStatus didStatus = 0;
-    WillReflow(aPresContext);
-    nsFramesetDrag drag(mDragger->mVertical, mDragger->mPrevNeighbor, change, this);
-    Reflow(aPresContext, &drag, metrics, state, status);
-    // XXX Compiler warning that didStatus is being used without having been
-    // initialized...
-    DidReflow(aPresContext, didStatus);
-    NS_IF_RELEASE(acx);
+    shell->ResizeReflow(mTopLevelFrameset->mRect.width, mTopLevelFrameset->mRect.height);
   }
 
   mLastDragPoint.x = aEvent->point.x;
@@ -1469,7 +1516,9 @@ NS_NewHTMLFramesetFrame(nsIFrame*& aResult)
 /*******************************************************************************
  * nsHTMLFramesetBorderFrame
  ******************************************************************************/
-nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(PRInt32 aWidth, PRBool aVertical, PRBool aVisibility)
+nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(PRInt32 aWidth, 
+                                                     PRBool  aVertical, 
+                                                     PRBool  aVisibility)
   : nsLeafFrame(), mWidth(aWidth), mVertical(aVertical), mVisibility(aVisibility)
 {
    mCanResize = PR_TRUE;
@@ -1478,12 +1527,12 @@ nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(PRInt32 aWidth, PRBool aVer
 
 nsHTMLFramesetBorderFrame::~nsHTMLFramesetBorderFrame()
 {
-printf("nsHTMLFramesetBorderFrame destructor %p \n", this);
+  //printf("nsHTMLFramesetBorderFrame destructor %p \n", this);
 }
 
-void nsHTMLFramesetBorderFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                          const nsHTMLReflowState& aReflowState,
-                                          nsHTMLReflowMetrics& aDesiredSize)
+void nsHTMLFramesetBorderFrame::GetDesiredSize(nsIPresContext*          aPresContext,
+                                               const nsHTMLReflowState& aReflowState,
+                                               nsHTMLReflowMetrics&     aDesiredSize)
 {
   aDesiredSize.width   = aReflowState.availableWidth;
   aDesiredSize.height  = aReflowState.availableHeight;
@@ -1608,8 +1657,8 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
 
 NS_IMETHODIMP
 nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                                 nsGUIEvent* aEvent,
-                                                 nsEventStatus& aEventStatus)
+                                       nsGUIEvent*     aEvent,
+                                       nsEventStatus&  aEventStatus)
 {
   aEventStatus = nsEventStatus_eIgnore;
 
@@ -1639,14 +1688,14 @@ nsHTMLFramesetBorderFrame::GetFrameForPoint(const nsPoint& aPoint,
 
 NS_IMETHODIMP
 nsHTMLFramesetBorderFrame::GetCursor(nsIPresContext& aPresContext,
-                             nsPoint&        aPoint,
-                             PRInt32&        aCursor)
+                                     nsPoint&        aPoint,
+                                     PRInt32&        aCursor)
 {
   if (!mCanResize) {
     aCursor = NS_STYLE_CURSOR_DEFAULT;
-    return NS_OK;
-  }    
-  aCursor = (mVertical) ? NS_STYLE_CURSOR_W_RESIZE : NS_STYLE_CURSOR_N_RESIZE;
+  } else {   
+    aCursor = (mVertical) ? NS_STYLE_CURSOR_W_RESIZE : NS_STYLE_CURSOR_N_RESIZE;
+  }
   return NS_OK;
 }
 
@@ -1664,9 +1713,9 @@ nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
   printf("nsHTMLFramesetBlankFrame destructor %p \n", this);
 }
 
-void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext* aPresContext,
+void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext*          aPresContext,
                                               const nsHTMLReflowState& aReflowState,
-                                              nsHTMLReflowMetrics& aDesiredSize)
+                                              nsHTMLReflowMetrics&     aDesiredSize)
 {
   aDesiredSize.width   = aReflowState.availableWidth;
   aDesiredSize.height  = aReflowState.availableHeight;
@@ -1718,7 +1767,8 @@ nsHTMLFramesetBlankFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 
-NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE*   out, 
+                                             PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
   fprintf(out, "%p BLANK \n", this);

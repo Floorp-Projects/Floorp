@@ -70,22 +70,23 @@ struct nsFramesetSpec {
 };
 
 struct nsFramesetDrag {
-  PRBool           mVertical;
-  PRInt32          mIndex;     // index of left col or top row of effected area
-  PRInt32          mChange;    // + for left to right or top to bottom
-  nsHTMLFramesetFrame* mSource;
-  PRBool           mConsumed;
-  nsFramesetDrag(PRBool aVertical, PRInt32 aIndex, PRInt32 aChange, 
-                 nsHTMLFramesetFrame* aSource) 
-    : mVertical(aVertical), mIndex(aIndex), mChange(aChange), 
-      mSource(aSource), mConsumed(PR_FALSE)
-    {}
-  nsFramesetDrag() 
-    : mVertical(PR_TRUE), mIndex(-1), mChange(0), 
-      mSource(nsnull), mConsumed(PR_TRUE)
-  {}
-};
+  PRBool               mVertical;  // vertical if true, otherwise horizontal
+  PRInt32              mIndex;     // index of left col or top row of effected area
+  PRInt32              mChange;    // pos for left to right or top to bottom, neg otherwise
+  nsHTMLFramesetFrame* mSource;    // frameset whose border was dragged to cause the resize
+  PRBool               mActive;
 
+  nsFramesetDrag();
+  nsFramesetDrag(PRBool               aVertical, 
+                 PRInt32              aIndex, 
+                 PRInt32              aChange, 
+                 nsHTMLFramesetFrame* aSource); 
+  void Reset(PRBool               aVertical, 
+             PRInt32              aIndex, 
+             PRInt32              aChange, 
+             nsHTMLFramesetFrame* aSource); 
+  void UnSet();
+};
 
 /*******************************************************************************
  * nsHTMLFramesetFrame
@@ -97,78 +98,107 @@ public:
 
   virtual ~nsHTMLFramesetFrame();
 
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
+  NS_IMETHOD  QueryInterface(const nsIID& aIID, 
+                             void**       aInstancePtr);
+
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
 
   static PRBool  gDragInProgress;
+
   static PRInt32 gMaxNumRowColSpecs;
 
   void GetSizeOfChild(nsIFrame* aChild, nsSize& aSize);
 
-  void GetSizeOfChildAt(PRInt32 aIndexInParent, nsSize& aSize, nsPoint& aCellIndex);
+  void GetSizeOfChildAt(PRInt32  aIndexInParent, 
+                        nsSize&  aSize, 
+                        nsPoint& aCellIndex);
 
   static nsHTMLFramesetFrame* GetFramesetParent(nsIFrame* aChild);
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
 
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                       nsPoint&        aPoint,
+                       PRInt32&        aCursor);
+
+  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
-                    nsFramesetDrag*          aDrag,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD  VerifyTree() const;
 
-  void StartMouseDrag(nsIPresContext& aPresContext, nsHTMLFramesetBorderFrame* aBorder, 
-                      nsGUIEvent* aEvent);
-  void MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
+  void StartMouseDrag(nsIPresContext&            aPresContext, 
+                      nsHTMLFramesetBorderFrame* aBorder, 
+                      nsGUIEvent*                aEvent);
+
+  void MouseDrag(nsIPresContext& aPresContext, 
+                 nsGUIEvent*     aEvent);
+
   void EndMouseDrag();
 
   nsFrameborder GetParentFrameborder() { return mParentFrameborder; }
+
   void SetParentFrameborder(nsFrameborder aValue) { mParentFrameborder = aValue; }
 
+  nsFramesetDrag& GetDrag() { return mDrag; }
+
 protected:
-  void Scale(nscoord aDesired, PRInt32 aNumIndicies, 
-             PRInt32* aIndicies, PRInt32* aItems);
+  void Scale(nscoord  aDesired, 
+             PRInt32  aNumIndicies, 
+             PRInt32* aIndicies, 
+             PRInt32* aItems);
 
-  void CalculateRowCol(nsIPresContext* aPresContext, nscoord aSize, PRInt32 aNumSpecs, 
-                       nsFramesetSpec* aSpecs, nscoord* aValues);
+  void CalculateRowCol(nsIPresContext* aPresContext, 
+                       nscoord         aSize, 
+                       PRInt32         aNumSpecs, 
+                       nsFramesetSpec* aSpecs, 
+                       nscoord*        aValues);
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+  virtual void GetDesiredSize(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics&     aDesiredSize);
 
   PRInt32 GetBorderWidth(nsIPresContext* aPresContext);
+
   PRInt32 GetParentBorderWidth() { return mParentBorderWidth; }
-  void    SetParentBorderWidth(PRInt32 aWidth) { mParentBorderWidth = aWidth; }
+
+  void SetParentBorderWidth(PRInt32 aWidth) { mParentBorderWidth = aWidth; }
+
   nscolor GetParentBorderColor() { return mParentBorderColor; }
-  void    SetParentBorderColor(nscolor aColor) { mParentBorderColor = aColor; }
+
+  void SetParentBorderColor(nscolor aColor) { mParentBorderColor = aColor; }
 
   nsFrameborder GetFrameBorder(PRBool aStandardMode);
+
   nsFrameborder GetFrameBorder(nsIContent* aContent, PRBool aStandardMode);
+
   nscolor GetBorderColor();
+
   nscolor GetBorderColor(nsIContent* aFrameContent);
+
   PRBool GetNoResize(nsIFrame* aChildFrame); 
   
   virtual PRIntn GetSkipSides() const;
 
   void ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs); 
 
-  PRInt32 ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues,
+  PRInt32 ParseRowColSpec(nsString&       aSpec, 
+                          PRInt32         aMaxNumValues,
                           nsFramesetSpec* aSpecs);
 
   void ReflowPlaceChild(nsIFrame*                aChild,
@@ -176,12 +206,19 @@ protected:
                         const nsHTMLReflowState& aReflowState,
                         nsPoint&                 aOffset,
                         nsSize&                  aSize,
-                        nsFramesetDrag*          aDrag = 0,
                         nsPoint*                 aCellIndex = 0);
   
-  PRBool CanResize(PRBool aVertical, PRBool aLeft); 
-  PRBool CanChildResize(PRBool aVertical, PRBool aLeft, PRInt32 aChildX, PRBool aFrameset); 
-  void SetBorderResize(PRInt32* aChildTypes, nsHTMLFramesetBorderFrame* aBorderFrame);
+  PRBool CanResize(PRBool aVertical, 
+                   PRBool aLeft); 
+
+  PRBool CanChildResize(PRBool  aVertical, 
+                        PRBool  aLeft, 
+                        PRInt32 aChildX,
+                        PRBool  aFrameset);
+  
+  void SetBorderResize(PRInt32*                   aChildTypes, 
+                       nsHTMLFramesetBorderFrame* aBorderFrame);
+
   PRBool ChildIsFrameset(nsIFrame* aChild); 
 
   PRInt32          mNumRows;
@@ -199,34 +236,12 @@ protected:
   PRInt32          mParentBorderWidth;
 
   nsHTMLFramesetBorderFrame* mDragger;
+  nsFramesetDrag   mDrag;
   nsPoint          mLastDragPoint;
   PRInt32          mMinDrag;
   PRInt32          mChildCount;
+  nsHTMLFramesetFrame* mTopLevelFrameset;
 };
 
-#if 0
-/*******************************************************************************
- * nsHTMLFrameset
- ******************************************************************************/
-class nsHTMLFrameset : public nsHTMLContainer {
-public:
- 
-  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;
-  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
-                          PRBool aNotify);
-
-protected:
-  nsHTMLFrameset(nsIAtom* aTag, nsIWebShell* aParentWebShell);
-  virtual  ~nsHTMLFrameset();
-
-  friend nsresult NS_NewHTMLFrameset(nsIHTMLContent** aInstancePtrResult,
-                                     nsIAtom* aTag, nsIWebShell* aWebShell);
-  //friend class nsHTMLFramesetFrame;
-
-  // this is held for a short time until the frame uses it, so it is not ref counted
-  nsIWebShell*    mParentWebShell; 
-};
-#endif
 
 #endif
