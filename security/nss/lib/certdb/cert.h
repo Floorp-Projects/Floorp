@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.50 2005/02/24 00:22:23 julien.pierre.bugs%sun.com Exp $
+ * $Id: cert.h,v 1.51 2005/02/25 00:54:29 julien.pierre.bugs%sun.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -453,7 +453,7 @@ extern void CERT_DestroyCrl (CERTSignedCrl *crl);
    the issuer (CA). */
 void CERT_CRLCacheRefreshIssuer(CERTCertDBHandle* dbhandle, SECItem* crlKey);
 
-/* add the specified RAM CRL object to the CRL cache. Doing so will allow
+/* add the specified DER CRL object to the CRL cache. Doing so will allow
    certificate verification functions (such as CERT_VerifyCertificate)
    to automatically find and make use of this CRL object.
    Once a CRL is added to the CRL cache, the application must hold on to
