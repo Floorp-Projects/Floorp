@@ -42,12 +42,15 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "prlog.h"
+#include "prtime.h"
 #include "rdf.h"
 #include "rdfutil.h"
 
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,  NS_IRDFLITERAL_IID);
+static NS_DEFINE_IID(kIRDFIntIID,      NS_IRDFINT_IID);
+static NS_DEFINE_IID(kIRDFDateIID,     NS_IRDFDATE_IID);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID); // XXX grr...
 static NS_DEFINE_CID(kTextNodeCID,     NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,   NS_RDFSERVICE_CID);
@@ -261,9 +264,11 @@ nsRDFContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
 nsresult
 nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
 {
-    nsresult rv;
-    nsIRDFResource* resource;
-    nsIRDFLiteral* literal;
+    nsresult		rv;
+    nsIRDFResource	*resource;
+    nsIRDFLiteral	*literal;
+    nsIRDFDate		*dateLiteral;
+    nsIRDFInt		*intLiteral;
 
     if (! aNode) {
         aResult.Truncate();
@@ -275,6 +280,25 @@ nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
             aResult = p;
         }
         NS_RELEASE(resource);
+    }
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFDateIID, (void**) &dateLiteral))) {
+	PRInt64		theDate;
+        if (NS_SUCCEEDED(rv = dateLiteral->GetValue( &theDate ))) {
+		PRExplodedTime	dateData;
+		PR_ExplodeTime(theDate, PR_LocalTimeParameters, &dateData);
+		char		dateBuf[128];
+		PR_FormatTime(dateBuf, sizeof(dateBuf)-1, "%c", &dateData);
+		aResult = dateBuf;
+        }
+        NS_RELEASE(dateLiteral);
+    }
+    else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFIntIID, (void**) &intLiteral))) {
+	PRInt32		theInt;
+	aResult.Truncate();
+        if (NS_SUCCEEDED(rv = intLiteral->GetValue( &theInt ))) {
+        	aResult.Append(theInt, 10);
+        }
+        NS_RELEASE(intLiteral);
     }
     else if (NS_SUCCEEDED(rv = aNode->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
         nsXPIDLString p;
