@@ -3685,7 +3685,7 @@ dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
-MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs"
+MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth"
 
 MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm datetime finger cview layout-debug tasks"
 
@@ -3740,6 +3740,123 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
     MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
   fi
 fi
+
+dnl ========================================================
+dnl Check for GSSAPI libraries and headers needed for
+dnl integrated windows authentication support (disable
+dnl negotiateauth extension if GSSAPI is not available).
+dnl ========================================================
+
+if test `echo "$MOZ_EXTENSIONS" | grep -c negotiateauth` -ne 0; then
+    dnl
+    dnl Check for alternative location for GSSAPI libraries.
+    dnl
+    MOZ_ARG_WITH_STRING(gssapi,
+        [  --with-gssapi=PFX	   Location of GSSAPI libraries],
+        GSSAPI_DIR=$withval)
+
+    dnl
+    dnl If not specified, assume GSSAPI lives under /usr
+    dnl
+    if test -z "$GSSAPI_DIR"; then
+        dnl
+        dnl RedHat Linux 7, 8, and 9 install GSSAPI headers and libraries under
+        dnl /usr/kerberos -- perhaps other platforms do the same.  If not, then
+        dnl we count on the default search paths.  Fedora Core 1, at least,
+        dnl puts the headers and libraries under /usr, but it still has
+        dnl /usr/kerberos for the other KRB5 components.
+        dnl
+        if test -d "/usr/kerberos/include"; then
+            GSSAPI_DIR="/usr/kerberos"
+        else
+            GSSAPI_DIR="/usr"
+        fi
+    fi
+
+    _SAVE_CPPFLAGS="$CPPFLAGS"
+    _SAVE_LDFLAGS="$LDFLAGS"
+    _SAVE_LIBS="$LIBS"
+
+    CPPFLAGS="$CPPFLAGS -I$GSSAPI_DIR/include"
+    LDFLAGS="$LDFLAGS -L$GSSAPI_DIR/lib"
+
+    dnl
+    dnl Try to set GSSAPI_INCLUDES ...
+    dnl
+    AC_CHECK_HEADERS(gssapi.h,
+        [GSSAPI_INCLUDES="-I$GSSAPI_DIR/include"])
+    if test -z "$GSSAPI_INCLUDES" ; then
+        AC_CHECK_HEADERS(gssapi/gssapi.h,
+            [GSSAPI_INCLUDES="-I$GSSAPI_DIR/include"])
+    fi
+    CPPFLAGS="$_SAVE_CPPFLAGS $GSSAPI_INCLUDES"
+
+    dnl
+    dnl Try to set GSSAPI_LIBS ...
+    dnl
+    AC_CHECK_LIB(gss, gss_init_sec_context,
+        [GSSAPI_LIBS="-L$GSSAPI_DIR/lib -lgss"],)
+
+    dnl
+    dnl If libgss was not found, look for the MIT Kerberos V5 GSSAPI
+    dnl libraries instead.
+    dnl
+    if test -z "$GSSAPI_LIBS" ; then
+        LIBS="$LIBS -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"
+        AC_CHECK_LIB(gssapi_krb5, gss_init_sec_context,
+            [GSSAPI_LIBS="-L$GSSAPI_DIR/lib -lgssapi_krb5 -lkrb5 -lk5crypto -lcom_err"],)
+        LIBS="$_SAVE_LIBS"
+    fi
+
+    dnl
+    dnl If GSS libs were STILL not found, try looking for Heimdal
+    dnl Kerberos V5 libraries.
+    dnl
+    if test -z "$GSSAPI_LIBS" ; then
+        if test -x "$GSSAPI_DIR/bin/krb5-config" ; then
+            krb5cfg="$GSSAPI_DIR/bin/krb5-config"
+            TMP_GSSAPI_LIBS=`$krb5cfg --libs gssapi 2>/dev/null`
+            TMP_GSSAPI_INCLUDES=`$krb5cfg --cflags gssapi 2>/dev/null`
+
+            LIBS="$LIBS $TMP_GSSAPI_LIBS"
+            AC_CHECK_LIB(gssapi, gss_init_sec_context,
+                [GSSAPI_LIBS="$TMP_GSSAPI_LIBS"
+                 GSSAPI_INCLUDES="$TMP_GSSAPI_INCLUDES"],
+                [GSSAPI_LIBS=""])
+
+            CPPFLAGS="$_SAVE_CPPFLAGS $GSSAPI_INCLUDES"
+        fi
+    fi
+
+    dnl
+    dnl If GSSAPI libs were not found, remove extension from the list to be
+    dnl built.
+    dnl
+    if test -z "$GSSAPI_LIBS" ; then
+        AC_MSG_WARN([Cannot build negotiateauth without GSSAPI. Removing negotatiate from MOZ_EXTENSIONS.])
+        MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|negotiateauth||'`
+        GSSAPI_INCLUDES=
+    else
+        dnl
+        dnl Try to determine if the GSS_C_NT_HOSTBASED_SERVICE value is
+        dnl defined.  Older MIT releases did not define this correctly.
+        dnl
+        AC_CHECK_HEADERS([gssapi/gssapi_generic.h])
+        AC_TRY_COMPILE([ #include <gssapi/gssapi.h> ],
+            [ gss_OID oid = GSS_C_NT_HOSTBASED_SERVICE; ],
+            [AC_DEFINE(HAVE_GSS_C_NT_HOSTBASED_SERVICE)],[
+             AC_MSG_WARN([GSS_C_NT_HOSTBASED_SERVICE not found])
+            ])
+    fi
+
+    LIBS="$_SAVE_LIBS"
+    LDFLAGS="$_SAVE_LDFLAGS"
+    CPPFLAGS="$_SAVE_CPPFLAGS"
+
+    AC_SUBST(GSSAPI_INCLUDES)
+    AC_SUBST(GSSAPI_LIBS)
+fi
+
 
 dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
