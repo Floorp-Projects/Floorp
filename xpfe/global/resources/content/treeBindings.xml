@@ -85,7 +85,11 @@
     </content>
   </binding>
 
-  <binding id="treecell-image" extends="xul:image"/>
+  <binding id="treecell-image">
+    <content autostretch="never">
+      <xul:image class="tree-cell-image" inherits="src"/>
+    </content>
+  </binding>
  
   <binding id="treecell-header">
     <content autostretch="never">
