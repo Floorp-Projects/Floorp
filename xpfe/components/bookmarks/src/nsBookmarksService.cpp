@@ -73,6 +73,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsICmdLineHandler.h"
 
 #include "nsISound.h"
 #include "nsIPrompt.h"
@@ -181,7 +182,6 @@ static const char kDefaultPersonalToolbarFolder[]     = "Personal Toolbar Folder
 static const char kBookmarkCommand[]                  = "http://home.netscape.com/NC-rdf#command?";
 
 #define bookmark_properties  NS_LITERAL_CSTRING("chrome://communicator/locale/bookmarks/bookmark.properties")
-#define NAVIGATOR_CHROME_URL "chrome://navigator/content/"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -2529,7 +2529,15 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             rv = suppString->SetData(nsDependentCString(uri));
             if (NS_FAILED(rv)) return rv;
             suppArray->AppendElement(suppString);
-            wwatch->OpenWindow(0, NAVIGATOR_CHROME_URL, "_blank", "chrome,dialog=no,all", 
+    
+            nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));    
+            if (NS_FAILED(rv)) return rv;
+   
+            nsXPIDLCString url;
+            rv = handler->GetChromeUrlForTask(getter_Copies(url));
+            if (NS_FAILED(rv)) return rv;
+
+            wwatch->OpenWindow(0, url, "_blank", "chrome,dialog=no,all", 
                                suppArray, getter_AddRefs(newWindow));
 					}
 				}
