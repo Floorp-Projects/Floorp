@@ -393,9 +393,9 @@ do_typedef(TreeState *state)
                          "sequences not supported, ignored");
     } else {
         state->tree = type;
+        fputs("typedef ", state->file);
         if (!xpcom_type(state))
             return FALSE;
-        fputs("typedef ", state->file);
         fputs(" ", state->file);
         if (IDL_NODE_TYPE(complex = IDL_LIST(dcls).data) == IDLN_TYPE_ARRAY) {
             fprintf(state->file, "%s[%ld]",
