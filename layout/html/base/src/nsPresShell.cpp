@@ -339,11 +339,12 @@ static PRLogModuleInfo* gLogModule;
 
 static PRUint32 gVerifyReflowFlags;
 
-#define VERIFY_REFLOW_ON            0x01
-#define VERIFY_REFLOW_NOISY         0x02
-#define VERIFY_REFLOW_ALL           0x04
-#define VERIFY_REFLOW_DUMP_COMMANDS 0x08
-#define VERIFY_REFLOW_NOISY_RC      0x10
+#define VERIFY_REFLOW_ON              0x01
+#define VERIFY_REFLOW_NOISY           0x02
+#define VERIFY_REFLOW_ALL             0x04
+#define VERIFY_REFLOW_DUMP_COMMANDS   0x08
+#define VERIFY_REFLOW_NOISY_RC        0x10
+#define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
 #endif
 
 static PRBool gVerifyReflowEnabled;
@@ -373,6 +374,9 @@ nsIPresShell::GetVerifyReflowEnable()
     }
     if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
       printf(" (noisy reflow commands)");
+      if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
+        printf(" (REALLY noisy reflow commands)");
+      }
     }
     printf("\n");
   }
@@ -402,8 +406,11 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
   return it->QueryInterface(kIPresShellIID, (void **) aInstancePtrResult);
 }
 
+MOZ_DECL_CTOR_COUNTER(PresShell);
+
 PresShell::PresShell()
 {
+  MOZ_COUNT_CTOR(PresShell);
   mIsDestroying = PR_FALSE;
   mCaretEnabled = PR_FALSE;
   mDisplayNonTextSelection = PR_FALSE;
@@ -493,6 +500,8 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 PresShell::~PresShell()
 {
+  MOZ_COUNT_DTOR(PresShell);
+
   mRefCnt = 99;/* XXX hack! get around re-entrancy bugs */
 
   mIsDestroying = PR_TRUE;
@@ -1229,11 +1238,13 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
     if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
       printf("PresShell@%p: adding reflow command\n", this);
       aReflowCommand->List(stdout);
-      printf("Current content model:\n");
-      nsCOMPtr<nsIContent> rootContent;
-      rootContent = getter_AddRefs(mDocument->GetRootContent());
-      if (rootContent) {
-        rootContent->List(stdout, 0);
+      if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
+        printf("Current content model:\n");
+        nsCOMPtr<nsIContent> rootContent;
+        rootContent = getter_AddRefs(mDocument->GetRootContent());
+        if (rootContent) {
+          rootContent->List(stdout, 0);
+        }
       }
     }
   }

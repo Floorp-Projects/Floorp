@@ -193,13 +193,20 @@ NS_NewEmptyFrame(nsIFrame** aNewFrame)
 
 NS_IMPL_ZEROING_OPERATOR_NEW(nsFrame)
 
+MOZ_DECL_CTOR_COUNTER(nsFrame);
+
 nsFrame::nsFrame()
 {
-  mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW | NS_FRAME_IS_DIRTY;
+  MOZ_COUNT_CTOR(nsFrame);
+
+  mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW |
+    NS_FRAME_IS_DIRTY;
 }
 
 nsFrame::~nsFrame()
 {
+  MOZ_COUNT_DTOR(nsFrame);
+
   NS_IF_RELEASE(mContent);
   NS_IF_RELEASE(mStyleContext);
   if (nsnull != mView) {
@@ -207,7 +214,6 @@ nsFrame::~nsFrame()
     mView->Destroy();
     mView = nsnull;
   }
-
 }
 
 /////////////////////////////////////////////////////////////////////////////
