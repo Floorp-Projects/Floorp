@@ -1137,22 +1137,22 @@ static void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* 
             if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
               nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
               if (childWidget != nsnull) {
-                PRBool visible = PR_FALSE;
-                childWidget->IsVisible(visible);
-
                 nsIView* view = nsView::GetViewFor(childWidget);
-                PRBool floating = PR_FALSE;
-                view->GetFloating(floating);               
 
-                if (visible && !floating) {
-                  nsRect bounds;
-                  float p2t;
+                nsViewVisibility visible = nsViewVisibility_kHide;
+                view->GetVisibility(visible);
 
-                  childWidget->GetBounds(bounds);
-                  aContext->GetDevUnitsToAppUnits(p2t);
-                  bounds.ScaleRoundIn(p2t);
-                  if (bounds.width > 0 && bounds.height > 0) {
-                    aRgn->Union(bounds.x, bounds.y, bounds.width, bounds.height);
+                if (visible == nsViewVisibility_kShow) {
+                  PRBool floating = PR_FALSE;
+                  view->GetFloating(floating);               
+
+                  if (!floating) {
+                    nsRect bounds;
+
+                    view->GetBounds(bounds);
+                    if (bounds.width > 0 && bounds.height > 0) {
+                      aRgn->Union(bounds.x, bounds.y, bounds.width, bounds.height);
+                    }
                   }
                 }
               }
