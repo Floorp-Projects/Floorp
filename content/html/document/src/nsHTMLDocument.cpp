@@ -216,6 +216,10 @@ nsHTMLDocument::nsHTMLDocument()
   mForms = nsnull;
   mIsWriting = 0;
   mWriteLevel = 0;
+
+#ifdef IBMBIDI
+  mTexttype = IBMBIDI_TEXTTYPE_LOGICAL;
+#endif
   
   if (gRefCntRDFService++ == 0)
   {
