@@ -26,11 +26,7 @@
 
 #include "nsIDOMBrowserAppCore.h"
 #include "nsBaseAppCore.h"
-#ifdef NECKO
-#include "nsIPrompt.h"
-#else
-#include "nsINetSupport.h"
-#endif
+
 #include "nsIStreamObserver.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIObserver.h"
@@ -51,11 +47,6 @@ class nsIFindComponent;
 
 class nsBrowserAppCore : public nsBaseAppCore, 
                          public nsIDOMBrowserAppCore,
-#ifdef NECKO
-                         public nsIPrompt,
-#else
-                         public nsINetSupport,
-#endif
                          //     public nsIStreamObserver,
                          public nsIDocumentLoaderObserver,
                          public nsIObserver,
@@ -134,37 +125,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
                                         const char *aCommand );
 #endif
 
-#ifdef NECKO
-    // nsIPrompt
-    NS_IMETHOD Alert(const PRUnichar *text);
-    NS_IMETHOD Confirm(const PRUnichar *text, PRBool *_retval);
-    NS_IMETHOD ConfirmCheck(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
-    NS_IMETHOD ConfirmYN(const PRUnichar *text, PRBool *_retval);
-    NS_IMETHOD ConfirmCheckYN(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval);
-    NS_IMETHOD Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval);
-    NS_IMETHOD PromptUsernameAndPassword(const PRUnichar *text, PRUnichar **user, PRUnichar **pwd, PRBool *_retval);
-    NS_IMETHOD PromptPassword(const PRUnichar *text, PRUnichar **pwd, PRBool *_retval);
-#else
-    // nsINetSupport
-    NS_IMETHOD_(void) Alert(const nsString &aText);
-  
-    NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
 
-
-    NS_IMETHOD_(PRBool) ConfirmYN(const nsString &aText);
-
-
-    NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
-                               const nsString &aDefault,
-                               nsString &aResult);
-
-    NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
-                                              nsString &aUser,
-                                              nsString &aPassword);
-
-    NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
-                                       nsString &aPassword);  
-#endif
 
     // nsIObserver
     NS_DECL_IOBSERVER
