@@ -5117,7 +5117,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                                styleContext, PR_FALSE);
     }
     
-  } else if (nsHTMLAtoms::inlineFrame == frameType) {
+  } else if (nsLayoutAtoms::inlineFrame == frameType) {
     rv = NS_NewInlineFrame(newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
@@ -5133,7 +5133,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                                styleContext, PR_FALSE);
     }
   
-  } else if (nsHTMLAtoms::blockFrame == frameType) {
+  } else if (nsLayoutAtoms::blockFrame == frameType) {
     rv = NS_NewBlockFrame(newFrame, 0);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
