@@ -24,7 +24,6 @@
 #include "Call.h"
 #include "nsHashtable.h"
 
-
 class bcOIDKey : public nsHashKey { 
 protected:
     bcOID key;
@@ -57,8 +56,14 @@ ORB::~ORB() {
 }
 
 bcOID ORB::RegisterStub(bcIStub *stub) {
-    stubs->Put(new bcOIDKey(currentID),stub);
-    return currentID++;
+    bcOID oid = GenerateOID();
+    stubs->Put(new bcOIDKey(oid),stub);
+    return oid;
+}
+
+void ORB:: RegisterStubWithOID(bcIStub *stub, bcOID *oid) {
+    stubs->Put(new bcOIDKey(*oid),stub);
+    return;
 }
 
 bcICall * ORB::CreateCall(bcIID *iid, bcOID *oid, bcMID mid) {
@@ -85,6 +90,24 @@ bcIStub * ORB::GetStub(bcOID *oid) {
     delete key;
     return (bcIStub*)tmp;
 }
+
+
+
+struct bcOIDstruct {
+    PRUint16 high;
+    PRUint16 low;
+};
+bcOID ORB::GenerateOID() {
+    bcOID oid;
+    bcOIDstruct oidStruct;
+    oidStruct.low = currentID++;
+    oidStruct.high = ((PRUint32)this);
+    oid = *(bcOID*)&oidStruct;
+    return oid;
+
+}
+
+
 
 
 

@@ -30,11 +30,13 @@ public:
     ORB();
     virtual ~ORB();
     virtual bcOID RegisterStub(bcIStub *stub);
+    virtual void RegisterStubWithOID(bcIStub *stub, bcOID *oid);
     virtual bcICall * CreateCall(bcIID *, bcOID *, bcMID);
     virtual int SendReceive(bcICall *);
 private:
     bcIStub * GetStub(bcOID *);
+    bcOID GenerateOID();
     nsHashtable *stubs;
-    int currentID;
+    unsigned int currentID;
 };
 #endif
