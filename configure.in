@@ -1676,6 +1676,12 @@ MOZ_ARG_ENABLE_BOOL(pedantic,
   [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic" ])
 
+dnl pass -Wno-long-long to the compiler
+MOZ_ARG_ENABLE_BOOL(ignore-no-long-long-warning,
+[  --enable-ignore-no-long-long-warning       pass -Wno-long-long to the compiler],
+  [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-long-long"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-long-long" ])
+
 dnl Note: This should not be disabled if --enable-oji is set
 MOZ_ARG_DISABLE_BOOL(shared,
 [  --disable-shared        Disable building of internal shared libs],
