@@ -67,6 +67,8 @@
 #define SIZEMODE_MAXIMIZED NS_LITERAL_STRING("maximized")
 #define SIZEMODE_MINIMIZED NS_LITERAL_STRING("minimized")
 
+#define WINDOWTYPE_ATTRIBUTE NS_LITERAL_STRING("windowtype")
+
 // CIDs
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -787,19 +789,18 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
   nsCOMPtr<nsIXULWindow> ourXULWindow(this);
 
   nsAutoString windowType;
-  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("windowtype"), windowType);
+  rv = windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
   if (NS_FAILED(rv))
     return;
 
   nsCOMPtr<nsIDOMWindowInternal> listDOMWindow;
 
-  PRUnichar* wtype = windowType.ToNewUnicode();
   // one full pass through all windows of this type. repeat until
   // no collisions.
   do {
     keepTrying = PR_FALSE;
     nsCOMPtr<nsISimpleEnumerator> windowList;
-    wm->GetXULWindowEnumerator(wtype, getter_AddRefs(windowList));
+    wm->GetXULWindowEnumerator(windowType.GetUnicode(), getter_AddRefs(windowList));
 
     if (!windowList)
       break;
@@ -841,7 +842,6 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
       }
     } while(1);
   } while (keepTrying);
-  nsMemory::Free(wtype);
 
   // if we found a competing DOM window (and therefore moved our window)
   // sanity constrain the position against that window's screen
