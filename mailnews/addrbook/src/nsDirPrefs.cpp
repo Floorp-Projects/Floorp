@@ -36,7 +36,6 @@
 
 #include "plstr.h"
 #include "prmem.h"
-#include "csid.h"
 #include "xp_str.h"
 #include "xp_file.h"
 #include "prprf.h"
@@ -225,6 +224,18 @@ typedef struct DIR_Callback
 	struct DIR_Callback *next;
 } DIR_Callback;
 
+/* Codeset type */
+#define SINGLEBYTE   0x0000 /* 0000 0000 0000 0000 =    0 */
+#define MULTIBYTE    0x0100 /* 0000 0001 0000 0000 =  256 */
+
+/* Code Set IDs */
+/* CS_DEFAULT: used if no charset param in header */
+/* CS_UNKNOWN: used for unrecognized charset */
+
+                    /* type                  id   */
+#define CS_DEFAULT    (SINGLEBYTE         |   0) /*    0 */
+#define CS_UTF8       (MULTIBYTE          |  34) /*  290 */
+#define CS_UNKNOWN    (SINGLEBYTE         | 255) /* 255 */
 
 /* Default settings for site-configurable prefs */
 #define kDefaultTokenSeps " ,."
