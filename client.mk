@@ -213,7 +213,7 @@ CVSCO_LDAPCSDK = cvs $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $
 ifneq ($(BUILD_MODULES),all)
   MOZ_CO_MODULE := $(filter-out $(NSPRPUB_DIR) security directory/c-sdk, $(BUILD_MODULE_DIRS))
   MOZ_CO_MODULE += allmakefiles.sh client.mk aclocal.m4 configure configure.in
-  MOZ_CO_MODULE += Makefile.in
+  MOZ_CO_MODULE += Makefile.in tools/elf-dynstr-gc
   MOZ_CO_MODULE := $(addprefix mozilla/, $(MOZ_CO_MODULE))
 ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_DIRS)))
   CVSCO_NSPR :=
