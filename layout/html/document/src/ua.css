@@ -191,7 +191,7 @@ a:out-of-date {
 }
 a:link img {
   display: inline;
-  border: 2px solid blue;
+  border: 2px solid;
   text-decoration: none;
 }
 a:visited img {
