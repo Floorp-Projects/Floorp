@@ -21,10 +21,7 @@
    -   Bob Lord <lord@netscape.com>
    -   Ian McGreer <mcgreer@netscape.com>
   -->
-
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <overlay id="certViewerOverlay" 
          xmlns:html="http://www.w3.org/1999/xhtml" 

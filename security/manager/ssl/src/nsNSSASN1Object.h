@@ -13,11 +13,10 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
- * Copyright (C) 2000 Netscape Communications Corporation.  All
+ * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
  * Contributor(s):
- *  Ian McGreer <mcgreer@netscape.com>
  *  Javier Delgadillo <javi@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
@@ -31,67 +30,63 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *
  */
+#ifndef _NSSASN_H_
+#define _NSSASN_H_
 
-#ifndef _NS_NSSCERTIFICATE_H_
-#define _NS_NSSCERTIFICATE_H_
-
+#include "nscore.h"
 #include "nsIX509Cert.h"
-#include "nsIX509CertDB.h"
+#include "nsIASN1Outliner.h"
+#include "nsIOutlinerView.h"
+#include "nsIOutlinerSelection.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
 
-#include "prtypes.h"
-#include "cert.h"
-#include "secitem.h"
+//
+// Read comments in nsIX509Cert.idl for a description of the desired
+// purpose for this ASN1 interface implementation.
+//
 
-class nsINSSComponent;
-
-/* Certificate */
-class nsNSSCertificate : public nsIX509Cert 
+class nsNSSASN1Sequence : public nsIASN1Sequence
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIX509CERT
+  NS_DECL_NSIASN1SEQUENCE
+  NS_DECL_NSIASN1OBJECT
 
-  nsNSSCertificate(char *certDER, int derLen);
-  nsNSSCertificate(CERTCertificate *cert);
-  /* from a request? */
-  virtual ~nsNSSCertificate();
-  CERTCertificate *GetCert();
-
+  nsNSSASN1Sequence();
+  virtual ~nsNSSASN1Sequence();
+  /* additional members */
 private:
-  CERTCertificate *mCert;
-  nsCOMPtr<nsIASN1Object> mASN1Structure;
-  nsresult CreateASN1Struct();
-  nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
-                                          nsINSSComponent *nssComponent);
-
-  PRBool verifyFailed(PRUint32 *_verified);
-
-  nsresult GetUsageArray(char     *suffix,
-                         PRUint32 *_verified,
-                         PRUint32 *_count,
-                         PRUnichar **tmpUsages);
+  nsCOMPtr<nsISupportsArray> mASN1Objects;
+  nsString mDisplayName;
+  nsString mDisplayValue;
+  PRUint32 mType;
+  PRUint32 mTag;
+  PRBool   mProcessObjects;
+  PRBool   mShowObjects;
 };
 
-class nsNSSCertificateDB : public nsIX509CertDB
+class nsNSSASN1PrintableItem : public nsIASN1PrintableItem
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIX509CERTDB
+  NS_DECL_NSIASN1PRINTABLEITEM
+  NS_DECL_NSIASN1OBJECT
 
-  nsNSSCertificateDB(); 
-  virtual ~nsNSSCertificateDB();
-
+  nsNSSASN1PrintableItem();
+  virtual ~nsNSSASN1PrintableItem();
+  /* additional members */
 private:
-
-  void getCertNames(CERTCertList *certList,
-                    PRUint32      type, 
-                    PRUint32     *_count,
-                    PRUnichar  ***_certNameList);
-
-  PRUint32 getCertType(CERTCertificate *cert);
-
+  nsString mDisplayName;
+  nsString mValue;
+  PRUint32 mType;
+  PRUint32 mTag;
+  unsigned char *mData;
+  PRUint32       mLen;
 };
 
-#endif /* _NS_NSSCERTIFICATE_H_ */
+nsresult CreateFromDER(unsigned char *data,
+                       unsigned int   len,
+                       nsIASN1Object **retval);
+#endif //_NSSASN_H_

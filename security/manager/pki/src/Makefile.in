@@ -52,6 +52,7 @@ CPPSRCS = \
 	nsNSSDialogs.cpp \
 	nsPKIModule.cpp \
 	nsPKIParamBlock.cpp \
+        nsASN1Outliner.cpp \
 	$(NULL)
 
 REQUIRES = nspr security js xpcom string dom pref intl locale windowwatcher appshell necko pipnss

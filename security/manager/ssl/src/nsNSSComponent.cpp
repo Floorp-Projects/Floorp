@@ -161,6 +161,9 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
   } else {
     outString.SetLength(0);
   }
+  if (ptrv)
+    nsMemory::Free(ptrv);
+
   return NS_ERROR_FAILURE;
 }
 
@@ -178,7 +181,8 @@ nsNSSComponent::InstallLoadableRoots()
         hasRoot = PR_TRUE;
         break;
       }    
-    }     
+    }
+    PK11_FreeSlotList(slotList);
   }
   if (!hasRoot) {
     nsresult rv;

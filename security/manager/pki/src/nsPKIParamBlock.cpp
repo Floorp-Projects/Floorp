@@ -40,7 +40,7 @@
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsPKIParamBlock, nsIPKIParamBlock,
                                                nsIDialogParamBlock)
 
-nsPKIParamBlock::nsPKIParamBlock() : mSupports(nsnull),mNumISupports(0)
+nsPKIParamBlock::nsPKIParamBlock()
 {
   NS_INIT_REFCNT();
 }
@@ -54,17 +54,6 @@ nsPKIParamBlock::Init()
 
 nsPKIParamBlock::~nsPKIParamBlock()
 {
-  if (mNumISupports > 0) {
-    NS_ASSERTION (mSupports, "mNumISupports and mSupports out of sync");
-    if (mSupports) {
-      PRIntn i;
- 
-      for (i=0; i<mNumISupports; i++) {
-        NS_IF_RELEASE(mSupports[i]);
-      }
-      delete [] mSupports;
-    }
-  } 
 }
 
 
@@ -99,44 +88,17 @@ nsPKIParamBlock::SetString(PRInt32 inIndex, const PRUnichar *inString)
   return mDialogParamBlock->SetString(inIndex, inString);
 }
 
-/* void setNumberISupports (in PRInt32 numISupports); */
-NS_IMETHODIMP 
-nsPKIParamBlock::SetNumberISupports(PRInt32 numISupports)
-{
-  if (mSupports) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  NS_ASSERTION(numISupports > 0, "passing in invalid number");
-  mNumISupports = numISupports;
-  mSupports = new nsISupports*[mNumISupports];
-  if (mSupports == nsnull) {
-    mNumISupports = 0;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  memset(mSupports, 0, sizeof(nsISupports*)*mNumISupports);
-  return NS_OK;
-}
-
 /* void setISupportAtIndex (in PRInt32 index, in nsISupports object); */
 NS_IMETHODIMP 
 nsPKIParamBlock::SetISupportAtIndex(PRInt32 index, nsISupports *object)
 {
   if (!mSupports) {
-    mNumISupports = kNumISupports;
-    mSupports = new nsISupports*[mNumISupports];
+    mSupports = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
     if (mSupports == nsnull) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    memset(mSupports, 0, sizeof(nsISupports*)*mNumISupports);
   }
-  nsresult rv = InBounds(index, mNumISupports);
-  if (rv != NS_OK)
-    return rv;
-
-  mSupports[index] = object;
-  NS_IF_ADDREF(mSupports[index]);
-  return NS_OK;
+  return mSupports->InsertElementAt(object, index-1);
 }
 
 /* nsISupports getISupportAtIndex (in PRInt32 index); */
@@ -144,12 +106,8 @@ NS_IMETHODIMP
 nsPKIParamBlock::GetISupportAtIndex(PRInt32 index, nsISupports **_retval)
 {
   NS_ENSURE_ARG(_retval);
-  nsresult rv = InBounds(index, mNumISupports);
-  if (rv != NS_OK)
-    return rv;
 
-  *_retval = mSupports[index];
-  NS_IF_ADDREF(*_retval);
+  *_retval = mSupports->ElementAt(index-1);
   return NS_OK;
 }
 

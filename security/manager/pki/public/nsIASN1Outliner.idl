@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Javier Delgadillo <javi@netscape.com>
+ *   Ian McGreer <mcgreer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,34 +32,23 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#ifndef _NSPKIPARAMBLOCK_
-#define _NSPKIPARAMBLOCK_
-#include "nsCOMPtr.h"
-#include "nsIPKIParamBlock.h"
-#include "nsIDialogParamBlock.h"
-#include "nsISupportsArray.h"
 
-#define NS_PKIPARAMBLOCK_CID \
-  { 0x0bec75a8, 0x1dd2, 0x11b2, \
-    { 0x86, 0x3a, 0xf6, 0x9f, 0x77, 0xc3, 0x13, 0x71 }}
+#include "nsISupports.idl"
+#include "nsIOutlinerView.idl"
+#include "nsIX509Cert.idl"
 
-#define NS_PKIPARAMBLOCK_CONTRACTID "@mozilla.org/security/pkiparamblock;1"
+[scriptable, uuid(c727b2f2-1dd1-11b2-95df-f63c15b4cd35)]
+interface nsIASN1Outliner : nsIOutlinerView {
 
-class nsPKIParamBlock : public nsIPKIParamBlock,
-                        public nsIDialogParamBlock
-{
-public:
- 
-  nsPKIParamBlock();
-  virtual ~nsPKIParamBlock();
-  nsresult Init();
+  void loadASN1Structure(in nsIASN1Object asn1Object);
 
-  NS_DECL_NSIPKIPARAMBLOCK
-  NS_DECL_NSIDIALOGPARAMBLOCK
-  NS_DECL_ISUPPORTS
-private:
-  nsCOMPtr<nsIDialogParamBlock> mDialogParamBlock;
-  nsCOMPtr<nsISupportsArray>    mSupports;
+  wstring getDisplayData(in unsigned long index);
+
 };
 
-#endif //_NSPKIPARAMBLOCK_
+%{C++
+
+#define NS_ASN1OUTLINER_CONTRACTID "@mozilla.org/security/nsASN1Outliner;1"
+
+%}
+

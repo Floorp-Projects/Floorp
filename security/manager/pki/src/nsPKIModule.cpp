@@ -26,9 +26,11 @@
 
 #include "nsNSSDialogs.h"
 #include "nsPKIParamBlock.h"
+#include "nsASN1Outliner.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSDialogs, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPKIParamBlock, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSASN1Outliner)
 
 static nsModuleComponentInfo components[] =
 {
@@ -37,6 +39,13 @@ static nsModuleComponentInfo components[] =
     NS_NSSDIALOGS_CID,
     NS_NSSDIALOGS_CONTRACTID,
     nsNSSDialogsConstructor
+  },
+
+  {
+    "ASN1 Outliner",
+    NS_NSSASN1OUTINER_CID,
+    NS_ASN1OUTLINER_CONTRACTID,
+    nsNSSASN1OutlinerConstructor
   },
 
   { "PKI Parm Block", 

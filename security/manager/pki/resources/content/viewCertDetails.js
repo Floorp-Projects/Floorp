@@ -27,37 +27,36 @@ const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
+const nsIASN1Object = Components.interfaces.nsIASN1Object;
+const nsIASN1Sequence = Components.interfaces.nsIASN1Sequence;
+const nsIASN1PrintableItem = Components.interfaces.nsIASN1PrintableItem;
+const nsIASN1Outliner = Components.interfaces.nsIASN1Outliner;
+const nsASN1Outliner = "@mozilla.org/security/nsASN1Outliner;1"
+
+var bundle;
 
 function AddCertChain(node, chain, idPrefix)
 {
   var idfier = idPrefix+"chain_";
-  var child = [document.getElementById(node)];
-  var item = document.createElement("treeitem");
-  item.setAttribute("id", idfier + "0");
-  item.setAttribute("container", "true");
-  item.setAttribute("open", "true");
-  var items = [item];
-  var rows = [document.createElement("treerow")];
-  var cell = document.createElement("treecell");
-  cell.setAttribute("class", "treecell-indent");
-  cell.setAttribute("label", chain[0]);
-  var cells = [cell];
-  for (var i=1; i<chain.length; i++) {
-    child[i] = items[i-1];
-    item = document.createElement("treeitem");
-    item.setAttribute("id", idfier + i);
-    item.setAttribute("container", "true");
-    items[i] = item;
-    rows[i] = document.createElement("treerow");
-    cell = document.createElement("treecell");
-    cell.setAttribute("class", "treecell-indent");
-    cell.setAttribute("label", chain[i]);
-    cells[i] = cell;
-  }
-  for (i=chain.length-1; i>=0; i--) {
-    rows[i].appendChild(cells[i]);
-    items[i].appendChild(rows[i]);
-    child[i].appendChild(items[i]);
+  var child = document.getElementById(node);
+  var numCerts = chain.Count();
+  var currCert;
+  var displayVal;
+  var addTwistie;
+  for (var i=numCerts-1; i>=0; i--) {
+    currCert = chain.GetElementAt(i);
+    currCert = currCert.QueryInterface(nsIX509Cert);
+    if (currCert.commonName) {
+      displayVal = currCert.commonName;
+    } else {
+      displayVal = currCert.windowTitle;
+    }
+    if (0 == i) {
+      addTwistie = false;
+    } else {
+      addTwistie = true;
+    }
+    child = addChildrenToTree(child, displayVal, null,addTwistie);
   }
 }
 
@@ -76,13 +75,14 @@ function setWindowName()
 {
   //  Get the cert from the cert database
   var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-
   var windowReference=document.getElementById('certDetails');
   myName = self.name;
+  bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var cert;
 
+  certDetails = bundle.GetStringFromName('certDetails');
   if (myName != "_blank") {
-    windowReference.setAttribute("title","Certificate Detail: \""+myName+"\"");
+    windowReference.setAttribute("title",certDetails+'"'+myName+'"');
     //  Get the token
     //  XXX ignore this for now.  NSS will find the cert on a token
     //      by "tokenname:certname", which is what we have.
@@ -97,7 +97,7 @@ function setWindowName()
     var isupport = pkiParams.getISupportAtIndex(1);
     cert = isupport.QueryInterface(nsIX509Cert);
     windowReference.setAttribute("title", 
-                                 "Certificate Detail: \""+cert.windowTitle+'"');
+                                 certDetails+'"'+cert.windowTitle+'"');
   }
 
   //
@@ -105,66 +105,88 @@ function setWindowName()
   //
 
   //  The chain of trust
-  var chainEnum = cert.getChain();
-  chainEnum.first();
-  var c = 0;
-  var chain = [];
-  try {
-  while (true) {
-    var node = chainEnum.currentItem();
-    node = node.QueryInterface(nsIX509Cert);
-    chain[c++] = node.commonName;
-    chainEnum.next();
-  }
-  } catch (e) {}
-  AddCertChain("chain", chain.reverse(),"");
+  var chain = cert.getChain();
+  AddCertChain("chain", chain,"");
   AddCertChain("chainDump", chain,"dump_");
   DisplayGeneralDataFromCert(cert);
   BuildPrettyPrint(cert);
 }
 
-function addTreeItemToTreeChild(treeChild, label)
+ 
+function addChildrenToTree(parentTree,label,value,addTwistie)
+{
+  var treeChild1 = document.createElement("treechildren");
+  var treeElement = addTreeItemToTreeChild(treeChild1,label,value,addTwistie);
+  parentTree.appendChild(treeChild1);
+  return treeElement;
+}
+
+function addTreeItemToTreeChild(treeChild,label,value,addTwistie)
 {
   var treeElem1 = document.createElement("treeitem");
-  treeElem1.setAttribute("container","true");
-  treeElem1.setAttribute("open","true");
-  treeElem1.setAttribute("class","treecell-indent");
+  if (addTwistie) {
+    treeElem1.setAttribute("container","true");
+    treeElem1.setAttribute("open","true");
+  }
   var treeRow = document.createElement("treerow");
   var treeCell = document.createElement("treecell");
   treeCell.setAttribute("class", "treecell-indent");
   treeCell.setAttribute("label",label);
+  if (value)
+    treeCell.setAttribute("display",value);
   treeRow.appendChild(treeCell);
   treeElem1.appendChild(treeRow);
   treeChild.appendChild(treeElem1);
   return treeElem1;
 }
 
-function addChildrenToTree(parentTree,label)
+function removeChildrenInTree(tree)
 {
-  var treeChild1 = document.createElement("treechildren");
-  var treeElement = addTreeItemToTreeChild(treeChild1, label);
-  parentTree.appendChild(treeChild1);
-  return treeElement;
+  while (tree.firstChild)
+    tree.removeChild(tree.firstChild);
+}
+
+function displaySelected() {
+  var asn1Outliner = document.getElementById('prettyDumpOutliner').
+                     outlinerBoxObject.view.QueryInterface(nsIASN1Outliner);
+  var items = asn1Outliner.selection;
+  if (items.currentIndex != -1) {
+    var certDumpVal = document.getElementById('certDumpVal');
+    removeChildrenInTree(certDumpVal);
+    // Since the tree widget doesn't do the right thing for new lines,
+    // I'll interpret them here.
+    var value = asn1Outliner.getDisplayData(items.currentIndex);
+    var strings = value.split("\n");
+    var i;
+    var children = document.createElement("treechildren");
+    certDumpVal.appendChild(children);
+    for (i=0;strings[i]!=null;i++) {
+      addTreeItemToTreeChild(children,strings[i],null,false);
+    }
+  }
 }
 
 function BuildPrettyPrint(cert)
 {
-  // For now, I'm just gonna build some dummy stuff
-  // just to get the helper functions I need up and
-  // running.
-  var prettyPrintBox = document.getElementById("prettyPrintTree");
-  var tree = document.createElement("tree");
-  prettyPrintBox.appendChild(tree);
-  var treeChildren = addChildrenToTree(tree,"Top Level"); 
-  var childOfFirstChild = addChildrenToTree(treeChildren, "Second Level:1");
-  var levelone2 = addChildrenToTree(treeChildren,"Second Level:2");
-  var levelthree1 = addChildrenToTree(childOfFirstChild,"Third Level:1");
+  var certDumpOutliner = Components.classes[nsASN1Outliner].
+                          createInstance(nsIASN1Outliner);
+  certDumpOutliner.loadASN1Structure(cert.ASN1Structure);
+  document.getElementById('prettyDumpOutliner').
+           outlinerBoxObject.view =  certDumpOutliner;
+}
+
+function addAttributeFromCert(nodeName, value)
+{
+  var node = document.getElementById(nodeName);
+  if (!value) {
+    value = bundle.GetStringFromName('notPresent');  
+  }
+  node.setAttribute('value',value)
 }
 
 function DisplayGeneralDataFromCert(cert)
 {
   //  Verification and usage
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var verifystr = "";
   var o1 = {};
   var o2 = {};
@@ -197,37 +219,21 @@ function DisplayGeneralDataFromCert(cert)
   }
 
   //  Common Name
-  var cn=document.getElementById('commonname');
-  cn.setAttribute("value", cert.commonName);
-
+  addAttributeFromCert('commonname', cert.commonName);
   //  Organization
-  var org=document.getElementById('organization');
-  org.setAttribute("value", cert.organization);
+  addAttributeFromCert('organization', cert.organization);
   //  Organizational Unit
-  var ou=document.getElementById('orgunit');
-  ou.setAttribute("value", cert.organizationalUnit);
-
+  addAttributeFromCert('orgunit', cert.organizationalUnit);
   //  Subject Name
-  var subn=document.getElementById('subjectname');
-  subn.setAttribute("value", cert.subjectName);
-
+  addAttributeFromCert('subjectname',cert.subjectName);
   //  Issuer Name
-  var issn=document.getElementById('issuername');
-  issn.setAttribute("value", cert.issuerName);
-
+  addAttributeFromCert('issuername',cert.issuerName);
   //  Serial Number
-  var sern=document.getElementById('serialnumber');
-  sern.setAttribute("value", cert.serialNumber);
-
+  addAttributeFromCert('serialnumber',cert.serialNumber);
   //  RSA Public Modulus
-  var rsap=document.getElementById('rsapubmodulus');
-  rsap.setAttribute("value", cert.rsaPubModulus);
-
+  addAttributeFromCert('rsapubmodulus',cert.rsaPubModulus);
   //  SHA1 Fingerprint
-  var sha1=document.getElementById('sha1fingerprint');
-  sha1.setAttribute("value", cert.sha1Fingerprint);
-
+  addAttributeFromCert('sha1fingerprint',cert.sha1Fingerprint);
   //  MD5 Fingerprint
-  var md5=document.getElementById('md5fingerprint');
-  md5.setAttribute("value", cert.md5Fingerprint);
+  addAttributeFromCert('md5fingerprint',cert.md5Fingerprint);
 }

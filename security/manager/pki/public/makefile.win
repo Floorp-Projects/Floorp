@@ -50,6 +50,7 @@ XPIDL_INCLUDES=-I$(DEPTH)\dist\idl
 
 XPIDLSRCS= \
     .\nsIPKIParamBlock.idl \
+    .\nsIASN1Outliner.idl \
     $(NULL)
 
 

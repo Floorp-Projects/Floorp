@@ -81,4 +81,5 @@
 <!ENTITY certmgr.backup.label "Backup">
 <!ENTITY certmgr.backupall.label "Backup All">
 <!ENTITY certmgr.restore.label "Restore">
+<!ENTITY certmgr.details.label "Certificate Layout">
 
