@@ -248,6 +248,18 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
   }
 }
 
+NS_IMETHODIMP_(void)       // XXX This may be temporary - rods
+GlobalWindowImpl::GetWebShell(nsIWebShell **aWebShell)
+{
+  if (nsnull != mWebShell)  {
+    *aWebShell = mWebShell;
+    NS_ADDREF(mWebShell);
+  } else {
+    //*mWebShell = nsnull;
+  }
+
+}
+
 NS_IMETHODIMP_(void)       
 GlobalWindowImpl::SetOpenerWindow(nsIDOMWindow *aOpener)
 {
