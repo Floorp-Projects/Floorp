@@ -49,6 +49,7 @@
 #include "nsIStringBundle.h"
 #include "prefapi.h"
 #include "prmem.h"
+#include "pldhash.h"
 
 #include "nsIFileSpec.h"  // this should be removed eventually
 #include "prefapi_private_data.h"
@@ -70,7 +71,9 @@ static NS_DEFINE_CID(kSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 // Prototypes
 extern PrefResult pref_UnlockPref(const char *key);
-PR_STATIC_CALLBACK(PRIntn) pref_enumChild(PLHashEntry *he, int i, void *arg);
+PR_STATIC_CALLBACK(PLDHashOperator)
+  pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
+                 PRUint32 i, void *arg);
 static int PR_CALLBACK NotifyObserver(const char *newpref, void *data);
 
 // this needs to be removed!
@@ -817,13 +820,16 @@ nsresult nsPrefBranch::getValidatedPrefName(const char *aPrefName, const char **
   return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PRIntn) pref_enumChild(PLHashEntry *he, int i, void *arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
+               PRUint32 i, void *arg)
 {
-  EnumerateData *d = (EnumerateData *) arg;
-  if (PL_strncmp((char *)he->key, d->parent, PL_strlen(d->parent)) == 0) {
-    d->pref_list->AppendElement((void *)he->key);
+  PrefHashEntry *he = NS_STATIC_CAST(PrefHashEntry*, heh);
+  EnumerateData *d = NS_REINTERPRET_CAST(EnumerateData *, arg);
+  if (PL_strncmp(he->key, d->parent, PL_strlen(d->parent)) == 0) {
+    d->pref_list->AppendElement((void*)he->key);
   }
-  return HT_ENUMERATE_NEXT;
+  return PL_DHASH_NEXT;
 }
 
 

@@ -58,7 +58,7 @@
 #include "sechash.h"
 #endif
 #include "plstr.h"
-#include "plhash.h"
+#include "pldhash.h"
 #include "plbase64.h"
 #include "prlog.h"
 #include "prmem.h"
@@ -75,57 +75,31 @@ extern JSRuntime* PREF_GetJSRuntime();
 #define BOGUS_DEFAULT_INT_PREF_VALUE (-5632)
 #define BOGUS_DEFAULT_BOOL_PREF_VALUE (-2)
 
-typedef union
+void PR_CALLBACK
+clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
-    char*       stringVal;
-    PRInt32     intVal;
-    PRBool      boolVal;
-} PrefValue;
- 
-typedef struct 
-{
-    PrefValue   defaultPref;
-    PrefValue   userPref;
-    PRUint8     flags;
-} PrefNode;
-
-/*-----------------------
-** Hash table allocation
-**----------------------*/
-
-PR_STATIC_CALLBACK(void*) pref_AllocTable(void *pool, size_t size)
-{
-    return malloc(size);
-}
-
-PR_STATIC_CALLBACK(void) pref_FreeTable(void *pool, void *item)
-{
-    free(item);     /* free items? */
-}
-
-PR_STATIC_CALLBACK(PLHashEntry*) pref_AllocEntry(void *pool, const void *key)
-{
-    return (PLHashEntry*)malloc(sizeof(PLHashEntry));
-}
-
-PR_STATIC_CALLBACK(void) pref_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
-{
-    PrefNode *pref = (PrefNode *) he->value;
-    if (pref)
+    PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry *, entry);
+    if (pref->flags & PREF_STRING)
     {
-        if (pref->flags & PREF_STRING)
-        {
-            PR_FREEIF(pref->defaultPref.stringVal);
-            PR_FREEIF(pref->userPref.stringVal);
-        }
-        PR_Free(he->value);
+        PR_FREEIF(pref->defaultPref.stringVal);
+        PR_FREEIF(pref->userPref.stringVal);
     }
+    PL_strfree((char*)pref->key);
+}
 
-    if (flag == HT_FREE_ENTRY)
-    {
-        PR_FREEIF(*(void**)&he->key);
-        PR_Free(he);
-    }
+PRBool PR_CALLBACK
+matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
+               const void* key)
+{
+    const PrefHashEntry *prefEntry =
+        NS_STATIC_CAST(const PrefHashEntry*,entry);
+    
+    if (prefEntry->key == key) return PR_TRUE;
+    
+    if (!prefEntry->key || !key) return PR_FALSE;
+
+    const char *otherKey = NS_REINTERPRET_CAST(const char*, key);
+    return (strcmp(prefEntry->key, otherKey) == 0);
 }
 
 PR_STATIC_CALLBACK(JSBool) pref_NativeDefaultPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
@@ -192,16 +166,24 @@ PRBool              gErrorOpeningUserPrefs = PR_FALSE;
 PRBool              gCallbacksEnabled = PR_FALSE;
 PRBool              gIsAnyPrefLocked = PR_FALSE;
 PRBool              gLockInfoRead = PR_FALSE;
-PLHashTable*        gHashTable = NULL;
-PRBool              gEnumeratingHashTable = PR_FALSE;
+PLDHashTable        gHashTable = { nsnull };
 char *              gSavedLine = NULL; 
 char *              gLockFileName = NULL;
 char *              gLockVendor = NULL;
-      
-PLHashAllocOps      pref_HashAllocOps = {
-                        pref_AllocTable, pref_FreeTable,
-                        pref_AllocEntry, pref_FreeEntry
-                    };
+
+
+static PLDHashTableOps     pref_HashTableOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashGetKeyStub,
+    PL_DHashStringKey,
+    matchPrefEntry,
+    PL_DHashMoveEntryStub,
+    clearPrefEntry,
+    PL_DHashFinalizeStub,
+    nsnull,
+};
+    
 
 /*----------------------------------------------------------------------------------------*/
 
@@ -234,7 +216,7 @@ JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 void JS_DLL_CALLBACK pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
 void pref_Alert(char* msg);
 PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
-static void* pref_HashTableLookup(const void *key);
+static inline PrefHashEntry* pref_HashTableLookup(const void *key);
   
 /* Computes the MD5 hash of the given buffer (not including the first line)
    and verifies the first line of the buffer expresses the correct hash in the form:
@@ -293,13 +275,12 @@ PRBool PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE, request = PR_FALSE;
 
-    /* --ML hash test */
-    if (!gHashTable)
-    gHashTable = PL_NewHashTable(2048, PL_HashString, PL_CompareStrings,
-            PL_CompareValues, &pref_HashAllocOps, NULL);
-    if (!gHashTable)
-        return PR_FALSE;
-
+    if (!gHashTable.ops) {
+        if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps, nsnull,
+                               sizeof(PrefHashEntry), 1024))
+            gHashTable.ops = nsnull;
+    }
+        
     if (!gMochaTaskState)
     {
         gMochaTaskState = PREF_GetJSRuntime();
@@ -441,9 +422,10 @@ void PREF_CleanupPrefs()
         }
     }
 
-    if (gHashTable)
-        PL_HashTableDestroy(gHashTable);
-    gHashTable = NULL;
+    if (gHashTable.ops) {
+        PL_DHashTableFinish(&gHashTable);
+        gHashTable.ops = nsnull;
+    }
 
     if (gSavedLine)
         free(gSavedLine);
@@ -515,7 +497,7 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
         /* Free up gSavedLine to avoid MLK. */
         if (gSavedLine) 
             free(gSavedLine);
-        gSavedLine = (char*)malloc(i+1);
+        gSavedLine = (char *)malloc(i + 1);
         if (!gSavedLine)
             return JS_FALSE;
         memcpy(gSavedLine, js_buffer, i);
@@ -714,15 +696,15 @@ PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt1
 }
 
 
-PrefResult
-pref_savePref(PLHashEntry *he, int i, void *arg)
+PLDHashOperator
+pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 {
     char **prefArray = (char**) arg;
-    PrefNode *pref = (PrefNode *) he->value;
+    PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry *, heh);
 
     PR_ASSERT(pref);
     if (!pref)
-        return PREF_NOERROR;
+        return PL_DHASH_NEXT;
 
     if (PREF_HAS_USER_VALUE(pref) && 
         pref_ValueChanged(pref->defaultPref, 
@@ -738,18 +720,18 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
             if (tmp_str)
             {
                 prefEntry = PR_smprintf("user_pref(\"%s\", \"%s\");",
-                                (char*)he->key, tmp_str);
+                                        pref->key, tmp_str);
                 PR_Free(tmp_str);
             }
         }
         else if (pref->flags & PREF_INT)
         {
-            prefEntry = PR_smprintf("user_pref(\"%s\", %ld);", (char*)he->key,
+            prefEntry = PR_smprintf("user_pref(\"%s\", %ld);", pref->key,
                             (long) pref->userPref.intVal);
         }
         else if (pref->flags & PREF_BOOL)
         {
-            prefEntry = PR_smprintf("user_pref(\"%s\", %s);", (char*)he->key,
+            prefEntry = PR_smprintf("user_pref(\"%s\", %s);", pref->key,
                             (pref->userPref.boolVal) ? "true" : "false");
         }
 
@@ -764,23 +746,23 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
             char *tmp_str = str_escape(pref->defaultPref.stringVal);
             if (tmp_str) {
                 prefEntry = PR_smprintf("user_pref(\"%s\", \"%s\");",
-                                (char*)he->key, tmp_str);
+                                        pref->key, tmp_str);
                 PR_Free(tmp_str);
             }
         }
         else if (pref->flags & PREF_INT)
         {
-            prefEntry = PR_smprintf("user_pref(\"%s\", %ld);", (char*)he->key,
+            prefEntry = PR_smprintf("user_pref(\"%s\", %ld);", pref->key,
                             (long) pref->defaultPref.intVal);
         }
         else if (pref->flags & PREF_BOOL)
         {
-            prefEntry = PR_smprintf("user_pref(\"%s\", %s);", (char*)he->key,
+            prefEntry = PR_smprintf("user_pref(\"%s\", %s);", pref->key,
                 (pref->defaultPref.boolVal) ? "true" : "false");
         }
         prefArray[i] = prefEntry;
     }
-    return PREF_NOERROR;
+    return PL_DHASH_NEXT;
 }
 
 int
@@ -806,34 +788,14 @@ pref_CompareStrings(const void *v1, const void *v2, void *unused)
 }
 
 
-PRBool
-pref_useDefaultPrefFile(void)
-{
-#ifdef PREF_BACKOUT
-
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  return PREF_Init("preferences.js");
-#elif defined(XP_MAC)
-  return PREF_Init("Netscape Preferences");
-#else /* XP_WIN */
-  return PREF_Init("prefs.js");
-#endif
-
-#else /* !PREF_BACKOUT */
-
-  return PR_FALSE;
-
-#endif /* PREF_BACKOUT */
-}
-
 PRBool PREF_HasUserPref(const char *pref_name)
 {
-    PrefNode *pref;
+    PrefHashEntry *pref;
     
-    if (!gHashTable && !pref_useDefaultPrefFile())
+    if (!gHashTable.ops)
         return PR_FALSE;
 
-    pref = (PrefNode*) pref_HashTableLookup(pref_name);
+    pref = pref_HashTableLookup(pref_name);
 
     if (!pref) return PR_FALSE;
     
@@ -846,12 +808,13 @@ PrefResult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * l
     PrefResult result = PREF_ERROR;
     char* stringVal;
     
-    PrefNode* pref;
+    PrefHashEntry* pref;
 
-    if (!gHashTable && !pref_useDefaultPrefFile())
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) pref_HashTableLookup(pref_name);
+    pref = pref_HashTableLookup(pref_name);
+    //    NS_ASSERTION(pref, pref_name);
 
     if (pref)
     {
@@ -872,6 +835,7 @@ PrefResult PREF_GetCharPref(const char *pref_name, char * return_buffer, int * l
             result = PREF_OK;
         }
     }
+
     return result;
 }
 
@@ -880,12 +844,12 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_defau
 {
     PrefResult result = PREF_ERROR;
     char* stringVal;    
-    PrefNode* pref;
+    PrefHashEntry* pref;
 
-    if (!gHashTable && !pref_useDefaultPrefFile())
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) pref_HashTableLookup(pref_name);
+    pref = pref_HashTableLookup(pref_name);
 
     if (pref && (pref->flags & PREF_STRING))
     {
@@ -905,12 +869,12 @@ PREF_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_defau
 PrefResult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_default)
 {
     PrefResult result = PREF_ERROR; 
-    PrefNode* pref;
+    PrefHashEntry* pref;
 
-    if (!gHashTable && !pref_useDefaultPrefFile())
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) pref_HashTableLookup(pref_name);
+    pref = pref_HashTableLookup(pref_name);
     if (pref && (pref->flags & PREF_INT))
     {
         if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
@@ -931,12 +895,13 @@ PrefResult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool ge
 PrefResult PREF_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool get_default)
 {
     PrefResult result = PREF_ERROR;
-    PrefNode* pref;
+    PrefHashEntry* pref;
 
-    if (!gHashTable && !pref_useDefaultPrefFile())
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) pref_HashTableLookup(pref_name);   
+    pref = pref_HashTableLookup(pref_name);
+    //NS_ASSERTION(pref, pref_name);
     if (pref && (pref->flags & PREF_BOOL))
     {
         if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
@@ -1070,19 +1035,20 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 #endif /* XP_MAC */
 
 /* Delete a branch. Used for deleting mime types */
-int PR_CALLBACK
-pref_DeleteItem(PLHashEntry *he, int i, void *arg)
+PLDHashOperator PR_CALLBACK
+pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 {
+    PrefHashEntry* he = NS_STATIC_CAST(PrefHashEntry*,heh);
     const char *to_delete = (const char *) arg;
     int len = PL_strlen(to_delete);
     
     /* note if we're deleting "ldap" then we want to delete "ldap.xxx"
         and "ldap" (if such a leaf node exists) but not "ldap_1.xxx" */
-    if (to_delete && (PL_strncmp((char*)he->key, to_delete, (PRUint32) len) == 0 ||
-        (len-1 == (int)PL_strlen((char*)he->key) && PL_strncmp((char*)he->key, to_delete, (PRUint32)(len-1)) == 0)))
-        return HT_ENUMERATE_REMOVE;
-    else
-        return HT_ENUMERATE_NEXT;
+    if (to_delete && (PL_strncmp(he->key, to_delete, (PRUint32) len) == 0 ||
+        (len-1 == (int)PL_strlen(he->key) && PL_strncmp(he->key, to_delete, (PRUint32)(len-1)) == 0)))
+        return PL_DHASH_REMOVE;
+    
+    return PL_DHASH_NEXT;
 }
 
 PrefResult
@@ -1091,7 +1057,7 @@ PREF_DeleteBranch(const char *branch_name)
     char* branch_dot;
     int len = (int)PL_strlen(branch_name);
 
-    if (!gHashTable)
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 
     /* The following check insures that if the branch name already has a "."
@@ -1121,12 +1087,12 @@ PrefResult
 PREF_ClearUserPref(const char *pref_name)
 {
     PrefResult success = PREF_ERROR;
-    PrefNode*       pref;
+    PrefHashEntry*       pref;
 
-    if (!gHashTable)
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) pref_HashTableLookup(pref_name);
+    pref = pref_HashTableLookup(pref_name);
     if (pref && PREF_HAS_USER_VALUE(pref))
     {
         pref->flags &= ~PREF_USERSET;
@@ -1137,26 +1103,26 @@ PREF_ClearUserPref(const char *pref_name)
     return success;
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-pref_ClearUserPref(PLHashEntry *he, int i, void *arg)
+PR_STATIC_CALLBACK(PLDHashOperator)
+pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, PRUint32,
+                   void *arg)
 {
-    PrefNode *pref = (PrefNode *) he->value;
-    PR_ASSERT(pref);
+    PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry*,  he);
 
-    if (pref && PREF_HAS_USER_VALUE(pref))
+    if (PREF_HAS_USER_VALUE(pref))
     {
         pref->flags &= ~PREF_USERSET;
         if (gCallbacksEnabled)
-            pref_DoCallback((const char*)he->key);
-        return HT_ENUMERATE_REMOVE;
+            pref_DoCallback(pref->key);
+        return PL_DHASH_REMOVE;
     }
-    return HT_ENUMERATE_NEXT;
+    return PL_DHASH_NEXT;
 }
 
 PrefResult
 PREF_ClearAllUserPrefs()
 {
-    if (!gHashTable)
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
     
     pref_HashTableEnumerateEntries(pref_ClearUserPref, nsnull);
@@ -1179,7 +1145,7 @@ PrefResult
 PREF_CopyConfigString(const char *obj_name, char **return_buffer)
 {
     PrefResult success = PREF_ERROR;
-    PrefNode* pref = (PrefNode*) pref_HashTableLookup(obj_name);
+    PrefHashEntry* pref = pref_HashTableLookup(obj_name);
     
     if (pref && (pref->flags & PREF_STRING))
     {
@@ -1195,10 +1161,10 @@ PREF_CopyIndexConfigString(const char *obj_name,
     int indx, const char *field, char **return_buffer)
 {
     PrefResult success = PREF_ERROR;
-    PrefNode* pref;
+    PrefHashEntry* pref;
     char* setup_buf = PR_smprintf("%s_%d.%s", obj_name, indx, field);
 
-    pref = (PrefNode*) pref_HashTableLookup(setup_buf);
+    pref = pref_HashTableLookup(setup_buf);
     
     if (pref && (pref->flags & PREF_STRING))
     {
@@ -1214,7 +1180,7 @@ PrefResult
 PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 {
     PrefResult success = PREF_ERROR;
-    PrefNode* pref = (PrefNode*) pref_HashTableLookup(obj_name);
+    PrefHashEntry* pref = pref_HashTableLookup(obj_name);
     if (pref && (pref->flags & PREF_INT))
     {
         *return_int = pref->defaultPref.intVal;
@@ -1227,7 +1193,7 @@ PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 PrefResult
 PREF_GetConfigBool(const char *obj_name, PRBool *return_bool)
 {
-    PrefNode* pref = (PrefNode*) pref_HashTableLookup(obj_name);  
+    PrefHashEntry* pref = pref_HashTableLookup(obj_name);  
     if (pref && (pref->flags & PREF_BOOL))
     {
         *return_bool = pref->defaultPref.boolVal;
@@ -1238,11 +1204,11 @@ PREF_GetConfigBool(const char *obj_name, PRBool *return_bool)
 
 PrefResult pref_UnlockPref(const char *key)
 {
-    PrefNode* pref;
-    if (!gHashTable)
+    PrefHashEntry* pref;
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) pref_HashTableLookup(key);
+    pref = pref_HashTableLookup(key);
     if (!pref)
         return PREF_DOES_NOT_EXIST;
 
@@ -1257,11 +1223,11 @@ PrefResult pref_UnlockPref(const char *key)
 
 PrefResult pref_LockPref(const char *key)
 {
-    PrefNode* pref;
-    if (!gHashTable)
+    PrefHashEntry* pref;
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 
-    pref = (PrefNode*) pref_HashTableLookup(key);
+    pref = pref_HashTableLookup(key);
     if (!pref)
         return PREF_DOES_NOT_EXIST;
    
@@ -1307,48 +1273,57 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
     }
 }
 
-static void* pref_HashTableLookup(const void *key)
+static inline PrefHashEntry* pref_HashTableLookup(const void *key)
 {
-    return gEnumeratingHashTable ?
-        PL_HashTableLookupConst(gHashTable, key) :
-        PL_HashTableLookup(gHashTable, key);
+    PrefHashEntry* result =
+        NS_STATIC_CAST(PrefHashEntry*, PL_DHashTableOperate(&gHashTable, key, PL_DHASH_LOOKUP));
+    
+    if (PL_DHASH_ENTRY_IS_FREE(result))
+        return nsnull;
+    
+    return result;
 }
 
-PRIntn pref_HashTableEnumerateEntries(PLHashEnumerator f, void *arg)
+PRIntn pref_HashTableEnumerateEntries(PLDHashEnumerator f, void *arg)
 {
     PRIntn result;
-    PRBool wasEnumerating = gEnumeratingHashTable;
-    
-    gEnumeratingHashTable = PR_TRUE;
-    result = PL_HashTableEnumerateEntries(gHashTable, f, arg);
-    gEnumeratingHashTable = wasEnumerating;
+    result = PL_DHashTableEnumerate(&gHashTable, f, arg);
     return result;
 }
 
 PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action)
 {
-    PrefNode* pref;
+    PrefHashEntry* pref;
     PrefResult result = PREF_OK;
 
-    if (!gHashTable && !pref_useDefaultPrefFile())
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
     
-    pref = (PrefNode*) pref_HashTableLookup(key);
+    pref = NS_STATIC_CAST(PrefHashEntry*, PL_DHashTableOperate(&gHashTable, key, PL_DHASH_ADD));
+
     if (!pref)
-    {
-        pref = (PrefNode*) calloc(sizeof(PrefNode), 1);
-        if (!pref)  
-            return PREF_OUT_OF_MEMORY;
+        return PREF_OUT_OF_MEMORY;
+
+    // new entry, better intialize
+    if (!pref->key) {
+        
+        // initialize the pref entry
         pref->flags = type;
+        pref->key = PL_strdup(key);
+        pref->defaultPref.intVal = 0;
+        pref->userPref.intVal = 0;
+        
+        /* ugly hack -- define it to a default that no pref will ever
+           default to this should really get fixed right by some out
+           of band data
+        */
         if (pref->flags & PREF_BOOL)
             pref->defaultPref.boolVal = (PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE;
-        /* ugly hack -- define it to a default that no pref will ever default to
-           this should really get fixed right by some out of band data */
         if (pref->flags & PREF_INT)
             pref->defaultPref.intVal = (PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE;
-        PL_HashTableAdd(gHashTable, PL_strdup(key), pref);
     }
-    else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK))
+    else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) !=
+                 (type & PREF_VALUETYPE_MASK))
     {
       /*PR_ASSERT(0);*/         /* this shouldn't happen */
       /* NS_ASSERTION(0, "Trying to set pref to with the wrong type!"); */
@@ -1421,9 +1396,9 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 PrefType
 PREF_GetPrefType(const char *pref_name)
 {
-    if (gHashTable)
+    if (gHashTable.ops)
     {
-        PrefNode* pref = (PrefNode*) pref_HashTableLookup(pref_name);
+        PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref)
         {
             if (pref->flags & PREF_STRING)
@@ -1461,7 +1436,7 @@ JSBool PR_CALLBACK pref_NativeUnlockPref
     if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
     {
         const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        PrefNode* pref = (PrefNode*) pref_HashTableLookup(key);
+        PrefHashEntry* pref = pref_HashTableLookup(key);
         
         if (pref && PREF_IS_LOCKED(pref))
         {
@@ -1483,13 +1458,13 @@ JSBool PR_CALLBACK pref_NativeGetPref
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
     /*void* value = NULL;*/
-    PrefNode* pref;
+    PrefHashEntry* pref;
     /*PRBool prefExists = PR_TRUE;*/
     
     if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
     {
         const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-        pref = (PrefNode*) pref_HashTableLookup(key);
+        pref = pref_HashTableLookup(key);
         
         if (pref)
         {
@@ -1517,7 +1492,7 @@ PREF_PrefIsLocked(const char *pref_name)
 {
     PRBool result = PR_FALSE;
     if (gIsAnyPrefLocked) {
-        PrefNode* pref = (PrefNode*) pref_HashTableLookup(pref_name);
+        PrefHashEntry* pref = pref_HashTableLookup(pref_name);
         if (pref && PREF_IS_LOCKED(pref))
             result = PR_TRUE;
     }
@@ -1540,18 +1515,19 @@ typedef struct
   and entry is
   "a.b.c" or "a.b"
   then add "a.b" to the list. */
-int PR_CALLBACK
-pref_addChild(PLHashEntry *he, int i, void *arg)
+PLDHashOperator PR_CALLBACK
+pref_addChild(PLDHashTable *table, PLDHashEntryHdr* heh,PRUint32 number,void *arg)
 {
+    PrefHashEntry* he = NS_STATIC_CAST(PrefHashEntry*,heh);
     PrefChildIter* pcs = (PrefChildIter*) arg;
-    if ( PL_strncmp((const char*)he->key, pcs->parent, PL_strlen(pcs->parent)) == 0 )
+    if ( PL_strncmp(he->key, pcs->parent, PL_strlen(pcs->parent)) == 0 )
     {
         char buf[512];
         char* nextdelim;
         PRUint32 parentlen = PL_strlen(pcs->parent);
         char* substring;
 
-        strncpy(buf, (const char*)he->key, PR_MIN(512, PL_strlen((const char*)he->key) + 2));
+        strncpy(buf, he->key, PR_MIN(512, PL_strlen(he->key) + 2));
         nextdelim = buf + parentlen;
         if (parentlen < PL_strlen(buf))
         {
@@ -1577,19 +1553,19 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
                 pcs->bufsize *= 3;
                 pcs->childList = (char*) realloc(pcs->childList, sizeof(char) * pcs->bufsize);
                 if (!pcs->childList)
-                    return HT_ENUMERATE_STOP;
+                    return PL_DHASH_STOP;
             }
             PL_strcat(pcs->childList, buf);
         }
     }
-    return 0;
+    return PL_DHASH_NEXT;
 }
 
 PrefResult
 PREF_CreateChildList(const char* parent_node, char **child_list)
 {
     PrefChildIter pcs;
-    if (!gHashTable)
+    if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
 #ifdef XP_WIN16
     pcs.bufsize = 20480;
@@ -1890,71 +1866,6 @@ JSBool PR_CALLBACK pref_NativeGetLDAPAttr
     return JS_TRUE;
 }
 
-/* Dump debugging info in response to about:config.
- */
-int PR_CALLBACK
-pref_printDebugInfo(PLHashEntry *he, int i, void *arg)
-{
-    char *buf1=NULL, *buf2=NULL;
-    PrefValue val;
-    PrefChildIter* pcs = (PrefChildIter*) arg;
-    PrefNode *pref = (PrefNode *) he->value;
-    
-    PR_ASSERT(pref);
-    if (!pref)
-        return PREF_NOERROR;
-
-    if (PREF_HAS_USER_VALUE(pref) && 
-        pref_ValueChanged(pref->defaultPref, 
-                          pref->userPref, 
-                          (PrefType) PREF_TYPE(pref)) && 
-        !PREF_IS_LOCKED(pref))
-    {
-        buf1 = PR_smprintf("<font color=\"blue\">%s = ", (const char*) he->key);
-        val = pref->userPref;
-    }
-    else
-    {
-        buf1 = PR_smprintf("<font color=\"%s\">%s = ",
-            PREF_IS_LOCKED(pref) ? "red" : (PREF_IS_CONFIG(pref) ? "black" : "green"),
-            (const char*) he->key);
-        val = pref->defaultPref;
-    }
-    
-    if (pref->flags & PREF_STRING)
-        buf2 = PR_smprintf("%s %s</font><br>", buf1, val.stringVal);
-    else if (pref->flags & PREF_INT)
-        buf2 = PR_smprintf("%s %d</font><br>", buf1, val.intVal);
-    else if (pref->flags & PREF_BOOL)
-        buf2 = PR_smprintf("%s %s</font><br>", buf1, val.boolVal ? "true" : "false");
-    
-    if ((PL_strlen(buf2) + PL_strlen(pcs->childList) + 1) > (PRUint32)pcs->bufsize)
-    {
-        pcs->bufsize *= 3;
-        pcs->childList = (char*) realloc(pcs->childList, sizeof(char) * pcs->bufsize);
-        if (!pcs->childList)
-            return HT_ENUMERATE_STOP;
-    }
-    PL_strcat(pcs->childList, buf2);
-    PR_Free(buf1);
-    PR_Free(buf2);
-    return 0;
-}
-
-char *
-PREF_AboutConfig()
-{
-    PrefChildIter pcs;
-    pcs.bufsize = 8192;
-    pcs.childList = (char*) malloc(sizeof(char) * pcs.bufsize);
-    pcs.childList[0] = '\0';
-    PL_strcat(pcs.childList, "<HTML>"); 
-
-    pref_HashTableEnumerateEntries(pref_printDebugInfo, &pcs);
-    
-    return pcs.childList;
-}
-
 #define MAYBE_GC_BRANCH_COUNT_MASK  4095
 
 JSBool PR_CALLBACK
@@ -2131,31 +2042,6 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
     config      -> pref_NativeSetConfig
  *--------------------------------------------------------------------------------------*/
 {   
-#ifdef NOPE1987
-    /* this is somehow fixing an internal compiler error for win16 */
-    PrefValue value;
-    const char *key;
-    PRBool bIsBool, bIsInt, bIsString;
-
-    ;
-    if (argc < 2)
-        return JS_FALSE;
-    if (!JSVAL_IS_STRING(argv[0]))
-        return JS_FALSE;
-
-    bIsBool = JSVAL_IS_BOOLEAN(argv[1]);
-    bIsInt = JSVAL_IS_INT(argv[1]);
-    bIsString = JSVAL_IS_STRING(argv[1]);
-
-    key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-
-    if (bIsString)
-    {
-        value.stringVal = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
-        pref_HashPref(key, value, PREF_STRING, action);
-    }
-    
-#else
     if (argc >= 2 && JSVAL_IS_STRING(argv[0]))
     {
         PrefValue value;
@@ -2177,7 +2063,6 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
             pref_HashPref(key, value, PREF_BOOL, action);
         }
     }
-#endif
 
     return JS_TRUE;
 }
@@ -2265,7 +2150,6 @@ PrefResult PREF_SetListPref(const char* pref, char** list)
 
     return status;  
 }
-
 
 /*--------------------------------------------------------------------------------------*/
 PrefResult

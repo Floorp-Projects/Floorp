@@ -57,20 +57,19 @@ extern PRBool				gErrorOpeningUserPrefs;
 extern PRBool				gCallbacksEnabled;
 extern PRBool				gIsAnyPrefLocked;
 extern PRBool               gLockInfoRead;
-extern PLHashTable*			gHashTable;
+extern PRBool               gHashTableInitialized;
+extern PLDHashTable			gHashTable;
 extern char *               gSavedLine;       
-extern PLHashAllocOps       pref_HashAllocOps;
 extern char *               gLockFileName;
 extern char *               gLockVendor;
 
-
 JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
-PrefResult pref_savePref(PLHashEntry *he, int i, void *arg);
+PLDHashOperator pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUint32, void *arg);
 PRBool pref_VerifyLockFile(char* buf, long buflen);
 
 int pref_CompareStrings(const void *v1, const void *v2, void* unused);
 extern JSBool pref_InitInitialObjects(void);
-extern PRIntn pref_HashTableEnumerateEntries(PLHashEnumerator f, void *arg);
+extern PRIntn pref_HashTableEnumerateEntries(PLDHashEnumerator f, void *arg);
 
 NSPR_END_EXTERN_C
 
