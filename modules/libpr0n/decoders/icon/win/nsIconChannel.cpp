@@ -141,6 +141,8 @@ nsIconChannel::Open(nsIInputStream **_retval)
 
 void InvertRows(unsigned char * aInitialBuffer, PRUint32 sizeOfBuffer, PRUint32 numBytesPerRow)
 {
+  if (!numBytesPerRow) return; 
+
   PRUint32 numRows = sizeOfBuffer / numBytesPerRow;
   void * temporaryRowHolder = (void *) nsMemory::Alloc(numBytesPerRow);
 
@@ -187,10 +189,11 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
 
 void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFO pBitMapInfo, nsCString& iconBuffer)
 {
-  // windows invers the row order in their bitmaps. So we need to invert the rows back into a top-down order.
+  // windows inverts the row order in their bitmaps. So we need to invert the rows back into a top-down order.
 
   PRUint32 bytesPerPixel = pBitMapInfo->bmiHeader.biBitCount / 8;
   PRUint32 unalignedBytesPerRow = pBitMapInfo->bmiHeader.biWidth * 3;
+
   InvertRows(buffer, pBitMapInfo->bmiHeader.biSizeImage, pBitMapInfo->bmiHeader.biWidth * bytesPerPixel);
   
   PRUint32 alignedBytesPerRow = CalcWordAlignedRowSpan(pBitMapInfo->bmiHeader.biWidth, 24);
@@ -208,7 +211,6 @@ void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFO pBitMapInfo, nsCStri
     PRUint8 redValue, greenValue, blueValue;
     while (index < pBitMapInfo->bmiHeader.biSizeImage)
     {                            
-      DWORD dst=(DWORD) buffer[index];
       PRUint16 num = 0;
       num = (PRUint8) buffer[index+1];
       num <<= 8;
@@ -369,6 +371,11 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
         result = GetDIBits(pDC, pIconInfo.hbmColor, 0, pBitMapInfo->bmiHeader.biHeight, (void *) buffer, pBitMapInfo, DIB_RGB_COLORS);
         if (result > 0)
         { 
+          // temporary hack alert...currently moz-icon urls only support 16, 24 and 32 bit color. we don't support
+          // 8, 4 or 1 bit color yet. return an error in those cases
+          if (pBitMapInfo->bmiHeader.biBitCount <= 8)
+            return NS_ERROR_FAILURE; 
+
           // The first 2 bytes into our output buffer needs to be the width and the height (in pixels) of the icon
           // as specified by our data format.
           iconBuffer.Assign((char) pBitMapInfo->bmiHeader.biWidth);
