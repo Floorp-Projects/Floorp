@@ -478,9 +478,9 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
     // build a PROGID
     nsCString progID(NS_ISTREAMCONVERTER_KEY);
     progID.Append("?from=");
-    progID.Append(aFromType);
+    progID.AppendWithConversion(aFromType);
     progID.Append("?to=");
-    progID.Append(aToType);
+    progID.AppendWithConversion(aToType);
     const char *cProgID = progID.GetBuffer();
 
     nsIComponentManager *comMgr;
@@ -592,9 +592,9 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
     // build a PROGID
     nsCString progID(NS_ISTREAMCONVERTER_KEY);
     progID.Append("?from=");
-    progID.Append(aFromType);
+    progID.AppendWithConversion(aFromType);
     progID.Append("?to=");
-    progID.Append(aToType);
+    progID.AppendWithConversion(aToType);
     const char *cProgID = progID.GetBuffer();
 
     nsIComponentManager *comMgr;
