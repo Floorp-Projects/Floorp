@@ -69,17 +69,30 @@ nsIRDFResource* nsGlobalHistory::kNC_Page;
 nsIRDFResource* nsGlobalHistory::kNC_Date;
 nsIRDFResource* nsGlobalHistory::kNC_FirstVisitDate;
 nsIRDFResource* nsGlobalHistory::kNC_VisitCount;
+nsIRDFResource* nsGlobalHistory::kNC_AgeInDays;
 nsIRDFResource* nsGlobalHistory::kNC_Name;
+nsIRDFResource* nsGlobalHistory::kNC_NameSort;
+nsIRDFResource* nsGlobalHistory::kNC_Hostname;
 nsIRDFResource* nsGlobalHistory::kNC_Referrer;
 nsIRDFResource* nsGlobalHistory::kNC_child;
 nsIRDFResource* nsGlobalHistory::kNC_URL;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
-nsIRDFResource* nsGlobalHistory::kNC_HistoryBySite;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 
 
 #define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED "browser.history.last_page_visited"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS "browser.history_expire_days"
+
+#define FIND_BY_AGEINDAYS_PREFIX "find:datasource=history&match=AgeInDays&method="
+
+// sync history every 10 seconds
+#define HISTORY_SYNC_TIMEOUT 10 * 1000
+//#define HISTORY_SYNC_TIMEOUT 3000 // every 3 seconds - testing only!
+
+// the value of mLastNow expires every 3 seconds
+#define HISTORY_EXPIRE_NOW_TIMEOUT 3 * 1000
+
+#define MSECS_PER_DAY 1000 * 60 * 60 * 24
 //----------------------------------------------------------------------
 //
 // CIDs
@@ -87,14 +100,12 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 static NS_DEFINE_CID(kStandardUrlCID,       NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
+// closure structures for RemoveMatchingRows
 struct matchExpiration_t {
   PRInt64 *expirationDate;
   nsGlobalHistory *history;
-};
-
-struct matchUrl_t {
-  const char *url;
 };
 
 struct matchHost_t {
@@ -104,44 +115,83 @@ struct matchHost_t {
   nsIURL* cachedUrl;
 };
 
+struct matchSearchTerm_t {
+  nsIMdbEnv *env;
+  nsIMdbStore *store;
+  
+  searchTerm *term;
+  PRBool haveClosure;           // are the rest of the fields valid?
+  PRInt64 now;
+  PRInt32 intValue;
+};
+
+// simple token/value struct
+class tokenPair {
+public:
+  tokenPair(const char *aName, PRUint32 aNameLen,
+            const char *aValue, PRUint32 aValueLen) :
+    tokenName(aName, aNameLen),
+    tokenValue(aValue, aValueLen) {}
+  nsLiteralCString tokenName;
+  nsLiteralCString tokenValue;
+};
+
+// individual search term, pulled from token/value structs
+class searchTerm {
+public:
+  searchTerm(const char* aDatasource, PRUint32 datasourceLen,
+             const char *aProperty, PRUint32 aPropertyLen,
+             const char* aMethod, PRUint32 methodLen,
+             const char* aText, PRUint32 textLen):
+    datasource(aDatasource, datasourceLen),
+    property(aProperty, aPropertyLen),
+    method(aMethod, methodLen)
+  {
+    // need to do UTF8-conversion/unescaping here, using
+    // nsITextToSubURI
+    text.AssignWithConversion(aText, textLen);
+  }
+  
+  nsLiteralCString datasource;  // should always be "history" ?
+  nsLiteralCString property;    // AgeInDays, Hostname, etc
+  nsLiteralCString method;      // is, isgreater, isless
+  nsAutoString text;            // text to match
+  rowMatchCallback match;      // matching callback if needed
+};
+
+// list of terms, plus an optional groupby column
+struct searchQuery {
+  nsVoidArray terms;            // array of searchTerms
+  mdb_column groupBy;           // column to group by
+};
+
 static nsresult
-PRInt64ToChars(const PRInt64& aValue, char* aBuf, PRInt32 aSize)
+PRInt64ToChars(const PRInt64& aValue, nsAWritableCString& aResult)
 {
   // Convert an unsigned 64-bit value to a string of up to aSize
   // decimal digits, placed in aBuf.
   nsInt64 value(aValue);
 
-  if (aSize < 2)
-    return NS_ERROR_FAILURE;
+  aResult.Truncate(0);
 
   if (value == nsInt64(0)) {
-    aBuf[0] = '0';
-    aBuf[1] = '\0';
+    aResult.Append('0');
   }
-
-  char buf[64];
-  char* p = buf;
 
   while (value != nsInt64(0)) {
     PRInt32 ones = PRInt32(value % nsInt64(10));
     value /= nsInt64(10);
 
-    *p++ = '0' + ones;
+    if (ones <=9) 
+      aResult.Insert(char('0' + ones), 0);
   }
-
-  if (p - buf >= aSize)
-    return NS_ERROR_FAILURE;
-
-  while (--p >= buf)
-    *aBuf++ = *p;
-
-  *aBuf = '\0';
+  
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
 
-nsresult
+static nsresult
 CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
 {
   // Convert aBuf of exactly aCount decimal characters to a 64-bit
@@ -162,19 +212,64 @@ CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
 PRBool
 nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
 {
-  mdb_err err;
   nsresult rv;
   
-  mdbYarn yarn;
-  err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
-  if (err != 0) return PR_FALSE;
-  
   PRInt64 lastVisitedTime;
-  rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &lastVisitedTime);
+  rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastVisitedTime);
+
   if (NS_FAILED(rv)) 
     return PR_FALSE;
   
   return LL_CMP(lastVisitedTime, <, *expirationDate);
+}
+
+static PRBool
+matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
+{
+  matchSearchTerm_t *matchSearchTerm = (matchSearchTerm_t*)aClosure;
+  const searchTerm *term = matchSearchTerm->term;
+  nsIMdbEnv *env = matchSearchTerm->env;
+  nsIMdbStore *store = matchSearchTerm->store;
+  
+  // fill in the rest of the closure if it's not filled in yet
+  // this saves us from recalculating this stuff on every row
+  if (!matchSearchTerm->haveClosure) {
+    PRInt32 err;
+    matchSearchTerm->intValue = term->text.ToInteger(&err);
+    matchSearchTerm->now = PR_Now();
+    if (err != 0) return PR_FALSE;
+    matchSearchTerm->haveClosure = PR_TRUE;
+  }
+  
+  // XXX convert the property to a column, get the column value
+
+  PRInt64 rowDate;
+  mdb_column column;
+  mdb_err err = store->StringToToken(env, "LastVisitDate", &column);
+
+  mdbYarn yarn;
+  row->AliasCellYarn(env, column, &yarn);
+  
+  CharsToPRInt64((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill, &rowDate);
+
+  PRInt64 age;
+  LL_SUB(age, matchSearchTerm->now, rowDate);
+  LL_DIV(age, age, 1000);
+
+  PRInt64 ageInDays;
+  LL_DIV(ageInDays, age, MSECS_PER_DAY);
+
+  PRInt32 days;
+  LL_L2I(days, ageInDays);
+
+  if (term->method == "is")
+    return (days == matchSearchTerm->intValue);
+  else if (term->method == "isgreater")
+    return (days >  matchSearchTerm->intValue);
+  else if (term->method == "isless")
+    return (days <  matchSearchTerm->intValue);
+  
+  return PR_FALSE;
 }
 
 static PRBool
@@ -199,7 +294,10 @@ matchHostCallback(nsIMdbRow *row, void *aClosure)
 //----------------------------------------------------------------------
 
 nsMdbTableEnumerator::nsMdbTableEnumerator()
-  : mEnv(nsnull), mTable(nsnull), mCursor(nsnull), mCurrent(nsnull)
+  : mEnv(nsnull),
+    mTable(nsnull),
+    mCursor(nsnull),
+    mCurrent(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -313,7 +411,8 @@ nsGlobalHistory::nsGlobalHistory()
   : mEnv(nsnull),
     mStore(nsnull),
     mTable(nsnull),
-    mExpireDays(9) // make default be nine days
+    mExpireDays(9), // make default be nine days
+    mDirty(PR_FALSE)
 {
   NS_INIT_REFCNT();
   LL_I2L(mFileSizeOnDisk, 0);
@@ -336,14 +435,22 @@ nsGlobalHistory::~nsGlobalHistory()
     NS_IF_RELEASE(kNC_Date);
     NS_IF_RELEASE(kNC_FirstVisitDate);
     NS_IF_RELEASE(kNC_VisitCount);
+    NS_IF_RELEASE(kNC_AgeInDays);
     NS_IF_RELEASE(kNC_Name);
+    NS_IF_RELEASE(kNC_NameSort);
+    NS_IF_RELEASE(kNC_Hostname);
     NS_IF_RELEASE(kNC_Referrer);
     NS_IF_RELEASE(kNC_child);
     NS_IF_RELEASE(kNC_URL);
     NS_IF_RELEASE(kNC_HistoryRoot);
-    NS_IF_RELEASE(kNC_HistoryBySite);
     NS_IF_RELEASE(kNC_HistoryByDate);
   }
+
+  if (mSyncTimer)
+    mSyncTimer->Cancel();
+
+  if (mExpireNowTimer)
+    mExpireNowTimer->Cancel();
 }
 
 
@@ -384,32 +491,6 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   rv = AddPageToDatabase(aURL, aReferrerURL, aDate);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We'd like to do a "small commit" here, but, unfortunately, we're
-  // leaking the _entire_ history service :-(. So just do a "large"
-  // commit for now.
-  mdb_err err;
-  err = mStore->SmallCommit(mEnv);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-#ifdef LEAKING_GLOBAL_HISTORY
-  {
-    nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-    err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    mdb_count total;
-    mdb_count current;
-    mdb_bool done;
-    mdb_bool broken;
-
-    do {
-      err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
-    } while ((err == 0) && !broken && !done);
-
-    if ((err != 0) || !done) return NS_ERROR_FAILURE;
-  }
-#endif
-
   return NS_OK;
 }
 
@@ -436,7 +517,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
   if (NS_FAILED(rv)) return rv;
 
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindUrl(aURL, getter_Acquires(row));
+  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
 
   if (NS_SUCCEEDED(rv) && row) {
 
@@ -454,10 +535,6 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     
     rv = NotifyChange(url, kNC_Date, oldDateLiteral, date);
     if (NS_FAILED(rv)) return rv;
-
-    // ...now set the new date.
-    char buf[64];
-    PRInt64ToChars(aDate, buf, sizeof(buf));
 
     // visit count
     nsCOMPtr<nsIRDFInt> oldCountLiteral;
@@ -484,6 +561,8 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     if (NS_FAILED(rv)) return rv;
   }
 
+  SetDirty();
+  
   return rv;
 }
 
@@ -494,22 +573,15 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
                                            PRInt32 *aOldCount)
 {
 
-  mdb_err err;
   nsresult rv;
   // Update last visit date.
   // First get the old date so we can update observers...
-  mdbYarn yarn;
-  err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
-  if (err != 0) return NS_ERROR_FAILURE;
-  
-  rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, aOldDate);
+  rv = GetRowValue(row, kToken_LastVisitDateColumn, aOldDate);
   if (NS_FAILED(rv)) return rv;
 
   // get the old count, so we can update it
-  err = row->AliasCellYarn(mEnv, kToken_VisitCountColumn, &yarn);
-  if (err == 0 && yarn.mYarn_Buf)
-    *aOldCount = atoi((char *)yarn.mYarn_Buf);
-  else
+  rv = GetRowValue(row, kToken_VisitCountColumn, aOldCount);
+  if (NS_FAILED(rv) || *aOldCount < 1)
     *aOldCount = 1;             // assume we've visited at least once
 
   // ...now set the new date.
@@ -524,6 +596,7 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
                                       const char *aReferrerURL,
                                       PRInt64 aDate)
 {
+  nsresult rv;
   mdb_err err;
   
   // Create a new row
@@ -550,6 +623,18 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
 
+  nsCOMPtr<nsIURL> urlObj(do_CreateInstance(kStandardUrlCID, &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = urlObj->SetSpec(aURL);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsXPIDLCString hostname;
+  rv = urlObj->GetHost(getter_Copies(hostname));
+  if (NS_FAILED(rv)) return rv;
+
+  SetRowValue(row, kToken_HostnameColumn, hostname);
+
   return NS_OK;
 }
 
@@ -557,11 +642,10 @@ nsresult
 nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt64& aValue)
 {
   mdb_err err;
-  char buf[64];
-  PRInt64ToChars(aValue, buf, sizeof(buf));
+  nsCAutoString val;
+  PRInt64ToChars(aValue, val);
 
-  PRInt32 len = PL_strlen(buf);
-  mdbYarn yarn = { (void *)buf, len, len, 0, 0, nsnull };
+  mdbYarn yarn = { (void *)val.get(), val.Length(), val.Length(), 0, 0, nsnull };
   
   err = aRow->AddColumn(mEnv, aCol, &yarn);
 
@@ -642,6 +726,58 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   return NS_OK;
 }
 
+nsresult
+nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
+                             PRInt64 *aResult)
+{
+  mdb_err err;
+  
+  mdbYarn yarn;
+  err = aRow->AliasCellYarn(mEnv, aCol, &yarn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  *aResult = LL_ZERO;
+  
+  if (!yarn.mYarn_Fill || !yarn.mYarn_Buf)
+    return NS_OK;
+
+  return CharsToPRInt64((char *)yarn.mYarn_Buf, yarn.mYarn_Fill, aResult);
+}
+
+nsresult
+nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
+                             PRInt32 *aResult)
+{
+  mdb_err err;
+  
+  mdbYarn yarn;
+  err = aRow->AliasCellYarn(mEnv, aCol, &yarn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  if (yarn.mYarn_Buf)
+    *aResult = atoi((char *)yarn.mYarn_Buf);
+  else
+    *aResult = 0;
+  
+  return NS_OK;
+}
+
+nsresult
+nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
+                             nsAWritableCString& aResult)
+{
+  mdb_err err;
+  
+  mdbYarn yarn;
+  err = aRow->AliasCellYarn(mEnv, aCol, &yarn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  nsLiteralCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
+  aResult.Assign(url);
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 {
@@ -657,7 +793,7 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
     aTitle = kEmptyString;
 
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindUrl(aURL, getter_Acquires(row));
+  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
   if (NS_FAILED(rv) || !row)
     return NS_ERROR_UNEXPECTED;
 
@@ -703,7 +839,7 @@ nsGlobalHistory::RemovePage(const char *aURL)
   if (!mTable) return NS_ERROR_NOT_INITIALIZED;
   // find the old row, ignore it if we don't have it
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindUrl(aURL, getter_Acquires(row));
+  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
   if (NS_FAILED(rv) || !row) return NS_OK;
 
   // get the resource so we can do the notification
@@ -754,7 +890,7 @@ nsGlobalHistory::MatchHost(nsIMdbRow *aRow,
 
   // do smart zero-termination
   nsLiteralCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
-  rv = hostInfo->cachedUrl->SetSpec(nsPromiseFlatCString(url).get());
+  rv = hostInfo->cachedUrl->SetSpec(nsCAutoString(url).get());
   if (NS_FAILED(rv)) return PR_FALSE;
 
   nsXPIDLCString urlHost;
@@ -837,7 +973,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
       
       nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
       
-      rv = gRDFService->GetResource(nsPromiseFlatCString(uri).get(), getter_AddRefs(resource));
+      rv = gRDFService->GetResource(nsCAutoString(uri).get(), getter_AddRefs(resource));
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
       if (NS_FAILED(rv))
         continue;
@@ -849,10 +985,10 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
     if (err != 0)
       continue;
     
-    // XXX possibly avoid leakage
+    // possibly avoid leakage
     err = row->CutAllColumns(mEnv);
     NS_ASSERTION(err == 0, "couldn't cut all columns");
-    // XXX we'll notify regardless of whether we could successfully
+    // we'll notify regardless of whether we could successfully
     // CutAllColumns or not.
     
     // Notify observers that the row is, er, history.
@@ -880,21 +1016,12 @@ nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
   nsresult rv;
 
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindUrl(aURL, getter_Acquires(row));
+  rv = FindRow(kToken_URLColumn, aURL, getter_Acquires(row));
 
-  if (NS_SUCCEEDED(rv) && row) {
-    mdb_err err;
-    mdbYarn yarn;
-    
-    err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
-    if (err != 0) return NS_ERROR_FAILURE;
-
-    rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, _retval);
-    if (NS_FAILED(rv)) return rv;
-  }
-  else {
-    *_retval = LL_ZERO; // return zero if not found
-  }
+  if (NS_FAILED(rv)) return rv;
+  if (!row) return NS_ERROR_FAILURE;
+  
+  return GetRowValue(row, kToken_LastVisitDateColumn, _retval);
 
   return NS_OK;
 }
@@ -987,25 +1114,15 @@ nsGlobalHistory::GetSource(nsIRDFResource* aProperty,
     // XXX We could be more forgiving here, and check for literal
     // values as well.
     nsCOMPtr<nsIRDFResource> target = do_QueryInterface(aTarget);
-    if (! target)
-      return NS_RDF_NO_VALUE;
-
-    nsXPIDLCString uri;
-    rv = target->GetValueConst(getter_Shares(uri));
-    if (NS_FAILED(rv)) return rv;
-
-    nsMdbPtr<nsIMdbRow> row(mEnv);
-    rv = FindUrl(uri, getter_Acquires(row));
-
-    if (NS_SUCCEEDED(rv) && row) {
-      // ...if so, return the URL. kNC_URL is just a self-referring arc.
+    if (IsURLInHistory(target))
       return CallQueryInterface(aTarget, aSource);
-    }
+    
   }
   else if ((aProperty == kNC_Date) ||
            (aProperty == kNC_FirstVisitDate) ||
            (aProperty == kNC_VisitCount) ||
            (aProperty == kNC_Name) ||
+           (aProperty == kNC_Hostname) ||
            (aProperty == kNC_Referrer)) {
     // Call GetSources() and return the first one we find.
     nsCOMPtr<nsISimpleEnumerator> sources;
@@ -1062,6 +1179,7 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
     void* value = nsnull;
     PRInt32 len = 0;
 
+    // PRInt64/date properties
     if (aProperty == kNC_Date ||
         aProperty == kNC_FirstVisitDate) {
       nsCOMPtr<nsIRDFDate> date = do_QueryInterface(aTarget);
@@ -1071,22 +1189,18 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
         rv = date->GetValue(&n);
         if (NS_FAILED(rv)) return rv;
 
-        char buf[64];
-        rv = PRInt64ToChars(n, buf, sizeof(buf));
+        nsCAutoString valueStr;
+        rv = PRInt64ToChars(n, valueStr);
         if (NS_FAILED(rv)) return rv;
-
-        len = PL_strlen(buf);
-        value = nsMemory::Alloc(len + 1);
-        if (! value)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-        PL_strcpy(buf, NS_STATIC_CAST(char*, value));
+        
+        value = (void *)valueStr.ToNewCString();
         if (aProperty == kNC_Date)
           col = kToken_LastVisitDateColumn;
         else
           col = kToken_FirstVisitDateColumn;
       }
     }
+    // PRInt32 properties
     else if (aProperty == kNC_VisitCount) {
       nsCOMPtr<nsIRDFInt> countLiteral = do_QueryInterface(aTarget);
       if (countLiteral) {
@@ -1101,6 +1215,7 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
       }
       
     }
+    // PRUnichar* properties
     else if (aProperty == kNC_Name) {
       nsCOMPtr<nsIRDFLiteral> name = do_QueryInterface(aTarget);
       if (name) {
@@ -1114,7 +1229,10 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
         col = kToken_NameColumn;
       }
     }
-    else if (aProperty == kNC_Referrer) {
+
+    // char* properties
+    else if (aProperty == kNC_Hostname ||
+             aProperty == kNC_Referrer) {
       col = kToken_ReferrerColumn;
       nsCOMPtr<nsIRDFResource> referrer = do_QueryInterface(aTarget);
       if (referrer) {
@@ -1125,7 +1243,10 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
         len = PL_strlen(p);
         value = p;
 
-        col = kToken_ReferrerColumn;
+        if (aProperty == kNC_Hostname)
+          col = kToken_HostnameColumn;
+        else if (aProperty == kNC_Referrer)
+          col = kToken_ReferrerColumn;
       }
     }
 
@@ -1153,6 +1274,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
                            PRBool aTruthValue,
                            nsIRDFNode** aTarget)
 {
+  
   NS_PRECONDITION(aSource != nsnull, "null ptr");
   if (! aSource)
     return NS_ERROR_NULL_POINTER;
@@ -1170,57 +1292,93 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
   if (! aTruthValue)
     return NS_RDF_NO_VALUE;
 
-  if ((aSource == kNC_HistoryRoot) && (aProperty == kNC_child)) {
+    // XXX eventually use IsFindResource to simply return the first
+    // matching row?
+  if (aProperty == kNC_child &&
+      (aSource == kNC_HistoryRoot ||
+       aSource == kNC_HistoryByDate ||
+       IsFindResource(aSource))) {
+      
     // If they're asking for all the children of the HistoryRoot, call
     // through to GetTargets() and return the first one.
     nsCOMPtr<nsISimpleEnumerator> targets;
     rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(targets));
     if (NS_FAILED(rv)) return rv;
-
+    
     PRBool hasMore;
     rv = targets->HasMoreElements(&hasMore);
     if (NS_FAILED(rv)) return rv;
-
+    
     if (! hasMore) return NS_RDF_NO_VALUE;
-
+    
     nsCOMPtr<nsISupports> isupports;
     rv = targets->GetNext(getter_AddRefs(isupports));
     if (NS_FAILED(rv)) return rv;
-
+    
     return CallQueryInterface(isupports, aTarget);
   }
   else if ((aProperty == kNC_Date) ||
            (aProperty == kNC_FirstVisitDate) ||
            (aProperty == kNC_VisitCount) ||
+           (aProperty == kNC_AgeInDays) ||
            (aProperty == kNC_Name) ||
+           (aProperty == kNC_NameSort) ||
+           (aProperty == kNC_Hostname) ||
            (aProperty == kNC_Referrer) ||
            (aProperty == kNC_URL)) {
-    // It's a real property! Okay, first we'll get the row...
-    mdb_err err;
 
     const char* uri;
     rv = aSource->GetValueConst(&uri);
     if (NS_FAILED(rv)) return rv;
 
-    nsMdbPtr<nsIMdbRow> row(mEnv);
-    rv = FindUrl(uri, getter_Acquires(row));
+    // url is self-referential, so we'll always just return itself
+    // however, don't return the URLs of find resources
+    if (aProperty == kNC_URL && !IsFindResource(aSource)) {
+      
+      nsCOMPtr<nsIRDFLiteral> uriLiteral;
+      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri), getter_AddRefs(uriLiteral));
+      if (NS_FAILED(rv))    return(rv);
+      *aTarget = uriLiteral;
+      NS_ADDREF(*aTarget);
+      return NS_OK;
+    }
 
+    // find URIs are special
+    if (((aProperty == kNC_Name) || (aProperty == kNC_NameSort)) &&
+        IsFindResource(aSource)) {
+      
+      // for sorting, we sort by uri, so just return the URI as a literal
+      if (aProperty == kNC_NameSort) {
+        nsCOMPtr<nsIRDFLiteral> uriLiteral;
+        rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri),
+                                     getter_AddRefs(uriLiteral));
+        if (NS_FAILED(rv))    return(rv);
+        
+        *aTarget = uriLiteral;
+        NS_ADDREF(*aTarget);
+        return NS_OK;
+      }
+      else 
+        return GetFindUriName(uri, aTarget);
+    }
+    // ok, we got this far, so we have to retrieve something from
+    // the row in the database
+    nsMdbPtr<nsIMdbRow> row(mEnv);
+    rv = FindRow(kToken_URLColumn, uri, getter_Acquires(row));
     if (NS_FAILED(rv) || !row) return NS_RDF_NO_VALUE;
 
+    mdb_err err;
     // ...and then depending on the property they want, we'll pull the
     // cell they want out of it.
     if (aProperty == kNC_Date  ||
         aProperty == kNC_FirstVisitDate) {
       // Last visit date
-      mdbYarn yarn;
-      if (aProperty == kNC_Date)
-        err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
-      else
-        err = row->AliasCellYarn(mEnv, kToken_FirstVisitDateColumn, &yarn);
-      if (err != 0) return NS_ERROR_FAILURE;
-
       PRInt64 i;
-      rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &i);
+      if (aProperty == kNC_Date)
+        rv = GetRowValue(row, kToken_LastVisitDateColumn, &i);
+      else
+        rv = GetRowValue(row, kToken_FirstVisitDateColumn, &i);
+
       if (NS_FAILED(rv)) return rv;
 
       nsCOMPtr<nsIRDFDate> date;
@@ -1234,10 +1392,9 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       err = row->AliasCellYarn(mEnv, kToken_VisitCountColumn, &yarn);
       if (err != 0) return NS_ERROR_FAILURE;
 
-      PRInt32 visitCount;
-      if (yarn.mYarn_Buf)
-        visitCount = atoi((char *)yarn.mYarn_Buf);
-      else
+      PRInt32 visitCount = 0;
+      rv = GetRowValue(row, kToken_VisitCountColumn, &visitCount);
+      if (NS_FAILED(rv) || visitCount <1)
         visitCount = 1;         // assume we've visited at least once
 
       nsCOMPtr<nsIRDFInt> visitCountLiteral;
@@ -1247,10 +1404,60 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
 
       return CallQueryInterface(visitCountLiteral, aTarget);
     }
+    else if (aProperty == kNC_AgeInDays) {
+      PRInt64 lastVisitDate;
+      rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastVisitDate);
+      if (NS_FAILED(rv)) return rv;
+
+      PRInt64 age;
+      LL_SUB(age, GetNow(), lastVisitDate);
+
+      // now need to convert msec -> days
+      PRInt64 ageInDays;
+      LL_DIV(ageInDays, age, MSECS_PER_DAY);
+
+      // now put in a 32-bit number (should be small now)
+      PRInt32 days;
+      LL_L2I(days, ageInDays);
+
+      nsCOMPtr<nsIRDFInt> ageLiteral;
+      rv = gRDFService->GetIntLiteral(days, getter_AddRefs(ageLiteral));
+      if (NS_FAILED(rv)) return rv;
+
+      *aTarget = ageLiteral;
+      NS_ADDREF(*aTarget);
+      return NS_OK;
+    }
     else if (aProperty == kNC_Name) {
       // Site name (i.e., page title)
       nsAutoString title;
       rv = GetRowValue(row, kToken_NameColumn, title);
+      if (NS_FAILED(rv) || title.IsEmpty()) {
+        // yank out the filename from the url, use that
+        nsCOMPtr<nsIURL> urlObj(do_CreateInstance(kStandardUrlCID, &rv));
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = urlObj->SetSpec(uri);
+        if (NS_FAILED(rv)) return rv;
+
+        nsXPIDLCString filename;
+        rv = urlObj->GetFileName(getter_Copies(filename));
+        if (NS_FAILED(rv) || !(const char*)filename) {
+          // ok fine. we'll use the file path. then we give up!
+          rv = urlObj->GetPath(getter_Copies(filename));
+          if (PL_strcmp(filename, "/") == 0) {
+            // if the top of a site does not have a title
+            // (common for redirections) then return the hostname
+            return GetTarget(aSource, kNC_Hostname, aTruthValue, aTarget);
+            
+          }
+        }
+
+        if (NS_FAILED(rv)) return rv;
+        
+        // assume the url is in UTF8
+        title = NS_ConvertUTF8toUCS2(filename);
+      }
       if (NS_FAILED(rv)) return rv;
 
       nsCOMPtr<nsIRDFLiteral> name;
@@ -1259,33 +1466,86 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
 
       return CallQueryInterface(name, aTarget);
     }
-    else if (aProperty == kNC_Referrer) {
-      // Referrer field
-      mdbYarn yarn;
-      err = row->AliasCellYarn(mEnv, kToken_ReferrerColumn, &yarn);
-      if (err != 0) return NS_ERROR_FAILURE;
-
-      // XXX Could probably alias the buffer here to avoid copy
-      nsCAutoString str((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
-
-      nsCOMPtr<nsIRDFResource> referrer;
-      rv = gRDFService->GetResource((const char*) str, getter_AddRefs(referrer));
+    else if (aProperty == kNC_Hostname ||
+             aProperty == kNC_Referrer) {
+      
+      nsCAutoString str;
+      if (aProperty == kNC_Hostname)
+        rv = GetRowValue(row, kToken_HostnameColumn, str);
+      else if (aProperty == kNC_Referrer)
+        rv = GetRowValue(row, kToken_ReferrerColumn, str);
+      
+      if (NS_FAILED(rv)) return rv;
+      
+      nsCOMPtr<nsIRDFResource> resource;
+      rv = gRDFService->GetResource(str.get(),
+                                    getter_AddRefs(resource));
       if (NS_FAILED(rv)) return rv;
 
-      return CallQueryInterface(referrer, aTarget);
+      return CallQueryInterface(resource, aTarget);
     }
-    else if (aProperty == kNC_URL) {
-      nsCOMPtr<nsIRDFLiteral> uriLiteral;
-      rv = gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(uri), getter_AddRefs(uriLiteral));
-      if (NS_FAILED(rv))    return(rv);
-      return CallQueryInterface(uriLiteral, aTarget);
-    }
+
     else {
       NS_NOTREACHED("huh, how'd I get here?");
     }
   }
-
   return NS_RDF_NO_VALUE;
+}
+
+void
+nsGlobalHistory::Sync()
+{
+  if (mDirty)
+    Flush();
+  
+  mDirty = PR_FALSE;
+}
+
+void
+nsGlobalHistory::ExpireNow()
+{
+  mNowValid = PR_FALSE;
+}
+
+// when we're dirty, we want to make sure we sync again soon,
+// but make sure that we don't keep syncing if someone is surfing
+// a lot, so cancel the existing timer if any is still waiting to fire
+nsresult
+nsGlobalHistory::SetDirty()
+{
+  nsresult rv;
+
+  if (mSyncTimer)
+    mSyncTimer->Cancel();
+
+  if (!mSyncTimer)
+    mSyncTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  mDirty = PR_TRUE;
+  mSyncTimer->Init(fireSyncTimer, this, HISTORY_SYNC_TIMEOUT,
+                   NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+  
+  return NS_OK;
+}
+
+// hack to avoid calling PR_Now() too often, as is the case when
+// we're asked the ageindays of many history entries in a row
+PRInt64
+nsGlobalHistory::GetNow()
+{
+  if (!mNowValid) {             // not dirty, mLastNow is crufty
+    mLastNow = PR_Now();
+    mNowValid = PR_TRUE;
+    if (!mExpireNowTimer)
+      mExpireNowTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+    if (mExpireNowTimer)
+      mExpireNowTimer->Init(fireSyncTimer, this, HISTORY_EXPIRE_NOW_TIMEOUT,
+                            NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+  }
+  
+  return mLastNow;
 }
 
 NS_IMETHODIMP
@@ -1302,37 +1562,54 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
   if (! aProperty)
     return NS_ERROR_NULL_POINTER;
 
-  if (aTruthValue) {
-    if ((aSource == kNC_HistoryRoot) &&
-        (aProperty == kNC_child) && (aTruthValue)) {
-      URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
-      if (! result)
-        return NS_ERROR_OUT_OF_MEMORY;
+  if (!aTruthValue)
+    return NS_NewEmptyEnumerator(aTargets);
 
-      nsresult rv;
-      rv = result->Init(mEnv, mTable);
-      if (NS_FAILED(rv)) return rv;
+  // list all URLs off the root
+  if ((aSource == kNC_HistoryRoot) &&
+      (aProperty == kNC_child)) {
+    URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
+    if (! result)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    nsresult rv;
+    rv = result->Init(mEnv, mTable);
+    if (NS_FAILED(rv)) return rv;
+    
+    *aTargets = result;
+    NS_ADDREF(*aTargets);
+    return NS_OK;
+  }
+  else if ((aSource == kNC_HistoryByDate) &&
+           (aProperty == kNC_child)) {
 
-      *aTargets = result;
-      NS_ADDREF(*aTargets);
-      return NS_OK;
-    }
-    else if ((aProperty == kNC_Date) ||
-             (aProperty == kNC_FirstVisitDate) ||
-             (aProperty == kNC_VisitCount) ||
-             (aProperty == kNC_Name) ||
-             (aProperty == kNC_Referrer)) {
-      nsresult rv;
-
-      nsCOMPtr<nsIRDFNode> target;
-      rv = GetTarget(aSource, aProperty, aTruthValue, getter_AddRefs(target));
-      if (NS_FAILED(rv)) return rv;
-
-      if (rv == NS_OK) {
-        return NS_NewSingletonEnumerator(aTargets, target);
-      }
+    return GetRootDayQueries(aTargets);
+  }
+  else if (aProperty == kNC_child &&
+           IsFindResource(aSource)) {
+    return CreateFindEnumerator(aSource, aTargets);
+  }
+  
+  else if ((aProperty == kNC_Date) ||
+           (aProperty == kNC_FirstVisitDate) ||
+           (aProperty == kNC_VisitCount) ||
+           (aProperty == kNC_AgeInDays) ||
+           (aProperty == kNC_Name) ||
+           (aProperty == kNC_Hostname) ||
+           (aProperty == kNC_Referrer)) {
+    nsresult rv;
+    
+    nsCOMPtr<nsIRDFNode> target;
+    rv = GetTarget(aSource, aProperty, aTruthValue, getter_AddRefs(target));
+    if (NS_FAILED(rv)) return rv;
+    
+    if (rv == NS_OK) {
+      return NS_NewSingletonEnumerator(aTargets, target);
     }
   }
+
+  // we've already answered the queries from the root, so we must be
+  // looking for real entries
 
   return NS_NewEmptyEnumerator(aTargets);
 }
@@ -1400,6 +1677,7 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
                               PRBool aTruthValue,
                               PRBool* aHasAssertion)
 {
+         
   NS_PRECONDITION(aSource != nsnull, "null ptr");
   if (! aSource)
     return NS_ERROR_NULL_POINTER;
@@ -1413,34 +1691,37 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
     return NS_ERROR_NULL_POINTER;
 
   // Only "positive" assertions here.
-  if (aTruthValue) {
-    // Do |GetTargets()| and grovel through the results to see if we
-    // have the assertion.
-    //
-    // XXX *AHEM*, this could be implemented much more efficiently...
-    nsresult rv;
+  if (!aTruthValue) {
+    *aHasAssertion = PR_FALSE;
+    return NS_OK;
+  }
 
-    nsCOMPtr<nsISimpleEnumerator> targets;
-    rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(targets));
+  // Do |GetTargets()| and grovel through the results to see if we
+  // have the assertion.
+  //
+  // XXX *AHEM*, this could be implemented much more efficiently...
+  nsresult rv;
+
+  nsCOMPtr<nsISimpleEnumerator> targets;
+  rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(targets));
+  if (NS_FAILED(rv)) return rv;
+  
+  while (1) {
+    PRBool hasMore;
+    rv = targets->HasMoreElements(&hasMore);
     if (NS_FAILED(rv)) return rv;
-
-    while (1) {
-      PRBool hasMore;
-      rv = targets->HasMoreElements(&hasMore);
-      if (NS_FAILED(rv)) return rv;
-
-      if (! hasMore)
-        break;
-
-      nsCOMPtr<nsISupports> isupports;
-      rv = targets->GetNext(getter_AddRefs(isupports));
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
-      if (node.get() == aTarget) {
-        *aHasAssertion = PR_TRUE;
-        return NS_OK;
-      }
+    
+    if (! hasMore)
+      break;
+    
+    nsCOMPtr<nsISupports> isupports;
+    rv = targets->GetNext(getter_AddRefs(isupports));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
+    if (node.get() == aTarget) {
+      *aHasAssertion = PR_TRUE;
+      return NS_OK;
     }
   }
 
@@ -1504,9 +1785,14 @@ nsGlobalHistory::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool
     return NS_ERROR_NULL_POINTER;
 
   if ((aSource == kNC_HistoryRoot) ||
-      (aSource == kNC_HistoryBySite) ||
       (aSource == kNC_HistoryByDate)) {
     *result = (aArc == kNC_child);
+  }
+  else if (IsFindResource(aSource)) {
+    // we handle children of find urls
+    *result = (aArc == kNC_child ||
+               aArc == kNC_Name ||
+               aArc == kNC_NameSort);
   }
   else if (IsURLInHistory(aSource)) {
     // If the URL is in the history, then it'll have all the
@@ -1515,6 +1801,7 @@ nsGlobalHistory::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool
                aArc == kNC_FirstVisitDate ||
                aArc == kNC_VisitCount ||
                aArc == kNC_Name ||
+               aArc == kNC_Hostname ||
                aArc == kNC_Referrer);
   }
   else {
@@ -1551,7 +1838,6 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
   nsresult rv;
 
   if ((aSource == kNC_HistoryRoot) ||
-      (aSource == kNC_HistoryBySite) ||
       (aSource == kNC_HistoryByDate)) {
     return NS_NewSingletonEnumerator(aLabels, kNC_child);
   }
@@ -1566,6 +1852,7 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
     array->AppendElement(kNC_FirstVisitDate);
     array->AppendElement(kNC_VisitCount);
     array->AppendElement(kNC_Name);
+    array->AppendElement(kNC_Hostname);
     array->AppendElement(kNC_Referrer);
 
     return NS_NewArrayEnumerator(aLabels, array);
@@ -1693,18 +1980,27 @@ nsGlobalHistory::Init()
     gRDFService->GetResource(NC_NAMESPACE_URI "FirstVisitDate",
                              &kNC_FirstVisitDate);
     gRDFService->GetResource(NC_NAMESPACE_URI "VisitCount",  &kNC_VisitCount);
+    gRDFService->GetResource(NC_NAMESPACE_URI "AgeInDays",  &kNC_AgeInDays);
     gRDFService->GetResource(NC_NAMESPACE_URI "Name",        &kNC_Name);
+    gRDFService->GetResource(NC_NAMESPACE_URI "Name?sort=true", &kNC_NameSort);
+    gRDFService->GetResource(NC_NAMESPACE_URI "Hostname",    &kNC_Hostname);
     gRDFService->GetResource(NC_NAMESPACE_URI "Referrer",    &kNC_Referrer);
     gRDFService->GetResource(NC_NAMESPACE_URI "child",       &kNC_child);
     gRDFService->GetResource(NC_NAMESPACE_URI "URL",         &kNC_URL);
     gRDFService->GetResource("NC:HistoryRoot",               &kNC_HistoryRoot);
-    gRDFService->GetResource("NC:HistoryBySite",             &kNC_HistoryBySite);
-    gRDFService->GetResource("NC:HistoryByDate",             &kNC_HistoryByDate);
+    gRDFService->GetResource("NC:HistoryByDate",           &kNC_HistoryByDate);
   }
 
   // register this as a named data source with the RDF service
   rv = gRDFService->RegisterDataSource(this, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(kStringBundleServiceCID, &rv);
+  
+  if (NS_SUCCEEDED(rv)) {
+    rv = bundleService->CreateBundle("chrome://communicator/locale/history/history.properties", nsnull, getter_AddRefs(mBundle));
+  }
 
   // register to observe profile changes
   NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
@@ -1834,6 +2130,10 @@ nsGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *filePath)
     return NS_ERROR_FAILURE;
   }
 
+  CheckHostnameEntries();
+
+  if (err != 0) return NS_ERROR_FAILURE;
+  
   return NS_OK;
 }
 
@@ -1882,6 +2182,112 @@ nsGlobalHistory::OpenNewFile(nsIMdbFactory *factory, const char *filePath)
   return NS_OK;
 }
 
+// break the uri down into a search query, and pass off to
+// SearchEnumerator
+nsresult
+nsGlobalHistory::CreateFindEnumerator(nsIRDFResource *aSource,
+                                      nsISimpleEnumerator **aResult)
+{
+  nsresult rv;
+  // make sure this was a find query
+  if (!IsFindResource(aSource))
+    return NS_ERROR_FAILURE;
+
+  nsXPIDLCString uri;
+  rv = aSource->GetValueConst(getter_Shares(uri));
+  if (NS_FAILED(rv)) return rv;
+
+  // convert uri to list of tokens
+  nsVoidArray tokenPairs;
+  FindUrlToTokenList(uri, tokenPairs);
+
+  // now convert the tokens to a query
+  searchQuery* query = new searchQuery;
+  if (!query) return NS_ERROR_OUT_OF_MEMORY;
+  TokenListToSearchQuery(tokenPairs, *query);
+  
+  FreeTokenList(tokenPairs);
+
+  // the enumerator will take ownership of the query
+  SearchEnumerator *result =
+    new SearchEnumerator(mStore, query, kToken_URLColumn);
+  if (!result) return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = result->Init(mEnv, mTable);
+  if (NS_FAILED(rv)) return rv;
+
+  // return the value
+  *aResult = result;
+  NS_ADDREF(*aResult);
+  
+  return NS_OK;
+}
+
+
+// for each row, we need to parse out the hostname from the url
+// then store it in a column
+nsresult
+nsGlobalHistory::CheckHostnameEntries()
+{
+  nsresult rv;
+
+  mdb_err err;
+
+  nsMdbPtr<nsIMdbTableRowCursor> cursor(mEnv);
+  nsMdbPtr<nsIMdbRow> row(mEnv);
+
+  err = mTable->GetTableRowCursor(mEnv, -1, getter_Acquires(cursor));
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  int marker;
+  err = mTable->StartBatchChangeHint(mEnv, &marker);
+  NS_ASSERTION(err == 0, "unable to start batch");
+  if (err != 0) return NS_ERROR_FAILURE;
+  
+  mdb_pos pos;
+  err = cursor->NextRow(mEnv, getter_Acquires(row), &pos);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  // comment out this code to rebuild the hostlist at startup
+#if 1
+  // bail early if the first row has a hostname
+  if (row) {
+    nsCAutoString hostname;
+    rv = GetRowValue(row, kToken_HostnameColumn, hostname);
+    if (NS_SUCCEEDED(rv) && !hostname.IsEmpty())
+      return NS_OK;
+  }
+#endif
+  
+  // cached variables used in the loop
+  nsCAutoString url;
+  nsXPIDLCString hostname;
+  nsCOMPtr<nsIURL> urlObj(do_CreateInstance(kStandardUrlCID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+
+  while (row) {
+    rv = GetRowValue(row, kToken_URLColumn, url);
+    if (NS_FAILED(rv)) break;
+
+    rv = urlObj->SetSpec(url);
+    if (NS_FAILED(rv)) break;
+
+    rv = urlObj->GetHost(getter_Copies(hostname));
+    if (NS_FAILED(rv)) break;
+
+    SetRowValue(row, kToken_HostnameColumn, hostname);
+    
+    cursor->NextRow(mEnv, getter_Acquires(row), &pos);
+  }
+
+  // Finish the batch.
+  err = mTable->EndBatchChangeHint(mEnv, &marker);
+  NS_ASSERTION(err == 0, "error ending batch");
+  
+  return rv;
+}
+
 nsresult
 nsGlobalHistory::CreateTokens()
 {
@@ -1893,10 +2299,10 @@ nsGlobalHistory::CreateTokens()
 
   err = mStore->StringToToken(mEnv, "ns:history:db:row:scope:history:all", &kToken_HistoryRowScope);
   if (err != 0) return NS_ERROR_FAILURE;
-
+  
   err = mStore->StringToToken(mEnv, "ns:history:db:table:kind:history", &kToken_HistoryKind);
   if (err != 0) return NS_ERROR_FAILURE;
-
+  
   err = mStore->StringToToken(mEnv, "URL", &kToken_URLColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
@@ -1913,6 +2319,9 @@ nsGlobalHistory::CreateTokens()
   if (err != 0) return NS_ERROR_FAILURE;
 
   err = mStore->StringToToken(mEnv, "Name", &kToken_NameColumn);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  err = mStore->StringToToken(mEnv, "Hostname", &kToken_HostnameColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
   return NS_OK;
@@ -1999,13 +2408,12 @@ nsresult nsGlobalHistory::Commit(eCommitType commitType)
 nsresult nsGlobalHistory::ExpireEntries(PRBool notify)
 {
   PRTime expirationDate;
-  PRTime now = PR_Now();
   PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInExpireDays;
-	
+  
   LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
   LL_UI2L(secondsInDays, 60 * 60 * 24 * mExpireDays);
   LL_MUL(microSecondsInExpireDays, secondsInDays, microSecondsPerSecond);
-  LL_SUB(expirationDate, now, microSecondsInExpireDays);
+  LL_SUB(expirationDate, GetNow(), microSecondsInExpireDays);
 
   matchExpiration_t expiration;
   expiration.history = this;
@@ -2035,16 +2443,17 @@ nsGlobalHistory::CloseDB()
 }
 
 nsresult
-nsGlobalHistory::FindUrl(const char *aURL, nsIMdbRow **aResult)
+nsGlobalHistory::FindRow(mdb_column aCol,
+                         const char *aValue, nsIMdbRow **aResult)
 {
   mdb_err err;
-  PRInt32 len = PL_strlen(aURL);
-  mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
+  PRInt32 len = PL_strlen(aValue);
+  mdbYarn yarn = { (void*) aValue, len, len, 0, 0, nsnull };
 
   mdbOid rowId;
   nsMdbPtr<nsIMdbRow> row(mEnv);
   err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
-                        kToken_URLColumn, &yarn,
+                        aCol, &yarn,
                         &rowId, getter_Acquires(row));
   
   *aResult = row;
@@ -2064,7 +2473,7 @@ nsGlobalHistory::IsURLInHistory(nsIRDFResource* aResource)
   if (NS_FAILED(rv)) return PR_FALSE;
 
   nsMdbPtr<nsIMdbRow> row(mEnv);
-  rv = FindUrl(url, getter_Acquires(row));
+  rv = FindRow(kToken_URLColumn, url, getter_Acquires(row));
 
   return (NS_SUCCEEDED(rv) && row) ? PR_TRUE : PR_FALSE;
 }
@@ -2155,6 +2564,306 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
   return NS_OK;
 }
 
+//
+// this is just generates static list of find-style queries
+// 
+nsresult
+nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsISupportsArray> dayArray;
+  NS_NewISupportsArray(getter_AddRefs(dayArray));
+  
+  PRInt32 i;
+  nsCOMPtr<nsIRDFResource> finduri;
+  nsLiteralCString
+    prefix(FIND_BY_AGEINDAYS_PREFIX "is" "&text=");
+  nsCAutoString uri;
+  for (i=0; i<7; i++) {
+    uri = prefix;
+    uri.AppendInt(i);
+    uri.Append("&groupby=Hostname");
+    rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
+    if (NS_SUCCEEDED(rv))
+      dayArray->AppendElement(finduri);
+  }
+
+  uri = FIND_BY_AGEINDAYS_PREFIX "isgreater" "&text=";
+  uri.AppendInt(i-1);
+  uri.Append("&groupby=Hostname");
+  rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
+
+  if (NS_SUCCEEDED(rv))
+    rv = dayArray->AppendElement(finduri);
+
+  PRUint32 arraylength;
+  dayArray->Count(&arraylength);
+  return NS_NewArrayEnumerator(aResult, dayArray);
+}
+
+//
+// convert the name/value pairs stored in a string into an array of
+// these pairs
+// find:a=b&c=d&e=f&g=h
+// becomes an array containing
+// {"a" = "b", "c" = "d", "e" = "f", "g" = "h" }
+//
+nsresult
+nsGlobalHistory::FindUrlToTokenList(const char *aURL, nsVoidArray& aResult)
+{
+  if (PL_strncmp(aURL, "find:", 5) != 0)
+    return NS_ERROR_UNEXPECTED;
+  
+  const char *curpos = aURL + 5;
+  const char *tokenstart = curpos;
+
+  // this is where we will store the current name and value
+  const char *tokenName = nsnull;
+  const char *tokenValue = nsnull;
+  PRUint32 tokenNameLength=0;
+  PRUint32 tokenValueLength=0;
+  
+  PRBool haveValue = PR_FALSE;  // needed because some values are 0-length
+  while (PR_TRUE) {
+    while (*curpos && (*curpos != '&') && (*curpos != '='))
+      curpos++;
+
+    if (*curpos == '=')  {        // just found a token name
+      tokenName = tokenstart;
+      tokenNameLength = (curpos - tokenstart);
+    }
+    else if ((!*curpos || *curpos == '&') &&
+             (tokenNameLength>0)) { // found a value, and we have a
+                                    // name
+      tokenValue = tokenstart;
+      tokenValueLength = (curpos - tokenstart);
+      haveValue = PR_TRUE;
+    }
+
+    // once we have a name/value pair, store it away
+    // note we're looking at lengths, so that
+    // "find:&a=b" doesn't connect with a=""
+    if (tokenNameLength>0 && haveValue) {
+
+      tokenPair *tokenStruct = new tokenPair(tokenName, tokenNameLength,
+                                             tokenValue, tokenValueLength);
+      aResult.AppendElement((void *)tokenStruct);
+      
+      // reset our state
+      tokenName = tokenValue = nsnull;
+      tokenNameLength = tokenValueLength = 0;
+      haveValue = PR_FALSE;
+    }
+
+    // the test has to be here to catch empty values
+    if (!*curpos) break;
+    
+    curpos++;
+    tokenstart = curpos;
+  }
+
+  return NS_OK;
+}
+
+void
+nsGlobalHistory::FreeTokenList(nsVoidArray& tokens)
+{
+  PRUint32 length = tokens.Count();
+  PRUint32 i;
+  for (i=0; i<length; i++) {
+    tokenPair *token = (tokenPair*)tokens[i];
+    delete token;
+  }
+  tokens.Clear();
+}
+
+//
+// helper function to figure out if something starts with "find"
+//
+PRBool
+nsGlobalHistory::IsFindResource(nsIRDFResource *aResource)
+{
+  nsresult rv;
+  const char *value;
+  rv = aResource->GetValueConst(&value);
+  if (NS_FAILED(rv)) return PR_FALSE;
+
+  return (PL_strncmp(value, "find:", 5)==0);
+}
+
+
+//
+// convert a list of name/value pairs into a search query with 0 or
+// more terms and an optional groupby
+//
+// a term consists of the values of the 4 name/value pairs
+// {datasource, match, method, text}
+// groupby is stored as a column #
+//
+nsresult
+nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
+                                        searchQuery& aResult)
+{
+
+  PRInt32 i;
+  PRInt32 length = aTokens.Count();
+
+  aResult.groupBy = 0;
+  const char *datasource=nsnull, *property=nsnull,
+    *method=nsnull, *text=nsnull;
+
+  PRUint32 datasourceLen=0, propertyLen=0, methodLen=0, textLen=0;
+  rowMatchCallback matchCallback;      // matching callback if needed
+  
+  for (i=0; i<length; i++) {
+    tokenPair *token = (tokenPair *)aTokens[i];
+
+    // per-term tokens
+    if (token->tokenName.Equals("datasource")) {
+      datasource = token->tokenValue.get();
+      datasourceLen = token->tokenValue.Length();
+    }
+    else if (token->tokenName.Equals("match")) {
+      if (token->tokenValue.Equals("AgeInDays"))
+        matchCallback = matchAgeInDaysCallback;
+      
+      property = token->tokenValue.get();
+      propertyLen = token->tokenValue.Length();
+    }
+    else if (token->tokenName.Equals("method")) {
+      method = token->tokenValue.get();
+      methodLen = token->tokenValue.Length();
+    }    
+    else if (token->tokenName.Equals("text")) {
+      text = token->tokenValue.get();
+      textLen = token->tokenValue.Length();
+    }
+    
+    // really, we should be storing the group-by as a column number or
+    // rdf resource
+    else if (token->tokenName.Equals("groupby")) {
+      mdb_err err;
+      err = mStore->QueryToken(mEnv,
+                               nsCAutoString(token->tokenValue),
+                               &aResult.groupBy);
+      printf("Converted %s to %d\n", nsCAutoString(token->tokenValue).get(),
+             aResult.groupBy);
+      if (err != 0)
+        aResult.groupBy = 0;
+    }
+    
+    // once we complete a term, we move on to the next one
+    if (datasource && property && method && text) {
+      searchTerm *currentTerm = new searchTerm(datasource, datasourceLen,
+                                               property, propertyLen,
+                                               method, methodLen,
+                                               text, textLen);
+      currentTerm->match = matchCallback;
+      
+      // append the old one, then create a new one
+      aResult.terms.AppendElement((void *)currentTerm);
+
+      // reset our state
+      matchCallback=nsnull;
+      currentTerm = nsnull;
+      datasource = property = method = text = 0;
+    }
+  }
+
+  return NS_OK;
+}
+
+//
+// get the user-visible "name" of a find resource
+// we basically parse the string, and use the data stored in the last
+// term to generate an appropriate string
+//
+nsresult
+nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
+{
+
+  nsresult rv;
+
+#if 0
+  printf("GetFindUriName for %s\n", aURL);
+#endif
+  
+  // build up a token list first
+  nsVoidArray tokens;
+  FindUrlToTokenList(aURL, tokens);
+  
+  // now convert the tokens to a query
+  searchQuery query;
+  TokenListToSearchQuery(tokens, query);
+
+  // throw away the tokens
+  FreeTokenList(tokens);
+
+  // can't exactly get a name if there's nothing to search for
+  if (query.terms.Count() < 1) {
+    NS_WARNING("Empty find: url\n");
+    return NS_OK;
+  }
+
+  // now build up a string from the query
+  searchTerm *term = (searchTerm*)query.terms[query.terms.Count()-1];
+    
+  // automatically build up string in the form
+  // findurl-<property>-<method>[-<text>]
+  // such as "finduri-AgeInDays-is" or "find-uri-AgeInDays-is-0"
+  nsAutoString stringName(NS_LITERAL_STRING("finduri-"));
+
+  // property
+  stringName.AppendWithConversion(term->property.get(),
+                                  term->property.Length());
+  stringName.Append(PRUnichar('-'));
+
+  // and now the method, such as "is" or "isgreater"
+  stringName.AppendWithConversion(nsCAutoString(term->method.get(),
+                                                term->method.Length()));
+
+  // try adding -<text> to see if there's a match
+  // for example, to match
+  // finduri-LastVisitDate-is-0=Today
+  PRInt32 preTextLength = stringName.Length();
+  stringName.Append(PRUnichar('-'));
+  stringName.Append(term->text);
+  stringName.Append(PRUnichar(0));
+
+  // try to find a localizable string
+  const PRUnichar *strings[] = {
+    term->text.GetUnicode()
+  };
+  nsXPIDLString value;
+
+  // first with the search text
+  rv = mBundle->FormatStringFromName(stringName.GetUnicode(),
+                                     strings, 1, getter_Copies(value));
+
+  // ok, try it without the -<text>, to match
+  // finduri-LastVisitDate-is=%S days ago
+  if (NS_FAILED(rv)) {
+    stringName.Truncate(preTextLength);
+    rv = mBundle->FormatStringFromName(stringName.GetUnicode(),
+                                       strings, 1, getter_Copies(value));
+  }
+
+  nsCOMPtr<nsIRDFLiteral> literal;
+  if (NS_SUCCEEDED(rv)) {
+    rv = gRDFService->GetLiteral(value, getter_AddRefs(literal));
+  } else {
+    // ok, no such string, so just put the match text itself there
+    rv = gRDFService->GetLiteral(term->text.GetUnicode(),
+                                 getter_AddRefs(literal));
+  }
+  if (NS_FAILED(rv)) return rv;
+  
+  *aResult = literal;
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
                          const PRUnichar *aSomeData)
@@ -2162,12 +2871,9 @@ nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
   nsresult rv;
 
   nsLiteralString aTopicString(aTopic);
-  
-  // topics we observe
-  NS_NAMED_LITERAL_STRING(prefChangedTopic, "nsPref:changed");
 
   // pref changing - update member vars
-  if (aTopicString.Equals(prefChangedTopic)) {
+  if (aTopicString.Equals(NS_LITERAL_STRING("nsPref:changed"))) {
 
     // expiration date
     nsCAutoString pref; pref.AssignWithConversion(aSomeData);
@@ -2236,11 +2942,259 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
 
   // Since the URLEnumerator always returns the value of the URL
   // column, we create an RDF resource.
-  nsCAutoString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+  nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
 
   nsresult rv;
   nsCOMPtr<nsIRDFResource> resource;
-  rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
+  rv = gRDFService->GetResource(nsCAutoString(uri).get(), getter_AddRefs(resource));
+  if (NS_FAILED(rv)) return rv;
+
+  *aResult = resource;
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsGlobalHistory::SearchEnumerator
+//
+//   Implementation
+
+nsGlobalHistory::SearchEnumerator::~SearchEnumerator()
+{
+  // free up the query
+  
+}
+
+
+// convert the query in mQuery into a find URI
+// if there is a groupby= in the query, then convert that
+// into the start of another search term
+// for example, in the following query with one term:
+//
+// term[0] = { history, AgeInDays, is, 0 }
+// groupby = Hostname
+//
+// we generate the following uri:
+//
+// find:datasource=history&match=AgeInDays&method=is&text=0&datasource=history
+//   &match=Hostname&method=is&text=
+//
+// and then the caller will append some text after after the "text="
+//
+void
+nsGlobalHistory::SearchEnumerator::GetFindUriPrefix(nsAWritableCString&
+                                                    aPrefix)
+{
+  if (!mFindUriPrefix.IsEmpty())
+    aPrefix.Assign(mFindUriPrefix);
+
+  mdb_err err;
+  
+  mFindUriPrefix.Assign("find:");
+  PRUint32 length = mQuery->terms.Count();
+  PRUint32 i;
+
+  
+  for (i=0; i<length; i++) {
+    searchTerm *term = (searchTerm*)mQuery->terms[i];
+    if (i != 0)
+      mFindUriPrefix.Append('&');
+    mFindUriPrefix.Append("datasource=");
+    mFindUriPrefix.Append(term->datasource);
+    
+    mFindUriPrefix.Append("&match=");
+    mFindUriPrefix.Append(term->property);
+    
+    mFindUriPrefix.Append("&method=");
+    mFindUriPrefix.Append(term->method);
+
+    mFindUriPrefix.Append("&text=");
+    mFindUriPrefix.Append(NS_ConvertUCS2toUTF8(term->text));
+  }
+
+  // if the query has a groupby=<foo> then we want to append that
+  // field as the last field to match
+
+  NS_ASSERTION(mQuery->groupBy != 0, "Can't generate find uri prefix without a groupby!");
+  if (mQuery->groupBy == 0) return;
+  
+  mFindUriPrefix.Append("&datasource=history");
+  
+  mFindUriPrefix.Append("&match=");
+
+  char groupby[100];
+  mdbYarn yarn = { groupby, 0, sizeof(groupby), 0, 0, nsnull };
+
+  err = mStore->TokenToString(mEnv, mQuery->groupBy, &yarn);
+  if (err == 0)
+    mFindUriPrefix.Append((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
+  
+  mFindUriPrefix.Append("&method=is");
+  mFindUriPrefix.Append("&text=");
+  
+  aPrefix.Assign(mFindUriPrefix);
+}
+
+//
+// determines if the given row matches all terms
+//
+// if there is a "groupBy" column, then we have to remember that we've
+// seen a row with the given value in that column, and then make sure
+// all future rows with that value in that column DON'T match, no
+// matter if they match the terms or not.
+PRBool
+nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
+{
+  mdb_err err;
+
+  mdbYarn groupColumnValue = { nsnull, 0, 0, 0, 0, nsnull};
+  if (mQuery->groupBy!=0) {
+
+    // if we have a 'groupby', then we use the hashtable to make sure
+    // we only match the FIRST row with the column value that we're
+    // grouping by
+    
+    err = mCurrent->AliasCellYarn(mEnv, mQuery->groupBy, &groupColumnValue);
+    if (err!=0) return PR_FALSE;
+
+    nsCStringKey key(nsLiteralCString((const char*)groupColumnValue.mYarn_Buf,
+                                      groupColumnValue.mYarn_Fill));
+
+    void *otherRow = mUniqueRows.Get(&key);
+
+    // Hey! we've seen this row before, so ignore it
+    if (otherRow) return PR_FALSE;
+  }
+
+  // now do the actual match
+  if (!RowMatches(mCurrent, mQuery))
+    return PR_FALSE;
+
+  if (mQuery->groupBy != 0) {
+    // we got this far, so we must have matched.
+    // add ourselves to the hashtable so we don't match rows like this
+    // in the future
+    nsCStringKey key(nsLiteralCString((const char*)groupColumnValue.mYarn_Buf,
+                                      groupColumnValue.mYarn_Fill));
+    
+    // note - weak ref, don't worry about releasing
+    mUniqueRows.Put(&key, (void *)mCurrent);
+  }
+
+  return PR_TRUE;
+}
+
+//
+// determines if the row matches the given terms, used above
+//
+PRBool
+nsGlobalHistory::SearchEnumerator::RowMatches(nsIMdbRow *aRow,
+                                              searchQuery *aQuery)
+{
+  PRUint32 length = aQuery->terms.Count();
+  PRUint32 i;
+
+  for (i=0; i<length; i++) {
+    
+    searchTerm *term = (searchTerm*)aQuery->terms[i];
+
+    if (term->datasource != "history")
+      continue;                 // we only match against history queries
+    
+    // use callback if it exists
+    if (term->match) {
+      // queue up some values just in case callback needs it
+      // (how would we do this dynamically?)
+      matchSearchTerm_t matchSearchTerm = { mEnv, mStore, term , PR_FALSE};
+      
+      if (!term->match(aRow, (void *)&matchSearchTerm))
+        return PR_FALSE;
+    } else {
+      mdb_err err;
+
+      mdb_column property_column;
+      nsCAutoString property_name(term->property.get(),term->property.Length());
+      property_name.Append(char(0));
+      
+      err = mStore->QueryToken(mEnv, property_name.get(), &property_column);
+      if (err != 0) {
+        NS_WARNING("Unrecognized column!");
+        continue;               // assume we match???
+      }
+      
+      // match the term directly against the column?
+      mdbYarn yarn;
+      aRow->AliasCellYarn(mEnv, property_column, &yarn);
+
+      if (term->method == "is") {
+        // is the cell in unicode or not? Hmm...let's assume so?
+        nsLiteralCString rowVal((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
+
+        if (NS_ConvertUCS2toUTF8(term->text) != rowVal)
+          return PR_FALSE;
+      }
+
+      else {
+        NS_WARNING("Unrecognized search method in SearchEnumerator::RowMatches");
+        // don't handle other match types like isgreater/etc yet
+      }
+      
+    }
+  }
+  
+  return PR_TRUE;
+}
+
+// 
+// return either the row, or another find resource.
+// if we're doing grouping, then we don't want to return a real row,
+// instead we want to expand the current query into a deeper query
+// where we match up the groupby attribute.
+// if we're not doing grouping, then we just return the URL for the
+// current row
+nsresult
+nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
+                                                      nsISupports** aResult)
+
+{
+  mdb_err err;
+  nsresult rv;
+  
+  nsCOMPtr<nsIRDFResource> resource;
+  if (mQuery->groupBy == 0) {
+    // no column to group by
+    // just create a resource based on the URL of the current row
+    mdbYarn yarn;
+    err = aRow->AliasCellYarn(mEnv, mURLColumn, &yarn);
+    if (err != 0) return NS_ERROR_FAILURE;
+
+    
+    nsLiteralCString uri((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
+
+    rv = gRDFService->GetResource(nsCAutoString(uri).get(),
+                                  getter_AddRefs(resource));
+    if (NS_FAILED(rv)) return rv;
+
+    *aResult = resource;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+  }
+
+  // we have a group by, so now we recreate the find url, but add a
+  // query for the row asked for by groupby
+  mdbYarn groupByValue;
+  err = aRow->AliasCellYarn(mEnv, mQuery->groupBy, &groupByValue);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  nsCAutoString findUri;
+  GetFindUriPrefix(findUri);
+
+  nsLiteralCString rowValue((const char *)groupByValue.mYarn_Buf,
+                            groupByValue.mYarn_Fill);
+  
+  findUri.Append(rowValue);
+
+  rv = gRDFService->GetResource(findUri.get(), getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
 
   *aResult = resource;
