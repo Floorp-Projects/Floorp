@@ -631,6 +631,7 @@ nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
                                    nsCID *aClass) 
 {
 	nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
+#ifdef USE_REGISTRY
 	HREG hreg;
 
 	checkInitialized();
@@ -677,6 +678,7 @@ nsresult nsRepository::ProgIDToCLSID(const char *aProgID,
 		return (NS_ERROR_FAILURE);
 	}
 	res = NS_OK;
+#endif /* USE_REGISTRY */
 
 	PR_LOG(logmodule, PR_LOG_WARNING, ("nsRepository: ProgIDToCLSID() %s",
 		res == NS_OK ? "succeeded" : "FAILED"));
