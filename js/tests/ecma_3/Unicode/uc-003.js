@@ -37,15 +37,15 @@ function test()
 
     reportCompare (5, eval("\u0041"),
                    "Escaped ASCII Identifier test.");
-    reportCompare (6, eval("\u0041++"),
+    reportCompare (6, eval("++\u0041"),
                    "Escaped ASCII Identifier test");
     reportCompare (15, eval("A\u03B2"),
                    "Escaped non-ASCII Identifier test");
-    reportCompare (16, eval("A\u03B2++"),
+    reportCompare (16, eval("++A\u03B2"),
                    "Escaped non-ASCII Identifier test");
-    reportCompare (25, eval("A\u03B2"),
+    reportCompare (25, eval("c\u0061se"),
                    "Escaped keyword Identifier test");
-    reportCompare (26, eval("A\u03B2++"),
+    reportCompare (26, eval("++c\u0061se"),
                    "Escaped keyword Identifier test");
     
     exitFunc ("test");

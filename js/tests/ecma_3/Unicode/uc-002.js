@@ -36,7 +36,7 @@ function test()
 
     var str = "\u00A0foo";
     reportCompare (0, str.search(/^\sfoo$/),
-                   "Unicode non-breaking space character regexp test."););
+                   "Unicode non-breaking space character regexp test.");
 
     exitFunc ("test");
 }
