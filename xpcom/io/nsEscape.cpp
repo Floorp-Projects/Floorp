@@ -310,7 +310,7 @@ const int EscapeChars[256] =
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,       /* 0x */
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  	    /* 1x */
         0,1023,   0, 512,1023,   0,1023,1023,1023,1023,1023,1023,1023,1023, 959, 784,       /* 2x   !"#$%&'()*+,-./	 */
-     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 912, 912,   0,1008,   0, 768,       /* 3x  0123456789:;<=>?	 */
+     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1008, 912,   0,1008,   0, 768,       /* 3x  0123456789:;<=>?	 */
      1008,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 4x  @ABCDEFGHIJKLMNO  */
      1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 896, 896, 896, 896,1023,       /* 5x  PQRSTUVWXYZ[\]^_	 */
         0,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 6x  `abcdefghijklmno	 */
@@ -384,6 +384,7 @@ NS_COM PRBool NS_EscapeURL(const char *part,
     PRBool ignoreNonAscii = (mask & esc_OnlyASCII);
     PRBool ignoreAscii = (mask & esc_OnlyNonASCII);
     PRBool writing = (mask & esc_AlwaysCopy);
+    PRBool colon = (mask & esc_Colon);
 
     register const unsigned char* src = (const unsigned char *) part;
 
@@ -401,10 +402,13 @@ NS_COM PRBool NS_EscapeURL(const char *part,
       // See bugzilla bug 61269 for details why we changed this
       //
       // And, we will not escape non-ascii characters if requested.
+      // On special request we will also escape the colon even when
+      // not covered by the matrix
 
-      if (NO_NEED_ESC(c) || (c == HEX_ESCAPE && !forced)
-                         || (c > 0x7f && ignoreNonAscii)
-                         || (c < 0x80 && ignoreAscii))
+      if ((NO_NEED_ESC(c) || (c == HEX_ESCAPE && !forced)
+                          || (c > 0x7f && ignoreNonAscii)
+                          || (c < 0x80 && ignoreAscii))
+          && !(c == ':' && colon))
       {
         if (writing)
           tempBuffer[tempBufferPos++] = c;
