@@ -80,7 +80,7 @@ bin2rc.exe:: bin2rc.c
 makedep.exe:: makedep.cpp
     @cl -MT makedep.cpp 
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number INSTALL_FILES
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number $(INSTALL_FILES)
 !ifdef MOZILLA_OFFICIAL
     $(PERL) set-timebomb.pl 0 30
 !endif
