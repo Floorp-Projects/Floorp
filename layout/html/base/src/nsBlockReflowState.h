@@ -327,14 +327,19 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
 NS_METHOD
 nsBlockFrame::VerifyTree() const
 {
+#ifdef NS_DEBUG
   nsresult rv = nsHTMLContainerFrame::VerifyTree();
   if (NS_OK != rv) {
     return rv;
   }
   rv = VerifyLines(PR_TRUE);
+#else
+  rv = NS_OK;
+#endif
   return rv;
 }
 
+#ifdef NS_DEBUG
 nsresult
 nsBlockFrame::VerifyLines(PRBool aFinalCheck) const
 {
@@ -381,6 +386,7 @@ nsBlockFrame::VerifyLines(PRBool aFinalCheck) const
 
   return rv;
 }
+#endif
 
 //----------------------------------------------------------------------
 
