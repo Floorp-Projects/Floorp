@@ -21,6 +21,7 @@ $SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
 $CleanProfile             = 0;
 $ResetHomeDirForTests     = 1;
 $ProductName              = "Mozilla";
+$VendorName               = '';
 
 $RunMozillaTests          = 1;  # Allow turning off of all tests if needed.
 $RegxpcomTest             = 1;

@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.257 $ ';
+$::UtilsVersion = '$Revision: 1.258 $ ';
 
 package TinderUtils;
 
@@ -1096,15 +1096,25 @@ sub get_profile_dir {
                 $profile_dir = $ENV{APPDATA} || "C:\\_UNKNOWN_";
             }
         }
-        $profile_dir .= "\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
+        if ($Settings::VendorName) {
+          $profile_dir .= "\\$Settings::VendorName\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
+        }
+        else {
+          $profile_dir .= "\\$Settings::ProductName\\Profiles\\$Settings::MozProfileName";
+        }
         $profile_dir =~ s|\\|/|g;
     } elsif ($Settings::OS eq "BeOS") {
         $profile_dir = "/boot/home/config/settings/Mozilla/$Settings::MozProfileName";
     } elsif ($Settings::OS eq "Darwin") {
-        $profile_dir = "$ENV{HOME}/Library/$Settings::ProductName/Profiles/$Settings::MozProfileName";
+        $profile_dir = "$ENV{HOME}/Library/Application Support/$Settings::ProductName/Profiles/$Settings::MozProfileName";
     } else {
         # *nix
-        $profile_dir = "$build_dir/.".lc($Settings::ProductName)."/$Settings::MozProfileName";
+        if ($Settings::VendorName) {
+          $profile_dir = "$build_dir/.".lc($Settings::VendorName)."/".lc($Settings::ProductName)."/$Settings::MozProfileName";
+        }
+        else {
+          $profile_dir = "$build_dir/.".lc($Settings::ProductName)."/$Settings::MozProfileName";
+        }
     }
 
     return $profile_dir;
