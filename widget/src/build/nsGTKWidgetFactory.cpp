@@ -267,15 +267,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*)new nsDragService();
     }
-    else if (mClassID.Equals(kCDragSource)) {
-        inst = (nsISupports*)new nsDragSource();
-    }
-    else if (mClassID.Equals(kCDragTarget)) {
-        inst = (nsISupports*)new nsDragTarget();
-    }
-    else if (mClassID.Equals(kCDraggedObject)) {
-        inst = (nsISupports*)new nsDraggedObject();
-    }
 #endif
     else {
         printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
