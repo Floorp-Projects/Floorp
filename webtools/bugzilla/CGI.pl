@@ -839,7 +839,8 @@ sub GetCommandMenu {
         $html .= "[<a href='query2.cgi'>beta</a>]";
     }
     
-    $html .= qq{| <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
+    $html .=
+        qq{ | <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
 
     $html .= " | <a href='reports.cgi'>Reports</a>";
     if ($loggedin) {
@@ -850,10 +851,10 @@ sub GetCommandMenu {
             GetVersionTable();
         }
         if ($::anyvotesallowed) {
-            $html .= qq{ | <A HREF="showvotes.cgi">My votes</A>};
+            $html .= qq{ | <A HREF="showvotes.cgi"><NOBR>My votes</NOBR></A>};
         }
         my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
-        $html = $html . " | <a href='$mybugsurl'>My bugs</a>";
+        $html = $html . " | <A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
     }
                 
     $html = $html . " | <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
