@@ -724,17 +724,11 @@ nsBoxFrame::DidReflow(nsIPresContext*           aPresContext,
                       const nsHTMLReflowState*  aReflowState,
                       nsDidReflowStatus         aStatus)
 {
-  PRBool isDirty = mState & NS_FRAME_IS_DIRTY;
-  PRBool hasDirtyChildren = mState & NS_FRAME_HAS_DIRTY_CHILDREN;
+  nsFrameState preserveBits =
+    mState & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
   nsresult rv = nsFrame::DidReflow(aPresContext, aReflowState, aStatus);
-  if (isDirty)
-    mState |= NS_FRAME_IS_DIRTY;
-
-  if (hasDirtyChildren)
-    mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
-
+  mState |= preserveBits;
   return rv;
-
 }
 
 #ifdef DO_NOISY_REFLOW
@@ -923,15 +917,11 @@ nsBoxFrame::Reflow(nsIPresContext*          aPresContext,
      nsSize minSize(0,0);
      GetMinSize(state,  minSize);
 
-     if (mRect.width > minSize.width) {
-       if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
-         *maxElementWidth = minSize.width;
-       } else {
-         *maxElementWidth = mRect.width;
-       }
-     } else {
-        *maxElementWidth = mRect.width;
-     }
+     if (mRect.width > minSize.width &&
+         aReflowState.mComputedWidth == NS_INTRINSICSIZE)
+       *maxElementWidth = minSize.width;
+     else
+       *maxElementWidth = mRect.width;
   }
 #ifdef DO_NOISY_REFLOW
   {
@@ -1331,6 +1321,8 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsBoxLayoutState state(aPresContext);
+  // XXX This causes us to reflow for any attribute change (e.g.,
+  // flipping through menus).
   MarkDirty(state);
 
   return rv;
@@ -1422,7 +1414,7 @@ nsBoxFrame::GetDebugPref(nsIPresContext* aPresContext)
     gDebug = PR_FALSE;
     nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (prefBranch) {
-	    prefBranch->GetBoolPref("xul.debug.box", &gDebug);
+        prefBranch->GetBoolPref("xul.debug.box", &gDebug);
     }
 }
 
