@@ -2471,7 +2471,8 @@ FindElementBackground(nsIPresContext* aPresContext,
 {
   nsIFrame *parentFrame;
   aForFrame->GetParent(&parentFrame);
-  if (IsCanvasFrame(parentFrame)) {
+  // XXXldb We shouldn't have to null-check |parentFrame| here.
+  if (parentFrame && IsCanvasFrame(parentFrame)) {
     // Check that we're really the root (rather than in another child list).
     nsIFrame *childFrame;
     parentFrame->FirstChild(aPresContext, nsnull, &childFrame);
@@ -2484,7 +2485,7 @@ FindElementBackground(nsIPresContext* aPresContext,
   nsCOMPtr<nsIContent> content;
   aForFrame->GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(content);
-  if (!body)
+  if (!body || !parentFrame)
     return PR_TRUE; // not frame for BODY element
 
   const nsStyleBackground *htmlBG;

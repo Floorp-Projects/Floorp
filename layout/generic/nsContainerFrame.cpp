@@ -60,6 +60,7 @@
 #include "nsIRegion.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
+#include "nsCSSRendering.h"
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
@@ -513,7 +514,9 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     const nsStyleBackground* bg;
     const nsStyleVisibility* vis;
     const nsStyleDisplay* display;
-    aFrame->GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)bg);
+    PRBool isCanvas;
+    PRBool hasBG =
+        nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
     aFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
     aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
@@ -522,8 +525,10 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
 
     // See if the view should be hidden or visible
     PRBool  viewIsVisible = PR_TRUE;
-    PRBool  viewHasTransparentContent = (bg->mBackgroundFlags &
-              NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
+    PRBool  viewHasTransparentContent =
+        !isCanvas &&
+        (!hasBG ||
+         (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
 
     if (NS_STYLE_VISIBILITY_COLLAPSE == vis->mVisible) {
       viewIsVisible = PR_FALSE;
