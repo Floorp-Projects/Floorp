@@ -293,11 +293,11 @@ nsNoAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
                 !(*(dirfile+2) == ':' || *(dirfile+2) == '|')) {
                 nsCAutoString tempdir;
                 if (PL_strlen(dirfile) < 2 || (PL_strlen(dirfile) >= 2 &&
-                   *(dirfile+1) != '/' && *(dirfile+1) != '\\')) {
+                   *(dirfile+1) != '/')) {
                     tempdir += "/";
                 }
                 if (PL_strlen(dirfile) < 3 || (PL_strlen(dirfile) >= 3 &&
-                   *(dirfile+2) != '/' && *(dirfile+2) != '\\')) {
+                   *(dirfile+2) != '/')) {
                     tempdir += "/";
                 }
                 tempdir += dirfile;
