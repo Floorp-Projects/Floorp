@@ -47,6 +47,7 @@
 #define MAX_RSA_MODULUS_BYTES (1024/8)
 #define DEFAULT_ITERS 10
 #define DEFAULT_DURATION 10
+#define DEFAULT_THREADS 1
 
 extern NSSLOWKEYPrivateKey * getDefaultRSAPrivateKey(void);
 extern NSSLOWKEYPublicKey  * getDefaultRSAPublicKey(void);
@@ -54,9 +55,9 @@ extern NSSLOWKEYPublicKey  * getDefaultRSAPublicKey(void);
 typedef struct TimingContextStr TimingContext;
 
 struct TimingContextStr {
-    int64 start;
-    int64 end;
-    int64 interval;
+    PRTime start;
+    PRTime end;
+    PRTime interval;
 
     long  days;     
     int   hours;    
@@ -66,20 +67,20 @@ struct TimingContextStr {
 };
 
 TimingContext *CreateTimingContext(void) {
-    return PR_Malloc(sizeof(TimingContext));
+    return PORT_Alloc(sizeof(TimingContext));
 }
 
 void DestroyTimingContext(TimingContext *ctx) {
-    PR_Free(ctx);
+    PORT_Free(ctx);
 }
 
-void TimingBegin(TimingContext *ctx) {
-    ctx->start = PR_Now();
+void TimingBegin(TimingContext *ctx, PRTime begin) {
+    ctx->start = begin;
 }
 
 static void timingUpdate(TimingContext *ctx) {
-    int64 tmp, remaining;
-    int64 L1000,L60,L24;
+    PRInt64 tmp, remaining;
+    PRInt64 L1000,L60,L24;
 
     LL_I2L(L1000,1000);
     LL_I2L(L60,60);
@@ -101,15 +102,15 @@ static void timingUpdate(TimingContext *ctx) {
     LL_L2I(ctx->days, remaining);
 }
 
-void TimingEnd(TimingContext *ctx) {
-    ctx->end = PR_Now();
+void TimingEnd(TimingContext *ctx, PRTime end) {
+    ctx->end = end;
     LL_SUB(ctx->interval, ctx->end, ctx->start);
     PORT_Assert(LL_GE_ZERO(ctx->interval));
     timingUpdate(ctx);
 }
 
 void TimingDivide(TimingContext *ctx, int divisor) {
-    int64 tmp;
+    PRInt64 tmp;
 
     LL_I2L(tmp, divisor);
     LL_DIV(ctx->interval, ctx->interval, tmp);
@@ -151,8 +152,8 @@ char *TimingGenerateString(TimingContext *ctx) {
 void
 Usage(char *progName)
 {
-    fprintf(stderr, "Usage: %s [-d certdir] [-i iterations | -p period] [-s | -e]"
-	            " -n nickname\n",
+    fprintf(stderr, "Usage: %s [-d certdir] [-t threads] [-i iterations | -p period] "
+	            "[-s | -e] -n nickname\n",
 	    progName);
     fprintf(stderr, "%-20s Cert database directory (default is ~/.netscape)\n",
 	    "-d certdir");
@@ -160,6 +161,7 @@ Usage(char *progName)
     fprintf(stderr, "%-20s How many seconds to run\n", "-p period");
     fprintf(stderr, "%-20s Perform signing (private key) operations\n", "-s");
     fprintf(stderr, "%-20s Perform encryption (public key) operations\n", "-e");
+    fprintf(stderr, "%-20s Number of execution threads\n", "-t threads(default 1)");
     fprintf(stderr, "%-20s Nickname of certificate or key\n", "-n nickname");
     exit(-1);
 }
@@ -226,6 +228,57 @@ typedef SECStatus (* RSAOp)(void *               key,
 			    unsigned char *      output,
 		            unsigned char *      input);
 
+typedef struct ThreadRunDataStr ThreadRunData;
+
+struct ThreadRunDataStr {
+    const PRBool        *doIters;
+    const void          *rsaKey;
+    const unsigned char *buf;
+    RSAOp                fn;
+    int                  seconds;
+    long                 iters;
+    long                 iterRes;
+    PRErrorCode          errNum;
+    SECStatus            status;
+    PRTime               tstart;
+    PRTime               tstop;
+};
+
+
+void ThreadExecFunction(void *data)
+{
+    ThreadRunData *tdata = (ThreadRunData*)data;
+    unsigned char buf2[1024];
+
+    tdata->status = SECSuccess;
+    tdata->tstart = PR_Now();
+    if (*tdata->doIters) {
+        long i = tdata->iters;
+        tdata->iterRes = tdata->iters;
+        while (i--) {
+            SECStatus rv = tdata->fn((void*)tdata->rsaKey, buf2, (unsigned char*)tdata->buf);
+            if (rv != SECSuccess) {
+                tdata->errNum = PORT_GetError();
+                tdata->status = rv;
+                return;
+            }
+        }
+    } else {
+        PRIntervalTime total = PR_SecondsToInterval(tdata->seconds);
+        PRIntervalTime start = PR_IntervalNow();
+        tdata->iterRes = 0;
+        while (PR_IntervalNow() - start < total) {
+            SECStatus rv = tdata->fn((void*)tdata->rsaKey, buf2, (unsigned char*)tdata->buf);
+            if (rv != SECSuccess) {
+                tdata->errNum = PORT_GetError();
+                tdata->status = rv;
+                return;
+            }
+            tdata->iterRes++;
+        }
+    }
+    tdata->tstop = PR_Now();
+}
 
 int
 main(int argc, char **argv)
@@ -253,13 +306,19 @@ main(int argc, char **argv)
     int                   seconds = DEFAULT_DURATION;
     PRBool                doIters = PR_FALSE;
     PRBool                doTime = PR_FALSE;
+    int                   threadNum     = DEFAULT_THREADS;
+    ThreadRunData      ** runDataArr = NULL;
+    PRThread           ** threadsArr = NULL;
+    int                   calcThreads = 0;
+    PRTime                startTimeAcc = 0;
+    PRTime                stopTimeAcc = 0;
 
     progName = strrchr(argv[0], '/');
     if (!progName)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    optstate = PL_CreateOptState(argc, argv, "d:i:sen:p:");
+    optstate = PL_CreateOptState(argc, argv, "d:i:sen:p:t:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	case '?':
@@ -285,6 +344,9 @@ main(int argc, char **argv)
             seconds = (atol(optstate->value)>0?atol(optstate->value):DEFAULT_DURATION);
             doTime = PR_TRUE;
             break;
+	case 't':
+	    threadNum = (atoi(optstate->value) > 0) ? atoi(optstate->value) : DEFAULT_THREADS;
+	    break;
 	}
     }
     if (optstatus == PL_OPT_BAD)
@@ -381,7 +443,7 @@ main(int argc, char **argv)
 	PRErrorCode errNum;
 	const char * errStr = NULL;
 
-	errNum = PR_GetError();
+	errNum = PORT_GetError();
 	if (errNum)
 	    errStr = SECU_Strerror(errNum);
 	else
@@ -393,38 +455,53 @@ main(int argc, char **argv)
     }
 
 /*  printf("START\n");	*/
+    threadsArr = (PRThread**)PORT_Alloc(threadNum*sizeof(PRThread*));
+    runDataArr = (ThreadRunData**)PORT_Alloc(threadNum*sizeof(ThreadRunData*));
+    for (i = 0;i < threadNum;i++) {
+        runDataArr[i] = (ThreadRunData*)PORT_Alloc(sizeof(ThreadRunData));
+        runDataArr[i]->fn = fn;
+        runDataArr[i]->buf = buf;
+        runDataArr[i]->doIters = &doIters;
+        runDataArr[i]->rsaKey = rsaKey;
+        runDataArr[i]->seconds = seconds;
+        runDataArr[i]->iters = iters;
+        threadsArr[i] = 
+            PR_CreateThread(PR_USER_THREAD,
+                 ThreadExecFunction,
+                 (void*) runDataArr[i],
+                 PR_PRIORITY_NORMAL,
+                 PR_GLOBAL_THREAD,
+                 PR_JOINABLE_THREAD,
+                 0);
+    }
+    iters = 0;
+    calcThreads = 0;
+    stopTimeAcc = startTimeAcc = 0;
+    for (i = 0;i < threadNum;i++, calcThreads++)
+    {
+        PR_JoinThread(threadsArr[i]);
+        if (runDataArr[i]->status != SECSuccess) {
+            const char * errStr = SECU_Strerror(runDataArr[i]->errNum);
+            fprintf(stderr, "Thread %d: Error in RSA operation: %d : %s\n", 
+                    i, runDataArr[i]->errNum, errStr);
+            calcThreads -= 1;
+        } else {
+            startTimeAcc += runDataArr[i]->tstart;
+            stopTimeAcc  += runDataArr[i]->tstop;
+            iters += runDataArr[i]->iterRes;
+        }
+        PORT_Free((void*)runDataArr[i]);
+    }
+    PORT_Free(runDataArr);
+    PORT_Free(threadsArr);
+    
+    LL_DIV(startTimeAcc, startTimeAcc, (PRInt64)calcThreads);
+    LL_DIV(stopTimeAcc, stopTimeAcc, (PRInt64)calcThreads);
 
     timeCtx = CreateTimingContext();
-    TimingBegin(timeCtx);
-    if (doIters) {
-        i = iters;
-        while (i--) {
-            rv = fn(rsaKey, buf2, buf);
-            if (rv != SECSuccess) {
-                PRErrorCode errNum = PR_GetError();
-                const char * errStr = SECU_Strerror(errNum);
-                fprintf(stderr, "Error in RSA operation: %d : %s\n", 
-                errNum, errStr);
-                exit(1);
-            }
-        }
-    } else {
-        PRIntervalTime total = PR_SecondsToInterval(seconds);
-        PRIntervalTime start = PR_IntervalNow();
-        iters = 0;
-        while (PR_IntervalNow() - start < total) {
-            rv = fn(rsaKey, buf2, buf);
-            if (rv != SECSuccess) {
-                PRErrorCode errNum = PR_GetError();
-                const char * errStr = SECU_Strerror(errNum);
-                fprintf(stderr, "Error in RSA operation: %d : %s\n", 
-                errNum, errStr);
-                exit(1);
-            }
-            iters++;
-        }
-    }
-    TimingEnd(timeCtx);
+    TimingBegin(timeCtx, startTimeAcc);
+    TimingEnd(timeCtx, stopTimeAcc);
+    
     printf("%ld iterations in %s\n",
 	   iters, TimingGenerateString(timeCtx));
     printf("%.2f operations/s .\n", ((double)(iters)*(double)1000000.0) / (double)timeCtx->interval );
