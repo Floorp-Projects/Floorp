@@ -145,7 +145,8 @@ protected:
 private:
   // We're counting the number of |nsWebShells| to help find leaks
   static unsigned long gNumberOfWebShells;
-#endif
+#endif /* DETECT_WEBSHELL_LEAKS */
 };
 
-#endif
+#endif /* webshell____h */
+

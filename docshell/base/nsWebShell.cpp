@@ -29,6 +29,21 @@
 // which is why this fix is here instead of in _os2.h
 typedef unsigned long HMTX;
 #endif
+
+#ifdef DEBUG
+#undef NOISY_LINKS
+#undef NOISY_WEBSHELL_LEAKS
+#else
+#undef NOISY_LINKS
+#undef NOISY_WEBSHELL_LEAKS
+#endif
+
+#define NOISY_WEBSHELL_LEAKS
+#ifdef NOISY_WEBSHELL_LEAKS
+#undef DETECT_WEBSHELL_LEAKS
+#define DETECT_WEBSHELL_LEAKS
+#endif
+
 #include "nsDocShell.h"
 #include "nsIWebShell.h"
 #include "nsWebShell.h"
@@ -117,21 +132,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_C
 
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
-
-
-#ifdef DEBUG
-#undef NOISY_LINKS
-#undef NOISY_WEBSHELL_LEAKS
-#else
-#undef NOISY_LINKS
-#undef NOISY_WEBSHELL_LEAKS
-#endif
-
-#define NOISY_WEBSHELL_LEAKS
-#ifdef NOISY_WEBSHELL_LEAKS
-#undef DETECT_WEBSHELL_LEAKS
-#define DETECT_WEBSHELL_LEAKS
-#endif
 
 #define SH_IN_FRAMES 1
 
