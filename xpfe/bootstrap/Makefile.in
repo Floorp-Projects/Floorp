@@ -56,6 +56,10 @@ ifdef MOZ_MONOLITHIC_TOOLKIT
 XP_LIBS		+= $(TK_LIBS)
 endif
 
+ifdef DETECT_WEBSHELL_LEAKS
+XP_LIBS         += -lraptorwebwidget
+endif
+
 ifdef MOZ_OJI
 OJI_LIBS	= -ljsj
 endif
