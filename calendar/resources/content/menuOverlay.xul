@@ -318,11 +318,11 @@
          label="&toolsMenu.label;"
          accesskey="&toolsMenu.accesskey;">
       <menupopup id="toolsPopup" onpopupshowing="checkWallet()">
-         <menuitem id="calendar-wizard-menu"
+<--         <menuitem id="calendar-wizard-menu"
                    key="wizard_key"
                    label="&calendar.wizard.label;"
                    accesskey="&calendar.wizard.accesskey;"
-                   observes="wizard_command"/>
+                   observes="wizard_command"/> -->
         <menuitem label="&walletPasswordManager.label;" hidden="true"
                   id="password-manager-menu"
                   accesskey="&walletPasswordManager.accesskey;"

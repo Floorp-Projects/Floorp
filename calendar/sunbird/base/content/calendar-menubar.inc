@@ -97,7 +97,6 @@
 
            <!-- export: getting data out of existing files -->
            <menuitem id="calendar-export-menu"
-                     key="export_key"
                      label="&calendar.export.label;"
                      accesskey="&calendar.export.accesskey;"
                      observes="export_command"/>
@@ -272,10 +271,10 @@
              label="&toolsMenu.label;"
              accesskey="&toolsMenu.accesskey;">
          <menupopup id="toolsPopup">
-           <menuitem id="calendar-wizard-menu"
-                     label="&calendar.wizard.label;"
-                     accesskey="&calendar.wizard.accesskey;"
-                     observes="wizard_command"/>
+#           <menuitem id="calendar-wizard-menu"
+#                     label="&calendar.wizard.label;"
+#                     accesskey="&calendar.wizard.accesskey;"
+#                     observes="wizard_command"/>
            <menuseparator/>
                <menuitem id="javascriptConsole"
                          label="&javaScriptConsoleCmd.label;"
