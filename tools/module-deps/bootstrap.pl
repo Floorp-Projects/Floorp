@@ -159,7 +159,7 @@ sub FindMakefiles
   # Pull core build stuff.
   unless($skip_cvs) {
     print "\n\nPulling core build files...\n";
-    my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/configure.in mozilla/Makefile.in mozilla/build mozilla/include mozilla/tools/module-deps";
+    my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/configure.in mozilla/aclocal.m4 mozilla/Makefile.in mozilla/build mozilla/include mozilla/tools/module-deps";
     $rv = run_shell_command("cvs co $core_build_files");
   }
 
