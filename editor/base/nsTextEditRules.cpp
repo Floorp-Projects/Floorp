@@ -282,21 +282,17 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   res = TruncateInsertionIfNeeded(aSelection, aInString, aOutString, aMaxLength);
   if (NS_FAILED(res)) return res;
   
-  if (aOutString->Length())
+  // handle password field docs
+  if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
   {
-    
-    // handle password field docs
-    if (mFlags & nsIHTMLEditor::eEditorPasswordMask)
-    {
-      res = EchoInsertionToPWBuff(aSelection, aOutString);
-      if (NS_FAILED(res)) return res;
-    }
-    
-    // do text insertion
-    PRBool bCancel;
-    res = DoTextInsertion(aSelection, &bCancel, aTxn, aOutString, aTypeInState);
+    res = EchoInsertionToPWBuff(aSelection, aOutString);
     if (NS_FAILED(res)) return res;
   }
+  
+  // do text insertion
+  PRBool bCancel;
+  res = DoTextInsertion(aSelection, &bCancel, aTxn, aOutString, aTypeInState);
+
   return res;
 }
 
