@@ -111,10 +111,7 @@
     }
   }
   
-  // Called whenever the user clicks in the content area,
-  // except when left-clicking on links (special case)
-  // should always return true for click to go through
-  function contentAreaClick(event) 
+  function hrefForClickEvent(event)
   {
     var target = event.target;
     var linkNode;
@@ -168,7 +165,16 @@
         href = makeURLAbsolute(target.baseURI,href);
       }
     }
+    return href;
+  }
 
+  // Called whenever the user clicks in the content area,
+  // except when left-clicking on links (special case)
+  // should always return true for click to go through
+  function contentAreaClick(event) 
+  {
+    var isKeyPress = (event.type == "keypress");
+    var href = hrefForClickEvent(event);
     if (href) {
       if (isKeyPress) {
         openNewTabWith(href, true, event.shiftKey);
