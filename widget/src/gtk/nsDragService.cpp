@@ -36,7 +36,9 @@
 
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
 
+#ifdef PR_LOGGING
 static PRLogModuleInfo *sDragLm = NULL;
+#endif
 
 static const char gMimeListType[] = "application/x-moz-internal-item-list";
 static const char gMozUrlType[] = "_NETSCAPE_URL";
@@ -75,8 +77,10 @@ nsDragService::nsDragService()
                      GTK_SIGNAL_FUNC(invisibleSourceDragEnd), this);
 
   // set up our logging module
+#ifdef PR_LOGGING
   if (!sDragLm)
     sDragLm = PR_NewLogModule("nsDragService");
+#endif
   PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::nsDragService"));
   mTargetWidget = 0;
   mTargetDragContext = 0;
@@ -91,7 +95,7 @@ nsDragService::nsDragService()
 nsDragService::~nsDragService()
 {
   PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::~nsDragService"));
-  gtk_widget_destroy(mHiddenWidget);
+  gtk_widget_unref(mHiddenWidget);
   TargetResetData();
 }
 

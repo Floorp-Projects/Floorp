@@ -124,6 +124,19 @@ nsImageGTK::~nsImageGTK()
 #endif
 }
 
+/* static */ void
+nsImageGTK::Shutdown()
+{
+  if (s1bitGC) {
+    gdk_gc_unref(s1bitGC);
+    s1bitGC = nsnull;
+  }
+  if (sXbitGC) {
+    gdk_gc_unref(sXbitGC);
+    sXbitGC = nsnull;
+  }
+}
+
 //------------------------------------------------------------
 
 nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,

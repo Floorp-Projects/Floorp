@@ -157,8 +157,23 @@ nsAppShell::~nsAppShell()
 #ifdef DEBUG_APPSHELL
   printf("nsAppShell::~nsAppShell()\n");
 #endif
-  // XXX we need to free this hashtable
-  //  PL_HashTableDestroy(sQueueHashTable);
+}
+
+/* static */ void
+nsAppShell::ReleaseGlobals()
+{
+  if (sQueueHashTable) {
+    PL_HashTableDestroy(sQueueHashTable);
+    sQueueHashTable = nsnull;
+  }
+  if (sCountHashTable) {
+    PL_HashTableDestroy(sCountHashTable);
+    sCountHashTable = nsnull;
+  }
+  if (sEventQueueList) {
+    delete sEventQueueList;
+    sEventQueueList = nsnull;
+  }
 }
 
 //-------------------------------------------------------------------------
