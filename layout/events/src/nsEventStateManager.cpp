@@ -865,7 +865,7 @@ nsEventStateManager::DoTreeScroll(nsIPresContext* inPresContext, PRInt32 inNumLi
   // w/out going back to the main event loop we can easily scroll the wrong
   // bits and it looks like garbage (bug 63465).
   nsIFrame* frame = nsnull;
-  if ( NS_SUCCEEDED(inTreeFrame->QueryInterface(NS_GET_IID(nsIFrame), &frame)) ) {
+  if ( NS_SUCCEEDED(inTreeFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame)) ) {
     nsIView* treeView = nsnull;
     frame->GetView(inPresContext, &treeView);
     if (!treeView) {
