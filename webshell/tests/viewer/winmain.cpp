@@ -32,6 +32,7 @@
 #include "prenv.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
+#include "nsITimer.h"
 
 // Debug Robot options
 static int gDebugRobotLoads = 5000;
@@ -304,6 +305,18 @@ void nsWin32Viewer::Destroy(WindowData* wd)
   nsViewer::Destroy(wd);
 }
 
+static nsITimer* gNetTimer;
+
+static void
+PollNet(nsITimer *aTimer, void *aClosure)
+{
+  NET_PollSockets();
+  NS_IF_RELEASE(gNetTimer);
+  if (NS_OK == NS_NewTimer(&gNetTimer)) {
+    gNetTimer->Init(PollNet, nsnull, 1000 / 50);
+  }
+}
+
 int PASCAL
 RunViewer(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow, nsWin32Viewer* aViewer)
 {
@@ -317,20 +330,16 @@ RunViewer(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow, ns
  
   // Process messages
   MSG msg;
-  BOOL bContinue = TRUE;
-
-  while (bContinue) {
-    if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-      if (!JSConsole::sAccelTable ||
+  PollNet(0, 0);
+  while (::GetMessage(&msg, NULL, 0, 0)) {
+    if (!JSConsole::sAccelTable ||
         !gConsole ||
         !gConsole->GetMainWindow() ||
         !TranslateAccelerator(gConsole->GetMainWindow(), JSConsole::sAccelTable, &msg)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-      }
-      bContinue = (msg.message != WM_QUIT);
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      NET_PollSockets();
     }
-    NET_PollSockets();
   }
 
   aViewer->CleanupViewer(dl);
