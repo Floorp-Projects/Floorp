@@ -225,6 +225,12 @@ friend class CTokenHandler;
      */
     virtual nsITokenizer* GetTokenizer(void);
 
+	/*
+	 * The following two should be removed once our Meta Charset work complete
+	 */
+	static nsString gHackMetaCharset; 
+	static nsString gHackMetaCharsetURL;
+
 protected:
 
     /**

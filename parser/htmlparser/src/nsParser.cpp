@@ -125,6 +125,9 @@ public:
 
 static CSharedParserObjects* gSharedParserObjects=0;
 
+nsString nsParser::gHackMetaCharset = "";
+nsString nsParser::gHackMetaCharsetURL = "";
+
 //----------------------------------------
 
 /** 
@@ -545,6 +548,7 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
   charsetSource = kCharsetFromDocTypeDefault;
 
 
+
   nsresult result=kBadURL;
   mDTDVerification=aVerifyEnabled;
   if(aURL) {
@@ -552,6 +556,18 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
     nsresult rv = aURL->GetSpec(&spec);
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
+
+    // XXX begin of meta tag charset hack
+
+	if(theName.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
+	{
+		charset = nsParser::gHackMetaCharset;
+		charsetSource = kCharsetFromMetaTag;
+	}
+	nsParser::gHackMetaCharsetURL = theName;
+	nsParser::gHackMetaCharset = "";
+    // XXX end of meta tag charset hack
+
     CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE, charset, charsetSource),aURL,aListener);
     if(pc) {
       pc->mMultipart=PR_TRUE;
@@ -594,6 +610,17 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
   
   //ok, time to create our tokenizer and begin the process
   nsAutoString theUnknownFilename("unknown");
+
+  // XXX begin of meta tag charset hack
+  if(theUnknownFilename.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
+  {
+		charset = nsParser::gHackMetaCharset;
+		charsetSource = kCharsetFromMetaTag;
+  }
+  nsParser::gHackMetaCharsetURL = theUnknownFilename;
+  nsParser::gHackMetaCharset = "";
+  // XXX end of meta tag charset hack
+
   CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename,aStream, charset, charsetSource,PR_FALSE),&aStream,0);
   if(pc) {
     PushContext(*pc);
@@ -645,6 +672,18 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
   // XXX We should really put if doc == html for the following line
   charset = "ISO-8859-1";
   charsetSource = kCharsetFromDocTypeDefault;
+
+  // XXX begin of meta tag charset hack
+  nsAutoString theFakeURL("fromString");
+  if(theFakeURL.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
+  {
+		charset = nsParser::gHackMetaCharset;
+		charsetSource = kCharsetFromMetaTag;
+  }
+  nsParser::gHackMetaCharsetURL = theFakeURL;
+  nsParser::gHackMetaCharset = "";
+  // XXX end of meta tag charset hack
+
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!
 

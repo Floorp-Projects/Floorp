@@ -954,6 +954,8 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
                  nsAutoString theCharset;
                  theValue.Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart);
                  theScanner->SetDocumentCharset(theCharset, kCharsetFromMetaTag);
+				 // XXX this should be delete after META charset really work
+				 nsParser::gHackMetaCharset = theCharset;
               } //if
           } //if
         }
