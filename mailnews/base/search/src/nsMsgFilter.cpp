@@ -29,7 +29,7 @@
 
 static const char *kImapPrefix = "//imap:";
 
-nsMsgRuleAction::nsMsgRuleAction() : m_folderName(eOneByte)
+nsMsgRuleAction::nsMsgRuleAction()
 {
 }
 
@@ -38,7 +38,7 @@ nsMsgRuleAction::~nsMsgRuleAction()
 }
 
 
-nsMsgFilter::nsMsgFilter() : m_filterName(eOneByte)
+nsMsgFilter::nsMsgFilter() 
 {
 	m_filterList = nsnull;
 	NS_INIT_REFCNT();
@@ -276,7 +276,7 @@ void nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)
 	m_filterList = filterList;
 }
 
-nsresult		nsMsgFilter::GetName(nsString2 *name)
+nsresult nsMsgFilter::GetName(nsCString *name)
 {
 	if (!name)
 		return NS_ERROR_NULL_POINTER;
@@ -284,7 +284,7 @@ nsresult		nsMsgFilter::GetName(nsString2 *name)
 	return NS_OK;
 }
 
-nsresult		nsMsgFilter::SetName(nsString2 *name)
+nsresult nsMsgFilter::SetName(nsCString *name)
 {
 	if (!name)
 		return NS_ERROR_NULL_POINTER;
@@ -292,7 +292,7 @@ nsresult		nsMsgFilter::SetName(nsString2 *name)
 	return NS_OK;
 }
 
-nsresult		nsMsgFilter::SetDescription(nsString2 *desc)
+nsresult nsMsgFilter::SetDescription(nsCString *desc)
 {
 	if (!desc)
 		return NS_ERROR_NULL_POINTER;
@@ -300,7 +300,7 @@ nsresult		nsMsgFilter::SetDescription(nsString2 *desc)
 	return NS_OK;
 }
 
-nsresult		nsMsgFilter::GetDescription(nsString2 *desc)
+nsresult nsMsgFilter::GetDescription(nsCString *desc)
 {
 	if (!desc)
 		return NS_ERROR_NULL_POINTER;
@@ -308,12 +308,12 @@ nsresult		nsMsgFilter::GetDescription(nsString2 *desc)
 	return NS_OK;
 }
 
-void			nsMsgFilter::SetFilterScript(nsString2 *fileName) 
+void nsMsgFilter::SetFilterScript(nsCString *fileName) 
 {
 	m_scriptFileName = *fileName;
 }
 
-nsresult nsMsgFilter::ConvertMoveToFolderValue(nsString2 &relativePath)
+nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &relativePath)
 {
 
 //	m_action.m_folderName = relativePath;
@@ -364,7 +364,7 @@ nsresult nsMsgFilter::SaveRule()
 	nsresult err = NS_OK;
 	//char			*relativePath = nsnull;
 	nsMsgFilterList	*filterList = GetFilterList();
-	nsString2	actionFilingStr(eOneByte);
+	nsCAutoString	actionFilingStr;
 
 	GetActionFilingStr(m_action.m_type, actionFilingStr);
 
@@ -375,16 +375,17 @@ nsresult nsMsgFilter::SaveRule()
 	{
 	case nsMsgFilterAction::MoveToFolder:
 		{
-		nsString2 imapTargetString(kImapPrefix, eOneByte);
+		nsCAutoString imapTargetString(kImapPrefix);
 		imapTargetString += m_action.m_folderName;
 		err = filterList->WriteStrAttr(nsMsgFilterAttribActionValue, imapTargetString);
 		}
 		break;
 	case nsMsgFilterAction::ChangePriority:
 		{
-			nsString2 priority(eOneByte);
+			nsAutoString priority;
+            nsCAutoString cStr(priority);
 			NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
-			err = filterList->WriteStrAttr(nsMsgFilterAttribActionValue, priority);
+			err = filterList->WriteStrAttr(nsMsgFilterAttribActionValue, cStr);
 		}
 		break;
 	default:
@@ -392,11 +393,11 @@ nsresult nsMsgFilter::SaveRule()
 	}
 	// and here the fun begins - file out term list...
 	int searchIndex;
-	nsString2  condition(eOneByte);
+	nsCAutoString  condition;
 	for (searchIndex = 0; searchIndex < m_termList.Count() && NS_SUCCEEDED(err);
 			searchIndex++)
 	{
-		nsString2	stream(eOneByte);
+		nsCAutoString	stream;
 
 		nsMsgSearchTerm * term = (nsMsgSearchTerm *) m_termList.ElementAt(searchIndex);
 		if (term == NULL)
@@ -458,7 +459,7 @@ const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)
 	}
 	return "";
 }
-/*static */nsresult nsMsgFilter::GetActionFilingStr(nsMsgRuleActionType action, nsString2 &actionStr)
+/*static */nsresult nsMsgFilter::GetActionFilingStr(nsMsgRuleActionType action, nsCString &actionStr)
 {
 	int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
 
@@ -474,7 +475,7 @@ const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)
 }
 
 
-nsMsgRuleActionType nsMsgFilter::GetActionForFilingStr(nsString2 &actionStr)
+nsMsgRuleActionType nsMsgFilter::GetActionForFilingStr(nsCString &actionStr)
 {
 	int	numActions = sizeof(ruleActionsTable) / sizeof(ruleActionsTable[0]);
 
