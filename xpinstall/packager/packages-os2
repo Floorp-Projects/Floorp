@@ -188,6 +188,10 @@ bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
 bin/components/necko_jar.xpt
 bin/components/necko_res.xpt
+bin/components/necko_cookie.xpt
+bin/components/necko_file.xpt
+bin/components/necko_socket.xpt
+bin/components/necko_viewsource.xpt
 bin/components/nslocale.dll
 bin/components/nsprefm.dll
 bin/components/nsSidebar.js
@@ -459,10 +463,6 @@ bin/res/inspector/search-registry.rdf
 ;iiextras.dll - I don't know
 ;iiextras.xpt - I don't know
 ;jsconsole.xpt - I don't know
-;necko_cookie.xpt - I don't know
-;necko_file.xpt - I don't know
-;necko_socket.xpt - I don't know
-;necko_viewsource_xpt - I don't know
 ;MyServce.dll - Sample
 ;p3p.dll - I don't know
 ;p3p.xpt - I don't know
