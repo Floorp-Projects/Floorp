@@ -120,6 +120,12 @@ $ops{"NEW_OBJECT"} =
    rem    => "dest",
    params => [ ("TypedRegister") ]
   };
+$ops{"NEW_CLASS"} =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, class name",
+   params => [ ("TypedRegister", "const StringAtom*") ]
+  };
 $ops{"NEW_FUNCTION"} =
   {
    super  => "Instruction_2",
