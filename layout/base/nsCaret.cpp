@@ -224,8 +224,9 @@ nsresult nsCaret::PrimeTimer()
 nsresult nsCaret::StartBlinking()
 {
 	PrimeTimer();
-		
-  NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
+
+  // The following assertion causes a crash if the blink rate is zero:
+  //NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
   
 	ToggleDrawnStatus();
 	DrawCaret();		// draw it right away
