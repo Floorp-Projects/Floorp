@@ -71,7 +71,7 @@
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #if defined(MOZ_WIDGET_COCOA)
 #include <CoreFoundation/CoreFoundation.h>
-#define MAC_USE_CFMESSAGEPORT
+#define MAC_USE_CFRUNLOOPSOURCE
 #elif defined(TARGET_CARBON)
 #include <CarbonEvents.h>
 #define MAC_USE_CARBON_EVENT
@@ -172,10 +172,9 @@ struct PLEventQueue {
 #elif defined(XP_BEOS)
     port_id             eventport;
 #elif defined(XP_MAC) || defined(XP_MACOSX)
-#if defined(MAC_USE_CFMESSAGEPORT)
-    CFMessagePortRef    mLocalMessagePort;
-    CFMessagePortRef    mRemoteMessagePort;
+#if defined(MAC_USE_CFRUNLOOPSOURCE)
     CFRunLoopSourceRef  mRunLoopSource;
+    CFRunLoopRef        mMainRunLoop;
 #elif defined(MAC_USE_CARBON_EVENT)
     EventHandlerUPP     eventHandlerUPP;
     EventHandlerRef     eventHandlerRef;
@@ -991,14 +990,11 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 
 #elif defined(XP_OS2)
     WinDestroyWindow(self->eventReceiverWindow);
-#elif defined(MAC_USE_CFMESSAGEPORT)
+#elif defined(MAC_USE_CFRUNLOOPSOURCE)
 
-    // XXX this assumes that the event queue is on the same run loop that it was created on
-    CFRunLoopRemoveSource(CFRunLoopGetCurrent(), self->mRunLoopSource, kCFRunLoopCommonModes);
+    CFRunLoopRemoveSource(self->mMainRunLoop, self->mRunLoopSource, kCFRunLoopCommonModes);
     CFRelease(self->mRunLoopSource);
-
-    CFRelease(self->mRemoteMessagePort);
-    CFRelease(self->mLocalMessagePort);
+    CFRelease(self->mMainRunLoop);
 
 #elif defined(MAC_USE_CARBON_EVENT)
     EventComparatorUPP comparator = NewEventComparatorUPP(_md_CarbonEventComparator);
@@ -1302,18 +1298,9 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-#if defined(MAC_USE_CFMESSAGEPORT)
-    // send a request with no data (just to wake the receiver)
-    SInt32 err = CFMessagePortSendRequest(self->mRemoteMessagePort,
-                          0,      // msgid (arbitrary value; unused)
-                          NULL,   // data (none)
-                          1.0,    // sendTimeout (1 second)
-                          0.0,    // rcvTimeout
-                          NULL,   // replyMode (no reply expected)
-                          NULL    // returnData (none)
-              					);
-    PR_ASSERT(err == kCFMessagePortSuccess);
-
+#if defined(MAC_USE_CFRUNLOOPSOURCE)
+  	CFRunLoopSourceSignal(self->mRunLoopSource);
+  	CFRunLoopWakeUp(self->mMainRunLoop);
 #elif defined(MAC_USE_CARBON_EVENT)
     OSErr err;
     EventRef newEvent;
@@ -1628,12 +1615,11 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 } /* end _md_CreateEventQueue() */
 #endif /* (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS) */
 
-#if defined(MAC_USE_CFMESSAGEPORT)
-static CFDataRef _md_EventReceiverProc(CFMessagePortRef local, SInt32 msgid, CFDataRef data, void *info)
+#if defined(MAC_USE_CFRUNLOOPSOURCE)
+static void _md_EventReceiverProc(void *info)
 {
   PLEventQueue *queue = (PLEventQueue*)info;
   PL_ProcessPendingEvents(queue);
-  return NULL;
 }
 
 #elif defined(MAC_USE_CARBON_EVENT)
@@ -1681,35 +1667,21 @@ static pascal Boolean _md_CarbonEventComparator(EventRef inEvent,
 #if defined(XP_MAC) || defined(XP_MACOSX)
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
-#if defined(MAC_USE_CFMESSAGEPORT)
-    CFMessagePortContext portContext = {
-      0,
-      (void*)eventQueue,
-      NULL, NULL, NULL
-    };
-
-    // create the local port (the receiver). Note that message ports are machine-wide,
-    // so we include the pid and event queue pointer in the name.
-    CFStringRef portName = CFStringCreateWithFormat(kCFAllocatorDefault, NULL,
-                              CFSTR("plevents_%d_%p"), getpid(), eventQueue);
-    eventQueue->mLocalMessagePort = CFMessagePortCreateLocal(kCFAllocatorDefault, portName,
-                              _md_EventReceiverProc, &portContext, NULL);
-
-    PR_ASSERT(eventQueue->mLocalMessagePort);
-    
-    // now create the remote port (the sender)
-    eventQueue->mRemoteMessagePort = CFMessagePortCreateRemote(kCFAllocatorDefault, portName);
-    PR_ASSERT(eventQueue->mRemoteMessagePort);
-
-    CFRelease(portName);
+#if defined(MAC_USE_CFRUNLOOPSOURCE)
+    CFRunLoopSourceContext sourceContext = { 0 };
+    sourceContext.version = 0;
+    sourceContext.info = (void*)eventQueue;
+    sourceContext.perform = _md_EventReceiverProc;
 
     // make a run loop source
-    eventQueue->mRunLoopSource = CFMessagePortCreateRunLoopSource(kCFAllocatorDefault,
-                                      eventQueue->mLocalMessagePort, 0 /* order: ignored */);
+    eventQueue->mRunLoopSource = CFRunLoopSourceCreate(kCFAllocatorDefault, 0 /* order */, &sourceContext);
     PR_ASSERT(eventQueue->mRunLoopSource);
     
+    eventQueue->mMainRunLoop = CFRunLoopGetCurrent();
+    CFRetain(eventQueue->mMainRunLoop);
+    
     // and add it to the run loop.
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), eventQueue->mRunLoopSource, kCFRunLoopCommonModes);
+    CFRunLoopAddSource(eventQueue->mMainRunLoop, eventQueue->mRunLoopSource, kCFRunLoopCommonModes);
 
 #elif defined(MAC_USE_CARBON_EVENT)
     eventQueue->eventHandlerUPP = NewEventHandlerUPP(_md_EventReceiverProc);
