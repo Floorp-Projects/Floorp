@@ -51,16 +51,16 @@ $verPartial   = "5.0.0.";
 $ver          = $verPartial . GetVersion($DEPTH);
 $ftpStr       = "ftp://not.needed.com/because/the/xpi/files/will/be/located/in/the/same/dir/as/the/installer";
 
-if(-e "$cwdDist\\Stage")
+if(-e "$cwdDist\\stage")
 {
-  system("perl $cwdPackager\\windows\\rdir.pl $cwdDist\\Stage");
+  system("perl $cwdPackager\\windows\\rdir.pl $cwdDist\\stage");
 }
 
-mkdir("$cwdDist\\Stage", 775);
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\Stage -f $cwdPackager\\packages-win -o dos -v");
+mkdir("$cwdDist\\stage", 775);
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\packages-win -o dos -v");
 
 chdir("$cwdPackager\\windows");
-system("perl makeall.pl $ver $ftpStr $cwdDist\\Stage $cwdDistWin\\install");
+system("perl makeall.pl $ver $ftpStr $cwdDist\\stage $cwdDistWin\\install");
 chdir($cwdBuilder);
 
 # Copy the .xpi files to the same directory as setup.exe.
