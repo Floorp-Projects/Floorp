@@ -78,9 +78,9 @@ public class DSMLWriter extends LDAPWriter {
             }
             String classType = "structural";
             switch( s.getType() ) {
-            case s.ABSTRACT: classType = "abstract";
+            case LDAPObjectClassSchema.ABSTRACT: classType = "abstract";
                 break;
-            case s.AUXILIARY: classType = "auxiliary";
+            case LDAPObjectClassSchema.AUXILIARY: classType = "auxiliary";
                 break;
             }
             printString( "      type=\"" + classType + "\">" );
