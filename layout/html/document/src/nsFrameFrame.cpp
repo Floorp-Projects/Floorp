@@ -350,6 +350,8 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
                                                 &innerStyleContext);
       if (NS_SUCCEEDED(rv)) {
         rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);
+        // have to release the context: Init does its own AddRef...
+        NS_RELEASE(innerStyleContext);
       } else {
         NS_WARNING( "Error resolving style for InnerFrame in nsHTMLFrameOuterFrame");
       }
