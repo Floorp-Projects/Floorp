@@ -110,8 +110,21 @@ function (iid) {
 }
 
 ICALContentHandler.prototype.handleContent =
-function (aContentType, aWindowTarget, aRequest)
+function (aContentType, param2, param3, param4)
 {
+
+    var aWindowTarget, aRequest;
+    if (param4 === undefined)
+    {// Moz1.8+ uses 3 params: (aContentType, aWindowTarget, aRequest)
+        aWindowTarget = param2;
+        aRequest      = param3;
+    }
+    else
+    {// Moz1.7- uses 4 params: (aContentType, aCommand, aWindowTarget, aRequest)
+        aWindowTarget = param3;
+        aRequest      = param4;
+    }
+
     var e;
     var channel = aRequest.QueryInterface(nsIChannel);
 
