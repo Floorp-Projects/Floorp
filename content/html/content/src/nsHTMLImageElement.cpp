@@ -141,7 +141,7 @@ public:
 protected:
   nsresult SetSrcInner(nsIURI* aBaseURL, const nsAString& aSrc);
 
-  nsresult GetImageFrame(nsIImageFrame** aImageFrame);
+  void GetImageFrame(nsIImageFrame** aImageFrame);
   nsresult GetXY(PRInt32* aX, PRInt32* aY);
   nsresult GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight);
 
@@ -262,19 +262,19 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_PIXEL_ATTR(nsHTMLImageElement, Vspace, vspace)
 
-nsresult
+void
 nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
 {
-  NS_ENSURE_ARG_POINTER(aImageFrame);
-  *aImageFrame = nsnull;
+  if (!aImageFrame) {
+    return;
+  }
 
+  *aImageFrame = nsnull;
   nsIFrame* frame = GetPrimaryFrame(PR_TRUE);
 
   if (frame) {
     CallQueryInterface(frame, aImageFrame);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -546,6 +546,17 @@ nsHTMLImageElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::ismap)  ||
       (aAttribute == nsHTMLAtoms::align)) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
+  }
+  else if (aAttribute == nsHTMLAtoms::src) {
+    // If 'src' changed and we don't have a real image frame,
+    // we need to cause a reframe.
+    nsIImageFrame* imageFrame;
+    // cast away |const| because the underlying interfaces don't use it.
+    nsHTMLImageElement* self = NS_CONST_CAST(nsHTMLImageElement*, this);
+    self->GetImageFrame(&imageFrame);
+    if (!imageFrame) {
+      aHint = NS_STYLE_HINT_FRAMECHANGE;
+    }
   }
   else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
@@ -897,14 +908,14 @@ nsHTMLImageElement::GetNaturalHeight(PRInt32* aNaturalHeight)
   *aNaturalHeight = 0;
 
   nsIImageFrame* imageFrame = nsnull;
-  nsresult rv = GetImageFrame(&imageFrame);
+  GetImageFrame(&imageFrame);
 
-  if (NS_FAILED(rv) || !imageFrame)
+  if (!imageFrame)
     return NS_OK; // don't throw JS exceptions in this case
 
   PRUint32 width, height;
 
-  rv = imageFrame->GetNaturalImageSize(&width, &height);
+  nsresult rv = imageFrame->GetNaturalImageSize(&width, &height);
 
   if (NS_FAILED(rv))
     return NS_OK;
@@ -922,14 +933,14 @@ nsHTMLImageElement::GetNaturalWidth(PRInt32* aNaturalWidth)
   *aNaturalWidth = 0;
 
   nsIImageFrame* imageFrame;
-  nsresult rv = GetImageFrame(&imageFrame);
+  GetImageFrame(&imageFrame);
 
-  if (NS_FAILED(rv) || !imageFrame)
+  if (!imageFrame)
     return NS_OK; // don't throw JS exceptions in this case
 
   PRUint32 width, height;
 
-  rv = imageFrame->GetNaturalImageSize(&width, &height);
+  nsresult rv = imageFrame->GetNaturalImageSize(&width, &height);
 
   if (NS_FAILED(rv))
     return NS_OK;
