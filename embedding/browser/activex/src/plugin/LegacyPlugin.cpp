@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *
+ * Paul Oswald <paul.oswald@isinet.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,14 +40,18 @@
 
 #include "jni.h"
 #include "npapi.h"
+#include "nsISupports.h"
 
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 #define IMPLEMENT_MozAxPlugin
-#include "MozAxPlugin.h"
-#include "netscape_plugin_Plugin.h"
+#include "_gen/MozAxPlugin.h"
+//#include "_gen/netscape_plugin_Plugin.h"
 #endif
 
-#include "nsISupports.h"
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+#include "nsMemory.h"
+#endif /* MOZ_ACTIVEX_PLUGIN_XPCONNECT */
+
 
 // Plugin types supported
 enum PluginInstanceType
@@ -63,7 +68,9 @@ struct PluginInstanceData {
         CActiveScriptSiteInstance *pScriptSite;
         CControlSiteInstance *pControlSite;
     };
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
     nsISupports *pScriptingPeer;
+#endif
 };
 
 
@@ -87,6 +94,14 @@ NPError NPP_Initialize(void)
 void NPP_Shutdown(void)
 {
     NG_TRACE_METHOD(NPP_Shutdown);
+#ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+    JRIEnv* env = NPN_GetJavaEnv();
+	if (env) {
+		// unuse_MozAxPlugin(env);
+        unregister_MozAxPlugin(env);
+	}
+#endif
+
     _Module.Unlock();
 }
 
@@ -99,17 +114,13 @@ jref NPP_GetJavaClass(void)
 {
     NG_TRACE_METHOD(NPP_GetJavaClass);
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-    struct java_lang_Class* myClass;
     JRIEnv* env = NPN_GetJavaEnv();
-    if (env == NULL)
-        return NULL;        /* Java disabled */
-
-    myClass = use_MozAxPlugin(env);
-    use_netscape_plugin_Plugin( env );
-    return (jref) myClass;
-#else
-    return NULL;
+    if (env) {
+	    return (jref) register_MozAxPlugin(env);
+        // return (jref) use_MozAxPlugin(env);
+    }
 #endif
+    return NULL;
 }
 
 
@@ -328,7 +339,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
     {
         return NPERR_GENERIC_ERROR;
     }
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
     pData->pScriptingPeer = NULL;
+#endif
 
     // Create a plugin according to the mime type
 
@@ -384,10 +397,12 @@ NPP_Destroy(NPP instance, NPSavedData** save)
             pSite->Detach();
             pSite->Release();
         }
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
         if (pData->pScriptingPeer)
         {
             pData->pScriptingPeer->Release();
         }
+#endif
     }
     else if (pData->nType == itScript)
     {
@@ -654,10 +669,16 @@ class nsClassInfoMozAxPlugin : public nsIClassInfo
     {return NS_ERROR_NOT_IMPLEMENTED;}
 };
 
+// Defines to be used as interface names by nsScriptablePeer
+static NS_DEFINE_IID(kIMoxAxPluginIID, NS_IMOZAXPLUGIN_IID);
+static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 class nsScriptablePeer : public nsIMozAxPlugin,
                          public nsClassInfoMozAxPlugin
 {
     long mRef;
+    PluginInstanceData* mPlugin;
 
 protected:
     virtual ~nsScriptablePeer();
@@ -686,20 +707,27 @@ nsScriptablePeer::~nsScriptablePeer()
 //       without.
 
 /* void QueryInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
-NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID & uuid, void * *result)
+NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID & aIID, void * *aInstancePtr)
 {
-    if (uuid.Equals(NS_GET_IID(nsISupports)))
+    if (aIID.Equals(NS_GET_IID(nsISupports)))
     {
-        *result = NS_STATIC_CAST(void *, this);
+        *aInstancePtr = NS_STATIC_CAST(void *, this);
         AddRef();
         return NS_OK;
     }
-    else if (uuid.Equals(NS_GET_IID(nsIMozAxPlugin)))
+    else if (aIID.Equals(NS_GET_IID(nsIMozAxPlugin)))
     {
-        *result = NS_STATIC_CAST(void *, this);
+        *aInstancePtr = NS_STATIC_CAST(void *, this);
         AddRef();
         return NS_OK;
     }
+    else if (aIID.Equals(kIClassInfoIID))
+    {
+        *aInstancePtr = static_cast<nsIClassInfo*>(this); 
+        AddRef();
+        return NS_OK;
+    }
+
     return NS_NOINTERFACE;
 }
 
@@ -725,15 +753,287 @@ NS_IMETHODIMP_(nsrefcnt) nsScriptablePeer::Release()
 // nsIMozAxPlugin
 
 // the following method will be callable from JavaScript
+
 NS_IMETHODIMP 
-nsScriptablePeer::X()
+nsScriptablePeer::Invoke(const char *str)
 {
+/*    HRESULT hr;
+    DISPID dispid;
+    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
+    // call the requested function
+    const char* funcName = str; //_T("Update");
+    PluginInstanceData *pData = mPlugin;
+    if (pData == NULL) {
+        return NPERR_INVALID_INSTANCE_ERROR;
+    }
+    IUnknown FAR* punk;
+    hr = pData->pControlSite->GetControlUnknown(&punk);
+    if (FAILED(hr)) {
+        return NPERR_GENERIC_ERROR; 
+    }
+    punk->AddRef();
+    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR; 
+    }
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(funcName);
+    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR; 
+    }
+    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+    hr = pdisp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_METHOD,
+        &dispparamsNoArgs, NULL, NULL, NULL);
+    if (FAILED(hr)) { 
+        return NPERR_GENERIC_ERROR; 
+    }
+    punk->Release(); */
     return NS_OK;
 }
 
 
+NS_IMETHODIMP 
+nsScriptablePeer::GetProperty(const char *propertyName, char **_retval)
+{
+/*    HRESULT hr;
+    DISPID dispid;
+    //VARIANT VarResult;
+    _variant_t VarResult;
+    //char* propertyValue;
+    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
+    const char* property = propertyName;
+    PluginInstanceData *pData = mPlugin;
+    if (pData == NULL) { 
+        return NPERR_INVALID_INSTANCE_ERROR;
+    }
+    IUnknown FAR* punk;
+    hr = pData->pControlSite->GetControlUnknown(&punk);
+    if (FAILED(hr)) { return NULL; }
+    punk->AddRef();
+    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR; 
+    }
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(property);
+    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR;
+    }
+    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+    hr = pdisp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_PROPERTYGET,
+        &dispparamsNoArgs, &VarResult, NULL, NULL);
+    if (FAILED(hr)) { 
+        return NPERR_GENERIC_ERROR;
+    }
+	punk->Release();
+    
+    char* tempStr;
+    switch(VarResult.vt & VT_TYPEMASK) {
+    case VT_BSTR:    
+        tempStr = OLE2A(VarResult.bstrVal);
+        if(!_retval) return NS_ERROR_NULL_POINTER;
+        *_retval = (char*) nsMemory::Alloc(strlen(tempStr) + 1);
+        if (! *_retval) return NS_ERROR_NULL_POINTER;
+        if (VarResult.bstrVal == NULL) {
+            *_retval = NULL;
+        } else {
+            strcpy(*_retval, tempStr);
+        }
+        break;
+//  case VT_I2:
+    default:
+        VarResult.ChangeType(VT_BSTR);
+        tempStr = OLE2A(VarResult.bstrVal);
+        if(!_retval) return NS_ERROR_NULL_POINTER;
+        *_retval = (char*) nsMemory::Alloc(strlen(tempStr) + 1);
+        if (! *_retval) return NS_ERROR_NULL_POINTER;
+        if (VarResult.bstrVal == NULL) {
+            *_retval = NULL;
+        } else {
+            strcpy(*_retval, tempStr);
+        }
+        break;
+    } */
+
+    // caller will be responsible for any memory allocated.
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsScriptablePeer::GetNProperty(const char *propertyName, PRInt16 *_retval)
+{
+/*    HRESULT hr;
+    DISPID dispid;
+    VARIANT VarResult;
+    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
+    const char* property = propertyName;
+    PluginInstanceData *pData = mPlugin;
+    if (pData == NULL) { 
+        return NPERR_INVALID_INSTANCE_ERROR;
+    }
+    IUnknown FAR* punk;
+    hr = pData->pControlSite->GetControlUnknown(&punk);
+    if (FAILED(hr)) { return NULL; }
+    punk->AddRef();
+    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR; 
+    }
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(property);
+    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR;
+    }
+    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+    hr = pdisp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_PROPERTYGET,
+        &dispparamsNoArgs, &VarResult, NULL, NULL);
+    if (FAILED(hr)) { 
+        return NPERR_GENERIC_ERROR;
+    }
+    punk->Release();
+    if(!_retval) return NS_ERROR_NULL_POINTER;
+    // make sure we are dealing with an int
+    if ((VarResult.vt & VT_TYPEMASK) != VT_I2) {
+        *_retval = NULL;
+        return NPERR_GENERIC_ERROR;
+    }
+    *_retval = VarResult.iVal; */
+
+	// caller will be responsible for any memory allocated.
+	return NS_OK;
+}
+
+/* void setProperty (in string propertyName, in string propertyValue); */
+NS_IMETHODIMP nsScriptablePeer::SetProperty(const char *propertyName, const char *propertyValue)
+{
+    HRESULT hr;
+    DISPID dispid;
+    VARIANT VarResult;
+    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
+    const char* property = propertyName;
+    PluginInstanceData *pData = mPlugin;
+    if (pData == NULL) { 
+        return NPERR_INVALID_INSTANCE_ERROR;
+    }
+    IUnknown FAR* punk;
+    hr = pData->pControlSite->GetControlUnknown(&punk);
+    if (FAILED(hr)) { return NULL; }
+    punk->AddRef();
+    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR;
+    }
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(property);
+    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR;
+    }
+    VARIANT *pvars = new VARIANT[1];
+    VariantInit(&pvars[0]);
+    pvars->vt = VT_BSTR;
+    pvars->bstrVal = A2OLE(propertyValue);
+    DISPID dispIdPut = DISPID_PROPERTYPUT;
+    DISPPARAMS functionArgs;
+    functionArgs.rgdispidNamedArgs = &dispIdPut;
+    functionArgs.rgvarg = pvars;
+    functionArgs.cArgs = 1;
+    functionArgs.cNamedArgs = 1;
+
+    hr = pdisp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_PROPERTYPUT,
+        &functionArgs, &VarResult, NULL, NULL);
+    delete []pvars;
+    if (FAILED(hr)) { 
+        return NPERR_GENERIC_ERROR;
+    }
+    punk->Release();
+    return NS_OK;
+}
+
+/* void setNProperty (in string propertyName, in string propertyValue); */
+NS_IMETHODIMP nsScriptablePeer::SetNProperty(const char *propertyName, PRInt16 propertyValue)
+{
+    HRESULT hr;
+    DISPID dispid;
+    VARIANT VarResult;
+    IDispatch FAR* pdisp = (IDispatch FAR*)NULL;
+    const char* property = propertyName;
+    PluginInstanceData *pData = mPlugin;
+    if (pData == NULL) { 
+        return NPERR_INVALID_INSTANCE_ERROR;
+    }
+    IUnknown FAR* punk;
+    hr = pData->pControlSite->GetControlUnknown(&punk);
+    if (FAILED(hr)) { return NULL; }
+    punk->AddRef();
+    hr = punk->QueryInterface(IID_IDispatch,(void FAR* FAR*)&pdisp);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR;
+    }
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(property);
+    hr = pdisp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr)) { 
+        punk->Release();
+        return NPERR_GENERIC_ERROR;
+    }
+   
+    VARIANT *pvars = new VARIANT[1];
+    VariantInit(&pvars[0]);
+    pvars->vt = VT_I2;
+    pvars->iVal = propertyValue;
+
+    DISPID dispIdPut = DISPID_PROPERTYPUT;
+    DISPPARAMS functionArgs;
+    functionArgs.rgdispidNamedArgs = &dispIdPut;
+    functionArgs.rgvarg = pvars;
+    functionArgs.cArgs = 1;
+    functionArgs.cNamedArgs = 1;
+
+    hr = pdisp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_PROPERTYPUT,
+        &functionArgs, &VarResult, NULL, NULL);
+    delete []pvars;
+    if (FAILED(hr)) { 
+        return NPERR_GENERIC_ERROR;
+    }
+    punk->Release();
+    return NS_OK;
+}
+
 // Happy happy fun fun - redefine some NPPVariable values that we might
-// be asked for but not defined by the PluginSDK 
+// be asked for but not defined by every PluginSDK 
+
 const int kVarScriptableInstance = 10; // NPPVpluginScriptableInstance
 const int kVarScriptableIID = 11; // NPPVpluginScriptableIID
 
@@ -763,7 +1063,7 @@ NPP_GetValue(NPP instance, NPPVariable variable, void *value)
     }
     else if (variable == kVarScriptableIID)
     {
-	static nsIID kIMozAxPluginIID = NS_IMOZAXPLUGIN_IID;
+	    static nsIID kIMozAxPluginIID = NS_IMOZAXPLUGIN_IID;
         nsIID *piid = (nsIID *) NPN_MemAlloc(sizeof(nsIID));
         *piid = kIMozAxPluginIID;
         *((nsIID **) value) = piid;
@@ -781,5 +1081,258 @@ NPP_SetValue(NPP instance, NPNVariable variable, void *value)
 #endif
 
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+
+// The following will be callable from Javascript through LiveConnect
+HRESULT
+_GetIDispatchFromJRI(JRIEnv *env, struct MozAxPlugin* self, IDispatch **pdisp)
+{
+    *pdisp = NULL;
+
+    NPP npp = (NPP) self->getPeer(env);
+    PluginInstanceData *pData = (PluginInstanceData *) npp->pdata;
+    if (pData == NULL)
+    { 
+        return E_FAIL;
+    }
+
+    IUnknownPtr unk;
+    HRESULT hr = pData->pControlSite->GetControlUnknown(&unk);
+    if (unk.GetInterfacePtr() == NULL)
+    {
+		return E_FAIL; 
+	}
+
+    IDispatchPtr disp = unk;
+    if (!disp.GetInterfacePtr() == NULL)
+    { 
+        return E_FAIL; 
+    }
+
+    *pdisp = disp.GetInterfacePtr();
+    (*pdisp)->AddRef();
+
+    return S_OK;
+}
+
+
+HRESULT
+_JRIObjectToVariant(java_lang_Object *o, VARIANT *v)
+{
+    // TODO
+    return S_OK;
+}
+
+struct java_lang_Object *
+_InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *func, int nargs, java_lang_Object *args[])
+{
+	HRESULT hr;
+    DISPID dispid = 0;
+    
+	// call the requested function
+    const char* funcName = JRI_GetStringUTFChars(env, func);
+
+    IDispatchPtr disp;
+    if (FAILED(_GetIDispatchFromJRI(env, self, &disp)))
+    {
+        return NULL;
+    }
+
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(funcName);
+	hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr))
+    { 
+        return NULL; 
+    }
+
+    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+
+    hr = disp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_METHOD,
+        &dispparamsNoArgs, NULL, NULL, NULL);
+    
+    if (FAILED(hr))
+    { 
+        return NULL; 
+    }
+
+	return NULL;
+
+}
+
+/*******************************************************************************
+ * Native Methods: 
+ * These are the native methods which we are implementing.
+ ******************************************************************************/
+
+//*** native Invoke (Ljava/lang/String;)Ljava/lang/Object; ***
+JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_invoke(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a)
+{
+    return _InvokeFromJRI(env, self, a, 0, NULL);
+}
+
+//*** native Invoke (Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object; ***
+JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_invoke_1(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b)
+{
+    java_lang_Object *args[1];
+    args[0] = b;
+    return _InvokeFromJRI(env, self, a, sizeof(args) / sizeof(args[0]), args);
+}
+
+//*** native Invoke (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***
+JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_invoke_2(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c)
+{
+    java_lang_Object *args[2];
+    args[0] = b;
+    args[1] = c;
+    return _InvokeFromJRI(env, self, a, sizeof(args) / sizeof(args[0]), args);
+}
+
+//*** native Invoke (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***
+JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_invoke_3(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c, struct java_lang_Object *d)
+{
+    java_lang_Object *args[3];
+    args[0] = b;
+    args[1] = c;
+    args[2] = d;
+    return _InvokeFromJRI(env, self, a, sizeof(args) / sizeof(args[0]), args);
+}
+
+//*** native Invoke (Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; ***
+JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_invoke_4(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b, struct java_lang_Object *c, struct java_lang_Object *d, struct java_lang_Object *e)
+{
+    java_lang_Object *args[4];
+    args[0] = b;
+    args[1] = c;
+    args[2] = d;
+    args[3] = e;
+    return _InvokeFromJRI(env, self, a, sizeof(args) / sizeof(args[0]), args);
+}
+
+
+//*** native GetProperty (Ljava/lang/String;)Ljava/lang/Object; ***
+JRI_PUBLIC_API(struct java_lang_Object *)
+native_MozAxPlugin_getProperty(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a)
+{
+    HRESULT hr;
+    DISPID dispid;
+    _variant_t VarResult;
+
+    IDispatchPtr disp;
+    if (FAILED(_GetIDispatchFromJRI(env, self, &disp)))
+    {
+        return NULL;
+    }
+
+    // return the requested property to the Java peer
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(JRI_GetStringUTFChars(env, a));
+    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr))
+    { 
+        return NULL; 
+    }
+    DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
+    hr = disp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_PROPERTYGET,
+        &dispparamsNoArgs, &VarResult, NULL, NULL);
+    if (FAILED(hr))
+    { 
+        return NULL; 
+    }
+
+    _bstr_t strVal;
+    switch(VarResult.vt & VT_TYPEMASK)
+    {
+    case VT_BSTR:
+        strVal = _bstr_t(VarResult.bstrVal);
+        return (java_lang_Object*)JRI_NewStringUTF( env, strVal, strVal.length() );
+        break;
+    case VT_I2:
+        VarResult.ChangeType(VT_BSTR);
+        strVal = _bstr_t(VarResult.bstrVal);
+        return (java_lang_Object*)JRI_NewStringUTF( env, strVal, strVal.length() );
+        break;
+	}
+	// caller will be responsible for any memory allocated by JRI_NewStringUTF
+
+	return NULL;
+}
+
+/*** native setProperty (Ljava/lang/String;Ljava/lang/Object;)V ***/
+JRI_PUBLIC_API(void)
+native_MozAxPlugin_setProperty(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_Object *b)
+
+{
+    // TODO
+}
+
+//*** public native SetProperty (Ljava/lang/String;Ljava/lang/String;)V ***
+JRI_PUBLIC_API(void)
+native_MozAxPlugin_setProperty_1(JRIEnv* env, struct MozAxPlugin* self, struct java_lang_String *a, struct java_lang_String *b)
+{
+    HRESULT hr;
+    DISPID dispid;
+    VARIANT VarResult;
+
+    IDispatchPtr disp;
+    if (FAILED(_GetIDispatchFromJRI(env, self, &disp)))
+    {
+        return;
+    }
+
+    USES_CONVERSION;
+    OLECHAR FAR* szMember = A2OLE(JRI_GetStringUTFChars(env, a));
+    hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
+    if (FAILED(hr))
+    { 
+        return;
+    }
+
+    VARIANT *pvars = new VARIANT[1];
+    VariantInit(&pvars[0]);
+    pvars->vt = VT_BSTR;
+    pvars->bstrVal = A2OLE(JRI_GetStringUTFChars(env, b));
+
+    DISPID dispIdPut = DISPID_PROPERTYPUT;
+
+    DISPPARAMS functionArgs;
+    functionArgs.rgdispidNamedArgs = &dispIdPut;
+    functionArgs.rgvarg = pvars;
+    functionArgs.cArgs = 1;
+    functionArgs.cNamedArgs = 1;
+
+    hr = disp->Invoke(
+        dispid,
+        IID_NULL,
+        LOCALE_USER_DEFAULT,
+        DISPATCH_PROPERTYPUT,
+        &functionArgs, &VarResult, NULL, NULL);
+
+    delete []pvars;
+    
+    if (FAILED(hr))
+    {
+        return;
+    }
+}
+
+
+#define NO_JDK
 #include "_stubs/MozAxPlugin.c"
+
+#define UNUSED_use_netscape_plugin_Plugin
+#include "_stubs/netscape_plugin_Plugin.c"
+
 #endif
