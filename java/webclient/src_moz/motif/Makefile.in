@@ -39,11 +39,11 @@ ifdef MOZ_ENABLE_GTK
 ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
 CFLAGS          += $(MOZ_GTK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt
+EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/lib -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt
 else
 CXXFLAGS        += $(TK_CFLAGS)
 CFLAGS          += $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt 
+EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/lib -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt 
 endif
 endif
 

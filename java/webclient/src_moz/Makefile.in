@@ -77,7 +77,7 @@ ifneq ($(BAL_INTERFACE),)
 CXXFLAGS += -DBAL_INTERFACE
 endif
 
-EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/bin/components -lwidget_gtk
+EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/lib -L$(DEPTH)/dist/bin/components -lwidget_gtk
 
 ifneq ($(BAL_INTERFACE),)
 EXTRA_DSO_LDOPTS += -lwc_share_bal
