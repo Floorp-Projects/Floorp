@@ -55,6 +55,7 @@ LIBS = \
 	$(JPEG_LIBS) \
 	-ljs \
 	-lxpcom \
+	-lreg \
 	-lxp \
 	$(ZLIB_LIBS) \
 	$(TK_LIBS) \

@@ -57,7 +57,6 @@ LIBS := \
 	$(TOOLKIT_BASE_LIB) \
 	-lraptorhtmlpars \
 	-lraptorview \
-	-lreg \
 	-labouturl \
 	-lfileurl \
 	-lftpurl \
@@ -79,7 +78,6 @@ LIBS := \
 	-lnetwork \
 	-lpwcac \
 	-lraptorwebwidget \
-	-lreg \
 	-lremoturl \
 	-lsecfree \
 	-ltestdynamic \
@@ -89,6 +87,7 @@ LIBS := \
 	-lmozutil \
 	-lxp \
 	-lxpcom \
+	-lreg \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
 	-lmozdbm \

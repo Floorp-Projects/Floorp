@@ -30,7 +30,7 @@ CPPSRCS = \
 
 LOCAL_INCLUDES := -I$(srcdir)/../src
 
-REQUIRES = raptor netlib xpcom pref
+REQUIRES = raptor netlib xpcom reg pref
 
 LIBS = \
 	-labouturl \
