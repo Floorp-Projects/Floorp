@@ -667,8 +667,12 @@ pk11_handleCertObject(PK11Session *session,PK11Object *object)
 							!= SECSuccess) {
 	    return CKR_ATTRIBUTE_VALUE_INVALID;
 	}
-	if (CERT_AddTempCertToPerm(cert, label, &trust) != SECSuccess) {
-	    return CKR_HOST_MEMORY;
+	if (!cert->isperm) {
+	    if (CERT_AddTempCertToPerm(cert, label, &trust) != SECSuccess) {
+		return CKR_HOST_MEMORY;
+	    }
+        } else {
+	    CERT_ChangeCertTrust(cert->dbhandle,cert,&trust);
 	}
 	if(certUsage) {
 	    if(CERT_ChangeCertTrustByUsage(CERT_GetDefaultCertDB(),
