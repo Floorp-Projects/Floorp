@@ -40,7 +40,7 @@
   <script src="chrome://global/content/treePopups.js"/>
 
 <tree id="historyTree" ref="NC:HistoryByDate" context="contextual"
-      datasources="rdf:history rdf:localsearch"
+      datasources="rdf:history"
       flex="1"
       multiple="true"
       onselect="historyOnSelect(event)"
@@ -145,7 +145,7 @@
   <template>
     <rule>
       <treechildren>
-       <treeitem uri="rdf:*" 
+       <treeitem uri="rdf:*" class="bookmark-item"
          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
          <treerow>
            <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
