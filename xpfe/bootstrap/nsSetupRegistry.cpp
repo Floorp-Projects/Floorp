@@ -122,7 +122,7 @@ NS_SetupRegistry_1()
 
   // APPSHELL_DLL
   nsComponentManager::RegisterComponentLib(kFileLocatorCID,      NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCAppShellServiceCID, NULL, "component://netscape/appshell/appShellService", APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kNetSupportDialogCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
