@@ -452,7 +452,8 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
     }
     
 #ifdef ENABLE_SMIME
-    else if (!nsCRT::strcasecmp(content_type, APPLICATION_XPKCS7_MIME))
+    else if (!nsCRT::strcasecmp(content_type, APPLICATION_XPKCS7_MIME)
+             || !nsCRT::strcasecmp(content_type, APPLICATION_PKCS7_MIME))
 	        clazz = (MimeObjectClass *)&mimeEncryptedCMSClass;
 #endif
     /* A few types which occur in the real world and which we would otherwise

@@ -117,62 +117,99 @@ nsCMSMessage::~nsCMSMessage()
 
 NS_IMETHODIMP nsCMSMessage::VerifySignature()
 {
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifySignature\n"));
-  return  NS_ERROR_NOT_IMPLEMENTED;
+  return CommonVerifySignature(nsnull, 0);
+}
+
+NSSCMSSignerInfo* nsCMSMessage::GetTopLevelSignerInfo()
+{
+  if (!m_cmsMsg)
+    return nsnull;
+
+  if (!NSS_CMSMessage_IsSigned(m_cmsMsg))
+    return nsnull;
+
+  NSSCMSContentInfo *cinfo = NSS_CMSMessage_ContentLevel(m_cmsMsg, 0);
+  if (!cinfo)
+    return nsnull;
+
+  NSSCMSSignedData *sigd = (NSSCMSSignedData*)NSS_CMSContentInfo_GetContent(cinfo);
+  if (!sigd)
+    return nsnull;
+
+  PR_ASSERT(NSS_CMSSignedData_SignerInfoCount(sigd) > 0);
+  return NSS_CMSSignedData_GetSignerInfo(sigd, 0);
 }
 
 NS_IMETHODIMP nsCMSMessage::GetSignerEmailAddress(char * * aEmail)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::GetSignerEmailAddress\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG(aEmail);
+
+  NSSCMSSignerInfo *si = GetTopLevelSignerInfo();
+  if (!si)
+    return NS_ERROR_FAILURE;
+
+  *aEmail = NSS_CMSSignerInfo_GetSignerEmailAddress(si);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsCMSMessage::GetSignerCommonName(char ** aName)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::GetSignerCommonName\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG(aName);
+
+  NSSCMSSignerInfo *si = GetTopLevelSignerInfo();
+  if (!si)
+    return NS_ERROR_FAILURE;
+
+  *aName = NSS_CMSSignerInfo_GetSignerCommonName(si);
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsCMSMessage::ContentIsEncrypted(int *)
+NS_IMETHODIMP nsCMSMessage::ContentIsEncrypted(PRBool *isEncrypted)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::ContentIsEncrypted\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG(isEncrypted);
+
+  if (!m_cmsMsg)
+    return NS_ERROR_FAILURE;
+
+  *isEncrypted = NSS_CMSMessage_IsEncrypted(m_cmsMsg);
+
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsCMSMessage::ContentIsSigned(int *)
+NS_IMETHODIMP nsCMSMessage::ContentIsSigned(PRBool *isSigned)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::ContentIsSigned\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG(isSigned);
+
+  if (!m_cmsMsg)
+    return NS_ERROR_FAILURE;
+
+  *isSigned = NSS_CMSMessage_IsSigned(m_cmsMsg);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsCMSMessage::GetSignerCert(nsIX509Cert **scert)
 {
-  if (!m_cmsMsg)
-    return NS_ERROR_FAILURE;
-
-  if (!NSS_CMSMessage_IsSigned(m_cmsMsg))
-    return NS_ERROR_FAILURE;
-
-  NSSCMSContentInfo *cinfo = NSS_CMSMessage_ContentLevel(m_cmsMsg, 0);
-  if (!cinfo)
-    return NS_ERROR_FAILURE;
-
-  NSSCMSSignedData *sigd = (NSSCMSSignedData*)NSS_CMSContentInfo_GetContent(cinfo);
-  if (!sigd)
-    return NS_ERROR_FAILURE;
-
-  PR_ASSERT(NSS_CMSSignedData_SignerInfoCount(sigd) > 0);
-  NSSCMSSignerInfo *si = NSS_CMSSignedData_GetSignerInfo(sigd, 0);
+  NSSCMSSignerInfo *si = GetTopLevelSignerInfo();
   if (!si)
     return NS_ERROR_FAILURE;
 
   if (si->cert) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::GetSignerCert got signer cert\n"));
+
     *scert = new nsNSSCertificate(si->cert);
     if (*scert) {
       (*scert)->AddRef();
     }
   }
   else {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::GetSignerCert no signer cert, do we have a cert list? %s\n",
+      (si->certList != nsnull ? "yes" : "no") ));
+
     *scert = nsnull;
   }
   
@@ -186,42 +223,54 @@ NS_IMETHODIMP nsCMSMessage::GetEncryptionCert(nsIX509Cert **ecert)
 
 NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, PRUint32 aDigestDataLen)
 {
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature\n"));
+  if (!aDigestData || !aDigestDataLen)
+    return NS_ERROR_FAILURE;
+
+  return CommonVerifySignature(aDigestData, aDigestDataLen);
+}
+
+nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint32 aDigestDataLen)
+{
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature, content level count %d\n", NSS_CMSMessage_ContentLevelCount(m_cmsMsg)));
   NSSCMSContentInfo *cinfo = nsnull;
   NSSCMSSignedData *sigd = nsnull;
   NSSCMSSignerInfo *si;
-  SECItem digest;
   PRInt32 nsigners;
   nsresult rv = NS_ERROR_FAILURE;
 
-  digest.data = aDigestData;
-  digest.len = aDigestDataLen;
-
   if (NSS_CMSMessage_IsSigned(m_cmsMsg) == PR_FALSE) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - not signed\n"));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - not signed\n"));
     return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
   } 
 
   cinfo = NSS_CMSMessage_ContentLevel(m_cmsMsg, 0);
   if (cinfo) {
+    // I don't like this hard cast. We should check in some way, that we really have this type.
     sigd = (NSSCMSSignedData*)NSS_CMSContentInfo_GetContent(cinfo);
   }
   
   if (!sigd) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - no content info\n"));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - no content info\n"));
     rv = NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
     goto loser;
   }
 
-  if (NSS_CMSSignedData_SetDigestValue(sigd, SEC_OID_SHA1, &digest)) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - bad digest\n"));
-    rv = NS_ERROR_CMS_VERIFY_BAD_DIGEST;
-    goto loser;
+  if (aDigestData && aDigestDataLen)
+  {
+    SECItem digest;
+    digest.data = aDigestData;
+    digest.len = aDigestDataLen;
+
+    if (NSS_CMSSignedData_SetDigestValue(sigd, SEC_OID_SHA1, &digest)) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - bad digest\n"));
+      rv = NS_ERROR_CMS_VERIFY_BAD_DIGEST;
+      goto loser;
+    }
   }
 
   // Import certs. Note that import failure is not a signature verification failure. //
   if (NSS_CMSSignedData_ImportCerts(sigd, CERT_GetDefaultCertDB(), certUsageEmailSigner, PR_TRUE) != SECSuccess) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - can not import certs\n"));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - can not import certs\n"));
   }
 
   nsigners = NSS_CMSSignedData_SignerInfoCount(sigd);
@@ -230,42 +279,42 @@ NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, 
 
   // We verify the first signer info,  only //
   if (NSS_CMSSignedData_VerifySignerInfo(sigd, 0, CERT_GetDefaultCertDB(), certUsageEmailSigner) != SECSuccess) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - unable to verify signature\n"));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - unable to verify signature\n"));
 
     if (NSSCMSVS_SigningCertNotFound == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - signing cert not found\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not found\n"));
       rv = NS_ERROR_CMS_VERIFY_NOCERT;
     }
     else if(NSSCMSVS_SigningCertNotTrusted == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - signing cert not trusted\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted\n"));
       rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
     }
     else if(NSSCMSVS_Unverified == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - can not verify\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - can not verify\n"));
       rv = NS_ERROR_CMS_VERIFY_ERROR_UNVERIFIED;
     }
     else if(NSSCMSVS_ProcessingError == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - processing error\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - processing error\n"));
       rv = NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
     }
     else if(NSSCMSVS_BadSignature == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - bad signature\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - bad signature\n"));
       rv = NS_ERROR_CMS_VERIFY_BAD_SIGNATURE;
     }
     else if(NSSCMSVS_DigestMismatch == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - digest mismatch\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - digest mismatch\n"));
       rv = NS_ERROR_CMS_VERIFY_DIGEST_MISMATCH;
     }
     else if(NSSCMSVS_SignatureAlgorithmUnknown == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - algo unknown\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - algo unknown\n"));
       rv = NS_ERROR_CMS_VERIFY_UNKNOWN_ALGO;
     }
     else if(NSSCMSVS_SignatureAlgorithmUnsupported == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - algo not supported\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - algo not supported\n"));
       rv = NS_ERROR_CMS_VERIFY_UNSUPPORTED_ALGO;
     }
     else if(NSSCMSVS_MalformedSignature == si->verificationStatus) {
-      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - malformed signature\n"));
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - malformed signature\n"));
       rv = NS_ERROR_CMS_VERIFY_MALFORMED_SIGNATURE;
     }
 
@@ -274,7 +323,7 @@ NS_IMETHODIMP nsCMSMessage::VerifyDetachedSignature(unsigned char* aDigestData, 
 
   // Save the profile. Note that save import failure is not a signature verification failure. //
   if (NSS_SMIMESignerInfo_SaveSMIMEProfile(si) != SECSuccess) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::VerifyDetachedSignature - unable to save smime profile\n"));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - unable to save smime profile\n"));
   }
 
   rv = NS_OK;

@@ -79,6 +79,8 @@ public:
   NSSCMSMessage* getCMS() {return m_cmsMsg;};
 private:
   NSSCMSMessage * m_cmsMsg;
+  NSSCMSSignerInfo* GetTopLevelSignerInfo();
+  nsresult CommonVerifySignature(unsigned char* aDigestData, PRUint32 aDigestDataLen);
 };
 
 

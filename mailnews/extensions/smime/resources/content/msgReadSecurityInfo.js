@@ -155,7 +155,7 @@ function onLoad()
       str = bundle.getString(sigInfo);
     }
     else if (sigInfo_clueless) {
-      str = bundle.getString("SIClueless") + " " + gSignatureStatus;
+      str = bundle.getString("SIClueless") + " (" + gSignatureStatus + ")";
     }
     setText("signatureExplanation", str);
     

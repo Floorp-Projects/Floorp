@@ -509,7 +509,7 @@ MimeMultCMS_generate (void *crypto_closure)
   if (data->smimeHeaderSink) {
     data->smimeHeaderSink->MaxWantedNesting(&maxNestLevel);
 
-    if (aNestLevel >= maxNestLevel)
+    if (aNestLevel <= maxNestLevel)
     {
       data->smimeHeaderSink->SignedStatus(aNestLevel, signature_status, signerCert);
     }

@@ -213,7 +213,6 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
   nsXPIDLCString from_name;
   nsXPIDLCString sender_addr;
   nsXPIDLCString sender_name;
-  nsXPIDLCString cert_name;
   nsXPIDLCString cert_addr;
   PRBool match = PR_TRUE;
 
@@ -221,11 +220,11 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
    */
   if (content_info)
 	{
-	  content_info->GetSignerCommonName (getter_Copies(cert_name));
 	  content_info->GetSignerEmailAddress (getter_Copies(cert_addr));
 	}
-  if (!cert_name && !cert_addr) goto DONE;
 
+  if (!cert_addr)
+    goto DONE;
 
   /* Find the headers of the MimeMessage which is the parent (or grandparent)
 	 of this object (remember, crypto objects nest.) */
@@ -450,42 +449,104 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
   PR_SetError(0, 0);
   rv = data->decoder_context->Finish(getter_AddRefs(data->content_info));
 
-  nsCOMPtr<nsIX509Cert> recipientCert;
-
-  /* Is the content info encrypted? */
-  if (data->content_info) {
-    data->ci_is_encrypted = PR_TRUE;
-    data->content_info->GetEncryptionCert(getter_AddRefs(recipientCert));
-  }
-
   if (NS_FAILED(rv))
 	  data->verify_error = PR_GetError();
 
-  PRInt32 maxNestLevel = 0;
-  if (data->smimeHeaderSink) {
-    data->smimeHeaderSink->MaxWantedNesting(&maxNestLevel);
+  data->decoder_context = 0;
 
-    if (aNestLevel >= maxNestLevel)
-    {
-      PRInt32 status = nsICMSMessageErrors::GENERAL_ERROR;
-      
-      if (data->ci_is_encrypted 
-          && !data->verify_error
-          && !data->decode_error
-          && NS_SUCCEEDED(rv))
-      {
-        status = nsICMSMessageErrors::SUCCESS;
+  nsCOMPtr<nsIX509Cert> certOfInterest;
+
+  if (!data->smimeHeaderSink)
+    return 0;
+
+  PRInt32 maxNestLevel = 0;
+  data->smimeHeaderSink->MaxWantedNesting(&maxNestLevel);
+
+  if (aNestLevel > maxNestLevel)
+    return 0;
+
+  PRInt32 status = nsICMSMessageErrors::SUCCESS;
+
+  if (data->verify_error
+      || data->decode_error
+      || NS_FAILED(rv))
+  {
+    status = nsICMSMessageErrors::GENERAL_ERROR;
+  }
+
+  if (!data->content_info)
+  {
+    status = nsICMSMessageErrors::GENERAL_ERROR;
+
+    // Although a CMS message could be either encrypted or opaquely signed,
+    // what we see is most likely encrypted, because if it were
+    // signed only, we probably would have been able to decode it.
+
+    data->ci_is_encrypted = PR_TRUE;
+  }
+  else
+  {
+    rv = data->content_info->ContentIsEncrypted(&data->ci_is_encrypted);
+
+    if (NS_SUCCEEDED(rv) && data->ci_is_encrypted) {
+      data->content_info->GetEncryptionCert(getter_AddRefs(certOfInterest));
+    }
+    else {
+      // Existing logic in mimei assumes, if !ci_is_encrypted, then it is signed.
+      // Make sure it indeed is signed.
+
+      PRBool testIsSigned;
+      rv = data->content_info->ContentIsSigned(&testIsSigned);
+
+      if (NS_FAILED(rv) || !testIsSigned) {
+        // Neither signed nor encrypted?
+        // We are unable to understand what we got, do not try to indicate S/Mime status.
+        return 0;
       }
-    
-      data->smimeHeaderSink->EncryptionStatus(
-        aNestLevel,
-        status,
-        recipientCert
-      );
+
+      rv = data->content_info->VerifySignature();
+
+	    if (NS_FAILED(rv)) {
+        if (NS_ERROR_MODULE_SECURITY == NS_ERROR_GET_MODULE(rv)) {
+          status = NS_ERROR_GET_CODE(rv);
+        }
+        else if (NS_ERROR_NOT_IMPLEMENTED == rv) {
+          status = nsICMSMessageErrors::VERIFY_ERROR_PROCESSING;
+        }
+      }
+      else {
+        if (MimeCMSHeadersAndCertsMatch(data->self,
+											                  data->content_info,
+											                  &data->sender_addr))
+        {
+          status = nsICMSMessageErrors::SUCCESS;
+        }
+        else
+        {
+          status = nsICMSMessageErrors::VERIFY_HEADER_MISMATCH;
+        }
+      }
+
+      data->content_info->GetSignerCert(getter_AddRefs(certOfInterest));
     }
   }
 
-  data->decoder_context = 0;
+  if (data->ci_is_encrypted)
+  {
+    data->smimeHeaderSink->EncryptionStatus(
+      aNestLevel,
+      status,
+      certOfInterest
+    );
+  }
+  else
+  {
+    data->smimeHeaderSink->SignedStatus(
+      aNestLevel,
+      status,
+      certOfInterest
+    );
+  }
 
   return 0;
 }
