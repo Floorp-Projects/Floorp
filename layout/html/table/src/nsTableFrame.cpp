@@ -381,23 +381,26 @@ nsTableFrame::RoundToPixel(nscoord       aValue,
                            float         aPixelToTwips,
                            nsPixelRound  aRound)
 {
-  nscoord halfPixel = NSToCoordRound(aPixelToTwips / 2.0f);
   nscoord fullPixel = NSToCoordRound(aPixelToTwips);
-  PRInt32 excess = aValue % fullPixel;
-  if (0 == excess) {
+  if (fullPixel <= 0) 
+    // We must be rendering to a device that has a resolution greater than Twips! 
+    // In that case, aValue is as accurate as it's going to get.
     return aValue;
-  }
-  else {
-    switch(aRound) {
-    case eRoundUpIfHalfOrMore:
-      if (excess >= halfPixel) { // eRoundUpIfHalfOrMore
-        return aValue + (fullPixel - excess);
-      }
-    case eAlwaysRoundDown:
-      return aValue - excess;
-    default: // eAlwaysRoundUp
+  
+  PRInt32 excess = aValue % fullPixel;
+  if (0 == excess) 
+    return aValue;
+
+  nscoord halfPixel = NSToCoordRound(aPixelToTwips / 2.0f);
+  switch(aRound) {
+  case eRoundUpIfHalfOrMore:
+    if (excess >= halfPixel) { // eRoundUpIfHalfOrMore
       return aValue + (fullPixel - excess);
     }
+  case eAlwaysRoundDown:
+    return aValue - excess;
+  default: // eAlwaysRoundUp
+    return aValue + (fullPixel - excess);
   }
 }
 
