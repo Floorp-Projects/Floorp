@@ -223,11 +223,18 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIChannel * aChannel, nsISupports 
     // First step:  See if any nsIURIContentListener prefers to handle this
     //              content type.
     //
+    PRBool abortDispatch = PR_FALSE;
     rv = pURILoader->DispatchContent(contentType, mCommand, m_windowTarget, 
                                      aChannel, aCtxt, 
                                      m_contentListener, 
                                      getter_Copies(desiredContentType), 
-                                     getter_AddRefs(contentListener));
+                                     getter_AddRefs(contentListener),
+                                     &abortDispatch);
+
+    // if the uri loader says to abort the dispatch then someone
+    // else must have stepped in and taken over for us...so stop..
+
+    if (abortDispatch) return NS_OK;
     //
     // Second step:  If no listener prefers this type, see if any stream
     //               decoders exist to transform this content type into
@@ -436,7 +443,8 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
                                       nsISupports * aCtxt, 
                                       nsIURIContentListener * aContentListener,
                                       char ** aContentTypeToUse,
-                                      nsIURIContentListener ** aContentListenerToUse)
+                                      nsIURIContentListener ** aContentListenerToUse,
+                                      PRBool * aAbortProcess)
 {
   // okay, now we've discovered the content type. We need to do the following:
   // (1) Give our uri content listener first crack at handling this content type.  
@@ -488,7 +496,10 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
   nsCOMPtr<nsIContentHandler> aContentHandler;
   rv = nsComponentManager::CreateInstance(handlerProgID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
+  {
     rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aChannel);
+    *aAbortProcess = PR_TRUE;
+  }
   
   return rv;
 }
