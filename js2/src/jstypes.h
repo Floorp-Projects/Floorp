@@ -178,17 +178,23 @@ namespace JSTypes {
 
     Formatter& operator<<(Formatter& f, const JSValue& value);
 
+
 #if defined(XP_MAC)
     // copied from default template parameters in map.
-    typedef gc_allocator<std::pair<const String, JSValue> > gc_map_allocator;
+    //typedef gc_allocator<std::pair<const String, JSValue> > gc_map_allocator;
+    //typedef gc_allocator<std::pair<const String, JSValue> > gc_map_allocator;
+    #define gc_map_allocator(T) gc_allocator<std::pair<const String, T> >
 #elif defined(XP_UNIX)
     // FIXME: in libg++, they assume the map's allocator is a byte allocator,
     // which is wrapped in a simple_allocator. this is crap.
     typedef char _Char[1];
-    typedef gc_allocator<_Char> gc_map_allocator;
+    //typedef gc_allocator<_Char> gc_map_allocator;
+    #define gc_map_allocator(T) gc_allocator<_Char>
 #elif defined(_WIN32)
     // FIXME: MSVC++'s notion. this is why we had to add _Charalloc().
-    typedef gc_allocator<JSValue> gc_map_allocator;
+    //typedef gc_allocator<JSValue> gc_map_allocator;
+    //typedef gc_allocator<JSContainer> gc_container_allocator;
+    #define gc_map_allocator(T) gc_allocator<T>
 #endif        
         
     /**
@@ -227,7 +233,8 @@ namespace JSTypes {
     extern JSType Object_Type;
     extern JSType Date_Type;
 
-    typedef std::map<String, JSValue, std::less<String>, gc_map_allocator> JSProperties;
+    typedef std::map<String, JSValue, std::less<String>, gc_map_allocator(JSValue) > JSProperties;
+    typedef std::map<String, JSFunction *, std::less<String> > FunctionMap;
 
     /**
      * Basic behavior of all JS objects, mapping a name to a value,
@@ -236,6 +243,8 @@ namespace JSTypes {
     class JSObject : public gc_base {
     protected:
         JSProperties mProperties;
+        FunctionMap *mGetter;      // only allocated if the object has properties with getters or setters
+        FunctionMap *mSetter;
         JSObject* mPrototype;
         JSType* mType;
         JSString* mClass;       // this is the internal [[Class]] property
@@ -244,13 +253,22 @@ namespace JSTypes {
         static JSString *ObjectString;
         static JSObject *ObjectPrototypeObject;
 
-        void init(JSObject* prototype)  { mPrototype = prototype; mType = &Any_Type; mClass = ObjectString; }
+        void init(JSObject* prototype)  { mGetter = NULL; mSetter = NULL; mPrototype = prototype; mType = &Any_Type; mClass = ObjectString; }
 
     public:
         JSObject()                      { init(ObjectPrototypeObject); }
         JSObject(JSValue &constructor)  { init(constructor.object->getProperty(widenCString("prototype")).object); }
         JSObject(JSObject *prototype)   { init(prototype); }
-    
+/*
+
+  I wanted to have this, but VCC complains about JSInstance instances not being deletable...
+
+        virtual ~JSObject() 
+        {
+            if (mGetter) delete mGetter;
+            if (mSetter) delete mSetter;
+        }
+*/    
         static void initObjectObject(JSScope *g);
 
         bool hasProperty(const String& name)
@@ -268,25 +286,55 @@ namespace JSTypes {
             return kUndefinedValue;
         }
 
-        // return the property AND the object it's found in
-        // (would rather return references, but couldn't get that to work)
-        const JSValue getReference(JSValue &prop, const String& name)
-        {
-            JSProperties::const_iterator i = mProperties.find(name);
-            if (i != mProperties.end()) {
-                prop = i->second;
-                return JSValue(this);
-            }
-            if (mPrototype)
-                return mPrototype->getReference(prop, name);
-            return kUndefinedValue;
-        }
-        
         JSValue& setProperty(const String& name, const JSValue& value)
         {
             return (mProperties[name] = value);
         }
         
+        void setGetter(const String& name, JSFunction *getter)
+        {
+            if (mGetter == NULL)
+                mGetter = new FunctionMap();
+            (*mGetter)[name] = getter;
+        }
+
+        void setSetter(const String& name, JSFunction *setter)
+        {
+            if (mSetter == NULL)
+                mSetter = new FunctionMap();
+            (*mSetter)[name] = setter;
+        }
+
+        JSFunction *getter(const String& name)
+        {
+            if (hasProperty(name)) {
+                if (mGetter) {
+                    FunctionMap::iterator g = mGetter->find(name);
+                    if (g != mGetter->end())
+                        return g->second;
+                }
+            }
+            else
+                if (mPrototype)
+                    return mPrototype->getter(name);
+            return NULL;
+        }
+
+        JSFunction *setter(const String& name)
+        {
+            if (hasProperty(name)) {
+                if (mSetter) {
+                    FunctionMap::iterator s = mSetter->find(name);
+                    if (s != mSetter->end())
+                        return s->second;
+                }
+            }
+            else
+                if (mPrototype)
+                    return mPrototype->setter(name);
+            return NULL;
+        }
+
         const JSValue& deleteProperty(const String& name)
         {
             JSProperties::iterator i = mProperties.find(name);
@@ -439,11 +487,8 @@ namespace JSTypes {
         static JSObject* FunctionPrototypeObject;
         ICodeModule* mICode;
         
-        uint32 mParameterCount;
-        bool mParameterInfo;
-
     protected:
-        JSFunction() : mICode(0), mParameterCount(0) {}
+        JSFunction() : mICode(0) {}
 
    	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
 	    typedef gc_allocator<JSFunction, traits> allocator;
@@ -451,20 +496,12 @@ namespace JSTypes {
     public:
         static void initFunctionObject(JSScope *g);
 
-        JSFunction(ICodeModule* iCode, FunctionDefinition *def)
+        JSFunction(ICodeModule* iCode)
             : JSObject(FunctionPrototypeObject),
-              mICode(iCode), mParameterCount(0), mParameterInfo(false)
+              mICode(iCode)
         {
             setClass(FunctionString);
-            if (def) {
-                mParameterInfo = true;
-                VariableBinding *p = def->parameters;
-                while (p) { mParameterCount++; p = p->next; }
-            }
         }
-
-        uint32 getParameterCount()  { return mParameterCount; }
-        bool hasParameterInfo()     { return mParameterInfo; }
 
         ~JSFunction();
     
@@ -574,9 +611,9 @@ namespace JSTypes {
             return result;
         }
         
-        JSValue& defineFunction(const String& name, ICodeModule* iCode, FunctionDefinition *def)
+        JSValue& defineFunction(const String& name, ICodeModule* iCode)
         {
-            JSValue value(new JSFunction(iCode, def));
+            JSValue value(new JSFunction(iCode));
             return defineVariable(name, &Function_Type, value);
         }
 

@@ -109,7 +109,7 @@ TypedRegister ICodeGenerator::allocateRegister(const StringAtom& name, JSType *t
     mPermanentRegister[r] = true;
 
     TypedRegister result(r, type); 
-    (*variableList)[name] = result; 
+    variableList->add(name, result);
     mTopRegister = ++r;
     return result;
 }
@@ -129,6 +129,14 @@ TypedRegister ICodeGenerator::allocateVariable(const StringAtom& name)
         mExceptionRegister = allocateRegister(mWorld->identifiers["__exceptionObject__"], &Any_Type);
     }
     return allocateRegister(name, &Any_Type); 
+}
+
+TypedRegister ICodeGenerator::allocateVariable(const StringAtom& name, JSType *type) 
+{ 
+    if (mExceptionRegister.first == NotARegister) {
+        mExceptionRegister = allocateRegister(mWorld->identifiers["__exceptionObject__"], &Any_Type);
+    }
+    return allocateRegister(name, type); 
 }
 
 ICodeModule *ICodeGenerator::complete()
@@ -246,10 +254,10 @@ TypedRegister ICodeGenerator::newClass(JSClass *clazz)
     return dest;
 }
 
-TypedRegister ICodeGenerator::newFunction(ICodeModule *icm, FunctionDefinition *def)
+TypedRegister ICodeGenerator::newFunction(ICodeModule *icm)
 {
     TypedRegister dest(getTempRegister(), &Function_Type);
-    NewFunction *instr = new NewFunction(dest, icm, def);
+    NewFunction *instr = new NewFunction(dest, icm);
     iCode->push_back(instr);
     return dest;
 }
@@ -717,7 +725,7 @@ static bool isMethodName(JSType *t, const StringAtom &name, uint32 &slotIndex)
 ICodeGenerator::LValueKind ICodeGenerator::resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex)
 {
     if (!isWithinWith()) {
-        v = findVariable(name);
+        v = variableList->findVariable(name);
         if (v.first != NotARegister)
             return Var;
         else {
@@ -751,6 +759,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
 
     const StringAtom &name = (static_cast<IdentifierExprNode *>(p))->name;
     LValueKind lValueKind = resolveIdentifier(name, v, slotIndex);
+    JSType *targetType = v.second;
 
     TypedRegister thisBase = TypedRegister(0, mClass ? mClass : &Any_Type);
 
@@ -785,6 +794,7 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
         ret = binaryOp(mapExprNodeToICodeOp(use), v, ret);
         // fall thru...
     case ExprNode::assignment:
+        ret = cast(ret, targetType);
         switch (lValueKind) {
         case Var:
             move(v, ret);
@@ -1012,6 +1022,7 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
             ret = binaryOp(mapExprNodeToICodeOp(use), v, ret);
             // fall thru...
         case ExprNode::assignment:
+            ret = cast(ret, fieldType);
             switch (lValueKind) {
             case Constructor:
             case Static:
@@ -1536,7 +1547,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             icg.genStmt(f->function.body);
             //stdOut << icg;
             ICodeModule *icm = icg.complete();
-            ret = newFunction(icm, &f->function);
+            ret = newFunction(icm);
         }
         break;
 
@@ -1596,7 +1607,7 @@ static bool hasAttribute(const IdentifierList* identifiers, Token::Kind tokenKin
 JSType *ICodeGenerator::extractType(ExprNode *t)
 {
     JSType* type = &Any_Type;
-    // FIXME:  need to do code generation for type expressions.
+    // FUTURE:  do code generation for type expressions.
     if (t && (t->getKind() == ExprNode::identifier)) {
         IdentifierExprNode* typeExpr = static_cast<IdentifierExprNode*>(t);
         type = findType(typeExpr->name);
@@ -1795,15 +1806,15 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                     if (name == nameExpr->name)
                                         hasDefaultConstructor = true;
                                     thisClass->defineConstructor(name);
-                                    scg.setStatic(thisClass, name, scg.newFunction(icm, &f->function));
+                                    scg.setStatic(thisClass, name, scg.newFunction(icm));
                                 }
                                 else
                                     if (isStatic) {
                                         thisClass->defineStatic(name, &Function_Type);
-                                        scg.setStatic(thisClass, name, scg.newFunction(icm, &f->function));
+                                        scg.setStatic(thisClass, name, scg.newFunction(icm));
                                     }
                                     else
-                                        thisClass->defineMethod(name, new JSFunction(icm, &f->function));
+                                        thisClass->defineMethod(name, new JSFunction(icm));
                             }
                         }                        
                         break;
@@ -1815,7 +1826,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 }
 
                 // add the instance initializer
-                scg.setStatic(thisClass, initName, scg.newFunction(ccg.complete(), NULL)); 
+                scg.setStatic(thisClass, initName, scg.newFunction(ccg.complete())); 
                 // invent a default constructor if necessary, it just calls the 
                 //   initializer and the superclass default constructor
                 if (!hasDefaultConstructor) {
@@ -1828,7 +1839,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     icg.call(icg.getStatic(thisClass, initName), thisValue, &args);
                     icg.returnStmt(thisValue);
                     thisClass->defineConstructor(nameExpr->name);
-                    scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete(), NULL));
+                    scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete()));
                 }
                 // freeze the class.
                 thisClass->complete();
@@ -1848,9 +1859,36 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
         {
             FunctionStmtNode *f = static_cast<FunctionStmtNode *>(p);
             ICodeModule *icm = genFunction(f, false, NULL);
+            JSType *resultType = extractType(f->function.resultType);
             if (f->function.name->getKind() == ExprNode::identifier) {
                 const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
-                mGlobal->defineFunction(name, icm, &f->function);
+                switch (f->function.prefix) {
+                case FunctionName::Get:
+                    if (isTopLevel()) {
+                        mGlobal->defineVariable(name, resultType);
+                        mGlobal->setGetter(name, new JSFunction(icm));
+                    }
+                    else {
+                        // is this legal - a nested getter?
+                        NOT_REACHED("Better check with Waldemar");
+                        //allocateVariable(name, resultType);
+                    }
+                    break;
+                case FunctionName::Set:
+                    if (isTopLevel()) {
+                        mGlobal->defineVariable(name, resultType);
+                        mGlobal->setSetter(name, new JSFunction(icm));
+                    }
+                    else {
+                        // is this legal - a nested setter?
+                        NOT_REACHED("Better check with Waldemar");
+                        //allocateVariable(name, resultType);
+                    }
+                    break;
+                case FunctionName::normal:
+                    mGlobal->defineFunction(name, icm);
+                    break;
+                }
             }
         }
         break;
@@ -1876,24 +1914,21 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             VariableBinding *v = vs->bindings;
             while (v)  {
                 if (v->name && (v->name->getKind() == ExprNode::identifier)) {
-                    if (v->type && (v->type->getKind() == ExprNode::identifier)) {
-                        if (isTopLevel())
-                            mGlobal->defineVariable((static_cast<IdentifierExprNode *>(v->name))->name,
-                                            findType((static_cast<IdentifierExprNode *>(v->type))->name));
-                        else
-                            allocateVariable((static_cast<IdentifierExprNode *>(v->name))->name,
-                                                (static_cast<IdentifierExprNode *>(v->type))->name);
-                    }
-                    else 
-                        allocateVariable((static_cast<IdentifierExprNode *>(v->name))->name);
+                    JSType *type = extractType(v->type);
+                    if (isTopLevel())
+                        mGlobal->defineVariable((static_cast<IdentifierExprNode *>(v->name))->name, type);
+                    else
+                        allocateVariable((static_cast<IdentifierExprNode *>(v->name))->name, type);
                     if (v->initializer) {
                         if (!isTopLevel() && !isWithinWith()) {
                             TypedRegister r = genExpr(v->name);
                             TypedRegister val = genExpr(v->initializer);
+                            val = cast(val, type);
                             move(r, val);
                         }
                         else {
                             TypedRegister val = genExpr(v->initializer);
+                            val = cast(val, type);
                             saveName((static_cast<IdentifierExprNode *>(v->name))->name, val);
                         }
                     }
@@ -2182,7 +2217,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 CatchClause *c = t->catches;
                 while (c) {
                     // Bind the incoming exception ...
-                    setRegisterForVariable(c->name, mExceptionRegister);
+                    variableList->setRegisterForVariable(c->name, mExceptionRegister);
 
                     genStmt(c->stmt);
                     if (finallyLabel)

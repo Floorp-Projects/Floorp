@@ -42,7 +42,7 @@
         NEGATE, /* dest, source */
         NEW_ARRAY, /* dest */
         NEW_CLASS, /* dest, class */
-        NEW_FUNCTION, /* dest, ICodeModule, Function Definition */
+        NEW_FUNCTION, /* dest, ICodeModule */
         NEW_OBJECT, /* dest, constructor */
         NOP, /* do nothing and like it */
         NOT, /* dest, source */
@@ -593,14 +593,14 @@
         }
     };
 
-    class NewFunction : public Instruction_3<TypedRegister, ICodeModule*, FunctionDefinition*> {
+    class NewFunction : public Instruction_2<TypedRegister, ICodeModule*> {
     public:
-        /* dest, ICodeModule, Function Definition */
-        NewFunction (TypedRegister aOp1, ICodeModule* aOp2, FunctionDefinition* aOp3) :
-            Instruction_3<TypedRegister, ICodeModule*, FunctionDefinition*>
-            (NEW_FUNCTION, aOp1, aOp2, aOp3) {};
+        /* dest, ICodeModule */
+        NewFunction (TypedRegister aOp1, ICodeModule* aOp2) :
+            Instruction_2<TypedRegister, ICodeModule*>
+            (NEW_FUNCTION, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_FUNCTION] << "\t" << mOp1 << ", " << "ICodeModule" << ", " << "FunctionDefinition";
+            f << opcodeNames[NEW_FUNCTION] << "\t" << mOp1 << ", " << "ICodeModule";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {

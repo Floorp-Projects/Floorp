@@ -61,15 +61,7 @@ namespace JSClasses {
         bool isConstructor() const          { return (mFlags & kIsConstructor) != 0; }
     };
 
-#if defined(XP_MAC)
-    // copied from default template parameters in map.
-    typedef gc_allocator<std::pair<const String, JSSlot> > gc_slot_allocator;
-#elif defined(XP_UNIX)
-    typedef JSTypes::gc_map_allocator gc_slot_allocator;
-#elif defined(_WIN32)
-    typedef gc_allocator<JSSlot> gc_slot_allocator;
-#endif
-
+    typedef gc_map_allocator(JSSlot) gc_slot_allocator;
     typedef std::map<String, JSSlot, std::less<const String>, gc_slot_allocator> JSSlots;
 
 
@@ -126,6 +118,8 @@ namespace JSClasses {
             return slot;
         }
         
+        
+
         const JSSlot& getSlot(const String& name)
         {
             return mSlots[name];
@@ -272,7 +266,7 @@ namespace JSClasses {
                                         JSTypes::kUndefinedValue);
             }
             // for grins, use the prototype link to access methods.
-            setPrototype(thisClass->getScope());
+            // setPrototype(thisClass->getScope());
         }
         
         JSFunction* getMethod(uint32 index)
