@@ -29,7 +29,6 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsIChromeRegistry.h"
 
 
 #if defined(XP_MAC)
@@ -56,11 +55,12 @@
 #include <storage/FindDirectory.h>
 #endif
 
-static nsresult GetChromeLocale(PRUnichar** localeName);
- 
-// IDs
+#ifndef XPCOM_STANDALONE
+#include "nsIChromeRegistry.h"
 
+static nsresult GetChromeLocale(PRUnichar** localeName);
 static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
+#endif
  
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
@@ -165,12 +165,14 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
             rv = localFile->AppendRelativePath(DEFAULTS_DIR_NAME);
             if (NS_SUCCEEDED(rv)) {
                 rv = localFile->AppendRelativePath(DEFAULTS_PROFILE_DIR_NAME);
+#ifndef XPCOM_STANDALONE
                 if (NS_SUCCEEDED(rv)) {
                     nsXPIDLString localeName;
                     rv = GetChromeLocale(getter_Copies(localeName));
                     if (NS_SUCCEEDED(rv))
                         rv = localFile->AppendRelativeUnicodePath(localeName);
                 }
+#endif
             }
         }
     }
@@ -365,6 +367,8 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
 // Static Routines
 //****************************************************************************************
 
+#ifndef XPCOM_STANDALONE
+
 static nsresult GetChromeLocale(PRUnichar** localeName)
 {
     NS_ENSURE_ARG_POINTER(localeName);
@@ -379,3 +383,5 @@ static nsresult GetChromeLocale(PRUnichar** localeName)
     }
     return rv;
 }
+
+#endif
