@@ -46,6 +46,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"
+#include "nsIDOMElement.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -271,7 +272,6 @@ nsTableFrame::GetFrameType(nsIAtom** aType) const
 
 /* --------------------- nsTableFrame -------------------- */
 
-
 nsTableFrame::nsTableFrame()
   : nsHTMLContainerFrame(),
     mColumnWidthsValid(PR_FALSE),
@@ -291,6 +291,8 @@ nsTableFrame::nsTableFrame()
   mCellMap = new nsCellMap(0, 0);
   mBorderEdges.mOutsideEdge=PR_TRUE;
 }
+
+NS_IMPL_ISUPPORTS_INHERITED(nsTableFrame, nsHTMLContainerFrame, nsITableLayout)
 
 NS_IMETHODIMP
 nsTableFrame::Init(nsIPresContext&  aPresContext,
@@ -5343,6 +5345,53 @@ void nsTableFrame::GetCellInfoAt(PRInt32            aRowX,
 {
   nsCellMap* cellMap = GetCellMap();
   cellMap->GetCellInfoAt(aRowX, aColX, aCellFrame, aOriginates, aColSpan);
+}
+
+NS_IMETHODIMP 
+nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
+                            nsIDOMElement* &aCell,   //out params
+                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
+                            PRInt32& aRowSpan, PRInt32& aColSpan,
+                            PRBool& aIsSelected)
+{
+  nsresult result;
+  nsCellMap* cellMap = GetCellMap();
+  // Initialize out params
+  aCell = nsnull;
+  aStartRowIndex = 0;
+  aStartColIndex = 0;
+  aRowSpan = 0;
+  aColSpan = 0;
+  aIsSelected = PR_FALSE;
+
+  if (!cellMap) { return NS_ERROR_NOT_INITIALIZED;}
+  nsTableCellFrame *cellFrame = cellMap->GetCellFrameAt(aRowIndex, aColIndex);
+  // This error value if a cell isn't found will pass the NS_SUCCEEDED() test
+  // It's OK to attempt to get a cell out of bounds,
+  //  as long as caller test i aCell is not null
+  // Thus we can get iterate to get all cells in a row or col
+  //   and stop when aCell is returned null.
+  if (!cellFrame) { return NS_TABLELAYOUT_CELL_NOT_FOUND;} // row or col index out of bounds
+
+  result = cellFrame->GetRowIndex(aStartRowIndex);
+  if (NS_FAILED(result)) return result;
+  result = cellFrame->GetColIndex(aStartColIndex);
+  if (NS_FAILED(result)) return result;
+  aRowSpan = cellFrame->GetRowSpan();
+  aColSpan = cellFrame->GetColSpan();
+  result = cellFrame->GetSelected(&aIsSelected);
+  if (NS_FAILED(result)) return result;
+
+  // do this last, because it addrefs, 
+  // and we don't want the caller leaking it on error
+  nsCOMPtr<nsIContent>content;
+  result = cellFrame->GetContent(getter_AddRefs(content));  
+  if (NS_SUCCEEDED(result) && content)
+  {
+    content->QueryInterface(nsIDOMElement::GetIID(), (void**)(&aCell));
+  }   
+                                         
+  return result;
 }
 
 PRInt32 nsTableFrame::GetNumCellsOriginatingIn(PRInt32 aColIndex)

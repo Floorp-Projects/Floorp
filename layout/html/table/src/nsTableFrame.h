@@ -25,7 +25,7 @@
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
 #include "nsIFrameReflow.h"   // for nsReflowReason enum
-
+#include "nsITableLayout.h"
 
 class nsCellMap;
 class nsTableCellFrame;
@@ -62,9 +62,12 @@ struct nsStyleSpacing;
   *
   * TODO: make methods virtual so nsTableFrame can be used as a base class in the future.
   */
-class nsTableFrame : public nsHTMLContainerFrame
+class nsTableFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
 public:
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;
@@ -801,6 +804,13 @@ public: /* ----- Cell Map public methods ----- */
 
   /** returns PR_TRUE if table layout requires a preliminary pass over the content */
   PRBool RequiresPass1Layout();
+
+  /*---------------- nsITableLayout methods ------------------------*/
+  NS_IMETHOD GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
+                           nsIDOMElement* &aCell,   //out params
+                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
+                           PRInt32& aRowSpan, PRInt32& aColSpan,
+                           PRBool& aIsSelected);
 
 public:
   static nsIAtom* gColGroupAtom;

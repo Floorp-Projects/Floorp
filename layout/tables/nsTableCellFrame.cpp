@@ -1008,9 +1008,10 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsTableCellFrame, nsHTMLContainerFrame, nsITableCellLayout)
-
 /* ----- global methods ----- */
+
+
+NS_IMPL_ISUPPORTS_INHERITED(nsTableCellFrame, nsHTMLContainerFrame, nsITableCellLayout)
 
 nsresult 
 NS_NewTableCellFrame(nsIFrame** aNewFrame)

@@ -20,6 +20,7 @@
 
 #include "nscore.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsITableLayout.h"
 
 struct OuterTableReflowState;
 struct nsStyleText;
@@ -38,9 +39,12 @@ struct nsStyleText;
  * are always mapped
  *
  */
-class nsTableOuterFrame : public nsHTMLContainerFrame
+class nsTableOuterFrame : public nsHTMLContainerFrame, public nsITableLayout
 {
 public:
+
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
   /** instantiate a new instance of nsTableOuterFrame.
     * @param aResult    the new object is returned in this out-param
@@ -87,6 +91,14 @@ public:
     * The return value is only meaningful after the caption has had a pass1 reflow.
     */
   nscoord GetMinCaptionWidth();
+
+  /*---------------- nsITableLayout methods ------------------------*/
+  NS_IMETHOD GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
+                           nsIDOMElement* &aCell,   //out params
+                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
+                           PRInt32& aRowSpan, PRInt32& aColSpan,
+                           PRBool& aIsSelected);
+
 
 protected:
 

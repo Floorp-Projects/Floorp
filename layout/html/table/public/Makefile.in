@@ -26,6 +26,7 @@ MODULE = raptor
 
 EXPORTS =					           \
         nsITableCellLayout.h \
+        nsITableLayout.h     \
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
