@@ -97,7 +97,9 @@ public:
 	
 	// CBrowserShell
 	NS_METHOD               SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWindow);
-	NS_METHOD				GetWebBrowser(nsIWebBrowser** aBrowser);
+	NS_METHOD				   GetWebBrowser(nsIWebBrowser** aBrowser);
+	NS_METHOD               SetWebBrowser(nsIWebBrowser* aBrowser);
+	                        // Drops ref to current one, installs given one
 	
 	Boolean                 CanGoBack();
 	Boolean                 CanGoForward();
@@ -140,8 +142,6 @@ protected:
    nsCOMPtr<nsIWebBrowser>       mWebBrowser;            // The thing we actually create
    nsCOMPtr<nsIBaseWindow>       mWebBrowserAsBaseWin;   // Convenience interface to above 
    nsCOMPtr<nsIWebNavigation>    mWebBrowserAsWebNav;    // Ditto
-   nsCOMPtr<nsIDocShellTreeItem> mWebBrowserAsTreeItem;  // Ditto
-   nsCOMPtr<nsIWebProgress>      mWebBrowserAsProgress;  // Ditto
    
    CFindComponent*            mFinder;
 };
