@@ -40,8 +40,6 @@
 
 #include "npapi.h"
 #include "npupp.h"
-#define HIBYTE(i) (i >> 8)
-#define LOBYTE(i) (i & 0xff)
 
 /**************************************************/
 /*                                                */
@@ -59,6 +57,10 @@
 /**************************************************/
 #ifdef XP_UNIX
 #include <stdio.h>
+
+#define HIBYTE(i) (i >> 8)
+#define LOBYTE(i) (i & 0xff)
+
 #endif //XP_UNIX
 
 /**************************************************/
@@ -84,6 +86,8 @@
 
 #include "jri.h"
 
+#define HIBYTE(i) (i >> 8)
+#define LOBYTE(i) (i & 0xff)
 
 // The Mixed Mode procInfos defined in npupp.h assume Think C-
 // style calling conventions.  These conventions are used by
