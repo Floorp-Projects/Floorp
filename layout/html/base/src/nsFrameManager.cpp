@@ -1479,6 +1479,8 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
           PRInt32 listIndex = 0;
           nsIAtom* childList = nsnull;
           nsIFrame* child;
+          
+          aFrame->SetStyleContext(presContext, newContext);
 
           do {
             child = nsnull;
@@ -1508,8 +1510,6 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
             NS_IF_RELEASE(childList);
             aFrame->GetAdditionalChildListName(listIndex++, &childList);
           } while (childList);
-          
-          aFrame->SetStyleContext(presContext, newContext);
 
           // do additional contexts 
           PRInt32 contextIndex = -1;
