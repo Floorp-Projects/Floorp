@@ -1,15 +1,16 @@
-
 var gUpdateDialog = {
   _updateType: "",
   _extensionManager: "",
   _extensionID: "",
+  _openTime: null,
+  _brandShortName: "",
+  _updateStrings: null,
+  _extensionsToUpdate: [],
   
-  _messages: ["update-start", 
-              "update-end", 
-              "update-item-network-start", 
-              "update-item-network-end", 
-              "update-item-processing-start", 
-              "update-item-processing-end",
+  _messages: ["update-started", 
+              "update-ended", 
+              "update-item-started", 
+              "update-item-ended",
               "update-item-error"],
   
   init: function ()
@@ -23,36 +24,46 @@ var gUpdateDialog = {
     for (var i = 0; i < this._messages.length; ++i)
       os.addObserver(this, this._messages[i], false);
     
+    this._openTime = Math.abs(Date.UTC());
+    
+    this._brandShortName = document.getElementById("brandStrings").getString("brandShortName");
+    this._updateStrings = document.getElementById("extensionsStrings");
+
     if (this._updateType == "extensions")
       this._extensionManager.updateExtension(this._extensionID, window);
     else if (gUpdateType == "themes")
       this._extensionManager.updateTheme(this._extensionID);
   },
   
+  uninit: function ()
+  {
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    for (var i = 0; i < this._messages.length; ++i)
+      os.removeObserver(this, this._messages[i]);
+  },
+  
   observe: function (aSubject, aTopic, aData)
   {
     switch (aTopic) {
     case "update-started":
-      dump("*** update-started: " + aSubject + ", " + aData + "\n");
       break;
     case "update-item-started":
-      dump("*** update-item-started: " + aSubject + ", " + aData + "\n");
       break;
     case "update-item-ended":
-      dump("*** update-item-ended: " + aSubject + ", " + aData + "\n");
+      this._extensionsToUpdate.push(aSubject);
       break;
     case "update-ended":
-      dump("*** update-ended: " + aSubject + ", " + aData + "\n");
-/*
       var installObj = { };
-      for (var i = 0; i < aExtensions.length; ++i) {  
-        var e = aExtensions[i];
-        var name = ds.getExtensionProperty(e.id, "name");
-        installObj[name + " " + e.version] = e.xpiURL;
+      for (var i = 0; i < this._extensionsToUpdate.length; ++i) {  
+        var e = this._extensionsToUpdate[i];
+        installObj[e.name + " " + e.version] = e.xpiURL;
       }
-      if (trigger.updateEnabled())
-        trigger.install(installObj);
-      break; */
+      if (InstallTrigger.updateEnabled())
+        InstallTrigger.install(installObj);
+
+      document.documentElement.acceptDialog();
+      break;
 /*    
     case "update-start":
       dump("*** update-start: " + aSubject + ", " + aData + "\n");
