@@ -432,7 +432,7 @@ PRBool nsScrollbar::OnScroll(UINT scrollCode, int cPos)
                 event.position = (PRUint32)NSToIntRound(newPosition * mScaleFactor);
 
                 result = ConvertStatus((*mEventCallback)(&event));
-                newPosition = NSToIntRound(event.position * mScaleFactor);
+                newPosition = NSToIntRound(event.position / mScaleFactor);
             }
 
             ::SetScrollPos(mWnd, SB_CTL, newPosition, TRUE);
