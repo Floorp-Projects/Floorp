@@ -99,6 +99,10 @@
   </titledbox>
 
   <spring class="vgap"/>
-  <titledbutton value="&changePasswords.label;" class="dialog push" onclick="changePasswords();"/>
-  
+  <box align="horizontal">
+    <spring flex="50%"/>
+    <titledbutton value="&changePasswords.label;" class="dialog push"
+                  onclick="changePasswords();"/>
+    <spring flex="50%"/>
+  </box>
 </window>
