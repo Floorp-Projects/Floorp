@@ -5291,7 +5291,9 @@ DocumentViewerImpl::Print(PRBool            aSilent,
         double scaling;
         mPrt->mPrintSettings->GetScaling(&scaling);
         if (scaling <= 1.0) {
-          dx->SetCanonicalPixelScale(float(scaling));
+          float oldScale = 1.0f;
+          mPrt->mPrintDC->GetCanonicalPixelScale(oldScale);
+          mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*oldScale);
         }
         
       if (NS_SUCCEEDED(rv)) {
