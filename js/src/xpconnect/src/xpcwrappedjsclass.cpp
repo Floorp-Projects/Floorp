@@ -45,14 +45,14 @@ static uint32 zero_methods_descriptor;
 
 static inline void DoPreScriptEvaluated(JSContext* cx)
 {
-// XXX should we do this?
-//    JS_BeginRequest(cx);
+    if(JS_GetContextThread(cx))
+        JS_BeginRequest(cx);
 }
 
 static inline void DoPostScriptEvaluated(JSContext* cx)
 {
-// XXX should we do this?
-//    JS_EndRequest(cx);
+    if(JS_GetContextThread(cx))
+        JS_EndRequest(cx);
 
 #ifndef XPCONNECT_STANDALONE
     // If this is a DOM JSContext, then notify nsIScriptContext of script 
