@@ -1762,12 +1762,11 @@ NS_IMETHODIMP nsMsgFolder::ClearRequiresCleanup()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::ManyHeadersToDownload(PRBool *_retval)
+NS_IMETHODIMP nsMsgFolder::GetManyHeadersToDownload(PRBool *_retval)
 {
-	if (!_retval)
-		return NS_ERROR_NULL_POINTER;
-	*_retval = PR_FALSE;
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = PR_FALSE;
+  return NS_OK;
 }
 
 

@@ -132,7 +132,7 @@ public:
   NS_IMETHOD GetDeletable(PRBool *aDeletable);
   NS_IMETHOD GetRequiresCleanup(PRBool *aRequiresCleanup);
   NS_IMETHOD ClearRequiresCleanup(void);
-  NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
+  NS_IMETHOD GetManyHeadersToDownload(PRBool *_retval);
   NS_IMETHOD GetKnowsSearchNntpExtension(PRBool *aKnowsSearchNntpExtension);
   NS_IMETHOD GetAllowsPosting(PRBool *aAllowsPosting);
   NS_IMETHOD GetDisplayRecipients(PRBool *aDisplayRecipients);

@@ -244,7 +244,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * the headers in this folder - so that we can do folder notifications
    * synchronously instead of asynchronously
    */
-	boolean manyHeadersToDownload();
+	readonly attribute boolean manyHeadersToDownload;
 
 	readonly attribute boolean requiresCleanup;
 	void clearRequiresCleanup();

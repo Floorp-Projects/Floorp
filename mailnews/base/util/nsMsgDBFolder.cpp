@@ -809,13 +809,11 @@ NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
+NS_IMETHODIMP nsMsgDBFolder::GetManyHeadersToDownload(PRBool *retval)
 {
   PRInt32 numTotalMessages;
 
-  if (!retval)
-    return NS_ERROR_NULL_POINTER;
-//  *retval = PR_TRUE;
+  NS_ENSURE_ARG_POINTER(retval);
 
   // is there any reason to return false?
   if (!mDatabase)
