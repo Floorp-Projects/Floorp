@@ -45,6 +45,8 @@
       onload="parent.initPanel('chrome://mozapps/content/downloads/pref-downloads.xul');"
       headertitle="&lHeader;" onunload="uninit();">
 
+  <stringbundle id="strings" src="chrome://mozapps/locale/downloads/unknownContentType.properties"/>
+
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/helperApps.js"/>
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/pref-downloads.js"/>
   
