@@ -22,99 +22,132 @@
  */
 #include "nsCOMPtr.h"
 #include "jsapi.h"
-#include "prmem.h"
 #include "nsCRT.h"
+#include "nsDOMError.h"
+#include "nsXPIDLString.h"
+#include "nsJSProtocolHandler.h"
+#include "nsNetUtil.h"
+
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsNetUtil.h"
-#include "nsIInputStream.h"
-#include "nsIStringStream.h"
 #include "nsIURI.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
-#include "nsJSProtocolHandler.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIProxyObjectManager.h"
-#include "nsIDocShell.h"
-#include "nsDOMError.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIEvaluateStringProxy.h"
-#include "nsXPIDLString.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIJSConsoleService.h"
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 
-class nsJSThunk;
 
-////////////////////////////////////////////////////////////////////////////////
-// nsEvaluateStringProxy
-// This private class will allow us to evaluate DOM JS on the main thread
-
-class nsEvaluateStringProxy : public nsIEvaluateStringProxy {
+class nsJSThunk : public nsIStreamIO
+{
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIEVALUATESTRINGPROXY
+    nsJSThunk();
 
-    nsEvaluateStringProxy();
-    virtual ~nsEvaluateStringProxy();
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMIO
+
+    nsresult Init(nsIURI* uri, nsIChannel* channel);
+    nsresult EvaluateScript();
+    nsresult BringUpConsole();
+
 protected:
-    nsCOMPtr<nsIChannel> mChannel;
+    virtual ~nsJSThunk();
+
+    nsCOMPtr<nsIURI>            mURI;
+    nsCOMPtr<nsIChannel>        mChannel;
+    char*                       mResult;
+    PRUint32                    mLength;
 };
 
-nsEvaluateStringProxy::nsEvaluateStringProxy()
+//
+// nsISupports implementation...
+//
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIStreamIO);
+
+
+nsJSThunk::nsJSThunk()
+         : mChannel(nsnull), mResult(nsnull), mLength(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
-nsEvaluateStringProxy::~nsEvaluateStringProxy()
+nsJSThunk::~nsJSThunk()
 {
+    (void)Close(NS_BASE_STREAM_CLOSED);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsEvaluateStringProxy, nsIEvaluateStringProxy)
-
-NS_IMETHODIMP
-nsEvaluateStringProxy::Init(nsIChannel* channel)
+nsresult nsJSThunk::Init(nsIURI* uri, nsIChannel* channel)
 {
+    NS_ENSURE_ARG_POINTER(uri);
+    NS_ENSURE_ARG_POINTER(channel);
+
+    mURI = uri;
     mChannel = channel;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
+nsresult nsJSThunk::EvaluateScript()
 {
-    NS_ENSURE_ARG_POINTER(mChannel);
-    NS_ENSURE_ARG_POINTER(aRetValue);
-    NS_ENSURE_ARG_POINTER(aIsUndefined);
-
     nsresult rv;
+
+    NS_ENSURE_ARG_POINTER(mChannel);
+
+    // Get the script string to evaluate...
+    nsXPIDLCString script;
+    rv = mURI->GetPath(getter_Copies(script));
+    if (NS_FAILED(rv)) return rv;
+
+    // If mURI is just "javascript:", we bring up the JavaScript console
+    // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
+    if (*((const char*)script) == '\0') {
+        rv = BringUpConsole();
+        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
 
     // Get an interface requestor from the channel callbacks.
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     rv = mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-    if (NS_FAILED(rv)) return rv;
-    NS_ENSURE_TRUE(callbacks, NS_ERROR_FAILURE);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv) && callbacks,
+                 "Unable to get an nsIInterfaceRequestor from the channel");
+    if (NS_FAILED(rv) || !callbacks) {
+        return NS_ERROR_FAILURE;
+    }
 
     // The requestor must be able to get a script global object owner.
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
-    callbacks->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
-                            getter_AddRefs(globalOwner));
-    NS_ENSURE_TRUE(globalOwner, NS_ERROR_FAILURE);
+    rv = callbacks->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
+                                 getter_AddRefs(globalOwner));
+
+    NS_ASSERTION(NS_SUCCEEDED(rv) && globalOwner, 
+                 "Unable to get an nsIScriptGlobalObjectOwner from the "
+                 "InterfaceRequestor!");
+    if (NS_FAILED(rv) || !globalOwner) {
+        return NS_ERROR_FAILURE;
+    }
 
     // So far so good: get the script context from its owner.
     nsCOMPtr<nsIScriptGlobalObject> global;
-    globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
-    NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+    rv = globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+
+    NS_ASSERTION(NS_SUCCEEDED(rv) && global,
+                 "Unable to get an nsIScriptGlobalObject from the "
+                 "ScriptGlobalObjectOwner!");
+    if (NS_FAILED(rv) || !global) {
+        return NS_ERROR_FAILURE;
+    }
+
 
     nsCOMPtr<nsIScriptContext> scriptContext;
     rv = global->GetContext(getter_AddRefs(scriptContext));
@@ -131,27 +164,20 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
     }
     else {
         // No owner from channel, use the current URI to generate a principal
-        nsCOMPtr<nsIURI> uri;
-        rv = mChannel->GetURI(getter_AddRefs(uri));
-        if (NS_FAILED(rv) || !uri) return NS_ERROR_FAILURE;
-        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
-                        NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        nsCOMPtr<nsIScriptSecurityManager> securityManager;
+        securityManager = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
-        rv = securityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
-        if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
+
+        rv = securityManager->GetCodebasePrincipal(mURI, 
+                                                   getter_AddRefs(principal));
+        if (NS_FAILED(rv) || !principal) {
+            return NS_ERROR_FAILURE;
+        }
     }
 
-    nsCOMPtr<nsIURI> jsURI;
-    rv = mChannel->GetURI(getter_AddRefs(jsURI));
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString script;
-    rv = jsURI->GetPath(getter_Copies(script));
-    if (NS_FAILED(rv)) return rv;
-
     // Finally, we have everything needed to evaluate the expression.
-
     nsString result;
+    PRBool bIsUndefined;
     {
         nsAutoString scriptString;
         scriptString.AssignWithConversion(script);
@@ -162,22 +188,32 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
                                            0,           // line no
                                            nsnull,
                                            result,
-                                           aIsUndefined);
+                                           &bIsUndefined);
     }
 
-    // XXXbe this should not decimate! pass back UCS-2 to necko
-    *aRetValue = result.ToNewCString();
+    if (NS_FAILED(rv)) {
+        rv = NS_ERROR_MALFORMED_URI;
+    }
+    else if (bIsUndefined) {
+        rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
+    else {
+        // XXXbe this should not decimate! pass back UCS-2 to necko
+        mResult = result.ToNewCString();
+        mLength = result.Length();
+    }
     return rv;
 }
 
 // Gasp.  This is so much easier to write in JS....
-NS_IMETHODIMP
-nsEvaluateStringProxy::BringUpConsole()
+nsresult nsJSThunk::BringUpConsole()
 {
     nsresult rv;
 
     // First, get the Window Mediator service.
-    NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+    nsCOMPtr<nsIWindowMediator> windowMediator;
+
+    windowMediator = do_GetService(kWindowMediatorCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // Next, find out whether there's a console already open.
@@ -211,171 +247,336 @@ nsEvaluateStringProxy::BringUpConsole()
         nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global, &rv);
         NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-        NS_WITH_SERVICE(nsIJSConsoleService, jsconsole, "@mozilla.org/embedcomp/jsconsole-service;1", &rv);
+        nsCOMPtr<nsIJSConsoleService> jsconsole;
+
+        jsconsole = do_GetService("@mozilla.org/embedcomp/jsconsole-service;1", &rv);
         if (NS_FAILED(rv) || !jsconsole) return rv;
-        jsconsole->Open ( window );
+        jsconsole->Open(window);
     }
     return rv;
 }
 
+//
+// nsIStreamIO implementation...
+//
+NS_IMETHODIMP
+nsJSThunk::Open(char* *contentType, PRInt32 *contentLength)
+{
+    //
+    // At this point the script has already been evaluated...
+    // The resulting string (if any) is stored in mResult.
+    //
+    // If the resultant script evaluation actually does return a value, we
+    // treat it as html.
+    *contentType = nsCRT::strdup("text/html");
+    *contentLength = mLength;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSThunk::Close(nsresult status)
+{
+    if (mResult) {
+        nsCRT::free(mResult);
+        mResult = nsnull;
+    }
+    mLength = 0;
+    mChannel = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSThunk::GetInputStream(nsIInputStream* *aInputStream)
+{
+    nsresult rv;
+    nsIByteArrayInputStream* str;
+
+    rv = NS_NewByteArrayInputStream(&str, mResult, mLength);
+    if (NS_SUCCEEDED(rv)) {
+        mResult = nsnull; // XXX Whackiness. The input stream takes ownership
+        *aInputStream = str;
+    }
+    else {
+        *aInputStream = nsnull;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsJSThunk::GetOutputStream(nsIOutputStream* *aOutputStream)
+{
+    // should never be called
+    NS_NOTREACHED("nsJSThunk::GetOutputStream");
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJSThunk::GetName(char* *aName)
+{
+    return mURI->GetSpec(aName);
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsJSThunk : public nsIStreamIO
+class nsJSChannel : public nsIChannel
 {
 public:
+    nsJSChannel();
+
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIREQUEST
+    NS_DECL_NSICHANNEL
 
-    nsJSThunk()
-      : mChannel(nsnull), mResult(nsnull), mLength(0), mReadCursor(0) {
-        NS_INIT_REFCNT();
-    }
-
-    virtual ~nsJSThunk() {
-        (void)Close(NS_BASE_STREAM_CLOSED);
-    }
-
-    nsresult Init(nsIURI* uri, nsIChannel* channel) {
-        NS_ENSURE_ARG_POINTER(uri);
-        NS_ENSURE_ARG_POINTER(channel);
-        mURI = uri;
-        mChannel = channel;
-        return NS_OK;
-    }
-
-
-    NS_IMETHOD Open(char* *contentType, PRInt32 *contentLength) {
-        // IMPORTANT CHANGE: We used to just implement nsIInputStream and use
-        // an input stream channel in the js protocol, but that had the nasty
-        // side effect of doing the evaluation after the window content was
-        // already torn down (in the webshell's OnStartRequest callback).
-        //
-        // By using an nsIStreamIO instead, we now get more control over when
-        // the evaluation occurs.  By evaluating in the Open method, we can
-        // get the status of the channel in the OnStartRequest callback and
-        // detect NS_ERROR_DOM_RETVAL_UNDEFINED, thereby avoiding tear-down of
-        // the current document.
-
-        nsresult rv;
-        
-
-        // We do this by proxying back to the main thread.
-        NS_WITH_SERVICE(nsIProxyObjectManager, 
-                        proxyObjectManager,
-                        kProxyObjectManagerCID, 
-                        &rv);
-
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsEvaluateStringProxy> eval = new nsEvaluateStringProxy();
-        if (!eval)
-            return NS_ERROR_OUT_OF_MEMORY;
-        rv = eval->Init(mChannel);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIEvaluateStringProxy> evalProxy;
-        rv = proxyObjectManager->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                                                NS_GET_IID(nsIEvaluateStringProxy),
-                                                NS_STATIC_CAST(nsISupports*, eval),
-                                                PROXY_SYNC | PROXY_ALWAYS,
-                                                getter_AddRefs(evalProxy));
-
-        if (NS_FAILED(rv)) return rv;
-
-        // If mURI is just "javascript:", we bring up the JavaScript console
-        // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
-        nsXPIDLCString script;
-        rv = mURI->GetPath(getter_Copies(script));
-        if (NS_FAILED(rv)) return rv;
-
-        if (*((const char*)script) == '\0') {
-            rv = evalProxy->BringUpConsole();
-            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-            return NS_ERROR_DOM_RETVAL_UNDEFINED;
-        }
-
-        char* retString;
-        PRBool isUndefined;
-        rv = evalProxy->EvaluateString(&retString, &isUndefined);
-
-        if (NS_FAILED(rv)) {
-            rv = NS_ERROR_MALFORMED_URI;
-            return rv;
-        }
-
-        if (isUndefined) {
-            if (retString)
-                Recycle(retString);
-            rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
-            return rv;
-        }
-#if 0
-        {
-            // This is from the old code which need to be hack on a bit more.
-            // XXXbe maybe we should just drop this, and take the compatibility
-            //       hit here -- does anyone care?
-
-            // plaintext is apparently busted
-            if (ret[0] != PRUnichar('<'))
-                ret.Insert("<plaintext>\n", 0);
-            mLength = ret.Length();
-            PRUint32 resultSize = mLength + 1;
-            mResult = (char *)PR_Malloc(resultSize);
-            ret.ToCString(mResult, resultSize);
-        }
-#endif
-
-        mResult = retString;
-        mLength = nsCRT::strlen(retString);
-
-        *contentType = nsCRT::strdup("text/html");
-        *contentLength = mLength;
-        return rv;
-    }
-
-    NS_IMETHOD Close(nsresult status) {
-        if (mResult) {
-            nsCRT::free(mResult);
-            mResult = nsnull;
-        }
-        mLength = 0;
-        mReadCursor = 0;
-        mChannel = nsnull;
-        return NS_OK;
-    }
-
-    NS_IMETHOD GetInputStream(nsIInputStream* *aInputStream) {
-        nsresult rv;
-        nsIByteArrayInputStream* str;
-        rv = NS_NewByteArrayInputStream(&str, mResult, mLength);
-        if (NS_SUCCEEDED(rv)) {
-            mResult = nsnull; // XXX Whackiness. The input stream takes ownership
-            *aInputStream = str;
-        }
-        else {
-            *aInputStream = nsnull;
-        }
-        return rv;
-    }
-
-    NS_IMETHOD GetOutputStream(nsIOutputStream* *aOutputStream) {
-        // should never be called
-        NS_NOTREACHED("nsJSThunk::GetOutputStream");
-        return NS_ERROR_FAILURE;
-    }
-
-    NS_IMETHOD GetName(char* *aName) {
-        return mURI->GetSpec(aName);
-    }
+    nsresult Init(nsIURI *aURI);
 
 protected:
-    nsCOMPtr<nsIURI>            mURI;
-    nsCOMPtr<nsIChannel>        mChannel;
-    char*                       mResult;
-    PRUint32                    mLength;
-    PRUint32                    mReadCursor;
+    virtual ~nsJSChannel();
+
+protected:
+    nsCOMPtr<nsIChannel>    mStreamChannel;
+
+    nsJSThunk *             mIOThunk;
+    PRBool                  mIsActive;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsJSThunk, nsIStreamIO);
+nsJSChannel::nsJSChannel() :
+    mIsActive(PR_FALSE),
+    mIOThunk(nsnull)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsJSChannel::~nsJSChannel()
+{
+    NS_IF_RELEASE(mIOThunk);
+}
+
+
+nsresult nsJSChannel::Init(nsIURI *aURI)
+{
+    nsresult rv;
+    
+    // Create the nsIStreamIO layer used by the nsIStreamIOChannel.
+    mIOThunk= new nsJSThunk();
+    if (mIOThunk == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mIOThunk);
+
+    // Create a stock nsIStreamIOChannel...
+    // Remember, until AsyncOpen is called, the script will not be evaluated
+    // and the underlying Input Stream will not be created...
+    nsCOMPtr<nsIStreamIOChannel> channel;
+
+    rv = NS_NewStreamIOChannel(getter_AddRefs(channel), aURI, mIOThunk);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mIOThunk->Init(aURI, channel);
+    if (NS_SUCCEEDED(rv)) {
+        mStreamChannel = do_QueryInterface(channel);
+    }
+
+    return rv;
+}
+
+//
+// nsISupports implementation...
+//
+
+NS_IMPL_ADDREF(nsJSChannel)
+NS_IMPL_RELEASE(nsJSChannel)
+
+NS_INTERFACE_MAP_BEGIN(nsJSChannel)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIRequest)
+    NS_INTERFACE_MAP_ENTRY(nsIChannel)
+NS_INTERFACE_MAP_END
+
+//
+// nsIRequest implementation...
+//
+
+NS_IMETHODIMP
+nsJSChannel::GetName(PRUnichar * *aResult)
+{
+    return mStreamChannel->GetName(aResult);
+}
+
+NS_IMETHODIMP
+nsJSChannel::IsPending(PRBool *aResult)
+{
+    if (mIsActive) {
+        *aResult = mIsActive;
+        return NS_OK;
+    }
+    return mStreamChannel->IsPending(aResult);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetStatus(nsresult *aResult)
+{
+    return mStreamChannel->GetStatus(aResult);
+}
+
+NS_IMETHODIMP
+nsJSChannel::Cancel(nsresult aStatus)
+{
+    return mStreamChannel->Cancel(aStatus);
+}
+
+NS_IMETHODIMP
+nsJSChannel::Suspend(void)
+{
+    return mStreamChannel->Suspend();
+}
+
+NS_IMETHODIMP
+nsJSChannel::Resume(void)
+{
+    return mStreamChannel->Resume();
+}
+
+//
+// nsIChannel implementation
+//
+
+NS_IMETHODIMP
+nsJSChannel::GetOriginalURI(nsIURI * *aURI)
+{
+    return mStreamChannel->GetOriginalURI(aURI);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetOriginalURI(nsIURI *aURI)
+{
+    return mStreamChannel->SetOriginalURI(aURI);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetURI(nsIURI * *aURI)
+{
+    return mStreamChannel->GetURI(aURI);
+}
+
+NS_IMETHODIMP
+nsJSChannel::Open(nsIInputStream **result)
+{
+    nsresult rv;
+
+    // Synchronously execute the script...
+    // mIsActive is used to indicate the the request is 'busy' during the
+    // the script evaluation phase.  This means that IsPending() will 
+    // indicate the the request is busy while the script is executing...
+    mIsActive = PR_TRUE;
+    rv = mIOThunk->EvaluateScript();
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = mStreamChannel->Open(result);
+    }
+    mIsActive = PR_FALSE;
+    return rv;
+
+}
+
+NS_IMETHODIMP
+nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
+{
+    nsresult rv;
+
+    // Synchronously execute the script...
+    // mIsActive is used to indicate the the request is 'busy' during the
+    // the script evaluation phase.  This means that IsPending() will 
+    // indicate the the request is busy while the script is executing...
+    mIsActive = PR_TRUE;
+    rv = mIOThunk->EvaluateScript();
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = mStreamChannel->AsyncOpen(aListener, aContext);
+    }
+    mIsActive = PR_FALSE;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
+{
+    return mStreamChannel->GetLoadFlags(aLoadFlags);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+    return mStreamChannel->SetLoadFlags(aLoadFlags);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
+{
+    return mStreamChannel->GetLoadGroup(aLoadGroup);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    return mStreamChannel->SetLoadGroup(aLoadGroup);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetOwner(nsISupports* *aOwner)
+{
+    return mStreamChannel->GetOwner(aOwner);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetOwner(nsISupports* aOwner)
+{
+    return mStreamChannel->SetOwner(aOwner);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aCallbacks)
+{
+    return mStreamChannel->GetNotificationCallbacks(aCallbacks);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
+{
+    return mStreamChannel->SetNotificationCallbacks(aCallbacks);
+}
+
+NS_IMETHODIMP 
+nsJSChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    return mStreamChannel->GetSecurityInfo(aSecurityInfo);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetContentType(char * *aContentType)
+{
+    return mStreamChannel->GetContentType(aContentType);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetContentType(const char *aContentType)
+{
+    return mStreamChannel->SetContentType(aContentType);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetContentLength(PRInt32 *aContentLength)
+{
+    return mStreamChannel->GetContentLength(aContentLength);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetContentLength(PRInt32 aContentLength)
+{
+    return mStreamChannel->SetContentLength(aContentLength);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -468,30 +669,23 @@ NS_IMETHODIMP
 nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
+    nsJSChannel * channel;
+
     NS_ENSURE_ARG_POINTER(uri);
 
-    nsJSThunk* thunk = new nsJSThunk();
-    if (thunk == nsnull)
+    channel = new nsJSChannel();
+    if (!channel) {
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(thunk);
-
-    nsCOMPtr<nsIStreamIOChannel> channel;
-    rv = NS_NewStreamIOChannel(getter_AddRefs(channel), uri, thunk);
-
-    // If the resultant script evaluation actually does return a value, we
-    // treat it as html.  XXXbe see <plaintext> comment above
-    if (NS_SUCCEEDED(rv)) {
-        rv = channel->SetContentType("text/html");
     }
-    if (NS_SUCCEEDED(rv)) {
-        rv = thunk->Init(uri, channel);
-    }
-    NS_RELEASE(thunk);
-    if (NS_FAILED(rv)) return rv;
+    NS_ADDREF(channel);
 
-    *result = channel;
-    NS_ADDREF(*result);
-    return NS_OK;
+    rv = channel->Init(uri);
+    if (NS_SUCCEEDED(rv)) {
+        *result = channel;
+        NS_ADDREF(*result);
+    }
+    NS_RELEASE(channel);
+    return rv;
 }
 
 NS_IMETHODIMP 
@@ -501,6 +695,7 @@ nsJSProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval
     *_retval = PR_FALSE;
     return NS_OK;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
