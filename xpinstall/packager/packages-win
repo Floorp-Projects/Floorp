@@ -254,6 +254,7 @@ bin\components\typeaheadfind.xpt
 bin\components\typeaheadfind.dll
 ; ActiveX plugin
 bin\plugins\npmozax.dll
+bin\components\nsAxSecurityPolicy.js
 
 ; LDAP components need to be in the browser for AutoConfig
 bin\components\mozldap.dll
