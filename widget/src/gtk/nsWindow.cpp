@@ -403,13 +403,13 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
 #include "mozicon50.xpm"
 nsresult nsWindow::SetIcon()
 {
-  static GdkPixmap *w_pixmap = NULL;
-  static GdkBitmap *w_mask   = NULL;
+  static GdkPixmap *w_pixmap = nsnull;
+  static GdkBitmap *w_mask   = nsnull;
   GtkStyle         *w_style;
 
   w_style = gtk_widget_get_style (mShell);
 
-  if (w_pixmap == NULL) {
+  if (!w_pixmap) {
     w_pixmap =
       gdk_pixmap_create_from_xpm_d (mShell->window,
 				    &w_mask,
@@ -428,7 +428,7 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   if (!mShell)
     return NS_ERROR_FAILURE;
 
-  gdk_window_set_icon(mShell->window, NULL, pixmap, mask);
+  gdk_window_set_icon(mShell->window, (GdkWindow*)nsnull, pixmap, mask);
 
   return NS_OK;
 }
