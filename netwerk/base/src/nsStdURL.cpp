@@ -130,6 +130,8 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
 NS_IMETHODIMP
 nsStdURL::Clone(nsIURI **o_URI)
 {
+    //TODO replace with a copy constructor that maps everything instead of creating it afresh...
+
 	nsStdURL* url = new nsStdURL(mSpec); /// TODO check outer?
     if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -176,156 +178,165 @@ nsStdURL::Parse(void)
             }
             break;
         case ':' :
-            // If the first colon is followed by // then its definitely a spec
-            if ((*(brk+1) == '/') && (*(brk+2) == '/')) // e.g. http://
+            if (*(brk+1) == '/') 
             {
-                ExtractString(&mScheme, 0, (brk - mSpec));    
-                lastbrk = brk+3;
-                brk = PL_strpbrk(lastbrk, delimiters);
-                if (brk)
+                ExtractString(&mScheme, 0, (brk - mSpec));
+
+                if (*(brk+2) == '/') // e.g. http://
+                // If the first colon is followed by // then its definitely a spec
                 {
-                    switch (*brk)
+                    lastbrk = brk+3;
+                    brk = PL_strpbrk(lastbrk, delimiters);
+                    if (brk)
                     {
-                        case '/' : // standard case- http://host/path
-                            ExtractString(&mHost, 
-								(lastbrk - mSpec), (brk - lastbrk));
-                            ExtractString(&mPath, 
-								(brk - mSpec), (len - (brk - mSpec)));
-                            return NS_OK;
-                            break;
-                        case ':' : 
-                            {
-                                // It could be http://user:pass@host/path 
-								// or http://host:port/path
-                                // For the first case, there has to be an 
-								// @ after this colon, so...
-                                char* atSign = PL_strchr(brk, '@');
-                                if (atSign)
+                        switch (*brk)
+                        {
+                            case '/' : // standard case- http://host/path
+                                ExtractString(&mHost, 
+								    (lastbrk - mSpec), (brk - lastbrk));
+                                ExtractString(&mPath, 
+								    (brk - mSpec), (len - (brk - mSpec)));
+                                return NS_OK;
+                                break;
+                            case ':' : 
                                 {
-                                    ExtractString(&mPreHost, 
-										(lastbrk - mSpec), (atSign - lastbrk));
-                                    brk = PL_strpbrk(atSign+1, "/:");
-                                    if (brk) // http://user:pass@host:port/path or http://user:pass@host/path
+                                    // It could be http://user:pass@host/path 
+								    // or http://host:port/path
+                                    // For the first case, there has to be an 
+								    // @ after this colon, so...
+                                    char* atSign = PL_strchr(brk, '@');
+                                    if (atSign)
                                     {
-                                        ExtractString(&mHost, 
-											(atSign+1 - mSpec), 
-											(brk - (atSign+1)));
-                                        if (*brk == '/')
+                                        ExtractString(&mPreHost, 
+										    (lastbrk - mSpec), (atSign - lastbrk));
+                                        brk = PL_strpbrk(atSign+1, "/:");
+                                        if (brk) // http://user:pass@host:port/path or http://user:pass@host/path
                                         {
-                                            ExtractString(&mPath, 
-												(brk - mSpec), 
-												len - (brk - mSpec));
+                                            ExtractString(&mHost, 
+											    (atSign+1 - mSpec), 
+											    (brk - (atSign+1)));
+                                            if (*brk == '/')
+                                            {
+                                                ExtractString(&mPath, 
+												    (brk - mSpec), 
+												    len - (brk - mSpec));
+                                                return NS_OK;
+                                            }
+                                            else // we have a port since (brk == ':')
+                                            {
+                                                lastbrk = brk+1;
+                                                brk = PL_strchr(lastbrk, '/');
+                                                if (brk) // http://user:pass@host:port/path
+                                                {
+                                                    mPort = ExtractPortFrom(mSpec, (lastbrk - mSpec), (brk-lastbrk));
+                                                    ExtractString(&mPath, (brk-mSpec), len - (brk-mSpec));
+                                                    return NS_OK;
+                                                }
+                                                else // http://user:pass@host:port
+                                                {
+                                                    mPort = ExtractPortFrom(mSpec, (lastbrk - mSpec), len - (lastbrk - mSpec));
+                                                    return NS_OK;
+                                                }
+                                            }
+
+                                        }
+                                        else // its just http://user:pass@host
+                                        {
+                                            ExtractString(&mHost, 
+											    (atSign+1 - mSpec), 
+											    len - (atSign+1 - mSpec));
                                             return NS_OK;
                                         }
-                                        else // we have a port since (brk == ':')
-                                        {
-                                            lastbrk = brk+1;
-                                            brk = PL_strchr(lastbrk, '/');
-                                            if (brk) // http://user:pass@host:port/path
-                                            {
-                                                mPort = ExtractPortFrom(mSpec, (lastbrk - mSpec), (brk-lastbrk));
-                                                ExtractString(&mPath, (brk-mSpec), len - (brk-mSpec));
-                                                return NS_OK;
-                                            }
-                                            else // http://user:pass@host:port
-                                            {
-                                                mPort = ExtractPortFrom(mSpec, (lastbrk - mSpec), len - (lastbrk - mSpec));
-                                                return NS_OK;
-                                            }
-                                        }
-
                                     }
-                                    else // its just http://user:pass@host
+                                    else // definitely the port option, i.e. http://host:port/path
                                     {
                                         ExtractString(&mHost, 
-											(atSign+1 - mSpec), 
-											len - (atSign+1 - mSpec));
-                                        return NS_OK;
-                                    }
-                                }
-                                else // definitely the port option, i.e. http://host:port/path
-                                {
-                                    ExtractString(&mHost, 
-										(lastbrk-mSpec), 
-										(brk-lastbrk));
-                                    lastbrk = brk+1;
-                                    brk = PL_strchr(lastbrk, '/');
-                                    if (brk)    // http://host:port/path
-                                    {
-                                        mPort = ExtractPortFrom(mSpec, (lastbrk-mSpec),(brk-lastbrk));
-                                        ExtractString(&mPath, 
-											(brk-mSpec), 
-											len - (brk-mSpec));
-                                        return NS_OK;
-                                    }
-                                    else        // http://host:port
-                                    {
-                                        mPort = ExtractPortFrom(mSpec, (lastbrk-mSpec),len - (lastbrk-mSpec));
-                                        return NS_OK;
-                                    }
-                                }
-                            }
-                            break;
-                        case '@' : 
-                            // http://user@host...
-                            {
-                                ExtractString(&mPreHost, 
-									(lastbrk-mSpec), (brk-lastbrk));
-                                lastbrk = brk+1;
-                                brk = PL_strpbrk(lastbrk, ":/");
-                                if (brk)
-                                {
-                                    ExtractString(&mHost, 
-										(lastbrk-mSpec), (brk - lastbrk));
-                                    if (*brk == ':') // http://user@host:port...
-                                    {
+										    (lastbrk-mSpec), 
+										    (brk-lastbrk));
                                         lastbrk = brk+1;
                                         brk = PL_strchr(lastbrk, '/');
-                                        if (brk)    // http://user@host:port/path
+                                        if (brk)    // http://host:port/path
                                         {
                                             mPort = ExtractPortFrom(mSpec, (lastbrk-mSpec),(brk-lastbrk));
                                             ExtractString(&mPath, 
-												(brk-mSpec), 
-												len - (brk-mSpec));
+											    (brk-mSpec), 
+											    len - (brk-mSpec));
                                             return NS_OK;
                                         }
-                                        else        // http://user@host:port
+                                        else        // http://host:port
                                         {
                                             mPort = ExtractPortFrom(mSpec, (lastbrk-mSpec),len - (lastbrk-mSpec));
                                             return NS_OK;
                                         }
-
                                     }
-                                    else // (*brk == '/') so no port just path i.e. http://user@host/path
+                                }
+                                break;
+                            case '@' : 
+                                // http://user@host...
+                                {
+                                    ExtractString(&mPreHost, 
+									    (lastbrk-mSpec), (brk-lastbrk));
+                                    lastbrk = brk+1;
+                                    brk = PL_strpbrk(lastbrk, ":/");
+                                    if (brk)
                                     {
-                                        ExtractString(&mPath, 
-											(brk - mSpec), 
-											len - (brk - mSpec));
+                                        ExtractString(&mHost, 
+										    (lastbrk-mSpec), (brk - lastbrk));
+                                        if (*brk == ':') // http://user@host:port...
+                                        {
+                                            lastbrk = brk+1;
+                                            brk = PL_strchr(lastbrk, '/');
+                                            if (brk)    // http://user@host:port/path
+                                            {
+                                                mPort = ExtractPortFrom(mSpec, (lastbrk-mSpec),(brk-lastbrk));
+                                                ExtractString(&mPath, 
+												    (brk-mSpec), 
+												    len - (brk-mSpec));
+                                                return NS_OK;
+                                            }
+                                            else        // http://user@host:port
+                                            {
+                                                mPort = ExtractPortFrom(mSpec, (lastbrk-mSpec),len - (lastbrk-mSpec));
+                                                return NS_OK;
+                                            }
+
+                                        }
+                                        else // (*brk == '/') so no port just path i.e. http://user@host/path
+                                        {
+                                            ExtractString(&mPath, 
+											    (brk - mSpec), 
+											    len - (brk - mSpec));
+                                            return NS_OK;
+                                        }
+                                    }
+                                    else // its just http://user@host
+                                    {
+                                        ExtractString(&mHost, 
+										    (lastbrk+1 - mSpec), len - (lastbrk+1 - mSpec));
                                         return NS_OK;
                                     }
-                                }
-                                else // its just http://user@host
-                                {
-                                    ExtractString(&mHost, 
-										(lastbrk+1 - mSpec), len - (lastbrk+1 - mSpec));
-                                    return NS_OK;
-                                }
 
-                            }
-                            break;
-                        default: NS_POSTCONDITION(0, "This just can't be!");
-                            break;
+                                }
+                                break;
+                            default: NS_POSTCONDITION(0, "This just can't be!");
+                                break;
+                        }
+
+                    }
+                    else // everything else is a host, as in http://host
+                    {
+                        ExtractString(&mHost, 
+						    (lastbrk - mSpec), 
+						    len - (lastbrk - mSpec));
+                        return NS_OK;
                     }
 
                 }
-                else // everything else is a host, as in http://host
+                else // This is a no // path alone case like file:/path, there is never a prehost/host in this case.
                 {
-                    ExtractString(&mHost, 
-						(lastbrk - mSpec), 
-						len - (lastbrk - mSpec));
+                    ExtractString(&mPath, (brk-mSpec+1), len - (brk-mSpec+1)); 
                     return NS_OK;
                 }
-
             }
             else // host:port...
             {
