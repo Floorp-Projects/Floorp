@@ -605,7 +605,11 @@ nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const char *
 					fileTime = time;
 					PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
 					if (etime.tm_yday == mSessionTime.tm_yday)
-						mCurrentFileSpec = fileURL;
+					{
+					//	XXX rjc - commenting this out for the moment due to a Win crash
+					//	which needs investigation (will look at tomorrow)
+					//	mCurrentFileSpec = fileURL;
+					}
 				}
 
 				AddPageToGraph(url, nsAutoString(title), referer, (PRUint32) atol(visitcount), time);
