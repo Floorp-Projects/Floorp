@@ -205,11 +205,11 @@ DWORD GetPreviousUnfinishedState(void)
              sgProduct.szUserAgent);
 
     PrfQueryProfileString(HINI_USERPROFILE, szApp, "Setup State", "", szBuf, sizeof(szBuf));
-    if(strcmpi(szBuf, SETUP_STATE_DOWNLOAD) == 0)
+    if(stricmp(szBuf, SETUP_STATE_DOWNLOAD) == 0)
       dwRv = PUS_DOWNLOAD;
-    else if(strcmpi(szBuf, SETUP_STATE_UNPACK_XPCOM) == 0)
+    else if(stricmp(szBuf, SETUP_STATE_UNPACK_XPCOM) == 0)
       dwRv = PUS_UNPACK_XPCOM;
-    else if(strcmpi(szBuf, SETUP_STATE_INSTALL_XPI) == 0)
+    else if(stricmp(szBuf, SETUP_STATE_INSTALL_XPI) == 0)
       dwRv = PUS_INSTALL_XPI;
   }
 
@@ -502,7 +502,7 @@ BOOL IsInArchivesLst(siC *siCObject, BOOL bModify)
     szBufPtr = szBuf;
     while(*szBufPtr != '\0')
     {
-      if(strcmpi(siCObject->szArchiveName, szBufPtr) == 0)
+      if(stricmp(siCObject->szArchiveName, szBufPtr) == 0)
       {
         if(bModify)
         {
@@ -693,7 +693,7 @@ int LocateJar(siC *siCObject, LPSTR szPath, int dwPathSize, BOOL bIncludeTempDir
     strcpy(szTempDirTemp,  szTempDir);
     AppendBackSlash(szTempDirTemp, sizeof(szTempDirTemp));
 
-    if(strcmpi(szTempDirTemp, szSetupDirTemp) == 0)
+    if(stricmp(szTempDirTemp, szSetupDirTemp) == 0)
     {
       /* check the temp dir for the .xpi file */
       strcpy(szBuf, szTempDirTemp);
@@ -862,12 +862,12 @@ HRESULT AddArchiveToIdiFile(siC *siCObject,
                             "desc",
                             siCObject->szDescriptionShort,
                             szFileIdiGetArchives);
-  itoa(siCObject->ulInstallSizeArchive, szArchiveSize, 10);
+  _itoa(siCObject->ulInstallSizeArchive, szArchiveSize, 10);
   WritePrivateProfileString(szSection,
                             "size",
                             szArchiveSize,
                             szFileIdiGetArchives);
-  itoa(siCObject->dwAttributes & SIC_IGNORE_DOWNLOAD_ERROR, szBuf, 10);
+  _itoa(siCObject->dwAttributes & SIC_IGNORE_DOWNLOAD_ERROR, szBuf, 10);
   WritePrivateProfileString(szSection,
                             "Ignore File Network Error",
                             szBuf,
@@ -886,7 +886,7 @@ HRESULT AddArchiveToIdiFile(siC *siCObject,
                           szBuf,
                           sizeof(szBuf),
                           szFileIniConfig);
-  if(strcmpi(szBuf, "ENABLED") != 0)
+  if(stricmp(szBuf, "ENABLED") != 0)
   {
     /* redirect.ini is *not* enabled, so use the url from the
      * config.ini's [Site Selector] section */
@@ -962,11 +962,11 @@ HRESULT AddArchiveToIdiFile(siC *siCObject,
 
 void SetSetupRunMode(LPSTR szMode)
 {
-  if(strcmpi(szMode, "NORMAL") == 0)
+  if(stricmp(szMode, "NORMAL") == 0)
     sgProduct.ulMode = NORMAL;
-  if(strcmpi(szMode, "AUTO") == 0)
+  if(stricmp(szMode, "AUTO") == 0)
     sgProduct.ulMode = AUTO;
-  if(strcmpi(szMode, "SILENT") == 0)
+  if(stricmp(szMode, "SILENT") == 0)
     sgProduct.ulMode = SILENT;
 }
 
@@ -981,7 +981,7 @@ BOOL CheckForArchiveExtension(LPSTR szFile)
   i = 0;
   while(*ArchiveExtensions[i] != '\0')
   {
-    if(strcmpi(szExtension, ArchiveExtensions[i]) == 0)
+    if(stricmp(szExtension, ArchiveExtensions[i]) == 0)
     {
       bRv = TRUE;
       break;
@@ -1014,7 +1014,7 @@ long RetrieveRedirectFile()
     DosDelete(szFileIniRedirect);
 
   GetPrivateProfileString("Redirect", "Status", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "ENABLED") != 0)
+  if(stricmp(szBuf, "ENABLED") != 0)
     return(0);
 
   ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
@@ -1209,7 +1209,7 @@ long RetrieveArchives()
                     NULL,
                     0,
                     gbPreviousUnfinishedDownload) == AP_NOT_FOUND) ||
-         (strcmpi(szPartiallyDownloadedFilename,
+         (stricmp(szPartiallyDownloadedFilename,
                    siCObject->szArchiveName) == 0))
       {
         sprintf(szSection, "File%d", dwFileCounter);
@@ -2506,7 +2506,7 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
   DWORD dwIndex0;
 
   strcpy(szSTSection, "Setup Type");
-  itoa(dwSetupType, szBuf, 10);
+  _itoa(dwSetupType, szBuf, 10);
   strcat(szSTSection, szBuf);
 
   // For each component in the global list unset its SELECTED and ADDITIONAL attributes
@@ -2829,14 +2829,14 @@ int SiCNodeGetIndexDS(char *szInDescriptionShort)
 
   if(siCTemp != NULL)
   {
-    if(strcmpi(szInDescriptionShort, siCTemp->szDescriptionShort) == 0)
+    if(stricmp(szInDescriptionShort, siCTemp->szDescriptionShort) == 0)
       return(dwCount);
 
     ++dwCount;
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if(strcmpi(szInDescriptionShort, siCTemp->szDescriptionShort) == 0)
+      if(stricmp(szInDescriptionShort, siCTemp->szDescriptionShort) == 0)
         return(dwCount);
       
       ++dwCount;
@@ -2854,14 +2854,14 @@ int SiCNodeGetIndexRN(char *szInReferenceName)
 
   if(siCTemp != NULL)
   {
-    if(strcmpi(szInReferenceName, siCTemp->szReferenceName) == 0)
+    if(stricmp(szInReferenceName, siCTemp->szReferenceName) == 0)
       return(dwCount);
 
     ++dwCount;
     siCTemp = siCTemp->Next;
     while((siCTemp != NULL) && (siCTemp != siComponents))
     {
-      if(strcmpi(szInReferenceName, siCTemp->szReferenceName) == 0)
+      if(stricmp(szInReferenceName, siCTemp->szReferenceName) == 0)
         return(dwCount);
       
       ++dwCount;
@@ -3152,8 +3152,8 @@ HRESULT ErrorMsgDiskSpace(unsigned long long ullDSAvailable, unsigned long long 
   strcpy(szBuf0, szPath);
   RemoveBackSlash(szBuf0);
 
-  itoa(ullDSAvailable, szDSAvailable, 10);
-  itoa(ullDSRequired, szDSRequired, 10);
+  _itoa(ullDSAvailable, szDSAvailable, 10);
+  _itoa(ullDSRequired, szDSRequired, 10);
 
   sprintf(szBuf1, "\n\n    %s\n\n    ", szBuf0);
   sprintf(szBuf2, "%s KB\n    ",        szDSRequired);
@@ -3212,7 +3212,7 @@ void UpdatePathDiskSpaceRequired(LPSTR szPath, unsigned long long ullSize, dsN *
         dsnTemp->ulSpaceRequired = ullSize;
         bFound = TRUE;
       }
-      else if(strcmpi(dsnTemp->szVDSPath, szVDSPath) == 0)
+      else if(stricmp(dsnTemp->szVDSPath, szVDSPath) == 0)
       {
         dsnTemp->ulSpaceRequired += ullSize;
         bFound = TRUE;
@@ -3246,7 +3246,7 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
   AppendBackSlash(szBufTempPath, sizeof(szBufTempPath));
 
   dwIndex0 = 0;
-  itoa(dwIndex0, szIndex0, 10);
+  _itoa(dwIndex0, szIndex0, 10);
   siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
@@ -3265,7 +3265,7 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
     }
 
     ++dwIndex0;
-    itoa(dwIndex0, szIndex0, 10);
+    _itoa(dwIndex0, szIndex0, 10);
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 
@@ -3405,7 +3405,7 @@ siC *SiCNodeFind(siC *siCHeadNode, char *szInReferenceName)
     if(siCNode == NULL)
       break;
 
-    if(strcmpi(siCNode->szReferenceName, szInReferenceName) == 0)
+    if(stricmp(siCNode->szReferenceName, szInReferenceName) == 0)
       return(siCNode);
 
     siCNode = siCNode->Next;
@@ -3430,7 +3430,7 @@ BOOL ResolveSupersede(siC *siCObject)
     GetPrivateProfileString(siCObject->szReferenceName, "SupersedeType", "", szType, sizeof(szType), szFileIniConfig);
     if(*szType !='\0')
     {
-      if(strcmpi(szType, "File Exists") == 0)
+      if(stricmp(szType, "File Exists") == 0)
       {
         sprintf(szKey, "SupersedeFile%d", dwIndex);        
         GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeFile, sizeof(szSupersedeFile), szFileIniConfig);
@@ -3542,12 +3542,12 @@ void InitSiComponents(char *szFileIni)
   for(iCurrentLoop = 3; iCurrentLoop >= 0; iCurrentLoop--)
   {
     strcpy(szSTSection, "Setup Type");
-    itoa(iCurrentLoop, szBuf, 10);
+    _itoa(iCurrentLoop, szBuf, 10);
     strcat(szSTSection, szBuf);
 
     /* read in each component given a setup type */
     dwIndex0 = 0;
-    itoa(dwIndex0, szIndex0, 10);
+    _itoa(dwIndex0, szIndex0, 10);
     strcpy(szComponentKey, "C");
     strcat(szComponentKey, szIndex0);
     GetPrivateProfileString(szSTSection, szComponentKey, "", szComponentSection, sizeof(szComponentSection), szFileIni);
@@ -3621,7 +3621,7 @@ void InitSiComponents(char *szFileIni)
 
         /* get all dependencies for this component */
         dwIndex1 = 0;
-        itoa(dwIndex1, szIndex1, 10);
+        _itoa(dwIndex1, szIndex1, 10);
         strcpy(szDependency, "Dependency");
         strcat(szDependency, szIndex1);
         GetPrivateProfileString(szComponentSection, szDependency, "", szBuf, sizeof(szBuf), szFileIni);
@@ -3638,7 +3638,7 @@ void InitSiComponents(char *szFileIni)
 
           ProcessWindowsMessages();
           ++dwIndex1;
-          itoa(dwIndex1, szIndex1, 10);
+          _itoa(dwIndex1, szIndex1, 10);
           strcpy(szDependency, "Dependency");
           strcat(szDependency, szIndex1);
           GetPrivateProfileString(szComponentSection, szDependency, "", szBuf, sizeof(szBuf), szFileIni);
@@ -3646,7 +3646,7 @@ void InitSiComponents(char *szFileIni)
 
         /* get all dependees for this component */
         dwIndex1 = 0;
-        itoa(dwIndex1, szIndex1, 10);
+        _itoa(dwIndex1, szIndex1, 10);
         strcpy(szDependee, "Dependee");
         strcat(szDependee, szIndex1);
         GetPrivateProfileString(szComponentSection, szDependee, "", szBuf, sizeof(szBuf), szFileIni);
@@ -3663,7 +3663,7 @@ void InitSiComponents(char *szFileIni)
 
           ProcessWindowsMessages();
           ++dwIndex1;
-          itoa(dwIndex1, szIndex1, 10);
+          _itoa(dwIndex1, szIndex1, 10);
           strcpy(szDependee, "Dependee");
           strcat(szDependee, szIndex1);
           GetPrivateProfileString(szComponentSection, szDependee, "", szBuf, sizeof(szBuf), szFileIni);
@@ -3681,7 +3681,7 @@ void InitSiComponents(char *szFileIni)
 
       ProcessWindowsMessages();
       ++dwIndex0;
-      itoa(dwIndex0, szIndex0, 10);
+      _itoa(dwIndex0, szIndex0, 10);
       strcpy(szComponentKey, "C");
       strcat(szComponentKey, szIndex0);
       GetPrivateProfileString(szSTSection, szComponentKey, "", szComponentSection, sizeof(szComponentSection), szFileIni);
@@ -3701,7 +3701,7 @@ void ResetComponentAttributes(char *szFileIni)
 
   for(dwCounter = 0; dwCounter < sgProduct.ulNumberOfComponents; dwCounter++)
   {
-    itoa(dwCounter, szIndex, 10);
+    _itoa(dwCounter, szIndex, 10);
     strcpy(szComponentItem, "Component");
     strcat(szComponentItem, szIndex);
 
@@ -3731,7 +3731,7 @@ void UpdateSiteSelector()
 
   /* get all dependees for this component */
   dwIndex = 0;
-  itoa(dwIndex, szIndex, 10);
+  _itoa(dwIndex, szIndex, 10);
   strcpy(szKDescription, "Description");
   strcpy(szKDomain,      "Domain");
   strcat(szKDescription, szIndex);
@@ -3739,7 +3739,7 @@ void UpdateSiteSelector()
   GetPrivateProfileString("Site Selector", szKDescription, "", szDescription, sizeof(szDescription), szFileIniRedirect);
   while(*szDescription != '\0')
   {
-    if(strcmpi(szDescription, szSiteSelectorDescription) == 0)
+    if(stricmp(szDescription, szSiteSelectorDescription) == 0)
     {
       GetPrivateProfileString("Site Selector", szKDomain, "", szDomain, sizeof(szDomain), szFileIniRedirect);
       if(*szDomain != '\0')
@@ -3765,7 +3765,7 @@ void UpdateSiteSelector()
     }
 
     ++dwIndex;
-    itoa(dwIndex, szIndex, 10);
+    _itoa(dwIndex, szIndex, 10);
     strcpy(szKDescription, "Description");
     strcpy(szKDomain,      "Domain");
     strcat(szKDescription, szIndex);
@@ -3792,7 +3792,7 @@ void InitSiteSelector(char *szFileIni)
 
   /* get all dependees for this component */
   dwIndex = 0;
-  itoa(dwIndex, szIndex, 10);
+  _itoa(dwIndex, szIndex, 10);
   strcpy(szKDescription, "Description");
   strcpy(szKDomain,      "Domain");
   strcpy(szKIdentifier,  "Identifier");
@@ -3820,7 +3820,7 @@ void InitSiteSelector(char *szFileIni)
 
     ProcessWindowsMessages();
     ++dwIndex;
-    itoa(dwIndex, szIndex, 10);
+    _itoa(dwIndex, szIndex, 10);
     strcpy(szKDescription, "Description");
     strcpy(szKDomain,      "Domain");
     strcpy(szKIdentifier,  "Identifier");
@@ -3845,7 +3845,7 @@ void InitErrorMessageStream(char *szFileIni)
                           sizeof(szBuf),
                           szFileIni);
 
-  if(strcmpi(szBuf, "disabled") == 0)
+  if(stricmp(szBuf, "disabled") == 0)
     gErrorMessageStream.bEnabled = FALSE;
   else
     gErrorMessageStream.bEnabled = TRUE;
@@ -3863,7 +3863,7 @@ void InitErrorMessageStream(char *szFileIni)
                           szBuf,
                           sizeof(szBuf),
                           szFileIni);
-  if(strcmpi(szBuf, "FALSE") == 0)
+  if(stricmp(szBuf, "FALSE") == 0)
     gErrorMessageStream.bShowConfirmation = FALSE;
   else
     gErrorMessageStream.bShowConfirmation = TRUE;
@@ -4222,7 +4222,7 @@ ssi* SsiGetNode(LPSTR szDescription)
     if(ssiSiteSelectorTemp == NULL)
       break;
 
-    if(strcmpi(ssiSiteSelectorTemp->szDescription, szDescription) == 0)
+    if(stricmp(ssiSiteSelectorTemp->szDescription, szDescription) == 0)
       return(ssiSiteSelectorTemp);
 
     ssiSiteSelectorTemp = ssiSiteSelectorTemp->Next;
@@ -4245,7 +4245,7 @@ void ResolveDependees(LPSTR szToggledReferenceName, HWND hwndListBox)
       break;
 
     if((siCTemp->siCDDependees != NULL) &&
-       (strcmpi(siCTemp->szReferenceName, szToggledReferenceName) != 0))
+       (stricmp(siCTemp->szReferenceName, szToggledReferenceName) != 0))
     {
       bAtLeastOneSelected = ResolveComponentDependee(siCTemp->siCDDependees);
       if(bAtLeastOneSelected == FALSE)
@@ -4329,34 +4329,34 @@ ULONG ParseCommandLine(int argc, char *argv[])
   i = 0;
   while(i < argc)
   {
-    if(!strcmpi(argv[i], "-h") || !strcmpi(argv[i], "/h"))
+    if(!stricmp(argv[i], "-h") || !stricmp(argv[i], "/h"))
     {
       PrintUsage(argv[0]);
       return(WIZ_ERROR_UNDEFINED);
     }
-    else if(!strcmpi(argv[i], "-a") || !strcmpi(argv[i], "/a"))
+    else if(!stricmp(argv[i], "-a") || !stricmp(argv[i], "/a"))
     {
       ++i;
       strcpy(sgProduct.szAlternateArchiveSearchPath, argv[i]);
     }
-    else if(!strcmpi(argv[i], "-n") || !strcmpi(argv[i], "/n"))
+    else if(!stricmp(argv[i], "-n") || !stricmp(argv[i], "/n"))
     {
       ++i;
       strcpy(sgProduct.szParentProcessFilename, argv[i]);
     }
-    else if(!strcmpi(argv[i], "-ma") || !strcmpi(argv[i], "/ma"))
+    else if(!stricmp(argv[i], "-ma") || !stricmp(argv[i], "/ma"))
       SetSetupRunMode("AUTO");
-    else if(!strcmpi(argv[i], "-ms") || !strcmpi(argv[i], "/ms"))
+    else if(!stricmp(argv[i], "-ms") || !stricmp(argv[i], "/ms"))
       SetSetupRunMode("SILENT");
-    else if(!strcmpi(argv[i], "-ira") || !strcmpi(argv[i], "/ira"))
+    else if(!stricmp(argv[i], "-ira") || !stricmp(argv[i], "/ira"))
       /* ignore [RunAppX] sections */
       gbIgnoreRunAppX = TRUE;
-    else if(!strcmpi(argv[i], "-ispf") || !strcmpi(argv[i], "/ispf"))
+    else if(!stricmp(argv[i], "-ispf") || !stricmp(argv[i], "/ispf"))
       /* ignore [Program FolderX] sections */
       gbIgnoreProgramFolderX = TRUE;
 
 #ifdef XXX_DEBUG
-    itoa(i, szBuf, 10);
+    _itoa(i, szBuf, 10);
     strcat(szOutputStr, "    ");
     strcat(szOutputStr, szBuf);
     strcat(szOutputStr, ": ");
@@ -4576,7 +4576,7 @@ HRESULT CheckInstances()
     memset(szMessageFulInstaller, 0, sizeof(szMessageFulInstaller));
 
     ++iIndex;
-    itoa(iIndex, szIndex, 10);
+    _itoa(iIndex, szIndex, 10);
     strcpy(szSection, "Check Instance");
     strcat(szSection, szIndex);
 
@@ -4640,7 +4640,7 @@ HRESULT CheckInstances()
     }
 
     GetPrivateProfileString(szSection, "Close All Process Windows", "", szCloseAllWindows, sizeof(szCloseAllWindows), szFileIniConfig);
-    if(strcmpi(szCloseAllWindows, "TRUE") == 0)
+    if(stricmp(szCloseAllWindows, "TRUE") == 0)
       bCloseAllWindows = TRUE;
     else
       bCloseAllWindows = FALSE;
@@ -4756,7 +4756,7 @@ int CRCCheckArchivesStartup(char *szCorruptedArchiveList, DWORD dwCorruptedArchi
     /* only download jars if not already in the local machine */
     iRv = LocateJar(siCObject, szArchivePath, sizeof(szArchivePath), bIncludeTempPath);
     if((iRv != AP_NOT_FOUND) &&
-       (strcmpi(szPartiallyDownloadedFilename,
+       (stricmp(szPartiallyDownloadedFilename,
                  siCObject->szArchiveName) != 0))
     {
       if(strlen(szArchivePath) < sizeof(szArchivePathWithFilename))
@@ -4916,7 +4916,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("General", "Sub Path",     "", sgProduct.szSubPath,     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Program Name", "", sgProduct.szProgramName, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("General", "Lock Path",    "", szBuf,                   sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     sgProduct.bLockPath = TRUE;
 
   /* get main install path */
@@ -5004,7 +5004,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Welcome",             "Message0",        "", diWelcome.szMessage0,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Message1",        "", diWelcome.szMessage1,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Welcome",             "Message2",        "", diWelcome.szMessage2,          MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diWelcome.bShowDialog = TRUE;
 
   /* License dialog */
@@ -5013,7 +5013,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog License",             "License File",    "", diLicense.szLicenseFilename,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog License",             "Message0",        "", diLicense.szMessage0,          MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog License",             "Message1",        "", diLicense.szMessage1,          MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diLicense.bShowDialog = TRUE;
 
   /* Setup Type dialog */
@@ -5022,7 +5022,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Setup Type",          "Message0",        "", diSetupType.szMessage0,        MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Setup Type",          "Readme Filename", "", diSetupType.szReadmeFilename,  MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Setup Type",          "Readme App",      "", diSetupType.szReadmeApp,       MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diSetupType.bShowDialog = TRUE;
 
   /* Get Setup Types info */
@@ -5049,14 +5049,14 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Select Components",   "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Select Components",   "Title",        "", diSelectComponents.szTitle,      MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Select Components",   "Message0",     "", diSelectComponents.szMessage0,   MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diSelectComponents.bShowDialog = TRUE;
 
   /* Select Additional Components dialog */
   GetPrivateProfileString("Dialog Select Additional Components",   "Show Dialog",  "", szShowDialog,                              sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Select Additional Components",   "Title",        "", diSelectAdditionalComponents.szTitle,      MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Select Additional Components",   "Message0",     "", diSelectAdditionalComponents.szMessage0,   MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diSelectAdditionalComponents.bShowDialog = TRUE;
 
   /* OS/2 Integration dialog */
@@ -5064,7 +5064,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog OS/2 Integration", "Title",        "", diOS2Integration.szTitle,    MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog OS/2 Integration", "Message0",     "", diOS2Integration.szMessage0, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog OS/2 Integration", "Message1",     "", diOS2Integration.szMessage1, MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diOS2Integration.bShowDialog = TRUE;
 
   /* Additional Options dialog */
@@ -5074,18 +5074,18 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Additional Options",       "Message1",       "", diAdditionalOptions.szMessage1,     MAX_BUF, szFileIniConfig);
 
   GetPrivateProfileString("Dialog Additional Options",       "Save Installer", "", szBuf,                            sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     diAdditionalOptions.bSaveInstaller = TRUE;
 
   GetPrivateProfileString("Dialog Additional Options",       "Recapture Homepage", "", szBuf,                            sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     diAdditionalOptions.bRecaptureHomepage = TRUE;
 
   GetPrivateProfileString("Dialog Additional Options",       "Show Homepage Option", "", szBuf,                            sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     diAdditionalOptions.bShowHomepageOption = TRUE;
 
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diAdditionalOptions.bShowDialog = TRUE;
 
   /* Advanced Settings dialog */
@@ -5096,17 +5096,17 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Advanced Settings",       "Proxy Port",     "", diAdvancedSettings.szProxyPort,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Advanced Settings",       "Proxy User",     "", diAdvancedSettings.szProxyUser,   MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Advanced Settings",       "Proxy Password", "", diAdvancedSettings.szProxyPasswd, MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diAdvancedSettings.bShowDialog = TRUE;
 
   GetPrivateProfileString("Dialog Advanced Settings",       "Use Protocol",   "", szBuf,                            sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "HTTP") == 0)
+  if(stricmp(szBuf, "HTTP") == 0)
     diAdditionalOptions.dwUseProtocol = UP_HTTP;
   else
     diAdditionalOptions.dwUseProtocol = UP_FTP;
 
   GetPrivateProfileString("Dialog Advanced Settings",       "Use Protocol Settings", "", szBuf,                     sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "DISABLED") == 0)
+  if(stricmp(szBuf, "DISABLED") == 0)
     diAdditionalOptions.bUseProtocolSettings = FALSE;
   else
     diAdditionalOptions.bUseProtocolSettings = TRUE;
@@ -5116,7 +5116,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
                           "",
                           szBuf,
                           sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "FALSE") == 0)
+  if(stricmp(szBuf, "FALSE") == 0)
     diAdditionalOptions.bShowProtocols = FALSE;
   else
     diAdditionalOptions.bShowProtocols = TRUE;
@@ -5127,13 +5127,13 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Quick Launch",      "Message0",     "", diQuickLaunch.szMessage0,      MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Quick Launch",      "Message1",     "", diQuickLaunch.szMessage1,      MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Quick Launch",      "Message2",     "", diQuickLaunch.szMessage2,      MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diQuickLaunch.bShowDialog = TRUE;
   GetPrivateProfileString("Dialog Quick Launch",       "Turbo Mode",         "", szBuf,                          sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     diQuickLaunch.bTurboMode = TRUE;   
   GetPrivateProfileString("Dialog Quick Launch",       "Turbo Mode Enabled","", szBuf,                          sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     diQuickLaunch.bTurboModeEnabled = TRUE;
   else
     /* since turbo mode is disabled, make sure bTurboMode is FALSE */
@@ -5144,7 +5144,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Start Install",       "Title",            "", diStartInstall.szTitle,           MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Start Install",       "Message Install",  "", diStartInstall.szMessageInstall,  MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Start Install",       "Message Download", "", diStartInstall.szMessageDownload, MAX_BUF, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diStartInstall.bShowDialog = TRUE;
  
   /* Download dialog */
@@ -5152,14 +5152,14 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Download",       "Title",              "", diDownload.szTitle,             MAX_BUF_TINY,   szFileIniConfig);
   GetPrivateProfileString("Dialog Download",       "Message Download0",  "", diDownload.szMessageDownload0,  MAX_BUF_MEDIUM, szFileIniConfig);
   GetPrivateProfileString("Dialog Download",       "Message Retry0",     "", diDownload.szMessageRetry0,     MAX_BUF_MEDIUM, szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diDownload.bShowDialog = TRUE;
 
   /* Reboot dialog */
   GetPrivateProfileString("Dialog Reboot", "Show Dialog", "", szShowDialog, sizeof(szShowDialog), szFileIniConfig);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diReboot.dwShowDialog = TRUE;
-  else if(strcmpi(szShowDialog, "AUTO") == 0)
+  else if(stricmp(szShowDialog, "AUTO") == 0)
     diReboot.dwShowDialog = AUTO;
 
   GetPrivateProfileString("OS/2 Integration-Item0", "CheckBoxState", "", szBuf,                                    sizeof(szBuf), szFileIniConfig);
@@ -5168,7 +5168,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   if(*diOS2Integration.oiCBMakeDefaultBrowser.szDescription != '\0')
     diOS2Integration.oiCBMakeDefaultBrowser.bEnabled = TRUE;
   /* check to see if the checkbox needs to be checked by default or not */
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     diOS2Integration.oiCBMakeDefaultBrowser.bCheckBoxState = TRUE;
 
   GetPrivateProfileString("OS/2 Integration-Item1", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
@@ -5177,7 +5177,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   if(*diOS2Integration.oiCBAssociateHTML.szDescription != '\0')
     diOS2Integration.oiCBAssociateHTML.bEnabled = TRUE;
   /* check to see if the checkbox needs to be checked by default or not */
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     diOS2Integration.oiCBAssociateHTML.bCheckBoxState = TRUE;
 
   GetPrivateProfileString("OS/2 Integration-Item2", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
@@ -5186,12 +5186,12 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   if(*diOS2Integration.oiCBUpdateCONFIGSYS.szDescription != '\0')
     diOS2Integration.oiCBUpdateCONFIGSYS.bEnabled = TRUE;
   /* check to see if the checkbox needs to be checked by default or not */
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
     diOS2Integration.oiCBUpdateCONFIGSYS.bCheckBoxState = TRUE;
 
   /* Read in the Site Selector Status */
   GetPrivateProfileString("Site Selector", "Status", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "HIDE") == 0)
+  if(stricmp(szBuf, "HIDE") == 0)
     gulSiteSelectorStatus = SS_HIDE;
 
   switch(sgProduct.ulMode)
@@ -5219,22 +5219,22 @@ HRESULT ParseConfigIni(int argc, char *argv[])
 
   /* get Default Setup Type */
   GetPrivateProfileString("General", "Default Setup Type", "", szBuf, sizeof(szBuf), szFileIniConfig);
-  if((strcmpi(szBuf, "Setup Type 0") == 0) && diSetupType.stSetupType0.bVisible)
+  if((stricmp(szBuf, "Setup Type 0") == 0) && diSetupType.stSetupType0.bVisible)
   {
     ulSetupType     = ST_RADIO0;
     ulTempSetupType = ulSetupType;
   }
-  else if((strcmpi(szBuf, "Setup Type 1") == 0) && diSetupType.stSetupType1.bVisible)
+  else if((stricmp(szBuf, "Setup Type 1") == 0) && diSetupType.stSetupType1.bVisible)
   {
     ulSetupType     = ST_RADIO1;
     ulTempSetupType = ulSetupType;
   }
-  else if((strcmpi(szBuf, "Setup Type 2") == 0) && diSetupType.stSetupType2.bVisible)
+  else if((stricmp(szBuf, "Setup Type 2") == 0) && diSetupType.stSetupType2.bVisible)
   {
     ulSetupType     = ST_RADIO2;
     ulTempSetupType = ulSetupType;
   }
-  else if((strcmpi(szBuf, "Setup Type 3") == 0) && diSetupType.stSetupType3.bVisible)
+  else if((stricmp(szBuf, "Setup Type 3") == 0) && diSetupType.stSetupType3.bVisible)
   {
     ulSetupType     = ST_RADIO3;
     ulTempSetupType = ulSetupType;
@@ -5277,7 +5277,7 @@ HRESULT ParseConfigIni(int argc, char *argv[])
   DecryptString(siCFXpcomFile.szDestination, szBuf);
   GetPrivateProfileString("Core",                           "Message",          "", siCFXpcomFile.szMessage,      MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Core",                           "Cleanup",          "", szBuf,                        sizeof(szBuf), szFileIniConfig);
-  if(strcmpi(szBuf, "FALSE") == 0)
+  if(stricmp(szBuf, "FALSE") == 0)
     siCFXpcomFile.bCleanup = FALSE;
   else
     siCFXpcomFile.bCleanup = TRUE;
@@ -5417,7 +5417,7 @@ BOOL LocatePreviousPath(PSZ szMainSectionName, PSZ szPath, ULONG ulPathSize)
   while(!bFound)
   {
     ++ulIndex;
-    itoa(ulIndex, szIndex, 10);
+    _itoa(ulIndex, szIndex, 10);
     strcpy(szSection, szMainSectionName);
     strcat(szSection, szIndex);
 
@@ -5440,7 +5440,7 @@ DWORD GetTotalArchivesToDownload()
 
   dwTotalArchivesToDownload = 0;
   dwIndex0                  = 0;
-  itoa(dwIndex0,  szIndex0,  10);
+  _itoa(dwIndex0,  szIndex0,  10);
   siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
@@ -5453,7 +5453,7 @@ DWORD GetTotalArchivesToDownload()
     }
 
     ++dwIndex0;
-    itoa(dwIndex0, szIndex0, 10);
+    _itoa(dwIndex0, szIndex0, 10);
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 
@@ -5480,7 +5480,7 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
 
     GetPrivateProfileString(szSection, "Name",         "", szName,  sizeof(szName),  szFileIniConfig);
     GetPrivateProfileString(szSection, "Decrypt App", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
-    if(strcmpi(szBuf, "FALSE") == 0)
+    if(stricmp(szBuf, "FALSE") == 0)
       bDecryptKey = FALSE;
     else
       bDecryptKey = TRUE;
@@ -5491,7 +5491,7 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
       GetPrivateProfileString(szSection, "Verify Existance", "", szVerifyExistence, sizeof(szVerifyExistence), szFileIniConfig);
 
     GetPrivateProfileString(szSection, "Contains Filename", "", szBuf, sizeof(szBuf), szFileIniConfig);
-    if(strcmpi(szBuf, "TRUE") == 0)
+    if(stricmp(szBuf, "TRUE") == 0)
       bContainsFilename = TRUE;
     else
       bContainsFilename = FALSE;
@@ -5505,7 +5505,7 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
     PrfQueryProfileString(HINI_USERPROFILE, szApp, szName, "", szBuf, sizeof(szBuf));
     if(*szBuf != '\0')
     {
-      if(strcmpi(szVerifyExistence, "FILE") == 0)
+      if(stricmp(szVerifyExistence, "FILE") == 0)
       {
         if(FileExists(szBuf))
         {
@@ -5519,7 +5519,7 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
         else
           bReturn = FALSE;
       }
-      else if(strcmpi(szVerifyExistence, "PATH") == 0)
+      else if(stricmp(szVerifyExistence, "PATH") == 0)
       {
         if(bContainsFilename == TRUE)
           ParsePath(szBuf, szPath, ulPathSize, FALSE, PP_PATH_ONLY);
@@ -5584,50 +5584,50 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
   memset(szBuf2,          0, sizeof(szBuf2));
   memset(szLookupSection, 0, sizeof(szLookupSection));
 
-  if(strcmpi(szVariable, "PROGRAMFILESDIR") == 0)
+  if(stricmp(szVariable, "PROGRAMFILESDIR") == 0)
   {
     /* @MAK Needed for install */
   }
-  else if(strcmpi(szVariable, "INSTALLDRIVE") == 0)
+  else if(stricmp(szVariable, "INSTALLDRIVE") == 0)
   {
     /* parse for "C:" */
     szVariable[0] = sgProduct.szPath[0];
     szVariable[1] = sgProduct.szPath[1];
     szVariable[2] = '\0';
   }
-  else if(strcmpi(szVariable, "STARTUP") == 0)
+  else if(stricmp(szVariable, "STARTUP") == 0)
   {
     HOBJECT hobj;
     hobj = WinQueryObject("<WP_STARTUP>");
     WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "DESKTOP") == 0)
+  else if(stricmp(szVariable, "DESKTOP") == 0)
   {
     HOBJECT hobj;
     hobj = WinQueryObject("<WP_DESKTOP>");
     WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "WARPCENTER") == 0)
+  else if(stricmp(szVariable, "WARPCENTER") == 0)
   {
     HOBJECT hobj;
     hobj = WinQueryObject("<WP_WARPCENTER????>");
     WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "WIZTEMP") == 0)
+  else if(stricmp(szVariable, "WIZTEMP") == 0)
   {
     /* parse for the "c:\Temp" path */
     strcpy(szVariable, szTempDir);
     if(szVariable[strlen(szVariable) - 1] == '\\')
       szVariable[strlen(szVariable) - 1] = '\0';
   }
-  else if(strcmpi(szVariable, "TEMP") == 0)
+  else if(stricmp(szVariable, "TEMP") == 0)
   {
     /* parse for the "c:\Temp" path */
     strcpy(szVariable, szOSTempDir);
     if(szVariable[strlen(szVariable) - 1] == '\\')
       szVariable[strlen(szVariable) - 1] = '\0';
   }
-  else if(strcmpi(szVariable, "OS2DISK") == 0)
+  else if(stricmp(szVariable, "OS2DISK") == 0)
   {
     /* Locate the drive that OS/2 is installed on, and only use the drive letter and the ':' character (C:). */
     ULONG ulBootDrive = 0;
@@ -5637,7 +5637,7 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
     szVariable[0] = 'A' - 1 + ulBootDrive;
     szVariable[1] = ':';
   }
-  else if(strcmpi(szVariable, "OS2DIR") == 0)
+  else if(stricmp(szVariable, "OS2DIR") == 0)
   {
     /* Locate the "OS2" directory */
     ULONG ulBootDrive = 0;
@@ -5648,16 +5648,16 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
     buffer[0] = 'A' - 1 + ulBootDrive;
     strcpy(szVariable, buffer);
   }
-  else if(  (strcmpi(szVariable, "JRE LIB PATH") == 0)
-         || (strcmpi(szVariable, "JRE BIN PATH") == 0) )
+  else if(  (stricmp(szVariable, "JRE LIB PATH") == 0)
+         || (stricmp(szVariable, "JRE BIN PATH") == 0) )
   {
     /* @MAK - we could do this */
   }
-  else if(strcmpi(szVariable, "JRE PATH") == 0)
+  else if(stricmp(szVariable, "JRE PATH") == 0)
   {
     /* @MAK - we could do this */
   }
-  else if(strcmpi(szVariable, "SETUP PATH") == 0)
+  else if(stricmp(szVariable, "SETUP PATH") == 0)
   {
     strcpy(szVariable, sgProduct.szPath);
     if(*sgProduct.szSubPath != '\0')
@@ -5666,7 +5666,7 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
       strcat(szVariable, sgProduct.szSubPath);
     }
   }
-  else if(strcmpi(szVariable, "Default Path") == 0)
+  else if(stricmp(szVariable, "Default Path") == 0)
   {
     strcpy(szVariable, sgProduct.szPath);
     if(*sgProduct.szSubPath != '\0')
@@ -5675,17 +5675,17 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
       strcat(szVariable, sgProduct.szSubPath);
     }
   }
-  else if(strcmpi(szVariable, "SETUP STARTUP PATH") == 0)
+  else if(stricmp(szVariable, "SETUP STARTUP PATH") == 0)
   {
     strcpy(szVariable, szSetupDir);
   }
-  else if(strcmpi(szVariable, "Default Folder") == 0)
+  else if(stricmp(szVariable, "Default Folder") == 0)
   {
     strcpy(szVariable, sgProduct.szProgramFolderPath);
     AppendBackSlash(szVariable, ulVariableSize);
     strcat(szVariable, sgProduct.szProgramFolderName);
   }
-  else if(strcmpi(szVariable, "Product CurrentVersion") == 0)
+  else if(stricmp(szVariable, "Product CurrentVersion") == 0)
   {
     char szApp[MAX_BUF];
 
@@ -5700,7 +5700,7 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
 
     strcpy(szVariable, szBuf);
   }
-  else if(strcmpi(szVariable, "Product PreviousVersion") == 0)
+  else if(stricmp(szVariable, "Product PreviousVersion") == 0)
   {
     char szApp[MAX_BUF];
 
@@ -5781,7 +5781,7 @@ HRESULT DecryptString(PSZ szOutputStr, PSZ szInputStr)
     szPrepend[ulPrepend] = '\0';
 
     /* if Variable is "XPI PATH", do special processing */
-    if(strcmpi(szVariable, "XPI PATH") == 0)
+    if(stricmp(szVariable, "XPI PATH") == 0)
     {
       strcpy(szBuf, sgProduct.szAlternateArchiveSearchPath);
       RemoveBackSlash(szBuf);

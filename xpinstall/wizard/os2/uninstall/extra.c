@@ -314,11 +314,11 @@ PSZ GetFirstNonSpace(PSZ szString)
 
 void SetUninstallRunMode(PSZ szMode)
 {
-  if(strcmpi(szMode, "NORMAL") == 0)
+  if(stricmp(szMode, "NORMAL") == 0)
     ugUninstall.ulMode = NORMAL;
-  if(strcmpi(szMode, "AUTO") == 0)
+  if(stricmp(szMode, "AUTO") == 0)
     ugUninstall.ulMode = AUTO;
-  if(strcmpi(szMode, "SILENT") == 0)
+  if(stricmp(szMode, "SILENT") == 0)
     ugUninstall.ulMode = SILENT;
 }
 
@@ -633,22 +633,22 @@ ULONG ParseCommandLine(int argc, char *argv[])
   i     = 0;
   while(i < argc)
   {
-    if((strcmpi(argv[i], "-ma") == 0) || (strcmpi(argv[i], "/ma") == 0))
+    if((stricmp(argv[i], "-ma") == 0) || (stricmp(argv[i], "/ma") == 0))
     {
       SetUninstallRunMode("AUTO");
     }
-    else if((strcmpi(argv[i], "-ms") == 0) || (strcmpi(argv[i], "/ms") == 0))
+    else if((stricmp(argv[i], "-ms") == 0) || (stricmp(argv[i], "/ms") == 0))
     {
       SetUninstallRunMode("SILENT");
     }
-    else if((strcmpi(argv[i], "-ua") == 0) || (strcmpi(argv[i], "/ua") == 0))
+    else if((stricmp(argv[i], "-ua") == 0) || (stricmp(argv[i], "/ua") == 0))
     {
       if((i + 1) < argc) {
         i++;
         strcpy(ugUninstall.szUserAgent, argv[i]);
       }
     }
-    else if((strcmpi(argv[i], "-app") == 0) || (strcmpi(argv[i], "/app") == 0))
+    else if((stricmp(argv[i], "-app") == 0) || (stricmp(argv[i], "/app") == 0))
     // Set the App ID
     {
       if((i + 1) < argc) {
@@ -656,7 +656,7 @@ ULONG ParseCommandLine(int argc, char *argv[])
         strcpy(ugUninstall.szAppID, argv[i]);
       }
     }
-    else if((strcmpi(argv[i], "-reg_path") == 0) || (strcmpi(argv[i], "/reg_path") == 0))
+    else if((stricmp(argv[i], "-reg_path") == 0) || (stricmp(argv[i], "/reg_path") == 0))
     // Set the alternative Windows registry path
     {
       if((i + 1) < argc) {
@@ -664,7 +664,7 @@ ULONG ParseCommandLine(int argc, char *argv[])
         strcpy(ugUninstall.szOIMainApp, argv[i]);
       }
     }
-    else if((strcmpi(argv[i], "-v") == 0) || (strcmpi(argv[i], "/v") == 0))
+    else if((stricmp(argv[i], "-v") == 0) || (stricmp(argv[i], "/v") == 0))
     // Set Verbose
     {
       ugUninstall.bVerbose = TRUE;
@@ -817,7 +817,7 @@ HRESULT CheckInstances()
     memset(szMessage,    0, sizeof(szMessage));
 
     ++iIndex;
-    itoa(iIndex, szIndex, 10);
+    _itoa(iIndex, szIndex, 10);
     strcpy(szSection, "Check Instance");
     strcat(szSection, szIndex);
 
@@ -1049,7 +1049,7 @@ HRESULT ParseUninstallIni(int argc, char *argv[])
 
   GetPrivateProfileString("General", "App",          "", szKeyCrypted, MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("General", "Decrypt App",  "", szBuf, MAX_BUF, szFileIniUninstall);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
   {
     DecryptString(ugUninstall.szOIKey, szKeyCrypted);
   }
@@ -1063,7 +1063,7 @@ HRESULT ParseUninstallIni(int argc, char *argv[])
   //    what we want to use.
   if(*ugUninstall.szOIMainApp == '\0') 
   {
-    if(strcmpi(szBuf, "TRUE") == 0)
+    if(stricmp(szBuf, "TRUE") == 0)
     {
       DecryptString(ugUninstall.szOIMainApp, szAppCrypted);
     }
@@ -1078,7 +1078,7 @@ HRESULT ParseUninstallIni(int argc, char *argv[])
   GetPrivateProfileString("Dialog Uninstall",       "Show Dialog",  "", szShowDialog,                 MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("Dialog Uninstall",       "Title",        "", diUninstall.szTitle,          MAX_BUF, szFileIniUninstall);
   GetPrivateProfileString("Dialog Uninstall",       "Message0",     "", diUninstall.szMessage0,       MAX_BUF, szFileIniUninstall);
-  if(strcmpi(szShowDialog, "TRUE") == 0)
+  if(stricmp(szShowDialog, "TRUE") == 0)
     diUninstall.bShowDialog = TRUE;
 
   switch(ugUninstall.ulMode)
@@ -1118,43 +1118,43 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
   memset(szName,          0, sizeof(szName));
   memset(szValue,         0, sizeof(szValue));
 
-  if(strcmpi(szVariable, "PROGRAMFILESDIR") == 0)
+  if(stricmp(szVariable, "PROGRAMFILESDIR") == 0)
   {
     /* @MAK Needed for install */
   }
-  else if(strcmpi(szVariable, "STARTUP") == 0)
+  else if(stricmp(szVariable, "STARTUP") == 0)
   {
     HOBJECT hobj;
     hobj = WinQueryObject("<WP_STARTUP>");
     WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "DESKTOP") == 0)
+  else if(stricmp(szVariable, "DESKTOP") == 0)
   {
     HOBJECT hobj;
     hobj = WinQueryObject("<WP_DESKTOP>");
     WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "WARPCENTER") == 0)
+  else if(stricmp(szVariable, "WARPCENTER") == 0)
   {
     HOBJECT hobj;
     hobj = WinQueryObject("<WP_WARPCENTER????>");
     WinQueryObjectPath(hobj, szVariable, ulVariableSize);
   }
-  else if(strcmpi(szVariable, "WIZTEMP") == 0)
+  else if(stricmp(szVariable, "WIZTEMP") == 0)
   {
     /* parse for the "c:\Temp" path */
     strcpy(szVariable, szTempDir);
     if(szVariable[strlen(szVariable) - 1] == '\\')
       szVariable[strlen(szVariable) - 1] = '\0';
   }
-  else if(strcmpi(szVariable, "TEMP") == 0)
+  else if(stricmp(szVariable, "TEMP") == 0)
   {
     /* parse for the "c:\Temp" path */
     strcpy(szVariable, szOSTempDir);
     if(szVariable[strlen(szVariable) - 1] == '\\')
       szVariable[strlen(szVariable) - 1] = '\0';
   }
-  else if(strcmpi(szVariable, "OS2DISK") == 0)
+  else if(stricmp(szVariable, "OS2DISK") == 0)
   {
     /* Locate the drive that OS/2 is installed on, and only use the drive letter and the ':' character (C:). */
     ULONG ulBootDrive = 0;
@@ -1164,7 +1164,7 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
     szVariable[0] = 'A' - 1 + ulBootDrive;
     szVariable[1] = ':';
   }
-  else if(strcmpi(szVariable, "OS2DIR") == 0)
+  else if(stricmp(szVariable, "OS2DIR") == 0)
   {
     /* Locate the "OS2" directory */
     ULONG ulBootDrive = 0;
@@ -1175,17 +1175,17 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
     buffer[0] = 'A' - 1 + ulBootDrive;
     strcpy(szVariable, buffer);
   }
-  else if(strcmpi(szVariable, "JRE BIN PATH") == 0)
+  else if(stricmp(szVariable, "JRE BIN PATH") == 0)
   {
   }
-  else if(strcmpi(szVariable, "JRE PATH") == 0)
+  else if(stricmp(szVariable, "JRE PATH") == 0)
   {
   }
-  else if(strcmpi(szVariable, "UNINSTALL STARTUP PATH") == 0)
+  else if(stricmp(szVariable, "UNINSTALL STARTUP PATH") == 0)
   {
     strcpy(szVariable, szUninstallDir);
   }
-  else if(strcmpi(szVariable, "Product CurrentVersion") == 0)
+  else if(stricmp(szVariable, "Product CurrentVersion") == 0)
   {
     char szApp[MAX_BUF];
 
@@ -1200,7 +1200,7 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
 
     strcpy(szVariable, szBuf);
   }
-  else if(strcmpi(szVariable, "Product OS2INIApp") == 0)
+  else if(stricmp(szVariable, "Product OS2INIApp") == 0)
   {
     sprintf(szVariable, "%s", ugUninstall.szProductName);
   }
