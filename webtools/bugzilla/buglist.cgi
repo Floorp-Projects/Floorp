@@ -276,6 +276,9 @@ if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
     $query =~ s/bugs,/bugs left join cc on bugs.bug_id = cc.bug_id left join profiles ccname on cc.who = ccname.userid,/;
 }
 
+my $needlongdescs = 0;          # Whether we need to patch in the longdescs
+                                # table.
+
 if (defined $::FORM{'sql'}) {
   $query .= "and (\n$::FORM{'sql'}\n)"
 } else {
@@ -359,7 +362,8 @@ foreach my $id ("1", "2") {
 
     my $foundone = 0;
     my $lead= "and (\n";
-    foreach my $field ("assigned_to", "reporter", "cc", "qa_contact") {
+    foreach my $field ("assigned_to", "reporter", "cc", "qa_contact",
+                       "longdesc") {
         my $doit = $::FORM{"email$field$id"};
         if (!$doit) {
             next;
@@ -372,12 +376,17 @@ foreach my $id ("1", "2") {
             $table = "report";
         } elsif ($field eq "qa_contact") {
             $table = "qacont";
+        } elsif ($field eq "longdesc") {
+            $table = "longdescname";
+            $needlongdescs = 1;
         } else {
             $table = "ccname";
         }
         if ($type eq "exact") {
             if ($field eq "cc") {
                 $query .= "\t$lead cc.who = $emailid\n";
+            } elsif ($field eq "longdesc") {
+                $query .= "\t$lead longdesc.who = $emailid\n";
             } else {
                 $query .= "\t$lead $field = $emailid\n";
             }
@@ -524,8 +533,7 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
             my $q = SqlQuote($s);
             my $type = $::FORM{$f . "_type"};
             if ($f eq "long_desc") {
-                # Patch in the longdescs table.
-                $query =~ s/where/, longdescs where/;
+                $needlongdescs = 1; # Patch in the longdescs table.
                 $query .= "and longdescs.bug_id = bugs.bug_id\n";
                 $n = "longdescs.thetext";
             }
@@ -545,6 +553,12 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
         }
     }
 }
+
+if ($needlongdescs) {
+    $query =~ s/where/, longdescs left join profiles longdescname on longdescs.who = longdescname.userid where/;
+    $query .= " AND longdescs.bug_id = bugs.bug_id ";
+}
+
 
 
 $query .= "group by bugs.bug_id\n";
@@ -582,6 +596,11 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
         $::FORM{'order'} = "bugs.bug_status, bugs.priority, assign.login_name, bugs.bug_id";
     }
     $query .= $::FORM{'order'};
+}
+
+
+if ($::FORM{'debug'} && $serverpush) {
+    print "<PRE>$query</PRE>\n";
 }
 
 

@@ -75,8 +75,10 @@ foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
                   "chfieldto", "chfieldvalue",
                   "email1", "emailtype1", "emailreporter1",
                   "emailassigned_to1", "emailcc1", "emailqa_contact1",
+                  "emaillongdesc1",
                   "email2", "emailtype2", "emailreporter2",
                   "emailassigned_to2", "emailcc2", "emailqa_contact2",
+                  "emaillongdesc2",
                   "changedin", "votes", "short_desc", "short_desc_type",
                   "long_desc", "long_desc_type", "bug_file_loc",
                   "bug_file_loc_type", "status_whiteboard",
@@ -138,6 +140,7 @@ sub GenerateEmailInput {
     my $assignedto = ($default{"emailassigned_to$id"} eq "1") ? "checked" : "";
     my $reporter = ($default{"emailreporter$id"} eq "1") ? "checked" : "";
     my $cc = ($default{"emailcc$id"} eq "1") ? "checked" : "";
+    my $longdesc = ($default{"emaillongdesc$id"} eq "1") ? "checked" : "";
 
     my $qapart = "";
     my $qacontact = "";
@@ -188,7 +191,13 @@ sub GenerateEmailInput {
 <tr>
 <td align=right>(Will match any of the selected fields)</td>
 <td>
-<input type="checkbox" name="emailcc$id" value=1 $cc>CC &nbsp;&nbsp;
+<input type="checkbox" name="emailcc$id" value=1 $cc>CC
+</td>
+</tr>
+<tr>
+<td></td>
+<td>
+<input type="checkbox" name="emaillongdesc$id" value=1 $longdesc>Added comment
 </td>
 </tr>
 </table>
