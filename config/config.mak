@@ -229,6 +229,21 @@ CFLAGS=$(CFLAGS) -D_IMPL_NS_WIDGET
 #//
 #//-----------------------------------------------------------------------
 
+# Default configuration for debug builds
+!ifdef MOZ_DEBUG
+
+# turn on MOZ_TIMELINE
+!ifndef MOZ_TIMELINE_DISABLE
+MOZ_TIMELINE=1
+!endif
+
+# turn on TRACE_MALLOC
+!ifndef MOZ_TRACE_MALLOC_DISABLE
+MOZ_TRACE_MALLOC=1
+!endif
+
+!endif
+
 # For modular netlib support.
 CFLAGS=$(CFLAGS) -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE
 
