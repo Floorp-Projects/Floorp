@@ -30,7 +30,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["nglayoutDebugWindow", "nglayoutUseNativePrintDialog", "printUseGlobalPrintSettings",
+    var _elementIDs = ["nglayoutUseNativePrintDialog", "printUseGlobalPrintSettings",
                        "debugXULBoxes", "browserDOMWindowDumpEnabled", 
                        "javascriptOptionsStrict", "javascriptOptionsShowInConsole", 
                        "nglayoutDebugUseXBLForms",
@@ -50,8 +50,6 @@
         <row align="center">
           <checkbox id="debugXULBoxes" label="&debugXULBox.label;"
                     prefstring="xul.debug.box"/>
-          <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
-                    prefstring="nglayout.widget.debugWindow"/>
         </row>
       </rows>
     </grid>
