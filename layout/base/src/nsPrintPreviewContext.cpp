@@ -21,6 +21,7 @@
 #include "nsIView.h"
 #include "nsIWidget.h"
 #include "nsGfxCIID.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
@@ -29,6 +30,7 @@ public:
   PrintPreviewContext();
   ~PrintPreviewContext();
 
+  NS_IMETHOD GetMedium(nsIAtom*& aMedium);
   virtual PRBool IsPaginated();
   virtual nscoord GetPageWidth();
   virtual nscoord GetPageHeight();
@@ -40,6 +42,14 @@ PrintPreviewContext::PrintPreviewContext()
 
 PrintPreviewContext::~PrintPreviewContext()
 {
+}
+
+NS_IMETHODIMP
+PrintPreviewContext::GetMedium(nsIAtom*& aMedium)
+{
+  aMedium = nsLayoutAtoms::print;
+  NS_ADDREF(aMedium);
+  return NS_OK;
 }
 
 PRBool PrintPreviewContext::IsPaginated()
