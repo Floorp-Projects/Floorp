@@ -59,6 +59,7 @@ public:
         : mJarCache(jarCache)
         , mJarFile(jarFile)
         , mJarEntry(jarEntry)
+        , mContentLength(-1)
     {
         NS_ASSERTION(mJarFile, "no jar file");
     }
@@ -66,7 +67,12 @@ public:
 
     void GetJarReader(nsIZipReader **result)
     {
-        NS_ADDREF(*result = mJarReader);
+        NS_IF_ADDREF(*result = mJarReader);
+    }
+
+    PRInt32 GetContentLength()
+    {
+        return mContentLength;
     }
 
 private:
@@ -77,6 +83,7 @@ private:
     nsCOMPtr<nsIFile>           mJarFile;
     nsCOMPtr<nsIInputStream>    mJarStream;
     nsCString                   mJarEntry;
+    PRInt32                     mContentLength;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsJARInputThunk, nsIInputStream)
@@ -87,11 +94,22 @@ nsJARInputThunk::EnsureJarStream()
     if (mJarStream)
         return NS_OK;
 
-    nsresult rv = mJarCache->GetZip(mJarFile, getter_AddRefs(mJarReader));
+    nsresult rv;
+    
+    rv = mJarCache->GetZip(mJarFile, getter_AddRefs(mJarReader));
     if (NS_FAILED(rv)) return rv;
 
-    return mJarReader->GetInputStream(mJarEntry.get(),
-                                      getter_AddRefs(mJarStream));
+    rv = mJarReader->GetInputStream(mJarEntry.get(),
+                                    getter_AddRefs(mJarStream));
+    if (NS_FAILED(rv)) return rv;
+
+    // ask the zip entry for the content length
+    nsCOMPtr<nsIZipEntry> entry;
+    mJarReader->GetEntry(mJarEntry.get(), getter_AddRefs(entry));
+    if (entry)
+        entry->GetRealSize((PRUint32 *) &mContentLength);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -510,17 +528,9 @@ nsJARChannel::SetContentCharset(const nsACString &aContentCharset)
 NS_IMETHODIMP
 nsJARChannel::GetContentLength(PRInt32 *result)
 {
-    if (mContentLength < 0 && mJarInput) {
-        // ask the zip entry for the content length
-        nsCOMPtr<nsIZipReader> jarReader;
-        mJarInput->GetJarReader(getter_AddRefs(jarReader));
-        if (jarReader) {
-            nsCOMPtr<nsIZipEntry> entry;
-            jarReader->GetEntry(mJarEntry.get(), getter_AddRefs(entry));
-            if (entry)
-                entry->GetRealSize((PRUint32 *) &mContentLength);
-        }
-    }
+    // if content length is unknown, query mJarInput...
+    if (mContentLength < 0 && mJarInput)
+        mContentLength = mJarInput->GetContentLength();
 
     *result = mContentLength;
     return NS_OK;
