@@ -25,8 +25,6 @@
 #include "nsPNGDecoder.h"
 #include "nsIImgDCallbk.h"
 
-#define OK 1
-#define ERROR -1
 
 extern void png_set_expand(png_structp); 
 extern void png_destroy_read_struct(png_structpp, png_infopp, png_infopp);
@@ -46,7 +44,7 @@ process_data(png_structp *png_ptr, png_infop *info_ptr,
       /* Free the png_ptr and info_ptr memory on error */
       png_destroy_read_struct(png_ptr, info_ptr, (png_infopp)NULL);
       
-      return ERROR;
+      return -1;
    }
 
    /* This one's new also.  Simply give it chunks of data as
@@ -60,7 +58,7 @@ process_data(png_structp *png_ptr, png_infop *info_ptr,
     * callback, if you aren't already displaying them there.
     */
    png_process_data(*png_ptr, *info_ptr, buffer, length);
-   return OK;
+   return 1; //ok
 }
 
 void info_callback(png_structp png_ptr, png_infop info)
