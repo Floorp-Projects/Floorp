@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 {
   nsresult rv;
   nsIServiceManager* servMgr;
-  rv = NS_InitXPCOM(&servMgr, nsnull, nsnull);
+  rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
   nsViewerApp* app = new nsNativeViewerApp();
   NS_ADDREF(app);
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
   int result = app->Run();
   app->Exit();  // this exit is needed for the -x case where the close box is never clicked
   NS_RELEASE(app);
-  rv = NS_ShutdownXPCOM(servMgr);
+  rv = NS_ShutdownXPCOM(nsnull);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return result;
 }
