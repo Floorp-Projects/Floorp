@@ -30,8 +30,3 @@ DIRS		= public idl libeditor composer txmgr txtsvc
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
-	@$(REGCHROME) content editor comm.jar
-	@$(REGCHROME) content editor-region comm.jar
-	@$(REGCHROME) locale en-US/editor en-US.jar
-	@$(REGCHROME) locale US/editor-region US.jar

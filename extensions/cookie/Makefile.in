@@ -87,6 +87,3 @@ ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif
 
-libs::
-	@$(REGCHROME) content cookie comm.jar
-	@$(REGCHROME) locale en-US/cookie en-US.jar
