@@ -82,7 +82,9 @@ clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
         PR_FREEIF(pref->defaultPref.stringVal);
         PR_FREEIF(pref->userPref.stringVal);
     }
-    PL_strfree((char*)pref->key);
+    // don't need to free this as it's allocated in memory owned by
+    // the global PrefNameBuffer
+    pref->key = nsnull;
     memset(entry, 0, table->entrySize);
 }
 
@@ -176,8 +178,97 @@ static PLDHashTableOps     pref_HashTableOps = {
     nsnull,
 };
     
+class PrefNameBuffer;
 
-/*----------------------------------------------------------------------------------------*/
+// making PrefNameBuffer exactly 8k for nice allocation
+#define PREFNAME_BUFFER_LEN (8192 - (sizeof(PrefNameBuffer*) + sizeof(char*)))
+#define WORD_ALIGN_MASK (PR_ALIGN_OF_WORD - 1)
+
+// sanity checking
+#if (PR_ALIGN_OF_WORD & WORD_ALIGN_MASK) != 0
+#error "PR_ALIGN_OF_WORD must be a power of 2!"
+#endif
+
+class PrefNameBuffer {
+ public:
+    PrefNameBuffer(PrefNameBuffer* aNext) : mNext(aNext), mNextFree(0)
+        {}
+    static const char *StrDup(const char*);
+    static void FreeAllBuffers();
+
+ private:
+    char *Alloc(PRInt32 len);
+
+    static PrefNameBuffer *gRoot;
+
+    // member variables
+    class PrefNameBuffer* mNext;
+    PRUint32 mNextFree;
+    char mBuf[PREFNAME_BUFFER_LEN];
+};
+
+PrefNameBuffer *PrefNameBuffer::gRoot = nsnull;
+
+char*
+PrefNameBuffer::Alloc(PRInt32 len)
+{
+    NS_ASSERTION(this == gRoot, "Can only allocate on the root!\n");
+    NS_ASSERTION(len < PREFNAME_BUFFER_LEN, "Can only allocate short strings\n");
+
+    // check for space in the current buffer
+    if ((mNextFree + len) > PREFNAME_BUFFER_LEN) {
+        // allocate and update the root
+        gRoot = new PrefNameBuffer(this);
+        return gRoot->Alloc(len);
+    }
+
+    // ok, we have space.
+    char *result = &mBuf[mNextFree];
+    
+    mNextFree += len;
+
+    // now align the next free allocation
+    mNextFree = (mNextFree + WORD_ALIGN_MASK) & ~WORD_ALIGN_MASK;
+
+    return result;
+}
+
+// equivalent to strdup() - does no error checking,
+// we're assuming we're only called with a valid pointer
+const char *
+PrefNameBuffer::StrDup(const char *str)
+{
+    if (!gRoot) {
+        gRoot = new PrefNameBuffer(nsnull);
+        
+        // ack, no memory
+        if (!gRoot)
+            return nsnull;
+    }
+
+    // extra byte for null-termination
+    PRInt32 len = strlen(str) + 1;
+    
+    char *buf = gRoot->Alloc(len);
+
+    memcpy(buf, str, len);
+    
+    return buf;
+}
+
+void
+PrefNameBuffer::FreeAllBuffers()
+{
+    PrefNameBuffer *curr = gRoot;
+    PrefNameBuffer *next;
+    do {
+        next = curr->mNext;
+        delete curr;
+    } while ((curr = next) != nsnull);
+    gRoot = nsnull;
+}
+
+/*---------------------------------------------------------------------------*/
 
 #define PREF_IS_LOCKED(pref)            ((pref)->flags & PREF_LOCKED)
 #define PREF_IS_CONFIG(pref)            ((pref)->flags & PREF_CONFIG)
@@ -259,7 +350,6 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
     return PR_TRUE;
 #endif
 }
-
 
 
 PRBool PREF_Init(const char *filename)
@@ -385,6 +475,8 @@ void PREF_CleanupPrefs()
         gHashTable.ops = nsnull;
     }
 
+    PrefNameBuffer::FreeAllBuffers();
+    
     if (gSavedLine)
         free(gSavedLine);
     gSavedLine = NULL;
@@ -780,7 +872,8 @@ PREF_DeleteBranch(const char *branch_name)
     if ((len > 1) && branch_name[len - 1] != '.')
         branch_dot += '.';
 
-    pref_HashTableEnumerateEntries(pref_DeleteItem, (void*) branch_dot.get());
+    PL_DHashTableEnumerate(&gHashTable, pref_DeleteItem,
+                           (void*) branch_dot.get());
     
     return PREF_NOERROR;
 }
@@ -828,7 +921,8 @@ PREF_ClearAllUserPrefs()
     if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
     
-    pref_HashTableEnumerateEntries(pref_ClearUserPref, nsnull);
+    PL_DHashTableEnumerate(&gHashTable, pref_ClearUserPref, nsnull);
+    
     return PREF_OK;
 }
 
@@ -909,13 +1003,6 @@ static inline PrefHashEntry* pref_HashTableLookup(const void *key)
     return result;
 }
 
-PRIntn pref_HashTableEnumerateEntries(PLDHashEnumerator f, void *arg)
-{
-    PRIntn result;
-    result = PL_DHashTableEnumerate(&gHashTable, f, arg);
-    return result;
-}
-
 PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action)
 {
     PrefHashEntry* pref;
@@ -934,7 +1021,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
         
         // initialize the pref entry
         pref->flags = type;
-        pref->key = PL_strdup(key);
+        pref->key = PrefNameBuffer::StrDup(key);
         pref->defaultPref.intVal = 0;
         pref->userPref.intVal = 0;
         
@@ -1178,7 +1265,7 @@ PREF_CreateChildList(const char* parent_node, char **child_list)
         return PREF_OUT_OF_MEMORY;
     pcs.childList[0] = '\0';
 
-    pref_HashTableEnumerateEntries(pref_addChild, &pcs);
+    PL_DHashTableEnumerate(&gHashTable, pref_addChild, &pcs);
 
     *child_list = pcs.childList;
     PR_Free(pcs.parent);

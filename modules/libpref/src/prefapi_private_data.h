@@ -44,7 +44,6 @@ PLDHashOperator PR_CALLBACK pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUi
 
 int PR_CALLBACK pref_CompareStrings(const void *v1, const void *v2, void* unused);
 extern JSBool pref_InitInitialObjects(void);
-extern PRIntn pref_HashTableEnumerateEntries(PLDHashEnumerator f, void *arg);
 
 #include "nsIFileSpec.h"
 
