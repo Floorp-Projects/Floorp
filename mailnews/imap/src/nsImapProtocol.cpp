@@ -34,7 +34,6 @@
 #include "nspr.h"
 #include "plbase64.h"
 #include "nsIWebShell.h"
-#include "nsCOMPtr.h"
 
 PRLogModuleInfo *IMAP;
 
@@ -173,19 +172,12 @@ nsImapProtocol::nsImapProtocol() :
 {
 	NS_INIT_REFCNT();
 	m_flags = 0;
-	m_runningUrl = nsnull; // initialize to NULL
-	m_transport = nsnull;
-	m_outputStream = nsnull;
-	m_inputStream = nsnull;
-	m_outputConsumer = nsnull;
 	m_urlInProgress = PR_FALSE;
 	m_socketIsOpen = PR_FALSE;
     m_connectionStatus = 0;
 	m_hostSessionList = nsnull;
     
     // ***** Thread support *****
-    m_sinkEventQueue = nsnull;
-    m_eventQueue = nsnull;
     m_thread = nsnull;
     m_dataAvailableMonitor = nsnull;
 	m_urlReadyToRunMonitor = nsnull;
@@ -197,20 +189,11 @@ nsImapProtocol::nsImapProtocol() :
 	m_fetchMsgListMonitor = nsnull;
 	m_fetchBodyListMonitor = nsnull;
     m_imapThreadIsRunning = PR_FALSE;
-    m_consumer = nsnull;
 	m_currentServerCommandTagNumber = 0;
 	m_active = PR_FALSE;
 	m_threadShouldDie = PR_FALSE;
 	m_pseudoInterrupted = PR_FALSE;
 
-    // imap protocol sink interfaces
-    m_server = nsnull;
-    m_imapLog = nsnull;
-    m_imapMailFolderSink = nsnull;
-    m_imapMessageSink = nsnull;
-    m_imapExtensionSink = nsnull;
-    m_imapMiscellaneousSink = nsnull;
-    
     m_trackingTime = PR_FALSE;
     LL_I2L(m_startTime, 0);
     LL_I2L(m_endTime, 0);
@@ -259,14 +242,10 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 	if (!aSinkEventQueue || !aHostSessionList)
         return NS_ERROR_NULL_POINTER;
 
-	m_displayConsumer = nsnull;
-    m_sinkEventQueue = aSinkEventQueue;
-		NS_IF_ADDREF(m_sinkEventQueue);
-
-    m_hostSessionList = aHostSessionList;
+    m_sinkEventQueue = dont_QueryInterface(aSinkEventQueue);
+    m_hostSessionList = aHostSessionList; // no ref count...host session list has life time > connection
     m_parser.SetHostSessionList(aHostSessionList);
     m_parser.SetFlagState(&m_flagState);
-    NS_ADDREF (m_hostSessionList);
 
 	// Now initialize the thread for the connection and create appropriate monitors
 	if (m_thread == nsnull)
@@ -292,19 +271,6 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 
 nsImapProtocol::~nsImapProtocol()
 {
-	// free handles on all networking objects...
-	NS_IF_RELEASE(m_outputStream); 
-	NS_IF_RELEASE(m_inputStream);
-	NS_IF_RELEASE(m_outputConsumer);
-	NS_IF_RELEASE(m_transport);
-    NS_IF_RELEASE(m_server);
-    NS_IF_RELEASE(m_imapLog);
-    NS_IF_RELEASE(m_imapMailFolderSink);
-    NS_IF_RELEASE(m_imapMessageSink);
-    NS_IF_RELEASE(m_imapExtensionSink);
-    NS_IF_RELEASE(m_imapMiscellaneousSink);
-	NS_IF_RELEASE(m_hostSessionList);
-
 	PR_FREEIF(m_userName);
 	PR_FREEIF(m_hostName);
 
@@ -314,11 +280,6 @@ nsImapProtocol::~nsImapProtocol()
 
     // **** We must be out of the thread main loop function
     NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, "Oops, thread is still running.\n");
-    if (m_eventQueue)
-    {
-        NS_RELEASE(m_eventQueue);
-        m_eventQueue = nsnull;
-    }
 
     if (m_dataAvailableMonitor)
     {
@@ -402,75 +363,70 @@ nsImapProtocol::SetupSinkProxy()
         nsresult res;
 
         if (!m_server)
-            m_runningUrl->GetServer(&m_server);
+            m_runningUrl->GetServer(getter_AddRefs(m_server));
         if (!m_imapLog)
         {
-            nsIImapLog *aImapLog;
-            res = m_runningUrl->GetImapLog(&aImapLog);
+            nsCOMPtr<nsIImapLog> aImapLog;
+            res = m_runningUrl->GetImapLog(getter_AddRefs(aImapLog));
             if (NS_SUCCEEDED(res) && aImapLog)
             {
-                m_imapLog = new nsImapLogProxy (aImapLog, this,
+                nsImapLogProxy * log = new nsImapLogProxy (aImapLog, this,
                                                 m_sinkEventQueue, m_thread);
-                NS_IF_ADDREF (m_imapLog);
-                NS_RELEASE (aImapLog);
+				m_imapLog = do_QueryInterface(log);
             }
         }
                 
         if (!m_imapMailFolderSink)
         {
-            nsIImapMailFolderSink *aImapMailFolderSink;
-            res = m_runningUrl->GetImapMailFolderSink(&aImapMailFolderSink);
+            nsCOMPtr<nsIImapMailFolderSink> aImapMailFolderSink;
+            res = m_runningUrl->GetImapMailFolderSink(getter_AddRefs(aImapMailFolderSink));
             if (NS_SUCCEEDED(res) && aImapMailFolderSink)
             {
-                m_imapMailFolderSink = new nsImapMailFolderSinkProxy(aImapMailFolderSink,
+                nsImapMailFolderSinkProxy * folderProxy = new nsImapMailFolderSinkProxy(aImapMailFolderSink,
                                                              this,
                                                              m_sinkEventQueue,
                                                              m_thread);
-                NS_IF_ADDREF(m_imapMailFolderSink);
-                NS_RELEASE(aImapMailFolderSink);
+				m_imapMailFolderSink = do_QueryInterface(folderProxy);
             }
         }
         if (!m_imapMessageSink)
         {
-            nsIImapMessageSink *aImapMessageSink;
-            res = m_runningUrl->GetImapMessageSink(&aImapMessageSink);
+            nsCOMPtr<nsIImapMessageSink> aImapMessageSink;
+            res = m_runningUrl->GetImapMessageSink(getter_AddRefs(aImapMessageSink));
             if (NS_SUCCEEDED(res) && aImapMessageSink)
             {
-                m_imapMessageSink = new nsImapMessageSinkProxy(aImapMessageSink,
+                nsImapMessageSinkProxy * messageSink = new nsImapMessageSinkProxy(aImapMessageSink,
                                                        this,
                                                        m_sinkEventQueue,
                                                        m_thread);
-                NS_IF_ADDREF (m_imapMessageSink);
-                NS_RELEASE(aImapMessageSink);
+				m_imapMessageSink = do_QueryInterface(messageSink);
             }
         }
         if (!m_imapExtensionSink)
         {
-            nsIImapExtensionSink *aImapExtensionSink;
-            res = m_runningUrl->GetImapExtensionSink(&aImapExtensionSink);
+            nsCOMPtr<nsIImapExtensionSink> aImapExtensionSink;
+            res = m_runningUrl->GetImapExtensionSink(getter_AddRefs(aImapExtensionSink));
             if(NS_SUCCEEDED(res) && aImapExtensionSink)
             {
-                m_imapExtensionSink = new nsImapExtensionSinkProxy(aImapExtensionSink,
+                nsImapExtensionSinkProxy * extensionSink = new nsImapExtensionSinkProxy(aImapExtensionSink,
                                                            this,
                                                            m_sinkEventQueue,
                                                            m_thread);
-                NS_IF_ADDREF(m_imapExtensionSink);
-                NS_RELEASE(aImapExtensionSink);
+				m_imapExtensionSink = do_QueryInterface(extensionSink);
             }
         }
         if (!m_imapMiscellaneousSink)
         {
-            nsIImapMiscellaneousSink *aImapMiscellaneousSink;
-            res = m_runningUrl->GetImapMiscellaneousSink(&aImapMiscellaneousSink);
+            nsCOMPtr<nsIImapMiscellaneousSink> aImapMiscellaneousSink;
+            res = m_runningUrl->GetImapMiscellaneousSink(getter_AddRefs(aImapMiscellaneousSink));
             if (NS_SUCCEEDED(res) && aImapMiscellaneousSink)
             {
-                m_imapMiscellaneousSink = new
+                 nsImapMiscellaneousSinkProxy * miscSink = new
                     nsImapMiscellaneousSinkProxy(aImapMiscellaneousSink,
                                              this,
                                              m_sinkEventQueue,
                                              m_thread);
-                NS_IF_ADDREF(m_imapMiscellaneousSink);
-                NS_RELEASE(aImapMiscellaneousSink);
+				m_imapMiscellaneousSink = do_QueryInterface(miscSink);
             }
         }
     }
@@ -482,7 +438,6 @@ nsImapProtocol::SetupSinkProxy()
 void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
-	NS_IF_RELEASE(m_runningUrl);
 	if (aURL)
 	{
 		nsresult rv = aURL->QueryInterface(nsIImapUrl::GetIID(), (void **)&m_runningUrl);
@@ -496,11 +451,11 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 			NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
 
 			if (NS_SUCCEEDED(rv) && pNetService)
- 				rv = pNetService->CreateSocketTransport(&m_transport, port, GetImapHostName());
+ 				rv = pNetService->CreateSocketTransport(getter_AddRefs(m_transport), port, GetImapHostName());
 
-			nsresult rv = m_transport->GetOutputStream(&m_outputStream);
+			nsresult rv = m_transport->GetOutputStream(getter_AddRefs(m_outputStream));
 			NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
-			rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
+			rv = m_transport->GetOutputStreamConsumer(getter_AddRefs(m_outputConsumer));
 			NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
 
 			// register self as the consumer for the socket...
@@ -514,9 +469,7 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 // when the connection is done processing the current state, free any per url state data...
 void nsImapProtocol::ReleaseUrlState()
 {
-	NS_RELEASE(m_runningUrl);
-	m_runningUrl = nsnull;
-
+	m_runningUrl = null_nsCOMPtr();
 	// mscott - do we need to release all of our sinks here? will we re-use them on the next
 	// url request? I'm guessing we need to release them even though we'll just re-acquire
 	// them on the next request.
@@ -537,24 +490,16 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
         return;
     }
 
-		// Wrap the PLQueue we're going to make in an nsIEventQueue
-    nsIEventQueueService* pEventQService;
-    nsresult result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pEventQService);
-		if (NS_FAILED(result))
-		  return;
+	// Wrap the PLQueue we're going to make in an nsIEventQueue
+	nsresult result = NS_OK;
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result);
+	if (NS_FAILED(result))
+		return;
 		
-		PLEventQueue* aPLQueue = PL_CreateEventQueue("ImapProtocolThread",
-                                       PR_GetCurrentThread());
+	PLEventQueue* aPLQueue = PL_CreateEventQueue("ImapProtocolThread", PR_GetCurrentThread());
 
-		if (NS_FAILED(result = pEventQService->CreateFromPLEventQueue(aPLQueue,
-			                                                            &me->m_eventQueue))) {
-			return;
-		}
-
-		// Release the eventqueueservice
-		nsServiceManager::ReleaseService(kEventQueueServiceCID, pEventQService);
+	if (NS_FAILED(result = pEventQService->CreateFromPLEventQueue(aPLQueue, getter_AddRefs(me->m_eventQueue))))
+		return;
 
     NS_ASSERTION(me->m_eventQueue, 
                  "Unable to create imap thread event queue.\n");
@@ -569,8 +514,7 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
     // call the platform specific main loop ....
     me->ImapThreadMainLoop();
 
-		NS_IF_RELEASE(me->m_eventQueue);
-    me->m_eventQueue = nsnull;
+    me->m_eventQueue = null_nsCOMPtr();
 
     // ***** Important need to remove the connection out from the connection
     // pool - nsImapService **********
@@ -594,10 +538,12 @@ nsImapProtocol::GetThreadEventQueue(nsIEventQueue **aEventQueue)
     // *** need to find a way to prevent dangling pointer ***
     // *** a callback mechanism or a semaphor control thingy ***
     
-		PR_CEnterMonitor(this);
-		NS_IF_ADDREF(m_eventQueue);
+	PR_CEnterMonitor(this);
     if (aEventQueue)
+	{
         *aEventQueue = m_eventQueue;
+		NS_IF_ADDREF(*aEventQueue);
+	}
     PR_CExitMonitor(this);
     return NS_OK;
 }
@@ -858,6 +804,9 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
 {
     PR_CEnterMonitor(this);
 
+	if (!m_runningUrl)
+		NS_ASSERTION(0, "hmm how did this happen?");
+
     nsIImapUrl *aImapUrl = nsnull;
     nsresult res = aURL->QueryInterface(nsIImapUrl::GetIID(), (void**)&aImapUrl);
 
@@ -866,10 +815,7 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
         NS_PRECONDITION( m_runningUrl->Equals(aImapUrl), "Oops... running a different imap url. Hmmm...");
 		// make sure m_inputStream is set to the right input stream...
 		if (m_inputStream == nsnull)
-		{
-			m_inputStream = aIStream;
-			NS_IF_ADDREF(aIStream);
-		}
+			m_inputStream = dont_QueryInterface(aIStream);
 
 		NS_ASSERTION(m_inputStream == aIStream, "hmm somehow we got a different stream than we were expecting");
 
@@ -909,6 +855,7 @@ NS_IMETHODIMP nsImapProtocol::GetDisplayStream (nsIWebShell **webShell)
 	if (webShell)
 	{
 		*webShell = m_displayConsumer;
+		NS_IF_ADDREF(*webShell);
 		return NS_OK;
 	}
 	return NS_ERROR_NULL_POINTER;
@@ -934,13 +881,9 @@ PRInt32 nsImapProtocol::SendData(const char * dataBuffer)
 		nsresult rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
 		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
 		{
-			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) &inputStream);
+			nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(m_outputStream);
 			if (inputStream)
-			{
 				m_outputConsumer->OnDataAvailable(m_runningUrl, inputStream, writeCount);
-				NS_RELEASE(inputStream);
-			}
 			status = 1; // mscott: we need some type of MK_OK? MK_SUCCESS? Arrgghhh
 		}
 		else // the write failed for some reason, returning 0 trips an error by the caller
@@ -966,7 +909,7 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 	if (aURL)
 	{
 		if (aConsumer)
-			rv = aConsumer->QueryInterface(kIWebShell, (void **) &m_displayConsumer);
+			m_displayConsumer = do_QueryInterface(aConsumer);
 
 		SetupWithUrl(aURL); 
     	SetupSinkProxy(); // generate proxies for all of the event sinks in the url
@@ -987,12 +930,6 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 			PR_ExitMonitor(m_urlReadyToRunMonitor);
 
 		} // if we have an imap url and a transport
-        
-		if (aConsumer)
-		{
-            m_consumer = aConsumer;
-			NS_ADDREF(m_consumer);
-		}
 	} // if we received a url!
 
 	return rv;
@@ -4936,8 +4873,8 @@ PRBool nsImapProtocol::TryToLogon()
 	char * userName = nsnull;
 
 	// get the password and user name for the current incoming server...
-	nsIMsgIncomingServer * server = nsnull;
-	nsresult rv = m_runningUrl->GetServer(&server);
+	nsCOMPtr<nsIMsgIncomingServer>  server;
+	nsresult rv = m_runningUrl->GetServer(getter_AddRefs(server));
 	if (NS_SUCCEEDED(rv) && server)
 	{
 		rv = server->GetPassword(&password);

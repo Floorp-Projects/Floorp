@@ -28,6 +28,7 @@
 #include "nsIOutputStream.h"
 #include "nsImapCore.h"
 #include "nsString2.h"
+#include "nsCOMPtr.h"
 
 #include "nsImapServerResponseParser.h"
 #include "nsImapProxyEvent.h"
@@ -225,7 +226,9 @@ public:
 	void PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePartIDArray *parts);
 
 
+	// this function does not ref count!!! be careful!!!
 	nsIImapUrl		*GetCurrentUrl() {return m_runningUrl;}
+
 	// Tunnels
 	virtual PRInt32 OpenTunnel (PRInt32 maxNumberOfBytesToRead);
 	PRBool GetIOTunnellingEnabled();
@@ -254,7 +257,7 @@ private:
 	PRBool			m_urlInProgress;	
 	PRBool			m_socketIsOpen;
 	PRUint32		m_flags;	   // used to store flag information
-	nsIImapUrl		*m_runningUrl; // the nsIImapURL that is currently running
+	nsCOMPtr<nsIImapUrl>		m_runningUrl; // the nsIImapURL that is currently running
 	nsIImapUrl::nsImapAction	m_imapAction;  // current imap action associated with this connnection...
 
 	char			*m_userName;
@@ -266,12 +269,12 @@ private:
     PRUint32        m_curReadIndex;  // current read index
 
 	// Ouput stream for writing commands to the socket
-	nsITransport			* m_transport; 
-	nsIInputStream			* m_inputStream;	// this is the stream netlib writes data into for us to read.
-	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
-	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
+	nsCOMPtr<nsITransport>	  m_transport; 
+	nsCOMPtr<nsIInputStream>  m_inputStream;	// this is the stream netlib writes data into for us to read.
+	nsCOMPtr<nsIOutputStream> m_outputStream;   // this will be obtained from the transport interface
+	nsCOMPtr<nsIStreamListener> m_outputConsumer; // this will be obtained from the transport interface
 
-	nsIWebShell				* m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
+	nsCOMPtr<nsIWebShell>	  m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 
 	// this is a method designed to buffer data coming from the input stream and efficiently extract out 
 	// a line on each call. We read out as much of the stream as we can and store the extra that doesn't
@@ -283,8 +286,8 @@ private:
 	char * ReadNextLineFromInput(char * aDataBuffer,char *& aStartPos, PRUint32 aDataBufferSize, nsIInputStream * aInputStream);
 
     // ******* Thread support *******
-    nsIEventQueue *m_sinkEventQueue;
-    nsIEventQueue *m_eventQueue;
+    nsCOMPtr<nsIEventQueue>		m_sinkEventQueue;
+    nsCOMPtr<nsIEventQueue>		m_eventQueue;
     PRThread     *m_thread;
     PRMonitor    *m_dataAvailableMonitor;   // used to notify the arrival of data from the server
 	PRMonitor    *m_urlReadyToRunMonitor;	// used to notify the arrival of a new url to be processed
@@ -300,16 +303,15 @@ private:
     static void ImapThreadMain(void *aParm);
     void ImapThreadMainLoop(void);
     PRBool ImapThreadIsRunning();
-    nsISupports			*m_consumer;
     PRInt32				 m_connectionStatus;
-    nsIMsgIncomingServer * m_server;
+    nsCOMPtr<nsIMsgIncomingServer>  m_server;
 
-    nsImapLogProxy *m_imapLog;
-    nsImapMailFolderSinkProxy *m_imapMailFolderSink;
-    nsImapMessageSinkProxy *m_imapMessageSink;
+    nsCOMPtr<nsIImapLog>			m_imapLog;
+    nsCOMPtr<nsIImapMailFolderSink> m_imapMailFolderSink;
+    nsCOMPtr<nsIImapMessageSink>	m_imapMessageSink;
 
-    nsImapExtensionSinkProxy *m_imapExtensionSink;
-    nsImapMiscellaneousSinkProxy *m_imapMiscellaneousSink;
+    nsCOMPtr<nsIImapExtensionSink>		m_imapExtensionSink;
+    nsCOMPtr<nsIImapMiscellaneousSink>	m_imapMiscellaneousSink;
     // helper function to setup imap sink interface proxies
     void SetupSinkProxy();
 	// End thread support stuff
