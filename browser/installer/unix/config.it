@@ -686,6 +686,7 @@ Description Short=$ProductName$ Help
 Description Long=Offline Help for learning about and using $ProductName$.
 Archive=help.xpi
 $InstallSize$:help
+$InstallSizeSystem$
 $InstallSizeArchive$:help.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\help.jar
