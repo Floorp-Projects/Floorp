@@ -1181,10 +1181,68 @@ var attachmentAreaDNDObserver = {
       aAttachmentData.data = new TransferData();
       if (attachmentUrl && attachmentDisplayName)
       {
+        aAttachmentData.data.addDataForFlavour("text/x-moz-url-data", tmpurl);
+        aAttachmentData.data.addDataForFlavour("text/x-moz-url-desc", attachmentDisplayName);
+        
+        aAttachmentData.data.addDataForFlavour("application/x-moz-file-promise-url", tmpurl);   
+        aAttachmentData.data.addDataForFlavour("application/x-moz-file-promise", new nsFlavorDataProvider(), 0, Components.interfaces.nsISupports);     
         aAttachmentData.data.addDataForFlavour("text/x-moz-url", tmpurl + "\n" + attachmentDisplayName);
       }
     }
   }
 };
 
+function nsFlavorDataProvider()
+{
+}
 
+nsFlavorDataProvider.prototype =
+{
+  QueryInterface : function(iid)
+  {
+      if (iid.equals(Components.interfaces.nsIFlavorDataProvider) ||
+          iid.equals(Components.interfaces.nsISupports))
+        return this;
+      throw Components.results.NS_NOINTERFACE;
+  },
+  
+  getFlavorData : function(aTransferable, aFlavor, aData, aDataLen)
+  {
+
+    // get the url for the attachment
+    if (aFlavor == "application/x-moz-file-promise")
+    {
+      var urlPrimitive = { };
+      var dataSize = { };
+      aTransferable.getTransferData("application/x-moz-file-promise-url", urlPrimitive, dataSize);
+
+      var srcUrlPrimitive = urlPrimitive.value.QueryInterface(Components.interfaces.nsISupportsString);
+
+      // now get the destination file location from kFilePromiseDirectoryMime
+      var dirPrimitive = {};
+      aTransferable.getTransferData("application/x-moz-file-promise-dir", dirPrimitive, dataSize);
+      var destDirectory = dirPrimitive.value.QueryInterface(Components.interfaces.nsILocalFile);
+
+      // now save the attachment to the specified location
+      // XXX: we need more information than just the attachment url to save it, fortunately, we have an array
+      // of all the current attachments so we can cheat and scan through them
+
+      var attachment = null;
+      for (index in currentAttachments)
+      {
+        attachment = currentAttachments[index];
+        if (attachment.url == srcUrlPrimitive)
+          break;
+      }
+
+      // call our code for saving attachments
+      if (attachment)
+      {
+        var destFilePath = messenger.saveAttachmentToFolder(attachment.contentType, attachment.url, attachment.displayName, attachment.uri, destDirectory);
+        aData.value = destFilePath.QueryInterface(Components.interfaces.nsISupports);
+        aDataLen.value = 4;
+      }
+    }
+  }
+
+}

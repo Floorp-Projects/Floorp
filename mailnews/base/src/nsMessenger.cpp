@@ -731,6 +731,41 @@ nsMessenger::OpenAttachment(const char * aContentType, const char * aURL, const
 }
 
 NS_IMETHODIMP
+nsMessenger::SaveAttachmentToFolder(const char * contentType, const char * url, const char * displayName, 
+                                    const char * messageUri, nsILocalFile * aDestFolder, nsILocalFile ** aOutFile)
+{
+  nsresult rv = NS_OK;
+  nsXPIDLCString unescapedFileName;
+  
+  rv = ConvertAndSanitizeFileName(displayName, nsnull, getter_Copies(unescapedFileName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFileSpec> fileSpec;
+
+  rv = NS_NewFileSpecFromIFile(aDestFolder, getter_AddRefs(fileSpec));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  fileSpec->SetLeafName(unescapedFileName);
+
+  // ok now we have a file spec for the destination
+  nsCAutoString unescapedUrl;
+  unescapedUrl.Assign(url);
+
+  nsUnescape(NS_CONST_CAST(char*, unescapedUrl.get()));
+  rv = SaveAttachment(fileSpec, unescapedUrl.get(), messageUri, contentType, nsnull);
+
+  // before we return, we need to convert our file spec back to a nsIFile to return to the caller
+  nsCOMPtr<nsILocalFile> outputFile;
+  nsFileSpec actualSpec;
+  fileSpec->GetFileSpec(&actualSpec);
+  NS_FileSpecToIFile(&actualSpec, getter_AddRefs(outputFile));
+
+  NS_IF_ADDREF(*aOutFile = outputFile);
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMessenger::SaveAttachment(const char * contentType, const char * url,
                             const char * displayName, const char * messageUri)
 {
