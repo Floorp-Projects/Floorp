@@ -78,12 +78,6 @@ vbox {
   -moz-box-orient: vertical;
 }
 
-/******** bulletinboard *******/
-
-bulletinboard {
-  display: -moz-bulletinboard;
-}
-
 /********** button **********/
 
 button,
@@ -413,7 +407,7 @@ deck {
   display: -moz-deck;
 }
 
-stack {
+stack, bulletinboard {
   display: -moz-stack;
 }
 

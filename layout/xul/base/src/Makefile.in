@@ -33,7 +33,6 @@ LIBRARY_NAME	= gkxulbase_s
 REQUIRES	= xpcom string dom locale widget view timer docshell necko editor htmlparser webshell pref intl gfx2 imglib2 unicharutil
 
 CPPSRCS		= \
-       nsBulletinBoardLayout.cpp \
        nsScrollBoxObject.cpp \
        nsScrollBoxFrame.cpp \
        nsTreeLayout.cpp \
