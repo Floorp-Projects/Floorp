@@ -57,6 +57,8 @@ public:
   virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
   virtual nsIImage*   DuplicateImage() {return(nsnull);}
 
+  void AllocConvertedBits(PRUint32 aSize);
+
   /** 
     * Return the image size of the Device Independent Bitmap(DIB).
     * @return size of image in bytes
@@ -95,9 +97,14 @@ private:
   PRInt32    mWidth;
   PRInt32    mHeight;
   PRInt32    mDepth;       // bits per pixel
+  PRInt32    mOriginalDepth;       // bits per pixel
   PRInt32    mRowBytes;
+  PRInt32    mOriginalRowBytes;
   Pixmap     mThePixMap;
   PRUint8    *mImageBits;
+  PRUint8    *mConvertedBits;
+  PRBool     mConverted;
+  PRUint8    *mBitsForCreate;
   PRInt32    mSizeImage;
   XImage     *mImage ;
   nsColorMap *mColorMap;
