@@ -27,6 +27,7 @@
 #include "nsAutoLock.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
+#include "nsProxiedService.h"
 #include "nsString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -68,7 +69,7 @@ nsSocketTransportService::~nsSocketTransportService()
     mSelectFDSet = nsnull;
   }
 
-  if (mActiveTransportList) {
+  if (mActiveTransportList) {    
     PR_Free(mActiveTransportList);
     mActiveTransportList = nsnull;
   }
@@ -155,6 +156,12 @@ nsSocketTransportService::Init(void)
     }
   }
 
+  // Hold onto the eventQueue service.  We do not want any eventqueues to go away
+  // when we shutdown until we process all remaining transports
+
+  if (NS_SUCCEEDED(rv))
+    mEventQueueService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+  
   //
   // Create the transport thread...
   //
@@ -476,8 +483,7 @@ nsSocketTransportService::Run(void)
         /* Process any pending operations on the mWorkQ... */
         rv = ProcessWorkQ();
   }
-
-  return NS_OK;
+   return NS_OK;
 }
 
 
@@ -608,8 +614,15 @@ nsSocketTransportService::Shutdown(void)
 {
   PRStatus status;
   nsresult rv = NS_OK;
-
+  int i;
+  
   if (mThread) {
+    // Cancel all remaining transports.
+    for (i=0; i<mSelectFDSetCount; i++) {
+      if (mActiveTransportList[i])
+          mActiveTransportList[i]->Cancel(NS_BINDING_ABORTED);
+    }
+
     //
     // Clear the running flag and wake up the transport thread...
     //
@@ -630,6 +643,10 @@ nsSocketTransportService::Shutdown(void)
     } 
 
     NS_RELEASE(mThread);
+    
+    for (i=0; i<mSelectFDSetCount; i++)
+      NS_IF_RELEASE(mActiveTransportList[i]);
+
   } else {
     rv = NS_ERROR_FAILURE;
   }
@@ -675,8 +692,9 @@ nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **a
 
     if (!m_stringBundle) {
         char*  propertyURL = NECKO_MSGS_URL;
-
-        NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
+        // make sure that we get this service on the UI thread.
+        NS_WITH_PROXIED_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, 
+                                NS_UI_THREAD_EVENTQ, &res);
         if (NS_SUCCEEDED (res) && (nsnull != sBundleService)) {
             nsILocale   *locale = nsnull;
             res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
