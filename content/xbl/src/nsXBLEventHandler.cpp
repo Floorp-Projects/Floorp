@@ -45,6 +45,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsXBLBinding.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIDOMWindow.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
@@ -54,44 +55,48 @@ PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kCharCodeAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kKeyAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kPrimaryAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kShiftAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kControlAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kMetaAtom = nsnull;
-nsIAtom* nsXBLEventHandler::kAltAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kActionAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kCommandAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kClickCountAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kButtonAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kBindingAttachedAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kBindingDetachedAtom = nsnull;
+nsIAtom* nsXBLEventHandler::kModifiersAtom = nsnull;
 
-nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement,
+PRInt32 nsXBLEventHandler::kAccessKey = -1;
+
+const PRInt32 nsXBLEventHandler::cShift = (1<<1);
+const PRInt32 nsXBLEventHandler::cAlt = (1<<2);
+const PRInt32 nsXBLEventHandler::cControl = (1<<3);
+const PRInt32 nsXBLEventHandler::cMeta = (1<<4);
+
+nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIContent* aHandlerElement,
                                      const nsString& aEventName)
 {
   NS_INIT_REFCNT();
-  mBoundElement = aBoundElement;
+  mEventReceiver = aEventReceiver;
   mHandlerElement = aHandlerElement;
   mEventName.Assign(aEventName);
   mNextHandler = nsnull;
   gRefCnt++;
-  mAccessKey = -1;
   if (gRefCnt == 1) {
     kKeyCodeAtom = NS_NewAtom("keycode");
     kKeyAtom = NS_NewAtom("key");
     kCharCodeAtom = NS_NewAtom("charcode");
-    kPrimaryAtom = NS_NewAtom("primary");
-    kShiftAtom = NS_NewAtom("shift");
-    kControlAtom = NS_NewAtom("control");
-    kAltAtom = NS_NewAtom("alt");
-    kMetaAtom = NS_NewAtom("meta");
+    kModifiersAtom = NS_NewAtom("modifiers");
     kActionAtom = NS_NewAtom("action");
     kCommandAtom = NS_NewAtom("command");
     kClickCountAtom = NS_NewAtom("clickcount");
     kButtonAtom = NS_NewAtom("button");
     kBindingAttachedAtom = NS_NewAtom("bindingattached");
     kBindingDetachedAtom = NS_NewAtom("bindingdetached");
+
+    // Get the primary accelerator key.
+    InitAccessKey();
   }
+
+  // Make sure our key mask is initialized.
+  ConstructKeyMask();
 }
 
 nsXBLEventHandler::~nsXBLEventHandler()
@@ -101,11 +106,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
     NS_RELEASE(kKeyAtom);
     NS_RELEASE(kKeyCodeAtom);
     NS_RELEASE(kCharCodeAtom);
-    NS_RELEASE(kPrimaryAtom);
-    NS_RELEASE(kShiftAtom);
-    NS_RELEASE(kControlAtom);
-    NS_RELEASE(kAltAtom);
-    NS_RELEASE(kMetaAtom);
+    NS_RELEASE(kModifiersAtom);
     NS_RELEASE(kActionAtom);
     NS_RELEASE(kCommandAtom);
     NS_RELEASE(kButtonAtom);
@@ -132,10 +133,8 @@ nsXBLEventHandler::BindingAttached()
     event.clickCount = 0;
     event.widget = nsnull;
 
-    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBoundElement));
-
     nsCOMPtr<nsIEventListenerManager> listenerManager;
-    if (NS_FAILED(ret = rec->GetListenerManager(getter_AddRefs(listenerManager)))) {
+    if (NS_FAILED(ret = mEventReceiver->GetListenerManager(getter_AddRefs(listenerManager)))) {
       NS_ERROR("Unable to instantiate a listener manager on this event.");
       return ret;
     }
@@ -152,7 +151,7 @@ nsXBLEventHandler::BindingAttached()
     // the frame. If we don't have a frame then that breaks.
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
     if (privateEvent) {
-      privateEvent->SetTarget(rec);
+      privateEvent->SetTarget(mEventReceiver);
     }
 
     ExecuteHandler(mEventName, domEvent);
@@ -382,15 +381,15 @@ nsresult nsXBLEventHandler::Destroy(nsIDOMEvent* aEvent)
 void
 nsXBLEventHandler::InitAccessKey()
 {
-  if (mAccessKey >= 0)
+  if (kAccessKey >= 0)
     return;
 
   // Compiled-in defaults, in case we can't get the pref --
   // mac doesn't have menu shortcuts, other platforms use alt.
 #ifndef XP_MAC
-  mAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
+  kAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
 #else
-  mAccessKey = 0;
+  kAccessKey = 0;
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
@@ -398,14 +397,8 @@ nsXBLEventHandler::InitAccessKey()
   NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
   if (NS_SUCCEEDED(rv) && prefs)
   {
-    rv = prefs->GetIntPref("ui.key.menuAccessKey", &mAccessKey);
+    rv = prefs->GetIntPref("ui.key.menuAccessKey", &kAccessKey);
   }
-#ifdef DEBUG_akkana
-  if (NS_FAILED(rv))
-  {
-    NS_ASSERTION(PR_FALSE,"XBLEventHandler couldn't get menu access key from prefs!\n");
-  }
-#endif
 }
 
 
@@ -424,109 +417,27 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
   aKeyEvent->GetCharCode(&charCode);
 
   PRBool keyMatched = PR_TRUE;
-
-  nsAutoString key;
+  
+  nsAutoString key, keyCodeStr, charCodeStr;
   mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyAtom, key);
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, keyCodeStr);
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, charCodeStr);
+  
+  if (key.IsEmpty() && keyCodeStr.IsEmpty() && charCodeStr.IsEmpty())
+    return PR_TRUE;
+
   if (!key.IsEmpty())
     keyMatched = IsMatchingCharCode(charCode, key);
-  
-  key.SetLength(0);
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, key);
-  if (!key.IsEmpty())
-    keyMatched = IsMatchingKeyCode(keyCode, key);
-  
-  key.SetLength(0);
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, key);
-  if (!key.IsEmpty())
-    keyMatched = IsMatchingCharCode(charCode, key);
+  else if (!keyCodeStr.IsEmpty())
+    keyMatched = IsMatchingKeyCode(keyCode, keyCodeStr);
+  else if (!charCodeStr.IsEmpty())
+    keyMatched = IsMatchingCharCode(charCode, charCodeStr);
   
   if (!keyMatched)
     return PR_FALSE;
 
   // Now check modifier keys
-  nsAutoString modifier;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kPrimaryAtom, modifier);
-
-  // Get the xulkey.
-  InitAccessKey();
-  PRBool isModifierPresent = PR_FALSE;
-  switch (mAccessKey)
-  {
-    case nsIDOMKeyEvent::DOM_VK_META:
-      aKeyEvent->GetMetaKey(&isModifierPresent);
-      break;
-
-    case nsIDOMKeyEvent::DOM_VK_ALT:
-      aKeyEvent->GetAltKey(&isModifierPresent);
-      break;
-
-    case nsIDOMKeyEvent::DOM_VK_CONTROL:
-    default:
-      aKeyEvent->GetCtrlKey(&isModifierPresent);
-  }
-
-  if (modifier == trueString) {
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  // Check for shift.
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kShiftAtom, modifier);
-  if (modifier == trueString) {
-    aKeyEvent->GetShiftKey(&isModifierPresent);
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    aKeyEvent->GetShiftKey(&isModifierPresent);
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  // Check for ctrl.
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kControlAtom, modifier);
-  if (modifier == trueString) {
-    aKeyEvent->GetCtrlKey(&isModifierPresent);
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    aKeyEvent->GetCtrlKey(&isModifierPresent);
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  // Check for meta.
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kMetaAtom, modifier);
-  if (modifier == trueString) {
-    aKeyEvent->GetMetaKey(&isModifierPresent);
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    aKeyEvent->GetMetaKey(&isModifierPresent);
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  // Check for alt.
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kAltAtom, modifier);
-  if (modifier == trueString) {
-    aKeyEvent->GetAltKey(&isModifierPresent);
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    aKeyEvent->GetAltKey(&isModifierPresent);
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  return PR_TRUE;
+  return MatchesMask(aKeyEvent);
 }
 
 PRBool 
@@ -538,110 +449,33 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
   nsAutoString trueString; trueString.AssignWithConversion("true");
   nsAutoString falseString; falseString.AssignWithConversion("false");
 
-  // XXX Check for button and modifier keys.
-// Now check modifier keys
-  nsAutoString modifier;
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kPrimaryAtom, modifier);
-
-  // Get the xulkey
-  InitAccessKey();
-  PRBool isModifierPresent = PR_FALSE;
-  switch (mAccessKey)
-  {
-    case nsIDOMKeyEvent::DOM_VK_META:
-      aMouseEvent->GetMetaKey(&isModifierPresent);
-      break;
-
-    case nsIDOMKeyEvent::DOM_VK_ALT:
-      aMouseEvent->GetAltKey(&isModifierPresent);
-      break;
-
-    case nsIDOMKeyEvent::DOM_VK_CONTROL:
-    default:
-      aMouseEvent->GetCtrlKey(&isModifierPresent);
-  }
-  if (modifier == trueString) {
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  // Check for shift.
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kShiftAtom, modifier);
-  if (modifier == trueString) {
-    aMouseEvent->GetShiftKey(&isModifierPresent);
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    aMouseEvent->GetShiftKey(&isModifierPresent);
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  // Check for ctrl.
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kControlAtom, modifier);
-  if (modifier == trueString) {
-    aMouseEvent->GetCtrlKey(&isModifierPresent);
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    aMouseEvent->GetCtrlKey(&isModifierPresent);
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  // Check for meta.
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kMetaAtom, modifier);
-  if (modifier == trueString) {
-    aMouseEvent->GetMetaKey(&isModifierPresent);
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    aMouseEvent->GetMetaKey(&isModifierPresent);
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
-  // Check for alt.
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kAltAtom, modifier);
-  if (modifier == trueString) {
-    aMouseEvent->GetAltKey(&isModifierPresent);
-    if (!isModifierPresent)
-      return PR_FALSE;
-  }
-  else if (modifier == falseString) {
-    aMouseEvent->GetAltKey(&isModifierPresent);
-    if (isModifierPresent)
-      return PR_FALSE;
-  }
-
+  // Check for button and modifier keys.
   // Check button and clickcounts
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kClickCountAtom, modifier);
-  if (!modifier.IsEmpty()) {
+  nsAutoString buttonStr, clickCountStr;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kClickCountAtom, clickCountStr);
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kButtonAtom, buttonStr);
+  
+  if (buttonStr.IsEmpty() && clickCountStr.IsEmpty())
+    return PR_TRUE;
+
+  if (!clickCountStr.IsEmpty()) {
     PRInt32 val, error, clickcount;
-    val = modifier.ToInteger(&error);
+    val = clickCountStr.ToInteger(&error);
     aMouseEvent->GetDetail(&clickcount);
     if (val != clickcount)
       return PR_FALSE;
   }
 
-  mHandlerElement->GetAttribute(kNameSpaceID_None, kButtonAtom, modifier);
-  if (!modifier.IsEmpty()) {
+  if (!buttonStr.IsEmpty()) {
     PRInt32 val, error;
     unsigned short button;
-    val = modifier.ToInteger(&error);
+    val = buttonStr.ToInteger(&error);
     aMouseEvent->GetButton(&button);
     if (val != button)
       return PR_FALSE;
   }
   
-  return PR_TRUE;
+  return MatchesMask(aMouseEvent);
 }
 
 NS_IMETHODIMP
@@ -699,18 +533,24 @@ nsXBLEventHandler::ExecuteHandler(const nsAReadableString & aEventName, nsIDOMEv
   }
   
   // Compile the handler and bind it to the element.
-  nsCOMPtr<nsIDocument> boundDocument;
-  mBoundElement->GetDocument(*getter_AddRefs(boundDocument));
-  if (!boundDocument)
-    return NS_OK;
+  nsCOMPtr<nsIScriptGlobalObject> boundGlobal(do_QueryInterface(mEventReceiver));
+  if (!boundGlobal) {
+    nsCOMPtr<nsIDocument> boundDocument(do_QueryInterface(mEventReceiver));
+    if (!boundDocument) {
+      // We must be an element.
+      nsCOMPtr<nsIContent> content(do_QueryInterface(mEventReceiver));
+      content->GetDocument(*getter_AddRefs(boundDocument));
+      if (!boundDocument)
+        return NS_OK;
+    }
 
-  nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
-  boundDocument->GetScriptGlobalObject(getter_AddRefs(boundGlobal));
+    boundDocument->GetScriptGlobalObject(getter_AddRefs(boundGlobal));
+  }
 
   nsCOMPtr<nsIScriptContext> boundContext;
   boundGlobal->GetContext(getter_AddRefs(boundContext));
 
-  nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(mBoundElement);
+  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mEventReceiver));
   void* scriptObject;
   owner->GetScriptObject(boundContext, &scriptObject);
   
@@ -741,18 +581,26 @@ nsXBLEventHandler::GetController(nsIController** aResult)
   // This code should have no special knowledge of what objects might have controllers.
   nsCOMPtr<nsIControllers> controllers;
 
-  nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mBoundElement);
+  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(mEventReceiver));
   if (xulElement)
     xulElement->GetControllers(getter_AddRefs(controllers));
-  else {
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea = do_QueryInterface(mBoundElement);
+
+  if (!controllers) {
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea(do_QueryInterface(mEventReceiver));
     if (htmlTextArea)
       htmlTextArea->GetControllers(getter_AddRefs(controllers));
-    else {
-      nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement = do_QueryInterface(mBoundElement);
-      if (htmlInputElement)
-        htmlInputElement->GetControllers(getter_AddRefs(controllers));
-    }
+  }
+
+  if (!controllers) {
+    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement(do_QueryInterface(mEventReceiver));
+    if (htmlInputElement)
+      htmlInputElement->GetControllers(getter_AddRefs(controllers));
+  }
+
+  if (!controllers) {
+    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(mEventReceiver));
+    if (domWindow)
+      domWindow->GetControllers(getter_AddRefs(controllers));
   }
 
   // Return the first controller.
@@ -770,50 +618,45 @@ void
 nsXBLEventHandler::RemoveEventHandlers()
 {
   // XXX Handle unhooking listeners attached to the document or window!
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBoundElement));
-  if (receiver) {
-    if (mNextHandler)
-      mNextHandler->RemoveEventHandlers();
+  if (mNextHandler)
+    mNextHandler->RemoveEventHandlers();
 
-    if (mEventName == NS_LITERAL_STRING("bindingattached") ||
-        mEventName == NS_LITERAL_STRING("bindingdetached")) {
-      // Release and drop.
-      NS_RELEASE_THIS();
-      return;
-    }
-
-    // Figure out if we're using capturing or not.
-    PRBool useCapture = PR_FALSE;
-    nsAutoString capturer;
-    mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kPhaseAtom, capturer);
-    if (capturer == NS_LITERAL_STRING("capturing"))
-      useCapture = PR_TRUE;
-
-    // XXX Will potentially be comma-separated
-    nsAutoString type;
-    mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kEventAtom, type);
-   
-    // Figure out our type.
-    PRBool mouse = nsXBLBinding::IsMouseHandler(type);
-    PRBool key = nsXBLBinding::IsKeyHandler(type);
-    PRBool focus = nsXBLBinding::IsFocusHandler(type);
-    PRBool xul = nsXBLBinding::IsXULHandler(type);
-    PRBool scroll = nsXBLBinding::IsScrollHandler(type);
-
-    // Remove the event listener.
-    if (mouse)
-      receiver->RemoveEventListener(type, (nsIDOMMouseListener*)this, useCapture);
-    else if(key)
-      receiver->RemoveEventListener(type, (nsIDOMKeyListener*)this, useCapture);
-    else if(focus)
-      receiver->RemoveEventListener(type, (nsIDOMFocusListener*)this, useCapture);
-    else if(scroll)
-      receiver->RemoveEventListener(type, (nsIDOMScrollListener*)this, useCapture);
-    else if (xul)
-      receiver->RemoveEventListener(type, (nsIDOMMenuListener*)this, useCapture);
-
-
+  if (mEventName == NS_LITERAL_STRING("bindingattached") ||
+      mEventName == NS_LITERAL_STRING("bindingdetached")) {
+    // Release and drop.
+    NS_RELEASE_THIS();
+    return;
   }
+
+  // Figure out if we're using capturing or not.
+  PRBool useCapture = PR_FALSE;
+  nsAutoString capturer;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kPhaseAtom, capturer);
+  if (capturer == NS_LITERAL_STRING("capturing"))
+    useCapture = PR_TRUE;
+
+  // XXX Will potentially be comma-separated
+  nsAutoString type;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kEventAtom, type);
+ 
+  // Figure out our type.
+  PRBool mouse = nsXBLBinding::IsMouseHandler(type);
+  PRBool key = nsXBLBinding::IsKeyHandler(type);
+  PRBool focus = nsXBLBinding::IsFocusHandler(type);
+  PRBool xul = nsXBLBinding::IsXULHandler(type);
+  PRBool scroll = nsXBLBinding::IsScrollHandler(type);
+
+  // Remove the event listener.
+  if (mouse)
+    mEventReceiver->RemoveEventListener(type, (nsIDOMMouseListener*)this, useCapture);
+  else if(key)
+    mEventReceiver->RemoveEventListener(type, (nsIDOMKeyListener*)this, useCapture);
+  else if(focus)
+    mEventReceiver->RemoveEventListener(type, (nsIDOMFocusListener*)this, useCapture);
+  else if(scroll)
+    mEventReceiver->RemoveEventListener(type, (nsIDOMScrollListener*)this, useCapture);
+  else if (xul)
+    mEventReceiver->RemoveEventListener(type, (nsIDOMMenuListener*)this, useCapture);
 }
 
 /// Helpers that are relegated to the end of the file /////////////////////////////
@@ -1424,14 +1267,85 @@ nsXBLEventHandler::IsMatchingCharCode(const PRUint32 aChar, const nsString& aKey
   return tempChar2.EqualsIgnoreCase(aKeyName);
 }
 
+void
+nsXBLEventHandler::ConstructKeyMask()
+{
+  mKeyMask = 0;
+
+  nsAutoString modifiers;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kModifiersAtom, modifiers);
+  if (modifiers.IsEmpty())
+    return;
+
+  char* str = modifiers.ToNewCString();
+  char* newStr;
+  char* token = nsCRT::strtok( str, ", ", &newStr );
+  while( token != NULL ) {
+    if (PL_strcmp(token, "shift") == 0)
+      mKeyMask |= cShift;
+    else if (PL_strcmp(token, "alt") == 0)
+      mKeyMask |= cAlt;
+    else if (PL_strcmp(token, "meta") == 0)
+      mKeyMask |= cMeta;
+    else if (PL_strcmp(token, "control") == 0)
+      mKeyMask |= cControl;
+    else if (PL_strcmp(token, "primary") == 0) {
+      switch (kAccessKey)
+      {
+        case nsIDOMKeyEvent::DOM_VK_META:
+          mKeyMask |= cMeta;
+          break;
+
+        case nsIDOMKeyEvent::DOM_VK_ALT:
+          mKeyMask |= cAlt;
+          break;
+
+        case nsIDOMKeyEvent::DOM_VK_CONTROL:
+        default:
+          mKeyMask |= cControl;
+      }
+    }
+    
+    token = nsCRT::strtok( newStr, ", ", &newStr );
+  }
+
+  nsMemory::Free(str);
+}
+
+PRBool
+nsXBLEventHandler::MatchesMask(nsIDOMUIEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
+  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
+
+  PRBool keyPresent;
+  key ? key->GetMetaKey(&keyPresent) : mouse->GetMetaKey(&keyPresent);
+  if (keyPresent != ((mKeyMask & cMeta) != 0))
+    return PR_FALSE;
+
+  key ? key->GetShiftKey(&keyPresent) : mouse->GetShiftKey(&keyPresent);
+  if (keyPresent != ((mKeyMask & cShift) != 0))
+    return PR_FALSE;
+  
+  key ? key->GetAltKey(&keyPresent) : mouse->GetAltKey(&keyPresent);
+  if (keyPresent != ((mKeyMask & cAlt) != 0))
+    return PR_FALSE;
+
+  key ? key->GetCtrlKey(&keyPresent) : mouse->GetCtrlKey(&keyPresent);
+  if (keyPresent != ((mKeyMask & cControl) != 0))
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHandlerElement, 
+NS_NewXBLEventHandler(nsIDOMEventReceiver* aRec, nsIContent* aHandlerElement, 
                       const nsString& aEventName,
                       nsXBLEventHandler** aResult)
 {
-  *aResult = new nsXBLEventHandler(aBoundElement, aHandlerElement, aEventName);
+  *aResult = new nsXBLEventHandler(aRec, aHandlerElement, aEventName);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);
