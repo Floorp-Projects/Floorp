@@ -75,10 +75,6 @@ CPPSRCS		= \
 		nsContentDLF.cpp \
 		$(NULL)
 
-ifndef MKSHLIB_FORCE_ALL
-CPPSRCS		+= dlldeps.cpp
-endif
-
 EXPORTS		= nsLayoutCID.h
 
 SHARED_LIBRARY_LIBS = \

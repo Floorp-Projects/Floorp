@@ -196,4 +196,4 @@ private:
   nsIPresContext*        mPresContext;  // weak reference
 };
 
-#endif /* nsScrollFrame_h___ */
+#endif /* nsGfxScrollFrame_h___ */

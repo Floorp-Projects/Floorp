@@ -706,9 +706,7 @@ protected:
                    nsStyleContext*&         aScrolledChildStyle,
                    nsIFrame*                aScrollPort = nsnull);
 
-  // Builds the initial ScrollFrame: 
-  //  if Gfx scrollbasrs in ares, it creates a GfxScrollFrame, otherwise it creates a ScrollFrame
-  //
+  // Builds the initial ScrollFrame
   already_AddRefed<nsStyleContext>
   BeginBuildingScrollFrame(nsIPresShell*            aPresShell, 
                            nsIPresContext*          aPresContext,
@@ -765,8 +763,6 @@ protected:
                         PRBool                   aIsFixedPositioned,
                         PRBool                   aCreateBlock);
 
-  // cache the "nglayout.widget.gfxscrollbars" pref
-  PRBool HasGfxScrollbars();
   // cache the "nglayout.debug.enable_xbl_forms" pref
   PRBool UseXBLForms();
 
@@ -1057,7 +1053,6 @@ protected:
   // Cached Prefs
   PRPackedBool        mGotGfxPrefs;
   PRPackedBool        mGotXBLFormPrefs;
-  PRPackedBool        mHasGfxScrollbars;
   PRPackedBool        mUseXBLForms;
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
