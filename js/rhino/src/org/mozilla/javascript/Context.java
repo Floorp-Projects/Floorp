@@ -1844,7 +1844,7 @@ public class Context {
                      open < colon && colon < close) 
             {
                 String fileStr = s.substring(open + 1, colon);
-                if (fileStr.endsWith(".js")) {
+                if (!fileStr.endsWith(".java")) {
                     String lineStr = s.substring(colon + 1, close);
                     try {
                         linep[0] = Integer.parseInt(lineStr);
