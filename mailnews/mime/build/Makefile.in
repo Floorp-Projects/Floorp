@@ -49,6 +49,7 @@ EXTRA_DSO_LDOPTS = \
                 $(MKSHLIB_UNFORCE_ALL) \
                 -L$(DIST)/bin \
                 -L$(DIST)/lib \
+		        $(EXTRA_DSO_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
                 $(NULL)
 
