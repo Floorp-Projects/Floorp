@@ -161,6 +161,7 @@ pref("network.enableUrlMatch",              true);
 pref("network.max_connections",             4);
 pref("network.speed_over_ui",               true);
 pref("network.file_sort_method",            0);     // NAME 0, TYPE 1, SIZE 2, DATE 3
+pref("network.ftp.passive",		    true);
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
 pref("network.hosts.nntp_server",           "news");
