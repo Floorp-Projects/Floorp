@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -3952,38 +3952,26 @@ nsBookmarksService::Flush()
 nsresult
 nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 {
-    nsresult rv;
+	nsresult rv;
 
-    // First we see if the user has set a pref for the location of the 
-    // bookmarks file.
-    NS_WITH_SERVICE(nsIPref, prefServ, kPrefCID, &rv);
+	// Look for bookmarks.html in the current profile
+	// directory. This is as convoluted as it seems because we
+	// want to 1) not break viewer (which has no profiles), and 2)
+	// still deal reasonably (in the short term) when no
+	// bookmarks.html is installed in the profile directory.
+		        
+    nsCOMPtr<nsIFile> bookmarksFile;
+    rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE, getter_AddRefs(bookmarksFile));
     if (NS_SUCCEEDED(rv)) {
-        nsXPIDLCString prefVal;
-        rv = prefServ->CopyCharPref("browser.bookmark_file",
-                                    getter_Copies(prefVal));      
-        if (NS_SUCCEEDED(rv)) {
-            *aResult = prefVal;
-        }
-    }
-
-
-    if (NS_FAILED(rv)) {
-        // Otherwise, we look for bookmarks.html in the current profile
-        // directory using the magic directory service.
-        nsCOMPtr<nsIFile> bookmarksFile;
-        rv = NS_GetSpecialDirectory(NS_APP_BOOKMARKS_50_FILE, 
-                                    getter_AddRefs(bookmarksFile));
-        if (NS_SUCCEEDED(rv)) {
-
-            // XXX: When the code which calls this can us nsIFile
-            // or nsILocalFile, this conversion from nsIFile to
-            // nsFileSpec can go away. Bug 36974.
-
-            nsXPIDLCString pathBuf;
-            rv = bookmarksFile->GetPath(getter_Copies(pathBuf));
-            if (NS_SUCCEEDED(rv))
-                *aResult = pathBuf.get();
-        }
+  
+        // TODO: When the code which calls this can us nsIFIle
+        // or nsILocalFile, this conversion from nsiFile to
+        // nsFileSpec can go away.
+  
+        nsXPIDLCString pathBuf;
+        rv = bookmarksFile->GetPath(getter_Copies(pathBuf));
+        if (NS_SUCCEEDED(rv))
+            *aResult = (const char *)pathBuf;
     }
 
 #ifdef DEBUG
