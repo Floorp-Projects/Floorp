@@ -1193,7 +1193,6 @@ nsFtpConnectionThread::R_retr() {
         // success.
         nsIBufferInputStream *bufInStrm = nsnull;
         nsIBufferOutputStream *bufOutStrm = nsnull;
-#if 0
         rv = NS_NewPipe(&bufInStrm, &bufOutStrm);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
@@ -1245,7 +1244,7 @@ nsFtpConnectionThread::R_retr() {
             delete event;
             return FTP_ERROR;
         }
-#endif
+
         return FTP_COMPLETE;
 
     } else {
