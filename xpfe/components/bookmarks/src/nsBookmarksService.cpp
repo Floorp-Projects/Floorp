@@ -1657,7 +1657,7 @@ nsBookmarksService::Init()
 		{
 			if (*prefVal)
 			{
-				mPersonalToolbarName.AssignWithConversion(prefVal);
+				mPersonalToolbarName = NS_ConvertUTF8toUCS2(prefVal);
 			}
 			nsCRT::free(prefVal);
 			prefVal = nsnull;
