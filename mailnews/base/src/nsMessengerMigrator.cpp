@@ -114,7 +114,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define DEFAULT_4X_DRAFTS_FOLDER_NAME "Drafts"
 #define DEFAULT_4X_SENT_FOLDER_NAME "Sent"
 #define DEFAULT_4X_TEMPLATES_FOLDER_NAME "Templates"
-#define UNSENT_MESSAGES_FOLDER_NAME "Unsent Messages"
+#define UNSENT_MESSAGES_FOLDER_NAME "Unsent%20Messages"
 
 #define FILTER_FILE_NAME	"rules.dat"		/* this is XP in 5.x */
 
