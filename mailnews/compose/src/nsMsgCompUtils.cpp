@@ -1138,9 +1138,13 @@ msg_generate_message_id (nsIMsgIdentity *identity)
   {
     nsresult rv = identity->GetEmail(getter_Copies(from));
     if (NS_SUCCEEDED(rv) && from)
-      host = PL_strchr (from, '@');
+      host = strchr(from,'@');
+
+    // No '@'? Munged address, anti-spam?
+    // see bug #197203
+    if (host)
       ++host;
- }
+  }
 
   if (!isValidHost(host))
   /* If we couldn't find a valid host name to use, we can't generate a
