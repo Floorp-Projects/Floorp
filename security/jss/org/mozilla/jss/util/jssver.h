@@ -45,6 +45,6 @@
 #define JSS_VMAJOR   3
 #define JSS_VMINOR   3
 #define JSS_VPATCH   0
-#define JSS_BETA     PR_TRUE
+#define JSS_BETA     PR_FALSE
 
 #endif
