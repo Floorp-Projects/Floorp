@@ -1001,7 +1001,9 @@ sub do_vxml {
 
   %state_symbols = (success=>'green',busted=>'red',testfailed=>'test failed');
 
-  print '<vxml><form id="tinderbox"><block>'."\n\n";
+  print '<vxml><form id="tinderbox"><block>\n\n';
+  print '<audio src="http://www.boulderdesign.com/sounds/wargames.wav">Welcome</audio>\n';
+  print '<pause>500</pause>';
 
   if (is_tree_state_available()) {
     print "<audio>$::tree is " .
@@ -1010,10 +1012,31 @@ sub do_vxml {
   my (%build, %times);
   tb_loadquickparseinfo($::tree, \%build, \%times);
 
+  $testFailed = 0;
+  $flames = 0;
+
   foreach my $buildname (sort keys %build) {
-    print "<pause>500</pause>\n";
-    print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>\n";
+    if ($state_symbols{$build{buildname}} == red)
+      flames = 1;
+    else if ($state_symbols{$build{buildname}} == testfailed)
+      testFailed = 1;
   }
-  print "<pause>1000</pause><audio>adios</audio>\n\n";
+
+  print '<pause>500</pause>\n';
+
+  if ($testFailed == 1 || flames == 1) {
+      if ($testFailed == 1) {
+        print '<audio src="http://www.boulderdesign.com/sounds/hansolo_badfeeling.wav">a test failed</audio>\n';
+      } else if (flames == 1) {
+        print '<audio src="http://www.boulderdesign.com/sounds/brimstone.wav">something is on fire</audio>\n';
+      }
+
+      foreach my $buildname (sort keys %build) {
+        print "<pause>500</pause>\n";
+        print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>\n";
+      }
+  }
+
+  print "<pause>1000</pause><audio src="http://www.boulderdesign.com/sounds/goodbye.wav">goodbye</audio>\n\n";
   print "<disconnect/>\n</block></form></vxml>";
 }
