@@ -53,10 +53,22 @@ function resetPassword()
   var token = pk11db.findTokenByName(tokenName);
   token.reset();
 
-  var wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
-  if (wallet) {
-    wallet = wallet.getService(Components.interfaces.nsIWalletService);
-    wallet.WALLET_DeleteAll();
+  var pref = Components.classes['@mozilla.org/preferences;1'];
+  if (pref) {
+    pref = pref.getService(Components.interfaces.nsIPrefBranch);
+    try {
+      if (pref.getBoolPref("wallet.crypto")) {
+        // data in wallet is encrypted, clear it
+        var wallet = Components.classes['@mozilla.org/wallet/wallet-service;1'];
+        if (wallet) {
+          wallet = wallet.getService(Components.interfaces.nsIWalletService);
+          wallet.WALLET_DeleteAll();
+        }
+      }
+    }
+    catch(e) {
+      // wallet.crypto pref is missing
+    }
   }
 
   var bundle = document.getElementById("pippki_bundle");
