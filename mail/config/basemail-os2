@@ -227,6 +227,7 @@ components\dom_traversal.xpt
 components\dom_views.xpt
 components\dom_xbl.xpt
 components\dom_xul.xpt
+components\dom_loadsave.xpt
 
 ; editor / composer for HTML compose
 components\editor.dll                   

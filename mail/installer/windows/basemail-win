@@ -266,6 +266,7 @@ thunderbird\components\dom_traversal.xpt
 thunderbird\components\dom_views.xpt
 thunderbird\components\dom_xbl.xpt
 thunderbird\components\dom_xul.xpt
+thunderbird\components\dom_loadsave.xpt
 
 ; editor / composer for HTML compose
 thunderbird\components\editor.dll                   
