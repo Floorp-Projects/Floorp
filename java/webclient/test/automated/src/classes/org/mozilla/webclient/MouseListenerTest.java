@@ -1,5 +1,5 @@
 /*
- * $Id: MouseListenerTest.java,v 1.1 2004/10/27 01:33:57 edburns%acm.org Exp $
+ * $Id: MouseListenerTest.java,v 1.2 2004/10/28 13:57:59 edburns%acm.org Exp $
  */
 
 /* 
@@ -32,6 +32,7 @@ import junit.framework.Test;
 
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.BitSet;
 
 import java.awt.Frame;
 import java.awt.Robot;
@@ -124,6 +125,8 @@ public class MouseListenerTest extends WebclientTestCase {
 		    MouseListenerTest.keepWaiting = false;
 		}
 	    });
+	final BitSet bitSet = new BitSet();
+	
 	// PENDING(edburns): flesh this out with more content
 	MouseListener mouseListener = new MouseListener() {
 		public void mouseEntered(MouseEvent e) {
@@ -139,22 +142,27 @@ public class MouseListenerTest extends WebclientTestCase {
 		    String href = (String) eventMap.get("href");
 		    assertNotNull(href);
 		    assertEquals(href, "HistoryTest1.html");
+		    bitSet.set(0);
 		}
 		public void mouseExited(MouseEvent e) {
 		    System.out.println("debug: edburns: exited: " + 
 				       e.getX() + ", " + e.getY());
+		    bitSet.set(1);
 		}
 		public void mouseClicked(MouseEvent e) {
 		    System.out.println("debug: edburns: clicked: " + 
 				       e.getX() + ", " + e.getY());
+		    bitSet.set(2);
 		}
 		public void mousePressed(MouseEvent e) {
 		    System.out.println("debug: edburns: pressed: " + 
 				       e.getX() + ", " + e.getY());
+		    bitSet.set(3);
 		}
 		public void mouseReleased(MouseEvent e) {
 		    System.out.println("debug: edburns: released: " + 
 				       e.getX() + ", " + e.getY());
+		    bitSet.set(4);
 		}
 	    };
 	
@@ -192,6 +200,12 @@ public class MouseListenerTest extends WebclientTestCase {
 	    Thread.currentThread().sleep(1000);
 	}
 
+	robot.mouseMove(OUT_X, OUT_Y);
+
+	Thread.currentThread().sleep(3000);
+
+	bitSet.flip(0, bitSet.size());
+	assertTrue(!bitSet.isEmpty());
 
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
