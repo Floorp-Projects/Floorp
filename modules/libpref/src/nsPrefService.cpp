@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPrefService.h"
-#include "jsapi.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
@@ -58,9 +57,6 @@
 #include "prefapi.h"
 #include "prefread.h"
 #include "prefapi_private_data.h"
-
-// supporting PREF_Init()
-#include "nsIJSRuntimeService.h"
 
 #include "nsITimelineService.h"
 
