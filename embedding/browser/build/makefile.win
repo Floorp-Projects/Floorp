@@ -35,6 +35,7 @@ LLIBS =                              \
  $(DIST)\lib\nsWebBrowser_s.lib      \
  $(DIST)\lib\nsWebBrowserSetup_s.lib \
  $(DIST)\lib\xpcom.lib		\
+ $(DIST)\lib\gkgfxwin.lib	\
  $(LIBNSPR)
 
 include <$(DEPTH)\config\config.mak>
