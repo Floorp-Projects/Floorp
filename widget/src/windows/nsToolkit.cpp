@@ -192,26 +192,28 @@ int ConvertAtoW(LPCSTR aStrInA, int aBufferSize, LPWSTR aStrOutW)
 
 int ConvertWtoA(LPCWSTR aStrInW, int aBufferSizeOut, LPSTR aStrOutA)
 {
-  int  numCharsConverted;
-  char defaultStr[] = "?";
-
-  if ((!aStrInW) || (!aStrOutA))
+  if ((!aStrInW) || (!aStrOutA) || (aBufferSizeOut <= 0))
     return 0;
 
-  aStrOutA[0] = '\0';
+  int numCharsConverted = WideCharToMultiByte(CP_ACP, 0, aStrInW, -1, 
+      aStrOutA, aBufferSizeOut, "?", NULL);
 
-  numCharsConverted = WideCharToMultiByte(CP_ACP, 0, aStrInW, -1, 
-      aStrOutA, aBufferSizeOut, defaultStr, NULL);
-
-  if (!numCharsConverted)
-    return 0 ;
-
-  if (numCharsConverted < aBufferSizeOut)  {
-    *(aStrOutA+numCharsConverted) = '\0' ; // Null terminate
-    return (numCharsConverted) ; 
+  if (!numCharsConverted) {
+    if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+      // Overflow, add missing null termination but return 0
+      aStrOutA[aBufferSizeOut-1] = '\0';
+    }
+    else {
+      // Other error, clear string and return 0
+      aStrOutA[0] = '\0';
+    }
+  }
+  else if (numCharsConverted < aBufferSizeOut) {
+    // Add 2nd null (really necessary?)
+    aStrOutA[numCharsConverted] = '\0';
   }
 
-  return 0 ;
+  return numCharsConverted;
 }
 
 BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
@@ -390,8 +392,8 @@ LRESULT WINAPI nsSendMessage(HWND aWnd, UINT aMsg, WPARAM awParam, LPARAM alPara
 			"Warning. Make sure sending non-Unicode string to ::SendMessage().");
   if (WM_SETTEXT == aMsg)  {
     char title[MAX_PATH];
-    if (alParam)
-      ConvertWtoA((LPCWSTR)alParam, MAX_CLASS_NAME, title);
+    if (alParam) // Note: Window titles are truncated to 159 chars by Windows
+      ConvertWtoA((LPCWSTR)alParam, MAX_PATH, title);
     return SendMessageA(aWnd, aMsg, awParam, (LPARAM)&title);
   }
 
