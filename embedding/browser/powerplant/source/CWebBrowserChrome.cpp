@@ -85,7 +85,7 @@ CWebBrowserPrompter::~CWebBrowserPrompter()
 //*****************************************************************************
 
 CWebBrowserChrome::CWebBrowserChrome() :
-   mBrowserWindow(nsnull), mBrowserShell(nsnull)
+   mBrowserWindow(nsnull), mBrowserShell(nsnull), mPreviousBalloonState(false)
 {
 	NS_INIT_REFCNT();
 	
@@ -114,6 +114,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
+   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -1123,3 +1124,36 @@ CBrowserShell*& CWebBrowserChrome::BrowserShell()
    return mBrowserShell;
 }
 
+NS_IMETHODIMP
+CWebBrowserChrome::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
+{
+  nsAutoString tipText ( aTipText );
+  const char* printable = tipText.ToNewCString();
+  printf("--------- SHOW TOOLTIP AT %ld %ld, |%s|\n", aXCoords, aYCoords, printable );
+  
+  Point where;
+  ::GetMouse ( &where );
+  ::LocalToGlobal ( &where );
+  
+  HMMessageRecord helpRec;
+  helpRec.hmmHelpType = khmmString;
+  helpRec.u.hmmString[0] = strlen(printable);
+  memcpy ( &helpRec.u.hmmString[1], printable, strlen(printable) );
+  
+  mPreviousBalloonState = ::HMGetBalloons();
+  ::HMSetBalloons ( true );
+  OSErr err = ::HMShowBalloon ( &helpRec, where, NULL, NULL, 0, 0, 0 );
+  
+  nsMemory::Free( (void*)printable );
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CWebBrowserChrome::OnHideTooltip()
+{
+  printf("--------- HIDE TOOLTIP\n");
+  ::HMRemoveBalloon();
+  ::HMSetBalloons ( mPreviousBalloonState );
+    return NS_OK;
+}
