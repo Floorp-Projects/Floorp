@@ -62,6 +62,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIChromeRegistry.h" // chromeReg
 #include "nsIStringBundle.h"
+#include "nsIObserverService.h"
 
 // Interfaces Needed
 #include "nsIDocShell.h"
@@ -318,6 +319,7 @@ NS_INTERFACE_MAP_BEGIN(nsProfile)
     NS_INTERFACE_MAP_ENTRY(nsIProfile)
     NS_INTERFACE_MAP_ENTRY(nsIProfileInternal)
     NS_INTERFACE_MAP_ENTRY(nsIDirectoryServiceProvider)
+    NS_INTERFACE_MAP_ENTRY(nsIProfileChangeStatus)
 NS_INTERFACE_MAP_END
 
 /*
@@ -861,6 +863,10 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **p
             rv = AddLevelOfIndirection(aProfileDir);
             if (NS_FAILED(rv)) return rv;
 
+            // create the sub directories
+            rv = CreateUserDirectories(aProfileDir);
+            if (NS_FAILED(rv)) return rv;
+            
 			// since we might be changing the location of
 			// profile dir, reset it in the registry.
 			// see bug #56002 for details
@@ -941,6 +947,94 @@ nsProfile::GetCurrentProfile(PRUnichar **profileName)
     gProfileDataAccess->GetCurrentProfile(profileName);
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
+{
+    NS_ENSURE_ARG(aCurrentProfile);
+    
+    nsresult rv;
+    PRBool exists;
+    rv = ProfileExists(aCurrentProfile, &exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) return NS_ERROR_FAILURE;
+
+    PRBool isSwitch;
+
+    if (mCurrentProfileAvailable)
+    {
+        nsXPIDLString currProfileName;
+        rv = GetCurrentProfile(getter_Copies(currProfileName));
+        if (NS_FAILED(rv)) return rv;
+        if (nsCRT::strcmp(aCurrentProfile, currProfileName.get()) == 0)
+            return NS_OK;
+        else
+            isSwitch = PR_TRUE;
+    }
+    else
+        isSwitch = PR_FALSE;
+            
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    NS_ENSURE_TRUE(directoryService, NS_ERROR_FAILURE);
+    
+    NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
+    
+    nsISupports *subject = (nsISupports *)((nsIProfile *)this);
+            
+    if (isSwitch)
+    {
+        // Phase 1: See if anybody objects to the profile being changed.
+        mProfileChangeVetoed = PR_FALSE;        
+        observerService->Notify(subject, PROFILE_APPROVE_CHANGE_TOPIC, nsnull);
+        if (mProfileChangeVetoed)
+            return NS_OK;
+
+        // Phase 2: Send the "teardown" notification
+        observerService->Notify(subject, PROFILE_CHANGE_TEARDOWN_TOPIC, nsnull);
+        
+        // Phase 3: Notify observers of a profile change
+        observerService->Notify(subject, PROFILE_BEFORE_CHANGE_TOPIC, nsnull);        
+    }
+    
+    // Do the profile switch    
+    gProfileDataAccess->SetCurrentProfile(aCurrentProfile);
+    gProfileDataAccess->mProfileDataChanged = PR_TRUE;
+    gProfileDataAccess->UpdateRegistry(nsnull);
+            
+    if (NS_FAILED(rv)) return rv;
+    mCurrentProfileAvailable = PR_TRUE;
+    
+    if (isSwitch)
+    {
+        (void) directoryService->Undefine(NS_APP_PREFS_50_DIR);
+        (void) directoryService->Undefine(NS_APP_PREFS_50_FILE);
+        (void) directoryService->Undefine(NS_APP_USER_PROFILE_50_DIR);
+        (void) directoryService->Undefine(NS_APP_USER_CHROME_DIR);
+        (void) directoryService->Undefine(NS_APP_LOCALSTORE_50_FILE);
+        (void) directoryService->Undefine(NS_APP_HISTORY_50_FILE);
+        (void) directoryService->Undefine(NS_APP_USER_PANELS_50_FILE);
+        (void) directoryService->Undefine(NS_APP_USER_MIMETYPES_50_FILE);
+        (void) directoryService->Undefine(NS_APP_BOOKMARKS_50_FILE);
+        (void) directoryService->Undefine(NS_APP_SEARCH_50_FILE);
+        (void) directoryService->Undefine(NS_APP_MAIL_50_DIR);
+        (void) directoryService->Undefine(NS_APP_IMAP_MAIL_50_DIR);
+        (void) directoryService->Undefine(NS_APP_NEWS_50_DIR);
+        (void) directoryService->Undefine(NS_APP_MESSENGER_FOLDER_CACHE_50_DIR);
+
+        // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
+        observerService->Notify(subject, PROFILE_DO_CHANGE_TOPIC, nsnull);
+
+        // Phase 5: Now observers can respond to something another observer did in phase 4
+        observerService->Notify(subject, PROFILE_AFTER_CHANGE_TOPIC, nsnull);
+    }
+    else
+      rv = LoadNewProfilePrefs();
+      
+    return NS_OK;
+}
+
 
 // Returns the name of the current profile directory
 NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsIFile **profileDir)
@@ -1096,15 +1190,7 @@ nsresult nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *profile
     aProfile->SetResolvedProfileDir(localFile);
     aProfile->isMigrated = PR_TRUE;
 
-    rv = CreateUserDirectories(localFile);
-    if (NS_FAILED(rv)) {
-        delete aProfile;
-        return rv;
-    }
-
     gProfileDataAccess->SetValue(aProfile);
-                           
-    gProfileDataAccess->SetCurrentProfile(profileName);
     
     delete aProfile;
 
@@ -1191,8 +1277,9 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     rv = AddLevelOfIndirection(profileDir);
     if (NS_FAILED(rv)) return rv;
 
+    // Create the sub directories
+    rv = CreateUserDirectories(profileDir);  
     // Set the directory value and add the entry to the registry tree.
-    // Creates required user directories.
     rv = SetProfileDir(profileName, profileDir);
 
 #if defined(DEBUG_profile_verbose)
@@ -1244,7 +1331,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
 
 
 // Create required user directories like ImapMail, Mail, News, Cache etc.
-nsresult nsProfile::CreateUserDirectories(nsILocalFile *profileDir)
+nsresult nsProfile::CreateUserDirectories(nsIFile *profileDir)
 {
     nsresult rv = NS_OK;
 
@@ -1280,7 +1367,7 @@ nsresult nsProfile::CreateUserDirectories(nsILocalFile *profileDir)
 
 // Delete all user directories associated with the a profile
 // A FileSpec of the profile's directory is taken as input param
-nsresult nsProfile::DeleteUserDirectories(nsILocalFile *profileDir)
+nsresult nsProfile::DeleteUserDirectories(nsIFile *profileDir)
 {
     NS_ENSURE_ARG(profileDir);
     nsresult rv;
@@ -1482,7 +1569,7 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
       printf("ProfileManager : StartApprunner\n");
 
       nsCAutoString temp; temp.AssignWithConversion(profileName);
-      printf("profileName passed in: %s", NS_STATIC_CAST(const char*, temp));
+      printf("profileName passed in: %s\n", NS_STATIC_CAST(const char*, temp));
     }
 #endif
 
@@ -1757,6 +1844,8 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
 	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy default mimeTypes.rdf file");
     // hack finish.
 	
+	rv = CreateUserDirectories(newProfDir);
+	if (NS_FAILED(rv)) return rv;
     rv = SetProfileDir(profileName, newProfDir);
     if (NS_FAILED(rv)) return rv;
 
@@ -1941,33 +2030,6 @@ NS_IMETHODIMP nsProfile::MigrateAllProfiles()
     return rv;
 }
 
-
-nsresult nsProfile::RenameProfileDir(const PRUnichar* newProfileName) 
-{
-    NS_ASSERTION(newProfileName, "Invalid new profile name");      
-
-    nsresult rv;
-    nsCOMPtr<nsIFile> aFile;
-    nsCOMPtr<nsILocalFile> profileDir;
-
-    rv = GetProfileDir(newProfileName, getter_AddRefs(aFile));
-    if (NS_FAILED(rv)) return rv;
-    profileDir = do_QueryInterface(aFile, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCAutoString  newName; newName.AssignWithConversion(newProfileName);
-
-    // rename the directory
-    rv = profileDir->MoveTo(nsnull, newName);
-    if (NS_FAILED(rv)) return rv;
-
-    // update the registry
-    rv = SetProfileDir(newProfileName, profileDir);
-    if (NS_FAILED(rv)) return rv;
-    
-
-    return NS_OK;
-}
 
 NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
 {
@@ -2231,6 +2293,17 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     	return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
     	
     return rv;
+}
+
+
+/*
+ * nsIProfileChangeStatus Implementation
+ */
+
+NS_IMETHODIMP nsProfile::VetoChange()
+{
+    mProfileChangeVetoed = PR_TRUE;
+    return NS_OK;
 }
 
 nsresult nsProfile::CloneProfileDirectorySpec(nsILocalFile **aLocalFile)
