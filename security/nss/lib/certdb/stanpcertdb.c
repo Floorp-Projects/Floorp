@@ -271,7 +271,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
      */
     cc = STAN_GetCERTCertificate(c);
     if (!cc) {
-        return NULL;
+        goto loser;
     }
     nssItem_Create(c->object.arena, 
                    &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
