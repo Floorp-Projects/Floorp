@@ -2835,7 +2835,7 @@ GetElementByAttribute(nsIContent* aContent,
 
   for (PRInt32 i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIContent> current;
-    current->ChildAt(i, *getter_AddRefs(current));
+    aContent->ChildAt(i, *getter_AddRefs(current));
 
     GetElementByAttribute(current, aAttrName, aAttrValue, aUniversalMatch, aResult);
 
