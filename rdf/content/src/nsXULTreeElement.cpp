@@ -115,6 +115,7 @@ nsXULTreeElement::~nsXULTreeElement()
 #endif
 
   NS_IF_RELEASE(mSelectedItems);
+  NS_IF_RELEASE(mCurrentItem);
   
   if (--gRefCnt == 0) {
     NS_IF_RELEASE(kSelectedAtom);
