@@ -190,7 +190,6 @@ if ($pull{all}) {
    Checkout();
 }
 
-SetBuildNumber();
 
 BuildDist();
 
