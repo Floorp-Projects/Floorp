@@ -61,6 +61,7 @@ nsCSSStruct::~nsCSSStruct()
 
 nsCSSFont::nsCSSFont(void)
 {
+  MOZ_COUNT_CTOR(nsCSSFont);
 }
 
 nsCSSFont::nsCSSFont(const nsCSSFont& aCopy)
@@ -72,10 +73,12 @@ nsCSSFont::nsCSSFont(const nsCSSFont& aCopy)
     mSizeAdjust(aCopy.mSizeAdjust),
     mStretch(aCopy.mStretch)
 {
+  MOZ_COUNT_CTOR(nsCSSFont);
 }
 
 nsCSSFont::~nsCSSFont(void)
 {
+  MOZ_COUNT_DTOR(nsCSSFont);
 }
 
 const nsID& nsCSSFont::GetID(void)
@@ -108,17 +111,20 @@ nsCSSValueList::nsCSSValueList(void)
   : mValue(),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSValueList);
 }
 
 nsCSSValueList::nsCSSValueList(const nsCSSValueList& aCopy)
   : mValue(aCopy.mValue),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSValueList);
   CSS_IF_COPY(mNext, nsCSSValueList);
 }
 
 nsCSSValueList::~nsCSSValueList(void)
 {
+  MOZ_COUNT_DTOR(nsCSSValueList);
   CSS_IF_DELETE(mNext);
 }
 
@@ -127,6 +133,7 @@ nsCSSValueList::~nsCSSValueList(void)
 nsCSSColor::nsCSSColor(void)
   : mCursor(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSColor);
 }
 
 nsCSSColor::nsCSSColor(const nsCSSColor& aCopy)
@@ -140,11 +147,13 @@ nsCSSColor::nsCSSColor(const nsCSSColor& aCopy)
     mCursor(nsnull),
     mOpacity(aCopy.mOpacity)
 {
+  MOZ_COUNT_CTOR(nsCSSColor);
   CSS_IF_COPY(mCursor, nsCSSValueList);
 }
 
 nsCSSColor::~nsCSSColor(void)
 {
+  MOZ_COUNT_DTOR(nsCSSColor);
   CSS_IF_DELETE(mCursor);
 }
 
@@ -180,6 +189,7 @@ void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
 nsCSSShadow::nsCSSShadow(void)
   : mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSShadow);
 }
 
 nsCSSShadow::nsCSSShadow(const nsCSSShadow& aCopy)
@@ -189,11 +199,13 @@ nsCSSShadow::nsCSSShadow(const nsCSSShadow& aCopy)
     mRadius(aCopy.mRadius),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSShadow);
   CSS_IF_COPY(mNext, nsCSSShadow);
 }
 
 nsCSSShadow::~nsCSSShadow(void)
 {
+  MOZ_COUNT_DTOR(nsCSSShadow);
   CSS_IF_DELETE(mNext);
 }
 
@@ -202,6 +214,7 @@ nsCSSShadow::~nsCSSShadow(void)
 nsCSSText::nsCSSText(void)
   : mTextShadow(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSText);
 }
 
 nsCSSText::nsCSSText(const nsCSSText& aCopy)
@@ -217,10 +230,12 @@ nsCSSText::nsCSSText(const nsCSSText& aCopy)
     mLineHeight(aCopy.mLineHeight),
     mWhiteSpace(aCopy.mWhiteSpace)
 {
+  MOZ_COUNT_CTOR(nsCSSText);
 }
 
 nsCSSText::~nsCSSText(void)
 {
+  MOZ_COUNT_DTOR(nsCSSText);
   CSS_IF_DELETE(mTextShadow);
 }
 
@@ -267,6 +282,7 @@ void nsCSSText::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSRect::nsCSSRect(void)
 {
+  MOZ_COUNT_CTOR(nsCSSRect);
 }
 
 nsCSSRect::nsCSSRect(const nsCSSRect& aCopy)
@@ -275,7 +291,14 @@ nsCSSRect::nsCSSRect(const nsCSSRect& aCopy)
     mBottom(aCopy.mBottom),
     mLeft(aCopy.mLeft)
 {
+  MOZ_COUNT_CTOR(nsCSSRect);
 }
+
+nsCSSRect::~nsCSSRect()
+{
+  MOZ_COUNT_DTOR(nsCSSRect);
+}
+
 
 void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
 {
@@ -330,6 +353,7 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
 nsCSSDisplay::nsCSSDisplay(void)
   : mClip(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSDisplay);
 }
 
 nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
@@ -341,11 +365,13 @@ nsCSSDisplay::nsCSSDisplay(const nsCSSDisplay& aCopy)
     mOverflow(aCopy.mOverflow),
     mVisibility(aCopy.mVisibility)
 {
+  MOZ_COUNT_CTOR(nsCSSDisplay);
   CSS_IF_COPY(mClip, nsCSSRect);
 }
 
 nsCSSDisplay::~nsCSSDisplay(void)
 {
+  MOZ_COUNT_DTOR(nsCSSDisplay);
   CSS_IF_DELETE(mClip);
 }
 
@@ -380,6 +406,7 @@ nsCSSMargin::nsCSSMargin(void)
   : mMargin(nsnull), mPadding(nsnull), 
     mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull), mBorderRadius(nsnull), mOutlineRadius(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSMargin);
 }
 
 nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
@@ -391,6 +418,7 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
     mOutlineRadius(nsnull),
     mFloatEdge(aCopy.mFloatEdge)
 {
+  MOZ_COUNT_CTOR(nsCSSMargin);
   CSS_IF_COPY(mMargin, nsCSSRect);
   CSS_IF_COPY(mPadding, nsCSSRect);
   CSS_IF_COPY(mBorderWidth, nsCSSRect);
@@ -402,6 +430,7 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
 
 nsCSSMargin::~nsCSSMargin(void)
 {
+  MOZ_COUNT_DTOR(nsCSSMargin);
   CSS_IF_DELETE(mMargin);
   CSS_IF_DELETE(mPadding);
   CSS_IF_DELETE(mBorderWidth);
@@ -485,6 +514,7 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
 nsCSSPosition::nsCSSPosition(void)
   : mOffset(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSPosition);
 }
 
 nsCSSPosition::nsCSSPosition(const nsCSSPosition& aCopy)
@@ -499,11 +529,13 @@ nsCSSPosition::nsCSSPosition(const nsCSSPosition& aCopy)
     mOffset(nsnull),
     mZIndex(aCopy.mZIndex)
 {
+  MOZ_COUNT_CTOR(nsCSSPosition);
   CSS_IF_COPY(mOffset, nsCSSRect);
 }
 
 nsCSSPosition::~nsCSSPosition(void)
 {
+  MOZ_COUNT_DTOR(nsCSSPosition);
   CSS_IF_DELETE(mOffset);
 }
 
@@ -544,6 +576,7 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSList::nsCSSList(void)
 {
+  MOZ_COUNT_CTOR(nsCSSList);
 }
 
 nsCSSList::nsCSSList(const nsCSSList& aCopy)
@@ -551,10 +584,12 @@ nsCSSList::nsCSSList(const nsCSSList& aCopy)
     mImage(aCopy.mImage),
     mPosition(aCopy.mPosition)
 {
+  MOZ_COUNT_CTOR(nsCSSList);
 }
 
 nsCSSList::~nsCSSList(void)
 {
+  MOZ_COUNT_DTOR(nsCSSList);
 }
 
 const nsID& nsCSSList::GetID(void)
@@ -578,6 +613,7 @@ void nsCSSList::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSTable::nsCSSTable(void)
 {
+  MOZ_COUNT_CTOR(nsCSSTable);
 }
 
 nsCSSTable::nsCSSTable(const nsCSSTable& aCopy)
@@ -588,10 +624,12 @@ nsCSSTable::nsCSSTable(const nsCSSTable& aCopy)
     mEmptyCells(aCopy.mEmptyCells),
     mLayout(aCopy.mLayout)
 {
+  MOZ_COUNT_CTOR(nsCSSTable);
 }
 
 nsCSSTable::~nsCSSTable(void)
 {
+  MOZ_COUNT_DTOR(nsCSSTable);
 }
 
 const nsID& nsCSSTable::GetID(void)
@@ -619,6 +657,7 @@ void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSBreaks::nsCSSBreaks(void)
 {
+  MOZ_COUNT_CTOR(nsCSSBreaks);
 }
 
 nsCSSBreaks::nsCSSBreaks(const nsCSSBreaks& aCopy)
@@ -629,10 +668,12 @@ nsCSSBreaks::nsCSSBreaks(const nsCSSBreaks& aCopy)
     mPageBreakBefore(aCopy.mPageBreakBefore),
     mPageBreakInside(aCopy.mPageBreakInside)
 {
+  MOZ_COUNT_CTOR(nsCSSBreaks);
 }
 
 nsCSSBreaks::~nsCSSBreaks(void)
 {
+  MOZ_COUNT_DTOR(nsCSSBreaks);
 }
 
 const nsID& nsCSSBreaks::GetID(void)
@@ -660,6 +701,7 @@ void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSPage::nsCSSPage(void)
 {
+  MOZ_COUNT_CTOR(nsCSSPage);
 }
 
 nsCSSPage::nsCSSPage(const nsCSSPage& aCopy)
@@ -667,10 +709,12 @@ nsCSSPage::nsCSSPage(const nsCSSPage& aCopy)
     mSizeWidth(aCopy.mSizeWidth),
     mSizeHeight(aCopy.mSizeHeight)
 {
+  MOZ_COUNT_CTOR(nsCSSPage);
 }
 
 nsCSSPage::~nsCSSPage(void)
 {
+  MOZ_COUNT_DTOR(nsCSSPage);
 }
 
 const nsID& nsCSSPage::GetID(void)
@@ -696,6 +740,7 @@ void nsCSSPage::List(FILE* out, PRInt32 aIndent) const
 nsCSSCounterData::nsCSSCounterData(void)
   : mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSCounterData);
 }
 
 nsCSSCounterData::nsCSSCounterData(const nsCSSCounterData& aCopy)
@@ -703,17 +748,20 @@ nsCSSCounterData::nsCSSCounterData(const nsCSSCounterData& aCopy)
     mValue(aCopy.mValue),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSCounterData);
   CSS_IF_COPY(mNext, nsCSSCounterData);
 }
 
 nsCSSCounterData::~nsCSSCounterData(void)
 {
+  MOZ_COUNT_DTOR(nsCSSCounterData);
   CSS_IF_DELETE(mNext);
 }
 
 nsCSSQuotes::nsCSSQuotes(void)
   : mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSQuotes);
 }
 
 nsCSSQuotes::nsCSSQuotes(const nsCSSQuotes& aCopy)
@@ -721,11 +769,13 @@ nsCSSQuotes::nsCSSQuotes(const nsCSSQuotes& aCopy)
     mClose(aCopy.mClose),
     mNext(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSQuotes);
   CSS_IF_COPY(mNext, nsCSSQuotes);
 }
 
 nsCSSQuotes::~nsCSSQuotes(void)
 {
+  MOZ_COUNT_DTOR(nsCSSQuotes);
   CSS_IF_DELETE(mNext);
 }
 
@@ -737,6 +787,7 @@ nsCSSContent::nsCSSContent(void)
     mCounterReset(nsnull),
     mQuotes(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSContent);
 }
 
 nsCSSContent::nsCSSContent(const nsCSSContent& aCopy)
@@ -746,6 +797,7 @@ nsCSSContent::nsCSSContent(const nsCSSContent& aCopy)
     mMarkerOffset(aCopy.mMarkerOffset),
     mQuotes(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSContent);
   CSS_IF_COPY(mContent, nsCSSValueList);
   CSS_IF_COPY(mCounterIncrement, nsCSSCounterData);
   CSS_IF_COPY(mCounterReset, nsCSSCounterData);
@@ -754,6 +806,7 @@ nsCSSContent::nsCSSContent(const nsCSSContent& aCopy)
 
 nsCSSContent::~nsCSSContent(void)
 {
+  MOZ_COUNT_DTOR(nsCSSContent);
   CSS_IF_DELETE(mContent);
   CSS_IF_DELETE(mCounterIncrement);
   CSS_IF_DELETE(mCounterReset);
@@ -804,6 +857,7 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
 nsCSSUserInterface::nsCSSUserInterface(void)
   : mKeyEquivalent(nsnull)
 {
+  MOZ_COUNT_CTOR(nsCSSUserInterface);
 }
 
 nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
@@ -815,11 +869,13 @@ nsCSSUserInterface::nsCSSUserInterface(const nsCSSUserInterface& aCopy)
     mResizer(aCopy.mResizer),
     mBehavior(aCopy.mBehavior)
 {
+  MOZ_COUNT_CTOR(nsCSSUserInterface);
   CSS_IF_COPY(mKeyEquivalent, nsCSSValueList);
 }
 
 nsCSSUserInterface::~nsCSSUserInterface(void)
 {
+  MOZ_COUNT_DTOR(nsCSSUserInterface);
   CSS_IF_DELETE(mKeyEquivalent);
 }
 
@@ -852,6 +908,7 @@ void nsCSSUserInterface::List(FILE* out, PRInt32 aIndent) const
 
 nsCSSAural::nsCSSAural(void)
 {
+  MOZ_COUNT_CTOR(nsCSSAural);
 }
 
 nsCSSAural::nsCSSAural(const nsCSSAural& aCopy)
@@ -875,10 +932,12 @@ nsCSSAural::nsCSSAural(const nsCSSAural& aCopy)
     mVoiceFamily(aCopy.mVoiceFamily),
     mVolume(aCopy.mVolume)
 {
+  MOZ_COUNT_CTOR(nsCSSAural);
 }
 
 nsCSSAural::~nsCSSAural(void)
 {
+  MOZ_COUNT_DTOR(nsCSSAural);
 }
 
 const nsID& nsCSSAural::GetID(void)

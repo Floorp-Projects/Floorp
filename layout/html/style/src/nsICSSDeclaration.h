@@ -177,6 +177,7 @@ struct nsCSSText : public nsCSSStruct  {
 struct nsCSSRect {
   nsCSSRect(void);
   nsCSSRect(const nsCSSRect& aCopy);
+  ~nsCSSRect();
   void List(FILE* out = 0, nsCSSProperty aPropID = eCSSProperty_UNKNOWN, PRInt32 aIndent = 0) const;
   void List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) const;
 
