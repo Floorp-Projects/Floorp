@@ -354,15 +354,15 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
 
     //*** start by finding the first start tag that hasn't been reviewed.
 
-  while(mTokenScanPos>0) {
+  while (mTokenScanPos > 0) {
     theRootToken=(CHTMLToken*)mTokenDeque.ObjectAt(mTokenScanPos);
-    if(theRootToken) {
+    if ( theRootToken) {
       eHTMLTokenTypes theType=eHTMLTokenTypes(theRootToken->GetTokenType());  
-      if(eToken_start==theType) {
-        if(eFormUnknown==theRootToken->GetContainerInfo()) {
+      if (eToken_start == theType) {
+        if (theRootToken->GetContainerInfo() & NS_HTMLTOKENS_UNKNOWNFORM) {
           break;
         }
-      }      
+      }
     }
     mTokenScanPos--;
   }
@@ -414,16 +414,16 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
                 if(theTag==theLastToken->GetTypeID()) {
                   theStack.Pop(); //yank it for real 
                   theStackDepth--;
-                  theLastToken->SetContainerInfo(eWellFormed);
+                  theLastToken->SetContainerInfo(NS_HTMLTOKENS_WELLFORMED);
 
                   //in addition, let's look above this container to see if we can find 
                   //any tags that are already marked malformed. If so, pop them too!
 
                   theLastToken= NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
-                  while(theLastToken) {
-                    if(eMalformed==theRootToken->GetContainerInfo()) {
+                  while (theLastToken) {
+                    if (theRootToken->GetContainerInfo() & NS_HTMLTOKENS_MALFORMED) {
                       theStack.Pop(); //yank the malformed token for real.
-                      theLastToken= NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
+                      theLastToken = NS_STATIC_CAST(CHTMLToken*, theStack.Peek());
                       continue;
                     }
                     break;
@@ -434,11 +434,11 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
                   //be malformed. If the tag is a block, we don't really care (but we'll
                   //mark it anyway). If it's an inline we DO care, especially if the 
                   //inline tried to contain a block (that's when RS handling kicks in).
-                  if(theTagIsInline) {
-                    PRInt32 theIndex=FindLastIndexOfTag(theTag,theStack);
-                    if(kNotFound!=theIndex) {
-                      theToken=(CHTMLToken*)theStack.ObjectAt(theIndex);                        
-                      theToken->SetContainerInfo(eMalformed);
+                  if (theTagIsInline) {
+                    PRInt32 theIndex = FindLastIndexOfTag(theTag,theStack);
+                    if (kNotFound != theIndex) {
+                      theToken = (CHTMLToken*)theStack.ObjectAt(theIndex);                        
+                      theToken->SetContainerInfo(NS_HTMLTOKENS_MALFORMED);
                     }
                     //otherwise we ignore an out-of-place end tag.
                   }

@@ -75,17 +75,16 @@
 #include "nsFileSpec.h"
 #include "nsFixedSizeAllocator.h"
 
+#define NS_HTMLTOKENS_UNKNOWNFORM 0x00000001
+#define NS_HTMLTOKENS_WELLFORMED  0x00000002
+#define NS_HTMLTOKENS_MALFORMED   0x00000004
+#define NS_HTMLTOKENS_EMPTYTOKEN  0x00000008
+
 #define NS_HTMLTOKENS_NOT_AN_ENTITY \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_HTMLPARSER,2000)
 
 class nsScanner;
 class nsTokenAllocator;
-
-enum eContainerInfo {
-  eWellFormed,
-  eMalformed,
-  eFormUnknown
-};
 
 /**
  * Implement the SizeOf() method; leaf classes derived from CToken
@@ -183,7 +182,7 @@ class CToken {
      * @update	gess5/11/98
      * @return  reference to string containing string value
      */
-    virtual void GetSource(nsString& anOutputString);
+    virtual void GetSource(nsAString& anOutputString);
 
     /** @update	harishd 03/23/00
      *  @return  reference to string containing string value
@@ -211,6 +210,8 @@ class CToken {
      */
     virtual PRInt16 GetAttributeCount(void);
 
+    virtual void SetAttributeCount(PRInt16 aValue) { }
+
     /**
      * Causes token to consume data from given scanner.
      * Note that behavior varies wildly between CToken subclasses.
@@ -235,6 +236,14 @@ class CToken {
      * @param   out is the output stream where token should write itself
      */
     virtual void DebugDumpSource(nsOutputStream& out);
+        
+    /**
+     * Getter which retrieves the class name for this token 
+     * This method is only used for debug purposes.
+     * @update	gess5/11/98
+     * @return  const char* containing class name
+     */
+    virtual const char* GetClassName(void);
 #endif
 
     /**
@@ -243,15 +252,6 @@ class CToken {
      * @return  int containing token type
      */
     virtual PRInt32 GetTokenType(void);
-
-    /**
-     * Getter which retrieves the class name for this token 
-     * This method is only used for debug purposes.
-     * @update	gess5/11/98
-     * @return  const char* containing class name
-     */
-    virtual const char* GetClassName(void);
-
 
     /**
      * For tokens who care, this can tell us whether the token is 
@@ -289,8 +289,6 @@ class CToken {
       mLineNumber = mLineNumber == 0 ? aLineNumber : mLineNumber;
     }
 
-    void SetAttributeCount(PRInt16 aValue) {  mAttrCount = aValue; }
-
     /**
      * perform self test.
      * @update	gess5/11/98
@@ -307,11 +305,11 @@ protected:
      */
     virtual size_t SizeOf() const = 0;
 
-    PRInt32 mTypeID;
-    PRInt32 mUseCount;
-    PRInt32 mNewlineCount;
-    PRInt32 mLineNumber;
-    PRInt16 mAttrCount;
+    PRInt32  mTypeID;
+    PRInt32  mUseCount;
+    PRInt32  mNewlineCount;
+    PRInt32  mLineNumber;
+    PRUint16 mFlags;  
 };
 
 
