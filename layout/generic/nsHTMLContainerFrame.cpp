@@ -106,6 +106,7 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
   return placeholder;
 }
 
+#if 0
 // XXX pass in aFrame's style context instead
 PRBool
 nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
@@ -140,6 +141,7 @@ nsHTMLContainerFrame::MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
 
   return PR_FALSE;
 }
+#endif
 
 /**
  * Create a next-in-flow for aFrame. Will return the newly created
