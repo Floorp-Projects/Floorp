@@ -802,9 +802,12 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
         /*
          * If id is a string that's a reserved identifier, or else id is not
-         * an identifier at all, then it needs to be quoted.
+         * an identifier at all, then it needs to be quoted.  Also, negative
+         * integer ids must be quoted.
          */
-        if (atom && (ATOM_KEYWORD(atom) || !js_IsIdentifier(idstr))) {
+        if (atom
+            ? (ATOM_KEYWORD(atom) || !js_IsIdentifier(idstr))
+            : JSVAL_TO_INT(id) < 0) {
             idstr = js_QuoteString(cx, idstr, (jschar)'\'');
             if (!idstr) {
                 ok = JS_FALSE;
