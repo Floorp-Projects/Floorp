@@ -740,8 +740,8 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      nsRect* aGap)
 {
 PRIntn  dashLength;
-nsRect  dashRect, firstRect, currRect;
-nscoord xstart,xwidth,ystart,ywidth,temp,leftover,temp1,cornerLength;
+nsRect  dashRect, currRect;
+nscoord xstart,xwidth,ystart,ywidth,temp,temp1,adjust;
 PRBool  bSolid = PR_TRUE;
 float   over = 0.0f;
 PRUint8 style = aDoOutline?aSpacing.GetOutlineStyle():aSpacing.GetBorderStyle(startSide);  
@@ -806,55 +806,58 @@ PRBool  skippedSide = PR_FALSE;
         
         // This is our dot or dash..
         dashRect.width = borderInside.x - borderOutside.x;
-        dashRect.height = dashRect.width * dashLength;
-        dashRect.y = borderOutside.y;
+        if( dashRect.width >0 ) {
+          dashRect.height = dashRect.width * dashLength;
+          dashRect.y = borderOutside.y;
 
-        if(whichSide == NS_SIDE_RIGHT){
-          dashRect.x = borderInside.XMost();
-        } else {
-          dashRect.x = borderOutside.x;
-        }
-
-        if (style == NS_STYLE_BORDER_STYLE_DASHED) {
-          cornerLength = dashRect.height/2;
-        } else {
-          cornerLength = dashRect.height;
-        }
-
-        // upper corner
-        aContext.FillRect(dashRect.x, dashRect.y,dashRect.width, cornerLength);
-
-        // lower corner
-        aContext.FillRect(dashRect.x, borderOutside.YMost()-cornerLength,dashRect.width, cornerLength);
- 
-
-        temp = borderOutside.YMost()-(2*cornerLength);
-        temp1 = temp/dashRect.height;
-
-        if((temp1%2)==0){  // then there are an even number of tiles
-          leftover = -((temp%dashRect.height)/2);
-        } else {
-          leftover = (temp%dashRect.height)/2;
-        }
-        
-        currRect = dashRect;
-        currRect.y+=(dashRect.height/2)+leftover;
-        if( temp > ywidth)
-          temp = ywidth;
-        
-        // get the currRect's y into the view before we start
-        if( currRect.y+currRect.height < aDirtyRect.y){
-          currRect.y = NSToCoordFloor((float)(aDirtyRect.y/dashRect.height))*dashRect.height;
-        }
-
-        while(currRect.y<temp) {
-          //draw if necessary
-          if (bSolid) {
-            aContext.FillRect(currRect);
+          if(whichSide == NS_SIDE_RIGHT){
+            dashRect.x = borderInside.XMost();
+          } else {
+            dashRect.x = borderOutside.x;
           }
 
-          bSolid = PRBool(!bSolid);
-          currRect.y += dashRect.height;
+          temp = borderOutside.YMost();
+          temp1 = temp/dashRect.height;
+
+          currRect = dashRect;
+
+          if((temp1%2)==0){
+            adjust = (dashRect.height-(temp%dashRect.height))/2; // adjust back
+            // draw in the left and right
+            aContext.FillRect(dashRect.x, borderOutside.y,dashRect.width, dashRect.height-adjust);
+            aContext.FillRect(dashRect.x,(borderOutside.YMost()-(dashRect.height-adjust)),dashRect.width, dashRect.height-adjust);
+            currRect.y += (dashRect.height-adjust);
+            temp = temp-= (dashRect.height-adjust);
+          } else {
+            adjust = (temp%dashRect.width)/2;                   // adjust a tad longer
+            // draw in the left and right
+            aContext.FillRect(dashRect.x, borderOutside.y,dashRect.width, dashRect.height+adjust);
+            aContext.FillRect(dashRect.x,(borderOutside.YMost()-(dashRect.height+adjust)),dashRect.width, dashRect.height+adjust);
+            currRect.y += (dashRect.height+adjust);
+            temp = temp-= (dashRect.height+adjust);
+          }
+        
+          if( temp > ywidth)
+            temp = ywidth;
+
+          // get the currRect's x into the view before we start
+          if( currRect.y < aDirtyRect.y){
+            temp1 = NSToCoordFloor((float)((aDirtyRect.y-currRect.y)/dashRect.height));
+            currRect.y += temp1*dashRect.height;
+            if((temp1%2)==1){
+              bSolid = PR_TRUE;
+            }
+         }
+
+          while(currRect.y<temp) {
+            //draw if necessary
+            if (bSolid) {
+              aContext.FillRect(currRect);
+            }
+
+            bSolid = PRBool(!bSolid);
+            currRect.y += dashRect.height;
+          }
         }
         break;
 
@@ -864,55 +867,61 @@ PRBool  skippedSide = PR_FALSE;
         
         // This is our dot or dash..
         dashRect.height = borderInside.y - borderOutside.y;
-        dashRect.width = dashRect.height * dashLength;
-        dashRect.x = borderOutside.x;
+        if( dashRect.height >0 ) {
+          dashRect.width = dashRect.height * dashLength;
+          dashRect.x = borderOutside.x;
 
-        if(whichSide == NS_SIDE_BOTTOM){
-          dashRect.y = borderInside.YMost();
-        } else {
-          dashRect.y = borderOutside.y;
-        }
-
-        if (style == NS_STYLE_BORDER_STYLE_DASHED) {
-          cornerLength = dashRect.width/2;
-        } else {
-          cornerLength = dashRect.width;
-        }
-
-        // upperleft corner
-        aContext.FillRect(borderOutside.x, dashRect.y,cornerLength, borderInside.y - borderOutside.y);
-
-        // upperright corner
-        aContext.FillRect(borderOutside.XMost()-cornerLength, dashRect.y,cornerLength, borderInside.y - borderOutside.y);
-        temp = borderOutside.XMost()-(2*cornerLength);
-        temp1 = temp/dashRect.width;
-
-        if((temp1%2)==0){  // then there are an even number of tiles
-          leftover = -((temp%dashRect.width)/2);
-        } else {
-          leftover = (temp%dashRect.width)/2;
-        }
-        
-        currRect = dashRect;
-        currRect.x+=(dashRect.width/2)+leftover;
-
-        if( temp > xwidth)
-          temp = xwidth;
-
-        // get the currRect's x into the view before we start
-        if( currRect.x+currRect.width < aDirtyRect.x){
-          currRect.x = NSToCoordFloor((float)(aDirtyRect.x/dashRect.height))*dashRect.width;
-        }
-        while(currRect.x<temp) {
-          //draw if necessary
-          if (bSolid) {
-            aContext.FillRect(currRect);
+          if(whichSide == NS_SIDE_BOTTOM){
+            dashRect.y = borderInside.YMost();
+          } else {
+            dashRect.y = borderOutside.y;
           }
 
-          bSolid = PRBool(!bSolid);
-          currRect.x += dashRect.width;
+          temp = borderOutside.XMost();
+          temp1 = temp/dashRect.width;
+
+          currRect = dashRect;
+
+          if((temp1%2)==0){
+            adjust = (dashRect.width-(temp%dashRect.width))/2;     // even, adjust back
+            // draw in the left and right
+            aContext.FillRect(borderOutside.x,dashRect.y,dashRect.width-adjust,dashRect.height);
+            aContext.FillRect((borderOutside.XMost()-(dashRect.width-adjust)),dashRect.y,dashRect.width-adjust,dashRect.height);
+            currRect.x += (dashRect.width-adjust);
+            temp = temp-= (dashRect.width-adjust);
+          } else {
+            adjust = (temp%dashRect.width)/2;
+            // draw in the left and right
+            aContext.FillRect(borderOutside.x,dashRect.y,dashRect.width+adjust,dashRect.height);
+            aContext.FillRect((borderOutside.XMost()-(dashRect.width+adjust)),dashRect.y,dashRect.width+adjust,dashRect.height);
+            currRect.x += (dashRect.width+adjust);
+            temp = temp-= (dashRect.width+adjust);
+          }
+       
+
+          if( temp > xwidth)
+            temp = xwidth;
+
+          // get the currRect's x into the view before we start
+          if( currRect.x < aDirtyRect.x){
+            temp1 = NSToCoordFloor((float)((aDirtyRect.x-currRect.x)/dashRect.width));
+            currRect.x += temp1*dashRect.width;
+            if((temp1%2)==1){
+              bSolid = PR_TRUE;
+            }
+          }
+
+          while(currRect.x<temp) {
+            //draw if necessary
+            if (bSolid) {
+              aContext.FillRect(currRect);
+            }
+
+            bSolid = PRBool(!bSolid);
+            currRect.x += dashRect.width;
+          }
         }
-        break;
+      break;
       }
     }
     skippedSide = PR_FALSE;
