@@ -794,6 +794,8 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
     {
         // returning an error will stop the download. We may get extra
         // OnData calls if they were already queued so beware
+        if (mDlg)
+            mDlg->Close();
         return NS_ERROR_FAILURE;
     }
 
