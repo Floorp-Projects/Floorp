@@ -22,10 +22,16 @@
 #include "nsIObserver.h"
 #include "nsAgg.h"
 
+// {DB242E03-E4D9-11d2-9DDE-000064657374}
+#define NS_OBSERVER_CID \
+    { 0xdb242e03, 0xe4d9, 0x11d2, { 0x9d, 0xde, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
+
 class nsObserver : public nsIObserver {
 public:
+
+    NS_DEFINE_STATIC_CID_ACCESSOR( NS_OBSERVER_CID )
  
-    NS_IMETHOD   Notify(nsISupports** result);
+    NS_DECL_IOBSERVER
  
     nsObserver(nsISupports* outer);
     virtual ~nsObserver(void);
@@ -38,5 +44,7 @@ public:
 private:
 
 };
+
+extern NS_COM nsresult NS_NewObserver(nsIObserver** anObserver, nsISupports* outer = NULL);
 
 #endif /* nsObserver_h___ */

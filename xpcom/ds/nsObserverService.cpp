@@ -31,7 +31,6 @@
 static NS_DEFINE_IID(kIObserverServiceIID, NS_IOBSERVERSERVICE_IID);
 static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static nsObserverService* gObserverService = nsnull; // The one-and-only ObserverService
@@ -88,7 +87,7 @@ nsresult nsObserverService::GetObserverService(nsIObserverService** anObserverSe
     return NS_OK;
 }
 
-nsresult nsObserverService::GetObserverList(nsIObserverList** anObserverList, nsString* aTopic)
+nsresult nsObserverService::GetObserverList(const nsString& aTopic, nsIObserverList** anObserverList)
 {
     if (anObserverList == NULL)
     {
@@ -105,16 +104,21 @@ nsresult nsObserverService::GetObserverList(nsIObserverList** anObserverList, ns
 	// Safely convert to a C-string 
     char buf[128];
     char* topic = buf;
-	
-    if ((*aTopic).Length() >= sizeof(buf))
-        topic = new char[(*aTopic).Length() + 1];
+    char *temp = 0;
+
+    if (aTopic.Length() >= sizeof(buf))
+        topic = temp = new char[aTopic.Length() + 1];
 
     if (topic == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    (*aTopic).ToCString(topic, (*aTopic).Length() + 1);
+    aTopic.ToCString(topic, aTopic.Length() + 1);
 
 	nsCStringKey key(topic);
+
+    if ( temp ) {
+        delete [] temp;
+    }
 
     nsIObserverList *topicObservers = nsnull;
     if (mObserverTopicTable->Exists(&key)) {
@@ -135,7 +139,7 @@ nsresult nsObserverService::GetObserverList(nsIObserverList** anObserverList, ns
 	return NS_OK;
 }
 
-nsresult nsObserverService::AddObserver(nsIObserver** anObserver, nsString* aTopic)
+nsresult nsObserverService::AddObserver(nsIObserver* anObserver, const PRUnichar* aTopic)
 {
 	nsIObserverList* anObserverList;
 	nsresult rv;
@@ -150,17 +154,17 @@ nsresult nsObserverService::AddObserver(nsIObserver** anObserver, nsString* aTop
         return NS_ERROR_NULL_POINTER;
     }
 
-	rv = GetObserverList(&anObserverList, aTopic);
+	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
-        return anObserverList->AddObserver(anObserver);
+        return anObserverList->AddObserver(&anObserver);
     }
  	
 	return NS_ERROR_FAILURE;
 }
 
-nsresult nsObserverService::RemoveObserver(nsIObserver** anObserver, nsString* aTopic)
+nsresult nsObserverService::RemoveObserver(nsIObserver* anObserver, const PRUnichar* aTopic)
 {
 	nsIObserverList* anObserverList;
 	nsresult rv;
@@ -175,17 +179,17 @@ nsresult nsObserverService::RemoveObserver(nsIObserver** anObserver, nsString* a
         return NS_ERROR_NULL_POINTER;
     }
 
-	rv = GetObserverList(&anObserverList, aTopic);
+	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
-        return anObserverList->RemoveObserver(anObserver);
+        return anObserverList->RemoveObserver(&anObserver);
     }
  	
 	return NS_ERROR_FAILURE;
 }
 
-nsresult nsObserverService::EnumerateObserverList(nsIEnumerator** anEnumerator, nsString* aTopic)
+nsresult nsObserverService::EnumerateObserverList(const PRUnichar* aTopic, nsIEnumerator** anEnumerator)
 {
 	nsIObserverList* anObserverList;
 	nsresult rv;
@@ -200,7 +204,7 @@ nsresult nsObserverService::EnumerateObserverList(nsIEnumerator** anEnumerator, 
         return NS_ERROR_NULL_POINTER;
     }
 
-	rv = GetObserverList(&anObserverList, aTopic);
+	rv = GetObserverList(aTopic, &anObserverList);
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
@@ -210,5 +214,41 @@ nsresult nsObserverService::EnumerateObserverList(nsIEnumerator** anEnumerator, 
 	return NS_ERROR_FAILURE;
 }
 
+// Enumerate observers of aTopic and call Observe on each.
+nsresult nsObserverService::Notify( nsISupports *aSubject,
+                                    const PRUnichar *aTopic,
+                                    const PRUnichar *someData ) {
+    nsresult rv = NS_OK;
+    nsIEnumerator *observers;
+    // Get observer list enumerator.
+    rv = this->EnumerateObserverList( aTopic, &observers );
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Go to start of observer list.
+        rv = observers->First();
+        // Continue until error or end of list.
+        while ( observers->IsDone() != NS_OK && NS_SUCCEEDED(rv) ) {
+            // Get current item (observer).
+            nsISupports *base;
+            rv = observers->CurrentItem( &base );
+            if ( NS_SUCCEEDED( rv ) ) {                           
+                // Convert item to nsIObserver.
+                nsIObserver *observer;
+                rv = base->QueryInterface( nsIObserver::GetIID(), (void**)&observer );
+                if ( NS_SUCCEEDED( rv ) && observer ) {
+                    // Tell the observer what's up.
+                    observer->Observe( aSubject, aTopic, someData );
+                    // Release the observer.
+                    observer->Release();
+                }
+            }
+            // Go on to next observer in list.
+            rv = observers->Next();
+        }
+        // Release the observer list.
+        observers->Release();
+        rv = NS_OK;
+    }
+    return rv;
+}
 ////////////////////////////////////////////////////////////////////////////////
 

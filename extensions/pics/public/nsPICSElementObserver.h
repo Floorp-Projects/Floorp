@@ -54,8 +54,8 @@ public:
                     PRUint32 numOfAttributes, const PRUnichar* nameArray[], 
                     const PRUnichar* valueArray[]);
 
-  NS_IMETHOD Notify(nsISupports** result);
-   
+  NS_DECL_IOBSERVER
+
   NS_DECL_ISUPPORTS
 
    

@@ -31,9 +31,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 
-static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
-static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
-
 static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
@@ -86,12 +83,10 @@ PRInt32 main(PRInt32 argc, char *argv[])
 	if (res == NS_OK) {
     // Load preferences
     nsComponentManager::RegisterComponent(kPrefCID, NULL, NULL, PREF_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kObserverServiceCID, "ObserverService", NS_OBSERVERSERVICE_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kObserverCID, "Observer", NS_OBSERVER_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, RAPTORHTMLPARS_DLL, PR_FALSE, PR_FALSE);
 
-    res = nsServiceManager::GetService(kObserverServiceCID, 
+    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
                                 nsIObserverService::GetIID(), 
                                 (nsISupports **)&anObserverService);
     

@@ -22,72 +22,132 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsString.h"
+#include "prprf.h"
 
-static NS_DEFINE_IID(kIObserverServiceIID, NS_IOBSERVERSERVICE_IID);
-static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
-static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
-static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
+static nsIObserverService *anObserverService = NULL;
+
+static void testResult( nsresult rv ) {
+    if ( NS_SUCCEEDED( rv ) ) {
+        cout << "...ok" << endl;
+    } else {
+        cout << "...failed, rv=0x" << hex << (int)rv << endl;
+    }
+    return;
+}
+
+extern ostream &operator<<( ostream &s, nsString &str ) {
+    const char *cstr = str.ToNewCString();
+    s << cstr;
+    delete [] (char*)cstr;
+    return s;
+}
+
+class TestObserver : public nsIObserver {
+public:
+    TestObserver( const nsString &name = "unknown" )
+        : mName( name ) {
+        NS_INIT_REFCNT();
+    }
+    NS_DECL_ISUPPORTS
+    NS_DECL_IOBSERVER
+    nsString mName;
+};
+
+NS_IMPL_ISUPPORTS( TestObserver, nsIObserver::GetIID() );
+
+NS_IMETHODIMP
+TestObserver::Observe( nsISupports     *aSubject,
+                       const PRUnichar *aTopic,
+                       const PRUnichar *someData ) {
+    nsString topic( aTopic );
+    nsString data( someData );
+    cout << mName << " has observed something: subject@" << (void*)aSubject
+         << " name=" << ((TestObserver*)aSubject)->mName
+         << " aTopic=" << topic
+         << " someData=" << data << endl;
+    return NS_OK;
+}
 
 int main(int argc, char *argv[])
 {
-
-    nsIObserverService *anObserverService = NULL;
+    nsString topicA( "topic-A" );
+    nsString topicB( "topic-B" );
     nsresult rv;
 
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
                                          "components");
     if (NS_FAILED(rv)) return rv;
 
-    nsresult res = nsComponentManager::CreateInstance(kObserverServiceCID,
+    nsresult res = nsComponentManager::CreateInstance(NS_OBSERVERSERVICE_PROGID,
                                                 NULL,
-                                                 kIObserverServiceIID,
+                                                 nsIObserverService::GetIID(),
                                                 (void **) &anObserverService);
 	
     if (res == NS_OK) {
 
-        nsString  aTopic("htmlparser");
-
         nsIObserver *anObserver;
-        nsIObserver *aObserver = nsnull;
-        nsIObserver *bObserver = nsnull;
+        nsIObserver *aObserver = new TestObserver("Observer-A");
+        aObserver->AddRef();
+        nsIObserver *bObserver = new TestObserver("Observer-B");
+        bObserver->AddRef();
             
-        nsresult res = nsRepository::CreateInstance(kObserverCID,
-                                                    NULL,
-                                                    kIObserverIID,
-                                                    (void **) &anObserver);
-
-        rv = NS_NewObserver(&aObserver);
-
-        if (NS_FAILED(rv)) return rv;
-
-        rv = anObserverService->AddObserver(&aObserver, &aTopic);
-        if (NS_FAILED(rv)) return rv;
+        cout << "Adding Observer-A as observer of topic-A..." << endl;
+        rv = anObserverService->AddObserver(aObserver, topicA);
+        testResult(rv);
  
-        rv = NS_NewObserver(&bObserver);
-        if (NS_FAILED(rv)) return rv;
+        cout << "Adding Observer-B as observer of topic-A..." << endl;
+        rv = anObserverService->AddObserver(bObserver, topicA);
+        testResult(rv);
+ 
+        cout << "Adding Observer-B as observer of topic-B..." << endl;
+        rv = anObserverService->AddObserver(bObserver, topicB);
+        testResult(rv);
 
-        rv = anObserverService->AddObserver(&bObserver, &aTopic);
-        if (NS_FAILED(rv)) return rv;
+        cout << "Testing Notify(observer-A, topic-A)..." << endl;
+        rv = anObserverService->Notify( aObserver,
+                                   topicA,
+                                   nsString("Testing Notify(observer-A, topic-A)") );
+        testResult(rv);
 
+        cout << "Testing Notify(observer-B, topic-B)..." << endl;
+        rv = anObserverService->Notify( bObserver,
+                                   topicB,
+                                   nsString("Testing Notify(observer-B, topic-B)") );
+        testResult(rv);
+ 
+        cout << "Testing EnumerateObserverList (for topic-A)..." << endl;
         nsIEnumerator* e;
-        rv = anObserverService->EnumerateObserverList(&e, &aTopic);
-        if (NS_FAILED(rv)) return rv;
-        nsISupports *inst;
+        rv = anObserverService->EnumerateObserverList(topicA, &e);
+        testResult(rv);
 
-        for (e->First(); e->IsDone() != NS_OK; e->Next()) {
-            rv = e->CurrentItem(&inst);
-            if (NS_SUCCEEDED(rv)) {
-              rv = inst->QueryInterface(nsIObserver::GetIID(),(void**)&anObserver);
+        cout << "Enumerating observers of topic-A..." << endl;
+        if ( NS_SUCCEEDED( rv ) ) {
+            nsISupports *inst;
+    
+            for (e->First(); e->IsDone() != NS_OK; e->Next()) {
+                rv = e->CurrentItem(&inst);
+                if (NS_SUCCEEDED(rv)) {
+                  rv = inst->QueryInterface(nsIObserver::GetIID(),(void**)&anObserver);
+                  cout << "Calling observe on enumerated observer "
+                        << ((TestObserver*)inst)->mName << "..." << endl;
+                  rv = anObserver->Observe( inst, topicA, nsString("during enumeration") );
+                  testResult(rv);
+                }
             }
-            rv = anObserver->Notify(nsnull);
         }
+        cout << "...done enumerating observers of topic-A" << endl;
 
-        rv = anObserverService->RemoveObserver(&aObserver, &aTopic);
-		    if (NS_FAILED(rv)) return rv;
+        cout << "Removing Observer-A..." << endl;
+        rv = anObserverService->RemoveObserver(aObserver, topicA);
+        testResult(rv);
 
 
-        rv = anObserverService->RemoveObserver(&bObserver, &aTopic);
-		    if (NS_FAILED(rv)) return rv;
+        cout << "Removing Observer-B (topic-A)..." << endl;
+        rv = anObserverService->RemoveObserver(bObserver, topicB);
+        testResult(rv);
+        cout << "Removing Observer-B (topic-B)..." << endl;
+        rv = anObserverService->RemoveObserver(bObserver, topicA);
+        testResult(rv);
        
     }
     return NS_OK;

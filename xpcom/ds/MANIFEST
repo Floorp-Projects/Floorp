@@ -7,9 +7,7 @@ nsIArena.h
 nsIAtom.h
 nsIBuffer.h
 nsIByteBuffer.h
-nsIObserver.h
 nsIObserverList.h
-nsIObserverService.h
 nsIPageManager.h
 nsIProperties.h
 nsISimpleEnumerator.h

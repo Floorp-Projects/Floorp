@@ -28,7 +28,6 @@
 static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
 static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsObserver Implementation
 
@@ -83,10 +82,10 @@ nsObserver::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_NOINTERFACE;
 }
 
-nsresult nsObserver::Notify(nsISupports** result)
-{
-    return NS_OK;
-    
+NS_IMETHODIMP
+nsObserver::Observe( nsISupports *, const PRUnichar *, const PRUnichar * ) {
+    nsresult rv = NS_OK;
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
