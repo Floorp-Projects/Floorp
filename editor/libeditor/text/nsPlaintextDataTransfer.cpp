@@ -47,7 +47,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsISelection.h"
 #include "nsCRT.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"

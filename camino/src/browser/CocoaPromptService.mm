@@ -46,7 +46,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsString.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 CocoaPromptService::CocoaPromptService()
 {

@@ -80,7 +80,7 @@
 #include "nsITextContent.h"
 
 #include "nsIContent.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 // transactions the editor knows how to build
 #include "TransactionFactory.h"

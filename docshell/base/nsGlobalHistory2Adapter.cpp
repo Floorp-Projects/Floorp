@@ -38,7 +38,7 @@
 #include "nsGlobalHistory2Adapter.h"
 
 #include "nsDocShellCID.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIComponentRegistrar.h"
 #include "nsGlobalHistoryAdapter.h"
 #include "nsIURI.h"

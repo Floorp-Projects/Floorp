@@ -54,7 +54,7 @@
 #include "nsRDFCID.h"
 
 #include "nsComponentManagerUtils.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsXPIDLString.h"
 #include "nsString.h"

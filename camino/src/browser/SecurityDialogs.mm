@@ -46,7 +46,7 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 SecurityDialogs::SecurityDialogs()
 {

@@ -82,7 +82,7 @@
 #include "nsIWebBrowser.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrefBranch.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIURI.h"
 #include "nsIURIFixup.h"

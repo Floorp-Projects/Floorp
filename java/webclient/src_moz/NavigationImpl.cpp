@@ -30,7 +30,7 @@
 
 #include "org_mozilla_webclient_impl_wrapper_0005fnative_NavigationImpl.h"
 
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsString.h"

@@ -38,7 +38,7 @@
 #include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsILineBreakerFactory.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreakerFactory.h"

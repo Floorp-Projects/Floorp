@@ -46,7 +46,7 @@
 #include <stdio.h>
 #include "ipcILockService.h"
 #include "ipcLockCID.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIEventQueueService.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"

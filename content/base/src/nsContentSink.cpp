@@ -68,7 +68,7 @@
 #include "nsNetCID.h"
 #include "nsICookieService.h"
 #include "nsIPrompt.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsICharsetConverterManager.h"
 #include "nsContentUtils.h"
 #include "nsParserUtils.h"

@@ -43,7 +43,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupportsUtils.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIPref.h"
 #include "nsFontMetricsXft.h"
 #include "prenv.h"

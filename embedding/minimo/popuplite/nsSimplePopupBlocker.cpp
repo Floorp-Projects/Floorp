@@ -40,7 +40,7 @@
 #include "nsString.h"
 
 #include "nsIPopupWindowManager.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"

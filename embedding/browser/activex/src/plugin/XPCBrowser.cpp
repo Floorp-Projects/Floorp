@@ -42,7 +42,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"

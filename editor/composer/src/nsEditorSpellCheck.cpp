@@ -51,7 +51,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIChromeRegistry.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"

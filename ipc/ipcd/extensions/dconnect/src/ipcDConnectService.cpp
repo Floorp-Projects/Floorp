@@ -42,7 +42,7 @@
 #include "ipcMessageReader.h"
 #include "ipcLog.h"
 
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsAutoPtr.h"

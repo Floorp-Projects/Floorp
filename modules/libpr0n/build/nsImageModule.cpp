@@ -49,7 +49,7 @@
 #include "nsIModule.h"
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "imgCache.h"
 #include "imgContainer.h"

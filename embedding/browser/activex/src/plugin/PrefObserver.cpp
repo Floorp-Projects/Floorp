@@ -40,7 +40,7 @@
 #include <Wininet.h>
 
 #include "npapi.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsISupportsUtils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"

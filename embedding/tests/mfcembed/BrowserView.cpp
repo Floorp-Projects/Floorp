@@ -65,7 +65,7 @@
 // Mozilla Includes
 #include "nsIIOService.h"
 #include "nsIWidget.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsMemory.h"
 #include "nsXPCOM.h"

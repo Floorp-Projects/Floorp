@@ -86,11 +86,11 @@
 #include "nsInterfaceRequestorAgg.h"
 
 // Helper, to simplify getting the I/O service.
-inline const nsGetServiceByCID
+inline const nsGetServiceByCIDWithError
 do_GetIOService(nsresult* error = 0)
 {
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    return nsGetServiceByCID(kIOServiceCID, 0, error);
+    return nsGetServiceByCIDWithError(kIOServiceCID, error);
 }
 
 // private little helper function... don't call this directly!

@@ -1,6 +1,6 @@
 #import "SecurityPane.h"
 
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIPref.h"
 
 // prefs for showing security dialogs

@@ -45,7 +45,7 @@
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIStringBundle.h"

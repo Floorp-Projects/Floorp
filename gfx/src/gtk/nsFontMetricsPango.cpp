@@ -40,7 +40,7 @@
 #include "nsIDeviceContext.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIPref.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #define PANGO_ENABLE_BACKEND
 #define PANGO_ENABLE_ENGINE

@@ -35,90 +35,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIServiceManagerUtils_h__
-#define nsIServiceManagerUtils_h__
+#ifndef nsServiceManagerUtils_h__
+#define nsServiceManagerUtils_h__
 
 #include "nsIServiceManager.h"
 #include "nsIServiceManagerObsolete.h"
 #include "nsCOMPtr.h"
 
-////////////////////////////////////////////////////////////////////////////
-// Using servicemanager with COMPtrs
-class NS_COM nsGetServiceByCID : public nsCOMPtr_helper
-{
- public:
-    nsGetServiceByCID( const nsCID& aCID, nsISupports* aServiceManager, nsresult* aErrorPtr )
-        : mCID(aCID),
-        mServiceManager(aServiceManager),
-        mErrorPtr(aErrorPtr)
-        {
-            // nothing else to do
-        }
-    
-    virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
-    
- private:
-    const nsCID&                mCID;
-    nsISupports*                mServiceManager;
-    nsresult*                   mErrorPtr;
-};
-
 inline
 const nsGetServiceByCID
-do_GetService( const nsCID& aCID, nsresult* error = 0 )
+do_GetService(const nsCID& aCID)
 {
-    return nsGetServiceByCID(aCID, 0, error);
+    return nsGetServiceByCID(aCID);
 }
 
 inline
-const nsGetServiceByCID
-do_GetService( const nsCID& aCID, nsISupports* aServiceManager, nsresult* error = 0 )
+const nsGetServiceByCIDWithError
+do_GetService(const nsCID& aCID, nsresult* error)
 {
-    return nsGetServiceByCID(aCID, aServiceManager, error);
-}
-
-class NS_COM nsGetServiceByContractID : public nsCOMPtr_helper
-{
- public:
-    nsGetServiceByContractID( const char* aContractID, nsISupports* aServiceManager, nsresult* aErrorPtr )
-        : mContractID(aContractID),
-        mServiceManager(aServiceManager),
-        mErrorPtr(aErrorPtr)
-        {
-            // nothing else to do
-        }
-    
-    virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
-    
- private:
-    const char*                 mContractID;
-    nsISupports*                mServiceManager;
-    nsresult*                   mErrorPtr;
-};
-
-inline
-const nsGetServiceByContractID
-do_GetService( const char* aContractID, nsresult* error = 0 )
-{
-    return nsGetServiceByContractID(aContractID, 0, error);
+    return nsGetServiceByCIDWithError(aCID, error);
 }
 
 inline
 const nsGetServiceByContractID
-do_GetService( const char* aContractID, nsISupports* aServiceManager, nsresult* error = 0 )
+do_GetService(const char* aContractID)
 {
-    return nsGetServiceByContractID(aContractID, aServiceManager, error);
+    return nsGetServiceByContractID(aContractID);
+}
+
+inline
+const nsGetServiceByContractIDWithError
+do_GetService( const char* aContractID, nsresult* error)
+{
+    return nsGetServiceByContractIDWithError(aContractID, error);
 }
 
 class nsGetServiceFromCategory : public nsCOMPtr_helper
 {
  public:
     nsGetServiceFromCategory(const char* aCategory, const char* aEntry,
-                             nsISupports* aServiceManager, 
                              nsresult* aErrorPtr)
         : mCategory(aCategory),
         mEntry(aEntry),
-        mServiceManager(aServiceManager),
         mErrorPtr(aErrorPtr)
         {
             // nothing else to do
@@ -128,7 +86,6 @@ class nsGetServiceFromCategory : public nsCOMPtr_helper
  protected:
     const char*                 mCategory;
     const char*                 mEntry;
-    nsISupports*                mServiceManager;
     nsresult*                   mErrorPtr;
 };
 
@@ -137,8 +94,14 @@ const nsGetServiceFromCategory
 do_GetServiceFromCategory( const char* category, const char* entry,
                            nsresult* error = 0)
 {
-    return nsGetServiceFromCategory(category, entry, 0, error);
+    return nsGetServiceFromCategory(category, entry, error);
 }
+
+NS_COM_GLUE nsresult
+CallGetService(const nsCID &aClass, const nsIID &aIID, void **aResult);
+
+NS_COM_GLUE nsresult
+CallGetService(const char *aContractID, const nsIID &aIID, void **aResult);
 
 // type-safe shortcuts for calling |GetService|
 template <class DestinationType>
@@ -149,15 +112,9 @@ CallGetService( const nsCID &aClass,
 {
     NS_PRECONDITION(aDestination, "null parameter");
     
-    nsCOMPtr<nsIServiceManager> mgr;
-    nsresult rv = NS_GetServiceManager(getter_AddRefs(mgr));
-    
-    if (NS_FAILED(rv))
-        return rv;
-
-    return mgr->GetService(aClass,
-                           NS_GET_IID(DestinationType), 
-                           NS_REINTERPRET_CAST(void**, aDestination));
+    return CallGetService(aClass,
+                          NS_GET_IID(DestinationType),
+                          NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 template <class DestinationType>
@@ -169,15 +126,9 @@ CallGetService( const char *aContractID,
     NS_PRECONDITION(aContractID, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
     
-    nsCOMPtr<nsIServiceManager> mgr;
-    nsresult rv = NS_GetServiceManager(getter_AddRefs(mgr));
-    
-    if (NS_FAILED(rv))
-        return rv;
-
-    return mgr->GetServiceByContractID(aContractID,
-                                       NS_GET_IID(DestinationType), 
-                                       NS_REINTERPRET_CAST(void**, aDestination));
+    return CallGetService(aContractID,
+                          NS_GET_IID(DestinationType),
+                          NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 #endif

@@ -37,7 +37,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 #include "nsIProperties.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include <windows.h>
 #include <shlobj.h>

@@ -44,7 +44,7 @@
 #include "nsINodeInfo.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"

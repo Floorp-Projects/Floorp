@@ -55,7 +55,7 @@
 #include "nsILocalFile.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsITridentProfileMigrator.h"
 

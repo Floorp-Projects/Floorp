@@ -42,7 +42,7 @@
 #ifdef MOZ_ENABLE_XFT
 #include "nsFontMetricsXft.h"
 #include "nsIPref.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "prenv.h"
 #endif /* MOZ_ENABLE_XFT */
 

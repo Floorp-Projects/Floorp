@@ -2,7 +2,7 @@
 #import "NSString+Utils.h"
 
 #include "nsCOMPtr.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIPref.h"
 #include "nsNetCID.h"
 #include "nsICookie.h"

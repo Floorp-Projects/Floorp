@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsQAWindowCreator.h"
 #include "nsIQABrowserUIGlue.h"

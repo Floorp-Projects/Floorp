@@ -42,7 +42,7 @@
 #include "nsEventQueueWatcher.h"
 
 #include "nsIEventQueueService.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIEventQueue.h"
 
 #include <qapplication.h>
