@@ -326,6 +326,10 @@ pass_1(TreeState *state)
 #endif
         g_hash_table_foreach_remove(IFACE_MAP(state), fill_ide_table, state);
 
+        /* if any are left then we must have failed in fill_ide_table */
+        if (g_hash_table_size(IFACE_MAP(state)))
+            return FALSE;
+
         /* sort the IDEs by IID order and store indices in the interface map */
         sort_ide_block(state);
         
