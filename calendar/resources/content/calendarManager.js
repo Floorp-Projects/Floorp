@@ -197,14 +197,16 @@ calendarManager.prototype.getAllCalendars = function()
    var thisCalendar = new CalendarObject;
    thisCalendar.name = "Default";
    thisCalendar.path = profileFile.path;
+   var active;
+
    try {
-      var active = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server0.active" );
+      active = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server0.active" );
    }
    catch( e )
    {
       this.CalendarWindow.calendarPreferences.calendarPref.setBoolPref( "server0.active", true );
 
-      var active = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server0.active" );
+      active = this.CalendarWindow.calendarPreferences.calendarPref.getBoolPref( "server0.active" );
    }
    
    thisCalendar.active = active;
@@ -339,7 +341,7 @@ function removeCalendar( event )
    dump( "\nbutton is "+event.button );
    if (event.button != 0) 
    {
-      return( false );
+      return;
    }
       
    if( event.currentTarget.checked )

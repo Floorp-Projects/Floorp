@@ -137,7 +137,10 @@ function cutToClipboard( /* calendarEventArray */)
 function copyToClipboard( calendarEventArray )
 {  
    if( !calendarEventArray)
-      var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
+   {
+      var calendarEventArray = new Array();
+      calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
+   }
 
    if(calendarEventArray.length == 0)
       alert("No events selected");
@@ -179,7 +182,7 @@ function copyToClipboard( calendarEventArray )
 
          clipboard.setData( trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard );
 
-         return true;         
+         return;         
       }
    }
 }
@@ -218,13 +221,16 @@ function pasteFromClipboard()
 	 trans.getAnyTransferData(flavour, data, length);
 	 data = data.value.QueryInterface(Components.interfaces.nsISupportsWString).data;
 	 //DEBUG alert("clipboard type: " + flavour.value);
+    var calendarEventArray;
+    var startDate;
+
 	 switch (flavour.value) {
 	 case "text/calendar":
-            var calendarEventArray;
+            
             calendarEventArray = parseIcalData( data );
             
             //change the date of all the events to now
-            var startDate = gCalendarWindow.currentView.getNewEventDate();
+            startDate = gCalendarWindow.currentView.getNewEventDate();
             var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
    
             var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
@@ -247,10 +253,9 @@ function pasteFromClipboard()
             }
             else
             {
-               var calendarEventArray;
                calendarEventArray = parseIcalData( data );
                //change the date of all the events to now
-               var startDate = gCalendarWindow.currentView.getNewEventDate();
+               startDate = gCalendarWindow.currentView.getNewEventDate();
                var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
       
                var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );

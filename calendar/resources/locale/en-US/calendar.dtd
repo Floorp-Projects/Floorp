@@ -186,7 +186,7 @@
 <!ENTITY calendar.main.tab.label        "Events" >
 <!ENTITY calendar.search.tab.label			        "Search">
 
-<!ENTITY calendar.search.options.searchfor			"Event contains:">
+<!ENTITY calendar.search.options.searchfor			" contain">
 
 <!-- Month View Entities -->
 <!ENTITY calendar.monthview.column.1.name "SUN">
