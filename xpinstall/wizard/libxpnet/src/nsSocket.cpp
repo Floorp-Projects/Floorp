@@ -45,18 +45,22 @@
         send(_socket, (char *) _buf, _len, 0);
 #include <winsock2.h>
 #elif defined(__OS2__)
-#define BSD_SELECT
-#include <types.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#define read(_socket, _buf, _len) \
-        recv(_socket, (char *) _buf, _len, 0);
-#define write(_socket, _buf, _len) \
-        send(_socket, (char *) _buf, _len, 0);
-#define close(_socket) \
-        soclose(_socket);
+ #define BSD_SELECT
+ #ifdef XP_OS2_EMX
+  #include <unistd.h>
+ #else
+  #include <types.h>
+  #define read(_socket, _buf, _len) \
+          recv(_socket, (char *) _buf, _len, 0);
+  #define write(_socket, _buf, _len) \
+          send(_socket, (char *) _buf, _len, 0);
+  #define close(_socket) \
+          soclose(_socket);
+ #endif
+ #include <sys/socket.h>
+ #include <sys/select.h>
+ #include <netinet/in.h>
+ #include <netdb.h>
 #endif
 
 #include "nsSocket.h"
