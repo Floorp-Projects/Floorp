@@ -64,7 +64,7 @@
 #include "nsIWebBrowserChrome.h"
 
 
-#ifndef XP_MAC && !defined(RHAPSODY)
+#if !defined(XP_MAC) && !defined(RHAPSODY)
 #include "nsTimeBomb.h"
 #endif
 
