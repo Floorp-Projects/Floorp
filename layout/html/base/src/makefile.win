@@ -26,7 +26,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
 CPPSRCS=				\
-	nsAreaFrame.cpp		\
+	nsAreaFrame.cpp			\
 	nsBRFrame.cpp			\
 	nsBlockBandData.cpp		\
 	nsBlockFrame.cpp		\
@@ -34,6 +34,7 @@ CPPSRCS=				\
 	nsBulletFrame.cpp		\
 	nsContainerFrame.cpp		\
 	nsFrame.cpp			\
+	nsFrameList.cpp			\
 	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
@@ -71,6 +72,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsBulletFrame.obj		\
 	.\$(OBJDIR)\nsContainerFrame.obj	\
 	.\$(OBJDIR)\nsFrame.obj			\
+	.\$(OBJDIR)\nsFrameList.obj		\
 	.\$(OBJDIR)\nsGlobalVariables.obj	\
 	.\$(OBJDIR)\nsHRFrame.obj		\
 	.\$(OBJDIR)\nsHTMLAtoms.obj		\
