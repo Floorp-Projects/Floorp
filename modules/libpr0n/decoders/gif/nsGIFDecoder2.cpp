@@ -34,6 +34,52 @@
 #include "nsRect.h"
 
 //////////////////////////////////////////////////////////////////////
+// Declaration of the static callbacks
+
+static int PR_CALLBACK BeginGIF(
+  void*    aClientData,
+  PRUint32 aLogicalScreenWidth, 
+  PRUint32 aLogicalScreenHeight,
+  PRUint8  aBackgroundRGBIndex);
+  
+static int PR_CALLBACK HaveDecodedRow(
+  void* aClientData,
+  PRUint8* aRowBufPtr,   // Pointer to single scanline temporary buffer
+  int aXOffset,          // With respect to GIF logical screen origin
+  int aLength,           // Length of the row?
+  int aRow,              // Row number?
+  int aDuplicateCount,   // Number of times to duplicate the row?
+  PRUint8 aDrawMode,     // il_draw_mode
+  int aInterlacePass);
+    
+static int PR_CALLBACK NewPixmap();
+
+static int PR_CALLBACK EndGIF(
+  void*    aClientData,
+  int      aAnimationLoopCount);
+  
+static int PR_CALLBACK BeginImageFrame(
+  void*    aClientData,
+  PRUint32 aFrameNumber,   /* Frame number, 1-n */
+  PRUint32 aFrameXOffset,  /* X offset in logical screen */
+  PRUint32 aFrameYOffset,  /* Y offset in logical screen */
+  PRUint32 aFrameWidth,    
+  PRUint32 aFrameHeight,   
+  GIF_RGB* aTransparencyChromaKey);
+static int PR_CALLBACK EndImageFrame(
+  void*    aClientData, 
+  PRUint32 aFrameNumber,
+  PRUint32 aDelayTimeout,
+  PRUint32 aDisposal);
+static int PR_CALLBACK SetupColorspaceConverter();
+static int PR_CALLBACK ResetPalette();
+static int PR_CALLBACK InitTransparentPixel();
+static int PR_CALLBACK DestroyTransparentPixel();
+
+static int PR_CALLBACK HaveImageAll(
+  void* aClientData);
+
+//////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
 // This is an adaptor between GIF2 and imgIDecoder
 
@@ -397,7 +443,6 @@ int HaveDecodedRow(
     nscoord width;
 
     decoder->mImageFrame->GetWidth(&width);
-    PRUint32 iwidth = width;
 
     gfx_format format;
     decoder->mImageFrame->GetFormat(&format);

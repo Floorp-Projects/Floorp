@@ -219,7 +219,7 @@ output_row(gif_struct *gs)
         if (width > 0)
             if (gs->GIFCallback_HaveDecodedRow) {
                 /* Decoded data available callback */
-                int result = (gs->GIFCallback_HaveDecodedRow)(
+                (gs->GIFCallback_HaveDecodedRow)(
                     gs->clientptr,
                     gs->rowbuf,                /* Pointer to single scanline temporary buffer */
                     gs->x_offset,              /* x offset with respect to GIF logical screen origin */
@@ -1420,7 +1420,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
         case gif_done:  
             if (gs->GIFCallback_EndGIF) {
-                int result = (gs->GIFCallback_EndGIF)(gs->clientptr, gs->loop_count);
+                (gs->GIFCallback_EndGIF)(gs->clientptr, gs->loop_count);
             }    
             return PR_SUCCESS;
             break;
@@ -1493,7 +1493,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
         // Handle general errors
         case gif_error: 
             if (gs->GIFCallback_EndGIF) {
-              int result = (gs->GIFCallback_EndGIF)(gs->clientptr, gs->loop_count);
+              (gs->GIFCallback_EndGIF)(gs->clientptr, gs->loop_count);
             }    
             return PR_FAILURE;
             break;
@@ -1522,7 +1522,7 @@ gif_destroy(gif_struct *gs)
     /* Clear any pending timeouts */
     if (gs->delay_time) {
         //ic->imgdcb->ImgDCBClearTimeout(gs->delay_timeout);
-        gs->delay_time = NULL;
+        gs->delay_time = 0;
     }
 
     gif_destroy_transparency(gs);
