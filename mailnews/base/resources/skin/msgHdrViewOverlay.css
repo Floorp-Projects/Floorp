@@ -34,9 +34,12 @@ box.header-part1           { background-color: #EEEEEE; border: none; }
 box.header-part2           { background-color: #CCCCCC; border: none; }
 box.header-part3           { background-color: #CCCCCC; border: none; }
 
-[hide] {
- display: none;
-} 
+/* visibility: collapse ONLY works for things inside of boxes, if it isn't in a box, it won't 
+   work. Use hideNonBox for objects which aren't in a box such as the titlebutton for showing
+   more or fewer email addresses
+*/
+[hide] { visibility: collapse; } 
+[hideNonBox] { display: none;}
 
 #addToAddressBookButton {
 	list-style-image:url("chrome://messenger/skin/addcard.gif");
@@ -46,6 +49,7 @@ box.header-part3           { background-color: #CCCCCC; border: none; }
 #attachmentButton {
   list-style-image:url("chrome://messenger/skin/attach.gif");
   min-height: 20px;
+  margin: 0px;
 }
 
 titledbutton.showMoreAddressesButton {
@@ -56,12 +60,6 @@ titledbutton.showFewerAddressesButton {
   list-style-image:url("chrome://messenger/skin/less.gif");
 }
 
-/* 
- * For printing/HTML display...
- */
-html|table[name=header-part1]    { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
-html|table[name=header-part2]    { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
-html|table[name=header-part3]    { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
 html|div.headerdisplayname       { font-weight: bold; margin-right: .5em; margin-left: .5em; }
 html|div.headerValue             { white-space: normal; min-width: 50px; }
 
