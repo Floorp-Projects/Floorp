@@ -72,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.52 $ $Date: 2001/06/15 11:12:17 $
+ * @version $Revision: 1.53 $ $Date: 2001/06/20 03:27:25 $
 **/
 
 /**
@@ -1794,8 +1794,9 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
             // Create a temporary channel to get nsIDocument->Reset to
             // do the right thing. We want the output document to get
             // much of the input document's characteristics.
-            serv->NewChannelFromURI(inputDocument->GetDocumentURL(),
-                                    getter_AddRefs(channel));
+            nsCOMPtr<nsIURI> docURL;
+            inputDocument->GetDocumentURL(getter_AddRefs(docURL));
+            serv->NewChannelFromURI(docURL, getter_AddRefs(channel));
         }
     }
  

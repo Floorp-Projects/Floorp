@@ -236,7 +236,8 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
         nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
         if (scriptContext)
         {
-            nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+            nsCOMPtr<nsIScriptGlobalObject> globalObject;
+            scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
             if (globalObject)
             {
                 nativeThis->Install(globalObject, trigger,&result);
@@ -316,7 +317,8 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
         nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
         if (scriptContext)
         {
-            nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+            nsCOMPtr<nsIScriptGlobalObject> globalObject;
+            scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
             if (globalObject)
             {
                 nsresult rv = nativeThis->InstallChrome(globalObject, chromeType, item, &nativeRet);
@@ -365,7 +367,8 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
     nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*) JS_GetContextPrivate(cx);
     if (scriptContext)
     {
-        nsCOMPtr<nsIScriptGlobalObject> globalObject = scriptContext->GetGlobalObject();
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
         if (globalObject)
         {
              if(NS_OK != nativeThis->StartSoftwareUpdate(globalObject, b0, b1, &nativeRet))

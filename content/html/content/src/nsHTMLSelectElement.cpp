@@ -1084,7 +1084,7 @@ nsHTMLSelectElement::RemoveFocus(nsIPresContext* aPresContext)
       return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIContent> rootContent;
-    rootContent = dont_AddRef(doc->GetRootContent());
+    doc->GetRootContent(getter_AddRefs(rootContent));
 
     rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
   }

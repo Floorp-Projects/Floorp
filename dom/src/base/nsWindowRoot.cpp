@@ -97,7 +97,8 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt)
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell;
+  doc->GetShellAt(0, getter_AddRefs(shell));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> aPresContext;

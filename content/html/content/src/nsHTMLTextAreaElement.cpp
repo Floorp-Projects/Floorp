@@ -270,7 +270,7 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
       return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIContent> rootContent;
-    rootContent = getter_AddRefs(doc->GetRootContent());
+    doc->GetRootContent(getter_AddRefs(rootContent));
 
     rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
   }

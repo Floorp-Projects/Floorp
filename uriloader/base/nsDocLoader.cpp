@@ -368,8 +368,8 @@ nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
 
   rv = base->QueryInterface(kIDocumentIID, (void**)&doc);
   if (NS_SUCCEEDED(rv)) {
-    nsIPresShell* pres;
-    pres = doc->GetShellAt(0);
+    nsCOMPtr<nsIPresShell> pres;
+    doc->GetShellAt(0, getter_AddRefs(pres));
     if (nsnull != pres) {
       nsIPresContext* presContext;
       rv = pres->GetPresContext(&presContext);
@@ -382,7 +382,6 @@ nsDocLoaderImpl::GetContentViewerContainer(nsISupports* aDocumentID,
         }
         NS_RELEASE(presContext);
       }
-      NS_RELEASE(pres);
     }
     NS_RELEASE(doc);
   }

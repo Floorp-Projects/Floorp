@@ -741,7 +741,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 
   if(mDocument) {
     // Get Presentation shell 0
-    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(mDocument->GetShellAt(0));
+    nsCOMPtr<nsIPresShell> presShell;
+    mDocument->GetShellAt(0, getter_AddRefs(presShell));
 
     if(presShell) {
       // Flush all pending notifications so that our frames are uptodate
@@ -768,7 +769,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 
         // Find the frame parent whose content's tagName either matches
         // the tagName passed in or is the document element.
-        nsCOMPtr<nsIContent> docElement(getter_AddRefs(mDocument->GetRootContent()));
+        nsCOMPtr<nsIContent> docElement;
+        mDocument->GetRootContent(getter_AddRefs(docElement));
         nsIFrame* parent = frame;
         nsCOMPtr<nsIContent> parentContent;
         frame->GetParent(&parent);
@@ -1025,7 +1027,8 @@ nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
   if (aDoc) {
     nsCompatibility mode;
     // multiple shells on the same doc are out of luck
-    nsIPresShell* shell = aDoc->GetShellAt(0);
+    nsCOMPtr<nsIPresShell> shell;
+    aDoc->GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
       nsCOMPtr<nsIPresContext> presContext;
       shell->GetPresContext(getter_AddRefs(presContext));
@@ -1035,7 +1038,6 @@ nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
           status = PR_TRUE;
         }
       }
-      NS_RELEASE(shell);
     }
   }
   return status;
@@ -2545,7 +2547,8 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
       }
 
        // Get presentation shell 0
-      nsIPresShell* presShell = doc->GetShellAt(0);
+      nsCOMPtr<nsIPresShell> presShell;
+      doc->GetShellAt(0, getter_AddRefs(presShell));
       if (nsnull != presShell) {
         nsIFrame *frame = nsnull;
         presShell->GetPrimaryFrameFor(aContent, &frame);
@@ -2553,7 +2556,6 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
           res = frame->QueryInterface(NS_GET_IID(nsIFormControlFrame),
                                       (void**)&aFormControlFrame);
         }
-        NS_RELEASE(presShell);
       }
       NS_RELEASE(doc);
     }
@@ -2578,7 +2580,8 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
     return result;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> presShell;
+  doc->GetShellAt(0, getter_AddRefs(presShell));
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIFrameManager> frameManager;
@@ -2621,10 +2624,10 @@ nsGenericHTMLElement::GetPresContext(nsIHTMLContent* aContent,
   if (NS_OK == aContent->GetDocument(doc)) {
     if (nsnull != doc) {
        // Get presentation shell 0
-      nsIPresShell* presShell = doc->GetShellAt(0);
+      nsCOMPtr<nsIPresShell> presShell;
+      doc->GetShellAt(0, getter_AddRefs(presShell));
       if (nsnull != presShell) {
         res = presShell->GetPresContext(aPresContext);
-        NS_RELEASE(presShell);
       }
       NS_RELEASE(doc);
     }

@@ -184,7 +184,7 @@ nsHTMLIFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 
   nsCOMPtr<nsIPresShell> presShell;
 
-  presShell = dont_AddRef(mDocument->GetShellAt(0));
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
   NS_ENSURE_TRUE(presShell, NS_OK);
 
   nsCOMPtr<nsISupports> tmp;

@@ -134,7 +134,8 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
   if (!binding) {
     nsCOMPtr<nsIDocument> doc;
     aInfo->GetDocument(getter_AddRefs(doc));
-    nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
+    nsCOMPtr<nsIContent> root;
+    doc->GetRootContent(getter_AddRefs(root));
     if (root) { // no root, no handlers. don't crash please.
       PRInt32 childCount;
       root->ChildCount(childCount);

@@ -215,7 +215,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     // Fix for bug #45989
     nsCOMPtr<nsIDocument> document;
     mHandlerElement->GetDocument(*getter_AddRefs(document));
-    nsCOMPtr<nsIURI> url = getter_AddRefs(document->GetDocumentURL());
+    nsCOMPtr<nsIURI> url;
+    document->GetDocumentURL(getter_AddRefs(url));
 
     PRBool isChrome = PR_FALSE;
     PRBool isRes = PR_FALSE;

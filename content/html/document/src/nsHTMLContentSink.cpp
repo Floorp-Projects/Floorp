@@ -1552,7 +1552,7 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
       if (mSink && mSink->mDocument) {
         PRInt32 ns = mSink->mDocument->GetNumberOfShells();
         if (ns > 0) {
-          presShell = dont_AddRef(mSink->mDocument->GetShellAt(0));
+          mSink->mDocument->GetShellAt(0, getter_AddRefs(presShell));
           if (presShell) {
             presShell->GetFrameManager(getter_AddRefs(frameManager));
             presShell->GetPresContext(getter_AddRefs(presContext));
@@ -2364,7 +2364,8 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   // Make root part
 
-  nsCOMPtr<nsIContent> doc_root(dont_AddRef(mDocument->GetRootContent()));
+  nsCOMPtr<nsIContent> doc_root;
+  mDocument->GetRootContent(getter_AddRefs(doc_root));
 
   if (doc_root) {
     // If the document already has a root we'll use it. This will
@@ -2452,7 +2453,8 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // XXX this is silly; who cares? RickG cares. It's part of the regression test. So don't bug me. 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
+    nsCOMPtr<nsIPresShell> shell;
+    mDocument->GetShellAt(i, getter_AddRefs(shell));
     if (shell) {
       nsCOMPtr<nsIViewManager> vm;
       nsresult rv = shell->GetViewManager(getter_AddRefs(vm));
@@ -3518,7 +3520,8 @@ HTMLContentSink::StartLayout()
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
+    nsCOMPtr<nsIPresShell> shell;
+    mDocument->GetShellAt(i, getter_AddRefs(shell));
     if (shell) {
       // Make shell an observer for next time
       shell->BeginObservingDocument();
@@ -3573,7 +3576,8 @@ HTMLContentSink::StartLayout()
     // scroll bars.
     ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
+      nsCOMPtr<nsIPresShell> shell;
+      mDocument->GetShellAt(i, getter_AddRefs(shell));
       if (shell) {
         nsCOMPtr<nsIViewManager> vm;
         shell->GetViewManager(getter_AddRefs(vm));
@@ -3643,7 +3647,8 @@ HTMLContentSink::ScrollToRef()
 
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
+      nsCOMPtr<nsIPresShell> shell;
+      mDocument->GetShellAt(i, getter_AddRefs(shell));
       if (shell) {
         // Scroll to the anchor
         shell->FlushPendingNotifications();
@@ -4858,7 +4863,8 @@ HTMLContentSink::DumpContentModel()
   FILE* out=::fopen("rtest_html.txt", "a");
   if(out!=nsnull) {
     if(mDocument) {
-      nsIContent* root = mDocument->GetRootContent();
+      nsIContent* root = nsnull;
+      mDocument->GetRootContent(&root);
       if(root) {
         if(mDocumentURI) {
           char* buff[1]={0};

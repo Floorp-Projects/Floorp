@@ -223,7 +223,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
 
     // Persist the main document
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
-    mURI = do_QueryInterface(doc->GetDocumentURL());
+    doc->GetDocumentURL(getter_AddRefs(mURI));
 
     // Store the base URI
     doc->GetBaseURL(*getter_AddRefs(mBaseURI));

@@ -351,7 +351,8 @@ nsXULCommandDispatcher::UpdateCommands(const nsAReadableString& aEventName)
 
     PRInt32 count = document->GetNumberOfShells();
     for (PRInt32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIPresShell> shell = dont_AddRef(document->GetShellAt(i));
+      nsCOMPtr<nsIPresShell> shell;
+      document->GetShellAt(i, getter_AddRefs(shell));
       if (! shell)
           continue;
       

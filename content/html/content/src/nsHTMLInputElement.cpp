@@ -743,7 +743,7 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
 
     nsCOMPtr<nsIContent> rootContent;
 
-    rootContent = getter_AddRefs(doc->GetRootContent());
+    doc->GetRootContent(getter_AddRefs(rootContent));
 
     rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
   }
@@ -852,7 +852,8 @@ nsHTMLInputElement::Click()
       PRInt32 numShells = doc->GetNumberOfShells();
       nsCOMPtr<nsIPresContext> context;
       for (PRInt32 i=0; i<numShells; i++) {
-        nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
+        nsCOMPtr<nsIPresShell> shell;
+        doc->GetShellAt(i, getter_AddRefs(shell));
         if (shell) {
           rv = shell->GetPresContext(getter_AddRefs(context));
           if (context) {

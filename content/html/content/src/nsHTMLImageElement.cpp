@@ -639,7 +639,7 @@ nsHTMLImageElement::GetCallerSourceURL(nsIURI** sourceURL)
         if (doc) {
           result = doc->GetBaseURL(*sourceURL);
           if (!*sourceURL) {
-            *sourceURL = doc->GetDocumentURL();
+            doc->GetDocumentURL(sourceURL);
           }
         }
       }
@@ -918,7 +918,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
   if (NS_SUCCEEDED(result) && mOwnerDocument) {
     nsCOMPtr<nsIPresShell> shell;
 
-    shell = dont_AddRef(mOwnerDocument->GetShellAt(0));
+    mOwnerDocument->GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
       nsCOMPtr<nsIPresContext> context;
 

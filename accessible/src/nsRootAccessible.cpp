@@ -133,7 +133,8 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
 
 NS_IMETHODIMP nsRootAccessible::GetAccValue(PRUnichar * *aAccValue)
 {
-  nsCOMPtr<nsIURI> pURI(mDocument->GetDocumentURL());
+  nsCOMPtr<nsIURI> pURI;
+  mDocument->GetDocumentURL(getter_AddRefs(pURI));
   char *path;
   pURI->GetSpec(&path);
   *aAccValue = ToNewUnicode(nsDependentCString(path));

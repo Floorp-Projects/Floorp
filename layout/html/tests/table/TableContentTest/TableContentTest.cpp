@@ -91,7 +91,7 @@ BasicTest::BasicTest()
   CreateCorrectContent(rows, cols);
   VerifyContent(rows, cols);
   nsIContent *root;
-  root = GetRootContent();
+  GetRootContent(&root);
   if (nsnull!=root && 1==root->ChildCount())
     root->RemoveChildAt(0);
   else
@@ -103,7 +103,7 @@ BasicTest::BasicTest()
   // Build a content model the "right" way with every kind of table object
   CreateCorrectFullContent(rows, cols);
   VerifyContent(rows, cols);
-  root = GetRootContent();
+  GetRootContent(&root);
   if (nsnull!=root && 1==root->ChildCount())
     root->RemoveChildAt(0);
   else
@@ -115,7 +115,7 @@ BasicTest::BasicTest()
   // Build a content model with things out of order
   CreateOutOfOrderContent(rows, cols);
   VerifyContent(rows, cols);
-  root = GetRootContent();
+  GetRootContent(&root);
   if (nsnull!=root && 1==root->ChildCount())
     root->RemoveChildAt(0);
   else
@@ -128,7 +128,7 @@ BasicTest::BasicTest()
   /* not ready for prime time...
   CreateIllegalContent(rows, cols);
   VerifyContent(rows, cols);
-  root = GetRootContent();
+  GetRootContent(&root);
   if (nsnull!=root && 1==root->ChildCount())
     root->RemoveChildAt(0);
   else
@@ -395,7 +395,8 @@ void BasicTest::CreateIllegalContent(int aRows, int aCols)
 
 void BasicTest::VerifyContent(PRInt32 aRows, PRInt32 aCols)
 {
-  nsIContent* root = GetRootContent();
+  nsIContent* root;
+  GetRootContent(&root);
   if (nsnull==root)
   {
     fprintf(out, "GetRootContent failed\n");
@@ -531,7 +532,8 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
 /** given a content model, create a geometry model */
 void GeometryTest::CreateGeometry(BasicTest * aDoc, nsIPresContext *aPC)
 {
-  nsIContent *root = aDoc->GetRootContent();
+  nsIContent *root;
+  aDoc->GetRootContent(&root);
   nsIContentDelegate* cd = root->GetDelegate(aPC);
   if (nsnull != cd) {
     mRootFrame = cd->CreateFrame(aPC, root, -1, nsnull);

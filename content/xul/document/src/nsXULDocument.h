@@ -116,7 +116,7 @@ public:
     NS_DECL_NSISTREAMLOADEROBSERVER
 
     // nsIDocument interface
-    virtual nsIArena* GetArena();
+    NS_IMETHOD GetArena(nsIArena** aArena);
 
     NS_IMETHOD Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
@@ -133,7 +133,7 @@ public:
 
     virtual const nsString* GetDocumentTitle() const;
 
-    virtual nsIURI* GetDocumentURL() const;
+    NS_IMETHOD GetDocumentURL(nsIURI** aURI) const;
 
     NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
 
@@ -186,31 +186,29 @@ public:
 
     virtual PRInt32 GetNumberOfShells();
 
-    virtual nsIPresShell* GetShellAt(PRInt32 aIndex);
+    NS_IMETHOD GetShellAt(PRInt32 aIndex, nsIPresShell** aShell);
 
-    virtual nsIDocument* GetParentDocument();
+    NS_IMETHOD GetParentDocument(nsIDocument** aParent);
 
-    virtual void SetParentDocument(nsIDocument* aParent);
+    NS_IMETHOD SetParentDocument(nsIDocument* aParent);
 
-    virtual void AddSubDocument(nsIDocument* aSubDoc);
+    NS_IMETHOD AddSubDocument(nsIDocument* aSubDoc);
 
-    virtual PRInt32 GetNumberOfSubDocuments();
+    NS_IMETHOD GetNumberOfSubDocuments(PRInt32* aCount);
 
-    virtual nsIDocument* GetSubDocumentAt(PRInt32 aIndex);
+    NS_IMETHOD GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc);
 
-    virtual nsIContent* GetRootContent();
+    NS_IMETHOD GetRootContent(nsIContent** aRoot);
 
-    virtual void SetRootContent(nsIContent* aRoot);
+    NS_IMETHOD SetRootContent(nsIContent* aRoot);
 
     NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
     NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aIndex) const;
     NS_IMETHOD GetChildCount(PRInt32& aCount);
 
-    virtual PRInt32 GetNumberOfStyleSheets();
-
-    virtual nsIStyleSheet* GetStyleSheetAt(PRInt32 aIndex);
-
-    virtual PRInt32 GetIndexOfStyleSheet(nsIStyleSheet* aSheet);
+    NS_IMETHOD GetNumberOfStyleSheets(PRInt32* aCount);
+    NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet);
+    NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex);
 
     virtual void AddStyleSheet(nsIStyleSheet* aSheet);
     virtual void RemoveStyleSheet(nsIStyleSheet* aSheet);

@@ -595,12 +595,11 @@ nsXULDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsIArena*
-nsXULDocument::GetArena()
+NS_IMETHODIMP
+nsXULDocument::GetArena(nsIArena** aArena)
 {
-    nsIArena* result = mArena;
-    NS_IF_ADDREF(result);
-    return result;
+    NS_IF_ADDREF(*aArena = mArena);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -753,12 +752,11 @@ nsXULDocument::GetDocumentTitle() const
     return &mDocumentTitle;
 }
 
-nsIURI*
-nsXULDocument::GetDocumentURL() const
+NS_IMETHODIMP
+nsXULDocument::GetDocumentURL(nsIURI** aURI) const
 {
-    nsIURI* result = mDocumentURL;
-    NS_IF_ADDREF(result);
-    return result;
+    NS_IF_ADDREF(*aURI = mDocumentURL);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -792,7 +790,7 @@ nsXULDocument::GetBaseURL(nsIURI*& aURL) const
     NS_ADDREF(aURL);
   }
   else {
-    aURL = GetDocumentURL();
+    GetDocumentURL(&aURL);
   }
   return NS_OK;
 }
@@ -1006,61 +1004,61 @@ nsXULDocument::GetNumberOfShells()
     return mPresShells.Count();
 }
 
-nsIPresShell*
-nsXULDocument::GetShellAt(PRInt32 aIndex)
+NS_IMETHODIMP
+nsXULDocument::GetShellAt(PRInt32 aIndex, nsIPresShell** aShell)
 {
-    nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[aIndex]);
-    NS_IF_ADDREF(shell);
-    return shell;
+    *aShell = NS_STATIC_CAST(nsIPresShell*, mPresShells[aIndex]);
+    NS_IF_ADDREF(*aShell);
+    return NS_OK;
 }
 
-nsIDocument*
-nsXULDocument::GetParentDocument()
+NS_IMETHODIMP
+nsXULDocument::GetParentDocument(nsIDocument** aParent)
 {
-    NS_IF_ADDREF(mParentDocument);
-    return mParentDocument;
+    NS_IF_ADDREF(*aParent = mParentDocument);
+    return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsXULDocument::SetParentDocument(nsIDocument* aParent)
 {
     // Note that we do *not* AddRef our parent because that would
     // create a circular reference.
     mParentDocument = aParent;
+    return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsXULDocument::AddSubDocument(nsIDocument* aSubDoc)
 {
     NS_ADDREF(aSubDoc);
     mSubDocuments.AppendElement(aSubDoc);
+    return NS_OK;
 }
 
-PRInt32
-nsXULDocument::GetNumberOfSubDocuments()
+NS_IMETHODIMP
+nsXULDocument::GetNumberOfSubDocuments(PRInt32 *aCount)
 {
-    return mSubDocuments.Count();
+    *aCount = mSubDocuments.Count();
+    return NS_OK;
 }
 
-nsIDocument*
-nsXULDocument::GetSubDocumentAt(PRInt32 aIndex)
+NS_IMETHODIMP
+nsXULDocument::GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc)
 {
-    nsIDocument* doc = (nsIDocument*) mSubDocuments.ElementAt(aIndex);
-    if (nsnull != doc) {
-        NS_ADDREF(doc);
-    }
-    return doc;
+    *aSubDoc = (nsIDocument*) mSubDocuments.ElementAt(aIndex);
+    NS_IF_ADDREF(*aSubDoc);
+    return NS_OK;
 }
 
-nsIContent*
-nsXULDocument::GetRootContent()
+NS_IMETHODIMP
+nsXULDocument::GetRootContent(nsIContent** aRoot)
 {
-    nsIContent* result = mRootContent;
-    NS_IF_ADDREF(result);
-    return result;
+    NS_IF_ADDREF(*aRoot = mRootContent);
+    return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsXULDocument::SetRootContent(nsIContent* aRoot)
 {
     if (mRootContent) {
@@ -1070,6 +1068,7 @@ nsXULDocument::SetRootContent(nsIContent* aRoot)
     if (mRootContent) {
         mRootContent->SetDocument(this, PR_TRUE, PR_TRUE);
     }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1093,24 +1092,26 @@ nsXULDocument::GetChildCount(PRInt32& aCount)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-PRInt32
-nsXULDocument::GetNumberOfStyleSheets()
+NS_IMETHODIMP
+nsXULDocument::GetNumberOfStyleSheets(PRInt32 *aCount)
 {
-    return mStyleSheets.Count();
+    *aCount = mStyleSheets.Count();
+    return NS_OK;
 }
 
-nsIStyleSheet*
-nsXULDocument::GetStyleSheetAt(PRInt32 aIndex)
+NS_IMETHODIMP
+nsXULDocument::GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet)
 {
-    nsIStyleSheet* sheet = NS_STATIC_CAST(nsIStyleSheet*, mStyleSheets[aIndex]);
-    NS_IF_ADDREF(sheet);
-    return sheet;
+    *aSheet = NS_STATIC_CAST(nsIStyleSheet*, mStyleSheets[aIndex]);
+    NS_IF_ADDREF(*aSheet);
+    return NS_OK;
 }
 
-PRInt32
-nsXULDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet)
+NS_IMETHODIMP
+nsXULDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex)
 {
-  return mStyleSheets.IndexOf(aSheet);
+    *aIndex = mStyleSheets.IndexOf(aSheet);
+    return NS_OK;
 }
 
 void 
@@ -2375,7 +2376,8 @@ nsXULDocument::GetElementsByTagName(const nsAReadableString& aTagName,
         return rv;
     }
 
-    nsIContent* root = GetRootContent();
+    nsIContent* root = nsnull;
+    GetRootContent(&root);
     NS_ASSERTION(root != nsnull, "no doc root");
 
     if (root != nsnull) {
@@ -2401,7 +2403,8 @@ nsXULDocument::GetElementsByAttribute(const nsAReadableString& aAttribute,
         return rv;
     }
 
-    nsIContent* root = GetRootContent();
+    nsIContent* root = nsnull;
+    GetRootContent(&root);
     NS_ASSERTION(root != nsnull, "no doc root");
 
     if (root != nsnull) {
@@ -2680,7 +2683,7 @@ nsXULDocument::GetWidth(PRInt32* aWidth)
 
     // We make the assumption that the first presentation shell
     // is the one for which we need information.
-    shell = getter_AddRefs(GetShellAt(0));
+    GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
         PRInt32 width, height;
         
@@ -2702,7 +2705,7 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
 
     // We make the assumption that the first presentation shell
     // is the one for which we need information.
-    shell = getter_AddRefs(GetShellAt(0));
+    GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
         PRInt32 width, height;
 
@@ -3112,7 +3115,8 @@ nsXULDocument::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
 
     *aReturn = elements;
 
-    nsCOMPtr<nsIContent> root = dont_AddRef(GetRootContent());
+    nsCOMPtr<nsIContent> root;
+    GetRootContent(getter_AddRefs(root));
     NS_ASSERTION(root, "no doc root");
 
     if (root) {
@@ -3846,7 +3850,8 @@ nsXULDocument::StartLayout(void)
 
     PRInt32 count = GetNumberOfShells();
     for (PRInt32 i = 0; i < count; i++) {
-      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(GetShellAt(i));
+      nsCOMPtr<nsIPresShell> shell;
+      GetShellAt(i, getter_AddRefs(shell));
       if (nsnull == shell)
           continue;
 
@@ -4115,7 +4120,8 @@ nsXULDocument::DispatchEvent(nsIDOMEvent* aEvent)
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell;
+  GetShellAt(0, getter_AddRefs(shell));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> presContext;
@@ -4138,7 +4144,8 @@ nsXULDocument::CreateEvent(const nsAReadableString& aEventType,
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell;
+  GetShellAt(0, getter_AddRefs(shell));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> presContext;
@@ -6009,7 +6016,8 @@ nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     }
   }
 
-  nsCOMPtr<nsIPresShell> shell(getter_AddRefs(GetShellAt(0)));
+  nsCOMPtr<nsIPresShell> shell;
+  GetShellAt(0, getter_AddRefs(shell));
   if (!shell)
     return NS_ERROR_FAILURE;
 

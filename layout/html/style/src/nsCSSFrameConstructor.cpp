@@ -7291,7 +7291,8 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
   aPresContext->GetShell(getter_AddRefs(shell));
 
   if (nsnull != mDocument && shell) {
-    nsCOMPtr<nsIContent> rootContent(dont_AddRef(mDocument->GetRootContent()));
+    nsCOMPtr<nsIContent> rootContent;
+    mDocument->GetRootContent(getter_AddRefs(rootContent));
     
     if (rootContent) {
       // Before removing the frames associated with the content object, ask them to save their
@@ -8438,7 +8439,8 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   // If we have a null parent, then this must be the document element
   // being inserted
   if (nsnull == aContainer) {
-    nsCOMPtr<nsIContent> docElement( dont_AddRef( mDocument->GetRootContent() ) );
+    nsCOMPtr<nsIContent> docElement;
+    mDocument->GetRootContent(getter_AddRefs(docElement));
 
     if (aChild == docElement.get()) {
       NS_PRECONDITION(nsnull == mInitialContainingBlock, "initial containing block already created");
@@ -10008,7 +10010,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
             //       so the entire visible regions gets painted
             nsCOMPtr<nsIContent> rootContent;
             nsCOMPtr<nsIContent> parentContent;
-            rootContent = getter_AddRefs(mDocument->GetRootContent());
+            mDocument->GetRootContent(getter_AddRefs(rootContent));
             aContent->GetParent(*getter_AddRefs(parentContent));
             if (aContent == rootContent.get() ||    // content is the root (HTML)
                 parentContent == rootContent ) {    // content's parent is root (BODY)

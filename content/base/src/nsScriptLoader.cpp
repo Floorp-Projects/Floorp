@@ -397,7 +397,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   else {
     request->mLoading = PR_FALSE;
     request->mIsInline = PR_TRUE;
-    request->mURI = dont_AddRef(mDocument->GetDocumentURL());
+    mDocument->GetDocumentURL(getter_AddRefs(request->mURI));
 
     nsCOMPtr<nsIScriptElement> scriptElement(do_QueryInterface(aElement));
     if (scriptElement) {

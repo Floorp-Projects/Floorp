@@ -2598,10 +2598,9 @@ static void
 wallet_InitializeCurrentURL(nsIDocument * doc) {
 
   /* get url */
-  nsIURI* url;
-  url = doc->GetDocumentURL();
+  nsCOMPtr<nsIURI> url;
+  doc->GetDocumentURL(getter_AddRefs(url));
   if (wallet_lastUrl == url) {
-    NS_RELEASE(url);
     return;
   } else {
     if (wallet_lastUrl) {
@@ -2610,7 +2609,6 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
     wallet_lastUrl = url;
   }
 
-  NS_RELEASE(url);
 }
 
 #define SEPARATOR "#*%$"
@@ -3292,7 +3290,8 @@ wallet_TraversalForPrefill
     if (NS_SUCCEEDED(result)) {
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
       if (doc) {
-        nsCOMPtr<nsIURI> url = getter_AddRefs(doc->GetDocumentURL());
+        nsCOMPtr<nsIURI> url;
+        doc->GetDocumentURL(getter_AddRefs(url));
         if (url) {
           wallet_GetHostFile(url, urlName);
         }
@@ -3791,13 +3790,13 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   char *URLName = nsnull;
   char *strippedURLName = nsnull;
   nsAutoString strippedURLNameAutoString;
-  nsCOMPtr<nsIURI> docURL;
   nsCOMPtr<nsIDocument> doc;
   currentForm->GetDocument(*getter_AddRefs(doc));
   if (!doc) {
     return;
   }
-  docURL = dont_AddRef(doc->GetDocumentURL());
+  nsCOMPtr<nsIURI> docURL;
+  doc->GetDocumentURL(getter_AddRefs(docURL));
   if (!docURL || wallet_IsFromCartman(docURL)) {
     return;
   }

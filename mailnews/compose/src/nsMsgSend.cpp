@@ -1597,7 +1597,8 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
           }
           
           nsXPIDLCString    spec;
-          nsCOMPtr<nsIURI> uri = dont_AddRef(doc->GetDocumentURL());
+          nsCOMPtr<nsIURI> uri;
+          doc->GetDocumentURL(getter_AddRefs(uri));
           
           if (!uri)
             return NS_ERROR_OUT_OF_MEMORY;

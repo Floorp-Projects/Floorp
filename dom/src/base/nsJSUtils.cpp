@@ -285,13 +285,11 @@ nsresult
 nsJSUtils::GetDynamicScriptGlobal(JSContext* aContext,
                                   nsIScriptGlobalObject** aNativeGlobal)
 {
-  nsIScriptGlobalObject* nativeGlobal = nsnull;
   nsCOMPtr<nsIScriptContext> scriptCX;
   GetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
-  if (scriptCX) {
-    *aNativeGlobal = nativeGlobal = scriptCX->GetGlobalObject();
-  }
-  return nativeGlobal ? NS_OK : NS_ERROR_FAILURE;
+  if (!scriptCX)
+    return NS_ERROR_FAILURE;
+  return scriptCX->GetGlobalObject(aNativeGlobal);
 }  
 
 nsresult 

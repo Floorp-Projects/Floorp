@@ -719,7 +719,8 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     else {
       aNode->GetAttribute(kNameSpaceID_HTML, mSrcAttr, src);
     }
-    nsIURI* docURL = aDocument->GetDocumentURL();
+    nsCOMPtr<nsIURI> docURL;
+    aDocument->GetDocumentURL(getter_AddRefs(docURL));
     nsresult rv;
     rv = NS_MakeAbsoluteURI(absURLSpec, src, docURL);
     if (NS_OK == rv) {
@@ -751,7 +752,6 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
         }
       }
     }
-    NS_RELEASE(docURL);
   }
 
   PRBool canHaveKids;
@@ -787,7 +787,7 @@ nsWebCrawler::FindMoreURLs()
         docv->GetDocument(*getter_AddRefs(doc));
         if (doc) {
           nsCOMPtr<nsIContent> root;
-          root = dont_AddRef(doc->GetRootContent());
+          doc->GetRootContent(getter_AddRefs(root));
           if (root) {
             FindURLsIn(doc, root);
           }

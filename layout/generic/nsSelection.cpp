@@ -3016,7 +3016,7 @@ NS_IMETHODIMP nsSelection::SelectAll()
     rv = shell->GetDocument(getter_AddRefs(doc));
     if (NS_FAILED(rv) || !doc)
       return rv?rv:NS_ERROR_FAILURE;
-    rootContent = getter_AddRefs(doc->GetRootContent());
+    doc->GetRootContent(getter_AddRefs(rootContent));
     if (!rootContent)
       return NS_ERROR_FAILURE;
   }

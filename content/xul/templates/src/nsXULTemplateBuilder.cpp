@@ -798,7 +798,8 @@ nsXULTemplateBuilder::LoadDataSources()
     //
     //     rdf:bookmarks rdf:history http://foo.bar.com/blah.cgi?baz=9
     //
-    nsCOMPtr<nsIURI> docurl = dont_AddRef(doc->GetDocumentURL());
+    nsCOMPtr<nsIURI> docurl;
+    doc->GetDocumentURL(getter_AddRefs(docurl));
 
     nsAutoString datasources;
     mRoot->GetAttribute(kNameSpaceID_None, nsXULAtoms::datasources, datasources);

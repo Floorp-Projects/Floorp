@@ -160,7 +160,7 @@ CookieViewerImpl::AddPermission(nsIDOMWindowInternal* aWin, PRBool permission, P
   }
 
   nsCOMPtr<nsIURI> docURL;
-  docURL = doc->GetDocumentURL();
+  doc->GetDocumentURL(getter_AddRefs(docURL));
   if (!docURL) {
     return NS_ERROR_FAILURE;
   }

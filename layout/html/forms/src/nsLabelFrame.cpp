@@ -352,7 +352,8 @@ nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
   if (!domElement)
     return PR_FALSE;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(iDoc->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell;
+  iDoc->GetShellAt(0, getter_AddRefs(shell));
   if (nsnull == shell)
     return PR_FALSE;
 

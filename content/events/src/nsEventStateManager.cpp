@@ -410,7 +410,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
               nsCOMPtr<nsIDocument> doc;
               gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
               if (doc) {
-                nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+                nsCOMPtr<nsIPresShell> shell;
+                doc->GetShellAt(0, getter_AddRefs(shell));
                 if (shell) {
                   nsCOMPtr<nsIPresContext> oldPresContext;
                   shell->GetPresContext(getter_AddRefs(oldPresContext));
@@ -507,7 +508,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             nsCOMPtr<nsIDocument> doc;
             gLastFocusedContent->GetDocument(*getter_AddRefs(doc));
             if (doc) {
-              nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+              nsCOMPtr<nsIPresShell> shell;
+              doc->GetShellAt(0, getter_AddRefs(shell));
               if (shell) {
                 nsCOMPtr<nsIPresContext> oldPresContext;
                 shell->GetPresContext(getter_AddRefs(oldPresContext));
@@ -599,7 +601,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             document = do_QueryInterface(domDoc);
             nsCOMPtr<nsIPresShell> shell;
             nsCOMPtr<nsIPresContext> context;
-            shell = getter_AddRefs(document->GetShellAt(0));
+            document->GetShellAt(0, getter_AddRefs(shell));
             shell->GetPresContext(getter_AddRefs(context));
             focusContent->SetFocus(context);
           }
@@ -648,8 +650,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       if (gLastFocusedDocument && gLastFocusedPresContext) {
         if (gLastFocusedContent) {
           // Blur the element.
-          nsCOMPtr<nsIPresShell> shell =
-            getter_AddRefs(gLastFocusedDocument->GetShellAt(0));
+          nsCOMPtr<nsIPresShell> shell;
+          gLastFocusedDocument->GetShellAt(0, getter_AddRefs(shell));
           if (shell) {
             nsCOMPtr<nsIPresContext> oldPresContext;
             shell->GetPresContext(getter_AddRefs(oldPresContext));
@@ -1148,7 +1150,8 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if(!doc) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(doc->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> presShell;
+  doc->GetShellAt(0, getter_AddRefs(presShell));
   if(!presShell) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
@@ -1311,7 +1314,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   else {
     // If there is no focused content, get the document content
     EnsureDocument(presShell);
-    focusContent = dont_AddRef(mDocument->GetRootContent());
+    mDocument->GetRootContent(getter_AddRefs(focusContent));
   }
   
   if (!focusContent)
@@ -2577,7 +2580,8 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
 {
 #ifdef DEBUG_DOCSHELL_FOCUS
   {
-    nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(mDocument->GetShellAt(0));
+    nsCOMPtr<nsIPresShell> presShell;
+    mDocument->GetShellAt(0, getter_AddRefs(presShell));
     if (presShell) {
       nsCOMPtr<nsIPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));
@@ -2623,7 +2627,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
     //}
   }
   else if (nsnull == mCurrentFocus) {
-    mCurrentFocus = mDocument->GetRootContent();
+    mDocument->GetRootContent(&mCurrentFocus);
     if (nsnull == mCurrentFocus) {
       return;
     }
@@ -2676,7 +2680,8 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
   // rememeber whether mSpecialTopOfDoc was set
   PRBool wasSpecialDocFocus = mSpecialTopOfDoc;
 
-  nsCOMPtr<nsIContent> rootContent = getter_AddRefs(mDocument->GetRootContent());
+  nsCOMPtr<nsIContent> rootContent;
+  mDocument->GetRootContent(getter_AddRefs(rootContent));
 
   // Check here to see if the HTMLFrame wants to do anything special
   // with the focus. i.e. like focusing a docshell child, or if it
@@ -3591,7 +3596,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
         // associated view manager on exit from this function.
         // See bug 53763.
         nsCOMPtr<nsIViewManager> kungFuDeathGrip;
-        nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+        nsCOMPtr<nsIPresShell> shell;
+        doc->GetShellAt(0, getter_AddRefs(shell));
         if (shell) {
           shell->GetViewManager(getter_AddRefs(kungFuDeathGrip));
 
@@ -4255,7 +4261,8 @@ nsEventStateManager::FigureOutKindOfDoc(nsIDocument* aDoc, eDocType* aDocType)
 
   *aDocType = eChrome;
 
-  nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(aDoc->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> presShell;
+  aDoc->GetShellAt(0, getter_AddRefs(presShell));
   if (!presShell) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
@@ -4281,7 +4288,8 @@ nsEventStateManager::FigureOutKindOfDoc(nsIDocument* aDoc, eDocType* aDocType)
   *aDocType = eGenericContent;
 
   // See if we are a frame set
-  nsCOMPtr<nsIContent>rootContent = getter_AddRefs(aDoc->GetRootContent());
+  nsCOMPtr<nsIContent> rootContent;
+  aDoc->GetRootContent(getter_AddRefs(rootContent));
   if (IsFrameSetDoc(rootContent)) {
     *aDocType = eFrameSet;
     return NS_OK;
@@ -4307,7 +4315,7 @@ nsEventStateManager::FigureOutKindOfDoc(nsIDocument* aDoc, eDocType* aDocType)
   parentPresShell->GetDocument(getter_AddRefs(parentDoc));
   if (!parentDoc) return NS_ERROR_FAILURE;
 
-  rootContent = getter_AddRefs(parentDoc->GetRootContent());
+  parentDoc->GetRootContent(getter_AddRefs(rootContent));
 
   nsCOMPtr<nsIContent> content = getter_AddRefs(FindContentForDocShell(parentPresShell, rootContent, docShell));
 
@@ -4340,7 +4348,8 @@ nsEventStateManager::GetDocShellsFromDoc(nsIDocument* aDocument,
   NS_ASSERTION(aDocShell,  "Pointer is null!");
   NS_ASSERTION(aParentDS,  "Pointer is null!");
 
-  nsCOMPtr<nsIPresShell> presShell = getter_AddRefs(aDocument->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> presShell;
+  aDocument->GetShellAt(0, getter_AddRefs(presShell));
   if (!presShell) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresContext> presContext;
@@ -4486,7 +4495,8 @@ nsEventStateManager::GetLastContent(nsIDocShell* aDocShell)
   presShell->GetDocument(getter_AddRefs(doc));
   if (!doc) return nsnull;
 
-  nsCOMPtr<nsIContent> rootContent = getter_AddRefs(doc->GetRootContent());
+  nsCOMPtr<nsIContent> rootContent;
+  doc->GetRootContent(getter_AddRefs(rootContent));
   if (!rootContent) return nsnull;
 
   nsIContent* last = nsnull;
@@ -4605,7 +4615,8 @@ nsEventStateManager::FocusAfterHTMLIFrameDoc(nsIDocShell* aDocShell,
     aParentDocShell->GetPresContext(getter_AddRefs(parentPresContext));
     if (!parentPresContext) return PR_FALSE;
 
-    nsCOMPtr<nsIContent> rootContent = getter_AddRefs(parentDoc->GetRootContent());
+    nsCOMPtr<nsIContent> rootContent;
+    parentDoc->GetRootContent(getter_AddRefs(rootContent));
     if (!rootContent) return PR_FALSE;
 
     // Now that we have the Root Content for the Parent Doc
@@ -4714,7 +4725,8 @@ nsEventStateManager::FocusWithinHTMLFrameDoc(nsIContent*   aRootContent,
       parentPresShell->GetDocument(getter_AddRefs(parentDoc));
       if (!parentDoc) return PR_FALSE;
 
-      nsCOMPtr<nsIContent> rootContent = getter_AddRefs(parentDoc->GetRootContent());
+      nsCOMPtr<nsIContent> rootContent;
+      parentDoc->GetRootContent(getter_AddRefs(rootContent));
       if (!rootContent) return PR_FALSE;
 
       // Look up the content

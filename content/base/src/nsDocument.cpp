@@ -169,10 +169,12 @@ nsDOMStyleSheetList::GetLength(PRUint32* aLength)
     // been added or removed.
     if (-1 == mLength) {
       PRUint32 count = 0;
-      PRInt32 i, imax = mDocument->GetNumberOfStyleSheets();
+      PRInt32 i, imax = 0;
+      mDocument->GetNumberOfStyleSheets(&imax);
       
       for (i = 0; i < imax; i++) {
-        nsCOMPtr<nsIStyleSheet> sheet(dont_AddRef(mDocument->GetStyleSheetAt(i)));
+        nsCOMPtr<nsIStyleSheet> sheet;
+        mDocument->GetStyleSheetAt(i, getter_AddRefs(sheet));
         if (!sheet)
           continue;
         nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
@@ -198,11 +200,13 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
   *aReturn = nsnull;
   if (nsnull != mDocument) {
     PRUint32 count = 0;
-    PRInt32 i, imax = mDocument->GetNumberOfStyleSheets();
+    PRInt32 i, imax = 0;
+    mDocument->GetNumberOfStyleSheets(&imax);
   
     // XXX Not particularly efficient, but does anyone care?
     for (i = 0; (i < imax) && (nsnull == *aReturn); i++) {
-      nsCOMPtr<nsIStyleSheet> sheet(dont_AddRef(mDocument->GetStyleSheetAt(i)));
+      nsCOMPtr<nsIStyleSheet> sheet;
+      mDocument->GetStyleSheetAt(i, getter_AddRefs(sheet));
       if (!sheet)
         continue;
       nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
@@ -587,12 +591,11 @@ nsresult nsDocument::Init()
   return rv;
 }
 
-nsIArena* nsDocument::GetArena()
+NS_IMETHODIMP
+nsDocument::GetArena(nsIArena** aArena)
 {
-  if (nsnull != mArena) {
-    NS_ADDREF(mArena);
-  }
-  return mArena;
+  NS_IF_ADDREF(*aArena = mArena);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -725,11 +728,11 @@ const nsString* nsDocument::GetDocumentTitle() const
   return &mDocumentTitle;
 }
 
-nsIURI* nsDocument::GetDocumentURL() const
+NS_IMETHODIMP
+nsDocument::GetDocumentURL(nsIURI** aURI) const
 {
-  nsIURI* url = mDocumentURL;
-  NS_IF_ADDREF(url);
-  return url;
+  NS_IF_ADDREF(*aURI = mDocumentURL);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1022,61 +1025,64 @@ PRInt32 nsDocument::GetNumberOfShells()
   return mPresShells.Count();
 }
 
-nsIPresShell* nsDocument::GetShellAt(PRInt32 aIndex)
+NS_IMETHODIMP
+nsDocument::GetShellAt(PRInt32 aIndex, nsIPresShell** aShell)
 {
-  nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(aIndex);
-  if (nsnull != shell) {
-    NS_ADDREF(shell);
-  }
-  return shell;
+  *aShell = (nsIPresShell*) mPresShells.ElementAt(aIndex);
+  NS_IF_ADDREF(*aShell);
+  return NS_OK;
 }
 
-nsIDocument* nsDocument::GetParentDocument()
+NS_IMETHODIMP
+nsDocument::GetParentDocument(nsIDocument** aParent)
 {
-  if (nsnull != mParentDocument) {
-    NS_ADDREF(mParentDocument);
-  }
-  return mParentDocument;
+  NS_IF_ADDREF(*aParent = mParentDocument);
+  return NS_OK;
 }
 
 /**
  * Note that we do *not* AddRef our parent because that would
  * create a circular reference.
  */
-void nsDocument::SetParentDocument(nsIDocument* aParent)
+NS_IMETHODIMP
+nsDocument::SetParentDocument(nsIDocument* aParent)
 {
   mParentDocument = aParent;
+  return NS_OK;
 }
 
-void nsDocument::AddSubDocument(nsIDocument* aSubDoc)
+NS_IMETHODIMP
+nsDocument::AddSubDocument(nsIDocument* aSubDoc)
 {
   NS_ADDREF(aSubDoc);
   mSubDocuments.AppendElement(aSubDoc);
+  return NS_OK;
 }
 
-PRInt32 nsDocument::GetNumberOfSubDocuments()
+NS_IMETHODIMP
+nsDocument::GetNumberOfSubDocuments(PRInt32* aCount)
 {
-  return mSubDocuments.Count();
+  *aCount = mSubDocuments.Count();
+  return NS_OK;
 }
 
-nsIDocument* nsDocument::GetSubDocumentAt(PRInt32 aIndex)
+NS_IMETHODIMP
+nsDocument::GetSubDocumentAt(PRInt32 aIndex, nsIDocument** aSubDoc)
 {
-  nsIDocument* doc = (nsIDocument*) mSubDocuments.ElementAt(aIndex);
-  if (nsnull != doc) {
-    NS_ADDREF(doc);
-  }
-  return doc;
+  *aSubDoc = (nsIDocument*) mSubDocuments.ElementAt(aIndex);
+  NS_IF_ADDREF(*aSubDoc);
+  return NS_OK;
 }
 
-nsIContent* nsDocument::GetRootContent()
+NS_IMETHODIMP
+nsDocument::GetRootContent(nsIContent** aRoot)
 {
-  if (nsnull != mRootContent) {
-    NS_ADDREF(mRootContent);
-  }
-  return mRootContent;
+  NS_IF_ADDREF(*aRoot = mRootContent);
+  return NS_OK;
 }
 
-void nsDocument::SetRootContent(nsIContent* aRoot)
+NS_IMETHODIMP
+nsDocument::SetRootContent(nsIContent* aRoot)
 {
   if (mRootContent) {
     PRInt32 indx = mChildren->IndexOf(mRootContent);
@@ -1090,6 +1096,7 @@ void nsDocument::SetRootContent(nsIContent* aRoot)
   }
 
   mRootContent = aRoot;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1116,21 +1123,26 @@ nsDocument::GetChildCount(PRInt32& aCount)
   return NS_OK;
 }
 
-PRInt32 nsDocument::GetNumberOfStyleSheets()
+NS_IMETHODIMP 
+nsDocument::GetNumberOfStyleSheets(PRInt32* aCount)
 {
-  return mStyleSheets.Count();
+  *aCount = mStyleSheets.Count();
+  return NS_OK;
 }
 
-nsIStyleSheet* nsDocument::GetStyleSheetAt(PRInt32 aIndex)
+NS_IMETHODIMP 
+nsDocument::GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet)
 {
-  nsIStyleSheet* sheet = (nsIStyleSheet*)mStyleSheets.ElementAt(aIndex);
-  NS_IF_ADDREF(sheet);
-  return sheet;
+  *aSheet = (nsIStyleSheet*)mStyleSheets.ElementAt(aIndex);
+  NS_IF_ADDREF(*aSheet);
+  return NS_OK;
 }
 
-PRInt32 nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet)
+NS_IMETHODIMP 
+nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex)
 {
-  return mStyleSheets.IndexOf(aSheet);
+  *aIndex = mStyleSheets.IndexOf(aSheet);
+  return NS_OK;
 }
 
 void nsDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
@@ -2294,7 +2306,8 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
     }
   }
 
-  nsCOMPtr<nsIPresShell> shell(getter_AddRefs(GetShellAt(0)));
+  nsCOMPtr<nsIPresShell> shell;
+  GetShellAt(0, getter_AddRefs(shell));
   if (!shell)
     return NS_ERROR_FAILURE;
 
@@ -2964,7 +2977,8 @@ nsDocument::DispatchEvent(nsIDOMEvent* aEvent)
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell(getter_AddRefs(GetShellAt(0)));
+  nsCOMPtr<nsIPresShell> shell;
+  GetShellAt(0, getter_AddRefs(shell));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> presContext;
@@ -2986,7 +3000,8 @@ nsDocument::CreateEvent(const nsAReadableString& aEventType, nsIDOMEvent** aRetu
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell(getter_AddRefs(GetShellAt(0)));
+  nsCOMPtr<nsIPresShell> shell;
+  GetShellAt(0, getter_AddRefs(shell));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> presContext;

@@ -270,7 +270,8 @@ int main (int argc, char* argv[])
     nsCRT::free(s);
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(pDOMDocument);
     if (doc) {
-      nsCOMPtr<nsIURI> uri = dont_AddRef(doc->GetDocumentURL());
+      nsCOMPtr<nsIURI> uri;
+      doc->GetDocumentURL(getter_AddRefs(uri));
       nsXPIDLCString spec;
       uri->GetSpec(getter_Copies(spec));
       printf("Document URI=\"%s\"\n",spec.get());

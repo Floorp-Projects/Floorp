@@ -1340,8 +1340,7 @@ nsAccessible::GetDocShellObjects(nsIDocShell*     aDocShell,
   (*aPresShell)->GetDocument(getter_AddRefs(doc));
   if (!doc) return NS_ERROR_FAILURE;
 
-  *aContent = doc->GetRootContent(); // this addrefs
-  return NS_OK;
+  return doc->GetRootContent(aContent); // this addrefs
 }
 
 //-------------------------------------------------------

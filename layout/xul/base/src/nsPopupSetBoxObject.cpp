@@ -132,7 +132,8 @@ nsPopupSetBoxObject::CreatePopup(nsIDOMElement* aSrcContent,
     return NS_OK;
 
   nsCOMPtr<nsIDocument> document(do_QueryInterface(doc));
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(document->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell;
+  document->GetShellAt(0, getter_AddRefs(shell));
   if (!shell)
     return NS_OK;
 

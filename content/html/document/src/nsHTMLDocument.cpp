@@ -1028,7 +1028,7 @@ nsHTMLDocument::GetBaseURL(nsIURI*& aURL) const
     NS_ADDREF(aURL);
   }
   else {
-    aURL = GetDocumentURL();
+    GetDocumentURL(&aURL);
   }
   return NS_OK;
 }
@@ -2036,7 +2036,7 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
       if (NS_SUCCEEDED(result)) {
         nsCOMPtr<nsIDocument> doc(do_QueryInterface(document, &result));
         if (doc) { 
-          *sourceURL = doc->GetDocumentURL(); 
+          doc->GetDocumentURL(sourceURL); 
           result = sourceURL ? NS_OK : NS_ERROR_FAILURE; 
         } 
       }
@@ -2680,7 +2680,7 @@ nsHTMLDocument::GetWidth(PRInt32* aWidth)
 
   // We make the assumption that the first presentation shell
   // is the one for which we need information.
-  shell = getter_AddRefs(GetShellAt(0));
+  GetShellAt(0, getter_AddRefs(shell));
   if (shell) {
     PRInt32 width, height;
 
@@ -2702,7 +2702,7 @@ nsHTMLDocument::GetHeight(PRInt32* aHeight)
 
   // We make the assumption that the first presentation shell
   // is the one for which we need information.
-  shell = getter_AddRefs(GetShellAt(0));
+  GetShellAt(0, getter_AddRefs(shell));
   if (shell) {
     PRInt32 width, height;
 

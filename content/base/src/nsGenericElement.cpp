@@ -406,7 +406,7 @@ nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
     doc->GetBaseURL(*getter_AddRefs(uri));
 
     if (!uri) {
-      uri = dont_AddRef(doc->GetDocumentURL());
+      doc->GetDocumentURL(getter_AddRefs(uri));
     }
   }
 
@@ -2009,8 +2009,8 @@ nsGenericElement::RenderFrame(nsIPresContext* aPresContext)
   PRInt32 i, n;
   n = mDocument->GetNumberOfShells();
   for (i = 0; i < n; i++) {
-    nsIPresShell* shell;
-    shell = mDocument->GetShellAt(i);
+    nsCOMPtr<nsIPresShell> shell;
+    mDocument->GetShellAt(i, getter_AddRefs(shell));
     nsIFrame* frame;
     shell->GetPrimaryFrameFor(this, &frame);
     while (nsnull != frame) {
@@ -2035,7 +2035,6 @@ nsGenericElement::RenderFrame(nsIPresContext* aPresContext)
       // If frame has a next-in-flow, repaint it too
       frame->GetNextInFlow(&frame);
     }
-    NS_RELEASE(shell);
   }
 
   return NS_OK;

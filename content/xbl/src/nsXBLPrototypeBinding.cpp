@@ -479,7 +479,8 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
     nsCOMPtr<nsIDocument> doc;
     info->GetDocument(getter_AddRefs(doc));
 
-    nsCOMPtr<nsIURI> docURL = getter_AddRefs(doc->GetDocumentURL());
+    nsCOMPtr<nsIURI> docURL;
+    doc->GetDocumentURL(getter_AddRefs(docURL));
 
     for (PRInt32 i = 0; i < childCount; i++) {
       nsCOMPtr<nsIContent> resource;
@@ -528,7 +529,8 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
         PRBool doneLoading;
         nsAutoString empty, media;
         resource->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::media, media);
-        PRInt32 numSheets = doc->GetNumberOfStyleSheets();      
+        PRInt32 numSheets = 0;
+        doc->GetNumberOfStyleSheets(&numSheets);
         rv = cssLoader->LoadStyleLink(nsnull, url, empty, media, kNameSpaceID_Unknown,
                                       numSheets,
                                       nsnull,
@@ -1419,7 +1421,8 @@ nsXBLPrototypeBinding::NotifyBoundElements()
         if (parent)
           parent->IndexOf(content, index);
         
-        nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+        nsCOMPtr<nsIPresShell> shell;
+        doc->GetShellAt(0, getter_AddRefs(shell));
         if (shell) {
           nsIFrame* childFrame;
           shell->GetPrimaryFrameFor(content, &childFrame);

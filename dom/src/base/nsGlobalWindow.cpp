@@ -356,7 +356,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
     nsCOMPtr<nsIURI> docURL;
 
     if (doc) {
-      docURL = dont_AddRef(doc->GetDocumentURL());
+      doc->GetDocumentURL(getter_AddRefs(docURL));
       doc = nsnull;             // Forces release now
     }
 
@@ -2580,7 +2580,8 @@ NS_IMETHODIMP GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent)
       if (count == 0)
         return NS_OK;
 
-      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(idoc->GetShellAt(0));
+      nsCOMPtr<nsIPresShell> shell;
+      idoc->GetShellAt(0, getter_AddRefs(shell));
 
       // Retrieve the context
       nsCOMPtr<nsIPresContext> aPresContext;
@@ -3749,14 +3750,15 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
 
   nsCOMPtr<nsIScriptContext> scriptcx = (nsIScriptContext *) JS_GetContextPrivate(cx);
   if (scriptcx) {
-    nsCOMPtr<nsIScriptGlobalObject> gobj(dont_AddRef(scriptcx->GetGlobalObject()));
+    nsCOMPtr<nsIScriptGlobalObject> gobj;
+    scriptcx->GetGlobalObject(getter_AddRefs(gobj));
     nsCOMPtr<nsIDOMWindow> caller(do_QueryInterface(gobj));
     if (caller) {
       nsCOMPtr<nsIDOMDocument> callerDOMdoc;
       caller->GetDocument(getter_AddRefs(callerDOMdoc));
       nsCOMPtr<nsIDocument> callerDoc(do_QueryInterface(callerDOMdoc));
       if (callerDoc)
-        baseURI = dont_AddRef(callerDoc->GetDocumentURL());
+        callerDoc->GetDocumentURL(getter_AddRefs(baseURI));
     }
   }
 

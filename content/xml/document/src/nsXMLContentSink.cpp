@@ -254,7 +254,8 @@ nsXMLContentSink::ScrollToRef()
   {
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
+      nsCOMPtr<nsIPresShell> shell;
+      mDocument->GetShellAt(i, getter_AddRefs(shell));
       if (shell) {
         shell->FlushPendingNotifications();
         // Scroll to the anchor
@@ -270,7 +271,8 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // XXX this is silly; who cares?
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell( dont_AddRef(mDocument->GetShellAt(i)) );
+    nsCOMPtr<nsIPresShell> shell;
+    mDocument->GetShellAt(i, getter_AddRefs(shell));
     if (shell) {
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));
@@ -1584,7 +1586,8 @@ nsXMLContentSink::StartLayout()
 
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
+    nsCOMPtr<nsIPresShell> shell;
+    mDocument->GetShellAt(i, getter_AddRefs(shell));
     if (nsnull != shell) {
       // Make shell an observer for next time
       shell->BeginObservingDocument();
@@ -1603,7 +1606,6 @@ nsXMLContentSink::StartLayout()
         RefreshIfEnabled(vm);
       }
 
-      NS_RELEASE(shell);
     }
   }
 
@@ -1637,7 +1639,8 @@ nsXMLContentSink::StartLayout()
     // scroll bars.
     ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsCOMPtr<nsIPresShell> shell(dont_AddRef(mDocument->GetShellAt(i)));
+      nsCOMPtr<nsIPresShell> shell;
+      mDocument->GetShellAt(i, getter_AddRefs(shell));
       if (shell) {
         nsCOMPtr<nsIViewManager> vm;
         shell->GetViewManager(getter_AddRefs(vm));

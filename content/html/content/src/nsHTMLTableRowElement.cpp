@@ -190,11 +190,13 @@ void DebugList(nsIDOMHTMLTableElement* aTable) {
     nsIDocument* doc = nsnull;
     result = content->GetDocument(doc);
     if (NS_SUCCEEDED(result) && (nsnull != doc)) {
-      nsIContent* root = doc->GetRootContent();
+      nsIContent* root = nsnull;
+      doc->GetRootContent(&root);
       if (root) {
         root->List();
       }
-      nsIPresShell* shell = doc->GetShellAt(0);
+      nsCOMPtr<nsIPresShell> shell;
+      doc->GetShellAt(0, getter_AddRefs(shell));
       if (nsnull != shell) {
         nsIFrame* rootFrame;
         shell->GetRootFrame(rootFrame);
@@ -202,7 +204,6 @@ void DebugList(nsIDOMHTMLTableElement* aTable) {
           rootFrame->List(stdout, 0);
         }
       }
-      NS_RELEASE(shell);
       NS_RELEASE(doc);
     }
     NS_RELEASE(content);

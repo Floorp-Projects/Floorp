@@ -307,7 +307,9 @@ nsStyleLinkElement::UpdateStyleSheet(PRBool aNotify, nsIDocument *aOldDocument, 
       }
     }
     if (prevSheet) {
-      insertionPoint = doc->GetIndexOfStyleSheet(prevSheet) + 1;
+      PRInt32 sheetIndex = 0;
+      doc->GetIndexOfStyleSheet(prevSheet, &sheetIndex);
+      insertionPoint = sheetIndex + 1;
     }
     else {
       insertionPoint = 0;

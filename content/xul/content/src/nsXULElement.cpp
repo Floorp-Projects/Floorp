@@ -831,7 +831,8 @@ nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
     }
     else if (mDocument) {
         // XXX This is a mess because of our fun multiple inheritance heirarchy
-        nsCOMPtr<nsIContent> root = dont_AddRef( mDocument->GetRootContent() );
+        nsCOMPtr<nsIContent> root;
+        mDocument->GetRootContent(getter_AddRefs(root));
         nsCOMPtr<nsIContent> thisIContent;
         QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(thisIContent));
 
@@ -1765,8 +1766,8 @@ nsXULElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
     // nsIXMLContent. If we're in a document, try to doc's root
     // element.
     if (mDocument) {
-        nsCOMPtr<nsIContent> docroot
-            = dont_AddRef( mDocument->GetRootContent() );
+        nsCOMPtr<nsIContent> docroot;
+        mDocument->GetRootContent(getter_AddRefs(docroot));
 
         // Wow! Nasty cast to get an unambiguous, non-const
         // nsISupports pointer. We want to make sure that we're not
@@ -1799,7 +1800,7 @@ nsXULElement::GetXMLBaseURI(nsIURI **aURI)
   if (mDocument) {
     mDocument->GetBaseURL(*aURI);
     if (!*aURI) {
-      *aURI = mDocument->GetDocumentURL();
+      mDocument->GetDocumentURL(aURI);
     }
   }
   return NS_OK;
@@ -1875,7 +1876,8 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName,
         if (NS_FAILED(rv)) return rv;
     }
 
-    nsCOMPtr<nsIContent> root(getter_AddRefs(mDocument->GetRootContent()));
+    nsCOMPtr<nsIContent> root;
+    mDocument->GetRootContent(getter_AddRefs(root));
     nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
     if ((!root || root == content) && !NodeInfo()->Equals(nsXULAtoms::overlay)) {
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
@@ -1990,7 +1992,8 @@ nsXULElement::DispatchEvent(nsIDOMEvent* aEvent)
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell;
+  mDocument->GetShellAt(0, getter_AddRefs(shell));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> aPresContext;
@@ -2135,7 +2138,8 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         nsCOMPtr<nsIAtom> ourTag;
         GetTag(*getter_AddRefs(ourTag));
         if (mDocument && CanHaveBinding(ourTag)) {
-          nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+          nsCOMPtr<nsIPresShell> shell;
+          mDocument->GetShellAt(0, getter_AddRefs(shell));
           if (shell) {
             nsIFrame* frame;
             shell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
@@ -3996,15 +4000,14 @@ nsXULElement::ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent)
 
     PRInt32 count = document->GetNumberOfShells();
     for (PRInt32 i = 0; i < count; i++) {
-        nsIPresShell* shell = document->GetShellAt(i);
-        if (nsnull == shell)
+        nsCOMPtr<nsIPresShell> shell;
+        document->GetShellAt(i, getter_AddRefs(shell));
+        if (!shell)
             continue;
 
         // Retrieve the context in which our DOM event will fire.
         nsCOMPtr<nsIPresContext> aPresContext;
         shell->GetPresContext(getter_AddRefs(aPresContext));
-    
-        NS_RELEASE(shell);
 
         // Handle the DOM event
         nsEventStatus status = nsEventStatus_eIgnore;
@@ -4394,7 +4397,8 @@ nsXULElement::Focus()
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell;
+  mDocument->GetShellAt(0, getter_AddRefs(shell));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> aPresContext;
@@ -4412,7 +4416,8 @@ nsXULElement::Blur()
   if (count == 0)
     return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+  nsCOMPtr<nsIPresShell> shell;
+  mDocument->GetShellAt(0, getter_AddRefs(shell));
   
   // Retrieve the context
   nsCOMPtr<nsIPresContext> aPresContext;
@@ -4433,7 +4438,7 @@ nsXULElement::Click()
     nsCOMPtr<nsIPresContext> context;
 
     for (PRInt32 i=0; i<numShells; i++) {
-      shell = getter_AddRefs(doc->GetShellAt(i));
+      doc->GetShellAt(i, getter_AddRefs(shell));
       shell->GetPresContext(getter_AddRefs(context));
         
 	    nsEventStatus status = nsEventStatus_eIgnore;
@@ -4465,7 +4470,7 @@ nsXULElement::Command()
     PRBool isButton = NodeInfo()->Equals(NS_LITERAL_STRING("button"));
 
     for (PRInt32 i=0; i<numShells; i++) {
-      shell = getter_AddRefs(doc->GetShellAt(i));
+      doc->GetShellAt(i, getter_AddRefs(shell));
       shell->GetPresContext(getter_AddRefs(context));
         
       nsEventStatus status = nsEventStatus_eIgnore;

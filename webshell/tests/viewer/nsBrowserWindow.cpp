@@ -2542,7 +2542,8 @@ DumpContentRecurse(nsIDocShell* aDocShell, FILE* out)
       nsCOMPtr<nsIDocument> doc;
       shell->GetDocument(getter_AddRefs(doc));
       if (doc) {
-        nsIContent* root = doc->GetRootContent();
+        nsIContent* root = nsnull;
+        doc->GetRootContent(&root);
         if (nsnull != root) {
           root->List(out);
           NS_RELEASE(root);
@@ -3082,9 +3083,8 @@ GatherContentDataSizes(nsISizeOfHandler* aHandler, nsIDocShell* aDocShell)
       nsIDocument* doc;
       shell->GetDocument(&doc);
       if (doc) {
-        nsCOMPtr<nsIContent> rootContent = getter_AddRefs(
-          doc->GetRootContent()
-          );
+        nsCOMPtr<nsIContent> rootContent;
+        doc->GetRootContent(getter_AddRefs(rootContent));
         if (rootContent) {
           GatherContentDataSizes(aHandler, rootContent.get());
         }
