@@ -1,5 +1,5 @@
 /*
- * $XConsortium: ifparser.h,v 1.1 92/08/22 13:05:39 rws Exp $
+ * $Xorg: ifparser.h,v 1.3 2000/08/17 19:41:51 cpqbld Exp $
  *
  * Copyright 1992 Network Computing Devices, Inc.
  * 
@@ -66,11 +66,17 @@ typedef struct _if_parser {
     struct {				/* functions */
 	char *(*handle_error) (/* struct _if_parser *, const char *,
 				 const char * */);
-	int (*eval_variable) (/* struct _if_parser *, const char *, int */);
+	long (*eval_variable) (/* struct _if_parser *, const char *, int */);
 	int (*eval_defined) (/* struct _if_parser *, const char *, int */);
     } funcs;
     char *data;
 } IfParser;
 
-char *ParseIfExpression (/* IfParser *, const char *, int * */);
+char *ParseIfExpression (
+#ifdef __STDC__
+    IfParser *, 
+    const char *, 
+    long *
+#endif
+);
 

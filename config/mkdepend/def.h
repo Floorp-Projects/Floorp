@@ -1,14 +1,13 @@
-/* $XConsortium: def.h,v 1.25 94/04/17 20:10:33 gildea Exp $ */
+/* $Xorg: def.h,v 1.4 2001/02/09 02:03:16 xorgcvs Exp $ */
 /*
 
-Copyright (c) 1993, 1994  X Consortium
+Copyright (c) 1993, 1994, 1998 The Open Group.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
@@ -16,26 +15,20 @@ all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
 AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Except as contained in this notice, the name of the X Consortium shall not be
+Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from the X Consortium.
+in this Software without prior written authorization from The Open Group.
 
 */
 
 #ifndef NO_X11
-#include <X11/Xosdefs.h>
-#ifdef WIN32
-#include <X11/Xw32defs.h>
-#endif
-#ifndef SUNOS4
+#include <X11/Xos.h>
 #include <X11/Xfuncproto.h>
-#endif /* SUNOS4 */
-#endif /* NO_X11 */
-
+#endif
 #include <stdio.h>
 #include <ctype.h>
 #ifndef X_NOT_POSIX
@@ -48,7 +41,7 @@ in this Software without prior written authorization from the X Consortium.
 #include <sys/stat.h>
 
 #define MAXDEFINES	512
-#define MAXFILES	1024  /* Increased from 512. -mcafee */
+#define MAXFILES	1024
 #define MAXDIRS		64
 #define SYMTABINC	10	/* must be > 1 for define() to work right */
 #define	TRUE		1
@@ -70,11 +63,12 @@ in this Software without prior written authorization from the X Consortium.
 #define SCCS            12
 #define ELIF            13
 #define EJECT           14
-#define IFFALSE         15     /* pseudo value --- never matched */
-#define ELIFFALSE       16     /* pseudo value --- never matched */
-#define INCLUDEDOT      17     /* pseudo value --- never matched */
-#define IFGUESSFALSE    18     /* pseudo value --- never matched */
-#define ELIFGUESSFALSE  19     /* pseudo value --- never matched */
+#define WARNING		15
+#define IFFALSE         16     /* pseudo value --- never matched */
+#define ELIFFALSE       17     /* pseudo value --- never matched */
+#define INCLUDEDOT      18     /* pseudo value --- never matched */
+#define IFGUESSFALSE    19     /* pseudo value --- never matched */
+#define ELIFGUESSFALSE  20     /* pseudo value --- never matched */
 
 #ifdef DEBUG
 extern int	_debugmask;
@@ -99,20 +93,25 @@ struct symtab {
 	char	*s_value;
 };
 
+/* possible i_flag */
+#define DEFCHECKED	(1<<0)	/* whether defines have been checked */
+#define NOTIFIED	(1<<1)	/* whether we have revealed includes */
+#define MARKED		(1<<2)	/* whether it's in the makefile */
+#define SEARCHED	(1<<3)	/* whether we have read this */
+#define FINISHED	(1<<4)	/* whether we are done reading this */
+#define INCLUDED_SYM	(1<<5)	/* whether #include SYMBOL was found
+				   Can't use i_list if TRUE */
 struct	inclist {
 	char		*i_incstring;	/* string from #include line */
 	char		*i_file;	/* path name of the include file */
 	struct inclist	**i_list;	/* list of files it itself includes */
 	int		i_listlen;	/* length of i_list */
-	struct symtab	*i_defs;	/* symbol table for this file */
+	struct symtab	**i_defs;	/* symbol table for this file and its
+					   children when merged */
 	int		i_ndefs;	/* current # defines */
-	int		i_deflen;	/* amount of space in table */
-	boolean		i_defchecked;	/* whether defines have been checked */
-	boolean		i_notified;	/* whether we have revealed includes */
-	boolean		i_marked;	/* whether it's in the makefile */
-	boolean		i_searched;	/* whether we have read this */
-	boolean         i_included_sym; /* whether #include SYMBOL was found */
-					/* Can't use i_list if TRUE */
+	boolean		*i_merged;      /* whether we have merged child
+					   defines */
+	unsigned char   i_flags;
 };
 
 struct filepointer {
@@ -136,15 +135,15 @@ char			*realloc();
 char			*copy();
 char			*base_name();
 char			*getline();
-struct symtab		*slookup();
-struct symtab		*isdefined();
-struct symtab		*fdefined();
+struct symtab		**slookup();
+struct symtab		**isdefined();
+struct symtab		**fdefined();
 struct filepointer	*getfile();
 struct inclist		*newinclude();
 struct inclist		*inc_path();
 
 #if NeedVarargsPrototypes
-extern fatalerr(char *, ...);
-extern warning(char *, ...);
-extern warning1(char *, ...);
+extern void fatalerr(char *, ...);
+extern void warning(char *, ...);
+extern void warning1(char *, ...);
 #endif

@@ -1,5 +1,5 @@
 /*
- * $XConsortium: ifparser.c,v 1.8 95/06/03 00:01:41 gildea Exp $
+ * $Xorg: ifparser.c,v 1.3 2000/08/17 19:41:50 cpqbld Exp $
  *
  * Copyright 1992 Network Computing Devices, Inc.
  * 
@@ -92,16 +92,17 @@ static const char *
 parse_number (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
     SKIPSPACE (cp);
 
     if (!isdigit(*cp))
 	return CALLFUNC(g, handle_error) (g, cp, "number");
 
-#ifdef WIN32
     *valp = strtol(cp, &cp, 0);
-#else
+    /* skip trailing qualifiers */
+    while (*cp == 'U' || *cp == 'u' || *cp == 'L' || *cp == 'l') cp++;
+#if 0
     *valp = atoi (cp);
     /* EMPTY */
     for (cp++; isdigit(*cp); cp++) ;
@@ -109,12 +110,43 @@ parse_number (g, cp, valp)
     return cp;
 }
 
+static const char *
+parse_character (g, cp, valp)
+    IfParser *g;
+    const char *cp;
+    long *valp;
+{
+    char val;
+
+    SKIPSPACE (cp);
+    if (*cp == '\\')
+	switch (cp[1]) {
+	case 'n': val = '\n'; break;
+	case 't': val = '\t'; break;
+	case 'v': val = '\v'; break;
+	case 'b': val = '\b'; break;
+	case 'r': val = '\r'; break;
+	case 'f': val = '\f'; break;
+	case 'a': val = '\a'; break;
+	case '\\': val = '\\'; break;
+	case '?': val = '\?'; break;
+	case '\'': val = '\''; break;
+	case '\"': val = '\"'; break;
+	case 'x': val = (char) strtol (cp + 2, NULL, 16); break;
+	default: val = (char) strtol (cp + 1, NULL, 8); break;
+	}
+    else
+	val = *cp;
+    while (*cp != '\'') cp++;
+    *valp = (long) val;
+    return cp;
+}
 
 static const char *
 parse_value (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
     const char *var;
 
@@ -157,6 +189,12 @@ parse_value (g, cp, valp)
 	*valp = 1; /* XXX */
 	return cp + 1;
 
+      case '\'':
+	DO (cp = parse_character (g, cp + 1, valp));
+	if (*cp != '\'')
+	    return CALLFUNC(g, handle_error) (g, cp, "'");
+	return cp + 1;
+
       case 'd':
 	if (strncmp (cp, "defined", 7) == 0 && !isalnum(cp[7])) {
 	    int paren = 0;
@@ -197,9 +235,9 @@ static const char *
 parse_product (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_value (g, cp, valp));
     SKIPSPACE (cp);
@@ -212,11 +250,7 @@ parse_product (g, cp, valp)
 
       case '/':
 	DO (cp = parse_product (g, cp + 1, &rightval));
-
-	/* Do nothing in the divide-by-zero case. */
-	if (rightval) {
-		*valp = (*valp / rightval);
-	}
+	*valp = (*valp / rightval);
 	break;
 
       case '%':
@@ -232,9 +266,9 @@ static const char *
 parse_sum (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_product (g, cp, valp));
     SKIPSPACE (cp);
@@ -258,9 +292,9 @@ static const char *
 parse_shift (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_sum (g, cp, valp));
     SKIPSPACE (cp);
@@ -288,9 +322,9 @@ static const char *
 parse_inequality (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_shift (g, cp, valp));
     SKIPSPACE (cp);
@@ -324,9 +358,9 @@ static const char *
 parse_equality (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_inequality (g, cp, valp));
     SKIPSPACE (cp);
@@ -354,9 +388,9 @@ static const char *
 parse_band (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_equality (g, cp, valp));
     SKIPSPACE (cp);
@@ -377,9 +411,9 @@ static const char *
 parse_bor (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_band (g, cp, valp));
     SKIPSPACE (cp);
@@ -400,9 +434,9 @@ static const char *
 parse_land (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_bor (g, cp, valp));
     SKIPSPACE (cp);
@@ -423,9 +457,9 @@ static const char *
 parse_lor (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
-    int rightval;
+    long rightval;
 
     DO (cp = parse_land (g, cp, valp));
     SKIPSPACE (cp);
@@ -450,7 +484,7 @@ const char *
 ParseIfExpression (g, cp, valp)
     IfParser *g;
     const char *cp;
-    int *valp;
+    long *valp;
 {
     return parse_lor (g, cp, valp);
 }

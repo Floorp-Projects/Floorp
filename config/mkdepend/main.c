@@ -1,15 +1,13 @@
-/* $XConsortium: main.c,v 1.84 94/11/30 16:10:44 kaleb Exp $ */
-/* $XFree86: xc/config/makedepend/main.c,v 3.4 1995/07/15 14:53:49 dawes Exp $ */
+/* $Xorg: main.c,v 1.5 2001/02/09 02:03:16 xorgcvs Exp $ */
 /*
 
-Copyright (c) 1993, 1994  X Consortium
+Copyright (c) 1993, 1994, 1998 The Open Group
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
 
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
@@ -17,13 +15,13 @@ all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
 AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Except as contained in this notice, the name of the X Consortium shall not be
+Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from the X Consortium.
+in this Software without prior written authorization from The Open Group.
 
 */
 
@@ -50,10 +48,6 @@ in this Software without prior written authorization from the X Consortium.
 #include <stdarg.h>
 #endif
 
-#ifdef MINIX
-#define USE_CHMOD	1
-#endif
-
 #ifdef DEBUG
 int	_debugmask;
 #endif
@@ -76,6 +70,7 @@ char	*directives[] = {
 	"sccs",
 	"elif",
 	"eject",
+	"warning",
 	NULL
 };
 
@@ -100,6 +95,14 @@ boolean	verbose = FALSE;
 boolean	show_where_not = FALSE;
 boolean warn_multiple = FALSE;	/* Warn on multiple includes of same file */
 
+void freefile();
+void redirect();
+#if !NeedVarargsPrototypes
+void fatalerr();
+void warning();
+void warning1();
+#endif
+
 static
 #ifdef SIGNALRETURNSINT
 int
@@ -113,7 +116,7 @@ catch (sig)
 	fatalerr ("got signal %d\n", sig);
 }
 
-#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32) || defined(__EMX__) || defined(Lynx_22)
+#if defined(USG) || (defined(i386) && defined(SYSV)) || defined(WIN32)
 #define USGISH
 #endif
 
@@ -355,7 +358,6 @@ main(argc, argv)
 #ifdef SIGSYS
 	signal (SIGSYS, catch);
 #endif
-	signal (SIGFPE, catch);
 #else
 	sig_act.sa_handler = catch;
 #ifdef _POSIX_SOURCE
@@ -447,6 +449,7 @@ struct filepointer *getfile(file)
 	return(content);
 }
 
+void
 freefile(fp)
 	struct filepointer	*fp;
 {
@@ -484,7 +487,7 @@ char *getline(filep)
 	register char	*p,	/* walking pointer */
 			*eof,	/* end of file pointer */
 			*bol;	/* beginning of line pointer */
-	register	lineno;	/* line number */
+	register int	lineno;	/* line number */
 
 	p = filep->f_p;
 	eof = filep->f_end;
@@ -504,6 +507,37 @@ char *getline(filep)
 					lineno++;
 				*p++ = ' ';
 			}
+			continue;
+		}
+		else if (*p == '/' && *(p+1) == '/') { /* consume comments */
+			*p++ = ' ', *p++ = ' ';
+
+			while (*p)
+			{
+				/* Comment continues on next line. */
+				if (*p == '\\' && *(p+1) == '\n')
+				{
+					*(p++) = ' ';
+					*(p++) = ' ';
+					lineno++;
+				}
+				else
+				if (*p == '\n')
+				{
+					/*
+					 * Decrement so that the next iteration
+					 * of the outter "for loop" will handle
+					 * the case of "*p == '\n'".
+					 */
+					--p;
+					break;
+				}
+				else
+				{
+					*p++ = ' ';
+				}
+			}
+
 			continue;
 		}
 #ifdef WIN32
@@ -561,7 +595,7 @@ char *base_name(file)
 	return(file);
 }
 
-#if defined(USG) && !defined(CRAY) && !defined(SVR4) && !defined(__EMX__)
+#if defined(USG) && !defined(CRAY) && !defined(SVR4)
 int rename (from, to)
     char *from, *to;
 {
@@ -575,6 +609,7 @@ int rename (from, to)
 }
 #endif /* USGISH */
 
+void
 redirect(line, makefile)
 	char	*line,
 		*makefile;
@@ -589,8 +624,10 @@ redirect(line, makefile)
 	/*
 	 * if makefile is "-" then let it pour onto stdout.
 	 */
-	if (makefile && *makefile == '-' && *(makefile+1) == '\0')
+	if (makefile && *makefile == '-' && *(makefile+1) == '\0') {
+		puts(line);
 		return;
+	}
 
 	/*
 	 * use a default makefile is not specified.
@@ -609,12 +646,12 @@ redirect(line, makefile)
 		fatalerr("cannot open \"%s\"\n", makefile);
 	sprintf(backup, "%s.bak", makefile);
 	unlink(backup);
-#if defined(WIN32) || defined(__EMX__)
+#ifdef WIN32
 	fclose(fdin);
 #endif
 	if (rename(makefile, backup) < 0)
 		fatalerr("cannot rename %s to %s\n", makefile, backup);
-#if defined(WIN32) || defined(__EMX__)
+#ifdef WIN32
 	if ((fdin = fopen(backup, "r")) == NULL)
 		fatalerr("cannot open \"%s\"\n", backup);
 #endif
@@ -637,13 +674,14 @@ redirect(line, makefile)
 	    }
 	}
 	fflush(fdout);
-#if defined(USGISH) || defined(_SEQUENT_) || defined(USE_CHMOD) || !defined(HAVE_FCHMOD)
+#if defined(USGISH) || defined(_SEQUENT_)
 	chmod(makefile, st.st_mode);
 #else
         fchmod(fileno(fdout), st.st_mode);
 #endif /* USGISH */
 }
 
+void
 #if NeedVarargsPrototypes
 fatalerr(char *msg, ...)
 #else
@@ -666,6 +704,7 @@ fatalerr(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 	exit (1);
 }
 
+void
 #if NeedVarargsPrototypes
 warning(char *msg, ...)
 #else
@@ -674,7 +713,6 @@ warning(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
     char *msg;
 #endif
 {
-#ifdef DEBUG_MKDEPEND
 #if NeedVarargsPrototypes
 	va_list args;
 #endif
@@ -686,9 +724,9 @@ warning(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 #else
 	fprintf(stderr, msg,x1,x2,x3,x4,x5,x6,x7,x8,x9);
 #endif
-#endif /* DEBUG_MKDEPEND */
 }
 
+void
 #if NeedVarargsPrototypes
 warning1(char *msg, ...)
 #else
@@ -697,7 +735,6 @@ warning1(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
     char *msg;
 #endif
 {
-#ifdef DEBUG_MKDEPEND
 #if NeedVarargsPrototypes
 	va_list args;
 	va_start(args, msg);
@@ -706,5 +743,4 @@ warning1(msg,x1,x2,x3,x4,x5,x6,x7,x8,x9)
 #else
 	fprintf(stderr, msg,x1,x2,x3,x4,x5,x6,x7,x8,x9);
 #endif
-#endif /* DEBUG_MKDEPEND */
 }
