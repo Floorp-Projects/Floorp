@@ -495,12 +495,6 @@ my @selectnames = map($columns->{$_}->{'name'}, @selectcolumns);
 #  (or a removed *_time column due to permissions)
 @selectnames = grep($_ ne '', @selectnames);
 
-# Generate the basic SQL query that will be used to generate the bug list.
-my $search = new Bugzilla::Search('fields' => \@selectnames, 
-                                  'params' => $params);
-my $query = $search->getSQL();
-
-
 ################################################################################
 # Sort Order Determination
 ################################################################################
@@ -511,8 +505,8 @@ if ($::COOKIE{'LASTORDER'} && (!$order || $order =~ /^reuse/i)) {
     $order_from_cookie = 1;
 }
 
+my $db_order = "";  # Modified version of $order for use with SQL query
 if ($order) {
-    my $db_order;  # Modified version of $order for use with SQL query
 
     # Convert the value of the "order" form field into a list of columns
     # by which to sort the results.
@@ -534,6 +528,12 @@ if ($order) {
                     else {
                         ThrowCodeError("invalid_column_name_form");
                     }
+                } elsif (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @selectnames)) {
+                    # Add order columns to selectnames
+                    # The fragment has already been validated
+                    $fragment =~ s/\s+(asc|desc)$//;
+                    trick_taint($fragment);
+                    push @selectnames, $fragment;
                 }
             }
             # Now that we have checked that all columns in the order are valid,
@@ -563,13 +563,6 @@ if ($order) {
 
     $db_order = $order;  # Copy $order into $db_order for use with SQL query
 
-    # Extra special disgusting hack: if we are ordering by target_milestone,
-    # change it to order by the sortkey of the target_milestone first.
-    if ($db_order =~ /bugs.target_milestone/) {
-        $db_order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
-        $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id WHERE /;
-    }
-
     # If we are sorting by votes, sort in descending order if no explicit
     # sort order was given
     $db_order =~ s/bugs.votes\s*(,|$)/bugs.votes desc$1/i;
@@ -583,8 +576,21 @@ if ($order) {
     $aggregate_search = quotemeta($columns->{'percentage_complete'}->{'name'});
     $db_order =~ s/$aggregate_search/percentage_complete/g;
 
-    $query .= " ORDER BY $db_order ";
 }
+
+# Generate the basic SQL query that will be used to generate the bug list.
+my $search = new Bugzilla::Search('fields' => \@selectnames, 
+                                  'params' => $params);
+my $query = $search->getSQL();
+
+# Extra special disgusting hack: if we are ordering by target_milestone,
+# change it to order by the sortkey of the target_milestone first.
+if ($db_order =~ /bugs.target_milestone/) {
+    $db_order =~ s/bugs.target_milestone/ms_order.sortkey,ms_order.value/;
+    $query =~ s/\sWHERE\s/ LEFT JOIN milestones ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id WHERE /;
+}
+
+$query .= " ORDER BY $db_order " if ($order);
 
 
 ################################################################################
