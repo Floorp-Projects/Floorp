@@ -20,5 +20,5 @@
   <!-- Version Information.  State that we work only with major version of this
        package. -->
   <RDF:Description about="urn:mozilla:locale:en-US:global-platform"
-             chrome:localeVersion="tk0.1"/>
+	           chrome:localeVersion="1.5b"/>
 </RDF:RDF>
