@@ -33,7 +33,6 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsGIFModule2
 
 REQUIRES	= xpcom \
-		  necko \
 		  gfx \
 		  gfx2 \
 		  imglib2 \

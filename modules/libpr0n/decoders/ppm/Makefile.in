@@ -34,7 +34,6 @@ MODULE_NAME	= nsPPMDecoderModule
 
 REQUIRES	= xpcom \
 		  gfx \
-		  necko \
 		  gfx2 \
 		  imglib2 \
 		  $(NULL)

@@ -45,12 +45,8 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  uriloader \
-		  locale \
-		  mozcomps \
 		  pref \
-		  necko \
-                  appstartup \
-                  embedcomponents \
+		  embedcomponents \
 		  $(NULL)
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1

@@ -37,7 +37,6 @@ REQUIRES	= xpcom \
 		  js \
 		  xpconnect \
 		  widget \
-		  pref \
 		  $(NULL)
 
 EXTRA_DSO_LDOPTS += \

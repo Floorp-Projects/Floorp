@@ -34,7 +34,6 @@ MODULE_NAME	= nsJPEGDecoderModule
 
 REQUIRES	= xpcom \
 		  string \
-		  necko \
 		  gfx \
 		  gfx2 \
 		  imglib2 \
