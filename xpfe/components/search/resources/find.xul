@@ -1,39 +1,13 @@
 <?xml version="1.0"?>
 
-
-<!DOCTYPE window
-[
-<!ENTITY window.title.label          "Find Local Data">
-
-<!ENTITY search1.label               "Search for items in ">
-<!ENTITY search2.label               " whose ">
-
-<!ENTITY search.button.label         "Search">
-<!ENTITY save.button.label           "Save Search in Bookmarks">
-
-<!ENTITY bookmarks.label             "Bookmarks">
-<!ENTITY history.label               "History">
-
-<!ENTITY name.label                  "Name">
-<!ENTITY url.label                   "URL">
-<!ENTITY shortcut.label              "Custom Keyword">
-<!ENTITY description.label           "Description">
-
-<!ENTITY contains.label              "contains">
-<!ENTITY startswith.label            "starts with">
-<!ENTITY endswith.label              "ends with">
-<!ENTITY is.label                    "is">
-<!ENTITY isnot.label                 "is not">
-<!ENTITY doesntcontain.label         "doesn't contain">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://search/locale/find.dtd">
 
 <window title="&window.title.label;" style="width:100%; height:100%; background-color:white" align="horizontal" flex="100%"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<html:script src="find.js" />
+	<html:script src="chrome://search/content/find.js" />
 
 	<spring align="horizontal" flex="100%" />
 	<box align="horizontal" style="width: 100%;" >
