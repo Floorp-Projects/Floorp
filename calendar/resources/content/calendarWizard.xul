@@ -116,44 +116,13 @@
    </wizardpage>
    
    <wizardpage pageid="export" label="Export Events" onpagehide="" onpageshow="buildCalendarsListbox( 'export-calendars-listbox' )" next="export-2">
-      <radiogroup>
-         <radio id="export-calendars"   label="Export Entire Calendar" selected="true"/>
-         <listbox id="export-calendars-listbox" class="unifinder-tree-class" flex="1" 
-            contextmenu="calendarlist-context-menu" datasources="rdf:null" ref="urn:calendarcontainer">
-            <listhead>
-               <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
-               <listheader/>
-            </listhead>
-            <listcols>
-               <listcol flex="1"/>
-               <listcol/>
-            </listcols>
-            <template>
-               <rule>   
-                  <listitem uri="rdf:*" 
-                     calendarPath="rdf:http://home.netscape.com/NC-rdf#path"
-                     onclick="switchCalendar( event );">
-                     <listcell id="calendar-list-item-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
-                        class="calendar-list-item-class"
-                        label="rdf:http://home.netscape.com/NC-rdf#name"
-                        flex="1"
-                        type="checkbox"
-                        checked="rdf:http://home.netscape.com/NC-rdf#active"
-                        />
-                     <listcell>
-                        <image id="calendar-list-image-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
-                           class="calendar-list-item-class"/>
-                     </listcell>
-                  </listitem>
-               </rule>
-            </template>
-         </listbox>
-            
-         <radio id="export-events"      label="Export Selected Events" disabled="true"/>
-         <!-- TODO: show a list of events here -->
-         
+      <radiogroup id="export-calendar-radiogroup" datasources="rdf:null" ref="urn:calendarcontainer">
+         <template>
+            <rule>
+               <radio oncommand="document.getElementById( 'calendar-wizard' ).canAdvance = true;" uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#name" value="rdf:http://home.netscape.com/NC-rdf#path"/>
+            </rule>
+         </template>
       </radiogroup>
-          
    </wizardpage>
    
    <wizardpage pageid="export-2" onpagehide="" onpageshow="">
