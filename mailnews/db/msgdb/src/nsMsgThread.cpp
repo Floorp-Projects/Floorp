@@ -171,7 +171,7 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMessage *child, PRBool threadInThread)
 }
 
 
-NS_IMETHODIMP nsMsgThread::GetChildAt(PRUint32 index, nsIMessage **result)
+NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 index, nsIMessage **result)
 {
 	nsresult ret = NS_OK;
 
@@ -187,15 +187,34 @@ NS_IMETHODIMP nsMsgThread::GetChild(nsMsgKey msgKey, nsIMessage **result)
 }
 
 
-NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRUint32 index, nsIMessage **result)
+NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMessage **result)
 {
 	nsresult ret = NS_OK;
+	nsIMdbRow* resultRow;
+	mdb_pos pos = index;
 
+	nsIMdbTableRowCursor *rowCursor;
+	ret = m_mdbTable->GetTableRowCursor(m_mdbDB->GetEnv(), pos, &rowCursor);
+
+	ret = rowCursor->NextRow(m_mdbDB->GetEnv(), &resultRow, &pos);
+	NS_RELEASE(rowCursor);
+	if (NS_FAILED(ret)) 
+		return ret;
+
+	//Get key from row
+	mdbOid outOid;
+	nsMsgKey key;
+	if (resultRow->GetOid(m_mdbDB->GetEnv(), &outOid) == NS_OK)
+		key = outOid.mOid_Id;
+
+	ret = m_mdbDB->CreateMsgHdr(resultRow, m_mdbDB->m_dbName, key, result, PR_TRUE);
+	if (NS_FAILED(ret)) 
+		return ret;
 	return ret;
 }
 
 
-NS_IMETHODIMP nsMsgThread::RemoveChildAt(PRUint32 index)
+NS_IMETHODIMP nsMsgThread::RemoveChildAt(PRInt32 index)
 {
 	nsresult ret = NS_OK;
 
@@ -214,6 +233,118 @@ NS_IMETHODIMP nsMsgThread::RemoveChild(nsMsgKey msgKey)
 NS_IMETHODIMP nsMsgThread::MarkChildRead(PRBool bRead)
 {
 	nsresult ret = NS_OK;
+
+	return ret;
+}
+
+class nsMsgThreadEnumerator : public nsIEnumerator {
+public:
+    NS_DECL_ISUPPORTS
+
+    // nsIEnumerator methods:
+    NS_IMETHOD First(void);
+    NS_IMETHOD Next(void);
+    NS_IMETHOD CurrentItem(nsISupports **aItem);
+    NS_IMETHOD IsDone(void);
+
+    // nsMsgThreadEnumerator methods:
+    typedef nsresult (*nsMsgThreadEnumeratorFilter)(nsIMessage* hdr, void* closure);
+
+    nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey startKey,
+                      nsMsgThreadEnumeratorFilter filter, void* closure);
+    virtual ~nsMsgThreadEnumerator();
+
+protected:
+	nsIMdbTableRowCursor*       mRowCursor;
+    nsIMessage*                 mResultHdr;
+	nsMsgThread*				mThread;
+	nsMsgKey					mCurKey;
+	PRInt32						mChildIndex;
+    PRBool                      mDone;
+    nsMsgThreadEnumeratorFilter     mFilter;
+    void*                       mClosure;
+};
+
+nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey startKey,
+                                     nsMsgThreadEnumeratorFilter filter, void* closure)
+    : mRowCursor(nsnull), mResultHdr(nsnull), mDone(PR_FALSE),
+      mFilter(filter), mClosure(closure)
+{
+    NS_INIT_REFCNT();
+	mCurKey = startKey;
+	mChildIndex = -1;
+	mThread = thread;
+    NS_ADDREF(thread);
+}
+
+nsMsgThreadEnumerator::~nsMsgThreadEnumerator()
+{
+    NS_RELEASE(mThread);
+}
+
+NS_IMPL_ISUPPORTS(nsMsgThreadEnumerator, nsIEnumerator::GetIID())
+
+NS_IMETHODIMP nsMsgThreadEnumerator::First(void)
+{
+	nsresult rv = 0;
+
+	if (!mThread)
+		return NS_ERROR_NULL_POINTER;
+		
+    return Next();
+}
+
+NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
+{
+	nsresult rv;
+	if (mCurKey == nsMsgKey_None)
+	{
+		rv = mThread->GetChildHdrAt(0, &mResultHdr);
+		mChildIndex = 0;
+	}
+	else
+	{
+		rv  = mThread->GetChildHdrAt(mChildIndex++, &mResultHdr);
+	}
+	if (!mResultHdr) 
+	{
+        mDone = PR_TRUE;
+		return NS_RDF_CURSOR_EMPTY;
+    }
+    if (NS_FAILED(rv)) 
+	{
+        mDone = PR_TRUE;
+        return rv;
+    }
+
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgThreadEnumerator::CurrentItem(nsISupports **aItem)
+{
+    if (mResultHdr) {
+        *aItem = mResultHdr;
+        NS_ADDREF(mResultHdr);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMsgThreadEnumerator::IsDone(void)
+{
+    return mDone ? NS_OK : NS_COMFALSE;
+}
+
+
+NS_IMETHODIMP nsMsgThread::EnumerateMessages(nsMsgKey parentKey, nsIEnumerator* *result)
+{
+	nsresult ret = NS_OK;
+	nsMsgThreadEnumerator* e = new nsMsgThreadEnumerator(this, parentKey, nsnull, nsnull);
+    if (e == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(e);
+    *result = e;
+    return NS_OK;
 
 	return ret;
 }

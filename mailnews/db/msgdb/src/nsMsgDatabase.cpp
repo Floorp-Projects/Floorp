@@ -2089,33 +2089,45 @@ nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token co
 
 		// get a locale factory 
 		err = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
-
-		// do this for a new db if no UI to be provided for locale selection 
-		err = localeFactory->GetApplicationLocale(&locale); 
-
-		// or generate a locale from a stored locale name ("en_US", "fr_FR") 
-		err = localeFactory->NewLocale(&localeName, &locale); 
-
-		// and locale name can be taken as below, category should be one of the following 
-		// probably NSILOCALE_COLLATE is appropriate 
-		nsString catagory = "NSILOCALE_COLLATE"; 
-		err = locale->GetCatagory(&catagory, &localeName); 
-
-		nsICollationFactory *f;
-
-		err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
-								kICollationFactoryIID, (void**) &f); 
-
-		nsICollation *inst;
-
-		// get a collation interface instance 
-		err = f->CreateCollation(locale, &inst); 
-
-		if (NS_SUCCEEDED(err) && inst)
+		if (NS_SUCCEEDED(err) && localeFactory)
 		{
-			err = inst->CreateSortKey( kCollationCaseSensitive, nakedString, resultStr) ;
-		}
- 	}
+			// do this for a new db if no UI to be provided for locale selection 
+			err = localeFactory->GetApplicationLocale(&locale); 
+
+			// or generate a locale from a stored locale name ("en_US", "fr_FR") 
+			//err = localeFactory->NewLocale(&localeName, &locale); 
+
+			// release locale factory
+			NS_RELEASE(localeFactory);
+
+			// and locale name can be taken as below, category should be one of the following 
+			// probably NSILOCALE_COLLATE is appropriate 
+			nsString catagory = "NSILOCALE_COLLATE"; 
+			err = locale->GetCatagory(&catagory, &localeName); 
+
+			nsICollationFactory *f;
+
+			err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
+									  kICollationFactoryIID, (void**) &f); 
+			if (NS_SUCCEEDED(err) && f)
+			{
+				nsICollation *inst;
+
+				// get a collation interface instance 
+				err = f->CreateCollation(nsnull/*locale*/, &inst); // Temporary: pass null until bug#3867 is fixed
+
+				// release locale, collation factory
+				NS_RELEASE(locale);
+				NS_RELEASE(f);
+
+				if (NS_SUCCEEDED(err) && inst)
+				{
+					err = inst->CreateSortKey( kCollationCaseSensitive, nakedString, resultStr) ;
+					NS_RELEASE(inst);
+				}
+			}
+ 		}
+	}
 	return err;
 }
 

@@ -42,12 +42,13 @@ public:
 	NS_IMETHOD		GetNumChildren(PRUint32 *result);
 	NS_IMETHOD		GetNumUnreadChildren (PRUint32 *result);
 	NS_IMETHOD		AddChild(nsIMessage *child, PRBool threadInThread);
-	NS_IMETHOD		GetChildAt(PRUint32 index, nsIMessage **result);
+	NS_IMETHOD		GetChildAt(PRInt32 index, nsIMessage **result);
 	NS_IMETHOD		GetChild(nsMsgKey msgKey, nsIMessage **result);
-	NS_IMETHOD		GetChildHdrAt(PRUint32 index, nsIMessage **result);
-	NS_IMETHOD 		RemoveChildAt(PRUint32 index);
+	NS_IMETHOD		GetChildHdrAt(PRInt32 index, nsIMessage **result);
+	NS_IMETHOD 		RemoveChildAt(PRInt32 index);
 	NS_IMETHOD		RemoveChild(nsMsgKey msgKey);
 	NS_IMETHOD		MarkChildRead(PRBool bRead);
+	NS_IMETHOD		EnumerateMessages(nsMsgKey parent, nsIEnumerator* *result);
 
 	// non-interface methods
     nsIMdbTable		*GetMDBTable() {return m_mdbTable;}
