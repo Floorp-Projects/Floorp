@@ -231,19 +231,6 @@ txXSLTProcessor::copyNode(Node* aSourceNode, ProcessorState* aPs)
     }
 }
 
-Document*
-txXSLTProcessor::createRTFDocument(txOutputMethod aMethod)
-{
-#ifdef TX_EXE
-    return new Document();
-#else
-    nsresult rv;
-    nsCOMPtr<nsIDOMDocument> domDoc = do_CreateInstance(kXMLDocumentCID, &rv);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-    return new Document(domDoc);
-#endif
-}
-
 void
 txXSLTProcessor::logMessage(const nsAString& aMessage)
 {
@@ -1535,7 +1522,7 @@ txXSLTProcessor::processVariable(Element* aVariable,
         txAXMLEventHandler* previousHandler = aPs->mResultHandler;
 
         txRtfHandler rtfHandler;
-        txResultTreeFragment* rtf = rtfHandler.getRTF();
+        txResultTreeFragment* rtf = rtfHandler.createRTF();
         if (!rtf) {
             // ErrorReport: out of memory
             return nsnull;

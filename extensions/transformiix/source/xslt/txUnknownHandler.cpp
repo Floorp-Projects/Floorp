@@ -74,12 +74,6 @@ void txUnknownHandler::endDocument()
     delete this;
 }
 
-void txUnknownHandler::endElement(const nsAString& aName,
-                                    const PRInt32 aNsID)
-{
-    NS_ASSERTION(0, "This shouldn't be called.");
-}
-
 void txUnknownHandler::startElement(const nsAString& aName,
                                     const PRInt32 aNsID)
 {
@@ -103,13 +97,6 @@ void txUnknownHandler::startElement(const nsAString& aName,
 
     delete this;
 }
-
-#ifndef TX_EXE
-void txUnknownHandler::getOutputDocument(nsIDOMDocument** aDocument)
-{
-    *aDocument = nsnull;
-}
-#endif
 
 nsresult txUnknownHandler::createHandlerAndFlush(txOutputMethod aMethod,
                                                  const nsAString& aName,
