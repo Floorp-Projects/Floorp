@@ -1,7 +1,6 @@
 nsEscape.h
 nsLinebreakConverter.h
 nsFileSpec.h
-nsFileSpecStreaming.h
 nsFileStream.h
 nsIFileStream.h
 nsIUnicharInputStream.h

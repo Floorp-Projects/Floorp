@@ -46,7 +46,6 @@
 //#include "nsIBuffer.h"
 //#include "nsIByteBufferInputStream.h"
 #include "nsFileStream.h"
-#include "nsFileSpecStreaming.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsRecyclingAllocator.h"
 #include "nsSpecialSystemDirectory.h"
@@ -131,8 +130,6 @@ void XXXNeverCalled()
     a.Free(0, 0);
     NS_NewIOFileStream(NULL, s, 0, 0);
     nsInputFileStream(s, 0, 0);
-    nsPersistentFileDescriptor d;
-    ReadDescriptor(NULL, d);
     new nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_DriveDirectory);
     nsIThread::GetCurrent(NULL);
     nsDeque(NULL);

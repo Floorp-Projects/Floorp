@@ -43,7 +43,6 @@ CPPSRCS		= \
 		nsFastLoadService.cpp \
 		nsFileSpec.cpp \
 		nsFileSpecImpl.cpp \
-		nsFileSpecStreaming.cpp \
 		nsFileStream.cpp \
 		nsIFileStream.cpp \
 		nsStringStream.cpp \
@@ -82,7 +81,6 @@ EXPORTS		= \
 		nsFastLoadPtr.h \
 		nsFastLoadService.h \
 		nsFileSpec.h \
-		nsFileSpecStreaming.h \
 		nsFileStream.h \
 		nsIFileStream.h \
 		nsIUnicharInputStream.h \
