@@ -49,11 +49,15 @@ CPPSRCS		= \
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
-ifdef NO_LD_ARCHIVE_FLAGS
-LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo -lmozreg_s
+include $(topsrcdir)/config/config.mk
+
+ifeq ($(OS_ARCH)$(OS_TEST),NetBSDarm32)
+NO_LD_ARCHIVE_FLAGS := 1
 endif
 
-include $(topsrcdir)/config/config.mk
+ifdef NO_LD_ARCHIVE_FLAGS
+LOST_SYM_LIBS	= -lxpcomds_s -lxpcomio_s -lxptinfo -lmozreg_s
+endif
 
 # These won't link on BSD/OS, due to multiply defined symbols.
 ifneq ($(OS_ARCH),BSD_OS)
