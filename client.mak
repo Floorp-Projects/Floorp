@@ -13,13 +13,13 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+# Enable builds on any drive if defined.
 !if !defined(MOZ_SRC)
-#enable builds on any drive if defined.
 MOZ_SRC=y:
 !endif
 
+# Enable builds from user defined top level directory.
 !if !defined(MOZ_TOP)
-#enable builds from changed top level directories
 MOZ_TOP=mozilla
 !endif
 
@@ -32,25 +32,6 @@ HAVE_BRANCH=1
 !else
 HAVE_BRANCH=0
 !endif
-
-#//
-#// Temporary hardcode (while we figure out how to do this)
-#//	to support the Core modularity efforts...
-#//
-
-!ifndef MOZ_JAVAVER
-!ifdef MOZ_MEDIUM
-MOZ_JAVAVER    =-r JAVA_STUB_RELEASE_19980319
-!else
-MOZ_JAVAVER    =-r JAVA_RELEASE_19980304
-!endif
-!endif
-
-
-NSPR20_BRANCH  =-r NSPR20_RELEASE_19980304_BRANCH
-SECURITY_BRANCH=-r SECURITY_RELEASE_19980210
-CORECONF_BRANCH=-r CFG_1_6
-DBM_BRANCH     =-r DBM_RELEASE_19980319
 
 !if "$(MOZ_DATE)" != ""
 CVS_BRANCH=-D "$(MOZ_DATE)"
@@ -87,58 +68,21 @@ pull_clobber_build_all:: pull_all \
 clobber_build_all:: 	clobber_all \
 			build_all
 
-# In theory, we should use some symbol in $(MOZ_TOP)/config/liteness.mak, 
-# but we haven't pulled the file yet.  So, refer to MOZ_LITE and
-# MOZ_MEDIUM explicitly .
-!if defined(MOZ_LITE) || defined(MOZ_MEDIUM)
 pull_all:: pull_client_source_product
-!else
-pull_all:: pull_client 
-!endif
 
-!ifndef NO_SECURITY
-pull_security:
-    -cvs -q co $(CORECONF_BRANCH) $(MOZ_TOP)/coreconf
-    -cvs -q co $(SECURITY_BRANCH) CoreSecurity
-!else
-pull_security:
-!endif
-
-pull_client: pull_security
-    @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
-    cd $(MOZ_SRC)\.
-    -cvs -q co $(DBM_BRANCH)      $(MOZ_TOP)/dbm
-    -cvs -q co $(CVS_BRANCH)      Client50Win
-    -cvs -q co $(MOZ_JAVAVER)     JavaWin
-    -cvs -q co $(NSPR20_BRANCH)   CoreNSPR20
 
 pull_client_source_product:
     @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
     cd $(MOZ_SRC)\.
-    -cvs -q co $(DBM_BRANCH)      $(MOZ_TOP)/dbm
     -cvs -q co $(CVS_BRANCH)      MozillaSourceWin
-    -cvs -q co $(MOZ_JAVAVER)     JavaStubWin
 
 
-build_all:              build_ldap  \
-			build_dist  \
+build_all:              build_dist  \
 			build_client
 build_dist:
     @echo +++ client.mak: building dist
     cd $(MOZ_SRC)\$(MOZ_TOP)
     $(NMAKE) -f makefile.win
-
-
-!if defined(MOZ_LITE) || defined(MOZ_MEDIUM)
-build_ldap:
-!else
-build_ldap:
-    @echo +++ client.mak: building ldap
-    cd $(MOZ_SRC)\$(MOZ_TOP)\netsite\ldap\libraries\msdos\winsock
-    $(NMAKE) -f nsldap.mak DEPEND=1
-    $(NMAKE) -f nsldap.mak 
-    $(NMAKE) -f nsldap.mak EXPORT=1
-!endif
 
 
 build_client:
@@ -168,12 +112,6 @@ depend:
     -del /s /q make.dep
     $(NMAKE) -f makefile.win depend 
 
-quick:
-    @cd $(MOZ_SRC)\.
-    @cvs -q co $(MOZ_TOP)/quickup
-    @cd $(MOZ_SRC)\$(MOZ_TOP)\quickup
-    @$(MOZ_TOOLS)\perl5\perl doupdate.pl
-
 #//------------------------------------------------------------------------
 #// Utility stuff...
 #//------------------------------------------------------------------------
@@ -181,8 +119,8 @@ quick:
 #//------------------------------------------------------------------------
 # Verify that MOZ_SRC is set correctly
 #//------------------------------------------------------------------------
-
 # Check to see if it is set at all
+
 !if "$(MOZ_SRC)"!=""
 
 #
@@ -249,6 +187,7 @@ MOZ_SRC     set to the directory above $(MOZ_TOP) or "$(MAKEDIR)\.."^
 MOZ_TOOLS   set to the directory containing the java compiler see ^
 		http://warp/tools/nt^
 JAVA_HOME   set to the same thing as MOZ_TOOLS^
+CVSROOT     set to the public mozilla cvs server^
 
 !ERROR $(ERR_MESSAGE)
 
