@@ -1396,6 +1396,10 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
         rv = rdf_MakeAbsoluteURI(docURL, uri);
         if (NS_FAILED(rv)) return rv;
 
+        // A special 'dummy' datasource
+        if (uri.Equals("rdf:null"))
+            continue;
+
         nsCOMPtr<nsIRDFDataSource> ds;
 
         // Some monkey business to convert the nsAutoString to a
@@ -1417,7 +1421,13 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
             // This is only a warning because the data source may not
             // be accessable for any number of reasons, including
             // security, a bad URL, etc.
-            NS_WARNING("unable to load datasource");
+#ifdef DEBUG
+            nsCAutoString msg;
+            msg += "unable to load datasource '";
+            msg += nsCAutoString(uri);
+            msg += '\'';
+            NS_WARNING((const char*) msg);
+#endif
             continue;
         }
 
