@@ -364,6 +364,40 @@ LocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 }
 
 
+//
+// Native method ToString
+//
+PR_STATIC_CALLBACK(JSBool)
+LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMLocation *nativeThis = (nsIDOMLocation*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->ToString(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function toString requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Location
@@ -406,6 +440,7 @@ static JSFunctionSpec LocationMethods[] =
 {
   {"reload",          LocationReload,     0},
   {"replace",          LocationReplace,     1},
+  {"toString",          LocationToString,     0},
   {0}
 };
 

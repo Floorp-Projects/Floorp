@@ -13,4 +13,6 @@
 
 	void reload(/* ... */);
         void replace(in wstring url);
+
+	wstring toString();
       };
