@@ -1009,8 +1009,10 @@ char* nsForm::Temp_GenerateTempFileName(PRInt32 aMaxSize, char* file_buf)
     
     //  Reverse the time string.
     //
+// XXX fix this
+#ifdef XP_PC
     _strrev(ca_time);
-    
+#endif   
     //  Create the fully qualified path and file name.
     //
     sprintf(file_buf, "%s\\%s%s%s", directory, prefix, ca_time, ext);
@@ -1021,8 +1023,13 @@ char* nsForm::Temp_GenerateTempFileName(PRInt32 aMaxSize, char* file_buf)
 	  //  Use the system call instead of XP_Stat since we already
 	  //  know the name and we don't want recursion
 	  //
+// XXX fix this
+#ifdef XP_PC
 	  struct _stat statinfo;
     int status  = _stat(file_buf, &statinfo);
+#else
+    int status = 1;
+#endif
     i_numtries++;
     
     //  If it does not exists, we are successful, return the name.

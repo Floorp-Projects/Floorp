@@ -48,16 +48,6 @@
 #include "nsUnitConversion.h"
 #include "nsCSSLayout.h"
 
-struct nsInputCallbackData
-{
-  nsIPresContext* mPresContext;
-  nsInputFrame*   mFrame;
-  nsInputCallbackData(nsIPresContext* aPresContext, nsInputFrame* aFrame)
-    :mPresContext(aPresContext), mFrame(aFrame)
-  {
-  }
-};
-
 nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsInputFrameSuper(aContent, aParentFrame)
 {
@@ -132,6 +122,7 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect)
 {
+printf("paint %d \n", this);
   nsStyleDisplay* disp =
     (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
