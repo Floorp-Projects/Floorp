@@ -89,8 +89,9 @@ LLIBS	= \
 !endif
  $(HASHLIBS)
 
+!if !defined(DISABLE_TESTS)
 DIRS=tests
-
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 
