@@ -520,7 +520,7 @@
   {
     if (appCore != null) {
       dump("Wallet Editor\n");
-      appCore.walletEditor();
+      appCore.walletEditor(window);
     } else {
       dump("BrowserAppCore has not been created!\n");
     }

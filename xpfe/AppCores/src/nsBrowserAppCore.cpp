@@ -390,9 +390,73 @@ done:
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsBrowserAppCore::WalletEditor()
+static void DOMWindowToWebShellWindow(
+              nsIDOMWindow *DOMWindow,
+              nsCOMPtr<nsIWebShellWindow> *webWindow)
 {
+  if (!DOMWindow)
+    return; // with webWindow unchanged -- its constructor gives it a null ptr
+
+  nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
+  nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+  if (globalScript)
+    globalScript->GetWebShell(getter_AddRefs(webshell));
+  if (webshell)
+    webshell->GetRootWebShellEvenIfChrome(*getter_AddRefs(rootWebshell));
+  if (rootWebshell) {
+    nsCOMPtr<nsIWebShellContainer> webshellContainer;
+    rootWebshell->GetContainer(*getter_AddRefs(webshellContainer));
+    *webWindow = do_QueryInterface(webshellContainer);
+  }
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
+{
+    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
+    nsresult           rv;
+    nsIAppShellService *appShell;
+    nsIWebShellWindow  *window;
+
+    window = nsnull;
+
+    nsCOMPtr<nsIURL> urlObj;
+    rv = NS_NewURL(getter_AddRefs(urlObj), "resource:/res/samples/xpconnect-walleteditor.html");
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
+                                    (nsISupports**) &appShell);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Create "save to disk" nsIXULCallbacks...
+    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
+    nsIXULWindowCallbacks *cb = nsnull;
+
+    nsCOMPtr<nsIWebShellWindow> parent;
+    DOMWindowToWebShellWindow(aWin, &parent);
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+                                 nsnull, cb, 504, 436);
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+
+    if (window != nsnull) {
+        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
+        nsresult gotParent;
+        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
+                             NS_ERROR_FAILURE;
+        // Windows OS is the only one that needs the parent disabled, or cares
+        // arguably this should be done by the new window, within ShowModal...
+        if (NS_SUCCEEDED(gotParent))
+            parentWindowWidgetThing->Enable(PR_FALSE);
+        window->ShowModal();
+        if (NS_SUCCEEDED(gotParent))
+            parentWindowWidgetThing->Enable(PR_TRUE);
+    }
+
+    return rv;
+
+#ifdef xxx
   /* set a cookie for the wallet editor */
   nsIWalletService *walletservice;
   nsresult res;
@@ -415,6 +479,7 @@ nsBrowserAppCore::WalletEditor()
 
   /* bring up the wallet editor in a new window */
   return newWind((char *)(u.GetURLString()));
+#endif
 }
 
 NS_IMETHODIMP    
