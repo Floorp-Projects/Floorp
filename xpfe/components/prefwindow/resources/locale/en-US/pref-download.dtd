@@ -1,8 +1,20 @@
 <!ENTITY lHeader "Downloads">
 <!ENTITY downloadBehavior.label "When starting a download">
+<!ENTITY finishedBehavior.label "When a download completes">
 <!ENTITY openDM.label "Open the download manager">
 <!ENTITY openDM.accesskey "m">
 <!ENTITY openProgressDialog.label "Open a progress dialog">
 <!ENTITY openProgressDialog.accesskey "p">
 <!ENTITY doNothing.label "Don't open anything">
 <!ENTITY doNothing.accesskey "D">
+<!ENTITY playSound.label "Play a sound">
+<!ENTITY playSound.accesskey "S">
+<!ENTITY showAlert.label "Show an alert">
+<!ENTITY showAlert.accesskey "A">
+<!ENTITY browse.label "Browse...">
+<!ENTITY browse.accesskey "B">
+<!ENTITY browse.title "Choose a sound">
+<!ENTITY preview.label "Preview">
+<!ENTITY preview.accesskey "v">
+<!ENTITY soundURL.label "Sound URL:">
+<!ENTITY soundURL.accesskey "U">

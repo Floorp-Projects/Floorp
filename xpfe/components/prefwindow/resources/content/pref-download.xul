@@ -45,12 +45,14 @@
       onload="parent.initPanel('chrome://communicator/content/pref/pref-download.xul');"
       headertitle="&lHeader;">
 
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-download.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["downloadBehavior"];
+    var _elementIDs = ["downloadBehavior", "finishedNotificationAlert",
+		       "finishedNotificationSound", "finishedSoundUrl"];
   ]]>
   </script>browser.downloadmanager.behavior
-  
+
   <groupbox>
     <caption label="&downloadBehavior.label;"/>
     <radiogroup id="downloadBehavior" prefstring="browser.downloadmanager.behavior">
@@ -58,7 +60,31 @@
       <radio value="1" label="&openProgressDialog.label;" accesskey="&openProgressDialog.accesskey;"/>
       <radio value="2" label="&doNothing.label;" accesskey="&doNothing.accesskey;"/>
     </radiogroup>
+  </groupbox>
 
+  <groupbox>
+    <caption label="&finishedBehavior.label;"/>
+
+      <vbox align="start">
+	<checkbox id="finishedNotificationAlert" label="&showAlert.label;"
+		  prefstring="browser.download.finished_download_alert"
+		  accesskey="&showAlert.accesskey;"/>
+	<checkbox id="finishedNotificationSound" label="&playSound.label;"
+		  prefstring="browser.download.finished_download_sound"
+		  accesskey="&playSound.accesskey;"
+		  oncommand="PlaySoundCheck()"/>
+      </vbox>
+
+      <hbox align="center" class="indent">
+        <textbox readonly="true" flex="1" id="finishedSoundUrl" preftype="string"
+             prefstring="browser.download.finished_sound_url"/>
+        <hbox align="center">
+          <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
+                  accesskey="&browse.accesskey;" oncommand="Browse()"/>
+          <button id="preview" label="&preview.label;"
+                  accesskey="&preview.accesskey;" oncommand="PreviewSound()"/>
+        </hbox>
+      </hbox>
   </groupbox>
 
 </page>

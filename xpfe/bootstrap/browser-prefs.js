@@ -87,6 +87,8 @@ pref("browser.show_about_as_stupid_modal_window", false);
 pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
 pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
 pref("browser.download.progressDnlgDialog.dontAskForLaunch", false);
+pref("browser.download.finished_download_sound", false);
+pref("browser.download.finished_download_alert", false);
 pref("browser.download.finished_sound_url", "");
 
 // various default search settings

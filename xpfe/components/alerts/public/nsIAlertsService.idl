@@ -46,7 +46,7 @@
 interface nsIAlertListener : nsISupports
 {
   void onAlertFinished(in wstring aAlertCookie);
-  void onAlertClickCallback(in wstring aAlertCookie); // if the user clicks on the link and you wanted notified....
+  void onAlertClickCallback(in wstring aAlertCookie); // if the user clicks the link and you wanted to be notified...
 };
 
 [scriptable, uuid(7E8B76C6-A70C-4075-81AA-D48B6152E1B4)]
