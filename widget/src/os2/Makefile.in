@@ -41,6 +41,7 @@ REQUIRES	= gfx \
 		  pref \
 		  plugin \
 		  webshell \
+		  webbrowserpersist \
 		  $(NULL)
 
 ifdef ENABLE_TESTS

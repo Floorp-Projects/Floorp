@@ -242,7 +242,7 @@ protected:
    HPOINTER  mFrameIcon;      // current frame icon
    HPS       mPS;             // cache PS for window
    ULONG     mPSRefs;         // number of refs to cache ps
-   BOOL      mDragInside;     // track draginside state
+   BOOL      mNativeDrag;     // is the drag from outside Mozilla
    VDKEY     mDeadKey;        // dead key from previous keyevent
    BOOL      mHaveDeadKey;    // is mDeadKey valid [0 may be a valid dead key, for all I know]
    HWND      mHackDestroyWnd; // access GetMainWindow() window from destructor
@@ -250,6 +250,7 @@ protected:
    PRBool    mIsTopWidgetWindow;
    BOOL      mIsScrollBar;
    BOOL      mInSetFocus;
+   nsContentType mContentType;
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
