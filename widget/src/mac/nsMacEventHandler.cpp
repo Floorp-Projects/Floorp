@@ -464,12 +464,16 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
   }
   err = ::NewTSMDocument(1, supportedServices,&mTSMDocument, (long)this);
   NS_ASSERTION(err==noErr, "nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
-
 #ifdef DEBUG_TSM
   printf("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n", mTSMDocument);
 #endif
 
-	mIMEIsComposing = PR_FALSE;
+  // make sure we do not use input widnow even some other code turn it for default by calling 
+  // ::UseInputWindow(nsnull, TRUE); 
+  if (mTSMDocument)
+    ::UseInputWindow(mTSMDocument, FALSE); 
+         
+  mIMEIsComposing = PR_FALSE;
   mIMECompositionStr = nsnull;
 
 #if !TARGET_CARBON
@@ -1328,10 +1332,13 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 		//
 		// Activate The TSMDocument associated with this handler
 		//
-		if (mTSMDocument)
-			err = ::ActivateTSMDocument(mTSMDocument);
-		else
-			err = ::UseInputWindow(NULL, true); // get this line from mozilla-classic - mozilla/cmd/macfe/central/TSMProxy.cp
+		if (mTSMDocument) {
+		  // make sure we do not use input widnow even some other code turn it for default by calling 
+		  // ::UseInputWindow(nsnull, TRUE); 
+		  ::UseInputWindow(mTSMDocument, FALSE); 
+		  err = ::ActivateTSMDocument(mTSMDocument);
+		}
+
 #ifdef DEBUG_TSM
 #if 0
 		NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: ActivateTSMDocument failed");
@@ -1376,8 +1383,13 @@ if (KeyDown(0x39))	// press [caps lock] to start the profile
 		//
 		// Deactivate the TSMDocument assoicated with this EventHandler
 		//
-		if (mTSMDocument)
-			err = ::DeactivateTSMDocument(mTSMDocument);
+		if (mTSMDocument) {
+		  // make sure we do not use input widnow even some other code turn it for default by calling 
+		  // ::UseInputWindow(nsnull, TRUE); 
+		  ::UseInputWindow(mTSMDocument, FALSE); 
+		  err = ::DeactivateTSMDocument(mTSMDocument);
+		}
+
 #ifdef DEBUG_TSM
 		NS_ASSERTION((noErr==err)||(tsmDocNotActiveErr==err),"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
 		printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p] %s return %d\n",mTSMDocument,
@@ -2647,6 +2659,9 @@ nsresult nsMacEventHandler::ResetInputState()
 {
 	OSErr err = noErr;
 	if (mTSMDocument) {
+		// make sure we do not use input widnow even some other code turn it for default by calling 
+		// ::UseInputWindow(nsnull, TRUE); 
+		::UseInputWindow(mTSMDocument, FALSE); 
 		err = ::FixTSMDocument(mTSMDocument);
 		NS_ASSERTION( (noErr==err)||(tsmDocNotActiveErr==err)||(tsmTSNotOpenErr), "Cannot FixTSMDocument");
 	}
