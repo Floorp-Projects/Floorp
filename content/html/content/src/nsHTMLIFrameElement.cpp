@@ -288,7 +288,15 @@ nsHTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 nsresult
 nsHTMLIFrameElement::EnsureFrameLoader()
 {
-  if (mFrameLoader || !mParent || !mDocument) {
+  if (!mParent || !mDocument) {
+    // If our parent or document are gone, time to destroy the frame loader.
+    if (mFrameLoader) {
+      mFrameLoader->Destroy();
+      mFrameLoader = nsnull;
+    }
+    return NS_OK;
+  } else if (mFrameLoader) {
+    // If frame loader is there, we just keep it around, cached
     return NS_OK;
   }
 
@@ -331,6 +339,16 @@ nsHTMLIFrameElement::SetParent(nsIContent *aParent)
 {
   nsresult rv = nsGenericHTMLContainerElement::SetParent(aParent);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // XXX if we're setting the parent to null, we don't bother with LoadSrc()
+  // just yet, because it will remove the frame loader--and our parent may get
+  // temporarily set to null if DemoteForm() is happening, we don't want to
+  // waste all that time.
+  // Also if mFrameLoader is already there, don't load again, for the same
+  // reason.
+  if (!aParent || mFrameLoader) {
+    return NS_OK;
+  }
 
   return LoadSrc();
 }
