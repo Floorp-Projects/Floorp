@@ -77,6 +77,12 @@ protected:
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
   static PRBool IsEditable(nsIDOMNode *aNode);
   
+  /** insert aNode into a new style node of type aTag.
+    * aSelection is optional.  If provided, aSelection is set to (aNode, 0)
+    * if aNode was successfully placed in a new style node
+    */
+  NS_IMETHOD InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelection *aSelection);
+  
   nsTextEditor *mEditor;  // note that we do not refcount the editor
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
 };

@@ -255,23 +255,31 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
       {
         if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
         {
-          if (PR_TRUE==aTypeInState.GetBold())
-          { // make the next char bold
-            nsCOMPtr<nsIDOMNode>parent;
-            newTextNode->GetParentNode(getter_AddRefs(parent));
-            PRInt32 offsetInParent;
-            nsIEditorSupport::GetChildOffset(newTextNode, parent, offsetInParent);
-            nsAutoString tag;
-            nsIEditProperty::b->ToString(tag);
-            nsCOMPtr<nsIDOMNode>newStyleNode;
-            result = mEditor->CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
-            result = mEditor->DeleteNode(newTextNode);
-            result = mEditor->InsertNode(newTextNode, newStyleNode, 0);
-            aSelection->Collapse(newTextNode, 0);
+          if (PR_TRUE==aTypeInState.GetBold()) {
+            InsertStyleNode(newTextNode, nsIEditProperty::b, aSelection);
+          }
+          else {
+            printf("not yet implemented, make unbold in a bold context\n");
+          }
+        }
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
+        {
+          if (PR_TRUE==aTypeInState.GetItalic()) { 
+            InsertStyleNode(newTextNode, nsIEditProperty::i, aSelection);
           }
           else
           {
-            printf("not yet implemented, make unbold in a bold context\n");
+            printf("not yet implemented, make unitalic in a italic context\n");
+          }
+        }
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
+        {
+          if (PR_TRUE==aTypeInState.GetUnderline()) { 
+            InsertStyleNode(newTextNode, nsIEditProperty::u, aSelection);
+          }
+          else
+          {
+            printf("not yet implemented, make not underline in an underline context\n");
           }
         }
       }
@@ -306,9 +314,46 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
             nsCOMPtr<nsIDOMNode>newStyleNode;
             nsCOMPtr<nsIDOMNode>newTextNode;
             result = mEditor->CreateNode(tag, bodyNode, 0, getter_AddRefs(newStyleNode));
-            result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), newStyleNode, 0, getter_AddRefs(newTextNode));
-            aSelection->Collapse(newTextNode, 0);
+            if (NS_SUCCEEDED(result)) 
+            {
+              result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), newStyleNode, 0, getter_AddRefs(newTextNode));
+              if (NS_SUCCEEDED(result)) 
+              {
+                aSelection->Collapse(newTextNode, 0);
+              }
+            }
           }
+        }
+      }
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsTextEditRules::InsertStyleNode(nsIDOMNode *aNode, nsIAtom *aTag, nsIDOMSelection *aSelection)
+{
+  NS_ASSERTION(aNode && aTag, "bad args");
+  if (!aNode || !aTag) { return NS_ERROR_NULL_POINTER; }
+
+  nsresult result;
+  nsCOMPtr<nsIDOMNode>parent;
+  aNode->GetParentNode(getter_AddRefs(parent));
+  PRInt32 offsetInParent;
+  nsIEditorSupport::GetChildOffset(aNode, parent, offsetInParent);
+  nsAutoString tag;
+  aTag->ToString(tag);
+  nsCOMPtr<nsIDOMNode>newStyleNode;
+  result = mEditor->CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
+  if ((NS_SUCCEEDED(result)) && newStyleNode)
+  {
+    result = mEditor->DeleteNode(aNode);
+    if (NS_SUCCEEDED(result))
+    {
+      result = mEditor->InsertNode(aNode, newStyleNode, 0);
+      if (NS_SUCCEEDED(result)) {
+        if (aSelection) {
+          aSelection->Collapse(aNode, 0);
         }
       }
     }
