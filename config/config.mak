@@ -156,9 +156,8 @@ CFLAGS = $(CFLAGS) -FR
 CFLAGS=$(CFLAGS) -DMOZ_FULLCIRCLE
 !endif
 
-!ifdef MODULAR_NETLIB
-CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE
-!endif
+# For modular netlib support.
+CFLAGS=$(CFLAGS) -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE
 
 # Defines for cookie management feature...
 CFLAGS=$(CFLAGS) -DCookieManagement
