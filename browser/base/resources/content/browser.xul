@@ -38,8 +38,6 @@ Contributor(s):
 %buildDTD;
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
 %browserDTD;
-<!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
-%contentAreaCommandsDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
 %globalRegionDTD;
 <!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetOverlay.dtd" >
@@ -71,7 +69,7 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/securityUI.js" />
@@ -156,11 +154,9 @@ Contributor(s):
   <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
   <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
   
-  <command id="Browser:AddBookmark" label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;" 
-           oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, false);"/>
   <command id="Browser:AddBookmarkAs" label="&addCurPageAsCmd.label;"
            accesskey="&addCurPageAsCmd.accesskey;"
-           oncommand="addBookmarkAs();"/>
+           oncommand="addBookmarkAs(document.getElementById('content'));"/>
   <command id="Browser:AddGroupmarkAs" label="&addCurTabsAsCmd.label;"
            accesskey="&addCurTabsAsCmd.accesskey;"
            oncommand="addGroupmarkAs(); event.preventBubble();"/>
@@ -224,8 +220,7 @@ Contributor(s):
     <key id="key_find"              key="&findOnCmd.commandkey;" command="Browser:Find" modifiers="accel"/>
     <key id="key_findAgain"         key="&findAgainCmd.commandkey;" command="Browser:FindAgain" modifiers="accel"/>
 
-    <key id="addBookmarkKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmark" modifiers="accel"/>
-    <key id="addBookmarkAsKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel,shift"/>
+    <key id="addBookmarkAsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel"/>
     <key id="manBookmarkKb" key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark" modifiers="accel"/>
 
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
@@ -261,7 +256,7 @@ Contributor(s):
                 accesskey="&bookmarkLinkCmd.accesskey;"
                 oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
                                                       gContextMenu.linkText(), 
-                                                      undefined, false);"/>
+                                                      undefined, true);"/>
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
@@ -314,7 +309,7 @@ Contributor(s):
       <menuitem id="context-bookmarkpage"
                 label="&bookmarkPageCmd.label;"
                 accesskey="&bookmarkPageCmd.accesskey;"
-                oncommand="gContextMenu.addBookmark();"/>
+                oncommand="addBookmarkAs(document.getElementById('content'));"/>
       <menuitem id="context-savepage"
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey;"
@@ -639,17 +634,6 @@ Contributor(s):
           </menupopup>
         </menu>
     
-        <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
-          <menupopup onpopupshowing="updateGoMenu(event);">
-            <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
-            <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
-            <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
-            <menuseparator/>
-            <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
-            <menuseparator hidden="true"/>
-          </menupopup>
-        </menu>
-        
         <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
@@ -700,7 +684,6 @@ Contributor(s):
           </template>
           <menupopup onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
             <!-- for some reason these don't work as command="" -->
-            <menuitem key="addBookmarkKb"   observes="Browser:AddBookmark"/>
             <menuitem key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
             <menuitem id="bookmarks_groupmark" observes="Browser:AddGroupmarkAs"/>
             <menuitem key="manBookmarkKb"   observes="Browser:ManageBookmark"/>
@@ -710,6 +693,7 @@ Contributor(s):
           
       <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
         <menupopup id="taskPopup">
+          <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
           <menuitem id="downloadmgr" label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
           <menuseparator/>
           <menu label="&webDevelopment.label;" accesskey="&webDevelopment.accesskey;">
@@ -718,7 +702,6 @@ Contributor(s):
               <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
             </menupopup>
           </menu>
-          <menuseparator id="navBeginGlobalItems"/>
         </menupopup>
       </menu>
       

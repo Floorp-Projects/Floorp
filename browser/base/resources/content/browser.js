@@ -752,18 +752,18 @@ function OpenBookmarkURL(node, datasources)
     openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
 }
 
-function addBookmarkAs()
-{
-  const browsers = gBrowser.browsers;
-  if (browsers.length > 1)
-    BookmarksUtils.addBookmarkForTabBrowser(gBrowser);
-  else
-    BookmarksUtils.addBookmarkForBrowser(gBrowser.webNavigation, true);
-}
-
 function addGroupmarkAs()
 {
   BookmarksUtils.addBookmarkForTabBrowser(gBrowser, true);
+}
+
+function addBookmarkAs(aBrowser)
+{
+  const browsers = aBrowser.browsers;
+  if (browsers.length > 1)
+    BookmarksUtils.addBookmarkForTabBrowser(aBrowser);
+  else
+    BookmarksUtils.addBookmarkForBrowser(aBrowser.webNavigation, true);
 }
 
 function updateGroupmarkMenuitem(id)
@@ -3764,8 +3764,13 @@ function OpenBrowserWindow()
 
 function OpenTaskURL( inURL )
 {
-  
   window.open( inURL );
 }
+
+function goAboutDialog()
+{
+  window.openDialog("chrome://global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
+}
+
 
 
