@@ -126,12 +126,18 @@ nsresult nsNetFactory::CreateInstance(nsISupports *aOuter,
   *aResult = NULL;  
   
   if (mClassID.Equals(kNetServiceCID)) {
+#ifdef XP_PC
+    /* This ifdef fixes bug 2414.  Unix and mac initialize NS_InitINetService in
+       NS_NewINetService so this initialization was being done twice.  Therefore
+       to fix the bug we are ifdef-ing this section to be done for windows only */
+
     // No need create a new one if we've already got one.
     if (!gNetlibService) {
         res = NS_InitINetService();
         if (res != NS_OK)
             return NS_ERROR_FAILURE;
     }
+#endif
 
     // Hook the caller up.
     res = NS_NewINetService((nsINetService**)aResult, aOuter);
