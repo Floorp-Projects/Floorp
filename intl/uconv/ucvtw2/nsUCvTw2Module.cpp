@@ -194,7 +194,7 @@ static nsModuleComponentInfo components[] =
     ENCODER_NAME_BASE "x-cns-11643-7" , NS_UNICODETOCNS11643P7_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-cns-11643-7",
     nsUnicodeToCNS11643p7Constructor,
-    nsUnicodeToCNS11643p7RegSelf, nsUnicodeToCNS11643p6UnRegSelf
+    nsUnicodeToCNS11643p7RegSelf, nsUnicodeToCNS11643p7UnRegSelf
   }
 };
 

@@ -958,6 +958,12 @@ static nsModuleComponentInfo components[] =
     nsUnicodeToMacCroatianRegSelf, nsUnicodeToMacCroatianUnRegSelf
   },
   { 
+    ENCODER_NAME_BASE "x-mac-romanian" , NS_UNICODETOMACROMANIAN_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-romanian",
+    nsUnicodeToMacRomanianConstructor, 
+    nsUnicodeToMacRomanianRegSelf, nsUnicodeToMacRomanianUnRegSelf
+  },
+  { 
     ENCODER_NAME_BASE "x-mac-cyrillic" , NS_UNICODETOMACCYRILLIC_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-cyrillic",
     nsUnicodeToMacCyrillicConstructor, 
