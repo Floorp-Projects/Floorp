@@ -575,25 +575,16 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
   static const char kSnewsURI[] = "snews";                                      
   static const char kNntpURI[] = "nntp";                                        
   static const char kImapURI[] = "imap"; 
+  static const char kAddbookURI[] = "addbook";
+  static const char kPopURI[] = "pop";
+  static const char kMailboxURI[] = "mailbox";
 
-  if (scheme.EqualsIgnoreCase(kMailToURI)) 
+
+  if (scheme.EqualsIgnoreCase(kMailToURI) || scheme.EqualsIgnoreCase(kNewsURI) || scheme.EqualsIgnoreCase(kSnewsURI)   || 
+      scheme.EqualsIgnoreCase(kNntpURI)   || scheme.EqualsIgnoreCase(kImapURI) || scheme.EqualsIgnoreCase(kAddbookURI) ||
+      scheme.EqualsIgnoreCase(kPopURI)    || scheme.EqualsIgnoreCase(kMailboxURI)) 
   {
-    // the scheme is mailto, we can handle it
-  } 
-  else if (scheme.EqualsIgnoreCase(kNewsURI)) 
-  {
-    // the scheme is news, we can handle it
-  } 
-  else if (scheme.EqualsIgnoreCase(kSnewsURI)) 
-  {
-    // the scheme is snews, we can handle it
-  } 
-  else if (scheme.EqualsIgnoreCase(kNntpURI)) 
-  {
-     // the scheme is nntp, we can handle it 
-  } else if (scheme.EqualsIgnoreCase(kImapURI)) 
-  {
-    // the scheme is imap, we can handle it
+    // we can handle all mail schemes
   } else 
   {
     // we don't handle this type, the the registered handler take it 
