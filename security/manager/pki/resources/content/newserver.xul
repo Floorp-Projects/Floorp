@@ -14,6 +14,7 @@
    - Contributor(s):
    -  Javier Delgadillo <javi@netscape.com>
    -  Bob Lord <lord@netscape.com>
+   -  Håkan Waara <hwaara@chello.se>
   -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
@@ -25,65 +26,45 @@
 %pippkiDTD;
 ]>
 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<window
-  id="ssl_warning" title="&newserver.title;"
+<window id="ssl_warning" title="&newserver.title;"
   xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  debug="false"
-  height="400"
-  width="400"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  style="width: 30em; height: 16em"
+  class="dialog"
   onload="onLoad();"
->
-<script src="chrome://global/content/strres.js" />
-<script src="pippki.js" />
-<script src="newserver.js" />
+  orient="vertical">
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js" />
+<script type="application/x-javascript" src="pippki.js" />
+<script type="application/x-javascript" src="newserver.js" />
 <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
+<keyset id="dialogKeys"/>
 
-<keyset id="keys">
-  <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK()"    />
-  <key id="return-key" keycode="VK_RETURN" oncommand="doOK()"    />
-  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel()"/>
-</keyset>
+<vbox flex="1">
+  <hbox valign="top" autostretch="never">
 
-<vbox style="margin: 5px;" flex="1">
+    <image class="alert-icon" style="margin: 5px"/>
+    <vbox flex="1" valign="middle">
 
-  <html id="message1" />
-  <separator/>
-  <html>&newserver.message2;</html>
-  <separator/>
-  <html>&newserver.message3;</html>
-  <separator/>
-  <html id="message4" />
+      <html id="message"/>
+      <separator class="thin"/>
+      <html id="notRecognized"/>
+      <separator/>
 
-  <radiogroup id="trustSiteCert" pref="false" orient="vertical">
-    <radio group="trustSiteCert" 
-           label="&newserver.acceptperm;"
-           id="acceptRadio"
-           value="0"/>
-    <radio group="trustSiteCert" 
-           label="&newserver.accepttemp;"
-           id="tmpAcceptRadio"  
-           value="1" checked="true"/>
-    <radio group="trustSiteCert" 
-           id="rejectRadio"
-           label="&newserver.reject;" value="2"/>
-  </radiogroup>
+      <vbox autostretch="never" flex="1" align="right">
+        <button id="examineCert-button" label="&examineCert.label;"
+                onclick="viewCert();"/> 
+      </vbox>
 
-  <hbox>
-  <button id="examineCert-button" class="dialog" label="&examineCert.label;"
-     onclick="viewCert();"/> 
+      <checkbox checked="false" id="alwaysAccept" label="&alwaysAccept.label;"/>
+
+    </vbox>
   </hbox>
-  <separator/>
-  
-  <hbox>
-  <button id="ok-button" class="dialog" label="&ok.label;" 
-     style="width: 10ex" onclick="doOK();" disabled="false" primary="true"/> 
-  <button id="cancel-button" class="dialog" label="&cancel.label;" 
-     style="width: 10ex" onclick="doCancel();" /> 
-  <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?new_web_cert');" /> 
-  </hbox>
+
+  <hbox id="okCancelHelpButtonsRight" flex="1" autostretch="never"/>
 </vbox>
+
 </window>
