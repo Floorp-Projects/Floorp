@@ -1027,7 +1027,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         JSObject* global = JS_GetGlobalObject(cx);
         if (global != obj) {
-          nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+          secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
           rv = secMan->CheckScriptAccess(cx, obj,
                                          NS_DOM_PROP_WINDOW_SCRIPTGLOBALS,
                                          PR_FALSE);

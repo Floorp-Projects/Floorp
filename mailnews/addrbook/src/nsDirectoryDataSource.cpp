@@ -640,7 +640,7 @@ nsresult nsAbDirectoryDataSource::DoDeleteFromDirectory(nsISupportsArray *parent
 		nsCOMPtr<nsIAbDirectory> parent = do_QueryInterface(supports, &rv);
 		if (NS_SUCCEEDED(rv)) 
 		{
-			nsCOMPtr<nsISupports> supports = getter_AddRefs(delDirs->ElementAt(item));
+			supports = getter_AddRefs(delDirs->ElementAt(item));
 			nsCOMPtr<nsIAbDirectory> deletedDir(do_QueryInterface(supports));
 			if(deletedDir)
 			{

@@ -577,8 +577,6 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 {
   *aValue = nsnull;
 
-  PRInt32 refIndex = (0 <= aIndex) ? aIndex : 0;
-      
   nsCOMPtr<nsIDOMHTMLCollection> cells;
 
   GetCells(getter_AddRefs(cells));

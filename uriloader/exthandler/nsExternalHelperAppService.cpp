@@ -211,7 +211,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
   nsXPIDLCString fileExtension;
 
   // (1) Try to find a mime object by looking the mime type
-  nsresult rv = GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
+  GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
 
   // here's a nifty little trick. If we got a match back for the content type; but the content type is
   // unknown or octet (both of these are pretty much unhelpful mime objects), then see if the file extension
@@ -848,7 +848,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
     return request->Cancel(NS_BINDING_ABORTED);
 
   // read the data out of the stream and write it to the temp file.
-  PRUint32 numBytesRead = 0;
   if (mOutStream && mDataBuffer && count > 0)
   {
     PRUint32 numBytesRead = 0; 
@@ -869,7 +868,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
 NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISupports *aCtxt, 
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
-  nsresult rv = NS_OK;
   mStopRequestIssued = PR_TRUE;
 
   // first, check to see if we've been canceled....

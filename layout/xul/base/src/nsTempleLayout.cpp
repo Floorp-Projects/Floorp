@@ -231,7 +231,6 @@ nsTempleLayout::DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
     parent->DesecrateMonuments(parentBox, aState);
 
   if (mMonuments) {
-    nsBoxSizeList* tmp = mMonuments;
     mMonuments->Destroy(aState);
     mMonuments = nsnull;
   }

@@ -1128,7 +1128,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(currentItem, NS_ERROR_FAILURE);
     
-    nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+    range = do_QueryInterface(currentItem);
     NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
     nsCOMPtr<nsIDOMRange> myRange;
     range->CloneRange(getter_AddRefs(myRange));

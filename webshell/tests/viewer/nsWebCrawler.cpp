@@ -884,7 +884,7 @@ nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
 
   if ((mMaxPages < 0) || (mMaxPages > 0)) {
     while (0 != mPendingURLs.Count()) {
-      nsString* url = (nsString*) mPendingURLs.ElementAt(0);
+      url = NS_REINTERPRET_CAST(nsString*, mPendingURLs.ElementAt(0));
       mPendingURLs.RemoveElementAt(0);
       if (nsnull != url) {
         if (OkToLoad(*url)) {

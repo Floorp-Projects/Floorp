@@ -642,7 +642,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
                   // iterate every row starting at last row spanned and up to the row with
                   // the spanning cell. do this bottom up so that special rows can get a full
                   // allocation before other rows.
-                  PRInt32 startRowIndex = rowIndex + rowSpan - 1;
+                  startRowIndex = rowIndex + rowSpan - 1;
                   for (PRInt32 rowX = startRowIndex; (rowX >= rowIndex) && (excessAvail > 0); rowX--) {
                     nscoord excessForRow = 0;
                     // special rows gets as much as they can

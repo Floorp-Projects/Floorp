@@ -470,9 +470,7 @@ nsDOMAttributeMap::SizeOfNamedNodeMap(nsIDOMNamedNodeMap* aMap,
                                       PRUint32* aResult)
 {
   if (!aResult) return NS_ERROR_NULL_POINTER;
-  nsDOMAttributeMap* map = (nsDOMAttributeMap*) aMap;
-  PRUint32 sum = sizeof(nsDOMAttributeMap);
-  *aResult = sum;
+  *aResult = sizeof(nsDOMAttributeMap);
   return NS_OK;
 }
 #endif

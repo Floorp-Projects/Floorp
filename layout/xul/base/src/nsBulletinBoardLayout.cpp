@@ -235,8 +235,6 @@ nsBulletinBoardLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
    
    nsIBox* child = nsnull;
    aBox->GetChildBox(&child);
-   nsRect damageRect;
-   PRBool damageRectSet = PR_FALSE;
 
    while (child) 
    {  

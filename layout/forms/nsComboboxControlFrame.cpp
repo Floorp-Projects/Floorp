@@ -1365,7 +1365,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
             aReflowState.reflowCommand->GetNext(incrementalChild);
             nsRect rect;
             plainLstFrame->GetRect(rect);
-            nsresult rvv = plainLstFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+            plainLstFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
             aDesiredSize.width  = mCacheSize.width;
             aDesiredSize.height = mCacheSize.height;

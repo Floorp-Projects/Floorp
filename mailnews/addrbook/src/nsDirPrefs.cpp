@@ -2003,7 +2003,7 @@ nsresult DIR_DeleteServerFromList(DIR_Server *server)
 		DIR_SetServerPosition(dirList, server, DIR_POS_DELETE);
 		DIR_DeleteServer(server);
 
-		nsresult rv = NS_OK;
+		rv = NS_OK;
 		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
 		if (NS_FAILED(rv) || !pPref) 
 			return NS_ERROR_FAILURE;

@@ -3774,9 +3774,7 @@ NS_IMETHODIMP nsMsgDatabase::ApplyRetentionSettings(nsIMsgRetentionSettings *msg
   nsMsgRetainByPreference retainByPreference;
   PRUint32 daysToKeepHdrs = 0;
   PRUint32 numHeadersToKeep = 0;
-  PRUint32 keepUnreadMessagesProp = 0;
   PRBool keepUnreadMessagesOnly = PR_FALSE;
-  PRUint32 daysToKeepBodies = 0;
   msgRetentionSettings->GetRetainByPreference(&retainByPreference);
   msgRetentionSettings->GetKeepUnreadMessagesOnly(&keepUnreadMessagesOnly);
 

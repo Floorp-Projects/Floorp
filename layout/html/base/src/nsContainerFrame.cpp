@@ -146,9 +146,6 @@ nsContainerFrame::PaintChildren(nsIPresContext*      aPresContext,
                                 const nsRect&        aDirtyRect,
                                 nsFramePaintLayer    aWhichLayer)
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-
   nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {
     PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);

@@ -2879,7 +2879,6 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY)
     }
 
   aView->GetBounds(trect);
-  nscoord x = trect.x, y = trect.y;
 
   localcx->Translate(aX, aY);
 

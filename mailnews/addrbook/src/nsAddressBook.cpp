@@ -552,7 +552,6 @@ nsresult AddressBookParser::ParseFile()
 	if (PL_strcmp(fileName, kPersonalAddressbook) == 0)
 	{
 		// This is the personal address book, get name from prefs
-		nsresult rv = NS_OK;
 		NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
 		if (NS_FAILED(rv) || !pPref) 
 			return nsnull;

@@ -273,7 +273,6 @@ nsresult nsMsgSearchNews::Encode (nsCString *outEncoding)
 		if (encoding)
 		{
 			PL_strcpy (encoding, "?search");
-      PRUint32 numTerms;
 
       m_searchTerms->Count(&numTerms);
 

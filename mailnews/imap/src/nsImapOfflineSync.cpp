@@ -234,8 +234,10 @@ nsImapOfflineSync::ProcessAppendMsgOperation(nsIMsgOfflineImapOperation *current
 	nsCOMPtr <nsIMsgDBHdr> mailHdr;
   nsMsgKey msgKey;
   currentOp->GetMessageKey(&msgKey);
+#ifndef NOT_IMPL_YET
+  m_currentDB->GetMsgHdrForKey(msgKey, getter_AddRefs(mailHdr)); 
+#else
   nsresult rv = m_currentDB->GetMsgHdrForKey(msgKey, getter_AddRefs(mailHdr)); 
-#ifdef NOT_IMPL_YET
 	if (NS_SUCCEEDED(rv) && mailHdr)
 	{
 		char *msg_file_name = WH_TempName (xpFileToPost, "nsmail");

@@ -480,7 +480,6 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
     if (aImapUrl)
     {
       nsCOMPtr <nsIImapMockChannel> mockChannel;
-      nsCOMPtr<nsIURI> url(do_QueryInterface(aSupport, &rv));
 
       if (NS_SUCCEEDED(aImapUrl->GetMockChannel(getter_AddRefs(mockChannel))) && mockChannel)
       {

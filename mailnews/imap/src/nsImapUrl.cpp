@@ -364,11 +364,9 @@ NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result)
 		if (wherepart)
 		{
 			char *wherelibmimepart = PL_strstr(wherepart, "&part=");
-			int len = PL_strlen(m_listOfMessageIds), numCharsToCopy = 0;
-			if (wherelibmimepart)
-				numCharsToCopy = (wherelibmimepart - wherepart);
-			else
-				numCharsToCopy = PL_strlen(m_listOfMessageIds) - (wherepart - m_listOfMessageIds);
+                int numCharsToCopy = (wherelibmimepart) ?
+                   wherelibmimepart - wherepart :
+                   PL_strlen(m_listOfMessageIds) - (wherepart - m_listOfMessageIds);
 			if (numCharsToCopy)
 			{
 				*result = (char *) PR_Malloc(sizeof(char) * (numCharsToCopy + 1));
@@ -884,7 +882,6 @@ NS_IMETHODIMP nsImapUrl::AllocateServerPath(const char * canonicalPath, char onl
 NS_IMETHODIMP nsImapUrl::AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) 
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
-  char *canonicalPath = nsnull;
 	char delimiterToUse = onlineDelimiter;
 	char *serverKey = nsnull;
   nsString aString;

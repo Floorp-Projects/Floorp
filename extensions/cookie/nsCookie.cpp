@@ -1376,7 +1376,7 @@ permission_Unblock(char * host, PRInt32 type) {
           if (typeStruct->permission == PR_FALSE) {
             hostStruct->permissionList->RemoveElementAt(typeIndex);
             /* if no more types are present, remove the entry */
-            PRInt32 count2 = hostStruct->permissionList->Count();
+            count2 = hostStruct->permissionList->Count();
             if (count2 == 0) {
               PR_FREEIF(hostStruct->permissionList);
               cookie_permissionList->RemoveElementAt(hostIndex);

@@ -163,7 +163,6 @@ public:
 nsScrollSmoother::nsScrollSmoother(nsXULTreeOuterGroupFrame* aOuter)
 {
   NS_INIT_REFCNT();
-  nsresult rv = NS_OK;
   mDelta = 0;
   mOuter = aOuter;
 }
@@ -1322,7 +1321,6 @@ nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlus
   treeLayout->LazyRowCreator(state, this);
 
   if (mAdjustScroll) {
-     PRInt32 pos = mCurrentIndex*mRowHeight;
      VerticalScroll(mYPosition);
      mAdjustScroll = PR_FALSE;
   }

@@ -149,7 +149,7 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIRequest *reque
       else
       {
         // Tell the user we started printing...
-        PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingMessage").GetUnicode());
+        msg = GetString(NS_LITERAL_STRING("PrintingMessage").get());
         SetStatusMessage( msg );
         PR_FREEIF(msg);
       }

@@ -454,7 +454,7 @@ nsresult nsAbDirectory::RemoveCardFromAddressList(const nsIAbCard* card)
 				rv = pAddressLists->Count(&total);
 				for (j = total - 1; j >= 0; j--)
 				{
-					nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(j));
+          pSupport = getter_AddRefs(pAddressLists->ElementAt(j));
 					nsCOMPtr<nsIAbCard> cardInList(do_QueryInterface(pSupport, &rv));
 					if (card == cardInList.get())
 						pAddressLists->RemoveElementAt(j);
@@ -491,11 +491,10 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 					mDatabase->DeleteCardFromMailList(this, card, PR_TRUE);
 
 					PRUint32 cardTotal;
-					PRInt32 i;
 					rv = m_AddressList->Count(&cardTotal);
-					for (i = cardTotal - 1; i >= 0; i--)
+					for (PRInt32 k = cardTotal - 1; k >= 0; k--)
 					{						
-						nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
+						nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(k));
 						if (!pSupport)
 							continue;
 
@@ -508,7 +507,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 							card->GetDbTableID(&cardTableID);
 							card->GetDbRowID(&cardRowID);
 							if (tableID == cardTableID && rowID == cardRowID)
-								m_AddressList->RemoveElementAt(i);
+								m_AddressList->RemoveElementAt(k);
 						}
 					}
 				}
@@ -525,7 +524,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 						char *listUri = PR_smprintf("%s/MailList%ld", mURI, rowID);
 						if (listUri)
 						{
-							nsresult rv = NS_OK;
+							rv = NS_OK;
 							NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 							if(NS_FAILED(rv))
 								return rv;
@@ -671,7 +670,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 	}
 	else
 	{	//it's a mailing list
-		nsresult rv = NS_OK;
+		rv = NS_OK;
 
 		nsXPIDLCString uri;
 		rv = directory->GetDirUri(getter_Copies(uri));

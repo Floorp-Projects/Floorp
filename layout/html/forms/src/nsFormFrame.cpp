@@ -666,7 +666,7 @@ NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
   return NS_OK;
 }
 
-#ifdef NS_DEBUG
+#if 0
 
 PRIVATE
 void DebugPrint(char* aLabel, nsString aString)

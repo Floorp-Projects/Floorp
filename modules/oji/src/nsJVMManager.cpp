@@ -839,7 +839,6 @@ nsJVMManager::IsAllPermissionGranted(
     PRBool * isGranted)
 {
     nsresult rv      = NS_OK;
-    PRBool   success = PR_FALSE;
 
     nsIPrincipal* pIPrincipal = NULL;
   
@@ -886,15 +885,13 @@ nsJVMManager::IsAppletTrusted(
     nsIPrincipal** pIPrincipal)
 {
     nsresult rv      = NS_OK;
-    PRBool   success = PR_FALSE;
 
     //-- Get the signature verifier service
     NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) // No signature verifier available
         return NS_OK;
 
-
-  // Get the Script Security Manager.
+    // Get the Script Security Manager.
 
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv)

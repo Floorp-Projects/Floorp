@@ -944,7 +944,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     }
 
     if (redrawAfterReflow) {
-       nsIFrame* frame = nsnull;
+       frame = nsnull;
        GetFrame(&frame);
        nsRect r;
        frame->GetRect(r);
@@ -959,8 +959,6 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
        changedSize = PR_TRUE;
   
     nsContainerFrame::FinishReflowChild(mFrame, aPresContext, aDesiredSize, aX, aY, NS_FRAME_NO_MOVE_FRAME);
-
-
   }    
   
 #ifdef DEBUG_REFLOW

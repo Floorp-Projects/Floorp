@@ -103,14 +103,12 @@ nsBox::ListBox(nsAutoString& aResult)
       {
         namedMap->Item(i, getter_AddRefs(attribute));
         nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
-        nsAutoString name;
         attr->GetName(name);
         nsAutoString value;
         attr->GetValue(value);
         AppendAttribute(name, value, aResult);
       }
     }
-
 }
 
 NS_IMETHODIMP
@@ -447,17 +445,15 @@ nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
       frame->SetFrameState(state);
       NeedsRecalc();
 
-      nsIBox* parent = nsnull;
-      GetParentBox(&parent);
-      if (parent)
-         return parent->RelayoutDirtyChild(aState, this);
-      else {
-        nsIFrame* parent = nsnull;
-        frame->GetParent(&parent);
-        nsCOMPtr<nsIPresShell> shell;
-        aState.GetPresShell(getter_AddRefs(shell));
-        return parent->ReflowDirtyChild(shell, frame);
-      }
+      nsIBox* parentBox = nsnull;
+      GetParentBox(&parentBox);
+      if (parentBox)
+         return parentBox->RelayoutDirtyChild(aState, this);
+      nsIFrame* parent = nsnull;
+      frame->GetParent(&parent);
+      nsCOMPtr<nsIPresShell> shell;
+      aState.GetPresShell(getter_AddRefs(shell));
+      return parent->ReflowDirtyChild(shell, frame);
     } else {
 #ifdef DEBUG_COELESCED
       Coelesced();

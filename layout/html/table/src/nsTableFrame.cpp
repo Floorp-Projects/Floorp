@@ -2276,7 +2276,6 @@ nsTableFrame::AppendFrames(nsIPresContext* aPresContext,
       // Append the new col group frame
       mColGroups.AppendFrame(nsnull, f);
     } else if (IsRowGroup(display->mDisplay)) {
-      nsIFrame* prevSibling = mFrames.LastChild();
       // Append the new row group frame to the sibling chain
       mFrames.AppendFrame(nsnull, f);
 
@@ -2340,7 +2339,6 @@ nsTableFrame::InsertFrames(nsIPresContext* aPresContext,
     SetNeedStrategyInit(PR_TRUE);
   } else if (IsRowGroup(display->mDisplay)) {
     // get the starting row index of the new rows and insert them into the table
-    PRInt32 rowIndex = 0;
     nsTableRowGroupFrame* prevRowGroup = (nsTableRowGroupFrame *)nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrame, nsLayoutAtoms::tableRowGroupFrame);
     nsFrameList newList(aFrameList);
     nsIFrame* lastSibling = newList.LastChild();

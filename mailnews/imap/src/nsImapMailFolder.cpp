@@ -4484,7 +4484,7 @@ nsresult nsImapMailFolder::GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, 
 		    {
           nsMsgKey originalKey;
           op->GetMessageKey(&originalKey);
-          nsresult rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
+          rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
 			    if (NS_SUCCEEDED(rv) && returnOp)
 			    {
 				    nsXPIDLCString moveDestination;
@@ -4532,7 +4532,7 @@ nsresult nsImapMailFolder::GetOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgO
 		    {
           nsMsgKey originalKey;
           op->GetMessageKey(&originalKey);
-          nsresult rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
+          rv = (*originalDB)->GetOfflineOpForKey(originalKey, PR_FALSE, &returnOp);
 		    }
       }
     }
@@ -4554,7 +4554,6 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
   NS_ENSURE_ARG(messages);
   nsresult rv = NS_OK;
 	nsresult stopit = 0;
-	PRBool operationOnMoveResult = PR_FALSE;
 	nsCOMPtr <nsIMsgDatabase> sourceMailDB;
   nsCOMPtr <nsIDBFolderInfo> srcDbFolderInfo;
   srcFolder->GetDBFolderInfoAndDB(getter_AddRefs(srcDbFolderInfo), getter_AddRefs(sourceMailDB));
@@ -4589,7 +4588,6 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
 		{
 			// get the highest key in the dest db, so we can make up our fake keys
 			PRBool highWaterDeleted = PR_FALSE;
-			PRBool haveWarnedUserAboutMoveTargets = PR_FALSE;
 			nsMsgKey fakeBase = 1;
       nsCOMPtr <nsIDBFolderInfo> folderInfo;
       rv = mDatabase->GetDBFolderInfo(getter_AddRefs(folderInfo));
@@ -4664,7 +4662,6 @@ nsresult nsImapMailFolder::CopyMessagesOffline(nsIMsgFolder* srcFolder,
 					{
             nsXPIDLCString folderURI;
 						GetURI(getter_Copies(folderURI));
-						nsOfflineImapOperationType opType = nsIMsgOfflineImapOperation::kMsgCopy;
 							
 						if (isMove)
 						{

@@ -258,7 +258,7 @@ nsPolygonFrame::GetPoints()
   mNumPnts = mPoints.Count()+1;
   mPnts    = new nsPoint[mNumPnts];
   for (cnt=0;cnt<mNumPnts-1;cnt++) {
-    nsPoint * pnt = (nsPoint*)mPoints.ElementAt(cnt);
+    pnt = NS_REINTERPRET_CAST(nsPoint*, mPoints.ElementAt(cnt));
     mPnts[cnt] = *pnt;
     delete pnt;
   }

@@ -314,7 +314,7 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
 
       nsAutoString childName; childName.AssignWithConversion("messagepane");
       nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootAsItem));
+      docShell = do_QueryInterface(rootAsItem);
       mRootDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell));
 
       // force ourselves to figure out the message pane

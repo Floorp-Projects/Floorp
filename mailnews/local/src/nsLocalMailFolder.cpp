@@ -858,7 +858,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener)
     nsCOMPtr<nsIDBFolderInfo> folderInfo;
     PRUint32 expungedBytes = 0;
     nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-    nsresult folderOpen = NS_OK;
     nsCOMPtr<nsIFileSpec> pathSpec;
 
     rv = GetExpungedBytes(&expungedBytes);

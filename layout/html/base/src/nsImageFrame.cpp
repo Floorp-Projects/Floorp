@@ -358,9 +358,13 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
   PRBool cancelledReflow = PR_FALSE;
 
-  if (mLowSrcImageLoader != nsnull && !(mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_IMAGE_READY)) {
-    PRBool gotDesiredSize = mLowSrcImageLoader->GetDesiredSize(aPresContext, &aReflowState, aDesiredSize);
-    /*if (gotDesiredSize) {
+  if (mLowSrcImageLoader && !(mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_IMAGE_READY)) {
+#ifdef DEBUG_RODS
+    PRBool gotDesiredSize =
+#endif
+    mLowSrcImageLoader->GetDesiredSize(aPresContext, &aReflowState, aDesiredSize);
+#ifdef DEBUG_RODS
+    if (gotDesiredSize) {
       // We have our "final" desired size. Cancel any pending
       // incremental reflows aimed at this frame.
       nsIPresShell* shell;
@@ -369,7 +373,8 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
         shell->CancelReflowCommand(this, nsnull);
         NS_RELEASE(shell);
       }
-    }*/
+    }
+#endif
   }
 
   // Must ask for desiredSize to start loading of image

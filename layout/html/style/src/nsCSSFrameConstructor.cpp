@@ -6959,7 +6959,6 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
 
   // Initialize the new frame
   nsIFrame* newFrame = nsnull;
-  nsIFrame* ignore = nsnull;
   //nsSVGTableCreator svgTableCreator(aPresShell); // Used to make table views.
  
   // See if the element is absolute or fixed positioned
@@ -7203,8 +7202,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                            (lastChild == aFrameItems.lastChild))) {
     // When there is no explicit frame to create, assume it's a
     // container and let display style dictate the rest
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      styleContext->GetStyleData(eStyleStruct_Display);
+    display = NS_STATIC_CAST(const nsStyleDisplay*,
+      styleContext->GetStyleData(eStyleStruct_Display));
 
     rv = ConstructFrameByDisplayType(aPresShell, aPresContext, aState, display, aContent,
                                      aParentFrame, styleContext, aFrameItems);
