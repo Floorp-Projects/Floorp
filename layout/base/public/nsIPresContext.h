@@ -448,12 +448,12 @@ public:
   /**
    * Set the Bidi options for the presentation context
    */  
-  NS_IMETHOD SetBidi(nsBidiOptions Source, PRBool aForceReflow = PR_FALSE) = 0;
+  NS_IMETHOD SetBidi(PRUint32 aBidiOptions, PRBool aForceReflow = PR_FALSE) = 0;
 
   /**
    * Get the Bidi options for the presentation context
    */  
-  NS_IMETHOD GetBidi(nsBidiOptions * Dist) = 0;
+  NS_IMETHOD GetBidi(PRUint32* aBidiOptions) = 0;
 //ahmed
 
   /**
