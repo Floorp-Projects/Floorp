@@ -255,527 +255,504 @@ void CWizardUI::OnPaint()
 	// Do not call CPropertyPage::OnPaint() for painting messages
 }
 
+void ExecuteCommand(char *command)
+{
+	STARTUPINFO	startupInfo; 
+	PROCESS_INFORMATION	processInfo; 
+
+	memset(&startupInfo, 0, sizeof(startupInfo));
+	memset(&processInfo, 0, sizeof(processInfo));
+
+	startupInfo.cb = sizeof(STARTUPINFO);
+	startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+	startupInfo.wShowWindow = SW_SHOW;
+
+	BOOL executionSuccessful = CreateProcess(NULL, command, NULL, NULL, TRUE, 
+												NORMAL_PRIORITY_CLASS, NULL, NULL, 
+												&startupInfo, &processInfo); 
+	DWORD error = GetLastError();
+	WaitForSingleObject(processInfo.hProcess, INFINITE);
+}
+
+BOOL CWizardUI::ActCommand(WIDGET *curWidget)
+{
+	UpdateGlobals();
+	char params[MAX_SIZE];
+					
+	CString function;
+	strcpy(params, curWidget->action.parameters);
+	int numCommands=0;
+	char target[MID_SIZE] = {'\0'};
+	char baseCommand[MID_SIZE] = {'\0'};
+	char *args[MAX_SIZE];
+	BOOL informAct = FALSE;
+
+
+	char *commands[MIN_SIZE];
+					
+
+	commands[0] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
+	commands[0] = strtok(params, ";");
+
+	int i=0;
+	while (commands[i])
+	{
+		i++;
+		commands[i] = strtok(NULL, ";");
+		if (commands[i])
+		{
+			if(!(strcmp(commands[i], "inform")))
+			{
+				informAct = TRUE;
+			}
+		}
+	}
+	numCommands = i;
+					
+	if (curWidget->target != "")
+	{
+		strcpy(target, curWidget->target);
+	}
+
+	WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+	CString tmpFunction = tmpWidget->action.function;
+	CString tmpParams = CString(tmpWidget->action.parameters);
+	
+	char localPath[MAX_SIZE] = {'\0'};
+
+	if (strrchr(tmpParams,'\\')) {
+		strncpy(localPath, tmpParams, strlen(tmpParams) - strlen(strrchr(tmpParams,'\\')));							
+	}
+					
+
+	char *commandList[MIN_SIZE];
+	int commandListLength = 0;
+	BOOL abortProcessing = FALSE;
+	BOOL newEntry = FALSE;
+	BOOL commandBuilt = FALSE;
+	CString entryName;
+
+	for (int j=0; j < numCommands; j++)
+	{
+		commandListLength = 0;
+		if (!abortProcessing)
+		{
+			// Need to replace this gunk with replaceVars() call, but listbox iterator needs 
+			// to be solved first.
+			int numArgs = 0;
+
+
+			int x=0;
+			args[x] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
+			args[x] = strtok((char *)(LPCTSTR) commands[j], " ");	
+	
+			commandList[commandListLength] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
+	
+			while (args[x])
+			{
+				x++;
+				args[x] = strtok(NULL, " ");
+			}
+					
+			numArgs = x;
+
+			if ((strstr(args[0], "ConfigDialog")))
+			{
+				CNewDialog newDlg;
+				newDlg.DoModal();
+				entryName = newDlg.GetData();
+				newEntry = TRUE;
+			}
+			if (newEntry && entryName == "")
+			{
+				abortProcessing = TRUE;
+			}
+			else
+			{
+				if (!newEntry)
+				{
+					for (int k=0; k < numArgs; k++)
+					{
+						if (!(strstr(args[k], "%")))
+						{
+							if (!commandBuilt)
+							{
+								strcpy(commandList[commandListLength], args[k]);
+							}
+							else
+							{
+								strcat(commandList[commandListLength], args[k]);
+							}
+							strcat(commandList[commandListLength]," ");
+							commandBuilt = TRUE;
+
+							if (k+1 == numArgs)
+								commandListLength++;
+						}
+						else
+						{
+							args[k]++;
+							args[k][strlen(args[k])-1] = '\0';
+														
+							WIDGET* aWidget = theApp.findWidget(args[k]);
+											
+							if (aWidget)
+							{
+								if (aWidget->type == "ListBox")
+								{
+									// Listbox iterator:  apply command to each selected value
+									//
+									// Use this index value to find the string from the listbox
+									// If the index is a ',' separated list, iterate over each value
+									CString valueSet = aWidget->value;
+
+									char *values[MIN_SIZE];
+				
+									int numValues=0;
+									values[numValues] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
+									values[numValues] = strtok((char *)(LPCTSTR)valueSet, ",");
+									while (values[numValues])
+									{
+										numValues++;
+										values[numValues] = strtok(NULL, ",");
+									}							
+													
+									if (strstr(commandList[0]," ")) {
+										strncpy(baseCommand, commandList[0], strlen(commandList[0]) - (strlen(strstr(commandList[0]," "))) );
+										strcat(baseCommand, " ");
+									}
+
+									for (int index=0;  index < numValues; index++)
+									{
+			
+										char valueBuffer[MAX_SIZE] = {'\0'};
+										((CListBox*)aWidget->control)->GetText(atoi(values[index]), valueBuffer);
+		
+										if (index >0)
+										{
+											commandList[commandListLength] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
+											strcpy(commandList[commandListLength], baseCommand);
+											strcat(commandList[commandListLength], currDirPath);
+											if (localPath) {
+												strcat(commandList[commandListLength], localPath);
+											}
+											strcat(commandList[commandListLength], "\\");
+											strcat(commandList[commandListLength], valueBuffer);
+											strcat(commandList[commandListLength], " ");	
+											commandListLength++;
+										}
+										else
+										{
+											strcat(commandList[commandListLength], currDirPath);
+											if (localPath) {
+												strcat(commandList[commandListLength], localPath);
+											}
+											strcat(commandList[commandListLength], "\\");
+											strcat(commandList[commandListLength], valueBuffer);
+											strcat(commandList[commandListLength], " ");
+															
+											if (k+1 == numArgs)
+											{
+												commandListLength++;
+											}
+										}
+									}
+								}
+								else
+								{
+									strcpy(commandList[commandListLength], (char *) (LPCTSTR) aWidget->value);
+									strcat(commandList[commandListLength], " ");
+
+									if (k+1 == numArgs)
+									{
+										commandListLength++;
+									}
+								}
+							}
+							else if (CString(args[k]) == "newEntry")
+							{
+								// Funky reference to newEntry as value just prompted for
+								strcat(commandList[commandListLength], currDirPath);
+								if (localPath) {
+									strcat(commandList[commandListLength], localPath);
+								}
+								strcat(commandList[commandListLength], "\\");
+								strcat(commandList[commandListLength], (char *) (LPCTSTR) entryName);
+												
+								if (k+1 == numArgs)
+								{
+									commandListLength++;
+								}
+							}
+						}
+
+					}	
+				}
+			}
+		}
+		newEntry = FALSE;
+		for (int listNum =0; listNum < commandListLength; listNum++)
+			ExecuteCommand(commandList[listNum]);
+
+		// This is the list of the target widget, but assumes the function
+		theApp.GenerateList(tmpFunction, tmpWidget, tmpParams);
+	}
+						
+	// Special dialog to show where the file was saved.  Should be replaced with interpreted call in INI file
+	if (informAct)
+	{
+		CWnd myWnd;
+		char infoPath[MAX_SIZE] = {'\0'};
+		strcpy(infoPath, currDirPath);
+		if (localPath) {
+			strcat(infoPath, localPath);
+		}
+
+		if (entryName != "") {
+			myWnd.MessageBox( entryName + " is saved in " + CString(infoPath), "Information", MB_OK);
+		}
+	}	
+
+	return TRUE;
+}
+
+BOOL CWizardUI::SortList(WIDGET *curWidget) 
+{
+#ifdef ACTUALLYNEEDTODOSOMETHINGLIKETHIS
+	WIDGET* listWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+	int count = ((CListBox*)(listWidget->control))->GetCount();
+	char* items[MAX_SIZE];
+
+	for (int i = 0; i < count; i++) {
+		items[i] = new char[MAX_SIZE];
+		((CListBox*)(listWidget->control))->GetText(i, items[i]);
+	}
+
+
+	// Please use qsort() if this code becomes active again...
+	
+	if (curWidget->action.function == "SortByName") 
+	{
+	}
+					
+	else if (curWidget->action.function == "SortByPhone")
+	{
+	}
+
+	((CListBox*)(listWidget->control))->ResetContent();
+	for (int k = 0; k < count; k++) {
+		((CListBox*)(listWidget->control))->AddString(CString(items[k]));
+	}
+#endif
+	return TRUE;
+}
+
+BOOL CWizardUI::NewConfig(WIDGET *curWidget) 
+{
+	// This doesn't really belong here...
+	CNewConfigDialog newDlg;
+	newDlg.DoModal();
+	CString configField = newDlg.GetConfigName();
+	CString newDir = CString(customizationPath); 
+	newDir += configField;
+	_mkdir(newDir);
+					
+	WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+	CString tmpFunction = tmpWidget->action.function;
+	CString params = CString(tmpWidget->action.parameters);
+	theApp.GenerateList(tmpFunction, tmpWidget, params);	
+					
+	((CComboBox*)tmpWidget->control)->SelectString(0, configField);
+	return TRUE;
+}
+
+BOOL CWizardUI::BrowseFile(WIDGET *curWidget) 
+{
+	// This is to browse to a file
+	CFileDialog fileDlg(TRUE, NULL, NULL, OFN_OVERWRITEPROMPT, NULL, NULL);
+	int retVal = fileDlg.DoModal();
+	CString fullFileName="";
+
+
+	//Checking to see if the open file dialog did get a value or was merely cancelled.
+	//If it was cancelled then the value of the edit box is not changed.
+	if (fileDlg.GetPathName() != "")
+	{	
+		fullFileName = fileDlg.GetPathName();
+		WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+		if (tmpWidget)
+			((CEdit*)tmpWidget->control)->SetWindowText(fullFileName);
+	}
+	return TRUE;
+}
+
+BOOL CWizardUI::BrowseDir(WIDGET *curWidget) 
+{
+	// The following code is used to browse to a dir
+	// CFileDialog does not allow this
+	
+	BROWSEINFO bi;
+	char szPath[MAX_PATH];
+	char szTitle[] = "Select Directory";
+	bi.hwndOwner = AfxGetMainWnd()->m_hWnd;
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = (char*)malloc(MAX_PATH);
+	bi.lpszTitle = szTitle;
+
+	// Enable this line to browse for a directory
+	bi.ulFlags = BIF_RETURNONLYFSDIRS;
+				
+	// Enable this line to browse for a computer
+	bi.lpfn = NULL;
+	bi.lParam = NULL;
+	LPITEMIDLIST pidl= SHBrowseForFolder(&bi);
+
+
+	if(pidl != NULL)
+	{
+		SHGetPathFromIDList(pidl,szPath);
+		if( bi.ulFlags & BIF_BROWSEFORCOMPUTER )
+		{
+			// bi.pszDisplayName variable contains the computer name
+		}
+		else if( bi.ulFlags & BIF_RETURNONLYFSDIRS )
+		{
+			// szPath variable contains the path
+			WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
+			if (tmpWidget)
+				((CEdit*)tmpWidget->control)->SetWindowText(szPath);
+		}
+	 }
+	
+	free( bi.pszDisplayName );
+	return TRUE;
+}
+
+BOOL CWizardUI::Progress() 
+{
+#ifdef SUPPORTINGIBPROGRESS
+	CProgressDialog progressDlg(this);
+	progressDlg.Create(IDD_PROGRESS_DLG);
+	CProgressDialog *pProgressDlg = &progressDlg;
+				
+	//CRuntimeClass *pProgDlgThread = RUNTIME_CLASS(CProgDlgThread);	//This is the multi-threading stuff for the progress dialog
+	//AfxBeginThread(pProgDlgThread);
+
+	pProgressDlg->m_ProgressText.SetWindowText("Creating a CD Layout...");
+	pProgressDlg->m_ProgressBar.SetPos(0);
+	pProgressDlg->m_ProgressBar.SetRange(0,4);
+	pProgressDlg->m_ProgressBar.SetStep(1);
+				
+	if (curWidget->action.dll == "IBEngine.dll") {
+		VERIFY(hModule = ::LoadLibrary("IBEngine.dll"));
+
+		VERIFY(
+			pMyDllPath =
+			(MYDLLPATH*)::GetProcAddress(
+			(HMODULE) hModule, "SetPath")
+		);
+
+		(*pMyDllPath)((char*)(LPCTSTR)Path);
+
+		pProgressDlg->m_ProgressText.SetWindowText("Loading Globals...");
+		LoadGlobals();
+		pProgressDlg->m_ProgressBar.StepIt();
+		pProgressDlg->UpdateWindow();
+
+		pProgressDlg->m_ProgressText.SetWindowText("Reading files...");
+		ReadIniFile();
+		pProgressDlg->m_ProgressBar.StepIt();
+		pProgressDlg->UpdateWindow();
+
+		pProgressDlg->m_ProgressText.SetWindowText("Merging files...");
+		MergeFiles();
+		pProgressDlg->m_ProgressBar.StepIt();
+		pProgressDlg->UpdateWindow();
+
+		pProgressDlg->m_ProgressText.SetWindowText("Creating CD Layout...");
+		CreateMedia();
+		pProgressDlg->m_ProgressBar.StepIt();
+		pProgressDlg->UpdateWindow();
+
+		MessageBox("CD Directory created", "OK", MB_OK);
+	}
+#endif
+
+	return TRUE;
+}
+
 BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam) 
 {
 	for(int i=0; i < CurrentNode->numWidgets; i++)
 	{
 		WIDGET* curWidget = CurrentNode->pageWidgets[i];
-		if (curWidget->widgetID == (int)wParam) 
+		if (curWidget->widgetID != (int)wParam) 
+			continue;
+
+		if (curWidget->action.dll == "NULL") 
 		{
-			if (curWidget->action.dll == "NULL") 
+			if (curWidget->action.function == "command")
+				ActCommand(curWidget);
+
+			else if (curWidget->action.function == "DisplayImage") 
 			{
-				if (curWidget->action.function == "command")
-				{
-					UpdateGlobals();
-					char params[MAX_SIZE];
-					
-					CString function;
-					strcpy(params, curWidget->action.parameters);
-					CString orgParams = CString(params);
-					CString setBack;
-					int numCommands=0;
-					char target[MID_SIZE] = {'\0'};
-					char baseCommand[MID_SIZE] = {'\0'};
-					char *args[MAX_SIZE];
-					BOOL informAct = FALSE;
-
-
-					char *commands[MIN_SIZE];
-					
-
-					commands[0] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-					commands[0] = strtok(params, ";");
-					setBack = CString(commands[0]);	
-
-					int i=0;
-					while (commands[i])
-					{
-						i++;
-						commands[i] = strtok(NULL, ";");
-						if (commands[i])
-						{
-							setBack += ";" + CString(commands[i]);
-							
-							if(!(strcmp(commands[i], "inform")))
-							{
-								informAct = TRUE;
-							}
-						}
-					}
-					strcpy(curWidget->action.parameters, (char *) (LPCTSTR) setBack);
-					numCommands = i;
-					
-					if (curWidget->target != "")
-					{
-						strcpy(target, curWidget->target);
-					}
-
-					WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
-					CString tmpFunction = tmpWidget->action.function;
-					CString tmpParams = CString(tmpWidget->action.parameters);
-	
-					char localPath[MAX_SIZE] = {'\0'};
-
-					if (strrchr(tmpParams,'\\')) {
-						strncpy(localPath, tmpParams, strlen(tmpParams) - strlen(strrchr(tmpParams,'\\')));							
-					}
-					
-
-					char *commandList[MIN_SIZE];
-					int commandListLength = 0;
-					BOOL abortProcessing = FALSE;
-					BOOL newEntry = FALSE;
-					BOOL commandBuilt = FALSE;
-					CString entryName;
-
-					for (int j=0; j < numCommands; j++)
-					{
-						commandListLength = 0;
-						if (!abortProcessing)
-						{
-							int numArgs = 0;
-
-
-							int x=0;
-							args[x] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-							args[x] = strtok((char *)(LPCTSTR) commands[j], " ");	
-	
-							commandList[commandListLength] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-	
-							while (args[x])
-							{
-								x++;
-								args[x] = strtok(NULL, " ");
-								if (args[x])
-								{
-									setBack += " " + CString(args[x]);
-								}
-							}
-					
-							numArgs = x;
-
-							if ((strstr(args[0], "ConfigDialog")))
-							{
-								CNewDialog newDlg;
-								newDlg.DoModal();
-								entryName = newDlg.GetData();
-								newEntry = TRUE;
-							}
-							if (newEntry && entryName == "")
-							{
-								abortProcessing = TRUE;
-							}
-							else
-							{
-								if (!newEntry)
-								{
-									for (int k=0; k < numArgs; k++)
-									{
-										if (!(strstr(args[k], "%")))
-										{
-											if (!commandBuilt)
-											{
-												strcpy(commandList[commandListLength], args[k]);
-											}
-											else
-											{
-												strcat(commandList[commandListLength], args[k]);
-											}
-											strcat(commandList[commandListLength]," ");
-											commandBuilt = TRUE;
-
-											if (k+1 == numArgs)
-												commandListLength++;
-										}
-										else
-										{
-											args[k]++;
-											args[k][strlen(args[k])-1] = '\0';
-														
-											WIDGET* aWidget = theApp.findWidget(args[k]);
-											
-											if (aWidget)
-											{
-												if (aWidget->type == "ListBox")
-												{
-													CString valueSet = aWidget->value;
-
-													char *values[MIN_SIZE];
-				
-													int numValues=0;
-													values[numValues] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-													values[numValues] = strtok((char *)(LPCTSTR)valueSet, ",");
-													while (values[numValues])
-													{
-														numValues++;
-														values[numValues] = strtok(NULL, ",");
-													}							
-													
-													if (strstr(commandList[0]," ")) {
-														strncpy(baseCommand, commandList[0], strlen(commandList[0]) - (strlen(strstr(commandList[0]," "))) );
-														strcat(baseCommand, " ");
-													}
-
-													for (int index=0;  index < numValues; index++)
-													{
+				// This is to dsiplay an image in a separate dialog
+				CImgDlg imgDlg(curWidget->action.parameters);
+				int retVal = imgDlg.DoModal();
+			}
+			else if (curWidget->action.function == "ShowSum") 
+			{
+				CSumDlg sumdlg;
+				int retVal = sumdlg.DoModal();
+			}
+			else if (curWidget->action.function == "BrowseFile") 
+				BrowseFile(curWidget);
 			
-														char valueBuffer[MAX_SIZE] = {'\0'};
-														((CListBox*)aWidget->control)->GetText(atoi(values[index]), valueBuffer);
-		
-														if (index >0)
-														{
-															commandList[commandListLength] = (char *) GlobalAlloc(0, MAX_SIZE * sizeof(char));
-															strcpy(commandList[commandListLength], baseCommand);
-															strcat(commandList[commandListLength], currDirPath);
-															if (localPath) {
-																strcat(commandList[commandListLength], localPath);
-															}
-															strcat(commandList[commandListLength], "\\");
-															strcat(commandList[commandListLength], valueBuffer);
-															strcat(commandList[commandListLength], " ");	
-															commandListLength++;
-														}
-														else
-														{
-															strcat(commandList[commandListLength], currDirPath);
-															if (localPath) {
-																strcat(commandList[commandListLength], localPath);
-															}
-															strcat(commandList[commandListLength], "\\");
-															strcat(commandList[commandListLength], valueBuffer);
-															strcat(commandList[commandListLength], " ");
-															
-															if (k+1 == numArgs)
-															{
-																commandListLength++;
-															}
-														}
-													}
-												}
-												else
-												{
-													strcpy(commandList[commandListLength], (char *) (LPCTSTR) aWidget->value);
-													strcat(commandList[commandListLength], " ");
-
-													if (k+1 == numArgs)
-													{
-														commandListLength++;
-													}
-												}
-											}
-											else if (CString(args[k]) == "newEntry")
-											{
-												strcat(commandList[commandListLength], currDirPath);
-												if (localPath) {
-													strcat(commandList[commandListLength], localPath);
-												}
-												strcat(commandList[commandListLength], "\\");
-												strcat(commandList[commandListLength], (char *) (LPCTSTR) entryName);
-												
-												if (k+1 == numArgs)
-												{
-													commandListLength++;
-												}
-											}
-										}
-
-									}	
-								}
-							}
-						}
-						newEntry = FALSE;
-						for (int listNum =0; listNum < commandListLength; listNum++)
-						{
-							//system(commandList[listNum]);
-							STARTUPINFO	startupInfo; 
-							PROCESS_INFORMATION	processInfo; 
-
-							memset(&startupInfo, '\0', sizeof(startupInfo));
-							memset(&processInfo, '\0', sizeof(processInfo));
-
-							startupInfo.cb = sizeof(STARTUPINFO);
-							startupInfo.dwFlags = STARTF_USESHOWWINDOW;
-							startupInfo.wShowWindow = SW_SHOW;
-
-							BOOL executionSuccessful = CreateProcess(NULL, commandList[listNum], NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, &startupInfo, &processInfo); 
-							DWORD error = GetLastError();
-							WaitForSingleObject(processInfo.hProcess, INFINITE);
-						}
-
-						theApp.GenerateList(tmpFunction, tmpWidget, tmpParams);
-					}
-						
-					if (informAct)
-					{
-						CWnd myWnd;
-						char infoPath[MAX_SIZE] = {'\0'};
-						strcpy(infoPath, currDirPath);
-						if (localPath) {
-							strcat(infoPath, localPath);
-						}
-
-						if (entryName != "") {
-							myWnd.MessageBox( entryName + " is saved in " + CString(infoPath), "Information", MB_OK);
-						}
-					}	
-				}
-				else if (curWidget->action.function == "DisplayImage") {
-					// This is to dsiplay an image in a separate dialog
-					CImgDlg imgDlg(curWidget->action.parameters);
-					int retVal = imgDlg.DoModal();
-				}
-				else if (curWidget->action.function == "ShowSum") {
-					// This is to see if this works 
-//							CWnd Mywnd;
-//							Mywnd.MessageBox("hello","hello",MB_OK);
-							CSumDlg sumdlg;
-							int retVal = sumdlg.DoModal();
-
-							
-				}
-
-				else if (curWidget->action.function == "BrowseFile") {
-					// This is to browse to a file
-					CFileDialog fileDlg(TRUE, NULL, NULL, OFN_OVERWRITEPROMPT, NULL, NULL);
-					int retVal = fileDlg.DoModal();
-					CString fullFileName="";
-
-
-					WIDGET* editWidget = CurrentNode->pageWidgets[i-1];
-//Checking to see if the open file dialog did get a value or was merely cancelled.
-//If it was cancelled then the value of the edit box is not changed.
-					if (fileDlg.GetPathName() != "")
-					{	
-						fullFileName = fileDlg.GetPathName();
-						((CEdit*)editWidget->control)->SetWindowText(fullFileName);
-					}
-				}
-				else if (curWidget->action.function == "BrowseDir") {
-					// The following code is used to browse to a dir
-					// CFileDialog does not allow this
-	
-					BROWSEINFO bi;
-					char szPath[MAX_PATH];
-					char szTitle[] = "Select Directory";
-					bi.hwndOwner = AfxGetMainWnd()->m_hWnd;
-					bi.pidlRoot = NULL;
-					bi.pszDisplayName = (char*)malloc(MAX_PATH);
-					bi.lpszTitle = szTitle;
-
-					// Enable this line to browse for a directory
-					bi.ulFlags = BIF_RETURNONLYFSDIRS;
-				
-					// Enable this line to browse for a computer
-					bi.lpfn = NULL;
-					bi.lParam = NULL;
-					LPITEMIDLIST pidl= SHBrowseForFolder(&bi);
-
-
-					if(pidl != NULL)
-					{
-						SHGetPathFromIDList(pidl,szPath);
-						if( bi.ulFlags & BIF_BROWSEFORCOMPUTER )
-						{
-							// bi.pszDisplayName variable contains the computer name
-						}
-						else if( bi.ulFlags & BIF_RETURNONLYFSDIRS )
-						{
-							// szPath variable contains the path
-							WIDGET* editWidget = CurrentNode->pageWidgets[i-1];
-							((CEdit*)editWidget->control)->SetWindowText(szPath);
-						}
-					 }
-	
-					 free( bi.pszDisplayName );
-				}
-				else if (curWidget->action.function == "NewConfig") {
-					CNewConfigDialog newDlg;
-					newDlg.DoModal();
-					CString configField = newDlg.GetConfigName();
-					CString newDir = CString(customizationPath); 
-					newDir += configField;
-					_mkdir(newDir);
-					
-					/**
-					char srcCache[250];
-					char destCache[250];
-					strcpy(srcCache, Path);
-					strcat(srcCache, "cck.che");
-					strcpy(destCache, newDir);
-					strcat(destCache, "\\cck.che");
-					CopyFile(srcCache, destCache, FALSE);
-					**/
-
-					WIDGET* tmpWidget = theApp.findWidget((char*) (LPCTSTR)curWidget->target);
-					CString tmpFunction = tmpWidget->action.function;
-					CString params = CString(tmpWidget->action.parameters);
-					theApp.GenerateList(tmpFunction, tmpWidget, params);	
-					
-					((CComboBox*)tmpWidget->control)->SelectString(0, configField);
-
-
-					// remembering the widget name for subsequent .che file operations
-					//customizationWidgetName = tmpWidget->name;
-				}
-				else if ((curWidget->action.function == "SortByName")
-							|| (curWidget->action.function == "SortByPhone"))
-				{
-					WIDGET* listWidget = theApp.findWidget("AcctSetupListBox");
-					int count = ((CListBox*)(listWidget->control))->GetCount();
-					char* items[MAX_SIZE];
-
-					for (int i = 0; i < count; i++) {
-						items[i] = new char[MAX_SIZE];
-						((CListBox*)(listWidget->control))->GetText(i, items[i]);
-					}
-
-
-					int x = 0;
-					int y = 0;
-					if (curWidget->action.function == "SortByName") {
-						int ch = '.';
-						char* pDest;
-						int result;
-						CString str1;
-						CString str2;
-						CString tmpStr;
-
-					    for (x = count-1; x >= 0; x--) {
-							BOOL flipped = FALSE;
-
-							for (int y = 0; y < x; y++) {
-								// number 1
-								pDest = strchr(items[y], ch);
-								result = pDest - items[y] + 1;
-								tmpStr = items[y];
-								str1 = tmpStr.Left(result);
-							
-								// number 2
-								pDest = strchr(items[y+1], ch);
-								result = pDest - items[y+1] + 1;
-								tmpStr = items[y+1];
-								str2 = tmpStr.Left(result);
-
-								if (str1 > str2) 
-								{
-									char tmpItem[MAX_SIZE];
-									strcpy(tmpItem, items[y]);
-
-									strcpy(items[y], items[y+1]);
-									strcpy(items[y+1], tmpItem);
-	
-									flipped = TRUE;
-								}
-							}
-
-							if (!flipped) {
-								break;
-							}
-						}
-					}
-					
-					if (curWidget->action.function == "SortByPhone") {
-						char* s1 = new char[MAX_SIZE];
-						char* s2 = new char[MAX_SIZE];
-
-					    for (x = count-1; x >= 0; x--) {
-							BOOL flipped = FALSE;
-
-							for (int y = 0; y < x; y++) {
-								// number 1
-								s1 = strstr(items[y], "(");
-							
-								// number 2
-								s2 = strstr(items[y+1], "(");
-
-								if (CString(s1) > CString(s2)) 
-								{
-									char tmpItem[MAX_SIZE];
-									strcpy(tmpItem, items[y]);
-
-									strcpy(items[y], items[y+1]);
-									strcpy(items[y+1], tmpItem);
-	
-									flipped = TRUE;
-								}
-							}
-
-							if (!flipped) {
-								break;
-							}
-						}
-					}
-
-					((CListBox*)(listWidget->control))->ResetContent();
-					for (int k = 0; k < count; k++) {
-						((CListBox*)(listWidget->control))->AddString(CString(items[k]));
-					}
-				}
-			}
-			else 
-			{
-				/**
-				CProgressDialog progressDlg(this);
-				progressDlg.Create(IDD_PROGRESS_DLG);
-				CProgressDialog *pProgressDlg = &progressDlg;
-				
-				//CRuntimeClass *pProgDlgThread = RUNTIME_CLASS(CProgDlgThread);	//This is the multi-threading stuff for the progress dialog
-				//AfxBeginThread(pProgDlgThread);
-
-				pProgressDlg->m_ProgressText.SetWindowText("Creating a CD Layout...");
-				pProgressDlg->m_ProgressBar.SetPos(0);
-				pProgressDlg->m_ProgressBar.SetRange(0,4);
-				pProgressDlg->m_ProgressBar.SetStep(1);
-				
-				if (curWidget->action.dll == "IBEngine.dll") {
-					VERIFY(hModule = ::LoadLibrary("IBEngine.dll"));
-
-					VERIFY(
-						pMyDllPath =
-						(MYDLLPATH*)::GetProcAddress(
-						(HMODULE) hModule, "SetPath")
-					);
-
-					(*pMyDllPath)((char*)(LPCTSTR)Path);
-
-					pProgressDlg->m_ProgressText.SetWindowText("Loading Globals...");
-					LoadGlobals();
-					pProgressDlg->m_ProgressBar.StepIt();
-					pProgressDlg->UpdateWindow();
-
-					pProgressDlg->m_ProgressText.SetWindowText("Reading files...");
-					ReadIniFile();
-					pProgressDlg->m_ProgressBar.StepIt();
-					pProgressDlg->UpdateWindow();
-
-					pProgressDlg->m_ProgressText.SetWindowText("Merging files...");
-					MergeFiles();
-					pProgressDlg->m_ProgressBar.StepIt();
-					pProgressDlg->UpdateWindow();
-
-					pProgressDlg->m_ProgressText.SetWindowText("Creating CD Layout...");
-					CreateMedia();
-					pProgressDlg->m_ProgressBar.StepIt();
-					pProgressDlg->UpdateWindow();
-
-					MessageBox("CD Directory created", "OK", MB_OK);
-				}
-				**/
-			}
-			break;
+			else if (curWidget->action.function == "BrowseDir") 
+				BrowseDir(curWidget);
+			
+			else if (curWidget->action.function == "NewConfig") 
+				NewConfig(curWidget);
+			
+			else if ((curWidget->action.function == "SortByName") ||
+				 (curWidget->action.function == "SortByPhone"))
+				SortList(curWidget);
 		}
+		else 
+			Progress();
+
+		break;
 	}
 
 	return CPropertyPage::OnCommand(wParam, lParam);
 }
 
+// This is a comparison function for the TabOrder qsort() call
+// Return -1 for "less than", 0 for "equals", and 1 for "greater than"
+int TabSort(const void *w1, const void *w2)
+{
+	WIDGET *widget1 = *((WIDGET **) w1);
+	WIDGET *widget2 = *((WIDGET **) w2);
+
+	// Primary key is y coordinate
+	if (widget1->location.y > widget2->location.y)
+		return 1;
+
+	if (widget1->location.y < widget2->location.y)
+		return -1;
+
+	// Primary key is equal, Secondary key is x coordinate
+	return (widget2->location.x - widget1->location.x);
+}
+
 void CWizardUI::SortWidgetsForTabOrder()
 {
+#ifdef USEOLDSORTCODEINSTEADOFBUILTINFUNCTION
 	// Sort on y-coordinate
 	int x = 0;
 	int y = 0;
 	int count = CurrentNode->numWidgets;
-    for (x = count-1; x >= 0; x--) {
+	for (x = count-1; x >= 0; x--) {
 		BOOL flipped = FALSE;
 
 		for (int y = 0; y < x; y++) {
@@ -800,7 +777,7 @@ void CWizardUI::SortWidgetsForTabOrder()
 	// Sort on x-coordinate
 	x = 0;
 	y = 0;
-    for (x = count-1; x >= 0; x--) {
+	for (x = count-1; x >= 0; x--) {
 		BOOL flipped = FALSE;
 
 		for (int y = 0; y < x; y++) {
@@ -824,6 +801,9 @@ void CWizardUI::SortWidgetsForTabOrder()
 			break;
 		}
 	}
+#endif
+
+	qsort(CurrentNode->pageWidgets, CurrentNode->numWidgets, sizeof(WIDGET *), TabSort);
 	CurrentNode->isWidgetsSorted = TRUE;
 }
 
