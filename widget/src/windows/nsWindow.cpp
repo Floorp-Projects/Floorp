@@ -3317,6 +3317,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //  press and a key release. The scan code is used for
             //  translating ALT+number key combinations.
 
+            // ignore [shift+]alt+space so the OS can handle it
+            if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
+                result = PR_FALSE;
+                break;
+            }
+
             if (!mIMEIsComposing)
               result = OnKeyUp(wParam, (HIWORD(lParam)), lParam);
 			      else
@@ -3351,6 +3357,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //  uScanCode parameter may be used to distinguish between a key 
             //  press and a key release. The scan code is used for
             //  translating ALT+number key combinations.
+
+            // ignore [shift+]alt+space so the OS can handle it
+            if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
+                result = PR_FALSE;
+                break;
+            }
 
             if (mIsAltDown && mIMEIsStatusChanged) {
                mIMEIsStatusChanged = FALSE;
