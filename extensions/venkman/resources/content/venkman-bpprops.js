@@ -95,7 +95,7 @@ function populateFromBreakpoint()
     dialog["condition-checkbox"].checked = breakpoint.conditionEnabled;
     if ("scriptWrapper" in breakpoint)
     {
-        window.title = opener.MSG_BPPROPS_TITLE;
+        document.title = opener.MSG_BPPROPS_TITLE;
         dialog["enabled-checkbox"].setAttribute("label",
                                                 opener.MSG_BPPROPS_ENABLED);
         dialog["function-textbox"].value = breakpoint.scriptWrapper.functionName;
@@ -105,7 +105,7 @@ function populateFromBreakpoint()
     }
     else
     {
-        window.title = opener.MSG_FBPPROPS_TITLE;
+        document.title = opener.MSG_FBPPROPS_TITLE;
         dialog["enabled-checkbox"].setAttribute("label",
                                                 opener.MSG_FBPPROPS_ENABLED);
         dialog["function-textbox"].value = opener.MSG_VAL_NA;
