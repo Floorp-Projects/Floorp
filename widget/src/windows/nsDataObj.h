@@ -50,6 +50,18 @@
 
 #define MAX_FORMATS 32
 
+/* 
+ * CFSTR_SHELLURL is deprecated and doesn't have a Unicode version.
+ * Therefore we are using CFSTR_INETURL instead of CFSTR_SHELLURL.
+ * See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/shell/programmersguide/shell_basics/shell_basics_programming/transferring/clipboard.asp
+ */
+#ifndef CFSTR_INETURLA
+#define CFSTR_INETURLA _T("UniformResourceLocator")
+#endif
+#ifndef CFSTR_INETURLW
+#define CFSTR_INETURLW _T("UniformResourceLocatorW")
+#endif
+
 class nsVoidArray;
 class CEnumFormatEtc;
 class nsITransferable;
@@ -147,9 +159,10 @@ class nsDataObj : public IDataObject
 		virtual HRESULT GetDib ( const nsACString& inFlavor, FORMATETC &, STGMEDIUM & aSTG );
 		virtual HRESULT GetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
 
-    virtual HRESULT GetUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
-    virtual HRESULT ExtractUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
-    virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT GetUniformResourceLocator ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode ) ;
+    virtual HRESULT ExtractUniformResourceLocatorA ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT ExtractUniformResourceLocatorW ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT GetFileDescriptor ( FORMATETC& aFE, STGMEDIUM& aSTG, PRBool aIsUnicode ) ;
     virtual HRESULT GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG );
    
@@ -159,7 +172,8 @@ class nsDataObj : public IDataObject
 		virtual HRESULT SetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
 
       // Provide the structures needed for an internet shortcut by the shell
-    virtual HRESULT GetFileDescriptorInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
+    virtual HRESULT GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
     virtual HRESULT GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG ) ;
 
     nsresult ExtractShortcutURL ( nsString & outURL ) ;
