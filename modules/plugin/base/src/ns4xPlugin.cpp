@@ -104,10 +104,7 @@ ns4xPlugin::CheckClassInitialized(void)
 
 ////////////////////////////////////////////////////////////////////////
 // nsISupports stuff
-NS_IMPL_ISUPPORTS2(ns4xPlugin,
-                   nsIPlugin,
-                   nsIFactory);
-
+NS_IMPL_ISUPPORTS2(ns4xPlugin, nsIPlugin, nsIFactory);
 
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
 {
@@ -131,8 +128,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   nsresult result = pfnGetEntryPoints(&fCallbacks);
   NS_ASSERTION( NS_OK == result,"Failed to get callbacks");
 
-  NS_ASSERTION(HIBYTE(fCallbacks.version) >= NP_VERSION_MAJOR,
-    "callback version is less than NP version");
+  NS_ASSERTION(HIBYTE(fCallbacks.version) >= NP_VERSION_MAJOR, "callback version is less than NP version");
 
   fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 #elif defined(XP_MAC) && !TARGET_CARBON
@@ -152,9 +148,8 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
   NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPP MainEntryProc called, return=%d\n",error));
 
   if(error != NPERR_NO_ERROR || ((fCallbacks.version >> 8) < NP_VERSION_MAJOR))
-  {
     return;
-  }
+
 #else // for everyone else
   memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
   fShutdownEntry = aShutdown;
@@ -260,8 +255,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 #if defined(XP_PC) && !defined(XP_WIN)
   // XXX this probably should be factored out and
   //      just use trailing XP_WIN.
-  NP_GETENTRYPOINTS pfnGetEntryPoints =
-    (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
+  NP_GETENTRYPOINTS pfnGetEntryPoints = (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
 
   if (pfnGetEntryPoints == NULL)
     return NS_ERROR_FAILURE;
@@ -277,8 +271,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
   if (HIBYTE(callbacks.version) < NP_VERSION_MAJOR)
     return NS_ERROR_FAILURE;
 
-  NP_PLUGINSHUTDOWN pfnShutdown =
-    (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
+  NP_PLUGINSHUTDOWN pfnShutdown = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 
   // create the new plugin handler
   *aResult = new ns4xPlugin(&callbacks, aLibrary, pfnShutdown, aServiceMgr);
@@ -307,13 +300,10 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
   // I don't want to break the plugins already in the field, so
   // we'll accept either name
 
-  NP_PLUGININIT pfnInitialize =
-    (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
+  NP_PLUGININIT pfnInitialize = (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
 
-  if (!pfnInitialize) {
-    pfnInitialize =
-      (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_PluginInit");
-  }
+  if (!pfnInitialize)
+    pfnInitialize = (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_PluginInit");
 
   if (pfnInitialize == NULL)
     return NS_ERROR_UNEXPECTED; // XXX Right error?
@@ -329,16 +319,12 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
   short pluginRefNum;
   Boolean found = false;
 
-  if (pluginsDir.Valid())
-  { 
-    for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++)
-    {
+  if (pluginsDir.Valid()) { 
+    for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) {
       const nsFileSpec& file = iter;
-      if (pluginsDir.IsPluginFile(file)) 
-      {
+      if (pluginsDir.IsPluginFile(file)) {
         FSSpec spec = file;
-        if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
-        {
+        if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0])) {
           nsPluginFile pluginFile(file);
           pluginRefNum = pluginFile.OpenPluginResource();
           if (pluginRefNum != -1)
@@ -349,21 +335,17 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
   }
 
   // if we didn't find it, try locally
-  if (!found)
-  {
+  if (!found) {
     nsPluginsDir pluginsDir(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
     if (!pluginsDir.Valid())
       return NS_ERROR_FAILURE;
 
     appRefNum = ::CurResFile();
-    for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++)
-    {
+    for(nsDirectoryIterator iter(pluginsDir, PR_TRUE); iter.Exists(); iter++) {
       const nsFileSpec& file = iter;
-      if (pluginsDir.IsPluginFile(file)) 
-      {
+      if (pluginsDir.IsPluginFile(file)) {
         FSSpec spec = file;
-        if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0]))
-        {
+        if (!nsCRT::memcmp(spec.name + 1, aFileName, spec.name[0])) {
           nsPluginFile pluginFile(file);
           pluginRefNum = pluginFile.OpenPluginResource();
           if (pluginRefNum != -1)
@@ -394,8 +376,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
                                                        &callbacks, 
                                                        &pfnShutdown), fLibrary);
 
-  NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
-  ("NPP MainEntryProc called: return=%d\n",error));
+  NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC, ("NPP MainEntryProc called: return=%d\n",error));
 
   if(error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
@@ -433,8 +414,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
   memset((void*) &callbacks, 0, sizeof(callbacks));
   callbacks.size = sizeof(callbacks);
 
-  NP_PLUGINSHUTDOWN pfnShutdown =
-    (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
+  NP_PLUGINSHUTDOWN pfnShutdown = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
 
   // create the new plugin handler
   *aResult = plptr = new ns4xPlugin(&callbacks, aLibrary, pfnShutdown, aServiceMgr);
@@ -449,8 +429,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
   // require that mBrowserManager be set up
   plptr->Initialize();
 
-  NP_PLUGINUNIXINIT pfnInitialize =
-    (NP_PLUGINUNIXINIT)PR_FindSymbol(aLibrary, "NP_Initialize");
+  NP_PLUGINUNIXINIT pfnInitialize = (NP_PLUGINUNIXINIT)PR_FindSymbol(aLibrary, "NP_Initialize");
 
   if (pfnInitialize == NULL)
     return NS_ERROR_FAILURE;
@@ -475,18 +454,16 @@ nsresult ns4xPlugin :: CreateInstance(nsISupports *aOuter,
                                       const nsIID &aIID,  
                                       void **aResult)  
 {
-  if (aResult == NULL) {
+  if (aResult == NULL)
     return NS_ERROR_NULL_POINTER;
-  }
 
   *aResult = NULL;
 
   // XXX This is suspicuous!
   ns4xPluginInstance *inst = new ns4xPluginInstance(&fCallbacks, fLibrary);
 
-  if (inst == NULL) {  
+  if (inst == NULL) 
     return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(inst);  // Stabilize
 
@@ -530,15 +507,14 @@ ns4xPlugin::Initialize(void)
 nsresult
 ns4xPlugin::Shutdown(void)
 {
-  NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
-  ("NPP Shutdown to be called: this=%p\n",this));
+  NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC, ("NPP Shutdown to be called: this=%p\n",this));
 
   if (nsnull != fShutdownEntry) {
 #ifdef XP_MAC
-  CallNPP_ShutdownProc(fShutdownEntry);
-  ::CloseResFile(fPluginRefNum);
+    CallNPP_ShutdownProc(fShutdownEntry);
+    ::CloseResFile(fPluginRefNum);
 #else
-  NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary);
+    NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary);
 #endif
 
     fShutdownEntry = nsnull;
@@ -553,13 +529,11 @@ ns4xPlugin::Shutdown(void)
 nsresult
 ns4xPlugin::GetMIMEDescription(const char* *resultingDesc)
 {
-  const char* (*npGetMIMEDescrpition)() =
-    (const char* (*)()) PR_FindSymbol(fLibrary, "NP_GetMIMEDescription");
+  const char* (*npGetMIMEDescrpition)() = (const char* (*)()) PR_FindSymbol(fLibrary, "NP_GetMIMEDescription");
 
   *resultingDesc = npGetMIMEDescrpition ? npGetMIMEDescrpition() : "";
 
-  PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("ns4xPlugin::GetMIMEDescription called: this=%p, result=%s\n",this, *resultingDesc));
+  PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("ns4xPlugin::GetMIMEDescription called: this=%p, result=%s\n",this, *resultingDesc));
 
   return NS_OK;
 }
@@ -627,14 +601,10 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
 
 ////////////////////////////////////////////////////////////////////////
 NPError NP_EXPORT
-_geturlnotify(NPP         npp, 
-              const char* relativeURL, 
-              const char* target, 
-              void*       notifyData)
+_geturlnotify(NPP npp, const char* relativeURL, const char* target, void* notifyData)
 {
-  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_GetURLNotify: npp=%p, target=%s, notify=%p, url=%s\n",
-  (void*)npp, target, notifyData, relativeURL));
+  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, 
+    ("NPN_GetURLNotify: npp=%p, target=%s, notify=%p, url=%s\n", (void*)npp, target, notifyData, relativeURL));
 
   if(!npp)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -668,13 +638,8 @@ _geturlnotify(NPP         npp,
 
 ////////////////////////////////////////////////////////////////////////
 NPError NP_EXPORT
-_posturlnotify(NPP         npp,
-               const char *relativeURL,
-               const char *target,
-               uint32     len,
-               const char *buf,
-               NPBool     file,
-               void       *notifyData)
+_posturlnotify(NPP npp, const char *relativeURL, const char *target,
+               uint32 len, const char *buf, NPBool file, void *notifyData)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPN_PostURLNotify: npp=%p, target=%s, len=%d, file=%d, notify=%p, url=%s, buf=%s\n",
@@ -712,12 +677,8 @@ _posturlnotify(NPP         npp,
 
 ////////////////////////////////////////////////////////////////////////
 NPError NP_EXPORT
-_posturl(NPP npp,
-         const char *relativeURL,
-         const char *target,
-         uint32     len,
-         const char *buf,
-         NPBool     file)
+_posturl(NPP npp, const char *relativeURL, const char *target,
+         uint32 len, const char *buf, NPBool file)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
   ("NPN_PostURL: npp=%p, target=%s, file=%d, len=%d, url=%s, buf=%s\n",
@@ -768,11 +729,7 @@ public:
   ~ns4xStreamWrapper();
 
   void GetStream(nsIOutputStream* &result);
-
-  NPStream*
-    GetNPStream(void) {
-    return &fNPStream;
-  };
+  NPStream* GetNPStream(void) { return &fNPStream; };
 };
 
 ns4xStreamWrapper::ns4xStreamWrapper(nsIOutputStream* stream)
@@ -784,7 +741,7 @@ ns4xStreamWrapper::ns4xStreamWrapper(nsIOutputStream* stream)
   NS_ADDREF(fStream);
 
   memset(&fNPStream, 0, sizeof(fNPStream));
-  fNPStream.ndata    = (void*) this;
+  fNPStream.ndata = (void*) this;
 }
 
 ns4xStreamWrapper::~ns4xStreamWrapper(void)
@@ -806,8 +763,7 @@ NPError NP_EXPORT
 _newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_NewStream: npp=%p, type=%s, window=%s\n",
-  (void*)npp, (const char *)type, window));
+  ("NPN_NewStream: npp=%p, type=%s, window=%s\n", (void*)npp, (const char *)type, window));
 
   if(!npp)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -852,8 +808,7 @@ int32 NP_EXPORT
 _write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_Write: npp=%p, url=%s, len=%d, buffer=%s\n",
-  (void*)npp, pstream->url, len, (char*)buffer));
+  ("NPN_Write: npp=%p, url=%s, len=%d, buffer=%s\n", (void*)npp, pstream->url, len, (char*)buffer));
 
   // negative return indicates failure to the plugin
   if(!npp)
@@ -884,8 +839,7 @@ NPError NP_EXPORT
 _destroystream(NPP npp, NPStream *pstream, NPError reason)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_DestroyStream: npp=%p, url=%s, reason=%d\n",
-  (void*)npp, pstream->url, (int)reason));
+  ("NPN_DestroyStream: npp=%p, url=%s, reason=%d\n", (void*)npp, pstream->url, (int)reason));
 
   if(!npp)
     return NPERR_INVALID_INSTANCE_ERROR;
@@ -893,8 +847,7 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
   nsISupports* stream = (nsISupports*) pstream->ndata;
   nsIPluginStreamListener* listener;
 
-  // DestroyStream can kill two kinds of streams: NPP derived and
-  // NPN derived.
+  // DestroyStream can kill two kinds of streams: NPP derived and NPN derived.
   // check to see if they're trying to kill a NPP stream
   if(stream->QueryInterface(kIPluginStreamListenerIID, (void**)&listener) == NS_OK) {
     // XXX we should try to kill this listener here somehow
@@ -919,8 +872,7 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
 void NP_EXPORT
 _status(NPP npp, const char *message)
 {
-  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, 
-  ("NPN_Status: npp=%p, message=%s\n", (void*)npp, message));
+  NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_Status: npp=%p, message=%s\n", (void*)npp, message));
 
   if(!npp)
     return;
@@ -1018,30 +970,29 @@ void NP_EXPORT
 _invalidateregion(NPP npp, NPRegion invalidRegion)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_InvalidateRegion: npp=%p, region=%p\n",
-  (void*)npp, (void*)invalidRegion));
+  ("NPN_InvalidateRegion: npp=%p, region=%p\n", (void*)npp, (void*)invalidRegion));
 
   if(!npp)
     return;
 
-    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
-    NS_ASSERTION(inst != NULL, "null instance");
+  nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
+  NS_ASSERTION(inst != NULL, "null instance");
 
-    if (inst == NULL)
-        return;
+  if (inst == NULL)
+    return;
 
-    nsIPluginInstancePeer *peer;
-    nsIWindowlessPluginInstancePeer *wpeer;
+  nsIPluginInstancePeer *peer;
+  nsIWindowlessPluginInstancePeer *wpeer;
 
-    if (NS_OK == inst->GetPeer(&peer)) {
-      if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer)) {
-        // XXX nsRegion & NPRegion are typedef'd to the same thing
-        wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
-        NS_RELEASE(wpeer);
-      }
-
-      NS_RELEASE(peer);
+  if (NS_OK == inst->GetPeer(&peer)) {
+    if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer)) {
+      // XXX nsRegion & NPRegion are typedef'd to the same thing
+      wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
+      NS_RELEASE(wpeer);
     }
+
+    NS_RELEASE(peer);
+  }
 }
 
 
@@ -1084,42 +1035,41 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   if(!npp || !npp->ndata)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  switch(variable)
-  {
+  switch(variable) {
 #ifdef XP_UNIX
-  case NPNVxDisplay : return NPERR_GENERIC_ERROR;
+  case NPNVxDisplay: 
+    return NPERR_GENERIC_ERROR;
 
-  case NPNVxtAppContext : return NPERR_GENERIC_ERROR;
+  case NPNVxtAppContext: 
+    return NPERR_GENERIC_ERROR;
 #endif
 
 #ifdef XP_PC
-  case NPNVnetscapeWindow :
-    {
-      ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
-      nsIPluginInstancePeer *peer;
+  case NPNVnetscapeWindow: {
+    ns4xPluginInstance *inst = (ns4xPluginInstance *) npp->ndata;
+    nsIPluginInstancePeer *peer;
 
-      if (NS_SUCCEEDED(inst->GetPeer(&peer)) && peer) {
-        res = peer->GetValue(nsPluginInstancePeerVariable_NetscapeWindow, result);
-        NS_RELEASE(peer);
-        return res;
-      }
-      return NPERR_GENERIC_ERROR;
+    if (NS_SUCCEEDED(inst->GetPeer(&peer)) && peer) {
+      res = peer->GetValue(nsPluginInstancePeerVariable_NetscapeWindow, result);
+      NS_RELEASE(peer);
+      return res;
     }
+    return NPERR_GENERIC_ERROR;
+  }
 #endif
 
-  case NPNVjavascriptEnabledBool: 
-    {
-      *(NPBool*)result = PR_TRUE; 
+  case NPNVjavascriptEnabledBool: {
+    *(NPBool*)result = PR_TRUE; 
 
-      nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));
-      if(NS_SUCCEEDED(res) && (nsnull != prefs)) {
-        PRBool js;
-        res = prefs->GetBoolPref("javascript.enabled", &js);
-        if(NS_SUCCEEDED(res))
-          *(NPBool*)result = js; 
-      }
-      return NPERR_NO_ERROR;
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &res));
+    if(NS_SUCCEEDED(res) && (nsnull != prefs)) {
+      PRBool js;
+      res = prefs->GetBoolPref("javascript.enabled", &js);
+      if(NS_SUCCEEDED(res))
+        *(NPBool*)result = js; 
     }
+    return NPERR_NO_ERROR;
+  }
 
   case NPNVasdEnabledBool: 
     *(NPBool*)result = FALSE; 
@@ -1128,6 +1078,18 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   case NPNVisOfflineBool: 
     *(NPBool*)result = FALSE; 
     return NPERR_NO_ERROR;
+
+  case NPNVserviceManager: {
+    // GetGlobalServiceManager does not AddRef, so we do here.
+    nsIServiceManager* serviceManager;
+    res = nsServiceManager::GetGlobalServiceManager(&serviceManager);
+    if (NS_SUCCEEDED(res)) {
+      *(nsIServiceManager**)result = serviceManager;
+      NS_ADDREF(serviceManager);
+      return NPERR_NO_ERROR;
+    } else
+      return NPERR_GENERIC_ERROR;
+  }
 
   default : return NPERR_GENERIC_ERROR;
   }
@@ -1173,19 +1135,17 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
   if (inst == NULL)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  switch (variable)
-  {
-  case NPPVpluginWindowBool:
-    {
+  switch (variable) {
+    case NPPVpluginWindowBool: {
       NPBool bWindowless = !(*((NPBool *)result));
       return inst->SetWindowless(bWindowless);
     }
 
-  case NPPVpluginTransparentBool:
-    return inst->SetTransparent(*((NPBool *)result));
+    case NPPVpluginTransparentBool:
+      return inst->SetTransparent(*((NPBool *)result));
 
-  default:
-    return NPERR_NO_ERROR;
+    default:
+      return NPERR_NO_ERROR;
   }
 
 #if 0
@@ -1204,7 +1164,6 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
     return NS_ERROR_UNEXPECTED;
 #endif
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 NPError NP_EXPORT
@@ -1244,7 +1203,6 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
   return NS_OK;
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 //
 // On 68K Mac (XXX still supported?), we need to make sure that the
@@ -1255,16 +1213,13 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 #pragma pointers_in_D0
 #endif
 
-
 ////////////////////////////////////////////////////////////////////////
 JRIEnv* NP_EXPORT
 _getJavaEnv(void)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaEnv\n"));
-
   return NULL;
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 const char * NP_EXPORT
@@ -1294,7 +1249,6 @@ void * NP_EXPORT
 _memalloc (uint32 size)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemAlloc: size=%d\n", size));
-
   return gMalloc->Alloc(size);
 }
 
@@ -1304,7 +1258,6 @@ java_lang_Class* NP_EXPORT
 _getJavaClass(void* handle)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaClass\n"));
-
   return NULL;
 }
 
@@ -1314,7 +1267,5 @@ jref NP_EXPORT
 _getJavaPeer(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaPeer: npp=%p\n", (void*)npp));
-
   return NULL;
 }
-
