@@ -199,6 +199,11 @@ PRBool nsPluginNativeWindowGtk2::CanGetValueFromPlugin(nsCOMPtr<nsIPluginInstanc
               if (PL_strcasecmp(jpiDescription + 17, "1.5") < 0)
                 return PR_FALSE;
             }
+            if (PL_strncasecmp(jpiDescription, "<a href=\"http://www.blackdown.org/java-linux.html\">", 51) == 0) {
+              // Java Plugin support Xembed from JRE 1.5
+              if (PL_strcasecmp(jpiDescription + 92, "1.5") < 0)
+                return PR_FALSE;
+            }
           }
         }
       }
