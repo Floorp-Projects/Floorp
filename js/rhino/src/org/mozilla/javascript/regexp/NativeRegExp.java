@@ -1017,7 +1017,6 @@ System.out.println();
             break;
         case '*':
         case '+':
-        case '{':
         case '}':
         case '?':        
             reportError("msg.bad.quant", 
