@@ -402,7 +402,7 @@ int HaveDecodedRow(
       format = gfxIFormats::RGB_A1;
     }
 
-#if defined(XP_PC) || defined(XP_BEOS)
+#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
     // XXX this works...
     format += 1; // RGB to BGR
 #endif
@@ -511,7 +511,7 @@ int HaveDecodedRow(
         PRUint32 iwidth = (PRUint32)width;
         for (PRUint32 x=0; x<iwidth; x++) {
           if (*rowBufIndex != decoder->mGIFStruct->tpixel) {
-#if defined(XP_PC) || defined(XP_BEOS)
+#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
