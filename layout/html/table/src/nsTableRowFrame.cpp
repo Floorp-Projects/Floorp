@@ -1360,18 +1360,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     // then inform the table that its maximum width needs to be recomputed
     ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
     if (cellMet.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-      // If the cell is not auto-width, then the natural width is the
-      // desired width. XXX what about Pct width?
-      PRBool  isAutoWidth = eStyleUnit_Auto == kidRS.mStylePosition->mWidth.GetUnit();
-      
-      if (!isAutoWidth) {
-        // Reset the natural width to be the desired width
-        // XXX This isn't the best thing to do, but if we don't then the table
-        // layout strategy will compute a different maximum content width than we
-        // computed for the initial reflow. That's because the table layout
-        // strategy doesn't check whether the cell is auto-width...
-        cellMet.mMaximumWidth = PR_MIN(cellMet.mMaximumWidth, cellMet.width);
-      }
       ((nsTableCellFrame *)aNextFrame)->SetMaximumWidth(cellMet.mMaximumWidth);
       if (oldCellMaximumWidth != cellMet.mMaximumWidth) {
         aReflowState.tableFrame->InvalidateMaximumWidth();
