@@ -87,15 +87,6 @@ struct PRStackElemStr {
 
 typedef struct PRStackStr PRStack;
 
-struct PRStackStr {
-    PRStackElem	prstk_head;			/* head MUST be at offset 0; assembly
-										language code relies on this
-									*/
-    PRLock		*prstk_lock;
-    char		*prstk_name;
-};
-
-
 /*
 ** FUNCTION: PR_CreateStack
 ** DESCRIPTION:
