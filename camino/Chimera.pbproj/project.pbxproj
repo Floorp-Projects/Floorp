@@ -331,7 +331,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Navigator</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Navigator 0.2.7, © 2002 Mozilla</string>
+	<string>Navigator 0.2.8, © 2002 Mozilla</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -343,7 +343,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>Navigator 0.2.7</string>
+	<string>Navigator 0.2.8</string>
 	<key>CFBundleSignature</key>
 	<string>CHIM</string>
 	<key>CFBundleURLTypes</key>
@@ -361,7 +361,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.2.7</string>
+	<string>0.2.8</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSMainNibFile</key>
@@ -770,7 +770,7 @@
 			isa = PBXFileReference;
 			name = nsFontUtils.cpp;
 			path = ../gfx/src/mac/nsFontUtils.cpp;
-			refType = 0;
+			refType = 2;
 		};
 		F50E1BAE0207EE5F01F281DF = {
 			children = (
@@ -826,13 +826,13 @@
 			isa = PBXFileReference;
 			name = nsPresShell.cpp;
 			path = ../layout/html/base/src/nsPresShell.cpp;
-			refType = 0;
+			refType = 2;
 		};
 		F50E1BB50207EEDC01F281DF = {
 			isa = PBXFileReference;
 			name = nsPresContext.cpp;
 			path = ../layout/base/src/nsPresContext.cpp;
-			refType = 0;
+			refType = 2;
 		};
 		F50E1BBC0207F27B01F281DF = {
 			children = (
@@ -862,13 +862,13 @@
 			isa = PBXFileReference;
 			name = nsLanguageAtomService.cpp;
 			path = ../intl/locale/src/nsLanguageAtomService.cpp;
-			refType = 0;
+			refType = 2;
 		};
 		F50E1BC30207F69E01F281DF = {
 			isa = PBXFileReference;
 			name = nsFont.cpp;
 			path = ../gfx/src/nsFont.cpp;
-			refType = 0;
+			refType = 2;
 		};
 		F50E1BC90207F99201F281DF = {
 			children = (
@@ -899,7 +899,7 @@
 			isa = PBXFileReference;
 			name = nsRuleNode.cpp;
 			path = ../content/base/src/nsRuleNode.cpp;
-			refType = 0;
+			refType = 2;
 		};
 		F5125A110202064D01FAFD9F = {
 			isa = PBXFileReference;
@@ -1121,7 +1121,7 @@
 			isa = PBXFileReference;
 			name = nsXULTemplateBuilder.cpp;
 			path = ../content/xul/templates/src/nsXULTemplateBuilder.cpp;
-			refType = 0;
+			refType = 2;
 		};
 		F51D9B1402094BB501A80166 = {
 			children = (
@@ -2900,18 +2900,6 @@
 			isa = PBXTargetDependency;
 			target = F58581AE022B8D62010001CA;
 		};
-		F585FDBD0239B9E101A967DF = {
-			isa = PBXFileReference;
-			name = libmozz.dylib;
-			path = ../dist/Embed/libmozz.dylib;
-			refType = 2;
-		};
-		F585FDBF0239B9F701A967DF = {
-			fileRef = F585FDBD0239B9E101A967DF;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F58A94F2023F10CA010001CA = {
 			children = (
 				29B97319FDCFA39411CA2CEA,
@@ -3225,18 +3213,6 @@
 			name = "Gray Images";
 			refType = 4;
 		};
-		F5F181C30208006F0124611D = {
-			isa = PBXFileReference;
-			name = bookmarks.xpt;
-			path = ../xpfe/components/bookmarks/public/_xpidlgen/bookmarks.xpt;
-			refType = 2;
-		};
-		F5F181C40208006F0124611D = {
-			isa = PBXFileReference;
-			name = directory.xpt;
-			path = ../xpfe/components/directory/_xpidlgen/directory.xpt;
-			refType = 2;
-		};
 		F5F181C50208006F0124611D = {
 			isa = PBXFileReference;
 			name = history.xpt;
@@ -3259,12 +3235,6 @@
 			isa = PBXFileReference;
 			name = libappcomps.dylib;
 			path = ../xpfe/components/build/libappcomps.dylib;
-			refType = 2;
-		};
-		F5F181CA0208006F0124611D = {
-			isa = PBXFileReference;
-			name = related.xpt;
-			path = ../xpfe/components/related/public/_xpidlgen/related.xpt;
 			refType = 2;
 		};
 		F5F24BDB022B88EF010001CA = {
@@ -3290,18 +3260,6 @@
 			settings = {
 			};
 		};
-		F5FB36760208010801236FF3 = {
-			fileRef = F5F181C30208006F0124611D;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5FB36770208010801236FF3 = {
-			fileRef = F5F181C40208006F0124611D;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5FB36780208010801236FF3 = {
 			fileRef = F5F181C50208006F0124611D;
 			isa = PBXBuildFile;
@@ -3322,12 +3280,6 @@
 		};
 		F5FB367C0208010801236FF3 = {
 			fileRef = F5F181C90208006F0124611D;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5FB367D0208010801236FF3 = {
-			fileRef = F5F181CA0208006F0124611D;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -3374,7 +3326,6 @@
 				F6BD638101B30EA301A962F7,
 				F6BD638201B30EA301A962F7,
 				F6BD638701B30F5301A962F7,
-				F585FDBD0239B9E101A967DF,
 				F5247C2F0228B5E7013DD99A,
 				F6BD645501B3167601A962F7,
 				F6BD64FB01B3184301A962F7,
@@ -3397,7 +3348,6 @@
 				F6BD638C01B30F5301A962F7,
 				F6BD638D01B30F5301A962F7,
 				F6BD638E01B30F5301A962F7,
-				F585FDBF0239B9F701A967DF,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
@@ -3436,14 +3386,10 @@
 			children = (
 				F507BA4E0213BAC401D93544,
 				F56DEF11020802A501FF5ADC,
-				F5F181C30208006F0124611D,
-				F5F181C40208006F0124611D,
 				F5F181C50208006F0124611D,
 				F5F181C60208006F0124611D,
 				F5F181C80208006F0124611D,
 				F5F181C90208006F0124611D,
-				F5F181CA0208006F0124611D,
-				F6BD639301B3131201A962F7,
 				F6BD639401B3131201A962F7,
 				F6BD639501B3131201A962F7,
 				F6BD639601B3131201A962F7,
@@ -3459,7 +3405,6 @@
 				F6BD63A001B3131201A962F7,
 				F6BD63A101B3131201A962F7,
 				F6BD63A201B3131201A962F7,
-				F6BD63A301B3131201A962F7,
 				F6BD63A401B3131201A962F7,
 				F6BD63A501B3131201A962F7,
 				F6BD63A601B3131201A962F7,
@@ -3470,8 +3415,6 @@
 				F6BD63AB01B3131201A962F7,
 				F6BD63AC01B3131201A962F7,
 				F6BD63AD01B3131201A962F7,
-				F6BD63AE01B3131201A962F7,
-				F6BD63AF01B3131201A962F7,
 				F6BD63B001B3131201A962F7,
 				F6BD63B101B3131201A962F7,
 				F6BD63B201B3131201A962F7,
@@ -3586,14 +3529,10 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F56DEF130208030601FF5ADC,
-				F5FB36760208010801236FF3,
-				F5FB36770208010801236FF3,
 				F5FB36780208010801236FF3,
 				F5FB36790208010801236FF3,
 				F5FB367B0208010801236FF3,
 				F5FB367C0208010801236FF3,
-				F5FB367D0208010801236FF3,
-				F6BD645601B3167601A962F7,
 				F6BD645701B3167601A962F7,
 				F6BD645801B3167601A962F7,
 				F5F59322020F4D0201ACA690,
@@ -3610,7 +3549,6 @@
 				F6BD646301B3167601A962F7,
 				F6BD646401B3167601A962F7,
 				F6BD646501B3167601A962F7,
-				F6BD646601B3167601A962F7,
 				F6BD646701B3167601A962F7,
 				F6BD646801B3167601A962F7,
 				F6BD646901B3167601A962F7,
@@ -3622,8 +3560,6 @@
 				F6BD646F01B3167601A962F7,
 				F5D3F1D002092373014E447F,
 				F6BD647001B3167601A962F7,
-				F6BD647101B3167601A962F7,
-				F6BD647201B3167601A962F7,
 				F6BD647301B3167601A962F7,
 				F6BD647401B3167601A962F7,
 				F6BD647501B3167601A962F7,
@@ -3697,12 +3633,6 @@
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
-		};
-		F6BD639301B3131201A962F7 = {
-			isa = PBXFileReference;
-			name = appshell.xpt;
-			path = ../dist/Embed/components/appshell.xpt;
-			refType = 2;
 		};
 		F6BD639401B3131201A962F7 = {
 			isa = PBXFileReference;
@@ -3794,12 +3724,6 @@
 			path = ../dist/Embed/components/dom.xpt;
 			refType = 2;
 		};
-		F6BD63A301B3131201A962F7 = {
-			isa = PBXFileReference;
-			name = editor.xpt;
-			path = ../dist/Embed/components/editor.xpt;
-			refType = 2;
-		};
 		F6BD63A401B3131201A962F7 = {
 			isa = PBXFileReference;
 			name = gfx.xpt;
@@ -3858,18 +3782,6 @@
 			isa = PBXFileReference;
 			name = libgfx2.dylib;
 			path = ../dist/Embed/components/libgfx2.dylib;
-			refType = 2;
-		};
-		F6BD63AE01B3131201A962F7 = {
-			isa = PBXFileReference;
-			name = libmozbrwsr.dylib;
-			path = ../dist/Embed/components/libmozbrwsr.dylib;
-			refType = 2;
-		};
-		F6BD63AF01B3131201A962F7 = {
-			isa = PBXFileReference;
-			name = libnsappshell.dylib;
-			path = ../dist/Embed/components/libnsappshell.dylib;
 			refType = 2;
 		};
 		F6BD63B001B3131201A962F7 = {
@@ -4301,12 +4213,6 @@
 			path = "";
 			refType = 4;
 		};
-		F6BD645601B3167601A962F7 = {
-			fileRef = F6BD639301B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD645701B3167601A962F7 = {
 			fileRef = F6BD639401B3131201A962F7;
 			isa = PBXBuildFile;
@@ -4397,12 +4303,6 @@
 			settings = {
 			};
 		};
-		F6BD646601B3167601A962F7 = {
-			fileRef = F6BD63A301B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD646701B3167601A962F7 = {
 			fileRef = F6BD63A401B3131201A962F7;
 			isa = PBXBuildFile;
@@ -4459,18 +4359,6 @@
 		};
 		F6BD647001B3167601A962F7 = {
 			fileRef = F6BD63AD01B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD647101B3167601A962F7 = {
-			fileRef = F6BD63AE01B3131201A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD647201B3167601A962F7 = {
-			fileRef = F6BD63AF01B3131201A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
