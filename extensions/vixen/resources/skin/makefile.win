@@ -22,8 +22,8 @@
 DEPTH=..\..\..\..
 include <$(DEPTH)/config/config.mak>
 
-CHROME_DIR=packages\xuledit
-CHROME_SKIN_DIR=xuledit\skin
+CHROME_DIR=packages\vixen
+CHROME_SKIN_DIR=vixen\skin
 
 CHROME_SKIN = \
 	.\vfdScratch.css \

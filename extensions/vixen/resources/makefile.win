@@ -24,7 +24,7 @@ include <$(DEPTH)/config/config.mak>
 
 DIRS = content locale
 
-CHROME_DIR = packages\xuledit
+CHROME_DIR = packages\vixen
 CHROME_MISC_DIR = .
 CHROME_TYPE = content locale skin
 
