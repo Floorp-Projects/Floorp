@@ -653,6 +653,8 @@ nsresult nsAbMDBDirectory::InternalAddMailList(nsIAbDirectory *list, PRUint32 *k
   {
     // XXX fix this.
     nsAbMDBDirProperty* dblistproperty = new nsAbMDBDirProperty ();
+    if (!dblistproperty)
+      return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(dblistproperty);
     nsCOMPtr<nsIAbDirectory> newlist = getter_AddRefs(NS_STATIC_CAST(nsIAbDirectory*, dblistproperty));
     newlist->CopyMailList(list);
@@ -661,7 +663,7 @@ nsresult nsAbMDBDirectory::InternalAddMailList(nsIAbDirectory *list, PRUint32 *k
   }
 
   if (!key)
-  mDatabase->CreateMailListAndAddToDB(list, PR_TRUE);
+    mDatabase->CreateMailListAndAddToDB(list, PR_TRUE);
   else
     mDatabase->CreateMailListAndAddToDBWithKey(list, PR_TRUE, key);
   mDatabase->Commit(nsAddrDBCommitType::kLargeCommit);

@@ -581,6 +581,9 @@ BOOL nsAbWinHelper::SetPropertiesUString(const nsMapiEntry& aObject, const ULONG
                                          ULONG aNbProperties, nsXPIDLString *aValues) 
 {
     LPSPropValue values = new SPropValue [aNbProperties] ;
+    if (!values)
+        return FALSE ;
+
     ULONG i = 0 ;
     ULONG currentValue = 0 ;
     nsCAutoString alternativeValue ;
@@ -593,10 +596,16 @@ BOOL nsAbWinHelper::SetPropertiesUString(const nsMapiEntry& aObject, const ULONG
         }
         else if (PROP_TYPE(aPropertiesTag [i]) == PT_STRING8) {
             alternativeValue.AssignWithConversion(aValues [i].get()) ;
-            values [currentValue ++].Value.lpszA = nsCRT::strdup(alternativeValue.get()) ;
+            PRUnichar *av = nsCRT::strdup(alternativeValue.get()) ;
+            if (!av) {
+                retCode = FALSE ;
+                break ;
+            }
+            values [currentValue ++].Value.lpszA = av ;
         }
     }
-    retCode = SetMAPIProperties(aObject, currentValue, values) ;
+    if (retCode)
+        retCode = SetMAPIProperties(aObject, currentValue, values) ;
     for (i = 0 ; i < currentValue ; ++ i) {
         if (PROP_TYPE(aPropertiesTag [i]) == PT_STRING8) {
             nsCRT::free(values [i].Value.lpszA) ;

@@ -527,15 +527,15 @@ void nsAddrDatabase::UnixToNative(char*& ioPath)
 /* caller need to delete *aDbPath */
 NS_IMETHODIMP nsAddrDatabase::GetDbPath(nsFileSpec * *aDbPath)
 {
-    if (aDbPath)
-    {
-        nsFileSpec* pFilePath = new nsFileSpec();
-        *pFilePath = m_dbName;
-        *aDbPath = pFilePath;
-        return NS_OK;
-    }
-    else
+    if (!aDbPath)
         return NS_ERROR_NULL_POINTER;
+
+    nsFileSpec* pFilePath = new nsFileSpec();
+    if (!pFilePath)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *pFilePath = m_dbName;
+    *aDbPath = pFilePath;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrDatabase::SetDbPath(nsFileSpec * aDbPath)
@@ -565,6 +565,8 @@ NS_IMETHODIMP nsAddrDatabase::Open
   if (aCreate) 
   {
     nsFileSpec *newMabFile = new nsFileSpec(*aMabFile);
+    if (!newMabFile)
+      return NS_ERROR_OUT_OF_MEMORY;
     
     // save off the name of the corrupt mab file, example abook.mab
     nsXPIDLCString originalMabFileName;
