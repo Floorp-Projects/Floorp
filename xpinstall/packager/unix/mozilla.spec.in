@@ -1,0 +1,37 @@
+Name:      mozilla
+Summary:   Mozilla
+Version:   5.0
+Release:   M12
+Serial:    0
+Copyright: MPL/NPL
+Source0:   mozilla-m12.tar.gz
+Buildroot: /var/tmp/mozilla-root
+Prefix:    /usr
+Group:     Mozilla
+
+%description
+This is Mozilla.
+
+
+PACKAGE_LISTING
+
+%prep
+
+%setup -n mozilla
+./configure
+
+%install
+export NSDISTMODE=copy
+make
+
+PACKAGE_INSTALL
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+FILE_LISTING
+
+
+
+
+
