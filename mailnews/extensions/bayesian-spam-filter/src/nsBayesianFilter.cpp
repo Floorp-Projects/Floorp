@@ -44,6 +44,8 @@
 #include "nsQuickSort.h"
 #include "nsIProfileInternal.h"
 #include "nsIStreamConverterService.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
 #include "prnetdb.h"
 
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
@@ -373,19 +375,23 @@ private:
 };
 
 /* void filterMessage (in string aMsgURL, in nsIMsgDBHdr aMsgHdr, in unsigned long aCount, [array, size_is (aCount)] in string aHeaders, in nsIMsgFilterHitNotify aListener, in nsIMsgWindow aMsgWindow); */
-NS_IMETHODIMP nsBayesianFilter::FilterMessage(const char *aMsgURL, nsIMsgDBHdr *aMsgHdr, PRUint32 aCount,
+NS_IMETHODIMP nsBayesianFilter::FilterMessage(const char *aMsgURI, nsIMsgDBHdr *aMsgHdr, PRUint32 aCount,
                                               const char **aHeaders, nsIMsgFilterHitNotify *aListener, nsIMsgWindow *aMsgWindow)
 {   
     TokenAnalyzer* analyzer = new MessageClassifier(this, NULL);
-    return tokenizeMessage(aMsgURL, analyzer);
+    return tokenizeMessage(aMsgURI, analyzer);
 }
 
-nsresult nsBayesianFilter::tokenizeMessage(const char* messageURL, TokenAnalyzer* analyzer)
+nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, TokenAnalyzer* analyzer)
 {
     nsresult rv;
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString messageURL;
     
+    nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mailSession->ConvertMsgURIToMsgURL(messageURI, nsnull, getter_Copies(messageURL));
     // Tell mime we just want to scan the message data
     nsCAutoString aUrl(messageURL);
     aUrl.FindChar('?') == kNotFound ? aUrl += "?" : aUrl += "&";
@@ -395,7 +401,7 @@ nsresult nsBayesianFilter::tokenizeMessage(const char* messageURL, TokenAnalyzer
     rv = ioService->NewChannel(aUrl, NULL, NULL, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
     
-    nsCOMPtr<nsIStreamListener> tokenListener = new TokenStreamListener(messageURL, analyzer);
+    nsCOMPtr<nsIStreamListener> tokenListener = new TokenStreamListener(messageURI, analyzer);
 
     static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
     nsCOMPtr<nsIStreamConverterService> streamConverter = do_GetService(kIStreamConverterServiceCID, &rv);
@@ -423,7 +429,7 @@ static int compareTokens(const void* p1, const void* p2, void* /* data */)
 inline double max(double x, double y) { return (x > y ? x : y); }
 inline double min(double x, double y) { return (x < y ? x : y); }
 
-void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* messageURL,
+void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* messageURI,
                                        nsIJunkMailClassificationListener* listener)
 {
     /* run the kernel of the Graham filter algorithm here. */
@@ -477,7 +483,7 @@ void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* mes
     delete[] tokens;
 
     if (listener)
-        listener->OnMessageClassified(messageURL, isJunk ? PRInt32(nsIJunkMailPlugin::JUNK) : PRInt32(nsIJunkMailPlugin::GOOD));
+        listener->OnMessageClassified(messageURI, isJunk ? PRInt32(nsIJunkMailPlugin::JUNK) : PRInt32(nsIJunkMailPlugin::GOOD));
 }
 
 /* void shutdown (); */
@@ -489,7 +495,8 @@ NS_IMETHODIMP nsBayesianFilter::Shutdown()
 /* readonly attribute boolean shouldDownloadAllHeaders; */
 NS_IMETHODIMP nsBayesianFilter::GetShouldDownloadAllHeaders(PRBool *aShouldDownloadAllHeaders)
 {
-    *aShouldDownloadAllHeaders = PR_TRUE;
+    // bayesian filters work on the whole msg body currently.
+    *aShouldDownloadAllHeaders = PR_FALSE;
     return NS_OK;
 }
 

@@ -129,18 +129,18 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
      * Given a message URL, determine what its current classification is
      * according to the current training set.
      */
-    void classifyMessage(in string aMsgURL,
+    void classifyMessage(in string aMsgURI,
                          in nsIJunkMailClassificationListener aListener);
 
     void classifyMessages(in unsigned long aCount,
-                          [array, size_is(aCount)] in string aMsgURLs,
+                          [array, size_is(aCount)] in string aMsgURIs,
                           in nsIJunkMailClassificationListener aListener);
     
     /**
      * Called when a user forces the classification of a message. Should
      * cause the training set to be updated appropriately.
      */
-    void setMessageClassification(in string aMsgURL,
+    void setMessageClassification(in string aMsgURI,
                                   in long aOldClassification,
                                   in long aNewClassification,
                                   in nsIJunkMailClassificationListener aListener);

@@ -87,9 +87,9 @@ public:
     nsBayesianFilter();
     virtual ~nsBayesianFilter();
     
-    nsresult tokenizeMessage(const char* messageURL, TokenAnalyzer* analyzer);
-    void classifyMessage(Tokenizer& messageTokens, const char* messageURL, nsIJunkMailClassificationListener* listener);
-    void observeMessage(Tokenizer& messageTokens, const char* messageURL, PRInt32 oldClassification, PRInt32 newClassification, nsIJunkMailClassificationListener* listener);
+    nsresult tokenizeMessage(const char* messageURI, TokenAnalyzer* analyzer);
+    void classifyMessage(Tokenizer& messageTokens, const char* messageURI, nsIJunkMailClassificationListener* listener);
+    void observeMessage(Tokenizer& messageTokens, const char* messageURI, PRInt32 oldClassification, PRInt32 newClassification, nsIJunkMailClassificationListener* listener);
 
     void writeTrainingData();
     void readTrainingData();

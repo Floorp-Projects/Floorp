@@ -457,8 +457,7 @@ function analyze(aMessage, aNextFunction)
 
     // XXX TODO jumping through hoops here.
     var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
-    var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
-    gJunkmailComponent.classifyMessage(messageURL, listener);
+    gJunkmailComponent.classifyMessage(messageURI, listener);
 }
 
 function analyzeFolder()
@@ -541,7 +540,6 @@ function mark(aMessage, aSpam, aNextFunction)
     var newClassification = (aSpam ? nsIJunkMailPlugin.JUNK : nsIJunkMailPlugin.GOOD);
 
     var messageURI = aMessage.folder.generateMessageURI(aMessage.messageKey) + "?fetchCompleteMessage=true";
-    var messageURL = mailSession.ConvertMsgURIToMsgURL(messageURI, msgWindow);
     
     var listener = (aNextFunction == null ? null :
                     {
@@ -551,7 +549,7 @@ function mark(aMessage, aSpam, aNextFunction)
                         }
                     });
     
-    gJunkmailComponent.setMessageClassification(messageURL, oldClassification, newClassification, listener);
+    gJunkmailComponent.setMessageClassification(messageURI, oldClassification, newClassification, listener);
 }
 
 function JunkSelectedMessages(setAsJunk)
