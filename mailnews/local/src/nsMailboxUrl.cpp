@@ -90,7 +90,8 @@ static char *nsMailboxGetURI(char *nativepath)
         rv = server->GetLocalPath(&nativeServerPath);
         if (NS_FAILED(rv)) continue;
         
-        nsFilePath serverPath(nativeServerPath);
+        nsFileSpec spec(nativeServerPath);
+        nsFilePath serverPath(spec);
         PL_strfree(nativeServerPath);
         
         // check if filepath begins with serverPath
