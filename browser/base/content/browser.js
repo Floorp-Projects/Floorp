@@ -3657,7 +3657,7 @@ function asyncOpenWebPanel(event)
        // _main (the IE convention) or _content (the Mozilla convention).
        // The only reason we field _main and _content here is for the markLinkVisited
        // hack.
-       var target = linkNode.getAttribute("target");
+       target = linkNode.getAttribute("target");
        if (fieldNormalClicks && 
            (!target || target == "_content" || target  == "_main")) 
          // IE uses _main, SeaMonkey uses _content, we support both
