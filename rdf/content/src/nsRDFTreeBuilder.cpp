@@ -1897,11 +1897,11 @@ RDFTreeBuilderImpl::IsOpen(nsIContent* aElement)
     }
 
     // The <xul:treebody> is _always_ open.
-    if (tag == kTreeBodyAtom)
+    if (tag.get() == kTreeBodyAtom)
         return PR_TRUE;
 
     // If it's not a <xul:treeitem>, then it's not open.
-    if (tag != kTreeItemAtom)
+    if (tag.get() != kTreeItemAtom)
         return PR_FALSE;
 
     nsAutoString value;
