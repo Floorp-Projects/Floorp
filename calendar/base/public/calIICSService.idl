@@ -39,6 +39,7 @@
 #include "nsISupports.idl"
 
 interface calIItemBase;
+interface calIDateTime;
 
 [scriptable,uuid(4d7e456b-cfd0-4ebf-8794-c57789dafdc3)]
 interface calIIcalComponent : nsISupports
@@ -99,6 +100,15 @@ interface calIIcalComponent : nsISupports
     const PRUint32 VISIBILITY_CONFIDENTIAL = 10009;
     const PRUint32 VISIBILITY_NONE = 10010;
     attribute PRUint32 visibility;
+
+    attribute calIDateTime startTime;
+    attribute calIDateTime endTime;
+    attribute calIDateTime dueTime;
+    attribute calIDateTime stampTime;
+
+    attribute calIDateTime createdTime;
+    attribute calIDateTime completedTime;
+    attribute calIDateTime lastModified;
 };
 
 [scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "calICSService.h"
+#include "calDateTime.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -105,6 +106,8 @@ protected:
         return SetProperty(kind, val);
     }
 
+
+
     icalcomponent              *mComponent;
     nsCOMPtr<calIcalComponent>  mParent;
 };
@@ -153,6 +156,41 @@ calIcalComponent::Set##Attrname(PRUint32 val)                   \
 {                                                               \
     return SetIntProperty(ICAL_##ICALNAME##_PROPERTY, val);     \
 }                                                               \
+
+#define RO_DATE_ATTRIBUTE(Attrname, ICALNAME)                           \
+NS_IMETHODIMP                                                           \
+calIcalComponent::Get##Attrname(calIDateTime **dtp)                     \
+{                                                                       \
+    icalproperty *prop =                                                \
+        icalcomponent_get_first_property(mComponent,                    \
+                                         ICAL_##ICALNAME##_PROPERTY);   \
+    if (!prop) {                                                        \
+        *dtp = nsnull;                                                  \
+        return NS_OK;                                                   \
+    }                                                                   \
+                                                                        \
+    struct icaltimetype itt =                                           \
+        icalvalue_get_datetime(icalproperty_get_value(prop));           \
+    calDateTime *dt = new calDateTime(&itt);                            \
+    if (!dt)                                                            \
+        return NS_ERROR_OUT_OF_MEMORY;                                  \
+    NS_ADDREF(*dtp = dt);                                               \
+    return NS_OK;                                                       \
+}
+
+#define DATE_ATTRIBUTE(Attrname, ICALNAME)                              \
+RO_DATE_ATTRIBUTE(Attrname, ICALNAME)                                   \
+                                                                        \
+NS_IMETHODIMP                                                           \
+calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
+{                                                                       \
+    struct icaltimetype itt;                                            \
+    dt->ToIcalTime(&itt);                                               \
+    icalvalue *val = icalvalue_new_datetime(itt);                       \
+    if (!val)                                                           \
+        return NS_ERROR_OUT_OF_MEMORY;                                  \
+    return SetProperty(ICAL_##ICALNAME##_PROPERTY, val);                \
+}
 
 NS_IMPL_ISUPPORTS1(calIcalComponent, calIIcalComponent)
 
@@ -209,6 +247,13 @@ STRING_ATTRIBUTE(Categories, CATEGORIES)
 STRING_ATTRIBUTE(URL, URL)
 INT_ATTRIBUTE(Priority, PRIORITY)
 INT_ATTRIBUTE(Visibility, CLASS)
+DATE_ATTRIBUTE(StartTime, DTSTART)
+DATE_ATTRIBUTE(EndTime, DTEND)
+DATE_ATTRIBUTE(DueTime, DUE)
+DATE_ATTRIBUTE(StampTime, DTSTAMP)
+DATE_ATTRIBUTE(LastModified, LASTMODIFIED)
+DATE_ATTRIBUTE(CreatedTime, CREATED)
+DATE_ATTRIBUTE(CompletedTime, COMPLETED)
 
 NS_IMPL_ISUPPORTS1(calICSService, calIICSService)
 

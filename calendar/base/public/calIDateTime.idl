@@ -38,6 +38,8 @@
 
 #include "nsISupports.idl"
 
+[ptr] native icaltimetypeptr(struct icaltimetype);
+
 [scriptable, uuid(5678d4a3-2543-4ece-afbb-079292f2866e)]
 interface calIDateTime : nsISupports
 {
@@ -134,4 +136,10 @@ interface calIDateTime : nsISupports
   // the start/end of the current object's year
   readonly attribute calIDateTime startOfYear;
   readonly attribute calIDateTime endOfYear;
+
+  [noscript,notxpcom] void toIcalTime(in icaltimetypeptr itt);
+
+  /* JS only:
+   * attribute Date jsDate;
+   */
 };

@@ -83,8 +83,7 @@ protected:
     PRInt16 mWeekday;
     PRInt16 mYearday;
 
-    void toIcalTime(icaltimetype *icalt);
-    void fromIcalTime(icaltimetype *icalt);
+    void FromIcalTime(icaltimetype *icalt);
 
     PRTime mLastModified;
 };

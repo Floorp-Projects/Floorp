@@ -68,7 +68,7 @@ calDateTime::calDateTime()
 
 calDateTime::calDateTime(struct icaltimetype *atimeptr)
 {
-    fromIcalTime(atimeptr);
+    FromIcalTime(atimeptr);
     mValid = PR_TRUE;
 }
 
@@ -159,11 +159,11 @@ calDateTime::Normalize()
 {
     struct icaltimetype icalt;
 
-    toIcalTime(&icalt);
+    ToIcalTime(&icalt);
 
     icalt = icaltime_normalize(icalt);
 
-    fromIcalTime(&icalt);
+    FromIcalTime(&icalt);
     
     mValid = PR_TRUE;
 
@@ -198,7 +198,7 @@ calDateTime::SetTimeInTimezone(PRTime aTime, const char *aTimezone)
     icalt = icaltime_from_timet(tt, 0);
     icalt = icaltime_as_utc(icalt, aTimezone);
 
-    fromIcalTime(&icalt);
+    FromIcalTime(&icalt);
 
     return NS_OK;
 }
@@ -207,7 +207,7 @@ NS_IMETHODIMP
 calDateTime::GetInTimezone(const char *aTimezone, calIDateTime **aResult)
 {
     struct icaltimetype icalt;
-    toIcalTime(&icalt);
+    ToIcalTime(&icalt);
 
     icalt = icaltime_as_zone(icalt, aTimezone);
     calDateTime *cdt = new calDateTime(&icalt);
@@ -259,8 +259,8 @@ calDateTime::GetEndOfYear(calIDateTime **aResult)
  ** utility/protected methods
  **/
 
-void
-calDateTime::toIcalTime(icaltimetype *icalt)
+NS_IMETHODIMP_(void)
+calDateTime::ToIcalTime(icaltimetype *icalt)
 {
     icalt->year = mYear;
     icalt->month = mMonth;
@@ -276,7 +276,7 @@ calDateTime::toIcalTime(icaltimetype *icalt)
 }
 
 void
-calDateTime::fromIcalTime(icaltimetype *icalt)
+calDateTime::FromIcalTime(icaltimetype *icalt)
 {
     mYear = icalt->year;
     mMonth = icalt->month;
@@ -346,7 +346,7 @@ calDateTime::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
         }
     }
 
-    *_retval = PR_FALSE;
+    *_retval = PR_TRUE;
     return NS_OK;
 }
 
@@ -385,7 +385,7 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
             return NS_OK;
         }
     }
-    *_retval = PR_FALSE;
+    *_retval = PR_TRUE;
     return NS_OK;
 }
 
