@@ -5118,6 +5118,7 @@ if test "$MOZ_SVG_RENDERER_LIBART"; then
         MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
         ;;
     esac
+    AC_FUNC_ALLOCA
   else
 dnl Disable system libart until the pixel format changes are merged upstream
     AC_MSG_ERROR([SVG requires a modified version of libart. To pull and build
