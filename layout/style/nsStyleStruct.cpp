@@ -860,6 +860,10 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
 
 nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) const
 {
+  if (mZIndex != aOther.mZIndex) {
+    return NS_STYLE_HINT_REFLOW;
+  }
+  
   if ((mOffset == aOther.mOffset) &&
       (mWidth == aOther.mWidth) &&
       (mMinWidth == aOther.mMinWidth) &&
@@ -867,10 +871,10 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
       (mHeight == aOther.mHeight) &&
       (mMinHeight == aOther.mMinHeight) &&
       (mMaxHeight == aOther.mMaxHeight) &&
-      (mBoxSizing == aOther.mBoxSizing) &&
-      (mZIndex == aOther.mZIndex))
+      (mBoxSizing == aOther.mBoxSizing))
     return NS_STYLE_HINT_NONE;
-  return NS_STYLE_HINT_REFLOW;
+  
+  return nsChangeHint_ReflowFrame;
 }
 
 // --------------------
