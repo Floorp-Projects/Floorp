@@ -84,7 +84,9 @@ NS_IMETHODIMP nsHTMLDocShell::CanHandleContentType(const PRUnichar* contentType,
 NS_IMETHODIMP nsHTMLDocShell::ScrollToNode(nsIDOMNode* aNode)
 {
    NS_ENSURE_ARG(aNode);
-   NS_ENSURE_STATE(mPresShell);
+   NS_ENSURE_STATE(mContentViewer);
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 
    // Get the nsIContent interface, because that's what we need to 
    // get the primary frame
@@ -99,7 +101,7 @@ NS_IMETHODIMP nsHTMLDocShell::ScrollToNode(nsIDOMNode* aNode)
       NS_ERROR_FAILURE);
 
    // tell the pres shell to scroll to the frame
-   NS_ENSURE_SUCCESS(mPresShell->ScrollFrameIntoView(frame, 
+   NS_ENSURE_SUCCESS(presShell->ScrollFrameIntoView(frame, 
       NS_PRESSHELL_SCROLL_TOP, NS_PRESSHELL_SCROLL_ANYWHERE), NS_ERROR_FAILURE); 
    return NS_OK; 
 }
@@ -283,7 +285,9 @@ NS_IMETHODIMP nsHTMLDocShell::SizeToContent()
  */
 NS_IMETHODIMP nsHTMLDocShell::SelectAll()
 {
-   NS_ENSURE_STATE(mPresShell);
+   NS_ENSURE_STATE(mContentViewer);
+   nsCOMPtr<nsIPresShell> presShell;
+   NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
 /*  XXX Implement - There is something not quite right with the objects
    being retrieved.  bodyNode isn't defined and bodyElement isn't used
    and nor is node.
