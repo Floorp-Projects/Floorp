@@ -92,17 +92,10 @@ JS_PUBLIC_API(void *)
 JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
 {
     JSArena **ap, *a, *b;
-#ifdef JS_THREADSAFE
-    JSArena *c;
-#endif
     JSUint32 sz;
     void *p;
 
     JS_ASSERT((nb & pool->mask) == 0);
-#if defined(XP_PC) && !defined(_WIN32)
-    if (nb >= 60000U)
-	return 0;
-#endif  /* WIN16 */
     for (a = pool->current; a->avail + nb > a->limit; pool->current = a) {
         if (!a->next) {
             ap = &arena_freelist;
@@ -110,13 +103,14 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
             while ((b = *ap) != NULL) {         /* reclaim a free arena */
                 /*
                  * Insist on exact arenasize match if nb is not greater than
-                 * arenasize, otherwise take any arena big enough.  The GC
-                 * counts on arenasize matching to keep its thing and flags
-                 * arenas parallel.
+                 * arenasize.  Otherwise take any arena big enough, but not
+                 * more than nb + arenasize.  The JS GC counts on arenasize
+                 * matching to keep its thing and flags arenas parallel.
                  */
+                sz = (JSUint32)(b->limit - b->base);
                 if ((nb > pool->arenasize)
-                    ? b->base + nb <= b->limit
-                    : b->base + pool->arenasize == b->limit) {
+                    ? sz >= nb && sz <= nb + pool->arenasize
+                    : sz == pool->arenasize) {
                     *ap = b->next;
                     JS_RELEASE_LOCK(arena_freelist_lock);
                     b->next = NULL;
@@ -167,9 +161,6 @@ static void
 FreeArenaList(JSArenaPool *pool, JSArena *head, JSBool reallyFree)
 {
     JSArena **ap, *a;
-#ifdef JS_THREADSAFE
-    JSArena *b;
-#endif
 
     ap = &head->next;
     a = *ap;
