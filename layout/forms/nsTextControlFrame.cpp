@@ -1428,7 +1428,8 @@ nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
   fontMet->GetMaxAdvance(charMaxAdvance);
 
   // Set the width equal to the width in characters
-  aDesiredSize.width = GetCols() * charWidth;
+  PRInt32 cols = GetCols();
+  aDesiredSize.width = cols * charWidth;
 
   // To better match IE, take the maximum character width(in twips) and remove
   // 4 pixels add this on as additional padding(internalPadding). But only do
@@ -1453,6 +1454,17 @@ nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
     // in Full Standards mode, see BRFrame::Reflow and bug 228752.
     if (aPresContext->CompatibilityMode() == eCompatibility_FullStandards) {
       aDesiredSize.width += 1;
+    }
+  }
+
+  // Increment width with cols * letter-spacing.
+  {
+    const nsStyleCoord& lsCoord = GetStyleText()->mLetterSpacing;
+    if (eStyleUnit_Coord == lsCoord.GetUnit()) {
+      nscoord letterSpacing = lsCoord.GetCoordValue();
+      if (letterSpacing != 0) {
+        aDesiredSize.width += cols * letterSpacing;
+      }
     }
   }
 
