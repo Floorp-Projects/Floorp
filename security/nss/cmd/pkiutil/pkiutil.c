@@ -327,7 +327,20 @@ main(int argc, char **argv)
                               NULL, NULL);
 
     printf("\n");
-    NSSTrustDomain_TraverseCertificates(root_cert_td, print_cert_callback, 0);
+    if (pkiutil.opt[opt_Nickname].on) {
+	int i;
+	NSSCertificate **certs;
+	NSSCertificate *cert;
+	certs = NSSTrustDomain_FindCertificatesByNickname(root_cert_td,
+			pkiutil.opt[opt_Nickname].arg, NULL, 0, NULL);
+	i = 0;
+	while ((cert = certs[i++]) != NULL) {
+	    printf("Found cert:\n");
+	    print_cert_callback(cert, NULL);
+	}
+    } else {
+        NSSTrustDomain_TraverseCertificates(root_cert_td, print_cert_callback, 0);
+    }
 
     NSSTrustDomain_Destroy(root_cert_td);
 
