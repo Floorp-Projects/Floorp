@@ -522,7 +522,7 @@ PR_IMPLEMENT(void) PREF_Cleanup()
 /* Frees up all the objects except the callback list. */
 PR_IMPLEMENT(void) PREF_CleanupPrefs()
 {
-    gMochaTaskState = NULL; // We -don't- destroy this.
+    gMochaTaskState = NULL; /* We -don't- destroy this. */
 
     if (gMochaContext) {
         gMochaPrefObject = NULL;
