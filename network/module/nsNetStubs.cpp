@@ -674,17 +674,6 @@ XP_StringHash (const void *xv)
  *---------------------------------------------------------------------------
  */
 
- /*
- * Finds a context that should be loaded with the URL, given
- * a type and current (refering) context.  Return NULL if there is none.
- */
-MWContext * XP_FindContextOfType (MWContext * context, MWContextType type)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
 /*
  * if the passed context is in the global context list
  * TRUE is returned.  Otherwise false
