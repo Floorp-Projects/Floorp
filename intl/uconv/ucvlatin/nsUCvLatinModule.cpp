@@ -399,7 +399,7 @@ static FactoryData g_FactoryData[] =
   {
     &kTCVN5712ToUnicodeCID,
     nsTCVN5712ToUnicode::CreateInstance,
-    "x-viet-tcvn",
+    "x-viet-tcvn5712",
     "Unicode"
   },
   {
@@ -708,7 +708,7 @@ static FactoryData g_FactoryData[] =
     &kUnicodeToTCVN5712CID,
     nsUnicodeToTCVN5712::CreateInstance,
     "Unicode",
-    "x-viet-tcvn"
+    "x-viet-tcvn5712"
   },
   {
     &kUnicodeToVISCIICID,
