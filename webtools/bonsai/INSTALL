@@ -278,15 +278,21 @@ will talke a lot of time. It takes several seconds to process one
 file. The more revisions in file the more time it will take. My SUN
 workstation with 2x200Mhz UltraSPARC processors run about an hour to
 process about 4K files with 20K+ revisions. Your mileage may vary.
+
+Read the comments at the top of dolog.pl to see how to keep your
+database updated when people make checkins.
  
 4. Things to do
 
   a) There should be better way to track CVS tree changes. Now it's done
-by making CVS send e-mail about each checkin. Then some cron job
-process this mail and updates database. CVS history command provides
+by making CVS send e-mail about each checkin.  (See the comments at
+the top of dolog.pl for some clues.) One alternative theory would be
+to take advantage of the CVS history command, which provides
 all necessary information to get list of files recently commited, so
 there is no need to send/process email. Just set up a cron job that
-will periodically look for CVS tree changes and update database.
+will periodically look for CVS tree changes and update database.  On
+the other hand, it's not at all clear how efficient the cvs history
+command is for large, active repositories.
 
   b) Better configuration. One should not hardcode CVS tree <-> Source
 tree  translations. Another thing to configure - banners.
