@@ -41,7 +41,8 @@ const char *gMemoryDeviceID      = "memory";
 
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
-    : mEvictionThreshold(40 * 1024),
+    : mInitialized(PR_FALSE),
+      mEvictionThreshold(40 * 1024),
       mHardLimit(4 * 1024 * 1024),  // set default memory limit, in case prefs aren't available
       mTotalSize(0),
       mInactiveSize(0),
@@ -62,21 +63,25 @@ nsMemoryCacheDevice::~nsMemoryCacheDevice()
 nsresult
 nsMemoryCacheDevice::Init()
 {
-    nsresult  rv;
+    if (mInitialized)  return NS_ERROR_ALREADY_INITIALIZED;
 
-    rv = mMemCacheEntries.Init();
+    nsresult  rv = mMemCacheEntries.Init();
     
     // set some default memory limits, in case prefs aren't available
     mSoftLimit = mHardLimit * 0.9;
 
     // XXX Register as a memory pressure observer
-
+    mInitialized = NS_SUCCEEDED(rv);
     return rv;
 }
+
 
 nsresult
 nsMemoryCacheDevice::Shutdown()
 {
+    NS_ASSERTION(mInitialized, "### attempting to shutdown while not initialized.\n");
+    NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
+    
     mMemCacheEntries.Shutdown();
 
     // evict all entries
@@ -107,8 +112,10 @@ nsMemoryCacheDevice::Shutdown()
     NS_ASSERTION(mInactiveSize == 0, "### mem cache leaking entries?\n");
     NS_ASSERTION(mEntryCount == 0, "### mem cache leaking entries?\n");
     
+    mInitialized = PR_FALSE;
     return NS_OK;
 }
+
 
 const char *
 nsMemoryCacheDevice::GetDeviceID()

@@ -77,6 +77,7 @@ private:
      */
     
     nsCacheEntryHashTable   mMemCacheEntries;
+    PRBool                  mInitialized;
     
     enum { mostLikelyToEvict = 0, leastLikelyToEvict = 1 };   // constants to differentiate eviction lists
     PRCList                 mEvictionList[2];

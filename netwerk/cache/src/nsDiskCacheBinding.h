@@ -123,6 +123,7 @@ public:
     ~nsDiskCacheBindery();
 
     nsresult                Init();
+    void                    Reset();
 
     nsDiskCacheBinding *   CreateBinding(nsCacheEntry *       entry,
                                          nsDiskCacheRecord *  record);

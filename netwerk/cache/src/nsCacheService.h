@@ -112,7 +112,8 @@ public:
     /**
      * Methods called by nsCacheProfilePrefObserver
      */
-    static void      ProfileChanged();
+    static void      OnProfileShutdown(PRBool cleanse);
+    static void      OnProfileChanged();
 
     static void      SetDiskCacheEnabled(PRBool  enabled);
     static void      SetDiskCacheCapacity(PRInt32  capacity);
