@@ -741,6 +741,20 @@ build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE)
 
 ####################################
+# Profile-feedback build (gcc only)
+#  To use this, you should set the following variables in your mozconfig
+#    mk_add_options PROFILE_GEN_SCRIPT=/path/to/profile-script
+#
+#  The profile script should exercise the functionality to be included
+#  in the profile feedback.
+
+profiledbuild:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
+	$(MOZ_MAKE) MOZ_PROFILE_GENERATE=1
+	OBJDIR=${OBJDIR} $(PROFILE_GEN_SCRIPT)
+	$(MOZ_MAKE) clobber_all
+	$(MOZ_MAKE) MOZ_PROFILE_USE=1
+
+####################################
 # Other targets
 
 # Pass these target onto the real build system

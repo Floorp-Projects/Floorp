@@ -477,6 +477,16 @@ DSO_PIC_CFLAGS=-mdynamic-no-pic
 else
 DSO_PIC_CFLAGS=
 endif
+
+# Enable profile-based feedback for non-PIC objects
+ifdef MOZ_PROFILE_GENERATE
+DSO_PIC_CFLAGS += $(PROFILE_GEN_CFLAGS)
+else
+ifdef MOZ_PROFILE_USE
+DSO_PIC_CFLAGS += $(PROFILE_USE_CFLAGS)
+endif
+endif
+
 MKSHLIB=
 endif
 

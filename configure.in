@@ -4709,6 +4709,38 @@ if test "$_IGNORE_LONG_LONG_WARNINGS"; then
      CFLAGS="$_SAVE_CFLAGS"
 fi
 
+dnl Test for profiling options
+dnl Under gcc 3.3, use -fprofile-arcs/-fbranch-probabilities
+dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
+
+_SAVE_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fprofile-generate"
+
+AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
+AC_TRY_COMPILE([], [return 0;],
+               [ PROFILE_GEN_CFLAGS="-fprofile-generate"
+                 result="yes" ], result="no")
+AC_MSG_RESULT([$result])
+
+if test $result = "yes"; then
+  PROFILE_USE_CFLAGS="-fprofile-use"
+else
+  CFLAGS="$_SAVE_CFLAGS -fprofile-arcs"
+  AC_MSG_CHECKING([whether C compiler supports -fprofile-arcs])
+  AC_TRY_COMPILE([], [return 0;],
+                 [ PROFILE_GEN_CFLAGS="-fprofile-arcs"
+                   result="yes" ], result="no")
+  AC_MSG_RESULT([$result])
+  if test $result = "yes"; then
+    PROFILE_USE_CFLAGS="-fbranch-probabilities"
+  fi
+fi
+
+CFLAGS="$_SAVE_CFLAGS"
+
+AC_SUBST(PROFILE_GEN_CFLAGS)
+AC_SUBST(PROFILE_USE_CFLAGS)
+
 AC_LANG_CPLUSPLUS
 
 dnl ========================================================
