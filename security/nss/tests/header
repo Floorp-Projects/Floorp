@@ -184,6 +184,7 @@ if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
 then
     RH="NO"
     grep 7.1 /etc/redhat-release > /dev/null 2>/dev/null && RH="YES"
+    grep 7.2 /etc/redhat-release > /dev/null 2>/dev/null && RH="YES"
 
     if [ "$RH" = "YES" ] 
     then                      # NSS-3-3-1RTM
@@ -863,8 +864,8 @@ eval_opts()
             NSSVER=$1
             if [ -z "$NSSVER" ]        
             then
-                NSSVER="332"
-                Debug "NSS Version: Parameters missing - defaulting to 332!"
+                NSSVER="tip"
+                Debug "NSS Version: Parameters missing - defaulting to tip!"
             else
                 BUILDDATE=$2
                 if [ -z "$BUILDDATE" ] 
@@ -891,8 +892,8 @@ eval_opts()
   fi
   if [ -z "$NSSVER" ]            
   then
-      NSSVER="332"
-      Debug "NSS Version: Parameters missing - defaulting to 332!"
+      NSSVER="tip"
+      Debug "NSS Version: Parameters missing - defaulting to tip!"
   fi
   
   Debug "Builddate $BUILDDATE NssVersion $NSSVER"
