@@ -108,8 +108,6 @@ static PRBool needsQuotedPrintable (const char *s)
 	while (*p) {
 		if (*p & 0x80)
 			return TRUE;
-		else
-			return FALSE;
 		p++;
 	}
 
