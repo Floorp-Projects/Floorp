@@ -190,7 +190,7 @@ static XtResource resources[] =
 	},
     /*
      * I just realized this resource is misnamed.  It should be 
-     * XmNpretendInsensitive. doh...
+     * XmNpretendInsensitive and default to False.
      */
 	{ 
 		XmNpretendSensitive,
