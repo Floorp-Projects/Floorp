@@ -251,7 +251,6 @@ function Startup()
   var contentArea = document.getElementById("content");
   contentArea.addEventListener("load", loadEventHandlers, false);
 
-  var turboMode = false;
   // set default character set if provided
   if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
     if (window.arguments[1].indexOf("charset=") != -1) {
@@ -260,9 +259,6 @@ function Startup()
         //we should "inherit" the charset menu setting in a new window
         getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
       }
-    } else if (window.arguments[1].indexOf("turbo=yes") != -1) {
-      turboMode = true;
-    }
   }
 
   //initConsoleListener();
@@ -320,20 +316,8 @@ function Startup()
       }
     }
 
-    // Close the window now, if it's for turbo mode startup.
-    if ( turboMode ) {
-        // Set "command line used" flag.  If we don't do this, then when a cmd line url
-        // for a "real* invocation comes in, we will override it with the "cmd line url"
-        // from the turbo-mode process (i.e., the home page).
-        appCore.cmdLineURLUsed = true;
-        // For some reason, window.close() directly doesn't work, so do it in the future.
-        window.setTimeout( "window.close()", 100 );
-        return;
-    }
-
     // Focus the content area unless we're loading a blank page
-    var navBar = document.getElementById("nav-bar");
-    if (uriToLoad == "about:blank" && !navBar.hidden && window.locationbar.visible)
+    if (uriToLoad == "about:blank" && !toolbar.hidden && window.locationbar.visible)
       setTimeout(WindowFocusTimerCallback, 0, gURLBar);
     else
       setTimeout(WindowFocusTimerCallback, 0, _content);
