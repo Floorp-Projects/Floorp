@@ -49,6 +49,9 @@ endif
 # XP_OS2 is strictly for OS2 only
 XP_DEFINE  += -DXP_PC=1  -DXP_OS2=1
 
+# Override prefix
+LIB_PREFIX  = $(NULL)
+
 # Override suffix in suffix.mk
 LIB_SUFFIX  = lib
 DLL_SUFFIX  = dll
