@@ -69,13 +69,10 @@ X11SHARED_LCPPSRCS = \
 		$(NULL)
                 
 CPPSRCS		= \
-		$(X11SHARED_LCPPSRCS) \
 		nsDeviceContextGTK.cpp \
 		nsDeviceContextSpecFactoryG.cpp \
 		nsDeviceContextSpecG.cpp \
 		nsDrawingSurfaceGTK.cpp \
-		nsFontMetricsGTK.cpp \
-		nsGdkUtils.cpp \
 		nsGfxFactoryGTK.cpp \
 		nsGraphicsStateGTK.cpp \
 		nsImageGTK.cpp \
@@ -84,7 +81,20 @@ CPPSRCS		= \
 		nsScreenGtk.cpp \
 		nsScreenManagerGtk.cpp \
 		nsPrintOptionsGTK.cpp \
+		nsFontMetricsUtils.cpp \
 		$(NULL)
+
+ifdef MOZ_ENABLE_COREXFONTS
+CPPSRCS		+= \
+		$(X11SHARED_LCPPSRCS) \
+		nsFontMetricsGTK.cpp \
+		nsGdkUtils.cpp
+endif
+
+ifdef MOZ_ENABLE_XFT
+CPPSRCS		+= \
+		nsFontMetricsXft.cpp
+endif
 
 ifdef MOZ_ENABLE_GTK
 CPPSRCS 	+= \
@@ -142,9 +152,9 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 endif
 
-EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(MOZ_GTK2_LIBS)
-CXXFLAGS	+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
-CFLAGS		+= $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(MOZ_XFT_LIBS) $(MOZ_GTK2_LIBS)
+CXXFLAGS	+= $(MOZ_XFT_CFLAGS) $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
+CFLAGS		+= $(MOZ_XFT_CFLAGS) $(MOZ_GTK_CFLAGS) $(MOZ_GTK2_CFLAGS)
 
 ifdef MOZ_ENABLE_XINERAMA
 GFX_XINERAMA_LIBS += $(MOZ_XINERAMA_LIBS)

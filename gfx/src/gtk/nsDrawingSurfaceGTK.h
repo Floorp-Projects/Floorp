@@ -42,8 +42,14 @@
 #include "nsIDrawingSurface.h"
 
 #include "nsTimer.h"
+#include "nsIRegion.h"
+#include "nsCOMPtr.h"
 
 #include <gtk/gtk.h>
+
+#ifdef MOZ_ENABLE_XFT
+typedef struct _XftDraw XftDraw;
+#endif
 
 class nsDrawingSurfaceGTK : public nsIDrawingSurface
 {
@@ -102,6 +108,12 @@ public:
 
   PRInt32 GetDepth() { return mDepth; }
 
+#ifdef MOZ_ENABLE_XFT
+  XftDraw *GetXftDraw     (void);
+  void     GetLastXftClip (nsIRegion **aLastRegion);
+  void     SetLastXftClip (nsIRegion  *aLastRegion);
+#endif /* MOZ_ENABLE_XFT */
+
 protected:
   inline PRUint8 ConvertMaskToCount(unsigned long val);
 
@@ -124,6 +136,11 @@ private:
   PRUint32	mLockHeight;
   PRUint32	mLockFlags;
   PRBool	mLocked;
+
+#ifdef MOZ_ENABLE_XFT
+  XftDraw             *mXftDraw;
+  nsCOMPtr<nsIRegion>  mLastXftClip;
+#endif
 
   //  MOZ_TIMER_DECLARE(mLockTime)
   //  MOZ_TIMER_DECLARE(mUnlockTime)

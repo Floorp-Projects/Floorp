@@ -1162,6 +1162,121 @@ InitGlobals(nsIDeviceContext *aDevice)
   return NS_OK;
 }
 
+// do the 8 to 16 bit conversion on the stack
+// if the data is less than this size
+#define WIDEN_8_TO_16_BUF_SIZE 1024
+
+// handle 8 bit data with a 16 bit font
+gint
+Widen8To16AndMove(const gchar *char_p, 
+                  gint char_len, 
+                  XChar2b *xchar2b_p)
+{
+  int i;
+  for (i=0; i<char_len; i++) {
+    (xchar2b_p)->byte1 = 0;
+    (xchar2b_p++)->byte2 = *char_p++;
+  }
+  return(char_len*2);
+}
+
+// handle 8 bit data with a 16 bit font
+gint
+Widen8To16AndGetWidth (nsXFont        *xFont,
+                       const gchar    *text,
+                       gint            text_length)
+{
+  NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+  XChar2b buf[WIDEN_8_TO_16_BUF_SIZE];
+  XChar2b *p = buf;
+  int uchar_size;
+  gint rawWidth;
+
+  if (text_length > WIDEN_8_TO_16_BUF_SIZE) {
+    p = (XChar2b*)PR_Malloc(text_length*sizeof(XChar2b));
+    if (!p) return(0); // handle malloc failure
+  }
+
+  uchar_size = Widen8To16AndMove(text, text_length, p);
+  rawWidth = xFont->TextWidth16(p, uchar_size/2);
+
+  if (text_length > WIDEN_8_TO_16_BUF_SIZE) {
+    PR_Free((char*)p);
+  }
+  return(rawWidth);
+}
+
+void
+Widen8To16AndDraw (GdkDrawable *drawable,
+                   nsXFont     *xFont,
+                   GdkGC       *gc,
+                   gint         x,
+                   gint         y,
+                   const gchar *text,
+                   gint         text_length)
+{
+  NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+  XChar2b buf[WIDEN_8_TO_16_BUF_SIZE];
+  XChar2b *p = buf;
+  int uchar_size;
+
+  if (text_length > WIDEN_8_TO_16_BUF_SIZE) {
+    p = (XChar2b*)PR_Malloc(text_length*sizeof(XChar2b));
+    if (!p) return; // handle malloc failure
+  }
+
+  uchar_size = Widen8To16AndMove(text, text_length, p);
+  xFont->DrawText16(drawable, gc, x, y, p, uchar_size/2);
+
+  if (text_length > WIDEN_8_TO_16_BUF_SIZE) {
+    PR_Free((char*)p);
+  }
+}
+
+#ifdef MOZ_MATHML
+
+void
+Widen8To16AndGetTextExtents (nsXFont *xFont,  
+                        const gchar *text,
+                        gint         text_length,
+                        gint        *lbearing,
+                        gint        *rbearing,
+                        gint        *width,
+                        gint        *ascent,
+                        gint        *descent)
+{
+  NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+  XChar2b buf[WIDEN_8_TO_16_BUF_SIZE];
+  XChar2b *p = buf;
+  int uchar_size;
+
+  if (text_length > WIDEN_8_TO_16_BUF_SIZE) {
+    p = (XChar2b*)PR_Malloc(text_length*sizeof(XChar2b));
+    if (!p) { // handle malloc failure
+      *lbearing = 0;
+      *rbearing = 0;
+      *width    = 0;
+      *ascent   = 0;
+      *descent  = 0;
+      return;
+    }
+  }
+
+  uchar_size = Widen8To16AndMove(text, text_length, p);
+  xFont->TextExtents16(p, uchar_size/2,
+                    lbearing, 
+                    rbearing, 
+                    width, 
+                    ascent, 
+                    descent);
+
+  if (text_length > WIDEN_8_TO_16_BUF_SIZE) {
+    PR_Free((char*)p);
+  }
+}
+
+#endif /* MOZ_MATHML */
+
 nsFontMetricsGTK::nsFontMetricsGTK()
   : mFonts() // I'm not sure what the common size is here - I generally
   // see 2-5 entries.  For now, punt and let it be allocated later.  We can't
@@ -1193,6 +1308,7 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
   }
 
   mWesternFont = nsnull;
+  mCurrentFont = nsnull;
 
   if (mDeviceContext) {
     // Notify our device context that owns us so that it can update its font cache
@@ -1362,6 +1478,8 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   if (!mWesternFont) {
     return NS_ERROR_FAILURE;
   }
+
+  mCurrentFont = mWesternFont;
 
   RealizeFont();
 
@@ -1693,8 +1811,7 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetLangGroup(nsIAtom** aLangGroup)
 
 NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
 {
-  aHandle = (nsFontHandle)mWesternFont;
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsFontGTK*
@@ -3266,6 +3383,1108 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
   return AddToLoadedFontsList(font);
 }
 
+nsresult
+nsFontMetricsGTK::GetWidth  (const char* aString, PRUint32 aLength,
+                             nscoord& aWidth,
+                             nsRenderingContextGTK *aContext)
+{
+    if (aLength == 0) {
+        aWidth = 0;
+        return NS_OK;
+    }
+
+    nsXFont *xFont = mCurrentFont->GetXFont();
+    gint rawWidth;
+    
+    if (mCurrentFont->IsFreeTypeFont()) {
+        PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
+
+        // need to fix this for long strings
+        PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
+
+        // convert 7 bit data to unicode
+        // this function is only supposed to be called for ascii data
+        for (PRUint32 i=0; i<len; i++) {
+            unichars[i] = (PRUnichar)((unsigned char)aString[i]);
+        }
+
+        rawWidth = mCurrentFont->GetWidth(unichars, len);
+    }
+    else if (!mCurrentFont->GetXFontIs10646()) {
+        NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
+        // 8 bit data with an 8 bit font
+        rawWidth = xFont->TextWidth8(aString, aLength);
+    }
+    else {
+        NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+        // we have 8 bit data but a 16 bit font
+        rawWidth = Widen8To16AndGetWidth (mCurrentFont->GetXFont(),
+                                          aString, aLength);
+    }
+
+    float f;
+    mDeviceContext->GetDevUnitsToAppUnits(f);
+    aWidth = NSToCoordRound(rawWidth * f);
+
+    return NS_OK;
+}
+
+nsresult
+nsFontMetricsGTK::GetWidth  (const PRUnichar* aString, PRUint32 aLength,
+                             nscoord& aWidth, PRInt32* aFontID,
+                             nsRenderingContextGTK *aContext)
+{
+    if (aLength == 0) {
+        aWidth = 0;
+        return NS_OK;
+    }
+
+    nsFontGTK* prevFont = nsnull;
+    gint rawWidth = 0;
+    PRUint32 start = 0;
+    PRUint32 i;
+
+    for (i = 0; i < aLength; i++) {
+        PRUnichar c = aString[i];
+        nsFontGTK* currFont = nsnull;
+        nsFontGTK** font = mLoadedFonts;
+        nsFontGTK** end = &mLoadedFonts[mLoadedFontsCount];
+        while (font < end) {
+            if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
+                currFont = *font;
+                goto FoundFont; // for speed -- avoid "if" statement
+            }
+            font++;
+        }
+        currFont = FindFont(c);
+    FoundFont:
+        // XXX avoid this test by duplicating code -- erik
+        if (prevFont) {
+            if (currFont != prevFont) {
+                rawWidth += prevFont->GetWidth(&aString[start], i - start);
+                prevFont = currFont;
+                start = i;
+            }
+        }
+        else {
+            prevFont = currFont;
+            start = i;
+        }
+    }
+
+    if (prevFont) {
+        rawWidth += prevFont->GetWidth(&aString[start], i - start);
+    }
+
+    float f;
+    mDeviceContext->GetDevUnitsToAppUnits(f);
+    aWidth = NSToCoordRound(rawWidth * f);
+
+    if (nsnull != aFontID)
+        *aFontID = 0;
+
+    return NS_OK;
+}
+
+nsresult
+nsFontMetricsGTK::DrawString(const char *aString, PRUint32 aLength,
+                             nscoord aX, nscoord aY,
+                             const nscoord* aSpacing,
+                             nsRenderingContextGTK *aContext,
+                             nsDrawingSurfaceGTK *aSurface)
+{
+  if (!aLength)
+      return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_OK;
+
+  g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(mCurrentFont != NULL, NS_ERROR_FAILURE);
+
+  nscoord x = aX;
+  nscoord y = aY;
+
+  aContext->UpdateGC();
+
+  nsXFont *xFont = mCurrentFont->GetXFont();
+
+  // Get the gc - note that we have to unref this later
+  GdkGC *gc = aContext->GetGC();
+
+  if (nsnull != aSpacing) {
+      // Render the string, one character at a time...
+      const char* end = aString + aLength;
+
+      while (aString < end) {
+          char ch = *aString++;
+          nscoord xx = x;
+          nscoord yy = y;
+          aContext->GetTranMatrix()->TransformCoord(&xx, &yy);
+
+          if (mCurrentFont->IsFreeTypeFont()) {
+              PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
+
+              // need to fix this for long strings
+              PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
+
+              // convert 7 bit data to unicode
+              // this function is only supposed to be called for ascii data
+              for (PRUint32 i=0; i<len; i++) {
+                  unichars[i] = (PRUnichar)((unsigned char)aString[i]);
+              }
+
+              rv = mCurrentFont->DrawString(aContext, aSurface, xx, yy,
+                                            unichars, len);
+          }
+          else if (!mCurrentFont->GetXFontIs10646()) {
+              // 8 bit data with an 8 bit font
+              NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
+              xFont->DrawText8(aSurface->GetDrawable(), gc, xx, yy, &ch, 1);
+          }
+          else {
+              // we have 8 bit data but a 16 bit font
+              NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+              Widen8To16AndDraw(aSurface->GetDrawable(), xFont, gc,
+                                xx, yy, &ch, 1);
+          }
+
+          x += *aSpacing++;
+      }
+  }
+  else {
+      aContext->GetTranMatrix()->TransformCoord(&x, &y);
+
+      if (mCurrentFont->IsFreeTypeFont()) {
+          PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
+
+          // need to fix this for long strings
+          PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
+
+          // convert 7 bit data to unicode
+          // this function is only supposed to be called for ascii data
+          for (PRUint32 i=0; i<len; i++) {
+              unichars[i] = (PRUnichar)((unsigned char)aString[i]);
+          }
+
+          rv = mCurrentFont->DrawString(aContext, aSurface, x, y,
+                                        unichars, len);
+      }
+      else if (!mCurrentFont->GetXFontIs10646()) { // keep 8 bit path fast
+          // 8 bit data with an 8 bit font
+          NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
+          xFont->DrawText8(aSurface->GetDrawable(), gc,
+                           x, y, aString, aLength);
+      }
+      else {
+          // we have 8 bit data but a 16 bit font
+          NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+          Widen8To16AndDraw(aSurface->GetDrawable(), xFont, gc,
+                            x, y, aString, aLength);
+      }
+  }
+
+  gdk_gc_unref(gc);
+
+  return rv;
+}
+
+nsresult
+nsFontMetricsGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
+                             nscoord aX, nscoord aY,
+                             PRInt32 aFontID,
+                             const nscoord* aSpacing,
+                             nsRenderingContextGTK *aContext,
+                             nsDrawingSurfaceGTK *aSurface)
+{
+    if (!aLength)
+        return NS_ERROR_FAILURE;
+
+    g_return_val_if_fail(aSurface != NULL, NS_ERROR_FAILURE);
+    g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
+
+    nscoord x = aX;
+    nscoord y = aY;
+
+    aContext->GetTranMatrix()->TransformCoord(&x, &y);
+
+    nsFontGTK* prevFont = nsnull;
+    PRUint32 start = 0;
+    PRUint32 i;
+
+    for (i = 0; i < aLength; i++) {
+        PRUnichar c = aString[i];
+        nsFontGTK* currFont = nsnull;
+        nsFontGTK** font = mLoadedFonts;
+        nsFontGTK** lastFont = &mLoadedFonts[mLoadedFontsCount];
+        while (font < lastFont) {
+            if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
+                currFont = *font;
+                goto FoundFont; // for speed -- avoid "if" statement
+            }
+            font++;
+        }
+
+        currFont = FindFont(c);
+
+    FoundFont:
+        // XXX avoid this test by duplicating code -- erik
+        if (prevFont) {
+            if (currFont != prevFont) {
+                if (aSpacing) {
+                    const PRUnichar* str = &aString[start];
+                    const PRUnichar* end = &aString[i];
+
+                    // save off mCurrentFont and set it so that we
+                    // cache the GC's font correctly
+                    nsFontGTK *oldFont = mCurrentFont;
+                    mCurrentFont = prevFont;
+                    aContext->UpdateGC();
+
+                    while (str < end) {
+                        x = aX;
+                        y = aY;
+                        aContext->GetTranMatrix()->TransformCoord(&x, &y);
+                        prevFont->DrawString(aContext, aSurface, x, y, str, 1);
+                        aX += *aSpacing++;
+                        str++;
+                    }
+
+                    mCurrentFont = oldFont;
+                }
+                else {
+                    nsFontGTK *oldFont = mCurrentFont;
+                    mCurrentFont = prevFont;
+                    aContext->UpdateGC();
+
+                    x += prevFont->DrawString(aContext, aSurface,
+                                              x, y, &aString[start],
+                                              i - start);
+
+                    mCurrentFont = oldFont;
+                }
+
+                prevFont = currFont;
+                start = i;
+            }
+        }
+        else {
+            prevFont = currFont;
+            start = i;
+        }
+    }
+
+    if (prevFont) {
+        nsFontGTK *oldFont = mCurrentFont;
+        mCurrentFont = prevFont;
+        aContext->UpdateGC();
+    
+        if (aSpacing) {
+            const PRUnichar* str = &aString[start];
+            const PRUnichar* end = &aString[i];
+
+            while (str < end) {
+                x = aX;
+                y = aY;
+                aContext->GetTranMatrix()->TransformCoord(&x, &y);
+                prevFont->DrawString(aContext, aSurface, x, y, str, 1);
+                aX += *aSpacing++;
+                str++;
+            }
+        }
+        else {
+            prevFont->DrawString(aContext, aSurface, x, y,
+                                 &aString[start], i - start);
+        }
+
+        mCurrentFont = oldFont;
+    }
+
+  return NS_OK;
+}
+
+nsresult
+nsFontMetricsGTK::GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                     nsBoundingMetrics &aBoundingMetrics,
+                                     nsRenderingContextGTK *aContext)
+{
+    aBoundingMetrics.Clear();
+
+    if (!aString || !aLength)
+        return NS_ERROR_FAILURE;
+
+    nsresult rv = NS_OK;
+
+    nsXFont *xFont = mCurrentFont->GetXFont();
+
+    if (mCurrentFont->IsFreeTypeFont()) {
+        PRUnichar unichars[WIDEN_8_TO_16_BUF_SIZE];
+
+        // need to fix this for long strings
+        PRUint32 len = PR_MIN(aLength, WIDEN_8_TO_16_BUF_SIZE);
+
+        // convert 7 bit data to unicode
+        // this function is only supposed to be called for ascii data
+        for (PRUint32 i=0; i<len; i++) {
+            unichars[i] = (PRUnichar)((unsigned char)aString[i]);
+        }
+
+        rv = mCurrentFont->GetBoundingMetrics(unichars, len,
+                                              aBoundingMetrics);
+    }
+    if (!mCurrentFont->GetXFontIs10646()) {
+        // 8 bit data with an 8 bit font
+        NS_ASSERTION(xFont->IsSingleByte(),"wrong string/font size");
+        xFont->TextExtents8(aString, aLength,
+                            &aBoundingMetrics.leftBearing, 
+                            &aBoundingMetrics.rightBearing, 
+                            &aBoundingMetrics.width, 
+                            &aBoundingMetrics.ascent, 
+                            &aBoundingMetrics.descent);
+    }
+    else {
+        // we have 8 bit data but a 16 bit font
+        NS_ASSERTION(!xFont->IsSingleByte(),"wrong string/font size");
+        Widen8To16AndGetTextExtents (mCurrentFont->GetXFont(), 
+                                     aString, aLength,
+                                     &aBoundingMetrics.leftBearing, 
+                                     &aBoundingMetrics.rightBearing, 
+                                     &aBoundingMetrics.width, 
+                                     &aBoundingMetrics.ascent, 
+                                     &aBoundingMetrics.descent);
+    }
+
+    float P2T;
+    mDeviceContext->GetDevUnitsToAppUnits(P2T);
+
+    aBoundingMetrics.leftBearing =
+        NSToCoordRound(aBoundingMetrics.leftBearing * P2T);
+    aBoundingMetrics.rightBearing =
+        NSToCoordRound(aBoundingMetrics.rightBearing * P2T);
+    aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * P2T);
+    aBoundingMetrics.ascent = NSToCoordRound(aBoundingMetrics.ascent * P2T);
+    aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * P2T);
+
+    return rv;
+}
+
+nsresult
+nsFontMetricsGTK::GetBoundingMetrics(const PRUnichar *aString,
+                                     PRUint32 aLength,
+                                     nsBoundingMetrics &aBoundingMetrics,
+                                     PRInt32 *aFontID,
+                                     nsRenderingContextGTK *aContext)
+{
+    aBoundingMetrics.Clear(); 
+
+    if (!aString || !aLength)
+        return NS_ERROR_FAILURE;
+
+    nsFontGTK* prevFont = nsnull;
+
+    nsBoundingMetrics rawbm;
+    PRBool firstTime = PR_TRUE;
+    PRUint32 start = 0;
+    PRUint32 i;
+
+    for (i = 0; i < aLength; i++) {
+        PRUnichar c = aString[i];
+        nsFontGTK* currFont = nsnull;
+        nsFontGTK** font = mLoadedFonts;
+        nsFontGTK** end = &mLoadedFonts[mLoadedFontsCount];
+
+        while (font < end) {
+            if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
+                currFont = *font;
+                goto FoundFont; // for speed -- avoid "if" statement
+            }
+            font++;
+        }
+        currFont = FindFont(c);
+
+    FoundFont:
+        // XXX avoid this test by duplicating code -- erik
+        if (prevFont) {
+            if (currFont != prevFont) {
+                prevFont->GetBoundingMetrics((const PRUnichar*)&aString[start],
+                                             i - start, rawbm);
+                if (firstTime) {
+                    firstTime = PR_FALSE;
+                    aBoundingMetrics = rawbm;
+                } 
+                else {
+                    aBoundingMetrics += rawbm;
+                }
+                prevFont = currFont;
+                start = i;
+            }
+        }
+        else {
+            prevFont = currFont;
+            start = i;
+        }
+    }
+    
+    if (prevFont) {
+        prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
+                                     i - start, rawbm);
+        if (firstTime)
+            aBoundingMetrics = rawbm;
+        else
+            aBoundingMetrics += rawbm;
+    }
+
+    // convert to app units
+    float P2T;
+    mDeviceContext->GetDevUnitsToAppUnits(P2T);
+
+    aBoundingMetrics.leftBearing =
+        NSToCoordRound(aBoundingMetrics.leftBearing * P2T);
+    aBoundingMetrics.rightBearing =
+        NSToCoordRound(aBoundingMetrics.rightBearing * P2T);
+    aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * P2T);
+    aBoundingMetrics.ascent = NSToCoordRound(aBoundingMetrics.ascent * P2T);
+    aBoundingMetrics.descent = NSToCoordRound(aBoundingMetrics.descent * P2T);
+
+    if (nsnull != aFontID)
+        *aFontID = 0;
+
+    return NS_OK;
+}
+
+nsresult
+nsFontMetricsGTK::GetTextDimensions (const PRUnichar* aString,
+                                     PRUint32 aLength,
+                                     nsTextDimensions& aDimensions,
+                                     PRInt32* aFontID,
+                                     nsRenderingContextGTK *aContext)
+{
+    aDimensions.Clear();
+
+    if (!aString || !aLength)
+        return NS_ERROR_FAILURE;
+
+    nsFontGTK* prevFont = nsnull;
+    gint rawWidth = 0, rawAscent = 0, rawDescent = 0;
+    PRUint32 start = 0;
+    PRUint32 i;
+
+    for (i = 0; i < aLength; i++) {
+        PRUnichar c = aString[i];
+        nsFontGTK* currFont = nsnull;
+        nsFontGTK** font = mLoadedFonts;
+        nsFontGTK** end = &mLoadedFonts[mLoadedFontsCount];
+
+        while (font < end) {
+            if (CCMAP_HAS_CHAR((*font)->mCCMap, c)) {
+                currFont = *font;
+                goto FoundFont; // for speed -- avoid "if" statement
+            }
+            font++;
+        }
+        currFont = FindFont(c);
+
+    FoundFont:
+        // XXX avoid this test by duplicating code -- erik
+        if (prevFont) {
+            if (currFont != prevFont) {
+                rawWidth += prevFont->GetWidth(&aString[start], i - start);
+                if (rawAscent < prevFont->mMaxAscent)
+                    rawAscent = prevFont->mMaxAscent;
+                if (rawDescent < prevFont->mMaxDescent)
+                    rawDescent = prevFont->mMaxDescent;
+                prevFont = currFont;
+                start = i;
+            }
+        }
+        else {
+            prevFont = currFont;
+            start = i;
+        }
+    }
+
+    if (prevFont) {
+        rawWidth += prevFont->GetWidth(&aString[start], i - start);
+        if (rawAscent < prevFont->mMaxAscent)
+            rawAscent = prevFont->mMaxAscent;
+        if (rawDescent < prevFont->mMaxDescent)
+            rawDescent = prevFont->mMaxDescent;
+    }
+
+    float P2T;
+    mDeviceContext->GetDevUnitsToAppUnits(P2T);
+
+    aDimensions.width = NSToCoordRound(rawWidth * P2T);
+    aDimensions.ascent = NSToCoordRound(rawAscent * P2T);
+    aDimensions.descent = NSToCoordRound(rawDescent * P2T);
+
+    if (nsnull != aFontID)
+        *aFontID = 0;
+
+    return NS_OK;
+}
+
+nsresult
+nsFontMetricsGTK::GetTextDimensions (const char*         aString,
+                                     PRInt32             aLength,
+                                     PRInt32             aAvailWidth,
+                                     PRInt32*            aBreaks,
+                                     PRInt32             aNumBreaks,
+                                     nsTextDimensions&   aDimensions,
+                                     PRInt32&            aNumCharsFit,
+                                     nsTextDimensions&   aLastWordDimensions,
+                                     PRInt32*            aFontID,
+                                     nsRenderingContextGTK *aContext)
+{
+    NS_PRECONDITION(aBreaks[aNumBreaks - 1] == aLength, "invalid break array");
+
+    // If we need to back up this state represents the last place
+    // we could break. We can use this to avoid remeasuring text
+    PRInt32 prevBreakState_BreakIndex = -1; // not known
+                                            // (hasn't been computed)
+    nscoord prevBreakState_Width = 0; // accumulated width to this point
+
+    // Initialize OUT parameters
+    GetMaxAscent(aLastWordDimensions.ascent);
+    GetMaxDescent(aLastWordDimensions.descent);
+    aLastWordDimensions.width = -1;
+    aNumCharsFit = 0;
+
+    // Iterate each character in the string and determine which font to use
+    nscoord width = 0;
+    PRInt32 start = 0;
+    nscoord aveCharWidth;
+    GetAveCharWidth(aveCharWidth);
+
+    while (start < aLength) {
+      // Estimate how many characters will fit. Do that by
+      // diving the available space by the average character
+      // width. Make sure the estimated number of characters is
+      // at least 1
+      PRInt32 estimatedNumChars = 0;
+
+      if (aveCharWidth > 0)
+        estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+
+      if (estimatedNumChars < 1)
+        estimatedNumChars = 1;
+
+      // Find the nearest break offset
+      PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+      PRInt32 breakIndex;
+      nscoord numChars;
+
+      // Find the nearest place to break that is less than or equal to
+      // the estimated break offset
+      if (aLength <= estimatedBreakOffset) {
+        // All the characters should fit
+        numChars = aLength - start;
+        breakIndex = aNumBreaks - 1;
+      } 
+      else {
+        breakIndex = prevBreakState_BreakIndex;
+        while (((breakIndex + 1) < aNumBreaks) &&
+               (aBreaks[breakIndex + 1] <= estimatedBreakOffset)) {
+          ++breakIndex;
+        }
+
+        if (breakIndex == prevBreakState_BreakIndex) {
+          ++breakIndex; // make sure we advanced past the
+          // previous break index
+        }
+
+        numChars = aBreaks[breakIndex] - start;
+      }
+
+      // Measure the text
+      nscoord twWidth = 0;
+      if ((1 == numChars) && (aString[start] == ' '))
+        GetSpaceWidth(twWidth);
+      else if (numChars > 0)
+        GetWidth(&aString[start], numChars, twWidth, aContext);
+
+      // See if the text fits
+      PRBool  textFits = (twWidth + width) <= aAvailWidth;
+
+      // If the text fits then update the width and the number of
+      // characters that fit
+      if (textFits) {
+        aNumCharsFit += numChars;
+        width += twWidth;
+        start += numChars;
+
+        // This is a good spot to back up to if we need to so remember
+        // this state
+        prevBreakState_BreakIndex = breakIndex;
+        prevBreakState_Width = width;
+      }
+      else {
+        // See if we can just back up to the previous saved
+        // state and not have to measure any text
+        if (prevBreakState_BreakIndex > 0) {
+          // If the previous break index is just before the
+          // current break index then we can use it
+          if (prevBreakState_BreakIndex == (breakIndex - 1)) {
+            aNumCharsFit = aBreaks[prevBreakState_BreakIndex];
+            width = prevBreakState_Width;
+            break;
+          }
+        }
+
+        // We can't just revert to the previous break state
+        if (0 == breakIndex) {
+          // There's no place to back up to, so even though
+          // the text doesn't fit return it anyway
+          aNumCharsFit += numChars;
+          width += twWidth;
+          break;
+        }
+
+        // Repeatedly back up until we get to where the text
+        // fits or we're all the way back to the first word
+        width += twWidth;
+        while ((breakIndex >= 1) && (width > aAvailWidth)) {
+          twWidth = 0;
+          start = aBreaks[breakIndex - 1];
+          numChars = aBreaks[breakIndex] - start;
+
+          if ((1 == numChars) && (aString[start] == ' '))
+            GetSpaceWidth(twWidth);
+          else if (numChars > 0)
+            GetWidth(&aString[start], numChars, twWidth,
+                     aContext);
+          width -= twWidth;
+          aNumCharsFit = start;
+          breakIndex--;
+        }
+        break;
+      }
+    }
+
+    aDimensions.width = width;
+    GetMaxAscent(aDimensions.ascent);
+    GetMaxDescent(aDimensions.descent);
+
+    return NS_OK;
+}
+
+struct BreakGetTextDimensionsData {
+  float    mP2T;               // IN
+  PRInt32  mAvailWidth;        // IN
+  PRInt32* mBreaks;            // IN
+  PRInt32  mNumBreaks;         // IN
+  nscoord  mSpaceWidth;        // IN
+  nscoord  mAveCharWidth;      // IN
+  PRInt32  mEstimatedNumChars; // IN (running -- to handle the edge case of one word)
+
+  PRInt32  mNumCharsFit;  // IN/OUT -- accumulated number of chars that fit so far
+  nscoord  mWidth;        // IN/OUT -- accumulated width so far
+
+  // If we need to back up, this state represents the last place
+  // we could break. We can use this to avoid remeasuring text
+  PRInt32 mPrevBreakState_BreakIndex; // IN/OUT, initialized as -1, i.e., not yet computed
+  nscoord mPrevBreakState_Width;      // IN/OUT, initialized as  0
+
+  // Remember the fonts that we use so that we can deal with
+  // line-breaking in-between fonts later. mOffsets[0] is also used
+  // to initialize the current offset from where to start measuring
+  nsVoidArray* mFonts;   // OUT
+  nsVoidArray* mOffsets; // IN/OUT
+};
+
+static PRBool PR_CALLBACK
+do_BreakGetTextDimensions(const nsFontSwitchGTK *aFontSwitch,
+                          const PRUnichar*       aSubstring,
+                          PRUint32               aSubstringLength,
+                          void*                  aData)
+{
+  nsFontGTK* fontGTK = aFontSwitch->mFontGTK;
+
+  // Make sure the font is selected
+  BreakGetTextDimensionsData* data = (BreakGetTextDimensionsData*)aData;
+
+  // Our current state relative to the _full_ string...
+  // This allows emulation of the previous code...
+  const PRUnichar* pstr = (const PRUnichar*)data->mOffsets->ElementAt(0);
+  PRInt32 numCharsFit = data->mNumCharsFit;
+  nscoord width = data->mWidth;
+  PRInt32 start = (PRInt32)(aSubstring - pstr);
+  PRInt32 i = start + aSubstringLength;
+  PRBool allDone = PR_FALSE;
+
+  while (start < i) {
+    // Estimate how many characters will fit. Do that by dividing the
+    // available space by the average character width
+    PRInt32 estimatedNumChars = data->mEstimatedNumChars;
+    if (!estimatedNumChars && data->mAveCharWidth > 0) {
+      estimatedNumChars = (data->mAvailWidth - width) / data->mAveCharWidth;
+    }
+    // Make sure the estimated number of characters is at least 1
+    if (estimatedNumChars < 1) {
+      estimatedNumChars = 1;
+    }
+
+    // Find the nearest break offset
+    PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+    PRInt32 breakIndex = -1; // not yet computed
+    PRBool  inMiddleOfSegment = PR_FALSE;
+    nscoord numChars;
+
+    // Avoid scanning the break array in the case where we think all
+    // the text should fit
+    if (i <= estimatedBreakOffset) {
+      // Everything should fit
+      numChars = i - start;
+    }
+    else {
+      // Find the nearest place to break that is less than or equal to
+      // the estimated break offset
+      breakIndex = data->mPrevBreakState_BreakIndex;
+      while (data->mBreaks[breakIndex + 1] <= estimatedBreakOffset) {
+        ++breakIndex;
+      }
+
+      if (breakIndex == -1)
+        breakIndex = 0;
+
+      // We found a place to break that is before the estimated break
+      // offset. Where we break depends on whether the text crosses a
+      // segment boundary
+      if (start < data->mBreaks[breakIndex]) {
+        // The text crosses at least one segment boundary so measure to the
+        // break point just before the estimated break offset
+        numChars = PR_MIN(data->mBreaks[breakIndex] - start, (PRInt32)aSubstringLength);
+      } 
+      else {
+        // See whether there is another segment boundary between this one
+        // and the end of the text
+        if ((breakIndex < (data->mNumBreaks - 1)) && (data->mBreaks[breakIndex] < i)) {
+          ++breakIndex;
+          numChars = PR_MIN(data->mBreaks[breakIndex] - start, (PRInt32)aSubstringLength);
+        }
+        else {
+          NS_ASSERTION(i != data->mBreaks[breakIndex], "don't expect to be at segment boundary");
+
+          // The text is all within the same segment
+          numChars = i - start;
+
+          // Remember we're in the middle of a segment and not between
+          // two segments
+          inMiddleOfSegment = PR_TRUE;
+        }
+      }
+    }
+
+    // Measure the text
+    nscoord twWidth, pxWidth;
+    if ((1 == numChars) && (pstr[start] == ' ')) {
+      twWidth = data->mSpaceWidth;
+    }
+    else {
+      pxWidth = fontGTK->GetWidth(&pstr[start], numChars);
+      twWidth = NSToCoordRound(float(pxWidth) * data->mP2T);
+    }
+
+    // See if the text fits
+    PRBool textFits = (twWidth + width) <= data->mAvailWidth;
+
+    // If the text fits then update the width and the number of
+    // characters that fit
+    if (textFits) {
+      numCharsFit += numChars;
+      width += twWidth;
+
+      // If we computed the break index and we're not in the middle
+      // of a segment then this is a spot that we can back up to if
+      // we need to, so remember this state
+      if ((breakIndex != -1) && !inMiddleOfSegment) {
+        data->mPrevBreakState_BreakIndex = breakIndex;
+        data->mPrevBreakState_Width = width;
+      }
+    }
+    else {
+      // The text didn't fit. If we're out of room then we're all done
+      allDone = PR_TRUE;
+
+      // See if we can just back up to the previous saved state and not
+      // have to measure any text
+      if (data->mPrevBreakState_BreakIndex != -1) {
+        PRBool canBackup;
+
+        // If we're in the middle of a word then the break index
+        // must be the same if we can use it. If we're at a segment
+        // boundary, then if the saved state is for the previous
+        // break index then we can use it
+        if (inMiddleOfSegment) {
+          canBackup = data->mPrevBreakState_BreakIndex == breakIndex;
+        } else {
+          canBackup = data->mPrevBreakState_BreakIndex == (breakIndex - 1);
+        }
+
+        if (canBackup) {
+          numCharsFit = data->mBreaks[data->mPrevBreakState_BreakIndex];
+          width = data->mPrevBreakState_Width;
+          break;
+        }
+      }
+
+      // We can't just revert to the previous break state. Find the break
+      // index just before the end of the text
+      i = start + numChars;
+      if (breakIndex == -1) {
+        breakIndex = 0;
+        if (data->mBreaks[breakIndex] < i) {
+          while ((breakIndex + 1 < data->mNumBreaks) && (data->mBreaks[breakIndex + 1] < i)) {
+            ++breakIndex;
+          }
+        }
+      }
+
+      if ((0 == breakIndex) && (i <= data->mBreaks[0])) {
+        // There's no place to back up to, so even though the text doesn't fit
+        // return it anyway
+        numCharsFit += numChars;
+        width += twWidth;
+
+        // Edge case of one word: it could be that we just measured a fragment of the
+        // first word and its remainder involves other fonts, so we want to keep going
+        // until we at least measure the entire first word
+        if (numCharsFit < data->mBreaks[0]) {
+          allDone = PR_FALSE;         
+          // From now on we don't care anymore what is the _real_ estimated
+          // number of characters that fits. Rather, we have no where to break
+          // and have to measure one word fully, but the real estimate is less
+          // than that one word. However, since the other bits of code rely on
+          // what is in "data->mEstimatedNumChars", we want to override
+          // "data->mEstimatedNumChars" and pass in what _has_ to be measured
+          // so that it is transparent to the other bits that depend on it.
+          data->mEstimatedNumChars = data->mBreaks[0] - numCharsFit;
+          start += numChars;
+        }
+
+        break;
+      }
+
+      // Repeatedly back up until we get to where the text fits or we're
+      // all the way back to the first word
+      width += twWidth;
+      while ((breakIndex >= 0) && (width > data->mAvailWidth)) {
+        twWidth = 0;
+        start = data->mBreaks[breakIndex];
+        numChars = i - start;
+        if ((1 == numChars) && (pstr[start] == ' ')) {
+          twWidth = data->mSpaceWidth;
+        }
+        else if (numChars > 0) {
+          pxWidth = fontGTK->GetWidth(&pstr[start], numChars);
+          twWidth = NSToCoordRound(float(pxWidth) * data->mP2T);
+        }
+
+        width -= twWidth;
+        numCharsFit = start;
+        --breakIndex;
+        i = start;
+      }
+    }
+
+    start += numChars;
+  }
+
+#ifdef DEBUG_rbs
+  NS_ASSERTION(allDone || start == i, "internal error");
+  NS_ASSERTION(allDone || data->mNumCharsFit != numCharsFit, "internal error");
+#endif /* DEBUG_rbs */
+
+  if (data->mNumCharsFit != numCharsFit) {
+    // some text was actually retained
+    data->mWidth = width;
+    data->mNumCharsFit = numCharsFit;
+    data->mFonts->AppendElement(fontGTK);
+    data->mOffsets->AppendElement((void*)&pstr[numCharsFit]);
+  }
+
+  if (allDone) {
+    // stop now
+    return PR_FALSE;
+  }
+
+  return PR_TRUE; // don't stop if we still need to measure more characters
+}
+
+nsresult
+nsFontMetricsGTK::GetTextDimensions (const PRUnichar*    aString,
+                                     PRInt32             aLength,
+                                     PRInt32             aAvailWidth,
+                                     PRInt32*            aBreaks,
+                                     PRInt32             aNumBreaks,
+                                     nsTextDimensions&   aDimensions,
+                                     PRInt32&            aNumCharsFit,
+                                     nsTextDimensions&   aLastWordDimensions,
+                                     PRInt32*            aFontID,
+                                     nsRenderingContextGTK *aContext)
+{
+
+    nscoord spaceWidth, aveCharWidth;
+    GetSpaceWidth(spaceWidth);
+    GetAveCharWidth(aveCharWidth);
+
+    // Note: aBreaks[] is supplied to us so that the first word is
+    // located at aString[0 .. aBreaks[0]-1] and more generally, the
+    // k-th word is located at aString[aBreaks[k-1]
+    // .. aBreaks[k]-1]. Whitespace can be included and each of them
+    // counts as a word in its own right.
+
+    // Upon completion of glyph resolution, characters that can be
+    // represented with fonts[i] are at offsets[i] .. offsets[i+1]-1
+
+    nsAutoVoidArray fonts, offsets;
+    offsets.AppendElement((void*)aString);
+
+    float f;
+    mDeviceContext->GetDevUnitsToAppUnits(f);
+    BreakGetTextDimensionsData data = { f, aAvailWidth,
+                                        aBreaks, aNumBreaks,
+                                        spaceWidth, aveCharWidth,
+                                        0, 0, 0, -1, 0, &fonts, &offsets };
+
+    ResolveForwards(aString, aLength, do_BreakGetTextDimensions,
+                    &data);
+
+    if (aFontID)
+        *aFontID = 0;
+
+    aNumCharsFit = data.mNumCharsFit;
+    aDimensions.width = data.mWidth;
+
+    ///////////////////
+    // Post-processing for the ascent and descent:
+    //
+    // The width of the last word is included in the final width, but
+    // its ascent and descent are kept aside for the moment. The
+    // problem is that line-breaking may occur _before_ the last word,
+    // and we don't want its ascent and descent to interfere. We can
+    // re-measure the last word and substract its width
+    // later. However, we need a special care for the ascent and
+    // descent at the break-point. The idea is to keep the ascent and
+    // descent of the last word separate, and let layout consider them
+    // later when it has determined that line-breaking doesn't occur
+    // before the last word.
+    //
+    // Therefore, there are two things to do:
+    // 1. Determine the ascent and descent up to where line-breaking may occur.
+    // 2. Determine the ascent and descent of the remainder.  For
+    //   efficiency however, it is okay to bail out early if there is
+    //   only one font (in this case, the height of the last word has no
+    //   special effect on the total height).
+
+    // aLastWordDimensions.width should be set to -1 to reply that we
+    // don't know the width of the last word since we measure multiple
+    // words
+    aLastWordDimensions.Clear();
+    aLastWordDimensions.width = -1;
+
+    PRInt32 count = fonts.Count();
+    if (!count)
+        return NS_OK;
+
+    nsFontGTK* fontGTK = (nsFontGTK*)fonts[0];
+    NS_ASSERTION(fontGTK, "internal error in do_BreakGetTextDimensions");
+    aDimensions.ascent = fontGTK->mMaxAscent;
+    aDimensions.descent = fontGTK->mMaxDescent;
+
+    // fast path - normal case, quick return if there is only one font
+    if (count == 1)
+        return NS_OK;
+
+    // get the last break index.
+    // If there is only one word, we end up with lastBreakIndex =
+    // 0. We don't need to worry about aLastWordDimensions in this
+    // case too. But if we didn't return earlier, it would mean that
+    // the unique word needs several fonts and we will still have to
+    // loop over the fonts to return the final height
+    PRInt32 lastBreakIndex = 0;
+    while (aBreaks[lastBreakIndex] < aNumCharsFit)
+        ++lastBreakIndex;
+
+    const PRUnichar* lastWord = (lastBreakIndex > 0) 
+        ? aString + aBreaks[lastBreakIndex-1]
+        : aString + aNumCharsFit; // let it point outside to play nice
+                                  // with the loop
+
+    // now get the desired ascent and descent information... this is
+    // however a very fast loop of the order of the number of
+    // additional fonts
+
+    PRInt32 currFont = 0;
+    const PRUnichar* pstr = aString;
+    const PRUnichar* last = aString + aNumCharsFit;
+
+    while (pstr < last) {
+        fontGTK = (nsFontGTK*)fonts[currFont];
+        PRUnichar* nextOffset = (PRUnichar*)offsets[++currFont]; 
+
+        // For consistent word-wrapping, we are going to handle the
+        // whitespace character with special care because a whitespace
+        // character can come from a font different from that of the
+        // previous word. If 'x', 'y', 'z', are Unicode points that
+        // require different fonts, we want 'xyz <br>' and 'xyz<br>'
+        // to have the same height because it gives a more stable
+        // rendering, especially when the window is resized at the
+        // edge of the word.
+        // If we don't do this, a 'tall' trailing whitespace, i.e., if
+        // the whitespace happens to come from a font with a bigger
+        // ascent and/or descent than all current fonts on the line,
+        // this can cause the next lines to be shifted down when the
+        // window is slowly resized to fit that whitespace.
+        if (*pstr == ' ') {
+            // skip pass the whitespace to ignore the height that it
+            // may contribute
+            ++pstr;
+            // get out if we reached the end
+            if (pstr == last) {
+                break;
+            }
+            // switch to the next font if we just passed the current font 
+            if (pstr == nextOffset) {
+                fontGTK = (nsFontGTK*)fonts[currFont];
+                nextOffset = (PRUnichar*)offsets[++currFont];
+            } 
+        }
+
+        // see if the last word intersects with the current font
+        // (we are testing for 'nextOffset-1 >= lastWord' since the
+        // current font ends at nextOffset-1)
+        if (nextOffset > lastWord) {
+            if (aLastWordDimensions.ascent < fontGTK->mMaxAscent) {
+                aLastWordDimensions.ascent = fontGTK->mMaxAscent;
+            }
+            if (aLastWordDimensions.descent < fontGTK->mMaxDescent) {
+                aLastWordDimensions.descent = fontGTK->mMaxDescent;
+            }
+        }
+
+        // see if we have not reached the last word yet
+        if (pstr < lastWord) {
+            if (aDimensions.ascent < fontGTK->mMaxAscent) {
+                aDimensions.ascent = fontGTK->mMaxAscent;
+            }
+            if (aDimensions.descent < fontGTK->mMaxDescent) {
+                aDimensions.descent = fontGTK->mMaxDescent;
+            }
+        }
+
+        // advance to where the next font starts
+        pstr = nextOffset;
+    }
+
+    return NS_OK;
+}
+
+GdkFont *
+nsFontMetricsGTK::GetCurrentGDKFont(void)
+{
+  return mCurrentFont->GetGDKFont();
+}
+
 PR_BEGIN_EXTERN_C
 static int
 CompareSizes(const void* aArg1, const void* aArg2, void *data)
@@ -4264,6 +5483,54 @@ nsFontMetricsGTK::FamilyExists(nsIDeviceContext *aDevice, const nsString& aName)
   }
 
   return NS_ERROR_FAILURE;
+}
+
+PRUint32
+nsFontMetricsGTK::GetHints(void)
+{
+  PRUint32 result = 0;
+
+  /* We can't enable fast text measuring (yet) on platforms which
+   * force natural alignment of datatypes (see
+   * http://bugzilla.mozilla.org/show_bug.cgi?id=36146#c46) ... ;-(
+   */
+
+#ifndef CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT
+#if defined(__i386)
+#define CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT 1
+#endif /* __i386 */
+#endif /* !CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT */
+
+  static PRBool enable_fast_measure;
+  static PRBool getenv_done = PR_FALSE;
+    
+  /* Check for the env vars "MOZILLA_GFX_ENABLE_FAST_MEASURE" and
+   * "MOZILLA_GFX_DISABLE_FAST_MEASURE" to enable/disable fast text
+   * measuring (for debugging the feature and doing regression tests).
+   * This code will be removed one all issues around this new feature
+   * have been fixed. */
+  if (!getenv_done) {
+#ifdef CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT
+    enable_fast_measure = PR_TRUE;
+#else
+    enable_fast_measure = PR_FALSE;
+#endif /* CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT */
+
+    if (PR_GetEnv("MOZILLA_GFX_ENABLE_FAST_MEASURE"))
+      enable_fast_measure = PR_TRUE;
+
+    if (PR_GetEnv("MOZILLA_GFX_DISABLE_FAST_MEASURE"))
+      enable_fast_measure = PR_FALSE;
+        
+    getenv_done = PR_TRUE;
+  }
+
+  if (enable_fast_measure) {
+    // We have GetTextDimensions()
+    result |= NS_RENDERING_HINT_FAST_MEASURE;
+  }
+
+  return result;
 }
 
 //

@@ -49,6 +49,10 @@ NS_IMPL_ISUPPORTS1(nsDrawingSurfaceGTK, nsIDrawingSurface)
 static PRTime mLockTime, mUnlockTime;
 #endif
 
+#ifdef MOZ_ENABLE_XFT
+#include <X11/Xft/Xft.h>
+#endif
+
 nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 {
   NS_INIT_ISUPPORTS();
@@ -89,6 +93,10 @@ nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
   mPixFormat.mAlphaShift = 0;
 
   mDepth = v->depth;
+
+#ifdef MOZ_ENABLE_XFT
+  mXftDraw = nsnull;
+#endif
 }
 
 nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
@@ -101,6 +109,11 @@ nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
 
   if (mGC)
     gdk_gc_unref(mGC);
+
+#ifdef MOZ_ENABLE_XFT
+  if (mXftDraw)
+    XftDrawDestroy(mXftDraw);
+#endif
 }
 
 /**
@@ -309,6 +322,31 @@ nsresult nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
 
   return mPixmap ? NS_OK : NS_ERROR_FAILURE;
 }
+
+#ifdef MOZ_ENABLE_XFT
+XftDraw *nsDrawingSurfaceGTK :: GetXftDraw(void)
+{
+  if (!mXftDraw) {
+    mXftDraw = XftDrawCreate(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mPixmap),
+                             GDK_VISUAL_XVISUAL(::gdk_rgb_get_visual()),
+                             GDK_COLORMAP_XCOLORMAP(::gdk_rgb_get_cmap()));
+  }
+
+  return mXftDraw;
+}
+
+void nsDrawingSurfaceGTK :: GetLastXftClip(nsIRegion **aLastRegion)
+{
+  *aLastRegion = mLastXftClip.get();
+  NS_IF_ADDREF(*aLastRegion);
+}
+
+void nsDrawingSurfaceGTK :: SetLastXftClip(nsIRegion  *aLastRegion)
+{
+  mLastXftClip = aLastRegion;
+}
+
+#endif /* MOZ_ENABLE_XFT */
 
 /* inline */
 PRUint8 

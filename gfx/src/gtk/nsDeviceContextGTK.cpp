@@ -46,7 +46,6 @@
 #include "nsCRT.h"
 
 #include "nsDeviceContextGTK.h"
-#include "nsFontMetricsGTK.h"
 #include "nsGfxCIID.h"
 
 #ifdef USE_POSTSCRIPT
@@ -58,6 +57,8 @@
 #include "nsIDeviceContextXPrint.h"
 #endif /* USE_XPRINT */
 
+#include "nsFontMetricsUtils.h"
+
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
@@ -68,11 +69,6 @@
 #include <X11/Xatom.h>
 
 #include "nsDeviceContextSpecG.h"
-
-#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
-
-#define GDK_COLOR_TO_NS_RGB(c) \
-  ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -445,7 +441,7 @@ NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor,
 
 NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
 {
-  return nsFontMetricsGTK::FamilyExists(this, aFontName);
+  return NS_FontMetricsFamilyExists(this, aFontName);
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
