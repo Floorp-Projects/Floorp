@@ -413,6 +413,7 @@ nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
       // the view's size is not know yet, but its size will be kept in synch with our frame.
       nsRect boundBox(0, 0, 500, 500); 
       result = view->Init(viewMan, boundBox, parView, nsnull);
+      view->SetContentTransparency(PR_TRUE);
       viewMan->InsertChild(parView, view, 0);
       SetView(view);
     }
