@@ -28,6 +28,7 @@ CPPSRCS = \
     nsBaseWidget.cpp      \
 	nsMenuButton.cpp        \
 	nsImageButton.cpp         \
+	nsFileSpecWithUIImpl.cpp         \
 	nsBaseClipboard.cpp         \
 	nsTransferable.cpp         \
 	nsXIFFormatConverter.cpp         \
@@ -41,6 +42,7 @@ OBJS= \
 	.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsMenuButton.obj  \
 	.\$(OBJDIR)\nsImageButton.obj  \
+	.\$(OBJDIR)\nsFileSpecWithUIImpl.obj  \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
 	.\$(OBJDIR)\nsXIFFormatConverter.obj  \
