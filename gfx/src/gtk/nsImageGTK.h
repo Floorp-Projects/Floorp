@@ -123,7 +123,12 @@ public:
    * @update - lordpixel 2001/05/16
    * @return  the alpha mask depth for the image, ie, 0, 1 or 8
    */
-  virtual PRInt8 GetAlphaDepth() {return(mAlphaDepth);}  
+  virtual PRInt8 GetAlphaDepth() { 
+    if (mTrueAlphaBits)
+      return mTrueAlphaDepth;
+    else
+      return mAlphaDepth;
+  }
   virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY);
 
   NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
@@ -189,6 +194,7 @@ private:
 
   PRUint8      *mImageBits;
   GdkPixmap    *mImagePixmap;
+  PRUint8      *mTrueAlphaBits;
   PRUint8      *mAlphaBits;
   GdkPixmap    *mAlphaPixmap;
 
@@ -209,10 +215,11 @@ private:
 
   // alpha layer members
   PRInt16       mAlphaRowBytes;     // alpha bytes per row
+  PRInt16       mTrueAlphaRowBytes; // alpha bytes per row
   PRInt16       mAlphaWidth;        // alpha layer width
   PRInt16       mAlphaHeight;       // alpha layer height
   PRInt8        mAlphaDepth;        // alpha layer depth
-  PRPackedBool  mAlphaValid;
+  PRInt8        mTrueAlphaDepth;    // alpha layer depth
   PRPackedBool  mIsSpacer;
   PRPackedBool  mPendingUpdate;
 
