@@ -601,7 +601,8 @@ The '$my_db_name' database is not accessible. This might have several reasons:
 
 * MySQL is not running.
 * MySQL is running, but the rights are not set correct. Go and read the
-  README file of Bugzilla and all parts of the MySQL documentation.
+  Bugzilla Guide in the doc directory and all parts of the MySQL
+  documentation.
 * There is an subtle problem with Perl, DBI, DBD::mysql and MySQL. Make
   sure all settings in 'localconfig' are correct. If all else fails, set
   '\$db_check' to zero.\n
@@ -614,7 +615,7 @@ EOF
 my $connectstring = "dbi:$db_base:$my_db_name:host=$my_db_host:port=$my_db_port";
 my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
     or die "Can't connect to the table '$connectstring'.\n",
-           "Have you read Bugzilla's README?  Have you read the doc of '$db_base'?\n";
+           "Have you read the Bugzilla Guide in the doc directory?  Have you read the doc of '$db_base'?\n";
 
 END { $dbh->disconnect if $dbh }
 
@@ -1491,7 +1492,7 @@ AddField('attachments', 'submitter_id', 'mediumint not null');
 #    populate
 # }
 #
-# For now I was too lazy, so you should read the README :-)
+# For now I was too lazy, so you should read the documentation :-)
 
 
 
