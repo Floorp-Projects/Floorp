@@ -717,6 +717,7 @@ FrameManager::AppendFrames(nsIPresContext* aPresContext,
     nsCOMPtr<nsIStyleContext> styleContext;
     insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
     while (walkit) {
+      walkit->SetParent(insertionPoint);
       aPresContext->ReParentStyleContext(walkit, styleContext);
       walkit->GetNextSibling(&walkit);
     }
@@ -746,6 +747,7 @@ FrameManager::InsertFrames(nsIPresContext* aPresContext,
     nsCOMPtr<nsIStyleContext> styleContext;
     insertionPoint->GetStyleContext(getter_AddRefs(styleContext));
     while (walkit) {
+      walkit->SetParent(insertionPoint);
       aPresContext->ReParentStyleContext(walkit, styleContext);
       walkit->GetNextSibling(&walkit);
     }

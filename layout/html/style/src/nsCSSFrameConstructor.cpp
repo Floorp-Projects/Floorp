@@ -5415,6 +5415,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
           nsIFrame* walkit = explicitItems.childList;
           while (walkit) {
             nsIFrame* realFrame = GetRealFrame(walkit);
+            realFrame->SetParent(frame);
             aPresContext->ReParentStyleContext(realFrame, styleContext);
             walkit->GetNextSibling(&walkit);
           }
@@ -5469,6 +5470,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
             frame->GetStyleContext(getter_AddRefs(styleContext));
 
             nsIFrame* realFrame = GetRealFrame(currFrame);
+            realFrame->SetParent(frame);
             aPresContext->ReParentStyleContext(realFrame, styleContext);
           }
        
