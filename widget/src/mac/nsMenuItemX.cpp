@@ -124,8 +124,8 @@ NS_METHOD nsMenuItemX::SetChecked(PRBool aIsEnabled)
   
   // update the content model. This will also handle unchecking our siblings
   // if we are a radiomenu
-  mContent->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, 
-                          mIsChecked ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"), PR_TRUE);
+  mContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, 
+                    mIsChecked ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false"), PR_TRUE);
 
   return NS_OK;
 }
@@ -283,7 +283,7 @@ NS_METHOD nsMenuItemX::DoCommand()
   // See if we have a command element.  If so, we execute on the command instead
   // of on our content element.
   nsAutoString command;
-  mContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::command, command);
+  mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
   if (!command.IsEmpty()) {
     nsCOMPtr<nsIDocument> doc;
     mContent->GetDocument(*getter_AddRefs(doc));
@@ -344,7 +344,7 @@ void
 nsMenuItemX :: UncheckRadioSiblings(nsIContent* inCheckedContent)
 {
   nsAutoString myGroupName;
-  inCheckedContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::name, myGroupName);
+  inCheckedContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::name, myGroupName);
   if ( ! myGroupName.Length() )        // no groupname, nothing to do
     return;
   
@@ -363,9 +363,9 @@ nsMenuItemX :: UncheckRadioSiblings(nsIContent* inCheckedContent)
       if ( sibling.get() != inCheckedContent ) {                    // skip this node
         // if the current sibling is in the same group, clear it
         nsAutoString currGroupName;
-        sibling->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::name, currGroupName);
+        sibling->GetAttr(kNameSpaceID_None, nsWidgetAtoms::name, currGroupName);
         if ( currGroupName == myGroupName )
-          sibling->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, NS_LITERAL_STRING("false"), PR_TRUE);
+          sibling->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, NS_LITERAL_STRING("false"), PR_TRUE);
       }
     }    
   } // for each sibling
@@ -388,7 +388,7 @@ nsMenuItemX :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, 
     // do any of this if we're just a normal check menu.
     if ( mMenuType == eRadio ) {
       nsAutoString checked;
-      mContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, checked);
+      mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, checked);
       if (checked == NS_LITERAL_STRING("true") ) 
         UncheckRadioSiblings(mContent);
     }

@@ -526,7 +526,7 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
     }
 
     // Open the node.
-    mMenuContent->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
+    mMenuContent->SetAttr(kNameSpaceID_None, nsWidgetAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
   
 
     // Fire our oncreate handler. If we're told to stop, don't build the menu at all
@@ -694,7 +694,7 @@ nsEventStatus nsMenuX::MenuDestruct(const nsMenuEvent & aMenuEvent)
         // Close the node.
         mNeedsRebuild = PR_TRUE;
     } 
-    mMenuContent->UnsetAttribute(kNameSpaceID_None, nsWidgetAtoms::open, PR_TRUE);
+    mMenuContent->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::open, PR_TRUE);
 
     OnDestroyed();
   }
@@ -855,7 +855,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
 
   // if menu should be hidden, bail
   nsAutoString hidden;
-  inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
   if ( hidden == NS_LITERAL_STRING("true") )
     return;
 
@@ -868,11 +868,11 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     nsAutoString menuitemName;
     nsAutoString menuitemCmd;
     
-    inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, disabled);
-    inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, checked);
-    inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::type, type);
-    inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
-    inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::command, menuitemCmd);
+    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, disabled);
+    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, checked);
+    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::type, type);
+    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
+    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, menuitemCmd);
 
     //printf("menuitem %s \n", menuitemName.ToNewCString());
               
@@ -897,7 +897,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     //
     
     nsAutoString keyValue;
-    inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
+    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
 
     // Try to find the key node. Get the document so we can do |GetElementByID|
     nsCOMPtr<nsIDocument> document;
@@ -914,13 +914,13 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     if ( keyElement ) {
       nsCOMPtr<nsIContent> keyContent ( do_QueryInterface(keyElement) );
       nsAutoString keyChar; keyChar.AssignWithConversion(" ");
-      keyContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
+      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
 	    if(keyChar != NS_LITERAL_STRING(" ")) 
         pnsMenuItem->SetShortcutChar(keyChar);
         
       PRUint8 modifiers = knsMenuItemNoModifier;
 	    nsAutoString modifiersStr;
-      keyContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
+      keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
 		  char* str = modifiersStr.ToNewCString();
 		  char* newStr;
 		  char* token = nsCRT::strtok( str, ", ", &newStr );
@@ -959,12 +959,12 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
 {
   // if menu should be hidden, bail
   nsAutoString hidden; 
-  inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
   if ( hidden == NS_LITERAL_STRING("true") )
     return;
   
   nsAutoString menuName; 
-  inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
+  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
@@ -979,7 +979,7 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
 
     // set if it's enabled or disabled
     nsAutoString disabled;
-    inMenuItemContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, disabled);
+    inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, disabled);
     if ( disabled == NS_LITERAL_STRING("true") )
       pnsMenu->SetEnabled ( PR_FALSE );
     else
@@ -1050,7 +1050,7 @@ nsMenuX::OnCreate()
       if (tag.get() == nsWidgetAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;
-        grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::command, command);
+        grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, command);
         if (!command.IsEmpty()) {
           // We do! Look it up in our document
           nsCOMPtr<nsIDOMElement> commandElt;
@@ -1059,32 +1059,32 @@ nsMenuX::OnCreate()
 
           if ( commandContent ) {
             nsAutoString commandDisabled, menuDisabled;
-            commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
-            grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, menuDisabled);
+            commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled);
+            grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, menuDisabled);
             if (!commandDisabled.Equals(menuDisabled)) {
               // The menu's disabled state needs to be updated to match the command.
               if (commandDisabled.IsEmpty()) 
-                grandChild->UnsetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
-              else grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
+                grandChild->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
+              else grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
             }
 
             // The menu's value and checked states need to be updated to match the command.
             // Note that (unlike the disabled state) if the command has *no* value for either, we
             // assume the menu is supplying its own.
             nsAutoString commandChecked, menuChecked;
-            commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked);
-            grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, menuChecked);
+            commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked);
+            grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, menuChecked);
             if (!commandChecked.Equals(menuChecked)) {
               if (!commandChecked.IsEmpty()) 
-                grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked, PR_TRUE);
+                grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, commandChecked, PR_TRUE);
             }
 
             nsAutoString commandValue, menuValue;
-            commandContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, commandValue);
-            grandChild->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
+            commandContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue);
+            grandChild->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuValue);
             if (!commandValue.Equals(menuValue)) {
               if (!commandValue.IsEmpty()) 
-                grandChild->SetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, PR_TRUE);
+                grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::label, commandValue, PR_TRUE);
             }
           }
         }
@@ -1278,8 +1278,8 @@ nsMenuX::GetNextVisibleMenu(nsIMenu** outNextVisibleMenu)
       thisMenu->GetMenuContent(getter_AddRefs(menuContent));
       
       nsAutoString hiddenValue, collapsedValue;
-      menuContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
-      menuContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
+      menuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
+      menuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
       if ( hiddenValue != NS_LITERAL_STRING("true") && collapsedValue != NS_LITERAL_STRING("true"))
       {
         NS_IF_ADDREF(*outNextVisibleMenu = thisMenu);
@@ -1322,7 +1322,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
     mNeedsRebuild = PR_TRUE;
    
     nsAutoString valueString;
-    mMenuContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::disabled, valueString);
+    mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, valueString);
     if(valueString == NS_LITERAL_STRING("true"))
       SetEnabled(PR_FALSE);
     else
@@ -1333,7 +1333,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
   else if(aAttribute == nsWidgetAtoms::label) {
     mNeedsRebuild = PR_TRUE;
     
-    mMenuContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
+    mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
 
     // reuse the existing menu, to avoid invalidating root menu bar.
     NS_ASSERTION(mMacMenuHandle != NULL, "nsMenuX::AttributeChanged: invalid menu handle.");
@@ -1351,8 +1351,8 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
       mNeedsRebuild = PR_TRUE;
       
       nsAutoString hiddenValue, collapsedValue;
-      mMenuContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
-      mMenuContent->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
+      mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
+      mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
       if (hiddenValue == NS_LITERAL_STRING("true") || collapsedValue == NS_LITERAL_STRING("true")) {
         // hide this menu
         NS_ASSERTION(PR_FALSE, "nsMenuX::AttributeChanged: WRITE HIDE CODE.");
