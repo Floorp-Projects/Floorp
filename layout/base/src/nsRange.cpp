@@ -27,6 +27,7 @@
 #include "nsIContent.h"
 #include "nsVoidArray.h"
 #include "nsIDOMText.h"
+#include "nsContentIterator.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
@@ -100,7 +101,10 @@ private:
   
   // helper routines
   
-  PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
+  static PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
+  static PRInt32       IndexOf(nsIDOMNode* aNode);
+  static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
+  static nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   
   nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset);
@@ -112,14 +116,10 @@ private:
   
   nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
   
-  PRInt32       IndexOf(nsIDOMNode* aNode);
-  
-  PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
   
   PRInt32       GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
                         nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets);
   
-  nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
 
 };
 
@@ -143,10 +143,10 @@ nsRange::nsRange()
   mStartOffset = 0;
   mEndParent = nsnull;
   mEndOffset = 0;
-  mStartAncestors = nsnull;
-  mEndAncestors = nsnull;
-  mStartAncestorOffsets = nsnull;
-  mEndAncestorOffsets = nsnull;
+  mStartAncestors = new nsVoidArray();
+  mStartAncestorOffsets = new nsVoidArray();
+  mEndAncestors = new nsVoidArray();
+  mEndAncestorOffsets = new nsVoidArray();
 } 
 
 nsRange::~nsRange() 
@@ -257,26 +257,12 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
     else return PR_TRUE;
   }
   
-  // lazy allocation of ancestor data
-  if (!mStartAncestors)
-  {
-    mStartAncestors = new nsVoidArray();
-    mStartAncestorOffsets = new nsVoidArray();
-    mEndAncestors = new nsVoidArray();
-    mEndAncestorOffsets = new nsVoidArray();
-    if (!mStartAncestors || mStartAncestorOffsets || mEndAncestors || mEndAncestorOffsets)
-    {
-      NS_NOTREACHED("nsRange::IsIncreasing");
-      return PR_FALSE;
-    }
-  }
-  else
-  {
-    mStartAncestors->Clear();
-    mStartAncestorOffsets->Clear();
-    mEndAncestors->Clear();
-    mEndAncestorOffsets->Clear();
-  }
+  // refresh ancestor data
+  mStartAncestors->Clear();
+  mStartAncestorOffsets->Clear();
+  mEndAncestors->Clear();
+  mEndAncestorOffsets->Clear();
+
   numStartAncestors = GetAncestorsAndOffsets(aStartN,aStartOffset,mStartAncestors,mStartAncestorOffsets);
   numEndAncestors = GetAncestorsAndOffsets(aEndN,aEndOffset,mEndAncestors,mEndAncestorOffsets);
   
@@ -357,33 +343,12 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  // lazy allocation of ancestor data
-  if (!mStartAncestors)
-  {
-    mStartAncestors = new nsVoidArray();
-    mStartAncestorOffsets = new nsVoidArray();
-    mEndAncestors = new nsVoidArray();
-    mEndAncestorOffsets = new nsVoidArray();
-    if (!mStartAncestors || mStartAncestorOffsets || mEndAncestors || mEndAncestorOffsets)
-    {
-      // my kingdom for exceptions
-      NS_NOTREACHED("nsRange::ComparePointToRange");
-      delete pointAncestors;
-      delete pointAncestorOffsets;
-      delete mStartAncestors;
-      delete mStartAncestorOffsets;
-      delete mEndAncestors;
-      delete mEndAncestorOffsets;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  else
-  {
-    mStartAncestors->Clear();
-    mStartAncestorOffsets->Clear();
-    mEndAncestors->Clear();
-    mEndAncestorOffsets->Clear();
-  }
+  // refresh ancestor data
+  mStartAncestors->Clear();
+  mStartAncestorOffsets->Clear();
+  mEndAncestors->Clear();
+  mEndAncestorOffsets->Clear();
+
   numStartAncestors = GetAncestorsAndOffsets(mStartParent,mStartOffset,mStartAncestors,mStartAncestorOffsets);
   numEndAncestors   = GetAncestorsAndOffsets(mEndParent,mEndOffset,mEndAncestors,mEndAncestorOffsets);
   numPointAncestors = GetAncestorsAndOffsets(aParent,aOffset,pointAncestors,pointAncestorOffsets);
@@ -435,7 +400,6 @@ nsresult nsRange::ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRIn
   return NS_OK;
 }
   
-// At the moment nobody is using this - maybe we can get rid of it.
 PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
 {
   nsIDOMNode *parentNode;
@@ -727,16 +691,18 @@ nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
 {
-  if (!aSibling) return NS_ERROR_NULL_POINTER;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 indx = IndexOf(aSibling);
+  nsIDOMNode *nParent;
+  aSibling->GetParentNode(&nParent);
+  return SetStart(nParent,indx);
 }
 
 nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
 {
-  if (!aSibling) return NS_ERROR_NULL_POINTER;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 indx = IndexOf(aSibling) + 1;
+  nsIDOMNode *nParent;
+  aSibling->GetParentNode(&nParent);
+  return SetStart(nParent,indx);
 }
 
 nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
@@ -764,16 +730,18 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 
 nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
 {
-  if (!aSibling) return NS_ERROR_NULL_POINTER;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 indx = IndexOf(aSibling);
+  nsIDOMNode *nParent;
+  aSibling->GetParentNode(&nParent);
+  return SetEnd(nParent,indx);
 }
 
 nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
 {
-  if (!aSibling) return NS_ERROR_NULL_POINTER;
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRInt32 indx = IndexOf(aSibling) + 1;
+  nsIDOMNode *nParent;
+  aSibling->GetParentNode(&nParent);
+  return SetEnd(nParent,indx);
 }
 
 nsresult nsRange::Collapse(PRBool aToStart)
@@ -920,8 +888,44 @@ nsresult nsRange::DeleteContents()
     }
   } 
   
-  // complex case
-  // not done yet  
+  /* complex case: cStart != cEnd
+     revisit - there are potential optimizations here and also tradeoffs.
+  */
+  
+  // get start node ancestors
+  nsVoidArray startAncestorList;
+  FillArrayWithAncestors(&startAncestorList,mStartParent);
+
+  nsContentIterator iter(this);
+  nsVoidArray deleteList;
+  nsIContent *cN;
+  nsIContent *cParent;
+  PRInt32 indx;
+ 
+  // loop through the content iterator, which returns nodes in the range in 
+  // close tag order, and mark for deletion any node that is not an ancestor
+  // of the start node.
+  res = iter.CurrentNode(&cN);
+  while (NS_COMFALSE == iter.IsDone())
+  {
+    // if node is not an ancestor of start node, delete it
+    if (mStartAncestors->IndexOf(NS_STATIC_CAST(void*,cN)) == -1)
+    {
+      deleteList.AppendElement(NS_STATIC_CAST(void*,cN));
+    }
+    iter.Next();
+    res = iter.CurrentNode(&cN);
+  }
+  
+  // remove the nodes on the delete list
+  while (deleteList.Count())
+  {
+    cN = NS_STATIC_CAST(nsIContent*, deleteList.ElementAt(0));
+    res = cN->GetParent(cParent);
+    res = cParent->IndexOf(cN,indx);
+    res = cParent->RemoveChildAt(indx, PR_TRUE);
+  }
+  
   return NS_OK;
 }
 
