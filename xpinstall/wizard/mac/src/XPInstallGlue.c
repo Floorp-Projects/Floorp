@@ -29,12 +29,12 @@
  *   XPInstall Glue
  *-----------------------------------------------------------*/
 
-/* XPI Stub Entry Points */
+/*================== XPI Stub Entry Points ================== */
 typedef		nsresult (*XPI_InitProc)(const FSSpec& aXPIStubDir, const FSSpec& aProgramDir, pfnXPIProgress progressCB);
 typedef 	nsresult (*XPI_InstallProc)(const FSSpec& file, const char* args,long flags);
 typedef		nsresult (*XPI_ExitProc)();
 
-/* XPI Run APIs */
+/*================== XPI Run APIs ============================*/
 OSErr		LoadXPIStub(XPI_InitProc* pfnInit, 
 						XPI_InstallProc* pfnInstall, 
 						XPI_ExitProc* pfnExit, 
@@ -42,19 +42,20 @@ OSErr		LoadXPIStub(XPI_InitProc* pfnInit,
 						FSSpec& aTargetDir);
 Boolean		UnloadXPIStub(CFragConnectionID* connID);
 OSErr		RunXPI(FSSpec&, XPI_InstallProc*);
+int			CountSelectedXPIs();
 Boolean		IsArchiveXPI(StringPtr archive);
 void 		ProgressMsgInit();
 
-/* Progress Bar Callbacks */
+/*================== Progress Bar Callbacks ==================*/
 void	 	xpicbProgress(const char* msg, PRInt32 val, PRInt32 max);
 
-
+/*================== Macros ==================================*/
 #define XPI_ERR_CHECK(_call) 	\
 rv = _call;						\
 if (NS_FAILED(rv))				\
 {								\
 	ErrorHandler();				\
-	return rv;						\
+	return rv;					\
 }
 
 #ifdef MIW_DEBUG
@@ -71,14 +72,16 @@ ProgressMsgInit()
 {
 	Rect	r;
 	
-	if (gControls->tw->progressMsg)
+	if (gControls->tw->allProgressMsg)
 	{
-		HLock((Handle)gControls->tw->progressMsg);
-		SetRect(&r, (*gControls->tw->progressMsg)->viewRect.left,
-				(*gControls->tw->progressMsg)->viewRect.top,
-				(*gControls->tw->progressMsg)->viewRect.right,
-				(*gControls->tw->progressMsg)->viewRect.bottom );
-		HUnlock((Handle)gControls->tw->progressMsg);
+		HLock((Handle)gControls->tw->allProgressMsg);
+		SetRect(&r, (*gControls->tw->allProgressMsg)->viewRect.left,
+				(*gControls->tw->allProgressMsg)->viewRect.top,
+				(*gControls->tw->allProgressMsg)->viewRect.right,
+				(*gControls->tw->allProgressMsg)->viewRect.bottom );
+		HUnlock((Handle)gControls->tw->allProgressMsg);
+		
+		TESetText("", 0, gControls->tw->allProgressMsg);
 		
 		EraseRect(&r);
 	}
@@ -103,16 +106,20 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 	if (gWPtr)
 	{
 		SetPort(gWPtr);
-		if (gControls->tw->progressBar)
+		if (gControls->tw->xpiProgressBar)
 		{
 			if (!bProgMsgInit)
 				ProgressMsgInit();
 				
 			if (max!=0 && !bMaxDiscovered)
 			{
-				SetControlData(gControls->tw->progressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
+				SetControlData(gControls->tw->xpiProgressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
 								sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
-				SetControlMaximum(gControls->tw->progressBar, max);
+				SetControlMaximum(gControls->tw->xpiProgressBar, max);
+				if (gControls->tw->allProgressBar)
+					SetControlValue(gControls->tw->allProgressBar,
+									GetControlValue(gControls->tw->allProgressBar)+1);
+									
 				bMaxDiscovered = true;
 			}
 			else if (!bMaxDiscovered)
@@ -131,7 +138,7 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 					{
 						EraseRect(&r);
 						
-						GetIndString(installingStr, rStringList, sInstalling);
+						GetIndString(installingStr, rStringList, sProcessing);
 						leaf = strrchr(msg, ':');
 						if (leaf)
 						{
@@ -162,11 +169,11 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 			
 			if (bMaxDiscovered)
 			{
-				SetControlValue(gControls->tw->progressBar, val);
+				SetControlValue(gControls->tw->xpiProgressBar, val);
 				
 				if (gControls->tw->xpiProgressMsg)
 				{
-					GetIndString(installingStr, rStringList, sInstalling);
+					GetIndString(installingStr, rStringList, sProcessing);
 					GetIndString(fileStr, rStringList, sFileSp);
 					GetIndString(ofStr, rStringList, sSpOfSp);
 					HLock((Handle)gControls->tw->xpiProgressMsg);
@@ -214,8 +221,9 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	CFragConnectionID	connID;
 	nsresult 			rv = NS_OK;
 	StringPtr			pcurrArchive;
-	int					i, compsDone = 0, instChoice = gControls->opt->instChoice-1;;
-	Boolean				isCurrXPI = false;
+	int					i, len, compsDone = 0, numXPIs, currXPICount = 0, instChoice = gControls->opt->instChoice-1;
+	Boolean				isCurrXPI = false, indeterminateFlag = false;
+	Str255				installingStr;
 	
 	err = FSMakeFSSpec(vRefNum, dirID, 0, &xpiStubDirSpec); /* temp dir */
 	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, 0, &tgtDirSpec);	/* program dir */
@@ -223,6 +231,20 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec), err);
 	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, xpicbProgress ));
 	
+	// init overall xpi indicator
+	numXPIs = CountSelectedXPIs();
+	if (gControls->tw->allProgressBar)
+	{
+		SetControlMaximum(gControls->tw->allProgressBar, numXPIs*2); // numXPIs * 2 so that prog bar moves more
+		SetControlData(gControls->tw->allProgressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
+						sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
+		SetControlValue(gControls->tw->allProgressBar, 0);
+		Draw1Control(gControls->tw->allProgressBar);
+	}
+	
+	if (gControls->tw->xpiProgressBar)
+		ShowControl(gControls->tw->xpiProgressBar);
+		
 	// enumerate through all .xpi's
 	// loop through 0 to kMaxComponents
 	for(i=0; i<kMaxComponents; i++)
@@ -239,17 +261,38 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 			{
 				// if LAUNCHAPP attr wasn't set
 			 	if (!gControls->cfg->comp[i].launchapp)
-				HLock(gControls->cfg->comp[i].archive);
-				pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
-				HUnlock(gControls->cfg->comp[i].archive);
-	
-				isCurrXPI = IsArchiveXPI(pcurrArchive);
-							
-				err = FSMakeFSSpec(xpiVRefNum, xpiDirID, pcurrArchive, &xpiSpec);
-				if (err==noErr && isCurrXPI)
-					RunXPI(xpiSpec, &xpi_installProc);
-				if (pcurrArchive)
-					DisposePtr((Ptr) pcurrArchive);
+				{
+					HLock(gControls->cfg->comp[i].archive);
+					pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
+					HUnlock(gControls->cfg->comp[i].archive);
+		
+					isCurrXPI = IsArchiveXPI(pcurrArchive);
+								
+					err = FSMakeFSSpec(xpiVRefNum, xpiDirID, pcurrArchive, &xpiSpec);
+					if (err==noErr && isCurrXPI)
+					{
+						// update package display name
+						if (gControls->tw->allProgressMsg)
+						{
+							ProgressMsgInit();
+							GetIndString(installingStr, rStringList, sInstalling);
+							TEInsert(&installingStr[1], installingStr[0], gControls->tw->allProgressMsg);
+							HLock(gControls->cfg->comp[i].shortDesc);
+							len = strlen(*gControls->cfg->comp[i].shortDesc);
+							TEInsert(*gControls->cfg->comp[i].shortDesc, (len>64?64:len), gControls->tw->allProgressMsg);
+							HUnlock(gControls->cfg->comp[i].shortDesc);
+						}
+						
+						RunXPI(xpiSpec, &xpi_installProc);
+						
+						// update progess bar
+						if (gControls->tw->allProgressBar)
+							SetControlValue(gControls->tw->allProgressBar,
+											GetControlValue(gControls->tw->allProgressBar)+1);
+					}
+					if (pcurrArchive)
+						DisposePtr((Ptr) pcurrArchive);
+				}
 				compsDone++;
 			}
 		}
@@ -274,14 +317,45 @@ RunXPI(FSSpec& aXPI, XPI_InstallProc *xpi_installProc)
 	
 	/* reset progress bar to barber poll */
 	bMaxDiscovered = false;
-	if (gControls->tw->progressBar)
-		SetControlData(gControls->tw->progressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
+	if (gControls->tw->xpiProgressBar)
+		SetControlData(gControls->tw->xpiProgressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
 						sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
 	if (NS_FAILED(rv))
 		return -1;
 
 
 	return err;
+}
+
+int
+CountSelectedXPIs()
+{
+	int i, instChoice = gControls->opt->instChoice - 1, compsDone = 0, numXPIs = 0;
+	
+	// enumerate through all .xpi's
+	// loop through 0 to kMaxComponents
+	for(i=0; i<kMaxComponents; i++)
+	{
+		// general test: if component in setup type
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+		{ 
+			// if custom and selected, or not custom setup type
+			// add file to buffer
+			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+				  (gControls->cfg->comp[i].selected == true)) ||
+				 (instChoice < gControls->cfg->numSetupTypes-1) )
+			{
+				// if LAUNCHAPP attr wasn't set
+			 	if (!gControls->cfg->comp[i].launchapp)
+					numXPIs++;
+			}
+		}
+		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
+			break;  
+	}
+	
+	return numXPIs;
 }
 
 /*-------------------------------------------------------------------

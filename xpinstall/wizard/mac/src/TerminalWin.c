@@ -90,16 +90,16 @@ UpdateTerminalWin(void)
 	SetPort(gWPtr);
 	
 	TEUpdate(&gControls->tw->startMsgBox, gControls->tw->startMsg);
-	if (gControls->tw->progressMsg)
+	if (gControls->tw->allProgressMsg)
 	{
-		HLock((Handle)gControls->tw->progressMsg);
-		SetRect(&instMsgRect, (*gControls->tw->progressMsg)->viewRect.left,
-				(*gControls->tw->progressMsg)->viewRect.top,
-				(*gControls->tw->progressMsg)->viewRect.right,
-				(*gControls->tw->progressMsg)->viewRect.bottom );
-		HUnlock((Handle)gControls->tw->progressMsg);
+		HLock((Handle)gControls->tw->allProgressMsg);
+		SetRect(&instMsgRect, (*gControls->tw->allProgressMsg)->viewRect.left,
+				(*gControls->tw->allProgressMsg)->viewRect.top,
+				(*gControls->tw->allProgressMsg)->viewRect.right,
+				(*gControls->tw->allProgressMsg)->viewRect.bottom );
+		HUnlock((Handle)gControls->tw->allProgressMsg);
 		
-		TEUpdate(&instMsgRect, gControls->tw->progressMsg);
+		TEUpdate(&instMsgRect, gControls->tw->allProgressMsg);
 	}
 	
 	SetPort(oldPort);
