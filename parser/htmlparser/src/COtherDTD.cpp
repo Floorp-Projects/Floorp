@@ -840,8 +840,9 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
     eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
     eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
-    eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        eHTMLTag_italic,    
-    eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     eHTMLTag_kbd,       
+    eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
+    eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
+    eHTMLTag_kbd,       
 
     eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_object,    eHTMLTag_paragraph, 
