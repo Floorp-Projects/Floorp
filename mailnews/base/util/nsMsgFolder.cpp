@@ -1524,7 +1524,7 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
 
-  if (strcmp(rootURI, kNewsMessageRootURI)) {
+  if (strcmp(rootURI, kNewsMessageRootURI) == 0) {
     rv = nsGetNewsRoot(pathResult);
   }
   else {
