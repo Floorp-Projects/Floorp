@@ -2066,6 +2066,23 @@ public class ScriptRuntime {
         return false;
     }
 
+    static String makeUrlForGeneratedScript
+        (boolean isEval, String masterScriptUrl, int masterScriptLine)
+    {
+        if (isEval) {
+            return masterScriptUrl+'#'+masterScriptLine+"(eval)";
+        } else {
+            return masterScriptUrl+'#'+masterScriptLine+"(Function)";
+        }
+    }
+
+    static boolean isGeneratedScript(String sourceUrl) {
+        // ALERT: this may clash with a valid URL containing (eval) or
+        // (Function)
+        return sourceUrl.indexOf("(eval)") >= 0
+               || sourceUrl.indexOf("(Function)") >= 0;
+    }
+
     private static RuntimeException errorWithClassName(String msg, Object val)
     {
         return Context.reportRuntimeError1(msg, val.getClass().getName());

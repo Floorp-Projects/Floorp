@@ -78,6 +78,10 @@ final class InterpretedScript extends NativeScript
         return itsData.itsSourceFile;
     }
 
+    public boolean isGeneratedScript() {
+        return ScriptRuntime.isGeneratedScript(itsData.itsSourceFile);
+    }
+
     public int[] getLineNumbers() {
         return Interpreter.getLineNumbers(itsData);
     }

@@ -89,6 +89,10 @@ final class InterpretedFunction extends NativeFunction
         return itsData.itsSourceFile;
     }
 
+    public boolean isGeneratedScript() {
+        return ScriptRuntime.isGeneratedScript(itsData.itsSourceFile);
+    }
+
     public int[] getLineNumbers() {
         return Interpreter.getLineNumbers(itsData);
     }

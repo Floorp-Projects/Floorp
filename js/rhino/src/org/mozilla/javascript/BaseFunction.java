@@ -351,7 +351,9 @@ public class BaseFunction extends IdScriptable implements Function {
             filename = "<eval'ed string>";
             linep[0] = 1;
         }
-        String sourceName = filename+'#'+linep[0]+"(Function)";
+
+        String sourceName = ScriptRuntime.
+            makeUrlForGeneratedScript(false, filename, linep[0]);
 
         Scriptable global = ScriptableObject.getTopLevelScope(scope);
 

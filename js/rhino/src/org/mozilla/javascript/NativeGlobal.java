@@ -502,7 +502,8 @@ public class NativeGlobal implements IdFunctionMaster {
                 filename = "";
             }
         }
-        String sourceName = filename+'#'+lineNumber+"(eval)";
+        String sourceName = ScriptRuntime.
+            makeUrlForGeneratedScript(true, filename, lineNumber);
 
         try {
             StringReader in = new StringReader((String) x);

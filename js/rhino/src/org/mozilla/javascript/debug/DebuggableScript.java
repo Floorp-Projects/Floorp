@@ -65,6 +65,12 @@ public interface DebuggableScript {
     public String getSourceName();
 
     /**
+     * Retutns true for functions constructed via <tt>Function(...)</tt>
+     * or  eval scripts or any function defined by such functions or scripts
+     */
+    public boolean isGeneratedScript();
+
+    /**
      * Get array containing the line numbers that
      * that can be passed to <code>DebugFrame.onLineChange()<code>.
      * Note that line order in the resulting array is arbitrary
