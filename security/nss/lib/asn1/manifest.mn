@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:56:37 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.2 $ $Date: 2002/03/14 04:12:09 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
@@ -38,10 +38,10 @@ PRIVATE_EXPORTS = \
 	asn1t.h		  \
 	asn1m.h		  \
 	asn1.h		  \
+	nssasn1t.h	  \
 	$(NULL)
 
 EXPORTS =	   \
-	nssasn1t.h \
 	$(NULL)
 
 MODULE = security

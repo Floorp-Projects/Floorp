@@ -47,11 +47,6 @@
 #include "pkcs7t.h"
 #include "cmsreclist.h"
 
-#ifndef NSS_3_4_CODE
-#define NSS_3_4_CODE
-#endif /* NSS_3_4_CODE */
-#include "nssdevt.h"
-
 SEC_BEGIN_PROTOS
 
 /************************************************************
@@ -95,8 +90,6 @@ void PK11_LogoutAll(void);
 void PK11_EnterSlotMonitor(PK11SlotInfo *);
 void PK11_ExitSlotMonitor(PK11SlotInfo *);
 void PK11_CleanKeyList(PK11SlotInfo *slot);
-
-void PK11Slot_SetNSSToken(PK11SlotInfo *slot, NSSToken *token);
 
 
 /************************************************************

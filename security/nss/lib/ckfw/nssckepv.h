@@ -31,4 +31,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
+#ifndef NSSCKEPV_H
+#define NSSCKEPV_H
+
 #include "pkcs11.h"
+
+#endif /* NSSCKEPV_H */

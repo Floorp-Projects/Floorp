@@ -51,6 +51,7 @@
 #include "secerr.h"
 /*#include "secpkcs5.h" */
 
+#include "dev.h"
 #include "dev3hack.h"
 #include "pki3hack.h"
 

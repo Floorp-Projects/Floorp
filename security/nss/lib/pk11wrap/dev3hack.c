@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.8 $ $Date: 2002/03/06 01:44:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.9 $ $Date: 2002/03/14 04:12:20 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -47,6 +47,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.8 $ $Da
 #include "devt.h"
 #endif /* DEVT_H */
 
+#include "pki3hack.h"
 #include "dev3hack.h"
 
 #ifndef BASE_H
@@ -186,7 +187,7 @@ nssToken_Refresh(NSSToken *token)
                                                        nss3slot->session,
                                                        nss3slot->sessionLock,
                                                        nss3slot->defRWSession);
-    nssToken_DestroyCertList(token);
+    nssToken_DestroyCertList(token, PR_TRUE);
     return nssToken_LoadCerts(token);
 }
 
