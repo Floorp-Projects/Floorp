@@ -543,7 +543,6 @@
 				<string>jpg</string>
 				<string>png</string>
 				<string>gif</string>
-				<string>mng</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>fileBookmark.icns</string>
@@ -7606,7 +7605,7 @@
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader";
 				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -D_BUILD_STATIC_BIN";
-				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lmozmng -lpthread -lz -lm";
+				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lpthread -lz -lm";
 				PREFIX_HEADER = src/includes/ChimeraPrefix.h;
 				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
@@ -7679,7 +7678,6 @@
 				<string>jpg</string>
 				<string>png</string>
 				<string>gif</string>
-				<string>mng</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>fileBookmark.icns</string>
