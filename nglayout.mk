@@ -99,7 +99,7 @@ real_depend: depend
 # Rules for pulling the source from the cvs repository
 #
 
-pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout pull_plugin
+pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout pull_plugin pull_autoconf
 
 pull_lizard:
 	cd $(MOZ_SRC)/.; \
@@ -156,6 +156,12 @@ pull_doc:
 	$(CVSCO_NGLAYOUT) README/nglayout; \
 	$(CVSCO_NGLAYOUT) mozilla/LICENSE; \
 	$(CVSCO_NGLAYOUT) mozilla/LEGAL
+
+pull_autoconf:
+	cd $(MOZ_SRC)/.; \
+	$(CVSCO_NGLAYOUT) mozilla/build/autoconf; \
+	$(CVSCO_NGLAYOUT) mozilla/Makefile.in; \
+	$(CVSCO_NGLAYOUT) mozilla/configure.in;
 
 ######################################################################
 #
