@@ -55,7 +55,7 @@ class nsIClipboard : public nsISupports {
    /**
     * Check to set if ant of the native data on the clipboard matches this data flavor
     *
-    * @result NS_Ok if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
+    * @result NS_OK if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
     */
   
     NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor) = 0;
@@ -64,7 +64,7 @@ class nsIClipboard : public nsISupports {
     * This empties the clipboard and notifies the clipboard owner
     * This empties the "logical" clipboard it does not clear the native clipboard
     *
-    * @result NS_OkK if successfull
+    * @result NS_OK if successful.
     */
   
     NS_IMETHOD EmptyClipboard() = 0;
@@ -74,7 +74,7 @@ class nsIClipboard : public nsISupports {
     * This method forces the data onto the clipboard in its various formats
     * This may be used if the application going away.
     *
-    * @result NS_OkK if successfull
+    * @result NS_OK if successful.
     */
   
     NS_IMETHOD ForceDataToClipboard() = 0;
@@ -82,3 +82,4 @@ class nsIClipboard : public nsISupports {
 };
 
 #endif
+
