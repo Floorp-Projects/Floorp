@@ -3348,6 +3348,8 @@ XFE_Outliner::handleDragEvent(XEvent *event,
 
 						break;
 			}
+        default:
+          break;
 		}
 }
 #endif /* USE_MOTIF_DND */
@@ -3490,6 +3492,8 @@ XFE_Outliner::listChangeFinished(XP_Bool /*asynchronous*/,
 		where = 0;
 		num = totallines;
 		break;
+    default:
+      break;
 	}
 
 	change(where, num, totallines);

@@ -358,7 +358,7 @@ findOrReplaceDialog (MWContext *context, Boolean again, Boolean replaceP)
   int ac;
   Widget shell, form, find_label, find_text;
   Widget replace_text = 0;
-  Widget replace_label, replaceBtn, replaceAllBtn;
+  Widget replace_label = 0, replaceBtn = 0, replaceAllBtn = 0;
   Widget findin = 0;
   Widget msg_head = 0;
   Widget msg_body = 0;

@@ -399,7 +399,7 @@ XFE_Image::DisplayImage(MWContext * context,
     fe_Drawable *fe_drawable = CONTEXT_DATA(context)->drawable;
     Drawable drawable = fe_drawable->xdrawable;
     Display *dpy = XtDisplay(widget);
-    Pixmap img_x_pixmap, mask_x_pixmap;
+    Pixmap img_x_pixmap, mask_x_pixmap=0;
     fe_PixmapClientData *img_client_data, *mask_client_data;
     GC gc;
     XGCValues gcv;
