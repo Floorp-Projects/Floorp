@@ -25,7 +25,7 @@
 #include "nsILineBreakerFactory.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsLWBreakerFImp.h"
-#include "nsLWBrkDll.h"
+#include "nsLWBRKDll.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
