@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('Fonts')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Colors</SPAN>
+</DIV>
+
+
+<table>
+  <FORM>
+
+
+			<tr><td>Text:</td><td>Color Picker</td</tr>
+			<tr><td>Background:</td><td>Color Picker</td></tr>
+			<tr><td><input  type="checkbox" id="pref:0:bool:browser.wfe.use_windows_colors" checked>Use Windows colors</td></tr>
+
+  </FORM>
+
+
+
+</table>
+
+<table>
+Links
+  <FORM>
+
+
+			<tr><td>Unvisited Links:</td><td>Color Picker</td</tr>
+			<tr><td>Visited Links:</td><td>Color Picker</td></tr>
+			<tr><td><input  type="checkbox" id="pref:0:bool:browser.underline_anchors" checked>Underline links</td></tr>
+
+  </FORM>
+
+
+
+</table>
+<br>
+
+<table>
+   <tr><td>Sometimes a document will provide its own colors and background.</tr></td>
+   <FORM>
+
+
+			<tr><td><input  type="checkbox" id="pref:0:bool:browser.use_document_">Always use my colors, overriding documents.</td></tr>
+			</table>
+   </FORM>
+
+</table>
+</body>
+</html>

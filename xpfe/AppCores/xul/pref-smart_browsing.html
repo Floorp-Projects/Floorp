@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('smart_browsing')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Smart Browsing</SPAN>
+</DIV>
+
+
+<table>
+  <FORM>
+            <tr><td><input name="related" type="checkbox" id="pref:0:bool:browser.related.enabled" checked>Enable Internet Keywords</td></tr>
+            <tr><td>Automatically load "What's Related" information</tr></td>
+			<tr><td><input name="autorelated" type="radio" id="pref:0:int:browser.related.autoload">Never</td></tr>
+			<tr><td><input name="autorelated" type="radio" id="pref:1:int:browser.related.autoload" checked>After first use</td></tr>
+			<tr><td><input name="autorelated" type="radio" id="pref:2:int:browser.related.autoload"        >Always</td></tr>
+			
+			<tr><td>Do not request "What's Related" information for the following 
+			domains(a comma-separated list)</tr><td>
+			<tr><td>
+			    <textarea name="textstyle" ROWS="2" COLS="30" id="pref:string:browser.related.disabledForDomains">
+			    
+			    </textarea>
+			</td></tr>
+  </FORM>
+
+
+
+</table>
+<br>
+<table>
+   <tr><td>Internet Keywords</tr></td>
+   <FORM>
+
+
+			<tr><td><input name="keyword" type="checkbox" id="pref:0:bool:browser.goBrowsing.enabled" checked>Enable Internet Keywords</td></tr>
+		</table>
+   </FORM>
+
+</table>
+</body>
+</html>

@@ -4,31 +4,8 @@
 <title>Sample Prefs Panel</title>
 </head>
 
-<style>
-	body  {
-	  background-color:#CCCCCC
-	}
-	   
-	#righttext {
-	  text-align: left;
-	  font-style: bold;
-	}
-
-
-	#righttext {
-	  text-align: right;
-	}
-
-	#top  {
-	background-color: grey
-	}
-
-//	table {
-//	    display:block;
-//	    border: groove white 2px;
-//	    min-height: 16px;
-//	    color: white;
-//	}
+<style type="text/css">
+@import url(pref.css);
 
 </style>
 
@@ -39,7 +16,6 @@
 	<DIV ID=top>
 		<SPAN ID=lefttext>Appearance</SPAN>
 	</DIV>
-	<br>
 
 	On startup, launch
 	
@@ -51,9 +27,6 @@
 			<tr><td><input type="checkbox" id="pref:0:bool:general.startup.calendar">Calendar</td></tr>
 		</table>
 	</FORM>
-
-		<br>
-		<br>
 
 	Show toolbars as
 

@@ -50,7 +50,7 @@
           <treecell name="resource://res/samples/pref-fonts.html"><treeindentation/>Fonts</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Colors</treecell>
+          <treecell name="resource://res/samples/pref-colors.html"><treeindentation/>Colors</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -65,10 +65,10 @@
           <treecell><treeindentation/>Languages</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Applications</treecell>
+          <treecell name="resource://res/samples/pref-applications.html"><treeindentation/>Applications</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Smart Browsing</treecell>
+          <treecell name="resource://res/samples/pref-smart_browsing.html"><treeindentation/>Smart Browsing</treecell>
 	    </treeitem>
       </treechildren>
     
@@ -115,59 +115,42 @@
     
      <treeitem>
        
-      <treecell><treeindentation/>Composer</treecell>
+      <treecell name="resource://res/samples/pref-composer.html"><treeindentation/>Composer</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell><treeindentation/>Publish</treecell>
+          <treecell name="resource://res/samples/pref-publish.html"><treeindentation/>Publish</treecell>
 	    </treeitem>
       </treechildren>
     
     </treeitem>
     
+    
      <treeitem>
        
-      <treecell><treeindentation/>Roaming Access</treecell>
+      <treecell name="resource://res/samples/pref-offline.html"><treeindentation/>Offline</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell><treeindentation/>Server Info</treecell>
-	    </treeitem>
-        <treeitem>
-          <treecell><treeindentation/>File Selection</treecell>
+          <treecell name="resource://res/samples/pref-download.html"><treeindentation/>Download</treecell>
 	    </treeitem>
       </treechildren>
     
-    </treeitem>
+     </treeitem>
     
      <treeitem>
        
-      <treecell><treeindentation/>Offline</treecell>
+      <treecell name="resource://res/samples/pref-advanced.html"><treeindentation/>Advanced</treecell>
        
 	  <treechildren>
         <treeitem>
-          <treecell><treeindentation/>Download</treecell>
-	    </treeitem>
-      </treechildren>
-    
-    </treeitem>
-    
-     <treeitem>
-       
-      <treecell><treeindentation/>Advanced</treecell>
-       
-	  <treechildren>
-        <treeitem>
-          <treecell><treeindentation/>Publish</treecell>
+          <treecell name="resource://res/samples/pref-cache.html"><treeindentation/>Cache</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Cache</treecell>
+          <treecell name="resource://res/samples/pref-proxies.html"><treeindentation/>Proxies</treecell>
 	    </treeitem>
         <treeitem>
-          <treecell><treeindentation/>Proxies</treecell>
-	    </treeitem>
-        <treeitem>
-          <treecell><treeindentation/>Smart Update</treecell>
+          <treecell name="resource://res/samples/pref-smartupdate.html"><treeindentation/>Smart Update</treecell>
 	    </treeitem>
       </treechildren>
     

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="pref.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload = "return StartUp('Languages')"> 
+		
+
+<html:script language="JavaScript" src="PrefsWindow.js">
+</html:script>
+
+
+<html:DIV ID=top>
+		<html:SPAN ID=lefttext>Languages</html:SPAN>
+</DIV>
+
+
+<html:table>
+  <html:FORM>
+             
+	        <html:tr><html:td>Choose in order of preference the language(s) 
+			in which you prefer to view web pages. Web pages are sometimes 
+			available in several languages.  Naveigator presents pages in 
+			the available language you most prefer.
+			<html:tr><html:td><html:select name="textstyle" size=5>
+			<html:option value="0" id="pref:string:intl.accept_languages">English
+			</html:select></html:td><html:td></html:tr>
+			<html:tr><html:td><html:input name=choose type="button" value="Add..."><html:td>
+			<html:td><html:input name=choose type="button" value="Delete..."></html:td></html:tr>
+
+  </html:FORM>
+
+
+</window>

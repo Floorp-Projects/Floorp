@@ -1,20 +1,54 @@
 <html>
-	<head>
-		<script language="JavaScript" src="PrefsWindow.js">
-		</script>
-	</head>
-
-	<FRAMESET cols="120,*" border="no">
+ <body onload = "return StartUp('Top');">
+ <STYLE>
+ 	body  {
+	  background-color:#CCCCCC
+	}
 	
-		<FRAME NAME=preftree SRC="preftree.xul" scrolling="auto" border="no">
+	#pref-appearance {
+	  border : 0}
 
-		<FRAMESET Rows="*,40"  onload = "return StartUp('Top');" border=no>
-			<FRAME NAME=prefpane SRC="pref-appearance.html" scrolling="no" border="no">
-			<FRAME NAME=prefbottom SRC="prefbottom.html" border="no" scrolling="no">
-		</FRAMESET>
+    #preftree  {
+	  border : yes
+	  border-style : ridge}
 
-	</FRAMESET>
+ </style> 
+ <script language="JavaScript" src="PrefsWindow.js">
+ </script>
+ </body>
 
-</html>
+ Category:
+ <br>
+ <IFRAME NAME="preftree" id="preftree" SRC="preftree.xul" scrolling="auto" width="27%" height="326" resize="yes"></iframe>
+ 
+ <IFRAME NAME="pref-appearance" ID="pref-appearance" SRC="pref-appearance.html" width="72%" height="326" resize="yes" scrolling="no"></iframe>
+		
+
+	<table border=0 width="100%" cellpadding=0 cellspacing=0>
+		<tr>
+			<td valign="right" width="160">
+				<center>
+					<form>
+
+					<input type="button" align="bottom" value="Help">
+					</input>
+
+					<input type="button" align="bottom" value="Cancel" onclick="DoCancel();">
+					</input>
+
+					<input type="button" align="bottom" value="OK" onClick="DoSave();">
+					</input>
+
+					 </form>
+				 </center>	  
+			  </td>
+		  </tr>
+	</table>
+	<html>
+
+
+
+
+
 
 
