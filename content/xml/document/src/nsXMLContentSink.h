@@ -26,7 +26,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
-#ifdef XSL
+#ifdef MOZ_XSL
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsITransformMediator.h"
@@ -59,7 +59,7 @@ typedef enum {
 // XXX Till the parser knows a little bit more about XML, 
 // this is a HTMLContentSink.
 class nsXMLContentSink : public nsIXMLContentSink,
-#ifdef XSL
+#ifdef MOZ_XSL
                          public nsIObserver,
                          public nsSupportsWeakReference,
 #endif
@@ -100,7 +100,7 @@ public:
   NS_IMETHOD AddNotation(const nsIParserNode& aNode);
   NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
-#ifdef XSL
+#ifdef MOZ_XSL
   // nsIObserver
   NS_IMETHOD Observe(nsISupports *aSubject, 
                      const PRUnichar *aTopic, 
@@ -142,7 +142,7 @@ protected:
                             const nsString& aHref, PRBool aAlternate,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
-#ifdef XSL
+#ifdef MOZ_XSL
   nsresult ProcessStyleLink(nsIContent* aElement,
                             const nsString& aHref, PRBool aAlternate,
                             const nsString& aTitle, const nsString& aType,
@@ -195,7 +195,7 @@ protected:
   PRInt32 mStyleSheetCount;
   nsICSSLoader* mCSSLoader;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
-#ifdef XSL
+#ifdef MOZ_XSL
   nsITransformMediator* mXSLTransformMediator;    // Weak reference
 #endif
 };

@@ -157,7 +157,7 @@ nsXMLDocument::nsXMLDocument(nsIURI* aBaseURI)
   mDocumentURL = aBaseURI;
   NS_IF_ADDREF(mDocumentURL);
 
-#ifdef XSL
+#ifdef MOZ_XSL
   mTransformMediator = nsnull;
 #endif
 }
@@ -177,7 +177,7 @@ nsXMLDocument::~nsXMLDocument()
     mCSSLoader->DropDocumentReference();
     NS_RELEASE(mCSSLoader);
   }
-#ifdef XSL
+#ifdef MOZ_XSL
   NS_IF_RELEASE(mTransformMediator);
 #endif
 }
@@ -879,7 +879,7 @@ nsXMLDocument::GetContentById(const nsString& aName, nsIContent** aContent)
   return NS_OK;
 }
 
-#ifdef XSL
+#ifdef MOZ_XSL
 NS_IMETHODIMP 
 nsXMLDocument::SetTransformMediator(nsITransformMediator* aMediator)
 {

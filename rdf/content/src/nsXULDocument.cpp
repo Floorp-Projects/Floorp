@@ -2176,7 +2176,7 @@ nsXULDocument::GetContentById(const nsString& aName, nsIContent** aContent)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#ifdef XSL
+#ifdef MOZ_XSL
 NS_IMETHODIMP
 nsXULDocument::SetTransformMediator(nsITransformMediator* aMediator)
 {
