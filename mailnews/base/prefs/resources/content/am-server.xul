@@ -39,8 +39,6 @@
                         type="checkbox"/>&biffStart.label;
             <html:input name="server.biffMinutes" type="text" size="3"/>
             &biffEnd.label;
-  <html:div><html:input name="server.downloadOnBiff"
-                        type="checkbox"/>&downloadOnBiff.label;</html:div>
   </html:div>
   </box>
   <tabcontrol flex="100%">
@@ -49,6 +47,8 @@
       <box align="vertical" flex="100%">
         <html:div><html:input name="pop3.leaveMessagesOnServer" type="checkbox"/>&leaveOnServer.label;</html:div>
         <html:div><html:input name="pop3.deleteMailLeftOnServer" type="checkbox"/>&deleteOnServer.label;</html:div>
+        <html:div><html:input name="server.downloadOnBiff"
+                              type="checkbox"/>&downloadOnBiff.label;</html:div>
       </box>
       <!-- IMAP -->
       <box align="vertical" flex="100%">
