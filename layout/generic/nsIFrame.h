@@ -1326,7 +1326,6 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
     *aBox = (mParent && mParent->IsBoxFrame()) ? mNextSibling : nsnull;
     return NS_OK;
   }
-  nsresult SetNextBox(nsIBox* aBox) { return NS_OK; }
   NS_HIDDEN_(nsresult) GetParentBox(nsIBox** aParent);
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
   NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding)=0;
