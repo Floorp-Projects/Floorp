@@ -502,19 +502,25 @@ JVM_GetJSSecurityContext()
     JVMSecurityStack  *securityStackTop = NULL;
     JSContext         *cx = context->js_context;
 
+    if (cx == NULL) {
+     //TODO: Get to the new context from DOM.
+     //pJSCX = LM_GetCrippledContext();
+    }
+
     if(securityStack != NULL) {
 	securityStackTop = securityStack->prev; 
 	JSStackFrame *fp = NULL;
 	securityStackTop->pJSToJavaFrame = JS_FrameIterator(cx, &fp);
     }
 
-    nsCSecurityContext *securityContext = new nsCSecurityContext(cx);
-    if (securityContext == nsnull) {
-        return nsnull;
+    if (cx != NULL) {
+        nsCSecurityContext *securityContext = new nsCSecurityContext(cx);
+        if (NULL != securityContext) {
+            securityContext->AddRef();
+            return securityContext;
+        }
     }
-
-    NS_ADDREF(securityContext);
-    return securityContext;
+    return NULL;
 }
 
 PR_END_EXTERN_C
