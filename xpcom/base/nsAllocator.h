@@ -27,7 +27,7 @@
 #include "prmem.h"
 #include "nsAgg.h"
 
-class nsAllocator : nsIAllocator {
+class nsAllocator : public nsIAllocator {
 public:
 
     /**
