@@ -87,7 +87,7 @@
 [%# Succeeding Status Line                                                   #%]
 [%############################################################################%]
 
-[% IF bugs.count == 0 %]
+[% IF bugs.size == 0 %]
   Zarro Boogs found.
   <p>
     <a href="query.cgi">Query Page</a>
@@ -95,7 +95,7 @@
     <a href="query.cgi?[% urlquerypart %]">Edit this query</a>
   </p>
 
-[% ELSIF bugs.count == 1 %]
+[% ELSIF bugs.size == 1 %]
   One bug found.
 
 [% ELSE %]
