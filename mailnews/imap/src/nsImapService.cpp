@@ -346,10 +346,10 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
             rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
 
             // now try to download the message
-			rv = FetchMessage(imapUrl, 
-					(moveMessage) ? nsIImapUrl::nsImapOnlineToOfflineMove : nsIImapUrl::nsImapOnlineToOfflineCopy, 
-					folder, imapMessageSink,
-                    aURL, streamSupport, msgKey, PR_TRUE);
+            nsImapAction imapAction = nsIImapUrl::nsImapOnlineToOfflineCopy;
+            if (moveMessage)
+                imapAction = nsIImapUrl::nsImapOnlineToOfflineMove; 
+			      rv = FetchMessage(imapUrl,imapAction, folder, imapMessageSink,aURL, streamSupport, msgKey, PR_TRUE);
            if (NS_SUCCEEDED(rv) && moveMessage)
            {
                nsCOMPtr<nsIEventQueue> queue;	
