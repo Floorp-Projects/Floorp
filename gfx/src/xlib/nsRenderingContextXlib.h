@@ -203,7 +203,6 @@ private:
   nsIDeviceContext        *mContext;
   nsIFontMetrics          *mFontMetrics;
   nsCOMPtr<nsIRegion>      mClipRegion;
-  nsTransform2D           *mTMatrix;
   float                    mP2T;
   nscolor                  mCurrentColor;
   Display *                mDisplay;

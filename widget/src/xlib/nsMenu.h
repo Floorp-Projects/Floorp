@@ -27,11 +27,11 @@
 #include "nsIMenu.h"
 #include "nsISupportsArray.h"
 #include "nsIMenuListener.h"
+class nsIContent;
+class nsIDOMElement;
+class nsIDOMNode;
 
 
-/**
- * Native Win32 button wrapper
- */
 
 class nsMenu : public nsIMenu, public nsIMenuListener
 {
@@ -53,15 +53,17 @@ public:
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
 
   
-  NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel);
-
-
   // nsIMenu Methods
+  NS_IMETHOD Create(nsISupports * aParent, const nsAReadableString &aLabel,
+                    const nsAReadableString &aAccessKey, 
+                    nsIChangeManager* aManager, nsIWebShell* aShell,
+                    nsIContent* aContent );
+
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
-  NS_IMETHOD SetLabel(const nsString &aText);
+  NS_IMETHOD SetLabel(const nsAReadableString &aText);
   NS_IMETHOD GetAccessKey(nsString &aText);
-  NS_IMETHOD SetAccessKey(const nsString &aText);
+  NS_IMETHOD SetAccessKey(const nsAReadableString &aText);
 
   NS_IMETHOD AddItem(nsISupports * aItem);
 

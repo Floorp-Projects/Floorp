@@ -30,8 +30,6 @@
 #include "prprf.h"
 #include "prmem.h"
 
-static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextXlib, nsIRenderingContext)
 
 static PRLogModuleInfo * RenderingContextXlibLM = PR_NewLogModule("RenderingContextXlib");
@@ -74,7 +72,7 @@ nsRenderingContextXlib::nsRenderingContextXlib()
   mRenderingSurface = nsnull;
   mContext = nsnull;
   mFontMetrics = nsnull;
-  mTMatrix = nsnull;
+  mTranMatrix = nsnull;
   mP2T = 1.0f;
   mStateCache = new nsVoidArray();
   mCurrentFont = nsnull;
@@ -104,43 +102,12 @@ nsRenderingContextXlib::~nsRenderingContextXlib()
     delete mStateCache;
     mStateCache = nsnull;
   }
-  if (mTMatrix)
-    delete mTMatrix;
+  if (mTranMatrix)
+    delete mTranMatrix;
   NS_IF_RELEASE(mOffscreenSurface);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
 }
-
-#if 0
-nsresult
-nsRenderingContextXlib::QueryInterface(const nsIID&  aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-  if (aIID.Equals(kIRenderingContextIID))
-  {
-    nsIRenderingContext* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    nsIRenderingContext* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsRenderingContextXlib)
-NS_IMPL_RELEASE(nsRenderingContextXlib)
-#endif
 
 NS_IMETHODIMP
 nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
@@ -232,7 +199,7 @@ nsresult nsRenderingContextXlib::CommonInit(void)
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
-  mTMatrix->AddScale(app2dev, app2dev);
+  mTranMatrix->AddScale(app2dev, app2dev);
   return NS_OK;
 }
 
@@ -318,14 +285,14 @@ nsRenderingContextXlib::PushState(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  state->mMatrix = mTMatrix;
+  state->mMatrix = mTranMatrix;
   
   mStateCache->AppendElement(state);
   
-  if (nsnull == mTMatrix)
-    mTMatrix = new nsTransform2D();
+  if (nsnull == mTranMatrix)
+    mTranMatrix = new nsTransform2D();
   else
-    mTMatrix = new nsTransform2D(mTMatrix);
+    mTranMatrix = new nsTransform2D(mTranMatrix);
   
   if (mClipRegion) {
     state->mClipRegion = mClipRegion;
@@ -355,9 +322,9 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
     state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
     mStateCache->RemoveElementAt(cnt - 1);
     
-    if (mTMatrix)
-      delete mTMatrix;
-    mTMatrix = state->mMatrix;
+    if (mTranMatrix)
+      delete mTranMatrix;
+    mTranMatrix = state->mMatrix;
     
     mClipRegion = state->mClipRegion;
     if (mFontMetrics != state->mFontMetrics)
@@ -399,7 +366,7 @@ nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine,
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRect()\n"));
   nsRect trect = aRect;
   Region rgn;
-  mTMatrix->TransformCoord(&trect.x, &trect.y,
+  mTranMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
   switch(aCombine) {
   case nsClipCombine_kIntersect:
@@ -601,7 +568,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::Translate(nscoord aX, nscoord aY)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::Translate()\n"));
-  mTMatrix->AddTranslation((float)aX,(float)aY);
+  mTranMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
@@ -609,7 +576,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::Scale(float aSx, float aSy)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::Scale()\n"));
-  mTMatrix->AddScale(aSx, aSy);
+  mTranMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
 
@@ -617,7 +584,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::GetCurrentTransform(nsTransform2D *&aTransform)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetCurrentTransform()\n"));
-  aTransform = mTMatrix;
+  aTransform = mTranMatrix;
   return NS_OK;
 }
 
@@ -667,11 +634,11 @@ nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
   nscoord diffX, diffY;
 
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawLine()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface)
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface)
     return NS_ERROR_FAILURE;
 
-  mTMatrix->TransformCoord(&aX0,&aY0);
-  mTMatrix->TransformCoord(&aX1,&aY1);
+  mTranMatrix->TransformCoord(&aX0,&aY0);
+  mTranMatrix->TransformCoord(&aX1,&aY1);
   
   diffX = aX1-aX0;
   diffY = aY1-aY0;
@@ -695,11 +662,11 @@ nsRenderingContextXlib::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoo
   nscoord diffX, diffY;
 
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawStdLine()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface)
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface)
     return NS_ERROR_FAILURE;
 
-  mTMatrix->TransformCoord(&aX0,&aY0);
-  mTMatrix->TransformCoord(&aX1,&aY1);
+  mTranMatrix->TransformCoord(&aX0,&aY0);
+  mTranMatrix->TransformCoord(&aX1,&aY1);
   
   diffX = aX1-aX0;
   diffY = aY1-aY0;
@@ -721,7 +688,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawPolyLine()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
   PRInt32 i ;
@@ -734,7 +701,7 @@ nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints
     thispoint = (xpoints+i);
     thispoint->x = aPoints[i].x;
     thispoint->y = aPoints[i].y;
-    mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
+    mTranMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
 
   ::XDrawLines(mDisplay,
@@ -758,7 +725,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawRect()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
 
@@ -769,7 +736,7 @@ nsRenderingContextXlib::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   w = aWidth;
   h = aHeight;
     
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
   // Don't draw empty rectangles; also, w/h are adjusted down by one
   // so that the right number of pixels are drawn.
@@ -798,7 +765,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillRect()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -807,7 +774,7 @@ nsRenderingContextXlib::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("About to fill window 0x%lxd with rect %d %d %d %d\n",
                                                 mRenderingSurface->GetDrawable(), x, y, w, h));
   ::XFillRectangle(mDisplay,
@@ -827,7 +794,7 @@ nsRenderingContextXlib :: InvertRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextXlib :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) 
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) 
     return NS_ERROR_FAILURE;
   
   nscoord x,y,w,h;
@@ -837,7 +804,7 @@ nsRenderingContextXlib :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nsc
   w = aWidth;
   h = aHeight;
 
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
 
   // Set XOR drawing mode
   ::XSetFunction(mDisplay,
@@ -864,7 +831,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawPolygon()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
   PRInt32 i ;
@@ -877,7 +844,7 @@ nsRenderingContextXlib::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
     thispoint = (xpoints+i);
     thispoint->x = aPoints[i].x;
     thispoint->y = aPoints[i].y;
-    mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
+    mTranMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
   
   ::XDrawLines(mDisplay,
@@ -894,7 +861,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillPolygon()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
   PRInt32 i ;
@@ -908,7 +875,7 @@ nsRenderingContextXlib::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
     thispoint = (xpoints+i);
     x = aPoints[i].x;
     y = aPoints[i].y;
-    mTMatrix->TransformCoord(&x,&y);
+    mTranMatrix->TransformCoord(&x,&y);
     thispoint->x = x;
     thispoint->y = y;
   } 
@@ -934,7 +901,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawEllipse()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -944,7 +911,7 @@ nsRenderingContextXlib::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
   w = aWidth; 
   h = aHeight;
     
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
   ::XDrawArc(mDisplay,
              mRenderingSurface->GetDrawable(),
@@ -965,7 +932,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillEllipse()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -975,7 +942,7 @@ nsRenderingContextXlib::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
   w = aWidth; 
   h = aHeight;
     
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
   ::XFillArc(mDisplay,
              mRenderingSurface->GetDrawable(),
@@ -998,7 +965,7 @@ nsRenderingContextXlib::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
                                 float aStartAngle, float aEndAngle)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawArc()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -1008,7 +975,7 @@ nsRenderingContextXlib::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
   w = aWidth; 
   h = aHeight;
     
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
   ::XDrawArc(mDisplay,
              mRenderingSurface->GetDrawable(),
@@ -1032,7 +999,7 @@ nsRenderingContextXlib::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
                                 float aStartAngle, float aEndAngle)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::FillArc()\n"));
-  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+  if (nsnull == mTranMatrix || nsnull == mRenderingSurface) {
     return NS_ERROR_FAILURE;
   }
   nscoord x,y,w,h;
@@ -1042,7 +1009,7 @@ nsRenderingContextXlib::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
   w = aWidth; 
   h = aHeight;
     
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTranMatrix->TransformCoord(&x,&y,&w,&h);
     
   ::XFillArc(mDisplay,
              mRenderingSurface->GetDrawable(),
@@ -1173,7 +1140,7 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawString()\n"));
   if (0 != aLength) {
-    if (mTMatrix == nsnull)
+    if (mTranMatrix == nsnull)
       return NS_ERROR_FAILURE;
     if (mRenderingSurface == nsnull)
       return NS_ERROR_FAILURE;
@@ -1196,7 +1163,7 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
         char ch = *aString++;
         nscoord xx = x;
         nscoord yy = y;
-        mTMatrix->TransformCoord(&xx, &yy);
+        mTranMatrix->TransformCoord(&xx, &yy);
         XDrawString(mDisplay,
                     mRenderingSurface->GetDrawable(),
                     mRenderingSurface->GetGC(),
@@ -1205,7 +1172,7 @@ nsRenderingContextXlib::DrawString(const char *aString, PRUint32 aLength,
       }
     }
     else {
-      mTMatrix->TransformCoord(&x, &y);
+      mTranMatrix->TransformCoord(&x, &y);
       XDrawString(mDisplay,
                   mRenderingSurface->GetDrawable(),
                   mRenderingSurface->GetGC(),
@@ -1259,7 +1226,7 @@ nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawString()\n"));
     if (aLength && mFontMetrics) {
-      if (mTMatrix == nsnull)
+      if (mTranMatrix == nsnull)
         return NS_ERROR_FAILURE;
       if (mRenderingSurface == nsnull)
         return NS_ERROR_FAILURE;
@@ -1274,7 +1241,7 @@ nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
     y += aY;
     aY = y;
 
-    mTMatrix->TransformCoord(&x, &y);
+    mTranMatrix->TransformCoord(&x, &y);
 
     nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) mFontMetrics;
     nsFontXlib* prevFont = nsnull;
@@ -1303,7 +1270,7 @@ FoundFont:
 	    while (str < end) {
 	      x = aX;
 	      y = aY;
-              mTMatrix->TransformCoord(&x, &y);
+              mTranMatrix->TransformCoord(&x, &y);
         prevFont->DrawString(this, mRenderingSurface, x, y, str, 1);
 	      aX += *aSpacing++;
 	      str++;
@@ -1331,7 +1298,7 @@ FoundFont:
 	while (str < end) {
 	  x = aX;
 	  y = aY;
-          mTMatrix->TransformCoord(&x, &y);
+          mTranMatrix->TransformCoord(&x, &y);
           prevFont->DrawString(this, mRenderingSurface, x, y, str, 1);
 	  aX += *aSpacing++;
 	  str++;
@@ -1390,7 +1357,7 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aRect)
 
   nsRect tr;
   tr = aRect;
-  mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
+  mTranMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
   return aImage->Draw(*this, mRenderingSurface, tr.x, tr.y, tr.width, tr.height);
 }
 
@@ -1401,14 +1368,14 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aSRect, const 
   nsRect	sr,dr;
   
   sr = aSRect;
-  mTMatrix->TransformCoord(&sr.x, &sr.y,
+  mTranMatrix->TransformCoord(&sr.x, &sr.y,
                            &sr.width, &sr.height);
   sr.x = aSRect.x;
   sr.y = aSRect.y;
   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
   
   dr = aDRect;
-  mTMatrix->TransformCoord(&dr.x, &dr.y,
+  mTranMatrix->TransformCoord(&dr.x, &dr.y,
                            &dr.width, &dr.height);
   
   return aImage->Draw(*this, mRenderingSurface,
@@ -1443,9 +1410,9 @@ nsRenderingContextXlib::DrawTile(nsIImage *aImage,
 {
   nsRect tileRect(aTileRect);
   nsRect srcRect(0, 0, aSrcXOffset, aSrcYOffset);
-  mTMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width,
+  mTranMatrix->TransformCoord(&srcRect.x, &srcRect.y, &srcRect.width,
                            &srcRect.height);
-  mTMatrix->TransformCoord(&tileRect.x, &tileRect.y,
+  mTranMatrix->TransformCoord(&tileRect.x, &tileRect.y,
                            &tileRect.width, &tileRect.height);
 
   if((tileRect.width > 0) && (tileRect.height > 0))
@@ -1466,7 +1433,7 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
 
   if (aSrcSurf == nsnull)
     return NS_ERROR_FAILURE;
-  if (mTMatrix == nsnull)
+  if (mTranMatrix == nsnull)
     return NS_ERROR_FAILURE;
   if (mRenderingSurface == nsnull)
     return NS_ERROR_FAILURE;
@@ -1479,10 +1446,10 @@ nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSr
     destsurf = mOffscreenSurface;
   
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-    mTMatrix->TransformCoord(&srcX, &srcY);
+    mTranMatrix->TransformCoord(&srcX, &srcY);
   
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-    mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+    mTranMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
   
   //XXX flags are unused. that would seem to mean that there is
   //inefficiency somewhere... MMP
