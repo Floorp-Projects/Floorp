@@ -59,16 +59,19 @@ function renderMachineReadable()
     var resultDocument = getDocument();
     docshell.setCurrentURI(policyuri);
 
+    xsltp.reset();
     xsltp.setParameter("", "policyUri", policyuri.spec);
     xsltp.importStylesheet(style);
 
     var result = xsltp.transformToFragment(source, resultDocument);
 
     // XXX Replacing the documentElement makes scrollbars disappear.
+    //     See http://bugzilla.mozilla.org/show_bug.cgi?id=205725.
     //while (resultDocument.lastChild} {
     //    resultDocument.removeChild(resultDocument.lastChild);
     //}
     // XXX appendChild of a DocumentFragment should work but doesn't.
+    //     See http://bugzilla.mozilla.org/show_bug.cgi?id=209027.
     //resultDocument.appendChild(result);
     transferToDocument(result, resultDocument);
 
@@ -81,6 +84,8 @@ function renderMachineReadable()
 
 // XXX Temporary function to workaround disappearing scrollbars
 //     and bug in document.appendChild(DocumentFragment).
+//     See http://bugzilla.mozilla.org/show_bug.cgi?id=205725
+//     and http://bugzilla.mozilla.org/show_bug.cgi?id=209027.
 function transferToDocument(aResult, aResultDocument)
 {
     var docElement = aResultDocument.documentElement;
