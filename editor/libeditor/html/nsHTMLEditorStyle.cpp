@@ -486,7 +486,8 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   // split any matching style nodes above the node/offset
   nsCOMPtr<nsIDOMNode> parent, tmp = *aNode;
   PRInt32 offset;
-  while (tmp && !nsTextEditUtils::IsBody(tmp))
+  
+  while (tmp && !IsBlockNode(tmp))
   {
     if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
          (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(tmp)) || // node is href - test if really <a href=...
@@ -509,9 +510,7 @@ PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
   if (!aNode)               return PR_FALSE;
   if (!IsContainer(aNode))  return PR_FALSE;
   if (!IsEditable(aNode))   return PR_FALSE;
-  PRBool isBlock (PR_FALSE);
-  NodeIsBlock(aNode, &isBlock);
-  if (isBlock) return PR_FALSE;
+  if (IsBlockNode(aNode))   return PR_FALSE;
   if (NodeIsType(aNode, nsIEditProperty::a)) return PR_FALSE;
   return PR_TRUE;
 }
