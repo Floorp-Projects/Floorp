@@ -60,6 +60,7 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsVoidArray.h"
 #include "nsIParserService.h"
+#include "nsReadableUtils.h"
 
 #define IF_HOLD(_ptr) \
  PR_BEGIN_MACRO       \

@@ -29,15 +29,15 @@
 
 #include "nsIEnumerator.h"
 #include "prprf.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
-#include "nsFileStream.h"
 #include "nsEscape.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
+
+#include "nsIFileSpec.h"
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Processes.h>

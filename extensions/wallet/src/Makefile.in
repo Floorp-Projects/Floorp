@@ -34,6 +34,7 @@ MODULE_NAME	= nsWalletModule
 GRE_MODULE	= 1
 
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  necko \
 		  dom \
@@ -74,6 +75,7 @@ EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIRS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

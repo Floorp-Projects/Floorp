@@ -650,13 +650,16 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
 #if defined(XP_MAC) || defined(XP_MACOSX)
   short appRefNum = ::CurResFile();
   short pluginRefNum;
-  
-  nsFileSpec pluginPath(aFullPath);
+
+  nsCOMPtr<nsILocalFile> pluginPath;
+  NS_NewNativeLocalFile(nsDependentCString(aFullPath), PR_TRUE,
+                        getter_AddRefs(pluginPath));
+
   nsPluginFile pluginFile(pluginPath);
   pluginRefNum = pluginFile.OpenPluginResource();
   if (pluginRefNum == -1)
     return NS_ERROR_FAILURE;
-  
+
   ns4xPlugin* plugin = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
   if(plugin == NULL)
     return NS_ERROR_OUT_OF_MEMORY;

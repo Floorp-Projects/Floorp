@@ -106,7 +106,7 @@ nsTransactionStack::Peek(nsTransactionItem **aTransaction)
     return NS_OK;
   }
 
-  *aTransaction = (nsTransactionItem *)(mQue.End().GetCurrent());
+  *aTransaction = (nsTransactionItem *)(mQue.Last());
 
   return NS_OK;
 }

@@ -44,13 +44,22 @@
 class nsSegmentedBuffer
 {
 public:
-    nsSegmentedBuffer();
-    ~nsSegmentedBuffer();
+    nsSegmentedBuffer()
+        : mSegmentSize(0), mMaxSize(0), 
+          mSegAllocator(nsnull), mSegmentArray(nsnull),
+          mSegmentArrayCount(0),
+          mFirstSegmentIndex(0), mLastSegmentIndex(0) {}
 
-    nsresult Init(PRUint32 segmentSize, PRUint32 maxSize,
+    ~nsSegmentedBuffer() {
+        Empty();
+        NS_IF_RELEASE(mSegAllocator);
+    }
+
+
+    NS_COM nsresult Init(PRUint32 segmentSize, PRUint32 maxSize,
                   nsIMemory* allocator = nsnull);
 
-    char* AppendNewSegment();   // pushes at end
+    NS_COM char* AppendNewSegment();   // pushes at end
 
     // returns true if no more segments remain:
     PRBool DeleteFirstSegment();  // pops from beginning
@@ -62,20 +71,20 @@ public:
     // consumption when data is not an exact multiple of segment size.
     PRBool ReallocLastSegment(size_t newSize);
 
-    void Empty();               // frees all segments
+    NS_COM void Empty();               // frees all segments
 
-    PRUint32 GetSegmentCount() {
+    NS_COM PRUint32 GetSegmentCount() {
         if (mFirstSegmentIndex <= mLastSegmentIndex)
             return mLastSegmentIndex - mFirstSegmentIndex;
         else 
             return mSegmentArrayCount + mLastSegmentIndex - mFirstSegmentIndex;
     }
 
-    PRUint32 GetSegmentSize() { return mSegmentSize; }
+    NS_COM PRUint32 GetSegmentSize() { return mSegmentSize; }
     PRUint32 GetMaxSize() { return mMaxSize; }
     PRUint32 GetSize() { return GetSegmentCount() * mSegmentSize; }
 
-    char* GetSegment(PRUint32 indx) {
+    NS_COM char* GetSegment(PRUint32 indx) {
         NS_ASSERTION(indx < GetSegmentCount(), "index out of bounds");
         PRInt32 i = ModSegArraySize(mFirstSegmentIndex + (PRInt32)indx);
         return mSegmentArray[i];

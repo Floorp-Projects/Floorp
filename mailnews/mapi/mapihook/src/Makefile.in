@@ -34,6 +34,7 @@ IS_COMPONENT	= 1
 META_COMPONENT	= mail
 
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
                   string \
 		  MapiProxy \
 		  appshell \
@@ -88,6 +89,7 @@ EXTRA_DSO_LDOPTS= \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(XPCOM_LIBS) \
+		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

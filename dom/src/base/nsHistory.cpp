@@ -52,7 +52,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
-
 //
 //  History class implementation 
 //

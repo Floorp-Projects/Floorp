@@ -30,7 +30,6 @@ DIRS		= \
 		base \
 		exthandler \
 		prefetch \
-		build \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

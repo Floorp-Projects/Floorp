@@ -45,11 +45,6 @@ CPPSRCS		= \
 		nsEscape.cpp \
 		nsFastLoadFile.cpp \
 		nsFastLoadService.cpp \
-		nsFileSpec.cpp \
-		nsFileSpecImpl.cpp \
-		nsFileStream.cpp \
-		nsIFileStream.cpp \
-		nsStringStream.cpp \
 		nsInputStreamTee.cpp \
 		nsLinebreakConverter.cpp \
 		nsLocalFileCommon.cpp \
@@ -58,8 +53,9 @@ CPPSRCS		= \
 		nsStreamUtils.cpp \
 		nsScriptableInputStream.cpp \
 		nsSegmentedBuffer.cpp \
-		nsSpecialSystemDirectory.cpp \
+		SpecialSystemDirectory.cpp \
 		nsStorageStream.cpp \
+		nsStringStream.cpp \
 		nsUnicharInputStream.cpp \
 		nsNativeCharsetUtils.cpp \
 		$(NULL)
@@ -85,17 +81,14 @@ EXPORTS		= \
 		nsEscape.h \
 		nsFastLoadPtr.h \
 		nsFastLoadService.h \
-		nsFileSpec.h \
-		nsFileStream.h \
-		nsIFileStream.h \
 		nsIUnicharInputStream.h \
 		nsLinebreakConverter.h \
 		nsLocalFile.h \
 		nsMultiplexInputStream.h \
 		nsScriptableInputStream.h \
-		nsSpecialSystemDirectory.h \
 		nsStorageStream.h \
 		nsStringIO.h \
+		nsStringStream.h \
 		nsStreamUtils.h \
 		$(NULL)			
 
@@ -119,7 +112,6 @@ XPIDLSRCS	= \
 		nsIByteArrayInputStream.idl \
 		nsIFastLoadFileControl.idl \
 		nsIFastLoadService.idl \
-		nsIFileSpec.idl \
 		nsIInputStreamTee.idl \
 		nsILineInputStream.idl \
 		nsIMultiplexInputStream.idl \
@@ -128,14 +120,14 @@ XPIDLSRCS	= \
 		nsIPipe.idl \
 		nsISeekableStream.idl \
 		nsIStorageStream.idl \
-		nsIStreamBufferAccess.idl \
 		nsIStringStream.idl \
+		nsIStreamBufferAccess.idl \
 		nsIAsyncInputStream.idl \
 		nsIAsyncOutputStream.idl \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-XPIDLSRCS		+= nsILocalFileMac.idl
+XPIDLSRCS	+= nsILocalFileMac.idl
 endif
 
 SDK_XPIDLSRCS   = \

@@ -204,7 +204,7 @@ class nsParser : public nsIParser,
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream& aStream,const nsACString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
+    virtual nsresult Parse(nsIInputStream* aStream,const nsACString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
 
     /**
      * @update	gess5/11/98
@@ -272,10 +272,6 @@ class nsParser : public nsIParser,
     virtual nsresult ResumeParse(PRBool allowIteration = PR_TRUE, 
                                  PRBool aIsFinalChunk = PR_FALSE,
                                  PRBool aCanInterrupt = PR_TRUE);
-
-#ifdef DEBUG
-    void  DebugDumpSource(nsOutputStream& anOutput);
-#endif
 
      //*********************************************
       // These methods are callback methods used by

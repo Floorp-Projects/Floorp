@@ -38,7 +38,6 @@
 #include "nsOS2Locale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
-#include "nsFileSpec.h"
 
 NS_DEFINE_IID(kOS2LocaleCID, NS_OS2LOCALE_CID);
 

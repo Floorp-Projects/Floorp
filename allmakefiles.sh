@@ -177,6 +177,7 @@ intl/uconv/ucvtw/Makefile
 intl/uconv/ucvtw2/Makefile
 intl/uconv/ucvko/Makefile
 intl/uconv/ucvibm/Makefile
+intl/uconv/native/Makefile
 intl/locale/Makefile
 intl/locale/public/Makefile
 intl/locale/idl/Makefile
@@ -337,6 +338,7 @@ MAKEFILES_libreg="
 modules/libreg/Makefile
 modules/libreg/include/Makefile
 modules/libreg/src/Makefile
+modules/libreg/standalone/Makefile
 "
 
 MAKEFILES_libpref="
@@ -585,6 +587,8 @@ xpcom/reflect/xptinfo/Makefile
 xpcom/reflect/xptinfo/public/Makefile
 xpcom/reflect/xptinfo/src/Makefile
 xpcom/reflect/xptinfo/tests/Makefile
+xpcom/obsolete/Makefile
+xpcom/obsolete/component/Makefile
 xpcom/proxy/Makefile
 xpcom/proxy/public/Makefile
 xpcom/proxy/src/Makefile

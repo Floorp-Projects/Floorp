@@ -29,13 +29,12 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsString.h"
-#include "nsIFileSpec.h"
 
 #include "nsIXPINotifier.h"
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
-
+#include "nsILocalFile.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 

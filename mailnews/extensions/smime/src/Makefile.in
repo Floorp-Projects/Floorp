@@ -30,6 +30,7 @@ MODULE		= msgsmime
 LIBRARY_NAME	= msgsmime_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  msgbase \
 		  mime \

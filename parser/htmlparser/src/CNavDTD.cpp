@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 //#define ENABLE_CRC
-//#define RICKG_DEBUG 
 //#define ALLOW_TR_AS_CHILD_OF_TABLE  //by setting this to true, TR is allowable directly in TABLE.
 
 #define ENABLE_RESIDUALSTYLE  
@@ -69,6 +68,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "prmem.h"
+#include "nsIServiceManager.h"
 
 #ifdef NS_DEBUG
 #include "nsLoggingSink.h"
@@ -190,13 +190,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
 #endif
 {
   mBodyContext=new nsDTDContext();
-
-#ifdef  RICKG_DEBUG
-  //DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
-  nsHTMLElement::DebugDumpContainment("c:/temp/contain.new","ElementTable Rules");
-  nsHTMLElement::DebugDumpMembership("c:/temp/membership.out");
-  nsHTMLElement::DebugDumpContainType("c:/temp/ctnrules.out");
-#endif
 }
 
 /**
@@ -1393,16 +1386,6 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsC
 
   return result;
 }
-
-
-#ifdef  RICKG_DEBUG
-void WriteTokenToLog(CToken* aToken) {
-
-  static nsFileSpec fileSpec("c:\\temp\\tokenlog.html");
-  static nsOutputFileStream outputStream(fileSpec);
-  aToken->DebugDumpSource(outputStream); //write token without close bracket...
-}
-#endif
  
 /**
  * This gets called before we've handled a given start tag.
@@ -1689,10 +1672,6 @@ nsresult CNavDTD::HandleKeyGen(nsIParserNode* aNode) {
 nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
-
   //Begin by gathering up attributes...
 
   nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken, mTokenAllocator);
@@ -1947,10 +1926,6 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
 
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
-
   switch(theChildTag) {
 
     case eHTMLTag_script:
@@ -2198,9 +2173,6 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
       result=HandleOmittedTag(aToken,theCurrTag,theParentTag,theNode);
     }
     else {
-#ifdef  RICKG_DEBUG
-  WriteTokenToLog(aToken);
-#endif
       result=AddLeaf(theNode);
     }
     IF_FREE(theNode, &mNodeAllocator);
@@ -2226,10 +2198,6 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken, mTokenAllocator);
 
   if(theNode) {
-
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
 
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
@@ -2304,10 +2272,6 @@ nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
   nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken, mTokenAllocator);
   if(theNode) {
 
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
-
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
 
@@ -2334,10 +2298,6 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   NS_PRECONDITION(0!=aToken,kNullToken);
 
   nsresult result=NS_OK;
-
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
 
   CDoctypeDeclToken* theToken = NS_STATIC_CAST(CDoctypeDeclToken*,aToken);
   nsAutoString docTypeStr(theToken->GetStringValue());
@@ -2405,10 +2365,6 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 
         // a legitimate "SELECTED" key.
         ((CAttributeToken*)theToken)->SanitizeKey();
         mLineNumber += theToken->GetNewlineCount();
-
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(theToken);
-  #endif
 
         aNode.AddAttribute(theToken);
       }

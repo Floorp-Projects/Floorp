@@ -40,12 +40,13 @@
 #define UTILS_H
 
 #include "nsString.h"
-#include "nsFileStream.h"
+#include "nsIInputStream.h"
+#include "nsIFile.h"
 
-extern PRInt32 CKutil_GetLine(nsInputFileStream& strm, char *aBuf, PRInt32 sz,
+extern PRInt32 CKutil_GetLine(nsIInputStream* strm, char *aBuf, PRInt32 sz,
                               PRInt32& next, PRInt32& count, nsACString& aLine);
 extern PRUnichar* CKutil_Localize(const PRUnichar *genericString);
-extern nsresult CKutil_ProfileDirectory(nsFileSpec& dirSpec);
+extern nsresult CKutil_ProfileDirectory(nsIFile** dirSpec);
 extern char * CKutil_StrAllocCopy(char *&destination, const char *source);
 extern char * CKutil_StrAllocCat(char *&destination, const char *source);
 

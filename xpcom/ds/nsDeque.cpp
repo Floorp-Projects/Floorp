@@ -380,6 +380,10 @@ nsDequeIterator nsDeque::End() const{
   return nsDequeIterator(*this, mSize - 1);
 }
 
+void* nsDeque::Last() const {
+  return End().GetCurrent();
+}
+
 /**
  * Call this method when you want to iterate all the
  * members of the container, passing a functor along

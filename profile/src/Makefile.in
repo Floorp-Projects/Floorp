@@ -29,7 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= profile
 LIBRARY_NAME	= profile_s
 REQUIRES	= xpcom \
-		  string \
+		  xpcom_obsolete \
+		  xpcom_obsolete \
+	          string \
 		  chrome \
 		  docshell \
 		  webbrwsr \
@@ -45,7 +47,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  uconv \
 		  windowwatcher \
-      profdirserviceprovider \
+		  profdirserviceprovider \
 		  $(NULL)
 
 CPPSRCS		= 	nsProfile.cpp	\

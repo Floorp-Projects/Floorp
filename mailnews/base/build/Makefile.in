@@ -33,10 +33,12 @@ LIBRARY_NAME	= msgbase
 RESFILE		= mail.res
 endif
 META_COMPONENT = mail
-EXPORT_LIBRARY = 1
+Expcom_obsolete_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMsgBaseModule
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
+		  xpobsolete \
 		  string \
 		  necko \
 		  intl \
@@ -87,6 +89,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(NULL)
 
 LOCAL_INCLUDES = -I$(srcdir) -I$(srcdir)/../src

@@ -72,7 +72,6 @@
 #include "prtypes.h"
 #include "nsString.h"
 #include "nsError.h"
-#include "nsFileSpec.h"
 #include "nsFixedSizeAllocator.h"
 
 #define NS_HTMLTOKENS_NOT_AN_ENTITY \
@@ -220,22 +219,6 @@ class CToken {
      * @return  error code (0 means ok)
      */
     virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-
-#ifdef DEBUG
-    /**
-     * Causes token to dump itself in debug form to given output stream
-     * @update	gess5/11/98
-     * @param   out is the output stream where token should write itself
-     */
-    virtual void DebugDumpToken(nsOutputStream& out);
-
-    /**
-     * Causes token to dump itself in source form to given output stream
-     * @update	gess5/11/98
-     * @param   out is the output stream where token should write itself
-     */
-    virtual void DebugDumpSource(nsOutputStream& out);
-#endif
 
     /**
      * Getter which retrieves type of token

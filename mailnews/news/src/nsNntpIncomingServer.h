@@ -48,7 +48,7 @@
 #include "plstr.h"
 #include "prprf.h"
 
-#include "nsEnumeratorUtils.h" 
+#include "nsAdapterEnumerator.h" 
 #include "nsIMsgWindow.h"
 #include "nsISubscribableServer.h"
 #include "nsMsgLineBuffer.h"

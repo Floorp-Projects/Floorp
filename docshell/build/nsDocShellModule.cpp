@@ -25,8 +25,38 @@
 #include "nsWebShell.h"
 #include "nsDefaultURIFixup.h"
 
+// uriloader
+#include "nsURILoader.h"
+#include "nsDocLoader.h"
+#include "nsOSHelperAppService.h"
+#include "nsExternalProtocolHandler.h"
+#include "nsPrefetchService.h"
+
+// session history
+#include "nsSHEntry.h"
+#include "nsSHistory.h"
+#include "nsSHTransaction.h"
+
+// docshell
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebShell);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup);
+
+// uriloader
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDocLoaderImpl, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsOSHelperAppService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalProtocolHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefetchService, Init)
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#include "nsInternetConfigService.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService);
+#endif
+
+// session history
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHEntry)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSHTransaction)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSHistory, Init)
 
 // Currently no-one is instantiating docshell's directly because
 // nsWebShell is still our main "shell" class. nsWebShell is a subclass
@@ -36,6 +66,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup);
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsDocShell);
 
 static const nsModuleComponentInfo gDocShellModuleInfo[] = {
+  // docshell
     { "WebShell", 
       NS_WEB_SHELL_CID,
       "@mozilla.org/webshell;1",
@@ -45,7 +76,39 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
       NS_DEFAULTURIFIXUP_CID,
       NS_URIFIXUP_CONTRACTID,
       nsDefaultURIFixupConstructor
-    }
+    },
+
+    // uriloader
+  { "Netscape URI Loader Service", NS_URI_LOADER_CID, NS_URI_LOADER_CONTRACTID, nsURILoaderConstructor, },
+  { "Netscape Doc Loader", NS_DOCUMENTLOADER_CID, NS_DOCUMENTLOADER_CONTRACTID, nsDocLoaderImplConstructor, },
+  { "Netscape Doc Loader Service", NS_DOCUMENTLOADER_SERVICE_CID, NS_DOCUMENTLOADER_SERVICE_CONTRACTID, 
+     nsDocLoaderImplConstructor, },
+  { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, 
+     nsOSHelperAppServiceConstructor, },
+  { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, 
+     nsOSHelperAppServiceConstructor, },
+  { "Netscape Mime Mapping Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_MIMESERVICE_CONTRACTID, 
+     nsOSHelperAppServiceConstructor, },
+  { "Netscape Default Protocol Handler", NS_EXTERNALPROTOCOLHANDLER_CID, NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default", 
+     nsExternalProtocolHandlerConstructor, },
+  {  NS_PREFETCHSERVICE_CLASSNAME, NS_PREFETCHSERVICE_CID, NS_PREFETCHSERVICE_CONTRACTID,
+     nsPrefetchServiceConstructor, },
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  { "Internet Config Service", NS_INTERNETCONFIGSERVICE_CID, NS_INTERNETCONFIGSERVICE_CONTRACTID,
+    nsInternetConfigServiceConstructor, },
+#endif
+    
+    // session history
+   { "nsSHEntry", NS_SHENTRY_CID,
+      NS_SHENTRY_CONTRACTID, nsSHEntryConstructor },
+   { "nsSHEntry", NS_HISTORYENTRY_CID,
+      NS_HISTORYENTRY_CONTRACTID, nsSHEntryConstructor },
+   { "nsSHTransaction", NS_SHTRANSACTION_CID,
+      NS_SHTRANSACTION_CONTRACTID, nsSHTransactionConstructor },
+   { "nsSHistory", NS_SHISTORY_CID,
+      NS_SHISTORY_CONTRACTID, nsSHistoryConstructor },
+   { "nsSHistory", NS_SHISTORY_INTERNAL_CID,
+      NS_SHISTORY_INTERNAL_CONTRACTID, nsSHistoryConstructor }
 };
 
 // "docshell provider" to illustrate that this thing really *should*

@@ -33,6 +33,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsTextImportModule
 REQUIRES	= xpcom \
+                  xpcom_obsolete \
 		  string \
 		  import \
 		  intl \
@@ -51,6 +52,7 @@ CPPSRCS		= \
 
 EXTRA_DSO_LDOPTS = \
 	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -40,7 +40,6 @@
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #define NS_CM_BLOCK_SIZE (1024 * 8)
 
-#include "NSReg.h"
 #include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
@@ -60,7 +59,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsLocalFile.h"
 #include "nsNativeComponentLoader.h"
-#include "nsRegistry.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -824,8 +822,6 @@ nsresult nsComponentManagerImpl::Init(void)
         mStaticComponentLoader->Init(this, nsnull);
     }
 #endif
-    NR_StartupRegistry();
-
     GetLocationFromDirectoryService(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(mComponentsDir));
     if (!mComponentsDir)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -908,8 +904,6 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     // delete arena for strings and small objects
     PL_FinishArenaPool(&mArena);
 
-    // This is were the nsFileSpec was deleted, so I am 
-    // going to assign zero to 
     mComponentsDir = 0;
 
     mCategoryManager = 0;
@@ -927,8 +921,6 @@ nsresult nsComponentManagerImpl::Shutdown(void)
 #ifdef ENABLE_STATIC_COMPONENT_LOADER
     NS_IF_RELEASE(mStaticComponentLoader);
 #endif
-
-    NR_ShutdownRegistry();
 
     mShuttingDown = NS_SHUTDOWN_COMPLETE;
 

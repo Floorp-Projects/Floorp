@@ -44,7 +44,6 @@
 #include "nsUtils.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "nsIFileSpec.h"
 #include "nsIPrompt.h"
 #include "nsVoidArray.h"
 #include "prmem.h"
@@ -55,6 +54,11 @@
 #include "nsIObserverService.h"
 #include "nsComObsolete.h"
 #include "nsIWindowWatcher.h"
+
+#include "nsIFile.h"
+#include "nsNetUtil.h"
+#include "plstr.h"
+#include "nsCRT.h"
 
 #include "nsICookieAcceptDialog.h"
 #include "nsCookiePromptService.h"
@@ -398,26 +402,26 @@ Permission_Save(PRBool notify) {
   if (permission_list == nsnull) {
     return;
   }
-  nsFileSpec dirSpec;
-  nsresult rval = CKutil_ProfileDirectory(dirSpec);
+  nsCOMPtr<nsIFile> dirSpec;
+  nsresult rval = CKutil_ProfileDirectory(getter_AddRefs(dirSpec));
   if (NS_FAILED(rval)) {
     return;
   }
-  dirSpec += kCookiesPermFileName;
-  PRBool ignored;
-  dirSpec.ResolveSymlink(ignored);
-  nsOutputFileStream strm(dirSpec);
-  if (!strm.is_open()) {
-    return;
-  }
+
+  dirSpec->AppendNative(nsDependentCString(kCookiesPermFileName));
+
+  PRUint32 ignore;
+  nsCOMPtr<nsIOutputStream> strm;
+  NS_NewLocalFileOutputStream(getter_AddRefs(strm),
+                              dirSpec);
 
 #define PERMISSIONFILE_LINE1 "# HTTP Permission File\n"
 #define PERMISSIONFILE_LINE2 "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
 #define PERMISSIONFILE_LINE3 "# This is a generated file!  Do not edit.\n\n"
 
-  strm.write(PERMISSIONFILE_LINE1, PL_strlen(PERMISSIONFILE_LINE1));
-  strm.write(PERMISSIONFILE_LINE2, PL_strlen(PERMISSIONFILE_LINE2));
-  strm.write(PERMISSIONFILE_LINE3, PL_strlen(PERMISSIONFILE_LINE3));
+  strm->Write(PERMISSIONFILE_LINE1, PL_strlen(PERMISSIONFILE_LINE1), &ignore);
+  strm->Write(PERMISSIONFILE_LINE2, PL_strlen(PERMISSIONFILE_LINE2), &ignore);
+  strm->Write(PERMISSIONFILE_LINE3, PL_strlen(PERMISSIONFILE_LINE3), &ignore);
 
   /* format shall be:
    * host \t permission \t permission ... \n
@@ -427,43 +431,42 @@ Permission_Save(PRBool notify) {
   for (PRInt32 i = 0; i < hostCount; ++i) {
     hostStruct = NS_STATIC_CAST(permission_HostStruct*, permission_list->ElementAt(i));
     if (hostStruct) {
-      strm.write(hostStruct->host, strlen(hostStruct->host));
+      strm->Write(hostStruct->host, strlen(hostStruct->host), &ignore);
 
       PRInt32 typeCount = hostStruct->permissionList->Count();
       for (PRInt32 typeIndex=0; typeIndex<typeCount; typeIndex++) {
         typeStruct = NS_STATIC_CAST
           (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
-        strm.write("\t", 1);
+        strm->Write("\t", 1, &ignore);
         nsCAutoString tmp; tmp.AppendInt(typeStruct->type);
-        strm.write(tmp.get(), tmp.Length());
+        strm->Write(tmp.get(), tmp.Length(), &ignore);
         if (typeStruct->permission) {
-          strm.write("T", 1);
+          strm->Write("T", 1, &ignore);
         } else {
-          strm.write("F", 1);
+          strm->Write("F", 1, &ignore);
         }
       }
-      strm.write("\n", 1);
+      strm->Write("\n", 1, &ignore);
     }
   }
 
   /* save current state of nag boxs' checkmarks */
-  strm.write("@@@@", 4);
+  strm->Write("@@@@", 4, &ignore);
   for (PRInt32 type = 0; type < NUMBER_OF_PERMISSIONS; type++) {
-    strm.write("\t", 1);
+    strm->Write("\t", 1, &ignore);
     nsCAutoString tmp; tmp.AppendInt(type);
-    strm.write(tmp.get(), tmp.Length());
+    strm->Write(tmp.get(), tmp.Length(), &ignore);
     if (permission_GetRememberChecked(type)) {
-      strm.write("T", 1);
+      strm->Write("T", 1, &ignore);
     } else {
-      strm.write("F", 1);
+      strm->Write("F", 1, &ignore);
     }
   }
 
-  strm.write("\n", 1);
+  strm->Write("\n", 1, &ignore);
 
   permission_changed = PR_FALSE;
-  strm.flush();
-  strm.close();
+  strm->Close();
 
   /* Notify cookie manager dialog to update its display */
   if (notify) {
@@ -487,13 +490,20 @@ PERMISSION_Read() {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsCAutoString buffer;
-  nsFileSpec dirSpec;
-  nsresult rv = CKutil_ProfileDirectory(dirSpec);
+  nsCOMPtr<nsIFile> dirSpec;
+  nsresult rv = CKutil_ProfileDirectory(getter_AddRefs(dirSpec));
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsInputFileStream strm(dirSpec + kCookiesPermFileName);
-  if (!strm.is_open()) {
+
+  dirSpec->AppendNative(nsDependentCString(kCookiesPermFileName));
+
+  nsCOMPtr<nsIInputStream> strm;
+  NS_NewLocalFileInputStream(getter_AddRefs(strm),
+                             dirSpec);
+
+  PRBool exists = PR_FALSE;;
+  if (NS_FAILED(dirSpec->Exists(&exists)) || !exists) {
     /* file doesn't exist -- that's not an error */
     for (PRInt32 type=0; type<NUMBER_OF_PERMISSIONS; type++) {
       permission_SetRememberChecked(type, PR_FALSE);
@@ -574,7 +584,7 @@ PERMISSION_Read() {
         if (!permissionString.IsEmpty()) {
           rv = Permission_AddHost(PromiseFlatCString(host), permission, type, PR_FALSE);
           if (NS_FAILED(rv)) {
-            strm.close();
+            strm->Close();
             return rv;
           }
         }
@@ -582,7 +592,7 @@ PERMISSION_Read() {
     }
   }
 
-  strm.close();
+  strm->Close();
   permission_changed = PR_FALSE;
   return NS_OK;
 }

@@ -78,7 +78,6 @@
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
-#include "nsSpecialSystemDirectory.h"
 #include "nsGtkMozRemoteHelper.h"
 
 #include "nsIDragService.h"

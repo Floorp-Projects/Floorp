@@ -47,12 +47,12 @@
 #include "nsIComponentRegistrar.h"
 #include "nsNetCID.h"
 
+#include "nsString.h"
+
 #include "nsXPCOM.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 //
-#include "nsIFileSpec.h"
-
 #define TEST_URL "resource:/res/strres.properties"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);

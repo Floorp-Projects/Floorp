@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXPCOM.h"
+#include "nsString.h"
 #include "nsIEventQueueService.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
@@ -50,7 +51,6 @@
 #include <iostream.h>  //BAD DOG -- no biscuit!
 #include "nsReadableUtils.h"
 
-#include "nsSpecialSystemDirectory.h"
 
 #define TEST_URL "resource:/res/test.properties"
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);

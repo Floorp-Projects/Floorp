@@ -37,6 +37,7 @@ endif
 GRE_MODULE	= 1
 
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  js \
 		  xpconnect \

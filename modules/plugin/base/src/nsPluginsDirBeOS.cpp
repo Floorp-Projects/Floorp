@@ -115,14 +115,8 @@ static nsresult GetMimeExtensions(const char *mimeType, char *extensions, int ex
 
 /* nsPluginsDir implementation */
 
-PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
+PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
-    const char* pathname = fileSpec.GetCString();
-
-#ifdef NS_DEBUG
-	printf("IsPluginFile(%s)\n", pathname);
-#endif
-
 	return PR_TRUE;
 }
 
@@ -130,8 +124,8 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 
 /* nsPluginFile implementation */
 
-nsPluginFile::nsPluginFile(const nsFileSpec& spec)
-	:	nsFileSpec(spec)
+nsPluginFile::nsPluginFile(nsIFile* spec)
+:	mPlugin(spec)
 {
 	// nada
 }

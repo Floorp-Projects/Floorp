@@ -30,6 +30,7 @@ MODULE		= msgimap
 LIBRARY_NAME	= msgimap_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+                  xpcom_obsolete \
 		  string \
 		  mailnews \
 		  rdf \

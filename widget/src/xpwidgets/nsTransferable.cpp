@@ -60,12 +60,13 @@ Notes to self:
 #include "nsMemory.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsXPIDLString.h"
- 
-#include "nsIFileSpec.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryService.h"
+#include "nsCRT.h" 
+#include "nsNetUtil.h"
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
-
-#include "nsSpecialSystemDirectory.h"
+#include "nsIFile.h"
 
 NS_IMPL_ISUPPORTS1(nsTransferable, nsITransferable)
 
@@ -84,7 +85,7 @@ struct DataStruct
   const nsCString& GetFlavor() const { return mFlavor; }
   void SetData( nsISupports* inData, PRUint32 inDataLen );
   void GetData( nsISupports** outData, PRUint32 *outDataLen );
-  nsIFileSpec * GetFileSpec(const char * aFileName);
+  nsIFile * GetFileSpec(const char * aFileName);
   PRBool IsDataAvilable() const { return (mData && mDataLen > 0) || (!mData && mCacheFileName); }
   
 protected:
@@ -121,7 +122,8 @@ DataStruct* GetDataForFlavor (const nsVoidArray* pArray, const char* aDataFlavor
 //-------------------------------------------------------------------------
 DataStruct::~DataStruct() 
 { 
-  delete [] mCacheFileName; 
+  if (mCacheFileName) nsCRT::free(mCacheFileName); 
+
     //nsIFileSpec * cacheFile = GetFileSpec(mCacheFileName);
     //cacheFile->Remove();
 }
@@ -171,35 +173,25 @@ DataStruct::GetData ( nsISupports** aData, PRUint32 *aDataLen )
 
 
 //-------------------------------------------------------------------------
-nsIFileSpec*
+nsIFile*
 DataStruct::GetFileSpec(const char * aFileName)
 {
-  nsIFileSpec* cacheFile = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance( NS_FILESPEC_CONTRACTID, nsnull, NS_GET_IID(nsIFileSpec),
-                                                     NS_REINTERPRET_CAST(void**,&cacheFile));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a Clipboard Cache file spec.");
-
-  // Get the system temp directory path
-  nsSpecialSystemDirectory *sysCacheFile =  
-    new nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+  nsIFile* cacheFile;
+  NS_GetSpecialDirectory(NS_OS_TEMP_DIR, &cacheFile);
+  
+  if (cacheFile == nsnull)
+    return nsnull;
 
   // if the param aFileName contains a name we should use that
   // because the file probably already exists
   // otherwise create a unique name
   if (!aFileName) {
-    *sysCacheFile += "clipboardcache";
-    sysCacheFile->MakeUnique();
+    cacheFile->AppendNative(NS_LITERAL_CSTRING("clipboardcache"));
+    cacheFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0755);
   } else {
-    *sysCacheFile += aFileName;
+    cacheFile->AppendNative(nsDependentCString(aFileName));
   }
-
-  // now set the entire path for the nsIFileSpec
-  cacheFile->SetFromFileSpec(*sysCacheFile);
-
-  // delete the temp for getting the system info
-  delete sysCacheFile;
-
-  // return the nsIFileSpec. The addref comes from CreateInstance()
+  
   return cacheFile;
 }
 
@@ -209,18 +201,25 @@ nsresult
 DataStruct::WriteCache(nsISupports* aData, PRUint32 aDataLen)
 {
   // Get a new path and file to the temp directory
-  nsCOMPtr<nsIFileSpec> cacheFile ( getter_AddRefs(GetFileSpec(mCacheFileName)) );
+  nsCOMPtr<nsIFile> cacheFile ( getter_AddRefs(GetFileSpec(mCacheFileName)) );
   if (cacheFile) {
     // remember the file name
-    if (!mCacheFileName)
-      cacheFile->GetLeafName(&mCacheFileName);
+    if (!mCacheFileName) {
+      nsXPIDLCString fName;
+      cacheFile->GetNativeLeafName(fName);
+      mCacheFileName = nsCRT::strdup(fName);
+    }
 
     // write out the contents of the clipboard
     // to the file
     //PRUint32 bytes;
     nsCOMPtr<nsIOutputStream> outStr;
-    cacheFile->GetOutputStream( getter_AddRefs(outStr) );
-    
+
+    NS_NewLocalFileOutputStream(getter_AddRefs(outStr),
+                                cacheFile);
+
+      if (!outStr) return NS_ERROR_FAILURE;
+
     void* buff = nsnull;
     nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor.get(), aData, &buff, aDataLen );
     if ( buff ) {
@@ -243,10 +242,11 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
     return NS_ERROR_FAILURE;
 
   // get the path and file name
-  nsCOMPtr<nsIFileSpec> cacheFile ( getter_AddRefs(GetFileSpec(mCacheFileName)) );
-  if ( cacheFile && Exists(cacheFile)) {
+  nsCOMPtr<nsIFile> cacheFile ( getter_AddRefs(GetFileSpec(mCacheFileName)) );
+  PRBool exists;
+  if ( cacheFile && NS_SUCCEEDED(cacheFile->Exists(&exists)) && exists ) {
     // get the size of the file
-    PRUint32 fileSize;
+    PRInt64 fileSize;
     cacheFile->GetFileSize(&fileSize);
 
     // create new memory for the large clipboard data
@@ -256,7 +256,11 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
       
     // now read it all in
     nsCOMPtr<nsIInputStream> inStr;
-    cacheFile->GetInputStream( getter_AddRefs(inStr) );
+    NS_NewLocalFileInputStream( getter_AddRefs(inStr),
+                                cacheFile);
+    
+    if (!cacheFile) return NS_ERROR_FAILURE;
+
     nsresult rv = inStr->Read(data, fileSize, aDataLen);
 
     // make sure we got all the data ok

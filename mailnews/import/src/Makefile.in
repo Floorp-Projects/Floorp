@@ -33,6 +33,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsImportServiceModule
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  mailnews \
 		  addrbook \
@@ -79,6 +80,7 @@ EXTRA_DSO_LDOPTS += \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
 
 

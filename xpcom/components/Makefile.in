@@ -40,7 +40,6 @@ CPPSRCS		= \
 		nsComponentManager.cpp \
 		nsComponentManagerObsolete.cpp \
 		nsNativeComponentLoader.cpp \
-		nsRegistry.cpp \
 		nsServiceManagerObsolete.cpp \
 		xcDll.cpp \
 		$(NULL)
@@ -55,7 +54,6 @@ EXPORTS		= \
 		nsCategoryManagerUtils.h \
 		nsComponentManagerUtils.h \
 		nsComponentManagerObsolete.h \
-		nsIRegistryUtils.h \
 		nsIServiceManagerUtils.h \
 		nsIServiceManagerObsolete.h \
 		nsXPComFactory.h \
@@ -69,7 +67,6 @@ XPIDLSRCS	= \
 		nsIComponentLoader.idl \
 		nsIComponentLoaderManager.idl \
 		nsIComponentManagerObsolete.idl \
-		nsIRegistry.idl \
 		nsINativeComponentLoader.idl  \
 		$(NULL)
 

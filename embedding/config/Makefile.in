@@ -67,6 +67,9 @@ else
 endif
 
 embed_copy::
+	-mkdir $(DIST)/Embed/defaults/
+	-mkdir $(DIST)/Embed/defaults/pref
+	-cp $(srcdir)/all.js $(DIST)/Embed/defaults/pref
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEBROWSER) -o $(_PLATFORM) -v
 ifeq ($(OS_ARCH),WINNT)
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEBROWSER_SUPP) -o $(_PLATFORM) -v

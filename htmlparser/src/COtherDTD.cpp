@@ -38,8 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
        
 //#define ENABLE_CRC              
-//#define RICKG_DEBUG           
-     
           
 #include "nsDebug.h"      
 #include "nsIAtom.h"
@@ -176,14 +174,6 @@ COtherDTD::COtherDTD() : nsIDTD() {
   if(!gElementTable) {
     gElementTable = new CElementTable();
   }
-
-#ifdef  RICKG_DEBUG
-  //DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New COtherDTD Containment Rules");
-  nsHTMLElement::DebugDumpContainment("c:/temp/contain.new","ElementTable Rules");
-  nsHTMLElement::DebugDumpMembership("c:/temp/membership.out");
-  nsHTMLElement::DebugDumpContainType("c:/temp/ctnrules.out");
-#endif
-
 }
 
 /**
@@ -628,16 +618,6 @@ nsresult COtherDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
   return result;
 } 
  
-
-#ifdef  RICKG_DEBUG
-void WriteTokenToLog(CToken* aToken) {
-
-  static nsFileSpec fileSpec("c:\\temp\\tokenlog.html");
-  static nsOutputFileStream outputStream(fileSpec);
-  aToken->DebugDumpSource(outputStream); //write token without close bracket...
-}
-#endif
- 
 /**
  * This gets called before we've handled a given start tag.
  * It's a generic hook to let us do pre processing.
@@ -694,9 +674,6 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNo
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */      
 nsresult COtherDTD::HandleStartToken(CToken* aToken) {  
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(aToken);
-  #endif
 
   //Begin by gathering up attributes...  
  
@@ -767,10 +744,6 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
  
-  #ifdef  RICKG_DEBUG    
-    WriteTokenToLog(aToken); 
-  #endif  
-  
   switch(theChildTag) {    
  
     case eHTMLTag_body: //we intentionally don't let the user close HTML or BODY
@@ -825,10 +798,6 @@ nsresult COtherDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt3
         // "SELECTED/", and ">". In this case the "SELECTED/" key will be sanitized to
         // a legitimate "SELECTED" key.
         ((CAttributeToken*)theToken)->SanitizeKey();
- 
-  #ifdef  RICKG_DEBUG
-    WriteTokenToLog(theToken);
-  #endif
  
         aNode.AddAttribute(theToken); 
       }

@@ -41,7 +41,6 @@
 #include "nsCookies.h"
 #include "nsPermissions.h"
 #include "nsUtils.h"
-#include "nsIFileSpec.h"
 #include "nsVoidArray.h"
 #include "prprf.h"
 #include "prmem.h"
@@ -55,6 +54,9 @@
 #include "prnetdb.h"
 #include "nsComObsolete.h"
 #include <time.h>
+
+#include "nsCRT.h"
+#include "nsNetUtil.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -104,7 +106,7 @@ PRLogModuleInfo* gCookieLog = nsnull;
 #define MAX_EXPIRE 0
 #endif
 
-static const char *kCookiesFileName = "cookies.txt";
+static const char kCookiesFileName[] = "cookies.txt";
 
 MODULE_PRIVATE nsresult
 cookie_ParseDate(const nsAFlatCString &date_string, time_t & date);
@@ -290,7 +292,7 @@ COOKIE_DeletePersistentUserData(void)
   nsCOMPtr<nsIFile> cookiesFile;
   res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookiesFile));
   if (NS_SUCCEEDED(res)) {
-    res = cookiesFile->AppendNative(nsDependentCString(kCookiesFileName));
+    res = cookiesFile->AppendNative(NS_LITERAL_CSTRING(kCookiesFileName));
     if (NS_SUCCEEDED(res))
         (void) cookiesFile->Remove(PR_FALSE);
   }
@@ -1707,30 +1709,31 @@ COOKIE_Write() {
   cookie_CookieStruct * cookie_s;
   time_t cur_date = get_current_time();
   char date_string[36];
-  nsFileSpec dirSpec;
+
+  nsCOMPtr<nsIFile> dirSpec;
+
   nsresult rv;
-  rv = CKutil_ProfileDirectory(dirSpec);
+  rv = CKutil_ProfileDirectory(getter_AddRefs(dirSpec));
   if (NS_FAILED(rv)) {
     return rv;
   }
-  dirSpec += kCookiesFileName;
-  PRBool ignored;
-  dirSpec.ResolveSymlink(ignored);
-  nsOutputFileStream strm(dirSpec);
-  if (!strm.is_open()) {
-    /* file doesn't exist -- that's not an error */
-    return NS_OK;
-  }
+
+  dirSpec->AppendNative(NS_LITERAL_CSTRING(kCookiesFileName));
+
+  nsCOMPtr<nsIOutputStream> strm;
+  NS_NewLocalFileOutputStream(getter_AddRefs(strm),
+                              dirSpec);
 
 #define COOKIEFILE_LINE1 "# HTTP Cookie File\n"
 #define COOKIEFILE_LINE2 "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
 #define COOKIEFILE_LINE3 "# This is a generated file!  Do not edit.\n"
 #define COOKIEFILE_LINE4 "# To delete cookies, use the Cookie Manager.\n\n"
 
-  strm.write(COOKIEFILE_LINE1, PL_strlen(COOKIEFILE_LINE1));
-  strm.write(COOKIEFILE_LINE2, PL_strlen(COOKIEFILE_LINE2));
-  strm.write(COOKIEFILE_LINE3, PL_strlen(COOKIEFILE_LINE3));
-  strm.write(COOKIEFILE_LINE4, PL_strlen(COOKIEFILE_LINE4));
+  PRUint32 ignore;
+  strm->Write(COOKIEFILE_LINE1, sizeof(COOKIEFILE_LINE1)-1, &ignore);
+  strm->Write(COOKIEFILE_LINE2, sizeof(COOKIEFILE_LINE2)-1, &ignore);
+  strm->Write(COOKIEFILE_LINE3, sizeof(COOKIEFILE_LINE3)-1, &ignore);
+  strm->Write(COOKIEFILE_LINE4, sizeof(COOKIEFILE_LINE4)-1, &ignore);
 
   /* format shall be:
    *
@@ -1750,36 +1753,33 @@ COOKIE_Write() {
         continue;
       }
 
-      strm.write(cookie_s->host.get(), cookie_s->host.Length());
+      strm->Write(cookie_s->host.get(), cookie_s->host.Length(), &ignore);
 
       if (cookie_s->isDomain) {
-        strm.write("\tTRUE\t", 6);
+        strm->Write("\tTRUE\t", 6, &ignore);
       } else {
-        strm.write("\tFALSE\t", 7);
+        strm->Write("\tFALSE\t", 7, &ignore);
       }
 
-      strm.write(cookie_s->path.get(), cookie_s->path.Length());
+      strm->Write(cookie_s->path.get(), cookie_s->path.Length(), &ignore);
 
       if (cookie_s->isSecure) {
-        strm.write("\tTRUE\t", 6);
+        strm->Write("\tTRUE\t", 6, &ignore);
       } else {
-        strm.write("\tFALSE\t", 7);
+        strm->Write("\tFALSE\t", 7, &ignore);
       }
 
       PR_snprintf(date_string, sizeof(date_string), "%lu", NS_STATIC_CAST(unsigned long, cookie_s->expires));
 
-      strm.write(date_string, strlen(date_string));
-      strm.write("\t", 1);
-      strm.write(cookie_s->name.get(), cookie_s->name.Length());
-      strm.write("\t", 1);
-      strm.write(cookie_s->cookie.get(), cookie_s->cookie.Length());
-      strm.write("\n", 1);
+      strm->Write(date_string, strlen(date_string), &ignore);
+      strm->Write("\t", 1, &ignore);
+      strm->Write(cookie_s->name.get(), cookie_s->name.Length(), &ignore);
+      strm->Write("\t", 1, &ignore);
+      strm->Write(cookie_s->cookie.get(), cookie_s->cookie.Length(), &ignore);
+      strm->Write("\n", 1, &ignore);
   }
 
   cookie_changed = PR_FALSE;
-  strm.flush();
-  strm.close();
-
   return NS_OK;
 }
 
@@ -1802,13 +1802,21 @@ COOKIE_Read() {
   cookie_CookieStruct *new_cookie, *tmp_cookie_ptr;
   nsCAutoString buffer;
   PRBool added_to_list;
-  nsFileSpec dirSpec;
-  nsresult rv = CKutil_ProfileDirectory(dirSpec);
+
+  nsCOMPtr<nsIFile> dirSpec;
+  nsresult rv = CKutil_ProfileDirectory(getter_AddRefs(dirSpec));
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsInputFileStream strm(dirSpec + kCookiesFileName);
-  if (!strm.is_open()) {
+
+  dirSpec->AppendNative(NS_LITERAL_CSTRING(kCookiesFileName));
+
+  nsCOMPtr<nsIInputStream> strm;
+  NS_NewLocalFileInputStream(getter_AddRefs(strm),
+                             dirSpec);
+
+  PRBool exists = PR_FALSE;;
+  if (NS_FAILED(dirSpec->Exists(&exists)) || !exists) {
     /* file doesn't exist -- that's not an error */
     return NS_OK;
   }
@@ -1858,7 +1866,6 @@ COOKIE_Read() {
     /* create a new cookie_struct and fill it in */
     new_cookie = new cookie_CookieStruct;
     if (!new_cookie) {
-      strm.close();
       return NS_ERROR_OUT_OF_MEMORY;
     }
     new_cookie->name = name;
@@ -1899,8 +1906,7 @@ COOKIE_Read() {
     if (!cookie_list) {
       cookie_list = new nsVoidArray();
       if (!cookie_list) {
-        delete new_cookie;
-        strm.close();
+        deleteCookie((void*)new_cookie, nsnull);
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
@@ -1923,7 +1929,6 @@ COOKIE_Read() {
     }
   }
 
-  strm.close();
   cookie_changed = PR_FALSE;
   return NS_OK;
 }

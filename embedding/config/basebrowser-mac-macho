@@ -99,15 +99,12 @@ components/libjar50.dylib
 components/jar.xpt
 
 ; javascript
-components/libjsurl.dylib
 components/jsurl.xpt
 
 ; layout
 res/dtd/xhtml11.dtd
 components/libgklayout.dylib                   
 components/libhtmlpars.dylib                 
-components/libgkview.dylib                   
-components/layout_base.xpt              
 components/layout_xul.xpt               
 components/content_base.xpt
 
@@ -138,6 +135,8 @@ components/libpref.dylib
 ; profile
 components/libprofile.dylib                  
 components/profile.xpt
+components/mozreg.dylib
+components/mozreg.xpt
 
 ; wallet
 ; Optional - only if you need password persistence
@@ -171,7 +170,6 @@ components/librdf.dylib
 components/rdf.xpt
 
 ; session history
-components/libshistory.dylib
 components/shistory.xpt
 
 ; optional typeaheadfind 
@@ -199,7 +197,6 @@ defaults/pref/all.js
 defaults/pref/macprefs.js
 
 ; uriloader
-components/liburiloader.dylib
 components/uriloader.xpt
 
 ; widget

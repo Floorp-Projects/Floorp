@@ -37,6 +37,7 @@ ifeq ($(OS_ARCH),WINNT)
 XPIDL_MODULE	= msgcompo
 endif
 REQUIRES	= xpcom \
+                  xpcom_obsolete \
 		  string \
 		  msgbase \
 		  msgbaseutil \
@@ -75,6 +76,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -52,6 +52,8 @@
 #include "nsScriptNameSpaceManager.h"
 #include "nsDOMException.h"
 
+#include "nsJSProtocolHandler.h"
+
 extern nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
                                        nsIScriptContext **aContext);
 
@@ -289,7 +291,11 @@ static const nsModuleComponentInfo gDOMModuleInfo[] = {
     NS_BASE_DOM_EXCEPTION_CID,
     nsnull,
     nsBaseDOMExceptionConstructor
-  }
+  },
+  { "JavaScript Protocol Handler",
+    NS_JSPROTOCOLHANDLER_CID,
+    NS_JSPROTOCOLHANDLER_CONTRACTID,
+    nsJSProtocolHandler::Create },
 };
 
 void PR_CALLBACK

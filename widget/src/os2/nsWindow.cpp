@@ -55,7 +55,6 @@
 #include "nsIServiceManager.h"
 
 // For SetIcon
-#include "nsSpecialSystemDirectory.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
 #include "nsIFile.h"

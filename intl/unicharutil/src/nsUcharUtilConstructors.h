@@ -47,7 +47,6 @@
 #include "nsEntityConverter.h"
 #include "nsSaveAsCharset.h"
 #include "nsUUDll.h"
-#include "nsFileSpec.h"
 #include "nsIFile.h"
 #include "nsUnicodeNormalizer.h"
 

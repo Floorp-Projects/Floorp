@@ -134,7 +134,6 @@ viewer:Components:htmlparser.shlb
 viewer:Components:jsconsole-clhandler.js
 viewer:Components:jsdService.shlb
 viewer:Components:jsdservice.xpt
-viewer:Components:jsurl.shlb 
 viewer:Components:jsurl.xpt
 viewer:Components:layout.shlb 
 viewer:Components:layout.xpt
@@ -170,7 +169,6 @@ viewer:Components:rdf.xpt
 viewer:Components:RDFLibrary.shlb 
 viewer:Components:related.xpt 
 viewer:Components:search.xpt 
-viewer:Components:shistory.shlb 
 viewer:Components:shistory.xpt 
 viewer:Components:tmbm.xpt
 viewer:Components:txtsvc.xpt 
@@ -178,10 +176,8 @@ viewer:Components:txmgr.xpt
 viewer:Components:uconv.shlb 
 viewer:Components:uconv.xpt 
 viewer:Components:unicharutil.xpt 
-viewer:Components:uriloader.shlb 
 viewer:Components:uriloader.xpt 
 viewer:Components:urlbarhistory.xpt
-viewer:Components:view.shlb 
 viewer:Components:Wallet.shlb 
 viewer:Components:wallet.xpt 
 viewer:Components:WalletViewers.shlb 

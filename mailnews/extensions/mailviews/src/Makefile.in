@@ -30,6 +30,7 @@ MODULE		= mailview
 LIBRARY_NAME	= mailview_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  msgbase \
 		  mailnews \

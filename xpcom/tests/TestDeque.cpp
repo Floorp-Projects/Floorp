@@ -51,7 +51,6 @@ public:
   nsresult OriginalTest();
   nsresult OriginalFlaw();
   nsresult AssignFlaw();
-  nsresult StupidIterations();
 };
 static _TestDeque sTestDeque;
 
@@ -73,7 +72,6 @@ int _TestDeque::SelfTest() {
   results+=OriginalTest();
   results+=OriginalFlaw();
   results+=AssignFlaw();
-  results+=StupidIterations();
   return results;
 }
 
@@ -152,46 +150,6 @@ nsresult _TestDeque::AssignFlaw() {
   int count=sizeof(ints)/sizeof(int);
   int i=0;
   nsDeque src(new _Dealloc),dest(new _Dealloc);
-  /**
-   * Test 2. Assignment doesn't do the right things.
-   */
-  printf("fill array\n");
-  for (i=32; i; --i)
-    ints[i]=i*3+7;
-  printf("push 10 times\n"); //Capacity => 16
-  for (i=0; i<10; i++)
-    src.Push(&ints[i]);
-  nsDequeIterator first(src.Begin()), second(src.End());
-  nsDequeIterator third(dest.Begin()), fourth=dest.Begin();
-  char sF[]="failure: ";
-  char s1[]="first [ src.Begin]";
-  char s2[]="second[ src.End  ]";
-  char s3[]="third [dest.Begin]";
-  char s4[]="fourth[dest.Begin]";
-  if (first ==second) printf("%s%s==%s",sF, s1, s2);
-  if (first ==third ) printf("%s%s==%s",sF, s1, s3);
-  if (first ==fourth) printf("%s%s==%s",sF, s1, s4);
-  if (second==third ) printf("%s%s==%s",sF, s2, s3);
-  if (second==fourth) printf("%s%s==%s",sF, s2, s4);
-  if (third !=fourth) printf("%s%s!=%s",sF, s3, s4);
-  return NS_OK;
-}
-
-nsresult _TestDeque::StupidIterations() {
-  /**
-   * Transaction manager defined a peek which insisted on
-   * (a) doing its own peek
-   * (b) peeking at an empty deque
-   */
-  nsDeque stupid(new _Dealloc);
-  stupid.End()++;
-  ++stupid.End();
-  stupid.End()--;
-  --stupid.End();
-  stupid.Begin()++;
-  ++stupid.Begin();
-  stupid.Begin()--;
-  --stupid.Begin();
   return NS_OK;
 }
 

@@ -43,7 +43,7 @@
 #include "nsString.h"
 #include "nsIDTD.h"
 #include "nsITokenizer.h"
-#include "nsFileSpec.h"
+#include "nsIInputStream.h"
 
 class nsIExpatSink;
 struct nsCatalogData;

@@ -1,4 +1,4 @@
-	/*
+/*
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -122,32 +122,31 @@ static void FreeStringArray(PRUint32 variants, char ** array)
 
 // nsPluginsDir class
 
-PRBool nsPluginsDir::IsPluginFile( const nsFileSpec &fileSpec)
+PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
-   PRBool rc = PR_FALSE;
+    nsCAutoString leaf;
+    if (NS_FAILED(file->GetNativeLeafName(leaf)))
+        return PR_FALSE;
 
-   char *leafname = fileSpec.GetLeafName();
-
-   if( nsnull != leafname)
-   {
+    const char *leafname = leaf.get();
+    
+    if( nsnull != leafname)
+    {
       int len = strlen( leafname);
       if( len > 6 &&                 // np*.dll
           (0 == strnicmp( &(leafname[len - 4]), ".dll", 4)) &&
           (0 == strnicmp( leafname, "np", 2)))
       {
-         rc = PR_TRUE;
+        rc = PR_TRUE;
       }
-
-      delete [] leafname;
-   }
-
-   return rc;
+    }
+    return PR_FALSE;
 }
 
 // nsPluginFile implementation
 
-nsPluginFile::nsPluginFile( const nsFileSpec &spec)
-             : nsFileSpec(spec)
+nsPluginFile::nsPluginFile(nsFile* spec)
+: mPlugin(spec)
 {}
 
 nsPluginFile::~nsPluginFile()
@@ -156,9 +155,14 @@ nsPluginFile::~nsPluginFile()
 // Loads the plugin into memory using NSPR's shared-library loading
 nsresult nsPluginFile::LoadPlugin( PRLibrary *&outLibrary)
 {
-   nsNSPRPath nsprpath( *this);
-   outLibrary = PR_LoadLibrary( nsprpath);
-	return outLibrary == nsnull ? NS_ERROR_FAILURE : NS_OK;
+    if (!mPlugin)
+      return NS_ERROR_NULL_POINTER;
+   
+    nsCAutoString temp;
+    mPlugin->GetNativePath(temp);
+
+    outLibrary = PR_LoadLibrary(temp.get());
+    return outLibrary == nsnull ? NS_ERROR_FAILURE : NS_OK;
 }
 
 // Obtains all of the information currently available for this plugin.

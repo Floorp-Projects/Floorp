@@ -41,6 +41,7 @@ RESFILE		= testembed.res
 MODULE = testEmbed
 
 REQUIRES = \
+	xpcom_obsolete \
 	xpcom \
 	string \
 	necko \

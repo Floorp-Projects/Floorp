@@ -25,8 +25,8 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIFile.h"
-#include "nsIChannel.h"
 #include "nsIFileURL.h"
+#include "nsIChannel.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
@@ -47,7 +47,6 @@
 #include "rdf.h"
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
-#include "nsIFileSpec.h"
 #include "nsHelperAppRDF.h"
 #include "nsIMIMEInfo.h"
 #include "nsDirectoryServiceDefs.h"
@@ -85,6 +84,9 @@
 #include "nsITextToSubURI.h"
 
 #include "nsIPrefService.h"
+
+#include "nsCRT.h"
+#include "plstr.h"
 
 const char *NEVER_ASK_PREF_BRANCH = "browser.helperApps.neverAsk.";
 const char *NEVER_ASK_FOR_SAVE_TO_DISK_PREF = "saveToDisk";

@@ -43,7 +43,7 @@
 #include "nsPosixLocale.h"
 #include "nsLocaleCID.h"
 #include "prprf.h"
-#include "nsFileSpec.h"
+#include "plstr.h"
 
 /* nsPosixLocale ISupports */
 NS_IMPL_ISUPPORTS1(nsPosixLocale, nsIPosixLocale)

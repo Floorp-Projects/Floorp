@@ -48,6 +48,7 @@
 #include "nsIMsgLogonRedirector.h"
 #include "nsISubscribableServer.h"
 #include "nsIUrlListener.h"
+#include "nsAdapterEnumerator.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsImapIncomingServer : public nsMsgIncomingServer,

@@ -52,12 +52,13 @@
 #ifndef SCANNER
 #define SCANNER
 
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIParser.h"
 #include "prtypes.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsFileStream.h"
 #include "nsSlidingString.h"
+#include "nsIInputStream.h"
 
 class nsScannerString : public nsSlidingString {
   public: 
@@ -117,7 +118,7 @@ class nsScanner {
        *  @param   aMode represents the parser mode (nav, other)
        *  @return  
        */
-      nsScanner(const nsAString& aFilename, nsInputStream& aStream, const nsString& aCharset, PRInt32 aSource);
+      nsScanner(const nsAString& aFilename, nsIInputStream* aStream, const nsString& aCharset, PRInt32 aSource);
 
 
       ~nsScanner();
@@ -382,7 +383,7 @@ class nsScanner {
                           PRUnichar* aDataEnd, 
                           PRUnichar* aStorageEnd);
 
-      nsInputStream*  mInputStream;
+      nsCOMPtr<nsIInputStream>     mInputStream;
       nsScannerString*             mSlidingBuffer;
       nsReadingIterator<PRUnichar> mCurrentPosition; // The position we will next read from in the scanner buffer
       nsReadingIterator<PRUnichar> mMarkPosition;    // The position last marked (we may rewind to here)
@@ -391,7 +392,6 @@ class nsScanner {
       PRUint32        mCountRemaining; // The number of bytes still to be read
                                        // from the scanner buffer
       PRUint32        mTotalRead;
-      PRPackedBool    mOwnsStream;
       PRPackedBool    mIncremental;
       PRInt32         mCharsetSource;
       nsString        mCharset;

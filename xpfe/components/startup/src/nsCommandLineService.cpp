@@ -42,6 +42,7 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "plstr.h"
+#include "nsCRT.h"
 #include "nsNetUtil.h"
 #ifdef XP_MACOSX
 #include "nsCommandLineServiceMac.h"
@@ -398,19 +399,4 @@ nsCmdLineService::PrintCmdArgs()
 
 }
 #endif
-
-NS_EXPORT nsresult NS_NewCmdLineService(nsICmdLineService** aResult)
-{
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aResult = new nsCmdLineService();
-  if (nsnull == *aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
 

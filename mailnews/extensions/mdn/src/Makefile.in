@@ -30,6 +30,7 @@ MODULE		= msgmdn
 LIBRARY_NAME	= msgmdn_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  dom \
 		  msgbase \

@@ -73,16 +73,7 @@ const int netCharType[256] =
 #define HEX_ESCAPE '%'
 
 //----------------------------------------------------------------------------------------
-NS_COM char* nsEscape(const char * str, nsEscapeMask mask)
-//----------------------------------------------------------------------------------------
-{
-    if(!str)
-        return NULL;
-    return nsEscapeCount(str, (PRInt32)strlen(str), mask, NULL);
-}
-
-//----------------------------------------------------------------------------------------
-NS_COM char* nsEscapeCount(
+static char* nsEscapeCount(
     const char * str,
     PRInt32 len,
     nsEscapeMask mask,
@@ -145,6 +136,15 @@ NS_COM char* nsEscapeCount(
 	if(out_len)
 		*out_len = dst - (unsigned char *) result;
     return result;
+}
+
+//----------------------------------------------------------------------------------------
+NS_COM char* nsEscape(const char * str, nsEscapeMask mask)
+//----------------------------------------------------------------------------------------
+{
+    if(!str)
+        return NULL;
+    return nsEscapeCount(str, (PRInt32)strlen(str), mask, NULL);
 }
 
 //----------------------------------------------------------------------------------------
@@ -347,24 +347,6 @@ const int EscapeChars[256] =
  
    esc_Forced        =  1024
 */
-
-NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
-{
-    result.Truncate();
-    nsresult rv = NS_EscapeURL(str, -1, mask, result);
-    if (NS_SUCCEEDED(rv) && result.IsEmpty())
-        result = str;
-    return rv;
-}
-
-NS_COM nsresult nsStdUnescape(char *str, char **result)
-{
-    *result = nsCRT::strdup(str);
-    if (!*result)
-        return NS_ERROR_OUT_OF_MEMORY;
-    nsUnescape(*result);
-    return NS_OK;
-}
 
 NS_COM PRBool NS_EscapeURL(const char *part,
                            PRInt32 partLen,

@@ -57,6 +57,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
+#include "nsXULAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIDocument.h"

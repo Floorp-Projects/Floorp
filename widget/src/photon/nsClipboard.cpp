@@ -28,7 +28,6 @@
 #include <Pt.h>
 
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h"
 #include "nsCRT.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"

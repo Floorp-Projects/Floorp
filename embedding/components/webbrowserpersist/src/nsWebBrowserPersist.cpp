@@ -23,10 +23,6 @@
 
 #include "nspr.h"
 
-#define NO_XPCOM_FILE_STREAMS
-#include "nsIFileStream.h"        // Old XPCOM file streams
-#undef NO_XPCOM_FILE_STREAMS
-
 #include "nsIFileStreams.h"       // New Necko file streams
 
 #ifdef XP_MAC
@@ -36,6 +32,7 @@
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIStorageStream.h"
+#include "nsISeekableStream.h"
 #include "nsIHttpChannel.h"
 #include "nsIEncodedChannel.h"
 #include "nsIUploadChannel.h"

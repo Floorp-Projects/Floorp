@@ -52,7 +52,6 @@ PRUint32 gFontDebug = 0 | NS_FONT_DEBUG_FONT_SCAN;
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <dirent.h>
-#include "nsIFileSpec.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsLocalFileUnix.h"
 #include "nsIEnumerator.h"

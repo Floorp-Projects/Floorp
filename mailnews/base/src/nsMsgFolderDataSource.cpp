@@ -49,6 +49,7 @@
 #include "nsRDFCID.h"
 #include "nsIRDFNode.h"
 #include "nsEnumeratorUtils.h"
+#include "nsAdapterEnumerator.h"
 
 #include "nsString.h"
 #include "nsCOMPtr.h"

@@ -30,6 +30,7 @@ MODULE		= msgcompose
 LIBRARY_NAME	= msgcompose_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+                  xpcom_obsolete \
 		  string \
 		  dom \
 		  editor \

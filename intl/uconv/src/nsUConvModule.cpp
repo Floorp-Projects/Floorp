@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
@@ -53,7 +54,6 @@
 #include "nsITextToSubURI.h"
 #include "nsIServiceManager.h"
 #include "nsUConvDll.h"
-#include "nsFileSpec.h"
 #include "nsIFile.h"
 #include "nsIScriptableUConv.h"
 #include "nsConverterInputStream.h"

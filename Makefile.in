@@ -128,6 +128,7 @@ tier_2_dirs	+= \
 		modules/libreg \
 		string \
 		xpcom \
+		xpcom/obsolete \
 		$(NULL)
 
 ifdef NS_TRACE_MALLOC
@@ -184,6 +185,7 @@ tier_9_dirs	+= \
 		content \
 		layout \
 		db \
+		xpfe/components/shistory \
 		docshell \
 		webshell \
 		profile \
@@ -206,7 +208,11 @@ ifdef MOZ_JPROF
 tier_9_dirs        += tools/jprof
 endif
 
-tier_9_dirs	+= xpfe xpinstall
+tier_9_dirs	+= xpfe
+
+ifdef MOZ_XPINSTALL
+tier_9_dirs     +=  xpinstall
+endif
 
 ifdef MOZ_LEAKY
 tier_9_dirs        += tools/leaky

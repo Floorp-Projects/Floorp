@@ -49,7 +49,6 @@
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include "nsXPIDLString.h"
-#include "nsIFileSpec.h"
 #include "nsEscape.h"
 #include "nsIURL.h"
 
@@ -2401,8 +2400,6 @@ nsProfile::CreateDefaultProfile(void)
 {
     nsresult rv = NS_OK;
 
-    nsFileSpec profileDirSpec;
-    
     // Get the default user profiles folder
     nsCOMPtr<nsIFile> profileRootDir;
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(profileRootDir));

@@ -30,6 +30,7 @@ MODULE		= msgnews
 LIBRARY_NAME	= msgnews_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+                  xpcom_obsolete \
 		  string \
 		  mailnews \
 		  msgbase \

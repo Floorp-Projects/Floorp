@@ -84,23 +84,24 @@ static CFBundleRef getPluginBundle(const char* path)
     return bundle;
 }
 
-static OSErr toFSSpec(const nsFileSpec& inFileSpec, FSSpec& outSpec)
+static OSErr toFSSpec(nsIFile* file, FSSpec& outSpec)
 {
-    FSRef ref;
-    OSErr err = FSPathMakeRef((const UInt8*)inFileSpec.GetCString(), &ref, NULL);
-    if (err == noErr)
-        err = FSGetCatalogInfo(&ref, kFSCatInfoNone, NULL, NULL, &outSpec, NULL);
-    return err;
+    nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(file);
+    if (!lfm)
+        return -1;
+
+    lfm->GetFSSpec(outSpec);
+    return NS_OK;
 }
 
-PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
+PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
 {
 #ifdef DEBUG
     printf("nsPluginsDir::IsPluginFile:  checking %s\n", fileSpec.GetCString());
 #endif
     // look at file's creator/type and make sure it is a code fragment, etc.
     FSSpec spec;
-    OSErr err = toFSSpec(fileSpec, spec);
+    OSErr err = toFSSpec(file, spec);
     if (err != noErr)
         return PR_FALSE;
 
@@ -138,8 +139,8 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
     return PR_FALSE;
 }
 
-nsPluginFile::nsPluginFile(const nsFileSpec& spec)
-    : nsFileSpec(spec)
+nsPluginFile::nsPluginFile(nsIFile *spec)
+    : mPlugin(spec)
 {
 }
 
@@ -151,7 +152,15 @@ nsPluginFile::~nsPluginFile() {}
  */
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
-    const char* path = this->GetCString();
+ 	const char* path;
+
+    if (!mPlugin)
+        return NS_ERROR_NULL_POINTER;
+
+    nsCAutoString temp;
+    mPlugin->GetNativePath(temp);
+    path = temp.get();
+
     outLibrary = PR_LoadLibrary(path);
     pLibrary = outLibrary;
     if (!outLibrary) {

@@ -30,6 +30,7 @@ MODULE		= msgbase
 LIBRARY_NAME	= msgbase_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  necko \
 		  dom \

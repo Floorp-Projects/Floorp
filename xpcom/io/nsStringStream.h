@@ -39,12 +39,34 @@
 #ifndef nsStringStream_h__
 #define nsStringStream_h__
 
+#include "nsISeekableStream.h"
+
+/* a6cf90e8-15b3-11d2-932e-00805f8add32 */
+#define NS_IRANDOMACCESS_IID \
+{  0xa6cf90eb, 0x15b3, 0x11d2, \
+    {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+
+//========================================================================================
+class nsIRandomAccessStore
+// Supports Seek, Tell etc.
+//========================================================================================
+: public nsISeekableStream
+{
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRANDOMACCESS_IID)
+
+/* "PROTECTED" */
+    NS_IMETHOD                         GetAtEOF(PRBool* outAtEOF) = 0;
+    NS_IMETHOD                         SetAtEOF(PRBool inAtEOF) = 0;
+}; // class nsIRandomAccessStore
+
 #include "nsIStringStream.h"
 
 /**
  * nsStringInputStream : nsIStringInputStream
  *                     , nsIInputStream
  *                     , nsISeekableStream
+ *                     , nsIRandomAccessStore
  */
 #define NS_STRINGINPUTSTREAM_CLASSNAME  "nsStringInputStream"
 #define NS_STRINGINPUTSTREAM_CONTRACTID "@mozilla.org/io/string-input-stream;1"
@@ -56,5 +78,7 @@
     {0xaf, 0x28, 0x61, 0xb3, 0xba, 0x17, 0xc2, 0x95} \
 }
 extern NS_METHOD nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **);
+
+
 
 #endif // nsStringStream_h__

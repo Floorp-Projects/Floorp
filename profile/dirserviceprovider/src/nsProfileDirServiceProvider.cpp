@@ -352,6 +352,7 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
   rv = profileDir->Exists(&exists);
   if (NS_FAILED(rv))
     return rv;
+
   if (!exists) {
     nsCOMPtr<nsIFile> profileDefaultsDir;
     nsCOMPtr<nsIFile> profileDirParent;
@@ -363,7 +364,7 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
     rv = profileDir->GetNativeLeafName(profileDirName);
     if (NS_FAILED(rv))
       return rv;
-    
+
     rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profileDefaultsDir));
     if (NS_FAILED(rv)) {
       rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(profileDefaultsDir));
@@ -371,8 +372,13 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
         return rv;
     }
     rv = profileDefaultsDir->CopyToNative(profileDirParent, profileDirName);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) {
+        // if copying failed, lets just ensure that the profile directory exists.
+        profileDirParent->AppendNative(profileDirName);
+        rv = profileDirParent->Create(nsIFile::DIRECTORY_TYPE, 0700);
+        if (NS_FAILED(rv))
+            return rv;
+    }
       
 #ifndef XP_MAC
     rv = profileDir->SetPermissions(0700);
@@ -384,6 +390,7 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
   else {
     PRBool isDir;
     rv = profileDir->IsDirectory(&isDir);
+
     if (NS_FAILED(rv))
       return rv;
     if (!isDir)

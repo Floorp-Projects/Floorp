@@ -268,7 +268,7 @@ void nsIMEPreedit::SetPreeditString(const XIMText *aText,
     composeUniStringLen =
       nsGtkIMEHelper::GetSingleton()->MultiByteToUnicode(
 				preeditStr,
-				nsCRT::strlen(preeditStr),
+				strlen(preeditStr),
 				&(mCompositionUniString),
 				&(mCompositionUniStringSize));
     if (aText && aText->encoding_is_wchar) {
@@ -709,7 +709,7 @@ void
 nsIMEStatus::resize(const char *aString) {
   Display *display = GDK_DISPLAY();
   if (!aString || !aString[0]) return;
-  int len = nsCRT::strlen(aString);
+  int len = strlen(aString);
 
   int width = XmbTextEscapement(mFontset, aString, len);
 
@@ -733,7 +733,7 @@ nsIMEStatus::show() {
 
   nsIMEGtkIC *xic = mAttachedWindow->IMEGetInputContext(PR_FALSE);
 
-  if (!xic || !xic->mStatusText || !nsCRT::strlen(xic->mStatusText)) {
+  if (!xic || !xic->mStatusText || !strlen(xic->mStatusText)) {
     // don't map if text is ""
     return;
   }
@@ -806,7 +806,7 @@ nsIMEStatus::setText(const char *aText) {
   Display *display = GDK_DISPLAY();
   if (!aText) return;
 
-  int len = nsCRT::strlen(aText);
+  int len = strlen(aText);
 
   if (mGC == 0) {
     XGCValues values;
@@ -1375,7 +1375,7 @@ nsIMEGtkIC::ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize)
   PRInt32 uniCharSize = 0;
   char *uncommitted_text = XmbResetIC(mIC->xic);
   if (uncommitted_text && uncommitted_text[0]) {
-    PRInt32 uncommitted_len = nsCRT::strlen(uncommitted_text);
+    PRInt32 uncommitted_len = strlen(uncommitted_text);
     uniCharSize = nsGtkIMEHelper::GetSingleton()->MultiByteToUnicode(
 				  uncommitted_text, uncommitted_len,
 				  aUnichar,

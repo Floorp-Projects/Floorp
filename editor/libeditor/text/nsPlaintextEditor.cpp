@@ -62,6 +62,7 @@
 #include "nsISelectionController.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEventGroup.h"
+#include "nsCRT.h"
 
 #include "nsIIndependentSelection.h" //domselections answer to frameselection
 
@@ -77,7 +78,6 @@
 #include "nsIDOMNSRange.h"
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
-#include "nsFileSpec.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"

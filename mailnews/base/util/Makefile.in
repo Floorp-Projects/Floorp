@@ -32,6 +32,7 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= msgbsutl
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  msgbase \
 		  rdf \
@@ -80,6 +81,7 @@ CPPSRCS		= \
 		nsMsgTxn.cpp \
 		nsMsgI18N.cpp \
 		nsMsgUtf7Utils.cpp \
+		nsAdapterEnumerator.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -101,6 +103,7 @@ EXPORTS		= \
 		nsMsgTxn.h \
 		nsMsgI18N.h \
 		nsMsgUtf7Utils.h \
+		nsAdapterEnumerator.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -108,6 +111,7 @@ EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
 
 DEFINES		+= -D_IMPL_NS_MSG_BASE

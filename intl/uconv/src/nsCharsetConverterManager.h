@@ -42,7 +42,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
-#include "nsIRegistry.h"
 
 class nsCharsetConverterManager : public nsICharsetConverterManager, 
 public nsICharsetConverterManager2

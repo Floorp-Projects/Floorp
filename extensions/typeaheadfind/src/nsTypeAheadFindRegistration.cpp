@@ -40,7 +40,6 @@
 #include "nsIGenericFactory.h"
 #include "nsTypeAheadFind.h"
 #include "nsIServiceManager.h"
-#include "nsIRegistry.h"
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsICategoryManager.h"

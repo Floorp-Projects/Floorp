@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIRegistry.h"
-#include "nsFileSpec.h"
 #include "nsString.h"
 #include "nsICmdLineService.h"
 #include "nsProfileAccess.h"

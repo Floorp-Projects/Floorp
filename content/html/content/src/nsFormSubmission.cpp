@@ -39,15 +39,12 @@
 
 // JBK added for submit move from content frame
 #include "nsIFile.h"
-#include "nsIFileStreams.h"
-#include "nsIFileSpec.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFormProcessor.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsSpecialSystemDirectory.h"
 #include "nsLinebreakConverter.h"
 #include "nsICharsetConverterManager.h"
 #include "xp_path.h"

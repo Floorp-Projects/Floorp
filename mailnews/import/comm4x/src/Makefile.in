@@ -57,6 +57,7 @@ META_COMPONENT  = mail
 MODULE_NAME     = nsComm4xMailImportModule
 
 REQUIRES	= xpcom \
+		  xpcom_obsolete \
 		  string \
 		  intl \
 		  import \
@@ -85,6 +86,7 @@ EXTRA_DSO_LDOPTS = \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_XPCOM_OBSOLETE_LIBS) \
 	$(NULL)
 
 

@@ -104,7 +104,6 @@ Essential Files:gfx.shlb
 Components:gfxComponent.shlb
 
 ; javascript
-Components:JSUrl.shlb
 Components:jsurl.xpt
 
 ; layout
@@ -112,7 +111,6 @@ res:dtd:xhtml11.dtd
 Components:layout.shlb
 Components:htmlparser.shlb
 Components:htmlparser.xpt
-Components:view.shlb
 Components:content.xpt     
 Components:layout.xpt   
 
@@ -146,6 +144,8 @@ Components:oji.xpt
 ; profile
 Components:profile.shlb
 Components:profileservices.xpt
+Components:mozreg.shlb
+Components:mozreg.xpt
 
 ; wallet
 ; Optional - only if you need password persistence
@@ -185,7 +185,6 @@ Components:RDFLibrary.shlb
 Components:rdf.xpt
 
 ; session history
-Components:shistory.shlb
 Components:shistory.xpt
 
 ; optional typeaheadfind 
@@ -222,7 +221,6 @@ defaults:Profile:mimeTypes.rdf
 defaults:Profile:US:mimeTypes.rdf
 
 ; uriloader
-Components:uriLoader.shlb
 Components:uriLoader.xpt
 
 ; widget

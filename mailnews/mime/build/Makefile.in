@@ -33,6 +33,7 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= mime_services
 REQUIRES	= xpcom \
+                  xpcom_obsolete \
 		  string \
 		  necko \
 		  msgbase \
@@ -58,6 +59,7 @@ EXTRA_DSO_LDOPTS = \
 	        $(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
+                $(MOZ_XPCOM_OBSOLETE_LIBS) \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -236,21 +236,6 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
 }
 
 
-#ifdef DEBUG
-/*
- *  Dump contents of this token to givne output stream
- *  
- *  @update  gess 3/25/98
- *  @param   out -- ostream to output content
- *  @return  
- */
-void CStartToken::DebugDumpSource(nsOutputStream& out) {
-  out << "<" << NS_LossyConvertUCS2toASCII(mTextValue).get();
-  if(!mAttributed)
-    out << ">";
-}
-#endif
-
 const nsAString& CStartToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
@@ -408,19 +393,6 @@ const char*  CEndToken::GetClassName(void) {
 PRInt32 CEndToken::GetTokenType(void) {
   return eToken_end;
 }
-
-#ifdef DEBUG
-/*
- *  Dump contents of this token to givne output stream
- *  
- *  @update  gess 3/25/98
- *  @param   out -- ostream to output content
- *  @return  
- */
-void CEndToken::DebugDumpSource(nsOutputStream& out) {
-  out << "</" << NS_LossyConvertUCS2toASCII(mTextValue).get() << ">";
-}
-#endif
 
 const nsAString& CEndToken::GetStringValue()
 {
@@ -1496,22 +1468,6 @@ void CAttributeToken::SanitizeKey() {
   return;
 }
 
-#ifdef DEBUG
-/*
- *  Dump contents of this token to given output stream
- *  
- *  @update  gess 3/25/98
- *  @param   out -- ostream to output content
- *  @return  
- */
-void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
-  out << "[" << GetClassName() << "] "
-      << NS_LossyConvertUCS2toASCII(mTextKey).get() << "="
-      << NS_LossyConvertUCS2toASCII(mTextValue).get() << ": " << mTypeID
-      << nsEndl;
-}
-#endif
-
 const nsAString& CAttributeToken::GetStringValue(void)
 {
   return mTextValue;
@@ -1836,24 +1792,6 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
   }//if
   return result;
 }
-
-#ifdef DEBUG
-/*
- *  Dump contents of this token to givne output stream
- *  
- *  @update  gess 3/25/98
- *  @param   out -- ostream to output content
- *  @return  
- */
-void CAttributeToken::DebugDumpSource(nsOutputStream& out) {
-  out << " " << NS_LossyConvertUCS2toASCII(mTextKey).get();
-  if (!mTextValue.IsEmpty()) {
-    out << "=" << NS_LossyConvertUCS2toASCII(mTextValue).get();
-  }
-  if(mLastAttribute)
-    out << ">";
-}
-#endif
 
 void CAttributeToken::SetKey(const nsAString& aKey)
 {
@@ -2201,20 +2139,6 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   return value;
 }
 
-#ifdef DEBUG
-/*
- *  Dump contents of this token to givne output stream
- *  
- *  @update  gess 3/25/98
- *  @param   out -- ostream to output content
- *  @return  
- */
-void CEntityToken::DebugDumpSource(nsOutputStream& out) {
-  char* cp = ToNewCString(mTextValue);
-  out << "&" << *cp;
-  delete[] cp;
-}
-#endif
 
 const nsAString& CEntityToken::GetStringValue(void)
 {

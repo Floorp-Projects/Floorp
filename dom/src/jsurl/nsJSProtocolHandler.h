@@ -50,6 +50,10 @@
     {0x8c, 0xd3, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+#define NS_JSPROTOCOLHANDLER_CONTRACTID \
+    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "javascript"
+
+
 class nsJSProtocolHandler : public nsIProtocolHandler
 {
 public:

@@ -30,7 +30,9 @@ MODULE		= mimeemitter
 LIBRARY_NAME	= emitterutil_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
+                  xpcom_obsolete \
 		  string \
+		  xpcom_obsolete \
 		  mime \
 		  msgbase \
 		  msgbaseutil \

@@ -39,6 +39,7 @@ RESFILE		= MfcEmbed.res
 
 MODULE = mfcEmbed
 REQUIRES = \
+	xpcom_obsolete \
 	xpcom \
 	string \
 	necko \

@@ -59,10 +59,20 @@
 #include "nsCOMPtr.h"
 #include <stdio.h>
 #include "nsInt64.h"
-#include "nsFileSpec.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+
+#if defined(XP_MAC)
+  #define FILE_PATH_SEPARATOR       ":"
+#elif defined(XP_WIN) || defined(XP_OS2)
+  #define FILE_PATH_SEPARATOR       "\\"
+#elif defined(XP_UNIX) || defined(XP_BEOS)
+  #define FILE_PATH_SEPARATOR       "/"
+#else
+  #error need_to_define_your_file_path_separator_and_illegal_characters
+#endif
 
 PRIntervalTime gDuration = 0;
 PRUint32 gVolume = 0;
@@ -272,9 +282,11 @@ SerialReadTest(char* dirName)
 
     PRIntervalTime startTime = PR_IntervalNow();
     PRDirEntry* entry;
+
     while ((entry = PR_ReadDir(dir, PR_SKIP_BOTH)) != nsnull) {
-        nsFileSpec spec(dirName);
-        spec += entry->name;
+        char buffer[1024];
+
+        sprintf(buffer, "%s%s%s" dirName, FILE_PATH_SEPARATOR, entry->name);
 
         nsReader* reader = new nsReader();
         NS_ASSERTION(reader, "out of memory");
@@ -293,7 +305,7 @@ SerialReadTest(char* dirName)
         reader->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
         NS_ASSERTION(listener, "QI failed");
 
-        rv = Simulated_nsFileTransport_Run(reader, spec);
+        rv = Simulated_nsFileTransport_Run(reader, buffer);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Simulated_nsFileTransport_Run failed");
 
         // the reader thread will hang on to these objects until it quits

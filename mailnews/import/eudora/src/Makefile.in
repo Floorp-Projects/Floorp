@@ -34,6 +34,7 @@ META_COMPONENT	= mail
 MODULE_NAME	= nsEudoraImportModule
 
 REQUIRES	= xpcom \
+                  xpcom_obsolete \
 		  string \
 		  import \
 		  intl \
@@ -74,6 +75,7 @@ endif
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
+		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

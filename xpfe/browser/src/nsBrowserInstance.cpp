@@ -58,6 +58,7 @@
 #include "pratom.h"
 #include "prprf.h"
 #include "nsIComponentManager.h"
+#include "nsCRT.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -81,6 +82,7 @@
 #include "nsIIOService.h"
 #include "nsIWidget.h"
 #include "plevent.h"
+#include "plstr.h"
 
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
@@ -93,14 +95,12 @@
 #include "nsIObserverService.h"
 
 #include "nsILocalFile.h"
-#include "nsIFileStreams.h"
 #include "nsDirectoryServiceDefs.h"
 
 #include "nsNetUtil.h"
 #include "nsICmdLineService.h"
 
 // Stuff to implement file download dialog.
-#include "nsFileStream.h"
 #include "nsIProxyObjectManager.h" 
 
 #ifdef MOZ_PHOENIX
