@@ -52,6 +52,10 @@
 #include "prsystem.h"
 #endif
 
+#ifdef VMS
+#include <rmsdef.h>
+#endif
+
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
 
@@ -1840,12 +1844,18 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
     if (NS_FAILED(rv))
         return rv;
 
-    remove(filePath.get());
-    mLockFileDesc = open(filePath.get(), O_WRONLY | O_CREAT | O_EXCL, 0666);
+    mLockFileDesc = open_noshr(filePath.get(), O_CREAT, 0666);
     if (mLockFileDesc == -1)
     {
-        NS_ERROR("Failed to open lock file.");
-        return NS_ERROR_FAILURE;
+	if ((errno == EVMSERR) && (vaxc$errno == RMS$_FLK))
+	{
+	    return NS_ERROR_FILE_ACCESS_DENIED;
+	}
+	else
+	{
+	    NS_ERROR("Failed to open lock file.");
+	    return NS_ERROR_FAILURE;
+	}
     }
 #elif defined(XP_UNIX)
 #ifdef USE_SYMLINK_LOCKING
