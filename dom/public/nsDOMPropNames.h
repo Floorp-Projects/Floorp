@@ -598,6 +598,7 @@
     "htmltitleelement.text", \
     "htmlulistelement.compact", \
     "htmlulistelement.type", \
+    "image.complete", \
     "image.lowsrc", \
     "keyevent.altkey", \
     "keyevent.charcode", \

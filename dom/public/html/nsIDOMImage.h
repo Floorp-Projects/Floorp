@@ -39,18 +39,22 @@ public:
 
   NS_IMETHOD    GetLowsrc(nsString& aLowsrc)=0;
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc)=0;
+
+  NS_IMETHOD    GetComplete(PRBool* aComplete)=0;
 };
 
 
 #define NS_DECL_IDOMIMAGE   \
   NS_IMETHOD    GetLowsrc(nsString& aLowsrc);  \
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc);  \
+  NS_IMETHOD    GetComplete(PRBool* aComplete);  \
 
 
 
 #define NS_FORWARD_IDOMIMAGE(_to)  \
   NS_IMETHOD    GetLowsrc(nsString& aLowsrc) { return _to GetLowsrc(aLowsrc); } \
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc) { return _to SetLowsrc(aLowsrc); } \
+  NS_IMETHOD    GetComplete(PRBool* aComplete) { return _to GetComplete(aComplete); } \
 
 
 #endif // nsIDOMImage_h__
