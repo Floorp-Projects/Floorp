@@ -45,7 +45,19 @@ function onLoad()
   if (!browser) {
     // No browser supplied - we are calling from Composer
     dialog.openAppList.selectedItem = dialog.openEditWindow;
-    dialog.openTopWindow.setAttribute("disabled", "true");
+
+    // Change string to make more sense for Composer
+    dialog.openTopWindow.setAttribute("label", dialog.bundle.getString("existingNavigatorWindow"));
+
+    // Find most recent browser window
+    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+    if (windowManagerInterface)
+      browser = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
+
+    // Disable "current browser" item if no browser is open
+    if (!browser)
+      dialog.openTopWindow.setAttribute("disabled", "true");
   }
   else {
     dialog.openAppList.selectedItem = dialog.openTopWindow;
