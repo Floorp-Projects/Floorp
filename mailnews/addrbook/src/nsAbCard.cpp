@@ -99,7 +99,7 @@ nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
   rv = array->Count(&count);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
   for (PRUint32 i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> element = getter_AddRefs((*array)[i]);
+    nsCOMPtr<nsISupports> element = getter_AddRefs(array->ElementAt(i));
     if (filter(element, data)) {
       rv = f->AppendElement(element);
       if (NS_FAILED(rv)) {

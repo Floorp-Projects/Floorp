@@ -558,7 +558,7 @@ nsABDirectoryDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* 
   PRUint32 cnt;
   rv = aSources->Count(&cnt);
   for (PRUint32 i = 0; i < cnt; i++) {
-    nsCOMPtr<nsISupports> source = getter_AddRefs((*aSources)[i]);
+    nsCOMPtr<nsISupports> source = getter_AddRefs(aSources->ElementAt(i));
 		directory = do_QueryInterface(source, &rv);
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- directory commands are always enabled
@@ -585,7 +585,7 @@ nsABDirectoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
   PRUint32 cnt;
   rv = aSources->Count(&cnt);
   for (PRUint32 i = 0; i < cnt; i++) {
-		nsCOMPtr<nsISupports> supports = getter_AddRefs((*aSources)[i]);
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIAbDirectory> directory = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {
       if (peq(aCommand, kNC_Delete)) {
@@ -739,7 +739,7 @@ nsresult nsABDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *director
 nsresult nsABDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface((*arguments)[0], &rv));
+	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(arguments->ElementAt(0), &rv));
 	if(NS_SUCCEEDED(rv))
 	{
 		PRUnichar *name;
