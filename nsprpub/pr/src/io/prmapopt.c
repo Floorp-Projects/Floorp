@@ -46,12 +46,17 @@
  * includes winsock.h, with _WIN32_WINNT undefined.
  */
 
-#ifdef WIN32
-#ifdef __MINGW32__
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#elif defined(WINNT)
+#if defined(WINNT) || defined(__MINGW32__)
 #include <winsock.h>
+#endif
+
+/* MinGW doesn't define these in its winsock.h. */
+#ifdef __MINGW32__
+#ifndef IP_TTL
+#define IP_TTL 7
+#endif
+#ifndef IP_TOS
+#define IP_TOS 8
 #endif
 #endif
 
