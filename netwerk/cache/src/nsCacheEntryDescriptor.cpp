@@ -171,21 +171,37 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *result)
 }
 
 
-NS_IMETHODIMP nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
+nsresult
+nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
 {
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-
-    //** check for signed/unsigned math errors
-    PRInt32  deltaSize = dataSize - mCacheEntry->DataSize();
-
-    // ignore return value, this call instance is advisory
-    (void) nsCacheService::GlobalInstance()->OnDataSizeChange(mCacheEntry, deltaSize);
-    mCacheEntry->SetDataSize(dataSize);
-    return NS_OK;
+    nsresult  rv;
+    rv = nsCacheService::GlobalInstance()->OnDataSizeChange(mCacheEntry, deltaSize);
+    if (NS_SUCCEEDED(rv)) {
+        //** review for signed/unsigned math errors
+        PRUint32  newDataSize = mCacheEntry->DataSize() + deltaSize;
+        mCacheEntry->SetDataSize(newDataSize);
+    }
+    return rv;
 }
 
 
-NS_IMETHODIMP nsCacheEntryDescriptor::GetTransport(nsITransport ** result)
+NS_IMETHODIMP
+nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
+{
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    //** review for signed/unsigned math errors
+    PRInt32  deltaSize = dataSize - mCacheEntry->DataSize();
+
+    // this had better be NS_OK, this call instance is advisory
+    nsresult  rv = RequestDataSizeChange(deltaSize);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed SetDataSize() on memory cache object!");
+    return rv;
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryDescriptor::GetTransport(nsITransport ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)                  return NS_ERROR_NOT_AVAILABLE;
@@ -386,6 +402,10 @@ nsCacheEntryDescriptor::OpenInputStream(PRUint32           offset,
 }
 
 
+/**
+ * nsCacheOutputStream - a wrapper for nsIOutputstream to track the amount of data
+ *                       written to a cache entry.
+ */
 class nsCacheOutputStream : public nsIOutputStream {
     nsCacheEntryDescriptor* mDescriptor;
     nsCOMPtr<nsIOutputStream> mOutput;
@@ -467,6 +487,10 @@ nsCacheOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUi
 nsresult
 nsCacheOutputStream::OnWrite(PRUint32 count)
 {
+    //** if count > 2^31 error_write_too_big
+    return mDescriptor->RequestDataSizeChange((PRInt32)count);
+
+#if 0
     nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
     if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
     nsCacheDevice* device = cacheEntry->CacheDevice();
@@ -475,7 +499,9 @@ nsCacheOutputStream::OnWrite(PRUint32 count)
     if (NS_FAILED(rv)) return rv;
     cacheEntry->SetDataSize(cacheEntry->DataSize() + count);
     return NS_OK;
+#endif
 }
+
 
 static nsresult NS_NewCacheOutputStream(nsIOutputStream ** result,
                                         nsCacheEntryDescriptor * descriptor,
@@ -489,6 +515,7 @@ static nsresult NS_NewCacheOutputStream(nsIOutputStream ** result,
     NS_ADDREF(*result = cacheOutput);
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::OpenOutputStream(PRUint32            offset,
