@@ -310,6 +310,7 @@ void nsHTMLIFrameFrame::CreateWebWidget(nsSize aSize, nsString& aURL)
   result = view->Init(viewMan, viewBounds, parView, &kCChildCID);
   viewMan->InsertChild(parView, view, 0);
   NS_RELEASE(viewMan);
+  SetView(view);
   NS_RELEASE(parView);
  
   // init the web widget
