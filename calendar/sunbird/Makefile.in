@@ -228,7 +228,6 @@ endif
 	cp $(topsrcdir)/dist/bin/components/shistory.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/webshell_idls.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/profile.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/prefmigr.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/embed_base.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/windowwatcher.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/find.xpt ./MozillaSunbird/components
