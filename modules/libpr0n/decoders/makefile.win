@@ -21,6 +21,6 @@
 
 DEPTH=..\..\..
 
-DIRS = ppm gif png jpeg
+DIRS = ppm gif png jpeg icon\win icon
 
 !include $(DEPTH)\config\rules.mak
