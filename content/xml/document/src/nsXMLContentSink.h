@@ -26,11 +26,9 @@
 #include "nsIXMLContentSink.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
-#ifdef MOZ_XSL
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsITransformMediator.h"
-#endif
 #include "nsIUnicharInputStream.h"
 #include "nsIStreamLoader.h"
 #include "nsISupportsArray.h"
@@ -59,10 +57,8 @@ typedef enum {
 // XXX Till the parser knows a little bit more about XML, 
 // this is a HTMLContentSink.
 class nsXMLContentSink : public nsIXMLContentSink,
-#ifdef MOZ_XSL
                          public nsIObserver,
                          public nsSupportsWeakReference,
-#endif
                          public nsIStreamLoaderObserver
 {
 public:
@@ -100,12 +96,10 @@ public:
   NS_IMETHOD AddNotation(const nsIParserNode& aNode);
   NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
-#ifdef MOZ_XSL
   // nsIObserver
   NS_IMETHOD Observe(nsISupports *aSubject, 
                      const PRUnichar *aTopic, 
                      const PRUnichar *someData);
-#endif
 
   NS_IMETHOD ResumeParsing();
   NS_IMETHOD EvaluateScript(nsString& aScript, nsIURI *aScriptURI, PRUint32 aLineNo, const char* aVersion);
@@ -139,7 +133,6 @@ protected:
                             const nsString& aHref, PRBool aAlternate,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
-#ifdef MOZ_XSL
   nsresult ProcessStyleLink(nsIContent* aElement,
                             const nsString& aHref, PRBool aAlternate,
                             const nsString& aTitle, const nsString& aType,
@@ -152,7 +145,7 @@ protected:
   nsresult CreateStyleSheetURL(nsIURI** aUrl, const nsAReadableString& aHref);
   nsresult LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType);
   nsresult SetupTransformMediator();
-#endif
+
   nsresult AddText(const nsString& aString);
 
   static void
@@ -190,9 +183,7 @@ protected:
   PRInt32 mStyleSheetCount;
   nsICSSLoader* mCSSLoader;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
-#ifdef MOZ_XSL
   nsCOMPtr<nsITransformMediator> mXSLTransformMediator;
-#endif
 };
 
 #endif // nsXMLContentSink_h__

@@ -86,9 +86,7 @@
 #include "nsIDOMFocusListener.h"
 #include "nsISelectionController.h"
 
-#ifdef MOZ_XSL
 #include "nsITransformMediator.h"
-#endif
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
@@ -215,9 +213,7 @@ public:
   NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
   NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
                                        nsIDocumentViewer*& aResult);
-#ifdef MOZ_XSL
   NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
-#endif
 
   // nsIContentViewerEdit
   NS_DECL_NSICONTENTVIEWEREDIT
@@ -266,11 +262,9 @@ protected:
   nsCOMPtr<nsIDeviceContext> mDeviceContext;   // ??? can't hurt, but...
   nsIView*                 mView;        // [WEAK] cleaned up by view mgr
 
-  // the following six items are explicitly in this order
+  // the following seven items are explicitly in this order
   // so they will be destroyed in the reverse order (pinkerton, scc)
-#ifdef MOZ_XSL
   nsCOMPtr<nsITransformMediator> mTransformMediator;
-#endif
   nsCOMPtr<nsIDocument>    mDocument;
   nsCOMPtr<nsIWidget>      mWindow;      // ??? should we really own it?
   nsCOMPtr<nsIViewManager> mViewManager;
@@ -1298,7 +1292,6 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
   }
 }
 
-#ifdef MOZ_XSL
 NS_IMETHODIMP 
 DocumentViewerImpl::SetTransformMediator(nsITransformMediator* aMediator)
 {
@@ -1307,7 +1300,6 @@ DocumentViewerImpl::SetTransformMediator(nsITransformMediator* aMediator)
   mTransformMediator = aMediator;
   return NS_OK;
 }
-#endif
 
 #ifdef XP_MAC
 #pragma mark -

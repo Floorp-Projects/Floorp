@@ -1620,10 +1620,7 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:layout:events:src:MANIFEST",                     "$distdirectory:layout:");
     _InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",            "$distdirectory:layout:");
     _InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",             "$distdirectory:layout:");
-    if ($main::options{transformiix})
-    {
-        _InstallFromManifest(":mozilla:layout:xsl:document:src:MANIFEST_IDL",                   "$distdirectory:idl:");
-    }
+    _InstallFromManifest(":mozilla:layout:xsl:document:src:MANIFEST_IDL",           "$distdirectory:idl:");
     if ($main::options{svg})
     {
         _InstallFromManifest(":mozilla:layout:svg:base:public:MANIFEST",                        "$distdirectory:layout:");
@@ -2426,14 +2423,7 @@ sub BuildLayoutProjects()
     BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    if ($main::options{transformiix})
-    {
-        BuildOneProject(":mozilla:layout:macbuild:layoutxsl.mcp",                   "layoutxsl$D.o", 0, 0, 0);
-    }
-    else
-    {
-        BuildOneProject(":mozilla:layout:macbuild:layoutxsl.mcp",                   "layoutxsl$D.o stub", 0, 0, 0);
-    }
+    BuildOneProject(":mozilla:layout:macbuild:layoutxsl.mcp",                   "layoutxsl$D.o", 0, 0, 0);
     if ($main::options{mathml})
     {
         BuildOneProject(":mozilla:layout:macbuild:layoutmathml.mcp",                "layoutmathml$D.o", 0, 0, 0);

@@ -24,10 +24,6 @@ MODULE=rdf
 LIBRARY_NAME=rdfcontent_s
 
 DEFINES=-D_IMPL_NS_DOM
-!if defined(MOZ_XSL)
-DEFINES=$(DEFINES) -DMOZ_XSL
-!endif
-
 
 LCFLAGS = \
         $(LCFLAGS) \

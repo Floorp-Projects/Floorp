@@ -72,9 +72,7 @@ LLIBS=					\
  $(DIST)\lib\raptorhtmltable_s.lib	\
  $(DIST)\lib\raptorxmlcontent_s.lib	\
  $(DIST)\lib\raptorxmldoc_s.lib		\
-!if defined(MOZ_XSL)
  $(DIST)\lib\raptorxsldoc_s.lib		\
-!endif
  $(DIST)\lib\raptorxulbase_s.lib \
  $(DIST)\lib\raptorxulcontent_s.lib	\
  $(DIST)\lib\raptorxbl_s.lib \

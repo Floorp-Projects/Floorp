@@ -25,3 +25,6 @@
  */
 
 #include "MacSharedPrefix.h"
+
+#define MOZ_XSL 1
+#define HAVE_RINT 1
