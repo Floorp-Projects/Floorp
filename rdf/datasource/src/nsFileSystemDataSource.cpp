@@ -225,7 +225,7 @@ FileSystemDataSource::~FileSystemDataSource (void)
     PL_strfree(mURI);
     if (nsnull != mObservers)
 	{
-            for (PRInt32 i = mObservers->Count(); i >= 0; --i)
+            for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i)
 		{
                     nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
                     NS_RELEASE(obs);
