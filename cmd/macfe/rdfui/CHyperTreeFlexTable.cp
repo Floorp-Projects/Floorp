@@ -322,30 +322,18 @@ void CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect
 		::RGBBackColor(&backColor);
 		::EraseRect(&backRect);
 	}
-	
-	
+		
 	// Get cell data
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
 	if (node)
 	{
 		if ( HT_IsSeparator(node) ) {
-			StColorPenState savedPenState;
-			RGBColor black = { 0, 0, 0 };
+			const static RGBColor black = { 0, 0, 0 };
 			Uint16 left = inLocalRect.left;
 			
-			if ( inCell.col == 1 ) {
-				StTextState savedTextState;
-				Rect iconRect, textRect = inLocalRect;
-				
-				// get level indent for text
-				GetIconRect ( inCell, inLocalRect, iconRect );
-				textRect.left = iconRect.left;
-				left = iconRect.left;
-				::MoveTo ( left, iconRect.top );
-				
-				//еее REPLACE WITH GetIndString
-				DrawTextString("<Separator>", &mTextFontInfo, 0, textRect);
-				left += ::TextWidth("<Separator>", 0, 11) + 5;
+			if ( inCell.col == FindTitleColumnID() ) {
+				left = DrawIcons(inCell, inLocalRect);
+				left += CStandardFlexTable::kDistanceFromIconToText;
 			}
 			
 			::RGBForeColor ( &black );
