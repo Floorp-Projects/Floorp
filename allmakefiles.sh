@@ -873,7 +873,6 @@ extensions/transformiix/source/base/Makefile
 extensions/transformiix/source/main/Makefile
 extensions/transformiix/source/xml/dom/standalone/Makefile
 extensions/transformiix/source/xml/dom/Makefile
-extensions/transformiix/source/xml/dom/mozImpl/Makefile
 extensions/transformiix/source/xml/parser/Makefile
 extensions/transformiix/source/xml/Makefile
 extensions/transformiix/source/xpath/Makefile
