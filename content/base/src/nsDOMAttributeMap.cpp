@@ -342,7 +342,6 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
           else {
             attrPrivate->SetContent(mContent);
             attrPrivate->SetName(name);
-            NS_RELEASE(attrPrivate);
 
             // Add the new attribute node to the hash table (maintaining
             // a reference to it)
