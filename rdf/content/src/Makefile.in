@@ -42,9 +42,10 @@ CPPSRCS =				\
 	nsXULDocument.cpp               \
 	nsXULSortService.cpp            \
 	nsXULDocumentInfo.cpp		\
-	nsXULPopupListener.cpp \
-	nsXULFocusTracker.cpp \
-	nsXULKeyListener.cpp \
+	nsXULPopupListener.cpp		\
+	nsXULFocusTracker.cpp		\
+	nsXULKeyListener.cpp		\
+	nsXULTreeElement.cpp		\
 	$(NULL)
 
 EXPORTS = \
