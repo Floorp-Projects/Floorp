@@ -5,9 +5,11 @@
 <window
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  title="&window.title;">
 
-<html:script language="JavaScript" src="FilterListDialog.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
+
 <box align="vertical" style="width: 100%">
   <box align="horizontal" flex="100%">
     <box align="vertical" style="width:100%;" flex="100%" class="cleanborder">

@@ -1,3 +1,7 @@
+function filterEditorOnLoad(pickerID)
+{
+	MsgFolderPickerOnLoad(pickerID);
+}
 
 
 function updateRule(boxnode) {

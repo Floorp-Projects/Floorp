@@ -1,5 +1,4 @@
-<!-- extracted from FilterEditor.xul -->
-
+<!ENTITY window.title "Edit Filter">
 <!ENTITY subject.label "subject">
 <!ENTITY sender.label "sender">
 <!ENTITY date.label "date">
@@ -18,6 +17,5 @@
 <!ENTITY markRead.label "Mark read">
 <!ENTITY ignoreThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
-<!ENTITY newFolderButton.label "New Folder...">
 <!ENTITY more.label "More">
 <!ENTITY less.label "Less">
