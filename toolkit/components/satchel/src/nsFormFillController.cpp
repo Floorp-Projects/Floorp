@@ -558,7 +558,20 @@ NS_IMETHODIMP
 nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-  
+
+  // see autocomplete.xml
+  // don't capture modified keys
+  PRBool isModified = PR_FALSE;
+  keyEvent->GetCtrlKey(&isModified);
+  if (isModified)
+    return NS_OK;
+  keyEvent->GetAltKey(&isModified);
+  if (isModified)
+    return NS_OK;
+  keyEvent->GetMetaKey(&isModified);
+  if (isModified)
+    return NS_OK;
+
   PRBool cancel = PR_FALSE;
 
   PRUint32 k;

@@ -20,6 +20,7 @@
 # Rights Reserved.
 # 
 # Contributor(s):
+#     Pierre Chanial (p_ch@verizon.net)
 #
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -327,8 +328,13 @@
       <method name="onKeyPress">
         <parameter name="aEvent"/>
         <body><![CDATA[
+          // this handler is called before the one in search.xml
+          // that's sucks because the next line will also cancel
+          // keys like ctrl-L, ctrl-N in the search bar.
+          if (aEvent.ctrlKey || aEvent.metaKey || aEvent.altKey)
+            return false; // don't capture key + modifiers
+
           var cancel = false;
-          
           const IController = Components.interfaces.nsIAutoCompleteController;
           
           if (!this.disableKeyNavigation) {

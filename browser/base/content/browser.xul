@@ -69,7 +69,7 @@
            datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" 
            oncommand="return SearchBarPopupCommand(event);"
            onpopupshowing="SearchBarPopupShowing(event);">
-      <menuitem id="miSearchModeFind" class="menuitem-iconic"
+      <menuitem id="__PhoenixFindInPage" class="menuitem-iconic"
                 label="&findOnSearchBarCmd.label;"/>
       <menuseparator/>
       <template>
@@ -390,12 +390,12 @@
                  autocompletepopup="PopupAutoComplete"
                  autocompletesearch="form-history"
                  tabscrolling="true"
+                 ontextentered="return this.onTextEntered(param);"
                  onfocus="URLBarFocusHandler(event, this);"
                  onmousedown="URLBarMouseDownHandler(event, this);"
                  onclick="URLBarClickHandler(event, this);"
-                 ontextentered="return handleSearchBarCommand(param);"
-                 persist="searchmode,autocompletesearchparam">
-          <image id="search-proxy-button" popup="SearchBarPopup"/>
+                 persist="searchengine,autocompletesearchparam">
+          <image id="search-proxy-button" popup="SearchBarPopup" persist="src"/>
         </textbox>
       </toolbaritem>
       
