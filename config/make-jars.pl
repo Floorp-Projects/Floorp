@@ -11,6 +11,24 @@ use Time::localtime;
 $IS_DIR = 1;
 $IS_FILE = 2;
 
+getopt("d:");
+my $destPath = ".";
+if (defined($opt_d)) {
+    $destPath = $opt_d;
+}
+
+getopt("c:");
+my $copyFiles = false;
+if (defined($opt_c)) {
+    $copyFiles = true;
+}
+
+getopt("v:");
+my $verbose = false;
+if (defined($opt_v)) {
+    $verbose = true;
+}
+
 sub Cleanup
 {
     while (true) {
@@ -31,9 +49,26 @@ sub Cleanup
 sub JarIt
 {
     my ($destPath, $jarfile, $copyFiles, $args, $overrides) = @_;
+
+    my $dir = $destPath;
+    if ("$dir/$jarfile" =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
+        $dir = $1;
+    }
+    MkDirs($dir, ".", false);
+
     if ($copyFiles eq true) {
+        my $indivDir = $jarfile;
+        if ($indivDir =~ /(.*).jar/) {
+            $indivDir = $1;
+        }
+        my $indivPath = "$destPath/$indivDir";
+        MkDirs($indivPath, ".", false);
+        
         foreach $file (split(' ', "$args $overrides")) {
-            EnsureFileInDir($destPath, $file);
+            if ($verbose eq true) {
+                print "adding individual file $file to dist\n";
+            }
+            EnsureFileInDir("$indivPath/$file", $file, false);
         }
     }
 
@@ -51,37 +86,48 @@ sub JarIt
 
 sub MkDirs
 {
-    my ($path, $containingDir) = @_;
-    #print "MkDirs $path $containingDir\n";
+    my ($path, $containingDir, $doCleanup) = @_;
+    #print "MkDirs $path $containingDir $doCleanup\n";
     if ($path =~ /([\w\d.\-]+)[\\\/](.*)/) {
         my $dir = $1;
         $path = $2;
         if (!-e $dir) {
-            #print "making dir $containingDir/$dir\n";
+            if ($verbose eq true) {
+                print "making dir $containingDir/$dir\n";
+            }
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-            push(@cleanupList, "$containingDir/$dir");
-            push(@cleanupList, $IS_DIR);
+            if ($doCleanup eq true) {
+                push(@cleanupList, "$containingDir/$dir");
+                push(@cleanupList, $IS_DIR);
+            }
         }
+        my $wd = cwd();
         chdir $dir;
-        MkDirs($path, "$containingDir/$dir");
-        chdir "..";
+        MkDirs($path, "$containingDir/$dir", $doCleanup);
+        chdir $wd;
     }
     else {
         my $dir = $path;
         if ($dir eq "") { return 0; } 
         if (!-e $dir) {
-            #print "making dir $containingDir/$dir\n";
+            if ($verbose eq true) {
+                print "making dir $containingDir/$dir\n";
+            }
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-            push(@cleanupList, "$containingDir/$dir");
-            push(@cleanupList, $IS_DIR);
+            if ($doCleanup eq true) {
+                push(@cleanupList, "$containingDir/$dir");
+                push(@cleanupList, $IS_DIR);
+            }
         }
     }
 }
 
 sub CopyFile
 {
-    my ($from, $to) = @_;
-    #print "copying $from to $to\n";
+    my ($from, $to, $doCleanup) = @_;
+    if ($verbose eq true) {
+        print "copying $from to $to\n";
+    }
     open(OUT, ">$to") || die "error: can't open '$to': $!";
     open(IN, "<$from") || die "error: can't open '$from': $!";
     binmode IN;
@@ -109,13 +155,15 @@ sub CopyFile
     my $mtime = stat($from)->mtime || die $!;
     utime($atime, $mtime, $to);
 
-    push(@cleanupList, "$to");
-    push(@cleanupList, $IS_FILE);
+    if ($doCleanup eq true) {
+        push(@cleanupList, "$to");
+        push(@cleanupList, $IS_FILE);
+    }
 }
 
 sub EnsureFileInDir
 {
-    my ($destPath, $srcPath) = @_;
+    my ($destPath, $srcPath, $doCleanup) = @_;
 
     if (!-e $destPath) {
         my $dir = "";
@@ -135,25 +183,11 @@ sub EnsureFileInDir
         if (!-e $file) {
             die "error: file '$file' doesn't exist\n";
         }
-        MkDirs($dir, ".");
-        CopyFile($file, $destPath);
+        MkDirs($dir, ".", $doCleanup);
+        CopyFile($file, $destPath, $doCleanup);
         return 1;
     }
     return 0;
-}
-
-getopt("d:");
-
-my $destPath = ".";
-if (defined($opt_d)) {
-    $destPath = $opt_d;
-}
-
-getopt("c:");
-
-my $copyFiles = false;
-if (defined($opt_c)) {
-    $copyFiles = true;
 }
 
 while (<>) {
@@ -172,7 +206,7 @@ while (<>) {
                     $srcPath = substr($srcPath,1,-1);
                 }
 
-                EnsureFileInDir($dest, $srcPath);
+                EnsureFileInDir($dest, $srcPath, true);
                 $args = "$args$dest ";
             } elsif (/^\+\s+([\w\d.\-\\\/]+)\s*(\([\w\d.\-\\\/]+\))?$\s*/) {
                 my $dest = $1;
@@ -182,7 +216,7 @@ while (<>) {
                     $srcPath = substr($srcPath,1,-1);
                 }
 
-                EnsureFileInDir($dest, $srcPath);
+                EnsureFileInDir($dest, $srcPath, true);
                 $overrides = "$overrides$dest ";
             } elsif (/^\s*$/) {
                 # end with blank line
