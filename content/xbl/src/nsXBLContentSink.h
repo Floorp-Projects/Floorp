@@ -90,7 +90,7 @@ public:
   // nsIContentSink overrides
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
-  NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
+  NS_IMETHOD AddCDATASection(const nsIParserNode& aNode);
 
 protected:
   // nsXMLContentSink overrides
