@@ -247,11 +247,8 @@ NS_IMETHODIMP nsMsgWindow::SetMsgHeaderSink(nsIMsgHeaderSink * aMsgHdrSink)
 
 NS_IMETHODIMP nsMsgWindow::GetTransactionManager(nsITransactionManager * *aTransactionManager)
 {
-	if(!aTransactionManager)
-		return NS_ERROR_NULL_POINTER;
-
-	*aTransactionManager = mTransactionManager;
-	NS_IF_ADDREF(*aTransactionManager);
+	NS_ENSURE_ARG_POINTER(aTransactionManager);
+	NS_IF_ADDREF(*aTransactionManager = mTransactionManager);
 	return NS_OK;
 }
 
@@ -263,13 +260,9 @@ NS_IMETHODIMP nsMsgWindow::SetTransactionManager(nsITransactionManager * aTransa
 
 NS_IMETHODIMP nsMsgWindow::GetOpenFolder(nsIMsgFolder * *aOpenFolder)
 {
-	if(!aOpenFolder)
-		return NS_ERROR_NULL_POINTER;
-
-	*aOpenFolder = mOpenFolder;
-	NS_IF_ADDREF(*aOpenFolder);
+	NS_ENSURE_ARG_POINTER(aOpenFolder);
+	NS_IF_ADDREF(*aOpenFolder = mOpenFolder);
 	return NS_OK;
-
 }
 
 NS_IMETHODIMP nsMsgWindow::SetOpenFolder(nsIMsgFolder * aOpenFolder)

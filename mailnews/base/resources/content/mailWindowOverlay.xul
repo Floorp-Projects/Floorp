@@ -1602,6 +1602,17 @@ Rights Reserved.
           accesskey="&advancedButton.accesskey;"/>
 </hbox>
 
+<hbox id="junkBar" collapsed="true">
+  <hbox align="center">
+    <image id="junkBarImage"/>
+  </hbox>
+  <hbox align="center">
+    <label id="junkBarMessage" value="&junkBarMessage.label;"/>
+  </hbox>
+  <spacer flex="1"/>
+  <button label="&notJunkButton.label;" oncommand="JunkSelectedMessages(false)" />
+</hbox>
+
 <statusbar class="chromeclass-status" id="status-bar"> 
   <hbox insertbefore="unreadMessageCount" flex="1">
     <statusbarpanel id="component-bar"/>

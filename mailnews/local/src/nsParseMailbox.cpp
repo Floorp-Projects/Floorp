@@ -248,6 +248,12 @@ NS_IMETHODIMP nsMsgMailboxParser::OnReadChanged(nsIDBChangeListener *instigator)
     return NS_OK;
 }
 
+/* void OnJunkScoreChanged (in nsIDBChangeListener instigator); */
+NS_IMETHODIMP nsMsgMailboxParser::OnJunkScoreChanged(nsIDBChangeListener *instigator)
+{
+    return NS_OK;
+}
+
 nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
 {
   Init();

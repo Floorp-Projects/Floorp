@@ -446,6 +446,9 @@ function StopUrls()
 
 function loadStartPage() {
     try {
+        // collapse the junk bar
+        SetUpJunkBar(null);
+
         var startpageenabled = pref.getBoolPref("mailnews.start_page.enabled");
 
         if (startpageenabled) {

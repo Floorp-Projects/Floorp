@@ -80,6 +80,7 @@ static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for pur
 nsIAtom* nsMsgDBFolder::mFolderLoadedAtom=nsnull;
 nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgCompletedAtom=nsnull;
 nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgFailedAtom=nsnull;
+nsIAtom* nsMsgDBFolder::mJunkStatusChangedAtom=nsnull;
 nsrefcnt nsMsgDBFolder::mInstanceCount=0;
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsMsgDBFolder, nsMsgFolder,
@@ -94,6 +95,7 @@ nsMsgDBFolder::nsMsgDBFolder(void)
     mFolderLoadedAtom = NS_NewAtom("FolderLoaded");
     mDeleteOrMoveMsgCompletedAtom = NS_NewAtom("DeleteOrMoveMsgCompleted");
     mDeleteOrMoveMsgFailedAtom = NS_NewAtom("DeleteOrMoveMsgFailed");
+    mJunkStatusChangedAtom = NS_NewAtom("JunkStatusChanged");
     LL_I2L(gtimeOfLastPurgeCheck, 0);
   }
 }
@@ -104,6 +106,7 @@ nsMsgDBFolder::~nsMsgDBFolder(void)
     NS_IF_RELEASE(mFolderLoadedAtom);
     NS_IF_RELEASE(mDeleteOrMoveMsgCompletedAtom);
     NS_IF_RELEASE(mDeleteOrMoveMsgFailedAtom);
+    NS_IF_RELEASE(mJunkStatusChangedAtom);
   }
 	//shutdown but don't shutdown children.
 	Shutdown(PR_FALSE);
@@ -663,9 +666,17 @@ nsMsgDBFolder::SetMsgDatabase(nsIMsgDatabase *aMsgDatabase)
 NS_IMETHODIMP
 nsMsgDBFolder::OnReadChanged(nsIDBChangeListener * aInstigator)
 {
-    /* do nothing.  if you care about this, over ride it.  see nsNewsFolder.cpp */
-    return NS_OK;
+  /* do nothing.  if you care about this, override it.  see nsNewsFolder.cpp */
+  return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgDBFolder::OnJunkScoreChanged(nsIDBChangeListener * aInstigator)
+{
+  NotifyFolderEvent(mJunkStatusChangedAtom);
+  return NS_OK;
+}
+
 
 // 1.  When the status of a message changes.
 NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
@@ -1171,7 +1182,8 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetRetentionSettings(nsIMsgRetentionSettings **settings)
+NS_IMETHODIMP 
+nsMsgDBFolder::GetRetentionSettings(nsIMsgRetentionSettings **settings)
 {
   NS_ENSURE_ARG_POINTER(settings);
   nsresult rv = NS_OK;

@@ -131,6 +131,9 @@ Rights Reserved.
         ondragover="nsDragAndDrop.dragOver(event, messagepaneObserver);"
         ondragdrop="nsDragAndDrop.drop(event, messagepaneObserver);"
         ondragexit="nsDragAndDrop.dragExit(event, messagepaneObserver);">
+
+    <hbox id="junkBar"/>
+
     <hbox id="msgHeaderView"/>
 
     <!-- message view -->

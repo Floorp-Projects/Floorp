@@ -4396,7 +4396,12 @@ NS_IMETHODIMP nsMsgDBView::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator
 }
 
     
-NS_IMETHODIMP nsMsgDBView::OnReadChanged(nsIDBChangeListener *instigator)
+NS_IMETHODIMP nsMsgDBView::OnReadChanged(nsIDBChangeListener *aInstigator)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::OnJunkScoreChanged(nsIDBChangeListener *aInstigator)
 {
   return NS_OK;
 }

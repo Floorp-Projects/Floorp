@@ -104,6 +104,9 @@ var folderListener = {
         }
       }
     }
+    else if (eventType == "JunkStatusChanged") {
+      HandleJunkStatusChanged(folder);
+    }
   }   
 }
 
@@ -191,8 +194,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 	if (!folderResource)
 		return;
 
-	var folderUri = folderResource.Value;
-	if ((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
+	if ((folderResource.Value == gCurrentFolderUri) && gCurrentMessageIsDeleted)
 	{
     gDBView.onDeleteCompleted(true);
     gCurrentMessageIsDeleted = false;
@@ -220,10 +222,18 @@ function HandleDeleteOrMoveMsgFailed(folder)
   if (!folderResource)
      return;
 
-  var folderUri = folderResource.Value;
   gDBView.onDeleteCompleted(false);
-  if ((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
+  if ((folderResource.Value == gCurrentFolderUri) && gCurrentMessageIsDeleted)
     gCurrentMessageIsDeleted = false;
+}
+
+function IsCurrentLoadedFolder(folder)
+{
+  var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+  if (!folderResource)
+     return false;
+
+  return (folderResource.Value == gCurrentFolderUri);
 }
 
 function OnLoadMessageWindow()

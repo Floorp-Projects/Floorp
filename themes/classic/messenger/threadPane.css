@@ -140,7 +140,7 @@ treechildren:-moz-tree-image(flaggedCol, flagged) {
 /* ..... junkStatus column ..... */
 
 treecol.junkStatusHeader {
-  list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
 }
 
 /* "unknown" now looks like "not junk".  see bug #182386 */
@@ -151,7 +151,7 @@ treechildren:-moz-tree-image(junkStatusCol) {
 }
 
 treechildren:-moz-tree-image(junkStatusCol, junk) {
-  list-style-image: url("chrome://messenger/skin/icons/message-junk-other.gif");
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
 }
 
 treechildren:-moz-tree-image(junkStatusCol, notjunk) {

@@ -169,6 +169,9 @@ Rights Reserved.
       </splitter>
       
       <vbox id="messagepanebox" flex="3" persist="collapsed height" onclick="contentAreaClick(event);">
+
+        <hbox id="junkBar"/>
+
         <hbox id="msgHeaderView"/>
     
         <browser id="messagepane" context="messagePaneContext"

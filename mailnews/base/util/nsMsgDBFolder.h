@@ -173,6 +173,7 @@ protected:
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;
   static nsIAtom* mDeleteOrMoveMsgFailedAtom;
+  static nsIAtom* mJunkStatusChangedAtom;
   static nsrefcnt mInstanceCount;
 };
 

@@ -57,6 +57,8 @@ interface nsIDBChangeAnnouncer  : nsISupports {
 
   void NotifyReadChanged(in nsIDBChangeListener instigator);
 
+  void NotifyJunkScoreChanged(in nsIDBChangeListener aInstigator);
+
   void NotifyAnnouncerGoingAway();
 };
 

@@ -1890,10 +1890,50 @@ function SetupUndoRedoCommand(command)
     return canUndoOrRedo;
 }
 
-function OnMsgLoaded(folder, msgURI)
+function HandleJunkStatusChanged(folder)
 {
+  if (IsCurrentLoadedFolder(folder)) {
+    var messageURI = GetLoadedMessage();
+    // if multiple message are selected
+    // and we change the junk status
+    // we don't want to show the junk bar
+    // (since the message pane is blank)
+    if (messageURI && (GetNumSelectedMessages() == 1))
+      SetUpJunkBar(messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI));
+    else
+      SetUpJunkBar(null);
+  }
+}
+
+function SetUpJunkBar(aMsgHdr)
+{
+  // XXX todo
+  // should this happen on the start, or at the end?
+  // if at the end, we might keep the "this message is junk" up for a while, until a big message is loaded
+  // or do we need to wait until here, to make sure the message is fully analyzed
+  // what about almost hiding it on the start, and then showing here?
+
+  var isJunk = false;
+  
+  if (aMsgHdr) {
+    var junkScore = aMsgHdr.getStringProperty("junkscore"); 
+    isJunk = ((junkScore != "") && (junkScore != "0"));
+  }
+  
+  var junkBar = document.getElementById("junkBar");
+  if (isJunk)
+    junkBar.removeAttribute("collapsed");
+  else
+    junkBar.setAttribute("collapsed","true");
+}
+
+function OnMsgLoaded(folder, aMessageURI)
+{
+    var msgHdr = messenger.messageServiceFromURI(aMessageURI).messageURIToMsgHdr(aMessageURI);
+    SetUpJunkBar(msgHdr);
+
     var currentMsgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-    if (!IsImapMessage(msgURI))
+    if (!IsImapMessage(aMessageURI))
       return;
 
     var imapServer = currentMsgFolder.server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
@@ -1908,7 +1948,6 @@ function OnMsgLoaded(folder, msgURI)
       // don't put this message in the read mail pfc.
       var outputPFC = imapServer.GetReadMailPFC(true);
 
-      var msgHdr = messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI);
       if (msgHdr)
       {
         messageID = msgHdr.messageId;

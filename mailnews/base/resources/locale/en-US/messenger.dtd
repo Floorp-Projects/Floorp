@@ -523,3 +523,7 @@ Rights Reserved.
 <!ENTITY markSelectedAsJunk.label "Mark Selected Messages As Junk">
 <!ENTITY markSelectedAsNotJunk.label "Mark Selected Messages As Not Junk">
 
+<!-- junk bar -->
+<!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
+<!ENTITY notJunkButton.label "This is Not Junk">
+

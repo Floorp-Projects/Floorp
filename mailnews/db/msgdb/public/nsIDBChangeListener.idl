@@ -52,6 +52,7 @@ interface  nsIDBChangeListener : nsISupports {
 	void OnParentChanged (in nsMsgKey aKeyChanged, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener aInstigator);
     void OnAnnouncerGoingAway(in nsIDBChangeAnnouncer instigator);
     
-    void OnReadChanged(in nsIDBChangeListener instigator);
+    void OnReadChanged(in nsIDBChangeListener aInstigator);
+	void OnJunkScoreChanged(in nsIDBChangeListener aInstigator);
 };
 

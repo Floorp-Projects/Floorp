@@ -500,6 +500,24 @@ NS_IMETHODIMP nsMsgDatabase::NotifyReadChanged(nsIDBChangeListener *instigator)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDatabase::NotifyJunkScoreChanged(nsIDBChangeListener *instigator)
+{
+  if (m_ChangeListeners == nsnull)
+    return NS_OK;
+  PRUint32 count;
+  m_ChangeListeners->Count(&count);
+  for (PRUint32 i = 0; i < count; i++)
+  {
+    nsCOMPtr<nsIDBChangeListener> changeListener;
+    m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
+
+    nsresult rv = changeListener->OnJunkScoreChanged(instigator);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey parentKey, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
@@ -1526,7 +1544,6 @@ nsresult nsMsgDatabase::AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr)
   return m_dbFolderInfo->ChangeExpungedBytes (size);
 }
 
-
 NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener *instigator, PRBool commit, PRBool notify)
 {
   nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, msg);  // closed system, so this is ok
@@ -1885,6 +1902,9 @@ NS_IMETHODIMP nsMsgDatabase::SetStringProperty(nsMsgKey aKey, const char *aPrope
 
   rv = msgHdr->SetStringProperty(aProperty, aValue);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  if (strcmp(aProperty, "junkscore") == 0)
+    NotifyJunkScoreChanged(nsnull);
 
   PRUint32 flags;
   (void)msgHdr->GetFlags(&flags);

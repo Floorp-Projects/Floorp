@@ -175,6 +175,8 @@ Rights Reserved.
       </splitter>
       <!-- msg header view -->
       <vbox id="messagepanebox" flex="4" persist="collapsed height">
+        <hbox id="junkBar"/>
+
         <hbox id="msgHeaderView"/>
 
         <!-- message view -->

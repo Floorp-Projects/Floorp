@@ -272,8 +272,11 @@ var folderListener = {
        else if (eventType == "CompactCompleted") {
          HandleCompactCompleted(folder);
        }
-       else if(eventType == "RenameCompleted") {
+       else if (eventType == "RenameCompleted") {
          SelectFolder(folder.URI);
+       }
+       else if (eventType == "JunkStatusChanged") {
+         HandleJunkStatusChanged(folder);
        }
     }
 }
@@ -1038,6 +1041,9 @@ function ClearMessagePane()
         GetMessagePaneFrame().location = "about:blank";
     // hide the message header view AND the message pane...
 		HideMessageHeaderPane();
+
+    // hide the junk bar
+    SetUpJunkBar(null);
 	}
 }
 
