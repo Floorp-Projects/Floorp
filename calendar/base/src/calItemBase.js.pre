@@ -88,7 +88,6 @@ calItemBase.prototype = {
         // fix me
         this.mRecurrenceInfo = null;
         this.mAttachments = null;
-        this.mContacts = null;
     },
 
     // for subclasses to use; copies the ItemBase's values
@@ -115,7 +114,6 @@ calItemBase.prototype = {
 
         // these need fixing
         m.mAttachments = this.mAttachments;
-        m.mContacts = this.mContacts;
 
         // m.mProperties = this.mProperties;
 
@@ -141,7 +139,6 @@ calItemBase.prototype = {
     MEMBER_ATTR(mAlarmTime, null, alarmTime),
     MEMBER_ATTR(mRecurrenceInfo, null, recurrenceInfo),
     MEMBER_ATTR(mAttachments, null, attachments),
-    MEMBER_ATTR(mContacts, null, contacts),
     MEMBER_ATTR(mProperties, null, properties),
 
 #undef MEMBER_ATTR

@@ -46,7 +46,6 @@ calItemBase.prototype = {
 
         this.mRecurrenceInfo = null;
         this.mAttachments = null;
-        this.mContacts = null;
     },
 
 
@@ -73,7 +72,6 @@ calItemBase.prototype = {
 
 
         m.mAttachments = this.mAttachments;
-        m.mContacts = this.mContacts;
 
 
 
@@ -99,7 +97,6 @@ calItemBase.prototype = {
     mAlarmTime: null, get alarmTime() { return this.mAlarmTime; }, set alarmTime(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mAlarmTime = v; },
     mRecurrenceInfo: null, get recurrenceInfo() { return this.mRecurrenceInfo; }, set recurrenceInfo(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mRecurrenceInfo = v; },
     mAttachments: null, get attachments() { return this.mAttachments; }, set attachments(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mAttachments = v; },
-    mContacts: null, get contacts() { return this.mContacts; }, set contacts(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mContacts = v; },
     mProperties: null, get properties() { return this.mProperties; }, set properties(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mProperties = v; },
 
 

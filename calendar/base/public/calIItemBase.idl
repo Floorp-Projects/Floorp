@@ -136,11 +136,6 @@ interface calIItemBase : nsISupports
   // if this item is mutable, the returned array will be a nsIMutableArray
   readonly attribute nsIArray attachments;
 
-  // contacts
-  // array of nsIAbCard
-  // if this item is mutable, the returned array will be a nsIMutableArray
-  readonly attribute nsIArray contacts;
-
   //
   // other properties come in through a property bag
   //
