@@ -233,6 +233,9 @@ struct JSContext {
     jsval               exception;          /* most-recently-thrown exceptin */
 
     uint32              options;            /* see jsapi.h for JSOPTION_* */
+
+    /* Delay JS_SetVersion scanner effects until they're needed. */
+    JSVersion           scannerVersion;
 };
 
 /* Slightly more readable macros, also to hide bitset implementation detail. */

@@ -216,6 +216,12 @@ js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length)
     size_t nb;
     JSTokenStream *ts;
 
+    if (cx->scannerVersion != cx->version) {
+        if (!js_InitScanner(cx))
+            return NULL;
+        cx->scannerVersion = cx->version;
+    }
+
     nb = sizeof(JSTokenStream) + JS_LINE_LIMIT * sizeof(jschar);
     JS_ARENA_ALLOCATE(ts, &cx->tempPool, nb);
     if (!ts) {
@@ -666,7 +672,7 @@ AddToTokenBuf(JSContext *cx, JSTokenBuf *tb, jschar c)
 * Otherwise, non-destructively return the original '\'.
 */
 static int32 
-getUnicodeEscape(JSTokenStream *ts)
+GetUnicodeEscape(JSTokenStream *ts)
 {
     jschar cp[5];
     int32 c;
@@ -733,23 +739,23 @@ retry:
 
     hadUnicodeEscape = JS_FALSE;
     if (JS_ISIDENT_START(c) ||
-        ((c == '\\') &&
-            (c = getUnicodeEscape(ts), 
-            hadUnicodeEscape = JS_ISIDENT_START(c)))) {
+        (c == '\\' &&
+         (c = GetUnicodeEscape(ts), 
+          hadUnicodeEscape = JS_ISIDENT_START(c)))) {
 	INIT_TOKENBUF(&ts->tokenbuf);
         for (;;) {
 	    if (!AddToTokenBuf(cx, &ts->tokenbuf, (jschar)c))
 		RETURN(TOK_ERROR);
 	    c = GetChar(ts);
             if (c == '\\') {
-                c = getUnicodeEscape(ts);
-                if (JS_ISIDENT(c))
-                    hadUnicodeEscape = JS_TRUE;
-                else
+                c = GetUnicodeEscape(ts);
+                if (!JS_ISIDENT(c))
+                    break;
+                hadUnicodeEscape = JS_TRUE;
+            } else {
+                if (!JS_ISIDENT(c))
                     break;
             }
-            else
-                if (!JS_ISIDENT(c)) break;
         }
 	UngetChar(ts, c);
 	FINISH_TOKENBUF(&ts->tokenbuf);
@@ -760,16 +766,13 @@ retry:
 			       0);
 	if (!atom)
 	    RETURN(TOK_ERROR);
-        if (hadUnicodeEscape) /* Can never be a keyword, then. */
-            atom->kwindex = -1;
-        else
-	    if (atom->kwindex >= 0) {
-	        struct keyword *kw;
+        if (!hadUnicodeEscape && atom->kwindex >= 0) {
+            struct keyword *kw;
 
-	        kw = &keywords[atom->kwindex];
-	        tp->t_op = (JSOp) kw->op;
-	        RETURN(kw->tokentype);
-	    }
+            kw = &keywords[atom->kwindex];
+            tp->t_op = (JSOp) kw->op;
+            RETURN(kw->tokentype);
+        }
 	tp->t_op = JSOP_NAME;
 	tp->t_atom = atom;
 	RETURN(TOK_NAME);
