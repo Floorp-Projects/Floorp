@@ -4282,6 +4282,31 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
 
 // after the node has been constructed and initialized create any
 // anonymous content a node needs.
+static void LocateAnonymousFrame(nsIPresContext* aPresContext,
+                                 nsIFrame*       aParentFrame,
+                                 nsIContent*     aTargetContent,
+                                 nsIFrame**      aResult)
+{
+  // Check ourselves.
+  *aResult = nsnull;
+  nsCOMPtr<nsIContent> content;
+  aParentFrame->GetContent(getter_AddRefs(content));
+  if (content.get() == aTargetContent) {
+    *aResult = aParentFrame;
+    return;
+  }
+
+  // Check our kids.
+  nsIFrame* currFrame;
+  aParentFrame->FirstChild(aPresContext, nsnull, &currFrame);
+  while (currFrame) {
+    LocateAnonymousFrame(aPresContext, currFrame, aTargetContent, aResult);
+    if (*aResult)
+      return;
+    currFrame->GetNextSibling(&currFrame);
+  }
+}
+
 nsresult
 nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell, 
                                              nsIPresContext*          aPresContext,
@@ -4319,6 +4344,16 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
     if (!anonymousItems)
       return NS_OK;
 
+    // See if we have to move our explicit content.
+    nsFrameItems explicitItems;
+    if (childElement) {
+      // First, remove all of the kids from the frame list and put them
+      // in a new frame list.
+      explicitItems.childList = aChildItems.childList;
+      explicitItems.lastChild = aChildItems.lastChild;
+      aChildItems.childList = aChildItems.lastChild = nsnull;
+    }
+
     // Build the frames for the anonymous content.
     PRUint32 count = 0;
     anonymousItems->Count(&count);
@@ -4333,6 +4368,38 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
       
       // create the frame and attach it to our frame
       ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
+    }
+
+    if (childElement) {
+      // Now append the explicit frames 
+      // All our explicit content that we built must be reparented.
+      nsIFrame* frame = nsnull;
+      nsIFrame* currFrame = aChildItems.childList;
+      while (currFrame) {
+        LocateAnonymousFrame(aPresContext,
+                             currFrame,
+                             childElement,
+                             &frame);
+        if (frame)
+          break;
+        currFrame->GetNextSibling(&currFrame);
+      }
+
+      nsCOMPtr<nsIFrameManager> frameManager;
+      aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+      
+      if (frameManager && frame && explicitItems.childList) {
+        frameManager->AppendFrames(aPresContext, *aPresShell, frame,
+                                   nsnull, explicitItems.childList);
+      }
+
+      /* XXX comes online soon.
+      if (frame) {
+        // XXX Eventually generalize to HTML as well. For now,
+        // leave this on nsIBox.
+        nsCOMPtr<nsIBox> box(do_QueryInterface(aNewFrame));
+        box->SetInsertionPoint(frame);
+      }*/
     }
 
     return NS_OK;
