@@ -1599,7 +1599,7 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
 #ifdef DEBUG_bienvenu
       nsXPIDLString name;
       rv = GetName(getter_Copies(name));
-      NS_ASSERTION(nsCRT::strcmp(name, "Trash") || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
+      NS_ASSERTION(Compare(name, NS_LITERAL_STRING("Trash")) || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
 #endif
       folderInfo->SetFlags((PRInt32) mFlags);
       if (db)
