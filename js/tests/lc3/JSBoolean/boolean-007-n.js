@@ -20,7 +20,7 @@
  * 
  */
 /* -*- Mode: java; tab-width: 8 -*-
- * Copyright © 1997, 1998 Netscape Communications Corporation,
+ * Copyright (C) 1997, 1998 Netscape Communications Corporation,
  * All Rights Reserved.
  */
 

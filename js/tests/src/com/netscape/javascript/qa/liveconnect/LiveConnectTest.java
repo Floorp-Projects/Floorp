@@ -1,5 +1,5 @@
 /* -*- Mode: java; tab-width: 8 -*-
- * Copyright © 1997, 1998 Netscape Communications Corporation, All Rights Reserved.
+ * Copyright (C) 1997, 1998 Netscape Communications Corporation, All Rights Reserved.
  */
 
 package com.netscape.javascript.qa.liveconnect;
