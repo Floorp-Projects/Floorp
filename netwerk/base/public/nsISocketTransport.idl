@@ -87,7 +87,13 @@ interface nsISocketTransport : nsITransport
     boolean isAlive();
 
     /**
-     * nsITransportEventSink status codes:
+     * nsITransportEventSink status codes.
+     *
+     * Although these look like XPCOM error codes and are passed in an nsresult
+     * variable, they are *not* error codes.  Note that while they *do* overlap
+     * with existing error codes in Necko, these status codes are confined
+     * within a very limited context where no error codes may appear, so there
+     * is no ambiguity.
      */
     const unsigned long STATUS_RESOLVING      = 0x804b0003;
     const unsigned long STATUS_CONNECTED_TO   = 0x804b0004;

@@ -564,19 +564,51 @@ nsBufferedOutputStream::Flush()
     mFillPoint = mCursor = rem;
     return NS_ERROR_FAILURE;        // didn't flush all
 }
-    
+
+static NS_METHOD
+nsReadFromInputStream(nsIOutputStream* outStr,
+                      void* closure,
+                      char* toRawSegment, 
+                      PRUint32 offset,
+                      PRUint32 count,
+                      PRUint32 *readCount)
+{
+    nsIInputStream* fromStream = (nsIInputStream*)closure;
+    return fromStream->Read(toRawSegment, count, readCount);
+}
+
 NS_IMETHODIMP
 nsBufferedOutputStream::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
-    NS_NOTREACHED("WriteFrom");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return WriteSegments(nsReadFromInputStream, inStr, count, _retval);
 }
 
 NS_IMETHODIMP
 nsBufferedOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
 {
-    NS_NOTREACHED("WriteSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *_retval = 0;
+    nsresult rv;
+    while (count > 0) {
+        PRUint32 left = PR_MIN(count, mBufferSize - mCursor);
+        if (left == 0) {
+            rv = Flush();
+            if (NS_FAILED(rv))
+              return rv;
+
+            continue;
+        }
+
+        PRUint32 read = 0;
+        rv = reader(this, closure, mBuffer + mCursor, *_retval, left, &read);
+
+        if (NS_FAILED(rv)) // If we have written some data, return ok
+            return (*_retval > 0) ? NS_OK : rv;
+        mCursor += read;
+        *_retval += read;
+        count -= read;
+        mFillPoint = PR_MAX(mFillPoint, mCursor);
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP

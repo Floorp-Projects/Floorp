@@ -2666,15 +2666,18 @@ nsHttpChannel::GetContentLength(PRInt32 *value)
     *value = mResponseHead->ContentLength();
     return NS_OK;
 }
+
 NS_IMETHODIMP
 nsHttpChannel::SetContentLength(PRInt32 value)
 {
+    NS_NOTYETIMPLEMENTED("nsHttpChannel::SetContentLength");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsHttpChannel::Open(nsIInputStream **_retval)
 {
+    NS_NOTYETIMPLEMENTED("nsHttpChannel::Open");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
