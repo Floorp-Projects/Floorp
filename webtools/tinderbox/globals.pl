@@ -189,6 +189,13 @@ sub load_buildlog {
     my ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile,$binaryname);
     my ($buildrec, @treelist, $t);
 
+    if (!defined $maxdate) {
+        $maxdate = time();
+    }
+    if (!defined $mindate) {
+        $mindate = $maxdate - 24*60*60;
+    }
+
     if( $tree2 ne '' ){ 
         @treelist = ($td1, $td2);
     }
