@@ -1415,7 +1415,7 @@ mips-sony-newsos*)
     PR_MD_CSRCS=qnx.c
     ;;
 
-*-rhapsody*)
+*-darwin*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(RHAPSODY)
     AC_DEFINE(HAVE_BSD_FLOCK)
