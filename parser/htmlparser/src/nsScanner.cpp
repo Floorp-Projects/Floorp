@@ -99,11 +99,11 @@ nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset, 
   mTotalRead = anHTMLString.Length();
   mSlidingBuffer = nsnull;
   mCountRemaining = 0;
+  mFirstNonWhitespacePosition = -1;
   AppendToBuffer(anHTMLString);
   mSlidingBuffer->BeginReading(mCurrentPosition);
   mMarkPosition = mCurrentPosition;
   mIncremental = PR_FALSE;
-  mFirstNonWhitespacePosition = -1;
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
