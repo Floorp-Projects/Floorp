@@ -9736,6 +9736,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 {
   nsresult  result = NS_OK;
 
+  nsCOMPtr<nsIStyleFrameConstruction> kungFuDeathGrip(this);
+
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsIFrame*     primaryFrame;
