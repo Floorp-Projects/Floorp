@@ -57,8 +57,8 @@
 <!-- Javascript includes -->
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://penglobal/content/timepicker.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/timepicker/timepicker.js"/>
 
 <!-- Popup  to hold time picker-->
 

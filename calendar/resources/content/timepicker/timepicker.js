@@ -46,7 +46,7 @@
 *
 * To use the timepicker include the overlay in your XUL, this .js file is included from there
 
-      <?xul-overlay href="chrome://penglobal/content/timepicker-overlay.xul"?>
+      <?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 *
 *
     <popup  id="oe-time-picker-popup"  oncommand="yourCommandFunction( this )" >

@@ -47,9 +47,9 @@
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarMenuOverlay.xul"?>
-<?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/datepicker/datepicker-overlay.xul"?>
 
-<?xul-overlay href="chrome://calendar/content/unifinder-overlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/unifinder/unifinderOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarDayView.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarWeekView.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarMonthView.xul"?>
@@ -87,12 +87,12 @@
 
 <!-- NEEDED FOR DATE UTILS -->
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://penglobal/content/unifinder.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/unifinder/unifinder.js"/>
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
-<script type="application/x-javascript" src="chrome://penglobal/content/calendarEvent.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 
 
 <!-- Pop up menus -->

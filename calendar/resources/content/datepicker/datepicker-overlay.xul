@@ -58,8 +58,8 @@
 <!-- Javascript includes -->
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-<script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
-<script type="application/x-javascript" src="chrome://penglobal/content/datepicker.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/datepicker/datepicker.js"/>
 
 <!-- Popup that holds the picker -->
 

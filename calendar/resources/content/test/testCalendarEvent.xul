@@ -58,9 +58,9 @@
 <script type="application/x-javascript" src="chrome://penglobal/content/jslib/libraries/io/io.js"/>
 <script type="application/x-javascript" src="chrome://penglobal/content/jslib/libraries/io/file.js"/>
 <script type="application/x-javascript" src="chrome://penglobal/content/penFileUtils.js"></script>
-<script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 <script type="application/x-javascript" src="chrome://penglobal/content/ParseUtils.js"></script>
-<script type="application/x-javascript" src="chrome://penglobal/content/calendarEvent.js"></script>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"></script>
 <script type="application/x-javascript" src="chrome://calendar/content/test/testCalendarEvent.js"></script>
 
   

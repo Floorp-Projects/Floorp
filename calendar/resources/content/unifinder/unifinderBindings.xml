@@ -50,7 +50,7 @@
     </resources>
   </binding>
 
-  <binding id="unifinder" extends="chrome://penglobal/content/unifinderBindings.xml#unifinder-base">
+  <binding id="unifinder" extends="chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-base">
     <content orient="vertical">
       <xul:box orient="vertical" class="unifinder-internal-box" flex="1" >
         <xul:box orient="horizontal" class="unifinder-top-box"  >
@@ -124,7 +124,7 @@
   </binding>
 
 
-  <binding id="unifinder-search-controls" extends="chrome://penglobal/content/unifinderBindings.xml#unifinder-base">
+  <binding id="unifinder-search-controls" extends="chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-base">
     <content orient="horizontal">
         <xul:hbox pack="center" align="start" flex="1">
             <xul:label for="unifinder-search-field" value="&unifinder.search.options.searchfor;" />
@@ -134,7 +134,7 @@
     </content>
   </binding>
 
-  <binding id="unifinder-history-controls" extends="chrome://penglobal/content/unifinderBindings.xml#unifinder-base">
+  <binding id="unifinder-history-controls" extends="chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-base">
     <content orient="horizontal">
         <xul:hbox class="unifinder-sub-control-box-class" align="start" pack="center">
             <xul:label for="unifinder-history-menu" value="&unifinder.history.options.documentsused;"/>

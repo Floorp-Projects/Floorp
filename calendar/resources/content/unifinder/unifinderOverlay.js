@@ -49,7 +49,7 @@
 	<!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd3;
 ]>
 
-<?xul-overlay href="chrome://penglobal/content/unifinder-overlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/unifinder/unifinderOverlay.xul"?>
 
 <overlay
    id="unifinder-overlay"

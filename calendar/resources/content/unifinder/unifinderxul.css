@@ -38,20 +38,20 @@
 /******* unifinder *******/
 
 unifinder { 
-  -moz-binding: url("chrome://penglobal/content/unifinderBindings.xml#unifinder");
+  -moz-binding: url("chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder");
 }
 
 unifinder-search-controls { 
-  -moz-binding: url("chrome://penglobal/content/unifinderBindings.xml#unifinder-search-controls");
+  -moz-binding: url("chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-search-controls");
 }
   
 unifinder-history-controls { 
-  -moz-binding: url("chrome://penglobal/content/unifinderBindings.xml#unifinder-history-controls");
+  -moz-binding: url("chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-history-controls");
 }
   
 
 unifinder-button{ 
-  -moz-binding: url("chrome://penglobal/content/unifinderBindings.xml#unifinder-button-base");
+  -moz-binding: url("chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-button-base");
 }
 
 unifinder-image-button{

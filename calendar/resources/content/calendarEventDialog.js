@@ -41,8 +41,8 @@
 * AUTHOR
 *   Garth Smedley
 * REQUIRED INCLUDES 
-*   <script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
-*   <script type="application/x-javascript" src="chrome://penglobal/content/calendarEvent.js"/>
+*   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
+*   <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 *
 * NOTES
 *   Code for the calendar's new/edit event dialog.
