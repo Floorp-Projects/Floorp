@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#error "Don’t use me!"
+
 #define OLDROUTINELOCATIONS 0
 #define XP_MAC 1
 #ifndef NSPR20
