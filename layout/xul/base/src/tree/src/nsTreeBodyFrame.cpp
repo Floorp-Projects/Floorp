@@ -585,7 +585,7 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
   PRBool recompute = (aRect != mRect);
   nsresult rv = nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect);
 
-  if (recompute) {
+  if (mView && recompute) {
     mInnerBox = GetInnerBox();
     if (!mHasFixedRowCount)
       mPageCount = mInnerBox.height / mRowHeight;
