@@ -2575,9 +2575,11 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
         if (PR_TRUE == windowless)
         {
-          //mPluginWindow.window = nsnull;    //XXX this needs to be a HDC
           mPluginWindow.type = nsPluginWindowType_Drawable;
-          mPluginWindow.window = GetPluginPort();//~~~
+          mPluginWindow.window = nsnull; //~~~ this needs to be a HDC according to the spec,
+                                         // but I do not see the right way to release it
+                                         // so let's postpone passing HDC till paint event
+                                         // when it is really needed. Change spec?
         }
         else
         {
