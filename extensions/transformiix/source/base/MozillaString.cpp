@@ -166,7 +166,7 @@ void MozillaString::append(UNICODE_CHAR source)
 //
 void MozillaString::append(char source)
 {
-  ptrNSString->Append(source);
+  ptrNSString->AppendWithConversion(source);
 }
 
 //
@@ -230,7 +230,7 @@ void MozillaString::append(const UNICODE_CHAR* source, Int32 length)
 //
 void MozillaString::append(Int32 source)
 {
-  ptrNSString->Append(source);
+  ptrNSString->AppendInt(source);
 }
 
 //
@@ -485,7 +485,7 @@ MBool MozillaString::isEqual(const String& data) const
     return MB_FALSE;
   else
   {
-    if (ptrNSString->Equals(data.toUnicode(),
+    if (ptrNSString->EqualsWithConversion(data.toUnicode(),
                             PR_FALSE, data.length()) == PR_TRUE)
       return MB_TRUE;
     else
