@@ -38,6 +38,7 @@
 #include "nsNetUtil.h"
 #include "nsIDNSService.h" // for host error code
 #include "nsIWalletService.h"
+#include "nsIAllocator.h"
 
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
@@ -96,8 +97,13 @@ nsFtpConnectionThread::Process() {
     PRBool      continueRead = PR_FALSE, brokenLine = PR_FALSE;
     nsCAutoString carryOverBuf;
 
+#ifdef DEBUG
+    nsXPIDLCString spec;
+    (void)mURL->GetSpec(getter_Copies(spec));
+
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() started for %x (spec =%s)\n",
-        mURL.get(), (const char *) mURLSpec));
+        mURL.get(), spec));
+#endif // DEBUG
  
     while (mKeepRunning) {
         switch(mState) {
@@ -758,8 +764,10 @@ nsFtpConnectionThread::Process() {
         } // END: switch 
     } // END: while loop
 
+#ifdef DEBUG
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() ended for %x (spec =%s)\n\n\n",
-        mURL.get(), (const char *) mURLSpec));
+        mURL.get(), spec));
+#endif // DEBUG
 
     return NS_OK;
 }
@@ -1723,15 +1731,11 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     rv = aChannel->GetURI(getter_AddRefs(mURL));
     if (NS_FAILED(rv)) return rv;
 
-    char *spec = nsnull;
-    rv = mURL->GetSpec(&spec);
-    if (NS_FAILED(rv)) return rv;
-    mURLSpec = nsUnescape(spec);
-
     char *path = nsnull;
     rv = mURL->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
     mPath = nsUnescape(path);
+    nsAllocator::Free(path);
 
     // pull any username and/or password out of the uri
     nsXPIDLCString uname;

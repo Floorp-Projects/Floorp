@@ -188,7 +188,6 @@ private:
 
         // ****** URI vars
     nsCOMPtr<nsIURI>       mURL;        // the uri we're connecting to
-    nsXPIDLCString         mURLSpec;    // raw spec of the url
     PRInt32                mPort;       // the port to connect to
     nsAutoString           mFilename;   // url filename (if any)
     PRTime                 mLastModified;// last modified time for file
