@@ -31,12 +31,15 @@
 
 
 // Assembly guff to return the EBP
-#ifdef _WIN32
-#define INLINE_GET_EBP(inEBPVariableName)			__asm mov inEBPVariableName, ebp
-#elif defined(LINUX) || defined(FREEBSD)
-#define INLINE_GET_EBP(inEBPVariableName)			__asm__ ("movl %%ebp,%0" : "=g" (inEBPVariableName) : /* no inputs */)
+#if defined(_WIN32) && !defined(__GNUC__)
+#define INLINE_GET_EBP(inEBPVariableName) \
+    __asm mov inEBPVariableName, ebp
+#elif defined(__i386__)
+#define INLINE_GET_EBP(inEBPVariableName)				\
+    ({ register __typeof__(inEBPVariableName) ebp_ __asm__("ebp");	\
+       (inEBPVariableName) = ebp_; })
 #else
-#define INLINE_GET_EBP(inEBPVariableName)			inEBPVariableName = 0
+#error Nothing else in this file is right either.
 #endif
 
 
