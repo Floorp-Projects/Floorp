@@ -185,8 +185,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 - (void)setFrame:(NSRect)frameRect
 {
   [super setFrame:frameRect];
-  NSRect bounds = [self bounds];
-  [mBrowserView setFrame:bounds];
+
+  // Only resize our browser view if we are visible.  If we're hidden, the frame
+  // will get reset when we get placed back into the view hierarchy anyway.  This
+  // enhancement keeps resizing in a window with many tabs from being slow.
+  if ([self window]) {
+    NSRect bounds = [self bounds];
+    [mBrowserView setFrame:bounds];
+  }
 }
 
 -(BOOL)isBusy
