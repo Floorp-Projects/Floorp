@@ -474,6 +474,9 @@ nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
   aPrevSibling->SetNextSibling(nsnull);
 
   if (nsnull != mNextInFlow) {
+    // XXX This is not a very good thing to do. If it gets removed
+    // then remove the copy of this routine that doesn't do this from
+    // nsInlineFrame.
     nsContainerFrame* nextInFlow = (nsContainerFrame*)mNextInFlow;
     nextInFlow->mFrames.InsertFrames(mNextInFlow, nsnull, aFromChild);
   }
@@ -583,10 +586,10 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   }
 
   if (nsnull != mPrevInFlow) {
-    fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
+    fprintf(out, " prev-in-flow=%p", mPrevInFlow);
   }
   if (nsnull != mNextInFlow) {
-    fprintf(out, "next-in-flow=%p ", mNextInFlow);
+    fprintf(out, " next-in-flow=%p", mNextInFlow);
   }
 
   // Output the rect
@@ -604,8 +607,10 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
     nsIFrame* kid;
     FirstChild(listName, kid);
     if (nsnull != kid) {
+      if (outputOneList) {
+        IndentBy(out, aIndent);
+      }
       outputOneList = PR_TRUE;
-      IndentBy(out, aIndent);
       nsAutoString tmp;
       if (nsnull != listName) {
         listName->ToString(tmp);
