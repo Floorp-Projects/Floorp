@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.8 2002/09/06 00:27:21 wtc%netscape.com Exp $
+ * $Id: sdrtest.c,v 1.9 2003/04/01 18:58:32 bishakhabanerjee%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -295,7 +295,9 @@ file_loser:
 loser:
     if (text.data) free(text.data);
     if (result.data) free(result.data);
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess)
+       exit(1);
+    }
 
 prdone:
     PR_Cleanup ();

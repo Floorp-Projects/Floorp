@@ -363,7 +363,8 @@ exitErr(char *function)
 {
 	errWarn(function);
 	/* Exit gracefully. */
-	NSS_Shutdown();
+	/* ignoring return value of NSS_Shutdown as code exits with 1*/
+	(void) NSS_Shutdown();
 	PR_Cleanup();
 	exit(1);
 }
