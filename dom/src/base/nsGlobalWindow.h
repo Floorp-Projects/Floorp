@@ -190,6 +190,8 @@ public:
 
   NS_IMETHOD ReallyCloseWindow();
   NS_IMETHOD IsLoadingOrRunningTimeout(PRBool* aResult);
+  NS_IMETHOD IsPopupSpamWindow(PRBool *aResult);
+  NS_IMETHOD SetPopupSpamWindow(PRBool aPopup);
 
   NS_IMETHOD GetFrameElementInternal(nsIDOMElement** aFrameElement);
   NS_IMETHOD SetFrameElementInternal(nsIDOMElement* aFrameElement);
@@ -243,8 +245,8 @@ protected:
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
                          float* aT2P);
   nsresult SecurityCheckURL(const char *aURL);
-  PRBool   CheckForAbusePoint();
-  PRBool   CheckOpenAllow(const nsAString &aName);
+  PRUint32 CheckForAbusePoint();
+  PRBool   CheckOpenAllow(PRUint32 aAbuseLevel, const nsAString &aName);
   void     FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
                            const nsAString &aPopupURL);
 
@@ -305,12 +307,14 @@ protected:
   PRPackedBool                  mFullScreen;
   PRPackedBool                  mIsClosed;
   PRPackedBool                  mOpenerWasCleared;
+  PRPackedBool                  mIsPopupSpam;
   PRTime                        mLastMouseButtonAction;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
 
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsIDocShell*                  mDocShell;  // Weak Reference
+  nsEvent*                      mCurrentEvent;
   PRUint32                      mMutationBits;
   nsCOMPtr<nsIChromeEventHandler> mChromeEventHandler; // [Strong] We break it when we get torn down.
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
