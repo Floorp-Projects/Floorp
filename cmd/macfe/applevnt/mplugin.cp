@@ -38,13 +38,16 @@
 #include "edt.h"	// for EDT_RegisterPlugin()
 #include "CApplicationEventAttachment.h"
 
+#if defined(JAVA)
 #include "java.h"	// for LJ_AddToClassPath
+#endif
 
 #include "np.h"
 #include "nppg.h"
 #include "prlink.h"
 
 #include "npglue.h"
+#include "nsIEventHandler.h"
 
 #ifdef LAYERS
 #include "layers.h"
@@ -59,7 +62,8 @@
 
 // On a powerPC, plugins depend on being able to find qd in our symbol table
 #ifdef powerc
-#pragma export qd
+// #pragma export qd
+// beard:  this seems to be an illegal pragma
 #endif
 
 const ResIDT nsPluginSig = 128;	// STR#, MIME type is #1
@@ -98,7 +102,7 @@ private:
 
 // ¥¥ funcs
 			OSErr				InitCodeResource(NPNetscapeFuncs * funcs, _np_handle* handle);
-			void				CloseCodeResource();
+			void				CloseCodeResource(_np_handle* handle = NULL);
 			void				ResetPlugFuncTable();
 			void				OpenPluginResourceFork(Int16 inPrivileges);
 			
@@ -204,8 +208,12 @@ CPluginHandler::CPluginHandler(FSSpec& plugFile)
 		if (descCount <= 1 || ResError())
 			fPluginName = plugFile.name;
 
-		cstring fileName((const unsigned char*) plugFile.name);
+		// cstring fileName((const unsigned char*) plugFile.name);
+		char* fileName = CFileMgr::EncodedPathNameFromFSSpec(plugFile, TRUE);
+		ThrowIfNil_(fileName);
+		fileName = NET_UnEscape(fileName);
 		NPError err = NPL_RegisterPluginFile(fPluginName, fileName, pluginDescription, this);
+		XP_FREE(fileName);
 		ThrowIfOSErr_(err);
 
 		CStringListRsrc mimeList(128);
@@ -339,7 +347,7 @@ CPluginHandler::CPluginHandler(FSSpec& plugFile)
 
 CPluginHandler::~CPluginHandler()			// This code never gets called
 {
-	CloseCodeResource();
+	// CloseCodeResource();
 	
 	if (fFile)
 		delete fFile;
@@ -406,30 +414,31 @@ OSErr CPluginHandler::InitCodeResource(NPNetscapeFuncs* funcs, _np_handle* handl
 			FSSpec fileSpec;
 			fFile->GetSpecifier(fileSpec);
 			
-			char* cFullPath;
-			cFullPath = CFileMgr::PathNameFromFSSpec(fileSpec, TRUE);
+			char* cFullPath = CFileMgr::PathNameFromFSSpec(fileSpec, TRUE);
 			ThrowIfNil_(cFullPath);
 			
 			fLibrary = PR_LoadLibrary(cFullPath);
 			ThrowIfNil_(fLibrary);
 
-			// Try the new C++ interface plugin interface.
-    		NP_CREATEPLUGIN npCreatePlugin = NULL;
-#ifndef NSPR20
-			npCreatePlugin = (NP_CREATEPLUGIN)PR_FindSymbol("NP_CreatePlugin", fLibrary);
-#else
-			npCreatePlugin = (NP_CREATEPLUGIN)PR_FindSymbol(fLibrary, "NP_CreatePlugin");
-#endif
-			if (npCreatePlugin != NULL) {
+			// PCB:  Let's factor this into an XP function, please!
+			nsFactoryProc nsGetFactory = (nsFactoryProc) PR_FindSymbol(fLibrary, "NSGetFactory");
+			if (nsGetFactory != NULL) {
+				nsresult res = NS_OK;
 			    if (thePluginManager == NULL) {
-			        static NS_DEFINE_IID(kIPluginManagerIID, NP_IPLUGINMANAGER_IID);
-			        if (nsPluginManager::Create(NULL, kIPluginManagerIID, (void**)&thePluginManager) != NS_OK)
-			            return NULL;
+			    	// For now, create the plugin manager on demand.
+			        static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+			        res = nsPluginManager::Create(NULL, kIPluginManagerIID, (void**)&thePluginManager);
+			    	ThrowIf_(res != NS_OK || thePluginManager == NULL);
 			    }
-			    NPIPlugin* plugin = NULL;
-			    NPPluginError pluginErr = npCreatePlugin(thePluginManager, &plugin);
-			    handle->userPlugin = plugin;
-			    ThrowIf_(pluginErr != NPPluginError_NoError || plugin == NULL);
+				static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
+				nsIPlugin* plugin = NULL;
+				res = nsGetFactory(kIPluginIID, (nsIFactory**)&plugin);
+			    ThrowIf_(res != NS_OK || plugin == NULL);
+			    // beard: establish the primary reference.
+			    plugin->AddRef();
+			    res = plugin->Initialize((nsIPluginManager2*)thePluginManager);
+			    ThrowIf_(res != NS_OK);
+				handle->userPlugin = plugin;
 			} else {
 #ifndef NSPR20
 				fMainEntryFunc = (NPP_MainEntryUPP) PR_FindSymbol("mainRD", fLibrary);
@@ -476,7 +485,7 @@ OSErr CPluginHandler::InitCodeResource(NPNetscapeFuncs* funcs, _np_handle* handl
 }
 
 // Dispose of the code
-void CPluginHandler::CloseCodeResource()
+void CPluginHandler::CloseCodeResource(_np_handle* handle)
 {
 	// Already unloaded?
 	if (fRefCount == 0)
@@ -486,7 +495,14 @@ void CPluginHandler::CloseCodeResource()
 	fRefCount--;
 	if (fRefCount > 0)
 		return;
-	
+
+	if (handle != NULL) {
+		nsIPlugin* userPlugin = handle->userPlugin;
+		if (userPlugin != NULL) {
+			userPlugin->Release();
+			handle->userPlugin = NULL;
+		}
+	} else
 	if (fUnloadFunc != NULL)
 		CallNPP_ShutdownProc(fUnloadFunc);
 
@@ -661,9 +677,13 @@ void RegisterPluginsInFolder(FSSpec folder)
 		char* cUnixFullPath = CFileMgr::EncodeMacPath(cFullPath);	// Frees cFullPath
 		ThrowIfNil_(cUnixFullPath);
 		(void) NET_UnEscape(cUnixFullPath);
-		
+
+#if defined(JAVA)
 		// Tell Java about this path name
 		LJ_AddToClassPath(cUnixFullPath);
+#elif defined(OJI)
+		// What, tell the current Java plugin about this class path?
+#endif
 		XP_FREE(cUnixFullPath);
 	}
 	Catch_(inErr) {}
@@ -858,8 +878,7 @@ NPPluginFuncs * FE_LoadPlugin(void *plugin, NPNetscapeFuncs * funcs, struct _np_
 
 void FE_UnloadPlugin(void *plugin, struct _np_handle* handle)
 {
-#pragma unused(handle)	// PCB: for now.
-	((CPluginHandler*)plugin)->CloseCodeResource();
+	((CPluginHandler*)plugin)->CloseCodeResource(handle);
 }
 
 //
@@ -914,21 +933,6 @@ NPError FE_PluginGetValue(MWContext *, NPEmbeddedApp *, NPNVariable ,
 	return NPERR_NO_ERROR;
 }
 
-void FE_RegisterWindow(void *plugin, void* window)
-{
-	((CPluginView*)plugin)->RegisterWindow(window);
-}
-
-void FE_UnregisterWindow(void *plugin, void* window)
-{
-	((CPluginView*)plugin)->UnregisterWindow(window);
-}
-
-SInt16 FE_AllocateMenuID(void *plugin, XP_Bool isSubmenu)
-{
-	return ((CPluginView*)plugin)->AllocateMenuID(isSubmenu);
-}
-
 //
 // Rather than having to scan an explicit list of windows each time an event
 // comes in, why not use a sub-class of LWindow, and let PowerPlant do the work
@@ -939,7 +943,7 @@ SInt16 FE_AllocateMenuID(void *plugin, XP_Bool isSubmenu)
 
 class CPluginWindow : public LWindow, public LPeriodical {
 public:
-	CPluginWindow(CPluginView* plugin, WindowPtr window);
+	CPluginWindow(nsIEventHandler* eventHandler, WindowRef window);
 	virtual ~CPluginWindow();
 
 	virtual void		HandleClick(const EventRecord& inMacEvent, Int16 inPart);
@@ -951,15 +955,57 @@ public:
 	virtual void		ActivateSelf();
 	virtual void		DeactivateSelf();
 	virtual void 		AdjustCursorSelf(Point inPortPt, const EventRecord& inMacEvent);
+
+	Boolean				IsPluginCommand(CommandT inCommand);
+	Boolean				PassPluginEvent(EventRecord& event);
 	
 private:
-	CPluginView*		mPlugin;
+	nsIEventHandler*	mEventHandler;
 	SInt16				mKind;
 };
 
-CPluginWindow::CPluginWindow(CPluginView* plugin, WindowPtr window)
+void FE_RegisterWindow(nsIEventHandler* handler, void* window)
 {
-	mPlugin = plugin;
+#if 1
+	LCommander::LCommander::SetDefaultCommander(LCommander::GetTopCommander());
+	CPluginWindow* pluginWindow = new CPluginWindow(handler, WindowRef(window));
+    XP_ASSERT(pluginWindow != NULL);
+    if (pluginWindow != NULL) {
+    	pluginWindow->Show();
+    	pluginWindow->Select();
+    }
+#else
+	((CPluginView*)plugin)->RegisterWindow(window);
+#endif
+}
+
+void FE_UnregisterWindow(nsIEventHandler* handler, void* window)
+{
+#if 1
+	// Toss the pluginWindow itself.
+	LWindow* pluginWindow = LWindow::FetchWindowObject(WindowPtr(window));
+	if (pluginWindow != NULL) {
+		// Hide the window.
+		pluginWindow->Hide();
+		// Notify PowerPlant that the window is no longer active.
+		// pluginWindow->Deactivate();
+		delete pluginWindow;
+	}
+#else
+	((CPluginView*)plugin)->UnregisterWindow(window);
+#endif
+}
+
+#if 0
+SInt16 FE_AllocateMenuID(void *plugin, XP_Bool isSubmenu)
+{
+	return ((CPluginView*)plugin)->AllocateMenuID(isSubmenu);
+}
+#endif
+
+CPluginWindow::CPluginWindow(nsIEventHandler* eventHandler, WindowRef window)
+{
+	mEventHandler = eventHandler;
 	mMacWindowP = window;
 
 	// The following is cribbed from one of the LWindow constructors.
@@ -1020,41 +1066,33 @@ CPluginWindow::~CPluginWindow()
 void CPluginWindow::HandleClick(const EventRecord& inMacEvent, Int16 inPart)
 {
 	EventRecord mouseEvent = inMacEvent;
-	if (!mPlugin->PassWindowEvent(mouseEvent, mMacWindowP))
+	if (!PassPluginEvent(mouseEvent))
 		LWindow::HandleClick(inMacEvent, inPart);
 }
 
 void CPluginWindow::EventMouseUp(const EventRecord& inMouseUp)
 {
 	EventRecord mouseEvent = inMouseUp;
-	mPlugin->PassWindowEvent(mouseEvent, mMacWindowP);
+	PassPluginEvent(mouseEvent);
 }
 
 Boolean	CPluginWindow::ObeyCommand(CommandT inCommand, void *ioParam)
 {
-	if (mPlugin->IsPluginCommand(inCommand)) {
-		// assume this is a plugin menu item, since menusharing didn't handle it.
+	if (IsPluginCommand(inCommand)) {
 		EventRecord menuEvent;
 		::OSEventAvail(0, &menuEvent);
-		menuEvent.what = menuCommandEvent;
+		menuEvent.what = nsPluginEventType_MenuCommandEvent;
 		menuEvent.message = -inCommand;			// PowerPlant encodes a raw menu selection as the negation of the selection.
-		return mPlugin->PassWindowEvent(menuEvent, mMacWindowP);
+		return PassPluginEvent(menuEvent);
 	}
-#if 0
-	if (inCommand == cmd_Close) {
-		HideSelf();
-		return true;
-	}
-#endif
 	return LWindow::ObeyCommand(inCommand, ioParam);
 }
 
 Boolean	CPluginWindow::HandleKeyPress(const EventRecord& inKeyEvent)
 {
 	EventRecord keyEvent = inKeyEvent;
-	return mPlugin->PassWindowEvent(keyEvent, mMacWindowP);
+	return PassPluginEvent(keyEvent);
 }
-
 
 void CPluginWindow::DrawSelf()
 {
@@ -1062,7 +1100,7 @@ void CPluginWindow::DrawSelf()
 	::OSEventAvail(0, &updateEvent);
 	updateEvent.what = updateEvt;
 	updateEvent.message = UInt32(mMacWindowP);
-	mPlugin->PassWindowEvent(updateEvent, mMacWindowP);
+	PassPluginEvent(updateEvent);
 }
 
 void CPluginWindow::SpendTime(const EventRecord& inMacEvent)
@@ -1083,7 +1121,7 @@ void CPluginWindow::SpendTime(const EventRecord& inMacEvent)
 	}
 
 	EventRecord macEvent = inMacEvent;
-	mPlugin->PassWindowEvent(macEvent, mMacWindowP);
+	PassPluginEvent(macEvent);
 	
 	//
 	// If weÕre in SpendTime because of a non-null event, send a
@@ -1094,7 +1132,7 @@ void CPluginWindow::SpendTime(const EventRecord& inMacEvent)
 	//
 	if (macEvent.what != nullEvent) {
 		macEvent.what = nullEvent;
-		mPlugin->PassWindowEvent(macEvent, mMacWindowP);
+		PassPluginEvent(macEvent);
 	}
 }
 
@@ -1107,7 +1145,7 @@ void CPluginWindow::ActivateSelf()
 	activateEvent.what = activateEvt;
 	activateEvent.modifiers |= activeFlag;
 	activateEvent.message = UInt32(mMacWindowP);
-	mPlugin->PassWindowEvent(activateEvent, mMacWindowP);
+	PassPluginEvent(activateEvent);
 }
 
 
@@ -1120,15 +1158,47 @@ void CPluginWindow::DeactivateSelf()
 	activateEvent.what = activateEvt;
 	activateEvent.modifiers &= ~activeFlag;
 	activateEvent.message = UInt32(mMacWindowP);
-	mPlugin->PassWindowEvent(activateEvent, mMacWindowP);
+	PassPluginEvent(activateEvent);
 }
 
 void CPluginWindow::AdjustCursorSelf(Point inPortPt, const EventRecord& inMacEvent)
 {
 	EventRecord cursorEvent = inMacEvent;
-	cursorEvent.what = adjustCursorEvent;
-	if (!mPlugin->PassWindowEvent(cursorEvent, mMacWindowP))
+	cursorEvent.what = nsPluginEventType_AdjustCursorEvent;
+	if (!PassPluginEvent(cursorEvent))
 		LWindow::AdjustCursorSelf(inPortPt, inMacEvent);
+}
+
+Boolean CPluginWindow::IsPluginCommand(CommandT inCommand)
+{
+#if 1
+	// Since only one plugin can have menus in the menu bar at a time,
+	// the test only checks to see if this plugin has any menus, and
+	// whether the command is synthetic and is from one of the plugin's menus.
+	if (thePluginManager != NULL) {
+		short menuID, menuItem;
+		if (LCommander::IsSyntheticCommand(inCommand, menuID, menuItem)) {
+			PRBool hasAllocated = PR_FALSE;
+			if (thePluginManager->HasAllocatedMenuID(mEventHandler, menuID, &hasAllocated) == NS_OK)
+				return hasAllocated;
+		}
+	}
+	return false;
+#else
+	return mPlugin->IsPluginCommand(inCommand);
+#endif
+}
+
+Boolean CPluginWindow::PassPluginEvent(EventRecord& event)
+{
+#if 1
+	nsPluginEvent pluginEvent = { &event, mMacWindowP };
+	PRBool eventHandled = PR_FALSE;
+	mEventHandler->HandleEvent(&pluginEvent, &eventHandled);
+	return eventHandled;
+#else
+	return mPlugin->PassWindowEvent(event, mMacWindowP))
+#endif
 }
 
 
@@ -1259,9 +1329,10 @@ void CPluginView::RegisterWindow(void* window)
 	// Set the default commander to the application, to limit the depth of the chain of command.
 	// I've seen this get ridiculously deep.
 	LCommander::LCommander::SetDefaultCommander(LCommander::GetTopCommander());
+
+#if 0
 	CPluginWindow* pluginWindow = new CPluginWindow(this, WindowPtr(window));
 	
-#if 0
 	if (fWindowList == NULL)
 		fWindowList = new LArray;
 	if (fWindowList != NULL)
@@ -1541,7 +1612,7 @@ void CPluginView::EmbedDisplay(LO_EmbedStruct* embed_struct, Boolean isPrinting)
 		//
 		ResetDrawRect();
 
-		memset(&updateEvent, 0, sizeof(EventRecord));
+		::OSEventAvail(0, &updateEvent);
 		updateEvent.what = updateEvt;
 		(void) PassEvent(updateEvent);
 	}
@@ -1653,8 +1724,8 @@ Boolean	CPluginView::ObeyCommand(CommandT inCommand, void *ioParam)
 	if (IsPluginCommand(inCommand)) {
 		// assume this is a plugin menu item, since menusharing didn't handle it.
 		EventRecord menuEvent;
-		::memset(&menuEvent, 0, sizeof(EventRecord));
-		menuEvent.what = menuCommandEvent;
+		::OSEventAvail(0, &menuEvent);
+		menuEvent.what = nsPluginEventType_MenuCommandEvent;
 		menuEvent.message = -inCommand;			// PowerPlant encodes a raw menu selection as the negation of the selection.
 		return PassEvent(menuEvent);
 	}
@@ -1701,7 +1772,7 @@ void CPluginView::DrawSelf()
 		else
 			{
 			EventRecord updateEvent;
-			memset(&updateEvent, 0, sizeof(EventRecord));
+			::OSEventAvail(0, &updateEvent);
 			updateEvent.what = updateEvt;
 			(void) PassEvent(updateEvent);
 			}
@@ -1733,7 +1804,7 @@ void CPluginView::SpendTime(const EventRecord& inMacEvent)
 void CPluginView::ActivateSelf()
 {
 	EventRecord activateEvent;
-	memset(&activateEvent, 0, sizeof(EventRecord));
+	::OSEventAvail(0, &activateEvent);
 	activateEvent.what = activateEvt;
 	activateEvent.modifiers = activeFlag;
 	(void) PassEvent(activateEvent);
@@ -1743,7 +1814,7 @@ void CPluginView::ActivateSelf()
 void CPluginView::DeactivateSelf()
 {
 	EventRecord activateEvent;
-	memset(&activateEvent, 0, sizeof(EventRecord));
+	::OSEventAvail(0, &activateEvent);
 	activateEvent.what = activateEvt;
 	(void) PassEvent(activateEvent);
 }
@@ -1760,8 +1831,8 @@ void CPluginView::BeTarget()
 	XP_ASSERT(!fHidden);
 	CPluginView::sPluginTarget = this;					// Parallel to LCommander::sTarget, except only for plug-ins
 	EventRecord focusEvent;
-	memset(&focusEvent, 0, sizeof(EventRecord));
-	focusEvent.what = getFocusEvent;
+	::OSEventAvail(0, &focusEvent);
+	focusEvent.what = nsPluginEventType_GetFocusEvent;
 	Boolean handled = PassEvent(focusEvent);
 	if (!handled)										// If the plugin doesnÕt want the focus,
 		SwitchTarget(GetSuperCommander());				//		switch the focus back to our super
@@ -1771,8 +1842,8 @@ void CPluginView::DontBeTarget()
 {
 	CPluginView::sPluginTarget = NULL;					// Parallel to LCommander::sTarget, except only for plug-ins
 	EventRecord focusEvent;
-	memset(&focusEvent, 0, sizeof(EventRecord));
-	focusEvent.what = loseFocusEvent;
+	::OSEventAvail(0, &focusEvent);
+	focusEvent.what = nsPluginEventType_LoseFocusEvent;
 	(void) PassEvent(focusEvent);
 }
 
@@ -1781,7 +1852,7 @@ void CPluginView::AdjustCursorSelf(Point inPortPt, const EventRecord& inMacEvent
 {
 	XP_ASSERT(!fHidden);
 	EventRecord cursorEvent = inMacEvent;
-	cursorEvent.what = adjustCursorEvent;
+	cursorEvent.what = nsPluginEventType_AdjustCursorEvent;
 	
 	Boolean handled = PassEvent(cursorEvent);
 	if (!handled)
@@ -2064,7 +2135,9 @@ void CPluginView::DrawBroken(Boolean hilite)
 Boolean CPluginView::HandleEmbedEvent(CL_Event *event)
 {
 	fe_EventStruct *fe_event = (fe_EventStruct *)event->fe_event;
+
 	EventRecord macEvent;
+	::OSEventAvail(0, &macEvent);
 
 	// For windowless plugins, the last draw might have been to the offscreen port,
 	// but for event handling, we want the current port to be the onscreen port (so
@@ -2092,13 +2165,13 @@ Boolean CPluginView::HandleEmbedEvent(CL_Event *event)
 		case CL_EVENT_MOUSE_MOVE:
 			//macEvent = *(EventRecord *)fe_event->event;
 			macEvent = fe_event->event.macEvent; // 1997-02-22 mjc
-			macEvent.what = adjustCursorEvent;
+			macEvent.what = nsPluginEventType_AdjustCursorEvent;
 			break;
 		case CL_EVENT_KEY_FOCUS_GAINED:
-			macEvent.what = getFocusEvent;
+			macEvent.what = nsPluginEventType_GetFocusEvent;
 			break;
 		case CL_EVENT_KEY_FOCUS_LOST:
-			macEvent.what = loseFocusEvent;
+			macEvent.what = nsPluginEventType_LoseFocusEvent;
 			break;
 		default:
 			return false;

@@ -65,6 +65,10 @@
 #include "mjava.h"
 #endif
 
+#if defined (OJI)
+#include "jvmmgr.h"
+#endif
+
 #include "mregistr.h"
 #include "resae.h"
 #include "resgui.h"
@@ -1450,7 +1454,12 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
             		}
 			break;
 	}
-	
+
+#if defined (OJI)
+	// beard:  On the Mac, there's no interface for this yet, so we want to turn it on.
+	PREF_SetBoolPref("security.enable_java", TRUE);
+#endif
+
 	SetBooleanWithPref("security.enable_java", &mJavaEnabled);
 	PREF_RegisterCallback("security.enable_java",
 						  SetBooleanWithPref,
@@ -1585,8 +1594,8 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 	
 	mozilla_event_queue = PR_CreateEventQueue("Mozilla Event Queue", mozilla_thread);
 
-	LM_InitMocha();		// mocha, mocha, mocha
 	NPL_Init();			// plugins
+	LM_InitMocha();		// mocha, mocha, mocha
 
 	// The tools menus must be created after the plugins are read in.
 	
@@ -2425,6 +2434,12 @@ void CFrontApp::FindCommandStatus( CommandT command, Boolean& enabled,
 			mark = LJ_IsConsoleShowing() ? 0x12 : 0;
 			enabled = mJavaEnabled;
 #endif /* defined (JAVA) */
+
+#if defined (OJI)
+			usesMark = true;
+			mark = JVM_IsConsoleVisible() ? 0x12 : 0;
+			enabled = mJavaEnabled;
+#endif /* defined (OJI) */
 			break;
 
 #ifdef EDITOR
@@ -2593,6 +2608,10 @@ Boolean CFrontApp::ObeyCommand(CommandT inCommand, void* ioParam)
 				LJ_ShowConsole();
 			}
 #endif /* defined (JAVA) */
+
+#if defined (OJI)
+			JVM_ToggleConsole();
+#endif /* defined (OJI) */
 			break;
 			
 		case cmd_HistoryWindow:
@@ -3637,9 +3656,11 @@ void main( void )
 	}
 #else
 
+#if !defined (OJI)
 	// ¥ double check to make sure we have Java installed
 	DisableJavaIfNotAvailable();
-	
+#endif
+
 #endif
 	
 	// NSPR/MOCHA Initialization

@@ -57,6 +57,13 @@ typedef	struct	{
 
 // prototypes
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 		void			startAsyncCursors();
 		void			stopAsyncCursors();
+
+#if defined(__cplusplus)
+} // extern "C"
+#endif

@@ -47,14 +47,14 @@ LINCS=-I$(XPDIST)\public\jtools -I$(XPDIST)\public\nspr \
     -I$(XPDIST)\public\java 
 !endif
 
-!if !defined (JAVA_OR_OJI)
+!if !defined (JAVA_OR_NSJVM)
 LOCAL_JMC_SUBDIR =  ..\..\..\jmcgen\include
 LOCAL_JMC_SRC_SUBDIR =  ..\..\..\jmcgen\src
 !endif
 
 !include $(DEPTH)\config\rules.mak
 
-!if !defined (JAVA_OR_OJI)
+!if !defined (JAVA_OR_NSJVM)
 export:: 
 	@echo +++ make:  Copying JMC src files from $(LOCAL_JMC_SRC_SUBDIR)/Mwin*.c to cwd
 	-for %f in ($(LOCAL_JMC_SRC_SUBDIR)\Mwin*.c) do $(MAKE_INSTALL) %f .

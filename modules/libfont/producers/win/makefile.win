@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 !include $(DEPTH)\config\config.mak
 
-!ifdef JAVA_OR_OJI
+!ifdef JAVA_OR_NSJVM
 DIRS=classes src 
 !else
 DIRS=src 

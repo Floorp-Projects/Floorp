@@ -756,7 +756,7 @@ void CWebFontReference::Apply()
 
 void CWebFontReference::DrawText(int x, int y, char *text, int start, int end)
 {
-	nfrf_DrawText(fRenderableFont, fRenderingContext, x, y, 0, &text[start], end - start + 1, NULL);
+	nfrf_DrawText(fRenderableFont, fRenderingContext, x, y, 0, (jbyte*)&text[start], end - start + 1, NULL);
 }
 
 short CWebFontReference::TextWidth(char *text, int firstByte, int byteCount)
@@ -767,7 +767,7 @@ short CWebFontReference::TextWidth(char *text, int firstByte, int byteCount)
 	// **** Do we need to calculate the character count here?
 	charLocs = (jint *) XP_ALLOC(byteCount * sizeof(jint));
 	
-	totalLength = nfrf_MeasureText(fRenderableFont, fRenderingContext, 0, &text[firstByte], byteCount, charLocs, byteCount, NULL);
+	totalLength = nfrf_MeasureText(fRenderableFont, fRenderingContext, 0, (jbyte*)&text[firstByte], byteCount, charLocs, byteCount, NULL);
 
 	XP_FREE(charLocs);
 	return (short) totalLength;
