@@ -30,8 +30,8 @@
 
 
 
-# $Revision: 1.7 $ 
-# $Date: 2002/05/02 22:58:28 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/05/06 18:36:28 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Time.pm,v $ 
 # $Name:  $ 
@@ -48,7 +48,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.7 $ )[1];
+$VERSION = ( qw $Revision: 1.8 $ )[1];
 
 
 sub new {
@@ -148,7 +148,8 @@ sub status_table_row {
     $hour_color = "bgcolor=#e7e7e7";
   }
 
-  my(@outrow) = ("\t<td align=right $hour_color>".
+  my(@outrow) = ("\t<!-- Time: $pretty_time -->\n".
+                 "\t\t<td align=right $hour_color>".
                  "$query_link</td>\n");
 
   $self->last_hour($hour);
