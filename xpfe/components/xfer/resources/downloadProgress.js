@@ -10,11 +10,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
- * Corporation.  Portions created by Netscape are 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  *
@@ -126,7 +126,7 @@ function onUnload() {
 
         // Unhook observer.
         op.observer = null;
-    
+
         // See if we completed normally (i.e., are closing ourself).
         if ( started && !completed ) {
             // Terminate transfer.
@@ -162,7 +162,7 @@ function stop() {
    if ( started && !completed ) {
       // Get current time.
       var now = ( new Date() ).getTime();
-   
+
       // See if sufficient time has elapsed to warrant dialog.
       if ( now - startTime > warningLimit ) {
          // XXX - Disabled for now since confirm call doesn't work.
@@ -277,8 +277,8 @@ function onProgress( bytes, max ) {
     // Update percentage label on progress meter.
     var percentMsg = getString( "percentMsg" );
     percentMsg = replaceInsert( percentMsg, 1, percent );
-    dialog.progress.progresstext = percentMsg;
-    
+    dialog.progress.label = percentMsg;
+
     if ( !completed ) {
         // Update time remaining.
         if ( rate && max != "-1" ) {
@@ -349,7 +349,7 @@ function onStatus( status ) {
    if ( status.length > 9 ) {
       dialog.status.setAttribute("value", status);
    }
-}                                 
+}
 
 function onError( errorCode ) {
     // Record fact we had an error.
@@ -376,12 +376,12 @@ function onError( errorCode ) {
                     // Access/permission error.
                     msg = getString( "accessErrorMsg" );
                     break;
-    
+
                 case Components.interfaces.nsIStreamTransferOperation.kReasonDiskFull :
                     // Out of space error.
                     msg = getString( "diskFullMsg" );
                     break;
-    
+
                 default :
                     // Generic write error.
                     msg = getString( "writeErrorMsg" );
