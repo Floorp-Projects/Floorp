@@ -1280,10 +1280,6 @@ nsDOMClassInfo::RegisterExternalClasses()
 #define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if)               \
   {                                                                           \
     nsDOMClassInfoData &d = sClassInfoData[eDOMClassInfo_##_class##_id];      \
-    NS_ASSERTION(!d.mProtoChainInterface, "Redeclaration of DOM classinfo "   \
-                 "proto chain interface!");                                   \
-    NS_ASSERTION(!d.mInterfaces, "Redeclaration of DOM classinfo "            \
-                 "interface list!");                                          \
     d.mProtoChainInterface = _ifptr;                                          \
     d.mHasClassInterface = _has_class_if;                                     \
     static const nsIID *interface_list[] = {
@@ -2963,6 +2959,7 @@ nsDOMClassInfo::ShutDown()
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
+  sIsInitialized = PR_FALSE;
 }
 
 

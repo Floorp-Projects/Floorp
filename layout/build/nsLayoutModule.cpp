@@ -100,6 +100,7 @@
 #include "nsIXBLService.h"
 #include "nsIFrameLoader.h"
 #include "nsICaret.h"
+#include "nsJSEnvironment.h"
 #include "nsLayoutAtoms.h"
 #include "nsPlainTextSerializer.h"
 #include "mozSanitizingSerializer.h"
@@ -255,7 +256,8 @@ Initialize(nsIModule* aSelf)
   }
 
   gInitialized = PR_TRUE;
-    
+
+  nsJSEnvironment::Startup();
   nsresult rv = nsContentUtils::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsContentUtils");
