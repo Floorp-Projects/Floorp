@@ -222,23 +222,23 @@
     </menu>
 
     <menu id="editMenu" value="&editMenu.label;" accesskey="&editmenu.accesskey;">
-    <menupopup>
-      <menuitem accesskey="&editundo.accesskey;"            key="undokb"         observes="Editor:Undo"/>
-      <menuitem accesskey="&editredo.accesskey;"            key="redokb"         observes="Editor:Redo"/>
-      <menuseparator />
-      <menuitem accesskey="&editcut.accesskey;"             key="cutkb"          observes="Editor:Cut"/>
-      <menuitem accesskey="&editcopy.accesskey;"            key="copykb"         observes="Editor:Copy"/>
-      <menuitem accesskey="&editpaste.accesskey;"           key="pastekb"        observes="Editor:Paste"/>
-      <menuitem accesskey="&editpastequotation.accesskey;"  key="pastequotationkb"  observes="Editor:PasteQuote"/>
-      <menuitem accesskey="&editclear.accesskey;"                                observes="Editor:Clear"/>
-      <menuseparator />
-      <menuitem accesskey="&editselectall.accesskey;"       key="selectallkb"    observes="Editor:SelectAll"/>
-      <menuseparator />
-      <menuitem accesskey="&editfind.accesskey;"            key="findkb"         observes="Editor:Find" value="&findCmd.label;"/>
-      <menuitem accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="Editor:FindNext"/>
-      <menuseparator />
-      <menuitem accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="Editor:CheckSpelling"/>
-      <menuseparator />
+    <menupopup id="edEditMenuPopup">
+      <menuitem id="edEditMenuUndo" accesskey="&editundo.accesskey;"            key="undokb"         observes="Editor:Undo"/>
+      <menuitem id="edEditMenuRedo" accesskey="&editredo.accesskey;"            key="redokb"         observes="Editor:Redo"/>
+      <menuseparator id="edEditMenuSep1" />
+      <menuitem id="edEditMenuCut" accesskey="&editcut.accesskey;"             key="cutkb"          observes="Editor:Cut"/>
+      <menuitem id="edEditMenuCopy" accesskey="&editcopy.accesskey;"            key="copykb"         observes="Editor:Copy"/>
+      <menuitem id="edEditMenuPaste" accesskey="&editpaste.accesskey;"           key="pastekb"        observes="Editor:Paste"/>
+      <menuitem id="edEditMenuPasteQuote" accesskey="&editpastequotation.accesskey;"  key="pastequotationkb"  observes="Editor:PasteQuote"/>
+      <menuitem id="edEditMenuClear" accesskey="&editclear.accesskey;"                                observes="Editor:Clear"/>
+      <menuseparator id="edEditMenuSep2" />
+      <menuitem id="edEditMenuSelectAll" accesskey="&editselectall.accesskey;"       key="selectallkb"    observes="Editor:SelectAll"/>
+      <menuseparator id="edEditMenuSep3" />
+      <menuitem id="edEditMenuFind" accesskey="&editfind.accesskey;"            key="findkb"         observes="Editor:Find" value="&findCmd.label;"/>
+      <menuitem id="edEditMenuFindNext" accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="Editor:FindNext"/>
+      <menuseparator id="edEditMenuSep4" />
+      <menuitem id="edEditMenuSpelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="Editor:CheckSpelling"/>
+      <menuseparator id="edEditMenuSep5" />
       <!-- TODO: PREF PANELS FOR EDITOR. Replace pref-publish with pref-editor -->
       <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://pref/content/pref-publish.xul')"/>
     </menupopup>
