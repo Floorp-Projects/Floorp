@@ -1,7 +1,7 @@
 Package: minimo
 Section: x11                                                                  
 Priority: optional
-Version: 0.1
+Version: 0.2-a1
 Source: http://mozilla.org/projects/minimo/
 Architecture: arm
 Priority: optional
