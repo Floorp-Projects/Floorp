@@ -11,7 +11,7 @@
 
   <binding id="download">
     <resources>
-      <stylesheet src="chrome://browser/skin/downloadmanager/downloadmanager.css"/>
+      <stylesheet src="chrome://browser/skin/downloads/downloadmanager.css"/>
     </resources>
     <content>
       <xul:deck anonid="title-deck">
