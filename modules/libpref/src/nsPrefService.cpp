@@ -82,9 +82,6 @@ static PRBool isSharingEnabled();
 static nsresult openPrefFile(nsIFile* aFile);
 static nsresult pref_InitInitialObjects(void);
 
-  // needed so we can still get the JS Runtime Service during XPCOM shutdown
-static nsIJSRuntimeService* gJSRuntimeService = nsnull; // owning reference
-
 //-----------------------------------------------------------------------------
 
 /*
@@ -105,7 +102,6 @@ nsPrefService::~nsPrefService()
 {
   PREF_Cleanup();
   NS_IF_RELEASE(mCurrentFile);
-  NS_IF_RELEASE(gJSRuntimeService);
 
 #ifdef MOZ_PROFILESHARING
   NS_IF_RELEASE(mCurrentSharedFile);
