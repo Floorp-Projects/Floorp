@@ -831,7 +831,7 @@ function con_respondsourcetext (response, sourceText)
     else
     {
         maxDigits = Math.floor(Math.log(sourceLines.length) / Math.LN10) + 1;
-        dd ("building response {");
+        dd ("OFF building response {");
         response.channel.contentType = "text/xml";
         resultSource = "<?xml version='1.0'";
         //        if ("charset" in sourceText)

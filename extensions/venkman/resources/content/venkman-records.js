@@ -649,9 +649,11 @@ function vr_refresh ()
             this.property     = this.atomDouble;
             break;
         case TYPE_STRING:
-            strval = this.value.stringValue.quote();
+            strval = this.value.stringValue;
             if (strval.length > console.prefs["maxStringLength"])
                 strval = getMsg(MSN_FMT_LONGSTR, strval.length);
+            else
+                strval = strval.quote();
             this.displayValue = strval;
             this.displayType  = MSG_TYPE_STRING;
             this.property     = this.atomString;
@@ -665,29 +667,49 @@ function vr_refresh ()
             this.value.refresh();
 
             var ctor = this.value.jsClassName;
+            strval = null;
+            
+            switch (ctor)
+            {
+                case "Function":
+                    this.displayType  = MSG_TYPE_FUNCTION;
+                    ctor = (this.value.isNative ? MSG_CLASS_NATIVE_FUN :
+                            MSG_CLASS_SCRIPT_FUN);
+                    this.property = this.atomFunction;
+                    break;
 
-            if (ctor == "Function")
-            {
-                this.displayType  = MSG_TYPE_FUNCTION;
-                ctor = (this.value.isNative ? MSG_CLASS_NATIVE_FUN :
-                        MSG_CLASS_SCRIPT_FUN);
-                this.property = this.atomFunction;
-            }
-            if (ctor == "Object")
-            {
-                if (this.value.jsConstructor)
-                    ctor = this.value.jsConstructor.jsFunctionName;
-            }
-            else if (ctor == "XPCWrappedNative_NoHelper")
-            {
-                ctor = MSG_CLASS_CONST_XPCOBJ;
-            }
-            else if (ctor == "XPC_WN_ModsAllowed_Proto_JSClass")
-            {
-                ctor = MSG_CLASS_XPCOBJ;
+                case "Object":
+                    if (this.value.jsConstructor)
+                        ctor = this.value.jsConstructor.jsFunctionName;
+                    break;
+
+                case "XPCWrappedNative_NoHelper":
+                    ctor = MSG_CLASS_CONST_XPCOBJ;
+                    break;
+
+                case "XPC_WN_ModsAllowed_Proto_JSClass":
+                    ctor = MSG_CLASS_XPCOBJ;
+                    break;
+
+                case "String":
+                    strval = this.value.stringValue;
+                    if (strval.length > console.prefs["maxStringLength"])
+                        strval = getMsg(MSN_FMT_LONGSTR, strval.length);
+                    else
+                        strval = strval.quote();
+                    break;
+
+                case "Number":
+                case "Boolean":
+                    strval = this.value.stringValue;
+                    break;
             }
 
-            if (ctor != "String")
+            if (strval != null)
+            {
+                this.displayValue = strval;
+            }
+            else
             {
                 if (0) {
                     /* too slow... */
@@ -711,13 +733,6 @@ function vr_refresh ()
                     this.displayValue = "{" + ctor + "}";
                 }
             }
-            else
-            {
-                strval = this.value.stringValue.quote();
-                if (strval.length > console.prefs["maxStringLength"])
-                    strval = getMsg(MSN_FMT_LONGSTR, strval.length);
-                this.displayValue = strval;
-            }
             
             /* if we have children, refresh them. */
             if ("childData" in this && this.childData.length > 0)
@@ -729,7 +744,7 @@ function vr_refresh ()
                     this.close();
                 }
             }
-            break;            
+            break;
 
         default:
             ASSERT (0, "invalid value");

@@ -353,6 +353,9 @@ function bv_hide()
 console.views.breaks.onDblClick =
 function bv_sel (e)
 {
+    if (e.target.localName != "treechildren")
+        return;
+
     var rowIndex = this.tree.selection.currentIndex;
     if (rowIndex == -1 || rowIndex > this.rowCount)
         return;
@@ -953,6 +956,9 @@ function scv_hide ()
 console.views.scripts.onDblClick =
 function scv_dblclick (e)
 {
+    if (e.target.localName != "treechildren")
+        return;
+
     var scriptsView = console.views.scripts;
     var rowIndex = scriptsView.tree.selection.currentIndex;
     
@@ -1778,8 +1784,11 @@ function skv_hide()
 }
 
 console.views.stack.onDblClick =
-function skv_select (row)
+function skv_select (e)
 {
+    if (e.target.localName != "treechildren")
+        return;
+
     var rowIndex = console.views.stack.tree.selection.currentIndex;
     
     if (rowIndex == -1)
@@ -2458,7 +2467,7 @@ function s2v_syncframe (iframe)
 
     function tryAgain ()
     {
-        //dd ("source2 view trying again...");
+        dd ("source2 view trying again...");
         source2View.syncOutputFrame(iframe);
     };
 
@@ -2486,8 +2495,8 @@ function s2v_syncframe (iframe)
     }
     catch (ex)
     {
-        //dd ("caught exception showing session view, will try again later.");
-        //dd (dumpObjectTree(ex));
+        // dd ("caught exception showing session view, will try again later.");
+        // dd (dumpObjectTree(ex));
         setTimeout (tryAgain, 500);
     }
 
@@ -2820,7 +2829,6 @@ function s2v_statechange (webProgress, request, stateFlags, status)
         */
 
         sourceTab = source2View.getSourceTabForDOMWindow(webProgress.DOMWindow);
-
         if (webProgress.DOMWindow.location.href !=
             sourceTab.iframe.getAttribute("targetSrc"))
         {
@@ -3921,8 +3929,11 @@ function winv_cellprops (index, colID, properties)
 }
 
 console.views.windows.onDblClick =
-function winv_dblclick ()
+function winv_dblclick (e)
 {
+    if (e.target.localName != "treechildren")
+        return;
+
     var rowIndex = this.tree.selection.currentIndex;
     if (rowIndex == -1 || rowIndex > this.rowCount)
         return;

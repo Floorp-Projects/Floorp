@@ -79,8 +79,11 @@ function mmgr_showpop (event)
      */
     function satisfied()
     {
-        if (menuitem.hasAttribute("isSeparator"))
+        if (menuitem.hasAttribute("isSeparator") || 
+            !menuitem.hasAttribute("commandname"))
+        {
             return true;
+        }
 
         if (!("menuManager" in cx))
         {

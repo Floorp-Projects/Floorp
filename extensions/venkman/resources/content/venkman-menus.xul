@@ -126,7 +126,9 @@
         <menu id="windowMenu"/>
 
         <!-- Help menu -->
-        <menu id="mainmenu:help"/>
+        <!-- Mac expects a help menu with this ID, and there is nothing we can
+             do about it. -->
+        <menu id="menu_Help"/>
       </menubar>  
 
       <!-- Debug toolbar -->

@@ -142,18 +142,6 @@ function initMenus()
         ]
     };
 
-    console.menuSpecs["mainmenu:help"] = {
-        label: MSG_MNU_HELP,
-        items:
-        [
-         ["mozilla-help"],
-         ["help"],
-         ["-"],
-         ["version"],
-         ["about-mozilla"]
-        ]
-    };
-    
     console.menuSpecs["mainmenu:profile"] = {
         label: MSG_MNU_PROFILE,
         items:
@@ -166,6 +154,19 @@ function initMenus()
         ]
     };
 
+    /* Mac expects a help menu with this ID, and there is nothing we can do
+     * about it. */
+    console.menuSpecs["mainmenu:help"] = {
+        label: MSG_MNU_HELP,
+        domID: "menu_Help",
+        items:
+        [
+         ["version"],
+         ["-"],
+         ["help"]
+        ]
+    };
+    
     console.menuSpecs["popup:emode"] = {
         label: MSG_MNU_EMODE,
         items:
@@ -211,8 +212,14 @@ function createMainMenu(document)
     var menuManager = console.menuManager;
     for (var id in console.menuSpecs)
     {
+        var domID;
+        if ("domID" in console.menuSpecs[id])
+            domID = console.menuSpecs[id].domID;
+        else
+            domID = id;
+        
         if (id.indexOf("mainmenu:") == 0)
-            menuManager.createMenu (mainmenu, null, id);
+            menuManager.createMenu (mainmenu, null, id, domID);
     }
 
     mainmenu.removeAttribute ("collapsed");

@@ -496,7 +496,13 @@ function getURLSpecFromFile (file)
 
     const nsIIOService = Components.interfaces.nsIIOService;
     const nsILocalFile = Components.interfaces.nsILocalFile;
-    const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
+    /* bug 166792 added this interface in Sept. 2002, but we need to work on
+     * older versions too. */
+    var nsIFileProtocolHandler;
+    if ("nsIFileProtocolHandler" in Components.interfaces)
+        nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
+    else
+        nsIFileProtocolHandler = null;
     
     if (typeof file == "string")
     {
@@ -507,8 +513,11 @@ function getURLSpecFromFile (file)
     }
     
     var service = Components.classes[IOS_CTRID].getService(nsIIOService);
-    var fileHandler = service.getProtocolHandler("file")
-                             .QueryInterface(nsIFileProtocolHandler);
+    if (!nsIFileProtocolHandler)
+        return service.getURLSpecFromFile(file);
+
+    var fileHandler = service.getProtocolHandler("file");
+    fileHandler = fileHandler.QueryInterface(nsIFileProtocolHandler);
     return fileHandler.getURLSpecFromFile(file);
 }
 

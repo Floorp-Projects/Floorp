@@ -441,7 +441,7 @@ function cmdClearBreak (e)
 
     if ("breakWrapperList" in e)
     {
-        for (i = 0; i < e.breakWrapperList.length; ++i)
+        for (var i = 0; i < e.breakWrapperList.length; ++i)
             clear(e.breakWrapperList[i]);
     }
     else
@@ -1608,6 +1608,8 @@ function cmdSetTransientFlag (e)
 
 function cmdStartupInit (e)
 {
+    dd ("startup-init " + e.toggle);
+    
     if (e.toggle != null)
     {
         e.toggle = getToggle (e.toggle, console.jsds.initAtStartup);

@@ -209,12 +209,6 @@ function jsdph_allowport (aPort, aScheme)
 JSDProtocolHandler.prototype.newURI =
 function jsdph_newuri (spec, charset, baseURI)
 {
-    if (baseURI)
-    {
-        debug ("-*- jsdHandler: aBaseURI passed to newURI, bailing.\n");
-        return null;
-    }
-
     var clazz = Components.classes[SIMPLEURI_CTRID];
     var uri = clazz.createInstance(nsIURI);
     uri.spec = spec;

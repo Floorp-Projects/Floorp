@@ -33,7 +33,7 @@
  *
  */
 
-const __vnk_version        = "0.9.37";
+const __vnk_version        = "0.9.39";
 const __vnk_requiredLocale = "0.9.x";
 var   __vnk_versionSuffix  = "";
 
@@ -819,7 +819,10 @@ function metaBreak (scriptInstance, line, matchResult)
     if (scriptWrapper.getBreakpoint(pc))
         return;
 
-    var breakpoint = scriptWrapper.setBreakpoint (pc);
+    var sourceLine = scriptWrapper.jsdScript.pcToLine(pc, PCMAP_SOURCETEXT);
+    var breakpoint = setFutureBreakpoint (scriptWrapper.jsdScript.fileName,
+                                          sourceLine);
+    scriptWrapper.setBreakpoint (pc, breakpoint);
     matchResult[2] = stringTrim(matchResult[2]);
     
     switch (matchResult[1])
@@ -1101,7 +1104,7 @@ function st_loadsrc (cb)
         /* if we can't load it now, try to load it later */
         try
         {
-            dd ("trying async");
+            // dd ("trying async");
             loadURLAsync (url, { onComplete: onComplete });
             return;
         }

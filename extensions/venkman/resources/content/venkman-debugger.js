@@ -228,7 +228,8 @@ function jsdExecutionHook (frame, type, rv)
         frame.script.fileName == MSG_VAL_CONSOLE ||
         !ASSERT(!(frame.script.flags & SCRIPT_NODEBUG),
                 "Stopped in a script marked as don't debug") ||
-        !ASSERT(!isURLFiltered(frame.script.fileName),
+        !ASSERT(isURLVenkman(frame.script.fileName) ||
+                !isURLFiltered(frame.script.fileName),
                 "stopped in a filtered URL"))
     {
         return hookReturn;
