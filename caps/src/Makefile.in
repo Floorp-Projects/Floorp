@@ -40,8 +40,8 @@ CPPSRCS		=	        \
 		admin.cpp                         \
 		nsCaps.cpp                        \
 		nsCCapsManager.cpp		  \
-		nsCCertPrincipal.cpp		  \
-		nsCCodebasePrincipal.cpp	  \
+		nsCertificatePrincipal.cpp		  \
+		nsCodebasePrincipal.cpp	  \
 		nsCCapsManagerFactory.cpp	  \
 		nsCCodeSourcePrincipal.cpp        \
 		$(NULL)

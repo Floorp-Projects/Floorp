@@ -16,30 +16,14 @@
  * Reserved.
  */
 
-#ifndef nsICodebasePrincipal_h___
-#define nsICodebasePrincipal_h___
-
-#include "nsIPrincipal.h"
-
-class nsICodebasePrincipal : public nsIPrincipal {
-public:
-
-    /**
-     * Returns the codebase URL of the principal.
-     *
-     * @param result - the resulting codebase URL
-     */
-    NS_IMETHOD
-    GetURL(const char **ppCodeBaseURL) = 0;
-
+#include "nsIPrincipal.idl"
+[uuid(68cb0890-436a-11d2-b940-00805f52351a)]
+interface nsICodeSourcePrincipal : nsIPrincipal {
+void GetPublicKey(out string publicKey, out unsigned long publicKeySize);
+void GetCompanyName(out string ppCompanyName);
+void GetCertificateAuthority(out string ppCertAuthority);
+void GetSerialNumber(out string ppSerialNumber);
+void GetExpirationDate(out string ppExpDate);
+void GetFingerPrint(out string ppFingerPrint);
+void GetURL(out string ppCodeBaseURL);
 };
-
-#define NS_ICODEBASEPRINCIPAL_IID                    \
-{ /* c29fe440-25e1-11d2-8160-006008119d7a */         \
-    0xc29fe440,                                      \
-    0x25e1,                                          \
-    0x11d2,                                          \
-    {0x81, 0x60, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
-
-#endif // nsICodebasePrincipal_h___

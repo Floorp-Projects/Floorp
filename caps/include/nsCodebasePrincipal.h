@@ -16,13 +16,13 @@
  * Reserved.
  */
 
-#ifndef nsCCodebasePrincipal_h___
-#define nsCCodebasePrincipal_h___
+#ifndef nsCodebasePrincipal_h___
+#define nsCodebasePrincipal_h___
 
 #include "nsICodebasePrincipal.h"
 #include "nsPrincipal.h"
 
-class nsCCodebasePrincipal : public nsICodebasePrincipal {
+class nsCodebasePrincipal : public nsICodebasePrincipal {
 public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsISupports:
@@ -45,15 +45,15 @@ public:
      * @param result - the resulting codebase URL
      */
     NS_IMETHOD
-    GetURL(const char **ppCodeBaseURL);
+    GetURL(char **ppCodeBaseURL);
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsCCodebasePrincipal:
 
-    nsCCodebasePrincipal(const char *codebaseURL, nsresult *result);
-    nsCCodebasePrincipal(nsPrincipal *pNSPrincipal);
+    nsCodebasePrincipal(const char *codebaseURL, nsresult *result);
+    nsCodebasePrincipal(nsPrincipal *pNSPrincipal);
 
-    virtual ~nsCCodebasePrincipal(void);
+    virtual ~nsCodebasePrincipal(void);
     nsPrincipal *GetPeer(void);
 
 protected:

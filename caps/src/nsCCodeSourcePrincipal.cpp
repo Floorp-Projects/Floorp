@@ -17,8 +17,8 @@
  */
 
 #include "nsCCodeSourcePrincipal.h"
-#include "nsCCodebasePrincipal.h"
-#include "nsCCertPrincipal.h"
+#include "nsCodebasePrincipal.h"
+#include "nsCertificatePrincipal.h"
 #include "nsPrincipal.h"
 
 NS_DEFINE_IID(kICodeSourcePrincipalIID, NS_ICODESOURCEPRINCIPAL_IID);
@@ -29,9 +29,7 @@ NS_DEFINE_IID(kICodeSourcePrincipalIID, NS_ICODESOURCEPRINCIPAL_IID);
 // These macros produce simple version of QueryInterface and AddRef.
 // See the nsISupports.h header file for DETAILS.
 
-NS_IMPL_ADDREF(nsCCodeSourcePrincipal)
-NS_IMPL_RELEASE(nsCCodeSourcePrincipal)
-NS_IMPL_QUERY_INTERFACE(nsCCodeSourcePrincipal, kICodeSourcePrincipalIID);
+NS_IMPL_ISUPPORTS(nsCCodeSourcePrincipal,kICodeSourcePrincipalIID);
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsIPrincipal:
@@ -58,28 +56,6 @@ nsCCodeSourcePrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
 // from nsICodeSourcePrincipal:
 
 /**
- * returns the certificate's data that is passes in via Initialize method.
- *
- * @param certByteData     - The ceritificate's byte array data including the chain.
- * @param certByteDataSize - the length of certificate byte array.
- */
-NS_METHOD
-nsCCodeSourcePrincipal::GetCertData(const unsigned char ***certChain, 
-                                    PRUint32 **certChainLengths, 
-                                    PRUint32 *noOfCerts)
-{
-    *certChain     = NULL;
-    *certChainLengths = 0;
-    *noOfCerts = 0;
-    if(m_pNSICertPrincipal == NULL)
-    {
-        return NS_ERROR_ILLEGAL_VALUE;
-    }
-    /* XXX: Raman fix it. Return the correct data */
-    return NS_OK;
-}
-
-/**
  * Returns the public key of the certificate.
  *
  * @param publicKey -     the Public Key data will be returned in this field.
@@ -87,7 +63,7 @@ nsCCodeSourcePrincipal::GetCertData(const unsigned char ***certChain,
  *                        parameter.
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetPublicKey(unsigned char **publicKey, 
+nsCCodeSourcePrincipal::GetPublicKey(char **publicKey, 
                                      PRUint32 *publicKeySize)
 {
    if(m_pNSICertPrincipal == NULL)
@@ -105,7 +81,7 @@ nsCCodeSourcePrincipal::GetPublicKey(unsigned char **publicKey,
  * @param result - the certificate details about the signer.
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetCompanyName(const char **ppCompanyName)
+nsCCodeSourcePrincipal::GetCompanyName(char **ppCompanyName)
 {
    if(m_pNSICertPrincipal == NULL)
    {
@@ -121,7 +97,7 @@ nsCCodeSourcePrincipal::GetCompanyName(const char **ppCompanyName)
  * @param result - the details about the issuer
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetCertificateAuthority(const char **ppCertAuthority)
+nsCCodeSourcePrincipal::GetCertificateAuthority(char **ppCertAuthority)
 {
    if(m_pNSICertPrincipal == NULL)
    {
@@ -137,7 +113,7 @@ nsCCodeSourcePrincipal::GetCertificateAuthority(const char **ppCertAuthority)
  * @param result - Returns the serial number of certificate 
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetSerialNumber(const char **ppSerialNumber)
+nsCCodeSourcePrincipal::GetSerialNumber(char **ppSerialNumber)
 {
    if(m_pNSICertPrincipal == NULL)
    {
@@ -153,7 +129,7 @@ nsCCodeSourcePrincipal::GetSerialNumber(const char **ppSerialNumber)
  * @param result - Returns the expiration date of certificate 
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetExpirationDate(const char **ppExpDate)
+nsCCodeSourcePrincipal::GetExpirationDate(char **ppExpDate)
 {
    if(m_pNSICertPrincipal == NULL)
    {
@@ -169,7 +145,7 @@ nsCCodeSourcePrincipal::GetExpirationDate(const char **ppExpDate)
  * @param result - Returns the finger print of certificate 
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetFingerPrint(const char **ppFingerPrint)
+nsCCodeSourcePrincipal::GetFingerPrint(char **ppFingerPrint)
 {
    if(m_pNSICertPrincipal == NULL)
    {
@@ -186,7 +162,7 @@ nsCCodeSourcePrincipal::GetFingerPrint(const char **ppFingerPrint)
  * @param result - the resulting codebase URL
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetURL(const char **ppCodeBaseURL)
+nsCCodeSourcePrincipal::GetURL(char **ppCodeBaseURL)
 {
    if(m_pNSICodebasePrincipal == NULL)
    {
@@ -207,18 +183,18 @@ nsCCodeSourcePrincipal::nsCCodeSourcePrincipal(const unsigned char **certChain,
                                                nsresult *result)
 {
    *result = NS_OK;
-   nsCCertPrincipal *pNSCCertPrincipal = 
-       new nsCCertPrincipal(certChain, certChainLengths, noOfCerts, result);
+   nsCertificatePrincipal *pNSCCertPrincipal = 
+       new nsCertificatePrincipal(certChain, certChainLengths, noOfCerts, result);
    if (pNSCCertPrincipal == NULL)
    {
       return;
    }
-   m_pNSICertPrincipal = (nsICertPrincipal *)pNSCCertPrincipal;
+   m_pNSICertPrincipal = (nsICertificatePrincipal *)pNSCCertPrincipal;
    m_pNSICertPrincipal->AddRef();
  
 
-   nsCCodebasePrincipal *pNSCCodebasePrincipal = 
-       new nsCCodebasePrincipal(codebaseURL, result);
+   nsCodebasePrincipal *pNSCCodebasePrincipal = 
+       new nsCodebasePrincipal(codebaseURL, result);
    if (pNSCCodebasePrincipal == NULL)
    {
       return;
@@ -233,6 +209,3 @@ nsCCodeSourcePrincipal::~nsCCodeSourcePrincipal(void)
    m_pNSICertPrincipal->Release();
    m_pNSICodebasePrincipal->Release();
 }
-
-
-

@@ -29,10 +29,7 @@ IGNORE_MANIFEST=1
 MODULE=caps 
 DEPTH=..\..
 EXPORTS= \
- nsICodebasePrincipal.h   \
- nsICertPrincipal.h       \
  nsICapsManager.h         \
- nsICodeSourcePrincipal.h \
  nsCapsPublicEnums.h      
 
 

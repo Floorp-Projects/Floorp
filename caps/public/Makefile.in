@@ -24,10 +24,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS	= \
-	nsICodebasePrincipal.h \
-	nsICertPrincipal.h \
 	nsICapsManager.h  \
-	nsICodeSourcePrincipal.h \
 	nsCapsPublicEnums.h \
 	$(NULL)
 

@@ -1,6 +1,3 @@
 nsICapsManager.h
-nsICertPrincipal.h
-nsICodebasePrincipal.h
-nsICodeSourcePrincipal.h
 nsCapsPublicEnums.h
 

@@ -68,8 +68,8 @@ CPP_OBJS=                                       \
     .\$(OBJDIR)\admin.obj                   \
     .\$(OBJDIR)\nsCaps.obj                  \
     .\$(OBJDIR)\nsCCapsManager.obj          \
-    .\$(OBJDIR)\nsCCertPrincipal.obj        \
-    .\$(OBJDIR)\nsCCodebasePrincipal.obj    \
+    .\$(OBJDIR)\nsCertificatePrincipal.obj        \
+    .\$(OBJDIR)\nsCodebasePrincipal.obj    \
     .\$(OBJDIR)\nsCCapsManagerFactory.obj   \
     .\$(OBJDIR)\nsCCodeSourcePrincipal.obj  \
     $(NULL)

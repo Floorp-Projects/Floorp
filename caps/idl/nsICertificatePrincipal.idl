@@ -15,10 +15,16 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsIPrincipal.idl"
 
-#include "nsISupports.idl"
-[uuid(ff9313d0-25e1-11d2-8160-006008119d7a)]
-interface nsIPrincipal : nsISupports {
-void IsTrusted([const] in string scope, out boolean pbIsTrusted);
+[uuid(ebfefcd0-25e1-11d2-8160-006008119d7a)]
+interface nsICertificatePrincipal : nsIPrincipal {
+void GetPublicKey(out string publicKey, out unsigned long publicKeySize);
+void GetCompanyName(out string ppCompanyName);
+void GetCertificateAuthority(out string ppCertAuthority);
+void GetSerialNumber(out string ppSerialNumber);
+void GetExpirationDate(out string ppExpDate);
+void GetFingerPrint(out string ppFingerPrint);
+
 };
 

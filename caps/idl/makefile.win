@@ -23,8 +23,9 @@ XPIDLSRCS= \
 	   .\nsIScriptSecurityManager.idl \
            .\nsICapsSecurityCallbacks.idl \
 	   .\nsIPrincipal.idl \
-#	   .\nsICertificatePrincipal.idl \
-#	   .\nsICodebasePrincipal.idl    \
+	   .\nsICertificatePrincipal.idl \
+	   .\nsICodebasePrincipal.idl    \
+	   .\nsICodeSourcePrincipal.idl \
            $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
