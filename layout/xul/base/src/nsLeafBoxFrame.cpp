@@ -79,7 +79,7 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mMouseThrough = unset;
+  mMouseThrough = sometimes;
 
   if (mContent) {
     nsAutoString value;
@@ -104,8 +104,13 @@ nsLeafBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   if (!mRect.Contains(aPoint))
     return NS_ERROR_FAILURE;
 
-  *aFrame = this;
-  return NS_OK;
+  if (mMouseThrough != never)
+  {
+     *aFrame = this;
+     return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

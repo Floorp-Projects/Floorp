@@ -90,7 +90,6 @@ public:
   NS_IMETHOD GetInset(nsMargin& aInset);
   NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetDebug(PRBool& aDebug);
-  //NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
   // ----- child and sibling operations ---
 
@@ -161,6 +160,7 @@ public:
 
   virtual PRBool IsHorizontal() const;
 
+  
   virtual ~nsBoxFrame();
 
   virtual nsresult GetContentOf(nsIContent** aContent);
