@@ -31,7 +31,6 @@ static NS_DEFINE_IID(kIJVMConsoleIID, NS_IJVMCONSOLE_IID);
 static NS_DEFINE_IID(kIJVMPrefsWindowIID, NS_IJVMPREFSWINDOW_IID);
 static NS_DEFINE_IID(kISymantecDebuggerIID, NS_ISYMANTECDEBUGGER_IID);
 static NS_DEFINE_IID(kISecurityContextIID, NS_ISECURITYCONTEXT_IID);
-extern nsIServiceManager  *theServiceManager;
 
 PR_BEGIN_EXTERN_C
 
@@ -56,7 +55,7 @@ JVM_GetJVMMgr(void)
     return mgr;
 #else
     nsJVMManager* mgr = NULL;
-    nsresult err = theServiceManager->GetService(kJVMManagerCID, kIJVMManagerIID, 
+    nsresult err = nsServiceManager::GetService(kJVMManagerCID, kIJVMManagerIID, 
                                                 (nsISupports**)&mgr);
     if (err != NS_OK)
         return NULL;

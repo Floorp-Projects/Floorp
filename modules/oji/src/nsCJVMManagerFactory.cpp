@@ -33,8 +33,6 @@ static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
 static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-nsIServiceManager  *theServiceManager = NULL;
-
 ///////////////////////////////////////////////////////////////////////////////
 // Auto-registration functions START
 ///////////////////////////////////////////////////////////////////////////////
@@ -106,14 +104,7 @@ NSGetFactory(nsISupports* serviceMgr,
     if (!aClass.Equals(kJVMManagerCID)) {
         return NS_ERROR_FACTORY_NOT_LOADED;     // XXX right error?
     }
-    
-	// first off, cache a reference to the service manager for later use.
-	if (theServiceManager == NULL) {
-		if (serviceMgr->QueryInterface(kIServiceManagerIID, (void**)&theServiceManager) != NS_OK)
-			theServiceManager = NULL;
-	}
-    
-    // now, create the JVM manager factory.
+
     nsCJVMManagerFactory* factory = new nsCJVMManagerFactory();
     if (factory == NULL) {
         return NS_ERROR_OUT_OF_MEMORY;
