@@ -9444,6 +9444,38 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresContext*          aPresConte
   return rv;
 }
 
+// Helper function that walks a framne list and recursively removed content to
+// frame mappings and undisplayed content mappings.
+// This differs from DeletingFrameSubtree() because the frames have no yet been
+// added to the frame hierarchy
+static void
+CleanupFrameReferences(nsIFrameManager* aFrameManager,
+                       nsIFrame*        aFrameList)
+{
+  while (aFrameList) {
+    nsCOMPtr<nsIContent> content;
+    aFrameList->GetContent(getter_AddRefs(content));
+    
+    // Remove the mapping from the content object to its frame
+    aFrameManager->SetPrimaryFrameFor(content, nsnull);
+    aFrameManager->ClearAllUndisplayedContentIn(content);
+
+    // Recursively walk the child frames.
+    // Note: we only need to look at the principal child list
+    nsIFrame* childFrame;
+    aFrameList->FirstChild(nsnull, &childFrame);
+    while (childFrame) {
+      CleanupFrameReferences(aFrameManager, childFrame);
+      
+      // Get the next sibling child frame
+      childFrame->GetNextSibling(&childFrame);
+    }
+
+    // Get the sibling frame
+    aFrameList->GetNextSibling(&aFrameList);
+  }
+}
+
 PRBool
 nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
                                            nsFrameConstructorState& aState,
@@ -9460,17 +9492,29 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
   if (NS_STYLE_DISPLAY_INLINE == parentDisplay->mDisplay) {
     if (!AreAllKidsInline(aFrameList)) {
       // Ok, reverse tracks: wipe out the frames we just created
+      nsCOMPtr<nsIPresShell>    presShell;
+      nsCOMPtr<nsIFrameManager> frameManager;
+
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      presShell->GetFrameManager(getter_AddRefs(frameManager));
+
+      // Destroy the frames. As we do make sure any content to frame mappings
+      // or entries in the undisplayed content map are removed
+      CleanupFrameReferences(frameManager, aFrameList);
       nsFrameList tmp(aFrameList);
       tmp.DestroyFrames(*aPresContext);
       if (aState.mAbsoluteItems.childList) {
+        CleanupFrameReferences(frameManager, aState.mAbsoluteItems.childList);
         tmp.SetFrames(aState.mAbsoluteItems.childList);
         tmp.DestroyFrames(*aPresContext);
       }
       if (aState.mFixedItems.childList) {
+        CleanupFrameReferences(frameManager, aState.mFixedItems.childList);
         tmp.SetFrames(aState.mFixedItems.childList);
         tmp.DestroyFrames(*aPresContext);
       }
       if (aState.mFloatedItems.childList) {
+        CleanupFrameReferences(frameManager, aState.mFloatedItems.childList);
         tmp.SetFrames(aState.mFloatedItems.childList);
         tmp.DestroyFrames(*aPresContext);
       }
