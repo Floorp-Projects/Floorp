@@ -37,6 +37,8 @@
 #include "nsIProgressEventSink.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIThreadPool.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 
 class nsIEventSinkGetter;
 class nsIProgressEventSink;
