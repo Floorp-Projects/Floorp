@@ -591,9 +591,17 @@ my @selectnames = map($columns->{$_}->{'name'}, @selectcolumns);
 ################################################################################
 
 # Add to the query some instructions for sorting the bug list.
-if ($cgi->cookie('LASTORDER') && (!$order || $order =~ /^reuse/i)) {
-    $order = $cgi->cookie('LASTORDER');
-    $order_from_cookie = 1;
+
+# First check if we'll want to reuse the last sorting order; that happens if
+# the order is not defined or its value is "reuse last sort"
+if (!$order || $order =~ /^reuse/i) {
+    if ($cgi->cookie('LASTORDER')) {
+        $order = $cgi->cookie('LASTORDER');
+        $order_from_cookie = 1;
+    }
+    else {
+        $order = '';  # Remove possible "reuse" identifier as unnecessary
+    }
 }
 
 my $db_order = "";  # Modified version of $order for use with SQL query
