@@ -770,6 +770,8 @@ DOMViewer.prototype =
     for (var i = 0; i < aKids.length; ++i) {
       try {
         aArray.push(aKids[i].contentDocument);
+        // Now recurse down into the kid and look for documents there
+        this.findDocuments(aKids[i].contentDocument, aArray);
       } catch (ex) {
         // if we can't access the content document, skip it
       }
