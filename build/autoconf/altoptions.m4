@@ -38,28 +38,28 @@ dnl MOZ_CHECK_PTHREADS(            NAME, IF-YES [, ELSE ])
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 
 
-dnl MOZ_TWO_STRING_TEST(NAME, STR1, IF-STR1, STR2, IF-STR2 [, ELSE])
+dnl MOZ_TWO_STRING_TEST(NAME, VAL, STR1, IF-STR1, STR2, IF-STR2 [, ELSE])
 AC_DEFUN(MOZ_TWO_STRING_TEST,
-[if test "$enableval" = "[$2]"; then
-    ifelse([$3], , :, [$3])
-  elif test "$enableval" = "[$4]"; then
-    ifelse([$5], , :, [$5])
+[if test "[$2]" = "[$3]"; then
+    ifelse([$4], , :, [$4])
+  elif test "[$2]" = "[$5]"; then
+    ifelse([$6], , :, [$6])
   else
-    ifelse([$6], ,
-      [AC_MSG_ERROR([Option, [$1], does not take an argument ($enableval).])],
-      [$6])
+    ifelse([$7], ,
+      [AC_MSG_ERROR([Option, [$1], does not take an argument ([$2]).])],
+      [$7])
   fi])
 
 dnl MOZ_ARG_ENABLE_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE]])
 AC_DEFUN(MOZ_ARG_ENABLE_BOOL,
 [AC_ARG_ENABLE([$1], [$2], 
- [MOZ_TWO_STRING_TEST([$1], yes, [$3], no, [$4])],
+ [MOZ_TWO_STRING_TEST([$1], [$enableval], yes, [$3], no, [$4])],
  [$5])])
 
 dnl MOZ_ARG_DISABLE_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE]])
 AC_DEFUN(MOZ_ARG_DISABLE_BOOL,
 [AC_ARG_ENABLE([$1], [$2],
- [MOZ_TWO_STRING_TEST([$1], no, [$3], yes, [$4])],
+ [MOZ_TWO_STRING_TEST([$1], [$enableval], no, [$3], yes, [$4])],
  [$5])])
 
 dnl MOZ_ARG_ENABLE_STRING(NAME, HELP, IF-SET [, ELSE])
@@ -73,19 +73,19 @@ AC_DEFUN(MOZ_ARG_ENABLE_BOOL_OR_STRING,
 ])
   m4exit(1)],
  [AC_ARG_ENABLE([$1], [$2],
-  [MOZ_TWO_STRING_TEST([$1], yes, [$3], no, [$4], [$5])],
+  [MOZ_TWO_STRING_TEST([$1], [$enableval], yes, [$3], no, [$4], [$5])],
   [$6])])])
 
 dnl MOZ_ARG_WITH_BOOL(NAME, HELP, IF-YES [, IF-NO [, ELSE])
 AC_DEFUN(MOZ_ARG_WITH_BOOL,
 [AC_ARG_WITH([$1], [$2],
- [MOZ_TWO_STRING_TEST([$1], yes, [$3], no, [$4])],
+ [MOZ_TWO_STRING_TEST([$1], [$withval], yes, [$3], no, [$4])],
  [$5])])
 
 dnl MOZ_ARG_WITHOUT_BOOL(NAME, HELP, IF-NO [, IF-YES [, ELSE])
 AC_DEFUN(MOZ_ARG_WITHOUT_BOOL,
 [AC_ARG_WITH([$1], [$2],
- [MOZ_TWO_STRING_TEST([$1], no, [$3], yes, [$4])],
+ [MOZ_TWO_STRING_TEST([$1], [$withval], no, [$3], yes, [$4])],
  [$5])])
 
 dnl MOZ_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])

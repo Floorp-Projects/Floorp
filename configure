@@ -6954,16 +6954,16 @@ echo "
 # Check whether --with-pthreads or --without-pthreads was given.
 if test "${with_pthreads+set}" = set; then
   withval="$with_pthreads"
-  if test "$enableval" = "yes"; then
+  if test "$withval" = "yes"; then
      if test "$USE_PTHREADS"x = x; then
     { echo "configure: error:  --with-pthreads specified for a system without pthread support " 1>&2; exit 1; };
 fi
-  elif test "$enableval" = "no"; then
+  elif test "$withval" = "no"; then
     USE_PTHREADS=
     _PTHREAD_LDFLAGS=
 
   else
-    { echo "configure: error: Option, pthreads, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, pthreads, does not take an argument ($withval)." 1>&2; exit 1; }
   fi
 fi
 
@@ -8235,12 +8235,12 @@ fi
 # Check whether --with-system-nspr or --without-system-nspr was given.
 if test "${with_system_nspr+set}" = set; then
   withval="$with_system_nspr"
-  if test "$enableval" = "no"; then
+  if test "$withval" = "no"; then
     _NO_NSPR=1 
-  elif test "$enableval" = "yes"; then
+  elif test "$withval" = "yes"; then
     :
   else
-    { echo "configure: error: Option, system-nspr, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, system-nspr, does not take an argument ($withval)." 1>&2; exit 1; }
   fi
 fi
 
@@ -9209,12 +9209,12 @@ fi
     # Check whether --with-static-gtk or --without-static-gtk was given.
 if test "${with_static_gtk+set}" = set; then
   withval="$with_static_gtk"
-  if test "$enableval" = "yes"; then
+  if test "$withval" = "yes"; then
     sysstaticgtk=$enableval
-  elif test "$enableval" = "no"; then
+  elif test "$withval" = "no"; then
     :
   else
-    { echo "configure: error: Option, static-gtk, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, static-gtk, does not take an argument ($withval)." 1>&2; exit 1; }
   fi
 fi
 
@@ -9419,12 +9419,12 @@ test -n "$HOST_MOC" || HOST_MOC=""""
     # Check whether --with-static-qt or --without-static-qt was given.
 if test "${with_static_qt+set}" = set; then
   withval="$with_static_qt"
-  if test "$enableval" = "yes"; then
+  if test "$withval" = "yes"; then
     sysstaticqt=$withval
-  elif test "$enableval" = "no"; then
+  elif test "$withval" = "no"; then
     :
   else
-    { echo "configure: error: Option, static-qt, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, static-qt, does not take an argument ($withval)." 1>&2; exit 1; }
   fi
 fi
 
@@ -11045,16 +11045,16 @@ fi
 # Check whether --with-os2vacpp or --without-os2vacpp was given.
 if test "${with_os2vacpp+set}" = set; then
   withval="$with_os2vacpp"
-  if test "$enableval" = "yes"; then
+  if test "$withval" = "yes"; then
     MOZ_OS2_TOOLS=VACPP
     cat >> confdefs.h <<\EOF
 #define XP_OS2_VACPP 1
 EOF
  
-  elif test "$enableval" = "no"; then
+  elif test "$withval" = "no"; then
     :
   else
-    { echo "configure: error: Option, os2vacpp, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, os2vacpp, does not take an argument ($withval)." 1>&2; exit 1; }
   fi
 fi
 
@@ -11266,12 +11266,12 @@ SKIP_IDL_CHECK="no"
 # Check whether --with-libIDL or --without-libIDL was given.
 if test "${with_libIDL+set}" = set; then
   withval="$with_libIDL"
-  if test "$enableval" = "no"; then
+  if test "$withval" = "no"; then
     SKIP_IDL_CHECK="yes"
-  elif test "$enableval" = "yes"; then
+  elif test "$withval" = "yes"; then
     :
   else
-    { echo "configure: error: Option, libIDL, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, libIDL, does not take an argument ($withval)." 1>&2; exit 1; }
   fi
 fi
 
