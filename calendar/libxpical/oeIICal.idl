@@ -119,6 +119,7 @@ interface oeIICal : nsISupports
 
 	void setServer( in string str );
     void addObserver( in oeIICalObserver observer );
+    void removeObserver( in oeIICalObserver observer );
 	string addEvent( in oeIICalEvent icalevent );
 	string modifyEvent( in oeIICalEvent icalevent );
 	void deleteEvent( in string id );

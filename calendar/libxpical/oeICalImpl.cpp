@@ -248,6 +248,7 @@ oeICalImpl::~oeICalImpl()
     for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
         m_observerlist[i]->Release();
     }
+    m_observerlist.clear();
     if( m_alarmtimer  ) {
         if ( m_alarmtimer->GetDelay() != 0 )
             m_alarmtimer->Cancel();
@@ -1170,10 +1171,30 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
     return NS_OK;
 }
 
+icaltimetype oeICalImpl::GetNextEvent( icaltimetype starting ) {
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalImpl::GetNextEvent()\n" );
+#endif
+    icaltimetype soonest = icaltime_null_time();
+    
+    EventList *tmplistptr = &m_eventlist;
+    while( tmplistptr ) {
+        if( tmplistptr->event ) {
+            oeIICalEvent* tmpevent = tmplistptr->event;
+            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( starting );
+            if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
+                soonest = next;
+            }
+        }
+        tmplistptr = tmplistptr->next;
+    }
+    return soonest;
+}
+
 NS_IMETHODIMP
 oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG
-    printf( "oeICalImpl::GetNextNEvents()\n" );
+    printf( "oeICalImpl::GetNextNEvents( %d )\n", maxcount );
 #endif
     
     nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
@@ -1229,6 +1250,24 @@ oeICalImpl::AddObserver(oeIICalObserver *observer)
         observer->AddRef();
         m_observerlist.push_back( observer );
         observer->OnLoad();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+oeICalImpl::RemoveObserver(oeIICalObserver *observer)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::RemoveObserver()\n" );
+#endif
+    if( observer ) {
+        for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
+            if( observer == m_observerlist[i] ) {
+                m_observerlist.erase( &m_observerlist[i] );
+                observer->Release();
+                break;
+            }
+        }
     }
     return NS_OK;
 }

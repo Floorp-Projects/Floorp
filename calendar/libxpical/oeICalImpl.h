@@ -44,6 +44,10 @@
 
 #define OE_ICAL_CONTRACTID "@mozilla.org/ical;1"
 
+extern "C" {
+    #include "ical.h"
+}
+
 class EventList {
 public:
     oeIICalEvent* event;
@@ -137,6 +141,7 @@ class oeICalImpl : public oeIICal
         NS_DECL_OEIICAL
         void SetupAlarmManager();
 private:
+    icaltimetype GetNextEvent( icaltimetype starting );
     std::vector<oeIICalObserver*> m_observerlist;
     bool m_batchMode;
     EventList m_eventlist;

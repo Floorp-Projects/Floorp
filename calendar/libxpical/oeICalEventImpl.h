@@ -85,6 +85,7 @@ public:
     icalcomponent *AsIcalComponent();
     icaltimetype GetNextAlarmTime( icaltimetype begin );
     bool matchId( const char *id );
+    icaltimetype GetNextRecurrence( icaltimetype begin );
 private:
     char *m_id;
     char *m_syncid;
@@ -112,7 +113,6 @@ private:
     icaltimetype m_lastalarmack;
     std::vector<PRTime> m_exceptiondates;
     std::vector<PRTime> m_snoozetimes;
-    icaltimetype GetNextRecurrence( icaltimetype begin );
     icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );
 };

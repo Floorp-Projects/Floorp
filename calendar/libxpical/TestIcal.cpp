@@ -38,32 +38,18 @@
 #include <oeIICal.h>
 #include <oeICalImpl.h>
 #include <nsIServiceManager.h>
+#include "nsIComponentRegistrar.h"
 
 main()
 {
     nsresult rv;
     char buf[80];
 
-    // Initialize XPCOM
-    rv = NS_InitXPCOM(nsnull, nsnull);
-    if (NS_FAILED(rv))
-    {
-        printf("ERROR: XPCOM intialization error [%x].\n", rv);
-        return -1;
-    }
-
-    // Do Autoreg to make sure our component is registered. The real way of
-    // doing this is running the xpcom registraion tool, regxpcom, at install
-    // time to get components registered and not make this call everytime.
-    // Ignore return value.
-    //
-    // Here we use the global component manager. Note that this will cause
-    // linkage dependency to XPCOM library. We feel that linkage dependency
-    // to XPCOM is inevitable and this is simpler to code.
-    // To break free from such dependencies, we can GetService() the component
-    // manager from the service manager that is returned from NS_InitXPCOM().
-    // We feel that linkage dependency to XPCOM library is inevitable.
-    (void) nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
     // Create an instance of our component
     nsCOMPtr<oeIICal> mysample = do_CreateInstance(OE_ICAL_CONTRACTID, &rv);
