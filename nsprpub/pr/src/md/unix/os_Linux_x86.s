@@ -53,6 +53,20 @@ _PR_x86_AtomicDecrement:
 / Atomically set the integer pointed to by 'val' to the new
 / value 'newval' and return the old value.
 /
+/ An alternative implementation:
+/   .text
+/   .globl _PR_x86_AtomicSet
+/   .align 4
+/_PR_x86_AtomicSet:
+/   movl 4(%esp), %ecx
+/   movl 8(%esp), %edx
+/   movl (%ecx), %eax
+/retry:
+/   lock
+/   cmpxchgl %edx, (%ecx)
+/   jne retry
+/   ret
+/
     .text
     .globl _PR_x86_AtomicSet
     .align 4
@@ -74,7 +88,7 @@ _PR_x86_AtomicSet:
 _PR_x86_AtomicAdd:
     movl 4(%esp), %ecx
     movl 8(%esp), %eax
-    movl 8(%esp), %edx
+    movl %eax, %edx
     lock
     xaddl %eax, (%ecx)
     addl %edx, %eax
