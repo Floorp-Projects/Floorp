@@ -3210,3 +3210,62 @@ function FillInHTMLTooltip(tooltip)
   }
   return false;
 }
+
+function UpdateTOC()
+{
+  window.openDialog("chrome://editor/content/EdInsertTOC.xul",
+                    "_blank", "chrome,close,modal,titlebar");
+  window._content.focus();
+}
+
+function InitTOCMenu()
+{
+  var elt = GetCurrentEditor().document.getElementById("mozToc");
+  var createMenuitem = document.getElementById("insertTOCMenuitem");
+  var updateMenuitem = document.getElementById("updateTOCMenuitem");
+  var removeMenuitem = document.getElementById("removeTOCMenuitem");
+  if (removeMenuitem && createMenuitem && updateMenuitem) {
+    if (elt) {
+      createMenuitem.setAttribute("disabled", "true");
+      updateMenuitem.removeAttribute("disabled");
+      removeMenuitem.removeAttribute("disabled");
+    }
+    else {
+      createMenuitem.removeAttribute("disabled");
+      removeMenuitem.setAttribute("disabled", "true");
+      updateMenuitem.setAttribute("disabled", "true");
+    }
+  }
+}
+
+function RemoveTOC()
+{
+  var theDocument = GetCurrentEditor().document;
+  var elt = theDocument.getElementById("mozToc");
+  if (elt) {
+    elt.parentNode.removeChild(elt);
+  }
+
+  function acceptNode(node)
+  {
+    if (node.nodeName.toLowerCase() == "a" &&
+        node.hasAttribute("name") &&
+        node.getAttribute("name").substr(0, 8) == "mozTocId") {
+      return NodeFilter.FILTER_ACCEPT;
+    }
+    return NodeFilter.FILTER_SKIP;
+  }
+
+  var treeWalker = theDocument.createTreeWalker(theDocument.documentElement,
+                                                NodeFilter.SHOW_ELEMENT,
+                                                acceptNode,
+                                                true);
+  if (treeWalker) {
+    var anchorNode = treeWalker.nextNode();
+    while (anchorNode) {
+      var tmp = treeWalker.nextNode();
+      anchorNode.parentNode.removeChild(anchorNode);
+      anchorNode = tmp;
+    }
+  }
+}

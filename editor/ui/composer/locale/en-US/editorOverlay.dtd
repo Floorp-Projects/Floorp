@@ -592,3 +592,13 @@
 <!ENTITY structRemoveTag.accesskey  "r">
 <!ENTITY structChangeTag.label      "Change tag">
 <!ENTITY structChangeTag.accesskey  "c">
+
+<!-- TOC manipulation -->
+<!ENTITY insertTOC.label          "Insert">
+<!ENTITY insertTOC.accesskey      "i">
+<!ENTITY updateTOC.label          "Update">
+<!ENTITY updateTOC.accesskey      "u">
+<!ENTITY removeTOC.label          "Remove">
+<!ENTITY removeTOC.accesskey      "r">
+<!ENTITY tocMenu.label            "Table of Contents...">
+<!ENTITY tocMenu.accesskey        "b">
