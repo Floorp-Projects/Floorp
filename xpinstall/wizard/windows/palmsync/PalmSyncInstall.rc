@@ -65,28 +65,32 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_APP_TITLE           "Mozilla PalmSync Install"
+    IDS_APP_TITLE_INSTALL   "%s Address Book Palm Sync Install"
+    IDS_APP_TITLE_UNINSTALL "%s Address Book Palm Sync Uninstall"
+    IDS_CONDUIT_TITLE       "%s Address Book"
     IDC_PALMSYNCINSTALL     "PALMSYNCINSTALL"
-    IDS_ERR_GENERAL         "Error in installing the Mozilla Address Book Palm Sync Conduit"
-    IDS_ERR_LOADING_CONDMGR "Error in loading the Conduit Manager while installing the Mozilla  Address Book Palm Sync Conduit"
+    IDS_ERR_GENERAL         "Error in installing the %s Address Book Palm Sync Conduit"
+    IDS_ERR_LOADING_CONDMGR "Error in loading the Conduit Manager while installing the %s Address Book Palm Sync Conduit"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERR_HSAPI_NOT_FOUND "Could not find the HSAPI.dll while installing the Mozilla Address Book Palm Sync Conduit"
+    IDS_ERR_HSAPI_NOT_FOUND "Could not find the HSAPI.dll while installing the %s Address Book Palm Sync Conduit"
     IDS_ERR_CONDUIT_NOT_FOUND 
-                            "Could not find the Mozilla Address Book Palm Sync Conduit to install"
+                            "Could not find the %s Address Book Palm Sync Conduit to install"
     IDS_ERR_HOTSYNC_IN_PROGRESS 
-                            "A Palm HotSync operation is in progress, let it complete first then install the Mozilla Address Book Palm Sync Conduit"
+                            "A Palm HotSync operation is in progress, let it complete first then install the %s Address Book Palm Sync Conduit"
     IDS_ERR_FINDING_INSTALL_DIR 
-                            "Could not find the directory to install the Mozilla Address Book Palm Sync Conduit."
-    IDS_SUCCESS_INSTALL     "Mozilla Address Book Palm Sync Conduit has been successfully installed. Now when you do an HotSync operation from your Palm handheld device, the Address Book on the handheld will sync with Mozilla's Address Book."
-    IDS_SUCCESS_UNINSTALL   "Mozilla Address Book Palm Sync Conduit has been successfully Uninstalled. The Palm Desktop configuration has been restored for you to enable synchronization of your Address Book on the handheld with Palm Desktop."
-    IDS_CONFIRM_INSTALL     "Click Yes to Install the Mozilla Address Book PalmSync Conduit, which will enable address book synchronization between Mozilla Address Book and Palm handheld Address Book. Note this will replace the synchronization with Palm Desktop."
-    IDS_CONFIRM_UNINSTALL   "Click Yes to Un-Install the Mozilla Address Book PalmSync Conduit. Note this will restore the synchronization with Palm Desktop."
+                            "Could not find the directory to install the %s Address Book Palm Sync Conduit."
+    IDS_SUCCESS_INSTALL     "%s Address Book Palm Sync was successfully installed. Using your Palm device, perform a HotSync operation to synchronize your Palm device's address book with your %s address book."
+    IDS_SUCCESS_UNINSTALL   "%s Address Book Palm Sync was successfully uninstalled. Palm Desktop synchronization with your Palm device is now restored."
+    IDS_CONFIRM_INSTALL     "You are about to synchronize your %s address book with your Palm device's address book. This will replace Palm Desktop synchronization with %s address book synchronization. Do you want to continue?"
+    IDS_CONFIRM_UNINSTALL   "You are about to uninstall %s Address Book Palm Sync. This will restore Palm Desktop synchronization. Do you want to continue?"
     IDS_ERR_REGISTERING_MOZ_DLL 
-                            "Failed to register the Mozilla's Palm Sync Support Proxy Dll while installing the Mozilla Address Book Palm Sync Conduit."
+                            "Failed to register the %s's Palm Sync Support Proxy Dll while installing the %s Address Book Palm Sync Conduit."
 END
+
+#include "BrandName.rc"
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
