@@ -233,8 +233,8 @@ mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
   int status;
 
   /* Some assertions to verify that this isn't random junk memory... */
-  PR_ASSERT(clazz->class_name && strlen(clazz->class_name) > 0);
-  PR_ASSERT(size > 0 && size < 1000);
+  NS_ASSERTION(clazz->class_name && strlen(clazz->class_name) > 0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
+  NS_ASSERTION(size > 0 && size < 1000, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   if (!clazz->class_initialized)
 	{
@@ -242,7 +242,7 @@ mime_new (MimeObjectClass *clazz, MimeHeaders *hdrs,
 	  if (status < 0) return 0;
 	}
 
-  PR_ASSERT(clazz->initialize && clazz->finalize);
+  NS_ASSERTION(clazz->initialize && clazz->finalize, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   if (hdrs)
 	{
@@ -621,10 +621,10 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
   }
 
   if (!exact_match_p)
-    PR_ASSERT(clazz);
+    NS_ASSERTION(clazz, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!clazz) return 0;
 
-  PR_ASSERT(clazz);
+  NS_ASSERTION(clazz, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   if (clazz && !clazz->class_initialized)
 	{
@@ -719,7 +719,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
 
   clazz = mime_find_class(content_type, hdrs, opts, PR_FALSE);
 
-  PR_ASSERT(clazz);
+  NS_ASSERTION(clazz, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!clazz) goto FAIL;
 
   if (opts && opts->part_to_load)
@@ -808,7 +808,7 @@ mime_classinit(MimeObjectClass *clazz)
   if (clazz->class_initialized)
 	return 0;
 
-  PR_ASSERT(clazz->class_initialize);
+  NS_ASSERTION(clazz->class_initialize, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!clazz->class_initialize)
 	return -1;
 
@@ -881,8 +881,8 @@ mime_part_address(MimeObject *obj)
 	  char buf [20];
 	  char *higher = 0;
 	  MimeContainer *cont = (MimeContainer *) obj->parent;
-	  PR_ASSERT(mime_typep(obj->parent,
-						   (MimeObjectClass *)&mimeContainerClass));
+	  NS_ASSERTION(mime_typep(obj->parent,
+                    (MimeObjectClass *)&mimeContainerClass), "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  for (i = 0; i < cont->nchildren; i++)
 		if (cont->children[i] == obj)
 		  {
@@ -891,7 +891,7 @@ mime_part_address(MimeObject *obj)
 		  }
 	  if (j == -1)
 		{
-		  PR_ASSERT(0);
+		  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 		  return 0;
 		}
 
@@ -1010,7 +1010,7 @@ mime_get_crypto_state (MimeObject *obj,
   if (signed_ok_ret) *signed_ok_ret = PR_FALSE;
   if (encrypted_ok_ret) *encrypted_ok_ret = PR_FALSE;
 
-  PR_ASSERT(obj);
+  NS_ASSERTION(obj, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!obj) return;
 
   if (!mime_typep (obj, (MimeObjectClass *) &mimeMessageClass))
@@ -1071,7 +1071,7 @@ mime_set_crypto_stamp(MimeObject *obj, PRBool signed_p, PRBool encrypted_p)
 		  obj->options->state)
 		{
 		  /* decrypt_p and write_html_p are incompatible. */
-		  PR_ASSERT(!obj->options->write_html_p);
+		  NS_ASSERTION(!obj->options->write_html_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 		  obj->options->state->decrypted_p = PR_TRUE;
     }
 
@@ -1134,7 +1134,7 @@ mime_find_security_info_of_part(const char *part, MimeObject *obj,
 	  MimeContainer *cont = (MimeContainer *) obj;
 	  if (cont->nchildren >= 1)
 		{
-		  PR_ASSERT(cont->nchildren == 1);
+		  NS_ASSERTION(cont->nchildren == 1, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 		  obj = cont->children[0];
 		}
 	}
@@ -1178,8 +1178,8 @@ mime_find_security_info_of_part(const char *part, MimeObject *obj,
 		*verify_error_return = verify_error;
 
 
-	  PR_ASSERT(mime_typep(obj, (MimeObjectClass *) &mimeContainerClass) &&
-				((MimeContainer *) obj)->nchildren <= 1);
+	  NS_ASSERTION(mime_typep(obj, (MimeObjectClass *) &mimeContainerClass) &&
+				((MimeContainer *) obj)->nchildren <= 1, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
 	  obj = ((((MimeContainer *) obj)->nchildren > 0)
 			 ? ((MimeContainer *) obj)->children[0]
@@ -1668,7 +1668,7 @@ MimeObject_write(MimeObject *obj, char *output, PRInt32 length,
 	{
 	  int status = MimeObject_output_init(obj, 0);
 	  if (status < 0) return status;
-	  PR_ASSERT(obj->options->state->first_data_written_p);
+	  NS_ASSERTION(obj->options->state->first_data_written_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	}
 
   return MimeOptions_write(obj->options, output, length, user_visible_p);

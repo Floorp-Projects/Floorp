@@ -74,7 +74,7 @@ MimeEncryptedCMSClassInitialize(MimeEncryptedCMSClass *clazz)
   MimeObjectClass    *oclass = (MimeObjectClass *)    clazz;
   MimeEncryptedClass *eclass = (MimeEncryptedClass *) clazz;
 
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
 
   eclass->crypto_init          = MimeCMS_init;
   eclass->crypto_write         = MimeCMS_write;
@@ -592,7 +592,7 @@ MimeCMS_MakeSAURL(MimeObject *obj)
 		  break;
 		}
 	  obj = obj->parent;
-	  PR_ASSERT(obj);
+	  NS_ASSERTION(obj, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
 	}
 
 

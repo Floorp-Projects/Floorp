@@ -639,7 +639,7 @@ void printVObjectToFile(nsFileSpec *fname, VObject *o)
     fp->close();
   }
 #else
-  PR_ASSERT(PR_FALSE);
+  NS_ASSERTION(PR_FALSE, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01");
 #endif
 }
 
@@ -655,7 +655,7 @@ void printVObjectsToFile(nsFileSpec *fname,VObject *list)
     fp->close();
   }
 #else
-  PR_ASSERT(PR_FALSE);
+  NS_ASSERTION(PR_FALSE, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01");
 #endif
 }
 
@@ -1251,7 +1251,7 @@ static void writeQPString(OFile *fp, const char *s)
           contWhite = PR_FALSE;
         }
 
-        PR_ASSERT(current_column <= 76); /* Hard limit required by spec */
+        NS_ASSERTION(current_column <= 76, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01"); /* Hard limit required by spec */
 
         if (current_column >= 73 || ((*(p+1) == ' ') && (current_column + 3 >= 73)))    /* soft line break: "=\r\n" */
         {
@@ -1469,7 +1469,7 @@ void writeVObjectToFile(nsFileSpec *fname, VObject *o)
     fp->close();
   }
 #else
-  PR_ASSERT(PR_FALSE);
+  NS_ASSERTION(PR_FALSE, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01");
 #endif
 }
 
@@ -1485,7 +1485,7 @@ void writeVObjectsToFile(nsFileSpec *fname, VObject *list)
   fp->close();
   }
 #else
-  PR_ASSERT(PR_FALSE);
+  NS_ASSERTION(PR_FALSE, "1.10 <rhp@netscape.com> 06 Jan 2000 08:01");
 #endif
 }
 

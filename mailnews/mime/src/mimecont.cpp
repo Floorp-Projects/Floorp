@@ -63,7 +63,7 @@ MimeContainerClassInitialize(MimeContainerClass *clazz)
 {
   MimeObjectClass *oclass = (MimeObjectClass *) &clazz->object;
 
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   oclass->initialize  = MimeContainer_initialize;
   oclass->finalize    = MimeContainer_finalize;
   oclass->parse_eof   = MimeContainer_parse_eof;
@@ -82,7 +82,7 @@ static int
 MimeContainer_initialize (MimeObject *object)
 {
   /* This is an abstract class; it shouldn't be directly instanciated. */
-  PR_ASSERT(object->clazz != (MimeObjectClass *) &mimeContainerClass);
+  NS_ASSERTION(object->clazz != (MimeObjectClass *) &mimeContainerClass, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(object);
 }
@@ -182,7 +182,7 @@ MimeContainer_add_child (MimeObject *parent, MimeObject *child)
   MimeContainer *cont = (MimeContainer *) parent;
   MimeObject **old_kids, **new_kids;
 
-  PR_ASSERT(parent && child);
+  NS_ASSERTION(parent && child, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!parent || !child) return -1;
 
   old_kids = cont->children;

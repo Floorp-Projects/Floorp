@@ -79,7 +79,7 @@ mime_decode_qp_buffer (MimeDecoderData *data, const char *buffer, PRInt32 length
   char token [3];
   int i;
 
-  PR_ASSERT(data->encoding == mime_QuotedPrintable);
+  NS_ASSERTION(data->encoding == mime_QuotedPrintable, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (data->encoding != mime_QuotedPrintable) return -1;
 
   /* For the first pass, initialize the token from the unread-buffer. */
@@ -214,7 +214,7 @@ mime_decode_base64_token (const char *in, char *out)
 	  else if (in[j] == '/')				 c = 63;
 	  else if (in[j] == '=')				 c = 0, eq_count++;
 	  else
-		PR_ASSERT(0);
+		NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  num = (num << 6) | c;
 	}
 
@@ -230,7 +230,7 @@ mime_decode_base64_token (const char *in, char *out)
 	return 1;				/* "xx==" means 2 bytes mapped to 1. */
   else
 	{						/* "x===" can't happen, because "x" would then */
-	  PR_ASSERT(0);			/* be encoding only 6 bits, not the min of 8. */
+	  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");			/* be encoding only 6 bits, not the min of 8. */
 	  return 1;
 	}
 }
@@ -249,7 +249,7 @@ mime_decode_base64_buffer (MimeDecoderData *data,
   int i;
   PRBool leftover = (data->token_size > 0);
 
-  PR_ASSERT(data->encoding == mime_Base64);
+  NS_ASSERTION(data->encoding == mime_Base64, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   /* For the first pass, initialize the token from the unread-buffer. */
   i = 0;
@@ -336,7 +336,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
   char *line = data->uue_line_buffer;
   char *line_end = data->uue_line_buffer + sizeof (data->uue_line_buffer) - 1;
 
-  PR_ASSERT(data->encoding == mime_uuencode);
+  NS_ASSERTION(data->encoding == mime_uuencode, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (data->encoding != mime_uuencode) return -1;
 
   if (data->uue_state == UUE_END)
@@ -400,7 +400,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 		 */
 		if (out[-1] != nsCRT::CR && out[-1] != nsCRT::LF)
 		  {
-			PR_ASSERT (input_length == 0);
+			NS_ASSERTION (input_length == 0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 			break;
 		  }
 	  }
@@ -436,7 +436,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 		  PRInt32 i;
 		  long lost;
 
-		  PR_ASSERT (data->uue_state == UUE_BODY);
+		  NS_ASSERTION (data->uue_state == UUE_BODY, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
 		  /* We map down `line', reading four bytes and writing three.
 			 That means that `out' always stays safely behind `in'.
@@ -472,7 +472,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 		  for (++in; i > 0; in += 4, i -= 3)
 			{
 			  char ch;
-			  PR_ASSERT(out <= in);
+			  NS_ASSERTION(out <= in, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
 			  if (i >= 3)
 				{
@@ -480,36 +480,36 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 				  ch = DEC (in[0]) << 2 | DEC (in[1]) >> 4;
 				  *out++ = ch;
 
-				  PR_ASSERT(out <= in+1);
+				  NS_ASSERTION(out <= in+1, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
 				  ch = DEC (in[1]) << 4 | DEC (in[2]) >> 2;
 				  *out++ = ch;
 
-				  PR_ASSERT(out <= in+2);
+				  NS_ASSERTION(out <= in+2, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
 				  ch = DEC (in[2]) << 6 | DEC (in[3]);
 				  *out++ = ch;
 
-				  PR_ASSERT(out <= in+3);
+				  NS_ASSERTION(out <= in+3, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 				}
 			  else
 				{
 				  /* Handle a line that isn't a multiple of 4 long.
 					 (We read 1, 2, or 3, and will write 1 or 2.)
 				   */
-				  PR_ASSERT (i > 0 && i < 3);
+				  NS_ASSERTION (i > 0 && i < 3, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
 				  ch = DEC (in[0]) << 2 | DEC (in[1]) >> 4;
 				  *out++ = ch;
 
-				  PR_ASSERT(out <= in+1);
+				  NS_ASSERTION(out <= in+1, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
 				  if (i == 2)
 					{
 					  ch = DEC (in[1]) << 4 | DEC (in[2]) >> 2;
 					  *out++ = ch;
 
-					  PR_ASSERT(out <= in+2);
+					  NS_ASSERTION(out <= in+2, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 					}
 				}
 			}
@@ -525,7 +525,7 @@ mime_decode_uue_buffer (MimeDecoderData *data,
 
 		  /* Now write out what we decoded for this line.
 		   */
-		  PR_ASSERT(out >= line && out < in);
+		  NS_ASSERTION(out >= line && out < in, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 		  if (out > line)
 			status = data->write_buffer (line, (out - line), data->closure);
 
@@ -605,7 +605,7 @@ MimeUUDecoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
 int
 MimeDecoderWrite (MimeDecoderData *data, const char *buffer, PRInt32 size)
 {
-  PR_ASSERT(data);
+  NS_ASSERTION(data, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!data) return -1;
   switch(data->encoding)
 	{
@@ -616,7 +616,7 @@ MimeDecoderWrite (MimeDecoderData *data, const char *buffer, PRInt32 size)
 	case mime_uuencode:
 	  return mime_decode_uue_buffer (data, buffer, size);
 	default:
-	  PR_ASSERT(0);
+	  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  return -1;
 	}
 }
@@ -787,7 +787,7 @@ mime_encode_base64_buffer (MimeEncoderData *data,
 	return 0;
   else if (size < 0)
 	{
-	  PR_ASSERT(0);
+	  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  return -1;
 	}
 
@@ -795,11 +795,11 @@ mime_encode_base64_buffer (MimeEncoderData *data,
   /* If this input buffer is too small, wait until next time. */
   if (size < (3 - data->in_buffer_count))
 	{
-	  PR_ASSERT(size < 3 && size > 0);
+	  NS_ASSERTION(size < 3 && size > 0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  data->in_buffer[data->in_buffer_count++] = buffer[0];
 	  if (size > 1)
 		data->in_buffer[data->in_buffer_count++] = buffer[1];
-	  PR_ASSERT(data->in_buffer_count < 3);
+	  NS_ASSERTION(data->in_buffer_count < 3, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  return 0;
 	}
 
@@ -822,7 +822,7 @@ mime_encode_base64_buffer (MimeEncoderData *data,
 		data->in_buffer [1] = buffer [size - off + 1];
 	  data->in_buffer_count = off;
 	  size -= off;
-	  PR_ASSERT (! ((size + i) % 3));
+	  NS_ASSERTION (! ((size + i) % 3), "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  end = (unsigned char *) (buffer + size);
 	}
 
@@ -894,7 +894,7 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
  */
 
 
-  PR_ASSERT(data->in_buffer_count == 0);
+  NS_ASSERTION(data->in_buffer_count == 0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   /* Populate the out_buffer with quoted-printable data, one line at a time.
    */
@@ -983,7 +983,7 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
 		  data->current_column += 3;
 		}
 
-	  PR_ASSERT (data->current_column <= 76); /* Hard limit required by spec */
+	  NS_ASSERTION (data->current_column <= 76, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00"); /* Hard limit required by spec */
 
 	  if (data->current_column >= 73)		/* soft line break: "=\r\n" */
 		{
@@ -1028,8 +1028,8 @@ MimeEncoderDestroy (MimeEncoderData *data, PRBool abort_p)
 	 flush those out now.
    */
 
-  PR_ASSERT (data->encoding == mime_Base64 ||
-			 data->in_buffer_count == 0);
+  NS_ASSERTION (data->encoding == mime_Base64 ||
+			 data->in_buffer_count == 0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   if (!abort_p &&
 	  data->in_buffer_count > 0)
@@ -1120,7 +1120,7 @@ MimeUUEncoderInit (char *filename,
 int
 MimeEncoderWrite (MimeEncoderData *data, const char *buffer, PRInt32 size)
 {
-  PR_ASSERT(data);
+  NS_ASSERTION(data, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!data) return -1;
   switch(data->encoding)
 	{
@@ -1131,7 +1131,7 @@ MimeEncoderWrite (MimeEncoderData *data, const char *buffer, PRInt32 size)
 	case mime_uuencode:
 	  return mime_uuencode_buffer(data, buffer, size);
 	default:
-	  PR_ASSERT(0);
+	  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  return -1;
 	}
 }

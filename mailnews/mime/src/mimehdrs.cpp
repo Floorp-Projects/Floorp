@@ -135,11 +135,11 @@ MimeHeaders_parse_line (const char *buffer, PRInt32 size, MimeHeaders *hdrs)
   int status = 0;
   int desired_size;
 
-  PR_ASSERT(hdrs);
+  NS_ASSERTION(hdrs, "1.22 <rhp@netscape.com> 22 Aug 1999 08:48");
   if (!hdrs) return -1;
 
   /* Don't try and feed me more data after having fed me a blank line... */
-  PR_ASSERT(!hdrs->done_p);
+  NS_ASSERTION(!hdrs->done_p, "1.22 <rhp@netscape.com> 22 Aug 1999 08:48");
   if (hdrs->done_p) return -1;
 
   if (!buffer || size == 0 || *buffer == nsCRT::CR || *buffer == nsCRT::LF)
@@ -218,10 +218,10 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
   char *s;
   char *end;
   int i;
-  PR_ASSERT(hdrs);
+  NS_ASSERTION(hdrs, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!hdrs) return -1;
 
-  PR_ASSERT(hdrs->done_p && !hdrs->heads);
+  NS_ASSERTION(hdrs->done_p && !hdrs->heads, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!hdrs->done_p || hdrs->heads)
 	return -1;
 
@@ -236,7 +236,7 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
   /* At this point, we might as well realloc all_headers back down to the
 	 minimum size it must be (it could be up to 1k bigger.)  But don't
 	 bother if we're only off by a tiny bit. */
-  PR_ASSERT(hdrs->all_headers_fp <= hdrs->all_headers_size);
+  NS_ASSERTION(hdrs->all_headers_fp <= hdrs->all_headers_size, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (hdrs->all_headers_fp + 60 <= hdrs->all_headers_size)
 	{
 	  char *ls = (char *)PR_Realloc(hdrs->all_headers, hdrs->all_headers_fp);
@@ -312,7 +312,7 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
 
 	  if (s < end)
 		{
-		  PR_ASSERT(! (i > hdrs->heads_size));
+		  NS_ASSERTION(! (i > hdrs->heads_size), "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 		  if (i > hdrs->heads_size) return -1;
 		  hdrs->heads[i++] = s;
 		}
@@ -331,11 +331,11 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 
 /*  PR_ASSERT(hdrs); cause delete message problem in WinFE */
   if (!hdrs) return 0;
-  PR_ASSERT(header_name);
+  NS_ASSERTION(header_name, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!header_name) return 0;
 
   /* Specifying strip_p and all_p at the same time doesn't make sense... */
-  PR_ASSERT(!(strip_p && all_p));
+  NS_ASSERTION(!(strip_p && all_p), "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   /* One shouldn't be trying to read headers when one hasn't finished
 	 parsing them yet... but this can happen if the message ended
@@ -354,7 +354,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 
   if (!hdrs->heads)	  /* Must not have been any headers. */
 	{
-	  PR_ASSERT(hdrs->all_headers_fp == 0);
+	  NS_ASSERTION(hdrs->all_headers_fp == 0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  return 0;
 	}
 
@@ -368,7 +368,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 				   : hdrs->heads[i+1]);
 	  char *colon, *ocolon;
 
-	  PR_ASSERT(head);
+	  NS_ASSERTION(head, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  if (!head) continue;
 
 	  /* Quick hack to skip over BSD Mailbox delimiter. */
@@ -519,7 +519,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 	  const char *value_start = str;
 	  const char *value_end = 0;
 
-	  PR_ASSERT(!nsCRT::IsAsciiSpace(*str)); /* should be after whitespace already */
+	  NS_ASSERTION(!nsCRT::IsAsciiSpace(*str), "1.1 <rhp@netscape.com> 19 Mar 1999 12:00"); /* should be after whitespace already */
 
 	  /* Skip forward to the end of this token. */
 	  for (; *str && !nsCRT::IsAsciiSpace(*str) && *str != '=' && *str != ';'; str++)
@@ -591,7 +591,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 		  {
 			  const char *s_quote1 = PL_strchr(value_start, 0x27);
 			  const char *s_quote2 = (char *) (s_quote1 ? PL_strchr(s_quote1+1, 0x27) : NULL);
-			  PR_ASSERT(s_quote1 && s_quote2);
+			  NS_ASSERTION(s_quote1 && s_quote2, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 			  if (charset && s_quote1 > value_start && s_quote1 < value_end)
 			  {
 				  *charset = (char *) PR_MALLOC(s_quote1-value_start+1);
@@ -613,7 +613,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 			  }
 			  if (s_quote2 && s_quote2+1 < value_end)
 			  {
-				  PR_ASSERT(!s);
+				  NS_ASSERTION(!s, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 				  s = (char *) PR_MALLOC(value_end-(s_quote2+1)+1);
 				  if (s)
 				  {
@@ -686,7 +686,7 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
   int i;
   PRBool wrote_any_p = PR_FALSE;
 
-  PR_ASSERT(hdrs);
+  NS_ASSERTION(hdrs, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!hdrs) 
     return -1;
 
@@ -990,7 +990,7 @@ MimeHeaders_do_unix_display_hook_hack(MimeHeaders *hdrs)
 static void
 MimeHeaders_compact (MimeHeaders *hdrs)
 {
-  PR_ASSERT(hdrs);
+  NS_ASSERTION(hdrs, "1.22 <rhp@netscape.com> 22 Aug 1999 08:48");
   if (!hdrs) return;
 
   PR_FREEIF(hdrs->obuffer);
@@ -998,8 +998,8 @@ MimeHeaders_compact (MimeHeaders *hdrs)
   hdrs->obuffer_size = 0;
 
   /* These really shouldn't have gotten out of whack again. */
-  PR_ASSERT(hdrs->all_headers_fp <= hdrs->all_headers_size &&
-			hdrs->all_headers_fp + 100 > hdrs->all_headers_size);
+  NS_ASSERTION(hdrs->all_headers_fp <= hdrs->all_headers_size &&
+            hdrs->all_headers_fp + 100 > hdrs->all_headers_size, "1.22 <rhp@netscape.com> 22 Aug 1999 08:48");
 }
 
 /* Writes the headers as text/plain.
@@ -1042,7 +1042,7 @@ MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
 					   ? hdrs->all_headers + hdrs->all_headers_fp
 					   : hdrs->heads[i+1]);
 
-		  PR_ASSERT(head);
+		  NS_ASSERTION(head, "1.22 <rhp@netscape.com> 22 Aug 1999 08:48");
 		  if (!head) continue;
 
 		  /* Don't write out any Content- header. */

@@ -62,7 +62,7 @@ MimeInlineImageClassInitialize(MimeInlineImageClass *clazz)
   MimeObjectClass *oclass = (MimeObjectClass *) clazz;
   MimeLeafClass   *lclass = (MimeLeafClass *) clazz;
 
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   oclass->initialize   = MimeInlineImage_initialize;
   oclass->finalize     = MimeInlineImage_finalize;
   oclass->parse_begin  = MimeInlineImage_parse_begin;
@@ -218,7 +218,7 @@ MimeInlineImage_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
 		{
 		  status = MimeObject_output_init(obj, 0);
 		  if (status < 0) return status;
-		  PR_ASSERT(obj->options->state->first_data_written_p);
+		  NS_ASSERTION(obj->options->state->first_data_written_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 		}
 	  
 	  return MimeObject_write(obj, buf, size, PR_TRUE);
@@ -259,6 +259,6 @@ MimeInlineImage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
   /* This method should never be called (inline images do no line buffering).
    */
-  PR_ASSERT(0);
+  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   return -1;
 }

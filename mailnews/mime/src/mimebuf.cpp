@@ -130,10 +130,10 @@ convert_and_send_buffer(char* buf, int length, PRBool convert_newlines_p,
     return 0;
 #endif
 
-  PR_ASSERT(buf && length > 0);
+  NS_ASSERTION(buf && length > 0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!buf || length <= 0) return -1;
   newline = buf + length;
-  PR_ASSERT(newline[-1] == nsCRT::CR || newline[-1] == nsCRT::LF);
+  NS_ASSERTION(newline[-1] == nsCRT::CR || newline[-1] == nsCRT::LF, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (newline[-1] != nsCRT::CR && newline[-1] != nsCRT::LF) return -1;
 
   if (!convert_newlines_p)
@@ -181,7 +181,7 @@ mime_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 	  net_buffer_size > 0 && net_buffer[0] != nsCRT::LF) {
 	/* The last buffer ended with a CR.  The new buffer does not start
 	   with a LF.  This old buffer should be shipped out and discarded. */
-	PR_ASSERT((PRUint32) *buffer_sizeP > *buffer_fpP);
+	NS_ASSERTION((PRUint32) *buffer_sizeP > *buffer_fpP, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	if ((PRUint32) *buffer_sizeP <= *buffer_fpP) return -1;
 	status = convert_and_send_buffer(*bufferP, *buffer_fpP,
 										 convert_newlines_p,

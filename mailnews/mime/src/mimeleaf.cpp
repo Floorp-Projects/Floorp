@@ -60,7 +60,7 @@ static int
 MimeLeafClassInitialize(MimeLeafClass *clazz)
 {
   MimeObjectClass *oclass = (MimeObjectClass *) clazz;
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   oclass->initialize   = MimeLeaf_initialize;
   oclass->finalize     = MimeLeaf_finalize;
   oclass->parse_begin  = MimeLeaf_parse_begin;
@@ -85,7 +85,7 @@ static int
 MimeLeaf_initialize (MimeObject *obj)
 {
   /* This is an abstract class; it shouldn't be directly instanciated. */
-  PR_ASSERT(obj->clazz != (MimeObjectClass *) &mimeLeafClass);
+  NS_ASSERTION(obj->clazz != (MimeObjectClass *) &mimeLeafClass, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
 }
@@ -151,7 +151,7 @@ MimeLeaf_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
 {
   MimeLeaf *leaf = (MimeLeaf *) obj;
 
-  PR_ASSERT(!obj->closed_p);
+  NS_ASSERTION(!obj->closed_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (obj->closed_p) return -1;
 
   /* If we're not supposed to write this object, bug out now.
@@ -171,7 +171,7 @@ MimeLeaf_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
 static int
 MimeLeaf_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   /* This method shouldn't ever be called. */
   return -1;
 }

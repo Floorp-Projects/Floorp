@@ -66,7 +66,7 @@ MimeExternalObjectClassInitialize(MimeExternalObjectClass *clazz)
   MimeObjectClass *oclass = (MimeObjectClass *) clazz;
   MimeLeafClass   *lclass = (MimeLeafClass *) clazz;
 
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   oclass->initialize   = MimeExternalObject_initialize;
   oclass->finalize     = MimeExternalObject_finalize;
   oclass->parse_begin  = MimeExternalObject_parse_begin;
@@ -109,7 +109,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
   {
     status = MimeObject_output_init(obj, 0);
     if (status < 0) return status;
-    PR_ASSERT(obj->options->state->first_data_written_p);
+    NS_ASSERTION(obj->options->state->first_data_written_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   }
     
   //
@@ -212,7 +212,7 @@ GOTTA STILL DO THIS FOR QUOTING!
 static int
 MimeExternalObject_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
 {
-  PR_ASSERT(!obj->closed_p);
+  NS_ASSERTION(!obj->closed_p, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (obj->closed_p) return -1;
 
   if (obj->output_p &&
@@ -250,7 +250,7 @@ MimeExternalObject_parse_decoded_buffer (char *buf, PRInt32 size,
 	  !obj->options ||
 	  obj->options->write_html_p)
 	{
-	  PR_ASSERT(0);
+	  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
 	  return -1;
 	}
 
@@ -263,7 +263,7 @@ MimeExternalObject_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
   /* This method should never be called (externals do no line buffering).
    */
-  PR_ASSERT(0);
+  NS_ASSERTION(0, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   return -1;
 }
 

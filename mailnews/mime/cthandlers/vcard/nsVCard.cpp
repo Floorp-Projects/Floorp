@@ -1249,7 +1249,7 @@ VObject* Parse_MIME_FromFileName(nsFileSpec *fname)
     return 0;
   }
 #else
-  PR_ASSERT(FALSE);
+  NS_ASSERTION(FALSE, "1.5 <rhp@netscape.com> 06 Jan 2000 08:00");
   return 0;
 #endif
 }

@@ -134,7 +134,7 @@ static int
 MimeInlineTextVCardClassInitialize(MimeInlineTextVCardClass *clazz)
 {
   MimeObjectClass *oclass = (MimeObjectClass *) clazz;
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.1 <rhp@netscape.com> 19 Mar 1999 12:11");
   oclass->parse_begin = MimeInlineTextVCard_parse_begin;
   oclass->parse_line  = MimeInlineTextVCard_parse_line;
   oclass->parse_eof   = MimeInlineTextVCard_parse_eof;

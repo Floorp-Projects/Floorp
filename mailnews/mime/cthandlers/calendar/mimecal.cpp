@@ -73,7 +73,7 @@ static int
 MimeInlineTextCalendarClassInitialize(MimeInlineTextCalendarClass *clazz)
 {
   MimeObjectClass *oclass = (MimeObjectClass *) clazz;
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.1 <rhp@netscape.com> 19 Mar 1999 12:01");
   oclass->parse_begin = MimeInlineTextCalendar_parse_begin;
   oclass->parse_line  = MimeInlineTextCalendar_parse_line;
   oclass->parse_eof   = MimeInlineTextCalendar_parse_eof;

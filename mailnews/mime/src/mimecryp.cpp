@@ -72,7 +72,7 @@ MimeEncryptedClassInitialize(MimeEncryptedClass *clazz)
   MimeObjectClass    *oclass = (MimeObjectClass *)    clazz;
   MimeContainerClass *cclass = (MimeContainerClass *) clazz;
 
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
   oclass->initialize   = MimeEncrypted_initialize;
   oclass->finalize     = MimeEncrypted_finalize;
   oclass->parse_begin  = MimeEncrypted_parse_begin;
@@ -167,7 +167,7 @@ MimeEncrypted_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
 static int
 MimeEncrypted_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
-  PR_ASSERT(0);
+  NS_ASSERTION(0, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
   /* This method shouldn't ever be called. */
   return -1;
 }
@@ -189,7 +189,7 @@ MimeEncrypted_parse_eof (MimeObject *obj, PRBool abort_p)
   MimeEncrypted *enc = (MimeEncrypted *) obj;
 
   if (obj->closed_p) return 0;
-  PR_ASSERT(!obj->parsed_p);
+  NS_ASSERTION(!obj->parsed_p, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
 
   /* (Duplicated from MimeLeaf, see comments in mimecryp.h.)
      Close off the decoder, to cause it to give up any buffered data that
@@ -419,7 +419,7 @@ MimeEncrypted_emit_buffered_child(MimeObject *obj)
   char *ct = 0;
   MimeObject *body;
 
-  PR_ASSERT(enc->crypto_closure);
+  NS_ASSERTION(enc->crypto_closure, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
 
   /* Emit some HTML saying whether the signature was cool.
 	 But don't emit anything if in FO_QUOTE_MESSAGE mode.
@@ -460,7 +460,7 @@ MimeEncrypted_emit_buffered_child(MimeObject *obj)
 		  MimeObject *p;
 		  for (p = obj; p->parent; p = p->parent)
 			  outer_headers = p->headers;
-		  PR_ASSERT(obj->options->state->first_data_written_p);
+		  NS_ASSERTION(obj->options->state->first_data_written_p, "1.2 <mscott@netscape.com> 01 Nov 2001 17:59");
 		  html = obj->options->generate_post_header_html_fn(NULL,
 													obj->options->html_closure,
 															outer_headers);

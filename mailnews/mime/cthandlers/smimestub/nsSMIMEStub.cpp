@@ -134,7 +134,7 @@ static int
 MimeInlineTextSMIMEStubClassInitialize(MimeInlineTextSMIMEStubClass *clazz)
 {
   MimeObjectClass *oclass = (MimeObjectClass *) clazz;
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.1 <rhp@netscape.com> 28 Nov 1999 19:36");
   oclass->parse_begin = MimeInlineTextSMIMEStub_parse_begin;
   oclass->parse_line  = MimeInlineTextSMIMEStub_parse_line;
   oclass->parse_eof   = MimeInlineTextSMIMEStub_parse_eof;

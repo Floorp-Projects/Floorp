@@ -74,7 +74,7 @@ MimeExternalBodyClassInitialize(MimeExternalBodyClass *clazz)
 {
   MimeObjectClass *oclass = (MimeObjectClass *) clazz;
 
-  PR_ASSERT(!oclass->class_initialized);
+  NS_ASSERTION(!oclass->class_initialized, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   oclass->initialize  = MimeExternalBody_initialize;
   oclass->finalize    = MimeExternalBody_finalize;
   oclass->parse_line  = MimeExternalBody_parse_line;
@@ -117,7 +117,7 @@ MimeExternalBody_parse_line (char *line, PRInt32 length, MimeObject *obj)
   MimeExternalBody *bod = (MimeExternalBody *) obj;
   int status = 0;
 
-  PR_ASSERT(line && *line);
+  NS_ASSERTION(line && *line, "1.1 <rhp@netscape.com> 19 Mar 1999 12:00");
   if (!line || !*line) return -1;
 
   if (!obj->output_p) return 0;
