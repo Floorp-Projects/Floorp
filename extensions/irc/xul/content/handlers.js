@@ -1656,10 +1656,10 @@ function my_netdisconnect (e)
 CIRCNetwork.prototype.onCTCPReplyPing =
 function my_replyping (e)
 {
-    var delay = formatDateOffset ((new Date() - new Date(Number(e.CTCPData))) /
-                                  1000);
-    display (getMsg(MSG_PING_REPLY, [e.user.unicodeName, delay]), "INFO",
-             e.user, "ME!");
+    var delay = formatDateOffset((new Date() - new Date(Number(e.CTCPData))) /
+                                 1000);
+    this.display(getMsg(MSG_PING_REPLY, [e.user.unicodeName, delay]), "INFO",
+                 e.user, "ME!");
 }
 
 CIRCNetwork.prototype.on221 =
