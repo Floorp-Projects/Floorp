@@ -578,7 +578,12 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
 #if TARGET_CARBON
-  if ( mWindowType == eWindowType_popup ) {
+  if ( mWindowType == eWindowType_toplevel)
+  {
+    // rjc: Mac OS X - enable toolbar box
+    ::ChangeWindowAttributes(mWindowPtr, kWindowToolbarButtonAttribute, 0L );
+  }
+  else if ( mWindowType == eWindowType_popup ) {
     // OSX enforces window layering so we have to make sure that popups can
     // appear over modal dialogs (at the top of the layering chain). Create
     // the popup like normal and change its window class to the modal layer.

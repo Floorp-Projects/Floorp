@@ -232,7 +232,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar id="command-toolbar" tbalign="stretch" grippytooltip="aTooltip" grippytooltiptext="&bookmarkToolbar.tooltip;">
+    <toolbar class="chromeclass-toolbar" id="command-toolbar" tbalign="stretch" grippytooltip="aTooltip" grippytooltiptext="&bookmarkToolbar.tooltip;">
       <toolbarbutton id="newfolder" label="&command.newFolder.label;" 
               command="cmd_newfolder"/>
       <toolbarbutton id="newseparator" label="&command.newSeparator.label;" 
@@ -399,7 +399,7 @@
                   onclick="gBookmarksShell.treeOpen(event);"/>
   </tree>
     
-  <statusbar id="status-bar">
+  <statusbar class="chromeclass-status" id="status-bar">
     <statusbarpanel id="statusbar-text" flex="1"/>
   </statusbar>
 
