@@ -490,9 +490,24 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
             return 0;
     }
     if (generate_typelib) {
+        if (strcmp(basename, "-")) {
+            outname = g_strdup_printf("%s.xpt", basename);
+            state.file = fopen(outname, "wb");
+            if (!state.file) {
+                perror("error opening output file");
+                free(outname);
+                return 0;
+            }
+        } else {
+            state.file = stdout;
+        }
         state.mode = TREESTATE_TYPELIB;
         state.tree = top;
-        if (!process_tree(&state))
+        ok = process_tree(&state);
+        free(outname);
+        if (state.file != stdout)
+            fclose(state.file);
+        if (!ok)
             return 0;
     }
     if (generate_docs) {
