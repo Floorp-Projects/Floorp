@@ -26,9 +26,11 @@
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsHTMLIIDs.h"
+#include "nsICSSStyleRule.h"
 
 static NS_DEFINE_IID(kIHTMLCSSStyleSheetIID, NS_IHTML_CSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
+static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 
 
 class HTMLCSSStyleSheetImpl : public nsIHTMLCSSStyleSheet {
@@ -180,8 +182,18 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           nsISupports*  rule = value.GetISupportsValue();
           if (nsnull != rule) {
             aResults->AppendElement(rule);
-            NS_RELEASE(rule);
             matchCount++;
+            nsICSSStyleRule*  cssRule;
+            if (NS_OK == rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule)) {
+              nsIStyleRule* important = cssRule->GetImportantRule();
+              if (nsnull != important) {
+                aResults->AppendElement(important);
+                matchCount++;
+                NS_RELEASE(important);
+              }
+              NS_RELEASE(cssRule);
+            }
+            NS_RELEASE(rule);
           }
         }
       }
