@@ -593,20 +593,6 @@ function onParagraphFormatChange(paraMenuList, commandID)
   }
 }
 
-function toggleFixedWidthFont()
-{
-  var commandNode = document.getElementById("cmd_fontFace");
-  if (commandNode)
-  {
-    var state = commandNode.getAttribute("state");
-
-    commandNode.setAttribute("state", state == "tt" ? "" : "tt");
-
-    gContentWindow.focus();
-    goDoCommand("cmd_fontFace");
-  }
-}
-
 function doStatefulCommand(commandID, newState)
 {
   var commandNode = document.getElementById(commandID);
