@@ -19,15 +19,9 @@
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
 #include "nsIFileSpec.idl"
+#include "nsIComponentManager.idl"
 
-%{C++
-#include "nsIComponentManager.h"
-%}
-
-// Once we idl component manager, this can be removed
-[ptr] native nsIComponentManager(nsIComponentManager);
-
-[uuid(7392D032-5371-11d3-994E-00805FD26FEE)]
+[scriptable, uuid(7392D032-5371-11d3-994E-00805FD26FEE)]
 interface nsIModule : nsISupports
 {
     // Object Instance Creation.
@@ -35,7 +29,7 @@ interface nsIModule : nsISupports
     //		create new objects.
     // SingletonFactory can be queried off the Class Object. Services can be created
     //		using the singletonfactory.
-    void GetClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
+    [noscript] void GetClassObject(in nsIComponentManager aCompMgr, in nsCIDRef aClass,
                         in nsIIDRef aIID, out voidStar return_ClassObject);
 
     // Component registration

@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
 #include "nsIFileSpec.idl"
+#include "nsIComponentManager.idl"
 
 [object, uuid(c073cfc0-567c-11d3-aec1-0000f8e25c06)]
 interface nsIComponentLoader : nsISupports {
@@ -32,10 +33,10 @@ interface nsIComponentLoader : nsISupports {
     /**
      * Initialize the loader.
      *
-     * We use nsISupports here because nsIComponentManager and nsIRegistry
-     * aren't IDLized yet.
+     * We use nsISupports here because nsIRegistry isn't IDLized yet.
+     * Should we pass in a service manager reference too/instead?
      */
-    void Init(in nsISupports aCompMgr, in nsISupports aRegistry);
+    void Init(in nsIComponentManager aCompMgr, in nsISupports aRegistry);
     
     /**
      * Called when a component of the appropriate type is registered,

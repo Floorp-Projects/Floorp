@@ -181,7 +181,7 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
 }
 
 NS_IMETHODIMP
-nsNativeComponentLoader::Init(nsISupports *aCompMgr, nsISupports *aReg)
+nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 {
     nsresult rv;
 
@@ -189,9 +189,9 @@ nsNativeComponentLoader::Init(nsISupports *aCompMgr, nsISupports *aReg)
     fprintf(stderr, "nNCL: Init()\n");
 #endif
 
-    mCompMgr = do_QueryInterface(aCompMgr);
+    mCompMgr = aCompMgr;
     mRegistry = do_QueryInterface(aReg);
-    if (!mCompMgr || !mRegistry)
+    if (!mCompMgr.get() || !mRegistry)
         return NS_ERROR_INVALID_ARG;
 
     rv = mRegistry->GetSubtree(nsIRegistry::Common, xpcomKeyName,

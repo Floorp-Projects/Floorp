@@ -48,6 +48,13 @@ interface nsIComponentManager : nsISupports
     void       registerComponent(in nsCIDRef aClass, in string aClassName,
                                  in string aProgID, in string aLocation,
                                  in boolean aReplace, in boolean aPersist);
+    void       registerComponentWithType(in nsCIDRef aClass,
+                                         in string aClassName,
+                                         in string aProgID,
+                                         in nsIFileSpec aSpec,
+                                         in boolean aReplace,
+                                         in boolean aPersist,
+                                         in string aType);
     void       registerComponentSpec(in nsCIDRef aClass, in string aClassName,
                                      in string aProgID, in nsIFileSpec aLibrary,
                                      in boolean aReplace, in boolean aPersist);
