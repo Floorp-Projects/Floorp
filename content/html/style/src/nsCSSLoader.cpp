@@ -302,7 +302,8 @@ public:
   nsHashtable   mLoadedSheets;  // url to first sheet fully loaded for URL
   nsHashtable   mLoadingSheets; // all current loads
 
-  nsVoidArray   mParsingData; // array of data for sheets currently parsing
+  // mParsingData is (almost?) always needed, so create with storage
+  nsAutoVoidArray   mParsingData; // array of data for sheets currently parsing
 
   nsVoidArray   mPendingDocSheets;  // loaded sheet waiting for doc insertion
   nsVoidArray   mPendingAlternateSheets;  // alternates waiting for load to start
@@ -481,7 +482,7 @@ static PRBool PR_CALLBACK DeleteLoadData(void* aData, void* aClosure)
 
 static PRBool PR_CALLBACK DeleteSheetMap(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  nsVoidArray* map = (nsVoidArray*)aData;
+  nsAutoVoidArray* map = (nsAutoVoidArray*)aData;
   delete map;
   return PR_TRUE;
 }
@@ -1101,9 +1102,9 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
   aSheet->SetEnabled(! IsAlternate(title));
 
   nsVoidKey key(mDocument);
-  nsVoidArray*  sheetMap = (nsVoidArray*)mSheetMapTable.Get(&key);
+  nsAutoVoidArray*  sheetMap = (nsAutoVoidArray*)mSheetMapTable.Get(&key);
   if (! sheetMap) {
-    sheetMap = new nsVoidArray();
+    sheetMap = new nsAutoVoidArray();
     if (sheetMap) {
       mSheetMapTable.Put(&key, sheetMap);
     }
@@ -1142,9 +1143,9 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
   }
 
   nsVoidKey key(aParentSheet);
-  nsVoidArray*  sheetMap = (nsVoidArray*)mSheetMapTable.Get(&key);
+  nsAutoVoidArray*  sheetMap = (nsAutoVoidArray*)mSheetMapTable.Get(&key);
   if (! sheetMap) {
-    sheetMap = new nsVoidArray();
+    sheetMap = new nsAutoVoidArray();
     if (sheetMap) {
       mSheetMapTable.Put(&key, sheetMap);
     }

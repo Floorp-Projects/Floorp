@@ -600,7 +600,7 @@ nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
       }
     }
     if (nsnull == mNameSpaceStack) {
-      mNameSpaceStack = new nsVoidArray();
+      mNameSpaceStack = new nsAutoVoidArray();
     }
     mNameSpaceStack->AppendElement(nameSpace);
   }

@@ -46,7 +46,7 @@ class nsIDocument;
 class nsIURI;
 class nsIWebShell;
 class nsIContent;
-class nsVoidArray;
+class nsAutoVoidArray;
 class nsIXMLDocument;
 class nsIUnicharInputStream;
 class nsIParser;
@@ -180,7 +180,7 @@ protected:
   XMLContentSinkState mState;
 
   nsCOMPtr<nsISupportsArray> mContentStack;
-  nsVoidArray* mNameSpaceStack;
+  nsAutoVoidArray* mNameSpaceStack;
 
   PRUnichar* mText;
   PRInt32 mTextLength;

@@ -376,7 +376,7 @@ nsHTMLLinkElement::GetStyleSheetInfo(nsAWritableString& aUrl,
   GetAttribute(NS_LITERAL_STRING("rel"), rel);
   rel.CompressWhitespace();
 
-  nsStringArray linkTypes;
+  nsStringArray linkTypes(4);
   nsStyleLinkElement::ParseLinkTypes(rel, linkTypes);
   // is it a stylesheet link?
   if (linkTypes.IndexOf(NS_LITERAL_STRING("stylesheet")) < 0)

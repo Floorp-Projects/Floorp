@@ -215,7 +215,7 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
       }
       NS_ASSERTION(!(mGenericListeners->Get(aKey)), "Found existing generic listeners, should be none");
       nsVoidArray* listeners;
-      listeners = new nsVoidArray();
+      listeners = new nsAutoVoidArray();
       if (!listeners) {
         //out of memory
         return nsnull;
@@ -229,7 +229,7 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
         //Change single type into multi, then add new listener with the code for the 
         //multi type below
         NS_ASSERTION(!mMultiListeners, "Found existing multi listener array, should be none");
-        mMultiListeners = new nsVoidArray(EVENT_ARRAY_TYPE_LENGTH);
+        mMultiListeners = new nsAutoVoidArray();
         if (!mMultiListeners) {
           //out of memory
           return nsnull;
@@ -241,6 +241,7 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
 
         mManagerType &= ~NS_ELM_SINGLE;
         mManagerType |= NS_ELM_MULTI;
+        // we'll fall through into the multi case
       }
 
       if (mManagerType & NS_ELM_MULTI) {
@@ -248,7 +249,7 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
         if (index >= 0) {
           nsVoidArray* listeners;
           NS_ASSERTION(!mMultiListeners->ElementAt(index), "Found existing listeners, should be none");
-          listeners = new nsVoidArray();
+          listeners = new nsAutoVoidArray();
           if (!listeners) {
             //out of memory
             return nsnull;
@@ -261,7 +262,7 @@ nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType,
         //We had no pre-existing type.  This is our first non-hash listener.
         //Create the single listener type
         NS_ASSERTION(!mSingleListener, "Found existing single listener array, should be none");
-        mSingleListener = new nsVoidArray();
+        mSingleListener = new nsAutoVoidArray();
         if (!mSingleListener) {
           //out of memory
           return nsnull;
@@ -430,7 +431,7 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
       ls->mSubType = aSubType;
       ls->mSubTypeCapture = NS_EVENT_BITS_NONE;
       ls->mHandlerIsString = 0;
-      listeners->InsertElementAt((void*)ls, listeners->Count());
+      listeners->AppendElement((void*)ls);
       NS_ADDREF(aListener);
     }
 

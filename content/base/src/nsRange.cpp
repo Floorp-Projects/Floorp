@@ -735,13 +735,13 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   // lazy allocation of static arrays
   if (!mStartAncestors)
   {
-    mStartAncestors = new nsVoidArray();
+    mStartAncestors = new nsAutoVoidArray();
     if (!mStartAncestors) return NS_ERROR_OUT_OF_MEMORY;
-    mStartAncestorOffsets = new nsVoidArray();
+    mStartAncestorOffsets = new nsAutoVoidArray();
     if (!mStartAncestorOffsets) return NS_ERROR_OUT_OF_MEMORY;
-    mEndAncestors = new nsVoidArray();
+    mEndAncestors = new nsAutoVoidArray();
     if (!mEndAncestors) return NS_ERROR_OUT_OF_MEMORY;
-    mEndAncestorOffsets = new nsVoidArray();
+    mEndAncestorOffsets = new nsAutoVoidArray();
     if (!mEndAncestorOffsets) return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -906,8 +906,8 @@ nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode
 
   // otherwise traverse the tree for the common ancestor
   // For now, a pretty dumb hack on computing this
-  nsVoidArray array1;
-  nsVoidArray array2;
+  nsAutoVoidArray array1;
+  nsAutoVoidArray array2;
   PRInt32     i=0, j=0;
   
   // get ancestors of each node
@@ -1404,7 +1404,7 @@ nsresult nsRange::DeleteContents()
   */
   
   // get start node ancestors
-  nsVoidArray startAncestorList;
+  nsAutoVoidArray startAncestorList;
   
   FillArrayWithAncestors(&startAncestorList,mStartParent);
   
@@ -1419,7 +1419,7 @@ nsresult nsRange::DeleteContents()
   // and then releasing them when we take them off
   nsAutoRangeLock lock;
   
-  nsVoidArray deleteList;
+  nsAutoVoidArray deleteList;
   nsCOMPtr<nsIContent> cN;
   nsCOMPtr<nsIContent> cParent;
   PRInt32 indx;

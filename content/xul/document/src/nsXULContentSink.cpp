@@ -176,7 +176,7 @@ protected:
     void PopNameSpaces(void);
     nsresult GetTopNameSpace(nsCOMPtr<nsINameSpace>* aNameSpace);
 
-    nsVoidArray mNameSpaceStack;
+    nsAutoVoidArray mNameSpaceStack;
 
     nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
     
@@ -214,6 +214,7 @@ protected:
     protected:
         struct Entry {
             nsXULPrototypeNode* mNode;
+            // a LOT of nodes have children, but leave for now
             nsVoidArray         mChildren;
             State               mState;
             Entry*              mNext;

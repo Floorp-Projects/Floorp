@@ -702,7 +702,7 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange& aRange)
 {
   // lazy allocation of range list
   if (nsnull == mRangeList) {
-    mRangeList = new nsVoidArray();
+    mRangeList = new nsAutoVoidArray();
   }
   if (nsnull == mRangeList) {
     return NS_ERROR_OUT_OF_MEMORY;
