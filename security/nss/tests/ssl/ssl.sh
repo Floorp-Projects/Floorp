@@ -127,7 +127,7 @@ wait_for_selfserv()
       html_failed "<TR><TD> Wait for Server "
       echo "RETRY: tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}"
       tstclnt -p ${PORT} -h ${HOST} -q -d . < ${REQUEST_FILE}
-  elif [ sparam = "-c ABCDEFabcdefghijklmnvy" ] ; then # "$1" = "cov" ] ; then
+  elif [ sparam = "-c ABCDEFabcdefghijklm" ] ; then # "$1" = "cov" ] ; then
       html_passed "<TR><TD> Wait for Server"
   fi
   is_selfserv_alive
@@ -180,7 +180,7 @@ ssl_cov()
   html_head "SSL Cipher Coverage"
 
   testname=""
-  sparam="-c ABCDEFabcdefghijklmnvy"
+  sparam="-c ABCDEFabcdefghijklm"
   start_selfserv # Launch the server
                
   cat ${SSLCOV} | while read tls param testname
