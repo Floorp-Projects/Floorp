@@ -49,7 +49,7 @@
 #include "nsISubscribableServer.h"
 #include "nsIUrlListener.h"
 #include "nsAdapterEnumerator.h"
-
+#include "nsCOMArray.h"
 /* get some implementation from nsMsgIncomingServer */
 class nsImapIncomingServer : public nsMsgIncomingServer,
                              public nsIImapIncomingServer,
@@ -131,6 +131,7 @@ private:
   nsCOMPtr<nsISupportsArray> m_connectionCache;
   nsCOMPtr<nsISupportsArray> m_urlQueue;
 	nsCOMPtr<nsIStringBundle>	m_stringBundle;
+  nsCOMArray<nsIMsgFolder> m_subscribeFolders; // used to keep folder resources around while subscribe UI is up.
   nsVoidArray       m_urlConsumers;
   PRUint32          m_capability;
   nsCString         m_manageMailAccountUrl;

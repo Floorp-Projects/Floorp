@@ -1691,7 +1691,8 @@ NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement
   nsXPIDLCString onlineName;
 
   element->GetInt32Property("boxFlags", &m_boxFlags);
-  if (NS_SUCCEEDED(element->GetInt32Property("hierDelim", &hierarchyDelimiter)))
+  if (NS_SUCCEEDED(element->GetInt32Property("hierDelim", &hierarchyDelimiter)) 
+      && hierarchyDelimiter != kOnlineHierarchySeparatorUnknown)
     m_hierarchyDelimiter = (PRUnichar) hierarchyDelimiter;
   rv = element->GetStringProperty("onlineName", getter_Copies(onlineName));
   if (NS_SUCCEEDED(rv) && (const char *) onlineName && strlen((const char *) onlineName))

@@ -712,7 +712,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
       else
       {
         rv = connection->CanHandleUrl(aImapUrl, &canRunUrlImmediately, &canRunButBusy);
-#ifdef DEBUG_bienvenu1
+#ifdef DEBUG_bienvenu
         nsXPIDLCString curSelectedFolderName;
         if (connection)    
           connection->GetSelectedMailboxName(getter_Copies(curSelectedFolderName));
@@ -1145,6 +1145,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       rv = a_nsIFolder->FindSubFolder(folderPath, getter_AddRefs(subFolder));
       NS_ENSURE_SUCCESS(rv,rv);
       msgFolder = do_QueryInterface(subFolder, &rv);
+      m_subscribeFolders.AppendObject(msgFolder);
       NS_ENSURE_SUCCESS(rv,rv);
       noSelect = (boxFlags & kNoselect) != 0;
       nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(msgFolder, &rv);
@@ -3056,6 +3057,7 @@ NS_IMETHODIMP
 nsImapIncomingServer::SubscribeCleanup()
 {
 	nsresult rv;
+  m_subscribeFolders.Clear();
     rv = ClearInner();
     NS_ENSURE_SUCCESS(rv,rv);
 	return NS_OK;

@@ -1184,7 +1184,7 @@ nsImapService::CreateStartOfImapUrl(const char * aImapURI, nsIImapUrl ** imapUrl
   rv = aImapMailFolder->GetUsername(getter_Copies(username));
   if (NS_FAILED(rv))
   {
-    PR_FREEIF(hostname);
+    PR_Free(hostname);
     return rv;
   }
   
@@ -1234,7 +1234,7 @@ nsImapService::CreateStartOfImapUrl(const char * aImapURI, nsIImapUrl ** imapUrl
       imapFolder->GetHierarchyDelimiter(&hierarchyDelimiter);
   }
   
-  PR_FREEIF(hostname);
+  PR_Free(hostname);
   return rv;
 }
 
@@ -3694,12 +3694,12 @@ nsImapService::GetListOfFoldersOnServer(nsIImapIncomingServer *aServer, nsIMsgWi
 NS_IMETHODIMP
 nsImapService::SubscribeFolder(nsIEventQueue* eventQueue, 
                                nsIMsgFolder* aFolder,
-                               const PRUnichar* folderName, 
+                               const PRUnichar* aFolderName, 
                                nsIUrlListener* urlListener, nsIURI** url)
 {
     NS_ENSURE_ARG_POINTER(eventQueue);
     NS_ENSURE_ARG_POINTER(aFolder);
-    NS_ENSURE_ARG_POINTER(folderName);
+    NS_ENSURE_ARG_POINTER(aFolderName);
     
     nsCOMPtr<nsIImapUrl> imapUrl;
     nsCAutoString urlSpec;
@@ -3716,7 +3716,7 @@ nsImapService::SubscribeFolder(nsIEventQueue* eventQueue,
             urlSpec.Append("/subscribe>");
             urlSpec.Append(char(hierarchySeparator));
             char *utfFolderName =
-                CreateUtf7ConvertedStringFromUnicode(folderName);
+                CreateUtf7ConvertedStringFromUnicode(aFolderName);
             char *escapedFolderName = nsEscape(utfFolderName, url_Path);
             urlSpec.Append(escapedFolderName);
             nsCRT::free(escapedFolderName);
