@@ -435,7 +435,7 @@ nsXPBaseWindow::FindWebShellWithName(const PRUnichar* aName,
   if (webShell) {
     nsXPIDLString name;
     if (NS_SUCCEEDED(docShellAsItem->GetName(getter_Copies(name)))) {
-      if (aNameStr.Equals(name)) {
+      if (aNameStr.EqualsWithConversion(name)) {
         aResult = webShell;
         NS_ADDREF(aResult);
         return NS_OK;
