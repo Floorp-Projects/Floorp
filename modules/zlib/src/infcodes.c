@@ -1,5 +1,5 @@
 /* infcodes.c -- process literals and length/distance pairs
- * Copyright (C) 1995-1996 Mark Adler
+ * Copyright (C) 1995-1998 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
@@ -11,16 +11,10 @@
 #include "inffast.h"
 
 /* simplify the use of the inflate_huft type with some defines */
-#define base more.Base
-#define next more.Next
 #define exop word.what.Exop
 #define bits word.what.Bits
 
-/* inflate codes private state */
-struct inflate_codes_state {
-
-  /* mode */
-  enum {        /* waiting for "i:"=input, "o:"=output, "x:"=nothing */
+typedef enum {        /* waiting for "i:"=input, "o:"=output, "x:"=nothing */
       START,    /* x: set up for LEN */
       LEN,      /* i: get length/literal/eob next */
       LENEXT,   /* i: getting length extra (have base) */
@@ -31,7 +25,13 @@ struct inflate_codes_state {
       WASH,     /* o: got eob, possibly still output waiting */
       END,      /* x: got eob and all data flushed */
       BADCODE}  /* x: got error */
-    mode;               /* current inflate_codes mode */
+inflate_codes_mode;
+
+/* inflate codes private state */
+struct inflate_codes_state {
+
+  /* mode */
+  inflate_codes_mode mode;      /* current inflate_codes mode */
 
   /* mode dependent information */
   uInt len;
@@ -143,7 +143,7 @@ int r;
       if ((e & 64) == 0)        /* next table */
       {
         c->sub.code.need = e;
-        c->sub.code.tree = t->next;
+        c->sub.code.tree = t + t->base;
         break;
       }
       if (e & 32)               /* end of block */
@@ -181,7 +181,7 @@ int r;
       if ((e & 64) == 0)        /* next table */
       {
         c->sub.code.need = e;
-        c->sub.code.tree = t->next;
+        c->sub.code.tree = t + t->base;
         break;
       }
       c->mode = BADCODE;        /* invalid code */
@@ -221,6 +221,13 @@ int r;
       c->mode = START;
       break;
     case WASH:          /* o: got eob, possibly more output */
+      if (k > 7)        /* return unused byte, if any */
+      {
+        Assert(k < 16, "inflate_codes grabbed too many bytes")
+        k -= 8;
+        n++;
+        p--;            /* can always return one */
+      }
       FLUSH
       if (s->read != s->write)
         LEAVE
@@ -235,6 +242,9 @@ int r;
       r = Z_STREAM_ERROR;
       LEAVE
   }
+#ifdef NEED_DUMMY_RETURN
+  return Z_STREAM_ERROR;  /* Some dumb compilers complain without this */
+#endif
 }
 
 

@@ -24,7 +24,7 @@ MODULE = necko
 
 LIBRARY_NAME=nkcnvts_s
 
-LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
+LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET -DZLIB_DLL
 # Add this for performance TXT-HTML performance #'s: -DMOZ_PERF_METRICS
 
 EXPORTS =                 \

@@ -45,6 +45,8 @@ OBJS=.\$(OBJDIR)\nsZipArchive.obj \
      .\$(OBJDIR)\nsWildCard.obj	\
      $(NULL)
 
+LCFLAGS=-DZLIB_DLL=1
+
 LINCS=                         \
     -I$(PUBLIC)\security       \
     -I$(XPDIST)\public\nspr    \
