@@ -137,7 +137,7 @@ nsImapFlagAndUidState::nsImapFlagAndUidState(const nsImapFlagAndUidState& state,
   NS_INIT_REFCNT();
 }
 
-/* static */PRBool nsImapFlagAndUidState::FreeCustomFlags(nsHashKey *aKey, void *aData,
+/* static */PRBool PR_CALLBACK nsImapFlagAndUidState::FreeCustomFlags(nsHashKey *aKey, void *aData,
                                         void *closure)
 {
   PR_Free(aData);
