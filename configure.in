@@ -1701,6 +1701,14 @@ else
 		    [MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XT_LIBS $XLIBS)
         ])
 
+    # AIX needs the motif library linked before libXt to prevent
+    # crashes in plugins linked against Motif - Bug #98892
+    case "${target_os}" in
+    aix*)
+        XT_LIBS="-lXm $XT_LIBS"
+        ;;
+    esac
+
     AC_SUBST(XT_LIBS)
     dnl ========================================================
     dnl = Check for Xinerama
