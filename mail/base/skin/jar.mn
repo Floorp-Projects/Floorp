@@ -5,6 +5,7 @@ classic.jar:
 +   skin/classic/communicator/smileys.css           (smileys.css)
 +   skin/classic/messenger/primaryToolbar.css       (primaryToolbar.css)
 +   skin/classic/messenger/accountCentral.css       (accountCentral.css)
++   skin/classic/messenger/accountManage.css        (accountManage.css)
 +   skin/classic/messenger/messageHeader.css        (messageHeader.css)
 +   skin/classic/messenger/messageBody.css          (messageBody.css)
     skin/classic/messenger/messageQuotes.css        (messageQuotes.css)
