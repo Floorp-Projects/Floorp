@@ -1486,7 +1486,8 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
         if (firstToken && !PL_strcasecmp(firstToken, "MESSAGE-ID:") )
         {
             char *message_id_token = nsCRT::strtok(newStr, " ", &newStr);
-            state = NS_PTR_TO_INT32(PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, message_id_token));
+            if (message_id_token)
+              state = NS_PTR_TO_INT32(PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, message_id_token));
             
             if (!m_pop3ConData->only_uidl && message_id_token && (state == 0))
             {	/* we have not seen this message before */
