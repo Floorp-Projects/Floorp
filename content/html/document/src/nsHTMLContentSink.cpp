@@ -4104,16 +4104,17 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 while (!done && !token.IsEmpty()) {
                     token.CompressWhitespace();
                     if (millis == -1 && nsCRT::IsAsciiDigit(token.First())) {
-                        PRInt32 i = 0;
-                        PRUnichar value = nsnull;
-                        while ((value = token[i++])) {
-                            if (!nsCRT::IsAsciiDigit(value)) {
-                                i = -1;
-                                break;
-                            }
-                        }
+                        PRBool tokenIsANumber = PR_TRUE;
+                        nsReadingIterator<PRUnichar> doneIterating(token.EndReading());
+                        nsReadingIterator<PRUnichar> iter(token.BeginReading());
+                        while ( iter != doneIterating )
+                          {
+                            if ( !(tokenIsANumber = nsCRT::IsAsciiDigit(*iter)) )
+                              break;
+                            ++iter;
+                           }
             
-                        if (i > -1) {
+                        if (tokenIsANumber) {
                             PRInt32 err;
                             millis = token.ToInteger(&err) * 1000;
                         } else {
