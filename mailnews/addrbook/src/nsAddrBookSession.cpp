@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -44,8 +45,6 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIDocument.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAddrBookSession, nsIAddrBookSession)
     
@@ -178,7 +177,6 @@ NS_IMETHODIMP nsAddrBookSession::NotifyDirectoryDeleted(nsIAbDirectory *director
   }
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
 {
