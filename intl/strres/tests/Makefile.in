@@ -23,8 +23,41 @@ include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS		= StringBundleTest.cpp
 
+ifndef NECKO
+NETLIB_LIBS = 	\
+	-lnetlib \
+	-labouturl \
+	-lfileurl \
+	-lremoturl \
+	-lgophurl \
+	-lnetcnvts \
+	-lsockstuburl \
+	-lftpurl \
+	-lmimetype \
+	-lpwcac \
+	-lhttpurl \
+	-lnetwork \
+	-lnetcache \
+	$(NULL)
+else
+NETLIB_LIBS = 	\
+	-lneckoutil_s \
+	$(NULL)
+endif
+
 LIBS		=\
+	-lraptorgfx 	\
+	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
+	$(TK_LIBS) \
+	-lpref \
+	-lsecfree \
+	-l$(MOZ_LIB_JS_PREFIX)js \
+	-limg \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
+	-lxp \
 	-lxpcom		\
+	$(NETLIB_LIBS) \
+	$(TIMER_LIBS) \
 	$(ZLIB_LIBS)	\
 	$(NSPR_LIBS)	\
 	$(NULL)		
