@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "nsISupports.h"
+#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
@@ -23,9 +25,8 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
-#include "nsIServiceManager.h"
-#include "nsISupports.h"
 #include "nsRDFCID.h"
+#include "nsIRDFXMLSink.h"
 
 #include "VerReg.h"
 #include "nsIPref.h"
@@ -60,6 +61,11 @@ class nsXPINotifierImpl : public nsISupports
 public:
     static NS_IMETHODIMP New(nsISupports* aOuter, REFNSIID aIID, void** aResult);
     
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+        
+    NS_DECL_NSIRDFXMLSINKOBSERVER
+        
 private:
     
     nsXPINotifierImpl();
@@ -67,16 +73,14 @@ private:
 
     nsresult NotificationEnabled(PRBool* aReturn);
     nsresult Init();
-    nsresult SynchronouslyOpenRemoteDataSource(const char* aURL, nsIRDFDataSource** aResult);
-    nsresult AddDistributor(nsIRDFResource *inDistributor);
+    nsresult OpenRemoteDataSource(const char* aURL, PRBool blocking, nsIRDFDataSource** aResult);
+    
     PRBool IsNewerOrUninstalled(const char* regKey, const char* versionString);
     PRInt32 CompareVersions(VERSION *oldversion, VERSION *newVersion);
     void   StringToVersionNumbers(const nsString& version, int32 *aMajor, int32 *aMinor, int32 *aRelease, int32 *aBuild);
     
-
     nsCOMPtr<nsISupports> mInner;
     nsIRDFService* mRDF;
-
 
     static nsIRDFResource* kXPI_NotifierSources;
     static nsIRDFResource* kXPI_NotifierPackages;
@@ -96,8 +100,6 @@ private:
 	static nsIRDFResource* kNC_URL;
 	static nsIRDFResource* kNC_Child;
 	
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
 };
 
 nsIRDFResource* nsXPINotifierImpl::kXPI_NotifierSources = nsnull;
@@ -122,6 +124,14 @@ nsXPINotifierImpl::nsXPINotifierImpl()
     : mRDF(nsnull)
 {
     NS_INIT_REFCNT();
+
+
+    static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+    
+    nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+                                       this, /* the "outer" */
+                                       nsCOMTypeInfo<nsISupports>::GetIID(),
+                                       getter_AddRefs(mInner));
 }
 
 
@@ -159,29 +169,46 @@ static NS_DEFINE_IID(kPrefsCID,  NS_PREF_CID);
 nsresult
 nsXPINotifierImpl::NotificationEnabled(PRBool* aReturn)
 {
+    *aReturn = PR_FALSE;
+
+
     nsIPref * prefs;
-    
     nsresult rv = nsServiceManager::GetService(kPrefsCID, 
                                                kPrefsIID,
                                                (nsISupports**) &prefs);
 
-
+    
+    
     if ( NS_SUCCEEDED(rv) )
     {
-        rv = prefs->GetBoolPref( (const char*) XPINSTALL_ENABLE_NOTIFICATIONS, aReturn);
+        PRBool value;
+        // check to see if we are on.
+        rv = prefs->GetBoolPref( (const char*) XPINSTALL_NOTIFICATIONS_ENABLE, &value);
 
-        if (NS_FAILED(rv))
+        if (NS_SUCCEEDED(rv) && value)
         {
-            *aReturn = PR_FALSE;
+            // check to see the last time we did anything.  Since flash does not have a persistant
+            // way to do poll invervals longer than a session, we will implemented that here by using the
+            // preferences.  The interval hardcoded here is max 7 days.
+*aReturn = value;
+#if 0
+            PRInt32 date;
+
+            rv = prefs->GetIntPref( (const char*) XPINSTALL_NOTIFICATIONS_LASTDATE, &date);
+            if (NS_SUCCEEDED(rv)
+            {
+
+            }
+            else
+            {  // it was never set.
+
+            }
+#endif
         }
 
         NS_RELEASE(prefs);
     }
-    else
-    {
-        *aReturn = PR_FALSE;  /* no prefs manager.  set to false */
-    }
-
+    
     return NS_OK;
 }
 
@@ -193,9 +220,10 @@ nsXPINotifierImpl::Init()
     NotificationEnabled(&enabled);
 
     if (!enabled)
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     
-    static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
+    if (mInner == nsnull)
+        return NS_ERROR_FAILURE;
 
     nsresult rv;
     nsCOMPtr<nsIRDFDataSource> distributors;
@@ -203,13 +231,6 @@ nsXPINotifierImpl::Init()
     nsCOMPtr <nsISimpleEnumerator> distributorEnumerator;
     PRBool moreElements;
     
-
-    rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                            this, /* the "outer" */
-                                            nsCOMTypeInfo<nsISupports>::GetIID(),
-                                            getter_AddRefs(mInner));
-    if (NS_FAILED(rv)) return rv;
-
     // Read the distributor registry
     rv = nsServiceManager::GetService(kRDFServiceCID, nsIRDFService::GetIID(), (nsISupports**) &mRDF);
     if (NS_FAILED(rv)) return rv;
@@ -236,8 +257,7 @@ nsXPINotifierImpl::Init()
 
 	}
 
-    rv = SynchronouslyOpenRemoteDataSource("resource:/res/xpinstall/SoftwareUpdates.rdf", 
-                                           getter_AddRefs(distributors));
+    rv = OpenRemoteDataSource("resource:/res/xpinstall/SoftwareUpdates.rdf", PR_TRUE, getter_AddRefs(distributors));
     if (NS_FAILED(rv)) return rv;
 
     rv = nsComponentManager::CreateInstance(kRDFContainerCID,
@@ -265,7 +285,11 @@ nsXPINotifierImpl::Init()
                     nsCOMPtr<nsIRDFResource> aDistributor(do_QueryInterface(i, &rv));
                     if (NS_FAILED(rv)) break;
 
-                    rv = AddDistributor(aDistributor);
+                    char* uri;
+                    nsCOMPtr<nsIRDFDataSource> remoteDatasource;
+                    aDistributor->GetValue(&uri);
+
+                    rv = OpenRemoteDataSource(uri, PR_FALSE, getter_AddRefs(remoteDatasource));
                     if (NS_FAILED(rv)) break;
                     
                     distributorEnumerator->HasMoreElements(&moreElements);
@@ -276,118 +300,6 @@ nsXPINotifierImpl::Init()
     return NS_OK;
 }
 
-nsresult 
-nsXPINotifierImpl::AddDistributor(nsIRDFResource *inDistributor)
-{
-    char* uri;
-    inDistributor->GetValue(&uri);
-    
-    if (uri == nsnull) return NS_ERROR_NULL_POINTER;
-        
-    nsCOMPtr<nsIRDFDataSource> distributorDataSource;
-    nsCOMPtr<nsIRDFContainer> distributorContainer;
-    nsCOMPtr <nsISimpleEnumerator> packageEnumerator;
-    PRBool moreElements;
-
-    nsresult rv = SynchronouslyOpenRemoteDataSource(uri, getter_AddRefs(distributorDataSource));
-    if (NS_FAILED(rv)) return rv;
-
-    
-    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
-                                            nsnull,
-                                            nsIRDFContainer::GetIID(),
-                                            getter_AddRefs(distributorContainer));
-    if (NS_SUCCEEDED(rv))
-    {
-        rv = distributorContainer->Init(distributorDataSource, kXPI_NotifierPackages);
-        if (NS_SUCCEEDED(rv))
-        {
-            rv = distributorContainer->GetElements(getter_AddRefs(packageEnumerator));
-            if (NS_SUCCEEDED(rv))
-            {
-                packageEnumerator->HasMoreElements(&moreElements);
-                while (moreElements) 
-                {
-                    nsCOMPtr<nsISupports> i;
-
-                    rv = packageEnumerator->GetNext(getter_AddRefs(i));
-                    if (NS_FAILED(rv)) break;
-
-                    nsCOMPtr<nsIRDFResource> aPackage(do_QueryInterface(i, &rv));
-                    if (NS_FAILED(rv)) break;
-    
-                    
-                    // Get the version information
-                    nsCOMPtr<nsIRDFNode> versionNode;
-                    distributorDataSource->GetTarget(aPackage, 
-                                                     kXPI_NotifierPackage_Version, 
-                                                     PR_TRUE, 
-                                                     getter_AddRefs(versionNode));
-
-                    nsCOMPtr<nsIRDFLiteral> version(do_QueryInterface(versionNode, &rv));
-                    if (NS_FAILED(rv)) break;
-
-                    // Get the regkey information
-                    nsCOMPtr<nsIRDFNode> regkeyNode;
-                    distributorDataSource->GetTarget(aPackage, 
-                                                     kXPI_NotifierPackage_RegKey, 
-                                                     PR_TRUE, 
-                                                     getter_AddRefs(regkeyNode));
-
-                    nsCOMPtr<nsIRDFLiteral> regkey(do_QueryInterface(regkeyNode, &rv));
-                    if (NS_FAILED(rv)) break;
-
-                    // convert them into workable nsAutoStrings
-                    PRUnichar* regkeyCString;
-                    regkey->GetValue(&regkeyCString);
-                    nsString regKeyString(regkeyCString);
-                    
-                    PRUnichar* versionCString;
-                    version->GetValue(&versionCString);
-                    nsString versionString(versionCString);
-                    
-
-                    // check to see if this software title should be "flashed"
-                    if (IsNewerOrUninstalled(nsAutoCString(regKeyString), nsAutoCString(versionString)))
-                    {
-                        //assert into flash
-                        
-                        nsCOMPtr<nsIRDFNode> urlNode;
-                        distributorDataSource->GetTarget(kXPI_NotifierPackages, 
-                                                         kXPI_NotifierPackage_URL, 
-                                                         PR_TRUE, 
-                                                         getter_AddRefs(urlNode));
-
-                        nsCOMPtr<nsIRDFLiteral> url(do_QueryInterface(urlNode, &rv));
-                        if (NS_FAILED(rv)) break;
-
-
-                        nsCOMPtr<nsIRDFNode> titleNode;
-                        distributorDataSource->GetTarget(kXPI_NotifierPackages, 
-                                                         kXPI_NotifierPackage_Title, 
-                                                         PR_TRUE, 
-                                                         getter_AddRefs(titleNode));
-
-                        nsCOMPtr<nsIRDFLiteral> title(do_QueryInterface(titleNode, &rv));
-                        if (NS_FAILED(rv)) break;
-
-                        nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInner);
-
-                        ds->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
-                        ds->Assert(aPackage, kNC_Source, title, PR_TRUE);
-                        ds->Assert(aPackage, kNC_URL, url, PR_TRUE);
-
-                        ds->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
-                        break;
-
-                    }
-                }
-            }
-        }
-    }
-    
-    return NS_OK;
-}
 
 PRBool 
 nsXPINotifierImpl::IsNewerOrUninstalled(const char* regKey, const char* versionString)
@@ -521,8 +433,7 @@ nsXPINotifierImpl::StringToVersionNumbers(const nsString& version, int32 *aMajor
 }
 
 nsresult
-nsXPINotifierImpl::SynchronouslyOpenRemoteDataSource(const char* aURL,
-                                                              nsIRDFDataSource** aResult)
+nsXPINotifierImpl::OpenRemoteDataSource(const char* aURL, PRBool blocking, nsIRDFDataSource** aResult)
 {
     static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
     nsresult rv;
@@ -535,8 +446,18 @@ nsXPINotifierImpl::SynchronouslyOpenRemoteDataSource(const char* aURL,
     if (NS_FAILED(rv)) return rv;
 
     rv = remote->Init(aURL);
-    if (NS_SUCCEEDED(rv)) {
-        rv = remote->Refresh(PR_TRUE);
+    if (NS_SUCCEEDED(rv)) 
+    {
+        if (! blocking)
+        {
+            nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(remote, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            rv = sink->AddXMLSinkObserver((nsIRDFXMLSinkObserver*)this);
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        rv = remote->Refresh(blocking);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFDataSource> result = do_QueryInterface(remote, &rv);
@@ -544,7 +465,8 @@ nsXPINotifierImpl::SynchronouslyOpenRemoteDataSource(const char* aURL,
         NS_IF_ADDREF(*aResult);
         return rv;
     }
-    else {
+    else 
+    {
         // we've already loaded this datasource. use cached copy
         return mRDF->GetDataSource(aURL, aResult);
     }
@@ -574,6 +496,131 @@ nsXPINotifierImpl::New(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
+
+NS_IMETHODIMP
+nsXPINotifierImpl::OnBeginLoad(nsIRDFXMLSink *aSink)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPINotifierImpl::OnInterrupt(nsIRDFXMLSink *aSink)
+{
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsXPINotifierImpl::OnResume(nsIRDFXMLSink *aSink)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
+{
+    nsresult rv;
+    nsCOMPtr<nsIRDFDataSource> distributorDataSource = do_QueryInterface(aSink, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFContainer> distributorContainer;
+    nsCOMPtr <nsISimpleEnumerator> packageEnumerator;
+    PRBool moreElements;
+
+    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
+                                            nsnull,
+                                            nsIRDFContainer::GetIID(),
+                                            getter_AddRefs(distributorContainer));
+    if (NS_SUCCEEDED(rv))
+    {
+        rv = distributorContainer->Init(distributorDataSource, kXPI_NotifierPackages);
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = distributorContainer->GetElements(getter_AddRefs(packageEnumerator));
+            if (NS_SUCCEEDED(rv))
+            {
+                packageEnumerator->HasMoreElements(&moreElements);
+                while (moreElements) 
+                {
+                    nsCOMPtr<nsISupports> i;
+
+                    rv = packageEnumerator->GetNext(getter_AddRefs(i));
+                    if (NS_FAILED(rv)) break;
+
+                    nsCOMPtr<nsIRDFResource> aPackage(do_QueryInterface(i, &rv));
+                    if (NS_FAILED(rv)) break;
+    
+                    
+                    // Get the version information
+                    nsCOMPtr<nsIRDFNode> versionNode;
+                    distributorDataSource->GetTarget(aPackage, 
+                                                     kXPI_NotifierPackage_Version, 
+                                                     PR_TRUE, 
+                                                     getter_AddRefs(versionNode));
+
+                    nsCOMPtr<nsIRDFLiteral> version(do_QueryInterface(versionNode, &rv));
+                    if (NS_FAILED(rv)) break;
+
+                    // Get the regkey information
+                    nsCOMPtr<nsIRDFNode> regkeyNode;
+                    distributorDataSource->GetTarget(aPackage, 
+                                                     kXPI_NotifierPackage_RegKey, 
+                                                     PR_TRUE, 
+                                                     getter_AddRefs(regkeyNode));
+
+                    nsCOMPtr<nsIRDFLiteral> regkey(do_QueryInterface(regkeyNode, &rv));
+                    if (NS_FAILED(rv)) break;
+
+                    // convert them into workable nsAutoStrings
+                    PRUnichar* regkeyCString;
+                    regkey->GetValue(&regkeyCString);
+                    nsString regKeyString(regkeyCString);
+                    
+                    PRUnichar* versionCString;
+                    version->GetValue(&versionCString);
+                    nsString versionString(versionCString);
+                    
+
+                    // check to see if this software title should be "flashed"
+                    if (IsNewerOrUninstalled(nsAutoCString(regKeyString), nsAutoCString(versionString)))
+                    {
+                        //assert into flash
+                        
+                        nsCOMPtr<nsIRDFNode> urlNode;
+                        distributorDataSource->GetTarget(kXPI_NotifierPackages, 
+                                                         kXPI_NotifierPackage_URL, 
+                                                         PR_TRUE, 
+                                                         getter_AddRefs(urlNode));
+
+                        nsCOMPtr<nsIRDFLiteral> url(do_QueryInterface(urlNode, &rv));
+                        if (NS_FAILED(rv)) break;
+
+
+                        nsCOMPtr<nsIRDFNode> titleNode;
+                        distributorDataSource->GetTarget(kXPI_NotifierPackages, 
+                                                         kXPI_NotifierPackage_Title, 
+                                                         PR_TRUE, 
+                                                         getter_AddRefs(titleNode));
+
+                        nsCOMPtr<nsIRDFLiteral> title(do_QueryInterface(titleNode, &rv));
+                        if (NS_FAILED(rv)) break;
+
+                        nsCOMPtr<nsIRDFDataSource> ds = do_QueryInterface(mInner);
+
+                        ds->Assert(aPackage, kNC_Type, kXPI_Notifier_Type, PR_TRUE);
+                        ds->Assert(aPackage, kNC_Source, title, PR_TRUE);
+                        ds->Assert(aPackage, kNC_URL, url, PR_TRUE);
+
+                        ds->Assert(kNC_FlashRoot, kNC_Child, aPackage, PR_TRUE);
+                        break;
+
+                    }
+                }
+            }
+        }
+    }
+    return NS_OK;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // nsISupports
 
@@ -589,13 +636,21 @@ nsXPINotifierImpl::QueryInterface(REFNSIID aIID, void** aResult)
 
     static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-    if (aIID.Equals(kISupportsIID)) {
+    if (aIID.Equals(kISupportsIID)) 
+    {
         *aResult = NS_STATIC_CAST(nsISupports*, this);
     }
-    else if (aIID.Equals(nsIRDFDataSource::GetIID())) {
-        return mInner->QueryInterface(aIID, aResult);
+    else if (aIID.Equals(nsIRDFDataSource::GetIID())) 
+    {
+        if (mInner)
+            return mInner->QueryInterface(aIID, aResult);
     }
-    else {
+    else if (aIID.Equals(nsIRDFXMLSinkObserver::GetIID())) 
+    {
+        *aResult = NS_STATIC_CAST(nsIRDFXMLSinkObserver*, (nsIRDFXMLSinkObserver*)this);
+    }
+    else 
+    {
         *aResult = nsnull;
         return NS_NOINTERFACE;
     }
