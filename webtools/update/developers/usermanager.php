@@ -2,7 +2,63 @@
 require"core/sessionconfig.php";
 require"../core/config.php";
 
+class PermissionsManager {
+  var $modes;
+  var $trusted;
+  var $mode;
+  var $func;
+  function PermissionsManager($function) {
+    $this->func=$function;
+    $this->modes=array('A'=>'Admin','E'=>'Editor','U'=>'User','D'=>'Disabled');
+    $mode=$_POST['usermode'];
+    if( (!$this->decodeMode($mode)) // unknown mode degrades to U
+        || ( $mode == 'A' && $_SESSION['level'] != 'admin' ) 
+            // only admins can create admins  
+    ) { 
+      $mode='U';
+    }
+    $this->mode=$mode;
+    $this->trusted=$_POST['trusted']=='TRUE'?'TRUE':'FALSE';
+  }
+  
+  function decodeMode($mode) {
+    return $this->modes[$mode];
+  }
+  
+  function printUI() {
+    $level=$_SESSION['level'];
+    if( $this->func == 'edituser' && ($level=='user' || $level=='editor')) {
+      // read-only (hidden) fields: "usermode" and "trusted"
+      $umDes=$this->decodeMode($this->mode);
+      echo "<input name=\"usermode\" type=\"hidden\" value=\"$this->mode\">"
+        . ( $umDes?$umDes:"Unknown ($this->mode)" );
+      
+      if ($this->trusted=="TRUE") {
+        echo"Trusted <INPUT NAME=\"trusted\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
+      }
+    } else if( $level=='admin' 
+      || ($editorAdding=($this->func == 'adduser' && $level=='editor')) ) { 
+      // editable fields: "usermode" (radio) and "trusted" (checkbox)
+      $modes=$this->modes;
+      if($editorAdding) array_shift($modes); // only admins can create admins 
+      foreach($modes as $umId=>$umDes) { // decode usermodes
+        echo '<input name="usermode" type="radio" value="'.$umId
+          . ($umId===$this->mode?'" checked="checked"/>':'"/>' )
+          ."$umDes\n";
+      }
+      
+      echo '<input name="trusted" type="checkbox" value="TRUE"';
+      if($this->trusted) echo ' checked="checked"';
+      echo ">Trusted\n";
+    
+    }
+  }
+  
+}
+
 $function = $_GET["function"];
+$perms=new PermissionsManager($function);
+
 //Access Level: "user" code, to keep user from altering other profiles but their own.
 if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
   //Kill access to add user.
@@ -68,7 +124,7 @@ if ($_POST["submit"] && $_GET["action"]=="update") {
 
     //Process Post Data, Make Changes to User Table.
     //Begin General Updating
-    for ($i=1; $i<=$_POST[maxuserid]; $i++) {
+    for ($i=1; $i<=$_POST['maxuserid']; $i++) {
       $admin = escape_string($_POST["admin$i"]);
       $editor = escape_string($_POST["editor$i"]);
       $trusted = escape_string($_POST["trusted$i"]);
@@ -233,55 +289,41 @@ echo"<INPUT NAME=\"maxuserid\" TYPE=\"HIDDEN\" VALUE=\"$maxuserid\">";
 
 <?php
 } else if ($function=="edituser") {
+
+
 if (!$userid) {$userid = escape_string($_GET["userid"]);}
 
 //Process Submitted Values if this is a return with $_POST data...
 if ($_POST["submit"]=="Update") {
-if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
-  $_POST["username"] = escape_string(htmlspecialchars($_POST["username"]));
-
-$admin = escape_string($_POST["admin"]);
-$editor = escape_string($_POST["editor"]);
-$trusted = escape_string($_POST["trusted"]);
-$usermode = escape_string($_POST["usermode"]);
-
-if ($admin=="TRUE") { $mode="A"; 
-} else if ($editor=="TRUE") { $mode="E"; 
-} else if ($disabled=="TRUE") {$mode="D";
-} else { $mode="U"; }
-
-if (!$admin AND $usermode=="A") {$mode="A";} //Ensure possible mode change during session doesn't wipe out changes.
-if ($usermode=="D") {$mode="D"; $trusted="FALSE";}
-
-if ($trusted !=="TRUE") {$trusted="FALSE"; }
-
-$userid = escape_string($_POST["userid"]);
-$username = escape_string($_POST["username"]);
-$useremail = escape_string($_POST["useremail"]);
-$userwebsite = escape_string($_POST["userwebsite"]);
-$useremailhide = escape_string($_POST["useremailhide"]);
+  if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
+    
+  $userid = escape_string($_POST["userid"]);
+  $username = escape_string(htmlspecialchars($_POST["username"]));
+  $useremail = escape_string($_POST["useremail"]);
+  $userwebsite = escape_string($_POST["userwebsite"]);
+  $useremailhide = escape_string($_POST["useremailhide"]);
 
   if (checkFormKey()) {
-    $sql = "UPDATE `userprofiles` SET `UserName`= '$username', `UserEmail`='$useremail', `UserWebsite`='$userwebsite', `UserMode`='$mode', `UserTrusted`='$trusted', `UserEmailHide`='$useremailhide' WHERE `UserID`='$userid'";
+    $sql = "UPDATE `userprofiles` SET `UserName`= '$username', `UserEmail`='$useremail', `UserWebsite`='$userwebsite', `UserMode`='$perms->mode', `UserTrusted`='$perms->trusted', `UserEmailHide`='$useremailhide' WHERE `UserID`='$userid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
-    echo"<h1>Updating User Profile...</h1>\n";
-    echo"The User Profile for $username, has been successfully updated...<br>\n";
+      echo"<h1>Updating User Profile...</h1>\n";
+      echo"The User Profile for $username, has been successfully updated...<br>\n";
     }
   }
 } else if ($_POST["submit"] == "Delete User") {
-if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
-$userid = escape_string($_POST["userid"]);
-$username = escape_string($_POST["username"]);
+  if ($_SESSION["level"] !=="admin" && $_SESSION["uid"] !== $_POST["userid"]) {$_POST["userid"]=$_SESSION["uid"];}
+  $userid = escape_string($_POST["userid"]);
   if (checkFormKey()) {
     $sql = "DELETE FROM `userprofiles` WHERE `UserID`='$userid'";
     $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
-    echo"<h1>Deleting User... Please wait...</h1>\n";
-    echo"You've successfully deleted the user profile for $username...<br>\n";
-    include"$page_footer";
-    echo"</body>\n</html>\n";
-    exit;
+      $username = htmlspecialchars($_POST["username"]);
+      echo"<h1>Deleting User... Please wait...</h1>\n";
+      echo"You've successfully deleted the user profile for $username...<br>\n";
+      include"$page_footer";
+      echo"</body>\n</html>\n";
+      exit;
     }
   }
 }
@@ -297,7 +339,7 @@ if (!$userid) {$userid=escape_string($_POST["userid"]);}
     $useremail = $row["UserEmail"];
     $userwebsite = $row["UserWebsite"];
     $userpass = $row["UserPass"];
-    $usermode = $row["UserMode"];
+    $perms->mode = $row["UserMode"];
     $trusted = $row["UserTrusted"];
     $useremailhide = $row["UserEmailHide"];
     $userlastlogin = date("l, F, d, Y, g:i:sa", strtotime($row["UserLastLogin"]));
@@ -317,33 +359,8 @@ if (!$userid) {$userid=escape_string($_POST["userid"]);}
 
     echo"<TR><TD><B>Permissions:</B></TD><TD>";
 
-    if ($_SESSION["level"]=="user" or $_SESSION["level"]=="editor") {
-      if ($usermode=="U") {
-        echo"User <INPUT NAME=\"user\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n"; //To prevent being reset to null on submit.
-      } else if ($usermode=="E") {
-        echo"Editor <INPUT NAME=\"editor\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
-      } else {
-        echo"Unknown <INPUT NAME=\"usermode\" TYPE=\"HIDDEN\" VALUE=\"$usermode\">\n";
-      }
+    $perms->printUI();
     
-      if ($trusted=="TRUE") {
-        echo"Trusted <INPUT NAME=\"trusted\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
-      }
-    
-    } else if ($_SESSION["level"]=="admin") {
-    
-      if ($usermode=="A") {
-        $a="TRUE"; $e="TRUE";
-      } else if ($usermode=="E") {
-        $e="TRUE"; $a="FALSE";
-      } else if ($usermode=="U") {
-        $e="FALSE"; $a="FALSE";
-      }
-    
-      echo"Editor: <INPUT NAME=\"editor\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($e=="TRUE") {echo"CHECKED";} if ($a=="TRUE") {echo" DISABLED=\"DISABLED\"";} echo">\n ";
-      echo"Admin: <INPUT NAME=\"admin\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($a=="TRUE") {echo"CHECKED";} echo">\n ";
-      echo"Trusted: <INPUT NAME=\"trusted\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($trusted=="TRUE") {echo"CHECKED";} echo">\n";
-    }
     echo"</TD></TR>\n";
 
     echo"<TR><TD><B>E-Mail Public:<B></TD><TD>";
@@ -370,8 +387,8 @@ if (!$userid) {$userid=escape_string($_POST["userid"]);}
 if ($_POST["submit"]=="Create User") {
 echo"<h1>Adding User...</h1>\n";
  //Verify Users Password and md5 encode it for storage...
- if ($_POST[userpass]==$_POST[userpassconfirm]) {
- $_POST[userpass]=md5($_POST[userpass]);
+ if ($_POST['userpass']==$_POST['userpassconfirm']) {
+ $_POST['userpass']=md5($_POST['userpass']);
  } else {
  $errors="true";
  echo"<B>Your two passwords did not match, go back and try again...</B><br>\n";
@@ -379,14 +396,7 @@ echo"<h1>Adding User...</h1>\n";
 
  //Add User to MySQL Table
 if ($errors !="true") {
-    $_POST["username"] = htmlspecialchars($_POST["username"]);
-
-$admin = escape_string($_POST["admin"]);
-$editor = escape_string($_POST["editor"]);
-$trusted = escape_string($_POST["trusted"]);
-$disabled = escape_string($_POST["disabled"]);
-//echo"$i - $admin - $editor - $trusted<br>\n";
-
+   
 // Set user level, but only allow admins to set the admin flag
 if ($admin=="TRUE" && $_SESSION["level"]=="admin") { $mode="A"; 
 } else if ($editor=="TRUE") { $mode="E"; 
@@ -395,11 +405,11 @@ if ($admin=="TRUE" && $_SESSION["level"]=="admin") { $mode="A";
 
 if ($trusted !=="TRUE") {$trusted="FALSE"; }
 
-$username = escape_string($_POST[username]);
-$useremail = escape_string($_POST[useremail]);
-$userwebsite = escape_string($_POST[userwebsite]);
-$userpass = escape_string($_POST[userpass]);
-$useremailhide = escape_string($_POST[useremailhide]);
+$username = escape_string(htmlspecialchars($_POST["username"]));
+$useremail = escape_string($_POST['useremail']);
+$userwebsite = escape_string($_POST['userwebsite']);
+$userpass = escape_string($_POST['userpass']);
+$useremailhide = escape_string($_POST['useremailhide']);
   if (checkFormKey()) {
     $sql = "INSERT INTO `userprofiles` (`UserName`, `UserEmail`, `UserWebsite`, `UserPass`, `UserMode`, `UserTrusted`, `UserEmailHide`) VALUES ('$username', '$useremail', '$userwebsite', '$userpass', '$mode', '$trusted', '$useremailhide');";
     $sql_result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
@@ -425,17 +435,10 @@ $useremailhide = escape_string($_POST[useremailhide]);
   <TR><TD><B>Password:</B></TD><TD><INPUT NAME="userpass" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
   <TR><TD ALIGN=RIGHT><FONT STYLE="font-size: 10pt"><B>Confirm:</B></FONT>&nbsp;&nbsp;</TD><TD><INPUT NAME="userpassconfirm" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
 
-  <?php /* Display permission checkboxes - leave out the admin box when an editor is logged in */ ?>
   <TR>
     <TD><B>Permissions:</B></TD>
     <TD>
-      Editor: <INPUT NAME="editor" TYPE="CHECKBOX" VALUE="TRUE">
-      <?php
-        if ($_SESSION["level"]=="admin") {
-          echo "Admin: <INPUT NAME=\"admin\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\">";
-        }
-      ?>
-      Trusted: <INPUT NAME="trusted" TYPE="CHECKBOX" VALUE="TRUE">
+      <?php $perms->printUI(); ?>
     </TD>
   </TR>
 
@@ -457,11 +460,11 @@ if ($_POST["submit"]=="Change Password") {
    $row = mysql_fetch_array($sql_result);
     $userpass = $row["UserPass"];
     $email = $row["UserEmail"];
-    $oldpass = md5($_POST[oldpass]);
+    $oldpass = md5($_POST['oldpass']);
 
     if ($userpass==$oldpass) {
 
-    if ($_POST[newpass]==$_POST[newpass2]) {
+    if ($_POST['newpass']==$_POST['newpass2']) {
      $newpassword = $_POST["newpass"];
      $password_plain = $newpassword;
      $userpass = md5($newpassword);
