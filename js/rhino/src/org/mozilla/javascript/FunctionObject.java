@@ -387,7 +387,7 @@ public class FunctionObject extends BaseFunction {
         throws JavaScriptException
     {
         if (parmsLength < 0) {
-            return callVarargs(cx, thisObj, args, false);
+            return callVarargs(cx, thisObj, args);
         }
         if (!isStatic) {
             // OPT: cache "clazz"?
@@ -457,12 +457,7 @@ public class FunctionObject extends BaseFunction {
         throws JavaScriptException
     {
         if (method == null || parmsLength == VARARGS_CTOR) {
-            Scriptable result;
-            if (method != null) {
-                result = (Scriptable) callVarargs(cx, null, args, true);
-            } else {
-                result = (Scriptable) call(cx, scope, null, args);
-            }
+            Scriptable result = (Scriptable) call(cx, scope, null, args);
             initCallResultAsNewObject(result);
             return result;
         } else if (method != null && !isStatic) {
@@ -500,8 +495,7 @@ public class FunctionObject extends BaseFunction {
         return method.invoke(thisObj, args);
     }
 
-    private Object callVarargs(Context cx, Scriptable thisObj, Object[] args,
-                               boolean inNewExpr)
+    private Object callVarargs(Context cx, Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
         try {
@@ -510,6 +504,7 @@ public class FunctionObject extends BaseFunction {
                 Object result = doInvoke(cx, null, invokeArgs);
                 return hasVoidReturn ? Undefined.instance : result;
             } else {
+                boolean inNewExpr = (thisObj == null);
                 Boolean b = inNewExpr ? Boolean.TRUE : Boolean.FALSE;
                 Object[] invokeArgs = { cx, args, this, b };
                 return (method == null)
