@@ -22,6 +22,9 @@
 #include "rdf.h"
 #include "gs.h"
 
+void
+describeItem (WriteClientProc callBack, void* obj, RDF_Resource u) ;
+
 RDF_Resource 
 getNodeFromQuery (char* query) {
   RDF_Resource ans;
@@ -32,90 +35,112 @@ getNodeFromQuery (char* query) {
 
 #define ROW_WIDTH 3
 
+#define PREFIX "<form method=get action=\"OpenDir?\"><B>Search:</B> <input size=25 name=search> <input type=submit value=search><br>"
+
+
 void 
 AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query) {
-  char *buff = (char*) malloc(10000);
-  RDF_Resource items[300];
-  RDF_Resource topics[100];
-  RDF_Resource child = RDF_GetResource("child", 1);
+  char buff[1000];
+  RDF_Resource narrow = RDF_GetResource("narrow", 1);
+  RDF_Resource link = RDF_GetResource("link", 1);
   RDF_Resource name = RDF_GetResource("name", 1);
-  RDF_Resource type = RDF_GetResource("type", 1);
   RDF_Resource topic = RDF_GetResource("Topic", 1);
   RDF_Resource desc = RDF_GetResource("description", 1);
+  RDF_Resource editor = RDF_GetResource("editor", 1);
+  RDF_Resource newsGroup = RDF_GetResource("newsGroup", 1);
   RDF_Resource node = getNodeFromQuery(query);
-  int itemCount = 0;
-  int topicCount = 0;
 
   if (node) {
-    RDF_Cursor c = RDF_GetTargets(0, node, child, RDF_RESOURCE_TYPE);
-    RDF_Resource ans ;
-    while (c && (ans = (RDF_Resource) RDF_NextValue(c))) {
-      int   subjectp = RDF_HasAssertion(0, ans, type, topic, RDF_RESOURCE_TYPE); 
-      if (subjectp) {
-        topics[topicCount++] = ans;
-      } else {
-        items[itemCount++] = ans;
-      }
-    }
-    RDF_DisposeCursor(c);
-
-    if (topicCount > 0) {
-      int n = 0;
-      (*callBack)(obj, "<hr><table cellspacing=\"4\" cellpadding=\"6\">");
-      while (n < topicCount) {
+    RDF_Cursor c = RDF_GetTargets(0, node, narrow, RDF_RESOURCE_TYPE);
+    RDF_Resource u = (RDF_Resource) RDF_NextValue(c);
+    (*callBack)(obj, PREFIX); 
+    if (u) {
+      (*callBack)(obj, "<hr><table cellspacing=\"6\" cellpadding=\"6\">");
+      while (u) {
         int w = 0;
         (*callBack)(obj, "<tr>");
-        while ((w < ROW_WIDTH) && (n < topicCount)) {
-          RDF_Resource u = topics[n];
+        while ((w < ROW_WIDTH) && u) {
           char* nm = (char*) RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
           char* id = RDF_ResourceID(u);
-          sprintf(buff, "<td><li><a href=\"OpenDir?%s\">%s</a></td>", id, (nm ? nm : id));
+          if (!nm) nm = strrchr(id, '/') +1;
+          sprintf(buff, "<td width=\"%i%\"><li><a href=\"OpenDir?browse=%s\">%s</a></td>",
+                  (100 / ROW_WIDTH), id, (nm ? nm : id));
           (*callBack)(obj, buff);
           w++;
-          n++;
+          u =  (RDF_Resource) RDF_NextValue(c);
         }
         (*callBack)(obj, "</tr>");
       }
       (*callBack)(obj, "</table>");
     }
-     (*callBack)(obj, "<hr>");
-    if (itemCount > 0) {
-      int n = 0;
-      (*callBack)(obj, "<ul>");
-      while (n < itemCount) {
-        int w = 0;
-        
-          RDF_Resource u = items[n];
-          char* nm = (char*) RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
-          char* id = RDF_ResourceID(u);
-          sprintf(buff, "<li><a href=\"%s\">%s</a>", id, (nm ? nm : id));
-          (*callBack)(obj, buff);
-           
-          n++;
-         
-         
+
+    RDF_DisposeCursor(c);
+    (*callBack)(obj, "<hr><UL>");
+    c = RDF_GetTargets(0, node, link, RDF_RESOURCE_TYPE);
+    u = (RDF_Resource) RDF_NextValue(c);
+    while (u) {
+      describeItem(callBack, obj, u);
+      u =  (RDF_Resource) RDF_NextValue(c);
+    }
+    (*callBack)(obj, "</UL>");
+    RDF_DisposeCursor(c);
+
+    c = RDF_GetTargets(0, node, newsGroup, RDF_RESOURCE_TYPE);
+    u = (RDF_Resource) RDF_NextValue(c);
+    if (u) {
+      (*callBack)(obj, "<hr><b>NewsGroups:</B>");      
+      while (u) {
+        char* id = RDF_ResourceID(u);
+        sprintf(buff, "<li><a href=\"%s\">%s</a>", id, id);
+        (*callBack)(obj, buff);
+        u =  (RDF_Resource) RDF_NextValue(c);
       }
-      (*callBack)(obj, "</ul>");
+      (*callBack)(obj, "</UL>");
+    }
+    RDF_DisposeCursor(c);
+
+
+    c = RDF_GetTargets(0, node, editor, RDF_RESOURCE_TYPE);
+    u = (RDF_Resource) RDF_NextValue(c);
+    if (u) {
+      (*callBack)(obj, "<hr><b>Editors:</b>");
+      while (u) {
+        char* id = RDF_ResourceID(u);
+        sprintf(buff, "%s, ", id);
+        (*callBack)(obj, buff);
+        u =  (RDF_Resource) RDF_NextValue(c);
+      }
+
+      RDF_DisposeCursor(c);
     }
   }
-  free(buff);  
+
 }
 
 void 
 AnswerSearchQuery (WriteClientProc callBack, void* obj, char *query) {
     RDF_Cursor c = RDFGS_Search(0, query, 0);
-    char *buff = (char*) malloc(10000);
     RDF_Resource name = RDF_GetResource("name", 1);
     RDF_Resource u ;
+	(*callBack)(obj, "<UL>");
     while (c && (u = (RDF_Resource) RDFGS_NextValue(c))) {
-      char* nm = (char*) RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
-      char* id = RDF_ResourceID(u);
-      sprintf(buff, "<li><a href=\"%s\">%s</a>", id, (nm ? nm : id));
-      (*callBack)(obj, buff);
+      describeItem(callBack, obj, u);
     }
-    freeMem(buff);
+	(*callBack)(obj, "</UL>");
 }
-    
+
+void
+describeItem (WriteClientProc callBack, void* obj, RDF_Resource u) {
+  char buff[1000];
+  RDF_Resource name = RDF_GetResource("name", 1);
+  RDF_Resource desc = RDF_GetResource("description", 1);
+  char* nm = (char*) RDF_OnePropValue(0, u, name, RDF_STRING_TYPE);
+  char* id = RDF_ResourceID(u);
+  char* des = (char*) RDF_OnePropValue(0, u, desc, RDF_STRING_TYPE);
+  sprintf(buff, "<li><a href=\"%s\">%s</a> %s %s", id, (nm ? nm : id), 
+          (des ? " : " : ""), (des ? des : ""));
+  (*callBack)(obj, buff);
+}
     
   
   

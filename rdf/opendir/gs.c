@@ -125,7 +125,7 @@ countChildren (TNS node, size_t *n) {
 void
 fillUpChildren (RDF_Cursor c, TNS node) {
   TNS ch;
-  if (node->targets) *((TNS*)c->pdata1 + c->count++) = node;
+  if (node->targets) *((TTS*)c->pdata1 + c->count++) = node->targets;
   ch = node->child;
   while (ch) {
     fillUpChildren(c, ch);
@@ -146,7 +146,7 @@ RDF_Cursor RDFGS_Search (RDFT db, char* searchString, RDF_Resource label) {
       c->count = 0;
       c->pdata1 = getMem(n+1);
       fillUpChildren(c, (TNS)c->pdata);
-      c->count = 0;
+      c->count = 1;
     }
 	if (c->pdata) c->pdata = ((TNS)c->pdata)->targets;
     return c;
@@ -156,8 +156,7 @@ void RDFGS_DisposeCursor (RDF_Cursor c) {
     freeMem(c);
 }
     
-RDF_Resource RDFGS_NextValue (RDF_Cursor c) {
-  TNS currentTNS; 
+RDF_Resource RDFGS_NextValue (RDF_Cursor c) { 
   TTS currentTTS = (TTS) c->pdata;
   if (!currentTTS) {
     return 0;
@@ -166,20 +165,14 @@ RDF_Resource RDFGS_NextValue (RDF_Cursor c) {
       if ((!c->s) || (c->s == currentTTS->label)) {
         RDF_Resource ans =currentTTS->target;
         currentTTS = c->pdata = currentTTS->next;
-		if (!currentTTS) {
-			currentTNS = ((TNS*)c->pdata1)[c->count++]; 
-			if (currentTNS) c->pdata = currentTNS->targets;
-		}
+		 if (!currentTTS)  c->pdata = currentTTS = ((TTS*)c->pdata1)[c->count++];   
         return ans;
       } 
       c->pdata = currentTTS =  currentTTS->next;
+	  if (!currentTTS)  c->pdata = currentTTS = ((TTS*)c->pdata1)[c->count++];  
     }
   }
-  
-  currentTNS = ((TNS*)c->pdata1)[c->count++];
-  if (!currentTNS) return 0;
-  c->pdata = currentTNS->targets;
-  return RDFGS_NextValue(c);
+  return 0;
 }
 	
     

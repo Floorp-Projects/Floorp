@@ -333,9 +333,6 @@ parseNextRDFToken (RDFT f, char* token)
   char* attlist[2*MAX_ATTRIBUTES+1];
   char* elementName;
 
-  fflush(0);
-  
-        
   if (token[0] != '<')   {
     if ((f->status == EXPECTING_OBJECT) && (f->depth > 1)) {
       RDF_Resource u = f->stack[f->depth-2];
