@@ -667,6 +667,13 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         SetColor("maroon",PR_TRUE,*mSink);
         nsAutoString theStr("&");
+        nsString& theEntity=aToken->GetStringValueXXX();
+        if(!theEntity.EqualsIgnoreCase("XI",2)) {
+          PRUnichar theChar=theEntity.CharAt(0);
+          if((nsString::IsDigit(theChar)) || ('X'==theChar) || ('x'==theChar)){
+            theStr.Append("#");
+          }
+        }
         theStr.Append(aToken->GetStringValueXXX());
         theStr.Append(";");
         WriteText(theStr,*mSink,PR_FALSE);

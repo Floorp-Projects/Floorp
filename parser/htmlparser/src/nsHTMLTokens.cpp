@@ -683,6 +683,7 @@ static
 nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
   static    nsAutoString gEdibles("!-");
   static    nsAutoString gMinus("-");
+  static    nsAutoString gWhitespace("\b\t\n\r ");
   nsresult  result=NS_OK;
  
   /*********************************************************
@@ -705,26 +706,25 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
           PRInt32 findpos=kNotFound;
           result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
           findpos=aString.RFind("-->");
-          nsAutoString temp("");
+          //nsAutoString temp("");
+          //nsAutoString ws("");
           while((kNotFound==findpos) && (NS_OK==result)) {
-            result=aScanner.ReadUntil(temp,kMinus,PR_TRUE);
+            result=aScanner.ReadUntil(aString,kMinus,PR_TRUE);
 
             if(NS_OK==result) {
-              result=aScanner.ReadWhile(temp,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
+              result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
               if(NS_OK==result)
-                aScanner.SkipWhitespace(); //but skip terminating whitespace...
+                result=aScanner.ReadWhile(aString,gWhitespace,PR_TRUE,PR_FALSE);  //get all available whitespace
             }
             
             if(NS_OK==result) {
               result=aScanner.GetChar(aChar);
-              temp+=aChar;
+              aString+=aChar;
             }
 
-            findpos=temp.RFind("-->");
+            findpos=aString.RFind("-->");
             if(kNotFound==findpos)
-              findpos=temp.RFind("!>");
-            aString+=temp;
-            temp="";
+              findpos=aString.RFind("!>");
           } //while
           return result;
         } //if

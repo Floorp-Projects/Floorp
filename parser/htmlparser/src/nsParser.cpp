@@ -144,6 +144,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mSink=0;
   mParserContext=0;
   mTokenObserver=anObserver;
+  mStreamStatus=0;
   mDTDVerification=PR_FALSE;
   if(!gSharedParserObjects) {
     gSharedParserObjects = new CSharedParserObjects();
