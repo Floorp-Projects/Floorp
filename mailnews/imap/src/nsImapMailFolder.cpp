@@ -321,7 +321,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   uri.Append(PRUnichar('/'));
 
   uri.Append(*name);
-  char* uriStr = ToNewCString(uri);
+  char* uriStr = nsCRT::strdup(NS_ConvertUCS2toUTF8(uri.get()).get());
   if (uriStr == nsnull) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -565,6 +565,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
         CreateClientSubfolderInfo("INBOX", kOnlineHierarchySeparatorUnknown,0, PR_TRUE);
       }
     }
+
     UpdateSummaryTotals(PR_FALSE);
 
     if (NS_FAILED(rv)) return rv;
@@ -6899,10 +6900,10 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsg
 				
      nsXPIDLString folderName;
      rv = msgFolder->GetName(getter_Copies(folderName));
-     if (!folderName || NS_FAILED(rv)) return rv;
-     nsAutoString utf7LeafName(folderName.get());
+     if (folderName.IsEmpty() || NS_FAILED(rv)) return rv;
+     nsAutoString unicodeLeafName(folderName.get());
 
-     rv = AddSubfolderWithPath(&utf7LeafName, dbFileSpec, getter_AddRefs(child));
+     rv = AddSubfolderWithPath(&unicodeLeafName, dbFileSpec, getter_AddRefs(child));
      
      if (!child || NS_FAILED(rv)) return rv;
 
@@ -6912,7 +6913,9 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsg
      GetOnlineName(getter_Copies(onlineName));
      nsCAutoString onlineCName(onlineName);
      onlineCName.Append(char(hierarchyDelimiter));
-     onlineCName.AppendWithConversion(utf7LeafName);
+     char *utf7LeafName = CreateUtf7ConvertedStringFromUnicode(unicodeLeafName.get());
+     onlineCName.Append(utf7LeafName);
+     PR_Free(utf7LeafName);
      if (imapFolder)
      {
        imapFolder->SetVerifiedAsOnlineFolder(verified);
