@@ -282,6 +282,11 @@ void _PR_LogCleanup(void)
         lm = next;
     }
     logModules = NULL;
+
+    if (_pr_logLock) {
+        PR_DestroyLock(_pr_logLock);
+        _pr_logLock = NULL;
+    }
 }
 
 static void _PR_SetLogModuleLevel( PRLogModuleInfo *lm )
