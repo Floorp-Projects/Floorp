@@ -198,7 +198,7 @@ I18N_COMPONENTS = \
 	$(DIST)/lib/libmimetype.$(DLL_SUFFIX) \
 	$(DIST)/lib/libnecko.$(DLL_SUFFIX) \
 	$(DIST)/lib/libnecko_file.$(DLL_SUFFIX) \
-	$(DIST)/lib/libnecko_resource.$(DLL_SUFFIX) \
+	$(DIST)/lib/libnecko_res.$(DLL_SUFFIX) \
 	$(DIST)/lib/libnslocale.$(DLL_SUFFIX) \
 	$(DIST)/lib/libstrres.$(DLL_SUFFIX) \
 	$(DIST)/lib/libunicharutil.$(DLL_SUFFIX) \
