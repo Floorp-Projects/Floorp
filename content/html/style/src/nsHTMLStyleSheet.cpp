@@ -186,13 +186,10 @@ HTMLDocumentColorRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresCon
   return NS_OK;
 }
 
-// -----------------------------------------------------------
-// this rule only applies in NavQuirks mode
-// -----------------------------------------------------------
-class TableBackgroundRule: public nsIStyleRule {
+class GenericTableRule: public nsIStyleRule {
 public:
-  TableBackgroundRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~TableBackgroundRule();
+  GenericTableRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~GenericTableRule();
 
   NS_DECL_ISUPPORTS
 
@@ -213,34 +210,34 @@ public:
   nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
 };
 
-TableBackgroundRule::TableBackgroundRule(nsIHTMLStyleSheet* aSheet)
+GenericTableRule::GenericTableRule(nsIHTMLStyleSheet* aSheet)
 {
   NS_INIT_REFCNT();
   mSheet = aSheet;
 }
 
-TableBackgroundRule::~TableBackgroundRule()
+GenericTableRule::~GenericTableRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(TableBackgroundRule, kIStyleRuleIID);
+NS_IMPL_ISUPPORTS(GenericTableRule, kIStyleRuleIID);
 
 NS_IMETHODIMP
-TableBackgroundRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
+GenericTableRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 {
   aResult = PRBool(this == aRule);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TableBackgroundRule::HashValue(PRUint32& aValue) const
+GenericTableRule::HashValue(PRUint32& aValue) const
 {
   aValue = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TableBackgroundRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+GenericTableRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   aSheet = mSheet;
   return NS_OK;
@@ -249,16 +246,48 @@ TableBackgroundRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 // Strength is an out-of-band weighting, useful for mapping CSS ! important
 // always 0 here
 NS_IMETHODIMP
-TableBackgroundRule::GetStrength(PRInt32& aStrength) const
+GenericTableRule::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TableBackgroundRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+GenericTableRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP
+GenericTableRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GenericTableRule::List(FILE* out, PRInt32 aIndent) const
+{
+  return NS_OK;
+}
+// -----------------------------------------------------------
+// this rule only applies in NavQuirks mode
+// -----------------------------------------------------------
+class TableBackgroundRule: public GenericTableRule {
+public:
+  TableBackgroundRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~TableBackgroundRule();
+
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
+                          nsIPresContext* aPresContext);
+};
+
+TableBackgroundRule::TableBackgroundRule(nsIHTMLStyleSheet* aSheet)
+: GenericTableRule(aSheet)
+{
+}
+
+TableBackgroundRule::~TableBackgroundRule()
+{
 }
 
 NS_IMETHODIMP
@@ -288,9 +317,44 @@ TableBackgroundRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresConte
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TableBackgroundRule::List(FILE* out, PRInt32 aIndent) const
+// -----------------------------------------------------------
+// this rule handles <th> inheritance
+// -----------------------------------------------------------
+class TableTHRule: public GenericTableRule {
+public:
+  TableTHRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~TableTHRule();
+
+  NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext,
+                          nsIPresContext* aPresContext);
+};
+
+TableTHRule::TableTHRule(nsIHTMLStyleSheet* aSheet)
+: GenericTableRule(aSheet)
 {
+}
+
+TableTHRule::~TableTHRule()
+{
+}
+
+NS_IMETHODIMP
+TableTHRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  nsIStyleContext* parentContext = aContext->GetParent();
+
+  if (parentContext) {
+    nsStyleText* styleText = 
+      (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+    if (NS_STYLE_TEXT_ALIGN_DEFAULT == styleText->mTextAlign) {
+      const nsStyleText* parentStyleText = 
+        (const nsStyleText*)parentContext->GetStyleData(eStyleStruct_Text);
+      PRUint8 parentAlign = parentStyleText->mTextAlign;
+      styleText->mTextAlign = (NS_STYLE_TEXT_ALIGN_DEFAULT == parentAlign)
+                              ? NS_STYLE_TEXT_ALIGN_CENTER : parentAlign;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -474,6 +538,7 @@ protected:
   HTMLColorRule*       mActiveRule;
   HTMLDocumentColorRule* mDocumentColorRule;
   TableBackgroundRule* mTableBackgroundRule;
+  TableTHRule*         mTableTHRule;
   nsHashtable          mMappedAttrTable;
 };
 
@@ -524,6 +589,8 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
   NS_INIT_REFCNT();
   mTableBackgroundRule = new TableBackgroundRule(this);
   NS_ADDREF(mTableBackgroundRule);
+  mTableTHRule = new TableTHRule(this);
+  NS_ADDREF(mTableTHRule);
 }
 
 PRBool MappedDropSheet(nsHashKey *aKey, void *aData, void* closure)
@@ -555,6 +622,10 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
   if (nsnull != mTableBackgroundRule) {
     mTableBackgroundRule->mSheet = nsnull;
     NS_RELEASE(mTableBackgroundRule);
+  }
+  if (nsnull != mTableTHRule) {
+    mTableTHRule->mSheet = nsnull;
+    NS_RELEASE(mTableTHRule);
   }
   mMappedAttrTable.Enumerate(MappedDropSheet);
 }
@@ -709,12 +780,17 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         } // end active rule
       } // end A tag
       // add the quirks background compatibility rule if in quirks mode
+      // and/or the Table TH rule for handling <TH> differently than <TD>
       else if ((tag == nsHTMLAtoms::td) ||
                (tag == nsHTMLAtoms::th) ||
                (tag == nsHTMLAtoms::tr) ||
                (tag == nsHTMLAtoms::thead) || // Nav4.X doesn't support row groups, but it is a lot
                (tag == nsHTMLAtoms::tbody) || // easier passing from the table to rows this way
                (tag == nsHTMLAtoms::tfoot)) {
+        // add the rule to handle text-align for a <th>
+        if (tag == nsHTMLAtoms::th) {
+          aResults->AppendElement(mTableTHRule);
+        }
         nsCompatibility mode;
         aPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode) {
@@ -908,6 +984,10 @@ NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURI* aURL)
   if (mTableBackgroundRule) {
     mTableBackgroundRule->mSheet = nsnull;
     NS_RELEASE(mTableBackgroundRule);
+  }
+  if (mTableTHRule) {
+    mTableTHRule->mSheet = nsnull;
+    NS_RELEASE(mTableTHRule);
   }
 
   mMappedAttrTable.Enumerate(MappedDropSheet);

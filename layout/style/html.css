@@ -153,14 +153,15 @@ table {
 }
 
 /* must never set padding in td, th */
-td, th {
+td {
   vertical-align: inherit;
-  text-align: left; 
+  text-align: inherit; 
   display: table-cell;
 }
 th {
   font-weight: bold;
-  text-align: center; 
+  vertical-align: inherit;
+  display: table-cell;
 }
 caption {
   text-align: center;
