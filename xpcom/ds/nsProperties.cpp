@@ -362,8 +362,11 @@ AddElemToArray(PLHashEntry* he, PRIntn i, void* arg)
   nsString* keyStr = new nsString((PRUnichar*) he->key);
   nsString* valueStr = new nsString((PRUnichar*) he->value);
 
-  // XXX Fix to make XPCOM friendly?
   nsPropertyElement *element = new nsPropertyElement();
+  if (!element)
+     return HT_ENUMERATE_STOP;
+
+  NS_ADDREF(element);
   element->SetKey(keyStr);
   element->SetValue(valueStr);
   propArray->InsertElementAt(element, i);
@@ -383,7 +386,9 @@ nsPersistentProperties::EnumerateProperties(nsIBidirectionalEnumerator** aResult
 		return rv;
 
 	// Step through hash entries populating a transient array
-	PL_HashTableEnumerateEntries(mTable, AddElemToArray, (void *)propArray);
+   PRIntn n = PL_HashTableEnumerateEntries(mTable, AddElemToArray, (void *)propArray);
+   if ( n < (PRIntn) mTable->nentries )
+      return NS_ERROR_OUT_OF_MEMORY;
 
 	// Convert array into enumerator
 	rv = NS_NewISupportsArrayEnumerator(propArray, aResult);
