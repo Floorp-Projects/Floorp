@@ -48,8 +48,8 @@
     (loop
       (let ((slash (position #\/ filename)))
         (if slash
-          (progn
-            (push (subseq filename 0 slash) directories)
+          (let ((dir-name (subseq filename 0 slash)))
+            (push (if (equal dir-name "..") :up dir-name) directories)
             (setq filename (subseq filename (1+ slash))))
           (return (if directories
                     (make-pathname :directory (cons ':relative (nreverse directories)) :name filename #+lispworks :type #+lispworks "lisp")
