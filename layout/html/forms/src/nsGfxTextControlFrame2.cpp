@@ -1453,7 +1453,11 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Get the default value for the textfield.
 
   nsAutoString defaultValue;
-  rv = GetText(&defaultValue, PR_TRUE);
+
+  if (mCachedState)
+    defaultValue = mCachedState->GetUnicode();
+  else
+    rv = GetText(&defaultValue, PR_FALSE);
 
   if (NS_FAILED(rv))
     return rv;
