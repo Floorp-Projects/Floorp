@@ -22,16 +22,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-	<!ENTITY senderColumn.label "Sender">
-	<!ENTITY subjectColumn.label "Subject">
-	<!ENTITY dateColumn.label "Date">
-	<!ENTITY statusColumn.label "Status">
-	<!ENTITY unreadColumn.label "Unread">
-	<!ENTITY totalColumn.label "Total">
-	<!ENTITY readcol.img "chrome://messenger/skin/readcol.gif">
-]>   
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/threadpane.dtd">
 
 <window
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
