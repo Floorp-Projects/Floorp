@@ -478,7 +478,7 @@ NS_IMETHODIMP nsMsgFolder::RemoveSubFolder (const nsIMsgFolder *which)
 	if(NS_SUCCEEDED(((nsISupports*)which)->QueryInterface(kISupportsIID,
                                                         (void**)&supports)))
 	{
-		mSubFolders->RemoveElement(supports, 0);
+		mSubFolders->RemoveElement(supports);
 		//make sure it's really been removed and no others exist.
 		PR_ASSERT(mSubFolders->IndexOf(supports, 0) == -1);
 		NS_RELEASE(supports);
