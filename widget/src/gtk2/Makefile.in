@@ -30,23 +30,28 @@ LIBRARY_NAME	= widget_gtk2
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWidgetGtk2Module
-REQUIRES	=
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  dom
 
 CSRCS		=
 
 CPPSRCS		= \
 		nsWindow.cpp \
 		nsScrollbar.cpp \
+		nsAppShell.cpp \
+		nsWidgetFactory.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-
-CFLAGS		+= $(TK_CFLAGS)
-LDFLAGS		+= $(TK_CFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS)
 
 include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+= $(MOZ_GTK2_CFLAGS)
+CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \

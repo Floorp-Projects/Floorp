@@ -19,25 +19,31 @@
  *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
-#ifndef nsAppShell_h__
-#define nsAppShell_h__
+#include "nsIGenericFactory.h"
+#include "nsWidgetsCID.h"
+#include "nsWindow.h"
+#include "nsAppShell.h"
 
-#include "nsIAppShell.h"
-#include "nsIEventQueue.h"
-#include "nsCOMPtr.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 
-class nsAppShell : public nsIAppShell {
- public:
-
-  nsAppShell();
-  virtual ~nsAppShell();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPSHELL
-
- private:
-
-  nsCOMPtr<nsIEventQueue> mEventQueue;
+static nsModuleComponentInfo components[] =
+{
+  { "Gtk2 Window",
+    NS_WINDOW_CID,
+    "@mozilla.org/widget/window/gtk2;1",
+    nsWindowConstructor },
+  { "Gtk2 AppShell",
+    NS_APPSHELL_CID,
+    "@mozilla.org/widget/appshell/gtk2;1",
+    nsAppShellConstructor },
 };
 
-#endif /* nsAppShell_h__ */
+PR_STATIC_CALLBACK(void)
+nsWidgetGtk2ModuleDtor(nsIModule *aSelf)
+{
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetGtk2Module,
+			      components,
+			      nsWidgetGtk2ModuleDtor)
