@@ -54,6 +54,183 @@
 #include "jsinterp.h"
 #endif
 
+/* Contributions from the String class to the set of methods defined for the
+ * global object.  escape and unescape used to be defined in the Mocha library,
+ * but as ECMA decided to spec them.  So they've been moved to the core engine
+ * and made ECMA-compliant.  (Incomplete escapes are interpreted as literal
+ * characters by unescape.)
+ */
+
+/* Stuff to emulate the old libmocha escape, which took a second argument
+ * giving the type of escape to perform.  Retained for compatibility, and
+ * copied here to avoid reliance on net.h, mkparse.c/NET_EscapeBytes.
+ */
+
+#define URL_XALPHAS     (unsigned char) 1
+#define URL_XPALPHAS    (unsigned char) 2
+#define URL_PATH        (unsigned char) 4
+
+static const unsigned char netCharType[256] =
+/*	Bit 0		xalpha		-- the alphas
+**	Bit 1		xpalpha		-- as xalpha but 
+**                             converts spaces to plus and plus to %20
+**	Bit 2 ...	path		-- as xalphas but doesn't escape '/'
+*/
+    /*   0 1 2 3 4 5 6 7 8 9 A B C D E F */
+    {    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,	/* 0x */
+         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,	/* 1x */
+         0,0,0,0,0,0,0,0,0,0,7,4,0,7,7,4,	/* 2x   !"#$%&'()*+,-./	 */
+         7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,	/* 3x  0123456789:;<=>?	 */
+         7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 4x  @ABCDEFGHIJKLMNO  */
+         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,	/* 5X  PQRSTUVWXYZ[\]^_	 */
+         0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 6x  `abcdefghijklmno	 */
+         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,	/* 7X  pqrstuvwxyz{\}~	DEL */
+	 0, };
+
+/* This matches the ECMA escape set when mask is 7 (default.) */
+
+#define IS_OK(C, mask) (netCharType[((unsigned char) (C))] & (mask))
+
+/* See ECMA-262 15.1.2.4. */
+static JSBool
+str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    size_t i, ni, newlength;
+    const jschar *chars;
+    jschar *newchars;
+    jschar ch;
+    jsint mask;
+    jsdouble d;
+    const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                           '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+    if (argc > 1) {
+        if (!js_ValueToNumber(cx, argv[1], &d))
+            return JS_FALSE;
+        if (!JSDOUBLE_IS_FINITE(d) ||
+            (mask = (jsint)d) != d || 
+            mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
+        {
+            JS_ReportError(cx, "invalid string escape mask %x", mask);
+            return JS_FALSE;
+        }
+    } else {
+        mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
+    }
+
+    str = js_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
+
+    chars = str->chars;
+    newlength = str->length;
+    /* Take a first pass and see how big the result string will need to be. */
+    for (i = 0; i < str->length; i++) {
+        if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
+            continue;
+        } else if (ch < 256) {
+            if (mask == URL_XPALPHAS && ch == ' ')
+                continue;   /* The character will be encoded as '+' */
+            else
+                newlength += 2; /* The character will be encoded as %XX */
+        } else {
+            newlength += 5; /* The character will be encoded as %uXXXX */
+        }
+    }
+
+    newchars = (jschar *) JS_malloc(cx, (newlength + 1) * sizeof(jschar));
+    for (i = 0, ni = 0; i < str->length; i++) {
+        if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
+            newchars[ni++] = ch;
+        } else if (ch < 256) {
+            if (mask == URL_XPALPHAS && ch == ' ') {
+                newchars[ni++] = '+'; /* convert spaces to pluses */
+            } else {
+                newchars[ni++] = '%';
+                newchars[ni++] = digits[ch >> 4];
+                newchars[ni++] = digits[ch & 0xF];
+            }
+        } else {
+            newchars[ni++] = '%';
+            newchars[ni++] = 'u';
+            newchars[ni++] = digits[ch >> 12];
+            newchars[ni++] = digits[(ch & 0xF00) >> 8];
+            newchars[ni++] = digits[(ch & 0xF0) >> 4];
+            newchars[ni++] = digits[ch & 0xF];
+        }
+    }
+    PR_ASSERT(ni == newlength);
+    newchars[newlength] = 0;
+
+    str = js_NewString(cx, newchars, newlength, 0);
+    if (!str) {
+        JS_free(cx, newchars);
+        return JS_FALSE;
+    }
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+#undef IS_OK
+
+/* See ECMA-262 15.1.2.5 */
+static JSBool
+str_unescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    size_t i, ni;
+    const jschar *chars;
+    jschar *newchars;
+    jschar ch;
+
+    str = js_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
+
+    chars = str->chars;
+    /* Don't bother allocating less space for the new string. */
+    newchars = (jschar *) JS_malloc(cx, (str->length + 1) * sizeof(jschar));
+    ni = i = 0;
+    while (i < str->length) {
+        ch = chars[i++];
+        if (ch == '%') {
+            if (i + 1 < str->length &&
+                JS7_ISHEX(chars[i]) && JS7_ISHEX(chars[i + 1]))
+            {
+                ch = JS7_UNHEX(chars[i]) * 16 + JS7_UNHEX(chars[i + 1]);
+                i += 2;
+            } else if (i + 4 < str->length && chars[i] == 'u' &&
+                       JS7_ISHEX(chars[i + 1]) && JS7_ISHEX(chars[i + 2]) &&
+                       JS7_ISHEX(chars[i + 3]) && JS7_ISHEX(chars[i + 4]))
+            {
+                ch = (((((JS7_UNHEX(chars[i + 1]) << 4)
+                        + JS7_UNHEX(chars[i + 2])) << 4)
+                      + JS7_UNHEX(chars[i + 3])) << 4)
+                    + JS7_UNHEX(chars[i + 4]);
+                i += 5;
+            }
+        }
+        newchars[ni++] = ch;
+    }
+    newchars[ni] = 0;
+
+    str = js_NewString(cx, newchars, ni, 0);
+    if (!str) {
+        JS_free(cx, newchars);
+        return JS_FALSE;
+    }
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+
+static JSFunctionSpec string_functions[] = {
+    {"escape",          str_escape,             1},
+    {"unescape",        str_unescape,           1},
+    {0}
+};
+
 jschar      js_empty_ucstr[]  = {0};
 JSSubString js_EmptySubString = {0, js_empty_ucstr};
 
@@ -1857,6 +2034,11 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 	    return NULL;
 	rt->emptyString = empty;
     }
+
+    /* Define the escape, unescape functions in the global object. */
+    if (!JS_DefineFunctions(cx, obj, string_functions))
+	return NULL;
+
     proto = JS_InitClass(cx, obj, NULL, &string_class, String, 1,
 			 string_props, string_methods,
 			 NULL, string_static_methods);
