@@ -121,16 +121,17 @@ public:
   PRUint8      compression;
   PRUint8      flags;
 
+#ifndef STANDALONE
   /**
    * GetModTime
    *
    * Utility to get an NSPR-friendly formatted string
    * representing the last modified time of this item.
    * 
-   * @return nsprstr    an NSPR-friendly string representation 
-   *                    of the modification time
+   * @return nsprstr    The modification time in PRTime
    */
-  char *GetModTime();
+  PRTime GetModTime();
+#endif
 
   nsZipItem();
   ~nsZipItem();

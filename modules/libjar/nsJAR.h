@@ -128,7 +128,6 @@ class nsJAR : public nsIZipReader, public nsIJAR
     nsresult VerifyEntry(nsISignatureVerifier* verifier,
                          nsJARManifestItem* aEntry, const char* aEntryData, 
                          PRUint32 aLen);
-    nsresult RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile);
 
     nsresult CalculateDigest(nsISignatureVerifier* verifier, 
                              const char* aInBuf, PRUint32 aInBufLen,
