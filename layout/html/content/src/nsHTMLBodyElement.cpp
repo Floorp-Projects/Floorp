@@ -415,13 +415,44 @@ BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
 
   // XXX do any other body processing here
 
-  // Fixup default presentation colors (NAV QUIRK)
-  nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetStyleData(eStyleStruct_Color));
+  // Use the CSS precedence rules for dealing with BODY background: if the value
+  // of the 'background' property for the HTML element is different from
+  // 'transparent' then use it, else use the value of the 'background' property
+  // for the BODY element
+  const nsStyleColor* styleColor;
+  styleColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
 
-  if (nsnull != styleColor) {
-    aPresContext->SetDefaultColor(styleColor->mColor);
-    aPresContext->SetDefaultBackgroundColor(styleColor->mBackgroundColor);
+  // See if the BODY has a background specified
+  if (!styleColor->BackgroundIsTransparent()) {
+    // Get the parent style context
+    nsIStyleContext*  parentContext = aContext->GetParent();
+
+    // Look at its 'background' property
+    const nsStyleColor* parentStyleColor;
+    parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
+
+    // See if it's 'transparent'
+    if (parentStyleColor->BackgroundIsTransparent()) {
+      // Have the parent (initial containing block) use the BODY's background
+      nsStyleColor* mutableStyleColor;
+      mutableStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
+
+      mutableStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
+      mutableStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags;
+      mutableStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
+      mutableStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
+      mutableStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
+      mutableStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
+      mutableStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
+
+      // Reset the BODY's background to transparent
+      mutableStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+      mutableStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+                                            NS_STYLE_BG_IMAGE_NONE;
+    }
+    NS_RELEASE(parentContext);
   }
+
   return NS_OK;
 }
 

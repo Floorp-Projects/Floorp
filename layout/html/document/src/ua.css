@@ -16,13 +16,10 @@
  */
 
 HTML {
-  background: inherit;
-  background-image: none;
   display: block;
 }
 
 BODY {
-  background: inherit;
   display: block;
   line-height: normal;
 
