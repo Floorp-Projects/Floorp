@@ -613,6 +613,10 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
           }
         } 
 
+        STOP_TIMER();
+
+#ifdef  RICKG_DEBUG
+
           //let's only grab this state once! 
         if(!gShowCRC) { 
           gShowCRC=1; //this only indicates we'll not initialize again. 
@@ -623,8 +627,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
             } 
           } 
         } 
-
-        STOP_TIMER();
 
         if(2==gShowCRC) { 
           if(mComputedCRC32!=mExpectedCRC32) { 
@@ -640,6 +642,9 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
           else result = aSink->DidBuildModel(0); 
         } 
         else result=aSink->DidBuildModel(0); 
+#else
+        result=aSink->DidBuildModel(0); 
+#endif
 
         if(mDTDDebug) { 
           mDTDDebug->DumpVectorRecord(); 
@@ -1103,7 +1108,10 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     result=CollectSkippedContent(aNode,theAttrCount); 
   } 
 
+  STOP_TIMER();
+
   if(mParser) {
+
     nsAutoString      charsetValue;
     nsCharsetSource   charsetSource;
     CObserverService& theService=mParser->GetObserverService();
@@ -1115,8 +1123,14 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
                              charsetValue,charsetSource);
   }
 
+  START_TIMER();
 
   if(NS_SUCCEEDED(result)) {
+
+#ifdef RICKG_DEBUG
+
+    STOP_TIMER();
+
     if(eHTMLTag_meta==aTag) { 
       PRInt32 theCount=aNode.GetAttributeCount(); 
       if(1<theCount){ 
@@ -1136,6 +1150,11 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
 
       } //if 
     }//if 
+
+    START_TIMER();
+
+#endif
+
 
     if(NS_OK==result) {
       result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
