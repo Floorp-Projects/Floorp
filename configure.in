@@ -591,6 +591,9 @@ AC_CHECK_HEADERS(fcntl.h limits.h malloc.h paths.h strings.h unistd.h)
 AC_CHECK_HEADERS(sys/bittypes.h sys/file.h sys/ioctl.h sys/time.h)
 AC_CHECK_HEADERS(getopt.h ioctl.h filio.h systeminfo.h compat.h)
 
+dnl These are all the places some variant of statfs can be hiding.
+AC_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
+
 case $target in
 *-aix4.3*)
 	;;
@@ -669,7 +672,7 @@ AC_FUNC_VFORK
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(ftime getcwd gethostname getwd mkdir mktime putenv rmdir select)
 AC_CHECK_FUNCS(socket strcspn strdup strerror strspn strstr strtol strtoul)
-AC_CHECK_FUNCS(uname qsort snprintf waitid fork1 remainder lchown)
+AC_CHECK_FUNCS(uname qsort snprintf waitid fork1 remainder lchown statvfs)
 AC_CHECK_FUNCS(localtime_r)
 
 AC_MSG_CHECKING(how to call gettimeofday)
