@@ -1016,36 +1016,6 @@ HRESULT CMozillaBrowser::Initialize()
         return E_FAIL;
     }
 
-    // Set the profile which the control will use
-    nsCOMPtr<nsIProfile> profileService = 
-             do_GetService(NS_PROFILE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-    {
-        return E_FAIL;
-    }
-
-    // Make a new default profile
-    nsAutoString newProfileName(NS_LITERAL_STRING("MozillaControl"));
-    PRBool profileExists = PR_FALSE;
-    rv = profileService->ProfileExists(newProfileName.get(), &profileExists);
-    if (NS_FAILED(rv))
-    {
-        return E_FAIL;
-    }
-    else if (!profileExists)
-    {
-        rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
-        if (NS_FAILED(rv))
-        {
-            return E_FAIL;
-        }
-    }
-    rv = profileService->SetCurrentProfile(newProfileName.get());
-    if (NS_FAILED(rv))
-    {
-        return E_FAIL;
-    }
-
     // Stuff in here only needs to be done once
     static BOOL bRegisterComponents = FALSE;
     if (!bRegisterComponents)
@@ -1080,6 +1050,37 @@ HRESULT CMozillaBrowser::Initialize()
             do_GetService(NS_WINDOWWATCHER_CONTRACTID);
         if (watcher)
             watcher->SetWindowCreator(windowCreator);
+    }
+
+    // Set the profile which the control will use
+    nsCOMPtr<nsIProfile> profileService = 
+             do_GetService(NS_PROFILE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+    {
+        return E_FAIL;
+    }
+
+    // Make a new default profile
+    nsAutoString newProfileName(NS_LITERAL_STRING("MozillaControl"));
+    PRBool profileExists = PR_FALSE;
+    rv = profileService->ProfileExists(newProfileName.get(), &profileExists);
+    if (NS_FAILED(rv))
+    {
+        return E_FAIL;
+    }
+    else if (!profileExists)
+    {
+        rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
+        if (NS_FAILED(rv))
+        {
+            return E_FAIL;
+        }
+    }
+
+    rv = profileService->SetCurrentProfile(newProfileName.get());
+    if (NS_FAILED(rv))
+    {
+        return E_FAIL;
     }
 
 #ifdef HACK_NON_REENTRANCY
