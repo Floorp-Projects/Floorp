@@ -53,11 +53,13 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-
-
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
+
+# have to put this here, instead of in rules.mk, so that Java gets
+# built first
+all:: buildJava
 
 include $(CORE_DEPTH)/coreconf/rules.mk
 
@@ -70,6 +72,8 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
+
+include rules.mk
 
 #
 # The public NSS headers from an NSS binary release are now unpacked in
