@@ -60,10 +60,14 @@ Contributors:
       <textbox id="identity.signing_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
              pref="true" preftype="wstring" prefattribute="value" 
              prefstring="mail.identity.%identitykey%.signing_cert_name" readonly="true" disabled="true"/>
- 
+
       <button id="signingCertSelectButton"
               label="&certificate.button;"
               oncommand="smimeSelectCert('identity.signing_cert_name')"/>
+ 
+      <button id="signingCertClearButton"
+              label="&certificate_clear.button;"
+              oncommand="smimeClearCert('identity.signing_cert_name')"/>
     </hbox>
   </groupbox>
 
@@ -87,10 +91,14 @@ Contributors:
       <textbox id="identity.encryption_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
                pref="true" preftype="wstring" prefattribute="value" 
                prefstring="mail.identity.%identitykey%.encryption_cert_name" readonly="true" disabled="true"/>
-      
+
       <button id="encryptionCertSelectButton"
               label="&certificate.button;"
               oncommand="smimeSelectCert('identity.encryption_cert_name')"/>
+      
+      <button id="encryptionCertClearButton"
+              label="&certificate_clear.button;"
+              oncommand="smimeClearCert('identity.encryption_cert_name')"/>
     </hbox>
   </groupbox>    
 </page>

@@ -1,5 +1,5 @@
 <!ENTITY securityTitle.label "Security">
-<!ENTITY securityHeading.label "To send and receive signed or encrypted messages, you must specify both a digital signing certificate and an encryption certificate.">
+<!ENTITY securityHeading.label "To send and receive signed or encrypted messages, you should specify both a digital signing certificate and an encryption certificate.">
 <!ENTITY encryptionGroupTitle.label "Encryption">
 <!ENTITY encryptionChoiceLabel.label "Default encryption setting when sending messages:">
 <!ENTITY neverEncrypt.label "Never (do not use encryption)">
@@ -7,6 +7,7 @@
 <!ENTITY encryptionCert.message "Use this certificate to encrypt &amp; decrypt messages sent to you:">
 <!ENTITY encryptionCert.notselected "No certificate set">
 <!ENTITY certificate.button "Select...">
+<!ENTITY certificate_clear.button "Clear">
 <!ENTITY signingGroupTitle.label "Digital Signing">
 <!ENTITY signMessage.label "Digitally sign messages (by default)">
 <!ENTITY signingCert.message "Use this certificate to digitally sign messages you send:">

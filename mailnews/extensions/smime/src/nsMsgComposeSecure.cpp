@@ -879,12 +879,6 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
 		goto FAIL;
 	}
 
-	if ((mSelfEncryptionCert == nsnull) && aSign) {
-    SetError(sendReport, NS_LITERAL_STRING("SignNoSenderEncryptionCert").get());
-    res = NS_ERROR_FAILURE;
-    goto FAIL;
-  }
-
 	if ((mSelfEncryptionCert == nsnull) && aEncrypt) {
     SetError(sendReport, NS_LITERAL_STRING("NoSenderEncryptionCert").get());
     res = NS_ERROR_FAILURE;

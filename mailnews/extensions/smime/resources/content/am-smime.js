@@ -41,14 +41,16 @@ var gBrandBundle;
 var gSmimePrefbranch;
 var gEncryptionChoicesLocked;
 var gSigningChoicesLocked;
+const kEncryptionCertPref = "identity.encryption_cert_name";
+const kSigningCertPref = "identity.signing_cert_name";
 
 function onInit() 
 {
   // initialize all of our elements based on the current identity values....
-  gEncryptionCertName = document.getElementById("identity.encryption_cert_name");
+  gEncryptionCertName = document.getElementById(kEncryptionCertPref);
   gHiddenEncryptionPolicy = document.getElementById("identity.encryptionpolicy");
   gEncryptionChoices = document.getElementById("encryptionChoices");
-  gSignCertName       = document.getElementById("identity.signing_cert_name");
+  gSignCertName       = document.getElementById(kSigningCertPref);
   gSignMessages       = document.getElementById("identity.sign_mail");
   gEncryptAlways      = document.getElementById("encrypt_mail_always");
   gNeverEncrypt       = document.getElementById("encrypt_mail_never");
@@ -80,7 +82,7 @@ function onInit()
     gNeverEncrypt.setAttribute("disabled", true);
   }
   else {
-    enableEncryptionControls();
+    enableEncryptionControls(true);
   }
 
   gSignCertName.value = gIdentity.getUnicharAttribute("signing_cert_name");
@@ -90,7 +92,7 @@ function onInit()
     gSignMessages.setAttribute("disabled", true);
   }
   else {
-    enableSigningControls();
+    enableSigningControls(true);
   }
 
   // Always start with enabling signing and encryption cert select buttons.
@@ -167,6 +169,12 @@ function disableIfLocked( prefstrArray )
       }
       else {
         element.setAttribute("disabled", "true");
+        if (id == "signingCertSelectButton") {
+          document.getElementById("signingCertClearButton").setAttribute("disabled", "true");
+        }
+        else if (id == "encryptionCertSelectButton") {
+          document.getElementById("encryptionCertClearButton").setAttribute("disabled", "true");
+        }
       }
     }
   }
@@ -248,7 +256,7 @@ function checkOtherCert(nickname, pref, usage, msgNeedCertWantSame, msgWantSame,
 
   if (userWantsSameCert) {
     otherCertInfo.value = nickname;
-    enabler();
+    enabler(true);
   }
 }
 
@@ -265,13 +273,10 @@ function smimeSelectCert(smime_cert)
   var certUsage;
   var selectEncryptionCert;
 
-  var encryptionCertPrefName = "identity.encryption_cert_name";
-  var signingCertPrefName = "identity.signing_cert_name";
-
-  if (smime_cert == encryptionCertPrefName) {
+  if (smime_cert == kEncryptionCertPref) {
     selectEncryptionCert = true;
     certUsage = email_recipient_cert_usage;
-  } else if (smime_cert == signingCertPrefName) {
+  } else if (smime_cert == kSigningCertPref) {
     selectEncryptionCert = false;
     certUsage = email_signing_cert_usage;
   }
@@ -302,19 +307,19 @@ function smimeSelectCert(smime_cert)
       certInfo.value = x509cert.nickname;
 
       if (selectEncryptionCert) {
-        enableEncryptionControls();
+        enableEncryptionControls(true);
 
         checkOtherCert(certInfo.value,
-          signingCertPrefName, email_signing_cert_usage, 
+          kSigningCertPref, email_signing_cert_usage, 
           "signing_needCertWantSame", 
           "signing_wantSame", 
           "signing_needCertWantToSelect",
           enableSigningControls);
       } else {
-        enableSigningControls();
+        enableSigningControls(true);
 
         checkOtherCert(certInfo.value,
-          encryptionCertPrefName, email_recipient_cert_usage, 
+          kEncryptionCertPref, email_recipient_cert_usage, 
           "encryption_needCertWantSame", 
           "encryption_wantSame", 
           "encryption_needCertWantToSelect",
@@ -322,25 +327,72 @@ function smimeSelectCert(smime_cert)
       }
     }
   }
+
+  enableCertSelectButtons();
 }
 
-function enableEncryptionControls()
+function enableEncryptionControls(do_enable)
 {
-  if (!gEncryptionChoicesLocked) {
-  gEncryptAlways.removeAttribute("disabled");
-  gNeverEncrypt.removeAttribute("disabled");
-}
+  if (gEncryptionChoicesLocked)
+    return;
+
+  if (do_enable) {
+    gEncryptAlways.removeAttribute("disabled");
+    gNeverEncrypt.removeAttribute("disabled");
+  }
+  else {
+    gEncryptAlways.setAttribute("disabled", "true");
+    gNeverEncrypt.setAttribute("disabled", "true");
+    gEncryptionChoices.selectedItem = document.getElementById('encrypt_mail_never');
+  }
 }
 
-function enableSigningControls()
+function enableSigningControls(do_enable)
 {
-  if (!gSigningChoicesLocked) {
-  gSignMessages.removeAttribute("disabled");
+  if (gSigningChoicesLocked)
+    return;
+
+  if (do_enable) {
+    gSignMessages.removeAttribute("disabled");
+  }
+  else {
+    gSignMessages.setAttribute("disabled", "true");
+    gSignMessages.checked = false;
   }
 }
 
 function enableCertSelectButtons()
 {
   document.getElementById("signingCertSelectButton").removeAttribute("disabled");
+
+  if (document.getElementById('identity.signing_cert_name').value.length)
+    document.getElementById("signingCertClearButton").removeAttribute("disabled");
+  else
+    document.getElementById("signingCertClearButton").setAttribute("disabled", "true");
+
   document.getElementById("encryptionCertSelectButton").removeAttribute("disabled");
+
+  if (document.getElementById('identity.encryption_cert_name').value.length)
+    document.getElementById("encryptionCertClearButton").removeAttribute("disabled");
+  else
+    document.getElementById("encryptionCertClearButton").setAttribute("disabled", "true");
 }
+
+function smimeClearCert(smime_cert)
+{
+  var certInfo = document.getElementById(smime_cert);
+  if (!certInfo)
+    return;
+
+  certInfo.setAttribute("disabled", "true");
+  certInfo.value = "";
+
+  if (smime_cert == kEncryptionCertPref) {
+    enableEncryptionControls(false);
+  } else if (smime_cert == kSigningCertPref) {
+    enableSigningControls(false);
+  }
+  
+  enableCertSelectButtons();
+}
+
