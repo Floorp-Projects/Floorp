@@ -26,6 +26,8 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsChromeFactory.obj    \
 	$(NULL)
 
+LINCS = $(LINCS) -I..\src         # for implementation headers
+
 # XXX linking in raptor is a heinous crime that will go away once we
 # have a more DOM-based mechanism for constructing elements and
 # hooking in to their changes.
