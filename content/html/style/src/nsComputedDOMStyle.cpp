@@ -691,7 +691,7 @@ nsComputedDOMStyle::GetCssFloat(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Display,(const nsStyleStruct*&)display,aFrame);
 
   if(display) {
-    const nsCString& cssFloat =
+    const nsAFlatCString& cssFloat =
       nsCSSProps::SearchKeywordTable(display->mFloats,
 	                                 nsCSSProps::kFloatKTable);
     val->SetString(cssFloat.get());
@@ -951,7 +951,7 @@ nsComputedDOMStyle::GetFontStyle(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font, aFrame);
 
   if(font) {
-    const nsCString& style=
+    const nsAFlatCString& style=
       nsCSSProps::SearchKeywordTable(font->mFont.style,
                                      nsCSSProps::kFontStyleKTable);
     val->SetString(style.get());
@@ -975,7 +975,7 @@ nsComputedDOMStyle::GetFontWeight(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font, aFrame);
 
   if(font) {
-    const nsCString& str_weight=
+    const nsAFlatCString& str_weight=
       nsCSSProps::SearchKeywordTable(font->mFont.weight,
                                      nsCSSProps::kFontWeightKTable);
     if(str_weight.Length()>0) {
@@ -1006,7 +1006,7 @@ nsComputedDOMStyle::GetFontVariant(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font, aFrame);
 
   if(font) {
-    const nsCString& variant=
+    const nsAFlatCString& variant=
       nsCSSProps::SearchKeywordTable(font->mFont.variant,
                                      nsCSSProps::kFontVariantKTable);
     val->SetString(variant.get());
@@ -1032,7 +1032,7 @@ nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
   if(color) {
     if ((color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) &&
         !(color->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT)) {
-      const nsCString& backgroundColor =
+      const nsAFlatCString& backgroundColor =
         nsCSSProps::SearchKeywordTable(NS_STYLE_BG_COLOR_TRANSPARENT,
                                        nsCSSProps::kBackgroundColorKTable);
       val->SetString(backgroundColor.get());
@@ -1119,7 +1119,7 @@ nsComputedDOMStyle::GetBorderCollapse(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_TableBorder, (const nsStyleStruct*&)table, aFrame);
 
   if(table) {
-    const nsCString& ident=
+    const nsAFlatCString& ident=
       nsCSSProps::SearchKeywordTable(table->mBorderCollapse,
                                      nsCSSProps::kBorderCollapseKTable);
     val->SetString(ident.get());
@@ -1325,7 +1325,7 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline, aFrame);
 
   if(outline) {
-    const nsCString& style=
+    const nsAFlatCString& style=
       nsCSSProps::SearchKeywordTable(outline->GetOutlineStyle(),
                                      nsCSSProps::kBorderStyleKTable);
     val->SetString(style.get());
@@ -1429,7 +1429,7 @@ nsComputedDOMStyle::GetTextAlign(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)text, aFrame);
 
   if(text) {
-    const nsCString& align=
+    const nsAFlatCString& align=
       nsCSSProps::SearchKeywordTable(text->mTextAlign,
                                      nsCSSProps::kTextAlignKTable);
     val->SetString(align.get());
@@ -1453,7 +1453,7 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_TextReset,(const nsStyleStruct*&)text,aFrame);
 
   if(text) {
-    const nsCString& decoration=
+    const nsAFlatCString& decoration=
       nsCSSProps::SearchKeywordTable(text->mTextDecoration,
 	                                 nsCSSProps::kTextDecorationKTable);
     val->SetString(decoration.get());
@@ -1477,7 +1477,7 @@ nsComputedDOMStyle::GetVisibility(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Visibility,(const nsStyleStruct*&)visibility,aFrame);
 
   if(visibility) {
-    const nsCString& value=
+    const nsAFlatCString& value=
       nsCSSProps::SearchKeywordTable(visibility->mVisible,
                                      nsCSSProps::kVisibilityKTable);
     val->SetString(value.get());
@@ -2610,7 +2610,7 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide,
       case eStyleUnit_Enumerated:
       case eStyleUnit_Chars:
         {
-          const nsCString& width=
+          const nsAFlatCString& width=
             nsCSSProps::SearchKeywordTable(coord.GetIntValue(),
                                            nsCSSProps::kBorderWidthKTable);
           val->SetString(width.get()); break;
@@ -2718,7 +2718,7 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide,
   GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border, aFrame);
 
   if(border) {
-    const nsCString& style=
+    const nsAFlatCString& style=
       nsCSSProps::SearchKeywordTable(border->GetBorderStyle(aSide),
                                      nsCSSProps::kBorderStyleKTable);
     val->SetString(style.get());

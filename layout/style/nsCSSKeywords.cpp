@@ -86,7 +86,7 @@ nsCSSKeywords::ReleaseTable(void)
 }
 
 nsCSSKeyword 
-nsCSSKeywords::LookupKeyword(const nsCString& aKeyword)
+nsCSSKeywords::LookupKeyword(const nsACString& aKeyword)
 {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
   if (gKeywordTable) {
@@ -96,7 +96,7 @@ nsCSSKeywords::LookupKeyword(const nsCString& aKeyword)
 }
 
 nsCSSKeyword 
-nsCSSKeywords::LookupKeyword(const nsString& aKeyword)
+nsCSSKeywords::LookupKeyword(const nsAString& aKeyword)
 {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
   if (gKeywordTable) {
@@ -105,14 +105,14 @@ nsCSSKeywords::LookupKeyword(const nsString& aKeyword)
   return eCSSKeyword_UNKNOWN;
 }
 
-const nsCString& 
+const nsAFlatCString& 
 nsCSSKeywords::GetStringValue(nsCSSKeyword aKeyword)
 {
   NS_ASSERTION(gKeywordTable, "no lookup table, needs addref");
   if (gKeywordTable) {
     return gKeywordTable->GetStringValue(PRInt32(aKeyword));
   } else {
-    static nsCString kNullStr;
+    static nsDependentCString kNullStr("");
     return kNullStr;
   }
 }

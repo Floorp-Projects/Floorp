@@ -2267,7 +2267,8 @@ const nsAReadableString& CStyleToken::GetStringValue(void)
  * @return
  */
 const char* GetTagName(PRInt32 aTag) {
-  const nsCString& result = nsHTMLTags::GetStringValue((nsHTMLTag) aTag);
+  const nsAFlatCString& result =
+    nsHTMLTags::GetStringValue((nsHTMLTag) aTag);
   if (0 == result.Length()) {
     if(aTag>=eHTMLTag_userdefined)
       return gUserdefined;

@@ -42,9 +42,9 @@
 #include "nsColor.h"
 
 struct nsStr;
-class nsCString;
-class nsACString;
+class nsAFlatCString;
 class nsAString;
+class nsACString;
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -71,7 +71,7 @@ public:
   static nsColorName LookupName(const nsAString& aName);
   static nsColorName LookupName(const nsACString& aName);
 
-  static const nsCString& GetStringValue(nsColorName aColorName);
+  static const nsAFlatCString& GetStringValue(nsColorName aColorName);
 
   // Color id to rgb value table
   static const nscolor kColors[];
