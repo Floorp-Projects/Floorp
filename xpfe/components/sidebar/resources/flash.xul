@@ -30,11 +30,11 @@
 
   <html:script src="chrome://sidebar/content/flash.js" />
 
-  <tree id="flashtree"
+  <html:div style="width:100px; height:100px" flex="1">
+  <tree id="flash-tree"
         ref="NC:FlashRoot"
-        flex="100%"
-        style="height: 100%"
-        datasources="rdf:null"
+        style="width: 100%; height: 100%"
+        datasources="datasources="rdf:null"
         rdf:containment="http://home.netscape.com/NC-rdf#child" 
         onclick="OpenURL(event.target.parentNode.parentNode);">
 
@@ -48,4 +48,5 @@
       </treechildren>
     </template>
   </tree>
+  </html:div>
 </window>

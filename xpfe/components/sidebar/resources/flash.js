@@ -27,12 +27,10 @@ var profiledir = 'chrome://sidebar/content/';
 // the location of the flash registry.
 var flashdb = profiledir + 'flash-registry.rdf';
 
-function FlashInit()
+function flashInit()
 {
     // Initialize the Flash panel.
-    dump('Init!\n');
-
-    var tree = document.getElementById('flashtree');
+    var tree = document.getElementById('flash-tree');
 
     // Install all the datasources named in the Flash Registry into
     // the tree control. Datasources are listed as members of the
@@ -47,7 +45,8 @@ function FlashInit()
         registry = registry.QueryInterface(Components.interfaces.nsIRDFDataSource);
 
         var remote = registry.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-        remote.Init(flashdb); // this will throw if it's already been opened and registered.
+        // This will throw if it's already been opened and registered.
+        remote.Init(flashdb);
 
         // read it in synchronously.
         remote.Refresh(true);
@@ -96,7 +95,7 @@ function FlashInit()
 
             if (pollInterval) {
                 dump(service.Value + ': setting poll interval to ' + pollInterval + 'sec.\n');
-                Schedule(service.Value, pollInterval);
+                flashSchedule(service.Value, pollInterval);
             }
         }
         catch (ex) {
@@ -115,7 +114,7 @@ function FlashInit()
 }
 
 
-function Reload(url, pollInterval)
+function flashReload(url, pollInterval)
 {
     // Reload the specified datasource and reschedule.
     dump('Reload(' + url + ', ' + pollInterval + ')\n');
@@ -127,30 +126,29 @@ function Reload(url, pollInterval)
     datasource.Refresh(false);
 
     // Reschedule
-    Schedule(url, pollInterval);
+    flashSchedule(url, pollInterval);
 }
 
-function Schedule(url, pollInterval)
+function flashSchedule(url, pollInterval)
 {
     setTimeout('Reload("' + url + '", ' + pollInterval + ')', pollInterval * 1000);
 }
 
-function OpenURL(node)
+function flashOpenURL(node)
 {
     dump("open-url(" + node + ")\n");
 }
 
-
 // To get around "window.onload" not working in viewer.
-function Boot()
+function flashBoot()
 {
-    var tree = document.getElementById('flashtree');
+    var tree = document.getElementById('flash-tree');
     if (tree == null) {
-        setTimeout(Boot, 0);
+        setTimeout(flashBoot, 1);
     }
     else {
-        FlashInit();
+        flashInit();
     }
 }
 
-setTimeout('Boot()', 0);
+setTimeout('flashBoot()', 0);
