@@ -528,9 +528,14 @@ des_ecb_test(blapitestInfo *info)
 	SECStatus rv;
 	DESContext *descx;
 	PRIntervalTime time1, time2;
+	int i, numiter = info->repetitions;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
+		descx = DES_CreateContext(info->key.data, NULL, NSS_DES, info->encrypt);
+		DES_DestroyContext(descx, PR_TRUE);
+	}
 	descx = DES_CreateContext(info->key.data, NULL, NSS_DES, info->encrypt);
 	TIMEFINISH("DES ECB CONTEXT CREATE", info->key.len);
 	if (!descx) {
@@ -550,10 +555,16 @@ des_cbc_test(blapitestInfo *info)
 	SECStatus rv;
 	DESContext *descx;
 	PRIntervalTime time1, time2;
+	int i, numiter = info->repetitions;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, DES_KEY_LENGTH, "tmp.iv");
 	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
+		descx = DES_CreateContext(info->key.data, info->iv.data, NSS_DES_CBC, 
+		                          info->encrypt);
+		DES_DestroyContext(descx, PR_TRUE);
+	}
 	descx = DES_CreateContext(info->key.data, info->iv.data, NSS_DES_CBC, 
 	                          info->encrypt);
 	TIMEFINISH("DES CBC CONTEXT CREATE", info->key.len);
@@ -593,9 +604,15 @@ des_ede_ecb_test(blapitestInfo *info)
 	SECStatus rv;
 	DESContext *descx;
 	PRIntervalTime time1, time2;
+	int i, numiter = info->repetitions;
 	fillitem(&info->key, 3*DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
+		descx = DES_CreateContext(info->key.data, NULL, NSS_DES_EDE3,
+		                          info->encrypt);
+		DES_DestroyContext(descx, PR_TRUE);
+	}
 	descx = DES_CreateContext(info->key.data, NULL, NSS_DES_EDE3,
 	                          info->encrypt);
 	TIMEFINISH("3DES ECB CONTEXT CREATE", info->key.len);
@@ -616,10 +633,16 @@ des_ede_cbc_test(blapitestInfo *info)
 	SECStatus rv;
 	DESContext *descx;
 	PRIntervalTime time1, time2;
+	int i, numiter = info->repetitions;
 	fillitem(&info->key, 3*DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, DES_KEY_LENGTH, "tmp.iv");
 	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
+		descx = DES_CreateContext(info->key.data, info->iv.data, 
+		                          NSS_DES_EDE3_CBC, info->encrypt);
+		DES_DestroyContext(descx, PR_TRUE);
+	}
 	descx = DES_CreateContext(info->key.data, info->iv.data, NSS_DES_EDE3_CBC, 
 	                          info->encrypt);
 	TIMEFINISH("3DES CBC CONTEXT CREATE", info->key.len);
@@ -662,11 +685,15 @@ rc2_ecb_test(blapitestInfo *info)
 	SECStatus rv;
 	RC2Context *rc2cx;
 	PRIntervalTime time1, time2;
-	int i, numiter;
-	numiter = info->repetitions;
+	int i, numiter = info->repetitions;
 	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
+		rc2cx = RC2_CreateContext(info->key.data, info->key.len, NULL, 
+		                          NSS_RC2, info->key.len);
+		RC2_DestroyContext(rc2cx, PR_TRUE);
+	}
 	rc2cx = RC2_CreateContext(info->key.data, info->key.len, NULL, 
 	                          NSS_RC2, info->key.len);
 	TIMEFINISH("RC2 ECB CONTEXT CREATE", info->key.len);
@@ -702,12 +729,16 @@ rc2_cbc_test(blapitestInfo *info)
 	SECStatus rv;
 	RC2Context *rc2cx;
 	PRIntervalTime time1, time2;
-	int i, numiter;
-	numiter = info->repetitions;
+	int i, numiter = info->repetitions;
 	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, info->bufsize, "tmp.iv");
 	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
+		rc2cx = RC2_CreateContext(info->key.data, info->key.len, info->iv.data, 
+		                          NSS_RC2_CBC, info->key.len);
+		RC2_DestroyContext(rc2cx, PR_TRUE);
+	}
 	rc2cx = RC2_CreateContext(info->key.data, info->key.len, info->iv.data, 
 	                          NSS_RC2_CBC, info->key.len);
 	TIMEFINISH("RC2 CBC CONTEXT CREATE", info->key.len);
@@ -842,8 +873,8 @@ rc5_ecb_test(blapitestInfo *info)
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	TIMESTART();
 	for (i=0; i<numiter-1; i++) {
-	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
-	                          NULL, NSS_RC5);
+		rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
+		                          NULL, NSS_RC5);
 		RC5_DestroyContext(rc5cx, PR_TRUE);
 	}
 	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
@@ -894,8 +925,8 @@ rc5_cbc_test(blapitestInfo *info)
 	fillitem(&info->iv, info->bufsize, "tmp.iv");
 	TIMESTART();
 	for (i=0; i<numiter-1; i++) {
-	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
-	                          info->iv.data, NSS_RC5_CBC);
+		rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
+		                          info->iv.data, NSS_RC5_CBC);
 		RC5_DestroyContext(rc5cx, PR_TRUE);
 	}
 	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
@@ -968,7 +999,13 @@ rsa_test(blapitestInfo *info)
 		expitem.data[1] = (info->rsapubexp >> 16) & 0xff;
 		expitem.data[2] = (info->rsapubexp >>  8) & 0xff;
 		expitem.data[3] = (info->rsapubexp & 0xff);
+		TIMESTART();
+		for (i=0; i<numiter-1; i++) {
+			key = RSA_NewKey(info->keysize*8, &expitem);
+			PORT_FreeArena(key->arena, PR_TRUE);
+		}
 		key = RSA_NewKey(info->keysize*8, &expitem);
+		TIMEFINISH("RSA KEY GEN", info->keysize);
 		rsakey_to_file(key, "tmp.key");
 	}
 	if (key->modulus.data[0] == 0) {
@@ -1020,12 +1057,19 @@ pqg_test(blapitestInfo *info)
 {
 	SECStatus rv = SECSuccess;
 	PQGVerify *verify;
+	PRIntervalTime time1, time2;
 	int i, numiter;
 	numiter = info->repetitions;
 	if (info->pqg.len > 0) {
 		info->params = pqg_from_filedata(&info->pqg);
 	} else {
+		TIMESTART();
+		for (i=0; i<numiter-1; i++) {
+			rv = PQG_ParamGen(info->keysize, &info->params, &verify);
+			PORT_FreeArena(info->params->arena, PR_TRUE);
+		}
 		rv = PQG_ParamGen(info->keysize, &info->params, &verify);
+		TIMEFINISH("PQG PARAM GEN", info->keysize);
 		pqg_to_file(info->params, "tmp.pqg");
 	}
 	CHECKERROR(rv, __LINE__);
