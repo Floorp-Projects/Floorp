@@ -69,6 +69,8 @@ public:
 protected:
   nsViewerApp();
 
+  void Destroy();
+
   nsIAppShell* mAppShell;
   nsIPref* mPrefs;
   nsString mStartURL;
@@ -77,7 +79,6 @@ protected:
   PRBool mCrawl;
   nsString mInputFileName;
   PRInt32 mNumSamples;
-  nsVoidArray mInputFiles;
   PRInt32 mDelay;
   PRInt32 mRepeatCount;
   nsWebCrawler* mCrawler;

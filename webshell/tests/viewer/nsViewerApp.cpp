@@ -58,6 +58,7 @@ nsViewerApp::nsViewerApp()
 
 nsViewerApp::~nsViewerApp()
 {
+  Destroy();
 }
 
 NS_IMPL_ADDREF(nsViewerApp)
@@ -81,6 +82,13 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
     return NS_OK;
   }
   return NS_NOINTERFACE;
+}
+
+void
+nsViewerApp::Destroy()
+{
+  NS_IF_RELEASE(mPrefs);
+  NS_IF_RELEASE(mCrawler);
 }
 
 nsresult
@@ -149,6 +157,7 @@ nsViewerApp::Initialize(int argc, char** argv)
 nsresult
 nsViewerApp::Exit()
 {
+  Destroy();
   mAppShell->Exit();
   return NS_OK;
 }
@@ -760,7 +769,7 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
 
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 
-void DestroyConsole()
+static void DestroyConsole()
 {
  if (gConsole) {
     gConsole->SetNotification(NULL);
@@ -769,7 +778,7 @@ void DestroyConsole()
   }
 }
 
-void ShowConsole(nsBrowserWindow* aWindow)
+static void ShowConsole(nsBrowserWindow* aWindow)
 {
     HWND hWnd = aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
     if (!gConsole) {
