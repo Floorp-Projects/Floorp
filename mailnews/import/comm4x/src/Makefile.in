@@ -79,6 +79,7 @@ REQUIRES	= xpcom \
 		  profile \
 		  prefmigr \
 		  unicharutil \
+	   	  libreg \
 		  $(NULL)
 
 CPPSRCS		= 	\
