@@ -45,6 +45,10 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #ifdef WIN32 
 #include <windows.h>
 #endif
+#ifdef XP_OS2
+#include <os2.h>
+#endif
+
 static int gKeepRunning = 0;
 static nsIEventQueue* gEventQ = nsnull;
 /////////////////////////////////
@@ -366,10 +370,19 @@ main(int argc, char* argv[])
 #ifdef XP_MAC
     /* Mac stuff is missing here! */
 #else
+#ifdef XP_OS2
+    QMSG qmsg;
+
+    if (WinGetMsg(0, &qmsg, 0, 0, 0))
+      WinDispatchMsg(0, &qmsg);
+    else
+      gKeepRunning = FALSE;
+#else
     PLEvent *gEvent;
     rv = gEventQ->GetEvent(&gEvent);
     rv = gEventQ->HandleEvent(gEvent);
 #endif /* XP_UNIX */
+#endif /* XP_OS2 */
 #endif /* !WIN32 */
     }
 
