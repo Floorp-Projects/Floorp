@@ -37,7 +37,7 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsINntpIncomingServer.h"
 
-#if 0
+#ifdef DEBUG_jefft
 #include "nsIImapIncomingServer.h"
 #endif
 
@@ -1531,7 +1531,7 @@ nsGetImapRoot(nsFileSpec &result)
 
     // temporary stuff. for now - should get everything from the mail session
   if (gImapRoot == nsnull) {
-#if 0
+#ifdef DEBUG_jefft
     nsIMsgMailSession *session;
     rv = nsServiceManager::GetService(kMsgMailSessionCID,
                                       nsIMsgMailSession::GetIID(),
@@ -1878,7 +1878,7 @@ nsresult nsBuildImapMessageURI(const nsFileSpec& path, PRUint32 key, char** uri)
 	if(!uri)
 		return NS_ERROR_NULL_POINTER;
 
-	char *folderURI;
+	char *folderURI = nsnull;
 
 	nsPath2URI(kImapMessageRootURI, path, &folderURI);
 
