@@ -71,9 +71,8 @@ function toJavaScriptConsole()
 
 function javaItemEnabling()
 {
-    var enabled = gJVMMgr.JavaEnabled();
     var element = document.getElementById("java");
-    if (enabled)
+    if (navigator.javaEnabled())
       element.removeAttribute("disabled");
     else
       element.setAttribute("disabled", "true");
@@ -81,7 +80,7 @@ function javaItemEnabling()
             
 function toJavaConsole()
 {
-    gJVMMgr.ShowJavaConsole();
+    gJVMMgr.showJavaConsole();
 }
 
 function toOpenWindowByType( inType, uri )
