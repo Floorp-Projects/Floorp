@@ -282,14 +282,12 @@
     <toolbar>
 	    <titledbutton src="resource:/res/toolbar/ED_Undo.gif"
 	    				align="bottom" value="Undo"
-	    				onclick="EditorUndo()"
-	    				style="background-color:rgb(192,192,50)">
+	    				onclick="EditorUndo()">
 	    </titledbutton>
 	    
 	    <titledbutton src="resource:/res/toolbar/ED_Redo.gif"
 	    				align="bottom" value="Redo"
-	    				onclick="EditorRedo()"
-	    				style="background-color:rgb(192,192,50)">
+	    				onclick="EditorRedo()">
 	    </titledbutton>
 	    
 	    <titledbutton src="resource:/res/toolbar/ED_Cut.gif"
@@ -353,7 +351,7 @@
   </html:div>
 
   <html:div html:id="main">
-     <html:iframe html:name="content" html:src="EditorInitPage.html" html:width="100%" html:height="450"></html:iframe>
+     <html:iframe html:name="content" html:src="EditorInitPagePlain.html" html:width="100%" html:height="450"></html:iframe>
   </html:div>
 
   <html:div html:id="footer">
