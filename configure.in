@@ -885,9 +885,12 @@ MOZ_ARG_DISABLE_BOOL(build-xpfe,
 [  --disable-build-xpfe    Dont build mozilla/xpfe],
   MOZ_BUILD_XPFE= )
 
-MOZ_ARG_ENABLE_BOOL(editor,
-[  --enable-editor         Enable editor],
-  MOZ_EDITOR=1)
+dnl build editor by default
+MOZ_EDITOR=1
+
+MOZ_ARG_DISABLE_BOOL(editor,
+[  --disable-editor         Dont build the editor],
+  MOZ_EDITOR= )
 
 dnl Remove this once clipboard is working.
 MOZ_ARG_ENABLE_BOOL(new-clipboard,
