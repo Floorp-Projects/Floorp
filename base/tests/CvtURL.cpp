@@ -23,12 +23,9 @@
 #include "prprf.h"
 #include "prtime.h"
 
-static nsCharSetID ConvertCharacterSetName(const char* aName)
+static nsString* ConvertCharacterSetName(const char* aName)
 {
-  if (nsCRT::strcasecmp(aName, "iso-latin-1") == 0) {
-    return eCharSetID_IsoLatin1;
-  }
-  return (nsCharSetID) -1;
+  return new nsString(aName);
 }
 
 int main(int argc, char** argv)
@@ -39,7 +36,7 @@ int main(int argc, char** argv)
   }
 
   char* characterSetName = argv[2];
-  nsCharSetID cset = ConvertCharacterSetName(characterSetName);
+  nsString* cset = ConvertCharacterSetName(characterSetName);
   if (PRInt32(cset) < 0) {
     printf("illegal character set name: '%s'\n", characterSetName);
     return -1;

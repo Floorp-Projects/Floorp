@@ -109,8 +109,8 @@ public:
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
-  virtual nsCharSetID GetDocumentCharacterSet() const = 0;
-  virtual void SetDocumentCharacterSet(nsCharSetID aCharSetID) = 0;
+  virtual nsString* GetDocumentCharacterSet() const = 0;
+  virtual void SetDocumentCharacterSet(nsString* aCharSetID) = 0;
 
   /**
    * Access HTTP header data (this may also get set from other sources, like
