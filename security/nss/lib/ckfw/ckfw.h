@@ -38,7 +38,7 @@
 #define CKFW_H
 
 #ifdef DEBUG
-static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.5 $ $Date: 2004/07/29 22:51:00 $ $Name:  $";
+static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.6 $ $Date: 2004/11/18 23:51:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -76,6 +76,7 @@ static const char CKFW_CVS_ID[] = "@(#) $RCSfile: ckfw.h,v $ $Revision: 1.5 $ $D
  *  nssCKFWInstance_MayCreatePthreads
  *  nssCKFWInstance_CreateMutex
  *  nssCKFWInstance_GetConfigurationData
+ *  nssCKFWInstance_GetInitArgs 
  *
  *  -- private accessors --
  *  nssCKFWInstance_CreateSessionHandle
@@ -179,6 +180,16 @@ nssCKFWInstance_GetConfigurationData
 );
 
 /*
+ * nssCKFWInstance_GetInitArgs
+ *
+ */
+NSS_EXTERN CK_C_INITIALIZE_ARGS_PTR
+nssCKFWInstance_GetInitArgs
+(
+  NSSCKFWInstance *fwInstance
+);
+
+/*
  * nssCKFWInstance_CreateSessionHandle
  *
  */
@@ -236,17 +247,6 @@ nssCKFWInstance_CreateObjectHandle
 );
 
 /*
- * nssCKFWInstance_FindObjectHandle
- *
- */
-NSS_EXTERN CK_OBJECT_HANDLE
-nssCKFWInstance_FindObjectHandle
-(
-  NSSCKFWInstance *fwInstance,
-  NSSCKFWObject *fwObject
-);
-
-/*
  * nssCKFWInstance_ResolveObjectHandle
  *
  */
@@ -284,7 +284,7 @@ nssCKFWInstance_DestroyObjectHandle
  * nssCKFWInstance_FindObjectHandle
  *
  */
-NSS_IMPLEMENT CK_OBJECT_HANDLE
+NSS_EXTERN CK_OBJECT_HANDLE
 nssCKFWInstance_FindObjectHandle
 (
   NSSCKFWInstance *fwInstance,
@@ -1639,7 +1639,7 @@ nssCKFWObject_GetArena
  * nssCKFWObject_SetHandle
  *
  */
-NSS_IMPLEMENT CK_RV
+NSS_EXTERN CK_RV
 nssCKFWObject_SetHandle
 (
   NSSCKFWObject *fwObject,
@@ -1650,7 +1650,7 @@ nssCKFWObject_SetHandle
  * nssCKFWObject_GetHandle
  *
  */
-NSS_IMPLEMENT CK_OBJECT_HANDLE
+NSS_EXTERN CK_OBJECT_HANDLE
 nssCKFWObject_GetHandle
 (
   NSSCKFWObject *fwObject
