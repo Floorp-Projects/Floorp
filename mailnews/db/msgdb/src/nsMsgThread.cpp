@@ -47,137 +47,137 @@ NS_IMPL_ISUPPORTS1(nsMsgThread, nsMsgThread)
 
 nsMsgThread::nsMsgThread()
 {
-
+  
   MOZ_COUNT_CTOR(nsMsgThread);
-	Init();
+  Init();
 }
 nsMsgThread::nsMsgThread(nsMsgDatabase *db, nsIMdbTable *table)
 {
   MOZ_COUNT_CTOR(nsMsgThread);
-	Init();
-	m_mdbTable = table;
-	m_mdbDB = db;
-	if (db)
-		db->AddRef();
-
-	if (table && db)
-	{
-		table->GetMetaRow(db->GetEnv(), nsnull, nsnull, &m_metaRow);
-		InitCachedValues();
-	}
+  Init();
+  m_mdbTable = table;
+  m_mdbDB = db;
+  if (db)
+    db->AddRef();
+  
+  if (table && db)
+  {
+    table->GetMetaRow(db->GetEnv(), nsnull, nsnull, &m_metaRow);
+    InitCachedValues();
+  }
 }
 
 void nsMsgThread::Init()
 {
-	m_threadKey = nsMsgKey_None; 
-	m_threadRootKey = nsMsgKey_None;
-	m_numChildren = 0;		
-	m_numUnreadChildren = 0;	
-	m_flags = 0;
-	m_mdbTable = nsnull;
-	m_mdbDB = nsnull;
-	m_metaRow = nsnull;
-	m_cachedValuesInitialized = PR_FALSE;
-	NS_INIT_ISUPPORTS();
+  m_threadKey = nsMsgKey_None; 
+  m_threadRootKey = nsMsgKey_None;
+  m_numChildren = 0;		
+  m_numUnreadChildren = 0;	
+  m_flags = 0;
+  m_mdbTable = nsnull;
+  m_mdbDB = nsnull;
+  m_metaRow = nsnull;
+  m_cachedValuesInitialized = PR_FALSE;
+  NS_INIT_ISUPPORTS();
 }
 
 
 nsMsgThread::~nsMsgThread()
 {
   MOZ_COUNT_DTOR(nsMsgThread);
-	if (m_mdbTable)
-		m_mdbTable->Release();
-	if (m_mdbDB)
-		m_mdbDB->Release();
-	if (m_metaRow)
-		m_metaRow->Release();
+  if (m_mdbTable)
+    m_mdbTable->Release();
+  if (m_mdbDB)
+    m_mdbDB->Release();
+  if (m_metaRow)
+    m_metaRow->Release();
 }
 
 nsresult nsMsgThread::InitCachedValues()
 {
-	nsresult err = NS_OK;
-
-	if (!m_mdbDB || !m_metaRow)
-	    return NS_ERROR_NULL_POINTER;
-
-	if (!m_cachedValuesInitialized)
-	{
-		err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, &m_flags);
-	    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, &m_numChildren);
-		err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadIdColumnToken, &m_threadKey);
-	    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, &m_numUnreadChildren);
-		err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadRootKeyColumnToken, &m_threadRootKey, nsMsgKey_None);
+  nsresult err = NS_OK;
+  
+  if (!m_mdbDB || !m_metaRow)
+    return NS_ERROR_NULL_POINTER;
+  
+  if (!m_cachedValuesInitialized)
+  {
+    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, &m_flags);
+    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, &m_numChildren);
+    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadIdColumnToken, &m_threadKey);
+    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, &m_numUnreadChildren);
+    err = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadRootKeyColumnToken, &m_threadRootKey, nsMsgKey_None);
     // fix num children if it's wrong. this doesn't work - some DB's have a bogus thread table
     // that is full of bogus headers - don't know why.
     PRUint32 rowCount = 0;
     m_mdbTable->GetCount(m_mdbDB->GetEnv(), &rowCount);
-//    NS_ASSERTION(m_numChildren <= rowCount, "num children wrong - fixing");
+    //    NS_ASSERTION(m_numChildren <= rowCount, "num children wrong - fixing");
     if (m_numChildren > rowCount)
       ChangeChildCount((PRInt32) rowCount - (PRInt32) m_numChildren);
     if ((PRInt32) m_numUnreadChildren < 0)
       ChangeUnreadChildCount(- (PRInt32) m_numUnreadChildren);
-		if (NS_SUCCEEDED(err))
-			m_cachedValuesInitialized = PR_TRUE;
-	}
-	return err;
+    if (NS_SUCCEEDED(err))
+      m_cachedValuesInitialized = PR_TRUE;
+  }
+  return err;
 }
 
 NS_IMETHODIMP		nsMsgThread::SetThreadKey(nsMsgKey threadKey)
 {
-	nsresult ret = NS_OK;
-
-	m_threadKey = threadKey;
-	// by definition, the initial thread key is also the thread root key.
-	SetThreadRootKey(threadKey);
-	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadIdColumnToken, threadKey);
-	// gotta set column in meta row here.
-	return ret;
+  nsresult ret = NS_OK;
+  
+  m_threadKey = threadKey;
+  // by definition, the initial thread key is also the thread root key.
+  SetThreadRootKey(threadKey);
+  ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadIdColumnToken, threadKey);
+  // gotta set column in meta row here.
+  return ret;
 }
 
 NS_IMETHODIMP	nsMsgThread::GetThreadKey(nsMsgKey *result)
 {
-	if (result)
-	{
-		nsresult res = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadIdColumnToken, &m_threadKey);
-		*result = m_threadKey;
-		return res;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+  if (result)
+  {
+    nsresult res = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadIdColumnToken, &m_threadKey);
+    *result = m_threadKey;
+    return res;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsMsgThread::GetFlags(PRUint32 *result)
 {
-	if (result)
-	{
-		nsresult res = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, &m_flags);
-		*result = m_flags;
-		return res;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+  if (result)
+  {
+    nsresult res = m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, &m_flags);
+    *result = m_flags;
+    return res;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsMsgThread::SetFlags(PRUint32 flags)
 {
-	nsresult ret = NS_OK;
-
-	m_flags = flags;
-	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, m_flags);
-	return ret;
+  nsresult ret = NS_OK;
+  
+  m_flags = flags;
+  ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadFlagsColumnToken, m_flags);
+  return ret;
 }
 
 NS_IMETHODIMP nsMsgThread::SetSubject(const char *subject)
 {
-	return m_mdbDB->CharPtrToRowCellColumn(m_metaRow, m_mdbDB->m_threadSubjectColumnToken, subject);
+  return m_mdbDB->CharPtrToRowCellColumn(m_metaRow, m_mdbDB->m_threadSubjectColumnToken, subject);
 }
 
 NS_IMETHODIMP nsMsgThread::GetSubject(char **result)
 {
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
-	nsresult ret = m_mdbDB->RowCellColumnToCharPtr(m_metaRow, m_mdbDB->m_threadSubjectColumnToken, result);
-	return ret;
+  if (!result)
+    return NS_ERROR_NULL_POINTER;
+  nsresult ret = m_mdbDB->RowCellColumnToCharPtr(m_metaRow, m_mdbDB->m_threadSubjectColumnToken, result);
+  return ret;
 }
 
 NS_IMETHODIMP nsMsgThread::GetNumChildren(PRUint32 *result)
@@ -248,9 +248,6 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   PRUint32 newHdrFlags = 0;
   nsMsgKey newHdrKey = 0;
   PRBool parentKeyNeedsSetting = PR_TRUE;
-  
-  if (m_flags & MSG_FLAG_IGNORED && m_mdbDB)
-    m_mdbDB->MarkHdrRead(child, PR_TRUE, nsnull);
   
   nsIMdbRow *hdrRow = hdr->GetMDBRow();
   hdr->GetFlags(&newHdrFlags);
@@ -364,6 +361,10 @@ NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, 
   if (numChildren > 0 && parentKeyNeedsSetting)
     child->SetThreadParent(m_threadRootKey);
   
+  // do this after we've put the new hdr in the thread
+  if (m_flags & MSG_FLAG_IGNORED && m_mdbDB)
+    m_mdbDB->MarkHdrRead(child, PR_TRUE, nsnull);
+  
   return ret;
 }
 
@@ -403,108 +404,108 @@ nsresult	nsMsgThread::ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, n
 
 NS_IMETHODIMP nsMsgThread::GetChildKeyAt(PRInt32 aIndex, nsMsgKey *result)
 {
-	nsresult ret = NS_OK;
-	mdbOid oid;
-	nsIMdbRow *hdrRow = nsnull;
+  nsresult ret = NS_OK;
+  mdbOid oid;
+  nsIMdbRow *hdrRow = nsnull;
 
-	ret = m_mdbTable->PosToOid( m_mdbDB->GetEnv(), aIndex, &oid);
-	if (ret == 0)
+  ret = m_mdbTable->PosToOid( m_mdbDB->GetEnv(), aIndex, &oid);
+  if (ret == 0)
     *result = oid.mOid_Id;
 
-	return ret;
+  return ret;
 }
 
 NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 {
-	nsresult ret = NS_OK;
-	mdbOid oid;
-	nsIMdbRow *hdrRow = nsnull;
-
-	ret = m_mdbTable->PosToOid( m_mdbDB->GetEnv(), aIndex, &oid);
-	if (ret == NS_OK)
-	{
-		//do I have to release hdrRow?
-		ret = m_mdbTable->PosToRow(m_mdbDB->GetEnv(), aIndex, &hdrRow); 
-		if(NS_SUCCEEDED(ret) && hdrRow)
-		{
-			ret = m_mdbDB->CreateMsgHdr(hdrRow,  oid.mOid_Id , result);
-		}
-	}
-
+  nsresult ret = NS_OK;
+  mdbOid oid;
+  nsIMdbRow *hdrRow = nsnull;
+  
+  ret = m_mdbTable->PosToOid( m_mdbDB->GetEnv(), aIndex, &oid);
+  if (ret == NS_OK)
+  {
+    //do I have to release hdrRow?
+    ret = m_mdbTable->PosToRow(m_mdbDB->GetEnv(), aIndex, &hdrRow); 
+    if(NS_SUCCEEDED(ret) && hdrRow)
+    {
+      ret = m_mdbDB->CreateMsgHdr(hdrRow,  oid.mOid_Id , result);
+    }
+  }
+  
   return (ret == NS_OK) ? NS_OK : NS_MSG_MESSAGE_NOT_FOUND;
 }
 
 
 NS_IMETHODIMP nsMsgThread::GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result)
 {
-	nsresult ret = NS_OK;
-	mdb_bool	hasOid;
-	mdbOid		rowObjectId;
-
-
-	if (!result || !m_mdbTable)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = NULL;
-	rowObjectId.mOid_Id = msgKey;
-	rowObjectId.mOid_Scope = m_mdbDB->m_hdrRowScopeToken;
-	ret = m_mdbTable->HasOid(m_mdbDB->GetEnv(), &rowObjectId, &hasOid);
-	if (NS_SUCCEEDED(ret) && hasOid && m_mdbDB && m_mdbDB->m_mdbStore)
-	{
-		nsIMdbRow *hdrRow = nsnull;
-		ret = m_mdbDB->m_mdbStore->GetRow(m_mdbDB->GetEnv(), &rowObjectId,  &hdrRow);
-		if (ret == NS_OK && hdrRow && m_mdbDB)
-		{
-			ret = m_mdbDB->CreateMsgHdr(hdrRow,  msgKey, result);
-		}
-	}
-	return ret;
+  nsresult ret = NS_OK;
+  mdb_bool	hasOid;
+  mdbOid		rowObjectId;
+  
+  
+  if (!result || !m_mdbTable)
+    return NS_ERROR_NULL_POINTER;
+  
+  *result = NULL;
+  rowObjectId.mOid_Id = msgKey;
+  rowObjectId.mOid_Scope = m_mdbDB->m_hdrRowScopeToken;
+  ret = m_mdbTable->HasOid(m_mdbDB->GetEnv(), &rowObjectId, &hasOid);
+  if (NS_SUCCEEDED(ret) && hasOid && m_mdbDB && m_mdbDB->m_mdbStore)
+  {
+    nsIMdbRow *hdrRow = nsnull;
+    ret = m_mdbDB->m_mdbStore->GetRow(m_mdbDB->GetEnv(), &rowObjectId,  &hdrRow);
+    if (ret == NS_OK && hdrRow && m_mdbDB)
+    {
+      ret = m_mdbDB->CreateMsgHdr(hdrRow,  msgKey, result);
+    }
+  }
+  return ret;
 }
 
 
 NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 {
-	nsresult ret = NS_OK;
-	nsIMdbRow* resultRow;
-	mdb_pos pos = aIndex - 1;
-
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-	// mork doesn't seem to handle this correctly, so deal with going off
-	// the end here.
-	if (aIndex > (PRInt32) m_numChildren)
-		return NS_OK;
-
-	nsIMdbTableRowCursor *rowCursor;
-	ret = m_mdbTable->GetTableRowCursor(m_mdbDB->GetEnv(), pos, &rowCursor);
+  nsresult ret = NS_OK;
+  nsIMdbRow* resultRow;
+  mdb_pos pos = aIndex - 1;
+  
+  if (!result)
+    return NS_ERROR_NULL_POINTER;
+  
+  *result = nsnull;
+  // mork doesn't seem to handle this correctly, so deal with going off
+  // the end here.
+  if (aIndex > (PRInt32) m_numChildren)
+    return NS_OK;
+  
+  nsIMdbTableRowCursor *rowCursor;
+  ret = m_mdbTable->GetTableRowCursor(m_mdbDB->GetEnv(), pos, &rowCursor);
   if (ret != 0)
     return  NS_ERROR_FAILURE;
-
-	ret = rowCursor->NextRow(m_mdbDB->GetEnv(), &resultRow, &pos);
-	NS_RELEASE(rowCursor);
-	if (NS_FAILED(ret) || !resultRow) 
-		return ret;
-
-	//Get key from row
-	mdbOid outOid;
-	nsMsgKey key=0;
-	if (resultRow->GetOid(m_mdbDB->GetEnv(), &outOid) == NS_OK)
-		key = outOid.mOid_Id;
-
-	ret = m_mdbDB->CreateMsgHdr(resultRow, key, result);
-	if (NS_FAILED(ret)) 
-		return ret;
-	return ret;
+  
+  ret = rowCursor->NextRow(m_mdbDB->GetEnv(), &resultRow, &pos);
+  NS_RELEASE(rowCursor);
+  if (NS_FAILED(ret) || !resultRow) 
+    return ret;
+  
+  //Get key from row
+  mdbOid outOid;
+  nsMsgKey key=0;
+  if (resultRow->GetOid(m_mdbDB->GetEnv(), &outOid) == NS_OK)
+    key = outOid.mOid_Id;
+  
+  ret = m_mdbDB->CreateMsgHdr(resultRow, key, result);
+  if (NS_FAILED(ret)) 
+    return ret;
+  return ret;
 }
 
 
 NS_IMETHODIMP nsMsgThread::RemoveChildAt(PRInt32 aIndex)
 {
-	nsresult ret = NS_OK;
+  nsresult ret = NS_OK;
 
-	return ret;
+  return ret;
 }
 
 
@@ -642,74 +643,74 @@ protected:
 };
 
 nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey startKey,
-                                     nsMsgThreadEnumeratorFilter filter, void* closure)
-    : mRowCursor(nsnull), mDone(PR_FALSE),
-      mFilter(filter), mClosure(closure), mFoundChildren(PR_FALSE)
+                                             nsMsgThreadEnumeratorFilter filter, void* closure)
+                                             : mRowCursor(nsnull), mDone(PR_FALSE),
+                                             mFilter(filter), mClosure(closure), mFoundChildren(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
-	mThreadParentKey = startKey;
-	mChildIndex = 0;
-	mThread = thread;
-	mNeedToPrefetch = PR_TRUE;
-	mFirstMsgKey = nsMsgKey_None;
-
-	nsresult rv = mThread->GetRootHdr(nsnull, getter_AddRefs(mResultHdr));
-
-	if (NS_SUCCEEDED(rv) && mResultHdr)
-		mResultHdr->GetMessageKey(&mFirstMsgKey);
-
-	PRUint32 numChildren;
-	mThread->GetNumChildren(&numChildren);
-
-	if (mThreadParentKey != nsMsgKey_None)
-	{
-		nsMsgKey msgKey = nsMsgKey_None;
-		PRUint32 childIndex = 0;
-
-
-		for (childIndex = 0; childIndex < numChildren; childIndex++)
-		{
-			rv = mThread->GetChildHdrAt(childIndex, getter_AddRefs(mResultHdr));
-			if (NS_SUCCEEDED(rv) && mResultHdr)
-			{
-				mResultHdr->GetMessageKey(&msgKey);
-
-				if (msgKey == startKey)
-				{
-					mChildIndex = MsgKeyFirstChildIndex(msgKey);
-					mDone = (mChildIndex < 0);
-					break;
-				}
-
-				if (mDone)
-					break;
-
-			}
-			else
-				NS_ASSERTION(PR_FALSE, "couldn't get child from thread");
-		}
-	}
-
+  NS_INIT_ISUPPORTS();
+  mThreadParentKey = startKey;
+  mChildIndex = 0;
+  mThread = thread;
+  mNeedToPrefetch = PR_TRUE;
+  mFirstMsgKey = nsMsgKey_None;
+  
+  nsresult rv = mThread->GetRootHdr(nsnull, getter_AddRefs(mResultHdr));
+  
+  if (NS_SUCCEEDED(rv) && mResultHdr)
+    mResultHdr->GetMessageKey(&mFirstMsgKey);
+  
+  PRUint32 numChildren;
+  mThread->GetNumChildren(&numChildren);
+  
+  if (mThreadParentKey != nsMsgKey_None)
+  {
+    nsMsgKey msgKey = nsMsgKey_None;
+    PRUint32 childIndex = 0;
+    
+    
+    for (childIndex = 0; childIndex < numChildren; childIndex++)
+    {
+      rv = mThread->GetChildHdrAt(childIndex, getter_AddRefs(mResultHdr));
+      if (NS_SUCCEEDED(rv) && mResultHdr)
+      {
+        mResultHdr->GetMessageKey(&msgKey);
+        
+        if (msgKey == startKey)
+        {
+          mChildIndex = MsgKeyFirstChildIndex(msgKey);
+          mDone = (mChildIndex < 0);
+          break;
+        }
+        
+        if (mDone)
+          break;
+        
+      }
+      else
+        NS_ASSERTION(PR_FALSE, "couldn't get child from thread");
+    }
+  }
+  
 #ifdef DEBUG_bienvenu1
-		nsCOMPtr <nsIMsgDBHdr> child;
-		for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++)
-		{
-			rv = mThread->GetChildHdrAt(childIndex, getter_AddRefs(child));
-			if (NS_SUCCEEDED(rv) && child)
-			{
-				nsMsgKey threadParent;
-				nsMsgKey msgKey;
-				// we're only doing one level of threading, so check if caller is
-				// asking for children of the first message in the thread or not.
-				// if not, we will tell him there are no children.
-				child->GetMessageKey(&msgKey);
-				child->GetThreadParent(&threadParent);
-
-				printf("index = %ld key = %ld parent = %lx\n", childIndex, msgKey, threadParent);
-			}
-		}
+  nsCOMPtr <nsIMsgDBHdr> child;
+  for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++)
+  {
+    rv = mThread->GetChildHdrAt(childIndex, getter_AddRefs(child));
+    if (NS_SUCCEEDED(rv) && child)
+    {
+      nsMsgKey threadParent;
+      nsMsgKey msgKey;
+      // we're only doing one level of threading, so check if caller is
+      // asking for children of the first message in the thread or not.
+      // if not, we will tell him there are no children.
+      child->GetMessageKey(&msgKey);
+      child->GetThreadParent(&threadParent);
+      
+      printf("index = %ld key = %ld parent = %lx\n", childIndex, msgKey, threadParent);
+    }
+  }
 #endif
-    NS_ADDREF(thread);
+  NS_ADDREF(thread);
 }
 
 nsMsgThreadEnumerator::~nsMsgThreadEnumerator()
@@ -722,42 +723,42 @@ NS_IMPL_ISUPPORTS1(nsMsgThreadEnumerator, nsISimpleEnumerator)
 
 PRInt32 nsMsgThreadEnumerator::MsgKeyFirstChildIndex(nsMsgKey inMsgKey)
 {
-//	if (msgKey != mThreadParentKey)
-//		mDone = PR_TRUE;
-	// look through rest of thread looking for a child of this message.
-	// If the inMsgKey is the first message in the thread, then all children
-	// without parents are considered to be children of inMsgKey.
-	// Otherwise, only true children qualify.
-	PRUint32 numChildren;
-	nsCOMPtr <nsIMsgDBHdr> curHdr;
-	PRInt32 firstChildIndex = -1;
-
-	mThread->GetNumChildren(&numChildren);
-
-	// if this is the first message in the thread, just check if there's more than
-	// one message in the thread.
-//	if (inMsgKey == mThread->m_threadRootKey)
-//		return (numChildren > 1) ? 1 : -1;
-
-	for (PRUint32 curChildIndex = 0; curChildIndex < numChildren; curChildIndex++)
-	{
-		nsresult rv = mThread->GetChildHdrAt(curChildIndex, getter_AddRefs(curHdr));
-		if (NS_SUCCEEDED(rv) && curHdr)
-		{
-			nsMsgKey parentKey;
-
-			curHdr->GetThreadParent(&parentKey);
-			if (parentKey == inMsgKey)
-			{
-				firstChildIndex = curChildIndex;
-				break;
-			}
-		}
-	}
+  //	if (msgKey != mThreadParentKey)
+  //		mDone = PR_TRUE;
+  // look through rest of thread looking for a child of this message.
+  // If the inMsgKey is the first message in the thread, then all children
+  // without parents are considered to be children of inMsgKey.
+  // Otherwise, only true children qualify.
+  PRUint32 numChildren;
+  nsCOMPtr <nsIMsgDBHdr> curHdr;
+  PRInt32 firstChildIndex = -1;
+  
+  mThread->GetNumChildren(&numChildren);
+  
+  // if this is the first message in the thread, just check if there's more than
+  // one message in the thread.
+  //	if (inMsgKey == mThread->m_threadRootKey)
+  //		return (numChildren > 1) ? 1 : -1;
+  
+  for (PRUint32 curChildIndex = 0; curChildIndex < numChildren; curChildIndex++)
+  {
+    nsresult rv = mThread->GetChildHdrAt(curChildIndex, getter_AddRefs(curHdr));
+    if (NS_SUCCEEDED(rv) && curHdr)
+    {
+      nsMsgKey parentKey;
+      
+      curHdr->GetThreadParent(&parentKey);
+      if (parentKey == inMsgKey)
+      {
+        firstChildIndex = curChildIndex;
+        break;
+      }
+    }
+  }
 #ifdef DEBUG_bienvenu1
-	printf("first child index of %ld = %ld\n", inMsgKey, firstChildIndex);
+  printf("first child index of %ld = %ld\n", inMsgKey, firstChildIndex);
 #endif
-	return firstChildIndex;
+  return firstChildIndex;
 }
 
 NS_IMETHODIMP nsMsgThreadEnumerator::GetNext(nsISupports **aItem)
@@ -850,12 +851,12 @@ nsresult nsMsgThreadEnumerator::Prefetch()
 
 NS_IMETHODIMP nsMsgThreadEnumerator::HasMoreElements(PRBool *aResult)
 {
-	if (!aResult)
-		return NS_ERROR_NULL_POINTER;
-	if (mNeedToPrefetch)
-		Prefetch();
-	*aResult = !mDone;
-    return NS_OK;
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+  if (mNeedToPrefetch)
+    Prefetch();
+  *aResult = !mDone;
+  return NS_OK;
 }
 
 static nsresult
@@ -884,15 +885,15 @@ NS_IMETHODIMP nsMsgThread::EnumerateUnreadMessages(nsMsgKey parentKey, nsISimple
 
 NS_IMETHODIMP nsMsgThread::EnumerateMessages(nsMsgKey parentKey, nsISimpleEnumerator* *result)
 {
-	nsresult ret = NS_OK;
-	nsMsgThreadEnumerator* e = new nsMsgThreadEnumerator(this, parentKey, nsnull, nsnull);
+    nsresult ret = NS_OK;
+    nsMsgThreadEnumerator* e = new nsMsgThreadEnumerator(this, parentKey, nsnull, nsnull);
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(e);
     *result = e;
     return NS_OK;
 
-	return ret;
+    return ret;
 }
 
 nsresult nsMsgThread::ReparentMsgsWithInvalidParent(PRUint32 numChildren, nsMsgKey threadParentKey)
@@ -924,44 +925,44 @@ nsresult nsMsgThread::ReparentMsgsWithInvalidParent(PRUint32 numChildren, nsMsgK
 
 NS_IMETHODIMP nsMsgThread::GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result)
 {
-	nsresult ret;
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
-
+  nsresult ret;
+  if (!result)
+    return NS_ERROR_NULL_POINTER;
+  
   *result = nsnull;
-
-	if (m_threadRootKey != nsMsgKey_None)
-	{
-		ret = GetChildHdrForKey(m_threadRootKey, result, resultIndex);
-		if (NS_SUCCEEDED(ret) && *result)
-			return ret;
+  
+  if (m_threadRootKey != nsMsgKey_None)
+  {
+    ret = GetChildHdrForKey(m_threadRootKey, result, resultIndex);
+    if (NS_SUCCEEDED(ret) && *result)
+      return ret;
     else
     {
       printf("need to reset thread root key\n");
-		  PRUint32 numChildren;
+      PRUint32 numChildren;
       nsMsgKey threadParentKey = nsMsgKey_None;
-		  GetNumChildren(&numChildren);
-
+      GetNumChildren(&numChildren);
+      
       for (PRInt32 childIndex = 0; childIndex < (PRInt32) numChildren; childIndex++)
-		  {
+      {
         nsCOMPtr <nsIMsgDBHdr> curChild;
-			  ret  = GetChildHdrAt(childIndex, getter_AddRefs(curChild));
-			  if (NS_SUCCEEDED(ret) && curChild)
-			  {
-				  nsMsgKey parentKey;
-
-				  curChild->GetThreadParent(&parentKey);
+        ret  = GetChildHdrAt(childIndex, getter_AddRefs(curChild));
+        if (NS_SUCCEEDED(ret) && curChild)
+        {
+          nsMsgKey parentKey;
+          
+          curChild->GetThreadParent(&parentKey);
           if (parentKey == nsMsgKey_None)
           {
             NS_ASSERTION(!(*result), "two top level msgs, not good");
-  				  curChild->GetMessageKey(&threadParentKey);
+            curChild->GetMessageKey(&threadParentKey);
             SetThreadRootKey(threadParentKey);
             if (resultIndex)
               *resultIndex = childIndex;
             *result = curChild;
             NS_ADDREF(*result);
             ReparentMsgsWithInvalidParent(numChildren, threadParentKey);
-//            return NS_OK;
+            //            return NS_OK;
           }
         }
       }
@@ -970,31 +971,31 @@ NS_IMETHODIMP nsMsgThread::GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result
         return NS_OK;
       }
     }
-		// if we can't get the thread root key, we'll just get the first hdr.
-		// there's a bug where sometimes we weren't resetting the thread root key 
-		// when removing the thread root key.
-	}
-	if (resultIndex)
-		*resultIndex = 0;
-	return GetChildHdrAt(0, result);
+    // if we can't get the thread root key, we'll just get the first hdr.
+    // there's a bug where sometimes we weren't resetting the thread root key 
+    // when removing the thread root key.
+  }
+  if (resultIndex)
+    *resultIndex = 0;
+  return GetChildHdrAt(0, result);
 }
 
 nsresult nsMsgThread::ChangeChildCount(PRInt32 delta)
 {
-	nsresult ret = NS_OK;
-	PRUint32 childCount = 0;
-	m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
-
-	NS_ASSERTION(childCount != 0 || delta > 0, "child count gone negative");
-	childCount += delta;
-
-	NS_ASSERTION((PRInt32) childCount >= 0, "child count gone to 0 or below");
-	if ((PRInt32) childCount < 0)	// force child count to >= 0
-		childCount = 0;
-
-	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
-	m_numChildren = childCount;
-	return ret;
+  nsresult ret = NS_OK;
+  PRUint32 childCount = 0;
+  m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
+  
+  NS_ASSERTION(childCount != 0 || delta > 0, "child count gone negative");
+  childCount += delta;
+  
+  NS_ASSERTION((PRInt32) childCount >= 0, "child count gone to 0 or below");
+  if ((PRInt32) childCount < 0)	// force child count to >= 0
+    childCount = 0;
+  
+  ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadChildrenColumnToken, childCount);
+  m_numChildren = childCount;
+  return ret;
 }
 
 nsresult nsMsgThread::ChangeUnreadChildCount(PRInt32 delta)
@@ -1017,46 +1018,46 @@ nsresult nsMsgThread::ChangeUnreadChildCount(PRInt32 delta)
 
 nsresult nsMsgThread::SetThreadRootKey(nsMsgKey threadRootKey)
 {
-	nsresult ret = NS_OK;
-	m_threadRootKey = threadRootKey;
-	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadRootKeyColumnToken, threadRootKey);
-	return ret;
+  nsresult ret = NS_OK;
+  m_threadRootKey = threadRootKey;
+  ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadRootKeyColumnToken, threadRootKey);
+  return ret;
 }
 
 nsresult nsMsgThread::GetChildHdrForKey(nsMsgKey desiredKey, nsIMsgDBHdr **result, PRInt32 *resultIndex)
 {
-	PRUint32 numChildren;
-	PRUint32 childIndex = 0;
-	nsresult rv = NS_OK;        // XXX or should this default to an error?
-
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
-
-	GetNumChildren(&numChildren);
-
-	if ((PRInt32) numChildren < 0)
-		numChildren = 0;
-
-	for (childIndex = 0; childIndex < numChildren; childIndex++)
-	{
-		rv = GetChildHdrAt(childIndex, result);
-		if (NS_SUCCEEDED(rv) && *result)
-		{
-			nsMsgKey msgKey;
-			// we're only doing one level of threading, so check if caller is
-			// asking for children of the first message in the thread or not.
-			// if not, we will tell him there are no children.
-			(*result)->GetMessageKey(&msgKey);
-
-			if (msgKey == desiredKey)
-				break;
-			NS_RELEASE(*result);
-		}
-	}
-	if (resultIndex)
-		*resultIndex = childIndex;
-
-	return rv;
+  PRUint32 numChildren;
+  PRUint32 childIndex = 0;
+  nsresult rv = NS_OK;        // XXX or should this default to an error?
+  
+  if (!result)
+    return NS_ERROR_NULL_POINTER;
+  
+  GetNumChildren(&numChildren);
+  
+  if ((PRInt32) numChildren < 0)
+    numChildren = 0;
+  
+  for (childIndex = 0; childIndex < numChildren; childIndex++)
+  {
+    rv = GetChildHdrAt(childIndex, result);
+    if (NS_SUCCEEDED(rv) && *result)
+    {
+      nsMsgKey msgKey;
+      // we're only doing one level of threading, so check if caller is
+      // asking for children of the first message in the thread or not.
+      // if not, we will tell him there are no children.
+      (*result)->GetMessageKey(&msgKey);
+      
+      if (msgKey == desiredKey)
+        break;
+      NS_RELEASE(*result);
+    }
+  }
+  if (resultIndex)
+    *resultIndex = childIndex;
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgThread::GetFirstUnreadChild(nsIMsgDBHdr **result)
