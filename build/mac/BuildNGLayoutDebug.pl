@@ -78,9 +78,8 @@ $build{all} 			= 1;	# Turn off to do individual builds, or to do "most"
 $build{most} 			= 0;	# Turn off to do individual builds
 $build{dist} 			= 0;
 $build{dist_runtime}	= 0;	# Implied by $build{dist}
-$build{idl}             = 0;
 $build{xpidl}			= 0;
-$build{resources} 		= 0;
+$build{idl}             = 0;
 $build{stubs} 			= 0;
 $build{runtime}			= 0;
 $build{common} 			= 0;
@@ -95,6 +94,7 @@ $build{xpapp} 			= 0;
 $build{extensions} 		= 0;
 $build{mailnews} 		= 0;
 $build{apprunner}		= 0;
+$build{resources} 		= 0;
 
 #-----------------------------------------------
 # configuration variables that affect the manner
@@ -142,7 +142,6 @@ if ($build{most})
 ### Just uncomment/comment to get the ones you want (if "most" is selected).
 #	$build{dist}		= 1;
 #	$build{dist_runtime}= 1;
-#	$build{resources}	= 1;
     $build{xpidl}		= 1; # build idl compiler
 	$build{idl}         = 1;
 	$build{stubs}		= 1;
@@ -159,6 +158,7 @@ if ($build{most})
 	$build{extensions} 	= 1;
 	$build{mailnews}	= 1;
 	$build{apprunner} 	= 1;
+	$build{resources}	= 1;
 }
 
 # do the work
