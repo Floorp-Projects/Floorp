@@ -42,7 +42,6 @@ CPPSRCS=		\
 	xpcmaps.cpp			\
 	xpcmodule.cpp	\
 	xpcthrower.cpp		\
-	xpcutil.cpp	\
 	xpcwrappedjs.cpp	\
 	xpcwrappedjsclass.cpp	\
 	xpcwrappednative.cpp	\

@@ -79,6 +79,10 @@ XPCContext::XPCContext(JSContext* aJSContext,
     JS_ValueToId(aJSContext, 
                  STRING_TO_JSVAL(JS_InternString(aJSContext, "toString")), 
                  &mToStringStrID);
+    JS_ValueToId(aJSContext, 
+                 STRING_TO_JSVAL(JS_InternString(aJSContext, "lastResult")), 
+                 &mLastResultStrID);
+    mLastResult = NS_OK;
 }
 
 XPCContext::~XPCContext()

@@ -6,7 +6,7 @@ function nsID(str)
     id = id.QueryInterface(Components.interfaces.nsIJSIID);
     id.init(str);
     return id;
-}    
+}
 
 var NS_ISUPPORTS_IID    = new nsID("{00000000-0000-0000-c000-000000000046}");
 var NS_ITESTXPC_FOO_IID = new nsID("{159E36D0-991E-11d2-AC3F-00C09300144B}");
@@ -17,9 +17,9 @@ print("baz = "+baz);
 print("distinct wrapper test "+ (foo != baz ? "passed" : "failed"));
 var baz2 = foo.QueryInterface(NS_ITESTXPC_FOO_IID);
 print("shared wrapper test "+ (baz == baz2 ? "passed" : "failed"));
-print("root wrapper identity test "+ 
-    (foo.QueryInterface(NS_ISUPPORTS_IID) == 
-     baz.QueryInterface(NS_ISUPPORTS_IID) ? 
+print("root wrapper identity test "+
+    (foo.QueryInterface(NS_ISUPPORTS_IID) ==
+     baz.QueryInterface(NS_ISUPPORTS_IID) ?
         "passed" : "failed"));
 
 print("foo = "+foo);
@@ -44,7 +44,7 @@ function _Test(p1, p2)
 
 function _QI(iid)
 {
-    print("QueryInterface called in JS with iid = "+iid); 
+    print("QueryInterface called in JS with iid = "+iid);
     return  this;
 }
 
@@ -58,6 +58,12 @@ print("foo properties:");
 for(i in foo)
     print("  foo."+i+" = "+foo[i]);
 
+print("Components = "+Components);
+print("Components properties:");
+for(i in Components)
+    print("  Components."+i+" = "+Components[i]);
+
+
 /***************************************************************************/
 print(".......................................");
 print("echo tests...");
@@ -65,7 +71,7 @@ print("echo tests...");
 var receiver = new Object();
 receiver.SetReceiver = function() {};
 receiver.SendOneString = function(str) {receiver_results[0] = str;};
-receiver.SendManyTypes = function() 
+receiver.SendManyTypes = function()
     {
         for(var i = 0; i < arguments.length; i++)
             receiver_results[i] = arguments[i];
@@ -95,18 +101,18 @@ print("In2OutOneInt - "+(
 
 var in_out_results1 = new Object();
 var in_out_results2 = new Object();
-var in_out_results = 
+var in_out_results =
         echo.In2OutAddTwoInts(123, 55, in_out_results1, in_out_results2);
 print("In2OutAddTwoInts - "+(
        in_out_results1.value == 123 &&
        in_out_results2.value ==  55 &&
-       in_out_results      == 178 
+       in_out_results      == 178
        ? "passed" : "failed"));
 
 var test_string2 = "some other string";
 print("In2OutOneString - "+(
        echo.In2OutOneString(test_string2) == test_string2 &&
-       echo.In2OutOneString(echo.In2OutOneString(test_string2)) == test_string2 
+       echo.In2OutOneString(echo.In2OutOneString(test_string2)) == test_string2
        ? "passed" : "failed"));
 
 
@@ -116,25 +122,25 @@ print("In2OutOneString - "+(
 var receiver_results = new Object();
 var send_params = [1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
 echo.SendManyTypes(send_params[0],
-                   send_params[1], 
-                   send_params[2], 
-                   send_params[3], 
-                   send_params[4], 
-                   send_params[5], 
-                   send_params[6], 
-                   send_params[7], 
-                   send_params[8], 
-                   send_params[9], 
-                   send_params[10], 
-                   send_params[11], 
-                   send_params[12], 
-                   send_params[13], 
-                   send_params[14], 
+                   send_params[1],
+                   send_params[2],
+                   send_params[3],
+                   send_params[4],
+                   send_params[5],
+                   send_params[6],
+                   send_params[7],
+                   send_params[8],
+                   send_params[9],
+                   send_params[10],
+                   send_params[11],
+                   send_params[12],
+                   send_params[13],
+                   send_params[14],
                    send_params[15]);
 
 var all_ok = true;
 for(i = 0; i < 16; i++) {
-    if(((""+receiver_results[i]).toLowerCase()) != 
+    if(((""+receiver_results[i]).toLowerCase()) !=
         ((""+send_params[i]).toLowerCase())) {
         if(all_ok)
             print("SendManyTypes - failed...");
@@ -152,7 +158,7 @@ var receiver_results = new Object();
 var send_params   = [1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
 var resend_params = [2,-3,-7,-10220,18,14,16,123,2.5,8.000008,false,'z','l',NS_ISUPPORTS_IID,"foo string","yet another string"];
 
-receiver.SendInOutManyTypes = function() 
+receiver.SendInOutManyTypes = function()
     {
         for(var i = 0; i < arguments.length; i++) {
             receiver_results[i] = arguments[i].value;
@@ -178,25 +184,25 @@ var inout_params = [{value:send_params[0] },
                     {value:send_params[15]}];
 
 echo.SendInOutManyTypes(inout_params[0] ,
-                        inout_params[1] , 
-                        inout_params[2] , 
-                        inout_params[3] , 
-                        inout_params[4] , 
-                        inout_params[5] , 
-                        inout_params[6] , 
-                        inout_params[7] , 
-                        inout_params[8] , 
-                        inout_params[9] , 
-                        inout_params[10], 
-                        inout_params[11], 
-                        inout_params[12], 
-                        inout_params[13], 
-                        inout_params[14], 
+                        inout_params[1] ,
+                        inout_params[2] ,
+                        inout_params[3] ,
+                        inout_params[4] ,
+                        inout_params[5] ,
+                        inout_params[6] ,
+                        inout_params[7] ,
+                        inout_params[8] ,
+                        inout_params[9] ,
+                        inout_params[10],
+                        inout_params[11],
+                        inout_params[12],
+                        inout_params[13],
+                        inout_params[14],
                         inout_params[15]);
 
 var all_ok = true;
 for(i = 0; i < 16; i++) {
-    if(((""+receiver_results[i]).toLowerCase()) != 
+    if(((""+receiver_results[i]).toLowerCase()) !=
         ((""+send_params[i]).toLowerCase())) {
         if(all_ok)
             print("SendInOutManyTypes - failed...");
@@ -206,7 +212,7 @@ for(i = 0; i < 16; i++) {
 }
 
 for(i = 0; i < 16; i++) {
-    if(((""+resend_params[i]).toLowerCase()) != 
+    if(((""+resend_params[i]).toLowerCase()) !=
         ((""+inout_params[i].value).toLowerCase())) {
         if(all_ok)
             print("SendInOutManyTypes - failed...");
@@ -227,7 +233,7 @@ try {
 }
 catch(e) {
     print("ReturnCode(0) exception text: "+e+" - failed");
-}    
+}
 
 try {
     echo.ReturnCode(-1);
@@ -236,7 +242,54 @@ try {
 catch(e) {
 //    print("ReturnCode(-1) exception text: "+e+" - passed");
     print("ReturnCode(-1) - passed");
-}    
+}
+
+var all_ok = true;
+
+echo.ReturnCode_NS_OK()
+if(Components.RESULT_NS_OK != Components.lastResult) {
+    all_ok = false;
+    print("expected: RESULT_NS_OK = "+Components.RESULT_NS_OK+"  got: "+Components.lastResult);
+    print(Components.lastResult);
+}
+
+echo.ReturnCode_NS_COMFALSE()
+if(Components.RESULT_NS_COMFALSE != Components.lastResult) {
+    all_ok = false;
+    print("expected: RESULT_NS_COMFALSE = "+Components.RESULT_NS_COMFALSE+"  got: "+Components.lastResult);
+}
+
+try {
+    echo.ReturnCode_NS_ERROR_NULL_POINTER()
+    all_ok = false;
+} catch(e) {
+    if(Components.RESULT_NS_ERROR_NULL_POINTER != Components.lastResult) {
+        all_ok = false;
+        print("expected: RESULT_NS_ERROR_NULL_POINTER = "+Components.RESULT_NS_ERROR_NULL_POINTER+"  got: "+Components.lastResult);
+    }
+}
+
+try {
+    echo.ReturnCode_NS_ERROR_UNEXPECTED()
+    all_ok = false;
+} catch(e) {
+    if(Components.RESULT_NS_ERROR_UNEXPECTED != Components.lastResult) {
+        all_ok = false;
+        print("expected: RESULT_NS_ERROR_UNEXPECTED = "+Components.RESULT_NS_ERROR_UNEXPECTED+"  got: "+Components.lastResult);
+    }
+}
+
+try {
+    echo.ReturnCode_NS_ERROR_OUT_OF_MEMORY()
+    all_ok = false;
+} catch(e) {
+    if(Components.RESULT_NS_ERROR_OUT_OF_MEMORY != Components.lastResult) {
+        all_ok = false;
+        print("expected: RESULT_NS_ERROR_OUT_OF_MEMORY = "+Components.RESULT_NS_ERROR_OUT_OF_MEMORY+"  got: "+Components.lastResult);
+    }
+}
+
+print("Components.lastResult test -  "+ (all_ok ? "passed" : "failed") );
 
 ////////////////////
 // check exceptions on too few args
@@ -248,7 +301,7 @@ try {
 catch(e) {
 //    print("Too few args test -- exception text: "+e+" - passed");
     print("Too few args test - passed");
-}    
+}
 
 ////////////////////
 // check exceptions on can't convert
@@ -263,7 +316,7 @@ try {
 catch(e) {
 //    print("Can't convert arg to Native ("+e+") - passed");
     print("Can't convert arg to Native - passed");
-}    
+}
 */
 ////////////////////
 // FailInJSTest
@@ -316,19 +369,19 @@ function idTest(name, iid, same)
     nameNormalized = name.toLowerCase();
     iidNormalized  = iid.toLowerCase();
 
-    idFromName_NameNormalized = idFromName.name ? 
+    idFromName_NameNormalized = idFromName.name ?
                                     idFromName.name.toLowerCase() :
                                     idFromName.name;
 
-    idFromIID_NameNormalized = idFromIID.name ? 
+    idFromIID_NameNormalized = idFromIID.name ?
                                     idFromIID.name.toLowerCase() :
                                     idFromIID.name;
 
-    idFromName_StringNormalized = idFromName.number ? 
+    idFromName_StringNormalized = idFromName.number ?
                                     idFromName.number.toLowerCase() :
                                     idFromName.number;
 
-    idFromIID_StringNormalized = idFromIID.number ? 
+    idFromIID_StringNormalized = idFromIID.number ?
                                     idFromIID.number.toLowerCase() :
                                     idFromIID.number;
 
@@ -343,15 +396,15 @@ function idTest(name, iid, same)
         print("iid toString test failed for "+name+" "+iid);
         result = false;
     }
-    
-    if(!idFromName.equals(new nsID(idFromName)) || 
+
+    if(!idFromName.equals(new nsID(idFromName)) ||
        !idFromIID.equals(new nsID(idFromIID))) {
         print("new id from id test failed for "+name+" "+iid);
         result = false;
     }
 
     return result;
-}    
+}
 
 var all_ok = true;
 // these 4 should be valid and the same
@@ -385,11 +438,11 @@ print("[shared] test - "+(all_ok ? "passed" : "failed"));
 // print("Components.interfaces.nsISupports = "+Components.interfaces.nsISupports);
 // print("Components.interfaces.nsISupports.name = "+Components.interfaces.nsISupports.name);
 // print("Components.interfaces.nsISupports.number = "+Components.interfaces.nsISupports.number);
-// 
+//
 // print("Components.interfaces.nsIEcho.number = "+Components.interfaces.nsIEcho.number);
 // print("Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'] = "+Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}']);
 // print("Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'].name = "+Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'].name);
-// 
+//
 // print("Components.classes = "+Components.classes);
 // print("Components.classes.nsIID = "+Components.classes.nsIID);
 // print("Components.classes.nsCID = "+Components.classes.nsCID);

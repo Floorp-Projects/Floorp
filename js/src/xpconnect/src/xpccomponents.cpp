@@ -191,7 +191,7 @@ ClassesScriptable::ClassesScriptable()
 
 ClassesScriptable::~ClassesScriptable() {}
 
-static NS_DEFINE_IID(kClassesScriptableIID, NS_IXPCCLASSES_IID);
+static NS_DEFINE_IID(kClassesScriptableIID, NS_IXPCSCRIPTABLE_IID);
 NS_IMPL_ISUPPORTS(ClassesScriptable, kClassesScriptableIID);
 
 XPC_IMPLEMENT_FORWARD_CREATE(ClassesScriptable);
@@ -313,8 +313,65 @@ NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(nsXPCClasses, mScriptable)
 
 /***************************************************************************/
 /***************************************************************************/
+class ComponentsScriptable : public nsIXPCScriptable
+{
+public:
+    NS_DECL_ISUPPORTS
+    XPC_DECLARE_IXPCSCRIPTABLE
+    ComponentsScriptable();
+    virtual ~ComponentsScriptable();
+ };
+
+/**********************************************/
+
+ComponentsScriptable::ComponentsScriptable()
+{
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+}
+
+ComponentsScriptable::~ComponentsScriptable() {}
+
+static NS_DEFINE_IID(kComponentsScriptableIID, NS_IXPCSCRIPTABLE_IID);
+NS_IMPL_ISUPPORTS(ComponentsScriptable, kComponentsScriptableIID)
+
+XPC_IMPLEMENT_FORWARD_CREATE(ComponentsScriptable);
+XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(ComponentsScriptable);
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(ComponentsScriptable);
+// XPC_IMPLEMENT_FORWARD_GETPROPERTY(ComponentsScriptable);
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(ComponentsScriptable);
+XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(ComponentsScriptable);
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(ComponentsScriptable);
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(ComponentsScriptable);
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(ComponentsScriptable);
+XPC_IMPLEMENT_FORWARD_ENUMERATE(ComponentsScriptable);
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(ComponentsScriptable);
+XPC_IMPLEMENT_IGNORE_CALL(ComponentsScriptable);
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(ComponentsScriptable);
+XPC_IMPLEMENT_FORWARD_FINALIZE(ComponentsScriptable);
+
+NS_IMETHODIMP
+ComponentsScriptable::GetProperty(JSContext *cx, JSObject *obj,
+                               jsid id, jsval *vp,
+                               nsIXPConnectWrappedNative* wrapper,
+                               nsIXPCScriptable* arbitrary,
+                               JSBool* retval)
+{
+    *retval = JS_TRUE; 
+
+    XPCContext* xpcc = nsXPConnect::GetContext(cx);
+    if(xpcc && xpcc->GetLastResultStrID() == id)
+    {
+        if(JS_NewDoubleValue(cx, (jsdouble) (PRInt32)xpcc->GetLastResult(), vp))
+            return NS_OK;
+    }
+    *vp = JSVAL_VOID; 
+    return NS_OK;
+}
+
+/***************************************************************************/
 static NS_DEFINE_IID(kComponentsIID, NS_IXPCCOMPONENTS_IID);
-NS_IMPL_QUERY_INTERFACE(nsXPCComponents, kComponentsIID)
+NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(nsXPCComponents, mScriptable)
 NS_IMPL_ADDREF(nsXPCComponents)
 NS_IMPL_RELEASE(nsXPCComponents)
 
@@ -324,6 +381,7 @@ nsXPCComponents::nsXPCComponents()
     NS_ADDREF_THIS();
     mInterfaces = new nsXPCInterfaces();
     mClasses = new nsXPCClasses();
+    mScriptable = new ComponentsScriptable();
 }
 
 nsXPCComponents::~nsXPCComponents()
@@ -332,6 +390,8 @@ nsXPCComponents::~nsXPCComponents()
         NS_RELEASE(mInterfaces);
     if(mClasses)
         NS_RELEASE(mClasses);
+    if(mScriptable)
+        NS_RELEASE(mScriptable);
 }
 
 NS_IMETHODIMP

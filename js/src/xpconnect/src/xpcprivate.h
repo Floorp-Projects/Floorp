@@ -134,6 +134,10 @@ public:
 
     jsid GetConstructorStrID() const {return mConstuctorStrID;}
     jsid GetToStringStrID() const    {return mToStringStrID;}
+    jsid GetLastResultStrID() const    {return mLastResultStrID;}
+
+    nsresult GetLastResult() {return mLastResult;}
+    void SetLastResult(nsresult rc) {mLastResult = rc;}
 
     JSBool Init(JSObject* aGlobalObj = NULL);
     void DebugDump(int depth);
@@ -157,6 +161,8 @@ private:
     IID2WrappedNativeClassMap* mWrappedNativeClassMap;
     jsid mConstuctorStrID;
     jsid mToStringStrID;
+    jsid mLastResultStrID;
+    nsresult mLastResult;
 };
 
 /***************************************************************************/
@@ -595,23 +601,6 @@ private:
 };
 
 /***************************************************************************/
-// allocator access methods
-
-// class here just for static methods
-class XPCMem
-{
-public:
-    static void* Alloc(PRUint32 size);
-    static void* Realloc(void* ptr, PRUint32 size);
-    static void  Free(void* ptr);
-    static void  HeapMinimize();
-    static void* Clone(const void* ptr,  PRUint32 size);
-private:
-    XPCMem();   // not implemented
-    static nsIAllocator* Allocator();
-};
-
-/***************************************************************************/
 // nsJSIID
 
 class nsJSIID : public nsIJSIID
@@ -713,6 +702,7 @@ xpc_JSObjectToID(JSContext *cx, JSObject* obj);
 
 class nsXPCInterfaces;
 class nsXPCClasses;
+class ComponentsScriptable;
 
 class nsXPCComponents : public nsIXPCComponents
 {
@@ -730,6 +720,7 @@ public:
 private:
     nsXPCInterfaces* mInterfaces;
     nsXPCClasses*    mClasses;
+    ComponentsScriptable* mScriptable;
 };
 
 /***************************************************************************/

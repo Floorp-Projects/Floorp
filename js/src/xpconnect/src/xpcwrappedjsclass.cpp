@@ -356,7 +356,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             {
                 if(iidIsOwned)
                 {
-                    XPCMem::Free((void*)conditional_iid);
+                    nsAllocator::Free((void*)conditional_iid);
                     iidIsOwned = JS_FALSE;
                 }
                 conditional_iid = NULL;
@@ -412,7 +412,7 @@ pre_call_clean_up:
             if((NULL != (pp = (void**) params[i].val.p)) && NULL != *pp)
             {
                 if(param.IsIn())
-                    XPCMem::Free(*pp);
+                    nsAllocator::Free(*pp);
                 *pp = NULL;
             }
         }
@@ -422,7 +422,7 @@ pre_call_clean_up:
     {
         if(iidIsOwned)
         {
-            XPCMem::Free((void*)conditional_iid);
+            nsAllocator::Free((void*)conditional_iid);
             iidIsOwned = JS_FALSE;
         }
         conditional_iid = NULL;
@@ -497,7 +497,7 @@ pre_call_clean_up:
             {
                 if(iidIsOwned)
                 {
-                    XPCMem::Free((void*)conditional_iid);
+                    nsAllocator::Free((void*)conditional_iid);
                     iidIsOwned = JS_FALSE;
                 }
                 conditional_iid = NULL;
@@ -521,7 +521,7 @@ done:
         delete [] argv;
 
     if(conditional_iid && iidIsOwned)
-        XPCMem::Free((void*)conditional_iid);
+        nsAllocator::Free((void*)conditional_iid);
 
     return retval;
 }
@@ -562,7 +562,7 @@ nsXPCWrappedJSClass::DebugDump(int depth)
         mInfo->GetName(&name);
         XPC_LOG_ALWAYS(("interface name is %s", name));
         if(name)
-            XPCMem::Free(name);
+            nsAllocator::Free(name);
         char * iid = mIID.ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid));
         delete iid;
