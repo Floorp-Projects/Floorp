@@ -281,8 +281,9 @@ void InitKeyEvent(GdkEventKey *aGEK,
   =============================================================
   ==============================================================*/
 
-gint handle_configure_event(GtkWidget *w, GdkEventConfigure *event, gpointer p)
+gint handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
+  GdkEventConfigure *event = (GdkEventConfigure*)gtk_get_current_event();
   nsSizeEvent sevent;
   InitConfigureEvent(event, p, sevent, NS_SIZE);
 
