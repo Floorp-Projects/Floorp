@@ -52,8 +52,8 @@ and change the POP3_QUIT_RESPONSE state to flush the newly committed deletes. */
 #include "mkpop3.h"
 #include "xp_hash.h"
 #include "merrors.h"
-#include "msgcom.h"
-#include "msgnet.h"
+/*#include "msgcom.h"
+#include "msgnet.h" */
 #include "secnav.h"
 #include  "ssl.h"
 #include "prio.h"
@@ -95,8 +95,7 @@ extern void net_graceful_shutdown(PRFileDesc * sock, XP_Bool isSecure);
 #define OUTPUT_BUFFER_SIZE 512  /* max size of command string */
 
 /* Globals */
-PRIVATE char *net_pop3_username=0;
-PRIVATE char *net_pop3_password=0; /* obfuscated pop3 password */
+  PRIVATE char *net_pop3_password=0; /* obfuscated pop3 password */
 PRIVATE XP_Bool net_pop3_password_pending=FALSE;
 PRIVATE XP_Bool net_pop3_block = FALSE;
 
@@ -179,6 +178,7 @@ typedef enum {
  */
 
 
+
 #define KEEP		'k'			/* If we want to keep this item on server. */
 #define DELETE_CHAR	'd'			/* If we want to delete this item. */
 #define TOO_BIG		'b'			/* item left on server because it was too big */
@@ -206,6 +206,10 @@ typedef struct Pop3MsgInfo {
 
 typedef struct _Pop3ConData {
 	MSG_Pane* pane;				/* msglib pane object. */
+	char* host;
+	char* username;
+    char* password;
+    char* accountdir;
 
 	XP_Bool leave_on_server;	/* Whether we're supposed to leave messages
 								   on server. */
@@ -240,7 +244,7 @@ typedef struct _Pop3ConData {
 											 * called
 											 */
 	XP_Bool         only_check_for_new_mail;
-  	MSG_BIFF_STATE	biffstate;	/* If just checking for, what the answer is. */
+  /* MSG_BIFF_STATE	biffstate;	 If just checking for, what the answer is. */
 
 	XP_Bool         password_failed;        /* flag for password querying */
 	void 		   *msg_closure;
@@ -282,7 +286,21 @@ typedef struct _Pop3ConData {
    XP_Bool get_url;
    XP_Bool seenFromHeader;
    char *sender_info;
+   NET_StreamClass *teststream;  
+   URL_Struct *testurls;
+   void *rdf;
+   char* current_from;
+   char* current_to;
+   char* current_date;
+   char* current_subject;
 } Pop3ConData;
+
+void *MSG_IncorporateBegin (ActiveEntry *ce) ;
+int MSG_IncorporateAbort (Pop3ConData *cd)  ;
+int MSG_IncorporateWrite (Pop3ConData *cd,   const char *block, int32 length) ;
+int MSG_IncorporateComplete(Pop3ConData *cd) ;
+ 
+char * POP_Base64Encode (char *src, int32 srclen);
 
 PUBLIC void
 NET_LeavePopMailOnServer(Bool do_it)
@@ -311,60 +329,34 @@ MODULE_PRIVATE void NET_SetAllowAtSignInMailUserName(XP_Bool allow)
 PUBLIC void
 NET_SetPopUsername(const char *username)
 {
-	char *at = NULL;
-
-	StrAllocCopy(net_pop3_username, username);
-	net_uidl_command_unimplemented = FALSE;
-	net_top_command_unimplemented = FALSE;
-	net_xtnd_xlst_command_unimplemented = FALSE;
-	/*
-	** If we are called with data like "fred@bedrock.com", then we will
-	** help the user by ignoring the stuff after the "@".  People with
-	** @ signs in their user names will be hosed.  They also can't possibly
-	** be current happy internet users.  This will waste a few bytes,
-	** but was the minimal change to make in order to ship cheddar.
-	** (it might even save bytes by avoiding the code which does the
-	** right thing)
-	*/
-	if (!net_allow_at_sign_in_mail_user_name)
-	{
-		if (net_pop3_username != NULL) at = XP_STRCHR(net_pop3_username, '@');
-		if (at != NULL) *at = '\0';
-	}
 }
 
 PUBLIC const char*
 NET_GetPopUsername(void)
 {
-  return net_pop3_username;
+  return NULL;
 }
 
 PRIVATE void
 net_set_pop3_password(const char *password)
 {
-    FREEIF(net_pop3_password);
-    net_pop3_password = SECNAV_MungeString(password);
+     
 }
 
 PRIVATE char *
 net_get_pop3_password(void)
 {
-	return SECNAV_UnMungeString(net_pop3_password);
+	return NULL;
 }
 
 PUBLIC void
 NET_SetPopPassword(const char *password)
-{
-	if (password && XP_STRLEN(password))
-		StrAllocCopy(net_pop3_password, password);
-	else
-		FREEIF(net_pop3_password);
+{ 
 }
 
 PUBLIC const char *
 NET_GetPopPassword(void)
-{
-  return net_get_pop3_password();
+{return NULL ;  
 }
 
 /* fix Mac warning of missing prototype */
@@ -422,9 +414,9 @@ put_hash(Pop3UidlHost* host, XP_HashTable table, const char* key, char value)
   }
 }
 
-PRIVATE Pop3UidlHost* net_pop3_load_state(const char* searchhost,
-										  const char* searchuser)
+PRIVATE Pop3UidlHost* net_pop3_load_state(Pop3ConData *cd) 
 {
+   
   XP_File file;
   char* buf;
   char* host;
@@ -433,7 +425,9 @@ PRIVATE Pop3UidlHost* net_pop3_load_state(const char* searchhost,
   char* flags;
   Pop3UidlHost* result = NULL;
   Pop3UidlHost* current = NULL;
-  Pop3UidlHost* tmp;
+  Pop3UidlHost* tmp; 
+  char* searchhost = cd->host;
+  char* searchuser = cd->username;
 
   result = XP_NEW_ZAP(Pop3UidlHost);
   if (!result) return NULL;
@@ -447,7 +441,9 @@ PRIVATE Pop3UidlHost* net_pop3_load_state(const char* searchhost,
 	XP_FREE(result);
 	return NULL;
   }
-  file = XP_FileOpen("", xpMailPopState, XP_FILE_READ);
+  
+  file = XP_FileOpen(cd->accountdir, xpMailPopState, XP_FILE_READ);
+  
   if (!file) return result;
   buf = (char*)XP_ALLOC(512);
   if (buf) {
@@ -537,12 +533,14 @@ net_pop3_write_mapper(XP_HashTable hash, const void* key, void* value,
 
 
 PRIVATE void
-net_pop3_write_state(Pop3UidlHost* host)
+net_pop3_write_state(Pop3ConData *cd)
 {
   XP_File file;
   int32 len = 0;
+  Pop3UidlHost* host = cd->uidlinfo;
 
-  file = XP_FileOpen("", xpMailPopState, XP_FILE_WRITE_BIN);
+  file = XP_FileOpen(cd->accountdir, xpMailPopState, XP_FILE_WRITE_BIN);
+
   if (!file) return;
   len = XP_FileWrite("# Netscape POP3 State File" LINEBREAK
 			   "# This is a generated file!  Do not edit." LINEBREAK LINEBREAK,
@@ -574,7 +572,7 @@ extern void SavePopData(char *data);
 extern void net_pop3_delete_if_in_server(char *data, char *uidl, XP_Bool *changed);
 extern void KillPopData(char* data);
 
-
+/*
 char* ReadPopData(char *name)
 {
 	Pop3UidlHost *uidlHost = NULL;
@@ -583,16 +581,17 @@ char* ReadPopData(char *name)
 		return (char*) uidlHost;
 	
 	uidlHost = net_pop3_load_state(name, net_pop3_username);
-	return (char*) uidlHost;
+	return (char*) uidlHost; 
+	return NULL;
 }
 
-void SavePopData(char *data)
+void SavePopData(ActiveEntry *ce)
 {
 	Pop3UidlHost *host = (Pop3UidlHost*) data;
 
 	if (!host)
 		return;
-	net_pop3_write_state(host);
+	net_pop3_write_state(host); 
 }
 
 
@@ -971,18 +970,18 @@ net_pop3_send_username(ActiveEntry *ce)
 	if(!cd->command_succeeded)
 		return(net_pop3_error(ce, MK_POP3_SERVER_ERROR));
 
-	if(!net_pop3_username || !*net_pop3_username)
+	if(!cd->username)
 		return(net_pop3_error(ce, MK_POP3_USERNAME_UNDEFINED));
 
 	if (POP3_HAS_AUTH_LOGIN & pop3CapabilityFlags) {
 		char * str = 
-		  NET_Base64Encode(net_pop3_username, 
-						   XP_STRLEN(net_pop3_username));
+		  POP_Base64Encode(cd->username, 
+						   XP_STRLEN(cd->username));
 		if (str)
 		  {
 			PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE, "%.256s" CRLF,
 						str);
-			XP_FREEIF(str);
+			 
 		  }
 		else
 		  {
@@ -992,7 +991,7 @@ net_pop3_send_username(ActiveEntry *ce)
 	else {
 		PR_snprintf(cd->output_buffer, 
 					OUTPUT_BUFFER_SIZE, 
-					"USER %.256s" CRLF, net_pop3_username);
+					"USER %.256s" CRLF, cd->username);
 	}
 
 	cd->next_state_after_response = POP3_SEND_PASSWORD;
@@ -1010,19 +1009,19 @@ net_pop3_send_password(ActiveEntry *ce)
 	if (!cd->command_succeeded)
 		return(net_pop3_error(ce, MK_POP3_USERNAME_FAILURE));
 
-	password = net_get_pop3_password();
+	password = cd->password;
 
 	if (password == NULL)
 		return(net_pop3_error(ce, MK_POP3_PASSWORD_UNDEFINED));
 
 	if (POP3_HAS_AUTH_LOGIN & pop3CapabilityFlags) {
 		char * str = 
-		  NET_Base64Encode(password, XP_STRLEN(password));
+		  POP_Base64Encode(password, XP_STRLEN(password));
 		if (str)
 		  {
 			PR_snprintf(cd->output_buffer, 
 						OUTPUT_BUFFER_SIZE, "%.256s" CRLF, str);
-			XP_FREEIF(str);
+			
 		  }
 		else
 		  {
@@ -1033,8 +1032,7 @@ net_pop3_send_password(ActiveEntry *ce)
 		PR_snprintf(cd->output_buffer, 
 					OUTPUT_BUFFER_SIZE, "PASS %.256s" CRLF, password);
 	}
-	XP_MEMSET(password, 0, XP_STRLEN(password));
-	XP_FREE(password);
+
 
 	if (cd->get_url)
 		cd->next_state_after_response = POP3_SEND_GURL;
@@ -1069,14 +1067,14 @@ net_pop3_send_stat_or_gurl(ActiveEntry *ce, XP_Bool sendStat)
 		cd->pause_for_read = FALSE;		   /* try again right away */
 		pop3CapabilityFlags = POP3_AUTH_LOGIN_UNDEFINED | POP3_XSENDER_UNDEFINED |
 							  POP3_GURL_UNDEFINED;
-		if (cd->pane) {
+		/*if (cd->pane) {
 			MSG_SetUserAuthenticated(MSG_GetMaster(cd->pane), FALSE);
 			MSG_SetMailAccountURL(MSG_GetMaster(cd->pane), NULL);
-		}
+		} */
 		/* clear the bogus password in case 
 		 * we need to sync with auth smtp password 
 		 */
-		XP_FREEIF(net_pop3_password);
+	 
 		return 0;
 	  }
     else if (net_pop3_password_pending)
@@ -1084,11 +1082,11 @@ net_pop3_send_stat_or_gurl(ActiveEntry *ce, XP_Bool sendStat)
 		/*
 		 * First time with this password.  Record it as a keeper.
 		 * (The user's preference might say to save it.)
-		 */
-		FE_RememberPopPassword(ce->window_id, net_pop3_password);
+		  
+		FE_RememberPopPassword(ce->window_id, net_pop3_password); */
 		net_pop3_password_pending = FALSE;
-		if (cd->pane)
-			MSG_SetUserAuthenticated(MSG_GetMaster(cd->pane), TRUE);
+        /*		if (cd->pane)
+			MSG_SetUserAuthenticated(MSG_GetMaster(cd->pane), TRUE); */
       }
 
 	if (sendStat) {
@@ -1151,15 +1149,15 @@ net_pop3_get_stat(ActiveEntry *ce)
 		 involve keeping messages on the server.  Therefore, we now know enough
 		 to finish up.  If we had no messages, that would have been handled
 		 above; therefore, we know we have some new messages. */
-	  cd->biffstate = MSG_BIFF_NewMail;
+	  /* cd->biffstate = MSG_BIFF_NewMail; */
 	  cd->next_state = POP3_SEND_QUIT;
 	  return(0);
 	}
 
 
 	if (!cd->only_check_for_new_mail) {
-	  cd->msg_del_started = MSG_BeginMailDelivery(cd->pane);
-
+      /*	  cd->msg_del_started = MSG_BeginMailDelivery(cd->pane); */
+      cd->msg_del_started = 1;
 	  if(!cd->msg_del_started)
 		{
 		  return(net_pop3_error(ce, MK_POP3_MESSAGE_WRITE_ERROR));
@@ -1207,8 +1205,8 @@ net_pop3_gurl_response(ActiveEntry *ce)
 
 	if (cd->command_succeeded) {
 		pop3CapabilityFlags |= POP3_HAS_GURL;
-		if (cd->pane)
-			MSG_SetMailAccountURL(MSG_GetMaster(cd->pane), cd->command_response);
+        /*		if (cd->pane)
+			MSG_SetMailAccountURL(MSG_GetMaster(cd->pane), cd->command_response); */
 	}
 	else {
 		pop3CapabilityFlags &= ~POP3_HAS_GURL;
@@ -1493,7 +1491,7 @@ get_fake_uidl_top(ActiveEntry *ce)
 				/* if we are only doing a biff, stop here */
 				if (cd->only_check_for_new_mail)
 				{
-					cd->biffstate = MSG_BIFF_NewMail;
+                  /* cd->biffstate = MSG_BIFF_NewMail; */
 	  				cd->next_state = POP3_SEND_QUIT;
 					cd->pause_for_read = FALSE;
 				}
@@ -1878,8 +1876,9 @@ net_pop3_get_msg(ActiveEntry *ce)
 	  } else {
 		cd->total_download_size = cd->total_folder_size;
 	  }
+	 /* cd->only_check_for_new_mail = 0; */
 	  if (cd->only_check_for_new_mail) {
-		if (cd->total_download_size > 0) cd->biffstate = MSG_BIFF_NewMail;
+        /*		if (cd->total_download_size > 0) cd->biffstate = MSG_BIFF_NewMail;*/
 		cd->next_state = POP3_SEND_QUIT;
 		return(0);
 	  }
@@ -1888,18 +1887,18 @@ net_pop3_get_msg(ActiveEntry *ce)
 	   */	
 
 	  {
-		const char* dir = MSG_GetFolderDirectory(MSG_GetPrefs(cd->pane));
+		/* const char* dir = MSG_GetFolderDirectory(MSG_GetPrefs(cd->pane));
 
-		/* When checking for disk space available, take in consideration possible database
+		 When checking for disk space available, take in consideration possible database
 		changes, therefore ask for a little more than what the message size is.
 		Also, due to disk sector sizes, allocation blocks, etc. The space "available" may be greater
-		than the actual space usable. */
+		than the actual space usable. 
 		if((cd->total_download_size > 0)
             && ((uint32)cd->total_download_size + (uint32) 3096) > FE_DiskSpaceAvailable(ce->window_id, dir))
 		  {
 			return(net_pop3_error(ce, MK_POP3_OUT_OF_DISK_SPACE));
 		  }
-
+*/
 	  }
 	}
 
@@ -2098,7 +2097,7 @@ net_pop3_send_retr(ActiveEntry *ce)
 }
 
 /* #### should include msgutils.h instead... */
-extern int msg_LineBuffer (const char *net_buffer, int32 net_buffer_size,
+int msg_LineBuffer (const char *net_buffer, int32 net_buffer_size,
 						   char **bufferP, uint32 *buffer_sizeP,
 						   uint32 *buffer_fpP,
 						   XP_Bool convert_newlines_p,
@@ -2160,13 +2159,13 @@ net_pop3_retr_response(ActiveEntry *ce)
 		if (cd->truncating_cur_msg)
 		{ /* TOP, truncated message */
 			cd->cur_msg_size = cd->size_limit;
-			flags |= MSG_FLAG_PARTIAL;
+			/* xxx flags |= MSG_FLAG_PARTIAL; */
 		}
 		else
 			cd->cur_msg_size = atol(XP_STRTOK(cd->command_response, " "));  /* RETR complete message */
 
-		if (cd->sender_info)
-			flags |= MSG_FLAG_SENDER_AUTHED;
+        /*	xxx	if (cd->sender_info)
+			flags |= MSG_FLAG_SENDER_AUTHED; */
 
 		if(cd->cur_msg_size < 0)
 			cd->cur_msg_size = 0;
@@ -2185,7 +2184,7 @@ net_pop3_retr_response(ActiveEntry *ce)
 		/* open the message stream so we have someplace
 		 * to put the data
 		 */
-		cd->msg_closure = MSG_IncorporateBegin (cd->pane, ce->format_out, uidl, ce->URL_s, flags);
+		cd->msg_closure = MSG_IncorporateBegin (ce);
 
 		TRACEMSG(("Done opening message stream!"));
 													
@@ -2228,7 +2227,7 @@ net_pop3_retr_response(ActiveEntry *ce)
 				*/
 				if (gPOP3dotFix && gPOP3AssumedEnd)
 				{
-					ce->status = MSG_IncorporateComplete(cd->pane, cd->msg_closure);
+					ce->status = MSG_IncorporateComplete(cd);
 					cd->msg_closure = 0;
 					buffer_size = 0;
 				}
@@ -2256,15 +2255,15 @@ net_pop3_retr_response(ActiveEntry *ce)
 								&cd->obuffer, &cd->obuffer_size,
 								&cd->obuffer_fp, FALSE,
 								net_pop3_retr_handle_line, (void *) ce);
+
 	if (ce->status < 0)
 	{
 		if (cd->msg_closure)
 		{
-			MSG_IncorporateAbort(cd->pane, cd->msg_closure,
-							   MK_POP3_MESSAGE_WRITE_ERROR);
+			MSG_IncorporateAbort(cd);
 			cd->msg_closure = NULL;
 		}
-		MSG_AbortMailDelivery(cd->pane);
+        /*		MSG_AbortMailDelivery(cd->pane); */
 		return(net_pop3_error(ce, MK_POP3_MESSAGE_WRITE_ERROR));
 	}
 
@@ -2386,13 +2385,14 @@ net_pop3_retr_handle_line(char *line, uint32 line_length, void *closure)
 		  char ch = line[line_length-1];
 		  line[line_length-1] = 0;
 		  cd->seenFromHeader = TRUE;
-		  if (XP_STRSTR(line, cd->sender_info) == NULL)
-			  MSG_ClearSenderAuthedFlag(cd->pane, cd->msg_closure);
+          /* 		  if (XP_STRSTR(line, cd->sender_info) == NULL)
+			  MSG_ClearSenderAuthedFlag(cd->pane, cd->msg_closure); */
 		  line[line_length-1] = ch;
 	  }
   }
 
-  status = MSG_IncorporateWrite(cd->pane, cd->msg_closure, line, line_length);
+  
+  status = MSG_IncorporateWrite(cd, line, line_length);
 
   if ((status >= 0) &&
 	  (line[0] == '.') &&
@@ -2401,7 +2401,7 @@ net_pop3_retr_handle_line(char *line, uint32 line_length, void *closure)
 	  gPOP3AssumedEnd = TRUE;	/* in case byte count from server is wrong, mark we may have had the end */
 	  if (!gPOP3dotFix || (gPOP3parsed_bytes >= (gPOP3size -3)))
 	  {
-		status = MSG_IncorporateComplete(cd->pane, cd->msg_closure);
+		status = MSG_IncorporateComplete(cd);
 		cd->msg_closure = 0;
 	  }
   }
@@ -2452,7 +2452,7 @@ net_pop3_dele_response(ActiveEntry *ce)
 	
 	We will do this by adding each successfully deleted message id
 	to a list which we will write out to popstate.dat in 
-	net_pop3_write_state().
+	net_pop3_write_state(cd).
 	*/
 	if (host)
 	{
@@ -2497,7 +2497,7 @@ net_pop3_commit_state(ActiveEntry *ce, XP_Bool remove_last_entry)
 		cd->newuidl = NULL;
 	}
 	if (!cd->only_check_for_new_mail) {
-		net_pop3_write_state(cd->uidlinfo);
+		net_pop3_write_state(cd);
 	}
 	return 0;
 }
@@ -2509,28 +2509,49 @@ PRIVATE int32
 net_Pop3Load (ActiveEntry * ce)
 {
 	Pop3ConData * cd = XP_NEW(Pop3ConData);
-	char* host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
 	char* uidl;
 	int err = 0;
+    int dirlen; 
+
+	XP_MEMSET(cd, 0, sizeof(Pop3ConData));
+ 	cd->host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
+	cd->username = NET_ParseURL(ce->URL_s->address, GET_USERNAME_PART | GET_PASSWORD_PART); 
+    dirlen = strlen(cd->host) + strlen(cd->username) + 1;
+    cd->accountdir = XP_ALLOC(dirlen);
+    sprintf(cd->accountdir, "%s@%s", cd->username, cd->host);
+    cd->rdf = ce->URL_s->fe_data; 
+
 
 	if (net_pop3_block)		/* we already have a connection going */
 	{
+      FREEIF(cd->host);
 		FREE(cd);
-		FREEIF(host);
 		return -1;	/* avoid looping back in */
 	}
-	if(!cd || !host || !ce->URL_s->internal_url) {
+	if(!cd || !cd->host /* guha || !ce->URL_s->internal_url */) {
+		FREEIF(cd->host);
 		FREEIF(cd);
-		FREEIF(host);
 		return(MK_OUT_OF_MEMORY);
 	}
 
-	XP_MEMSET(cd, 0, sizeof(Pop3ConData));
-
-	if(!net_pop3_username || !*net_pop3_username)
+ 
+     
+ 
+    if (cd->username && strchr(cd->username, ':')) {
+      char* temp = cd->username;
+      size_t len = strlen(temp);
+      char* pw  = strchr(temp, ':');
+	  size_t l1 = len - strlen(pw);
+      cd->password = XP_STRDUP(&temp[l1+1]);
+      temp[l1] = '\0';
+      cd->username = XP_STRDUP(temp);
+      FREE(temp);
+    } else cd->password = NULL;
+	if(!cd->username)
 	  {
+		FREEIF(cd->host);
 		FREE(cd);
-		FREEIF(host);
+
 		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_POP3_USERNAME_UNDEFINED);
 		ce->status = MK_POP3_USERNAME_UNDEFINED;
 #ifdef XP_MAC
@@ -2551,22 +2572,23 @@ net_Pop3Load (ActiveEntry * ce)
 
 	if (!cd->only_check_for_new_mail) {
 	  XP_Bool tmp = FALSE;
-      cd->pane = ce->URL_s->msg_pane;
+   /* guha   cd->pane = ce->URL_s->msg_pane;
 	  if (!cd->pane)
       {
 #ifdef DEBUG_phil
         XP_Trace ("NET_Pop3Load: url->msg_pane NULL for URL: %s\n", ce->URL_s->address);
 #endif
-	    cd->pane = MSG_FindPane(ce->window_id, MSG_FOLDERPANE); /* ###tw */
+	    cd->pane = MSG_FindPane(ce->window_id, MSG_FOLDERPANE); 
       }
 	  XP_ASSERT(cd->pane);
 	  if (cd->pane == NULL)
 	  {
 		  net_pop3_block = FALSE;
-		  return -1; /* ### */
+		  return -1; 
 	  }
-
+*/
 	  PREF_GetBoolPref("mail.leave_on_server", &(cd->leave_on_server));
+      cd->leave_on_server = 1;
 	  PREF_GetBoolPref("mail.limit_message_size", &tmp);
 	  if (tmp) {
 		PREF_GetIntPref("mail.max_size", &(cd->size_limit));
@@ -2576,8 +2598,8 @@ net_Pop3Load (ActiveEntry * ce)
 	  }
 	}
 
-	cd->uidlinfo = net_pop3_load_state(host, net_pop3_username);
-	XP_FREE(host);
+	cd->uidlinfo = net_pop3_load_state(cd);
+
 	cd->output_buffer = (char*)XP_ALLOC(OUTPUT_BUFFER_SIZE);
 	if(!cd->uidlinfo || !cd->output_buffer)
 		goto FAIL;
@@ -2585,7 +2607,7 @@ net_Pop3Load (ActiveEntry * ce)
 
 	ce->con_data = cd;
 
-	cd->biffstate = MSG_BIFF_NoMail;	/* Return "no mail" unless proven
+	/* cd->biffstate = MSG_BIFF_NoMail;	 Return "no mail" unless proven
 										   otherwise. */
 
 	uidl = strcasestr(ce->URL_s->address, "?uidl=");
@@ -2637,7 +2659,7 @@ net_ProcessPop3 (ActiveEntry *ce)
 
     cd->pause_for_read = FALSE; /* already paused; reset */
 
-	if(!net_pop3_username || !*net_pop3_username)
+	if(!cd->username)
 	  return(net_pop3_error(ce, MK_POP3_USERNAME_UNDEFINED));
 
     while(!cd->pause_for_read)
@@ -2659,77 +2681,55 @@ net_ProcessPop3 (ActiveEntry *ce)
 			    /* If we're just checking for new mail (biff) then don't
 				   prompt the user for a password; just tell him we don't
 				   know whether he has new mail. */
-			    if ((cd->only_check_for_new_mail || MSG_Biff_Master_NikiCallingGetNewMail()) &&
-					(!net_pop3_password || !net_pop3_username))
+                 
+			    if ((cd->only_check_for_new_mail) &&
+					(!cd->username))
 				  {
 					ce->status = MK_POP3_PASSWORD_UNDEFINED;
-					cd->biffstate = MSG_BIFF_Unknown;
-					MSG_SetBiffStateAndUpdateFE(cd->biffstate);	/* update old style biff */
+                    /*	cd->biffstate = MSG_BIFF_Unknown; 
+					MSG_SetBiffStateAndUpdateFE(cd->biffstate);	 update old style biff */
 					cd->next_state = POP3_FREE;
 					cd->pause_for_read = FALSE;
 					break;
 				  }
 
-				XP_ASSERT(net_pop3_username);
+				XP_ASSERT(cd->username);
 
 				if (cd->password_failed)
 				  fmt2 =
 				  XP_GetString( XP_THE_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC );
-				else if (!net_pop3_password)
+				else if (!cd->password)
 				  fmt1 = 
 				   XP_GetString( XP_PASSWORD_FOR_POP3_USER );
 
-				if (fmt1 || fmt2)	/* We need to read a password. */
+				if (!cd->password && (fmt1 || fmt2))	/* We need to read a password. */
 				  {
 					char *password;
-					char *host = NET_ParseURL(ce->URL_s->address,
-											  GET_HOST_PART);
+					char *host = cd->host;
 					size_t len = (XP_STRLEN(fmt1 ? fmt1 : fmt2) +
                                  (host ? XP_STRLEN(host) : 0) + 300) 
 								 * sizeof(char);
 					char *prompt = (char *) XP_ALLOC (len);
-#if defined(SingleSignon)
-					char *usernameAndHost=0;
-#endif
+
 					if (!prompt) {
 						FREEIF(host);
 						net_pop3_block = FALSE;
 						return MK_OUT_OF_MEMORY;
 					}
 					if (fmt1)
-					  PR_snprintf (prompt, len, fmt1, net_pop3_username, host);
+					  PR_snprintf (prompt, len, fmt1, cd->username, cd->host);
 					else
 					  PR_snprintf (prompt, len, fmt2,
 								   (cd->command_response
 									? cd->command_response
 									: XP_GetString(XP_NO_ANSWER)),
-								   net_pop3_username, host);
-#if defined(SingleSignon)
-					StrAllocCopy
-					    (usernameAndHost, 
-					    net_pop3_username);
-					StrAllocCat(usernameAndHost, "@");
-					StrAllocCat(usernameAndHost, host);
-
-					if (cd->password_failed) {
-					    SI_RemoveUser
-						(host, 
-						net_pop3_username, 
-						TRUE);
-					}
-					FREEIF (host);
-
-					password = SI_PromptPassword
-					    (ce->window_id, prompt,
-					    usernameAndHost, FALSE);
-					cd->password_failed = FALSE;
-					XP_FREE(usernameAndHost);
-#else
-					FREEIF (host);
+								   cd->username, cd->host);
+ 
+					
 					cd->password_failed = FALSE;
 					password = FE_PromptPassword
 					    (ce->window_id, prompt);
-#endif
+ 
 					XP_FREE(prompt);
 
 					if (password == NULL)
@@ -2738,15 +2738,13 @@ net_ProcessPop3 (ActiveEntry *ce)
 						return MK_POP3_PASSWORD_UNDEFINED;
 					}
 
-					net_set_pop3_password(password);
-					XP_MEMSET(password, 0, XP_STRLEN(password));
-					XP_FREE(password);
+					cd->password = XP_STRDUP(password);  
 
 					net_pop3_password_pending = TRUE;
 				  }
 
-				XP_ASSERT (net_pop3_username && net_pop3_password);
-				if (!net_pop3_username || !net_pop3_password)
+				XP_ASSERT (cd->username && cd->password);
+				if (!cd->username)
 				{
 					net_pop3_block = FALSE;
 					return -1;
@@ -2777,10 +2775,6 @@ net_ProcessPop3 (ActiveEntry *ce)
 				if ((ce->status == MK_UNABLE_TO_CONNECT) ||
 					(ce->status == MK_CONNECTION_TIMED_OUT) ||
 					(ce->status == MK_CONNECTION_REFUSED))
-				{
-					if (MSG_Biff_Master_NikiCallingGetNewMail())
-						cd->next_state = POP3_FREE;		/* calls from niki-biff should avoid dialogs */
-				}
             	if(ce->socket != NULL)
                 	NET_TotalNumberOfOpenConnections++;
    
@@ -3022,20 +3016,20 @@ net_ProcessPop3 (ActiveEntry *ce)
 				   status file and the FE's biff state.
 				 */
 				if (!cd->only_uidl) {
-				  if (cd->only_check_for_new_mail)
-					  MSG_SetBiffStateAndUpdateFE(cd->biffstate);	/* update old style biff */
-				  else {
+                  if (cd->only_check_for_new_mail) {
+					/*  MSG_SetBiffStateAndUpdateFE(cd->biffstate);	 update old style biff 
+				 } else {
 					/* We don't want to pop up a warning message any more (see bug 54116),
 					   so instead we put the "no new messages" or "retrieved x new messages"
 					   in the status line.  Unfortunately, this tends to be running
 					   in a progress pane, so we try to get the real pane and
 					   show the message there. */
 					  MWContext* context = ce->window_id;
-					  if (cd->pane) {
+                      /*					  if (cd->pane) {
 						  MSG_Pane* parentpane = MSG_GetParentPane(cd->pane);
 						  if (parentpane)
 							  context = MSG_GetContext(parentpane);
-					  }
+					  } */
 					  if (cd->total_download_size <= 0) {
 						  /* There are no new messages.  */
 						  if (context)
@@ -3048,7 +3042,7 @@ net_ProcessPop3 (ActiveEntry *ce)
 						  if (context)
 							  NET_Progress(context, statusString);
 						  FREEIF(statusString);
-						  MSG_SetBiffStateAndUpdateFE(MSG_BIFF_NewMail);
+						  /* MSG_SetBiffStateAndUpdateFE(MSG_BIFF_NewMail); */
 					  }
 				  }
 				}
@@ -3096,14 +3090,14 @@ net_ProcessPop3 (ActiveEntry *ce)
                 	TRACEMSG(("Closing and clearing sock ce->socket: %d", 
 							  ce->socket));
                 	PR_Close(ce->socket);
-                	NET_TotalNumberOfOpenConnections--;
+                	if (NET_TotalNumberOfOpenConnections > 0) NET_TotalNumberOfOpenConnections--;
                 	ce->socket = NULL;
                   }
 
-				if(cd->msg_del_started)
+                /*				if(cd->msg_del_started)
 					MSG_EndMailDelivery(cd->pane);
 				else if (cd->pane)
-					MSG_GetNextURL(cd->pane);
+					MSG_GetNextURL(cd->pane); */
 
 				cd->next_state = POP3_FREE;
 				break;
@@ -3118,6 +3112,7 @@ net_ProcessPop3 (ActiveEntry *ce)
 													      	   */
 					cd->pause_for_read = FALSE;
 					cd->next_state = POP3_ERROR_DONE;
+					net_pop3_block = FALSE;
 				}
 				break;
 
@@ -3153,10 +3148,9 @@ net_ProcessPop3 (ActiveEntry *ce)
 
 				if(cd->msg_closure)
 				  {
-					MSG_IncorporateAbort(cd->pane, cd->msg_closure,
-										 MK_POP3_MESSAGE_WRITE_ERROR);
+					MSG_IncorporateAbort(cd);
 					cd->msg_closure = NULL;
-					MSG_AbortMailDelivery(cd->pane);
+                    /*					MSG_AbortMailDelivery(cd->pane); */
 			 	  }
 
 				if(cd->msg_del_started)
@@ -3164,16 +3158,16 @@ net_ProcessPop3 (ActiveEntry *ce)
 					char *statusTemplate = XP_GetString (MK_MSG_DOWNLOAD_COUNT);
 					char *statusString = PR_smprintf (statusTemplate,  cd->last_accessed_msg, cd->number_of_messages);
 					MWContext* context = ce->window_id;
-					if (cd->pane) {
+                    /*					if (cd->pane) {
 					  MSG_Pane* parentpane = MSG_GetParentPane(cd->pane);
 					  if (parentpane) {
 						context = MSG_GetContext(parentpane);
-					  }
-					}
+					   } 
+					} */
 					XP_ASSERT (!cd->password_failed);
-					MSG_AbortMailDelivery(cd->pane);
+                    /*					MSG_AbortMailDelivery(cd->pane); 
 					if (context)
-						NET_Progress(context, statusString);
+						NET_Progress(context, statusString); */
 					FREEIF(statusString);
 				  }
 
@@ -3262,13 +3256,622 @@ MODULE_PRIVATE void
 NET_InitPop3Protocol(void)
 {
     static NET_ProtoImpl pop3_proto_impl;
-
     pop3_proto_impl.init = net_Pop3Load;
     pop3_proto_impl.process = net_ProcessPop3;
     pop3_proto_impl.interrupt = net_InterruptPop3;
     pop3_proto_impl.cleanup = net_CleanupPop3;
-
     NET_RegisterProtocolImplementation(&pop3_proto_impl, POP3_TYPE_URL);
+	NET_InitMailboxProtocol();
 }
+
+extern void RDF_StartMessageDelivery (void* rdf) ;
+extern void RDF_AddMessageLine(void* rdf, const char* line, int32 length);
+extern void RDF_FinishMessageDelivery (void* rdf) ;
+
+void *MSG_IncorporateBegin (ActiveEntry *ce) {
+  Pop3ConData * cd = (Pop3ConData *)ce->con_data;
+  void* rdf = cd->rdf;
+  RDF_StartMessageDelivery(rdf);  
+}
+
+int MSG_IncorporateWrite (Pop3ConData *cd,   const char *block, int32 length) {  
+  void* rdf = cd->rdf;
+  RDF_AddMessageLine(rdf, block, length);
+  return 1;
+}
+
+
+
+int MSG_IncorporateComplete(Pop3ConData *cd) {
+  void* rdf = cd->rdf;
+  RDF_FinishMessageDelivery(rdf);
+  return 1;
+}
+
+int MSG_IncorporateAbort (Pop3ConData *cd)  {
+  return 0;
+}
+
+int
+msg_GrowBuffer (uint32 desired_size, uint32 element_size, uint32 quantum,
+				char **buffer, uint32 *size)
+{
+  if (*size <= desired_size)
+	{
+	  char *new_buf;
+	  uint32 increment = desired_size - *size;
+	  if (increment < quantum) /* always grow by a minimum of N bytes */
+		increment = quantum;
+
+#ifdef TESTFORWIN16
+	  if (((*size + increment) * (element_size / sizeof(char))) >= 64000)
+		{
+		  /* Make sure we don't choke on WIN16 */
+		  XP_ASSERT(0);
+		  return MK_OUT_OF_MEMORY;
+		}
+#endif /* DEBUG */
+
+	  new_buf = (*buffer
+				 ? (char *) XP_REALLOC (*buffer, (*size + increment)
+										* (element_size / sizeof(char)))
+				 : (char *) XP_ALLOC ((*size + increment)
+									  * (element_size / sizeof(char))));
+	  if (! new_buf)
+		return MK_OUT_OF_MEMORY;
+	  *buffer = new_buf;
+	  *size += increment;
+	}
+  return 0;
+}
+
+/* Take the given buffer, tweak the newlines at the end if necessary, and
+   send it off to the given routine.  We are guaranteed that the given
+   buffer has allocated space for at least one more character at the end. */
+static int
+msg_convert_and_send_buffer(char* buf, uint32 length, XP_Bool convert_newlines_p,
+							int32 (*per_line_fn) (char *line,
+												  uint32 line_length,
+												  void *closure),
+							void *closure)
+{
+  /* Convert the line terminator to the native form.
+   */
+  char* newline;
+
+  XP_ASSERT(buf && length > 0);
+  if (!buf || length <= 0) return -1;
+  newline = buf + length;
+  XP_ASSERT(newline[-1] == CR || newline[-1] == LF);
+  if (newline[-1] != CR && newline[-1] != LF) return -1;
+
+  if (!convert_newlines_p)
+	{
+	}
+#if (LINEBREAK_LEN == 1)
+  else if ((newline - buf) >= 2 &&
+		   newline[-2] == CR &&
+		   newline[-1] == LF)
+	{
+	  /* CRLF -> CR or LF */
+	  buf [length - 2] = LINEBREAK[0];
+	  length--;
+	}
+  else if (newline > buf + 1 &&
+		   newline[-1] != LINEBREAK[0])
+	{
+	  /* CR -> LF or LF -> CR */
+	  buf [length - 1] = LINEBREAK[0];
+	}
+#else
+  else if (((newline - buf) >= 2 && newline[-2] != CR) ||
+		   ((newline - buf) >= 1 && newline[-1] != LF))
+	{
+	  /* LF -> CRLF or CR -> CRLF */
+	  length++;
+	  buf[length - 2] = LINEBREAK[0];
+	  buf[length - 1] = LINEBREAK[1];
+	}
+#endif
+
+  return (*per_line_fn)(buf, length, closure);
+}
+
+int
+msg_LineBuffer (const char *net_buffer, int32 net_buffer_size,
+				char **bufferP, uint32 *buffer_sizeP, uint32 *buffer_fpP,
+				XP_Bool convert_newlines_p,
+				int32 (*per_line_fn) (char *line, uint32 line_length,
+									  void *closure),
+				void *closure)
+{
+  int status = 0;
+  if (*buffer_fpP > 0 && *bufferP && (*bufferP)[*buffer_fpP - 1] == CR &&
+	  net_buffer_size > 0 && net_buffer[0] != LF) {
+	/* The last buffer ended with a CR.  The new buffer does not start
+	   with a LF.  This old buffer should be shipped out and discarded. */
+	XP_ASSERT(*buffer_sizeP > *buffer_fpP);
+	if (*buffer_sizeP <= *buffer_fpP) return -1;
+	status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
+										 convert_newlines_p,
+										 per_line_fn, closure);
+	if (status < 0) return status;
+	*buffer_fpP = 0;
+  }
+  while (net_buffer_size > 0)
+	{
+	  const char *net_buffer_end = net_buffer + net_buffer_size;
+	  const char *newline = 0;
+	  const char *s;
+
+
+	  for (s = net_buffer; s < net_buffer_end; s++)
+		{
+		  /* Move forward in the buffer until the first newline.
+			 Stop when we see CRLF, CR, or LF, or the end of the buffer.
+			 *But*, if we see a lone CR at the *very end* of the buffer,
+			 treat this as if we had reached the end of the buffer without
+			 seeing a line terminator.  This is to catch the case of the
+			 buffers splitting a CRLF pair, as in "FOO\r\nBAR\r" "\nBAZ\r\n".
+		   */
+		  if (*s == CR || *s == LF)
+			{
+			  newline = s;
+			  if (newline[0] == CR)
+				{
+				  if (s == net_buffer_end - 1)
+					{
+					  /* CR at end - wait for the next character. */
+					  newline = 0;
+					  break;
+					}
+				  else if (newline[1] == LF)
+					/* CRLF seen; swallow both. */
+					newline++;
+				}
+			  newline++;
+			  break;
+			}
+		}
+
+	  /* Ensure room in the net_buffer and append some or all of the current
+		 chunk of data to it. */
+	  {
+		const char *end = (newline ? newline : net_buffer_end);
+		uint32 desired_size = (end - net_buffer) + (*buffer_fpP) + 1;
+
+		if (desired_size >= (*buffer_sizeP))
+		  {
+			status = msg_GrowBuffer (desired_size, sizeof(char), 1024,
+									 bufferP, buffer_sizeP);
+			if (status < 0) return status;
+		  }
+		XP_MEMCPY ((*bufferP) + (*buffer_fpP), net_buffer, (end - net_buffer));
+		(*buffer_fpP) += (end - net_buffer);
+	  }
+
+	  /* Now *bufferP contains either a complete line, or as complete
+		 a line as we have read so far.
+
+		 If we have a line, process it, and then remove it from `*bufferP'.
+		 Then go around the loop again, until we drain the incoming data.
+	   */
+	  if (!newline)
+		return 0;
+
+	  status = msg_convert_and_send_buffer(*bufferP, *buffer_fpP,
+										   convert_newlines_p,
+										   per_line_fn, closure);
+	  if (status < 0) return status;
+
+	  net_buffer_size -= (newline - net_buffer);
+	  net_buffer = newline;
+	  (*buffer_fpP) = 0;
+	}
+  return 0;
+}
+
+
+struct MimeEncoderData {
+
+  /* Buffer for the base64 encoder. */
+  unsigned char in_buffer[3];
+  int32 in_buffer_count;
+	
+  int32 current_column, line_byte_count;
+  
+  /* Where to write the encoded data */
+  int (*write_buffer) (const char *buf, int32 size, void *closure);
+  void *closure;
+};
+
+pop_mime_encode_base64_buffer (MimeEncoderData *data, const char *buffer, int32 size);
+MimeEncoderData* pop_mime_encoder_init (int (*output_fn) (const char *, int32, void *),   void *closure);
+int PopMimeEncoderDestroy (MimeEncoderData *data, XP_Bool abort_p);
+int net_buffer_output_fn ( const char *buf, int32 size, void *closure);
+
+
+int
+PopMimeEncoderDestroy (MimeEncoderData *data, XP_Bool abort_p)
+{
+  int status = 0;
+
+  /* If we're uuencoding, we have our own finishing routine. */
+  
+  /* Since Base64 (and uuencode) output needs to do some buffering to get 
+	 a multiple of three bytes on each block, there may be a few bytes 
+	 left in the buffer after the last block has been written.  We need to
+	 flush those out now.
+   */
+
+
+  if (!abort_p &&
+	  data->in_buffer_count > 0)
+	{
+	  char buf2 [6];
+	  char *buf = buf2 + 2;
+	  char *out = buf;
+	  int j;
+	  /* fixed bug 55998, 61302, 61866
+	   * type casting to uint32 before shifting
+	   */
+	  uint32 n = ((uint32) data->in_buffer[0]) << 16;
+	  if (data->in_buffer_count > 1)
+		n = n | (((uint32) data->in_buffer[1]) << 8);
+
+	  buf2[0] = CR;
+	  buf2[1] = LF;
+
+	  for (j = 18; j >= 0; j -= 6)
+		{
+		  unsigned int k = (n >> j) & 0x3F;
+		  if (k < 26)       *out++ = k      + 'A';
+		  else if (k < 52)  *out++ = k - 26 + 'a';
+		  else if (k < 62)  *out++ = k - 52 + '0';
+		  else if (k == 62) *out++ = '+';
+		  else if (k == 63) *out++ = '/';
+		  else abort ();
+		}
+
+	  /* Pad with equal-signs. */
+	  if (data->in_buffer_count == 1)
+		buf[2] = '=';
+	  buf[3] = '=';
+
+	  if (data->current_column >= 72)
+		status = data->write_buffer (buf2, 6, data->closure);
+	  else
+		status = data->write_buffer (buf,  4, data->closure);
+	}
+
+
+  XP_FREE (data);
+  return status;
+}
+
+MimeEncoderData *
+pop_mime_encoder_init (int (*output_fn) (const char *, int32, void *),
+				   void *closure)
+{
+  MimeEncoderData *data = XP_NEW(MimeEncoderData);
+  if (!data) return 0;
+  XP_MEMSET(data, 0, sizeof(*data));
+  data->write_buffer = output_fn;
+  data->closure = closure;
+  return data;
+}
+
+typedef struct {
+  char *buffer;
+  int32 size;
+  int32 pos;
+} BufferStruct;
+
+
+char * POP_Base64Encode (char *src, int32 srclen)
+{
+  BufferStruct bs;
+  MimeEncoderData *encoder_data = NULL;
+
+  XP_ASSERT (src);
+  if (!src)
+    return NULL;
+  else if (srclen == 0)
+    return XP_STRDUP("");
+
+  XP_MEMSET (&bs, 0, sizeof (BufferStruct));
+  encoder_data = pop_mime_encoder_init(net_buffer_output_fn, (void *) &bs);
+  if (!encoder_data)
+    return NULL;
+
+  if (pop_mime_encode_base64_buffer(encoder_data, src, srclen) < 0)
+    {
+      PopMimeEncoderDestroy(encoder_data, FALSE);
+      XP_FREEIF(bs.buffer);
+      return NULL;
+    }
+  
+  PopMimeEncoderDestroy(encoder_data, FALSE);
+  /* caller must free the returned pointer to prevent
+   * memory leak problem.
+   */
+  return bs.buffer;
+}
+
+int
+pop_mime_encode_base64_buffer (MimeEncoderData *data, const char *buffer, int32 size)
+{
+  int status = 0;
+  const unsigned char *in = (unsigned char *) buffer;
+  const unsigned char *end = in + size;
+  char out_buffer[80];
+  char *out = out_buffer;
+  uint32 i = 0, n = 0;
+  uint32 off;
+
+  if (size == 0)
+	return 0;
+  else if (size < 0)
+	{
+	  XP_ASSERT(0);
+	  return -1;
+	}
+
+
+  /* If this input buffer is too small, wait until next time. */
+  if (size < (3 - data->in_buffer_count))
+	{
+	  XP_ASSERT(size < 3 && size > 0);
+	  data->in_buffer[data->in_buffer_count++] = buffer[0];
+	  if (size > 1)
+		data->in_buffer[data->in_buffer_count++] = buffer[1];
+	  XP_ASSERT(data->in_buffer_count < 3);
+	  return 0;
+	}
+
+
+  /* If there are bytes that were put back last time, take them now.
+   */
+  i = 0;
+  if (data->in_buffer_count > 0) n = data->in_buffer[0];
+  if (data->in_buffer_count > 1) n = (n << 8) + data->in_buffer[1];
+  i = data->in_buffer_count;
+  data->in_buffer_count = 0;
+
+  /* If this buffer is not a multiple of three, put one or two bytes back.
+   */
+  off = ((size + i) % 3);
+  if (off)
+	{
+	  data->in_buffer[0] = buffer [size - off];
+	  if (off > 1)
+		data->in_buffer [1] = buffer [size - off + 1];
+	  data->in_buffer_count = off;
+	  size -= off;
+	  XP_ASSERT (! ((size + i) % 3));
+	  end = (unsigned char *) (buffer + size);
+	}
+
+  /* Populate the out_buffer with base64 data, one line at a time.
+   */
+  while (in < end)
+	{
+	  int32 j;
+
+	  while (i < 3)
+		{
+		  n = (n << 8) | *in++;
+		  i++;
+		}
+	  i = 0;
+
+	  for (j = 18; j >= 0; j -= 6)
+		{
+		  unsigned int k = (n >> j) & 0x3F;
+		  if (k < 26)       *out++ = k      + 'A';
+		  else if (k < 52)  *out++ = k - 26 + 'a';
+		  else if (k < 62)  *out++ = k - 52 + '0';
+		  else if (k == 62) *out++ = '+';
+		  else if (k == 63) *out++ = '/';
+		  else abort ();
+		}
+
+	  data->current_column += 4;
+	  if (data->current_column >= 72)
+		{
+		  /* Do a linebreak before column 76.  Flush out the line buffer. */
+		  data->current_column = 0;
+		  *out++ = '\015';
+		  *out++ = '\012';
+		  status = data->write_buffer (out_buffer, (out - out_buffer),
+									   data->closure);
+		  out = out_buffer;
+		  if (status < 0) return status;
+		}
+	}
+
+  /* Write out the unwritten portion of the last line buffer. */
+  if (out > out_buffer)
+	{
+	  status = data->write_buffer (out_buffer, (out - out_buffer),
+								   data->closure);
+	  if (status < 0) return status;
+	}
+
+  return 0;
+}
+
+int
+net_buffer_output_fn ( const char *buf, int32 size, void *closure)
+{
+  BufferStruct *bs = (BufferStruct *) closure;
+  /* if the size greater or equal to the available buffer size
+   * reallocate the buffer
+   */
+  PR_ASSERT (buf && bs && size > 0);
+  if ( !buf || !bs || size <= 0 )
+	return -1;
+
+  if (size >= bs->size - bs->pos)
+	{
+	  int32 len;
+	  char *newBuffer;
+	  
+	  len = (bs->size << 1) - bs->pos + size + 1; /* null terminated */
+	  if (bs->buffer)
+		newBuffer = PR_Realloc (bs->buffer, len);
+	  else
+		newBuffer = PR_Malloc(len);
+	  if (!newBuffer)
+		return MK_OUT_OF_MEMORY;
+	  memset(newBuffer+bs->pos, 0, len-bs->pos);
+	  bs->size = len;
+	  bs->buffer = newBuffer;
+	}
+  memcpy (bs->buffer+bs->pos, buf, size);
+  bs->pos += size;
+  return 0;
+}
+
+
+
+/* Stick the mailbox stuff here. The mailbox stuff in mkmailbox.c is too ... */
+
+
+typedef struct _MBoxConData {
+  FILE *mbox;
+  int32 offset;
+  int32 status;
+  NET_StreamClass *stream;
+  int32 pos;
+  char* buff;
+} MBoxConData;
+
+
+extern void* getTranslator (char* url);
+extern FILE *getPopMBox(void* db);
+
+int32
+net_ProcessMBox (ActiveEntry * ce) {
+  MBoxConData *cd = (MBoxConData *)ce->con_data;
+  if ((cd->status == 1) && (cd->stream)) { 
+	memset(cd->buff, '\0', 100000);
+    fseek(cd->mbox, cd->offset, SEEK_SET); 
+    while (fgets(cd->buff, 100000, cd->mbox)) {
+	  cd->offset = ftell(cd->mbox);
+      if (!startsWith("From ", cd->buff)) { 
+        (*(cd->stream->put_block))(cd->stream, cd->buff, strlen(cd->buff));  
+      } else break;
+      memset(cd->buff, '\0', 100000);
+	  fseek(cd->mbox, cd->offset, SEEK_SET);
+    }
+    (*cd->stream->complete)(cd->stream);
+    XP_FREE(cd->buff);
+    cd->status = 0; 
+    XP_FREE(cd);
+	XP_FREE(ce->URL_s->content_type);
+	ce->URL_s->content_type = NULL;
+    ce->con_data = NULL;
+  }
+  return -1;
+}
+
+char* normalizeMTs (char* mt) {
+	if (strcmp(mt, "text/html") ==0) {
+		return TEXT_HTML;
+	} if (strcmp(mt, "text/plain") ==0) {
+		return TEXT_PLAIN;
+	} if (strcmp(mt, "text") ==0) {
+		return TEXT_PLAIN;
+	} else return mt;
+}
+
+
+PRIVATE int32
+net_MBoxLoad (ActiveEntry * ce)
+{
+  /* displaying mailbox items */
+	MBoxConData  *cd = (MBoxConData *)XP_NEW(MBoxConData);
+    void* db;
+    char* mbox = XP_ALLOC(100);
+	PRBool mimeTypeSet = 0;
+	char* offset = strchr(ce->URL_s->address, '?') + 1;
+	memset(mbox, '\0', 100);
+	memcpy(mbox, ce->URL_s->address, offset-(ce->URL_s->address+1));
+    sscanf(offset, "%d",&cd->offset);
+    db = getTranslator(mbox);
+    cd->mbox = getPopMBox(db);
+    cd->status = 1; 
+	 cd->buff = XP_ALLOC(100000);
+	 memset(cd->buff, '\0', 100000);
+	fseek(cd->mbox, cd->offset, SEEK_SET); 
+	
+	while (fgets(cd->buff, 100000, cd->mbox)) {
+	  cd->offset = ftell(cd->mbox);
+      if (startsWith("From ", cd->buff) || startsWith("Content-Length:", cd->buff) || 
+		  startsWith("\n", cd->buff) || startsWith("\r", cd->buff)) break;
+	  if (startsWith("Content-Type:", cd->buff)) {
+		  char* enc = strchr(&cd->buff[13], ';');
+		  char* mt  = XP_ALLOC(50);
+		  memset(mt, '\0', 50);
+		  if (enc) {
+			memcpy(mt, &cd->buff[14], enc-&cd->buff[14]);
+		  } else {
+			int n = 0;
+			while ((cd->buff[14+n] != ' ') && (cd->buff[14+n] != '\n') && (cd->buff[14+n] != '\r')) {
+				mt[n] = cd->buff[14+n];
+				n++;
+			}
+		  }
+		    /* need libmime */
+			StrAllocCopy(ce->URL_s->content_type, normalizeMTs(mt));
+			mimeTypeSet = 1;
+		   
+	  } 
+	  memset(cd->buff, '\0', 100000);
+	  fseek(cd->mbox, cd->offset, SEEK_SET); 
+	}
+	if (!mimeTypeSet) StrAllocCopy(ce->URL_s->content_type, TEXT_PLAIN);
+    cd->stream = NET_StreamBuilder(1,  ce->URL_s, (MWContext*) ce->window_id); 
+	ce->con_data = cd;
+    
+    XP_FREE(mbox);
+    return net_ProcessMBox(ce);
+}
+
+
+int32
+net_InterruptMBox (ActiveEntry *ce) {
+  MBoxConData* cd = (MBoxConData*)ce->con_data;
+  cd->status = 0;
+  return 0;
+}
+
+int32 
+net_CleanupMBox (void) {
+  return 0;
+}
+  
+/* NET_process_Pop3  will control the state machine that
+ * loads messages from a pop3 server
+ *
+ * returns negative if the transfer is finished or error'd out
+ *
+ * returns zero or more if the transfer needs to be continued.
+ */
+
+MODULE_PRIVATE void
+NET_InitMailboxProtocol(void)
+{
+    static NET_ProtoImpl mbox_proto_impl;
+    mbox_proto_impl.init = net_MBoxLoad;
+    mbox_proto_impl.process = net_ProcessMBox;
+    mbox_proto_impl.interrupt = net_InterruptMBox;
+    mbox_proto_impl.cleanup = net_CleanupMBox;
+    NET_RegisterProtocolImplementation(&mbox_proto_impl, MAILBOX_TYPE_URL);
+}
+
+
+
 
 #endif /* MOZILLA_CLIENT */

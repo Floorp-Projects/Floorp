@@ -758,6 +758,9 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 	NET_InitNFSProtocol();
 	NET_InitURNProtocol();
 	NET_InitWAISProtocol();
+#ifdef SMART_MAIL
+	NET_InitPop3Protocol(); 
+#endif
 	NET_InitTotallyRandomStuffPeopleAddedProtocols();
 
 	NET_InitMailtoProtocol();  /* has a stub for MOZ_MAIL_NEWS */
@@ -765,7 +768,7 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 	NET_InitNewsProtocol();
 	NET_InitMailboxProtocol();
 	NET_InitMsgSearchProtocol();
-	NET_InitPop3Protocol();
+	 
 	NET_InitLDAPProtocol();
 #ifdef MOZ_SECURITY
 	NET_InitCertLdapProtocol();
