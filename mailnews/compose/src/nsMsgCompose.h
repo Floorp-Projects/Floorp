@@ -48,12 +48,18 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_IMETHOD SetDocumentCharset(const PRUnichar *charset);
 
 	/* void SendMsg (in MSG_DeliverMode deliverMode, in wstring callback); */
-	NS_IMETHOD SendMsg(MSG_DeliverMode deliverMode, const PRUnichar *callback);
+	NS_IMETHOD SendMsg(MSG_DeliverMode deliverMode,
+                     nsIMsgIdentity *identity,
+                     const PRUnichar *callback);
 
 	/* void SendMsgEx (in MSG_DeliverMode deliverModer, in wstring addrTo, in wstring addrCc, in wstring addrBcc,
 		in wstring newsgroup, in wstring subject, in wstring body, in wstring callback); */
-	NS_IMETHOD SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *addrTo, const PRUnichar *addrCc, const PRUnichar *addrBcc,
-		const PRUnichar *newsgroup, const PRUnichar *subject, const PRUnichar *body, const PRUnichar *callback);
+	NS_IMETHOD SendMsgEx(MSG_DeliverMode deliverMode,
+                       nsIMsgIdentity *identity,
+                       const PRUnichar *addrTo, const PRUnichar *addrCc,
+                       const PRUnichar *addrBcc, const PRUnichar *newsgroup,
+                       const PRUnichar *subject, const PRUnichar *body,
+                       const PRUnichar *callback);
 
 	/* void CloseWindow (); */
 	NS_IMETHOD CloseWindow();

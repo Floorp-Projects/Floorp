@@ -29,6 +29,12 @@
 #include "nsIMessage.h"		//temporary!
 #include "nsMsgQuote.h"
 #include "nsIPref.h"
+#include "nsXPIDLString.h"
+
+// XXX temporary so we can use the current identity hack -alecf
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 #ifdef XP_UNIX
 #define TEMP_PATH_DIR "/usr/tmp/"
@@ -49,8 +55,6 @@
 
 nsMsgCompose::nsMsgCompose()
 {
-	nsMsgCompPrefs prefs;
-
 	m_window = nsnull;
 	m_webShell = nsnull;
 	m_webShellWin = nsnull;
@@ -65,9 +69,22 @@ nsMsgCompose::nsMsgCompose()
    		m_compFields->SetCharacterSet(default_mail_charset, nsnull);
     	PR_Free(default_mail_charset);
   	}
-	
-	m_composeHTML = prefs.GetComposeHtml();
 
+
+  m_composeHTML = PR_FALSE;
+  // temporary - m_composeHTML from the "current" identity
+  // eventually we should know this when we open the compose window
+  // -alecf
+  nsresult rv;
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) return;
+  
+  nsCOMPtr<nsIMsgIdentity> identity;
+  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  if (NS_FAILED(rv)) return;
+
+	rv = identity->GetComposeHtml(&m_composeHTML);
+  
 	NS_INIT_REFCNT();
 }
 
@@ -88,7 +105,6 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 	MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object)
 {
 	nsresult rv = NS_OK;
-	nsMsgCompPrefs prefs;
 
 	if (aWindow)
 	{
@@ -116,7 +132,7 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow, const PRUnichar *origin
 	{
 		case MSGCOMP_FORMAT_HTML		: m_composeHTML = PR_TRUE;					break;
 		case MSGCOMP_FORMAT_PlainText	: m_composeHTML = PR_FALSE;					break;
-		default							: m_composeHTML = prefs.GetComposeHtml();	break;
+    default							: /* m_composeHTML initialized in ctor */	break;
 
 	}
 	
@@ -227,7 +243,9 @@ nsresult nsMsgCompose::SetDocumentCharset(const PRUnichar *charset)
 }
 
 
-nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, const PRUnichar *callback)
+nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
+                               nsIMsgIdentity *identity,
+                               const PRUnichar *callback)
 {
 	nsresult rv = NS_OK;
 
@@ -286,7 +304,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, const PRUnichar *cal
 					msgBody = bodyText;
 					delete [] bodyText;
 					
-					SendMsgEx(deliverMode, msgTo.GetUnicode(), msgCc.GetUnicode(), msgBcc.GetUnicode(),
+					SendMsgEx(deliverMode, identity, msgTo.GetUnicode(), msgCc.GetUnicode(), msgBcc.GetUnicode(),
 						msgNewsgroup.GetUnicode(), msgSubject.GetUnicode(), msgBody.GetUnicode(), callback);          
 				}
 			}
@@ -297,11 +315,14 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, const PRUnichar *cal
 }
 
 
-nsresult nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *addrTo, const PRUnichar *addrCc,
-	const PRUnichar *addrBcc, const PRUnichar *newsgroup, const PRUnichar *subject,
-	const PRUnichar *body, const PRUnichar *callback)
+nsresult
+nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
+                        nsIMsgIdentity *identity,
+                        const PRUnichar *addrTo, const PRUnichar *addrCc,
+                        const PRUnichar *addrBcc, const PRUnichar *newsgroup,
+                        const PRUnichar *subject, const PRUnichar *body,
+                        const PRUnichar *callback)
 {
-	nsMsgCompPrefs pCompPrefs;
 
 #ifdef DEBUG
 	  printf("----------------------------\n");
@@ -321,9 +342,18 @@ nsresult nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *a
 		char *outCString;
 
 		// Pref values are supposed to be stored as UTF-8, so no conversion
-		m_compFields->SetFrom((char *)pCompPrefs.GetUserEmail(), nsnull);
-		m_compFields->SetReplyTo((char *)pCompPrefs.GetReplyTo(), nsnull);
-		m_compFields->SetOrganization((char *)pCompPrefs.GetOrganization(), nsnull);
+    nsXPIDLCString email;
+    nsXPIDLCString replyTo;
+    nsXPIDLCString organization;
+
+    identity->GetEmail(getter_Copies(email));
+    identity->GetReplyTo(getter_Copies(replyTo));
+    identity->GetOrganization(getter_Copies(organization));
+    
+		m_compFields->SetFrom(NS_CONST_CAST(char*, (const char *)email), nsnull);
+		m_compFields->SetReplyTo(NS_CONST_CAST(char*, (const char *)replyTo),
+                             nsnull);
+		m_compFields->SetOrganization(NS_CONST_CAST(char*, (const char *)organization), nsnull);
 
 		// Convert fields to UTF-8
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrTo, &outCString))) 
@@ -388,7 +418,7 @@ nsresult nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *a
 	        bodyLength = PL_strlen(bodyString);
 
 	        msgSend->CreateAndSendMessage(
-                  nsnull, // RICHIE - This needs to be the identity eventually!
+                  identity,
                   m_compFields, 
 					        PR_FALSE,         					// PRBool                            digest_p,
 					        PR_FALSE,         					// PRBool                            dont_deliver_p,

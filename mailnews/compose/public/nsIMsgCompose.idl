@@ -88,12 +88,16 @@ interface nsIMsgCompose : nsISupports {
 	void SetDocumentCharset(in wstring charset);
 
 	/* ... */
-	void SendMsg(in MSG_DeliverMode deliverMode, in wstring callback);
+	void SendMsg(in MSG_DeliverMode deliverMode,
+                 in nsIMsgIdentity identity,
+                 in wstring callback);
 
 	/* ... */
-    void SendMsgEx(in MSG_DeliverMode deliverMode, in wstring addrTo, in wstring addrCc, in wstring addrBcc,
-            in wstring newsgroup, in wstring subject, in wstring body,
-            in wstring callback);
+    void SendMsgEx(in MSG_DeliverMode deliverMode,
+                   in nsIMsgIdentity identity,
+                   in wstring addrTo, in wstring addrCc, in wstring addrBcc,
+                   in wstring newsgroup, in wstring subject, in wstring body,
+                   in wstring callback);
     
 	/* ... */
     void CloseWindow();
