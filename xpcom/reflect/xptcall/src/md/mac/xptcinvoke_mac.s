@@ -42,7 +42,8 @@
 		stw	r5,32(sp)				# paramCount
 		stw	r6,36(sp)				# params
 		stw	r0,8(sp)
-		stwu	sp,-136(sp)				#  = 24 for linkage area,  8 * 13 for fprData area, 8 for saved registers
+		stwu	sp,-144(sp)			#  = 24 for linkage area,  8 * 13 for fprData area, 8 for saved registers,
+                                    #    8 to keep stack 16-byte aligned.
 
 # set up for and call 'invoke_count_words' to get new stack size
 #	
@@ -53,14 +54,15 @@
 
 # prepare args for 'invoke_copy_to_stack' call
 #		
-		lwz	r4,168(sp)				# paramCount
-		lwz	r5,172(sp)				# params
+		lwz	r4,176(sp)				# paramCount
+		lwz	r5,180(sp)				# params
 #		addi	r6,sp,128				# fprData
 		mr	r6,sp					# fprData
 		slwi	r3,r3,2				        # number of bytes of stack required
 		addi	r3,r3,28				# linkage area
 		mr	r31,sp					# save original stack top
 		sub	sp,sp,r3				# bump the stack
+		clrrwi sp,sp,4              # keep the stack 16-byte aligned.
 		lwz	r3,0(r31)				# act like real alloca, so 0(sp) always points back to 
 		stw	r3,0(sp)				# previous stack frame.
 		addi	r3,sp,28				# parameter pointer excludes linkage area size + 'this'
@@ -82,9 +84,9 @@
 		lfd	f12,88(r31)				
 		lfd	f13,96(r31)				
 		
-		lwz	r3,160(r31)				# that
+		lwz	r3,168(r31)				# that
 		lwz	r4,0(r3)				# get vTable from 'that'
-		lwz	r5,164(r31)				# methodIndex
+		lwz	r5,172(r31)				# methodIndex
 		slwi	r5,r5,2					# methodIndex * 4
 		addi	r5,r5,8					# step over junk at start of vTable !
 		lwzx	r12,r5,r4				# get function pointer
@@ -102,8 +104,8 @@
 		
 		
 		mr      sp,r31
-		lwz	r0,144(sp)
-		addi    sp,sp,136
+		lwz	r0,152(sp)
+		addi    sp,sp,144
 		mtlr    r0
 		lwz     r31,-4(sp)
         blr
