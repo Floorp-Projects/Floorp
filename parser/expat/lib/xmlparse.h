@@ -107,7 +107,7 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 /* data is 0 terminated */
 typedef void (*XML_CommentHandler)(void *userData, const XML_Char *data);
 
-//#define EXTERNAL_ENTITY_SUPPORT
+/* #define EXTERNAL_ENTITY_SUPPORT */
 #ifdef EXTERNAL_ENTITY_SUPPORT
 typedef int (*XML_ExternalDTDLoader)(const XML_Char * base, 
                                      const XML_Char * systemId,
