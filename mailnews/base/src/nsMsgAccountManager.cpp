@@ -2870,16 +2870,19 @@ nsresult nsMsgAccountManager::LoadVirtualFolders()
               nsUnescape(currentFolderNameCStr.BeginWriting());
               CopyUTF8toUTF16(currentFolderNameCStr, currentFolderNameStr);
               nsCOMPtr <nsIMsgFolder> childFolder;
-              rv =  parentFolder->AddSubfolder(currentFolderNameStr, getter_AddRefs(childFolder));
-
               nsCOMPtr <nsIMsgDatabase> db;
               virtualFolder->GetMsgDatabase(nsnull, getter_AddRefs(db)); // force db to get created.
-              rv = db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+              if (db)
+                rv = db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+              else
+                continue;
+              rv =  parentFolder->AddSubfolder(currentFolderNameStr, getter_AddRefs(childFolder));
+
               virtualFolder->SetFlag(MSG_FOLDER_FLAG_VIRTUAL);
             }
           }
         }
-        else if (Substring(buffer, 0, 6).Equals("scope="))
+        else if (dbFolderInfo && Substring(buffer, 0, 6).Equals("scope="))
         {
           buffer.Cut(0, 6);
           // if this is a cross folder virtual folder, we have a list of folders uris,
@@ -2902,7 +2905,7 @@ nsresult nsMsgAccountManager::LoadVirtualFolders()
             }
           }
         }
-        else if (Substring(buffer, 0, 6).Equals("terms="))
+        else if (dbFolderInfo && Substring(buffer, 0, 6).Equals("terms="))
         {
           buffer.Cut(0, 6);
           dbFolderInfo->SetCharPtrProperty("searchStr", buffer.get());
@@ -2941,19 +2944,19 @@ NS_IMETHODIMP nsMsgAccountManager::SaveVirtualFolders()
           NS_ENSURE_SUCCESS(rv, rv);
           PRUint32 vfCount;
           virtualFolders->Count(&vfCount);
+          if (!outputStream)
+          {
+            GetVirtualFoldersFile(file);
+            rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
+                                             file,
+                                             PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                             0664);
+            NS_ENSURE_SUCCESS(rv, rv);
+            WriteLineToOutputStream("version=", "1", outputStream);
+
+          }
           for (PRInt32 folderIndex = 0; folderIndex < vfCount; folderIndex++)
           {
-            if (!outputStream)
-            {
-              GetVirtualFoldersFile(file);
-              rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
-                                               file,
-                                               PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
-                                               0664);
-              NS_ENSURE_SUCCESS(rv, rv);
-              WriteLineToOutputStream("version=", "1", outputStream);
-
-            }
             nsCOMPtr <nsIRDFResource> folderRes (do_QueryElementAt(virtualFolders, folderIndex));
             nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(folderRes);
             const char *uri;
