@@ -1372,7 +1372,7 @@ nsPrintEngine::EnumerateDocumentNames(PRUint32* aCount,
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     PRUnichar * docTitleStr;
     PRUnichar * docURLStr;
-    GetWebShellTitleAndURL(po->mWebShell, po->mDocument, &docTitleStr, &docURLStr);
+    GetDocumentTitleAndURL(po->mDocument, &docTitleStr, &docURLStr);
 
     // Use the URL if the doc is empty
     if (!docTitleStr || !*docTitleStr) {
@@ -1770,9 +1770,7 @@ nsPrintEngine::IsParentAFrameSet(nsIWebShell * aParent)
     if (doc) {
       nsIContent *rootContent = doc->GetRootContent();
       if (rootContent) {
-        if (NS_SUCCEEDED(mDocViewerPrint->FindFrameSetWithIID(rootContent, NS_GET_IID(nsIDOMHTMLFrameSetElement)))) {
-          isFrameSet = PR_TRUE;
-        }
+        isFrameSet = HasFramesetChild(rootContent);
       }
     }
   }
@@ -1793,7 +1791,7 @@ nsPrintEngine::BuildDocTree(nsIDocShellTreeNode * aParentNode,
   NS_ASSERTION(aPO, "Pointer is null!");
 
   // Get the Doc and Title String
-  GetWebShellTitleAndURL(aPO->mWebShell, aPO->mDocument, &aPO->mDocTitle, &aPO->mDocURL);
+  GetDocumentTitleAndURL(aPO->mDocument, &aPO->mDocTitle, &aPO->mDocURL);
 
   PRInt32 childWebshellCount;
   aParentNode->GetChildCount(&childWebshellCount);
@@ -1833,12 +1831,10 @@ nsPrintEngine::BuildDocTree(nsIDocShellTreeNode * aParentNode,
 
 //---------------------------------------------------------------------
 void
-nsPrintEngine::GetWebShellTitleAndURL(nsIWebShell* aWebShell,
-                                      nsIDocument* aDoc,
+nsPrintEngine::GetDocumentTitleAndURL(nsIDocument* aDoc,
                                       PRUnichar**  aTitle,
                                       PRUnichar**  aURLStr)
 {
-  NS_ASSERTION(aWebShell, "Pointer is null!");
   NS_ASSERTION(aDoc,      "Pointer is null!");
   NS_ASSERTION(aTitle,    "Pointer is null!");
   NS_ASSERTION(aURLStr,   "Pointer is null!");
@@ -1875,7 +1871,7 @@ nsPrintEngine::MapContentToWebShells(nsPrintObject* aRootPO,
   // Recursively walk the content from the root item
   nsCOMPtr<nsIPresShell> presShell;
   nsCOMPtr<nsIContent> rootContent;
-  mDocViewerPrint->GetPresShellAndRootContent(aPO->mWebShell, getter_AddRefs(presShell), getter_AddRefs(rootContent));
+  GetPresShellAndRootContent(aPO->mDocShell, getter_AddRefs(presShell), getter_AddRefs(rootContent));
   if (presShell && rootContent) {
     MapContentForPO(aRootPO, presShell, rootContent);
   }
@@ -3887,23 +3883,6 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
 //-----------------------------------------------------------------
 
 //---------------------------------------------------------------------
-// Note this is also defined in DocumentViewerImpl
-// static
-nsIPresShell *
-GetPresShellFor(nsIDocShell* aDocShell)
-{
-  nsCOMPtr<nsIDOMDocument> domDoc(do_GetInterface(aDocShell));
-  if (!domDoc)
-    return nsnull;
-
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (!doc)
-    return nsnull;
-
-  return doc->GetShellAt(0);
-}
-
-//---------------------------------------------------------------------
 void nsPrintEngine::SetIsPrinting(PRBool aIsPrinting)
 { 
   mIsDoingPrinting = aIsPrinting;
@@ -3933,6 +3912,59 @@ nsPrintEngine::CleanupDocTitleArray(PRUnichar**& aArray, PRInt32& aCount)
   aArray = NULL;
   aCount = 0;
 }
+//---------------------------------------------------------------------
+// This gets ref counted copies of the PresShell and Root Content
+// for a given docshell
+// static
+void
+nsPrintEngine::GetPresShellAndRootContent(nsIDocShell *  aDocShell,
+                                          nsIPresShell** aPresShell,
+                                          nsIContent**   aContent)
+{
+  NS_ASSERTION(aDocShell, "Pointer is null!");
+  NS_ASSERTION(aPresShell, "Pointer is null!");
+  NS_ASSERTION(aContent, "Pointer is null!");
+
+  *aContent   = nsnull;
+  *aPresShell = nsnull;
+
+  nsCOMPtr<nsIDOMDocument> domDoc(do_GetInterface(aDocShell));
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc)
+    return;
+
+  nsIPresShell *presShell = doc->GetShellAt(0);
+  if (!presShell)
+    return;
+
+  NS_IF_ADDREF(*aContent = doc->GetRootContent());
+  NS_ADDREF(*aPresShell = presShell);
+}
+
+//---------------------------------------------------------------------
+// static
+PRBool nsPrintEngine::HasFramesetChild(nsIContent* aContent)
+{
+  if (!aContent) {
+    return PR_FALSE;
+  }
+
+  PRUint32 numChildren = aContent->GetChildCount();
+
+  // do a breadth search across all siblings
+  for (PRUint32 i = 0; i < numChildren; ++i) {
+    nsIContent *child = aContent->GetChildAt(i);
+    if (child->Tag() == nsHTMLAtoms::frameset &&
+        child->IsContentOfType(nsIContent::eHTML)) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+ 
+
 
 /** ---------------------------------------------------
  *  Get the Focused Frame for a documentviewer
