@@ -215,6 +215,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsISortService
+    NS_IMETHOD Sort(nsIDOMNode* node, const char *sortResource, const char *sortDirection);
     NS_IMETHOD DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
     NS_IMETHOD OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *container, nsIRDFResource **flatArray,
 				PRInt32 numElements, PRInt32 elementSize);
@@ -1465,6 +1466,20 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node,
 		container->AppendChildTo(node, aNotify);
 	}
 	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+XULSortServiceImpl::Sort(nsIDOMNode* node, const char *sortResource, const char *sortDirection)
+{
+#ifdef	DEBUG
+	printf("\n XULSortServiceImpl::Sort \n\n");
+#endif
+
+	nsAutoString	sortRes(sortResource), sortDir(sortDirection);
+	nsresult	rv = DoSort(node, sortResource, sortDirection);
+	return(rv);
 }
 
 

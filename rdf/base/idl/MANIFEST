@@ -11,4 +11,5 @@ nsIRDFResource.idl
 nsIRDFService.idl
 nsIRDFXMLSink.idl
 nsIRDFXMLSource.idl
+nsIXULSortService.idl
 xulstubs.idl

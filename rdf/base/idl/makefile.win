@@ -34,6 +34,7 @@ XPIDLSRCS=      .\nsIRDFNode.idl                  \
                 .\nsIController.idl               \
                 .\nsIGenericCommandSet.idl        \
                 .\xulstubs.idl                    \
+                .\nsIXULSortService.idl           \
                 $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
