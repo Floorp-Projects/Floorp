@@ -935,15 +935,15 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
      getInterface: function(iid, instance) {
        if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
          // use the window watcher service to get a nsIAuthPrompt impl
-         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                            .getService(Components.interfaces.nsIWindowWatcher);
-         return ww.getNewAuthPrompter(window);
+         return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                          .getService(Components.interfaces.nsIWindowWatcher)
+                          .getNewAuthPrompter(window);
        }
        else if (iid.equals(Components.interfaces.nsIPrompt)) {
          // use the window watcher service to get a nsIPrompt impl
-         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                            .getService(Components.interfaces.nsIWindowWatcher);
-         return ww.getNewPrompter(window);
+         return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                          .getService(Components.interfaces.nsIWindowWatcher)
+                          .getNewPrompter(window);
        }
        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
        return null;
