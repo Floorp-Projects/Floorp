@@ -42,6 +42,7 @@ Rights Reserved.
 <script src="chrome://messenger/content/mailCommands.js"/>
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script src="chrome://messenger/content/commandglue.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
 
 <stringbundleset id="mailStringBundles">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
@@ -683,8 +684,8 @@ Rights Reserved.
         <menuitem id="context-bookmarklink"
                   label="&bookmarkLinkCmd.label;"
                   accesskey="&bookmarkLinkCmd.accesskey;"
-                  oncommand="addBookmark(gMessagePaneContextMenu.linkURL(),
-                                         gMessagePaneContextMenu.linkText());"/>
+                  oncommand="BookmarksUtils.addBookmark(gMessagePaneContextMenu.linkURL(),
+                                                        gMessagePaneContextMenu.linkText());"/>
 
 </popup>
 
