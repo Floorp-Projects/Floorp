@@ -55,8 +55,8 @@ interface nsIDownloadManager : nsISupports {
 
 
 %{C++
-#define NS_IDOWNLOADMANAGER_CONTRACTID "@mozilla.org/downloadmgr;1"
-#define NS_IDOWNLOADMANAGER_CLASSNAME "Mozilla Download Manager"
+#define NS_DOWNLOADMANAGER_CONTRACTID "@mozilla.org/download-manager;1"
+#define NS_DOWNLOADMANAGER_CLASSNAME "Mozilla Download Manager"
 // {EDB0490E-1DD1-11B2-83B8-DBF8D85906A6}
 #define NS_DOWNLOADMANAGER_CID \
     { 0xedb0490e, 0x1dd1, 0x11b2, { 0x83, 0xb8, 0xdb, 0xf8, 0xd8, 0x59, 0x06, 0xa6 } }

@@ -50,6 +50,9 @@
   <script type="application/x-javascript" src="chrome://global/content/treePopups.js"></script>
 
   <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"></script>
+  
+  <stringbundle id="downloadBundle" 
+                src="chrome://communicator/locale/downloadmanager/downloadmanager.properties"/>
 
   <commands id="commands">
     <commandset id="commandUpdate_Downloads"
@@ -115,6 +118,8 @@
     <toolbarseparator/>
     <toolbarbutton id="btn_openfile" command="cmd_openfile"/>
     <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
+    <toolbarseparator/>
+    <toolbarbutton label="Test" oncommand="Test();"/>
   </toolbar>
 
   <tree id="downloadView" ref="NC:DownloadsRoot"
@@ -167,8 +172,8 @@
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
               <treecell class="treecell-indent" 
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                        label="rdf:http://home.netscape.com/NC-rdf#File"
+                        src="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
               <treecell>
                 <progressmeter class="tree-progressmeter" value="rdf:http://home.netscape.com/NC-rdf#Progress"/>

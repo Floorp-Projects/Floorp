@@ -26,7 +26,8 @@ REQUIRES	= xpcom \
 		  rdf \
 		  uriloader \
 		  necko \
-		  webBrowser_core \
+		  intl \
+		  webbrowserpersist \
 		  $(NULL)
 
 CPP_OBJS=                               \

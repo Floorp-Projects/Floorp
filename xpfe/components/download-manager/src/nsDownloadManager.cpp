@@ -37,22 +37,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsRDFCID.h"
+#include "nsDownloadManager.h"
+
 #include "nsIServiceManager.h"
 #include "nsIWebProgress.h"
-#include "nsDownloadManager.h"
+
+#include "nsIStringBundle.h"
 #include "nsIRDFLiteral.h"
+#include "nsIRDFXMLSerializer.h"
+#include "nsIRDFXMLSource.h"
 #include "rdf.h"
+#include "nsRDFCID.h"
 #include "nsCRT.h"
 #include "nsString.h"
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,   NS_RDFINMEMORYDATASOURCE_CID);
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
+
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+
+#define PROFILE_DOWNLOAD_FILE "downloads.rdf"
+#define NSDOWNLOADMANAGER_PROPERTIES_URI "chrome://communicator/locale/downloadmanager/downloadmanager.properties"
 
 nsIRDFResource* gNC_DownloadsRoot;
 nsIRDFResource* gNC_File;
 nsIRDFResource* gNC_URL;
 nsIRDFResource* gNC_Name;
+nsIRDFResource* gNC_Progress;
 
-NS_IMPL_ISUPPORTS1(nsDownloadManager, nsIDownloadManager)
+nsIRDFService* gRDFService;
+
+NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
 nsDownloadManager::nsDownloadManager()
 {
@@ -61,9 +76,15 @@ nsDownloadManager::nsDownloadManager()
 
 nsDownloadManager::~nsDownloadManager()
 {
-  mRDFService->UnregisterDataSource(this);
+  gRDFService->UnregisterDataSource(this);
 
   NS_IF_RELEASE(gNC_DownloadsRoot);
+  NS_IF_RELEASE(gNC_File);
+  NS_IF_RELEASE(gNC_URL);
+  NS_IF_RELEASE(gNC_Name);
+
+  nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+  gRDFService = nsnull;
 }
 
 nsresult
@@ -71,18 +92,23 @@ nsDownloadManager::Init()
 {
   nsresult rv;
 
-  mRDFService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService), 
+                                    (nsISupports**) &gRDFService);
   if (NS_FAILED(rv)) return rv;
 
   mRDFContainerUtils = do_GetService("@mozilla.org/rdf/container-utils;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
-  mRDFService->GetResource("NC:Downloads", &gNC_DownloadsRoot);
+  gRDFService->GetResource("NC:DownloadsRoot", &gNC_DownloadsRoot);
+  gRDFService->GetResource(NC_NAMESPACE_URI "File", &gNC_File);
+  gRDFService->GetResource(NC_NAMESPACE_URI "URL", &gNC_URL);
+  gRDFService->GetResource(NC_NAMESPACE_URI "Name", &gNC_Name);
+  gRDFService->GetResource(NC_NAMESPACE_URI "Progress", &gNC_Progress);
 
   mInner = do_GetService(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource", &rv);
   if (NS_FAILED(rv)) return rv;
 
-  return mRDFService->RegisterDataSource(this, PR_FALSE);  
+  return gRDFService->RegisterDataSource(this, PR_FALSE);  
 }                                                 
   
 NS_IMETHODIMP
@@ -105,11 +131,11 @@ nsDownloadManager::AddItem(const PRUnichar* aDisplayName, nsIURI* aSourceURI,
   nsCOMPtr<nsIRDFContainer> downloads;
   GetDownloadsContainer(getter_AddRefs(downloads));
 
-  nsXPIDLCString spec;
-  aSourceURI->GetSpec(getter_Copies(spec));
+  nsXPIDLCString filePath;
+  aLocalFile->GetPath(getter_Copies(filePath));
 
   nsCOMPtr<nsIRDFResource> downloadItem;
-  mRDFService->GetResource(spec, getter_AddRefs(downloadItem));
+  gRDFService->GetResource(filePath, getter_AddRefs(downloadItem));
 
   PRInt32 itemIndex;
   downloads->IndexOf(downloadItem, &itemIndex);
@@ -121,24 +147,31 @@ nsDownloadManager::AddItem(const PRUnichar* aDisplayName, nsIURI* aSourceURI,
   downloads->AppendElement(downloadItem);
 
   // NC:Name 
+  nsAutoString displayName; displayName.Assign(aDisplayName);
+  if (displayName.IsEmpty()) {
+    nsXPIDLString unicodeDisplayName;
+    aLocalFile->GetUnicodeLeafName(getter_Copies(unicodeDisplayName));
+    displayName.Assign(unicodeDisplayName);
+  }
+
   nsCOMPtr<nsIRDFLiteral> nameLiteral;
-  mRDFService->GetLiteral(aDisplayName, getter_AddRefs(nameLiteral));
+  gRDFService->GetLiteral(displayName.get(), getter_AddRefs(nameLiteral));
   Assert(downloadItem, gNC_Name, nameLiteral, PR_TRUE);
 
   // NC:URL
+  nsXPIDLCString spec;
+  aSourceURI->GetSpec(getter_Copies(spec));
+
   nsCOMPtr<nsIRDFResource> urlResource;
-  mRDFService->GetResource(spec, getter_AddRefs(urlResource));
+  gRDFService->GetResource(spec, getter_AddRefs(urlResource));
   Assert(downloadItem, gNC_URL, urlResource, PR_TRUE);
 
   // NC:File
-  nsXPIDLCString filePath;
-  aLocalFile->GetPath(getter_Copies(filePath));
-
   nsCOMPtr<nsIRDFResource> fileResource;
-  mRDFService->GetResource(filePath, getter_AddRefs(fileResource));
+  gRDFService->GetResource(filePath, getter_AddRefs(fileResource));
   Assert(downloadItem, gNC_File, fileResource, PR_TRUE);
 
-  return NS_OK;
+  return Flush();
 }
 
 nsresult
@@ -324,6 +357,65 @@ nsDownloadManager::DoCommand(nsISupportsArray* aSources,
   return mInner->DoCommand(aSources, aCommand, aArguments);
 }
 
+////////////////////////////////////////////////////////////////////////
+// nsIRDFRemoteDataSource
+
+NS_IMETHODIMP
+nsDownloadManager::GetLoaded(PRBool* aResult)
+{
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::Init(const char* aURI)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::Refresh(PRBool aBlocking)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::Flush()
+{
+  nsresult rv;
+
+  // Locate datasource file
+  nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
+  nsCOMPtr<nsIFile> profileDir;
+  rv = fileLocator->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(profileDir));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = profileDir->Append(PROFILE_DOWNLOAD_FILE);
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString fileURL;
+  profileDir->GetURL(getter_Copies(fileURL));
+  nsAutoString fileAS; fileAS.AssignWithConversion(fileURL);
+
+  nsFileURL url(fileURL, PR_TRUE);
+  nsFileSpec path(url);
+
+  nsOutputFileStream out(path);
+  if (!out.is_open())
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIRDFXMLSerializer> serializer(do_CreateInstance("@mozilla.org/rdf/xml-serializer;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = serializer->Init(mInner);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIRDFXMLSource> source(do_QueryInterface(serializer, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  return source->Serialize(out.GetIStream());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 DownloadItem::DownloadItem() 
@@ -332,6 +424,41 @@ DownloadItem::DownloadItem()
 
 DownloadItem::~DownloadItem()
 {
+  UpdateProgressInfo();
+}
+
+nsresult
+DownloadItem::UpdateProgressInfo()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> sbs(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = sbs->CreateBundle(NSDOWNLOADMANAGER_PROPERTIES_URI, getter_AddRefs(bundle));
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString key; key.AssignWithConversion("progressFormat");
+  nsAutoString curTotalProgressStr; curTotalProgressStr.AppendInt(mCurTotalProgress);
+  nsAutoString maxTotalProgressStr; maxTotalProgressStr.AppendInt(mMaxTotalProgress);
+  const PRUnichar* formatStrings[2] = { curTotalProgressStr.get(), maxTotalProgressStr.get() };
+  
+  nsXPIDLString progressString;
+  rv = bundle->FormatStringFromName(key.get(), formatStrings, 2, getter_Copies(progressString));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIRDFLiteral> progressLiteral;
+  rv = gRDFService->GetLiteral(progressString, getter_AddRefs(progressLiteral));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mDataSource->Assert(mDownloadItem, gNC_Progress, progressLiteral, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  // Store Unformatted Elapsed Time
+
+
+  return rv;
 }
 
 nsresult
@@ -353,21 +480,28 @@ DownloadItem::Init(nsIRDFResource* aDownloadItem,
   rv = mWebBrowserPersist->SetProgressListener(this);
   if (NS_FAILED(rv)) return rv;
 
-  return mWebBrowserPersist->SaveURI(aURI, aPostData, aFile);
+  rv = mWebBrowserPersist->SaveURI(aURI, aPostData, aFile);
+  if (NS_FAILED(rv)) return rv;
+
+
+
+  return rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 NS_IMETHODIMP 
 DownloadItem::OnProgressChange(nsIWebProgress *aWebProgress, 
-                                    nsIRequest *aRequest, 
-                                    PRInt32 aCurSelfProgress, 
-                                    PRInt32 aMaxSelfProgress, 
-                                    PRInt32 aCurTotalProgress, 
-                                    PRInt32 aMaxTotalProgress)
+                               nsIRequest *aRequest, 
+                               PRInt32 aCurSelfProgress, 
+                               PRInt32 aMaxSelfProgress, 
+                               PRInt32 aCurTotalProgress, 
+                               PRInt32 aMaxTotalProgress)
 {
-
-  return NS_ERROR_NOT_IMPLEMENTED;  
+  mCurTotalProgress = aCurTotalProgress;
+  mMaxTotalProgress = aMaxTotalProgress;
+  
+  return NS_OK;  
 }
 
 NS_IMETHODIMP 
@@ -387,6 +521,14 @@ DownloadItem::OnStatusChange(nsIWebProgress *aWebProgress,
   else if (aStatus & nsIWebProgressListener::STATE_STOP)
     mRequestObserver->OnStopRequest(aRequest, nsnull, aStatus);
 
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DownloadItem::OnStateChange(nsIWebProgress* aWebProgress,
+                            nsIRequest* aRequest, PRInt32 aStateFlags,
+                            PRUint32 aStatus)
+{
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

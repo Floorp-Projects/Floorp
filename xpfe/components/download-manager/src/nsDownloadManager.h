@@ -54,8 +54,7 @@
  
 class nsDownloadManager : public nsIDownloadManager,
                           public nsIRDFDataSource,
-                          public nsIRDFRemoteDataSource,
-                          public nsIWebProgressListener
+                          public nsIRDFRemoteDataSource
 {
 public:
   NS_DECL_NSIRDFDATASOURCE
@@ -93,11 +92,16 @@ public:
                 nsIRDFDataSource* aDataSource,
                 nsIURI* aURI, nsIInputStream* aPostData, nsILocalFile* aFile);
 
+protected:
+  nsresult UpdateProgressInfo();
 
 protected:
   nsCOMPtr<nsIWebBrowserPersist> mWebBrowserPersist;
   nsCOMPtr<nsIRequestObserver> mRequestObserver;
   nsIRDFResource* mDownloadItem;
   nsIRDFDataSource* mDataSource;
+
+  PRInt32 mCurTotalProgress;
+  PRInt32 mMaxTotalProgress;
 };
 #endif
