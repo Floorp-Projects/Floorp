@@ -226,20 +226,56 @@ function ChangeFolderByDOMNode(folderNode)
 	  ChangeFolderByURI(uri, isThreaded == "true", "");
 }
 
+function setTitleFromFolder(msgfolder)
+{
+    if (!msgfolder) return;
+
+    var title;
+    var server = msgfolder.server;
+
+    if (msgfolder.isServer) {
+            // <hostname>
+            title = server.hostName;
+    }
+
+    else {
+        var middle;
+        var end;
+        if (server.type == "nntp") {
+            // <folder> on <hostname>
+            middle = Bundle.GetStringFromName("titleNewsPreHost");
+            end = server.hostName;
+        } else {
+            var identities = accountManager.GetIdentitiesForServer(server);
+            var identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
+            
+            // <folder> for <email>
+            middle = Bundle.GetStringFromName("titleMailPreHost");
+            end = identity.email;
+        }
+
+        title = msgfolder.prettyName + " " + middle + " " + end;
+    }
+    
+    title += " - " + BrandBundle.GetStringFromName("brandShortName");
+    
+    window.title = title;
+
+}
+
 function ChangeFolderByURI(uri, isThreaded, sortID)
 {
   dump('In ChangeFolderByURI\n');
   var resource = RDF.GetResource(uri);
   var msgfolder =
       resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-  if (msgfolder.isServer)
-      window.title = msgfolder.name;
-  else if (msgfolder.server)
-      window.title = msgfolder.name + " on " +
-          msgfolder.server.prettyName;
-  else
-      window.title = msgfolder.name;
 
+  try {
+      setTitleFromFolder(msgfolder);
+  } catch (ex) {
+      dump("error setting title: " + ex + "\n");
+  }
+  
   gBeforeFolderLoadTime = new Date();
   gCurrentLoadingFolderURI = uri;
 
