@@ -26,8 +26,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= locale
 LIBRARY_NAME	= nslocale
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsLocaleModule
+FORCE_STATIC_LIB	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
@@ -36,19 +36,12 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
-SHARED_LIBRARY_LIBS = ../$(LIB_PREFIX)nslocale_s.$(LIB_SUFFIX)
-
 CPPSRCS		= \
 		nsOS2Locale.cpp \
 		nsCollationOS2.cpp \
 		nsDateTimeFormatOS2.cpp \
-		nsLocaleModule.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 OS_LIBS += libuls.lib

@@ -27,11 +27,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= unicharutil
-LIBRARY_NAME	= unicharutil
+LIBRARY_NAME	= ucharucomp_s
 EXPORT_LIBRARY = 1
-SHORT_LIBNAME	= ucharuti
-IS_COMPONENT	= 1
-MODULE_NAME	= UcharUtil
+FORCE_STATIC_LIB = 1
+
 REQUIRES	= xpcom \
 		  string \
 		  uconv \
@@ -40,16 +39,10 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsCaseConversionImp2.cpp \
-                nsUcharUtilModule.cpp \
 		nsCategoryImp.cpp \
 		nsHankakuToZenkaku.cpp \
 		nsEntityConverter.cpp \
 		nsSaveAsCharset.cpp \
-		$(NULL)
-
-EXTRA_DSO_LDOPTS =\
-		$(MOZ_NECKO_UTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

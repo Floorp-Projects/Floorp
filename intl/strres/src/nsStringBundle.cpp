@@ -36,11 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsStringBundle.h"
 #include "nsID.h"
 #include "nsFileSpec.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -52,18 +52,11 @@
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIMemory.h"
-#include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsWeakReference.h"
-#include "nsCOMPtr.h"
 #include "pratom.h"
-#include "prclist.h"
-#include "plarena.h"
-#include "prlog.h"              // for PR_ASSERT
 #include "prmem.h"
 #include "nsIModule.h"
 #include "nsISupportsArray.h"
-#include "nsHashtable.h"
 #include "nsAutoLock.h"
 #include "nsTextFormatter.h"
 #include "nsIErrorService.h"
@@ -615,40 +608,6 @@ struct bundleCacheEntry_t {
   nsIStringBundle* mBundle;
 };
 
-class nsStringBundleService : public nsIStringBundleService,
-                              public nsIObserver,
-                              public nsSupportsWeakReference
-{
-public:
-  nsStringBundleService();
-  virtual ~nsStringBundleService();
-
-  nsresult Init();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTRINGBUNDLESERVICE
-  NS_DECL_NSIOBSERVER
-    
-private:
-  nsresult getStringBundle(const char *aUrl, nsIStringBundle** aResult);
-  nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus, 
-                            PRUint32 argCount, PRUnichar** argArray,
-                            PRUnichar* *result);
-
-  void flushBundleCache();
-  
-  bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
-                                      nsCStringKey *aHashKey);
-
-  static void recycleEntry(bundleCacheEntry_t*);
-  
-  nsHashtable mBundleMap;
-  PRCList mBundleCache;
-  PLArenaPool mCacheEntryPool;
-
-  nsCOMPtr<nsIErrorService>     mErrorService;
-
-};
 
 nsStringBundleService::nsStringBundleService() :
   mBundleMap(MAX_CACHED_BUNDLES, PR_TRUE)
@@ -980,12 +939,4 @@ done:
   return rv;
 }
 
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStringBundleService, Init)
-static const nsModuleComponentInfo components[] =
-{
-  { "String Bundle", NS_STRINGBUNDLESERVICE_CID, NS_STRINGBUNDLE_CONTRACTID, nsStringBundleServiceConstructor},
-};
-
-NS_IMPL_NSGETMODULE(nsStringBundleModule, components)
 

@@ -35,7 +35,6 @@ viewer:defaults:profile:mimeTypes.rdf
 [xpcom]
 viewer:Components:libjar.shlb 
 viewer:Components:xpinstall.shlb 
-viewer:Components:unicharutil.shlb 
 viewer:Essential Files:JavaScript.shlb 
 viewer:Essential Files:libreg.shlb 
 viewer:Essential Files:LiveConnect.shlb 
@@ -92,7 +91,6 @@ viewer:Components:appshell.xpt
 viewer:Components:bookmarks.xpt 
 viewer:Components:Caps.shlb 
 viewer:Components:caps.xpt 
-viewer:Components:chardet.shlb 
 viewer:Components:universalchardet.shlb 
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
@@ -145,12 +143,11 @@ viewer:Components:libpref.xpt
 viewer:Components:prefextras.shlb 
 viewer:Components:prefextras.xpt 
 viewer:Components:libutil.xpt
-viewer:Components:lwbrk.shlb 
+viewer:Components:i18n.shlb 
 viewer:Components:Mork.shlb 
 viewer:Components:mozBrowser.xpt 
 viewer:Components:mozcomps.xpt 
 viewer:Components:nsIStringBundle.xpt 
-viewer:Components:nslocale.shlb 
 viewer:Components:nsLocale.xpt 
 viewer:Components:nsSidebar.js
 viewer:Components:oji.shlb
@@ -174,7 +171,6 @@ viewer:Components:related.xpt
 viewer:Components:search.xpt 
 viewer:Components:shistory.shlb 
 viewer:Components:shistory.xpt 
-viewer:Components:strres.shlb 
 viewer:Components:tmbm.xpt
 viewer:Components:txmgr.xpt 
 viewer:Components:uconv.shlb 

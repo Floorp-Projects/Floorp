@@ -43,10 +43,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= locale
-LIBRARY_NAME	= nslocale
+LIBRARY_NAME	= platlocale_s
 EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsLocaleModule
+FORCE_STATIC_LIB	= 1
+
 REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
@@ -55,20 +55,11 @@ REQUIRES	= xpcom \
 		  intl \
 		  $(NULL)
 
-SHARED_LIBRARY_LIBS = ../libnslocale_s.a
-
 CPPSRCS		= \
 		nsCollationMac.cpp \
 		nsCollationMacUC.cpp \
 		nsDateTimeFormatMac.cpp \
-		nsLocaleSHLIB.cpp \
 		nsMacLocale.cpp \
-		$(NULL)
-
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(TK_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

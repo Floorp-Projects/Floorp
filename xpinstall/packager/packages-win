@@ -50,7 +50,6 @@ bin\xpistub.dll
 bin\zlib.dll
 bin\components\jar50.dll
 bin\components\xpinstal.dll
-bin\components\ucharuti.dll
 ;install\ren8dot3.exe,bin\ren8dot3.exe
 
 [browser]
@@ -91,7 +90,6 @@ bin\components\urlbarhistory.xpt
 bin\components\urlwidgt.xpt
 bin\components\caps.dll
 bin\components\caps.xpt
-bin\components\chardet.dll
 bin\components\chardetc.dll
 bin\components\universalchardet.dll
 bin\components\chrome.dll
@@ -148,7 +146,7 @@ bin\components\layout_base.xpt
 bin\components\layout_xul.xpt
 bin\components\layout_xul_tree.xpt
 bin\components\locale.xpt
-bin\components\lwbrk.dll
+bin\components\i18n.dll
 bin\components\mork.dll
 bin\components\mozbrwsr.xpt
 bin\components\mozcomps.xpt
@@ -174,7 +172,6 @@ bin\components\necko_cookie.xpt
 bin\components\necko_file.xpt
 bin\components\necko_socket.xpt
 bin\components\necko_viewsource.xpt
-bin\components\nslocale.dll
 bin\components\nsprefm.dll
 bin\components\nsSidebar.js
 bin\components\oji.dll
@@ -192,7 +189,6 @@ bin\components\shistory.dll
 bin\components\shistory.xpt
 bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
-bin\components\strres.dll
 bin\components\txmgr.dll
 bin\components\txmgr.xpt
 bin\components\uconv.dll
