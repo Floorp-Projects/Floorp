@@ -135,6 +135,8 @@ nsMsgServiceProviderService::Init()
   nsCOMPtr<nsIFileSpec> dataFilesDir;
   rv = GetConvertedChromeURL("chrome://messenger/locale/isp/", getter_AddRefs(dataFilesDir));
 
+  if (NS_FAILED(rv) || !dataFilesDir)
+      return rv;
   // now enumerate every file in the directory, and suck it into the datasource
 
   nsCOMPtr<nsIDirectoryIterator> fileIterator =
