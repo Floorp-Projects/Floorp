@@ -2700,7 +2700,7 @@ nsCSSFrameConstructor::GetPseudoRowGroupFrame(nsIPresShell*            aPresShel
   nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
   nsIAtom* parentFrameType = aParentFrameIn.GetType();
 
-  if (pseudoFrames.IsEmpty()) {
+  if (!pseudoFrames.mLowestType) {
     PRBool created = PR_FALSE;
     if (nsLayoutAtoms::tableRowFrame == parentFrameType) {  // row parent
       rv = CreatePseudoCellFrame(aPresShell, aPresContext, aTableCreator, aState, &aParentFrameIn);
@@ -2740,7 +2740,7 @@ nsCSSFrameConstructor::GetPseudoRowFrame(nsIPresShell*            aPresShell,
   nsPseudoFrames& pseudoFrames = aState.mPseudoFrames;
   nsIAtom* parentFrameType = aParentFrameIn.GetType();
 
-  if (pseudoFrames.IsEmpty()) {
+  if (!pseudoFrames.mLowestType) {
     PRBool created = PR_FALSE;
     if (IS_TABLE_CELL(parentFrameType) || // cell parent
         !IsTableRelated(parentFrameType, PR_TRUE)) { // block parent
