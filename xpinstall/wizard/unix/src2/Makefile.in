@@ -55,6 +55,7 @@ LIBS        = \
         `$(GTK_CONFIG) --libs` \
         -ljar$(VERSION_NUMBER)_s \
         -lxpnet_s \
+        -lpthread \
         $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../../../stub
