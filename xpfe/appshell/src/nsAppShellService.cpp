@@ -136,6 +136,7 @@ nsAppShellService::Initialize(void)
     rv = eventQService->CreateThreadEventQueue();
   }
 
+#if 0 // XXX: Remove this when mac and unix build the AppShellNameset...
   // Register the nsAppShellNameSet with the global nameset registry...
   nsIScriptNameSetRegistry *registry;
   rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
@@ -149,6 +150,7 @@ nsAppShellService::Initialize(void)
   nameSet = new nsAppShellNameSet();
   registry->AddExternalNameSet(nameSet);
   /* FIX - do we need to release this service?  When we do, it get deleted,and our name is lost. */
+#endif
 
   // Create the toplevel window list...
   rv = NS_NewISupportsArray(&mWindowList);

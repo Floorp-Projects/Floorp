@@ -27,6 +27,9 @@ CPPSRCS=                                \
  nsWebShellWindow.cpp                   \
  nsAppShellFactory.cpp                  \
  nsCommandLineService.cpp               \
+ nsXPConnectFactory.cpp                \
+ nsJSXPConnectFactory.cpp              \
+ nsAppShellNameSet.cpp                 \
  nsFileLocations.cpp                    \
  $(NULL)
 
@@ -36,6 +39,9 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
  .\$(OBJDIR)\nsAppShellFactory.obj      \
  .\$(OBJDIR)\nsCommandLineService.obj   \
+ .\$(OBJDIR)\nsXPConnectFactory.obj    \
+ .\$(OBJDIR)\nsJSXPConnectFactory.obj  \
+ .\$(OBJDIR)\nsAppShellNameSet.obj     \
  .\$(OBJDIR)\nsFileLocations.obj        \
  $(NULL)
 
@@ -64,6 +70,8 @@ LLIBS=                          \
  $(DIST)\lib\raptorgfxwin.lib   \
  $(DIST)\lib\plc3.lib       \
  $(DIST)\lib\netlib.lib         \
+  $(DIST)\lib\js3250.lib        \
+  $(DIST)\lib\jsdombase_s.lib   \
  $(LIBNSPR)                     \
  $(NULL)
 
