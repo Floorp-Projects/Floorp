@@ -32,6 +32,8 @@
 #include "nsIURL.h"
 #include "nsString.h"
 
+#define NOISY_IMAGES
+
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
 nsPresContext::nsPresContext()
@@ -48,7 +50,6 @@ nsPresContext::nsPresContext()
   mImageGroup = nsnull;
   mLinkHandler = nsnull;
   mContainer = nsnull;
-  mImageUpdates = 0;
 }
 
 nsPresContext::~nsPresContext()
@@ -281,6 +282,10 @@ nsPresContext::StopLoadImage(nsIFrame* aForFrame)
     nsIFrame* loaderFrame;
     loader->GetTargetFrame(loaderFrame);
     if (loaderFrame == aForFrame) {
+#ifdef NOISY_IMAGES
+      printf("%p: removing %p\n", this, aForFrame);
+#endif
+      loader->StopImageLoad();
       NS_RELEASE(loader);
       mImageLoaders.RemoveElementAt(i);
       n--;
@@ -289,47 +294,6 @@ nsPresContext::StopLoadImage(nsIFrame* aForFrame)
     i++;
   }
   return NS_OK;
-}
-
-void
-nsPresContext::BeginLoadImageUpdate()
-{
-  ++mImageUpdates;
-}
-
-void
-nsPresContext::ImageUpdate(nsIFrame* aFrame)
-{
-  nsIContent* content;
-  aFrame->GetContent(content);
-  mPendingImageUpdates.AppendElement(content);
-  if (0 == mImageUpdates) {
-    ProcessLoadImageUpdates();
-  }
-}
-
-void
-nsPresContext::EndLoadImageUpdate()
-{
-  if (--mImageUpdates == 0) {
-    ProcessLoadImageUpdates();
-  }
-}
-
-void
-nsPresContext::ProcessLoadImageUpdates()
-{
-  PRInt32 i, n = mPendingImageUpdates.Count();
-  mShell->EnterReflowLock();
-  mShell->BeginUpdate();
-  for (i = 0; i < n; i++) {
-    nsIContent* content = (nsIContent*) mPendingImageUpdates.ElementAt(i);
-    mShell->ContentChanged(content, nsnull);
-    NS_RELEASE(content);
-  }
-  mPendingImageUpdates.Clear();
-  mShell->EndUpdate();
-  mShell->ExitReflowLock();
 }
 
 NS_IMETHODIMP
