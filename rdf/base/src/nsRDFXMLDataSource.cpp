@@ -835,6 +835,18 @@ RDFXMLDataSourceImpl::Flush(void)
 
     nsresult rv;
 
+    {
+        // Quick and dirty check to see if we're in XPCOM shutdown. If
+        // we are, we're screwed: it's too late to serialize because
+        // many of the services that we'll need to acquire to properly
+        // write the file will be unaquirable.
+        nsCOMPtr<nsIRDFService> dummy = do_GetService(kRDFServiceCID, &rv);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("unable to Flush() diry datasource during XPCOM shutdown");
+            return rv;
+        }
+    }
+
     // XXX Replace this with channels someday soon...
     nsFileURL url(mURLSpec, PR_TRUE);
     nsFileSpec path(url);
@@ -1346,7 +1358,8 @@ static const char kRDFResource2[] = "\"/>\n";
     }
     else {
         // XXX it doesn't support nsIRDFResource _or_ nsIRDFLiteral???
-        NS_ASSERTION(PR_FALSE, "huh?");
+        // We should serialize nsIRDFInt, nsIRDFDate, etc...
+        NS_ERROR("not an nsIRDFResource or nsIRDFLiteral?");
     }
 
     return NS_OK;
@@ -1422,17 +1435,18 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
     rdf_BlockingWrite(aStream, kRDFDescription2, sizeof(kRDFDescription2) - 1);
 
     nsCOMPtr<nsISimpleEnumerator> arcs;
-    rv = mInner->ArcLabelsOut(aResource, getter_AddRefs(arcs));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISupportsArray> array;
 
-	nsCOMPtr<nsISupportsArray> array;
+    rv = mInner->ArcLabelsOut(aResource, getter_AddRefs(arcs));
+    if (NS_FAILED(rv)) goto done;
+
 	rv = NS_NewISupportsArray(getter_AddRefs(array));
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
     while (1) {
         PRBool hasMore;
         rv = arcs->HasMoreElements(&hasMore);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) break;
 
         if (! hasMore)
             break;
@@ -1463,8 +1477,11 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
             break;
     }
 
+    rv = NS_OK;
+
+ done:
     rdf_BlockingWrite(aStream, kRDFDescription3, sizeof(kRDFDescription3) - 1);
-    return NS_OK;
+    return rv;
 }
 
 nsresult
@@ -1584,27 +1601,26 @@ RDFXMLDataSourceImpl::SerializeContainer(nsIOutputStream* aStream,
     // elements).
     nsCOMPtr<nsISimpleEnumerator> elements;
     rv = NS_NewContainerEnumerator(mInner, aContainer, getter_AddRefs(elements));
-    if (NS_FAILED(rv)) return rv;
 
-    while (1) {
-        PRBool hasMore;
-        rv = elements->HasMoreElements(&hasMore);
-        if (NS_FAILED(rv)) return rv;
+    if (NS_SUCCEEDED(rv)) {
+        while (1) {
+            PRBool hasMore;
+            rv = elements->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) break;
 
-        if (! hasMore)
-            break;
+            if (! hasMore)
+                break;
 
-        nsCOMPtr<nsISupports> isupports;
-        rv = elements->GetNext(getter_AddRefs(isupports));
-        if (NS_FAILED(rv)) return rv;
+            nsCOMPtr<nsISupports> isupports;
+            elements->GetNext(getter_AddRefs(isupports));
 
-        nsCOMPtr<nsIRDFNode> element = do_QueryInterface(isupports);
-        NS_ASSERTION(element != nsnull, "not an nsIRDFNode");
-        if (! element)
-            continue;
+            nsCOMPtr<nsIRDFNode> element = do_QueryInterface(isupports);
+            NS_ASSERTION(element != nsnull, "not an nsIRDFNode");
+            if (! element)
+                continue;
 
-        rv = SerializeMember(aStream, aContainer, element);
-        if (NS_FAILED(rv)) return rv;
+            SerializeMember(aStream, aContainer, element);
+        }
     }
 
     // close the container tag
@@ -1612,26 +1628,24 @@ RDFXMLDataSourceImpl::SerializeContainer(nsIOutputStream* aStream,
     rdf_BlockingWrite(aStream, tag);
     rdf_BlockingWrite(aStream, ">\n", 2);
 
-
     // Now, we iterate through _all_ of the arcs, in case someone has
     // applied properties to the bag itself. These'll be placed in a
     // separate RDF:Description element.
     nsCOMPtr<nsISimpleEnumerator> arcs;
-    rv = mInner->ArcLabelsOut(aContainer, getter_AddRefs(arcs));
-    if (NS_FAILED(rv)) return rv;
+    mInner->ArcLabelsOut(aContainer, getter_AddRefs(arcs));
 
     PRBool wroteDescription = PR_FALSE;
     while (! wroteDescription) {
-        PRBool hasMore;
+        PRBool hasMore = PR_FALSE;
         rv = arcs->HasMoreElements(&hasMore);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) break;
 
         if (! hasMore)
             break;
 
         nsIRDFResource* property;
         rv = arcs->GetNext((nsISupports**) &property);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) break;
 
         // If it's a membership property, then output a "LI"
         // tag. Otherwise, output a property.
