@@ -121,8 +121,6 @@ namespace MetaData {
             *p = x;
             return p;
         }
-
-
     }
 
     // if the argument can be stored as an integer value, do so
@@ -156,6 +154,14 @@ namespace MetaData {
         int64 *p = (int64 *)(JS2Object::alloc(sizeof(int64)));
         *p = x;
         return LONG_TO_JS2VAL(p);
+    }
+
+    // Don't store as an int, even if possible, we need to retain 'floatness'
+    js2val JS2Engine::allocFloat(float32 x)
+    {
+        float32 *p = (float32 *)(JS2Object::alloc(sizeof(float32)));
+        *p = x;
+        return FLOAT_TO_JS2VAL(p);
     }
 
     // Convert an integer to a string
@@ -234,30 +240,35 @@ namespace MetaData {
         return toNumber(toPrimitive(x));
     }
 
-    // x is not a number
+    // x is not a number, convert it to one
     js2val JS2Engine::convertValueToGeneralNumber(js2val x)
     {
         // XXX Assuming convert to float64, rather than long/ulong
         return allocNumber(toNumber(x));
     }
 
-    // x is a Number
+    // x is a Number, validate that it has no fractional component
     int64 JS2Engine::checkInteger(js2val x)
     {
+        int64 i;
         if (JS2VAL_IS_FLOAT(x)) {
             float64 f = *JS2VAL_TO_FLOAT(x);
-            if (!JSDOUBLE_IS_FINITE(f, i))
+            if (!JSDOUBLE_IS_FINITE(f))
                 meta->reportError(Exception::rangeError, "Non integer", errorPos());
-            int64 i;
             JSLL_D2L(i, f);
             JSLL_L2D(f, i);
-            if (!=) rangeError...
+            if (f != *JS2VAL_TO_FLOAT(x))
+                meta->reportError(Exception::rangeError, "Non integer", errorPos());
             return i;
         }
         else
         if (JS2VAL_IS_DOUBLE(x)) {
             float64 d = *JS2VAL_TO_DOUBLE(x);
-            if (!JSDOUBLE_IS_INT(d, i))
+            if (!JSDOUBLE_IS_FINITE(d))
+                meta->reportError(Exception::rangeError, "Non integer", errorPos());
+            JSLL_D2L(i, d);
+            JSLL_L2D(d, i);
+            if (d != *JS2VAL_TO_DOUBLE(x))
                 meta->reportError(Exception::rangeError, "Non integer", errorPos());
             return i;
         }
@@ -267,9 +278,8 @@ namespace MetaData {
             return i;
         }
         ASSERT(JS2VAL_IS_ULONG(x));
-            JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
-            return i;
-        }
+        JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
+        return i;
     }
 
     // x is any js2val

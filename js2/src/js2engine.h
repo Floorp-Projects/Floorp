@@ -168,7 +168,7 @@ public:
 
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
-    int32 checkInteger(js2val x);
+    int64 checkInteger(js2val x);
 
     JS2Metadata *meta;
 
@@ -181,6 +181,9 @@ public:
     js2val nanValue;
     js2val posInfValue;
     js2val negInfValue;
+
+    js2val allocFloat(float32 x); 
+    js2val pushFloat(float32 x)         { js2val retval = allocFloat(x); push(retval); return retval; }
 
     js2val allocNumber(float64 x); 
     js2val pushNumber(float64 x)        { js2val retval = allocNumber(x); push(retval); return retval; }

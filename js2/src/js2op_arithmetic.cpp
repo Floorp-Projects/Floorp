@@ -191,9 +191,32 @@
         {
 	    b = pop();
 	    a = pop();
-            float64 anum = toNumber(a);
-            float64 bnum = toNumber(b);
-            pushNumber(anum * bnum);
+            a = toGeneralNumber(a);
+            b = toGeneralNumber(b);
+            if (JS2VAL_IS_LONG(a) || JS2VAL_IS_ULONG(a) || JS2VAL_IS_LONG(b) || JS2VAL_IS_ULONG(b)) {
+                int64 x = checkInteger(a);
+                int64 y = checkInteger(b);
+                int64 z;
+                JSLL_MUL(z, x, y);
+                // XXX need to check that z didn't overflow
+                if (JS2VAL_IS_ULONG(a) || JS2VAL_IS_ULONG(b)) {
+                    pushULong(z);   
+                }
+                else {
+                    pushLong(z);   
+                }
+            }
+            else {
+                float64 x = toNumber(a);
+                float64 y = toNumber(b);
+                float64 z = x * y;
+                if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b)) {
+                    pushFloat(z);
+                }
+                else {
+                    pushNumber(z);
+                }
+            }
         }
         break;
 
