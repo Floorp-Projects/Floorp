@@ -49,10 +49,12 @@ public:
 	//nsIDBChangeListener
 	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                          nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
+	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey aParentKey, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
+	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey aParentKey, PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator);
+	NS_IMETHOD OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, 
+						nsIDBChangeListener * aInstigator);
 	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
 
 	NS_DECL_ISUPPORTS_INHERITED

@@ -123,7 +123,7 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 ol
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, PRInt32 flags, 
+NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey parentKey, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
     if (m_ChangeListeners == nsnull)
@@ -133,13 +133,14 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, PRInt32 fl
 		nsIDBChangeListener *changeListener = 
             (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
 
-		nsresult rv = changeListener->OnKeyDeleted(keyDeleted, flags, instigator); 
-        if (NS_FAILED(rv)) return rv;
+		nsresult rv = changeListener->OnKeyDeleted(keyDeleted, parentKey, flags, instigator); 
+        if (NS_FAILED(rv)) 
+			return rv;
 	}
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags, 
+NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey parentKey, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
     if (m_ChangeListeners == nsnull) 
@@ -149,11 +150,30 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags,
 		nsIDBChangeListener *changeListener =
             (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
 
-		nsresult rv = changeListener->OnKeyAdded(keyAdded, flags, instigator); 
-        if (NS_FAILED(rv)) return rv;
+		nsresult rv = changeListener->OnKeyAdded(keyAdded, parentKey, flags, instigator); 
+        if (NS_FAILED(rv))
+			return rv;
 	}
     return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgDatabase::NotifyParentChangedAll(nsMsgKey keyReparented, nsMsgKey oldParent, nsMsgKey newParent,
+	nsIDBChangeListener *instigator)
+{
+    if (m_ChangeListeners == nsnull) 
+		return NS_OK;
+	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
+	{
+		nsIDBChangeListener *changeListener =
+            (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
+
+		nsresult rv = changeListener->OnParentChanged(keyReparented, oldParent, newParent, instigator); 
+        if (NS_FAILED(rv)) 
+			return rv;
+	}
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP nsMsgDatabase::NotifyAnnouncerGoingAway(void)
 {
@@ -988,8 +1008,12 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 	if (notify && NS_SUCCEEDED(ret))
 	{
         PRUint32 flags;
+		nsMsgKey threadParent;
+
         (void)msg->GetFlags(&flags);
-		NotifyKeyDeletedAll(key, flags, instigator); // tell listeners
+		msg->GetThreadParent(&threadParent);
+
+		NotifyKeyDeletedAll(key, threadParent, flags, instigator); // tell listeners
     }
 
 	if (commit)
@@ -1922,10 +1946,14 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 			if (! (flags & MSG_FLAG_READ))
 				m_dbFolderInfo->ChangeNumNewMessages(1);
 		}
+
 		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdr->GetMDBRow());
 		if (notify)
 		{
-			NotifyKeyAddedAll(key, flags, NULL);
+			nsMsgKey threadParent;
+
+			newHdr->GetThreadParent(&threadParent);
+			NotifyKeyAddedAll(key, threadParent, flags, NULL);
 		}
 	}
 	return err;

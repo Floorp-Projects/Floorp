@@ -50,10 +50,12 @@ public:
 
   NS_IMETHOD NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                                 nsIDBChangeListener *instigator);
-  NS_IMETHOD NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags, 
+  NS_IMETHOD NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey parentKey, PRInt32 flags, 
                                nsIDBChangeListener *instigator);
-  NS_IMETHOD NotifyKeyDeletedAll(nsMsgKey keyDeleted, PRInt32 flags, 
+  NS_IMETHOD NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey parentKey, PRInt32 flags, 
                                  nsIDBChangeListener *instigator);
+  NS_IMETHOD NotifyParentChangedAll(nsMsgKey keyReparented, nsMsgKey oldParent, nsMsgKey newParent,
+								nsIDBChangeListener *instigator);
   NS_IMETHOD NotifyAnnouncerGoingAway(void);
 
   //////////////////////////////////////////////////////////////////////////////

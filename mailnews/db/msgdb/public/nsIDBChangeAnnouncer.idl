@@ -30,10 +30,11 @@ interface nsIDBChangeAnnouncer  : nsISupports {
 
   void NotifyKeyChangeAll(in nsMsgKey keyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
                                 in nsIDBChangeListener instigator);
-  void NotifyKeyAddedAll(in nsMsgKey keyAdded, in long flags, 
+  void NotifyKeyAddedAll(in nsMsgKey keyAdded, in nsMsgKey parentKey, in long flags, 
                                in nsIDBChangeListener instigator);
-  void NotifyKeyDeletedAll(in nsMsgKey keyDeleted, in long flags, 
+  void NotifyKeyDeletedAll(in nsMsgKey keyDeleted, in nsMsgKey parentKey, in long flags, 
                                  in nsIDBChangeListener instigator);
+  void NotifyParentChangedAll(in nsMsgKey keyReparented, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener instigator); 
   void NotifyAnnouncerGoingAway();
 };
 

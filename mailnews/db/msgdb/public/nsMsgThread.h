@@ -72,7 +72,7 @@ protected:
 	nsresult			SetThreadRootKey(nsMsgKey threadRootKey);
 	nsresult			GetChildHdrForKey(nsMsgKey desiredKey, 
 												nsIMsgDBHdr **result, PRInt32 *resultIndex); 
-
+	nsresult			ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent);
 
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		

@@ -286,7 +286,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
+NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey /* aParentKey */, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
 	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
@@ -309,7 +309,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags,
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
+NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey /* aParentKey */, PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
 	nsresult rv;
@@ -331,6 +331,13 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags,
 	}
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgDBFolder::OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, 
+						nsIDBChangeListener * aInstigator)
+{
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
 													 instigator)
@@ -354,6 +361,13 @@ nsresult nsMsgDBFolder::ReadFromFolderCache(nsIMsgFolderCacheElement *element)
 
 	element->GetStringProperty("charset", &charset);
 
+#ifdef DEBUG_bienvenu
+	char *uri;
+
+	GetURI(&uri);
+	printf("read total %ld for %s\n", mNumTotalMessages, uri);
+	PR_Free(uri);
+#endif
 	mCharset = charset;
 	PR_FREEIF(charset);
 
@@ -410,6 +424,13 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 
 	element->SetStringProperty("charset", nsAutoString(mCharset, eOneByte).GetBuffer());
 
+#ifdef DEBUG_bienvenu
+	char *uri;
+
+	GetURI(&uri);
+	printf("writing total %ld for %s\n", mNumTotalMessages, uri);
+	PR_Free(uri);
+#endif
 	return rv;
 }
 

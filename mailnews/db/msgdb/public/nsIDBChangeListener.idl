@@ -26,10 +26,11 @@ interface nsIDBChangeAnnouncer;
 interface  nsIDBChangeListener : nsISupports {
     void OnKeyChange(in nsMsgKey aKeyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
                            in nsIDBChangeListener aInstigator);
-    void OnKeyDeleted(in nsMsgKey aKeyChanged, in long aFlags, 
+    void OnKeyDeleted(in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, 
                             in nsIDBChangeListener aInstigator);
-    void OnKeyAdded(in nsMsgKey aKeyChanged, in long aFlags, 
+    void OnKeyAdded(in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, 
                           in nsIDBChangeListener aInstigator);
+	void OnParentChanged (in nsMsgKey aKeyChanged, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener aInstigator);
     void OnAnnouncerGoingAway(in nsIDBChangeAnnouncer instigator);
 };
 

@@ -353,6 +353,7 @@ NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child)
 {
 	PRUint32 flags;
 	nsMsgKey key;
+	nsMsgKey threadParent;
 
 	if (!child)
 		return NS_ERROR_NULL_POINTER;
@@ -360,10 +361,41 @@ NS_IMETHODIMP nsMsgThread::RemoveChildHdr(nsIMsgDBHdr *child)
 	child->GetFlags(&flags);
 	child->GetMessageKey(&key);
 
+	child->GetThreadParent(&threadParent);
+	ReparentChildrenOf(key, threadParent);
+
 	if (!(flags & MSG_FLAG_READ))
 		ChangeUnreadChildCount(-1);
 	ChangeChildCount(-1);
 	return RemoveChild(key);
+}
+
+nsresult nsMsgThread::ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent)
+{
+	nsresult rv = NS_OK;
+
+	PRUint32 numChildren;
+	PRUint32 childIndex = 0;
+
+ 	GetNumChildren(&numChildren);
+
+	nsCOMPtr <nsIMsgDBHdr> curHdr;
+	for (childIndex = 0; childIndex < numChildren; childIndex++)
+	{
+		rv = GetChildHdrAt(childIndex, getter_AddRefs(curHdr));
+		if (NS_SUCCEEDED(rv) && curHdr)
+		{
+			nsMsgKey threadParent;
+
+			curHdr->GetThreadParent(&threadParent);
+			if (threadParent == oldParent)
+			{
+				curHdr->SetThreadParent(newParent);
+				// need to send some sort of notification here.
+			}
+		}
+	}
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgThread::MarkChildRead(PRBool bRead)
