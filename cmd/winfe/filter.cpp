@@ -975,10 +975,8 @@ int CFilterDialog::OnInitDialog()
 
 	CComboBox *combo;
 
-#if defined (B3_SEARCH_API)
 	MSG_FolderInfo *pInbox = NULL;
 	MSG_GetFoldersWithFlag (WFE_MSGGetMaster(), MSG_FOLDER_FLAG_INBOX, &pInbox, 1);
-#endif
 
 	uint16 numItems;
 
@@ -990,11 +988,7 @@ int CFilterDialog::OnInitDialog()
 	if (!HeaderItems) 
 		return FALSE;  //something bad happened here!!
 
-#if defined (B3_SEARCH_API)
 	MSG_GetAttributesForFilterScopes (WFE_MSGGetMaster(), scopeAttrib, (void**)&m_pFolderInfoScope, 1, HeaderItems, &numItems);
-#else
-	MSG_GetAttributesForScope(scopeAttrib, HeaderItems, &numItems);
-#endif
 
   for (i = 0; i < 5; i++) {
 		combo = (CComboBox *) GetDlgItem( RuleMatrix[i][COL_ATTRIB] );
@@ -1201,13 +1195,9 @@ void CFilterDialog::UpdateOpList(int iRow)
 	combo = (CComboBox *) GetDlgItem( RuleMatrix[iRow][COL_OP] );
 	combo->ResetContent();
 
-  MSG_ScopeAttribute scopeAttrib = GetFolderScopeAttribute();
+    MSG_ScopeAttribute scopeAttrib = GetFolderScopeAttribute();
 
-#if defined (B3_SEARCH_API)
 	MSG_GetOperatorsForFilterScopes (WFE_MSGGetMaster(), scopeAttrib, (void**) &m_pFolderInfoScope, 1, attrib, items, &maxItems);
-#else
-	MSG_GetOperatorsForAttribute(scopeAttrib, attrib, items, &maxItems);
-#endif
 
 	for (j = 0; j < maxItems; j++) {
 		combo->AddString(items[j].name);
