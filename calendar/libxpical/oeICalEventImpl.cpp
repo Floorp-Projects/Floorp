@@ -1787,7 +1787,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     }
 
     //Create enddate if does not exist
-    if( icaltime_is_null_time( m_end->m_datetime ) ) {
+    if( icaltime_is_null_time( m_end->m_datetime ) && !icaltime_is_null_time( m_start->m_datetime ) ) {
         //Set to the same as start date 23:59
         m_end->m_datetime = m_start->m_datetime;
         m_end->SetHour( 23 ); m_end->SetMinute( 59 );
@@ -1921,21 +1921,24 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     }
 
     //startdate
-    
-    if( m_allday ) {
-        m_start->SetHour( 0 );
-        m_start->SetMinute( 0 );
+    if( m_start && !icaltime_is_null_time( m_start->m_datetime ) ) {
+        if( m_allday ) {
+            m_start->SetHour( 0 );
+            m_start->SetMinute( 0 );
+        }
+        prop = icalproperty_new_dtstart( m_start->m_datetime );
+        icalcomponent_add_property( vevent, prop );
     }
-    prop = icalproperty_new_dtstart( m_start->m_datetime );
-    icalcomponent_add_property( vevent, prop );
 
-    //enddate
-    if( m_allday ) {
-        m_end->SetHour( 23 );
-        m_end->SetMinute( 59 );
+    if( m_end && !icaltime_is_null_time( m_end->m_datetime ) ) {
+        //enddate
+        if( m_allday ) {
+            m_end->SetHour( 23 );
+            m_end->SetMinute( 59 );
+        }
+        prop = icalproperty_new_dtend( m_end->m_datetime );
+        icalcomponent_add_property( vevent, prop );
     }
-    prop = icalproperty_new_dtend( m_end->m_datetime );
-    icalcomponent_add_property( vevent, prop );
 
     //snoozetimes
     icalcomponent *tmpcomp=NULL;
@@ -1983,7 +1986,6 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
             nsMemory::Free( url );
         }
     }
-
 
     //add event to newcalendar
     icalcomponent_add_component( newcalendar, vevent );

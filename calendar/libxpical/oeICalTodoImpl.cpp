@@ -286,9 +286,12 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
     }
 
     //percent
-    prop = icalproperty_new_percentcomplete( m_percent );
-    icalcomponent_add_property( vtodo, prop );
+    if( m_percent ) {
+        prop = icalproperty_new_percentcomplete( m_percent );
+        icalcomponent_add_property( vtodo, prop );
+    }
 
+    /* This isn't really needed
     //Create due if does not exist
     if( icaltime_is_null_time( m_due->m_datetime ) ) {
         prop = icalcomponent_get_first_property( vtodo, ICAL_DTSTART_PROPERTY );
@@ -299,15 +302,18 @@ icalcomponent* oeICalTodoImpl::AsIcalComponent()
         }
     }
 
-    //due
     PRBool m_allday;
     GetAllDay ( &m_allday );
     if( m_allday ) {
         m_due->SetHour( 23 );
         m_due->SetMinute( 59 );
+    }*/
+
+    //due
+    if( m_due && !icaltime_is_null_time( m_due->m_datetime ) ) {
+        prop = icalproperty_new_due( m_due->m_datetime );
+        icalcomponent_add_property( vtodo, prop );
     }
-    prop = icalproperty_new_due( m_due->m_datetime );
-    icalcomponent_add_property( vtodo, prop );
 
     //completed
     if( m_completed && !icaltime_is_null_time( m_completed->m_datetime ) ) {
