@@ -1,21 +1,107 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
-<html><head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="Author" content="Igor Bukanov">
-  <meta name="KeyWords" content="Rhino, JavaScript, Java">
-  <title>Change Log</title>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="Author" content="Igor Bukanov">
+<meta name="KeyWords" content="Rhino, JavaScript, Java">
+<title>Change Log</title>
+
+<style>
+P { text-align: justify; }
+</style>
+
 </head>
 
 <body bgcolor="#ffffff">
 
 <h1 align="center">
-Change Log for Significant Rhino Changes</h1>
+Change Log for Rhino</h1>
 
-This is a log of significant changes since Rhino 1.5 Release 5.
+<h2>Release candidate 1 for Rhino 1.6R1</h2>
 
-<h3>Support for <tt>Date.now()</tt></h3>
+<h3>Release overview</h3>
+<p>
+Rhino 1.6R1 is the new major release of Rhino. It supports ECMAScript for XML (E4X) as specified by <a href="http://www.ecma-international.org/publications/standards/Ecma-357.htm">ECMA 357</a> standard. E4X is a set of language extensions adding native XML support for JavaScript without affecting the existing code base. 
+</p>
+<p>
+This version of Rhino should be binary compatible with the current embeddings that use only public <a href="apidocs/index.html">API</a> unless the code use the previously deperected classes as documented <a href="#Rhino1.5R1-deprecation-removal">below</a>. Please report any incompatibilitiy issues to <a href="http://bugzilla.mozilla.org/enter_bug.cgi?product=Rhino">Bugzilla</a>.
+</p>
+</h3>
+
+<h3>E4X implementation</h3>
+<p>
+The E4X implementation was donated to Rhino project by <a href="http://www.agiledelta.com/">AgileDelta, Inc.</a>. It uses <a href="http://xml.apache.org/xmlbeans/">XMLBeans</a> library to implement E4X runtime. The implementation was tested against versions 1.0.2 and 1.0.3 of XMLBeans. Please make sure that <tt>xmlbeans.jar</tt> is avaialble on the classpath if you use E4X in your scripts.
+</p>
+<p>
+See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=242805">Bugzilla 242805</a> for details.
+</p>
+
+
+<h3>Other changes</h3>
+
+<h4>Common root for Rhino execeptions</h4>
+<p>
+Now all Rhino execption classes are derived from <a href="apidocs/org/mozilla/javascript/RhinoException.html"><tt>org.mozilla.javascript.RhinoException</tt></a> which extends <tt>java.lang.RuntimeException</tt>. 
+The class gives the uniform way to access information about the script origin of the exception and simplifies execption handling in Rhino embeddings. 
+</p>
+<p>
+See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=244492">Bugzilla 244492</a> for details.
+</p>
+
+<h4>Removal of code complexity limits in the interpretr</tt></h4>
+<p>
+The interpreter mode in Rhino does not limit any longer the script size or code complexity. It should be possible to execute any script as long as JVM resources allow so.
+</p>
+<p>
+See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=244014">Bugzilla 244014</a> for details.
+</p>
+
+
+<h4><tt>JavaImporter</tt> constructor</h4>
+<p>
+<tt>JavaImporter</tt> is a new global constructor that allows to omit explicit package names when scripting Java:
+</p>
+<pre>
+var SwingGui = JavaImporter(Packages.javax.swing,
+                            Packages.javax.swing.event,
+                            Packages.javax.swing.border,
+                            java.awt.event,
+                            java.awt.Point,
+                            java.awt.Rectangle,
+                            java.awt.Dimension);
+...
+
+with (SwingGui) {
+    var mybutton = new JButton(test);
+    var mypoint = new Point(10, 10);
+    var myframe = new JFrame();
+...
+}
+</pre>
+<p>
+Previously such functionality was available only to embeddings that used <a href="apidocs/org/mozilla/javascript/ImporterTopLevel.html"><tt>org.mozilla.javascript.ImporterTopLevel</tt></a> class as the top level scope. The class provides additional <tt>importPackage()</tt> and <tt>importClass()</tt> global functions but their extensive usage has tendency to pollute the global name space with names of Java classes
+</p>
+<p>
+See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=245882">Bugzilla 245882</a> for details.
+</p>
+
+
+<h4>Support for <tt>Date.now()</tt></h4>
 <p>
 <tt>Date.now()</tt> function which is a SpiderMonkey extension to ECMAScript standard is available now in Rhino. The function returns number of milliseconds passed since 1970-01-01 00:00:00 GMT.
+</p>
+
+
+<h4><a name="#Rhino1.5R1-deprecation-removal"></a>Removal of deprecated classes</h4>
+<p>
+The following classes that were deprecated in Rhino 1.5R5 are no longer available in Rhino 1.6R1:
+<ul>
+<li><tt>org.mozilla.javascript.ClassNameHelper</tt></li>
+<li><tt>org.mozilla.javascript.ClassRepository</tt></li>
+<li><tt>org.mozilla.javascript.NotAFunctionException</tt></li>
+</ul>
+
+See documentation for <a href="apidocs/org/mozilla/javascript/optimizer/ClassCompiler.html"><tt>org.mozilla.javascript.optimizer.ClassCompiler</tt></a> that provides replacement for ClassNameHelper and ClassRepository and <a href="apidocs/org/mozilla/javascript/RhinoException.html"><tt>org.mozilla.javascript.RhinoException</tt></a> that gives the common root for all Rhino exceptions.
 </p>
 
 <hr width="100%"><br>
