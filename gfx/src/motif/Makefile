@@ -19,7 +19,7 @@ DEPTH = ../../..
 
 include $(DEPTH)/config/config.mk
 
-LIBRARY_NAME = gfxunix
+LIBRARY_NAME = gfxmotif
 
 MODULE=raptor 
 

@@ -43,7 +43,7 @@ EX_LIBS = \
 	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/bin/libwidgetunix.so \
 	$(DIST)/bin/libraptorgfx.so \
-	$(DIST)/bin/libgfxunix.so \
+	$(DIST)/bin/libgfxmotif.so \
 	$(DIST)/bin/libraptorhtml.so \
 	$(DIST)/bin/libgmbaseunix.so \
 	$(DIST)/bin/libraptorhtmlpars.so \
