@@ -26,5 +26,4 @@ nsMsgHdr.h
 nsIDBChangeListener.h
 nsIDBFolderInfo.h
 nsIMessage.h
-nsIMsgThread.h
 nsMsgThread.h

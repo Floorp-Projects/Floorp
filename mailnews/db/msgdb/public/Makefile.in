@@ -33,10 +33,11 @@ EXPORTS= \
 		nsIDBChangeListener.h	    \
 		nsIDBFolderInfo.h \
 		nsIMessage.h	    \
-		nsIMsgThread.h \
 		nsMsgThread.h \
 		$(NULL)
 
+IDLSRCS = \
+		$(NULL)
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
