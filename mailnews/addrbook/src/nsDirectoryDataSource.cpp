@@ -60,8 +60,8 @@
 #define NC_RDF_DIRURI				"http://home.netscape.com/NC-rdf#DirUri"
 #define NC_RDF_ISMAILLIST			"http://home.netscape.com/NC-rdf#IsMailList"
 #define NC_RDF_ISREMOTE				"http://home.netscape.com/NC-rdf#IsRemote"
+#define NC_RDF_ISSECURE			"http://home.netscape.com/NC-rdf#IsSecure"
 #define NC_RDF_ISWRITEABLE			"http://home.netscape.com/NC-rdf#IsWriteable"
-
 
 //Directory Commands
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"
@@ -144,6 +144,8 @@ nsAbDirectoryDataSource::Init()
   rv = rdf->GetResource(NC_RDF_ISMAILLIST, getter_AddRefs(kNC_IsMailList));
   NS_ENSURE_SUCCESS(rv,rv);
   rv = rdf->GetResource(NC_RDF_ISREMOTE, getter_AddRefs(kNC_IsRemote));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_ISSECURE, getter_AddRefs(kNC_IsSecure));
   NS_ENSURE_SUCCESS(rv,rv);
   rv = rdf->GetResource(NC_RDF_ISWRITEABLE, getter_AddRefs(kNC_IsWriteable));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -229,6 +231,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
             (kNC_DirUri == property) ||
             (kNC_IsMailList == property) ||
             (kNC_IsRemote == property) ||
+            (kNC_IsSecure == property) ||
             (kNC_IsWriteable == property)) 
 	{ 
       nsSingletonEnumerator* cursor =
@@ -300,6 +303,7 @@ nsAbDirectoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc
                aArc == kNC_DirUri ||
                aArc == kNC_IsMailList ||
                aArc == kNC_IsRemote ||
+               aArc == kNC_IsSecure ||
                aArc == kNC_IsWriteable);
   }
   else {
@@ -349,6 +353,7 @@ nsAbDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
   (*arcs)->AppendElement(kNC_DirUri);
   (*arcs)->AppendElement(kNC_IsMailList);
   (*arcs)->AppendElement(kNC_IsRemote);
+  (*arcs)->AppendElement(kNC_IsSecure);
   (*arcs)->AppendElement(kNC_IsWriteable);
   return NS_OK;
 }
@@ -503,6 +508,8 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
 	rv = createDirectoryIsMailListNode(directory, target);
   if ((kNC_IsRemote == property))
 	rv = createDirectoryIsRemoteNode(directory, target);
+  if ((kNC_IsSecure == property))
+	rv = createDirectoryIsSecureNode(directory, target);
   if ((kNC_IsWriteable == property))
 	rv = createDirectoryIsWriteableNode(directory, target);
   return rv;
@@ -579,16 +586,23 @@ nsresult
 nsAbDirectoryDataSource::createDirectoryIsRemoteNode(nsIAbDirectory* directory,
                                                   nsIRDFNode **target)
 {
-	nsresult rv;
 	PRBool isRemote;
-	rv = directory->GetIsRemote(&isRemote);
+	nsresult rv = directory->GetIsRemote(&isRemote);
 	NS_ENSURE_SUCCESS(rv, rv);
 
-	if (isRemote)
-		*target = kTrueLiteral;
-	else
-		*target = kFalseLiteral;
-	NS_IF_ADDREF(*target);
+  NS_IF_ADDREF(*target = (isRemote ? kTrueLiteral : kFalseLiteral));
+	return NS_OK;
+}
+
+nsresult
+nsAbDirectoryDataSource::createDirectoryIsSecureNode(nsIAbDirectory* directory,
+                                                  nsIRDFNode **target)
+{
+	PRBool IsSecure;
+	nsresult rv = directory->GetIsSecure(&IsSecure);
+	NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_IF_ADDREF(*target = (IsSecure ? kTrueLiteral : kFalseLiteral));
 	return NS_OK;
 }
 
@@ -596,16 +610,11 @@ nsresult
 nsAbDirectoryDataSource::createDirectoryIsWriteableNode(nsIAbDirectory* directory,
                                                   nsIRDFNode **target)
 {
-	nsresult rv;
 	PRBool isWriteable;
-	rv = directory->GetOperations(&isWriteable);
+	nsresult rv = directory->GetOperations(&isWriteable);
 	NS_ENSURE_SUCCESS(rv, rv);
 
-	if (isWriteable & nsIAbDirectory::opWrite)
-		*target = kTrueLiteral;
-	else
-		*target = kFalseLiteral;
-	NS_IF_ADDREF(*target);
+  NS_IF_ADDREF(*target = ((isWriteable & nsIAbDirectory::opWrite) ? kTrueLiteral : kFalseLiteral));
 	return NS_OK;
 }
 
@@ -618,11 +627,7 @@ nsAbDirectoryDataSource::createDirectoryIsMailListNode(nsIAbDirectory* directory
 	rv = directory->GetIsMailList(&isMailList);
 	NS_ENSURE_SUCCESS(rv, rv);
 
-	if (isMailList)
-		*target = kTrueLiteral;
-	else
-		*target = kFalseLiteral;
-	NS_IF_ADDREF(*target);
+	NS_IF_ADDREF(*target = (isMailList ? kTrueLiteral : kFalseLiteral));
 	return NS_OK;
 }
 
@@ -715,7 +720,7 @@ nsresult nsAbDirectoryDataSource::DoDirectoryHasAssertion(nsIAbDirectory *direct
 			rv = directory->HasDirectory(newDirectory, hasAssertion);
 	}
 	else if ((kNC_IsMailList == property) || (kNC_IsRemote == property) ||
-			(kNC_IsWriteable == property))
+			(kNC_IsSecure == property) || (kNC_IsWriteable == property))
 	{
 		nsCOMPtr<nsIRDFResource> dirResource(do_QueryInterface(directory, &rv));
 		NS_ENSURE_SUCCESS(rv, rv);

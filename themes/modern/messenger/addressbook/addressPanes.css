@@ -56,3 +56,8 @@ treechildren:-moz-tree-image(DirCol, IsMailList-true) {
 treechildren:-moz-tree-image(DirCol, IsRemote-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/directory.gif");
 }
+
+treechildren:-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/secure-directory.gif");
+}
+

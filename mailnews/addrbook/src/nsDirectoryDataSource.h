@@ -121,6 +121,8 @@ protected:
                                       nsIRDFNode **target);
   nsresult createDirectoryIsRemoteNode(nsIAbDirectory *directory,
     nsIRDFNode **target);
+  nsresult createDirectoryIsSecureNode(nsIAbDirectory *directory,
+    nsIRDFNode **target);
 	nsresult createDirectoryIsWriteableNode(nsIAbDirectory *directory,
                                             nsIRDFNode **target);
 	nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
@@ -146,6 +148,7 @@ protected:
   nsCOMPtr<nsIRDFResource> kNC_DirUri;
   nsCOMPtr<nsIRDFResource> kNC_IsMailList;
   nsCOMPtr<nsIRDFResource> kNC_IsRemote;
+  nsCOMPtr<nsIRDFResource> kNC_IsSecure;
   nsCOMPtr<nsIRDFResource> kNC_IsWriteable;
   
   // commands

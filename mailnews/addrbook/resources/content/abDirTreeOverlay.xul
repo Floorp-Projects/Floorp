@@ -65,13 +65,16 @@ Contributors:
           <binding subject="?member"
                    predicate="http://home.netscape.com/NC-rdf#IsRemote"
                    object="?IsRemote"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsSecure"
+                   object="?IsSecure"/>
         </bindings>
         
         <action>
           <treechildren>
             <treeitem uri="?member" persist="sortDirection sortColumn open">
               <treerow>
-                <treecell label="?DirName" properties="IsMailList-?IsMailList IsRemote-?IsRemote"/>
+                <treecell label="?DirName" properties="IsMailList-?IsMailList IsRemote-?IsRemote IsSecure-?IsSecure"/>
               </treerow>
             </treeitem>
           </treechildren>

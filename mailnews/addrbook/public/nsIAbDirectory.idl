@@ -131,6 +131,11 @@ interface nsIAbDirectory : nsISupports {
     readonly attribute boolean isRemote;
 
     /**
+     * directory is secure (as in LDAP over SSL)
+     */
+    readonly attribute boolean isSecure;
+
+    /**
      * directory should be searched when doing local autocomplete
      */
     readonly attribute boolean searchDuringLocalAutocomplete;

@@ -55,6 +55,7 @@
 #include "nsIPref.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIPrefBranch.h"
 
 nsAbLDAPDirectory::nsAbLDAPDirectory() :
     nsAbDirectoryRDFResource(),
@@ -451,6 +452,27 @@ NS_IMETHODIMP nsAbLDAPDirectory::GetIsRemote(PRBool *aIsRemote)
 {
   NS_ENSURE_ARG_POINTER(aIsRemote);
   *aIsRemote = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbLDAPDirectory::GetIsSecure(PRBool *aIsSecure)
+{
+  NS_ENSURE_ARG_POINTER(aIsSecure);
+
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // use mURINoQuery to get a prefName
+  nsCAutoString prefName;
+  prefName = nsDependentCString(mURINoQuery.get() + kLDAPDirectoryRootLen) + NS_LITERAL_CSTRING(".uri");
+  
+  nsXPIDLCString URI;
+  rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(URI));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  // to determine if this is a secure directory, check if the uri is ldaps:// or not
+  *aIsSecure = (strncmp(URI.get(), "ldaps:", 6) == 0);
   return NS_OK;
 }
 

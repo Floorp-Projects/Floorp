@@ -280,6 +280,13 @@ NS_IMETHODIMP nsAbDirProperty::GetIsRemote(PRBool *aIsRemote)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAbDirProperty::GetIsSecure(PRBool *aIsSecure)
+{
+  NS_ENSURE_ARG_POINTER(aIsSecure);
+  *aIsSecure = PR_FALSE;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAbDirProperty::GetSearchDuringLocalAutocomplete(PRBool *aSearchDuringLocalAutocomplete)
 {
   NS_ENSURE_ARG_POINTER(aSearchDuringLocalAutocomplete);

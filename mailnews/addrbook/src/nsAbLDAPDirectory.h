@@ -67,6 +67,7 @@ public:
      NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
     NS_IMETHOD GetSupportsMailingLists(PRBool *aSupportsMailingsLists);
     NS_IMETHOD GetIsRemote(PRBool *aIsRemote);
+    NS_IMETHOD GetIsSecure(PRBool *aIsRemote);
     NS_IMETHOD GetSearchDuringLocalAutocomplete(PRBool *aSearchDuringLocalAutocomplete);
 
     // nsAbLDAPDirectoryQuery methods

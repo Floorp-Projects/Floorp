@@ -805,12 +805,12 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, 
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-        // XXX can we avoid this copy?
+  // XXX can we avoid this copy?
   nsAutoString sourceString(aSource);
   rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, aKeyLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aKey = (PRUint8*) nsMemory::Alloc (*aKeyLen);
+  *aKey = (PRUint8*) nsMemory::Alloc(*aKeyLen);
   if (!aKey)
     return NS_ERROR_OUT_OF_MEMORY;
 
