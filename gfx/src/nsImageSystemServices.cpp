@@ -72,7 +72,7 @@ timer_callback (nsITimer *aTimer, void *aClosure)
 
 void * 
 ImageSystemServicesImpl::SetTimeout(ilTimeoutCallbackFunction aFunc, 
-				    void * aClosure, PRUint32 aMsecs)
+                                    void * aClosure, PRUint32 aMsecs)
 {
     nsITimer *timer;
     TimerClosure *tc;
