@@ -42,9 +42,8 @@
 class nsASingleFragmentCString;
 class nsCString;
 
-NS_COM size_t Distance( const nsAString::const_iterator&, const nsAString::const_iterator& );
-NS_COM size_t Distance( const nsACString::const_iterator&, const nsACString::const_iterator& );
-
+NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
+NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
 
 NS_COM void CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest );
 NS_COM void CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest );
