@@ -44,11 +44,21 @@ MAPFILE        = $(LIBRARY_NAME).map
 MODULE_NAME = PKI
 META_COMPONENT = crypto
 
-include <$(DEPTH)/config/config.mak>
+REQUIRES = \
+	xpcom \
+	string \
+	dom \
+	pref \
+	intl \
+	locale \
+	windowwatcher \
+	necko \
+	pipnss \
+	layout \
+	layout_xul \
+	$(NULL)
 
-LINCS = $(LINCS)     \
-    -I$(PUBLIC)      \
-    $(NULL)
+include <$(DEPTH)/config/config.mak>
 
 LLIBS   = \
     $(DIST)/lib/js3250.lib \
