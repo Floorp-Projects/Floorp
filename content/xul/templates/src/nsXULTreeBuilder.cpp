@@ -346,6 +346,7 @@ nsXULOutlinerBuilder::Init()
                 cfact->CreateCollation(locale, getter_AddRefs(mCollation));
         }
     }
+    return rv;
 }
 
 nsXULOutlinerBuilder::~nsXULOutlinerBuilder()
