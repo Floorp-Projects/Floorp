@@ -2674,7 +2674,7 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
 /* gisburn: Small hack for Xprint:
  * Xprint usually operates at resolutions >= 300DPI. There are 
  * usually no "normal" bitmap fonts at those resolutions - only 
- * "scalable outline fonts" and "printer buildin fonts" (which 
+ * "scalable outline fonts" and "built-in printer fonts" (which 
  * usually look like scalable bitmap fonts) are available.
  * Therefore: force use of scalable fonts to get rid of 
  * manually scaled bitmap fonts...
@@ -3238,21 +3238,14 @@ NodeGetStretch(nsFontWeightXlib* aWeight, int aStretchIndex)
 }
 
 static PRBool
-NodeAddScalable(nsFontStretchXlib* aStretch, PRBool aOutlineScaled, 
+NodeAddScalable(nsFontStretchXlib* aStretch, 
+                PRBool aOutlineScaled, PRBool aPrinterBuiltinFont,
+                int aResX, int aResY,
                 const char *aDashFoundry, const char *aFamily, 
                 const char *aWeight,      const char *aSlant, 
                 const char *aWidth,       const char *aStyle, 
                 const char *aSpacing,     const char *aCharSet)
 {
-#ifdef USE_XPRINT
-  /* gisburn: disabled for Xprint - this kills printer buildin fonts
-   * Xprint printer-buildin fonts look like bitmap scaled fonts but are 
-   * (scalable) printer-buildin fonts in reality.
-   */
-  if (nsFontMetricsXlib::mPrinterMode)
-    return PR_TRUE;
-#endif /* USE_XPRINT */      
-  
   // if we have both an outline scaled font and a bitmap 
   // scaled font pick the outline scaled font
   if ((aStretch->mScalable) && (!aStretch->mOutlineScaled) 
@@ -3262,7 +3255,18 @@ NodeAddScalable(nsFontStretchXlib* aStretch, PRBool aOutlineScaled,
   }
   if (!aStretch->mScalable) {
     aStretch->mOutlineScaled = aOutlineScaled;
-    if (aOutlineScaled) {
+    /* Xprint built-in printer fonts are outline-scaled fonts (except
+     * that we ask explicitly for X/Y resolution instead of using 0/0)
+     */
+    if (aPrinterBuiltinFont) {
+      aStretch->mScalable = 
+          PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-%d-%d-%s-*-%s", 
+          aDashFoundry, aFamily, aWeight, aSlant, aWidth, aStyle, 
+          aResX, aResY, aSpacing, aCharSet);      
+      if (!aStretch->mScalable)
+        return PR_FALSE;
+    }
+    else if (aOutlineScaled) {
       aStretch->mScalable = 
           PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-0-0-%s-*-%s", 
           aDashFoundry, aFamily, aWeight, aSlant, aWidth, aStyle, 
@@ -3407,7 +3411,10 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
     
     char* p = name + 1;
     int scalable = 0;
-    PRBool outline_scaled = PR_FALSE;
+    PRBool outline_scaled       = PR_FALSE,
+           builtin_printer_font = PR_FALSE;
+    int    resX = -1,
+           resY = -1;
 
 #ifdef FIND_FIELD
 #undef FIND_FIELD
@@ -3454,10 +3461,14 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
       scalable = 1;
     }
     FIND_FIELD(resolutionX);
+    resX = atoi(resolutionX);
+    NS_ASSERTION(!(resolutionX[0] != '0' && resX == 0), "atoi(resolutionX) failure.");
     if (resolutionX[0] == '0') {
       scalable = 1;
     }
     FIND_FIELD(resolutionY);
+    resY = atoi(resolutionY);
+    NS_ASSERTION(!(resolutionY[0] != '0' && resY == 0), "atoi(resolutionY) failure.");
     if (resolutionY[0] == '0') {
       scalable = 1;
     }
@@ -3487,6 +3498,25 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
     }
     FIND_FIELD(spacing);
     FIND_FIELD(averageWidth);
+    
+#ifdef USE_XPRINT
+    /* I am not sure what Xprint built-in printer fonts exactly look like
+     * (usually '-adobe-helvetica-medium-r-normal--50-120-300-300-p-0-iso8859-1'
+     * for a 300DPI printer) - but this test is good enough (except when
+     * someone installs 300DPI bitmap (!!) fonts on a system... =:-)
+     */
+    if (nsFontMetricsXlib::mPrinterMode &&
+        averageWidth[0] == '0' && 
+        resX >= screen_xres    && 
+        resY >= screen_yres) {
+      builtin_printer_font = PR_TRUE;
+      /* Treat built-in printer fonts like outline-scaled ones... */
+      outline_scaled = PR_TRUE;
+
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("This may be a built-in printer font '%s'\n", list[i]));
+    }
+#endif /* USE_XPRINT */
+    
     if (averageWidth[0] == '0') {
       scalable = 1;
 /* Workaround for bug 103159 ("sorting fonts by foundry names cause font
@@ -3496,19 +3526,18 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
  * for additional comments...
  */      
 #ifndef DISABLE_WORKAROUND_FOR_BUG_103159
-#ifdef USE_XPRINT
-      /* The following check kills Xprint printer-buildin fonts... ;-( */
-      if (!nsFontMetricsXlib::mPrinterMode)
-#endif /* USE_XPRINT */
-      {
-        // skip 'mysterious' and 'spurious' cases like
-        // -adobe-times-medium-r-normal--17-120-100-100-p-0-iso8859-9
-        if ((pixelSize[0] != '0' || pointSize[0] != 0) && 
-            (outline_scaled == PR_FALSE)) {
-          PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("rejecting font '%s' (via hardcoded workaround for bug 103159)\n", list[i]));
-          continue;
-        }  
-      }    
+      /* Skip 'mysterious' and 'spurious' cases like
+       * -adobe-times-medium-r-normal--17-120-100-100-p-0-iso8859-9
+       * The only "legal" use for this type of XLFD are Xprint
+       * build-in printer fonts.like
+       * -adobe-times-medium-r-normal--50-120-300-300-p-0-iso8859-1
+       * (300DPI printer)
+       */
+      if ((pixelSize[0] != '0' || pointSize[0] != 0) && 
+          (outline_scaled == PR_FALSE) && (builtin_printer_font == PR_FALSE)) {
+        PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("rejecting font '%s' (via hardcoded workaround for bug 103159)\n", list[i]));
+        continue;
+      }  
 #endif /* DISABLE_WORKAROUND_FOR_BUG_103159 */
     }
     char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
@@ -3655,8 +3684,9 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
       continue;
 
     if (scalable) {
-      if (!NodeAddScalable(stretch, outline_scaled, name, familyName, 
-           weightName, slant, setWidth, addStyle, spacing, charSetName))
+      if (!NodeAddScalable(stretch, outline_scaled, builtin_printer_font,
+           resX, resY, name, familyName, weightName, slant, setWidth,
+           addStyle, spacing, charSetName))
         continue;
     }
   
