@@ -419,9 +419,6 @@ nsBlockFrame::~nsBlockFrame()
 NS_IMETHODIMP
 nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  nsLineBox::DeleteLineList(aPresContext, mLines);
-  nsLineBox::DeleteLineList(aPresContext, mOverflowLines);
-
   // When we have a bullet frame and it's not in our child list then
   // we need to delete it ourselves (this is the common case for
   // list-item's that have outside bullets).
@@ -430,6 +427,9 @@ nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
     mBullet->DeleteFrame(aPresContext);
     mBullet = nsnull;
   }
+
+  nsLineBox::DeleteLineList(aPresContext, mLines);
+  nsLineBox::DeleteLineList(aPresContext, mOverflowLines);
 
   mFloaters.DeleteFrames(aPresContext);
 
