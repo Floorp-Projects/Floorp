@@ -9,6 +9,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript">
+  <![CDATA[
     function sendLink(pageUrl, pageTitle)
     {
       var currentIdentity = getCurrentIdentityKey();
@@ -43,11 +44,13 @@
 
       var shouldShowSendLink = gContextMenu.onLink;
       gContextMenu.showItem("context-sendlink", shouldShowSendLink);
-        
+      
       var appsSeparator = document.getElementById("context-sep-apps");
-      var tempElement = appsSeparator.previousSibling;
-      if (tempElement.localName == "menuseparator") 
-        gContextMenu.showItem("context-sep-apps", false);
+      if (appsSeparator) {
+        var tempElement = appsSeparator.previousSibling;
+        if (tempElement.localName == "menuseparator") 
+          gContextMenu.showItem("context-sep-apps", false);
+      }
     }
       
     function initMailContextMenuListener(aEvent)
