@@ -211,31 +211,6 @@ function unifinderMouseDownToDo( event )
    }
 }
 
-/**
-*  Delete the current selected item with focus from the ToDo unifinder list
-*/
-
-function deleteToDoCommand( DoNotConfirm )
-{
-   // TODO Implement Confirm
-   var tree = document.getElementById( ToDoUnifinderTreeName );
-   var start = new Object();
-   var end = new Object();
-   var numRanges = tree.view.selection.getRangeCount();
-
-   gICalLib.batchMode = true;
-
-   for (var t=0; t<numRanges; t++){
-      tree.view.selection.getRangeAt(t,start,end);
-      for (var v=start.value; v<=end.value; v++){
-         var toDoItem = tree.taskView.getCalendarTaskAtRow( v );
-         var todoId = toDoItem.id
-         gICalLib.deleteTodo( todoId );   
-      }
-   }
-   gICalLib.batchMode = false;
-}
-
 function checkboxClick( ThisToDo, completed )
 {
    // var ThisToDo = event.currentTarget.parentNode.parentNode.toDo;

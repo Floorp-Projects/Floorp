@@ -762,7 +762,7 @@ function addEventDialogResponse( calendarEvent, Server )
 
 function addToDoDialogResponse( calendarToDo, Server )
 {
-   gICalLib.addTodo( calendarToDo, Server );
+    refreshRemoteCalendarAndRunFunction( calendarToDo, Server, "addTodo" );
 }
 
 
@@ -829,7 +829,7 @@ function modifyEventDialogResponse( calendarEvent, Server )
 
 function modifyToDoDialogResponse( calendarToDo, Server )
 {
-   gICalLib.modifyTodo( calendarToDo, Server );
+    refreshRemoteCalendarAndRunFunction( calendarToDo, Server, "modifyTodo" );
 }
 
 
@@ -982,6 +982,43 @@ function deleteEventCommand( DoNotConfirm )
       */
    }
 }
+
+/**
+*  Delete the current selected item with focus from the ToDo unifinder list
+*/
+
+function deleteToDoCommand( DoNotConfirm )
+{
+   // TODO Implement Confirm
+
+    var tree = document.getElementById( ToDoUnifinderTreeName );
+    var start = new Object();
+    var end = new Object();
+    var numRanges = tree.view.selection.getRangeCount();
+
+    if( numRanges == 1 ) {
+        for (var t=0; t<numRanges; t++){
+            tree.view.selection.getRangeAt(t,start,end);
+            for (var v=start.value; v<=end.value; v++){
+                var toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+                refreshRemoteCalendarAndRunFunction( toDoItem.id, calendarEvent.parent.server, "deleteTodo" );
+            }
+        }
+    } else {
+        gICalLib.batchMode = true;
+
+        for (var t=0; t<numRanges; t++){
+            tree.view.selection.getRangeAt(t,start,end);
+            for (var v=start.value; v<=end.value; v++){
+                var toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+                var todoId = toDoItem.id
+                gICalLib.deleteTodo( todoId );   
+            }
+        }
+        gICalLib.batchMode = false;
+    }
+}
+
 
 function goFindNewCalendars()
 {
