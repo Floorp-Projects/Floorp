@@ -137,6 +137,7 @@ protected:
   PRUint32 mMaxRows;
   PRPackedBool mDisableAutoComplete; 
   PRPackedBool mCompleteDefaultIndex;
+  PRPackedBool mCompleteSelectedIndex;
   PRPackedBool mForceComplete;
   PRPackedBool mSuppressOnInput;
   PRPackedBool mIgnoreClick;

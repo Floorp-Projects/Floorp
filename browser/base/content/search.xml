@@ -57,6 +57,7 @@
                    autocompletepopup="PopupAutoComplete"
                    autocompletesearch="form-history"
                    autocompletesearchparam="searchbar-history"
+                   completeselectedindex="true"
                    tabscrolling="true"
                    onfocus="URLBarFocusHandler(event, this);"
                    onmousedown="URLBarMouseDownHandler(event, this);"

@@ -40,7 +40,7 @@
 
 interface nsIAutoCompletePopup;
 
-[scriptable, uuid(3B6E2742-B136-4588-A6DF-699B9585AF60)]
+[scriptable, uuid(e312267f-8f57-43e8-a904-ff9b5d3f5aef)]
 interface nsIAutoCompleteInput : nsISupports
 {  
   /*
@@ -69,6 +69,12 @@ interface nsIAutoCompleteInput : nsISupports
    * result at the default index as the user types
    */
   attribute boolean completeDefaultIndex;
+
+  /*
+   * complete text in the textbox as the user selects from the dropdown
+   * options if set to true
+   */
+  attribute boolean completeSelectedIndex;
 
   /* 
    * Option for completing to the default result whenever the user hits

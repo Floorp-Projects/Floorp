@@ -137,6 +137,10 @@
                 onset="this.setAttribute('completedefaultindex', val); return val;"
                 onget="return this.getAttribute('completedefaultindex') == 'true';"/>
 
+      <property name="completeSelectedIndex"
+                onset="this.setAttribute('completeselectedindex', val); return val;"
+                onget="return this.getAttribute('completeselectedindex') == 'true';"/>
+
       <property name="forceComplete"
                 onset="this.setAttribute('forcecomplete', val); return val;"
                 onget="return this.getAttribute('forcecomplete') == 'true';"/>

@@ -67,6 +67,7 @@
 
       <hbox align="center">
         <textbox id="dialog.input" flex="1" type="autocomplete"
+                  completeselectedindex="true"
                   autocompletesearch="history"
                   enablehistory="true"
                   oninput="doEnabling();"/>
