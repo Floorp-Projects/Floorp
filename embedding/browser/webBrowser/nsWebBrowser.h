@@ -82,8 +82,6 @@ public:
    NS_DECL_NSIWEBNAVIGATION
    NS_DECL_NSIWEBPROGRESS
 
-   static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
-
 protected:
    virtual ~nsWebBrowser();
 

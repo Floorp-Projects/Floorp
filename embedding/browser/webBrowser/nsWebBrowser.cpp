@@ -66,21 +66,6 @@ nsWebBrowser::~nsWebBrowser()
       }
 }
 
-NS_IMETHODIMP nsWebBrowser::Create(nsISupports* aOuter, const nsIID& aIID, 
-	void** ppv)
-{
-	NS_ENSURE_ARG_POINTER(ppv);
-	NS_ENSURE_NO_AGGREGATION(aOuter);
-
-	nsWebBrowser* browser = new  nsWebBrowser();
-	NS_ENSURE_TRUE(browser, NS_ERROR_OUT_OF_MEMORY);
-
-	NS_ADDREF(browser);
-	nsresult rv = browser->QueryInterface(aIID, ppv);
-	NS_RELEASE(browser);  
-	return rv;
-}
-
 //*****************************************************************************
 // nsWebBrowser::nsISupports
 //*****************************************************************************   

@@ -38,14 +38,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserSetup)
 
 static nsModuleComponentInfo components[] =
 {
-  { "WebBrowser Component", NS_WEBBROWSER_CID, NS_WEBBROWSER_PROGID, nsWebBrowser::Create },
-  { "WebBrowserSetup Component", NS_WEBBROWSER_SETUP_CID, NS_WEBBROWSER_SETUP_PROGID, nsWebBrowserSetup::Create }
+   { "WebBrowser Component", NS_WEBBROWSER_CID, 
+      NS_WEBBROWSER_PROGID, nsWebBrowserConstructor },
+   { "WebBrowserSetup Component", NS_WEBBROWSER_SETUP_CID, 
+      NS_WEBBROWSER_SETUP_PROGID, nsWebBrowserSetupConstructor }
 };
 
 
 // NSGetModule implementation.
 
-NS_IMPL_NSGETMODULE("nsWebBrowserModule", components)
+NS_IMPL_NSGETMODULE("Browser Embedding Module", components)
 
 
 
