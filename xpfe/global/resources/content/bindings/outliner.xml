@@ -66,13 +66,14 @@
                 cols[cols.length] = col;
               col = col.boxObject.nextSibling;
             }
-            for (var i = 0; i < cols.length; ++i)
+            var i;
+            for (i = 0; i < cols.length; ++i)
               cols[i].setAttribute("ordinal", (i*2)+1);
               
             // update the ordinal positions of splitters to even numbers, so that 
             // they are in between columns
             var splitters = this.getElementsByTagName("splitter");
-            for (var i = 0; i < splitters.length; ++i)
+            for (i = 0; i < splitters.length; ++i)
               splitters[i].setAttribute("ordinal", (i+1)*2);
             
             this._columnsDirty = false;
