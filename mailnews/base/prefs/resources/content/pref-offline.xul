@@ -60,37 +60,41 @@
 <groupbox>
   <caption label="&rHeader;"/>
 
-  <separator class="thin"/>
   <label value="&textStartUp;"/>
-    <radiogroup id="whenStartingUp"
+    <radiogroup id="whenStartingUp" class="indent"
                 prefstring="offline.startup_state">
       <radio value="0" label="&radioRememberPrevState;"
              accesskey="&radioRememberPrevState.accesskey;"/>
       <radio value="1" label="&radioAskMe;"
              accesskey="&radioAskMe.accesskey;"/>
     </radiogroup>
-  <separator class="thin"/>
+
+  <separator/>
+
   <label value="&textGoingOnline;"/>
     <radiogroup id="whengoingOnlinestate"
+                orient="horizontal" class="indent"
                 prefstring="offline.send.unsent_messages">
-      <radio value="0" label="&radioAskUnsent;"
-             accesskey="&radioAskUnsent.accesskey;"/>
       <radio value="1" label="&radioAutoSend;"
              accesskey="&radioAutoSend.accesskey;"/>
       <radio value="2" label="&radioNotSend;"
              accesskey="&radioNotSend.accesskey;"/>
+      <radio value="0" label="&radioAskUnsent;"
+             accesskey="&radioAskUnsent.accesskey;"/>
     </radiogroup>
 
-  <separator class="thin"/>
+  <separator/>
+
   <label value="&textGoingOffline;"/>
     <radiogroup id="whengoingOfflinestate"
+                orient="horizontal" class="indent"
                 prefstring="offline.download.download_messages">
-      <radio value="0" label="&radioAskDownload;"
-             accesskey="&radioAskDownload.accesskey;"/>
       <radio value="1" label="&radioAutoDownload;"
              accesskey="&radioAutoDownload.accesskey;"/>
       <radio value="2" label="&radioNotDownload;"
              accesskey="&radioNotDownload.accesskey;"/>
+      <radio value="0" label="&radioAskDownload;"
+             accesskey="&radioAskDownload.accesskey;"/>
     </radiogroup>
 
 </groupbox>
