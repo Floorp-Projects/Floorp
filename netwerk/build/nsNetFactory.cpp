@@ -20,6 +20,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIOService.h"
+#include "nsNetModuleMgr.h"
 #include "nsFileTransportService.h"
 #include "nsSocketTransportService.h"
 #include "nscore.h"
@@ -30,6 +31,7 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID,   NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kExternalModuleManagerCID, NS_NETMODULEMGR_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,6 +58,9 @@ NSGetFactory(nsISupports* aServMgr,
     }
     else if (aClass.Equals(kStandardURLCID)) {
         rv = NS_NewGenericFactory(&fact, nsStandardURL::Create);
+    }
+    else if (aClass.Equals(kExternalModuleManagerCID)) {
+        rv = NS_NewGenericFactory(&fact, nsNetModuleMgr::Create);
     }
     else {
         rv = NS_ERROR_FAILURE;
@@ -90,11 +95,17 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     "Socket Transport Service",
                                     "component://netscape/network/socket-transport-service",
                                     aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;;
+    if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->RegisterComponent(kStandardURLCID, 
                                     "Standard URL Implementation",
                                     "component://netscape/network/standard-url",
+                                    aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->RegisterComponent(kExternalModuleManagerCID,
+                                    "External Module Manager",
+                                    "component://netscape/network/net-extern-mod",
                                     aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
@@ -114,9 +125,12 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kSocketTransportServiceCID, aPath);
-    if (NS_FAILED(rv)) return rv;;
+    if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kStandardURLCID, aPath);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = compMgr->UnregisterComponent(kExternalModuleManagerCID, aPath);
     return rv;
 }
 
