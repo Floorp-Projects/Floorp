@@ -235,7 +235,7 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
                                         NS_GET_IID(nsILineBreakerFactory),
                                         (nsISupports **)&lf);
   if (NS_SUCCEEDED(result)) {
-    nsAutoString lbarg("");
+    nsAutoString lbarg;
     result = lf->GetBreaker(lbarg, &mLineBreaker);
     if(NS_FAILED(result)) {
       mLineBreaker = nsnull;
@@ -583,8 +583,11 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     // >>> fdfd
     // when a mail is sent.
     nsString value;
-    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "type", value))
-        && value.StripChars("\"").EqualsWithConversion("cite", PR_TRUE))
+    nsresult rv = GetValueOfAttribute(aNode, "type", value);
+    if ( NS_SUCCEEDED(rv) )
+      value.StripChars("\"");
+
+    if (NS_SUCCEEDED(rv)  && value.EqualsWithConversion("cite", PR_TRUE))
       mCiteQuoteLevel++;
     else
       mIndent += gTabSize; // Check for some maximum value?
@@ -594,7 +597,10 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     nsAutoString url;
     if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "href", url))
         && !url.IsEmpty())
-      mURL = url.StripChars("\"");
+      {
+        url.StripChars("\"");
+        mURL = url;
+      }
   }
   else if (type == eHTMLTag_img)
   {
@@ -606,15 +612,24 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
           && !desc.IsEmpty())
       {
         temp.AppendWithConversion(" (");
-        temp += desc.StripChars("\"");
+
+        desc.StripChars("\"");
+        temp += desc;
+
         temp.AppendWithConversion(" <");
-        temp += url.StripChars("\"");
+
+        url.StripChars("\"");
+        temp += url;
+
         temp.AppendWithConversion(">) ");
       }
       else
       {
         temp.AppendWithConversion(" <");
-        temp += url.StripChars("\"");
+
+        url.StripChars("\"");
+        temp += url;
+
         temp.AppendWithConversion("> ");
       }
       Write(temp);

@@ -1077,7 +1077,7 @@ nsresult nsXIFDTD::AddLeaf(const nsIParserNode& aNode)
       case eXIFTag_text:
         if(theToken) {
           nsString& temp =theToken->GetStringValueXXX();
-          if (temp.Equals("<xml version=\"1.0\"?>")) handled=PR_TRUE;
+          if (temp.EqualsWithConversion("<xml version=\"1.0\"?>")) handled=PR_TRUE;
         }
         break;
       default:
@@ -1348,7 +1348,7 @@ nsresult nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
   CToken* theToken=((nsCParserNode&)aNode).mToken;
   
   if(theToken) {
-    theToken->Reinitialize(eHTMLTag_style,"style");
+    theToken->Reinitialize(eHTMLTag_style,NS_ConvertASCIItoUCS2("style"));
     mXIFContext->Push(&aNode);
   }
 
@@ -1368,9 +1368,9 @@ nsresult nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
   nsresult result=NS_OK;
   nsAutoString tagName(nsHTMLTags::GetStringValue(eHTMLTag_style));
 
-  mBuffer.Append("</");
+  mBuffer.AppendWithConversion("</");
   mBuffer.Append(tagName);
-  mBuffer.Append(">");
+  mBuffer.AppendWithConversion(">");
   ((nsCParserNode&)aNode).SetSkippedContent(mBuffer);
   
   result=mSink->AddLeaf(aNode);
@@ -1421,16 +1421,16 @@ nsresult nsXIFDTD::BeginCSSDeclarationList(const nsIParserNode& aNode)
     count = 0;
 
   for (PRInt32 i = 0; i < count; i++)
-    mBuffer.Append(" ");
+    mBuffer.AppendWithConversion(" ");
 
-  mBuffer.Append("   {");
+  mBuffer.AppendWithConversion("   {");
   mCSSDeclarationCount = 0;
   return result;
 }
 
 nsresult nsXIFDTD::EndCSSDeclarationList(const nsIParserNode& aNode)
 {
-  mBuffer.Append("}\n");
+  mBuffer.AppendWithConversion("}\n");
   return NS_OK;
 }
 
@@ -1445,10 +1445,10 @@ nsresult nsXIFDTD::AddCSSDeclaration(const nsIParserNode& aNode)
     if (PR_TRUE == GetAttribute(aNode, mGenericKey, value))
     {
       if (mCSSDeclarationCount != 0)
-        mBuffer.Append(";");
-      mBuffer.Append(" ");
+        mBuffer.AppendWithConversion(";");
+      mBuffer.AppendWithConversion(" ");
       mBuffer.Append(property);
-      mBuffer.Append(": ");
+      mBuffer.AppendWithConversion(": ");
       mBuffer.Append(value);
       mCSSDeclarationCount++;
     }
