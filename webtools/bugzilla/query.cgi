@@ -274,6 +274,21 @@ sub GenerateEmailInput {
 my $emailinput1 = GenerateEmailInput(1);
 my $emailinput2 = GenerateEmailInput(2);
 
+# if using usebuggroups, then we don't want people to see products they don't
+# have access to.  remove them from the list.
+
+@::product_list = ();
+foreach my $p (@::legal_product) {
+   if(Param("usebuggroupsentry")
+      && GroupExists($p)
+      && !UserInGroup($p)) {
+        # If we're using bug groups to restrict entry on products, and
+        # this product has a bug group, and the user is not in that
+        # group, we don't want to include that product in this list.
+        next;
+      }
+   push @::product_list, $p;
+}
 
 # javascript
     
@@ -306,7 +321,7 @@ foreach $tm (@::legal_target_milestone) {
     $jscript .= "tms['$tm'] = new Array();\n";
 }
 
-for $p (@::legal_product) {
+for $p (@::product_list) {
     if ($::components{$p}) {
         foreach $c (@{$::components{$p}}) {
             $jscript .= "cpts['$c'][cpts['$c'].length] = '$p';\n";
@@ -602,7 +617,7 @@ print "
 
 <td align=left valign=top>
 <SELECT NAME=\"product\" MULTIPLE SIZE=5 onChange=\"selectProduct(this.form);\">
-@{[make_options(\@::legal_product, $default{'product'}, $type{'product'})]}
+@{[make_options(\@::product_list, $default{'product'}, $type{'product'})]}
 </SELECT>
 </td>
 
