@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -50,7 +51,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsChromeUIDataSource::nsChromeUIDataSource(nsIRDFDataSource* aComposite)
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
   mComposite = aComposite;
   mComposite->AddObserver(this);
 
@@ -65,7 +66,8 @@ nsChromeUIDataSource::nsChromeUIDataSource(nsIRDFDataSource* aComposite)
 
 nsChromeUIDataSource::~nsChromeUIDataSource()
 {
-  mComposite->RemoveObserver(this);
+  if (mComposite)
+    mComposite->RemoveObserver(this);
 
   mRDFService->UnregisterDataSource(this);
 
@@ -75,7 +77,32 @@ nsChromeUIDataSource::~nsChromeUIDataSource()
   }
 }
 
-NS_IMPL_ISUPPORTS2(nsChromeUIDataSource, nsIRDFDataSource, nsIRDFObserver);
+// we require a special implementation of Release, which knows about
+// a circular strong reference
+NS_IMPL_ADDREF(nsChromeUIDataSource)
+NS_IMPL_QUERY_INTERFACE2(nsChromeUIDataSource, nsIRDFDataSource, nsIRDFObserver)
+
+NS_IMETHODIMP_(nsrefcnt)
+nsChromeUIDataSource::Release()
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
+  --mRefCnt;
+  NS_LOG_RELEASE(this, mRefCnt, "nsChromeUIDataSource");
+
+  // delete if the last reference is our strong circular reference
+  if (mComposite && PRInt32(mRefCnt) == 1) {
+    ++mRefCnt;
+    nsCOMPtr<nsIRDFDataSource> composite = mComposite;
+    mComposite = 0; // release
+    composite->RemoveObserver(this);
+    --mRefCnt;
+  }
+  if (mRefCnt == 0) {
+    delete this;
+    return 0;
+  }
+  return mRefCnt;
+}
 
 
 //----------------------------------------------------------------------
