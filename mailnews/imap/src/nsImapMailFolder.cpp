@@ -784,31 +784,9 @@ NS_IMETHODIMP nsImapMailFolder::GetNoSelect(PRBool *aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   return GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, aResult);
 }
-#ifdef DEBUG_bienvenu1
-  nsIMsgSearchSession *saveSearchSession;
-#endif
 NS_IMETHODIMP nsImapMailFolder::Compact()
 {
     nsresult rv;
-#ifdef DEBUG_bienvenu1
-  nsCOMPtr<nsIMsgSearchSession> searchSession;
-  rv = nsComponentManager::CreateInstance(NS_MSGSEARCHSESSION_PROGID,
-                                          nsnull,
-                                          NS_GET_IID(nsIMsgSearchSession),
-                                          getter_AddRefs(searchSession));
-  if (searchSession)
-  {
-    nsMsgSearchValue *searchValue = new nsMsgSearchValue;
-    searchValue->u.string = PL_strdup("test");
-    searchValue->attribute = nsMsgSearchAttrib::Subject;
-    searchSession->AddSearchTerm(nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 
-      searchValue, PR_FALSE, nsnull);
-    searchSession->AddScopeTerm(nsMsgSearchScope::MailFolder, this);
-    saveSearchSession = searchSession;
-    NS_ADDREF(saveSearchSession);
-    searchSession->Search(nsnull);
-  }
-#endif
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv) && imapService)
     {
@@ -3325,10 +3303,6 @@ NS_IMETHODIMP
 nsImapMailFolder::NotifySearchHit(nsIMsgMailNewsUrl * aUrl, 
                                   const char* searchHitLine)
 {
-#ifdef DEBUG_bienvenu
-  printf("search hit %s\n", searchHitLine);
-#endif
-
   nsresult rv = GetDatabase(nsnull /* don't need msg window, that's more for local mbox parsing */);
   if (!mDatabase || !NS_SUCCEEDED(rv))
     return rv;

@@ -833,6 +833,8 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted
 {
   NS_ENSURE_ARG (interrupted);
 
+  *interrupted = PR_FALSE;
+
   nsAutoCMonitor(this);
 
   if (m_runningUrl && !TestFlag(IMAP_CLEAN_UP_URL_STATE))
@@ -863,8 +865,9 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted
       }
     }
   }
-  // this should check if the protocol instance is currently running a msg fetch
-  // url for the passed folder, and if so, pseudo interrupt it.
+#ifdef DEBUG_bienvenu
+  printf("interrupt msg load : %s\n", (*interrupted) ? "TRUE" : "FALSE");
+#endif
   return NS_OK;
 }
 
@@ -964,6 +967,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 {
   PRBool  logonFailed = PR_FALSE;
   PRBool anotherUrlRun = PR_FALSE;
+
+
+  PseudoInterrupt(PR_FALSE);  // clear this if left over from previous url.
 
   if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_channel)
   {
@@ -1090,8 +1096,6 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     rv = m_channelListener->OnStopRequest(m_mockChannel, m_channelContext, NS_OK, nsnull);
 
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
-  PseudoInterrupt(PR_FALSE);  // clear this, because we must be done
-                              // interrupting?
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
   if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && GetServerStateParser().LastCommandSuccessful() 
 	&& m_imapMiscellaneousSink && m_runningUrl)
@@ -1375,7 +1379,8 @@ NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool *aIsConnectionBusy,
     if (m_urlInProgress) // do we have a url? That means we're working on it... 
       *aIsConnectionBusy = PR_TRUE;
 
-    if (GetServerStateParser().GetSelectedMailboxName() && 
+    if (GetServerStateParser().GetIMAPstate() ==
+        nsImapServerResponseParser::kFolderSelected && GetServerStateParser().GetSelectedMailboxName() && 
         PL_strcasecmp(GetServerStateParser().GetSelectedMailboxName(),
                       "Inbox") == 0)
       *isInboxConnection = PR_TRUE;
@@ -3385,7 +3390,9 @@ PRMonitor *nsImapProtocol::GetDataMemberMonitor()
 PRBool nsImapProtocol::DeathSignalReceived()
 {
 	nsresult returnValue = NS_OK;
-	if (m_mockChannel)
+  // ignore mock channel status if we've been pseudo interrupted
+  // ### need to make sure we clear pseudo interrupted status appropriately.
+	if (!GetPseudoInterrupted() && m_mockChannel) 
 		m_mockChannel->GetStatus(&returnValue);
 
 	if (NS_SUCCEEDED(returnValue))	// check the other way of cancelling.

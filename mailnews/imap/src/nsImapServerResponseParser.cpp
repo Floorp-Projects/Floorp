@@ -384,7 +384,11 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 	         !PL_strcasecmp(commandToken, "EXAMINE"))
 		fIMAPstate = kFolderSelected;
 	else if (!PL_strcasecmp(commandToken, "CLOSE"))
+  {
 		fIMAPstate = kAuthenticated;
+    // we no longer have a selected mailbox.
+    PR_FREEIF( fSelectedMailboxName );
+  }
 	else if ((!PL_strcasecmp(commandToken, "LIST")) ||
 			 (!PL_strcasecmp(commandToken, "LSUB")))
 	{

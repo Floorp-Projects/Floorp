@@ -59,6 +59,12 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIImapService.h"
 #include "nsMsgI18N.h"
+#include "nsAutoLock.h"
+#include "nsIImapMockChannel.h"
+// for the memory cache...
+#include "nsINetDataCacheManager.h"
+#include "nsINetDataCache.h"
+#include "nsICachedNetData.h"
 
 #include "nsITimer.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -355,7 +361,6 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
       // queue
     PR_CEnterMonitor(this);
 	  nsCOMPtr <nsISupports> supports(do_QueryInterface(aImapUrl));
-//    printf("queueing imap url \n");
 	  if (supports)
 		  m_urlQueue->AppendElement(supports);
     m_urlConsumers.AppendElement((void*)aConsumer);
@@ -374,13 +379,13 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
   PRUint32 cnt = 0;
   nsresult rv = NS_OK;
 	PRBool urlRun = PR_FALSE;
+  PRBool removeUrlFromQueue = PR_FALSE;
+  PRBool keepGoing = PR_TRUE;
 
-  PR_CEnterMonitor(this);
+  nsAutoCMonitor(this);
   m_urlQueue->Count(&cnt);
 
-//  printf("loading next url, cnt = %ld\n", cnt);
-
-  if (cnt > 0)
+  while (cnt > 0 && !urlRun && keepGoing)
   {
     nsCOMPtr<nsISupports>
         aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
@@ -389,37 +394,78 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
     if (aImapUrl)
     {
-      nsISupports *aConsumer =
-          (nsISupports*)m_urlConsumers.ElementAt(0);
+      nsCOMPtr <nsIImapMockChannel> mockChannel;
+      nsCOMPtr<nsIURI> url(do_QueryInterface(aSupport, &rv));
 
-      NS_IF_ADDREF(aConsumer);
-      
-      nsCOMPtr <nsIImapProtocol>  protocolInstance ;
-      rv = CreateImapConnection(nsnull, aImapUrl,
-                                         getter_AddRefs(protocolInstance));
-      if (NS_SUCCEEDED(rv) && protocolInstance)
+      if (NS_SUCCEEDED(aImapUrl->GetMockChannel(getter_AddRefs(mockChannel))) && mockChannel)
       {
-		    nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-		    if (NS_SUCCEEDED(rv) && url)
-		    {
-#ifdef DEBUG_bienvenu
-          printf("loading queued url\n");
-#endif
-			    rv = protocolInstance->LoadUrl(url, aConsumer);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "failed running queued url");
-			    urlRun = PR_TRUE;
-		    }
+        mockChannel->GetStatus(&rv);
+        if (!NS_SUCCEEDED(rv))
+        {
+          nsresult res;
+          removeUrlFromQueue = PR_TRUE;
+
+          mockChannel->Close(); // try closing it to get channel listener nulled out.
+
+          nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_PROGID, &res);
+          if (NS_SUCCEEDED(res) && cacheManager)
+          {
+            nsCOMPtr<nsICachedNetData>  cacheEntry;
+            // Retrieve an existing cache entry or create a new one if none exists for the
+            // given URL.
+            nsXPIDLCString urlCString; 
+            // eventually we are going to want to use the url spec - the query/ref part 'cause that doesn't
+            // distinguish urls.......
+            url->GetSpec(getter_Copies(urlCString));
+            // for now, truncate of the query part so we don't duplicate urls in the cache...
+            char * anchor = PL_strrchr(urlCString, '?');
+            if (anchor)
+              *anchor = '\0';
+            res = cacheManager->GetCachedNetData(urlCString, 0, 0, nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE,
+                                                getter_AddRefs(cacheEntry));
+            if (NS_SUCCEEDED(res) && cacheEntry)
+              cacheEntry->Delete();
+          }
+        }
+      }
+      // Note that we're relying on no one diddling the rv from the mock channel status
+      // between the place we set it and here.
+      if (NS_SUCCEEDED(rv))
+      {
+        nsISupports *aConsumer =
+            (nsISupports*)m_urlConsumers.ElementAt(0);
+
+        NS_IF_ADDREF(aConsumer);
+      
+        nsCOMPtr <nsIImapProtocol>  protocolInstance ;
+        rv = CreateImapConnection(nsnull, aImapUrl,
+                                           getter_AddRefs(protocolInstance));
+        if (NS_SUCCEEDED(rv) && protocolInstance)
+        {
+		      nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
+		      if (NS_SUCCEEDED(rv) && url)
+		      {
+			      rv = protocolInstance->LoadUrl(url, aConsumer);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed running queued url");
+			      urlRun = PR_TRUE;
+            removeUrlFromQueue = PR_TRUE;
+		      }
+        }
+        else
+          keepGoing = PR_FALSE;
+        NS_IF_RELEASE(aConsumer);
+      }
+      if (removeUrlFromQueue)
+      {
         m_urlQueue->RemoveElementAt(0);
         m_urlConsumers.RemoveElementAt(0);
       }
-
-      NS_IF_RELEASE(aConsumer);
     }
+    m_urlQueue->Count(&cnt);
   }
 	if (aResult)
 		*aResult = urlRun;
 
-  PR_CExitMonitor(this);
   return rv;
 }
 
