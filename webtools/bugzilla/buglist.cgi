@@ -451,7 +451,7 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
             last ORDER;
         };
         # DEFAULT
-        $::FORM{'order'} = "bugs.bug_status, priorities.rank, assign.login_name, bugs.bug_id";
+        $::FORM{'order'} = "bugs.bug_status, bugs.priority, assign.login_name, bugs.bug_id";
     }
     $query .= $::FORM{'order'};
 }
