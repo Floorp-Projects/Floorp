@@ -482,7 +482,6 @@ void CURLBar::UpdateFields( const char * msg )
     msg = LM_StripWysiwygURLPrefix(msg);
 
     CString cs(msg);
-    cs += " ";
     m_pBox->SetWindowText(cs); 
     UpdateWindow();
     //m_pBox->SetEditSel(cs.GetLength()-1,cs.GetLength());
