@@ -150,7 +150,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 	}
 
 	// optimize the common case of placing on the end
-	if (!fNumberOfMessagesAdded || (uid > (PRInt32) fUids[fNumberOfMessagesAdded - 1]))
+	if (!fNumberOfMessagesAdded || (uid > (PRUint32) fUids[fNumberOfMessagesAdded - 1]))
 	{	
 		fUids.SetAt(fNumberOfMessagesAdded, uid);
 		fFlags[fNumberOfMessagesAdded] = flags;
@@ -169,7 +169,7 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 	GetMessageFlagsFromUID(uid, &foundIt, &insertionIndex);
 
 	// Hmmm, is the server sending back unordered fetch responses?
-	if (((PRInt32) fUids[insertionIndex]) != uid)
+	if (((PRUint32) fUids[insertionIndex]) != uid)
 	{
 		// shift the uids and flags to the right
 		for (PRInt32 shiftIndex = fNumberOfMessagesAdded; shiftIndex > insertionIndex; shiftIndex--)
