@@ -78,9 +78,5 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+= -DB1M
 
 GARBAGE		+= $(addprefix $(DIST)/bin/components/, \
-			initpref.js all.js mailnews.js editor.js config.js beos.js unix.js winpref.js os2prefs.js) \
-			$(DIST)/bin/netscape.cfg
-
-install::
-	$(INSTALL) -m 444 $(srcdir)/init/netscape.cfg $(DIST)/bin
+			initpref.js all.js mailnews.js editor.js config.js beos.js unix.js winpref.js os2prefs.js)
 

@@ -35,7 +35,6 @@ bin/libraptorplugin.so
 bin/libraptorwebwidget.so
 bin/libwidget_gtk.so
 bin/libxlibrgb.so
-bin/netscape.cfg
 bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom

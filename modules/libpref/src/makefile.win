@@ -113,7 +113,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)	
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-	$(MAKE_INSTALL) .\init\netscape.cfg $(DIST)\bin
     $(MAKE_INSTALL) .\initpref.js $(DIST)\bin\defaults\pref
     $(MAKE_INSTALL) .\init\all.js $(DIST)\bin\defaults\pref
     $(MAKE_INSTALL) .\init\mailnews.js $(DIST)\bin\defaults\pref
