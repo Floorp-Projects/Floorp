@@ -676,16 +676,21 @@ rdf_ContainerSetNextValue(nsIRDFDataSource* aDataSource,
 }
 
 static nsresult
-rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
-                          nsIRDFResource* container,
-                          nsIRDFResource** result)
+rdf_ContainerGetNextValue(nsIRDFDataSource* aDataSource,
+                          nsIRDFResource* aContainer,
+                          nsIRDFResource** aResult)
 {
-    NS_ASSERTION(ds,        "null ptr");
-    NS_ASSERTION(container, "null ptr");
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aContainer != nsnull, "null ptr");
+    if (! aContainer)
+        return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-    if (NS_FAILED(rv = rdf_EnsureRDFService()))
-        return rv;
+    rv = rdf_EnsureRDFService();
+    if (NS_FAILED(rv)) return rv;
 
     nsIRDFNode* nextValNode       = nsnull;
     nsIRDFLiteral* nextValLiteral = nsnull;
@@ -696,11 +701,13 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
 
     // Get the next value, which hangs off of the bag via the
     // RDF:nextVal property.
-    if (NS_FAILED(rv = ds->GetTarget(container, kRDF_nextVal, PR_TRUE, &nextValNode)))
+    if (NS_FAILED(rv = aDataSource->GetTarget(aContainer, kRDF_nextVal, PR_TRUE, &nextValNode)))
         goto done;
 
-    if (rv == NS_RDF_NO_VALUE)
+    if (rv == NS_RDF_NO_VALUE) {
+        rv = NS_ERROR_UNEXPECTED;
         goto done;
+    }
 
     if (NS_FAILED(rv = nextValNode->QueryInterface(kIRDFLiteralIID, (void**) &nextValLiteral)))
         goto done;
@@ -718,11 +725,11 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
     nextValStr.Append("_");
     nextValStr.Append(nextVal, 10);
 
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(nextValStr, result)))
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(nextValStr, aResult)))
         goto done;
 
     // Now increment the RDF:nextVal property.
-    if (NS_FAILED(rv = ds->Unassert(container, kRDF_nextVal, nextValLiteral)))
+    if (NS_FAILED(rv = aDataSource->Unassert(aContainer, kRDF_nextVal, nextValLiteral)))
         goto done;
 
     NS_RELEASE(nextValLiteral);
@@ -734,7 +741,7 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* ds,
     if (NS_FAILED(rv = gRDFService->GetLiteral(nextValStr, &nextValLiteral)))
         goto done;
 
-    if (NS_FAILED(rv = rdf_Assert(ds, container, kRDF_nextVal, nextValLiteral)))
+    if (NS_FAILED(rv = aDataSource->Assert(aContainer, kRDF_nextVal, nextValLiteral, PR_TRUE)))
         goto done;
 
 done:
@@ -748,26 +755,33 @@ done:
 
 
 nsresult
-rdf_ContainerAppendElement(nsIRDFDataSource* ds,
-                           nsIRDFResource* container,
-                           nsIRDFNode* element)
+rdf_ContainerAppendElement(nsIRDFDataSource* aDataSource,
+                           nsIRDFResource* aContainer,
+                           nsIRDFNode* aElement)
 {
-    NS_ASSERTION(ds,        "null ptr");
-    NS_ASSERTION(container, "null ptr");
-    NS_ASSERTION(element,   "null ptr");
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aContainer != nsnull, "null ptr");
+    if (! aContainer)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(rdf_IsContainer(aDataSource, aContainer), "not a container");
 
     nsresult rv;
+    nsCOMPtr<nsIRDFResource> nextVal;
+    rv = rdf_ContainerGetNextValue(aDataSource, aContainer, getter_AddRefs(nextVal));
+    if (NS_FAILED(rv)) return rv;
 
-    nsIRDFResource* nextVal;
+    rv = aDataSource->Assert(aContainer, nextVal, aElement, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = rdf_ContainerGetNextValue(ds, container, &nextVal)))
-        goto done;
-
-    if (NS_FAILED(rv = rdf_Assert(ds, container, nextVal, element)))
-        goto done;
-
-done:
-    return rv;
+    return NS_OK;
 }
 
 
