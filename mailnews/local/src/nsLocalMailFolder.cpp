@@ -1767,10 +1767,6 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   nsCOMPtr<nsISupports> srcSupport(do_QueryInterface(srcFolder, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  // make sure we turn notifications on when the move is done!
-  if (isMove)
-    srcFolder->EnableNotifications(allMessageCountNotifications, PR_FALSE);
-
   // don't update the counts in the dest folder until it is all over
   EnableNotifications(allMessageCountNotifications, PR_FALSE);
 
@@ -2595,7 +2591,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
   {
     //Notify that a completion finished.
     nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
-    srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
     srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
 
     /*passing PR_TRUE because the messages that have been successfully copied have their corressponding
@@ -2622,7 +2617,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove(PRBool moveSucceeded)
       {
         // lets delete these all at once - much faster that way
         result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
-        srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
       
