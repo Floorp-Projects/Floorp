@@ -1686,13 +1686,13 @@ il_gif_abort(il_container *ic)
                 gs->local_colormap = NULL;
                 ic->src_header->color_space->cmap.map = NULL;
             }
-        } else {
-            if (gs->global_colormap) {
+        }
+        if (gs->global_colormap) {
                 PR_FREEIF(gs->global_colormap);
                 gs->global_colormap = NULL;
                 ic->src_header->color_space->cmap.map = NULL;
-            }
         }
+
        
         PR_FREEIF(gs);
         ic->ds = 0;
