@@ -41,6 +41,8 @@
 #include "nsHelperAppRDF.h"
 #include "nsIMIMEInfo.h"
 
+#include "nsIHelperAppLauncherDialog.h"
+
 #include "nsCExternalHandlerService.h" // contains progids for the helper app service
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -417,10 +419,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   aChannel->GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
 
-  nsCAutoString tempLeafName ("test");  // WARNING THIS IS TEMPORARY CODE!!!
-  tempLeafName.Append(mTempFileExtension);
+  nsCAutoString tempLeafName;   
 
-#if 0
   if (url)
   {
     // try to extract the file name from the url and use that as a first pass as the
@@ -429,15 +429,19 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     url->GetFileName(getter_Copies(leafName));
     if (leafName)
     {
-      nsCAutoString
-      mTempFile->Append(leafName); // WARNING --> neeed a make Unique routine on nsIFile!!
+      tempLeafName = leafName;
+      // strip off whatever extension this file may have and force our own extension.
+      PRInt32 pos = tempLeafName.RFindCharInSet(".");
+      if (pos > 0) // we have a comma separated list of languages...
+        tempLeafName.Truncate(pos); // truncate everything after the first comma (including the comma)
     }
-    else
-      mTempFile->Append("test"); // WARNING THIS IS TEMPORARY CODE!!!
   }
-  else
-    mTempFile->Append("test"); // WARNING THIS IS TEMPORARY CODE!!!
-#endif
+
+  if (tempLeafName.IsEmpty())
+    tempLeafName = "test"; // this is bogus...what do i do if i can't get a file name from the url.
+  
+  // now append our extension.
+  tempLeafName.Append(mTempFileExtension);
 
   mTempFile->Append(tempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
@@ -465,8 +469,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
 
   PRBool alwaysAsk = PR_FALSE;
   mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
-  // temporary hack...we don't have a dialog yet so don't try to ask
-  alwaysAsk = PR_FALSE;
   if (alwaysAsk)
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do
@@ -474,9 +476,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
     mReceivedDispostionInfo = PR_FALSE; 
 
     // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog service
+    nsCOMPtr<nsIHelperAppLauncherDialog> dlgService( do_GetService( NS_IHELPERAPPLAUNCHERDLG_PROGID ) );
+    if ( dlgService ) 
+      rv = dlgService->Show( this, mWindowContext );
 
-
-
+    // what do we do if the dialog failed? I guess we should call Cancel and abort the load....
   }
   else
     mReceivedDispostionInfo = PR_TRUE; // no need to wait for a response from the user
