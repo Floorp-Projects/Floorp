@@ -1,5 +1,6 @@
 browser.jar:
         content/browser/contents.rdf                  (content/contents.rdf)
+        content/browser-region/contents.rdf           (content/contents-region.rdf)
         content/browser/aboutCredits.png              (content/aboutCredits.png)
         content/browser/aboutFooter.png               (content/aboutFooter.png)
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
