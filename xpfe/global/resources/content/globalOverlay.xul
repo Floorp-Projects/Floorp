@@ -11,13 +11,13 @@
 <html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
 	<!-- File Menu -->
-	<menu id="menu_File" value="&fileMenu.label;"/>
+	<menu id="menu_File" value="&fileMenu.label;" accesskey="&fileMenu.accesskey;"/>
 	
 	<!-- Page Setup menu item -->
 	<menuitem id="menu_pageSetup" value="&pageSetupCmd.label;" oncommand="goPageSetup()"/>
 	
 	<!-- Edit Menu -->
-	<menu id="menu_Edit" value="&editMenu.label;"/>
+	<menu id="menu_Edit" value="&editMenu.label;" accesskey="&editMenu.accesskey;"/>
 	<menuitem id="menu_undo" value="&undoCmd.label;" key="key_undo" observes="cmd_undo"/>
 	<menuitem id="menu_cut" value="&cutCmd.label;" key="key_cut" observes="cmd_cut"/>
 	<menuitem id="menu_copy" value="&copyCmd.label;" key="key_copy" observes="cmd_copy"/>
