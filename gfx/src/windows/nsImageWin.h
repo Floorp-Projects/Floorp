@@ -192,12 +192,22 @@ private:
    * Print a DDB
    * @update dc - 05/20/99
    * @param aSurface - The drawingsurface to create the DIB from.
-   * @param aX - x location to place image
-   * @param aX - y location to place image
-   * @param aWidth - width of DIB
-   * @param aHeight - height of DIB
+   * @param aDX - x location to place image
+   * @param aDY - y location to place image
+   * @param aDWidth - width of DIB
+   * @param aDHeight - height of DIB
+   * @param aSX - x location of rect to use
+   * @param aSY - y location to rect to use (in bitmap, not image, so
+                    "upside down" from Mozilla's coordinates)
+   * @param aSWidth - width of rect to use
+   * @param aSHeight - height of rect to use
    */
-  nsresult PrintDDB(nsIDrawingSurface* aSurface,PRInt32 aX,PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight,PRUint32  aROP);
+  nsresult PrintDDB(nsIDrawingSurface* aSurface,
+                    PRInt32 aDX, PRInt32 aDY,
+                    PRInt32 aDWidth, PRInt32 aDHeight,
+                    PRInt32 aSX, PRInt32 aSY,
+                    PRInt32 aSWidth, PRInt32 aSHeight,
+                    PRUint32 aROP);
 
 
   /** 
