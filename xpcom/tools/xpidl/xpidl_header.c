@@ -90,7 +90,7 @@ type_integer(TreeState *state)
     IDL_tree p = state->tree;
 
     if (!IDL_TYPE_INTEGER(p).f_signed)
-	fputs("unsigned ", stdout);
+	fputs("unsigned ", state->file);
 
     switch(IDL_TYPE_INTEGER(p).f_type) {
       case IDL_INTEGER_TYPE_SHORT:
@@ -133,7 +133,7 @@ static gboolean
 param_dcls(TreeState *state)
 {
     IDL_tree iter;
-    fputs("(", stdout);
+    fputs("(", state->file);
     for (iter = state->tree; iter; iter = IDL_LIST(iter).next) {
 	struct _IDL_PARAM_DCL decl = IDL_PARAM_DCL(IDL_LIST(iter).data);
 	switch(decl.attr) {
@@ -222,6 +222,27 @@ attr_dcl(TreeState *state)
 }
 
 /*
+ * param generation:
+ * in string foo	-->	nsString * foo
+ * out string foo       -->     nsString * &foo;
+ * inout string foo     -->     nsString * &foo;
+ */
+
+static gboolean
+xpcom_param(TreeState *state)
+{
+    IDL_tree param = state->tree;
+    state->tree = IDL_PARAM_DCL(param).param_type_spec;
+    if (!xpcom_type(state))
+	return FALSE;
+    fprintf(state->file, " %s",
+	    IDL_PARAM_DCL(param).attr == IDL_PARAM_IN ? "" : "&");
+    fprintf(state->file, "%s",
+	    IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
+    return TRUE;
+}
+
+/*
  * A method is an `operation', therefore a method decl is an `op dcl'.
  * I blame Elliot.
  */
@@ -229,6 +250,7 @@ static gboolean
 op_dcl(TreeState *state)
 {
     struct _IDL_OP_DCL op = IDL_OP_DCL(state->tree);
+    IDL_tree iter;
     state->tree = op.op_type_spec;
     fputs("\n  /* ", state->file);
     if (!type(state))
@@ -241,6 +263,16 @@ op_dcl(TreeState *state)
     if (!param_dcls(state))
 	return FALSE;
     fputs("; */\n", state->file);
+
+    fprintf(state->file, "  NS_IMETHOD %s(", IDL_IDENT(op.ident).str);
+    for (iter = op.parameter_dcls; iter; iter = IDL_LIST(iter).next) {
+	state->tree = IDL_LIST(iter).data;
+	if (!xpcom_param(state))
+	    return FALSE;
+	if (IDL_LIST(iter).next)
+	    fputs(", ", state->file);
+    }
+    fputs(");\n", state->file);
     return TRUE;
 }
 
