@@ -131,9 +131,6 @@ nsUrlWidget::SetURLToHiddenControl( char const *aURL, nsIDOMWindow *parent )
 
     return rv;
 }
-
-public:
-    static nsModuleComponentInfo components[];
 }; // End of nsUrlWidget class definition.
 
 // Use standard implementation of nsISupports stuff.
@@ -156,12 +153,12 @@ printf( "nsUrlWidget dtor called\n" );
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 
-nsModuleComponentInfo nsUrlWidget::components[] = {
+nsModuleComponentInfo components[] = {
   { NS_IURLWIDGET_CLASSNAME, 
     NS_IURLWIDGET_CID, 
     NS_IURLWIDGET_PROGID, 
 	nsUrlWidgetConstructor },
 };
 
-NS_IMPL_NSGETMODULE( "nsUrlWidget", nsUrlWidget::components )
+NS_IMPL_NSGETMODULE( "nsUrlWidget", components )
 

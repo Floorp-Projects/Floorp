@@ -28,23 +28,16 @@
   Implementation for an internet search RDF data store.
  */
 
-#include <ctype.h> // for toupper()
-#include <stdio.h>
+#include "nsInternetSearchService.h"
 #include "nscore.h"
-#include "nsCOMPtr.h"
 #include "nsIEnumerator.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIServiceManager.h"
-#include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsXPIDLString.h"
 #include "nsRDFCID.h"
-//#include "rdfutil.h"
-#include "nsIRDFService.h"
 #include "xp_core.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -55,8 +48,6 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIFileSpec.h"
-#include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -64,20 +55,12 @@
 #include "nsICharsetAlias.h"
 #include "nsITextToSubURI.h"
 #include "nsEscape.h"
-#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
-#include "nsILoadGroup.h"
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
 #include "nsIInputStream.h"
-#include "nsIStreamListener.h"
-#include "nsISearchService.h"
-#include "nsWeakReference.h"
 #include "nsIBookmarksService.h"
-#include "nsITimer.h"
-#include "nsIPref.h"
-#include "nsISupportsArray.h"
 #include "nsIHTTPHeader.h"
 
 #ifdef	XP_MAC
@@ -291,145 +274,38 @@ NS_NewInternetSearchContext(PRUint32 contextType, nsIRDFResource *aParent, nsIRD
 
 
 
-class InternetSearchDataSource : public nsIInternetSearchService,
-				 public nsIRDFDataSource, public nsIStreamListener,
-         			 public nsSupportsWeakReference
+
+
+static const char		kEngineProtocol[] = "engine://";
+static const char		kSearchProtocol[] = "internetsearch:";
+
+#ifdef	DEBUG_SEARCH_UPDATES
+#define	SEARCH_UPDATE_TIMEOUT	10000		// fire every 10 seconds
+#else
+#define	SEARCH_UPDATE_TIMEOUT	60000		// fire every 60 seconds
+#endif
+
+
+int PR_CALLBACK
+searchModePrefCallback(const char *pref, void *aClosure)
 {
-private:
-static PRInt32				gRefCnt;
-static	PRBool				mEngineListBuilt;
+	InternetSearchDataSource *searchDS = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
+	if (!searchDS)	return(NS_OK);
 
-    // pseudo-constants
-	static nsIRDFResource		*kNC_SearchResult;
-	static nsIRDFResource		*kNC_SearchEngineRoot;
-	static nsIRDFResource		*kNC_LastSearchRoot;
-	static nsIRDFResource		*kNC_LastSearchMode;
-	static nsIRDFResource		*kNC_SearchCategoryRoot;
-	static nsIRDFResource		*kNC_SearchResultsSitesRoot;
-	static nsIRDFResource		*kNC_FilterSearchURLsRoot;
-	static nsIRDFResource		*kNC_FilterSearchSitesRoot;
-	static nsIRDFResource		*kNC_SearchType;
-	static nsIRDFResource		*kNC_Ref;
-	static nsIRDFResource		*kNC_Child;
-	static nsIRDFResource		*kNC_Title;
-	static nsIRDFResource		*kNC_Data;
-	static nsIRDFResource		*kNC_Name;
-	static nsIRDFResource		*kNC_Description;
-	static nsIRDFResource		*kNC_LastText;
-	static nsIRDFResource		*kNC_URL;
-	static nsIRDFResource		*kRDF_InstanceOf;
-	static nsIRDFResource		*kRDF_type;
-	static nsIRDFResource		*kNC_loading;
-	static nsIRDFResource		*kNC_HTML;
-	static nsIRDFResource		*kNC_Icon;
-	static nsIRDFResource		*kNC_StatusIcon;
-	static nsIRDFResource		*kNC_Banner;
-	static nsIRDFResource		*kNC_Site;
-	static nsIRDFResource		*kNC_Relevance;
-	static nsIRDFResource		*kNC_Date;
-	static nsIRDFResource		*kNC_RelevanceSort;
-	static nsIRDFResource		*kNC_PageRank;
-	static nsIRDFResource		*kNC_Engine;
-	static nsIRDFResource		*kNC_Price;
-	static nsIRDFResource		*kNC_PriceSort;
-	static nsIRDFResource		*kNC_Availability;
-	static nsIRDFResource		*kNC_BookmarkSeparator;
-	static nsIRDFResource		*kNC_Update;
-	static nsIRDFResource		*kNC_UpdateIcon;
-	static nsIRDFResource		*kNC_UpdateCheckDays;
-	static nsIRDFResource		*kWEB_LastPingDate;
-	static nsIRDFResource		*kWEB_LastPingModDate;
-	static nsIRDFResource		*kWEB_LastPingContentLen;
-
-	static nsIRDFResource		*kNC_SearchCommand_AddToBookmarks;
-	static nsIRDFResource		*kNC_SearchCommand_FilterResult;
-	static nsIRDFResource		*kNC_SearchCommand_FilterSite;
-	static nsIRDFResource		*kNC_SearchCommand_ClearFilters;
-
-	static nsIRDFLiteral		*kTrueLiteral;
-
-protected:
-	static nsIRDFDataSource			*mInner;
-	static nsCOMPtr<nsIRDFDataSource>	mLocalstore;
-	static nsCOMPtr<nsISupportsArray>	mUpdateArray;
-	static nsCOMPtr<nsITimer>		mTimer;
-	static nsCOMPtr<nsILoadGroup>		mBackgroundLoadGroup;
-	static nsCOMPtr<nsILoadGroup>		mLoadGroup;
-	static nsCOMPtr<nsIRDFDataSource>	categoryDataSource;
-	static nsCOMPtr<nsIPref>		prefs;
-	PRBool					busySchedule;
-	nsCOMPtr<nsIRDFResource>		busyResource;
-
-
-friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-friend	int		searchModePrefCallback(const char *pref, void *aClosure);
-
-	// helper methods
-	nsresult	GetSearchEngineToPing(nsIRDFResource **theResource, nsCString &updateURL);
-	PRBool		isEngineURI(nsIRDFResource* aResource);
-	PRBool		isSearchURI(nsIRDFResource* aResource);
-	PRBool		isSearchCategoryURI(nsIRDFResource* aResource);
-	PRBool		isSearchCategoryEngineURI(nsIRDFResource* aResource);
-	PRBool		isSearchCategoryEngineBasenameURI(nsIRDFNode *aResource);
-	PRBool		isSearchCommand(nsIRDFResource* aResource);
-	nsresult	resolveSearchCategoryEngineURI(nsIRDFResource *source, nsIRDFResource **trueEngine);
-	nsresult	BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);
-	nsresult	FindData(nsIRDFResource *engine, nsIRDFLiteral **data);
-	nsresult	updateDataHintsInGraph(nsIRDFResource *engine, const PRUnichar *data);
-	nsresult	updateAtom(nsIRDFDataSource *db, nsIRDFResource *src, nsIRDFResource *prop, nsIRDFNode *newValue, PRBool *dirtyFlag);
-	nsresult	validateEngine(nsIRDFResource *engine);
-	nsresult	DoSearch(nsIRDFResource *source, nsIRDFResource *engine, const nsString &fullURL, const nsString &text);
-	nsresult	MapEncoding(const nsString &numericEncoding, nsString &stringEncoding);
-	nsresult	SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon, const PRUnichar *hint, const PRUnichar *data, PRBool checkMacFileType);
-	nsresult	GetSearchEngineList(nsIFile *spec, PRBool checkMacFileType);
-	nsresult	GetCategoryList();
-	nsresult	GetSearchFolder(nsIFile **spec);
-	nsresult	ReadFileContents(const nsFileSpec &baseFilename, nsString & sourceContents);
-	nsresult	GetData(const PRUnichar *data, const char *sectionToFind, PRUint32 sectionNum, const char *attribToFind, nsString &value);
-	nsresult	GetNumInterpretSections(const PRUnichar *data, PRUint32 &numInterpretSections);
-	nsresult	GetInputs(const PRUnichar *data, nsString &userVar, const nsString &text, nsString &input);
-	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
-	nsresult	validateEngineNow(nsIRDFResource *engine);
-	nsresult	webSearchFinalize(nsIChannel *channel, nsIInternetSearchContext *context);
-	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const PRUnichar *htmlPage);
-	nsresult	SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
-	nsresult	ConvertEntities(nsString &str, PRBool removeHTMLFlag = PR_TRUE, PRBool removeCRLFsFlag = PR_TRUE, PRBool trimWhiteSpaceFlag = PR_TRUE);
-	nsresult	saveContents(nsIChannel* channel, nsIInternetSearchContext *context, PRUint32 contextType);
-	char *		getSearchURI(nsIRDFResource *src);
-	nsresult	addToBookmarks(nsIRDFResource *src);
-	nsresult	filterResult(nsIRDFResource *src);
-	nsresult	filterSite(nsIRDFResource *src);
-	nsresult	clearFilters(void);
-	PRBool		isSearchResultFiltered(const nsString &href);
-
-static	void		FireTimer(nsITimer* aTimer, void* aClosure);
-
-			InternetSearchDataSource(void);
-	virtual		~InternetSearchDataSource(void);
-	NS_METHOD	Init();
-	NS_METHOD	DeferredInit();
-
-public:
-
-	NS_DECL_ISUPPORTS
-
-	NS_DECL_NSIINTERNETSEARCHSERVICE
-
-	// nsIStreamObserver methods:
-	NS_DECL_NSISTREAMOBSERVER
-
-	// nsIStreamListener methods:
-	NS_DECL_NSISTREAMLISTENER
-
-	// nsIRDFDataSource methods
-	NS_DECL_NSIRDFDATASOURCE
-};
-
-
+	if (searchDS->prefs)
+	{
+		PRInt32		searchMode=0;
+		searchDS->prefs->GetIntPref(pref, &searchMode);
+#ifdef	DEBUG
+		printf("searchModePrefCallback: '%s' = %d\n", pref, searchMode);
+#endif
+		searchDS->Assert(searchDS->kNC_LastSearchRoot, searchDS->kNC_LastSearchMode, searchDS->kTrueLiteral, PR_TRUE);
+	}
+	return(NS_OK);
+}
 
 static	nsIRDFService		*gRDFService = nsnull;
 static	nsIRDFContainerUtils	*gRDFC = nsnull;
-
 PRInt32				InternetSearchDataSource::gRefCnt = 0;
 nsIRDFDataSource		*InternetSearchDataSource::mInner = nsnull;
 nsCOMPtr<nsISupportsArray>	InternetSearchDataSource::mUpdateArray;
@@ -488,37 +364,6 @@ nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterSite;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_ClearFilters;
 
 nsIRDFLiteral			*InternetSearchDataSource::kTrueLiteral;
-
-static const char		kEngineProtocol[] = "engine://";
-static const char		kSearchProtocol[] = "internetsearch:";
-
-#ifdef	DEBUG_SEARCH_UPDATES
-#define	SEARCH_UPDATE_TIMEOUT	10000		// fire every 10 seconds
-#else
-#define	SEARCH_UPDATE_TIMEOUT	60000		// fire every 60 seconds
-#endif
-
-
-int PR_CALLBACK
-searchModePrefCallback(const char *pref, void *aClosure)
-{
-	InternetSearchDataSource *searchDS = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
-	if (!searchDS)	return(NS_OK);
-
-	if (searchDS->prefs)
-	{
-		PRInt32		searchMode=0;
-		searchDS->prefs->GetIntPref(pref, &searchMode);
-#ifdef	DEBUG
-		printf("searchModePrefCallback: '%s' = %d\n", pref, searchMode);
-#endif
-		searchDS->Assert(searchDS->kNC_LastSearchRoot, searchDS->kNC_LastSearchMode, searchDS->kTrueLiteral, PR_TRUE);
-	}
-	return(NS_OK);
-}
-
-
-
 InternetSearchDataSource::InternetSearchDataSource(void)
 {
 	NS_INIT_REFCNT();
@@ -2317,40 +2162,6 @@ InternetSearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSourc
 	}
 	return(NS_OK);
 }
-
-
-
-NS_IMETHODIMP
-NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-	NS_PRECONDITION(aResult != nsnull, "null ptr");
-	if (! aResult)
-		return NS_ERROR_NULL_POINTER;
-
-	NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-	if (aOuter)
-		return NS_ERROR_NO_AGGREGATION;
-
-	nsresult rv = NS_OK;
-
-	InternetSearchDataSource* result = new InternetSearchDataSource();
-	if (! result)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	rv = result->Init();
-	if (NS_SUCCEEDED(rv))
-		rv = result->QueryInterface(aIID, aResult);
-
-	if (NS_FAILED(rv)) {
-		delete result;
-		*aResult = nsnull;
-		return rv;
-	}
-
-	return rv;
-}
-
-
 
 NS_IMETHODIMP
 InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *iconURL,

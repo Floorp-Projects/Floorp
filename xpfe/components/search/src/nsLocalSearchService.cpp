@@ -28,101 +28,28 @@
   Implementation for a find RDF data store.
  */
 
-#include <ctype.h> // for toupper()
-#include <stdio.h>
+#include "nsLocalSearchService.h"
 #include "nscore.h"
-#include "nsCOMPtr.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFNode.h"
-#include "nsIRDFObserver.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
-#include "nsString.h"
-#include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsXPIDLString.h"
-#include "nsRDFCID.h"
-//#include "rdfutil.h"
-#include "nsIRDFService.h"
 #include "xp_core.h"
 #include "plhash.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "prio.h"
-#include "rdf.h"
-#include "nsISearchService.h"
 #include "nsITextToSubURI.h"
+#include "nsIRDFObserver.h"
+#include "nsRDFCID.h"
+#include "rdf.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
-
-
-typedef	struct	_findTokenStruct
-{
-	char			*token;
-	nsString	    value;
-} findTokenStruct, *findTokenPtr;
-
-
-
-class LocalSearchDataSource : public nsIRDFDataSource
-{
-private:
-	nsCOMPtr<nsISupportsArray> mObservers;
-
-	static PRInt32		gRefCnt;
-
-    // pseudo-constants
-	static nsIRDFResource	*kNC_Child;
-	static nsIRDFResource	*kNC_Name;
-	static nsIRDFResource	*kNC_URL;
-	static nsIRDFResource	*kNC_FindObject;
-	static nsIRDFResource	*kNC_pulse;
-	static nsIRDFResource	*kRDF_InstanceOf;
-	static nsIRDFResource	*kRDF_type;
-
-friend	NS_IMETHODIMP	NS_NewLocalSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-protected:
-
-	NS_METHOD	getFindResults(nsIRDFResource *source, nsISimpleEnumerator** aResult);
-	NS_METHOD	getFindName(nsIRDFResource *source, nsIRDFLiteral** aResult);
-	NS_METHOD	parseResourceIntoFindTokens(nsIRDFResource *u, findTokenPtr tokens);
-	NS_METHOD	doMatch(nsIRDFLiteral *literal, const nsString &matchMethod, const nsString &matchText);
-	NS_METHOD	parseFindURL(nsIRDFResource *u, nsISupportsArray *array);
-
-public:
-
-	NS_DECL_ISUPPORTS
-
-			LocalSearchDataSource(void);
-	virtual		~LocalSearchDataSource(void);
-	nsresult	Init();
-
-	NS_DECL_NSILOCALSEARCHSERVICE
-        NS_DECL_NSIRDFDATASOURCE
-};
-
-
 
 static	nsIRDFService		*gRDFService = nsnull;
 static	LocalSearchDataSource		*gLocalSearchDataSource = nsnull;
-
-PRInt32 LocalSearchDataSource::gRefCnt;
-
-nsIRDFResource		*LocalSearchDataSource::kNC_Child;
-nsIRDFResource		*LocalSearchDataSource::kNC_Name;
-nsIRDFResource		*LocalSearchDataSource::kNC_URL;
-nsIRDFResource		*LocalSearchDataSource::kNC_FindObject;
-nsIRDFResource		*LocalSearchDataSource::kNC_pulse;
-nsIRDFResource		*LocalSearchDataSource::kRDF_InstanceOf;
-nsIRDFResource		*LocalSearchDataSource::kRDF_type;
-
 static const char	kFindProtocol[] = "find:";
-
-
 
 static PRBool
 isFindURI(nsIRDFResource *r)
@@ -139,6 +66,14 @@ isFindURI(nsIRDFResource *r)
 }
 
 
+PRInt32              LocalSearchDataSource::gRefCnt;
+nsIRDFResource		*LocalSearchDataSource::kNC_Child;
+nsIRDFResource		*LocalSearchDataSource::kNC_Name;
+nsIRDFResource		*LocalSearchDataSource::kNC_URL;
+nsIRDFResource		*LocalSearchDataSource::kNC_FindObject;
+nsIRDFResource		*LocalSearchDataSource::kNC_pulse;
+nsIRDFResource		*LocalSearchDataSource::kRDF_InstanceOf;
+nsIRDFResource		*LocalSearchDataSource::kRDF_type;
 
 LocalSearchDataSource::LocalSearchDataSource(void)
 {
@@ -886,36 +821,4 @@ LocalSearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 				nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
 	return(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-
-
-NS_IMETHODIMP
-NS_NewLocalSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-	NS_PRECONDITION(aResult != nsnull, "null ptr");
-	if (! aResult)
-		return NS_ERROR_NULL_POINTER;
-
-	NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-	if (aOuter)
-		return NS_ERROR_NO_AGGREGATION;
-
-	nsresult rv = NS_OK;
-
-	LocalSearchDataSource* result = new LocalSearchDataSource();
-	if (! result)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	rv = result->Init();
-	if (NS_SUCCEEDED(rv))
-		rv = result->QueryInterface(aIID, aResult);
-
-	if (NS_FAILED(rv)) {
-		delete result;
-		*aResult = nsnull;
-		return rv;
-	}
-
-	return rv;
 }

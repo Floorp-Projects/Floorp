@@ -27,17 +27,14 @@
 
  */
 
-#include "nsCOMPtr.h"
+#include "nsRelatedLinksHandlerImpl.h"
 #include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIGenericFactory.h"
 #include "nsIInputStream.h"
-#include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFPurgeableDataSource.h"
-#include "nsIRDFService.h"
-#include "nsIRelatedLinksHandler.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
@@ -45,7 +42,6 @@
 #include "nsIInputStream.h"
 #include "nsIPref.h"
 #include "nsRDFCID.h"
-#include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nscore.h"
@@ -56,8 +52,6 @@
 #include "prprf.h"
 #include "rdf.h"
 #include "xp_core.h"
-#include <ctype.h> // for toupper()
-#include <stdio.h>
 
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
@@ -571,57 +565,6 @@ RelatedLinksStreamListener::Unescape(nsString &text)
 	return(NS_OK);
 }
 
-
-
-////////////////////////////////////////////////////////////////////////
-// RelatedLinksHanlderImpl
-
-
-
-class RelatedLinksHandlerImpl : public nsIRelatedLinksHandler,
-				public nsIRDFDataSource
-{
-private:
-	char			*mRelatedLinksURL;
-	static nsString		mRLServerURL;
-
-   // pseudo-constants
-	static PRInt32		gRefCnt;
-	static nsIRDFService    *gRDFService;
-	static nsIRDFResource	*kNC_RelatedLinksRoot;
-	static nsIRDFResource	*kNC_Child;
-	static nsIRDFResource	*kRDF_type;
-	static nsIRDFResource	*kNC_RelatedLinksTopic;
-
-	nsCOMPtr<nsIRDFDataSource> mInner;
-
-				RelatedLinksHandlerImpl();
-	virtual		~RelatedLinksHandlerImpl();
-	nsresult	Init();
-
-	friend NS_IMETHODIMP
-	NS_NewRelatedLinksHandler(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-public:
-
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSIRELATEDLINKSHANDLER
-	NS_DECL_NSIRDFDATASOURCE
-};
-
-
-
-PRInt32			RelatedLinksHandlerImpl::gRefCnt;
-nsIRDFService		*RelatedLinksHandlerImpl::gRDFService;
-
-nsString		RelatedLinksHandlerImpl::mRLServerURL;
-nsIRDFResource		*RelatedLinksHandlerImpl::kNC_RelatedLinksRoot;
-nsIRDFResource		*RelatedLinksHandlerImpl::kRDF_type;
-nsIRDFResource		*RelatedLinksHandlerImpl::kNC_RelatedLinksTopic;
-nsIRDFResource		*RelatedLinksHandlerImpl::kNC_Child;
-
-
-
 RelatedLinksHandlerImpl::RelatedLinksHandlerImpl()
 	: mRelatedLinksURL(nsnull)
 {
@@ -694,47 +637,9 @@ RelatedLinksHandlerImpl::Init()
 }
 
 
-
-NS_IMETHODIMP
-NS_NewRelatedLinksHandler(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-	NS_PRECONDITION(aResult != nsnull, "null ptr");
-	if (! aResult)
-		return NS_ERROR_NULL_POINTER;
-
-	NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-	if (aOuter)
-		return NS_ERROR_NO_AGGREGATION;
-
-	nsresult rv = NS_OK;
-
-	RelatedLinksHandlerImpl* result = new RelatedLinksHandlerImpl();
-	if (! result)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	rv = result->Init();
-	if (NS_SUCCEEDED(rv)) {
-		rv = result->QueryInterface(aIID, aResult);
-	}
-
-	if (NS_FAILED(rv)) {
-		delete result;
-		*aResult = nsnull;
-		return rv;
-	}
-
-	return rv;
-}
-
-
-
 // nsISupports interface
 
-NS_IMPL_ADDREF(RelatedLinksHandlerImpl);
-NS_IMPL_RELEASE(RelatedLinksHandlerImpl);
-NS_IMPL_QUERY_INTERFACE2(RelatedLinksHandlerImpl, nsIRelatedLinksHandler, nsIRDFDataSource)
-
-
+NS_IMPL_ISUPPORTS2(RelatedLinksHandlerImpl, nsIRelatedLinksHandler, nsIRDFDataSource)
 
 // nsIRelatedLinksHandler interface
 
@@ -1054,11 +959,13 @@ RelatedLinksHandlerImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 ////////////////////////////////////////////////////////////////////////
 // Component Exports
 
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
+
 // The list of components we register
-static nsModuleComponentInfo gRelatedLinksComponents[] = {
+static nsModuleComponentInfo components[] = {
     { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_PROGID,
-	  NS_NewRelatedLinksHandler
+	  RelatedLinksHandlerImplConstructor
 	},
 };
 
-NS_IMPL_NSGETMODULE("nsRelatedLinksModule", gRelatedLinksComponents)
+NS_IMPL_NSGETMODULE("nsRelatedLinksModule", components)

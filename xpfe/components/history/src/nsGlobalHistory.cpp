@@ -35,16 +35,13 @@
 
 */
 
+#include "nsGlobalHistory.h"
 #include "nsIFileSpec.h"
 #include "nsCRT.h"
 #include "nsFileStream.h"
 #include "nsIEnumerator.h"
 #include "nsIGenericFactory.h"
-#include "nsIGlobalHistory.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFService.h"
 #include "nsIServiceManager.h"
-#include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
 #include "nsRDFCID.h"
 #include "nsIDirectoryService.h"
@@ -56,13 +53,10 @@
 #include "prprf.h"
 #include "prtime.h"
 #include "rdf.h"
-#include "nsIRDFRemoteDataSource.h"
 
-#include "nsMdbPtr.h"
 #include "nsInt64.h"
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
-#include "mdb.h"
 
 #include "nsIPref.h"
 
@@ -132,42 +126,6 @@ CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
   *aResult = result;
   return NS_OK;
 }
-
-//----------------------------------------------------------------------
-//
-//  nsMdbTableEnumerator
-//
-//    An nsISimpleEnumerator implementation that returns the value of
-//    a column as an nsISupports. Allows for some simple selection.
-//
-
-class nsMdbTableEnumerator : public nsISimpleEnumerator
-{
-protected:
-  nsIMdbEnv*   mEnv;
-  nsIMdbTable* mTable;
-
-  nsIMdbTableRowCursor* mCursor;
-  nsIMdbRow*            mCurrent;
-
-  nsMdbTableEnumerator();
-  virtual ~nsMdbTableEnumerator();
-
-public:
-  // nsISupports methods
-  NS_DECL_ISUPPORTS
-
-  // nsISimpleEnumeratorMethods
-  NS_IMETHOD HasMoreElements(PRBool* _result);
-  NS_IMETHOD GetNext(nsISupports** _result);
-
-  // Implementation methods
-  virtual nsresult Init(nsIMdbEnv* aEnv, nsIMdbTable* aTable);
-
-protected:
-  virtual PRBool   IsResult(nsIMdbRow* aRow) = 0;
-  virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult) = 0;
-};
 
 //----------------------------------------------------------------------
 
@@ -278,124 +236,6 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 //
 // nsGlobalHistory
 //
-//   This class is the browser's implementation of the
-//   nsIGlobalHistory interface.
-//
-
-class nsGlobalHistory : public nsIGlobalHistory,
-                        public nsIRDFDataSource,
-                        public nsIRDFRemoteDataSource
-{
-public:
-  // nsISupports methods 
-  NS_DECL_ISUPPORTS
-
-  // nsIGlobalHistory
-  NS_DECL_NSIGLOBALHISTORY
-
-  // nsIRDFDataSource
-  NS_DECL_NSIRDFDATASOURCE
-
-  // nsIRDFRemoteDataSource
-  NS_DECL_NSIRDFREMOTEDATASOURCE
-
-protected:
-  nsGlobalHistory(void);
-  virtual ~nsGlobalHistory();
-
-  friend NS_IMETHODIMP
-  NS_NewGlobalHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-  // Implementation Methods
-  nsresult Init();
-  nsresult OpenDB();
-  nsresult CreateTokens();
-  nsresult CloseDB();
-
-  PRBool IsURLInHistory(nsIRDFResource* aResource);
-
-  // N.B., these are MDB interfaces, _not_ XPCOM interfaces.
-  nsIMdbEnv* mEnv;         // OWNER
-  nsIMdbStore* mStore;     // OWNER
-  nsIMdbTable* mTable;     // OWNER
-
-  nsresult SaveLastPageVisited(const char *);
-
-  nsresult NotifyAssert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
-  nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);
-
-  nsCOMPtr<nsISupportsArray> mObservers;
-
-  mdb_scope  kToken_HistoryRowScope;
-  mdb_kind   kToken_HistoryKind;
-  mdb_column kToken_URLColumn;
-  mdb_column kToken_ReferrerColumn;
-  mdb_column kToken_LastVisitDateColumn;
-  mdb_column kToken_NameColumn;
-
-  // pseudo-constants. although the global history really is a
-  // singleton, we'll use this metaphor to be consistent.
-  static PRInt32 gRefCnt;
-  static nsIRDFService* gRDFService;
-  static nsIRDFResource* kNC_Page; // XXX do we need?
-  static nsIRDFResource* kNC_Date;
-  static nsIRDFResource* kNC_VisitCount;
-  static nsIRDFResource* kNC_Name;
-  static nsIRDFResource* kNC_Referrer;
-  static nsIRDFResource* kNC_child;
-  static nsIRDFResource* kNC_URL;  // XXX do we need?
-  static nsIRDFResource* kNC_HistoryRoot;
-  static nsIRDFResource* kNC_HistoryBySite;
-  static nsIRDFResource* kNC_HistoryByDate;
-
-  class URLEnumerator : public nsMdbTableEnumerator
-  {
-  protected:
-    mdb_column mURLColumn;
-    mdb_column mSelectColumn;
-    void*      mSelectValue;
-    PRInt32    mSelectValueLen;
-
-    virtual ~URLEnumerator();
-
-  public:
-    URLEnumerator(mdb_column aURLColumn,
-                  mdb_column aSelectColumn = mdb_column(0),
-                  void* aSelectValue = nsnull,
-                  PRInt32 aSelectValueLen = 0) :
-      mURLColumn(aURLColumn),
-      mSelectColumn(aSelectColumn),
-      mSelectValue(aSelectValue),
-      mSelectValueLen(aSelectValueLen)
-    {}
-
-  protected:
-    virtual PRBool   IsResult(nsIMdbRow* aRow);
-    virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult);
-  };
-
-  friend class URLEnumerator;
-};
-
-
-PRInt32 nsGlobalHistory::gRefCnt;
-nsIRDFService* nsGlobalHistory::gRDFService;
-nsIRDFResource* nsGlobalHistory::kNC_Page;
-nsIRDFResource* nsGlobalHistory::kNC_Date;
-nsIRDFResource* nsGlobalHistory::kNC_VisitCount;
-nsIRDFResource* nsGlobalHistory::kNC_Name;
-nsIRDFResource* nsGlobalHistory::kNC_Referrer;
-nsIRDFResource* nsGlobalHistory::kNC_child;
-nsIRDFResource* nsGlobalHistory::kNC_URL;
-nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
-nsIRDFResource* nsGlobalHistory::kNC_HistoryBySite;
-nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
-
-
-//----------------------------------------------------------------------
-//
-// nsGlobalHistory
-//
 //   ctor dtor etc.
 //
 
@@ -436,46 +276,13 @@ nsGlobalHistory::~nsGlobalHistory()
 
 
 
-NS_IMETHODIMP
-NS_NewGlobalHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsresult rv = NS_OK;
-
-  nsGlobalHistory* result = new nsGlobalHistory();
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  rv = result->Init();
-  if (NS_SUCCEEDED(rv))
-    rv = result->QueryInterface(aIID, aResult);
-
-  if (NS_FAILED(rv)) {
-    delete result;
-    *aResult = nsnull;
-    return rv;
-  }
-
-  return rv;
-}
-
-
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
 //
 //   nsISupports methods
 
-NS_IMPL_ADDREF(nsGlobalHistory);
-NS_IMPL_RELEASE(nsGlobalHistory);
-NS_IMPL_QUERY_INTERFACE3(nsGlobalHistory, nsIGlobalHistory, nsIRDFDataSource, nsIRDFRemoteDataSource)
+NS_IMPL_ISUPPORTS3(nsGlobalHistory, nsIGlobalHistory, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
 //----------------------------------------------------------------------
 //
@@ -1876,14 +1683,16 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
 // Global History Module
 //
 
-static nsModuleComponentInfo gHistoryComponents[] =
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
+
+static nsModuleComponentInfo components[] =
 {
   { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_PROGID,
-    NS_NewGlobalHistory,
+    nsGlobalHistoryConstructor,
   },
   { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_PROGID,
-    NS_NewGlobalHistory,
+    nsGlobalHistoryConstructor,
   }
 };
 
-NS_IMPL_NSGETMODULE("nsGlobalHistoryModule", gHistoryComponents)
+NS_IMPL_NSGETMODULE("nsGlobalHistoryModule", components)
