@@ -313,7 +313,7 @@ nsStandardURL::Host()
     if (mHost.mLen > 0) {
         pos = mHost.mPos;
         len = mHost.mLen;
-        if (mSpec.CharAt(pos) == '[') {
+        if (mSpec.CharAt(pos) == '[' && mSpec.CharAt(pos + len - 1) == ']') {
             pos++;
             len -= 2;
         }
