@@ -211,6 +211,26 @@ NS_IMETHODIMP nsDocShellBase::GetRootDocShell(nsIDocShell** aRootDocShell)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDocShellBase::GetZoom(float* zoom)
+{
+   NS_ENSURE_ARG_POINTER(zoom);
+
+   //XXX First Check
+	/**
+	* Set/Get the document scale factor
+	*/
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShellBase::SetZoom(float zoom)
+{
+   //XXX First Check
+	/**
+	* Set/Get the document scale factor
+	*/
+   return NS_ERROR_FAILURE;
+}
+
 //*****************************************************************************
 // nsDocShellBase::nsIDocShellEdit
 //*****************************************************************************   
@@ -724,26 +744,6 @@ NS_IMETHODIMP nsDocShellBase::GetTitle(PRUnichar** title)
 NS_IMETHODIMP nsDocShellBase::SetTitle(const PRUnichar* title)
 {
    //XXX First Check
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocShellBase::GetZoom(float* zoom)
-{
-   NS_ENSURE_ARG_POINTER(zoom);
-
-   //XXX First Check
-	/**
-	* Set/Get the document scale factor
-	*/
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsDocShellBase::SetZoom(float zoom)
-{
-   //XXX First Check
-	/**
-	* Set/Get the document scale factor
-	*/
    return NS_ERROR_FAILURE;
 }
 

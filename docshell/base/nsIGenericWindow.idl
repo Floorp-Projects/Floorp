@@ -179,9 +179,4 @@ interface nsIGenericWindow : nsISupports
 	void setFocus();
 
 	attribute wstring title;
-
-	/**
-	* Set/Get the document scale factor
-	*/
-	attribute float zoom;
 };
