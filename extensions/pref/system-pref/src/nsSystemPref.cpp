@@ -269,8 +269,8 @@ nsSystemPref::ReadSystemPref(const char *aPrefName)
         return NS_ERROR_FAILURE;
     nsresult rv;
 
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-        do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIPrefBranch> prefBranch
+        (do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
         return rv;
 
