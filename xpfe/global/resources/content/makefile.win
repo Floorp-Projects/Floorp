@@ -42,7 +42,6 @@ CHROME_CONTENT= \
 	.\commonDialog.xul \
 	.\commonDialog.js \
 	.\strres.js \
-	.\builtinURLs.js \
 	.\logo.gif \
 	.\about.xul \
 	.\mozilla.html \

@@ -415,5 +415,77 @@
     </content>
   </binding>
 
+  <binding id="popupcell">
+    <content autostretch="never" allowevents="true">
+      <xul:menu>
+        <xul:image class="treecell-popup-icon"/>
+        <xul:menupopup popupanchor="bottomright"
+                       popupalign="topright"
+                       oncommand="this.parentNode.parentNode.toggleColumn(event.target, document);"
+                       oncreate="this.buildPopup(this);"/>
+      </xul:menu>
+    </content>
+    <interface>
+      <method name="buildPopup">
+        <argument name="aMenupopup"/>
+        <body>
+        <![CDATA[
+          var treeColGroup = document.getElementById(this.getAttribute("columns"));
+          var treeHeadRow = document.getElementById(this.getAttribute("head"));
+          var skipCell = document.getElementById(this.getAttribute("popupcell"));
+
+          var popupChild = popup.firstChild;
+          if (popupChild)
+            return;
+        
+          var currTreeCol = treeHeadRow.firstChild;
+          var currColNode = treeColGroup.firstChild;
+          while (currTreeCol) {
+            if (currColNode.tagName == "splitter")
+              currColNode = currColNode.nextSibling;
+        
+            if (skipCell != currTreeCol) {
+        		// Construct an entry for each cell in the row.
+        		var columnName = currTreeCol.getAttribute("value");
+        		var v = document.createElement("menuitem");
+        		v.setAttribute("type", "checkbox");
+        		v.setAttribute("value", columnName);
+        		if (columnName == "") {
+        		  var display = currTreeCol.getAttribute("display");
+        		  v.setAttribute("value", display);
+        		}
+        		v.setAttribute("colid", currColNode.id);
+        		var hidden = currColNode.getAttribute("hidden");
+        		if (hidden != "true")
+        		  v.setAttribute("checked", "true");
+        
+        		popup.appendChild(v);
+        	}
+        
+        	currTreeCol = currTreeCol.nextSibling;
+        	currColNode = currColNode.nextSibling;
+          }
+        ]]>
+        </body>
+      </method>
+      <method name="toggleColumn">
+        <argument name="popupElement"/>
+        <argument name="doc"/>
+        <body>
+        <![CDATA[
+          var colid = popupElement.getAttribute("colid");
+          var colNode = doc.getElementById(colid);
+          if (colNode) {
+            var checkedState = popupElement.getAttribute("checked");
+          	if (checkedState == "true")
+          	  colNode.removeAttribute("hidden");
+          	else colNode.setAttribute("hidden", "true");
+          }
+        ]]>
+        </body>
+      </method>
+    </interface>
+  </binding>
+
 </bindings>
 
