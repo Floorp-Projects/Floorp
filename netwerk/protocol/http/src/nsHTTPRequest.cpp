@@ -923,7 +923,9 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
         nsCOMPtr<nsISSLSocketControl> sslControl(do_QueryInterface(securityInfo, &rval));
         if (NS_FAILED(rval)) return rval;
 
+#ifdef DEBUG
         printf(">>> Doing SSL ProxyStepUp\n");
+#endif
         rval = sslControl->ProxyStepUp();
         if (NS_FAILED(rval)) return rval;
 
