@@ -59,6 +59,9 @@
 #define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
 #define NS_XPCOM_COMPONENT_DIR                  "ComsD"
 
+#define NS_MRE_DIR                              "MreD"
+#define NS_MRE_COMPONENT_DIR                    "MreComsD" 
+
 #define NS_OS_HOME_DIR                          "Home"
 #define NS_OS_DRIVE_DIR                         "DrvD"
 #define NS_OS_TEMP_DIR                          "TmpD"

@@ -250,6 +250,22 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
 
     // Add additional plugins dirs
     // No error checking here since this is optional in some embeddings
+    
+    // Add the MRE's component directory to searchPath if the 
+    // application is using an MRE.
+    // An application indicates that it's using an MRE by returning
+    // a valid nsIFile via it's directory service provider interface.
+    //
+    // Please see http://www.mozilla.org/projects/embedding/MRE.html
+    // for more info. on MREs
+    //
+    nsCOMPtr<nsILocalFile> mreComponentDirectory;
+    nsresult rv = GetDirectoryFromDirService(NS_MRE_COMPONENT_DIR, 
+                                    getter_AddRefs(mreComponentDirectory));
+    if (NS_SUCCEEDED(rv))
+    {
+        searchPath->AppendElement(mreComponentDirectory);
+    }
 
     (void) AppendFromDirServiceList(NS_APP_PLUGINS_DIR_LIST, searchPath);
 

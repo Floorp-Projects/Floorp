@@ -3069,18 +3069,6 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
     {
         // Use supplied components' directory   
         dir = inDirSpec;
-        
-        if (fileIsCompDir) {
-            // Set components' directory for AutoRegisterInterfces to query
-            nsCOMPtr<nsIProperties> directoryService = 
-                do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-            if (NS_FAILED(rv)) return rv;
-            
-            // Don't care if undefining fails
-            directoryService->Undefine(NS_XPCOM_COMPONENT_DIR); 
-            rv = directoryService->Define(NS_XPCOM_COMPONENT_DIR, dir);
-            if (NS_FAILED(rv)) return rv;
-        }
     } 
     else 
     {
