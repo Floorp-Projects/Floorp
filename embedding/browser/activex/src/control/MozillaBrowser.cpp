@@ -180,6 +180,9 @@ CMozillaBrowser::CMozillaBrowser()
     mBrowserHelperList = NULL;
     mBrowserHelperListCount = 0;
 
+    // Name of the default profile to use
+    mProfileName = NS_LITERAL_STRING("MozillaControl");
+
     // Initialise the web browser
     Initialize();
 }
@@ -748,7 +751,24 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 {
     NG_TRACE_METHOD(CMozillaBrowser::OnViewSource);
 
-    if (mWebBrowserContainer->mCurrentURI)
+    if (!mWebBrowser)
+    {
+        // No webbrowser to view!
+        NG_ASSERT(0);
+        return 0;
+    }
+
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
+    if (!webNav)
+    {
+        // No webnav!
+        NG_ASSERT(0);
+        return 0;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    webNav->GetCurrentURI(getter_AddRefs(uri));
+    if (!uri)
     {
         // No URI to view!
         NG_ASSERT(0);
@@ -757,16 +777,18 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 
     // Get the current URI
     nsCAutoString aURI;
-    mWebBrowserContainer->mCurrentURI->GetSpec(aURI);
+    uri->GetSpec(aURI);
 
     nsAutoString strURI;
     strURI.Assign(NS_LITERAL_STRING("view-source:"));
     strURI.Append(NS_ConvertUTF8toUCS2(aURI));
 
+    // Ask the client to create a window to view the source in
     CIPtr(IDispatch) spDispNew;
     VARIANT_BOOL bCancel = VARIANT_FALSE;
     Fire_NewWindow2(&spDispNew, &bCancel);
 
+    // Load the view-source into a new url
     if ((bCancel == VARIANT_FALSE) && spDispNew)
     {
         CIPtr(IWebBrowser2) spOther = spDispNew;;
@@ -800,12 +822,6 @@ LRESULT CMozillaBrowser::OnDocumentForward(WORD wNotifyCode, WORD wID, HWND hWnd
 {
     GoForward();
     return 0;
-}
-
-
-LRESULT CMozillaBrowser::OnDocumentSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
-{
-    return OnSelectAll(wNotifyCode, wID, hWndCtl, bHandled);
 }
 
 
@@ -1061,23 +1077,22 @@ HRESULT CMozillaBrowser::Initialize()
     }
 
     // Make a new default profile
-    nsAutoString newProfileName(NS_LITERAL_STRING("MozillaControl"));
     PRBool profileExists = PR_FALSE;
-    rv = profileService->ProfileExists(newProfileName.get(), &profileExists);
+    rv = profileService->ProfileExists(mProfileName.get(), &profileExists);
     if (NS_FAILED(rv))
     {
         return E_FAIL;
     }
     else if (!profileExists)
     {
-        rv = profileService->CreateNewProfile(newProfileName.get(), nsnull, nsnull, PR_FALSE);
+        rv = profileService->CreateNewProfile(mProfileName.get(), nsnull, nsnull, PR_FALSE);
         if (NS_FAILED(rv))
         {
             return E_FAIL;
         }
     }
 
-    rv = profileService->SetCurrentProfile(newProfileName.get());
+    rv = profileService->SetCurrentProfile(mProfileName.get());
     if (NS_FAILED(rv))
     {
         return E_FAIL;
