@@ -69,7 +69,9 @@ static const PRUint16 type1_encryption_c1 = TYPE1_ENCRYPTION_C1;
 static const PRUint16 type1_encryption_c2 = TYPE1_ENCRYPTION_C2;
 
 typedef struct {
+#ifndef MOZ_ENABLE_XFT
   nsIFreeType2  *ft2;
+#endif
   FT_Face        face;
   int            elm_cnt;
   int            len;
@@ -179,17 +181,24 @@ sideWidthAndBearing(FT_Vector *aEndPt, FT2PT1_info *aFti)
   FT_GlyphSlot slot;
   FT_Glyph glyph;
   FT_BBox bbox;
-  nsresult rv;
 
   slot = aFti->face->glyph;
 
-  rv = aFti->ft2->GetGlyph(slot, &glyph);
+#ifdef MOZ_ENABLE_XFT
+  FT_Error error = FT_Get_Glyph(slot, &glyph);
+  if (error) {
+    NS_ERROR("sideWidthAndBearing failed to get glyph");
+    return PR_FALSE;
+  }
+  FT_Glyph_Get_CBox(glyph, ft_glyph_bbox_unscaled, &bbox);
+#else
+  nsresult rv = aFti->ft2->GetGlyph(slot, &glyph);
   if (NS_FAILED(rv)) {
     NS_ERROR("sideWidthAndBearing failed to get glyph");
     return PR_FALSE;
   }
   aFti->ft2->GlyphGetCBox(glyph, ft_glyph_bbox_unscaled, &bbox);
-
+#endif
 
   if (aFti->wmode == 0)
     aw = toCS(upm, slot->metrics.horiAdvance);
@@ -369,21 +378,33 @@ static FT_Outline_Funcs ft_outline_funcs = {
 };
 
 FT_Error
+#ifdef MOZ_ENABLE_XFT
+FT2GlyphToType1CharString(FT_Face aFace, PRUint32 aGlyphID,
+                          int aWmode, int aLenIV, unsigned char *aBuf)
+#else
 FT2GlyphToType1CharString(nsIFreeType2 *aFt2, FT_Face aFace, PRUint32 aGlyphID,
                           int aWmode, int aLenIV, unsigned char *aBuf)
+#endif
 {
   int j;
   FT_Int32 flags = FT_LOAD_NO_BITMAP | FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;
   FT_GlyphSlot slot;
   unsigned char *start = aBuf;
   FT2PT1_info fti;
-  nsresult rv;
 
-  rv = aFt2->LoadGlyph(aFace, aGlyphID, flags);
+#ifdef MOZ_ENABLE_XFT
+  FT_Error error = FT_Load_Glyph(aFace, aGlyphID, flags);
+  if (error) {
+    NS_ERROR("failed to load aGlyphID");
+    return error;
+  }
+#else
+  nsresult rv = aFt2->LoadGlyph(aFace, aGlyphID, flags);
   if (NS_FAILED(rv)) {
     NS_ERROR("failed to load aGlyphID");
     return 1;
   }
+#endif
   slot = aFace->glyph;
 
   if (slot->format != ft_glyph_format_outline) {
@@ -391,7 +412,9 @@ FT2GlyphToType1CharString(nsIFreeType2 *aFt2, FT_Face aFace, PRUint32 aGlyphID,
     return 1;
   }
 
+#ifndef MOZ_ENABLE_XFT
   fti.ft2     = aFt2;
+#endif
   fti.face    = aFace;
   fti.buf     = aBuf;
   fti.elm_cnt = 0;
@@ -402,11 +425,18 @@ FT2GlyphToType1CharString(nsIFreeType2 *aFt2, FT_Face aFace, PRUint32 aGlyphID,
   for (j=0; j< aLenIV; j++) {
     fti.len += ecsi(&fti.buf, 0);
   }
+#ifdef MOZ_ENABLE_XFT
+  if (FT_Outline_Decompose(&slot->outline, &ft_outline_funcs, &fti))  {
+    NS_ERROR("error decomposing aGlyphID");
+    return 1;
+  }
+#else
   rv = aFt2->OutlineDecompose(&slot->outline, &ft_outline_funcs, &fti);
   if (NS_FAILED(rv)) {
     NS_ERROR("error decomposing aGlyphID");
     return 1;
   }
+#endif
 
   if (fti.elm_cnt) {
     fti.len += csc(&fti.buf, T1_CLOSEPATH);

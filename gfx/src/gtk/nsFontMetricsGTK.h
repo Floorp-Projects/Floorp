@@ -51,7 +51,9 @@
 #include "nsICharRepresentable.h"
 #include "nsCompressedCharMap.h"
 #include "nsIFontMetricsGTK.h"
+#ifdef MOZ_ENABLE_FREETYPE2
 #include "nsIFontCatalogService.h"
+#endif
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -91,7 +93,9 @@ struct nsFontStretch
   char*              mScalable;
   PRBool             mOutlineScaled;
   nsVoidArray        mScaledFonts;
+#ifdef MOZ_ENABLE_FREETYPE2
   nsITrueTypeFontCatalogEntry*   mFreeTypeFaceID;
+#endif
 };
 
 struct nsFontStyle
@@ -412,7 +416,9 @@ public:
 class nsHashKey;
 PRBool FreeNode(nsHashKey* aKey, void* aData, void* aClosure);
 nsFontCharSetInfo *GetCharSetInfo(const char *aCharSetName);
+#ifdef MOZ_ENABLE_FREETYPE2
 void CharSetNameToCodeRangeBits(const char*, PRUint32*, PRUint32*);
+#endif
 nsFontCharSetMap *GetCharSetMap(const char *aCharSetName);
 
 

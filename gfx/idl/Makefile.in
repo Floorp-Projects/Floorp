@@ -55,13 +55,18 @@ XPIDLSRCS	= \
 		nsIPrintOptions.idl \
 		nsIPrintSettings.idl \
 		nsIPrintSettingsService.idl \
-		nsIFontCatalogService.idl \
-		nsIFreeType2.idl \
 		nsIPrintSession.idl \
 		gfxIFormats.idl \
 		gfxIImageFrame.idl \
 		gfxtypes.idl \
 		$(NULL)
+
+ifdef MOZ_ENABLE_FREETYPE2
+XPIDLSRCS	+= \
+		nsIFontCatalogService.idl \
+		nsIFreeType2.idl \
+		$(NULL)
+endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_GFX_TOOLKIT)))
 XPIDLSRCS += nsIPrintSettingsX.idl \

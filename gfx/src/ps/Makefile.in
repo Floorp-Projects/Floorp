@@ -95,7 +95,13 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
-ifdef MOZ_ENABLE_FREETYPE2
+ifdef MOZ_ENABLE_XFT
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_XFT_LIBS) \
+		$(NULL)
+endif
+
+ifneq (,$(MOZ_ENABLE_FREETYPE2)$(MOZ_ENABLE_XFT))
 CPPSRCS		+= \
 		nsCidMap.cpp \
 		nsType1.cpp \
@@ -105,10 +111,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_ENABLE_FREETYPE2
-INCLUDES        += $(FT2_CFLAGS)
-endif
-
 CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
 
@@ -116,6 +118,15 @@ LOCAL_INCLUDES = \
 		-I../.. \
 		-I$(srcdir)/.. \
                  $(NULL)
+
+ifdef MOZ_ENABLE_XFT
+INCLUDES		+= $(MOZ_XFT_CFLAGS)
+LOCAL_INCLUDES	+= -I$(srcdir)/../shared
+else
+ifdef MOZ_ENABLE_FREETYPE2
+INCLUDES	+= $(FT2_CFLAGS)
+endif
+endif
 
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res

@@ -50,7 +50,20 @@
 #include "nsCRT.h"
 #include "nsCompressedCharMap.h"
 #include "nsPostScriptObj.h"
+#ifdef MOZ_ENABLE_XFT
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+#include FT_CACHE_H
+#include FT_CACHE_IMAGE_H
+#include FT_OUTLINE_H
+#include FT_OUTLINE_H
+#include FT_TRUETYPE_TABLES_H
+#else
+#ifdef MOZ_ENABLE_FREETYPE2
 #include "nsIFontCatalogService.h"
+#endif
+#endif
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 
@@ -250,15 +263,112 @@ public:
   nsString     mFamilyName;
 };
 
+
+#ifdef MOZ_ENABLE_XFT
+
+#include <X11/Xft/Xft.h>
+
+class nsXftEntry
+{
+public:
+  nsXftEntry(FcPattern *aFontPattern);
+  ~nsXftEntry() {}; 
+
+  FT_Face       mFace;
+  int           mFaceIndex;
+  nsCString     mFontFileName;
+  nsCString     mFamilyName;
+  nsCString     mStyleName;
+
+protected:
+  nsXftEntry() {};
+};
+
+struct fontps {
+  nsXftEntry *entry;
+  nsFontPS   *fontps;
+  FcCharSet  *charset;
+};
+
+struct fontPSInfo {
+  nsVoidArray     *fontps;
+  const nsFont*    nsfont;
+  nsCAutoString    lang;
+  nsHashtable     *alreadyLoaded;
+  nsCStringArray   mFontList;
+  nsAutoVoidArray  mFontIsGeneric;
+  nsCString       *mGenericFont;
+};
+
+class nsFontPSXft : public nsFontPS
+{
+public:
+  static nsFontPS* FindFont(PRUnichar aChar, const nsFont& aFont,
+                            nsFontMetricsPS* aFontMetrics);
+  nsresult         Init(nsXftEntry* aEntry,
+                        nsPSFontGenerator* aPSFontGen);
+  static PRBool CSSFontEnumCallback(const nsString& aFamily, PRBool aGeneric,
+                                    void* aFpi);
+
+  nsFontPSXft(const nsFont& aFont, nsFontMetricsPS* aFontMetrics);
+  virtual ~nsFontPSXft();
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  nscoord GetWidth(const char* aString, PRUint32 aLength);
+  nscoord GetWidth(const PRUnichar* aString, PRUint32 aLength);
+  nscoord DrawString(nsRenderingContextPS* aContext,
+                     nscoord aX, nscoord aY,
+                     const char* aString, PRUint32 aLength);
+  nscoord DrawString(nsRenderingContextPS* aContext,
+                     nscoord aX, nscoord aY,
+                     const PRUnichar* aString, PRUint32 aLength);
+  nsresult RealizeFont(nsFontMetricsPS* aFontMetrics, float dev2app);
+  nsresult SetupFont(nsRenderingContextPS* aContext);
+
+#ifdef MOZ_MATHML
+  nsresult
+  GetBoundingMetrics(const char*        aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+  nsresult
+  GetBoundingMetrics(const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#endif
+
+  nsXftEntry *mEntry;
+  FT_Face getFTFace();
+
+protected:
+  PRUint16        mPixelSize;
+  FTC_Image_Desc  mImageDesc;
+  FT_Library      mFreeTypeLibrary;
+  FTC_Manager     mFTCacheManager;
+  FTC_Image_Cache mImageCache;
+
+  int     ascent();
+  int     descent();
+  PRBool  getXHeight(unsigned long &aVal);
+  int     max_ascent();
+  int     max_descent();
+  int     max_width();
+  PRBool  superscript_y(long &aVal);
+  PRBool  subscript_y(long &aVal);
+  PRBool  underlinePosition(long &aVal);
+  PRBool  underline_thickness(unsigned long &aVal);
+  nsPSFontGenerator*  mPSFontGenerator;
+};
+
+#else
+
+#ifdef MOZ_ENABLE_FREETYPE2
+#include "nsIFreeType2.h"
+
 typedef struct {
   nsITrueTypeFontCatalogEntry *entry;
   nsFontPS *fontps;
   unsigned short *ccmap;
 } fontps;
-
-#ifdef MOZ_ENABLE_FREETYPE2
-
-#include "nsIFreeType2.h"
 
 typedef struct {
   nsVoidArray *fontps;
@@ -337,7 +447,12 @@ protected:
   nsPSFontGenerator*  mPSFontGenerator;
 };
 
-#endif
+#else // !FREETYPE2 && !XFT
+typedef struct {
+  nsFontPS   *fontps;
+} fontps;
+#endif // MOZ_ENABLE_FREETYPE2
+#endif   // MOZ_ENABLE_XFT
 
 class nsPSFontGenerator {
 public:
@@ -351,6 +466,23 @@ protected:
   nsString mSubset;
 };
 
+
+#ifdef MOZ_ENABLE_XFT
+
+class nsXftType8Generator : public nsPSFontGenerator {
+public:
+  nsXftType8Generator();
+  ~nsXftType8Generator();
+  nsresult Init(nsXftEntry* aFce);
+  void  GeneratePSFont(FILE* aFile);
+
+protected:
+  nsXftEntry *mEntry;
+  FTC_Image_Desc  mImageDesc;
+  FT_Library      mFreeTypeLibrary;
+  FTC_Manager     mFTCacheManager;
+};
+#else
 #ifdef MOZ_ENABLE_FREETYPE2
 class nsFT2Type8Generator : public nsPSFontGenerator {
 public:
@@ -364,7 +496,8 @@ protected:
   nsCOMPtr<nsIFreeType2> mFt2;
   FTC_Image_Desc  mImageDesc;
 };
-#endif
+#endif   // MOZ_ENABLE_FREETYPE2
+#endif   // MOZ_ENABLE_XFT
 
 #endif
 

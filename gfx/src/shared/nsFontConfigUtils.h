@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +12,13 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Golden Hills Computer Services code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Brian Stell <bstell@ix.netcom.com>.
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is Christopher Blizzard
+ * <blizzard@mozilla.org>.  Portions created by the Initial Developer
+ * are Copyright (C) 2002 the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Brian Stell <bstell@ix.netcom.com>.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,34 +34,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef TYPE8_H
-#define TYPE8_H
+#ifndef nsFontConfigUtils_h__
+#define nsFontConfigUtils_h__
 
-#include <stdio.h>
 #include "nspr.h"
-#ifdef MOZ_ENABLE_XFT
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-#include FT_CACHE_H
-#include FT_CACHE_IMAGE_H
-#include FT_OUTLINE_H
-// macros to handle FreeType2 26.6 numbers (26 bit number with 6 bit fraction)
-#define FT_REG_TO_16_16(x) ((x)<<16)
-#ifndef FT_MulFix
-#define FT_MulFix(v, s) (((v)*(s))>>16)
+#include "nsString.h"
+#include "nsIAtom.h"
+#include "nsFont.h"
+
+#include <fontconfig/fontconfig.h>
+
+extern int     NS_CalculateSlant   (PRUint8  aStyle);
+extern int     NS_CalculateWeight  (PRUint16 aWeight);
+extern void    NS_AddLangGroup     (FcPattern *aPattern, nsIAtom *aLangGroup);
+extern void    NS_AddFFRE          (FcPattern *aPattern, nsCString *aFamily,
+                                    PRBool aWeak);
+extern int     NS_FFRECountHyphens (nsACString &aFFREName);
+extern PRBool  NS_IsASCIIFontName  (const nsString& aName);
 #endif
-#define FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
-#define FT_TRUNC(x) ((x) >> 6)
-#define FT_DESIGN_UNITS_TO_PIXELS(v, s) FT_TRUNC(FT_ROUND(FT_MulFix((v) , (s))))
-#else /* MOZ_ENABLE_FREETYPE2 */
-#include "nsIFreeType2.h"
-#endif /* MOZ_ENABLE_XFT */
 
-void AddCIDCheckCode(FILE *aFile);
-PRBool FT2SubsetToType8(FT_Face aFace, const PRUnichar *aCharIDs,
-                        PRUint32 aNumChars, int aWmode, FILE *aFile);
-char*  FT2ToType8CidFontName(FT_Face aFace, int aWmode);
-
-
-#endif /* TYPE8_H */

@@ -64,6 +64,7 @@
 #include "nsNetUtil.h"
 #include "nsClassHashtable.h"
 #include "nsAutoBuffer.h"
+#include "nsFontConfigUtils.h"
 
 #include <gdk/gdkx.h>
 #include <freetype/tttables.h>
@@ -194,26 +195,6 @@ class nsFontXftInfo {
     FT_Encoding                 mFT_Encoding;
 };
 
-struct MozXftLangGroup {
-    const char    *mozLangGroup;
-    FcChar32       character;
-    const FcChar8 *XftLang;
-};
-
-static const MozXftLangGroup MozXftLangGroups[] = {
-    { "x-western",      0x0041, (const FcChar8 *)"en" },
-    { "x-central-euro", 0x0100, (const FcChar8 *)"pl" },
-    { "x-cyrillic",     0x0411, (const FcChar8 *)"ru" },
-    { "x-baltic",       0x0104, (const FcChar8 *)"lv" },
-    { "x-devanagari",   0x0905, (const FcChar8 *)"hi" },
-    { "x-tamil",        0x0B85, (const FcChar8 *)"ta" },
-    { "x-unicode",      0x0000,                  0    },
-    { "x-user-def",     0x0000,                  0    },
-};
-
-#define NUM_XFT_LANG_GROUPS (sizeof (MozXftLangGroups) / \
-                             sizeof (MozXftLangGroups[0]))
-
 struct DrawStringData {
     nscoord                x;
     nscoord                y;
@@ -236,20 +217,10 @@ struct BoundingMetricsData {
 #define AUTO_BUFFER_SIZE 3000
 typedef nsAutoBuffer<FcChar32, AUTO_BUFFER_SIZE> nsAutoFcChar32Buffer;
 
-static int      CalculateSlant   (PRUint8  aStyle);
-static int      CalculateWeight  (PRUint16 aWeight);
-static void     AddLangGroup     (FcPattern *aPattern, nsIAtom *aLangGroup);
-static void     AddFFRE          (FcPattern *aPattern, nsCString *aFamily,
-                                  PRBool aWeak);
-static void     FFREToFamily     (nsACString &aFFREName, nsACString &oFamily);
-static int      FFRECountHyphens (nsACString &aFFREName);
 static int      CompareFontNames (const void* aArg1, const void* aArg2,
                                   void* aClosure);
-static PRBool   IsASCIIFontName  (const nsString& aName);
 static nsresult EnumFontsXft     (nsIAtom* aLangGroup, const char* aGeneric,
                                   PRUint32* aCount, PRUnichar*** aResult);
-
-static const MozXftLangGroup* FindFCLangGroup (nsACString &aLangGroup);
 
 static        void ConvertCharToUCS4    (const char *aString,
                                          PRUint32 aLength,
@@ -1028,13 +999,13 @@ nsFontMetricsXft::SetupFCPattern(void)
             break;;
 
         nsCString *familyName = mFontList.CStringAt(i);
-        AddFFRE(mPattern, familyName, PR_FALSE);
+        NS_AddFFRE(mPattern, familyName, PR_FALSE);
     }
 
     // Add the language group.  Note that we do this before adding any
     // generics.  That's because the language is more important than
     // any generic font.
-    AddLangGroup (mPattern, mLangGroup);
+    NS_AddLangGroup (mPattern, mLangGroup);
 
     // If there's a generic add a pref for the generic if there's one
     // set.
@@ -1058,7 +1029,7 @@ nsFontMetricsXft::SetupFCPattern(void)
 
             // we ignore prefs that have three hypens since they are X
             // style prefs.
-            if (FFRECountHyphens(value) < 3) {
+            if (NS_FFRECountHyphens(value) < 3) {
                 nsCString tmpstr;
                 tmpstr.Append(value);
 
@@ -1067,14 +1038,14 @@ nsFontMetricsXft::SetupFCPattern(void)
                            tmpstr.get());
                 }
 
-                AddFFRE(mPattern, &tmpstr, PR_FALSE);
+                NS_AddFFRE(mPattern, &tmpstr, PR_FALSE);
             }
         }
     }
 
     // Add the generic if there is one.
     if (mGenericFont && !mFont->systemFont)
-        AddFFRE(mPattern, mGenericFont, PR_FALSE);
+        NS_AddFFRE(mPattern, mGenericFont, PR_FALSE);
 
     if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
         // generic font
@@ -1101,7 +1072,7 @@ nsFontMetricsXft::SetupFCPattern(void)
 
         // weight
         printf("\tweight: (orig,calc) %d,%d\n",
-               mFont->weight, CalculateWeight(mFont->weight));
+               mFont->weight, NS_CalculateWeight(mFont->weight));
 
     }        
 
@@ -1113,11 +1084,11 @@ nsFontMetricsXft::SetupFCPattern(void)
 
     // Add the slant type
     FcPatternAddInteger(mPattern, FC_SLANT,
-                        CalculateSlant(mFont->style));
+                        NS_CalculateSlant(mFont->style));
 
     // Add the weight
     FcPatternAddInteger(mPattern, FC_WEIGHT,
-                        CalculateWeight(mFont->weight));
+                        NS_CalculateWeight(mFont->weight));
 
     // Set up the default substitutions for this font
     FcConfigSubstitute(0, mPattern, FcMatchPattern);
@@ -1252,7 +1223,7 @@ nsFontMetricsXft::SetupMiniFont(void)
     FcPatternAddInteger(pattern, FC_PIXEL_SIZE, int(0.5 * mPixelSize));
 
     FcPatternAddInteger(pattern, FC_WEIGHT,
-                        CalculateWeight(mFont->weight));
+                        NS_CalculateWeight(mFont->weight));
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
     XftDefaultSubstitute(GDK_DISPLAY(), DefaultScreen(GDK_DISPLAY()),
@@ -1668,7 +1639,7 @@ nsresult
 nsFontMetricsXft::FamilyExists(nsIDeviceContext *aDevice,
                                const nsString &aName)
 {
-    if (!IsASCIIFontName(aName))
+    if (!NS_IsASCIIFontName(aName))
         return NS_ERROR_FAILURE;
 
     NS_ConvertUCS2toUTF8 name(aName);
@@ -1726,7 +1697,7 @@ nsFontMetricsXft::EnumFontCallback(const nsString &aFamily, PRBool aIsGeneric,
 {
     // make sure it's an ascii name, if not then return and continue
     // enumerating
-    if (!IsASCIIFontName(aFamily))
+    if (!NS_IsASCIIFontName(aFamily))
         return PR_TRUE;
 
     nsCAutoString name;
@@ -1824,7 +1795,7 @@ nsFontEnumeratorXft::GetDefaultFont(const char *aLangGroup,
 
   if (aLangGroup && *aLangGroup) {
     nsCOMPtr<nsIAtom> langGroup = do_GetAtom(aLangGroup);
-    AddLangGroup(match_pattern, langGroup);
+    NS_AddLangGroup(match_pattern, langGroup);
   }
 
   FcConfigSubstitute(0, match_pattern, FcMatchPattern); 
@@ -2209,172 +2180,12 @@ nsAutoDrawSpecBuffer::Flush()
 
 /* static */
 int
-CalculateSlant(PRUint8 aStyle)
-{
-    int fcSlant;
-
-    switch(aStyle) {
-    case NS_FONT_STYLE_ITALIC:
-        fcSlant = FC_SLANT_ITALIC;
-        break;
-    case NS_FONT_STYLE_OBLIQUE:
-        fcSlant = FC_SLANT_OBLIQUE;
-        break;
-    default:
-        fcSlant = FC_SLANT_ROMAN;
-        break;
-    }
-
-    return fcSlant;
-}
-
-/* static */
-int
-CalculateWeight (PRUint16 aWeight)
-{
-    /*
-     * weights come in two parts crammed into one
-     * integer -- the "base" weight is weight / 100,
-     * the rest of the value is the "offset" from that
-     * weight -- the number of steps to move to adjust
-     * the weight in the list of supported font weights,
-     * this value can be negative or positive.
-     */
-    PRInt32 baseWeight = (aWeight + 50) / 100;
-    PRInt32 offset = aWeight - baseWeight * 100;
-
-    /* clip weights to range 0 to 9 */
-    if (baseWeight < 0)
-        baseWeight = 0;
-    if (baseWeight > 9)
-        baseWeight = 9;
-
-    /* Map from weight value to fcWeights index */
-    static int fcWeightLookup[10] = {
-        0, 0, 0, 0, 1, 1, 2, 3, 3, 4,
-    };
-
-    PRInt32 fcWeight = fcWeightLookup[baseWeight];
-
-    /*
-     * adjust by the offset value, make sure we stay inside the 
-     * fcWeights table
-     */
-    fcWeight += offset;
-
-    if (fcWeight < 0)
-        fcWeight = 0;
-    if (fcWeight > 4)
-        fcWeight = 4;
-
-    /* Map to final FC_WEIGHT value */
-    static int fcWeights[5] = {
-        FC_WEIGHT_LIGHT,      /* 0 */
-        FC_WEIGHT_MEDIUM,     /* 1 */
-        FC_WEIGHT_DEMIBOLD,   /* 2 */
-        FC_WEIGHT_BOLD,       /* 3 */
-        FC_WEIGHT_BLACK,      /* 4 */
-    };
-
-    return fcWeights[fcWeight];
-
-}
-
-/* static */
-void
-AddLangGroup(FcPattern *aPattern, nsIAtom *aLangGroup)
-{
-    // Find the FC lang group for this lang group
-    nsCAutoString cname;
-    aLangGroup->ToUTF8String(cname);
-
-    // see if the lang group needs to be translated from mozilla's
-    // internal mapping into fontconfig's
-    const struct MozXftLangGroup *langGroup;
-    langGroup = FindFCLangGroup(cname);
-
-    // if there's no lang group, just use the lang group as it was
-    // passed to us
-    //
-    // we're casting away the const here for the strings - should be
-    // safe.
-    if (!langGroup)
-        FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)cname.get());
-    else if (langGroup->XftLang) 
-        FcPatternAddString(aPattern, FC_LANG, (FcChar8 *)langGroup->XftLang);
-}
-
-/* static */
-void
-AddFFRE(FcPattern *aPattern, nsCString *aFamily, PRBool aWeak)
-{
-    nsCAutoString family;
-    FFREToFamily(*aFamily, family);
-
-    FcValue v;
-    v.type = FcTypeString;
-    // casting away the const here, should be safe
-    v.u.s = (FcChar8 *)family.get();
-
-    if (aWeak)
-        FcPatternAddWeak(aPattern, FC_FAMILY, v, FcTrue);
-    else
-        FcPatternAdd(aPattern, FC_FAMILY, v, FcTrue);
-}
-
-/* static */
-void
-FFREToFamily(nsACString &aFFREName, nsACString &oFamily)
-{
-  if (FFRECountHyphens(aFFREName) == 3) {
-      PRInt32 familyHyphen = aFFREName.FindChar('-') + 1;
-      PRInt32 registryHyphen = aFFREName.FindChar('-',familyHyphen);
-      oFamily.Append(Substring(aFFREName, familyHyphen,
-                               registryHyphen-familyHyphen));
-  }
-  else {
-      oFamily.Append(aFFREName);
-  }
-}
-
-/* static */
-int
-FFRECountHyphens (nsACString &aFFREName)
-{
-    int h = 0;
-    PRInt32 hyphen = 0;
-    while ((hyphen = aFFREName.FindChar('-', hyphen)) >= 0) {
-        ++h;
-        ++hyphen;
-    }
-    return h;
-}
-
-/* static */
-int
 CompareFontNames (const void* aArg1, const void* aArg2, void* aClosure)
 {
     const PRUnichar* str1 = *((const PRUnichar**) aArg1);
     const PRUnichar* str2 = *((const PRUnichar**) aArg2);
 
     return nsCRT::strcmp(str1, str2);
-}
-
-PRBool
-IsASCIIFontName(const nsString& aName)
-{
-    PRUint32 len = aName.Length();
-    const PRUnichar* str = aName.get();
-    for (PRUint32 i = 0; i < len; i++) {
-        /*
-         * X font names are printable ASCII, ignore others (for now)
-         */
-        if ((str[i] < 0x20) || (str[i] > 0x7E)) {
-            return PR_FALSE;
-        }
-    }
-  
-    return PR_TRUE;
 }
 
 /* static */
@@ -2404,7 +2215,7 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
 
     // take the pattern and add the lang group to it
     if (aLangGroup)
-        AddLangGroup(pat, aLangGroup);
+        NS_AddLangGroup(pat, aLangGroup);
 
     // get the font list
     fs = FcFontList(0, pat, os);
@@ -2509,20 +2320,6 @@ EnumFontsXft(nsIAtom* aLangGroup, const char* aGeneric,
         FcFontSetDestroy(fs);
 
     return rv;
-}
-
-/* static */
-const MozXftLangGroup*
-FindFCLangGroup (nsACString &aLangGroup)
-{
-    for (unsigned int i=0; i < NUM_XFT_LANG_GROUPS; ++i) {
-        if (aLangGroup.Equals(MozXftLangGroups[i].mozLangGroup,
-                              nsCaseInsensitiveCStringComparator())) {
-            return &MozXftLangGroups[i];
-        }
-    }
-
-    return nsnull;
 }
 
 /* static */
