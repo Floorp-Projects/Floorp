@@ -111,19 +111,26 @@ protected:
   nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool foward);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
-  nsIScrollableView* GetNearestScrollingView(nsIView* aView);
-  nsISelfScrollingFrame* GetParentSelfScrollingFrame(nsIFrame* aFrame);
   PRBool CheckDisabled(nsIContent* aContent);
 
+  // These functions are all for mousewheel scrolling
+  nsISelfScrollingFrame* GetParentSelfScrollingFrame(nsIFrame* aFrame);
+  nsIScrollableView* GetNearestScrollingView(nsIView* aView);
 #ifdef USE_FOCUS_FOR_MOUSEWHEEL
-  nsresult  GetScrollableFrameOrView(nsIScrollableView* &sv, nsISelfScrollingFrame* &sf, nsIView* &focusView);
+  nsresult  GetScrollableFrameOrView(nsIScrollableView* &sv,
+                                     nsISelfScrollingFrame* &sf,
+                                     nsIView* &focusView);
 #else
   nsIFrame* GetDocumentFrame(nsIPresContext* aPresContext);
-  nsresult  GetScrollableFrameOrView(nsIPresContext* aPresContext, nsIFrame* aTargetFrame, nsIView* aView,
-                                     nsIScrollableView* &sv, nsISelfScrollingFrame* &sf, nsIView* &focusView);
+  nsresult  GetScrollableFrameOrView(nsIPresContext* aPresContext,
+                                     nsIFrame* aTargetFrame, nsIView* aView,
+                                     nsIScrollableView* &sv,
+                                     nsISelfScrollingFrame* &sf,
+                                     nsIView* &focusView);
 #endif
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefService();
+  // end mousewheel functions
 
   // routines for the d&d gesture tracking state machine
   void BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
@@ -172,6 +179,8 @@ protected:
   PRUint32 mRClickCount;
 
   static PRUint32 mInstanceCount;
+
+  // For mousewheel preferences handling
   nsCOMPtr<nsIPref> mPrefService;
   PRBool m_haveShutdown;
 };
