@@ -30,16 +30,19 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
   mThumbSize = 0;
   mLineIncrement = 1;
   mIsVertical = aIsVertical;
-  mRenderingContext = nsnull;
-  mBackground = NS_RGB(192,192,192);
+  mBackground = NS_RGB(100,100,100);
   bg_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
   border_pixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBar = 0;
+  mBarBounds.x = mBarBounds.y = mBarBounds.width = mBarBounds.height = 0;
 };
 
 nsScrollbar::~nsScrollbar()
 {
-  if (mRenderingContext)
-    NS_RELEASE(mRenderingContext);
+  if (mBar) {
+    XDestroyWindow(gDisplay, mBar);
+    DeleteWindowCallback(mBar);
+  }
 }
 
 nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -61,6 +64,8 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
   printf("nsScrollbar::SetMaxRange()\n");
   printf("Max Range set to %d\n", aEndRange);
   mMaxRange = aEndRange;
+  CalcBarBounds();
+  LayoutBar();
   return NS_OK;
 }
 
@@ -76,6 +81,8 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
   printf("nsScrollbar::SetPosition()\n");
   printf("Scroll to %d\n", aPos);
   mPosition = aPos;
+  CalcBarBounds();
+  LayoutBar();
   return NS_OK;
 }
 
@@ -91,6 +98,8 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
   printf("nsScrollbar::SetThumbSize()\n");
   printf("Thumb size set to %d\n", aSize);
   mThumbSize = aSize;
+  CalcBarBounds();
+  LayoutBar();
   return NS_OK;
 }
 
@@ -106,6 +115,8 @@ NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aSize)
   printf("nsScrollbar::SetLineIncrement()\n");
   printf("Set Line Increment to %d\n", aSize);
   mLineIncrement = aSize;
+  CalcBarBounds();
+  LayoutBar();
   return NS_OK;
 }
 
@@ -126,6 +137,8 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
   SetThumbSize(aThumbSize);
   SetPosition(aPosition);
   SetLineIncrement(aLineIncrement);
+  CalcBarBounds();
+  LayoutBar();
   return NS_OK;
 }
 
@@ -135,31 +148,13 @@ PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, int cPos)
   return PR_FALSE;
 }
 
-PRBool nsScrollbar::OnPaint(nsPaintEvent &event)
-{
-  PRBool result;
-  nsRect scrollRect;
-  printf("nsScrollbar::OnPaint\n");
-  // draw the scrollbar itself
-  scrollRect.x = 0;
-  scrollRect.y = 0;
-  scrollRect.width = mBounds.width/2;
-  scrollRect.height = mBounds.height/2;
-  printf("mBounds %d %d\n",
-         mBounds.width, mBounds.height);
-  printf("About to fill rect %d %d\n",
-         scrollRect.width, scrollRect.height);
-  if (mRenderingContext) {
-    mRenderingContext->FillRect(scrollRect);
-  }
-  result = PR_FALSE;
-  return result;
-}
-
 PRBool nsScrollbar::OnResize(nsSizeEvent &event)
 {
   PRBool result;
   printf("nsScrollbar::OnResize\n");
+  nsWidget::OnResize(event);
+  CalcBarBounds();
+  LayoutBar();
   result = PR_FALSE;
   return result;
 }
@@ -182,7 +177,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   // be discarded...
   attr.bit_gravity = SouthEastGravity;
   // make sure that we listen for events
-  attr.event_mask = StructureNotifyMask | ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
+  attr.event_mask = StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
   // set the default background color and border to that awful gray
   attr.background_pixel = bg_pixel;
   attr.border_pixel = border_pixel;
@@ -196,17 +191,99 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
 
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
   CreateGC();
+  // set up the scrolling bar.
+  attr.background_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(192,192,192));
+  attr.border_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(100,100,100));
+  // set up the size
+  CalcBarBounds();
+  mBar = XCreateWindow(gDisplay,
+                       mBaseWindow,
+                       mBarBounds.x, mBarBounds.y,
+                       mBarBounds.width, mBarBounds.height,
+                       2,  // border width
+                       gDepth,
+                       InputOutput,
+                       gVisual,
+                       attr_mask,
+                       &attr);
+  AddWindowCallback(mBar, this);
+}
 
-  // create a rendering context for this window
-  static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-  static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-  if (NS_OK != nsComponentManager::CreateInstance(kRenderingContextCID,
-                                                  nsnull,
-                                                  kRenderingContextIID,
-                                                  (void **)&mRenderingContext)) {
-    // oy vey!
-    printf("Oh, dear.  I couldn't create an nsRenderingContext for this scrollbar.  All hell is about to break loose.\n");
+NS_IMETHODIMP nsScrollbar::Show(PRBool bState)
+{
+  nsWidget::Show(bState);
+  if (mBar) {
+    XMapWindow(gDisplay, mBar);
   }
-  mRenderingContext->Init(mContext, this);
-  mRenderingContext->SetColor(NS_RGB(0,0,0));
+  CalcBarBounds();
+  LayoutBar();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aWidth,
+                                  PRUint32 aHeight,
+                                  PRBool   aRepaint)
+{
+  nsWidget::Resize(aWidth, aHeight, aRepaint);
+  CalcBarBounds();
+  LayoutBar();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aX,
+                                  PRUint32 aY,
+                                  PRUint32 aWidth,
+                                  PRUint32 aHeight,
+                                  PRBool   aRepaint)
+{
+  nsWidget::Resize(aX, aY, aWidth, aHeight, aRepaint);
+  CalcBarBounds();
+  LayoutBar();
+  return NS_OK;
+}
+
+void nsScrollbar::CalcBarBounds(void)
+{
+  float bar_start;
+  float bar_end;
+
+  if (mMaxRange == 0) {
+    bar_start = 0;
+    bar_end = 0;
+    printf("CalcBarBounds: max range is zero.\n");
+  }
+  else {
+    printf("CalcBarBounds: position: %d max: %d thumb: %d\n",
+           mPosition, mMaxRange, mThumbSize);
+    bar_start = (float)mPosition / (float)mMaxRange;
+    bar_end = ((float)mThumbSize + (float)mPosition ) / (float)mMaxRange;
+    printf("CalcBarBounds: start: %f end: %f\n", bar_start, bar_end);
+  }
+  
+  if (mIsVertical == PR_TRUE) {
+    mBarBounds.x = 0;
+    mBarBounds.y = (int)(bar_start * mBounds.height);
+    mBarBounds.width = mBounds.width;
+    mBarBounds.height = (int)(bar_end * mBounds.height);
+  }
+  else {
+    mBarBounds.x = (int)(bar_start * mBounds.width);
+    mBarBounds.y = 0;
+    mBarBounds.width = (int)(bar_end * mBounds.width);
+    mBarBounds.height = mBounds.height;
+  }
+  if (mBarBounds.height == 0) {
+    mBarBounds.height = 1;
+  }
+  if (mBarBounds.width == 0) {
+    mBarBounds.width = 1;
+  }
+  printf("CalcBarBounds: bar is (%s) %d %d %d %d\n", ((mIsVertical == PR_TRUE) ? "vertical" : "horizontal" ), mBarBounds.x, mBarBounds.y, mBarBounds.width, mBarBounds.height);
+}
+
+void nsScrollbar::LayoutBar(void)
+{
+  XMoveResizeWindow(gDisplay, mBar,
+                    mBarBounds.x, mBarBounds.y,
+                    mBarBounds.width, mBarBounds.height);
 }
