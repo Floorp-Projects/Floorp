@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.4 2000/09/07 03:14:16 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.5 2000/09/07 06:44:57 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -75,24 +75,24 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     }
     /* length of primes p and q (in bytes) */
     primeLen = keySizeInBits / (2 * BITS_PER_BYTE);
-    MP_DIGITS(&p) = 0;
-    MP_DIGITS(&q) = 0;
-    MP_DIGITS(&n) = 0;
-    MP_DIGITS(&e) = 0;
-    MP_DIGITS(&d) = 0;
-    MP_DIGITS(&phi) = 0;
+    MP_DIGITS(&p)     = 0;
+    MP_DIGITS(&q)     = 0;
+    MP_DIGITS(&n)     = 0;
+    MP_DIGITS(&e)     = 0;
+    MP_DIGITS(&d)     = 0;
+    MP_DIGITS(&phi)   = 0;
     MP_DIGITS(&psub1) = 0;
     MP_DIGITS(&qsub1) = 0;
-    MP_DIGITS(&tmp) = 0;
-    CHECK_MPI_OK( mp_init(&p) );
-    CHECK_MPI_OK( mp_init(&q) );
-    CHECK_MPI_OK( mp_init(&n) );
-    CHECK_MPI_OK( mp_init(&e) );
-    CHECK_MPI_OK( mp_init(&d) );
-    CHECK_MPI_OK( mp_init(&phi) );
+    MP_DIGITS(&tmp)   = 0;
+    CHECK_MPI_OK( mp_init(&p)     );
+    CHECK_MPI_OK( mp_init(&q)     );
+    CHECK_MPI_OK( mp_init(&n)     );
+    CHECK_MPI_OK( mp_init(&e)     );
+    CHECK_MPI_OK( mp_init(&d)     );
+    CHECK_MPI_OK( mp_init(&phi)   );
     CHECK_MPI_OK( mp_init(&psub1) );
     CHECK_MPI_OK( mp_init(&qsub1) );
-    CHECK_MPI_OK( mp_init(&tmp) );
+    CHECK_MPI_OK( mp_init(&tmp)   );
     /* 1. Allocate arena & key */
     arena = PORT_NewArena(NSS_FREEBL_DEFAULT_CHUNKSIZE);
     if (!arena) {
@@ -132,6 +132,8 @@ retry:
     CHECK_MPI_OK( mp_mul(&p, &q, &n) );
     MPINT_TO_SECITEM(&n, &key->modulus, arena);
     /* 6.  Compute phi = (p-1)*(q-1) */
+    CHECK_MPI_OK( mp_sub_d(&p, 1, &psub1) );
+    CHECK_MPI_OK( mp_sub_d(&q, 1, &qsub1) );
     CHECK_MPI_OK( mp_mul(&psub1, &qsub1, &phi) );
     /* 7.  Compute d = e**-1 mod(phi) using extended Euclidean algorithm */
     CHECK_MPI_OK( mp_xgcd(&e, &phi, &tmp, &d, NULL) );
@@ -140,11 +142,9 @@ retry:
 	goto retry;
     MPINT_TO_SECITEM(&d, &key->privateExponent, arena);
     /* 8.  Compute exponent1 = d mod (p-1) */
-    CHECK_MPI_OK( mp_sub_d(&p, 1, &psub1) );
     CHECK_MPI_OK( mp_mod(&d, &psub1, &tmp) );
     MPINT_TO_SECITEM(&tmp, &key->exponent1, arena);
     /* 9.  Compute exponent2 = d mod (q-1) */
-    CHECK_MPI_OK( mp_sub_d(&q, 1, &qsub1) );
     CHECK_MPI_OK( mp_mod(&d, &qsub1, &tmp) );
     MPINT_TO_SECITEM(&tmp, &key->exponent2, arena);
     /*10.  Compute coefficient = q**-1 mod p */
