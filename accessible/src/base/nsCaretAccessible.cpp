@@ -165,11 +165,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   nsIViewManager* viewManager = presShell->GetViewManager();
   if (!presContext || !viewManager)
     return NS_OK;
-  nsIView *view = nsnull;
-  viewManager->GetRootView(view);
-  if (!view)
-    return NS_OK;
-  nsIWidget* widget = view->GetWidget();
+  nsIWidget* widget = viewManager->RootView()->GetWidget();
   if (!widget)
     return NS_OK;
 

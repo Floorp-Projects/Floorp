@@ -447,9 +447,9 @@ nsViewManager::nsViewManager()
 
 nsViewManager::~nsViewManager()
 {
-  if (mRootView) {
+  if (RootView()) {
     // Destroy any remaining views
-    mRootView->Destroy();
+    delete RootView();
     mRootView = nsnull;
   }
 
@@ -538,7 +538,7 @@ nsViewManager::CreateRegion(nsIRegion* *result)
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
+nsresult nsViewManager::Init(nsIDeviceContext* aContext, nsIView* aParent)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
 
@@ -557,68 +557,34 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
   mMouseGrabber = nsnull;
   mKeyGrabber = nsnull;
 
+  mRootView = new nsView();
+  if (!mRootView) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mRootView->Init(this, nsRect(0, 0, 0, 0), aParent);
+
+  if (aParent) {
+    NS_STATIC_CAST(nsView*, aParent)->InsertChild(RootView(), nsnull);
+  }
+
   if (nsnull == mEventQueueService) {
     mEventQueueService = do_GetService(kEventQueueServiceCID);
     NS_ASSERTION(mEventQueueService, "couldn't get event queue service");
   }
-  
-  return NS_OK;
-}
 
-NS_IMETHODIMP nsViewManager::GetRootView(nsIView *&aView)
-{
-  aView = mRootView;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView)
-{
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
-
-  // Do NOT destroy the current root view. It's the caller's responsibility
-  // to destroy it
-  mRootView = view;
-
-  if (mRootView) {
-    nsView* parent = mRootView->GetParent();
-    if (parent) {
-      parent->InsertChild(mRootView, nsnull);
-    }
-
-    mRootView->SetZIndex(PR_FALSE, 0, PR_FALSE);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::GetWindowDimensions(nscoord *aWidth, nscoord *aHeight)
-{
-  if (nsnull != mRootView) {
-    nsRect dim;
-    mRootView->GetDimensions(dim);
-    *aWidth = dim.width;
-    *aHeight = dim.height;
-  }
-  else
-    {
-      *aWidth = 0;
-      *aHeight = 0;
-    }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight)
 {
   // Resize the root view
-  if (nsnull != mRootView) {
     nsRect dim(0, 0, aWidth, aHeight);
-    mRootView->SetDimensions(dim);
-  }
+    RootView()->SetDimensions(dim);
 
   //printf("new dims: %d %d\n", aWidth, aHeight);
   // Inform the presentation shell that we've been resized
   if (nsnull != mObserver)
-    mObserver->ResizeReflow(mRootView, aWidth, aHeight);
+    mObserver->ResizeReflow(RootView(), aWidth, aHeight);
   //printf("reflow done\n");
 
   return NS_OK;
@@ -1573,7 +1539,7 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
     return;
   }
 
-  nsView* realRoot = mRootView;
+  nsView* realRoot = RootView();
   while (realRoot->GetParent()) {
     realRoot = realRoot->GetParent();
   }
@@ -1717,7 +1683,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   } else {
     damagedRect.MoveBy(ComputeViewOffset(view));
 
-    nsView* realRoot = mRootView;
+    nsView* realRoot = RootView();
     while (realRoot->GetParent()) {
       realRoot = realRoot->GetParent();
     }
@@ -1741,7 +1707,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
 
 NS_IMETHODIMP nsViewManager::UpdateAllViews(PRUint32 aUpdateFlags)
 {
-  UpdateViews(mRootView, aUpdateFlags);
+  UpdateViews(RootView(), aUpdateFlags);
   return NS_OK;
 }
 
@@ -1780,7 +1746,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // The root view may not be set if this is the resize associated with
             // window creation
 
-            if (view == mRootView)
+            if (view == RootView())
               {
                 // Convert from pixels to twips
                 float p2t;
@@ -1937,14 +1903,14 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             nsView *parent;
 
             parent = baseView;
-            while (mRootView != parent) {
+            while (RootView() != parent) {
               parent->ConvertToParentCoords(&offset.x, &offset.y);
               parent = parent->GetParent();
             }
 
             //Subtract back offset from root of view
             parent = view;
-            while (mRootView != parent) {
+            while (RootView() != parent) {
               parent->ConvertFromParentCoords(&offset.x, &offset.y);
               parent = parent->GetParent();
             }
@@ -2751,7 +2717,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
     if (IsAncestorOf(NS_STATIC_CAST(const nsView*, scrollableClipView), aView)) {
       // add areas of fixed views to the opaque area.
       // This is a bit of a hack. We should not be doing special case processing for fixed views.
-      nsView* fixedView = mRootView->GetFirstChild();
+      nsView* fixedView = RootView()->GetFirstChild();
       while (fixedView != nsnull) {
         if (fixedView->GetZParent() != nsnull && fixedView->GetZIndex() >= 0) {
           opaqueRegion.Or(opaqueRegion, fixedView->GetBounds());
@@ -2871,7 +2837,7 @@ NS_IMETHODIMP nsViewManager::SetViewVisibility(nsIView *aView, nsViewVisibility 
 
 PRBool nsViewManager::IsViewInserted(nsView *aView)
 {
-  if (mRootView == aView) {
+  if (RootView() == aView) {
     return PR_TRUE;
   } else if (aView->GetParent() == nsnull) {
     return PR_FALSE;
@@ -2896,7 +2862,7 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
 
   // don't allow the root view's z-index to be changed. It should always be zero.
   // This could be removed and replaced with a style rule, or just removed altogether, with interesting consequences
-  if (aView == mRootView) {
+  if (aView == RootView()) {
     return rv;
   }
 
@@ -3097,7 +3063,7 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
   mRefreshEnabled = PR_TRUE;
 
   if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
-    ProcessPendingUpdates(mRootView);
+    ProcessPendingUpdates(RootView());
     mHasPendingInvalidates = PR_FALSE;
     Composite();
   } else {
@@ -3943,7 +3909,7 @@ nsViewManager::CacheWidgetChanges(PRBool aCache)
 
   // if we turned it off. Then move and size all the widgets.
   if (mCachingWidgetChanges == 0)
-    ProcessWidgetChanges(mRootView);
+    ProcessWidgetChanges(RootView());
 #endif
 
   return NS_OK;
@@ -3967,7 +3933,7 @@ NS_IMETHODIMP
 nsViewManager::FlushPendingInvalidates()
 {
   if (mHasPendingInvalidates) {
-    ProcessPendingUpdates(mRootView);
+    ProcessPendingUpdates(RootView());
     mHasPendingInvalidates = PR_FALSE;
   }
   return NS_OK;

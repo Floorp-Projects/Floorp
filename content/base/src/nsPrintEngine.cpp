@@ -234,7 +234,6 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aD
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
-static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
 static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
@@ -2610,7 +2609,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
     return rv;
   }
 
-  rv = aPO->mViewManager->Init(mPrt->mPrintDocDC);
+  rv = aPO->mViewManager->Init(mPrt->mPrintDocDC, nsnull);
   if (NS_FAILED(rv)) {
     delete aPO->mStyleSet;
     return rv;
@@ -2659,12 +2658,8 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 
   nsRect tbounds = nsRect(0, 0, width, height);
 
-  // Create a child window of the parent that is our "root view/window"
-  rv = CallCreateInstance(kViewCID, &aPO->mRootView);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = (aPO->mRootView)->Init(aPO->mViewManager, tbounds, nsnull);
+  aPO->mRootView = aPO->mViewManager->RootView();
+  rv = aPO->mViewManager->ResizeView(aPO->mRootView, tbounds);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2708,7 +2703,6 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
 #endif // NS_PRINT_PREVIEW
 
   // Setup hierarchical relationship in view manager
-  aPO->mViewManager->SetRootView(aPO->mRootView);
   aPO->mPresShell->Init(aPO->mDocument, aPO->mPresContext,
                         aPO->mViewManager, aPO->mStyleSet,
                         mPresContext->CompatibilityMode());
@@ -4753,11 +4747,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
     if (shell) {
       nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
-        nsIView* root;
-        vm->GetRootView(root);
-        if (nsnull != root) {
-          root->List(out);
-        }
+        vm->RootView()->List(out);
       }
     }
     else {

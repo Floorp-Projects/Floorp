@@ -456,7 +456,6 @@ protected:
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
-static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
 //------------------------------------------------------------------
 nsresult
@@ -1653,11 +1652,7 @@ DocumentViewerImpl::SetEnableRendering(PRBool aOn)
   if (mViewManager) {
     if (aOn) {
       mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-      nsIView* view;
-      mViewManager->GetRootView(view);   // views are not refCounted
-      if (view) {
-        mViewManager->UpdateView(view, NS_VMREFRESH_IMMEDIATE);
-      }
+      mViewManager->UpdateView(mViewManager->RootView(), NS_VMREFRESH_IMMEDIATE);
     }
     else {
       mViewManager->DisableRefresh();
@@ -1844,12 +1839,6 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   p2t = mPresContext->PixelsToTwips();
   tbounds *= p2t;
 
-   // Initialize the view manager with an offset. This allows the viewmanager
-   // to manage a coordinate space offset from (0,0)
-  rv = mViewManager->Init(dx);
-  if (NS_FAILED(rv))
-    return rv;
-
   // Reset the bounds offset so the root view is set to 0,0. The
   // offset is specified in nsIViewManager::Init above.
   // Besides, layout will reset the root view to (0,0) during reflow,
@@ -1860,11 +1849,6 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
 
   // Create a child window of the parent that is our "root view/window"
   // Create a view
-
-  nsIView *view = nsnull;
-  rv = CallCreateInstance(kViewCID, &view);
-  if (NS_FAILED(rv))
-    return rv;
 
   // if aParentWidget has a view, we'll hook our view manager up to its view tree
   void* clientData;
@@ -1908,9 +1892,12 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
     }
   }
 
-  rv = view->Init(mViewManager, tbounds, containerView);
+  rv = mViewManager->Init(dx, containerView);
   if (NS_FAILED(rv))
     return rv;
+
+  nsIView* view = mViewManager->RootView();
+  mViewManager->ResizeView(view, tbounds);
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mContainer));
   NS_ENSURE_TRUE(treeItem, NS_ERROR_FAILURE);
@@ -1934,9 +1921,6 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
                           PR_TRUE, PR_FALSE, contentType);
   if (NS_FAILED(rv))
     return rv;
-
-  // Setup hierarchical relationship in view manager
-  mViewManager->SetRootView(view);
 
   mWindow = view->GetWidget();
 
