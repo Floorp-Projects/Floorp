@@ -1,0 +1,2 @@
+# target: brprof.shlb
+mozilla/rdf/brprof/src/nsBrowsingProfile.cpp
