@@ -902,7 +902,7 @@ nsRDFElement::SetAttribute(const nsString& aName,
 NS_IMETHODIMP
 nsRDFElement::GetAttribute(const nsString& aName, nsString& aResult) const
 {
-    nsresult rv = NS_CONTENT_ATTR_NO_VALUE;
+    nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
 
     if (mAttributes) {
         AttributeKey key(aName);
