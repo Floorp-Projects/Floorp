@@ -71,7 +71,21 @@ public:
     mValue.mFloat = aValue;
     mType = CSS_NUMBER;
   }
-  
+
+  void SetNumber(PRInt32 aValue)
+  {
+    Reset();
+    mValue.mFloat = float(aValue);
+    mType = CSS_NUMBER;
+  }
+
+  void SetNumber(PRUint32 aValue)
+  {
+    Reset();
+    mValue.mFloat = float(aValue);
+    mType = CSS_NUMBER;
+  }
+
   void SetPercent(float aValue)
   {
     Reset();
@@ -86,46 +100,77 @@ public:
     mType = CSS_PX;
   }
 
+  void SetTwips(float aValue)
+  {
+    Reset();
+    mValue.mTwips = nscoord(aValue);
+    mType = CSS_PX;
+  }
+
   void SetIdent(const nsACString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = (mValue.mString != nsnull) ? CSS_IDENT : CSS_UNKNOWN;
+    if (mValue.mString) {
+      mType = CSS_IDENT;
+    } else {
+      mType = CSS_UNKNOWN;
+    }
   }
 
   void SetIdent(const nsAString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = (mValue.mString != nsnull) ? CSS_IDENT : CSS_UNKNOWN;
+    if (mValue.mString) {
+      mType = CSS_IDENT;
+    } else {
+      mType = CSS_UNKNOWN;
+    }
   }
 
   void SetString(const nsACString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = (mValue.mString != nsnull) ? CSS_STRING : CSS_UNKNOWN;
+    if (mValue.mString) {
+      mType = CSS_STRING;
+    } else {
+      mType = CSS_UNKNOWN;
+    }
   }
 
   void SetString(const nsAString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = (mValue.mString != nsnull) ? CSS_STRING : CSS_UNKNOWN;
+    if (mValue.mString) {
+      mType = CSS_STRING;
+    } else {
+      mType = CSS_UNKNOWN;
+    }
   }
 
   void SetURI(const nsACString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = (mValue.mString != nsnull) ? CSS_URI : CSS_UNKNOWN;
+    if (mValue.mString) {
+      mType = CSS_URI;
+    } else {
+      mType = CSS_UNKNOWN;
+    }
   }
 
   void SetURI(const nsAString& aString)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
-    mType = (mValue.mString != nsnull) ? CSS_URI : CSS_UNKNOWN;
+    if (mValue.mString) {
+      mType = CSS_URI;
+    } else {
+      mType = CSS_UNKNOWN;
+    }
   }
 
   void SetColor(nsIDOMRGBColor* aColor)

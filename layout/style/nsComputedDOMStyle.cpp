@@ -1785,7 +1785,7 @@ nsComputedDOMStyle::GetLineHeight(nsIFrame *aFrame,
   else if (text) {
     switch (text->mLineHeight.GetUnit()) {
       case eStyleUnit_Percent:
-        val->SetPercent(text->mLineHeight.GetCoordValue());
+        val->SetPercent(text->mLineHeight.GetPercentValue());
         break;
       case eStyleUnit_Factor:
         val->SetNumber(text->mLineHeight.GetFactorValue());
