@@ -412,12 +412,31 @@ sub PasswordForLogin {
     return $result;
 }
 
+sub get_netaddr {
+    my ($ipaddr) = @_;
+
+    # Check for a valid IPv4 addr which we know how to parse
+    if ($ipaddr !~ /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/) {
+        return undef;
+    }
+
+    my $addr = unpack("N", pack("CCCC", split(/\./, $ipaddr)));
+
+    my $maskbits = Param('loginnetmask');
+
+    $addr >>= (32-$maskbits);
+    $addr <<= (32-$maskbits);
+    return join(".", unpack("CCCC", pack("N", $addr)));
+}
+
 sub quietly_check_login() {
     $::disabledreason = '';
     my $userid = 0;
+    my $ipaddr = $ENV{'REMOTE_ADDR'};
+    my $netaddr = get_netaddr($ipaddr);
     if (defined $::COOKIE{"Bugzilla_login"} &&
         defined $::COOKIE{"Bugzilla_logincookie"}) {
-        SendSQL("SELECT profiles.userid," .
+        my $query = "SELECT profiles.userid," .
                 " profiles.login_name, " .
                 " profiles.disabledtext " .
                 " FROM profiles, logincookies WHERE logincookies.cookie = " .
@@ -425,8 +444,14 @@ sub quietly_check_login() {
                 " AND profiles.userid = logincookies.userid AND" .
                 " profiles.login_name = " .
                 SqlQuote($::COOKIE{"Bugzilla_login"}) .
-                " AND logincookies.ipaddr = " .
-                SqlQuote($ENV{"REMOTE_ADDR"}));
+                " AND (logincookies.ipaddr = " .
+                SqlQuote($ipaddr);
+        if (defined $netaddr) {
+            $query .= " OR logincookies.ipaddr = " . SqlQuote($netaddr);
+        }
+        $query .= ")";
+        SendSQL($query);
+
         my @row;
         if (MoreSQLData()) {
             ($userid, my $loginname, my $disabledtext) = FetchSQLData();
@@ -728,7 +753,16 @@ sub confirm_login {
      # the cookies.
      if($enteredlogin ne "") {
        $::COOKIE{"Bugzilla_login"} = $enteredlogin;
-       SendSQL("insert into logincookies (userid,ipaddr) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ENV{'REMOTE_ADDR'})]})");
+       my $ipaddr = $ENV{'REMOTE_ADDR'};
+
+       # Unless we're restricting the login, or restricting would have no
+       # effect, loosen the IP which we record in the table
+       unless ($::FORM{'Bugzilla_restrictlogin'} ||
+               Param('loginnetmask') == 32) {
+           $ipaddr = get_netaddr($ipaddr);
+           $ipaddr = $ENV{'REMOTE_ADDR'} unless defined $ipaddr;
+       }
+       SendSQL("insert into logincookies (userid,ipaddr) values (@{[DBNameToIdAndCheck($enteredlogin)]}, @{[SqlQuote($ipaddr)]})");
        SendSQL("select LAST_INSERT_ID()");
        my $logincookie = FetchOneColumn();
 

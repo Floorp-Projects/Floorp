@@ -38,8 +38,8 @@
 
 <form action="[% target %]" method="POST">
   <table>
-    [% IF Param("useLDAP") %]
-      <tr>
+    <tr>
+      [% IF Param("useLDAP") %]
         <td align="right">
           <b>Username:</b>
         </td>
@@ -54,9 +54,7 @@
         <td>
           <input type="password" size="10" name="LDAP_password">
         </td>
-      </tr>
-    [% ELSE %]
-      <tr>
+      [% ELSE %]
         <td align="right">
           <b>E-mail address:</b>
         </td>
@@ -71,8 +69,23 @@
         <td>
           <input type="password" size="35" name="Bugzilla_password">
         </td>
+      [% END %]
+    [% IF Param('loginnetmask') < 32 %]
+      <tr>
+        <td align="right">
+          <b>
+             Restrict this session<br>
+             to this IP address:
+          </b>
+        </td>
+        <td>
+          <input type="checkbox" name="Bugzilla_restrictlogin"
+                 checked="checked">
+          (Using this option increases security)
+        </td>
       </tr>
     [% END %]
+    </tr>
   </table>
   
   [% PROCESS "global/hidden-fields.html.tmpl"   

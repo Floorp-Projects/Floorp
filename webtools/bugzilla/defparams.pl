@@ -111,6 +111,21 @@ sub check_webdotbase {
     return "";
 }
 
+sub check_netmask {
+    my ($mask) = @_;
+    my $res = check_numeric($mask);
+    return $res if $res;
+    if ($mask < 0 || $mask > 32) {
+        return "an IPv4 netmask must be between 0 and 32 bits";
+    }
+    # Note that if we changed the netmask from anything apart from 32, then
+    # existing logincookies which aren't for a single IP won't work
+    # any more. We can't know which ones they are, though, so they'll just
+    # take space until they're preiodically cleared, later.
+
+    return "";
+}
+
 # OK, here are the parameter definitions themselves.
 #
 # Each definition is a hash with keys:
@@ -844,6 +859,17 @@ Reason: %reason%
            'comments and attachments.',
    type => 't',
    default => ''
+  },
+
+  {
+   name => 'loginnetmask',
+   desc => 'The number of bits for the netmask used if a user chooses to ' .
+           'allow a login to be valid for more than a single IP. Setting ' .
+           'this to 32 disables this feature.<br>' .
+           'Note that enabling this may decrease the security of your system.',
+   type => 't',
+   default => '32',
+   checker => \&check_netmask
   },
 );
 
