@@ -129,25 +129,6 @@ extern char *SEC_ReadDongleFile(int fd);
 
 /* End stolen headers */
 
-
-/* Get the Key ID (modulus) from the cert with the given nickname. */
-extern SECItem * SECU_GetKeyIDFromNickname(char *name);
-
-/* Change the key db password in the database */
-extern SECStatus SECU_ChangeKeyDBPassword(SECKEYKeyDBHandle *kdbh);
-
-/* Check if a key name exists. Return PR_TRUE if true, PR_FALSE if not */
-extern PRBool SECU_CheckKeyNameExists(SECKEYKeyDBHandle *handle, char *nickname);
-
-/* Find a key by a nickname. Calls SECKEY_FindKeyByName */
-extern SECKEYLowPrivateKey *SECU_GetPrivateKey(SECKEYKeyDBHandle *kdbh, char *nickname);
-
-/* Get key encrypted with dongle file in "pathname" */
-extern SECKEYLowPrivateKey *SECU_GetPrivateDongleKey(SECKEYKeyDBHandle *handle, 
-                                               char *nickname, char *pathname);
-
-extern SECItem *SECU_GetPassword(void *arg, SECKEYKeyDBHandle *handle);
-
 /* Just sticks the two strings together with a / if needed */
 char *SECU_AppendFilenameToDir(char *dir, char *filename);
 
@@ -161,17 +142,6 @@ extern char *SECU_DefaultSSLDir(void);
 ** If 'base' is NULL, defaults to set to .netscape in home directory.
 */
 extern char *SECU_ConfigDirectory(const char* base);
-
-
-extern char *SECU_CertDBNameCallback(void *arg, int dbVersion);
-extern char *SECU_KeyDBNameCallback(void *arg, int dbVersion);
-
-extern SECKEYPrivateKey *SECU_FindPrivateKeyFromNickname(char *name);
-extern SECKEYLowPrivateKey *SECU_FindLowPrivateKeyFromNickname(char *name);
-extern SECStatus SECU_DeleteKeyByName(SECKEYKeyDBHandle *handle, char *nickname);
-
-extern SECKEYKeyDBHandle *SECU_OpenKeyDB(PRBool readOnly);
-extern CERTCertDBHandle *SECU_OpenCertDB(PRBool readOnly);
 
 /* 
 ** Basic callback function for SSL_GetClientAuthDataHook
@@ -233,9 +203,6 @@ extern void SECU_PrintUTCTime(FILE *out, SECItem *t, char *m, int level);
 extern void SECU_PrintGeneralizedTime(FILE *out, SECItem *t, char *m,
 				      int level);
 
-/* Dump all key nicknames */
-extern int SECU_PrintKeyNames(SECKEYKeyDBHandle *handle, FILE *out);
-
 /* callback for listing certs through pkcs11 */
 extern SECStatus SECU_PrintCertNickname(CERTCertificate *cert, void *data);
 
@@ -260,8 +227,10 @@ extern void SECU_PrintTrustFlags(FILE *out, CERTCertTrust *trust, char *m, int l
 /* Dump contents of public key */
 extern int SECU_PrintPublicKey(FILE *out, SECItem *der, char *m, int level);
 
+#ifdef HAVE_EPV_TEMPLATE
 /* Dump contents of private key */
 extern int SECU_PrintPrivateKey(FILE *out, SECItem *der, char *m, int level);
+#endif
 
 /* Print the MD5 and SHA1 fingerprints of a cert */
 extern int SECU_PrintFingerprints(FILE *out, SECItem *derCert, char *m,
@@ -288,8 +257,10 @@ extern void SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 
 extern void SECU_PrintName(FILE *out, CERTName *name, char *msg, int level);
 
+#ifdef SECU_GetPassword
 /* Convert a High public Key to a Low public Key */
 extern SECKEYLowPublicKey *SECU_ConvHighToLow(SECKEYPublicKey *pubHighKey);
+#endif
 
 extern SECItem *SECU_GetPBEPassword(void *arg);
 
