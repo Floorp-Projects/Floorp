@@ -1190,7 +1190,7 @@ void LargeBlockFree(void *block, void *refcon)
 
 SubHeapAllocationChunk * LargeBlockAllocChunk ( size_t blockSize, void * refcon )
 {
-	LargeBlockAllocationRoot *	root = refcon;
+	LargeBlockAllocationRoot *	root = (LargeBlockAllocationRoot *)refcon;
 	UInt32						bestHeapSize;
 	UInt32						smallestHeapSize;
 	Boolean						useTemp;
@@ -1314,7 +1314,7 @@ size_t LargeBlockSize (void *block, void *refcon)
 void LargeBlockHeapFree(size_t blockSize, FreeMemoryStats * stats, void * refcon)
 {
 #pragma unused(blockSize, refcon)
-	LargeBlockAllocationRoot *	root = refcon;
+	LargeBlockAllocationRoot *	root = (LargeBlockAllocationRoot *)refcon;
 	LargeBlockAllocationChunk *	chunk;
 	uint32						freeBytes;
 	uint32						totalBytes;
@@ -1477,7 +1477,7 @@ void FixedSizeFree(void *block, void *refcon)
 
 SubHeapAllocationChunk * FixedSizeAllocChunk ( size_t blockSize, void * refcon )
 {
-	FixedSizeAllocationRoot *			root = refcon;
+	FixedSizeAllocationRoot *			root = (FixedSizeAllocationRoot *)refcon;
 	UInt32								chunkSize;
 	FixedSizeAllocationChunk *			chunk;
 	FixedMemoryFreeBlockHeader *		freePtr;
@@ -1582,7 +1582,7 @@ size_t FixedBlockSize (void *block, void *refcon)
 void FixedBlockHeapFree(size_t blockSize, FreeMemoryStats * stats, void * refcon)
 {
 #pragma unused(blockSize)
-	FixedSizeAllocationRoot *			root = refcon;
+	FixedSizeAllocationRoot *			root = (FixedSizeAllocationRoot *)refcon;
 	FixedSizeAllocationChunk *			chunk;
 	uint32								freeBlocks;
 	uint32								totalBytes;
@@ -1946,7 +1946,7 @@ void SmallHeapFree(void *address, void *refcon)
 SubHeapAllocationChunk * SmallHeapAllocChunk ( size_t blockSize, void * refcon )
 {
 #pragma unused(blockSize)
-	SmallHeapRoot *			root = refcon;
+	SmallHeapRoot *			root = (SmallHeapRoot *)refcon;
 	SmallHeapChunk *		chunk;
 	Boolean					useTemp;
 	Size					heapSize;
@@ -2050,7 +2050,7 @@ size_t SmallBlockSize (void *block, void *refcon)
 void SmallBlockHeapFree(size_t blockSize, FreeMemoryStats * stats, void * refcon)
 {
 #pragma unused(blockSize)
-	SmallHeapRoot *			root = refcon;
+	SmallHeapRoot *			root = (SmallHeapRoot *)refcon;
 	SmallHeapChunk *		chunk;
 	uint32					freeBytes;
 	uint32					totalBytes;
