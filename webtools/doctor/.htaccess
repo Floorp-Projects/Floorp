@@ -1,0 +1,22 @@
+# Note that uncommenting these options will generate an internal server error
+# if the global Apache configuration file doesn't explicitly enable their use
+# for this directory via the appropriate AllowOverride statement.
+
+# Uncomment this to enable CGI scripts in this directory in lieu of
+# changing this in the global Apache configuration file.
+# Requires "AllowOverride Options" to be enabled for this directory.
+#Options +ExecCGI
+#AddHandler cgi-script cgi
+
+# Uncomment this to execute doctor.cgi automatically when the user requests
+# the directory (i.e. http://yoursite/doctor/).
+# Requires "AllowOverride Indexes" to be enabled for this directory.
+#DirectoryIndex doctor.cgi
+
+# IMPORTANT! Uncomment this to restrict access to doctor.conf.  This prevents
+# users from accessing the configuration file, which may contain sensitive CVS
+# authentication info (i.e. username, password).
+# Requires "AllowOverride Limit" to be enabled for this directory.
+#<Files doctor.conf>
+#  Deny from all
+#</Files>

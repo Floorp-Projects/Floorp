@@ -7,12 +7,13 @@ can get via CPAN:
 
 perl -MCPAN -e"install Template, AppConfig, File::Temp, Text::Diff, Email::Valid, and MIME::Entity"
 
-Finally, put the doctor directory into your web server's cgi-bin directory
+Then configure your web server to serve Doctor files correctly.  See the
+.htaccess file for an explanation of the configuration options, but note that
+you should add the options to the global Apache configuration file if you have
+access to it since the global file is much more performant than .htaccess.
+
+Finally, put the doctor/ directory into your web server's cgi-bin/ directory
 (or another location where you can run CGI scripts) and browse to doctor.cgi.
 
-You may also want to edit the templates in the templates/ sub-directory
-to refer to your own site instead of mozilla.org's.
-
-Note that doctor.conf may contain a CVS write password you don't want anyone
-to know.  The .htaccess file restricts access to that file for Apache
-if this feature is enabled in .htaccess files.  Check and make sure!
+You may want to edit the templates in the templates/ subdirectory to refer
+to your own website instead of the mozilla.org website.
