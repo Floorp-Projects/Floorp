@@ -163,6 +163,10 @@ public:
                           const char* leafName,
                           nsIUrlListener* urlListener,
                           nsIURI** url) = 0;
+    NS_IMETHOD DeleteFolder(nsIEventQueue* aClientEventQ,
+                            nsIMsgFolder* aFolder,
+                            nsIUrlListener* urlListener,
+                            nsIURI** url) = 0;
 };
 
 
