@@ -4657,8 +4657,10 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 	char * expires = NULL;
 	char * expireDate = NULL;
 
-        char *fixed_name = net_FixQuoted(cookie->name);
-        char *fixed_value = net_FixQuoted(cookie->cookie);
+	char *fixed_name = net_FixQuoted(cookie->name);
+	char *fixed_value = net_FixQuoted(cookie->cookie);
+	char *fixed_domain_or_host = net_FixQuoted(cookie->host);
+	char *fixed_path = net_FixQuoted(cookie->path);
 
 	StrAllocCopy (name, XP_GetString(MK_ACCESS_NAME));
 	StrAllocCopy (value, XP_GetString(MK_ACCESS_VALUE));
@@ -4696,14 +4698,16 @@ net_DisplayCookieInfoAsHTML(MWContext *context, char* host)
 	    cookieNum,
 	    name, fixed_name,
 	    value, fixed_value,
-	    domain_or_host, cookie->host,
-	    path, cookie->path,
+	    domain_or_host, fixed_domain_or_host,
+	    path, fixed_path,
 	    secure, yes_or_no,
 	    expires, expireDate
 	    );
 	FLUSH_BUFFER
-        PR_FREEIF(fixed_name);
-        PR_FREEIF(fixed_value);
+	PR_FREEIF(fixed_name);
+	PR_FREEIF(fixed_value);
+	PR_FREEIF(fixed_domain_or_host);
+	PR_FREEIF(fixed_path);
 	PR_FREEIF(name);
 	PR_FREEIF(value);
 	PR_FREEIF(domain_or_host);
