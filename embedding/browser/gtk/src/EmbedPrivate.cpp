@@ -361,7 +361,13 @@ EmbedPrivate::Destroy(void)
 void
 EmbedPrivate::SetURI(const char *aURI)
 {
+#ifdef MOZ_WIDGET_GTK
   mURI.AssignWithConversion(aURI);
+#endif
+
+#ifdef MOZ_WIDGET_GTK2
+  mURI.Assign(NS_ConvertUTF8toUCS2(aURI));
+#endif
 }
 
 void
