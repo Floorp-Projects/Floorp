@@ -924,6 +924,9 @@ protected:
                                  nsIFrame*                aPrevSibling,
                                  nsFrameItems&            aFrameItems);
 
+  nsresult RemoveFixedItems(nsIPresContext& aPresContext,
+                            nsIPresShell&   aPresShell);
+
 protected:
   nsIDocument*        mDocument;
 
