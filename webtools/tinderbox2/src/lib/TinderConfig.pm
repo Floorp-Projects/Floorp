@@ -4,9 +4,9 @@
 
 
 
-# $Revision: 1.12 $ 
-# $Date: 2000/11/13 23:00:16 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.13 $ 
+# $Date: 2000/11/14 15:41:01 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -70,9 +70,9 @@ $GLOBAL_INDEX_FILE = "index.html";
 # Error log filename:
 
 $ERROR_LOG = "/var/log/tinderbox/log";
-
+  
 # Where the daemon mode lock (for all trees) is placed
-$LOCK_FILE = "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock";
+$LOCK_FILE = $TINDERBOX_DATA_DIR."/tinderd.lock";
 
 # The time between auto refreshes for all pages in seconds.
 
@@ -180,8 +180,9 @@ $VCDisplayImpl = (
 
 
 # Pick one method for storting data, Data::Dumper is slow but text
-# files allows great debugging capabilities and Storable (not yet
-# tested) which is much faster but binary format.
+# files allows great debugging capabilities and Storable, availible
+# from CPAN, (not yet fully implemented or tested) which is a much
+# faster binary format.
 
 $PersistenceImpl = (
                     'Persistence::Dumper',
