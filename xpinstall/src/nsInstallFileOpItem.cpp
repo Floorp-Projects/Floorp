@@ -270,11 +270,15 @@ PRInt32 nsInstallFileOpItem::Complete()
   return ret;
 }
   
+#define RESBUFSIZE 4096
 char* nsInstallFileOpItem::toString()
 {
   nsString result;
-  char*    resultCString;
+  char*    resultCString = new char[RESBUFSIZE];
+  char*    rsrcVal = nsnull;
   char*    temp;
+  char*    srcPath;
+  char*    dstPath;
 
   // XXX these hardcoded strings should be replaced by nsInstall::GetResourcedString(id)
 
@@ -283,80 +287,132 @@ char* nsInstallFileOpItem::toString()
   switch(mCommand)
   {
     case NS_FOP_FILE_COPY:
-      result.AssignWithConversion("Copy File: ");
-      mSrc->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      result.AppendWithConversion(" to ");
-      mTarget->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      resultCString = result.ToNewCString();
+      if((mSrc == nsnull) || (mTarget == nsnull))
+        break;
+
+      mSrc->GetPath(&srcPath);
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("CopyFile"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
     case NS_FOP_FILE_DELETE:
-     result.AssignWithConversion("Delete File: ");
-      mTarget->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      resultCString = result.ToNewCString();
+      if(mTarget == nsnull)
+        break;
+
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("DeleteFile"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
     case NS_FOP_FILE_EXECUTE:
-      result.AssignWithConversion("Execute File: ");
-      mTarget->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      result.AppendWithConversion(" ");
-      result.Append(*mParams);
-      resultCString = result.ToNewCString();
+      if(mTarget == nsnull)
+        break;
+
+      mTarget->GetPath(&dstPath);
+
+      temp = mParams->ToNewCString();
+      if((temp != nsnull) && (*temp != '\0'))
+      {
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ExecuteWithArgs"));
+        if(rsrcVal != nsnull)
+          PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath, temp);
+      }
+      else
+      {
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Execute"));
+        if(rsrcVal != nsnull)
+          PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath);
+      }
+
+      if(temp != nsnull)
+        Recycle(temp);
+
       break;
     case NS_FOP_FILE_MOVE:
-      result.AssignWithConversion("Move File: ");
-      mSrc->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      result.AppendWithConversion(" to ");
-      mTarget->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      resultCString = result.ToNewCString();
+      if((mSrc == nsnull) || (mTarget == nsnull))
+        break;
+
+      mSrc->GetPath(&srcPath);
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("MoveFile"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
     case NS_FOP_FILE_RENAME:
-      result.AssignWithConversion("Rename File: ");
-      result.Append(*mStrTarget);
-      resultCString = result.ToNewCString();
+      if((mSrc == nsnull) || (mTarget == nsnull))
+        break;
+
+      mSrc->GetPath(&srcPath);
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("RenameFile"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
     case NS_FOP_DIR_CREATE:
-      result.AssignWithConversion("Create Folder: ");
-      mTarget->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      resultCString = result.ToNewCString();
+      if(mTarget == nsnull)
+        break;
+
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("CreateFolder"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
     case NS_FOP_DIR_REMOVE:
-      result.AssignWithConversion("Remove Folder: ");
-      mTarget->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      resultCString = result.ToNewCString();
+      if(mTarget == nsnull)
+        break;
+
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("RemoveFolder"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
     case NS_FOP_DIR_RENAME:
-      result.AssignWithConversion("Rename Dir: ");
-      result.Append(*mStrTarget);
-      resultCString = result.ToNewCString();
+      if((mSrc == nsnull) || (mTarget == nsnull))
+        break;
+
+      mSrc->GetPath(&srcPath);
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("RenameFolder"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
     case NS_FOP_WIN_SHORTCUT:
-      result.AssignWithConversion("Windows Shortcut: ");
-      mShortcutPath->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      result.AppendWithConversion("\\");
-      result.Append(*mDescription);
-      resultCString = result.ToNewCString();
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("WindowsShortcut"));
+      if(rsrcVal != nsnull)
+      {
+        mShortcutPath->GetPath(&temp);
+        result.AssignWithConversion(temp);
+        result.AppendWithConversion("\\");
+        result.Append(*mDescription);
+        dstPath = result.ToNewCString();
+        if(dstPath != nsnull)
+        {
+          PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
+          Recycle(dstPath);
+        }
+      }
       break;
     case NS_FOP_MAC_ALIAS:
-      result.AssignWithConversion("Mac Alias: ");
-      mSrc->GetPath(&temp);
-      result.AppendWithConversion(temp);
-      resultCString = result.ToNewCString();
+      if(mTarget == nsnull)
+        break;
+
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("MacAlias"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
     case NS_FOP_UNIX_LINK:
       break;
     default:
-      result.AssignWithConversion("Unkown file operation command!");
-      resultCString = result.ToNewCString();
+      if(rsrcVal != nsnull)
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("UnknownFileOpCommand"));
       break;
   }
+
+  if(rsrcVal)
+    Recycle(rsrcVal);
+
   return resultCString;
 }
 
@@ -391,6 +447,7 @@ PRInt32 nsInstallFileOpItem::Prepare()
       ret = NativeFileOpDirRenamePrepare();
       break;
     case NS_FOP_WIN_SHORTCUT:
+      ret = NativeFileOpWindowsShortcutPrepare();
       break;
     case NS_FOP_MAC_ALIAS:
       break;
@@ -1031,6 +1088,46 @@ nsInstallFileOpItem::NativeFileOpDirRenameAbort()
     if(leafName)
       nsCRT::free(leafName);
   }
+
+  return ret;
+}
+
+PRInt32
+nsInstallFileOpItem::NativeFileOpWindowsShortcutPrepare()
+{
+  PRInt32 ret = nsInstall::SUCCESS;
+
+#ifdef _WINDOWS
+  nsCOMPtr<nsIFile> tempVar;
+  PRBool            flagExists;
+
+  if(mShortcutPath)
+  {
+    mShortcutPath->Clone(getter_AddRefs(tempVar));
+    tempVar->Exists(&flagExists);
+    if(!flagExists)
+    {
+      tempVar->Create(1, 0755);
+      tempVar->Exists(&flagExists);
+      if(!flagExists)
+        ret = nsInstall::ACCESS_DENIED;
+    }
+    else
+    {
+      tempVar->Append("NSTestDir");
+      tempVar->Create(1, 0755);
+      tempVar->Exists(&flagExists);
+      if(!flagExists)
+        ret = nsInstall::ACCESS_DENIED;
+      else
+        tempVar->Delete(0);
+    }
+  }
+
+  if(nsInstall::SUCCESS == ret)
+    mAction = nsInstallFileOpItem::ACTION_SUCCESS;
+
+#endif
 
   return ret;
 }

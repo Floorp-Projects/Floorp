@@ -144,6 +144,7 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32       NativeFileOpFileRenamePrepare();
     PRInt32       NativeFileOpFileRenameComplete();
     PRInt32       NativeFileOpFileRenameAbort();
+    PRInt32       NativeFileOpWindowsShortcutPrepare();
     PRInt32       NativeFileOpWindowsShortcutComplete();
     PRInt32       NativeFileOpWindowsShortcutAbort();
     PRInt32       NativeFileOpMacAliasComplete();
