@@ -161,6 +161,8 @@ static unsigned gFirstUserCollection = 0;
     // at some point, f'd up setting the bookmark toolbar folder special flag.
     // this'll handle that little boo-boo for the time being
     [[self toolbarFolder] setIsToolbar:YES];
+    [[self toolbarFolder] setTitle:NSLocalizedString(@"Bookmark Bar",@"Bookmark Bar")];
+    [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu","Bookmark Menu")]; 
     // don't do this until after we've read in the bookmarks
     mUndoManager = [[NSUndoManager alloc] init];
     // Generic notifications for Bookmark Client
