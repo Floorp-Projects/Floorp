@@ -672,15 +672,17 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
   if (!crypt0) {
     return NS_ERROR_FAILURE;
   }
-  crypt = (char *)PR_Malloc(PL_strlen(PREFIX) + PL_strlen(crypt0) + 1);
+  PRUint32 PREFIX_len = sizeof (PREFIX) - 1;
+  PRUint32 crypt0_len = PL_strlen(crypt0);
+  crypt = (char *)PR_Malloc(PREFIX_len + crypt0_len + 1);
   PRUint32 i;
-  for (i=0; i<PL_strlen(PREFIX); i++) {
+  for (i=0; i<PREFIX_len; i++) {
     crypt[i] = PREFIX[i];
   }
-  for (i=0; i<PL_strlen(crypt0); i++) {
-    crypt[PL_strlen(PREFIX)+i] = crypt0[i];
+  for (i=0; i<crypt0_len; i++) {
+    crypt[PREFIX_len+i] = crypt0[i];
   }
-  crypt[PL_strlen(PREFIX) + PL_strlen(crypt0)] = '\0';
+  crypt[PREFIX_len + crypt0_len] = '\0';
   Recycle(crypt0);
 
   return NS_OK;
@@ -709,12 +711,13 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
 
   /* otherwise do our own de-obscuring */
 
-  if (PL_strlen(crypt) == PL_strlen(PREFIX)) {
+  PRUint32 PREFIX_len = sizeof(PREFIX) - 1;
+  if (PL_strlen(crypt) == PREFIX_len) {
     text = (char *)PR_Malloc(1);
     text[0] = '\0';
     return NS_OK;
   }
-  text = PL_Base64Decode(&crypt[PL_strlen(PREFIX)], 0, NULL);
+  text = PL_Base64Decode(&crypt[PREFIX_len], 0, NULL);
   if (!text) {
     return NS_ERROR_FAILURE;
   }
@@ -794,7 +797,8 @@ Wallet_Decrypt(const nsString& crypt, nsString& text) {
   text.Truncate(0);
   text.SetCapacity(2 * crypt.Length());
   
-  for (PRUint32 i=0; i<PL_strlen(UTF8textCString); ) {
+  PRUint32 UTF8textCString_len = PL_strlen(UTF8textCString);
+  for (PRUint32 i=0; i<UTF8textCString_len; ) {
     c1 = (PRUnichar)UTF8textCString[i++];    
     if ((c1 & 0x80) == 0x00) {
       text += c1;
@@ -2618,7 +2622,7 @@ wallet_GetNextInString(const nsString& str, nsString& head, nsString& tail) {
     return -1;
   }
   str.Left(head, separator);
-  str.Mid(tail, separator+PL_strlen(SEPARATOR), str.Length() - (separator+PL_strlen(SEPARATOR)));
+  str.Mid(tail, separator+sizeof(SEPARATOR)-1, str.Length() - (separator+sizeof(SEPARATOR)-1));
   return 0;
 }
 
@@ -3031,7 +3035,7 @@ WLLT_ClearUserData() {
 PUBLIC void
 WLLT_DeletePersistentUserData() {
 
-  if (schemaValueFileName && nsCRT::strlen(schemaValueFileName)) {
+  if (schemaValueFileName && schemaValueFileName[0]) {
     nsFileSpec fileSpec;
     nsresult rv = Wallet_ProfileDirectory(fileSpec);
     if (NS_SUCCEEDED(rv)) {

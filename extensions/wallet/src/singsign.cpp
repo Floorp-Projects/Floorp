@@ -394,7 +394,7 @@ si_CheckGetPassword
   nsresult res;
 
   PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
-  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
+  if (dialogTitle == nsnull || dialogTitle[0] == 0)
     prompt_string = Wallet_Localize("PromptForPassword");
   PRUnichar * check_string;
   
@@ -445,7 +445,7 @@ si_CheckGetData
   nsresult res;  
 
   PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
-  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
+  if (dialogTitle == nsnull || dialogTitle[0] == 0)
     prompt_string = Wallet_Localize("PromptForData");
   PRUnichar * check_string;
 
@@ -469,7 +469,7 @@ si_CheckGetData
                        check_value,
                        &confirmed);
 
-  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
+  if (dialogTitle == nsnull || dialogTitle[0] == 0)
     Recycle(prompt_string);
   if (check_string)
     Recycle(check_string);
@@ -497,7 +497,7 @@ si_CheckGetUsernamePassword
   nsresult res;  
   PRUnichar * check_string;
   PRUnichar * prompt_string = (PRUnichar*)dialogTitle;
-  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
+  if (dialogTitle == nsnull || dialogTitle[0] == 0)
     prompt_string = Wallet_Localize("PromptForPassword");
   
   // According to nsIPrompt spec, the checkbox is shown or not
@@ -520,7 +520,7 @@ si_CheckGetUsernamePassword
                                           check_value,
                                           &confirmed);
 
-  if (dialogTitle == nsnull || nsCRT::strlen(dialogTitle) == 0)
+  if (dialogTitle == nsnull || dialogTitle[0] == 0)
     Recycle(prompt_string);
   if (check_string)
     Recycle(check_string);
@@ -1215,7 +1215,7 @@ SI_ClearUserData() {
 PUBLIC void
 SI_DeletePersistentUserData() {
 
-  if (signonFileName && nsCRT::strlen(signonFileName)) {
+  if (signonFileName && signonFileName[0]) {
     nsFileSpec fileSpec;
     nsresult rv = Wallet_ProfileDirectory(fileSpec);
     if (NS_SUCCEEDED(rv)) {
@@ -2368,7 +2368,7 @@ SINGSIGN_PromptUsernameAndPassword
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRBool checked = (nsCRT::strlen(*user) != 0);
+  PRBool checked = (**user != 0);
   PRBool remembered = checked;
   res = si_CheckGetUsernamePassword(user, pwd, dialogTitle, text, dialog, savePassword, &checked);
   if (NS_FAILED(res)) {
@@ -2814,7 +2814,8 @@ si_LoadSignonDataFromKeychain() {
       buffer[actualSize] = 0;
 
       /* parse for '=' which separates the name and value */
-      for (i = 0; i < PL_strlen(buffer); i++) {
+      uint16 bufferlen = PL_strlen(buffer);
+      for (i = 0; i < bufferlen; i++) {
         if (buffer[i] == '=') {
           value = &buffer[i+1];
           buffer[i] = 0;
@@ -2841,7 +2842,8 @@ si_LoadSignonDataFromKeychain() {
     buffer[actualSize] = 0;
     if (!reject) {
       /* parse for '=' which separates the name and value */
-      for (i = 0; i < PL_strlen(buffer); i++) {
+      uint16 bufferlen = PL_strlen(buffer);
+      for (i = 0; i < bufferlen; i++) {
         if (buffer[i] == '=') {
           value = &buffer[i+1];
           buffer[i] = 0;
@@ -2861,7 +2863,7 @@ si_LoadSignonDataFromKeychain() {
       }
       submit.value_cnt++;
       /* store the info for this URL into memory-resident data structure */
-      if (!passwordRealm || PL_strlen(passwordRealm) == 0) {
+      if (!passwordRealm || passwordRealm[0] == 0) {
         badInput = PR_TRUE;
       }
       if (!badInput) {
