@@ -243,10 +243,9 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
 ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 length)
 #endif
 {
-  PRUint32 max_read;
+  PRUint32 max_read=0;
   PRUint32 bytes_read = 0, str_length;
   ilINetReader *reader = mURL->GetReader();
-  PRInt32 ilErr;
 
   if (mInterrupted || mStatus != 0) {
     mStatus = MK_INTERRUPTED;
@@ -257,8 +256,9 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
   
   nsresult err = 0;
   PRUint32 nb;
+
   do {
-    max_read = reader->WriteReady();
+    max_read = reader->WriteReady(); //ptn temp
     if (0 == max_read) {
       break;
     }
@@ -282,16 +282,15 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
     bytes_read += nb;
 
     if (mFirstRead == PR_TRUE) {
-      PRInt32 ilErr;
             
-      ilErr = reader->FirstWrite((const unsigned char *)mBuffer, nb);
+      err = reader->FirstWrite((const unsigned char *)mBuffer, nb);
       mFirstRead = PR_FALSE;
       /* 
        * If FirstWrite(...) fails then the image type
        * cannot be determined and the il_container 
        * stream functions have not been initialized!
        */
-      if (ilErr != 0) {
+      if (NS_FAILED(err)) {
         mStatus = MK_IMAGE_LOSSAGE;
         mInterrupted = PR_TRUE;
 	    NS_RELEASE(reader);
@@ -299,8 +298,8 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
       }
     }
 
-    ilErr = reader->Write((const unsigned char *)mBuffer, (int32)nb);
-	if(ilErr <= 0){
+    err = reader->Write((const unsigned char *)mBuffer, (int32)nb);
+	if(NS_FAILED(err)){
         mStatus = MK_IMAGE_LOSSAGE;
         mInterrupted = PR_TRUE;
 	    NS_RELEASE(reader);
