@@ -109,7 +109,7 @@ function help() {
 }
 
 function strresTest() {
-  var Bundle = JS_GetStrBundle("resource:/res/strres.properties", null);
+  var Bundle = srGetStrBundle("resource:/res/strres.properties", null);
   var	ostr1 = Bundle.GetStringFromName("file");
   dump("\n--** JS strBundle GetStringFromName file=" + ostr1 +
       "len=" + ostr1.length + "**--\n");
