@@ -24,6 +24,8 @@
 #include "nsIOutputStream.h"
 #include "nsINetService.h"
 
+#include "nsMailDatabase.h"
+
 #include "rosetta.h"
 
 #include "allxpstr.h"
@@ -33,6 +35,7 @@
 #include "prprf.h"
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
@@ -88,6 +91,7 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 	// query the URL for a nsIMAILBOXUrl
 	m_runningUrl = nsnull; // initialize to NULL
 	m_transport = nsnull;
+	m_displayConsumer = nsnull;
 
 	if (aURL)
 	{
@@ -172,12 +176,26 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 		// we need to inform our mailbox parser that there is no more incoming data...
 		m_mailboxParser->OnStopBinding(aURL, 0, nsnull);
 	}
+	if (m_nextState == MAILBOX_READ_MESSAGE) 
+	{
+		// and close the article file if it was open....
+		if (m_tempMessageFile)
+			PR_Close(m_tempMessageFile);
+
+		// mscott: hack alert...now that the file is done...turn around and fire a file url 
+		// to display the message....
+		char * fileUrl = PR_smprintf("file:///%s", MESSAGE_PATH_URL);
+		if (m_displayConsumer)
+			m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
+		PR_FREEIF(fileUrl);
+	}
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
 	// available for another url if there is one.
 	
 	// mscott --> maybe we should set our state to done because we don't run multiple urls in a mailbox
 	// protocol connection....
+	m_nextState = MAILBOX_DONE;
 
 	return NS_OK;
 
@@ -272,24 +290,48 @@ PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
 	return status;
 }
 
-#if 0
 PRInt32 nsMailboxProtocol::SetupReadMessage()
 {
 	// (1) create a temp file to write the message into. We need to do this because
 	// we don't have pluggable converters yet. We want to let mkfile do the work of 
 	// converting the message from RFC-822 to HTML before displaying it...
-	// (2) Create the file:// url with the appropriate byte range which we want to run
-	// the url. This is the actual url we'll run underneath the protocol....
+	// (2) Determine the number of bytes we are going to need to read out of the 
+	// mailbox url....
 
+	PR_Delete(MESSAGE_PATH);
 	m_tempMessageFile = PR_Open(MESSAGE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+
+	nsMsgKey messageKey;
+	PRUint32 messageSize = 0;
+	const nsFilePath * dbFilePath = nsnull;
+	m_runningUrl->GetFilePath(&dbFilePath);
+	m_runningUrl->GetMessageKey(messageKey);
+	if (dbFilePath)
+	{
+		nsMailDatabase * mailDb = nsnull;
+		nsMsgHdr * msgHdr = nsnull;
+		nsMailDatabase::Open((const nsFilePath) *dbFilePath, PR_FALSE, &mailDb);
+		if (mailDb) // did we get a db back?
+		{
+			mailDb->GetMsgHdrForKey(messageKey, &msgHdr);
+			if (msgHdr)
+			{
+				msgHdr->GetMessageSize(&messageSize);
+				msgHdr->Release();
+			}
+			mailDB->Release();
+		}
+	}
+	m_runningUrl->SetMessageSize(messageSize);
+	return NS_OK;
 }
-#endif
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Begin protocol state machine functions...
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL)
+PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
@@ -297,19 +339,16 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL)
 	HG77067
 	if (aURL)
 	{
-		// let's verify that the new url being loaded is in fact a mailbox url...
-		const char * protocol = nsnull;
-		rv = aURL->GetProtocol(&protocol);
-		NS_ASSERTION(protocol && PL_strcmp(protocol, "mailbox") == 0, "this is not a mailbox url!");
-
 		rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &mailboxUrl);
 		if (NS_SUCCEEDED(rv) && mailboxUrl)
 		{
 			NS_IF_RELEASE(m_runningUrl);
 			m_runningUrl = mailboxUrl; // we have transferred ref cnt contro to m_runningUrl
 
-			// find out from the url what action we are supposed to perform...
+			if (aConsumer)
+				rv = aConsumer->QueryInterface(kIWebShell, (void **) &m_displayConsumer);
 
+			// find out from the url what action we are supposed to perform...
 			rv = m_runningUrl->GetMailboxAction(&m_mailboxAction);
 
 			if (NS_SUCCEEDED(rv))
@@ -324,11 +363,10 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL)
 					break;
 
 				case nsMailboxActionDisplayMessage:
-#if 0
 					SetupReadMessage();
+					// i may need to modify the url spec to remove the search part and just have a file
+					// path...
 					m_nextState = MAILBOX_READ_MESSAGE;
-#endif
-//					rv = m_runningUrl->GetMessageID(m_messageID); // extract the ID of the message
 					break;
 
 				default:
@@ -388,6 +426,83 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 	return 0; 
 }
 
+PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRUint32 length)
+{
+	char *line;
+	PRInt32 status = 0;
+	nsresult rv = NS_OK;
+	char outputBuffer[OUTPUT_BUFFER_SIZE];
+	do
+	{
+		status = ReadLine(inputStream, length, &line);
+		if(status == 0)
+		{
+			m_nextState = MAILBOX_ERROR_DONE;
+			ClearFlag(MAILBOX_PAUSE_FOR_READ);
+			m_runningUrl->SetErrorMessage("error message not implemented yet");
+			return status;
+		}
+
+		if (status > length)
+			length = 0;
+		else
+			length -= status; 
+
+		if(!line)
+			return(status);  /* no line yet or error */
+	
+		if (!line || (line[0] == '.' && line[1] == 0))
+		{
+			m_nextState = MAILBOX_DONE;
+			// and close the article file if it was open....
+			if (m_tempMessageFile)
+				PR_Close(m_tempMessageFile);
+
+			// mscott: hack alert...now that the file is done...turn around and fire a file url 
+			// to display the message....
+			char * fileUrl = PR_smprintf("file:///%s", MESSAGE_PATH_URL);
+			if (m_displayConsumer)
+				m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
+
+			ClearFlag(MAILBOX_PAUSE_FOR_READ);
+		} // otherwise process the line
+		else
+		{
+			if (line[0] == '.')
+				PL_strcpy (outputBuffer, line + 1);
+			else
+				PL_strcpy (outputBuffer, line);
+
+			/* When we're sending this line to a converter (ie,
+				it's a message/rfc822) use the local line termination
+				convention, not CRLF.  This makes text articles get
+				saved with the local line terminators.  Since SMTP
+				and NNTP mandate the use of CRLF, it is expected that
+				the local system will convert that to the local line
+				terminator as it is read.
+			*/
+		
+			PL_strcat (outputBuffer, LINEBREAK);
+			/* Don't send content-type to mime parser if we're doing a cancel
+				because it confuses mime parser into not parsing.
+			*/
+
+			// for test purposes...we'd want to write this line out to an rfc-822 stream converter...
+			// we don't have one now so print the data out so we can verify that we got it....
+			printf("%s", outputBuffer);
+			if (m_tempMessageFile)
+				PR_Write(m_tempMessageFile,(void *) outputBuffer,PL_strlen(outputBuffer));
+		} 
+
+
+	}
+	while (length > 0 && status > 0);
+
+	SetFlag(MAILBOX_PAUSE_FOR_READ); // wait for more data to become available...
+
+	return 0;
+}
+
 
 /*
  * returns negative if the transfer is finished or error'd out
@@ -404,6 +519,12 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 
         switch(m_nextState) 
 		{
+			case MAILBOX_READ_MESSAGE:
+				if (inputStream == nsnull)
+					SetFlag(MAILBOX_PAUSE_FOR_READ);
+				else
+					status = ReadMessageResponse(inputStream, length);
+				break;
 			case MAILBOX_READ_FOLDER:
 				if (inputStream == nsnull)
 					SetFlag(MAILBOX_PAUSE_FOR_READ);   // wait for file socket to read in the next chunk...
@@ -411,14 +532,11 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 					status = ReadFolderResponse(inputStream, length);
 				break;
 			case MAILBOX_DONE:
+			case MAILBOX_ERROR_DONE:
 				m_urlInProgress = PR_FALSE;
 				m_runningUrl->SetUrlState(PR_FALSE, NS_OK);
 	            m_nextState = MAILBOX_FREE;
 				break;
-        
-			case MAILBOX_ERROR_DONE:
-	            m_nextState = MAILBOX_FREE;
-		        break;
         
 			case MAILBOX_FREE:
 				// MAILBOX is a one time use connection so kill it if we get here...

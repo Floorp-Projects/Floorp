@@ -27,6 +27,8 @@
 #include "nsIOutputStream.h"
 #include "nsIMailboxUrl.h"
 
+#include "nsIWebShell.h"  // mscott - this dependency should only be temporary!
+
 #define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
 #define MESSAGE_PATH_URL "C|/temp/tempMessage.eml"
 
@@ -67,7 +69,8 @@ public:
 	
 	virtual ~nsMailboxProtocol();
 
-	PRInt32 LoadURL(nsIURL * aURL);
+	// the consumer of the url might be something like an nsIWebShell....
+	PRInt32 LoadURL(nsIURL * aURL, nsISupports * aConsumer);
 	PRBool  IsRunningUrl() { return m_urlInProgress;} // returns true if we are currently running a url and false otherwise...
 
 	NS_DECL_ISUPPORTS
@@ -132,12 +135,16 @@ private:
     MailboxStatesEnum  m_initialState;
 
 	PRUint32	m_messageID;
+
+	PRFileDesc* m_tempMessageFile;
+	nsIWebShell				* m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 	
 	PRInt32	  ProcessMailboxState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
 	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
 
 	// initialization function given a new url and transport layer
 	void Initialize(nsIURL * aURL);
+	PRInt32 SetupReadMessage();
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
@@ -158,6 +165,7 @@ private:
 	// When parsing a mailbox folder in chunks, this protocol state reads in the current chunk
 	// and forwards it to the mailbox parser. 
 	PRInt32 ReadFolderResponse(nsIInputStream * inputStream, PRUint32 length);
+	PRInt32 ReadMessageResponse(nsIInputStream * inputStream, PRUint32 length);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of Protocol Methods
