@@ -66,7 +66,7 @@ nsPresContext::nsPresContext()
                       NSIntPointsToTwips(10))
 {
   NS_INIT_REFCNT();
-  nsLayoutAtoms::AddrefAtoms();
+  nsLayoutAtoms::AddRefAtoms();
   mCompatibilityMode = eCompatibility_Standard;
   mCompatibilityLocked = PR_FALSE;
   mWidgetRenderingMode = eWidgetRendering_Native;  // to be changed to _Gfx soon!
