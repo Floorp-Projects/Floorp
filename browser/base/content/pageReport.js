@@ -73,7 +73,7 @@ function whitelistSite()
   // and made it into a whitelist.  So we want to add this to the list of "blocked' popups.
   var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
   uri.spec = selectedItem.label;
-  popupmanager.add(uri, false);
+  popupmanager.add(uri, true);
   gSiteBox.removeChild(selectedItem);
 
   alert(uri.host + gUPMsg.value);
