@@ -35,12 +35,6 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
     }
 }
 
-function ConvertMessagesToResourceArray(messages,  resourceArray)
-{
-    dump("fix or remove this\n");
-    // going away...
-}
-
 function GetNewMessages(selectedFolders, compositeDataSource)
 {
 	var numFolders = selectedFolders.length;
