@@ -202,10 +202,7 @@ STDMETHODIMP nsNativeDragTarget::Drop(LPDATAOBJECT pIDataSource,
   if (DRAG_DEBUG) printf("Drop\n");
 
 	if (mDragService) {
-    // Clear the native clipboard
-    //::OleFlushClipboard();
 
-    //::OleSetClipboard(pIDataSource);
     nsDragService * dragService = (nsDragService *)mDragService;
     dragService->SetIDataObject(pIDataSource);
 
