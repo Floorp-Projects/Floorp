@@ -294,12 +294,6 @@ NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultRefe
 		if(NS_SUCCEEDED(err))
 			m_initedValues |= REFERENCES_INITED;
 	}
-#ifdef DEBUG_bienvenu
-	else
-	{
-		printf("hit string ref cache!\n");
-	}
-#endif
 
 	nsCAutoString cStr(m_references);
 	const char *startNextRef = cStr.GetBuffer();

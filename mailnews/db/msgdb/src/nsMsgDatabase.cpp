@@ -1207,14 +1207,13 @@ NS_IMETHODIMP nsMsgDatabase::MarkRead(nsMsgKey key, PRBool bRead,
 						   nsIDBChangeListener *instigator)
 {
 	nsresult rv;
-	nsIMsgDBHdr *msgHdr;
+	nsCOMPtr <nsIMsgDBHdr> msgHdr;
 	
-	rv = GetMsgHdrForKey(key, &msgHdr);
-    if (NS_FAILED(rv)) 
+	rv = GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
+    if (NS_FAILED(rv) || !msgHdr) 
 		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
 	rv = MarkHdrRead(msgHdr, bRead, instigator);
-	NS_RELEASE(msgHdr);
 	return rv;
 }
 
@@ -1325,9 +1324,9 @@ nsresult	nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
 							  nsIDBChangeListener *instigator)
 {
 	nsresult rv;
-	nsIMsgDBHdr *msgHdr = nsnull;
+	nsCOMPtr <nsIMsgDBHdr> msgHdr;
 		
-    rv = GetMsgHdrForKey(key, &msgHdr);
+    rv = GetMsgHdrForKey(key, getter_AddRefs(msgHdr));
     if (NS_FAILED(rv) || !msgHdr) 
 		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
@@ -1340,7 +1339,6 @@ nsresult	nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
     (void)msgHdr->GetFlags(&flags);
 	NotifyKeyChangeAll(key, oldFlags, flags, instigator);
 
-	NS_RELEASE(msgHdr);
 	return rv;
 }
 
@@ -2032,6 +2030,7 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 			NotifyKeyAddedAll(key, threadParent, flags, NULL);
 		}
 	}
+	NS_ASSERTION(NS_SUCCEEDED(err), "error creating thread");
 	return err;
 }
 
@@ -2348,9 +2347,9 @@ PRUint32 nsMsgDatabase::GetCurVersion()
 
 nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
 {
-	// setting the version to -1 ought to make it pretty invalid.
+	// setting the version to 0 ought to make it pretty invalid.
 	if (!valid)
-		m_dbFolderInfo->SetVersion(-1);
+		m_dbFolderInfo->SetVersion(0);
 
 	// for default db (and news), there's no nothing to set to make it it valid
 	return NS_OK;
