@@ -23,12 +23,7 @@ DEPTH=..
 include <$(DEPTH)/config/config.mak>
 
 DIRS = nss \
-!if defined(BUILD_PSM2)
 	manager \
-!else
-	psm\lib\nlslayer \
-	psm \
-!endif
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
