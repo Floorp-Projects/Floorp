@@ -390,7 +390,7 @@ nsVoidArray *nsAddrDatabase::m_dbCache = NULL;
 // GetDBCache
 //----------------------------------------------------------------------
 
-nsVoidArray/*<nsAddrDatabase>*/*
+nsVoidArray/*<nsAddrDatabase>*/ *
 nsAddrDatabase::GetDBCache()
 {
 	if (!m_dbCache)
@@ -4177,6 +4177,17 @@ NS_IMETHODIMP nsAddrDatabase::FindMailListbyUnicodeName(const PRUnichar *listNam
 			*exist = PR_FALSE;
 		Recycle(pUTF8Str);
 	}
+	return rv;
+}
+
+NS_IMETHODIMP nsAddrDatabase::GetCardCount(PRUint32 *count)
+{	
+	mdb_err rv;
+	mdb_count c;
+	rv = m_mdbPabTable->GetCount(m_mdbEnv, &c);
+	if(NS_SUCCEEDED(rv))
+		*count = c;
+
 	return rv;
 }
 

@@ -238,6 +238,8 @@ public:
 
 	NS_IMETHOD FindMailListbyUnicodeName(const PRUnichar *listName, PRBool *exist);
 
+	NS_IMETHOD GetCardCount(PRUint32 *count);
+
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
 
@@ -322,8 +324,8 @@ protected:
 	nsresult GetCollationKeyGenerator();
 	nsresult AddLowercaseColumn(nsIMdbRow * row, mdb_token columnToken, const char* utf8String);
 
-	static nsVoidArray/*<nsAddrDatabase>*/* GetDBCache();
-	static nsVoidArray/*<nsAddrDatabase>*/* m_dbCache;
+	static nsVoidArray/*<nsAddrDatabase>*/ * GetDBCache();
+	static nsVoidArray/*<nsAddrDatabase>*/ * m_dbCache;
 
 	// mdb bookkeeping stuff
 	nsresult			InitExistingDB();
@@ -354,7 +356,7 @@ protected:
 	nsIMdbRow			*m_mdbRow;	// singleton row in table;
 	nsFileSpec		    m_dbName;
 	PRBool				m_mdbTokensInitialized;
-    nsVoidArray/*<nsIAddrDBListener>*/ *m_ChangeListeners;
+    nsVoidArray /*<nsIAddrDBListener>*/ *m_ChangeListeners;
 
 	nsIMdbTable		    *m_mdbAnonymousTable;
 	mdb_kind			m_AnonymousTableKind;

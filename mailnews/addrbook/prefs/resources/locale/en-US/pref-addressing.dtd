@@ -41,6 +41,8 @@ Rights Reserved.
 <!ENTITY emailCollectionTypeText.label "Save email addresses from my:">
 <!ENTITY emailCollectiontitle.label	"Email Address Collection">
 <!ENTITY emailCollectiontext.label	"Email Address Collection saves the email addresses from your incoming and/or outgoing mail and stores them in a local address book, 'Collected Addresses'.">
+<!ENTITY useCABSizelimitPart1.label	"Limit the Collected Address book to">
+<!ENTITY useCABSizelimitPart2.label	"cards.">
 
 <!-- Autocompletion -->
 <!ENTITY addressingTitle.label				  "Addressing Messages">

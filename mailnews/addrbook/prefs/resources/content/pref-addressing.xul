@@ -12,8 +12,40 @@
 
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing", "addressingAutocomplete"];
+    var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing", "addressingAutocomplete", "enableCABsizeLimit", "CABsizeLimit"];
   ]]>
+
+	function Startup(){
+		doEnabling();
+	}
+
+	function doEnabling()
+	{
+		var emailCollection = document.getElementById("emailCollection");
+		var emailCollectionIncoming = document.getElementById("emailCollectionIncoming");
+		var emailCollectionOutgoing = document.getElementById("emailCollectionOutgoing");
+		var emailCollectionTypeText = document.getElementById("emailCollectionTypeText");
+		var enableCABsizeLimit = document.getElementById("enableCABsizeLimit");
+		var CABsizeLimit = document.getElementById("CABsizeLimit");
+		var useCABSizelimitPart2 = document.getElementById("useCABSizelimitPart2");
+		
+		if( emailCollection.checked ){
+			emailCollectionIncoming.removeAttribute("disabled");
+			emailCollectionOutgoing.removeAttribute("disabled");
+			emailCollectionTypeText.removeAttribute("disabled");
+			enableCABsizeLimit.removeAttribute("disabled");
+			CABsizeLimit.removeAttribute("disabled");
+			useCABSizelimitPart2.removeAttribute("disabled");
+		} else {
+			emailCollectionIncoming.setAttribute("disabled", "true");
+			emailCollectionOutgoing.setAttribute("disabled", "true");
+			emailCollectionTypeText.setAttribute("disabled", "true");
+			enableCABsizeLimit.setAttribute("disabled", "true");
+			CABsizeLimit.setAttribute("disabled", "true");
+			useCABSizelimitPart2.setAttribute("disabled", "true");
+		}
+
+	}
   </script>  
     
   <box class="box-smallheader" title="&pane.title;"/>
@@ -23,15 +55,23 @@
 	<html>&emailCollectiontext.label;</html>
 		<checkbox id="emailCollection" value="&emailCollectionEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address"
-              prefattribute="checked"/>
+              prefattribute="checked" oncommand="doEnabling();"/>
     <box orient="vertical" autostretch="never" class="indent">
-		<html>&emailCollectionTypeText.label;</html>
+		<text class="label" value="&emailCollectionTypeText.label;" id="emailCollectionTypeText"/>
 		<checkbox id="emailCollectionIncoming" value="&emailCollectionIncomingEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_incoming"
               prefattribute="checked"/>
 		<checkbox id="emailCollectionOutgoing" value="&emailCollectionOutgoingEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address_outgoing"
               prefattribute="checked"/>
+		<box autostretch="never">
+			<checkbox id="enableCABsizeLimit" value="&useCABSizelimitPart1.label;"
+				pref="true" preftype="bool" prefstring="mail.collect_email_address_enable_size_limit"
+				prefattribute="checked"/>
+			<textfield id="CABsizeLimit" size="3" pref="true" preftype="int"
+					prefstring="mail.collect_email_address_size_limit" prefattribute="value"/>
+			<text id="useCABSizelimitPart2" class="label" value="&useCABSizelimitPart2.label;"/>
+		</box> 
 	</box>
 	</titledbox>
 	
