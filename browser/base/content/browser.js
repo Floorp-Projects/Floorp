@@ -3088,7 +3088,7 @@ nsContextMenu.prototype = {
         saveURL( this.imageURL, null, "SaveImageTitle", false );
     },
     sendImage : function () {
-        sendImage(this.imageURL);
+        sendLink(this.imageURL, "");
     },
     toggleImageBlocking : function (aBlock) {
       var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
