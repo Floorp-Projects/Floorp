@@ -258,6 +258,45 @@ NS_IMETHODIMP nsMsgFolder::BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url
 }
 #endif
 
+NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
+{
+	nsresult rv = NS_OK; 
+	if (!m_server) // if we haven't fetched the server yet....
+	{
+		NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+		if (NS_FAILED(rv)) return rv;
+
+		nsCOMPtr<nsIMsgAccountManager> accountManager;
+		rv = session->GetAccountManager(getter_AddRefs(accountManager));
+		if(NS_FAILED(rv)) return rv;
+
+		char * hostname = nsnull;
+		rv = GetHostName(&hostname);
+		if(NS_FAILED(rv)) return rv;
+
+		nsCOMPtr<nsISupportsArray> servers;
+		rv = accountManager->FindServersByHostname(hostname,
+                                               GetIncomingServerType(),
+                                               getter_AddRefs(servers));
+		PR_FREEIF(hostname);
+		if (NS_FAILED(rv)) return rv;
+
+		// mscott: this is pretty bogus....we should be required by FindServers
+		// to pass in enough information to uniquely identify ONE
+		// server. we need at least the user name and host name.
+		m_server = do_QueryInterface(servers->ElementAt(0));
+	}
+
+	if (aServer)
+	{
+		*aServer = m_server;
+		NS_IF_ADDREF(*aServer);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+
+	return rv;
+}
 
 NS_IMETHODIMP nsMsgFolder::GetPrettyName(char ** name)
 {

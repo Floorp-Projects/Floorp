@@ -30,6 +30,7 @@
 #include "nsRDFResource.h"
 #include "nsIDBFolderInfo.h"
 #include "nsIMsgDatabase.h"
+#include "nsIMsgIncomingServer.h"
 #include "nsCOMPtr.h"
 
  /* 
@@ -75,10 +76,10 @@ public:
   NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
   NS_IMETHOD GetHasSubFolders(PRBool *_retval);
-	NS_IMETHOD AddFolderListener(nsIFolderListener * listener);
-	NS_IMETHOD RemoveFolderListener(nsIFolderListener * listener);
-	NS_IMETHOD GetParent(nsIFolder * *aParent);
-	NS_IMETHOD SetParent(nsIFolder * aParent);
+  NS_IMETHOD AddFolderListener(nsIFolderListener * listener);
+  NS_IMETHOD RemoveFolderListener(nsIFolderListener * listener);
+  NS_IMETHOD GetParent(nsIFolder * *aParent);
+  NS_IMETHOD SetParent(nsIFolder * aParent);
 
 
   // nsIMsgFolder methods:
@@ -86,9 +87,11 @@ public:
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator* *result);
   NS_IMETHOD GetMessages(nsIEnumerator* *result);
-	NS_IMETHOD GetThreads(nsIEnumerator ** threadEnumerator);
-	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
-	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
+  NS_IMETHOD GetThreads(nsIEnumerator ** threadEnumerator);
+  NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
+  NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
+
+  NS_IMETHOD GetServer(nsIMsgIncomingServer ** aServer);
 
 
   NS_IMETHOD GetPrettyName(char ** name);
@@ -265,6 +268,11 @@ protected:
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
 
+	// this is a little helper function that is not part of the public interface. 
+	// we use it to get the IID of the incoming server for the derived folder.
+	// w/out a function like this we would have to implement GetServer in each
+	// derived folder class.
+	virtual const nsIID& GetIncomingServerType() = 0;
 
 protected:
   nsString mName;
@@ -275,7 +283,7 @@ protected:
                                          tried to find out.) */
   PRInt32 mNumTotalMessages;         /* count of existing messages. */
   nsCOMPtr<nsISupportsArray> mSubFolders;
-	nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to
+  nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to
 													 //ownership issues, listeners can't be AddRef'd
 
   PRInt16 mCsid;			// default csid for folder/newsgroup - maintained by fe.
@@ -283,6 +291,8 @@ protected:
   PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
   nsISupports *mSemaphoreHolder; // set when the folder is being written to
 								//Due to ownership issues, this won't be AddRef'd.
+
+  nsCOMPtr<nsIMsgIncomingServer> m_server; // this will be addrefed....no ownership issue here
 
 #ifdef HAVE_DB
   nsMsgKey	m_lastMessageLoaded;
@@ -293,7 +303,7 @@ protected:
   PRInt32 mNumPendingUnreadMessages;
   PRInt32 mNumPendingTotalMessages;
 
-	PRBool mIsCachable;
+  PRBool mIsCachable;
 
 };
 
