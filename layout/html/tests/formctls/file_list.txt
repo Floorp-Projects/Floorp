@@ -1,0 +1,10 @@
+file:///s|/mozilla/layout/html/tests/formctls/button_css_sizing.html
+file:///s|/mozilla/layout/html/tests/formctls/button_sizing_tests.html
+file:///s|/mozilla/layout/html/tests/formctls/inputtext_sizes.html
+file:///s|/mozilla/layout/html/tests/formctls/inputtext_tests.html
+file:///s|/mozilla/layout/html/tests/formctls/optgroup_test1.html
+file:///s|/mozilla/layout/html/tests/formctls/select_js.html
+file:///s|/mozilla/layout/html/tests/formctls/selectsize3_js.html
+file:///s|/mozilla/layout/html/tests/formctls/testarea_wrap.html
+file:///s|/mozilla/layout/html/tests/formctls/textarea_sizes.html
+file:///s|/mozilla/layout/html/tests/formctls/textarea_tests.html
