@@ -1068,7 +1068,7 @@ wallet_ReadFromList(
         }
         item2 = plaintext;
       } else {
-        item2 = PL_strdup(mapElementPtr->item2);
+        item2 = mapElementPtr->item2;
       }
       itemList = mapElementPtr->itemList;
       index = i+1;
