@@ -29,14 +29,14 @@
 
 #include "nsCOMPtr.h"
 #include "nsHTMLSelectListAccessible.h"
-#include "nsIDOMMenuListener.h"
+#include "nsIDOMXULListener.h"
 
 /*
  * A class the represents the HTML Combobox widget.
  */
 class nsHTMLComboboxAccessible : public nsAccessible,
                                  public nsIAccessibleSelectable,
-                                 public nsIDOMMenuListener
+                                 public nsIDOMXULListener
 {
 public:
 
@@ -54,11 +54,14 @@ public:
   NS_IMETHOD GetAccValue(nsAWritableString& _retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 
-    // popup listener
-  NS_IMETHOD Create(nsIDOMEvent* aEvent);
+  // popup listener
+  NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupShown(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
+  NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent) { return NS_OK; }
+  
   NS_IMETHOD Close(nsIDOMEvent* aEvent);
-  NS_IMETHOD Destroy(nsIDOMEvent* aEvent);
-  NS_IMETHOD Action(nsIDOMEvent* aEvent) { return NS_OK; }
+  NS_IMETHOD Command(nsIDOMEvent* aEvent) { return NS_OK; }
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) { return NS_OK; }
   NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) { return NS_OK; }
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
