@@ -313,6 +313,21 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     pageSize.height = NS_UNCONSTRAINEDSIZE;
   }
 
+  // *** Special Override ***
+  // If this is a sub-sdoc (meaning it doesn't take the whole page)
+  // and if this Document is in the upper left hand corner
+  // we need to suppress the top margin or it will reflow too small
+  // Start by getting the actual printer page dimensions to see if we are not a whole page
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
+  NS_ASSERTION(dc, "nsIDeviceContext can't be NULL!");
+  nscoord width, height;
+  dc->GetDeviceSurfaceDimensions(width, height);
+
+  if (adjSize.x == 0 && adjSize.y == 0 && (pageSize.width != width || pageSize.height != height)) {
+    suppressTopMargin = PR_TRUE;
+  }
+
   // only use this local margin for sizing, 
   // not for positioning
   nsMargin margin(suppressLeftMargin?0:mMargin.left,
