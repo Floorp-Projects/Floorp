@@ -25,49 +25,101 @@
 
 -->
 
-<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical">
+  align="vertical"
+  onload="ToBeetle();">
 
   <html:script>
-  function FindBeetle()
+  var cursor;
+
+  function CursorText()
   {
-    var beetle = document.getElementById('beetle');
-    dump('beetle = ' + beetle + '\n');
+    if (cursor)
+      return "&lt;" + cursor.nodeName + "&gt;";
+    else
+      return "(null)";
+  }
+
+  function ToBeetle()
+  {
+    cursor = document.getElementById('beetle');
+    dump('cursor = ' + CursorText() + '\n');
+  }
+
+  function ToPrev()
+  {
+    cursor = cursor.previousSibling;
+    dump('cursor = ' + CursorText() + '\n');
+  }
+
+  function ToNext()
+  {
+    cursor = cursor.nextSibling;
+    dump('cursor = ' + CursorText() + '\n');
+  }
+
+  function ToParent()
+  {
+    cursor = cursor.parentNode;
+    dump('cursor = ' + CursorText() + '\n');
+  }
+
+  function ToFirstChild()
+  {
+    cursor = cursor.firstChild;
+    dump('cursor = ' + CursorText() + '\n');
+  }
+
+  function ToLastChild()
+  {
+    cursor = cursor.lastChild;
+    dump('cursor = ' + CursorText() + '\n');
   }
   </html:script>
 
-  <titledbutton onclick="FindBeetle();" value="Find Beetle" />
+  <box align="horizontal">
+    <titledbutton onclick="ToBeetle();" value="To Beetle" />
+    <titledbutton onclick="ToPrev();" value="To Previous Sibling" />
+    <titledbutton onclick="ToNext();" value="To Next Sibling" />
+    <titledbutton onclick="ToParent();" value="To Parent" />
+    <titledbutton onclick="ToFirstChild();" value="To First Child" />
+    <titledbutton onclick="ToLastChild();" value="To Last Child" />
+  </box>
 
 <!--  <tree id="tree" flex="100%" datasources="rdf:bookmarks rdf:mailnewsfolders rdf:msgaccountmanager" style="height:100%;"> -->
   <tree id="tree" flex="100%" style="height:100%;">
     <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
-         <treeitem uri="...">
-           <treerow>
-             <treecell>
-               <html:hr width="75%" align="center" size="1" />
-             </treecell>
-           </treerow>
-         </treeitem>  		
+      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+         <treechildren>
+           <treeitem uri="...">
+             <treerow>
+               <treecell>
+                 <html:hr width="75%" align="center" size="1" />
+               </treecell>
+             </treerow>
+           </treeitem>  		
+         </treechildren>
        </rule>
 
-       <rule rootcontainment="treechildren" subcontainment="treechildren">
-         <treeitem uri="...">
-           <treerow>
-             <treecell>
-               <treeindentation />
-               <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
-             </treecell>
-             <treecell>
-               <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
-             </treecell>
-           </treerow>
-         </treeitem>
+       <rule>
+         <treechildren>
+           <treeitem uri="...">
+             <treerow>
+               <treecell>
+                 <treeindentation />
+                 <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+               </treecell>
+               <treecell>
+                 <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="left" style="list-style-image: none;" />
+               </treecell>
+             </treerow>
+           </treeitem>
+         </treechildren>
        </rule>
     </template>
 
@@ -78,34 +130,41 @@
       </treerow>
     </treehead>
 
-    <treechildren>
-      <treeitem id="treeroot" ref="NC:BookmarksRoot">
+    <treechildren id="1">
+      <treeitem id="treeroot" ref="NC:BookmarksRoot" open="true">
         <treerow>
           <treecell>Bookmarks</treecell>
           <treecell></treecell>
         </treerow>
 
-        <treechildren>
+        <treechildren id="2" open="true">
           <treeitem id="beetle">
             <treerow>
-              <treecell><treeindentation/>XUL Child #1</treecell>
+              <treecell><treeindentation/>XUL Child #1 (Beetle)</treecell>
               <treecell></treecell>
             </treerow>
 
-            <treechildren>
-              <treeitem>
-                <treerow>
-                  <treecell><treeindentation/>XUL Child #1.1</treecell>
-                  <treecell></treecell>
+            <treechildren id="3" open="true">
+              <treeitem id="4">
+                <treerow id="4_1">
+                  <treecell id="4_1_1"><treeindentation/>XUL Child #1.1</treecell>
+                  <treecell id="4_1_2"></treecell>
+                </treerow>
+              </treeitem>
+
+              <treeitem id="5">
+                <treerow id="5_1">
+                  <treecell id="5_1_1"><treeindentation/>XUL Child #1.2</treecell>
+                  <treecell id="5_1_2"></treecell>
                 </treerow>
               </treeitem>
             </treechildren>
           </treeitem>
 
-          <treeitem>
-            <treerow>
-              <treecell><treeindentation/>XUL Child #2</treecell>
-              <treecell></treecell>
+          <treeitem id="6">
+            <treerow id="6_1">
+              <treecell id="6_1_1"><treeindentation/>XUL Child #2</treecell>
+              <treecell id="6_1_2"></treecell>
             </treerow>
           </treeitem>
 
