@@ -52,8 +52,11 @@
 #include "nsIScreen.h"
 #include "nsIScrollable.h"
 #include "nsIPref.h"
+#include "nsIScriptGlobalObject.h"
 
 #include "nsStyleConsts.h"
+
+#define ABS(x) ((x)<0?-(x):x)
 
 // XXX Get rid of this
 #pragma message("WARNING: XXX bad include, remove it.")
@@ -731,50 +734,9 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
     }
   }
 
-  // Now look for any other windows of this type, and if they exist, offset
-  // from them.
-  nsCOMPtr<nsIWindowMediator> wm(do_GetService("@mozilla.org/rdf/datasource;1?name=window-mediator", &rv));
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoString windowType;
-    rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("windowtype"), windowType);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIDOMWindowInternal> domWindow;
-      PRUnichar* wtype = windowType.ToNewUnicode();
-      wm->GetMostRecentWindow(wtype, getter_AddRefs(domWindow));
-      nsMemory::Free(wtype);
-      if (domWindow) {
-        // Get the screen dimensions
-        PRInt32 screenLeft;
-        PRInt32 screenTop;
-        PRInt32 screenWidth;
-        PRInt32 screenHeight;
-        PRInt32 screenRight;
-        PRInt32 screenBottom;
-        nsCOMPtr<nsIDOMScreen> screen;
-        domWindow->GetScreen(getter_AddRefs(screen));
-        screen->GetAvailLeft(&screenLeft);
-        screen->GetAvailTop(&screenTop);
-        screen->GetAvailWidth(&screenWidth);
-        screen->GetAvailHeight(&screenHeight);
-        screenRight = screenLeft + screenWidth;
-        screenBottom = screenTop + screenHeight;
-
-        // Adjust the location for the offset.
-        const PRInt32 kOffset = 22; // XXX traditionally different for mac.
-        specX += kOffset;
-        specY += kOffset;
-
-        // Sanity check. 
-        if ((specX + specWidth) > screenRight)
-          specX = screenLeft;
-        if ((specY + specHeight) > screenBottom)
-          specY = screenTop;
-      }
-    }
-  }
-
   // Now set position and size.
   if (aPosition) {
+    StaggerPosition(specX, specY, specWidth, specHeight);
     mWindow->ConstrainPosition(&specX, &specY);
     if (specX != currX || specY != currY)
       SetPosition(specX, specY);
@@ -800,6 +762,111 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
   }
   
   return NS_OK;
+}
+
+/* Stagger windows of the same type so they don't appear on top of each other.
+   This code does have a scary double loop -- it'll keep passing through
+   the entire list of open windows until it finds a non-collision. Doesn't
+   seem to be a problem, but it deserves watching.
+*/
+void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
+                                  PRInt32 aSpecWidth, PRInt32 aSpecHeight)
+{
+  const PRInt32 kOffset = 22; // XXX traditionally different for mac.
+  const PRInt32 kSlop = 4;
+  nsresult rv;
+  PRBool   keepTrying;
+
+  // look for any other windows of this type
+  nsCOMPtr<nsIWindowMediator> wm(do_GetService("@mozilla.org/rdf/datasource;1?name=window-mediator"));
+  if (!wm)
+    return;
+
+  nsCOMPtr<nsIDOMElement> windowElement;
+  GetWindowDOMElement(getter_AddRefs(windowElement));
+  nsCOMPtr<nsIXULWindow> ourXULWindow(this);
+
+  nsAutoString windowType;
+  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("windowtype"), windowType);
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIDOMWindowInternal> listDOMWindow;
+
+  PRUnichar* wtype = windowType.ToNewUnicode();
+  // one full pass through all windows of this type. repeat until
+  // no collisions.
+  do {
+    keepTrying = PR_FALSE;
+    nsCOMPtr<nsISimpleEnumerator> windowList;
+    wm->GetXULWindowEnumerator(wtype, getter_AddRefs(windowList));
+
+    if (!windowList)
+      break;
+
+    // one full pass through all windows of this type. offset and stop
+    // on collision.
+    do {
+      PRBool more;
+      PRInt32 listX, listY;
+      windowList->HasMoreElements(&more);
+      if (!more)
+        break;
+
+      nsCOMPtr<nsISupports> supportsWindow;
+      windowList->GetNext(getter_AddRefs(supportsWindow));
+
+      nsCOMPtr<nsIXULWindow> listXULWindow(do_QueryInterface(supportsWindow));
+      nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
+
+      if (listXULWindow.get() != ourXULWindow) {
+        listBaseWindow->GetPosition(&listX, &listY);
+
+        if (ABS(listX-aRequestedX) <= kSlop && ABS(listY-aRequestedY) <= kSlop) {
+          // collision! offset and stop. save the DOMWindow corresponding
+          // to the colliding window for later. (we'll need its nsIDOMScreen
+          nsCOMPtr<nsIDocShell> listDocShell;
+          listXULWindow->GetDocShell(getter_AddRefs(listDocShell));
+          if (listDocShell) {
+            nsCOMPtr<nsIInterfaceRequestor> listRequestor(do_QueryInterface(listDocShell));
+            if (listRequestor)
+              listRequestor->GetInterface(NS_GET_IID(nsIDOMWindowInternal),
+                             getter_AddRefs(listDOMWindow));
+          }
+          aRequestedX += kOffset;
+          aRequestedY += kOffset;
+          keepTrying = PR_TRUE;
+          break;
+        }
+      }
+    } while(1);
+  } while (keepTrying);
+  nsMemory::Free(wtype);
+
+  // if we found a competing DOM window (and therefore moved our window)
+  // sanity constrain the position against that window's screen
+  if (listDOMWindow) {
+    PRInt32 screenLeft;
+    PRInt32 screenTop;
+    PRInt32 screenWidth;
+    PRInt32 screenHeight;
+    PRInt32 screenRight;
+    PRInt32 screenBottom;
+    nsCOMPtr<nsIDOMScreen> screen;
+    listDOMWindow->GetScreen(getter_AddRefs(screen));
+    screen->GetAvailLeft(&screenLeft);
+    screen->GetAvailTop(&screenTop);
+    screen->GetAvailWidth(&screenWidth);
+    screen->GetAvailHeight(&screenHeight);
+    screenRight = screenLeft + screenWidth;
+    screenBottom = screenTop + screenHeight;
+
+    // Sanity check. 
+    if ((aRequestedX + aSpecWidth) > screenRight)
+      aRequestedX = screenLeft;
+    if ((aRequestedY + aSpecHeight) > screenBottom)
+      aRequestedY = screenTop;
+  }
 }
 
 NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
