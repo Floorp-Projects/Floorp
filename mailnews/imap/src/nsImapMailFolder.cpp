@@ -67,7 +67,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 #endif
 
 nsImapMailFolder::nsImapMailFolder() :
-	nsMsgFolder(), m_pathName(""), m_mailDatabase(nsnull),
+	nsMsgFolder(), m_pathName(""),
     m_initialized(PR_FALSE), m_haveReadNameFromDB(PR_FALSE),
     m_msgParser(nsnull), m_curMsgUid(0), m_nextMessageByteLength(0),
     m_urlRunning(PR_FALSE), m_haveDiscoverAllFolders(PR_FALSE)
@@ -75,35 +75,28 @@ nsImapMailFolder::nsImapMailFolder() :
     //XXXX This is a hack for the moment.  I'm assuming the only listener is
     //our rdf:mailnews datasource. 
     //In reality anyone should be able to listen to folder changes. 
-    
-    nsIRDFDataSource* datasource = nsnull;
+    nsCOMPtr<nsIRDFDataSource> datasource;
 	m_tempMessageFile = nsnull;
 	nsresult rv = NS_OK;
+
 	NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
     if(NS_SUCCEEDED(rv))
     {
-        rv = rdfService->GetDataSource("rdf:mailnewsfolders", &datasource);
+        rv = rdfService->GetDataSource("rdf:mailnewsfolders", getter_AddRefs(datasource));
         if(NS_SUCCEEDED(rv))
         {
-            nsIFolderListener *folderListener;
-            rv = datasource->QueryInterface(nsIFolderListener::GetIID(),
-                                            (void**)&folderListener);
-            if(NS_SUCCEEDED(rv))
-            {
+            nsCOMPtr<nsIFolderListener> folderListener = do_QueryInterface(datasource);
+            if(folderListener)
                 AddFolderListener(folderListener);
-                NS_RELEASE(folderListener);
-            }
-            NS_RELEASE(datasource);
         }
     }
 
     // Get current thread envent queue
-    m_eventQueue = nsnull;
-	
+
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
         pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
-                                            &m_eventQueue);
+                                            getter_AddRefs(m_eventQueue));
 	m_msgParser = nsnull;
 }
 
@@ -111,7 +104,6 @@ nsImapMailFolder::~nsImapMailFolder()
 {
     if (m_mailDatabase)
         m_mailDatabase->Close(PR_TRUE);
-		NS_IF_RELEASE(m_eventQueue);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImapMailFolder, nsMsgFolder)
@@ -196,10 +188,12 @@ NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)
 nsresult nsImapMailFolder::AddDirectorySeparator(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
-	if (nsCRT::strcmp(mURI, kImapRootURI) == 0) {
+	if (nsCRT::strcmp(mURI, kImapRootURI) == 0) 
+	{
       // don't concat the full separator with .sbd
     }
-    else {
+    else 
+	{
       nsAutoString sep;
       rv = nsGetMailFolderSeparator(sep);
       if (NS_FAILED(rv)) return rv;
@@ -249,13 +243,15 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	if (uriStr == nsnull) 
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	nsIRDFResource* res;
-	rv = rdf->GetResource(uriStr, &res);
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uriStr, getter_AddRefs(res));
 	if (NS_FAILED(rv))
 		return rv;
+
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
 		return rv;        
+
 	delete[] uriStr;
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
@@ -267,7 +263,7 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	mSubFolders->AppendElement(folder);
     folder->SetDepth(mDepth+1);
 	*child = folder;
-	NS_ADDREF(*child);
+	NS_IF_ADDREF(*child);
 	return rv;
 }
 
@@ -275,9 +271,10 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
 	nsAutoString currentFolderNameStr;
-	nsIMsgFolder *child;
+	nsCOMPtr<nsIMsgFolder> child;
 	char *folderName;
-	for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
+	for (nsDirectoryIterator dir(path); dir.Exists(); dir++) 
+	{
 		nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 
 		folderName = currentFolderPath.GetLeafName();
@@ -288,8 +285,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 			continue;
 		}
 
-		AddSubfolder(currentFolderNameStr, &child);
-		NS_IF_RELEASE(child);
+		AddSubfolder(currentFolderNameStr, getter_AddRefs(child));
 		PL_strfree(folderName);
     }
 	return rv;
@@ -319,18 +315,17 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
 #if 0
 			// temporary until we do folder discovery correctly.
 			nsAutoString name("Inbox");
-			nsIMsgFolder *child;
+			nsCOMPtr<nsIMsgFolder> child;
 
-			AddSubfolder(name, &child);
+			AddSubfolder(name, getter_AddRefs(child));
 			if (NS_SUCCEEDED(GetDatabase()))
 			{
 				nsCOMPtr <nsIDBFolderInfo> dbFolderInfo ;
 				m_mailDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+
 				if (dbFolderInfo)
 					dbFolderInfo->SetMailboxName(name);
 			}
-			if (child)
-				NS_RELEASE(child);
 #endif
 		}
         if (path.IsDirectory()) {
@@ -1013,14 +1008,14 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 	nsIImapProtocol* aProtocol,	mailbox_spec* aSpec)
 {
 	nsresult rv = NS_ERROR_FAILURE;
-    nsIMsgDatabase* mailDBFactory;
+    nsCOMPtr<nsIMsgDatabase> mailDBFactory;
     nsNativeFileSpec dbName;
 
     GetPathName(dbName);
 
     rv = nsComponentManager::CreateInstance(kCImapDB, nsnull,
                                             nsIMsgDatabase::GetIID(),
-                                            (void **) &mailDBFactory);
+                                            (void **) getter_AddRefs(mailDBFactory));
     if (NS_FAILED(rv)) return rv;
 
     if (!m_mailDatabase)
@@ -1028,17 +1023,11 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
         // if we pass in PR_TRUE for upgrading, the db code will ignore the
         // summary out of date problem for now.
         rv = mailDBFactory->Open(dbName, PR_TRUE, (nsIMsgDatabase **)
-                                 &m_mailDatabase, PR_TRUE);
+                                 getter_AddRefs(m_mailDatabase), PR_TRUE);
         if (NS_FAILED(rv))
-        { 
-            NS_IF_RELEASE (mailDBFactory);
             return rv;
-        }
         if (!m_mailDatabase) 
-        {
-            NS_IF_RELEASE (mailDBFactory);
             return NS_ERROR_NULL_POINTER;
-        }
         m_mailDatabase->AddListener(this);
     }
     if (aSpec->folderSelected)
@@ -1046,10 +1035,10 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
      	nsMsgKeyArray existingKeys;
     	nsMsgKeyArray keysToDelete;
     	nsMsgKeyArray keysToFetch;
-		nsIDBFolderInfo *dbFolderInfo = nsnull;
+		nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
 		PRInt32 imapUIDValidity = 0;
 
-		rv = m_mailDatabase->GetDBFolderInfo(&dbFolderInfo);
+		rv = m_mailDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
 
 		if (NS_SUCCEEDED(rv) && dbFolderInfo)
 			dbFolderInfo->GetImapUidValidity(&imapUIDValidity);
@@ -1060,13 +1049,12 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     		!NET_IsOffline() */)
     	{
 
-			nsIMsgDatabase *saveMailDB = m_mailDatabase;
 #if TRANSFER_INFO
 			TNeoFolderInfoTransfer *originalInfo = NULL;
 			originalInfo = new TNeoFolderInfoTransfer(dbFolderInfo);
 #endif // 0
 			m_mailDatabase->ForceClosed();
-			m_mailDatabase = NULL;
+			m_mailDatabase = null_nsCOMPtr();
 				
 			nsLocalFolderSummarySpec	summarySpec(dbName);
 			// Remove summary file.
@@ -1074,7 +1062,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			
 			// Create a new summary file, update the folder message counts, and
 			// Close the summary file db.
-			rv = mailDBFactory->Open(dbName, PR_TRUE, &m_mailDatabase, PR_FALSE);
+			rv = mailDBFactory->Open(dbName, PR_TRUE, getter_AddRefs(m_mailDatabase), PR_FALSE);
 
 			// ********** Important *************
 			// David, help me here I don't know this is right or wrong
@@ -1084,7 +1072,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			if (NS_FAILED(rv) && m_mailDatabase)
 			{
 				m_mailDatabase->ForceClosed();
-				m_mailDatabase = nsnull;
+				m_mailDatabase = null_nsCOMPtr();
 			}
 			else if (NS_SUCCEEDED(rv) && m_mailDatabase)
 			{
@@ -1097,7 +1085,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 				SummaryChanged();
                 m_mailDatabase->AddListener(this);
 #endif
-				rv = m_mailDatabase->GetDBFolderInfo(&dbFolderInfo);
+				rv = m_mailDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
 			}
 			// store the new UIDVALIDITY value
 
@@ -1163,7 +1151,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     if (NS_FAILED(rv))
         dbName.Delete(PR_FALSE);
 
-    NS_IF_RELEASE (mailDBFactory);
 	return rv;
 }
 
@@ -1321,7 +1308,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 	char* msgURI = nsnull;
 	nsFileSpec path;
 	nsMsgKey key;
-    nsIRDFResource* res;
+    nsCOMPtr<nsIRDFResource> res;
 
 	rv = msgDBHdr->GetMessageKey(&key);
 
@@ -1330,25 +1317,20 @@ NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 
 
 	if(NS_SUCCEEDED(rv))
-	{
-		rv = rdfService->GetResource(msgURI, &res);
-    }
+		rv = rdfService->GetResource(msgURI, getter_AddRefs(res));
+
 	if(msgURI)
 		PR_smprintf_free(msgURI);
 
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIMessage *messageResource;
-		rv = res->QueryInterface(nsIMessage::GetIID(), (void**)&messageResource);
-		if(NS_SUCCEEDED(rv))
+		nsCOMPtr<nsIDBMessage> messageResource = do_QueryInterface(res);
+		if(messageResource)
 		{
-			//We know from our factory that imap message resources are going to be
-			//nsImapMessages.
-			nsImapMessage *imapMessage = NS_STATIC_CAST(nsImapMessage*, messageResource);
-			imapMessage->SetMsgDBHdr(msgDBHdr);
+			messageResource->SetMsgDBHdr(msgDBHdr);
 			*message = messageResource;
+			NS_IF_ADDREF(*message);
 		}
-		NS_IF_RELEASE(res);
 	}
 	return rv;
 }
@@ -1366,30 +1348,26 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged,
 											 PRInt32 aFlags, 
 											 nsIDBChangeListener * aInstigator)
 {
-	nsIMsgDBHdr *pMsgDBHdr = nsnull;
-	nsresult rv = m_mailDatabase->GetMsgHdrForKey(aKeyChanged, &pMsgDBHdr);
+	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
+	nsresult rv = m_mailDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIMessage *message = nsnull;
-		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, &message);
+		nsCOMPtr<nsIMessage> message;
+		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
 		if(NS_SUCCEEDED(rv))
 		{
-			nsISupports *msgSupports;
-			if(NS_SUCCEEDED(message->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+			nsCOMPtr<nsISupports> msgSupports = do_QueryInterface(message);
+			if(msgSupports)
 			{
 				PRUint32 i;
 				for(i = 0; i < mListeners->Count(); i++)
 				{
 					nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 					listener->OnItemRemoved(this, msgSupports);
-//					NS_RELEASE(listener);	// since mListeners is NOT an nsISupportsArray, don't release, eh?
 				}
-				NS_IF_RELEASE(msgSupports);
 			}
-			NS_IF_RELEASE(message);
 			UpdateSummaryTotals();
 		}
-		NS_IF_RELEASE(pMsgDBHdr);
 	}
 
 	return NS_OK;
@@ -1400,24 +1378,19 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyAdded(nsMsgKey aKeyChanged,
 										   nsIDBChangeListener * aInstigator)
 {
 	nsresult rv;
-	nsIMsgDBHdr *pMsgDBHdr;
-	rv = m_mailDatabase->GetMsgHdrForKey(aKeyChanged, &pMsgDBHdr);
-	if(NS_SUCCEEDED(rv))
+	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
+	rv = m_mailDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
+	if(NS_SUCCEEDED(rv) && pMsgDBHdr)
 	{
-		nsIMessage *message;
-		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, &message);
+		nsCOMPtr<nsIMessage> message;
+		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
 		if(NS_SUCCEEDED(rv))
 		{
-			nsISupports *msgSupports;
-			if(message && NS_SUCCEEDED(message->QueryInterface(kISupportsIID, (void**)&msgSupports)))
-			{
+			nsCOMPtr<nsISupports> msgSupports = do_QueryInterface(message);
+			if(msgSupports)
 				NotifyItemAdded(msgSupports);
-				NS_IF_RELEASE(msgSupports);
-			}
 			UpdateSummaryTotals();
-			NS_IF_RELEASE(message);
 		}
-		NS_IF_RELEASE(pMsgDBHdr);
 	}
 	return NS_OK;}
 
@@ -1427,7 +1400,7 @@ NS_IMETHODIMP nsImapMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
     if (m_mailDatabase)
     {
         m_mailDatabase->RemoveListener(this);
-        m_mailDatabase = nsnull;
+        m_mailDatabase = null_nsCOMPtr();
     }
     return NS_OK;
 }
@@ -1675,11 +1648,11 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
 	nsresult res = NS_OK;
 	if (m_tempMessageFile)
 	{
-		nsIWebShell *webShell;
+		nsCOMPtr<nsIWebShell> webShell;
 
 		PR_Close(m_tempMessageFile);
 		m_tempMessageFile = nsnull;
-		res = aProtocol->GetDisplayStream(&webShell);
+		res = aProtocol->GetDisplayStream(getter_AddRefs(webShell));
 		if (NS_SUCCEEDED(res) && webShell)
 		{
 			nsFilePath filePath(MESSAGE_PATH);
@@ -1859,15 +1832,12 @@ nsImapMailFolder::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
 	if (sizeInfo && sizeInfo->id && m_mailDatabase)
 	{
 		PRUint32 key = atoi(sizeInfo->id);
-		nsIMsgDBHdr *mailHdr = nsnull;
+		nsCOMPtr<nsIMsgDBHdr> mailHdr;
 		NS_ASSERTION(sizeInfo->idIsUid, "ids must be uids to get message size");
 		if (sizeInfo->idIsUid)
-			rv = m_mailDatabase->GetMsgHdrForKey(key, &mailHdr);
+			rv = m_mailDatabase->GetMsgHdrForKey(key, getter_AddRefs(mailHdr));
 		if (NS_SUCCEEDED(rv) && mailHdr)
-		{
 			rv = mailHdr->GetMessageSize(&sizeInfo->size);
-			NS_RELEASE(mailHdr);
-		}
 	}
     return rv;
 }
@@ -1889,14 +1859,9 @@ nsImapMailFolder::OnStopRunningUrl(nsIURL *aUrl, nsresult aExitCode)
 	if (aUrl)
 	{
 		// query it for a mailnews interface for now....
-		nsIMsgMailNewsUrl * mailUrl = nsnull;
-		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(),
-                                  (void **) mailUrl);
-		if (NS_SUCCEEDED(rv) && mailUrl)
-		{
+		nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
+		if (mailUrl)
 			mailUrl->UnRegisterListener(this);
-            NS_RELEASE (mailUrl);
-		}
 	}
 	return NS_OK;
 }

@@ -269,21 +269,19 @@ protected:
 	nsresult GetDatabase();
 
     nsNativeFileSpec m_pathName;
-	nsIMsgDatabase* m_mailDatabase;
+	nsCOMPtr<nsIMsgDatabase> m_mailDatabase;
     PRBool m_initialized;
     PRBool m_haveDiscoverAllFolders;
     PRBool m_haveReadNameFromDB;
 	nsParseMailMessageState *m_msgParser;
 	nsMsgKey			m_curMsgUid;
 	PRInt32			m_nextMessageByteLength;
-    nsIEventQueue* m_eventQueue;
+    nsCOMPtr<nsIEventQueue> m_eventQueue;
     PRBool m_urlRunning;
 
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
 	PRFileDesc* m_tempMessageFile;
-
-
 };
 
 #endif
