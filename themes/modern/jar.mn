@@ -374,6 +374,7 @@ modern.jar:
   skin/modern/messenger/icons/local-mailhost.gif                   (messenger/icons/local-mailhost.gif)
   skin/modern/messenger/icons/mast-mail.gif                        (messenger/icons/mast-mail.gif)
   skin/modern/messenger/icons/message-mail-attach-offl.gif         (messenger/icons/message-mail-attach-offl.gif)
+  skin/modern/messenger/icons/message-mail-attach-del.gif          (messenger/icons/message-mail-attach-del.gif)
   skin/modern/messenger/icons/message-mail-attach.gif              (messenger/icons/message-mail-attach.gif)
   skin/modern/messenger/icons/message-mail-delete-offl.gif         (messenger/icons/message-mail-delete-offl.gif)
   skin/modern/messenger/icons/message-mail-imapdelete.gif          (messenger/icons/message-mail-imapdelete.gif)
