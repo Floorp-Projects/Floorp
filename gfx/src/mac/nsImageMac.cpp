@@ -478,14 +478,14 @@ nsImageMac::UnlockImagePixels(PRBool aMaskPixels)
 #pragma mark -
 
 /** -----------------------------------------------------------------
- *	Create a PixMap, filling in ioPixMap
+ *  Create a PixMap, filling in ioPixMap
  */
-OSErr nsImageMac::CreatePixMap(	PRInt32 aWidth, PRInt32 aHeight, 
-								PRInt32 aDepth, CTabHandle aColorTable, 
-								PixMap& ioPixMap, Handle& ioBitsHandle)
-{								
-    CreatePixMapInternal( aWidth, aHeight, aDepth, aColorTable, 
-								          ioPixMap, ioBitsHandle, PR_FALSE);
+OSErr nsImageMac::CreatePixMap( PRInt32 aWidth, PRInt32 aHeight, 
+                PRInt32 aDepth, CTabHandle aColorTable, 
+                PixMap& ioPixMap, Handle& ioBitsHandle)
+{
+    return CreatePixMapInternal(aWidth, aHeight, aDepth, aColorTable, 
+                                ioPixMap, ioBitsHandle, PR_FALSE);
 }
 
 
@@ -703,7 +703,7 @@ PRInt32  nsImageMac::CalculateRowBytesInternal(PRUint32 aWidth, PRUint32 aDepth,
   */
 PRInt32  nsImageMac::CalculateRowBytes(PRUint32 aWidth, PRUint32 aDepth)
 {
-    CalculateRowBytesInternal(aWidth, aDepth, PR_FALSE);
+    return CalculateRowBytesInternal(aWidth, aDepth, PR_FALSE);
 }
 
 #pragma mark -
@@ -1132,12 +1132,12 @@ nsImageMac::CopyPixMap(Rect& aSrcRegion,
                       )
 {
 
-    CopyPixMapInternal(aSrcRegion,
-                       aDestRegion,
-                       aDestDepth,
-                       aCopyMaskBits,
-                       aDestData,
-                       PR_FALSE);
+    return CopyPixMapInternal(aSrcRegion,
+                              aDestRegion,
+                              aDestDepth,
+                              aCopyMaskBits,
+                              aDestData,
+                              PR_FALSE);
 }
 
 
