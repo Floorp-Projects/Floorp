@@ -58,6 +58,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsMsgCompose::nsMsgCompose()
 {
+	m_sendListener = nsnull;
 	m_window = nsnull;
 	m_webShell = nsnull;
 	m_webShellWin = nsnull;
@@ -96,6 +97,7 @@ nsMsgCompose::nsMsgCompose()
 
 nsMsgCompose::~nsMsgCompose()
 {
+	NS_IF_RELEASE(m_sendListener);
 	NS_IF_RELEASE(m_compFields);
 	NS_IF_RELEASE(mOutStream);
 // ducarroz: we don't need to own the editor shell as JS does it for us.
@@ -244,7 +246,7 @@ nsMsgCompose::LoadBody()
 
 nsresult nsMsgCompose::LoadFields()
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   
   
   // Now we do the LoadURL on the editor because we *may* not have have to wait for any
@@ -303,20 +305,41 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
 	        const char *bodyString = m_compFields->GetBody();
 	        PRInt32 bodyLength = PL_strlen(bodyString);
 
+
+			// Create the listener for the send operation...
+			nsMsgComposeSendListener *m_sendListener = new nsMsgComposeSendListener();
+			if (!m_sendListener)
+				return NS_ERROR_FAILURE;
+      
+			// set this object for use on completion...
+			m_sendListener->SetComposeObj(this);
+			m_sendListener->SetDeliverMode(deliverMode);
+			nsIMsgSendListener **tArray = m_sendListener->CreateListenerArray();
+			if (!tArray)
+			{
+#ifdef DEBUG
+				printf("Error creating listener array.\n");
+#endif
+				return NS_ERROR_FAILURE;
+			}
+
+
 	        rv = msgSend->CreateAndSendMessage(
 					          identity,
 					          m_compFields, 
 					          PR_FALSE,         					// PRBool                            digest_p,
 					          PR_FALSE,         					// PRBool                            dont_deliver_p,
-					          (nsMsgDeliverMode)deliverMode,   	// nsMsgDeliverMode                  mode,
-					          nsnull,                     		// nsIMessage *msgToReplace, 
+					          (nsMsgDeliverMode)deliverMode,   		// nsMsgDeliverMode                  mode,
+					          nsnull,                     			// nsIMessage *msgToReplace, 
 					          m_composeHTML?TEXT_HTML:TEXT_PLAIN,	// const char                        *attachment1_type,
 					          bodyString,               			// const char                        *attachment1_body,
 					          bodyLength,               			// PRUint32                          attachment1_body_length,
-					          nsnull,             				// const struct nsMsgAttachmentData  *attachments,
-					          nsnull,             				// const struct nsMsgAttachedFile    *preloaded_attachments,
-					          nsnull,             				// nsMsgSendPart                     *relatedPart,
-					          nsnull);                   			// listener array
+					          nsnull,             					// const struct nsMsgAttachmentData  *attachments,
+					          nsnull,             					// const struct nsMsgAttachedFile    *preloaded_attachments,
+					          nsnull,             					// nsMsgSendPart                     *relatedPart,
+					          tArray);                   			// listener array
+
+			delete tArray;
 	    }
 	    else
 	    	rv = NS_ERROR_FAILURE;
@@ -340,8 +363,8 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
     // rhp:
     // We shouldn't close the window if we are just saving a draft or a template
     // so do this check
-    if ( (deliverMode != nsMsgSaveAsDraft) && (deliverMode != nsMsgSaveAsTemplate) )
-  		CloseWindow();
+		if ( (deliverMode != nsMsgSaveAsDraft) && (deliverMode != nsMsgSaveAsTemplate) )
+			ShowWindow(PR_FALSE);
 	}
 		
 	return rv;
@@ -465,6 +488,17 @@ nsresult nsMsgCompose::CloseWindow()
 		m_editor = nsnull;	/* m_editor will be destroyed during the Close Window. Set it to null to
 							   be sure we wont use it anymore. */
 		m_webShellWin->Close();
+		m_webShellWin = nsnull;
+	}
+
+	return NS_OK;
+}
+
+nsresult nsMsgCompose::ShowWindow(PRBool show)
+{
+	if (m_webShellWin)
+	{
+		m_webShellWin->Show(show);
 	}
 
 	return NS_OK;
@@ -958,5 +992,95 @@ void nsMsgCompose::CleanUpRecipients(nsString& recipients)
 	recipients = newRecipient;
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the send operation. We have to create this class 
+// to listen for message send completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS(nsMsgComposeSendListener, nsCOMTypeInfo<nsIMsgSendListener>::GetIID());
+
+nsMsgComposeSendListener::nsMsgComposeSendListener() 
+{ 
+	mComposeObj = nsnull;
+	mDeliverMode = 0;
+	NS_INIT_REFCNT(); 
+}
+
+nsMsgComposeSendListener::~nsMsgComposeSendListener(void) 
+{
+}
+
+nsresult nsMsgComposeSendListener::SetComposeObj(nsMsgCompose *obj)
+{
+	mComposeObj = obj;
+	return NS_OK;
+}
+
+nsresult nsMsgComposeSendListener::SetDeliverMode(MSG_DeliverMode deliverMode)
+{
+	mDeliverMode = deliverMode;
+	return NS_OK;
+}
+
+nsresult nsMsgComposeSendListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
+{
+#ifdef NS_DEBUG
+	printf("nsMsgComposeSendListener::OnStartSending()\n");
+#endif
+	return NS_OK;
+}
+  
+nsresult nsMsgComposeSendListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+#ifdef NS_DEBUG
+	printf("nsMsgComposeSendListener::OnProgress()\n");
+#endif
+	return NS_OK;
+}
+
+nsresult nsMsgComposeSendListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
+{
+#ifdef NS_DEBUG
+	printf("nsMsgComposeSendListener::OnStatus()\n");
+#endif
+
+	return NS_OK;
+}
+  
+nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+                                     nsIFileSpec *returnFileSpec)
+{
+	nsresult rv = NS_OK;
+
+	if (mComposeObj)
+	{
+		if (NS_SUCCEEDED(aStatus))
+		{
+#ifdef NS_DEBUG
+			printf("nsMsgComposeSendListener: Success on the message send operation!\n");
+#endif
+			if ( (mDeliverMode != nsMsgSaveAsDraft) && (mDeliverMode != nsMsgSaveAsTemplate) )
+				mComposeObj->CloseWindow();
+		}
+		else
+		{
+#ifdef NS_DEBUG
+			printf("nsMsgComposeSendListener: the message send operation failed!\n");
+#endif
+			mComposeObj->ShowWindow(PR_TRUE);
+		}
+	}
+
+  return rv;
+}
+
+nsIMsgSendListener ** nsMsgComposeSendListener::CreateListenerArray()
+{
+  nsIMsgSendListener **tArray = (nsIMsgSendListener **)PR_Malloc(sizeof(nsIMsgSendListener *) * 2);
+  if (!tArray)
+    return nsnull;
+  nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
+  tArray[0] = this;
+  return tArray;
+}
 
 

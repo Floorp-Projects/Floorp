@@ -23,8 +23,10 @@
 #include "nsIWebShellWindow.h"
 #include "nsIOutputStream.h"
 #include "nsIMsgQuote.h"
+#include "nsIMsgSendListener.h"
 
 class QuotingOutputStreamImpl;
+class nsMsgComposeSendListener;
 
 class nsMsgCompose : public nsIMsgCompose
 {
@@ -64,9 +66,9 @@ class nsMsgCompose : public nsIMsgCompose
 	/* void CloseWindow (); */
 	NS_IMETHOD CloseWindow();
 
-  /* attribute nsIEditorShell editor; */ 
-  NS_IMETHOD GetEditor(nsIEditorShell * *aEditor); 
-  NS_IMETHOD SetEditor(nsIEditorShell * aEditor); 
+	/* attribute nsIEditorShell editor; */ 
+	NS_IMETHOD GetEditor(nsIEditorShell * *aEditor); 
+	NS_IMETHOD SetEditor(nsIEditorShell * aEditor); 
   
 	/* readonly attribute nsIDOMWindow domWindow; */
 	NS_IMETHOD GetDomWindow(nsIDOMWindow * *aDomWindow);
@@ -81,31 +83,33 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_IMETHOD GetWrapLength(PRInt32 *aWrapLength);
 /******/
 
-  nsresult LoadBody();
-  nsresult SetQuotingToFollow(PRBool aVal);
-
-private:
+	nsresult LoadBody();
+	nsresult SetQuotingToFollow(PRBool aVal);
+	nsresult ShowWindow(PRBool show);
+ private:
 
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const PRUnichar *callback);
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports* object);
 	void HackToGetBody(PRInt32 what); //Temporary
 	void CleanUpRecipients(nsString& recipients);
 
-  nsresult QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
+	nsresult QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
 
-	nsIEditorShell*		m_editor;
+	nsMsgComposeSendListener*	m_sendListener;
+	nsIEditorShell*				m_editor;
 	nsIDOMWindow*				m_window;
 	nsIWebShell*				m_webShell;
 	nsIWebShellWindow*			m_webShellWin;
 	nsMsgCompFields* 			m_compFields;
 	PRBool						m_composeHTML;
-  QuotingOutputStreamImpl *mOutStream;
-  nsCOMPtr<nsIOutputStream>          mBaseStream;
-  nsCOMPtr<nsIMsgQuote>              mQuote;
+	QuotingOutputStreamImpl *	mOutStream;
+	nsCOMPtr<nsIOutputStream>   mBaseStream;
+	nsCOMPtr<nsIMsgQuote>       mQuote;
 
-  // For only making a single LoadUrl call on the editor
-  PRBool                             mBodyLoaded;
-  PRBool                             mQuotingToFollow;
+	// For only making a single LoadUrl call on the editor
+	PRBool						mBodyLoaded;
+	PRBool						mQuotingToFollow;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -136,4 +140,39 @@ public:
 private:
     nsMsgCompose    *mComposeObj;
     nsString        mMsgBody;
+};
+
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the send operation. We have to create this class 
+// to listen for message send completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+class nsMsgComposeSendListener : public nsIMsgSendListener
+{
+public:
+	nsMsgComposeSendListener(void);
+	virtual ~nsMsgComposeSendListener(void);
+
+	// nsISupports interface
+	NS_DECL_ISUPPORTS
+
+	/* void OnStartSending (in string aMsgID, in PRUint32 aMsgSize); */
+	NS_IMETHOD OnStartSending(const char *aMsgID, PRUint32 aMsgSize);
+
+	/* void OnProgress (in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax); */
+	NS_IMETHOD OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
+
+	/* void OnStatus (in string aMsgID, in wstring aMsg); */
+	NS_IMETHOD OnStatus(const char *aMsgID, const PRUnichar *aMsg);
+
+	/* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
+	NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+                           nsIFileSpec *returnFileSpec);
+
+    NS_IMETHOD SetComposeObj(nsMsgCompose *obj);
+	NS_IMETHOD SetDeliverMode(MSG_DeliverMode deliverMode);
+	nsIMsgSendListener ** CreateListenerArray();
+
+private:
+    nsMsgCompose    *mComposeObj;
+	MSG_DeliverMode mDeliverMode;
 };

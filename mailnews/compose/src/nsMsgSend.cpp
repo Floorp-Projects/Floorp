@@ -1425,7 +1425,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    mSendListener->SetMsgComposeAndSendObject(this);
+    // RICHIE:
+    // Since we are in the same thread, we are going to use the callback method
+    // mSendListener->SetMsgComposeAndSendObject(this);
 
     nsFilePath    filePath(*mTempFileSpec);
     rv = smtpService->SendMailMessage(filePath, buf, mSendListener, nsnull);
@@ -1455,7 +1457,10 @@ nsMsgComposeAndSend::DeliverFileAsNews()
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    mSendListener->SetMsgComposeAndSendObject(this);
+    // RICHIE:
+    // Since we are in the same thread, we are going to use the callback method
+    // mSendListener->SetMsgComposeAndSendObject(this);
+    
     nsFilePath    filePath (*mTempFileSpec);
 
     rv = nntpService->PostMessage(filePath, mCompFields->GetNewsgroups(), mSendListener, nsnull);
