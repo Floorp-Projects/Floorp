@@ -350,13 +350,15 @@ extern OTClientContextPtr	clientContext;
 #define CLOSE_OPEN_TRANSPORT()	CloseOpenTransport()
 #endif /* TARGET_CARBON */
 
+extern pascal void __NSTerminate(void);
+
 void CleanupTermProc(void)
 {
 	_MD_StopInterrupts();	// deactive Time Manager task
 
 	CLOSE_OPEN_TRANSPORT();
 	
-	__terminate();
+	__NSTerminate();
 }
 
 
