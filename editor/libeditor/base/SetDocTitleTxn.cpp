@@ -23,7 +23,6 @@
 
 #include "SetDocTitleTxn.h"
 #include "nsEditor.h"
-#include "nsHTMLEditor.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
@@ -81,7 +80,8 @@ nsresult SetDocTitleTxn::SetDocTitle(nsString& aTitle)
   nsCOMPtr<nsIDOMDocument>  domDoc;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_FAILURE;
-  nsresult res = editor->GetDocument(getter_AddRefs(domDoc));
+  nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(rv)) return rv;
   if (!domDoc) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(domDoc);
   if (!HTMLDoc) return NS_ERROR_FAILURE;

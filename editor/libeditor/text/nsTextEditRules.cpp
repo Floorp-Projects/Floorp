@@ -23,7 +23,7 @@
 #include "nsTextEditRules.h"
 
 #include "nsEditor.h"
-#include "nsHTMLEditUtils.h"
+#include "nsTextEditUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
@@ -37,10 +37,8 @@
 #include "nsIContentIterator.h"
 #include "nsIEnumerator.h"
 #include "nsLayoutCID.h"
-#include "nsIEditProperty.h"
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
-#include "TypeInState.h"
 #include "nsIPref.h"
 #ifdef IBMBIDI
 #include "nsIPresContext.h"
@@ -165,8 +163,6 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
   // SetFlags() is really meant to only be called once
   // and at editor init time.  
 
-  PRBool willBePlaintext  = (aFlags & nsIPlaintextEditor::eEditorPlaintextMask) != 0;
-  PRBool alreadyPlaintext = (mFlags & nsIPlaintextEditor::eEditorPlaintextMask) != 0;
   mFlags = aFlags;
   return NS_OK;
 }
@@ -422,7 +418,7 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   temp = mEditor->GetChildAt(selNode, selOffset);
   if (temp) return NS_OK; // cant be at end of there is a node after us.
   nearNode = mEditor->GetChildAt(selNode, selOffset-1);
-  if (nearNode && nsHTMLEditUtils::IsBreak(nearNode) && !nsHTMLEditUtils::IsMozBR(nearNode))
+  if (nearNode && nsTextEditUtils::IsBreak(nearNode) && !nsTextEditUtils::IsMozBR(nearNode))
   {
     nsCOMPtr<nsISelection> sel(aSelection);
     nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(sel));

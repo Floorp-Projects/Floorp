@@ -22,6 +22,7 @@
 
 #include "nsHTMLEditor.h"
 #include "nsHTMLEditRules.h"
+#include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
 
 #include "nsEditorEventListeners.h"
@@ -50,6 +51,7 @@
 #include "nsIDocumentStateListener.h"
 
 #include "nsIStyleContext.h"
+#include "TypeInState.h"
 
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
@@ -482,7 +484,7 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   // split any matching style nodes above the node/offset
   nsCOMPtr<nsIDOMNode> parent, tmp = *aNode;
   PRInt32 offset;
-  while (tmp && !nsHTMLEditUtils::IsBody(tmp))
+  while (tmp && !nsTextEditUtils::IsBody(tmp))
   {
     if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
          (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(tmp)) || // node is href - test if really <a href=...
@@ -505,7 +507,9 @@ PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
   if (!aNode)               return PR_FALSE;
   if (!IsContainer(aNode))  return PR_FALSE;
   if (!IsEditable(aNode))   return PR_FALSE;
-  if (!IsInlineNode(aNode)) return PR_FALSE;
+  PRBool isBlock (PR_FALSE);
+  NodeIsBlock(aNode, isBlock);
+  if (isBlock) return PR_FALSE;
   if (NodeIsType(aNode, nsIEditProperty::a)) return PR_FALSE;
   return PR_TRUE;
 }
@@ -718,7 +722,7 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
   if (NS_FAILED(res)) return res;
   
   while ( startNode && 
-          !nsHTMLEditUtils::IsBody(startNode) && 
+          !nsTextEditUtils::IsBody(startNode) && 
           IsAtFrontOfNode(startNode, startOffset) )
   {
     res = GetNodeLocation(startNode, address_of(parent), &startOffset);
@@ -728,7 +732,7 @@ nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
   if (!startNode) return NS_ERROR_NULL_POINTER;
   
   while ( endNode && 
-          !nsHTMLEditUtils::IsBody(endNode) && 
+          !nsTextEditUtils::IsBody(endNode) && 
           IsAtEndOfNode(endNode, endOffset) )
   {
     res = GetNodeLocation(endNode, address_of(parent), &endOffset);

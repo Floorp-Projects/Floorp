@@ -133,6 +133,14 @@ public:
   /* ------------ HTML content methods -------------- */
 
   /**
+   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD
+   *   This does NOT consider CSS effect on display type
+   *
+   * @param aNode      the node to test
+   */
+  NS_IMETHOD NodeIsBlock(nsIDOMNode *aNode, PRBool &aIsBlock)=0;
+
+  /**
    * Insert some HTML source at the current location
    *
    * @param aInputString   the string to be inserted

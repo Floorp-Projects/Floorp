@@ -32,8 +32,9 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsEditor.h"
-#include "nsPlaintextEditor.h"
 #include "nsIContentIterator.h"
+
+class nsPlaintextEditor;
 
 /***************************************************************************
  * stack based helper class for batching a collection of txns inside a 
@@ -48,23 +49,6 @@ class nsAutoPlaceHolderBatch
                    { if (mEd) mEd->BeginPlaceHolderTransaction(atom); }
     ~nsAutoPlaceHolderBatch() { if (mEd) mEd->EndPlaceHolderTransaction(); }
 };
-
-/***************************************************************************
- * stack based helper class for detecting end of editor initialization, in
- * order to triger "end of init" initialization of the edit rules.
- */
-class nsAutoEditInitRulesTrigger
-{
-  private:
-    nsPlaintextEditor *mEd;
-    nsresult &mRes;
-  public:
-    nsAutoEditInitRulesTrigger( nsPlaintextEditor *aEd, nsresult &aRes) : mEd(aEd), mRes(aRes)
-                   { if (mEd) mEd->BeginEditorInit(); }
-    ~nsAutoEditInitRulesTrigger() { if (mEd) mRes = mEd->EndEditorInit(); }
-};
-
-
 
 /***************************************************************************
  * stack based helper class for batching a collection of txns.  

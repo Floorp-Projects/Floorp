@@ -324,14 +324,6 @@ public:
   /* ------------ Node manipulation methods -------------- */
 
   /**
-   * Tests if a node is a BLOCK element according the the HTML 4.0 DTD
-   *   This does NOT consider CSS effect on display type
-   *
-   * @param aNode      the node to test
-   */
-  NS_IMETHOD NodeIsBlock(nsIDOMNode *aNode, PRBool &aIsBlock)=0;
-
-  /**
    * SetAttribute() sets the attribute of aElement.
    * No checking is done to see if aAttribute is a legal attribute of the node,
    * or if aValue is a legal value of aAttribute.

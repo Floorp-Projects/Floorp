@@ -22,9 +22,7 @@
 
 
 #include "nsPlaintextEditor.h"
-#include "nsHTMLEditUtils.h"
-
-#include "nsEditorEventListeners.h"
+#include "nsTextEditUtils.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
@@ -44,7 +42,6 @@
 
 #include "nsIFrameSelection.h"  // For TABLESELECTION_ defines
 #include "nsIIndependentSelection.h" //domselections answer to frameselection
-
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
@@ -80,7 +77,6 @@
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
 #include "nsISupportsPrimitives.h"
-#include "InsertTextTxn.h"
 
 // netwerk
 #include "nsIURI.h"
@@ -93,12 +89,7 @@
 #include "nsIDragService.h"
 #include "nsIDOMNSUIEvent.h"
 
-// Transactionas
-#include "PlaceholderTxn.h"
-#include "nsStyleSheetTxns.h"
-
 // Misc
-#include "TextEditorTest.h"
 #include "nsEditorUtils.h"
 #include "nsIPref.h"
 const PRUnichar nbsp = 160;

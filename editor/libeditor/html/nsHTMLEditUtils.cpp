@@ -21,6 +21,7 @@
  */
 
 #include "nsHTMLEditUtils.h"
+#include "nsTextEditUtils.h"
 
 #include "nsString.h"
 #include "nsEditor.h"
@@ -28,124 +29,21 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLAnchorElement.h"
 
-PRBool
-nsHTMLEditUtils::NodeIsType(nsIDOMNode *aNode, const nsAReadableString& aTag)
-{
-  NS_PRECONDITION(aNode, "null node passed to nsHTMLEditUtils::NodeIsType");
-  if (aNode)
-  {
-    nsAutoString tag;
-    nsEditor::GetTagString(aNode,tag);
-    tag.ToLowerCase();
-    if (tag.Equals(aTag))
-      return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-/********************************************************
- *  helper methods from nsTextEditRules
- ********************************************************/
- 
 ///////////////////////////////////////////////////////////////////////////
-// IsBody: true if node an html body node
-//                  
-PRBool 
-nsHTMLEditUtils::IsBody(nsIDOMNode *node)
-{
-  return NodeIsType(node, NS_LITERAL_STRING("body"));
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsBreak: true if node an html break node
-//                  
-PRBool 
-nsHTMLEditUtils::IsBreak(nsIDOMNode *node)
-{
-  return NodeIsType(node, NS_LITERAL_STRING("br"));
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsBreak: true if node an html break node
 //                  
 PRBool 
 nsHTMLEditUtils::IsBig(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("big"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("big"));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// IsBreak: true if node an html break node
 //                  
 PRBool 
 nsHTMLEditUtils::IsSmall(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("small"));
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsMozBR: true if node an html br node with type = _moz
-//                  
-PRBool 
-nsHTMLEditUtils::IsMozBR(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsMozBR");
-  if (IsBreak(node) && HasMozAttr(node)) return PR_TRUE;
-  return PR_FALSE;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// HasMozAttr: true if node has type attribute = _moz
-//             (used to indicate the div's and br's we use in
-//              mail compose rules)
-//                  
-PRBool 
-nsHTMLEditUtils::HasMozAttr(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::HasMozAttr");
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(node);
-  if (elem)
-  {
-    nsAutoString typeAttrName; typeAttrName.AssignWithConversion("type");
-    nsAutoString typeAttrVal;
-    nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
-    typeAttrVal.ToLowerCase();
-    if (NS_SUCCEEDED(res) && (typeAttrVal.EqualsWithConversion("_moz")))
-      return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// InBody: true if node is a descendant of the body
-//                  
-PRBool 
-nsHTMLEditUtils::InBody(nsIDOMNode *node, nsIEditor *editor)
-{
-  if ( node )
-  {
-    nsCOMPtr<nsIDOMElement> bodyElement;
-    nsresult res = editor->GetRootElement(getter_AddRefs(bodyElement));
-    if (NS_FAILED(res) || !bodyElement)
-      return res?res:NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
-    nsCOMPtr<nsIDOMNode> tmp;
-    nsCOMPtr<nsIDOMNode> p = node;
-    while (p && p!= bodyNode)
-    {
-      if (NS_FAILED(p->GetParentNode(getter_AddRefs(tmp))) || !tmp)
-        return PR_FALSE;
-      p = tmp;
-    }
-  }
-  return PR_TRUE;
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("small"));
 }
 
 
@@ -182,7 +80,7 @@ nsHTMLEditUtils::IsHeader(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsParagraph(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("p"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("p"));
 }
 
 
@@ -232,7 +130,7 @@ nsHTMLEditUtils::IsTableElement(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsTable(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("table"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("table"));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -241,7 +139,7 @@ nsHTMLEditUtils::IsTable(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsTableRow(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("tr"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("tr"));
 }
 
 
@@ -309,7 +207,7 @@ nsHTMLEditUtils::IsList(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsOrderedList(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("ol"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("ol"));
 }
 
 
@@ -319,7 +217,7 @@ nsHTMLEditUtils::IsOrderedList(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("ul"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("ul"));
 }
 
 
@@ -329,7 +227,7 @@ nsHTMLEditUtils::IsUnorderedList(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsDefinitionList(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("dl"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("dl"));
 }
 
 
@@ -339,7 +237,7 @@ nsHTMLEditUtils::IsDefinitionList(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsBlockquote(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("blockquote"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("blockquote"));
 }
 
 
@@ -349,7 +247,7 @@ nsHTMLEditUtils::IsBlockquote(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsPre(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("pre"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("pre"));
 }
 
 
@@ -359,7 +257,7 @@ nsHTMLEditUtils::IsPre(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("address"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("address"));
 }
 
 
@@ -369,7 +267,7 @@ nsHTMLEditUtils::IsAddress(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsAnchor(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("a"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("a"));
 }
 
 
@@ -379,7 +277,7 @@ nsHTMLEditUtils::IsAnchor(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsImage(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("img"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("img"));
 }
 
 PRBool 
@@ -417,7 +315,7 @@ nsHTMLEditUtils::IsNamedAnchor(nsIDOMNode *aNode)
 PRBool 
 nsHTMLEditUtils::IsDiv(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("div"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("div"));
 }
 
 
@@ -427,7 +325,7 @@ nsHTMLEditUtils::IsDiv(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsNormalDiv(nsIDOMNode *node)
 {
-  if (IsDiv(node) && !nsHTMLEditUtils::HasMozAttr(node)) return PR_TRUE;
+  if (IsDiv(node) && !nsTextEditUtils::HasMozAttr(node)) return PR_TRUE;
   return PR_FALSE;
 }
 
@@ -438,7 +336,7 @@ nsHTMLEditUtils::IsNormalDiv(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsMozDiv(nsIDOMNode *node)
 {
-  if (IsDiv(node) && HasMozAttr(node)) return PR_TRUE;
+  if (IsDiv(node) && nsTextEditUtils::HasMozAttr(node)) return PR_TRUE;
   return PR_FALSE;
 }
 
@@ -474,7 +372,7 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsTextarea(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("textarea"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("textarea"));
 }
 
 
@@ -484,7 +382,7 @@ nsHTMLEditUtils::IsTextarea(nsIDOMNode *node)
 PRBool 
 nsHTMLEditUtils::IsMap(nsIDOMNode *node)
 {
-  return NodeIsType(node, NS_LITERAL_STRING("map"));
+  return nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("map"));
 }
 
 

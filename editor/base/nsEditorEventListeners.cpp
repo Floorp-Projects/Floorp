@@ -32,7 +32,6 @@
 #include "nsIDOMElement.h"
 #include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIEditProperty.h"
 #include "nsISupportsArray.h"
 #include "nsIStringStream.h"
 #include "nsIDOMKeyEvent.h"

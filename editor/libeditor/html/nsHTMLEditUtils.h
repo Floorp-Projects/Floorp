@@ -25,23 +25,15 @@
 
 #include "prtypes.h"  // for PRBool
 #include "nsError.h"  // for nsresult
-#include "nsString.h" // for nsAReadableString
 class nsIEditor;
 class nsIDOMNode;
 
 class nsHTMLEditUtils
 {
 public:
-  static PRBool NodeIsType(nsIDOMNode *aNode, const nsAReadableString& aTag);
-
   // from nsTextEditRules:
-  static PRBool IsBody(nsIDOMNode *aNode);
-  static PRBool IsBreak(nsIDOMNode *aNode);
   static PRBool IsBig(nsIDOMNode *aNode);
   static PRBool IsSmall(nsIDOMNode *aNode);
-  static PRBool IsMozBR(nsIDOMNode *aNode);
-  static PRBool HasMozAttr(nsIDOMNode *aNode);
-  static PRBool InBody(nsIDOMNode *aNode, nsIEditor *aEditor);
 
   // from nsHTMLEditRules:
   static PRBool IsHeader(nsIDOMNode *aNode);

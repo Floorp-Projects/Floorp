@@ -37,10 +37,8 @@
 #include "nsIDOMRange.h"
 #include "nsIPrivateTextRange.h"
 #include "nsITransactionManager.h"
-#include "TransactionFactory.h"
 #include "nsIComponentManager.h"
 #include "nsISupportsArray.h"
-#include "nsIEditProperty.h"
 #include "nsIDOMCharacterData.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDTD.h"
@@ -71,7 +69,6 @@ class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
 class nsIFile;
 class nsISelectionController;
-
 
 /** implementation of an editor object.  it will be the controller/focal point 
  *  for the main editor services. i.e. the GUIManager, publishing, transaction 
@@ -483,15 +480,6 @@ public:
                                  nsCOMPtr<nsIDOMNode> *aParent, 
                                  PRInt32    *aOffset);
 
-  /** set aIsInline to PR_TRUE if aNode is inline as defined by HTML DTD */
-  static nsresult IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline);
-
-  /** set aIsBlock to PR_TRUE if aNode is block as defined by HTML DTD */
-  static nsresult IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock);
-
-  /** This version is for exposure to JavaScript */
-  NS_IMETHOD NodeIsBlock(nsIDOMNode *aNode, PRBool &aIsBlock);
-
   /** returns the number of things inside aNode in the out-param aCount.  
     * @param  aNode is the node to get the length of.  
     *         If aNode is text, returns number of characters. 
@@ -601,51 +589,12 @@ public:
   static nsresult GetTagString(nsIDOMNode *aNode, nsString& outString);
   static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
   static PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
-  static PRBool IsBlockNode(nsIDOMNode *aNode);
-  static PRBool IsInlineNode(nsIDOMNode *aNode);
-  static nsCOMPtr<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
-  static PRBool HasSameBlockNodeParent(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
-  /** Determines the bounding nodes for the block section containing aNode.
-    * The calculation is based on some nodes intrinsically being block elements
-    * acording to HTML.  Style sheets are not considered in this calculation.
-    * <BR> tags separate block content sections.  So the HTML markup:
-    * <PRE>
-    *      <P>text1<BR>text2<B>text3</B></P>
-    * </PRE>
-    * contains two block content sections.  The first has the text node "text1"
-    * for both endpoints.  The second has "text2" as the left endpoint and
-    * "text3" as the right endpoint.
-    * Notice that offsets aren't required, only leaf nodes.  Offsets are implicit.
-    *
-    * @param aNode      the block content returned includes aNode
-    * @param aLeftNode  [OUT] the left endpoint of the block content containing aNode
-    * @param aRightNode [OUT] the right endpoint of the block content containing aNode
-    *
-    */
-  static nsresult GetBlockSection(nsIDOMNode  *aNode,
-                                  nsIDOMNode **aLeftNode, 
-                                  nsIDOMNode **aRightNode);
-
-  /** Compute the set of block sections in a given range.
-    * A block section is the set of (leftNode, rightNode) pairs given
-    * by GetBlockSection.  The set is computed by computing the 
-    * block section for every leaf node in the range and throwing 
-    * out duplicates.
-    *
-    * @param aRange     The range to compute block sections for.
-    * @param aSections  Allocated storage for the resulting set, stored as nsIDOMRanges.
-    */
-  static nsresult GetBlockSectionsForRange(nsIDOMRange      *aRange, 
-                                           nsISupportsArray *aSections);
-
-  
   static PRBool IsTextOrElementNode(nsIDOMNode *aNode);
   static PRBool IsTextNode(nsIDOMNode *aNode);
   
   static PRInt32 GetIndexOf(nsIDOMNode *aParent, nsIDOMNode *aChild);
   static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
   
-  static nsCOMPtr<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
   static nsresult GetStartNodeAndOffset(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *outStartNode, PRInt32 *outStartOffset);
   static nsresult GetEndNodeAndOffset(nsISelection *aSelection, nsCOMPtr<nsIDOMNode> *outEndNode, PRInt32 *outEndOffset);
 
@@ -663,18 +612,6 @@ public:
   nsresult ClearSelection();
 
   nsresult IsPreformatted(nsIDOMNode *aNode, PRBool *aResult);
-  nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, 
-                                PRInt32 aOffset, 
-                                PRBool *outIsSpace, 
-                                PRBool *outIsNBSP,
-                                nsCOMPtr<nsIDOMNode> *outNode = 0,
-                                PRInt32 *outOffset = 0);
-  nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, 
-                                PRInt32 aOffset, 
-                                PRBool *outIsSpace, 
-                                PRBool *outIsNBSP,
-                                nsCOMPtr<nsIDOMNode> *outNode = 0,
-                                PRInt32 *outOffset = 0);
 
   nsresult SplitNodeDeep(nsIDOMNode *aNode, 
                          nsIDOMNode *aSplitPointParent, 
@@ -693,6 +630,13 @@ public:
   PRBool GetShouldTxnSetSelection();
   void   SetShouldTxnSetSelection(PRBool aShould);
 
+public:
+  // Argh!  These transaction names are used by PlaceholderTxn and
+  // nsPlaintextEditor.  They should be localized to those classes.
+  static nsIAtom *gTypingTxnName;
+  static nsIAtom *gIMETxnName;
+  static nsIAtom *gDeleteTxnName;
+
 protected:
 
   PRUint32        mFlags;		// behavior flags. See nsPlaintextEditor.h for the flags we use.
@@ -702,7 +646,6 @@ protected:
   nsIViewManager *mViewManager;
   PRInt32         mUpdateCount;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
-  nsCOMPtr<nsIEditProperty>  mEditProperty;
   nsCOMPtr<nsICSSStyleSheet> mLastStyleSheet;			// is owning this dangerous?
   nsWeakPtr         mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
   nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
