@@ -33,7 +33,7 @@
 
 CORE_DEPTH = ../../..
 
-DEFINES += -DNSPR20 -DSECUTIL_NEW
+DEFINES += -DNSPR20
 
 # MODULE public and private header  directories are implicitly REQUIRED.
 MODULE = security 
