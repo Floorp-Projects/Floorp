@@ -444,6 +444,7 @@ nsOutlinerBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSiz
       PRInt32 err;
       desiredRows = size.ToInteger(&err);
       mHasFixedRowCount = PR_TRUE;
+      mPageCount = desiredRows;
     } else
       desiredRows = 1;
   } else {
@@ -455,12 +456,13 @@ nsOutlinerBodyFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSiz
       PRInt32 err;
       desiredRows = rows.ToInteger(&err);
       mHasFixedRowCount = PR_TRUE;
+      mPageCount = desiredRows;
     } else
       desiredRows = 0;
   }
 
   aSize.height = GetRowHeight() * desiredRows;
-
+  
   AddBorderAndPadding(aSize);
   AddInset(aSize);
   nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize);
@@ -572,7 +574,9 @@ nsOutlinerBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& 
 
   if (recompute) {
     mInnerBox = GetInnerBox();
-    mPageCount = mRowHeight ? (mInnerBox.height / mRowHeight) : 0;
+
+    if (!mHasFixedRowCount)
+      mPageCount = mRowHeight ? (mInnerBox.height / mRowHeight) : 0;
 
     PRInt32 rowCount;
     mView->GetRowCount(&rowCount);
@@ -1892,7 +1896,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   PRInt32 oldPageCount = mPageCount;
   mRowHeight = GetRowHeight();
   mInnerBox = GetInnerBox();
-  mPageCount = mInnerBox.height/mRowHeight;
+
+  if (!mHasFixedRowCount)
+    mPageCount = mInnerBox.height/mRowHeight;
 
   if (mRowHeight != oldRowHeight || oldPageCount != mPageCount) {
     // Schedule a ResizeReflow that will update our page count properly.
