@@ -248,6 +248,9 @@ Initialize(nsIModule* aSelf)
   nsSVGAtoms::AddRefAtoms();
 #endif
 
+#ifdef DEBUG
+  nsFrame::DisplayReflowStartup();
+#endif
   nsCSSFrameConstructor::InitGlobals();
   nsTextTransformer::Initialize();
 
@@ -284,6 +287,9 @@ Shutdown(nsIModule* aSelf)
   nsContentList::Shutdown();
   nsComputedDOMStyle::Shutdown();
   CSSLoaderImpl::Shutdown();
+#ifdef DEBUG
+  nsFrame::DisplayReflowShutdown();
+#endif
 
   // Release all of our atoms
   nsColorNames::ReleaseTable();

@@ -4833,6 +4833,8 @@ nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
 // Start Display Reflow
 #ifdef DEBUG
 
+MOZ_DECL_CTOR_COUNTER(DR_cookie)
+
 DR_cookie::DR_cookie(nsIPresContext*          aPresContext,
                      nsIFrame*                aFrame, 
                      const nsHTMLReflowState& aReflowState,
@@ -4840,11 +4842,13 @@ DR_cookie::DR_cookie(nsIPresContext*          aPresContext,
                      nsReflowStatus&          aStatus)
   :mPresContext(aPresContext), mFrame(aFrame), mReflowState(aReflowState), mMetrics(aMetrics), mStatus(aStatus)
 {
+  MOZ_COUNT_CTOR(DR_cookie);
   mValue = nsFrame::DisplayReflowEnter(aPresContext, mFrame, mReflowState);
 }
 
 DR_cookie::~DR_cookie()
 {
+  MOZ_COUNT_DTOR(DR_cookie);
   nsFrame::DisplayReflowExit(mPresContext, mFrame, mMetrics, mStatus, mValue);
 }
 
@@ -4897,7 +4901,7 @@ struct DR_State
   nsVoidArray mFrameTreeLeaves;
 };
 
-static DR_State DR_state; // the one and only DR_State
+static DR_State *DR_state; // the one and only DR_State
 
 struct DR_RulePart 
 {
@@ -4916,10 +4920,17 @@ void DR_RulePart::Destroy()
   delete this;
 }
 
+MOZ_DECL_CTOR_COUNTER(DR_Rule)
+
 struct DR_Rule 
 {
-  DR_Rule() : mLength(0), mTarget(nsnull), mDisplay(PR_FALSE) {}
-  ~DR_Rule() { if (mTarget) mTarget->Destroy(); }
+  DR_Rule() : mLength(0), mTarget(nsnull), mDisplay(PR_FALSE) {
+    MOZ_COUNT_CTOR(DR_Rule);
+  }
+  ~DR_Rule() {
+    if (mTarget) mTarget->Destroy();
+    MOZ_COUNT_DTOR(DR_Rule);
+  }
   void AddPart(nsIAtom* aFrameType);
 
   PRUint32      mLength;
@@ -4935,10 +4946,13 @@ void DR_Rule::AddPart(nsIAtom* aFrameType)
   mLength++;
 }
 
+MOZ_DECL_CTOR_COUNTER(DR_FrameTypeInfo)
+
 struct DR_FrameTypeInfo
 {
   DR_FrameTypeInfo(nsIAtom* aFrmeType, char* aFrameNameAbbrev, char* aFrameName);
   ~DR_FrameTypeInfo() { 
+      MOZ_COUNT_DTOR(DR_FrameTypeInfo);
       PRInt32 numElements;
       numElements = mRules.Count();
       for (PRInt32 i = numElements - 1; i >= 0; i--) {
@@ -4959,11 +4973,22 @@ DR_FrameTypeInfo::DR_FrameTypeInfo(nsIAtom* aFrameType,
   mType = aFrameType;
   strcpy(mNameAbbrev, aFrameNameAbbrev);
   strcpy(mName, aFrameName);
+  MOZ_COUNT_CTOR(DR_FrameTypeInfo);
 }
+
+MOZ_DECL_CTOR_COUNTER(DR_FrameTreeNode)
 
 struct DR_FrameTreeNode
 {
-  DR_FrameTreeNode(nsIFrame* aFrame, DR_FrameTreeNode* aParent) : mFrame(aFrame), mParent(aParent), mDisplay(0), mIndent(0) {}
+  DR_FrameTreeNode(nsIFrame* aFrame, DR_FrameTreeNode* aParent) : mFrame(aFrame), mParent(aParent), mDisplay(0), mIndent(0)
+  {
+    MOZ_COUNT_CTOR(DR_FrameTreeNode);
+  }
+
+  ~DR_FrameTreeNode()
+  {
+    MOZ_COUNT_DTOR(DR_FrameTreeNode);
+  }
 
   nsIFrame*         mFrame;
   DR_FrameTreeNode* mParent;
@@ -4973,10 +4998,14 @@ struct DR_FrameTreeNode
 
 // DR_State implementation
 
+MOZ_DECL_CTOR_COUNTER(DR_State)
+
 DR_State::DR_State() 
 : mInited(PR_FALSE), mActive(PR_FALSE), mCount(0), mAssert(-1), mIndentStart(0), 
   mIndentUndisplayedFrames(PR_FALSE), mDisplayPixelErrors(PR_FALSE)
-{}
+{
+  MOZ_COUNT_CTOR(DR_State);
+}
 
 void DR_State::Init() 
 {
@@ -5020,6 +5049,7 @@ void DR_State::Init()
 
 DR_State::~DR_State()
 {
+  MOZ_COUNT_DTOR(DR_State);
   PRInt32 numElements, i;
   numElements = mWildRules.Count();
   for (i = numElements - 1; i >= 0; i--) {
@@ -5398,17 +5428,17 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
                                     PRBool                   aChanged)
 {
   if (aTreeNode.mDisplay) {
-    DR_state.DisplayFrameTypeInfo(aFrame, aTreeNode.mIndent);
+    DR_state->DisplayFrameTypeInfo(aFrame, aTreeNode.mIndent);
 
 
     char width[16];
     char height[16];
-    DR_state.PrettyUC(aReflowState.availableWidth, width);
-    DR_state.PrettyUC(aReflowState.availableHeight, height);
+    DR_state->PrettyUC(aReflowState.availableWidth, width);
+    DR_state->PrettyUC(aReflowState.availableHeight, height);
     printf("r=%d a=%s,%s ", aReflowState.reason, width, height); 
 
-    DR_state.PrettyUC(aReflowState.mComputedWidth, width);
-    DR_state.PrettyUC(aReflowState.mComputedHeight, height);
+    DR_state->PrettyUC(aReflowState.mComputedWidth, width);
+    DR_state->PrettyUC(aReflowState.mComputedHeight, height);
     printf("c=%s,%s ", width, height);
 
     nsIFrame* inFlow;
@@ -5423,8 +5453,8 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
     if (aChanged) 
       printf("CHANGED \n");
     else 
-      printf("cnt=%d \n", DR_state.mCount);
-    if (DR_state.mDisplayPixelErrors) {
+      printf("cnt=%d \n", DR_state->mCount);
+    if (DR_state->mDisplayPixelErrors) {
       float p2t;
       aPresContext->GetScaledPixelsToTwips(&p2t);
       CheckPixelError(aReflowState.availableWidth, p2t);
@@ -5439,12 +5469,12 @@ void* nsFrame::DisplayReflowEnter(nsIPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
                                   const nsHTMLReflowState& aReflowState)
 {
-  if (!DR_state.mInited) DR_state.Init();
-  if (!DR_state.mActive) return nsnull;
+  if (!DR_state->mInited) DR_state->Init();
+  if (!DR_state->mActive) return nsnull;
 
   NS_ASSERTION(aFrame, "invalid call");
 
-  DR_FrameTreeNode* treeNode = DR_state.CreateTreeNode(aFrame, aReflowState);
+  DR_FrameTreeNode* treeNode = DR_state->CreateTreeNode(aFrame, aReflowState);
   if (treeNode) {
     DisplayReflowEnterPrint(aPresContext, aFrame, aReflowState, *treeNode, PR_FALSE);
   }
@@ -5457,34 +5487,34 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
                                 nsReflowStatus       aStatus,
                                 void*                aFrameTreeNode)
 {
-  if (!DR_state.mActive) return;
+  if (!DR_state->mActive) return;
 
   NS_ASSERTION(aFrame, "DisplayReflowExit - invalid call");
   if (!aFrameTreeNode) return;
 
   DR_FrameTreeNode* treeNode = (DR_FrameTreeNode*)aFrameTreeNode;
   if (treeNode->mDisplay) {
-    DR_state.DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
+    DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
 
     char width[16];
     char height[16];
-    DR_state.PrettyUC(aMetrics.width, width);
-    DR_state.PrettyUC(aMetrics.height, height);
+    DR_state->PrettyUC(aMetrics.width, width);
+    DR_state->PrettyUC(aMetrics.height, height);
     printf("d=%s,%s ", width, height);
 
     if (aMetrics.mComputeMEW) {
-      DR_state.PrettyUC(aMetrics.mMaxElementWidth, width);
+      DR_state->PrettyUC(aMetrics.mMaxElementWidth, width);
       printf("me=%s ", width);
     }
     if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-      DR_state.PrettyUC(aMetrics.mMaximumWidth, width);
+      DR_state->PrettyUC(aMetrics.mMaximumWidth, width);
       printf("m=%s ", width);
     }
     if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
       printf("status=%d", aStatus);
     }
     printf("\n");
-    if (DR_state.mDisplayPixelErrors) {
+    if (DR_state->mDisplayPixelErrors) {
       float p2t;
       aPresContext->GetScaledPixelsToTwips(&p2t);
       CheckPixelError(aMetrics.width, p2t);
@@ -5495,7 +5525,20 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
         CheckPixelError(aMetrics.mMaximumWidth, p2t);
     }
   }
-  DR_state.DeleteTreeNode(*treeNode);
+  DR_state->DeleteTreeNode(*treeNode);
+}
+
+/* static */ void
+nsFrame::DisplayReflowStartup()
+{
+  DR_state = new DR_State();
+}
+
+/* static */ void
+nsFrame::DisplayReflowShutdown()
+{
+  delete DR_state;
+  DR_state = nsnull;
 }
 
 void DR_cookie::Change() const
