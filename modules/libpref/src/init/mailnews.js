@@ -230,6 +230,7 @@ pref("mailnews.sort_by_date_received",      false);
 
 pref("mailnews.send_default_charset",       "ISO-8859-1");
 pref("mailnews.view_default_charset",       "ISO-8859-1");
+pref("mailnews.force_charset_override",     false);
 
 pref("mailnews.language_sensitive_font",    true);
 
