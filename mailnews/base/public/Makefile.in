@@ -50,11 +50,11 @@ XPIDLSRCS =				  \
 		nsIMsgCopyService.idl	\
 		nsIMsgCopyServiceListener.idl	\
 		nsIMsgStatusFeedback.idl \
+		nsIMsgMailNewsUrl.idl	\
 		$(NULL)
 
 EXPORTS =				\
 		msgCore.h		\
-		nsIMsgMailNewsUrl.h	\
 		nsIMsgHdr.h		\
 		nsMsgFolderFlags.h	\
 		nsMsgHeaderMasks.h	\
