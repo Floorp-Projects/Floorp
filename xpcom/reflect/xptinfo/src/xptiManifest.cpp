@@ -189,7 +189,7 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
                            (int) i,
                            file.GetName(),
                            (int) file.GetDirectory(),
-                           size32, file.GetDate()))
+                           size32, PRInt64(file.GetDate())))
         goto out;
     }
 
