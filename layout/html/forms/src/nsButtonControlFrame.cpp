@@ -205,6 +205,8 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       }
     } else if (nsHTMLAtoms::size == aAttribute) {
       nsFormFrame::StyleChangeReflow(aPresContext, this);
+    } else {
+      result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
     }
   }
   return result;

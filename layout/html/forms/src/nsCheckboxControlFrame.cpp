@@ -190,7 +190,9 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         }
         NS_RELEASE(button);
       }
-    }   
+    } else {
+      result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    }
   }
   return result;
 }
