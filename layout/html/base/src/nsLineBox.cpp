@@ -22,6 +22,11 @@
 #include "nsLineLayout.h"
 #include "prprf.h"
 
+#ifdef DEBUG
+#include "nsISizeOfHandler.h"
+#include "nsLayoutAtoms.h"
+#endif
+
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
 {
   mFirstChild = aFrame;
@@ -203,6 +208,25 @@ nsLineBox::CheckIsBlock() const
 {
   PRBool isBlock = nsLineLayout::TreatFrameAsBlock(mFirstChild);
   return isBlock == IsBlock();
+}
+#endif
+
+#ifdef DEBUG
+void
+nsLineBox::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  NS_PRECONDITION(aResult, "null OUT parameter pointer");
+  *aResult = sizeof(*this);
+
+  // Add in the size needed for floaters associated with this line
+  if (mFloaters.NotEmpty()) {
+    PRUint32  floatersSize;
+
+    mFloaters.SizeOf(aHandler, &floatersSize);
+    // Base size of embedded object was included in sizeof(*this) above
+    floatersSize -= sizeof(mFloaters);
+    aHandler->AddSize(nsLayoutAtoms::lineBoxFloaters, floatersSize);
+  }
 }
 #endif
 
@@ -531,6 +555,20 @@ nsFloaterCacheList::Remove(nsFloaterCache* aElement)
     fcp = &fc->mNext;
   }
 }
+
+#ifdef DEBUG
+void
+nsFloaterCacheList::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  NS_PRECONDITION(aResult, "null OUT parameter pointer");
+  *aResult = sizeof(*this);
+
+  // Add in the space for each floater
+  for (nsFloaterCache* cache = Head(); cache; cache = cache->Next()) {
+    *aResult += sizeof(*cache);
+  }
+}
+#endif
 
 //----------------------------------------------------------------------
 

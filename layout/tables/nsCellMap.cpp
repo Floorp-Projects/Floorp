@@ -704,6 +704,7 @@ PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex) const
 #ifdef DEBUG
 void nsCellMap::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
+  NS_PRECONDITION(aResult, "null OUT parameter pointer");
   PRUint32 sum = sizeof(*this);
 
   // Add in the size of the void arrays. Because we have emnbedded objects
