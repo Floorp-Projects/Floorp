@@ -3706,6 +3706,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
       if (!parentFolder || !canFileMessages)
       {
         filter->SetEnabled(PR_FALSE);
+        m_filterList->SaveToDefaultFile();
         destIFolder->ThrowAlertMsg("filterDisabled",msgWindow);
         return NS_MSG_NOT_A_MAIL_FOLDER;
       }

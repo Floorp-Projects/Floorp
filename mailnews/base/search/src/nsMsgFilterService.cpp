@@ -569,6 +569,8 @@ nsresult nsMsgFilterAfterTheFact::ApplyFilter()
           {
             m_curFilter->SetEnabled(PR_FALSE);
             destIFolder->ThrowAlertMsg("filterDisabled",m_msgWindow);
+            // we need to explicitly save the filter file.
+            m_filters->SaveToDefaultFile();
             // In the case of applying multiple filters
             // we might want to remove the filter from the list, but 
             // that's a bit evil since we really don't know that we own
