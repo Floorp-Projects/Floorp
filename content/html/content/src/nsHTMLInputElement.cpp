@@ -1104,12 +1104,8 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
     return;
   }
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-
-  if (esm) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-  }
+  aPresContext->EventStateManager()->SetContentState(this,
+                                                     NS_EVENT_STATE_FOCUS);
 
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
@@ -1136,11 +1132,9 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
   }
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-
-  if (esm && mDocument) {
-    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  if (mDocument) {
+    aPresContext->EventStateManager()->SetContentState(nsnull,
+                                                       NS_EVENT_STATE_FOCUS);
   }
 }
 
@@ -1198,18 +1192,15 @@ nsHTMLInputElement::Select()
     // returning false)
     if (status == nsEventStatus_eIgnore) {
       if (presContext) {
-        nsCOMPtr<nsIEventStateManager> esm;
-        presContext->GetEventStateManager(getter_AddRefs(esm));
-        if (esm) {
-          // XXX Fix for bug 135345 - ESM currently does not check to see if we
-          // have focus before attempting to set focus again and may cause
-          // infinite recursion.  For now check if we have focus and do not set
-          // focus again if already focused.
-          PRInt32 currentState;
-          esm->GetContentState(this, currentState);
-          if (!(currentState & NS_EVENT_STATE_FOCUS)) {
-            esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-          }
+        nsIEventStateManager *esm = presContext->EventStateManager();
+        // XXX Fix for bug 135345 - ESM currently does not check to see if we
+        // have focus before attempting to set focus again and may cause
+        // infinite recursion.  For now check if we have focus and do not set
+        // focus again if already focused.
+        PRInt32 currentState;
+        esm->GetContentState(this, currentState);
+        if (!(currentState & NS_EVENT_STATE_FOCUS)) {
+          esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
         }
       }
 
@@ -2038,13 +2029,11 @@ nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
   if (manager &&
       NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(aEventType, PR_TRUE, PR_TRUE);
+
     PRBool noDefault;
-    nsCOMPtr<nsIEventStateManager> esm;
-    aPresContext->GetEventStateManager(getter_AddRefs(esm));
-    if (esm) {
-      nsCOMPtr<nsISupports> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMHTMLInputElement *, this)));
-      esm->DispatchNewEvent(target, event, &noDefault);
-    }
+    nsISupports *target = NS_STATIC_CAST(nsIDOMHTMLInputElement*, this);
+    aPresContext->EventStateManager()->DispatchNewEvent(target, event,
+                                                        &noDefault);
   }
 
   return NS_OK;

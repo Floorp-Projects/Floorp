@@ -2370,15 +2370,9 @@ nsGenericElement::GetRangeList() const
 void
 nsGenericElement::SetFocus(nsIPresContext* aPresContext)
 {
-  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
-    return;
-  }
- 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-
-  if (esm) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+  if (!HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+    aPresContext->EventStateManager()->SetContentState(this,
+                                                       NS_EVENT_STATE_FOCUS);
   }
 }
 

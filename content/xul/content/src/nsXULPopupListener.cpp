@@ -340,8 +340,7 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
         currFrame = currFrame->GetParent();
     } 
     nsCOMPtr<nsIContent> focusableContent = do_QueryInterface(element);
-    nsCOMPtr<nsIEventStateManager> esm;
-    context->GetEventStateManager(getter_AddRefs(esm));
+    nsIEventStateManager *esm = context->EventStateManager();
 
     if (focusableContent)
       focusableContent->SetFocus(context);

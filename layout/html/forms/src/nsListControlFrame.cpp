@@ -2865,10 +2865,8 @@ nsListControlFrame::FireMenuItemActiveEvent()
       NS_SUCCEEDED(manager->CreateEvent(mPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(NS_LITERAL_STRING("DOMMenuItemActive"), PR_TRUE, PR_TRUE);
     PRBool noDefault;
-    nsCOMPtr<nsIEventStateManager> esm;
-    mPresContext->GetEventStateManager(getter_AddRefs(esm));
-    if (esm)
-      esm->DispatchNewEvent(mContent, event, &noDefault);
+    mPresContext->EventStateManager()->DispatchNewEvent(mContent, event,
+                                                        &noDefault);
   }
 }
 #endif
@@ -2897,18 +2895,21 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
   printf("-->\n");
 #endif
 
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIEventStateManager> stateManager;
-  if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
-    nsCOMPtr<nsIContent> content;
-    stateManager->GetEventTargetContent(nsnull, getter_AddRefs(content));
+  nsresult rv;
+  
+  nsCOMPtr<nsIContent> content;
+  mPresContext->EventStateManager()->
+    GetEventTargetContent(nsnull, getter_AddRefs(content));
 
-    nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
-    if (optionContent) {
-      aCurIndex = GetIndexFromContent(optionContent);
-      rv = NS_OK;
-    }
+  nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
+  if (optionContent) {
+    aCurIndex = GetIndexFromContent(optionContent);
+    rv = NS_OK;
+  } else {
+    rv = NS_ERROR_FAILURE;
   }
+
+
   return rv;
 }
 

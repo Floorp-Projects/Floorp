@@ -323,11 +323,9 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
     switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       {
-        nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
-          stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
-          NS_RELEASE(stateManager);
-        }
+        aPresContext->EventStateManager()->
+          SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+
         *aEventStatus = nsEventStatus_eConsumeDoDefault;
       }
       break;

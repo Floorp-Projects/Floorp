@@ -294,12 +294,8 @@ nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
     return;
   }
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-
-  if (esm) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-  }
+  aPresContext->EventStateManager()->SetContentState(this,
+                                                     NS_EVENT_STATE_FOCUS);
 
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 
@@ -326,11 +322,9 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
   }
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-
-  if (esm && mDocument) {
-    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  if (mDocument) {
+    aPresContext->EventStateManager()->SetContentState(nsnull,
+                                                       NS_EVENT_STATE_FOCUS);
   }
 }
 
@@ -361,13 +355,8 @@ nsHTMLTextAreaElement::Select()
   // If the DOM event was not canceled (e.g. by a JS event handler
   // returning false)
   if (status == nsEventStatus_eIgnore) {
-    nsCOMPtr<nsIEventStateManager> esm;
-
-    presContext->GetEventStateManager(getter_AddRefs(esm));
-
-    if (esm) {
-      esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-    }
+    presContext->EventStateManager()->SetContentState(this,
+                                                      NS_EVENT_STATE_FOCUS);
 
     nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_TRUE);
 

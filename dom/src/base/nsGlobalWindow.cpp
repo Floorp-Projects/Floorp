@@ -3054,12 +3054,8 @@ GlobalWindowImpl::CheckForAbusePoint()
       if (presShell) {
         nsCOMPtr<nsIPresContext> presContext;
         presShell->GetPresContext(getter_AddRefs(presContext));
-        if (presContext) {
-          nsCOMPtr<nsIEventStateManager> esManager;
-          presContext->GetEventStateManager(getter_AddRefs(esManager));
-          if (esManager)
-            esManager->GetCurrentEvent(&currentEvent);
-        }
+        if (presContext)
+          presContext->EventStateManager()->GetCurrentEvent(&currentEvent);
       }
     }
 
@@ -4170,13 +4166,9 @@ GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
     // Retrieve the context
     nsCOMPtr<nsIPresContext> aPresContext;
     shell->GetPresContext(getter_AddRefs(aPresContext));
-
-    nsCOMPtr<nsIEventStateManager> esm;
-    aPresContext->GetEventStateManager(getter_AddRefs(esm));
-    if (esm) {
-      return esm->DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject *,
-                                                  this), aEvent, _retval);
-    }
+    aPresContext->EventStateManager()->
+      DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject*, this),
+                       aEvent, _retval);
   }
 
   return NS_ERROR_FAILURE;
@@ -5853,26 +5845,23 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
   nsCOMPtr<nsIPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
-    nsCOMPtr<nsIEventStateManager> esm;
-    if (NS_SUCCEEDED(presContext->GetEventStateManager(getter_AddRefs(esm)))) {
-      // Need root widget.
-      nsCOMPtr<nsIPresShell> presShell;
-      mDocShell->GetPresShell(getter_AddRefs(presShell));
-      NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    // Need root widget.
+    nsCOMPtr<nsIPresShell> presShell;
+    mDocShell->GetPresShell(getter_AddRefs(presShell));
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-      nsIViewManager* vm = presShell->GetViewManager();
-      NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+    nsIViewManager* vm = presShell->GetViewManager();
+    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
-      nsIView *rootView;
-      vm->GetRootView(rootView);
-      NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
+    nsIView *rootView;
+    vm->GetRootView(rootView);
+    NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
-      nsIWidget* widget = rootView->GetWidget();
-      NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+    nsIWidget* widget = rootView->GetWidget();
+    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
-      // Call esm and set cursor.
-      rv = esm->SetCursor(cursor, widget, PR_TRUE);
-    }
+    // Call esm and set cursor.
+    rv = presContext->EventStateManager()->SetCursor(cursor, widget, PR_TRUE);
   }
 
   return rv;

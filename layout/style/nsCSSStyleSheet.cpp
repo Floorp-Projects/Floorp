@@ -3128,12 +3128,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
     mParentContent = aContent->GetParent();
 
     // get the event state
-    nsIEventStateManager* eventStateManager = nsnull;
-    mPresContext->GetEventStateManager(&eventStateManager);
-    if(eventStateManager) {
-      eventStateManager->GetContentState(aContent, mEventState);
-      NS_RELEASE(eventStateManager);
-    }
+    mPresContext->EventStateManager()->GetContentState(aContent, mEventState);
 
     // get the styledcontent interface and the ID
     if (NS_SUCCEEDED(aContent->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&mStyledContent))) {

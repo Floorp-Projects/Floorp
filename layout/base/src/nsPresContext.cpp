@@ -68,6 +68,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
 #include "nsAutoPtr.h"
+#include "nsEventStateManager.h"
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
@@ -131,7 +132,6 @@ PR_STATIC_CALLBACK(PRBool) destroy_loads(nsHashKey *aKey, void *aData, void* clo
 
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 #include "nsContentCID.h"
-static NS_DEFINE_CID(kEventStateManagerCID, NS_EVENTSTATEMANAGER_CID);
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 
 
@@ -622,6 +622,15 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     GetUserPreferences();
   }
 
+  mEventManager = new nsEventStateManager();
+  if (!mEventManager)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = mEventManager->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mEventManager->SetPresContext(this);
+
 #ifdef DEBUG
   mInitialized = PR_TRUE;
 #endif
@@ -1022,33 +1031,6 @@ nsPresContext::GetContainer()
     result = nsnull;
 
   return result;
-}
-
-nsIEventStateManager*
-nsIPresContext::GetEventStateManager()
-{
-  if (!mEventManager) {
-    nsresult rv = CallCreateInstance(kEventStateManagerCID, &mEventManager);
-    if (NS_FAILED(rv)) {
-      return nsnull;
-    }
-
-    //Not refcnted, set null in destructor
-    mEventManager->SetPresContext(this);
-  }
-  return mEventManager;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
-{
-  NS_PRECONDITION(aManager, "null ptr");
-
-  *aManager = GetEventStateManager();
-  if (!*aManager)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aManager);
-  return NS_OK;
 }
 
 #ifdef IBMBIDI

@@ -2587,18 +2587,15 @@ nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
 
   // With a valid PresContext we can get the ESM 
   // and register the access key
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+  nsIEventStateManager *esm = aPresContext->EventStateManager();
 
-  nsresult rv = NS_OK;
+  nsresult rv;
 
-  if (esm) {
-    PRUint32 key = accessKey.First();
-    if (aDoReg)
-      rv = esm->RegisterAccessKey(mContent, key);
-    else
-      rv = esm->UnregisterAccessKey(mContent, key);
-  }
+  PRUint32 key = accessKey.First();
+  if (aDoReg)
+    rv = esm->RegisterAccessKey(mContent, key);
+  else
+    rv = esm->UnregisterAccessKey(mContent, key);
 
   return rv;
 }
@@ -2616,10 +2613,8 @@ nsBoxFrame::FireDOMEvent(nsIPresContext *aPresContext, const nsAString& aDOMEven
         NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
       event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
       PRBool noDefault;
-      nsCOMPtr<nsIEventStateManager> esm;
-      aPresContext->GetEventStateManager(getter_AddRefs(esm));
-      if (esm)
-        esm->DispatchNewEvent(mContent, event, &noDefault);
+      aPresContext->EventStateManager()->DispatchNewEvent(mContent, event,
+                                                          &noDefault);
     }
   }
 }

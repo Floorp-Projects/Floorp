@@ -605,13 +605,11 @@ nsFormControlFrame::RegUnRegAccessKey(nsIPresContext* aPresContext, nsIFrame * a
   }
 
   if (NS_CONTENT_ATTR_NOT_THERE != rv) {
-    nsCOMPtr<nsIEventStateManager> stateManager;
-    if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(stateManager)))) {
-      if (aDoReg) {
-        return stateManager->RegisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
-      } else {
-        return stateManager->UnregisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
-      }
+    nsIEventStateManager *stateManager = aPresContext->EventStateManager();
+    if (aDoReg) {
+      return stateManager->RegisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
+    } else {
+      return stateManager->UnregisterAccessKey(aFrame->GetContent(), (PRUint32)accessKey.First());
     }
   }
   return NS_ERROR_FAILURE;

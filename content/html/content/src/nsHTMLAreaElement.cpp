@@ -248,25 +248,22 @@ nsHTMLAreaElement::SetFocus(nsIPresContext* aPresContext)
   if (!aPresContext)
     return;
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-  if (esm) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+  aPresContext->EventStateManager()->SetContentState(this,
+                                                     NS_EVENT_STATE_FOCUS);
     
-    // Make sure the presentation is up-to-date    
-    if (mDocument) {
-      mDocument->FlushPendingNotifications();
-    }
+  // Make sure the presentation is up-to-date    
+  if (mDocument) {
+    mDocument->FlushPendingNotifications();
+  }
 
-    nsIPresShell *presShell = aPresContext->GetPresShell();
+  nsIPresShell *presShell = aPresContext->GetPresShell();
 
-    if (presShell) {
-      nsIFrame* frame = nsnull;
-      presShell->GetPrimaryFrameFor(this, &frame);
-      if (frame) {
-        presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
-                                       NS_PRESSHELL_SCROLL_ANYWHERE);
-      }
+  if (presShell) {
+    nsIFrame* frame = nsnull;
+    presShell->GetPrimaryFrameFor(this, &frame);
+    if (frame) {
+      presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
+                                     NS_PRESSHELL_SCROLL_ANYWHERE);
     }
   }
 }
@@ -277,11 +274,8 @@ nsHTMLAreaElement::RemoveFocus(nsIPresContext* aPresContext)
   if (!aPresContext)
     return;
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-  if (esm) {
-    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
-  }
+  aPresContext->EventStateManager()->SetContentState(nsnull,
+                                                     NS_EVENT_STATE_FOCUS);
 }
 
 void

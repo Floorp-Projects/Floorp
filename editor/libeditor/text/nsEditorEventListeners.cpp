@@ -977,13 +977,9 @@ IsTargetFocused(nsIDOMEventTarget* aTarget)
   if (!presContext)
     return PR_FALSE;
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  presContext->GetEventStateManager(getter_AddRefs(esm));
-  if (!esm)
-    return PR_FALSE;
-
   nsCOMPtr<nsIContent> focusedContent;
-  esm->GetFocusedContent(getter_AddRefs(focusedContent));
+  presContext->EventStateManager()->
+    GetFocusedContent(getter_AddRefs(focusedContent));
 
   // focusedContent will be null in the case where the document has focus,
   // and so will content.

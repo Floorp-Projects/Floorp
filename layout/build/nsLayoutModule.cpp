@@ -51,7 +51,6 @@
 #include "nsDOMCID.h"
 #include "nsCSSOMFactory.h"
 #include "nsInspectorCSSUtils.h"
-#include "nsEventStateManager.h"
 #include "nsEventListenerManager.h"
 #include "nsGenericElement.h"
 #include "nsHTMLAtoms.h"
@@ -537,7 +536,6 @@ MAKE_CTOR(CreateCaret,                  nsICaret,               NS_NewCaret)
 
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
-MAKE_CTOR(CreateEventStateManager,        nsIEventStateManager,        NS_NewEventStateManager)
 MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
 MAKE_CTOR(CreateDocumentViewer,           nsIDocumentViewer,           NS_NewDocumentViewer)
 MAKE_CTOR(CreateHTMLStyleSheet,           nsIHTMLStyleSheet,           NS_NewHTMLStyleSheet)
@@ -924,11 +922,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_EVENTLISTENERMANAGER_CID,
     nsnull,
     CreateEventListenerManager },
-
-  { "Event state manager",
-    NS_EVENTSTATEMANAGER_CID,
-    nsnull,
-    CreateEventStateManager },
 
   { "DOM Event group",
     NS_DOMEVENTGROUP_CID,

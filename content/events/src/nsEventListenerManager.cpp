@@ -1807,11 +1807,8 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   nsCOMPtr<nsIPresContext> aPresContext;
   shell->GetPresContext(getter_AddRefs(aPresContext));
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  nsresult rv = aPresContext->GetEventStateManager(getter_AddRefs(esm));
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  return esm->DispatchNewEvent(mTarget, aEvent, _retval);
+  return aPresContext->EventStateManager()->DispatchNewEvent(mTarget, aEvent,
+                                                             _retval);
 }
 
 // nsIDOM3EventTarget interface

@@ -226,10 +226,9 @@ static PRBool
 EventTargetIn(nsIPresContext *aPresContext, nsEvent *aEvent,
               nsIContent *aChild, nsIContent *aStop)
 {
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
   nsCOMPtr<nsIContent> c;
-  esm->GetEventTargetContent(aEvent, getter_AddRefs(c));
+  aPresContext->EventStateManager()->GetEventTargetContent(aEvent,
+                                                           getter_AddRefs(c));
   nsIContent *content = c;
   while (content) {
     if (content == aChild) {

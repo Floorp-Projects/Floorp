@@ -278,11 +278,8 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
     return;
   }
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-  if (esm) {
-    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
-  }
+  aPresContext->EventStateManager()->SetContentState(this,
+                                                     NS_EVENT_STATE_FOCUS);
 
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
@@ -306,10 +303,9 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
   }
 
-  nsCOMPtr<nsIEventStateManager> esm;
-  aPresContext->GetEventStateManager(getter_AddRefs(esm));
-  if (esm && mDocument) {
-    esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+  if (mDocument) {
+    aPresContext->EventStateManager()->SetContentState(nsnull,
+                                                       NS_EVENT_STATE_FOCUS);
   }
 }
 
@@ -468,12 +464,10 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
       case NS_MOUSE_LEFT_BUTTON_DOWN:
         {
-          nsIEventStateManager *stateManager;
-          if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
-            stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE |
-                                          NS_EVENT_STATE_FOCUS);
-            NS_RELEASE(stateManager);
-          }
+          aPresContext->EventStateManager()->
+            SetContentState(this,
+                            NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+
           *aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }
         break;
@@ -503,11 +497,9 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
       case NS_MOUSE_ENTER_SYNTH:
         {
-          nsIEventStateManager *stateManager;
-          if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
-            stateManager->SetContentState(this, NS_EVENT_STATE_HOVER);
-            NS_RELEASE(stateManager);
-          }
+          aPresContext->EventStateManager()->
+            SetContentState(this, NS_EVENT_STATE_HOVER);
+
           *aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }
         break;
@@ -515,11 +507,9 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
         // XXX this doesn't seem to do anything yet
       case NS_MOUSE_EXIT_SYNTH:
         {
-          nsIEventStateManager *stateManager;
-          if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
-            stateManager->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
-            NS_RELEASE(stateManager);
-          }
+          aPresContext->EventStateManager()->
+            SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+
           *aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }
         break;
