@@ -46,7 +46,6 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsNetCID.h"
-#include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
 
@@ -86,7 +85,7 @@ nsIMIMEService *
 nsJARProtocolHandler::MimeService()
 {
     if (!mMimeService)
-        mMimeService = do_GetService(NS_MIMESERVICE_CONTRACTID);
+        mMimeService = do_GetService("@mozilla.org/mime;1");
 
     return mMimeService.get();
 }

@@ -30,7 +30,6 @@ MODULE		= necko
 LIBRARY_NAME	= neckobase_s
 REQUIRES	= xpcom \
 		  string \
-		  exthandler \
 		  mimetype \
 		  uconv \
 		  locale \
