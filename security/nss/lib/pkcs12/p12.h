@@ -161,6 +161,10 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
 		       digestIOFn dRead, digestIOFn dWrite, void *dArg);
 
 extern SECStatus
+SEC_PKCS12DecoderSetTargetTokenCAs(SEC_PKCS12DecoderContext *p12dcx,
+                		   SECPKCS12TargetTokenCAs tokenCAs);
+
+extern SECStatus
 SEC_PKCS12DecoderUpdate(SEC_PKCS12DecoderContext *p12dcx, unsigned char *data,
 			unsigned long len);
 

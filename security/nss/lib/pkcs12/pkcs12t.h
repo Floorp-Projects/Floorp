@@ -42,6 +42,15 @@
 #include "secpkcs7.h"
 #include "secdig.h"	/* for SGNDigestInfo */
 
+typedef enum {
+  SECPKCS12TargetTokenNoCAs,		/* CA get loaded intothe fixed token,
+					 * User certs go to target token */
+  SECPKCS12TargetTokenIntermediateCAs,  /* User certs and intermediates go to
+					 * target token, root certs got to
+					 * fixed token */
+  SECPKCS12TargetTokenAllCAs,		/* All certs go to target token */
+} SECPKCS12TargetTokenCAs;
+
 /* PKCS12 Structures */
 typedef struct SEC_PKCS12PFXItemStr SEC_PKCS12PFXItem;
 typedef struct SEC_PKCS12MacDataStr SEC_PKCS12MacData;

@@ -236,6 +236,7 @@ NSS_CMSRecipientInfo_CreateNew;
 NSS_CMSRecipientInfo_CreateFromDER;
 NSS_CMSRecipientInfo_Encode;
 NSS_CMSRecipientInfo_GetCertAndKey;
+SEC_PKCS12DecoderSetTargetTokenCAs;
 ;+    local:
 ;+       *;
 ;+};

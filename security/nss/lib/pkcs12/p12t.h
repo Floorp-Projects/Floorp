@@ -39,6 +39,7 @@
 #include "pkcs11.h"
 #include "secpkcs7.h"
 #include "secdig.h"	/* for SGNDigestInfo */
+#include "pkcs12t.h"
 
 #define SEC_PKCS12_VERSION	3
 
@@ -118,6 +119,7 @@ struct sec_PKCS12SafeBagStr {
     PK11SlotInfo *slot;
     SECItem *pwitem;
     PRBool oldBagType;
+    SECPKCS12TargetTokenCAs tokenCAs;
 };
     
 struct sec_PKCS12SafeContentsStr {
