@@ -149,7 +149,7 @@ LIBS =		       \
 
 include $(topsrcdir)/config/config.mk
 
-CFLAGS += $(TOOLKIT_CFLAGS)
+CXXFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 

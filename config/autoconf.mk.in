@@ -61,10 +61,15 @@ MOZ_BUILD_NSPR = @MOZ_BUILD_NSPR@
 
 # Should the extra CFLAGS only be added in Makefile.ins that need them? 
 ifdef MOZ_DEBUG
-OS_CFLAGS	= $(filter-out -O%, @CFLAGS@) $(DSO_CFLAGS)
+OS_CFLAGS	= $(filter-out -O%, @CFLAGS@)
+OS_CXXFLAGS	= $(filter-out -O%, @CXXFLAGS@)
 else
-OS_CFLAGS	= @CFLAGS@ $(DSO_CFLAGS)
+OS_CFLAGS	= @CFLAGS@
+OS_CXXFLAGS	= @CXXFLAGS@
 endif
+
+OS_CFLAGS	+= $(DSO_CFLAGS)
+OS_CXXFLAGS	+= $(DSO_CFLAGS)
 
 OS_INCLUDES	= $(NSPR_CFLAGS) $(JPEG_CFLAGS) $(PNG_CFLAGS) $(ZLIB_CFLAGS)
 OS_LIBS		= @LDFLAGS@ @LIBS@
@@ -82,12 +87,7 @@ XLDFLAGS	= @XLDFLAGS@
 XLIBS		= @XLIBS@
 
 CC		    = @CC@
-
-# The right way to set these rtti and exceptions flags is probably using
-# CXXFLAGS.  But, CXXFLAGS is currently not used.  It scares me a lot 
-# set CXXFLAGS for the whole project without knowing what side effects
-# it could have in implicit make rules or even rules.mk
-CXX		    = @CXX@ @MOZ_RTTI_FLAGS@ @MOZ_EXCEPTIONS_FLAGS@
+CXX		    = @CXX@
 
 GNU_CC		= @GNU_CC@
 GNU_CXX		= @GNU_CXX@

@@ -54,7 +54,7 @@ CPPSRCS := \
 
 include $(topsrcdir)/config/config.mk
 
-CFLAGS += $(TK_CFLAGS)
+CXXFLAGS += $(TK_CFLAGS)
 
 TOOLKIT_DSO_LDOPTS = $(addprefix $(DIST)/lib/libraptorwidget, \
 			$(addsuffix _s.a, $(MOZ_TOOLKIT)))
