@@ -164,7 +164,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 
       case JOF_CONST:
 	atom = GET_ATOM(cx, script, pc);
-	str = js_ValueToString(cx, ATOM_KEY(atom));
+	str = js_ValueToSource(cx, ATOM_KEY(atom));
 	if (!str)
 	    return 0;
 	cstr = js_DeflateString(cx, str->chars, str->length);
@@ -222,16 +222,13 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 	    pc2 += JUMP_OFFSET_LEN;
 
 	    key = ATOM_KEY(atom);
-	    str = js_ValueToString(cx, key);
+	    str = js_ValueToSource(cx, key);
 	    if (!str)
 		return 0;
 	    cstr = js_DeflateString(cx, str->chars, str->length);
 	    if (!cstr)
 		return 0;
-	    if (JSVAL_IS_STRING(key))
-		fprintf(fp, "\n\t\"%s\": %d", cstr, off);
-	    else
-		fprintf(fp, "\n\t%s: %d", cstr, off);
+	    fprintf(fp, "\n\t%s: %d", cstr, off);
 	    JS_free(cx, cstr);
 	    npairs--;
 	}
