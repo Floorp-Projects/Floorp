@@ -20,8 +20,21 @@
         </getter>
       </property>
 
-      <property name="value" onset="this.setAttribute('value',val); return val;"
-                             onget="return this.getAttribute('value');"/>
+      <property name="value" onget="return this.getAttribute('value');">
+        <setter>
+          <![CDATA[
+            this.setAttribute("value", val);
+            var children = this._getRadioChildren();
+            for (var i = 0; i < children.length; i++) {
+              if (children[i].value == val) {
+                this.selectedItem = children[i];
+                break;
+              }
+            }
+            return val;
+          ]]>
+        </setter>
+      </property>
       <property name="disabled">
         <getter>
         <![CDATA[
@@ -89,7 +102,7 @@
             alreadySelected = val.getAttribute("selected") == "true";
             val.setAttribute("focused", focused);
             val.setAttribute("selected", "true");
-            this.value = val.value;
+            this.setAttribute("value", val.value);
           }
 
           // uncheck all other group nodes
