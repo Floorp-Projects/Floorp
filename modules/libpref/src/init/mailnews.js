@@ -125,6 +125,7 @@ localDefPref("mail.addr_book.locality.pos", -1);
 localDefPref("mail.addr_book.company.pos", -1);
 pref("mail.attach_vcard",                   false);
 pref("mail.html_compose",                   true);
+pref("mail.compose.other.header",	    "");
 pref("mail.htmldomains", "netscape.com,mcom.com");
 pref("mail.play_sound",                     true);
 pref("mail.send_html",                      true);
