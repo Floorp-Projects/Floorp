@@ -116,7 +116,7 @@ public:
   virtual PRInt32 GetRowIndex() const;
 
   /** set this row's starting row index */
-  virtual void SetRowIndex (int aRowIndex);
+  void SetRowIndex (int aRowIndex);
 
   virtual PRBool Contains(const nsPoint& aPoint);
 
@@ -245,6 +245,11 @@ inline PRInt32 nsTableRowFrame::GetRowIndex() const
 {
   NS_ASSERTION(0<=mRowIndex, "bad state: row index");
   return (mRowIndex);
+}
+
+inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
+{
+  mRowIndex = aRowIndex;
 }
 
 inline void nsTableRowFrame::ResetInitChildren()

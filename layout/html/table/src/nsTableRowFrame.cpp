@@ -318,11 +318,6 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
   }
 }
 
-void nsTableRowFrame::SetRowIndex (int aRowIndex)
-{
-  mRowIndex = aRowIndex;
-}
-
 /** returns the height of the tallest child in this row (ignoring any cell with rowspans) */
 nscoord nsTableRowFrame::GetTallestChild() const
 {
