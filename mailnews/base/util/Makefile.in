@@ -73,7 +73,6 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsMsgGroupRecord.cpp \
 		nsMsgLineBuffer.cpp \
-		nsMsgFolder.cpp \
 		nsMsgDBFolder.cpp \
 		nsUint8Array.cpp \
 		nsUInt32Array.cpp \
@@ -99,7 +98,6 @@ EXPORTS		= \
 		nsUInt32Array.h \
 		nsMsgKeySet.h \
 		nsMsgKeyArray.h \
-		nsMsgFolder.h \
 		nsMsgDBFolder.h \
 		nsLocalFolderSummarySpec.h \
 		nsNewsSummarySpec.h \

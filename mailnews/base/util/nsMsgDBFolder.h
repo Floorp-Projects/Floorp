@@ -39,106 +39,86 @@
 #define nsMsgDBFolder_h__
 
 #include "msgCore.h"
-#include "nsMsgFolder.h" 
+#include "nsIMsgFolder.h" 
+#include "nsRDFResource.h"
 #include "nsIDBFolderInfo.h"
 #include "nsIMsgDatabase.h"
+#include "nsIMsgIncomingServer.h"
 #include "nsCOMPtr.h"
+#include "nsStaticAtom.h"
 #include "nsIDBChangeListener.h"
+#include "nsIURL.h"
+#include "nsWeakReference.h"
+#include "nsIMsgFilterList.h"
 #include "nsIUrlListener.h"
+#include "nsIFileSpec.h"
 #include "nsIMsgHdr.h"
 #include "nsIOutputStream.h"
 #include "nsITransport.h"
 #include "nsIMsgStringService.h"
 class nsIMsgFolderCacheElement;
 class nsIJunkMailPlugin;
+class nsICollation;
 
  /* 
   * nsMsgDBFolder
   * class derived from nsMsgFolder for those folders that use an nsIMsgDatabase
   */ 
 
-class NS_MSG_BASE nsMsgDBFolder:  public nsMsgFolder,
-                                        public nsIDBChangeListener,
-                                        public nsIUrlListener
+class NS_MSG_BASE nsMsgDBFolder: public nsRDFResource,
+                                 public nsSupportsWeakReference,
+                                 public nsIMsgFolder,
+                                 public nsIDBChangeListener,
+                                 public nsIUrlListener
 {
 public: 
   nsMsgDBFolder(void);
   virtual ~nsMsgDBFolder(void);
-  NS_DECL_NSIDBCHANGELISTENER
-  
-  NS_IMETHOD StartFolderLoading(void);
-  NS_IMETHOD EndFolderLoading(void);
-  NS_IMETHOD GetCharset(char * *aCharset);
-  NS_IMETHOD SetCharset(const char * aCharset);
-  NS_IMETHOD GetCharsetOverride(PRBool *aCharsetOverride);
-  NS_IMETHOD SetCharsetOverride(PRBool aCharsetOverride);
-  NS_IMETHOD GetFirstNewMessage(nsIMsgDBHdr **firstNewMessage);
-  NS_IMETHOD ClearNewMessages();
-  NS_IMETHOD GetFlags(PRUint32 *aFlags);
-  NS_IMETHOD GetExpungedBytes(PRUint32 *count);
-
-  NS_IMETHOD GetMsgDatabase(nsIMsgWindow *aMsgWindow,
-                            nsIMsgDatabase** aMsgDatabase);
-  NS_IMETHOD SetMsgDatabase(nsIMsgDatabase *msgDatabase);
-
   NS_DECL_ISUPPORTS_INHERITED
-
+  NS_DECL_NSIMSGFOLDER
+  NS_DECL_NSICOLLECTION
+  NS_DECL_NSISERIALIZABLE
+  NS_DECL_NSIDBCHANGELISTENER
   NS_DECL_NSIURLLISTENER
-
-  NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache, PRBool deep);
+  
   NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
   NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
-  NS_IMETHOD GetManyHeadersToDownload(PRBool *_retval);
 
-  NS_IMETHOD AddMessageDispositionState(nsIMsgDBHdr *aMessage, nsMsgDispositionState aDispositionFlag);
-  NS_IMETHOD MarkAllMessagesRead(void);
-  NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
-  NS_IMETHOD SetFlag(PRUint32 flag);
+  // nsRDFResource overrides
+  NS_IMETHOD Init(const char* aURI);
+
+  // These functions are used for tricking the front end into thinking that we have more 
+  // messages than are really in the DB.  This is usually after and IMAP message copy where
+  // we don't want to do an expensive select until the user actually opens that folder
+  // These functions are called when MSG_Master::GetFolderLineById is populating a MSG_FolderLine
+  // struct used by the FE
+  PRInt32 GetNumPendingUnread();
+  PRInt32 GetNumPendingTotalMessages();
+
+  void ChangeNumPendingUnread(PRInt32 delta);
+  void ChangeNumPendingTotalMessages(PRInt32 delta);
+
+  NS_IMETHOD MatchName(nsString *name, PRBool *matches);
+
+protected:
+  
+	// this is a little helper function that is not part of the public interface. 
+	// we use it to get the IID of the incoming server for the derived folder.
+	// w/out a function like this we would have to implement GetServer in each
+	// derived folder class.
+	virtual const char* GetIncomingServerType() = 0;
+
+	virtual nsresult CreateBaseMessageURI(const char *aURI);
 
 
-  NS_IMETHOD Shutdown(PRBool shutdownChildren);
-  NS_IMETHOD ForceDBClosed();
-  NS_IMETHOD GetHasNewMessages(PRBool *hasNewMessages);
-  NS_IMETHOD SetHasNewMessages(PRBool hasNewMessages);
-  NS_IMETHOD GetGettingNewMessages(PRBool *gettingNewMessages);
-  NS_IMETHOD SetGettingNewMessages(PRBool gettingNewMessages);
-
-  NS_IMETHOD GetSupportsOffline(PRBool *aSupportsOffline);
-  NS_IMETHOD ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result);
-  NS_IMETHOD GetOfflineFileStream(nsMsgKey msgKey, PRUint32 *offset, PRUint32 *size, nsIInputStream **_retval);
-  NS_IMETHOD HasMsgOffline(nsMsgKey msgKey, PRBool *result);
-  NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *msgWindow);
-  NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
-  NS_IMETHOD GetRetentionSettings(nsIMsgRetentionSettings **settings);
-  NS_IMETHOD SetRetentionSettings(nsIMsgRetentionSettings *settings);
-  NS_IMETHOD GetDownloadSettings(nsIMsgDownloadSettings **settings);
-  NS_IMETHOD SetDownloadSettings(nsIMsgDownloadSettings *settings);
-  NS_IMETHOD CompactAllOfflineStores(nsIMsgWindow *msgWindow, nsISupportsArray *aOfflineFolderArray);
-  NS_IMETHOD GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
-  NS_IMETHOD GetOfflineStoreInputStream(nsIInputStream **outputStream);
-  NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
-  NS_IMETHOD MatchOrChangeFilterDestination(nsIMsgFolder *oldFolder, PRBool caseInsensitive, PRBool *changed);
-  NS_IMETHOD GetDBTransferInfo(nsIDBFolderInfo **aTransferInfo);
-  NS_IMETHOD SetDBTransferInfo(nsIDBFolderInfo *aTransferInfo);
-  NS_IMETHOD GetStringProperty(const char *propertyName, char **propertyValue);
-  NS_IMETHOD SetStringProperty(const char *propertyName, const char *propertyValue);
-  NS_IMETHOD CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun);
-  NS_IMETHOD GetLastMessageLoaded(nsMsgKey *aMsgKey);
-  NS_IMETHOD SetLastMessageLoaded(nsMsgKey aMsgKey);
-
-  /* temporary stubs for bug 218825 */
-  NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders,
-                              nsIMsgWindow *msgWindow);
-  NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages,
-                              PRBool markRead);
-  NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages,
-                                 PRBool markFlagged);
-  NS_IMETHOD SetPath(nsIFileSpec * aPathName);
-  NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
-  NS_IMETHOD SetFilterList(nsIMsgFilterList *aMsgFilterList);
-  NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);
-  NS_IMETHOD SetPrettyName(const PRUnichar *aName);
-  NS_IMETHOD GetName(PRUnichar **aName);
+  // helper routine to parse the URI and update member variables
+  nsresult parseURI(PRBool needServer=PR_FALSE);
+  nsresult GetBaseStringBundle(nsIStringBundle **aBundle);
+  nsresult GetStringFromBundle(const char* msgName, PRUnichar **aResult);
+  nsresult ThrowConfirmationPrompt(nsIMsgWindow *msgWindow, const PRUnichar *confirmString, PRBool *confirmed);
+  nsresult GetWarnFilterChanged(PRBool *aVal);
+  nsresult SetWarnFilterChanged(PRBool aVal);
+  nsresult CreateCollationKey(const nsString &aSource,  PRUint8 **aKey, PRUint32 *aLength);
 
 protected:
   virtual nsresult ReadDBFolderInfo(PRBool force);
@@ -191,6 +171,79 @@ protected:
   static nsIAtom* mDeleteOrMoveMsgFailedAtom;
   static nsIAtom* mJunkStatusChangedAtom;
   static nsrefcnt mInstanceCount;
+
+protected:
+  PRUint32 mFlags;
+  nsWeakPtr mParent;     //This won't be refcounted for ownership reasons.
+  PRInt32 mNumUnreadMessages;        /* count of unread messages (-1 means
+                                         unknown; -2 means unknown but we already
+                                         tried to find out.) */
+  PRInt32 mNumTotalMessages;         /* count of existing messages. */
+  PRBool mNotifyCountChanges;
+  PRUint32 mExpungedBytes;
+  nsCOMPtr<nsISupportsArray> mSubFolders;
+  nsVoidArray mListeners; //This can't be an nsISupportsArray because due to
+                          //ownership issues, listeners can't be AddRef'd
+
+  PRBool mInitializedFromCache;
+  nsISupports *mSemaphoreHolder; // set when the folder is being written to
+								//Due to ownership issues, this won't be AddRef'd.
+
+  nsWeakPtr mServer;
+
+  // These values are used for tricking the front end into thinking that we have more 
+  // messages than are really in the DB.  This is usually after and IMAP message copy where
+  // we don't want to do an expensive select until the user actually opens that folder
+  PRInt32 mNumPendingUnreadMessages;
+  PRInt32 mNumPendingTotalMessages;
+  PRUint32 mFolderSize;
+
+  PRInt32 mNumNewBiffMessages;
+  PRBool mIsCachable;
+  //
+  // stuff from the uri
+  //
+  PRBool mHaveParsedURI;        // is the URI completely parsed?
+  PRBool mIsServerIsValid;
+  PRBool mIsServer;
+  nsString mName;
+  nsCOMPtr<nsIFileSpec> mPath;
+  char * mBaseMessageURI; //The uri with the message scheme
+
+  // static stuff for cross-instance objects like atoms
+  static nsrefcnt gInstanceCount;
+
+  static nsresult initializeStrings();
+  static nsresult createCollationKeyGenerator();
+
+  static PRUnichar *kLocalizedInboxName;
+  static PRUnichar *kLocalizedTrashName;
+  static PRUnichar *kLocalizedSentName;
+  static PRUnichar *kLocalizedDraftsName;
+  static PRUnichar *kLocalizedTemplatesName;
+  static PRUnichar *kLocalizedUnsentName;
+  static PRUnichar *kLocalizedJunkName;
+  
+  static nsIAtom* kTotalUnreadMessagesAtom;
+  static nsIAtom* kBiffStateAtom;
+  static nsIAtom* kNewMessagesAtom;
+  static nsIAtom* kNumNewBiffMessagesAtom;
+  static nsIAtom* kTotalMessagesAtom;
+  static nsIAtom* kFolderSizeAtom;
+  static nsIAtom* kStatusAtom;
+  static nsIAtom* kFlaggedAtom;
+  static nsIAtom* kNameAtom;
+  static nsIAtom* kSynchronizeAtom;
+  static nsIAtom* kOpenAtom;
+  static nsICollation* kCollationKeyGenerator;
+
+#ifdef MSG_FASTER_URI_PARSING
+  // cached parsing URL object
+  static nsCOMPtr<nsIURL> mParsingURL;
+  static PRBool mParsingURLInUse;
+#endif
+
+  static const nsStaticAtom folder_atoms[];
 };
 
 #endif
