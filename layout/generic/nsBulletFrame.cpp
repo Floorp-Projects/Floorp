@@ -904,7 +904,7 @@ static PRUnichar gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
 };
 static void GeorgianToText(PRInt32 ordinal, nsString& result)
 {
-  if((0 == ordinal) || (ordinal > 19999)) { // zero or reach the limit of Armenain numbering system
+  if((0 == ordinal) || (ordinal > 19999)) { // zero or reach the limit of Georgian numbering system
     DecimalToText(ordinal, result);
     return;
   } else {
