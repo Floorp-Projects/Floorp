@@ -50,8 +50,9 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
   <keyset id="dialogKeys"/>
 
   <hbox align="center">
-    <label value="&filtersForPrefix.label;" accesskey="&filtersForPrefix.accesskey;"
-           control="serverMenu"/>
+    <label value="&filtersForPrefix.label;" 
+           accesskey="&filtersForPrefix.accesskey;" control="serverMenu"/>
+
       <menulist oncommand="onServerClick(event);" id="serverMenu">
         <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                    containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
@@ -70,7 +71,6 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
       <spacer flex="1"/> 
       <vbox>
         <button label="&viewLogButton.label;" accesskey="&viewLogButton.accesskey;" oncommand="viewLog();"/>
-        <checkbox id="logFilters" label="&logFilters.label;" accesskey="&logFilters.accesskey;" oncommand="toggleLogFilters()"/>
       </vbox>
   </hbox>
 
@@ -148,20 +148,26 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
           <spacer flex="1"/>
         </vbox>
       </row>
+      <row>
+        <vbox>
+          <hbox align="center">
+            <label id="folderPickerPrefix" value="&folderPickerPrefix.label;" 
+                   accesskey="&folderPickerPrefix.accesskey;"
+                   disabled="true" control="runFiltersFolder"/>
+
+            <menulist id="runFiltersFolder" disabled="true"/>
+          </hbox>
+        </vbox>
+        <vbox>
+          <button id="runFiltersButton" label="&runFilters.label;" 
+                  accesskey="&runFilters.accesskey;" 
+                  oncommand="runSelectedFilters();" disabled="true"/>
+        </vbox>
+      </row>
     </rows>
   </grid>
-     
-  <hbox align="center">
-    <button id="runFiltersButton" label="&runFilters.label;" accesskey="&runFilters.accesskey;" oncommand="runSelectedFilters();" disabled="true"/>
-
-    <label id="onLabel" value="&on.label;" disabled="true" control="runFiltersFolder"/>
-
-    <menulist id="runFiltersFolder" disabled="true"/>
-
-    <spacer flex="1"/>
-
-  </hbox>
 
   <separator/>
+
 </dialog>
 

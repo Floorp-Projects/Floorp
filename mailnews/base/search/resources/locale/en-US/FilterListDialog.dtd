@@ -14,11 +14,10 @@
 <!ENTITY filterHeader.label "Enabled filters are run automatically in the order shown below.">
 <!ENTITY filtersForPrefix.label "Filters for:">
 <!ENTITY filtersForPrefix.accesskey "F">
-<!ENTITY viewLogButton.label "View Filter Log">
-<!ENTITY viewLogButton.accesskey "V">
-<!ENTITY logFilters.label "Log Filter Use">
-<!ENTITY logFilters.accesskey "L">
-<!ENTITY runFilters.label "Run Selected Filters">
+<!ENTITY viewLogButton.label "Filter Log">
+<!ENTITY viewLogButton.accesskey "L">
+<!ENTITY runFilters.label "Run Now">
 <!ENTITY runFilters.accesskey "R">
-<!ENTITY on.label "on">
+<!ENTITY folderPickerPrefix.label "Manually run selected filter(s) on folder:">
+<!ENTITY folderPickerPrefix.accesskey "a">
 <!ENTITY choosethis.label "choose this folder">

@@ -24,9 +24,9 @@ var editButton;
 var deleteButton;
 var reorderUpButton;
 var reorderDownButton;
-var runFiltersButton;
 var runFiltersFolderPickerLabel;
 var runFiltersFolderPicker;
+var runFiltersButton;
 
 const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
@@ -54,9 +54,9 @@ function onLoad()
     deleteButton = document.getElementById("deleteButton");
     reorderUpButton = document.getElementById("reorderUpButton");
     reorderDownButton = document.getElementById("reorderDownButton");
-    runFiltersButton = document.getElementById("runFiltersButton");
-    runFiltersFolderPickerLabel = document.getElementById("onLabel");
+    runFiltersFolderPickerLabel = document.getElementById("folderPickerPrefix");
     runFiltersFolderPicker = document.getElementById("runFiltersFolder");
+    runFiltersButton = document.getElementById("runFiltersButton");
 
     updateButtons();
 
@@ -145,18 +145,7 @@ function setServer(uri, rebuild)
      gFilterTree.builder.rebuild();
    }
 
-   var logFilters = document.getElementById("logFilters");
-   var curFilterList = currentFilterList();
-   logFilters.checked = curFilterList.loggingEnabled;
-
    updateButtons();
-}
-
-function toggleLogFilters()
-{
-   var logFilters = document.getElementById("logFilters");
-   var curFilterList = currentFilterList();
-   curFilterList.loggingEnabled = logFilters.checked;
 }
 
 function toggleFilter(aFilterURI)
@@ -265,8 +254,9 @@ function viewLog()
   var uri = gFilterTree.getAttribute("ref");
   var server = rdf.GetResource(uri).QueryInterface(Components.interfaces.nsIMsgFolder).server;
 
-  var filterList = currentFilterList();
-  openTopWin(filterList.logURL);
+  var args = {filterList: currentFilterList()};
+
+  window.openDialog("chrome://messenger/content/viewLog.xul", "FilterLog", "chrome,modal,titlebar,resizable,centerscreen", args);
 }
 
 function runSelectedFilters()
@@ -329,9 +319,9 @@ function updateButtons()
 
     // we can run multiple filters on a folder
     // so only disable this UI if no filters are selected
-    runFiltersButton.disabled = !numFiltersSelected;
     runFiltersFolderPickerLabel.disabled = !numFiltersSelected;
     runFiltersFolderPicker.disabled = !numFiltersSelected;
+    runFiltersButton.disabled = !numFiltersSelected;
 
     // "up" enabled only if one filter selected, and it's not the first
     reorderUpButton.disabled = !(oneFilterSelected && gFilterTree.currentIndex > 0);
