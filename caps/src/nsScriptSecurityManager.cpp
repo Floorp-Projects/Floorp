@@ -791,8 +791,13 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     nsCOMPtr<nsIPrincipal> subject;
     nsresult rv = GetFunctionObjectPrincipal(aCx, (JSObject *)aFunObj, 
                                              getter_AddRefs(subject));
-    if (NS_FAILED(rv))
-        return rv;
+    //-- If subject is null, get a principal from the function object's scope.
+    if (NS_SUCCEEDED(rv) && !subject)
+        rv = GetObjectPrincipal(aCx, (JSObject*)aFunObj, getter_AddRefs(subject));
+
+    if (NS_FAILED(rv)) return rv;
+    if (!subject) return NS_ERROR_FAILURE;
+
 
     PRBool isSystem;
     if (NS_SUCCEEDED(subject->Equals(mSystemPrincipal, &isSystem)) && isSystem) 
@@ -801,8 +806,6 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
 
     // Check if the principal the function was compiled under is
     // allowed to execute scripts.
-    if (!subject)
-      return NS_ERROR_DOM_SECURITY_ERR;
 
     PRBool result;
     rv = CanExecuteScripts(aCx, subject, &result);
@@ -1064,7 +1067,7 @@ nsScriptSecurityManager::GetScriptPrincipal(JSContext *cx,
     }
     nsJSPrincipals *nsJSPrin = NS_STATIC_CAST(nsJSPrincipals *, jsp);
     *result = nsJSPrin->nsIPrincipalPtr;
-    if (!result)
+    if (!*result)
         return NS_ERROR_FAILURE;
     NS_ADDREF(*result);
     return NS_OK;
