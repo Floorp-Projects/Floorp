@@ -658,8 +658,12 @@ static PRBool pt_recv_cont(pt_Continuation *op, PRInt16 revents)
      * error we continue is EWOULDBLOCK|EAGAIN.
      */
 #if defined(SOLARIS)
-    op->result.code = read(
-        op->arg1.osfd, op->arg2.buffer, op->arg3.amount);
+    if (0 == op->arg4.flags)
+        op->result.code = read(
+            op->arg1.osfd, op->arg2.buffer, op->arg3.amount);
+    else
+        op->result.code = recv(
+            op->arg1.osfd, op->arg2.buffer, op->arg3.amount, op->arg4.flags);
 #else
     op->result.code = recv(
         op->arg1.osfd, op->arg2.buffer, op->arg3.amount, op->arg4.flags);
@@ -1524,15 +1528,28 @@ static PRInt32 pt_Recv(
     PRIntn flags, PRIntervalTime timeout)
 {
     PRInt32 syserrno, bytes = -1;
+    PRIntn osflags;
+
+    if (0 == flags)
+        osflags = 0;
+    else if (PR_MSG_PEEK == flags)
+        osflags = MSG_PEEK;
+    else
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return bytes;
+    }
 
     if (pt_TestAbort()) return bytes;
 
     /* recv() is a much slower call on pre-2.6 Solaris than read(). */
 #if defined(SOLARIS)
-    PR_ASSERT(0 == flags);
-    bytes = read(fd->secret->md.osfd, buf, amount);
+    if (0 == osflags)
+        bytes = read(fd->secret->md.osfd, buf, amount);
+    else
+        bytes = recv(fd->secret->md.osfd, buf, amount, osflags);
 #else
-    bytes = recv(fd->secret->md.osfd, buf, amount, flags);
+    bytes = recv(fd->secret->md.osfd, buf, amount, osflags);
 #endif
     syserrno = errno;
 
@@ -1546,7 +1563,7 @@ static PRInt32 pt_Recv(
             op.arg1.osfd = fd->secret->md.osfd;
             op.arg2.buffer = buf;
             op.arg3.amount = amount;
-            op.arg4.flags = flags;
+            op.arg4.flags = osflags;
             op.timeout = timeout;
             op.function = pt_recv_cont;
             op.event = POLLIN | POLLPRI;

@@ -1343,7 +1343,7 @@ NSPR_API(PRStatus)    PR_Shutdown(PRFileDesc *fd, PRShutdownHow how);
  *     PRInt32 amount
  *       the size of 'buf' (in bytes)
  *     PRIntn flags
- *        (OBSOLETE - must always be zero)
+ *       must be zero or PR_MSG_PEEK.
  *     PRIntervalTime timeout
  *       Time limit for completion of the receive operation.
  * OUTPUTS:
@@ -1355,6 +1355,8 @@ NSPR_API(PRStatus)    PR_Shutdown(PRFileDesc *fd, PRShutdownHow how);
  *         by calling PR_GetError().
  **************************************************************************
  */
+
+#define PR_MSG_PEEK 0x2
 
 NSPR_API(PRInt32)    PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount,
                 PRIntn flags, PRIntervalTime timeout);

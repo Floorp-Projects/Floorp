@@ -1577,6 +1577,11 @@ struct PRFilePrivate {
     PRBool inheritable;
     PRFileDesc *next;
     PRIntn lockCount;
+#ifdef _PR_EMULATE_MSG_PEEK
+    char *peekBuf;
+    PRInt32 peekBufSize;
+    PRInt32 peekBytes;
+#endif
     _MDFileDesc md;
 };
 

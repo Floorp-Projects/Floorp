@@ -109,6 +109,7 @@ CSRCS =             \
 	op_nofil.c		\
 	openfile.c		\
 	parent.c    	\
+	peek.c    		\
 	perf.c    		\
 	pipeping.c		\
 	pipepong.c		\
