@@ -82,8 +82,10 @@ nsXBLWindowHandler :: nsXBLWindowHandler (nsIDOMElement* aElement, nsIDOMEventRe
 nsXBLWindowHandler :: ~nsXBLWindowHandler ( )
 {
   --sRefCnt;
-  if ( !sRefCnt ) 
+  if ( !sRefCnt ) {
     delete sXBLSpecialDocInfo;
+    sXBLSpecialDocInfo = nsnull;
+  }
 }
 
 
