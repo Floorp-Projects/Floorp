@@ -135,6 +135,13 @@ alpha-*-linux*)
 	DLL_SUFFIX="so.1.0"
     fi ;;
 
+*-openbsd*)
+    DSO_LDOPTS="-Bshareable -x -assert pure-text"
+    DSO_CFLAGS='-fPIC'
+    DLL_SUFFIX="so.1.0"
+    MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    ;;
+
 *-irix*)
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared -all'
