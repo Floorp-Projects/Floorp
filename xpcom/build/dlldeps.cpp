@@ -59,6 +59,8 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsSupportsArray.h"
+#include "nsArray.h"
+#include "nsArrayEnumerator.h"
 #include "nsProxyEventPrivate.h"
 #include "xpt_xdr.h"
 #include "xptcall.h"
@@ -159,7 +161,6 @@ void XXXNeverCalled()
 #endif
     NS_NewSizeOfHandler(0);
     NS_NewStorageStream(0,0, nsnull);
-    NS_NewBinaryInputStream(0, 0);
     nsString foo;
     nsPrintfCString bar("");
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
@@ -178,6 +179,10 @@ void XXXNeverCalled()
     PL_DHashTableFinish(NULL);
     nsSlidingString sliding(NULL, NULL, NULL);
     NS_NewInputStreamTee(NULL, NULL, NULL);
+    NS_NewArray(nsnull);
+    nsCOMArray<nsISupports> dummyArray;
+    NS_NewArray(nsnull, dummyArray);
+    NS_NewArrayEnumerator(nsnull, dummyArray);
 #ifdef NS_TRACE_MALLOC
     NS_TraceMallocStartup(0);
     NS_TraceMallocStartupArgs(0, NULL);
