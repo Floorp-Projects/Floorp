@@ -117,7 +117,6 @@ function InitMessageMenu()
     var copyMenu = document.getElementById("copyMenu");
     if(copyMenu)
         copyMenu.setAttribute("disabled", !aMessage);
-
 }
 
 function GetMessageType(message)
@@ -131,22 +130,30 @@ function GetMessageType(message)
 
 }
 
-function InitMessageMarkMenu()
+function InitMessageMark()
 {
-    InitMarkReadMenuItem();
-    InitMarkFlaggedMenuItem();
-
+    InitMarkReadItem("markReadMenuItem");
+    InitMarkReadItem("markReadToolbarItem");
+    InitMarkFlaggedItem("markFlaggedMenuItem");
+    InitMarkFlaggedItem("markFlaggedToolbarItem");
 }
 
-function InitMarkReadMenuItem()
+function InitMarkReadItem(id)
 {
-
-    areMessagesRead = SelectedMessagesAreRead();
-
-    var markReadMenuItem = document.getElementById("markReadMenuItem");
-    if(markReadMenuItem)
-        markReadMenuItem.setAttribute("checked", areMessagesRead);
+    var areMessagesRead = SelectedMessagesAreRead();
+    var item = document.getElementById(id);
+    if(item)
+        item.setAttribute("checked", areMessagesRead);
 }
+
+function InitMarkFlaggedItem(id)
+{
+    var areMessagesFlagged = SelectedMessagesAreFlagged();
+    var item = document.getElementById(id);
+    if(item)
+        item.setAttribute("checked", areMessagesFlagged);
+}
+
 
 function SelectedMessagesAreRead()
 {
@@ -167,15 +174,6 @@ function SelectedMessagesAreRead()
     }
 
     return areMessagesRead;
-}
-
-function InitMarkFlaggedMenuItem()
-{
-    areMessagesFlagged = SelectedMessagesAreFlagged();
-
-    var markFlaggedMenuItem = document.getElementById("markFlaggedMenuItem");
-    if(markFlaggedMenuItem)
-        markFlaggedMenuItem.setAttribute("checked", areMessagesFlagged);
 }
 
 function SelectedMessagesAreFlagged()
@@ -802,6 +800,40 @@ function IsEmptyTrashEnabled()
 function IsCompactFolderEnabled()
 {
     return IsMailFolderSelected();
+}
+
+var gDeleteButton = null;
+var gMarkButton = null;
+
+function SetUpToolbarButtons(uri)
+{
+    // dump("SetUpToolbarButtons("+uri+")\n");
+
+    // eventually, we might want to set up the toolbar differently for imap,
+    // pop, and news.  for now, just tweak it based on if it is news or not.
+    var forNews = isNewsURI(uri);
+
+    if(!gMarkButton) gMarkButton = document.getElementById("button-mark");
+    if(!gDeleteButton) gDeleteButton = document.getElementById("button-delete");
+    
+    var buttonToHide = null;
+    var buttonToShow = null;
+
+    if (forNews) {
+        buttonToHide = gDeleteButton;
+        buttonToShow = gMarkButton;
+    }
+    else {
+        buttonToHide = gMarkButton;
+        buttonToShow = gDeleteButton;
+    }
+
+    if (buttonToHide) {
+        buttonToHide.setAttribute('hidden',true);
+    }
+    if (buttonToShow) {
+        buttonToShow.removeAttribute('hidden');
+    }
 }
 
 function MsgMarkByDate() {}

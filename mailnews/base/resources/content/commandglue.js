@@ -223,11 +223,11 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection, viewType)
 
 function isNewsURI(uri)
 {
-    if (uri[0] != 'n') {
+    if (!uri || uri[0] != 'n') {
         return false;
     }
     else {
-        return (uri.substring(0,6) == "news:/");
+        return ((uri.substring(0,6) == "news:/") || (uri.substring(0,14) == "news_message:/"));
     }
 }
 

@@ -104,6 +104,9 @@ var folderListener = {
 			{
 				var uri = resource.Value;
 				dump("In OnFolderLoaded for " + uri +"\n");
+
+                SetUpToolbarButtons(uri);
+
 				if(uri == gCurrentFolderToReroot)
 				{
 					gCurrentFolderToReroot="";

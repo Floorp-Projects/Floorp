@@ -64,6 +64,11 @@ var FolderPaneController =
                     	specialFolder = selectedFolder.getAttribute('SpecialFolder');
                     	isServer = selectedFolder.getAttribute('IsServer');
 						serverType = selectedFolder.getAttribute('ServerType');
+            
+                        if (serverType == "nntp") {
+				            if ( command == "cmd_delete" )
+					            goSetMenuValue(command, 'valueNewsgroup');
+                        }
 					}
 					catch (ex) {
 						//dump("specialFolder failure: " + ex + "\n");
@@ -255,10 +260,25 @@ var DefaultController =
 
 				if ( command == "cmd_delete")
 				{
-					if ( numSelected < 2 )
-						goSetMenuValue(command, 'valueMessage');
-					else
-						goSetMenuValue(command, 'valueMessages');
+                    var uri = GetUriForFirstSelectedMessage();
+
+					if ( numSelected < 2 ) {
+                        if (isNewsURI(uri)) {
+						    goSetMenuValue(command, 'valueNewsMessage');    
+                        }
+                        else {
+						    goSetMenuValue(command, 'valueMessage');
+                        }
+                    }
+					else {
+                        if (isNewsURI(uri)) {
+						    goSetMenuValue(command, 'valueNewsMessage');    
+                            return false;
+                        }
+                        else {
+						    goSetMenuValue(command, 'valueMessages');
+                        }
+                    }
 				}
 				return ( numSelected > 0 );
 			case "cmd_nextMsg":
@@ -477,6 +497,17 @@ function MailAreaHasFocus()
 		return ((name != "INPUT") && (name != "TEXTAREA"));
 	}
 	return true;
+}
+
+function GetUriForFirstSelectedMessage()
+{
+    try {
+	    var threadTree = GetThreadTree();
+        return threadTree.selectedItems[0].getAttribute('id');
+    }
+    catch (ex) {
+        return null;
+    }
 }
 
 function GetNumSelectedMessages()

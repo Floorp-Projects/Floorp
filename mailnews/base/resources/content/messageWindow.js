@@ -416,7 +416,12 @@ var MessageWindowController =
 			case "cmd_file":
 				if ( command == "cmd_delete")
 				{
-					goSetMenuValue(command, 'valueMessage');
+                    if (isNewsURI(gCurrentMessageUri)) {
+					    goSetMenuValue(command, 'valueNewsMessage');
+                    }
+                    else {
+					    goSetMenuValue(command, 'valueMessage');
+                    }
 				}
 				return ( gCurrentMessageUri != null);
 			case "cmd_getNewMessages":

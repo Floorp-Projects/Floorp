@@ -78,8 +78,10 @@ Rights Reserved.
 
 <!-- Edit Menu -->
 <!ENTITY deleteMsgCmd.label "Delete Message">  
+<!ENTITY cancelNewsMsgCmd.label "Cancel Message">  
 <!ENTITY deleteMsgsCmd.label "Delete Selected Messages">  
 <!ENTITY deleteFolderCmd.label "Delete Folder">  
+<!ENTITY unsubscribeNewsgroupCmd.label "Unsubscribe">
 <!ENTITY selectMenu.label "Select">  
 <!ENTITY selectMenu.accesskey "l">  
 <!ENTITY selectThreadCmd.label ".Thread">  
@@ -333,7 +335,7 @@ Rights Reserved.
 <!ENTITY markAsUnreadCmd.accesskey "u">  
 <!ENTITY markThreadAsReadCmd.label "Thread As Read">  
 <!ENTITY markThreadAsReadCmd.accesskey "t">  
-<!ENTITY markByDateCmd.label ".by Date...">  
+<!ENTITY markByDateCmd.label "by Date...">  
 <!ENTITY markByDateCmd.accesskey "d">  
 <!ENTITY markAllReadCmd.label "All Read">  
 <!ENTITY markAllReadCmd.accesskey "a">  
@@ -356,6 +358,7 @@ Rights Reserved.
 <!ENTITY fileButton.label "File">  
 <!ENTITY nextButton.label "Next">  
 <!ENTITY deleteButton.label "Delete">  
+<!ENTITY markButton.label "As Read">
 <!ENTITY printButton.label "Print">  
 <!ENTITY stopButton.label "Stop">  
 
@@ -368,6 +371,7 @@ Rights Reserved.
 <!ENTITY fileButton.tooltip "File selected message"> 
 <!ENTITY nextButton.tooltip "Move to the next unread message"> 
 <!ENTITY deleteButton.tooltip "Delete selected message or folder"> 
+<!ENTITY markButton.tooltip "Mark messages">
 <!ENTITY printButton.tooltip "Print this message"> 
 <!ENTITY stopButton.tooltip "Stop the current transfer"> 
 

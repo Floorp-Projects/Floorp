@@ -54,6 +54,27 @@
     list-style-image      : url("chrome://messenger/skin/getmsg-hover-active.gif");
   } 
 
+#button-mark {
+	list-style-image	: url("chrome://messenger/skin/mark.gif");
+}
+
+#button-mark[disabled="true"],
+#button-mark[disabled="true"]:hover,
+#button-mark[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-disabled.gif");
+  } 
+
+#button-mark:hover
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-hover.gif");
+  } 
+
+#button-mark:hover:active
+  {
+    list-style-image      : url("chrome://messenger/skin/mark-clicked.gif");
+  } 
+
 #button-newmsg 
   {
 	  list-style-image      : url("chrome://messenger/skin/newmsg.gif");

@@ -64,7 +64,9 @@ Rights Reserved.
 	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"
 				 valueFolder="&deleteFolderCmd.label;"
+                 valueNewsgroup="&unsubscribeNewsgroupCmd.label;"
 				 valueMessage="&deleteMsgCmd.label;"
+                 valueNewsMessage="&cancelNewsMsgCmd.label;"
 				 valueMessages="&deleteMsgsCmd.label;"/>
 	<broadcaster id="button_delete"/>
 	<broadcaster id="cmd_selectAll"/>
@@ -983,7 +985,7 @@ Rights Reserved.
 			</template>
 		</menu>
 		<menuseparator/>
-		<menu value="&markMenu.label;" accesskey="&markMenu.accesskey;" oncreate="InitMessageMarkMenu()">
+		<menu value="&markMenu.label;" accesskey="&markMenu.accesskey;" oncreate="InitMessageMark()">
 			<menupopup>
 				<menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
 				<menuitem value="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
@@ -1076,6 +1078,16 @@ Rights Reserved.
 			</menu>
 			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="cmd_nextUnreadMsg"/>
 			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
+      <menubutton class="menubutton-dual toolbar top" id="button-mark" value="&markButton.label;" hidden="true"
+                  crop="right" observes="cmd_markAsRead" tooltip="aTooltip" buttontooltiptext="&markButton.tooltip;">  
+            <menupopup oncreate="InitMessageMark()">
+                <menuitem type="checkbox" key="key_toggleRead" id="markReadToolbarItem" value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead" default="true" />
+                <menuitem value="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
+                <menuitem value="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
+                <menuseparator/>
+                <menuitem type="checkbox" id="markFlaggedToolbarItem" value="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
+            </menupopup>
+  	  </menubutton>
       <menubutton class="menubutton-dual toolbar top" id="button-print" value="&printButton.label;" 
                   crop="right" observes="cmd_print" tooltip="aTooltip" buttontooltiptext="&printButton.tooltip;">  
      	  <menupopup id="printMenu">
