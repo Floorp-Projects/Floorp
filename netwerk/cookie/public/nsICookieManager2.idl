@@ -51,7 +51,9 @@ interface nsICookieManager2 : nsICookieManager
    * method is something of a backdoor.
    *
    * @param aDomain
-   *        the host or domain for which the cookie is set
+   *        the host or domain for which the cookie is set. presence of a
+   *        leading dot indicates a domain cookie; otherwise, the cookie
+   *        is treated as a non-domain cookie. see RFC2109.
    * @param aPath
    *        path within the domain for which the cookie is valid
    * @param aName
@@ -59,9 +61,12 @@ interface nsICookieManager2 : nsICookieManager
    * @param aValue
    *        cookie data
    * @param aSecure
-   *        true if the cookie should be secure
-   * @param aExpires
-   *        expiration date. 0 means none; a session cookie.
+   *        true if the cookie should only be sent over a secure connection.
+   * @param aIsSession
+   *        true if the cookie should exist for the current session only.
+   * @param aExpiry
+   *        expiration date, in seconds since the epoch. only relevant if
+   *        aIsSession is false.
    */
   [noscript]
   void add(in AUTF8String aDomain,
@@ -69,7 +74,8 @@ interface nsICookieManager2 : nsICookieManager
            in ACString    aName,
            in ACString    aValue,
            in boolean     aSecure,
-           in PRInt32     aExpires);
+           in boolean     aIsSession,
+           in PRInt64     aExpiry);
 
   /**
    * Find whether a matching cookie already exists, and how many cookies

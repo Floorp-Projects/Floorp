@@ -922,15 +922,18 @@ nsCookieService::Add(const nsACString &aDomain,
                      const nsACString &aPath,
                      const nsACString &aName,
                      const nsACString &aValue,
-                     PRBool           aIsSecure,
-                     PRInt32          aExpires)
+                     PRBool            aIsSecure,
+                     PRBool            aIsSession,
+                     PRInt64           aExpiry)
 {
   nsInt64 currentTime = NOW_IN_SECONDS;
 
   nsRefPtr<nsCookie> cookie =
     new nsCookie(aName, aValue, aDomain, aPath,
-                 nsInt64(aExpires), currentTime,
-                 nsInt64(aExpires) == nsInt64(0), aIsSecure,
+                 nsInt64(aExpiry),
+                 currentTime,
+                 aIsSession,
+                 aIsSecure,
                  nsICookie::STATUS_UNKNOWN,
                  nsICookie::POLICY_UNKNOWN);
   if (!cookie) {
