@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,51 +13,48 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/default
+
+EXPORT_RESOURCE_SAMPLES = \
+		AccountManager.xul \
+		AccountManager.js \
+		accounttree.xul \
+		am-main.xul \
+		am-server.xul \
+		am-server.js \
+		am-server-top.xul \
+		am-server-pop3.xul \
+		am-copies.xul \
+		am-copies.js \
+		am-advanced.xul \
+		pref-mailnews.xul \
+		pref-winsetting.xul \
+		pref-receipts.xul \
+		custreceipt.xul \
+		pref-diskspace.xul \
+		AccountWizard.xul \
+		AccountWizard.js \
+		aw-accounttype.xul \
+		aw-identity.xul \
+		aw-server.xul \
+		aw-login.xul \
+		aw-accname.xul \
+		aw-done.xul \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-SAMPLES_DIR = $(DIST)/bin/chrome/messenger/content/default
-
-EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/AccountManager.xul	\
-	$(srcdir)/AccountManager.js		\
-	$(srcdir)/accounttree.xul	\
-	$(srcdir)/am-main.xul		\
-	$(srcdir)/am-server.xul		\
-	$(srcdir)/am-server.js		\
-	$(srcdir)/am-server-top.xul	\
-	$(srcdir)/am-server-pop3.xul	\
-	$(srcdir)/am-copies.xul		\
-	$(srcdir)/am-copies.js		\
-	$(srcdir)/am-advanced.xul	\
-	$(srcdir)/pref-mailnews.xul \
-	$(srcdir)/pref-winsetting.xul \
-	$(srcdir)/pref-receipts.xul \
-	$(srcdir)/custreceipt.xul \
-	$(srcdir)/pref-diskspace.xul \
-	$(srcdir)/AccountWizard.xul		\
-	$(srcdir)/AccountWizard.js		\
-	$(srcdir)/aw-accounttype.xul	\
-	$(srcdir)/aw-identity.xul		\
-	$(srcdir)/aw-server.xul			\
-	$(srcdir)/aw-login.xul			\
-	$(srcdir)/aw-accname.xul		\
-	$(srcdir)/aw-done.xul			\
-	$(NULL)
-
-EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
 
 install::
-	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(SAMPLES_DIR)
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 
-clobber::
-	$(RM) $(EXPORT_RESOURCE_SAMPLES_TO_REMOVE)
