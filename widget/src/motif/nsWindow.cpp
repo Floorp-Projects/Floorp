@@ -367,6 +367,8 @@ void nsWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
+  XtVaSetValues(mWidget, XmNx, aX, XmNy, aY, nsnull);
+
 }
 
 //-------------------------------------------------------------------------
