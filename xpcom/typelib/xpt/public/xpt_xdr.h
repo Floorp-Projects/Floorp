@@ -36,6 +36,12 @@ PRBool
 XPT_DoString(XPTCursor *cursor, XPTString **strp);
 
 PRBool
+XPT_DoStringInline(XPTCursor *cursor, XPTString **strp);
+
+PRBool
+XPT_DoCString(XPTCursor *cursor, char **strp);
+
+PRBool
 XPT_DoIdentifier(XPTCursor *cursor, char **identp);
 
 PRBool
@@ -131,6 +137,18 @@ XPT_DataOffset(XPTState *state, uint32 *data_offsetp);
 
 void
 XPT_SetDataOffset(XPTState *state, uint32 data_offset);
+
+uint32
+XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr);
+
+PRBool
+XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, uint32 offset);
+
+PRBool
+XPT_SetAddrForOffset(XPTCursor *cursor, uint32 offset, void *addr);
+
+void *
+XPT_GetAddrForOffset(XPTCursor *cursor, uint32 offset);
 
 /* all data structures are big-endian */
 

@@ -22,6 +22,30 @@
 #include "xpt_struct.h"
 #include <string.h>
 
+PRBool
+XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
+                              XPTInterfaceDirectoryEntry *ide, uint16 index);
+PRBool
+XPT_DoInterfaceDirectoryEntryIndex(XPTCursor *cursor,
+                                   XPTInterfaceDirectoryEntry **idep);
+PRBool
+XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd);
+
+PRBool
+XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md);
+
+PRBool
+XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp);
+
+PRBool
+XPT_DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp);
+
+PRBool
+XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td);
+
+PRBool
+XPT_DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd);
+
 #define CURS_POOL_OFFSET_RAW(cursor)                                          \
   ((cursor)->pool == XPT_HEADER                                               \
    ? (cursor)->offset                                                         \
@@ -40,7 +64,6 @@ XPT_SizeOfHeader(XPTHeader *header)
         2 /* num_interfaces */ + 4 /* file_length */ +
         4 /* interface_directory */ + 4 /* data_pool */;
 
-    fprintf(stderr, "header size is %d ", size);
     ann = header->annotations;
     do {
         size += 1; /* Annotation prefix */
@@ -50,7 +73,6 @@ XPT_SizeOfHeader(XPTHeader *header)
 	ann = ann->next;
     } while (!XPT_ANN_IS_LAST(last->flags));
     
-    fprintf(stderr, " (%d with annotations)\n", size);
     return size;
 }
 
@@ -145,7 +167,8 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
 
     for (i = 0; i < header->num_interfaces; i++) {
         if (!XPT_DoInterfaceDirectoryEntry(cursor, 
-                                           &header->interface_directory[i]))
+                                           &header->interface_directory[i],
+                                           i + 1))
             goto error;
     }
     
@@ -170,7 +193,7 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
 /* InterfaceDirectoryEntry records go in the header */
 PRBool
 XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
-                              XPTInterfaceDirectoryEntry *ide)
+                              XPTInterfaceDirectoryEntry *ide, uint16 index)
 {    
     XPTMode mode = cursor->state->mode;
     
@@ -183,11 +206,17 @@ XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
         
         /* write the namespace string in the data pool, and the offset in our
            cursor space */
-        !XPT_DoCString(cursor, &(ide->namespace))) {
+        !XPT_DoCString(cursor, &(ide->namespace)) ||
         
+        /* do InterfaceDescriptors -- later, only on encode (see below) */
+        !XPT_DoInterfaceDescriptor(cursor, &ide->interface_descriptor)) {
         goto error;
     }
     
+    if (mode == XPT_DECODE)
+        XPT_SetOffsetForAddr(cursor, ide, index);
+
+#if 0 /* not yet -- we eagerly load for now */
     /* write the InterfaceDescriptor in the data pool, and the offset
        in our cursor space, but only if we're encoding. */
     if (mode == XPT_ENCODE) {
@@ -196,17 +225,48 @@ XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
             goto error;
         }
     }
-    
+#endif
+
     return PR_TRUE;
 
     XPT_ERROR_HANDLE(ide);    
 }
 
+/*
+ * Decode: Get the interface directory entry for the on-disk index.
+ * Encode: Write the index.
+ */
 PRBool
-XPT_IndexForInterface(XPTInterfaceDirectoryEntry *ide_block,
-                      uint32 num_interfaces, nsID *iid, uint32 *indexp)
+XPT_DoInterfaceDirectoryEntryIndex(XPTCursor *cursor,
+                                   XPTInterfaceDirectoryEntry **idep)
 {
-    *indexp = 0;
+    XPTMode mode = cursor->state->mode;
+    uint16 index;
+    
+    if (mode == XPT_ENCODE) {
+        /* XXX index zero is legal, so how do I detect an error? */
+        if (*idep) {
+            index = XPT_GetOffsetForAddr(cursor, *idep);
+            if (!index)
+                return PR_FALSE;
+        } else {
+            index = 0;          /* no interface */
+        }
+    }
+
+    if (!XPT_Do16(cursor, &index))
+        return PR_FALSE;
+
+    if (mode == XPT_DECODE) {
+        if (index) {
+            *idep = XPT_GetAddrForOffset(cursor, index);
+            if (!*idep)
+                return PR_FALSE;
+        } else {
+            *idep = NULL;
+        }
+    }
+
     return PR_TRUE;
 }
 
@@ -303,7 +363,7 @@ XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd)
 uint32
 XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id)
 {
-    uint32 size = 4 /* parent interface */ + 2 /* num_methods */
+    uint32 size = 2 /* parent interface */ + 2 /* num_methods */
         + 2 /* num_constants */, i;
     for (i = 0; i < id->num_methods; i++)
         size += XPT_SizeOfMethodDescriptor(&id->method_descriptors[i]);
@@ -324,6 +384,7 @@ XPT_DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
         id = PR_NEWZAP(XPTInterfaceDescriptor);
         if (!id)
             return PR_FALSE;
+        *idp = id;
     } else {
         id = *idp;
         id_sz = XPT_SizeOfInterfaceDescriptor(id);
@@ -332,7 +393,9 @@ XPT_DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
     if (!XPT_MakeCursor(outer->state, XPT_DATA, id_sz, cursor))
         goto error;
 
-    if(!XPT_Do32(cursor, &id->parent_interface) ||
+    if (!XPT_Do32(outer, &cursor->offset))
+        goto error;
+    if(!XPT_DoInterfaceDirectoryEntryIndex(cursor, &id->parent_interface) ||
        !XPT_Do16(cursor, &id->num_methods)) {
         goto error;
     }
@@ -383,7 +446,6 @@ XPT_FillConstDescriptor(XPTConstDescriptor *cd, char *name,
 PRBool
 XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor *cd)
 {
-    XPTMode mode = cursor->state->mode;
     PRBool ok = PR_FALSE;
 
     if (!XPT_DoCString(cursor, &cd->name) ||
@@ -470,7 +532,6 @@ PRBool
 XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
 {
     XPTMode mode = cursor->state->mode;
-    uintn scratch;
     int i;
 
     if (!XPT_Do8(cursor, &md->flags) ||
@@ -478,9 +539,8 @@ XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
         !XPT_Do8(cursor, &md->num_args))
         return PR_FALSE;
 
-    if (mode == XPT_DECODE) {
-        if (md->num_args)
-            md->params = PR_CALLOC(md->num_args * sizeof(XPTParamDescriptor));
+    if (mode == XPT_DECODE && md->num_args) {
+        md->params = PR_CALLOC(md->num_args * sizeof(XPTParamDescriptor));
         if (!md->params)
             return PR_FALSE;
     }
@@ -490,7 +550,9 @@ XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor *md)
             goto error;
     }
     
-    if (!XPT_DoParamDescriptor(cursor, md->result))
+    md->result = PR_NEWZAP(XPTParamDescriptor);
+    if (!md->result ||
+        !XPT_DoParamDescriptor(cursor, md->result))
         goto error;
     
     return PR_TRUE;
@@ -510,9 +572,6 @@ XPT_FillParamDescriptor(XPTParamDescriptor *pd, uint8 flags,
 PRBool
 XPT_DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor *pd)
 {
-    XPTMode mode = cursor->state->mode;
-    uintn scratch;
-
     if (!XPT_Do8(cursor, &pd->flags) ||
         !XPT_DoTypeDescriptor(cursor, &pd->type))
         return PR_FALSE;
@@ -530,8 +589,6 @@ XPT_DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix *tdp)
 PRBool
 XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td)
 {
-    XPTMode mode = cursor->state->mode;
-    
     if (!XPT_DoTypeDescriptorPrefix(cursor, &td->prefix)) {
         goto error;
     }
@@ -571,7 +628,6 @@ XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **annp)
     XPTMode mode = cursor->state->mode;
     XPTAnnotation *ann;
     
-    fprintf(stderr, "DoAnnotation\n");
     if (mode == XPT_DECODE) {
         ann = PR_NEWZAP(XPTAnnotation);
         if (!ann)
@@ -617,9 +673,15 @@ XPT_DoAnnotations(XPTCursor *cursor, XPTAnnotation **ap)
     return PR_FALSE;
 }
 
+#if 0 /* need hashtables and stuff */
 XPTInterfaceDescriptor *
-XPT_GetDescriptorByOffset(XPTState *state, XPTHeader *header, uint32
-                          descriptor_num)
+XPT_GetDescriptorByIndex(XPTCursor *cursor, XPTHeader *header, uint16 index)
 {
+    XPTInterfaceDescriptor *id = header->interface_directory + index;
+    if (id)
+        return id;              /* XXX refcnt? */
+    /* XXX lazily load and allocate later, for now we always read them all
+       in */
+    return id;
 }
-
+#endif

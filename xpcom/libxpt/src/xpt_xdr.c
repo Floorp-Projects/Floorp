@@ -265,8 +265,6 @@ XPT_DoString(XPTCursor *cursor, XPTString **strp)
     XPTCursor my_cursor;
     XPTString *str = *strp;
     PRBool already;
-    XPTMode mode = cursor->state->mode;
-    int i;
 
     XPT_PREAMBLE_NO_ALLOC(cursor, strp, XPT_DATA, str->length + 2, my_cursor,
                           already);
@@ -334,17 +332,16 @@ XPT_SetOffsetForAddr(XPTCursor *cursor, void *addr, uint32 offset)
 }
 
 PRBool
-XPT_SetAddrForOffset(XPTCursor *cursor, void *addr)
+XPT_SetAddrForOffset(XPTCursor *cursor, uint32 offset, void *addr)
 {
     return PL_HashTableAdd(cursor->state->pool->offset_map,
-                           (void *)cursor->offset, addr) != NULL;
+                           (void *)offset, addr) != NULL;
 }
 
 void *
-XPT_GetAddrForOffset(XPTCursor *cursor)
+XPT_GetAddrForOffset(XPTCursor *cursor, uint32 offset)
 {
-    return PL_HashTableLookup(cursor->state->pool->offset_map,
-                              (void *)cursor->offset);
+    return PL_HashTableLookup(cursor->state->pool->offset_map, (void *)offset);
 }
 
 PRBool
@@ -360,7 +357,7 @@ XPT_CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, int len,
 
     if (cursor->state->mode == XPT_DECODE) {
 
-        last = XPT_GetAddrForOffset(new_cursor);
+        last = XPT_GetAddrForOffset(new_cursor, new_cursor->offset);
 
         if (last) {
             *already = PR_TRUE;
@@ -565,8 +562,6 @@ XPT_DoBits(XPTCursor *cursor, uint8 *u8p, int nbits)
 int
 XPT_FlushBits(XPTCursor *cursor)
 {
-    int skipped = 8 - cursor->bits;
-
     return 0;
 #if 0
     cursor->bits = 0;

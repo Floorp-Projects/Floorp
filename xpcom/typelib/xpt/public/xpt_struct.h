@@ -117,6 +117,10 @@ struct XPTInterfaceDirectoryEntry {
     char                   *name;
     char                   *namespace;
     XPTInterfaceDescriptor *interface_descriptor;
+#if 0 /* not yet */
+    /* not stored on disk */
+    uint32                 offset; /* the offset for an ID still to be read */
+#endif
 };
 
 PRBool
@@ -129,16 +133,16 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
  * single XPCOM interface, including all of its methods. 
  */
 struct XPTInterfaceDescriptor {
-    uint32              parent_interface;
-    uint16              num_methods;
-    XPTMethodDescriptor *method_descriptors;
-    uint16              num_constants;
-    XPTConstDescriptor  *const_descriptors;
+    XPTInterfaceDirectoryEntry *parent_interface;
+    uint16                     num_methods;
+    XPTMethodDescriptor        *method_descriptors;
+    uint16                     num_constants;
+    XPTConstDescriptor         *const_descriptors;
 };
 
 PRBool
 XPT_IndexForInterface(XPTInterfaceDirectoryEntry *ide_block,
-                      uint32 num_interfaces, nsID *iid, uint32 *indexp);
+                      uint32 num_interfaces, nsID *iid, uint16 *indexp);
 
 XPTInterfaceDescriptor *
 XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
