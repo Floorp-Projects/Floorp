@@ -922,6 +922,11 @@ extern JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename,
                      FILE *fh);
 
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
+                                  const char *filename, FILE *fh,
+                                  JSPrincipals *principals);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script);
 

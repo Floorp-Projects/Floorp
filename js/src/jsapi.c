@@ -2413,6 +2413,14 @@ JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename,
                      FILE *fh)
 {
+    return JS_CompileFileHandleForPrincipals(cx, obj, filename, fh, NULL);
+}
+
+JS_PUBLIC_API(JSScript *)
+JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
+                                  const char *filename, FILE *fh,
+                                  JSPrincipals *principals)
+{
     void *mark;
     JSTokenStream *ts;
 
@@ -2422,6 +2430,10 @@ JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename,
     if (!ts)
 	return NULL;
     ts->filename = filename;
+    if (principals) {
+        ts->principals = principals;
+        JSPRINCIPALS_HOLD(cx, ts->principals);
+    }
     return CompileTokenStream(cx, obj, ts, mark, NULL);
 }
 
