@@ -5318,21 +5318,16 @@ from the network, or save to a file and then play from the file?
 
 
 !!
-!! *urlLocationProxyIcon
+!! *proxyIcon
 !!
-*urlLocationProxyIcon.tipString:	\
-Drag this to create a link to this page
-*urlLocationProxyIcon.documentationString:	\
-Drag this to create a link to this page
-*urlLocationProxyIcon.topOffset:		3
-*urlLocationProxyIcon.leftOffset:		3
-*urlLocationProxyIcon.cursor:			hand2
+*proxyIcon.tipString:				Drag this to create a link to this page
+*proxyIcon.documentationString:		Drag this to create a link to this page
+*proxyIcon.cursor:					hand2
 
-*urlLocationProxyIcon.shadowThickness:			0
-*urlLocationProxyIcon.accentBorderThickness:		0
-*urlLocationProxyIcon.fillOnArm:				false
-*urlLocationProxyIcon.buttonLayout:				button_pixmap_only
-
+*proxyIcon.shadowThickness:			0
+*proxyIcon.accentBorderThickness:	0
+*proxyIcon.fillOnArm:				false
+*proxyIcon.buttonLayout:			button_pixmap_only
 
 !!
 !! *urlLocationLabel
