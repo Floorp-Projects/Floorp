@@ -158,7 +158,7 @@ function goPreferences(containerID, paneURL, itemID)
   }
 
   //check for an existing pref window and focus it; it's not application modal
-  const kWindowMediatorContractID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
   const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
   const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
   var lastPrefWindow = kWindowMediator.getMostRecentWindow("mozilla:preferences");
@@ -246,7 +246,7 @@ function openTopWin( url )
         url = "about:blank";
     }
 
-    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
     var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 
     var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );

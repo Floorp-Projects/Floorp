@@ -42,7 +42,7 @@ function SelectInboxFolderMessage()
 
 function SendMessageNow()
 {
-  var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  var cwindowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var iwindowManager = Components.interfaces.nsIWindowMediator;           
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);     
   var composeWindow = windowManager.getMostRecentWindow('msgcompose'); //find the open msgcompose window and get it      

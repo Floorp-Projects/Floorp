@@ -183,7 +183,7 @@ function dumpObjectTree (o, recurse, compress, level)
 function getWindowByType (windowType)
 {
     const MEDIATOR_CONTRACTID =
-        "@mozilla.org/rdf/datasource;1?name=window-mediator";
+        "@mozilla.org/appshell/window-mediator;1";
     const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
 
     var windowManager =

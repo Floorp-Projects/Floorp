@@ -647,7 +647,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
     }
     if (forceDialogFlag || searchMode == 1) {
       // Use a single search dialog
-      var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
+      var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                                     .getService(Components.interfaces.nsIWindowMediator);
 
       var searchWindow = windowManager.getMostRecentWindow("search:window");
@@ -740,7 +740,7 @@ function enableBookmarks()
 function BrowserEditBookmarks()
 {
   // Use a single sidebar bookmarks dialog
-  var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
+  var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                                 .getService(Components.interfaces.nsIWindowMediator);
 
   var bookmarksWindow = windowManager.getMostRecentWindow("bookmarks:manager");

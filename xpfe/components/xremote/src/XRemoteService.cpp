@@ -44,7 +44,6 @@
 #include <nsIURI.h>
 #include <nsNetUtil.h>
 #include <nsIWindowMediator.h>
-#include <rdf.h>
 
 NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
@@ -845,8 +844,7 @@ XRemoteService::FindWindow(const PRUnichar *aType,
 			   nsIDOMWindowInternal **_retval)
 {
   nsCOMPtr<nsIWindowMediator> mediator;
-  mediator = do_GetService(NS_RDF_DATASOURCE_CONTRACTID_PREFIX
-			   "window-mediator");
+  mediator = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
 
   if (!mediator)
     return NS_ERROR_FAILURE;

@@ -49,7 +49,7 @@ const IRCPROT_HANDLER_CID =
 
 /* components used in this file */
 const MEDIATOR_CONTRACTID =
-    "@mozilla.org/rdf/datasource;1?name=window-mediator";
+    "@mozilla.org/appshell/window-mediator;1";
 const STANDARDURL_CONTRACTID = 
     "@mozilla.org/network/standard-url;1";
 const ASS_CONTRACTID =

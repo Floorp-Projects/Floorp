@@ -241,7 +241,7 @@ function NotifyQuitApplication()
 
 function LastToClose()
 {
-	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+	var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
 	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
 	var enumerator = windowManagerInterface.getEnumerator( null );
     var count = 0;

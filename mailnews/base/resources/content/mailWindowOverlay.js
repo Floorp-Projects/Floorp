@@ -533,7 +533,7 @@ function GetWindowMediator()
     if (gWindowManagerInterface)
         return gWindowManagerInterface;
 
-    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
     return (gWindowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator));
 }
 
