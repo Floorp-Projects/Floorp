@@ -1,6 +1,6 @@
 REM
 REM The contents of this file are subject to the Netscape Public License
-REM Version 1.0 (the "NPL"); you may not use this file except in
+REM Version 1.1 (the "NPL"); you may not use this file except in
 REM compliance with the NPL.  You may obtain a copy of the NPL at
 REM http://www.mozilla.org/NPL/
 REM 
