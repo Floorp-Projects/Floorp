@@ -63,6 +63,7 @@ LIBS := \
 	-lraptorgfx \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
+	$(NULL)
 
 ifndef NECKO
 LIBS += 	\
@@ -85,8 +86,6 @@ LIBS += 	\
 	-lneckoutil_s \
 	$(NULL)
 endif
-	$(NULL)
-
 
 CFLAGS += $(TOOLKIT_CFLAGS)
 CXXFLAGS += $(TOOLKIT_CXXFLAGS)
