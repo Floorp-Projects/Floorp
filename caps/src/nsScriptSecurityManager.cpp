@@ -242,7 +242,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 
         // if (aPropertyStr), we were called from CheckPropertyAccess or checkConnect,
         // so we can assume this is a DOM class. Otherwise, we ask the ClassInfo.
-        secLevel = GetSecurityLevel(aJSContext, subjectPrincipal,
+        secLevel = GetSecurityLevel(subjectPrincipal,
                                     (aProperty || IsDOMClass(aClassInfo)),
                                     className, propertyName, aAction, capability, aPolicy);
     }
@@ -418,9 +418,8 @@ nsScriptSecurityManager::IsDOMClass(nsIClassInfo* aClassInfo)
     return NS_SUCCEEDED(rv) && (classFlags & nsIClassInfo::DOM_OBJECT);
 }
 
-PRInt32
-nsScriptSecurityManager::GetSecurityLevel(JSContext* aJSContext,
-                                          nsIPrincipal *principal,
+PRInt32 
+nsScriptSecurityManager::GetSecurityLevel(nsIPrincipal *principal,
                                           PRBool aIsDOM,
                                           const char* aClassName,
                                           const char* aPropertyName,
@@ -444,23 +443,27 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext* aJSContext,
         if (NS_FAILED(GetPrefName(principal, aClassName, aPropertyName,
                                   classPolicy, prefName)))
             return SCRIPT_SECURITY_NO_ACCESS;
+
+        nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
+        if (!securityPref)
+            return SCRIPT_SECURITY_NO_ACCESS;
         char *secLevelString;
-        rv = mSecurityPrefs->SecurityGetCharPref(prefName, &secLevelString);
+        rv = securityPref->SecurityGetCharPref(prefName, &secLevelString);
         if (NS_FAILED(rv))
         {
             prefName += (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ? ".set" : ".get");
-            rv = mSecurityPrefs->SecurityGetCharPref(prefName, &secLevelString);
+            rv = securityPref->SecurityGetCharPref(prefName, &secLevelString);
         }
         if (NS_FAILED(rv)) //-- No site policy for this property; look for a default policy
         {
             if (NS_FAILED(GetPrefName(principal, aClassName, aPropertyName,
-                                      nsnull, prefName)))
+                                      (void*)CLASS_POLICY_DEFAULT, prefName)))
                 return SCRIPT_SECURITY_NO_ACCESS;
-            rv = mSecurityPrefs->SecurityGetCharPref(prefName, &secLevelString);
+            rv = securityPref->SecurityGetCharPref(prefName, &secLevelString);
             if (NS_FAILED(rv))
             {
                 prefName += (aAction == nsIXPCSecurityManager::ACCESS_SET_PROPERTY ? ".set" : ".get");
-                rv = mSecurityPrefs->SecurityGetCharPref(prefName, &secLevelString);
+                rv = securityPref->SecurityGetCharPref(prefName, &secLevelString);
             }
         }
         if (NS_SUCCEEDED(rv) && secLevelString)
@@ -655,19 +658,58 @@ nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
     return NS_ERROR_DOM_BAD_URI;
 }
 
+nsresult
+nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
+{
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri(aURI);
+
+    //-- get the source scheme
+    nsXPIDLCString scheme;
+    rv = uri->GetScheme(getter_Copies(scheme));
+    if (NS_FAILED(rv)) return rv;
+
+    //-- If uri is a view-source URI, drill down to the base URI
+    nsXPIDLCString path;
+    while(PL_strcmp(scheme, "view-source") == 0)
+    {
+        rv = uri->GetPath(getter_Copies(path));
+        if (NS_FAILED(rv)) return rv;
+        rv = NS_NewURI(getter_AddRefs(uri), path, nsnull);
+        if (NS_FAILED(rv)) return rv;
+        rv = uri->GetScheme(getter_Copies(scheme));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    //-- If uri is a jar URI, drill down again
+    nsCOMPtr<nsIJARURI> jarURI;
+    PRBool isJAR = PR_FALSE;
+    while((jarURI = do_QueryInterface(uri)))
+    {
+        jarURI->GetJARFile(getter_AddRefs(uri));
+        isJAR = PR_TRUE;
+    }
+    if (!uri) return NS_ERROR_FAILURE;
+    if (isJAR)
+    {
+        rv = uri->GetScheme(getter_Copies(scheme));
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    *aScheme = PL_strdup(scheme);
+    NS_ASSERTION(*aScheme, "GetBaseURIScheme returning null scheme");
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                                       PRUint32 aFlags)
 {
-    nsCOMPtr<nsIJARURI> jarURI;
-    nsCOMPtr<nsIURI> sourceUri(aSourceURI);
-    while((jarURI = do_QueryInterface(sourceUri)))
-        jarURI->GetJARFile(getter_AddRefs(sourceUri));
-    if (!sourceUri) return NS_ERROR_FAILURE;
-
+    nsresult rv;
+    //-- get the source scheme
     nsXPIDLCString sourceScheme;
-    if (NS_FAILED(sourceUri->GetScheme(getter_Copies(sourceScheme))))
-        return NS_ERROR_FAILURE;
+    rv = GetBaseURIScheme(aSourceURI, getter_Copies(sourceScheme));
+    if (NS_FAILED(rv)) return rv;
 
     // Some loads are not allowed from mail/news messages
     if ((aFlags & nsIScriptSecurityManager::DISALLOW_FROM_MAIL) &&
@@ -678,14 +720,10 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         return NS_ERROR_DOM_BAD_URI;
     }
 
-    nsCOMPtr<nsIURI> targetUri(aTargetURI);
-    while((jarURI = do_QueryInterface(targetUri)))
-        jarURI->GetJARFile(getter_AddRefs(targetUri));
-    if (!targetUri) return NS_ERROR_FAILURE;
-
+    //-- get the target scheme
     nsXPIDLCString targetScheme;
-    if (NS_FAILED(targetUri->GetScheme(getter_Copies(targetScheme))))
-        return NS_ERROR_FAILURE;
+    rv = GetBaseURIScheme(aTargetURI, getter_Copies(targetScheme));
+    if (NS_FAILED(rv)) return rv;
 
     if (nsCRT::strcasecmp(targetScheme, sourceScheme) == 0)
     {
@@ -693,11 +731,14 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         return NS_OK;
     }
 
+    //-- If the schemes don't match, the policy is specified in this table.
     enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol, AboutProtocol };
-    static const struct {
+    static const struct
+    { 
         const char *name;
         Action action;
-    } protocolList[] = {
+    } protocolList[] =
+    {
         //-- Keep the most commonly used protocols at the top of the list
         //   to increase performance
         { "http",            AllowProtocol  },
@@ -725,17 +766,26 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
 
     nsXPIDLCString targetSpec;
     const char* targetPage;
-    for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++) {
-        if (nsCRT::strcasecmp(targetScheme, protocolList[i].name) == 0) {
+    for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++)
+    {
+        if (nsCRT::strcasecmp(targetScheme, protocolList[i].name) == 0)
+        {
             PRBool doCheck = PR_FALSE;
-            switch (protocolList[i].action) {
+            switch (protocolList[i].action)
+            {
             case AllowProtocol:
                 // everyone can access these schemes.
                 return NS_OK;
             case PrefControlled:
                 // Allow access if pref is false
-                mPrefs->GetBoolPref("security.checkloaduri", &doCheck);
-                return doCheck ? ReportErrorToConsole(aTargetURI) : NS_OK;
+                {
+                    nsCOMPtr<nsISecurityPref> securityPref =
+                                   do_QueryReferent(mPrefBranchWeakRef);
+                    if (!securityPref)
+                        return NS_ERROR_FAILURE;
+                    securityPref->SecurityGetBoolPref("security.checkloaduri", &doCheck);
+                    return doCheck ? ReportErrorToConsole(aTargetURI) : NS_OK;
+                }
             case ChromeProtocol:
                 if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME)
                     return NS_OK;
@@ -745,8 +795,8 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
                     return NS_OK;
                 return ReportErrorToConsole(aTargetURI);
             case AboutProtocol:
-                // Allow loading about:blank, otherwise deny
-                if(NS_FAILED(targetUri->GetSpec(getter_Copies(targetSpec))))
+                // Allow loading 'safe' about pages, otherwise deny
+                if(NS_FAILED(aTargetURI->GetSpec(getter_Copies(targetSpec))))
                     return NS_ERROR_FAILURE;
                 targetPage = targetSpec.get() + sizeof("about:") - 1;
                 return (PL_strcmp(targetPage, "blank") == 0)   ||
@@ -924,27 +974,56 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
         rv = docshell->GetAllowJavascript(result);
         if (NS_FAILED(rv)) return rv;
         if (!*result)
-        return NS_OK;
+            return NS_OK;
     }
 
-    /*
-         There used to be a per-domain policy here, but that functionality
-         will hopefully be taken over by nsIContentPolicy. Meantime, it's gone.
-    */
-
+    //-- See if JS is disabled globally (via prefs)
+    *result = mIsJavaScriptEnabled;
     if ((mIsJavaScriptEnabled != mIsMailJavaScriptEnabled) && docshell)
     {
         // Is this script running from mail?
-               PRUint32 appType;
+        PRUint32 appType;
         rv = docshell->GetAppType(&appType);
         if (NS_FAILED(rv)) return rv;
         if (appType == nsIDocShell::APP_TYPE_MAIL)
-        {
             *result = mIsMailJavaScriptEnabled;
-            return NS_OK;
+    }
+    if (!*result)
+        return NS_OK;
+
+    //-- Check for a per-site policy
+    static const char jsPrefGroupName[] = "javascript";
+    static const char jsEnabledName[] = "enabled";
+    nsCStringKey jsKey(jsPrefGroupName);
+    void* policy = mClassPolicies ? mClassPolicies->Get(&jsKey) : nsnull;
+    if(policy)
+    {
+        nsCAutoString prefName;
+        rv = GetPrefName(principal, jsPrefGroupName, jsEnabledName, policy, prefName);
+        //-- early return?
+        nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
+        if (NS_SUCCEEDED(rv) && securityPref)
+        {
+            PRBool jsEnabledForSite;
+            rv = securityPref->SecurityGetBoolPref(prefName, &jsEnabledForSite);
+            if (NS_FAILED(rv) && (policy == (void*)CLASS_POLICY_SITE))
+                //-- No site policy for this property; look for a default policy
+            {
+                rv = GetPrefName(principal, jsPrefGroupName, jsEnabledName,
+                                 (void*)CLASS_POLICY_DEFAULT, prefName);
+                if (NS_SUCCEEDED(rv))
+                    rv = securityPref->SecurityGetBoolPref(prefName, &jsEnabledForSite);
+            }
+            if (NS_SUCCEEDED(rv) && !jsEnabledForSite)
+            {
+                *result = PR_FALSE;
+                return NS_OK;
+            }
         }
     }
-    *result = mIsJavaScriptEnabled;
+
+    //-- Nobody vetoed, so allow the JS to run.
+    *result = PR_TRUE;
     return NS_OK;
 }
 
@@ -1244,7 +1323,6 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 nsresult
 nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
 {
-    NS_ASSERTION(mSecurityPrefs, "nsScriptSecurityManager::mSecurityPrefs not initialized");
     nsresult rv;
     nsCOMPtr<nsIPrincipal> persistent = aToSave;
     nsCOMPtr<nsIAggregatePrincipal> aggregate = do_QueryInterface(aToSave, &rv);
@@ -1280,24 +1358,30 @@ nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
                              getter_Copies(deniedPrefName)  );
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
+    nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
+    if (!securityPref)
+        return NS_ERROR_FAILURE;
     mIsWritingPrefs = PR_TRUE;
     if (grantedList)
-        mSecurityPrefs->SecuritySetCharPref(grantedPrefName, grantedList);
+        securityPref->SecuritySetCharPref(grantedPrefName, grantedList);
     else
-        mSecurityPrefs->SecurityClearUserPref(grantedPrefName);
+        securityPref->SecurityClearUserPref(grantedPrefName);
 
     if (deniedList)
-        mSecurityPrefs->SecuritySetCharPref(deniedPrefName, deniedList);
+        securityPref->SecuritySetCharPref(deniedPrefName, deniedList);
     else
-        mSecurityPrefs->SecurityClearUserPref(deniedPrefName);
+        securityPref->SecurityClearUserPref(deniedPrefName);
 
     if (grantedList || deniedList)
-        mSecurityPrefs->SecuritySetCharPref(idPrefName, id);
+        securityPref->SecuritySetCharPref(idPrefName, id);
     else
-        mSecurityPrefs->SecurityClearUserPref(idPrefName);
+        securityPref->SecurityClearUserPref(idPrefName);
 
     mIsWritingPrefs = PR_FALSE;
-    return mPrefService->SavePrefFile(nsnull);
+
+    nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return prefService->SavePrefFile(nsnull);
 }
 
 ///////////////// Capabilities API /////////////////////
@@ -1777,8 +1861,11 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext,
             static PRBool allowPluginAccess = PR_FALSE;
             if (!prefSet)
             {
-                rv = mPrefs->GetBoolPref("security.xpconnect.plugin.unrestricted",
-                                         &allowPluginAccess);
+                nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
+                if (!securityPref)
+                    return NS_ERROR_FAILURE;
+                rv = securityPref->SecurityGetBoolPref("security.xpconnect.plugin.unrestricted",
+                                                       &allowPluginAccess);
                 prefSet = PR_TRUE;
             }
             if (allowPluginAccess)
@@ -1805,10 +1892,13 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const PRUnichar* aAction,
     char* prefName = prefNameStr.ToNewCString();
     if (!prefName)
         return NS_ERROR_OUT_OF_MEMORY;
+    nsCOMPtr<nsISecurityPref> securityPref = do_QueryReferent(mPrefBranchWeakRef);
+    if (!securityPref)
+        return NS_ERROR_FAILURE;
 
     static const char jsPrefix[] = "javascript.";
     if(PL_strncmp(prefName, jsPrefix, sizeof(jsPrefix)-1) == 0)
-        JSEnabledPrefChanged();
+        JSEnabledPrefChanged(securityPref);
     else if((PL_strncmp(prefName, sPrincipalPrefix, sizeof(sPrincipalPrefix)-1) == 0) &&
             !mIsWritingPrefs)
     {
@@ -1819,7 +1909,7 @@ nsScriptSecurityManager::Observe(nsISupports* aObject, const PRUnichar* aAction,
         {
             PL_strcpy(lastDot + 1, id);
             const char** idPrefArray = (const char**)&prefName;
-            rv = InitPrincipals(1, idPrefArray);
+            rv = InitPrincipals(1, idPrefArray, securityPref);
         }
     }
     PR_Free(prefName);
@@ -1905,7 +1995,8 @@ DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 }
 
 nsresult
-nsScriptSecurityManager::InitPolicies(PRUint32 aPrefCount, const char** aPrefNames)
+nsScriptSecurityManager::InitPolicies(PRUint32 aPrefCount, const char** aPrefNames,
+                                      nsISecurityPref* aSecurityPref)
 {
     for (PRUint32 c = 0; c < aPrefCount; c++)
     {
@@ -1943,7 +2034,7 @@ nsScriptSecurityManager::InitPolicies(PRUint32 aPrefCount, const char** aPrefNam
                         return NS_ERROR_OUT_OF_MEMORY;
                 }
                 char *s;
-                if (NS_FAILED(mSecurityPrefs->SecurityGetCharPref(aPrefNames[c], &s)))
+                if (NS_FAILED(aSecurityPref->SecurityGetCharPref(aPrefNames[c], &s)))
                     return NS_ERROR_FAILURE;
                 char *q=s;
                 char *r=s;
@@ -2004,7 +2095,7 @@ nsScriptSecurityManager::InitPolicies(PRUint32 aPrefCount, const char** aPrefNam
         else if (count > 3)
         { // capability.policy.<policyname>.<class>.<property>[.(get|set)]
           // Store the class name so we know this class has a policy set on it
-          // Shoving a null into the pref anme string is unorthodox
+          // Shoving a null into the pref name string is unorthodox
           // but it saves a malloc & copy - hash keys require null-terminated strings
             *(char*)dots[3] = '\0';
             nsCStringKey classNameKey(dots[2] + 1);
@@ -2053,7 +2144,8 @@ nsScriptSecurityManager::PrincipalPrefNames(const char* pref,
 }
 
 nsresult
-nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefNames)
+nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefNames,
+                                        nsISecurityPref* aSecurityPref)
 {
     /* This is the principal preference syntax:
      * capability.principal.[codebase|certificate].<name>.[id|granted|denied]
@@ -2070,8 +2162,8 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
         if (PL_strcasecmp(aPrefNames[c] + prefNameLen, idSuffix) != 0)
             continue;
 
-        char* id;
-        if (NS_FAILED(mSecurityPrefs->SecurityGetCharPref(aPrefNames[c], &id)))
+        nsXPIDLCString id;
+        if (NS_FAILED(aSecurityPref->SecurityGetCharPref(aPrefNames[c], getter_Copies(id)))) 
             return NS_ERROR_FAILURE;
 
         nsXPIDLCString grantedPrefName;
@@ -2085,17 +2177,17 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
             continue;
 
         char* grantedList = nsnull;
-        mSecurityPrefs->SecurityGetCharPref(grantedPrefName, &grantedList);
+        aSecurityPref->SecurityGetCharPref(grantedPrefName, &grantedList);
         char* deniedList = nsnull;
-        mSecurityPrefs->SecurityGetCharPref(deniedPrefName, &deniedList);
+        aSecurityPref->SecurityGetCharPref(deniedPrefName, &deniedList);
 
         //-- Delete prefs if their value is the empty string
         if ((!id || id[0] == '\0') ||
             ((!grantedList || grantedList[0] == '\0') && (!deniedList || deniedList[0] == '\0')))
         {
-            mSecurityPrefs->SecurityClearUserPref(aPrefNames[c]);
-            mSecurityPrefs->SecurityClearUserPref(grantedPrefName);
-            mSecurityPrefs->SecurityClearUserPref(deniedPrefName);
+            aSecurityPref->SecurityClearUserPref(aPrefNames[c]);
+            aSecurityPref->SecurityClearUserPref(grantedPrefName);
+            aSecurityPref->SecurityClearUserPref(deniedPrefName);
             PR_FREEIF(grantedList);
             PR_FREEIF(deniedList);
             continue;
@@ -2148,15 +2240,15 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
 
 
 inline void
-nsScriptSecurityManager::JSEnabledPrefChanged()
+nsScriptSecurityManager::JSEnabledPrefChanged(nsISecurityPref* aSecurityPref)
 {
-    if (NS_FAILED(mPrefs->GetBoolPref(sJSEnabledPrefName,
-                                      &mIsJavaScriptEnabled)))
+    if (NS_FAILED(aSecurityPref->SecurityGetBoolPref(sJSEnabledPrefName, 
+                                                     &mIsJavaScriptEnabled)))
         // Default to enabled.
         mIsJavaScriptEnabled = PR_TRUE;
 
-    if (NS_FAILED(mPrefs->GetBoolPref(sJSMailEnabledPrefName,
-                                      &mIsMailJavaScriptEnabled)))
+    if (NS_FAILED(aSecurityPref->SecurityGetBoolPref(sJSMailEnabledPrefName, 
+                                                     &mIsMailJavaScriptEnabled))) 
         // Default to enabled.
         mIsMailJavaScriptEnabled = PR_TRUE;
 }
@@ -2165,17 +2257,18 @@ nsresult
 nsScriptSecurityManager::InitPrefs()
 {
     nsresult rv;
-    mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mPrefService->GetBranch(nsnull, getter_AddRefs(mPrefs));
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
     NS_ENSURE_SUCCESS(rv, rv);
-    mSecurityPrefs = do_QueryInterface(mPrefs, &rv);
+    mPrefBranchWeakRef = getter_AddRefs(NS_GetWeakReference(prefBranch));
+    nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal = do_QueryInterface(prefBranch, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal = do_QueryInterface(mPrefs, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsISecurityPref> securityPref = do_QueryInterface(prefBranch);
 
     // Set the initial value of the "javascript.enabled" prefs
-    JSEnabledPrefChanged();
+    JSEnabledPrefChanged(securityPref);
     // set observer callbacks in case the value of the pref changes
     prefBranchInternal->AddObserver(sJSEnabledPrefName, this);
     prefBranchInternal->AddObserver(sJSMailEnabledPrefName, this);
@@ -2184,19 +2277,21 @@ nsScriptSecurityManager::InitPrefs()
     char** prefNames;
 
     //-- Initialize the policy database from prefs
-    rv = mPrefs->GetChildList("capability.policy", &prefCount, &prefNames);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = InitPolicies(prefCount, (const char**)prefNames);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
-
+    rv = prefBranch->GetChildList("capability.policy", &prefCount, &prefNames);
+    if (NS_SUCCEEDED(rv) && prefCount > 0)
+    {
+        rv = InitPolicies(prefCount, (const char**)prefNames, securityPref);
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
+    }
     //-- Initialize the principals database from prefs
-    rv = mPrefs->GetChildList(sPrincipalPrefix, &prefCount, &prefNames);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = InitPrincipals(prefCount, (const char**)prefNames);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
-
+    rv = prefBranch->GetChildList(sPrincipalPrefix, &prefCount, &prefNames);
+    if (NS_SUCCEEDED(rv) && prefCount > 0)
+    {
+        rv = InitPrincipals(prefCount, (const char**)prefNames, securityPref);
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
+    }
     //-- Set a callback for principal changes
     prefBranchInternal->AddObserver(sPrincipalPrefix, this);
 

@@ -37,6 +37,7 @@
 #include "nsISecurityPref.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserver.h"
+#include "nsWeakPtr.h"
 
 class nsIDocShell;
 class nsString;
@@ -103,6 +104,9 @@ private:
 
     static PRBool IsDOMClass(nsIClassInfo* aClassInfo);
 
+    nsresult
+    GetBaseURIScheme(nsIURI* aURI, char** aScheme);
+
     static nsresult 
     ReportErrorToConsole(nsIURI* aTarget);
 
@@ -122,7 +126,7 @@ private:
                     nsIPrincipal* aObject, PRUint32 aAction);
     
     PRInt32 
-    GetSecurityLevel(JSContext* aCx, nsIPrincipal *principal,
+    GetSecurityLevel(nsIPrincipal *principal,
                      PRBool aIsDOM,
                      const char* aClassName, const char* aProperty,
                      PRUint32 aAction, nsCString &capability, void** aPolicy);
@@ -167,13 +171,15 @@ private:
     PrincipalPrefNames(const char* pref, char** grantedPref, char** deniedPref);
 
     nsresult
-    InitPolicies(PRUint32 prefCount, const char** prefNames);
+    InitPolicies(PRUint32 prefCount, const char** prefNames,
+                 nsISecurityPref* securityPref);
 
     nsresult
-    InitPrincipals(PRUint32 prefCount, const char** prefNames);
+    InitPrincipals(PRUint32 prefCount, const char** prefNames,
+                   nsISecurityPref* securityPref);
 
     inline void
-    JSEnabledPrefChanged();
+    JSEnabledPrefChanged(nsISecurityPref* aSecurityPref);
 
     static const char* sJSEnabledPrefName;
     static const char* sJSMailEnabledPrefName;
@@ -181,9 +187,7 @@ private:
 
     nsObjectHashtable* mOriginToPolicyMap;
     nsHashtable* mClassPolicies;
-    nsCOMPtr<nsIPrefService> mPrefService;
-    nsCOMPtr<nsIPrefBranch> mPrefs;
-    nsCOMPtr<nsISecurityPref> mSecurityPrefs;
+    nsWeakPtr mPrefBranchWeakRef;
     nsIPrincipal* mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
     nsSupportsHashtable* mPrincipals;
