@@ -20,13 +20,50 @@ topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
-MODULE =msgcomposetest
+PROGRAM=TestMSGCompose
 
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS = \
 		test.cpp \
 		$(NULL)
+
+ifdef MOZ_OJI
+        JSJ_LIB = -ljsj
+endif
+
+LIBS = \
+        -labouturl \
+        -lfileurl \
+        -lftpurl \
+        -lgophurl \
+        -lremoturl \
+        -lhttpurl \
+        -lsockstuburl \
+        -lnetcache \
+        -lmimetype \
+        -lnetcnvts \
+        -lnetwork \
+        -lnetlib \
+        -lreg   \
+        -lxpcom \
+        -lpwcac \
+        -lmozdbm        \
+        -lxp    \
+        -lpref  \
+        -lmozjs \
+        -ljsdom \
+        -ljsurl \
+        -lsecfree \
+        $(ZLIB_LIBS) \
+        $(NSPR_LIBS) \
+        -lgfx$(MOZ_TOOLKIT)     \
+        -lraptorgfx     \
+        -lgfxps         \
+        -limg           \
+        -lmozutil       \
+        $(TK_LIBS) \
+        $(NULL)
 
 include $(topsrcdir)/config/config.mk
 
