@@ -28,8 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gfx_photon
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxPhModule
+REQUIRES	= xpcom string widget view util dom pref uconv unicharutil windowwatcher locale intl
 
 CPPSRCS		= \
 		nsDeviceContextPh.cpp \
