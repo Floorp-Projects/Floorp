@@ -173,16 +173,18 @@ _MD_open (const char *name, PRIntn flags, PRIntn mode)
 		osflags = O_RDONLY;
 	}
 
-        if (flags & PR_APPEND)
-                osflags |= O_APPEND;
-        if (flags & PR_TRUNCATE)
-                osflags |= O_TRUNC;
-        if (flags & PR_SYNC) {
+	if (flags & PR_EXCL)
+		osflags |= O_EXCL;
+	if (flags & PR_APPEND)
+		osflags |= O_APPEND;
+	if (flags & PR_TRUNCATE)
+		osflags |= O_TRUNC;
+	if (flags & PR_SYNC) {
 /* Ummmm.  BeOS doesn't appear to
    support sync in any way shape or
    form. */
 		return PR_NOT_IMPLEMENTED_ERROR;
-        }
+	}
 
 	/*
 	** On creations we hold the 'create' lock in order to enforce
