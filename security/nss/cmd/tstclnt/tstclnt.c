@@ -405,8 +405,13 @@ int main(int argc, char **argv)
 		return SECFailure;
 	    }
 	    prStatus = PR_Connect(s, &addr, PR_INTERVAL_NO_TIMEOUT);
-	    if (prStatus == PR_SUCCESS) 
+	    if (prStatus == PR_SUCCESS) {
+    		PR_Shutdown(s, PR_SHUTDOWN_BOTH);
+    		PR_Close(s);
+    		NSS_Shutdown();
+    		PR_Cleanup();
 		return SECSuccess;
+	    }
 	    err = PR_GetError();
 	    if ((err != PR_CONNECT_REFUSED_ERROR) && 
 	        (err != PR_CONNECT_RESET_ERROR)) {
