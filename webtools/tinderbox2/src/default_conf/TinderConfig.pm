@@ -5,9 +5,9 @@
 # customizable settings.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2001/03/26 14:01:38 $ 
-# $Author: kestes%tradinglinx.com $ 
+# $Revision: 1.9 $ 
+# $Date: 2001/07/20 18:55:44 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -172,6 +172,8 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 	       # control system.
 	       
 	       'TinderHeader::TreeState',
+	       'TinderHeader::TreeState_Bonsai',
+
 	      );
 
 # Each of the TinderHeader method appears on the left side of this
