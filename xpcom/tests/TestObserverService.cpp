@@ -69,8 +69,12 @@ TestObserver::Observe( nsISupports     *aSubject,
                        const PRUnichar *someData ) {
     nsString topic( aTopic );
     nsString data( someData );
+    	/*
+    		The annoying double-cast below is to work around an annoying bug in
+    		the compiler currently used on wensleydale.  This is a test.
+    	*/
     cout << mName << " has observed something: subject@" << (void*)aSubject
-         << " name=" << ((TestObserver*)aSubject)->mName
+         << " name=" << NS_REINTERPRET(TestObserver*, NS_REINTERPRET_CAST(void*, aSubject))->mName
          << " aTopic=" << topic
          << " someData=" << data << endl;
     return NS_OK;
