@@ -3914,7 +3914,23 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
       }
     }
   } else {
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE; //changed to NS_OK in quirks mode if ScrollTo is called
+    
+    // Scroll to the top/left if the anchor can not be
+    // found (quirks mode only). @see bug 80784
+    nsCompatibility compatMode;
+    mPresContext->GetCompatibilityMode(&compatMode);
+   
+    if ((compatMode == eCompatibility_NavQuirks) && (mViewManager)) {
+      // Get the viewport scroller
+      nsIScrollableView* scrollingView;
+      mViewManager->GetRootScrollableView(&scrollingView);
+      if (scrollingView) {
+        // Scroll to the top of the page
+        scrollingView->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
+        rv = NS_OK;
+      }
+    }
   }
 
   return rv;
