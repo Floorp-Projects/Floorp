@@ -60,8 +60,8 @@
     ((+ :fonts) (:courier fmodern fcharset 256 fprq 2 "Courier New;"))
     (:palatino f 6)
     ((+ :fonts) (:palatino fnil fcharset 256 fprq 2 "Palatino;"))
-    (:zapf-chancery f 7)
-    ((+ :fonts) (:zapf-chancery fscript fcharset 256 fprq 2 "Zapf Chancery;"))
+    (:comic-sans-ms f 7)
+    ((+ :fonts) (:comic-sans-ms fnil fcharset 256 fprq 2 (* panose "00030f07020303020202") "Comic Sans MS;"))
     (:arial f 8)
     ((+ :fonts) (:arial fnil fcharset 256 fprq 2 (* panose "00020b06040202020202") "Arial;"))
     
@@ -415,7 +415,7 @@
     ((+ :styles) (* :variable-sub additive sbasedon :default-paragraph-font-num "Variable Sub;"))
     
     (:action-name-num 60)
-    (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
+    (:action-name cs :action-name-num :comic-sans-ms :purple :no-language)
     ((+ :styles) (* :action-name additive sbasedon :default-paragraph-font-num "Action Name;"))
     
     

@@ -77,7 +77,7 @@ A.field-name:active, A:active .field-name {color: #996666}
 .global-variable, A.global-variable:link, A.global-variable:visited {font-family: "Times New Roman", Times, serif; color: #006600}
 A.global-variable:hover, A:hover .global-variable {color: #336633}
 A.global-variable:active, A:active .global-variable {color: #00FF00}
-.action-name, A.action-name:link, A.action-name:visited {font-family: "Zapf Chancery", "Comic Sans MS", Script, serif; color: #660066}
+.action-name, A.action-name:link, A.action-name:visited {font-family: "Comic Sans MS", "Zapf Chancery", Script, serif; color: #660066}
 A.action-name:hover, A:hover .action-name {color: #663366}
 A.action-name:active, A:active .action-name {color: #FF00FF}
 
