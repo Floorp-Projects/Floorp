@@ -23,9 +23,16 @@
 #ifdef MOZ_PERF_METRICS
 
 #include "stopwatch.h"
+#include "nsStackBasedTimer.h"
 
 // This should be set from preferences at runtime.  For now, make it a compile time flag.
 #define ENABLE_DEBUG_OUTPUT PR_FALSE
+
+// Uncomment and re-build to use the Mac Instrumentation SDK on a Mac.
+// #define MOZ_TIMER_USE_MAC_ISDK
+
+// Uncomment and re-build to use the 
+// #define MOZ_TIMER_USE_QUANTIFY
 
 // Timer macros for the Mac
 #ifdef XP_MAC
@@ -34,7 +41,6 @@
 
 #include "InstrumentationHelpers.h"
 
-// Macro to create a timer on the stack.
 #  define MOZ_TIMER_CREATE(name, msg)    \
   static InstTraceClassRef name = 0;  StInstrumentationLog __traceLog((msg), name)
 
@@ -50,12 +56,68 @@
   if (ENABLE_DEBUG_OUTPUT) printf msg
 
 #  define MOZ_TIMER_MACISDK_LOGDATA(msg, data) \
-  do { traceLog.LogMiddleEventWithData((s), (d)); } while (0)
+  do { traceLog.LogMiddleEventWithData((msg), (data)); } while (0)
 
 #else
 
+#define MOZ_TIMER_USE_STOPWATCH
+
+#endif  // MOZ_TIMER_USE_MAC_ISDK
+
+#endif  // XP_MAC
+
+
+// Timer macros for Windows
+#ifdef XP_WIN
+
+#ifdef MOZ_TIMER_USE_QUANTIFY
+
+#include "pure.h"
+
+#  define MOZ_TIMER_CREATE(name, msg)
+#  define MOZ_TIMER_RESET(name, msg)  \
+  QuantifyClearData(); printf msg
+
+#  define MOZ_TIMER_START(name, msg)  \
+  QuantifyStartRecordingData(); printf msg
+  
+#  define MOZ_TIMER_STOP(name, msg) \
+  QuantifyStopRecordingData(); printf msg
+
+#  define MOZ_TIMER_SAVE(name, msg)
+#  define MOZ_TIMER_RESTORE(name, msg)  
+
+#  define MOZ_TIMER_LOG(msg)    \ 
+do {                            \
+  char* str = __mysprintf msg;  \
+  QuantifyAddAnnotation(str);   \
+  delete [] str;                \
+} while (0)
+
+#  define MOZ_TIMER_DEBUGLOG(msg) \
+  if (ENABLE_DEBUG_OUTPUT) printf msg
+
+#  define MOZ_TIMER_MACISDK_LOGDATA(msg, data)
+
+#else
+
+#define MOZ_TIMER_USE_STOPWATCH
+
+#endif  // MOZ_TIMER_USE_QUANTIFY
+
+#endif  // XP_WIN
+
+// Timer macros for Unix
+#ifdef XP_UNIX
+
+#define MOZ_TIMER_USE_STOPWATCH
+
+#endif  // XP_UNIX
+
+#ifdef MOZ_TIMER_USE_STOPWATCH
+
 #  define MOZ_TIMER_CREATE(name, msg)    \
-  static Stopwatch __sw_name;  nsFunctionTimer name(__sw_name, msg)
+  static Stopwatch __sw_name;  nsStackBasedTimer name(&__sw_name)
 
 #  define MOZ_TIMER_RESET(name, msg)  \
   name.Reset(); printf msg
@@ -79,64 +141,19 @@
   if (ENABLE_DEBUG_OUTPUT) printf msg
 
 #  define MOZ_TIMER_MACISDK_LOGDATA(msg, data)
-#endif
 
-#endif
-
-
-// Timer macros for Windows
-#ifdef XP_WIN
-
-#endif
-
-// Timer macros for Unix
-#ifdef XP_UNIX
-
-#endif
+#endif // MOZ_TIMER_USE_STOPWATCH
 
 #else
-#  define MOZ_TIMER_CREATE(id)
-#  define MOZ_TIMER_RESET(id, msg)
-#  define MOZ_TIMER_START(id, msg)
-#  define MOZ_TIMER_STOP(id, msg)
-#  define MOZ_TIMER_SAVE(id, msg)
-#  define MOZ_TIMER_RESTORE(id, msg)
-#  define MOZ_TIMER_LOG(id, msg)
+#  define MOZ_TIMER_CREATE(name, msg)
+#  define MOZ_TIMER_RESET(name, msg)
+#  define MOZ_TIMER_START(name, msg)
+#  define MOZ_TIMER_STOP(name, msg)
+#  define MOZ_TIMER_SAVE(name, msg)
+#  define MOZ_TIMER_RESTORE(name, msg)
+#  define MOZ_TIMER_LOG(name, msg)
 #  define MOZ_TIMER_DEBUGLOG(msg)
 #  define MOZ_TIMER_MACISDK_LOGDATA(msg, data)
-#endif
-
-// To be removed.
-#ifdef MOZ_PERF_METRICS
-
-static PRLogModuleInfo* gLogStopwatchModule = PR_NewLogModule("timing");
-
-#if 0
-#define RAPTOR_TRACE_STOPWATCHES        0x1
-
-#define RAPTOR_STOPWATCH_TRACE(_args)                               \
-  PR_BEGIN_MACRO                                                    \
-  PR_LOG(gLogStopwatchModule, RAPTOR_TRACE_STOPWATCHES, _args);     \
-  PR_END_MACRO
-#endif
-
-#define RAPTOR_STOPWATCH_TRACE(_args)      \
-  PR_BEGIN_MACRO                           \
-  printf _args ;                           \
-  PR_END_MACRO
-
-#else
-#define RAPTOR_TRACE_STOPWATCHES 
-#define RAPTOR_STOPWATCH_TRACE(_args) 
-#endif
-
-#ifdef DEBUG_STOPWATCH
-#define RAPTOR_STOPWATCH_DEBUGTRACE(_args)      \
-  PR_BEGIN_MACRO                                \
-  printf _args ;                                \
-  PR_END_MACRO
-#else
-#define RAPTOR_STOPWATCH_DEBUGTRACE(_args) 
-#endif
+#endif  // MOZ_PERF_METRICS
 
 #endif  // __NSTIMER_H
