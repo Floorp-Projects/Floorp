@@ -212,7 +212,7 @@ nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aConte
       JS_CompileUCFunction(mJSContext, mScriptObject, mCharName,
 		           1, mEventArgv, (jschar*)aFunc.GetUnicode(), aFunc.Length(),
 		           nsnull, 0);
-      delete mCharName;
+      delete[] mCharName;
       return SetJSEventListener(aContext, mScriptObject, aIID);
     }
   }
