@@ -97,19 +97,23 @@ public:
   NS_DECL_ISUPPORTS
 
   /* nsITextServicesDocumentInternal method implementations. */
-  NS_IMETHOD Init(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell);
-  NS_IMETHOD SetEditor(nsIEditor *aEditor);
+  NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell);
+  NS_IMETHOD InitWithEditor(nsIEditor *aEditor);
 
   /* nsITextServicesDocument method implementations. */
+  NS_IMETHOD CanEdit(PRBool *aCanEdit);
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr);
   NS_IMETHOD FirstBlock();
   NS_IMETHOD LastBlock();
+  NS_IMETHOD FirstSelectedBlock(PRInt32 *aSelOffset, PRInt32 *aSelLength);
+  NS_IMETHOD LastSelectedBlock(PRInt32 *aSelOffset, PRInt32 *aSelLength);
   NS_IMETHOD PrevBlock();
   NS_IMETHOD NextBlock();
-  NS_IMETHOD IsDone();
+  NS_IMETHOD IsDone(PRBool *aIsDone);
   NS_IMETHOD SetSelection(PRInt32 aOffset, PRInt32 aLength);
   NS_IMETHOD DeleteSelection();
   NS_IMETHOD InsertText(const nsString *aText);
+  NS_IMETHOD SetDisplayStyle(TSDDisplayStyle aStyle);
 
   /* nsIEditActionListener method implementations. */
   nsresult InsertNode(nsIDOMNode * aNode,
