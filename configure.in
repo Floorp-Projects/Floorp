@@ -3620,6 +3620,14 @@ MOZ_ARG_ENABLE_BOOL(elf-dynstr-gc,
     USE_ELF_DYNSTR_GC= )
 
 dnl ========================================================
+dnl = --enable-prebinding
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(prebinding,
+[  --enable-prebinding     Enable prebinding (Mac OS X only)],
+    USE_PREBINDING=1,
+    USE_PREBINDING= )
+
+dnl ========================================================
 dnl = 
 dnl = Profiling and Instrumenting
 dnl = 
@@ -4415,6 +4423,7 @@ AC_SUBST(MOZ_USER_DIR)
 
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(USE_ELF_DYNSTR_GC)
+AC_SUBST(USE_PREBINDING)
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 AC_SUBST(MOZ_COMPONENT_XPCOM_LIBS)
