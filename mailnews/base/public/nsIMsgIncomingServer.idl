@@ -200,6 +200,9 @@ interface nsIMsgIncomingServer : nsISupports {
 
   attribute boolean loginAtStartUp;
 
+  attribute boolean limitMessageSize;
+  attribute long maxMessageSize;
+
   attribute nsIMsgRetentionSettings retentionSettings;
 };
 

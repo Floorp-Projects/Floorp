@@ -50,7 +50,6 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer,
   virtual ~nsMsgIncomingServer();
 
   NS_DECL_ISUPPORTS
-
   NS_DECL_NSIMSGINCOMINGSERVER
   
 private:

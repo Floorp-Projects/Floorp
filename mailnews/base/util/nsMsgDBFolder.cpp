@@ -972,9 +972,30 @@ NS_IMETHODIMP nsMsgDBFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *resu
 
       hdr->GetFlags(&msgFlags);
       // check if we already have this message body offline
-      // should also check against size limit when we have that.
       if (! (msgFlags & MSG_FLAG_OFFLINE))
+      {
         *result = PR_TRUE;
+      // check against the server download size limit .
+        nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+        rv = GetServer(getter_AddRefs(incomingServer));
+        if (NS_SUCCEEDED(rv) && incomingServer)
+        {
+          PRBool limitDownloadSize = PR_FALSE;
+          rv = incomingServer->GetLimitMessageSize(&limitDownloadSize);
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (limitDownloadSize)
+          {
+            PRInt32 maxDownloadMsgSize = 0;
+            PRUint32 msgSize;
+            hdr->GetMessageSize(&msgSize);
+            rv = incomingServer->GetMaxMessageSize(&maxDownloadMsgSize);
+            NS_ENSURE_SUCCESS(rv, rv);
+            maxDownloadMsgSize *= 1024;
+            if (msgSize > (PRUint32) maxDownloadMsgSize)
+              *result = PR_FALSE;
+          }
+        }
+      }
     }
   }
   return NS_OK;

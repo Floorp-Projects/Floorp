@@ -64,6 +64,8 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
+#define OFFLINE_STATUS_CHANGED_TOPIC "network:offline-status-changed"
+
 #define PORT_NOT_SET -1
 
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)
@@ -79,7 +81,7 @@ nsMsgIncomingServer::nsMsgIncomingServer():
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
 {
-    nsresult rv;
+  nsresult rv;
     if (mFilterList) {
         nsCOMPtr<nsIMsgFilterService> filterService =
             do_GetService(kMsgFilterServiceCID, &rv);
@@ -90,6 +92,7 @@ nsMsgIncomingServer::~nsMsgIncomingServer()
                                                   m_prefs,
                                                   nsnull);
 }
+
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgIncomingServer);
 NS_IMPL_THREADSAFE_RELEASE(nsMsgIncomingServer);
@@ -1207,3 +1210,9 @@ NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, EmptyTrashOnExit,
                         "empty_trash_on_exit");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, CanDelete, "canDelete");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, LoginAtStartUp, "login_at_startup");
+
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
+                        LimitMessageSize,
+                        "limit_message_size")
+
+NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, MaxMessageSize, "max_size")
