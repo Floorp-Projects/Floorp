@@ -323,9 +323,9 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 		            PRBool isControl = PR_FALSE;
 		            theEvent->GetMetaKey(&isCommand);
 		            theEvent->GetCtrlKey(&isControl);
-		            if (((isCommand && (modCommand != "true")) ||
-		                (!isCommand && (modCommand == "true"))) && 
-		                ((isControl && (modControl != "true")) ||
+		            if (((isCommand && (modCommand == "false")) ||
+		                (!isCommand && (modCommand == "true"))) || 
+		                ((isControl && (modControl == "false")) ||
 		                (!isControl && (modControl == "true"))))
 		              break;
                     //printf("Passed command/ctrl test \n"); // this leaks   
