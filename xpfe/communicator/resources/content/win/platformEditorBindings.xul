@@ -1,0 +1,47 @@
+<?xml version="1.0"?> 
+<!-- windows version of platformEditorBindings.xul -->
+
+<keybinding id="platformEditorBindings"
+	 xmlns:html="http://www.w3.org/TR/REC-html40"
+	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!-- xul key for Windows -->
+<keyset id="editorKeySet" xulkey="ctrl">
+
+
+<!-- alternate cut/copy/paste keys for Windows -->
+<key id="winAlternateCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+    controller.doCommand('cmd_cut');"/>
+<key id="winAlternateCopyKey" keycode="VK_INSERT" control="true" shift="false" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+    controller.doCommand('cmd_copy');"/>
+<key id="winAlternatePasteKey" keycode="VK_INSERT" shift="true" control="false" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+    controller.doCommand('cmd_paste');"/>
+
+<key id="key_leftcontrol" keycode="VK_LEFT" shift="false" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_wordPrevious');
+    controller.doCommand('cmd_wordPrevious');"/>
+<key id="key_rightcontrol" keycode="VK_RIGHT" shift="false" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_wordNext');
+    controller.doCommand('cmd_wordNext');"/>
+<key id="key_leftshiftcontrol" keycode="VK_LEFT" shift="true" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordPrevious');
+    controller.doCommand('cmd_selectWordPrevious');"/>
+<key id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" xulkey="true" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
+    controller.doCommand('cmd_selectWordNext');"/>
+</keyset>
+
+<!-- End Windows-specific keybindings -->
+
+</keybinding>
+

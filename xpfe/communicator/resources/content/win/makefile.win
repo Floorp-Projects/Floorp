@@ -19,24 +19,15 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..\..\..
 
-CHROME_DIR=packages\core
-CHROME_CONTENT_DIR=communicator\content
-CHROME_MISC_DIR=.
-CHROME_TYPE=content
-
-DIRS= win
-
-CHROME_MISC = \
-	.\manifest.rdf \
-	$(NULL)
+CHROME_DIR = packages\core
+CHROME_CONTENT_DIR = communicator\content
 
 CHROME_CONTENT = \
-	.\communicatorOverlay.xul \
-	.\utilityOverlay.xul \
-	.\utilityOverlay.js \
-	.\utilityOverlay.css \
+	.\platformBrowserBindings.xul \
+	.\platformEditorBindings.xul \
+	.\platformGlobalOverlay.xul \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
