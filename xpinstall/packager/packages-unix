@@ -39,6 +39,7 @@ bin/libxpistub.so
 bin/libzlib.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
+bin/components/libunicharutil.so
 
 [browser]
 bin/mozilla
@@ -116,7 +117,6 @@ bin/components/libucvko.so
 bin/components/libucvlatin.so
 bin/components/libucvtw.so
 bin/components/libucvtw2.so
-bin/components/libunicharutil.so
 bin/components/liburiloader.so
 bin/components/liburlbarhistory.so
 bin/components/libwebbrwsr.so
