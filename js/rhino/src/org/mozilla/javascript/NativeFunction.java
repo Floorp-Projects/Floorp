@@ -73,12 +73,17 @@ public class NativeFunction extends ScriptableObject implements Function {
             return result;
         if (s.equals("prototype")) {
             NativeObject obj = new NativeObject();
-            obj.setPrototype(getObjectPrototype(this));
             final int attr = ScriptableObject.DONTENUM |
                              ScriptableObject.READONLY |
                              ScriptableObject.PERMANENT;
             obj.defineProperty("constructor", this, attr);
-            put(s, this, obj);
+			// put the prototype property into the object now, then in the
+			// wacky case of a user defining a function Object(), we don't
+			// get an infinite loop trying to find the prototype.
+			put(s, this, obj);
+			Scriptable proto = getObjectPrototype(this);			
+			if (proto != obj) // not the one we just made, it must remain grounded
+				obj.setPrototype(proto);
             return obj;
         }
         if (s.equals("arguments")) {
