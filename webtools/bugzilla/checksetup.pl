@@ -102,7 +102,7 @@ use strict;
 
 use vars qw(
     $webservergroup
-    $db_host $db_port $db_name $db_user
+    $db_host $db_port $db_name $db_user $db_pass $db_check
     @severities @priorities @opsys @platforms
 );
 
@@ -180,18 +180,19 @@ if ($charts != 2) {
 #
 # This is quite tricky. But fun!
 #
-# First we read the file 'localconfig'. And then we check if the variables
-# we need to be defined are defined. If not, localconfig will be amended by
-# the new settings and the user informed to check this. The program then
-# stops.
+# First we read the file 'localconfig'. Then we check if the variables we
+# need are defined. If not, localconfig will be amended by the new settings
+# and the user informed to check this. The program then stops.
 #
 # Why do it this way around?
 #
 # Assume we will enhance Bugzilla and eventually more local configuration
 # stuff arises on the horizon.
 #
-# But the file 'localconfig' is not in the Bugzilla CVS or tarfile. It should
-# not be there so that we never overwrite user's local setups accidentally.
+# But the file 'localconfig' is not in the Bugzilla CVS or tarfile. You
+# know, we never want to overwrite your own version of 'localconfig', so
+# we can't put it into the CVS/tarfile, can we?
+#
 # Now, we need a new variable. We simply add the necessary stuff to checksetup.
 # The user get's the new version of Bugzilla from the CVS, runs checksetup
 # and checksetup finds out "Oh, there is something new". Then it adds some
@@ -250,7 +251,22 @@ $db_port = 3306;                # which port to use
 $db_name = "bugs";              # name of the MySQL database
 $db_user = "bugs";              # user to attach to the MySQL database
 ');
+LocalVar('$db_pass', '
+#
+# Some people actually use passwords with their MySQL database ...
+#
+$db_pass = "";
+');
 
+
+
+LocalVar('$db_check', '
+#
+# Should checksetup.pl try to check if your MySQL setup is correct?
+# (with some combinations of MySQL/Msql-mysql/Perl/moonphase this doesn\'t work)
+#
+$db_check = 1;
+');
 
 
 LocalVar('@severities', '
@@ -342,11 +358,11 @@ LocalVar('@platforms', '
 
 
 if ($newstuff ne "") {
-    print "This version of Bugzilla contains some variables that you may \n",
+    print "\nThis version of Bugzilla contains some variables that you may \n",
           "to change and adapt to your local settings. Please edit the file\n",
           "'localconfig' and rerun checksetup.pl\n\n",
           "The following variables are new to localconfig since you last ran\n",
-          "checksetup.pl:  $newstuff\n";
+          "checksetup.pl:  $newstuff\n\n";
     exit;
 }
 
@@ -432,7 +448,6 @@ if ($webservergroup) {
 # the fact that we use MySQL and not, say, PostgreSQL.
 
 my $db_base = 'mysql';
-my $db_pass = '';               # Password to attach to the MySQL database
 
 use DBI;
 
@@ -440,15 +455,24 @@ use DBI;
 my $drh = DBI->install_driver($db_base)
     or die "Can't connect to the $db_base. Is the database installed and up and running?\n";
 
-# Do we have the database itself?
-my @databases = $drh->func($db_host, $db_port, '_ListDBs');
-unless (grep /^$db_name$/, @databases) {
+if ($db_check) {
+    # Do we have the database itself?
+    my @databases = $drh->func($db_host, $db_port, '_ListDBs');
+    unless (grep /^$db_name$/, @databases) {
     print "Creating database $db_name ...\n";
     $drh->func('createdb', $db_name, 'admin')
-        or die "The '$db_name' database does not exist. I tried to create the database,\n",
-               "but that didn't work, probably because of access rigths. Read the README\n",
-               "file and the documentation of $db_base to make sure that everything is\n",
-               "set up correctly.\n";
+            or die <<"EOF"
+
+The '$db_name' database is not accessible. This might have several reasons:
+
+* MySQL is not running.
+* MySQL is running, but the rights are not set correct. Go and read the
+  README file of Bugzilla and all parts of the MySQL documentation.
+* There is an subtle problem with Perl, DBI, DBD::mysql and MySQL. Make
+  sure all settings in 'localconfig' are correct. If all else fails, set
+  '\$db_check' to zero.\n
+EOF
+    }
 }
 
 # now get a handle to the database:
