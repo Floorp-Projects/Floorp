@@ -1378,8 +1378,7 @@ char *
 MimeGetStringByIDREAL(PRInt32 stringID)
 {
   nsresult    res;
-  char        propertyURL[256];
-  PRInt32     bufLen = sizeof(propertyURL);
+  char*       propertyURL;
 
 /***************************************     
     // Father forgive me...
@@ -1400,10 +1399,13 @@ MimeGetStringByIDREAL(PRInt32 stringID)
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->GetCharPref("mail.strings.mime", propertyURL, &bufLen);
+    res = prefs->GetCharPref("mail.strings.mime", propertyURL);
 
   if (!NS_SUCCEEDED(res) || !prefs)
-    PR_snprintf(propertyURL, sizeof(propertyURL), "%s", MIME_URL);
+    propertyURL = PL_strdup(MIME_URL);
+
+  // nobody seems to be using propertyURL, so I'm freeing it again!
+  PL_strfree(propertyURL);
 
   NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &res); 
   if (!NS_SUCCEEDED(res) || (nsnull == pNetService)) 
