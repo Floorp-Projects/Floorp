@@ -343,7 +343,6 @@ nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory)
         
             *this = inNewParentDirectory + GetLeafName(); 
     	}
-	    delete [] destPath;
     }
     return result;
 } 
