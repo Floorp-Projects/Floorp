@@ -249,6 +249,16 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
      else
        return NS_ERROR_FAILURE;
    }
+   else if (aIID.Equals(NS_GET_IID(nsISHistory))) {
+      nsCOMPtr<nsISHistory> shistory;
+      nsresult rv = GetSessionHistory(getter_AddRefs(shistory));
+      if (NS_SUCCEEDED(rv) && shistory) {
+        *aSink = shistory;
+        NS_ADDREF((nsISupports *)*aSink);
+        return NS_OK;
+      }
+      return NS_NOINTERFACE;
+   }
    else
    {
       return QueryInterface(aIID, aSink);
