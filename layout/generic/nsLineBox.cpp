@@ -42,7 +42,8 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
     mNext(nsnull),
     mBounds(0, 0, 0, 0),
     mMaxElementWidth(0),
-    mData(nsnull)
+    mData(nsnull),
+    mMaximumWidth(-1)
 {
   MOZ_COUNT_CTOR(nsLineBox);
 #ifdef DEBUG

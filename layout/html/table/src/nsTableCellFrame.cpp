@@ -635,7 +635,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (availSize.height < 0)
     availSize.height = 1;
 
-  nsHTMLReflowMetrics kidSize(pMaxElementSize);
+  nsHTMLReflowMetrics kidSize(pMaxElementSize, aDesiredSize.mFlags);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
   SetPriorAvailWidth(aReflowState.availableWidth);
   nsIFrame* firstKid = mFrames.FirstChild();
@@ -761,6 +761,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height  = cellHeight;
   aDesiredSize.ascent  = topInset;
   aDesiredSize.descent = bottomInset;
+  if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    aDesiredSize.mMaximumWidth = kidSize.mMaximumWidth + leftInset + rightInset;
+  }
   if (nsnull!=aDesiredSize.maxElementSize) {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
     if (0!=pMaxElementSize->height) {

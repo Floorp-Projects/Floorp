@@ -1236,7 +1236,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
 
     // Pass along the reflow command
     nsSize              kidMaxElementSize;
-    nsHTMLReflowMetrics desiredSize(&kidMaxElementSize);
+    nsHTMLReflowMetrics desiredSize(&kidMaxElementSize, NS_REFLOW_CALC_MAX_WIDTH);
     nsHTMLReflowState   kidReflowState(aPresContext,
                                        aReflowState.reflowState,
                                        aNextFrame, kidAvailSize);
@@ -1262,7 +1262,12 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     
     // Update the cell layout data.
     ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
+    // XXX TROY Not ready to be turned on yet...
+#if 0
+    ((nsTableCellFrame *)aNextFrame)->SetMaximumWidth(desiredSize.mMaximumWidth);
+#endif
 
+#if 1
     // Now see if we need to do the regular pass 1 reflow and gather the preferred
     // width. If the new minimum width is different from the old minimum width,
     // then we should consider the max element size
@@ -1323,6 +1328,17 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
         aReflowState.tableFrame->InvalidateColumnWidths();
       }
     }
+#else
+    // Now that we know the minimum and preferred widths see if the column
+    // widths need to be rebalanced
+    if (!aReflowState.tableFrame->ColumnsAreValidFor(*(nsTableCellFrame*)aNextFrame,
+                                                     oldMinSize.width,
+                                                     oldMaximumWidth)) {
+      // The column widths need to be rebalanced. Tell the table to rebalance
+      // the column widths
+      aReflowState.tableFrame->InvalidateColumnWidths();
+    }
+#endif
   
     // Calculate the cell's actual size given its pass2 size. This function
     // takes into account the specified height (in the style), and any special
