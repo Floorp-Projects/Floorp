@@ -51,3 +51,4 @@
 
 <!ENTITY textZoomReduceCmd.commandkey	"-">
 <!ENTITY textZoomEnlargeCmd.commandkey	"+">
+<!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->

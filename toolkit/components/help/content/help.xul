@@ -108,6 +108,8 @@
             command="cmd_closeWindow" modifiers="accel"/>
         <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"
             command="cmd_textZoomEnlarge" modifiers="accel"/>
+        <key id="key_textZoomEnlarge2" key="&textZoomEnlargeCmd.commandkey2;"
+            command="cmd_textZoomEnlarge" modifiers="accel"/>
         <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;"
             command="cmd_textZoomReduce" modifiers="accel"/>
         <key id="key_toggleSidebar" keycode="VK_F9" command="Help:ToggleSidebar"/>
