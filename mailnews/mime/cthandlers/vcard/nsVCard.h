@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+
 /***************************************************************************
 (C) Copyright 1996 Apple Computer, Inc., AT&T Corp., International             
 Business Machines Corporation and Siemens Rolm Communications Inc.             
@@ -61,16 +62,23 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #ifndef __VCC_H__
 #define __VCC_H__ 1
 
+#include "xp.h"
+#include "nsFileStream.h"
+#include "nsFileSpec.h"
 #include "nsVCardObj.h"
 
-extern "C" VObject* Parse_MIME(const char *input, unsigned long len);
+XP_BEGIN_PROTOS
 
-VObject* Parse_MIME_FromFile(PRFileDesc *file);
+VObject* Parse_MIME(const char *input, unsigned long len);
 
-VObject* Parse_MIME_FromFileName(char* fname);
+VObject* Parse_MIME_FromFile(nsInputFileStream *file);
+
+VObject* Parse_MIME_FromFileName(nsFileSpec * fname);
 
 typedef void (*MimeErrorHandler)(char *);
 
 void registerMimeErrorHandler(MimeErrorHandler);
+
+XP_END_PROTOS
 
 #endif /* __VCC_H__ */

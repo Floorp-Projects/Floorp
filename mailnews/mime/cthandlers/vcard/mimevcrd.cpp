@@ -143,23 +143,22 @@ MimeInlineTextVCardClassInitialize(MimeInlineTextVCardClass *clazz)
 static int
 MimeInlineTextVCard_parse_begin (MimeObject *obj)
 {
-//    int status = ((MimeObjectClass*)&mimeLeafClass)->parse_begin(obj);
   int status = ((MimeObjectClass*)COM_GetmimeLeafClass())->parse_begin(obj);
   MimeInlineTextVCardClass *clazz;
-    if (status < 0) return status;
-
-    if (!obj->output_p) return 0;
-    if (!obj->options || !obj->options->write_html_p) return 0;
-
-    /* This is a fine place to write out any HTML before the real meat begins.
-       In this sample code, we tell it to start a table. */
-
-	clazz = ((MimeInlineTextVCardClass *) obj->clazz);
-	/* initialize vcard string to empty; */
-	vCard_SACopy(&(clazz->vCardString), "");
-
-    obj->options->state->separator_suppressed_p = PR_TRUE;
-    return 0;
+  if (status < 0) return status;
+  
+  if (!obj->output_p) return 0;
+  if (!obj->options || !obj->options->write_html_p) return 0;
+  
+  /* This is a fine place to write out any HTML before the real meat begins.
+  In this sample code, we tell it to start a table. */
+  
+  clazz = ((MimeInlineTextVCardClass *) obj->clazz);
+  /* initialize vcard string to empty; */
+  vCard_SACopy(&(clazz->vCardString), "");
+  
+  obj->options->state->separator_suppressed_p = PR_TRUE;
+  return 0;
 }
 
 char *strcpySafe (char *dest, const char *src, size_t destLength)
@@ -172,28 +171,28 @@ char *strcpySafe (char *dest, const char *src, size_t destLength)
 static int
 MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
 {
-    /* This routine gets fed each line of data, one at a time.  In my
-       sample, I spew it out as a table row, putting everything
-       between colons in its own table cell.*/
-
-	char* linestring;
-	MimeInlineTextVCardClass *clazz = ((MimeInlineTextVCardClass *) obj->clazz);
- 
-    if (!obj->output_p) return 0;
-    if (!obj->options || !obj->options->output_fn) return 0;
-    if (!obj->options->write_html_p) {
-		return COM_MimeObject_write(obj, line, length, PR_TRUE);
-    }
-
-	linestring = (char *) PR_MALLOC (length + 1);
-
-	if (linestring) {
+  // This routine gets fed each line of data, one at a time.    
+  char* linestring;
+  MimeInlineTextVCardClass *clazz = ((MimeInlineTextVCardClass *) obj->clazz);
+  
+  if (!obj->output_p) return 0;
+  if (!obj->options || !obj->options->output_fn) return 0;
+  if (!obj->options->write_html_p) 
+  {
+    return COM_MimeObject_write(obj, line, length, PR_TRUE);
+  }
+  
+  linestring = (char *) PR_MALLOC (length + 1);
+  nsCRT::memset(linestring, 0, (length + 1));
+  
+  if (linestring) 
+  {
     strcpySafe((char *)linestring, line, length + 1);
-		vCard_SACat (&clazz->vCardString, linestring);
-		PR_Free (linestring);
-	}
-
-    return 0;
+    vCard_SACat (&clazz->vCardString, linestring);
+    PR_Free (linestring);
+  }
+  
+  return 0;
 }
 
 
@@ -793,7 +792,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 			{
 				namestring  = fakeCString (vObjectUStringZValue(prop));
 				if (namestring)
-					if (nsCRT::strcasecmp (namestring, "PR_TRUE") == 0)
+					if (nsCRT::strcasecmp (namestring, "TRUE") == 0)
 					{
 						PR_FREEIF (namestring);
 						status = OutputFont(obj, PR_FALSE, "-1", NULL);
@@ -971,7 +970,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	if (!obj->options->output_vcard_buttons_p)
 		return status;
 
-	vCard = writeMemVObjects(0, &len, v);
+	vCard = writeMemoryVObjects(0, &len, v, PR_FALSE);
 
 	if (!vCard)
 		return VCARD_OUT_OF_MEMORY;
@@ -1732,30 +1731,15 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
 	int     status = 0;
 	char    *htmlLine;
 	int     htmlLen ;
-  char    *charset = PL_strstr(obj->content_type, "charset=");
-  char    *converted = NULL;
-  PRInt32 converted_length;
-  PRInt32 res;
 
-  if (!charset)
-    charset = "ISO-8859-1";
-
-  // convert from the resource charset. 
-  res = INTL_ConvertCharset(charset, "UTF-8", line, nsCRT::strlen(line), 
-                            &converted, &converted_length);
-  if ( (res != 0) || (converted == NULL) )
-    converted = (char *)line;
-  else
-    converted[converted_length] = '\0';
-
-  htmlLen = nsCRT::strlen(converted) + nsCRT::strlen("<DT></DT>") + 1;;
+  htmlLen = nsCRT::strlen(line) + nsCRT::strlen("<DT></DT>") + 1;;
 
 	htmlLine = (char *) PR_MALLOC (htmlLen);
 	if (htmlLine)
 	{
     htmlLine[0] = '\0';
     PL_strcat (htmlLine, "<DT>");
-    PL_strcat (htmlLine, converted);
+    PL_strcat (htmlLine, line);
     PL_strcat (htmlLine, "</DT>");
     status = COM_MimeObject_write(obj, htmlLine, nsCRT::strlen(htmlLine), PR_TRUE);
     PR_Free ((void*) htmlLine);
@@ -1763,8 +1747,6 @@ static int WriteLineToStream (MimeObject *obj, const char *line)
 	else
 		status = VCARD_OUT_OF_MEMORY;
 
-  if (converted != line)
-    PR_FREEIF(converted);
 	return status;
 }
 

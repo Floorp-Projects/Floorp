@@ -66,6 +66,9 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
  * can be commented out here to make it easier to trace through
  * in a debugger. However, if a bug is found it should 
  */
+#include "nsVCard.h"
+#include "nsVCardObj.h"
+#include "nsFileStream.h"
 
 #ifndef lint
 char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
@@ -73,11 +76,7 @@ char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
 /*#line 2 "vcc.y" */
 
 /* debugging utilities */
-#ifdef DEBUG_mwatkins
-#define DBG_(x) /* PR_LogPrint x */
-#else
 #define DBG_(x)
-#endif
 
 #ifndef _NO_LINE_FOLDING
 #define _SUPPORT_LINE_FOLDING
@@ -119,26 +118,24 @@ char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
 #define yyrule mime_rule
 #define YYPREFIX "mime_"
 
-#include "nsVCard.h"
-#include "msgCore.h"
-
-#include "prio.h"
-#include "plstr.h"
 #include "prmem.h"
+#include "plstr.h"
+#	define NOT_NULL(X)	X
 
-#ifndef PR_FALSE
-#define PR_FALSE 0
+
+#ifndef FALSE
+#define FALSE 0
 #endif
-#ifndef PR_TRUE
-#define PR_TRUE 1
+#ifndef TRUE
+#define TRUE 1
 #endif
 
 /****  Types, Constants  ****/
 
 #define YYDEBUG		0	/* 1 to compile in some debugging code */
-#define MAXTOKEN	256	/* maximum token (line) length */
+#define PR_MAXTOKEN	256	/* maximum token (line) length */
 #define YYSTACKSIZE 	50	/* ~unref ?*/
-#define MAXLEVEL	10	/* max # of nested objects parseable */
+#define PR_MAXLEVEL	10	/* max # of nested objects parseable */
 				/* (includes outermost) */
 
 
@@ -147,21 +144,19 @@ int mime_lineNum, mime_numErrors; /* yyerror() can use these */
 static VObject* vObjList;
 static VObject *curProp;
 static VObject *curObj;
-static VObject* ObjStack[MAXLEVEL];
+static VObject* ObjStack[PR_MAXLEVEL];
 static int ObjStackTop;
 
 
-static const char** fieldedProp;
-
-
 /* A helpful utility for the rest of the app. */
-#ifdef XP_CPLUSPLUS
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-  extern void yyerror(char *s);
+    extern void yyerror(char *s);
+	  extern char** fieldedProp;
 
-#ifdef XP_CPLUSPLUS
+#ifdef __cplusplus
     };
 #endif
 
@@ -342,7 +337,7 @@ short yycheck[] = {                                       8,
 #ifndef YYDEBUG
 #define YYDEBUG 0
 #endif
-#define YYMAXTOKEN 274
+#define YYPR_MAXTOKEN 274
 #if YYDEBUG
 char *yyname[] = {
 "end-of-file",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -408,8 +403,8 @@ char *yyrule[] = {
 #define yyclearin (yychar=(-1))
 #define yyerrok (yyerrflag=0)
 #ifndef YYSTACKSIZE
-#ifdef YYMAXDEPTH
-#define YYSTACKSIZE YYMAXDEPTH
+#ifdef YYPR_MAXDEPTH
+#define YYSTACKSIZE YYPR_MAXDEPTH
 #else
 #define YYSTACKSIZE 300
 #endif
@@ -425,15 +420,13 @@ YYSTYPE yylval;
 #define yystacksize YYSTACKSIZE
 short yyss[YYSTACKSIZE];
 YYSTYPE yyvs[YYSTACKSIZE];
-
-
 /*#line 444 "vcc.y"*/
 /******************************************************************************/
 static int pushVObject(const char *prop)
     {
     VObject *newObj;
-    if (ObjStackTop == MAXLEVEL)
-	return PR_FALSE;
+    if (ObjStackTop == PR_MAXLEVEL)
+	return FALSE;
 
     ObjStack[++ObjStackTop] = curObj;
 
@@ -444,7 +437,7 @@ static int pushVObject(const char *prop)
     else
 	curObj = newVObject(prop);
 
-    return PR_TRUE;
+    return TRUE;
     }
 
 
@@ -463,6 +456,7 @@ static VObject* popVObject()
     return oldObj;
     }
 
+extern "C" void			deleteString(char *p);
 
 static void enterValues(const char *value)
     {
@@ -478,18 +472,18 @@ static void enterValues(const char *value)
 	    setVObjectUStringZValue_(curProp,fakeUnicode(value,0));
 	    }
 	}
-    deleteStr(value);
+    deleteString((char *)value);
     }
 
 static void enterProps(const char *s)
     {
     curProp = addGroup(curObj,s);
-    deleteStr(s);
+    deleteString((char *)s);
     }
 
 static void enterAttr(const char *s1, const char *s2)
     {
-    const char *p1, *p2=nsnull;
+    const char *p1, *p2;
     p1 = lookupProp_(s1);
     if (s2) {
 	VObject *a;
@@ -499,23 +493,23 @@ static void enterAttr(const char *s1, const char *s2)
 	}
     else
 	addProp(curProp,p1);
-    if (nsCRT::strcasecmp(p1,VCBase64Prop) == 0 || (s2 && nsCRT::strcasecmp(p2,VCBase64Prop)==0))
+    if (PL_strcasecmp(p1,VCBase64Prop) == 0 || (s2 && PL_strcasecmp(p2,VCBase64Prop)==0))
 	lexPushMode(L_BASE64);
-    else if (nsCRT::strcasecmp(p1,VCQuotedPrintableProp) == 0
-	    || (s2 && nsCRT::strcasecmp(p2,VCQuotedPrintableProp)==0))
+    else if (PL_strcasecmp(p1,VCQuotedPrintableProp) == 0
+	    || (s2 && PL_strcasecmp(p2,VCQuotedPrintableProp)==0))
 	lexPushMode(L_QUOTED_PRINTABLE);
-    deleteStr(s1); deleteStr(s2);
+    deleteString((char *)s1); deleteString((char *)s2);
     }
 
 
-#define MAX_LEX_LOOKAHEAD_0 32
-#define MAX_LEX_LOOKAHEAD 64
-#define MAX_LEX_MODE_STACK_SIZE 10
+#define PR_MAX_LEX_LOOKAHEAD_0 32
+#define PR_MAX_LEX_LOOKAHEAD 64
+#define PR_MAX_LEX_MODE_STACK_SIZE 10
 #define LEXMODE() (lexBuf.lexModeStack[lexBuf.lexModeStackTop])
 
 struct LexBuf {
 	/* input */
-    PRFileDesc *inputFile;
+    nsInputFileStream  *inputFile;
     char *inputString;
     unsigned long curPos;
     unsigned long inputLen;
@@ -524,11 +518,11 @@ struct LexBuf {
 	 /      can be represented correctly.
 	*/
     unsigned long len;
-    short buf[MAX_LEX_LOOKAHEAD];
+    short buf[PR_MAX_LEX_LOOKAHEAD];
     unsigned long getPtr;
 	/* context stack */
     unsigned long lexModeStackTop;
-    enum LexMode lexModeStack[MAX_LEX_MODE_STACK_SIZE];
+    enum LexMode lexModeStack[PR_MAX_LEX_MODE_STACK_SIZE];
 	/* token buffer */
     unsigned long maxToken;
     char *strs;
@@ -537,7 +531,7 @@ struct LexBuf {
 
 static void lexPushMode(enum LexMode mode)
     {
-    if (lexBuf.lexModeStackTop == (MAX_LEX_MODE_STACK_SIZE-1))
+    if (lexBuf.lexModeStackTop == (PR_MAX_LEX_MODE_STACK_SIZE-1))
 	yyerror("lexical context stack overflow");
     else {
 	lexBuf.lexModeStack[++lexBuf.lexModeStackTop] = mode;
@@ -568,10 +562,16 @@ static int lexGetc_()
     return EOF;
   else if (lexBuf.inputString)
     return *(lexBuf.inputString + lexBuf.curPos++);
-  else {
-    char    c;
-    PR_Read(lexBuf.inputFile, &c, 1);
-    return c;
+  else 
+  {
+    char        c;
+    nsresult    status;
+
+    status = lexBuf.inputFile->read(&c, 1);
+    if (status != 1)
+      return -1;
+    else
+      return c;  
   }
 }
 
@@ -584,13 +584,13 @@ static int lexGeta()
 static int lexGeta_(int i)
     {
     ++lexBuf.len;
-    return (lexBuf.buf[(lexBuf.getPtr+i)%MAX_LEX_LOOKAHEAD] = lexGetc_());
+    return (lexBuf.buf[(lexBuf.getPtr+i)%PR_MAX_LEX_LOOKAHEAD] = lexGetc_());
     }
 
 static void lexSkipLookahead() {
     if (lexBuf.len > 0 && lexBuf.buf[lexBuf.getPtr]!=EOF) {
 	/* don't skip EOF. */
-        lexBuf.getPtr = (lexBuf.getPtr + 1) % MAX_LEX_LOOKAHEAD;
+        lexBuf.getPtr = (lexBuf.getPtr + 1) % PR_MAX_LEX_LOOKAHEAD;
 	lexBuf.len--;
         }
     }
@@ -602,7 +602,7 @@ static int lexLookahead() {
     /* do the \r\n -> \n or \r -> \n translation here */
     if (c == '\r') {
 	int a = (lexBuf.len>1)?
-	    lexBuf.buf[(lexBuf.getPtr+1)%MAX_LEX_LOOKAHEAD]:
+	    lexBuf.buf[(lexBuf.getPtr+1)%PR_MAX_LEX_LOOKAHEAD]:
 	    lexGeta_(1);
 	if (a == '\n') {
 	    lexSkipLookahead();
@@ -625,7 +625,7 @@ static int lexGetc() {
     int c = lexLookahead();
     if (lexBuf.len > 0 && lexBuf.buf[lexBuf.getPtr]!=EOF) {
 	/* EOF will remain in lookahead buffer */
-        lexBuf.getPtr = (lexBuf.getPtr + 1) % MAX_LEX_LOOKAHEAD;
+        lexBuf.getPtr = (lexBuf.getPtr + 1) % PR_MAX_LEX_LOOKAHEAD;
 	lexBuf.len--;
         }
     return c;
@@ -634,7 +634,7 @@ static int lexGetc() {
 static void lexSkipLookaheadWord() {
     if (lexBuf.strsLen <= lexBuf.len) {
 	lexBuf.len -= lexBuf.strsLen;
-	lexBuf.getPtr = (lexBuf.getPtr + lexBuf.strsLen) % MAX_LEX_LOOKAHEAD;
+	lexBuf.getPtr = (lexBuf.getPtr + lexBuf.strsLen) % PR_MAX_LEX_LOOKAHEAD;
 	}
     }
 
@@ -673,7 +673,7 @@ static char* lexGetWord() {
     lexSkipWhite();
     lexClearToken();
     c = lexLookahead();
-    while (c != EOF && !PL_strchr("\t\n ;:=",c)) {
+    while (c != EOF && !PL_strchr("\t\n ;:=",(char)c)) {
 	lexAppendc(c);
 	lexSkipLookahead();
 	c = lexLookahead();
@@ -685,16 +685,16 @@ static char* lexGetWord() {
 #if 0
 static void lexPushLookahead(char *s, int len) {
     int putptr;
-    if (len == 0) len = nsCRT::strlen(s);
+    if (len == 0) len = PL_strlen(s);
     putptr = lexBuf.getPtr - len;
     /* this function assumes that length of word to push back
-     /  is not greater than MAX_LEX_LOOKAHEAD.
+     /  is not greater than PR_MAX_LEX_LOOKAHEAD.
      */
-    if (putptr < 0) putptr += MAX_LEX_LOOKAHEAD;
+    if (putptr < 0) putptr += PR_MAX_LEX_LOOKAHEAD;
     lexBuf.getPtr = putptr;
     while (*s) {
 	lexBuf.buf[putptr] = *s++;
-	putptr = (putptr + 1) % MAX_LEX_LOOKAHEAD;
+	putptr = (putptr + 1) % PR_MAX_LEX_LOOKAHEAD;
 	}
     lexBuf.len += len;
     }
@@ -705,14 +705,14 @@ static void lexPushLookaheadc(int c) {
     /* can't putback EOF, because it never leaves lookahead buffer */
     if (c == EOF) return;
     putptr = (int) lexBuf.getPtr - 1;
-    if (putptr < 0) putptr += MAX_LEX_LOOKAHEAD;
+    if (putptr < 0) putptr += PR_MAX_LEX_LOOKAHEAD;
     lexBuf.getPtr = putptr;
     lexBuf.buf[putptr] = c;
     lexBuf.len += 1;
     }
 
 static char* lexLookaheadWord() {
-    /* this function can lookahead word with max size of MAX_LEX_LOOKAHEAD_0
+    /* this function can lookahead word with max size of PR_MAX_LEX_LOOKAHEAD_0
      /  and thing bigger than that will stop the lookahead and return 0;
      / leading white spaces are not recoverable.
      */
@@ -722,10 +722,10 @@ static char* lexLookaheadWord() {
     lexSkipWhite();
     lexClearToken();
     curgetptr = (int) lexBuf.getPtr;	/* remember! */
-    while (len < (MAX_LEX_LOOKAHEAD_0)) {
+    while (len < (PR_MAX_LEX_LOOKAHEAD_0)) {
 	c = lexGetc();
 	len++;
-	if (c == EOF || PL_strchr("\t\n ;:=", c)) {
+	if (c == EOF || PL_strchr("\t\n ;:=", (char)c)) {
 	    lexAppendc(0);
 	    /* restore lookahead buf. */
 	    lexBuf.len += len;
@@ -809,7 +809,7 @@ static char* lexGet1Value() {
     }
 #endif
 
-#if 0
+
 static char* lexGetStrUntil(char *termset) {
     int c = lexLookahead();
     lexClearToken();
@@ -821,17 +821,16 @@ static char* lexGetStrUntil(char *termset) {
     lexAppendc(0);
     return c==EOF?0:lexStr();
     }
-#endif
 
 static int match_begin_name(int end) {
     char *n = lexLookaheadWord();
     int token = ID;
     if (n) {
-	if (!nsCRT::strcasecmp(n,"vcard")) token = end?END_VCARD:BEGIN_VCARD;
-	else if (!nsCRT::strcasecmp(n,"vcalendar")) token = end?END_VCAL:BEGIN_VCAL;
-	else if (!nsCRT::strcasecmp(n,"vevent")) token = end?END_VEVENT:BEGIN_VEVENT;
-	else if (!nsCRT::strcasecmp(n,"vtodo")) token = end?END_VTODO:BEGIN_VTODO;
-	deleteStr(n);
+	if (!PL_strcasecmp(n,"vcard")) token = end?END_VCARD:BEGIN_VCARD;
+	else if (!PL_strcasecmp(n,"vcalendar")) token = end?END_VCAL:BEGIN_VCAL;
+	else if (!PL_strcasecmp(n,"vevent")) token = end?END_VEVENT:BEGIN_VEVENT;
+	else if (!PL_strcasecmp(n,"vtodo")) token = end?END_VTODO:BEGIN_VTODO;
+	deleteString(n);
 	return token;
 	}
     return 0;
@@ -842,7 +841,7 @@ static int match_begin_name(int end) {
 #pragma require_prototypes off
 #endif
 
-void initLex(const char *inputstring, unsigned long inputlen, PRFileDesc *inputfile)
+void initLex(const char *inputstring, unsigned long inputlen, nsInputFileStream *inputFile)
     {
     /* initialize lex mode stack */
     lexBuf.lexModeStack[lexBuf.lexModeStackTop=0] = L_NORMAL;
@@ -851,13 +850,13 @@ void initLex(const char *inputstring, unsigned long inputlen, PRFileDesc *inputf
     lexBuf.inputString = (char*) inputstring;
     lexBuf.inputLen = inputlen;
     lexBuf.curPos = 0;
-    lexBuf.inputFile = inputfile;
+    lexBuf.inputFile = inputFile;
 
     lexBuf.len = 0;
     lexBuf.getPtr = 0;
 
-    lexBuf.maxToken = MAXTOKEN;
-    lexBuf.strs = (char*)PR_Malloc(MAXTOKEN);
+    lexBuf.maxToken = PR_MAXTOKEN;
+    lexBuf.strs = (char*)PR_CALLOC(PR_MAXTOKEN);
     lexBuf.strsLen = 0;
 
     }
@@ -938,7 +937,7 @@ static char * lexGetDataFromBase64()
 		if (bytesLen + numOut > bytesMax) {
 		    if (!bytes) {
 			bytesMax = 1024;
-			bytes = (unsigned char*)PR_Malloc(bytesMax);
+			bytes = (unsigned char*)PR_CALLOC(bytesMax);
 			}
 		    else {
 			bytesMax <<= 2;
@@ -950,7 +949,7 @@ static char * lexGetDataFromBase64()
 			}
 		    }
 		if (bytes) {
-      nsCRT::memcpy(bytes + bytesLen, outBytes, numOut);
+			memcpy(bytes + bytesLen, outBytes, numOut);
 			bytesLen += numOut;
 		}
 		trip = 0;
@@ -986,7 +985,7 @@ static int match_begin_end_name(int end) {
 	}
     else if (token != 0) {
 	lexSkipLookaheadWord();
-	deleteStr(yylval.str);
+	deleteString(yylval.str);
 	DBG_(("db: begin/end %d\n", token));
 	return token;
 	}
@@ -1075,11 +1074,11 @@ static int yylex() {
 #endif
 	    return SEMICOLON;
 	    }
-	else if (PL_strchr("\n",c)) {
+	else if (PL_strchr("\n",(char)c)) {
 	    ++mime_lineNum;
 	    /* consume all line separator(s) adjacent to each other */
 	    c = lexLookahead();
-	    while (PL_strchr("\n",c)) {
+	    while (PL_strchr("\n",(char)c)) {
 		lexSkipLookahead();
 		c = lexLookahead();
 		++mime_lineNum;
@@ -1123,7 +1122,7 @@ static int yylex() {
 		    /* consume all line separator(s) adjacent to each other */
 		    /* ignoring linesep immediately after colon. */
 		    c = lexLookahead();
-		    while (PL_strchr("\n",c)) {
+		    while (PL_strchr("\n",(char)c)) {
 			lexSkipLookahead();
 			c = lexLookahead();
 			++mime_lineNum;
@@ -1148,13 +1147,13 @@ static int yylex() {
 		    break;
 		default: {
 		    lexPushLookaheadc(c);
-		    if (IS_ALPHA(c)) {
+		    if (isalpha(c)) {
 			char *t = lexGetWord();
 			yylval.str = t;
-			if (!nsCRT::strcasecmp(t, "BEGIN")) {
+			if (!PL_strcasecmp(t, "BEGIN")) {
 			    return match_begin_end_name(0);
 			    }
-			else if (!nsCRT::strcasecmp(t,"END")) {
+			else if (!PL_strcasecmp(t,"END")) {
 			    return match_begin_end_name(1);
 			    }
 		        else {
@@ -1195,7 +1194,6 @@ static VObject* Parse_MIMEHelper()
     }
 
 /******************************************************************************/
-extern "C"
 VObject* Parse_MIME(const char *input, unsigned long len)
     {
     initLex(input, len, 0);
@@ -1203,27 +1201,27 @@ VObject* Parse_MIME(const char *input, unsigned long len)
     }
 
 
-VObject* Parse_MIME_FromFile(PRFileDesc *file)
+VObject* Parse_MIME_FromFile(nsInputFileStream *file)
 {
   VObject *result;	
-  PRInt32 startPos;
+  long startPos;
   
   initLex(0,(unsigned long)-1,file);
-
-  startPos = PR_Seek(file, 0, PR_SEEK_CUR);
+  startPos = file->tell();
   if (!(result = Parse_MIMEHelper())) {
-    PR_Seek(file,startPos,PR_SEEK_SET);
+    file->seek(startPos);
   }
   return result;
 }
 
-VObject* Parse_MIME_FromFileName(char *fname)
+VObject* Parse_MIME_FromFileName(nsFileSpec *fname)
 {
 #if !defined(MOZADDRSTANDALONE)
-  PRFileDesc *fp = PR_Open(fname, PR_RDONLY, 493);
-  if (fp) {
+  nsInputFileStream *fp = new nsInputFileStream(*fname);
+  if (fp) 
+  {
     VObject* o = Parse_MIME_FromFile(fp);
-    PR_Close(fp);
+    fp->close();
     return o;
   }
   else {
@@ -1233,18 +1231,10 @@ VObject* Parse_MIME_FromFileName(char *fname)
     return 0;
   }
 #else
-  PR_ASSERT (PR_FALSE);
+  PR_ASSERT(FALSE);
   return 0;
 #endif
 }
-
-/******************************************************************************/
-#if 0
-static void YYDebug(const char *s)
-{
-/*	PR_LogPrint("%s\n", s); */
-}
-#endif
 
 static MimeErrorHandler mimeErrorHandler;
 
@@ -1298,7 +1288,7 @@ yyparse()
     *yyssp = yystate = 0;
 
 yyloop:
-    if ((yyn = yydefred[yystate])) goto yyreduce;
+    if (yyn = yydefred[yystate]) goto yyreduce;
     if (yychar < 0)
     {
         if ((yychar = yylex()) < 0) yychar = 0;
@@ -1306,7 +1296,7 @@ yyloop:
         if (yydebug)
         {
             yys = 0;
-            if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
+            if (yychar <= YYPR_MAXTOKEN) yys = yyname[yychar];
             if (!yys) yys = "illegal-symbol";
             printf("yydebug: state %d, reading %d (%s)\n", yystate,
                     yychar, yys);
@@ -1340,8 +1330,8 @@ yyloop:
     if (yyerrflag) goto yyinrecovery;
 #ifdef lint
     goto yynewerror;
-yynewerror:
 #endif
+/*yynewerror: */
     yyerror("syntax error");
 #ifdef lint
     goto yyerrlab;
@@ -1390,7 +1380,7 @@ yyinrecovery:
         if (yydebug)
         {
             yys = 0;
-            if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
+            if (yychar <= YYPR_MAXTOKEN) yys = yyname[yychar];
             if (!yys) yys = "illegal-symbol";
             printf("yydebug: state %d, error recovery discards token %d (%s)\n",
                     yystate, yychar, yys);
@@ -1591,7 +1581,7 @@ break;
             if (yydebug)
             {
                 yys = 0;
-                if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
+                if (yychar <= YYPR_MAXTOKEN) yys = yyname[yychar];
                 if (!yys) yys = "illegal-symbol";
                 printf("yydebug: state %d, reading %d (%s)\n",
                         YYFINAL, yychar, yys);
@@ -1625,6 +1615,3 @@ yyabort:
 yyaccept:
     return (0);
 }
-
-/* end of source file vcc.c */
-

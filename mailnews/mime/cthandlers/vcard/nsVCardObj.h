@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  */
-
 /***************************************************************************
 (C) Copyright 1996 Apple Computer, Inc., AT&T Corp., International             
 Business Machines Corporation and Siemens Rolm Communications Inc.             
@@ -100,8 +99,6 @@ which accompanied this distribution.
 #ifndef __VOBJECT_H__
 #define __VOBJECT_H__ 1
 
-#include "xp.h"
-
 /*
 Unfortunately, on the Mac (and possibly other platforms) with our current, out-dated
 libraries (Plauger), |wchar_t| is defined incorrectly, which breaks vcards.
@@ -118,6 +115,7 @@ they will use an appropriately defined local type |vwchar_t|.
         typedef wchar_t vwchar_t;
 #endif
 
+XP_BEGIN_PROTOS
 
 #define VC7bitProp				"7bit"
 #define VC8bitProp				"8bit"
@@ -335,7 +333,7 @@ struct StrItem {
     };
 
 typedef struct OFile {
-    PRFileDesc *fp;
+    nsOutputFileStream *fp;
     char *s;
     int len;
     int limit;
@@ -348,11 +346,10 @@ typedef struct VObjectIterator {
     VObject* next;
     } VObjectIterator;
 
-
-extern "C" VObject*		newVObject(const char *id);
+VObject*		newVObject(const char *id);
 void			deleteVObject(VObject *p);
-extern "C" char*			dupStr(const char *s, unsigned int size);
-extern "C" void			deleteStr(const char *p);
+char*			dupStr(const char *s, unsigned int size);
+extern "C" void			deleteString(char *p);
 void			unUseStr(const char *s);
 
 void			setVObjectName(VObject *o, const char* id);
@@ -363,62 +360,65 @@ void			setVObjectUStringZValue_(VObject *o, const vwchar_t *s);
 void			setVObjectIntegerValue(VObject *o, unsigned int i);
 void			setVObjectLongValue(VObject *o, unsigned long l);
 void			setVObjectAnyValue(VObject *o, void *t);
-extern "C" VObject*		setValueWithSize(VObject *prop, void *val, unsigned int size);
+VObject*		setValueWithSize(VObject *prop, void *val, unsigned int size);
 VObject*		setValueWithSize_(VObject *prop, void *val, unsigned int size);
 
-extern "C" const char* vObjectName(VObject *o);
+const char* vObjectName(VObject *o);
 const char* vObjectStringZValue(VObject *o);
-extern "C" const vwchar_t* vObjectUStringZValue(VObject *o);
+const vwchar_t* vObjectUStringZValue(VObject *o);
 unsigned int vObjectIntegerValue(VObject *o);
 unsigned long vObjectLongValue(VObject *o);
-extern "C" void* vObjectAnyValue(VObject *o);
+void* vObjectAnyValue(VObject *o);
 VObject* vObjectVObjectValue(VObject *o);
 void setVObjectVObjectValue(VObject *o, VObject *p);
 
 VObject* addVObjectProp(VObject *o, VObject *p);
-extern "C" VObject* addProp(VObject *o, const char *id);
+VObject* addProp(VObject *o, const char *id);
 VObject* addProp_(VObject *o, const char *id);
 VObject* addPropValue(VObject *o, const char *p, const char *v);
 VObject* addPropSizedValue_(VObject *o, const char *p, const char *v, unsigned int size);
 VObject* addPropSizedValue(VObject *o, const char *p, const char *v, unsigned int size);
 VObject* addGroup(VObject *o, const char *g);
-extern "C" void addList(VObject **o, VObject *p);
+void addList(VObject **o, VObject *p);
 
-extern "C" VObject* isAPropertyOf(VObject *o, const char *id);
+VObject* isAPropertyOf(VObject *o, const char *id);
 
-extern "C" VObject* nextVObjectInList(VObject *o);
-extern "C" void initPropIterator(VObjectIterator *i, VObject *o);
-extern "C" int moreIteration(VObjectIterator *i);
-extern "C" VObject* nextVObject(VObjectIterator *i);
+VObject* nextVObjectInList(VObject *o);
+void initPropIterator(VObjectIterator *i, VObject *o);
+int moreIteration(VObjectIterator *i);
+VObject* nextVObject(VObjectIterator *i);
 
-extern void printVObject(PRFileDesc *fp,VObject *o);
-void printVObject_(PRFileDesc * fp, VObject *o, int level);
-extern void writeVObject(PRFileDesc * fp, VObject *o);
+extern void printVObject(nsOutputFileStream *fp,VObject *o);
+void printVObject_(nsOutputFileStream *fp, VObject *o, int level);
+extern void writeVObject(nsOutputFileStream *fp, VObject *o);
+
 void writeVObject_(OFile *fp, VObject *o);
-extern "C" char* writeMemVObject(char *s, int *len, VObject *o);
-extern "C" char* writeMemVObjects(char *s, int *len, VObject *list);
+char* writeMemVObject(char *s, int *len, VObject *o);
+extern "C" char* writeMemoryVObjects(char *s, int *len, VObject *list, PRBool expandSpaces);
 
 const char* lookupStr(const char *s);
 
 void cleanStrTbl();
 
-extern "C" void cleanVObject(VObject *o);
+void cleanVObject(VObject *o);
 void cleanVObjects(VObject *list);
 
 const char* lookupProp(const char* str);
 const char* lookupProp_(const char* str);
 
-extern "C" vwchar_t* fakeUnicode(const char *ps, int *bytes);
+vwchar_t* fakeUnicode(const char *ps, int *bytes);
 int uStrLen(const vwchar_t *u);
-extern "C" char* fakeCString(const vwchar_t *u);
+char* fakeCString(const vwchar_t *u);
 
-void printVObjectToFile(char *fname,VObject *o);
-void printVObjectsToFile(char *fname,VObject *list);
-void writeVObjectToFile(char *fname, VObject *o);
-void writeVObjectsToFile(char *fname, VObject *list);
+void printVObjectToFile(nsFileSpec *fname,VObject *o);
+void printVObjectsToFile(nsFileSpec *fname,VObject *list);
+void writeVObjectToFile(nsFileSpec *fname, VObject *o);
+void writeVObjectsToFile(nsFileSpec *fname, VObject *list);
 
 #define MAXPROPNAMESIZE	256
 #define MAXMOZPROPNAMESIZE 16
+
+XP_END_PROTOS
 
 #endif /* __VOBJECT_H__ */
 

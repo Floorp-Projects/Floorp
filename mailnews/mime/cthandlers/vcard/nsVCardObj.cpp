@@ -59,37 +59,41 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 ***************************************************************************/
 
 /*
- * src: vobject.c
  * doc: vobject and APIs to construct vobject, APIs pretty print 
  * vobject, and convert a vobject into its textual representation.
  */
+
+#include "nsVCard.h"
 #include "nsVCardObj.h"
-#include "plstr.h"
 #include "prmem.h"
-#include "prprf.h"
-#include "msgCore.h"
-#include "nsCRT.h"
+#include "plstr.h"
+#define NOT_NULL(X)	X
 
 /* debugging utilities */
-#if DEBUG_mwatkins
-#define DBG_(x) PR_LogPrint x 
-#else
 #define DBG_(x)
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-static const char** fieldedProp;
+  char    **fieldedProp;
+
+#ifdef __cplusplus
+    };
+#endif
+
+
 
 static VObject* newVObject_(const char *id);
-#if 0
 static int vObjectValueType(VObject *o);
 static void initVObjectIterator(VObjectIterator *i, VObject *o);
-#endif
+
 /*----------------------------------------------------------------------
    The following functions involve with memory allocation:
 	newVObject
 	deleteVObject
 	dupStr
-	deleteStr
+	deleteString
 	newStrItem
 	deleteStrItem
    ----------------------------------------------------------------------*/
@@ -98,21 +102,23 @@ static PRBool needsQuotedPrintable (const char *s)
 {
     const unsigned char *p = (const unsigned char *)s;
 
-	if (PL_strstr (s, MSG_LINEBREAK))
-		return PR_TRUE;
+	if (PL_strstr (s, LINEBREAK))
+		return TRUE;
 
 	while (*p) {
 		if (*p & 0x80)
-			return PR_TRUE;
+			return TRUE;
+		else
+			return FALSE;
 		p++;
 	}
 
-	return PR_FALSE;
+	return FALSE;
 }
 
 VObject* newVObject_(const char *id)
 {
-    VObject *p = (VObject*)PR_NEW(VObject);
+    VObject *p = (VObject*) new(VObject);
     p->next = 0;
     p->id = id;
     p->prop = 0;
@@ -121,7 +127,6 @@ VObject* newVObject_(const char *id)
     return p;
 }
 
-extern "C" 
 VObject* newVObject(const char *id)
 {
     return newVObject_(lookupStr(id));
@@ -135,39 +140,42 @@ void deleteVObject(VObject *p)
 
 char* dupStr(const char *s, unsigned int size)
 {
-  char *t;
-  if  (size == 0) {
-    size = nsCRT::strlen(s);
-  }
-  t = (char*)PR_Malloc(size+1);
-  if (t) {
-    nsCRT::memcpy(t,s,size);
-    t[size] = 0;
-    return t;
-  }
-  else {
-    return (char*)0;
-  }
-}
-
-extern "C" 
-void deleteStr(const char *p)
-{
-    if (p) PR_Free ((void*)p);
+    char *t;
+    if  (size == 0) {
+	size = PL_strlen(s);
+	}
+    t = (char*)PR_CALLOC(size+1);
+	if (t) {
+	memcpy(t,s,size);
+	t[size] = 0;
+	return t;
+	}
+    else {
+	return (char*)0;
+	}
 }
 
 static StrItem* newStrItem(const char *s, StrItem *next)
 {
-    StrItem *p = (StrItem*)PR_Malloc(sizeof(StrItem));
+    StrItem *p = (StrItem*)PR_CALLOC(sizeof(StrItem));
     p->next = next;
     p->s = s;
     p->refCnt = 1;
     return p;
 }
 
-static void deleteStrItem(StrItem *p)
+extern "C" 
+void deleteString(char *p)
 {
-    if (p) PR_Free ((void*)p);
+    if (p) 
+      PR_Free ((void*)p);
+}
+
+extern "C"
+void deleteStrItem(StrItem *p)
+{
+    if (p) 
+      PR_FREEIF (p);
 }
 
 
@@ -264,12 +272,11 @@ void setVObjectVObjectValue(VObject *o, VObject *p)
     VALUE_TYPE(o) = VCVT_VOBJECT;
 }
 
-#if 0
 int vObjectValueType(VObject *o)
 {
     return VALUE_TYPE(o);
 }
-#endif
+
 
 /*----------------------------------------------------------------------
   The following functions can be used to build VObject.
@@ -310,7 +317,6 @@ VObject* addVObjectProp(VObject *o, VObject *p)
     return p;
 }
 
-extern "C" 
 VObject* addProp(VObject *o, const char *id)
 {
     return addVObjectProp(o,newVObject(id));
@@ -321,7 +327,6 @@ VObject* addProp_(VObject *o, const char *id)
     return addVObjectProp(o,newVObject_(id));
 }
 
-extern "C" 
 void addList(VObject **o, VObject *p)
 {
     p->next = 0;
@@ -351,7 +356,6 @@ VObject* setValueWithSize_(VObject *prop, void *val, unsigned int size)
     return prop;
 }
 
-extern "C" 
 VObject* setValueWithSize(VObject *prop, void *val, unsigned int size)
 {
 	void *p = dupStr((const char *)val,size);
@@ -364,13 +368,11 @@ void initPropIterator(VObjectIterator *i, VObject *o)
     i->next = 0;
 }
 
-#if 0
 void initVObjectIterator(VObjectIterator *i, VObject *o)
 {
     i->start = o->next; 
     i->next = 0;
 }
-#endif
 
 int moreIteration(VObjectIterator *i)
 { 
@@ -398,7 +400,7 @@ VObject* isAPropertyOf(VObject *o, const char *id)
     initPropIterator(&i,o);
     while (moreIteration(&i)) {
 	VObject *each = nextVObject(&i);
-	if (!nsCRT::strcasecmp(id,each->id))
+	if (!PL_strcasecmp(id,each->id))
 	    return each;
 	}
     return (VObject*)0;
@@ -435,7 +437,7 @@ VObject* addGroup(VObject *o, const char *g)
 	    t = addProp(t,VCGroupingProp);
 	    setVObjectStringZValue(t,lookupProp_(n));
 	    } while (n != gs);
-	deleteStr(gs);	
+	deleteString(gs);	
 	return p;
 	}
     else
@@ -449,7 +451,7 @@ VObject* addPropValue(VObject *o, const char *p, const char *v)
 	if (v) {
 		setVObjectUStringZValue_(prop, fakeUnicode(v,0));
 		if (needsQuotedPrintable (v)) {
-			if (nsCRT::strcasecmp (VCCardProp, vObjectName(o)) == 0) 
+			if (PL_strcasecmp (VCCardProp, vObjectName(o)) == 0) 
 				addProp (prop, VCQuotedPrintableProp);
 			else
 				addProp (o, VCQuotedPrintableProp);
@@ -482,123 +484,156 @@ VObject* addPropSizedValue(VObject *o, const char *p, const char *v,
   The following pretty print a VObject
   ----------------------------------------------------------------------*/
 
-/* extern void printVObject_(PRFileDesc *fp, VObject *o, int level); */
-
-static void indent(PRFileDesc *fp, int level)
+static void indent(nsOutputFileStream *fp, int level)
 {
   int i;
   for (i=0;i<level*4;i++) {
-    PR_Write(fp, " ", 1);
+    fp->write(" ", 1);
   }
 }
 
-static void printValue(PRFileDesc *fp, VObject *o, int level)
+static void printValue(nsOutputFileStream *fp, VObject *o, int level)
 {
-    switch (VALUE_TYPE(o)) {
-	case VCVT_USTRINGZ: {
-	    char c;
-            char *t,*s;
-	    s = t = fakeCString(USTRINGZ_VALUE_OF(o));
-	    PR_Write(fp,"'",1);
-	    while (c=*t,c) {
-	        PR_Write(fp, &c, 1);
-		if (c == '\n') indent(fp,level+2);
-		t++;
-		}
-	    PR_Write(fp, "'",1);
-	    deleteStr(s);
-	    break;
-	    }
-	case VCVT_STRINGZ: {
-	    char c;
-		char *str = &c;
-	    const char *s = STRINGZ_VALUE_OF(o);
-	    PR_Write(fp,"'",1);
-	    while (c=*s,c) {
-	        PR_Write(fp,str,1);
-		if (c == '\n') indent(fp,level+2);
-		s++;
-		}
-	    PR_Write(fp, "'", 1);
-	    break;
-	    }
-	case VCVT_UINT:
-	    PR_fprintf(fp,"%d", INTEGER_VALUE_OF(o)); break;
-	case VCVT_ULONG:
-	    PR_fprintf(fp,"%ld", LONG_VALUE_OF(o)); break;
-	case VCVT_RAW:
-	    PR_fprintf(fp,"[raw data]"); break;
-	case VCVT_VOBJECT:
-	    PR_fprintf(fp,"[vobject]\n");
-	    printVObject_(fp,VOBJECT_VALUE_OF(o),level+1);
-	    break;
-	case 0:
-	    PR_fprintf(fp,"[none]"); break;
-	default:
-	    PR_fprintf(fp,"[unknown]"); break;
-	}
+  char *buf = nsnull;
+
+  switch (VALUE_TYPE(o)) {
+  case VCVT_USTRINGZ: {
+    char c;
+    char *t,*s;
+    s = t = fakeCString(USTRINGZ_VALUE_OF(o));
+    fp->write("'",1);
+    while (c=*t,c) {
+      fp->write(&c,1);
+      if (c == '\n') indent(fp,level+2);
+      t++;
+    }
+    fp->write("'",1);
+    deleteString(s);
+    break;
+                      }
+  case VCVT_STRINGZ: {
+    char c;
+    char *str = &c;
+    const char *s = STRINGZ_VALUE_OF(o);
+    fp->write("'",1);
+    while (c=*s,c) {
+      fp->write(str,1);
+      if (c == '\n') indent(fp,level+2);
+      s++;
+    }
+    fp->write("'",1);
+    break;
+                     }
+  case VCVT_UINT:    
+    buf = PR_smprintf("%d", INTEGER_VALUE_OF(o)); 
+    if (buf)
+    {
+      fp->write(buf, nsCRT::strlen(buf));
+      PR_FREEIF(buf);
+    }
+    break;
+
+  case VCVT_ULONG:
+    buf = PR_smprintf("%ld", LONG_VALUE_OF(o)); 
+    if (buf)
+    {
+      fp->write(buf, nsCRT::strlen(buf));
+      PR_FREEIF(buf);
+    }
+    break;
+
+  case VCVT_RAW:
+    fp->write("[raw data]", 10); 
+    break;
+
+  case VCVT_VOBJECT:
+    fp->write("[vobject]\n", 11);
+    printVObject_(fp,VOBJECT_VALUE_OF(o),level+1);
+    break;
+
+  case 0:
+    fp->write("[none]", 6); 
+    break;
+  default:
+    fp->write("[unknown]", 9); 
+    break;
+  }
 }
 
-static void printNameValue(PRFileDesc *fp,VObject *o, int level)
+static void printNameValue(nsOutputFileStream *fp,VObject *o, int level)
 {
-    indent(fp,level);
-    if (NAME_OF(o)) {
-	PR_fprintf(fp,"%s", NAME_OF(o));
-	}
-    if (VALUE_TYPE(o)) {
-	PR_fprintf(fp, "=", 1);
-	printValue(fp,o, level);
-	}
-    PR_fprintf(fp,"\n");
+  char  *buf;
+
+  indent(fp,level);
+  if (NAME_OF(o)) 
+  {
+    buf = PR_smprintf("%s", NAME_OF(o)); 
+    if (buf)
+    {
+      fp->write(buf, nsCRT::strlen(buf));
+      PR_FREEIF(buf);
+    }
+  }
+
+  if (VALUE_TYPE(o)) 
+  {
+    fp->write("=",1);
+    printValue(fp,o, level);
+  }
+
+  fp->write("\n", 1);
 }
 
-void printVObject_(PRFileDesc *fp, VObject *o, int level)
+void printVObject_(nsOutputFileStream *fp, VObject *o, int level)
 {
   VObjectIterator t;
   if (o == 0) {
-    char *buf = "[NULL]\n";
-    PR_Write(fp,"[NULL]\n", nsCRT::strlen(buf));
+    fp->write("[NULL]\n", 7);
     return;
   }
+
   printNameValue(fp,o,level);
   initPropIterator(&t,o);
-  while (moreIteration(&t)) {
+
+  while (moreIteration(&t)) 
+  {
     VObject *eachProp = nextVObject(&t);
     printVObject_(fp,eachProp,level+1);
   }
 }
 
-void printVObject(PRFileDesc *fp,VObject *o)
+void printVObject(nsOutputFileStream *fp,VObject *o)
 {
-    printVObject_(fp,o,0);
+  printVObject_(fp,o,0);
 }
 
-void printVObjectToFile(char *fname,VObject *o)
+void printVObjectToFile(nsFileSpec *fname, VObject *o)
 {
 #if !defined(MOZADDRSTANDALONE)
-  PRFileDesc *fp = PR_Open(fname, PR_RDWR, 493);
+  nsOutputFileStream *fp = new nsOutputFileStream(*fname);
+
   if (fp) {
     printVObject(fp,o);
-    PR_Close(fp);
+    fp->close();
   }
 #else
-  PR_ASSERT (PR_FALSE);
+  PR_ASSERT(FALSE);
 #endif
 }
 
-void printVObjectsToFile(char *fname,VObject *list)
+void printVObjectsToFile(nsFileSpec *fname,VObject *list)
 {
 #if !defined(MOZADDRSTANDALONE)
-    PRFileDesc *fp = PR_Open(fname,PR_RDWR, 493);
-    if (fp) {
-	while (list) {
-	    printVObject(fp,list);
-	    list = nextVObjectInList(list);
-	    }
-	PR_Close(fp);
-	}
+  nsOutputFileStream *fp = new nsOutputFileStream(*fname);
+  if (fp) {
+    while (list) {
+      printVObject(fp,list);
+      list = nextVObjectInList(list);
+    }
+    fp->close();
+  }
 #else
-	PR_ASSERT (PR_FALSE);
+  PR_ASSERT(FALSE);
 #endif
 }
 
@@ -628,7 +663,8 @@ void cleanVObject(VObject *o)
 	case VCVT_STRINGZ:
 	case VCVT_RAW:
 	    /* assume they are all allocated by malloc. */
-	    if ((char*) STRINGZ_VALUE_OF(o)) PR_Free ((char*)STRINGZ_VALUE_OF(o));
+	    if ((char*) STRINGZ_VALUE_OF(o)) 
+        PR_Free ((char*)STRINGZ_VALUE_OF(o));
 	    break;
 	case VCVT_VOBJECT:
 	    cleanVObject(VOBJECT_VALUE_OF(o));
@@ -671,7 +707,7 @@ void unUseStr(const char *s)
     if ((t = strTbl[h]) != 0) {
 	p = t;
 	do {
-	    if (nsCRT::strcasecmp(t->s,s) == 0) {
+	    if (PL_strcasecmp(t->s,s) == 0) {
 		t->refCnt--;
 		if (t->refCnt == 0) {
 		    if (p == strTbl[h]) {
@@ -680,7 +716,7 @@ void unUseStr(const char *s)
 		    else {
 			p->next = t->next;
 			}
-		    deleteStr(t->s);
+		    deleteString((char *)t->s);
 		    deleteStrItem(t);
 		    return;
 		    }
@@ -698,7 +734,7 @@ void cleanStrTbl()
 	StrItem *t = strTbl[i];
 	while (t) {
 	    StrItem *p;
-	    deleteStr(t->s);
+	    deleteString((char *)t->s);
 	    p = t;
 	    t = t->next;
 	    deleteStrItem(p);
@@ -963,7 +999,7 @@ static struct PreDefProp* lookupPropInfo(const char* str)
     int i;
 	
     for (i = 0; propNames[i].name; i++) 
-	if (nsCRT::strcasecmp(str, propNames[i].name) == 0) {
+	if (PL_strcasecmp(str, propNames[i].name) == 0) {
 	    return &propNames[i];
 	    }
     
@@ -976,7 +1012,7 @@ const char* lookupProp_(const char* str)
     int i;
 	
     for (i = 0; propNames[i].name; i++)
-	if (nsCRT::strcasecmp(str, propNames[i].name) == 0) {
+	if (PL_strcasecmp(str, propNames[i].name) == 0) {
 	    const char* s;
 	    s = propNames[i].alias?propNames[i].alias:propNames[i].name;
 	    return lookupStr(s);
@@ -990,9 +1026,9 @@ const char* lookupProp(const char* str)
     int i;
 	
     for (i = 0; propNames[i].name; i++)
-	if (nsCRT::strcasecmp(str, propNames[i].name) == 0) {
+	if (PL_strcasecmp(str, propNames[i].name) == 0) {
 	    const char *s;
-	    fieldedProp = propNames[i].fields;
+	    fieldedProp = (char **)propNames[i].fields;
 	    s = propNames[i].alias?propNames[i].alias:propNames[i].name;
 	    return lookupStr(s);
 	    }
@@ -1006,7 +1042,7 @@ const char* lookupProp(const char* str)
   ----------------------------------------------------------------------*/
 #define OFILE_REALLOC_SIZE 256
 /* typedef struct OFile {
-    XP_File fp;
+    nsOutputFileStream *fp;
     char *s;
     int len;
     int limit;
@@ -1014,84 +1050,30 @@ const char* lookupProp(const char* str)
     int fail:1;
     } OFile; */
 
-#if 0
-static void appendsOFile(OFile *fp, const char *s)
-{
-    int slen;
-    if (fp->fail) return;
-    slen  = nsCRT::strlen(s);
-    if (fp->fp) {
-	PR_Write(fp->fp, s,slen);
-	}
-    else {
-stuff:
-	if (fp->len + slen < fp->limit) {
-	    XP_MEMCPY(fp->s+fp->len,s,slen);
-	    fp->len += slen;
-	    return;
-	    }
-	else if (fp->alloc) {
-	    fp->limit = fp->limit + OFILE_REALLOC_SIZE;
-	    if (OFILE_REALLOC_SIZE <= slen) fp->limit += slen;
-	    fp->s = (char *) PR_Realloc(fp->s,fp->limit);
-	    if (fp->s) goto stuff;
-	    }
-	if (fp->alloc)
-	    PR_FREEIF (fp->s);
-	fp->s = 0;
-	fp->fail = 1;
-	}
-}
-
-
-static void appendcOFile(OFile *fp, char c)
-{
-    if (fp->fail) return;
-    if (fp->fp) {
-	PR_Write(fp->fp, &c, 1);
-	}
-    else {
-stuff:
-	if (fp->len+1 < fp->limit) {
-	    fp->s[fp->len] = c;
-	    fp->len++;
-	    return;
-	    }
-	else if (fp->alloc) {
-	    fp->limit = fp->limit + OFILE_REALLOC_SIZE;
-	    fp->s = (char *) PR_Realloc(fp->s,fp->limit);
-	    if (fp->s) goto stuff;
-	    }
-	if (fp->alloc)
-	    PR_FREEIF (fp->s);
-	fp->s = 0;
-	fp->fail = 1;
-	}
-}
-#else
 static void appendcOFile_(OFile *fp, char c)
 {
-    if (fp->fail) return;
-    if (fp->fp) {
-	PR_Write(fp->fp, &c, 1);
-	}
-    else {
+  if (fp->fail) 
+    return;
+  if (fp->fp) {
+    fp->fp->write(&c,1);
+  }
+  else {
 stuff:
-	if (fp->len+1 < fp->limit) {
-	    fp->s[fp->len] = c;
-	    fp->len++;
-	    return;
-	    }
-	else if (fp->alloc) {
-	    fp->limit = fp->limit + OFILE_REALLOC_SIZE;
-	    fp->s = (char *)PR_Realloc(fp->s,fp->limit);
-	    if (fp->s) goto stuff;
-	    }
-	if (fp->alloc)
-	    PR_FREEIF(fp->s);
-	fp->s = 0;
-	fp->fail = 1;
-	}
+  if (fp->len+1 < fp->limit) {
+    fp->s[fp->len] = c;
+    fp->len++;
+    return;
+  }
+  else if (fp->alloc) {
+    fp->limit = fp->limit + OFILE_REALLOC_SIZE;
+    fp->s = (char *)PR_Realloc(fp->s,fp->limit);
+    if (fp->s) goto stuff;
+  }
+  if (fp->alloc)
+    PR_FREEIF(fp->s);
+  fp->s = 0;
+  fp->fail = 1;
+  }
 }
 
 static void appendcOFile(OFile *fp, char c)
@@ -1099,8 +1081,8 @@ static void appendcOFile(OFile *fp, char c)
 /*  int i = 0; */
     if (c == '\n') {
 	/* write out as <CR><LF> */
-	/* for (i = 0; i < MSG_LINEBREAK_LEN; i++)
-		appendcOFile_(fp,MSG_LINEBREAK [ i ]); */
+	/* for (i = 0; i < LINEBREAK_LEN; i++)
+		appendcOFile_(fp,LINEBREAK [ i ]); */
 	appendcOFile_(fp,0xd); 
 	appendcOFile_(fp,0xa); 
 	}
@@ -1111,15 +1093,13 @@ static void appendcOFile(OFile *fp, char c)
 static void appendsOFile(OFile *fp, const char *s)
 {
     int i, slen;
-    slen  = nsCRT::strlen (s);
+    slen  = PL_strlen (s);
     for (i=0; i<slen; i++) {
 	appendcOFile(fp,s[i]);
 	}
 }
 
-#endif
-
-static void initOFile(OFile *fp, PRFileDesc *ofp)
+static void initOFile(OFile *fp, nsOutputFileStream *ofp)
 {
     fp->fp = ofp;
     fp->s = 0;
@@ -1147,7 +1127,7 @@ static int writeBase64(OFile *fp, unsigned char *s, long len)
     unsigned long trip;
     unsigned char b;
     char quad[5];
-#define MAXQUADS 16
+#define PR_MAXQUADS 16
 
     quad[4] = 0;
 
@@ -1174,8 +1154,8 @@ static int writeBase64(OFile *fp, unsigned char *s, long len)
 	/* now output 'quad' with appropriate whitespace and line ending */
 	appendsOFile(fp, (numQuads == 0 ? "    " : ""));
 	appendsOFile(fp, quad);
-	appendsOFile(fp, ((cur >= len)?"\n" :(numQuads==MAXQUADS-1?"\n" : "")));
-	numQuads = (numQuads + 1) % MAXQUADS;
+	appendsOFile(fp, ((cur >= len)?"\n" :(numQuads==PR_MAXQUADS-1?"\n" : "")));
+	numQuads = (numQuads + 1) % PR_MAXQUADS;
 	}
     appendcOFile(fp,'\n');
 
@@ -1187,9 +1167,9 @@ static void writeQPString(OFile *fp, const char *s)
     const unsigned char *p = (const unsigned char *)s;
 	int current_column = 0;
 	static const char hexdigits[] = "0123456789ABCDEF";
-	PRBool white = PR_FALSE;
-	PRBool contWhite = PR_FALSE;
-	PRBool mb_p = PR_FALSE;
+	PRBool white = FALSE;
+	PRBool contWhite = FALSE;
+	PRBool mb_p = FALSE;
 
 	if (needsQuotedPrintable (s)) 
 	{
@@ -1219,13 +1199,13 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,'=');
 					appendcOFile(fp,'\n');
 					appendcOFile(fp,'\t');
-					contWhite = PR_FALSE;
+					contWhite = FALSE;
 				}
 
 				/* If its CRLF, swallow two chars instead of one. */
 				if (*p == CR && *(p+1) == LF)
 					p++;
-				white = PR_FALSE;
+				white = FALSE;
 				current_column = 0;
 			}
 			else
@@ -1236,8 +1216,8 @@ static void writeQPString(OFile *fp, const char *s)
 				{
 					appendcOFile(fp,*p);
 					current_column++;
-					white = PR_FALSE;
-					contWhite = PR_FALSE;
+					white = FALSE;
+					contWhite = FALSE;
 				}
 				else if (*p == ' ' || *p == '\t')		/* whitespace */
 				{
@@ -1247,14 +1227,14 @@ static void writeQPString(OFile *fp, const char *s)
 						appendcOFile(fp,hexdigits[*p >> 4]);
 						appendcOFile(fp,hexdigits[*p & 0xF]);
 						current_column += 3;
-						contWhite = PR_FALSE;
+						contWhite = FALSE;
 					}
 					else
 					{
 						appendcOFile(fp,*p);
 						current_column++;
 					}
-					white = PR_TRUE;
+					white = TRUE;
 				}
 				else										/* print as =FF */
 				{
@@ -1262,11 +1242,11 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,hexdigits[*p >> 4]);
 					appendcOFile(fp,hexdigits[*p & 0xF]);
 					current_column += 3;
-					white = PR_FALSE;
-					contWhite = PR_FALSE;
+					white = FALSE;
+					contWhite = FALSE;
 				}
 
-				PR_ASSERT (current_column <= 76); /* Hard limit required by spec */
+				PR_ASSERT(current_column <= 76); /* Hard limit required by spec */
 
 				if (current_column >= 73 || ((*(p+1) == ' ') && (current_column + 3 >= 73)))		/* soft line break: "=\r\n" */
 				{
@@ -1275,10 +1255,10 @@ static void writeQPString(OFile *fp, const char *s)
 					appendcOFile(fp,'\t');
 					current_column = 0;
 					if (white)
-						contWhite = PR_TRUE;
+						contWhite = TRUE;
 					else 
-						contWhite = PR_FALSE;
-					white = PR_FALSE;
+						contWhite = FALSE;
+					white = FALSE;
 				}
 			}	
 			p++;
@@ -1294,8 +1274,6 @@ static void writeQPString(OFile *fp, const char *s)
 }
 
 
-/* extern void writeVObject_(OFile *fp, VObject *o); */
-
 static void writeValue(OFile *fp, VObject *o, unsigned long size)
 {
     if (o == 0) return;
@@ -1303,7 +1281,7 @@ static void writeValue(OFile *fp, VObject *o, unsigned long size)
 	case VCVT_USTRINGZ: {
 	    char *s = fakeCString(USTRINGZ_VALUE_OF(o));
 	    writeQPString(fp, s);
-	    deleteStr(s);
+	    deleteString(s);
 	    break;
 	    }
 	case VCVT_STRINGZ: {
@@ -1346,7 +1324,7 @@ static void writeAttrValue(OFile *fp, VObject *o, int* length)
 		(*length)++;
 	appendsOFile(fp,NAME_OF(o));
 	if (*length != -1)
-		(*length) += nsCRT::strlen (NAME_OF(o));
+		(*length) += PL_strlen (NAME_OF(o));
 	}
     else {
 		appendcOFile(fp,';');
@@ -1381,7 +1359,7 @@ static int inList(const char **list, const char *s)
 {
     if (list == 0) return 0;
     while (*list) {
-	if (nsCRT::strcasecmp(*list,s) == 0) return 1;
+	if (PL_strcasecmp(*list,s) == 0) return 1;
 	list++;
 	}
     return 0;
@@ -1390,6 +1368,7 @@ static int inList(const char **list, const char *s)
 static void writeProp(OFile *fp, VObject *o)
 {
 	int length = -1;
+	int ilen = 0;
 
     if (NAME_OF(o)) {
 	struct PreDefProp *pi;
@@ -1410,7 +1389,7 @@ static void writeProp(OFile *fp, VObject *o)
 	    const char *s;
 	    VObject *eachProp = nextVObject(&t);
 	    s = NAME_OF(eachProp);
-	    if (nsCRT::strcasecmp(VCGroupingProp,s) && !inList(fields_,s))
+	    if (PL_strcasecmp(VCGroupingProp,s) && !inList(fields_,s))
 		writeAttrValue(fp,eachProp, &length);
 	    }
 	if (fields_) {
@@ -1419,9 +1398,9 @@ static void writeProp(OFile *fp, VObject *o)
 	    /* output prop as fields */
 	    appendcOFile(fp,':');
 	    while (*fields) {
-		VObject *t0 = isAPropertyOf(o,*fields);
+		VObject *t = isAPropertyOf(o,*fields);
 		i++;
-		if (t0) n = i;
+		if (t) n = i;
 		fields++;
 		}
 	    fields = fields_;
@@ -1445,6 +1424,7 @@ static void writeProp(OFile *fp, VObject *o)
 
 void writeVObject_(OFile *fp, VObject *o)
 {
+	int ilen = 0;
     if (NAME_OF(o)) {
 	struct PreDefProp *pi;
 	pi = lookupPropInfo(NAME_OF(o));
@@ -1467,39 +1447,40 @@ void writeVObject_(OFile *fp, VObject *o)
 	}
 }
 
-void writeVObject(PRFileDesc *fp, VObject *o)
+void writeVObject(nsOutputFileStream *fp, VObject *o)
 {
     OFile ofp;
     initOFile(&ofp,fp);
     writeVObject_(&ofp,o);
 }
 
-void writeVObjectToFile(char *fname, VObject *o)
+void writeVObjectToFile(nsFileSpec *fname, VObject *o)
 {
 #if !defined(MOZADDRSTANDALONE)
-    PRFileDesc *fp = PR_Open(fname, PR_WRONLY, 493);
-    if (fp) {
-	writeVObject(fp,o);
-	PR_Close(fp);
-	}
+  nsOutputFileStream *fp = new nsOutputFileStream(*fname);
+  
+  if (fp) {
+    writeVObject(fp,o);
+    fp->close();
+  }
 #else
-	PR_ASSERT (PR_FALSE);
+  PR_ASSERT(FALSE);
 #endif
 }
 
-void writeVObjectsToFile(char *fname, VObject *list)
+void writeVObjectsToFile(nsFileSpec *fname, VObject *list)
 {
 #if !defined(MOZADDRSTANDALONE)
-    PRFileDesc *fp = PR_Open(fname,PR_WRONLY, 493);
+  nsOutputFileStream *fp = new nsOutputFileStream(*fname);
     if (fp) {
 	while (list) {
 	    writeVObject(fp,list);
 	    list = nextVObjectInList(list);
 	    }
-	PR_Close(fp);
+	fp->close();
 	}
 #else
-	PR_ASSERT (PR_FALSE);
+	PR_ASSERT(FALSE);
 #endif
 }
 
@@ -1513,7 +1494,8 @@ char* writeMemVObject(char *s, int *len, VObject *o)
     return ofp.s;
 }
 
-char* writeMemVObjects(char *s, int *len, VObject *list)
+extern "C" 
+char * writeMemoryVObjects(char *s, int *len, VObject *list, PRBool expandSpaces)
 {
     OFile ofp;
     initMemOFile(&ofp,s,len?*len:0);
@@ -1529,13 +1511,12 @@ char* writeMemVObjects(char *s, int *len, VObject *list)
 /*----------------------------------------------------------------------
   APIs to do fake Unicode stuff.
   ----------------------------------------------------------------------*/
-extern "C" 
 vwchar_t* fakeUnicode(const char *ps, int *bytes)
 {
     vwchar_t *r, *pw;
-    int len = nsCRT::strlen(ps)+1;
+    int len = strlen(ps)+1;
 
-    pw = r = (vwchar_t*)PR_Malloc(sizeof(vwchar_t)*len);
+    pw = r = (vwchar_t*)PR_CALLOC(sizeof(vwchar_t)*len);
     if (bytes)
 	*bytes = len * sizeof(vwchar_t);
 
@@ -1564,7 +1545,7 @@ char* fakeCString(const vwchar_t *u)
 {
     char *s, *t;
     int len = uStrLen(u) + 1;
-    t = s = (char*)PR_Malloc(len);
+    t = s = (char*)PR_CALLOC(len);
     while (*u) {
 	if (*u == (vwchar_t)0x2028)
 	    *t = '\n';
@@ -1584,7 +1565,7 @@ const char* lookupStr(const char *s)
     unsigned int h = hashStr(s);
     if ((t = strTbl[h]) != 0) {
 	do {
-	    if (nsCRT::strcasecmp(t->s,s) == 0) {
+	    if (PL_strcasecmp(t->s,s) == 0) {
 		t->refCnt++;
 		return t->s;
 		}
@@ -1595,23 +1576,3 @@ const char* lookupStr(const char *s)
     strTbl[h] = newStrItem(s,strTbl[h]);
     return s;
 }
-
-#ifdef NS_DEBUG
-
-void
-DumpProperties(VObject *o)
-{
-  return;
-
-  VObjectIterator i;
-  initPropIterator(&i,o);
-  while (moreIteration(&i)) 
-  {
-    VObject *each = nextVObject(&i);
-    printf("ID = %s Value = [%s]\n", each->id, fakeCString(vObjectUStringZValue(each)));
-  }
-}
-
-#endif
-
-/* end of source file vobject.c */

@@ -75,11 +75,11 @@ int
 GenerateMessage(char** html) 
 {
   *html = nsCRT::strdup("\
-<text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\
+<BR><text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\
 <center><table BORDER=1 ><tr>\
 <td><CENTER>This is an <B>ENCRYPTED</B> message. Mozilla Mail does not support encrypted mail.</CENTER></td>\
 </tr>\
-</table></center>");
+</table></center><BR>");
 
   return 0;
 }
