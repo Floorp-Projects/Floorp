@@ -38,7 +38,6 @@
 #include "jsclasses.h"
 #include "icodegenerator.h"
 #include "interpreter.h"
-#include "xmlparser.h"
 #include "exception.h"
 #include "icodeasm.h"
 
@@ -2561,6 +2560,55 @@ Formatter& operator<<(Formatter &f, string &s)
     return f;
 }
 
+ICodeModule *ICodeGenerator::readFunction(XMLNode *element, String &name, JSClass *thisClass)
+{
+    ICodeModule *result = NULL;
+
+    String resultTypeName;
+    element->getValue(widenCString("type"), resultTypeName);
+    ParameterList *theParameterList = new ParameterList();
+    theParameterList->add(mContext->getWorld().identifiers["this"], TypedRegister(0, thisClass), false);
+    uint32 pCount = 1;
+    StringFormatter s;
+    XMLNodeList &parameters = element->children();
+    for (XMLNodeList::const_iterator k = parameters.begin(); k != parameters.end(); k++) {
+        XMLNode *parameter = *k;
+        if (parameter->name().compare(widenCString("parameter")) == 0) {                    
+            String parameterName;
+            String parameterTypeName;
+            element->getValue(widenCString("name"), parameterName);
+            element->getValue(widenCString("type"), parameterTypeName);
+            JSType *parameterType = findType(mContext->getWorld().identifiers[parameterTypeName]);
+            theParameterList->add(mContext->getWorld().identifiers[parameterName], TypedRegister(pCount, parameterType), false);
+            s << pCount - 1;
+            theParameterList->add(mContext->getWorld().identifiers[s.getString()], TypedRegister(pCount, parameterType), false);
+            s.clear();
+            pCount++;
+        }
+    }
+    theParameterList->setPositionalCount(pCount);
+
+    JSType *resultType = findType(mContext->getWorld().identifiers[resultTypeName]);
+    String &body = element->body();
+    if (body.length()) {
+        std::string str(body.length(), char());
+        std::transform(body.begin(), body.end(), str.begin(), narrow);
+        ICodeParser icp(mContext);
+
+        stdOut << "Calling ICodeParser with :\n" << str << "\n";
+
+        icp.parseSourceFromString(str);
+
+        result = new ICodeModule(icp.mInstructions, 
+                                            NULL,                   /* VariableList *variables */
+                                            theParameterList,       /* ParameterList *parameters */
+                                            icp.mMaxRegister, 
+                                            NULL,                   /* InstructionMap *instructionMap */
+                                            resultType, 
+                                            NotABanana);            /* exception register */
+    }
+    return result;
+}
 
 ICodeModule *ICodeGenerator::readICode(const char *fileName)
 {
@@ -2594,56 +2642,16 @@ ICodeModule *ICodeGenerator::readICode(const char *fileName)
 
             mContext->getGlobalObject()->defineVariable(className, &Type_Type, JSValue(thisClass));
 
-//            bool hasDefaultConstructor = false;
             XMLNodeList &elements = node->children();
             for (XMLNodeList::const_iterator j = elements.begin(); j != elements.end(); j++) {
                 XMLNode *element = *j;
                 bool isConstructor = (element->name().compare(widenCString("constructor")) == 0);
 
                 if (isConstructor || (element->name().compare(widenCString("method")) == 0)) {
-                    String methodName, resultTypeName;
-                    element->getValue(widenCString("name"), methodName);
-                    element->getValue(widenCString("type"), resultTypeName);
-                    ParameterList *theParameterList = new ParameterList();
-                    theParameterList->add(mContext->getWorld().identifiers["this"], TypedRegister(0, thisClass), false);
-                    uint32 pCount = 1;
-                    StringFormatter s;
-                    XMLNodeList &parameters = element->children();
-                    for (XMLNodeList::const_iterator k = parameters.begin(); k != parameters.end(); k++) {
-                        XMLNode *parameter = *k;
-                        if (parameter->name().compare(widenCString("parameter")) == 0) {                    
-                            String parameterName;
-                            String parameterTypeName;
-                            element->getValue(widenCString("name"), parameterName);
-                            element->getValue(widenCString("type"), parameterTypeName);
-                            JSType *parameterType = findType(mContext->getWorld().identifiers[parameterTypeName]);
-                            theParameterList->add(mContext->getWorld().identifiers[parameterName], TypedRegister(pCount, parameterType), false);
-                            s << pCount - 1;
-                            theParameterList->add(mContext->getWorld().identifiers[s.getString()], TypedRegister(pCount, parameterType), false);
-                            s.clear();
-                            pCount++;
-                        }
-                    }
-                    theParameterList->setPositionalCount(pCount);
-
-                    JSType *resultType = findType(mContext->getWorld().identifiers[resultTypeName]);
-                    String &body = element->body();
-                    if (body.length()) {
-                        std::string str(body.length(), char());
-                        std::transform(body.begin(), body.end(), str.begin(), narrow);
-                        ICodeParser icp(mContext);
-
-                        stdOut << "Calling ICodeParser with :\n" << str << "\n";
-
-                        icp.parseSourceFromString(str);
-
-                        ICodeModule *icm = new ICodeModule(icp.mInstructions, 
-                                                            NULL,                   /* VariableList *variables */
-                                                            theParameterList,       /* ParameterList *parameters */
-                                                            icp.mMaxRegister, 
-                                                            NULL,                   /* InstructionMap *instructionMap */
-                                                            resultType, 
-                                                            NotABanana);            /* exception register */
+                    String methodName;
+                    node->getValue(widenCString("name"), methodName);
+                    ICodeModule *icm = readFunction(element, methodName, thisClass);
+                    if (icm) {
                         if (isConstructor) {
                             thisClass->defineConstructor(methodName);
                             scg.setStatic(thisClass, mContext->getWorld().identifiers[methodName], scg.newFunction(icm));
@@ -2669,21 +2677,6 @@ ICodeModule *ICodeGenerator::readICode(const char *fileName)
                 }
             }
             scg.setStatic(thisClass, mInitName, scg.newFunction(ccg.complete(&Void_Type))); 
-/*
-            if (!hasDefaultConstructor) {
-                TypedRegister thisValue = TypedRegister(0, thisClass);
-                ArgumentList *args = new ArgumentList(0);
-                ICodeGenerator icg(mContext, NULL, thisClass, kIsStaticMethod);
-                icg.allocateParameter(mContext->getWorld().identifiers["this"], false, thisClass);   // always parameter #0
-                if (superclass)
-                    icg.call(icg.bindThis(thisValue, icg.getStatic(superclass, superclass->getName())), args);
-                if (thisClass->hasStatic(mInitName))
-                    icg.call(icg.bindThis(thisValue, icg.getStatic(thisClass, mInitName)), args);
-                icg.returnStmt(thisValue);
-                thisClass->defineConstructor(className);
-                scg.setStatic(thisClass, mContext->getWorld().identifiers[className], scg.newFunction(icg.complete(&Void_Type)));
-            }
-*/
             thisClass->complete();
         
             if (scg.getICode()->size()) {
@@ -2715,12 +2708,20 @@ ICodeModule *ICodeGenerator::readICode(const char *fileName)
                 }                        
             }
             else {
-                if (node->name().compare(widenCString("instance")) == 0) {
-                    // find the appropriate class and initialize the fields
+                if (node->name().compare(widenCString("function")) == 0) {
+                    String functionName;
+                    node->getValue(widenCString("name"), functionName);
+                    ICodeModule *icm = readFunction(node, functionName, NULL);
+                    mContext->getGlobalObject()->defineFunction(functionName, icm);
                 }
                 else {
-                    if (node->name().compare(widenCString("object")) == 0) {
-                        // an object literal
+                    if (node->name().compare(widenCString("instance")) == 0) {
+                        // find the appropriate class and initialize the fields
+                    }
+                    else {
+                        if (node->name().compare(widenCString("object")) == 0) {
+                            // an object literal
+                        }
                     }
                 }
             }

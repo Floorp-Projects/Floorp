@@ -41,6 +41,7 @@
 #include "parser.h"
 #include "vmtypes.h"
 #include "jsclasses.h"
+#include "xmlparser.h"
 
 
 namespace JavaScript {
@@ -282,7 +283,10 @@ namespace ICG {
         TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
         TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
         ICodeModule *genFunction(FunctionDefinition &function, bool isStatic, bool isConstructor, JSClass *superClass);
-    
+
+        
+        ICodeModule *readFunction(XMLNode *element, String &name, JSClass *thisClass);
+
     public:
 
         ICodeGenerator(Context *cx, ICodeGenerator *containingFunction = NULL, JSClass *aClass = NULL, ICodeGeneratorFlags flags = kIsTopLevel);
