@@ -31,6 +31,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIJSContextStack.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -119,6 +120,34 @@ LocationImpl::SetWebShell(nsIWebShell *aWebShell)
 }
 
 nsresult 
+LocationImpl::CheckURL(nsIURI* aURL)
+{
+  nsresult result;
+  // Get JSContext from stack.
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
+                  &result);
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+  JSContext *cx;
+  if (NS_FAILED(stack->Peek(&cx)))
+    return NS_ERROR_FAILURE;
+
+  // Get security manager.
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
+    return NS_ERROR_FAILURE;
+
+  // Check to see if URI is allowed.
+  PRBool ok = PR_FALSE;
+  if (NS_FAILED(secMan->CheckURI(scriptCX, aURL, &ok)) || !ok) 
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+
+nsresult 
 LocationImpl::SetURL(nsIURI* aURL)
 {
   if (nsnull != mWebShell) {
@@ -132,6 +161,10 @@ LocationImpl::SetURL(nsIURI* aURL)
     aURL->GetSpec(&spec);
     nsAutoString s = spec;
 #endif
+
+    if (NS_FAILED(CheckURL(aURL)))
+      return NS_ERROR_FAILURE;
+
     return mWebShell->LoadURL(s.GetUnicode(), nsnull, PR_TRUE);
   }
   else {
@@ -399,13 +432,13 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
                               PRBool aReplace)
 {
   nsresult result;
-  nsIURI* newUrl;
+  nsCOMPtr<nsIURI> newUrl;
   nsAutoString newHref;
 
 #ifndef NECKO
-  result = NS_NewURL(&newUrl, aHref, aBase);
+  result = NS_NewURL(getter_AddRefs(newUrl), aHref, aBase);
 #else
-  result = NS_NewURI(&newUrl, aHref, aBase);
+  result = NS_NewURI(getter_AddRefs(newUrl), aHref, aBase);
 #endif // NECKO
   if (NS_OK == result) {
 #ifdef NECKO
@@ -420,29 +453,14 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
       nsCRT::free(spec);
 #endif
     }
-    NS_RELEASE(newUrl);
   }
 
   if ((NS_OK == result) && (nsnull != mWebShell)) {
-#if 0
-    // Get JSContext from stack
-    NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", 
-                    &result);
-    if (NS_FAILED(result))
-      return NS_ERROR_FAILURE;
-    JSContext *cx = stack.Peek();
 
-    // Get security manager
-    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))))
+    if (NS_FAILED(CheckURL(newUrl)))
       return NS_ERROR_FAILURE;
 
-    // Check to see if URI is legal.
-    PRBool ok = PR_FALSE;
-    if (NS_FAILED(secMan->CheckURI(scriptCX, newUrl, &ok) || !ok)) 
-      return NS_ERROR_FAILURE;
-#endif
+    // Load new URI.
     result = mWebShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace);
   }
   

@@ -79,8 +79,8 @@ nsFileChannel::nsFileChannel()
       mBufferInputStream(nsnull), mBufferOutputStream(nsnull),
       mStatus(NS_OK), mHandler(nsnull), mSourceOffset(0),
       mLoadAttributes(LOAD_NORMAL),
-      mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull), mRealListener(nsnull),
-      mPrincipal(nsnull)
+      mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull), mPrincipal(nsnull),
+      mRealListener(nsnull)
 {
     NS_INIT_REFCNT();
 #if defined(PR_LOGGING)

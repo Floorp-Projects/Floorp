@@ -26,6 +26,7 @@
 #include "nsIChannel.h"
 #include "nsIChromeRegistry.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
@@ -188,6 +189,11 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
             return NS_ERROR_FAILURE;
         }
         (*result)->SetPrincipal(principal);
+#ifdef DEBUG_norris
+        nsXPIDLCString spec;
+        uri->GetSpec(getter_Copies(spec));
+        fprintf(stderr, "System principal created for %s\n", (const char *)spec);
+#endif
     }
 
     NS_RELEASE(chromeURI);

@@ -21,20 +21,13 @@
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "nsIGenericFactory.h"
-//#include "nsICapsManager.h"
-//#include "nsCCapsManager.h"
-//#include "nsPrincipalManager.h"
-//#include "nsIPrivilegeManager.h"
-//#include "nsPrivilegeManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsCodebasePrincipal.h"
 
-//static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
-//static NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCodebasePrincipal)
 
@@ -47,7 +40,7 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
 	*aResult = nsnull;
 	if (aOuter)
 		return NS_ERROR_NO_AGGREGATION;
-	nsISupports *obj = nsScriptSecurityManager::GetScriptSecurityManager();
+	nsScriptSecurityManager *obj = nsScriptSecurityManager::GetScriptSecurityManager();
 	if (!obj) 
 		return NS_ERROR_OUT_OF_MEMORY;
 	if (NS_FAILED(obj->QueryInterface(aIID, aResult)))
@@ -112,24 +105,6 @@ done:
 	return rv;
 }
 
-/*
-static NS_IMETHODIMP
-Construct_nsIPrincipalManager(nsISupports * aOuter, REFNSIID aIID, void * * aResult)
-{
-	nsresult rv;
-	nsPrincipalManager* obj = nsnull;
-	if(!aResult) return NS_ERROR_NULL_POINTER;
-	*aResult = NULL;
-	if(aOuter) return NS_ERROR_NO_AGGREGATION;
-	rv = nsnull; //nsPrincipalManager::GetPrincipalManager(&obj);
-	if(!obj) return NS_ERROR_OUT_OF_MEMORY;
-  if(NS_FAILED(rv)) return rv;
-	rv = obj->QueryInterface(aIID, aResult);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
-	return rv;
-}
-*/
-
 extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports *aServMgr, const nsCID &aClass, 
              const char *aClassName, const char *aProgID, 
@@ -151,14 +126,6 @@ NSGetFactory(nsISupports *aServMgr, const nsCID &aClass,
         rv = factory->SetConstructor(Construct_nsIScriptSecurityManager);
     else if (aClass.Equals(nsCodebasePrincipal::GetCID())) 
         rv = factory->SetConstructor(nsCodebasePrincipalConstructor);
-    /*
-    else if (aClass.Equals(kCCapsManagerCID)) 
-        rv = factory->SetConstructor(Construct_nsISecurityManager);
-    else if (aClass.Equals(nsPrivilegeManager::GetCID())) 
-        rv = factory->SetConstructor(Construct_nsIPrivilegeManager);
-    else if (aClass.Equals(nsPrincipalManager::GetCID())) 
-        rv = factory->SetConstructor(Construct_nsIPrincipalManager);
-    */
     else {
         NS_ASSERTION(0, "incorrectly registered");
         rv = NS_ERROR_NO_INTERFACE;
@@ -202,23 +169,6 @@ NSRegisterSelf(nsISupports *aServMgr, const char *aPath)
                                     PR_TRUE, PR_TRUE);  
     if (NS_FAILED(rv)) 
         return NS_ERROR_FAILURE;
-    /*
-    rv = compMgr->RegisterComponent(kCCapsManagerCID, NS_CCAPSMANAGER_CLASSNAME,
-                                    NS_CCAPSMANAGER_PROGID, aPath, PR_TRUE, 
-                                    PR_TRUE);
-    if (NS_FAILED(rv)) 
-        return NS_ERROR_FAILURE;
-    rv = compMgr->RegisterComponent(nsPrivilegeManager::GetCID(), 
-                                    NS_PRIVILEGEMANAGER_CLASSNAME, 
-                                    NS_PRIVILEGEMANAGER_PROGID, aPath, 
-                                    PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) 
-        return NS_ERROR_FAILURE;
-    rv = compMgr->RegisterComponent(nsPrincipalManager::GetCID(),
-                                    NS_PRINCIPALMANAGER_CLASSNAME,
-                                    NS_PRINCIPALMANAGER_PROGID, aPath, 
-                                    PR_TRUE, PR_TRUE);
-    */
     if (NS_FAILED(rv)) 
         return NS_ERROR_FAILURE;
     return NS_OK;
@@ -240,16 +190,5 @@ NSUnregisterSelf(nsISupports *aServMgr, const char *aPath)
   rv = compMgr->UnregisterComponent(nsCodebasePrincipal::GetCID(), aPath);
   if (NS_FAILED(rv)) 
       return NS_ERROR_FAILURE;
-  /*
-  rv = compMgr->UnregisterComponent(kCCapsManagerCID, aPath);
-  if (NS_FAILED(rv)) 
-      return NS_ERROR_FALURE;
-  rv = compMgr->UnregisterComponent(nsPrivilegeManager::GetCID(), aPath);
-  if (NS_FAILED(rv)) 
-      return NS_ERROR_FALURE;
-  rv = compMgr->UnregisterComponent(nsPrincipalManager::GetCID(), aPath);
-  if (NS_FAILED(rv)) 
-      return NS_ERROR_FALURE;
-  */
   return NS_OK;
 }

@@ -24,12 +24,15 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "nsIScriptContext.h"
+#include "nsIXPCSecurityManager.h"
 
 #define NS_SCRIPTSECURITYMANAGER_CID \
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-class nsScriptSecurityManager : public nsIScriptSecurityManager {
+class nsScriptSecurityManager : public nsIScriptSecurityManager,
+                                public nsIXPCSecurityManager
+{
 public:
     nsScriptSecurityManager();
     virtual ~nsScriptSecurityManager();
@@ -38,6 +41,7 @@ public:
         
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTSECURITYMANAGER
+    NS_DECL_NSIXPCSECURITYMANAGER
     
     static nsScriptSecurityManager *
     GetScriptSecurityManager();
@@ -60,6 +64,9 @@ private:
 
     char *
     GetSitePolicy(const char *org);
+
+    NS_IMETHOD
+    CheckXPCPermissions(JSContext *cx);
 
     nsIPrincipal *mSystemPrincipal;
 };
