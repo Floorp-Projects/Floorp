@@ -823,6 +823,7 @@ static PLHashTable* gWeights = nsnull;
 
 static nsFontPropertyName gWeightNames[] =
 {
+  { "black",    900 },
   { "bold",     700 },
   { "book",     400 },
   { "demi",     600 },
@@ -1126,8 +1127,10 @@ static nsFontCharSetMap gCharSetMap[] =
   { "cns11643.1992-2",    &Ignore        },
   { "cns11643.1992-3",    &Ignore        },
   { "cns11643.1992-4",    &Ignore        },
+  { "cp1251-1",           &Ignore        },
   { "dec-dectech",        &Ignore        },
   { "dtsymbol-1",         &Ignore        },
+  { "fontspecific-0",     &Ignore        },
   { "gb2312.1980-0",      &Ignore        },
   { "gb2312.1980-1",      &Ignore        },
   { "hp-japanese15",      &Ignore        },
@@ -1163,6 +1166,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "iso8859-7",          &Ignore        },
   { "iso8859-8",          &Ignore        },
   { "iso8859-9",          &Ignore        },
+  { "iso10646-1",         &Ignore        },
   { "jisx0201.1976-0",    &Ignore        },
   { "jisx0201.1976-1",    &Ignore        },
 #ifdef JAPANESE
@@ -1172,6 +1176,7 @@ static nsFontCharSetMap gCharSetMap[] =
 #endif
   { "jisx0208.1990-0",    &Ignore        },
   { "jisx0212.1990-0",    &Ignore        },
+  { "koi8-r",             &Ignore        },
   { "ksc5601.1987-0",     &Ignore        },
   { "misc-fontspecific",  &Ignore        },
   { "sgi-fontspecific",   &Ignore        },
@@ -2014,8 +2019,8 @@ GetFontNames(char* aPattern)
       int newSize = 2 * (stretch->mSizesAlloc ? stretch->mSizesAlloc : 1);
       nsFontXlib* newPointer = new nsFontXlib[newSize];
       if (newPointer) {
-        for (int i = stretch->mSizesAlloc - 1; i >= 0; i--) {
-          newPointer[i] = stretch->mSizes[i];
+        for (int j = stretch->mSizesAlloc - 1; j >= 0; j--) {
+          newPointer[j] = stretch->mSizes[j];
         }
         stretch->mSizesAlloc = newSize;
         delete [] stretch->mSizes;
