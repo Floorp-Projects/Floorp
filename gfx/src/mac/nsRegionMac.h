@@ -40,7 +40,7 @@
 #define nsRegionMac_h___
 
 #include "nsIRegion.h"
-#include <QuickDraw.h>
+#include <Quickdraw.h>
 
 //------------------------------------------------------------------------
 
