@@ -26,9 +26,7 @@
  */
 
 #if defined(CookieManagement)
-#if defined(XP_WIN) || defined(XP_MAC)
 #define TRUST_LABELS 1
-#endif
 #endif
 
 #define alphabetize 1
