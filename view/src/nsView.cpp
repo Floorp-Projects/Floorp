@@ -78,7 +78,6 @@ nsView :: nsView()
   MOZ_COUNT_CTOR(nsView);
 
   mVis = nsViewVisibility_kShow;
-  mXForm = nsnull;
   mVFlags = 0;
   mOpacity = 1.0f;
   mViewManager = nsnull;
@@ -103,12 +102,6 @@ nsView :: ~nsView()
       if (nsnull != kid)
         kid->Destroy();
     } while (nsnull != kid);
-  }
-
-  if (mXForm != nsnull)
-  {
-    delete mXForm;
-    mXForm = nsnull;
   }
 
   if (nsnull != mViewManager)
@@ -871,26 +864,6 @@ NS_IMETHODIMP nsView :: GetChild(PRInt32 index, nsIView *&aChild) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetTransform(nsTransform2D &aXForm)
-{
-  if (nsnull == mXForm)
-    mXForm = new nsTransform2D(&aXForm);
-  else
-    *mXForm = aXForm;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView :: GetTransform(nsTransform2D &aXForm) const
-{
-  if (nsnull != mXForm)
-    aXForm = *mXForm;
-  else
-    aXForm.SetToIdentity();
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsView :: SetOpacity(float opacity)
 {
   mOpacity = opacity;
@@ -1149,12 +1122,6 @@ NS_IMETHODIMP nsView::GetDirtyRegion(nsIRegion *&aRegion) const
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsView::GetScratchPoint(nsPoint **aPoint)
-{
-	NS_ASSERTION((aPoint != nsnull), "no point");
-	*aPoint = &mScratchPoint;
-	return NS_OK;
-}
 
 NS_IMETHODIMP nsView::SetCompositorFlags(PRUint32 aFlags)
 {
