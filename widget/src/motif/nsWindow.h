@@ -224,7 +224,7 @@ public: \
     virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos); 
 
 
-#define BASE_IWIDGET_IMPL(_classname, _aggname) \
+#define BASE_IWIDGET_IMPL_NO_SHOW(_classname, _aggname) \
     _classname::_aggname::_aggname() \
     { \
     } \
@@ -280,10 +280,6 @@ public: \
     void _classname::_aggname::RemoveChild(nsIWidget* aChild) \
     { \
         GET_OUTER()->RemoveChild(aChild); \
-    } \
-    void _classname::_aggname::Show(PRBool bState) \
-    { \
-        GET_OUTER()->Show(bState); \
     } \
     void _classname::_aggname::Move(PRUint32 aX, PRUint32 aY) \
     { \
@@ -450,6 +446,15 @@ public: \
       return GET_OUTER()->OnScroll(aEvent, cPos); \
     }
 
+#define BASE_IWIDGET_IMPL_SHOW(_classname, _aggname) \
+    void _classname::_aggname::Show(PRBool bState) \
+    { \
+        GET_OUTER()->Show(bState); \
+    }
+
+#define BASE_IWIDGET_IMPL(_classname, _aggname) \
+  BASE_IWIDGET_IMPL_NO_SHOW(_classname, _aggname)  \
+  BASE_IWIDGET_IMPL_SHOW(_classname, _aggname)  
 
 
 
