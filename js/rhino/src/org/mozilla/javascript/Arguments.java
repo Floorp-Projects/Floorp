@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -72,51 +73,83 @@ class Arguments extends IdScriptable {
     }
 
     public boolean has(int index, Scriptable start) {
-        Object[] args = activation.getOriginalArguments();
-        return (0 <= index && index < args.length) || super.has(index, start);
+        if (0 <= index && index < args.length) {
+            if (args[index] != NOT_FOUND) {
+                return true;
+            }
+        }
+        return super.has(index, start);
     }
 
     public Object get(int index, Scriptable start) {
         if (0 <= index && index < args.length) {
-            NativeFunction f = activation.funObj;
-            if (index < f.argCount) {
-                String argName = f.argNames[index];
-                for (int i=index+1; i < f.argNames.length; i++) {
-                    if (argName.equals(f.argNames[i])) {
-                        // duplicate parameter name, must use initial
-                        // parameter value
-                        Object[] orig = activation.getOriginalArguments();
-                        return index < orig.length ? orig[index]
-                                                   : Undefined.instance;
-                    }
+            Object value = args[index];
+            if (value != NOT_FOUND) {
+                if (sharedWithActivation(index)) {
+                    String argName = activation.funObj.argNames[index];
+                    value = activation.get(argName, activation);
+                    if (value == NOT_FOUND) Context.codeBug();
                 }
-                return activation.get(f.argNames[index], activation);
+                return value;
             }
-            return args[index];
         }
         return super.get(index, start);
     }
 
+    private boolean sharedWithActivation(int index) {
+        NativeFunction f = activation.funObj;
+        int definedCount = f.argCount;
+        if (index < definedCount) {
+            // Check if argument is not hidden by later argument with the same
+            // name as hidden arguments are not shared with activation
+            if (index < definedCount - 1) {
+                String argName = f.argNames[index];
+                for (int i = index + 1; i < definedCount; i++) {
+                    if (argName.equals(f.argNames[i])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
     public void put(int index, Scriptable start, Object value) {
         if (0 <= index && index < args.length) {
-            NativeFunction f = activation.funObj;
-            if (index < f.argCount)
-                activation.put(f.argNames[index], activation, value);
-            else
-                args[index] = value;
-            return;
+            if (args[index] != NOT_FOUND) {
+                if (sharedWithActivation(index)) {
+                    String argName = activation.funObj.argNames[index];
+                    activation.put(argName, activation, value);
+                    return;
+                }
+                synchronized (this) {
+                    if (args[index] != NOT_FOUND) {
+                        if (args == activation.getOriginalArguments()) {
+                            args = (Object[])args.clone();
+                        }
+                        args[index] = value;
+                        return;
+                    }
+                }
+            }
         }
         super.put(index, start, value);
     }
 
     public void delete(int index) {
         if (0 <= index && index < args.length) {
-            NativeFunction f = activation.funObj;
-            if (index < f.argCount)
-                activation.delete(f.argNames[index]);
-            else
-                args[index] = Undefined.instance;
+            synchronized (this) {
+                if (args[index] != NOT_FOUND) {
+                    if (args == activation.getOriginalArguments()) {
+                        args = (Object[])args.clone();
+                    }
+                    args[index] = NOT_FOUND;
+                    return;
+                }
+            }
         }
+        super.delete(index);
     }
 
     protected int getIdDefaultAttributes(int id) {
@@ -228,5 +261,9 @@ class Arguments extends IdScriptable {
     private Object lengthObj;
 
     private NativeCall activation;
+
+// Initially args holds activation.getOriginalArgs(), but any modification
+// of its elements triggers creation of a copy. If its element holds NOT_FOUND,
+// it indicates deleted index, in which case super class is queried.
     private Object[] args;
 }
