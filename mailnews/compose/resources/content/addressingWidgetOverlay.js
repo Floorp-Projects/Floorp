@@ -88,10 +88,10 @@ function CompFields2Recipients(msgCompFields)
 	{
 		var row = 1;
 		
-		row = awSetInputAndPopup(row, msgCompFields.GetTo(), "addr_to");
-		row = awSetInputAndPopup(row, msgCompFields.GetCc(), "addr_cc");
-		row = awSetInputAndPopup(row, msgCompFields.GetBcc(), "addr_bcc");
-		row = awSetInputAndPopup(row, msgCompFields.GetReplyTo(), "addr_reply");
+		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetTo()), "addr_to");
+		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetCc()), "addr_cc");
+		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetBcc()), "addr_bcc");
+		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetReplyTo()), "addr_reply");
 		row = awSetInputAndPopup(row, msgCompFields.GetOtherRandomHeaders(), "addr_other");
 		row = awSetInputAndPopup(row, msgCompFields.GetNewsgroups(), "addr_newsgroups");
 		row = awSetInputAndPopup(row, msgCompFields.GetFollowupTo(), "addr_followup");
@@ -130,6 +130,41 @@ function awSetInputAndPopup(firstRow, inputValue, popupValue)
 			if ( row <= top.MAX_RECIPIENTS )
 			{
 				awGetInputElement(row).value = addressArray[index];
+				awGetPopupElement(row).value = popupValue;
+				row++;
+			}
+		}
+		
+		return(row);
+	}
+	return(firstRow);		
+}
+
+function awSetInputAndPopupFromArray(firstRow, inputArray, popupValue)
+{
+	var		row = firstRow;
+	
+	if ( inputArray && popupValue )
+	{
+		for ( var index = 0; index < inputArray.count; index++ )
+		{
+			// remove leading spaces
+			inputValue = inputArray.StringAt(index);
+			while ( inputValue[0] == " " )
+				inputValue = inputValue.substring(1, inputValue.length);
+			
+			// we can add one row if trying to add just beyond current size
+			if ( row == (top.MAX_RECIPIENTS + 1))
+			{
+				var body = document.getElementById('addressWidgetBody');
+				awCopyNode(awGetTreeItem(1), body, 0);
+				top.MAX_RECIPIENTS++;
+			}
+			
+			// if row is legal then set the values
+			if ( row <= top.MAX_RECIPIENTS )
+			{
+				awGetInputElement(row).value = inputValue;
 				awGetPopupElement(row).value = popupValue;
 				row++;
 			}

@@ -27,8 +27,11 @@
 #include "nsIPref.h"
 #include "nsMsgI18N.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsMsgRecipientArray.h"
+#include "nsIMsgHeaderParser.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 /* this function will be used by the factory to generate an Message Compose Fields Object....*/
 nsresult NS_NewMsgCompFields(const nsIID &aIID, void ** aInstancePtrResult)
@@ -665,3 +668,79 @@ const char* nsMsgCompFields::GetForwardURL(PRInt32 which)
 	return NULL;
 }
 
+nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, nsIMsgRecipientArray **_retval)
+{
+	nsresult rv = NS_OK;
+
+	if (! _retval)
+		return NS_ERROR_NULL_POINTER;
+	*_retval = nsnull;
+		
+	nsMsgRecipientArray* pAddrArray = new nsMsgRecipientArray;
+	if (! pAddrArray)
+		return NS_ERROR_OUT_OF_MEMORY;
+	
+	rv = pAddrArray->QueryInterface(NS_GET_IID(nsIMsgRecipientArray), _retval);
+	if (NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIMsgHeaderParser> parser;
+		nsComponentManager::CreateInstance(kHeaderParserCID,
+		                           nsnull,
+		                           nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
+		                           getter_AddRefs(parser));
+		if (parser)
+		{
+			char * recipientsStr;
+			char * names;
+			char * addresses;
+			PRUint32 numAddresses;
+
+			if (NS_FAILED(ConvertFromUnicode(msgCompHeaderInternalCharset(), recipients, &recipientsStr)))
+				recipientsStr = PL_strdup(nsAutoCString(recipients));
+			
+			if (! recipientsStr)
+				return NS_ERROR_OUT_OF_MEMORY;
+
+			rv= parser->ParseHeaderAddresses(msgCompHeaderInternalCharset(), recipientsStr, &names, &addresses, &numAddresses);
+			if (NS_SUCCEEDED(rv))
+			{
+				int i;
+				char * pNames = names;
+				char * pAddresses = addresses;
+				char * fullAddress;
+				nsString aRecipient;
+				PRBool aBool;
+				
+				for (i = 0; i < numAddresses; i ++)
+				{
+					rv = parser->MakeFullAddress(msgCompHeaderInternalCharset(), pNames, pAddresses, &fullAddress);
+					if (NS_SUCCEEDED(rv))
+					{
+						rv = ConvertToUnicode(msgCompHeaderInternalCharset(), fullAddress, aRecipient);
+						PR_FREEIF(fullAddress);
+					}
+					else
+						rv = ConvertToUnicode(msgCompHeaderInternalCharset(), pAddresses, aRecipient);
+					if (NS_FAILED(rv))
+						break;
+
+					rv = pAddrArray->AppendString(aRecipient.GetUnicode(), &aBool);
+					if (NS_FAILED(rv))
+						break;
+						
+					pNames += PL_strlen(pNames) + 1;
+					pAddresses += PL_strlen(pAddresses) + 1;
+				}
+			
+				PR_FREEIF(names);
+				PR_FREEIF(addresses);
+			}
+			
+			PR_Free(recipientsStr);
+		}
+		else
+			rv = NS_ERROR_FAILURE;
+	}
+		
+	return rv;
+}

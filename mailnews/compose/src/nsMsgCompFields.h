@@ -198,6 +198,9 @@ public:
 	const char* GetBody();
 
 	nsresult AppendBody(char*);
+	
+	NS_IMETHOD SplitRecipients(const PRUnichar *recipients, nsIMsgRecipientArray **_retval); 
+
 
 	// When forwarding a bunch of messages, we can have a bunch of
 	// "forward url's" instead of an attachment.
@@ -215,7 +218,7 @@ public:
 	void        SetForcePlainText(PRBool value) {m_force_plain_text = value;}
 	PRBool      GetForcePlainText() {return m_force_plain_text;}
 
-  NS_IMETHOD  SetUseMultipartAlternativeFlag(PRBool value);
+	NS_IMETHOD  SetUseMultipartAlternativeFlag(PRBool value);
 	NS_IMETHOD  GetUseMultipartAlternativeFlag(PRBool *_retval);
 
 	void SetUseMultipartAlternative(PRBool value) {m_multipart_alt = value;}

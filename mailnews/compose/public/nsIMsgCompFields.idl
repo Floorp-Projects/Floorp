@@ -21,6 +21,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIMsgRecipientArray.idl"
 
 
 [scriptable, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
@@ -121,5 +122,7 @@ interface nsIMsgCompFields : nsISupports {
 
 	void SetTheForcePlainText(in boolean value);
 	boolean GetTheForcePlainText();
+	
+    nsIMsgRecipientArray SplitRecipients(in wstring recipients);
 };
 
