@@ -101,6 +101,8 @@ my $READ_CVS_SERVER = $config->get('READ_CVS_SERVER');
 my $READ_CVS_USERNAME = $config->get('READ_CVS_USERNAME');
 my $READ_CVS_PASSWORD = $config->get('READ_CVS_PASSWORD');
 my $WRITE_CVS_SERVER = $config->get('WRITE_CVS_SERVER');
+my $WEB_BASE_URI = $config->get('WEB_BASE_URI');
+my $WEB_BASE_PATH = $config->get('WEB_BASE_PATH');
 
 # Store the home directory so we can get back to it after changing directories
 # in certain places in the code.
@@ -152,6 +154,7 @@ if ($action eq "edit")
 }
 elsif ($action eq "review")
 {
+  ValidateFile();
   ReviewChanges();
 }
 elsif ($action eq "commit")
@@ -181,6 +184,11 @@ sub ValidateFile
   
   my $file = $request->param("file");
 
+  # If the file name starts with the base URI for files on the web site, it is
+  # a URL and needs to be converted into a file path, which we do by removing
+  # the base URI and adding the base path.
+  if ($file =~ s/^\Q$WEB_BASE_URI\E(.*)$/$1/i) { $file = $WEB_BASE_PATH . $file }
+
   # Collapse multiple consecutive slashes (i.e. dir//file.txt) 
   # into a single slash.
   $file =~ s:/{2,}:/:;
@@ -197,6 +205,11 @@ sub ValidateFile
   
   # Note: we don't need to validate further because CVS will tell us
   # whether or not the filename is valid.
+
+  # Construct a URL to the file if possible.
+  my $url = $file;
+  if ($url =~ s/^\Q$WEB_BASE_PATH\E(.*)$/$1/i) { $vars->{'file_url'} = $WEB_BASE_URI . $url }
+
 }
 
 sub ValidateUsername

@@ -27,7 +27,15 @@
 
   <body bgcolor="white" color="black">
 
-  <big><b>Doctor - edit <em>[% file FILTER html %]</em></b></big><br><br>
+    <big><b>Doctor - edit <em>
+      [% IF file_url %]
+        <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
+      [% ELSE %]
+        [% file FILTER html %]
+      [% END %]
+    </em></b></big>
+
+    <br><br>
 
   <form method="post" action="doctor.cgi">
 

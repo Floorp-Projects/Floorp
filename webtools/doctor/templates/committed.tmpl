@@ -27,7 +27,13 @@
 
   <body bgcolor="white" color="black">
 
-    <big><b>Doctor - committed <em>[% file FILTER html %]</em></b></big>
+    <big><b>Doctor - committed <em>
+      [% IF file_url %]
+        <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
+      [% ELSE %]
+        [% file FILTER html %]
+      [% END %]
+    </em></b></big>
 
     [% IF at_sign %]
       <p style="color: red;"><big><b>

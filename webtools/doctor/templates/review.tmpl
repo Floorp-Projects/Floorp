@@ -27,7 +27,13 @@
 
   <body bgcolor="white" color="black">
 
-    <big><b>Doctor - review changes to <em>[% file FILTER html %]</em></b></big>
+    <big><b>Doctor - review changes to <em>
+      [% IF file_url %]
+        <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
+      [% ELSE %]
+        [% file FILTER html %]
+      [% END %]
+    </em></b></big>
 
     <p>
       You are making the following changes:
@@ -69,6 +75,12 @@
       <p>
         Otherwise, go back and 
         <input type="submit" name="action" value="edit"> the file some more.
+      </p>
+
+      <p>
+        Don't have a CVS account?
+        <a href="http://bugzilla.mozilla.org/enter_bug.cgi?reporter=myk%40mozilla.org&product=mozilla.org&component=CVS+Account+Request&version=unspecified&rep_platform=All&op_sys=All&short_desc=webtree+CVS+account+for+%3Cyour+name+here%3E+-+%3Cyour+email+address+here%3E&comment=%3CEnter+a+description+of+what+you+would+like+to+edit+on+the+web+site+here.++Note%0D%0Athat+you+need+someone+who+already+has+access+to+vouch+for+you.%3E">File a bug report about getting one</a>
+        or <a href="http://bugzilla.mozilla.org/enter_bug.cgi?reporter=myk%40mozilla.org&product=Documentation&version=unspecified&rep_platform=All&op_sys=All&priority=--&bug_severity=normal&assigned_to=&cc=&bug_file_loc=[% file_url FILTER html %]&short_desc=%3CSummarize+your+changes+here.%3E&comment=%3CDescribe+your+changes+here+in+more+detail.++After+you+commit+this+bug+report%2C%0D%0Aclick+the+%22Create+Attachment%22+link+to+add+the+changes+to+the+report+as+an%0D%0Aattachment.%3E">file a bug report about your changes</a>, then add them to the report as an attachment.
       </p>
 
     </form>
