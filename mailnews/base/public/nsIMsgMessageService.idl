@@ -25,6 +25,7 @@
 interface nsIURI;
 interface nsIUrlListener;
 interface nsIStreamListener;
+interface nsIMsgWindow;
 interface nsIFileSpec;
 
 [scriptable, uuid(F11009C1-F697-11d2-807F-006008128C4E)]
@@ -66,7 +67,9 @@ interface nsIMsgMessageService : nsISupports {
      ///////////////////////////////////////////////////////////////////
 %}
 	void DisplayMessage(in string aMessageURI, in nsISupports aDisplayConsumer, 
-							  in nsIUrlListener aUrlListener, out nsIURI aURL);
+						in nsIMsgWindow aMsgWindow,
+						in nsIUrlListener aUrlListener, 
+						out nsIURI aURL);
 
 %{ C++
 
