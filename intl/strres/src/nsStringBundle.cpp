@@ -926,7 +926,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
   }
 
   // format the arguments:
-  const nsAutoString args(aStatusArg);
+  const nsDependentString args(aStatusArg);
   argCount = args.CountChar(PRUnichar('\n')) + 1;
   NS_ENSURE_ARG(argCount <= 10); // enforce 10-parameter limit
   PRUnichar* argArray[10];
@@ -942,9 +942,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
       PRInt32 pos = args.FindChar('\n', offset);
       if (pos == -1) 
         pos = args.Length();
-      nsAutoString arg;
-      args.Mid(arg, offset, pos);
-      argArray[i] = ToNewUnicode(arg);
+      argArray[i] = ToNewUnicode(Substring(args, offset, pos));
       if (argArray[i] == nsnull) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         argCount = i - 1; // don't try to free uninitialized memory
