@@ -64,8 +64,11 @@ protected:
 #define DECL_INTERNAL_DOM_EXCEPTION(domname)                                 \
 nsresult                                                                     \
 NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
-                nsIException** aException)
+                nsIException** aException);
 
 
-DECL_INTERNAL_DOM_EXCEPTION(DOMException);
-DECL_INTERNAL_DOM_EXCEPTION(RangeException);
+DECL_INTERNAL_DOM_EXCEPTION(DOMException)
+DECL_INTERNAL_DOM_EXCEPTION(RangeException)
+#ifdef MOZ_SVG
+DECL_INTERNAL_DOM_EXCEPTION(SVGException)
+#endif

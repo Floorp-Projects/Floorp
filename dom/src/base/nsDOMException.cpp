@@ -43,6 +43,9 @@
 #include "nsDOMException.h"
 #include "nsIDOMDOMException.h"
 #include "nsIDOMRangeException.h"
+#ifdef MOZ_SVG
+#include "nsIDOMSVGException.h"
+#endif
 #include "nsString.h"
 #include "prprf.h"
 
@@ -110,11 +113,6 @@ static struct ResultStruct
 static void
 NSResultToNameAndMessage(nsresult aNSResult,
                          const char** aName,
-                         const char** aMessage);
-
-void
-NSResultToNameAndMessage(nsresult aNSResult,
-                         const char** aName,
                          const char** aMessage)
 {
   ResultStruct* result_struct = gDOMErrorMsgMap;
@@ -167,6 +165,25 @@ nsRangeException::GetCode(PRUint16* aCode)
 
   return NS_OK;
 }
+
+#ifdef MOZ_SVG
+IMPL_INTERNAL_DOM_EXCEPTION_HEAD(nsSVGException, nsIDOMSVGException)
+  NS_DECL_NSIDOMSVGEXCEPTION
+IMPL_INTERNAL_DOM_EXCEPTION_TAIL(nsSVGException, nsIDOMSVGException,
+                                 SVGException, NS_ERROR_MODULE_SVG,
+                                 NSResultToNameAndMessage)
+
+NS_IMETHODIMP
+nsSVGException::GetCode(PRUint16* aCode)
+{
+  NS_ENSURE_ARG_POINTER(aCode);
+  nsresult result;
+  GetResult(&result);
+  *aCode = NS_ERROR_GET_CODE(result);
+
+  return NS_OK;
+}
+#endif // MOZ_SVG
 
 
 nsBaseDOMException::nsBaseDOMException()
