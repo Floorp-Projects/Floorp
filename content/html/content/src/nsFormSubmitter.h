@@ -91,7 +91,7 @@ protected:
                                  const nsAString& mCharset);
   static nsresult GetPlatformEncoder(nsIUnicodeEncoder** encoder);
   static PRUint32 GetFileNameWithinPath(nsString& aPathName);
-  static nsresult GetContentType(char* aPathName, char** aContentType);
+  static nsresult GetContentType(const char* aPathName, char** aContentType);
 
   static nsresult GetEnumAttr(nsIForm* form, nsIAtom* atom, PRInt32* aValue);
   static nsresult FullyGetMethod(nsIForm* form, PRInt32* aMethod);

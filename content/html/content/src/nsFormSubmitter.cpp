@@ -86,6 +86,25 @@ static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #define MULTIPART "multipart/form-data"
 #define SEP "--"
 
+/* XXX This should be punted in favor of nsAutoArrayPtr (see
+ * xpcom/base/nsAutoPtr.h) once that class is made public
+ */
+class
+nsStringAutoArrayPtr
+{
+    public:
+        nsStringAutoArrayPtr() : mPtr(0) { }
+        nsStringAutoArrayPtr(nsString* aPtr) : mPtr(aPtr) {}
+        ~nsStringAutoArrayPtr() { delete[] mPtr; }
+
+        operator nsString*() const { return mPtr; }
+        nsString* get() const { return mPtr; }
+
+    private:
+        nsString* mPtr;
+
+};
+
 // End added JBK
 
 // JBK moved from nsFormFrame - bug 34297
@@ -535,10 +554,14 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form,
           continue;
         }
         nsString* names = new nsString[maxNumValues];
+        // XXX use nsAutoArrayPtr instead when that becomes public
+        nsStringAutoArrayPtr  tmpNames(names);
         if (!names) {
           rv = NS_ERROR_OUT_OF_MEMORY;
         } else {
           nsString* values = new nsString[maxNumValues];
+          // XXX use nsAutoArrayPtr instead when that becomes public
+          nsStringAutoArrayPtr  tmpValues(values);
           if (!values) {
             rv = NS_ERROR_OUT_OF_MEMORY;
           } else {
@@ -580,9 +603,7 @@ nsFormSubmitter::ProcessAsURLEncoded(nsIForm* form,
                 delete convValue;
               }
             }
-            delete [] values;
           }
-          delete [] names;
         }
       }
     }
@@ -710,14 +731,18 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
         }
         nsString* names  = new nsString[maxNumValues];
         nsString* values = new nsString[maxNumValues];
+        // XXX use nsAutoArrayPtr instead when that becomes public
+        nsStringAutoArrayPtr tmpNames(names);
+        // XXX use nsAutoArrayPtr instead when that becomes public
+        nsStringAutoArrayPtr tmpValues(values);
         if (NS_FAILED(controlNode->GetNamesValues(maxNumValues, numValues,
                                                   values, names))) {
           continue;
         }
         for (int valueX = 0; valueX < numValues; valueX++) {
-          char* name = nsnull;
-          char* value = nsnull;
-          char* fname = nsnull; // basename (path removed)
+          nsCAutoString name;
+          nsCAutoString value;
+          nsCAutoString fname; // basename (path removed)
 
           nsString valueStr = values[valueX];
           if (aFormProcessor) {
@@ -730,12 +755,12 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
                          "unable to Notify form process observer");
           }
           if (encoder) {
-              name  = UnicodeToNewBytes(names[valueX].get(),
+              name.Adopt(UnicodeToNewBytes(names[valueX].get(),
                                         names[valueX].Length(),
                                         encoder,
                                         aCtrlsModAtSubmit,
                                         aTextDirAtSubmit,
-                                        charset);
+                                        charset));
           }
 
           //use the platformencoder only for values containing file names
@@ -743,48 +768,45 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
           if (NS_FORM_INPUT_FILE == type) {
             fileNameStart = GetFileNameWithinPath(valueStr);
             if (platformencoder) {
-              value  = UnicodeToNewBytes(valueStr.get(),
+              value.Adopt(UnicodeToNewBytes(valueStr.get(),
                                          valueStr.Length(),
                                          platformencoder,
                                          aCtrlsModAtSubmit,
                                          aTextDirAtSubmit,
-                                         charset);
+                                         charset));
 
               // filename with the leading dirs stripped
-              fname = UnicodeToNewBytes(valueStr.get() + fileNameStart,
+              fname.Adopt(UnicodeToNewBytes(valueStr.get() + fileNameStart,
                                         valueStr.Length() - fileNameStart,
                                         platformencoder,
                                         aCtrlsModAtSubmit,
                                         aTextDirAtSubmit,
-                                        charset);
+                                        charset));
             }
           } else {
             if (encoder) {
-              value  = UnicodeToNewBytes(valueStr.get(),
+              value.Adopt(UnicodeToNewBytes(valueStr.get(),
                                          valueStr.Length(),
                                          encoder,
                                          aCtrlsModAtSubmit,
                                          aTextDirAtSubmit,
-                                         charset);
+                                         charset));
             }
           }
 
-          if (!name)
-            name  = ToNewCString(names[valueX]);
-          if (!value)
-            value = ToNewCString(valueStr);
+          if (name.IsEmpty()) 
+            name.Adopt(ToNewCString(names[valueX]));
+          if (value.IsEmpty()) 
+            value.Adopt(ToNewCString(valueStr));
 
           if (names[valueX].IsEmpty()) {
             continue;
           }
 
           // convert value to CRLF line breaks
-          char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
+          value.Adopt(nsLinebreakConverter::ConvertLineBreaks(value.get(),
                            nsLinebreakConverter::eLinebreakAny,
-                           nsLinebreakConverter::eLinebreakNet);
-          if (value)
-            nsMemory::Free(value);
-          value = newValue;
+                           nsLinebreakConverter::eLinebreakNet));
 
           // Add boundary line
           contentLen += sepLen + boundaryLen + crlfLen;
@@ -801,12 +823,12 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
 
           // Add Content-Disp line
           contentLen += contDispLen;
-          contentLen += PL_strlen(name);
+          contentLen += name.Length();
 
           // File inputs also list filename on Content-Disp line
           if (NS_FORM_INPUT_FILE == type) {
             contentLen += PL_strlen(FILENAME);
-            contentLen += PL_strlen(fname);
+            contentLen += fname.Length();
           }
           // End Content-Disp Line (quote plus CRLF)
           contentLen += 1 + crlfLen;  // ending name quote plus CRLF
@@ -814,7 +836,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
           // File inputs add Content-Type line
           if (NS_FORM_INPUT_FILE == type) {
             char* contentType = nsnull;
-            rv = GetContentType(value, &contentType);
+            rv = GetContentType(value.get(), &contentType);
             if (NS_FAILED(rv)) break; // Need to free up anything here?
             contentLen += PL_strlen(CONTENT_TYPE);
             contentLen += PL_strlen(contentType) + crlfLen;
@@ -826,13 +848,13 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
 
           // File inputs add file contents next
           if (NS_FORM_INPUT_FILE == type &&
-              PL_strlen(value)) { // Don't bother if no file specified
+              !value.IsEmpty()) { // Don't bother if no file specified
             do {
               // Because we have a native path to the file we can't use
               // PR_GetFileInfo on the Mac as it expects a Unix style path.
               // Instead we'll use our spiffy new nsILocalFile
               nsILocalFile* tempFile = nsnull;
-              rv = NS_NewLocalFile(value, PR_TRUE, &tempFile);
+              rv = NS_NewLocalFile(value.get(), PR_TRUE, &tempFile);
               NS_ASSERTION(tempFile,
                            "Couldn't create nsIFileSpec to get file size!");
               if (NS_FAILED(rv) || !tempFile)
@@ -853,17 +875,9 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
             contentLen += crlfLen;
           } else {
             // Non-file inputs add value line
-            contentLen += PL_strlen(value) + crlfLen;
+            contentLen += value.Length() + crlfLen;
           }
-          if (name)
-            nsMemory::Free(name);
-          if (value)
-            nsMemory::Free(value);
-          if (fname)
-            nsMemory::Free(fname);
         }
-        delete [] names;
-        delete [] values;
       }
     }
   }
@@ -906,25 +920,29 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
             continue;
           }
           nsString* names  = new nsString[maxNumValues];
+          // XXX use nsAutoArrayPtr instead when that becomes public
+          nsStringAutoArrayPtr tmpNames(names);
           nsString* values = new nsString[maxNumValues];
+          // XXX use nsAutoArrayPtr instead when that becomes public
+          nsStringAutoArrayPtr tmpValues(values);
           if (NS_FAILED(controlNode->GetNamesValues(maxNumValues, numValues,
                                                     values, names))) {
             continue;
           }
           for (int valueX = 0; valueX < numValues; valueX++) {
-            char* name = nsnull;
-            char* value = nsnull;
-            char* fname = nsnull; // basename (path removed)
+            nsCAutoString name;
+            nsCAutoString value;
+            nsCAutoString fname; // basename (path removed)
 
             nsString valueStr = values[valueX];
 
             if (encoder) {
-              name  = UnicodeToNewBytes(names[valueX].get(),
+              name.Adopt(UnicodeToNewBytes(names[valueX].get(),
                                         names[valueX].Length(),
                                         encoder,
                                         aCtrlsModAtSubmit,
                                         aTextDirAtSubmit,
-                                        charset);
+                                        charset));
             }
 
             //use the platformencoder only for values containing file names
@@ -932,48 +950,45 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
             if (NS_FORM_INPUT_FILE == type) {
               fileNameStart = GetFileNameWithinPath(valueStr);
               if (platformencoder) {
-                value = UnicodeToNewBytes(valueStr.get(),
+                value.Adopt(UnicodeToNewBytes(valueStr.get(),
                                           valueStr.Length(),
                                           platformencoder,
                                           aCtrlsModAtSubmit,
                                           aTextDirAtSubmit,
-                                          charset);
+                                          charset));
 
                 // filename with the leading dirs stripped
-                fname = UnicodeToNewBytes(valueStr.get() + fileNameStart,
+                fname.Adopt(UnicodeToNewBytes(valueStr.get() + fileNameStart,
                                           valueStr.Length() - fileNameStart,
                                           platformencoder,
                                           aCtrlsModAtSubmit,
                                           aTextDirAtSubmit,
-                                          charset);
+                                          charset));
               }
             } else {
               if (encoder) {
-                  value = UnicodeToNewBytes(valueStr.get(),
+                  value.Adopt(UnicodeToNewBytes(valueStr.get(),
                                             valueStr.Length(),
                                             encoder,
                                             aCtrlsModAtSubmit,
                                             aTextDirAtSubmit,
-                                            charset);
+                                            charset));
               }
             }
 
-            if (!name)
-              name  = ToNewCString(names[valueX]);
-            if (!value)
-              value = ToNewCString(valueStr);
-
+            if (name.IsEmpty()) 
+              name.Adopt(ToNewCString(names[valueX]));
+            if (value.IsEmpty()) 
+              value.Adopt(ToNewCString(valueStr));
+            
             if (names[valueX].IsEmpty()) {
               continue;
             }
 
             // convert value to CRLF line breaks
-            char* newValue = nsLinebreakConverter::ConvertLineBreaks(value,
+            value.Adopt(nsLinebreakConverter::ConvertLineBreaks(value.get(),
                              nsLinebreakConverter::eLinebreakAny,
-                             nsLinebreakConverter::eLinebreakNet);
-            if (value)
-              nsMemory::Free(value);
-            value = newValue;
+                             nsLinebreakConverter::eLinebreakNet));
 
             // Print boundary line
             sprintf(buffer, SEP "%s" CRLF, boundary);
@@ -1004,8 +1019,8 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
             wantbytes = contDispLen;
             rv = outStream->Write(CONTENT_DISP, wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-            wantbytes = PL_strlen(name);
-            rv = outStream->Write(name, wantbytes, &gotbytes);
+            wantbytes = name.Length();
+            rv = outStream->Write(name.get(), wantbytes, &gotbytes);
             if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs also list filename on Content-Disp line
@@ -1013,8 +1028,8 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
               wantbytes = PL_strlen(FILENAME);
               rv = outStream->Write(FILENAME, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
-              wantbytes = PL_strlen(fname);
-              rv = outStream->Write(fname, wantbytes, &gotbytes);
+              wantbytes = fname.Length();
+              rv = outStream->Write(fname.get(), wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
 
@@ -1026,7 +1041,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
             // File inputs write Content-Type line
             if (NS_FORM_INPUT_FILE == type) {
               char* contentType = nsnull;
-              rv = GetContentType(value, &contentType);
+              rv = GetContentType(value.get(), &contentType);
               if (NS_FAILED(rv)) break;
               wantbytes = PL_strlen(CONTENT_TYPE);
               rv = outStream->Write(CONTENT_TYPE, wantbytes, &gotbytes);
@@ -1054,7 +1069,7 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
                            "Post content file couldn't be created!");
               // NS_ERROR_OUT_OF_MEMORY
               if (NS_FAILED(rv) || !contentFile) break;
-              rv = contentFile->SetNativePath(value);
+              rv = contentFile->SetNativePath(value.get());
               NS_ASSERTION(contentFile,
                            "Post content file path couldn't be set!");
               if (NS_FAILED(rv)) {
@@ -1082,22 +1097,14 @@ nsFormSubmitter::ProcessAsMultipart(nsIForm* form,
 
             // Non-file inputs print value line
             else {
-              wantbytes = PL_strlen(value);
-              rv = outStream->Write(value, wantbytes, &gotbytes);
+              wantbytes = value.Length();
+              rv = outStream->Write(value.get(), wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
               wantbytes = PL_strlen(CRLF);
               rv = outStream->Write(CRLF, wantbytes, &gotbytes);
               if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
             }
-            if (name)
-              nsMemory::Free(name);
-            if (value)
-              nsMemory::Free(value);
-            if (fname)
-              nsMemory::Free(fname);
           }
-          delete [] names;
-          delete [] values;
         }
       }
     }
@@ -1444,14 +1451,14 @@ nsFormSubmitter::GetFileNameWithinPath(nsString& aPathName)
 
 // static
 nsresult
-nsFormSubmitter::GetContentType(char* aPathName, char** aContentType)
+nsFormSubmitter::GetContentType(const char* aPathName, char** aContentType)
 {
   nsresult rv = NS_OK;
   NS_ASSERTION(aContentType, "null pointer");
 
   if (aPathName && *aPathName) {
     // Get file extension and mimetype from that.g936
-    char* fileExt = aPathName + nsCRT::strlen(aPathName);
+    const char* fileExt = aPathName + nsCRT::strlen(aPathName);
     while (fileExt > aPathName) {
       if (*(--fileExt) == '.') {
         break;
