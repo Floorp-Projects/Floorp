@@ -71,6 +71,7 @@
 #include "nsIPrincipal.h"
 
 #include "nsPIDOMWindow.h"
+#include "nsIDOMDocument.h"
 
 // For reporting errors with the console service.
 // These can go away if error reporting is propagated up past nsDocShell.
@@ -1971,11 +1972,19 @@ NS_IMETHODIMP nsDocShell::GetMainWidget(nsIWidget** aMainWidget)
 
 NS_IMETHODIMP nsDocShell::SetFocus()
 {
-   nsCOMPtr<nsIWidget> mainWidget;
-   GetMainWidget(getter_AddRefs(mainWidget));
-   if(mainWidget)
-      mainWidget->SetFocus();
-   return NS_OK;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (doc) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo;
+    doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+    if (sgo) {
+      nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
+      if (domwin)
+        domwin->Focus();
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
