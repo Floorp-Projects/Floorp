@@ -1,0 +1,17 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+
+<!--
+
+  These are the panels that will be displayed in the sidebar.
+
+-->
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Seq about="urn:sidebar:current-panel-list">
+    <RDF:li resource="urn:sidebar:panel:whats-related" />
+    <RDF:li resource="urn:sidebar:panel:tinderbox" />
+    <RDF:li resource="urn:sidebar:panel:bookmarks" />
+  </RDF:Seq>
+</RDF:RDF>
