@@ -26,11 +26,8 @@ DLL = $(OBJDIR)\MyService.dll
 LINCS = -I.. -I$(PUBLIC)\xpcom
 
 LLIBS=				\
- $(DIST)\lib\xpcom.lib	\
- $(LIBNSPR)			\
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
+ $(DIST)\lib\xpcom.lib		\
+ $(LIBNSPR)
 
 CPPSRCS =				\
 	MyService.cpp			\
