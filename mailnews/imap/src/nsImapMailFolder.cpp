@@ -1457,7 +1457,6 @@ NS_IMETHODIMP nsImapMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
     nsresult rv = NS_ERROR_FAILURE;
     return rv;
 }
-
     
 NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 * size)
 {
@@ -1945,7 +1944,9 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
             }
             else
             {
+                EnableNotifications(allMessageCountNotifications, PR_FALSE);  //"remove it immediately" model
                 mDatabase->DeleteMessages(&srcKeyArray,NULL);
+                EnableNotifications(allMessageCountNotifications, PR_TRUE);
                 NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);            
             }
             
@@ -3900,16 +3901,13 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           }
           if (m_copyState)
           {
+            nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(m_copyState->m_srcSupport, &rv);
             if (NS_SUCCEEDED(aExitCode))
             {
               if (m_copyState->m_isMove && !m_copyState->m_isCrossServerOp)
               {
-                nsCOMPtr<nsIMsgFolder> srcFolder;
-                srcFolder =
-                    do_QueryInterface(m_copyState->m_srcSupport,
-                                      &rv);
                 nsCOMPtr<nsIMsgDatabase> srcDB;
-                if (NS_SUCCEEDED(rv))
+                if (srcFolder)
                     rv = srcFolder->GetMsgDatabase(aWindow,
                         getter_AddRefs(srcDB));
                 if (NS_SUCCEEDED(rv) && srcDB)
@@ -3930,14 +3928,13 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                   }
                  
                   if (!ShowDeletedMessages())
-                  {
-                    EnableNotifications(allMessageCountNotifications, PR_FALSE);
-                    srcDB->DeleteMessages(&srcKeyArray, nsnull);
-                    EnableNotifications(allMessageCountNotifications, PR_TRUE);
-                  }
+                    srcDB->DeleteMessages(&srcKeyArray, nsnull);  
                   else
                     MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, srcDB);
+                  
+                  srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
                 }
+                
                 // even if we're showing deleted messages, 
                 // we still need to notify FE so it will show the imap deleted flag
                 srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
@@ -3950,6 +3947,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                   txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
               }
             }
+            else if (m_copyState->m_isMove && !m_copyState->m_isCrossServerOp && srcFolder)
+               srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);  //enable message count notification even if we failed.
             if (m_copyState->m_listener)
               listener = do_QueryInterface(m_copyState->m_listener);
             ClearCopyState(aExitCode);
@@ -5260,6 +5259,9 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
 
   m_copyState->m_curIndex = m_copyState->m_totalCount;
 
+  if (isMove)
+    srcFolder->EnableNotifications(allMessageCountNotifications, PR_FALSE);  //disable message count notification 
+
   copySupport = do_QueryInterface(m_copyState);
   if (imapService)
   rv = imapService->OnlineMessageCopy(m_eventQueue,
@@ -5772,7 +5774,6 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         rv = CreateUnicodeStringFromUtf7(proposedDBName.get(), getter_Copies(unicodeName));
         if (NS_SUCCEEDED(rv) && unicodeName)
           child->SetName(unicodeName);
-
         imapFolder = do_QueryInterface(child);
 
         if (imapFolder)
