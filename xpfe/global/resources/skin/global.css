@@ -71,14 +71,6 @@ box {
    overflow: hidden;
 }
 
-
-
-/******* Scrollbar *******/
-
-scrollbar { 
-  user-focus:ignore; 
-} 
-
 /******* ToolBox & ToolBar *******/
 
 toolbox { 
@@ -615,30 +607,6 @@ splitter.gray-horizontal-splitter #endcap {
 	max-width: 8px;
 }
 
-
-/****** Progress Meter ********/
-
-progressmeter[align="horizontal"] {
-	height: 1em;
-}
-
-box.progress-bar {
-	background-color : #9999cc;
-}
-
-box.progress-remainder {
-	background-color: #999999;
-}
-
-progressmeter[mode="undetermined"] > .internal-box
-{
-  background-image: url(chrome://global/skin/progressmeter-busy.gif);
-}
-
-progressmeter[mode="undetermined"] > .internal-box > stack > progressbar
-{
-  display: none;
-}
 
 /********* Box ********/
 
@@ -1739,82 +1707,136 @@ html|select[size="1"]:-moz-display-comboboxcontrol-frame:focus {
   border: none;
 }
 
-toolbarseparator.line {
-  width: 30px;
-  border : 1px solid red;
-  background-color: #99CCCC;
-}
+/** separator rules **/
+/* standard separators */
+  separator, separator[orient="horizontal"] 
+    {
+      height: 1.5em;
+    }
+  
+  separator[orient="vertical"] 
+    {
+      width: 1.5em;
+    }
 
-/* NEW WIDGET LANDING: <separator> */
-separator, separator[orient="horizontal"] {
-  height: 1.5em;
-}
+/* thinner separators (50% size) */
+  separator.thin, separator.thin[orient="horizontal"] 
+    {
+      height: 0.5em;
+    }
+  
+  separator.thin[orient="vertical"] 
+    {
+      width: 0.5em;
+    }
 
-separator[orient="vertical"] {
-  width: 1.5em;
-}
+/* groove separators (50% size) */
+  separator.groove,
+  separator.groove[orient="horizontal"] 
+    {
+      border-top: 2px groove #CCCCCC;
+      height: 0px;
+      margin-top: 0.4em;
+      margin-bottom: 0.4em;
+    }
+  
+  separator.groove[orient="vertical"] 
+    {
+      border-left: 2px groove #CCCCCC;
+      margin-left: 0.4em;
+      margin-right: 0.4em;
+    }
+  
+/* groove separators (0 padding, for dividing effects) */  
+  separator.groove-thin 
+    {
+      border-top: 2px groove #CCCCCC;
+      height: 0px;
+    }
+  
+  separator[orient="vertical"].groove-thin 
+    {
+      border-left: 2px groove #CCCCCC;
+    }
 
-separator.thin, separator.thin[orient="horizontal"] {
-  height: 0.5em;
-}
+/** text formatting rules **/
+/* label (with margins) */
+  text.label 
+    {
+      margin              : 1px 5px 2px 5px;
+    }
+    
+  text[disabled="true"] 
+    {
+      color                 : #999999;
+    }    
+    
+  html
+    {
+      margin              : 5px;
+      cursor              : default;
+    }
 
-separator.thin[orient="vertical"] {
-  width: 0.5em;
-}
+  html.header 
+    {
+      font-weight         : bold;
+    }
 
-separator.groove,
-separator.groove[orient="horizontal"] {
-  border-top: 2px groove #CCCCCC;
-  height: 0px;
-  margin-top: 0.4em;
-  margin-bottom: 0.4em;
-}
+/** XUL <progressmeter> **/
 
-separator[type="groove"][orient="vertical"] {
-  border-left: 2px groove #CCCCCC;
-  margin-left: 0.4em;
-  margin-right: 0.4em;
-}
+/* outer frame */
+  progressmeter 
+    {
+      margin              : 0px 4px 0px 4px;
+      border              : 1px inset #CCCCCC;
+      max-height          : 1.5em;
+    }
 
-separator.groove-thin {
-  border-top: 2px groove #CCCCCC;
-  height: 0px;
-}
+/* progress indicators */
+  box.progress-bar 
+    {
+	    background-color    : #6699cc;
+      border-right        : 1px outset #6699cc;
+    }
+  
+  box.progress-remainder 
+    {
+	    background-color    : #999999;
+    }
 
-separator.groove-thin {
-  border-left: 2px groove #CCCCCC;
-}
+  progressmeter[mode="undetermined"] > .internal-box > stack > progressbar
+    {
+      display             : none;
+    }
 
-/* NEW WIDGET LANDING: <text> rules */
-text.label {
-  margin: 1px 5px 2px 5px;
-}
+/* internal frame */
+  progressmeter > .internal-box 
+    {
+      border              : 1px solid #000000;
+    }
 
-html {
-  margin: 5px;
-  cursor: default;
-}
+  progressmeter[mode="undetermined"] > .internal-box
+    {
+      background-image    : url(chrome://global/skin/progressmeter-busy.gif);
+    }
 
-html.header {
-  font-weight: bold;
-}
+    
+    
+/** box formatting **/
+  box[autostretch="never"][valign="center"] 
+    {
+      vertical-align      : middle;
+    }
+  
+  box[autostretch="never"][orient="vertical"][halign="center"] 
+    {
+      text-align          : center;
+    }
 
-progressmeter {
-  margin: 0px 4px 0px 4px;
-}
-
-/* NEW WIDGETS <box> formatting */
-box[autostretch="never"][valign="center"] {
-  vertical-align: middle;
-}
-
-box[autostretch="never"][orient="vertical"][halign="center"] {
-  text-align: center;
-}
-
-text[disabled="true"] 
-  {
-    color                 : #999999;
-  }
+/** XUL <scrollbar> element **/
+  scrollbar 
+    { 
+      user-focus          : ignore; 
+    } 
 
 

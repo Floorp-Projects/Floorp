@@ -67,12 +67,12 @@
       border-bottom       : 1px inset #CCCCCC;
     }
     
-  menubutton menupopup menuitem
+  menubutton > menupopup > menuitem
     {
       padding             : 0px 0px 0px 3px;
     }
 
-  menubutton menupopup menuitem > .menu-left
+  menubutton > menupopup > menuitem > .menu-left
     {
       display             : none;
     }

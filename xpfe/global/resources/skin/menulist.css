@@ -147,27 +147,27 @@
       border-top          : 0px;
     }
     
-  menulist menupopup > menuseparator 
+  menulist > menupopup > menuseparator 
     {
       border-bottom       : 2px groove #CCCCCC;
     }
 
-  menulist menupopup > menuitem 
+  menulist > menupopup > menuitem 
     {
       padding             : 0px;
     }
 
-  menulist menupopup > menuitem > .menu-left 
+  menulist > menupopup > menuitem > .menu-left 
     {
       width               : 13px;
     }
 
-  menulist menupopup > menuitem[selected="true"] > .menu-left
+  menulist > menupopup > menuitem[selected="true"] > .menu-left
     {
       list-style-image    : url(chrome://global/skin/menu-check.gif);
     }
   
-  menulist menupopup > menuitem[menuactive="true"][selected="true"] > .menu-left
+  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-left
     {
       list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
     }
