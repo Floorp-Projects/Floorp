@@ -45,6 +45,9 @@ nsSplittableFrame::Init(nsIPresContext&  aPresContext,
     if (state & NS_FRAME_REPLACED_ELEMENT) {
       mState |= NS_FRAME_REPLACED_ELEMENT;
     }
+    if (state & NS_FRAME_SELECTED_CONTENT) {
+      mState |= NS_FRAME_SELECTED_CONTENT;
+    }
   }
 
   return rv;

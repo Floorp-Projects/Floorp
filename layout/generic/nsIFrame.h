@@ -44,7 +44,7 @@ class nsStyleChangeList;
 struct nsPoint;
 struct nsRect;
 struct nsStyleStruct;
-struct nsSelectionStruct;
+class  nsIDOMRange;
 
 struct PRLogModuleInfo;
 
@@ -126,6 +126,9 @@ typedef PRUint32 nsFrameState;
 // If this bit is set, then the frame is has been moved out of the flow,
 // e.g., it is absolutely positioned or floated
 #define NS_FRAME_OUT_OF_FLOW 0x00000100
+
+// If this bit is set, then the frame reflects content that may be selected
+#define NS_FRAME_SELECTED_CONTENT 0x00000200
 
 // The low 16 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED 0x0000FFFF
@@ -579,21 +582,13 @@ public:
    *  Called to set the selection of the frame based on frame offsets.  you can FORCE the frame
    *  to redraw event if aSelected == the frame selection with the last parameter.
    *  data in struct may be changed when passed in.
-   *  @param nsSelectionStruct will hold the data pertinant to the Selection,  Selected or not ect.
+   *  @param aRange is the range that will dictate if the frames need to be redrawn null means the whole content needs to be redrawn
+   *  @param aSelected is it selected
+   *  @param aSpread should is spread selection to flow elements around it?
    */
-  NS_IMETHOD  SetSelected(nsSelectionStruct *) = 0;
+  NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread) = 0;
 
-  /** 
-   * Called to start a selection with this frame content.  
-   * @param aSS is the struct that holds the data instead of passing in so many parameters
-   * @param aFocusTracker will allow the frame to set the focus to what it needs.
-   * @param return value of which frame (maybe not this one, maybe one of its siblings)
-   */
-  NS_IMETHOD  SetSelectedContentOffsets(nsSelectionStruct *aSS,
-                                        nsIFocusTracker *aTracker,
-                                        nsIFrame **aActualSelected)=0;
-
-  NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset) = 0;
+  NS_IMETHOD  GetSelected(PRBool *aSelected) const = 0;
 
   /**
    *  called to find the previous/next character, word, or line  returns the actual 
@@ -609,7 +604,7 @@ public:
    *  @param aEatingWS boolean to tell us the state of our search for Next/Prev
    */
   NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                         nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset, PRBool aEatingWS) = 0;
+                         nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset, PRBool aEatingWS) const = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add

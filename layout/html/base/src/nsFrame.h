@@ -208,14 +208,11 @@ public:
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
   NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
   NS_IMETHOD  VerifyTree() const;
-  NS_IMETHOD  SetSelected(nsSelectionStruct *);
-  NS_IMETHOD  SetSelectedContentOffsets(nsSelectionStruct *aSS, 
-                                        nsIFocusTracker *aTracker,
-                                        nsIFrame **aActualSelected);
-  NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
+  NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread);
+  NS_IMETHOD  GetSelected(PRBool *aSelected) const;
   NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset, 
                            nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset,
-                           PRBool aEatingWS);
+                           PRBool aEatingWS)const;
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
 
@@ -352,7 +349,6 @@ protected:
   nsIFrame*        mParent;
   nsIFrame*        mNextSibling;  // singly linked list of frames
   nsFrameState     mState;
-  PRBool           mSelected;
 
   ///////////////////////////////////
   // Important Selection Variables
