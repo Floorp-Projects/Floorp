@@ -179,7 +179,7 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
     char *currLCSec = (char *) malloc(strlen(LEGACY_CHECKd) + 1);
     if (!currLCSec) return E_MEM;
     char *currVal = NULL;
-    nsObjectIgnore *currOI = NULL, *lastOI = NULL, *nextOI = NULL;
+    nsObjectIgnore *currOI = NULL, *nextOI = NULL;
     char *currFile = NULL, *currMsg = NULL;
     nsLegacyCheck *currLC = NULL, *nextLC = NULL;
     nsComponent *currComp = NULL;
@@ -220,8 +220,6 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
             XI_IF_FREE(mTitle); 
 
     /* Objects to Ignore */
-    sObjectsToIgnore = new nsObjectIgnore();
-    currOI = sObjectsToIgnore;
     for (i = 0; i < MAX_LEGACY_CHECKS; i++)
     {
         // construct key name based on index
@@ -230,7 +228,7 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
 
         // get ObjectToIgnore key
         bufsize = 0;
-        err = aParser->GetStringAlloc(CLEAN_UPGRADE, currOIKey, &currVal, &bufsize);
+        err = aParser->GetStringAlloc(CLEAN_UPGRADE, currOIKey, &currFile, &bufsize);
         if (err != OK) 
         { 
             if (err != nsINIParser::E_NO_SEC &&
@@ -238,21 +236,22 @@ nsSetupTypeDlg::Parse(nsINIParser *aParser)
             else 
             {
                 err = OK; 
-                XI_IF_DELETE(currOI);
-                if (lastOI)
-                    lastOI->InitNext();
                 break; 
             } 
         }
-        currOI->SetFilename(currVal);
+        nextOI = new nsObjectIgnore(currFile);
 
-        nextOI = new nsObjectIgnore();
-        currOI->SetNext(nextOI);
-        lastOI = currOI;
+        if (currOI)
+        {
+           currOI->SetNext(nextOI);
+        }
+        else if (!sObjectsToIgnore)
+        {
+           sObjectsToIgnore = nextOI;
+        }
+
         currOI = nextOI;
     }
-    if (i == 0) // none found
-        sObjectsToIgnore = NULL;
 
     /* legacy check */
     for (i = 0; i < MAX_LEGACY_CHECKS; i++)

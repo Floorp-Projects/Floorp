@@ -46,14 +46,12 @@
 class nsObjectIgnore
 {
 public:
-    nsObjectIgnore();
+    nsObjectIgnore(char *aFilename);
     ~nsObjectIgnore();
 
-    int             SetFilename(char *aFilename);
     char            *GetFilename();
     int             SetNext(nsObjectIgnore *aNext);
     nsObjectIgnore  *GetNext();
-    int             InitNext();
 
 private:
     char            *mFilename;
