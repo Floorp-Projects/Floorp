@@ -31,11 +31,17 @@ static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
 extern "C" gboolean nsTimerExpired(gpointer aCallData);
 
-/* Just linear interpolation. Is this good? */
+/* Note that "priority" in terms of glib is in the sense of the priority the 
+   timer has in the face of other dispatchable items in the glib inner loop, 
+   not relative timer priorities. There is a small danger here that was exposed    by appshellservice, which at one point used timers in handling apshell exit 
+   cleanup. In the face of it receiving g_io dispatches from glib, it never was
+   seeing the timer, and thus we hung (see bug 27855). Ultimately we fixed the
+   problem by avoiding the use of timers. IMHO, the safest thing for us to do 
+   here would be to always set a priority of G_PRIORITY_DEFAULT. */
+
 static gint calc_priority(PRUint32 aPriority)
 {
-  int pri = ((G_PRIORITY_HIGH-G_PRIORITY_LOW)*(int)aPriority)/NS_PRIORITY_HIGHEST + G_PRIORITY_LOW;
-  return pri;
+	return G_PRIORITY_DEFAULT;
 }
 
 PRBool nsTimerGtk::FireTimeout()
