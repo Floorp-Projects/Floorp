@@ -373,28 +373,32 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
         nsCAutoString buffer;
         PRInt32 semicolon;
 
-        // Set the content-type in the HTTPChannel...
-        semicolon = aValue.FindChar(';');
-        if (kNotFound != semicolon) {
-            aValue.Left(buffer, semicolon);
-            SetContentType(buffer.GetBuffer());
+        // we don't care about comments
+        PRInt32 parenLoc = aValue.FindChar('(');
+        if (parenLoc > -1) {
+            aValue.Truncate(parenLoc);
+            aValue.Trim(" ", PR_FALSE);
+        }
 
-            // Does the Content-Type contain a charset attribute?
-            aValue.Mid(buffer, semicolon+1, -1);
-            buffer.Trim(" ");
-            if (0 == buffer.Find("charset=", PR_TRUE)) {
-                //
-                // Set the charset in the HTTPChannel...
-                //
-                // XXX: Currently, the charset is *everything* past the "charset="
-                //      This includes comments :-(
-                //
-                buffer.Cut(0, 8);
-                SetCharset(buffer.GetBuffer());
+        if (!aValue.IsEmpty()) {
+            // Set the content-type in the HTTPChannel...
+            semicolon = aValue.FindChar(';');
+            if (kNotFound != semicolon) {
+                aValue.Left(buffer, semicolon);
+                SetContentType(buffer.GetBuffer());
+
+                // Does the Content-Type contain a charset attribute?
+                aValue.Mid(buffer, semicolon+1, -1);
+                buffer.Trim(" ");
+                if (0 == buffer.Find("charset=", PR_TRUE)) {
+                    // Set the charset in the HTTPChannel...
+                    buffer.Cut(0, 8);
+                    SetCharset(buffer.GetBuffer());
+                }
+            } 
+            else {
+                SetContentType(aValue.GetBuffer());
             }
-        } 
-        else {
-            SetContentType(aValue.GetBuffer());
         }
     }
     //
