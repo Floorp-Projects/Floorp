@@ -245,6 +245,11 @@ void UninitExposeEvent(GdkEventExpose *aGEE,
 
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
 {
+  // For now (obviously this will need to change for IME),
+  // only set a char code if the result is printable:
+  if (!isprint(aGEK->string[0]))
+    return 0;
+
   // ALT keys in gdk give the upper case character in string,
   // but we want the lower case char in char code
   // unless shift was also pressed.
@@ -294,19 +299,26 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
   anEvent.widget = (nsWidget*)p;
 
   if (aGEK!=nsnull) {
-    anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
     anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
+    if (anEvent.charCode == 0)
+    {
+      anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
+      anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
+      anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+    }
+    else
+    {
+      anEvent.isControl = PR_FALSE;
+      anEvent.isAlt = PR_FALSE;
+    }
 #ifdef DEBUG_pavlov
     g_print("%s\n", aGEK->string);
 #endif
     anEvent.time = aGEK->time;
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.point.x = 0;
     anEvent.point.y = 0;
   }
-
 }
 
 //=============================================================
