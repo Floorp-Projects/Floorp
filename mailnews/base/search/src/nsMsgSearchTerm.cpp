@@ -22,6 +22,7 @@
 
 #include "msgCore.h"
 #include "nsMsgSearchCore.h"
+#include "nsIMsgSearchSession.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgSearchTerm.h"
