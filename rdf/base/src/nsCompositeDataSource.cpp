@@ -396,7 +396,7 @@ public:
             if (NS_FAILED(rv)) return;
             rv = predRes->GetValue(&predicate);
             if (NS_FAILED(rv)) return;
-            if (NS_SUCCEEDED(valueNode->QueryInterface(nsIRDFResource::IID(), (void**)&valRes))) {
+            if (NS_SUCCEEDED(valueNode->QueryInterface(nsIRDFResource::GetIID(), (void**)&valRes))) {
                 rv = valRes->GetValue((const char**)&value);
                 if (NS_FAILED(rv)) return;
                 NS_RELEASE(valRes);
