@@ -37,6 +37,14 @@
 #include "nsplugindefs.h"
 #include "nsIFactory.h"
 
+// {df773070-0199-11d2-815b-006008119d7a}
+#define NS_IPLUGIN_IID \
+{ 0xdf773070, 0x0199, 0x11d2, { 0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a } }
+
+// {ffc63200-cf09-11d2-a5a0-bc8f7ad21dfc}
+#define NS_PLUGIN_CID \
+{ 0xffc63200, 0xcf09, 0x11d2, { 0xa5, 0xa0, 0xbc, 0x8f, 0x7a, 0xd2, 0x1d, 0xfc } }
+
 /**
  * The nsIPlugin interface is the minimum interface plugin developers need to 
  * support in order to implement a plugin. The plugin manager may QueryInterface 
@@ -56,6 +64,7 @@
  */
 struct nsIPlugin : public nsIFactory {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGIN_IID)
 
     /**
      * Initializes the plugin and will be called before any new instances are
@@ -107,14 +116,6 @@ public:
     NS_IMETHOD
     GetValue(nsPluginVariable variable, void *value) = 0;
 };
-
-#define NS_IPLUGIN_IID                               \
-{ /* df773070-0199-11d2-815b-006008119d7a */         \
-    0xdf773070,                                      \
-    0x0199,                                          \
-    0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
