@@ -224,11 +224,10 @@ private:
 
   /**
    * 0 is the current image being displayed on the screen.
-   * 1 is for the lowsrc image if any.
-   * 2 is for attribute changed images.
-   * when the load from 2 completes, it will replace 0.
+   * 1 is for attribute changed images.
+   * when the load from 1 completes, it will replace 0.
    */
-  struct ImageLoad mLoads[3];
+  struct ImageLoad mLoads[2];
 
   nsSize mComputedSize;
   nsSize mIntrinsicSize;

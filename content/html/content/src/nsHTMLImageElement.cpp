@@ -252,7 +252,6 @@ nsHTMLImageElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, LowSrc, lowsrc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Alt, alt)
@@ -260,7 +259,6 @@ NS_IMPL_INT_ATTR(nsHTMLImageElement, Border, border)
 NS_IMPL_INT_ATTR(nsHTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
