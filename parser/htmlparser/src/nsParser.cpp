@@ -445,14 +445,14 @@ eParseMode DetermineParseMode(nsParser& aParser) {
     nsString& theBuffer=theScanner->GetBuffer();
     theBuffer.Left(theBufCopy,125);
     PRInt32 theIndex=theBufCopy.Find("<!");
-    if(theIndex!=kNotFound) 
-      theIndex=theBufCopy.Find("DOCTYPE",PR_TRUE,2);
+    theIndex=(theIndex!=kNotFound)? theIndex=theBufCopy.Find("DOCTYPE",PR_TRUE,2):kNotFound;
 
     if(kNotFound<theIndex) {
       //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
+      theBufCopy.StripWhitespace();
       PRInt32 theSubIndex=theBufCopy.FindChar(kGreaterThan,theIndex+1);
       theBufCopy.Truncate(theSubIndex);
-      theSubIndex=theBufCopy.Find("HTML 4.0",PR_TRUE,theIndex+8);
+      theSubIndex=theBufCopy.Find("HTML4.0",PR_TRUE,theIndex+8);
       if(kNotFound<theSubIndex) {
         if(theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex)>kNotFound)
           return eParseMode_navigator;
@@ -463,6 +463,13 @@ eParseMode DetermineParseMode(nsParser& aParser) {
           return eParseMode_navigator; // XXX -HACK- Set the appropriate mode.
         else
           return eParseMode_noquirks;
+      }
+      theSubIndex=theBufCopy.Find("ISO/IEC15445:1999",PR_TRUE,theIndex+8);
+      if(kNotFound<theSubIndex) {
+        theSubIndex=theBufCopy.Find("HTML",PR_TRUE,theSubIndex+18);
+        if(kNotFound==theSubIndex)
+          theSubIndex=theBufCopy.Find("HYPERTEXTMARKUPLANGUAGE",PR_TRUE,theSubIndex+18);
+        return eParseMode_noquirks;
       }
     }
 
