@@ -33,6 +33,7 @@
 #include "nsCRT.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
+#include "nsReadableUtils.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -908,8 +909,8 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     } else if (type.Equals("UTF8_STRING")) {
       if (clipboardData) {
         PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
-        nsString str(castedUnicode, dataLength);
-        char *utf8String = str.ToNewUTF8String();
+        char *utf8String =
+            ToNewUTF8String(nsDependentString(castedUnicode, dataLength/2));
         nsMemory::Free(NS_REINTERPRET_CAST(char*, clipboardData));
         clipboardData = utf8String;
         dataLength = strlen(utf8String);
