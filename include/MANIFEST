@@ -20,7 +20,6 @@ edt.h
 edttypes.h
 fe_proto.h
 fe_rgn.h
-fullsoft.h
 garray.h
 glhist.h
 gui.h
