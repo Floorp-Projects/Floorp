@@ -635,6 +635,11 @@ FrameArena::AllocateFrame(size_t aSize, void** aResult)
 nsresult
 FrameArena::FreeFrame(size_t aSize, void* aPtr)
 {
+#ifdef DEBUG
+  // Mark the memory with 0xdd in DEBUG builds so that there will be
+  // problems if someone tries to access memory that they've freed.
+  memset(aPtr, 0xdd, aSize);
+#endif
 #if defined(DEBUG_TRACEMALLOC_FRAMEARENA)
   PR_Free(aPtr);
 #else
