@@ -522,15 +522,14 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
     SetCertificateID(aToken);
   }
   else {
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), aToken, nsnull);
+    nsresult rv = NS_NewURI(getter_AddRefs(mCodebase), aToken, nsnull);
     if (NS_FAILED(rv)) {
       NS_ERROR("Malformed URI in capability.principal preference.");
       return rv;
     }
 
     nsCAutoString token;
-    rv = uri->GetSpec(token);
+    rv = mCodebase->GetSpec(token);
     if (NS_FAILED(rv)) {
       return rv;
     }
