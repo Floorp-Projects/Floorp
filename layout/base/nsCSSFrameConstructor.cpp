@@ -9916,6 +9916,30 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
 }
 
 void
+nsCSSFrameConstructor::RestyleElement(nsIPresContext *aPresContext,
+                                      nsIContent     *aContent,
+                                      nsIFrame       *aPrimaryFrame)
+{
+  if (aPrimaryFrame) {
+    nsStyleChangeList changeList;
+    nsChangeHint frameChange = NS_STYLE_HINT_NONE;
+    aPresContext->GetPresShell()->GetFrameManager()->
+      ComputeStyleChangeFor(aPrimaryFrame, kNameSpaceID_Unknown, nsnull,
+                            changeList, NS_STYLE_HINT_NONE, frameChange);
+
+    if (frameChange & nsChangeHint_ReconstructFrame) {
+      RecreateFramesForContent(aPresContext, aContent);
+      changeList.Clear();
+    } else {
+      ProcessRestyledFrames(changeList, aPresContext);
+    }
+  } else {
+    // no frames, reconstruct for content
+    MaybeRecreateFramesForContent(aPresContext, aContent);
+  }
+}
+
+void
 nsCSSFrameConstructor::RestyleLaterSiblings(nsIPresContext *aPresContext,
                                             nsIContent *aContent)
 {
@@ -9924,7 +9948,6 @@ nsCSSFrameConstructor::RestyleLaterSiblings(nsIPresContext *aPresContext,
     return; // root element has no later siblings
 
   nsIPresShell *shell = aPresContext->GetPresShell();
-  nsIFrameManager *frameManager = shell->GetFrameManager();
 
   for (PRInt32 index = parent->IndexOf(aContent) + 1,
                index_end = parent->GetChildCount();
@@ -9935,24 +9958,7 @@ nsCSSFrameConstructor::RestyleLaterSiblings(nsIPresContext *aPresContext,
 
     nsIFrame* primaryFrame = nsnull;
     shell->GetPrimaryFrameFor(child, &primaryFrame);
-    if (primaryFrame) {
-      nsStyleChangeList changeList;
-      nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-      frameManager->ComputeStyleChangeFor(primaryFrame, 
-                                          kNameSpaceID_Unknown, nsnull,
-                                          changeList, NS_STYLE_HINT_NONE,
-                                          frameChange);
-
-      if (frameChange & nsChangeHint_ReconstructFrame) {
-        RecreateFramesForContent(aPresContext, child);
-        changeList.Clear();
-      } else {
-        ProcessRestyledFrames(changeList, aPresContext);
-      }
-    } else {
-      // no frames, reconstruct for content
-      MaybeRecreateFramesForContent(aPresContext, child);
-    }
+    RestyleElement(aPresContext, child, primaryFrame);
   }
 }
 
@@ -9963,27 +9969,21 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
                                             PRInt32 aStateMask) 
 {
   DoContentStateChanged(aPresContext, aContent1, aStateMask);
-  return DoContentStateChanged(aPresContext, aContent2, aStateMask);
+  DoContentStateChanged(aPresContext, aContent2, aStateMask);
+  return NS_OK;
 }
 
-nsresult
+void
 nsCSSFrameConstructor::DoContentStateChanged(nsIPresContext* aPresContext, 
                                              nsIContent* aContent,
                                              PRInt32 aStateMask) 
 {
-  nsresult  result = NS_OK;
-
   nsIPresShell *shell = aPresContext->GetPresShell();
 
   NS_ASSERTION(shell, "couldn't get pres shell");
   if (shell) {
     nsStyleSet *styleSet = shell->StyleSet();
-
     NS_ASSERTION(styleSet, "couldn't get style set");
-    // test if any style rules exist which are dependent on content state
-
-    nsCOMPtr<nsIFrameManager> frameManager;
-    shell->GetFrameManager(getter_AddRefs(frameManager));
 
     if (aContent) {
       nsIFrame* primaryFrame = nsnull;
@@ -10005,32 +10005,13 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIPresContext* aPresContext,
       nsReStyleHint rshint = 
         styleSet->HasStateDependentStyle(aPresContext, aContent, aStateMask);
       if (rshint & eReStyle_Self) {
-        if (primaryFrame) {
-          nsStyleChangeList changeList;
-          nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-          frameManager->ComputeStyleChangeFor(primaryFrame, 
-                                              kNameSpaceID_Unknown, nsnull,
-                                              changeList, NS_STYLE_HINT_NONE,
-                                              frameChange);
-
-          if (frameChange & nsChangeHint_ReconstructFrame) {
-            result = RecreateFramesForContent(aPresContext, aContent);
-            changeList.Clear();
-          } else {
-            ProcessRestyledFrames(changeList, aPresContext);
-          }
-        } else if (aContent) {
-          // no frames, reconstruct for content
-          result = MaybeRecreateFramesForContent(aPresContext, aContent);
-        }
+        RestyleElement(aPresContext, aContent, primaryFrame);
       }
-
       if (rshint & eReStyle_LaterSiblings) {
         RestyleLaterSiblings(aPresContext, aContent);
       }
     }
   }
-  return result;
 }
 
 NS_IMETHODIMP

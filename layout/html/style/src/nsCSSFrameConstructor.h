@@ -134,9 +134,9 @@ public:
                                   nsIContent*     aContent2,
                                   PRInt32         aStateMask);
 
-  nsresult DoContentStateChanged(nsIPresContext* aPresContext,
-                                 nsIContent*     aContent,
-                                 PRInt32         aStateMask);
+  void DoContentStateChanged(nsIPresContext* aPresContext,
+                             nsIContent*     aContent,
+                             PRInt32         aStateMask);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aContent,
@@ -146,6 +146,10 @@ public:
 
   NS_IMETHOD ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
                                    nsIPresContext*    aPresContext);
+
+  void RestyleElement(nsIPresContext* aPresContext,
+                      nsIContent*     aContent,
+                      nsIFrame*       aPrimaryFrame);
 
   void RestyleLaterSiblings(nsIPresContext* aPresContext,
                             nsIContent*     aContent);
