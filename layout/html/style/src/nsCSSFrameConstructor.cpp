@@ -9584,11 +9584,13 @@ nsCSSFrameConstructor::ConstructInline(nsIPresContext*          aPresContext,
   if (gNoisyInlineConstruction) {
     printf("nsCSSFrameConstructor::ConstructInline:\n");
     printf("  ==> leading inline frame:\n");
+/*
     aNewFrame->List(aPresContext, stdout, 2);
     printf("  ==> block frame:\n");
     blockFrame->List(aPresContext, stdout, 2);
     printf("  ==> trailing inline frame:\n");
     inlineFrame->List(aPresContext, stdout, 2);
+*/
   }
 #endif
 
