@@ -2213,7 +2213,8 @@ nsXULDocument::LoadFromStream(nsIInputStream& xulStream,
     rv = PrepareToLoad(aContainer, aCommand, nsnull, nsnull, getter_AddRefs(parser));
     if (NS_FAILED(rv)) return rv;
 
-    parser->Parse(xulStream);
+    nsAutoString theMimeType(kXULTextContentType);
+    parser->Parse(xulStream,theMimeType);
     return NS_OK;
 }
 
