@@ -40,7 +40,7 @@
 
 #include "nsString.h"
 
-#define XMLPARSER_PROPERTIES "chrome://communicator/locale/layout/xmlparser.properties"
+#define XMLPARSER_PROPERTIES "chrome://global/locale/layout/xmlparser.properties"
 
 class nsParserMsgUtils {
   nsParserMsgUtils();  // Currently this is not meant to be created, use the static methods
