@@ -31,19 +31,20 @@ int error_handler (Display *d, XErrorEvent *e)
 {
   if ((e->error_code == BadWindow) || (e->error_code == BadDrawable))
     {
-      GdkWindow *window = gdk_window_lookup (e->resourceid);
+      XID resourceid = e->resourceid;
+      GdkWindow *window = gdk_window_lookup (resourceid);
 
       if (window)
-	{
-	  if (!g_dataset_get_data (window, "bonobo-error"))
-	    {
-	      g_dataset_set_data_full (window, "bonobo-error",
-				       g_new (gint, 1),
-				       (GDestroyNotify)g_free);
-	  
-	      g_warning ("Error accessing window %ld", e->resourceid);
-	    }
-	}
+        {
+          if (!g_dataset_get_data (window, "bonobo-error"))
+            {
+              g_dataset_set_data_full (window, "bonobo-error",
+                                       g_new (gint, 1),
+                                       (GDestroyNotify)g_free);
+
+              g_warning ("Error accessing window %ld", resourceid);
+            }
+        }
       return 0;
     }
   else
