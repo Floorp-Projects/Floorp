@@ -37,7 +37,6 @@
 #endif
 
 extern "C" void fe_mail_text_modify_cb (Widget, XtPointer, XtPointer);
-extern "C"  void fe_HackTranslations (MWContext *, Widget);
 
 extern "C" XtPointer fe_GetFont(MWContext *context, int sizeNum, int fontmask);
 extern "C"

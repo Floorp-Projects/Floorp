@@ -49,7 +49,6 @@ extern int XFE_EDITOR_ALERT_ABOUT_DOCUMENT;
 
 extern "C"   void xfe2_EditorInit(MWContext* context);
 extern "C"   void fe_set_scrolled_default_size(MWContext *context);
-extern "C"   void fe_HackTranslations (MWContext *, Widget);
 
 // Editor Encoding Menu Spec - no longer shared between Browsers, and Mail/News
 MenuSpec XFE_EditorFrame::encoding_menu_spec[] = {

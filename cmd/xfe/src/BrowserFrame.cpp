@@ -156,7 +156,6 @@ MenuSpec XFE_BrowserFrame::edit_menu_spec[] = {
 MenuSpec XFE_BrowserFrame::view_menu_spec[] = {
   { xfeCmdToggleNavigationToolbar ,PUSHBUTTON },
   { xfeCmdToggleLocationToolbar,  PUSHBUTTON },
-  { xfeCmdTogglePersonalToolbar,  PUSHBUTTON },
   { xfeCmdToggleNavCenter, PUSHBUTTON},
   MENU_SEPARATOR,
   { xfeCmdIncreaseFont,		PUSHBUTTON },
@@ -298,8 +297,6 @@ XFE_BrowserFrame::getCommand(CommandType cmd)
 {
 	return findCommand(my_commands, cmd);
 }
-
-extern "C"  void fe_HackTranslations (MWContext *, Widget);
 
 XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
 								   XFE_Frame *parent_frame,
