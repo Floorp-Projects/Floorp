@@ -620,7 +620,8 @@ NS_GetURLSpecFromFile(nsIFile      *aFile,
 inline nsresult
 NS_NewResumableEntityID(nsIResumableEntityID **aRes,
                         PRUint32               size,
-                        PRTime                 lastModified)
+                        const nsACString      &lastModified,
+                        const nsACString      &entityTag)
 {
     nsresult rv;
     nsCOMPtr<nsIResumableEntityID> ent =
@@ -628,6 +629,7 @@ NS_NewResumableEntityID(nsIResumableEntityID **aRes,
     if (NS_SUCCEEDED(rv)) {
         ent->SetSize(size);
         ent->SetLastModified(lastModified);
+        ent->SetEntityTag(entityTag);
         NS_ADDREF(*aRes = ent);
     }
     return rv;

@@ -42,18 +42,24 @@
 
 [scriptable, uuid(c9df38d4-1dd1-11b2-81ae-c9e767256d1b)]
 interface nsIResumableEntityID : nsISupports {
-    /** Size of the entity, -1 if unknown */
+    /**
+     * Size of the entity.
+     * @throw NS_ERROR_NOT_AVAILABLE if the size is not known.
+     */
     attribute unsigned long size;
     
-    /** Last modified time, in seconds since epoch. Note that the timezone
-     * these are in may not be known
+    /**
+     * An opaque, but human-readable ASCII string specifying the date when the
+     * resource was last modified. May be empty.
      */
-    attribute PRTime lastModified;
+    attribute ACString lastModified;
     
-    /** Entity, may be empty. This is meant to hold the E-Tag for http */
-    // currently we only support ftp; add this in when its utility can be
-    // checked
-    //attribute string entity;
+    /**
+     * The entity tag is a strong identifier specified by the protocol. For
+     * HTTP, this attribute corresponds to the value of the ETag response
+     * header. This attribute may be empty. Otherwise it is an ASCII string.
+     */
+    attribute ACString entityTag;
 
     /** Compare to another nsIResumableEntityID */
     boolean equals(in nsIResumableEntityID other);

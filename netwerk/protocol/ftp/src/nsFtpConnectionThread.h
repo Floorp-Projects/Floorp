@@ -194,7 +194,7 @@ private:
     nsCOMPtr<nsIRequest>            mDPipeRequest;
     DataRequestForwarder*           mDRequestForwarder;
     PRUint32                        mFileSize;
-    PRTime                          mModTime;
+    nsCString                       mModTime;
 
         // ****** consumer vars
     nsCOMPtr<nsIFTPChannel>         mChannel;         // our owning FTP channel we pass through our events

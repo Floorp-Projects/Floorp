@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set et ts=4 sw=4 sts=4 cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -17,10 +18,11 @@
  * The Initial Developer of the Original Code is
  * Bradley Baetz
  * Portions created by the Initial Developer are Copyright (C) 2002
- * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
+ * Contributor(s):
+ *   Bradley Baetz <bbaetz@student.usyd.edu.au>
+ *   Christian Biesinger <cbiesinger@web.de>
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,18 +39,20 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsResumableEntityID.h"
+#include "nsReadableUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsResumableEntityID, nsIResumableEntityID)
     
 nsResumableEntityID::nsResumableEntityID() :
-    mSize(PRUint32(-1)),
-    mLastModified(PRTime(LL_INIT(-1,-1))) {
+    mSize(PR_UINT32_MAX) {
 }
 
 nsResumableEntityID::~nsResumableEntityID() {}
 
 NS_IMETHODIMP
 nsResumableEntityID::GetSize(PRUint32 *aSize) {
+    if (mSize == PR_UINT32_MAX)
+        return NS_ERROR_NOT_AVAILABLE;
     *aSize = mSize;
     return NS_OK;
 }
@@ -60,27 +64,52 @@ nsResumableEntityID::SetSize(PRUint32 aSize) {
 }
 
 NS_IMETHODIMP
-nsResumableEntityID::GetLastModified(PRTime *aLastModified) {
-    *aLastModified = mLastModified;
+nsResumableEntityID::GetLastModified(nsACString& aLastModified) {
+    aLastModified = mLastModified;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsResumableEntityID::SetLastModified(PRTime aLastModified) {
+nsResumableEntityID::SetLastModified(const nsACString& aLastModified) {
     mLastModified = aLastModified;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsResumableEntityID::SetEntityTag(const nsACString& aTag) {
+    mEntityTag = aTag;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsResumableEntityID::GetEntityTag(nsACString& aTag) {
+    aTag = mEntityTag;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsResumableEntityID::Equals(nsIResumableEntityID *other, PRBool *ret) {
     PRUint32 size;
-    PRInt64 lastMod;
+    nsCAutoString lastMod;
+    nsCAutoString entityTag;
 
     nsresult rv = other->GetSize(&size);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        size = PR_UINT32_MAX;
 
-    rv = other->GetLastModified(&lastMod);
-    if (NS_FAILED(rv)) return rv;
+    rv = other->GetLastModified(lastMod);
+    if (NS_FAILED(rv))
+        lastMod.Truncate();
+
+    rv = other->GetEntityTag(entityTag);
+    if (NS_FAILED(rv))
+        entityTag.Truncate();
+
+    // This assumes that the server generated the last modification time in
+    // exactly the same way for both of these entity IDs (same timezone, same
+    // format, etc).
+    *ret = mEntityTag.Equals(entityTag) && lastMod.Equals(mLastModified) &&
+           (mSize == size);
 
     return NS_OK;
 }

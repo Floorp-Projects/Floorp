@@ -56,6 +56,12 @@ public:
     const nsAFlatCString &ContentCharset() { return mContentCharset; }
     PRBool                NoStore()        { return mCacheControlNoStore; }
     PRBool                NoCache()        { return (mCacheControlNoCache || mPragmaNoCache); }
+    /**
+     * Full length of the entity. For byte-range requests, this may be larger
+     * than ContentLength(), which will only represent the requested part of the
+     * entity.
+     */
+    PRInt32               TotalEntitySize();
 
     const char *PeekHeader(nsHttpAtom h)            { return mHeaders.PeekHeader(h); }
     nsresult SetHeader(nsHttpAtom h, const nsACString &v, PRBool m=PR_FALSE);

@@ -384,7 +384,6 @@ nsFtpState::nsFtpState()
     mControlConnection = nsnull;
     mDRequestForwarder = nsnull;
     mFileSize          = PRUint32(-1);
-    mModTime           = -1;
 
     // make sure handler stays around
     NS_ADDREF(gFtpHandler);
@@ -1357,26 +1356,12 @@ nsFtpState::R_mdtm() {
         if (mResponseMsg.Length() != 14) {
             NS_ASSERTION(mResponseMsg.Length() == 14, "Unknown MDTM response");
         } else {
-            const char* date = mResponseMsg.get();
-            PRExplodedTime exp;
-            exp.tm_year = (date[0]-'0')*1000 + (date[1]-'0')*100 +
-                (date[2]-'0')*10 + (date[3]-'0');
-            exp.tm_month = (date[4]-'0')*10 + (date[5]-'0');
-            exp.tm_mday = (date[6]-'0')*10 + (date[7]-'0');
-            exp.tm_hour = (date[8]-'0')*10 + (date[9]-'0');
-            exp.tm_min = (date[10]-'0')*10 + (date[11]-'0');
-            exp.tm_sec = (date[12]-'0')*10 + (date[13]-'0');
-            exp.tm_usec = 0;
-            exp.tm_wday = 0;
-            exp.tm_yday = 0;
-            exp.tm_params.tp_gmt_offset = 0;
-            exp.tm_params.tp_dst_offset = 0;
-            mModTime = PR_ImplodeTime(&exp);
+            mModTime = mResponseMsg;
         }
     }
 
     nsresult rv = NS_NewResumableEntityID(getter_AddRefs(mEntityID),
-                                          mFileSize, mModTime);
+                                          mFileSize, mModTime, EmptyCString());
     if (NS_FAILED(rv)) return FTP_ERROR;
     mDRequestForwarder->SetEntityID(mEntityID);
 

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,6 +21,7 @@
  * Contributor(s): 
  *   Darin Fisher <darin@netscape.com> (original author)
  *   Andreas M. Schneider <clarence@clarence.de>
+ *   Christian Biesinger <cbiesinger@web.de>
  */
 
 #include <stdlib.h>
@@ -501,6 +503,25 @@ nsHttpResponseHead::GetExpiresValue(PRUint32 *result)
     else
         *result = PRTimeToSeconds(time); 
     return NS_OK;
+}
+
+PRInt32
+nsHttpResponseHead::TotalEntitySize()
+{
+    const char* contentRange = PeekHeader(nsHttp::Content_Range);
+    if (!contentRange)
+        return ContentLength();
+
+    // Total length is after a slash
+    const char* slash = strrchr(contentRange, '/');
+    if (!slash)
+        return -1; // No idea what the length is
+
+    slash++;
+    if (*slash == '*') // Server doesn't know the length
+        return -1;
+
+    return atoi(slash);
 }
 
 //-----------------------------------------------------------------------------
