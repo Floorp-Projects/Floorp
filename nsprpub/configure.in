@@ -987,9 +987,18 @@ case "$target" in
         AC_DEFINE(HAVE_INT_LOCALTIME_R)
     fi
 
-    if echo "$OS_RELEASE" | egrep '^(B.10.30|B.11.00|B.11.11|B.11.20)' >/dev/null; then
+    if echo "$OS_RELEASE" | egrep '^(B.10.30|B.11)' >/dev/null; then
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     fi
+
+    # HP-UX 11i (B.11.11) or higher
+    changequote(<<,>>)
+    case "$OS_RELEASE" in
+    [C-Z]*|B.[2-9]*|B.1[2-9]*|B.11.[2-9]*|B.11.1[1-9]*)
+        USE_IPV6=1
+        ;;
+    esac
+    changequote([,])
 
     if test "$OS_RELEASE" = "B.10.01"; then
         AC_DEFINE(HPUX10)
@@ -1022,7 +1031,7 @@ case "$target" in
         DEFAULT_IMPL_STRATEGY=_PTH
     fi
 
-    if echo "$OS_RELEASE" | egrep '^(B.11.00|B.11.11|B.11.20)' >/dev/null; then
+    if echo "$OS_RELEASE" | grep ^B.11 >/dev/null; then
         AC_DEFINE(HPUX10)
         AC_DEFINE(HPUX11)
         AC_DEFINE(_LARGEFILE64_SOURCE)
@@ -1124,7 +1133,7 @@ case "$target" in
 	    if test "$USE_MDUPDATE"; then
                 CFLAGS="$CFLAGS -MDupdate \$(DEPENDENCIES)"
 	    fi
-	    case "$target}" in
+	    case "${target}" in
 	    *-irix6.*)
 	        CFLAGS="$CFLAGS -multigot"
 	        DSO_LDOPTS="-no_unresolved"
