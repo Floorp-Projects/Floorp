@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
    *      components this will be specified in the XUL description...
    */
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  appShell->CreateTopLevelWindow(url, controllerCID, newWindow);
+  appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull);
   NS_RELEASE(url);
   
    /*
