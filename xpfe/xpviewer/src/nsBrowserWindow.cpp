@@ -89,6 +89,7 @@
 #include <strstrea.h>
 #else
 #include <strstream.h>
+#include <ctype.h>
 #endif
 
 #if defined(WIN32)
