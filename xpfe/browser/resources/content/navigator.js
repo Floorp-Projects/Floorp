@@ -527,7 +527,6 @@ function Shutdown()
   // unregister us as a pref listener
   pref.removeObserver(window.buttonPrefListener.domain,
                       window.buttonPrefListener);
-  window.offlineObserver.unload();
   
   // Close the app core.
   if (appCore)
