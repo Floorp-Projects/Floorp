@@ -819,6 +819,7 @@ sub MakeResourceAliases()
 		my($mailnews_dir) = "$resource_dir" . "mailnews";
 		
 		InstallResources(":mozilla:mailnews:ui:messenger:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);
+		InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",				"$mailnews_dir:messenger:", 0);	
 		InstallResources(":mozilla:mailnews:mime:emitters:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);	
 		InstallResources(":mozilla:mailnews:ui:compose:resources:MANIFEST",			"$mailnews_dir:compose:", 0);	
 		InstallResources(":mozilla:mailnews:ui:preference:resources:MANIFEST",		"$mailnews_dir:preference:", 0);
