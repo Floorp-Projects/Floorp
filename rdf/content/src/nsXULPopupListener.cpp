@@ -31,6 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsXULAtoms.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMNodeList.h"
 #include "nsIXULPopupListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
@@ -457,12 +458,33 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
 
   if (identifier.EqualsWithConversion("_child")) {
     nsCOMPtr<nsIContent> popupset;
+    nsCOMPtr<nsIContent> popup;
     GetImmediateChild(content, nsXULAtoms::popupset, getter_AddRefs(popupset));
     if (popupset) {
-      nsCOMPtr<nsIContent> popup;
       GetImmediateChild(popupset, nsXULAtoms::popup, getter_AddRefs(popup));
       if (popup)
         popupContent = do_QueryInterface(popup);
+    } else {
+      nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(content));
+      nsCOMPtr<nsIDOMNodeList> list;
+      xulElement->GetAnonymousContent(getter_AddRefs(list));
+      if (list) {
+        PRUint32 ctr,listLength;
+        nsCOMPtr<nsIDOMNode> node;
+        list->GetLength(&listLength);
+        for (ctr = 0; ctr < listLength; ctr++) {
+          list->Item(ctr, getter_AddRefs(node));
+          nsCOMPtr<nsIContent> childContent(do_QueryInterface(node));
+          nsCOMPtr<nsIAtom> childTag;
+          childContent->GetTag(*getter_AddRefs(childTag));
+          if (childTag.get() == nsXULAtoms::popupset) {
+            GetImmediateChild(childContent, nsXULAtoms::popup, getter_AddRefs(popup));
+            if (popup)
+              popupContent = do_QueryInterface(popup);
+            break;
+          }
+        }
+      }
     }
   }
   else if (NS_FAILED(rv = xulDocument->GetElementById(identifier, getter_AddRefs(popupContent)))) {
