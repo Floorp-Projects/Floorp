@@ -47,6 +47,8 @@ function Startup()
   dialog.srcInput          = document.getElementById( "srcInput" );
   dialog.altTextInput      = document.getElementById( "altTextInput" );
   dialog.MoreFewerButton   = document.getElementById( "MoreFewerButton" );
+  dialog.AdvancedEditButton = document.getElementById( "AdvancedEditButton" );
+  dialog.AdvancedEditButton2 = document.getElementById( "AdvancedEditButton2" );
   dialog.MoreSection       = document.getElementById( "MoreSection" );
   dialog.customsizeRadio   = document.getElementById( "customsizeRadio" );
   dialog.originalsizeRadio = document.getElementById( "originalsizeRadio" );
@@ -64,8 +66,6 @@ function Startup()
   dialog.doConstrain = false;
   dialog.isCustomSize = false;
   
-  // Another version of button just for this dialog -- on same line as "More Properties"
-  dialog.AdvancedEditButton = document.getElementById( "AdvancedEditButton" );
 
   // Get a single selected image element
   var tagName = "img"
@@ -298,12 +298,14 @@ function onMoreFewerImage()
     
     //dialog.MoreSection.setAttribute("style","display: none");
     dialog.MoreSection.setAttribute("collapsed","true");
-    // Show the "Advanced Edit" button on same line as "More Properties"
-    //dialog.AdvancedEditButton.setAttribute("style","display: inherit");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
     dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
     SeeMore = false;
+
+    // Show the "Advanced Edit" button on same line as "More Properties"
+    dialog.AdvancedEditButton.removeAttribute("hidden");
+    dialog.AdvancedEditButton2.setAttribute("hidden","true");
   }
   else
   {
@@ -316,6 +318,10 @@ function onMoreFewerImage()
     dialog.MoreFewerButton.setAttribute("more","1");
     dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
     SeeMore = true;
+
+    // Show the "Advanced Edit" button at bottom
+    dialog.AdvancedEditButton.setAttribute("hidden","true");
+    dialog.AdvancedEditButton2.removeAttribute("hidden","false");
     
     InitDialog();
     
