@@ -198,7 +198,7 @@ PRBool 	result;
 			if(mWidgetArmed)
 				{
 				
-				this->SetPosition();
+				/*this->SetPosition();*/NS_ERROR("Get mouse loc and set position");
 				this->DrawWidget();
 				}
 			break;
