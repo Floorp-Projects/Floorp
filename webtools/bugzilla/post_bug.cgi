@@ -73,23 +73,6 @@ if (!defined $::FORM{'short_desc'} || trim($::FORM{'short_desc'}) eq "") {
     exit;
 }
 
-if ( Param("strictvaluechecks") ) {
-    GetVersionTable();  
-    CheckFormField(\%::FORM, 'reporter');
-    CheckFormField(\%::FORM, 'product', \@::legal_product);
-    CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
-    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
-    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
-    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
-    CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
-    CheckFormFieldDefined(\%::FORM, 'assigned_to');
-    CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
-    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
-    CheckFormField(\%::FORM, 'component', 
-                   \@{$::components{$::FORM{'product'}}});
-    CheckFormFieldDefined(\%::FORM, 'comment');
-}
-
 my $forceAssignedOK = 0;
 if ($::FORM{'assigned_to'} eq "") {
     SendSQL("select initialowner from components where program=" .
@@ -135,6 +118,23 @@ if (!exists $::FORM{'bug_status'}) {
     }
 }
 
+
+if ( Param("strictvaluechecks") ) {
+    GetVersionTable();  
+    CheckFormField(\%::FORM, 'reporter');
+    CheckFormField(\%::FORM, 'product', \@::legal_product);
+    CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
+    CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
+    CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
+    CheckFormField(\%::FORM, 'priority', \@::legal_priority);
+    CheckFormField(\%::FORM, 'op_sys', \@::legal_opsys);
+    CheckFormFieldDefined(\%::FORM, 'assigned_to');
+    CheckFormField(\%::FORM, 'bug_status', \@::legal_bug_status);
+    CheckFormFieldDefined(\%::FORM, 'bug_file_loc');
+    CheckFormField(\%::FORM, 'component', 
+                   \@{$::components{$::FORM{'product'}}});
+    CheckFormFieldDefined(\%::FORM, 'comment');
+}
 
 my @used_fields;
 foreach my $f (@bug_fields) {
