@@ -67,10 +67,6 @@
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
-#ifdef DEBUG_sspitzer_
-#define DEBUG_NEWS
-#endif
-
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
@@ -3264,9 +3260,9 @@ PRInt32 nsNNTPProtocol::PostData()
     nsCOMPtr <nsINNTPNewsgroupPost> message;
     rv = m_runningURL->GetMessageToPost(getter_AddRefs(message));
     if (NS_SUCCEEDED(rv)) {
-        const nsFilePath *filePath;
+        nsFilePath *filePath;
         rv = message->GetPostMessageFile(&filePath);
-        if (NS_SUCCEEDED(rv) && (*filePath != "")) {
+        if (NS_SUCCEEDED(rv)) {
             PostMessageInFile(*filePath);
         }
      }
