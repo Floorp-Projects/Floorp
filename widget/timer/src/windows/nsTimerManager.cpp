@@ -62,14 +62,14 @@ nsresult nsTimerManager::Init()
 }
 
 
-NS_IMETHODIMP_(bool) nsTimerManager::IsTimerInQueue(nsITimer* timer)
+NS_IMETHODIMP_(PRBool) nsTimerManager::IsTimerInQueue(nsITimer* timer)
 {
-  if (mReadyQueue == nsnull) return false;
+  if (mReadyQueue == nsnull) return PR_FALSE;
 
   for (int i=0; i<mReadyQueue->Count(); i++) {
-    if (mReadyQueue->ElementAt(i) == timer) return true;
+    if (mReadyQueue->ElementAt(i) == timer) return PR_TRUE;
   }
-  return false;
+  return PR_FALSE;
 }
 
 
@@ -89,12 +89,12 @@ NS_IMETHODIMP_(void) nsTimerManager::AddReadyQueue(nsITimer* timer)
 }
 
 
-NS_IMETHODIMP_(bool) nsTimerManager::HasReadyTimers(PRUint32 minTimerPriority)
+NS_IMETHODIMP_(PRBool) nsTimerManager::HasReadyTimers(PRUint32 minTimerPriority)
 {
-  if (mReadyQueue == nsnull || mReadyQueue->Count() == 0) return false;
+  if (mReadyQueue == nsnull || mReadyQueue->Count() == 0) return PR_FALSE;
 
   nsTimer* timer = (nsTimer*) mReadyQueue->ElementAt(0);
-  if (timer == nsnull) return false;
+  if (timer == nsnull) return PR_FALSE;
 
   return timer->GetPriority() >= minTimerPriority;
 }
@@ -102,7 +102,7 @@ NS_IMETHODIMP_(bool) nsTimerManager::HasReadyTimers(PRUint32 minTimerPriority)
 
 NS_IMETHODIMP_(void) nsTimerManager::FireNextReadyTimer(PRUint32 minTimerPriority)
 {
-  PR_ASSERT(HasReadyTimers(minTimerPriority) == true);
+  PR_ASSERT(HasReadyTimers(minTimerPriority) == PR_TRUE);
 
   if (mReadyQueue == nsnull) return;
 

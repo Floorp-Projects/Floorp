@@ -61,9 +61,9 @@ public:
   // --- manage priority queue of ready timers ---
   NS_IMETHOD_(void) AddReadyQueue(nsITimer* timer);
   // is this timer in the ready queue?
-  NS_IMETHOD_(bool) IsTimerInQueue(nsITimer* timer);
+  NS_IMETHOD_(PRBool) IsTimerInQueue(nsITimer* timer);
   // does a timer above a priority level exist in the ready queue?
-  NS_IMETHOD_(bool) HasReadyTimers(PRUint32 minTimerPriority);
+  NS_IMETHOD_(PRBool) HasReadyTimers(PRUint32 minTimerPriority);
   // fire the next timer above a priority level in the ready queue
   NS_IMETHOD_(void) FireNextReadyTimer(PRUint32 minTimerPriority);
 };
