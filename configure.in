@@ -957,9 +957,15 @@ MOZ_ARG_DISABLE_BOOL(asserts,
 
 MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 [  --enable-debug          Enable debug symbols],
-  [ MOZ_DEBUG=1 CFLAGS="$CFLAGS -g" CXXFLAGS="$CXXFLAGS -g" ],
+  [ MOZ_DEBUG=1 ],
   [],
   [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
+
+if test "$MOZ_DEBUG"
+then
+  CFLAGS="$CFLAGS -g"
+  CXXFLAGS="$CXXFLAGS -g"
+fi
 
 _cpp_md_flag=
 MOZ_ARG_DISABLE_BOOL(md,
