@@ -118,7 +118,7 @@ public:
   void DoFileOpen();
   void DoCopy();
   void DoJSConsole();
-  void DoEditorMode();
+  void DoEditorMode(nsIWebShell* aWebShell);
   nsIPresShell* GetPresShell();
 
   void DoSelectAll();

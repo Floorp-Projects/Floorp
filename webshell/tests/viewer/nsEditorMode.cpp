@@ -32,11 +32,12 @@ static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument)
 {
   NS_IF_RELEASE(kCurrentNode);
+  NS_IF_RELEASE(kDomDoc);
   
   kCurrentNode = nsnull;
 
   kDomDoc = aDOMDocument;
-  kDomDoc->AddRef();
+  NS_IF_ADDREF(kDomDoc);
 
   RegisterEventListeners();
   

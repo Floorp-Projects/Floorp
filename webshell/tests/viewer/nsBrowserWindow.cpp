@@ -331,7 +331,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     break;
 
   case EDITOR_MODE:
-    DoEditorMode();
+    DoEditorMode(mWebShell);
     break;
   }
 
@@ -1158,21 +1158,37 @@ nsBrowserWindow::DoJSConsole()
 }
 
 void
-nsBrowserWindow::DoEditorMode()
+nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
 {
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
-    if (nsnull != doc) {
-      nsIDOMDocument *domdoc = nsnull;
-      doc->QueryInterface(kIDOMDocumentIID, (void**) &domdoc);
-      if (nsnull != domdoc) {
-        NS_InitEditorMode(domdoc);
-        NS_RELEASE(domdoc);
+  PRInt32 i, n;
+  if (nsnull != aWebShell) {
+    nsIContentViewer* mCViewer;
+    aWebShell->GetContentViewer(mCViewer);
+    if (nsnull != mCViewer) {
+      nsIDocumentViewer* mDViewer;
+      if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
+        nsIDocument* mDoc;
+        mDViewer->GetDocument(mDoc);
+        if (nsnull != mDoc) {
+          nsIDOMDocument* mDOMDoc;
+          if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) {
+            NS_InitEditorMode(mDOMDoc);
+            NS_RELEASE(mDOMDoc);
+          }
+          NS_RELEASE(mDoc);
+        }
+        NS_RELEASE(mDViewer);
       }
-      NS_RELEASE(doc);
+      NS_RELEASE(mCViewer);
     }
-    NS_RELEASE(shell);
+    
+    aWebShell->GetChildCount(n);
+    for (i = 0; i < n; i++) {
+      nsIWebShell* mChild;
+      aWebShell->ChildAt(i, mChild);
+      DoEditorMode(mChild);
+      NS_RELEASE(mChild);
+    }
   }
 }
 
