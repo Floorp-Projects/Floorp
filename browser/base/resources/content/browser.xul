@@ -206,7 +206,8 @@ Contributor(s): ______________________________________. -->
          command="cmd_newNavigator"
          modifiers="accel"/>
     <key id="key_newNavigatorTab" key="&tabCmd.commandkey;" modifiers="accel" command="cmd_newNavigatorTab"/>
-    <key id="openLocationKb"   key="&openCmd.commandkey;" command="Browser:Open" modifiers="accel"/>
+    <key key="&openCmd.commandkey;" command="Browser:Open" modifiers="accel"/>
+    <key key="&openCmd2.commandkey;" command="Browser:Open" modifiers="alt"/>
     <key id="openFileKb"         key="&openFileCmd.commandkey;" command="Browser:OpenFile"  modifiers="accel"/>
     <key id="key_savePage"       key="&savePageCmd.commandkey;" command="Browser:SavePage" modifiers="accel"/>
     <key id="printKb"            key="&printCmd.commandkey;" command="Browser:Print"  modifiers="accel"/>
@@ -793,7 +794,7 @@ Contributor(s): ______________________________________. -->
     <toolbar id="LocationToolbar" class="chromeclass-toolbar" persist="collapsed"
              tbalign="stretch" fullscreentoolbar="true">
       <hbox id="nav-bar-inner" flex="1">
-        <label value="&location.label;"/>
+        <label value="&location.label;" accesskey="&location.accesskey;" control="urlbar"/>
         <textbox id="urlbar" class="chromeclass-location" flex="1"
                  type="autocomplete" searchSessions="history" 
                  timeout="50" maxrows="6" alwaysopenpopup="true"
