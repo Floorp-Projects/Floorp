@@ -89,194 +89,6 @@ WSPPropertyBagWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_ERROR_NO_INTERFACE;
 }
 
-nsresult
-WSPPropertyBagWrapper::VariantToResult(uint8 aTypeTag,
-                                       void* aResult,
-                                       nsIInterfaceInfo* aInterfaceInfo,
-                                       nsIVariant* aProperty)
-{
-  nsresult rv;
-
-  switch(aTypeTag) {
-    case nsXPTType::T_I8:
-      rv = aProperty->GetAsInt8((PRUint8*)aResult);
-      break;
-    case nsXPTType::T_I16:
-      rv = aProperty->GetAsInt16((PRInt16*)aResult);
-      break;
-    case nsXPTType::T_I32:
-      rv = aProperty->GetAsInt32((PRInt32*)aResult);
-      break;
-    case nsXPTType::T_I64:
-      rv = aProperty->GetAsInt64((PRInt64*)aResult);
-      break; 
-    case nsXPTType::T_U8:
-      rv = aProperty->GetAsUint8((PRUint8*)aResult);
-      break;
-    case nsXPTType::T_U16:
-      rv = aProperty->GetAsUint16((PRUint16*)aResult);
-      break;
-    case nsXPTType::T_U32:
-      rv = aProperty->GetAsUint32((PRUint32*)aResult);
-      break;
-    case nsXPTType::T_U64:
-      rv = aProperty->GetAsUint64((PRUint64*)aResult);
-      break;
-    case nsXPTType::T_FLOAT:
-      rv = aProperty->GetAsFloat((float*)aResult);
-      break;
-    case nsXPTType::T_DOUBLE:
-      rv = aProperty->GetAsDouble((double*)aResult);
-      break;
-    case nsXPTType::T_BOOL:
-      rv = aProperty->GetAsBool((PRBool*)aResult);
-      break;
-    case nsXPTType::T_CHAR:
-      rv = aProperty->GetAsChar((char*)aResult);
-      break;
-    case nsXPTType::T_WCHAR:
-      rv = aProperty->GetAsWChar((PRUnichar*)aResult);
-      break;
-    case nsXPTType::T_DOMSTRING:
-      rv = aProperty->GetAsAString(*(nsAString*)aResult);
-      break;
-    case nsXPTType::T_INTERFACE:
-    {
-      PRUint16 dataType;
-      aProperty->GetDataType(&dataType);
-      if (dataType == nsIDataType::TYPE_EMPTY) {
-        *(nsISupports**)aResult = nsnull;
-      }
-      else {
-        nsCOMPtr<nsISupports> sup;
-        rv = aProperty->GetAsISupports(getter_AddRefs(sup));
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        nsCOMPtr<nsIPropertyBag> propBag = do_QueryInterface(sup, &rv);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        WSPPropertyBagWrapper* wrapper;
-        rv = Create(propBag, aInterfaceInfo, &wrapper);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        const nsIID* iid;
-        aInterfaceInfo->GetIIDShared(&iid);
-        rv = wrapper->QueryInterface(*iid, (void**)aResult);
-        NS_RELEASE(wrapper);
-      }
-      break;
-    }
-    default:
-      NS_ERROR("Bad attribute type for complex type interface");
-      rv = NS_ERROR_FAILURE;
-  }
-
-  return rv;
-}
-
-nsresult
-WSPPropertyBagWrapper::VariantToArrayResult(uint8 aTypeTag,
-                                            nsXPTCMiniVariant* aResult,
-                                            nsIInterfaceInfo* aInterfaceInfo,
-                                            nsIVariant* aProperty)
-{
-  void* array;
-  PRUint16 type;
-  PRUint32 count;
-
-  nsresult rv = aProperty->GetAsArray(&type, &count, &array);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // We assume it's an array of variants.
-  // XXX need a way to confirm that
-  if (type != nsIDataType::TYPE_INTERFACE) {
-    return NS_ERROR_FAILURE;
-  }
-  nsIVariant** variants = (nsIVariant**)array;
-
-  PRUint32 size;
-  // Allocate the array
-  switch (aTypeTag) {
-    case nsXPTType::T_I8:
-    case nsXPTType::T_U8:
-      size = sizeof(PRUint8);
-      break;
-    case nsXPTType::T_I16:
-    case nsXPTType::T_U16:
-      size = sizeof(PRUint16);
-      break;
-    case nsXPTType::T_I32:
-    case nsXPTType::T_U32:
-      size = sizeof(PRUint32);
-      break;
-    case nsXPTType::T_I64:
-    case nsXPTType::T_U64:
-      size = sizeof(PRUint64);
-      break;
-    case nsXPTType::T_FLOAT:
-      size = sizeof(float);
-      break;
-    case nsXPTType::T_DOUBLE:
-      size = sizeof(double);
-      break;
-    case nsXPTType::T_BOOL:
-      size = sizeof(PRBool);
-      break;
-    case nsXPTType::T_CHAR:
-      size = sizeof(char);
-      break;
-    case nsXPTType::T_WCHAR:
-      size = sizeof(PRUnichar);
-      break;
-    case nsXPTType::T_INTERFACE:
-      size = sizeof(nsISupports*);
-      break;
-    default:
-      NS_ERROR("Unexpected array type");
-      return NS_ERROR_FAILURE;
-  }
-
-  void* outptr = nsMemory::Alloc(count * size);
-  if (!outptr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  PRUint32 i;
-  for (i = 0; i < count; i++) {
-    rv = VariantToResult(aTypeTag, (void*)((char*)outptr + (i*size)),
-                         aInterfaceInfo, variants[i]);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-  }
-
-  // Free the variant array passed back to us
-  NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, variants);
-
-  // If conversion failed, free the allocated structures
-  if (NS_FAILED(rv)) {
-    if (aTypeTag == nsXPTType::T_INTERFACE) {
-      nsMemory::Free(outptr);
-    }
-    else {
-      NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(i, (nsISupports**)outptr);
-    }
-
-    return rv;
-  }
-
-  *((PRUint32*)aResult[0].val.p) = count;
-  *((void**)aResult[1].val.p) = outptr;
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 WSPPropertyBagWrapper::CallMethod(PRUint16 methodIndex,
                                   const nsXPTMethodInfo* info,
@@ -291,8 +103,8 @@ WSPPropertyBagWrapper::CallMethod(PRUint16 methodIndex,
     return NS_ERROR_FAILURE;
   }
   else {
-    rv = WSPFactory::MethodToPropertyName(nsDependentCString(info->GetName()),
-                                          propName);
+    rv = WSPFactory::C2XML(nsDependentCString(info->GetName()),
+                           propName);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -316,7 +128,7 @@ WSPPropertyBagWrapper::CallMethod(PRUint16 methodIndex,
         }
       }
       
-      rv = VariantToResult(type_tag, params[0].val.p, iinfo, val);
+      rv = WSPProxy::VariantToValue(type_tag, params[0].val.p, iinfo, val);
     }
     else if (info->GetParamCount() == 2) {
       // If it's not an explicit getter, it has to be an array 
@@ -354,7 +166,8 @@ WSPPropertyBagWrapper::CallMethod(PRUint16 methodIndex,
         }
       }
 
-      rv = VariantToArrayResult(arrayType.TagPart(), params, iinfo, val);
+      rv = WSPProxy::VariantToArrayValue(arrayType.TagPart(), params, 
+                                         iinfo, val);
     }
     else {
       NS_ERROR("Unexpected method signature for property bag wrapper");

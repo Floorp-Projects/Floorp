@@ -38,14 +38,20 @@ REQUIRES = xpcom \
 	   caps \
 	   js \
 	   necko \
+	   dom \
 	   $(NULL)
 
 CPPSRCS=					\
 	wspproxy.cpp				\
+	wspcallcontext.cpp			\
 	wspfactory.cpp				\
 	wspcomplextypewrapper.cpp		\
 	wsppropertybagwrapper.cpp		\
 	$(NULL)
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../../soap/src \
+		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

@@ -42,6 +42,8 @@
 #include "nsIWSDL.idl"
 #include "nsISimpleEnumerator.idl"
 #include "nsIException.idl"
+#include "nsISOAPResponse.idl"
+#include "nsISOAPBlock.idl"
 
 %{ C++
 #include "nsAWritableString.h"
@@ -49,9 +51,6 @@
 
 interface nsIWebServiceProxy;
 interface nsIWebServiceProxyListener;
-// XXX Should be replaced with an include
-interface nsISOAPResponse;
-interface nsISOAPParameter;
 
 [scriptable, uuid(693611be-bb38-40e0-a98e-b46ff8a5bcca)]
 interface nsIWebServiceProxyFactory : nsISupports {
@@ -245,41 +244,6 @@ interface nsIWebServiceCallContext : nsISupports {
   readonly attribute nsIWSDLOperation operation;
 
   /**
-   * For users who want access to the lower-level constructs that
-   * are used for the method invocation, this attributes provides
-   * the SOAP response once the call has completed.
-   *
-   * @see nsISOAPResponse
-   */
-  readonly attribute nsISOAPResponse soapResponse;
-
-  /**
-   * For user who want access to the lower-level constructs that
-   * are used for the method invocation, this method provides
-   * the SOAP parameters that were passed to the lower-level API.
-   *
-   * @see nsISOAPParameter
-   * @param paramCount The number of parameters in the array.
-   * @param params The array of parameters passed to the
-   *               lower-level API.
-   */
-  void getParameters(out PRUint32 paramCount, [retval, array, size_is(paramCount)] out nsISOAPParameter params);
-
-  /**
-   * For user who want access to the lower-level constructs that
-   * are used for the method invocation, this method provides
-   * the SOAP parameters that were returned from the call
-   * to the lower-level API. This list is only available after
-   * the call completes successfully.
-   *
-   * @see nsISOAPParameter
-   * @param resultCount The number of results in the array.
-   * @param results The array of results returned from the
-   *                lower-level API.
-   */
-  void getResults(out PRUint32 resultCount, [retval, array, size_is(resultCount)] out nsISOAPParameter results);
-
-  /**
    * Called to abort a pending call. If the call is still pending,
    * its callback instance's <code>onError</code> will be invoked,
    * passing in the specified exception.
@@ -288,6 +252,18 @@ interface nsIWebServiceCallContext : nsISupports {
    *              <code>onError</code> method.
    */
   void abort(in nsIException error);
+};
+
+[scriptable, uuid(1ef83ece-b645-4b55-a501-df42c3333b47)]
+interface nsIWebServiceSOAPCallContext : nsIWebServiceCallContext {
+  /**
+   * For users who want access to the lower-level constructs that
+   * are used for the method invocation, this attributes provides
+   * the SOAP response once the call has completed.
+   *
+   * @see nsISOAPResponse
+   */
+  readonly attribute nsISOAPResponse soapResponse;
 };
 
 %{ C++

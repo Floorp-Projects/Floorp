@@ -225,7 +225,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
   GET_AND_TEST_NAME(p2)
   PRUint16 dataType;
   val->GetDataType(&dataType);
-  if (dataType != nsIDataType::TYPE_EMPTY) {
+  if (dataType != nsIDataType::VTYPE_EMPTY) {
     printf("WSPProxyTest: Value doesn't match for property p\n");
     return NS_ERROR_FAILURE;
   }
@@ -235,7 +235,8 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
   nsIVariant** arrayVal;
 
   GET_AND_TEST_NAME(array1)
-  rv = val->GetAsArray(&type, &count, (void**)&arrayVal);
+  nsIID iid;
+  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal);
   if (NS_FAILED(rv)) {
     printf("WSPProxyTest: Failed getting value for property array1\n");
     return rv;
@@ -257,7 +258,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
   NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, arrayVal);
 
   GET_AND_TEST_NAME(array2)
-  rv = val->GetAsArray(&type, &count, (void**)&arrayVal);
+  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal);
   if (NS_FAILED(rv)) {
     printf("WSPProxyTest: Failed getting value for property array2\n");
     return rv;
@@ -279,7 +280,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
   NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, arrayVal);
 
   GET_AND_TEST_NAME(array3)
-  rv = val->GetAsArray(&type, &count, (void**)&arrayVal);
+  rv = val->GetAsArray(&type, &iid, &count, (void**)&arrayVal);
   if (NS_FAILED(rv)) {
     printf("WSPProxyTest: Failed getting value for property array2\n");
     return rv;
@@ -297,7 +298,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag)
   }
   array3Var = arrayVal[1];
   array3Var->GetDataType(&dataType);
-  if (dataType != nsIDataType::TYPE_EMPTY) {
+  if (dataType != nsIDataType::VTYPE_EMPTY) {
     printf("WSPProxyTest: Value doesn't match for element of  property array3\n");
     return NS_ERROR_FAILURE;
   }
@@ -649,7 +650,7 @@ int main (int argc, char* argv[])
 {
   nsIServiceManager *servMgr;
 
-  nsresult rv = NS_InitXPCOM(&servMgr, nsnull);
+  nsresult rv = NS_InitXPCOM2(&servMgr, nsnull, nsnull);
   if (NS_FAILED(rv)) {
     printf("failed to initialize XPCOM");
     return rv;

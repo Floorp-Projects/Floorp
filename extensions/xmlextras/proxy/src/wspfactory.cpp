@@ -80,14 +80,14 @@ WSPFactory::CreateProxyAsync(const nsAString & wsdlURL,
 #define P2M_ESCAPE_CHARACTER '_'
 
 nsresult
-WSPFactory::MethodToPropertyName(const nsAReadableCString& aMethodName,
-                                 nsAWritableString& aPropertyName)
+WSPFactory::C2XML(const nsAReadableCString& aCIdentifier,
+                  nsAWritableString& aXMLIdentifier)
 {
   nsReadingIterator<char> current, end;
 
-  aPropertyName.Truncate();
-  aMethodName.BeginReading(current);
-  aMethodName.EndReading(end);
+  aXMLIdentifier.Truncate();
+  aCIdentifier.BeginReading(current);
+  aCIdentifier.EndReading(end);
 
   while (current != end) {
     char ch = *current++;
@@ -111,21 +111,21 @@ WSPFactory::MethodToPropertyName(const nsAReadableCString& aMethodName,
     else {
       uch = PRUnichar(ch);
     }
-    aPropertyName.Append(uch);
+    aXMLIdentifier.Append(uch);
   }
 
   return NS_OK;
 }
  
 void
-WSPFactory::PropertyToMethodName(const nsAReadableString& aPropertyName,
-                                 nsAWritableCString& aMethodName)
+WSPFactory::XML2C(const nsAReadableString& aXMLIndentifier,
+                  nsAWritableCString& aCIdentifier)
 {
   nsReadingIterator<PRUnichar> current, end;
 
-  aMethodName.Truncate();
-  aPropertyName.BeginReading(current);
-  aPropertyName.EndReading(end);
+  aCIdentifier.Truncate();
+  aXMLIndentifier.BeginReading(current);
+  aXMLIndentifier.EndReading(end);
 
   while (current != end) {
     PRUnichar uch = *current++;
@@ -133,14 +133,14 @@ WSPFactory::PropertyToMethodName(const nsAReadableString& aPropertyName,
         ((PRUnichar('A') <= uch) && (uch <= PRUnichar('Z'))) ||
         ((PRUnichar('0') <= uch) && (uch <= PRUnichar('9')))) {
       // Casting is safe since we know that it's an ASCII character
-      aMethodName.Append(char(uch));
+      aCIdentifier.Append(char(uch));
     }
     else {
       // Escape the character and append to the string
       char buf[6];
       buf[0] = P2M_ESCAPE_CHARACTER;
       PR_snprintf(buf+1, 5, "%hx", uch);
-      aMethodName.Append(buf, 5);
+      aCIdentifier.Append(buf, 5);
     }
   }
 }

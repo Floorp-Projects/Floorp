@@ -36,10 +36,12 @@ REQUIRES = xpcom \
 	   caps \
 	   js \
 	   necko \
+	   dom \
 	   $(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\wspproxy.obj		\
+	.\$(OBJDIR)\wspcallcontext.obj		\
 	.\$(OBJDIR)\wspfactory.obj		\
 	.\$(OBJDIR)\wspcomplextypewrapper.obj	\
 	.\$(OBJDIR)\wsppropertybagwrapper.obj	\
@@ -47,6 +49,8 @@ CPP_OBJS=					\
 
 EXPORTS =					\
 	$(NULL)
+
+LINCS=-I..\..\soap\src
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..\..\..
 
-XPIDL_MODULE=wsproxytest
+MODULE=wsproxytest
 
 XPIDLSRCS = .\nsIWSPProxyTest.idl \
 	    $(NULL)

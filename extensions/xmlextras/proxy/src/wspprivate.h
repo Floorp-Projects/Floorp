@@ -44,6 +44,13 @@
 #include "nsIWebServiceProxy.h"
 #include "nsIWSDL.h"
 
+// SOAP includes
+#include "nsISOAPCall.h"
+#include "nsISOAPResponse.h"
+#include "nsISOAPResponseListener.h"
+#include "nsISOAPCallCompletion.h"
+#include "nsISOAPFault.h"
+
 // interface info includes
 #include "xptcall.h"
 #include "nsIInterfaceInfo.h"
@@ -52,10 +59,7 @@
 #include "nsCOMPtr.h"
 #include "nsSupportsArray.h"
 #include "nsIPropertyBag.h"
-
-class nsISOAPCall;
-class nsISOAPResponse;
-class nsISOAPParameter;
+#include "nsIException.h"
 
 class WSPFactory : public nsIWebServiceProxyFactory 
 {
@@ -66,10 +70,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBSERVICEPROXYFACTORY  
 
-  static nsresult MethodToPropertyName(const nsAReadableCString& aMethodName,
-                                       nsAWritableString& aPropertyName);
-  static void PropertyToMethodName(const nsAReadableString& aPropertyName,
-                                   nsAWritableCString& aMethodName);
+  static nsresult C2XML(const nsAReadableCString& aCIdentifier,
+                        nsAWritableString& aXMLIdentifier);
+  static void XML2C(const nsAReadableString& aXMLIndentifier,
+                    nsAWritableCString& aCIdentifier);
 };
 
 class WSPProxy : public nsXPTCStubBase,
@@ -89,41 +93,113 @@ public:
                         const nsXPTMethodInfo* info,
                         nsXPTCMiniVariant* params);
   NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
-    
+
+  nsresult Init(nsIWSDLPort* aPort,
+                nsIInterfaceInfo* aPrimaryInterface,
+                const nsAReadableString& aQualifier,
+                PRBool aIsAsync);
+  void GetListenerInterfaceInfo(nsIInterfaceInfo** aInfo);
+
   static nsresult Create(nsIWSDLPort* aPort,
                          nsIInterfaceInfo* aPrimaryInterface,
-                         const nsAReadableString& aNamespace,
+                         const nsAReadableString& aQualifier,
                          PRBool aIsAsync, WSPProxy** aProxy);
+
+  static nsresult XPTCMiniVariantToVariant(uint8 aTypeTag,
+                                           nsXPTCMiniVariant aResult,
+                                           nsIInterfaceInfo* aInterfaceInfo,
+                                           nsIVariant** aVariant);
+  static nsresult ArrayXPTCMiniVariantToVariant(uint8 aTypeTag,
+                                                nsXPTCMiniVariant aResult,
+                                                PRUint32 aLength,
+                                                nsIInterfaceInfo* aIfaceInfo,
+                                                nsIVariant** aVariant);
+
+  static nsresult VariantToValue(uint8 aTypeTag,
+                                 void* aValue,
+                                 nsIInterfaceInfo* aInterfaceInfo,
+                                 nsIVariant* aProperty);
+  static nsresult VariantToArrayValue(uint8 aTypeTag,
+                                      nsXPTCMiniVariant* aResult,
+                                      nsIInterfaceInfo* aInterfaceInfo,
+                                      nsIVariant* aProperty);
+
+  static nsresult ParameterToVariant(nsIInterfaceInfo* aInterfaceInfo,
+                                     PRUint32 aMethodIndex,
+                                     const nsXPTParamInfo* aParamInfo,
+                                     nsXPTCMiniVariant aMiniVariant,
+                                     PRUint32 aArrayLength,
+                                     nsIVariant** aVariant);
+  static nsresult VariantToInParameter(nsIInterfaceInfo* aInterfaceInfo,
+                                       PRUint32 aMethodIndex,
+                                       const nsXPTParamInfo* aParamInfo,
+                                       nsIVariant* aVariant,
+                                       nsXPTCVariant* aXPTCVariant);
+  static nsresult VariantToOutParameter(nsIInterfaceInfo* aInterfaceInfo,
+                                        PRUint32 aMethodIndex,
+                                        const nsXPTParamInfo* aParamInfo,
+                                        nsIVariant* aVariant,
+                                        nsXPTCMiniVariant* aMiniVariant);
+  static PRBool IsArray(nsIWSDLPart* aPart);
 
 protected:
   nsCOMPtr<nsIWSDLPort> mPort;
   nsCOMPtr<nsIInterfaceInfo> mPrimaryInterface;
-  nsString mNamespace;
+  nsString mQualifier;
   PRBool mIsAsync;
   nsSupportsArray mPendingCalls;
+  const nsIID* mIID;
+  nsCOMPtr<nsISupports> mAsyncListener;
+  nsCOMPtr<nsIInterfaceInfo> mListenerInterfaceInfo;
 };
 
-class WSPCallContext : public nsIWebServiceCallContext
-//                       public nsISOAPResponseListener
+class WSPCallContext : public nsIWebServiceSOAPCallContext,
+                       public nsISOAPResponseListener
 {
 public:
-  WSPCallContext();
+  WSPCallContext(WSPProxy* aProxy,
+                 nsISOAPCall* aSOAPCall,
+                 const nsAReadableString& aMethodName,
+                 nsIWSDLOperation* aOperation);
   virtual ~WSPCallContext();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBSERVICECALLCONTEXT
-
-  static nsresult Create(WSPProxy* aProxy,
-                         nsISOAPCall* aSOAPCall,
-                         const nsAReadableString& aMethodName,
-                         nsIWSDLOperation* aOperation,
-                         WSPCallContext** aCallContext);
+  NS_DECL_NSIWEBSERVICESOAPCALLCONTEXT
+  NS_DECL_NSISOAPRESPONSELISTENER
+  
+  nsresult CallAsync(PRUint32 aListenerMethodIndex,
+                     nsISupports* aListener);
+  nsresult CallSync(PRUint32 aMethodIndex,
+                    nsXPTCMiniVariant* params);
 
 protected:
-  nsCOMPtr<WSPProxy> mProxy;
-  //  nsCOMPtr<nsISOAPCall> mSOAPCall;
+  nsresult CallCompletionListener();
+
+protected:
+  WSPProxy* mProxy;
+  nsCOMPtr<nsISOAPCall> mCall;
   nsString mMethodName;
   nsCOMPtr<nsIWSDLOperation> mOperation;
+  nsCOMPtr<nsISOAPCallCompletion> mCompletion;
+  nsresult mStatus;
+  nsCOMPtr<nsIException> mException;
+  nsCOMPtr<nsISupports> mAsyncListener;
+  PRUint32 mListenerMethodIndex;
+};
+
+class WSPException : public nsIException 
+{
+public:
+  WSPException(nsISOAPFault* aFault, nsresult aStatus);
+  virtual ~WSPException();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIEXCEPTION
+
+protected:
+  nsCOMPtr<nsISOAPFault> mFault;
+  nsresult mStatus;
 };
 
 class WSPComplexTypeWrapper : public nsIPropertyBag
@@ -144,16 +220,6 @@ public:
                             const nsXPTMethodInfo* aMethodInfo,
                             nsIVariant** _retval);
 
-protected:
-  nsresult ResultAsVariant(uint8 aTypeTag,
-                           nsXPTCVariant aResult,
-                           nsIInterfaceInfo* aInterfaceInfo,
-                           nsIVariant** aVariant);
-  nsresult ArrayResultAsVariant(uint8 aTypeTag,
-                                nsXPTCVariant aResult,
-                                PRUint32 aLength,
-                                nsIInterfaceInfo* aInterfaceInfo,
-                                nsIVariant** aVariant);
 protected:
   nsCOMPtr<nsISupports> mComplexTypeInstance;
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
@@ -177,16 +243,6 @@ public:
   static nsresult Create(nsIPropertyBag* aPropertyBag,
                          nsIInterfaceInfo* aInterfaceInfo,
                          WSPPropertyBagWrapper** aWrapper);
-protected:
-  nsresult VariantToResult(uint8 aTypeTag,
-                           void* aResult,
-                           nsIInterfaceInfo* aInterfaceInfo,
-                           nsIVariant* aProperty);
-  nsresult VariantToArrayResult(uint8 aTypeTag,
-                                nsXPTCMiniVariant* aResult,
-                                nsIInterfaceInfo* aInterfaceInfo,
-                                nsIVariant* aProperty);
-
 protected:
   nsCOMPtr<nsIPropertyBag> mPropertyBag;
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
