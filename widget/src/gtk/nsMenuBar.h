@@ -56,7 +56,7 @@ public:
   NS_IMETHOD Paint();
 protected:
   PRUint32    mNumMenus;
-  GtkWidget   *mMenu;
+  GtkWidget   *mMenuBar;
   nsIWidget  *mParent;
   PRBool      mIsMenuBarAdded;
 };

@@ -67,7 +67,7 @@ protected:
   nsIPopUpMenu *mPopUpParent;
   nsIWidget    *mTarget;
 
-  GtkWidget    *mMenu; // native cascade widget
+  GtkWidget    *mMenuItem; // native cascade widget
 
 };
 

@@ -47,7 +47,7 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 {
   NS_INIT_REFCNT();
   mNumMenus = 0;
-  mMenu     = nsnull;
+  mMenuBar  = nsnull;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
 }
@@ -70,16 +70,10 @@ nsMenuBar::~nsMenuBar()
 NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
   mParent = aParent;
-  NS_ADDREF(mParent);
-  GtkWidget *parentWidget = GTK_WIDGET(mParent->GetNativeData(NS_NATIVE_WIDGET));
-#if 0
-  GtkWidget *mainWindow = XtParent(parentWidget);
-#endif
-  mMenu = gtk_menu_bar_new();
+  NS_IF_ADDREF(mParent);
+  mMenuBar = gtk_menu_bar_new();
   mParent->SetMenuBar(this);
-  gtk_widget_show(mMenu);
-// does this need to be added?
-//  gtk_layout_put(GTK_LAYOUT(parentWidget), mMenu, 0, 0);
+  gtk_widget_show(mMenuBar);
   return NS_OK;
 
 }
@@ -87,8 +81,8 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
- // XXX: Shouldn't this do an addref here? or is this just internal
   aParent = mParent;
+  NS_IF_ADDREF(aParent);
   return NS_OK;
 }
 
@@ -106,7 +100,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
   widget = gtk_menu_item_new_with_label (labelStr);
   gtk_widget_show(widget);
-  gtk_menu_bar_append (GTK_MENU_BAR (mMenu), widget);
+  gtk_menu_bar_append (GTK_MENU_BAR (mMenuBar), widget);
 
   delete[] labelStr;
 
@@ -115,7 +109,6 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
   gtk_menu_item_set_submenu (GTK_MENU_ITEM (widget), nmenu);
 
-  // XXX add aMenu to internal data structor list
   return NS_OK;
 }
 
@@ -152,7 +145,7 @@ NS_METHOD nsMenuBar::RemoveAll()
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetNativeData(void *& aData)
 {
-  aData = (void *)mMenu;
+  aData = (void *)mMenuBar;
   return NS_OK;
 }
 
