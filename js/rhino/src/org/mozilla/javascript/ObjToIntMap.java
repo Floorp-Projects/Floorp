@@ -62,13 +62,13 @@ public class ObjToIntMap implements Serializable {
 
         Iterator(ObjToIntMap master) {
             this.master = master;
-            cursor = -1;
         }
 
-        void init(Object[] keys, int[] values) {
+        final void init(Object[] keys, int[] values, int keyCount) {
             this.keys = keys;
             this.values = values;
-            this.cursor = (keys == null) ? 0 : keys.length;
+            this.cursor = -1;
+            this.remaining = keyCount;
         }
 
         public void start() {
@@ -77,23 +77,29 @@ public class ObjToIntMap implements Serializable {
         }
 
         public boolean done() {
-            return cursor < 0;
+            return remaining < 0;
         }
 
         public void next() {
-            if (cursor < 0) Context.codeBug();
-            --cursor;
-            while (cursor >= 0) {
-                Object key = keys[cursor];
-                if (key != null && key != DELETED) {
-                    break;
+            if (remaining == -1) Context.codeBug();
+            if (remaining == 0) {
+                remaining = -1;
+                cursor = -1;
+            }else {
+                for (++cursor; ; ++cursor) {
+                    Object key = keys[cursor];
+                    if (key != null && key != DELETED) {
+                        --remaining;
+                        break;
+                    }
                 }
-                --cursor;
             }
         }
 
         public Object getKey() {
-            return  keys[cursor];
+            Object key = keys[cursor];
+            if (key == UniqueTag.NULL_VALUE) { key = null; }
+            return key;
         }
 
         public int getValue() {
@@ -106,6 +112,7 @@ public class ObjToIntMap implements Serializable {
 
         ObjToIntMap master;
         private int cursor;
+        private int remaining;
         private Object[] keys;
         private int[] values;
     }
@@ -133,16 +140,16 @@ public class ObjToIntMap implements Serializable {
     }
 
     public boolean has(Object key) {
+        if (key == null) { key = UniqueTag.NULL_VALUE; }
         return 0 <= findIndex(key);
     }
 
     /**
      * Get integer value assigned with key.
-     * @return key integer value or defaultValue if key is absent or does
-     * not have int value
+     * @return key integer value or defaultValue if key is absent
      */
     public int get(Object key, int defaultValue) {
-        if (key == null) Context.codeBug();
+        if (key == null) { key = UniqueTag.NULL_VALUE; }
         int index = findIndex(key);
         if (0 <= index) {
             return values[index];
@@ -152,13 +159,11 @@ public class ObjToIntMap implements Serializable {
 
     /**
      * Get integer value assigned with key.
-     * @return key integer value or defaultValue if key does not exist or does
-     * not have int value
-     * @throws RuntimeException if key does not exist or does
-     * not have int value
+     * @return key integer value
+     * @throws RuntimeException if key does not exist
      */
     public int getExisting(Object key) {
-        if (key == null) Context.codeBug();
+        if (key == null) { key = UniqueTag.NULL_VALUE; }
         int index = findIndex(key);
         if (0 <= index) {
             return values[index];
@@ -169,13 +174,13 @@ public class ObjToIntMap implements Serializable {
     }
 
     public void put(Object key, int value) {
-        if (key == null) Context.codeBug();
+        if (key == null) { key = UniqueTag.NULL_VALUE; }
         int index = ensureIndex(key);
         values[index] = value;
     }
 
     public void remove(Object key) {
-        if (key == null) Context.codeBug();
+        if (key == null) { key = UniqueTag.NULL_VALUE; }
         int index = findIndex(key);
         if (0 <= index) {
             keys[index] = DELETED;
@@ -196,8 +201,11 @@ public class ObjToIntMap implements Serializable {
         return new Iterator(this);
     }
 
-    void initIterator(Iterator i) {
-        i.init(keys, values);
+    // The sole purpose of the method is to avoid accessing private fields
+    // from the Iterator inner class to workaround JDK 1.1 compiler bug which
+    // generates code triggering VerifierError on recent JVMs
+    final void initIterator(Iterator i) {
+        i.init(keys, values, keyCount);
     }
 
     /** Return array of present keys */
@@ -212,8 +220,10 @@ public class ObjToIntMap implements Serializable {
         for (int i = 0; count != 0; ++i) {
             Object key = keys[i];
             if (key != null && key != DELETED) {
+                if (key == UniqueTag.NULL_VALUE) { key = null; }
+                array[offset] = key;
+                ++offset;
                 --count;
-                array[offset++] = key;
             }
         }
     }
