@@ -81,7 +81,7 @@ $(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
         $(OBJS) 
         $(RESFILE)
         $(LLIBS) $(OS_LIBS)
-<<
+<<KEEP
 !endif
 
 !endif # PROGRAM && ! CONFIG_EXE_INC
