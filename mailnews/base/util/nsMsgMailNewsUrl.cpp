@@ -492,14 +492,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result) 
 {
-  // mailnews urls aren't like http or file urls...
-  // we don't have relative urls you can resolve against other urls.
-  // in fact, trying to do so leads to very bad things!! so instead
-  // of trying to resolve the url, return the input string as a dummy 
-  // place holder. I tried returning just an error code but too many 
-  // callers always assume they get back a url =(
-  *result = nsCRT::strdup(relativePath);
-  return NS_OK;
+  return m_baseURL->Resolve(relativePath, result);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetDirectory(char * *aDirectory)
