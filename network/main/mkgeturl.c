@@ -22,6 +22,10 @@
  * Designed and originally implemented by Lou Montulli '94
  * Additions/Changes by Judson Valeski, Gagan Saksena 1997.
  */
+#if defined(CookieManagement)
+#define TRUST_LABELS 1
+#endif
+
 #include "rosetta.h"
 #include "xp_error.h"
 #include "mkutils.h"
@@ -162,6 +166,10 @@ void net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
 #endif /* !NETLIB_THREAD */
 
 #include "timing.h"
+
+#ifdef TRUST_LABELS
+#include "mkaccess.h"		/* change to trust.h for phase 2 */
+#endif
 
 /* for XP_GetString() */
 #include "xpgetstr.h"
@@ -318,6 +326,11 @@ PRIVATE NET_ProxyStyle MKproxy_style = PROXY_STYLE_UNSET;
 PRIVATE char * MKglobal_config_url = 0;
 
 PRIVATE XP_List * net_EntryList=0;
+
+#ifdef TRUST_LABELS
+/* This list contains all the URL_Struct s that are created */
+PRIVATE XP_List * net_URL_sList=0;
+#endif
 
 MODULE_PRIVATE CacheUseEnum NET_CacheUseMethod=CU_CHECK_PER_SESSION;
 
@@ -794,6 +807,9 @@ NET_InitNetLib(int socket_buffer_size, int max_number_of_connections)
 	net_waiting_for_connection_url_list = XP_ListNew();
 
     net_EntryList = XP_ListNew();
+#ifdef TRUST_LABELS
+	net_URL_sList = XP_ListNew();
+#endif
 
     NET_TotalNumberOfProcessingURLs=0; /* reset */
 
@@ -1750,6 +1766,20 @@ NET_ShutdownNetLib(void)
 
 	XP_ListDestroy(net_EntryList);
 	net_EntryList = 0;
+
+#ifdef TRUST_LABELS
+	/* if there are any URL_s on their list delete them, then delete the list */
+	if ( net_URL_sList ) { 
+		URL_Struct *tmpURLs;
+		XP_List *list_ptr = net_URL_sList;
+		while((tmpURLs = (URL_Struct *) XP_ListNextObject(list_ptr)) != NULL) {
+			list_ptr = list_ptr->next;		/* get the next object before the current object gets deleted */
+			NET_FreeURLStruct( tmpURLs );	/* this will remove it from the list */
+		}
+		XP_ListDestroy( net_URL_sList );
+		net_URL_sList = 0;
+	}
+#endif
 
     /* free any memory in the protocol modules
      */
@@ -4279,6 +4309,17 @@ NET_CreateURLStruct (CONST char *url, NET_ReloadMethod force_reload)
 		URL_s = NULL;
 	}
 
+#ifdef TRUST_LABELS
+	/* add the newly minted URL_s struct to the list of the same so
+	 * that when cookie to trust label matching occurs I can find the
+	 * associated trust list */
+	if ( URL_s && net_URL_sList ) {
+		LIBNET_LOCK();
+		XP_ListAddObjectToEnd( net_URL_sList, URL_s );
+		LIBNET_UNLOCK();
+	}
+#endif
+
     return(URL_s);
 }
 
@@ -4392,6 +4433,15 @@ NET_FreeURLStruct (URL_Struct * URL_s)
     if(URL_s->ref_count > 0)
 	return;
 
+#ifdef TRUST_LABELS
+	/* remove URL_s struct from the list of the same */
+	if ( URL_s && net_URL_sList ) {
+		LIBNET_LOCK();
+	   	XP_ListRemoveObject( net_URL_sList, URL_s );
+		LIBNET_UNLOCK();
+	}
+#endif
+
     FREEIF(URL_s->address);
     FREEIF(URL_s->username);
     FREEIF(URL_s->password);
@@ -4455,8 +4505,23 @@ NET_FreeURLStruct (URL_Struct * URL_s)
 	 PR_FREEIF(URL_s->page_services_url);
     PR_FREEIF(URL_s->privacy_policy_url);
 
-    PR_Free(URL_s);
 
+#ifdef TRUST_LABELS
+	/* delete the entries and the trust list, if the list was created then there
+	 * are entries on it.  */
+	if ( URL_s->TrustList != NULL ) {
+		/* delete each trust list entry then delete the list */
+		TrustLabel *ALabel;
+		XP_List *tempList = URL_s->TrustList;
+		while ( (ALabel = XP_ListRemoveEndObject( tempList )) != NULL ) {
+			TL_Destruct( ALabel );
+		}
+		XP_ListDestroy( URL_s->TrustList );
+		URL_s->TrustList = NULL;
+    }
+#endif
+
+    PR_Free(URL_s);
 }
 
 /* free the contents of AllHeader structure that is part of URL_Struct
@@ -5188,6 +5253,49 @@ NET_InitMailtoProtocol(void)
 }
 
 #endif /* MOZ_MAIL_NEWS */
+
+#ifdef TRUST_LABELS
+/* given a URL search the list of URL_s structures for one that has
+ * a non-empty trust list.
+ * Return a pointer to the non empty trust last */
+XP_List * NET_GetTrustList( char *TargetURL )
+{
+	XP_List *RetList = NULL;
+	XP_List * list_ptr;
+	URL_Struct * tmpURLs;
+	char *FromURLs = NULL;
+	char *FromTarget = NULL;
+
+	if ( TargetURL && PL_strlen( TargetURL ) ) {
+		LIBNET_LOCK();
+		list_ptr = net_URL_sList;
+		while((tmpURLs = (URL_Struct *) XP_ListNextObject(list_ptr)) != NULL) {
+			/* first check if this URL_Struct has a trust list.  If it does then do 
+			 * the name parsing on both URLs. Check for an empty list because due to
+			 * thread switching the list could have been created but no entries added 
+			 * to it. */
+			if ( tmpURLs->TrustList != NULL && !XP_ListIsEmpty( tmpURLs->TrustList ) ) { 
+			/* This entry has a trustList, see if the URS match.  To be safe strip both
+			 * URLs down to host/domain/file.  If there is a match 
+			 * return the pointer to the trust list */
+				char *FromURLs = NET_ParseURL (tmpURLs->address, GET_PATH_PART);
+				char *FromTarget = NET_ParseURL (TargetURL, GET_PATH_PART);
+				if( PL_strcmp( FromURLs, FromTarget) == 0 ) {
+					/* we have a match */
+					RetList = tmpURLs->TrustList;
+					break;
+				}
+			}
+		} 
+		FREEIF( FromURLs ); 
+		FREEIF( FromTarget );
+		LIBNET_UNLOCK();
+	}
+	return RetList;
+}
+
+#endif
+
 
 #ifdef PROFILE
 #pragma profile off

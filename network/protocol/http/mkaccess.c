@@ -128,7 +128,6 @@ extern int MK_ACCESS_TL_RPH1;
 extern int MK_ACCESS_TL_RPH2; 
 extern int MK_ACCESS_TL_RPH3; 
 
-extern XP_List *TrustList;
 #endif
 
 
@@ -2633,11 +2632,9 @@ net_IntSetCookieString(MWContext * context,
          * At this point the cookie was added to
          * the cookie list.  So see if there is a trust label that
          * matches the cookie and if so add the trust label to the
-         * cookie permission list.  Existing trust label entries are 
-		 * replaced with this latest entry.
+         * cookie permission list.  Existing trust label entries in 
+		 * the permission list replaced with this latest entry.
          */
-        if ( !XP_ListIsEmpty( TrustList ) ) {
-            /* there are trust labels - attempt to match them to this cookie */
             if ( MatchCookieToLabel2(
                     cur_url, prev_cookie->name,
                     prev_cookie->path, prev_cookie->host, &trustlabel ) ) {
@@ -2651,7 +2648,6 @@ net_IntSetCookieString(MWContext * context,
                 net_SaveCookiePermissions(NULL);
             }
         }
-    }
 #endif
 #if defined(CookieManagement)
 	net_IntSetCookieStringInUse = FALSE;
@@ -3982,6 +3978,9 @@ struct _CookieViewerDialog {
  *
  * If a matching label is not found return a string with a single space.
  * The caller must free the string.
+ *
+ * History:
+ *  9/9/98 Paul Chek - switch recipient from a range to a single value 
  */
 char *GetTrustLabelString(char *CookieName)
 {
@@ -4000,7 +3999,7 @@ char *GetTrustLabelString(char *CookieName)
  *   int PurposeIds[] = {MK_ACCESS_TL_PPH0, MK_ACCESS_TL_PPH1,
  *                       MK_ACCESS_TL_PPH2, MK_ACCESS_TL_PPH3,
  *                       MK_ACCESS_TL_PPH4, MK_ACCESS_TL_PPH5};
- *   int RecpIds[] = { 0, MK_ACCESS_TL_RPH1, 
+ *   int RecpIds[] = { MK_ACCESS_TL_RPH0, MK_ACCESS_TL_RPH1, 
  *                     MK_ACCESS_TL_RPH2, MK_ACCESS_TL_RPH3};
 */
 
@@ -4027,7 +4026,7 @@ char *GetTrustLabelString(char *CookieName)
     PurposeIds[4] = MK_ACCESS_TL_PPH4;
     PurposeIds[5] = MK_ACCESS_TL_PPH5;
 
-    RecpIds[0] = 0;
+    RecpIds[0] = MK_ACCESS_TL_RPH0;
     RecpIds[1] = MK_ACCESS_TL_RPH1;
     RecpIds[2] = MK_ACCESS_TL_RPH2;
     RecpIds[3] = MK_ACCESS_TL_RPH3;
@@ -4144,7 +4143,26 @@ char *GetTrustLabelString(char *CookieName)
                 szTempStrs[j] = NULL;
             }
 
-            /* second build the recipient phrase list */
+            /* second, build the recipient phrase list.  The recipients value as
+			 * ossolated between allowing a range of values (0:2) and a single
+			 * value, thats the reason for the ifdef'd code. */
+#ifndef RECIPIENT_RANGE
+			szTempStrs[0] = PL_strdup( XP_GetString( RecpIds[ TEntry->recipient] ) );
+			PR_snprintf(szTemp, BUFLEN,
+				XP_GetString( MK_ACCESS_TL_RECP1 ),
+				szTempStrs[0]
+			);
+			PR_FREEIF(szTempStrs[0]);
+            szRecipient = PL_strdup( szTemp );
+#else
+			/* is just a single bit set and is that bit 0 ?*/
+			/* if  RECIPIENT_RANGE is defined you will need to 
+			 * include these lines in allxpstr.h
+			 *	ResDef(MK_ACCESS_TL_RECP2, (TRUST_LABEL_BASE + 17),
+			 *	"It is %1$s and %2$s." )
+			 *	ResDef(MK_ACCESS_TL_RECP3, (TRUST_LABEL_BASE + 18),
+			 *	"It is %1$s, %2$s and %3$s." )
+			 */
             if ( TEntry->recipient == 1 ) {
                 szTempStrs[0] = PL_strdup( XP_GetString( MK_ACCESS_TL_RPH0 ) );
                 PR_snprintf(szTemp, BUFLEN,
@@ -4203,6 +4221,7 @@ char *GetTrustLabelString(char *CookieName)
                 PR_FREEIF(szTempStrs[j]);
                 szTempStrs[j] = NULL;
             }
+#endif
 
             /* construct the by string */
             if (TEntry->by) {
@@ -4550,7 +4569,7 @@ void CopyTrustEntry( char *CookieName, TrustEntry *TEntry, TrustLabel *trustlabe
 PRIVATE
 void DeleteCookieFromPermissions( char *CookieHost, char *CookieName )
 {
-    XP_List *Tptr, *TmpList;
+    XP_List *TmpList;
     TrustEntry *TEntry;
     net_CookiePermissionStruct * cookie_permission;
 
@@ -4563,7 +4582,6 @@ void DeleteCookieFromPermissions( char *CookieHost, char *CookieName )
             /* yes - see if there is a trust label entry for the cookie */
             if ( FindTrustEntry( CookieName, cookie_permission->TrustList, &TEntry ) ) {
                 /* yes there is - delete it */
-                Tptr = Tptr->prev; /* before removing the current entry get the ptr to the next one */
                 XP_ListRemoveObject( cookie_permission->TrustList, TEntry);
                 /* free the strings in the entry */
                 PR_FREEIF(TEntry->CookieName);
