@@ -865,7 +865,6 @@ NS_METHOD nsGtkMozRemoteHelper::OpenXULWindow (const char *aChromeURL, nsIDOMWin
 {
   NS_ENSURE_ARG_POINTER(aChromeURL);
   NS_ENSURE_ARG_POINTER(aWindowFeatures);
-  NS_ENSURE_ARG_POINTER(aParent);
 
   // make sure that we pass a valid name even if there isn't one
   // passed in.
@@ -878,7 +877,7 @@ NS_METHOD nsGtkMozRemoteHelper::OpenXULWindow (const char *aChromeURL, nsIDOMWin
   url = aURL ? aURL : kEmptyUnichar;
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  nsCOMPtr<nsISupportsWString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  nsCOMPtr<nsISupportsWString> sarg(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
   if (!wwatch || !sarg)
     return NS_ERROR_FAILURE;
 
