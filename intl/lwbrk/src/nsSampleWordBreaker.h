@@ -28,16 +28,25 @@ class nsSampleWordBreaker : public nsIWordBreaker
   nsSampleWordBreaker() ;
   ~nsSampleWordBreaker() ;
 
-  NS_IMETHOD BreakInBetween(PRUnichar* aText1 , PRUint32 aTextLen1,
-                            PRUnichar* aText2 , PRUint32 aTextLen2,
+  NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
+                            const PRUnichar* aText2 , PRUint32 aTextLen2,
                             PRBool *oCanBreak);
-  NS_IMETHOD PostionToBoundary(PRUnichar* aText1 , PRUint32 aTextLen1,
+  NS_IMETHOD PostionToBoundary(const PRUnichar* aText1 , PRUint32 aTextLen1,
                                       PRUint32 *oWordBegin,
                                       PRUint32 *oWordEnd);
-  NS_IMETHOD GetLinearIterator(PRUnichar* aText, PRUint32 aLen,
-                                      nsILinearIterator** iterator,
-                                      PRBool aForward = PR_TRUE,
-                                      PRBool aCanBreak = PR_TRUE);
+
+  NS_IMETHOD FirstForwardBreak   (nsIBreakState* state) ; 
+  NS_IMETHOD NextForwardBreak    (nsIBreakState* state) ; 
+
+#ifdef AFTER_DOGFOOD 
+  NS_IMETHOD FirstBackwardBreak  (nsIBreakState* state) ; 
+  NS_IMETHOD NextBackwardBreak   (nsIBreakState* state) ; 
+  NS_IMETHOD FirstForwardConnect (nsIBreakState* state) ; 
+  NS_IMETHOD NextForwardConnect  (nsIBreakState* state) ; 
+  NS_IMETHOD FirstBackwardConnect(nsIBreakState* state) ; 
+  NS_IMETHOD NextBackwardConnect (nsIBreakState* state) ; 
+#endif 
+
 };
 
 #endif  /* nsSampleWordBreaker_h__ */

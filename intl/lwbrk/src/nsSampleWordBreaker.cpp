@@ -36,8 +36,8 @@ NS_DEFINE_IID(kIWordBreakerIID, NS_IWORDBREAKER_IID);
 NS_IMPL_ISUPPORTS(nsSampleWordBreaker, kIWordBreakerIID);
 
 nsresult nsSampleWordBreaker::BreakInBetween(
-  PRUnichar* aText1 , PRUint32 aTextLen1,
-  PRUnichar* aText2 , PRUint32 aTextLen2,
+  const PRUnichar* aText1 , PRUint32 aTextLen1,
+  const PRUnichar* aText2 , PRUint32 aTextLen2,
   PRBool *oCanBreak)
 {
   // to be implement
@@ -45,7 +45,7 @@ nsresult nsSampleWordBreaker::BreakInBetween(
 }
 
 nsresult nsSampleWordBreaker::PostionToBoundary(
-  PRUnichar* aText1 , PRUint32 aTextLen1,
+  const PRUnichar* aText1 , PRUint32 aTextLen1,
   PRUint32 *oWordBegin,
   PRUint32 *oWordEnd)
 {
@@ -53,13 +53,26 @@ nsresult nsSampleWordBreaker::PostionToBoundary(
   return NS_OK;
 }
 
-nsresult nsSampleWordBreaker::GetLinearIterator(
-  PRUnichar* aText, PRUint32 aLen,
-  nsILinearIterator** iterator,
-  PRBool aForward,
-  PRBool aCanBreak)
+nsresult nsSampleWordBreaker::FirstForwardBreak(nsIBreakState* state)
 {
   // to be implement
+  state->Set(1, PR_TRUE);
   return NS_OK;
 }
-
+nsresult nsSampleWordBreaker::NextForwardBreak(nsIBreakState* state) 
+{
+  // to be implement
+  PRBool done;
+  state->IsDone(&done);
+  if(! done)
+  {
+    PRUint32 pos;
+    PRUint32 len;
+    state->Current(&pos);
+    pos += 1;
+    state->Length(&len);
+   
+    state->Set(pos, (pos >= len));
+  }
+  return NS_OK;
+}

@@ -25,24 +25,31 @@ class nsJISx4501LineBreaker : public nsILineBreaker
 {
   NS_DECL_ISUPPORTS
 
-  nsJISx4501LineBreaker();
+public:
+  nsJISx4501LineBreaker(const PRUnichar *aNoBegin, PRInt32 aNoBeginLen, 
+                        const PRUnichar* aNoEnd, PRInt32 aNoEndLen);
   ~nsJISx4501LineBreaker();
 
-  NS_IMETHOD BreakInBetween(PRUnichar* aText1 , PRUint32 aTextLen1,
-                            PRUnichar* aText2 , PRUint32 aTextLen2,
+  NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
+                            const PRUnichar* aText2 , PRUint32 aTextLen2,
                             PRBool *oCanBreak);
+  NS_IMETHOD FirstForwardBreak   (nsIBreakState* state) ; 
+  NS_IMETHOD NextForwardBreak    (nsIBreakState* state) ; 
+#ifdef AFTER_DOGFOOD 
+  NS_IMETHOD FirstBackwardBreak  (nsIBreakState* state) ; 
+  NS_IMETHOD NextBackwardBreak   (nsIBreakState* state) ; 
+  NS_IMETHOD FirstForwardConnect (nsIBreakState* state) ; 
+  NS_IMETHOD NextForwardConnect  (nsIBreakState* state) ; 
+  NS_IMETHOD FirstBackwardConnect(nsIBreakState* state) ; 
+  NS_IMETHOD NextBackwardConnect (nsIBreakState* state) ; 
+#endif 
 
-  NS_IMETHOD GetLinearIterator(PRUnichar* aText, PRUint32 aLen,
-                                      nsILinearIterator** iterator,
-                                      PRBool aForward = PR_TRUE,
-                                      PRBool aCanBreak = PR_TRUE);
+protected:
 
-  NS_IMETHOD GetBinarySearchIterator(PRUnichar* aText, PRUint32 aLen,
-                                      nsIBinarySearchIterator** iterator);
+  PRUint32 Next(const PRUnichar* aText, PRUint32 aLen,  PRUint32 aPos);
+  PRInt8   GetClass(PRUnichar u);
+  PRBool   GetPair(PRInt8 c1, PRInt8 c2);
 
-  NS_IMETHOD GetConnector(PRUnichar* aText, PRUint32 aLen,
-                                      nsString& oLinePostfix,
-                                      nsString& oLinePrefix);
 };
 
 #endif  /* nsJISx4501LineBreaker_h__ */

@@ -21,6 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIWordBreaker.h"
+#include "nsString.h"
 
 #include "nscore.h"
 
@@ -32,6 +33,7 @@
 
 class nsIWordBreakerFactory : public nsISupports
 {
+public:
   NS_IMETHOD GetBreaker(nsString& aParam, nsIWordBreaker** breaker) = 0;
 };
 

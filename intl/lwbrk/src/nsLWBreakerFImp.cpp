@@ -18,10 +18,11 @@
 
 #include "nsLWBreakerFImp.h"
 
-#include "nsLWIMP.h"
+#include "nsLWBRKDll.h"
 
 #include "pratom.h"
-#include "nsLWBRKDll.h"
+#include "nsJISx4501LineBreaker.h"
+#include "nsSampleWordBreaker.h"
 nsLWBreakerFImp::nsLWBreakerFImp()
 {
   NS_INIT_REFCNT();
@@ -69,12 +70,71 @@ nsresult nsLWBreakerFImp::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
+static const PRUnichar gJaNoBegin[] =
+{
+  0xfffd // to be changed
+};
+static const PRUnichar gJaNoEnd[] =
+{
+  0xfffd // to be changed
+};
+static const PRUnichar gKoNoBegin[] =
+{
+  0xfffd // to be changed
+};
+static const PRUnichar gKoNoEnd[] =
+{
+  0xfffd // to be changed
+};
+static const PRUnichar gTwNoBegin[] =
+{
+  0xfffd // to be changed
+};
+static const PRUnichar gTwNoEnd[] =
+{
+  0xfffd // to be changed
+};
+static const PRUnichar gCnNoBegin[] =
+{
+  0xfffd // to be changed
+};
+static const PRUnichar gCnNoEnd[] =
+{
+  0xfffd // to be changed
+};
 nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsILineBreaker** oResult)
 {
   if( NULL == oResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  *oResult = new LINEBREAKER ();
+  if( aParam == "ja" ) 
+  {
+     *oResult = new nsJISx4501LineBreaker (
+           gJaNoBegin, sizeof(gJaNoBegin)/sizeof(PRUnichar), 
+           gJaNoEnd, sizeof(gJaNoEnd)/sizeof(PRUnichar));
+  } 
+  else if(aParam =="ko") 
+  {
+     *oResult = new nsJISx4501LineBreaker (
+           gKoNoBegin, sizeof(gKoNoBegin)/sizeof(PRUnichar), 
+           gKoNoEnd, sizeof(gKoNoEnd)/sizeof(PRUnichar));
+  } 
+  else if(aParam =="tw") 
+  {
+     *oResult = new nsJISx4501LineBreaker (
+           gTwNoBegin, sizeof(gTwNoBegin)/sizeof(PRUnichar), 
+           gTwNoEnd, sizeof(gTwNoEnd)/sizeof(PRUnichar));
+  } 
+  else if(aParam =="cn") 
+  {
+     *oResult = new nsJISx4501LineBreaker (
+           gCnNoBegin, sizeof(gCnNoBegin)/sizeof(PRUnichar), 
+           gCnNoEnd, sizeof(gCnNoEnd)/sizeof(PRUnichar));
+  } 
+  else 
+  {
+     *oResult = new nsJISx4501LineBreaker (nsnull, 0, nsnull, 0);
+  }
   return (*oResult)->AddRef();
 }
 
@@ -83,7 +143,7 @@ nsresult nsLWBreakerFImp::GetBreaker(nsString& aParam, nsIWordBreaker** oResult)
   if( NULL == oResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  *oResult = new WORDBREAKER ();
+  *oResult = new nsSampleWordBreaker ();
   return (*oResult)->AddRef();
 }
 
