@@ -374,8 +374,6 @@ function Save()
   // Without this, the dialog tries to update as it is being destroyed.
   current_panels.setAttribute('ref', 'rdf:null');
 
-  start_batch(sidebarObj.datasource, sidebarObj.resource);
-
   // Create a "container" wrapper around the current panels to
   // manipulate the RDF:Seq more easily.
   var container = Components.classes["component://netscape/rdf/container"].createInstance();
@@ -407,7 +405,7 @@ function Save()
                          container);
   }
 
-  end_batch(sidebarObj.datasource, sidebarObj.resource);
+  refresh_all_sidebars();
 
   // Write the modified panels out.
   sidebarObj.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
@@ -431,21 +429,16 @@ function has_targets(datasource, resource) {
   return arcs.HasMoreElements();
 }
 
-// Mark the beginning of a batch by asserting inbatch="true"
-// into the datasource. The observer in sidebarOverlay.js uses 
-// this to remember the panel selection.
-function start_batch(datasource, resource) {
-  datasource.Assert(RDF.GetResource(resource),
-                    RDF.GetResource(NC + "inbatch"),
-                    RDF.GetLiteral("true"),
-                    true);
-}
-
-// Mark the end of a batch by unasserting 'inbatch' on the datasource.
-function end_batch(datasource, resource) {
-  datasource.Unassert(RDF.GetResource(resource),
-                      RDF.GetResource(NC + "inbatch"),
-                      RDF.GetLiteral("true"));
+// Use an assertion to pass a "refresh" event to all the sidebars.
+// They use observers to watch for this assertion (in sidebarOverlay.js).
+function refresh_all_sidebars() {
+  sidebarObj.datasource.Assert(RDF.GetResource(sidebarObj.resource),
+                               RDF.GetResource(NC + "refresh"),
+                               RDF.GetLiteral("true"),
+                               true);
+  sidebarObj.datasource.Unassert(RDF.GetResource(sidebarObj.resource),
+                                 RDF.GetResource(NC + "refresh"),
+                                 RDF.GetLiteral("true"));
 }
 
 // Remove a resource and all the arcs out from it.
