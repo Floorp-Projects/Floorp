@@ -73,7 +73,8 @@ CMD: for ($::FORM{'cmdtype'}) {
 Refresh: 0; URL=$url
 
 <TITLE>What a hack.</TITLE>
-Loading your query named <B>$::FORM{'namedcmd'}</B>...";
+Loading your query named <B>$::FORM{'namedcmd'}</B>...
+";
         exit;
     };
     /^forgetnamed$/ && do {
@@ -84,7 +85,8 @@ Content-type: text/html
 <TITLE>Forget what?</TITLE>
 OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
 <P>
-<A HREF=query.cgi>Go back to the query page.</A>";
+<A HREF=query.cgi>Go back to the query page.</A>
+";
         exit;
     };
     /^asnamed$/ && do {
@@ -98,7 +100,8 @@ OK, you now have a new query named <B>$::FORM{'newqueryname'}</B>.
 
 <P>
 
-<A HREF=query.cgi>Go back to the query page.</A>";
+<A HREF=query.cgi>Go back to the query page.</A>
+";
         } else {
             print "Content-type: text/html
 
@@ -107,7 +110,8 @@ OK, you now have a new query named <B>$::FORM{'newqueryname'}</B>.
 Query names can only have letters, digits, spaces, or underbars.  You entered 
 \"<B>$::FORM{'newqueryname'}</B>\", which doesn't cut it.
 <P>
-Click the <B>Back</B> button and type in a valid name for this query.";
+Click the <B>Back</B> button and type in a valid name for this query.
+";
         }
         exit;
     };
@@ -121,7 +125,8 @@ OK, you now have a new default query.
 
 <P>
 
-<A HREF=query.cgi>Go back to the query page, using the new default.</A>";
+<A HREF=query.cgi>Go back to the query page, using the new default.</A>
+";
         exit;
     };
 }
