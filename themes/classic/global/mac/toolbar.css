@@ -2,6 +2,10 @@
 toolbox
   {
     background-color      : #9D9D9D;
+  }
+
+.toolbox-top
+  {
     border-bottom         : 1px solid #000000;
   }
 

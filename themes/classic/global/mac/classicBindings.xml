@@ -112,4 +112,21 @@
     </content>
   </binding>
   
+  <binding id="treeheader" extends="xul:button">
+    <content>
+      <xul:box class="treeheader-box" flex="1" autostretch="never">
+        <xul:image class="treeheader-icon" inherits="src,loading"/>
+        <xul:text class="treeheader-text" inherits="value,crop" crop="right"/>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding id="treeheader-children" extends="xul:button">
+    <content>
+      <xul:box class="treeheader-box" flex="1" autostretch="never">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>  
+  
 </bindings>

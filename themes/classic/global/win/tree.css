@@ -146,3 +146,8 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
   margin-right: 3px;
 }
 
+
+.treecell-popup-icon
+  {
+    list-style-image       : url("chrome://global/skin/columnselect.gif");
+  }
