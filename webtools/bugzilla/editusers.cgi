@@ -292,20 +292,25 @@ List users with login name matching:
 if ($action eq 'list') {
     PutHeader("Select user");
     my $query = "";
+    my $matchstr = $::FORM{'matchstr'};
     if (exists $::FORM{'matchtype'}) {
       $query = "SELECT login_name,realname,disabledtext " .
           "FROM profiles WHERE login_name ";
       if ($::FORM{'matchtype'} eq 'substr') {
           $query .= "like";
-          $::FORM{'matchstr'} = '%' . $::FORM{'matchstr'} . '%';
+          $matchstr = '%' . $matchstr . '%';
       } elsif ($::FORM{'matchtype'} eq 'regexp') {
           $query .= "regexp";
+          $matchstr = '.'
+	  	unless $matchstr;
       } elsif ($::FORM{'matchtype'} eq 'notregexp') {
           $query .= "not regexp";
+          $matchstr = '.'
+	  	unless $matchstr;
       } else {
           die "Unknown match type";
       }
-      $query .= SqlQuote($::FORM{'matchstr'}) . " ORDER BY login_name";
+      $query .= SqlQuote($matchstr) . " ORDER BY login_name";
     } elsif (exists $::FORM{'query'}) {
       $query = "SELECT login_name,realname,disabledtext " .
           "FROM profiles WHERE " . $::FORM{'query'} . " ORDER BY login_name";
