@@ -95,6 +95,7 @@ public:
   NS_IMETHOD ShowMenuBar(PRBool aShow);
   NS_IMETHOD IsMenuBarVisible(PRBool *aVisible);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
+  NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
 
   // nsIStreamObserver
   NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);

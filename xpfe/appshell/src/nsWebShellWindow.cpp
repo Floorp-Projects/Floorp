@@ -161,6 +161,7 @@ static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
 
 const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
 const char * kThrobberOffStr = "resource:/res/throbber/anims00.gif";
+const char * kPrimaryContentTypeValue  = "content-primary";
 
 struct ThreadedWindowEvent {
   PLEvent           event;
@@ -171,11 +172,13 @@ struct ThreadedWindowEvent {
 // subsequently be filled in when we receive a webshell added notification.
 struct nsWebShellInfo {
   nsString id; // The identifier of the iframe or frame node in the XUL tree.
+  PRBool   primary;   // whether it's considered a/the primary content
   nsIWebShell* child; // The child web shell that will end up being used for the content area.
 
-  nsWebShellInfo(const nsString& anID, nsIWebShell* aChildShell)
+  nsWebShellInfo(const nsString& anID, PRBool aPrimary, nsIWebShell* aChildShell)
   {
     id = anID; 
+    primary = aPrimary;
     child = aChildShell;
     NS_IF_ADDREF(aChildShell);
   }
@@ -947,10 +950,11 @@ nsWebShellWindow::GetContentShellById(const nsString& aID, nsIWebShell** aChildS
 //------------------------------------------------------------------------------
 NS_IMETHODIMP
 nsWebShellWindow::AddWebShellInfo(const nsString& aID,
+                                  PRBool aPrimary,
                                   nsIWebShell* aChildShell)
 {
 
-  nsWebShellInfo* webShellInfo = new nsWebShellInfo(aID, 
+  nsWebShellInfo* webShellInfo = new nsWebShellInfo(aID, aPrimary,
                                                     aChildShell);
   
   if (mContentShells == nsnull)
@@ -1229,10 +1233,21 @@ NS_IMETHODIMP
 nsWebShellWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
 {
   // Find out the id of the frameNode in question 
-  nsIAtom* idAtom = NS_NewAtom("id");
+  nsIAtom      *idAtom = NS_NewAtom("id");
+  nsIAtom      *typeAtom = NS_NewAtom("type");
+  PRBool       isPrimary;
   nsAutoString value;
-	frameNode->GetAttribute(kNameSpaceID_None, idAtom, value);
-	AddWebShellInfo(value, aChildShell);
+
+  // right now, any webshell with type "content" or "content-XXX" is
+  // considered a content webshell.  but only "content-primary" is
+  // considered primary.
+  frameNode->GetAttribute(kNameSpaceID_None, typeAtom, value);
+  isPrimary = value.EqualsIgnoreCase(kPrimaryContentTypeValue) ? PR_TRUE : PR_FALSE;
+  frameNode->GetAttribute(kNameSpaceID_None, idAtom, value);
+
+  AddWebShellInfo(value, isPrimary, aChildShell);
+
+  NS_RELEASE(typeAtom);
   NS_RELEASE(idAtom);
   return NS_OK;
 }
@@ -1489,12 +1504,58 @@ nsWebShellWindow::ShowModalInternal()
 }
 
 
+/* return the main, outermost webshell in this window */
 NS_IMETHODIMP 
 nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
 {
   aWebShell = mWebShell;
   NS_ADDREF(mWebShell);
   return NS_OK;
+}
+
+/* return the webshell intended to hold (html) content.  In a simple
+   browser window, that would be the main content area.  If no such
+   webshell was found for any reason, the outermost webshell will be
+   returned.  (Note that is the main chrome webshell, and probably
+   not what you wanted, but at least it's a webshell.)
+     Also note that if no content webshell was marked "primary,"
+   we return the chrome webshell, even if (non-primary) content webshells
+   do exist.  Thas was done intentionally.  The selection would be
+   nondeterministic, and it seems dangerous to set a precedent like that.
+*/
+NS_IMETHODIMP
+nsWebShellWindow::GetContentWebShell(nsIWebShell **aResult)
+{
+  nsresult     rv;
+  nsIWebShell  *content;
+
+  content = nsnull;
+  rv = NS_ERROR_FAILURE;
+
+  // first, try looking in the webshell list
+  // (note this list isn't dynamic: it's set up when the webshell is added,
+  // but not updated when its attributes are poked. could be a problem...)
+  if (mContentShells) {
+    PRInt32 count = mContentShells->Count();
+    for (PRInt32 ctr = 0; ctr < count; ctr++) {
+      nsWebShellInfo* webInfo = (nsWebShellInfo*)(mContentShells->ElementAt(ctr));
+      if (webInfo->primary) {
+        content = webInfo->child;
+        break;
+      }
+    }
+  }
+
+  if (!content)
+    // couldn't find it? then return our chrome webshell
+    content = mWebShell;
+
+  if (content) {
+    NS_ADDREF(content);
+    rv = NS_OK;
+  }
+  *aResult = content;
+  return rv;
 }
 
 NS_IMETHODIMP 

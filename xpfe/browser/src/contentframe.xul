@@ -17,6 +17,9 @@
     <titledbutton id="grippy" class="grippy" onclick="toggleOpenClose();"
                   flex="100%" />
   </box>
-  <html:iframe type="content" id="content" src="about:blank" flex="100%" />
+  <!-- type attribute is used by frame construction to locate iframes
+       intended to hold (html) content -->
+  <!-- id's use is a mystery -->
+  <html:iframe type="content-primary" id="content" src="about:blank" flex="100%" />
 </box>
 </window>

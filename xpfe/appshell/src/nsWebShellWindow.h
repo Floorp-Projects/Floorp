@@ -97,10 +97,11 @@ public:
                          nsIWebShell *&aNewWebShell);
 
   NS_IMETHOD AddWebShellInfo(const nsString& aID,
-                             nsIWebShell* aChildShell);
+                         PRBool aPrimary,
+                         nsIWebShell* aChildShell);
 
-	NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult);
-	NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
+  NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult);
+  NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
   NS_IMETHOD GetLockedState(PRBool& aResult) { aResult = mLockedUntilChromeLoad; return NS_OK; }
 
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
@@ -113,6 +114,7 @@ public:
   NS_IMETHOD ShowModal();
   NS_IMETHOD Close();
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
+  NS_IMETHOD GetContentWebShell(nsIWebShell **aResult);
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
   // nsWebShellWindow methods...

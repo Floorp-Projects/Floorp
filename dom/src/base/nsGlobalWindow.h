@@ -85,6 +85,7 @@ public:
   NS_IMETHOD    GetLocation(nsIDOMLocation** aLocation);
   NS_IMETHOD    GetParent(nsIDOMWindow** aOpener);
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);
+  NS_IMETHOD    GetContent(nsIDOMWindow** aContent);
   NS_IMETHOD    GetClosed(PRBool* aClosed);
   NS_IMETHOD    GetMenubar(nsIDOMBarProp** aMenubar);
   NS_IMETHOD    GetToolbar(nsIDOMBarProp** aToolbar);
@@ -224,6 +225,8 @@ protected:
   PRUint32      CalculateChromeFlags(char *aFeatures);
   nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures);
   nsresult      ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
+
+  static nsresult WebShellToDOMWindow(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
 
   nsIScriptContext *mContext;
   void *mScriptObject;

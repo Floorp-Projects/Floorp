@@ -44,12 +44,12 @@ public:
   NS_IMETHOD GetWidget(nsIWidget *& aWidget) = 0;
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow) = 0;
 
-  NS_IMETHOD AddWebShellInfo(const nsString& aID, nsIWebShell* aChildShell) = 0;
+  NS_IMETHOD AddWebShellInfo(const nsString& aID, PRBool aPrimary, nsIWebShell* aChildShell) = 0;
 
-	NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult) = 0;
+  NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult) = 0;
 
-	NS_IMETHOD LockUntilChromeLoad() = 0;
-	NS_IMETHOD GetLockedState(PRBool& aResult) = 0;
+  NS_IMETHOD LockUntilChromeLoad() = 0;
+  NS_IMETHOD GetLockedState(PRBool& aResult) = 0;
 };
 
 
