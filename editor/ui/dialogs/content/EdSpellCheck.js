@@ -365,9 +365,11 @@ function IgnoreAll()
   NextWord();
 }
 
-function Replace()
+function Replace(newWord)
 {
-  var newWord = gDialog.ReplaceWordInput.value;
+  if (!newWord)
+    return;
+
   if (gMisspelledWord && gMisspelledWord != newWord)
   {
     var editor = GetCurrentEditor();
