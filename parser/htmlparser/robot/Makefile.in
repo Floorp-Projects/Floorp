@@ -34,6 +34,8 @@ include $(topsrcdir)/config/config.mk
 LIBS = \
 	-lraptorbase \
 	-lraptorhtmlpars \
+	-lexpat \
+	-lxmltok \
 	-lnetlib \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lftpurl \
