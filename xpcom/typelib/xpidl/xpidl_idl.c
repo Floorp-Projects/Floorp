@@ -403,7 +403,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                 end_copy, MIN(data->buf + data->len, end_copy),
                 data->point);
 #endif
-        copy = MIN(avail, cb_data->fill.max_size);
+        copy = MIN(avail, (int) cb_data->fill.max_size);
 #ifdef DEBUG_shaver_bufmgmt
         fprintf(stderr, "COPYING->%.*s<-COPYING\n", copy, data->point);
 #endif
