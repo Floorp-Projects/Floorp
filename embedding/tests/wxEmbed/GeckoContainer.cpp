@@ -32,7 +32,6 @@
 // Mozilla Includes
 //#include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
-#include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIURI.h"
 #include "nsIWebProgress.h"
@@ -41,16 +40,20 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIURIContentListener.h"
 #include "nsCWebBrowser.h"
 #include "nsCRT.h"
 
 #include "GeckoContainer.h"
 
 
+
 GeckoContainer::GeckoContainer(GeckoContainerUI *pUI, const char *aRole) :
     mUI(pUI),
     mNativeWindow(nsnull),
-    mSizeSet(PR_FALSE)
+    mSizeSet(PR_FALSE),
+    mIsChromeContainer(PR_FALSE),
+    mIsURIContentListener(PR_TRUE)
 {
     NS_ASSERTION(mUI, "No GeckoContainerUI! How do you expect this to work???");
     if (aRole)
@@ -74,10 +77,13 @@ nsresult GeckoContainer::CreateBrowser(PRInt32 aX, PRInt32 aY,
     if (!mWebBrowser || NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
-    (void)mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+    mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome *, this));
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
-    dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+    dsti->SetItemType(
+        mIsChromeContainer ?
+            nsIDocShellTreeItem::typeChromeWrapper :
+            nsIDocShellTreeItem::typeContentWrapper);
 
     nsCOMPtr<nsIBaseWindow> browserBaseWindow = do_QueryInterface(mWebBrowser);
 
@@ -95,6 +101,10 @@ nsresult GeckoContainer::CreateBrowser(PRInt32 aX, PRInt32 aY,
     nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
     (void)mWebBrowser->AddWebBrowserListener(thisListener, 
         NS_GET_IID(nsIWebProgressListener));
+
+    if (mIsURIContentListener)
+        mWebBrowser->SetParentURIContentListener(NS_STATIC_CAST(nsIURIContentListener *, this));
+
 
     // The window has been created. Now register for history notifications
 //    mWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsISHistoryListener));
@@ -140,6 +150,7 @@ NS_INTERFACE_MAP_BEGIN(GeckoContainer)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) // optional
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener2)
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
    NS_INTERFACE_MAP_ENTRY(nsIGeckoContainer)
@@ -446,8 +457,52 @@ NS_IMETHODIMP GeckoContainer::Observe(nsISupports *aSubject, const char *aTopic,
 }
 
 //*****************************************************************************
-// GeckoContainer::nsIContextMenuListener
+// GeckoContainer::nsIURIContentListener
 //*****************************************************************************   
+
+/* boolean onStartURIOpen (in nsIURI aURI); */
+NS_IMETHODIMP GeckoContainer::OnStartURIOpen(nsIURI *aURI, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean doContent (in string aContentType, in boolean aIsContentPreferred, in nsIRequest aRequest, out nsIStreamListener aContentHandler); */
+NS_IMETHODIMP GeckoContainer::DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *aRequest, nsIStreamListener **aContentHandler, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean isPreferred (in string aContentType, out string aDesiredContentType); */
+NS_IMETHODIMP GeckoContainer::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean canHandleContent (in string aContentType, in boolean aIsContentPreferred, out string aDesiredContentType); */
+NS_IMETHODIMP GeckoContainer::CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsISupports loadCookie; */
+NS_IMETHODIMP GeckoContainer::GetLoadCookie(nsISupports * *aLoadCookie)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP GeckoContainer::SetLoadCookie(nsISupports * aLoadCookie)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* attribute nsIURIContentListener parentContentListener; */
+NS_IMETHODIMP GeckoContainer::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP GeckoContainer::SetParentContentListener(nsIURIContentListener * aParentContentListener)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //*****************************************************************************
 // GeckoContainer::nsIContextMenuListener2

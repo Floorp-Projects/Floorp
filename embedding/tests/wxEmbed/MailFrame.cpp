@@ -33,6 +33,7 @@
 
 #include "MailFrame.h"
 #include "GeckoProtocolHandler.h"
+#include "nsEmbedString.h"
 
 #include "nsIURI.h"
 

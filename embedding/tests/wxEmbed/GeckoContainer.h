@@ -46,6 +46,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebBrowser.h"
+#include "nsIURIContentListener.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIContextMenuListener.h"
@@ -70,7 +71,9 @@ public:
     NS_IMETHOD GetContainerUI(GeckoContainerUI **pUI) = 0;
 };
 
-#define NS_DECL_NSIGECKOCONTAINER
+#define NS_DECL_NSIGECKOCONTAINER \
+    NS_IMETHOD GetRole(nsACString &aRole); \
+    NS_IMETHOD GetContainerUI(GeckoContainerUI **pUI);
 
 class GeckoContainer   :
     public nsIWebBrowserChrome,
@@ -81,6 +84,7 @@ class GeckoContainer   :
     public nsIObserver,
     public nsIContextMenuListener2,
     public nsITooltipListener,
+    public nsIURIContentListener,
     public nsIGeckoContainer,
     public nsSupportsWeakReference
 {
@@ -101,11 +105,8 @@ public:
     NS_DECL_NSIOBSERVER
     NS_DECL_NSICONTEXTMENULISTENER2
     NS_DECL_NSITOOLTIPLISTENER
+    NS_DECL_NSIURICONTENTLISTENER
     NS_DECL_NSIGECKOCONTAINER
-
-    // nsIGeckoContainer
-    NS_IMETHOD GetRole(nsACString &aRole);
-    NS_IMETHOD GetContainerUI(GeckoContainerUI **pUI);
 
     nsresult CreateBrowser(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY, nativeWindow aParent,
                            nsIWebBrowser **aBrowser);
@@ -123,6 +124,9 @@ protected:
     PRUint32     mChromeFlags;
     PRBool       mContinueModalLoop;
     PRBool       mSizeSet;
+    PRBool       mIsChromeContainer;
+    PRBool       mIsURIContentListener;
+
     nsCString    mRole;
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
     nsCOMPtr<nsIWebBrowserChrome> mDependentParent; // opener (for dependent windows only)

@@ -31,6 +31,8 @@
 
 #include "global.h"
 
+#include "wx/strconv.h"
+
 #include "BrowserFrame.h"
 
 #include "nsIURI.h"
@@ -46,6 +48,8 @@ BEGIN_EVENT_TABLE(BrowserFrame, GeckoFrame)
     EVT_MENU(XRCID("browse_home"),      BrowserFrame::OnBrowserHome)
     EVT_BUTTON(XRCID("browser_go"),     BrowserFrame::OnBrowserGo)
     EVT_TEXT_ENTER(XRCID("url"),        BrowserFrame::OnBrowserUrl)
+    EVT_MENU(XRCID("browser_open_in_new_window"),
+                                        BrowserFrame::OnBrowserOpenLinkInNewWindow)
 END_EVENT_TABLE()
 
 BrowserFrame::BrowserFrame(wxWindow* aParent)
@@ -59,8 +63,31 @@ BrowserFrame::BrowserFrame(wxWindow* aParent)
     SetupDefaultGeckoWindow();
 
     CreateStatusBar();
+}
 
-    OnBrowserHome(wxCommandEvent());
+
+nsresult BrowserFrame::LoadURI(const wchar_t *aURI)
+{
+    if (mWebBrowser)
+    {
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
+        if (webNav)
+        {
+            return webNav->LoadURI(aURI,
+                    nsIWebNavigation::LOAD_FLAGS_NONE,
+                    nsnull,
+                    nsnull,
+                    nsnull);
+        }
+    }
+    return NS_ERROR_FAILURE;
+}
+
+
+nsresult BrowserFrame::LoadURI(const char *aURI)
+{
+    wxMBConv conv;
+    return LoadURI(conv.cWX2WC(aURI));
 }
 
 
@@ -78,19 +105,11 @@ void BrowserFrame::OnFilePrint(wxCommandEvent & WXUNUSED(event))
 
 void BrowserFrame::OnBrowserGo(wxCommandEvent & WXUNUSED(event))
 {
-    if (mWebBrowser)
+    wxTextCtrl *txtCtrl = (wxTextCtrl *) FindWindowById(XRCID("url"), this);
+    wxString url = txtCtrl->GetValue();
+    if (!url.IsEmpty())
     {
-        wxTextCtrl *txtCtrl = (wxTextCtrl *) FindWindowById(XRCID("url"), this);
-        wxString url = txtCtrl->GetValue();
-        if (!url.IsEmpty())
-        {
-            nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
-            webNav->LoadURI(NS_ConvertASCIItoUCS2(url.c_str()).get(),
-                                   nsIWebNavigation::LOAD_FLAGS_NONE,
-                                   nsnull,
-                                   nsnull,
-                                   nsnull);
-        }
+        LoadURI(url);
     }
 }
 
@@ -164,17 +183,15 @@ void BrowserFrame::OnUpdateBrowserStop(wxUpdateUIEvent &event)
 
 void BrowserFrame::OnBrowserHome(wxCommandEvent & WXUNUSED(event))
 {
-    if (mWebBrowser)
-    {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
-        webNav->LoadURI(NS_ConvertASCIItoUCS2("http://www.mozilla.org/projects/embedding/").get(),
-                               nsIWebNavigation::LOAD_FLAGS_NONE,
-                               nsnull,
-                               nsnull,
-                               nsnull);
-    }
+    LoadURI("http://www.mozilla.org/projects/embedding/");
 }
 
+void BrowserFrame::OnBrowserOpenLinkInNewWindow(wxCommandEvent & WXUNUSED(event))
+{
+    BrowserFrame* frame = new BrowserFrame(NULL);
+    frame->Show(TRUE);
+    frame->LoadURI(mContextLinkUrl.get());
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // GeckoContainerUI overrides
@@ -224,6 +241,9 @@ void BrowserFrame::ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *a
     {
         return;
     }
+
+    mContextLinkUrl.SetLength(0);
+
     nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(event);
     if (mouseEvent)
     {
@@ -254,6 +274,8 @@ void BrowserFrame::ShowContextMenu(PRUint32 aContextFlags, nsIContextMenuInfo *a
         else if (aContextFlags & nsIContextMenuListener2::CONTEXT_LINK)
         {
             menuName = "context_browser_link";
+
+            aContextMenuInfo->GetAssociatedLink(mContextLinkUrl);
         }
         else if (aContextFlags & nsIContextMenuListener2::CONTEXT_INPUT)
         {

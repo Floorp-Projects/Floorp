@@ -31,7 +31,6 @@
 
 #include "GeckoProtocolHandler.h"
 
-#include "nsString.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIGenericFactory.h"
@@ -43,6 +42,7 @@
 #include "nsIByteArrayInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStreamPump.h"
+#include "nsEmbedString.h"
 
 // Everytime register handler is called, it picks the next available CID in the
 // list.
@@ -360,7 +360,7 @@ GeckoProtocolChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aCont
     mURI->GetScheme(scheme);
     for (PRUint32 i = 0; i < gUsedCIDs; i++)
     {
-        if (scheme.EqualsIgnoreCase(gCallbacks[i].mScheme.get()))
+        if (stricmp(scheme.get(), gCallbacks[i].mScheme.get()) == 0)
         {
             rv = gCallbacks[i].mCallback->GetData(
                 mURI, NS_STATIC_CAST(nsIChannel *,this), mContentType, &mData, &mContentLength);
