@@ -46,7 +46,7 @@
         if (!element) break;
         var eltType = element.localName;
         if (eltType == "radiogroup")
-          element.selectedItem = element.childNodes[pref.getIntPref(element.getAttribute("prefstring"))];
+          element.selectedItem = element.getElementsByAttribute('value', pref.getIntPref(element.getAttribute("prefstring")))[0];
         else if (eltType == "checkbox")
           element.checked = pref.getBoolPref(element.getAttribute("prefstring"));
         else if (eltType == "textbox")
@@ -97,6 +97,7 @@
                 prefstring="offline.startup_state">
     <radio value="0" label="&radioRememberPrevState;" accesskey="&radioRememberPrevState.accesskey;"/>
     <radio value="1" label="&radioAskMe;" accesskey="&radioAskMe.accesskey;"/>
+    <radio value="2" label="&radioAlwaysOnline;" accesskey="&radioAlwaysOnline.accesskey;"/>
     </radiogroup>
 
   <separator/>

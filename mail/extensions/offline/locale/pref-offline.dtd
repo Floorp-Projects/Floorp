@@ -7,6 +7,9 @@
 <!ENTITY radioRememberPrevState.accesskey "R">
 <!ENTITY radioAskMe "Ask me for online state at startup">
 <!ENTITY radioAskMe.accesskey "A">
+<!ENTITY radioAlwaysOnline "Always start up online">
+<!ENTITY radioAlwaysOnline.accesskey "l">
+
 <!ENTITY textGoingOnline "Send unsent messages when going online?">
 <!ENTITY radioAutoSend "Yes">
 <!ENTITY radioAutoSend.accesskey "Y">
