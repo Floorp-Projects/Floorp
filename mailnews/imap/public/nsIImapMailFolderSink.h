@@ -27,6 +27,44 @@
 #include "nsImapCore.h"
 #include "nsIImapProtocol.h"
 
+typedef PRInt32  ImapOnlineCopyState;
+
+/* starting interface:    ImapOnlineCopyStateType */
+
+#define IMAPONLINECOPYSTATETYPE_IID_STR "5f7484b0-68b4-11d3-a53e-0060b0fc04b7"
+
+#define IMAPONLINECOPYSTATETYPE_IID \
+  {0x5f7484b0, 0x68b4, 0x11d3, \
+    { 0xa5, 0x3e, 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7 }}
+
+class ImapOnlineCopyStateType {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(IMAPONLINECOPYSTATETYPE_IID)
+
+  enum { kInProgress = 0 };
+
+  enum { kSuccessfulCopy = 1 };
+
+  enum { kFailedCopy = 2 };
+
+  enum { kSuccessfulDelete = 3 };
+
+  enum { kFailedDelete = 4 };
+
+  enum { kReadyForAppendData = 5 };
+
+  enum { kFailedAppend = 6 };
+
+  enum { kInterruptedState = 7 };
+};
+
+/* Use this macro when declaring classes that implement this interface. */
+#define NS_DECL_IMAPONLINECOPYSTATETYPE \
+
+/* Use this macro to declare functions that forward the behavior of this interface to another object. */
+#define NS_FORWARD_IMAPONLINECOPYSTATETYPE(_to) \
+
+
 /* 3b2dd7e0-e72c-11d2-ab7b-00805f8ac968 */
 
 #define NS_IIMAPMAILFOLDERSINK_IID \
@@ -44,9 +82,9 @@ public:
 
     // Tell mail master about the newly selected mailbox
     NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
-                                     mailbox_spec* aSpec) = 0;
+                                     nsImapMailboxSpec* aSpec) = 0;
     NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
-                                       mailbox_spec* aSpec) = 0;
+                                       nsImapMailboxSpec* aSpec) = 0;
     NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol) = 0;
     NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
                                                 PRBool* aBool) = 0;
@@ -60,7 +98,7 @@ public:
     
     NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol) = 0;
     
-    
+//    NS_IMETHOD OnlineCopyCompleted(nsIImapProtocol* aProtocol, ImapOnlineCopyState aCopyState) = 0;
 };
 
 #endif

@@ -23,7 +23,6 @@
 nsIImapUrl.h
 nsIImapLog.h
 nsIIMAPHostSessionList.h
-nsIImapMailfolderSink.h
 nsIImapExtensionSink.h
 nsIImapMiscellaneousSink.h
 nsIImapService.h

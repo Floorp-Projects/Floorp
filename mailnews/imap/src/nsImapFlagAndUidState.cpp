@@ -100,6 +100,7 @@ nsImapFlagAndUidState::nsImapFlagAndUidState(PRInt32 numberOfMessages, PRUint16 
 	nsCRT::memset(fFlags, 0, sizeof(imapMessageFlagsType) * fNumberOfMessageSlotsAllocated);
 	fSupportedUserFlags = flags;
 	fNumberDeleted = 0;
+	NS_INIT_REFCNT();
 }
 
 nsImapFlagAndUidState::nsImapFlagAndUidState(const nsImapFlagAndUidState& state, 
@@ -114,6 +115,7 @@ nsImapFlagAndUidState::nsImapFlagAndUidState(const nsImapFlagAndUidState& state,
 	memcpy(fFlags, state.fFlags, sizeof(imapMessageFlagsType) * fNumberOfMessageSlotsAllocated);
 	fSupportedUserFlags = flags;
 	fNumberDeleted = 0;
+	NS_INIT_REFCNT();
 }
 
 nsImapFlagAndUidState::~nsImapFlagAndUidState()

@@ -32,7 +32,6 @@ EXPORTS		= \
 		nsIImapUrl.h \
 		nsIImapLog.h \
 		nsIIMAPHostSessionList.h \
-		nsIImapMailFolderSink.h \
 		nsIImapExtensionSink.h \
 		nsIImapMiscellaneousSink.h \
 		nsIImapService.h \
@@ -45,6 +44,8 @@ XPIDLSRCS	= \
 		nsIImapFlagAndUidState.idl \
 		nsIImapMockChannel.idl \
 		nsIImapProtocol.idl \
+		nsIMailboxSpec.idl \
+		nsIImapMailFolderSink.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -25,6 +25,8 @@
 
 #include "MailNewsTypes.h"
 #include "nsString.h"
+#include "nsIMailboxSpec.h"
+#include "nsIImapFlagAndUidState.h"
 
 class nsIMAPNamespace;
 class nsImapProtocol;
@@ -148,8 +150,17 @@ protected:
 	char m_delimiter;
 };
 
+class nsImapMailboxSpec : public nsIMailboxSpec
+{
+public:
+	NS_DECL_ISUPPORTS
 
-struct mailbox_spec {
+	nsImapMailboxSpec();
+	
+	virtual ~nsImapMailboxSpec();
+	NS_DECL_NSIMAILBOXSPEC
+
+  nsImapMailboxSpec& operator=(const nsImapMailboxSpec& aCopy);
 	PRInt32 		  	folder_UIDVALIDITY;
 	PRInt32			number_of_messages;
 	PRInt32 		  	number_of_unseen_messages;
@@ -163,19 +174,15 @@ struct mailbox_spec {
 	char			*hostName;
 	
 	nsImapProtocol *connection;	// do we need this? It seems evil.
-	nsImapFlagAndUidState     *flagState;
+	nsCOMPtr <nsIImapFlagAndUidState>     flagState;
 	
 	PRBool			folderSelected;
 	PRBool			discoveredFromLsub;
 
-	const char		*smtpPostAddress;
 	PRBool			onlineVerified;
 
-	nsIMAPNamespace	*namespaceForFolder;
+	nsIMAPNamespace *namespaceForFolder;
 };
-
-typedef struct mailbox_spec mailbox_spec;
-
 
 const int kImapServerDisconnected = 1;
 const int kImapOutOfMemory = 2;
@@ -189,7 +196,7 @@ typedef struct _GenericInfo {
 typedef struct _StreamInfo {
 	PRUint32	size;
 	char	*content_type;
-	struct mailbox_spec *boxSpec;
+	nsImapMailboxSpec *boxSpec;
 } StreamInfo;
 
 typedef struct _ProgressInfo {

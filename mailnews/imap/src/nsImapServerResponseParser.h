@@ -92,7 +92,7 @@ public:
     
     // create a struct mailbox_spec from our info, used in
     // libmsg c interface
-    struct mailbox_spec *CreateCurrentMailboxSpec(const char *mailboxName = NULL);
+    nsImapMailboxSpec *CreateCurrentMailboxSpec(const char *mailboxName = NULL);
     
     // zero stops a list recording of flags and causes the flags for
     // each individual message to be sent back to libmsg 
@@ -169,7 +169,7 @@ protected:
     virtual PRBool	msg_fetch_quoted(PRBool chunk, PRInt32 origin);
     virtual PRBool	msg_fetch_literal(PRBool chunk, PRInt32 origin);
     virtual void    mailbox_list(PRBool discoveredFromLsub);
-    virtual void    mailbox(mailbox_spec *boxSpec);
+    virtual void    mailbox(nsImapMailboxSpec *boxSpec);
     
     virtual void        ProcessOkCommand(const char *commandToken);
     virtual void        ProcessBadCommand(const char *commandToken);

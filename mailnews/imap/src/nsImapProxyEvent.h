@@ -33,6 +33,8 @@
 #include "nsIImapExtensionSink.h"
 #include "nsIImapMiscellaneousSink.h"
 #include "nsIImapIncomingServer.h"
+#include "nsImapCore.h"
+
 #include "nsCOMPtr.h"
 class nsImapProxyBase
 {
@@ -78,9 +80,9 @@ public:
 
     // Tell mail master about the newly selected mailbox
     NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
-                                     mailbox_spec* aSpec);
+                                     nsImapMailboxSpec* aSpec);
     NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
-                                       mailbox_spec* aSpec);
+                                       nsImapMailboxSpec* aSpec);
     NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol);
     NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
                                                 PRBool* aBool);
@@ -212,73 +214,6 @@ struct nsImapMailFolderSinkProxyEvent : public nsImapEvent
     nsImapMailFolderSinkProxyEvent(nsImapMailFolderSinkProxy* aProxy);
     virtual ~nsImapMailFolderSinkProxyEvent();
     nsImapMailFolderSinkProxy* m_proxy;
-};
-
-struct UpdateImapMailboxInfoProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    UpdateImapMailboxInfoProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                                    mailbox_spec* aSpec);
-    virtual ~UpdateImapMailboxInfoProxyEvent();
-    NS_IMETHOD HandleEvent();
-    mailbox_spec m_mailboxSpec;
-};
-
-struct UpdateImapMailboxStatusProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    UpdateImapMailboxStatusProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                                      mailbox_spec* aSpec);
-    virtual ~UpdateImapMailboxStatusProxyEvent();
-    NS_IMETHOD HandleEvent();
-    mailbox_spec m_mailboxSpec;
-};
-
-struct ChildDiscoverySucceededProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    ChildDiscoverySucceededProxyEvent(nsImapMailFolderSinkProxy* aProxy);
-    virtual ~ChildDiscoverySucceededProxyEvent();
-    NS_IMETHOD HandleEvent();
-};
-
-struct PromptUserForSubscribeUpdatePathProxyEvent : 
-    public nsImapMailFolderSinkProxyEvent 
-{
-    PromptUserForSubscribeUpdatePathProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                                               PRBool* aBool);
-    virtual ~PromptUserForSubscribeUpdatePathProxyEvent();
-    NS_IMETHOD HandleEvent();
-    PRBool m_bool;
-};
-
-struct SetupHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    SetupHeaderParseStreamProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                               StreamInfo* aStreamInfo);
-    virtual ~SetupHeaderParseStreamProxyEvent();
-    NS_IMETHOD HandleEvent();
-    StreamInfo m_streamInfo;
-};
-
-struct NormalEndHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    NormalEndHeaderParseStreamProxyEvent(nsImapMailFolderSinkProxy* aProxyo);
-    virtual ~NormalEndHeaderParseStreamProxyEvent();
-    NS_IMETHOD HandleEvent();
-};
-
-struct ParseAdoptedHeaderLineProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    ParseAdoptedHeaderLineProxyEvent(nsImapMailFolderSinkProxy* aProxy,
-                               msg_line_info* aMsgLineInfo);
-    virtual ~ParseAdoptedHeaderLineProxyEvent();
-    NS_IMETHOD HandleEvent();
-    msg_line_info m_msgLineInfo;
-};
-
-struct AbortHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent
-{
-    AbortHeaderParseStreamProxyEvent(nsImapMailFolderSinkProxy* aProxy);
-    virtual ~AbortHeaderParseStreamProxyEvent();
-    NS_IMETHOD HandleEvent();
 };
 
 struct nsImapExtensionSinkProxyEvent : nsImapEvent

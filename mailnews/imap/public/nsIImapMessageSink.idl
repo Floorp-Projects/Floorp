@@ -25,25 +25,6 @@
 
 interface nsIFileSpec;
 
-typedef long ImapOnlineCopyState;
-
-[scriptable, uuid(5f7484b0-68b4-11d3-a53e-0060b0fc04b7)]
-
-interface ImapOnlineCopyStateType 
-{
-  const long kInProgress = 0;
-  const long kSuccessfulCopy = 1;
-  const long kFailedCopy = 2;
-  const long kSuccessfulDelete = 3;
-  const long kFailedDelete = 4;
-  const long kReadyForAppendData = 5;
-  const long kFailedAppend = 6;
-  const long kInterruptedState = 7;
-};
-
-
-
-
 [scriptable, uuid(5a53b814-68b1-11d3-a53e-0060b0fc04b7)]
 
 interface nsIImapMessageSink : nsISupports {
@@ -58,7 +39,7 @@ interface nsIImapMessageSink : nsISupports {
     void AbortMsgWriteStream();
     
     // message move/copy related methods
-    void OnlineCopyReport(in ImapOnlineCopyState aCopyState);
+//    void OnlineCopyReport(in ImapOnlineCopyState aCopyState);
     void BeginMessageUpload();
 //    void UploadMessageFile(UploadMessageInfo* aMsgInfo);
 

@@ -175,24 +175,8 @@ public:
 	NS_DECL_NSIMSGIMAPMAILFOLDER
 
     // nsIImapMailFolderSink methods
-    // Tell mail master about the newly selected mailbox
-    NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
-                                     mailbox_spec* aSpec);
-    NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
-                                       mailbox_spec* aSpec);
-    NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol);
-    NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
-                                                PRBool* aBool);
-    NS_IMETHOD SetupHeaderParseStream(nsIImapProtocol* aProtocol,
-                                   StreamInfo* aStreamInfo);
+	NS_DECL_NSIIMAPMAILFOLDERSINK
 
-    NS_IMETHOD ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
-                                   msg_line_info* aMsgLineInfo);
-    
-    NS_IMETHOD NormalEndHeaderParseStream(nsIImapProtocol* aProtocol);
-    
-    NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
-    
     // nsIImapMessageSink methods
 	NS_DECL_NSIIMAPMESSAGESINK
 
@@ -276,15 +260,15 @@ public:
 protected:
     // Helper methods
 	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
-                       &keysToFetch, nsImapFlagAndUidState *flagState);
+                       &keysToFetch, nsIImapFlagAndUidState *flagState);
 	void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray
-                          &keysToFetch, nsImapFlagAndUidState *flagState);
+                          &keysToFetch, nsIImapFlagAndUidState *flagState);
 	void PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const
                                      nsMsgKeyArray &keysToFetch, 
-                                     mailbox_spec *boxSpec);
+                                     nsIMailboxSpec *boxSpec);
 	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr *tweakMe);
 
-	nsresult SyncFlags(nsImapFlagAndUidState *flagState);
+	nsresult SyncFlags(nsIImapFlagAndUidState *flagState);
 
 	void UpdatePendingCounts(PRBool countUnread, PRBool missingAreRead);
 	void SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted);

@@ -31,8 +31,9 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"
 #include "nsMsgBaseCID.h"
-
+#include "nsImapCore.h"
 #include "nsMsgUtils.h"
+#include "nsIImapFlagAndUidState.h"
 
 nsresult
 nsGetImapServer(const char* username, const char* hostname,
@@ -238,4 +239,104 @@ nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char** uri)
 	*uri = PR_smprintf("%s%s#%d", kImapMessageRootURI, (const char *) tailURI, key);
 
 	return NS_OK;
+}
+
+// nsImapMailboxSpec stuff
+
+NS_IMPL_ISUPPORTS(nsImapMailboxSpec, nsCOMTypeInfo<nsIMailboxSpec>::GetIID());
+
+nsImapMailboxSpec::nsImapMailboxSpec()
+{
+	folder_UIDVALIDITY = 0;
+	number_of_messages = 0;
+	number_of_unseen_messages = 0;
+	number_of_recent_messages = 0;
+	
+	box_flags = 0;
+	
+	allocatedPathName = nsnull;
+	unicharPathName = nsnull;
+	hierarchySeparator = '\0';
+	hostName = nsnull;
+	
+	folderSelected = PR_FALSE;
+	discoveredFromLsub = PR_FALSE;
+
+	onlineVerified = PR_FALSE;
+	namespaceForFolder = nsnull;
+	NS_INIT_REFCNT ();
+}
+
+nsImapMailboxSpec::~nsImapMailboxSpec()
+{
+}
+
+NS_IMPL_GETSET(nsImapMailboxSpec, Folder_UIDVALIDITY, PRInt32, folder_UIDVALIDITY);
+NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_messages, PRInt32, number_of_messages);
+NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_unseen_messages, PRInt32, number_of_unseen_messages);
+NS_IMPL_GETSET(nsImapMailboxSpec, Number_of_recent_messages, PRInt32, number_of_recent_messages);
+NS_IMPL_GETSET(nsImapMailboxSpec, HierarchySeparator, char, hierarchySeparator);
+NS_IMPL_GETSET(nsImapMailboxSpec, FolderSelected, PRBool, folderSelected);
+NS_IMPL_GETSET(nsImapMailboxSpec, DiscoveredFromLsub, PRBool, discoveredFromLsub);
+NS_IMPL_GETSET(nsImapMailboxSpec, OnlineVerified, PRBool, onlineVerified);
+NS_IMPL_GETSET_STR(nsImapMailboxSpec, HostName, hostName);
+NS_IMPL_GETSET_STR(nsImapMailboxSpec, AllocatedPathName, allocatedPathName);
+NS_IMPL_GETSET(nsImapMailboxSpec, Box_flags, PRUint32, box_flags);
+NS_IMPL_GETSET(nsImapMailboxSpec, NamespaceForFolder, nsIMAPNamespace *, namespaceForFolder);
+
+NS_IMETHODIMP nsImapMailboxSpec::GetUnicharPathName(PRUnichar **aUnicharPathName)
+{
+	if (!aUnicharPathName)
+		return NS_ERROR_NULL_POINTER;
+	*aUnicharPathName = (unicharPathName) ? nsCRT::strdup(unicharPathName) : nsnull;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailboxSpec::GetFlagState(nsIImapFlagAndUidState ** aFlagState)
+{
+	if (!aFlagState)
+		return NS_ERROR_NULL_POINTER;
+	*aFlagState = flagState;
+	NS_IF_ADDREF(*aFlagState);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMailboxSpec::SetFlagState(nsIImapFlagAndUidState * aFlagState)
+{
+	flagState = aFlagState;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsImapMailboxSpec::SetUnicharPathName(const PRUnichar *aUnicharPathName)
+{
+	PR_FREEIF(unicharPathName);
+	unicharPathName= (aUnicharPathName) ? nsCRT::strdup(aUnicharPathName ) : nsnull;
+	return (unicharPathName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+nsImapMailboxSpec& nsImapMailboxSpec::operator=(const nsImapMailboxSpec& aCopy) 
+{
+  folder_UIDVALIDITY = aCopy.folder_UIDVALIDITY;
+  number_of_messages = aCopy.number_of_messages;
+  number_of_unseen_messages = aCopy.number_of_unseen_messages;
+  number_of_recent_messages = aCopy.number_of_recent_messages;
+	
+  box_flags = aCopy.box_flags;
+	
+  allocatedPathName = (aCopy.allocatedPathName) ? nsCRT::strdup(aCopy.allocatedPathName) : nsnull;
+  unicharPathName = (aCopy.unicharPathName) ? nsCRT::strdup(aCopy.unicharPathName) : nsnull;
+  hierarchySeparator = aCopy.hierarchySeparator;
+  hostName = nsCRT::strdup(aCopy.hostName);
+	
+  flagState = aCopy.flagState;
+	
+  folderSelected = aCopy.folderSelected;
+  discoveredFromLsub = aCopy.discoveredFromLsub;
+
+  onlineVerified = aCopy.onlineVerified;
+
+  namespaceForFolder = aCopy.namespaceForFolder;
+  
+  return *this;
 }

@@ -202,7 +202,7 @@ public:
 	void NotifySearchHit(const char * hitLine);
 
 	// Event handlers for the imap parser. 
-	void DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec);
+	void DiscoverMailboxSpec(nsImapMailboxSpec * adoptedBoxSpec);
 	void AlertUserEventUsingId(PRUint32 aMessageId);
 	void AlertUserEvent(const char * message);
 	void AlertUserEventFromServer(const char * aServerEvent);
@@ -370,7 +370,7 @@ private:
 	PRBool	CheckNewMail();
 
 	// folder opening and listing header functions
-	void UpdatedMailboxSpec(mailbox_spec *aSpec);
+	void UpdatedMailboxSpec(nsImapMailboxSpec *aSpec);
 	void FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount);
 	void FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
 	void FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);

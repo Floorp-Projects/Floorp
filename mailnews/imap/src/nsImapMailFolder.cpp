@@ -58,6 +58,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsXPIDLString.h"
+#include "nsIImapFlagAndUidState.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
@@ -1288,7 +1289,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 }
 
 NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
-	nsIImapProtocol* aProtocol,	mailbox_spec* aSpec)
+	nsIImapProtocol* aProtocol,	nsIMailboxSpec* aSpec)
 {
 	nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIMsgDatabase> mailDBFactory;
@@ -1322,7 +1323,9 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
         if (mDatabase && mAddListener)
             mDatabase->AddListener(this);
     }
-    if (aSpec->folderSelected)
+	PRBool folderSelected;
+	rv = aSpec->GetFolderSelected(&folderSelected);
+    if (NS_SUCCEEDED(rv) && folderSelected)
     {
      	nsMsgKeyArray existingKeys;
     	nsMsgKeyArray keysToDelete;
@@ -1342,7 +1345,14 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
             if (mDatabase->ListAllOfflineDeletes(&existingKeys) > 0)
                 existingKeys.QuickSort();
         }
-    	if ((imapUIDValidity != aSpec->folder_UIDVALIDITY)	/* && // if UIDVALIDITY Changed 
+		PRInt32 folderValidity;
+		aSpec->GetFolder_UIDVALIDITY(&folderValidity);
+
+		nsCOMPtr <nsIImapFlagAndUidState> flagState;
+
+		aSpec->GetFlagState(getter_AddRefs(flagState));
+
+    	if ((imapUIDValidity != folderValidity)	/* && // if UIDVALIDITY Changed 
     		!NET_IsOffline() */)
     	{
 
@@ -1395,29 +1405,32 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			// store the new UIDVALIDITY value
 
 			if (NS_SUCCEEDED(rv) && dbFolderInfo)
-    			dbFolderInfo->SetImapUidValidity(aSpec->folder_UIDVALIDITY);
+    			dbFolderInfo->SetImapUidValidity(folderValidity);
     										// delete all my msgs, the keys are bogus now
 											// add every message in this folder
 			existingKeys.RemoveAll();
 //			keysToDelete.CopyArray(&existingKeys);
 
-			if (aSpec->flagState)
+			if (flagState)
 			{
 				nsMsgKeyArray no_existingKeys;
-	  			FindKeysToAdd(no_existingKeys, keysToFetch, aSpec->flagState);
+	  			FindKeysToAdd(no_existingKeys, keysToFetch, flagState);
     		}
     	}		
-    	else if (!aSpec->flagState /*&& !NET_IsOffline() */)	// if there are no messages on the server
+    	else if (!flagState /*&& !NET_IsOffline() */)	// if there are no messages on the server
     	{
 			keysToDelete.CopyArray(&existingKeys);
     	}
     	else /* if ( !NET_IsOffline()) */
     	{
-    		FindKeysToDelete(existingKeys, keysToDelete, aSpec->flagState);
+    		FindKeysToDelete(existingKeys, keysToDelete, flagState);
             
+			PRUint32 boxFlags;
+
+			aSpec->GetBox_flags(&boxFlags);
 			// if this is the result of an expunge then don't grab headers
-			if (!(aSpec->box_flags & kJustExpunged))
-				FindKeysToAdd(existingKeys, keysToFetch, aSpec->flagState);
+			if (!(boxFlags & kJustExpunged))
+				FindKeysToAdd(existingKeys, keysToFetch, flagState);
     	}
     	
     	
@@ -1439,14 +1452,14 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 			if (keysToFetch.GetSize() > 0)
 			{
 				SetBiffState(nsMsgBiffState_NewMail);
-				if (aSpec->flagState)
+				if (flagState)
 				{
-					aSpec->flagState->GetNumberOfRecentMessages(&numRecentMessages);
+					flagState->GetNumberOfRecentMessages(&numRecentMessages);
 					SetNumNewMessages(numRecentMessages);
 				}
 			}
 		}
-		SyncFlags(aSpec->flagState);
+		SyncFlags(flagState);
 	   	if (keysToFetch.GetSize())
     	{			
             PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);
@@ -1476,7 +1489,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 }
 
 NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxStatus(
-	nsIImapProtocol* aProtocol,	mailbox_spec* aSpec)
+	nsIImapProtocol* aProtocol,	nsIMailboxSpec* aSpec)
 {
 	nsresult rv = NS_ERROR_FAILURE;
 	return rv;
@@ -1497,7 +1510,7 @@ NS_IMETHODIMP nsImapMailFolder::PromptUserForSubscribeUpdatePath(
 }
 
 NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
-    nsIImapProtocol* aProtocol, StreamInfo* aStreamInfo)
+    nsIImapProtocol* aProtocol, PRUint32 aSize, const char *content_type, nsIMailboxSpec *boxSpec)
 {
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -1534,7 +1547,7 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 		}
 
 	}
-	m_nextMessageByteLength = aStreamInfo->size;
+	m_nextMessageByteLength = aSize;
 	if (!m_msgParser)
 	{
 		rv = nsComponentManager::CreateInstance(kParseMailMsgStateCID, nsnull, 
@@ -1553,12 +1566,12 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
 }
 
 NS_IMETHODIMP nsImapMailFolder::ParseAdoptedHeaderLine(
-    nsIImapProtocol* aProtocol, msg_line_info* aMsgLineInfo)
+    nsIImapProtocol* aProtocol, const char *aMessageLine, PRUint32 aMsgKey)
 {
     // we can get blocks that contain more than one line, 
     // but they never contain partial lines
-	char *str = aMsgLineInfo->adoptedMessageLine;
-	m_curMsgUid = aMsgLineInfo->uidOfMessage;
+	const char *str = aMessageLine;
+	m_curMsgUid = aMsgKey;
 	m_msgParser->SetEnvelopePos(m_curMsgUid);	// OK, this is silly (but
                                                 // we'll fix
                                                 // it). m_envelope_pos, for
@@ -2127,7 +2140,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 
 // both of these algorithms assume that key arrays and flag states are sorted by increasing key.
-void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsImapFlagAndUidState *flagState)
+void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsIImapFlagAndUidState *flagState)
 {
 	PRBool imapDeleteIsMoveToTrash = DeleteIsMoveToTrash();
 	PRUint32 total = existingKeys.GetSize();
@@ -2166,7 +2179,7 @@ void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsg
 	}
 }
 
-void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState)
+void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsIImapFlagAndUidState *flagState)
 {
 	PRBool showDeletedMessages = ShowDeletedMessages();
 
@@ -2201,7 +2214,7 @@ void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKey
 }
 
 void nsImapMailFolder::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const nsMsgKeyArray &keysToFetch,
-                                                mailbox_spec *boxSpec)
+                                                nsIMailboxSpec *boxSpec)
 {
     PRUint32 *theKeys = (PRUint32 *) PR_Malloc( keysToFetch.GetSize() * sizeof(PRUint32) );
     if (theKeys)
@@ -2417,9 +2430,41 @@ nsresult nsImapMailFolder::GetMessageHeader(nsMsgKey key, nsIMsgDBHdr ** aMsgHdr
     
     // message move/copy related methods
 NS_IMETHODIMP 
-nsImapMailFolder::OnlineCopyReport(ImapOnlineCopyState aCopyState)
+nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopyState aCopyState)
 {
-    return NS_ERROR_FAILURE;
+	if (aCopyState == ImapOnlineCopyStateType::kSuccessfulCopy && aProtocol)
+	{
+		nsCOMPtr <nsIImapUrl> imapUrl;
+		aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
+		if (imapUrl)
+		{
+			nsIImapUrl::nsImapAction action;
+			imapUrl->GetImapAction(&action);
+			if (action == nsIImapUrl::nsImapOnlineToOfflineMove)
+			{
+				nsCString messageIds;
+				nsresult rv = imapUrl->CreateListOfMessageIdsString(&messageIds);
+				if (NS_SUCCEEDED(rv))
+				{
+				   nsCOMPtr<nsIEventQueue> queue;	
+				   // get the Event Queue for this thread...
+				   NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+
+				   if (NS_FAILED(rv)) return rv;
+
+					NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+				   if (NS_FAILED(rv)) return rv;
+				   rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+				   if (NS_FAILED(rv)) return rv;
+       
+				   rv = imapService->AddMessageFlags(queue, this, nsnull, nsnull,
+										messageIds.GetBuffer(),
+										kImapMsgDeletedFlag,
+										PR_TRUE);
+				}
+			}
+		}
+	}
 }
 
 NS_IMETHODIMP
@@ -2429,7 +2474,7 @@ nsImapMailFolder::BeginMessageUpload()
 }
 
 // synchronize the message flags in the database with the server flags
-nsresult nsImapMailFolder::SyncFlags(nsImapFlagAndUidState *flagState)
+nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
 {
     // update all of the database flags
 	PRInt32 messageIndex;

@@ -34,12 +34,14 @@
  {
    const long kInProgress = 0;
    const long kSuccessfulCopy = 1;
-   const long kFailedCopy = 2;
+   const long kSuccessfulMove = 2;
    const long kSuccessfulDelete = 3;
    const long kFailedDelete = 4;
    const long kReadyForAppendData = 5;
    const long kFailedAppend = 6;
    const long kInterruptedState = 7;
+   const long kFailedCopy = 8;
+   const long kFailedMove = 9;
  };
 
 
@@ -62,5 +64,5 @@ interface nsIImapMailFolderSink : nsISupports {
     
     void AbortHeaderParseStream(in nsIImapProtocol aProtocol) ;
     
-    void OnlineCopyCompleted(in ImapOnlineCopyState aCopyState) ;
+    void OnlineCopyCompleted(in nsIImapProtocol aProtocol, in ImapOnlineCopyState aCopyState) ;
 };

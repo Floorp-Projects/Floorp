@@ -742,7 +742,8 @@ void nsImapServerResponseParser::mailbox_data()
 
 void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 {
-	mailbox_spec *boxSpec = (mailbox_spec *)PR_CALLOC(sizeof(mailbox_spec));
+	nsImapMailboxSpec *boxSpec = new nsImapMailboxSpec;
+	NS_ADDREF(boxSpec);
     PRBool needsToFreeBoxSpec = PR_TRUE;
 	if (!boxSpec)
 		HandleMemoryFailure();
@@ -798,17 +799,13 @@ void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 		}
 	}
     if (needsToFreeBoxSpec)
-    {
-        nsCRT::free(boxSpec->hostName);
-        PR_FREEIF(boxSpec->allocatedPathName);
-        PR_FREEIF(boxSpec); // mscott - do we have any fields we need to
+        NS_RELEASE(boxSpec); // mscott - do we have any fields we need to
                             // release?
-    }
 }
 
 /* mailbox         ::= "INBOX" / astring
 */
-void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
+void nsImapServerResponseParser::mailbox(nsImapMailboxSpec *boxSpec)
 {
 	char *boxname = nsnull;
     const char *serverKey = fServerConnection.GetImapServerKey();
@@ -2265,9 +2262,10 @@ PRBool nsImapServerResponseParser::IsNumericString(const char *string)
 }
 
 
-struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const char *mailboxName /* = nsnull */)
+nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const char *mailboxName /* = nsnull */)
 {
-	mailbox_spec *returnSpec = (mailbox_spec *) PR_Calloc(1, sizeof(mailbox_spec) );
+	nsImapMailboxSpec *returnSpec = new nsImapMailboxSpec;
+	NS_ADDREF(returnSpec);
 	if (returnSpec)
 	{	
 		char *convertedMailboxName = nsnull;
