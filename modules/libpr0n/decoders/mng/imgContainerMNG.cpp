@@ -27,6 +27,7 @@
 #include "nsIInputStream.h"
 #include "imgIDecoderObserver.h"
 #include "nsMemory.h"
+#include "prinrval.h"
 
 static void il_mng_timeout_func(nsITimer *timer, void *data);
 
@@ -377,27 +378,26 @@ il_mng_refresh(mng_handle handle,
 
 // stupid Mac code that shouldn't be in the image decoders...
 #ifdef XP_MAC
-  nscoord width;
-  container->mFrame->GetWidth(&width);
-  PRUint32 iwidth = width;
-  PRUint8 *buf = nsMemory::Alloc(bpr);
+  PRInt32 iwidth;
+  container->mFrame->GetWidth(&iwidth);
+  PRUint8 *buf = (PRUint8 *)nsMemory::Alloc(bpr);
 #endif
 
   for (mng_uint32 y=top; y<top+height; y++) {
+    if (container->alpha)
+      container->mFrame->SetAlphaData(container->alpha + 
+                          y*container->mByteWidthAlpha,
+                          container->mByteWidthAlpha,
+                          abpr*y);
 #ifdef XP_MAC
     PRUint8 *cptr = buf;
-    PRUint8 *row = container->iamge+y*container->mByteWidth;
+    PRUint8 *row = container->image+y*container->mByteWidth;
     for (PRUint32 x=0; x<iwidth; x++) {
       *cptr++ = 0;
       *cptr++ = *row++;
       *cptr++ = *row++;
       *cptr++ = *row++;
     }
-    if (container->alpha)
-      container->mFrame->SetAlphaData(container->alpha + 
-                          y*container->mByteWidthAlpha,
-                          container->mByteWidthAlpha,
-                          abpr*y);
     container->mFrame->SetImageData(buf, bpr, bpr*y);
 #else
     container->mFrame->SetImageData(container->image + 
