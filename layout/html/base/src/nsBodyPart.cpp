@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#if 0
 #include "nsHTMLParts.h"
 #include "nsHTMLContainer.h"
 #include "nsBodyFrame.h"
@@ -243,3 +244,4 @@ NS_NewBodyPart(nsIHTMLContent** aInstancePtrResult,
   }
   return body->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
 }
+#endif
