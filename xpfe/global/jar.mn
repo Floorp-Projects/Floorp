@@ -9,7 +9,6 @@ packages/widget-toolkit.jar:
 	global/content/commonDialog.js              (resources/content/commonDialog.js) 
 	global/content/strres.js                    (resources/content/strres.js) 
 	global/content/builtinURLs.js               (resources/content/builtinURLs.js) 
-	global/content/about.html                   (resources/content/about.html) 
 	global/content/logo.gif                     (resources/content/logo.gif) 
 	global/content/about.xul                    (resources/content/about.xul) 
 	global/content/mozilla.html                 (resources/content/mozilla.html) 
@@ -58,3 +57,4 @@ locales/en-US.jar:
     global/locale/accept2locale.properties    (resources/locale/en-US/accept2locale.properties) 
     global/locale/languageNames.properties    (resources/locale/en-US/languageNames.properties) 
     global/locale/regionNames.properties      (resources/locale/en-US/regionNames.properties) 
+    global/locale/about.html                  (resources/locale/en-US/about.html) 
