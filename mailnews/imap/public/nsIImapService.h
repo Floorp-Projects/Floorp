@@ -179,7 +179,10 @@ public:
                             nsIUrlListener* urlListener,
                             nsIURI** url) = 0;
 
-//    NS_IMETHOD RunImapUrl (nsIEventQueue * eventQueue, nsIURI * aURI
+	NS_IMETHOD ListFolder(nsIEventQueue* aClientEventQueue,
+                                nsIMsgFolder* aImapMailFolder,
+                                nsIUrlListener* aUrlListener,
+                                nsIURI** aURL) = 0;
 };
 
 

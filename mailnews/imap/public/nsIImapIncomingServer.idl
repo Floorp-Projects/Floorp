@@ -51,7 +51,7 @@ interface nsIImapIncomingServer : nsISupports {
   attribute string manageMailAccountUrl;
   attribute boolean fetchByChunks;
   attribute boolean mimePartsOnDemand;
-       
+  attribute boolean isAOLServer;       
   void GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
                                            in nsIImapUrl aImapUrl,
                                            in nsISupports aConsumer);
