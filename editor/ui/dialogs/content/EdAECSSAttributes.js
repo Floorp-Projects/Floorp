@@ -62,11 +62,10 @@ function BuildCSSAttributeTable()
 
   if (declLength > 0)
   {
-    var added = false;
-    for (i = 0; i < declLength; i++)
+    for (var i = 0; i < declLength; ++i)
     {
-      name = style.item(i);
-      value = style.getPropertyValue(name);
+      var name = style.item(i);
+      var value = style.getPropertyValue(name);
       AddTreeItem( name, value, "CSSAList", CSSAttrs );
     }
   }
