@@ -32,6 +32,8 @@
 #include "logging.h"
 #include <logkeys.h>
 
+#define  SIZEOFNOTSTRING 4
+
 HRESULT TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile)
 {
   char szBuf[MAX_BUF_TINY];
@@ -98,6 +100,48 @@ HRESULT TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile)
     }
   }
   return(FALSE);
+}
+
+HRESULT MeetCondition(LPSTR szSection)
+{
+  char szBuf[MAX_BUF_TINY];
+  BOOL bResult = FALSE; // An undefined result is never met
+  BOOL bNegateTheResult = FALSE;
+
+  char *pszCondition = szBuf;
+
+  GetPrivateProfileString(szSection, "Condition", "", szBuf, sizeof(szBuf), szFileIniConfig);
+
+  // If there is no condition then the "condition" is met, so we return TRUE.
+  if(pszCondition[0] == '\0')
+    return TRUE;
+
+  // See if "not " is prepended to the condition.
+  if(strncmp(pszCondition, "not ", SIZEOFNOTSTRING) == 0)
+  {
+    bNegateTheResult = TRUE;
+    pszCondition = pszCondition + SIZEOFNOTSTRING;
+  }
+
+  // The condition "DefaultApp" is met if the app which is running the install is the same as the
+  //   the app identified by the Default AppID key in config.ini.
+  if(strcmp(pszCondition, "DefaultApp") == 0)
+  {
+    GetPrivateProfileString("General", "Default AppID", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    if(strcmp(szBuf, sgProduct.szAppID) != 0)
+      bResult = FALSE;
+  }
+  // The condition "RecaptureHPChecked" is met if the RecaptureHome checkbox in "Additional Options" dialog.
+  //   has been checked by the user.
+  else if(strcmp(pszCondition, "RecaptureHPChecked") == 0)
+  {
+    bResult = diAdditionalOptions.bRecaptureHomepage;
+  }
+
+  if(bNegateTheResult)
+    return !bResult;
+
+  return bResult;
 }
 
 char *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char *szInputString, char *szOutBuf, DWORD dwOutBufSize)
@@ -1326,25 +1370,7 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
       GetPrivateProfileString(szSection, "Parameters", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szParameters, szBuf);
 
-      // If we are given a criterion to test against, we expect also to be told whether we should run
-      //    the app when that criterion is true or when it is false.  If we are not told, we assume that
-      //    we are to run the app when the criterion is true.
-      bRunApp = TRUE;
-      GetPrivateProfileString(szSection, "Criterion ID", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      if(lstrcmpi(szBuf, "RecaptureHP") == 0)
-      {
-        GetPrivateProfileString(szSection, "Run App If Criterion", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        if(lstrcmpi(szBuf, "FALSE") == 0)
-        {
-          if(diAdditionalOptions.bRecaptureHomepage == TRUE)
-             bRunApp = FALSE;
-        }
-        else
-        {
-          if(diAdditionalOptions.bRecaptureHomepage == FALSE)
-             bRunApp = FALSE;
-        }
-      }
+      bRunApp = MeetCondition(szSection);
 
       GetPrivateProfileString(szSection, "WorkingDir", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szWorkingDir, szBuf);
@@ -1855,7 +1881,7 @@ HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
   GetPrivateProfileString(szSection, "Root Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
-    if(TimingCheck(dwTiming, szSection, szFileIniConfig))
+    if(TimingCheck(dwTiming, szSection, szFileIniConfig) && MeetCondition(szSection))
     {
       hRootKey = ParseRootKey(szBuf);
 
