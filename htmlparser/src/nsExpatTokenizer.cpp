@@ -299,9 +299,9 @@ CreateErrorText(const nsParserError* aError, nsString& aErrorString)
   if (aError) {
     aErrorString.Append(aError->description);
     aErrorString.AppendWithConversion("\nLine Number ");
-    aErrorString.AppendWithConversion(aError->lineNumber, 10);
+    aErrorString.AppendInt(aError->lineNumber, 10);
     aErrorString.AppendWithConversion(", Column ");
-    aErrorString.AppendWithConversion(aError->colNumber, 10);
+    aErrorString.AppendInt(aError->colNumber, 10);
     aErrorString.AppendWithConversion(":");
   }
 
