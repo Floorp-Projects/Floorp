@@ -163,7 +163,7 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
   //     See bug 85334.
   const char macromediaurl[] = "http://pinger.macromedia.com";
   if (callbacks->urlnotify != NULL && mNotifyData != nsnull &&
-      strnicmp(mNPStream.url, macromediaurl, sizeof(macromediaurl) - 1) != 0 )  {
+      PL_strncasecmp(mNPStream.url, macromediaurl, sizeof(macromediaurl) - 1) != 0 )  {
     PRLibrary* lib = nsnull;
     lib = mInst->fLibrary;
 
