@@ -1808,38 +1808,6 @@ nsXULDocument::GetHeight(PRInt32* aHeight)
     return result;
 }
 
-static nsresult
-GetElementByAttribute(nsIContent* aContent,
-                      nsIAtom* aAttrName,
-                      const nsAString& aAttrValue,
-                      PRBool aUniversalMatch,
-                      nsIDOMElement** aResult)
-{
-    nsAutoString value;
-    nsresult rv = aContent->GetAttr(kNameSpaceID_None, aAttrName, value);
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        if (aUniversalMatch || value.Equals(aAttrValue))
-            return CallQueryInterface(aContent, aResult);
-    }
-
-    PRInt32 childCount;
-    aContent->ChildCount(childCount);
-
-    for (PRInt32 i = 0; i < childCount; ++i) {
-        nsCOMPtr<nsIContent> current;
-        aContent->ChildAt(i, *getter_AddRefs(current));
-
-        GetElementByAttribute(current, aAttrName, aAttrValue, aUniversalMatch,
-                              aResult);
-
-        if (*aResult)
-            return NS_OK;
-    }
-
-    return NS_OK;
-}
-
-
 //----------------------------------------------------------------------
 //
 // nsIDOMXULDocument interface
