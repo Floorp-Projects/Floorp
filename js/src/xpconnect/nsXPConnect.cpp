@@ -293,6 +293,7 @@ nsXPCArbitraryScriptable::nsXPCArbitraryScriptable()
 }
 
 #ifdef DEBUG
+JS_STATIC_DLL_CALLBACK(intN)
 ContextMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
 {
     ((XPCContext*)he->value)->DebugDump(*(int*)arg);

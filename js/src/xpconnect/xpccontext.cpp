@@ -98,21 +98,25 @@ XPCContext::Init(JSObject* aGlobalObj /*= NULL*/)
 }
 
 #ifdef DEBUG
+JS_STATIC_DLL_CALLBACK(intN)
 WrappedNativeClassMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
 {
     ((nsXPCWrappedNativeClass*)he->value)->DebugDump(*(int*)arg);
     return HT_ENUMERATE_NEXT;
 }
+JS_STATIC_DLL_CALLBACK(intN)
 WrappedJSClassMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
 {
     ((nsXPCWrappedJSClass*)he->value)->DebugDump(*(int*)arg);
     return HT_ENUMERATE_NEXT;
 }
+JS_STATIC_DLL_CALLBACK(intN)
 WrappedNativeMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
 {
     ((nsXPCWrappedNative*)he->value)->DebugDump(*(int*)arg);
     return HT_ENUMERATE_NEXT;
 }
+JS_STATIC_DLL_CALLBACK(intN)
 WrappedJSMapDumpEnumerator(JSHashEntry *he, intN i, void *arg)
 {
     ((nsXPCWrappedJS*)he->value)->DebugDump(*(int*)arg);
