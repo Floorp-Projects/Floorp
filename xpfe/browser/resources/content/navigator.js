@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *    Blake Ross <BlakeR1234@aol.com>
+ *  Blake Ross <BlakeR1234@aol.com>
+ *  Peter Annema <disttsc@bart.nl>
  */
 
 var pref = null;
@@ -62,6 +63,8 @@ catch (ex)
   var locationFld = null;
   var backButton	= null;
   var forwardButton = null;
+
+  var webNavigation = null;
 
   var useRealProgressFlag = false;
   var totalRequests = 0;
@@ -424,6 +427,14 @@ function Startup()
       contentArea.addEventListener("load",postURLToNativeWidget, true);
     }
 
+    // Get the content area docshell
+    var docShell = { value : null };
+    var result = appCore.getContentDocShell(docShell);            
+    if (docShell.value) {
+        //Get the session history component from docshell
+        webNavigation = docShell.value.QueryInterface(Components.interfaces.nsIWebNavigation);
+    }
+
     dump("*** Pulling out the charset\n");
     if ( window.arguments && window.arguments[1] ) {
         if (window.arguments[1].indexOf('charset=') != -1) {
@@ -603,15 +614,13 @@ function BrowserForward()
 
 function BrowserBackMenu(event)
   {
-    //FillHistoryMenu(event.target, "back");
-    appCore.backButtonPopup(event.target);
+    FillHistoryMenu(event.target, "back");
   }
 
 
 function BrowserForwardMenu(event)
   {
-    //FillHistoryMen(event.target, "forward");
-    appCore.forwardButtonPopup(event.target);
+    FillHistoryMenu(event.target, "forward");
   }
 
 
