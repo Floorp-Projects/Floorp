@@ -20,6 +20,7 @@
 #define nsIScrollableView_h___
 
 #include "nsISupports.h"
+#include "nsCoord.h"
 class nsIView;
 
 // IID for the nsIView interface
