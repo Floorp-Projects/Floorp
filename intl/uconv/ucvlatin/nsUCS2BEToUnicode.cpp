@@ -18,7 +18,7 @@
  */
 
 #include "nsUCS2BEToUnicode.h"
-
+#include <string.h>
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 

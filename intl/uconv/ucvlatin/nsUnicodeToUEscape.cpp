@@ -20,6 +20,7 @@
 
 #include "nsUnicodeToUEscape.h"
 #include "nsUCvLatinSupport.h"
+#include <string.h>
 
 // XXX should we inherited from nsEncoderSupprt ? We don't want the buffer stuff there
 class nsUnicodeToUEscape : public nsEncoderSupport 
