@@ -85,13 +85,13 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 #define FIND_BY_AGEINDAYS_PREFIX "find:datasource=history&match=AgeInDays&method="
 
 // sync history every 10 seconds
-#define HISTORY_SYNC_TIMEOUT 10 * 1000
+#define HISTORY_SYNC_TIMEOUT 10 * PR_MSEC_PER_SEC
 //#define HISTORY_SYNC_TIMEOUT 3000 // every 3 seconds - testing only!
 
 // the value of mLastNow expires every 3 seconds
-#define HISTORY_EXPIRE_NOW_TIMEOUT 3 * 1000
+#define HISTORY_EXPIRE_NOW_TIMEOUT 3 * PR_MSEC_PER_SEC
 
-#define MSECS_PER_DAY 1000 * 60 * 60 * 24
+#define MSECS_PER_DAY PR_MSEC_PER_SEC * 60 * 60 * 24
 //----------------------------------------------------------------------
 //
 // CIDs
@@ -207,6 +207,52 @@ CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
   return NS_OK;
 }
 
+static PRTime
+NormalizeTime(PRInt64 aTime)
+{
+  // normalize both now and date to midnight of the day they occur on
+  PRExplodedTime explodedTime;
+  PR_ExplodeTime(aTime, PR_LocalTimeParameters, &explodedTime);
+
+  // set to midnight (0:00)
+  explodedTime.tm_min =
+    explodedTime.tm_hour =
+    explodedTime.tm_sec =
+    explodedTime.tm_usec = 0;
+
+  return PR_ImplodeTime(&explodedTime);
+}
+
+// pass in a pre-normalized now and a date, and we'll find
+// the difference since midnight on each of the days..
+static PRInt32
+GetAgeInDays(PRInt64 aNormalizedNow, PRInt64 aDate)
+{
+  PRInt64 dateMidnight = NormalizeTime(aDate);
+
+  PRInt64 diff;
+  LL_SUB(diff, aNormalizedNow, dateMidnight);
+
+  // two-step process since I can't seem to load
+  // MSECS_PER_DAY * PR_MSEC_PER_SEC into a PRInt64 at compile time
+  PRInt64 msecPerSec;
+  LL_L2I(msecPerSec, PR_MSEC_PER_SEC);
+  PRInt64 ageInSeconds;
+  LL_DIV(ageInSeconds, diff, msecPerSec);
+
+  PRInt32 ageSec; LL_L2I(ageSec, ageInSeconds);
+  
+  PRInt64 msecPerDay;
+  LL_I2L(msecPerDay, MSECS_PER_DAY);
+  
+  PRInt64 ageInDays;
+  LL_DIV(ageInDays, ageInSeconds, msecPerDay);
+
+  PRInt32 retval;
+  LL_L2I(retval, ageInDays);
+  return retval;
+}
+
 
 PRBool
 nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
@@ -235,7 +281,7 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   if (!matchSearchTerm->haveClosure) {
     PRInt32 err;
     matchSearchTerm->intValue = term->text.ToInteger(&err);
-    matchSearchTerm->now = PR_Now();
+    matchSearchTerm->now = NormalizeTime(PR_Now());
     if (err != 0) return PR_FALSE;
     matchSearchTerm->haveClosure = PR_TRUE;
   }
@@ -251,20 +297,8 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
   
   CharsToPRInt64((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill, &rowDate);
 
-  PRInt64 age;
-  PRInt64 oneThousand;
-  LL_I2L(oneThousand, 1000);
-  LL_SUB(age, matchSearchTerm->now, rowDate);
-  LL_DIV(age, age, oneThousand);
-
-  PRInt64 ageInDays;
-  PRInt64 msecsPerDay;
-  LL_I2L(msecsPerDay, MSECS_PER_DAY);
-  LL_DIV(ageInDays, age, msecsPerDay);
-
-  PRInt32 days;
-  LL_L2I(days, ageInDays);
-
+  PRInt32 days = GetAgeInDays(matchSearchTerm->now, rowDate);
+  
   if (term->method.Equals("is"))
     return (days == matchSearchTerm->intValue);
   else if (term->method.Equals("isgreater"))
@@ -555,7 +589,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     
   }
   else {
-    AddNewPageToDatabase(aURL, aDate);
+    AddNewPageToDatabase(aURL, aDate, getter_Acquires(row));
     
     // Notify observers
     rv = NotifyAssert(url, kNC_Date, date);
@@ -565,6 +599,8 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     if (NS_FAILED(rv)) return rv;
   }
 
+  NotifyFindAssertions(url, row);
+  
   SetDirty();
   
   return rv;
@@ -597,7 +633,8 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
 
 nsresult
 nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
-                                      PRInt64 aDate)
+                                      PRInt64 aDate,
+                                      nsIMdbRow **aResult)
 {
   nsresult rv;
   mdb_err err;
@@ -633,6 +670,9 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   if (NS_FAILED(rv)) return rv;
 
   SetRowValue(row, kToken_HostnameColumn, hostname);
+
+  *aResult = row;
+  (*aResult)->AddStrongRef(mEnv);
 
   return NS_OK;
 }
@@ -1399,20 +1439,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       PRInt64 lastVisitDate;
       rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastVisitDate);
       if (NS_FAILED(rv)) return rv;
-
-      PRInt64 age;
-      LL_SUB(age, GetNow(), lastVisitDate);
-
-      // now need to convert msec -> days
-      PRInt64 msecsPerDay;
-      LL_I2L(msecsPerDay, MSECS_PER_DAY);
       
-      PRInt64 ageInDays;
-      LL_DIV(ageInDays, age, msecsPerDay);
-
-      // now put in a 32-bit number (should be small now)
-      PRInt32 days;
-      LL_L2I(days, ageInDays);
+      PRInt32 days = GetAgeInDays(NormalizeTime(GetNow()), lastVisitDate);
 
       nsCOMPtr<nsIRDFInt> ageLiteral;
       rv = gRDFService->GetIntLiteral(days, getter_AddRefs(ageLiteral));
@@ -1690,11 +1718,42 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
     return NS_OK;
   }
 
+  nsresult rv;
+  
+  // answer if a specific row matches a find URI
+  // 
+  // at some point, we should probably match groupby= findURIs with
+  // findURIs that match all their criteria
+  //
+  nsCOMPtr<nsIRDFResource> target = do_QueryInterface(aTarget);
+  if (target &&
+      aProperty == kNC_child &&
+      IsFindResource(aSource) &&
+      !IsFindResource(target)) {
+
+    const char *uri;
+    rv = target->GetValueConst(&uri);
+    if (NS_FAILED(rv)) return rv;
+
+    searchQuery query;
+    FindUrlToSearchQuery(uri, query);
+    
+    nsMdbPtr<nsIMdbRow> row(mEnv);
+    rv = FindRow(kToken_URLColumn, uri, getter_Acquires(row));
+    // not even in history. don't bother trying
+    if (NS_FAILED(rv)) {
+      *aHasAssertion = PR_FALSE;
+      return NS_OK;
+    }
+    
+    *aHasAssertion = RowMatches(row, &query);
+    return NS_OK;
+  }
+  
   // Do |GetTargets()| and grovel through the results to see if we
   // have the assertion.
   //
   // XXX *AHEM*, this could be implemented much more efficiently...
-  nsresult rv;
 
   nsCOMPtr<nsISimpleEnumerator> targets;
   rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(targets));
@@ -2202,20 +2261,14 @@ nsGlobalHistory::CreateFindEnumerator(nsIRDFResource *aSource,
   rv = aSource->GetValueConst(getter_Shares(uri));
   if (NS_FAILED(rv)) return rv;
 
-  // convert uri to list of tokens
-  nsVoidArray tokenPairs;
-  FindUrlToTokenList(uri, tokenPairs);
-
-  // now convert the tokens to a query
+  // convert uri to a query
   searchQuery* query = new searchQuery;
   if (!query) return NS_ERROR_OUT_OF_MEMORY;
-  TokenListToSearchQuery(tokenPairs, *query);
-  
-  FreeTokenList(tokenPairs);
+  FindUrlToSearchQuery(uri, *query);
 
   // the enumerator will take ownership of the query
   SearchEnumerator *result =
-    new SearchEnumerator(mStore, query, kToken_URLColumn);
+    new SearchEnumerator(query, this);
   if (!result) return NS_ERROR_OUT_OF_MEMORY;
 
   rv = result->Init(mEnv, mTable);
@@ -2777,6 +2830,123 @@ nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
   return NS_OK;
 }
 
+nsresult
+nsGlobalHistory::FindUrlToSearchQuery(const char *aUrl, searchQuery& aResult)
+{
+
+  nsresult rv;
+  // convert uri to list of tokens
+  nsVoidArray tokenPairs;
+  rv = FindUrlToTokenList(aUrl, tokenPairs);
+  if (NS_FAILED(rv)) return rv;
+
+  // now convert the tokens to a query
+  rv = TokenListToSearchQuery(tokenPairs, aResult);
+  
+  FreeTokenList(tokenPairs);
+
+  return rv;
+}
+
+// preemptively construct some common find-queries so that we show up
+// asychronously when a search is open
+
+// we have to do the following assertions:
+// (a=AgeInDays, h=hostname; g=groupby, -> = #child)
+// 1) NC:HistoryRoot -> uri
+//
+// 2) NC:HistoryByDate -> a&g=h
+// 3)                     a&g=h -> a&h
+// 4)                              a&h -> uri
+//
+// 5) g=h -> h
+// 6)        h->uri
+nsresult
+nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
+                                      nsIMdbRow *aRow)
+{
+  // we'll construct a bunch of sample queries, and then do
+  // appropriate assertions
+
+  // first pull out the appropriate values
+  PRInt64 lastVisited;
+  GetRowValue(aRow, kToken_LastVisitDateColumn, &lastVisited);
+
+  PRInt32 ageInDays = GetAgeInDays(NormalizeTime(GetNow()), lastVisited);
+  nsCAutoString ageString; ageString.AppendInt(ageInDays);
+
+  nsCAutoString hostname;
+  GetRowValue(aRow, kToken_HostnameColumn, hostname);
+  
+  // construct some terms that we'll use later
+  
+  // Hostname=<hostname>
+  searchTerm hostterm("history", sizeof("history")-1,
+                      "Hostname", sizeof("Hostname")-1,
+                      "is", sizeof("is")-1,
+                      hostname.get(), hostname.Length());
+
+  // AgeInDays=<age>
+  searchTerm ageterm("history", sizeof("history") -1,
+                     "AgeInDays", sizeof("AgeInDays")-1,
+                     "is", sizeof("is")-1,
+                     ageString.get(), ageString.Length());
+
+  searchQuery query;
+  nsCAutoString findUri;
+  nsCOMPtr<nsIRDFResource> childFindResource;
+  nsCOMPtr<nsIRDFResource> parentFindResource;
+
+  // 2) NC:HistoryByDate -> AgeInDays=<age>&groupby=Hostname
+  query.groupBy = kToken_HostnameColumn;
+  query.terms.AppendElement((void *)&ageterm);
+
+  GetFindUriPrefix(query, PR_TRUE, findUri);
+  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  NotifyAssert(kNC_HistoryByDate, kNC_child, childFindResource);
+  
+  query.terms.Clear();
+
+  // 3) AgeInDays=<age>&groupby=Hostname ->
+  //    AgeInDays=<age>&Hostname=<host>
+  
+  parentFindResource=childFindResource; // AgeInDays=<age>&groupby=Hostname
+
+  query.groupBy = 0;            // create AgeInDays=<age>&Hostname=<host>
+  query.terms.AppendElement((void *)&ageterm);
+  query.terms.AppendElement((void *)&hostterm);
+  
+  GetFindUriPrefix(query, PR_FALSE, findUri);
+  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  NotifyAssert(parentFindResource, kNC_child, childFindResource);
+  
+  query.terms.Clear();
+
+  // 4) AgeInDays=<age>&Hostname=<host> -> uri
+  parentFindResource = childFindResource; // AgeInDays=<age>&hostname=<host>
+  NotifyAssert(childFindResource, kNC_child, aSource);
+  
+  // 5) groupby=Hostname -> Hostname=<host>
+  query.groupBy = kToken_HostnameColumn; // create groupby=Hostname
+  
+  GetFindUriPrefix(query, PR_TRUE, findUri);
+  gRDFService->GetResource(findUri.get(), getter_AddRefs(parentFindResource));
+
+  query.groupBy = 0;            // create Hostname=<host>
+  query.terms.AppendElement((void *)&hostterm);
+  GetFindUriPrefix(query, PR_FALSE, findUri);
+  findUri.Append(hostname);     // append <host>
+  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  
+  NotifyAssert(parentFindResource, kNC_child, childFindResource);
+
+  // 6) Hostname=<host> -> uri
+  parentFindResource = childFindResource; // Hostname=<host>
+  NotifyAssert(parentFindResource, kNC_child, aSource);
+
+  return NS_OK;
+}
+
 //
 // get the user-visible "name" of a find resource
 // we basically parse the string, and use the data stored in the last
@@ -2788,22 +2958,12 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
 
   nsresult rv;
 
-  // build up a token list first
-  nsVoidArray tokens;
-  FindUrlToTokenList(aURL, tokens);
-  
-  // now convert the tokens to a query
   searchQuery query;
-  TokenListToSearchQuery(tokens, query);
-
-  // throw away the tokens
-  FreeTokenList(tokens);
+  rv = FindUrlToSearchQuery(aURL, query);
 
   // can't exactly get a name if there's nothing to search for
-  if (query.terms.Count() < 1) {
-    NS_WARNING("Empty find: url\n");
+  if (query.terms.Count() < 1)
     return NS_OK;
-  }
 
   // now build up a string from the query
   searchTerm *term = (searchTerm*)query.terms[query.terms.Count()-1];
@@ -2988,57 +3148,62 @@ nsGlobalHistory::SearchEnumerator::~SearchEnumerator()
 // and then the caller will append some text after after the "text="
 //
 void
-nsGlobalHistory::SearchEnumerator::GetFindUriPrefix(nsAWritableCString&
-                                                    aPrefix)
+nsGlobalHistory::GetFindUriPrefix(const searchQuery& aQuery,
+                                  PRBool aDoGroupBy,
+                                  nsAWritableCString& aResult)
 {
-  if (!mFindUriPrefix.IsEmpty())
-    aPrefix.Assign(mFindUriPrefix);
-
   mdb_err err;
   
-  mFindUriPrefix.Assign("find:");
-  PRUint32 length = mQuery->terms.Count();
+  aResult.Assign("find:");
+  PRUint32 length = aQuery.terms.Count();
   PRUint32 i;
-
   
   for (i=0; i<length; i++) {
-    searchTerm *term = (searchTerm*)mQuery->terms[i];
+    searchTerm *term = (searchTerm*)aQuery.terms[i];
     if (i != 0)
-      mFindUriPrefix.Append('&');
-    mFindUriPrefix.Append("datasource=");
-    mFindUriPrefix.Append(term->datasource);
+      aResult.Append('&');
+    aResult.Append("datasource=");
+    aResult.Append(term->datasource);
     
-    mFindUriPrefix.Append("&match=");
-    mFindUriPrefix.Append(term->property);
+    aResult.Append("&match=");
+    aResult.Append(term->property);
     
-    mFindUriPrefix.Append("&method=");
-    mFindUriPrefix.Append(term->method);
+    aResult.Append("&method=");
+    aResult.Append(term->method);
 
-    mFindUriPrefix.Append("&text=");
-    mFindUriPrefix.Append(NS_ConvertUCS2toUTF8(term->text));
+    aResult.Append("&text=");
+    aResult.Append(NS_ConvertUCS2toUTF8(term->text));
   }
 
-  // if the query has a groupby=<foo> then we want to append that
-  // field as the last field to match
+  if (aQuery.groupBy == 0) return;
 
-  NS_ASSERTION(mQuery->groupBy != 0, "Can't generate find uri prefix without a groupby!");
-  if (mQuery->groupBy == 0) return;
-  
-  mFindUriPrefix.Append("&datasource=history");
-  
-  mFindUriPrefix.Append("&match=");
-
+  // find out the name of the column we're grouping by
   char groupby[100];
   mdbYarn yarn = { groupby, 0, sizeof(groupby), 0, 0, nsnull };
+  err = mStore->TokenToString(mEnv, aQuery.groupBy, &yarn);
+  
+  // put a "groupby=<colname>"
+  if (aDoGroupBy) {
+    aResult.Append("&groupby=");
+    if (err == 0)
+      aResult.Append((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
+  }
 
-  err = mStore->TokenToString(mEnv, mQuery->groupBy, &yarn);
-  if (err == 0)
-    mFindUriPrefix.Append((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
+  // put &datasource=history&match=<colname>&method=is&text=
+  else {
+    // if the query has a groupby=<foo> then we want to append that
+    // field as the last field to match.. caller has to be sure to
+    // append that!
+    aResult.Append("&datasource=history");
+    
+    aResult.Append("&match=");
+    if (err == 0)
+      aResult.Append((const char*)yarn.mYarn_Buf, yarn.mYarn_Fill);
+    // herep  
+    aResult.Append("&method=is");
+    aResult.Append("&text=");
+  }
   
-  mFindUriPrefix.Append("&method=is");
-  mFindUriPrefix.Append("&text=");
-  
-  aPrefix.Assign(mFindUriPrefix);
 }
 
 //
@@ -3073,7 +3238,7 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
   }
 
   // now do the actual match
-  if (!RowMatches(mCurrent, mQuery))
+  if (!mHistory->RowMatches(mCurrent, mQuery))
     return PR_FALSE;
 
   if (mQuery->groupBy != 0) {
@@ -3094,8 +3259,8 @@ nsGlobalHistory::SearchEnumerator::IsResult(nsIMdbRow *aRow)
 // determines if the row matches the given terms, used above
 //
 PRBool
-nsGlobalHistory::SearchEnumerator::RowMatches(nsIMdbRow *aRow,
-                                              searchQuery *aQuery)
+nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
+                            searchQuery *aQuery)
 {
   PRUint32 length = aQuery->terms.Count();
   PRUint32 i;
@@ -3171,7 +3336,7 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
     // no column to group by
     // just create a resource based on the URL of the current row
     mdbYarn yarn;
-    err = aRow->AliasCellYarn(mEnv, mURLColumn, &yarn);
+    err = aRow->AliasCellYarn(mEnv, mHistory->kToken_URLColumn, &yarn);
     if (err != 0) return NS_ERROR_FAILURE;
 
     
@@ -3192,13 +3357,16 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
   err = aRow->AliasCellYarn(mEnv, mQuery->groupBy, &groupByValue);
   if (err != 0) return NS_ERROR_FAILURE;
 
-  nsCAutoString findUri;
-  GetFindUriPrefix(findUri);
+  if (mFindUriPrefix.IsEmpty())
+    mHistory->GetFindUriPrefix(*mQuery, PR_FALSE, mFindUriPrefix);
+  
+  nsCAutoString findUri(mFindUriPrefix);
 
   nsLiteralCString rowValue((const char *)groupByValue.mYarn_Buf,
                             groupByValue.mYarn_Fill);
   
   findUri.Append(rowValue);
+  findUri.Append('\0');
 
   rv = gRDFService->GetResource(findUri.get(), getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;

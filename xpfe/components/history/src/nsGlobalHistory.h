@@ -155,11 +155,20 @@ protected:
   nsresult GetFindUriName(const char *aURL, nsIRDFNode **aResult);
   nsresult CreateFindEnumerator(nsIRDFResource *aSource,
                                 nsISimpleEnumerator **aResult);
+  
   static nsresult FindUrlToTokenList(const char *aURL, nsVoidArray& aResult);
   static void FreeTokenList(nsVoidArray& tokens);
   static PRBool IsFindResource(nsIRDFResource *aResource);
+  void GetFindUriPrefix(const searchQuery& aQuery,
+                        const PRBool aDoGroupBy,
+                        nsAWritableCString& aResult);
+  
   nsresult TokenListToSearchQuery(const nsVoidArray& tokens,
                                   searchQuery& aResult);
+  nsresult FindUrlToSearchQuery(const char *aURL, searchQuery& aResult);
+  PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
+  nsresult NotifyFindAssertions(nsIRDFResource *aSource, nsIMdbRow *aRow);
+    
 
   // caching of PR_Now() so we don't call it every time we do
   // a history query
@@ -227,7 +236,8 @@ protected:
                                      PRInt64 *aOldDate,
                                      PRInt32 *aOldCount);
   nsresult AddNewPageToDatabase(const char *aURL,
-                                PRInt64 aDate);
+                                PRInt64 aDate,
+                                nsIMdbRow **aResult);
   //
   // generic routines for setting/retrieving various datatypes
   //
@@ -303,32 +313,25 @@ protected:
   class SearchEnumerator : public nsMdbTableEnumerator
   {
   public:
-    SearchEnumerator(nsIMdbStore* aStore,
-                     searchQuery *aQuery,
-                     mdb_column aURLColumn) :
+    SearchEnumerator(searchQuery *aQuery,
+                     nsGlobalHistory *aHistory) :
       mQuery(aQuery),
-      mURLColumn(aURLColumn),
-      mStore(aStore)
+      mHistory(aHistory)
     {}
 
     virtual ~SearchEnumerator();
 
   protected:
     searchQuery *mQuery;
+    nsGlobalHistory *mHistory;
     nsHashtable mUniqueRows;
-    nsIMdbStore *mStore;
-    mdb_column mURLColumn;
-
     
     nsCString mFindUriPrefix;
 
-    void GetFindUriPrefix(nsAWritableCString& aPrefix);
-    
     virtual PRBool IsResult(nsIMdbRow* aRow);
     virtual nsresult ConvertToISupports(nsIMdbRow* aRow,
                                         nsISupports** aResult);
     
-    PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
   };
 
   friend class URLEnumerator;
