@@ -1151,6 +1151,8 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
   // turn off selection and caret
   if (mEditor)
   {
+    PRUint32 flags;
+    mEditor->GetFlags(&flags);
     nsCOMPtr<nsIEditor>editor = do_QueryInterface(mEditor);
     if (editor)
     {
@@ -1164,11 +1166,20 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
         editor->GetDocument(getter_AddRefs(domDoc));
         if (domDoc)
         {
-          nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-          if (doc)
-          {
-            doc->SetDisplaySelection(PR_FALSE);
-          }
+          if ((flags & nsIHTMLEditor::eEditorPlaintextMask) ||
+              (flags & nsIHTMLEditor::eEditorSingleLineMask) ||
+              (flags & nsIHTMLEditor::eEditorPasswordMask) ||
+              (flags & nsIHTMLEditor::eEditorReadonlyMask) ||
+              (flags & nsIHTMLEditor::eEditorDisabledMask) ||
+              (flags & nsIHTMLEditor::eEditorFilterInputMask) ||
+              (flags & nsIHTMLEditor::eEditorMailMask))
+          {//HACK UNTIL UNFOCUSED SELECTION DRAWS CORRECTLY
+            nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+            if (doc)
+            {
+              doc->SetDisplaySelection(PR_FALSE);
+            }
+          }//END HACK
         }
 #ifdef USE_HACK_REPAINT
 // begin hack repaint
