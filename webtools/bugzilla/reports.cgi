@@ -525,21 +525,11 @@ sub chart_image_type {
 sub chart_image_name {
     my ($data_file, $type) = @_;
 
-    my $id = datasets_id($FORM{datasets});
-    my $doy = day_of_year();
+    # Cache charts by generating a unique filename based on what they
+    # show. Charts should be deleted by collectstats.pl nightly.
+    my $id = join ("_", split (":", $FORM{datasets}));
 
     return "${data_file}_${id}.$type";
-}
-
-# Cache charts by generating a unique filename based on what they
-# show. Charts should be deleted by collectstats.pl nightly.
-sub datasets_id {
-	# Current method is very long filenames...	
-	my $longname = "";
-    foreach (@_) {
-	  $longname .= $_;
-	} 	
-    return $longname;
 }
 
 sub day_of_year {
