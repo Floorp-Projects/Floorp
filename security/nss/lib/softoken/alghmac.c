@@ -43,7 +43,6 @@ struct HMACContextStr {
     const SECHashObject *hashobj;
     unsigned char ipad[HMAC_PAD_SIZE];
     unsigned char opad[HMAC_PAD_SIZE];
-    PRBool isFIPS;
 };
 
 void
@@ -99,7 +98,6 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
 	cx->opad[i] ^= secret[i];
     }
     PORT_Memset(hashed_secret, 0, sizeof hashed_secret);
-    cx->isFIPS = isFIPS;
     return cx;
 
 loser:
