@@ -373,9 +373,12 @@ function RegisterTabOpenObserver()
     }
   };
 
-  const service = Components.classes["@mozilla.org/observer-service;1"]
+  var service = Components.classes["@mozilla.org/observer-service;1"]
     .getService(Components.interfaces.nsIObserverService);
   service.addObserver(observer, "open-new-tab-request", false);
+  // Null out service variable so the closure of the observer doesn't
+  // own the service and create a cycle (bug 170022).
+  service = null;
 }
 
 function Startup()
