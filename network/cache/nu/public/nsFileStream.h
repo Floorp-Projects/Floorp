@@ -28,11 +28,12 @@
 //#include "nsISupports.h"
 #include "nsStream.h"
 #include "prio.h" // PRFileDesc
+
 class nsFileStream: public nsStream
 {
 
 public:
-            nsFileStream(PRFileDesc* i_pFile);
+            nsFileStream(const char* i_Filename);
     virtual ~nsFileStream();
 /*
     NS_IMETHOD              QueryInterface(const nsIID& aIID, 
@@ -48,10 +49,13 @@ public:
 
 protected:
 
+    PRBool      Open(void);
+
 private:
     nsFileStream(const nsFileStream& o);
     nsFileStream& operator=(const nsFileStream& o);
     PRFileDesc* m_pFile;    
+    char* m_pFilename;
 };
 
 inline

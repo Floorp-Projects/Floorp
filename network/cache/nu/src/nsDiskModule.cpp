@@ -295,25 +295,26 @@ nsStream* nsDiskModule::GetStreamFor(const nsCacheObject* i_pObject)
     MonitorLocker ml(this);
     if (i_pObject)
     {
+        /* 
         if (Contains((nsCacheObject*)i_pObject))
         {
             nsStream* pStream = i_pObject->Stream();
             if (pStream)
                 return pStream;
         }
+        */
+        
+        nsStream* pStream = i_pObject->Stream();
+        if (pStream)
+            return pStream;
+
         PR_ASSERT(*i_pObject->Filename());
 
         char* fullname = FullFilename(i_pObject->Filename());
 
-        // Set up a new stream for this object
-        PRFileDesc* pFD = PR_Open(
-            fullname ? fullname : i_pObject->Filename(), 
-            PR_CREATE_FILE | PR_RDWR,
-            600);// Read and write by owner only
-
-        if (pFD)
+        if (fullname)
         {
-            return new nsFileStream(pFD);
+            return new nsFileStream(fullname);
         }
         
         return 0;
