@@ -50,7 +50,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindowInternal.h"
 
@@ -426,8 +425,8 @@ nsBrowserInstance::ReinitializeContentVariables()
   SetContentWindow(content);
 }
 
-nsIDocShell* 
-nsBrowserInstance::GetContentAreaDocShell()
+
+nsresult nsBrowserInstance::GetContentAreaDocShell(nsIDocShell** outDocShell)
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContentAreaDocShellWeak));
   if (docShell) {
@@ -443,28 +442,66 @@ nsBrowserInstance::GetContentAreaDocShell()
   }
   if (!docShell)
     ReinitializeContentVariables();
+
   docShell = do_QueryReferent(mContentAreaDocShellWeak);
-  return docShell.get();
+  NS_IF_ADDREF(*outDocShell = docShell);
+  return NS_OK;
 }
     
-nsIDOMWindowInternal* 
-nsBrowserInstance::GetContentWindow()
+
+nsresult nsBrowserInstance::GetContentWindow(nsIDOMWindowInternal** outDOMWindow)
 {
   nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryReferent(mContentWindowWeak));
   if (!domWindow)
     ReinitializeContentVariables();
   domWindow = do_QueryReferent(mContentWindowWeak);
-  return domWindow.get();
+  NS_IF_ADDREF(*outDOMWindow = domWindow);
+  return NS_OK;
 }
 
-nsIDocumentLoader* 
-nsBrowserInstance::GetContentAreaDocLoader()
+nsresult nsBrowserInstance::GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow)
+{
+  nsCOMPtr<nsIDOMWindowInternal> focussedWindow;
+  
+  // get the window that has focus (e.g. framesets)
+  if (mDocShell)
+  {    
+    nsCOMPtr<nsIContentViewer> cv;
+    mDocShell->GetContentViewer(getter_AddRefs(cv));    
+    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+    if (docv)
+    {
+      // Get the document from the doc viewer.
+      nsCOMPtr<nsIDocument> doc;
+      docv->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
+      if (xulDoc)
+      {
+        nsCOMPtr<nsIDOMXULCommandDispatcher>  commandDispatcher;
+        xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
+        
+        if (commandDispatcher)
+          commandDispatcher->GetFocusedWindow(getter_AddRefs(focussedWindow));
+      }
+    }
+  }
+  
+  if (!focussedWindow)
+    GetContentWindow(getter_AddRefs(focussedWindow));   // default to content window
+
+  NS_IF_ADDREF(*outFocussedWindow = focussedWindow);
+  return NS_OK;
+}
+
+
+nsresult nsBrowserInstance::GetContentAreaDocLoader(nsIDocumentLoader** outDocLoader)
 {
   nsCOMPtr<nsIDocumentLoader> docLoader(do_QueryReferent(mContentAreaDocLoaderWeak));
   if (!docLoader)
     ReinitializeContentVariables();
   docLoader = do_QueryReferent(mContentAreaDocLoaderWeak);
-  return docLoader.get();
+  NS_IF_ADDREF(*outDocLoader = docLoader);
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -490,15 +527,18 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP    
 nsBrowserInstance::Back()
 {
-#ifdef SH_IN_FRAMES
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
+#ifdef SH_IN_FRAMES    
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
 	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
   webNav = do_QueryInterface(mSessionHistory);
   webNav->GoBack();
 #else
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->GoBack();
@@ -509,15 +549,18 @@ nsBrowserInstance::Back()
 NS_IMETHODIMP
 nsBrowserInstance::Forward()
 {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
 #ifdef SH_IN_FRAMES
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
 	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
   webNav = do_QueryInterface(mSessionHistory);
   webNav->GoForward();
 #else
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->GoForward();
@@ -528,15 +571,18 @@ nsBrowserInstance::Forward()
 NS_IMETHODIMP
 nsBrowserInstance::GetCanGoBack(PRBool* aCan)
 {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
 #ifdef SH_IN_FRAMES
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
 	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
   webNav = do_QueryInterface(mSessionHistory);
   webNav->GetCanGoBack(aCan);
 #else
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->GetCanGoBack(aCan);
@@ -547,8 +593,11 @@ nsBrowserInstance::GetCanGoBack(PRBool* aCan)
 NS_IMETHODIMP
 nsBrowserInstance::GetCanGoForward(PRBool* aCan)
 {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
 #ifdef SH_IN_FRAMES
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
 	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
@@ -556,7 +605,7 @@ nsBrowserInstance::GetCanGoForward(PRBool* aCan)
   webNav->GetCanGoForward(aCan);
 #else
 
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
   webNav->GetCanGoForward(aCan);
@@ -567,15 +616,18 @@ nsBrowserInstance::GetCanGoForward(PRBool* aCan)
 NS_IMETHODIMP
 nsBrowserInstance::Reload(nsLoadFlags flags)
 {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
 #ifdef SH_IN_FRAMES
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
 	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
   webNav = do_QueryInterface(mSessionHistory);
   webNav->Reload(flags);
 #else
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
   webNav->Reload(flags);
 #endif
@@ -585,7 +637,10 @@ nsBrowserInstance::Reload(nsLoadFlags flags)
 NS_IMETHODIMP    
 nsBrowserInstance::Stop()
 {
-   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
+   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
    if(webNav)
       webNav->Stop();
   return NS_OK;
@@ -596,8 +651,11 @@ nsBrowserInstance::LoadUrl(const PRUnichar * urlToLoad)
 {
   nsresult rv = NS_OK;
 
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
   /* Ask nsWebShell to load the URl */
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
     
   // Normal browser.
   rv = webNav->LoadURI( urlToLoad );
@@ -647,10 +705,13 @@ nsBrowserInstance::LoadInitialPage(void)
     else 
 #endif //ENABLE_PAGE_CYCLER
     {
+      nsCOMPtr<nsIDocShell> docShell;
+      GetContentAreaDocShell(getter_AddRefs(docShell));
+
       // Examine content URL.
-      if ( GetContentAreaDocShell() ) {
+      if (docShell) {
         nsCOMPtr<nsIURI> uri;
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(GetContentAreaDocShell());
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
         rv = webNav->GetCurrentURI(getter_AddRefs(uri));
         nsXPIDLCString spec;
         if (uri)
@@ -718,9 +779,11 @@ nsBrowserInstance::LoadInitialPage(void)
 NS_IMETHODIMP
 nsBrowserInstance::BackButtonPopup(nsIDOMNode * aParent)
 {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
 
-  if (!GetContentAreaDocShell())  {
-    printf("nsBrowserInstance::BackButtonPopup Couldn't get a handle to SessionHistory\n");
+  if (!docShell)  {
+    if (APP_DEBUG) printf("nsBrowserInstance::BackButtonPopup Couldn't get a handle to SessionHistory\n");
     return NS_ERROR_FAILURE;
   }
   
@@ -731,15 +794,17 @@ nsBrowserInstance::BackButtonPopup(nsIDOMNode * aParent)
   rv = aParent->HasChildNodes(&hasChildren);
   if (NS_SUCCEEDED(rv) && hasChildren) {
     rv = ClearHistoryMenus(aParent);
-    if (!NS_SUCCEEDED(rv))
-      printf("nsBrowserInstance::BackButtonPopup ERROR While removing old history menu items\n");
+    if (!NS_SUCCEEDED(rv)) {
+      if (APP_DEBUG) printf("nsBrowserInstance::BackButtonPopup ERROR While removing old history menu items\n");
+    }
   }    // hasChildren
   else {
    if (APP_DEBUG) printf("nsBrowserInstance::BackButtonPopup Menu has no children\n");
   }             
 
   nsCOMPtr<nsISHistory> mSHistory;
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
   webNav->GetSessionHistory(getter_AddRefs(mSHistory));
   NS_ENSURE_TRUE(mSHistory, NS_ERROR_FAILURE);
 
@@ -770,7 +835,7 @@ nsBrowserInstance::BackButtonPopup(nsIDOMNode * aParent)
       if (APP_DEBUG)printf("nsBrowserInstance::BackButtonPopup URL = %s, TITLE = %s\n", (const char *) uriSpec, histTitle.ToNewCString());
       rv = CreateMenuItem(aParent, j, title);
       if (!NS_SUCCEEDED(rv)) {
-        printf("nsBrowserInstance::BackButtonPopup Error while creating history mene item\n");
+        if (APP_DEBUG) printf("nsBrowserInstance::BackButtonPopup Error while creating history mene item\n");
 	  }  
    Recycle(title);
   }  //for
@@ -782,9 +847,11 @@ nsBrowserInstance::BackButtonPopup(nsIDOMNode * aParent)
 NS_IMETHODIMP
 nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
 {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
 
-  if (!GetContentAreaDocShell())  {
-    printf("nsBrowserInstance::ForwardButtonPopup Couldn't get a handle to SessionHistory\n");
+  if (!docShell)  {
+    if (APP_DEBUG) printf("nsBrowserInstance::ForwardButtonPopup Couldn't get a handle to SessionHistory\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -797,7 +864,7 @@ nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
     // Remove all old entries 
     rv = ClearHistoryMenus(aParent);
     if (!NS_SUCCEEDED(rv)) {
-      printf("nsBrowserInstance::ForwardMenuPopup Error while clearing old history entries\n");
+      if (APP_DEBUG) printf("nsBrowserInstance::ForwardMenuPopup Error while clearing old history entries\n");
     }
   }    // hasChildren
   else {
@@ -805,7 +872,8 @@ nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
   }  
 
   nsCOMPtr<nsISHistory> mSHistory;
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
   webNav->GetSessionHistory(getter_AddRefs(mSHistory));
   NS_ENSURE_TRUE(mSHistory, NS_ERROR_FAILURE);
 
@@ -827,9 +895,9 @@ nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
 
 	  nsCOMPtr<nsISHEntry> shEntry;
 	  mSHistory->GetEntryAtIndex(j, PR_FALSE, getter_AddRefs(shEntry));
-      NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
 
-      shEntry->GetURI(getter_AddRefs(uri));
+    shEntry->GetURI(getter_AddRefs(uri));
 	  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 	  uri->GetSpec(getter_Copies(uriSpec));
 
@@ -838,7 +906,7 @@ nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
       if (APP_DEBUG)printf("nsBrowserInstance::ForwardButtonPopup URL = %s, TITLE = %s\n", (const char *) uriSpec, histTitle.ToNewCString());
       rv = CreateMenuItem(aParent, j, title);
       if (!NS_SUCCEEDED(rv)) {
-        printf("nsBrowserInstance::ForwardButtonPopup Error while creating history mene item\n");
+        if (APP_DEBUG) printf("nsBrowserInstance::ForwardButtonPopup Error while creating history mene item\n");
 	  }  
    Recycle(title);
   }
@@ -850,14 +918,19 @@ nsBrowserInstance::ForwardButtonPopup(nsIDOMNode * aParent)
 NS_IMETHODIMP
 nsBrowserInstance::GotoHistoryIndex(PRInt32 aIndex)
 {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
 #ifdef SH_IN_FRAMES
-	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
   webNav->GotoIndex(aIndex);
 #else
 
-   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(GetContentAreaDocShell()));
-   webShell->GoTo(aIndex);
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+  NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
+  webShell->GoTo(aIndex);
 #endif
   return NS_OK;
 
@@ -1035,33 +1108,37 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindowInternal* aWin)
     mContentAreaDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell)); // Weak reference
     docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
 
-  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
-  webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
-  nsCOMPtr<nsISHistory> sessionHistory;
-  if (mSessionHistory) {
-	  /* There is already a Session History for this browser 
-	   * component. Maybe the theme changed and we got called
-	   * to reinitialize the window, docloader, docshell etc...
-	   * Use the existing session History
-	   */
-	  sessionHistory = mSessionHistory;
-  }
-  else {
-     sessionHistory = (do_CreateInstance(NS_SHISTORY_PROGID));
-  mSessionHistory = sessionHistory;
-  if (!mSessionHistory) {
-	  printf("#### Error initialising Session History ####\n");
-  }
-  }
+    nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
+    webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
+    nsCOMPtr<nsISHistory> sessionHistory;
+    if (mSessionHistory) {
+  	  /* There is already a Session History for this browser 
+  	   * component. Maybe the theme changed and we got called
+  	   * to reinitialize the window, docloader, docshell etc...
+  	   * Use the existing session History
+  	   */
+  	  sessionHistory = mSessionHistory;
+    }
+    else {
+      sessionHistory = (do_CreateInstance(NS_SHISTORY_PROGID, &rv));
+      mSessionHistory = sessionHistory;
+      if (!mSessionHistory) {
+  	    if (APP_DEBUG) printf("#### Error initialising Session History ####\n");
+        return NS_FAILED(rv) ? rv : NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
 
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-  if (webNav)
-     webNav->SetSessionHistory(sessionHistory);
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
+    if (webNav)
+       webNav->SetSessionHistory(sessionHistory);
 
-  nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(GetContentAreaDocShell()));
-  nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
-  if (dsHistory)
- 	  dsHistory->SetGlobalHistory(history);
+    nsCOMPtr<nsIDocShell> docShell;
+    GetContentAreaDocShell(getter_AddRefs(docShell));
+
+    nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(docShell));
+    nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
+    if (dsHistory)
+   	  dsHistory->SetGlobalHistory(history);
 
     // Cache the Document Loader for the content area webshell.  This is a 
     // weak reference that is *not* reference counted...
@@ -1081,8 +1158,8 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindowInternal* aWin)
     }
     nsCOMPtr<nsIUrlbarHistory>  ubHistory = do_GetService(NS_URLBARHISTORY_PROGID, &rv);
 	
-	NS_ENSURE_TRUE(ubHistory, NS_ERROR_FAILURE);
-	mUrlbarHistory = ubHistory;
+	  NS_ENSURE_TRUE(ubHistory, NS_ERROR_FAILURE);
+	  mUrlbarHistory = ubHistory;
   }
 
   return NS_OK;
@@ -1093,9 +1170,7 @@ nsBrowserInstance::GetContentDocShell(nsIDocShell** aDocShell)
 {
   NS_ENSURE_ARG_POINTER(aDocShell);
 
-  *aDocShell = GetContentAreaDocShell();
-  NS_IF_ADDREF(*aDocShell); // (GetContentAreaDocShell doesn't)
-  return NS_OK;
+  return GetContentAreaDocShell(aDocShell);
 }
 
 
@@ -1164,7 +1239,10 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
 NS_IMETHODIMP    
 nsBrowserInstance::SetTextZoom(float aTextZoom)
 {
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(GetContentWindow()) );
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
   if (!globalObj) {
     return NS_ERROR_FAILURE;
   }
@@ -1189,7 +1267,10 @@ nsBrowserInstance::SetTextZoom(float aTextZoom)
 NS_IMETHODIMP
 nsBrowserInstance::GetDocumentCharset(PRUnichar **aCharset)
 {
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(GetContentWindow()) );
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
 
   if (!globalObj) {
     return NS_ERROR_FAILURE;
@@ -1221,7 +1302,10 @@ nsBrowserInstance::GetDocumentCharset(PRUnichar **aCharset)
 NS_IMETHODIMP    
 nsBrowserInstance::SetDocumentCharset(const PRUnichar *aCharset)
 {
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(GetContentWindow()) );
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
   if (!globalObj) {
     return NS_ERROR_FAILURE;
   }
@@ -1248,7 +1332,10 @@ nsBrowserInstance::SetDocumentCharset(const PRUnichar *aCharset)
 NS_IMETHODIMP    
 nsBrowserInstance::SetForcedCharset(const PRUnichar * aCharset)
 {
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(GetContentWindow()) );
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
   if (!globalObj) {
     return NS_ERROR_FAILURE;
   }
@@ -1285,7 +1372,10 @@ nsBrowserInstance::SetForcedCharset(const PRUnichar * aCharset)
 NS_IMETHODIMP    
 nsBrowserInstance::SetForcedDetector()
 {
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(GetContentWindow()) );
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  GetContentWindow(getter_AddRefs(contentWindow));
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
   if (!globalObj) {
     return NS_ERROR_FAILURE;
   }
@@ -1322,14 +1412,16 @@ nsBrowserInstance::PrintPreview()
 NS_IMETHODIMP    
 nsBrowserInstance::Print()
 {  
-  if (GetContentAreaDocShell()) {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
+  if (docShell)
+  {
     nsCOMPtr<nsIContentViewer> viewer;    
-    GetContentAreaDocShell()->GetContentViewer(getter_AddRefs(viewer));    
-    if (nsnull != viewer) {
-      nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
-      if (viewerFile) {
-        NS_ENSURE_SUCCESS(viewerFile->Print(PR_FALSE,nsnull), NS_ERROR_FAILURE);
-      }
+    docShell->GetContentViewer(getter_AddRefs(viewer));    
+    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+    if (viewerFile) {
+      NS_ENSURE_SUCCESS(viewerFile->Print(PR_FALSE,nsnull), NS_ERROR_FAILURE);
     }
   }
   return NS_OK;
@@ -1346,10 +1438,11 @@ nsBrowserInstance::Close()
 
   // Undo other stuff we did in SetContentWindow.
   // Remove listeners we may have registered
-  nsIDocShell* docShell = GetContentAreaDocShell();
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
   if (docShell)
   {
-    docShell->SetDocLoaderObserver( 0 );
+    docShell->SetDocLoaderObserver(0);
     nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
     webProgress->RemoveProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
   }
@@ -1373,25 +1466,33 @@ nsBrowserInstance::Close()
 NS_IMETHODIMP    
 nsBrowserInstance::Copy()
 {
-    nsCOMPtr<nsIContentViewer> viewer;
-    GetContentAreaDocShell()->GetContentViewer(getter_AddRefs(viewer));
-    nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
-    if (edit) {
-        edit->CopySelection();
-    }
-    return NS_OK;
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  
+  nsCOMPtr<nsIContentViewer> viewer;
+  docShell->GetContentViewer(getter_AddRefs(viewer));
+  nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
+  if (edit) {
+      edit->CopySelection();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserInstance::SelectAll()
 {
-    nsCOMPtr<nsIContentViewer> viewer;
-    GetContentAreaDocShell()->GetContentViewer(getter_AddRefs(viewer));
-    nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
-    if (edit) {
-        edit->SelectAll();
-    }
-    return NS_OK;
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIContentViewer> viewer;
+  docShell->GetContentViewer(getter_AddRefs(viewer));
+  nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
+  if (edit) {
+      edit->SelectAll();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1405,8 +1506,12 @@ nsBrowserInstance::Find()
     if (NS_FAILED(rv)) return rv;
     if (!finder) return NS_ERROR_FAILURE;
 
+    // get the window to search
+    nsCOMPtr<nsIDOMWindowInternal>  windowToSearch;  
+    GetFocussedContentWindow(getter_AddRefs(windowToSearch));
+    
     // Make sure we've initialized searching for this document.
-    rv = InitializeSearch( finder );
+    rv = InitializeSearch(windowToSearch, finder);
     if (NS_FAILED(rv)) return rv;
 
     // Perform find via find component.
@@ -1428,13 +1533,17 @@ nsBrowserInstance::FindNext()
     if (NS_FAILED(rv)) return rv;
     if (!finder) return NS_ERROR_FAILURE;
 
+    // get the window to search
+    nsCOMPtr<nsIDOMWindowInternal>  windowToSearch;  
+    GetFocussedContentWindow(getter_AddRefs(windowToSearch));
+
     // Make sure we've initialized searching for this document.
-    rv = InitializeSearch( finder );
+    rv = InitializeSearch(windowToSearch, finder);
     if (NS_FAILED(rv)) return rv;
 
     // Perform find via find component.
     if (mSearchContext) {
-            rv = finder->FindNext( mSearchContext, &found );
+        rv = finder->FindNext(mSearchContext, &found );
     }
 
     return rv;
@@ -1489,9 +1598,13 @@ nsBrowserInstance::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL,
      }
   }
 
-  if (!isFrame) {
+  if (!isFrame)
+  {
+    nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+    GetContentWindow(getter_AddRefs(contentWindow));
+    
     nsAutoString kStartDocumentLoad; kStartDocumentLoad.AssignWithConversion("StartDocumentLoad");
-    rv = observer->Notify(GetContentWindow(),
+    rv = observer->Notify(contentWindow,
                         kStartDocumentLoad.GetUnicode(),
                         urlStr.GetUnicode());
 
@@ -1534,11 +1647,14 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
   if (parent)
   isFrame = PR_TRUE;
 
-
-  if (GetContentAreaDocLoader()) {
+  
+  nsCOMPtr<nsIDocumentLoader> docLoader;
+  GetContentAreaDocLoader(getter_AddRefs(docLoader));
+  
+  if (docLoader) {
     PRBool isBusy = PR_FALSE;
 
-    GetContentAreaDocLoader()->IsBusy(&isBusy);
+    docLoader->IsBusy(&isBusy);
     if (isBusy) {
       return NS_OK;
     }
@@ -1557,7 +1673,10 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
       NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_PROGID, &rv);
       if (NS_FAILED(rv)) return rv;
 
-      rv = observer->Notify(GetContentWindow(),
+      nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+      GetContentWindow(getter_AddRefs(contentWindow));
+
+      rv = observer->Notify(contentWindow,
                             NS_SUCCEEDED(aStatus) ? kEndDocumentLoad.GetUnicode() : kFailDocumentLoad.GetUnicode(),
                             urlStr.GetUnicode());
 
@@ -1652,8 +1771,11 @@ NS_IMETHODIMP
 nsBrowserInstance::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, 
                              nsIChannel *aChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
   // forward the DoContent call to our content area webshell
-  nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(docShell));
   if (ctnListener)
     return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, aChannel, aContentHandler, aAbortProcess);
   return NS_OK;
@@ -1712,15 +1834,18 @@ nsBrowserInstance::CanHandleContent(const char * aContentType,
                                     PRBool * aCanHandleContent)
 
 {
-   // can handle is really determined by what our docshell can 
-   // load...so ask it....
-   nsCOMPtr<nsIURIContentListener> ctnListener(do_GetInterface(GetContentAreaDocShell())); 
-   if (ctnListener)
-     return ctnListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, aCanHandleContent);
-   else
-     *aCanHandleContent = PR_FALSE;
- 
-   return NS_OK;
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+
+  // can handle is really determined by what our docshell can 
+  // load...so ask it....
+  nsCOMPtr<nsIURIContentListener> ctnListener(do_GetInterface(docShell)); 
+  if (ctnListener)
+    return ctnListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, aCanHandleContent);
+  else
+    *aCanHandleContent = PR_FALSE;
+
+ return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1835,16 +1960,18 @@ nsBrowserInstance::OnStatusChange(nsIWebProgress* aWebProgress,
 //*****************************************************************************
 
 nsresult
-nsBrowserInstance::InitializeSearch( nsIFindComponent *finder )
+nsBrowserInstance::InitializeSearch(nsIDOMWindowInternal* windowToSearch, nsIFindComponent *finder)
 {
     nsresult rv = NS_OK;
 
     if (!finder) return NS_ERROR_NULL_POINTER;
-
-    if (!mSearchContext ) {
-        // Create the search context for this browser window.
-        rv = finder->CreateContext(GetContentWindow(), nsnull, getter_AddRefs(mSearchContext));
-    }
+    if (!windowToSearch) return NS_ERROR_NULL_POINTER;
+    
+    if (!mSearchContext )
+        rv = finder->CreateContext(windowToSearch, nsnull, getter_AddRefs(mSearchContext));
+    else
+        rv = finder->ResetContext(mSearchContext, windowToSearch, nsnull);
+    
     return rv;
 }
 
@@ -1859,7 +1986,7 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
 
   rv = aParentMenu->GetOwnerDocument(getter_AddRefs(doc));
   if (!NS_SUCCEEDED(rv)) {
-    printf("nsBrowserInstance::CreateMenuItem ERROR Getting handle to the document\n");
+    if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem ERROR Getting handle to the document\n");
     return NS_ERROR_FAILURE;
   }
   nsString menuitemName(aName);
@@ -1869,7 +1996,7 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
   nsString  tagName; tagName.AssignWithConversion("menuitem");
   rv = doc->CreateElement(tagName, getter_AddRefs(menuItemElement));
   if (!NS_SUCCEEDED(rv)) {
-    printf("nsBrowserInstance::CreateMenuItem ERROR creating the menu item element\n");
+    if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem ERROR creating the menu item element\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -1887,7 +2014,7 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
   if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem Setting menu name to %s\n", menuitemlabel.ToNewCString());
   rv = menuItemElement->SetAttribute(NS_ConvertASCIItoUCS2("value"), menuitemlabel);
   if (!NS_SUCCEEDED(rv)) {
-    printf("nsBrowserInstance::CreateMenuItem ERROR Setting node value for menu item ****\n");
+    if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem ERROR Setting node value for menu item ****\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -1898,14 +2025,14 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
   rv = menuItemElement->SetAttribute(NS_ConvertASCIItoUCS2("index"), indexString);
 
   if (!NS_SUCCEEDED(rv)) {
-    printf("nsBrowserAppCore::CreateMenuItem ERROR setting ishist handler\n");
+    if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem ERROR setting ishist handler\n");
     return NS_ERROR_FAILURE;
   }
 
     // Make a DOMNode out of it
   nsCOMPtr<nsIDOMNode>  menuItemNode = do_QueryInterface(menuItemElement);
   if (!menuItemNode) {
-    printf("nsBrowserInstance::CreateMenuItem ERROR converting DOMElement to DOMNode *****\n");
+    if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem ERROR converting DOMElement to DOMNode *****\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -1915,7 +2042,7 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
   
   if (!NS_SUCCEEDED(rv)) 
   {
-       printf("nsBrowserInstance::CreateMenuItem ERROR appending menuitem to menu *****\n");
+     if (APP_DEBUG) printf("nsBrowserInstance::CreateMenuItem ERROR appending menuitem to menu *****\n");
      return NS_ERROR_FAILURE;
   }
 
@@ -1925,11 +2052,9 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
 NS_IMETHODIMP
 nsBrowserInstance::UpdateGoMenu(nsIDOMNode * aGoMenu)
 {
-
- if (!GetContentAreaDocShell())  {
-    printf("nsBrowserInstance::UpdateGoMenu Couldn't get a handle to Content Area DocShell\n");
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsIDocShell> docShell;
+  GetContentAreaDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> menuPopup = aGoMenu;
   nsresult rv;
@@ -1937,11 +2062,11 @@ nsBrowserInstance::UpdateGoMenu(nsIDOMNode * aGoMenu)
   // Clear all history children under Go menu
   rv = ClearHistoryMenus(menuPopup);
   if (!NS_SUCCEEDED(rv)) {
-    printf("nsBrowserInstance::UpdateGoMenu Error while clearing old history list\n");
+    if (APP_DEBUG) printf("nsBrowserInstance::UpdateGoMenu Error while clearing old history list\n");
   }
 
   nsCOMPtr<nsISHistory> mSHistory;
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   webNav->GetSessionHistory(getter_AddRefs(mSHistory));
   NS_ENSURE_TRUE(mSHistory, NS_ERROR_FAILURE);
 
@@ -1971,7 +2096,7 @@ nsBrowserInstance::UpdateGoMenu(nsIDOMNode * aGoMenu)
       if (APP_DEBUG)printf("nsBrowserInstance::UpdateGoMenu URL = %s, TITLE = %s\n", (const char *) uriSpec, histTitle.ToNewCString());
       rv = CreateMenuItem(menuPopup, j, title);
       if (!NS_SUCCEEDED(rv)) {
-        printf("nsBrowserInstance::UpdateGoMenu Error while creating history mene item\n");
+        if (APP_DEBUG) printf("nsBrowserInstance::UpdateGoMenu Error while creating history mene item\n");
 	  }
       Recycle(title);
 	}
@@ -1991,52 +2116,54 @@ nsBrowserInstance::ClearHistoryMenus(nsIDOMNode * aParent)
 
      //Get handle to the children list
      rv = menu->GetChildNodes(getter_AddRefs(childList));
-     if (NS_SUCCEEDED(rv) && childList) {
+     if (NS_SUCCEEDED(rv) && childList)
+     {
         PRInt32 ccount=0;
         childList->GetLength((unsigned int *)&ccount);
 
         // Remove the children that has the 'hist' attribute set to true.
-        for (PRInt32 i=0; i<ccount; i++) {
-            nsCOMPtr<nsIDOMNode> child;
-            rv = childList->Item(i, getter_AddRefs(child));
-      if (!NS_SUCCEEDED(rv) ||  !child) {
-        printf("nsBrowserInstance::ClearHistoryPopup, Could not get child\n");
-        return NS_ERROR_FAILURE;
-      }
-      // Get element out of the node
-      nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
-      if (!childElement) {
-        printf("nsBrowserInstance::ClearHistorypopup Could n't get DOMElement out of DOMNode for child\n");
-        return NS_ERROR_FAILURE;
-      }
+        for (PRInt32 i=0; i<ccount; i++)
+        {
+          nsCOMPtr<nsIDOMNode> child;
+          rv = childList->Item(i, getter_AddRefs(child));
+          if (!NS_SUCCEEDED(rv) ||  !child) {
+            if (APP_DEBUG) printf("nsBrowserInstance::ClearHistoryPopup, Could not get child\n");
+            return NS_ERROR_FAILURE;
+          }
+          // Get element out of the node
+          nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
+          if (!childElement) {
+            if (APP_DEBUG) printf("nsBrowserInstance::ClearHistorypopup Could n't get DOMElement out of DOMNode for child\n");
+            return NS_ERROR_FAILURE;
+          }
 
-      nsString  attrname; attrname.AssignWithConversion("index");
-      nsString  attrvalue;
-      rv = childElement->GetAttribute(attrname, attrvalue);
+          nsString  attrname; attrname.AssignWithConversion("index");
+          nsString  attrvalue;
+          rv = childElement->GetAttribute(attrname, attrvalue);
 
-      if (NS_SUCCEEDED(rv) && (attrvalue.Length() > 0)) {
-        // It is a history menu item. Remove it
-                nsCOMPtr<nsIDOMNode> ret;         
-                rv = menu->RemoveChild(child, getter_AddRefs(ret));
-          if (NS_SUCCEEDED(rv)) {
-           if (ret) {
-              if (APP_DEBUG) printf("nsBrowserInstance::ClearHistoryPopup Child %x removed from the popuplist \n", (unsigned int) child.get());                
-           }
-           else {
-              printf("nsBrowserInstance::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child.get());
-           }
-		  }  // NS_SUCCEEDED(rv)
+          if (NS_SUCCEEDED(rv) && (attrvalue.Length() > 0)) {
+            // It is a history menu item. Remove it
+              nsCOMPtr<nsIDOMNode> ret;         
+              rv = menu->RemoveChild(child, getter_AddRefs(ret));
+              if (NS_SUCCEEDED(rv)) {
+                if (ret) {
+                  if (APP_DEBUG) printf("nsBrowserInstance::ClearHistoryPopup Child %x removed from the popuplist \n", (unsigned int) child.get());                
+                }
+              else {
+                if (APP_DEBUG) printf("nsBrowserInstance::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child.get());
+              }
+    		  }  // NS_SUCCEEDED(rv)
           else
-		  {
-           printf("nsBrowserInstance::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child.get());
-                   return NS_ERROR_FAILURE;
-		  }         
-      }  // atrrvalue == true      
-	  else
-	  {
-		  if (APP_DEBUG) printf("Couldn't get attribute values \n");
-	  }
-    } //(for) 
+    		  {
+               if (APP_DEBUG) printf("nsBrowserInstance::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child.get());
+               return NS_ERROR_FAILURE;
+    		  }         
+        }  // atrrvalue == true      
+    	  else
+    	  {
+    		  if (APP_DEBUG) printf("Couldn't get attribute values \n");
+    	  }
+      } //(for) 
    }   // if (childList)
    return NS_OK;
 }

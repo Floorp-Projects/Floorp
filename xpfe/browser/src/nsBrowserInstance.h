@@ -92,17 +92,21 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     static PRUint32 gRefCnt;
 
-  public:
-    nsIDocShell* GetContentAreaDocShell();
-    nsIDOMWindowInternal* GetContentWindow();
-    nsIDocumentLoader* GetContentAreaDocLoader();
+  protected:
+
+    nsresult GetContentAreaDocShell(nsIDocShell** outDocShell);
+    nsresult GetContentWindow(nsIDOMWindowInternal** outContentWindow);
+    nsresult GetContentAreaDocLoader(nsIDocumentLoader** outDocLoader);
+    
+    nsresult GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow);
+    
     void ReinitializeContentVariables();
 
-  protected:
-    nsresult InitializeSearch(nsIFindComponent*);
+    nsresult InitializeSearch(nsIDOMWindowInternal* windowToSearch, nsIFindComponent *finder );
+    
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
     NS_IMETHOD EnsureXULBrowserWindow();
-	NS_IMETHOD ClearHistoryMenus(nsIDOMNode * );
+	  NS_IMETHOD ClearHistoryMenus(nsIDOMNode * );
 
     PRBool              mIsClosed;
 
