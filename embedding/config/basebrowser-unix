@@ -164,6 +164,7 @@ components/liblwbrk.so
 components/libnslocale.so
 components/libucvlatin.so
 components/unicharutil.xpt
+components/libchardet.so
 ; optional - on english only systems
 ; components/libucvja.so for japanese 
 ; components/libucvko.so for korean
