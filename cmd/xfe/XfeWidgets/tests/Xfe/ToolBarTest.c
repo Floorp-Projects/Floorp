@@ -168,10 +168,12 @@ location_cb(Widget w,XtPointer client_data,XtPointer call_data)
 		location = XmINDICATOR_LOCATION_MIDDLE;
 	}
 
+#ifdef DEBUG
 	printf("%s(%s) location = %s\n",
 		   "__FUNCTION__",
 		   XtName(w),
 		   XfeDebugRepTypeValueToName(XmRToolBarIndicatorLocation,location));
+#endif
 
 	XtVaSetValues(_tool_bar,XmNindicatorLocation,location,NULL);
 }
