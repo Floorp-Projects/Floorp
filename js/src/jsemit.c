@@ -304,41 +304,53 @@ js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
                        JUMP_OFFSET_LO(delta));                                \
     JS_END_MACRO
 
-static ptrdiff_t
-EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
-         ptrdiff_t *last, JSAtomListElement *label, JSSrcNoteType noteType)
+/* Emit additional bytecode(s) for non-local jumps. */
+static JSBool
+EmitNonLocalJumpFixup(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt)
 {
     JSStmtInfo *stmt;
-    intN index;
     ptrdiff_t jmp;
 
     for (stmt = cg->treeContext.topStmt; stmt != toStmt; stmt = stmt->down) {
         switch (stmt->type) {
           case STMT_FINALLY:
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-                return -1;
+                return JS_FALSE;
             EMIT_CHAINED_JUMP(cx, cg, stmt->gosub, JSOP_GOSUB, jmp);
             if (jmp < 0)
-                return -1;
+                return JS_FALSE;
             break;
           case STMT_WITH:
           case STMT_CATCH:
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-                return -1;
+                return JS_FALSE;
             cg->stackDepth++;
             if (js_Emit1(cx, cg, JSOP_LEAVEWITH) < 0)
-                return -1;
+                return JS_FALSE;
             break;
           case STMT_FOR_IN_LOOP:
             if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-                return -1;
+                return JS_FALSE;
             cg->stackDepth += 2;
             if (js_Emit1(cx, cg, JSOP_POP2) < 0)
-                return -1;
+                return JS_FALSE;
             break;
           default:;
         }
     }
+
+    return JS_TRUE;
+}
+
+static ptrdiff_t
+EmitGoto(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *toStmt,
+         ptrdiff_t *last, JSAtomListElement *label, JSSrcNoteType noteType)
+{
+    intN index;
+    ptrdiff_t jmp;
+
+    if (!EmitNonLocalJumpFixup(cx, cg, toStmt))
+        return -1;
 
     if (label) {
         index = js_NewSrcNote(cx, cg, noteType);
@@ -1810,6 +1822,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         break;
 
       case TOK_RETURN:
+        if (!EmitNonLocalJumpFixup(cx, cg, NULL))
+            return JS_FALSE;
         pn2 = pn->pn_kid;
         if (pn2) {
             if (!js_EmitTree(cx, cg, pn2))
