@@ -223,13 +223,13 @@ typedef struct DIR_Server
 	/* Flags */
 	/* TBD: All the PRBool fields should eventually merge into "flags" */
 	PRUint32 flags;               
-	PRBool stopFiltersOnHit;
-	PRBool isOffline;
-	PRBool isSecure;           /* use SSL?                               */
-	PRBool saveResults;    
-	PRBool efficientWildcards; /* server can match substrings            */
-	PRBool enableAuth;			/* AUTH: Use DN/password when binding?    */
-	PRBool savePassword;		/* AUTH: Remember DN and password?        */
+	PRPackedBool stopFiltersOnHit;
+	PRPackedBool isOffline;
+	PRPackedBool isSecure;           /* use SSL?                               */
+	PRPackedBool saveResults;    
+	PRPackedBool efficientWildcards; /* server can match substrings            */
+	PRPackedBool enableAuth;			/* AUTH: Use DN/password when binding?    */
+	PRPackedBool savePassword;		/* AUTH: Remember DN and password?        */
 
 	/* site-configurable attributes and filters */
 	nsVoidArray *customFilters;

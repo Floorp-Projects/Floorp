@@ -323,46 +323,52 @@ NS_IMETHODIMP nsAbDirProperty::GetDirectoryProperties(nsIAbDirectoryProperties *
     return NS_ERROR_OUT_OF_MEMORY;
 
   DIR_InitServer(server);
-  nsCString prefId;
+  nsCAutoString prefId;
   rv = GetDirPrefId(prefId);
-  NS_ENSURE_SUCCESS(rv,rv);
-  server->prefName = nsCRT::strdup(prefId.get());
-  DIR_GetPrefsForOneServer(server, PR_FALSE, PR_FALSE);
 
-  // Now create the obj and move info in DIR_Server to it.
-  nsCOMPtr <nsIAbDirectoryProperties> properties;
-  properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
+  if (NS_SUCCEEDED(rv)) {
+    server->prefName = nsCRT::strdup(prefId.get());
+    DIR_GetPrefsForOneServer(server, PR_FALSE, PR_FALSE);
 
-  NS_ConvertUTF8toUCS2 description (server->description);
-  rv = properties->SetDescription(description);
-  NS_ENSURE_SUCCESS(rv,rv);
+    // Now create the obj and move info in DIR_Server to it.
+    nsCOMPtr<nsIAbDirectoryProperties> properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
 
-  rv = properties->SetFileName(server->fileName);
-  NS_ENSURE_SUCCESS(rv,rv);
+    if (NS_SUCCEEDED(rv)) {
+      NS_ConvertUTF8toUCS2 description (server->description);
 
-  rv = properties->SetPrefName(server->prefName);
-  NS_ENSURE_SUCCESS(rv,rv);
+      rv = properties->SetDescription(description);
 
-  rv = properties->SetURI(server->uri);
-  NS_ENSURE_SUCCESS(rv,rv);
+      if (NS_SUCCEEDED(rv))
+        rv = properties->SetFileName(server->fileName);
 
-  rv = properties->SetDirType(server->dirType);
-  NS_ENSURE_SUCCESS(rv,rv);
+      if (NS_SUCCEEDED(rv))
+        rv = properties->SetPrefName(server->prefName);
 
-  rv = properties->SetMaxHits(server->maxHits);
-  NS_ENSURE_SUCCESS(rv,rv);
+      if (NS_SUCCEEDED(rv))
+        rv = properties->SetURI(server->uri);
 
-  rv = properties->SetAuthDn(server->authDn);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = properties->SetCategoryId(server->PalmCategoryId);
-  NS_ENSURE_SUCCESS(rv,rv);
-  
-  rv = properties->SetSyncTimeStamp(server->PalmSyncTimeStamp);
-  NS_ENSURE_SUCCESS(rv,rv);
+      if (NS_SUCCEEDED(rv))
+        rv = properties->SetDirType(server->dirType);
 
-  NS_IF_ADDREF(*aDirectoryProperties = properties);
+      if (NS_SUCCEEDED(rv))
+        rv = properties->SetMaxHits(server->maxHits);
+
+      if (NS_SUCCEEDED(rv))
+        rv = properties->SetAuthDn(server->authDn);
+
+      if (NS_SUCCEEDED(rv))
+        rv = properties->SetCategoryId(server->PalmCategoryId);
+
+      if (NS_SUCCEEDED(rv))
+        rv = properties->SetSyncTimeStamp(server->PalmSyncTimeStamp);
+
+      if (NS_SUCCEEDED(rv))
+        NS_ADDREF(*aDirectoryProperties = properties);
+    }
+  }
+
+  DIR_DeleteServer(server);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsAbDirProperty::GetDirPrefId failed!");
   return rv;
 }
 
