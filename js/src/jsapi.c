@@ -652,6 +652,7 @@ JS_DestroyRuntime(JSRuntime *rt)
     if (rt->requestDone)
 	JS_DESTROY_CONDVAR(rt->requestDone);
     JS_DESTROY_LOCK(rt->rtLock);
+    JS_DESTROY_CONDVAR(rt->stateChange);
 #endif
     free(rt);
 }
@@ -2193,14 +2194,11 @@ JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
 JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
-    JSFunction *fun;
-
     CHECK_REQUEST(cx);
     if (OBJ_GET_CLASS(cx, funobj) != &js_FunctionClass) {
         /* Indicate we cannot clone this object */
 	return funobj;
     }
-    fun = JS_GetPrivate(cx, funobj);
     return js_CloneFunctionObject(cx, funobj, parent);
 }
 
