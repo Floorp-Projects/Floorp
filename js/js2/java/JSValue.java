@@ -40,11 +40,10 @@ class JSValue extends ExpressionNode {
     void eq(Environment theEnv)                         { unimplemented("eq"); }
     void ne(Environment theEnv)                         { unimplemented("ne"); }
     
-    
     JSDouble toJSDouble()                               { unimplemented("toJSDouble"); return null; }
     JSInteger toJSInteger()                             { unimplemented("toJSInteger"); return null; }
     JSString toJSString()                               { unimplemented("toJSString"); return null; }
     JSBoolean toJSBoolean()                             { unimplemented("toJSBoolean"); return null; }
-        
+    JSValue toPrimitive(String hint)                    { unimplemented("toPrimitive"); return null; }        
 
 }

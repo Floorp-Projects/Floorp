@@ -85,12 +85,16 @@ class JSDouble extends JSNumber {
         return this;
     }
     
+    JSValue toPrimitive() {
+        return this;
+    }
+    
     JSInteger toJSInteger() {
         return new JSInteger((int)d);
     }
     
     JSBoolean toJSBoolean() {
-        return (d != 0.0) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
+        return ((d == d) && (d != 0.0)) ? JSBoolean.JSTrue : JSBoolean.JSFalse;
     }
     
     JSString toJSString() {
