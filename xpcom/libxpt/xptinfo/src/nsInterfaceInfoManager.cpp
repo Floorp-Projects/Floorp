@@ -25,10 +25,7 @@
 #endif
 #include "nscore.h"
 
-// XXX We need to make this work on all platforms
-#ifndef XP_MAC
 #include "nsSpecialSystemDirectory.h" 
-#endif
 
 #include "nsISupports.h"
 #include "nsIInterfaceInfoManager.h"
@@ -138,17 +135,24 @@ XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
     }
 
     if (flen > 0) {
-        PRInt32 howmany = PR_Read(in, whole, flen);
-        if (howmany < 0) {
-            NS_ERROR("FAILED: reading typelib file");
-            goto out;
-        }
+       	PRInt32 howmany = PR_Read(in, whole, flen);
+       	if (howmany < 0) {
+           	NS_ERROR("FAILED: reading typelib file");
+           	goto out;
+       	}
 
-        // XXX lengths are PRUInt32, reads are PRInt32?
-        if (howmany < (PRInt32) flen) {
-            NS_ERROR("short read of typelib file");
-            goto out;
-        }
+#ifdef XP_MAC
+		// Mac can lie about the filesize, because it includes the resource fork
+		// (where our CVS information lives). So we'll just believe it if it read
+		// less than flen bytes.
+		flen = howmany;
+#else
+		if (howmany < flen) {
+			NS_ERROR("typelib short read");
+			goto out;
+		}
+#endif
+
         state = XPT_NewXDRState(XPT_DECODE, whole, flen);
         if (!XPT_MakeCursor(state, XPT_HEADER, 0, cursor)) {
             NS_ERROR("MakeCursor failed\n");
@@ -315,47 +319,36 @@ nsInterfaceInfoManager::initInterfaceTables()
         return NS_ERROR_FAILURE;
     }
 
-    // XXX We need to get rid of the env var on all platforms
-#ifndef XP_MAC
     // this code stolen from SetupRegistry; it might bear further
     // examination, as the code there doesn't look quite done.
     nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     sysdir += "components";
-    const char *xptdirname = sysdir.GetCString(); // native path
-#else
-    // First, find the xpt directory from the env.  XXX Temporary hack.
-    const char *xptdirname = PR_GetEnv("XPTDIR");
+//    const char *xptdirname = sysdir.GetCString(); // native path
+    
+#ifdef XP_MAC
+	PRBool wasAlias;
+	sysdir.ResolveAlias(wasAlias);
 #endif
-    PRDir *xptdir;
-    if (xptdirname == NULL || (xptdir = PR_OpenDir(xptdirname)) == NULL)
-        return NS_ERROR_FAILURE;
 
-    // Create a buffer that has dir/ in it so we can append the
-    // filename each time in the loop
-    char fullname[1024]; // NS_MAX_FILENAME_LEN
-    PL_strncpyz(fullname, xptdirname, sizeof(fullname));
-    unsigned int n = strlen(fullname);
-    if (n+1 < sizeof(fullname)) {
-        fullname[n] = '/';
-        n++;
-    }
-    char *filepart = fullname + n;
-	
-    PRDirEntry *dirent = NULL;
 #ifdef DEBUG
     int which = 0;
 #endif
-    while ((dirent = PR_ReadDir(xptdir, PR_SKIP_BOTH)) != NULL) {
-        PL_strncpyz(filepart, dirent->name, sizeof(fullname)-n);
-	PRFileInfo statbuf;
-        // stattable?
-	if (PR_GetFileInfo(fullname,&statbuf) != PR_SUCCESS)
-            continue;
-        // plain file?
-	else if (statbuf.type != PR_FILE_FILE)
-            continue;
-        // .xpt suffix?
-	int flen = PL_strlen(fullname);
+
+	for (nsDirectoryIterator i(sysdir); i.Exists(); i++) {
+		// XXX need to copy?
+		nsFileSpec spec = i.Spec();
+		
+#ifdef XP_MAC
+		spec.ResolveAlias(wasAlias);
+#endif
+		
+		if (! spec.IsFile())
+			continue;
+		
+		// XXX this assumes ASCII strings are returned from nsFileSpec. Is this valid?
+		nsprPath path(spec);
+		const char* fullname = path; // path needs to stay in scope, beacuse fullname refers to an internal member
+		int flen = PL_strlen(fullname);
         if (flen < 4 || PL_strcasecmp(&(fullname[flen - 4]), ".xpt"))
             continue;
 
@@ -364,6 +357,7 @@ nsInterfaceInfoManager::initInterfaceTables()
         which++;
         TRACE((stderr, "%d %s\n", which, fullname));
 #endif
+
         nsresult nsr = this->indexify_file(fullname);
         if (NS_IS_ERROR(nsr)) {
             char *warnstr = PR_smprintf("failed to process typelib file %s",
@@ -372,7 +366,6 @@ nsInterfaceInfoManager::initInterfaceTables()
             PR_smprintf_free(warnstr);
         }
     }
-    PR_CloseDir(xptdir);
 
 #ifdef DEBUG
     TRACE((stderr, "\nchecking name table for unresolved entries...\n"));
