@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.157 $ ';
+$::UtilsVersion = '$Revision: 1.158 $ ';
 
 package TinderUtils;
 
@@ -827,11 +827,16 @@ sub find_pref_file {
     # doesn't work on Me, XP, NT...)
     if ($Settings::OS =~ /^WIN/) {
         my $is9x = eval 'use Win32; return Win32::IsWin95();';
-        if ($is9x) {
+        my $major = eval 'use Win32; return (Win32::GetOSVersion())[1];';
+        if ($is9x) {            # 95, 98, Me(?)
             $profile_dir = $ENV{winbootdir} || $ENV{windir} || "C:\\WINDOWS";
             $profile_dir .= "\\Application Data";
-        } else {
+        } elsif ($major == 4) { # NT 4
+            $profile_dir = $ENV{USERPROFILE} || "C:\\WE_ARE_DOOMED";
+            $profile_dir .= "\\Application Data";
+        } else {                # NT 5: 2k, XP(?)
             $profile_dir = $ENV{APPDATA};
+
         }
         $profile_dir .= "\\Mozilla\\Profiles\\$Settings::MozProfileName";
         $profile_dir =~ s|\\|/|g;
