@@ -321,7 +321,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
        // see above
 
   PRBool rawPlainText = obj->options &&
-       obj->options->format_out != nsMimeOutput::nsMimeMessageFilterSniffer;
+       obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer;
 
   // this routine gets called for every line of data that comes through the
   // mime converter. It's important to make sure we are efficient with 
