@@ -339,6 +339,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsIDrawingSurface
         	if ( mPhImageZoom ) {
 						if( mImageFlags & ZOOM_SHMEM ) {
 							PgFlushCx( dc );
+							PgWaitHWIdle();
 							PgShmemDestroy( mPhImageZoom->image );
 							}
 						else free( mPhImageZoom->image );
