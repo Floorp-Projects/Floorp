@@ -29,17 +29,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
- #include "global.h"
+#include "global.h"
 
- #include "ChatFrame.h"
+#include "nsIWebNavigation.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMHTMLDocument.h"
 
+#include "ChatFrame.h"
 
-BEGIN_EVENT_TABLE(ChatFrame, wxFrame)
-//    EVT_LIST_ITEM_SELECTED(XRCID("articles"), ChatFrame::OnArticleClick)
+BEGIN_EVENT_TABLE(ChatFrame, GeckoFrame)
+    EVT_TEXT_ENTER(XRCID("chat"),        ChatFrame::OnChat)
 END_EVENT_TABLE()
 
-ChatFrame::ChatFrame(wxWindow* aParent) :
-    mGeckoWnd(NULL)
+ChatFrame::ChatFrame(wxWindow* aParent)
 {
     wxXmlResource::Get()->LoadFrame(this, aParent, wxT("chat_frame"));
+
+    SetIcon(wxICON(appicon));
+
+    SetupDefaultGeckoWindow();
+
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
+    webNav->LoadURI(NS_ConvertASCIItoUCS2("about:blank").get(),
+        nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
+
+}
+
+void ChatFrame::OnChat(wxCommandEvent &event)
+{
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
+    nsCOMPtr<nsIDOMDocument> doc;
+    webNav->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(doc);
+    // doc->CreateElement(getter_AddRefs(element));
+
+    wxTextCtrl *chatCtrl = (wxTextCtrl *) FindWindowById(XRCID("chat"), this);
+    if (chatCtrl)
+    {
+        wxString txt = chatCtrl->GetValue();
+        nsAutoString htmlFragment(NS_LITERAL_STRING("<p>Foo: "));
+        htmlFragment.AppendWithConversion(txt.c_str());
+        htmlDoc->Writeln(htmlFragment);
+        chatCtrl->SetValue("");
+    }
 }

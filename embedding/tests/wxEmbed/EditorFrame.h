@@ -29,19 +29,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef CHATFRAME_H
+#ifndef EDITORFRAME_H
+#define EDITORFRAME_H
 
 #include "GeckoFrame.h"
 
-class ChatFrame :
+class EditorFrame :
     public GeckoFrame
 {
 public :
-    ChatFrame(wxWindow* aParent);
+    EditorFrame(wxWindow* aParent);
 
     DECLARE_EVENT_TABLE()
-
-    void OnChat(wxCommandEvent &event);
 };
 
 #endif

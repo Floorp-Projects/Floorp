@@ -72,6 +72,9 @@
         <object class="wxMenuItem" name="menu_chat">
           <label>_Chat</label>
         </object>
+        <object class="wxMenuItem" name="menu_editor">
+          <label>_Editor</label>
+        </object>
       </object>
     </object>
 

@@ -29,19 +29,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef CHATFRAME_H
+#include "global.h"
 
 #include "GeckoFrame.h"
+#include "GeckoContainer.h"
 
-class ChatFrame :
-    public GeckoFrame
+GeckoFrame::GeckoFrame() :
+    mGeckoWnd(NULL)
 {
-public :
-    ChatFrame(wxWindow* aParent);
+}
 
-    DECLARE_EVENT_TABLE()
+bool GeckoFrame::SetupDefaultGeckoWindow()
+{
+    mGeckoWnd  = (GeckoWindow *) FindWindowById(XRCID("gecko"), this);
+    if (!mGeckoWnd)
+        return FALSE;
+    return SetupGeckoWindow(mGeckoWnd, this, getter_AddRefs(mWebBrowser));
+}
 
-    void OnChat(wxCommandEvent &event);
-};
+bool GeckoFrame::SetupGeckoWindow(GeckoWindow *aGeckoWindow, GeckoContainerUI *aUI, nsIWebBrowser **aWebBrowser) const
+{
+    if (!aGeckoWindow || !aUI)
+        return FALSE;
 
-#endif
+    GeckoContainer *geckoContainer = new GeckoContainer(aUI);
+    if (!geckoContainer)
+        return FALSE;
+
+    mGeckoWnd->SetGeckoContainer(geckoContainer);
+
+    PRUint32 aChromeFlags = nsIWebBrowserChrome::CHROME_ALL;
+    geckoContainer->SetChromeFlags(aChromeFlags);
+    geckoContainer->SetParent(nsnull);
+
+    wxSize size = mGeckoWnd->GetClientSize();
+
+    // Insert the browser
+    geckoContainer->CreateBrowser(0, 0, size.GetWidth(), size.GetHeight(),
+        (nativeWindow) aGeckoWindow->GetHWND(), aWebBrowser);
+
+    aUI->ShowWindow(PR_TRUE);
+
+    return TRUE;
+}

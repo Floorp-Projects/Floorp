@@ -36,40 +36,70 @@
 
 #include "nsIURI.h"
 
-const char msg1[] =
-"<html><body>"
-"Attention: Sir,<br>\n"
-"Good day. I am ALEXANDER NENE, Solicitor and Notary Public, The Personal Attorney<br>"
-"to MR HENRI CARLTON, The president of DIAMOND SAFARIESCO.LTD.ACCRA-GHANA who is a<br>"
-"National of your country. On the 21st of April 2000, my client, his wife and their <br>"
-"only son were Involved in a car accident along ACCRA/KUMASI Express Road.<br>\n"
-"Unfortunately, they all lost their lives in the event of the accident, since then<br>"
-"I have made several enquiries to locate any of my clients extended relatives and<br>"
-"this has also proved unsuccessful.After these several unsuccessful attempts, I decided<br>"
-"to trace his Relatives over the Internet, to locate any member of his family but of<br>"
-"no avail, hence I contacted youI contacted you to assist in repatriating the money and<br>"
-"property left Behind before they get confiscated or declare unserviceable by the bank<br>"
-"where my client lodged this huge deposits. Particularly, the Bank where the deceased had<br>"
-"an account valued at about 28.3 million dollars.Conseqently, the bank issued me a notice<br>"
-"to provide the next of kin or Have the account confiscated within a short time. Since<br>"
-"I have been Unsuccessful in locating the relatives for over some years now, I seek your<br>"
-"consent to present you as the next of kin of the deceased since you share the same surname<br>"
-" so that the proceeds of this account valued at 48.3 million dollars can be paid to you<br>"
-"for both of us to share the money; 70% to me and 25% to you, while 5% should be for<br>"
-"expenses or tax as your government may require. I have all necessary legal documents that<br>"
-"can be used to backup the claim.All I require is your honest cooperation to enable us see<br>"
-"this deal Through. I guarantee that this will be executed under a legitimate arrangement<br>"
-"that will protect you from any breach of the law. Please get in touch with me through my<br>"
-"email to enable us discuss further.<br><br> \n"
-"Thanks for you kind co-operation<br><br> \n"
-"ALEXANDER NENE<br><br><br></body></html>";
+struct MailMsg
+{
+    char *mSubject;
+    char *mSender;
+    char *mDate;
+    char *mBody;
+};
 
-
-const char msg2[] =
-"<html><body>The network will be going down tonight so please log off your computers before going home.</body></html>";
-
-const char msg3[] =
-"<html><body>Please submit expense reports ASAP if you want to see payment in your accounts this month!</body></html>";
+MailMsg gSampleMessages[] = 
+{
+    {
+        "URGENT ASSITANCE PLS",
+        "alexander nene",
+        "09/06/2003 14:38",
+        "<html><body>"
+        "<p>Attention: Sir,<br>\n"
+        "<p>Good day. I am ALEXANDER NENE, Solicitor and Notary Public, The Personal Attorney"
+        "to MR HENRI CARLTON, The president of DIAMOND SAFARIESCO.LTD.ACCRA-GHANA who is a"
+        "National of your country. On the 21st of April 2000, my client, his wife and their "
+        "only son were Involved in a car accident along ACCRA/KUMASI Express Road."
+        "<p>Unfortunately, they all lost their lives in the event of the accident, since then "
+        "I have made several enquiries to locate any of my clients extended relatives and"
+        "this has also proved unsuccessful.After these several unsuccessful attempts, I decided"
+        "to trace his Relatives over the Internet, to locate any member of his family but of"
+        "no avail, hence I contacted youI contacted you to assist in repatriating the money and"
+        "property left Behind before they get confiscated or declare unserviceable by the bank"
+        "where my client lodged this huge deposits. Particularly, the Bank where the deceased had"
+        "an account valued at about 28.3 million dollars.Conseqently, the bank issued me a notice "
+        "to provide the next of kin or Have the account confiscated within a short time. Since "
+        "I have been Unsuccessful in locating the relatives for over some years now, I seek your "
+        "consent to present you as the next of kin of the deceased since you share the same surname "
+        "so that the proceeds of this account valued at 48.3 million dollars can be paid to you "
+        "for both of us to share the money; 70% to me and 25% to you, while 5% should be for "
+        "expenses or tax as your government may require. I have all necessary legal documents that"
+        "can be used to backup the claim.All I require is your honest cooperation to enable us see"
+        "this deal Through. "
+        "<p>I guarantee that this will be executed under a legitimate arrangement"
+        "that will protect you from any breach of the law. Please get in touch with me through my"
+        "email to enable us discuss further.<br><br> \n"
+        "<p>Thanks for you kind co-operation<br><br> \n"
+        "<p>ALEXANDER NENE<br><br><br></body></html>"
+    },
+    {
+        "Reminder: Network Outage Tonight",
+        "IT Dept",
+        "09/06/2003 15:22",
+        "<html><body>The network will be going down tonight so please log off "
+        "your computers before going home.</body></html>"
+    },
+    {
+        "Expense Reports Due",
+        "Finance Dept",
+        "09/06/2003 15:40",
+        "<html><body>Please submit expense reports ASAP if you want to see payment "
+        "in your accounts this month!</body></html>"
+    },
+    {
+        "Flight confirmation",
+        "Expediocity",
+        "12/06/2003 12:31",
+        "<html><body>Thank you for booking with Expediocity, Your flight reservation has been "
+        "confirmed and details may be found online <a href=\"http://www.mozilla.org\">here</a>.</body></html>"
+    }
+};
 
 static bool gMailChannelCallbackRegistered = FALSE;
 
@@ -88,12 +118,16 @@ public:
 
         nsCAutoString path;
         aURI->GetPath(path);
-        if (path.Equals("//0"))
-            txt = msg1;
-        else if (path.Equals("//1"))
-            txt = msg2;
+
+        long i;
+        if (sscanf(path.get(), "//%ld", &i) == 1)
+        {
+            txt = gSampleMessages[i].mBody;
+        }
         else
-            txt = msg3;
+        {
+            return NS_ERROR_FAILURE;
+        }
 
         size_t size = txt.Length();
         *aData = (void *) nsMemory::Alloc(size + 1);
@@ -106,12 +140,11 @@ public:
     }
 };
 
-BEGIN_EVENT_TABLE(MailFrame, wxFrame)
+BEGIN_EVENT_TABLE(MailFrame, GeckoFrame)
     EVT_LIST_ITEM_SELECTED(XRCID("articles"), MailFrame::OnArticleClick)
 END_EVENT_TABLE()
 
-MailFrame::MailFrame(wxWindow* aParent) :
-    mGeckoWnd(NULL)
+MailFrame::MailFrame(wxWindow* aParent)
 {
     wxXmlResource::Get()->LoadFrame(this, aParent, wxT("mail_frame"));
 
@@ -130,40 +163,16 @@ MailFrame::MailFrame(wxWindow* aParent) :
         articleListCtrl->InsertColumn(0, "Subject", wxLIST_FORMAT_LEFT, 200);
         articleListCtrl->InsertColumn(1, "Sender", wxLIST_FORMAT_LEFT, 100);
         articleListCtrl->InsertColumn(2, "Date", wxLIST_FORMAT_LEFT, 100);
-        long idx;
-        idx = articleListCtrl->InsertItem(0, "URGENT ASSITANCE PLS");
-        articleListCtrl->SetItem(idx, 1, "alexander nene");
-        articleListCtrl->SetItem(idx, 2, "09/06/2003 14:38");
-        idx = articleListCtrl->InsertItem(1, "Reminder: Network Outage Tonight");
-        articleListCtrl->SetItem(idx, 1, "IT Dept");
-        articleListCtrl->SetItem(idx, 2, "09/06/2003 15:22");
-        idx = articleListCtrl->InsertItem(2, "Expense Reports Due");
-        articleListCtrl->SetItem(idx, 1, "Finance Dept");
-        articleListCtrl->SetItem(idx, 2, "09/06/2003 15:40");
-    }
 
-    mGeckoWnd = (GeckoWindow *) FindWindowById(XRCID("gecko"), this);
-    if (mGeckoWnd)
-    {
-        GeckoContainer *geckoContainer = new GeckoContainer(this);
-        if (geckoContainer)
+        for (long i = 0; i < sizeof(gSampleMessages) / sizeof(gSampleMessages[0]); i++)
         {
-            mGeckoWnd->SetGeckoContainer(geckoContainer);
-
-            PRUint32 aChromeFlags = nsIWebBrowserChrome::CHROME_ALL;
-            geckoContainer->SetChromeFlags(aChromeFlags);
-            geckoContainer->SetParent(nsnull);
-
-            wxSize size = mGeckoWnd->GetClientSize();
-
-            // Insert the browser
-            geckoContainer->CreateBrowser(0, 0, size.GetWidth(), size.GetHeight(),
-                (nativeWindow) mGeckoWnd->GetHWND(), getter_AddRefs(mWebbrowser));
-
-            GeckoContainerUI::ShowWindow(PR_TRUE);
-
+            articleListCtrl->InsertItem(i, gSampleMessages[i].mSubject);
+            articleListCtrl->SetItem(i, 1, gSampleMessages[i].mSender);
+            articleListCtrl->SetItem(i, 2, gSampleMessages[i].mDate);
         }
     }
+
+    SetupDefaultGeckoWindow();
 
     wxWindow *hdrPanel = FindWindowById(XRCID("mail_header_panel"), this);
     if (hdrPanel)
@@ -177,18 +186,27 @@ MailFrame::MailFrame(wxWindow* aParent) :
 
 void MailFrame::OnArticleClick(wxListEvent &event)
 {
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        wxString url = wxString::Format("wxmail://%ld", event.GetIndex());
+        long idx = event.GetIndex();
+        wxString url = wxString::Format("wxmail://%ld", idx);
         if (!url.IsEmpty())
         {
+            wxStaticText *txtFrom = (wxStaticText *) FindWindowById(XRCID("mail_from"), this);
+            if (txtFrom)
+                txtFrom->SetLabel(gSampleMessages[idx].mSender);
+            wxStaticText *txtDate = (wxStaticText *) FindWindowById(XRCID("mail_date"), this);
+            if (txtDate)
+                txtDate->SetLabel(gSampleMessages[idx].mDate);
+            wxStaticText *txtSubject = (wxStaticText *) FindWindowById(XRCID("mail_subject"), this);
+            if (txtSubject)
+                txtSubject->SetLabel(gSampleMessages[idx].mSubject);
+
             wxWindow *hdrPanel = FindWindowById(XRCID("mail_header_panel"), this);
             if (hdrPanel)
-            {
                 hdrPanel->Show(TRUE);
-            }
 
-            nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+            nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
             webNav->LoadURI(NS_ConvertASCIItoUCS2(url.c_str()).get(),
                                    nsIWebNavigation::LOAD_FLAGS_NONE,
                                    nsnull,

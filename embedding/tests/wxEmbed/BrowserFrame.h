@@ -32,12 +32,10 @@
 #ifndef BROWSERFRAME_H
 #define BROWSERFRAME_H
 
-#include "GeckoContainer.h"
-#include "GeckoWindow.h"
+#include "GeckoFrame.h"
 
 class BrowserFrame :
-    public wxFrame,
-    public GeckoContainerUI
+    public GeckoFrame
 {
 public :
     BrowserFrame(wxWindow* aParent);
@@ -55,9 +53,6 @@ public :
     void OnUpdateBrowserForward(wxUpdateUIEvent &event);
     void OnUpdateBrowserStop(wxUpdateUIEvent &event);
 
-    GeckoWindow            *mGeckoWnd;
-    nsCOMPtr<nsIWebBrowser> mWebbrowser;
-  
     // GeckoContainerUI overrides
     virtual nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
          nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow);
