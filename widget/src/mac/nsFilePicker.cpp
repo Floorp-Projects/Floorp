@@ -82,7 +82,7 @@ nsFilePicker::~nsFilePicker()
 // Ok's the dialog
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFileWidget::OnOk()
+NS_IMETHODIMP nsFilePicker::OnOk()
 {
   mWasCancelled  = PR_FALSE;
   mIOwnEventLoop = PR_FALSE;
@@ -94,7 +94,7 @@ NS_IMETHODIMP nsFileWidget::OnOk()
 // Cancel the dialog
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFileWidget::OnCancel()
+NS_IMETHODIMP nsFilePicker::OnCancel()
 {
   mWasCancelled  = PR_TRUE;
   mIOwnEventLoop = PR_FALSE;
@@ -155,7 +155,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //
 //-------------------------------------------------------------------------
 PRBool
-nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec* outSpec )
+nsFilePicker :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec* outSpec )
 {
  	PRBool retVal = PR_FALSE;
 	NavReplyRecord reply;
@@ -223,7 +223,7 @@ nsFileWidget :: GetFile ( Str255 & inTitle, /* filter list here later */ FSSpec*
 //
 //-------------------------------------------------------------------------
 PRBool
-nsFileWidget :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
+nsFilePicker :: GetFolder ( Str255 & inTitle, FSSpec* outSpec  )
 {
  	PRBool retVal = PR_FALSE;
 	NavReplyRecord reply;
