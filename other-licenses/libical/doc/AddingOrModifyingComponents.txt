@@ -1,0 +1,23 @@
+
+How to add or change Components, Properties, Values or Parameters
+
+
+Adding or modifying values
+---------------------------
+
+You may have to modify these files or data structures
+
+file design-data/value-c-types.txt
+file design-data/prop-to-val.txt
+table parameter_map[] in icalenums.c
+enum icalvalue_kind in icalenum.h
+table value_map[] in icalenums.c
+enum icalparameter_value in icalenum.h
+table propval_map[] in icalenums.c
+function icalvalue_as_ical_string() in icalvalue.c
+function icalvalue_new_from_string_with_error() in icalvalue.c
+
+When you are done, if you changed any files in the design-data
+directory, regnerate derived datatypes in src/libical with "make
+derived" or "make icalvalue"
+

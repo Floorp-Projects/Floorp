@@ -1,0 +1,60 @@
+
+
+Usecases
+---------
+
+1) iMIP based CUA uses a local, file-based store
+
+2) CAP based CUA uses one or more remote CAP servers
+
+3) CAP based CUA uses a local cache that synchronizes with one or more
+CAP servers.
+
+4) CUA imports and exports from a file
+
+Scenarios. 
+---------
+
+1 Open a connection to a store. 
+	
+2 Create a new calendar for which user Bob can read and user Alice can
+read an write.
+
+3 Create several new calendars
+
+4 Delete a calendar
+
+5 Change the calid of a calendar
+
+6 Delete all calendars belonging to user bob
+
+7 Get three new UIDs from the store
+
+8 Store a new VEVENT in the store. 
+
+9 Find all components for which the LOCATION is "West Conference Room"
+and change them to "East Conference Room"
+
+10 Find the component with UID X and add a GEO property to it. 
+
+11 Delete all VEVENTS which have a METHOD that is not CREATED
+
+12 Retrieve all VEVENTS which have a METHOD that is not CREATED
+
+13 Retrieve the capabilities of the store
+
+14 Retrieve/Modify/Add/Delete properties of a store
+
+15 Retrieve/Modify/Add/Delete VCARs of a store
+
+16 Retrieve/Modify/Add/Delete VTIMEZONEs of a store
+
+17 Retrieve/Modify/Add/Delete properties of a calendar
+
+18 Retrieve/Modify/Add/Delete VCARs of a calendar
+
+19 Retrieve/Modify/Add/Delete VTIMEZONEs of a calendar
+
+20 Translate a CALID into one or more UPNs
+
+21 Expand a group UPN into all of the members of the group
