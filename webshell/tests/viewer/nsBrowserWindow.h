@@ -75,6 +75,11 @@ public:
                   const nsRect& aBounds,
                   PRUint32 aChromeMask,
                   PRBool aAllowPlugins = PR_TRUE);
+                  
+  // virtual method for platform-specific initialization
+  NS_IMETHOD InitNativeWindow() { return NS_OK; }
+  
+  // nsIBrowserWindow
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD GetBounds(nsRect& aBounds);
@@ -264,9 +269,13 @@ class nsNativeBrowserWindow : public nsBrowserWindow {
 public:
   nsNativeBrowserWindow();
   ~nsNativeBrowserWindow();
-
+  
   virtual nsresult CreateMenuBar(PRInt32 aWidth);
   virtual nsEventStatus DispatchMenuItem(PRInt32 aID);
+  
+protected:
+	  NS_IMETHOD InitNativeWindow();
+
 };
 
 #endif /* nsBrowserWindow_h___ */

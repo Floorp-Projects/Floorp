@@ -1238,9 +1238,11 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     }
   }
 
+  // Give the embedding app a chance to do platforms-specific window setup
+  InitNativeWindow();
+
   // Now lay it all out
   Layout(r.width, r.height);
-
 
   return NS_OK;
 }
@@ -1311,6 +1313,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     }
   }
 
+  // Give the embedding app a chance to do platforms-specific window setup
+  InitNativeWindow();
+  
   // Now lay it all out
   Layout(r.width, r.height);
 
