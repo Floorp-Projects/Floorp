@@ -942,6 +942,55 @@ unless (-d "$webdotdir") {
     mkdir "$webdotdir", 0700;
 }
 
+if (!-d "skins/custom") {
+    # perms/ownership are fixed up later
+    mkdir "skins/custom", 0700;
+}
+
+# Whether or not the custom skin directory has been ignored (i.e. added to
+# skins/.cvsignore).
+sub customSkinsIgnored {
+    if (!-e "skins/.cvsignore") {
+        return 0;
+    }
+    else {
+        open CVSIGNORE, '<', "skins/.cvsignore";
+        while (<CVSIGNORE>) {
+            chomp;
+            if (/^custom$/) {
+                close CVSIGNORE;
+                return 1;
+            }
+        }
+        close CVSIGNORE;
+        return 0;
+    }
+}
+
+# If the custom skin directory hasn't been ignored, ignore it (i.e. add it to
+# skins/.cvsignore).
+if (!customSkinsIgnored()) {
+    open CVSIGNORE, '>>', "skins/.cvsignore";
+    print CVSIGNORE "custom\n";
+    close CVSIGNORE;
+}
+
+# Create custom stylesheets for each standard stylesheet.
+foreach my $standard (<skins/standard/*.css>) {
+    my $custom = $standard;
+    $custom =~ s|^skins/standard|skins/custom|;
+    if (!-e $custom) {
+        open STYLESHEET, '>', $custom;
+        print STYLESHEET <<"END";
+/* 
+ * Custom rules for $standard.
+ * The rules you put here override rules in that stylesheet.
+ */
+END
+        close STYLESHEET;
+    }
+}
+
 if ($my_create_htaccess) {
   my $fileperm = 0644;
   my $dirperm = 01777;
@@ -1330,6 +1379,7 @@ if ($^O !~ /MSWin32/i) {
         fixPerms($templatedir, $<, $webservergid, 027, 1);
         fixPerms('images', $<, $webservergid, 027, 1);
         fixPerms('css', $<, $webservergid, 027, 1);
+        fixPerms('skins', $<, $webservergid, 027, 1);
         fixPerms('js', $<, $webservergid, 027, 1);
         chmod 0644, 'globals.pl';
         
@@ -1356,6 +1406,7 @@ if ($^O !~ /MSWin32/i) {
         fixPerms($templatedir, $<, $gid, 022, 1);
         fixPerms('images', $<, $gid, 022, 1);
         fixPerms('css', $<, $gid, 022, 1);
+        fixPerms('skins', $<, $gid, 022, 1);
         fixPerms('js', $<, $gid, 022, 1);
         
         # Don't use fixPerms here, because it won't change perms on the directory
