@@ -4135,6 +4135,10 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 // header = "REFRESH"
                 // result = "5; URL=http://uri" // note the URL attribute is
                 // optional, if it is absent, the currently loaded url is used.
+                // Also note that the second and URL seperator can be either a ';'
+                // or a ','. This breaks some websites. The ',' seperator should be
+                // illegal but CNN is using it.
+
                 // 
                 // We need to handle the following strings.
                 //  - X is a set of digits
