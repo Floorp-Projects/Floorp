@@ -1083,7 +1083,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
   // Flush the image cache.
   NS_WITH_SERVICE(nsIImageManager, imageManager, kImageManagerCID, &rv);
   if (imageManager)
-    rv = imageManager->FlushCache();
+    rv = imageManager->FlushCache(1);
 
   return rv;
 }
