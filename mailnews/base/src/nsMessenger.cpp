@@ -143,8 +143,6 @@ ConvertBufToPlainText(nsString &aConBuf)
     PRUint32 converterFlags = 0;
     PRUint32 wrapWidth = 72;
     
-    converterFlags |= nsIDocumentEncoder::OutputFormatted;
-    
     rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, wrapWidth, converterFlags);
     if (sink && NS_SUCCEEDED(rv)) 
     {  
@@ -503,6 +501,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
       {
         nsCOMPtr<nsIFileSpec> aSpec;
         PRUint32 saveAsFileType = 0; // 0 - raw, 1 = html, 2 = text;
+        char      *defaultFile = "msgTemp.eml";
 
         if (asFile)
         {
@@ -514,7 +513,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
             goto done;
           }
 
-          rv = fileSpec->ChooseOutputFile("Save Message", "",
+          rv = fileSpec->ChooseOutputFile("Save Message", defaultFile,
                                 nsIFileSpecWithUI::eAllMailOutputFilters);
           if (NS_FAILED(rv)) goto done;
           char *fileName = nsnull;
@@ -533,7 +532,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
         }
         else
         {
-          nsFileSpec tmpFileSpec("msgTemp.eml");
+          nsFileSpec tmpFileSpec(defaultFile);
           rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(aSpec));
         }
         if (NS_FAILED(rv)) goto done;
@@ -560,10 +559,8 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
                   nsCOMPtr<nsIURI> aURL;
                   nsAutoString urlString = url;
 
-                  if (saveAsFileType == 2)  // RICHIE - text hack, ugh!
-                    urlString += "?header=quote";
-                  else
-                    urlString += "?header=saveas";
+                  // Setup the URL for a "Save As..." Operation...
+                  urlString += "?header=saveas";
 
                   char *urlCString = urlString.ToNewCString();
                   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
@@ -1418,9 +1415,10 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
     if (m_outputFormat == TEXT_PLAIN)
     {
       ConvertBufToPlainText(m_msgBuffer);
-      rv = ConvertFromUnicode(msgCompFileSystemCharset(), m_msgBuffer, &conBuf);
+      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, (const char *)nsAutoCString(msgCompFileSystemCharset()), 
+                                  m_msgBuffer.GetUnicode(), &conBuf); 
       if ( NS_SUCCEEDED(rv) && (conBuf) )
-        conLength = nsCRT::strlen(conBuf);
+        conLength = m_msgBuffer.Length();
     }
 
     if ( (NS_SUCCEEDED(rv)) && (conBuf) )

@@ -161,9 +161,13 @@ MimeInlineTextPlainFlowed_parse_eof (MimeObject *obj, PRBool abort_p)
     // *don't work*    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
     status = MimeObject_write(obj, "</tt>", 5, PR_FALSE);
     if(status<0) return status;
+#ifdef DEBUG_rhp
     printf("fixbredd\n");
+#endif
   } else {
+#ifdef DEBUG_rhp
     printf("propbredd");
+#endif
   }
 
   return 0;

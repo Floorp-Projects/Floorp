@@ -109,6 +109,9 @@ MimeInlineImage_parse_begin (MimeObject *obj)
 	  ct = obj->content_type;
 	  if (!ct) ct = IMAGE_GIF;  /* Can't happen?  Close enough. */
 
+    // We need to separate images with HR's...
+    MimeObject_write_separator(obj);
+
 	  img->image_data =
 		obj->options->image_begin(image_url, ct, obj->options->stream_closure);
 	  PR_Free(image_url);

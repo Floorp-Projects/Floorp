@@ -577,22 +577,31 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
   if (input_line[input_length] == 0)  /* oh good, it's null-terminated */
     line = (char *) input_line;
   else
-    {
-      line = (char *) PR_MALLOC(input_length+1);
-      if (!line) return MIME_OUT_OF_MEMORY;
-      nsCRT::memcpy(line, input_line, input_length);
-      line[input_length] = 0;
-    }
-
+  {
+    line = (char *) PR_MALLOC(input_length+1);
+    if (!line) return MIME_OUT_OF_MEMORY;
+    nsCRT::memcpy(line, input_line, input_length);
+    line[input_length] = 0;
+  }
+  
   converted = MIME_DecodeMimePartIIStr(line, charset, PR_TRUE);
-
+  
   if (line != input_line)
     PR_Free(line);
-
+  
   if (converted)
+  {
+    // If output_charset is NULL, then we should just return the decoded
+    // header value
+    if (!output_charset)
+    {
+      *output_ret = converted;
+      *output_size_ret = nsCRT::strlen(converted);
+    }
+    else
     {
       char  *convertedString = NULL; 
-
+    
       PRInt32 res = MIME_ConvertString(charset, "UTF-8", converted, &convertedString); 
       if ( (res != 0) || (!convertedString) )
       {
@@ -606,11 +615,12 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
         *output_size_ret = nsCRT::strlen(convertedString);
       }
     }
+  }
   else
-    {
-      *output_ret = 0;
-      *output_size_ret = 0;
-    }
+  {
+    *output_ret = 0;
+    *output_size_ret = 0;
+  }
   return 0;
 }
 
@@ -869,9 +879,8 @@ mime_image_make_image_html(void *image_closure)
   struct mime_image_stream_data *mid =
     (struct mime_image_stream_data *) image_closure;
 
-  
   const char *prefix = "<P><CENTER><IMG SRC=\"";
-  const char *suffix = "\"></CENTER><P><BR>";
+  const char *suffix = "\"></CENTER><P>";
   const char *url;
   char *buf;
 

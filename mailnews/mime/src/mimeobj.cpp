@@ -29,6 +29,7 @@
 #include "nsMimeTypes.h"
 #include "nsCRT.h"
 #include "nsMimeStringResources.h"
+#include "mimemsg.h"
 
 /* Way to destroy any notions of modularity or class hierarchy, Terry! */
 # include "mimetpla.h"
@@ -189,7 +190,30 @@ MimeObject_parse_begin (MimeObject *obj)
 	{
 	  char *id = mime_part_address(obj);
 	  if (!id) return MIME_OUT_OF_MEMORY;
-	  obj->output_p = !nsCRT::strcmp(id, obj->options->part_to_load);
+
+    // rhp: We need to check if a part is the subpart of an RFC822 message.
+    // If so and this is a raw output operation, then we should mark the 
+    // part for subsequent output.
+    //
+    obj->output_p = PR_FALSE;
+	  PRBool exactMatch = !nsCRT::strcmp(id, obj->options->part_to_load);
+    if (exactMatch)
+    {
+      obj->output_p = PR_TRUE;
+    }
+    else
+    {
+      if (obj->options->format_out == nsMimeOutput::nsMimeMessageRaw)
+      {
+        if ( (obj->parent) && 
+             (mime_typep(obj->parent, (MimeObjectClass*) &mimeMessageClass)) )
+        {
+          obj->output_p = !nsCRT::strncmp(id, obj->options->part_to_load, 
+                                          nsCRT::strlen(obj->options->part_to_load));
+        }
+      }
+    }
+
 	  PR_Free(id);
 	}
 

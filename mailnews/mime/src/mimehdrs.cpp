@@ -673,7 +673,15 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
 	{
 	  char *converted = 0;
 	  PRInt32 converted_len = 0;
-    const char *output_charset = "UTF-8";
+    const char *output_charset = nsnull;
+
+    // Ok, here is where we need to check for the type
+    // of output that we are doing. If we are doing Save As output
+    // then we should convert to the charset that lives in the headers
+    // for the message...if not, then go to UTF-8
+    if (opt->format_out != nsMimeOutput::nsMimeMessageSaveAs)
+      output_charset = "UTF-8";
+
 	  int status =
 		opt->rfc1522_conversion_fn(input, input_length,
 								   0, output_charset,  /* no input charset? */
