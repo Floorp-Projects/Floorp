@@ -284,6 +284,12 @@ public:
                                        nsIFrame*       aFrame);
   NS_IMETHOD GoToAnchor(const nsString& aAnchorName) const;
 
+  NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
+                                 PRInt32   aVOffsetPercent, 
+                                 PRUint32  aVFlags,
+                                 PRInt32   aHOffsetPercent, 
+                                 PRUint32  aHFlags) const;
+
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView *aView,
@@ -1322,38 +1328,52 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
 
         // Get the primary frame
         if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
-          if (nsnull != mViewManager) {
-            nsIScrollableView* scrollingView;
-            mViewManager->GetRootScrollableView(&scrollingView);
-
-            if (scrollingView) {
-              // Determine the offset for the given frame relative to the
-              // scrolled view
-              nsIView*  scrolledView;
-              nsPoint   offset;
-              nsIView*  view;
-                  
-              scrollingView->GetScrolledView(scrolledView);
-              frame->GetOffsetFromView(offset, &view);
-  
-              // XXX If view != scrolledView, then there is a scrolled frame,
-              // e.g., a DIV with 'overflow' of 'scroll', somewhere in the middle,
-              // or maybe an absolutely positioned element that has a view. We
-              // need to handle these cases...
-              scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
-            }
-          }
+          rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP, 0, NS_PRESSHELL_SCROLL_LEFT, 0);
         }
-
       } else {
         rv = NS_ERROR_FAILURE;
       }
     }
-
   } else {
     rv = NS_ERROR_FAILURE;
   }
 
+  return rv;
+}
+
+// XXX: all arguments except aFrame are currently ignored!
+NS_IMETHODIMP
+PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
+                               PRInt32   aVOffsetPercent, 
+                               PRUint32  aVFlags,
+                               PRInt32   aHOffsetPercent, 
+                               PRUint32  aHFlags) const
+{
+  nsresult rv = NS_ERROR_UNEXPECTED;
+  if (!aFrame)
+    return NS_ERROR_NULL_POINTER;
+  if (nsnull != mViewManager) {
+    nsIScrollableView* scrollingView;
+    mViewManager->GetRootScrollableView(&scrollingView);
+
+    if (scrollingView) {
+      // Determine the offset for the given frame relative to the
+      // scrolled view
+      nsIView*  scrolledView;
+      nsPoint   offset;
+      nsIView*  view;
+          
+      scrollingView->GetScrolledView(scrolledView);
+      aFrame->GetOffsetFromView(offset, &view);
+
+      // XXX If view != scrolledView, then there is a scrolled frame,
+      // e.g., a DIV with 'overflow' of 'scroll', somewhere in the middle,
+      // or maybe an absolutely positioned element that has a view. We
+      // need to handle these cases...
+      scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
+      rv = NS_OK;
+    }
+  }
   return rv;
 }
 
