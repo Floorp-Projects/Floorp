@@ -46,6 +46,8 @@ interface nsIUpdateItem : nsISupports
 {
   readonly attribute string   id;
   readonly attribute string   version;
+  readonly attribute string   minAppVersion;
+  readonly attribute string   maxAppVersion;
   readonly attribute wstring  name;
   readonly attribute long     row;
   readonly attribute wstring  updateURL;
@@ -62,7 +64,8 @@ interface nsIUpdateItem : nsISupports
 
   readonly attribute long     type;
 
-  void init(in string aID, in string aVersion, in wstring aName, 
+  void init(in string aID, in string aVersion, in string aMinAppVersion, 
+            in string aMaxAppVersion, in wstring aName, 
             in long aRow, in wstring aUpdateURL, in wstring aIconURL, 
             in wstring aUpdateRDF, in long aType);
 

@@ -5,6 +5,8 @@ public class UpdateItem
   private int row;
   private java.lang.String id;
   private java.lang.String version;
+  private java.lang.String minAppVersion;
+  private java.lang.String maxAppVersion;
   private java.lang.String name;
   private java.lang.String updateURL;
   private java.lang.String iconURL;
@@ -42,6 +44,26 @@ public class UpdateItem
   public void setVersion(java.lang.String version) 
   {
     this.version = version;
+  }
+
+  public java.lang.String getMinAppVersion() 
+  {
+    return minAppVersion;
+  }
+
+  public void setMinAppVersion(java.lang.String minAppVersion) 
+  {
+    this.minAppVersion = minAppVersion;
+  }
+
+  public java.lang.String getMaxAppVersion() 
+  {
+    return maxAppVersion;
+  }
+
+  public void setMaxAppVersion(java.lang.String maxAppVersion) 
+  {
+    this.maxAppVersion = maxAppVersion;
   }
 
   public java.lang.String getName() 

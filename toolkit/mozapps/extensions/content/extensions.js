@@ -239,7 +239,7 @@ XPInstallDownloadManager.prototype = {
       // gExtensionManager.addDownload(displayName, url, iconURL, type);
       var item = Components.classes["@mozilla.org/updates/item;1"]
                            .createInstance(Components.interfaces.nsIUpdateItem);
-      item.init(url, " ", displayName, -1, url, iconURL, "", type);
+      item.init(url, " ", "", "", displayName, -1, url, iconURL, "", type);
       items.push(item);
 
       // Advance the enumerator
