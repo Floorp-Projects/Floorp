@@ -913,6 +913,7 @@ nsLocalFile::Clone(nsIFile **file)
 			char *path;
 			GetPath(&path);
 			rv = localFile->InitWithPath(path);
+			nsAllocator::Free(path);
 			break;
 		
 		case eInitWithFSSpec:
