@@ -32,11 +32,11 @@
 /* ::::: tools menu icons ::::: */
 
 .icon-mail16 {
-  list-style-image: url("chrome://communicator/skin/taskbar/mail-16.gif");
+  list-style-image: url("chrome://messenger/skin/icons/mail-16.gif");
 }
 
 .icon-addressbook16 {
-  list-style-image: url("chrome://communicator/skin/taskbar/addressbook-16.gif");
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/addressbook-16.gif");
 }
 
 /* ::::: primary toolbar buttons ::::: */
@@ -145,6 +145,14 @@
 #attachmentbucket-sizer {
   border-top: none;
   border-bottom: none;
+}
+
+/* XXX I should really have a selector rule here to select just .listcell-icon objects underneath the attachmentList listbox */
+
+.listcell-icon
+{
+  margin-left: 2px;
+  margin-top: 2px;
 }
 
 #compose-toolbar-sizer {

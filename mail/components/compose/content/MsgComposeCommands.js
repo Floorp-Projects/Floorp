@@ -1284,6 +1284,13 @@ function ComposeStartup(recycled, aParams)
         if (attachments)
           for (i = 0; i < attachments.Count(); i ++)
             AddAttachment(attachments.QueryElementAt(i, Components.interfaces.nsIMsgAttachment));
+          
+          if (attachments.Count()) 
+          {
+            var attachmentBox = document.getElementById("attachments-box");
+            attachmentBox.hidden = false;
+            document.getElementById("attachmentbucket-sizer").hidden=false; 
+          }
       }
 
       gMsgCompose.RegisterStateListener(stateListener);
@@ -2163,6 +2170,10 @@ function AttachFile()
       var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
       attachment.url = currentAttachment;
       AddAttachment(attachment);
+      var attachmentBox = document.getElementById("attachments-box");
+      attachmentBox.hidden = false;
+      document.getElementById("attachmentbucket-sizer").hidden=false;
+
       gContentChanged = true;
     }
   }
@@ -2291,6 +2302,9 @@ function RemoveAllAttachments()
     // Let's release the attachment object hold by the node else it won't go away until the window is destroyed
     child.attachment = null;
   }
+  
+  document.getElementById("attachments-box").setAttribute("hidden", "true");
+  document.getElementById("attachmentbucket-sizer").setAttribute("hidden", "true");   
 }
 
 function RemoveSelectedAttachment()
@@ -2305,6 +2319,12 @@ function RemoveSelectedAttachment()
       child.attachment = null;
     }
     gContentChanged = true;
+  }
+
+  if (!MessageHasAttachments())
+  {                                                
+    document.getElementById("attachments-box").setAttribute("hidden", "true");
+    document.getElementById("attachmentbucket-sizer").setAttribute("hidden", "true");    
   }
 }
 
