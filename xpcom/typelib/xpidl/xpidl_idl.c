@@ -377,14 +377,14 @@ NextIsInclude(struct input_callback_stack *stack, char **startp, int *lenp)
         g_hash_table_insert(stack->includes, filename, file_basename);
         new_data = new_input_callback_data(filename, stack->include_path);
         if (!new_data) {
-	    IDL_file_get(&scratch, (int *)&data->lineno);
 #ifdef XP_MAC
 	    static char warning_message[1024];
+	    IDL_file_get(&scratch, (int *)&data->lineno);
 	    sprintf(warning_message, "%s:%d: can't open included file %s for reading\n", scratch,
 		    data->lineno, filename);
 	    mac_warning(warning_message);
 #else
-
+	    IDL_file_get(&scratch, (int *)&data->lineno);
 	    fprintf(stderr, "%s:%d: can't open included file %s for reading\n", scratch,
 		    data->lineno, filename);
 #endif
