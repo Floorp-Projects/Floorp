@@ -81,6 +81,11 @@ endif
 else
 # This is a recursive build.  
 
+TARGETS	     = $(SHARED_LIBRARY)
+LIBRARY      =
+PURE_LIBRARY =
+PROGRAM      =
+
 #ifeq ($(OS_ARCH), HP-UX)
   EXTRA_LIBS        += \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
