@@ -48,8 +48,8 @@ public:
 
   // nsEditRules methods
   NS_IMETHOD Init(nsIEditor *aEditor);
-  NS_IMETHOD WillDoAction(int aAction, nsIDOMSelection *aSelection, void **aOtherInfo, PRBool *aCancel);
-  NS_IMETHOD DidDoAction(int aAction, nsIDOMSelection *aSelection, void **aOtherInfo, nsresult aResult);
+  NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel);
+  NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
   // nsTextEditRules action id's
   enum 
@@ -63,23 +63,26 @@ public:
 protected:
 
   // nsTextEditRules implementation methods
-  NS_IMETHOD WillInsertText(nsIDOMSelection  *aSelection, 
+  nsresult WillInsertText(nsIDOMSelection  *aSelection, 
                             PRBool          *aCancel,
-                            PlaceholderTxn **aTxn);
-  NS_IMETHOD DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
-  NS_IMETHOD CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
+                            PlaceholderTxn **aTxn,
+                            const nsString *inString,
+                            nsString       *outString,
+                            TypeInState    typeInState);
+  nsresult DidInsertText(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState);
 
-  NS_IMETHOD WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
-  NS_IMETHOD DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidInsert(nsIDOMSelection *aSelection, nsresult aResult);
 
-  NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel);
-  NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResult);
 
-  NS_IMETHOD WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel);
-  NS_IMETHOD DidUndo(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillUndo(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidUndo(nsIDOMSelection *aSelection, nsresult aResult);
 
-  NS_IMETHOD WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel);
-  NS_IMETHOD DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
+  nsresult WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
 
   // helper functions
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
@@ -89,7 +92,7 @@ protected:
     * aSelection is optional.  If provided, aSelection is set to (aNode, 0)
     * if aNode was successfully placed in a new style node
     */
-  NS_IMETHOD InsertStyleNode(nsIDOMNode *aNode, 
+  nsresult InsertStyleNode(nsIDOMNode *aNode, 
                              nsIAtom    *aTag, 
                              nsIDOMSelection *aSelection);
 
@@ -99,13 +102,29 @@ protected:
     * aSelection is optional.  If provided, aSelection is set to (newTextNode, 0)
     * if newTextNode was successfully created.
     */
-  NS_IMETHOD InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, 
+  nsresult InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, 
                                        nsIAtom    *aTag, 
                                        nsIDOMSelection *aSelection);
   
   // data
   nsTextEditor *mEditor;  // note that we do not refcount the editor
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
+};
+
+
+
+class nsTextRulesInfo : public nsRulesInfo
+{
+ public:
+ 
+  nsTextRulesInfo(int aAction) : nsRulesInfo(aAction),placeTxn(0),inString(0),outString(0),typeInState() {}
+  virtual ~nsTextRulesInfo() {}
+  
+  // used by kInsertText
+  PlaceholderTxn **placeTxn;
+  const nsString *inString;
+  nsString *outString;
+  TypeInState typeInState;
 };
 
 #endif //nsTextEditRules_h__
