@@ -88,13 +88,14 @@ ReplaceChar(nsAString &str, char oldChar, char newChar)
   // XXX this could be much more efficient
 
   PRUnichar *data = NS_StringCloneData(str);
+  PRUnichar *datastring = data;
   for (; *data; ++data)
   {
     if ((char ) *data == oldChar)
       *data = (PRUnichar) newChar;
   }
-  NS_StringSetData(str, data);
-  nsMemory::Free(data);
+  NS_StringSetData(str, datastring);
+  nsMemory::Free(datastring);
 }
 
 static void
@@ -105,6 +106,7 @@ StripChars(nsAString &str, const char *chars)
   PRUint32 len = str.Length();
 
   PRUnichar *data = NS_StringCloneData(str);
+  PRUnichar *datastring = data;
   PRUnichar *dataEnd = data + len;
   for (; *data; ++data)
   {
@@ -115,8 +117,8 @@ StripChars(nsAString &str, const char *chars)
       --dataEnd;
     }
   }
-  NS_StringSetData(str, data);
-  nsMemory::Free(data);
+  NS_StringSetData(str, datastring);
+  nsMemory::Free(datastring);
 }
 
 static void
@@ -127,6 +129,7 @@ StripChars(nsACString &str, const char *chars)
   PRUint32 len = str.Length();
 
   char *data = NS_CStringCloneData(str);
+  char *datastring = data;
   char *dataEnd = data + len;
   for (; *data; ++data)
   {
@@ -137,8 +140,8 @@ StripChars(nsACString &str, const char *chars)
       --dataEnd;
     }
   }
-  NS_CStringSetData(str, data);
-  nsMemory::Free(data);
+  NS_CStringSetData(str, datastring);
+  nsMemory::Free(datastring);
 }
 
 static const char* kWhitespace="\b\t\r\n ";
