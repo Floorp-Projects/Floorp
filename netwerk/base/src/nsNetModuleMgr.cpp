@@ -17,116 +17,98 @@
  */
 
 #include "nsNetModuleMgr.h"
-#include "nsEnumeratorUtils.h"
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-// The entry class
-class nsNetModRegEntry {
-public:
-    nsINetNotify        *mNotify;
-    nsIEventQueue       *mEventQ;
-    nsString2            mTopic;
-};
+#include "nsNetModRegEntry.h"
+#include "nsEnumeratorUtils.h" // for nsArrayEnumerator
+#include "nsString2.h"
+#include "nsIEventQueue.h"
 
 // Entry routines.
-static PRBool (*nsVoidArrayEnumFunc)DeleteEntry(void *aElement, void *aData) {
-    nsNetModRegEntry *entry = (nsNetModRegEntry*)aElement;
-    // XXX clean it up
-    delete entry;
-}
-
-PRBool CompareEntries(nsNetModRegEntry* a, nsNetModRegEntry* b) {
-    if (a->mTopic != b->mTopic)
-        return PR_FALSE;    
-    if (a->mNotify != b->mNotify)
-        return PR_FALSE;
-    if (a->mEventQ != b->mEventQ)
-        return PR_FALSE;
+static PRBool DeleteEntry(nsISupports *aElement, void *aData) {
+    NS_ASSERTION(aElement, "null pointer");
+    NS_RELEASE(aElement);
     return PR_TRUE;
 }
 
-PRBool CompareEntries(nsNetModRegEntry* aEntry, nsString2 aTopic, nsIEventQueue *mEventQ, nsINetNotify *aNotify) {
-    if (aEntry->mTopic != aTopic)
-        return PR_FALSE;
-    if (aEntry->mNotify != aNotify)
-        return PR_FALSE;
-    if (aEntry->mEventQ != aEventQ)
-        return PR_FALSE;
-    return PR_TRUE;
-}
 
 ///////////////////////////////////
 //// nsISupports
 ///////////////////////////////////
 
-NS_IMPL_ADDREF(nsNetModuleMgr);
-NS_IMPL_RELEASE(nsNetModuleMgr);
+NS_IMPL_ISUPPORTS(nsNetModuleMgr, nsINetModuleMgr::GetIID());
 
-NS_IMETHODIMP
-nsNetModuleMgr::QueryInterface(REFNSIID iid, void** result)
-{
-    if (result == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    *result = nsnull;
-    if (iid.Equals(nsINetModuleMgr::GetIID()) ||
-        iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsINetModuleMgr*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
 
 ///////////////////////////////////
 //// nsINetModuleMgr
 ///////////////////////////////////
 
 NS_IMETHODIMP
-nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify) {
-    nsNetModRegEntry *newEntry = new nsNetModRegEntry;
+nsNetModuleMgr::RegisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, nsCID *aCID) {
+    nsresult rv;
+    PRUint32 cnt;
+
+    nsINetModRegEntry* newEntryI = nsnull;
+    nsNetModRegEntry *newEntry =
+        new nsNetModRegEntry(aTopic, aEventQueue, aNotify, *aCID);
     if (!newEntry)
         return NS_ERROR_OUT_OF_MEMORY;
-    newEntry->mTopic = aTopic;
-    newEntry->mEventQ = aEventQueue;
-    NS_ADDREF(newEntry->mEventQ);
-    newEntry->mNotify = aNotify;
-    NS_ADDREF(newEntry->mNotify);
+
+    rv = newEntry->QueryInterface(nsINetModRegEntry::GetIID(), (void**)&newEntryI);
+    if (NS_FAILED(rv)) return rv;
 
     // Check for a previous registration
-    PR_Lock(mLock);
-    PRInt8 cnt;
+    //PR_Lock(mLock);
     mEntries->Count(&cnt);
-    for (PRInt8 i = 0; i < cnt; i++) {
-        if (CompareEntries(mEntries->ElementAt(i), newEntry) ) {
-            delete newEntry;
-            PR_Unlock(mLock);
-            return NS_ERROR; // XXX should be more descriptive
+    for (PRUint32 i = 0; i < cnt; i++) {
+        nsINetModRegEntry* curEntry = NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i));
+        PRBool same = PR_FALSE;
+        rv = newEntryI->Equals(curEntry, &same);
+        if (NS_FAILED(rv)) return rv;
+
+        // if we've already got this one registered, yank it, and replace it with the new one
+        if (same) {
+            NS_RELEASE(curEntry);
+            mEntries->DeleteElementAt(i);
+            break;
         }
     }
 
-    mEntries->AppendElement(newEntry);
-    PR_Unlock(mLock);
-
+    mEntries->AppendElement(NS_STATIC_CAST(nsISupports*, newEntryI));
+    //PR_Unlock(mLock);
+    NS_RELEASE(newEntryI);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify) {
+nsNetModuleMgr::UnregisterModule(const char *aTopic, nsIEventQueue *aEventQueue, nsINetNotify *aNotify, nsCID *aCID) {
 
-    PR_Lock(mLock);
-    PRInt8 cnt;
+    //PR_Lock(mLock);
+    nsresult rv;
+    PRUint32 cnt;
+
+    nsINetModRegEntry* tmpEntryI = nsnull;
+    nsNetModRegEntry *tmpEntry =
+        new nsNetModRegEntry(aTopic, aEventQueue, aNotify, *aCID);
+    if (!tmpEntry)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = tmpEntry->QueryInterface(nsINetModRegEntry::GetIID(), (void**)&tmpEntryI);
+    if (NS_FAILED(rv)) return rv;
+
     mEntries->Count(&cnt);
-    for (PRInt32 i = 0; i < cnt; i++) {
-        if (CompareEntries(mEntries->ElementAt(i), aTopic, aEventQueue, aNotify) ) {
-            nsNetModRegEntry *entry= (nsNetModRegEntry*)mEntries->ElementAt(i);
-            NS_RELEASE(entry->mEventQ);
-            NS_RELEASE(entry->mNotify);
-            delete entry;
+    for (PRUint32 i = 0; i < cnt; i++) {
+        nsINetModRegEntry* curEntry = NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i));
+        NS_ADDREF(curEntry); // get our ref to it
+        PRBool same = PR_FALSE;
+        rv = tmpEntryI->Equals(curEntry, &same);
+        if (NS_FAILED(rv)) return rv;
+        if (same) {
+            NS_RELEASE(curEntry);
+            mEntries->DeleteElementAt(i);
         }
+        NS_RELEASE(curEntry); // ditch our ref to it
     }
-    PR_Unlock(mLock);
+    //PR_Unlock(mLock);
+    NS_RELEASE(tmpEntryI);
     return NS_OK;
 }
 
@@ -135,38 +117,34 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
 
     nsresult rv;
     PRUint32 cnt;
+    char *topic = nsnull;
 
     // get all the entries for this topic
     
     rv = mEntries->Count(&cnt);
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
     // create the new array
     nsISupportsArray *topicEntries = nsnull;
     rv = NS_NewISupportsArray(&topicEntries);
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
     // run through the main entry array looking for topic matches.
     for (PRUint32 i = 0; i < cnt; i++) {
-        nsISupports *entryS = nsnull;
-        nsINetModRegEntry *entry = nsnull;
-        entryS = mEntry[i];
-        rv = entryS->QueryInterface(nsINetModRegEntry::GetIID(), (void**)&entry);
-        if (NS_FAILED(rv))
-            return rv;
+        nsINetModRegEntry *entry = NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i));
 
-        rv = entry->GetTopic(&topic);
+        rv = entry->GetMTopic(&topic);
         if (NS_FAILED(rv)) {
+            NS_RELEASE(topicEntries);
             NS_RELEASE(entry);
             return rv;
         }
 
         if (!PL_strcmp(aTopic, topic)) {
             // found a match, add it to the list
-            rv = topicEntries->AppendElement(entryS);
+            rv = topicEntries->AppendElement(NS_STATIC_CAST(nsISupports*, entry));
             if (NS_FAILED(rv)) {
+                NS_RELEASE(topicEntries);
                 NS_RELEASE(entry);
                 return rv;
             }
@@ -187,9 +165,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
         delete arrEnum;
         return rv;
     }
-
     *aEnumerator = outEnum;
-
     return NS_OK;
 }
 
@@ -201,7 +177,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
 nsNetModuleMgr::nsNetModuleMgr() {
     NS_INIT_REFCNT();
     NS_NewISupportsArray(&mEntries);
-    mLock    = PR_NewLock();
+    //mLock    = PR_NewLock();
 }
 
 nsNetModuleMgr::~nsNetModuleMgr() {
@@ -209,5 +185,5 @@ nsNetModuleMgr::~nsNetModuleMgr() {
         mEntries->EnumerateForwards(DeleteEntry, nsnull);
         NS_RELEASE(mEntries);
     }
-    PR_DestroyLock(mLock);
+    //PR_DestroyLock(mLock);
 }
