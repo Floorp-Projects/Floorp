@@ -420,7 +420,11 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 
 
     event.renderingContext = GetRenderingContext();
-    result = DispatchWindowEvent(&event);
+    if (event.renderingContext)
+    {
+      result = DispatchWindowEvent(&event);
+      NS_RELEASE(event.renderingContext);
+    }
     
 #ifdef NS_DEBUG
     if (debug_WantPaintFlashing())
