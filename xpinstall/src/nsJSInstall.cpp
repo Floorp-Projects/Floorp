@@ -54,15 +54,13 @@ enum Install_slots
 {
   INSTALL_USERPACKAGENAME = -1,
   INSTALL_REGPACKAGENAME  = -2,
-  INSTALL_SILENT          = -3,
-  INSTALL_JARFILE         = -4,
-  INSTALL_FORCE           = -5,
-  INSTALL_ARGUMENTS       = -6,
-  INSTALL_URL             = -7,
-  INSTALL_STATUSSENT      = -8,
-  INSTALL_INSTALL         = -9,
-  INSTALL_FILEOP          = -10,
-  INSTALL_INSTALLED_FILES = -11
+  INSTALL_JARFILE         = -3,
+  INSTALL_ARGUMENTS       = -4,
+  INSTALL_URL             = -5,
+  INSTALL_STATUSSENT      = -6,
+  INSTALL_INSTALL         = -7,
+  INSTALL_FILEOP          = -8,
+  INSTALL_INSTALLED_FILES = -9
 };
 
 // prototype for fileOp object
@@ -103,6 +101,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+
       case INSTALL_REGPACKAGENAME:
       {
         nsAutoString prop;
@@ -116,6 +115,7 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+
       case INSTALL_JARFILE:
       {
         nsAutoString prop;
@@ -1763,8 +1763,6 @@ static JSPropertySpec InstallProperties[] =
 {
   {"userPackageName",   INSTALL_USERPACKAGENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"regPackageName",    INSTALL_REGPACKAGENAME,     JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"silent",            INSTALL_SILENT,             JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"force",             INSTALL_FORCE,              JSPROP_ENUMERATE | JSPROP_READONLY},
   {"jarfile",           INSTALL_JARFILE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
   {"url",               INSTALL_URL,                JSPROP_ENUMERATE | JSPROP_READONLY},
