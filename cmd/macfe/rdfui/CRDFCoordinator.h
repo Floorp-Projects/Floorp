@@ -46,6 +46,7 @@ class CHyperTreeFlexTable;
 class CNavCenterTitle;
 class CNavCenterCommandStrip;
 class CBrowserView;
+class CBrowserContext;
 
 
 //
@@ -159,7 +160,7 @@ protected:
 class CDockedRDFCoordinator : public CRDFCoordinator
 {
 public:
-	enum { class_ID = 'RCoE', pane_ID = 'RCoE', adSpacePane_ID = 'spam' };
+	enum { class_ID = 'RCoE', pane_ID = 'RCoE', adSpacePane_ID = 'spam', mainHTMLPane_ID = 'html' };
 	enum {
 		msg_ShelfStateShouldChange	= 'shlf'		// broadcast when shelf should open/close
 	};
@@ -197,6 +198,7 @@ private:
 	CShelf*			mAdSpace;
 	
 	CBrowserView*	mAdSpaceView;
+	CBrowserView*	mMainHTMLView;		// the main html area of the window, for sitemaps
 	
 }; // CDockedRDFCoordinator
 
