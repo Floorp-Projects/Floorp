@@ -194,6 +194,8 @@ static NS_DEFINE_IID(kCHTMLImageElement, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
+static NS_DEFINE_IID(kITextEditFactoryIID, NS_ITEXTEDITORFACTORY_IID);
+static NS_DEFINE_IID(kIHTMLEditFactoryIID, NS_IHTMLEDITORFACTORY_IID);
 
 #if defined(XP_MAC) || defined (XP_UNIX) // XXX somebody please make dynamic registration work on Mac
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
@@ -298,6 +300,8 @@ NS_SetupRegistry()
   nsRepository::RegisterComponent(kNameSpaceManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kIEditFactoryIID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kITextEditFactoryIID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kIHTMLEditFactoryIID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterComponent(kCEventListenerManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
 #if defined(XP_MAC) || defined (XP_UNIX) // XXX somebody please make dynamic registration work on Mac
