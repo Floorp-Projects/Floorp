@@ -5,8 +5,8 @@
     <NC:child>
        <RDF:Description id="flash2">
          <NC:type resource="http://home.netscape.com/NC-rdf#OnlinePresence" />
-         <NC:source>Chris Waterson</NC:source>
-         <NC:description>Are you there?</NC:description>
+         <NC:source>George Clinton</NC:source>
+         <NC:description>How's the Funk?</NC:description>
          <NC:timestamp>Tue Apr 27 01:05:34 PDT 1999</NC:timestamp>
        </RDF:Description>
     </NC:child>
