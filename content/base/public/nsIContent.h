@@ -427,7 +427,7 @@ public:
    * something like nsGenericHTMLElement::SetElementFocus().  This method is
    * the end result, the point where the content finds out it has been focused.
    * 
-   * All content elements are potentially focusable (according to CSS3).
+   * All content elements are potentially focusable.
    *
    * @param aPresContext the pres context
    * @see nsGenericHTMLElement::SetElementFocus()
@@ -442,7 +442,7 @@ public:
    * something like nsGenericHTMLElement::SetElementFocus().  This method is
    * the end result, the point where the content finds out it has been focused.
    * 
-   * All content elements are potentially focusable (according to CSS3).
+   * All content elements are potentially focusable.
    *
    * @param aPresContext the pres context
    * @see nsGenericHTMLElement::SetElementFocus()

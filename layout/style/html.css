@@ -397,11 +397,6 @@ hr[size="1"] {
 img[usemap], object[usemap] {
   cursor: pointer;
   color: blue;
-  -moz-user-focus: normal;
-}
-
-object, embed, applet {
-  -moz-user-focus: normal;
 }
 
 frameset {
@@ -411,13 +406,8 @@ frameset {
   float: none ! important;
 }
 
-frame {
-  -moz-user-focus: normal;
-}
-
 iframe {
   border: 2px inset;
-  -moz-user-focus: normal;
 }
 
 noframes {
@@ -474,11 +464,6 @@ marquee[height*="7"], marquee[height*="8"], marquee[height*="9"] {
 @media print {
 
   marquee { -moz-binding: none; }
- 
-  *|*:-moz-any-link img, img[usemap], object[usemap],
-  img[usemap], object[usemap], object, embed, applet, iframe {
-    -moz-user-focus: none !important;
-  }
 
   /* XXX this should not be necessary, we should be stopping blinking
      of any kind in print preview, not just the <blink> element */

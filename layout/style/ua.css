@@ -117,7 +117,6 @@
 
 *|*:-moz-any-link {
   cursor: pointer;
-  -moz-user-focus: normal;
 }
 
 *|*:-moz-any-link:focus {
@@ -191,10 +190,6 @@
 
   *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas {
     background-color: #737373 !important;
-  }
-
-  *|*:-moz-any-link {
-    -moz-user-focus: none !important;
   }
 
 }
