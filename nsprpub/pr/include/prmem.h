@@ -121,7 +121,7 @@ PR_EXTERN(void) PR_Free(void *ptr);
 ** OUTPUTS:	the referenced object is returned to the heap
 ** RETURN:	void
 ***********************************************************************/
-#define PR_DELETE(_ptr) { PR_Free(_ptr); (_ptr) = NULL; }
+#define PR_DELETE(_ptr) { PR_Free((void*)_ptr); (_ptr) = NULL; }
 
 /***********************************************************************
 ** FUNCTION:	PR_FREEIF()

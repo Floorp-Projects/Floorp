@@ -22,8 +22,10 @@
 
 
 
-
+#ifdef JAVA
 #include "mozjava.h"
+#endif
+
 #include "xfe2_extern.h"
 #include "VerReg.h"
 #include "libmocha.h"
@@ -379,7 +381,14 @@ fe_showNetcaster(Widget toplevel)
       if (netcasterURL)
 		{
 
-		  if (!LM_GetMochaEnabled() || !LJ_GetJavaEnabled())
+		  if (!LM_GetMochaEnabled()
+#ifdef JAVA
+              || !LJ_GetJavaEnabled()
+#else
+              || TRUE /* If we haven't compiled Java in, then it
+                         sure won't be enabled... */
+#endif
+              )
 			{
 			  fe_Alert_2(toplevel, XP_GetString(XP_ALERT_NETCASTER_NO_JS));
 			  return;

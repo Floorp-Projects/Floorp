@@ -27,6 +27,9 @@ OBJS = $(OBJS) $(JMC_OBJS)
 
 
 DEPTH=..\..\.. 
+
+!include $(DEPTH)\config\config.mak
+
 MODULE=libfont 
 JMC_GEN=Mcf Mcfb Mcfmi Mcrc Mcdoer 
 JMC_GEN_FLAGS=-cimpl 
@@ -62,14 +65,14 @@ LINCS=-I$(XPDIST)\public\libfont -I$(XPDIST)\public\java \
     -I$(XPDIST)\public\htmldlgs -I$(XPDIST)\public\security 
 !endif
 
-!if !defined (MOZ_JAVA)
+!if !defined (JAVA_OR_OJI)
 LOCAL_JMC_SUBDIR =  ..\jmcgen\include
 LOCAL_JMC_SRC_SUBDIR =  ..\jmcgen\src
 !endif
 
 !include $(DEPTH)\config\rules.mak
 
-!if !defined (MOZ_JAVA)
+!if !defined (JAVA_OR_OJI)
 export:: 
 	@echo +++ make:  Copying JMC src files from $(LOCAL_JMC_SRC_SUBDIR)/*.c to cwd
 	-for %f in ($(LOCAL_JMC_SRC_SUBDIR)\*.c) do $(MAKE_INSTALL) %f .

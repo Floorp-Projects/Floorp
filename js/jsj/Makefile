@@ -19,7 +19,9 @@
 
 DEPTH		= ../..
 
-ifdef MOZ_JAVA
+include $(DEPTH)/config/config.mk
+
+ifdef JAVA_OR_OJI
 DIRS		= classes
 endif
 
@@ -36,7 +38,7 @@ CSRCS		= \
 
 JRI_GEN		= netscape.javascript.JSObject netscape.javascript.JSException
 
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 CSRCS	 += jsjsa.c      \
 	    stubs.c      \
 	    jsj_nodl.c    \
@@ -66,7 +68,7 @@ jsj_nodl.c: $(OBJDIR)/stubs.o Makefile $(DEPTH)/config/nodl.pl
 	    `nm -Bn $(OBJDIR)/stubs.o | egrep Java_.*_stub | awk '{print $$3;}'` > $@
 endif
 
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 $(OBJDIR)/stubs.o:					 \
 	$(JRI_GEN_DIR)/netscape_javascript_JSObject.c	 \
 	$(JRI_GEN_DIR)/netscape_javascript_JSException.c \

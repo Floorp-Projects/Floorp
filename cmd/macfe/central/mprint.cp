@@ -590,7 +590,7 @@ void CPrintHTMLView::DisplayEmbed(
 		case epmDisplay:
 			if (FocusDraw() && BelongsOnPage (inEmbedStruct))
 				{
-				NPEmbeddedApp* app = (NPEmbeddedApp*) inEmbedStruct->FE_Data;
+				NPEmbeddedApp* app = (NPEmbeddedApp*) inEmbedStruct->objTag.FE_Data;
 				CPluginView* view = (CPluginView*) app->fe_data;
 				view->EmbedDisplay(inEmbedStruct, true);
 				}

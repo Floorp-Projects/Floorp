@@ -125,7 +125,12 @@ LINCS= $(LINCS) -I_jri       \
 LINCS= $(LINCS) \
 		-I$(PUBLIC)/softupdt	\
 		-I$(PUBLIC)/libreg	\
+#if defined(MOZ_OJI)
+		-I$(PUBLIC)/oji 	\
+		-I$(PUBLIC)/npj 	\
+#elseif defined(MOZ_JAVA)
 		-I$(PUBLIC)/applet	\
+#endif
 		-I$(PUBLIC)/java	\
 		-I$(PUBLIC)/nspr	\
 		-I$(PUBLIC)/js		\
@@ -136,10 +141,7 @@ LINCS= $(LINCS) \
 		-I$(PUBLIC)/jtools	\
 		-I$(PUBLIC)/winfont	\
 		-I$(PUBLIC)/rdf		\
-		-I$(PUBLIC)/java	\
-		-I$(PUBLIC)/applet	\
 		-I$(PUBLIC)/network	\
-		-I$(PUBLIC)/rdf		\
 		$(NULL)
 !endif
 
@@ -191,7 +193,7 @@ clobber::
 	$(JRI_GEN_DIR)\netscape_softupdate_InstallPatch.c	 \
 	$(JRI_GEN_DIR)/netscape_softupdate_SoftwareUpdate.h	 \
 	$(JRI_GEN_DIR)/netscape_softupdate_SoftUpdateException.h \
-   	$(JRI_GEN_DIR)\netscape_softupdate_Strings.h
+	$(JRI_GEN_DIR)\netscape_softupdate_Strings.h
 
 .\$(OBJDIR)\su_trigger.obj:					 \
 	$(JRI_GEN_DIR)\netscape_softupdate_Trigger.c		 \

@@ -18,7 +18,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.1 $
+ *  npapi.h $Revision: 3.2 $
  *  Netscape client plug-in API spec
  */
 
@@ -274,7 +274,8 @@ typedef enum {
 	NPPVpluginWindowBool,
 	NPPVpluginTransparentBool,
   NPPVjavaClass,
-  NPPVpluginWindowSize
+  NPPVpluginWindowSize,
+  NPPVpluginTimerInterval
 } NPPVariable;
 
 /*

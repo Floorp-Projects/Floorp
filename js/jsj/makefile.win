@@ -30,9 +30,11 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH= ..\..
 
-!ifdef MOZ_JAVA
+include <$(DEPTH)/config/config.mak>
+
+#!ifdef JAVA_OR_OJI
 DIRS = classes
-!endif
+#!endif
 
 
 #//------------------------------------------------------------------------
@@ -51,7 +53,7 @@ MAKE_OBJ_TYPE	= DLL
 DEFFILE		= $(DLLNAME).def
 !endif
 
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 LLIBS=$(LIBNSPR) $(DIST)\lib\jrt$(MOZ_BITS)$(VERSION_NUMBER).lib \
 	$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib
 !else
@@ -63,7 +65,7 @@ LLIBS=$(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib
 #// Define the files necessary to build the target (ie. OBJS)
 #//
 #//------------------------------------------------------------------------
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 OBJS=                                       \
     .\$(OBJDIR)\jsStubs.obj                 \
     .\$(OBJDIR)\jsjava.obj                  \
@@ -78,7 +80,7 @@ OBJS=                                       \
     .\$(OBJDIR)\jsjava.obj                  \
     .\$(OBJDIR)\jsStubs.obj                 \
     $(NULL)
-!endif # MOZ_JAVA
+!endif # JAVA_OR_OJI
 #
 
 #//------------------------------------------------------------------------
@@ -103,7 +105,7 @@ JRI_GEN=                            \
 	$(NULL)
 
 MODULE = java
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 EXPORTS =				       \
 	$(JRI_GEN_DIR)/netscape_javascript_JSObject.h    \
 	$(JRI_GEN_DIR)/netscape_javascript_JSException.h \
@@ -141,7 +143,7 @@ export:: $(DLL) INSTALL_FILES
 clobber::
     $(RM_R) _jri 
 
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 .\$(OBJDIR)\stubs.obj:					 \
 	$(JRI_GEN_DIR)\netscape_javascript_JSObject.c	 \
 	$(JRI_GEN_DIR)\netscape_javascript_JSException.c \

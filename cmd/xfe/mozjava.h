@@ -32,7 +32,9 @@
 #include "plevent.h"
 #endif /* NSPR20 */
 #include "prlog.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #endif
 
 #ifdef JAVA

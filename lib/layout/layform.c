@@ -22,7 +22,9 @@
 #include "shist.h"
 #include "pa_parse.h"
 #include "layout.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "laylayer.h"
 #include "libevent.h"
 #include "libimg.h"             /* Image Library public API. */
@@ -2893,7 +2895,7 @@ lo_get_form_element_data(MWContext *context,
 
 				name = lo_dup_block(form_data->name);
 
-				object_value = LJ_Applet_GetText(form_data->object->session_data);
+				object_value = LJ_Applet_GetText(form_data->object->objTag.session_data);
 				value = PA_ALLOC(XP_STRLEN(object_value) + 1);
 				if (value != NULL)
 				{

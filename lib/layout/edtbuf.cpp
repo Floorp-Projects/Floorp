@@ -8728,6 +8728,7 @@ void CEditBuffer::PrintTree( CEditElement* pElement ){
     if ( bCheckForSelectionAsComment){
         CheckAndPrintComment(pElement->Leaf(), printState.m_selection, FALSE);
     }
+
     pElement->PrintOpen( &printState );
 
     while( pNext ){

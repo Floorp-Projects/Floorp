@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -36,6 +36,12 @@ static void np_ReplaceChars(char* word, char oldChar, char newChar);
 static char* np_CreateMimePref(const char* mimetype, const char* pref);
 #endif /* ANTHRAX */
 
+#ifdef PLUGIN_TIMER_EVENT
+static void np_SetTimerInterval(NPP npp, uint32 msecs);
+static void np_TimerCallback(void* app);
+#define DEFAULT_TIMER_INTERVAL 1000
+#endif
+
 /* list of all plugins */
 static np_handle *np_plist = 0;
 
@@ -60,7 +66,7 @@ np_is50StylePlugin(np_handle* handle)
 
 /* Find a mimetype in the handle */
 static np_mimetype *
-np_getmimetype(np_handle *handle, char *mimeStr, XP_Bool wildCard)
+np_getmimetype(np_handle *handle, const char *mimeStr, XP_Bool wildCard)
 {
 	np_mimetype *mimetype;
 
@@ -522,7 +528,7 @@ NPL_Write(NET_StreamClass *stream, const unsigned char *str, int32 len)
     if (newstream->handle->userPlugin) {
         nsPluginStreamPeer* peerStream = (nsPluginStreamPeer*)newstream->pstream->pdata;
         NPIPluginStream* userStream = peerStream->GetUserStream();
-        ret = userStream->Write(len, (void*)&str[urls->position]);
+        ret = userStream->Write(len, (const char*)str);
     }
     else if (ISFUNCPTR(newstream->handle->f->write)) {
         ret = CallNPP_WriteProc(newstream->handle->f->write, newstream->instance->npp, newstream->pstream, 
@@ -1055,7 +1061,6 @@ np_makecontext(np_instance* instance, const char* window)
         
 	return cx;
 }
-
 
 PR_STATIC_CALLBACK(void)
 np_redisable_js(URL_Struct* url_s, int status, MWContext* context)
@@ -1608,6 +1613,11 @@ npn_setvalue(NPP npp, NPPVariable variable, void *r_value)
              }
 #endif /* LAYERS */            
             break;
+            
+        case NPPVpluginTimerInterval:
+        	np_SetTimerInterval(npp, *(uint32*)r_value);
+        	break; 
+
         case NPPVpluginWindowSize:
           break;
 	    default:
@@ -2043,7 +2053,7 @@ npn_reloadplugins(NPBool reloadPages)
     		
     		/*
     		 * In the case where we switch the handler (above), 
-    		 * "instance" already points to the next object.
+    		 * "instance" already points to the next objTag.
     		 */
     		if (!switchedHandler)
     			instance = instance->next;
@@ -2186,10 +2196,10 @@ NS_DEFINE_IID(kLiveConnectPluginIID, NP_ILIVECONNECTPLUGIN_IID);
 #pragma pointers_in_D0
 #endif
 
-struct java_lang_Class* NP_EXPORT
+#ifdef JAVA
+java_lang_Class* NP_EXPORT
 npn_getJavaClass(np_handle* handle)
 {
-#ifdef JAVA
     if (handle->userPlugin) {
         NPIPlugin* userPluginClass = (NPIPlugin*)handle->userPlugin;
         NPILiveConnectPlugin* lcPlugin;
@@ -2210,9 +2220,9 @@ npn_getJavaClass(np_handle* handle)
         if (env == NULL) return NULL;
         return (java_lang_Class*)JRI_GetGlobalRef(env, handle->f->javaClass);
     }
-#endif
     return NULL;
 }
+#endif
 
 jref NP_EXPORT
 npn_getJavaPeer(NPP npp)
@@ -2303,7 +2313,11 @@ np_IsLiveConnected(np_handle* handle)
         }
     }
     else {
+#ifdef JAVA
         return npn_getJavaClass(handle) != NULL;
+#else
+        return FALSE;
+#endif
     }
 }
 
@@ -2317,7 +2331,7 @@ XP_Bool NPL_IsLiveConnected(LO_EmbedStruct *embed)
 	if (embed == NULL)
 		return FALSE;
 
-	app = (NPEmbeddedApp*) embed->FE_Data;
+	app = (NPEmbeddedApp*) embed->objTag.FE_Data;
 	if (app == NULL)
 		return FALSE;
 
@@ -2333,9 +2347,8 @@ XP_Bool NPL_IsLiveConnected(LO_EmbedStruct *embed)
 
 /******************************************************************************/
 
-
-
-static void
+/* Returns false if there was an error: */
+static PRBool
 np_setwindow(np_instance *instance, NPWindow *appWin)
 {
 	/*
@@ -2355,10 +2368,9 @@ np_setwindow(np_instance *instance, NPWindow *appWin)
 			ndata = (np_data*) app->np_data;
 			lo_struct = ndata->lo_struct;
 #ifndef XP_MAC
-			if (lo_struct && lo_struct->ele_attrmask & LO_ELE_HIDDEN)
-				return;
+			if (lo_struct && lo_struct->objTag.ele_attrmask & LO_ELE_HIDDEN)
+				return PR_TRUE;
 #endif
-				
 		}
 	}
 
@@ -2373,8 +2385,13 @@ np_setwindow(np_instance *instance, NPWindow *appWin)
 
             // If this is the first time we're drawing this, then call
             // the plugin's Start() method.
-            if (lo_struct && ! (lo_struct->ele_attrmask & LO_ELE_DRAWN))
-                userInst->Start();
+            if (lo_struct && ! (lo_struct->objTag.ele_attrmask & LO_ELE_DRAWN)) {
+                NPPluginError err = userInst->Start();
+                if (err != NPPluginError_NoError) {
+                    np_delete_instance(instance);
+                    return PR_FALSE;
+                }
+            }
         }
         else if (ISFUNCPTR(instance->handle->f->setwindow)) {
             CallNPP_SetWindowProc(instance->handle->f->setwindow, instance->npp, appWin);
@@ -2384,6 +2401,7 @@ np_setwindow(np_instance *instance, NPWindow *appWin)
     {
         NPTRACE(0,("setwindow before appWin was valid"));
     }
+    return PR_TRUE;
 }
 
 static void
@@ -2392,7 +2410,7 @@ np_UnloadPluginClass(np_handle *handle)
 	/* only called when we truly want to dispose the plugin class */
 	XP_ASSERT(handle && handle->refs == 0);
 
-#ifdef JAVA 
+#ifdef JAVA
     if (handle->userPlugin == NULL && handle->f && handle->f->javaClass != NULL) {
 		/* Don't get the environment unless there is a Java class,
 		   because this would cause the java runtime to start up. */
@@ -2415,6 +2433,7 @@ np_UnloadPluginClass(np_handle *handle)
 PR_IMPLEMENT(void)
 NPL_SetPluginWindow(void *data)
 {
+#ifdef JAVA
 	 JRIEnv * env = NULL;
 	 np_instance *instance = (np_instance *) data;
      struct netscape_javascript_JSObject *mochaWindow = NULL;
@@ -2422,7 +2441,6 @@ NPL_SetPluginWindow(void *data)
 	 if (instance && instance->cx)
 		mochaWindow = LJ_GetMochaWindow(instance->cx);
 
-#ifdef JAVA
 	 env = LJ_EnsureJavaEnv(PR_CurrentThread());
 
 	 if (mochaWindow){
@@ -2513,10 +2531,15 @@ np_newinstance(np_handle *handle, MWContext *cx, NPEmbeddedApp *app,
         instance->npp = npp;
         instance->windowed = TRUE;
         instance->transparent = FALSE;
+        
+#ifdef PLUGIN_TIMER_EVENT
+        instance->timeout = NULL;
+        instance->interval = DEFAULT_TIMER_INTERVAL;
+#endif
 
 #ifdef LAYERS
         if (ndata)
-            instance->layer = ndata->lo_struct->layer;
+            instance->layer = ndata->lo_struct->objTag.layer;
 #endif /* LAYERS */
 
         /* invite the plugin */
@@ -2548,10 +2571,15 @@ np_newinstance(np_handle *handle, MWContext *cx, NPEmbeddedApp *app,
                 if (instance->type == NP_EMBED)
                 {
                     /* Embedded plug-ins get their attributes passed in from layout */
+#ifdef OJI
+                    int16 argc = (int16) ndata->lo_struct->attributes.n;
+                    char** names = ndata->lo_struct->attributes.names;
+                    char** values = ndata->lo_struct->attributes.values;
+#else
                     int16 argc = (int16) ndata->lo_struct->attribute_cnt;
                     char** names = ndata->lo_struct->attribute_list;
                     char** values = ndata->lo_struct->value_list;
-
+#endif
                     err = CallNPP_NewProc(handle->f->newp, requestedType, npp, 
                                           instance->type, argc, names, values, savedData);
                 }
@@ -2599,7 +2627,8 @@ np_newinstance(np_handle *handle, MWContext *cx, NPEmbeddedApp *app,
         if (app->pagePluginType == NP_Embedded)
         {
             XP_ASSERT(app->wdata);
-            np_setwindow(instance, app->wdata);
+            PRBool success = np_setwindow(instance, app->wdata);
+            if (!success) goto error;
         }
 #endif
     }
@@ -2635,8 +2664,10 @@ np_newinstance(np_handle *handle, MWContext *cx, NPEmbeddedApp *app,
             // The problem is that by deferring the jvm startup, we cause it to 
             // happen later on the wrong thread. 
             np_IsLiveConnected(handle)
+#elif defined(JAVA)
+            npn_getJavaClass(handle)
 #else
-            npn_getJavaClass(handle)           
+            FALSE
 #endif
             ) { /*  for liveconnected plugins only */
             ET_SetPluginWindow(cx, (void *)instance);
@@ -2957,7 +2988,7 @@ NPL_NewPresentStream(FO_Present_Types format_out, void* type, URL_Struct* urls, 
 
 	/*
 	 * To actually create the instance we need to create a stream of
-	 * fake HTML to cause layout to create a new embedded object.
+	 * fake HTML to cause layout to create a new embedded objTag.
 	 * EmbedCreate will be called, which will created the NPEmbeddedApp
 	 * and put it into urls->fe_data, where we can retrieve it.
 	 */
@@ -3529,7 +3560,7 @@ np_delete_instance(np_instance *instance)
 #ifdef JAVA		
 			/*
 			** Break any association we have made between this instance and
-			** its corresponding Java object. That way other java objects
+			** its corresponding Java objTag. That way other java objects
 			** still referring to it will be able to detect that the plugin
 			** went away (by calling isActive).
 			*/
@@ -3595,6 +3626,12 @@ np_delete_instance(np_instance *instance)
 		
 		if (instance->typeString)
 			XP_FREE(instance->typeString);
+			
+#ifdef PLUGIN_TIMER_EVENT			
+		if(instance->timeout)
+			FE_ClearTimeout(instance->timeout);
+#endif			
+
         XP_FREE(instance);
     }
 }
@@ -3719,7 +3756,7 @@ NPL_SameElement(LO_EmbedStruct* embed_struct)
 {
 	if (embed_struct)
 	{
-		NPEmbeddedApp* app = (NPEmbeddedApp*) embed_struct->FE_Data;
+		NPEmbeddedApp* app = (NPEmbeddedApp*) embed_struct->objTag.FE_Data;
 		if (app)
 		{
 			np_data* ndata = (np_data*) app->np_data;
@@ -3935,7 +3972,6 @@ np_deleteapp(MWContext* cx, NPEmbeddedApp* app)
 	}
 }
 
-
 /*
  * This is called by the front-end via layout when the plug-in's
  * context is going away.  Based on what kind of plugin this is, what
@@ -3949,17 +3985,17 @@ NPL_EmbedDelete(MWContext* cx, LO_EmbedStruct* embed_struct)
 	NPEmbeddedApp* app;
 	np_data* ndata;
 	
-	if (!cx || !embed_struct || !embed_struct->FE_Data)
+	if (!cx || !embed_struct || !embed_struct->objTag.FE_Data)
 		return;
 		
-	app = (NPEmbeddedApp*) embed_struct->FE_Data;
-	embed_struct->FE_Data = NULL;
+	app = (NPEmbeddedApp*) embed_struct->objTag.FE_Data;
+	embed_struct->objTag.FE_Data = NULL;
 
     ndata = (np_data*) app->np_data;
 
     if (ndata)
     {
-        embed_struct->session_data = (void*) ndata;
+        embed_struct->objTag.session_data = (void*) ndata;
         	
     	ndata->refs--;
 
@@ -4006,21 +4042,28 @@ NPL_EmbedDelete(MWContext* cx, LO_EmbedStruct* embed_struct)
                 nsPluginInstancePeer* peerInst = (nsPluginInstancePeer*) ndata->instance->npp->pdata;
                 NPIPluginInstance* userInst = peerInst->GetUserInstance();
 
-                /* XXX Where should this error go? */
                 NPPluginError err = userInst->Stop();
-                XP_ASSERT(err == NPPluginError_NoError);
+                if (err == NPPluginError_NoError) {
+                    /* XXX So I'm going out on a limb here and saying that
+                       by keeping the plugin in a "cached" state, we
+                       should pretty much not need to perturb much
+                       else... */
+                    ndata->state = NPDataCached;
+                    ndata->lo_struct = NULL;
+                    np_unbindContext(app, cx);
 
-                /* XXX So I'm going out on a limb here and saying that
-                   by keeping the plugin in a "cached" state, we
-                   should pretty much not need to perturb much
-                   else... */
-                ndata->state = NPDataCached;
-                ndata->lo_struct = NULL;
-                np_unbindContext(app, cx);
-
-                /* Tell the front-end to save the embedded window for us */
-                FE_SaveEmbedWindow(cx, app);
-                return;
+                    /* Tell the front-end to save the embedded window for us */
+                    FE_SaveEmbedWindow(cx, app);
+                    return;
+                }
+                else {
+                    // the plugin failed to stop properly
+                    // XXX is the following right?...
+                    np_delete_instance(ndata->instance);
+                    embed_struct->objTag.session_data = NULL;
+                    app->np_data = NULL;
+                    XP_FREE(ndata);
+                }
             } else {
                 /* It's a normal old-fashioned plugin. Destroy the instance */
                 np_delete_instance(ndata->instance);
@@ -4035,7 +4078,7 @@ NPL_EmbedDelete(MWContext* cx, LO_EmbedStruct* embed_struct)
         else
         {
         	/* If there's no instance, there's no need to save session data */
-        	embed_struct->session_data = NULL;
+        	embed_struct->objTag.session_data = NULL;
         	app->np_data = NULL;
         	XP_FREE(ndata);
         }
@@ -4043,7 +4086,7 @@ NPL_EmbedDelete(MWContext* cx, LO_EmbedStruct* embed_struct)
 
     /* XXX This is pretty convoluted how this just all falls through
        to here. Clean it up sometime... */
-	np_deleteapp(cx, app);						/* unlink app from context and delete app */
+    np_deleteapp(cx, app);						/* unlink app from context and delete app */
 }
 
 
@@ -4091,6 +4134,16 @@ np_findTypeAttribute(LO_EmbedStruct* embed_struct)
 	int i;
 
 	/* Look for the TYPE attribute */
+#ifdef OJI
+	for (i = 0; i < embed_struct->attributes.n; i++)
+	{
+		if (XP_STRCASECMP(embed_struct->attributes.names[i], "TYPE") == 0)
+		{
+			typeAttribute = embed_struct->attributes.values[i];
+			break;
+		}
+	}	
+#else
 	for (i = 0; i < embed_struct->attribute_cnt; i++)
 	{
 		if (XP_STRCASECMP(embed_struct->attribute_list[i], "TYPE") == 0)
@@ -4099,10 +4152,86 @@ np_findTypeAttribute(LO_EmbedStruct* embed_struct)
 			break;
 		}
 	}
-	
+#endif
+
 	return typeAttribute;
 }
 
+void
+np_FindHandleByType(const char* typeAttribute, np_handle* *resultingHandle,
+                    np_mimetype* *resultingMimetype)
+{
+    np_handle* handle = NULL;
+    np_mimetype* mimetype = NULL;
+
+    for (handle = np_plist; handle; handle = handle->next) {
+        mimetype = np_getmimetype(handle, typeAttribute, FALSE);
+        if (mimetype) break;
+    }
+
+    /* No handler with an exactly-matching name, so check for a wildcard */ 
+    if (!mimetype) 
+    {
+        for (handle = np_plist; handle; handle = handle->next) {
+            mimetype = np_getmimetype(handle, typeAttribute, TRUE);
+            if (mimetype) break;
+        }
+    }
+
+    *resultingHandle = handle;
+    *resultingMimetype = mimetype;
+}
+
+// Used by OJI to load the Java VM plugin
+PR_IMPLEMENT(struct NPIPlugin*)
+NPL_LoadPluginByType(const char* typeAttribute)
+{
+    np_handle* handle = NULL;
+    np_mimetype* mimetype = NULL;
+    np_FindHandleByType(typeAttribute, &handle, &mimetype);
+    if (mimetype == NULL)
+        return NULL;
+    PR_ASSERT(handle);
+
+    PRBool loaded = PR_FALSE;
+    if (handle->refs == 0) {
+//        FE_Progress(cx, XP_GetString(XP_PLUGIN_LOADING_PLUGIN));               
+        if (!(handle->f = FE_LoadPlugin(handle->pdesc, &npp_funcs, handle))) 
+        {
+//            char* msg = PR_smprintf(XP_GetString(XP_PLUGIN_CANT_LOAD_PLUGIN), handle->name, mimetype->type);
+//            FE_Alert(cx, msg);
+//            XP_FREE(msg);
+            return NULL;
+        }
+        loaded = PR_TRUE;
+#ifdef JAVA
+        /*
+        ** Don't use npn_getJavaEnv here. We don't want to start the
+        ** interpreter, just use env if it already exists.
+        */
+        JRIEnv* env = JRI_GetCurrentEnv();
+
+        /*
+        ** An exception could have occurred when the plugin tried to load
+        ** it's class file. We'll print any exception to the console.
+        */
+        if (env && JRI_ExceptionOccurred(env)) {
+            JRI_ExceptionDescribe(env);
+            JRI_ExceptionClear(env);
+        }
+#endif
+    }
+    if (handle->userPlugin) {
+        // refcount was incremented
+        return handle->userPlugin;
+    }
+    else {
+        // old style plugin -- we failed so unload it
+        if (loaded)
+            FE_UnloadPlugin(handle->pdesc, handle);
+        return NULL;
+    }
+}
 
 /*
  * This is called by the front-end to create a new plug-in. It will
@@ -4127,10 +4256,10 @@ NPL_EmbedCreate(MWContext* cx, LO_EmbedStruct* embed_struct)
      * attach it to a new app.  If there is nothing in the session
      * data, then we must create both a np_data object and an app.
      */
-    if (embed_struct->session_data)
+    if (embed_struct->objTag.session_data)
     {
-        ndata = (np_data*) embed_struct->session_data;
-        embed_struct->session_data = NULL;
+        ndata = (np_data*) embed_struct->objTag.session_data;
+        embed_struct->objTag.session_data = NULL;
 
         if (ndata->state == NPDataCached)			/* We cached this app, so don't create another */
         {
@@ -4166,7 +4295,7 @@ NPL_EmbedCreate(MWContext* cx, LO_EmbedStruct* embed_struct)
 	            ndata->state = NPDataNormal;
 #ifdef LAYERS
                 if (ndata->instance) {
-                    ndata->instance->layer = embed_struct->layer;
+                    ndata->instance->layer = embed_struct->objTag.layer;
                     LO_SetEmbedType(ndata->lo_struct, 
                                     (PRBool)ndata->instance->windowed);
                 }
@@ -4191,11 +4320,11 @@ NPL_EmbedCreate(MWContext* cx, LO_EmbedStruct* embed_struct)
 
             /* Make the front-end restore the embedded window from
                it's saved context. */
-            if (! (embed_struct->ele_attrmask & LO_ELE_HIDDEN))
+            if (! (embed_struct->objTag.ele_attrmask & LO_ELE_HIDDEN))
                 FE_RestoreEmbedWindow(cx, ndata->app);
 
             /* Tie the app to the layout struct. */
-            embed_struct->FE_Data = ndata->app;
+            embed_struct->objTag.FE_Data = ndata->app;
 	        return ndata->app;
 	    }
 
@@ -4233,11 +4362,11 @@ NPL_EmbedCreate(MWContext* cx, LO_EmbedStruct* embed_struct)
 	np_bindContext(app, cx);
 
     /* Tell the front-end to create the plugin window for us. */
-    if (! (embed_struct->ele_attrmask & LO_ELE_HIDDEN))
+    if (! (embed_struct->objTag.ele_attrmask & LO_ELE_HIDDEN))
         FE_CreateEmbedWindow(cx, app);
     
     /* Attach the app to the layout info */
-    embed_struct->FE_Data = ndata->app;
+    embed_struct->objTag.FE_Data = ndata->app;
     return app;
 	
 error:	
@@ -4287,22 +4416,7 @@ NPL_EmbedStart(MWContext* cx, LO_EmbedStruct* embed_struct, NPEmbeddedApp* app)
 		app->pagePluginType = NP_Embedded;
 
 		/* Found the TYPE attribute, so look for a matching handler */
-		mimetype = NULL;
-		for (handle = np_plist; handle; handle = handle->next)
-		{
-			mimetype = np_getmimetype(handle, typeAttribute, FALSE);
-			if (mimetype) break;
-		}
-
-		/* No handler with an exactly-matching name, so check for a wildcard */ 
-		if (!mimetype) 
-		{
-			for (handle = np_plist; handle; handle = handle->next)
-			{
-				mimetype = np_getmimetype(handle, typeAttribute, TRUE);
-				if (mimetype) break;
-			}
-		}
+        np_FindHandleByType(typeAttribute, &handle, &mimetype);
 
 		/*
 		 * If we found a handler, now we can create an instance.
@@ -4389,7 +4503,7 @@ NPL_EmbedStart(MWContext* cx, LO_EmbedStruct* embed_struct, NPEmbeddedApp* app)
 	    	 */
 	        app->pagePluginType = NP_Embedded;
 	        
-	        if ((embed_struct->ele_attrmask & LO_ELE_STREAM_STARTED) == 0)
+	        if ((embed_struct->objTag.ele_attrmask & LO_ELE_STREAM_STARTED) == 0)
 	        {
 		        URL_Struct* pURL;    
 		        pURL = NET_CreateURLStruct(theURL, NET_DONT_RELOAD);
@@ -4421,11 +4535,12 @@ error:
 void
 NPL_EmbedSize(NPEmbeddedApp *app)
 {
-    if(app)
-    {
+    if (app) {
         np_data *ndata = (np_data *)app->np_data;
-        if(ndata && ndata->instance && app->wdata)
-            np_setwindow(ndata->instance, app->wdata);
+        if (ndata && ndata->instance && app->wdata) {
+            PRBool success = np_setwindow(ndata->instance, app->wdata);
+            if (!success) return;       // XXX deal with the error
+        }
     }
 }
 
@@ -5066,4 +5181,38 @@ static void np_ReplaceChars(char* word, char oldChar, char newChar)
 }
 
 #endif	/* ANTHRAX */
+
+#ifdef PLUGIN_TIMER_EVENT
+
+static void np_SetTimerInterval(NPP npp, uint32 msecs)
+{
+    if(npp) {
+        np_instance* instance = (np_instance*) npp->ndata;
+        if(instance)
+        	{
+			instance->interval = msecs;
+			instance->timeout = FE_SetTimeout(np_TimerCallback, (void*)instance, instance->interval);
+			}
+    }	
+}
+
+static void np_TimerCallback(void* data)
+{
+	NPEvent event;
+	np_instance* instance = (np_instance*) data;
+
+#ifdef XP_MAC
+	((EventRecord)event).what = nullEvent;
+#elif defined(XP_WIN)
+	event.event = 0; // ?
+#elif defined(XP_OS2)
+	event.event = 0; // ?
+#elif defined(XP_UNIX)
+	// not sure what to do here
+#endif
+
+	instance->timeout = FE_SetTimeout(np_TimerCallback, (void*)instance, instance->interval);
+	NPL_HandleEvent(instance->app, &event, NULL);
+}
+#endif
 

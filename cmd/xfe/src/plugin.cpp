@@ -43,7 +43,9 @@
 #endif /* NSPR20 */
 #include "pref_helpers.h"
 #include "edt.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "obsolete/probslet.h"
 #include "npglue.h"
 

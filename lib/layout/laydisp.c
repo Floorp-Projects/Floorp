@@ -300,21 +300,21 @@ lo_DisplayEmbed(MWContext *context, LO_EmbedStruct *embed)
 	}
 
 	/* Don't ever display hidden embeds */
-	if (embed->ele_attrmask & LO_ELE_HIDDEN)
+	if (embed->objTag.ele_attrmask & LO_ELE_HIDDEN)
 		return;
 
-	layer = embed->layer;
+	layer = embed->objTag.layer;
 	XP_ASSERT(layer);
 	if (! layer)				/* Paranoia */
 		return;
 
-        if (!(embed->ele_attrmask & LO_ELE_DRAWN)) {
+        if (!(embed->objTag.ele_attrmask & LO_ELE_DRAWN)) {
             /* Move layer to new position */
             CL_MoveLayer(layer,
-                         embed->x + embed->x_offset,
-                         embed->y + embed->y_offset);
+                         embed->objTag.x + embed->objTag.x_offset,
+                         embed->objTag.y + embed->objTag.y_offset);
             CL_SetLayerHidden(layer, PR_FALSE);
-            embed->ele_attrmask |= LO_ELE_DRAWN;
+            embed->objTag.ele_attrmask |= LO_ELE_DRAWN;
         }
 }
 
@@ -358,21 +358,21 @@ lo_DisplayJavaApp(MWContext *context, LO_JavaAppStruct *java_app)
 	    return;
 	}
 
-	layer = java_app->layer;
+	layer = java_app->objTag.layer;
 	XP_ASSERT(layer);
 	if (! layer)				/* Paranoia */
 		return;
 
-        if (!(java_app->ele_attrmask & LO_ELE_DRAWN)) {
+        if (!(java_app->objTag.ele_attrmask & LO_ELE_DRAWN)) {
             /* Move layer to new position */
             CL_MoveLayer(layer,
-                         java_app->x + java_app->x_offset,
-                         java_app->y + java_app->y_offset);
+                         java_app->objTag.x + java_app->objTag.x_offset,
+                         java_app->objTag.y + java_app->objTag.y_offset);
             
             /* Now that layer is layed out to its final position, 
                we can display it */
             CL_SetLayerHidden(layer, PR_FALSE);
-            java_app->ele_attrmask |= LO_ELE_DRAWN;
+            java_app->objTag.ele_attrmask |= LO_ELE_DRAWN;
         }
 }
 #endif

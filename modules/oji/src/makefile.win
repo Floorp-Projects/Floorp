@@ -1,2 +1,115 @@
+IGNORE_MANIFEST=1
+#//------------------------------------------------------------------------
+#//
+#// Makefile to build 
+#//
+#//------------------------------------------------------------------------
 
 
+#//------------------------------------------------------------------------
+#//
+#// Specify the depth of the current directory relative to the
+#// root of NS
+#//
+#//------------------------------------------------------------------------
+DEPTH= ..\..\..
+
+!ifdef MOZ_OJI
+
+!ifndef MAKE_OBJ_TYPE
+MAKE_OBJ_TYPE=EXE
+!endif
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
+#//
+#//------------------------------------------------------------------------
+LIBNAME=oji$(MOZ_BITS)
+PDBFILE=$(LIBNAME).pdb
+
+#//------------------------------------------------------------------------
+#// 
+#// Define the files necessary to build the target (ie. OBJS)
+#//
+#//------------------------------------------------------------------------
+
+OBJS = .\$(OBJDIR)\jvmmgr.obj \
+       .\$(OBJDIR)\jvmpeer.obj \
+       .\$(OBJDIR)\scd.obj
+
+#//------------------------------------------------------------------------
+#//
+#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
+#// (these must be defined before the common makefiles are included)
+#//
+#//------------------------------------------------------------------------
+
+LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
+
+#//------------------------------------------------------------------------
+#//
+#// Define any local options for the make tools 
+#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
+#//
+#//------------------------------------------------------------------------
+
+LINCS= $(LINCS) -I_jri -I$(DEPTH)/lib/plugin \
+#
+# For Win16 the following include directories are copied into 
+# ns/dist/public/win16
+#
+!if "$(MOZ_BITS)" == "32"
+		-I$(PUBLIC)/js       \
+		-I$(PUBLIC)/java     \
+		-I$(PUBLIC)/libimg   \
+		-I$(PUBLIC)/nspr     \
+		-I$(PUBLIC)/dbm      \
+		-I$(PUBLIC)/security \
+		-I$(PUBLIC)/pref     \
+		-I$(PUBLIC)/xpcom    \
+!endif
+		-I$(DEPTH)/lib/layout   \
+		-I$(DEPTH)/lib/libstyle \
+		-I$(DEPTH)/lib/libjar   \
+		-I$(DEPTH)/lib/plugin   \
+		$(NULL)
+
+CSRCS = jvmmgr.cpp \
+        jvmpeer.cpp \
+        scd.cpp
+
+!endif # MOZ_OJI
+
+MODULE = oji
+
+EXPORTS = nsjvm.h jvmmgr.h nsscd.h
+
+#//------------------------------------------------------------------------
+#//
+#// Include the common makefile rules
+#//
+#//------------------------------------------------------------------------
+include <$(DEPTH)/config/rules.mak>
+
+LCFLAGS=$(LCFLAGS) ^
+	$(JAVA_DEFINES) 
+
+!if "$(MOZ_BITS)" == "32"
+PUBLIC_HEADER_DIR=$(PUBLIC)\oji
+!else
+PUBLIC_HEADER_DIR=$(PUBLIC)\win16
+!endif
+
+export::
+    $(MAKE_INSTALL) nsjvm.h $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) nsscd.h $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) jvmmgr.h $(PUBLIC_HEADER_DIR)
+
+!ifdef MOZ_OJI
+install:: $(LIBRARY)
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+    $(RM_R) _jri
+!endif # MOZ_OJI

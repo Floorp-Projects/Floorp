@@ -28,7 +28,9 @@
 #include "net.h"
 #include "xfe.h"
 #include "libmocha.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "PrefsDialog.h"
 
 extern "C"

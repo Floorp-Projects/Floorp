@@ -1806,7 +1806,7 @@ PRBool CHTMLView::HandleEmbedEvent(
 	LO_EmbedStruct*			inEmbed, 
 	CL_Event*				inEvent)
 {
-	NPEmbeddedApp* app = (NPEmbeddedApp*) inEmbed->FE_Data;
+	NPEmbeddedApp* app = (NPEmbeddedApp*) inEmbed->objTag.FE_Data;
 	if (app && app->fe_data)
 	{
 		CPluginView* view = (CPluginView*) app->fe_data;
@@ -5548,7 +5548,7 @@ void CHTMLView::GetEmbedSize(
 	LO_EmbedStruct*			inEmbedStruct,
 	NET_ReloadMethod		/* inReloadMethod */)
 {
-	if (inEmbedStruct->FE_Data == NULL)		// Creating plugin from scratch
+	if (inEmbedStruct->objTag.FE_Data == NULL)		// Creating plugin from scratch
 	{
 		Try_
 		{
@@ -5562,19 +5562,19 @@ void CHTMLView::GetEmbedSize(
 		}
 		Catch_(inErr)
 		{
-			inEmbedStruct->FE_Data =  NULL;
+			inEmbedStruct->objTag.FE_Data =  NULL;
 		}
 		EndCatch_
 	}
 	else
-		NPL_EmbedSize((NPEmbeddedApp*) inEmbedStruct->FE_Data);
+		NPL_EmbedSize((NPEmbeddedApp*) inEmbedStruct->objTag.FE_Data);
 }
 
 void CHTMLView::FreeEmbedElement(
 	LO_EmbedStruct*			inEmbedStruct)
 {
 	NPL_EmbedDelete(*mContext, inEmbedStruct);
-	inEmbedStruct->FE_Data = NULL;
+	inEmbedStruct->objTag.FE_Data = NULL;
 }
 
 void CHTMLView::CreateEmbedWindow(
@@ -5665,9 +5665,9 @@ void CHTMLView::RestoreEmbedWindow(
 		if (XP_OK_ASSERT(inEmbeddedApp->np_data)) {
 			LO_EmbedStruct* embed_struct = ((np_data*) inEmbeddedApp->np_data)->lo_struct;
 			if (XP_OK_ASSERT(embed_struct)) {
-				xp = embed_struct->x + embed_struct->x_offset
+				xp = embed_struct->objTag.x + embed_struct->objTag.x_offset
 					/* - CONTEXT_DATA(*mContext)->document_x */;
-				yp = embed_struct->y + embed_struct->y_offset
+				yp = embed_struct->objTag.y + embed_struct->objTag.y_offset
 					/* - CONTEXT_DATA(*mContext)->document_y */;
 			}
 		}
@@ -5702,7 +5702,7 @@ void CHTMLView::DisplayEmbed(
 	int 					/* inLocation */,
 	LO_EmbedStruct*			inEmbedStruct)
 {
-	NPEmbeddedApp* app = (NPEmbeddedApp*) inEmbedStruct->FE_Data;
+	NPEmbeddedApp* app = (NPEmbeddedApp*) inEmbedStruct->objTag.FE_Data;
 	if (app && app->fe_data)
 	{
 		if ( !FocusDraw() )

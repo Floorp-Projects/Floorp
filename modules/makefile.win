@@ -30,6 +30,7 @@
 DEPTH=..
 
 ## Include support for MOZ_LITE/MOZ_MEDIUM
+include <$(DEPTH)/config/config.mak>
 include <$(DEPTH)/config/liteness.mak>
 
 #//------------------------------------------------------------------------
@@ -50,7 +51,7 @@ DIRS=                   \
 	libimg          \
 	libfont         \
 	libreg          \
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 !ifdef EDITOR
 	edtplug         \
 !endif
@@ -61,7 +62,7 @@ DIRS=                   \
 !if ("$(MOZ_BITS)" == "16")
 	libmem          \
 !endif
-	coreincl       \
+	coreincl        \
 !ifdef MOZ_LOC_INDEP
 	li		\
 !endif
@@ -70,7 +71,8 @@ DIRS=                   \
 !endif
 	rdf				\
     schedulr	\
-	xml
+	xml	\
+	oji
 
 #//------------------------------------------------------------------------
 #//

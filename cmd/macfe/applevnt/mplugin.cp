@@ -1406,10 +1406,10 @@ void CPluginView::EmbedSize(LO_EmbedStruct* embed_struct, SDimension16 hyperSize
 	// If the plug-in is hidden, set the width and height to zero and
 	// set a flag indicating that we are hidden.
 	//
-	if (embed_struct->ele_attrmask & LO_ELE_HIDDEN)
+	if (embed_struct->objTag.ele_attrmask & LO_ELE_HIDDEN)
 	{
-		embed_struct->width = 0;
-		embed_struct->height = 0;
+		embed_struct->objTag.width = 0;
+		embed_struct->objTag.height = 0;
 		fHidden = true;
 		Hide();
 		StartIdling();		// Visible plug-ins start idling in EmbedDisplay
@@ -1438,8 +1438,8 @@ void CPluginView::EmbedSize(LO_EmbedStruct* embed_struct, SDimension16 hyperSize
 		SBooleanRect binding = {true, true, true, true};
 		SetFrameBinding(binding);
 		
-		embed_struct->width = hyperSize.width;
-		embed_struct->height = hyperSize.height;
+		embed_struct->objTag.width = hyperSize.width;
+		embed_struct->objTag.height = hyperSize.height;
 		
 		//
 		// Remember an offset for the view to
@@ -1456,8 +1456,8 @@ void CPluginView::EmbedSize(LO_EmbedStruct* embed_struct, SDimension16 hyperSize
 		fVerticalOffset = 0;
 	}
 
-	ResizeImageTo(embed_struct->width, embed_struct->height, false);
-	ResizeFrameTo(embed_struct->width, embed_struct->height, false);
+	ResizeImageTo(embed_struct->objTag.width, embed_struct->objTag.height, false);
+	ResizeFrameTo(embed_struct->objTag.width, embed_struct->objTag.height, false);
 
 	//
 	// NOTE: The position set here is not really valid because the x and y in 
@@ -1466,8 +1466,8 @@ void CPluginView::EmbedSize(LO_EmbedStruct* embed_struct, SDimension16 hyperSize
 	// We go ahead and position ourselves anyway just so we have a superview
 	// and location initially.
 	//
-	Int32 x = embed_struct->x + embed_struct->x_offset + fHorizontalOffset;
-	Int32 y = embed_struct->y + embed_struct->y_offset + fVerticalOffset;
+	Int32 x = embed_struct->objTag.x + embed_struct->objTag.x_offset + fHorizontalOffset;
+	Int32 y = embed_struct->objTag.y + embed_struct->objTag.y_offset + fVerticalOffset;
 	PlaceInSuperImageAt(x, y, false);
 	
 	//
@@ -1490,8 +1490,8 @@ void CPluginView::EmbedDisplay(LO_EmbedStruct* embed_struct, Boolean isPrinting)
 	//
 	if (fPositioned == false)
 	{
-		Int32 x = embed_struct->x + embed_struct->x_offset + fHorizontalOffset;
-		Int32 y = embed_struct->y + embed_struct->y_offset + fVerticalOffset;
+		Int32 x = embed_struct->objTag.x + embed_struct->objTag.x_offset + fHorizontalOffset;
+		Int32 y = embed_struct->objTag.y + embed_struct->objTag.y_offset + fVerticalOffset;
 		PlaceInSuperImageAt(x, y, false);
 		if (fWindowed)
 			Show();
@@ -1517,19 +1517,19 @@ void CPluginView::EmbedDisplay(LO_EmbedStruct* embed_struct, Boolean isPrinting)
 		SPoint32 imagePoint;
 		Int32 x, y;
 		
-		if (IsVisible() && (embed_struct->ele_attrmask & LO_ELE_INVISIBLE))
+		if (IsVisible() && (embed_struct->objTag.ele_attrmask & LO_ELE_INVISIBLE))
 			Hide();
 			
 		CalcPortFrameRect(frameRect);
 		GetSuperView()->PortToLocalPoint(topLeft(frameRect));
 		GetSuperView()->LocalToImagePoint(topLeft(frameRect), imagePoint);
 		
-		x = embed_struct->x + embed_struct->x_offset + fHorizontalOffset;
-		y = embed_struct->y + embed_struct->y_offset + fVerticalOffset;
+		x = embed_struct->objTag.x + embed_struct->objTag.x_offset + fHorizontalOffset;
+		y = embed_struct->objTag.y + embed_struct->objTag.y_offset + fVerticalOffset;
 		if ((imagePoint.h != x) || (imagePoint.v != y))
 			PlaceInSuperImageAt(x, y, true);
 		
-		if (!IsVisible() && !(embed_struct->ele_attrmask & LO_ELE_INVISIBLE))
+		if (!IsVisible() && !(embed_struct->objTag.ele_attrmask & LO_ELE_INVISIBLE))
 			Show();
 	}
 	// For a windowless plug-in, this is where the plug-in actually draws.
@@ -1551,7 +1551,7 @@ void CPluginView::EmbedDisplay(LO_EmbedStruct* embed_struct, Boolean isPrinting)
 void CPluginView::EmbedCreate(MWContext* context, LO_EmbedStruct* embed_struct)
 {
 	fEmbedStruct = embed_struct;
-	fApp = (NPEmbeddedApp*) embed_struct->FE_Data;
+	fApp = (NPEmbeddedApp*) embed_struct->objTag.FE_Data;
 	Boolean printing = (context->type == MWContextPrint);
 	
 	//
@@ -1569,7 +1569,7 @@ void CPluginView::EmbedCreate(MWContext* context, LO_EmbedStruct* embed_struct)
 		if (printing)
 			fOriginalView = (CPluginView*) fApp->fe_data;
 		fApp->fe_data = this;
-		embed_struct->FE_Data = fApp;
+		embed_struct->objTag.FE_Data = fApp;
 		if (!printing)
 			fApp->wdata = GetNPWindow();
 		NPError err = NPL_EmbedStart(context, embed_struct, fApp);
@@ -1585,7 +1585,7 @@ void CPluginView::EmbedCreate(MWContext* context, LO_EmbedStruct* embed_struct)
 	if (fApp == NULL)
 	{
 		delete this;
-		embed_struct->FE_Data = NULL;
+		embed_struct->objTag.FE_Data = NULL;
 	}
 }
 
@@ -1934,8 +1934,8 @@ void CPluginView::ResetDrawRect()
 		parentView->CalcElementPosition((LO_Element *)fEmbedStruct, frame);
 		
 		// Convert it into image coordinates
-		localPoint.h = frame.left - (fEmbedStruct->x + fEmbedStruct->x_offset);
-		localPoint.v = frame.top - (fEmbedStruct->y + fEmbedStruct->y_offset);
+		localPoint.h = frame.left - (fEmbedStruct->objTag.x + fEmbedStruct->objTag.x_offset);
+		localPoint.v = frame.top - (fEmbedStruct->objTag.y + fEmbedStruct->objTag.y_offset);
 		portPoint = localPoint;
 		localPoint.h -= portOrigin.h;
 		localPoint.v -= portOrigin.v;

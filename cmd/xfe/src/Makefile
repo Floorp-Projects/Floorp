@@ -42,6 +42,7 @@ REQUIRES	=\
 			hook \
 			pref \
 			java \
+			oji \
 			libfont \
 			ldap \
 			lay \

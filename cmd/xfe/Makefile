@@ -259,8 +259,8 @@ ifdef MOZ_LOC_INDEP
 BASIC_LIBS	+= $(DIST)/lib/libli.a
 endif
 
-ifdef MOZ_JAVA
-JAVA_JMC = $(DIST)/lib/libjmc.a
+ifdef JAVA_OR_OJI
+JAVA_JMC = $(DIST)/lib/libjmc.a      # XXX To be removed...
 endif
 
 BASIC_LIBS	+= \
@@ -323,8 +323,11 @@ endif
 
 BASIC_LIBS += $(DIST)/lib/libxpcom.a
 
+ifdef JAVA_OR_OJI
+
 ifdef MOZ_JAVA
 
+# Monolithic Java
 BASIC_LIBS	+= \
                   $(DIST)/lib/libcaps.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)applet.a \
@@ -362,12 +365,26 @@ BASIC_LIBS	+= $(DIST)/lib/libjrt.a
 
 else  # MOZ_JAVA
 
+# OJI
+BASIC_LIBS      += $(DIST)/lib/liboji.a
+
+ifdef EDITOR
+BASIC_LIBS	+= $(DIST)/lib/libedtplug.a
+endif
+
+BASIC_LIBS      += $(DIST)/lib/libsoftupdate.a
+
+endif # MOZ_JAVA
+
+else  # JAVA_OR_OJI
+
+# No Monolithic Java, no OJI, just stubs.
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libstubsj.a \
 		  $(DIST)/lib/libstubnj.a \
 		  $(NULL)
 
-endif  # MOZ_JAVA
+endif  # JAVA_OR_OJI
 
 BASIC_LIBS	+= $(DIST)/lib/libzlib.a
 

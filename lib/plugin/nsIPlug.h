@@ -755,7 +755,6 @@ public:
     UnregisterWindow(void* window) = 0;
 
 	// Menu ID allocation calls for Mac:
-
     NS_IMETHOD_(PRInt16)
 	AllocateMenuID(PRBool isSubmenu) = 0;
 

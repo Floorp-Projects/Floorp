@@ -26,7 +26,6 @@
 #include "laystyle.h"
 #include "layers.h"
 
-
 #ifdef ANTHRAX /* 9.23.97 amusil */
 #include "prefapi.h"
 #endif /* ANTHRAX */
@@ -160,13 +159,13 @@ LO_ClearEmbedBlock(MWContext *context, LO_EmbedStruct *embed)
 
 	if (top_state->layout_blocking_element == (LO_Element *)embed)
 	{
-		if (embed->width == 0)
+		if (embed->objTag.width == 0)
 		{
-			embed->width = EMBED_DEF_DIM;
+			embed->objTag.width = EMBED_DEF_DIM;
 		}
-		if (embed->height == 0)
+		if (embed->objTag.height == 0)
 		{
-			embed->height = EMBED_DEF_DIM;
+			embed->objTag.height = EMBED_DEF_DIM;
 		}
 
 		main_doc_state = top_state->doc_state;
@@ -234,22 +233,30 @@ lo_FormatEmbed(MWContext *context, lo_DocState *state, PA_Tag *tag)
 			return;
 		}
 
-		embed->type = LO_EMBED;
-		embed->ele_id = NEXT_ELEMENT;
-		embed->x = state->x;
-		embed->x_offset = 0;
-		embed->y = state->y;
-		embed->y_offset = 0;
-		embed->width = 0;
-		embed->height = 0;
-		embed->next = NULL;
-		embed->prev = NULL;
-		embed->attribute_cnt = 0;
-		embed->attribute_list = NULL;
-		embed->value_list = NULL;
+		embed->objTag.type = LO_EMBED;
+		embed->objTag.ele_id = NEXT_ELEMENT;
+		embed->objTag.x = state->x;
+		embed->objTag.x_offset = 0;
+		embed->objTag.y = state->y;
+		embed->objTag.y_offset = 0;
+		embed->objTag.width = 0;
+		embed->objTag.height = 0;
+		embed->objTag.next = NULL;
+		embed->objTag.prev = NULL;
+#ifdef OJI
+        LO_NVList_Init( &embed->attributes );
+        LO_NVList_Init( &embed->parameters );
 
-		embed->attribute_cnt = PA_FetchAllNameValues(tag,
-			&(embed->attribute_list), &(embed->value_list), CS_FE_ASCII);
+		embed->attributes.n = PA_FetchAllNameValues(tag,
+			&(embed->attributes.names), &(embed->attributes.values), CS_FE_ASCII);
+#else
+ 		embed->attribute_cnt = 0;
+ 		embed->attribute_list = NULL;
+ 		embed->value_list = NULL;
+  
+ 		embed->attribute_cnt = PA_FetchAllNameValues(tag,
+ 			&(embed->attribute_list), &(embed->value_list), CS_FE_ASCII);
+#endif
 
 		lo_FormatEmbedInternal(context, state, tag, embed, FALSE, FALSE);
 #ifdef	ANTHRAX
@@ -268,32 +275,41 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 	int32 typeIndex = -1;
 	int32 classidIndex = -1;
 
-	embed->attribute_cnt = 0;
-	embed->attribute_list = NULL;
-	embed->value_list = NULL;
+#ifdef OJI
+    LO_NVList_Init(&embed->attributes);
 
-	embed->attribute_cnt = PA_FetchAllNameValues(tag,
-		&(embed->attribute_list), &(embed->value_list), CS_FE_ASCII);
+	embed->attributes.n = PA_FetchAllNameValues(tag,
+		&(embed->attributes.names), &(embed->attributes.values), CS_FE_ASCII);
+#else
+ 	embed->attribute_cnt = 0;
+ 	embed->attribute_list = NULL;
+ 	embed->value_list = NULL;
+  
+ 	embed->attribute_cnt = PA_FetchAllNameValues(tag,
+ 		&(embed->attribute_list), &(embed->value_list), CS_FE_ASCII);
+#endif
 
-
+#ifdef OJI
+    /* XXX */
+#else
 	/*
 	 * Look through the parameters and replace "id"
 	 * with "name" and "data" with "src", so that 
 	 * other code that looks up parameters by name
 	 * can believe this is a normal EMBED.
 	 */
-	for (count = 0; count < (uint32)embed->attribute_cnt; count++)
-	{
-		if (XP_STRCASECMP(embed->attribute_list[count], PARAM_ID) == 0)
-			StrAllocCopy(embed->attribute_list[count], PARAM_NAME);
-		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_DATA) == 0)
-			StrAllocCopy(embed->attribute_list[count], "src");
-		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_TYPE) == 0)
-			typeIndex = count;
-		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_CLASSID) == 0)
-			classidIndex = count;
-	}
-	
+ 	for (count = 0; count < (uint32)embed->attribute_cnt; count++)
+  	{
+ 		if (XP_STRCASECMP(embed->attribute_list[count], PARAM_ID) == 0)
+ 			StrAllocCopy(embed->attribute_list[count], PARAM_NAME);
+ 		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_DATA) == 0)
+ 			StrAllocCopy(embed->attribute_list[count], "src");
+ 		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_TYPE) == 0)
+  			typeIndex = count;
+ 		else if (XP_STRCASECMP(embed->attribute_list[count], PARAM_CLASSID) == 0)
+  			classidIndex = count;
+  	}
+ 	
 	/*
 	 * If we have a CLASSID attribute, add the appropriate
 	 * TYPE attribute.
@@ -303,8 +319,8 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 		if (typeIndex >= 0)
 		{
 			/* Change current value of TYPE to application/oleobject */
-			if (XP_STRCASECMP(embed->value_list[typeIndex], APPLICATION_OLEOBJECT) != 0)
-				StrAllocCopy(embed->value_list[typeIndex], APPLICATION_OLEOBJECT);
+ 			if (XP_STRCASECMP(embed->value_list[typeIndex], APPLICATION_OLEOBJECT) != 0)
+ 				StrAllocCopy(embed->value_list[typeIndex], APPLICATION_OLEOBJECT);
 		}
 		else
 		{
@@ -314,9 +330,9 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 			names[0] = XP_STRDUP(PARAM_TYPE);
 			values[0] = XP_STRDUP(APPLICATION_OLEOBJECT);
 			
-			lo_AppendParamList((uint32*) &(embed->attribute_cnt),
-							   &(embed->attribute_list),
-							   &(embed->value_list),
+ 			lo_AppendParamList((uint32*) &(embed->attribute_cnt),
+ 							   &(embed->attribute_list),
+ 							   &(embed->value_list),
 							   1, names, values);
 		}
 		
@@ -328,33 +344,54 @@ lo_FormatEmbedObject(MWContext* context, lo_DocState* state,
 					   (XP_STRLEN(classID) + 1) * sizeof(char));
 		}
 	}
+#endif
 
 	/*
 	 * Merge any parameters passed in with the ones in this tag.
 	 * Separate the merged <PARAM> tag attributes from the
 	 * <OBJECT> tag attributes with an extra "PARAM" attribute.
 	 */
+#ifdef OJI
+    LO_NVList_Init(&embed->parameters);
+#endif
+
 	if (param_count > 0)
 	{
-		char* names[1];
-		char* values[1];
-		names[0] = XP_STRDUP(PT_PARAM);
-		values[0] = NULL;
-		
-		/* Add "PARAM" to the list */
-		lo_AppendParamList((uint32*) &(embed->attribute_cnt),
-						   &(embed->attribute_list),
-						   &(embed->value_list),
-						   1, names, values);
+#ifdef OJI
+        int i;
 
-		/* Add all <PARAM> tag paramters to the list */
-		lo_AppendParamList((uint32*) &(embed->attribute_cnt),
-						   &(embed->attribute_list),
-						   &(embed->value_list),
-						   param_count,
-						   param_names,
-						   param_values);
-			
+        /* Add all <PARAM> tag parameters to the parameters list */
+        embed->parameters.names = (char**) PA_ALLOC(param_count*sizeof(char*));
+        embed->parameters.values = (char**) PA_ALLOC(param_count*sizeof(char*));
+
+        XP_MEMCPY( embed->parameters.names, 
+                   param_names, 
+                   param_count*sizeof(char*) );
+        XP_MEMCPY( embed->parameters.values, 
+                   param_values, 
+                   param_count*sizeof(char*) );
+        embed->parameters.n = param_count;
+#else
+		char* names[1];
+ 		char* values[1];
+ 		names[0] = XP_STRDUP(PT_PARAM);
+ 		values[0] = NULL;
+ 		
+ 		/* Add "PARAM" to the list */
+ 		lo_AppendParamList((uint32*) &(embed->attribute_cnt),
+ 						   &(embed->attribute_list),
+ 						   &(embed->value_list),
+ 						   1, names, values);
+ 
+ 		/* Add all <PARAM> tag paramters to the list */
+ 		lo_AppendParamList((uint32*) &(embed->attribute_cnt),
+ 						   &(embed->attribute_list),
+ 						   &(embed->value_list),
+ 						   param_count,
+ 						   param_names,
+ 						   param_values);
+#endif /* OJI */
+
 		if (param_names != NULL)
 			XP_FREE(param_names);
 		if (param_values != NULL)
@@ -379,28 +416,34 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 
     embed->nextEmbed= NULL;
 #ifdef MOCHA
-    embed->mocha_object = NULL;
+    embed->objTag.mocha_object = NULL;
 #endif
 
-	embed->FE_Data = NULL;
-	embed->session_data = NULL;
-	embed->line_height = state->line_height;
+	embed->objTag.FE_Data = NULL;
+	embed->objTag.session_data = NULL;
+	embed->objTag.line_height = state->line_height;
 	embed->embed_src = NULL;
-	embed->alignment = LO_ALIGN_BASELINE;
-	embed->border_width = EMBED_DEF_BORDER;
-	embed->border_vert_space = EMBED_DEF_VERTICAL_SPACE;
-	embed->border_horiz_space = EMBED_DEF_HORIZONTAL_SPACE;
-	embed->tag = tag;
-	embed->ele_attrmask = 0;
+	embed->objTag.alignment = LO_ALIGN_BASELINE;
+	embed->objTag.border_width = EMBED_DEF_BORDER;
+	embed->objTag.border_vert_space = EMBED_DEF_VERTICAL_SPACE;
+	embed->objTag.border_horiz_space = EMBED_DEF_HORIZONTAL_SPACE;
+	embed->objTag.tag = tag;
+	embed->objTag.ele_attrmask = 0;
+	embed->objTag.base_url = NULL;
 
 	if (streamStarted)
-		embed->ele_attrmask |= LO_ELE_STREAM_STARTED;
+		embed->objTag.ele_attrmask |= LO_ELE_STREAM_STARTED;
 
 	/*
 	 * Convert any javascript in the values
 	 */
+#ifdef OJI
+	lo_ConvertAllValues(context, embed->attributes.values, embed->attributes.n,
+						tag->newline_count);
+#else
 	lo_ConvertAllValues(context, embed->value_list, embed->attribute_cnt,
 						tag->newline_count);
+#endif
 
 	/* don't double-count loading plugins due to table relayout */
 	if (!state->in_relayout)
@@ -412,7 +455,7 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	 * Assign a unique index for this object 
 	 * and increment the master index.
 	 */
-	embed->embed_index = state->top_state->embed_count++;
+	embed->objTag.embed_index = state->top_state->embed_count++;
 
 	/*
 	 * Check for the hidden attribute value.
@@ -444,7 +487,7 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 
             if (hidden != FALSE)
             {
-                embed->ele_attrmask |= LO_ELE_HIDDEN;
+                embed->objTag.ele_attrmask |= LO_ELE_HIDDEN;
 				/* marcb says:  had to disable the printed hidden audio feature   */
 				if (context->type==MWContextPrint){
 					return;
@@ -455,6 +498,24 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	}
 	
 	/*
+	 * Save away the base of the document
+	 */
+	buff = PA_ALLOC(XP_STRLEN(state->top_state->base_url) + 1);
+	if (buff != NULL)
+	{
+		char *cp;
+		PA_LOCK(cp, char*, buff);
+		XP_STRCPY(cp, state->top_state->base_url);
+		PA_UNLOCK(buff);
+		embed->objTag.base_url = buff;
+	}
+	else
+	{
+		state->top_state->out_of_memory = TRUE;
+		return;
+	}
+
+	/*
 	 * Check for an align parameter
 	 */
 	buff = lo_FetchParamValue(context, tag, PARAM_ALIGN);
@@ -464,10 +525,10 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 
 		floating = FALSE;
 		PA_LOCK(str, char *, buff);
-		embed->alignment = lo_EvalAlignParam(str, &floating);
+		embed->objTag.alignment = lo_EvalAlignParam(str, &floating);
 		if (floating != FALSE)
 		{
-			embed->ele_attrmask |= LO_ELE_FLOATING;
+			embed->objTag.ele_attrmask |= LO_ELE_FLOATING;
 		}
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
@@ -549,12 +610,12 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 		val = lo_ValueOrPercent(str, &is_percent);
 		if (is_percent != FALSE)
 		{
-			embed->percent_width = val;
+			embed->objTag.percent_width = val;
 		}
 		else
 		{
-			embed->percent_width = 0;
-			embed->width = val;
+			embed->objTag.percent_width = 0;
+			embed->objTag.width = val;
 			val = FEUNITS_X(val, context);
 		}
 		PA_UNLOCK(buff);
@@ -564,8 +625,8 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	val = LO_GetWidthFromStyleSheet(context, state);
 	if(val)
 	  {
-		embed->width = val;
-		embed->percent_width = 0;
+		embed->objTag.width = val;
+		embed->objTag.percent_width = 0;
 		widthSpecified = TRUE;
 	  }
 
@@ -585,14 +646,14 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 		val = lo_ValueOrPercent(str, &is_percent);
 		if (is_percent != FALSE)
 		{
-			embed->percent_height = val;
+			embed->objTag.percent_height = val;
 		}
 		else
 		{
-			embed->percent_height = 0;
+			embed->objTag.percent_height = 0;
 			val = FEUNITS_Y(val, context);
 		}
-		embed->height = val;
+		embed->objTag.height = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
 		heightSpecified = TRUE;
@@ -601,8 +662,8 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	val = LO_GetHeightFromStyleSheet(context, state);
 	if(val)
 	  {
-		embed->height = val;
-		embed->percent_height = 0;
+		embed->objTag.height = val;
+		embed->objTag.percent_height = 0;
 		heightSpecified = TRUE;
 	  }
 
@@ -612,22 +673,22 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	 * Don't do this for Windows, because they want to block
 	 * layout for unsized OLE objects.  (Eventually all FEs will
 	 * want to support this behavior when there's a plug-in API
-	 * to specify the desired size of the object.)
+	 * to specify the desired size of the objTag.)
 	 */
 	if (!widthSpecified)
 	{
 		if (heightSpecified)
-			embed->width = embed->height;
+			embed->objTag.width = embed->objTag.height;
 		else
-			embed->width = EMBED_DEF_DIM;
+			embed->objTag.width = EMBED_DEF_DIM;
 	}
 	
 	if (!heightSpecified)
 	{
 		if (widthSpecified)
-			embed->height = embed->width;
+			embed->objTag.height = embed->objTag.width;
 		else
-			embed->height = EMBED_DEF_DIM;
+			embed->objTag.height = EMBED_DEF_DIM;
 	}
 #endif /* ifndef XP_WIN */
 
@@ -645,11 +706,11 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 		{
 			val = 0;
 		}
-		embed->border_vert_space = val;
+		embed->objTag.border_vert_space = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
 	}
-	embed->border_vert_space = FEUNITS_Y(embed->border_vert_space, context);
+	embed->objTag.border_vert_space = FEUNITS_Y(embed->objTag.border_vert_space, context);
 
 	/*
 	 * Get the extra horizontal space parameter.
@@ -663,11 +724,11 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 		{
 			val = 0;
 		}
-		embed->border_horiz_space = val;
+		embed->objTag.border_horiz_space = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
 	}
-	embed->border_horiz_space = FEUNITS_X(embed->border_horiz_space,
+	embed->objTag.border_horiz_space = FEUNITS_X(embed->objTag.border_horiz_space,
 						context);
 
 	/*
@@ -681,14 +742,14 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 		/*
 		 * If there is still valid data to restore available.
 		 */
-		if (embed->embed_index < embed_list->embed_count)
+		if (embed->objTag.embed_index < embed_list->embed_count)
 		{
 			lo_EmbedDataElement* embed_data_list;
 
 			PA_LOCK(embed_data_list, lo_EmbedDataElement*,
 				embed_list->embed_data_list);
-			embed->session_data =
-				embed_data_list[embed->embed_index].data;
+			embed->objTag.session_data =
+				embed_data_list[embed->objTag.embed_index].data;
 			PA_UNLOCK(embed_list->embed_data_list);
 		}
 	}
@@ -725,7 +786,7 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
         for (i = count-1; i >= 0; i--) {
             if (i == doc_lists->embed_list_count) {
                 /* Copy over the mocha object (it might not exist) */
-                embed->mocha_object = cur_embed->mocha_object;
+                embed->objTag.mocha_object = cur_embed->objTag.mocha_object;
 
                 embed->nextEmbed = cur_embed->nextEmbed;
                 
@@ -758,7 +819,7 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	/* Create an initially hidden layer for this plugin to inhabit.  If the plugin is 
 	   a windowless plugin, this will later become a "normal" layer.  If the plugin is
 	   a windowed plugin, the layer will become a cutout layer. */
-	embed->layer =
+	embed->objTag.layer =
 	  lo_CreateEmbeddedObjectLayer(context, state, (LO_Element*)embed);
 
 	/*
@@ -770,10 +831,10 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	/*
 	 * Hidden embeds always have 0 width and height
 	 */
-	if (embed->ele_attrmask & LO_ELE_HIDDEN)
+	if (embed->objTag.ele_attrmask & LO_ELE_HIDDEN)
 	{
-		embed->width = 0;
-		embed->height = 0;
+		embed->objTag.width = 0;
+		embed->objTag.height = 0;
 	}
 
 	/*
@@ -781,8 +842,8 @@ lo_FormatEmbedInternal(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	 * when the front end can give us the width and height.
 	 * Never block on hidden embeds.
 	 */
-	if (((embed->width == 0)||(embed->height == 0))&&
-	    ((embed->ele_attrmask & LO_ELE_HIDDEN) == 0))
+	if (((embed->objTag.width == 0)||(embed->objTag.height == 0))&&
+	    ((embed->objTag.ele_attrmask & LO_ELE_HIDDEN) == 0))
 	{
 		state->top_state->layout_blocking_element = (LO_Element *)embed;
 	}
@@ -806,39 +867,39 @@ lo_FinishEmbed(MWContext *context, lo_DocState *state, LO_EmbedStruct *embed)
 	 * front end.
 	 * Hidden embeds are supposed to have 0 width and height.
 	 */
-	if ((embed->ele_attrmask & LO_ELE_HIDDEN) == 0)
+	if ((embed->objTag.ele_attrmask & LO_ELE_HIDDEN) == 0)
 	{
-		if (embed->width == 0)
+		if (embed->objTag.width == 0)
 		{
-			embed->width = EMBED_DEF_DIM;
+			embed->objTag.width = EMBED_DEF_DIM;
 		}
-		if (embed->height == 0)
+		if (embed->objTag.height == 0)
 		{
-			embed->height = EMBED_DEF_DIM;
+			embed->objTag.height = EMBED_DEF_DIM;
 		}
 	}
 
-	embed_width = embed->width + (2 * embed->border_width) +
-		(2 * embed->border_horiz_space);
-	embed_height = embed->height + (2 * embed->border_width) +
-		(2 * embed->border_vert_space);
+	embed_width = embed->objTag.width + (2 * embed->objTag.border_width) +
+		(2 * embed->objTag.border_horiz_space);
+	embed_height = embed->objTag.height + (2 * embed->objTag.border_width) +
+		(2 * embed->objTag.border_vert_space);
 
 	/*
 	 * SEVERE FLOW BREAK!  This may be a floating embed,
 	 * which means at this point we go do something completely
 	 * different.
 	 */
-	if (embed->ele_attrmask & LO_ELE_FLOATING)
+	if (embed->objTag.ele_attrmask & LO_ELE_FLOATING)
 	{
 
-		embed->x_offset += (int16)embed->border_horiz_space;
-		embed->y_offset += (int32)embed->border_vert_space;
+		embed->objTag.x_offset += (int16)embed->objTag.border_horiz_space;
+		embed->objTag.y_offset += (int32)embed->objTag.border_vert_space;
 
 
 		/*
 		 * Insert this element into the float list.
 		 */
-		embed->next = state->float_list;
+		embed->objTag.next = state->float_list;
 		state->float_list = (LO_Element *)embed;
 
 		lo_AppendFloatInLineList(state, (LO_Element*)embed, NULL);
@@ -868,8 +929,8 @@ lo_FinishEmbed(MWContext *context, lo_DocState *state, LO_EmbedStruct *embed)
 		}
 
 
-		embed->x_offset += (int16)embed->border_horiz_space;
-		embed->y_offset += (int32)embed->border_vert_space;
+		embed->objTag.x_offset += (int16)embed->objTag.border_horiz_space;
+		embed->objTag.y_offset += (int32)embed->objTag.border_vert_space;
 
 		lo_LayoutInflowEmbed(context, state, embed, FALSE, &line_inc, &baseline_inc);
 
@@ -897,22 +958,22 @@ lo_RelayoutEmbed ( MWContext *context, lo_DocState *state, LO_EmbedStruct * embe
 	/*
 	 * Fill in the embed structure with default data
 	 */
-	embed->type = LO_EMBED;
-	embed->ele_id = NEXT_ELEMENT;
-	embed->x = state->x;
-	embed->x_offset = 0;
-	embed->y = state->y;
-	embed->y_offset = 0;
-	embed->next = NULL;
-	embed->prev = NULL;
+	embed->objTag.type = LO_EMBED;
+	embed->objTag.ele_id = NEXT_ELEMENT;
+	embed->objTag.x = state->x;
+	embed->objTag.x_offset = 0;
+	embed->objTag.y = state->y;
+	embed->objTag.y_offset = 0;
+	embed->objTag.next = NULL;
+	embed->objTag.prev = NULL;
 
-	embed->line_height = state->line_height;
+	embed->objTag.line_height = state->line_height;
 
 	/*
 	 * Assign a unique index for this object 
 	 * and increment the master index.
 	 */
-	embed->embed_index = state->top_state->embed_count++;
+	embed->objTag.embed_index = state->top_state->embed_count++;
 
     /*
      * Since we saved the embed_list_count during table relayout,
@@ -933,8 +994,8 @@ lo_RelayoutEmbed ( MWContext *context, lo_DocState *state, LO_EmbedStruct * embe
 	 * I don't think we need to worry about blocking at all since we're in
 	 * relayout, but I'd rather be safe.
 	 */
-	if (((embed->width == 0)||(embed->height == 0))&&
-	    ((embed->ele_attrmask & LO_ELE_HIDDEN) == 0))
+	if (((embed->objTag.width == 0)||(embed->objTag.height == 0))&&
+	    ((embed->objTag.ele_attrmask & LO_ELE_HIDDEN) == 0))
 	{
 		state->top_state->layout_blocking_element = (LO_Element *)embed;
 	}
@@ -1024,7 +1085,7 @@ LO_CopySavedEmbedData(MWContext *context, SHIST_SavedData *saved_data)
 void
 LO_AddEmbedData(MWContext *context, LO_EmbedStruct* embed, void *session_data)
 {
-	lo_AddEmbedData(context, session_data, NPL_DeleteSessionData, embed->embed_index);
+	lo_AddEmbedData(context, session_data, NPL_DeleteSessionData, embed->objTag.embed_index);
 }
 
 
@@ -1037,10 +1098,10 @@ lo_FillInEmbedGeometry(lo_DocState *state,
 
 	if (relayout == TRUE)
 	{
-		embed->ele_id = NEXT_ELEMENT;
+		embed->objTag.ele_id = NEXT_ELEMENT;
 	}
-	embed->x = state->x;
-	embed->y = state->y;
+	embed->objTag.x = state->x;
+	embed->objTag.y = state->y;
 
 	doc_width = state->right_margin - state->left_margin;
 
@@ -1049,27 +1110,27 @@ lo_FillInEmbedGeometry(lo_DocState *state,
 	 * If percentage, make it absolute.
 	 */
 
-	if (embed->percent_width > 0) {
-		int32 val = embed->percent_width;
+	if (embed->objTag.percent_width > 0) {
+		int32 val = embed->objTag.percent_width;
 		if (state->allow_percent_width == FALSE) {
 			val = 0;
 		}
 		else {
 			val = doc_width * val / 100;
 		}
-		embed->width = val;
+		embed->objTag.width = val;
 	}
 
-	/* Set embed->height if embed has a % height specified */
-	if (embed->percent_height > 0) {
-		int32 val = embed->percent_height;
+	/* Set embed->objTag.height if embed has a % height specified */
+	if (embed->objTag.percent_height > 0) {
+		int32 val = embed->objTag.percent_height;
 		if (state->allow_percent_height == FALSE) {
 			val = 0;
 		}
 		else {
 			val = state->win_height * val / 100;
 		}
-		embed->height = val;
+		embed->objTag.height = val;
 	}
 }
 
@@ -1112,10 +1173,10 @@ lo_LayoutInflowEmbed(MWContext *context,
   FE_GetTextInfo(context, &tmp_text, &text_info);
   PA_FREE(buff);
   
-  embed_width = embed->width + (2 * embed->border_width) +
-	(2 * embed->border_horiz_space);
-  embed_height = embed->height + (2 * embed->border_width) +
-	(2 * embed->border_vert_space);
+  embed_width = embed->objTag.width + (2 * embed->objTag.border_width) +
+	(2 * embed->objTag.border_horiz_space);
+  embed_height = embed->objTag.height + (2 * embed->objTag.border_width) +
+	(2 * embed->objTag.border_vert_space);
   
   /*
    * Will this embed make the line too wide.
@@ -1152,7 +1213,7 @@ lo_LayoutInflowEmbed(MWContext *context,
 	   * We need to make the elements sequential, linefeed
 	   * before embed.
 	   */
-		top_state->element_id = embed->ele_id;	  
+		top_state->element_id = embed->objTag.ele_id;	  
 
 		if (!inRelayout)
 		{
@@ -1162,14 +1223,14 @@ lo_LayoutInflowEmbed(MWContext *context,
 		{
 			lo_rl_AddSoftBreakAndFlushLine(context, state);
 		}
-		embed->x = state->x;
-		embed->y = state->y;
-		embed->ele_id = NEXT_ELEMENT;
+		embed->objTag.x = state->x;
+		embed->objTag.y = state->y;
+		embed->objTag.ele_id = NEXT_ELEMENT;
 	}
 
-  lo_CalcAlignOffsets(state, &text_info, (intn)embed->alignment,
+  lo_CalcAlignOffsets(state, &text_info, (intn)embed->objTag.alignment,
 					  embed_width, embed_height,
-					  &embed->x_offset, &embed->y_offset, line_inc, baseline_inc);
+					  &embed->objTag.x_offset, &embed->objTag.y_offset, line_inc, baseline_inc);
 }
 
 void
@@ -1180,36 +1241,36 @@ lo_LayoutFloatEmbed(MWContext *context,
 {
   int32 embed_width;
 
-  embed_width = embed->width + (2 * embed->border_width) +
-	(2 * embed->border_horiz_space);
-  if (embed->alignment == LO_ALIGN_RIGHT)
+  embed_width = embed->objTag.width + (2 * embed->objTag.border_width) +
+	(2 * embed->objTag.border_horiz_space);
+  if (embed->objTag.alignment == LO_ALIGN_RIGHT)
 	{
 	  if (state->right_margin_stack == NULL)
 		{
-		  embed->x = state->right_margin - embed_width;
+		  embed->objTag.x = state->right_margin - embed_width;
 		}
 	  else
 		{
-		  embed->x = state->right_margin_stack->margin -
+		  embed->objTag.x = state->right_margin_stack->margin -
 			embed_width;
 		}
-	  if (embed->x < 0)
+	  if (embed->objTag.x < 0)
 		{
-		  embed->x = 0;
+		  embed->objTag.x = 0;
 		}
 	}
   else
 	{
-	  embed->x = state->left_margin;
+	  embed->objTag.x = state->left_margin;
 	}
   
-  embed->y = -1;
+  embed->objTag.y = -1;
 
-  lo_AddMarginStack(state, embed->x, embed->y,
-					embed->width, embed->height,
-					embed->border_width,
-					embed->border_vert_space, embed->border_horiz_space,
-					(intn)embed->alignment);
+  lo_AddMarginStack(state, embed->objTag.x, embed->objTag.y,
+					embed->objTag.width, embed->objTag.height,
+					embed->objTag.border_width,
+					embed->objTag.border_vert_space, embed->objTag.border_horiz_space,
+					(intn)embed->objTag.alignment);
   
   if (state->at_begin_line != FALSE)
 	{
@@ -1227,8 +1288,8 @@ lo_UpdateStateAfterEmbedLayout(lo_DocState *state,
   int32 embed_width;
   int32 x, y;
 
-  embed_width = embed->width + (2 * embed->border_width) +
-	(2 * embed->border_horiz_space);
+  embed_width = embed->objTag.width + (2 * embed->objTag.border_width) +
+	(2 * embed->objTag.border_horiz_space);
 
   state->baseline += (intn) baseline_inc;
   state->line_height += (intn) (baseline_inc + line_inc);
@@ -1236,25 +1297,25 @@ lo_UpdateStateAfterEmbedLayout(lo_DocState *state,
   /*
    * Clean up state
    */
-  state->x = state->x + embed->x_offset +
-	embed_width - embed->border_horiz_space;
+  state->x = state->x + embed->objTag.x_offset +
+	embed_width - embed->objTag.border_horiz_space;
   state->linefeed_state = 0;
   state->at_begin_line = FALSE;
   state->trailing_space = FALSE;
   state->cur_ele_type = LO_EMBED;
 
   /* Determine the new position of the layer. */
-  x = embed->x + embed->x_offset + embed->border_width;
-  y = embed->y + embed->y_offset + embed->border_width;
+  x = embed->objTag.x + embed->objTag.x_offset + embed->objTag.border_width;
+  y = embed->objTag.y + embed->objTag.y_offset + embed->objTag.border_width;
   
   /* Move layer to new position */
-  CL_MoveLayer(embed->layer, x, y);
+  CL_MoveLayer(embed->objTag.layer, x, y);
 }
 
 void
 LO_SetEmbedSize( MWContext *context, LO_EmbedStruct *embed, int32 width, int32 height )
 {
 	/* For now, just setting the embed's dimensions.  Do we need to lock/unlock layout here? */
-	embed->width = width;
-	embed->height = height;
+	embed->objTag.width = width;
+	embed->objTag.height = height;
 }

@@ -23,7 +23,7 @@
   !!! HEED THE WARNING.
 */
 
-#if defined (JAVA)
+#if defined (JAVA) || defined(OJI)
 #define IMPLEMENT_netscape_javascript_JSObject
 #define IMPLEMENT_netscape_javascript_JSException
 

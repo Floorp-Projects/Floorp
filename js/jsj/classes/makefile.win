@@ -52,6 +52,8 @@ JARS=$(JAR_JSJ)
 
 include <$(DEPTH)\config\rules.mak>
 
+!ifdef JAVA_OR_OJI
+
 $(JAR_JSJ):
 	cd $(JAVA_DESTPATH)
 	@echo +++ building/updating $@
@@ -63,6 +65,7 @@ jars:	$(JARS)
 
 install:: jars
 
+!endif
 
 javadoc:
 	-mkdir $(XPDIST)\javadoc 2> NUL

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -34,7 +34,9 @@ extern "C" {
 #include "gui.h"			/* For XP_AppCodeName */
 #include "merrors.h"
 #include "xpgetstr.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "nppriv.h"
 #include "shist.h"
 
@@ -51,8 +53,16 @@ extern "C" {
 #include "layers.h"
 #endif /* LAYERS */
 
-#include "nsAgg.h"      // nsPluginManager aggregates nsJVMManager
+#include "nsILCPlg.h"
+#include "nsAgg.h"      /* nsPluginManager aggregates nsJVMManager */
+#ifdef OJI
 #include "nsjvm.h"
+#else  /* OJI */
+/* Just define a dummy struct for NPIJVMPluginManager. In the
+   plugin code, it is never actually dereferenced outside of an
+   `#ifdef OJI'. */
+struct NPIJVMPluginManager;
+#endif /* OJI */
 
 extern int XP_PLUGIN_LOADING_PLUGIN;
 extern int MK_BAD_CONNECT;
@@ -307,7 +317,6 @@ protected:
     // aggregated sub-intefaces:
     NPIJVMPluginManager* GetJVMMgr(const nsIID& aIID);
     nsISupports* fJVMMgr;
-
 };
 
 extern nsPluginManager* thePluginManager;
@@ -344,17 +353,42 @@ public:
     NS_IMETHOD_(NPPluginType)
     GetMode(void);
 
-    // (Corresponds to NPP_New's argc argument.)
-    NS_IMETHOD_(PRUint16)
-    GetArgCount(void);
+    // Get a ptr to the paired list of attribute names and values,
+    // returns the length of the array.
+    //
+    // Each name or value is a null-terminated string.
+    //
+    NS_IMETHOD_(NPPluginError)
+    GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values);
 
-    // (Corresponds to NPP_New's argn argument.)
-    NS_IMETHOD_(const char**)
-    GetArgNames(void);
+    // Get the value for the named attribute.  Returns null
+    // if the attribute was not set.
+    NS_IMETHOD_(const char*)
+    GetAttribute(const char* name);
 
-    // (Corresponds to NPP_New's argv argument.)
-    NS_IMETHOD_(const char**)
-    GetArgValues(void);
+    // Get a ptr to the paired list of parameter names and values,
+    // returns the length of the array.
+    //
+    // Each name or value is a null-terminated string.
+    NS_IMETHOD_(NPPluginError)
+    GetParameters(PRUint16& n, const char*const*& names, const char*const*& values);
+
+    // Get the value for the named parameter.  Returns null
+    // if the parameter was not set.
+    NS_IMETHOD_(const char*)
+    GetParameter(const char* name);
+
+    // Get the complete text of the HTML tag that was
+    // used to instantiate this plugin
+    NS_IMETHOD_(const char *)
+    GetTagText(void);
+
+    // Get the type of the HTML tag that was used ot instantiate this
+    // plugin.  Currently supported tags are EMBED, OBJECT and APPLET.
+    // 
+    // returns a NPTagType.
+    NS_IMETHOD_(NPTagType) 
+    GetTagType(void);
 
     NS_IMETHOD_(NPIPluginManager*)
     GetPluginManager(void);
@@ -409,7 +443,7 @@ public:
 	
     NS_IMETHOD_(void)
     UnregisterWindow(void* window);	
-    
+
     NS_IMETHOD_(PRInt16)
 	AllocateMenuID(PRBool isSubmenu);
 
@@ -452,7 +486,7 @@ public:
 
     // (Corresponds to NPP_Write and NPN_Write.)
     NS_IMETHOD_(PRInt32)
-    Write(PRInt32 len, void* buffer);
+    Write(PRInt32 len, const char* buffer);
 
     ////////////////////////////////////////////////////////////////////////////
     // from NPIPluginManagerStream:
@@ -504,6 +538,22 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // from NPIPluginStreamPeer:
 
+    // (Corresponds to NPStream's url field.)
+    NS_IMETHOD_(const char*)
+    GetURL(void);
+
+    // (Corresponds to NPStream's end field.)
+    NS_IMETHOD_(PRUint32)
+    GetEnd(void);
+
+    // (Corresponds to NPStream's lastmodified field.)
+    NS_IMETHOD_(PRUint32)
+    GetLastModified(void);
+
+    // (Corresponds to NPStream's notifyData field.)
+    NS_IMETHOD_(void*)
+    GetNotifyData(void);
+
     // (Corresponds to NPP_DestroyStream's reason argument.)
     NS_IMETHOD_(NPPluginReason)
     GetReason(void);
@@ -514,31 +564,7 @@ public:
 
     NS_IMETHOD_(PRUint32)
     GetContentLength(void);
-#if 0
-    NS_IMETHOD_(const char*)
-    GetContentEncoding(void);
 
-    NS_IMETHOD_(const char*)
-    GetCharSet(void);
-
-    NS_IMETHOD_(const char*)
-    GetBoundary(void);
-
-    NS_IMETHOD_(const char*)
-    GetContentName(void);
-
-    NS_IMETHOD_(time_t)
-    GetExpires(void);
-
-    NS_IMETHOD_(time_t)
-    GetLastModified(void);
-
-    NS_IMETHOD_(time_t)
-    GetServerDate(void);
-
-    NS_IMETHOD_(NPServerStatus)
-    GetServerStatus(void);
-#endif
     NS_IMETHOD_(PRUint32)
     GetHeaderFieldCount(void);
 

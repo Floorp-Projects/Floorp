@@ -30,7 +30,9 @@
 #include "prprf.h"
 #include "net.h"
 #include "libmocha.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "PrefsDialogAppl.h"
 #include "PrefsProxiesView.h"
 #include "PrefsApplEdit.h"

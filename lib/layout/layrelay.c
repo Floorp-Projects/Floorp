@@ -1195,9 +1195,9 @@ lo_rl_FitJava( lo_RelayoutState *relay_state, LO_Element *lo_ele )
   lo_AppendToLineList(relay_state->context, relay_state->doc_state, lo_ele, baseline_inc);
   lo_UpdateStateAfterJavaAppLayout( relay_state->doc_state, java_app, line_inc, baseline_inc );
 
-  CL_MoveLayer(java_app->layer,
-			   java_app->x + java_app->x_offset + java_app->border_horiz_space,
-			   java_app->y + java_app->y_offset + java_app->border_vert_space);
+  CL_MoveLayer(java_app->objTag.layer,
+			   java_app->objTag.x + java_app->objTag.x_offset + java_app->objTag.border_horiz_space,
+			   java_app->objTag.y + java_app->objTag.y_offset + java_app->objTag.border_vert_space);
 #endif
 
   return next;
@@ -1413,10 +1413,10 @@ lo_rl_FitFloat( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 		lo_LayoutFloatJavaApp( relay_state->context, relay_state->doc_state, java_app, FALSE );
 
 		/* Determine the new position of the layer. */
-		x = java_app->x + java_app->x_offset + java_app->border_width;
-		y = java_app->y + java_app->y_offset + java_app->border_width;
+		x = java_app->objTag.x + java_app->objTag.x_offset + java_app->objTag.border_width;
+		y = java_app->objTag.y + java_app->objTag.y_offset + java_app->objTag.border_width;
 
-		layer = java_app->layer;
+		layer = java_app->objTag.layer;
 	}
 #endif
 	else if (lo_ele->lo_float.float_ele->lo_any.type == LO_EMBED) {
@@ -1425,10 +1425,10 @@ lo_rl_FitFloat( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 		lo_LayoutFloatEmbed( relay_state->context, relay_state->doc_state, embed, FALSE );
 
 		/* Determine the new position of the layer. */
-		x = embed->x + embed->x_offset + embed->border_width;
-		y = embed->y + embed->y_offset + embed->border_width;
+		x = embed->objTag.x + embed->objTag.x_offset + embed->objTag.border_width;
+		y = embed->objTag.y + embed->objTag.y_offset + embed->objTag.border_width;
 
-		layer = embed->layer;
+		layer = embed->objTag.layer;
 	}
 #ifdef SHACK
 	else if (lo_ele->lo_float.float_ele->lo_any.type == LO_BUILTIN) {

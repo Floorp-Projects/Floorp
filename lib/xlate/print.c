@@ -1878,7 +1878,7 @@ void
 PSFE_FreeEmbedElement (MWContext *context, LO_EmbedStruct *embed_struct)
 {
     NPL_EmbedDelete(context, embed_struct);
-    embed_struct->FE_Data = 0;
+    embed_struct->objTag.FE_Data = 0;
 }
 
 void
@@ -1919,18 +1919,18 @@ PSFE_DisplayEmbed (MWContext *context,
     NPPrint npprint;
 
     if (!embed_struct) return;
-    eApp = (NPEmbeddedApp *)embed_struct->FE_Data;
+    eApp = (NPEmbeddedApp *)embed_struct->objTag.FE_Data;
     if (!eApp) return;
 
     npprint.mode = NP_EMBED;
     npprint.print.embedPrint.platformPrint = NULL;
     npprint.print.embedPrint.window.window = NULL;
     npprint.print.embedPrint.window.x =
-      embed_struct->x + embed_struct->x_offset;
+      embed_struct->objTag.x + embed_struct->objTag.x_offset;
     npprint.print.embedPrint.window.y =
-      embed_struct->y + embed_struct->y_offset;
-    npprint.print.embedPrint.window.width = embed_struct->width;
-    npprint.print.embedPrint.window.height = embed_struct->height;
+      embed_struct->objTag.y + embed_struct->objTag.y_offset;
+    npprint.print.embedPrint.window.width = embed_struct->objTag.width;
+    npprint.print.embedPrint.window.height = embed_struct->objTag.height;
     
     npPrintInfo.type = NP_PRINT;
     npPrintInfo.fp = context->prSetup->out;
@@ -1943,30 +1943,36 @@ void
 PSFE_GetEmbedSize (MWContext *context, LO_EmbedStruct *embed_struct,
 		  NET_ReloadMethod force_reload)
 {
-  NPEmbeddedApp *eApp = (NPEmbeddedApp *)embed_struct->FE_Data;
+  NPEmbeddedApp *eApp = (NPEmbeddedApp *)embed_struct->objTag.FE_Data;
   
   if(eApp) return;
 
   /* attempt to make a plugin */
   if(!(eApp = NPL_EmbedCreate(context, embed_struct)) ||
-     (embed_struct->ele_attrmask & LO_ELE_HIDDEN)) {
+     (embed_struct->objTag.ele_attrmask & LO_ELE_HIDDEN)) {
     return;
   }
 
   /* Determine if this is a fullpage plugin */
+#ifdef OJI
+  if ((embed_struct->attributes.n > 0) &&
+      (!strcmp(embed_struct->attributes.names[0], "src")) &&
+      (!strcmp(embed_struct->attributes.values[0], "internal-external-plugin")))
+#else
   if ((embed_struct->attribute_cnt > 0) &&
       (!strcmp(embed_struct->attribute_list[0], "src")) &&
       (!strcmp(embed_struct->value_list[0], "internal-external-plugin")))
+#endif
     {
-      embed_struct->width = context->prInfo->page_width;
-      embed_struct->height = context->prInfo->page_height;
+      embed_struct->objTag.width = context->prInfo->page_width;
+      embed_struct->objTag.height = context->prInfo->page_height;
     }
 
-  embed_struct->FE_Data = (void *)eApp;
+  embed_struct->objTag.FE_Data = (void *)eApp;
 
   if (NPL_EmbedStart(context, embed_struct, eApp) != NPERR_NO_ERROR) {
     /* Spoil sport! */
-    embed_struct->FE_Data = NULL;
+    embed_struct->objTag.FE_Data = NULL;
     return;
   }
 }
@@ -1979,27 +1985,27 @@ void PSFE_DisplayJavaApp(MWContext *context, int iLocation,
 
   int x, y;
   float w, h, tw, th;
-  LJAppletData *ad = (LJAppletData *)java_app->session_data;
+  LJAppletData *ad = (LJAppletData *)java_app->objTag.session_data;
 
   if (!XP_CheckElementSpan(context,
-			  java_app->x + java_app->x_offset, java_app->height))
+			  java_app->objTag.x + java_app->objTag.x_offset, java_app->objTag.height))
     return;
 
   /* Calculate (x,y) coordinate of bottom left corner. */
-  x = java_app->x + java_app->x_offset;
-  y = java_app->y + java_app->y_offset + java_app->height;
+  x = java_app->objTag.x + java_app->objTag.x_offset;
+  y = java_app->objTag.y + java_app->objTag.y_offset + java_app->objTag.height;
 
-  w =  PAGE_TO_POINT_F(java_app->width);
-  h =  PAGE_TO_POINT_F(java_app->height);
+  w =  PAGE_TO_POINT_F(java_app->objTag.width);
+  h =  PAGE_TO_POINT_F(java_app->objTag.height);
 
-  tw = (float)java_app->width  / context->convertPixX;
-  th = (float)java_app->height / context->convertPixY;
+  tw = (float)java_app->objTag.width  / context->convertPixX;
+  th = (float)java_app->objTag.height / context->convertPixY;
 
   XP_FilePrintf(context->prSetup->out, "BeginEPSF\n");
 
   /* Clip to the applet's bounding box */
-  xl_moveto(context, java_app->x, java_app->y);
-  xl_box(context, java_app->width, java_app->height);
+  xl_moveto(context, java_app->objTag.x, java_app->objTag.y);
+  xl_box(context, java_app->objTag.width, java_app->objTag.height);
   XP_FilePrintf(context->prSetup->out, "clip\n");
 
   xl_translate(context, x, y);

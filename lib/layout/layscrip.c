@@ -976,9 +976,10 @@ lo_ProcessScriptTag(MWContext *context, lo_DocState *state, PA_Tag *tag, JSObjec
 #ifdef DEBUG_ScriptPlugin
 		if (top_state->in_script == SCRIPT_TYPE_UNKNOWN)
 		{
+			char* pluginName;
 			mimebuf = npl_Script2mimeType(context,tag);
 			if (mimebuf){
-				if (NPL_FindPluginEnabledForType(mimebuf)){
+				if ((pluginName = NPL_FindPluginEnabledForType(mimebuf)) != NULL){
 					top_state->in_script = SCRIPT_TYPE_PLUGIN;
 					XP_ASSERT(top_state->mimetype == NULL);
 					StrAllocCopy((char *)top_state->mimetype,mimebuf);

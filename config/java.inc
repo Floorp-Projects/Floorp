@@ -66,7 +66,7 @@ $(MAC_JAVA_HEADERS_DIR):
 !endif 
 
 !ifdef JDK_GEN
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 #//------------------------------------------------------------------------
 #//
 #// Rule to generate Java header files using javah.
@@ -92,12 +92,12 @@ $(JDK_GEN)::display_java_header_msg_mac $(MAC_JAVA_HEADERS_DIR)
 display_java_header_msg_mac:
         echo +++ make: Generating Macintosh JDK header files +++
 !endif
-!endif # MOZ_JAVA
+!endif # JAVA_OR_OJI
 !endif
 
 
 !ifdef JDK_GEN
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 #//------------------------------------------------------------------------
 #//
 #// Rules to generate Java stub files using javah.
@@ -120,11 +120,11 @@ display_java_stub_msg_mac:
 
 export:: $(JDK_GEN)
 
-!endif # MOZ_JAVA
+!endif # JAVA_OR_OJI
 !endif
 
 !ifdef JAVA_LIBSTUB_FILES
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 #//------------------------------------------------------------------------
 #//
 #// Rules to generate libstubs.c using javah.
@@ -138,11 +138,11 @@ stubs$(MOZ_BITS).c::$(JAVA_LIBSTUB_FILES)
 	echo +++ make: Generating stubs$(MOZ_BITS).c...
     $(JAVAH) -o stubs$(MOZ_BITS).c -stubs $**
 
-!endif # MOZ_JAVA
+!endif # JAVA_OR_OJI
 !endif
 
 !ifdef JRI_GEN
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 #//------------------------------------------------------------------------
 #//
 #// Rule to generate JRI header files using javah.
@@ -168,11 +168,11 @@ $(JRI_GEN)::display_jri_header_msg_mac $(MAC_JAVA_HEADERS_DIR)
 display_jri_header_msg_mac:
         echo +++ make: Generating Macintosh java JRI header files +++
 !endif
-!endif # MOZ_JAVA
+!endif # JAVA_OR_OJI
 !endif
 
 !ifdef JRI_GEN
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 #//------------------------------------------------------------------------
 #//
 #// Rules to generate JRI stub files using javah.
@@ -195,7 +195,7 @@ display_jri_stub_msg_mac:
 
 export:: $(JRI_GEN)
 
-!endif # MOZ_JAVA
+!endif # JAVA_OR_OJI
 !endif
 
 !endif # CONFIG_JAVA_INC

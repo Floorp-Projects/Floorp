@@ -8248,11 +8248,11 @@ lo_FindReuseableElement(MWContext *context, lo_DocState *state, LO_Element ** el
 		switch ( eptr->type )
 		{
 			case LO_EMBED:
-				tag = eptr->lo_embed.tag;
+				tag = eptr->lo_embed.objTag.tag;
 				break;
 #ifdef JAVA
 			case LO_JAVA:
-				tag = eptr->lo_java.tag;
+				tag = eptr->lo_java.objTag.tag;
 				break;
 #endif /* JAVA */
 		}

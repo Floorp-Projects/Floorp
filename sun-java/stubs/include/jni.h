@@ -42,6 +42,9 @@ typedef jobject jclass;
 typedef void *jbyteArray;
 typedef void *jobjectArray;
 
+typedef void JNIEnvInterface;
+typedef const JNIEnvInterface *JNIEnv;
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

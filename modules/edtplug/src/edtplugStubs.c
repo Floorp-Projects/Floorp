@@ -77,9 +77,11 @@ void EDTPLUG_RegisterEditURLCallback(EditURLCallback callback){
 static JRIEnv* getEnv(MozillaEvent_MozillaCallback* e)
 {
     JRIEnv* ee = e->env;
+#ifdef JAVA     // XXX hack to get OJI working
     if ( ! ee ) {
         ee = JRI_GetCurrentEnv();
     }
+#endif
     return ee;
 }
 

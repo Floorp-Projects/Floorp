@@ -663,7 +663,7 @@ BEGIN
 			MENUITEM SEPARATOR
 		END
 		MENUITEM "&History\tCtrl+H",                         ID_GO_HISTORY
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 		MENUITEM "&Java Console",                   ID_OPTIONS_SHOWJAVACONSOLE
 #endif
 		MENUITEM "&Security Info\tCtrl+Shift+I",	ID_SECURITY
@@ -982,7 +982,7 @@ BEGIN
 			END
 		END
 		MENUITEM "&History",                         ID_GO_HISTORY
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
         MENUITEM "&Java Console",                   ID_OPTIONS_SHOWJAVACONSOLE
 #endif
 #ifdef MOZ_TASKBAR
@@ -1315,7 +1315,7 @@ symlogo RCDATA
 #include "_gen\symlogo.rc"
 tdlogo RCDATA
 #include "_gen\tdlogo.rc"
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 javalogo RCDATA
 #include "_gen\javalogo.rc"
 #endif

@@ -21,9 +21,12 @@
 #include "pa_parse.h"
 #include "layout.h"
 #include "laylayer.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "laystyle.h"
 #include "layers.h"
+#include "np.h"
 
 #define JAVA_DEF_DIM			50
 #define JAVA_DEF_BORDER		0
@@ -36,6 +39,7 @@ static void lo_FormatJavaAppInternal(MWContext *context,
 									 PA_Tag *tag,
 									 LO_JavaAppStruct *java_app);
 
+#if 0   /* not used */
 void
 LO_ClearJavaAppBlock(MWContext *context, LO_JavaAppStruct *java_app)
 {
@@ -73,7 +77,7 @@ LO_ClearJavaAppBlock(MWContext *context, LO_JavaAppStruct *java_app)
 		lo_FlushBlockage(context, state, main_doc_state);
 	}
 }
-
+#endif
 
 void
 lo_FormatJavaObject(MWContext *context, lo_DocState *state, PA_Tag *tag, LO_JavaAppStruct *java_app)
@@ -97,12 +101,12 @@ lo_FormatJavaObject(MWContext *context, lo_DocState *state, PA_Tag *tag, LO_Java
 
     if (java_app->selector_type == LO_JAVA_SELECTOR_OBJECT_JAVAPROGRAM)
     {
-        java_app->ele_attrmask |= LO_ELE_HIDDEN;
+        java_app->objTag.ele_attrmask |= LO_ELE_HIDDEN;
     }
     else 
     {
         /* Get the HIDDEN parameter */
-        java_app->ele_attrmask = 0;
+        java_app->objTag.ele_attrmask = 0;
         buff = lo_FetchParamValue(context, tag, PARAM_HIDDEN);
         if (buff != NULL)
         {
@@ -127,7 +131,7 @@ lo_FormatJavaObject(MWContext *context, lo_DocState *state, PA_Tag *tag, LO_Java
 
             if (hidden != FALSE)
             {
-                java_app->ele_attrmask |= LO_ELE_HIDDEN;
+                java_app->objTag.ele_attrmask |= LO_ELE_HIDDEN;
             }
         }
     }
@@ -136,6 +140,7 @@ lo_FormatJavaObject(MWContext *context, lo_DocState *state, PA_Tag *tag, LO_Java
     lo_FormatJavaAppInternal(context, state, tag, java_app);
 }
 
+#define JAVA_PLUGIN_MIMETYPE "application/x-java-vm"
 
 void
 lo_FormatJavaApp(MWContext *context, lo_DocState *state, PA_Tag *tag)
@@ -151,18 +156,18 @@ lo_FormatJavaApp(MWContext *context, lo_DocState *state, PA_Tag *tag)
 		return;
 	}
 
-	java_app->type = LO_JAVA;
-	java_app->ele_id = NEXT_ELEMENT;
-	java_app->x = state->x;
-	java_app->x_offset = 0;
-	java_app->y = state->y;
-	java_app->y_offset = 0;
-	java_app->width = 0;
-	java_app->height = 0;
-	java_app->next = NULL;
-	java_app->prev = NULL;
+	java_app->objTag.type = LO_JAVA;
+	java_app->objTag.ele_id = NEXT_ELEMENT;
+	java_app->objTag.x = state->x;
+	java_app->objTag.x_offset = 0;
+	java_app->objTag.y = state->y;
+	java_app->objTag.y_offset = 0;
+	java_app->objTag.width = 0;
+	java_app->objTag.height = 0;
+	java_app->objTag.next = NULL;
+	java_app->objTag.prev = NULL;
 
-	java_app->ele_attrmask = 0;
+	java_app->objTag.ele_attrmask = 0;
 	java_app->selector_type = LO_JAVA_SELECTOR_APPLET;
 
 	/* Finish formatting the object */
@@ -183,38 +188,43 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 
     java_app->nextApplet = NULL;
 #ifdef MOCHA
-    java_app->mocha_object = NULL;
+    java_app->objTag.mocha_object = NULL;
 #endif
 
-	java_app->FE_Data = NULL;
-	java_app->session_data = NULL;
-	java_app->line_height = state->line_height;
+	java_app->objTag.FE_Data = NULL;
+	java_app->objTag.session_data = NULL;
+	java_app->objTag.line_height = state->line_height;
 
-	java_app->base_url = NULL;
+	java_app->objTag.base_url = NULL;
 	java_app->attr_code = NULL;
 	java_app->attr_codebase = NULL;
 	java_app->attr_archive = NULL;
 	java_app->attr_name = NULL;
 
-	java_app->param_cnt = 0;
-	java_app->param_names = NULL;
-	java_app->param_values = NULL;
+#ifdef OJI
+    LO_NVList_Init( &java_app->attributes );
+    LO_NVList_Init( &java_app->parameters );
+#else
+ 	java_app->param_cnt = 0;
+ 	java_app->param_names = NULL;
+ 	java_app->param_values = NULL;
+#endif
 
 	java_app->may_script = FALSE;
 
-	java_app->alignment = LO_ALIGN_BASELINE;
-	java_app->border_width = JAVA_DEF_BORDER;
-	java_app->border_vert_space = JAVA_DEF_VERTICAL_SPACE;
-	java_app->border_horiz_space = JAVA_DEF_HORIZONTAL_SPACE;
+	java_app->objTag.alignment = LO_ALIGN_BASELINE;
+	java_app->objTag.border_width = JAVA_DEF_BORDER;
+	java_app->objTag.border_vert_space = JAVA_DEF_VERTICAL_SPACE;
+	java_app->objTag.border_horiz_space = JAVA_DEF_HORIZONTAL_SPACE;
 	
-	java_app->layer = NULL;
-	java_app->tag = tag;
+	java_app->objTag.layer = NULL;
+	java_app->objTag.tag = tag;
 
 	/*
 	 * Assign a unique index for this object 
 	 * and increment the master index.
 	 */
-	java_app->embed_index = state->top_state->embed_count++;
+	java_app->objTag.embed_index = state->top_state->embed_count++;
 
 	/*
 	 * Save away the base of the document
@@ -226,7 +236,7 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		PA_LOCK(cp, char*, buff);
 		XP_STRCPY(cp, state->top_state->base_url);
 		PA_UNLOCK(buff);
-		java_app->base_url = buff;
+		java_app->objTag.base_url = buff;
 	}
 	else
 	{
@@ -244,10 +254,10 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 
 		floating = FALSE;
 		PA_LOCK(str, char *, buff);
-		java_app->alignment = lo_EvalAlignParam(str, &floating);
+		java_app->objTag.alignment = lo_EvalAlignParam(str, &floating);
 		if (floating != FALSE)
 		{
-			java_app->ele_attrmask |= LO_ELE_FLOATING;
+			java_app->objTag.ele_attrmask |= LO_ELE_FLOATING;
 		}
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
@@ -354,12 +364,12 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		val = lo_ValueOrPercent(str, &is_percent);
 		if (is_percent != FALSE)
 		{
-			java_app->percent_width = val;
+			java_app->objTag.percent_width = val;
 		}
 		else
 		{
-			java_app->percent_width = 0;
-			java_app->width = val;
+			java_app->objTag.percent_width = 0;
+			java_app->objTag.width = val;
 			val = FEUNITS_X(val, context);
 		}
 		PA_UNLOCK(buff);
@@ -369,7 +379,7 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 	val = LO_GetWidthFromStyleSheet(context, state);
 	if(val)
 	{
-		java_app->width = val;
+		java_app->objTag.width = val;
 		widthSpecified = TRUE;
 	}
 
@@ -386,14 +396,14 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		val = lo_ValueOrPercent(str, &is_percent);
 		if (is_percent != FALSE)
 		{
-			java_app->percent_height = val;
+			java_app->objTag.percent_height = val;
 		}
 		else
 		{
-			java_app->percent_height = 0;
+			java_app->objTag.percent_height = 0;
 			val = FEUNITS_Y(val, context);
 		}
-		java_app->height = val;
+		java_app->objTag.height = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
 		heightSpecified = TRUE;
@@ -402,7 +412,7 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 	val = LO_GetHeightFromStyleSheet(context, state);
 	if(val)
 	{
-		java_app->height = val;
+		java_app->objTag.height = val;
 		heightSpecified = TRUE;
 	}
 
@@ -410,7 +420,7 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 	if (!widthSpecified) {
 		val = 0;
 		if (heightSpecified) {
-			val = java_app->height;
+			val = java_app->objTag.height;
 		}
 		else if (state->allow_percent_width) {
 			val = state->win_width * 90 / 100;
@@ -418,14 +428,14 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		if (val < 1) {
 			val = 600;
 		}
-		java_app->width = val;
+		java_app->objTag.width = val;
 	}
 	
 	/* If they forgot to specify a height, make one up. */
 	if (!heightSpecified) {
 		val = 0;
 		if (widthSpecified) {
-			val = java_app->width;
+			val = java_app->objTag.width;
 		}
 		else if (state->allow_percent_height) {
 			val = state->win_height / 2;
@@ -433,16 +443,16 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		if (val < 1) {
 			val = 400;
 		}
-		java_app->height = val;
+		java_app->objTag.height = val;
 	}
 
     /* After going through all the trouble, just to make sure
      * the object tag HIDDEN case is covered as well.
      */
-    if (java_app->ele_attrmask & LO_ELE_HIDDEN)
+    if (java_app->objTag.ele_attrmask & LO_ELE_HIDDEN)
     {
-        java_app->width = 0;
-        java_app->height = 0;
+        java_app->objTag.width = 0;
+        java_app->objTag.height = 0;
     }
 
 	/*
@@ -457,11 +467,11 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		{
 			val = 0;
 		}
-		java_app->border_width = val;
+		java_app->objTag.border_width = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
 	}
-	java_app->border_width = FEUNITS_X(java_app->border_width, context);
+	java_app->objTag.border_width = FEUNITS_X(java_app->objTag.border_width, context);
 
 	/*
 	 * Get the extra vertical space parameter.
@@ -475,11 +485,11 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		{
 			val = 0;
 		}
-		java_app->border_vert_space = val;
+		java_app->objTag.border_vert_space = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
 	}
-	java_app->border_vert_space = FEUNITS_Y(java_app->border_vert_space,
+	java_app->objTag.border_vert_space = FEUNITS_Y(java_app->objTag.border_vert_space,
 							context);
 
 	/*
@@ -494,11 +504,11 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		{
 			val = 0;
 		}
-		java_app->border_horiz_space = val;
+		java_app->objTag.border_horiz_space = val;
 		PA_UNLOCK(buff);
 		PA_FREE(buff);
 	}
-	java_app->border_horiz_space = FEUNITS_X(java_app->border_horiz_space,
+	java_app->objTag.border_horiz_space = FEUNITS_X(java_app->objTag.border_horiz_space,
 						context);
 
 	lo_FillInJavaAppGeometry(state, java_app, FALSE);
@@ -514,14 +524,14 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 		/*
 		 * If there is still valid data to restore available.
 		 */
-		if (java_app->embed_index < embed_list->embed_count)
+		if (java_app->objTag.embed_index < embed_list->embed_count)
 		{
 			lo_EmbedDataElement* embed_data_list;
 
 			PA_LOCK(embed_data_list, lo_EmbedDataElement*,
 				embed_list->embed_data_list);
-			java_app->session_data =
-				embed_data_list[java_app->embed_index].data;
+			java_app->objTag.session_data =
+				embed_data_list[java_app->objTag.embed_index].data;
 			PA_UNLOCK(embed_list->embed_data_list);
 		}
 	}
@@ -556,7 +566,7 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
         for (i = count-1; i >= 0; i--) {
             if (i == doc_lists->applet_list_count) {
                 /* Copy over the mocha object (it might not exist) */
-                java_app->mocha_object = cur_applet->mocha_object;
+                java_app->objTag.mocha_object = cur_applet->objTag.mocha_object;
 
                 java_app->nextApplet = cur_applet->nextApplet;
 
@@ -587,7 +597,7 @@ lo_FormatJavaAppInternal(MWContext *context, lo_DocState *state, PA_Tag *tag, LO
 	}
 }
 
-
+#ifdef JAVA
 void
 lo_FinishJavaApp(MWContext *context, lo_DocState *state,
 	LO_JavaAppStruct *java_app)
@@ -596,9 +606,9 @@ lo_FinishJavaApp(MWContext *context, lo_DocState *state,
 	int32 line_inc;
 	int32 java_app_height, java_app_width;
 
-	if ( java_app->layer == NULL )
+	if ( java_app->objTag.layer == NULL )
 		{
-		java_app->layer =
+		java_app->objTag.layer =
 		  lo_CreateEmbeddedObjectLayer(context, state, (LO_Element*)java_app);
 		}
 
@@ -609,35 +619,35 @@ lo_FinishJavaApp(MWContext *context, lo_DocState *state,
 		 * have dims here from either the image tag itself or the
 		 * front end.
 		 */
-		if (java_app->width == 0)
+		if (java_app->objTag.width == 0)
 		{
-			java_app->width = JAVA_DEF_DIM;
+			java_app->objTag.width = JAVA_DEF_DIM;
 		}
-		if (java_app->height == 0)
+		if (java_app->objTag.height == 0)
 		{
-			java_app->height = JAVA_DEF_DIM;
+			java_app->objTag.height = JAVA_DEF_DIM;
 		}
 	}
 
-	java_app_width = java_app->width + (2 * java_app->border_width) +
-		(2 * java_app->border_horiz_space);
-	java_app_height = java_app->height + (2 * java_app->border_width) +
-		(2 * java_app->border_vert_space);
+	java_app_width = java_app->objTag.width + (2 * java_app->objTag.border_width) +
+		(2 * java_app->objTag.border_horiz_space);
+	java_app_height = java_app->objTag.height + (2 * java_app->objTag.border_width) +
+		(2 * java_app->objTag.border_vert_space);
 
 	/*
 	 * SEVERE FLOW BREAK!  This may be a floating java_app,
 	 * which means at this point we go do something completely
 	 * different.
 	 */
-	if (java_app->ele_attrmask & LO_ELE_FLOATING)
+	if (java_app->objTag.ele_attrmask & LO_ELE_FLOATING)
 	{
-		java_app->x_offset += (int16)java_app->border_horiz_space;
-		java_app->y_offset += java_app->border_vert_space;
+		java_app->objTag.x_offset += (int16)java_app->objTag.border_horiz_space;
+		java_app->objTag.y_offset += java_app->objTag.border_vert_space;
 
 		/*
 		 * Insert this element into the float list.
 		 */
-		java_app->next = state->float_list;
+		java_app->objTag.next = state->float_list;
 		state->float_list = (LO_Element *)java_app;
 
 		lo_AppendFloatInLineList(state, (LO_Element*)java_app, NULL);
@@ -649,7 +659,7 @@ lo_FinishJavaApp(MWContext *context, lo_DocState *state,
 		 * the java side before we ever try to display
 		 * (which the following if might do).
 		 */
-		if (java_app->session_data == NULL && !EDT_IS_EDITOR( context ))
+		if (java_app->objTag.session_data == NULL && !EDT_IS_EDITOR( context ))
 		{
 			/*
 			 * This creates an applet in the java airspace,
@@ -680,8 +690,8 @@ lo_FinishJavaApp(MWContext *context, lo_DocState *state,
 		state->baseline = 0;
 	}
 
-	java_app->x_offset += (int16)java_app->border_horiz_space;
-	java_app->y_offset += java_app->border_vert_space;
+	java_app->objTag.x_offset += (int16)java_app->objTag.border_horiz_space;
+	java_app->objTag.y_offset += java_app->objTag.border_vert_space;
 
 	lo_LayoutInflowJavaApp(context, state, java_app, FALSE, &line_inc, &baseline_inc);
 
@@ -690,7 +700,7 @@ lo_FinishJavaApp(MWContext *context, lo_DocState *state,
 
 	lo_UpdateStateAfterJavaAppLayout(state, java_app, line_inc, baseline_inc);
 
-	if (java_app->session_data == NULL && !EDT_IS_EDITOR( context )) {
+	if (java_app->objTag.session_data == NULL && !EDT_IS_EDITOR( context )) {
 		/*
 		** This creates an applet in the java airspace, sends it the init
 		** message and sets up the session_data of the java_app structure:
@@ -708,16 +718,16 @@ lo_CloseJavaApp(MWContext *context, lo_DocState *state,
     ** Create the applet first (if there wasn't a saved one in the
     ** history).  That way we'll be able to remember reload method.
     */
-	if (java_app->session_data == NULL && !EDT_IS_EDITOR( context )) {
+	if (java_app->objTag.session_data == NULL && !EDT_IS_EDITOR( context )) {
 		/*
 		** This creates an applet in the java airspace, sends it the init
 		** message and sets up the session_data of the java_app structure:
 		*/
 		LJ_CreateApplet(java_app, context, state->top_state->force_reload);
 
-                lo_AddEmbedData(context, java_app->session_data, 
+                lo_AddEmbedData(context, java_app->objTag.session_data, 
                                 LJ_DeleteSessionData, 
-                                java_app->embed_index); 
+                                java_app->objTag.embed_index); 
 	}
 
 	/*
@@ -735,7 +745,7 @@ lo_CloseJavaApp(MWContext *context, lo_DocState *state,
      * is being commented out.
 	 */
     /*
-	if ((java_app->width == 0)||(java_app->height == 0))
+	if ((java_app->objTag.width == 0)||(java_app->objTag.height == 0))
 	{
 		state->top_state->layout_blocking_element =
 			(LO_Element *)java_app;
@@ -749,7 +759,7 @@ lo_CloseJavaApp(MWContext *context, lo_DocState *state,
 
 	state->current_java = NULL;
 }
-
+#endif /* JAVA */
 
 void
 lo_RelayoutJavaApp(MWContext *context, lo_DocState *state, PA_Tag *tag,
@@ -763,16 +773,16 @@ lo_RelayoutJavaApp(MWContext *context, lo_DocState *state, PA_Tag *tag,
 		return;
 	}
 
-	java_app->x = state->x;
-	java_app->x_offset = 0;
-	java_app->y = state->y;
-	java_app->y_offset = 0;
+	java_app->objTag.x = state->x;
+	java_app->objTag.x_offset = 0;
+	java_app->objTag.y = state->y;
+	java_app->objTag.y_offset = 0;
 
 	/*
 	 * Assign a unique index for this object 
 	 * and increment the master index.
 	 */
-	java_app->embed_index = state->top_state->embed_count++;
+	java_app->objTag.embed_index = state->top_state->embed_count++;
 
     /*
      * Since we saved the applet_list_count during table relayout,
@@ -795,10 +805,10 @@ lo_FillInJavaAppGeometry(lo_DocState *state,
 
 	if (relayout == TRUE)
 	{
-		java_app->ele_id = NEXT_ELEMENT;
+		java_app->objTag.ele_id = NEXT_ELEMENT;
 	}
-	java_app->x = state->x;
-	java_app->y = state->y;
+	java_app->objTag.x = state->x;
+	java_app->objTag.y = state->y;
 
 	doc_width = state->right_margin - state->left_margin;
 
@@ -807,27 +817,27 @@ lo_FillInJavaAppGeometry(lo_DocState *state,
 	 * If percentage, make it absolute.
 	 */
 
-	if (java_app->percent_width > 0) {
-		int32 val = java_app->percent_width;
+	if (java_app->objTag.percent_width > 0) {
+		int32 val = java_app->objTag.percent_width;
 		if (state->allow_percent_width == FALSE) {
 			val = 0;
 		}
 		else {
 			val = doc_width * val / 100;
 		}
-		java_app->width = val;
+		java_app->objTag.width = val;
 	}
 
-	/* Set java_app->height if java_app has a % height specified */
-	if (java_app->percent_height > 0) {
-		int32 val = java_app->percent_height;
+	/* Set java_app->objTag.height if java_app has a % height specified */
+	if (java_app->objTag.percent_height > 0) {
+		int32 val = java_app->objTag.percent_height;
 		if (state->allow_percent_height == FALSE) {
 			val = 0;
 		}
 		else {
 			val = state->win_height * val / 100;
 		}
-		java_app->height = val;
+		java_app->objTag.height = val;
 	}
 }
 
@@ -867,10 +877,10 @@ lo_LayoutInflowJavaApp(MWContext *context,
 	FE_GetTextInfo(context, &tmp_text, &text_info);
 	PA_FREE(buff);
 
-	java_app_width = java_app->width + (2 * java_app->border_width) +
-		(2 * java_app->border_horiz_space);
-	java_app_height = java_app->height + (2 * java_app->border_width) +
-		(2 * java_app->border_vert_space);
+	java_app_width = java_app->objTag.width + (2 * java_app->objTag.border_width) +
+		(2 * java_app->objTag.border_horiz_space);
+	java_app_height = java_app->objTag.height + (2 * java_app->objTag.border_width) +
+		(2 * java_app->objTag.border_vert_space);
 
 	/*
 	 * Will this java_app make the line too wide.
@@ -907,7 +917,7 @@ lo_LayoutInflowJavaApp(MWContext *context,
 		 * We need to make the elements sequential, linefeed
 		 * before java app.
 		 */
-		state->top_state->element_id = java_app->ele_id;		
+		state->top_state->element_id = java_app->objTag.ele_id;		
 
 		if (!inRelayout)
 		{
@@ -918,15 +928,15 @@ lo_LayoutInflowJavaApp(MWContext *context,
 			lo_rl_AddSoftBreakAndFlushLine(context, state);
 		}
 		
-		java_app->x = state->x;
-		java_app->y = state->y;
-		java_app->ele_id = NEXT_ELEMENT;
+		java_app->objTag.x = state->x;
+		java_app->objTag.y = state->y;
+		java_app->objTag.ele_id = NEXT_ELEMENT;
 	}
 
 
-	lo_CalcAlignOffsets(state, &text_info, java_app->alignment,
+	lo_CalcAlignOffsets(state, &text_info, java_app->objTag.alignment,
 						java_app_width, java_app_height,
-						&java_app->x_offset, &java_app->y_offset,
+						&java_app->objTag.x_offset, &java_app->objTag.y_offset,
 						line_inc, baseline_inc);
 }
 
@@ -938,29 +948,29 @@ lo_LayoutFloatJavaApp(MWContext *context,
 {
   int32 java_app_width;
 
-  java_app_width = (2 * java_app->border_width) +
-	(2 * java_app->border_horiz_space);
+  java_app_width = (2 * java_app->objTag.border_width) +
+	(2 * java_app->objTag.border_horiz_space);
 
-  if (java_app->alignment == LO_ALIGN_RIGHT)
+  if (java_app->objTag.alignment == LO_ALIGN_RIGHT)
 	{
-	  java_app->x = state->right_margin - java_app_width;
-	  if (java_app->x < 0)
+	  java_app->objTag.x = state->right_margin - java_app_width;
+	  if (java_app->objTag.x < 0)
 		{
-		  java_app->x = 0;
+		  java_app->objTag.x = 0;
 		}
 	}
   else
 	{
-	  java_app->x = state->left_margin;
+	  java_app->objTag.x = state->left_margin;
 	}
   
-  java_app->y = -1;
-  lo_AddMarginStack(state, java_app->x, java_app->y,
-					java_app->width, java_app->height,
-					java_app->border_width,
-					java_app->border_vert_space,
-					java_app->border_horiz_space,
-					java_app->alignment);
+  java_app->objTag.y = -1;
+  lo_AddMarginStack(state, java_app->objTag.x, java_app->objTag.y,
+					java_app->objTag.width, java_app->objTag.height,
+					java_app->objTag.border_width,
+					java_app->objTag.border_vert_space,
+					java_app->objTag.border_horiz_space,
+					java_app->objTag.alignment);
 
   if (state->at_begin_line != FALSE)
 	{
@@ -978,8 +988,8 @@ lo_UpdateStateAfterJavaAppLayout(lo_DocState *state,
   int32 java_app_width;
   int32 x, y;
 
-  java_app_width = java_app->width + (2 * java_app->border_width) +
-	(2 * java_app->border_horiz_space);
+  java_app_width = java_app->objTag.width + (2 * java_app->objTag.border_width) +
+	(2 * java_app->objTag.border_horiz_space);
 
   state->baseline += (intn) baseline_inc;
   state->line_height += (intn) (baseline_inc + line_inc);
@@ -987,17 +997,18 @@ lo_UpdateStateAfterJavaAppLayout(lo_DocState *state,
   /*
    * Clean up state
    */
-  state->x = state->x + java_app->x_offset +
-	java_app_width - java_app->border_horiz_space;
+  state->x = state->x + java_app->objTag.x_offset +
+	java_app_width - java_app->objTag.border_horiz_space;
   state->linefeed_state = 0;
   state->at_begin_line = FALSE;
   state->trailing_space = FALSE;
   state->cur_ele_type = LO_JAVA;
 
   /* Determine the new position of the layer. */
-  x = java_app->x + java_app->x_offset + java_app->border_width;
-  y = java_app->y + java_app->y_offset + java_app->border_width;
+  x = java_app->objTag.x + java_app->objTag.x_offset + java_app->objTag.border_width;
+  y = java_app->objTag.y + java_app->objTag.y_offset + java_app->objTag.border_width;
   
   /* Move layer to new position */
-  CL_MoveLayer(java_app->layer, x, y);
+  CL_MoveLayer(java_app->objTag.layer, x, y);
 }
+

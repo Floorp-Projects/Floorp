@@ -1685,7 +1685,7 @@ void lo_UpdateElementPosition ( lo_DocState * state, LO_Element * element )
 			break;
 			
 		case LO_EMBED:
-			CL_MoveLayer(element->lo_embed.layer,
+			CL_MoveLayer(element->lo_embed.objTag.layer,
                          element->lo_any.x, element->lo_any.y);
 			break;
 		}

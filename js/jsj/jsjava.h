@@ -70,7 +70,7 @@ typedef struct {
 PR_EXTERN(JSBool)
 JSJ_Init(JSJCallbacks *callbacks);
 
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 /* this is called by JSObject.initClass to initialize the default
  * glue if jsjava has been loaded into java.exe as a DLL.  it does
  * nothing if the client or server has already initialized us */
@@ -165,6 +165,6 @@ js_GetJSPrincipalsFromJavaCaller(JSContext *cx, int callerDepth);
 PR_EXTERN(void)
 jsj_ClearSavedErrors(JSContext *cx);
 
-#endif /* defined(JAVA) */
+#endif /* defined(JAVA) || defined(OJI) */
 
 #endif /* _jsjava_h_ */

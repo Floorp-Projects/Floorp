@@ -33,7 +33,9 @@
 #endif
 #include "layout.h"	/* XXX for lo_ContextToCell and lo_FormData */
 #include "libimg.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "pa_tags.h"
 #include "css.h"
 #include "pa_parse.h"

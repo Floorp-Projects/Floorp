@@ -20,7 +20,10 @@ IGNORE_MANIFEST=1
 # 
 
 DEPTH=..\..\..\.. 
-!ifdef MOZ_JAVA
+
+!include $(DEPTH)\config\config.mak
+
+!ifdef JAVA_OR_OJI
 DIRS=classes src 
 !else
 DIRS=src 

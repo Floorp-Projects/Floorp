@@ -32,7 +32,7 @@ OBJDIR_TAG	= _DBG
 endif
 
 # Name of the binary code directories
-OBJDIR_NAME	= $(OS_CONFIG)$(CPU_ARCH_TAG)$(COMPILER_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
+OBJDIR_NAME	= SunOS5.5.1_sparc_DBG.OBJ
 
 MKDEPEND_DIR    = $(DEPTH)/config/mkdepend
 MKDEPEND 	= $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend

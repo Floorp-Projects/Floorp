@@ -567,7 +567,7 @@ BEGIN
 	        MENUITEM SEPARATOR
 	    END
 	    MENUITEM "&History\tCtrl+H",                         ID_GO_HISTORY
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 	    MENUITEM "&Java Console",                   ID_OPTIONS_SHOWJAVACONSOLE
 #endif
         MENUITEM "&Security Info\tCtrl+Shift+I",    ID_SECURITY

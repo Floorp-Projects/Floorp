@@ -206,7 +206,7 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
 
     PR_LOG(Moja, debug, ("really reflect applet 0x%x\n", lo_applet));
 
-     obj = lo_applet->mocha_object;
+     obj = lo_applet->objTag.mocha_object;
      if (obj)
         return obj;
 
@@ -223,7 +223,7 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
                              LM_GET_MAPPING_KEY(LM_APPLETS, layer_id, index));
 
         if (obj) {
-            lo_applet->mocha_object = obj;
+            lo_applet->objTag.mocha_object = obj;
             return obj;
         }
     }
@@ -232,10 +232,10 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
     if (!JSJ_IsEnabled()) {
         PR_LOG(Moja, debug, ("reflected applet 0x%x as null\n",
                              lo_applet));
-        return lo_applet->mocha_object = lm_DummyObject;
+        return lo_applet->objTag.mocha_object = lm_DummyObject;
     }
 
-    ad = (LJAppletData *) lo_applet->session_data;
+    ad = (LJAppletData *) lo_applet->objTag.session_data;
 
     if (ad) {
         /* MozillaAppletContext.reflectApplet gets the java applet
@@ -268,7 +268,7 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
 
         if (obj)
 	    lm_java_clasp = JS_GetClass(obj);
-	return lo_applet->mocha_object = obj;
+	return lo_applet->objTag.mocha_object = obj;
     } else {
         PR_LOG(Moja, warn, ("failed to reflect applet 0x%x\n", lo_applet));
         return NULL;
@@ -288,7 +288,7 @@ LM_ReflectApplet(MWContext *context, LO_JavaAppStruct *applet_data,
     JSContext *cx;
     char *name;
 
-    obj = applet_data->mocha_object;
+    obj = applet_data->objTag.mocha_object;
     if (obj)
         return obj;
 
@@ -346,7 +346,7 @@ LM_ReflectApplet(MWContext *context, LO_JavaAppStruct *applet_data,
     }
 
     /* cache it in layout data structure XXX lm_ReallyReflectApplet did this */
-    XP_ASSERT(applet_data->mocha_object == obj);
+    XP_ASSERT(applet_data->objTag.mocha_object == obj);
 
   out:
     LM_PutMochaDecoder(decoder);

@@ -15,11 +15,13 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-ifndef MOZ_JAVA
+DEPTH	= ../../..
+
+include $(DEPTH)/config/config.mk
+
+ifndef JAVA_OR_OJI
 LOCAL_JMC_SUBDIR =  ../jmcgen/include
 endif
-
-DEPTH	= ../../..
 
 MODULE	= libfont
 

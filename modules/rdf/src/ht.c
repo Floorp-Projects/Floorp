@@ -2544,7 +2544,7 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 	}
 	else
 	{
-		if ((node = HT_GetNextSelection(pane->selectedView, NULL)) == NULL)
+		if (pane->selectedView == NULL || (node = HT_GetNextSelection(pane->selectedView, NULL)) == NULL)
 		{
 			return(false);
 		}

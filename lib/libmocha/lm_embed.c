@@ -192,7 +192,7 @@ lm_ReallyReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
     PRHashTable *map;
     PR_LOG(Moja, debug, ("really reflect embed 0x%x\n", lo_embed));
 
-    if ((obj = lo_embed->mocha_object) != NULL)
+    if ((obj = lo_embed->objTag.mocha_object) != NULL)
         return obj;
 
     decoder = LM_GetMochaDecoder(context);
@@ -208,7 +208,7 @@ lm_ReallyReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
             obj = (JSObject *)PR_HashTableLookup(map,
                              LM_GET_MAPPING_KEY(LM_EMBEDS, layer_id, index));
         if (obj) {
-            lo_embed->mocha_object = obj;
+            lo_embed->objTag.mocha_object = obj;
             return obj;
         }
     }
@@ -217,10 +217,10 @@ lm_ReallyReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
     if (!JSJ_IsEnabled()) {
         PR_LOG(Moja, debug, ("reflected embed 0x%x as null\n",
                              lo_embed));
-        return lo_embed->mocha_object = lm_DummyObject;
+        return lo_embed->objTag.mocha_object = lm_DummyObject;
     }
 
-    embed = (NPEmbeddedApp*) lo_embed->FE_Data;
+    embed = (NPEmbeddedApp*) lo_embed->objTag.FE_Data;
     if (embed) {
         np_data *ndata = (np_data*) embed->np_data;
         np_instance *instance;
@@ -249,7 +249,7 @@ lm_ReallyReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
                             LM_GET_MAPPING_KEY(LM_EMBEDS, layer_id, index),
                             obj);
 
-        return lo_embed->mocha_object = obj;
+        return lo_embed->objTag.mocha_object = obj;
     } else {
         PR_LOG(Moja, warn, ("failed to reflect embed 0x%x\n", lo_embed));
         return NULL;
@@ -267,7 +267,7 @@ LM_ReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
     char *name;
     int i;
 
-    obj = lo_embed->mocha_object;
+    obj = lo_embed->objTag.mocha_object;
     if (obj)
         return obj;
 
@@ -279,12 +279,21 @@ LM_ReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
 
     /* get the name */
     name = 0;
+#ifdef OJI
+    for (i = 0; i < lo_embed->attributes.n; i++) {
+        if (!XP_STRCASECMP(lo_embed->attributes.names[i], "name")) {
+            name = strdup(lo_embed->attributes.values[i]);
+            break;
+        }
+    }
+#else
     for (i = 0; i < lo_embed->attribute_cnt; i++) {
         if (!XP_STRCASECMP(lo_embed->attribute_list[i], "name")) {
             name = strdup(lo_embed->value_list[i]);
             break;
         }
     }
+#endif
 
     /* Get the document object that will hold this applet */
     document = lm_GetDocumentFromLayerId(decoder, layer_id);
@@ -324,7 +333,7 @@ LM_ReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
     }
 
     /* cache it in layout data structure */
-    lo_embed->mocha_object = obj;
+    lo_embed->objTag.mocha_object = obj;
 
 out:
     LM_PutMochaDecoder(decoder);

@@ -337,7 +337,8 @@ LINK_LIBS= \
     $(DIST)\lib\libplc21.lib \
     $(DIST)\lib\libmsgc21.lib \
 !endif
-!ifdef MOZ_JAVA
+!if defined(MOZ_OJI)
+!elseif defined(MOZ_JAVA)
     $(DIST)\lib\jrt32$(VERSION_NUMBER).lib \
 !else
     $(DIST)\lib\libsjs32.lib \
@@ -356,9 +357,12 @@ LINK_LIBS= \
 !ifdef MOZ_JAVA
     $(DIST)\lib\libapplet32.lib \
 !endif
+!ifdef MOZ_OJI
+    $(DIST)\lib\oji32.lib \
+!endif
     $(DIST)\lib\hook.lib \
 #!if defined(EDITOR)
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
     $(DIST)\lib\edtplug.lib \
 !endif
 #!endif
@@ -386,7 +390,7 @@ LINK_LIBS= \
     $(DIST)\lib\libnsc32.lib \
 !endif
     $(DIST)\lib\img32.lib \
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI      # XXX remove later
     $(DIST)\lib\jmc.lib \
 !endif
     $(DIST)\lib\font.lib \
@@ -414,7 +418,7 @@ LINK_LIBS= \
 !endif
 !endif
     $(DIST)\lib\unicvt32.lib \
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
     $(DIST)\lib\softup32.lib \
 !ifndef NO_SECURITY
     $(DIST)\lib\jsl32.lib \
@@ -560,7 +564,10 @@ CDISTINCLUDES1= \
     /I$(DIST)\include \
     /I$(XPDIST)\public\dbm \
     /I$(XPDIST)\public\java \
-!ifdef MOZ_JAVA
+!if defined(MOZ_OJI)
+    /I$(XPDIST)\public\oji \
+    /I$(XPDIST)\public\npj \
+!elseif defined(MOZ_JAVA)
     /I$(XPDIST)\public\applet \
     /I$(XPDIST)\public\softupdt \
 !endif
@@ -594,7 +601,7 @@ CDISTINCLUDES3= \
     /I$(XPDIST)\public\schedulr \
     /I$(XPDIST)\public\xpcom \
 #!ifdef EDITOR
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
     /I$(XPDIST)\public\edtplug \
 !endif
     /I$(XPDIST)\public\spellchk \
@@ -607,6 +614,7 @@ CDISTINCLUDES3= \
     /I$(DIST)\include \
     /I$(XPDIST)\public\img \
     /I$(XPDIST)\public\jtools \
+!else
 !endif
     /I$(XPDIST)\public \
     /I$(XPDIST)\public\coreincl \
@@ -640,7 +648,9 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 	/DNSPR20 \
 !endif
 !endif
-!if defined(MOZ_JAVA)
+!if defined(MOZ_OJI)
+    /DOJI \
+!elseif defined(MOZ_JAVA)
     /DJAVA \
 !endif
     /DMOZILLA_CLIENT
@@ -653,7 +663,9 @@ CDEFINES=$(CDEFINES) $(MOZ_LITENESS_FLAGS)
 # or the RC command line will be too long
 
 RCDEFINES=/DRESOURCE_STR /D_WINDOWS \
-!if defined(MOZ_JAVA)
+!if defined(MOZ_OJI)
+     /DOJI \
+!elseif defined(MOZ_JAVA)
      /DJAVA \
 !endif
 !if "$(MOZ_BITS)" == "32"
@@ -1068,7 +1080,7 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\modules\libimg\src\xbm.c
 	$(DEPTH)\modules\libimg\src\ipng.c
 	$(DEPTH)\modules\libimg\src\png_png.c
-!if defined(MOZ_JAVA)
+!if defined(JAVA_OR_OJI)        # XXX remove later
 	$(DEPTH)\sun-java\jtools\src\jmc.c
 !endif
 !endif
@@ -1553,6 +1565,16 @@ $(GENDIR)\config.rc:  $(DEPTH)\modules\libpref\src\init\config.js
 		$(GENDIR)\config.rc
 !endif
 
+!if defined(MOZ_OJI)
+JAVAPARENT_DIR = $(OUTDIR)\plugins
+JAVABIN_DIR = $(OUTDIR)\plugins\nsjvm
+JAVACLS_DIR = $(OUTDIR)\plugins\nsjvm
+!elseif defined(MOZ_JAVA)
+JAVAPARENT_DIR = $(OUTDIR)\java
+JAVABIN_DIR = $(OUTDIR)\java\bin
+JAVACLS_DIR = $(OUTDIR)\java\classes
+!endif
+
 #
 # Installation of the executable directory, support dlls and java
 #
@@ -1634,41 +1656,46 @@ install:    \
 !IF EXIST($(DIST)\bin\xpcom32.dll)
 	    $(OUTDIR)\xpcom32.dll    \
 !ENDIF
-!IF EXIST($(DIST)\bin\jrt32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\jrt32$(VERSION_NUMBER).dll    \
-!ENDIF
 !IF EXIST($(DIST)\bin\uni3200.dll)
 	    $(OUTDIR)\uni3200.dll    \
-!ENDIF
-!IF EXIST($(DIST)\bin\awt32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\awt32$(VERSION_NUMBER).dll   \
 !ENDIF
 !if defined(MOZ_TRACKGDI)
 !IF EXIST($(DIST)\bin\trackgdi.dll)
 	    $(OUTDIR)\trackgdi.dll   \
 !ENDIF
 !endif
+!if defined(JAVA_OR_OJI)
+!IF EXIST($(DIST)\bin\npj32$(VERSION_NUMBER).dll)
+	    $(JAVABIN_DIR)\npj32$(VERSION_NUMBER).dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\jrt32$(VERSION_NUMBER).dll)
+	    $(JAVABIN_DIR)\jrt32$(VERSION_NUMBER).dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\awt32$(VERSION_NUMBER).dll)
+ 	    $(JAVABIN_DIR)\awt32$(VERSION_NUMBER).dll   \
+!ENDIF
 !IF EXIST($(DIST)\bin\jbn32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\jbn32$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\jbn32$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\jdb32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\jdb32$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\jdb32$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\mm32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\mm32$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\mm32$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\jit32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\jit32$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\jit32$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\jpw32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\jpw32$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\jpw32$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\con32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\con32$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\con32$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\zpw32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\zpw32$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\zpw32$(VERSION_NUMBER).dll    \
 !ENDIF
+!endif  # JAVA_OR_OJI
 !IF EXIST($(DEPTH)\cmd\winfe\nstdfp32.dll)
 	    $(OUTDIR)\dynfonts\nstdfp32.dll    \
 !ENDIF
@@ -1686,29 +1713,32 @@ install:    \
 !ENDIF
 !endif
 !ELSE
-!IFDEF MOZ_JAVA
+!IFDEF JAVA_OR_OJI
+!IF EXIST($(DIST)\bin\npj16$(VERSION_NUMBER).dll)
+	    $(JAVABIN_DIR)\npj16$(VERSION_NUMBER).dll    \
+!ENDIF
 !IF EXIST($(DIST)\bin\jrt16$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\jrt16$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\jrt16$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\awt16$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\awt16$(VERSION_NUMBER).dll   \
+	    $(JAVABIN_DIR)\awt16$(VERSION_NUMBER).dll   \
 !ENDIF
 !IF EXIST($(DIST)\bin\jpw16$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\jpw16$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\jpw16$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\con16$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\con16$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\con16$(VERSION_NUMBER).dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\zpw16$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\java\bin\zpw16$(VERSION_NUMBER).dll    \
+	    $(JAVABIN_DIR)\zpw16$(VERSION_NUMBER).dll    \
 !ENDIF
 #!IF EXIST($(DIST)\bin\jbn16$(VERSION_NUMBER).dll)
-#           $(OUTDIR)\java\bin\jbn16$(VERSION_NUMBER).dll   \
+#           $(JAVABIN_DIR)\jbn16$(VERSION_NUMBER).dll   \
 #!ENDIF
 #!IF EXIST($(DIST)\bin\jdb16$(VERSION_NUMBER).dll)
-#           $(OUTDIR)\java\bin\jdb16$(VERSION_NUMBER).dll   \
+#           $(JAVABIN_DIR)\jdb16$(VERSION_NUMBER).dll   \
 #!ENDIF
-!ENDIF
+!ENDIF # JAVA_OR_OJI
 !ifndef NSPR20
 !IF EXIST($(DIST)\bin\pr16$(VERSION_NUMBER).dll)
 	    $(OUTDIR)\pr16$(VERSION_NUMBER).dll    \
@@ -1760,8 +1790,8 @@ install:    \
 !ENDIF
 !endif
 !ENDIF
-!if defined(MOZ_JAVA)
-	    $(OUTDIR)\java\classes\$(JAR_NAME) \
+!if defined(JAVA_OR_OJI)
+	    $(JAVACLS_DIR)\$(JAR_NAME) \
 !endif
 	    $(OUTDIR)\netscape.cfg  \
 !if defined(DEATH_TO_POLICY_FILES)
@@ -1830,7 +1860,7 @@ REBASE=rebase.exe
 !if exist(rebase.yes)
 !if [for %i in ($(OUTDIR)\*.dll) do $(QUIET)echo %i >> rebase.lst]
 !endif
-!if [for %i in ($(OUTDIR)\java\bin\*.dll) do $(QUIET)echo %i >> rebase.lst]
+!if [for %i in ($(JAVABIN_DIR)\*.dll) do $(QUIET)echo %i >> rebase.lst]
 !endif
 !if [for %i in ($(OUTDIR)\spellchk\*.dll) do $(QUIET)echo %i >> rebase.lst]
 !endif
@@ -1850,20 +1880,20 @@ rebase:
 !endif
 
 
-$(OUTDIR)\java\bin\jpw32$(VERSION_NUMBER).dll:   $(DIST)\bin\jpw32$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\jpw32$(VERSION_NUMBER).dll copy $(DIST)\bin\jpw32$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\jpw32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\jpw32$(VERSION_NUMBER).dll:   $(DIST)\bin\jpw32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\jpw32$(VERSION_NUMBER).dll copy $(DIST)\bin\jpw32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jpw32$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\con32$(VERSION_NUMBER).dll:   $(DIST)\bin\con32$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\con32$(VERSION_NUMBER).dll copy $(DIST)\bin\con32$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\con32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\con32$(VERSION_NUMBER).dll:   $(DIST)\bin\con32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\con32$(VERSION_NUMBER).dll copy $(DIST)\bin\con32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\con32$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\zpw32$(VERSION_NUMBER).dll:   $(DIST)\bin\zpw32$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\zpw32$(VERSION_NUMBER).dll copy $(DIST)\bin\zpw32$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\zpw32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\zpw32$(VERSION_NUMBER).dll:   $(DIST)\bin\zpw32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\zpw32$(VERSION_NUMBER).dll copy $(DIST)\bin\zpw32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\zpw32$(VERSION_NUMBER).dll
 
 
 !IF "$(MOZ_BITS)"=="32"
@@ -1905,8 +1935,15 @@ $(OUTDIR)\xpcom32.dll:   $(DIST)\bin\xpcom32.dll
 $(OUTDIR)\uni3200.dll:   $(DIST)\bin\uni3200.dll
     @IF EXIST $(DIST)\bin\uni3200.dll copy $(DIST)\bin\uni3200.dll $(OUTDIR)\uni3200.dll
 
-$(OUTDIR)\jrt32$(VERSION_NUMBER).dll:   $(DIST)\bin\jrt32$(VERSION_NUMBER).dll
-    @IF EXIST $(DIST)\bin\jrt32$(VERSION_NUMBER).dll copy $(DIST)\bin\jrt32$(VERSION_NUMBER).dll $(OUTDIR)\jrt32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\npj32$(VERSION_NUMBER).dll:   $(DIST)\bin\npj32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\npj32$(VERSION_NUMBER).dll copy $(DIST)\bin\npj32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\npj32$(VERSION_NUMBER).dll
+
+$(JAVABIN_DIR)\jrt32$(VERSION_NUMBER).dll:   $(DIST)\bin\jrt32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\jrt32$(VERSION_NUMBER).dll copy $(DIST)\bin\jrt32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jrt32$(VERSION_NUMBER).dll
 
 $(OUTDIR)\unicvt32.dll:   $(DIST)\bin\unicvt32.dll
     @IF EXIST $(DIST)\bin\unicvt32.dll copy $(DIST)\bin\unicvt32.dll $(OUTDIR)\unicvt32.dll
@@ -1920,35 +1957,35 @@ $(OUTDIR)\nsldap32.dll:   $(DIST)\bin\nsldap32.dll
     @IF EXIST $(DIST)\bin\nsldap32.dll copy $(DIST)\bin\nsldap32.dll $(OUTDIR)\nsldap32.dll
 !endif
 
-$(OUTDIR)\java\bin\awt32$(VERSION_NUMBER).dll:   $(DIST)\bin\awt32$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\awt32$(VERSION_NUMBER).dll copy $(DIST)\bin\awt32$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\awt32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\awt32$(VERSION_NUMBER).dll:   $(DIST)\bin\awt32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\awt32$(VERSION_NUMBER).dll copy $(DIST)\bin\awt32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\awt32$(VERSION_NUMBER).dll
 
 !if defined(MOZ_TRACKGDI)
 $(OUTDIR)\trackgdi.dll:   $(DIST)\bin\trackgdi.dll
     @IF EXIST $(DIST)\bin\trackgdi.dll copy $(DIST)\bin\trackgdi.dll $(OUTDIR)\trackgdi.dll
 !endif
 
-$(OUTDIR)\java\bin\jbn32$(VERSION_NUMBER).dll:   $(DIST)\bin\jbn32$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\jbn32$(VERSION_NUMBER).dll copy $(DIST)\bin\jbn32$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\jbn32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\jbn32$(VERSION_NUMBER).dll:   $(DIST)\bin\jbn32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\jbn32$(VERSION_NUMBER).dll copy $(DIST)\bin\jbn32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jbn32$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\jdb32$(VERSION_NUMBER).dll:   $(DIST)\bin\jdb32$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\jdb32$(VERSION_NUMBER).dll copy $(DIST)\bin\jdb32$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\jdb32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\jdb32$(VERSION_NUMBER).dll:   $(DIST)\bin\jdb32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\jdb32$(VERSION_NUMBER).dll copy $(DIST)\bin\jdb32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jdb32$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\mm32$(VERSION_NUMBER).dll:   $(DIST)\bin\mm32$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\mm32$(VERSION_NUMBER).dll copy $(DIST)\bin\mm32$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\mm32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\mm32$(VERSION_NUMBER).dll:   $(DIST)\bin\mm32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\mm32$(VERSION_NUMBER).dll copy $(DIST)\bin\mm32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\mm32$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\jit32$(VERSION_NUMBER).dll:   $(DIST)\bin\jit32$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\jit32$(VERSION_NUMBER).dll copy $(DIST)\bin\jit32$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\jit32$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\jit32$(VERSION_NUMBER).dll:   $(DIST)\bin\jit32$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\jit32$(VERSION_NUMBER).dll copy $(DIST)\bin\jit32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jit32$(VERSION_NUMBER).dll
 
 !ELSE
 !ifndef NSPR20
@@ -1995,28 +2032,35 @@ $(OUTDIR)\nsldap.dll:   $(DIST)\bin\nsldap.dll
     @IF EXIST $(DIST)\bin\nsldap.dll copy $(DIST)\bin\nsldap.dll $(OUTDIR)\nsldap.dll
 !endif
 
-$(OUTDIR)\jrt16$(VERSION_NUMBER).dll:   $(DIST)\bin\jrt16$(VERSION_NUMBER).dll
-    @IF EXIST $(DIST)\bin\jrt16$(VERSION_NUMBER).dll copy $(DIST)\bin\jrt16$(VERSION_NUMBER).dll $(OUTDIR)\jrt16$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\npj16$(VERSION_NUMBER).dll:   $(DIST)\bin\npj16$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\npj16$(VERSION_NUMBER).dll copy $(DIST)\bin\npj16$(VERSION_NUMBER).dll $(JAVABIN_DIR)\npj16$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\awt16$(VERSION_NUMBER).dll:   $(DIST)\bin\awt16$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\awt16$(VERSION_NUMBER).dll copy $(DIST)\bin\awt16$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\awt16$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\jrt16$(VERSION_NUMBER).dll:   $(DIST)\bin\jrt16$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\jrt16$(VERSION_NUMBER).dll copy $(DIST)\bin\jrt16$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jrt16$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\jpw16$(VERSION_NUMBER).dll:   $(DIST)\bin\jpw16$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\jpw16$(VERSION_NUMBER).dll copy $(DIST)\bin\jpw16$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\jpw16$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\awt16$(VERSION_NUMBER).dll:   $(DIST)\bin\awt16$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\awt16$(VERSION_NUMBER).dll copy $(DIST)\bin\awt16$(VERSION_NUMBER).dll $(JAVABIN_DIR)\awt16$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\con16$(VERSION_NUMBER).dll:   $(DIST)\bin\con16$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\con16$(VERSION_NUMBER).dll copy $(DIST)\bin\con16$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\con16$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\jpw16$(VERSION_NUMBER).dll:   $(DIST)\bin\jpw16$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\jpw16$(VERSION_NUMBER).dll copy $(DIST)\bin\jpw16$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jpw16$(VERSION_NUMBER).dll
 
-$(OUTDIR)\java\bin\zpw16$(VERSION_NUMBER).dll:   $(DIST)\bin\zpw16$(VERSION_NUMBER).dll
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\bin/$(NULL)" mkdir "$(OUTDIR)\java\bin"
-    @IF EXIST $(DIST)\bin\zpw16$(VERSION_NUMBER).dll copy $(DIST)\bin\zpw16$(VERSION_NUMBER).dll $(OUTDIR)\java\bin\zpw16$(VERSION_NUMBER).dll
+$(JAVABIN_DIR)\con16$(VERSION_NUMBER).dll:   $(DIST)\bin\con16$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\con16$(VERSION_NUMBER).dll copy $(DIST)\bin\con16$(VERSION_NUMBER).dll $(JAVABIN_DIR)\con16$(VERSION_NUMBER).dll
+
+$(JAVABIN_DIR)\zpw16$(VERSION_NUMBER).dll:   $(DIST)\bin\zpw16$(VERSION_NUMBER).dll
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
+    @IF EXIST $(DIST)\bin\zpw16$(VERSION_NUMBER).dll copy $(DIST)\bin\zpw16$(VERSION_NUMBER).dll $(JAVABIN_DIR)\zpw16$(VERSION_NUMBER).dll
 
 $(OUTDIR)\nsinit.exe: $(DIST)\bin\nsinit.exe
     @IF EXIST $(DIST)\bin\nsinit.exe copy $(DIST)\bin\nsinit.exe $(OUTDIR)\nsinit.exe
@@ -2025,16 +2069,16 @@ $(OUTDIR)\nsinit.exe: $(DIST)\bin\nsinit.exe
 
 
 # XXX this will copy them all, we really only want the ones that changed
-$(OUTDIR)\java\classes\$(JAR_NAME): $(JAVA_DESTPATH)\$(JAR_NAME)
-    @IF NOT EXIST "$(OUTDIR)\java/$(NULL)" mkdir "$(OUTDIR)\java"
-    @IF NOT EXIST "$(OUTDIR)\java\classes/$(NULL)" mkdir "$(OUTDIR)\java\classes"
-!ifdef MOZ_JAVA
+$(JAVACLS_DIR)\$(JAR_NAME): $(JAVA_DESTPATH)\$(JAR_NAME)
+    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVACLS_DIR)/$(NULL)" mkdir "$(JAVACLS_DIR)"
+!if defined(JAVA_OR_OJI)
 !ifdef MOZ_COPY_ALL_JARS
-    @copy $(JAVA_DESTPATH)\*.jar "$(OUTDIR)\java\classes\"
+    @copy $(JAVA_DESTPATH)\*.jar "$(JAVACLS_DIR)\"
 !else
-    @copy $(JAVA_DESTPATH)\java*.jar "$(OUTDIR)\java\classes\"
-    @copy $(JAVA_DESTPATH)\ifc*.jar "$(OUTDIR)\java\classes\"
-    @copy $(JAVA_DESTPATH)\jsj*.jar "$(OUTDIR)\java\classes\"
+    @copy $(JAVA_DESTPATH)\java*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\ifc*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\jsj*.jar "$(JAVACLS_DIR)\"
 !endif
 !endif
 
@@ -2238,7 +2282,7 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\li16.lib +
 	$(DIST)\lib\prgrss16.lib +
 !ifdef EDITOR
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
     $(DIST)\lib\edtplug.lib +
 !endif
 !endif
@@ -2249,7 +2293,7 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\libsjs16.lib +
     $(DIST)\lib\libnjs16.lib +
 !endif
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
 !ifndef NO_SECURITY
     $(DIST)\lib\jsl16.lib +
 !endif
@@ -2606,7 +2650,7 @@ exports:
     -xcopy $(XPDIST)\public\ldap\*.h $(EXPORTINC) $(XCF)
 !endif
 !ifdef EDITOR
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI
     -xcopy $(DEPTH)\modules\edtplug\include\*.h $(EXPORTINC) $(XCF)
 !endif
 !endif
@@ -2635,15 +2679,18 @@ exports:
     -xcopy $(XPDIST)\public\applet\*.h $(EXPORTINC) $(XCF)
     -xcopy $(XPDIST)\public\libreg\*.h $(EXPORTINC) $(XCF)
 !endif
+!if defined(MOZ_OJI)
+    -xcopy $(XPDIST)\public\oji\*.h $(EXPORTINC) $(XCF)
+!endif
     -xcopy $(XPDIST)\public\hook\*.h $(EXPORTINC) $(XCF)
     -xcopy $(XPDIST)\public\pref\*.h $(EXPORTINC) $(XCF)
-!if defined(MOZ_JAVA)
+!if defined(JAVA_OR_OJI)
     -xcopy $(XPDIST)\public\edtplug\*.h $(EXPORTINC) $(XCF)
 !endif
     -xcopy $(XPDIST)\public\htmldlgs\*.h $(EXPORTINC) $(XCF)
     -xcopy $(XPDIST)\public\softupdt\*.h $(EXPORTINC) $(XCF)
     -xcopy $(XPDIST)\public\li\*.h $(EXPORTINC) $(XCF)
-!if defined(MOZ_JAVA)
+!if defined(JAVA_OR_OJI)
     -xcopy $(XPDIST)\public\progress\*.h $(EXPORTINC) $(XCF)
 !endif
     -xcopy $(XPDIST)\public\schedulr\*.h $(EXPORTINC) $(XCF)
@@ -2675,8 +2722,8 @@ symbols:
 ns.zip:
 	cd $(OUTDIR)
 	zip -9rpu ns.zip		\
-!if defined(MOZ_JAVA)
 		mozilla.exe		\
+!if defined(JAVA_OR_OJI)
 		java/bin/awt3240.dll	\
 		java/bin/jbn3240.dll	\
 		java/bin/jdb3240.dll	\
@@ -2691,6 +2738,7 @@ ns.zip:
 		java/classes/jsd10.jar	\
 		java/classes/ldap10.jar	\
 		java/classes/scd10.jar	\
+		npj3240.dll		\
 		jrt3240.dll		\
 		jsd3240.dll		\
 !endif

@@ -31,6 +31,8 @@
 
 #define ISFUNCPTR(x) (x != NULL)
 
+#define PLUGIN_TIMER_EVENT
+
 typedef struct _np_handle np_handle;
 typedef struct _np_mimetype np_mimetype;
 typedef struct _np_instance np_instance;
@@ -69,7 +71,6 @@ struct _np_handle {
     char *name;
     char *filename;
     char *description;
-    XP_Bool usesNewAPI;
     struct NPIPlugin* userPlugin;
 };
 
@@ -100,6 +101,12 @@ struct _np_instance {
     XP_Bool transparent;        /* TRUE = transparent, FALSE = opaque */
 	XP_Bool calling_netlib_all_the_time;
 	JRIGlobalRef mochaWindow;
+
+#ifdef PLUGIN_TIMER_EVENT
+	void* timeout;
+	uint32 interval;
+#endif
+	
 #ifdef LAYERS
     CL_Layer *layer;
 #endif /* LAYERS */

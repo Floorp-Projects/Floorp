@@ -205,5 +205,32 @@ CONFIG_OBJ_INC=1
         $(CURDIR)$(*B).c
 <<KEEP
 
+.cpp.i:
+    @$(CC) @<<$(CFGFILE)
+        /P -c 
+        $(OPTIMIZER)
+        $(CFLAGS) 
+        $(LCFLAGS)
+        $(LINCS) 
+        $(LINCS_1) 
+        $(INCS)
+        -Fd$(PDBFILE)
+        $(CURDIR)$(*B).cpp
+<<KEEP
+
+.cpp{.\$(OBJDIR)\}.i:
+    @$(CC) @<<$(CFGFILE)
+        /P -c 
+        $(OPTIMIZER)
+        $(CFLAGS) 
+        $(LCFLAGS)
+        $(LINCS) 
+        $(LINCS_1) 
+        $(INCS)
+        -Fd$(PDBFILE)
+        -Fo.\$(OBJDIR)\
+        $(CURDIR)$(*B).cpp
+<<KEEP
+
 
 !endif # CONFIG_OBJ_INC

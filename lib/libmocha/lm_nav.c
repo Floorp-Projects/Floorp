@@ -22,7 +22,9 @@
  */
 #include "lm.h"
 #include "prmem.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "gui.h"
 #include "prefapi.h"
 #include "msgcom.h"

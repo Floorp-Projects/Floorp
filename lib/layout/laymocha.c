@@ -627,7 +627,7 @@ LO_EnumerateApplets(MWContext *context, int32 layer_id)
     /* reflect all applets in reverse order */
     applet = doc_lists->applet_list;
     for (index = count-1; index >= 0; index--) {
-        if (applet->mocha_object == NULL)
+        if (applet->objTag.mocha_object == NULL)
 	    LM_ReflectApplet(context, (void *) applet, NULL, layer_id, index);
         applet = applet->nextApplet;
     }
@@ -704,7 +704,7 @@ LO_EnumerateEmbeds(MWContext *context, int32 layer_id)
     /* reflect all embeds in reverse order */
     embed = doc_lists->embed_list;
     for (index = count-1; index >= 0; index--) {
-	if (embed->mocha_object == NULL)
+	if (embed->objTag.mocha_object == NULL)
         	LM_ReflectEmbed(context, (void *) embed, NULL, layer_id, index);
         embed = embed->nextEmbed;
     }

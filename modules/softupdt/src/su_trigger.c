@@ -147,7 +147,11 @@ native_netscape_softupdate_SoftwareUpdate_VerifyJSObject(JRIEnv* env,
 	*/
 	JSObject * jsobj;
 	JSClass * jsclass;
+#ifdef OJI      // XXX hack
+    jsobj = NULL;
+#else
 	jsobj = JSJ_ExtractInternalJSObject(env, (HObject*)a);
+#endif
 	jsclass = JS_GetClass(jsobj);
 	if ( jsclass != &lm_softup_class )
 	{
@@ -422,7 +426,11 @@ native_netscape_softupdate_SoftwareUpdate_getCertificates(JRIEnv* env,
 	if (!pathname)
 		return NULL;
 
+#ifdef OJI      // XXX hack
+    return NULL;
+#else
 	return LJ_GetCertificates(env, (void *)zigPtr, pathname);
+#endif
 }
 
 #ifdef XP_MAC

@@ -26,7 +26,9 @@
 
 #include "layers.h"
 
+#ifdef JAVA
 #include "mozjava.h"
+#endif
 
 #include "libmocha.h"
 #include "libevent.h"

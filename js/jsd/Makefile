@@ -24,6 +24,13 @@ LIBRARY_NAME	= jsd
 
 # Switching on MOZ_JAVA is a short-term hack. This is really for no Java/IFC
 ifdef MOZ_JAVA
+JAVA_OR_OJI = 1
+endif
+ifdef MOZ_OJI
+JAVA_OR_OJI = 1
+endif
+
+ifdef JAVA_OR_OJI
 DIRS		= classes
 endif
 

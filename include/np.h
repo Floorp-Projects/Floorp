@@ -18,7 +18,7 @@
 
 
 /*
- *  np.h $Revision: 3.1 $
+ *  np.h $Revision: 3.2 $
  *  Prototypes for functions exported by libplugin and called by the FEs or other XP libs.
  *  Prototypes for functions exported by the FEs and called by libplugin are in nppg.h.
  */
@@ -103,7 +103,7 @@ extern void				NPL_SamePage(MWContext *context);
 extern void 			NPL_SameElement(LO_EmbedStruct *embed);
 extern void				NPL_DeleteSessionData(MWContext* context, void* sessionData);
 extern XP_Bool 			NPL_HandleURL(MWContext *pContext, FO_Present_Types iFormatOut, URL_Struct *pURL,
-								Net_GetUrlExitFunc *pExitFunc);
+                                              Net_GetUrlExitFunc *pExitFunc);
 #ifndef XP_MAC								
 extern void				NPL_DisplayPluginsAsHTML(FO_Present_Types format_out, URL_Struct *urls, MWContext *cx);
 #endif
@@ -125,6 +125,7 @@ extern NPError			NPL_RegisterAppletType(NPMIMEType type);
 #endif /* ANTHRAX */
 
 PR_EXTERN(void)         NPL_SetPluginWindow(void *data);
+PR_EXTERN(struct NPIPlugin*) NPL_LoadPluginByType(const char* typeAttribute);
 
 XP_END_PROTOS
 

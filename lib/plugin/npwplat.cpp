@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -37,7 +37,9 @@
 #include "plgindll.h"
 #include "np.h"
 #include "helper.h"
+#ifdef JAVA
 #include "java.h"
+#endif
 #include "edt.h"
 #include "npglue.h"
 
@@ -446,10 +448,27 @@ void fe_RegisterPlugins(char* pszPluginDir)
     CString csPluginSpec;
     csPluginSpec = pszPluginDir; 
 
-#ifdef JAVA
     // add directory to the java path no matter what
+#if defined(xOJI)       // XXX not yet -- ordering problem here between loading the vm and adding to the classpath
+    JVMMgr* jvmMgr = JVM_GetJVMMgr();
+    if (jvmMgr) {
+        NPIJVMPlugin* jvm = jvmMgr->GetJVM();
+        if (jvm) {
+            jvm->AddToClassPath(pszPluginDir);
+        }
+        jvmMgr->Release();
+    }
+#elif defined(JAVA)
     LJ_AddToClassPath(pszPluginDir);
 #endif
+
+    if (thePluginManager == NULL) {
+        static NS_DEFINE_IID(kIPluginManagerIID, NP_IPLUGINMANAGER_IID);
+        nsresult rslt = nsPluginManager::Create(NULL, kIPluginManagerIID, (void**)&thePluginManager);
+        // XXX Out of memory already? This function should return an error code!
+        PR_ASSERT(rslt == NS_OK);
+        // keep going anyway...
+    }
 
     csPluginSpec += "\\*.*"; 
 
@@ -616,7 +635,17 @@ NPPluginFuncs* FE_LoadPlugin(void* pluginType, NPNetscapeFuncs* pNavigatorFuncs,
     NPPMgtBlk* pNPMgtBlock = (NPPMgtBlk*)pluginType;
 
     CString csPluginDir;
+#ifdef OJI
+    char* szExplicitDLL = strrchr(pNPMgtBlock->pPluginFilename, '\\');
+    if( szExplicitDLL ) {
+        csPluginDir = pNPMgtBlock->pPluginFilename; // MFC copies the string
+        csPluginDir.SetAt( szExplicitDLL - pNPMgtBlock->pPluginFilename, '\0');
+    } else {
+        wfe_GetPluginsDirectory(csPluginDir);
+    }
+#else
     wfe_GetPluginsDirectory(csPluginDir);
+#endif /* OJI */
 
     LPSTR pPathSave = NULL;   // storage for one dir spec
 
@@ -649,11 +678,7 @@ NPPluginFuncs* FE_LoadPlugin(void* pluginType, NPNetscapeFuncs* pNavigatorFuncs,
         (NP_CREATEPLUGIN)PR_FindSymbol(pNPMgtBlock->pLibrary, "NP_CreatePlugin");
 #endif
     if (npCreatePlugin != NULL) {
-        if (thePluginManager == NULL) {
-            static NS_DEFINE_IID(kIPluginManagerIID, NP_IPLUGINMANAGER_IID);
-            if (nsPluginManager::Create(NULL, kIPluginManagerIID, (void**)&thePluginManager) != NS_OK)
-                return NULL;
-        }
+        PR_ASSERT(thePluginManager != NULL);
         NPIPlugin* plugin = NULL;
         NPPluginError err = npCreatePlugin(thePluginManager, &plugin);
         handle->userPlugin = plugin;
@@ -775,7 +800,8 @@ void FE_UnloadPlugin(void* pluginType, struct _np_handle* handle)
     // if this DLL is the last one, call its shutdown entry point
     if (pNPMgtBlk->uRefCount == 0) {
         if (handle->userPlugin) {
-            handle->userPlugin->Release();
+            nsrefcnt cnt = handle->userPlugin->Release();
+            PR_ASSERT(cnt == 0);
         }
         else {
             // the NP_Shutdown entry point was misnamed as NP_PluginShutdown, early
@@ -803,8 +829,6 @@ void FE_UnloadPlugin(void* pluginType, struct _np_handle* handle)
             }
         }
     }
-
-    // XXX Shouldn't the rest of this be inside the if statement, above?...
 
     PR_UnloadLibrary(pNPMgtBlk->pLibrary);
     pNPMgtBlk->pLibrary = NULL;

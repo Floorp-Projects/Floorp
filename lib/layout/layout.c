@@ -7585,8 +7585,8 @@ void lo_UpdateStateWhileFlushingLine( MWContext *context, lo_DocState *state )
 		    break;
 #ifdef JAVA
 		  case LO_JAVA:
-		    layer = tptr->lo_java.layer;
-		    border_width = tptr->lo_java.border_width;
+		    layer = tptr->lo_java.objTag.layer;
+		    border_width = tptr->lo_java.objTag.border_width;
 		    break;
 #endif
 #ifdef SHACK
@@ -7596,8 +7596,8 @@ void lo_UpdateStateWhileFlushingLine( MWContext *context, lo_DocState *state )
 		    break;
 #endif
 		  case LO_EMBED:
-		    layer = tptr->lo_embed.layer;
-		    border_width = tptr->lo_embed.border_width;
+		    layer = tptr->lo_embed.objTag.layer;
+		    border_width = tptr->lo_embed.objTag.border_width;
 		    break;
 		  case LO_FORM_ELE:
 		    layer = tptr->lo_form.layer;

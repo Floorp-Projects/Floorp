@@ -15,12 +15,14 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-ifndef MOZ_JAVA
+DEPTH		= ../../..
+
+include $(DEPTH)/config/config.mk
+
+ifndef JAVA_OR_OJI
 LOCAL_JMC_SUBDIR =  ../jmcgen/include
 LOCAL_JMC_SRC_SUBDIR =  ../jmcgen/src
 endif
-
-DEPTH		= ../../..
 
 MODULE		= libfont
 LIBRARY_NAME	= font
@@ -62,7 +64,7 @@ SDK_TARGET	= producer-sdk
 SDK_NAME	= FontProducer-sdk-v1.0
 SDK_DIR		= $(OBJDIR)/$(SDK_TARGET)
 
-ifndef MOZ_JAVA
+ifndef JAVA_OR_OJI
 export:: 
 	@echo "Copying JMC src files from $(LOCAL_JMC_SRC_SUBDIR)/*.c to cwd"
 	@for FILE in $(LOCAL_JMC_SRC_SUBDIR)/*.c ;\

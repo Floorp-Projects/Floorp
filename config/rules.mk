@@ -155,7 +155,7 @@ ifndef PACKAGE
 PACKAGE			= .
 endif
 
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) $(JDK_HEADER_CFILES) $(JDK_STUB_CFILES) \
 			  $(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
@@ -170,13 +170,13 @@ ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
 			  _gen _stubs $(wildcard gts_tmp_*)
 endif
 
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 ifdef JDIRS
 ALL_TRASH		+= $(addprefix $(JAVA_DESTPATH)/,$(JDIRS))
 endif
 endif
 
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 JMC_SUBDIR              = _jmc
 else
 JMC_SUBDIR              = $(LOCAL_JMC_SUBDIR)
@@ -435,7 +435,7 @@ $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE) $(JMCSRCDIR)::
 ### JSRCS -- for compiling java files
 
 ifneq ($(JSRCS),)
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 	list=`$(PERL) $(DEPTH)/config/outofdate.pl $(PERLARG)	\
 		    -d $(JAVA_DESTPATH)/$(PACKAGE) $(JSRCS)`;	\
@@ -460,7 +460,7 @@ endif
 # some builds to run out of memory
 #
 ifdef JDIRS
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 	@for d in $(JDIRS); do							\
 		if test -d $$d; then						\
@@ -488,7 +488,7 @@ endif
 # Generate JDK Headers and Stubs into the '_gen' and '_stubs' directory
 #
 ifneq ($(JDK_GEN),)
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 ifdef NSBUILDROOT
 INCLUDES		+= -I$(JDK_GEN_DIR) -I$(XPDIST)
 else
@@ -520,7 +520,7 @@ ifdef MOZ_GENMAC
 	@echo Generating/Updating JDK stubs for the Mac
 	$(JAVAH) -mac -stubs -d $(DEPTH)/lib/mac/Java/_stubs $(JDK_PACKAGE_CLASSES)
 endif
-endif # MOZ_JAVA
+endif # JAVA_OR_OJI
 endif
 
 #
@@ -529,7 +529,7 @@ endif
 # Generate JRI Headers and Stubs into the 'jri' directory
 #
 ifneq ($(JRI_GEN),)
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 ifdef NSBUILDROOT
 INCLUDES		+= -I$(JRI_GEN_DIR) -I$(XPDIST)
 else
@@ -561,14 +561,14 @@ ifdef MOZ_GENMAC
 	@echo Generating/Updating JRI stubs for the Mac
 	$(JAVAH) -jri -mac -stubs -d $(DEPTH)/lib/mac/Java/_jri $(JRI_PACKAGE_CLASSES)
 endif
-endif # MOZ_JAVA
+endif # JAVA_OR_OJI
 endif
 
 #
 # JMC_EXPORT -- for declaring which java classes are to be exported for jmc
 #
 ifneq ($(JMC_EXPORT),)
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 JMC_EXPORT_PATHS	= $(subst .,/,$(JMC_EXPORT))
 JMC_EXPORT_FILES	= $(patsubst %,$(JAVA_DESTPATH)/$(PACKAGE)/%.class,$(JMC_EXPORT_PATHS))
 
@@ -579,7 +579,7 @@ JMC_EXPORT_FILES	= $(patsubst %,$(JAVA_DESTPATH)/$(PACKAGE)/%.class,$(JMC_EXPORT
 #
 export:: $(JMC_EXPORT_FILES) $(JMCSRCDIR)
 	$(NSINSTALL) -t -m 444 $(JMC_EXPORT_FILES) $(JMCSRCDIR)
-endif # MOZ_JAVA
+endif # JAVA_OR_OJI
 endif
 
 #
@@ -589,7 +589,7 @@ endif
 #
 ifneq ($(JMC_GEN),)
 INCLUDES		+= -I$(JMC_GEN_DIR) -I.
-ifdef MOZ_JAVA
+ifdef JAVA_OR_OJI
 JMC_HEADERS		= $(patsubst %,$(JMC_GEN_DIR)/%.h,$(JMC_GEN))
 JMC_STUBS		= $(patsubst %,$(JMC_GEN_DIR)/%.c,$(JMC_GEN))
 JMC_OBJS		= $(patsubst %,$(OBJDIR)/%.o,$(JMC_GEN))
@@ -609,7 +609,7 @@ else
 endif
 
 export:: $(JMC_HEADERS) $(JMC_STUBS)
-endif # MOZ_JAVA
+endif # JAVA_OR_OJI
 endif
 
 #
