@@ -58,6 +58,7 @@ REQUIRES = 	\
 		dom \
 		content \
 		widget \
+		autocomplete \
 		$(NULL)
 
 XPIDLSRCS	= nsIPassword.idl
