@@ -42,12 +42,16 @@ class nsIURI;
 class nsClassList {
 public:
     nsClassList(nsIAtom* aAtom)
-        : mAtom(aAtom), mNext(nsnull) {}
+        : mAtom(aAtom), mNext(nsnull)
+    {
+        MOZ_COUNT_CTOR(nsClassList);
+    }
 
 
     nsClassList(const nsClassList& aCopy)
         : mAtom(aCopy.mAtom), mNext(nsnull)
     {
+        MOZ_COUNT_CTOR(nsClassList);
         if (aCopy.mNext) mNext = new nsClassList(*(aCopy.mNext));
     }
 
@@ -67,6 +71,7 @@ public:
 
     ~nsClassList(void)
     {
+        MOZ_COUNT_DTOR(nsClassList);
         delete mNext;
     }
 
