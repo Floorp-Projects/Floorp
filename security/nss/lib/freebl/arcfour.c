@@ -51,8 +51,11 @@
 #define CONVERT_TO_WORDS
 #endif
 
-#if defined(AIX) || defined(OSF1)
-/* Treat array variables as longs, not bytes */
+#if defined(AIX) || defined(OSF1) || defined(NSS_BEVAND_ARCFOUR)
+/* Treat array variables as longs, not bytes, on CPUs that take 
+ * much longer to write bytes than to write longs, or when using 
+ * assembler code that required it.
+ */
 #define USE_LONG
 #endif
 
@@ -88,9 +91,15 @@ typedef PRUint8 Stype;
  */
 struct RC4ContextStr
 {
+#if defined(NSS_ARCFOUR_IJ_B4_S) || defined(NSS_BEVAND_ARCFOUR)
+	Stype i;
+	Stype j;
 	Stype S[ARCFOUR_STATE_SIZE];
-	PRUint8 i;
-	PRUint8 j;
+#else
+	Stype S[ARCFOUR_STATE_SIZE];
+	Stype i;
+	Stype j;
+#endif
 };
 
 /*
@@ -186,6 +195,10 @@ RC4_DestroyContext(RC4Context *cx, PRBool freeit)
 		PORT_ZFree(cx, sizeof(*cx));
 }
 
+#if defined(NSS_BEVAND_ARCFOUR)
+extern void ARCFOUR(RC4Context *cx, unsigned long inputLen, 
+	const unsigned char *input, unsigned char *output);
+#else
 /*
  * Generate the next byte in the stream.
  */
@@ -199,7 +212,7 @@ RC4_DestroyContext(RC4Context *cx, PRBool freeit)
 
 #ifdef CONVERT_TO_WORDS
 /*
- * Straight RC4 op.  No optimization.
+ * Straight ARCFOUR op.  No optimization.
  */
 static SECStatus 
 rc4_no_opt(RC4Context *cx, unsigned char *output,
@@ -231,7 +244,7 @@ rc4_no_opt(RC4Context *cx, unsigned char *output,
 
 #ifndef CONVERT_TO_WORDS
 /*
- * Byte-at-a-time RC4, unrolling the loop into 8 pieces.
+ * Byte-at-a-time ARCFOUR, unrolling the loop into 8 pieces.
  */
 static SECStatus 
 rc4_unrolled(RC4Context *cx, unsigned char *output,
@@ -554,6 +567,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 	return SECSuccess;
 }
 #endif
+#endif /* NSS_BEVAND_ARCFOUR */
 
 SECStatus 
 RC4_Encrypt(RC4Context *cx, unsigned char *output,
@@ -565,7 +579,11 @@ RC4_Encrypt(RC4Context *cx, unsigned char *output,
 		PORT_SetError(SEC_ERROR_INVALID_ARGS);
 		return SECFailure;
 	}
-#ifdef CONVERT_TO_WORDS
+#if defined(NSS_BEVAND_ARCFOUR)
+	ARCFOUR(cx, inputLen, input, output);
+        *outputLen = inputLen;
+	return SECSuccess;
+#elif defined( CONVERT_TO_WORDS )
 	/* Convert the byte-stream to a word-stream */
 	return rc4_wordconv(cx, output, outputLen, maxOutputLen, input, inputLen);
 #else
@@ -584,7 +602,11 @@ SECStatus RC4_Decrypt(RC4Context *cx, unsigned char *output,
 		return SECFailure;
 	}
 	/* decrypt and encrypt are same operation. */
-#ifdef CONVERT_TO_WORDS
+#if defined(NSS_BEVAND_ARCFOUR)
+	ARCFOUR(cx, inputLen, input, output);
+        *outputLen = inputLen;
+	return SECSuccess;
+#elif defined( CONVERT_TO_WORDS )
 	/* Convert the byte-stream to a word-stream */
 	return rc4_wordconv(cx, output, outputLen, maxOutputLen, input, inputLen);
 #else
