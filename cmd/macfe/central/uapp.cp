@@ -1662,7 +1662,7 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 	SplashProgress( GetPString(MAC_PROGRESS_ADDRESS) );
 	CAddressBookManager::OpenAddressBookManager();
 #endif // MOZ_MAIL_NEWS
-//	NET_FinishInitNetLib();
+	NET_FinishInitNetLib();			// This was commented out - anyone know why?
 	if (agreedToLicense)
 		CreateStartupEnvironment(! gotPrefsFile);
 	
