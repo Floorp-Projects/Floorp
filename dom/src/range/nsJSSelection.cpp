@@ -32,6 +32,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMSelectionListener.h"
+#include "nsIEnumerator.h"
 #include "nsIDOMRange.h"
 
 
@@ -41,11 +42,13 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kISelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kISelectionListenerIID, NS_IDOMSELECTIONLISTENER_IID);
+static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 
 NS_DEF_PTR(nsIDOMSelection);
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMSelectionListener);
+NS_DEF_PTR(nsIEnumerator);
 NS_DEF_PTR(nsIDOMRange);
 
 //
