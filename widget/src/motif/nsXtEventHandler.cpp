@@ -32,8 +32,6 @@
 
 #define DBG 0
 
-extern XtAppContext gAppContext;
-
 struct nsKeyConverter {
   int vkCode; // Platform independent key code
   XID keysym; // X keysym key code

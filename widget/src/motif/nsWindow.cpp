@@ -27,6 +27,7 @@
 #include "nsGfxCIID.h"
 
 #include "nsXtEventHandler.h"
+#include "nsAppShell.h"
 
 #include "X11/Xlib.h"
 #include "Xm/Xm.h"
@@ -48,12 +49,12 @@
 
 Widget gFirstTopLevelWindow = 0; //XXX: REMOVE Kludge should not be needed.
 
-extern XtAppContext gAppContext;
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 NS_IMPL_ADDREF(nsWindow)
 NS_IMPL_RELEASE(nsWindow)
 
+extern XtAppContext gAppContext;
 
 //-------------------------------------------------------------------------
 //
@@ -261,6 +262,7 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
   
   // save the event callback function
   mEventCallback = aHandleEventFunction;
+printf("************* CreateMainWindow 0x%x\n", mEventCallback);
 
   InitDeviceContext(aContext, 
                     (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL));
@@ -337,6 +339,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
   
   // save the event callback function
   mEventCallback = aHandleEventFunction;
+printf("************* CreateChildWindow 0x%x\n", mEventCallback);
   
   InitDeviceContext(aContext, (Widget)aNativeParent);
 
@@ -684,6 +687,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 a
   mBounds.height = aHeight;
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
                         XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+printf("After nsWindow::Resize\n");
   return NS_OK;
 }
 
@@ -726,7 +730,12 @@ NS_METHOD nsWindow::SetFocus(void)
 //-------------------------------------------------------------------------
 void nsWindow::SetBounds(const nsRect &aRect)
 {
-  Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_TRUE);
+  mBounds.x      = aRect.x;
+  mBounds.y      = aRect.y;
+  mBounds.width  = aRect.width;
+  mBounds.height = aRect.height;
+printf("SetBounds\n");
+  //Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_TRUE);
 }
 
 //-------------------------------------------------------------------------
@@ -1231,7 +1240,9 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 
   aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {
+printf("Before Dispatch 0x%x\n", mEventCallback);
     aStatus = (*mEventCallback)(event);
+printf("After Dispatch\n");
   } 
 
   // Dispatch to event listener if event was not consumed
@@ -1514,15 +1525,18 @@ void nsWindow_Refresh_Callback(XtPointer call_data)
 
     widgetWindow->SetBounds(bounds); 
     widgetWindow->OnResize(event);
-
+printf("nsWindow_ResetResize_Callback 1\n");
     nsPaintEvent pevent;
     pevent.message = NS_PAINT;
     pevent.widget = widgetWindow;
     pevent.time = 0;
     pevent.rect = (nsRect *)&bounds;
+printf("nsWindow_ResetResize_Callback 2\n");
     widgetWindow->OnPaint(pevent);
+printf("nsWindow_ResetResize_Callback 3 0x%x\n", gAppContext);
 
     XtAppAddTimeOut(gAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
+printf("nsWindow_ResetResize_Callback 4\n");
 }
 
 //

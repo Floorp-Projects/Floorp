@@ -20,7 +20,7 @@ DEPTH = ../../..
 
 include $(DEPTH)/config/config.mk
 
-LIBRARY_NAME = widgetunix
+LIBRARY_NAME = raptorwidgetunix_s
 
 MODULE=raptor
 
@@ -28,27 +28,13 @@ REQUIRES=util img xpcom raptor netlib
 
 DEFINES = -D_IMPL_NS_WIDGET 
 
-EXTRA_DSO_LDOPTS+=\
-	$(DIST)/bin/libxpcom.so \
-	$(DIST)/bin/libraptorbase.so \
-	$(DIST)/bin/libreg.so \
-	$(LIBNSPR)\
-	$(DIST)/lib/libplc21.a
-
-# This should really be done properly in 'config'
-ifeq ($(OS_ARCH),Linux)
-EXTRA_DSO_LDOPTS+=\
-	-L/usr/X11R6/lib -lX11 -lm
-else
-EXTRA_DSO_LDOPTS+= -lXm -lXt -lX11 -lm 
-endif
+INCLUDES+= -I../xpwidgets -I../motif -I.
 
 CPPSRCS= \
         nsMenuBar.cpp \
         nsMenu.cpp \
         nsMenuItem.cpp \
         nsPopUpMenu.cpp \
-        nsWidgetSupport.cpp \
 	nsComboBox.cpp \
 	nsTextHelper.cpp \
 	nsTextAreaWidget.cpp \
@@ -64,14 +50,12 @@ CPPSRCS= \
 	nsToolkit.cpp \
 	nsLabel.cpp \
 	nsDialog.cpp \
-	nsWidgetFactory.cpp \
 	nsWindow.cpp \
 	nsXtEventHandler.cpp \
         nsXtManageWidget.cpp
 
 CPP_OBJS=				\
  ./$(OBJDIR)/nsPopUpMenu.o  \
- ./$(OBJDIR)/nsWidgetSupport.o		\
  ./$(OBJDIR)/nsComboBox.o		\
  ./$(OBJDIR)/nsFileWidget.o		\
  ./$(OBJDIR)/nsTextHelper.o		\
@@ -89,14 +73,14 @@ CPP_OBJS=				\
  ./$(OBJDIR)/nsToolkit.o		\
  ./$(OBJDIR)/nsLabel.o			\
  ./$(OBJDIR)/nsDialog.o		\
- ./$(OBJDIR)/nsWidgetFactory.o		\
  ./$(OBJDIR)/nsWindow.o		\
  ./$(OBJDIR)/nsXtEventHandler.o		\
  $(NULL)
 
-include $(DEPTH)/config/config.mk
 
 TARGETS = $(LIBRARY)
+
+MKSHLIB :=
 
 include $(DEPTH)/config/rules.mk
 

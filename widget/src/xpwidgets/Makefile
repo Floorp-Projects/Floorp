@@ -15,17 +15,38 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../..
+DEPTH = ../../..
 
-ifeq ($(OS_TARGET),Rhapsody)
-DIRS = rhapsody
-else
-DIRS = xpwidgets motif build
-endif
 
 include $(DEPTH)/config/config.mk
 
-TARGET = $(LIBRARY)
+LIBRARY_NAME = raptorbasewidget_s
+
+#LCFLAGS=-D_IMPL_NS_WIDGET 
+
+ifeq ($(OS_TARGET),Rhapsody)
+INCLUDES += -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I../rhapsody
+else
+INCLUDES += -I../public -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I../motif -I.
+endif
+
+
+CPPSRCS=nsBaseWidget.cpp                \
+	nsMenuButton.cpp                \
+	nsToolbarItemHolder.cpp         \
+	nsToolbarManager.cpp            \
+	nsImageButton.cpp               \
+	nsToolbar.cpp                   \
+	$(NULL)
+
+MODULE=raptor 
+
+REQUIRES=util img xpcom raptor netlib
+
+TARGETS = $(LIBRARY)
+
+
+MKSHLIB :=
 
 include $(DEPTH)/config/rules.mk
 
