@@ -685,6 +685,7 @@ extern "C" NS_DOM nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFacto
 }
 
 
+void XXXDomNeverCalled();
 void XXXDomNeverCalled()
 {
   nsJSContext* jcx = new nsJSContext(0);

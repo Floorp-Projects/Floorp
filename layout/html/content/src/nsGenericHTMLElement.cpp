@@ -1012,6 +1012,7 @@ nsGenericHTMLElement::ToHTML(FILE* out) const
 
 // XXX i18n: this is wrong (?) because we need to know the outgoing
 // character set (I think)
+void NS_QuoteForHTML(const nsString& aValue, nsString& aResult);
 void
 NS_QuoteForHTML(const nsString& aValue, nsString& aResult)
 {

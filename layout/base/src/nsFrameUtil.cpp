@@ -424,6 +424,7 @@ public:
   NS_IMETHOD LoadFrameRegressionData(nsIURL* aURL, nsIXMLContent** aResult);
 };
 
+nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 nsresult
 NS_NewFrameUtil(nsIFrameUtil** aResult)
 {
