@@ -1418,9 +1418,8 @@ nsGfxScrollFrameInner::SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize,
       aBox->GetFrame(&frame);
       nsCOMPtr<nsIContent> content;
       frame->GetContent(getter_AddRefs(content));
-      char ch[100];
-      sprintf(ch,"%d", aSize);
-      nsAutoString newValue; newValue.AssignWithConversion(ch);
+      nsAutoString newValue;
+      newValue.AppendInt(aSize);
       content->SetAttribute(kNameSpaceID_None, aAtom, newValue, aReflow);
       return PR_TRUE;
   }
