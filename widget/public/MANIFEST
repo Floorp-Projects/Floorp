@@ -27,3 +27,4 @@ nsIAppShell.h
 nsStringUtil.h
 nsIDialog.h
 nsILabel.h
+nsILookAndFeel.h
