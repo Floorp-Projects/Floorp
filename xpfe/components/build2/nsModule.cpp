@@ -47,6 +47,8 @@
 #include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
 #include "nsAutoComplete.h"
+#include "nsDownloadManager.h"
+#include "nsDownloadProxy.h"
 
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsLDAPAutoCompleteSession.h"
@@ -64,6 +66,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 
 #if defined(MOZ_LDAP_XPCOM)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
@@ -91,6 +95,8 @@ RegisterWindowDS(nsIComponentManager *aCompMgr,
 }
 
 static const nsModuleComponentInfo components[] = {
+    { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID, nsDownloadManagerConstructor },
+    { "Download", NS_DOWNLOAD_CID, NS_TRANSFER_CONTRACTID, nsDownloadProxyConstructor },
 
     { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
       nsAutoCompleteResultsConstructor},
