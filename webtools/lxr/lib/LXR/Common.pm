@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.6 1998/06/16 01:18:34 jwz Exp $
+# $Id: Common.pm,v 1.7 1998/06/16 08:42:22 jwz Exp $
 
 package LXR::Common;
 
@@ -271,7 +271,14 @@ sub fixpaths {
     
     foreach (0..$#pathelem) {
 	if (defined($addrelem[$_])) {
-	    $Path->{'xref'} .= &fileref($pathelem[$_], "/$addrelem[$_]");
+
+	    # jwz: put a space after each / in the banner so that it's possible
+	    # for the pathnames to wrap.  The <WBR> tag ought to do this, but
+	    # it is ignored when sizing table cells, so we have to use a real
+	    # space.  It's somewhat ugly to have these spaces be visible, but
+	    # not as ugly as getting a horizontal scrollbar...
+	    #
+	    $Path->{'xref'} .= &fileref($pathelem[$_], "/$addrelem[$_]") . " ";
 	} else {
 	    $Path->{'xref'} .= $pathelem[$_];
 	}
