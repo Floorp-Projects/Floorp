@@ -58,6 +58,7 @@ interface jsdINestCallback;
 interface jsdIFilterEnumerator;
 interface jsdIScriptEnumerator;
 interface jsdIScriptHook;
+interface jsdIErrorHook;
 interface jsdIExecutionHook;
 interface jsdICallHook;
 interface jsdIEphemeral;
@@ -78,6 +79,11 @@ interface jsdIDebuggerService : nsISupports
     /** Internal use only. */
     [noscript] readonly attribute JSDContext        JSDContext;
 
+
+    /**
+     * Called when an error or warning occurs.
+     */
+    attribute jsdIErrorHook     errorHook;
     /**
      * Called when a jsdIScript is created or destroyed.
      */
@@ -91,9 +97,9 @@ interface jsdIDebuggerService : nsISupports
      */
     attribute jsdIExecutionHook debuggerHook;
     /**
-     * Called when an exception goes uncaught.
+     * Called when the errorHook returns false.
      */
-    attribute jsdIExecutionHook errorHook;
+    attribute jsdIExecutionHook debugHook;
     /**
      * Called before the next PC is executed.
      */
@@ -401,6 +407,20 @@ interface jsdICallHook : nsISupports
     void onCall (in jsdIStackFrame frame, in unsigned long type);
 };
 
+[scriptable, uuid(b7dd3c1c-1dd1-11b2-83eb-8a857d199e0f)]
+interface jsdIErrorHook : nsISupports
+{
+    const unsigned long REPORT_ERROR     = 0x00;
+    const unsigned long REPORT_WARNING   = 0x01;
+    const unsigned long REPORT_EXCEPTION = 0x02;
+    const unsigned long REPORT_STRICT    = 0x04;
+
+    boolean onError (in string message, in string fileName,
+                     in unsigned long line, in unsigned long pos,
+                     in unsigned long flags, in unsigned long errnum,
+                     in jsdIValue exc);
+};
+
 /**
  * Hook instances of this interface up to the
  * jsdIDebuggerService::breakpointHook, debuggerHook, errorHook, interruptHook,
@@ -409,10 +429,25 @@ interface jsdICallHook : nsISupports
 [scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
 interface jsdIExecutionHook : nsISupports
 {
+    /**
+     * Execution stopped because we're in single step mode.
+     */
     const unsigned long TYPE_INTERRUPTED      = 0;
+    /**
+     * Execution stopped by a trap instruction (i.e. breakoint.)
+     */
     const unsigned long TYPE_BREAKPOINT       = 1;
+    /**
+     * Error handler returned an "invoke debugger" value.
+     */
     const unsigned long TYPE_DEBUG_REQUESTED  = 2;
+    /**
+     * Debugger keyword encountered.
+     */
     const unsigned long TYPE_DEBUGGER_KEYWORD = 3;
+    /**
+     * Exception was thrown.
+     */
     const unsigned long TYPE_THROW            = 4;
 
     /**
@@ -429,9 +464,21 @@ interface jsdIExecutionHook : nsISupports
      * hooks.
      */
     const unsigned long RETURN_CONTINUE       = 1;
+    /**
+     * Same effect as RETURN_HOOK_ERROR.
+     */
     const unsigned long RETURN_ABORT          = 2;
+    /**
+     * Return the value of the |val| parameter.
+     */
     const unsigned long RETURN_RET_WITH_VAL   = 3;
+    /**
+     * Throw the value of the |val| parameter.
+     */
     const unsigned long RETURN_THROW_WITH_VAL = 4;
+    /**
+     * Continue the current throw.
+     */
     const unsigned long RETURN_CONTINUE_THROW = 5;
 
     /**

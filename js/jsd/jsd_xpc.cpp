@@ -494,11 +494,68 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
     return JS_TRUE;
 }
 
+JS_STATIC_DLL_CALLBACK (uintN)
+jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
+                    JSErrorReport *report, void *callerdata)
+{
+    static PRBool running = PR_FALSE;
+
+    if (running)
+        return JSD_ERROR_REPORTER_PASS_ALONG;
+    
+    running = PR_TRUE;
+    
+    nsCOMPtr<jsdIErrorHook> hook;
+    gJsds->GetErrorHook(getter_AddRefs(hook));
+    if (!hook)
+        return JSD_ERROR_REPORTER_PASS_ALONG;
+    
+    jsdIValue *val = 0;
+    if (JS_IsExceptionPending(cx)) {
+        jsval jv;
+        JS_GetPendingException(cx, &jv);
+        JSDValue *jsdv = JSD_NewValue (jsdc, jv);
+        val = jsdValue::FromPtr(jsdc, jsdv);
+    }
+    
+    const char *fileName;
+    PRUint32    line;
+    PRUint32    pos;
+    PRUint32    flags;
+    PRUint32    errnum;
+    PRBool      rval;
+    if (report) {
+        fileName = report->filename;
+        line = report->lineno;
+        pos = report->tokenptr - report->linebuf;
+        flags = report->flags;
+        errnum = report->errorNumber;
+    }
+    else
+    {
+        fileName = 0;
+        line     = 0;
+        pos      = 0;
+        flags    = 0;
+        errnum   = 0;
+    }
+    
+    gJsds->Pause(nsnull);
+    hook->OnError (message, fileName, line, pos, flags, errnum, val, &rval);
+    gJsds->UnPause(nsnull);
+    
+    running = false;
+    if (!rval)
+        return JSD_ERROR_REPORTER_DEBUG;
+    
+    return JSD_ERROR_REPORTER_PASS_ALONG;
+}
+
 JS_STATIC_DLL_CALLBACK (JSBool)
 jsds_CallHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
                    uintN type, void* callerdata)
 {
-    nsCOMPtr<jsdICallHook> hook(0);
+    nsCOMPtr<jsdICallHook> hook;
 
     switch (type)
     {
@@ -548,7 +605,7 @@ jsds_ExecutionHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
             gJsds->GetInterruptHook(getter_AddRefs(hook));
             break;
         case JSD_HOOK_DEBUG_REQUESTED:
-            gJsds->GetErrorHook(getter_AddRefs(hook));
+            gJsds->GetDebugHook(getter_AddRefs(hook));
             break;
         case JSD_HOOK_DEBUGGER_KEYWORD:
             gJsds->GetDebuggerHook(getter_AddRefs(hook));
@@ -1345,7 +1402,11 @@ jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
         return NS_ERROR_FAILURE;
     
     JSDValue *jsdv = JSD_NewValue (mCx, jv);
+    if (!jsdv)
+        return NS_ERROR_FAILURE;    
     *_rval = jsdValue::FromPtr (mCx, jsdv);
+    if (!*_rval)
+        return NS_ERROR_FAILURE;    
     return NS_OK;
 }        
 
@@ -1796,6 +1857,8 @@ jsdService::OnForRuntime (JSRuntime *rt)
     /* If any of these mFooHook objects are installed, do the required JSD
      * hookup now.   See also, jsdService::SetFooHook().
      */
+    if (mErrorHook)
+        JSD_SetErrorReporter (mCx, jsds_ErrorHookProc, NULL);
     if (mThrowHook)
         JSD_SetThrowHook (mCx, jsds_ExecutionHookProc, NULL);
     /* can't ignore script callbacks, as we need to |Release| the wrapper 
@@ -1804,7 +1867,7 @@ jsdService::OnForRuntime (JSRuntime *rt)
         JSD_SetInterruptHook (mCx, jsds_ExecutionHookProc, NULL);
     if (mDebuggerHook)
         JSD_SetDebuggerHook (mCx, jsds_ExecutionHookProc, NULL);
-    if (mErrorHook)
+    if (mDebugHook)
         JSD_SetDebugBreakHook (mCx, jsds_ExecutionHookProc, NULL);
     if (mTopLevelHook)
         JSD_SetTopLevelHook (mCx, jsds_CallHookProc, NULL);
@@ -1851,6 +1914,7 @@ jsdService::Off (void)
     jsdProperty::InvalidateAll();
     ClearAllBreakpoints();
 
+    JSD_SetErrorReporter (mCx, NULL, NULL);
     JSD_ClearThrowHook (mCx);
     JSD_ClearInterruptHook (mCx);
     JSD_ClearDebuggerHook (mCx);
@@ -1875,6 +1939,7 @@ NS_IMETHODIMP
 jsdService::Pause(PRUint32 *_rval)
 {
     if (++mPauseLevel == 1) {
+        JSD_SetErrorReporter (mCx, NULL, NULL);
         JSD_ClearThrowHook (mCx);
         JSD_ClearInterruptHook (mCx);
         JSD_ClearDebuggerHook (mCx);
@@ -1896,13 +1961,15 @@ jsdService::UnPause(PRUint32 *_rval)
         return NS_ERROR_NOT_AVAILABLE;
 
     if (--mPauseLevel == 0) {
+        if (mErrorHook)
+            JSD_SetErrorReporter (mCx, jsds_ErrorHookProc, NULL);
         if (mThrowHook)
             JSD_SetThrowHook (mCx, jsds_ExecutionHookProc, NULL);
         if (mInterruptHook)
             JSD_SetInterruptHook (mCx, jsds_ExecutionHookProc, NULL);
         if (mDebuggerHook)
             JSD_SetDebuggerHook (mCx, jsds_ExecutionHookProc, NULL);
-        if (mErrorHook)
+        if (mDebugHook)
             JSD_SetDebugBreakHook (mCx, jsds_ExecutionHookProc, NULL);
         if (mTopLevelHook)
             JSD_SetTopLevelHook (mCx, jsds_CallHookProc, NULL);
@@ -2199,6 +2266,34 @@ jsdService::ExitNestedEventLoop (PRUint32 *_rval)
 /* hook attribute get/set functions */
 
 NS_IMETHODIMP
+jsdService::SetErrorHook (jsdIErrorHook *aHook)
+{
+    mErrorHook = aHook;
+
+    /* if the debugger isn't initialized, that's all we can do for now.  The
+     * OnForRuntime() method will do the rest when the coast is clear.
+     */
+    if (!mCx || mPauseLevel)
+        return NS_OK;
+
+    if (aHook)
+        JSD_SetErrorReporter (mCx, jsds_ErrorHookProc, NULL);
+    else
+        JSD_SetErrorReporter (mCx, NULL, NULL);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdService::GetErrorHook (jsdIErrorHook **aHook)
+{
+    *aHook = mErrorHook;
+    NS_IF_ADDREF(*aHook);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdService::SetBreakpointHook (jsdIExecutionHook *aHook)
 {    
     mBreakpointHook = aHook;
@@ -2215,9 +2310,9 @@ jsdService::GetBreakpointHook (jsdIExecutionHook **aHook)
 }
 
 NS_IMETHODIMP
-jsdService::SetErrorHook (jsdIExecutionHook *aHook)
+jsdService::SetDebugHook (jsdIExecutionHook *aHook)
 {    
-    mErrorHook = aHook;
+    mDebugHook = aHook;
 
     /* if the debugger isn't initialized, that's all we can do for now.  The
      * OnForRuntime() method will do the rest when the coast is clear.
@@ -2234,9 +2329,9 @@ jsdService::SetErrorHook (jsdIExecutionHook *aHook)
 }
 
 NS_IMETHODIMP
-jsdService::GetErrorHook (jsdIExecutionHook **aHook)
+jsdService::GetDebugHook (jsdIExecutionHook **aHook)
 {   
-    *aHook = mErrorHook;
+    *aHook = mDebugHook;
     NS_IF_ADDREF(*aHook);
     
     return NS_OK;
