@@ -22,10 +22,11 @@ var toolkitCore;
 nameGlobal = new Array();
 nameArray = new Array();
 var count = 0;
+var dataCount = 0;
 
 function Startup()
 {
-	dump("Doing Startup...\n");
+	//dump("Doing Startup...\n");
 	toolkitCore = XPAppCoresManager.Find("toolkitCore");
 	if (!toolkitCore) {
 		toolkitCore = new ToolkitCore();
@@ -38,13 +39,13 @@ function Startup()
 
 function SetValue(name, value)
 {
-	dump("Inside SetValue\n");
+	//dump("Inside SetValue\n");
 	var found = false;
-	for (i = 0; i !=count; i++) {
+	for (i = 0; i !=dataCount; i++) {
 		if (nameArray[i] == name) {
-			dump("Name exists: "+nameGlobal[i]+"\n");
+			//dump("Name exists: "+nameGlobal[i]+"\n");
 			nameGlobal[i] = name+"="+value+"%";
-			dump("New values: "+name+"	"+value+"\n");
+			//dump("New values: "+name+"	"+value+"\n");
 			found = true;
 			break;
 		}
@@ -52,12 +53,12 @@ function SetValue(name, value)
 
 
 	if (!found) {
-		dump("Name does not exist\n");
-		nameGlobal[count] = name+"="+value+"%";
-		dump("Name Value: "+name+"	"+value+"\n");
+		//dump("Name does not exist\n");
+		nameGlobal[dataCount] = name+"="+value+"%";
+		//dump("Name Value: "+name+"	"+value+"\n");
 
-		nameArray[count] = name;
-		count++;
+		nameArray[dataCount] = name;
+		dataCount++;
 	}
 }
 
@@ -65,23 +66,23 @@ function Finish()
 {
 	var data = "";
 	var i = 0;
-    dump("before for loop\n");
-	for (i = 0; i !=count; i++) {
+    //dump("before for loop\n");
+	for (i = 0; i !=dataCount; i++) {
 		data = data+nameGlobal[i];		
 	}
     dump("DATA IS: "+data+"\n");
 
 
-    dump("calling javascript reflection\n");
+    //dump("calling javascript reflection\n");
     var profileCore = XPAppCoresManager.Find("ProfileCore");
     if (!profileCore)
     {
-	    dump("!profileCore\n");
+	    //dump("!profileCore\n");
 		profileCore = new ProfileCore();
-		dump("!profileCore\n");
+		//dump("!profileCore\n");
 
 		if (profileCore) {
-			dump("after ! yes profileCore in if loop\n");
+			//dump("after ! yes profileCore in if loop\n");
 			profileCore.Init("ProfileCore");
 		}
 		else {
@@ -90,8 +91,9 @@ function Finish()
 	}
 
 	if (profileCore) {
-	    dump("yes profileCore\n");
+	    //dump("yes profileCore\n");
 		profileCore.CreateNewProfile(data);
+		profileCore.StartCommunicator(profName);
 	}
 	
 	toolkitCore = XPAppCoresManager.Find("toolkitCore");
@@ -110,6 +112,6 @@ function Finish()
 </html:script>
 
 <html:iframe src="content1.xul" name="frame1" width="100%" height="350px"> </html:iframe>
-<html:iframe src="navigationStart.xul" name="frame2" width="100%" height="90px"> </html:iframe>
+<html:iframe src="navigationStart.xul" name="frame2" width="100%" height="100px"> </html:iframe>
 
 </window>
