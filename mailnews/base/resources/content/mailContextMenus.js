@@ -20,7 +20,7 @@
  *
  */
 
- function fillThreadPaneContextMenu()
+function fillThreadPaneContextMenu()
 {
 	var selectedMessages = GetSelectedMessages();
 	var numSelected = selectedMessages ? selectedMessages.length : 0;
@@ -198,7 +198,8 @@ function fillFolderPaneContextMenu()
 	var serverType = targetFolder.getAttribute('ServerType');
 	var specialFolder = targetFolder.getAttribute('SpecialFolder');
 	var canSubscribeToFolder = (serverType == "nntp") || (serverType == "imap");
-	var canGetMessages =  isServer && (serverType != "nntp") && (serverType !="none");
+    var isNewsgroup = !isServer && serverType == 'nntp';
+	var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
 
 	ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) && canGetMessages);
 	EnableMenuItem("folderPaneContext-getMessages", true);
@@ -224,14 +225,10 @@ function fillFolderPaneContextMenu()
 
 // News	folder context menu	=============================================
 
-	ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) &&	canSubscribeToFolder &&	!isServer && serverType	== 'nntp');
+	ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) &&	canSubscribeToFolder &&	isNewsgroup);
 	EnableMenuItem("folderPaneContext-newsUnsubscribe",	true);
-	ShowMenuItem("folderPaneContext-markAllRead", (numSelected <= 1) &&	!isServer && serverType	== 'nntp');
+	ShowMenuItem("folderPaneContext-markAllRead", (numSelected <= 1) &&	isNewsgroup);
 	EnableMenuItem("folderPaneContext-markAllRead",	true);
-	ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) &&	!isServer && serverType	== 'nntp');
-	EnableMenuItem("folderPaneContext-getMessages",	true);	
-	ShowMenuItem("folderPaneContext-new", (numSelected <= 1) &&	!isServer && serverType	!= 'nntp');
-	EnableMenuItem("folderPaneContext-new",	(numSelected <=	1) && !isServer	&& serverType != 'nntp');
 
 // End of News folder context menu =======================================	
 
@@ -288,7 +285,6 @@ function SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, speci
 		else
 			SetMenuItemValue("folderPaneContext-new", Bundle.GetStringFromName("newSubfolder"));
 	}
-
 }
 
 function ShowMenuItem(id, showItem)
