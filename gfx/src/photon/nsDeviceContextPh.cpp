@@ -93,8 +93,6 @@ nsDeviceContextPh :: ~nsDeviceContextPh( ) {
 	NS_IF_RELEASE( mSpec );
 	}
 
-NS_IMPL_ISUPPORTS1(nsDeviceContextPh, nsIDeviceContext)
-
 NS_IMETHODIMP nsDeviceContextPh :: Init( nsNativeWidget aWidget ) {
   float newscale, origscale;
   float a2d,t2d;

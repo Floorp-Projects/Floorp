@@ -55,8 +55,6 @@ public:
   nsDeviceContextPh();
   virtual ~nsDeviceContextPh();
   
-  NS_DECL_ISUPPORTS
-  
   NS_IMETHOD  Init(nsNativeWidget aWidget);
 
 
