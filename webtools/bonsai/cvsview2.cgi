@@ -401,7 +401,7 @@ foreach my $option (split(/&/, $query_string)) {
     die("command $opt_command: garbled option $option\n")
         if ($option !~ /^([^=]+)=(.*)/);
     die("bogus characters in options")
-        if ($option !~ /^[\w\-\.\+\/\,\:]+$/ );
+        if ($option !~ /^[\w\-\.\+\/\,\:\=]+$/ );
     eval('$opt_' . $1 . '=' . SqlQuote($2));
 }
 
