@@ -61,6 +61,20 @@
 #endif
 #include "prtypes.h"
 
+#ifdef HAVE_SYS_BYTEORDER_H
+#include <sys/types.h>
+#include <sys/byteorder.h>
+#endif
+
+#ifdef __linux
+#include <endian.h>
+#ifndef BYTE_ORDER
+#define BYTE_ORDER    __BYTE_ORDER
+#define BIG_ENDIAN    __BIG_ENDIAN
+#define LITTLE_ENDIAN __LITTLE_ENDIAN
+#endif
+#endif /* __linux */
+
 #ifdef __sgi
 #define BYTE_ORDER BIG_ENDIAN
 #define BIG_ENDIAN      4321
@@ -102,18 +116,14 @@
 #endif /* !BYTE_ORDER */
 #endif /* __sun */
 
-#ifdef __linux
-# include <endian.h>
-# ifndef BYTE_ORDER
-#  define BYTE_ORDER    __BYTE_ORDER
-#  define BIG_ENDIAN    __BIG_ENDIAN
-#  define LITTLE_ENDIAN __LITTLE_ENDIAN
-# endif
-#endif /* __linux */
+#ifdef NCR
+#include <sys/endian.h>
+#endif
 
-#if defined(SCO) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX)
-#include <sys/types.h>
-#include <sys/byteorder.h>
+#ifdef QNX
+#define LITTLE_ENDIAN	1234
+#define BIG_ENDIAN	4321
+#define BYTE_ORDER	LITTLE_ENDIAN
 #endif
 
 #ifdef SCO
@@ -122,33 +132,15 @@
 #endif
 
 #ifdef SNI
-#include <sys/types.h>
-#include <sys/byteorder.h>
 /* #include <sys/hetero.h> */
 #define BYTE_ORDER BIG_ENDIAN
 #define BIG_ENDIAN      4321
 #define LITTLE_ENDIAN   1234
 #endif
 
-#ifdef UNIXWARE
-#include <sys/types.h>
-#include <sys/byteorder.h>
-#endif
-
-#ifdef DGUX
-#include <sys/types.h>
-#include <sys/byteorder.h>
-#endif
-
-#ifdef NCR
-#include <sys/endian.h>
-#endif
-
 #ifdef macintosh
 #include <unix.h>
-#endif
-
-#ifndef macintosh
+#else
 #include <fcntl.h>
 #endif
 
