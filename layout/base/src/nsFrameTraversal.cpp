@@ -406,7 +406,7 @@ NS_IMETHODIMP
 nsLeafIterator::Prev()
 {
 //recursive-oid method to get prev frame
-  nsIFrame *result;
+  nsIFrame *result = nsnull;
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
@@ -632,7 +632,7 @@ nsFocusIterator::Next()
 NS_IMETHODIMP
 nsFocusIterator::Prev()
 {
-  nsIFrame *result = 0;
+  nsIFrame *result = nsnull;
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
@@ -746,7 +746,7 @@ NS_IMETHODIMP
    nsVisualIterator::Prev()
 {
   //recursive-oid method to get prev frame
-  nsIFrame *result;
+  nsIFrame *result = nsnull;
   nsIFrame *parent = getCurrent();
   if (!parent)
     parent = getLast();
