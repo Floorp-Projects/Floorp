@@ -37,8 +37,8 @@
 
 	mov -1,%o3                      ! busy flag
 	swap [%o0],%o3                  ! get current value
-l1:	tst %o3                         ! busy?
-	bneg,a l1                       ! if so, spin
+l1:	cmp %o3,-1                      ! busy?
+	be,a l1                         ! if so, spin
 	swap [%o0],%o3                  ! using branch-delay to swap back value
 	cmp %o1,%o3                     ! compare old with current
 	be,a l2                         ! if equal then swap in new value
