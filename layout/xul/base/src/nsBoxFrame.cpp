@@ -104,6 +104,55 @@ nsBoxFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+/*
+void
+nsBoxFrame::Reflow(nsIPresShell& aPresShell)
+{
+      // generate a reflow command for "this"
+      nsIReflowCommand* reflowCmd = nsnull;
+      rv = NS_NewHTMLReflowCommand(&reflowCmd, target,
+                                   nsIReflowCommand::ReflowDirty);
+      if (NS_SUCCEEDED(rv)) {
+        aPresShell.AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
+}
+*/
+
+NS_IMETHODIMP
+nsBoxFrame::RemoveFrame(nsIPresContext& aPresContext,
+                           nsIPresShell& aPresShell,
+                           nsIAtom* aListName,
+                           nsIFrame* aOldFrame)
+{
+      // remove the child frame
+      nsresult rv = nsHTMLContainerFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+      mFrames.DeleteFrame(aPresContext, aOldFrame);
+      return rv;
+}
+
+NS_IMETHODIMP
+nsBoxFrame::InsertFrames(nsIPresContext& aPresContext,
+                            nsIPresShell& aPresShell,
+                            nsIAtom* aListName,
+                            nsIFrame* aPrevFrame,
+                            nsIFrame* aFrameList)
+{
+  mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+  return nsHTMLContainerFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList); 
+}
+
+NS_IMETHODIMP
+nsBoxFrame::AppendFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList)
+{
+   mFrames.AppendFrames(nsnull, aFrameList); 
+   return nsHTMLContainerFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
+}
+
+
 NS_IMETHODIMP
 nsBoxFrame::FlowChildAt(nsIFrame* childFrame, 
                      nsIPresContext& aPresContext,
