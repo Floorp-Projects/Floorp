@@ -1420,10 +1420,10 @@ wallet_RequestToPrefill(XP_List * list) {
 "      top.frames[button_frame].document.buttons.xxxbuttonxxx.name = 'button';\n"
 "      top.frames[button_frame].document.buttons.submit();\n"
 #ifndef HTMLDialogs 
-"      top.frames[list_frame].document.open();\n"
-"      top.frames[list_frame].document.close();\n"
-"      top.frames[button_frame].document.open();\n"
-"      top.frames[button_frame].document.close();\n"
+//"      top.frames[list_frame].document.open();\n"
+//"      top.frames[list_frame].document.close();\n"
+//"      top.frames[button_frame].document.open();\n"
+//"      top.frames[button_frame].document.close();\n"
 #endif
 "    }\n"
 "\n"
