@@ -145,10 +145,8 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
   p = ToNewCString(parentElementTag);
   if (c&&p)
   {
-#ifdef NS_DEBUG
     if (gNoisy)
       printf("  DeleteElementTxn:  inserting child %s back into parent %s\n", c, p); 
-#endif
 
     nsCRT::free(c);
     nsCRT::free(p);
