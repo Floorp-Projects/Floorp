@@ -797,6 +797,14 @@ protected:
                              nsIFrame* aFrame,
                              nsIFrame* aFrameList);
 
+  nsresult SplitToContainingBlock(nsIPresContext* aPresContext,
+                                  nsFrameConstructorState& aState,
+                                  nsIFrame* aFrame,
+                                  nsIFrame* aLeftInlineChildFrame,
+                                  nsIFrame* aBlockChildFrame,
+                                  nsIFrame* aRightInlineChildFrame,
+                                  PRBool aTransfer);
+
   nsresult ReframeContainingBlock(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
   nsresult StyleChangeReflow(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIAtom* aAttribute);
