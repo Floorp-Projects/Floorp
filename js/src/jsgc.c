@@ -107,6 +107,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 				      NULL, NULL);
     if (!rt->gcRootsHash)
 	return JS_FALSE;
+    rt->gcLocksHash = NULL;     /* create lazily */
     rt->gcMaxBytes = maxbytes;
     return JS_TRUE;
 }
@@ -155,6 +156,10 @@ js_FinishGC(JSRuntime *rt)
     JS_ArenaFinish();
     JS_HashTableDestroy(rt->gcRootsHash);
     rt->gcRootsHash = NULL;
+    if (rt->gcLocksHash) {
+        JS_HashTableDestroy(rt->gcLocksHash);
+        rt->gcLocksHash = NULL;
+    }
     rt->gcFreeList = NULL;
 }
 
@@ -268,43 +273,129 @@ gc_find_flags(JSRuntime *rt, void *thing)
     return NULL;
 }
 
+static JSHashNumber
+gc_hash_thing(const void *key)
+{
+    JSHashNumber num = (JSHashNumber) key;	/* help lame MSVC1.5 on Win16 */
+
+    return num >> JSVAL_TAGBITS;
+}
+
+#define gc_lock_get_count(he)   ((jsword)(he)->value)
+#define gc_lock_set_count(he,n) ((jsword)((he)->value = (void *)(n)))
+#define gc_lock_increment(he)   gc_lock_set_count(he, gc_lock_get_count(he)+1)
+#define gc_lock_decrement(he)   gc_lock_set_count(he, gc_lock_get_count(he)-1)
+
 JSBool
 js_LockGCThing(JSContext *cx, void *thing)
 {
-    uint8 *flagp, flags;
+    JSRuntime *rt;
+    uint8 *flagp, flags, lockbits;
+    JSBool ok;
+    JSHashEntry **hep, *he;
 
     if (!thing)
 	return JS_TRUE;
-    flagp = gc_find_flags(cx->runtime, thing);
+    rt = cx->runtime;
+    flagp = gc_find_flags(rt, thing);
     if (!flagp)
 	return JS_FALSE;
+
+    ok = JS_TRUE;
+    JS_LOCK_GC(rt);
     flags = *flagp;
-    if ((flags & GCF_LOCKMASK) != GCF_LOCKMASK) {
-	*flagp = (uint8)(flags + GCF_LOCK);
+    lockbits = (flags & GCF_LOCKMASK);
+    if (lockbits != GCF_LOCKMASK) {
+        if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
+            /* Objects may require "deep locking", i.e., rooting by value. */
+            if (lockbits == 0) {
+                if (!rt->gcLocksHash) {
+                    rt->gcLocksHash = JS_NewHashTable(GC_ROOTS_SIZE,
+                                                      gc_hash_thing,
+                                                      JS_CompareValues,
+                                                      JS_CompareValues,
+                                                      NULL, NULL);
+                    if (!rt->gcLocksHash)
+                        goto outofmem;
+                } else {
+                    JS_ASSERT(!JS_HashTableLookup(rt->gcLocksHash, thing));
+                }
+                he = JS_HashTableAdd(rt->gcLocksHash, thing, NULL);
+                if (!he)
+                    goto outofmem;
+                gc_lock_set_count(he, 1);
+                *flagp = (uint8)(flags + GCF_LOCK);
+            } else {
+                JS_ASSERT(lockbits == GCF_LOCK);
+                hep = JS_HashTableRawLookup(rt->gcLocksHash,
+                                            gc_hash_thing(thing),
+                                            thing);
+                he = *hep;
+                JS_ASSERT(he);
+                if (he) {
+                    JS_ASSERT(gc_lock_get_count(he) >= 1);
+                    gc_lock_increment(he);
+                }
+            }
+        } else {
+            *flagp = (uint8)(flags + GCF_LOCK);
+        }
     } else {
-	METER(cx->runtime->gcStats.stuck++);
+	METER(rt->gcStats.stuck++);
     }
-    METER(cx->runtime->gcStats.lock++);
-    return JS_TRUE;
+
+    METER(rt->gcStats.lock++);
+out:
+    JS_UNLOCK_GC(rt);
+    return ok;
+
+outofmem:
+    JS_ReportOutOfMemory(cx);
+    ok = JS_FALSE;
+    goto out;
 }
 
 JSBool
 js_UnlockGCThing(JSContext *cx, void *thing)
 {
-    uint8 *flagp, flags;
+    JSRuntime *rt;
+    uint8 *flagp, flags, lockbits;
+    JSHashEntry **hep, *he;
 
     if (!thing)
 	return JS_TRUE;
-    flagp = gc_find_flags(cx->runtime, thing);
+    rt = cx->runtime;
+    flagp = gc_find_flags(rt, thing);
     if (!flagp)
 	return JS_FALSE;
+
+    JS_LOCK_GC(rt);
     flags = *flagp;
-    if ((flags & GCF_LOCKMASK) != GCF_LOCKMASK) {
-	*flagp = (uint8)(flags - GCF_LOCK);
+    lockbits = (flags & GCF_LOCKMASK);
+    if (lockbits != GCF_LOCKMASK) {
+        if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
+            /* Defend against a call on an unlocked object. */
+            if (lockbits != 0) {
+                JS_ASSERT(lockbits == GCF_LOCK);
+                hep = JS_HashTableRawLookup(rt->gcLocksHash,
+                                            gc_hash_thing(thing),
+                                            thing);
+                he = *hep;
+                JS_ASSERT(he);
+                if (he && gc_lock_decrement(he) == 0) {
+                    JS_HashTableRawRemove(rt->gcLocksHash, hep, he);
+                    *flagp = (uint8)(flags & ~GCF_LOCKMASK);
+                }
+            }
+        } else {
+            *flagp = (uint8)(flags - GCF_LOCK);
+        }
     } else {
-	METER(cx->runtime->gcStats.unstuck++);
+	METER(rt->gcStats.unstuck++);
     }
-    METER(cx->runtime->gcStats.unlock++);
+
+    METER(rt->gcStats.unlock++);
+    JS_UNLOCK_GC(rt);
     return JS_TRUE;
 }
 
@@ -659,6 +750,16 @@ gc_root_marker(JSHashEntry *he, intN i, void *arg)
     return HT_ENUMERATE_NEXT;
 }
 
+JS_STATIC_DLL_CALLBACK(intN)
+gc_lock_marker(JSHashEntry *he, intN i, void *arg)
+{
+    void *thing = (void *)he->key;
+    JSRuntime *rt = (JSRuntime *)arg;
+
+    GC_MARK(rt, thing, "locked object", NULL);
+    return HT_ENUMERATE_NEXT;
+}
+
 JS_FRIEND_API(void)
 js_ForceGC(JSContext *cx)
 {
@@ -774,8 +875,12 @@ js_GC(JSContext *cx)
 restart:
     rt->gcNumber++;
 
-    /* Mark phase. */
+    /*
+     * Mark phase.
+     */
     JS_HashTableEnumerateEntries(rt->gcRootsHash, gc_root_marker, rt);
+    if (rt->gcLocksHash)
+        JS_HashTableEnumerateEntries(rt->gcLocksHash, gc_lock_marker, rt);
     js_MarkAtomState(&rt->atomState, gc_mark);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
@@ -783,7 +888,7 @@ restart:
 	 * Iterate frame chain and dormant chains. Temporarily tack current
 	 * frame onto the head of the dormant list to ease iteration.
 	 *
-	 * (NOTE: see comment on this whole 'dormant' thing in js_Execute)
+	 * (NB: see comment on this whole "dormant" thing in js_Execute.)
 	 */
 	chain = acx->fp;
 	if (chain) {
@@ -792,7 +897,8 @@ restart:
 	} else {
 	    chain = acx->dormantFrameChain;
 	}
-	for (fp=chain; fp; fp = chain = chain->dormantNext) {
+
+	for (fp = chain; fp; fp = chain = chain->dormantNext) {
 	    sp = fp->sp;
 	    if (sp) {
 		for (a = acx->stackPool.first.next; a; a = a->next) {
@@ -824,9 +930,12 @@ restart:
 		    GC_MARK(rt, fp->sharpArray, "sharp array", NULL);
 	    } while ((fp = fp->down) != NULL);
 	}
-	/* cleanup temporary link */
+
+	/* Cleanup temporary "dormant" linkage. */
 	if (acx->fp)
 	    acx->fp->dormantNext = NULL;
+
+        /* Mark other roots-by-definition in acx. */
 	GC_MARK(rt, acx->globalObject, "global object", NULL);
 	GC_MARK(rt, acx->newborn[GCX_OBJECT], "newborn object", NULL);
 	GC_MARK(rt, acx->newborn[GCX_STRING], "newborn string", NULL);
@@ -837,7 +946,10 @@ restart:
 #endif
     }
 
-    /* Sweep phase.  Mark in tempPool for release at label out:. */
+    /*
+     * Sweep phase.
+     * Mark tempPool for release of finalization records at label out.
+     */
     ma = cx->tempPool.current;
     mark = JS_ARENA_MARK(&cx->tempPool);
     js_SweepAtomState(&rt->atomState);
@@ -871,7 +983,10 @@ restart:
 	}
     }
 
-    /* Finalize phase.  Don't hold the GC lock while running finalizers! */
+    /*
+     * Finalize phase.
+     * Don't hold the GC lock while running finalizers!
+     */
     JS_UNLOCK_GC(rt);
     for (final = (JSGCThing *) mark; ; final++) {
 	if ((jsuword)final >= ma->avail) {
@@ -898,7 +1013,10 @@ restart:
     }
     JS_LOCK_GC(rt);
 
-    /* Free unused arenas and rebuild the freelist. */
+    /*
+     * Free phase.
+     * Free any unused arenas and rebuild the JSGCThing freelist.
+     */
     ap = &rt->gcArenaPool.first.next;
     a = *ap;
     if (!a)

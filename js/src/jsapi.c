@@ -732,40 +732,16 @@ JS_YieldRequest(JSContext *cx)
     JS_UNLOCK_GC(rt);
 }
 
-/* Like JS_EndRequest, but don't notify any GC waiting in the wings. */
 JS_PUBLIC_API(void)
 JS_SuspendRequest(JSContext *cx)
 {
-    JSRuntime *rt;
-
-    CHECK_REQUEST(cx);
-    cx->requestDepth--;
-    if (!cx->requestDepth) {
-	rt = cx->runtime;
-	JS_LOCK_GC(rt);
-	JS_ASSERT(rt->requestCount > 0);
-	rt->requestCount--;
-	JS_UNLOCK_GC(rt);
-    }
+    JS_EndRequest(cx);
 }
 
 JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx)
 {
-    JSRuntime *rt;
-
-    if (!cx->requestDepth) {
-	/* Wait until the GC is finished. */
-	rt = cx->runtime;
-	JS_LOCK_GC(rt);
-	while (rt->gcLevel > 0)
-	    JS_AWAIT_GC_DONE(rt);
-
-	/* Indicate that a request is running. */
-	rt->requestCount++;
-	JS_UNLOCK_GC(rt);
-    }
-    cx->requestDepth++;
+    JS_BeginRequest(cx);
 }
 
 #endif /* JS_THREADSAFE */
@@ -1168,30 +1144,28 @@ JS_MaybeGC(JSContext *cx)
     rt = cx->runtime;
     bytes = rt->gcBytes;
     lastBytes = rt->gcLastBytes;
-    if ((bytes > 8192 && bytes > lastBytes + lastBytes / 2)
-#ifdef NES40
-/*
-    This is the other side of the fix in jsgc.c, allocGCThing where we stopped
-    doing a gc when the allocation fails. It turned out that the server branch-
-    callback wasn't providing for enough gc to prevent certain string concatenations
-    from exhausting the heap - with large strings the number of JSObjects remains
-    small but the amount of malloc'd space can be huge. We re-instate a test of the
-    malloc'd space here to help trigger a gc. (The server changed the frequency of
-    issuing calls to MaybeGC as well).
-*/
-            || (rt->gcMallocBytes > rt->gcMaxBytes)
-#endif /* NES40 */
-            )
+    if ((bytes > 8192 && bytes > lastBytes + lastBytes / 2) ||
+        rt->gcMallocBytes > rt->gcMaxBytes) {
+        /*
+         * Run the GC if we have half again as many bytes of GC-things as
+         * the last time we GC'd, or if we have malloc'd more bytes through
+         * JS_malloc than we were told to allocate by JS_NewRuntime.
+         */
 	JS_GC(cx);
+    }
 }
 
 JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallback(JSContext *cx, JSGCCallback cb)
 {
-    JSRuntime *rt;
+    return JS_SetGCCallbackRT(cx->runtime, cb);
+}
+
+JS_PUBLIC_API(JSGCCallback)
+JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb)
+{
     JSGCCallback oldcb;
 
-    rt = cx->runtime;
     oldcb = rt->gcCallback;
     rt->gcCallback = cb;
     return oldcb;
