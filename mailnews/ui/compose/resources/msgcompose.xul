@@ -3,22 +3,84 @@
 
 <!DOCTYPE window
 [
-                            
-<!--  TEXT ENTITY DECLARATION BEGIN  -->
 
+<!ENTITY msgComposeWindow.title "Message Compose">
+
+<!-- address labels -->                            
 <!ENTITY toAddr.label   "To:"> 
 <!ENTITY ccAddr.label   "Cc:"> 
-<!ENTITY bccAddr.label   "Bcc:"> 
+<!ENTITY bccAddr.label  "Bcc:"> 
 <!ENTITY newsgroupsAddr.label   "Newsgroups:"> 
-<!ENTITY subject.label   "Subject:"> 
+<!ENTITY subject.label  "Subject:">
 
-<!-- TEXT ENTITY DECLARATION END     -->
-   
+<!-- menu items:  the . means that the menu item isn't implemented yet -->
+
+<!-- File menu items -->
+<!ENTITY fileMenu.label "File">
+<!ENTITY newCmd.label ".New">
+<!ENTITY saveCmd.label ".Save">
+<!ENTITY saveAsCmd.label ".Save As">
+<!ENTITY attachCmd.label ".Attach">
+<!ENTITY sendNowCmd.label ".Send Now">
+<!ENTITY sendLaterCmd.label ".Send Later">
+<!ENTITY quoteOrigCmd.label ".Quote Original Message">
+<!ENTITY selectAddressCmd.label ".Select Addresses...">
+<!ENTITY printSetupCmd.label ".Print Setup">
+<!ENTITY printPreviewCmd.label ".Print Preview">
+<!ENTITY printCmd.label ".Print">
+<!ENTITY closeCmd.label ".Close">
+<!ENTITY exitCmd.label ".Exit">
+
+<!-- Edit menu items -->
+<!ENTITY editMenu.label ".Edit">
+<!ENTITY undoCmd.label ".Undo">
+<!ENTITY cutCmd.label ".Cut">
+<!ENTITY copyCmd.label ".Copy">
+<!ENTITY pasteCmd.label ".Paste">
+<!ENTITY pasteAsQuotCmd.label ".Paste as Quotation">
+<!ENTITY deleteCmd.label ".Delete">
+<!ENTITY selectAllCmd.label ".Select All">
+<!ENTITY findCmd.label ".Find">
+<!ENTITY findAgainCmd.label ".Find Again">
+<!ENTITY doNotCompleteAddrCmd.label ".Do Not Complete Address">
+<!ENTITY showMatchingAddrCmd.label ".Show Matching Address">
+<!ENTITY prefsCmd.label ".Preferences...">
+
+<!-- View menu items -->
+<!ENTITY viewMenu.label ".View">
+<!ENTITY showCmd.label ".Show">
+<!ENTITY addressCmd.label ".Address">
+<!ENTITY attachmentsCmd.label ".Attachments">
+<!ENTITY wrapCmd.label ".Wrap Long Lines">
+<!ENTITY charSetCmd.label ".Character Set">
+
+<!-- Tools menu items -->
+<!ENTITY toolsMenu.label ".Tools">
+<!ENTITY checkSpellCmd.label ".Check Spelling...">
+
+<!-- Toolbar items -->
+<!ENTITY sendButton.img "resource:/res/mailnews/compose/send.gif">
+<!ENTITY sendButton.label "Send">
+<!ENTITY quoteButton.img "resource:/res/mailnews/compose/quote.gif">
+<!ENTITY quoteButton.label "Quote">
+<!ENTITY addressButton.img "resource:/res/mailnews/compose/address.gif">
+<!ENTITY addressButton.label "Address">
+<!ENTITY attachButton.img "resource:/res/mailnews/compose/attach.gif">
+<!ENTITY attachButton.label "Attach">
+<!ENTITY spellingButton.img "resource:/res/mailnews/compose/spelling.gif">
+<!ENTITY spellingButton.label "Spelling">
+<!ENTITY saveButton.img "resource:/res/mailnews/compose/save.gif">
+<!ENTITY saveButton.label "Save">
+<!ENTITY stopButton.img "resource:/res/mailnews/compose/stop.gif">
+<!ENTITY stopButton.label "Stop">
+<!ENTITY throbberButton.img "resource:/res/throbber/anims00.gif">
+<!ENTITY throbberButton.url "http://www.mozilla.org/">
+
 ]>
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="startup()" title="Message Compose"
+        onload="startup()" title="&msgComposeWindow.title;"
 		style="width:100%;height:100%"> 
   
 <html:script src="resource:/res/mailnews/messenger/widgetglue.js"></html:script>
@@ -125,71 +187,71 @@
 
 <menubar>
 	<menu name="File">
-		<menuitem name=".New" cmd="nsCmd:ComposeNew"/>
-		<menuitem name=".Save" cmd="nsCmd:ComposeSave"/>
-		<menuitem name=".Save As" cmd="nsCmd:ComposeSaveAs"/>
-		<menuitem name=".Attach" cmd="nsCmd:ComposeAttach"/>
+		<menuitem name="&newCmd.label;" cmd="nsCmd:ComposeNew"/>
+		<menuitem name="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
+		<menuitem name="&saveAsCmd.label;" cmd="nsCmd:ComposeSaveAs"/>
+		<menuitem name="&attachCmd.label;" cmd="nsCmd:ComposeAttach"/>
 		<separator/>
-		<menuitem name=".Send Now" cmd="nsCmd:ComposeSend"/>
-		<menuitem name=".Send Later" cmd="nsCmd:ComposeSendLater"/>
-		<menuitem name=".Quote Original Message" cmd="nsCmd:ComposeQuote"/>
-		<menuitem name=".Select Addresses..." cmd="nsCmd:ComposeAddress"/>
+		<menuitem name="&sendNowCmd.label;" cmd="nsCmd:ComposeSend"/>
+		<menuitem name="&sendLaterCmd.label;" cmd="nsCmd:ComposeSendLater"/>
+		<menuitem name="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
+		<menuitem name="&selectAddressCmd.label;" cmd="nsCmd:ComposeAddress"/>
 		<separator/>
-		<menuitem name=".Print Setup" cmd="nsCmd:BrowserPrintSetup"/>
-		<menuitem name=".Print Preview" cmd="nsCmd:BrowserPrintPreview"/>
-		<menuitem name=".Print" cmd="nsCmd:BrowserPrint"/>
+		<menuitem name="&printSetupCmd.label;" cmd="nsCmd:BrowserPrintSetup"/>
+		<menuitem name="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
+		<menuitem name="&printCmd.label;" cmd="nsCmd:BrowserPrint"/>
 		<separator/>
-		<menuitem name=".Close" cmd="nsCmd:BrowserClose"/>
-		<menuitem name=".Exit" onclick="ComposeExit()"/>
+		<menuitem name="&closeCmd.label;" cmd="nsCmd:BrowserClose"/>
+		<menuitem name="&exitCmd.label;" onclick="ComposeExit()"/>
 	</menu>
-    <menu name=".Edit">
-		<menuitem name=".Undo" cmd="nsCmd:ComposeNYI"/>
+    <menu name="&editMenu.label;">
+		<menuitem name="&undoCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name=".Cut" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name=".Copy" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name=".Paste" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name=".Paste as Quotation" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name=".Delete" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name=".Select All" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&cutCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&copyCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&pasteCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&pasteAsQuotCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&deleteCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&selectAllCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name=".Find" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name=".Find Again" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&findCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&findAgainCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name=".Do Not Complete Address" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name=".Show Matching Addresses" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&doNotCompleteAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&showMatchingAddrCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name=".Preferences..." cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&prefsCmd.label;" cmd="nsCmd:ComposeNYI"/>
     </menu>
-    <menu name=".View">
-		<menuitem name=".Show" cmd="nsCmd:ComposeNYI"/>
+    <menu name="&viewMenu.label;">
+		<menuitem name="&showCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name=".Address" cmd="nsCmd:ComposeNYI"/>
-		<menuitem name=".Attachments" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&addressCmd.label;" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&attachmentsCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name=".Wrap Long Lines" cmd="nsCmd:ComposeNYI"/>
+		<menuitem name="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menu name="Character Set">
-    <menuitem name="Western (ISO-8859-1)" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
-    <menuitem name="Japanese (ISO-2022-JP)" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
+    		<menu name="Character Set">
+    			<menuitem name="Western (ISO-8859-1)" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
+    			<menuitem name="Japanese (ISO-2022-JP)" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
+    		</menu>
     </menu>
-    </menu>
-    <menu name=".Tools">
-		<menuitem name=".Check Spelling..." cmd="nsCmd:ComposeSpelling"/>
+    <menu name="&toolsMenu.label;">
+		<menuitem name="&checkSpellCmd.label;" cmd="nsCmd:ComposeSpelling"/>
     </menu>
 </menubar>
 
 <box id="toolbar" align="vertical" style="width:100%;height:100%">
 <toolbox>
 	<toolbar>
- 		<titledbutton src="resource:/res/mailnews/compose/send.gif" align="bottom" value="Send" onClick="SendMessage()"/>
- 		<titledbutton src="resource:/res/mailnews/compose/quote.gif" align="bottom" value="Quote" onClick="QuoteMessage()"/>
- 		<titledbutton src="resource:/res/mailnews/compose/address.gif" align="bottom" value="Address" onClick="SelectAddress()"/>
- 		<titledbutton src="resource:/res/mailnews/compose/attach.gif" align="bottom" value="Attach" onClick="AttachFile()"/>
- 		<titledbutton src="resource:/res/mailnews/compose/spelling.gif" align="bottom" value="Spelling" onClick="Spelling()"/>
- 		<titledbutton src="resource:/res/mailnews/compose/save.gif" align="bottom" value="Save" onClick="SaveMessage()"/>
- 		<titledbutton src="resource:/res/mailnews/compose/stop.gif" align="bottom" value="Stop" onClick="Stop()"/>
+ 		<titledbutton src="&sendButton.img;" align="bottom" value="&sendButton.label;" onClick="SendMessage()"/>
+ 		<titledbutton src="&quoteButton.img;" align="bottom" value="&quoteButton.label;" onClick="QuoteMessage()"/>
+ 		<titledbutton src="&addressButton.img;" align="bottom" value="&addressButton.label;" onClick="SelectAddress()"/>
+ 		<titledbutton src="&attachButton.img;" align="bottom" value="&attachButton.label;" onClick="AttachFile()"/>
+ 		<titledbutton src="&spellingButton.img;" align="bottom" value="&spellingButton.label;" onClick="Spelling()"/>
+ 		<titledbutton src="&saveButton.img;" align="bottom" value="&saveButton.label;" onClick="SaveMessage()"/>
+ 		<titledbutton src="&stopButton.img;" align="bottom" value="&stopButton.label;" onClick="Stop()"/>
 	    <spring flex="100%"/>
-		<titledbutton src="resource:/res/throbber/anims00.gif" align="bottom" onclick="MsgHome('http://www.mozilla.org/')"/>
+		<titledbutton src="&throbberButton.img;" align="bottom" onclick="MsgHome('&throbberButton.url;')"/>
 	</toolbar>
 
 	<toolbar>

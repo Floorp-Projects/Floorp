@@ -1,11 +1,38 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
 
-<!DOCTYPE window> 
+<!DOCTYPE window
+[
+
+<!ENTITY messengerWindow.title "Messenger">
+
+<!-- menu items:  the . means that the menu item isn't implemented yet -->
+
+<!-- File menu items -->
+<!ENTITY Menu.label ""> 
+<!ENTITY Cmd.label ".">  
+
+<!-- Toolbar items -->  
+<!ENTITY getMsgButton.img "resource:/res/mailnews/messenger/getmsg.gif">
+<!ENTITY getMsgButton.label "Get Msg">  
+<!ENTITY newMsgButton.img "resource:/res/mailnews/messenger/newmsg.gif">
+<!ENTITY newMsgButton.label "New Msg">  
+<!ENTITY replyButton.img "resource:/res/mailnews/messenger/reply.gif">
+<!ENTITY replyButton.label "Reply">  
+<!ENTITY forwardButton.img "resource:/res/mailnews/messenger/forward.gif">
+<!ENTITY forwardButton.label "Forward">  
+<!ENTITY deleteButton.img "resource:/res/mailnews/messenger/delete.gif">
+<!ENTITY deleteButton.label "Delete">  
+<!ENTITY getNewsButton.img "resource:/res/mailnews/messenger/getmsg.gif">
+<!ENTITY getNewsButton.label "Load News">  
+<!ENTITY throbber.img "resource:/res/throbber/anims00.gif">
+<!ENTITY throbber.url "http://www.mozilla.org/"> 
+
+]> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	title="Messenger"
+	title="&messengerWindow.title;"
         style="width:100%;height:100%">
 
 <html:script src="resource:/res/mailnews/messenger/widgetglue.js"></html:script>
@@ -262,7 +289,7 @@
 
           <spring flex="100%"/>
 
-	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://www.mozilla.org/')"/>
+	  <titledbutton src="&throbber.img;" align="right" onclick="MsgHome('&throbber.url;')"/>
       </toolbar>
     </toolbox>
 

@@ -1,7 +1,13 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="threadPane.css" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+	<!ENTITY senderColumn.label "Sender">
+	<!ENTITY subjectColumn.label "Subject">
+	<!ENTITY dateColumn.label "Date">
+	<!ENTITY statusColumn.label "Status">
+]>   
 
 <window
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
@@ -16,12 +22,10 @@
   <treecol id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
   <treehead>
     <treeitem>
-		<treecell onclick="return parent.parent.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">
-			Subject
-		</treecell>
-		<treecell onclick="return parent.parent.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');">Sender</treecell>
-		<treecell onclick="return parent.parent.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');">Date</treecell>
-		<treecell onclick="return parent.parent.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');">Status</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">&subjectColumn.label;</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');">&senderColumn.label;</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');">&dateColumn.label;</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');">&statusColumn.label;</treecell>
     </treeitem>
   </treehead>
   

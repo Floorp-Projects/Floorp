@@ -1,7 +1,14 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="folderPane.css" type="text/css"?>
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+	<!ENTITY nameColumn.label   "Name"> 
+	<!ENTITY unreadColumn.label "Unread"> 
+	<!ENTITY totalColumn.label "Total"> 
+	<!ENTITY localMailHost.img "resource:/res/mailnews/messenger/localMailHost.gif">
+	<!ENTITY localMailHost.label "Local Mail">
+]>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -15,15 +22,15 @@
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treeitem>
-      <treecell>Name</treecell>
-      <treecell>Unread</treecell>
-      <treecell>Total</treecell>
+      <treecell>&nameColumn.label;</treecell>
+      <treecell>&unreadColumn.label;</treecell>
+      <treecell>&totalColumn.label;</treecell>
     </treeitem>
   </treehead>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="mailbox:/" open="true">
-      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="resource:/res/mailnews/messenger/localMailHost.gif"/>Local Mail</treecell>
+      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src=&localMailHost.img;/>&localMailHost.label;</treecell>
       </treeitem>
   </treebody>
 </tree>
