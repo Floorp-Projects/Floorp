@@ -690,17 +690,30 @@ nsEventStateManager :: GenerateDragGesture ( nsIPresContext* aPresContext, nsGUI
     // Check if selection is tracking drag gestures, if so
     // don't interfere!
 
-    nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell){
-      nsCOMPtr<nsIFrameSelection> frameSel;
-      rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
-      if (NS_SUCCEEDED(rv) && frameSel){
-        PRBool mouseDownState = PR_TRUE;
-        frameSel->GetMouseDownState(&mouseDownState);
-        if (mouseDownState) {
-          StopTrackingDragGesture();
-          return;
+    if (mGestureDownFrame) {
+      nsCOMPtr<nsISelectionController> selCon;
+      nsresult rv = mGestureDownFrame->GetSelectionController(aPresContext, getter_AddRefs(selCon));
+
+      if (NS_SUCCEEDED(rv) && selCon) {
+        nsCOMPtr<nsIFrameSelection> frameSel;
+
+        frameSel = do_QueryInterface(selCon);
+
+        if (! frameSel) {
+          nsCOMPtr<nsIPresShell> shell;
+          nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+
+          if (NS_SUCCEEDED(rv) && shell)
+            rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
+        }
+
+        if (NS_SUCCEEDED(rv) && frameSel) {
+          PRBool mouseDownState = PR_TRUE;
+          frameSel->GetMouseDownState(&mouseDownState);
+          if (mouseDownState) {
+            StopTrackingDragGesture();
+            return;
+          }
         }
       }
     }
