@@ -219,18 +219,11 @@ void TimerImpl::Fire()
 //----------------------------------------------------------------------------------------
 {
   NS_PRECONDITION(mRefCnt > 0, "Firing a disposed Timer!");
-  if (mCallbackFunc != NULL)
-  {
+  if (mCallbackFunc != NULL) {
     (*mCallbackFunc)(this, mClosure);
   }
-  else if (mCallbackObject != NULL)
-  {
-    nsITimerCallback* object = mCallbackObject;
-    mCallbackObject = nsnull;
-      // because the Notify call will release it.
-      // We will release again it in the destructor if
-      // it is not null when we go away!
-    object->Notify(this); // Fire the timer
+  else if (mCallbackObject != NULL) {
+    mCallbackObject->Notify(this); // Fire the timer
   }
 }
 
