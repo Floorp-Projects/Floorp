@@ -560,7 +560,7 @@ public:
 #endif
 
 protected:
-  typedef long PtrBits;
+  typedef PRWord PtrBits;
 
   // Subclasses may use the low two bits of mParentPtrBits to store other data
   enum { kParentBitMask = 0x3 };
