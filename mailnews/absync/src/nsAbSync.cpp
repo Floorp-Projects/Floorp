@@ -918,6 +918,10 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
       if (NS_FAILED(aCard->GetKey(&aKey)))
         return PR_FALSE;
       
+      // Ugh...this should never happen...BUT??
+      if (aKey <= 0)
+        return PR_FALSE;
+
       // Needs to be negative, so make it so!
       char *tVal = PR_smprintf("%d", (aKey * -1));
       if (tVal)
@@ -1110,6 +1114,10 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
         //
         PRUint32    aKey;
         if (NS_FAILED(card->GetKey(&aKey)))
+          continue;
+
+        // Ugh...this should never happen...BUT??
+        if (aKey <= 0)
           continue;
 
         mNewSyncMapingTable[workCounter].localID = aKey;
