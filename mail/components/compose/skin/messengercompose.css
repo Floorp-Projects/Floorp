@@ -29,7 +29,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: options menu icons ::::: */
+/* ::::: tools menu icons ::::: */
 
 .icon-mail16 {
   list-style-image: url("chrome://communicator/skin/taskbar/mail-16.gif");
