@@ -27,7 +27,9 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
+#include "nsIDocument.h"
 #include "nsIInterfaceRequestor.h"
 
 nsDOMWindowList::nsDOMWindowList(nsIDocShell *aDocShell)
@@ -65,8 +67,25 @@ nsDOMWindowList::GetLength(PRUint32* aLength)
   nsresult ret;
   PRInt32 length;
 
-  ret = mDocShellNode->GetChildCount(&length);
-  *aLength = length;
+  *aLength = 0;
+  if (mDocShellNode) {
+    nsCOMPtr<nsIDocShell> shell = do_QueryInterface(mDocShellNode);
+    if (shell) {
+      nsCOMPtr<nsIDOMDocument> domdoc;
+      
+      shell->GetDocument(getter_AddRefs(domdoc));
+      if (domdoc) {
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+        if (doc) {
+          doc->FlushPendingNotifications();
+        }
+      }
+    }
+    
+    ret = mDocShellNode->GetChildCount(&length);
+    *aLength = length;
+  }
+
   return ret;
 }
 
@@ -75,15 +94,28 @@ nsDOMWindowList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 {
   nsCOMPtr<nsIDocShellTreeItem> item;
 
-  mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
+  *aReturn = nsnull;
+  if (mDocShellNode) {
+    nsCOMPtr<nsIDocShell> shell = do_QueryInterface(mDocShellNode);
+    if (shell) {
+      nsCOMPtr<nsIDOMDocument> domdoc;
+      
+      shell->GetDocument(getter_AddRefs(domdoc));
+      if (domdoc) {
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+        if (doc) {
+          doc->FlushPendingNotifications();
+        }
+      }
+    }
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
-  NS_ASSERTION(globalObject, "Couldn't get to the globalObject");
-  if (globalObject) {
-    CallQueryInterface(globalObject.get(), aReturn);
-  }
-  else {
-    *aReturn = nsnull;
+    mDocShellNode->GetChildAt(aIndex, getter_AddRefs(item));
+    
+    nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
+    NS_ASSERTION(globalObject, "Couldn't get to the globalObject");
+    if (globalObject) {
+      CallQueryInterface(globalObject.get(), aReturn);
+    }
   }
   return NS_OK;
 }
@@ -93,17 +125,31 @@ nsDOMWindowList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
 {
   nsCOMPtr<nsIDocShellTreeItem> item;
 
-  mDocShellNode->FindChildWithName(aName.GetUnicode(), PR_FALSE,
-    nsnull, getter_AddRefs(item));
+  *aReturn = nsnull;
+  if (mDocShellNode) {
+    nsCOMPtr<nsIDocShell> shell = do_QueryInterface(mDocShellNode);
+    if (shell) {
+      nsCOMPtr<nsIDOMDocument> domdoc;
+      
+      shell->GetDocument(getter_AddRefs(domdoc));
+      if (domdoc) {
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+        if (doc) {
+          doc->FlushPendingNotifications();
+        }
+      }
+    }
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
-  NS_ASSERTION(globalObject, "Couldn't get to the globalObject");
-  if (globalObject) {
-    CallQueryInterface(globalObject.get(), aReturn);
+    mDocShellNode->FindChildWithName(aName.GetUnicode(), PR_FALSE,
+                                     nsnull, getter_AddRefs(item));
+    
+    nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(item));
+    NS_ASSERTION(globalObject, "Couldn't get to the globalObject");
+    if (globalObject) {
+      CallQueryInterface(globalObject.get(), aReturn);
+    }
   }
-  else {
-    *aReturn = nsnull;
-  }
+
   return NS_OK;
 }
 
