@@ -418,7 +418,6 @@ sub init {
              {
                  push(@wherepart, "$table.isprivate < 1");
              }
-             push(@wherepart, "$table.bug_id = bugs.bug_id");
 
              # Create search terms to add to the SELECT and WHERE clauses.
              # $term1 searches comments.
