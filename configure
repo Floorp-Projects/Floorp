@@ -226,10 +226,10 @@ ac_help="$ac_help
   --with-doc-output-dir=DIR
                           Dir to generate docs into"
 ac_help="$ac_help
-  --disable-pedantic      Issue all warnings demanded by strict ANSI C "
-ac_help="$ac_help
   --enable-long-long-warning 
                           Warn about use of non-ANSI long long type"
+ac_help="$ac_help
+  --disable-pedantic      Issue all warnings demanded by strict ANSI C "
 ac_help="$ac_help
   --enable-cpp-rtti       Enable C++ RTTI "
 ac_help="$ac_help
@@ -13070,6 +13070,48 @@ else
     echo "$ac_t""no" 1>&6
 fi
 
+# Check whether --enable-long-long-warning or --disable-long-long-warning was given.
+if test "${enable_long_long_warning+set}" = set; then
+  enableval="$enable_long_long_warning"
+  if test "$enableval" = "yes"; then
+    _IGNORE_LONG_LONG_WARNINGS=
+  elif test "$enableval" = "no"; then
+    _IGNORE_LONG_LONG_WARNINGS=1
+  else
+    { echo "configure: error: Option, long-long-warning, does not take an argument ($enableval)." 1>&2; exit 1; }
+  fi
+fi
+
+
+if test "$_IGNORE_LONG_LONG_WARNINGS"; then
+     _SAVE_CFLAGS="$CFLAGS"
+     CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
+     echo $ac_n "checking whether compiler supports -Wno-long-long""... $ac_c" 1>&6
+echo "configure:13091: checking whether compiler supports -Wno-long-long" >&5
+     cat > conftest.$ac_ext <<EOF
+#line 13093 "configure"
+#include "confdefs.h"
+
+int main() {
+return(0);
+; return 0; }
+EOF
+if { (eval echo configure:13100: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+   _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+	  result="yes" 
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  result="no"
+fi
+rm -f conftest*
+     echo "$ac_t""$result" 1>&6
+     CFLAGS="$_SAVE_CFLAGS"
+fi
+
 ac_ext=C
 # CXXFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -13094,12 +13136,12 @@ if test "$_PEDANTIC"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
     echo $ac_n "checking whether C++ compiler has -pedantic long long bug""... $ac_c" 1>&6
-echo "configure:13098: checking whether C++ compiler has -pedantic long long bug" >&5
+echo "configure:13140: checking whether C++ compiler has -pedantic long long bug" >&5
     if test "$cross_compiling" = yes; then
   result="maybe" 
 else
   cat > conftest.$ac_ext <<EOF
-#line 13103 "configure"
+#line 13145 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
 extern "C" void exit(int);
@@ -13108,7 +13150,7 @@ extern "C" void exit(int);
                 if (sizeof(long long) != 8) { return 1; } 
                     return 0; } 
 EOF
-if { (eval echo configure:13112: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:13154: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   result="no"
 else
@@ -13140,12 +13182,12 @@ fi
 _SAVE_CXXFLAGS=$CXXFLAGS
 CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS}"
 echo $ac_n "checking for correct overload resolution with const and templates""... $ac_c" 1>&6
-echo "configure:13144: checking for correct overload resolution with const and templates" >&5
+echo "configure:13186: checking for correct overload resolution with const and templates" >&5
 if eval "test \"`echo '$''{'ac_nscap_nonconst_opeq_bug'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 13149 "configure"
+#line 13191 "configure"
 #include "confdefs.h"
 
                       template <class T>
@@ -13175,7 +13217,7 @@ int main() {
                     
 ; return 0; }
 EOF
-if { (eval echo configure:13179: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:13221: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_nscap_nonconst_opeq_bug="no"
 else
@@ -13196,48 +13238,6 @@ if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
 EOF
 
 fi
-fi
-
-# Check whether --enable-long-long-warning or --disable-long-long-warning was given.
-if test "${enable_long_long_warning+set}" = set; then
-  enableval="$enable_long_long_warning"
-  if test "$enableval" = "yes"; then
-    _IGNORE_LONG_LONG_WARNINGS=
-  elif test "$enableval" = "no"; then
-    _IGNORE_LONG_LONG_WARNINGS=1
-  else
-    { echo "configure: error: Option, long-long-warning, does not take an argument ($enableval)." 1>&2; exit 1; }
-  fi
-fi
-
-
-if test "$_IGNORE_LONG_LONG_WARNINGS"; then
-     _SAVE_CFLAGS="$CFLAGS"
-     CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
-     echo $ac_n "checking whether compiler supports -Wno-long-long""... $ac_c" 1>&6
-echo "configure:13219: checking whether compiler supports -Wno-long-long" >&5
-     cat > conftest.$ac_ext <<EOF
-#line 13221 "configure"
-#include "confdefs.h"
-
-int main() {
-return(0);
-; return 0; }
-EOF
-if { (eval echo configure:13228: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
-  rm -rf conftest*
-   _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  result="yes" 
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  result="no"
-fi
-rm -f conftest*
-     echo "$ac_t""$result" 1>&6
-     CFLAGS="$_SAVE_CFLAGS"
 fi
 
 # Check whether --enable-cpp-rtti or --disable-cpp-rtti was given.
