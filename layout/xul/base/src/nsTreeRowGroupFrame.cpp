@@ -363,7 +363,12 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
     return NS_OK;
 
   printf("The position changed!\n");
-  
+ 
+  if (mContentChain) {
+    NS_ERROR("This is bad!");
+    return NS_OK;
+  }
+
   // Get our row count.
   PRInt32 rowCount;
   GetRowCount(rowCount);
