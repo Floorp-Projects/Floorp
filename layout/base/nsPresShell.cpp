@@ -3898,7 +3898,7 @@ PresShell::HandleEvent(nsIView         *aView,
           // coordinates as the frame's own Rect, so mRect.Contains(aPoint)
           // works.  However, this point is relative to the frame's rect, so
           // we need to add on the origin of the rect.
-          nsPoint eventPoint;
+/*          nsPoint eventPoint;
           frame->GetOrigin(eventPoint);
           eventPoint += aEvent->point;
           rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FOREGROUND, &mCurrentEventFrame);
@@ -3907,13 +3907,13 @@ PresShell::HandleEvent(nsIView         *aView,
             if (rv != NS_OK) {
               rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
               if (rv != NS_OK) {
-#ifdef XP_MAC
+#ifdef XP_MAC*/
                 // On the Mac it is possible to be running with no windows open, only the native menu bar.
                 // In this situation, we need to handle key board events but there are no frames, so
                 // we set mCurrentEventContent and that works itself out in HandleEventInternal.
                 mCurrentEventContent = mDocument->GetRootContent();
                 mCurrentEventFrame = nsnull;
-#else
+/*#else
 								if (aForceHandle) {
 									mCurrentEventFrame = frame;
 								}
@@ -3926,6 +3926,7 @@ PresShell::HandleEvent(nsIView         *aView,
               }
             }
           }
+          */
         }
       }
       else {
