@@ -38,6 +38,8 @@ CPPSRCS		= \
 		nsJSXULCommandDispatcher.cpp \
 		nsJSXULPopupElement.cpp \
 		nsJSXULTreeElement.cpp \
+		nsJSXULIFrameElement.cpp \
+		nsJSXULBrowserElement.cpp \
 		nsJSXULEditorElement.cpp \
 		nsRDFDOMNodeList.cpp \
 		nsXULElement.cpp \
@@ -53,6 +55,8 @@ CPPSRCS		= \
 		nsXULKeyListener.cpp \
 		nsXULPopupElement.cpp \
 		nsXULTreeElement.cpp \
+		nsXULIFrameElement.cpp \
+		nsXULBrowserElement.cpp \
 		nsXULEditorElement.cpp \
 		nsXULPrototypeDocument.cpp \
 		nsXULPrototypeCache.cpp \
