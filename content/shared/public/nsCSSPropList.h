@@ -401,6 +401,7 @@ CSS_PROP_SHORTHAND(-moz-outline, _moz_outline, MozOutline)  // XXX This is tempo
 CSS_PROP_OUTLINE(-moz-outline-color, _moz_outline_color, MozOutlineColor, Margin, mOutlineColor, eCSSType_Value, PR_FALSE, kOutlineColorKTable) // XXX bug 48973
 CSS_PROP_OUTLINE(-moz-outline-style, _moz_outline_style, MozOutlineStyle, Margin, mOutlineStyle, eCSSType_Value, PR_FALSE, kBorderStyleKTable) // XXX bug 48973
 CSS_PROP_OUTLINE(-moz-outline-width, _moz_outline_width, MozOutlineWidth, Margin, mOutlineWidth, eCSSType_Value, PR_TRUE, kBorderWidthKTable) // XXX bug 48973
+CSS_PROP_OUTLINE(-moz-outline-offset, _moz_outline_offset, MozOutlineOffset, Margin, mOutlineOffset, eCSSType_Value, PR_TRUE, nsnull)
 CSS_PROP_SHORTHAND(overflow, overflow, Overflow)
 CSS_PROP_DISPLAY(overflow-x, overflow_x, OverflowX, Display, mOverflowX, eCSSType_Value, PR_FALSE, kOverflowSubKTable)
 CSS_PROP_DISPLAY(overflow-y, overflow_y, OverflowY, Display, mOverflowY, eCSSType_Value, PR_FALSE, kOverflowSubKTable)

@@ -582,6 +582,7 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),
     mOutlineRadius(aCopy.mOutlineRadius),
+    mOutlineOffset(aCopy.mOutlineOffset),
     mFloatEdge(aCopy.mFloatEdge)
 {
   MOZ_COUNT_CTOR(nsCSSMargin);
@@ -639,6 +640,7 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
   nsAutoString  buffer;
   mOutlineWidth.AppendToString(buffer, eCSSProperty__moz_outline_width);
   mOutlineColor.AppendToString(buffer, eCSSProperty__moz_outline_color);
+  mOutlineOffset.AppendToString(buffer, eCSSProperty__moz_outline_offset);
   mOutlineStyle.AppendToString(buffer, eCSSProperty__moz_outline_style);
   {
     static const nsCSSProperty trbl[] = {

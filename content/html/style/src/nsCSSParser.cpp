@@ -4419,6 +4419,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HOK, 
                         nsCSSProps::kBorderStyleKTable);
   case eCSSProperty__moz_outline_width:
+  case eCSSProperty__moz_outline_offset:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKL,
                         nsCSSProps::kBorderWidthKTable);
 #endif

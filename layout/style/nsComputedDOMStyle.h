@@ -237,6 +237,7 @@ private:
   nsresult GetOutlineWidth(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOutlineStyle(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOutlineColor(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetOutlineOffset(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOutlineRadiusBottomLeft(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOutlineRadiusBottomRight(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOutlineRadiusTopLeft(nsIFrame *aFrame, nsIDOMCSSValue** aValue);

@@ -2494,7 +2494,10 @@ static nsRect ComputeOutlineRect(const nsIFrame* aFrame, PRBool* aAnyOutline,
       outline->GetOutlineWidth(width);
     NS_ASSERTION(result, "GetOutlineWidth had no cached outline width");
     if (width > 0) {
-      r.Inflate(width, width);
+      nscoord offset;
+      outline->GetOutlineOffset(offset);
+      nscoord inflateBy = PR_MAX(width + offset, 0);
+      r.Inflate(inflateBy, inflateBy);
       *aAnyOutline = PR_TRUE;
     }
   }
