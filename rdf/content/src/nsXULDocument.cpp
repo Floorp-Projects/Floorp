@@ -142,6 +142,10 @@ static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
 
 ////////////////////////////////////////////////////////////////////////
+
+static PRLogModuleInfo* gMapLog;
+
+////////////////////////////////////////////////////////////////////////
 // nsElementMap
 
 class nsElementMap
@@ -657,9 +661,9 @@ XULDocumentImpl::XULDocumentImpl(void)
       mXULBuilder(nsnull),
       mLocalDataSource(nsnull),
       mDocumentDataSource(nsnull),
+      mParser(nsnull),
       mLineBreaker(nsnull),
       mWordBreaker(nsnull),
-      mParser(nsnull),
       mContentViewerContainer(nsnull),
       mCommand(""),
       mFragmentRoot(nsnull)
@@ -680,6 +684,11 @@ XULDocumentImpl::XULDocumentImpl(void)
         kIdAtom        = NS_NewAtom("id");
         kObservesAtom  = NS_NewAtom("observes");
     }
+
+#ifdef PR_LOGGING
+    if (! gMapLog)
+        gMapLog = PR_NewLogModule("nsXULDocumentElementMap");
+#endif
 }
 
 XULDocumentImpl::~XULDocumentImpl()
@@ -1976,10 +1985,14 @@ XULDocumentImpl::AddElementForResource(nsIRDFResource* aResource, nsIContent* aE
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-#ifdef DEBUG_waterson
-    nsXPIDLCString uri;
-    aResource->GetValue( getter_Copies(uri) );
-    printf("add    [%p] <-- %s\n", aElement, (const char*) uri);
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+        nsXPIDLCString uri;
+        aResource->GetValue( getter_Copies(uri) );
+        PR_LOG(gMapLog, PR_LOG_ALWAYS,
+               ("xulelemap(%p) add    [%p] <-- %s\n",
+                this, aElement, (const char*) uri));
+    }
 #endif
 
     mResources.Add(aResource, aElement);
@@ -1998,10 +2011,14 @@ XULDocumentImpl::RemoveElementForResource(nsIRDFResource* aResource, nsIContent*
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-#ifdef DEBUG_waterson
-    nsXPIDLCString uri;
-    aResource->GetValue( getter_Copies(uri) );
-    printf("remove [%p] <-- %s\n", aElement, (const char*) uri);
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+        nsXPIDLCString uri;
+        aResource->GetValue( getter_Copies(uri) );
+        PR_LOG(gMapLog, PR_LOG_ALWAYS,
+               ("xulelement(%p) remove [%p] <-- %s\n",
+                this, aElement, (const char*) uri));
+    }
 #endif
 
     mResources.Remove(aResource, aElement);
