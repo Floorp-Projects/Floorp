@@ -1679,16 +1679,18 @@ il_gif_abort(il_container *ic)
          * present, will be freed when the image container is
          * destroyed.
          */
-        
+
         if (gs->is_local_colormap_defined) {
-            if (gs->global_colormap) {
-                PR_FREEIF(gs->global_colormap);
-                gs->global_colormap = NULL;
-            }
-        } else {
             if (gs->local_colormap) {
                 PR_FREEIF(gs->local_colormap);
                 gs->local_colormap = NULL;
+                ic->src_header->color_space->cmap.map = NULL;
+            }
+        } else {
+            if (gs->global_colormap) {
+                PR_FREEIF(gs->global_colormap);
+                gs->global_colormap = NULL;
+                ic->src_header->color_space->cmap.map = NULL;
             }
         }
        
