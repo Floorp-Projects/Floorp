@@ -32,8 +32,8 @@ public:
   friend nsresult NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult);
 
   // Get/Set the associated out of flow frame
-  nsIFrame*   GetOutOfFlowFrame() const {return mOutOfFlowFrame;}
-  void        SetOutOfFlowFrame(nsIFrame* aFrame) {mOutOfFlowFrame = aFrame;}
+  nsIFrame*  GetOutOfFlowFrame() const {return mOutOfFlowFrame;}
+  void       SetOutOfFlowFrame(nsIFrame* aFrame) {mOutOfFlowFrame = aFrame;}
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -46,6 +46,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   /**
    * Get the "type" of the frame
@@ -54,7 +55,7 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
-  NS_IMETHOD  GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
 protected:
   nsIFrame* mOutOfFlowFrame;

@@ -93,3 +93,23 @@ nsPlaceholderFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("Placeholder", aResult);
 }
+
+NS_IMETHODIMP
+nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  IndentBy(out, aIndent);
+  ListTag(out);
+  nsIView* view;
+  GetView(&view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+  }
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+  fprintf(out, " outOfFlowFrame=");
+  nsFrame::ListTag(out, mOutOfFlowFrame);
+  fputs("\n", out);
+  return NS_OK;
+}
