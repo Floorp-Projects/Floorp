@@ -442,7 +442,7 @@ LDFLAGS="$_SAVE_LDFLAGS"
 
 res=`echo :$MOZ_FE | grep -c " x"`
 if [ test $res != 0 ]; then
-    if [ test "$MOTIF_REQUIRES_XPM" = "True" && test "$MOTIF_VERSION" = "2.1" ]; then
+    if [ test "$MOTIF_REQUIRES_XPM" = "True" || test "$MOTIF_VERSION" = "2.1" ]; then
         _SAVE_LDFLAGS="$LDFLAGS"
     	LDFLAGS="$XLDFLAGS $LDFLAGS"
 	if [ test "$MOTIF_REQUIRES_XPM" = "True" ]; then
