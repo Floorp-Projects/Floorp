@@ -19,15 +19,13 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mike Shaver <shaver@mozilla.org>
  */
 
-#include <iostream.h>
-#include <iomanip.h>   // needed for libstdc++-v3
 
 #ifdef XP_MAC
 #include "macstdlibextras.h"
 #endif
-
 
 #include "plstr.h"
 #include "prlink.h"
@@ -36,27 +34,8 @@
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
 
-static PRBool gUnreg = PR_FALSE;
+static PRBool gUnreg = PR_FALSE, gSilent = PR_FALSE, gQuiet = PR_FALSE;
 
-void print_err(nsresult err)
-{
-  switch (err) {
-  case NS_ERROR_FACTORY_NOT_LOADED:
-    cerr << "Factory not loaded";
-    break;
-  case NS_NOINTERFACE:
-    cerr << "No Interface";
-    break;
-  case NS_ERROR_NULL_POINTER:
-    cerr << "Null pointer";
-    break;
-  case NS_ERROR_OUT_OF_MEMORY:
-    cerr << "Out of memory";
-    break;
-  default:
-    cerr << hex << err << dec;
-  }
-}
 
 nsresult Register(const char *path) 
 { 
@@ -88,7 +67,7 @@ nsresult Unregister(const char *path)
 
   if (NS_FAILED(rv) || (!spec)) 
   {
-      printf("create nsILocalFile failed\n");
+      fputs("create nsILocalFile failed\n", stderr);
       return NS_ERROR_FAILURE;
   }
 
@@ -98,9 +77,50 @@ nsresult Unregister(const char *path)
   return rv;
 }
 
+void ReportSuccess(const char *file)
+{
+  if (gQuiet)
+    return;
+
+  if (gUnreg)
+    printf("Unregistration successful for %s\n", file);
+  else
+    printf("Registration successful for %s\n", file);
+}
+
+void ReportError(nsresult err, const char *file)
+{
+  if (gSilent)
+    return;
+
+  if (gUnreg)
+    fputs("Unregistration failed: (", stderr);
+  else
+    fputs("Registration failed: (", stderr);
+  
+  switch (err) {
+  case NS_ERROR_FACTORY_NOT_LOADED:
+    fputs("Factory not loaded", stderr);
+    break;
+  case NS_NOINTERFACE:
+    fputs("No Interface", stderr);
+    break;
+  case NS_ERROR_NULL_POINTER:
+    fputs("Null pointer", stderr);
+    break;
+  case NS_ERROR_OUT_OF_MEMORY:
+    fputs("Out of memory", stderr);
+    break;
+  default:
+    fprintf(stderr, "%x", (unsigned)err);
+  }
+
+  fprintf(stderr, ") %s\n", file);
+}
+
 int ProcessArgs(int argc, char *argv[])
 {
-  int i = 1;
+  int i = 1, result = 0;
   nsresult res;
 
   while (i < argc) {
@@ -111,40 +131,36 @@ int ProcessArgs(int argc, char *argv[])
         case 'u':
           gUnreg = PR_TRUE;
           break;
+        case 'Q':
+          gSilent = PR_TRUE;
+          /* fall through */
+        case 'q':
+          gQuiet = PR_TRUE;
+          break;
         default:
-          cerr << "Unknown option '" << argv[i][j] << "'\n";
+          fprintf(stderr, "Unknown option '%c'\n", argv[i][j]);
         }
       }
       i++;
     } else {
-      if (gUnreg == PR_TRUE) {
+      if (gUnreg == PR_TRUE)
         res = Unregister(argv[i]);
-        if (NS_SUCCEEDED(res)) {
-          cout << "Successfully unregistered: " << argv[i] << "\n";
-        } else {
-          cerr << "Unregister failed (";
-          print_err(res);
-          cerr << "): " << argv[i] << "\n";
-        }
-      } else {
+      else
         res = Register(argv[i]);
-        if (NS_SUCCEEDED(res)) {
-          cout << "Successfully registered: " << argv[i] << "\n";
-        } else {
-          cerr << "Register failed (";
-          print_err(res);
-          cerr << "): " << argv[i] << "\n";
-        }
+      if (NS_FAILED(res)) {
+        ReportError(res, argv[i]);
+        result = -1;
+      } else {
+        ReportSuccess(argv[i]);
       }
-      i++;
     }
   }
-  return 0;
+  return result;
 }
 
 int main(int argc, char *argv[])
 {
-    int ret = 0;
+    int ret;
 
 #ifdef XP_MAC
 #if DEBUG
