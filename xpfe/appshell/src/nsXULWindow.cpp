@@ -767,9 +767,9 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
 
         // Sanity check. 
         if ((specX + specWidth) > screenRight)
-          specX = 0;
-        if ((specY + specHeight) > screenHeight)
-          specY = 0;
+          specX = screenLeft;
+        if ((specY + specHeight) > screenBottom)
+          specY = screenTop;
       }
     }
   }
