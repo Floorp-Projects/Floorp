@@ -99,6 +99,9 @@
 			  accesskey="&preferencesCmd.accesskey;"
 			  observes="cmd_preferences"/>
 		  
+	<!-- Search Menu -->
+
+	
 	<!-- View Menu -->
 	<menu id="menu_View" value="&viewMenu.label;"/>
 	<menu id="menu_Toolbars" value="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"/>
@@ -114,18 +117,18 @@
 	        <!-- Help Menu disabled
 			<menu value="&helpContentCmd.label;">
 				<menupopup>
-				  <menuitem value="&webBrowsingCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/user-docs/local/browserhelp/navtop.html');"/>
-				  <menuitem value="&emailCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/user-docs/local/mailhelp/mailtop.html');"/>
-				  <menuitem value="&internetShopCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/user-docs/served/shophelp/shoptop.html');"/>
-				  <menuitem value="&customCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/user-docs/served/custhelp/custtop.html');"/>
+				  <menuitem value="&webBrowsingCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/local/browserhelp/navtop.html');"/>
+				  <menuitem value="&emailCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/local/mailhelp/mailtop.html');"/>
+				  <menuitem value="&internetShopCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/served/shophelp/shoptop.html');"/>
+				  <menuitem value="&customCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/served/custhelp/custtop.html');"/>
 				  <menuseparator/>
-				  <menuitem value="&softUpdatesCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/user-docs/served/updatehelp/updatetop.html');"/>
-				  <menuitem value="&connProbCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/user-docs/local/troubleshoot/troubletop.html');"/>
-				  <menuitem value="&secPrivCmd.label;" oncommand="goHelpMenu('http://home.netscape.com/security/basics/index.html');"/>
+				  <menuitem value="&softUpdatesCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/served/updatehelp/updatetop.html');"/>
+				  <menuitem value="&connProbCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/local/troubleshoot/troubletop.html');"/>
+				  <menuitem value="&secPrivCmd.label;" oncommand="openTopWin('http://home.netscape.com/security/basics/index.html');"/>
 				 </menupopup>
 			</menu>
 			-->
-			<menuitem value="&releaseCommCmd.label;" oncommand="goHelpMenu('http://www.mozilla.org/projects/seamonkey/release-notes/')"/>
+			<menuitem value="&releaseCommCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/seamonkey/release-notes/')"/>
 			<menuitem value="&aboutCommCmd.label;" oncommand="goAboutDialog();"/>
 		</menupopup>
 	</menu>
