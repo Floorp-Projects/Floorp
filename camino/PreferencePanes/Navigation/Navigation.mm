@@ -413,13 +413,13 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   
   // allow user to select a browser
   [menu addItem:[NSMenuItem separatorItem]];
-  item = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Select...", "Select...")
+  NSMenuItem* selectItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Select...", "Select...")
                                     action:@selector(defaultBrowserChange:) keyEquivalent:@""];
-  [item setRepresentedObject:nil];
-  [item setTarget:self];
-  [item setEnabled:YES];
-  [menu addItem:item];
-  [item release];
+  [selectItem setRepresentedObject:nil];
+  [selectItem setTarget:self];
+  [selectItem setEnabled:YES];
+  [menu addItem:selectItem];
+  [selectItem release];
   
   [defaultBrowserPopUp setMenu:menu];
 
