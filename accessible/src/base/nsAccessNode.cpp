@@ -51,7 +51,8 @@
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIServiceManager.h"
@@ -61,16 +62,12 @@
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-
 nsIStringBundle *nsAccessNode::gStringBundle = 0;
 nsIStringBundle *nsAccessNode::gKeyStringBundle = 0;
 nsIDOMNode *nsAccessNode::gLastFocusedNode = 0;
 PRBool nsAccessNode::gIsAccessibilityActive = PR_FALSE;
 PRBool nsAccessNode::gIsCacheDisabled = PR_FALSE;
-
-nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *nsAccessNode::gGlobalDocAccessibleCache = nsnull;
+nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> nsAccessNode::gGlobalDocAccessibleCache;
 
 /*
  * Class nsAccessNode
@@ -175,24 +172,24 @@ void nsAccessNode::InitXPAccessibility()
   if (gIsAccessibilityActive) {
     return;
   }
-  nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID));
+
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   if (stringBundleService) {
     // Static variables are released in ShutdownAllXPAccessibility();
     stringBundleService->CreateBundle(ACCESSIBLE_BUNDLE_URL, 
                                       &gStringBundle);
-    NS_IF_ADDREF(gStringBundle);
     stringBundleService->CreateBundle(PLATFORM_KEYS_BUNDLE_URL, 
                                       &gKeyStringBundle);
-    NS_IF_ADDREF(gKeyStringBundle);
   }
+
   nsAccessibilityAtoms::AddRefAtoms();
 
-  gGlobalDocAccessibleCache = new nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>;
-  gGlobalDocAccessibleCache->Init(4); // Initialize for 4 entries
+  gGlobalDocAccessibleCache.Init(4);
 
-  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefCID));
-  if (prefService) {
-    prefService->GetBoolPref("accessibility.disablecache", &gIsCacheDisabled);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
+    prefBranch->GetBoolPref("accessibility.disablecache", &gIsCacheDisabled);
   }
 
   gIsAccessibilityActive = PR_TRUE;
@@ -211,9 +208,7 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(gKeyStringBundle);
   NS_IF_RELEASE(gLastFocusedNode);
 
-  ClearCache(*gGlobalDocAccessibleCache);
-  delete gGlobalDocAccessibleCache;
-  gGlobalDocAccessibleCache = nsnull;
+  ClearCache(gGlobalDocAccessibleCache);
 
   gIsAccessibilityActive = PR_FALSE;
 }
@@ -439,12 +434,11 @@ void nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell,
                                        nsIAccessibleDocument **aDocAccessible)
 {
   *aDocAccessible = nsnull;
-  NS_ASSERTION(gGlobalDocAccessibleCache, "Global doc cache does not exist");
 
   nsCOMPtr<nsIAccessNode> accessNode;
-  gGlobalDocAccessibleCache->Get(NS_STATIC_CAST(void*, aPresShell), getter_AddRefs(accessNode));
+  gGlobalDocAccessibleCache.Get(NS_STATIC_CAST(void*, aPresShell), getter_AddRefs(accessNode));
   if (accessNode) {
-    accessNode->QueryInterface(NS_GET_IID(nsIAccessibleDocument), (void**)aDocAccessible); // addrefs
+    CallQueryInterface(accessNode, aDocAccessible);
   }
 }
  
@@ -477,7 +471,5 @@ PLDHashOperator nsAccessNode::ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAcce
 
 void nsAccessNode::ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> &aCache)
 {
-  aCache.Enumerate(ClearCacheEntry, nsnull);  
+  aCache.Enumerate(ClearCacheEntry, nsnull);
 }
-
-

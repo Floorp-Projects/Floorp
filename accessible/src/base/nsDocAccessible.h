@@ -119,7 +119,7 @@ class nsDocAccessible : public nsBlockAccessible,
                                nsIAccessibleDocument **aAccessibleDoc);
     virtual void CheckForEditor();
 
-    nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *mAccessNodeCache;
+    nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> mAccessNodeCache;
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
     nsCOMPtr<nsITimer> mScrollWatchTimer;

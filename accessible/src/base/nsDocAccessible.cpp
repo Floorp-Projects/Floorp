@@ -78,8 +78,7 @@
 // construction 
 //-----------------------------------------------------
 nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-  nsBlockAccessible(aDOMNode, aShell), 
-  mAccessNodeCache(nsnull), mWnd(nsnull), 
+  nsBlockAccessible(aDOMNode, aShell), mWnd(nsnull),
   mScrollWatchTimer(nsnull), mDocLoadTimer(nsnull), 
   mWebProgress(nsnull), mEditor(nsnull), 
   mBusy(eBusyStateUninitialized), 
@@ -103,12 +102,10 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
     }
   }
   
-  NS_ASSERTION(gGlobalDocAccessibleCache, "No global doc accessible cache");
-  PutCacheEntry(*gGlobalDocAccessibleCache, mWeakShell, this);
+  PutCacheEntry(gGlobalDocAccessibleCache, mWeakShell, this);
 
   // XXX aaronl should we use an algorithm for the initial cache size?
-  mAccessNodeCache = new nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>;
-  mAccessNodeCache->Init(kDefaultCacheSize);
+  mAccessNodeCache.Init(kDefaultCacheSize);
 }
 
 //-----------------------------------------------------
@@ -310,15 +307,13 @@ NS_IMETHODIMP nsDocAccessible::GetIsEditable(PRBool *aIsEditable)
 
 NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
 {
-  NS_ASSERTION(mAccessNodeCache, "No accessibility cache for document");
-  GetCacheEntry(*mAccessNodeCache, aUniqueID, aAccessNode); // Addrefs for us
+  GetCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode); // Addrefs for us
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
 {
-  NS_ASSERTION(mAccessNodeCache, "No accessibility cache for document");
-  PutCacheEntry(*mAccessNodeCache, aUniqueID, aAccessNode);
+  PutCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode);
   return NS_OK;
 }
 
@@ -357,10 +352,7 @@ NS_IMETHODIMP nsDocAccessible::Init()
 
 NS_IMETHODIMP nsDocAccessible::Destroy()
 {
-  NS_ASSERTION(gGlobalDocAccessibleCache, "No global doc accessible cache");
-  if (gGlobalDocAccessibleCache) {
-    gGlobalDocAccessibleCache->Remove(NS_STATIC_CAST(void*, mWeakShell));
-  }
+  gGlobalDocAccessibleCache.Remove(NS_STATIC_CAST(void*, mWeakShell));
   return Shutdown();
 }
 
@@ -386,10 +378,7 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
   }
   mWebProgress = nsnull;
 
-  if (mAccessNodeCache) {
-    ClearCache(*mAccessNodeCache);
-    mAccessNodeCache = nsnull;
-  }
+  ClearCache(mAccessNodeCache);
 
   mDocument = nsnull;
 
@@ -897,7 +886,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode)
         nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
         privateAccessNode->Shutdown();
         // Remove from hash table as well
-        mAccessNodeCache->Remove(uniqueID);
+        mAccessNodeCache.Remove(uniqueID);
       }
     }
 
