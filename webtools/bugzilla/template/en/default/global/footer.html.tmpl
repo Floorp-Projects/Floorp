@@ -16,12 +16,46 @@
   # Copyright (C) 1998 Netscape Communications Corporation. All
   # Rights Reserved.
   #
-  # Contributor(s):
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
   #%]
 
-[% PerformSubsts(Param('footerhtml')) %]
+[%# INTERFACE:
+  # This template has no interface. However, you must fulfill the interface to
+  # global/useful-links.html.tmpl.
+  #%]
+  
+[%# Migration note: this whole file corresponds to the old Param 'footerhtml' %]
+  
+<table border="0">
+  <tr>
+    <td bgcolor="#000000" valign="top">
+      <table border="0" cellpadding="10" cellspacing="0" width="100%"
+             bgcolor="lightyellow">
+        <tr>
+          <td>
+          
+[%# Migration note: this section corresponds to the old Param 'blurbhtml' %]
+ 
+           This is <b>Bugzilla</b>: the Mozilla bug system.  For more 
+            information about what Bugzilla is and what it can do, see 
+            <a href="http://www.bugzilla.org/">bugzilla.org</a>.
+            
+[%# End section %]
+
+            <br>
+
+[% Migration note: useful-links.html.tmpl corresponds to %commandmenu% %]
+
+           [% PROCESS "global/useful-links.html.tmpl" %]
+
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
 
 </body>
 </html>
 
-[% CALL SyncAnyPendingShadowChanges() %]
+[% CALL SyncAnyPendingShadowChanges() IF SyncAnyPendingShadowChanges %]

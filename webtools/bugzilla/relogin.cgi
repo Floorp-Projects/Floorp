@@ -66,6 +66,7 @@ delete $::COOKIE{"Bugzilla_login"};
                           next time it is required.";
     $vars->{'url'} = "query.cgi?GoAheadAndLogIn=1";
     $vars->{'link'} = "Log in again here";
+    $vars->{'user'} = {};
     
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)

@@ -280,7 +280,7 @@
   Reassign</A> bugs to
 </label>
 <input name="assigned_to" 
-       value="[% user FILTER html %]"
+       value="[% user.login FILTER html %]"
        onchange="document.forms.changeform.knob[[% knum %]].checked = true;"
        size="32"><br />
 

@@ -480,7 +480,50 @@ sub quietly_check_login() {
     if (!$loginok) {
         delete $::COOKIE{"Bugzilla_login"};
     }
+                    
+    $vars->{'user'} = GetUserInfo($::userid);
+    
     return $loginok;
+}
+
+# Populate a hash with information about this user. 
+sub GetUserInfo {
+    my ($userid) = (@_);
+    my %user;
+    my @queries;
+    my %groups;
+    
+    # No info if not logged in
+    return \%user if ($userid == 0);
+    
+    $user{'login'} = $::COOKIE{"Bugzilla_login"};
+    $user{'userid'} = $userid;
+    
+    SendSQL("SELECT mybugslink, realname, groupset FROM profiles " . 
+            "WHERE userid = $userid");
+    ($user{'showmybugslink'}, $user{'realname'}, $user{'groupset'}) =
+                                                                 FetchSQLData();
+
+    SendSQL("SELECT name, query, linkinfooter FROM namedqueries " .
+            "WHERE userid = $userid");
+    while (MoreSQLData()) {
+        my %query;
+        ($query{'name'}, $query{'query'}, $query{'linkinfooter'}) = 
+                                                                 FetchSQLData();
+        push(@queries, \%query);    
+    }
+
+    $user{'queries'} = \@queries;
+
+    SendSQL("select name, (bit & $user{'groupset'}) != 0 from groups");
+    while (MoreSQLData()) {
+        my ($name, $bit) = FetchSQLData();    
+        $groups{$name} = $bit;
+    }
+
+    $user{'groups'} = \%groups;
+
+    return \%user;
 }
 
 sub CheckEmailSyntax {

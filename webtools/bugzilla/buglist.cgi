@@ -1119,8 +1119,22 @@ CMD: for ($::FORM{'cmdtype'}) {
             SendSQL("REPLACE INTO namedqueries (userid, name, query, linkinfooter)
                      VALUES ($userid, $qname, $qbuffer, $tofooter)");
         }
+        
+        my $new_in_footer = $tofooter;
+        
+        # Don't add it to the list if they are reusing an existing query name.
+        foreach my $query (@{$vars->{'user'}{'queries'}}) {
+            if ($query->{'name'} eq $name) {
+                $new_in_footer = 0;
+            }
+        }        
+        
         print "Content-Type: text/html\n\n";
-        # Generate and return the UI (HTML page) from the appropriate template.
+        # Generate and return the UI (HTML page) from the appropriate template.        
+        if ($new_in_footer) {
+            push(@{$vars->{'user'}{'queries'}}, {name => $name});
+        }
+        
         $vars->{'title'} = "OK, query saved.";
         $vars->{'message'} = "OK, you have a new query named <code>$name</code>";
         $vars->{'url'} = "query.cgi";
@@ -1453,7 +1467,7 @@ $vars->{'urlquerypart'} =~ s/[&?](order|cmdtype)=[^&]*//g;
 $vars->{'order'} = $order;
 
 # The user's login account name (i.e. email address).
-$vars->{'user'} = $::COOKIE{'Bugzilla_login'};
+my $login = $::COOKIE{'Bugzilla_login'};
 
 $vars->{'caneditbugs'} = UserInGroup('editbugs');
 $vars->{'usebuggroups'} = UserInGroup('usebuggroups');
@@ -1461,8 +1475,8 @@ $vars->{'usebuggroups'} = UserInGroup('usebuggroups');
 # Whether or not this user is authorized to move bugs to another installation.
 $vars->{'ismover'} = 1
   if Param('move-enabled')
-    && defined($vars->{'user'})
-      && Param('movers') =~ /^(\Q$vars->{'user'}\E[,\s])|([,\s]\Q$vars->{'user'}\E[,\s]+)/;
+    && defined($login)
+      && Param('movers') =~ /^(\Q$login\E[,\s])|([,\s]\Q$login\E[,\s]+)/;
 
 my @bugowners = keys %$bugowners;
 if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {

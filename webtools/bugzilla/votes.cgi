@@ -213,7 +213,7 @@ sub show_user {
     SendSQL("DELETE FROM votes WHERE count <= 0");
     SendSQL("UNLOCK TABLES");
     
-    $vars->{'user'} = { canedit => $canedit, name => $name, id => $who };
+    $vars->{'voting_user'} = { "login" => $name };
     $vars->{'products'} = \@products;
 
     print "Content-type: text/html\n\n";

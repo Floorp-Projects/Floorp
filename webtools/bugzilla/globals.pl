@@ -486,7 +486,6 @@ sub GenerateVersionTable {
         }
     }
             
-
     my $cols = LearnAboutColumns("bugs");
     
     @::log_columns = @{$cols->{"-list-"}};
@@ -1574,6 +1573,15 @@ $::template ||= Template->new(
         # filter should be used for a full URL that may have
         # characters that need encoding.
         url_quote => \&url_quote ,
+        
+        # Returns the text with spaces converted to non-breaking space
+        # HTML entities.
+        no_break => sub
+        {
+            my ($var) = @_;            
+            $var =~ s/ /\&nbsp;/g;
+            return $var;
+       } ,
       } ,
   }
 ) || DisplayError("Template creation failed: " . Template->error())
@@ -1756,6 +1764,8 @@ $::vars =
     
     # User Agent - useful for detecting in templates
     'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
+    
+    'use_votes' => $::anyvotesallowed,
   };
 
 1;

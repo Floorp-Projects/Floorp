@@ -70,6 +70,7 @@ my $template = Template->new(
         js        => sub { return $_ } ,
         strike    => sub { return $_ } ,
         url_quote => sub { return $_ } ,
+        no_break  => sub { return $_ } ,
     },
 }
 );
