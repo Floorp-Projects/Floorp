@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "nsXPCOM.h"
 #include "nsITransactionManager.h"
 #include "nsIComponentManager.h"

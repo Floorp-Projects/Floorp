@@ -35,6 +35,7 @@
 #ifndef nsTraceMalloc_h___
 #define nsTraceMalloc_h___
 
+#include <stdio.h> /* for FILE */
 #include "prtypes.h"
 
 PR_BEGIN_EXTERN_C
