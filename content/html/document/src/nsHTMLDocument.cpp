@@ -179,7 +179,8 @@ nsHTMLDocument::nsHTMLDocument()
     mBaseURL(nsnull),
     mBaseTarget(nsnull),
     mLastModified(nsnull),
-    mReferrer(nsnull)
+    mReferrer(nsnull),
+    mIsWriting(0)
 {
   mImages = nsnull;
   mApplets = nsnull;

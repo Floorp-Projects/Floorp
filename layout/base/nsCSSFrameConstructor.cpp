@@ -330,7 +330,8 @@ nsFrameConstructorState::PushFloaterContainingBlock(nsIFrame* aNewFloaterContain
 }
 
 nsFrameConstructorSaveState::nsFrameConstructorSaveState()
-  : mItems(nsnull), mFirstLetterStyle(nsnull), mFirstLineStyle(nsnull)
+  : mItems(nsnull), mFirstLetterStyle(nsnull), mFirstLineStyle(nsnull), 
+    mSavedFirstLetterStyle(PR_FALSE), mSavedFirstLineStyle(PR_FALSE)
 {
 }
 
