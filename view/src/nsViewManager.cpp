@@ -360,8 +360,10 @@ static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
   // Search for valid view manager before trying to access it.  This
   // is working around a bug in RevokeEvents.
   const nsVoidArray *vmArray = nsViewManager::GetViewManagerArray();
-  NS_ENSURE_TRUE(vmArray && vmArray->IndexOf(event->ViewManager()) != -1,
-                 nsnull);
+  if (!vmArray || vmArray->IndexOf(event->ViewManager()) == -1) {
+    NS_ERROR("RevokeEvents is buggy.  Fix it!");
+    return nsnull;
+  }
 
   event->HandleEvent();
   return nsnull;
@@ -493,13 +495,15 @@ nsViewManager::~nsViewManager()
     mRootView = nsnull;
   }
 
-  if (IsRootVM()) {
-    nsCOMPtr<nsIEventQueue> eventQueue;
-    mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
-                                             getter_AddRefs(eventQueue));
-    NS_ASSERTION(nsnull != eventQueue, "Event queue is null"); 
-    eventQueue->RevokeEvents(this);
-  } else {
+  // Make sure to RevokeEvents for all viewmanagers, since some events
+  // are posted by a non-root viewmanager.
+  nsCOMPtr<nsIEventQueue> eventQueue;
+  mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                           getter_AddRefs(eventQueue));
+  NS_ASSERTION(eventQueue, "Event queue is null"); 
+  eventQueue->RevokeEvents(this);
+  
+  if (!IsRootVM()) {
     // We have a strong ref to mRootViewManager
     NS_IF_RELEASE(mRootViewManager);
   }
@@ -4234,6 +4238,10 @@ nsViewManager::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
     return;
   }
 
+  // Hold a ref to ourselves so DispatchEvent won't destroy us (since
+  // we need to access members after we call DispatchEvent).
+  nsCOMPtr<nsIViewManager> kungFuDeathGrip(this);
+  
 #ifdef DEBUG_MOUSE_LOCATION
   printf("[vm=%p]synthesizing mouse move to (%d,%d)\n",
          this, mMouseLocation.x, mMouseLocation.y);
