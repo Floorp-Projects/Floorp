@@ -99,7 +99,7 @@ public:
     NS_IMETHOD SetReciever(nsIEcho* aReciever) = 0 ;
     NS_IMETHOD SendOneString(const char* str) = 0 ;
     NS_IMETHOD In2OutOneInt(int input, int* output) = 0 ;
-    NS_IMETHOD In2OutAddTwoInts(int input1, 
+    NS_IMETHOD In2OutAddTwoInts(int input1,
                                 int input2,
                                 int* output1,
                                 int* output2,

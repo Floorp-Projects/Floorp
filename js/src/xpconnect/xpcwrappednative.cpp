@@ -230,6 +230,17 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
 nsXPCWrappedNative::~nsXPCWrappedNative()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
+    if(mRoot == this && GetClass())
+    {
+        XPCContext* xpcc = GetClass()->GetXPCContext();
+        if(xpcc)
+        {
+            Native2WrappedNativeMap* map;
+            map = xpcc->GetWrappedNativeMap();
+            if(map)
+                map->Remove(this);
+        }
+    }
     if(mDynamicScriptable)
         NS_RELEASE(mDynamicScriptable);
     NS_RELEASE(mClass);
@@ -342,3 +353,44 @@ nsXPCWrappedNative::GetIID(nsIID** iid)
     *iid = NULL;
     return NS_ERROR_UNEXPECTED;
 }
+
+NS_IMETHODIMP
+nsXPCWrappedNative::DebugDump(int depth)
+{
+#ifdef DEBUG
+    depth-- ;
+    XPC_LOG_ALWAYS(("nsXPCWrappedNative @ %x with mRefCnt = %d", this, mRefCnt));
+    XPC_LOG_INDENT();
+        PRBool isRoot = mRoot == this;
+        XPC_LOG_ALWAYS(("%s wrapper around native @ %x", \
+                         isRoot ? "ROOT":"non-root", mObj));
+        XPC_LOG_ALWAYS(("interface name is %s", GetClass()->GetInterfaceName()));
+        char * iid = GetClass()->GetIID().ToString();
+        XPC_LOG_ALWAYS(("IID number is %s", iid));
+        free(iid);
+        XPC_LOG_ALWAYS(("JSObject @ %x", mJSObj));
+        XPC_LOG_ALWAYS(("nsXPCWrappedNativeClass @ %x", mClass));
+        if(GetDynamicScriptable())
+            XPC_LOG_ALWAYS(("DynamicScriptable @ %x", GetDynamicScriptable()));
+        else
+            XPC_LOG_ALWAYS(("NO DynamicScriptable"));
+
+        if(!isRoot)
+            XPC_LOG_OUTDENT();
+        if(mNext)
+        {
+            if(isRoot)
+            {
+                XPC_LOG_ALWAYS(("Additional wrappers for this object..."));
+                XPC_LOG_INDENT();
+            }
+            mNext->DebugDump(depth);
+            if(isRoot)
+                XPC_LOG_OUTDENT();
+        }
+        if(isRoot)
+            XPC_LOG_OUTDENT();
+#endif
+    return NS_OK;
+}
+

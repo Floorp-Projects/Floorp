@@ -192,6 +192,17 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSObject* aJSObj,
 nsXPCWrappedJS::~nsXPCWrappedJS()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
+    if(mRoot == this && GetClass())
+    {
+        XPCContext* xpcc = GetClass()->GetXPCContext();
+        if(xpcc)
+        {
+            JSObject2WrappedJSMap* map;
+            map = xpcc->GetWrappedJSMap();
+            if(map)
+                map->Remove(this);
+        }
+    }
     JS_RemoveRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
     NS_RELEASE(mClass);
     if(mMethods)
@@ -310,4 +321,66 @@ nsXPCWrappedJSMethods::GetIID(nsIID** iid)
     }
     *iid = NULL;
     return NS_ERROR_UNEXPECTED;
+}
+
+/***************************************************************************/
+
+NS_IMETHODIMP
+nsXPCWrappedJSMethods::DebugDump(int depth)
+{
+#ifdef DEBUG
+    XPC_LOG_ALWAYS(("nsXPCWrappedJSMethods @ %x with mRefCnt = %d for...", \
+                    this, mRefCnt));
+        XPC_LOG_INDENT();
+        mWrapper->DebugDump(depth);
+        XPC_LOG_OUTDENT();
+#endif
+    return NS_OK;
+}
+
+void
+nsXPCWrappedJS::DebugDump(int depth)
+{
+#ifdef DEBUG
+    XPC_LOG_ALWAYS(("nsXPCWrappedJS @ %x with mRefCnt = %d", this, mRefCnt));
+        XPC_LOG_INDENT();
+
+        PRBool isRoot = mRoot == this;
+        XPC_LOG_ALWAYS(("%s wrapper around JSObject @ %x", \
+                         isRoot ? "ROOT":"non-root", mJSObj));
+        char* name;
+        nsIAllocator* al;
+        GetClass()->GetInterfaceInfo()->GetName(&name);
+        XPC_LOG_ALWAYS(("interface name is %s", name));
+        if(name && NULL != (al = nsXPConnect::GetAllocator()))
+        {
+            al->Free(name);
+            NS_RELEASE(al);
+        }
+        char * iid = GetClass()->GetIID().ToString();
+        XPC_LOG_ALWAYS(("IID number is %s", iid));
+        free(iid);
+        XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x", mClass));
+        if(mMethods)
+            XPC_LOG_ALWAYS(("mMethods @ %x with mRefCnt = %d", \
+                            mMethods, mMethods->GetRefCnt()));
+        else
+            XPC_LOG_ALWAYS(("NO mMethods object"));
+
+        if(!isRoot)
+            XPC_LOG_OUTDENT();
+        if(mNext)
+        {
+            if(isRoot)
+            {
+                XPC_LOG_ALWAYS(("Additional wrappers for this object..."));
+                XPC_LOG_INDENT();
+            }
+            mNext->DebugDump(depth);
+            if(isRoot)
+                XPC_LOG_OUTDENT();
+        }
+        if(isRoot)
+            XPC_LOG_OUTDENT();
+#endif
 }
