@@ -21,28 +21,24 @@
 
 DEPTH=..\..
 
-
-
 MODULE=raptor
 
 include <$(DEPTH)\config\config.mak>
 
+XPIDLSRCS = \
+        .\nsIRefreshURI.idl \
+        .\nsIClipboardCommands.idl \
+        .\nsIContentViewerContainer.idl \
+        .\nsIDocumentLoaderFactory.idl \
+        $(NULL)
+
 EXPORTS =                               \
-        nsIClipboardCommands.h          \
         nsIContentViewer.h              \
-        nsIContentViewerContainer.h     \
         nsIDocStreamLoaderFactory.h     \
-        nsIDocumentLoaderFactory.h      \
         nsILinkHandler.h                \
-        nsIUrlDispatcher.h    \
         nsIWebShell.h                   \
+        nsIContentViewerFile.h          \
         nsIWebShellServices.h           \
-        nsweb.h                         \
-!ifdef NECKO
-        nsIRefreshURI.h                 \
-!endif
-				nsIContentViewerEdit.h \
-				nsIContentViewerFile.h \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -22,7 +22,6 @@
 #ifndef nsILinkHandler_h___
 #define nsILinkHandler_h___
 
-#include "nsweb.h"
 #include "nsISupports.h"
 
 class nsIInputStream;

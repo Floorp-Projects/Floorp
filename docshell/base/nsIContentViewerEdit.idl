@@ -22,25 +22,21 @@
 
 #include "nsISupports.idl"
 
-/**
- * The nsIDocShellFile    
- */
-
 [scriptable, uuid(42d5215c-9bc7-11d3-bccc-0060b0fc76bd)]
 interface nsIContentViewerEdit : nsISupports
 {
-	void Search();
+	void search();
 	readonly attribute boolean searchable;
 
-	void ClearSelection();
-	void SelectAll();
+	void clearSelection();
+	void selectAll();
 
-	void CopySelection();
+	void copySelection();
 	readonly attribute boolean copyable;
 
-	void CutSelection();
+	void cutSelection();
 	readonly attribute boolean cutable;
 
-	void Paste();
+	void paste();
 	readonly attribute boolean pasteable;
 };

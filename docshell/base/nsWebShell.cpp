@@ -31,6 +31,7 @@ typedef unsigned long HMTX;
 #endif
 #include "nsDocShell.h"
 #include "nsIWebShell.h"
+#include "nsWebShell.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocumentLoader.h"
@@ -163,182 +164,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 //----------------------------------------------------------------------
 
-typedef enum {
-   eCharsetReloadInit,
-   eCharsetReloadRequested,
-   eCharsetReloadStopOrigional
-} eCharsetReloadState;
-
-class nsWebShell : public nsDocShell,
-                   public nsIWebShell,
-                   public nsIWebShellContainer,
-                   public nsIWebShellServices,
-                   public nsILinkHandler,
-                   public nsIDocumentLoaderObserver,
-                   public nsIClipboardCommands
-{
-public:
-  nsWebShell();
-  virtual ~nsWebShell();
-
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIInterfaceRequestor
-  NS_DECL_NSIINTERFACEREQUESTOR
-
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
-
-  NS_IMETHOD SetupNewViewer(nsIContentViewer* aViewer);
-
-  // nsIContentViewerContainer
-  NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
-                   const char* aCommand,
-                   nsISupports* aExtraInfo);
-
-  // nsIWebShell
-  NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
-  NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
-  NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
-  NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
-  NS_IMETHOD SetParent(nsIWebShell* aParent);
-  NS_IMETHOD GetParent(nsIWebShell*& aParent);
-  NS_IMETHOD GetReferrer(nsIURI **aReferrer);
-
-  // Document load api's
-  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
-
-/*  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     const char* aCommand,
-                     nsIInputStream* aPostDataStream=nsnull,
-                     PRBool aModifyHistory=PR_TRUE,
-                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                     nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull,
-                     const char * aWindowTarget = nsnull);
-
-  NS_IMETHOD LoadURI(nsIURI * aUri,
-                     const char * aCommand,
-                     nsIInputStream* aPostDataStream=nsnull,
-                     PRBool aModifyHistory=PR_TRUE,
-                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                     nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull,
-                     const char * aWindowTarget = nsnull);
-  */
-  void SetReferrer(const PRUnichar* aReferrer);
-
-  // History api's
-  NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
-  NS_IMETHOD GetHistoryLength(PRInt32& aResult);
-  NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
-  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult);
-
-  // nsIWebShellContainer
-  NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
-  NS_IMETHOD FireUnloadEvent(void);
-
-  // nsIWebShellServices
-  NS_IMETHOD LoadDocument(const char* aURL,
-                          const char* aCharset= nsnull ,
-                          nsCharsetSource aSource = kCharsetUninitialized);
-  NS_IMETHOD ReloadDocument(const char* aCharset= nsnull ,
-                            nsCharsetSource aSource = kCharsetUninitialized);
-  NS_IMETHOD StopDocumentLoad(void);
-  NS_IMETHOD SetRendering(PRBool aRender);
-
-  // nsILinkHandler
-  NS_IMETHOD OnLinkClick(nsIContent* aContent,
-                         nsLinkVerb aVerb,
-                         const PRUnichar* aURLSpec,
-                         const PRUnichar* aTargetSpec,
-                         nsIInputStream* aPostDataStream = 0);
-  NS_IMETHOD OnOverLink(nsIContent* aContent,
-                        const PRUnichar* aURLSpec,
-                        const PRUnichar* aTargetSpec);
-  NS_IMETHOD GetLinkState(const nsString& aLinkURI, nsLinkState& aState);
-
-  // nsIClipboardCommands
-  NS_IMETHOD CanCutSelection  (PRBool* aResult);
-  NS_IMETHOD CanCopySelection (PRBool* aResult);
-  NS_IMETHOD CanPasteSelection(PRBool* aResult);
-
-  NS_IMETHOD CutSelection  (void);
-  NS_IMETHOD CopySelection (void);
-  NS_IMETHOD PasteSelection(void);
-
-  NS_IMETHOD SelectAll(void);
-  NS_IMETHOD SelectNone(void);
-
-  NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
-
-  // nsIBaseWindow
-  NS_IMETHOD Create();
-  NS_IMETHOD Destroy();
-  NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy,
-      PRBool fRepaint);
-  NS_IMETHOD GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
-      PRInt32* cy);
-
-  // nsWebShell
-  nsIEventQueue* GetEventQueue(void);
-  void HandleLinkClickEvent(nsIContent *aContent,
-                            nsLinkVerb aVerb,
-                            const PRUnichar* aURLSpec,
-                            const PRUnichar* aTargetSpec,
-                            nsIInputStream* aPostDataStream = 0);
-
-  static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
-
-  NS_IMETHOD SetURL(const PRUnichar* aURL);
-
-protected:
-  void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
-  void InitFrameData();
-
-  nsIEventQueue* mThreadEventQueue;
-
-  nsIWebShellContainer* mContainer;
-  nsIDocumentLoader* mDocLoader;
-
-  PRBool mFiredUnloadEvent;
-
-  nsRect   mBounds;
-
-  eCharsetReloadState mCharsetReloadState;
-
-  nsISupports* mHistoryState; // Weak reference.  Session history owns this.
-
-  nsresult FireUnloadForChildren();
-
-  nsresult CreateViewer(nsIChannel* aChannel,
-                        const char* aContentType,
-                        const char* aCommand,
-                        nsIStreamListener** aResult);
-
-#ifdef DETECT_WEBSHELL_LEAKS
-private:
-  // We're counting the number of |nsWebShells| to help find leaks
-  static unsigned long gNumberOfWebShells;
-
-public:
-  static unsigned long TotalWebShellsInExistence() { return gNumberOfWebShells; }
-#endif
-};
-
-#ifdef DETECT_WEBSHELL_LEAKS
-unsigned long nsWebShell::gNumberOfWebShells = 0;
-
-extern "C" NS_WEB
-unsigned long
-NS_TotalWebShellsInExistence()
-{
-  return nsWebShell::TotalWebShellsInExistence();
-}
-#endif
-
 //----------------------------------------------------------------------
 
 // Class IID's
@@ -349,7 +174,7 @@ static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
 
 // IID's
 static NS_DEFINE_IID(kIContentViewerContainerIID,
-                     NS_ICONTENT_VIEWER_CONTAINER_IID);
+                     NS_ICONTENTVIEWERCONTAINER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -650,6 +475,7 @@ nsWebShell::GetRootWebShellEvenIfChrome(nsIWebShell** aResult)
    NS_IF_ADDREF(*aResult);
 }
 
+/*
 NS_IMETHODIMP
 nsWebShell::SetParent(nsIWebShell* aParent)
 {
@@ -671,7 +497,7 @@ nsWebShell::GetParent(nsIWebShell*& aParent)
       aParent = nsnull;
    return NS_OK;
 }
-
+*/
 NS_IMETHODIMP
 nsWebShell::GetReferrer(nsIURI **aReferrer)
 {
@@ -705,34 +531,6 @@ nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
   aResult = mDocLoader;
   NS_IF_ADDREF(mDocLoader);
   return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
-{
-   nsXPIDLCString spec1;
-   nsXPIDLCString spec2;
-   char *  anchor1 = nsnull, * anchor2=nsnull;
-   PRBool rv = PR_FALSE;
-  
-   if (url1 && url2) {
-     // XXX We need to make these strcmps case insensitive.
-     url1->GetSpec(getter_Copies(spec1));
-     url2->GetSpec(getter_Copies(spec2));
- 
-     /* Don't look at the ref-part */
-     anchor1 = PL_strrchr(spec1, '#');
-     anchor2 = PL_strrchr(spec2, '#');
- 
-     if (anchor1)
-         *anchor1 = '\0';
-     if (anchor2)
-         *anchor2 = '\0';
- 
-     if (0 == PL_strcmp(spec1,spec2)) {
-       rv = PR_TRUE;
-     }
-   }   // url1 && url2
-  return rv;
 }
 
 //----------------------------------------
@@ -1631,84 +1429,6 @@ NS_IMETHODIMP nsWebShell::GetPositionAndSize(PRInt32* x, PRInt32* y,
    return NS_OK; 
 }
 
-
-//----------------------------------------------------------------------
-
-// Factory code for creating nsWebShell's
-
-class nsWebShellFactory : public nsIFactory
-{
-public:
-  nsWebShellFactory();
-  virtual ~nsWebShellFactory();
-
-  NS_DECL_ISUPPORTS
-
-  // nsIFactory methods
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-};
-
-nsWebShellFactory::nsWebShellFactory()
-{
-   NS_INIT_REFCNT();
-}
-
-nsWebShellFactory::~nsWebShellFactory()
-{
-}
-
-NS_IMPL_ADDREF(nsWebShellFactory);
-NS_IMPL_RELEASE(nsWebShellFactory);
-
-NS_INTERFACE_MAP_BEGIN(nsWebShellFactory)
-   NS_INTERFACE_MAP_ENTRY(nsISupports)
-   NS_INTERFACE_MAP_ENTRY(nsIFactory)
-NS_INTERFACE_MAP_END
-
-nsresult
-nsWebShellFactory::CreateInstance(nsISupports *aOuter,
-                                  const nsIID &aIID,
-                                  void **aResult)
-{
-  nsresult rv;
-  nsWebShell *inst;
-
-  NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-  *aResult = NULL;
-
-  NS_NEWXPCOM(inst, nsWebShell);
-  NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
-}
-
-nsresult
-nsWebShellFactory::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.
-  return NS_OK;
-}
-
-extern "C" NS_WEB nsresult
-NS_NewWebShellFactory(nsIFactory** aFactory)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst = new nsWebShellFactory();
-  if (nsnull == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aFactory = inst;
-  return rv;
-}
+#ifdef DETECT_WEBSHELL_LEAKS
+unsigned long nsWebShell::gNumberOfWebShells = 0;
+#endif

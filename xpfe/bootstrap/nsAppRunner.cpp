@@ -1098,14 +1098,6 @@ int main(int argc, char* argv[])
   rv = NS_ShutdownXPCOM( NULL );
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
-#ifdef DETECT_WEBSHELL_LEAKS
-  unsigned long count;
-  count = NS_TotalWebShellsInExistence();
-  if (count)  {
-    printf("XXX WARNING: Number of webshells being leaked: %d \n", (int)count);
-  }
-#endif
-
   return TranslateReturnValue(mainResult);
 }
 

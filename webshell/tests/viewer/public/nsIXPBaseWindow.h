@@ -22,7 +22,6 @@
 #ifndef nsIXPBaseWindow_h___
 #define nsIXPBaseWindow_h___
 
-#include "nsweb.h"
 #include "nsISupports.h"
 
 class nsIAppShell;

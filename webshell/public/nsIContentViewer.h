@@ -22,7 +22,6 @@
 #ifndef nsIContentViewer_h___
 #define nsIContentViewer_h___
 
-#include "nsweb.h"
 #include "nsIWidget.h"
 #include "nsIScrollableView.h"
 

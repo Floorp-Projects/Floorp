@@ -35,15 +35,17 @@ XPIDLSRCS	= \
 		nsIDocShellTreeItem.idl	\
 		nsIDocShellTreeNode.idl	\
 		nsIDocShellTreeOwner.idl	\
-    nsIDocShellHistory.idl \
+		nsIDocShellHistory.idl \
 		nsIMarkupDocumentViewer.idl	\
 		nsIScrollable.idl		\
 		nsITextScroll.idl		\
 		nsIWebNavigation.idl		\
+		nsIContentViewerEdit.idl	\
 		$(NULL)
 
 CPPSRCS		= \
 		nsDocShell.cpp		\
+		nsWebShell.cpp		\
 		nsDocShellLoadInfo.cpp		\
 		nsDSURIContentListener.cpp		\
 #		nsDSWebProgressListener.cpp		\

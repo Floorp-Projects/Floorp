@@ -5,9 +5,6 @@
 nsIContentViewer.h
 nsIDocStreamLoaderFactory.h
 nsILinkHandler.h
-nsIUrlDispatcher.h
 nsIWebShell.h
+nsIContentViewerFile.h
 nsIWebShellServices.h
-nsweb.h
-nsIContentViewerEdit.h
-nsIContentViewerFile.h	
