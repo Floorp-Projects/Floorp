@@ -42,7 +42,6 @@
 <window id="bookmark-window" windowtype="bookmarks:manager"
         title="&bookmarksWindowTitle.label;" 
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns:web="http://home.netscape.com/WEB-rdf#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="630" height="400" screenX="20" screenY="20"
         persist="width height screenX screenY sizemode"
