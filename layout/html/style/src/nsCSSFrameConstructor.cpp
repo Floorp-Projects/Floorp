@@ -2315,7 +2315,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*        aPresShell,
           if ((NS_OK == rv2) && (nsnull != domData)) {
             nsString charData;
             domData->GetData(charData);
-            charData = charData.StripWhitespace();
+            charData.StripWhitespace();
             if ((charData.Length() <= 0) && (!charData.Equals(" "))) { // XXX check this
               needCell = PR_FALSE;  // only contains whitespace, don't create cell
             }
