@@ -2913,7 +2913,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
 
       rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
 
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv) && peer)
       {
         nsCOMPtr<nsIPluginInstanceOwner> owner;
 
@@ -2997,7 +2997,7 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
           nsPluginInstancePeerImpl *peer;          
           rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
           
-          if (NS_SUCCEEDED(rv))
+          if (NS_SUCCEEDED(rv) && peer)
             {
               nsCOMPtr<nsIPluginInstanceOwner> owner;
               
@@ -6197,7 +6197,7 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginIn
   if (instance) {
     nsPluginInstancePeerImpl *peer;
     rv =instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));            
-    if (NS_SUCCEEDED(rv)) {        
+    if (NS_SUCCEEDED(rv) && peer) {        
       peer->GetOwner(*getter_AddRefs(owner));
     }
   }
