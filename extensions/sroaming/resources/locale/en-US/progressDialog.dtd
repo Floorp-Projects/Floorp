@@ -40,7 +40,7 @@
 <!ENTITY siteUrl.label         "Site URL:">
 
 <!ENTITY status.label          "">
-<!ENTITY fileList.label        "Transfering Status">
+<!ENTITY fileList.label        "Transferring Status">
 <!ENTITY statusHeader.label    "Status">
 <!ENTITY filenameHeader.label  "Filename">
 <!ENTITY succeeded.label       "Succeeded">

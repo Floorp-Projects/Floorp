@@ -86,7 +86,7 @@ function Startup()
   document.getElementById("TransferToFromSite").value = 
                       directionString.replace(/%site%/, gTransfer.sitename);
 
-  // Show transfering destination URL
+  // Show transferring destination URL
   document.getElementById("TransferUrl").value = gTransfer.remoteDir;
 
   // Add the files to the UI as quickly as possible
@@ -224,7 +224,7 @@ function SetProgressStatus(filenr)
   //ddump(filename + ", " + status + ", " + NameForStatusCode(file.statusCode));
 
   if (status == "busy")
-    SetStatusMessage(GetString("Transfering"));
+    SetStatusMessage(GetString("Transferring"));
 
   // update file listbox
   // if we already have this file's item, just set attribute for status icon
@@ -406,5 +406,5 @@ function SetListingTransfer(on)
 {
   gDialog.ListingProgress.setAttribute("hidden", on ? "false" : "true");
   //gDialog.ListingProgress.setAttribute("value", on ? "1" : "0");
-  SetStatusMessage(on ? GetString("TransferingListing") : null);
+  SetStatusMessage(on ? GetString("TransferringListing") : null);
 }

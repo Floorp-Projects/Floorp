@@ -1304,7 +1304,7 @@ TransferProgressListener.prototype =
   // Update any data that the user supplied in a prompt dialog
   updateUsernamePasswordFromPrompt : function(username, password,savePassword)
   {
-    // Set flag to save login data after transfering, if it changed in
+    // Set flag to save login data after transferring, if it changed in
     // dialog and the "SavePassword" checkbox was checked
     this.transfer.saveLogin = (username != this.transfer.username ||
                                password != this.transfer.password)

@@ -187,7 +187,7 @@ nsProgressDialog.prototype = {
         if ( aStateFlags & nsIWebProgressListener.STATE_STOP ) {
             // if we are downloading, then just wait for the first STATE_STOP
             if ( this.targetFile != null ) {
-                // we are done transfering...
+                // we are done transferring...
                 this.completed = true;
                 return;
             }
@@ -197,7 +197,7 @@ nsProgressDialog.prototype = {
             try {
                 var chan = aRequest.QueryInterface(nsIChannel);
                 if (chan.URI.equals(this.target)) {
-                    // we are done transfering...
+                    // we are done transferring...
                     this.completed = true;
                 }
             }
