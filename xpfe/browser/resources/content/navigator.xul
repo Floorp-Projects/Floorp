@@ -758,7 +758,7 @@ Contributor(s): ______________________________________. -->
       
           <box align="vertical" flex="100%">
             <spring flex="100%"/>
-            <html:input id="urlbar" type="text" chromeclass="location" 
+            <html:input id="urlbar" type="text"
               onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
             <spring flex="100%"/>
           </box>
