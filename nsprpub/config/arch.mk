@@ -76,10 +76,6 @@ endif
 ifeq ($(OS_ARCH),NCR)
 OS_RELEASE	:= $(shell awk '{print $$3}' /etc/.relid | sed 's/^\([0-9]\)\(.\)\(..\)\(.*\)$$/\2.\3/')
 endif
-ifeq ($(OS_ARCH),procnto)
-OS_ARCH      := NTO
-OS_RELEASE := _$(OS_TEST)$(OS_RELEASE)
-endif
 ifeq ($(OS_ARCH),UNIX_System_V)
 OS_ARCH		:= NEC
 endif
@@ -89,7 +85,12 @@ CPU_ARCH	:= $(shell uname -Wh)
 OS_RELEASE	:= $(shell uname -v)
 endif
 ifeq ($(OS_ARCH),QNX)
-OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
+	ifeq ($(OS_RELEASE),6.00)
+		OS_ARCH := NTO
+		OS_RELEASE := _$(OS_TEST)$(OS_RELEASE)
+	else
+		OS_RELEASE := $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
+	endif
 endif
 ifeq ($(OS_ARCH),SCO_SV)
 OS_ARCH		:= SCOOS
