@@ -408,6 +408,14 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
     if (!language.IsEmpty()) {
       isJavaScript = nsParserUtils::IsJavaScriptLanguage(language,
                                                          &jsVersionString);
+
+      // IE, Opera, etc. do not respect language version, so neither should
+      // we at this late date in the browser wars saga.  Note that this change
+      // affects HTML but not XUL or SVG (but note also that XUL has its own
+      // code to check nsParserUtils::IsJavaScriptLanguage -- that's probably
+      // a separate bug, one we may not be able to fix short of XUL2).  See
+      // bug 255895 (https://bugzilla.mozilla.org/show_bug.cgi?id=255895).
+      jsVersionString = ::JS_VersionToString(JSVERSION_DEFAULT);
     }
   }
 
