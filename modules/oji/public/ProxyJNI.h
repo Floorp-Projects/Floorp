@@ -56,5 +56,9 @@ nsISecureEnv* GetSecureEnv(JNIEnv* proxyEnv);
  */
 PR_EXTERN(void) SetSecurityContext(JNIEnv* proxyEnv, nsISecurityContext *context);
 
+/**
+ * Gets current SecurityContext for proxy env
+ */
+PR_EXTERN(nsresult) GetSecurityContext(JNIEnv* proxyEnv, nsISecurityContext **context);
 #endif /* PROXY_JNI_H */
 
