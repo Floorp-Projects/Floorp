@@ -38,15 +38,15 @@
     <th>Number of votes</th>
   </tr>
 
-  [% FOREACH user = users %]      
+  [% FOREACH voter = users %]
     <tr>
       <td>
-        <a href="votes.cgi?action=show_user&amp;user=[% user.name FILTER url_quote %]">
-          [% user.name FILTER html %]
+        <a href="votes.cgi?action=show_user&amp;user=[% voter.name FILTER url_quote %]">
+          [% voter.name FILTER html %]
         </a>
       </td>
       <td align="right">
-        [% user.count %]
+        [% voter.count %]
       </td>
     </tr>
   [% END %]
