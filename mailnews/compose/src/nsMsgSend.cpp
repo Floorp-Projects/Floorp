@@ -60,6 +60,7 @@
 #include "nsAbBaseCID.h"
 #include "nsCOMPtr.h"
 #include "nsIDNSService.h"
+#include "mozITXTToHTMLConv.h"
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
 // for these two interfaces 
@@ -70,6 +71,7 @@ static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
+static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
 #ifdef XP_MAC
 #include "xp.h"                 // mac only 
@@ -1162,6 +1164,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   nsString  format(TEXT_HTML);
   PRUint32  flags = 0;
   PRUnichar *bodyText = NULL;
+  nsresult rv;
 
   // Ok, get the body...the DOM should have been whacked with 
   // Content ID's already
@@ -1172,7 +1175,23 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   //
   if ((!bodyText) || (!*bodyText))
     return NS_OK;
-		
+
+  nsCOMPtr<mozITXTToHTMLConv> conv;
+  rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
+    NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+    (void **) getter_AddRefs(conv));
+  if (NS_SUCCEEDED(rv)) 
+  {
+    PRUnichar* wresult;
+    rv = conv->ScanHTML(bodyText, ~PRUint32(mozITXTToHTMLConv::kGlyphSubstitution)
+      /* XXX Ask Prefs what to do */, &wresult);
+    if (NS_SUCCEEDED(rv))
+    {
+      Recycle(bodyText);
+      bodyText = wresult;
+    }
+  }
+  
 	// Convert body to mail charset
 	char      *outCString;
   nsString  aCharset = mCompFields->GetCharacterSet();
@@ -1182,11 +1201,12 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     // Convert to entities.
     // If later Editor generates entities then we can remove this.
     char charset[65];
-    nsresult rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), bodyText, &outCString);
+    rv = nsMsgI18NSaveAsCharset(attachment1_type, aCharset.ToCString(charset, 65), bodyText, &outCString);
     if (NS_SUCCEEDED(rv)) {
       PR_FREEIF(attachment1_body);
       attachment1_body = outCString;
     }
+    Recycle(bodyText);
   }
   else
   {

@@ -520,6 +520,8 @@ nsMsgSendPart::Write()
       }
     }
 
+#if 0
+    // This part has moved to nsMsgSend.cpp.
     if (m_buffer) 
     {
       const char* charset;
@@ -578,6 +580,7 @@ nsMsgSendPart::Write()
         goto FAIL;
       }
     }
+#endif
   }
   
   if (m_parent && m_parent->m_type &&
