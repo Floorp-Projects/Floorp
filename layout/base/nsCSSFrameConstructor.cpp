@@ -3081,6 +3081,7 @@ IsCanvasFrame(nsIFrame* aFrame)
   return parentType.get() == nsLayoutAtoms::canvasFrame;
 }
 
+#if 0 // unused currently
 static void
 PropagateBackgroundToParent(nsIStyleContext*    aStyleContext,
                             const nsStyleColor* aColor,
@@ -3105,6 +3106,7 @@ PropagateBackgroundToParent(nsIStyleContext*    aStyleContext,
   mutableColor->mBackgroundImage.SetLength(0);
   mutableColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
 }
+#endif // 0
 
 /**
  * New one
@@ -3344,6 +3346,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
         }
     }
 
+#if 0 
+    // this is not sufficient nor required: if the background gets changed via DOM after
+    // frame construction we need to do this again, besides, it is not
+    // necessary since the BODY manages to paint the background correctly
+
     // Section 14.2 of the CSS2 spec says that the background of the root element
     // covers the entire canvas. See if a background was specified for the root
     // element
@@ -3356,6 +3363,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
       PropagateBackgroundToParent(styleContext, color, parentContext);
       NS_RELEASE(parentContext);
     }
+#endif // 0
+
   }
 
   return NS_OK;
@@ -9455,6 +9464,33 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         case NS_STYLE_HINT_REFLOW:
         case NS_STYLE_HINT_VISUAL:
         case NS_STYLE_HINT_CONTENT:
+          // first check if it is a background change: 
+          // - if it is then we may need to notify the canvas frame
+          //   so it can take care of invalidating the whole canvas
+          if (aAttribute == nsHTMLAtoms::bgcolor || aAttribute == nsHTMLAtoms::background) {
+            // see if the content element is the root (HTML) or BODY element
+            // NOTE: the assumption here is that the background color or image on
+            //       the BODY or HTML element need to have the canvas frame invalidate
+            //       so the entire visible regions gets painted
+            nsCOMPtr<nsIContent> rootContent;
+            nsCOMPtr<nsIContent> parentContent;
+            rootContent = getter_AddRefs(mDocument->GetRootContent());
+            aContent->GetParent(*getter_AddRefs(parentContent));
+            if (aContent == rootContent.get() ||    // content is the root (HTML)
+                parentContent == rootContent ) {    // content's parent is root (BODY)
+              // Walk the frame tree up and find the canvas frame
+              nsIFrame *pCanvasFrameCandidate = nsnull;
+              primaryFrame->GetParent(&pCanvasFrameCandidate);
+              while (pCanvasFrameCandidate) {
+                if (IsCanvasFrame(pCanvasFrameCandidate)) {
+                  pCanvasFrameCandidate->AttributeChanged(aPresContext,aContent,aNameSpaceID,aAttribute,maxHint);
+                  break;
+                } else {
+                  pCanvasFrameCandidate->GetParent(&pCanvasFrameCandidate);
+                }
+              }
+            }
+          } 
           // let the frame deal with it, since we don't know how to
           result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, maxHint);
         default:
