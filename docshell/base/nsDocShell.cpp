@@ -562,7 +562,7 @@ NS_IMETHODIMP
 nsDocShell::LoadURI(nsIURI * aURI,
                     nsIDocShellLoadInfo * aLoadInfo,
                     PRUint32 aLoadFlags,
-                    PRBool firstParty)
+                    PRBool aFirstParty)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> referrer;
@@ -570,6 +570,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
     nsCOMPtr<nsIInputStream> headersStream;
     nsCOMPtr<nsISupports> owner;
     PRBool inheritOwner = PR_FALSE;
+    PRBool sendReferrer = PR_TRUE;
     nsCOMPtr<nsISHEntry> shEntry;
     nsXPIDLString target;
     PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);    
@@ -591,6 +592,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
         aLoadInfo->GetTarget(getter_Copies(target));
         aLoadInfo->GetPostDataStream(getter_AddRefs(postStream));
         aLoadInfo->GetHeadersStream(getter_AddRefs(headersStream));
+        aLoadInfo->GetSendReferrer(&sendReferrer);
     }
 
 #ifdef PR_LOGGING
@@ -728,17 +730,25 @@ nsDocShell::LoadURI(nsIURI * aURI,
             }
         }
 
+        PRUint32 flags = 0;
+
+        if (inheritOwner)
+            flags |= INTERNAL_LOAD_FLAGS_INHERIT_OWNER;
+
+        if (!sendReferrer)
+            flags |= INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER;
+
         rv = InternalLoad(aURI,
                           referrer,
                           owner,
-                          inheritOwner,
+                          flags,
                           target.get(),
                           nsnull,         // No type hint
                           postStream,
                           headersStream,
                           loadType,
                           nsnull,         // No SHEntry
-                          firstParty,
+                          aFirstParty,
                           nsnull,         // No nsIDocShell
                           nsnull);        // No nsIRequest
     }
@@ -2908,7 +2918,7 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
         rv = InternalLoad(mCurrentURI,
                           mReferrerURI,
                           nsnull,         // No owner
-                          PR_TRUE,        // Inherit owner from document
+                          INTERNAL_LOAD_FLAGS_INHERIT_OWNER, // Inherit owner from document
                           nsnull,         // No window target
                           NS_LossyConvertUCS2toASCII(contentTypeHint).get(),
                           nsnull,         // No post data
@@ -5027,14 +5037,14 @@ NS_IMETHODIMP
 nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIURI * aReferrer,
                          nsISupports * aOwner,
-                         PRBool aInheritOwner,
+                         PRUint32 aFlags,
                          const PRUnichar *aWindowTarget,
                          const char* aTypeHint,
                          nsIInputStream * aPostData,
                          nsIInputStream * aHeadersData,
                          PRUint32 aLoadType,
                          nsISHEntry * aSHEntry,
-                         PRBool firstParty,
+                         PRBool aFirstParty,
                          nsIDocShell** aDocShell,
                          nsIRequest** aRequest)
 {
@@ -5111,7 +5121,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     //
     // Get an owner from the current document if necessary
     //
-    if (!owner && aInheritOwner)
+    if (!owner && (aFlags & INTERNAL_LOAD_FLAGS_INHERIT_OWNER))
         GetCurrentDocumentOwner(getter_AddRefs(owner));
 
     //
@@ -5183,14 +5193,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             rv = targetDocShell->InternalLoad(aURI,
                                               aReferrer,
                                               owner,
-                                              aInheritOwner,
+                                              aFlags,
                                               nsnull,         // No window target
                                               aTypeHint,
                                               aPostData,
                                               aHeadersData,
                                               aLoadType,
                                               aSHEntry,
-                                              firstParty,
+                                              aFirstParty,
                                               aDocShell,
                                               aRequest);
             if (rv == NS_ERROR_NO_CONTENT) {
@@ -5410,8 +5420,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // been called. 
     mLSHE = aSHEntry;
 
-    rv = DoURILoad(aURI, aReferrer, owner, aTypeHint, aPostData, aHeadersData,
-                   firstParty, aDocShell, aRequest);
+    rv = DoURILoad(aURI, aReferrer,
+                   !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
+                   owner, aTypeHint, aPostData, aHeadersData, aFirstParty,
+                   aDocShell, aRequest);
 
     if (NS_FAILED(rv)) {
         DisplayLoadError(rv, aURI, nsnull);
@@ -5461,11 +5473,12 @@ nsDocShell::GetCurrentDocumentOwner(nsISupports ** aOwner)
 nsresult
 nsDocShell::DoURILoad(nsIURI * aURI,
                       nsIURI * aReferrerURI,
+                      PRBool aSendReferrer,
                       nsISupports * aOwner,
                       const char * aTypeHint,
                       nsIInputStream * aPostData,
                       nsIInputStream * aHeadersData,
-                      PRBool firstParty,
+                      PRBool aFirstParty,
                       nsIDocShell ** aDocShell,
                       nsIRequest ** aRequest)
 {
@@ -5476,7 +5489,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     if (NS_FAILED(rv)) return rv;
 
     nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-    if (firstParty) {
+    if (aFirstParty) {
         // tag first party URL loads
         loadFlags |= nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
     }
@@ -5520,7 +5533,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(do_QueryInterface(channel));
     if (httpChannelInternal) {
-      if (firstParty) {
+      if (aFirstParty) {
         httpChannelInternal->SetDocumentURI(aURI);
       } else {
         httpChannelInternal->SetDocumentURI(aReferrerURI);
@@ -5600,8 +5613,10 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             rv = AddHeadersToChannel(aHeadersData, httpChannel);
         }
         // Set the referrer explicitly
-        if (aReferrerURI)       // Referrer is currenly only set for link clicks here.
+        if (aReferrerURI && aSendReferrer) {
+            // Referrer is currenly only set for link clicks here.
             httpChannel->SetReferrer(aReferrerURI);
+        }
     }
     //
     // Set the owner of the channel - only for javascript and data channels.
@@ -6349,7 +6364,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
     rv = InternalLoad(uri,
                       referrerURI,
                       nsnull,            // No owner
-                      PR_FALSE,          // Do not inherit owner from document (security-critical!)
+                      INTERNAL_LOAD_FLAGS_NONE, // Do not inherit owner from document (security-critical!)
                       nsnull,            // No window target
                       contentType.get(), // Type hint
                       postData,          // Post data stream
@@ -6961,6 +6976,18 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
         }
         nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
         mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+        NS_ENSURE_TRUE(loadInfo, NS_OK);
+
+        /* We do need to pass in a referrer, but we don't want it to
+         * be sent to the server.
+         */
+        loadInfo->SetSendReferrer(PR_FALSE);
+
+        /* for most refreshes the current URI is an appropriate
+         * internal referrer
+         */
+        loadInfo->SetReferrer(currURI);
+
         /* Check if this META refresh causes a redirection
          * to another site. 
          */
@@ -6974,6 +7001,19 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
              */
             if (delay <= REFRESH_REDIRECT_TIMER) {
                 loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
+
+                /* for redirects we mimic HTTP, which passes the
+                 *  original referrer
+                 */
+                nsCOMPtr<nsIURI> internalReferrer;
+                nsCOMPtr<nsIWebNavigation> webNav =
+                    do_QueryInterface(mDocShell);
+                if (webNav) {
+                    webNav->GetReferringURI(getter_AddRefs(internalReferrer));
+                    if (internalReferrer) {
+                        loadInfo->SetReferrer(internalReferrer);
+                    }
+                }
             }
             else
                 loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
