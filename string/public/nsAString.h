@@ -112,9 +112,19 @@ class NS_COM nsAString
       virtual void SetIsVoid( PRBool );
 
         /**
-         * |CharAt|, |operator[]|, |First()|, and |Last()| are not guaranteed to be constant-time operations.
-         * These signatures should be pushed down into interfaces that guarantee flat allocation.
-         * Clients at _this_ level should always use iterators.
+         * |CharAt|, |operator[]|, |First()|, and |Last()| are not
+         * guaranteed to be constant-time operations.  These signatures
+         * should be pushed down into interfaces that guarantee flat
+         * allocation.  (Right now |First| and |Last| are here but
+         * |CharAt| and |operator[]| are on |nsASingleFragmentString|.)
+         *
+         * Clients at _this_ level should always use iterators.  For
+         * example, to see if the n-th character is a '-':
+         *
+         *   nsAString::const_iterator iter;
+         *   if ( *myString.BeginReading(iter).advance(n) == PRUnichar('-') )
+         *     // do something...
+         *   
          */
       char_type  First() const;
       char_type  Last() const;
@@ -151,8 +161,8 @@ class NS_COM nsAString
       // RFindCharInSet( ... ) const;
 
         /**
-         * |SetCapacity| is not required to do anything; however, it can be used
-         * as a hint to the implementation to reduce allocations.
+         * |SetCapacity| is not required to do anything; however, it can be
+         * used as a hint to the implementation to reduce allocations.
          * |SetCapacity(0)| is a suggestion to discard all associated storage.
          */
       virtual void SetCapacity( size_type ) { }
@@ -162,13 +172,20 @@ class NS_COM nsAString
          *   1) to |Cut| a suffix of the string;
          *   2) to prepare to |Append| or move characters around.
          *
-         * External callers are not allowed to use |SetLength| is this latter capacity.
-         * Should this really be a public operation?
-         * Additionally, your implementation of |SetLength| need not satisfy (2) if and only if you
-         * override the |do_...| routines to not need this facility.
+         * External callers are not allowed to use |SetLength| is this
+         * latter capacity, and should prefer |Truncate| for the former.
+         * In other words, |SetLength| is deprecated for all use outside
+         * of the string library and the internal use may at some point
+         * be replaced as well.
          *
-         * This distinction makes me think the two different uses should be split into
-         * two distinct functions.
+         * Should this really be a public operation?
+         *
+         * Additionally, your implementation of |SetLength| need not
+         * satisfy (2) if and only if you override the |do_...| routines
+         * to not need this facility.
+         *
+         * This distinction makes me think the two different uses should
+         * be split into two distinct functions.
          */
       virtual void SetLength( size_type ) { }
 
@@ -176,10 +193,10 @@ class NS_COM nsAString
       void
       Truncate( size_type aNewLength=0 )
         {
-          NS_ASSERTION(aNewLength<=this->Length(), "Can't use |Truncate()| to make a string longer.");
+          NS_ASSERTION(aNewLength <= this->Length(),
+                       "Can't use |Truncate()| to make a string longer.");
 
-          if ( aNewLength < this->Length() )
-            SetLength(aNewLength);
+          SetLength(aNewLength);
         }
 
 
@@ -201,9 +218,13 @@ class NS_COM nsAString
 
 
 
-        //
-        // |Assign()|, |operator=()|
-        //
+        /**
+         * |Assign()| and |operator=()| make |this| equivalent to the
+         * string or buffer given as an argument.  If possible, they do
+         * this by sharing a refcounted buffer (see
+         * |nsSharableC?String|, |nsXPIDLC?String|.  If not, they copy
+         * the buffer into their own buffer.
+         */
 
       void Assign( const self_type& aReadable )                                                     { AssignFromReadable(aReadable); }
       inline void Assign( const promise_type& aReadable );
@@ -366,9 +387,19 @@ class NS_COM nsACString
       virtual void SetIsVoid( PRBool );
 
         /**
-         * |CharAt|, |operator[]|, |First()|, and |Last()| are not guaranteed to be constant-time operations.
-         * These signatures should be pushed down into interfaces that guarantee flat allocation.
-         * Clients at _this_ level should always use iterators.
+         * |CharAt|, |operator[]|, |First()|, and |Last()| are not
+         * guaranteed to be constant-time operations.  These signatures
+         * should be pushed down into interfaces that guarantee flat
+         * allocation.  (Right now |First| and |Last| are here but
+         * |CharAt| and |operator[]| are on |nsASingleFragmentString|.)
+         *
+         * Clients at _this_ level should always use iterators.  For
+         * example, to see if the n-th character is a '-':
+         *
+         *   nsACString::const_iterator iter;
+         *   if ( *myString.BeginReading(iter).advance(n) == '-' )
+         *     // do something...
+         *   
          */
       char_type  First() const;
       char_type  Last() const;

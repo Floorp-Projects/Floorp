@@ -1015,7 +1015,7 @@ nsHttpHandler::InitUserAgentComponents()
         buf =  (char*)name.sysname;
         buf += ' ';
         buf += (char*)name.machine;
-        mOscpu.Adopt(ToNewCString(buf));
+        mOscpu.Assign(buf);
     }
 #elif defined (XP_MAC)
     long version;

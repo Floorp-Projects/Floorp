@@ -231,7 +231,7 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
         if (NS_FAILED(rv)) return rv;
         mFSCharset.Adopt(ToNewCString(tmp));
 #else
-        mFSCharset.Adopt(nsCRT::strdup("ISO-8859-1"));
+        mFSCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
 #endif   
     }
         

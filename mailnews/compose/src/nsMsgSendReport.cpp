@@ -299,7 +299,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
           nsMsgBuildErrorMessageByID(currError, errorMsg);
 
           if (! errorMsg.IsEmpty())
-            currMessage.Adopt(ToNewUnicode(errorMsg));
+            currMessage.Assign(errorMsg);
           break;
       }
   }
@@ -365,7 +365,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
         if (! dialogMessage.IsEmpty())
           temp.Append(NS_LITERAL_STRING("\n"));
         temp.Append(currMessage);
-        dialogMessage.Adopt(ToNewUnicode(temp));
+        dialogMessage.Assign(temp);
       }
     }
       
@@ -378,7 +378,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
       if (! dialogMessage.IsEmpty())
         temp.Append(NS_LITERAL_STRING("\n"));
       temp.Append(text1);
-      dialogMessage.Adopt(ToNewUnicode(temp));
+      dialogMessage.Assign(temp);
       nsMsgAskBooleanQuestionByString(prompt, dialogMessage, &oopsGiveMeBackTheComposeWindow, dialogTitle);
       if (!oopsGiveMeBackTheComposeWindow)
         *_retval = NS_OK;
@@ -431,7 +431,7 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
       if (! dialogMessage.IsEmpty())
         temp.Append(NS_LITERAL_STRING("\n"));
       temp.Append(currMessage);
-      dialogMessage.Adopt(ToNewUnicode(temp));
+      dialogMessage.Assign(temp);
     }
 
     nsMsgDisplayMessageByString(prompt, dialogMessage, dialogTitle);

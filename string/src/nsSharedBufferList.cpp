@@ -98,15 +98,20 @@ nsSharedBufferList::SplitBuffer( const Position& aSplitPosition, SplitDispositio
 
     NS_ASSERTION(bufferToSplit, "bufferToSplit");
 
-    ptrdiff_t splitOffset = aSplitPosition.mPosInBuffer - bufferToSplit->DataStart();
+    Buffer::size_type splitOffset =
+        aSplitPosition.mPosInBuffer - bufferToSplit->DataStart();
 
-    NS_ASSERTION(0 <= splitOffset && splitOffset <= bufferToSplit->DataLength(), "|splitOffset| within buffer");
+    NS_ASSERTION(aSplitPosition.mPosInBuffer >= bufferToSplit->DataStart() &&
+                 splitOffset <= bufferToSplit->DataLength(),
+                 "|splitOffset| within buffer");
 
-      // if the caller specifically asked to split off the right side of the buffer-to-be-split
-      //  or else if they asked for the minimum amount of work, and that turned out to be the right side...
+      // if the caller specifically asked to split off the right side of
+      // the buffer-to-be-split or else if they asked for the minimum
+      // amount of work, and that turned out to be the right side...
     ptrdiff_t savedLength = mTotalDataLength;
     if ( aSplitDirection==kSplitCopyRightData ||
-        ( aSplitDirection==kSplitCopyLeastData && ((bufferToSplit->DataLength() >> 1) <= splitOffset) ) )
+         ( aSplitDirection==kSplitCopyLeastData &&
+           ((bufferToSplit->DataLength() >> 1) <= splitOffset) ) )
       {
           // ...then allocate a new buffer initializing it by copying all the data _after_ the split in the source buffer (i.e., `split right')
         Buffer* new_buffer = NewSingleAllocationBuffer(bufferToSplit->DataStart()+splitOffset, PRUint32(bufferToSplit->DataLength()-splitOffset));

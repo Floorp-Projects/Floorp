@@ -2301,6 +2301,7 @@ protected:
                NS_REINTERPRET_CAST(PRUnichar *,
                                    JS_GetStringChars(str) +
                                    JS_GetStringLength(str)),
+               JS_GetStringLength(str) + 1,
                mAllocator),
             mAllocator(str)
         { }

@@ -21,6 +21,16 @@
  *   Scott Collins <scc@mozilla.org> (original author)
  */
 
+// XXX TODO:
+//
+// nsSharableString will need to be careful to use GetSharedBufferHandle
+// where necessary so that an nsXPIDLString can be passed as an
+// nsSharableString&.  We must be careful to ensure that an
+// nsXPIDLString can be used as an nsSharableString& and that an
+// nsXPIDLString and an nsSharableString can share buffers created by
+// the other (and buffers created by nsSharableString::Adopt rather than
+// its other assignment methods).
+
 #include "nsXPIDLString.h"
 
 #if DEBUG_STRING_STATS
@@ -40,12 +50,12 @@ size_t nsXPIDLCString::sShareCount      = 0;
 
 template <class CharT>
 class nsImportedStringHandle
-    : public nsFlexBufferHandle<CharT>
+    : public nsSharedBufferHandle<CharT>
   {
     public:
-      nsImportedStringHandle() : nsFlexBufferHandle<CharT>(0, 0, 0, 0) { }
+      nsImportedStringHandle() : nsSharedBufferHandle<CharT>(0, 0, 0, PR_FALSE) { }
 
-      CharT** AddressOfStorageStart() { return &(this->mStorageStart); }
+      CharT** AddressOfStorageStart() { return &(this->mDataStart); }
       void RecalculateBoundaries() const;
   };
 
@@ -55,19 +65,17 @@ void
 nsImportedStringHandle<CharT>::RecalculateBoundaries() const
   {
     size_t data_length = 0;
-    size_t storage_length = 0;
 
-    CharT* storage_start = NS_CONST_CAST(CharT*, this->StorageStart());
+    CharT* storage_start = NS_CONST_CAST(CharT*, this->DataStart());
     if ( storage_start )
       {
         data_length = nsCharTraits<CharT>::length(storage_start);
-        storage_length = data_length + 1;
       }
 
     nsImportedStringHandle<CharT>* mutable_this = NS_CONST_CAST(nsImportedStringHandle<CharT>*, this);
     mutable_this->DataStart(storage_start);
-    mutable_this->DataEnd(storage_start+data_length);
-    mutable_this->StorageEnd(storage_start+storage_length);
+    mutable_this->DataEnd(storage_start + data_length);
+    mutable_this->StorageLength(data_length + 1);
   }
 
 
@@ -100,15 +108,21 @@ nsXPIDLString::DebugPrintStats( FILE* aOutFile )
 const nsXPIDLString::shared_buffer_handle_type*
 nsXPIDLString::GetSharedBufferHandle() const
   {
-    const nsImportedStringHandle<char_type>* answer = NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get());
-    
-    if ( answer && !answer->DataEnd() && answer->StorageStart() )
-      answer->RecalculateBoundaries();
+    self_type* mutable_this = NS_CONST_CAST(self_type*, this);
+    if ( !mBuffer->DataStart() )
+      // XXXldb This isn't any good.  What if we just called
+      // PrepareForUseAsOutParam and it hasn't been filled in yet?
+      mutable_this->mBuffer = GetSharedEmptyBufferHandle();
+    else if ( !mBuffer->DataEnd() )
+      // Our handle may not be an nsImportedStringHandle.  However, if it
+      // is not, this cast will still be safe since no other handle will
+      // be in this state.
+      NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get())->RecalculateBoundaries();
 
 #if DEBUG_STRING_STATS
     ++sShareCount;
 #endif
-    return answer;
+    return mBuffer.get();
   }
 
 
@@ -123,6 +137,20 @@ nsXPIDLString::PrepareForUseAsOutParam()
     ++sAssignCount;
 #endif
     return handle->AddressOfStorageStart();
+  }
+
+/* static */
+nsXPIDLString::shared_buffer_handle_type*
+nsXPIDLString::GetSharedEmptyBufferHandle()
+  {
+    static shared_buffer_handle_type* sBufferHandle = nsnull;
+
+    if (!sBufferHandle) {
+      sBufferHandle = NS_AllocateContiguousHandleWithData(sBufferHandle,
+                                              PRUint32(1), (self_type*)nsnull);
+      sBufferHandle->AcquireReference();
+    }
+    return sBufferHandle;
   }
 
 
@@ -155,15 +183,21 @@ nsXPIDLCString::DebugPrintStats( FILE* aOutFile )
 const nsXPIDLCString::shared_buffer_handle_type*
 nsXPIDLCString::GetSharedBufferHandle() const
   {
-    const nsImportedStringHandle<char_type>* answer = NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get());
-    
-    if ( answer && !answer->DataEnd() && answer->StorageStart() )
-      answer->RecalculateBoundaries();
+    self_type* mutable_this = NS_CONST_CAST(self_type*, this);
+    if ( !mBuffer->DataStart() )
+      // XXXldb This isn't any good.  What if we just called
+      // PrepareForUseAsOutParam and it hasn't been filled in yet?
+      mutable_this->mBuffer = GetSharedEmptyBufferHandle();
+    else if ( !mBuffer->DataEnd() )
+      // Our handle may not be an nsImportedStringHandle.  However, if it
+      // is not, this cast will still be safe since no other handle will
+      // be in this state.
+      NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get())->RecalculateBoundaries();
 
 #if DEBUG_STRING_STATS
     ++sShareCount;
 #endif
-    return answer;
+    return mBuffer.get();
   }
 
 
@@ -178,4 +212,18 @@ nsXPIDLCString::PrepareForUseAsOutParam()
     ++sAssignCount;
 #endif
     return handle->AddressOfStorageStart();
+  }
+
+/* static */
+nsXPIDLCString::shared_buffer_handle_type*
+nsXPIDLCString::GetSharedEmptyBufferHandle()
+  {
+    static shared_buffer_handle_type* sBufferHandle = nsnull;
+
+    if (!sBufferHandle) {
+      sBufferHandle = NS_AllocateContiguousHandleWithData(sBufferHandle,
+                                              PRUint32(1), (self_type*)nsnull);
+      sBufferHandle->AcquireReference();
+    }
+    return sBufferHandle;
   }

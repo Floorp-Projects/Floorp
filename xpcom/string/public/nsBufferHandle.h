@@ -31,9 +31,6 @@
 #include "nsStringDefines.h"
 #endif
 
-#include <stddef.h>
-  // for |ptrdiff_t|
-
 #include "prtypes.h"
   // for |PRBool|
 
@@ -49,32 +46,39 @@
 #pragma warning( disable: 4251 )
 #endif
 
-  /**
-   The classes in this file are collectively called `buffer handles'.
-   All buffer handles begin with a pointer-tuple that delimits the useful content of a
-   hunk of string.  A buffer handle that points to a sharable hunk of string data
-   additionally has a field which multiplexes some flags and a reference count.
-
-
-      ns[Const]BufferHandle       nsSharedBufferHandle        mFlexBufferHandle
-      +-----+-----+-----+-----+   +-----+-----+-----+-----+   +-----+-----+-----+-----+
-      | mDataStart            |   | mDataStart            |   | mDataStart            |
-      +-----+-----+-----+-----+   +-----+-----+-----+-----+   +-----+-----+-----+-----+
-      | mDataEnd              |   | mDataEnd              |   | mDataEnd              |
-      +-----+-----+-----+-----+   +-----+-----+-----+-----+   +-----+-----+-----+-----+
-                                  | mFlags                |   | mFlags                |
-                                  +-----+-----+-----+-----+   +-----+-----+-----+-----+
-                                  . mAllocator            .   | mStorageStart         |
-                                  .........................   +-----+-----+-----+-----+
-                                                              | mStorageEnd           |
-                                                              +-----+-----+-----+-----+
-                                                              . mAllocator            .
-                                                              .........................
-
-    Given only a |ns[Const]BufferHandle|, there is no legal way to tell if it is sharable.
-    In all cases, the data might immediately follow the handle in the same allocated block.
-    From the |mFlags| field, you can tell exactly what configuration of a handle you
-    actually have.
+  /*
+   * The classes in this file are collectively called `buffer handles'.
+   * All buffer handles begin with a pointer-tuple that delimits the
+   * useful content of a hunk of string.  A buffer handle that points to
+   * a sharable hunk of string data additionally has a field which
+   * multiplexes some flags and a reference count.
+   *
+   *
+   *  ns[Const]BufferHandle       nsSharedBufferHandle
+   *  +-----+-----+-----+-----+   +-----+-----+-----+-----+
+   *  | mDataStart            |   | mDataStart            |
+   *  +-----+-----+-----+-----+   +-----+-----+-----+-----+
+   *  | mDataEnd              |   | mDataEnd              |
+   *  +-----+-----+-----+-----+   +-----+-----+-----+-----+
+   *                              | mFlags                |
+   *                              +-----+-----+-----+-----+
+   *                              | mStorageLength        |
+   *                              +-----+-----+-----+-----+
+   *                              . mAllocator            .
+   *                              .........................
+   *
+   * Given only a |ns[Const]BufferHandle|, there is no legal way to tell
+   * if it is sharable.  In all cases, the data might immediately follow
+   * the handle in the same allocated block.  From the |mFlags| field,
+   * you can tell exactly what configuration of a handle you actually
+   * have.
+   *
+   * An |nsSharedBufferHandle| has the limitation that its |mDataStart|
+   * must also be the beginning of the allocated storage.  However,
+   * allowing otherwise would introduce significant additional
+   * complexity for a feature that would better be handled by allowing
+   * an owninng substring string class that owned a reference to the
+   * buffer handle.
    */
 
 
@@ -85,6 +89,8 @@ template <class CharT>
 class nsBufferHandle
   {
     public:
+      typedef PRUint32                          size_type;
+
       nsBufferHandle() { }
       nsBufferHandle( CharT* aDataStart, CharT* aDataEnd ) : mDataStart(aDataStart), mDataEnd(aDataEnd) { }
 
@@ -96,7 +102,7 @@ class nsBufferHandle
       CharT*        DataEnd()                               { return mDataEnd; }
       const CharT*  DataEnd() const                         { return mDataEnd; }
 
-      ptrdiff_t     DataLength() const                      { return mDataEnd - mDataStart; }
+      size_type     DataLength() const                      { return mDataEnd - mDataStart; }
 
     protected:
       CharT*  mDataStart;
@@ -107,6 +113,8 @@ template <class CharT>
 class nsConstBufferHandle
   {
     public:
+      typedef PRUint32                          size_type;
+
       nsConstBufferHandle() { }
       nsConstBufferHandle( const CharT* aDataStart, const CharT* aDataEnd ) : mDataStart(aDataStart), mDataEnd(aDataEnd) { }
 
@@ -116,7 +124,7 @@ class nsConstBufferHandle
       void          DataEnd( const CharT* aNewDataEnd )     { mDataEnd = aNewDataEnd; }
       const CharT*  DataEnd() const                         { return mDataEnd; }
 
-      ptrdiff_t     DataLength() const                      { return mDataEnd - mDataStart; }
+      size_type     DataLength() const                      { return mDataEnd - mDataStart; }
 
     protected:
       const CharT*  mDataStart;
@@ -175,13 +183,15 @@ template <class CharT>
 class nsSharedBufferHandle
     : public nsBufferHandle<CharT>
   {
+    public:
+      typedef PRUint32                          size_type;
+
     protected:
       enum
         {
-          kIsShared                       = 0x08000000, // one reason _not_ to set this is for a stack based handle that wants to express `NULL'-ness et al
-          kIsSingleAllocationWithBuffer   = 0x04000000, // handle and buffer are one piece, no separate deallocation is possible for the buffer
-          kIsStorageDefinedSeparately     = 0x02000000, // i.e., we're using the ``flex'' structure defined below
-          kIsUserAllocator                = 0x01000000, // can't |delete|, call a hook instead
+          kIsShared                       = 0x01000000, // one reason _not_ to set this is for a stack based handle that wants to express `NULL'-ness et al
+          kIsSingleAllocationWithBuffer   = 0x02000000, // handle and buffer are one piece, no separate deallocation is possible for the buffer
+          kIsUserAllocator                = 0x04000000, // can't |delete|, call a hook instead
 
             // the following flags are opaque to the string library itself
           kIsNULL                         = 0x80000000, // the most common request of external clients is a scheme by which they can express `NULL'-ness
@@ -192,14 +202,9 @@ class nsSharedBufferHandle
         };
 
     public:
-      nsSharedBufferHandle( CharT* aDataStart, CharT* aDataEnd )
-          : nsBufferHandle<CharT>(aDataStart, aDataEnd)
-        {
-          mFlags = kIsShared;
-        }
-
-      nsSharedBufferHandle( CharT* aDataStart, CharT* aDataEnd, CharT*, CharT*, PRBool isSingleAllocation )
-          : nsBufferHandle<CharT>(aDataStart, aDataEnd)
+      nsSharedBufferHandle( CharT* aDataStart, CharT* aDataEnd, size_type aStorageLength, PRBool isSingleAllocation )
+          : nsBufferHandle<CharT>(aDataStart, aDataEnd),
+            mStorageLength(aStorageLength)
         {
           mFlags = kIsShared;
           if ( isSingleAllocation )
@@ -230,6 +235,23 @@ class nsSharedBufferHandle
           return get_refcount() != 0;
         }
 
+      PRBool
+      IsShared() const
+        {
+          return get_refcount() > 1;
+        }
+
+      void StorageLength( size_type aNewStorageLength )
+        {
+          mStorageLength = aNewStorageLength;
+        }
+
+      size_type
+      StorageLength() const
+        {
+          return mStorageLength;
+        }
+
       PRUint32
       GetImplementationFlags() const
         {
@@ -244,6 +266,7 @@ class nsSharedBufferHandle
 
     protected:
       PRUint32  mFlags;
+      size_type mStorageLength;
 
       PRUint32
       get_refcount() const
@@ -265,60 +288,16 @@ class nsSharedBufferHandle
 
 
 template <class CharT>
-class nsFlexBufferHandle
-    : public nsSharedBufferHandle<CharT>
-  {
-    public:
-      nsFlexBufferHandle( CharT* aDataStart, CharT* aDataEnd, CharT* aStorageStart, CharT* aStorageEnd )
-          : nsSharedBufferHandle<CharT>(aDataStart, aDataEnd),
-            mStorageStart(aStorageStart),
-            mStorageEnd(aStorageEnd)
-        {
-          this->mFlags |= this->kIsStorageDefinedSeparately;
-        }
-
-      void          StorageStart( CharT* aNewStorageStart )       { mStorageStart = aNewStorageStart; }
-      CharT*        StorageStart()                                { return mStorageStart; }
-      const CharT*  StorageStart() const                          { return mStorageStart; }
-
-      void          StorageEnd( CharT* aNewStorageEnd )           { mStorageEnd = aNewStorageEnd; }
-      CharT*        StorageEnd()                                  { return mStorageEnd; }
-      const CharT*  StorageEnd() const                            { return mStorageEnd; }
-
-      ptrdiff_t     StorageLength() const                         { return mStorageEnd - mStorageStart; }
-
-    protected:
-      CharT*  mStorageStart;
-      CharT*  mStorageEnd;
-  };
-
-template <class CharT>
 class nsSharedBufferHandleWithAllocator
     : public nsSharedBufferHandle<CharT>
   {
     public:
-      nsSharedBufferHandleWithAllocator( CharT* aDataStart, CharT* aDataEnd, nsStringAllocator<CharT>& aAllocator )
-          : nsSharedBufferHandle<CharT>(aDataStart, aDataEnd),
-            mAllocator(aAllocator)
-        {
-          this->mFlags |= this->kIsUserAllocator;
-        }
+      // why is this needed again?
+      typedef PRUint32                          size_type;
 
-      nsStringAllocator<CharT>& get_allocator() const { return mAllocator; }
-
-    protected:
-      nsStringAllocator<CharT>& mAllocator;
-  };
-
-template <class CharT>
-class nsFlexBufferHandleWithAllocator
-    : public nsFlexBufferHandle<CharT>
-  {
-    public:
-      nsFlexBufferHandleWithAllocator( CharT* aDataStart, CharT* aDataEnd,
-                                       CharT* aStorageStart, CharT* aStorageEnd,
-                                       nsStringAllocator<CharT>& aAllocator )
-          : nsFlexBufferHandle<CharT>(aDataStart, aDataEnd, aStorageStart, aStorageEnd),
+      nsSharedBufferHandleWithAllocator( CharT* aDataStart, CharT* aDataEnd, size_type aStorageLength, nsStringAllocator<CharT>& aAllocator )
+          : nsSharedBufferHandle<CharT>(aDataStart, aDataEnd,
+                                        aStorageLength, PR_FALSE),
             mAllocator(aAllocator)
         {
           this->mFlags |= this->kIsUserAllocator;
@@ -338,10 +317,7 @@ nsSharedBufferHandle<CharT>::get_allocator() const
   {
     if ( mFlags & kIsUserAllocator )
       {
-        if ( mFlags & kIsStorageDefinedSeparately )
-          return NS_REINTERPRET_CAST(const nsFlexBufferHandleWithAllocator<CharT>*, this)->get_allocator();
-        else
-          return NS_REINTERPRET_CAST(const nsSharedBufferHandleWithAllocator<CharT>*, this)->get_allocator();
+        return NS_REINTERPRET_CAST(const nsSharedBufferHandleWithAllocator<CharT>*, this)->get_allocator();
       }
 
     return nsStringAllocatorTraits<CharT>::global_string_allocator();
@@ -357,9 +333,6 @@ nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
     if ( !(mFlags & kIsSingleAllocationWithBuffer) )
       {
         CharT* string_storage = this->mDataStart;
-        if ( mFlags & kIsStorageDefinedSeparately )
-          string_storage = NS_REINTERPRET_CAST(nsFlexBufferHandle<CharT>*, this)->StorageStart();
-
         get_allocator().Deallocate(string_storage);
       }
   }

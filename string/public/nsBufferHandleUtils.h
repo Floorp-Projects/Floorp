@@ -169,7 +169,7 @@ NS_AllocateContiguousHandleWithData( const HandleT* aDummyHandlePtr, PRUint32 aA
         if ( aAdditionalCapacity > 0 )
           *toBegin = char_type(0);
 
-        result = new (handle_ptr) HandleT(data_start_ptr, data_end_ptr, data_start_ptr, buffer_end_ptr, PR_TRUE);
+        result = new (handle_ptr) HandleT(data_start_ptr, data_end_ptr, buffer_end_ptr - data_start_ptr, PR_TRUE);
       }
 
     return result;
