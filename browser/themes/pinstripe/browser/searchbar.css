@@ -16,7 +16,6 @@
 .searchbar-engine-image {
   width: 16px;
   height: 16px;
-  padding: 0px;
   list-style-image: url("chrome://browser/skin/Search-bar.png");
 }
 
