@@ -52,7 +52,6 @@ LIBS := \
 	-lraptorgfx \
 	$(TOOLKIT_GFX_LIB) \
 	-lgfxps \
-	$(DIST)/lib/libraptorhtmlforms_s.a \
 	-lraptorhtmlpars \
 	-lraptorview \
 	-labouturl \
@@ -61,12 +60,7 @@ LIBS := \
 	-lgophurl \
 	-lhttpurl \
 	-limg \
-	$(PNG_LIBS) \
-	$(JPEG_LIBS) \
 	-l$(MOZ_LIB_JS_PREFIX)js \
-	-ljsdom \
-	-ljsurl \
-	$(DIST)/lib/libjsdomcore_s.a \
 	$(JSJ_LIB) \
 	-lmimetype \
 	-lnetcache \
@@ -75,7 +69,6 @@ LIBS := \
 	-lsockstuburl \
 	-lnetwork \
 	-lpwcac \
-	-lraptorwebwidget \
 	-lremoturl \
 	-lsecfree \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
