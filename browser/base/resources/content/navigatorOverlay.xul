@@ -23,7 +23,6 @@
    -   Jeremy M. Dolan <jmd@pobox.com>
    -->
 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
 
 <!DOCTYPE window [
