@@ -64,7 +64,6 @@ public:
 
 private:
   CERTCertificate *mCert;
-  nsString         mIssuerOrg;
   PRBool           mPermDelete;
   PRUint32         mCertType;
   nsCOMPtr<nsIASN1Object> mASN1Structure;

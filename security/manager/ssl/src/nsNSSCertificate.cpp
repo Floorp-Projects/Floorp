@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.40 2001/08/01 23:05:08 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.41 2001/08/02 23:52:14 ddrinan%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -684,36 +684,47 @@ nsNSSCertificate::GetOrganization(PRUnichar **aOrganization)
 }
 
 NS_IMETHODIMP
+nsNSSCertificate::GetIssuerCommonName(PRUnichar **aCommonName)
+{
+  NS_ENSURE_ARG(aCommonName);
+  *aCommonName = nsnull;
+  if (mCert) {
+    char *commonName = CERT_GetCommonName(&mCert->issuer);
+    if (commonName) {
+      nsAutoString cn = NS_ConvertASCIItoUCS2(commonName);
+      *aCommonName = cn.ToNewUnicode();
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNSSCertificate::GetIssuerOrganization(PRUnichar **aOrganization)
 {
   NS_ENSURE_ARG(aOrganization);
-  if (mIssuerOrg.Length() == 0) {
-    PRBool failed = PR_TRUE;
-    CERTCertificate *issuer;
-    issuer = CERT_FindCertIssuer(mCert, PR_Now(), certUsageSSLClient);
-    if (issuer) {
-      char *org = CERT_GetOrgName(&issuer->subject);
-      if (org) {
-        mIssuerOrg = NS_ConvertASCIItoUCS2(org);
-        failed = PR_FALSE;
-      }
-    }
-    if (failed) {
-      nsresult rv;
-      nsCOMPtr<nsINSSComponent> nssComponent(
-                     do_GetService(kNSSComponentCID, &rv));
-      if (NS_FAILED(rv)) return rv;
-      if (!issuer) {
-        rv = nssComponent->GetPIPNSSBundleString(
-                     NS_LITERAL_STRING("UnknownCertIssuer").get(), mIssuerOrg);
-      } else { /* !org */
-        rv = nssComponent->GetPIPNSSBundleString(
-                     NS_LITERAL_STRING("UnknownCertOrg").get(), mIssuerOrg);
-      }
-      if (NS_FAILED(rv)) return rv;
+  *aOrganization = nsnull;
+  if (mCert) {
+    char *organization = CERT_GetOrgName(&mCert->issuer);
+    if (organization) {
+      nsAutoString org = NS_ConvertASCIItoUCS2(organization);
+      *aOrganization = org.ToNewUnicode();
     }
   }
-  *aOrganization = mIssuerOrg.ToNewUnicode();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetIssuerOrganizationUnit(PRUnichar **aOrganizationUnit)
+{
+  NS_ENSURE_ARG(aOrganizationUnit);
+  *aOrganizationUnit = nsnull;
+  if (mCert) {
+    char *organizationUnit = CERT_GetOrgUnitName(&mCert->issuer);
+    if (organizationUnit) {
+      nsAutoString orgUnit = NS_ConvertASCIItoUCS2(organizationUnit);
+      *aOrganizationUnit = orgUnit.ToNewUnicode();
+    }
+  }
   return NS_OK;
 }
 
