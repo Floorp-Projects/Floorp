@@ -24,8 +24,7 @@
 #include "nsStyleConsts.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
-
-
+#include "nsHTMLIIDs.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
@@ -33,9 +32,6 @@
 static NS_DEFINE_IID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 static nsICaseConversion* gCaseConv =  nsnull;
-
-// XXX put a copy in nsHTMLIIDs
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 // XXX I'm sure there are other special characters
 #define CH_NBSP 160

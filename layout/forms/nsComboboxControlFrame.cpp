@@ -63,7 +63,6 @@ static NS_DEFINE_IID(kIComboboxControlFrameIID,  NS_ICOMBOBOXCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID,  NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID,  NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIListControlFrameIID,      NS_ILISTCONTROLFRAME_IID);
-static NS_DEFINE_IID(kITextContentIID,           NS_ITEXT_CONTENT_IID);
 
 nsresult
 NS_NewComboboxControlFrame(nsIFrame*& aResult)
