@@ -29,7 +29,6 @@
 #include "nsIReflowCommand.h"
 
 class nsIContent;
-class nsIContentIterator;
 class nsIDocument;
 class nsIDocumentObserver;
 class nsIFrame;
@@ -403,18 +402,6 @@ public:
    * @param aIsReflowLocked returns PR_TRUE if reflow is locked, PR_FALSE otherwise
    */
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked) = 0;  
-
-  /**
-   * Returns a content iterator to iterate the generated content nodes.
-   * You must specify whether you want to iterate the "before" generated
-   * content or the "after" generated content. If there is no generated
-   * content of the specified type for the promary frame associated with
-   * with the content object then NULL is returned
-   */
-  enum GeneratedContentType {Before, After};
-  NS_IMETHOD GetGeneratedContentIterator(nsIContent*          aContent,
-                                         GeneratedContentType aType,
-                                         nsIContentIterator** aIterator) const = 0;
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add

@@ -75,7 +75,6 @@
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
 #include "plarena.h"
-#include "nsCSSAtoms.h"
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -371,10 +370,6 @@ public:
 
   NS_IMETHOD GetReflowEventStatus(PRBool* aPending);
   NS_IMETHOD SetReflowEventStatus(PRBool aPending);
-
-  NS_IMETHOD GetGeneratedContentIterator(nsIContent*          aContent,
-                                         GeneratedContentType aType,
-                                         nsIContentIterator** aIterator) const;
 
   /**
    * Reflow batching
@@ -2509,123 +2504,6 @@ PresShell::SetReflowEventStatus(PRBool aPending)
 {
   mPendingReflowEvent = aPending;
   return NS_OK;
-}
-  
-static PRBool
-IsGeneratedContentFrame(nsIFrame* aFrame)
-{
-  nsFrameState  frameState;
-
-  aFrame->GetFrameState(&frameState);
-  return (frameState & NS_FRAME_GENERATED_CONTENT) != 0;
-}
-
-static PRBool
-IsPseudoFrame(nsIFrame* aFrame, nsIContent* aParentContent)
-{
-  nsCOMPtr<nsIContent>  content;
-
-  aFrame->GetContent(getter_AddRefs(content));
-  return content.get() == aParentContent;
-}
-
-static nsIFrame*
-GetFirstChildFrame(nsIPresContext* aPresContext,
-                   nsIFrame*       aFrame,
-                   nsIContent*     aContent)
-{
-  nsIFrame* childFrame;
-
-  // Get the first child frame
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-
-  // If the child frame is a pseudo-frame, then return its first child
-  if (childFrame && IsPseudoFrame(childFrame, aContent)) {
-    return GetFirstChildFrame(aPresContext, childFrame, aContent);
-  }
-
-  return childFrame;
-}
-
-static nsIFrame*
-GetLastChildFrame(nsIPresContext* aPresContext,
-                  nsIFrame*       aFrame,
-                  nsIContent*     aContent)
-{
-  NS_PRECONDITION(aFrame, "NULL frame pointer");
-
-  // Get the last in flow frame
-  nsIFrame* lastInFlow;
-  while (aFrame)  {
-    lastInFlow = aFrame;
-    lastInFlow->GetNextInFlow(&aFrame);
-  }
-
-  // Get the first child frame
-  nsIFrame* firstChildFrame;
-  lastInFlow->FirstChild(aPresContext, nsnull, &firstChildFrame);
-  if (firstChildFrame) {
-    nsFrameList frameList(firstChildFrame);
-    nsIFrame*   lastChildFrame = frameList.LastChild();
-
-    NS_ASSERTION(lastChildFrame, "unexpected error");
-
-    // If the last child frame is a pseudo-frame, then return its last child
-    if (lastChildFrame && IsPseudoFrame(lastChildFrame, aContent)) {
-      return GetLastChildFrame(aPresContext, lastChildFrame, aContent);
-    }
-
-    return lastChildFrame;
-  }
-
-  return nsnull;
-}
-
-NS_IMETHODIMP
-PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
-                                       GeneratedContentType aType,
-                                       nsIContentIterator** aIterator) const
-{
-  nsIFrame* primaryFrame;
-  nsresult  rv = NS_OK;
-
-  // Initialize OUT parameter
-  *aIterator = nsnull;
-
-  // Get the primary frame associated with the content object
-  GetPrimaryFrameFor(aContent, &primaryFrame);
-  if (primaryFrame) {
-    // See whether it's a request for the before or after generated content
-    if (Before == aType) {
-      // The most efficient thing to do is to get the first child frame,
-      // and see if it is associated with generated content
-      nsIFrame* firstChildFrame = GetFirstChildFrame(mPresContext, primaryFrame, aContent);
-      if (firstChildFrame && IsGeneratedContentFrame(firstChildFrame)) {
-        // Create an iterator
-        rv = NS_NewGeneratedContentIterator(mPresContext, firstChildFrame, aIterator);
-      }
-      
-    } else {
-      // Avoid finding the last child frame unless we need to. Instead probe
-      // for the existence of the pseudo-element
-      nsCOMPtr<nsIStyleContext> styleContext;
-      nsCOMPtr<nsIStyleContext> pseudoStyleContext;
-      
-      primaryFrame->GetStyleContext(getter_AddRefs(styleContext));
-      mPresContext->ProbePseudoStyleContextFor(aContent, nsCSSAtoms::afterPseudo,
-                                               styleContext, PR_FALSE,
-                                               getter_AddRefs(pseudoStyleContext));
-      if (pseudoStyleContext) {
-        nsIFrame* lastChildFrame = GetLastChildFrame(mPresContext, primaryFrame, aContent);
-        NS_ASSERTION(lastChildFrame && IsGeneratedContentFrame(lastChildFrame),
-                     "can't find generated content frame");
-        // Create an iterator
-        rv = NS_NewGeneratedContentIterator(mPresContext, lastChildFrame, aIterator);
-      }
-    }
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP 
