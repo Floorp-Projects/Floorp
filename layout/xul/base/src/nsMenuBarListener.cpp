@@ -27,6 +27,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMNSUIEvent.h"
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
@@ -105,28 +106,33 @@ nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
 #if !defined(XP_UNIX) || defined(NTO)
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-  PRUint32 theChar;
-	keyEvent->GetKeyCode(&theChar);
+  nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
+  PRBool preventDefault;
 
-  if (mAltKeyDown && (theChar != NS_VK_ALT)) {
-    mAltKeyDown = PR_FALSE;
+  nsUIEvent->GetPreventDefault(&preventDefault);
+  if (!preventDefault) {
+    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+    PRUint32 theChar;
+	  keyEvent->GetKeyCode(&theChar);
 
-    // Do shortcut navigation.
-    // A letter was pressed. We want to see if a shortcut gets matched. If
-    // so, we'll know the menu got activated.
-    keyEvent->GetCharCode(&theChar);
+    if (mAltKeyDown && (theChar != NS_VK_ALT)) {
+      mAltKeyDown = PR_FALSE;
 
-    PRBool active = PR_FALSE;
-    mMenuBarFrame->ShortcutNavigation(theChar, active);
+      // Do shortcut navigation.
+      // A letter was pressed. We want to see if a shortcut gets matched. If
+      // so, we'll know the menu got activated.
+      keyEvent->GetCharCode(&theChar);
 
-    if (active) {
-	    aKeyEvent->PreventBubble();
-      aKeyEvent->PreventCapture();
-      aKeyEvent->PreventDefault();
-    }
-    
+      PRBool active = PR_FALSE;
+      mMenuBarFrame->ShortcutNavigation(theChar, active);
+
+      if (active) {
+	      aKeyEvent->PreventBubble();
+        aKeyEvent->PreventCapture();
+        aKeyEvent->PreventDefault();
+      }
     return NS_ERROR_BASE; // I am consuming event
+    }    
   } 
 #endif
   return NS_OK;

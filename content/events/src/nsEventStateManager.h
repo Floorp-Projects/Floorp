@@ -29,6 +29,7 @@
 #include "nsIPref.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsHashTable.h"
 
 class nsIDocument;
 class nsIScrollableView;
@@ -93,8 +94,8 @@ public:
   NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) { mConsumeFocusEvents = aDoConsume; return NS_OK; }
 
   // Access Key Registration
-  NS_IMETHOD RegisterAccessKey(nsIFrame * aFrame, PRUint32 aKey);
-  NS_IMETHOD UnregisterAccessKey(nsIFrame * aFrame);
+  NS_IMETHOD RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, PRUint32 aKey);
+  NS_IMETHOD UnregisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, PRUint32 aKey);
 
   NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor);
 
@@ -181,6 +182,9 @@ protected:
   PRUint32 mLClickCount;
   PRUint32 mMClickCount;
   PRUint32 mRClickCount;
+
+  //Hashtable for accesskey support
+  nsSupportsHashtable *mAccessKeys;
 
   static PRUint32 mInstanceCount;
 
