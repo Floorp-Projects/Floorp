@@ -39,7 +39,7 @@ class nsString;
 
 class nsIFormSubmitObserver : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IFORMSUBMITOBSERVER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMSUBMITOBSERVER_IID)
 
   /*
    *   Subject calls the observer when the form is submitted

@@ -33,6 +33,7 @@ class nsIFrame;
  **/
 class nsIFormManager : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMMANAGER_IID)
   /**
     * Reset the values of all of this manager's controls back to their
     * initial values. This is in response to a reset button being pushed.

@@ -36,6 +36,7 @@ class nsIStyleContext;
 class nsIRadioControlFrame : public nsISupports {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRADIOCONTROLFRAME_IID)
 
   /**
    * Sets the Pseudo Style Contexts for the Radio button
