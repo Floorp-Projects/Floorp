@@ -632,16 +632,6 @@ nsDeviceContextGTK::GetSystemFontInfo( GdkFont* iFont, nsSystemAttrID anID, nsFo
     if( pr )
       aFont->size = NSIntPixelsToTwips(pr, mPixelsToTwips);
 
-    pr = 0;
-    ::XGetFontProperty( fontInfo, XA_ITALIC_ANGLE, &pr );
-    if( pr )
-      aFont->style = NS_FONT_STYLE_ITALIC;
-    
-    pr = 0;
-    ::XGetFontProperty( fontInfo, XA_UNDERLINE_THICKNESS, &pr );
-    if( pr )
-      aFont->decorations = NS_FONT_DECORATION_UNDERLINE;
-    
     status = NS_OK;
   }
   return (status);
