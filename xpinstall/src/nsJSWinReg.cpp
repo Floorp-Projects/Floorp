@@ -456,6 +456,100 @@ WinRegGetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 }
 
 //
+// Native method enumValueNames
+//
+PR_STATIC_CALLBACK(JSBool)
+WinRegEnumValueNames(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsWinReg*      nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
+  nsAutoString   nativeRet;
+  nsAutoString   b0;
+  int32          b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc >= 2)                             
+  {
+    //  public String enumValueNames ( String subkey,
+    //                                 Int index);
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+
+    if(JS_ValueToInt32(cx, argv[1], &b1))
+    {
+      if ( NS_OK == nativeThis->EnumValueNames(b0, b1, nativeRet) )
+      {
+          ConvertStrToJSVal(nativeRet, cx, rval);
+      }
+    }
+    else  
+    {
+      JS_ReportWarning(cx, "WinReg.enumValueNames - Parameter 2 must be a number");
+    }
+  }
+  else
+  {
+    JS_ReportWarning(cx, "WinReg.enumValueNames() - Too few parameters");
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method enumKeys
+//
+PR_STATIC_CALLBACK(JSBool)
+WinRegEnumKeys(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsWinReg*      nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
+  nsAutoString   nativeRet;
+  nsAutoString   b0;
+  int32          b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  if(argc >= 2)                             
+  {
+    //  public String enumKeys ( String subkey,
+    //                           Int    index);
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+
+    if(JS_ValueToInt32(cx, argv[1], &b1))
+    {
+      if ( NS_OK ==  nativeThis->EnumKeys(b0, b1, nativeRet) )
+      {
+          ConvertStrToJSVal(nativeRet, cx, rval);
+      }
+    }
+    else
+    {
+      JS_ReportWarning(cx, "WinReg.enumKeys() - Parameter 2 must be a number");
+    }
+  }
+  else
+  {
+    JS_ReportWarning(cx, "WinReg.enumKeys() - Too few parameters");
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method SetValueNumber
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -700,6 +794,8 @@ static JSFunctionSpec WinRegMethods[] =
   {"getValueNumber",            WinRegGetValueNumber,           2},
   {"setValue",                  WinRegSetValue,                 3},
   {"getValue",                  WinRegGetValue,                 2},
+  {"enumKeys",                  WinRegEnumKeys,                 2},
+  {"enumValueNames",            WinRegEnumValueNames,           2},
   {0}
 };
 
