@@ -1166,6 +1166,7 @@ doSimple:
                                     NULL, JSREPORT_ERROR,
                                     JSMSG_BAD_QUANTIFIER, state->cp - 1);
         return JS_FALSE;
+#if 0
     case '{':
         /* Treat left-curly in a non-quantifier context as an error only 
          * if it's followed immediately by a decimal digit.
@@ -1178,6 +1179,7 @@ doSimple:
             return JS_FALSE;
         }
         /* fall thru... */
+#endif
     default:
         state->result = NewRENode(state, REOP_FLAT);
         if (!state->result) 
