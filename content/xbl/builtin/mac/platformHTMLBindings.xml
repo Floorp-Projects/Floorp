@@ -61,6 +61,9 @@
 
   <binding id="browser">
     <handlers>
+      <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_scrollPageUp"/>
+      <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown"/>
+
       <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_wordPrevious" />
       <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_wordNext" />
       <handler event="keypress" keycode="VK_LEFT" modifiers="alt,shift" command="cmd_selectWordPrevious" />
