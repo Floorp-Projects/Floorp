@@ -59,6 +59,10 @@ typedef struct threadInfo {
 PRIntn failed_already = 0;
 PRIntn debug_mode = 0;
 
+#define	LOCAL_SCOPE_STRING			"LOCAL scope"
+#define	GLOBAL_SCOPE_STRING			"GLOBAL scope"
+#define	GLOBAL_BOUND_SCOPE_STRING	"GLOBAL_BOUND scope"
+
 void 
 thread_main(void *_info)
 {
@@ -68,9 +72,29 @@ thread_main(void *_info)
     PRFileDesc *listenSock = NULL;
     PRFileDesc *clientSock;
     PRStatus rv;
+	PRThreadScope tscope;
+	char *scope_str;
+
  
 	if (debug_mode)
     	printf("thread %d is alive\n", info->id);
+	tscope = PR_GetThreadScope(PR_GetCurrentThread());
+
+	switch(tscope) {
+		case PR_LOCAL_THREAD:
+			scope_str = LOCAL_SCOPE_STRING;
+			break;
+		case PR_GLOBAL_THREAD:
+			scope_str = GLOBAL_SCOPE_STRING;
+			break;
+		case PR_GLOBAL_BOUND_THREAD:
+			scope_str = GLOBAL_BOUND_SCOPE_STRING;
+			break;
+		default:
+			PR_ASSERT(!"Invalid thread scope");
+			break;
+	}
+	printf("thread id %d, scope %s\n", info->id, scope_str);
 
     listenSock = PR_NewTCPSocket();
     if (!listenSock) {
@@ -172,6 +196,10 @@ thread_test(PRThreadScope scope, PRInt32 num_threads)
                                0);
 
         if (!thr) {
+        	printf("Failed to create thread, error = %d(%d)\n",
+											PR_GetError(), PR_GetOSError());
+			failed_already=1;
+
             PR_Lock(dead_lock);
             alive--;
             PR_Unlock(dead_lock);
@@ -229,14 +257,14 @@ int main(int argc, char **argv)
 	debug_mode = 1;
 #endif
 
+    printf("test with global bound thread\n");
+    thread_test(PR_GLOBAL_BOUND_THREAD, num_threads);
+
     printf("test with local thread\n");
     thread_test(PR_LOCAL_THREAD, num_threads);
 
     printf("test with global thread\n");
     thread_test(PR_GLOBAL_THREAD, num_threads);
-
-    printf("test with global bound thread\n");
-    thread_test(PR_GLOBAL_BOUND_THREAD, num_threads);
 
     PR_Cleanup();
 
