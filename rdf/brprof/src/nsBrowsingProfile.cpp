@@ -146,7 +146,7 @@ nsBrowsingProfile::Init(const char* userProfileName)
                                           (nsISupports**)&gRDFService);
         if (NS_FAILED(rv)) return rv;
 
-        rv = gRDFService->GetDataSource("rdf:categoryDB", &gCategoryDB);
+        rv = gRDFService->GetDataSource("resource:/res/samples/directory.xml", &gCategoryDB);
         if (NS_FAILED(rv)) return rv;
 
         // get all the properties we'll need:
@@ -309,7 +309,7 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
             nsIRDFAssertionCursor* cursor;
             rv = gCategoryDB->GetSources(gChildProperty, urlRes, PR_TRUE, &cursor);
             if (NS_SUCCEEDED(rv)) {
-                while (cursor->Advance()) {
+                while (NS_SUCCEEDED(cursor->Advance())) {
                     nsIRDFResource* category;
                     rv = cursor->GetSubject(&category);
                     if (NS_SUCCEEDED(rv)) {
