@@ -62,13 +62,15 @@ bin2rc.exe:: bin2rc.c
 makedep.exe:: makedep.cpp
     @cl -MT makedep.cpp 
     
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number
 
 # update build number from within make script
 build_number:: FORCE
     $(RM) $@
     $(PERL) bdate.pl > $@
-    $(PERL) aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
+    echo Setting build number...
+    $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/src/navigator.xul $@
+
 
 install:: export
 
