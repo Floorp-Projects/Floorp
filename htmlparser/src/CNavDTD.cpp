@@ -2451,7 +2451,6 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
           nsTagEntry *theEntry=theStack->mEntries;
           for(sindex=0;sindex<theStack->mCount;sindex++){            
             nsCParserNode* theNode=(nsCParserNode*)theEntry->mNode;
-            theEntry++;
             if(1==theNode->mUseCount) {
               eHTMLTags theNodeTag=(eHTMLTags)theNode->GetNodeType();
               if(gHTMLElements[theNodeTag].CanContain(aChildTag)) {
@@ -2467,6 +2466,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
                 theEntry--; //back up by one
               }
             } //if
+            theEntry++;
           } //for
         } //if
       } //for
