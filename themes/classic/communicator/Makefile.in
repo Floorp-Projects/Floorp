@@ -32,6 +32,8 @@ EXPORT_RESOURCE = \
 		$(srcdir)/navbar-endbox.gif \
 		$(srcdir)/tb-menubutton-dm.gif \
 		$(srcdir)/tb-menubutton-dm-disabled.gif \
+		$(srcdir)/offline.gif \
+		$(srcdir)/online.gif \
 		$(NULL)
 
 DIRS = bookmarks directory profile regviewer related search sidebar unix wallet xpinstall
