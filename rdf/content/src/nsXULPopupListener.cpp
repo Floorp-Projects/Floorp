@@ -268,8 +268,8 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
           PRInt32 offsetX, offsetY;
           uiEvent->GetClientX(&offsetX);
           uiEvent->GetClientY(&offsetY);
-          offsetX = xPos-offsetX;
-          offsetY = yPos-offsetY;
+          xPos = xPos-offsetX;
+          yPos = yPos-offsetY;
         }
 
         domWindow->CreatePopup(element, popupContent, 
