@@ -50,6 +50,51 @@ public class NameValueSet
         nameValuePairs = new Hashtable();
 	}
 	
+	/* delimiterB between name-value pairs, delimiterA between the name and value */
+	protected void initWithDelimitedString( String nvPairs, int delimiterA, int delimiterB )
+	{
+		init();
+		
+		String				temp = nvPairs;
+		String              name = null;
+		String              value = null;
+		String				nvPair = null;
+		
+		int					delB;
+		int					delA;
+		
+		boolean				done = false;
+		
+		while ( done == false )
+		{
+			delB = temp.indexOf( delimiterB );
+			if ( delB == -1 )
+			{
+				done = true;
+				nvPair = temp;
+			}
+			else
+				nvPair = temp.substring( 0, delB );
+				
+			delA = nvPair.indexOf( delimiterA );
+			if ( delA != - 1 )
+			{
+				name = new String( nvPair.substring( 0, delA ) );
+				value = new String( nvPair.substring( delA + 1, nvPair.length() ) );
+			}
+			else
+			{
+				name = new String( nvPair );
+				value = new String();
+			}
+			//Trace.TRACE( "name: " + name + " value: " + value );
+			nameValuePairs.put( name, value );
+			
+			if ( done == false )
+				temp = temp.substring( delB + 1, temp.length() );
+		}
+	}
+			
 	protected void initWithFile( File inputFile, boolean ignoreSects ) throws Exception
 	{
 		init();
@@ -62,7 +107,7 @@ public class NameValueSet
     	if ( inputFile.exists() == false )
     		return;
 
-		Trace.TRACE("parsing NameValueSet: " + inputFile.getAbsolutePath() );
+		//Trace.TRACE("parsing NameValueSet: " + inputFile.getAbsolutePath() );
         BufferedReader  bufferedReader = new BufferedReader( new FileReader( inputFile ) );
 
 		this.read( bufferedReader );
@@ -91,61 +136,15 @@ public class NameValueSet
         @param nvPairs          string in the form "name1=value2&name2=value2&..." to
                                 be parsed into nameValuePairs
     */
-    public NameValueSet( String nvPairs ) throws Exception
+    public NameValueSet( String nvPairs, int delimiter ) throws Exception
     {
-        nameValuePairs = new Hashtable();
+    	initWithDelimitedString( nvPairs, '=', delimiter );
+	}
 
-        StringReader        stringReader = new StringReader( nvPairs );
-        int                 ch = 0;
-        StringBuffer        buffer = new StringBuffer();
-        String              name = null;
-        String              value = null;
-
-        ch = stringReader.read();
-        while ( ch != -1 )
-        {
-            buffer.setLength( 0 );
-            while ( ch == ' ' )
-                ch = stringReader.read();
-
-            while ( ch != -1 && ch != '=' &&  ch != ' ' )
-            {
-                buffer.append( (char)ch );
-                ch = stringReader.read();
-            }
-
-            if ( ch == ' ' )
-            {
-                while ( ch == ' ' )
-                    ch = stringReader.read();
-            }
-
-            if ( ch == '=' )
-            {
-                name = new String( buffer );
-                buffer.setLength( 0 );
-                ch = stringReader.read();
-
-                while ( ch == ' ' )
-                    ch = stringReader.read();
-
-                while ( ch != -1 &&  ch != ' ' )
-                {
-                    buffer.append( (char)ch );
-                    ch = stringReader.read();
-                }
-
-                value = new String( buffer );
-
-                nameValuePairs.put( name, value );
-                if ( ch == ' ' )
-                {
-                    while ( ch == ' ' )
-                        ch = stringReader.read();
-                }
-            }
-        }
-    }
+	public NameValueSet( String nvPairs ) throws Exception
+	{
+		initWithDelimitedString( nvPairs, '=', ' ' );
+	}
 
 	private void readLine( String line )
 	{
@@ -164,7 +163,12 @@ public class NameValueSet
             }
         }
 	}
-
+	
+	public void setIgnoreSections( boolean ignoreSects )
+	{
+		ignoreSections = ignoreSects;
+	}
+			
     public void read( BufferedReader reader ) throws Exception
     {
         reader.mark( READ_AHEAD );
@@ -187,6 +191,17 @@ public class NameValueSet
         }
     }
 	
+	public void read( File inputFile ) throws Exception
+	{
+    	if ( inputFile.exists() == false )
+    		return;
+
+		//Trace.TRACE("parsing NameValueSet: " + inputFile.getAbsolutePath() );
+        BufferedReader  bufferedReader = new BufferedReader( new FileReader( inputFile ) );
+
+		this.read( bufferedReader );
+	}
+			
 	public void write( BufferedWriter writer ) throws Exception
 	{
         for ( Enumeration names = nameValuePairs.keys(); names.hasMoreElements(); )

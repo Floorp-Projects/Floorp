@@ -20,25 +20,27 @@ package netscape.npasw;
 import netscape.npasw.*;
 import java.io.*;
 import java.lang.*;
+import java.util.Vector;
+
 //import Trace;
 
 public class ISPDynamicData
 {
-    static final String         NAME_STRING = "ISPNAME";
-    static final String         LANGUAGE_STRING = "LANGUAGE";
-    static final String         SERVICE_TYPE_STRING = "SERVICE_TYPE";
-    static final String         DYNAMIC_DATA_STRING = "DYNAMICDATA";
-//  static final String         zipFilesURL = "http://seaspace.netscape.com:8080/programs/ias5/regserv/docs/ISP/";
-
-    public NameValueSet         reggieData = null;
-    protected String            name = null;
-    protected String            language = null;
-    protected String            serviceType = null;
-
-    static String               lastName = null;
-
-    protected NameValueSet      dynamicData = null;
-
+	static final String			NAME_STRING = "ISPNAME";
+	static final String			LANGUAGE_STRING = "LANGUAGE";
+	static final String			SERVICE_TYPE_STRING = "SERVICE_TYPE";
+	static final String			DYNAMIC_DATA_STRING = "DYNAMICDATA";
+	//  static final String			zipFilesURL = "http://seaspace.netscape.com:8080/programs/ias5/regserv/docs/ISP/";
+	
+	public NameValueSet			reggieData = null;
+	protected String			name = null;
+	protected String			language = null;
+	protected String			serviceType = null;
+	
+	static String				lastName = null;
+	
+	protected Vector			dynamicData = null;
+	
     public ISPDynamicData()
     {
     }
@@ -55,7 +57,7 @@ public class ISPDynamicData
 
         try
         {
-			Trace.TRACE( "creating ISPDynnamicData" );
+			//Trace.TRACE( "creating ISPDynamicData" );
 			while ( !done )
 			{
 				if ( lastName != null )
@@ -151,31 +153,90 @@ public class ISPDynamicData
         }
         return "";
     }
+	
+	public NameValueSet getDynamicData()
+	{
+		return this.getDynamicData( 0 );
+	}
+	
+	public int getDynamicDataSize()
+	{
+		if ( dynamicData == null )
+			this.parseDynamicData();
+		if ( dynamicData == null )
+			return 0;
+			
+		return dynamicData.size();
+	}
+	
+	public NameValueSet getDynamicData( int index )
+	{
+		
+		if ( dynamicData == null )
+			this.parseDynamicData();
+		
+		if ( dynamicData == null )
+			return null;
 
-    public NameValueSet getDynamicData()
+		try
+		{
+			NameValueSet		nvSet = (NameValueSet)dynamicData.elementAt( index );	
+			return nvSet;
+		}
+		catch ( Throwable e )
+		{
+			return null;
+		}
+	}
+	
+	
+    public void parseDynamicData()
     {
-        if ( dynamicData != null )
-            return dynamicData;
-        else
-        {
-            if ( reggieData != null )
-            {
-                String      temp = reggieData.getValue( DYNAMIC_DATA_STRING );
-                if ( temp != null && temp.compareTo( "" ) != 0 )
-                {
-                    try
-                    {
-                        dynamicData = new NameValueSet( temp );
-                        return dynamicData;
-                    }
-                    catch ( Throwable e )
-                    {
-                        return null;
-                    }
-                }
-            }
-        }
-        return null;
+		if ( reggieData != null )
+		{
+			//Trace.TRACE( "parseDynamicData" );
+		    String      temp = reggieData.getValue( DYNAMIC_DATA_STRING );
+		    if ( temp != null && temp.compareTo( "" ) != 0 )
+		    {
+				try
+				{
+					boolean		done = false;
+		        
+		        	if ( dynamicData == null )
+		        		dynamicData = new Vector();
+		        			
+		        	while ( done == false )
+		        	{
+						int			delimiter = 1;
+						String		subTemp = null;
+						
+						//Trace.TRACE( "temp: " + temp );
+						
+						int			delIndex = temp.indexOf( delimiter );
+						
+						if ( delIndex != -1 )
+		        		{
+							subTemp = temp.substring( 0, delIndex );
+							temp = temp.substring( delIndex + 1 );
+						}
+						else
+						{
+							subTemp = temp;
+							//Trace.TRACE( "	done..." );
+							done = true;
+						}
+						//Trace.TRACE( "subTemp: " + subTemp );
+						NameValueSet nvSet = new NameValueSet( subTemp, 2 );
+						dynamicData.addElement( nvSet );
+					}
+				}
+				catch ( Throwable e )
+				{
+					dynamicData = null;
+					e.printStackTrace();
+				}
+		    }
+		}
     }
 
     public final void printISPDynamicData()

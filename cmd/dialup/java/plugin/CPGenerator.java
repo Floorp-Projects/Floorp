@@ -30,32 +30,36 @@ import netscape.security.*;
 
 public class CPGenerator
 {
-	public static final int         SENDING = 4;
-	public static final int         RECEIVING_RESPONSE = 5;
-	public static final int         WAITING = 6;
-	public static final int         CONTACTING_SERVER = 7;
-	public static final int         DONE = 0;
-	public static final int         ABORT = -1;
+	public static final int			SENDING = 4;
+	public static final int			RECEIVING_RESPONSE = 5;
+	public static final int			WAITING = 6;
+	public static final int			CONTACTING_SERVER = 7;
+	public static final int			DONE = 0;
+	public static final int			ABORT = -1;
 	
-	public static final String      FEATURE_STRING = "FEATURES";
-	public static final int         FEATURE_COUNT = 8;
+	public static final String		FEATURE_STRING = "FEATURES";
+	public static final int			FEATURE_COUNT = 8;
+	public static final boolean		DEBUG = true;
 	
+	public static boolean			done = false;
+	public static String			currentFile = "";
+	public static int				totalBytes = 0;
 	
-	public static final boolean     DEBUG = true;
-	public static boolean           done = false;
-	public static String            currentFile = "";
-	public static int               totalBytes = 0;
-	
-	static int                      state = DONE;
-	
-    static final String				REG_SOURCE_STRING = "REG_SOURCE";
+	static final String				REG_SOURCE_STRING = "REG_SOURCE";
+		
+	static int						state = DONE;
 	
 	static String					regSource;
 	
-	static String                   ispDirectorySymbol = "isp_dir";
-	static String                   comparePageTemplateFileName = "compare.tmpl";
-	static String                   comparePageFileName = "compare.htm";
-	static String                   localPath;
+	static String					ispDirectorySymbol = "isp_dir";
+	static String					comparePageTemplateFileName = "compare.tmpl";
+	static String					comparePageFileName = "compare.htm";
+	static String					localPath;
+	
+	// ispList is a vector of ISPDynamicData's that is created from the stream passed back
+	//	from the registration server "POST"
+	static Vector					ispList = null;
+	static Vector					nameValueSets = null;
 
     //static CPGeneratorProgress    progress = null;
 
@@ -104,16 +108,147 @@ public class CPGenerator
 		return new String( getConfigPath( isp ) + File.separator + "compare.cfg" );
 	}
 
-    /*
-        Takes the given inputFile and looks for strings in the form
-        "@@@string_to_replace@@@" and replaces them with the value
-        found in nvSet, writing the output into outputFile
+	private static String getMasterFilePath( ISPDynamicData isp )
+	{
+		return new String( getConfigPath( isp ) + File.separator + "master.cfg" );
+	}
+	
+	private static ISPDynamicData getISPDynamicData( String ispName )
+	{
+		//Trace.TRACE( "getISPDynamicData: " + ispName );
+		
+		for ( int i = 0; i < ispList.size(); i++ )
+		{
+			ISPDynamicData		ispData = (ISPDynamicData)ispList.elementAt( i );
+			String				name = ispData.getName();
+			
+			if ( name.compareTo( ispName ) == 0 )
+				return ispData;
+		}
+		return null;
+	}
+	
+	private static NameValueSet getISPData( String ispName )
+	{
+		//Trace.TRACE( "getISPData: " + ispName );
+		
+		for ( int i = 0; i < nameValueSets.size(); i++ )
+		{
+			NameValueSet		nvSet = (NameValueSet)nameValueSets.elementAt( i );
+			//nvSet.printNameValueSet();
+			String				name = nvSet.getValue( "ISPName" );
+			
+			if ( name.compareTo( ispName ) == 0 )
+				return nvSet;
+		}
+		return null;
+	}
+		
+	public static String[] getISPPopList( String isp )
+	{
+		String		retArray[] = null;
+		
+		//Trace.TRACE( "getISPPopList" );
 
-        @return             void
-        @param nvSet        NameValueSet that contains the name/value pairs to use for replacement
-        @param inputFile    file containing replacement strings in the form "@@@string_to_replace@@@"
-        @param outputFile   file that is created
-    */
+		try
+		{
+			ISPDynamicData		ispData = getISPDynamicData( isp );
+
+			if ( ispData == null )
+			{
+				//Trace.TRACE( "isp not found: " + isp );
+				return null;
+			}
+			
+			int		size = ispData.getDynamicDataSize();
+			
+			//Trace.TRACE( "size: " + size );
+			
+			retArray = new String[ size ];
+			
+			while ( size > 0 )
+			{
+				size = size - 1;
+
+				NameValueSet		nvSet = ispData.getDynamicData( size );
+				String				phoneNum = nvSet.getValue( "phone" );
+				String				city = nvSet.getValue( "city" );
+				String				state = nvSet.getValue( "state" );
+				
+				String				entry = phoneNum + ", " + city + ", " + state;
+				retArray[ size ] = entry;
+				//Trace.TRACE( "entry:	" + entry );
+			}
+		}
+		catch ( Throwable e )
+		{
+			retArray = null;
+			e.printStackTrace();
+		}
+		return retArray;
+	}
+	
+	public static void createConfigIAS( String ispName, int index ) 
+	{
+		// * fill in the variables in each "config.ias" with the dynamic data from the server
+		ISPDynamicData      ispData = getISPDynamicData( ispName );
+				
+		String          inputFileName = getConfigFilePath( ispData );
+		String          outputFileName = inputFileName + ".r";
+		
+		//Trace.TRACE( "inputFileName: " + inputFileName );
+		//Trace.TRACE( "outputFileName: " + outputFileName );
+		
+		File            inputFile = new File( inputFileName );
+		File            outputFile = new File( outputFileName );
+		
+	
+		try
+		{
+			NameValueSet		nvSet = ispData.getDynamicData( index );
+			if ( nvSet == null )
+				nvSet = new NameValueSet();
+				
+			executeNameValueReplacement( ispData.getDynamicData( index ), inputFile, outputFile );
+		}
+		catch ( Throwable e )
+		{
+			e.printStackTrace();
+		}
+		
+		//if ( inputFile.delete() )
+		//{
+		//  Trace.TRACE( "deleted ISP config file" );
+		//  if ( outputFile.renameTo( inputFile ) )
+		//      ; //Trace.TRACE( "rename succeeded" );
+		//}
+	}
+
+	public static String getISPDisplayName( String ispName )
+	{
+		NameValueSet		nvSet = getISPData( ispName );
+		
+		
+		if ( nvSet != null )
+		{
+			//Trace.TRACE( "have nvSet" );
+			String		ispDisplayName = new String ( nvSet.getValue( "DisplayName" ) );
+			//Trace.TRACE( "ispDisplayName: " + ispDisplayName );
+			return ispDisplayName;
+		}
+		return null;
+	}
+	
+	/*
+		Takes the given inputFile and looks for strings in the form
+		"@@@string_to_replace@@@" and replaces them with the value
+		found in nvSet, writing the output into outputFile
+		
+		@return             void
+		@param nvSet        NameValueSet that contains the name/value pairs to use for replacement
+		@param inputFile    file containing replacement strings in the form "@@@string_to_replace@@@"
+		@param outputFile   file that is created
+	*/
     public static void executeNameValueReplacement( NameValueSet nvSet, File inputFile, File outputFile )
     throws Exception
     {
@@ -216,7 +351,7 @@ public class CPGenerator
         @param bufferedInputReader      input file containing constraint template to be replaced
         @param bufferedOutputWriter     output file (html)
     */
-    public static void executeConstraintReplacement( Vector nameValueSets, BufferedReader bufferedInputReader, BufferedWriter bufferedOutputWriter )
+    public static void executeConstraintReplacement( Vector inSets, BufferedReader bufferedInputReader, BufferedWriter bufferedOutputWriter )
     throws Exception
     {
 		int c = bufferedInputReader.read();
@@ -259,9 +394,9 @@ public class CPGenerator
                             String          templateFileName = getMetadataPath() + File.separator + buffer.toString() + ".tmpl"; /* will be something like "template1.tmpl" */
                             String          outputFileName = getMetadataPath() + File.separator + buffer.toString() + ".html";
 
-                            Trace.TRACE( "criterionFile: " + criterionFileName );
-                            Trace.TRACE( "templateFile: " + templateFileName );
-                            Trace.TRACE( "outputFile: " + outputFileName );
+                            //Trace.TRACE( "criterionFile: " + criterionFileName );
+                            //Trace.TRACE( "templateFile: " + templateFileName );
+                            //Trace.TRACE( "outputFile: " + outputFileName );
 
                             File            templateFile = new File( templateFileName );
                             File            criterionFile = new File( criterionFileName );
@@ -270,16 +405,16 @@ public class CPGenerator
                             NameValueSet    criterionSet = new NameValueSet( criterionFile );
 							criterionSet.printNameValueSet();
 							
-							for ( int i = 0; i < nameValueSets.size(); i++ )
+							for ( int i = 0; i < inSets.size(); i++ )
 							{
-								NameValueSet        nvSet = (NameValueSet)nameValueSets.elementAt( i );
-								Trace.TRACE( "testing a set: " );
-								nvSet.printNameValueSet();
+								NameValueSet        nvSet = (NameValueSet)inSets.elementAt( i );
+								//Trace.TRACE( "testing a set: " );
+								//nvSet.printNameValueSet();
 								if ( criterionSet.isSubsetOf( nvSet ) )
 								{
 									executeNameValueReplacement( nvSet, templateFile, outputFile );
 									BufferedReader bufSubInputReader = new BufferedReader( new FileReader( outputFile ) );
-									executeConstraintReplacement( nameValueSets, bufSubInputReader, bufferedOutputWriter );
+									executeConstraintReplacement( inSets, bufSubInputReader, bufferedOutputWriter );
 									bufSubInputReader.close();
 								}
 							}
@@ -322,6 +457,7 @@ public class CPGenerator
         URLConnection       urlSrcConn = null;
         URL                 urlSrc = null;
         Vector              ispList = new Vector();
+		ISPDynamicData		newData = null;
 
         state = CONTACTING_SERVER;
 
@@ -331,33 +467,42 @@ public class CPGenerator
 
         state = SENDING;
         urlSrcConn.setDoOutput( true );
+        urlSrcConn.setUseCaches( false );
         urlSrcConn.setAllowUserInteraction( true );
 
         Trace.TRACE( "sending POST to:" );
         Trace.TRACE( sURL );
 
         // * send the post
-        PrintWriter out = new PrintWriter( urlSrcConn.getOutputStream() );
-        for ( count = 0; count < reggieData.length; count++ )
-        {
-            if ( count > 0 )
-                out.print( "&" );
-            out.print( reggieData[ count ] );
-        }
-
+		PrintWriter out = new PrintWriter( urlSrcConn.getOutputStream() );
+		String traceOut = new String();
+		for ( count = 0; count < reggieData.length; count++ )
+		{
+			if ( count > 0 )
+			{
+				out.print( "&" );
+				traceOut = traceOut + "&";
+			}
+			out.print( reggieData[ count ] );
+			traceOut = traceOut + reggieData[ count ];
+		}
+		
         out.println();
         out.close();
-
+	
+		Trace.TRACE( traceOut );
+        
         state = WAITING;
 
 		try
 		{
+			String              buffer;
+			
 			InputStream         origStream = urlSrcConn.getInputStream();
-
+			
 			//Trace.TRACE( "creating reggie stream" );
 			ReggieStream        is = new ReggieStream( origStream );
 			
-			String              buffer;
 			state = RECEIVING_RESPONSE;
 			
 			buffer = is.nextToken();
@@ -385,21 +530,24 @@ public class CPGenerator
 			buffer = is.nextToken();
 			regSource = buffer;
 			
+			Trace.TRACE( "REG_SOURCE=" + regSource );
+			
 			while ( true )
 			{
-				Trace.TRACE( "trying to create a new ISPDynamicData" );
-				ISPDynamicData      newData = new ISPDynamicData();
+				//Trace.TRACE( "trying to create a new ISPDynamicData" );
+				newData = new ISPDynamicData();
 				newData.read( is );
-				
-				newData.printISPDynamicData();
-				
+			
+				//newData.printISPDynamicData();
+			
 				ispList.addElement( newData );
 			}
         }
         catch ( EOFException e )
         {
-            state = DONE;
-            Trace.TRACE( "successfully finished downloading dynamic data" );
+			state = DONE;
+			ispList.addElement( newData );
+			Trace.TRACE( "successfully finished downloading dynamic data" );
         }
  		catch ( IOException e )
 		{
@@ -407,11 +555,11 @@ public class CPGenerator
 			Trace.TRACE( "I/O exception (check the RegCGI URL in the .IAS file)" );
 			ispList = null;
 		}
-       	catch ( MalformedReggieStreamException e )
-        {
-            state = ABORT;
-            Trace.TRACE( "malformed stream, saving partial dynamic data" );
-        }
+		catch ( MalformedReggieStreamException e )
+		{
+			state = ABORT;
+			Trace.TRACE( "malformed stream, saving partial dynamic data" );
+		}
 
         //Trace.TRACE( "returning ispList" );
         return ispList;
@@ -425,7 +573,7 @@ public class CPGenerator
     //          "CST_AREA_CODE_3=408" } );
     }
 
-    public static void parseFeatureSet( NameValueSet ispSet, NameValueSet featureMapping )
+    private static void parseFeatureSet( NameValueSet ispSet, NameValueSet featureMapping )
     {
         String      featureList = ispSet.getValue( FEATURE_STRING );
         //Trace.TRACE( "features: " + featureList );
@@ -503,37 +651,10 @@ public class CPGenerator
 		}
 	}
 
-	private static void replaceDynamicData( Vector ispList ) throws Throwable
-	{
-		// * fill in the variables in each "config.ias" with the dynamic data from the server
-		for ( int i = 0; i < ispList.size(); i++ )
-		{
-		    ISPDynamicData      ispData;
-		    ispData = (ISPDynamicData)ispList.elementAt( i );
-		
-		    String          inputFileName = getConfigFilePath( ispData );
-		    String          outputFileName = inputFileName + ".r";
-		    
-		    //Trace.TRACE( "inputFileName: " + inputFileName );
-		    //Trace.TRACE( "outputFileName: " + outputFileName );
-		
-		    File            inputFile = new File( inputFileName );
-		    File            outputFile = new File( outputFileName );
-		
-		    executeNameValueReplacement( ispData.getDynamicData(), inputFile, outputFile );
-			//if ( inputFile.delete() )
-			//{
-			//  Trace.TRACE( "deleted ISP config file" );
-			//  if ( outputFile.renameTo( inputFile ) )
-			//      ; //Trace.TRACE( "rename succeeded" );
-			//}
-		}
-	}
-
 	private static Vector parseCompareFiles( Vector ispList, NameValueSet featureMappings ) throws Throwable
 	{
-		// * create a name/value set for each ISP by parsing the "config.ias" files
-		Vector nameValueSets = new Vector();
+		// * create a name/value set for each ISP by parsing the "compare.cfg" files
+		Vector returnSets = new Vector();
 
 		for ( int i = 0; i < ispList.size(); i++ )
 		{
@@ -541,36 +662,42 @@ public class CPGenerator
 			ispData = (ISPDynamicData)ispList.elementAt( i );
 			
 			String          ispConfigFileName = getCompareFilePath( ispData );
+			String			ispMasterFileName = getMasterFilePath( ispData );
 			
-			Trace.TRACE( "ispConfigFileName: " + ispConfigFileName );
+			//Trace.TRACE( "ispConfigFileName: " + ispConfigFileName );
 			
 			File            ispConfigFile = new File( ispConfigFileName );
+			File			ispMasterFile = new File( ispMasterFileName );
+			
+			NameValueSet	nvSet = new NameValueSet();
+			nvSet.setIgnoreSections( true );
 			
 			if ( ispConfigFile.exists() )
-			{
-				NameValueSet    nvSet = new NameValueSet( ispConfigFile, true );
-				nvSet.setValue( ispDirectorySymbol, new String( ispData.language + "/" + ispData.name ) );
-				parseFeatureSet( nvSet, featureMappings );
-				nameValueSets.addElement( nvSet );
+				nvSet.read( ispConfigFile );
+			
+			if ( ispMasterFile.exists() )
+				nvSet.read( ispMasterFile );
+				
+			nvSet.setValue( ispDirectorySymbol, new String( ispData.language + "/" + ispData.name + "/client_data" ) );
+			parseFeatureSet( nvSet, featureMappings );
+			returnSets.addElement( nvSet );
 				//nvSet.printNameValueSet();
-			}
 		}
-		return nameValueSets;
+		return returnSets;
 	}
-		
+	
 	public static boolean generateComparePage( String inLocalPath, String sCGIUrl, 
 		String sRootURL, String metadataMode, String reggieData[] )
 	{
+		done = false;
+
         Trace.TRACE( "Hello" );
 
-        Vector          nameValueSets = null;
-        Vector          ispList = null;
         NameValueSet    featureMappings = null;
         boolean         result = false;
 
 		localPath = new String( inLocalPath );
 		
-        done = false;
         try
         {
 			//if ( progress == null )
@@ -593,8 +720,6 @@ public class CPGenerator
 			ServerDownload.resetBytesDownloaded();
 			
 			decompressJarFiles( ispList );
-			
-			replaceDynamicData( ispList );
 			
 			//Trace.TRACE( "features.cfg settings: " );
 			String		featuresConfigPath = getLocalPath() + File.separator + "metadata" + 

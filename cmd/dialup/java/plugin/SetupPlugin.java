@@ -57,7 +57,7 @@ public class SetupPlugin extends Plugin
 			
 			try
 			{
-				Trace.TRACE( "flushing ini cache object" );
+				//Trace.TRACE( "flushing ini cache object" );
 				iniFileData.flush();
 			}
 			catch ( Throwable e )
@@ -308,13 +308,34 @@ public class SetupPlugin extends Plugin
 			return false;
     }
 
+	final public String[] GetISPPopList( String isp )
+	{
+		if ( privilegeCheck() == true )
+			return CPGenerator.getISPPopList( isp );
+		else
+			return null;
+	}
+	
+	final public void CreateConfigIAS( String isp, int index )
+	{
+		if ( privilegeCheck() == true )
+			CPGenerator.createConfigIAS( isp, index );
+	}
 
+	final public String GetISPDisplayName( String ispName )
+	{
+		if ( privilegeCheck() == true )
+			return CPGenerator.getISPDisplayName( ispName );
+		else
+			return null;
+	}
+	
 	final public String GetCurrentProfileDirectory()
 	{
-	    if ( privilegeCheck() == true )
-	    {
-	    	String		temp = SECURE_GetCurrentProfileDirectory();
-	    	Trace.TRACE( "getCurrentProfileDirectory: " + temp );
+		if ( privilegeCheck() == true )
+		{
+			String		temp = SECURE_GetCurrentProfileDirectory();
+			//Trace.TRACE( "getCurrentProfileDirectory: " + temp );
 			return temp;
 		}
 		else

@@ -35,11 +35,13 @@ public class ReggieStream extends DataInputStream
 		int         nBuffSize = 0;
 		String      string = null;
 
-		//Trace.TRACE( "nextToken has:" + this.available() );
+		
+//		Trace.TRACE( "nextToken has:" + this.available() );
+
 		nBuffSize = this.readInt();
 		//Trace.TRACE( "nBuffSize: " + nBuffSize );
 		if ( nBuffSize == 0 )
-            string = "";
+			string = "";
 		else if ( nBuffSize > 0 && nBuffSize < 4096 )
 		{
 			buffer = new byte[ nBuffSize ];
@@ -47,12 +49,15 @@ public class ReggieStream extends DataInputStream
 			this.readFully( buffer );
 			//Trace.TRACE( "creating string" );
 			string = new String( buffer );
-			//Trace.TRACE( "read:" + string );
 		}
 		else
 			throw new MalformedReggieStreamException( "invalid length for identifier" );
+		
+		//Trace.TRACE( "read:" + string );
 
-		//Trace.TRACE( string );
+		if ( string == null )
+			string = "";
+			
 		return string;
     }
 }
