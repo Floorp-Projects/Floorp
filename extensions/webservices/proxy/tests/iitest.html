@@ -27,12 +27,9 @@ var listener = {
         var gen = new IDL_GENERATOR();
       
         var IInfoNamedCtor = IInfoNamed;  
-
-        var primaryIface = new IInfo(proxy.primaryIID);
         
         // writing to our document whacks the preexisting stuff...
         document.write("<pre>");
-
 
         document.write("\n#include \"nsISupports.h\"\n\n");
 
@@ -45,9 +42,35 @@ var listener = {
 
         document.write("\n");
 
+        var primary       = proxy.primaryInterfaceName;
+        var primaryID       = Components.ID(proxy.interfaces[primary].number);
+        
+        var asyncListener = proxy.primaryAsyncListenerInterfaceName;
+        var asyncListenerID = Components.ID(proxy.interfaces[asyncListener].number);
+
+        document.write("//-------------------------------------\n");
+        document.write("// primary interface"+(proxy.isAsync ? " (async):":":"));
+        document.write(gen.generateIDL(primaryID, false, false));
+        
+        if(proxy.isAsync) {
+            var asyncListener = proxy.primaryAsyncListenerInterfaceName;
+            var asyncListenerID = Components.ID(proxy.interfaces[asyncListener].number);
+
+            document.write("//-------------------------------------\n");
+            document.write("// asyncListener interface:");
+            document.write(gen.generateIDL(asyncListenerID, false, false));
+        }
+
+
         for(var name in proxy.interfaces) {
             var id = proxy.interfaces[name];
             
+            if(name == primary || (proxy.isAsync && name == asyncListener))
+                continue;
+
+            if(proxy.qualifier && 0 != id.name.indexOf(proxy.qualifier))
+                continue;
+
             if(0 == id.name.indexOf("nsI"))
                 continue;
 

@@ -16,14 +16,17 @@ var listener = {
 function ask() {
     
     var talkToMe = {
-        isPrimeNumberCallback : function(e, isPrime) {
-            if(e)
-                alert("error: "+e);
-            else {
-                lastNumber = number;
-                lastAnswer = isPrime;
-                ask();
-            }
+        isPrimeNumberCallback : function(isPrime, cx) {
+            // just a stupid test of the (ignorable) callcontext...
+            if(cx.methodName != "isPrimeNumber")
+              alert("I'm very confused");
+            
+            lastNumber = number;
+            lastAnswer = isPrime;
+            ask();
+        },
+        onError : function(e, cx) {
+            alert("error: "+e);
         }
     };
 
