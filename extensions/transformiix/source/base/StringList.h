@@ -35,6 +35,8 @@
 #include "TxString.h"
 #include "baseutils.h"
 
+class StringListIterator;
+
 class StringList {
    friend class StringListIterator;
 

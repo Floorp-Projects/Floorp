@@ -54,6 +54,8 @@
 
 class Property;
 
+nsresult NS_NewOutlinerContentView(nsIOutlinerContentView** aResult);
+
 class nsOutlinerContentView : public nsIOutlinerView,
                               public nsIOutlinerContentView,
                               public nsIDocumentObserver

@@ -48,6 +48,11 @@ class nsCSSFrameConstructor;
 class nsXULTreeOuterGroupFrame;
 class nsTreeItemDragCapturer;
 
+nsresult NS_NewXULTreeGroupFrame(nsIPresShell* aPresShell, 
+                                 nsIFrame** aNewFrame, 
+                                 PRBool aIsRoot = PR_FALSE,
+                                 nsIBoxLayout* aLayoutManager = nsnull);
+
 class nsXULTreeGroupFrame : public nsBoxFrame, public nsIXULTreeSlice
 {
 public:
@@ -55,8 +60,8 @@ public:
 
   friend nsresult NS_NewXULTreeGroupFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
-                                          PRBool aIsRoot = PR_FALSE,
-                                          nsIBoxLayout* aLayoutManager = nsnull);
+                                          PRBool aIsRoot,
+                                          nsIBoxLayout* aLayoutManager);
 
 protected:
   nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);

@@ -87,6 +87,8 @@ public:
  * @update	gess4/20/98
  */
 
+class nsDequeIterator;
+
 class NS_COM nsDeque {
 friend class nsDequeIterator;
   public:

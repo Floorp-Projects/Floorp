@@ -102,6 +102,8 @@ public:
 
 #define SET_COORD(aX, aY, coord, isHorizontal) if (isHorizontal) { aX = (coord); } else { aY  = (coord); }
 
+nsresult NS_NewSprocketLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
+
 class nsSprocketLayout : public nsBoxLayout {
 
 public:

@@ -38,13 +38,18 @@
 
 #include "nsBoxFrame.h"
 
+nsresult NS_NewXULTreeCellFrame(nsIPresShell* aPresShell, 
+                                nsIFrame** aNewFrame, 
+                                PRBool aIsRoot = PR_FALSE,
+                                nsIBoxLayout* aLayoutManager = nsnull);
+
 class nsXULTreeCellFrame : public nsBoxFrame
 {
 public:
   friend nsresult NS_NewXULTreeCellFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame, 
-                                          PRBool aIsRoot = PR_FALSE,
-                                          nsIBoxLayout* aLayoutManager = nsnull);
+                                          PRBool aIsRoot,
+                                          nsIBoxLayout* aLayoutManager);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, // Overridden to capture events

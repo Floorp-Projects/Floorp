@@ -27,6 +27,8 @@
 
 #include "nsIWeakReference.h"
 
+class nsWeakReference;
+
 class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
   {
     public:
