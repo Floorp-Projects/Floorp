@@ -123,7 +123,6 @@ Contributor(s): ______________________________________. -->
     <!-- tooltips -->
     <popupset id="aTooltipSet"/>
   </popupset>
-  
   <script type="application/x-javascript">
     var gBookmarkPopup = null;
   </script>
@@ -138,7 +137,7 @@ Contributor(s): ______________________________________. -->
              tbalign="stretch" tooltip="aTooltip">
       <hbox id="nav-bar-buttons">
         <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
-                       label="&backButton.label;" crop="right"
+                       label="&backButton.label;"
                        oncommand="if (event.target==this) BrowserBack(); else gotoHistoryIndex(event);"
                        observes="canGoBack" context="backMenu"
                        tooltiptext="&backButton.tooltip;">
@@ -146,7 +145,7 @@ Contributor(s): ______________________________________. -->
         </toolbarbutton>
         
         <toolbarbutton id="forward-button" type="menu-button" class="toolbarbutton-1"
-                       label="&forwardButton.label;" crop="right"
+                       label="&forwardButton.label;"
                        oncommand="if (event.target==this) BrowserForward(); else gotoHistoryIndex(event);"
                        observes="canGoForward" context="forwardMenu"
                        tooltiptext="&forwardButton.tooltip;">
@@ -154,16 +153,16 @@ Contributor(s): ______________________________________. -->
         </toolbarbutton>
         
         <toolbarbutton id="reload-button" class="toolbarbutton-1"
-                       label="&reloadButton.label;" crop="right"
+                       label="&reloadButton.label;"
                        oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();"  
                        tooltiptext="&reloadButton.tooltip;"/>
                        
         <toolbarbutton id="stop-button" class="toolbarbutton-1"
-                       label="&stopButton.label;" crop="right"
+                       label="&stopButton.label;"
                        oncommand="BrowserStop();" observes="canStop"  
                        tooltiptext="&stopButton.tooltip;"/>
       </hbox>
-
+ 
       <hbox id="fullscreen-extra-buttons" hidden="true">
         <toolbarbutton id="fullscreen-exit-button" class="toolbarbutton-1"
                        label="&exitFullScreenButton.label;" crop="right"
@@ -219,7 +218,7 @@ Contributor(s): ______________________________________. -->
       </hbox>
 
       <toolbarbutton id="print-button" type="menu-button" class="toolbarbutton-1"
-                     label="&printButton.label;" crop="right" persist="hidden"
+                     label="&printButton.label;" persist="hidden"
                      oncommand="if (event.target==this) BrowserPrint();"
                      tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu">
@@ -254,7 +253,7 @@ Contributor(s): ______________________________________. -->
  
       <!-- "Bookmarks" button on personal toolbar -->                           
       <toolbarbutton type="menu" id="bookmarks-button" class="bookmark-item"
-                     persist="hidden" label="&bookmarksButton.label;" hidden="false"
+                     persist="hidden" label="&bookmarksButton.label;"
                      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                      ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
                      oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" 

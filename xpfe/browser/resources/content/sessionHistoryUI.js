@@ -39,11 +39,9 @@
  * ***** END LICENSE BLOCK ***** */
 const MAX_HISTORY_MENU_ITEMS = 15;
 const MAX_HISTORY_ITEMS = 100;
-var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-             .getService(Components.interfaces.nsIRDFService);
-var rdfc = Components.classes["@mozilla.org/rdf/container-utils;1"]
-             .getService(Components.interfaces.nsIRDFContainerUtils);
-var localstore = rdf.GetDataSource("rdf:localstore");
+var gRDF = null;
+var gRDFC = null;
+var gLocalStore = null;
 
 function FillHistoryMenu(aParent, aMenu)
   {
@@ -112,8 +110,19 @@ function executeUrlBarHistoryCommand( aTarget )
 
 function createUBHistoryMenu( aParent )
   {
-    if (localstore) {
-      var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history")).GetElements();
+    if (!gRDF)
+      gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                       .getService(Components.interfaces.nsIRDFService);
+
+    if (!gLocalStore)
+      gLocalStore = gRDF.GetDataSource("rdf:localstore");
+
+    if (gLocalStore) {
+      if (!gRDFC)
+        gRDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                          .getService(Components.interfaces.nsIRDFContainerUtils);
+
+      var entries = gRDFC.MakeSeq(gLocalStore, gRDF.GetResource("nc:urlbar-history")).GetElements();
       var i= MAX_HISTORY_MENU_ITEMS;
 
       // Delete any old menu items only if there are legitimate
@@ -150,8 +159,20 @@ function addToUrlbarHistory()
      return;
   if (urlToAdd.search(/[\x00-\x1F]/) != -1) // don't store bad URLs
      return;
-  if (localstore) {
-       var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history"));
+
+  if (!gRDF)
+     gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+
+  if (!gLocalStore)
+     gLocalStore = gRDF.GetDataSource("rdf:localstore");
+
+  if (gLocalStore) {
+      if (!gRDFC)
+        gRDFC = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                          .getService(Components.interfaces.nsIRDFContainerUtils);
+
+       var entries = gRDFC.MakeSeq(gLocalStore, gRDF.GetResource("nc:urlbar-history"));
        if (!entries)
           return;
        var elements = entries.GetElements();
@@ -222,7 +243,7 @@ function addToUrlbarHistory()
           }
        }   // while
 
-       var entry = rdf.GetLiteral(urlToAdd);
+       var entry = gRDF.GetLiteral(urlToAdd);
        // Otherwise, we've got a new URL in town. Add it!
        // Put the value as it was typed by the user in to RDF
        // Insert it to the beginning of the list.
