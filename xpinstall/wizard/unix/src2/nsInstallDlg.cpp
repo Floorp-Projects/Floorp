@@ -28,6 +28,7 @@
 #include "nsXInstaller.h"
 #include "nsXIEngine.h"
 #include <signal.h>
+#include <sys/wait.h>
 #include <gtk/gtk.h>
 #include <errno.h>
 
@@ -51,6 +52,7 @@ DLProgress;
 
 static char             *sXPInstallEngine;
 static nsRunApp         *sRunAppList = NULL;
+static nsRunApp         *sPostInstallRun = NULL;
 static DLProgress       sDLProgress;
 
 static GtkWidget        *sDLTable = NULL;
@@ -230,30 +232,46 @@ nsInstallDlg::Parse(nsINIParser *aParser)
 
     for (i = 0; err == OK; i++)
     {
+        /* construct PostInstallRunX section name */
+        sprintf(secName, POSTINSTALLRUNd, i);
+        err = aParser->GetStringAlloc(secName, TARGET, &app, &bufsize);
+        if (err == OK && bufsize > 0)
+        {
+            /* "args" is optional: this may return E_NO_KEY which we ignore */
+            aParser->GetStringAlloc(secName, ARGS, &args, &bufsize);
+            newRunApp = new nsRunApp(app, args);
+            if (!newRunApp)
+                return E_MEM;
+            err = AppendRunApp(&sPostInstallRun, newRunApp);
+        }
+    }
+    err = OK; /* reset error since PostInstallRunX sections are optional
+                 and we could have gotten a parse error (E_NO_SEC) */
+
+    for (i = 0; err == OK; i++)
+    {
         /* construct RunAppX section name */
         sprintf(secName, RUNAPPd, i);
         err = aParser->GetStringAlloc(secName, TARGET, &app, &bufsize);
         if (err == OK && bufsize > 0)
         {
             /* "args" is optional: this may return E_NO_KEY which we ignore */
-            err = aParser->GetStringAlloc(secName, ARGS, &args, &bufsize);
+            aParser->GetStringAlloc(secName, ARGS, &args, &bufsize);
             newRunApp = new nsRunApp(app, args);
             if (!newRunApp)
                 return E_MEM;
-            err = AppendRunApp(newRunApp);
+            err = AppendRunApp(&sRunAppList, newRunApp);
         }
     }
     err = OK; /* reset error since RunAppX sections are optional
                  and we could have gotten a parse error (E_NO_SEC) */
-
-    return err;
 
 BAIL:
     return err;
 }
 
 int 
-nsInstallDlg::AppendRunApp(nsRunApp *aNewRunApp)
+nsInstallDlg::AppendRunApp(nsRunApp **aRunAppList, nsRunApp *aNewRunApp)
 {
     int err = OK;
     nsRunApp *currRunApp = NULL, *nextRunApp = NULL;
@@ -263,14 +281,14 @@ nsInstallDlg::AppendRunApp(nsRunApp *aNewRunApp)
         return E_PARAM;
 
     /* special case: list is empty */
-    if (!sRunAppList)
+    if (!*aRunAppList)
     {
-        sRunAppList = aNewRunApp;
+        *aRunAppList = aNewRunApp;
         return OK;
     }
 
     /* list has at least one element */
-    currRunApp = sRunAppList;
+    currRunApp = *aRunAppList;
     while (currRunApp)
     {
         if (!(nextRunApp = currRunApp->GetNext()))
@@ -284,11 +302,10 @@ nsInstallDlg::AppendRunApp(nsRunApp *aNewRunApp)
 }
 
 void
-nsInstallDlg::FreeRunAppList()
+nsInstallDlg::FreeRunAppList(nsRunApp *aRunAppList)
 {
-    nsRunApp *currRunApp = NULL, *nextRunApp = NULL;
+    nsRunApp *currRunApp = aRunAppList, *nextRunApp = NULL;
 
-    currRunApp = sRunAppList;
     while (currRunApp)
     {
         nextRunApp = currRunApp->GetNext();
@@ -298,13 +315,12 @@ nsInstallDlg::FreeRunAppList()
 }
 
 void
-nsInstallDlg::RunApps()
+nsInstallDlg::RunApps(nsRunApp *aRunAppList, int aSequential)
 {
-    nsRunApp *currRunApp = sRunAppList;
+    nsRunApp *currRunApp = aRunAppList;
     char *argv[3], *dest;
     char apppath[MAXPATHLEN];
     extern char **environ; /* globally available to all processes */
-    int pid;
 
     dest = gCtx->opt->mDestination;
     if (chdir(dest) < 0) 
@@ -313,27 +329,32 @@ nsInstallDlg::RunApps()
     while (currRunApp)
     {
         /* run application with supplied args */
-        if ((pid = fork()) == 0)
+        sprintf(apppath, "%s/%s", dest, currRunApp->GetApp());
+
+        argv[0] = apppath;
+        argv[1] = currRunApp->GetArgs();
+        argv[2] = NULL; /* null-terminate arg vector */
+
+        if (!fork())
         {
             /* child */
 
-            if (*(dest + strlen(dest)) == '/') /* trailing slash */
-                sprintf(apppath, "%s%s", dest, currRunApp->GetApp());
-            else                               /* no trailing slash */
-                sprintf(apppath, "%s/%s", dest, currRunApp->GetApp());
-
-            argv[0] = apppath;
-            argv[1] = currRunApp->GetArgs();
-            argv[2] = NULL; /* null-terminate arg vector */
             execve(apppath, argv, environ);
 
             /* shouldn't reach this but in case execve fails we will */
-            exit(0);
+            _exit(0);
         }
         /* parent continues running to finish installation */
 
+        if (aSequential)
+        {
+           wait(NULL);
+        }
+
         currRunApp = currRunApp->GetNext();
     }
+
+
 }
 
 int
@@ -597,13 +618,26 @@ nsInstallDlg::PerformInstall()
         engine->DeleteXPIs(bCus, comps);
     }
 
+    // destroy installer engine thread object
+    XI_IF_DELETE(engine);
+
+    // run post-install applications to complete installation
+    if (sPostInstallRun)
+    {
+        MajorProgressCB("", 1, 1, ACT_COMPLETE);
+        RunApps(sPostInstallRun, 1);
+        FreeRunAppList(sPostInstallRun);
+    }
+
     // run all specified applications after installation
     if (sRunAppList)
     {
         if (gCtx->opt->mShouldRunApps)
-            RunApps();
-        FreeRunAppList();
+            RunApps(sRunAppList, 0);
+        FreeRunAppList(sRunAppList);
     }
+
+    return OK;
 
 BAIL:
     // destroy installer engine thread object
@@ -705,6 +739,10 @@ nsInstallDlg::MajorProgressCB(char *aName, int aNum, int aTotal, int aActivity)
             sprintf(msg, gCtx->Res("INSTALLING_XPI"), aName);
             break;
 
+        case ACT_COMPLETE:
+            sprintf(msg, gCtx->Res("COMPLETING_INSTALL"));
+            break;
+
         default:
             break;
     }
@@ -731,6 +769,8 @@ nsInstallDlg::MajorProgressCB(char *aName, int aNum, int aTotal, int aActivity)
         gtk_widget_show(sMinorLabel);
         gtk_widget_show(sMinorProgBar);
     }
+    else if (aActivity == ACT_COMPLETE)
+        gtk_label_set_text(GTK_LABEL(sMinorLabel), "");
 
     XI_GTK_UPDATE_UI();
 }

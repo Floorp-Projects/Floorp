@@ -399,7 +399,7 @@ main(int argc, char **argv)
 
     XI_IF_DELETE(installer);
 
-	_exit(err);
+    exit(err);
 }
 
 /*------------------------------------------------------------------*
