@@ -132,6 +132,7 @@ bin\components\prefmigr.xpt
 bin\components\profile.xpt
 bin\components\proxyObject.xpt
 bin\components\rdf.xpt
+bin\components\satchel.xpt
 bin\components\shistory.xpt
 bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
