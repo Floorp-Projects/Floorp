@@ -925,7 +925,6 @@ nsHTMLContentSerializer::LineBreakAfterOpen(nsIAtom* aName,
       (aName == nsHTMLAtoms::link) ||
       (aName == nsHTMLAtoms::script) ||
       (aName == nsHTMLAtoms::select) ||
-      (aName == nsHTMLAtoms::img) ||
       (aName == nsHTMLAtoms::map) ||
       (aName == nsHTMLAtoms::area) ||
       (aName == nsHTMLAtoms::style)) {
