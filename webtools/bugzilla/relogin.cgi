@@ -23,6 +23,8 @@
 use diagnostics;
 use strict;
 
+use vars %::COOKIE;
+
 require "CGI.pl";
 
 
@@ -39,6 +41,8 @@ The cookie that was remembering your login is now gone.  The next time you
 do an action that requires a login, you will be prompted for it.
 <p>
 ";
+
+delete $::COOKIE{"Bugzilla_login"};
 
 PutFooter();
 
