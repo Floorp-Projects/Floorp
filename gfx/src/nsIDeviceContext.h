@@ -120,6 +120,11 @@ public:
   NS_IMETHOD CheckFontExistence(const char * aFontName) = 0;
 
   /**
+   * Return the bit depth of the device.
+   */
+  NS_IMETHOD GetDepth(PRUint32& aDepth) = 0;
+
+  /**
    * Create an image lib color space that's appropriate for this rendering
    * context
    */

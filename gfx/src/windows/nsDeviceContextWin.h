@@ -27,6 +27,8 @@ class nsDeviceContextWin : public DeviceContextImpl
 public:
   nsDeviceContextWin();
 
+  virtual nsresult Init(nsNativeWidget aWidget);
+
   virtual float GetScrollBarWidth() const;
   virtual float GetScrollBarHeight() const;
 
@@ -38,12 +40,15 @@ public:
 
   NS_IMETHOD CheckFontExistence(const char * aFontName);
 
+  NS_IMETHOD GetDepth(PRUint32& aDepth);
+
   NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
 
 protected:
   virtual ~nsDeviceContextWin();
 
-  HDC mSurface;
+  HDC      mSurface;
+  PRUint32 mDepth;  // bit depth of device
 };
 
 #endif /* nsDeviceContextWin_h___ */
