@@ -286,8 +286,8 @@ public:
    *  with a call to EndOperation, naming the action and direction */
   NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
 
-  /** returns PR_TRUE if aParent can contain a child of type aTag */
-  PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
+  /** returns PR_TRUE if aParentTag can contain a child of type aChildTag */
+  virtual PRBool TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag);
   
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);

@@ -5794,19 +5794,39 @@ nsHTMLEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 
 
 PRBool 
-nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
+nsHTMLEditor::TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag)
 {
   // CNavDTD gives some unwanted results.  We override them here.
-  // if parent is a list and tag is text, say "no". 
-  if (IsListNode(aParent) && (aTag.EqualsWithConversion("__moz_text")))
-    return PR_FALSE;
-  // if both are lists, return true
-  if (IsListNode(aParent) && 
-     ( aTag.EqualsWithConversion("ol") ||
-       aTag.EqualsWithConversion("ul") ) )
-    return PR_TRUE;
+
+  if ( aParentTag.EqualsWithConversion("ol") ||
+       aParentTag.EqualsWithConversion("ul") )
+  {
+    // if parent is a list and tag is text, say "no". 
+    if (aChildTag.EqualsWithConversion("__moz_text"))
+      return PR_FALSE;
+    // if both are lists, return true
+    if (aChildTag.EqualsWithConversion("ol") ||
+        aChildTag.EqualsWithConversion("ul") ) 
+      return PR_TRUE;
+  }
+  
+  // if parent is a pre, and child is not inline, say "no"
+  if ( aParentTag.EqualsWithConversion("pre") )
+  {
+    if (aChildTag.EqualsWithConversion("__moz_text"))
+      return PR_TRUE;
+    PRInt32 childTagEnum, parentTagEnum;
+    nsAutoString non_const_childTag(aChildTag);
+    nsAutoString non_const_parentTag(aParentTag);
+    nsresult res = mDTD->StringTagToIntTag(non_const_childTag,&childTagEnum);
+    if (NS_FAILED(res)) return PR_FALSE;
+    res = mDTD->StringTagToIntTag(non_const_parentTag,&parentTagEnum);
+    if (NS_FAILED(res)) return PR_FALSE;
+    if (!mDTD->IsInlineElement(childTagEnum,parentTagEnum))
+      return PR_FALSE;
+  }
   // else fall thru
-  return nsEditor::CanContainTag(aParent, aTag);
+  return nsEditor::TagCanContainTag(aParentTag, aChildTag);
 }
 
 

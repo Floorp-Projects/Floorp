@@ -520,7 +520,34 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
     nsCOMPtr<nsIAtom> atom = mEditor->GetTag(curNode);
     
     if (mEditor->IsInlineNode(curNode))
-      format.AssignWithConversion("");
+    {
+      nsCOMPtr<nsIDOMNode> block = mEditor->GetBlockNodeParent(curNode);
+      if (block)
+      {
+        nsCOMPtr<nsIAtom> blockAtom = mEditor->GetTag(block);
+        if ( nsIEditProperty::p == blockAtom.get()           ||
+             nsIEditProperty::blockquote == blockAtom.get()  ||
+             nsIEditProperty::address == blockAtom.get()     ||
+             nsIEditProperty::pre == blockAtom.get()           )
+        {
+          blockAtom->ToString(format);
+        }
+        else if (nsHTMLEditUtils::IsHeader(block))
+        {
+          nsAutoString tag;
+          nsEditor::GetTagString(block,tag);
+          format = tag;
+        }
+        else
+        {
+          format.AssignWithConversion("");
+        }
+      }
+      else
+      {
+        format.AssignWithConversion("");
+      }  
+    }    
     else if (nsHTMLEditUtils::IsHeader(curNode))
     {
       nsAutoString tag;
@@ -530,9 +557,7 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
     else if (nsIEditProperty::p == atom.get()           ||
              nsIEditProperty::blockquote == atom.get()  ||
              nsIEditProperty::address == atom.get()     ||
-             nsIEditProperty::pre == atom.get()         ||
-             nsIEditProperty::dt == atom.get()          ||
-             nsIEditProperty::dd == atom.get() )
+             nsIEditProperty::pre == atom.get()           )
     {
       atom->ToString(format);
     }
@@ -2224,12 +2249,29 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
   if (outMakeEmpty) 
   {
     PRInt32 offset;
-    nsCOMPtr<nsIDOMNode> brNode, parent, theDiv;
+    nsCOMPtr<nsIDOMNode> brNode, parent, theDiv, sib;
     nsAutoString divType; divType.AssignWithConversion("div");
     res = mEditor->GetStartNodeAndOffset(aSelection, &parent, &offset);
     if (NS_FAILED(res)) return res;
     res = SplitAsNeeded(&divType, &parent, &offset);
     if (NS_FAILED(res)) return res;
+    // consume a trailing br, if any.  This is to keep an alignment from
+    // creating extra lines, if possible.
+    res = mEditor->GetNextHTMLNode(parent, offset, &brNode);
+    if (NS_FAILED(res)) return res;
+    if (nsHTMLEditUtils::IsBreak(brNode))
+    {
+      // making use of html structure... if next node after where
+      // we are putting our div is not a block, then the br we 
+      // found is in same block we are, so its safe to consume it.
+      res = mEditor->GetNextHTMLSibling(parent, offset, &sib);
+      if (NS_FAILED(res)) return res;
+      if (!nsEditor::IsBlockNode(sib))
+      {
+        res = mEditor->DeleteNode(brNode);
+        if (NS_FAILED(res)) return res;
+      }
+    }
     res = mEditor->CreateNode(divType, parent, offset, getter_AddRefs(theDiv));
     if (NS_FAILED(res)) return res;
     // set up the alignment on the div
@@ -3662,8 +3704,8 @@ nsHTMLEditRules::ShouldMakeEmptyBlock(nsIDOMSelection *aSelection,
     res = nsEditor::GetStartNodeAndOffset(aSelection, &parent, &offset);
     if (NS_FAILED(res)) return res;
     
-    // is selection point in the body?
-    if (nsHTMLEditUtils::IsBody(parent))
+    // is selection point in the body? or a cell?
+    if (nsHTMLEditUtils::IsBody(parent) || mEditor->IsTableCell(parent))
     {
       *outMakeEmpty = PR_TRUE;
       return res;
