@@ -441,7 +441,6 @@ modules/libpref/public/Makefile
 MAKEFILES_uriloader="
 uriloader/Makefile
 uriloader/base/Makefile
-uriloader/build/Makefile
 uriloader/exthandler/Makefile
 "
 
