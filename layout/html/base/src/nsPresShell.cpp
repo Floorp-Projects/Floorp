@@ -814,11 +814,15 @@ public:
 
   /**
    * Add a reflow command to the set of commands that are to be
-   * dispatched in the incremental reflow. Returns `true' if
-   * successful, `false' if the command could not be added (and thus,
-   * should be re-scheduled).
+   * dispatched in the incremental reflow.
    */
-  PRBool
+  enum AddCommandResult {
+    eEnqueued, // the command was successfully added
+    eTryLater, // the command could not be added; try again
+    eCancel,   // the command was not added; delete it
+    eOOM       // Out of memory.
+  };
+  AddCommandResult
   AddCommand(nsIPresContext      *aPresContext,
              nsHTMLReflowCommand *aCommand);
 
@@ -900,7 +904,7 @@ IncrementalReflow::Dispatch(nsIPresContext      *aPresContext,
   }
 }
 
-PRBool
+IncrementalReflow::AddCommandResult
 IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
                               nsHTMLReflowCommand *aCommand)
 {
@@ -922,13 +926,21 @@ IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
   nsIFrame *rootFrame = NS_STATIC_CAST(nsIFrame *, path[lastIndex]);
   path.RemoveElementAt(lastIndex);
 
+  // Prevent an incremental reflow from being posted inside a reflow
+  // root if the reflow root's container has not yet been reflowed.
+  // This can cause problems like bug 228156.
+  if (rootFrame->GetParent() &&
+      (rootFrame->GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    return eCancel;
+  }
+
   nsReflowPath *root = nsnull;
 
   PRInt32 i;
   for (i = mRoots.Count() - 1; i >= 0; --i) {
-    nsReflowPath *path = NS_STATIC_CAST(nsReflowPath *, mRoots[i]);
-    if (path->mFrame == rootFrame) {
-      root = path;
+    nsReflowPath *r = NS_STATIC_CAST(nsReflowPath *, mRoots[i]);
+    if (r->mFrame == rootFrame) {
+      root = r;
       break;
     }
   }
@@ -936,7 +948,7 @@ IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
   if (! root) {
     root = new nsReflowPath(rootFrame);
     if (! root)
-      return NS_ERROR_OUT_OF_MEMORY;
+      return eOOM;
 
     root->mReflowCommand = nsnull;
     mRoots.AppendElement(root);
@@ -946,12 +958,12 @@ IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
   // tree as necessary.
   nsReflowPath *target = root;
   for (i = path.Count() - 1; i >= 0; --i) {
-    nsIFrame *frame = NS_STATIC_CAST(nsIFrame *, path[i]);
-    target = target->EnsureSubtreeFor(frame);
+    nsIFrame *f = NS_STATIC_CAST(nsIFrame *, path[i]);
+    target = target->EnsureSubtreeFor(f);
 
     // Out of memory. Ugh.
     if (! target)
-      return PR_FALSE;
+      return eOOM;
   }
 
   // Place the reflow command in the leaf, if one isn't there already.
@@ -967,11 +979,11 @@ IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
              (void*)aCommand, (void*)target->mReflowCommand);
 #endif
 
-    return PR_FALSE;
+    return eTryLater;
   }
 
   target->mReflowCommand = aCommand;
-  return PR_TRUE;
+  return eEnqueued;
 }
 
 
@@ -6392,10 +6404,15 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
         nsHTMLReflowCommand *command =
           NS_STATIC_CAST(nsHTMLReflowCommand *, mReflowCommands[i]);
 
-        if (reflow.AddCommand(mPresContext, command)) {
+        IncrementalReflow::AddCommandResult res =
+          reflow.AddCommand(mPresContext, command);
+        if (res == IncrementalReflow::eEnqueued ||
+            res == IncrementalReflow::eCancel) {
           // Remove the command from the queue.
           mReflowCommands.RemoveElementAt(i);
           ReflowCommandRemoved(command);
+          if (res == IncrementalReflow::eCancel)
+            delete command;
         }
         else {
           // The reflow command couldn't be added to the tree; leave
