@@ -1805,6 +1805,9 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           kidMatch = matchRENodes(state, (RENode *)ren->kid,
                                         ren->next, cp);
           if (kidMatch == NULL) {
+              /* need to undo the result of running the kid */
+              for (i = num; i < state->parenCount; i++)
+                  state->parens[i].length = 0;
               state->parenCount = num;
               break;
           }
@@ -1813,6 +1816,8 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
                                             stop, kidMatch);
               if (restMatch == NULL) {
                     /* need to undo the result of running the kid */
+                  for (i = num; i < state->parenCount; i++)
+                      state->parens[i].length = 0;
                   state->parenCount = num;
                   break;
               }
@@ -1905,11 +1910,11 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
               return NULL;
           break;
         case REOP_DOTSTARMIN:
-          for (cp2 = cp; cp2 < cpend; cp2++) {
+          for (cp2 = cp; cp2 <= cpend; cp2++) {
               const jschar *cp3 = matchRENodes(state, ren->next, stop, cp2);
               if (cp3 != NULL)
                   return cp3;
-              if (IS_LINE_TERMINATOR(*cp2))
+              if ((cp2 == cpend) || IS_LINE_TERMINATOR(*cp2))
                   return NULL;
           }
           return NULL;
