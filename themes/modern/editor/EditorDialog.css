@@ -207,23 +207,35 @@ tree.list {
 
 /* ::::: Image Properties dialog ::::: */
 
-.align-menu[data="top"] {
+.align-menu[value="top"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-top.gif") !important;
 }
 
-.align-menu[data="center"] {
+.align-menu[value="top"]:hover {
+	list-style-image: url("chrome://editor/skin/icons/img-align-top-sel.gif") !important;
+}
+
+.align-menu[value="middle"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-mid.gif") !important;
 }
 
-.align-menu[data="bottom"] {
+.align-menu[value="middle"]:hover {
+	list-style-image: url("chrome://editor/skin/icons/img-align-mid-sel.gif") !important;
+}
+
+.align-menu[value="bottom"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-btm.gif") !important;
 }
 
-.align-menu[data="right"] {
+.align-menu[value="bottom"]:hover {
+	list-style-image: url("chrome://editor/skin/icons/img-align-btm-sel.gif") !important;
+}
+
+.align-menu[value="right"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-rit.gif") !important;
 }
 
-.align-menu[data="left"] {
+.align-menu[value="left"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-lft.gif") !important;
 }
 
