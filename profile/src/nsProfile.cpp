@@ -617,16 +617,14 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
     }
 
     PRBool prefs_converted = PR_FALSE;
-    rv = prefBranch->GetBoolPref("prefs.converted-to-utf8", &prefs_converted);
-    if(NS_FAILED(rv)) return rv;
+    (void)prefBranch->GetBoolPref("prefs.converted-to-utf8", &prefs_converted);
 
     if (!prefs_converted) 
     {
         nsCOMPtr <nsIPrefConverter> pPrefConverter = do_CreateInstance(kPrefConverterCID, &rv);
-        if (NS_FAILED(rv)) return rv;
         if (!pPrefConverter) return NS_ERROR_FAILURE;
-
         rv = pPrefConverter->ConvertPrefsToUTF8();
+        if (NS_FAILED(rv)) return rv;
     }
     
     return NS_OK;
