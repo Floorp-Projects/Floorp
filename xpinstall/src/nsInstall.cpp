@@ -322,7 +322,15 @@ nsInstall::AddDirectory(const nsString& aRegName,
         return NS_OK;
     }
     
-    for (PRInt32 i=0; i < paths->Count(); i++)
+    PRInt32 count = paths->Count();
+    
+    if (count == 0)
+    {
+        *aReturn = SaveError( nsInstall::FILE_DOES_NOT_EXIST );
+        return NS_OK;
+    }
+
+    for (PRInt32 i=0; i < count; i++)
     {
         nsString *thisPath = (nsString *)paths->ElementAt(i);
 
