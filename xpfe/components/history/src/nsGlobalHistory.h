@@ -105,6 +105,8 @@ protected:
 
   // Implementation Methods
   nsresult OpenDB();
+  nsresult OpenExistingFile(nsIMdbFactory *factory, const char *filePath);
+  nsresult OpenNewFile(nsIMdbFactory *factory, const char *filePath);
   nsresult CreateTokens();
   nsresult CloseDB();
 
@@ -121,13 +123,33 @@ protected:
   nsresult NotifyUnassert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
   nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);
 
+  nsresult AddPageToDatabase(const char *aURL,
+                             const char *aReferrerURL,
+                             PRInt64 aDate);
+  nsresult AddExistingPageToDatabase(nsIMdbRow *row,
+                                     PRInt64 aDate,
+                                     PRInt64 *aOldDate,
+                                     PRInt32 *aOldCount);
+  
+  nsresult AddNewPageToDatabase(const char *aURL,
+                                const char *aReferrerURL,
+                                PRInt64 aDate);
+
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64 aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32 aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const char *aValue);
+  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRUnichar *aValue);
+  
   nsCOMPtr<nsISupportsArray> mObservers;
 
   mdb_scope  kToken_HistoryRowScope;
   mdb_kind   kToken_HistoryKind;
+  
   mdb_column kToken_URLColumn;
   mdb_column kToken_ReferrerColumn;
   mdb_column kToken_LastVisitDateColumn;
+  mdb_column kToken_FirstVisitDateColumn;
+  mdb_column kToken_VisitCountColumn;
   mdb_column kToken_NameColumn;
 
   // pseudo-constants. although the global history really is a
@@ -136,6 +158,7 @@ protected:
   static nsIRDFService* gRDFService;
   static nsIRDFResource* kNC_Page; // XXX do we need?
   static nsIRDFResource* kNC_Date;
+  static nsIRDFResource* kNC_FirstVisitDate;
   static nsIRDFResource* kNC_VisitCount;
   static nsIRDFResource* kNC_Name;
   static nsIRDFResource* kNC_Referrer;
