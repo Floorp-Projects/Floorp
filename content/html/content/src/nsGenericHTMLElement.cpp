@@ -133,7 +133,6 @@ static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
  
 //----------------------------------------------------------------------
 
-
 #ifdef GATHER_ELEMENT_USEAGE_STATISTICS
 
 // static objects that have constructors are kinda bad, but we don't
@@ -527,9 +526,18 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
   return NS_OK;
 }
 
+
+static inline PRBool
+IsOffsetParentTag(nsIAtom *aAtom)
+{
+  return (aAtom == nsHTMLAtoms::body ||
+          aAtom == nsHTMLAtoms::td ||
+          aAtom == nsHTMLAtoms::table ||
+          aAtom == nsHTMLAtoms::th);
+}
+
 nsresult
 nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
-                                    nsIAtom* aOffsetParentTag,
                                     nsIContent** aOffsetParent)
 {
   *aOffsetParent = nsnull;
@@ -597,7 +605,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   if (content) {
     content->GetTag(*getter_AddRefs(tag));
 
-    if (tag.get() == aOffsetParentTag || content == docElement) {
+    if (tag == nsHTMLAtoms::body || content == docElement) {
       done = PR_TRUE;
 
       parent = frame;
@@ -658,8 +666,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 
         content->GetTag(*getter_AddRefs(tag));
 
-        // If the tag of this frame matches the one passed in, break here
-        if (tag.get() == aOffsetParentTag) {
+        // If the tag of this frame is a offset parent tag, break here
+        if (IsOffsetParentTag(tag)) {
           if (parent != frame) {
             *aOffsetParent = content;
             NS_ADDREF(*aOffsetParent);
@@ -749,9 +757,7 @@ nsGenericHTMLElement::GetOffsetTop(PRInt32* aOffsetTop)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame,
-                               nsHTMLAtoms::body,
-                               getter_AddRefs(parent));
+  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
 
   if(NS_SUCCEEDED(res)) {
     *aOffsetTop = rcFrame.y;
@@ -768,9 +774,7 @@ nsGenericHTMLElement::GetOffsetLeft(PRInt32* aOffsetLeft)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame,
-                               nsHTMLAtoms::body,
-                               getter_AddRefs(parent));
+  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
 
   if(NS_SUCCEEDED(res)) {
     *aOffsetLeft = rcFrame.x;
@@ -787,9 +791,7 @@ nsGenericHTMLElement::GetOffsetWidth(PRInt32* aOffsetWidth)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame,
-                               nsHTMLAtoms::body,
-                               getter_AddRefs(parent));
+  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
 
   if(NS_SUCCEEDED(res)) {
     *aOffsetWidth = rcFrame.width;
@@ -806,9 +808,7 @@ nsGenericHTMLElement::GetOffsetHeight(PRInt32* aOffsetHeight)
 {
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame,
-                               nsHTMLAtoms::body,
-                               getter_AddRefs(parent));
+  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
 
   if(NS_SUCCEEDED(res)) {
     *aOffsetHeight = rcFrame.height;
@@ -827,9 +827,7 @@ nsGenericHTMLElement::GetOffsetParent(nsIDOMElement** aOffsetParent)
 
   nsRect rcFrame;
   nsCOMPtr<nsIContent> parent;
-  nsresult res = GetOffsetRect(rcFrame,
-                               nsHTMLAtoms::body,
-                               getter_AddRefs(parent));
+  nsresult res = GetOffsetRect(rcFrame, getter_AddRefs(parent));
   if (NS_SUCCEEDED(res)) {
     if (parent) {
       res = parent->QueryInterface(NS_GET_IID(nsIDOMElement),
