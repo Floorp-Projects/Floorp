@@ -1,8 +1,10 @@
 @echo OFF
 REM --------------------------------------------------------
-REM Modify MRE_DIR below to match your MRE install location
+REM Modify GRE_DIR below to match your GRE install location
 REM --------------------------------------------------------
-set MRE_DIR=c:\Program Files\Mozilla\MRE\1.0
-set PATH=%PATH%;%MRE_DIR%;%MRE_DIR%\components
+set GRE_VERSION=1.2b
+set GRE_DIR=c:\Program Files\Mozilla\GRE\%GRE_VERSION%
+
+set PATH=%PATH%;%GRE_DIR%;%GRE_DIR%\components
 mfcembed.exe -console
 
