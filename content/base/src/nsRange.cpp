@@ -975,11 +975,10 @@ nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
     // Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
-  nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
-  PRInt32 indx = IndexOf(theSibling);
-  nsIDOMNode *nParent;
-  nsresult res = theSibling->GetParentNode(&nParent);
-  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> nParent;
+  nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
+  if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+  PRInt32 indx = IndexOf(aSibling);
   return SetStart(nParent,indx);
 }
 
@@ -989,11 +988,10 @@ nsresult nsRange::SetStartAfter(nsIDOMNode* aSibling)
     // Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
-  nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
-  PRInt32 indx = IndexOf(theSibling) + 1;
-  nsIDOMNode *nParent;
-  nsresult res = theSibling->GetParentNode(&nParent);
-  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> nParent;
+  nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
+  if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+  PRInt32 indx = IndexOf(aSibling) + 1;
   return SetStart(nParent,indx);
 }
 
@@ -1028,11 +1026,10 @@ nsresult nsRange::SetEndBefore(nsIDOMNode* aSibling)
     // Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
-  nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
-  PRInt32 indx = IndexOf(theSibling);
-  nsIDOMNode *nParent;
-  nsresult res = theSibling->GetParentNode(&nParent);
-  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> nParent;
+  nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
+  if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+  PRInt32 indx = IndexOf(aSibling);
   return SetEnd(nParent,indx);
 }
 
@@ -1042,11 +1039,10 @@ nsresult nsRange::SetEndAfter(nsIDOMNode* aSibling)
     // Not the correct one to throw, but spec doesn't say what is
     return NS_ERROR_DOM_NOT_OBJECT_ERR;
   }
-  nsCOMPtr<nsIDOMNode>theSibling( do_QueryInterface(aSibling) );
-  PRInt32 indx = IndexOf(theSibling) + 1;
-  nsIDOMNode *nParent;
-  nsresult res = theSibling->GetParentNode(&nParent);
-  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> nParent;
+  nsresult res = aSibling->GetParentNode(getter_AddRefs(nParent));
+  if (NS_FAILED(res) || !nParent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
+  PRInt32 indx = IndexOf(aSibling) + 1;
   return SetEnd(nParent,indx);
 }
 
@@ -1090,7 +1086,7 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
   }
 
   nsresult res = aN->GetParentNode(getter_AddRefs(parent));
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(res) || !parent) return NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR;
   PRInt32 indx = IndexOf(theNode);
   return DoSetRange(parent,indx,parent,indx+1);
 }
