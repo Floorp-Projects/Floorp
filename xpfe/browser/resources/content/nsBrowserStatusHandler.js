@@ -37,11 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const NS_ERROR_MODULE_NETWORK = 2152398848;
-const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
-const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
-
-
 function nsBrowserStatusHandler()
 {
   this.init();
@@ -78,8 +73,6 @@ nsBrowserStatusHandler.prototype =
   jsDefaultStatus : "",
   overLink : "",
 
-  statusTimeoutInEffect : false,
-
   hideAboutBlank : true,
 
   locationChanged : false,  
@@ -96,9 +89,6 @@ nsBrowserStatusHandler.prototype =
 
   init : function()
   {
-    // XXXjag is this still needed? It's currently just ""
-    this.defaultStatus = gNavigatorBundle.getString("defaultStatus");
-
     this.urlBar          = document.getElementById("urlbar");
     this.throbberElement = document.getElementById("navigator-throbber");
     this.statusMeter     = document.getElementById("statusbar-icon");
@@ -147,9 +137,12 @@ nsBrowserStatusHandler.prototype =
     this.updateStatusField();
   },
 
-  setOverLink : function(link, b)
+  setOverLink : function(link)
   {
     this.overLink = link;
+    // clear out 'Done' (or other message) on first hover
+    if (this.defaultStatus)
+      this.defaultStatus = "";
     this.updateStatusField();
     if (link)
       this.statusTextField.setAttribute('crop', 'center');
@@ -299,7 +292,7 @@ nsBrowserStatusHandler.prototype =
 
   onLocationChange : function(aWebProgress, aRequest, aLocation)
   {
-    this.setOverLink("", null);
+    this.setOverLink("");
 
     var location = "";
 
