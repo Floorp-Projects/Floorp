@@ -294,11 +294,6 @@ typedef enum { LockOutDatabase, UnlockDatabase } DBLockFlagEnum;
 #define	DB_TXN		    0x8000	/* Do transactions. */
 #endif
 
-/* if we're using gcc's -pedantic-errors, uint isn't defined */
-#if !defined(HAVE_UINT)
-typedef unsigned int uint;
-#endif
-
 /* Access method description structure. */
 typedef struct __db {
 	DBTYPE type;			/* Underlying db type. */
