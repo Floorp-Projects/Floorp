@@ -281,7 +281,7 @@ nsWinReg::NativeCreateKey(const nsString& subkey, const nsString& classname)
 
 #ifdef WIN32
     root   = (HKEY)mRootKey;
-    result = RegCreateKeyEx(root, subkeyCString, 0, classnameCString, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, nsnull, &newkey, &disposition);
+    result = RegCreateKeyEx(root, subkeyCString, 0, classnameCString, REG_OPTION_NON_VOLATILE, KEY_WRITE, nsnull, &newkey, &disposition);
 
     if(ERROR_SUCCESS == result)
     {
@@ -354,7 +354,7 @@ nsWinReg::NativeSetValueString(const nsString& subkey, const nsString& valname, 
     length = value.Length();
 
     root   = (HKEY) mRootKey;
-    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_ALL_ACCESS, &newkey);
+    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_WRITE, &newkey);
 
     if(ERROR_SUCCESS == result)
     {
@@ -412,7 +412,7 @@ nsWinReg::NativeSetValueNumber(const nsString& subkey, const nsString& valname, 
     char*   valnameCString  = valname.ToNewCString();
     
     root   = (HKEY) mRootKey;
-    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_ALL_ACCESS, &newkey);
+    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_WRITE, &newkey);
 
     if(ERROR_SUCCESS == result)
     {
@@ -473,7 +473,7 @@ nsWinReg::NativeSetValue(const nsString& subkey, const nsString& valname, nsWinR
 
 
     root   = (HKEY) mRootKey;
-    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_ALL_ACCESS, &newkey );
+    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_WRITE, &newkey );
 
     if(ERROR_SUCCESS == result)
     {
@@ -510,7 +510,7 @@ nsWinReg::NativeGetValue(const nsString& subkey, const nsString& valname)
     char*   valnameCString  = valname.ToNewCString();
 
     root   = (HKEY) mRootKey;
-    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_ALL_ACCESS, &newkey );
+    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_READ, &newkey );
 
     if(ERROR_SUCCESS == result)
     {
