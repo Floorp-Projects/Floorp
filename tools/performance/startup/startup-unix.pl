@@ -10,6 +10,9 @@
 #   where T = ms since 1970, e.g.:
 # mozilla file:/foo/startup-test.html?begin=999456977124
 # 
+# NOTE: You will get much better results if you install the
+# Time::HiRes perl module, urls in gettime.pl.
+#
 
 require 5.003;
 
