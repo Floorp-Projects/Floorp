@@ -110,7 +110,58 @@ static const char kNameSpaceSeparator = ':';
 
 static const char kLoadAsData[] = "loadAsData";
 
+class nsScriptLoaderObserverProxy : public nsIScriptLoaderObserver
+{
+public:
+  nsScriptLoaderObserverProxy(nsIScriptLoaderObserver* aInner)
+    : mInner(do_GetWeakReference(aInner))
+  {
+  }
+  virtual ~nsScriptLoaderObserverProxy()
+  {
+  }
+  
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISCRIPTLOADEROBSERVER
 
+  nsWeakPtr mInner;
+};
+
+NS_IMPL_ISUPPORTS1(nsScriptLoaderObserverProxy, nsIScriptLoaderObserver)
+
+NS_IMETHODIMP
+nsScriptLoaderObserverProxy::ScriptAvailable(nsresult aResult,
+                                             nsIDOMHTMLScriptElement *aElement,
+                                             PRBool aIsInline,
+                                             PRBool aWasPending,
+                                             nsIURI *aURI,
+                                             PRInt32 aLineNo,
+                                             const nsAString & aScript)
+{
+  nsCOMPtr<nsIScriptLoaderObserver> inner = do_QueryReferent(mInner);
+
+  if (inner) {
+    return inner->ScriptAvailable(aResult, aElement, aIsInline, aWasPending,
+                                  aURI, aLineNo, aScript);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptLoaderObserverProxy::ScriptEvaluated(nsresult aResult,
+                                             nsIDOMHTMLScriptElement *aElement,
+                                             PRBool aIsInline,
+                                             PRBool aWasPending)
+{
+  nsCOMPtr<nsIScriptLoaderObserver> inner = do_QueryReferent(mInner);
+
+  if (inner) {
+    return inner->ScriptEvaluated(aResult, aElement, aIsInline, aWasPending);
+  }
+
+  return NS_OK;
+}
 
 // XXX Open Issues:
 // 1) what's not allowed - We need to figure out which HTML tags
@@ -192,17 +243,29 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
     mPrettyPrintXML = PR_FALSE;
   }
   
+  // use this to avoid a circular reference sink->document->scriptloader->sink
+  nsCOMPtr<nsIScriptLoaderObserver> proxy =
+      new nsScriptLoaderObserverProxy(this);
+  NS_ENSURE_TRUE(proxy, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsIScriptLoader> loader;
+  rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
+  NS_ENSURE_SUCCESS(rv, rv);
+  loader->AddObserver(proxy);
+
   mState = eXMLContentSinkState_InProlog;
   mDocElement = nsnull;
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED4(nsXMLContentSink,
+NS_IMPL_ISUPPORTS_INHERITED5(nsXMLContentSink,
                              nsContentSink,
                              nsIContentSink,
                              nsIXMLContentSink,
                              nsIExpatSink,
-                             nsITransformObserver)
+                             nsITransformObserver,
+                             nsISupportsWeakReference)
+
 
 // nsIContentSink
 NS_IMETHODIMP

@@ -80,6 +80,7 @@ const PRBool kBlockByDefault = PR_TRUE;
 #endif
 
 
+#if 0
 class nsScriptLoaderObserverProxy : public nsIScriptLoaderObserver
 {
 public:
@@ -132,11 +133,11 @@ nsScriptLoaderObserverProxy::ScriptEvaluated(nsresult aResult,
 
   return NS_OK;
 }
+#endif
 
 
-NS_IMPL_ISUPPORTS3(nsContentSink,
+NS_IMPL_ISUPPORTS2(nsContentSink,
                    nsICSSLoaderObserver,
-                   nsISupportsWeakReference,
                    nsIScriptLoaderObserver)
 
 nsContentSink::nsContentSink()
@@ -166,6 +167,7 @@ nsContentSink::Init(nsIDocument* aDoc,
   mDocumentBaseURL = aURL;
   mDocShell = do_QueryInterface(aContainer);
 
+#if 0
   // use this to avoid a circular reference sink->document->scriptloader->sink
   nsCOMPtr<nsIScriptLoaderObserver> proxy =
       new nsScriptLoaderObserverProxy(this);
@@ -176,6 +178,7 @@ nsContentSink::Init(nsIDocument* aDoc,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = loader->AddObserver(proxy);
   NS_ENSURE_SUCCESS(rv, rv);
+#endif
 
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(aDoc));
   if (htmlContainer) {

@@ -50,6 +50,7 @@
 #include "nsIParser.h"
 #include "nsParserUtils.h"
 #include "nsIScriptLoader.h"
+#include "nsIScriptLoaderObserver.h"
 #include "nsIHTMLContent.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -232,6 +233,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSISCRIPTLOADEROBSERVER
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -429,8 +431,8 @@ protected:
   nsresult ResumeParsing();
 
   // nsContentSink overrides
-  virtual void PreEvaluateScript();
-  virtual void PostEvaluateScript();
+  void PreEvaluateScript();
+  void PostEvaluateScript();
 
   void UpdateAllContexts();
   void NotifyAppend(nsIContent* aContent,
@@ -2159,6 +2161,11 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   service->GetTopicObservers(NS_LITERAL_STRING("text/html"),
                              getter_AddRefs(mObservers));
+
+  nsCOMPtr<nsIScriptLoader> loader;
+  rv = mDocument->GetScriptLoader(getter_AddRefs(loader));
+  NS_ENSURE_SUCCESS(rv, rv);
+  loader->AddObserver(this);
 
   NS_WARN_IF_FALSE(mDocShell, "oops no docshell!");
 
@@ -4487,6 +4494,79 @@ HTMLContentSink::PostEvaluateScript()
 {
   mCurrentContext->SetPreAppend(PR_FALSE);
 }
+
+NS_IMETHODIMP
+HTMLContentSink::ScriptAvailable(nsresult aResult,
+                                 nsIDOMHTMLScriptElement *aElement,
+                                 PRBool aIsInline,
+                                 PRBool aWasPending,
+                                 nsIURI *aURI,
+                                 PRInt32 aLineNo,
+                                 const nsAString& aScript)
+{
+  // Check if this is the element we were waiting for
+  PRUint32 count = mScriptElements.Count();
+
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = mScriptElements[count - 1];
+  if (aElement != scriptElement) {
+    return NS_OK;
+  }
+
+  if (mParser && !mParser->IsParserEnabled()) {
+    // make sure to unblock the parser before evaluating the script,
+    // we must unblock the parser even if loading the script failed or
+    // if the script was empty, if we don't, the parser will never be
+    // unblocked.
+    mParser->UnblockParser();
+  }
+
+  // Mark the current script as loaded
+  mNeedToBlockParser = PR_FALSE;
+
+  if (NS_SUCCEEDED(aResult) && aResult != NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
+    PreEvaluateScript();
+  } else {
+    mScriptElements.RemoveObjectAt(count - 1);
+
+    if (mParser && aWasPending) {
+      // Loading external script failed!. So, resume
+      // parsing since the parser got blocked when loading
+      // external script. - Ref. Bug: 94903
+      mParser->ContinueParsing();
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::ScriptEvaluated(nsresult aResult,
+                                 nsIDOMHTMLScriptElement *aElement,
+                                 PRBool aIsInline,
+                                 PRBool aWasPending)
+{
+  // Check if this is the element we were waiting for
+  PRUint32 count = mScriptElements.Count();
+
+  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement = mScriptElements[count - 1];
+  if (aElement != scriptElement) {
+    return NS_OK;
+  }
+
+  // Pop the script element stack
+  mScriptElements.RemoveObjectAt(count - 1);
+
+  if (NS_SUCCEEDED(aResult)) {
+    PostEvaluateScript();
+  }
+
+  if (mParser && mParser->IsParserEnabled() && aWasPending) {
+    mParser->ContinueParsing();
+  }
+
+  return NS_OK;
+}
+
 
 nsresult
 HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
