@@ -139,6 +139,17 @@ function ValidateNumberString(value, minValue, maxValue)
   // Return an empty string to indicate error
   return "";
 }
+function SetTextfieldFocus(textfield)
+{
+  if (textfield)
+  {
+    textfield.focus();
+    //TODO: This is not working -- did Simon checkin? Do we need to change XBL?
+    textfield.selectionStart = 0;
+    //TODO: Simon should change this to support "-1" for "select to end"
+    textfield.selectionEnd = textfield.value.length;
+  }
+}
 
 function ShowInputErrorMessage(message)
 {
@@ -301,11 +312,11 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
   {
     // Strip out the %
     size = size.substr(0, percentIndex);
-    if (pixelItem)
-      menulist.selectedItem = pixelItem;
+    if (percentItem)
+      menulist.selectedItem = percentItem;
   } 
-  else if(percentItem)
-    menulist.selectedItem = percentItem;
+  else if(pixelItem)
+    menulist.selectedItem = pixelItem;
 
   return size;
 }

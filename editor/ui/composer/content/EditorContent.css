@@ -29,15 +29,6 @@
 
 a[name]:before {
   content: url(chrome://editor/skin/images/anchor-in-doc.gif);
-  /* display: inline; */
-
-/*  margin-left: 2px; */
-
-  /*
-  padding-left: 13px; 
-  background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
-  background-position: center left;
-*/
 }
 
 /* Force border display for empty cells 
