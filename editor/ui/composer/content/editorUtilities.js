@@ -230,8 +230,8 @@ function GetCurrentEditorElement()
     var editorList = tmpWindow.document.getElementsByTagName("editor");
 
     // This will change if we support > 1 editor element
-    if (editorList.item(0))
-      return editorList.item(0);
+    if (editorList && editorList.length > 0)
+      return editorList[0];
 
     tmpWindow = tmpWindow.opener;
   } 
