@@ -21,12 +21,11 @@ VPATH		= @srcdir@
 srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/config.mk
-
-DEFINES		+= -DEXPORT_XPTC_API
 
 LIBRARY_NAME	= xptcmd
 MODULE		= xpcom
+
+include $(topsrcdir)/config/config.mk
 
 # the default is this buildable non-functioning code
 CPPSRCS		= \
@@ -55,17 +54,15 @@ endif
 endif
 
 # Neutrino/Intel (uses the same unixish_x86 code)
-ifeq ($(OS_TARGET),NTO)
-ifeq ($(OS_TEST),x86)
+ifeq ($(OS_TARGET)$(OS_TEST),NTOx86)
 CPPSRCS		= \
 		  xptcinvoke_unixish_x86.cpp \
 		  xptcstubs_unixish_x86.cpp \
 		  $(NULL)
 endif
-endif
 
 # Solaris/sparc
-ifneq (,$(filter SunOS,$(OS_ARCH)))
+ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		= \
 		  xptcinvoke_sparc_solaris.cpp \
@@ -85,8 +82,8 @@ endif
 endif
 endif
 
-# Linux/sparc
 ifeq ($(OS_ARCH),Linux)
+# Linux/sparc
 ifeq ($(OS_TEST),sparc)
 CPPSRCS		= \
 		  xptcinvoke_sparc_solaris.cpp \
@@ -97,32 +94,53 @@ ASFILES		= \
 		  xptcstubs_asm_sparc_solaris.s \
 		  $(NULL)
 endif
+# Linux/Alpha
+ifeq ($(OS_TEST),alpha)
+CPPSRCS		= \
+		  xptcinvoke_linux_alpha.cpp \
+		  xptcstubs_linux_alpha.cpp \
+		  $(NULL)
+endif
+# Linux/ARM
+ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
+CPPSRCS		= \
+		  xptcinvoke_arm.cpp \
+		  xptcstubs_arm.cpp \
+		  $(NULL)
+endif
 endif
 
 # AIX/PPC
-ifeq (AIX,$(filter AIX,$(OS_ARCH)))
+ifeq ($(OS_ARCH),AIX)
 CPPSRCS		= \
-		xptcinvoke_ppc_aix.cpp \
-		xptcstubs_ppc_aix.cpp \
-		$(NULL)
+		  xptcinvoke_ppc_aix.cpp \
+		  xptcstubs_ppc_aix.cpp \
+		  $(NULL)
 ASFILES		= \
-		xptcinvoke_asm_ppc_aix.s \
-		xptcstubs_asm_ppc_aix.s \
-		$(NULL)
+		  xptcinvoke_asm_ppc_aix.s \
+		  xptcstubs_asm_ppc_aix.s \
+		  $(NULL)
 endif
 
+ifeq ($(OS_ARCH),NetBSD)
 # NetBSD/m68k
-ifneq (,$(filter NetBSD,$(OS_ARCH)))
 ifneq (,$(filter amiga atari hp300 mac68k mvme68k next68k sun3 sun3x x68k,$(OS_TEST)))
-CPPSRCS                = \
-		xptcinvoke_netbsd_m68k.cpp \
-		xptcstubs_netbsd_m68k.cpp \
-		$(NULL)
+CPPSRCS		= \
+		  xptcinvoke_netbsd_m68k.cpp \
+		  xptcstubs_netbsd_m68k.cpp \
+		  $(NULL)
 endif
+# NetBSD/ARM
+#ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
+#CPPSRCS		= \
+#		  xptcinvoke_arm.cpp \
+#		  xptcstubs_arm.cpp \
+#		  $(NULL)
+#endif
 endif
 
 # IRIX
-ifeq ($(OS_ARCH), IRIX)
+ifeq ($(OS_ARCH),IRIX)
 ifneq ($(basename $(OS_RELEASE)),5)
 CPPSRCS		= \
 		  xptcinvoke_irix.cpp \
@@ -131,16 +149,6 @@ CPPSRCS		= \
 ASFILES		= \
 		  xptcinvoke_asm_irix.s \
 		  xptcstubs_asm_irix.s \
-		  $(NULL)
-endif
-endif
-
-# Linux/Alpha
-ifeq ($(OS_ARCH),Linux)
-ifeq ($(OS_TEST),alpha)
-CPPSRCS		= \
-		  xptcinvoke_linux_alpha.cpp \
-		  xptcstubs_linux_alpha.cpp \
 		  $(NULL)
 endif
 endif
@@ -159,31 +167,17 @@ ASFILES		= \
 endif
 endif
 
-# Linux ARM
-ifeq ($(OS_ARCH),Linux)
-ifeq (arm,$(findstring arm,$(OS_TEST)))
-CPPSRCS = \
-		  xptcinvoke_arm.cpp \
-		  xptcstubs_arm.cpp \
-		  $(NULL)
-endif
-ifeq (sa110,$(findstring sa110,$(OS_TEST)))   
-CPPSRCS = \
-		  xptcinvoke_arm.cpp \
-		  xptcstubs_arm.cpp \
-		  $(NULL)
-endif
-endif
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES		+= -DEXPORT_XPTC_API
+
 INCLUDES	+= -I$(srcdir)/../..
 
-ifeq ($(OS_ARCH), IRIX)
+ifeq ($(OS_ARCH),IRIX)
 # The assembler on IRIX (6.3 only?) seems to have trouble with the default command,
 # but works fine if we first copy the header and source file into the current dir.
 $(OBJDIR)/xptcstubs_asm_irix.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_irix.s
