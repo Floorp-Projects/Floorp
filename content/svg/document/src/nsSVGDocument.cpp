@@ -42,6 +42,7 @@
 #include "nsIHttpChannel.h"
 #include "nsString.h"
 #include "nsLiteralString.h"
+#include "nsReadableUtils.h"
 
 NS_INTERFACE_MAP_BEGIN(nsSVGDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGDocument)
