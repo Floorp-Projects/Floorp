@@ -100,29 +100,12 @@ private:
   nsresult RemoveDragListener();
 
     // utility routines
-  static void FindFirstAnchor(nsIDOMNode* inNode, nsIDOMNode** outAnchor);
-  static void FindParentLinkNode(nsIDOMNode* inNode, nsIDOMNode** outParent);
-  static void GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL);
-  static void CreateLinkText(const nsAString& inURL, const nsAString & inText,
-                              nsAString& outLinkText);
-  static void GetNodeString(nsIDOMNode* inNode, nsAString & outNodeString);
   static void NormalizeSelection(nsIDOMNode* inBaseNode, nsISelection* inSelection);
   static void GetEventDocument(nsIDOMEvent* inEvent, nsIDOMDocument** outDocument);
-  static nsresult GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage** outImage);
-
-  static nsresult GetDraggableSelectionData(nsISelection* inSelection,
-                        nsIDOMNode* inRealTargetNode, nsIDOMNode **outImageOrLinkNode, PRBool* outDragSelectedText);
-  // if inNode is null, use the selection from the window
-  static nsresult SerializeNodeOrSelection(const char* inMimeType, PRUint32 inFlags,
-                        nsIDOMWindow* inWindow, nsIDOMNode* inNode, nsAString& outResultString);
 
   static nsresult SaveURIToFileInDirectory(nsAString& inSourceURIString, nsILocalFile* inDestDirectory, nsILocalFile** outFile);
   
-  PRBool BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outURLString, nsAString & outTitleString,
-                        nsAString & outHTMLString, nsAString & outImageSourceString, nsIImage** outImage, PRBool* outIsAnchor);
-  nsresult CreateTransferable(const nsAString & inURLString, const nsAString & inTitleString, 
-                                const nsAString & inHTMLString, const nsAString & inImageSourceString,
-                                nsIImage* inImage, PRBool inIsAnchor, nsITransferable** outTrans);
+  nsresult CreateTransferable(nsIDOMEvent* inMouseEvent, nsITransferable** outTrans);
   void ExtractURLFromData(const nsACString & inFlavor, nsISupports* inDataWrapper, PRUint32 inDataLen,
                            nsAString & outURL);
   nsresult GetHookEnumeratorFromEvent(nsIDOMEvent* inEvent, nsISimpleEnumerator** outEnumerator);
