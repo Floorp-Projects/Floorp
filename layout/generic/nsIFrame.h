@@ -525,7 +525,7 @@ public:
    * ascent of the line's children). Note that the metrics returned
    * apply to the frame as it exists at the time of the call.
    */
-  NS_IMETHOD  GetReflowMetrics(nsIPresContext*  aPresContext,
+  NS_IMETHOD  GetReflowMetrics(nsIPresContext&  aPresContext,
                                nsReflowMetrics& aMetrics) = 0;
 
   /**
