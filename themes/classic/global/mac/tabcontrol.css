@@ -138,18 +138,18 @@ tabbox {
 
 /* when a tab is selected this is how it should look */
 
-.tab-bottom[selected="1"] > .tab-image-left,
-.tab-bottom:hover:active[selected="1"] > .tab-image-left { 
+.tab-bottom[selected="true"] > .tab-image-left,
+.tab-bottom:hover:active[selected="true"] > .tab-image-left { 
   background		: url(chrome://global/skin/tab-sm-bot-sel-left.gif) no-repeat;
 }
 
-.tab-bottom[selected="1"] > .tab-image-middle,
-.tab-bottom:hover:active[selected="1"] > .tab-image-middle { 
+.tab-bottom[selected="true"] > .tab-image-middle,
+.tab-bottom:hover:active[selected="true"] > .tab-image-middle { 
   background		: url(chrome://global/skin/tab-sm-bot-sel-mid.gif) repeat-x;
 }
 
-.tab-bottom[selected="1"] > .tab-image-right,
-.tab-bottom:hover:active[selected="1"] > .tab-image-right { 
+.tab-bottom[selected="true"] > .tab-image-right,
+.tab-bottom:hover:active[selected="true"] > .tab-image-right { 
   background		: url(chrome://global/skin/tab-sm-bot-sel-right.gif) no-repeat;
 }
 
