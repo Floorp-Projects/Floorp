@@ -185,7 +185,10 @@ printf( "\n\n\t\t\tIn nsFontMetricsPh::Init str=%s\n", str );
 	float app2dev;
 	app2dev = mDeviceContext->AppUnitsToDevUnits();
 
-	PRInt32 sizePoints = NSToIntRound( app2dev * mFont->size * 0.74 );
+	PRInt32 sizePoints;
+	if( mFont->systemFont == PR_TRUE )
+		sizePoints = NSToIntRound( app2dev * mFont->size * 0.68 );
+	else sizePoints = NSToIntRound( app2dev * mFont->size * 0.74 );
 	
 	char NSFullFontName[MAX_FONT_TAG];
 
