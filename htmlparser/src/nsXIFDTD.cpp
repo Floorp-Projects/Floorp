@@ -1736,11 +1736,12 @@ void nsXIFDTD::ProcessDocumentInfoTag(const nsIParserNode& aNode)
   {
     nsString tmpString("XIF_DOC_INFO");
     PushNodeAndToken(tmpString);
-    CAttributeToken* attribute = new CAttributeToken(key,value);
     nsIParserNode* top = PeekNode();
     if (top != nsnull)
+    {
+      CAttributeToken* attribute = new CAttributeToken(key,value);
       ((nsCParserNode*)top)->AddAttribute(attribute);
-
+    }
   }
 }
 
