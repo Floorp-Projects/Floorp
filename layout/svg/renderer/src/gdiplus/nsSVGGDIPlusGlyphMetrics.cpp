@@ -149,7 +149,7 @@ private:
   nsCOMPtr<nsISVGGlyphMetricsSource> mSource;
   
 public:
-  static nsDataHashtable<nsStringHashKey,const nsDependentString*> sFontAliases;
+  static nsDataHashtable<nsStringHashKey,const nsString*> sFontAliases;
 };
 
 /** @} */
@@ -157,7 +157,7 @@ public:
 //----------------------------------------------------------------------
 // implementation:
 
-nsDataHashtable<nsStringHashKey,const nsDependentString*>
+nsDataHashtable<nsStringHashKey,const nsString*>
 nsSVGGDIPlusGlyphMetrics::sFontAliases;
 
 nsSVGGDIPlusGlyphMetrics::nsSVGGDIPlusGlyphMetrics(nsISVGGlyphMetricsSource *src)
@@ -505,14 +505,14 @@ static PRBool FindFontFamily(const nsString& aFamily, PRBool aGeneric, void *aDa
     delete family;
     
     //try alias if there is one:
-    const nsDependentString *alias = nsnull;
+    const nsString *alias = nsnull;
     nsAutoString canonical_name(aFamily);
     ToLowerCase(canonical_name);
     nsSVGGDIPlusGlyphMetrics::sFontAliases.Get(canonical_name, &alias);
     if (alias) {
       // XXX this might cause a stack-overflow if there are cyclic
       // aliases in sFontAliases
-      retval = FindFontFamily(nsString(*alias), PR_FALSE, aData);
+      retval = FindFontFamily(*alias, PR_FALSE, aData);
     }
   }
 
