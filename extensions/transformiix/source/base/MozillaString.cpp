@@ -35,7 +35,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "TxString.h"
+#ifndef MOZ_XSL
 #include <iostream.h>
+#endif
 
 //
 //Default constructor ( nsString() )
@@ -531,7 +533,7 @@ MBool String::isEqual(const String& data) const
 {
   if (this == &data)
     return MB_TRUE;
-  else if (ptrNSString->Length() != data.length())
+  else if (length() != data.length())
     return MB_FALSE;
   else
   {

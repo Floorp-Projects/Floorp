@@ -136,10 +136,10 @@ class Node
 class NodeList
 {
   public:
-    virtual Node* item(Int32 index) = 0;
-    virtual Int32 getLength() = 0;
+    virtual Node* item(UInt32 index) = 0;
+    virtual UInt32 getLength() = 0;
   protected:
-    Int32 length;
+    UInt32 length;
 };
 
 //
@@ -160,8 +160,8 @@ class NodeListDefinition : public NodeList
     void append(Node* newNode);
 
     //Inherited from NodeList
-    Node* item(Int32 index);
-    Int32 getLength();
+    Node* item(UInt32 index);
+    UInt32 getLength();
 
   protected:
     struct ListItem {
@@ -233,8 +233,8 @@ class NodeDefinition : public Node, public NodeList
     MBool hasChildNodes() const;
 
     //Inherrited from NodeList
-    Node* item(Int32 index);
-    Int32 getLength();
+    Node* item(UInt32 index);
+    UInt32 getLength();
 
   protected:
     //Name, value, and attributes for this node.  Available to derrived
@@ -308,6 +308,9 @@ class Document : public NodeDefinition
     Node* insertBefore(Node* newChild, Node* refChild);
     Node* replaceChild(Node* newChild, Node* oldChild);
     Node* removeChild(Node* oldChild);
+
+    // Introduced in DOM Level 2
+    Element* getElementById(const String aID);
 
   private:
     Element* documentElement;

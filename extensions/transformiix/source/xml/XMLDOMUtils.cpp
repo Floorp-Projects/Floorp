@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.7 2000/10/26 16:45:26 axel%pike.org Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.8 2001/01/12 20:06:16 axel%pike.org Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2000/10/26 16:45:26 $
+ * @version $Revision: 1.8 $ $Date: 2001/01/12 20:06:16 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -46,7 +46,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
     //-- document nodes
     if ((nodeType != Node::DOCUMENT_NODE) && (!owner)) return 0;
     Node* newNode = 0;
-    int i = 0;
+    UInt32 i = 0;
     switch ( nodeType ) {
 
         case Node::ATTRIBUTE_NODE :
@@ -62,7 +62,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
             Document* doc = (Document*)node;
             Document* newDoc = new Document();
 #ifdef MOZ_XSL
-            owner->addWrapper(newDoc, newDoc->getKey());
+            owner->addWrapper(newDoc);
 #endif
             NodeList* nl = doc->getChildNodes();
             for (i = 0; i < nl->getLength(); i++) {
@@ -154,7 +154,7 @@ void XMLDOMUtils::getNodeValue(Node* node, String* target) {
         case Node::ELEMENT_NODE :
         {
             nl = node->getChildNodes();
-            for ( int i = 0; i < nl->getLength(); i++) {
+            for (UInt32 i = 0; i < nl->getLength(); i++) {
                 nodeType = nl->item(i)->getNodeType();
                 if ((nodeType == Node::TEXT_NODE) ||
                     (nodeType == Node::ELEMENT_NODE))

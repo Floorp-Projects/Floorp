@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: WildCardExpr.cpp,v 1.1 2000/04/06 07:46:00 kvisco%ziplink.net Exp $
+ * $Id: WildCardExpr.cpp,v 1.2 2001/01/12 20:06:37 axel%pike.org Exp $
  */
 
 #include "Expr.h"
@@ -30,7 +30,7 @@
  * This class represents a WildCardExpr as defined by the XSL
  * Working Draft
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:46:00 $
+ * @version $Revision: 1.2 $ $Date: 2001/01/12 20:06:37 $
 **/
 
 /**
@@ -48,7 +48,7 @@ ExprResult* WildCardExpr::evaluate(Node* context, ContextState* cs) {
 
     NodeList* nl = context->getChildNodes();
 
-    for (int i = 0; i < nl->getLength(); i++ ) {
+    for ( UInt32 i = 0; i < nl->getLength(); i++ ) {
         Node* node = nl->item(i);
         if ( node->getNodeType() == Node::ELEMENT_NODE )
             nodeSet->add(node);

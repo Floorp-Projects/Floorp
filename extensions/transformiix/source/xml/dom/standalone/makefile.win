@@ -17,10 +17,64 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s):
 
-DEPTH=..\..\..\..\..
+DEPTH=..\..\..\..\..\..
 
-DIRS=mozImpl
+!ifdef MOZ_XSL
+DEFINES=$(DEFINES) -DMOZ_XSL
+!endif
+
+CPPSRCS=Attr.cpp \
+        CDATASection.cpp \
+        CharacterData.cpp \
+        Comment.cpp \
+        DOMImplementation.cpp \
+        Document.cpp \
+        DocumentFragment.cpp \
+        DocumentType.cpp \
+        Element.cpp \
+        Entity.cpp \
+        EntityReference.cpp \
+        NamedNodeMap.cpp \
+        NodeDefinition.cpp \
+        NodeListDefinition.cpp \
+        Notation.cpp \
+        ProcessingInstruction.cpp \
+        Text.cpp \
+	$(NULL)
+
+CPP_OBJS=					\
+	  .\$(OBJDIR)\Attr.obj \
+        .\$(OBJDIR)\CDATASection.obj \
+        .\$(OBJDIR)\CharacterData.obj \
+        .\$(OBJDIR)\Comment.obj \
+        .\$(OBJDIR)\DOMImplementation.obj \
+        .\$(OBJDIR)\Document.obj \
+        .\$(OBJDIR)\DocumentFragment.obj \
+        .\$(OBJDIR)\DocumentType.obj \
+        .\$(OBJDIR)\Element.obj \
+        .\$(OBJDIR)\Entity.obj \
+        .\$(OBJDIR)\EntityReference.obj \
+        .\$(OBJDIR)\NamedNodeMap.obj \
+        .\$(OBJDIR)\NodeDefinition.obj \
+        .\$(OBJDIR)\NodeListDefinition.obj \
+        .\$(OBJDIR)\Notation.obj \
+        .\$(OBJDIR)\ProcessingInstruction.obj \
+        .\$(OBJDIR)\Text.obj \
+	$(NULL)
+
+EXPORTS = 					\
+	$(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\..\base -I..\..\dom \
+	-I..\..
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: $(OBJDIR) $(CPP_OBJS)

@@ -29,6 +29,8 @@
 
 #include "mozilladom.h"
 
+MOZ_DECL_CTOR_COUNTER(MozillaObjectWrapper)
+
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
@@ -38,10 +40,11 @@
 MozillaObjectWrapper::MozillaObjectWrapper(nsISupports* aNsObject,
         Document* aOwner)
 {
+    MOZ_COUNT_CTOR(MozillaObjectWrapper);
     nsObject = aNsObject;
     ownerDocument = aOwner;
     if (ownerDocument && (ownerDocument != this))
-        ownerDocument->addWrapper(this, nsObject.get());
+        ownerDocument->addWrapper(this);
 }
 
 /**
@@ -49,9 +52,10 @@ MozillaObjectWrapper::MozillaObjectWrapper(nsISupports* aNsObject,
  */
 MozillaObjectWrapper::~MozillaObjectWrapper()
 {
+    MOZ_COUNT_DTOR(MozillaObjectWrapper);
     if (ownerDocument && (ownerDocument != this) &&
             !ownerDocument->inHashTableDeletion())
-        ownerDocument->removeWrapper(nsObject.get());
+        ownerDocument->removeWrapper(getNSObj());
 }
 
 /**
@@ -74,15 +78,15 @@ void MozillaObjectWrapper::setNSObj(nsISupports* aNsObject, Document* aOwner)
     nsObject = aNsObject;
     ownerDocument = aOwner;
     if (ownerDocument && (ownerDocument != this))
-        ownerDocument->addWrapper(this, nsObject.get());
+        ownerDocument->addWrapper(this);
 }
 
 /**
- * Get the hash key for the Mozilla object that this wrapper wraps.
+ * Get the Mozilla object wrapped with this wrapper.
  *
- * @return the wrapper's hash key
+ * @return the Mozilla object wrapped with this wrapper
  */
-void* MozillaObjectWrapper::getKey() const
+nsISupports* MozillaObjectWrapper::getNSObj() const
 {
-    return nsObject.get();
+    return nsObject;
 };

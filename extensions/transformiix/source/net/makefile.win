@@ -22,7 +22,7 @@
 DEPTH=..\..\..\..
 
 !if defined(MOZ_XSL)
-DEFINES=-DMOZ_XSL
+DEFINES= $(DEFINES) -DMOZ_XSL
 !endif
 
 CPPSRCS=		\

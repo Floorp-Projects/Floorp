@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: AttributeExpr.cpp,v 1.1 2000/04/06 07:44:41 kvisco%ziplink.net Exp $
+ * $Id: AttributeExpr.cpp,v 1.2 2001/01/12 20:06:30 axel%pike.org Exp $
  */
 
 #include "Expr.h"
@@ -30,7 +30,7 @@
  * This class represents a ElementExpr as defined by the XSL
  * Working Draft
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:44:41 $
+ * @version $Revision: 1.2 $ $Date: 2001/01/12 20:06:30 $
 **/
 
 //- Constructors -/
@@ -68,7 +68,7 @@ ExprResult* AttributeExpr::evaluate(Node* context, ContextState* cs) {
     if ( !context ) return nodeSet;
     NamedNodeMap* atts = context->getAttributes();
     if ( atts ) {
-        for (int i = 0; i < atts->getLength(); i++ ) {
+        for (UInt32 i = 0; i < atts->getLength(); i++ ) {
             Attr* attr = (Attr*)atts->item(i);
             if ( isWild ) nodeSet->add(attr);
             else {

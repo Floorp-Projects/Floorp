@@ -21,6 +21,10 @@
 
 DEPTH=..\..\..\..\..
 
-DIRS=mozImpl
+!ifdef MOZ_XSL
+DIRS = mozImpl
+!else
+DIRS = standalone
+!endif
 
 include <$(DEPTH)\config\rules.mak>

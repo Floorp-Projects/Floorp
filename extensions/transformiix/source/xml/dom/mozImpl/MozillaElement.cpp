@@ -132,7 +132,7 @@ void Element::removeAttribute(const String& aName)
     // Second, remove the attribute wrapper object from the hash table if it is
     // there.  It might not be if the attribute was created using
     // Element::setAttribute. If it was removed, then delete it.
-    attrWrapper = (Attr*)ownerDocument->removeWrapper(attr.get());
+    attrWrapper = (Attr*)ownerDocument->removeWrapper(attr);
     if (attrWrapper)
         delete attrWrapper;
 
@@ -195,7 +195,7 @@ Attr* Element::removeAttributeNode(Attr* aOldAttr)
     if (NS_SUCCEEDED(nsElement->RemoveAttributeNode(aOldAttr->getNSAttr(),
             getter_AddRefs(removedAttr))))
     {
-        attrWrapper = (Attr*)ownerDocument->removeWrapper(removedAttr.get());
+        attrWrapper = (Attr*)ownerDocument->removeWrapper(aOldAttr);
         if (!attrWrapper)
             attrWrapper =  new Attr(removedAttr, ownerDocument);
         return attrWrapper;

@@ -18,39 +18,16 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Peter Van der Beken, peterv@netscape.com
+#    -- original author.
 
-DEPTH=..\..\..\..\..
+DEPTH=..\..\..
 
-!if defined(MOZ_XSL)
-DEFINES=$(DEFINES) -DMOZ_XSL
-!endif
+XPIDLSRCS = .\nsIXPathNodeSelector.idl  \
+            .\nsISyncLoader.idl         \
+	      $(NULL)
 
-CPPSRCS=					\
-	GenerateIDFunctionCall.cpp		\
-	DocumentFunctionCall.cpp		\
-	SystemPropertyFunctionCall.cpp	\
-	CurrentFunctionCall.cpp			\
-	$(NULL)
-
-CPP_OBJS=						\
-	.\$(OBJDIR)\GenerateIDFunctionCall.obj		\
-	.\$(OBJDIR)\DocumentFunctionCall.obj		\
-	.\$(OBJDIR)\SystemPropertyFunctionCall.obj	\
-	.\$(OBJDIR)\CurrentFunctionCall.obj			\
-	$(NULL)
-
-EXPORTS =	\
-	$(NULL)
-
-LINCS= $(LINCS) -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\..\xml\dom \
-	-I..\..\xpath -I..\..\xml -I..\ -I..\..\xml\util \
-	-I..\..\net -I$(DEPTH)\expat -I..\..\xml\parser
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
+MODULE=transformiix
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(OBJDIR) $(CPP_OBJS)

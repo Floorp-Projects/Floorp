@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: ElementExpr.cpp,v 1.2 2000/11/07 10:49:07 kvisco%ziplink.net Exp $
+ * $Id: ElementExpr.cpp,v 1.3 2001/01/12 20:06:31 axel%pike.org Exp $
  */
 
 #include "Expr.h"
@@ -83,7 +83,7 @@ ExprResult* ElementExpr::evaluate(Node* context, ContextState* cs) {
 
     NodeList* nl = context->getChildNodes();
 
-    for (int i = 0; i < nl->getLength(); i++ ) {
+    for (UInt32 i = 0; i < nl->getLength(); i++ ) {
         Node* node = nl->item(i);
         if (matches(node, context, cs)) nodeSet->add(node);
     }

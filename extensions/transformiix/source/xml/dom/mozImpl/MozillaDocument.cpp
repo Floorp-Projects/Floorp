@@ -31,6 +31,13 @@
 
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 
+PR_STATIC_CALLBACK(PRBool)
+DeleteWrapper(nsHashKey *aKey, void *aData, void* closure)
+{
+    delete (MozillaObjectWrapper*)aData;
+    return PR_TRUE;
+}
+
 /**
  * Construct a new Mozilla document and wrap it. The caller is responsible for
  * deleting the wrapper object!
@@ -50,8 +57,9 @@ Document::Document() : Node(NULL, NULL)
                 getter_AddRefs(document));
     //if (NS_FAILED(res)) return NULL;
     nsDocument = document;
+    wrapperHashTable = new nsObjectHashtable(nsnull, nsnull, DeleteWrapper, nsnull);
     bInHashTableDeletion = PR_FALSE;
-    addWrapper(this, getKey());
+    addWrapper(this);
 }
 
 /**
@@ -63,8 +71,9 @@ Document::Document() : Node(NULL, NULL)
 Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, this)
 {
     nsDocument = aDocument;
+    wrapperHashTable = new nsObjectHashtable(nsnull, nsnull, DeleteWrapper, nsnull);
     bInHashTableDeletion = PR_FALSE;
-    addWrapper(this, getKey());
+    addWrapper(this);
 }
 
 /**
@@ -72,8 +81,9 @@ Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, this)
  */
 Document::~Document()
 {
-    removeWrapper(getKey());
+    removeWrapper(this);
     bInHashTableDeletion = PR_TRUE;
+    delete wrapperHashTable;
 }
 
 /**
@@ -190,8 +200,9 @@ DocumentFragment* Document::createDocumentFragment(
 
     if (aFragment)
     {
+        nsISupportsKey key(aFragment);
         docFragWrapper =
-            (DocumentFragment*)wrapperHashTable.retrieve(aFragment);
+            (DocumentFragment*)wrapperHashTable->Get(&key);
 
         if (!docFragWrapper)
             docFragWrapper = new DocumentFragment(aFragment, this);
@@ -219,6 +230,23 @@ Element* Document::createElement(const String& aTagName)
 }
 
 /**
+ * Call nsIDOMDocument::GetElementById to get Element with ID.
+ *
+ * @param aID the name of ID referencing the element
+ *
+ * @return the Element
+ */
+Element* Document::getElementById(const String aID)
+{
+    nsCOMPtr<nsIDOMElement> element;
+
+    if (NS_SUCCEEDED(nsDocument->GetElementById(aID.getConstNSString(), getter_AddRefs(element))))
+        return createElement(element);
+    else
+        return NULL;
+}
+
+/**
  * Create a wrapper for a nsIDOMElement, reuses an existing wrapper if possible.
  *
  * @param aElement the nsIDOMElement you want to wrap
@@ -231,7 +259,8 @@ Element* Document::createElement(nsIDOMElement* aElement)
 
     if (aElement)
     {
-        elemWrapper = (Element*)wrapperHashTable.retrieve(aElement);
+        nsISupportsKey key(aElement);
+        elemWrapper = (Element*)wrapperHashTable->Get(&key);
 
         if (!elemWrapper)
             elemWrapper = new Element(aElement, this);
@@ -295,7 +324,8 @@ Attr* Document::createAttribute(nsIDOMAttr* aAttr)
 
     if (aAttr)
     {
-        attrWrapper = (Attr*)wrapperHashTable.retrieve(aAttr);
+        nsISupportsKey key(aAttr);
+        attrWrapper = (Attr*)wrapperHashTable->Get(&key);
 
         if (!attrWrapper)
             attrWrapper = new Attr(aAttr, this);
@@ -338,7 +368,8 @@ Text* Document::createTextNode(nsIDOMText* aText)
 
     if (aText)
     {
-        textWrapper = (Text*)wrapperHashTable.retrieve(aText);
+        nsISupportsKey key(aText);
+        textWrapper = (Text*)wrapperHashTable->Get(&key);
 
         if (!textWrapper)
             textWrapper = new Text(aText, this);
@@ -381,7 +412,8 @@ Comment* Document::createComment(nsIDOMComment* aComment)
 
     if (aComment)
     {
-        commentWrapper = (Comment*)wrapperHashTable.retrieve(aComment);
+        nsISupportsKey key(aComment);
+        commentWrapper = (Comment*)wrapperHashTable->Get(&key);
 
         if (!commentWrapper)
             commentWrapper = new Comment(aComment, this);
@@ -425,7 +457,8 @@ CDATASection* Document::createCDATASection(nsIDOMCDATASection* aCdata)
 
     if (cdataWrapper)
     {
-        cdataWrapper = (CDATASection*)wrapperHashTable.retrieve(aCdata);
+        nsISupportsKey key(aCdata);
+        cdataWrapper = (CDATASection*)wrapperHashTable->Get(&key);
 
         if (!cdataWrapper)
             cdataWrapper = new CDATASection(aCdata, this);
@@ -474,7 +507,8 @@ ProcessingInstruction* Document::createProcessingInstruction(
 
     if (aPi)
     {
-        piWrapper = (ProcessingInstruction*)wrapperHashTable.retrieve(aPi);
+        nsISupportsKey key(aPi);
+        piWrapper = (ProcessingInstruction*)wrapperHashTable->Get(&key);
 
         if (!piWrapper)
             piWrapper = new ProcessingInstruction(aPi, this);
@@ -519,8 +553,8 @@ EntityReference* Document::createEntityReference(
 
     if (aEntityRef)
     {
-        entityWrapper = (EntityReference*) wrapperHashTable.retrieve(
-                    aEntityRef);
+        nsISupportsKey key(aEntityRef);
+        entityWrapper = (EntityReference*)wrapperHashTable->Get(&key);
 
         if (!entityWrapper)
             entityWrapper = new EntityReference(aEntityRef, this);
@@ -542,7 +576,8 @@ Entity* Document::createEntity(nsIDOMEntity* aEntity)
 
     if (aEntity)
     {
-        entityWrapper = (Entity*)wrapperHashTable.retrieve(aEntity);
+        nsISupportsKey key(aEntity);
+        entityWrapper = (Entity*)wrapperHashTable->Get(&key);
 
         if (!entityWrapper)
             entityWrapper = new Entity(aEntity, this);
@@ -564,7 +599,8 @@ Node* Document::createNode(nsIDOMNode* aNode)
 
     if (aNode)
     {
-        nodeWrapper = (Node*)wrapperHashTable.retrieve(aNode);
+        nsISupportsKey key(aNode);
+        nodeWrapper = (Node*)wrapperHashTable->Get(&key);
 
         if (!nodeWrapper)
             nodeWrapper = new Node(aNode, this);
@@ -587,7 +623,8 @@ Notation* Document::createNotation(nsIDOMNotation* aNotation)
 
     if (aNotation)
     {
-        notationWrapper = (Notation*)wrapperHashTable.retrieve(aNotation);
+        nsISupportsKey key(aNotation);
+        notationWrapper = (Notation*)wrapperHashTable->Get(&key);
 
         if (!notationWrapper)
             notationWrapper = new Notation(aNotation, this);
@@ -611,7 +648,8 @@ DOMImplementation* Document::createDOMImplementation(
 
     if (aImpl)
     {
-        implWrapper = (DOMImplementation*)wrapperHashTable.retrieve(aImpl);
+        nsISupportsKey key(aImpl);
+        implWrapper = (DOMImplementation*)wrapperHashTable->Get(&key);
 
         if (!implWrapper)
             implWrapper = new DOMImplementation(aImpl, this);
@@ -634,7 +672,8 @@ DocumentType* Document::createDocumentType(nsIDOMDocumentType* aDoctype)
 
     if (aDoctype)
     {
-        doctypeWrapper = (DocumentType*)wrapperHashTable.retrieve(aDoctype);
+        nsISupportsKey key(aDoctype);
+        doctypeWrapper = (DocumentType*)wrapperHashTable->Get(&key);
 
         if (!doctypeWrapper)
             doctypeWrapper = new DocumentType(aDoctype, this);
@@ -657,7 +696,8 @@ NodeList* Document::createNodeList(nsIDOMNodeList* aList)
 
     if (aList)
     {
-        listWrapper = (NodeList*)wrapperHashTable.retrieve(aList);
+        nsISupportsKey key(aList);
+        listWrapper = (NodeList*)wrapperHashTable->Get(&key);
 
         if (!listWrapper)
             listWrapper = new NodeList(aList, this);
@@ -680,7 +720,8 @@ NamedNodeMap* Document::createNamedNodeMap(nsIDOMNamedNodeMap* aMap)
 
     if (aMap)
     {
-        mapWrapper = (NamedNodeMap*)wrapperHashTable.retrieve(aMap);
+        nsISupportsKey key(aMap);
+        mapWrapper = (NamedNodeMap*)wrapperHashTable->Get(&key);
 
         if (!mapWrapper)
             mapWrapper = new NamedNodeMap(aMap, this);
@@ -743,7 +784,7 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
             break;
 
         case nsIDOMNode::DOCUMENT_NODE:
-            if (aNode == getKey())
+            if (aNode == getNSObj())
                 return this;
             else {
                 // XXX (pvdb) We need a createDocument here!
@@ -774,9 +815,10 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
  * @param aObj the MITREObject you want to add
  * @param aHashValue the key for the object in the hash table
  */
-void Document::addWrapper(MITREObject* aObj, void* aHashValue)
+void Document::addWrapper(MozillaObjectWrapper* aObject)
 {
-    wrapperHashTable.add(aObj, aHashValue);
+    nsISupportsKey key(aObject->getNSObj());
+    wrapperHashTable->Put(&key, aObject);
 }
 
 /**
@@ -786,7 +828,21 @@ void Document::addWrapper(MITREObject* aObj, void* aHashValue)
  *
  * @return the wrapper as a MITREObject
  */
-MITREObject* Document::removeWrapper(void* aHashValue)
+MITREObject* Document::removeWrapper(nsISupports* aMozillaObject)
 {
-    return wrapperHashTable.remove(aHashValue);
+    nsISupportsKey key(aMozillaObject);
+    return (MITREObject*)wrapperHashTable->Remove(&key);
+}
+
+/**
+ * Remove a wrapper from the document's hash table and return it to the caller.
+ *
+ * @param aHashValue the key for the object you want to remove
+ *
+ * @return the wrapper as a MITREObject
+ */
+MITREObject* Document::removeWrapper(MozillaObjectWrapper* aObject)
+{
+    nsISupportsKey key(aObject->getNSObj());
+    return (MITREObject*)wrapperHashTable->Remove(&key);
 }

@@ -24,13 +24,13 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- added LANG_FN
  *
- * $Id: XPathNames.cpp,v 1.3 2000/06/11 12:31:28 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XPathNames.cpp,v 1.4 2001/01/12 20:06:37 axel%pike.org Exp $
  */
 
 /**
  * XPath names
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/06/11 12:31:28 $
+ * @version $Revision: 1.4 $ $Date: 2001/01/12 20:06:37 $
 **/
 
 #include "FunctionLib.h"
@@ -41,10 +41,12 @@ const String XPathNames::CONCAT_FN               = "concat";
 const String XPathNames::CONTAINS_FN             = "contains";
 const String XPathNames::COUNT_FN                = "count";
 const String XPathNames::FALSE_FN                = "false";
+const String XPathNames::ID_FN                   = "id";
 const String XPathNames::LAST_FN                 = "last";
 const String XPathNames::LOCAL_NAME_FN           = "local-name";
 const String XPathNames::NAME_FN                 = "name";
 const String XPathNames::NAMESPACE_URI_FN        = "namespace-uri";
+const String XPathNames::NORMALIZE_SPACE_FN      = "normalize-space";
 const String XPathNames::NOT_FN                  = "not";
 const String XPathNames::POSITION_FN             = "position";
 const String XPathNames::STARTS_WITH_FN          = "starts-with";
@@ -53,6 +55,7 @@ const String XPathNames::STRING_LENGTH_FN        = "string-length";
 const String XPathNames::SUBSTRING_FN            = "substring";
 const String XPathNames::SUBSTRING_AFTER_FN      = "substring-after";
 const String XPathNames::SUBSTRING_BEFORE_FN     = "substring-before";
+const String XPathNames::SUM_FN                  = "sum";
 const String XPathNames::TRANSLATE_FN            = "translate";
 const String XPathNames::TRUE_FN                 = "true";
 // OG+

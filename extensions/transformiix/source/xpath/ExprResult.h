@@ -23,7 +23,7 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- changed constant short result types to enum
  *
- * $Id: ExprResult.h,v 1.6 2000/06/11 11:43:07 Peter.VanderBeken%pandora.be Exp $
+ * $Id: ExprResult.h,v 1.7 2001/01/12 20:06:33 axel%pike.org Exp $
  */
 
 #include "MITREObject.h"
@@ -42,7 +42,7 @@
  * <BR/>
  * Note: for NodeSet, see NodeSet.h <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.6 $ $Date: 2000/06/11 11:43:07 $
+ * @version $Revision: 1.7 $ $Date: 2001/01/12 20:06:33 $
 */
 
 class ExprResult : public MITREObject {
@@ -65,6 +65,7 @@ public:
      * @return the type of ExprResult represented
     **/
     virtual short getResultType()      = 0;
+
     /**
      * Creates a String representation of this ExprResult
      * @param str the destination string to append the String representation to.

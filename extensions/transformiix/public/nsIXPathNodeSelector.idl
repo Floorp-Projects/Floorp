@@ -1,0 +1,45 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMNode;
+interface nsIDOMNodeList;
+
+/**
+ * The nsIXPathNodeSelector can be used to query a DOM tree using XPath.
+ */
+
+[scriptable, uuid(f70c3f08-1dd1-11b2-b582-db02dfacb173)]
+interface nsIXPathNodeSelector : nsISupports
+{
+
+  /**
+   * Return a nodelist that is the result of an XPath query of the tree
+   * fragment starting with the context node.
+   *
+   * @param aContextNode The context node for the query.
+   * @param aPattern The pattern for the query.
+   *
+   * @returns The result of the XPath query.
+   */
+    nsIDOMNodeList selectNodes(in nsIDOMNode aContextNode,
+	                         in string aPattern);						  
+};
+
+
+%{ C++
+extern nsresult
+NS_NewXPathNodeSelector(nsIXPathNodeSelector** aNodeSelector);
+%}

@@ -29,7 +29,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.cpp,v 1.6 2000/07/06 12:35:35 axel%pike.org Exp $
+ * $Id: URIUtils.cpp,v 1.7 2001/01/12 20:06:13 axel%pike.org Exp $
  */
 
 #include "URIUtils.h"
@@ -38,9 +38,10 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2000/07/06 12:35:35 $
+ * @version $Revision: 1.7 $ $Date: 2001/01/12 20:06:13 $
 **/
 
+#ifndef MOZ_XSL
 //- Constants -/
 
 const String URIUtils::HTTP_PROTOCOL  = "http";
@@ -112,13 +113,13 @@ istream* URIUtils::getInputStream
     return inStream;
 
 } //-- getInputStream
+#endif
 
 /**
     * Returns the document base of the href argument
     * @return the document base of the given href
 **/
 void URIUtils::getDocumentBase(String& href, String& dest) {
-
 #ifdef MOZ_XSL
     String docBase("");
     nsCOMPtr<nsIURI> pURL;
@@ -165,7 +166,6 @@ void URIUtils::getDocumentBase(String& href, String& dest) {
     }
     dest.append(docBase);
 #endif
-
 } //-- getDocumentBase
 
 /**
@@ -174,8 +174,6 @@ void URIUtils::getDocumentBase(String& href, String& dest) {
  * The new resolved href will be appended to the given dest String
 **/
 void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
-
-
 #ifdef MOZ_XSL
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
@@ -183,14 +181,14 @@ void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
     NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
     if (NS_SUCCEEDED(result)) {
         // XXX This is ugly, there must be an easier (cleaner way).
-        char *baseStr = (((String)documentBase).getConstNSString()).ToNewCString();
+        char *baseStr = (documentBase.getConstNSString()).ToNewCString();
         result = pService->NewURI(baseStr, nsnull, getter_AddRefs(pURL));
         nsCRT::free(baseStr);
         if (NS_SUCCEEDED(result)) {
             nsXPIDLCString newURL;
 
             // XXX This is ugly, there must be an easier (cleaner way).
-            char *hrefStr = (((String)documentBase).getConstNSString()).ToNewCString();
+            char *hrefStr = (href.getConstNSString()).ToNewCString();
             result = pURL->Resolve(hrefStr, getter_Copies(newURL));
             nsCRT::free(hrefStr);
             if (NS_SUCCEEDED(result)) {
@@ -234,9 +232,9 @@ void URIUtils::resolveHref(String& href, String& documentBase, String& dest) {
     delete uri;
     delete newUri;
 #endif
-
 } //-- resolveHref
 
+#ifndef MOZ_XSL
 istream* URIUtils::openStream(ParsedURI* uri) {
     if ( !uri ) return 0;
     // check protocol
@@ -264,11 +262,11 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
     // look for protocol
     int totalCount = uri.length();
     int charCount = 0;
-    char prevCh = '\0';
+    UNICODE_CHAR prevCh = '\0';
     int fslash = 0;
     String buffer(uri.length());
     while ( charCount < totalCount ) {
-        char ch = uri.charAt(charCount++);
+        UNICODE_CHAR ch = uri.charAt(charCount++);
         switch(ch) {
             case '.' :
                 if ( mode == PROTOCOL_MODE ) {
@@ -286,7 +284,6 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
                         mode = HOST_MODE;
                         break;
                     case HOST_MODE :
-
                         uriTokens->host = buffer;
                         buffer.clear();
                         mode = PORT_MODE;
@@ -383,5 +380,5 @@ void main(int argc, char** argv) {
     cout << "resolved url : " << url << endl;
 
 }
-/* -*- */
-
+*/
+#endif

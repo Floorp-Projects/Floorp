@@ -28,6 +28,8 @@
 
 #include "mozilladom.h"
 
+MOZ_DECL_CTOR_COUNTER(Node)
+
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
@@ -37,6 +39,7 @@
 Node::Node(nsIDOMNode* aNode, Document* aOwner) :
             MozillaObjectWrapper(aNode, aOwner)
 {
+    MOZ_COUNT_CTOR(Node);
     nsNode = aNode;
 }
 
@@ -45,6 +48,7 @@ Node::Node(nsIDOMNode* aNode, Document* aOwner) :
  */
 Node::~Node()
 {
+    MOZ_COUNT_DTOR(Node);
 }
 
 /**
@@ -57,7 +61,7 @@ void Node::setNSObj(nsIDOMNode* aNode)
     // First we must remove this wrapper from the document hash table since we 
     // don't want to be associated with the existing nsIDOM* object anymore
     if (ownerDocument && nsNode)
-        ownerDocument->removeWrapper(getKey());
+        ownerDocument->removeWrapper(nsNode);
 
     // Now assume control of the new node
     MozillaObjectWrapper::setNSObj(aNode);
@@ -65,7 +69,7 @@ void Node::setNSObj(nsIDOMNode* aNode)
 
     // Finally, place our selves back in the hash table
     if (ownerDocument && aNode)
-        ownerDocument->addWrapper(this, getKey());
+        ownerDocument->addWrapper(this);
 }
 
 /**
@@ -84,7 +88,7 @@ void Node::setNSObj(nsIDOMNode* aNode, Document* aOwner)
  *
  * @return the Mozilla object wrapped with this wrapper
  */
-nsIDOMNode* Node::getNSObj()
+nsIDOMNode* Node::getNSNode()
 {
     return nsNode;
 }
@@ -291,8 +295,8 @@ Node* Node::insertBefore(Node* aNewChild, Node* aRefChild)
     if (nsNode == NULL)
         return NULL;
 
-    if (NS_SUCCEEDED(nsNode->InsertBefore(aNewChild->getNSObj(),
-            aRefChild->getNSObj(), getter_AddRefs(returnValue))))
+    if (NS_SUCCEEDED(nsNode->InsertBefore(aNewChild->getNSNode(),
+            aRefChild->getNSNode(), getter_AddRefs(returnValue))))
         return ownerDocument->createWrapper(returnValue);
     else
         return NULL;
@@ -313,8 +317,8 @@ Node* Node::replaceChild(Node* aNewChild, Node* aOldChild)
     if (nsNode == NULL)
         return NULL;
 
-    if (NS_SUCCEEDED(nsNode->ReplaceChild(aNewChild->getNSObj(),
-               aOldChild->getNSObj(), getter_AddRefs(returnValue))))
+    if (NS_SUCCEEDED(nsNode->ReplaceChild(aNewChild->getNSNode(),
+               aOldChild->getNSNode(), getter_AddRefs(returnValue))))
         return (Node*)ownerDocument->removeWrapper(returnValue.get());
     else
         return NULL;
@@ -334,7 +338,7 @@ Node* Node::removeChild(Node* aOldChild)
     if (nsNode == NULL)
         return NULL;
 
-    if (NS_SUCCEEDED(nsNode->RemoveChild(aOldChild->getNSObj(),
+    if (NS_SUCCEEDED(nsNode->RemoveChild(aOldChild->getNSNode(),
             getter_AddRefs(returnValue))))
         return (Node*)ownerDocument->removeWrapper(returnValue.get());
     else
@@ -355,7 +359,7 @@ Node* Node::appendChild(Node* aNewChild)
     if (nsNode == NULL)
         return NULL;
 
-    if (NS_SUCCEEDED(nsNode->AppendChild(aNewChild->getNSObj(),
+    if (NS_SUCCEEDED(nsNode->AppendChild(aNewChild->getNSNode(),
             getter_AddRefs(returnValue))))
         return ownerDocument->createWrapper(returnValue);
     else
