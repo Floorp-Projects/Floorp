@@ -693,7 +693,10 @@ nsMenuPopupFrame::GetWidget(nsIWidget **aWidget)
 NS_IMETHODIMP
 nsMenuPopupFrame::CreateDismissalListener()
 {
-  NS_ADDREF(nsMenuFrame::mDismissalListener = new nsMenuDismissalListener());
+  nsMenuDismissalListener *listener = new nsMenuDismissalListener();
+  if (!listener) return NS_ERROR_OUT_OF_MEMORY;
+  nsMenuFrame::mDismissalListener = listener;
+  NS_ADDREF(listener);
   return NS_OK;
 }
 
