@@ -1050,7 +1050,7 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
   if (NS_FAILED(rv))
     return rv;
 
-  nscoord width;
+  nscoord width, xEndRun;
   PRBool isRTL = PR_FALSE;
   PRInt32 i, start, limit, length;
   PRUint8 charType;
@@ -1076,6 +1076,23 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
     PRInt32 subRunCount = 1;
     PRInt32 subRunLimit = typeLimit;
 
+    /*
+     * If |level| is even, i.e. the direction of the run is left-to-right, we
+     * render the subruns from left to right and increment the x-coordinate
+     * |aX| by the width of each subrun after rendering.
+     *
+     * If |level| is odd, i.e. the direction of the run is right-to-left, we
+     * render the subruns from right to left. We begin by incrementing |aX| by
+     * the width of the whole run, and then decrement it by the width of each
+     * subrun before rendering. After rendering all the subruns, we restore the
+     * x-coordinate of the end of the run for the start of the next run.
+     */
+    if (level & 1) {
+      aRenderingContext.GetWidth(aText + start, subRunLength, width, nsnull);
+      aX += width;
+      xEndRun = aX;
+    }
+
     while (subRunCount > 0) {
       // CalculateCharType can increment subRunCount if the run
       // contains mixed character types
@@ -1094,14 +1111,22 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
                         isBidiSystem);
 
       aRenderingContext.GetWidth(aText + start, subRunLength, width, nsnull);
+      if (level & 1) {
+        aX -= width;
+      }
       aRenderingContext.DrawString(aText + start, subRunLength, aX, aY, width);
-      aX += width;
+      if (!(level & 1)) {
+        aX += width;
+      }
 
       --subRunCount;
       start = lineOffset;
       subRunLimit = typeLimit;
       subRunLength = typeLimit - lineOffset;
     } // while
+    if (level & 1) {
+      aX = xEndRun;
+    }
   } // for
 
   // Restore original reading order
