@@ -1724,10 +1724,42 @@ function IsSpellCheckerInstalled()
   return gHaveSpellChecker;
 }
 
+var gHaveFind = false;
+var gSoughtFind = false;
+//-----------------------------------------------------------------------------------
+function IsFindInstalled()
+{
+  if (gSoughtFind)
+    return gHaveFind;
+
+  var findClass = Components.classes["component://netscape/appshell/component/find"]; 
+  gHaveFind = (findClass != null);
+  gSoughtFind = true;
+  dump("Have Find = "+gHaveFind+"\n");
+  return gHaveFind;
+}
+
 //-----------------------------------------------------------------------------------
 function RemoveInapplicableUIElements()
 {
-  // if no spell checker, remove spell checker ui
+   // if no find, remove find ui
+  if (!IsFindInstalled())
+  {
+    dump("Hiding find items\n");
+    
+    var findMenuItem = document.getElementById("menu_find");
+    if (findMenuItem)
+      findMenuItem.setAttribute("hidden", "true");
+
+    findMenuItem = document.getElementById("menu_findnext");
+    if (findMenuItem)
+      findMenuItem.setAttribute("hidden", "true");
+    
+	var findSepItem  = document.getElementById("sep_find");
+      if (findSepItem)
+        findSepItem.parentNode.removeChild(findSepItem);
+ }
+   // if no spell checker, remove spell checker ui
   if (!IsSpellCheckerInstalled())
   {
     dump("Hiding spell checker items\n");
@@ -1937,4 +1969,3 @@ function EditorTableCellProperties()
     window._content.focus();
   }
 }
-
