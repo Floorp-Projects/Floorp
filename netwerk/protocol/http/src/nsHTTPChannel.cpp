@@ -136,12 +136,15 @@ nsHTTPChannel::~nsHTTPChannel()
     CRTFREEIF(mProxy);
 }
 
-NS_IMPL_ISUPPORTS5(nsHTTPChannel, 
-                   nsIHTTPChannel, 
-                   nsIChannel, 
-                   nsIInterfaceRequestor, 
-                   nsIProgressEventSink,
-                   nsIProxy);
+NS_IMPL_THREADSAFE_ADDREF(nsHTTPChannel)
+NS_IMPL_THREADSAFE_RELEASE(nsHTTPChannel)
+
+NS_IMPL_QUERY_INTERFACE5(nsHTTPChannel,
+                         nsIHTTPChannel,
+                         nsIChannel,
+                         nsIInterfaceRequestor,
+                         nsIProgressEventSink,
+                         nsIProxy);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:

@@ -45,7 +45,10 @@ nsHTTPEncodeStream::~nsHTTPEncodeStream()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsHTTPEncodeStream, nsIInputStream, nsISeekableStream);
+NS_IMPL_THREADSAFE_ADDREF(nsHTTPEncodeStream);
+NS_IMPL_THREADSAFE_RELEASE(nsHTTPEncodeStream);
+
+NS_IMPL_QUERY_INTERFACE2(nsHTTPEncodeStream, nsIInputStream, nsISeekableStream);
 
 NS_METHOD
 nsHTTPEncodeStream::Create(nsIInputStream *rawStream, PRUint32 flags,
