@@ -101,19 +101,19 @@ nsButtonPrefListener.prototype =
     if (topic != "nsPref:changed") return;
     if (prefName.substr(0, this.domain.length) != this.domain) return;
 
-    var button = document.getElementById("cmd_highlight");
+    var cmd = document.getElementById("cmd_highlight");
     var mixedObj = new Object();
-    if (button) {
+    if (cmd && gIsHTMLEditor) {
       var prefs = GetPrefs();
       var useCSS = prefs.getBoolPref(prefName);
       if (useCSS && gEditor && gIsHTMLEditor) {
-        button.removeAttribute("disabled");
         var state = gEditor.getHighlightColorState(mixedObj);
-        button.setAttribute("state", state);
+        cmd.setAttribute("state", state);
+        cmd.removeAttribute("collapsed");
       }      
       else {
-        button.setAttribute("disabled", "true");
-        button.setAttribute("state", "transparent");
+        cmd.setAttribute("state", "transparent");
+        cmd.setAttribute("collapsed", "true");
       }
 
       if (gEditor && gIsHTMLEditor)
@@ -375,6 +375,16 @@ function EditorStartup(editorType, editorElement)
   SetupComposerWindowCommands();
 
   gCSSPrefListener = new nsButtonPrefListener();
+
+  // hide Highlight button if we are in an HTML editor with CSS mode off
+  var cmd = document.getElementById("cmd_highlight");
+  if (cmd) {
+    var prefs = GetPrefs();
+    var useCSS = prefs.getBoolPref("editor.use_css");
+    if (!useCSS && gIsHTMLEditor) {
+      cmd.setAttribute("collapsed", "true");
+    }
+  }
 
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
@@ -986,6 +996,7 @@ function onHighlightColorChange()
     }
   }
 }
+
 function onFontColorChange()
 {
   var commandNode = document.getElementById("cmd_fontColor");

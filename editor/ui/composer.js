@@ -77,7 +77,7 @@ pref("editor.quotesPreformatted",            false);
 pref("editor.publish.",                      "");
 pref("editor.lastFileLocation.image",        "");
 pref("editor.lastFileLocation.html",         "");
-pref("editor.use_css",                       false);
+pref("editor.use_css",                       true);
 pref("editor.css.default_length_unit",       "px");
 pref("editor.save_associated_files",         true);
 pref("editor.always_show_publish_dialog",    false);
