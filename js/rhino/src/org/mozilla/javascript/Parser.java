@@ -95,13 +95,11 @@ class Parser {
      * parse failure will result in a call to the current Context's
      * ErrorReporter.)
      */
-    public ScriptOrFnNode parse(TokenStream ts, IRFactory nf, 
+    public ScriptOrFnNode parse(TokenStream ts, IRFactory nf,
                                 Decompiler decompiler)
         throws IOException
     {
         this.decompiler = decompiler;
-        decompiler.startScript();
-
         this.nf = nf;
         currentScriptOrFn = nf.createScript();
 
@@ -143,7 +141,7 @@ class Parser {
             return null;
         }
 
-        String source = decompiler.stopScript();
+        String source = decompiler.getEncodedSource();
         this.decompiler = null; // To help GC
 
         nf.initScript(currentScriptOrFn, pn, ts.getSourceName(),
@@ -233,7 +231,7 @@ class Parser {
         FunctionNode fnNode = nf.createFunction(name);
         int functionIndex = currentScriptOrFn.addFunction(fnNode);
 
-        int functionSourceOffset = decompiler.startFunction(functionIndex);
+        int functionSourceOffset = decompiler.startFunction();
 
         ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
         currentScriptOrFn = fnNode;

@@ -80,32 +80,21 @@ package org.mozilla.javascript;
  */
 public class Decompiler
 {
+    private static final int FUNCTION_REF = Token.LAST_TOKEN + 1;
 
-    void startScript()
+    public Decompiler()
     {
-        sourceTop = 0;
-
-        // Add script indicator
-        addToken(Token.SCRIPT);
     }
 
-    String stopScript()
+    String getEncodedSource()
     {
-        String encoded = sourceToString(0);
-        sourceBuffer = null; // It helpds GC
-        sourceTop = 0;
-        return encoded;
+        return sourceToString(0);
     }
 
-    int startFunction(int functionIndex)
+    int startFunction()
     {
-        if (!(0 <= functionIndex))
-            throw new IllegalArgumentException();
-
         // Add reference to the enclosing function/script
-        addToken(Token.FUNCTION);
-        append((char)functionIndex);
-
+        append((char)FUNCTION_REF);
         return sourceTop;
     }
 
@@ -296,32 +285,29 @@ public class Decompiler
      * @param indentGap the identation offset for case labels
      *
      */
-    static String decompile(Object encodedSourcesTree, boolean justbody,
+    static String decompile(Object encodedSourcesTree,
+                            boolean justFunctionBody,
                             int indent, int indentGap, int caseGap)
     {
         StringBuffer result = new StringBuffer();
-        decompile_r(encodedSourcesTree, false, justbody,
+        decompile_r(encodedSourcesTree, false, justFunctionBody,
                     indent, indentGap, caseGap, result);
         return result.toString();
     }
 
     private static void decompile_r(Object encodedSourcesTree,
-                                    boolean nested, boolean justbody,
+                                    boolean nested, boolean justFunctionBody,
                                     int indent, int indentGap, int caseGap,
                                     StringBuffer result)
     {
         String source;
         Object[] childNodes = null;
-        if (encodedSourcesTree == null) {
-            source = null;
-        } else if (encodedSourcesTree instanceof String) {
+        if (encodedSourcesTree instanceof String) {
             source = (String)encodedSourcesTree;
         } else {
             childNodes = (Object[])encodedSourcesTree;
             source = (String)childNodes[0];
         }
-
-        if (source == null) { return; }
 
         int length = source.length();
         if (length == 0) { return; }
@@ -355,49 +341,22 @@ public class Decompiler
 
         if (!nested) {
             // add an initial newline to exactly match js.
-            if (!justbody)
-                result.append('\n');
+            result.append('\n');
             for (int j = 0; j < indent; j++)
                 result.append(' ');
         }
 
+        int functionCount = 0;
+        int braceNesting = 0;
         int i = 0;
 
-        // If the first token is Token.SCRIPT, then we're
-        // decompiling the toplevel script, otherwise it a function
-        // and should start with Token.FUNCTION
-
-        int token = source.charAt(i);
-        ++i;
-        if (token == Token.FUNCTION) {
-            if (!justbody) {
-                result.append("function ");
-            } else {
-                // Skip past the entire function header pass the next EOL.
-                skipLoop: for (;;) {
-                    token = source.charAt(i);
-                    ++i;
-                    switch (token) {
-                        case Token.EOL:
-                            break skipLoop;
-                        case Token.NAME:
-                            // Skip function or argument name
-                            i = getSourceStringEnd(source, i);
-                            break;
-                        case Token.LP:
-                        case Token.COMMA:
-                        case Token.RP:
-                        case Token.LC:
-                            break;
-                        default:
-                            // Bad function header
-                            throw new RuntimeException();
-                    }
-                }
+        boolean skipFunctionHeader = false;
+        if (source.charAt(0) == Token.FUNCTION) {
+            ++i;
+            result.append("function ");
+            if (justFunctionBody) {
+                skipFunctionHeader = true;
             }
-        } else if (token != Token.SCRIPT) {
-            // Bad source header
-            throw new RuntimeException();
         }
 
         while (i < length) {
@@ -448,52 +407,53 @@ public class Decompiler
                 }
                 break;
 
-            case Token.FUNCTION: {
+            case FUNCTION_REF:
+                ++functionCount;
                 /* decompile a FUNCTION token as an escape; call
-                 * toString on the nth enclosed nested function,
-                 * where n is given by the byte that follows.
+                 * toString on the encoded source at
+                 * childNodes[1 + functionIndex] or childNodes[functionCount]
                  */
-
-                ++i;
-                int functionIndex = source.charAt(i);
                 if (childNodes == null
-                    || functionIndex + 1 > childNodes.length)
+                    || functionCount >= childNodes.length)
                 {
                     throw Context.reportRuntimeError(Context.getMessage1
                         ("msg.no.function.ref.found",
-                         new Integer(functionIndex)));
+                         new Integer(functionCount - 1)));
                 }
-                decompile_r(childNodes[functionIndex + 1], true, false,
+                decompile_r(childNodes[functionCount], true, false,
                             indent, indentGap, caseGap, result);
                 break;
-            }
+
             case Token.COMMA:
                 result.append(", ");
                 break;
 
             case Token.LC:
+                ++braceNesting;
                 if (nextIs(source, length, i, Token.EOL))
                     indent += indentGap;
                 result.append('{');
                 break;
 
             case Token.RC:
+                --braceNesting;
                 /* don't print the closing RC if it closes the
                  * toplevel function and we're called from
                  * decompileFunctionBody.
                  */
-                if (justbody && !nested && i + 1 == length)
+                if (justFunctionBody && !nested && braceNesting == 0)
                     break;
 
                 if (nextIs(source, length, i, Token.EOL))
                     indent -= indentGap;
+
+                result.append('}');
                 if (nextIs(source, length, i, Token.WHILE)
-                    || nextIs(source, length, i, Token.ELSE)) {
+                    || nextIs(source, length, i, Token.ELSE))
+                {
                     indent -= indentGap;
-                    result.append("} ");
+                    result.append(' ');
                 }
-                else
-                    result.append('}');
                 break;
 
             case Token.LP:
@@ -516,7 +476,16 @@ public class Decompiler
                 break;
 
             case Token.EOL:
-                result.append('\n');
+                if (skipFunctionHeader) {
+                    skipFunctionHeader = false;
+                    /* throw away just added 'function name(...) {' and restore
+                     * the original indent
+                     */
+                    result.setLength(0);
+                    indent -= indentGap;
+                } else {
+                    result.append('\n');
+                }
 
                 /* add indent if any tokens remain,
                  * less setback if next token is
@@ -535,7 +504,6 @@ public class Decompiler
 
                     /* elaborate check against label... skip past a
                      * following inlined NAME and look for a COLON.
-                     * Depends on how NAME is encoded.
                      */
                     else if (nextToken == Token.NAME) {
                         int afterName = getSourceStringEnd(source, i + 2);
@@ -872,7 +840,7 @@ public class Decompiler
         }
 
         // add that trailing newline if it's an outermost function.
-        if (!nested && !justbody)
+        if (!nested && !justFunctionBody)
             result.append('\n');
     }
 
