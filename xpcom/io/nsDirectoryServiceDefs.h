@@ -48,16 +48,13 @@
 // Keys whose definition ends in "DIR" or "FILE" return a single nsIFile (or subclass).
 // Keys whose definition ends in "LIST" return an nsISimpleEnumerator which enumerates a
 // list of file objects.
+//
 //========================================================================================
-
-
-
-#define NS_XPCOM_INIT_CURRENT_PROCESS_DIR       "MozBinD"   // Can be used to set NS_XPCOM_CURRENT_PROCESS_DIR
-                                                            // CANNOT be used to GET a location
                                                                                                                        
 #define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
 #define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
 #define NS_XPCOM_COMPONENT_DIR                  "ComsD"
+#define NS_XPCOM_LIBRARY_FILE                   "XpcomLib"
 
 #define NS_GRE_DIR                              "GreD"
 #define NS_GRE_COMPONENT_DIR                    "GreComsD" 

@@ -40,6 +40,7 @@
 
 #include "nsIFactory.h"
 #include "nsIModule.h"
+#include "nsIClassInfo.h"
 
 // {3bc97f01-ccdf-11d2-bab8-b548654461fc}
 #define NS_GENERICFACTORY_CID                                                 \

@@ -45,6 +45,9 @@
 #include "nsISupportsArray.h"
 #include "nsIAtom.h"
 
+#define NS_XPCOM_INIT_CURRENT_PROCESS_DIR       "MozBinD"   // Can be used to set NS_XPCOM_CURRENT_PROCESS_DIR
+                                                            // CANNOT be used to GET a location
+
 class nsDirectoryService : public nsIDirectoryService,
                            public nsIProperties,
                            public nsIDirectoryServiceProvider2
