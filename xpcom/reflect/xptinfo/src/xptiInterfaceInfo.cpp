@@ -409,7 +409,10 @@ xptiInterfaceInfo::GetInfoForParam(uint16 methodIndex,
         mInterface->mWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
             GetInfoAtNoAddRef(td->type.iface - 1);
 
-    NS_IF_ADDREF(*info = theInfo);
+    if(!theInfo)
+        return NS_ERROR_FAILURE;
+
+    NS_ADDREF(*info = theInfo);
     return NS_OK;
 }
 
@@ -417,43 +420,11 @@ NS_IMETHODIMP
 xptiInterfaceInfo::GetIIDForParam(uint16 methodIndex,
                                 const nsXPTParamInfo* param, nsIID** iid)
 {
-    NS_PRECONDITION(param, "bad pointer");
-    NS_PRECONDITION(iid, "bad pointer");
-
-    if(!EnsureResolved())
-        return NS_ERROR_UNEXPECTED;
-
-    if(methodIndex < mInterface->mMethodBaseIndex)
-        return mInterface->mParent->GetIIDForParam(methodIndex, param, iid);
-
-    if(methodIndex >= mInterface->mMethodBaseIndex + 
-                      mInterface->mDescriptor->num_methods)
-    {
-        NS_PRECONDITION(0, "bad param");
-        *iid = NULL;
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    const XPTTypeDescriptor *td = &param->type;
-
-    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
-        td = &mInterface->mDescriptor->
-                                additional_types[td->type.additional_type];
-    }
-
-    if(XPT_TDP_TAG(td->prefix) != TD_INTERFACE_TYPE) {
-        NS_ASSERTION(0, "not an interface");
-        return NS_ERROR_INVALID_ARG;
-    }
-
-    nsIInterfaceInfo* theInfo =
-        mInterface->mWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
-            GetInfoAtNoAddRef(td->type.iface - 1);
-
-    if(!theInfo)
-        return NS_ERROR_FAILURE;
-
-    return theInfo->GetIID(iid);
+    nsCOMPtr<nsIInterfaceInfo> ii;
+    nsresult rv = GetInfoForParam(methodIndex, param, getter_AddRefs(ii));
+    if(NS_FAILED(rv))
+        return rv;
+    return ii->GetIID(iid);
 }
 
 // this is a private helper
