@@ -843,6 +843,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 
   else if (IsBlockLevel(aTag)
            && type != eHTMLTag_blockquote
+           && type != eHTMLTag_div
            && type != eHTMLTag_script
            && type != eHTMLTag_doctypeDecl
            && type != eHTMLTag_markupDecl) {
