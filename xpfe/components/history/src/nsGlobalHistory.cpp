@@ -1307,7 +1307,6 @@ nsGlobalHistory::OpenDB()
   nsIMdbFactory* factory;
 
   static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
-#ifdef BIENVENU_HAS_FIXED_THE_FACTORY
   nsCOMPtr<nsIMdbFactoryFactory> factoryfactory;
   rv = nsComponentManager::CreateInstance(kMorkCID,
                                           nsnull,
@@ -1316,12 +1315,6 @@ nsGlobalHistory::OpenDB()
   if (NS_FAILED(rv)) return rv;
 
   rv = factoryfactory->GetMdbFactory(&factory);
-#else
-  rv = nsComponentManager::CreateInstance(kMorkCID,
-                                          nsnull,
-                                          nsCOMTypeInfo<nsISupports>::GetIID(),
-                                          (void**) &factory);
-#endif
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create mork factory factory");
   if (NS_FAILED(rv)) return rv;
 
@@ -1480,7 +1473,7 @@ nsGlobalHistory::CloseDB()
   }
 
   if (mEnv)
-    mEnv->CutStrongRef(mEnv /* XXX */);
+    mEnv->CloseMdbObject(mEnv /* XXX */);
 
   return NS_OK;
 }
