@@ -53,6 +53,7 @@ enum ePathTypes{
 };
 
 static void GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
+static void TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32 aFlag);
 
 
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
@@ -1941,6 +1942,8 @@ nsStyleCoord  borderRadius;
         // tile to account for dirtyRect.x. When tiling in x, the anchor.x value
         // will be a negative value used to adjust the starting coordinate.
         x0 = (dirtyRect.x / tileWidth) * tileWidth + anchor.x;
+        if(x0+tileWidth<dirtyRect.x)
+          x0+=tileWidth;
         x1 = x0 + xDistance + tileWidth;
         if (0 != anchor.x) {
           x1 += tileWidth;
@@ -1975,6 +1978,8 @@ nsStyleCoord  borderRadius;
         // tile to account for dirtyRect.y. When tiling in y, the anchor.y value
         // will be a negative value used to adjust the starting coordinate.
         y0 = (dirtyRect.y / tileHeight) * tileHeight + anchor.y;
+        if(y0+tileHeight<dirtyRect.y)
+          y0+=tileHeight;
         y1 = y0 + yDistance + tileHeight;
         if (0 != anchor.y) {
           y1 += tileHeight;
@@ -1987,14 +1992,48 @@ nsStyleCoord  borderRadius;
       }
     }
 
-    // Tile the image in x and y
-    nscoord x, y;
-    for (y = y0; y < y1; y += tileHeight) {
-      for (x = x0; x < x1; x += tileWidth) {
-        aRenderingContext.DrawImage(image, x, y, tileWidth, tileHeight);
+    nsDrawingSurface  theSurface;
+    nsRect            srcRect,destRect;
+    PRInt32           x,y;
+    PRInt32           flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_XFORM_SOURCE_VALUES;
+
+    srcRect.x = x0;
+    srcRect.y = y0;
+    srcRect.width = tileWidth;
+    srcRect.height = tileHeight;
+
+    // copy the initial image to our buffer
+    aRenderingContext.DrawImage(image,srcRect.x,srcRect.y,tileWidth,tileHeight);
+    //if(anchor.x<0) {
+    if(x0<dirtyRect.x) {
+      aRenderingContext.DrawImage(image,x0+tileWidth,y0,tileWidth,tileHeight);
+      srcRect.x =dirtyRect.x;
+    }
+    //if(anchor.y<0) {
+    if(y0<dirtyRect.y) {
+      aRenderingContext.DrawImage(image,x0,y0+tileHeight,tileWidth,tileHeight);
+      srcRect.y = dirtyRect.y;
+      if(x0<dirtyRect.x) {
+        aRenderingContext.DrawImage(image,x0+tileWidth,y0+tileHeight,tileWidth,tileHeight);
       }
     }
-    
+
+    // create a bigger tile
+    aRenderingContext.GetDrawingSurface(&theSurface);
+    TileImage(aRenderingContext,theSurface,srcRect,x1-x0,y1-y0,flag);
+
+    // use the tile to fill in the rest of the image
+    destRect = srcRect;
+
+    for(y=srcRect.y;y<y1;y+=srcRect.height){
+      for(x=srcRect.x;x<x1;x+=srcRect.width){
+        destRect.x = x;
+        destRect.y = y;
+        aRenderingContext.CopyOffScreenBits(theSurface,srcRect.x,srcRect.y,destRect,flag);
+      }
+    }  
+
+
     // Restore clipping
     aRenderingContext.PopState(clipState);
 
@@ -2030,6 +2069,37 @@ nsStyleCoord  borderRadius;
       aRenderingContext.FillRect(aBorderArea);
     }
   }
+}
+
+/** ---------------------------------------------------
+ *  A bit blitter to tile images to the background recursively
+ *	@update 4/13/99 dwc
+ *  @param aRC -- Rendering Context to render to
+ *  @param aDS -- Target drawing surface for the rendering context
+ *  @param aWidth -- width of the tile
+ *  @param aHeight -- height of the tile
+ *  @param aWidth -- flags for the rendering context to use
+ */
+static void
+TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32 aFlag)
+{
+nsRect  destRect;
+  
+  if( ((aSrcRect.width)<<1) < (aWidth)) {
+    // width is less than double so double our source bitmap width
+    destRect = aSrcRect;
+    destRect.x += aSrcRect.width;
+    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,aFlag);
+    aSrcRect.width*=2; 
+    TileImage(aRC,aDS,aSrcRect,aWidth,aHeight,aFlag);
+  } else if (((aSrcRect.height)<<1) < (aHeight)) {
+    // height is less than double so double our source bitmap height
+    destRect = aSrcRect;
+    destRect.y += aSrcRect.height;
+    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,aFlag);
+    aSrcRect.height*=2;
+    TileImage(aRC,aDS,aSrcRect,aWidth,aHeight,aFlag);
+  } 
 }
 
 static void  AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32 aStartIndex,PRInt32 curIndex,PRInt8 aSide,PRInt8 aCorner);

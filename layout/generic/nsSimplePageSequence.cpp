@@ -328,7 +328,12 @@ nsSimplePageSequenceFrame::PaintChild(nsIPresContext&      aPresContext,
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aFrame->GetRect(pageBounds);
     pageBounds.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
-    aRenderingContext.DrawRect(pageBounds);
+    
+    // this paints a rectangle around the for the printer output, 
+    // which sometimes appears, other times
+    // goes away.  I have to look into this further or ask troy.. 
+    // I took it out for the time being to fix some bugs -- dwc
+    //aRenderingContext.DrawRect(pageBounds);
   }
 }
 
