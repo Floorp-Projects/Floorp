@@ -1,3 +1,7 @@
+window {
+  overflow: auto;
+}
+
 Subject {
   display: block;
   text-align:left; 

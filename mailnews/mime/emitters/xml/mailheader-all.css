@@ -1,3 +1,7 @@
+window {
+  overflow: auto;
+}
+
 mailheader {
   display:           block;
   background-color:  lightblue;
