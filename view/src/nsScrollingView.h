@@ -64,6 +64,7 @@ public:
   //private
   virtual void HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
   virtual void AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float aScale);
+  virtual void UpdateScrollControls(PRBool aPaint);
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
