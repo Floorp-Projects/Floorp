@@ -239,7 +239,7 @@ endif
 #
 ifeq ($(OS_ARCH),SunOS)
 ifeq ($(GNU_CXX),)
-GARBAGE += SunWS_cache
+GARBAGE_DIRS += SunWS_cache
 endif
 endif
 
