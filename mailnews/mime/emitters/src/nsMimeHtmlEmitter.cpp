@@ -81,7 +81,7 @@ PRBool nsMimeHtmlDisplayEmitter::BroadCastHeadersAndAttachments()
 nsresult 
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPrefix()
 {
-  if (!BroadCastHeadersAndAttachments() || nsMimeOutput::nsMimeMessagePrintOutput)
+  if (!BroadCastHeadersAndAttachments() || (mFormat == nsMimeOutput::nsMimeMessagePrintOutput))
     return nsMimeBaseEmitter::WriteHeaderFieldHTMLPrefix();
   else
     return NS_OK;
@@ -90,7 +90,7 @@ nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPrefix()
 nsresult
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 {
-  if (!BroadCastHeadersAndAttachments() || nsMimeOutput::nsMimeMessagePrintOutput)
+  if (!BroadCastHeadersAndAttachments() || (mFormat == nsMimeOutput::nsMimeMessagePrintOutput))
     return nsMimeBaseEmitter::WriteHeaderFieldHTML(field, value);
   else
     return NS_OK;
@@ -99,7 +99,7 @@ nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTML(const char *field, const char *va
 nsresult
 nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPostfix()
 {
-  if (!BroadCastHeadersAndAttachments() || nsMimeOutput::nsMimeMessagePrintOutput)
+  if (!BroadCastHeadersAndAttachments() || (mFormat == nsMimeOutput::nsMimeMessagePrintOutput))
     return nsMimeBaseEmitter::WriteHeaderFieldHTMLPostfix();
   else
     return NS_OK;

@@ -85,6 +85,7 @@ static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, 
                                               char *charset,
                                               PRBool eatContinuations);
+void                 ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs);
 
 static MimeHeadersState MIME_HeaderType;
 static PRBool MIME_WrapLongLines;
@@ -104,7 +105,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
 {
   nsMsgAttachmentData   *tmp;
   PRInt32               n;
-  char                  *disp;
+  char                  *disp = nsnull;
 
   // Ok, this is the special case when somebody sends an "attachment" as the body
   // of an RFC822 message...I really don't think this is the way this should be done.
@@ -138,6 +139,9 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   {
     tmp->real_name = MimeHeaders_get_name(child->headers);
   }
+
+  if ( (!tmp->real_name) && (tmp->real_type) && (nsCRT::strncasecmp(tmp->real_type, "text", 4)) )
+    ValidateRealName(tmp, child->headers);
 
   char  *tmpURL = nsnull;
   char  *id = nsnull;
