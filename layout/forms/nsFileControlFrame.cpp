@@ -156,7 +156,7 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
  
   nsIFileWidget *fileWidget;
 
-  nsString title("FileWidget Title <here> mode = save");
+  nsString title("File Upload");
   nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
   nsString titles[] = {"all files"};
