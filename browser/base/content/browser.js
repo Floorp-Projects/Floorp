@@ -2990,7 +2990,7 @@ nsBrowserStatusHandler.prototype =
         // pages. 
         if (/^\s*wyciwyg:\/\/\d+\//.test(location))
           location = RegExp.rightContext;
-        gURLBar.value = location;
+        setTimeout(function(loc) { gURLBar.value = loc; }, 0, location);
         // the above causes userTyped.value to become true, reset it
         this.userTyped.value = false;
       }
