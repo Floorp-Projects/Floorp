@@ -1978,6 +1978,20 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 			*aStatus = nsEventStatus_eConsumeNoDefault;
 			break;
 
+
+    case NS_DISPLAYCHANGED:
+
+      // Reset the offscreens width and height
+      // so it will be reallocated the next time it needs to
+      // draw. It needs to be reallocated because it's depth
+      // has changed. @see bugzilla bug 6061
+      *aStatus = nsEventStatus_eConsumeDoDefault;
+      mDSBounds.width = 0;
+      mDSBounds.height = 0;
+      break;
+
+
+
 		default:
 			{
 				nsIView* baseView;
