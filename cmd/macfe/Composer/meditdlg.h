@@ -246,6 +246,24 @@ protected:
 };
 
 
+class CPageTitle: public CEditDialog
+{
+public:
+	enum				{ class_ID = 'PGTL' };
+	
+						CPageTitle( LStream* inStream );
+	virtual				~CPageTitle();
+						
+	virtual Boolean		CommitChanges(Boolean allPanes);
+	virtual void		InitializeDialogControls();
+	virtual void		FinishCreateSelf();
+protected:	
+	virtual void		Help() {;} // Sorry, no help.
+	
+	CLargeEditField*		fPageName;
+};
+
+
 class MultipleSelectionSingleColumn: public LListBox
 {
 public:
