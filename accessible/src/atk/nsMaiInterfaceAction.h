@@ -59,12 +59,12 @@ public:
     void SetName(nsAString &aString) { mName = NS_ConvertUCS2toUTF8(aString); }
 
     const char *GetKeyBinding() {
-        return NS_ConvertUCS2toUTF8(mKeyBinding).get(); 
+        return mKeyBinding.get(); 
     }
-    void SetKeyBinding(nsAString &aString) { mKeyBinding = aString; }
+    void SetKeyBinding(nsAString &aString) { mKeyBinding = NS_ConvertUCS2toUTF8(aString); }
 private:
     nsCString mName;
-    nsString mKeyBinding;
+    nsCString mKeyBinding;
 };
 
 #endif /* __MAI_INTERFACE_ACTION_H__ */

@@ -157,7 +157,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
                        accWrap->GetMaiInterface(MAI_INTERFACE_ACTION));
     NS_ENSURE_TRUE(action, nsnull);
 
-    if (action->GetKeyBinding())
+    if (*action->GetKeyBinding())
         return action->GetKeyBinding();
 
     //return all KeyBindings including accesskey and shortcut
@@ -183,7 +183,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
                                 rightChar;
             }
             else if ((role == ATK_ROLE_MENU) || (role == ATK_ROLE_MENU_ITEM)) {
-                //it is submenu, change from "s" to "s;<Alt>fs"
+                //it is submenu, change from "s" to "s;<Alt>f:s"
                 nsAutoString allKey = accessKey;
                 nsCOMPtr<nsIAccessible> grandParentAcc = parentAccessible;
 
@@ -194,7 +194,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
                     if (!grandParentKey.IsEmpty()) {
                         nsAutoString rightChar;
                         grandParentKey.Right(rightChar, 1);
-                        allKey = rightChar + allKey;
+                        allKey = rightChar + NS_LITERAL_STRING(":") + allKey;
                     }
 
                     nsCOMPtr<nsIAccessible> tempAcc = grandParentAcc;
