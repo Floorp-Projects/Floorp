@@ -1,0 +1,133 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<title> Embed Smoke Test </title>
+<!-- Descrpt: Embed Smoke Test
+     Author: dsirnapalli@netscape.com
+     Revs: 08.13.01 - Created
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+<head>
+
+<!-- script below is ngdriverspecific  -->
+<script TYPE="text/javascript" SRC="http://bubblegum/ngdriver/suites/testlib.js">
+</script>
+
+<script type="text/javascript">
+
+var mozload  = "Fail";
+var seamonkeyload = "Fail";
+var pageload = "Fail";
+
+function mozillaimageLoaded()
+{
+  mozload = "Pass";
+}
+
+function seamonkeyimageLoaded()
+{
+  seamonkeyload = "Pass";
+}
+
+function displayResults()
+{
+  var results = "";
+  var mozloadcolor  = "white";
+  var seamonkeyloadcolor = "white";
+  var pageloadcolor = "white";
+
+  if (mozload == "Fail") mozloadcolor = "red";
+  if (seamonkeyload == "Fail") seamonkeyloadcolor = "red";
+  if (pageload == "Fail") pageloadcolor = "red";
+
+  results = results + "<html>";
+  results = results + "  <table bgcolor='white' border='4'>";
+  results = results + "  <tbody>";
+  results = results + "  <caption> <center> <b> Embed SmokeTest Results </b> </center> </caption>";
+  results = results + "    <tr>";
+  results = results + "      <td> <b> Description </b> </td>";
+  results = results + "      <td> <b> Result </b> </td>";
+  results = results + "    </tr>";
+  results = results + "    <tr bgcolor = '" + mozloadcolor + "'>";
+  results = results + "      <td> Mozilla Image Loaded </td>";
+  results = results + "      <td>" + mozload + "</td>";
+  results = results + "    </tr>";
+  results = results + "    <tr bgcolor = '" + seamonkeyloadcolor + "'>";
+  results = results + "      <td> SeaMonkey Image Loaded </td>";
+  results = results + "      <td>" + seamonkeyload + "</td>";
+  results = results + "    </tr>";
+  results = results + "    <tr bgcolor = '" + pageloadcolor + "'>";
+  results = results + "      <td> PageLoaded </td>";
+  results = results + "      <td>" + pageload + "</td>";
+  results = results + "    </tr>";
+  results = results + "  <tbody>";
+  results = results + "  </table>";
+  results = results + "</html>";
+
+  document.results.textarea.value = results;
+  fixSubmit();
+}
+
+function pageLoaded()
+{
+  pageload = "Pass";
+  setTimeout("displayResults();", 1000);
+}
+
+</script>
+</head>
+
+<body onLoad = "pageLoaded();">
+
+<!-- form below is ngdriverspecific  -->
+<form name="results" action="/ngdriver/cgi-bin/writeresults.cgi" method="post">
+<script TYPE="text/javascript">
+document.write('<input name="resultsfile" type="hidden" value="' + window.opener.document.resultsform.resultsfile.value + '">');
+</script>
+<input type="hidden" name="textarea">
+</form>
+
+<center><b> This is a Test Page </b></center>
+
+<center>
+<img src="mozilla-banner.gif" height=58 width=600 onLoad = "mozillaimageLoaded();">
+</center>
+
+<br> <br>
+<table bgcolor='blue' border='4'>
+<tbody>
+<caption> <center> <b> Test Table </b> </center> </caption>
+  <tr>
+    <td> <b> Cell1 </b> </td>
+    <td> <b> Cell2 </b> </td>
+  </tr>
+  <tr>
+    <td> <b> Cell3 </b> </td>
+    <td> <b> Cell4 </b> </td>
+  </tr>
+</tbody>
+</table>
+
+<center>
+<img SRC="9709TUANP.jpg" height=183 width=300 onLoad = "seamonkeyimageLoaded();">
+</center>
+
+</body>
+</html>
