@@ -78,57 +78,57 @@ nsXULMenuListElement::~nsXULMenuListElement()
 NS_IMETHODIMP
 nsXULMenuListElement::GetValue(nsString& aValue)
 {
-  return mOuter->GetAttribute("value", aValue);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
 nsXULMenuListElement::SetValue(const nsString& aValue)
 {
-  return mOuter->SetAttribute("value", aValue);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
 nsXULMenuListElement::GetCrop(nsString& aCrop)
 {
-  return mOuter->GetAttribute("crop", aCrop);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
 nsXULMenuListElement::SetCrop(const nsString& aCrop)
 {
-  return mOuter->SetAttribute("crop", aCrop);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
 nsXULMenuListElement::GetSrc(nsString& aSrc)
 {
-  return mOuter->GetAttribute("src", aSrc);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
 nsXULMenuListElement::SetSrc(const nsString& aSrc)
 {
-  return mOuter->SetAttribute("src", aSrc);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
 nsXULMenuListElement::GetData(nsString& aData)
 {
-  return mOuter->GetAttribute("data", aData);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("data"), aData);
 }
 
 NS_IMETHODIMP
 nsXULMenuListElement::SetData(const nsString& aData)
 {
-  return mOuter->SetAttribute("data", aData);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("data"), aData);
 }
 
 NS_IMETHODIMP
 nsXULMenuListElement::GetDisabled(PRBool* aDisabled)
 {
   nsAutoString value;
-  mOuter->GetAttribute("disabled", value);
-  if(value.Equals("true"))
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), value);
+  if(value.EqualsWithConversion("true"))
     *aDisabled = PR_TRUE;
   else
     *aDisabled = PR_FALSE;
@@ -140,9 +140,9 @@ NS_IMETHODIMP
 nsXULMenuListElement::SetDisabled(PRBool aDisabled)
 {
   if(aDisabled)
-    mOuter->SetAttribute("disabled", "true");
+    mOuter->SetAttribute(NS_ConvertASCIItoUCS2("disabled"), NS_ConvertASCIItoUCS2("true"));
   else
-    mOuter->RemoveAttribute("disabled");
+    mOuter->RemoveAttribute(NS_ConvertASCIItoUCS2("disabled"));
 
   return NS_OK;
 }
@@ -229,8 +229,8 @@ nsXULMenuListElement::GetSelectedItem(nsIDOMElement** aResult)
           nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
 
           nsAutoString isSelected;
-          selectedElement->GetAttribute(nsAutoString("selected"), isSelected);
-          if (isSelected.Equals("true")) {
+          selectedElement->GetAttribute(NS_ConvertASCIItoUCS2("selected"), isSelected);
+          if (isSelected.EqualsWithConversion("true")) {
             SetSelectedItem(selectedElement);
             break;
           }
@@ -259,7 +259,7 @@ nsXULMenuListElement::SetSelectedItem(nsIDOMElement* aElement)
     return NS_OK;
 
   if (mSelectedItem) {
-    mSelectedItem->RemoveAttribute(nsAutoString("selected"));
+    mSelectedItem->RemoveAttribute(NS_ConvertASCIItoUCS2("selected"));
   }
 
   mSelectedItem = aElement;
@@ -267,15 +267,15 @@ nsXULMenuListElement::SetSelectedItem(nsIDOMElement* aElement)
   if (!mSelectedItem)
     return NS_OK;
 
-  mSelectedItem->SetAttribute(nsAutoString("selected"), nsAutoString("true"));
+  mSelectedItem->SetAttribute(NS_ConvertASCIItoUCS2("selected"), NS_ConvertASCIItoUCS2("true"));
 
   nsAutoString value, src, data;
-  aElement->GetAttribute(nsAutoString("value"), value);
-  aElement->GetAttribute(nsAutoString("src"), src);
-  aElement->GetAttribute(nsAutoString("data"), data);
-  mOuter->SetAttribute(nsAutoString("value"), value);
-  mOuter->SetAttribute(nsAutoString("src"), src);
-  mOuter->SetAttribute(nsAutoString("data"), data);
+  aElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), value);
+  aElement->GetAttribute(NS_ConvertASCIItoUCS2("src"), src);
+  aElement->GetAttribute(NS_ConvertASCIItoUCS2("data"), data);
+  mOuter->SetAttribute(NS_ConvertASCIItoUCS2("value"), value);
+  mOuter->SetAttribute(NS_ConvertASCIItoUCS2("src"), src);
+  mOuter->SetAttribute(NS_ConvertASCIItoUCS2("data"), data);
   
   return NS_OK;
 }

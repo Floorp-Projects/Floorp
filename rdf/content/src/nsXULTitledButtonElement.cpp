@@ -77,69 +77,69 @@ nsXULTitledButtonElement::~nsXULTitledButtonElement()
 NS_IMETHODIMP
 nsXULTitledButtonElement::GetValue(nsString& aValue)
 {
-  return mOuter->GetAttribute("value", aValue);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::SetValue(const nsString& aValue)
 {
-  return mOuter->SetAttribute("value", aValue);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::GetCrop(nsString& aCrop)
 {
-  return mOuter->GetAttribute("crop", aCrop);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::SetCrop(const nsString& aCrop)
 {
-  return mOuter->SetAttribute("crop", aCrop);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::GetSrc(nsString& aSrc)
 {
-  return mOuter->GetAttribute("src", aSrc);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::SetSrc(const nsString& aSrc)
 {
-  return mOuter->SetAttribute("src", aSrc);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::GetImgalign(nsString& aImgalign)
 {
-  return mOuter->GetAttribute("imgalign", aImgalign);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("imgalign"), aImgalign);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::SetImgalign(const nsString& aImgalign)
 {
-  return mOuter->SetAttribute("imgalign", aImgalign);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("imgalign"), aImgalign);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::GetAccesskey(nsString& aAccesskey)
 {
-  return mOuter->GetAttribute("accesskey", aAccesskey);
+  return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("accesskey"), aAccesskey);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::SetAccesskey(const nsString& aAccesskey)
 {
-  return mOuter->SetAttribute("accesskey", aAccesskey);
+  return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("accesskey"), aAccesskey);
 }
 
 NS_IMETHODIMP
 nsXULTitledButtonElement::GetDisabled(PRBool* aDisabled)
 {
   nsAutoString value;
-  mOuter->GetAttribute("disabled", value);
-  if(value.Equals("true"))
+  mOuter->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), value);
+  if(value.EqualsWithConversion("true"))
     *aDisabled = PR_TRUE;
   else
     *aDisabled = PR_FALSE;
@@ -151,9 +151,9 @@ NS_IMETHODIMP
 nsXULTitledButtonElement::SetDisabled(PRBool aDisabled)
 {
   if(aDisabled)
-    mOuter->SetAttribute("disabled", "true");
+    mOuter->SetAttribute(NS_ConvertASCIItoUCS2("disabled"), NS_ConvertASCIItoUCS2("true"));
   else
-    mOuter->RemoveAttribute("disabled");
+    mOuter->RemoveAttribute(NS_ConvertASCIItoUCS2("disabled"));
 
   return NS_OK;
 }
