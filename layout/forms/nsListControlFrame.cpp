@@ -544,31 +544,33 @@ void nsListControlFrame::DisplayDeselected(nsIContent* aContent)
 PRInt32 nsListControlFrame::GetSelectedIndex(nsIFrame *aHitFrame) 
 {
   PRInt32 index   = kNothingSelected;
-   // Get the content of the frame that was selected
+  // Get the content of the frame that was selected
   nsIContent* selectedContent = nsnull;
-  aHitFrame->GetContent(&selectedContent);
+  NS_ASSERTION(aHitFrame, "No frame for html <select> element\n");  
+  if (aHitFrame) {
+    aHitFrame->GetContent(&selectedContent);
 
-  // Search the list of option elements looking for a match
+    // Search the list of option elements looking for a match
  
-  PRUint32 length = GetNumberOfOptions();
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
-  if (nsnull != options) {
-    PRUint32 numOptions;
-    options->GetLength(&numOptions);
-    for (PRUint32 optionX = 0; optionX < numOptions; optionX++) {
-      nsIContent* option = nsnull;
-      option = GetOptionAsContent(options, optionX);
-      if (nsnull != option) {
-        if (option == selectedContent) {
-          index = optionX;
-          break;
+    PRUint32 length = GetNumberOfOptions();
+    nsIDOMHTMLCollection* options = GetOptions(mContent);
+    if (nsnull != options) {
+      PRUint32 numOptions;
+      options->GetLength(&numOptions);
+      for (PRUint32 optionX = 0; optionX < numOptions; optionX++) {
+        nsIContent* option = nsnull;
+        option = GetOptionAsContent(options, optionX);
+        if (nsnull != option) {
+          if (option == selectedContent) {
+            index = optionX;
+            break;
+          }
+         NS_RELEASE(option);
         }
-       NS_RELEASE(option);
       }
+      NS_RELEASE(options);
     }
-    NS_RELEASE(options);
   }
-
   return index;
 }
 
