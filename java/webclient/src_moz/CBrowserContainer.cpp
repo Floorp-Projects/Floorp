@@ -103,12 +103,24 @@ CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
 	if (nsnull == gVm) { // declared in jni_util.h
         ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
     }
-
 }
 
 
 CBrowserContainer::~CBrowserContainer()
 {
+    m_pOwner = nsnull;
+    mJNIEnv = nsnull;
+    mInitContext = nsnull;
+    mDocTarget = nsnull;
+    mMouseTarget = nsnull;
+    mDomEventTarget = nsnull;
+    inverseDepth = -1;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
+    if (properties) {
+        ::util_DeleteGlobalRef(env, properties);
+    }
+    properties = nsnull;
+    currentDOMEvent = nsnull;
 }
 
 

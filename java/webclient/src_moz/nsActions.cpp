@@ -35,6 +35,7 @@
 #include "nsIBaseWindow.h"
 #include "nsISHEntry.h"
 #include "nsIURI.h"
+#include "nsIDocShellTreeItem.h"
 
 #include "jni_util.h"
 
@@ -680,9 +681,29 @@ wsDeallocateInitContextEvent::handleEvent ()
     }
 
     mInitContext->parentHWnd = nsnull;
-    //    ((nsISupports *)mInitContext->docShell)->Release();
+
+    // make sure the webBrowser's contentListener doesn't have a ref to
+    // CBrowserContainer
+    mInitContext->webBrowser->SetParentURIContentListener(nsnull);
+    mInitContext->webBrowser = nsnull;
+
+    // make sure the webShell's container is set to null.
+    // get the webShell from the docShell
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mInitContext->docShell));
+    if (webShell) {
+        webShell->SetContainer(nsnull);
+    }
+
+    // make sure the docShell's TreeOwner is set to null
+    // get the docShellTreeItem from the docShell
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mInitContext->docShell));
+    if (docShellAsItem) {
+        docShellAsItem->SetTreeOwner(nsnull);
+    }
+
+    mInitContext->docShell->SetDocLoaderObserver(nsnull);
+
     mInitContext->docShell = nsnull;
-    //    ((nsISupports *)mInitContext->webShell)->Release();
 
     // PENDING(edburns): this is a leak.  For some reason, webShell's
     // refcount is two.  I believe it should be one.
@@ -710,6 +731,11 @@ wsDeallocateInitContextEvent::handleEvent ()
     mInitContext->h = -1;    
     mInitContext->gtkWinPtr = nsnull;
     mInitContext->searchContext = nsnull;
+
+    // make sure we aren't listening anymore.  This needs to be done
+    // before currentDocument = nsnull
+    mInitContext->browserContainer->RemoveAllListeners();
+    
     mInitContext->currentDocument = nsnull;
     mInitContext->propertiesClass = nsnull;
     mInitContext->browserContainer = nsnull;
