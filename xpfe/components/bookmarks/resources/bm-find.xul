@@ -25,7 +25,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bm-find.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bm-find.dtd">

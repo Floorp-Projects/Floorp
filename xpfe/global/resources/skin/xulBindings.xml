@@ -89,36 +89,39 @@
 	  </handlers>
   </binding>
 
-  <binding id="treecell-indented-folder">
-    <content>
+  <binding id="treecell-indented">
+    <content autostretch="never">
       <xul:treeindentation/>
-      <xul:titledbutton class="twisty" allowevents="true"/>
-      <xul:titledbutton class="tree-icon tree-button" inherits="crop,value,align,src" 
-                    flex="1" align="left" crop="right"/>
+      <xul:image class="tree-cell-twisty" twisty="true" allowevents="true"/>
+      <xul:image class="tree-cell-primary-icon" inherits="src"/>
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
     </content>
   </binding>
 
-  <binding id="treecell-indented-leaf">
-    <content>
-      <xul:treeindentation/>
-      <xul:titledbutton class="twisty" disabled="true" allowevents="true"/>
-      <xul:titledbutton class="tree-icon tree-button" inherits="crop,value,align,src" 
-                    flex="1" align="left" crop="right"/>
+  <binding id="treecell-iconic">
+    <content autostretch="never">
+      <xul:image class="tree-cell-icon" inherits="src"/>
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
+  </binding>
+
+  <binding id="treecell-image">
+    <content autostretch="never">
+      <xul:image class="tree-cell-image" inherits="src"/>
     </content>
   </binding>
 
   <binding id="treecell">
-    <content>
-      <xul:titledbutton class="tree-button" inherits="crop,value,align,src" 
-                    flex="1" align="left" crop="right"/>
+    <content autostretch="never">
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
     </content>
   </binding>
 
   <binding id="treecell-header">
-    <content>
-      <xul:image class="tree-button" inherits="src"/>
-      <xul:text class="tree-text" inherits="crop,value" flex="1" crop="right"/>
-      <xul:image class="treeheader-sortdirection"/>
+    <content autostretch="never">
+      <xul:image class="tree-header-image" inherits="src"/>
+      <xul:text class="tree-header-text" inherits="crop,value" flex="1" crop="right"/>
+      <xul:image class="tree-header-sortdirection"/>
     </content>
   </binding>
   

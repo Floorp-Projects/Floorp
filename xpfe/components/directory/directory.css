@@ -26,7 +26,7 @@
 
 */
 
-@import url(chrome://global/skin/global.css);
+@import url(chrome://communicator/skin/);
 
 treecol[sortActive="true"] {
   background-color: lightgray;

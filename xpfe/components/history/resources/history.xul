@@ -22,8 +22,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/history/history.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/manage-bookmarks.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/history/history.dtd" >
