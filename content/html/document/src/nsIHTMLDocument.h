@@ -91,7 +91,22 @@ public:
                          nsISupports **aResult) = 0;
 
   NS_IMETHOD GetFormControlElements(nsIDOMNodeList** aReturn) = 0;
-
+  /**
+   * Called when form->SetDocument() is called so that document knows
+   * immediately when a form is added
+   */
+  NS_IMETHOD AddedForm() = 0;
+  /**
+   * Called when form->SetDocument() is called so that document knows
+   * immediately when a form is removed
+   */
+  NS_IMETHOD RemovedForm() = 0;
+  /**
+   * Called to get a better count of forms than document.forms can provide
+   * without calling FlushPendingNotifications (bug 138892).
+   */
+  NS_IMETHOD GetNumFormsSynchronous(PRInt32* aNumForms) = 0;
+  
   NS_IMETHOD GetBodyElement(nsIDOMHTMLBodyElement** aBody) = 0;
 
   NS_IMETHOD_(PRBool) IsWriting() = 0;
