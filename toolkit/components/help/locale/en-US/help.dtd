@@ -12,6 +12,8 @@
 <!ENTITY forwardButton.label            "Forward">
 <!ENTITY forwardButton.accesskey        "F">
 <!ENTITY forwardButton.tooltip          "Go forward one page">
+<!ENTITY goBackCmd.commandkey           "[">
+<!ENTITY goForwardCmd.commandkey        "]">
 <!ENTITY homeButton.label               "Home">
 <!ENTITY homeButton.tooltip             "Go to the Help Start Page">
 <!ENTITY printButton.label              "Print">
