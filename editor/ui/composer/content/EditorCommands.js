@@ -722,7 +722,9 @@ function EditorShowEmbeddedObjects()
 {
   dump("\nEmbedded Objects:\n");
   var objectArray = editorShell.GetEmbeddedObjects();
-  dump(objectArray.length + " embedded objects\n");
+  dump(objectArray.Count() + " embedded objects\n");
+  for (var i=0; i < objectArray.Count(); ++i)
+    dump(objectArray.GetElementAt(i) + "\n");
 }
 
 function EditorUnitTests()
