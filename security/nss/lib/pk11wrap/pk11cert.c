@@ -3750,7 +3750,10 @@ loser:
     } else {
 	crls = nssTrustDomain_FindCRLsBySubject(td, &subject);
     }
-    if (!crls) {
+    if ((!crls) || (*crls == NULL)) {
+	if (crls) {
+	    nssCRLArray_Destroy(crls);
+	}
 	if (NSS_GetError() == NSS_ERROR_NOT_FOUND) {
 	    PORT_SetError(SEC_ERROR_CRL_NOT_FOUND);
 	}
