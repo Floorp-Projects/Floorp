@@ -33,7 +33,14 @@
     </implementation>
     <handlers>
       <handler event="click" button="0" action="if (!this.disabled) this.checked = !this.checked;"/>
-      <handler event="keypress" key=" " action="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="keypress" key=" ">
+        <![CDATA[
+          if (!this.disabled) {
+            this.checked = !this.checked;
+            this.command();
+          }
+        ]]>
+      </handler>
     </handlers>
   </binding>
 

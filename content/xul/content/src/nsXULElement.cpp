@@ -3727,14 +3727,6 @@ nsXULElement::GetRangeList(nsVoidArray*& aResult) const
 
 
 //----------------------------------------------------------------------
-// nsIDOMXULElement interface
-
-NS_IMETHODIMP
-nsXULElement::DoCommand()
-{
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXULElement::AddBroadcastListener(const nsAReadableString& attr,
                                    nsIDOMElement* anElement) 
@@ -4439,8 +4431,6 @@ nsXULElement::Click()
     PRInt32 numShells = doc->GetNumberOfShells();
     nsCOMPtr<nsIPresShell> shell; // Strong
     nsCOMPtr<nsIPresContext> context;
-    nsAutoString tagName;
-    PRBool isButton = NodeInfo()->Equals(NS_LITERAL_STRING("button"));
 
     for (PRInt32 i=0; i<numShells; i++) {
       shell = getter_AddRefs(doc->GetShellAt(i));
@@ -4457,14 +4447,32 @@ nsXULElement::Click()
       event.clickCount = 0;
       event.widget = nsnull;
       HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    }
+  }
+  
+  return NS_OK;
+}
 
-      if (isButton) {
-        nsMouseEvent evt;
-        evt.eventStructType = NS_EVENT;
-        evt.message = NS_MENU_ACTION;
-        nsEventStatus sts = nsEventStatus_eIgnore;
-        HandleDOMEvent(context, &evt, nsnull, NS_EVENT_FLAG_INIT, &sts);
-      }
+NS_IMETHODIMP
+nsXULElement::Command()
+{
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(*getter_AddRefs(doc));
+  if (doc) {
+    PRInt32 numShells = doc->GetNumberOfShells();
+    nsCOMPtr<nsIPresShell> shell;
+    nsCOMPtr<nsIPresContext> context;
+    PRBool isButton = NodeInfo()->Equals(NS_LITERAL_STRING("button"));
+
+    for (PRInt32 i=0; i<numShells; i++) {
+      shell = getter_AddRefs(doc->GetShellAt(i));
+      shell->GetPresContext(getter_AddRefs(context));
+        
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsMouseEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_MENU_ACTION;
+      HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
   }
   
