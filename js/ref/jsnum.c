@@ -97,7 +97,7 @@ num_parseFloat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
 }
 
-/* See ECMA 15.1.2.2. */
+/* See ECMA 15.1.2.2 */
 static JSBool
 num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -105,8 +105,7 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsint radix;
     const jschar *chars, *start;
     jsdouble sum;
-    JSBool negative;
-    uintN digit, newDigit;
+    intN negative, digit, newDigit;
     jschar c;
     jschar digitMax = '9';
     jschar lowerCaseBound = 'a';
@@ -116,12 +115,7 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!str)
 	return JS_FALSE;
     chars = str->chars;
-
-    /* This assumes that the char strings are null-terminated - JS_ISSPACE will
-     * always evaluate to false at the end of a string containing only
-     * whitespace.
-     */
-    while (JS_ISSPACE(*chars))
+    while (JS_ISSPACE(*chars) && *chars != 0)
         chars++;
 
     if ((negative = (*chars == '-')) != 0 || *chars == '+')
@@ -149,9 +143,10 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         /* No radix supplied, or some radix that evaluated to 0. */ 
         if (*chars == '0') {
             /* It's either hex or octal; only increment char if str isn't '0' */
-            if (*(chars + 1) == 'X' || *(chars + 1) == 'x') /* Hex */
+            if ((*(chars + 1) != 0) &&
+                (*(++chars) == 'X' || *chars == 'x'))  /* Hex */
             {
-                chars += 2;
+                chars++;
                 radix = 16;
             } else { /* Octal */
                 radix = 8;
@@ -181,7 +176,7 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     digit = 0; /* how many digits have we seen? (if radix == 10) */
     sum = 0;
-    while ((c = *chars) != 0) { /* 0 is never a valid character. */
+    while ((c = *chars) != 0) {
         if ('0' <= c && c <= digitMax)
             newDigit = c - '0';
         else if ('a' <= c && c < lowerCaseBound)
