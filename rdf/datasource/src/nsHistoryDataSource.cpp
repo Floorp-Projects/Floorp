@@ -153,7 +153,7 @@ static    nsIRDFResource*    mResourceHistoryBySite;
 static    nsIRDFResource*    mResourceHistoryByDate;
 
     nsresult ReadHistory(void);
-    nsresult ReadOneHistoryFile(nsInputFileStream& aStream, nsFileSpec fileSpec);
+    nsresult ReadOneHistoryFile(nsInputFileStream& aStream, const nsFileSpec& aFileSpec);
     nsresult AddPageToGraph(const char* url, const PRUnichar* title, const char* referer, PRUint32 visitCount, PRTime date);
     nsresult AddToDateHierarchy (PRTime date, const char *url);
     nsresult getSiteOfURL(const char* url, nsIRDFResource** resource);
@@ -621,59 +621,87 @@ nsHistoryDataSource::ReadHistory(void)
 
 
 nsresult
-nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, nsFileSpec fileSpec)
+nsHistoryDataSource::ReadOneHistoryFile(nsInputFileStream& aStream, const nsFileSpec& aFileSpec)
 {
-	nsresult	rv = NS_ERROR_FAILURE;
 	nsAutoString	buffer;
 
-	while (! aStream.eof() && ! aStream.failed())
-	{
-		nsresult rv = NS_OK;
-		char c = aStream.get();
-		if ((c != '\r') && (c != '\n'))
-		{
-			buffer += c;
-		}
-		else
-		{
-			int n = 0;
-			char *title, *url, *referer, *visitcount, *date;
-			PRTime time;
-			PRTime fileTime = LL_ZERO;
+	while (! aStream.eof() && ! aStream.failed()) {
+        nsresult rv;
 
-			char *aLine = buffer.ToNewCString();
-			if (aLine && PL_strlen(aLine)>0)
-			{
-				url = aLine;
-				title = strchr(aLine, '\t') + 1;
-				*(title - 1) = '\0';
-				referer = strchr(title, '\t') + 1;
-				*(referer - 1) = '\0';
-				visitcount = strchr(referer, '\t') + 1;
-				*(visitcount - 1) = '\0';
-				date = strchr(visitcount, '\t') + 1;
-				*(date -1 ) = '\0';
-				PR_ParseTimeString (date, 0, &time);
-				if (LL_IS_ZERO(fileTime))
-				{
-					PRExplodedTime etime;
-					fileTime = time;
-					PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
-					if (etime.tm_yday == mSessionTime.tm_yday)
-					{
-						mCurrentFileSpec = fileSpec;
-					}
-				}
+        char c = aStream.get();
+        if ((c != '\r') && (c != '\n')) {
+            buffer += c;
+            continue;
+        }
 
-				AddPageToGraph(url, nsAutoString(title).GetUnicode(), referer,
-					(PRUint32) atol(visitcount), time);
-				delete [] aLine;
-			}
+        char buf[256];
+        char* p = buf;
 
-			buffer = "";
-		}        
-	}
-	return(rv);
+        if (buffer.Length() >= sizeof(buf))
+            p = new char[buffer.Length() + 1];
+
+        if (! p)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        buffer.ToCString(p, buffer.Length() + 1);
+
+        if (PL_strlen(p) > 0) do {
+            char* url = p;
+
+            char* title = PL_strchr(p, '\t');
+            if (! title)
+                break;
+
+            *(title++) = '\0';
+
+            char* referer = PL_strchr(title, '\t');
+            if (! referer)
+                break;
+
+            *(referer++) = '\0';
+
+            char* visitcount = PL_strchr(referer, '\t');
+            if (! visitcount)
+                break;
+
+            *(visitcount++) = '\0';
+
+            char* date = PL_strchr(visitcount, '\t');
+            if (! date)
+                break;
+
+            *(date++) = '\0';
+
+            PRTime time;
+            PR_ParseTimeString(date, 0, &time);
+
+            PRExplodedTime etime;
+            PR_ExplodeTime(time, PR_LocalTimeParameters, &etime);
+
+            // While we parse this file, check to see if it has any
+            // history elements in it from today. If it does, then
+            // we'll re-use it as the current history file.
+            //
+            // XXX Isn't this a little over-ambitious? I could see one
+            // file growing into a monstrous thing if somebody
+            // regularly stays up past midnight.
+            if (etime.tm_yday == mSessionTime.tm_yday)
+                mCurrentFileSpec = aFileSpec;
+
+            rv = AddPageToGraph(url, nsAutoString(title).GetUnicode(), referer,
+                                (PRUint32) atol(visitcount), time);
+
+        } while (0);
+
+        if (p != buf)
+            delete[] p;
+
+        if (NS_FAILED(rv))
+            return rv;
+
+        buffer.Truncate();
+    }
+	return NS_OK;
 }
 
 
