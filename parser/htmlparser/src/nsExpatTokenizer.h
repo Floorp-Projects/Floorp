@@ -53,70 +53,73 @@ public:
 
           NS_DECL_ISUPPORTS
 
-  /* nsITokenizer methods */
-  virtual nsresult ConsumeToken(nsScanner& aScanner);
+  /* nsITokenizer methods */  
+  virtual nsresult ConsumeToken(nsScanner& aScanner);  
+  virtual nsresult DidTokenize(PRBool aIsFinalChunk);
 
   virtual void    FrontloadMisplacedContent(nsDeque& aDeque);
 
 
 protected:
 
-    /**
-     * Parse an XML buffer using expat
-     * @update	nra 2/29/99
-     * @return  NS_ERROR_FAILURE if expat encounters an error, else NS_OK
-     */
-    nsresult ParseXMLBuffer(const char *aBuffer, PRUint32 aLength);
+  /**
+   * Parse an XML buffer using expat
+   * @update	nra 2/29/99
+   * @return  NS_ERROR_FAILURE if expat encounters an error, else NS_OK
+   */
+  nsresult ParseXMLBuffer(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal=PR_FALSE);
 
-    /**
-     * Sets up the callbacks for the expat parser      
-     * @update  nra 2/24/99
-     * @param   none
-     * @return  none
-     */
-    void SetupExpatCallbacks(void);
+  /**
+   * Sets up the callbacks for the expat parser      
+   * @update  nra 2/24/99
+   * @param   none
+   * @return  none
+   */
+  void SetupExpatCallbacks(void);
 
-    void PushXMLErrorToken(const char *aBuffer, PRUint32 aLength);
-	void SetErrorContextInfo(nsParserError* aError, PRUint32 aByteIndex,
-		const char* aSourceBuffer, PRUint32 aLength);
+  // Propagate XML errors to the content sink
+  void PushXMLErrorToken(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
+	void GetLine(const char* aSourceBuffer, PRUint32 aLength, 
+    PRUint32 aByteIndex, nsString& aLine);
 
-    /* The callback handlers that get called from the expat parser */
-    static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
-    static void HandleEndElement(void *userData, const XML_Char *name);
-    static void HandleCharacterData(void *userData, const XML_Char *s, int len);
-    static void HandleComment(void *userData, const XML_Char *name);
-    static void HandleProcessingInstruction(void *userData, 
-      const XML_Char *target, 
-      const XML_Char *data);
-    static void HandleDefault(void *userData, const XML_Char *s, int len);
-    static void HandleUnparsedEntityDecl(void *userData, 
-      const XML_Char *entityName, 
-      const XML_Char *base, 
-      const XML_Char *systemId, 
-      const XML_Char *publicId,
-      const XML_Char *notationName);
-    static void HandleNotationDecl(void *userData,
-      const XML_Char *notationName,
-      const XML_Char *base,
-      const XML_Char *systemId,
-      const XML_Char *publicId);
-    static int HandleExternalEntityRef(XML_Parser parser,
-      const XML_Char *openEntityNames,
-      const XML_Char *base,
-      const XML_Char *systemId,
-      const XML_Char *publicId);
-    static int HandleUnknownEncoding(void *encodingHandlerData,
-      const XML_Char *name,
-      XML_Encoding *info);
+  // Load up an external stream to get external entity information
+  static nsresult OpenInputStream(nsString2& aURLStr, 
+                                  nsIInputStream*& in);
+  static nsresult LoadStream(nsIInputStream* in, 
+                             PRUnichar* &uniBuf, PRUint32 &retLen);
 
-    static nsresult OpenInputStream(nsString2& aURLStr, 
-                                    nsIInputStream*& in);
-    static nsresult LoadStream(nsIInputStream* in, 
-                               PRUnichar* &uniBuf, PRUint32 &retLen);
+  /* The callback handlers that get called from the expat parser */
+  static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
+  static void HandleEndElement(void *userData, const XML_Char *name);
+  static void HandleCharacterData(void *userData, const XML_Char *s, int len);
+  static void HandleComment(void *userData, const XML_Char *name);
+  static void HandleProcessingInstruction(void *userData, 
+    const XML_Char *target, 
+    const XML_Char *data);
+  static void HandleDefault(void *userData, const XML_Char *s, int len);
+  static void HandleUnparsedEntityDecl(void *userData, 
+    const XML_Char *entityName, 
+    const XML_Char *base, 
+    const XML_Char *systemId, 
+    const XML_Char *publicId,
+    const XML_Char *notationName);
+  static void HandleNotationDecl(void *userData,
+    const XML_Char *notationName,
+    const XML_Char *base,
+    const XML_Char *systemId,
+    const XML_Char *publicId);
+  static int HandleExternalEntityRef(XML_Parser parser,
+    const XML_Char *openEntityNames,
+    const XML_Char *base,
+    const XML_Char *systemId,
+    const XML_Char *publicId);
+  static int HandleUnknownEncoding(void *encodingHandlerData,
+    const XML_Char *name,
+    XML_Encoding *info);
 
-    XML_Parser mExpatParser;
+  XML_Parser mExpatParser;
 	PRUint32 mBytesParsed;
-  PRBool mSeenError;
+  nsString mLastLine;
 };
 
 extern NS_HTMLPARS nsresult NS_Expat_Tokenizer(nsIDTD** aInstancePtrResult);

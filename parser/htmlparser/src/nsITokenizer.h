@@ -63,7 +63,9 @@ public:
 class nsITokenizer : public nsISupports {
 public:
 
+  virtual nsresult          WillTokenize(PRBool aIsFinalChunk)=0;
   virtual nsresult          ConsumeToken(nsScanner& aScanner)=0;
+  virtual nsresult          DidTokenize(PRBool aIsFinalChunk)=0;
   virtual nsITokenRecycler* GetTokenRecycler(void)=0;
 
   virtual CToken*           PushTokenFront(CToken* aToken)=0;
@@ -74,6 +76,7 @@ public:
 	virtual CToken*           GetTokenAt(PRInt32 anIndex)=0;
 
   virtual void              PrependTokens(nsDeque& aDeque)=0;
+  
 };
 
 

@@ -232,7 +232,7 @@ friend class CTokenHandler;
      * @update	gess5/11/98
      * @return  TRUE if all went well, otherwise FALSE
      */
-    virtual nsresult ResumeParse(nsIDTD* mDefaultDTD=0);
+    virtual nsresult ResumeParse(nsIDTD* mDefaultDTD=0, PRBool aIsFinalChunk=PR_FALSE);
 
     void  DebugDumpSource(ostream& anOutput);
 
@@ -319,7 +319,7 @@ private:
      *  @param   
      *  @return  TRUE if it's ok to proceed
      */
-    PRBool WillTokenize();
+    PRBool WillTokenize(PRBool aIsFinalChunk = PR_FALSE);
 
    
     /**
@@ -330,7 +330,7 @@ private:
      *  @update  gess 3/25/98
      *  @return  error code 
      */
-    nsresult Tokenize();
+    nsresult Tokenize(PRBool aIsFinalChunk = PR_FALSE);
 
     /**
      *  This is the tail-end of the code sandwich for the
@@ -341,7 +341,7 @@ private:
      *  @param   
      *  @return  TRUE if all went well
      */
-    PRBool DidTokenize();
+    PRBool DidTokenize(PRBool aIsFinalChunk = PR_FALSE);
     
 
 protected:

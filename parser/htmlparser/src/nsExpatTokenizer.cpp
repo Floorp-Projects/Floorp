@@ -115,7 +115,7 @@ NS_IMPL_ADDREF(nsExpatTokenizer)
 NS_IMPL_RELEASE(nsExpatTokenizer)
 
 /**
- * Sets up the callbacks for the expat parser      
+ * Sets up the callbacks for the expat parser
  * @update  nra 2/24/99
  * @param   none
  * @return  none
@@ -145,7 +145,6 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
 nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {  
   NS_INIT_REFCNT();
   mBytesParsed = 0;
-  mSeenError = PR_FALSE;
   nsAutoString buffer("UTF-16");
   const PRUnichar* encoding = buffer.GetUnicode();
   if (encoding) {
@@ -168,7 +167,7 @@ nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {
  *  @return  
  */
 nsExpatTokenizer::~nsExpatTokenizer(){
-  if (mExpatParser) {
+  if (mExpatParser) {    
     XML_ParserFree(mExpatParser);
     mExpatParser = nsnull;
   }
@@ -179,20 +178,27 @@ nsExpatTokenizer::~nsExpatTokenizer(){
   Here begins the real working methods for the tokenizer.
  *******************************************************************/
 
-
-void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByteIndex, 
-                                const char* aSourceBuffer, PRUint32 aLength)
+/* 
+ * Parameters:
+ * 
+ * aSourceBuffer (in): String buffer.
+ * aLength (in): Length of input buffer.
+ * aOffset (in): Offset in buffer
+ * aLine (out): Line on which the character, aSourceBuffer[aOffset], is located.
+ */
+void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength, 
+                                PRUint32 aOffset, nsString& aLine)
 {
-  /* Figure out the substring inside aSourceBuffer that contains the line on which the error
-     occurred.  Copy the line into aError->sourceLine */
-  PR_ASSERT(aByteIndex > 0 && aByteIndex < aLength);
+  /* Figure out the line inside aSourceBuffer that contains character specified by aOffset.
+     Copy it into aLine. */
+  PR_ASSERT(aOffset > 0 && aOffset < aLength);
   /* Assert that the byteIndex and the length of the buffer is even */
-  PR_ASSERT(aByteIndex % 2 == 0 && aLength % 2 == 0);  
-  PRUnichar* start = (PRUnichar* ) &aSourceBuffer[aByteIndex];  /* Will try to find the start of the line */
-  PRUnichar* end = (PRUnichar* ) &aSourceBuffer[aByteIndex];    /* Will try to find the end of the line */
-  PRUint32 startIndex = aByteIndex / 2;          /* Track the position of the 'start' pointer into the buffer */
-  PRUint32 endIndex = aByteIndex / 2;          /* Track the position of the 'end' pointer into the buffer */
-  PRUint32 numCharsInBuffer = aLength / 2;
+  PR_ASSERT(aOffset % 2 == 0 && aLength % 2 == 0);  
+  PRUnichar* start = (PRUnichar* ) &aSourceBuffer[aOffset];  /* Will try to find the start of the line */
+  PRUnichar* end = (PRUnichar* ) &aSourceBuffer[aOffset];    /* Will try to find the end of the line */
+  PRUint32 startIndex = aOffset / sizeof(PRUnichar);          /* Track the position of the 'start' pointer into the buffer */
+  PRUint32 endIndex = aOffset / sizeof(PRUnichar);          /* Track the position of the 'end' pointer into the buffer */
+  PRUint32 numCharsInBuffer = aLength / sizeof(PRUnichar);
   PRBool reachedStart;
   PRBool reachedEnd;
   
@@ -214,12 +220,13 @@ void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByte
     }
   }
 
+  aLine.Truncate(0);
   if (startIndex == endIndex) {
     /* Special case if the error is on a line where the only character is a newline */
-    aError->sourceLine.Append("");
+    aLine.Append("");
   }
   else {
-    PR_ASSERT(endIndex - startIndex >= 2);
+    PR_ASSERT(endIndex - startIndex >= sizeof(PRUnichar));
     /* At this point, there are two cases.  Either the error is on the first line or
        on subsequent lines.  If the error is on the first line, startIndex will decrement
        all the way to zero.  If not, startIndex will decrement to the position of the
@@ -232,7 +239,7 @@ void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByte
     /* At this point, the substring starting at startPosn and ending at (endIndex - 1),
        is the line on which the error occurred. Copy that substring into the error structure. */
     const PRUnichar* unicodeBuffer = (const PRUnichar*) aSourceBuffer;
-    aError->sourceLine.Append(&unicodeBuffer[startPosn], endIndex - startPosn);
+    aLine.Append(&unicodeBuffer[startPosn], endIndex - startPosn);
   }
 }
 
@@ -241,19 +248,25 @@ void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByte
  * an error token and pushes it onto the token queue.
  *
  */
-void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
+void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal)
 {
   CErrorToken* token= (CErrorToken *) gTokenRecycler->CreateTokenOfType(eToken_error, eHTMLTag_unknown);
   nsParserError *error = new nsParserError;
-  PRUint32 byteIndexRelativeToFile = 0;
-
+  
   if(error){  
     error->code = XML_GetErrorCode(mExpatParser);
     error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
     error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
     error->description = XML_ErrorString(error->code);
-    byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);  
-    SetErrorContextInfo(error, (byteIndexRelativeToFile - mBytesParsed), aBuffer, aLength);  
+    if (!aIsFinal) {
+      PRInt32 byteIndexRelativeToFile = 0;
+      byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);
+      GetLine(aBuffer, aLength, (byteIndexRelativeToFile - mBytesParsed), error->sourceLine);
+    }
+    else {
+      error->sourceLine.Append(mLastLine);
+    }
+
     token->SetError(error);
 
     CToken* theToken = (CToken* )token;
@@ -261,14 +274,20 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
   }
 }
 
-nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength){
+nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength, PRBool aIsFinal)
+{
   nsresult result=NS_OK;
-  if (mExpatParser) {    
-    if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {
-      PushXMLErrorToken(aBuffer, aLength);
+  PR_ASSERT((aBuffer && aLength) || (aBuffer == nsnull && aLength == 0));
+  if (mExpatParser) {
+    if (!XML_Parse(mExpatParser, aBuffer, aLength, aIsFinal)) {
+      PushXMLErrorToken(aBuffer, aLength, aIsFinal);
       result=NS_ERROR_HTMLPARSER_STOPPARSING;
     }
-	  mBytesParsed += aLength;
+    else if (aBuffer && aLength) {
+      // Cache the last line in the buffer
+      GetLine(aBuffer, aLength, aLength - sizeof(PRUnichar), mLastLine);
+    }
+	  mBytesParsed += aLength;    
   }
   else {
     result = NS_ERROR_FAILURE;
@@ -296,23 +315,26 @@ nsresult nsExpatTokenizer::ConsumeToken(nsScanner& aScanner) {
   // Ask the scanner to send us all the data it has
   // scanned and pass that data to expat.
   nsresult result = NS_OK;
-  nsString& theBuffer = aScanner.GetBuffer();
-  PRInt32 length = theBuffer.Length();
-  if(0 < length) {
-    const PRUnichar* expatBuffer = theBuffer.GetUnicode();
-    PRUint32 bufLength = theBuffer.Length() * 2;
-    if (expatBuffer) {
-      gTokenDeque=&mTokenDeque;
-      gExpatParser = mExpatParser;
-      result = ParseXMLBuffer((const char *)expatBuffer, bufLength);
-    }
-    theBuffer.Truncate(0);
-  }
+  nsString& theBuffer = aScanner.GetBuffer();  
+  PRUint32 bufLength = theBuffer.Length() * sizeof(PRUnichar);
+  const PRUnichar* expatBuffer = (bufLength) ? theBuffer.GetUnicode() : nsnull;
+  
+  gTokenDeque=&mTokenDeque;
+  gExpatParser = mExpatParser;
+
+  result = ParseXMLBuffer((const char *)expatBuffer, bufLength);
+    
+  theBuffer.Truncate(0);
+  
   if(NS_OK==result)
     result=aScanner.Eof();
   return result;
 }
 
+nsresult nsExpatTokenizer::DidTokenize(PRBool aIsFinalChunk)
+{
+  return ParseXMLBuffer(nsnull, 0, aIsFinalChunk);
+}
 
 /**
  * 
