@@ -415,7 +415,7 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
         PRInt32 clipboard;
 
-#ifdef XP_OS2
+#if defined(XP_OS2) || defined(XP_WIN32)
         clipboard = nsIClipboard::kGlobalClipboard;
 #else
         clipboard = nsIClipboard::kSelectionClipboard;
