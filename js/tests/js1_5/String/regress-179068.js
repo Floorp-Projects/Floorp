@@ -42,6 +42,50 @@
 * For that the script passes to eval() "str ='LONG_STRING_LITERAL';" where
 * LONG_STRING_LITERAL is a string with 200K chars.
 *
+* Igor Bukanov explains the technique used below:
+*
+* > Philip Schwartau wrote:
+* >...
+* > Here is the heart of the testcase:
+* >
+* >   // Generate 200K long string
+* >   var long_str = duplicate(LONG_STR_SEED, N);
+* >   var str = "";
+* >   eval("str='".concat(long_str, "';"));
+* >   var test_is_ok = (str.length == LONG_STR_SEED.length * N);
+* >
+* >
+* > The testcase creates two identical strings, |long_str| and |str|. It
+* > uses eval() simply to assign the value of |long_str| to |str|. Why is
+* > it necessary to have the variable |str|, then? Why not just create
+* > |long_str| and test it? Wouldn't this be enough:
+* >
+* >   // Generate 200K long string
+* >   var long_str = duplicate(LONG_STR_SEED, N);
+* >   var test_is_ok = (long_str.length == LONG_STR_SEED.length * N);
+* >
+* > Or do we specifically need to test eval() to exercise the interpreter?
+*
+* The reason for eval is to test string literals like in 'a string literal
+* with 100 000 characters...', Rhino deals fine with strings generated at
+* run time where lengths > 64K. Without eval it would be necessary to have
+* a test file excedding 64K which is not that polite for CVS and then a
+* special treatment for the compiled mode in Rhino should be added.
+*
+*
+* >
+* > If so, is it important to use the concat() method in the assignment, as
+* > you have done: |eval("str='".concat(long_str, "';"))|, or can we simply
+* > do |eval("str = long_str;")| ?
+*
+* The concat is a replacement for eval("str='"+long_str+"';"), but as
+* long_str is huge, this leads to constructing first a new string via
+* "str='"+long_str and then another one via ("str='"+long_str) + "';"
+* which takes time under JDK 1.1 on a something like StrongArm 200MHz.
+* Calling concat makes less copies, that is why it is used in the
+* duplicate function and this is faster then doing recursion like in the
+* test case to test that 64K different string literals can be handled.
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
