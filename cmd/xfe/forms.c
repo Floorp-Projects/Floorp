@@ -2446,9 +2446,12 @@ htmlarea_create_widget(FEFormData *fed, LO_FormElementStruct *form)
   LO_FormElementData	*form_data = XP_GetFormElementData(form);
   MWContext				*context   = ha_fed->form_data.context;
   Widget				parent     = CONTEXT_DATA(context)->drawing_area;
-  char 					*default_text = (char*)XP_FormGetDefaultText(form_data);
+  char 					*default_text = (char*)XP_FormGetCurrentText(form_data);
   LO_TextAttr 			*text_attr = XP_GetFormTextAttr(form);
   int32 				wid, ht;
+
+  if (!default_text)
+	default_text = (char*)XP_FormGetDefaultText(form_data);
 
 
   /* XXX: For now, we are using the textarea's rows/cols attribute to specify
@@ -2541,7 +2544,6 @@ htmlarea_get_value(FEFormData *fed, LO_FormElementStruct *form, XP_Bool delete_p
 static void
 htmlarea_reset(FEFormData *fed, LO_FormElementStruct *form)
 {
-#ifdef NOT_YET_KIN
   LO_FormElementData *form_data = XP_GetFormElementData(form);
   FEHTMLAreaFormData *ha_fed = (FEHTMLAreaFormData*)fed;
   char *default_text = (char*)XP_FormGetDefaultText(form_data);
@@ -2553,7 +2555,6 @@ htmlarea_reset(FEFormData *fed, LO_FormElementStruct *form)
     fe_forms_clean_text(fed->context, charset, default_text, False);
     EDT_SetDefaultHTML(ha_fed->editor_context, default_text);
   }
-#endif /* NOT_YET_KIN */
 }
 
 static void
