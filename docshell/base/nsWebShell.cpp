@@ -254,9 +254,6 @@ public:
   NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult);
 
   // nsIWebShellContainer
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
   NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
   NS_IMETHOD FireUnloadEvent(void);
 
@@ -911,37 +908,6 @@ nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
   return (nsnull != mDocLoader) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-#define FILE_PROTOCOL "file://"
-
-static void convertFileToURL(const nsString &aIn, nsString &aOut)
-{
-  aOut = aIn;
-#ifdef XP_PC
-  // Check for \ in the url-string (PC)
-  if(kNotFound != aIn.FindChar(PRUnichar('\\'))) {
-#else
-#if XP_UNIX
-  // Check if it starts with / or \ (UNIX)
-  const PRUnichar * up = aIn.GetUnicode();
-  if((PRUnichar('/') == *up) ||
-     (PRUnichar('\\') == *up)) {
-#else
-  if (0) {  
-  // Do nothing (All others for now) 
-#endif
-#endif
-
-#ifdef XP_PC
-    // Translate '\' to '/'
-    aOut.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
-    aOut.ReplaceChar(PRUnichar(':'), PRUnichar('|'));
-#endif
-
-    // Build the file URL
-    aOut.Insert(FILE_PROTOCOL,0);
-  }
-}
-
 static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
 {
    nsXPIDLCString spec1;
@@ -1090,16 +1056,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   if (aKickOffLoad)
     StopLoad();
   
-
-  // Tell web-shell-container we are loading a new url
-  if (nsnull != mContainer) {
-    nsAutoString uniSpec (urlSpec);
-    rv = mContainer->BeginLoadURL(this, uniSpec.GetUnicode());
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
   mProcessedEndDocumentLoad = PR_FALSE;
 
  /* WebShell was primarily passing the buck when it came to streamObserver.
@@ -1123,75 +1079,25 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
     MOZ_TIMER_START(mTotalTime);
 #endif
 
-    nsCOMPtr<nsIURILoader> pURILoader = do_GetService(NS_URI_LOADER_PROGID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString aUrlScheme;
-    aUri->GetScheme(getter_Copies(aUrlScheme));
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    pURILoader->GetLoadGroupForContext(NS_STATIC_CAST(nsISupports *, (nsIWebShell *) this), getter_AddRefs(loadGroup));
-
-    // first, create a channel for the protocol....
-    nsCOMPtr<nsIIOService> pNetService = do_GetService(kIOServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIChannel> pChannel;
-      nsCOMPtr<nsIInterfaceRequestor> requestor (do_QueryInterface(NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this)));
-
-      // Create a referrer URI
-      nsCOMPtr<nsIURI> referrer;
-      if (aReferrer) {
-        nsAutoString tempReferrer(aReferrer);
-        char* referrerStr = tempReferrer.ToNewCString();
-        pNetService->NewURI(referrerStr, nsnull, getter_AddRefs(referrer));
-        Recycle(referrerStr);
-      }
-
-      rv = NS_OpenURI(getter_AddRefs(pChannel), aUri, pNetService, loadGroup, requestor, aType);
-      if (NS_SUCCEEDED(rv)) {
-        // XXX wrong, but needed for now:
-        rv = pChannel->SetOriginalURI(referrer ? referrer.get() : aUri);  
-      }
-      if (NS_FAILED(rv)) {
-        if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
-          return NS_OK;                        // dom and there is nothing else to do
-        else
-          return rv; // uhoh we were unable to get a channel to handle the url!!!
-      }
-
-      // Mark the channel as being a document URI...
-      nsLoadFlags loadAttribs = 0;
-      pChannel->GetLoadAttributes(&loadAttribs);
-      loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
-
-      pChannel->SetLoadAttributes(loadAttribs);
-      
-      nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(pChannel));
-      if (httpChannel)
+    // Create a referrer URI
+    nsCOMPtr<nsIIOService> pNetService(do_GetService(kIOServiceCID));
+    nsCOMPtr<nsIURI> referrer;
+    if(aReferrer)
       {
-          // figure out if we need to set the post data stream on the channel...
-          // right now, this is only done for http channels.....
-          if (aPostDataStream)
-          {
-            httpChannel->SetRequestMethod(HM_POST);
-            httpChannel->SetPostDataStream(aPostDataStream);
-          }
-          // Set the referrer explicitly
-          if (referrer)
-          {
-              // Referrer is currenly only set for link clicks here. 
-              httpChannel->SetReferrer(referrer, 
-                      nsIHTTPChannel::REFERRER_LINK_CLICK);
-          }
+      nsAutoString tempReferrer(aReferrer);
+      char* referrerStr = tempReferrer.ToNewCString();
+      pNetService->NewURI(referrerStr, nsnull, getter_AddRefs(referrer));
+      Recycle(referrerStr);
       }
 
-      // now let's pass the channel into the uri loader
-      nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
-      if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
-        loadCmd = nsIURILoader::viewUserClick;
+    // now let's pass the channel into the uri loader
+    nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
+    if(nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
+       loadCmd = nsIURILoader::viewUserClick;
 
-      rv = pURILoader->OpenURI(pChannel, loadCmd, aWindowTarget /* window target */, 
-                               NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this));
-    }
+    NS_ENSURE_SUCCESS(DoURILoad(aUri, referrer, loadCmd, aWindowTarget, 
+      aPostDataStream), NS_ERROR_FAILURE);
+    return NS_OK; 
   }
 
   return rv;
@@ -1335,14 +1241,6 @@ nsWebShell::DoContent(const char * aContentType,
   if (aAbortProcess)
     *aAbortProcess = PR_FALSE;
 
-  nsXPIDLCString strCommand;
-  // go to the uri loader and ask it to convert the uri load command into a old
-  // world style string
-  NS_WITH_SERVICE(nsIURILoader, pURILoader, NS_URI_LOADER_PROGID, &rv);
-  if (NS_SUCCEEDED(rv))
-    pURILoader->GetStringForCommand(aCommand, getter_Copies(strCommand));
-
-
   // determine if the channel has just been retargeted to us...
   nsLoadFlags loadAttribs = 0;
   aOpenedChannel->GetLoadAttributes(&loadAttribs);
@@ -1359,7 +1257,7 @@ nsWebShell::DoContent(const char * aContentType,
     // however since we can't retarget yet, we were basically canceling our very
     // own load group!!! So the request would get canceled out from under us...
     // after retargeting we may be able to safely call DoLoadURL. 
-    DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, nsnull, nsnull, PR_FALSE);
+    DoLoadURL(aUri, "view", nsnull, nsIChannel::LOAD_NORMAL, nsnull, nsnull, PR_FALSE);
     SetFocus(); // force focus to get set on the retargeted window...
   }
 
@@ -1418,15 +1316,6 @@ nsresult nsWebShell::PrepareToLoadURI(nsIURI * aUri,
   }
   ShowHistory();
 
-  // Give web-shell-container right of refusal
-  if (nsnull != mContainer) {
-    nsAutoString str(spec);
-    rv = mContainer->WillLoadURL(this, str.GetUnicode(), nsLoadURL);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
   return rv;
 }
 
@@ -1450,47 +1339,6 @@ nsWebShell::LoadURI(nsIURI * aUri,
 }
 
 
-static nsresult convertURLToFileCharset(nsString& aIn, nsCString& aOut)
-{
-    nsresult rv=NS_OK;
-    aOut = "";
-    // for file url, we need to convert the nsString to the file system
-    // charset before we pass to NS_NewURI
-    static nsAutoString fsCharset("");
-    // find out the file system charset first
-    if(0 == fsCharset.Length()) {
-       fsCharset = "ISO-8859-1"; // set the fallback first.
-       NS_WITH_SERVICE(nsIPlatformCharset, plat, kPlatformCharsetCID, &rv);
-       NS_ASSERTION(NS_SUCCEEDED(rv), "cannot get nsIPlatformCharset");
-       if(NS_SUCCEEDED(rv)) {
-         rv = plat->GetCharset(kPlatformCharsetSel_FileName, fsCharset);
-         NS_ASSERTION(NS_SUCCEEDED(rv), "nsIPlatformCharset GetCharset failed");
-       }
-    }
-    // We probably should cache ccm here.
-    // get a charset converter from the manager
-    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "cannot get CharsetConverterManager");
-    nsCOMPtr<nsIUnicodeEncoder> fsEncoder;
-    if(NS_SUCCEEDED(rv)){
-       rv = ccm->GetUnicodeEncoder(&fsCharset, getter_AddRefs(fsEncoder));
-       NS_ASSERTION(NS_SUCCEEDED(rv), "cannot get encoder");
-       if(NS_SUCCEEDED(rv)){
-          PRInt32 bufLen = 0;
-          rv = fsEncoder->GetMaxLength(aIn.GetUnicode(), aIn.Length(), &bufLen);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "GetMaxLength failed");
-          aOut.SetCapacity(bufLen+1);
-          PRInt32 srclen = aIn.Length();
-          rv = fsEncoder->Convert(aIn.GetUnicode(), &srclen, 
-                    (char*)aOut.GetBuffer(), &bufLen);
-          if(NS_SUCCEEDED(rv)) {
-             ((char*)aOut.GetBuffer())[bufLen]='\0';
-             aOut.SetLength(bufLen);
-          }
-       }
-    }
-    return rv;
-}
 NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const char* aCommand,
@@ -1501,195 +1349,125 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const PRUnichar* aReferrer,
                     const char * aWindowTarget)
 {
-  nsresult rv = NS_OK;
-  PRBool keywordsEnabled = PR_FALSE;
+   nsresult rv = NS_OK;
+   PRBool keywordsEnabled = PR_FALSE;
 
-  /* 
+   /* 
      TODO This doesnt belong here... The app should be doing all this
      URL play. The webshell should not have a clue about whats "mailto" 
      If you insist that this should be here, then put in URL parsing 
      optimizations here. -Gagan
-  */
+   */
 
-  nsAutoString urlStr(aURLSpec);
-  // first things first. try to create a uri out of the string.
-  nsCOMPtr<nsIURI> uri;
-  nsXPIDLCString  spec;
-  if(0==urlStr.Find("file:",0)) {
-    // if this is file url, we need to  convert the URI
-    // from Unicode to the FS charset
-    nsCAutoString inFSCharset;
-    rv = convertURLToFileCharset(urlStr, inFSCharset);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "convertURLToFielCharset failed");
-    if (NS_SUCCEEDED(rv)) 
-      rv = NS_NewURI(getter_AddRefs(uri), inFSCharset.GetBuffer(), nsnull);
-  } else {
-    rv = NS_NewURI(getter_AddRefs(uri), urlStr, nsnull);
-  }
-  if (NS_FAILED(rv)) {
-    // no dice.
-    nsAutoString urlSpec;
-    urlStr.Trim(" ");
+   nsAutoString urlStr(aURLSpec);
+   // first things first. try to create a uri out of the string.
+   nsCOMPtr<nsIURI> uri;
+   nsXPIDLCString  spec;
+   if(0==urlStr.Find("file:",0))
+      {
+      // if this is file url, we need to  convert the URI
+      // from Unicode to the FS charset
+      nsCAutoString inFSCharset;
+      rv = ConvertStringURIToFileCharset(urlStr, inFSCharset);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "convertURLToFielCharset failed");
+      if(NS_SUCCEEDED(rv)) 
+         rv = NS_NewURI(getter_AddRefs(uri), inFSCharset.GetBuffer(), nsnull);
+      } 
+   else 
+      rv = NS_NewURI(getter_AddRefs(uri), urlStr, nsnull);
+   if(NS_FAILED(rv))
+      {
+      // no dice.
+      nsAutoString urlSpec;
+      urlStr.Trim(" ");
 
-    // see if we've got a file url.
-    convertFileToURL(urlStr, urlSpec);
-    nsCAutoString inFSCharset;
-    rv = convertURLToFileCharset(urlSpec, inFSCharset);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "convertURLToFielCharset failed");
-    if (NS_SUCCEEDED(rv)) 
-      rv = NS_NewURI(getter_AddRefs(uri), inFSCharset.GetBuffer(), nsnull);
+      // see if we've got a file url.
+      ConvertFileToStringURI(urlStr, urlSpec);
+      nsCAutoString inFSCharset;
+      rv = ConvertStringURIToFileCharset(urlSpec, inFSCharset);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "convertURLToFielCharset failed");
+      if(NS_SUCCEEDED(rv)) 
+         rv = NS_NewURI(getter_AddRefs(uri), inFSCharset.GetBuffer(), nsnull);
 
-    if (NS_FAILED(rv)) {
-      NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
+      if(NS_FAILED(rv))
+         {
+         rv = CreateFixupURI(urlStr.GetUnicode(), getter_AddRefs(uri));
 
-      rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
-      if (NS_FAILED(rv)) return rv;
+         if(NS_ERROR_UNKNOWN_PROTOCOL == rv)
+            {
+            PRInt32 colon=urlStr.FindChar(':');
+            // we weren't able to find a protocol handler
+            rv = InitDialogVars();
+            if (NS_FAILED(rv)) 
+               return rv;
 
-      PRInt32 qMarkLoc = -1, spaceLoc = -1;
+            nsXPIDLString messageStr;
+            nsAutoString name("protocolNotFound");
+            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+            if (NS_FAILED(rv)) 
+               return rv;
 
-      rv = NS_ERROR_FAILURE;
-      if (keywordsEnabled) {
-          // These are keyword formatted strings
-          // "what is mozilla"
-          // "what is mozilla?"
-          // "?mozilla"
-          // "?What is mozilla"
+            NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
 
-          // These are not keyword formatted strings
-          // "www.blah.com" - anything with a dot in it 
-          // "nonQualifiedHost:80" - anything with a colon in it
-          // "nonQualifiedHost?"
-          // "nonQualifiedHost?args"
-          // "nonQualifiedHost?some args"
+            // extract the scheme
+            nsAutoString scheme;
+            urlSpec.Left(scheme, colon);
 
-          if (urlStr.FindChar('.') == -1 && urlStr.FindChar(':') == -1) {
-              qMarkLoc = urlStr.FindChar('?');
-              spaceLoc = urlStr.FindChar(' ');
+            nsAutoString dnsMsg(scheme);
+            dnsMsg.Append(' ');
+            dnsMsg.Append(messageStr);
 
-              PRBool keyword = PR_FALSE;
-              if (qMarkLoc == 0) {
-                  keyword = PR_TRUE;
-              } else if ( (spaceLoc > 0) && 
-                          ( (qMarkLoc == -1) || (spaceLoc < qMarkLoc) )) {
-                    keyword = PR_TRUE;
-              }
-
-              if (keyword) {
-                  nsCAutoString keywordSpec("keyword:");
-                  char *utf8Spec = urlStr.ToNewUTF8String();
-                  if(utf8Spec) {
-                      char* escapedUTF8Spec = nsEscape(utf8Spec, url_Path);
-                      if(escapedUTF8Spec) {
-                          keywordSpec.Append(escapedUTF8Spec);
-                          rv = NS_NewURI(getter_AddRefs(uri), keywordSpec.GetBuffer(), nsnull);
-                          nsAllocator::Free(escapedUTF8Spec);
-                      } // escapedUTF8Spec
-                      nsAllocator::Free(utf8Spec);
-                  } // utf8Spec
-              } // keyword 
-          } // FindChar
-      } // keywordEnable
-   
-
-      PRInt32 colon = -1;
-      if (NS_FAILED(rv)) {
-          PRInt32 fSlash = urlSpec.FindChar('/');
-          PRUnichar port;
-          // if no scheme (protocol) is found, assume http.
-          if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
-               || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
-               || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
-                    && ((port=urlSpec.CharAt(colon+1)) <= '9')
-                    && (port > '0') )) {
-            // find host name
-            PRInt32 hostPos = urlSpec.FindCharInSet("./:");
-            if (hostPos == -1) {
-              hostPos = urlSpec.Length();
-            }
-
-            // extract host name
-            nsAutoString hostSpec;
-            urlSpec.Left(hostSpec, hostPos);
-
-            // insert url spec corresponding to host name
-            if (hostSpec.EqualsIgnoreCase("ftp")) {
-              urlSpec.Insert("ftp://", 0, 6);
-            } else {
-              urlSpec.Insert("http://", 0, 7);
-            }
-          } // end if colon
-
-          rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
-          if(NS_ERROR_UNKNOWN_PROTOCOL == rv)
-             {
-             // we weren't able to find a protocol handler
-             rv = InitDialogVars();
-             if (NS_FAILED(rv)) return rv;
-
-             nsXPIDLString messageStr;
-             nsAutoString name("protocolNotFound");
-             rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
-             if (NS_FAILED(rv)) return rv;
-
-             NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
-
-             // extract the scheme
-             nsAutoString scheme;
-             urlSpec.Left(scheme, colon);
-
-             nsAutoString dnsMsg(scheme);
-             dnsMsg.Append(' ');
-             dnsMsg.Append(messageStr);
-
-             (void)mPrompter->Alert(dnsMsg.GetUnicode());
-             } // end unknown protocol
+            (void)mPrompter->Alert(dnsMsg.GetUnicode());
+            } // end unknown protocol
+         }
       }
-   }
-  }
 
-  if (!uri) return rv;
+   if(!uri)
+      return rv;
 
    rv = uri->GetSpec(getter_Copies(spec));
-   if (NS_FAILED(rv)) return rv;
+   if(NS_FAILED(rv))
+      return rv;
 
-  // Get hold of Root webshell
-  nsCOMPtr<nsIWebShell>  root;
-  nsCOMPtr<nsISessionHistory> shist;
-  PRBool  isLoadingHistory=PR_FALSE; // Is SH currently loading an entry from history?
-  rv = GetRootWebShell(*getter_AddRefs(root));
-  // Get hold of session History
-  if (NS_SUCCEEDED(rv) && root) {    
-    root->GetSessionHistory(*getter_AddRefs(shist));
-  }
-  if (shist)
-    shist->GetLoadingFlag(&isLoadingHistory);
+   // Get hold of Root webshell
+   nsCOMPtr<nsIWebShell>  root;
+   nsCOMPtr<nsISessionHistory> shist;
+   PRBool  isLoadingHistory=PR_FALSE; // Is SH currently loading an entry from history?
+   rv = GetRootWebShell(*getter_AddRefs(root));
+   // Get hold of session History
+   if (NS_SUCCEEDED(rv) && root)
+      {    
+      root->GetSessionHistory(*getter_AddRefs(shist));
+      }
+   if (shist)
+      shist->GetLoadingFlag(&isLoadingHistory);
 
 
-  /* 
+   /* 
    * Save the history state for the current index iff this loadurl() request
    * is not from SH. When the request comes from SH, aModifyHistory will
    * be false and nsSessionHistory.cpp takes of this.
    */
-  if (shist)
-   {
-   PRInt32  indix;
-     shist->GetCurrentIndex(&indix);
-     if (indix >= 0 && (aModifyHistory))
+   if (shist)
       {
-       nsCOMPtr<nsILayoutHistoryState>  historyState;
-       //XXX For now don't do it when we have frames
-       if(mChildren.Count())
+      PRInt32  indix;
+      shist->GetCurrentIndex(&indix);
+      if(indix >= 0 && (aModifyHistory))
          {
-         nsCOMPtr<nsIPresShell> presShell;
-         GetPresShell(getter_AddRefs(presShell));
-         if(presShell)
-            rv = presShell->CaptureHistoryState(getter_AddRefs(historyState));
-         if (NS_SUCCEEDED(rv) && historyState)
-           shist->SetHistoryObjectForIndex(indix, historyState);
+         nsCOMPtr<nsILayoutHistoryState>  historyState;
+         //XXX For now don't do it when we have frames
+         if(mChildren.Count())
+            {
+            nsCOMPtr<nsIPresShell> presShell;
+            GetPresShell(getter_AddRefs(presShell));
+            if(presShell)
+               rv = presShell->CaptureHistoryState(getter_AddRefs(historyState));
+            if(NS_SUCCEEDED(rv) && historyState)
+               shist->SetHistoryObjectForIndex(indix, historyState);
+            }
          }
       }
-   }
-  /* Set the History state object for the current page in the
+   /* Set the History state object for the current page in the
    * presentation shell. If it is a new page being visited,
    * aHistoryState is null. If the load is coming from
    * session History, it will be set to the cached history object by
@@ -1699,59 +1477,65 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
    /* If the current Uri is the same as the one to be loaded
     * don't add it to session history. This avoids multiple
-	* entries for the same url in the  go menu 
-	*/
+   * entries for the same url in the  go menu 
+   */
    nsCOMPtr<nsIURI> currentURI;
    nsresult res = GetCurrentURI(getter_AddRefs(currentURI));
-   if (NS_SUCCEEDED(res) && currentURI) {
-	  nsXPIDLCString currentUriSpec;
+   if(NS_SUCCEEDED(res) && currentURI)
+      {
+      nsXPIDLCString currentUriSpec;
       rv = currentURI->GetSpec(getter_Copies(currentUriSpec));
-      if (NS_FAILED(rv)) return rv;
+      if(NS_FAILED(rv))
+         return rv;
       nsAutoString currentURIString(currentUriSpec);
-	  if (currentURIString.Equals(spec)) {
+      if(currentURIString.Equals(spec))
+         {
          /* The url to be loaded is the same as the 
-		  * url already in the page. Don't add it to session history
-		  */
-		  aModifyHistory = PR_FALSE;
-	  }
-   }
+	     * url already in the page. Don't add it to session history
+	     */
+	     aModifyHistory = PR_FALSE;
+         }
+      }
 
 
-  /* Add the page to session history */
-  if (aModifyHistory && shist)  {
-        PRInt32  ret;
-        nsCAutoString referrer(aReferrer);
-        ret = shist->Add(spec, referrer, this);
-  }
+   /* Add the page to session history */
+   if(aModifyHistory && shist)
+      {
+      PRInt32  ret;
+      nsCAutoString referrer(aReferrer);
+      ret = shist->Add(spec, referrer, this);
+      }
 
-  nsCOMPtr<nsIWebShell> parent;
-  res = GetParent(*getter_AddRefs(parent));
-  nsCOMPtr<nsIURI> newURI;
+   nsCOMPtr<nsIWebShell> parent;
+   res = GetParent(*getter_AddRefs(parent));
+   nsCOMPtr<nsIURI> newURI;
 
-  if ((isLoadingHistory)) {
-  /* if LoadURL() got called from SH, AND If we are going "Back/Forward" 
-   * to a frame page,SH  will change the current uri to the right value
-   * for smoother redraw. 
-   */
-     res = GetCurrentURI(getter_AddRefs(newURI));
-  }
-  else{
-  /* If the call is not from SH, use the url passed by the caller
-   * so that things like JS will work right. This is for bug # 1646.
-   * May regress in other situations.
-   * What a hack
-   */
-     nsAutoString urlstr = (const char *) spec;
-     res = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
-  }
-  
+   if ((isLoadingHistory))
+      {
+      /* if LoadURL() got called from SH, AND If we are going "Back/Forward" 
+      * to a frame page,SH  will change the current uri to the right value
+      * for smoother redraw. 
+      */
+      res = GetCurrentURI(getter_AddRefs(newURI));
+      }
+   else
+      {
+      /* If the call is not from SH, use the url passed by the caller
+      * so that things like JS will work right. This is for bug # 1646.
+      * May regress in other situations.
+      * What a hack
+      */
+      nsAutoString urlstr = (const char *) spec;
+      res = NS_NewURI(getter_AddRefs(newURI), urlstr, nsnull);
+      }
 
-  if (NS_SUCCEEDED(res)) {
-    // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
-    return LoadURI(newURI, aCommand, aPostDataStream, aModifyHistory, aType, aHistoryState, aReferrer, aWindowTarget);
-  }
-  return rv;
 
+   if(NS_SUCCEEDED(res))
+      {
+      // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
+      return LoadURI(newURI, aCommand, aPostDataStream, aModifyHistory, aType, aHistoryState, aReferrer, aWindowTarget);
+      }
+   return rv;
 }
 
 
@@ -1781,20 +1565,13 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
       (aHistoryIndex < mHistory.Count())) {
     nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
 
-    // Give web-shell-container right of refusal
-    nsAutoString urlSpec(*s);
-    if (nsnull != mContainer) {
-      rv = mContainer->WillLoadURL(this, urlSpec.GetUnicode(), nsLoadHistory);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-
 #ifdef DEBUG
     printf("Goto %d\n", aHistoryIndex);
 #endif
     mHistoryIndex = aHistoryIndex;
     ShowHistory();
+
+    nsAutoString urlSpec(*s);
 
     // convert the uri spec into a url and then pass it to DoLoadURL
     nsCOMPtr<nsIURI> uri;
@@ -1805,8 +1582,9 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
                    "view",        // Command
                    nsnull,        // Post Data
                    nsISessionHistory::LOAD_HISTORY,  // the reload type
-                   0,            // load attributes
-                   nsnull,nsnull);      // referrer
+                   nsnull,        // referrer
+                   nsnull,        // window target
+                   PR_TRUE);      // kick off load?
   }
   return rv;
 
@@ -1872,37 +1650,6 @@ nsWebShell::ShowHistory()
 //----------------------------------------------------------------------
 
 // WebShell container implementation
-
-NS_IMETHODIMP
-nsWebShell::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
-{
-  nsresult rv = NS_OK;
-  if (nsnull != mContainer) {
-    rv = mContainer->WillLoadURL(aShell, aURL, aReason);
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsWebShell::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
-{
-  if (nsnull != mContainer) {
-    // XXX: do not propagate this notification up from any frames...
-    return mContainer->BeginLoadURL(aShell, aURL);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus)
-{
-  nsresult rv = NS_OK;
-  if (nsnull != mContainer) {
-    // XXX: do not propagate this notification up from any frames...
-    return mContainer->EndLoadURL(aShell, aURL, aStatus);
-  }
-  return rv;
-}
 
 NS_IMETHODIMP
 nsWebShell::SetHistoryState(nsISupports* aLayoutHistoryState)
@@ -2319,21 +2066,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
     }
 
     mEODForCurrentDocument = PR_TRUE;
-
-    // Fire the EndLoadURL of the web shell container
-    if (nsnull != aURL) {
-       nsAutoString urlString;
-       char* spec;
-       rv = aURL->GetSpec(&spec);
-       if (NS_SUCCEEDED(rv)) {
-         urlString = spec;
-         if (nsnull != mContainer) {
-            rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
-         }
-         nsCRT::free(spec);
-       }
-    }
-
 
     nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
