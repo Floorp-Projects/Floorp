@@ -1,16 +1,11 @@
-var curPageIndex = 0;
-var wizardMap = new Array("test-content1_1.xul", "test-tab2.xul", "test-tab3.xul", "test-tab4.xul");
+var wizardMap = new Array("test-content1_1.xul");
 var content;
-var count = 0;
 var wizardHash = new Array;
 var firstTime = true;
 
 var testMap = {
     content1_1: { next: "content1_2" },
-    content1_2: { next: "tab2", previous: "content1_1" },
-    tab2:   { next: "tab3", previous: "content1_2"},
-    tab3: { next: "tab4", previous: "tab2"},
-	tab4:   { previous: "tab3"},
+    content1_2: { previous: "content1_1" },
 }
 
 var pagePrefix="test-";
@@ -22,11 +17,10 @@ var profName = "";
 var profDir = "";
 
 var toolkitCore;
-nameGlobal = new Array();
-nameArray = new Array();
-var count = 0;
-var dataCount = 0;
 
+
+// hack for inability to gray out finish button in first screen on first load
+var isProfileData = false;
 
 function wizardPageLoaded(tag) {
 	dump("**********wizardPageLoaded\n");
@@ -48,25 +42,8 @@ function loadPage(thePage)
 		saveData();
 	}
 
-	if (thePage == wizardMap[0]) {
-		curPageIndex = 0;
-	}
-	else if (thePage == wizardMap[1]) {
-		curPageIndex = 1;
-	}
-	else if (thePage == wizardMap[2]) {
-		curPageIndex = 2;
-	}
-	else if (thePage == wizardMap[3]) {
-		curPageIndex = 3;
-	}
-
-	dump("***********COUNT: "+count+"\n\n");
-	count++;
-
 	dump("**********loadPage\n");
 	dump("thePage: "+thePage+"\n");
-	dump("curPageIndex: "+curPageIndex+"\n");
 	displayPage(thePage);
 
 	firstTime = false;
@@ -79,7 +56,11 @@ function onNext()
 {
 	dump("***********onNext\n");
 
-	if (currentPageTag != "tab4") {
+	if (currentPageTag == "content1_1") {
+		isProfileData = true;
+	}
+
+	if (currentPageTag != "content1_2") {
 		saveData();
 		var nextPageTag = testMap[currentPageTag].next;
 		var url = getUrlFromTag(nextPageTag);
@@ -185,11 +166,16 @@ function Finish(opener)
 
 	dump("******FINISH ROUTINE\n");
 
-	saveData();
-	processCreateProfileData();
+	if (isProfileData) {
+		saveData();
+		processCreateProfileData();
 
-	if (opener) {
-		opener.CreateProfile();
+		if (opener) {
+			opener.CreateProfile();
+		}
+	}
+	else {
+		alert("You need to enter minimum profile info before clicking on finish.\n\nYou can do this by clicking on the next button.\n");
 	}
 
 }
