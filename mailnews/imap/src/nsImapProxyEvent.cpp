@@ -154,7 +154,7 @@ nsImapLogProxyEvent::~nsImapLogProxyEvent()
 NS_IMETHODIMP
 nsImapLogProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->HandleImapLogData(m_logData);
+    nsresult res = m_proxy->m_realImapLog->HandleImapLogData(m_logData);
     m_proxy->m_protocol->NotifyFEEventCompletion();
 		return res;
 }
@@ -1611,8 +1611,9 @@ PossibleImapMailboxProxyEvent::~PossibleImapMailboxProxyEvent()
 NS_IMETHODIMP
 PossibleImapMailboxProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->PossibleImapMailbox(m_proxy->m_protocol,
-                                                &m_mailboxSpec);
+    nsresult res =
+        m_proxy->m_realImapMailfolder->PossibleImapMailbox(
+            m_proxy->m_protocol, &m_mailboxSpec);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1630,7 +1631,8 @@ MailboxDiscoveryDoneProxyEvent::~MailboxDiscoveryDoneProxyEvent()
 NS_IMETHODIMP
 MailboxDiscoveryDoneProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->MailboxDiscoveryDone(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMailfolder->MailboxDiscoveryDone(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1670,7 +1672,7 @@ UpdateImapMailboxInfoProxyEvent::~UpdateImapMailboxInfoProxyEvent()
 NS_IMETHODIMP
 UpdateImapMailboxInfoProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->UpdateImapMailboxInfo(
+    nsresult res = m_proxy->m_realImapMailfolder->UpdateImapMailboxInfo(
         m_proxy->m_protocol, &m_mailboxSpec);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
@@ -1711,7 +1713,7 @@ UpdateImapMailboxStatusProxyEvent::~UpdateImapMailboxStatusProxyEvent()
 NS_IMETHODIMP
 UpdateImapMailboxStatusProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->UpdateImapMailboxStatus(
+    nsresult res = m_proxy->m_realImapMailfolder->UpdateImapMailboxStatus(
         m_proxy->m_protocol, &m_mailboxSpec);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
@@ -1730,7 +1732,8 @@ ChildDiscoverySucceededProxyEvent::~ChildDiscoverySucceededProxyEvent()
 NS_IMETHODIMP
 ChildDiscoverySucceededProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->ChildDiscoverySucceeded(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMailfolder->ChildDiscoverySucceeded(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1755,8 +1758,8 @@ OnlineFolderDeleteProxyEvent::~OnlineFolderDeleteProxyEvent()
 NS_IMETHODIMP
 OnlineFolderDeleteProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->OnlineFolderDelete(m_proxy->m_protocol,
-                                               m_folderName); 
+    nsresult res = m_proxy->m_realImapMailfolder->OnlineFolderDelete(
+        m_proxy->m_protocol, m_folderName); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1781,8 +1784,8 @@ OnlineFolderCreateFailedProxyEvent::~OnlineFolderCreateFailedProxyEvent()
 NS_IMETHODIMP
 OnlineFolderCreateFailedProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->OnlineFolderCreateFailed(m_proxy->m_protocol,
-                                                 m_folderName);
+    nsresult res = m_proxy->m_realImapMailfolder->OnlineFolderCreateFailed(
+        m_proxy->m_protocol, m_folderName);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1819,8 +1822,8 @@ OnlineFolderRenameProxyEvent::~OnlineFolderRenameProxyEvent()
 NS_IMETHODIMP
 OnlineFolderRenameProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->OnlineFolderRename(m_proxy->m_protocol,
-                                               &m_folderRenameStruct);
+    nsresult res = m_proxy->m_realImapMailfolder->OnlineFolderRename(
+        m_proxy->m_protocol, &m_folderRenameStruct);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1843,8 +1846,8 @@ SubscribeUpgradeFinishedProxyEvent::~SubscribeUpgradeFinishedProxyEvent()
 NS_IMETHODIMP
 SubscribeUpgradeFinishedProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->SubscribeUpgradeFinished(m_proxy->m_protocol,
-                                                     &m_state);
+    nsresult res = m_proxy->m_realImapMailfolder->SubscribeUpgradeFinished(
+        m_proxy->m_protocol, &m_state);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1868,8 +1871,8 @@ NS_IMETHODIMP
 PromptUserForSubscribeUpdatePathProxyEvent::HandleEvent()
 {
     nsresult res =
-        m_proxy->PromptUserForSubscribeUpdatePath(m_proxy->m_protocol,
-                                                  &m_bool); 
+        m_proxy->m_realImapMailfolder->PromptUserForSubscribeUpdatePath(
+            m_proxy->m_protocol, &m_bool); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1904,8 +1907,8 @@ FolderIsNoSelectProxyEvent::~FolderIsNoSelectProxyEvent()
 NS_IMETHODIMP
 FolderIsNoSelectProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->FolderIsNoSelect(m_proxy->m_protocol,
-                                             &m_folderQueryInfo);
+    nsresult res = m_proxy->m_realImapMailfolder->FolderIsNoSelect(
+        m_proxy->m_protocol, &m_folderQueryInfo);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -1978,8 +1981,8 @@ SetupMsgWriteStreamProxyEvent::~SetupMsgWriteStreamProxyEvent()
 NS_IMETHODIMP
 SetupMsgWriteStreamProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->SetupMsgWriteStream(m_proxy->m_protocol,
-                                                &m_streamInfo);
+    nsresult res = m_proxy->m_realImapMessage->SetupMsgWriteStream(
+        m_proxy->m_protocol, &m_streamInfo);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2012,8 +2015,8 @@ ParseAdoptedMsgLineProxyEvent::~ParseAdoptedMsgLineProxyEvent()
 NS_IMETHODIMP
 ParseAdoptedMsgLineProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->ParseAdoptedMsgLine(m_proxy->m_protocol,
-                                                &m_msgLineInfo);
+    nsresult res = m_proxy->m_realImapMessage->ParseAdoptedMsgLine(
+        m_proxy->m_protocol, &m_msgLineInfo);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2031,7 +2034,8 @@ NormalEndMsgWriteStreamProxyEvent::~NormalEndMsgWriteStreamProxyEvent()
 NS_IMETHODIMP
 NormalEndMsgWriteStreamProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->NormalEndMsgWriteStream(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMessage->NormalEndMsgWriteStream(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2049,7 +2053,8 @@ AbortMsgWriteStreamProxyEvent::~AbortMsgWriteStreamProxyEvent()
 NS_IMETHODIMP
 AbortMsgWriteStreamProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->AbortMsgWriteStream(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMessage->AbortMsgWriteStream(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2077,8 +2082,8 @@ OnlineCopyReportProxyEvent::~OnlineCopyReportProxyEvent()
 NS_IMETHODIMP
 OnlineCopyReportProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->OnlineCopyReport(m_proxy->m_protocol,
-                                                &m_copyState); 
+    nsresult res = m_proxy->m_realImapMessage->OnlineCopyReport(
+        m_proxy->m_protocol, &m_copyState); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2096,7 +2101,8 @@ BeginMessageUploadProxyEvent::~BeginMessageUploadProxyEvent()
 NS_IMETHODIMP
 BeginMessageUploadProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->BeginMessageUpload(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMessage->BeginMessageUpload(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2129,8 +2135,8 @@ UploadMessageFileProxyEvent::~UploadMessageFileProxyEvent()
 NS_IMETHODIMP
 UploadMessageFileProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->UploadMessageFile(m_proxy->m_protocol,
-                                              &m_msgInfo); 
+    nsresult res = m_proxy->m_realImapMessage->UploadMessageFile(
+        m_proxy->m_protocol, &m_msgInfo); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2159,8 +2165,8 @@ NotifyMessageFlagsProxyEvent::~NotifyMessageFlagsProxyEvent()
 NS_IMETHODIMP
 NotifyMessageFlagsProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->NotifyMessageFlags(m_proxy->m_protocol,
-                                               &m_keyStruct); 
+    nsresult res = m_proxy->m_realImapMessage->NotifyMessageFlags(
+        m_proxy->m_protocol, &m_keyStruct); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2198,8 +2204,8 @@ NotifyMessageDeletedProxyEvent::~NotifyMessageDeletedProxyEvent()
 NS_IMETHODIMP
 NotifyMessageDeletedProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->NotifyMessageDeleted(m_proxy->m_protocol,
-                                                &m_deleteMessageStruct); 
+    nsresult res = m_proxy->m_realImapMessage->NotifyMessageDeleted(
+        m_proxy->m_protocol, &m_deleteMessageStruct); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2220,8 +2226,8 @@ GetMessageSizeFromDBProxyEvent::~GetMessageSizeFromDBProxyEvent()
 NS_IMETHODIMP
 GetMessageSizeFromDBProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->GetMessageSizeFromDB(m_proxy->m_protocol,
-                                                 m_sizeInfo); 
+    nsresult res = m_proxy->m_realImapMessage->GetMessageSizeFromDB(
+        m_proxy->m_protocol, m_sizeInfo); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2253,8 +2259,8 @@ SetUserAuthenticatedProxyEvent::~SetUserAuthenticatedProxyEvent()
 NS_IMETHODIMP
 SetUserAuthenticatedProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->SetUserAuthenticated(m_proxy->m_protocol,
-                                             m_bool); 
+    nsresult res = m_proxy->m_realImapExtension->SetUserAuthenticated(
+        m_proxy->m_protocol, m_bool); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2279,8 +2285,8 @@ SetMailServerUrlsProxyEvent::~SetMailServerUrlsProxyEvent()
 NS_IMETHODIMP
 SetMailServerUrlsProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->SetMailServerUrls(m_proxy->m_protocol,
-                                              m_hostName); 
+    nsresult res = m_proxy->m_realImapExtension->SetMailServerUrls(
+        m_proxy->m_protocol, m_hostName); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2305,8 +2311,8 @@ SetMailAccountUrlProxyEvent::~SetMailAccountUrlProxyEvent()
 NS_IMETHODIMP
 SetMailAccountUrlProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->SetMailAccountUrl(m_proxy->m_protocol,
-                                              m_hostName); 
+    nsresult res = m_proxy->m_realImapExtension->SetMailAccountUrl(
+        m_proxy->m_protocol, m_hostName); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2347,8 +2353,8 @@ ClearFolderRightsProxyEvent::~ClearFolderRightsProxyEvent()
 NS_IMETHODIMP
 ClearFolderRightsProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->ClearFolderRights(m_proxy->m_protocol,
-                                              &m_aclRightsInfo); 
+    nsresult res = m_proxy->m_realImapExtension->ClearFolderRights(
+        m_proxy->m_protocol, &m_aclRightsInfo); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2389,8 +2395,8 @@ AddFolderRightsProxyEvent::~AddFolderRightsProxyEvent()
 NS_IMETHODIMP
 AddFolderRightsProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->AddFolderRights(m_proxy->m_protocol,
-                                              &m_aclRightsInfo); 
+    nsresult res = m_proxy->m_realImapExtension->AddFolderRights(
+        m_proxy->m_protocol, &m_aclRightsInfo); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2431,8 +2437,8 @@ RefreshFolderRightsProxyEvent::~RefreshFolderRightsProxyEvent()
 NS_IMETHODIMP
 RefreshFolderRightsProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->RefreshFolderRights(m_proxy->m_protocol,
-                                              &m_aclRightsInfo); 
+    nsresult res = m_proxy->m_realImapExtension->RefreshFolderRights(
+        m_proxy->m_protocol, &m_aclRightsInfo); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2473,8 +2479,8 @@ FolderNeedsACLInitializedProxyEvent::~FolderNeedsACLInitializedProxyEvent()
 NS_IMETHODIMP
 FolderNeedsACLInitializedProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->FolderNeedsACLInitialized(m_proxy->m_protocol,
-                                                      &m_aclRightsInfo); 
+    nsresult res = m_proxy->m_realImapExtension->FolderNeedsACLInitialized(
+        m_proxy->m_protocol, &m_aclRightsInfo); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2507,8 +2513,8 @@ SetFolderAdminURLProxyEvent::~SetFolderAdminURLProxyEvent()
 NS_IMETHODIMP
 SetFolderAdminURLProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->SetFolderAdminURL(m_proxy->m_protocol,
-                                                 &m_folderQueryInfo); 
+    nsresult res = m_proxy->m_realImapExtension->SetFolderAdminURL(
+        m_proxy->m_protocol, &m_folderQueryInfo); 
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2546,8 +2552,8 @@ AddSearchResultProxyEvent::~AddSearchResultProxyEvent()
 NS_IMETHODIMP
 AddSearchResultProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->AddSearchResult(m_proxy->m_protocol,
-                                            m_searchHitLine);
+    nsresult res = m_proxy->m_realImapMiscellaneous->AddSearchResult(
+        m_proxy->m_protocol, m_searchHitLine);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2567,8 +2573,8 @@ GetArbitraryHeadersProxyEvent::~GetArbitraryHeadersProxyEvent()
 NS_IMETHODIMP
 GetArbitraryHeadersProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->GetArbitraryHeaders(m_proxy->m_protocol,
-                                                m_info);
+    nsresult res = m_proxy->m_realImapMiscellaneous->GetArbitraryHeaders(
+        m_proxy->m_protocol, m_info);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2588,8 +2594,9 @@ GetShouldDownloadArbitraryHeadersProxyEvent::~GetShouldDownloadArbitraryHeadersP
 NS_IMETHODIMP
 GetShouldDownloadArbitraryHeadersProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->GetShouldDownloadArbitraryHeaders(m_proxy->m_protocol,
-                                                m_info);
+    nsresult res = 
+        m_proxy->m_realImapMiscellaneous->GetShouldDownloadArbitraryHeaders(
+            m_proxy->m_protocol, m_info);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2609,8 +2616,8 @@ GetShowAttachmentsInlineProxyEvent::~GetShowAttachmentsInlineProxyEvent()
 NS_IMETHODIMP
 GetShowAttachmentsInlineProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->GetShowAttachmentsInline(m_proxy->m_protocol,
-                                                m_bool);
+    nsresult res = m_proxy->m_realImapMiscellaneous->GetShowAttachmentsInline(
+        m_proxy->m_protocol, m_bool);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2628,7 +2635,8 @@ HeaderFetchCompletedProxyEvent::~HeaderFetchCompletedProxyEvent()
 NS_IMETHODIMP
 HeaderFetchCompletedProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->HeaderFetchCompleted(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMiscellaneous->HeaderFetchCompleted(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2646,7 +2654,8 @@ FinishImapConnectionProxyEvent::~FinishImapConnectionProxyEvent()
 NS_IMETHODIMP
 FinishImapConnectionProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->FinishImapConnection(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMiscellaneous->FinishImapConnection(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2664,7 +2673,8 @@ UpdateSecurityStatusProxyEvent::~UpdateSecurityStatusProxyEvent()
 NS_IMETHODIMP
 UpdateSecurityStatusProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->UpdateSecurityStatus(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMiscellaneous->UpdateSecurityStatus(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2697,8 +2707,8 @@ SetImapHostPasswordProxyEvent::~SetImapHostPasswordProxyEvent()
 NS_IMETHODIMP
 SetImapHostPasswordProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->SetImapHostPassword(m_proxy->m_protocol,
-                                                &m_info);
+    nsresult res = m_proxy->m_realImapMiscellaneous->SetImapHostPassword(
+        m_proxy->m_protocol, &m_info);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2723,8 +2733,8 @@ GetPasswordForUserProxyEvent::~GetPasswordForUserProxyEvent()
 NS_IMETHODIMP
 GetPasswordForUserProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->GetPasswordForUser(m_proxy->m_protocol,
-                                                m_userName);
+    nsresult res = m_proxy->m_realImapMiscellaneous->GetPasswordForUser(
+        m_proxy->m_protocol, m_userName);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2744,8 +2754,8 @@ SetBiffStateAndUpdateProxyEvent::~SetBiffStateAndUpdateProxyEvent()
 NS_IMETHODIMP
 SetBiffStateAndUpdateProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->SetBiffStateAndUpdate(m_proxy->m_protocol,
-                                                m_biffState);
+    nsresult res = m_proxy->m_realImapMiscellaneous->SetBiffStateAndUpdate(
+        m_proxy->m_protocol, m_biffState);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2779,8 +2789,8 @@ GetStoredUIDValidityProxyEvent::~GetStoredUIDValidityProxyEvent()
 NS_IMETHODIMP
 GetStoredUIDValidityProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->GetStoredUIDValidity(m_proxy->m_protocol,
-                                                 &m_uidValidityInfo);
+    nsresult res = m_proxy->m_realImapMiscellaneous->GetStoredUIDValidity(
+        m_proxy->m_protocol, &m_uidValidityInfo);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2799,8 +2809,8 @@ LiteSelectUIDValidityProxyEvent::~LiteSelectUIDValidityProxyEvent()
 NS_IMETHODIMP
 LiteSelectUIDValidityProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->LiteSelectUIDValidity(m_proxy->m_protocol,
-                                                  m_uidValidity);
+    nsresult res = m_proxy->m_realImapMiscellaneous->LiteSelectUIDValidity(
+        m_proxy->m_protocol, m_uidValidity);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2825,8 +2835,8 @@ FEAlertProxyEvent::~FEAlertProxyEvent()
 NS_IMETHODIMP
 FEAlertProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->FEAlert(m_proxy->m_protocol,
-                                    m_alertString);
+    nsresult res = m_proxy->m_realImapMiscellaneous->FEAlert(
+        m_proxy->m_protocol, m_alertString);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2851,8 +2861,8 @@ FEAlertFromServerProxyEvent::~FEAlertFromServerProxyEvent()
 NS_IMETHODIMP
 FEAlertFromServerProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->FEAlertFromServer(m_proxy->m_protocol,
-                                              m_alertString);
+    nsresult res = m_proxy->m_realImapMiscellaneous->FEAlertFromServer(
+        m_proxy->m_protocol, m_alertString);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2877,8 +2887,8 @@ ProgressStatusProxyEvent::~ProgressStatusProxyEvent()
 NS_IMETHODIMP
 ProgressStatusProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->ProgressStatus(m_proxy->m_protocol,
-                                              m_statusMsg);
+    nsresult res = m_proxy->m_realImapMiscellaneous->ProgressStatus(
+        m_proxy->m_protocol, m_statusMsg);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2909,8 +2919,8 @@ PercentProgressProxyEvent::~PercentProgressProxyEvent()
 NS_IMETHODIMP
 PercentProgressProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->PercentProgress(m_proxy->m_protocol,
-                                            &m_progressInfo);
+    nsresult res = m_proxy->m_realImapMiscellaneous->PercentProgress(
+        m_proxy->m_protocol, &m_progressInfo);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2928,7 +2938,8 @@ PastPasswordCheckProxyEvent::~PastPasswordCheckProxyEvent()
 NS_IMETHODIMP
 PastPasswordCheckProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->PastPasswordCheck(m_proxy->m_protocol);
+    nsresult res = m_proxy->m_realImapMiscellaneous->PastPasswordCheck(
+        m_proxy->m_protocol);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2953,8 +2964,8 @@ CommitNamespacesProxyEvent::~CommitNamespacesProxyEvent()
 NS_IMETHODIMP
 CommitNamespacesProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->CommitNamespaces(m_proxy->m_protocol,
-                                             m_hostName);
+    nsresult res = m_proxy->m_realImapMiscellaneous->CommitNamespaces(
+        m_proxy->m_protocol, m_hostName);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -2979,8 +2990,8 @@ CommitCapabilityForHostProxyEvent::~CommitCapabilityForHostProxyEvent()
 NS_IMETHODIMP
 CommitCapabilityForHostProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->CommitCapabilityForHost(m_proxy->m_protocol,
-                                                    m_hostName);
+    nsresult res = m_proxy->m_realImapMiscellaneous->CommitCapabilityForHost(
+        m_proxy->m_protocol, m_hostName);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -3012,8 +3023,8 @@ TunnelOutStreamProxyEvent::~TunnelOutStreamProxyEvent()
 NS_IMETHODIMP
 TunnelOutStreamProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->TunnelOutStream(m_proxy->m_protocol,
-                                            &m_msgLineInfo);
+    nsresult res = m_proxy->m_realImapMiscellaneous->TunnelOutStream(
+        m_proxy->m_protocol, &m_msgLineInfo);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
@@ -3040,8 +3051,8 @@ ProcessTunnelProxyEvent::~ProcessTunnelProxyEvent()
 NS_IMETHODIMP
 ProcessTunnelProxyEvent::HandleEvent()
 {
-    nsresult res = m_proxy->ProcessTunnel(m_proxy->m_protocol,
-                                          &m_tunnelInfo);
+    nsresult res = m_proxy->m_realImapMiscellaneous->ProcessTunnel(
+        m_proxy->m_protocol, &m_tunnelInfo);
     m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
