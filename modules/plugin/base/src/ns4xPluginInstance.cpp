@@ -853,8 +853,9 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     ws = (NPSetWindowCallbackStruct *)window->ws_info;
 
     GdkWindow *win = gdk_window_lookup((XID)window->window);
-    if (win)
-    {
+    if (!win)
+      return NS_ERROR_FAILURE;
+    {  
 #ifdef NS_DEBUG      
       printf("About to create new xtbin of %i X %i from %p...\n",
              window->width, window->height, win);
@@ -881,6 +882,10 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
       if (!mXtBin) {
         mXtBin = gtk_xtbin_new(win, 0);
+        // Check to see if creating mXtBin failed for some reason.
+        // if it did, we can't go any further.
+        if (!mXtBin)
+          return NS_ERROR_FAILURE;
       } 
 
       gtk_widget_set_usize(mXtBin, window->width, window->height);
@@ -903,6 +908,9 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     XFlush(ws->display);
   } // !window->ws_info
+
+  if (!mXtBin)
+    return NS_ERROR_FAILURE;
 
   // And now point the NPWindow structures window 
   // to the actual X window
