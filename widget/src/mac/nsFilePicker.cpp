@@ -124,22 +124,23 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   
   // XXX Ignore the filter list for now....
   
-  if (mMode == eMode_load)
+  if (mMode == modeLoad)
     userClicksOK = GetFile ( title, &theFile );
-  else if (mMode == eMode_save)
+  else if (mMode == modeSave)
     userClicksOK = PutFile ( title, defaultName, &theFile );
-  else if (mMode == eMode_getfolder)
+  else if (mMode == modeGetFolder)
     userClicksOK = GetFolder ( title, &theFile );  
 
   // Clean up filter buffers
   delete[] filterBuffer;
 
   if ( userClicksOK ) {
-    nsNativeFileSpec fileSpec(theFile);
+    /*    nsNativeFileSpec fileSpec(theFile);
     nsFilePath filePath(fileSpec);
 	
-    mFile = filePath;
+    mFile = theFile;
     mFileSpec = fileSpec;
+    */
   }
   
   *retVal = userClicksOK;
