@@ -65,7 +65,7 @@ class nsIWordBreaker;
 #define CH_RLO  8238  //<!CDATA "&#8238;" -- right-to-left override, U+202E -->
 
 #define IS_BIDI_CONTROL(_ch) \
-  (((_ch) >= CH_ZWNJ && (_ch) <= CH_RLM) \
+  (((_ch) >= CH_LRM && (_ch) <= CH_RLM) \
   || ((_ch) >= CH_LRE && (_ch) <= CH_RLO))
 #endif // IBMBIDI
 

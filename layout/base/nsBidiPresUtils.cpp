@@ -950,9 +950,31 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
       }
     }
   }
+  StripBidiControlCharacters(aText, aTextLength);
   return rv;
 }
 
+void
+nsBidiPresUtils::StripBidiControlCharacters(PRUnichar* aText,
+                                            PRInt32&   aTextLength) const
+{
+  if ( (nsnull == aText) || (aTextLength < 1) ) {
+    return;
+  }
+
+  PRInt32 stripLen = 0;
+
+  for (PRInt32 i = 0; i < aTextLength; i++) {
+    if (mBidiEngine->IsBidiControl(aText[i])) {
+      ++stripLen;
+    }
+    else {
+      aText[i - stripLen] = aText[i];
+    }
+  }
+  aTextLength -= stripLen;
+}
+ 
 #if 0 // XXX: for the future use ???
 void
 RemoveDiacritics(PRUnichar* aText,
