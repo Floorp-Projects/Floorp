@@ -89,7 +89,6 @@ protected:
     HWND                mDNSWindow;
     UINT                mMsgFoundDNS;
     nsVoidArray         mCompletionQueue;
-    HANDLE              mThreadHandle;
 #elif defined(XP_UNIX)
     //XXX - to be defined
 #endif
