@@ -1110,17 +1110,24 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         pn2 = pn->pn_kid2;
         ncases = pn2->pn_count;
 
+        ok = JS_TRUE;
         if (ncases == 0 ||
             (ncases == 1 &&
              (hasDefault = (pn2->pn_head->pn_type == TOK_DEFAULT)))) {
             ncases = 0;
             low = 0;
             high = -1;
-            ok = JS_TRUE;
         } else {
+#define INTMAP_LENGTH   256
+            jsbitmap intmap_space[INTMAP_LENGTH];
+            jsbitmap *intmap = NULL;
+            int32 intmap_bitlen = 0;
+
             low  = JSVAL_INT_MAX;
             high = JSVAL_INT_MIN;
             cg2.current = NULL;
+            mark = JS_ARENA_MARK(&cx->tempPool);
+
             for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
                 if (pn3->pn_type == TOK_DEFAULT) {
                     hasDefault = JS_TRUE;
@@ -1139,8 +1146,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                             pn3->pn_val = INT_TO_JSVAL(i);
                         } else {
                             atom = js_AtomizeDouble(cx, d, 0);
-                            if (!atom)
-                                return JS_FALSE;
+                            if (!atom) {
+                                ok = JS_FALSE;
+                                goto release;
+                            }
                             pn3->pn_val = ATOM_KEY(atom);
                         }
                         break;
@@ -1163,24 +1172,29 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     }
                 } else {
                     /* Pre-ECMAv2 switch evals case exprs at compile time. */
-                    if (!js_InitCodeGenerator(cx, &cg2, cg->filename,
+                    ok = js_InitCodeGenerator(cx, &cg2, cg->filename,
                                               pn3->pn_pos.begin.lineno,
-                                              cg->principals)) {
-                        return JS_FALSE;
-                    }
+                                              cg->principals);
+                    if (!ok)
+                        goto release;
                     cg2.currentLine = pn4->pn_pos.begin.lineno;
-                    if (!js_EmitTree(cx, &cg2, pn4))
-                        return JS_FALSE;
-                    if (js_Emit1(cx, &cg2, JSOP_POPV) < 0)
-                        return JS_FALSE;
+                    ok = js_EmitTree(cx, &cg2, pn4);
+                    if (!ok)
+                        goto release;
+                    if (js_Emit1(cx, &cg2, JSOP_POPV) < 0) {
+                        ok = JS_FALSE;
+                        goto release;
+                    }
                     script = js_NewScriptFromCG(cx, &cg2, NULL);
-                    if (!script)
-                        return JS_FALSE;
+                    if (!script) {
+                        ok = JS_FALSE;
+                        goto release;
+                    }
                     ok = js_Execute(cx, cx->fp->scopeChain, script, cx->fp, 0,
                                     &pn3->pn_val);
                     js_DestroyScript(cx, script);
                     if (!ok)
-                        return JS_FALSE;
+                        goto release;
                 }
 
                 if (!JSVAL_IS_NUMBER(pn3->pn_val) &&
@@ -1189,7 +1203,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     cg->currentLine = pn3->pn_pos.begin.lineno;
                     js_ReportCompileErrorNumber(cx, NULL, cg, JSREPORT_ERROR,
                                                 JSMSG_BAD_CASE);
-                    return JS_FALSE;
+                    ok = JS_FALSE;
+                    goto release;
                 }
 
                 if (switchop != JSOP_TABLESWITCH)
@@ -1207,7 +1222,46 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     low = i;
                 if (high < i)
                     high = i;
+
+                /*
+                 * Check for duplicates, which require a JSOP_LOOKUPSWITCH.
+                 * We bias i by 32768 if it's negative, and hope that's a rare
+                 * case (because it requires a malloc'd bitmap).
+                 */
+                if (i < 0)
+                    i += JS_BIT(15);
+                if (i >= intmap_bitlen) {
+                    if (!intmap) {
+                        intmap = intmap_space;
+                        intmap_bitlen = INTMAP_LENGTH << JS_BITS_PER_WORD_LOG2;
+                    } else {
+                        /* Just grab 8K for the worst-case bitmap. */
+                        intmap_bitlen = JS_BIT(16);
+                        JS_ARENA_ALLOCATE_CAST(intmap, jsbitmap *,
+                                               &cx->tempPool,
+                                               (JS_BIT(16) >>
+                                                JS_BITS_PER_WORD_LOG2)
+                                               * sizeof(jsbitmap));
+                        if (!intmap) {
+                            JS_ReportOutOfMemory(cx);
+                            ok = JS_FALSE;
+                            goto release;
+                        }
+                    }
+                    memset(intmap, 0, intmap_bitlen >> JS_BITS_PER_BYTE_LOG2);
+                }
+                if (JS_TEST_BIT(intmap, i)) {
+                    switchop = JSOP_LOOKUPSWITCH;
+                    continue;
+                }
+                JS_SET_BIT(intmap, i);
             }
+
+          release:
+            JS_ARENA_RELEASE(&cx->tempPool, mark);
+            if (!ok)
+                return JS_FALSE;
+
             if (switchop == JSOP_CONDSWITCH) {
                 JS_ASSERT(!cg2.current);
             } else {
