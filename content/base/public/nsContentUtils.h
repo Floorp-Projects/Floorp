@@ -255,9 +255,9 @@ public:
                                    nsACString& aKey);
 
   /**
-   * Create a new URI object from aSpec, using aBaseURI as the base.
-   * The charset associated to the new nsIURI will be the document
-   * charset of aDocument.
+   * Create a new nsIURI from aSpec, using aBaseURI as the base.  The
+   * origin charset of the new nsIURI will be the document charset of
+   * aDocument.
    */
   static nsresult NewURIWithDocumentCharset(nsIURI** aResult,
                                             const nsAString& aSpec,
