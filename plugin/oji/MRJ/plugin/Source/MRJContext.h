@@ -31,13 +31,13 @@
 
 #include "jni.h"
 #include "JManager.h"
-#include "nsplugindefs.h"
+#include "nsIPluginTagInfo2.h"
 
 //
 // Instance state information about the plugin.
 //
 // *Developers*: Use this struct to hold per-instance
-//				 information that you¼ll need in the
+//				 information that you'll need in the
 //				 various functions in this file.
 //
 
@@ -49,6 +49,11 @@ class MRJFrame;
 class MRJPage;
 struct MRJPageAttributes;
 
+struct nsPluginPoint {
+	PRInt32             x;
+    PRInt32             y;
+};
+
 class MRJContext {
 public:
 	MRJContext(MRJSession* session, MRJPluginInstance* instance);
@@ -57,6 +62,7 @@ public:
 	void processAppletTag();
 	Boolean createContext();
 	JMAWTContextRef getContextRef();
+    JMAppletViewerRef getViewerRef();
 	
 	void setProxyInfoForURL(char * url, JMProxyType proxyType);
 	Boolean appletLoaded();
@@ -80,9 +86,8 @@ public:
 	void keyRelease(long message, short modifiers);
 	
 	void setWindow(nsPluginWindow* pluginWindow);
-	Boolean inspectClipping();
 	Boolean inspectWindow();
-	void setClipping(RgnHandle clipRgn);
+	void setClipping();
 	
 	MRJFrame* findFrame(WindowRef window);
 	GrafPtr getPort();
@@ -91,11 +96,11 @@ public:
 	void hideFrames();
 	void releaseFrames();
 	
-	void setCodeBase(const char* codeBase);
-	const char* getCodeBase();
-	
 	void setDocumentBase(const char* documentBase);
 	const char* getDocumentBase();
+	
+	void setAppletHTML(const char* appletHTML, nsPluginTagType tagType);
+	const char* getAppletHTML();
 
 private:
 	void localToFrame(Point* pt);
@@ -132,11 +137,13 @@ private:
 	JMAppletViewerRef		mViewer;
 	JMFrameRef				mViewerFrame;
 	Boolean					mIsActive;
-	nsPluginWindow			mCache;
-	nsPluginWindow*			mPluginWindow;
+	nsPluginPoint           mCachedOrigin;
+	nsPluginRect            mCachedClipRect;
+	RgnHandle               mCachedClipping;
 	RgnHandle				mPluginClipping;
+	nsPluginWindow*			mPluginWindow;
 	CGrafPtr				mPluginPort;
 	char*					mDocumentBase;
-	char*					mCodeBase;
+	char*					mAppletHTML;
 	MRJPage*				mPage;
 };
