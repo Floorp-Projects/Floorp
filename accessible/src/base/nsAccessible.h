@@ -158,6 +158,7 @@ public:
   NS_IMETHOD GetLastChild();
   PRInt32 GetChildCount();
   WalkState mState;
+  WalkState mInitialState;
 
 protected:
   NS_IMETHOD GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);

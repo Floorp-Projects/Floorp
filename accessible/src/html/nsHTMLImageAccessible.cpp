@@ -89,7 +89,8 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccState(PRUint32 *_retval)
   if (content && shell) 
     shell->GetPrimaryFrameFor(content, &frame);
 
-  nsCOMPtr<nsIImageFrame> imageFrame(do_QueryInterface(frame));
+  nsIImageFrame *imageFrame = nsnull;
+  frame->QueryInterface(NS_GET_IID(nsIImageFrame), (void**)&imageFrame);
 
   nsCOMPtr<imgIRequest> imageRequest;
   if (imageFrame) 

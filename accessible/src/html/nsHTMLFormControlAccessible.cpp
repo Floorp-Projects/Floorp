@@ -328,7 +328,8 @@ nsFormControlAccessible(aNode, aShell)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsIFrame *frame = nsnull;
   shell->GetPrimaryFrameFor(content, &frame);
-  nsCOMPtr<nsITextControlFrame> tframe(do_QueryInterface(frame));
+  nsITextControlFrame *tframe = nsnull;
+  frame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&tframe);
   if (!tframe)
     return;
 
@@ -468,7 +469,8 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::MakeSelection(PRInt32 aStartPos, PRInt3
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsIFrame *frame = nsnull;
   shell->GetPrimaryFrameFor(content, &frame);
-  nsCOMPtr<nsITextControlFrame> tframe(do_QueryInterface(frame));
+  nsITextControlFrame *tframe = nsnull;
+  frame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&tframe);
   if (!tframe)
     return NS_ERROR_FAILURE;  
 
