@@ -22,6 +22,8 @@ MODULE=raptor
 
 IDLSRCS =  \
 	Range.idl \
+	Selection.idl	\
+	SelectionListener.idl	\
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\coreDOM
 JSSTUB_DESTDIR=$(DEPTH)\dom\src\coreDOM
