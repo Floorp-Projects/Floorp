@@ -350,7 +350,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SetProgressListener(
     return NS_OK;
 }
 
-/* void saveURI (in nsIURI aURI, in nsIURI aReferrer,
+/* void saveURI (in nsIURI aURI, in nsISupports aCacheKey, in nsIURI aReferrer,
    in nsIInputStream aPostData, in wstring aExtraHeaders,
    in nsISupports aFile); */
 NS_IMETHODIMP nsWebBrowserPersist::SaveURI(
