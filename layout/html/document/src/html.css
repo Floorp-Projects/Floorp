@@ -21,62 +21,43 @@
  */
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
-@namespace viewsource url(http://www.mozilla.org/viewsource); 
 
-html {
+/* blocks */
+
+html, div, map, dt, :-moz-anonymous-block, :cell-content, :fieldset-content {
   display: block;
 }
 
 body {
   display: block;
-  line-height: normal;
   margin: 8px;
 }
 
-body > *:first-node, td > *:first-node {
-  margin-top: 0;
-}
-
-td > *:last-node {
-  margin-bottom: 0;
-}
-
-frameset {
-  display: block ! important;
-  overflow: hidden;
-}
-
-frame {
-  background-color: white;
-}
-
-iframe {
-  background-color: white;
-}
-
-/* focusable content */
-a, area, button, input, object, select, textarea {
-  -moz-user-focus: normal;
-}
-
-option {
-  -moz-user-focus: none;
-}
-
-/* blocks */
-
-p {
+p, dl, multicol {
   display: block;
   margin: 1em 0;
 }
-address {
+
+dd {
   display: block;
-  font-style: italic;
+  margin-left: 40px;
 }
+
 blockquote {
   display: block;
   margin: 1em 40px;
 }
+
+address {
+  display: block;
+  font-style: italic;
+}
+
+center {
+  display: block;
+  text-align: -moz-center;
+}
+
 blockquote[type=cite] {
   display: block;
   margin: 1em 0px;
@@ -85,13 +66,6 @@ blockquote[type=cite] {
   border-color: blue;
   border-width: thin;
 }
-center {
-  display: block;
-  text-align: -moz-center;
-}
-div {
-  display: block;
-}
 
 h1 {
   display: block;
@@ -99,35 +73,41 @@ h1 {
   font-weight: bold;
   margin: .67em 0;
 }
+
 h2 {
   display: block;
   font-size: 1.5em;
   font-weight: bold;
   margin: .83em 0;
 }
+
 h3 {
   display: block;
   font-size: 1.17em;
   font-weight: bold;
   margin: 1em 0;
 }
+
 h4 {
   display: block;
   font-weight: bold;
   margin: 1.33em 0;
 }
+
 h5 {
   display: block;
   font-size: 0.83em;
   font-weight: bold;
   margin: 1.67em 0;
 }
+
 h6 {
   display: block;
   font-size: 0.67em;
   font-weight: bold;
   margin: 2.33em 0;
 }
+
 listing {
   display: block;
   font-family: -moz-fixed;
@@ -135,29 +115,18 @@ listing {
   white-space: pre;
   margin: 1em 0;
 }
+
 plaintext, xmp, pre {
   display: block;
   font-family: -moz-fixed;
   white-space: pre;
   margin: 1em 0;
 }
-pre[wrap] {
-  white-space: -moz-pre-wrap;
-}
-pre[cols] {
-  white-space: -moz-pre-wrap;
-}
-pre[width] {
-  white-space: -moz-pre-wrap;
-}
-multicol {
-  display: block;
-  margin: 1em 0;
-}
+
 
 /* tables */
 
-table {
+table, :table {
   display: table;
   border-spacing: 2px; 
   border-collapse: separate;
@@ -166,144 +135,142 @@ table {
   -moz-box-sizing: border-box;
 }
 
-/* must never set padding in td, th */
-td {
-  vertical-align: inherit;
-  text-align: inherit; 
-  display: table-cell;
+:table-outer {
+  display: table;
+  margin: 0;
+  border: none;
+  padding: 0;
+  width: 0;
+  height: 0;
+  float: inherit;
+  clear: inherit;
+  position: inherit;
+  top: inherit;
+  right: inherit;
+  bottom: inherit;
+  left: inherit;
+  z-index: inherit;
+  clip: inherit;
+  -moz-opacity: inherit;
 }
-th {
-  font-weight: bold;
-  vertical-align: inherit;
-  display: table-cell;
-}
+   
 caption {
-  text-align: center;
   display: table-caption;
+  text-align: center;
   -moz-box-sizing: border-box;
 }
+
 tr {
   display: table-row;
   vertical-align: inherit;
 }
+
+:table-row {
+  display: table-row;
+}
+
+col, :table-column {
+  display: table-column;
+}
+
+colgroup, :table-column-group {
+  display: table-column-group;
+}
+
 tbody {
   display: table-row-group;
   vertical-align: middle;
 }
+
 thead {
   display: table-header-group;
   vertical-align: middle;
 }
+
 tfoot {
   display: table-footer-group;
   vertical-align: middle;
 }
-col {
-  display: table-column;
-}
-colgroup {
-  display: table-column-group;
+
+:table-row-group {
+  display: table-row-group;
 }
 
-/* spans */
+td { /* must never set padding on TD */
+  display: table-cell;
+  vertical-align: inherit;
+  text-align: inherit; 
+}
+
+th { /* must never set padding on TH */
+  display: table-cell;
+  vertical-align: inherit;
+  font-weight: bold;
+}
+
+:table-cell {
+  display: table-cell;
+}
+
+
+/* inlines */
 
 q:before {
   content: open-quote;
 }
+
 q:after {
   content: close-quote;
 }
 
-:link {
-  color: blue;
-  text-decoration: underline;
-  cursor: pointer;
-}
-:visited {
-  color: purple;
-  text-decoration: underline;
-  cursor: pointer;
-}
-:link:focus, :visited:focus, :out-of-date:focus,
-:link:focus img, :visited:focus img, :out-of-date:focus img {
-  -moz-outline: 2px solid #6666CC;
-}
-:link:active, :visited:active, :out-of-date:active {
-  color: red;
-  text-decoration: underline;
-  cursor: pointer;
-}
-:out-of-date {
-  color: lime;
-  text-decoration: underline;
-  cursor: pointer;
-}
 b, strong {
-  display: inline;
   font-weight: bolder;
 }
-i, cite, em, var {
-  display: inline;
+
+i, cite, em, var, dfn {
   font-style: italic;
 }
+
 tt, code, kbd, samp {
-  display: inline;
   font-family: -moz-fixed;
 }
-u {
-  display: inline;
+
+u, ins {
   text-decoration: underline;
 }
-s, strike {
-  display: inline;
+
+s, strike, del {
   text-decoration: line-through;
 }
+
 blink {
-  display: inline;
   text-decoration: blink;
 }
+
 big {
-  display: inline;
   font-size: larger;
 }
+
 small {
-  display: inline;
   font-size: smaller;
 }
-abbr, acronym, del, dfn, ins, q, span {
-  display: inline;
-}
-ins { text-decoration: underline; }
-del { text-decoration: line-through; }
-dfn { font-style: italic; }
-sub, sup {
-  display: inline;
+
+sub {
+  vertical-align: sub;
   font-size: smaller;
   line-height: normal;
 }
-sub {
-  vertical-align: sub;
-}
+
 sup {
   vertical-align: super;
+  font-size: smaller;
+  line-height: normal;
 }
+
 nobr {
-  display: inline;
   white-space: nowrap;
 }
-legend {
-  display: inline;
-	padding-left: 2px;
-	padding-right: 2px;
-  border: none;
-}
-fieldset {
-  display: block;
-  border: 2px solid black;
-	padding: 4px;
-	margin-left: 2px;
-	margin-right: 2px;
-}
+
 
 /* lists */
 
@@ -319,7 +286,6 @@ ul, menu, dir {
   margin: 1em 0;
   padding-left: 40px;
   counter-reset: -html-counter 0;
-  -moz-float-edge: margin-box;
 }
 
 ol {
@@ -328,19 +294,19 @@ ol {
   margin: 1em 0;
   padding-left: 40px;
   counter-reset: -html-counter 0;
-  -moz-float-edge: margin-box;
 }
 
 li {
   display: list-item;
+  -moz-float-edge: margin-box;
 }
 
 /* nested lists have no top/bottom margins */
-ul ul,   ul ol,   ul menu,   ul dir,
-menu ul, menu ol, menu menu, menu dir,
-dir ul,  dir ol,  dir menu,  dir dir,
-ol ul,   ol ol,   ol menu,   ol dir
-{
+ul ul,   ul ol,   ul dir,   ul menu,   ul dl
+ol ul,   ol ol,   ol dir,   ol menu,   ol dl
+dir ul,  dir ol,  dir dir,  dir menu,  dir dl
+menu ul, menu ol, menu dir, menu menu, menu dl
+dl ul,   dl ol,   dl dir,   dl menu,   dl dl {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -348,836 +314,429 @@ ol ul,   ol ol,   ol menu,   ol dir
 /* 2 deep unordered lists use a circle */
 ol ul,   ul ul,   menu ul,   dir ul,
 ol menu, ul menu, menu menu, dir menu,
-ol dir,  ul dir,  menu dir,  dir dir
-{
+ol dir,  ul dir,  menu dir,  dir dir {
   list-style-type: circle;
 }
 
 /* 3 deep (or more) unordered lists use a square */
-ol ol ul,   ol ul ul,   ol menu ul,   ol dir ul,
-ol ol menu, ol ul menu, ol menu menu, ol dir menu,
-ol ol dir,  ol ul dir,  ol menu dir,  ol dir dir,
-
-ul ol ul,   ul ul ul,   ul menu ul,   ul dir ul,
-ul ol menu, ul ul menu, ul menu menu, ul dir menu,
-ul ol dir,  ul ul dir,  ul menu dir,  ul dir dir,
-
+ol ol ul,     ol ul ul,     ol menu ul,     ol dir ul,
+ol ol menu,   ol ul menu,   ol menu menu,   ol dir menu,
+ol ol dir,    ol ul dir,    ol menu dir,    ol dir dir,
+ul ol ul,     ul ul ul,     ul menu ul,     ul dir ul,
+ul ol menu,   ul ul menu,   ul menu menu,   ul dir menu,
+ul ol dir,    ul ul dir,    ul menu dir,    ul dir dir,
 menu ol ul,   menu ul ul,   menu menu ul,   menu dir ul,
 menu ol menu, menu ul menu, menu menu menu, menu dir menu,
 menu ol dir,  menu ul dir,  menu menu dir,  menu dir dir,
-
-dir ol ul,   dir ul ul,   dir menu ul,   dir dir ul,
-dir ol menu, dir ul menu, dir menu menu, dir dir menu,
-dir ol dir,  dir ul dir,  dir menu dir,  dir dir dir
-{
+dir ol ul,    dir ul ul,    dir menu ul,    dir dir ul,
+dir ol menu,  dir ul menu,  dir menu menu,  dir dir menu,
+dir ol dir,   dir ul dir,   dir menu dir,   dir dir dir {
   list-style-type: square;
 }
 
-dl {
-  display: block;
-  margin: 1em 0;
-}
-dt {
-  display: block;
-}
-/* compact allowed on DL, OL, UL, DIR MENU */
-/*
-dl[compact] > dt {
-  display: compact;
-}
-*/
-dd {
-  display: block;
-  margin-left: 40px;
-}
-dl dl {
-  margin: 0 0 0 40px;
-}
-dt dl, dd dl {
-  margin: 0;
-}
 
 /* leafs */
 
-embed {
-  display: inline;
-}
 hr {
   display: block;
   border: 1px -moz-bg-inset;
-  margin: 0 auto;
+  margin: 0 auto 0 auto;
 }
-br {
-  display: inline;
-  color: cyan;
-}
-img {
-  display: inline;
-}
-:link img, :visited img, :out-of-date img,
-:link:active img, :visited:active img, :out-of-date:active img,
-img[usemap], object[usemap] {
+
+:link img, :visited img, img[usemap], object[usemap] {
   border: 2px solid;
   cursor: pointer;
 }
+
 img[usemap], object[usemap] {
   color: blue;
   -moz-user-focus: normal;
 }
-img:-moz-text {
-  /* font-family: sans-serif; */
-  /* font-size: 8.5pt; */
+
+frameset {
+  display: block ! important;
+  overflow: hidden;
 }
-spacer {
-  display: inline;
+
+frame {
+  background-color: transparent ! important; /* (b=49779) */
 }
-wbr {
-  display: inline;
-}
+
 iframe {
-  display: inline;
+  background-color: transparent ! important; /* (b=49779) */
   border: 2px inset;
 }
+
 form {
   display: block;
-  margin: 0px 0px 1em 0px;
+  margin: 0 0 1em 0;
 }
 
 
-input {
-  vertical-align: bottom;
-  text-align: start;
-  border: 2px inset rgb(204, 204, 204);
-  color: black;
-	background-color: white;
-  -moz-box-sizing: border-box;
-  font:field;
-  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
-	cursor: text;
-}
-
-input[type="hidden"] {
-  border: none;
-  visibility: collapse;
-  -moz-binding: none;
-}
-
-input[type="image"] {
-  -moz-box-sizing: border-box;
-  border: none;
-  vertical-align:baseline;
-  -moz-binding: none;
-  background-color: inherit;
-  cursor: default;
-  font-family: sans-serif;
-  font-size: small;
-}
-
-input[type="image"]:hover {
-  cursor: pointer;
-}
-
-input[type="image"]:focus {
-  border: 2px dotted black;
-}
-
-input[type="image"][disabled] {
-  border: 2px solid rgb(153, 153, 153);
-  cursor: default;
-}
-
-/* file selector */
-input[type="file"] {
-  -moz-box-sizing: border-box;
-  white-space: nowrap;
-  border:none;
-  -moz-binding: none;
-	cursor: default;
-}
-
-input[type="file"] > input {
-  /*border:inherit;*/
-}
-
-/* browse button for file selector */
-input[type="file"] > input[type="button"] {
-  height:inherit;
-  font:button;
-  -moz-user-select: none !important;
-}
-
-
-/* Show browse button inside the file selector disabled */
-input[type="file"][disabled] > input[type="button"] {
-  border: 1px solid;
-  color: gray;
-} 
-
-/* radio buttons */
-input[type="radio"] {
-  /* these margins are for NavQuirks, we need a Standard ua.css */  
-  padding: 0px;
-  margin-left:   3px;   
-  margin-right:  5px;  
-  margin-top:    2px; 
-  margin-bottom: 4px; 
-  border: 2px inset rgb(153, 153, 153);
-  background-color:rgb(255, 255, 255);
-  color:black;
-  width:12px;
-  height:12px;
-  -moz-binding: none;
-  -moz-border-radius:6px;
-	cursor: default;
-}
-
-input[type="radio"][disabled] {
-  border: 1px solid;
-  padding: 1px;
-  background-color:rgb(204, 204, 204);
-}
-
-input[type="radio"]:focus {
-  border: 2px inset rgb(153, 153, 153);
-}
-
-input[type="radio"]:hover {
- /* border : 2px solid black; */
-}
-
-input[type="radio"]:hover:active {
-  background-color: lightgray;
-}
-
-input[type="radio"]:active {
-  background-color: rgb(255, 255, 255);
-}
-
-input[type="radio"][disabled]:hover {
-  border: 1px solid rgb(153, 153, 153);
-}
-
-input[type="radio"][disabled]:active {
-  background-color: rgb(204, 204, 204);
-}
-
-:-moz-radio {
-  background-color:black;
-  width:4px;
-  height:4px;
-  left:6px;
-  top:6px;
-  -moz-border-radius:3px;
-}
-
-
-input[type="checkbox"] {
-  /* these margins are for NavQuirks, we need a Standard ua.css */  
-  padding:       0px;
-  margin-left:   3px;   
-  margin-right:  4px;  
-  margin-top:    3px; 
-  margin-bottom: 3px;
-  border: 2px inset rgb(153, 153, 153);
-  background-color:rgb(255, 255, 255);
-  width:13px;
-  height:13px;
-  color:black;
-  -moz-binding: none;
-	cursor: default;
-/*  -moz-border-radius:1px; */
-}
-
-input[type="checkbox"]:focus {
-  border: 2px dotted rgb(153, 153, 153);
-}
-
-input[type="checkbox"]:hover {
-/*  border : 2px solid black; */
-}
-
-input[type="checkbox"]:hover:active {
-  background-color: lightgray;
-}
-
-input[type="checkbox"]:active {
-  background-color: rgb(255, 255, 255);
-}
-
-input[type="checkbox"][disabled] {
-  border: 2px solid;
-  background-color:rgb(204, 204, 204);
-}
-
-input[type="checkbox"][disabled]:hover {
-  border: 2px solid rgb(153, 153, 153);
-}
-
-input[type="checkbox"][disabled]:active {
-  background-color:rgb(204, 204, 204);
-}
-
-/* submit */
-input[type="submit"] { 
-  -moz-box-sizing: border-box;
-  border: 2px outset rgb(156, 154, 156);
-  background-color: rgb(206, 207, 206);
-  color:black; 
-  -moz-user-select: none !important;
-  padding: 1px;
-  font-family: sans-serif;
-  font-size: small;
-
-  -moz-binding: none;
-	cursor: default;
-}
-
-input[type="submit"]:hover {
-/*   border : 2px solid black; */
-}
-
-input[type="submit"]:active:hover {
-  border-style: inset;
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-input[type="submit"]:-moz-focus-inner {
-   padding-left  : 2px;
-   padding-right : 2px;
-   padding-top   : 1px;
-   padding-bottom: 1px;
-   margin: 0px;
-}
-
-input[type="submit"]:focus:-moz-focus-inner {
-   padding-left  : 1px;
-   padding-right : 1px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
- 
-   margin: 0px;
-   border : 1px dotted black;
-}
-
-input[type="submit"][disabled], input[type="submit"][disabled]:active {
-  border: 1px solid rgb(156, 154, 156);
-  padding: 1px;
-  color: gray;
-}
-
-/* reset */
-input[type="reset"] { 
-  -moz-box-sizing: border-box;
-  border: 2px outset rgb(156, 154, 156);
-  background-color: rgb(206, 207, 206);
-  color:black; 
-
-  padding: 1px;
-  font-family: sans-serif;
-  font-size: small;
-  -moz-binding: none;
-  -moz-user-select: none !important;
-	cursor: default;
-}
-
-input[type="reset"]:hover {
-/*   border : 2px solid black;  */
-}
-
-input[type="reset"]:active:hover {
-  border-style: inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-input[type="reset"]:-moz-focus-inner {
-   padding-left  : 2px;
-   padding-right : 2px;
-   padding-top   : 1px;
-   padding-bottom: 1px;
-
-   margin: 0px;
-}
-
-input[type="reset"]:focus:-moz-focus-inner {
-   padding-left  : 1px;
-   padding-right : 1px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
-
-   margin: 0px;
-   border : 1px dotted black;
-}
-
-input[type="reset"][disabled],input[type="reset"][disabled]:active {
-  border: 1px solid rgb(156, 154, 156);
-  padding: 1px;
-  color: gray;
-
-}
-
-/* button */
-input[type="button"] { 
-  -moz-box-sizing: border-box;
-  border: 2px outset rgb(156, 154, 156);
-  background-color: rgb(206, 207, 206);
-  color:black; 
-  padding: 1px;
-  font:button;
-  -moz-binding: none;
-  white-space: pre;
-  -moz-user-select: none !important;
-	cursor: default;
-}
-
-input[type="button"]:active:hover {
-  border-style: inset;
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-input[type="button"]:-moz-focus-inner {
-/*XXX[PERF] Set the padding to match between
-  focus changes to prevent reflow */
-   padding-left  : 1px;
-   padding-right : 1px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
-   margin: 0px;
-/*XXX[PERF] setup a border so the size does 
-  not change between focus changes to prevent 
-  reflows */
-   border : 1px solid transparent;
-}
-
-input[type="button"]:focus:-moz-focus-inner {
-   padding-left  : 1px;
-   padding-right : 1px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
-   margin: 0px;
-   border : 1px dotted black;
-}
-
-input[type="button"][disabled], input[type="button"][disabled]:active {
-  border: 1px solid rgb(156, 154, 156);
-  padding: 1px;
-  color: gray;
-}
-
-input[type="button"][disabled]:-moz-text {
-  color: gray;
-  font:button;
-}
-
-/* HTML 4 Button */
-button { 
-  font:button;
-  -moz-user-select: none !important;
-  display: inline;
-  vertical-align: bottom;
-  cursor: default;
-  -moz-box-sizing: border-box;
-
-  border: 2px outset rgb(156, 154, 156);
-  background-color: rgb(206, 207, 206);
-  color:black; 
-
-  padding: 1px;
-}
-
-button:hover {
-/*   border : 2px solid black;  */
-  -moz-user-select: none !important;
-}
-
-button:active:hover {
-  border-style: inset;
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-button:-moz-focus-inner {
-   padding-left  : 2px;
-   padding-right : 2px;
-   padding-top   : 1px;
-   padding-bottom: 1px;
-   margin: 0px;
-}
-
-button:focus:-moz-focus-inner {
-   padding-left  : 1px;
-   padding-right : 1px;
-   padding-top   : 0px;
-   padding-bottom: 0px;
-   margin: 0px;
-   border : 1px dotted black;
-}
-
-button[disabled], button[disabled]:active {
-  border: 1px solid rgb(156, 154, 156);
-  padding: 1px;
-  color: gray;
-}
-
-button[disabled]:-moz-text {
-  color: gray;
-  font:button;
-}
-
-/* text input */
-input[type="text"] {
-  -moz-box-sizing: border-box;
-  font:field;
-  border: 2px inset rgb(204, 204, 204); /* for Nav Quirks */
-  padding: 0px;                         /* for Nav Quirks */
-  background-color: white;
-  color: black;
-  margin-top:    1px;
-  margin-bottom: 0px;
-  margin-left:   0px;
-  margin-right:  0px;
-  padding:  1px;
-} 
-
-input[type="text"][disabled] {
-  color: gray;
-	cursor: default;
-}
-
-input[type="password"] {
-  font:field;
-  border: 2px inset rgb(204, 204, 204);
-  background-color: white;
-  color:black;
-}
-
-input[type="password"][disabled] {
-  color: gray;
-	cursor: default;
-}
+/* miscellaneous form elements */
 
 label {
-  display: inline;
+  /* our <label> support is badly broken. (b=47149) */
   vertical-align: bottom;
   padding-left: 3px;
   padding-right: 3px;
 }
 
-/* Combo box style */
-:-moz-display-comboboxcontrol-frame {
-  cursor: default !important;
-  -moz-user-select: none !important;
-  overflow:hidden !important;
-  white-space:nowrap !important;
-  background-color: inherit !important;
-  color: inherit !important;
-  text-align: inherit !important;
-  padding-left:   4px !important;
-  padding-right:  0px !important;
-  padding-bottom: 1px !important;
-  padding-top:    1px !important;
+legend {
+  padding-left: 2px;
+  padding-right: 2px;
+  border: none;
+}
+
+fieldset {
+  display: block;
+  border: 2px solid black;
+  padding: 4px 4px 4px 4px;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+
+/* focusable content */
+
+/* links */
+:link {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  -moz-user-focus: normal;
+}
+
+:visited {
+  color: purple;
+  text-decoration: underline;
+  cursor: pointer;
+  -moz-user-focus: normal;
+}
+
+:link:active, :visited:active {
+  color: red;
+}
+
+:link:focus, :visited:focus {
+  -moz-outline: 1px dotted WindowText;
+}
+
+/* default inputs, text inputs, and selects */
+input {
+  background-color: Window;
+  border: 2px inset ThreeDFace;
+  color: WindowText;
+  cursor: text;
+  font: field;
+  text-align: start;
+  vertical-align: bottom;
+  -moz-box-sizing: border-box;
+  -moz-user-focus: normal;
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#inputFields");
+}
+
+textarea {
+  background-color: Window;
+  border: 2px inset ThreeDFace;
+  color: WindowText;
+  font: field;
+  margin: 1px 0 1px 0;
+  text-align: start;
+  vertical-align: bottom;
+  -moz-box-sizing: border-box;
+  -moz-user-focus: normal;
+  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
+}
+
+:-moz-singleline-textcontrol-frame {
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: inherit;
+  text-align: inherit;
+}
+
+select {
+  font: list;
+  background-color: Window;
+  border: 2px inset ThreeDFace;
+  margin: 1px 0 1px 0;
+  vertical-align: bottom;
+  color: WindowText;
+  white-space: nowrap;
+  text-align: start; 
+  cursor: default;
+  -moz-user-select: none;
+  -moz-user-focus: normal;
+  -moz-box-sizing: border-box;
+}
+
+select > input[type="button"] {
+  position: static ! important;
+  white-space: nowrap;
+  background-image: url("arrow.gif");
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 12px;
+  height: 12px;
+  -moz-user-focus: none;
+}
+
+select > input[type="button"]:active {
+  background-image: url("arrowd.gif");
+}
+
+select[size], :-moz-select-scrolled-content {
+  overflow: -moz-scrollbars-vertical;
 }
 
 select:-moz-dummy-option { 
   visibility: hidden; 
-  content: "XX"; 
+  content: "XX"; /* demo 8, edge case test 1 */
 }
 
-select[size] {
-  -moz-user-select: none !important;
-  -moz-box-sizing: border-box;
-  font: button;
-  background-color: white;
-  border: 2px inset rgb(153, 153, 153);
-  padding-left:   0px;
-  padding-top:    1px;
-  padding-right:  0px;
-  padding-bottom: 1px;
-  overflow:-moz-scrollbars-vertical;
+:-moz-display-comboboxcontrol-frame {
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: inherit;
+  color: inherit;
+  text-align: inherit;
+  padding: 1px 0 1px 4px;
+  -moz-user-select: none;
 }
 
-select, select[size="1"] {
-  -moz-user-select: none !important;
-  -moz-box-sizing: border-box;
-  font: button;
-  background-color: white;
-  border: inset 2px rgb(192, 192, 192);
-  padding: 0px;
-  margin:  0px;
-  vertical-align: bottom;
-  color:black;
-  white-space:nowrap;
-  text-align: left; 
-}
-
-/* temporary rule to make repaint happen on loss of focus */
-select:focus, select[size="1"]:focus {
-  background-color: #FEFEFE;
-}
-
-select[disabled] {
-  color: rgb(132, 132, 132);
-}
-
-/* combobox button */
-select > input[type="button"] {
-  -moz-user-focus: none;
-  -moz-user-select: none !important;
-  position: static !important;
-  white-space:nowrap;
-  border: outset 2px rgb(204, 204, 204);
-  background-image:url("arrow.gif");
-  background-repeat:no-repeat;
-  background-position:center;
-  background-color: buttonface;
-  width:12px;
-  height:12px;
-  -moz-border-radius:0px;
-}
-
-/* combobox button depressed */
-select > input[type="button"]:active {
-  background-image:url("arrowd.gif");
-  padding:1px;
-}
-
-select[disabled] > input[type="button"] {
-  border: solid 2px rgb(153, 153, 153);
-}
-
-
-/* combobox display area */
-select > input:button-content {
-  text-align: left;
-}
-
-select[disabled] > *:-moz-display-comboboxcontrol-frame {
-  color: gray;
+:focus:-moz-display-comboboxcontrol-frame {
+  background-color: Highlight;
+  color: HighlightText;
+  -moz-outline: 1px dotted HighlightText;
 }
 
 option {
   min-height: 1em;
-  display:block;
-  font-family: inherit;
-  font-size: inherit;
+  display: block;
   -moz-user-select: none;
+  -moz-user-focus: none;
 }
 
-/* we need to address the part where there is a label */
-/* and content. The CSS3 content property would be handy for this */
-/*option[label]:before { 
-  content:attr(label);
-}*/
-
-select[size] option {
-  padding-left:   3px;
-  padding-top:    0px;
-  padding-right:  5px;
-  padding-bottom: 0px;
+select[size] > option {
+  padding: 0 5px 0 5px;
 }
 
-select option, select[size="1"] option {
-  padding-left:   3px;
-  padding-top:    0px;
-  padding-right:  5px;
-  padding-bottom: 0px;
+select > option, select[size="1"] > option {
+  padding: 0 5px 0 3px;
 }
 
-
-/* Combobox item style */
 option[-moz-option-selected] {
- color:white !important;
- background-color:rgb(51,51,102) !important; 
-}
-
-/* List box item selected style */
-option[disabled] {
-  color:rgb(153,153,153) !important; 
-  background-color:rgb(204,204,204) !important; 
+  color: HighlightText ! important;
+  background-color: Highlight ! important;
 }
 
 optgroup {
-  font: button;
-  display:block;
-  font-style:italic;
-  font-weight:bold;
+  display: block;
+  font: list;
+  font-style: italic;
+  font-weight: bold;
 }
 
 optgroup > option {
-  display:block;
-  padding-left:20px;
-  font-style:normal;
-  font-weight:normal;
+  padding-left: 20px;
+  font-style: normal;
+  font-weight: normal;
 }
 
 optgroup:before {
-  display:block;
-  content:attr(label);
-}
-
-/* Begin - Margin setting for form controls inside tables for Nav Quirks */
-
-td select[size] {
-  margin-top:    0px;
-  margin-bottom: 1px;
-}
-
-td select, td select[size="1"] {
-  margin-top:    2px;
-  margin-bottom: 2px;
-}
-
-td input[type="text"], input[type="password"] {
-  margin-top:    1px;
-  margin-bottom: 1px;
-}
-
-td input[type="checkbox"] {
-  margin-bottom: 1px;
-}
-
-td input[type="radio"] {
-  margin-bottom: 1px;
-}
-
-td textarea {
-  margin-top: 1px;
-  margin-bottom: 2px;
-}
-
-/* End - Margin setting for form controls inside tables for Nav Quirks */
-
-textarea {
-  text-align: start;
-  -moz-box-sizing: border-box;
-  font:field;
-  vertical-align: bottom;
-  border: 2px inset #c0c0c0;
-  background-color:white;
-  color:black;
-  padding:   0px;
-  margin-top:    1px;
-  margin-bottom: 1px;
-  margin-left:   0px;
-  margin-right:  0px;
-  -moz-binding: url("chrome://global/content/platformHTMLBindings.xml#textAreas");
-}
-
-textarea[disabled] {
-  color: gray;
-}
-
-
-/* misc */
-
-applet {
-  display: inline;
-}
-area {
-  display: none;
-}
-map {
-  display: none;
-}
-base {
-  display: none;
-}
-basefont {
-  display: none;
-}
-head {
-  display: none;
-}
-meta {
-  display: none;
-}
-object {
-  display: inline;
-}
-script {
-  display: none;
-}
-style {
-  display: none;
-}
-title {
-  display: none;
-}
-noembed {
-  display: none;
-}
-noscript {
-  display: none;
-}
-noframes {
-  display: none;
-}
-
-param {
-  display: none;
-}
-
-parsererror {  /* XXX should not be in HTML namespace */
   display: block;
+  content: attr(label);
+}
+
+:-moz-dropdown-list {
+  background-color: inherit;
+  border: 1px outset ThreeDFace; 
+  border-top-style: none;
+  z-index: 2147483647;
+  -moz-user-select: none;
+} 
+
+input[disabled],
+textarea[disabled],
+option[disabled],
+select[disabled],
+select[disabled] > :-moz-display-comboboxcontrol-frame {
+  color: GrayText;
+  cursor: default;
+}
+
+/* hidden inputs */
+input[type="hidden"] {
+  border: none;
+  visibility: hidden;
+  -moz-binding: none;
+}
+
+/* image buttons */
+input[type="image"] {
+  border: none;
+  vertical-align: baseline;
+  background-color: transparent;
+  cursor: pointer;
   font-family: sans-serif;
-  font-weight: bold;
-  white-space: pre;
-  margin: 1em;
-  padding: 1em;
-  border-width: thin;
+  font-size: small;
+  -moz-binding: none;
+}
+
+input[type="image"][disabled] {
+  cursor: default;
+}
+
+/* file selector */
+input[type="file"] {
+  white-space: nowrap;
+  border: none;
+  cursor: default;
+  -moz-binding: none;
+}
+
+/* button part of file selector */
+input[type="file"] > input[type="button"] {
+  height: inherit;
+}
+
+/* radio buttons */
+input[type="radio"] {
+  border: 2px inset ThreeDFace;
+  background-color: Window;
+  color: WindowText;
+  width: 12px;
+  height: 12px;
+  cursor: default;
+  vertical-align: baseline;
+  -moz-border-radius: 100%;
+  -moz-binding: none;
+}
+
+/* check boxes */
+input[type="checkbox"] {
+  border: 2px inset ThreeDFace;
+  background-color: Window;
+  color: WindowText;
+  width: 13px;
+  height: 13px;
+  cursor: default;
+  vertical-align: baseline;
+  -moz-binding: none;
+}
+
+/* common features of radio buttons and check boxes */
+input[type="radio"][disabled],
+input[type="radio"][disabled]:active,
+input[type="radio"][disabled]:hover,
+input[type="radio"][disabled]:hover:active,
+input[type="checkbox"][disabled],
+input[type="checkbox"][disabled]:active,
+input[type="checkbox"][disabled]:hover,
+input[type="checkbox"][disabled]:hover:active {
+  padding: 1px;
+  border: 1px inset ThreeDShadow;
+  background-color: GrayText;
+}
+
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+  border-style: groove;
+}
+
+input[type="checkbox"]:hover:active,
+input[type="radio"]:hover:active {
   border-style: inset;
-  border-color: red;
-  font-size: 14pt;
-  background-color: lightyellow;
+  background-color: ThreeDHighlight;
 }
 
-sourcetext { /* XXX should not be in HTML namespace */
-  display: block;
+:-moz-radio {
+  background-color: WindowText;
+  width: 4px;
+  height: 4px;
+  left: 6px;
+  top: 6px;
+  -moz-border-radius: 3px;
+}
+
+/* buttons */
+button, 
+input[type="reset"],
+input[type="button"],
+input[type="submit"] { 
+  border: 2px outset ButtonFace;
+  background-color: ButtonFace;
+  color: ButtonText; 
+  padding: 1px 1px 1px 1px;
+  font: button;
+  cursor: default;
   white-space: pre;
-  font-family: Courier;
-  margin-top: 2em;
-  margin-bottom: 1em;
-  color: red;
-  font-weight: bold;
-  font-size: 12pt;
+  -moz-user-select: none;
+  -moz-binding: none;
 }
 
-/* pseudo-element style */
-
-:scrollbar-look {
-  background-color: #c0c0c0;
-  /* border-color: inherit; */
-  /* border: 2px outset #c0c0c0; */
+:button-content {
+  display: block;
+  text-align: center;
 }
 
-:scrollbar-arrow-look {
-  background-color: #c0c0c0;
-  border-color: inherit;
-  border: 2px outset #c0c0c0;
+button:active:hover,
+input[type="reset"]:active:hover,
+input[type="button"]:active:hover,
+input[type="submit"]:active:hover {
+  border-style: inset;
+  padding: 2px 0 0 2px;
 }
 
-:scrollbar-thumb-look {
-  background-color: #c0c0c0;
-  border-color: inherit;
-  border: 2px outset #c0c0c0;
+button:-moz-focus-inner,
+input[type="reset"]:-moz-focus-inner,
+input[type="button"]:-moz-focus-inner,
+input[type="submit"]:-moz-focus-inner {
+  padding: 1px 2px 1px 2px;
+  border: 1px dotted transparent;
 }
 
-:-moz-select-scrolled-content {
-  overflow: -moz-scrollbars-vertical ! important;
+button:focus:-moz-focus-inner,
+input[type="reset"]:focus:-moz-focus-inner,
+input[type="button"]:focus:-moz-focus-inner,
+input[type="submit"]:focus:-moz-focus-inner {
+  border-color: ButtonText;
 }
 
-:scrolled-content {
+button[disabled]:active, button[disabled],
+input[type="reset"][disabled]:active,
+input[type="reset"][disabled],
+input[type="button"][disabled]:active,
+input[type="button"][disabled],
+input[type="file"][disabled] > input[type="button"],
+input[type="file"][disabled] > input[type="button"]:active,
+select[disabled] > input[type="button"],
+select[disabled] > input[type="button"]:active,
+input[type="submit"][disabled]:active,
+input[type="submit"][disabled] {
+  border: 1px outset ButtonShadow;
+  padding: 1px 1px 1px 1px;
+  color: GrayText;
+}
+
+
+/* hidden elements */
+area, base, basefont, head, meta, script, style, title, noembed,
+noscript, noframes, param, :-moz-comment, :-moz-pi {
+  display: none;
+}
+
+
+/* magic */
+
+:viewport, :viewport-scroll, :canvas {
+  display: block;
+  background-color: inherit;
+}
+
+:scrolled-content { 
+  /* e.g., text inputs, select boxes */
   background: inherit;
   padding: inherit;
   display: inherit;
@@ -1193,172 +752,19 @@ sourcetext { /* XXX should not be in HTML namespace */
   height: 0;
 }
 
-:viewport, :viewport-scroll {
-  display: block;
-  background-color: inherit;
-}
-
-/* XXX Temporary until @page is supported... */
 :-moz-page, :-moz-page-sequence {
+  display: block;
   background: transparent;
-  display: block;
-}
-
-:canvas {
-  display: block;
-  background-color: inherit;
-}
-
-:table {
-  display: table;
-  border-spacing: 2px; 
-  border-collapse: separate;
-  margin-top: 0;
-  margin-bottom: 0;
-  -moz-box-sizing: border-box;
-}
-
-:table-outer {
-  display: table;
-  margin: 0px;
-  border: 0px;
-  padding: 0px;
-  float: inherit;
-  position: inherit;
-  top: inherit;
-  right: inherit;
-  bottom: inherit;
-  left: inherit;
-  z-index: inherit;
-  clip: inherit;
-  -moz-opacity: inherit;
-  width:  0px; /* hack for boxes */
-  height: 0px; /* hack for boxes */
-}
-
-:table-cell {
-	display: table-cell;
-}
-
-:table-column {
-	display: table-column;
-}
-
-:table-column-group {
-	display: table-column-group;
-}
-
-:table-row {
-	display: table-row;
-}
-
-:table-row-group {
-	display: table-row-group;
-}
-
-:cell-content {
-  display: block;
-}
-
-:fieldset-content {
-  display: block;
-}
-
-:button-content {
-  display: block;
-  text-align: center;
-}
-
-:label-content {
-  display: block;
-}
-
-:-moz-comment {
-  display: none;
-}
-
-:-moz-pi {
-  display: none;
-}
-
-/* combobox dropdown list */
-:-moz-dropdown-list {
-  -moz-user-select: none !important;
-  background-color:inherit;
-  border: 2px inset rgb(153, 153, 153);
-} 
-
-/* combobox dropdown list hidden */
-select:-moz-dropdown-list {
-  z-index: 2147483647;
-}
-
-/* combobox dropdown list visible 
-select[-moz-dropdown-active]:-moz-dropdown-list {
-  visibility: visible;
-  z-index: 2147483647;
-}
-*/
-
-:-moz-anonymous-block {
-  display: block;
-/*  border: 2px dashed green; */
 }
 
 :-moz-anonymous-positioned-block {
   display: block;
   position: relative;
-  top: inherit; /* XXXwaterson are there others? */
+  top: inherit; 
   left: inherit;
   bottom: inherit;
   right: inherit;
+  z-index: inherit;
+  clip: inherit;
+  -moz-opacity: inherit;
 }
-
-:-moz-line-frame {
-  
-}
-
-:-moz-letter-frame {
-}
-
-:-moz-singleline-textcontrol-frame {
-  overflow:hidden;
-	white-space:nowrap;
-	background-color: inherit;
-	text-align: inherit;
-}
-
-
-
-/* The following namespace if for use with viewsource */
-
-viewsource|key   {font-weight:bold;} 
-viewsource|key:before {color: black;} 
-
-viewsource|val  {color: blue; font-weight:normal;} 
-viewsource|val:before {content: "="; color: black;} 
-
-viewsource|entity  {color:#FF4500; font-weight:normal;} 
-viewsource|entity:before {content: "&"; color:#FF4500;} 
-
-viewsource|comment {color: green; font-style:italic; } 
-viewsource|cdata   {color: #CC0066;} 
-
-viewsource|doctype {color:steelblue; font-style:italic;} 
-
-viewsource|pi  {color:orchid; font-style:italic;} 
-
-viewsource|start {color: purple;  font-weight:bold;} 
-viewsource|start:before {content: "<"; color: black;} 
-viewsource|start:after {content: ">"; color: black;} 
-
-viewsource|end {color: purple;  font-weight:bold;} 
-viewsource|end:before {content: "</"; color: black;} 
-viewsource|end:after {content: ">"; color: black;} 
-
-viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre; font-size:10pt; padding-top:8px; margin-left:8px;} 
-
-viewsource|txt {font-weight: normal; }
-
-viewsource|error {background-color:#FFFFCC; font-weight:bold;} 
-viewsource|summary  {display:block; background-color:#FFFFCC; width:90%; border:solid; border-width:1pt; font-family: Sans-serif;} 

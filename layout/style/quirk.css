@@ -19,82 +19,171 @@
  * Contributor(s): 
  */
 
-/* test rule: remove before shipping 
-.moz-quirktest { text-decoration: underline; color: lime; }
-*/
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
-/* Quirk: input images have a blue border (b=28010)*/
+/* Quirk: input images have a blue border (b=28010) */ 
+
+/* default border */
 input[type=image] {
   border: 2px solid blue;
 }
 
-/* Quirk: DL under a OL has no margins (b=33300) */
-ol dl {
-  margin: 0 0 0 0;
+/* border when focused -- only change style to dotted */
+input[type=image]:focused {
+  border-style: dotted;
 }
 
-/* Quirk: UL under a DL has no margins  (b=32989) */
-dl ul {
-  margin: 0 0 0 0;
+/* border when focused -- only change color to gray */
+input[type=image][disabled] {
+  border-color: GrayText;
 }
 
-/* make orphaned li's have inside bullet */
+
+/* Quirk: make orphaned LIs have inside bullet (b=1049) */
+
+/* force inside position for orphaned lis */
 li {
   list-style-position: inside; 
 }
 
-/* restore outside position for lists inside li's */
+/* restore outside position for lists inside LIs */
 li ul, li ol, li dir, li menu { 
   list-style-position: outside; 
 }
 
 /* undo previous two rules for properly nested lists */
-ul li, dir li, menu li, ol li,
-ul ul, ul dir, ul menu, ul ol,
-dir ul, dir dir, dir menu, dir ol,
-menu ul, menu dir, menu menu, menu ol,
-ol ul, ol dir, ol menu, ol ol {
+  ul ul,   ul ol,   ul dir,   ul menu,   ul li,
+  ol ul,   ol ol,   ol dir,   ol menu,   ol li,
+ dir ul,  dir ol,  dir dir,  dir menu,  dir li,
+menu ul, menu ol, menu dir, menu menu, menu li {
   list-style-position: inherit;
 }
 
-/* Ensure that we get proper padding if the very first node
-   beneath an <li> is another <ul>. This is an ugly way to
-   fix the problem, because it extends the <li> up into
-   what would otherwise appear to be the <ul>'s space. */
-li > ul:first-node {
-  padding-top: 1em;
-}
 
+/* Quirk: ensure that we get proper padding if the very first 
+ * node in an LI is another UL or OL. This is an ugly way to
+ * fix the problem, because it extends the LI up into what
+ * would otherwise appear to be the ULs space. (b=38832) */
+/* Note: this fix will fail once we implement marker box 
+ * alignment correctly. */
+li > ul:first-node,
 li > ol:first-node {
   padding-top: 1em;
 }
 
-/* text input */
+
+/* Quirk: collapse top margin of BODY and TD and bottom margin of TD */
+
+body > :first-node, td > :first-node {
+  margin-top: 0;
+}
+
+td > :last-node {
+  margin-bottom: 0;
+}
+
+
+/* Quirk: support the ways of making PRE have wrapping */
+pre[wrap], pre[cols], pre[width] {
+  white-space: -moz-pre-wrap;
+}
+
+
+/* Quirk: text input has fixed look in compat mode (b=25580) */
 input[type="text"] {
-  border-width: 2px !important;
-  border-style: inset !important;
-  border-color: rgb(204, 204, 204); 
-  padding-top:    1px;
-  padding-bottom: 0px;
-  padding-left:   0px;
-  padding-right:  0px;
+  border: 2px inset ! important;
+  padding: 1px 0 0 0;
 } 
 
-/* HR  see bug 18754                                                     */
-/* there is code in nsLineLayout.cpp and nsHRFrame.cpp to make this work */
-/* in a backwards-compatible way with HRs and floats                     */
+
+/* Quirk: text inputs and textareas have special font (b=44656) */
+/* dealt with at the code level */
+
+
+/* Quirk: special margins for radio buttons */
+input[type="radio"] {
+  margin: 2px 5px 4px 3px;
+  vertical-align: bottom;
+}
+
+
+/* Quirk: special margins for check boxes */
+input[type="checkbox"] {
+  margin: 3px 4px 3px 3px;
+  vertical-align: bottom;
+}
+
+
+/* Quirk: special top and bottom margins for inputs in tables */
+
+td select[size] {
+  margin-top: 0px;
+  margin-bottom: 1px;
+}
+
+td select, td select[size="1"] {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+td input[type="text"], input[type="password"] {
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+td input[type="checkbox"],
+td input[type="radio"] {
+  margin-bottom: 1px;
+}
+
+td textarea {
+  margin-top: 1px;
+  margin-bottom: 2px;
+}
+
+
+/* Quirk: HRs avoid floats (b=18754) */
 
 hr {
   display: inline;
-	box-sizing: border-box;
-}
-	
-hr:after {
-  white-space: pre;
-  content: "\A";
+  -moz-box-sizing: border-box;
 }
 
 hr:before {
   white-space: pre;
   content: "\A";
+}
+
+hr:after {
+  white-space: pre;
+  content: "\A";
+}
+
+
+/* Quirk: DD not in DL has text-indent instead of margin (b=5119) */
+
+dd {
+  text-indent: 40px;
+  margin: 0;
+}
+
+dd > * {
+  text-indent: 0;
+}
+
+dl > dd {
+  text-indent: inherit;
+  margin-left: 40px;
+}
+
+dl > dd > * {
+  text-indent: inherit;
+}
+
+dl dl {
+  margin: 0 0 0 40px;
+}
+
+dt dl, dd dl {
+  margin: 0 0 0 0;
 }
