@@ -2575,7 +2575,7 @@ void CEditView::ClickSelf( const SMouseDownEvent &where )
 
 			SInt16 mouseAction = cr1.WaitForMouseAction( where.whereLocal, where.macEvent.when, 2 * GetDblTime() );
 
-			if ( mouseAction == cr1.eMouseDragging )
+			if ( mouseAction == eMouseDragging )
 			{
 				::SafeSetCursor( iBeamCursor );
 				mDoContinueSelection = true;
@@ -2842,7 +2842,7 @@ Boolean CEditView::ClickTrackSelection( const SMouseDownEvent& where,
 		{
 			::SetCursor( &UQDGlobals::GetQDGlobals()->arrow );
 			SInt16 mouseAction = inClickRecord.WaitForMouseAction( where, this, 2 * GetDblTime() );
-			if ( mouseAction == inClickRecord.eHandledByAttachment )
+			if ( mouseAction == eMouseHandledByAttachment )
 			{
 				didDisplayAttachment = true;
 				break;
