@@ -70,11 +70,26 @@ NS_IMPL_ISUPPORTS1(nsHttpBasicAuth, nsIHttpAuthenticator);
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+nsHttpBasicAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
+                                   const char *challenge,
+                                   nsISupports **sessionState,
+                                   nsISupports **continuationState,
+                                   PRBool *identityInvalid)
+{
+    // if challenged, then the username:password that was sent must
+    // have been wrong.
+    *identityInvalid = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                                      const char *challenge,
-                                     const PRUnichar *username,
+                                     const PRUnichar *domain,
+                                     const PRUnichar *user,
                                      const PRUnichar *password,
-                                     nsISupports *extra,
+                                     nsISupports **sessionState,
+                                     nsISupports **continuationState,
                                      char **creds)
 
 {
@@ -88,47 +103,25 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 
     // we work with ASCII around here
     nsCAutoString userpass;
-    userpass.AssignWithConversion(username);
+    userpass.AssignWithConversion(user);
     userpass.Append(':'); // always send a ':' (see bug 129565)
     if (password)
         userpass.AppendWithConversion(password);
 
-    char *b64userpass = PL_Base64Encode(userpass.get(),
-                                        userpass.Length(),
-                                        nsnull);
-    if (!b64userpass)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // allocate a buffer sizeof("Basic" + " " + b64userpass + "\0")
-    *creds = (char *) malloc(6 + strlen(b64userpass) + 1);
+    // plbase64.h provides this worst-case output buffer size calculation.
+    // use calloc, since PL_Base64Encode does not null terminate.
+    *creds = (char *) calloc(6 + ((userpass.Length() + 2)/3)*4 + 1, 1);
     if (!*creds)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    PL_strcpy(*creds, "Basic ");
-    PL_strcpy(*creds + 6, b64userpass);
-
-    PR_Free(b64userpass);
+    memcpy(*creds, "Basic ", 6);
+    PL_Base64Encode(userpass.get(), userpass.Length(), *creds + 6);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHttpBasicAuth::AreCredentialsReusable(PRBool *result)
+nsHttpBasicAuth::GetAuthFlags(nsresult *flags)
 {
-    *result = PR_TRUE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpBasicAuth::ChallengeRequiresUserPass(const char *challenge,
-                                           PRBool *result)
-{
-    *result = PR_TRUE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpBasicAuth::AllocateMetaData(nsISupports **result)
-{
-    *result = nsnull;
+    *flags = REQUEST_BASED | REUSABLE_CREDENTIALS | REUSABLE_CHALLENGE;
     return NS_OK;
 }

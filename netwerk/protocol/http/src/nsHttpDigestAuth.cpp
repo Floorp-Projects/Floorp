@@ -96,11 +96,38 @@ nsHttpDigestAuth::MD5Hash(const char *buf, PRUint32 len)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+nsHttpDigestAuth::ChallengeReceived(nsIHttpChannel *httpChannel,
+                                    const char *challenge,
+                                    nsISupports **sessionState,
+                                    nsISupports **continuationState,
+                                    PRBool *result)
+{
+  nsCAutoString realm, domain, nonce, opaque;
+  PRBool stale;
+  PRUint16 algorithm, qop;
+
+  nsresult rv = ParseChallenge(challenge, realm, domain, nonce, opaque,
+                               &stale, &algorithm, &qop);
+  if (NS_FAILED(rv)) return rv;
+
+  // if the challenge has the "stale" flag set, then the user identity is not
+  // necessarily invalid.  by returning FALSE here we can suppress username
+  // and password prompting that usually accompanies a 401/407 challenge.
+  *result = !stale;
+
+  // clear any existing nonce_count since we have a new challenge.
+  NS_IF_RELEASE(*sessionState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
                                       const char *challenge,
+                                      const PRUnichar *userdomain,
                                       const PRUnichar *username,
                                       const PRUnichar *password,
-                                      nsISupports *extra,
+                                      nsISupports **sessionState,
+                                      nsISupports **continuationState,
                                       char **creds)
 
 {
@@ -197,12 +224,20 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   // prevent spoofing). we increase this count every time.
   //
   char nonce_count[NONCE_COUNT_LENGTH+1] = "00000001"; // in hex
-  nsCOMPtr<nsISupportsPRUint32> v(do_QueryInterface(extra));
-  if (v) {
-    PRUint32 nc;
-    v->GetData(&nc);
-    PR_snprintf(nonce_count, sizeof(nonce_count), "%08x", ++nc);
-    v->SetData(nc);
+  if (*sessionState) {
+    nsCOMPtr<nsISupportsPRUint32> v(do_QueryInterface(*sessionState));
+    if (v) {
+      PRUint32 nc;
+      v->GetData(&nc);
+      PR_snprintf(nonce_count, sizeof(nonce_count), "%08x", ++nc);
+      v->SetData(nc);
+    }
+  }
+  else {
+    nsCOMPtr<nsISupportsPRUint32> v(
+            do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv));
+    v->SetData(1);
+    NS_ADDREF(*sessionState = v);
   }
   LOG(("   nonce_count=%s\n", nonce_count));
 
@@ -279,38 +314,14 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 }
 
 NS_IMETHODIMP
-nsHttpDigestAuth::AreCredentialsReusable(PRBool *result)
+nsHttpDigestAuth::GetAuthFlags(PRUint32 *flags)
 {
-  *result = PR_FALSE;
+  *flags = REQUEST_BASED | REUSABLE_CHALLENGE;
+  //
+  // NOTE: digest auth credentials must be uniquely computed for each request,
+  //       so we do not set the REUSABLE_CREDENTIALS flag.
+  //
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpDigestAuth::ChallengeRequiresUserPass(const char *challenge,
-                                            PRBool *result)
-{
-  nsCAutoString realm, domain, nonce, opaque;
-  PRBool stale;
-  PRUint16 algorithm, qop;
-
-  nsresult rv = ParseChallenge(challenge, realm, domain, nonce, opaque,
-                               &stale, &algorithm, &qop);
-  if (NS_FAILED(rv)) {
-    *result = PR_TRUE;
-    return rv;
-  }
-  *result = !stale;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpDigestAuth::AllocateMetaData(nsISupports **result)
-{
-  nsresult rv;
-  nsCOMPtr<nsISupportsPRUint32> v(
-          do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv));
-  NS_ADDREF(*result = v);
-  return rv;
 }
 
 nsresult
@@ -586,3 +597,5 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
   }
   return NS_OK;
 }
+
+// vim: ts=2 sw=2

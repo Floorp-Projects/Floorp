@@ -38,42 +38,16 @@ class nsHttpPipeline : public nsAHttpConnection
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSAHTTPCONNECTION
+    NS_DECL_NSAHTTPTRANSACTION
+    NS_DECL_NSAHTTPSEGMENTREADER
 
     nsHttpPipeline();
     virtual ~nsHttpPipeline();
 
     nsresult AddTransaction(nsAHttpTransaction *);
 
-    // nsAHttpConnection methods:
-    nsresult OnHeadersAvailable(nsAHttpTransaction *, nsHttpRequestHead *, nsHttpResponseHead *, PRBool *reset);
-    nsresult ResumeSend();
-    nsresult ResumeRecv();
-    void CloseTransaction(nsAHttpTransaction *, nsresult);
-    void GetConnectionInfo(nsHttpConnectionInfo **);
-    void GetSecurityInfo(nsISupports **);
-    PRBool IsPersistent() { return PR_TRUE; }  // pipelining requires this
-    PRBool IsReused()     { return PR_TRUE; }  // pipelining requires this
-    nsresult PushBack(const char *, PRUint32);
-    
-    // nsAHttpTransaction methods:
-    void SetConnection(nsAHttpConnection *);
-    void GetSecurityCallbacks(nsIInterfaceRequestor **);
-    void OnTransportStatus(nsresult status, PRUint32 progress);
-    PRBool   IsDone();
-    nsresult Status();
-    PRUint32 Available();
-    nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *);
-    nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *);
-    void     Close(nsresult reason);
-
-    // nsAHttpSegmentReader methods:
-    nsresult OnReadSegment(const char *, PRUint32, PRUint32 *);
-
-    // nsAHttpSegmentWriter methods:
-    nsresult OnWriteSegment(char *, PRUint32, PRUint32 *);
-
 private:
-
     nsresult FillSendBuf();
     
     static NS_METHOD ReadFromPipe(nsIInputStream *, void *, const char *,

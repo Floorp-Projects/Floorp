@@ -76,10 +76,20 @@ extern PRLogModuleInfo *gHttpLog;
 
 typedef PRUint8 nsHttpVersion;
 
+//-----------------------------------------------------------------------------
 // http connection capabilities
+//-----------------------------------------------------------------------------
+
 #define NS_HTTP_ALLOW_KEEPALIVE      (1<<0)
 #define NS_HTTP_ALLOW_PIPELINING     (1<<1)
-#define NS_HTTP_DONT_REPORT_PROGRESS (1<<2)
+
+// a transaction with this caps flag will continue to own the connection,
+// preventing it from being reclaimed, even after the transaction completes.
+#define NS_HTTP_STICKY_CONNECTION    (1<<2)
+
+//-----------------------------------------------------------------------------
+// some default values
+//-----------------------------------------------------------------------------
 
 // hard upper limit on the number of requests that can be pipelined
 #define NS_HTTP_MAX_PIPELINED_REQUESTS 8 

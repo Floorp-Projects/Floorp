@@ -55,8 +55,6 @@ nsHttpConnection::nsHttpConnection()
     , mSuspendCount(0)
     , mLastReadTime(0)
     , mIdleTimeout(0)
-    , mTransactionStatus(NS_OK)
-    , mTransactionDone(PR_TRUE)
     , mKeepAlive(PR_TRUE) // assume to keep-alive by default
     , mKeepAliveMask(PR_TRUE)
     , mSupportsPipelining(PR_FALSE) // assume low-grade server
@@ -110,6 +108,8 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime)
 nsresult
 nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
 {
+    nsresult rv;
+
     LOG(("nsHttpConnection::Activate [this=%x trans=%x caps=%x]\n",
          this, trans, caps));
 
@@ -119,10 +119,6 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
     // take ownership of the transaction
     mTransaction = trans;
     NS_ADDREF(mTransaction);
-
-    mTransaction->SetConnection(this);
-
-    nsresult rv;
 
     // set mKeepAlive according to what will be requested
     mKeepAliveMask = mKeepAlive = (caps & NS_HTTP_ALLOW_KEEPALIVE);
@@ -253,7 +249,7 @@ nsHttpConnection::SupportsPipelining(nsHttpResponseHead *responseHead)
 }
 
 //----------------------------------------------------------------------------
-// nsHttpConnection::nsAHttpConnection
+// nsHttpConnection::nsAHttpConnection compatible methods
 //----------------------------------------------------------------------------
 
 nsresult
@@ -451,11 +447,12 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     NS_ASSERTION(trans == mTransaction, "wrong transaction");
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
-    // ignore this error code because its not a real error.
+    // mask this error code because its not a real error.
     if (reason == NS_BASE_STREAM_CLOSED)
         reason = NS_OK;
 
     mTransaction->Close(reason);
+
     NS_RELEASE(mTransaction);
     mTransaction = 0;
 
@@ -465,8 +462,6 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     // flag the connection as reused here for convenience sake.  certainly
     // it might be going away instead ;-)
     mIsReused = PR_TRUE;
-
-    gHttpHandler->ReclaimConnection(this);
 }
 
 NS_METHOD
