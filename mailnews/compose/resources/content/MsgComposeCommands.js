@@ -607,7 +607,7 @@ function GenerateAttachmentsString()
 	return attachments;
 }
 
-function RemoveSelectedAtachment()
+function RemoveSelectedAttachment()
 {
 	var bucketTree = document.getElementById("attachmentBucket");
 	if ( bucketTree )
