@@ -32,7 +32,7 @@ HINSTANCE       hInst;
 
 HANDLE          hAccelTable;
 
-HWND            hDlg;
+HWND            hDlgUninstall;
 HWND            hDlgMessage;
 HWND            hWndMain;
 
@@ -51,6 +51,8 @@ LPSTR           szFileIniUninstall;
 ULONG           ulOSType;
 DWORD           dwScreenX;
 DWORD           dwScreenY;
+
+DWORD           gdwWhatToDo;
 
 uninstallGen    ugUninstall;
 diU             diUninstall;
@@ -91,16 +93,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
     else
     {
-      InstantiateDialog(DLG_UNINSTALL, diUninstall.szTitle, DlgProcUninstall);
+      if(diUninstall.bShowDialog == TRUE)
+        hDlgUninstall = InstantiateDialog(hWndMain, DLG_UNINSTALL, diUninstall.szTitle, DlgProcUninstall);
+      else
+        ParseAllUninstallLogs();
     }
   }
 
-  while(GetMessage(&msg, NULL, 0, 0))
+  if(diUninstall.bShowDialog == TRUE)
   {
-    if((!IsDialogMessage(hDlg, &msg)) && (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)))
+    while(GetMessage(&msg, NULL, 0, 0))
     {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
+      if((!IsDialogMessage(hDlgUninstall, &msg)) && (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)))
+      {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
     }
   }
 

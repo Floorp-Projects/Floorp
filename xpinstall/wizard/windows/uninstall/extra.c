@@ -157,6 +157,7 @@ HRESULT Initialize(HINSTANCE hInstance)
 
   hDlgMessage = NULL;
   DetermineOSVersion();
+  gdwWhatToDo = WTD_ASK;
 
   /* load strings from setup.exe */
   if(NS_LoadStringAlloc(hInst, IDS_ERROR_GLOBALALLOC, &szEGlobalAlloc, MAX_BUF))
@@ -1167,6 +1168,7 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   {
     case AUTO:
     case SILENT:
+      gdwWhatToDo             = WTD_NO_TO_ALL;
       diUninstall.bShowDialog = FALSE;
       break;
   }

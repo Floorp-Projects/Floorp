@@ -28,14 +28,58 @@
 #include "ifuncns.h"
 #include "parser.h"
 
-LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+void ParseAllUninstallLogs()
 {
-  char  szBuf[MAX_BUF];
   char  szFileInstallLog[MAX_BUF];
   char  szKey[MAX_BUF];
   sil   *silFile;
-  RECT  rDlg;
   DWORD dwFileFound;
+  DWORD dwRv = 0;
+
+  dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
+  while(dwFileFound)
+  {
+    if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
+    {
+      FileDelete(szFileInstallLog);
+      dwRv = Uninstall(silFile);
+      DeInitSilNodes(&silFile);
+      if(dwRv == WTD_CANCEL)
+        break;
+    }
+
+    dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
+  }
+
+  if(dwRv != WTD_CANCEL)
+  {
+    lstrcpy(szFileInstallLog, ugUninstall.szLogPath);
+    AppendBackSlash(szFileInstallLog, MAX_BUF);
+    lstrcat(szFileInstallLog, ugUninstall.szLogFilename);
+    if(FileExists(szFileInstallLog))
+    {
+      if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
+      {
+        FileDelete(szFileInstallLog);
+        Uninstall(silFile);
+        DeInitSilNodes(&silFile);
+      }
+    }
+
+    /* clean up the uninstall windows registry key */
+    lstrcpy(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\");
+    lstrcat(szKey, ugUninstall.szUninstallKeyDescription);
+    RegDeleteKey(HKEY_LOCAL_MACHINE, szKey);
+
+    /* update Wininit.ini to remove itself at reboot */
+    RemoveUninstaller(ugUninstall.szUninstallFilename);
+  }
+}
+
+LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  char  szBuf[MAX_BUF];
+  RECT  rDlg;
 
   switch(msg)
   {
@@ -53,40 +97,8 @@ LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
-          dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
-          while(dwFileFound)
-          {
-            if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
-            {
-              FileDelete(szFileInstallLog);
-              Uninstall(silFile);
-              DeInitSilNodes(&silFile);
-            }
-
-            dwFileFound = GetLogFile(ugUninstall.szLogPath, ugUninstall.szLogFilename, szFileInstallLog, sizeof(szFileInstallLog));
-          }
-
-          lstrcpy(szFileInstallLog, ugUninstall.szLogPath);
-          AppendBackSlash(szFileInstallLog, MAX_BUF);
-          lstrcat(szFileInstallLog, ugUninstall.szLogFilename);
-          if(FileExists(szFileInstallLog))
-          {
-            if((silFile = InitSilNodes(szFileInstallLog)) != NULL)
-            {
-              FileDelete(szFileInstallLog);
-              Uninstall(silFile);
-              DeInitSilNodes(&silFile);
-            }
-          }
-
-          /* clean up the uninstall windows registry key */
-          lstrcpy(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\uninstall\\");
-          lstrcat(szKey, ugUninstall.szUninstallKeyDescription);
-          RegDeleteKey(HKEY_LOCAL_MACHINE, szKey);
-
-          /* update Wininit.ini to remove itself at reboot */
-          RemoveUninstaller(ugUninstall.szUninstallFilename);
-
+          EnableWindow(GetDlgItem(hDlg, IDWIZNEXT), FALSE);
+          ParseAllUninstallLogs();
           DestroyWindow(hDlg);
           PostQuitMessage(0);
           break;
@@ -104,16 +116,74 @@ LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   return(0);
 }
 
+LRESULT CALLBACK DlgProcWhatToDo(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  char  szBuf[MAX_BUF];
+  RECT  rDlg;
+
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      SetWindowText(hDlg, "Que?");
+      wsprintf(szBuf, diUninstall.szMessage0, ugUninstall.szDescription);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
+
+      if(GetClientRect(hDlg, &rDlg))
+        SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
+
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        case ID_NO:
+          gdwWhatToDo = WTD_NO;
+          DestroyWindow(hDlg);
+          PostQuitMessage(0);
+          break;
+
+        case ID_NO_TO_ALL:
+          gdwWhatToDo = WTD_NO_TO_ALL;
+          DestroyWindow(hDlg);
+          PostQuitMessage(0);
+          break;
+
+        case ID_YES:
+          gdwWhatToDo = WTD_YES;
+          DestroyWindow(hDlg);
+          PostQuitMessage(0);
+          break;
+
+        case ID_YES_TO_ALL:
+          gdwWhatToDo = WTD_YES_TO_ALL;
+          DestroyWindow(hDlg);
+          PostQuitMessage(0);
+          break;
+
+        case IDCANCEL:
+          gdwWhatToDo = WTD_CANCEL;
+          DestroyWindow(hDlg);
+          PostQuitMessage(0);
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
+  return(0);
+}
+
 LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  RECT rDlg;
-  HWND hSTMessage = GetDlgItem(hDlg, IDC_MESSAGE); /* handle to the Static Text message window */
-  HDC  hdcSTMessage;
-  SIZE sizeString;
-  int  iLen;
-//  int  iCount;
-//  int  iCharWidth;
-//  UINT uiTotalWidth;
+  RECT      rDlg;
+  HWND      hSTMessage = GetDlgItem(hDlg, IDC_MESSAGE); /* handle to the Static Text message window */
+  HDC       hdcSTMessage;
+  SIZE      sizeString;
+  LOGFONT   logFont;
+  HFONT     hfontTmp;
+  HFONT     hfontOld;
+  int       i;
 
   switch(msg)
   {
@@ -125,29 +195,40 @@ LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       {
         case IDC_MESSAGE:
           hdcSTMessage = GetWindowDC(hSTMessage);
-          iLen = lstrlen((LPSTR)lParam);
-          GetTextExtentPoint32(hdcSTMessage, (LPSTR)lParam, iLen, &sizeString);
 
-/*          uiTotalWidth = 0;
-          for(iCount = 0; iCount < iLen; iCount ++)
-          {
-            GetCharWidth32(hdcSTMessage, ((LPSTR)lParam)[iCount], ((LPSTR)lParam)[iCount], &iCharWidth);
-            uiTotalWidth += iCharWidth;
-          }
-*/
+          SystemParametersInfo(SPI_GETICONTITLELOGFONT,
+                               sizeof(logFont),
+                               (PVOID)&logFont,
+                               0);
+          hfontTmp = CreateFontIndirect(&logFont);
 
+          if(hfontTmp)
+            hfontOld = SelectObject(hdcSTMessage, hfontTmp);
+
+          GetTextExtentPoint32(hdcSTMessage, (LPSTR)lParam, lstrlen((LPSTR)lParam), &sizeString);
+          SelectObject(hdcSTMessage, hfontOld);
+          DeleteObject(hfontTmp);
           ReleaseDC(hSTMessage, hdcSTMessage);
 
           SetWindowPos(hDlg, HWND_TOP,
-                      (dwScreenX/2)-((sizeString.cx - (iLen * 1))/2), (dwScreenY/2)-((sizeString.cy + 50)/2),
-                      (sizeString.cx - (iLen * 1)), sizeString.cy + 50,
-                       SWP_SHOWWINDOW);
+                      (dwScreenX/2)-((sizeString.cx + 40)/2), (dwScreenY/2)-((sizeString.cy + 40)/2),
+                      sizeString.cx + 40, sizeString.cy + 40,
+                      SWP_SHOWWINDOW);
 
           if(GetClientRect(hDlg, &rDlg))
-            SetWindowPos(hSTMessage, HWND_TOP,
-                         rDlg.left, rDlg.top,
-                         (sizeString.cx - (iLen * 1)), rDlg.bottom,
+            SetWindowPos(hSTMessage,
+                         HWND_TOP,
+                         rDlg.left,
+                         rDlg.top,
+                         rDlg.right,
+                         rDlg.bottom,
                          SWP_SHOWWINDOW);
+
+          for(i = 0; i < lstrlen((LPSTR)lParam); i++)
+          {
+            if((((LPSTR)lParam)[i] == '\r') || (((LPSTR)lParam)[i] == '\n')) 
+              ((LPSTR)lParam)[i] = ' ';
+          }
 
           SetDlgItemText(hDlg, IDC_MESSAGE, (LPSTR)lParam);
           break;
@@ -167,6 +248,7 @@ void ProcessWindowsMessages()
     DispatchMessage(&msg);
   }
 }
+
 void ShowMessage(LPSTR szMessage, BOOL bShow)
 {
   char szBuf[MAX_BUF];
@@ -177,7 +259,7 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
     {
       ZeroMemory(szBuf, sizeof(szBuf));
       NS_LoadString(hInst, IDS_MB_MESSAGE_STR, szBuf, MAX_BUF);
-      InstantiateDialog(DLG_MESSAGE, szBuf, DlgProcMessage);
+      hDlgMessage = InstantiateDialog(hWndMain, DLG_MESSAGE, szBuf, DlgProcMessage);
       SendMessage(hDlgMessage, WM_COMMAND, IDC_MESSAGE, (LPARAM)szMessage);
     }
     else if(!bShow && hDlgMessage)
@@ -188,11 +270,12 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
   }
 }
 
-void InstantiateDialog(DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc)
+HWND InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc)
 {
   char szBuf[MAX_BUF];
+  HWND hDlg = NULL;
 
-  if((hDlg = CreateDialog(hInst, MAKEINTRESOURCE(dwDlgID), hWndMain, wpDlgProc)) == NULL)
+  if((hDlg = CreateDialog(hInst, MAKEINTRESOURCE(dwDlgID), hParent, wpDlgProc)) == NULL)
   {
     char szEDialogCreate[MAX_BUF];
 
@@ -204,9 +287,7 @@ void InstantiateDialog(DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc)
 
     PostQuitMessage(1);
   }
-  else if(dwDlgID == DLG_MESSAGE)
-  {
-    hDlgMessage = hDlg;
-  }
+
+  return(hDlg);
 }
 

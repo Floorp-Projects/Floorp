@@ -53,6 +53,14 @@ typedef int PRInt32;
 #define FILE_LOG_INSTALL                "install.log"
 #define WIZ_TEMP_DIR                    "ns_temp"
 
+/* WTD: What To Do */
+#define WTD_ASK                         0
+#define WTD_CANCEL                      1
+#define WTD_NO                          2
+#define WTD_NO_TO_ALL                   3
+#define WTD_YES                         4
+#define WTD_YES_TO_ALL                  5
+
 /* PP: Parse Path */
 #define PP_FILENAME_ONLY                1
 #define PP_PATH_ONLY                    2
