@@ -337,6 +337,9 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   if (NS_FAILED(secMan->CheckLoadURIFromScript(nsnull, uri)))
     return NS_ERROR_FAILURE;
 
+  // Reset the document URL to the new URL
+  SetDocumentURL(uri);
+
   // Create a channel
   rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull, this);
   if (NS_FAILED(rv)) return rv;
