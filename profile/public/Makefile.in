@@ -22,9 +22,11 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS		= \
+XPIDLSRCS = nsIProfile.idl
+MODULE = profile
+
+EXPORTS	= \
 		profileSwitch.h \
-		nsIProfile.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
