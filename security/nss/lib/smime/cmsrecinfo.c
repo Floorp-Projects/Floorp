@@ -34,7 +34,7 @@
 /*
  * CMS recipientInfo methods.
  *
- * $Id: cmsrecinfo.c,v 1.2 2000/06/13 21:56:30 chrisk%netscape.com Exp $
+ * $Id: cmsrecinfo.c,v 1.3 2000/10/06 23:26:10 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -352,7 +352,8 @@ NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey, S
 }
 
 PK11SymKey *
-NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex, CERTCertificate *cert, SECKEYPrivateKey *privkey, SECOidTag bulkalgtag)
+NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex, 
+	CERTCertificate *cert, SECKEYPrivateKey *privkey, SECOidTag bulkalgtag)
 {
     PK11SymKey *bulkkey = NULL;
     SECAlgorithmID *encalg;
@@ -360,7 +361,7 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex, CERTCe
     SECItem *enckey;
     int error;
 
-    ri->cert = cert;		/* mark the recipientInfo so we can find it later */
+    ri->cert = cert;	/* mark the recipientInfo so we can find it later */
 
     switch (ri->recipientInfoType) {
     case NSSCMSRecipientInfoID_KeyTrans:
