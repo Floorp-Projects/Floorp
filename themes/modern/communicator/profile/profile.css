@@ -39,13 +39,6 @@ treeitem[rowMigrate="no"] > treerow > treecell > .tree-button {
   list-style-image: url("chrome://communicator/skin/profile/migrate.gif");
 }
 
-.box-header-circle 
-  {
-    list-style-image      : url("chrome://communicator/skin/profile/profileicon-large.gif");
-    width                 : 10px;
-    height                : 14px;
-  }
-
 /* profile selection dialog */
 html#intro {
   width: 17em;

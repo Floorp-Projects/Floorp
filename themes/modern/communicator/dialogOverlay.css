@@ -41,47 +41,32 @@ toolbargrippy {
 }
 
 /** 
- * Large Dialog Header (with icon) 
+ * Large Dialog Header 
  **/
 .box-header 
   {
-    -moz-binding          : url(chrome://communicator/content/dialogBindings.xml#largeheader);
+    -moz-binding          : url(chrome://global/skin/globalBindings.xml#largeheader);
   }
 
-.box-header-header 
+.largeheader-box
   {
-    padding               : 0px 0px 4px 5px;
-    min-height            : 34px;
-  }
-
-.box-header-text-box 
-  {
-    vertical-align        : middle;
-  }
-
-.box-header-text 
-  {
-    color                 : white;
-    font-size             : large;
-    font-weight           : bold;
-    text-decoration       : underline;
-  }
-
-.box-header-icon-box  
-  {
-    vertical-align        : middle;
-  }
+    padding-top           : 10px;
+    padding-bottom        : 10px;
+    border-top            : 1px solid #94AACE;
+    border-bottom         : 1px solid #000000;
+    background-color      : #5B7693;
+    color                 : #ffffff;
+  }  
   
-.box-header-circle-box
+.largeheader-header-text
   {
-    background-image      : url("chrome://global/skin/button28-bg.gif");
-    background-repeat     : no-repeat;
-    background-position   : 50% 4px;
-    background-color      : transparent;
-    min-width             : 28px;
-    min-height            : 32px;
-    margin                : 1px 7px 1px 1px;
-    text-align            : center;
+    font-weight           : bold;
+    margin-left           : 23px;
+  }
+
+.largeheader-desc-text
+  {
+    margin-left           : 44px;
   }  
 
 /**

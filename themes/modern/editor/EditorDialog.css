@@ -100,7 +100,7 @@ titledbox {
 
 button.color-button {
   /* need to override large default min-width */
-  min-width : 44px;
+  min-width : 37px;
 }
 
 #ColorPickerSwatch {

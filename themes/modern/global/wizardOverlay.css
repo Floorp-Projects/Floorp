@@ -15,3 +15,9 @@ box#wizardButtons {
   margin-top                  : 3px;
 }
 
+.box-wizardcontent
+  {
+    margin-left               : 44px;
+    margin-right              : 44px;
+    width                     : 30em;
+  } 
