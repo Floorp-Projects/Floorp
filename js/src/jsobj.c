@@ -2468,7 +2468,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                             pc += cs->length;
                             while (*pc == JSOP_GROUP)
                                 pc++;
-                            if (*pc == JSOP_IFEQ)
+                            if (js_CodeSpec[*pc].format & JOF_DETECTING)
                                 flags |= JSRESOLVE_DETECTING;
                         }
                     }

@@ -89,6 +89,7 @@ typedef enum JSOp {
 #define JOF_FOR           0x1000  /* for-in property op */
 #define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
                                      that do simplex assignment */
+#define JOF_DETECTING     0x2000  /* object detection flag for JSNewResolveOp */
 #define JOF_BACKPATCH     0x4000  /* backpatch placeholder during codegen */
 #define JOF_LEFTASSOC     0x8000  /* left-associative operator */
 
