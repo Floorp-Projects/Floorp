@@ -688,15 +688,7 @@ nsMenuFrame::AttributeChanged(nsIContent* aChild,
 {
   nsAutoString value;
 
-  if (aAttribute == nsXULAtoms::open) {
-    aChild->GetAttr(kNameSpaceID_None, aAttribute, value);
-    if (value.EqualsLiteral("true"))
-      OpenMenuInternal(PR_TRUE);
-    else {
-      OpenMenuInternal(PR_FALSE);
-      mCreateHandlerSucceeded = PR_FALSE;
-    }
-  } else if (aAttribute == nsHTMLAtoms::checked) {
+  if (aAttribute == nsHTMLAtoms::checked) {
     if (mType != eMenuType_Normal)
         UpdateMenuSpecialState(GetPresContext());
   } else if (aAttribute == nsXULAtoms::acceltext) {
@@ -717,15 +709,15 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
   if (!mContent)
     return NS_OK;
 
-  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mContent));
   if (aActivateFlag) {
     // Now that the menu is opened, we should have a menupopup child built.
     // Mark it as generated, which ensures a frame gets built.
     MarkAsGenerated();
 
-    domElement->SetAttribute(NS_LITERAL_STRING("open"), NS_LITERAL_STRING("true"));
+    mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::open, NS_LITERAL_STRING("true"), PR_TRUE);
   }
-  else domElement->RemoveAttribute(NS_LITERAL_STRING("open"));
+  else mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
+  OpenMenuInternal(aActivateFlag);
 
   return NS_OK;
 }
@@ -899,6 +891,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
     if (nsMenuFrame::sDismissalListener)
       nsMenuFrame::sDismissalListener->EnableListener(PR_TRUE);
+
+    mCreateHandlerSucceeded = PR_FALSE;
   }
 
 }
