@@ -1308,8 +1308,13 @@ loser:
 
 
 
-
-
+/* Search the cert for an X509_SUBJECT_ALT_NAME extension.
+** ASN1 Decode it into a list of alternate names.
+** Search the list of alternate names for one with the NETSCAPE_NICKNAME OID.
+** ASN1 Decode that name.  Turn the result into a zString.  
+** Look for duplicate nickname already in the certdb. 
+** If one is found, create a nickname string that is not a duplicate.
+*/
 char *
 CERT_GetNickName(CERTCertificate   *cert,
  		 CERTCertDBHandle  *handle,
@@ -1317,21 +1322,21 @@ CERT_GetNickName(CERTCertificate   *cert,
 { 
     CERTGeneralName  *current;
     CERTGeneralName  *names;
-    SECItem          altNameExtension;
-    char             *nickname = NULL;
+    char             *nickname   = NULL;
     char             *returnName = NULL;
-    char             *tempname = NULL;
-    SECItem          *nick;
+    char             *basename   = NULL;
+    PRArenaPool      *arena      = NULL;
+    CERTCertificate  *tmpcert;
     SECStatus        rv;
-    PRArenaPool      *arena = NULL;
     int              count;
-    int              length;
-    
-    
+    int              found = 0;
+    SECItem          altNameExtension;
+    SECItem          nick;
 
     if (handle == NULL) {
 	handle = CERT_GetDefaultCertDB();
     }
+    altNameExtension.data = NULL;
     rv = CERT_FindCertExtension(cert, SEC_OID_X509_SUBJECT_ALT_NAME, 
 				&altNameExtension);
     if (rv != SECSuccess) { 
@@ -1348,46 +1353,62 @@ CERT_GetNickName(CERTCertificate   *cert,
     current = names;
     do {
 	if (current->type == certOtherName && 
-	    SECOID_FindOIDTag(&current->name.OthName.oid) == SEC_OID_NETSCAPE_NICKNAME) {
-	    rv = SEC_ASN1DecodeItem(arena, nick, SEC_IA5StringTemplate, 
-				    &current->name.OthName.name);
-	    if (rv != SECSuccess) {
-		goto loser;
-	    }
-	    nickname = (char*)PORT_ZAlloc(nick->len + 1);
-	    if (nickname == NULL) {
-		goto loser;
-	    }
-	    nickname = PORT_Strncpy(nickname, (char *) nick->data, nick->len);
-	    length = nick->len;
-	    count = 1;
-	    tempname = nickname;
-	    while (CERT_FindCertByNickname(handle, nickname) != NULL) {
-		nickname = PR_smprintf("%s #%d", tempname, count);
-		count++;
-	    }
-	    goto done;
+	    SECOID_FindOIDTag(&current->name.OthName.oid) == 
+	      SEC_OID_NETSCAPE_NICKNAME) {
+	    found = 1;
+	    break;
 	}
 	current = cert_get_next_general_name(current);
     } while (current != names);
-loser:
-    if (arena != NULL) {
-	PORT_FreeArena(arena, PR_FALSE);
+    if (!found)
+    	goto loser;
+
+    rv = SEC_ASN1DecodeItem(arena, &nick, SEC_IA5StringTemplate, 
+			    &current->name.OthName.name);
+    if (rv != SECSuccess) {
+	goto loser;
     }
-    if (nickname != NULL) {
-	PORT_Free(nickname);
+
+    /* make a null terminated string out of nick, with room enough at
+    ** the end to add on a number of up to 21 digits in length, (a signed
+    ** 64-bit number in decimal) plus a space and a "#". 
+    */
+    nickname = (char*)PORT_ZAlloc(nick.len + 24);
+    if (!nickname) 
+	goto loser;
+    PORT_Strncpy(nickname, (char *)nick.data, nick.len);
+
+    /* Don't let this cert's nickname duplicate one already in the DB.
+    ** If it does, create a variant of the nickname that doesn't.
+    */
+    count = 0;
+    while ((tmpcert = CERT_FindCertByNickname(handle, nickname)) != NULL) {
+	CERT_DestroyCertificate(tmpcert);
+	if (!basename) {
+	    basename = PORT_Strdup(nickname);
+	    if (!basename)
+		goto loser;
+	}
+	count++;
+	sprintf(nickname, "%s #%d", basename, count);
     }
-    return NULL;
-done:
-    if (nicknameArena != NULL) {
-	returnName =  PORT_ArenaStrdup(cert->arena, nickname);
+
+    /* success */
+    if (nicknameArena) {
+	returnName =  PORT_ArenaStrdup(nicknameArena, nickname);
     } else {
-	returnName = PORT_Strdup(nickname);
+	returnName = nickname;
+	nickname = NULL;
     }
-    if (arena != NULL) {
+loser:
+    if (arena != NULL) 
 	PORT_FreeArena(arena, PR_FALSE);
-    }
-    PORT_Free(nickname);
+    if (nickname)
+	PORT_Free(nickname);
+    if (basename)
+	PORT_Free(basename);
+    if (altNameExtension.data)
+    	PORT_Free(altNameExtension.data);
     return returnName;
 }
 
