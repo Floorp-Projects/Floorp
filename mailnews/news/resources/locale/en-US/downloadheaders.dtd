@@ -19,6 +19,14 @@ Rights Reserved.
 --> 
 
 <!ENTITY all.label	"Download all headers">
+<!--LOCALIZATION NOTE (download.label):
+    consider the download.label and headers.label as a single sentence
+	 with the number of headers to be downloaded inserted between them:
+	 EXAMPLE: "Download" <some number> "headers"
+	 Either label could be set to null ("") if required grammatically.
+-->
+
 <!ENTITY download.label "Download">
+<!--LOCALIZATION NOTE (headers.label): see note for download.label -->
 <!ENTITY headers.label 	"headers">
 <!ENTITY mark.label	"Mark remaining headers as read">
