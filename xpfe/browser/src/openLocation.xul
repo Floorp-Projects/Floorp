@@ -13,12 +13,6 @@
     <html:script language="javascript" src="openLocation.js">
     </html:script>
     
-    <broadcaster id="args" value=""/>
-
-    <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
-    <broadcaster id="dialog.start" ready="false"/>
-    <observes element="dialog.start" attribute="ready" onchange="onLoadWithArgs()"/>
-    
     <!--
     <box align="vertical">
         <box align="horizontal">  
@@ -83,7 +77,7 @@
 							<html:button id="dialog.ok" onclick="open()" disabled="">Open</html:button>
 						</html:td>
 						<html:td width="70">
-							<html:button id="dialog.cancel" onclick="cancel()" disabled="">Cancel</html:button>
+							<html:button id="dialog.cancel" onclick="cancel()">Cancel</html:button>
 						</html:td>
 						<html:td width="70">
 							<html:button id="dialog.help" onclick="help()" disabled="">Help</html:button>
