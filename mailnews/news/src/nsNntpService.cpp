@@ -604,23 +604,6 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, nsISupportsArr
     return NS_ERROR_FAILURE;
   }
   
-  // we've got an article.  check that the we are the poster.
-  // nsAutoString alertText("This message does not appear to be from you.  You may only cancel your own posts, not those made by others.");
-
-  // we're the sender, give them one last chance to cancel the cancel
-  PRInt32 result;
-
-  nsAutoString confirmText("Are you sure you want to cancel this message?");
-  rv = dialog->Confirm(confirmText, &result);
-#ifdef DEBUG_NEWS
-  printf("OK or CANCEL? %d\n",result);
-#endif
-
-  if (result != 1) {
-    // they canceled the cancel
-    return NS_ERROR_FAILURE;
-  }
-
   nsMsgKey key;
   nsString messageId("", eOneByte);
   
@@ -650,17 +633,6 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, nsISupportsArr
 
   nsString blankNewsgroupName("",eOneByte);
   rv = RunNewsUrl(urlStr, blankNewsgroupName, nsMsgKey_None, aConsumer, aUrlListener, aURL);
-  
-  if (NS_SUCCEEDED(rv)) {
-    // the CANCEL succeeded.
 
-    nsAutoString alertText("Message cancelled.");
-    rv = dialog->Alert(alertText);
-    
-    return NS_OK;
-  }
-  else {
-    // the CANCEL failed.
-    return NS_ERROR_FAILURE;
-  }
+  return rv; 
 }

@@ -66,6 +66,7 @@
 
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
+#include "nsINetSupportDialogService.h"
 
 #define PREF_NEWS_MAX_ARTICLES "news.max_articles"
 #define PREF_NEWS_MARK_OLD_READ "news.mark_old_read"
@@ -75,6 +76,15 @@
 #ifdef DEBUG_sspitzer_
 #define DEBUG_NEWS 1
 #endif
+
+
+// move these to a string bundle
+#define UNTIL_STRING_BUNDLES_XP_HTML_NEWS_ERROR "<TITLE>Error!</TITLE>\n<H1>Error!</H1> newsgroup server responded: <b>%.256s</b><p>\n"
+#define UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED "<b><p>Perhaps the article has expired</b><p>\n"
+#define UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT "Click here to remove all expired articles"
+#define UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED "This message does not appear to be from you.  You may only cancel your own posts, not those made by others."
+#define UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM "Are you sure you want to cancel this message?"
+#define UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED "Message cancelled."
 
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
@@ -93,6 +103,7 @@ static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 // quiet compiler warnings by defining these function prototypes
 char *NET_ExplainErrorDetails (int code, ...);
@@ -442,7 +453,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
 	m_typeWanted = 0;
 	m_responseCode = 0;
 	m_previousResponseCode = 0;
-	m_responseText = NULL;
+	m_responseText = nsnull;
 
 	m_path = NULL;
 	m_currentGroup = NULL;
@@ -456,7 +467,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
 	m_newsRCListIndex = 0;
 	m_newsRCListCount = 0;
 	
-	m_messageID = NULL;
+	m_messageID = nsnull;
 	m_articleNumber = 0;
 	m_originalContentLength = 0;
 	m_cancelID = nsnull;
@@ -469,14 +480,12 @@ nsresult nsNNTPProtocol::Initialize(nsIURL * aURL)
 nsresult nsNNTPProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
 {
   PRBool bVal = FALSE;
-  char * hostAndPort = 0;
-  char *group = 0;
-  char *messageID = 0;
-  char *commandSpecificData = 0;
+  char *hostAndPort = nsnull;
+  char *group = nsnull;
+  char *messageID = nsnull;
+  char *commandSpecificData = nsnull;
   PRBool cancel = FALSE;
   nsCOMPtr <nsINNTPNewsgroupPost> message;
-  //char *message_id = 0;
- 
   nsresult rv = NS_OK;
 
   m_articleNumber = -1;
@@ -1837,30 +1846,33 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
         nsresult rv = NS_OK;
         char *group_name = nsnull;
         char outputBuffer[OUTPUT_BUFFER_SIZE];
-            
-        if (m_newsgroup) {
-            rv = m_newsgroup->GetName(&group_name);
-        }
-
-        if (NS_SUCCEEDED(rv) && group_name) {
-#if 0
-            PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n", "news:", m_hostName, group_name, "Click here to remove all expired articles");
-#else
-            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<h1>Error!</h1><br>\nnewsgroup server responded: Bad article number<br>\nPerhaps the article has expired<br>\n &lt;%s&gt; (%d)<br>\n<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", "foobar", -1, kNewsRootURI, m_hostName, group_name, "Click here to remove all expired articles");
-#endif
-        }
 
         m_tempErrorFile.Delete(PR_FALSE);
         nsISupports * supports;
         NS_NewIOFileStream(&supports, m_tempErrorFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
         m_tempErrorStream = do_QueryInterface(supports);
         NS_IF_RELEASE(supports);
-  
-        if (m_tempErrorStream) {
-            PRUint32 count = 0;
-        	m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+        
+        if (m_newsgroup) {
+            rv = m_newsgroup->GetName(&group_name);
         }
 
+        if (NS_SUCCEEDED(rv) && group_name && m_tempErrorStream) {
+            PRUint32 count = 0;
+            
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, UNTIL_STRING_BUNDLES_XP_HTML_NEWS_ERROR, m_responseText);
+        	m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+            
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE, UNTIL_STRING_BUNDLES_XP_HTML_ARTICLE_EXPIRED);
+            m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+            
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P>&lt;%.512s&gt; (%lu)", m_cancelID?m_cancelID:"(null)", m_articleNumber);
+            m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+            
+            PR_snprintf(outputBuffer,OUTPUT_BUFFER_SIZE,"<P> <A HREF=\"%s/%s/%s?list-ids\">%s</A> </P>\n", kNewsRootURI, m_hostName, group_name, UNTIL_STRING_BUNDLES_XP_LIST_IDS_URL_TEXT);
+            m_tempErrorStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+        }
+  
         // and close the article file if it was open....
 		if (m_tempErrorStream)
 			m_tempErrorStream->Close();
@@ -3602,7 +3614,7 @@ PRInt32 nsNNTPProtocol::StartCancel()
 PRInt32 nsNNTPProtocol::Cancel()
 {
 	int status = 0;
-        nsresult rv = NS_OK;
+    nsresult rv = NS_OK;
 	char *id, *subject, *newsgroups, *distribution, *other_random_headers, *body;
 	char *from, *old_from;
 	int L;
@@ -3617,35 +3629,20 @@ PRInt32 nsNNTPProtocol::Cancel()
    */
   PR_ASSERT (m_responseCode == MK_NNTP_RESPONSE_POST_SEND_NOW);
 
-#if  ParseHeadersForCancelHack
-  /* These shouldn't be set yet, since the headers haven't been "flushed" */
-  PR_ASSERT (!m_cancelID &&
-			 !m_cancelFromHdr &&
-			 !m_cancelNewsgroups &&
-			 !m_cancelDistribution);
-#endif
-  /* Write out a blank line.  This will tell mimehtml.c that the headers
-	 are done, and it will call news_generate_html_header_fn which will
-	 notice the fields we're interested in.
-   */
-  
-  char outputBuffer[OUTPUT_BUFFER_SIZE];
-  outputBuffer[0] = '\0';
+  // These shouldn't be set yet, since the headers haven't been "flushed"
+  // "Distribution: " doesn't appear to be required, so
+  // don't assert on m_cancelDistribution
+  PR_ASSERT (m_cancelID &&
+			 m_cancelFromHdr &&
+			 m_cancelNewsgroups);
 
-  PL_strcpy (outputBuffer, CRLF); /* CRLF used to be LINEBREAK. 
-  										 LINEBREAK is platform dependent
-  										 and is only <CR> on a mac. This
-										 CRLF is the protocol delimiter 
-										 and not platform dependent  -km */
-  status = SendData(m_runningURL, outputBuffer);
-  if (status < 0) return status;
-  
-  /* Now news_generate_html_header_fn should have been called, and these
-	 should have values. */
   newsgroups = m_cancelNewsgroups;
   distribution = m_cancelDistribution;
   old_from = m_cancelFromHdr;
   id = m_cancelID;
+
+  NS_WITH_SERVICE(nsINetSupportDialogService,dialog,kCNetSupportDialogCID,&rv);
+  if (NS_FAILED(rv)) return -1;  /* unable to get the dialog service */
 
   PR_ASSERT (id && newsgroups);
   if (!id || !newsgroups) return -1; /* "unknown error"... */
@@ -3656,6 +3653,7 @@ PRInt32 nsNNTPProtocol::Cancel()
   m_cancelID = nsnull;
 
   L = PL_strlen (id);
+  
 #ifdef UNREADY_CODE
   from = MIME_MakeFromField ();
 #else
@@ -3670,78 +3668,111 @@ PRInt32 nsNNTPProtocol::Cancel()
    }
 #ifdef DEBUG_NEWS
    printf("post the cancel message as %s\n",from);
-#endif
-#endif
+#endif /* DEBUG_NEWS */
+#endif /* UNREADY_CODE */
 
   subject = (char *) PR_Malloc (L + 20);
   other_random_headers = (char *) PR_Malloc (L + 20);
   body = (char *) PR_Malloc (PL_strlen (XP_AppCodeName) + 100);
+  
+  // i18N people:  don't panic because these are eOneByte strings.  as soon
+  // as I get string bundles working, these will go away.
+  nsString alertText("",eOneByte);
+  nsString confirmText(UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_CONFIRM, eOneByte);
+
+  PRInt32 confirmCancelResult = 0;
 
   /* Make sure that this loser isn't cancelling someone else's posting.
 	 Yes, there are occasionally good reasons to do so.  Those people
 	 capable of making that decision (news admins) have other tools with
 	 which to cancel postings (like telnet.)
+     
 	 Don't do this if server tells us it will validate user. DMB 3/19/97
    */
   PRBool cancelchk=PR_FALSE;
   rv = m_newsHost->QueryExtension("CANCELCHK",&cancelchk);
-  if (NS_SUCCEEDED(rv) && cancelchk)
-  {
-    nsCOMPtr<nsIMsgHeaderParser> parser;
-    PRBool ok = PR_FALSE;
+  if (NS_SUCCEEDED(rv) && !cancelchk) {
+#ifdef DEBUG_sspitzer
+      printf("CANCELCHK supported\n");
+#endif
+      nsCOMPtr<nsIMsgHeaderParser> parser;
+      PRBool ok = PR_FALSE;
                   
-    rv = nsComponentManager::CreateInstance(kCHeaderParserCID,
-                                            nsnull,
-                                            nsIMsgHeaderParser::GetIID(),
-                                            getter_AddRefs(parser));
-    if (NS_SUCCEEDED(rv)) 
-	{
-		char *us = nsnull;
-        char *them = nsnull;
-		nsresult rv1 = parser->ExtractHeaderAddressMailboxes(nsnull, from, &us);
-		nsresult rv2 = parser->ExtractHeaderAddressMailboxes(nsnull, old_from, &them);
-		ok = (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && !PL_strcasecmp(us, them));
-
-		if (NS_SUCCEEDED(rv1)) PR_Free(us);
-		if (NS_SUCCEEDED(rv2)) PR_Free(them);
-    }
-	if (!ok)
-	{
-		status = MK_NNTP_CANCEL_DISALLOWED;
-		m_runningURL->SetErrorMessage(PL_strdup("not implemented"));
-		m_nextState = NEWS_ERROR; /* even though it worked */
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		goto FAIL;
-	}
+      rv = nsComponentManager::CreateInstance(kCHeaderParserCID,
+                                              nsnull,
+                                              nsIMsgHeaderParser::GetIID(),
+                                              getter_AddRefs(parser));
+      
+      if (NS_SUCCEEDED(rv))  {
+#ifdef DEBUG_sspitzer
+          printf("got a header parser...\n");
+#endif
+          char *us = nsnull;
+          char *them = nsnull;
+          nsresult rv1 = parser->ExtractHeaderAddressMailboxes(nsnull, from, &us);
+          nsresult rv2 = parser->ExtractHeaderAddressMailboxes(nsnull, old_from, &them);
+#ifdef DEBUG_sspitzer
+          printf("us = %s, them = %s\n", us, them);
+#endif
+          ok = (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2) && !PL_strcasecmp(us, them));
+          
+          if (NS_SUCCEEDED(rv1)) PR_Free(us);
+          if (NS_SUCCEEDED(rv2)) PR_Free(them);
+      }
+      if (!ok) {
+          alertText = UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED;
+          if (dialog) {
+              // until #7770 is fixed, we can't do dialogs on Linux from here
+#ifdef BUG_7770_FIXED
+              rv = dialog->Alert(alertText);
+#else
+              printf("%s\n",alertText.GetBuffer());
+#endif /* BUG_7770_FIXED */
+          }
+          
+          status = MK_NNTP_CANCEL_DISALLOWED;
+          m_runningURL->SetErrorMessage(PL_strdup("not implemented"));
+          m_nextState = NEWS_ERROR; /* even though it worked */
+          ClearFlag(NNTP_PAUSE_FOR_READ);
+          goto FAIL;
+      }
   }
-
+  else {
+#ifdef DEBUG_sspitzer
+      printf("CANCELCHK not supported\n");
+#endif
+  }
+  
   /* Last chance to cancel the cancel.
    */
-#ifdef UNREADY_CODE
-  if (!FE_Confirm (ce->window_id, XP_GetString(MK_NNTP_CANCEL_CONFIRM)))
-  {
-	  status = MK_NNTP_NOT_CANCELLED;
-	  goto FAIL;
+  if (dialog) {
+      // until #7770 is fixed, we can't do dialogs on Linux from here
+#ifdef BUG_7770_FIXED
+      rv = dialog->Confirm(confirmText, &confirmCancelResult);
+#else
+      printf("%s\n", confirmText.GetBuffer());
+      confirmCancelResult = 1;
+#endif /* BUG_7770_FIXED */
   }
-
-
-  news_url = ce->URL_s->address;  /* we can just post here. */
-#endif
-
-  if (!from || !subject || !other_random_headers || !body)
-  {
+  
+  if (confirmCancelResult != 1) {
+      // they canceled the cancel
+      status = MK_NNTP_NOT_CANCELLED;
+      goto FAIL;
+  }  
+  
+  if (!from || !subject || !other_random_headers || !body) {
 	  status = MK_OUT_OF_MEMORY;
 	  goto FAIL;
   }
-
+  
   PL_strcpy (subject, "cancel ");
   PL_strcat (subject, id);
 
   PL_strcpy (other_random_headers, "Control: cancel ");
   PL_strcat (other_random_headers, id);
   PL_strcat (other_random_headers, CRLF);
-  if (distribution)
-  {
+  if (distribution) {
 	  PL_strcat (other_random_headers, "Distribution: ");
 	  PL_strcat (other_random_headers, distribution);
 	  PL_strcat (other_random_headers, CRLF);
@@ -3750,21 +3781,13 @@ PRInt32 nsNNTPProtocol::Cancel()
   PL_strcpy (body, "This message was cancelled from within ");
   PL_strcat (body, XP_AppCodeName);
   PL_strcat (body, "." CRLF);
-
+  
 #ifdef USE_LIBMSG
   fields = MSG_CreateCompositionFields(from, 0, 0, 0, 0, 0, newsgroups,
 									   0, 0, subject, id, other_random_headers,
 									   0, 0, news_url);
 #endif 
   
-/* so that this would compile - will probably change later */
-#if 0
-									   PR_FALSE,
-									   PR_FALSE  
-									   );
-#endif
-
-
   m_cancelStatus = 0;
 
   {
@@ -3783,8 +3806,7 @@ PRInt32 nsNNTPProtocol::Cancel()
     
 	status = SendData(m_runningURL, data);
     PR_Free (data);
-    if (status < 0)
-	{
+    if (status < 0) {
 		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR, status));
 		goto FAIL;
 	}
@@ -3792,9 +3814,18 @@ PRInt32 nsNNTPProtocol::Cancel()
     SetFlag(NNTP_PAUSE_FOR_READ);
 	m_nextState = NNTP_RESPONSE;
 	m_nextStateAfterResponse = NNTP_SEND_POST_DATA_RESPONSE;
+
+    alertText = UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED;
+    if (dialog) {
+        // until #7770 is fixed, we can't do dialogs on Linux from here
+#ifdef BUG_7770_FIXED
+        rv = dialog->Alert(alertText);
+#else
+        printf("%s\n", alertText.GetBuffer());
+#endif /* BUG_7770_FIXED */
+    }
   }
-
-
+    
 FAIL:
   PR_FREEIF (id);
   PR_FREEIF (from);
@@ -3805,29 +3836,28 @@ FAIL:
   PR_FREEIF (other_random_headers);
   PR_FREEIF (body);
   PR_FREEIF (m_cancelMessageFile);
-
+  
 #ifdef USE_LIBMSG
   if (fields)
 	  MSG_DestroyCompositionFields(fields);
 #endif 
-
+  
   return status;
 }
-
+  
 PRInt32 nsNNTPProtocol::XPATSend()
 {
 	int status = 0;
 	char *thisTerm = NULL;
-
+    
 #ifdef UNREADY_CODE
 	if (cd->current_search &&
-		(thisTerm = PL_strchr(cd->current_search, '/')) != NULL)
+		(thisTerm = PL_strchr(cd->current_search, '/')) != NULL) {
 #else
-	if (1)
+    if (1) {
 #endif
-	{
 		/* extract the XPAT encoding for one query term */
-/*		char *next_search = NULL; */
+        /* char *next_search = NULL; */
 		char *command = NULL;
 		char *unescapedCommand = NULL;
 		char *endOfTerm = NULL;
