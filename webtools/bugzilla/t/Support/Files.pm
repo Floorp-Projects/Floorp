@@ -23,6 +23,8 @@
 
 package Support::Files;
 
+use File::Find;
+
 # exclude_deps is a hash of arrays listing the files to be excluded
 # if a module is not available
 #
@@ -33,11 +35,8 @@ package Support::Files;
 );
 
 
-# XXX - this file should really be rewritten to use File::Find or similar
-$file = '*';
-@files = (glob($file), glob('Bugzilla/*.pm'), glob('Bugzilla/*/*.pm'),
-          glob('Bugzilla/*/*/*.pm'), glob('Bugzilla/*/*/*/*.pm'),
-          glob('Bugzilla/*/*/*/*/*.pm'));
+@files = glob('*');
+find(sub { push(@files, $File::Find::name) if $_ =~ /\.pm$/;}, 'Bugzilla');
 
 sub have_pkg {
     my ($pkg) = @_;
