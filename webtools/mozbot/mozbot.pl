@@ -616,19 +616,19 @@ sub on_disconnected {
         $serverRestrictsIRCNames = $server;
         $serverExpectsValidUsername = $server;
         &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
-        &debug('Hrm, $server is having issues. We\'re gonna try to be nice.');
+        &debug("Hrm, $server is having issues. We're gonna try to be nice.");
         &debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /Bad user info/osi and $serverRestrictsIRCNames ne $server) {
         # change our IRC name to something simpler by setting the flag
         $serverRestrictsIRCNames = $server;
         &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
-        &debug('Hrm, $server didn\'t like our IRC name. Trying again with a simpler one.');
+        &debug("Hrm, $server didn't like our IRC name. Trying again with a simpler one.");
         &debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /identd/osi and $serverExpectsValidUsername ne $server) {
         # try setting our username to the actual username
         $serverExpectsValidUsername = $server;
         &Configuration::Save($cfgfile, &configStructure(\$delaytime));
-        &debug('Hrm, $server said something about an identd problem. Trying again with our real username.');
+        &debug("Hrm, $server said something about an identd problem. Trying again with our real username.");
         &debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /Excess Flood/osi) {
         # increase the delay by 20%
