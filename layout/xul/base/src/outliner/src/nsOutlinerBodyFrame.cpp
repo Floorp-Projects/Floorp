@@ -56,7 +56,7 @@
 #include "nsBoxObject.h"
 #ifdef USE_IMG2
 #include "imgIRequest.h"
-#include "imgiContainer.h"
+#include "imgIContainer.h"
 #endif
 
 #define ELLIPSIS "..."
