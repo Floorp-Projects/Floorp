@@ -26,6 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= psm
+DIRS		= manager
 
 include $(topsrcdir)/config/rules.mk
