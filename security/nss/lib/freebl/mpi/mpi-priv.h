@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi-priv.h,v 1.9 2000/08/22 01:57:33 nelsonb%netscape.com Exp $
+ *  $Id: mpi-priv.h,v 1.10 2000/08/31 02:51:23 nelsonb%netscape.com Exp $
  */
 #ifndef _MPI_PRIV_H_
 #define _MPI_PRIV_H_ 1
@@ -191,14 +191,13 @@ void     s_mp_div_2d(mp_int *mp, mp_digit d);  /* divide by 2^d in place  */
 void     s_mp_mod_2d(mp_int *mp, mp_digit d);  /* modulo 2^d in place     */
 void     s_mp_div_2(mp_int *mp);               /* divide by 2 in place    */
 mp_err   s_mp_mul_2(mp_int *mp);               /* multiply by 2 in place  */
-mp_digit s_mp_norm(mp_int *a, mp_int *b);      /* normalize for division  */
+mp_err   s_mp_norm(mp_int *a, mp_int *b, mp_digit *pd); 
+                                               /* normalize for division  */
 mp_err   s_mp_add_d(mp_int *mp, mp_digit d);   /* unsigned digit addition */
 mp_err   s_mp_sub_d(mp_int *mp, mp_digit d);   /* unsigned digit subtract */
 mp_err   s_mp_mul_d(mp_int *mp, mp_digit d);   /* unsigned digit multiply */
 mp_err   s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r);
 		                               /* unsigned digit divide   */
-mp_err   s_mp_mod_d(mp_int *mp, mp_digit d, mp_digit *r);
-                                               /* unsigned digit rem      */
 mp_err   s_mp_reduce(mp_int *x, const mp_int *m, const mp_int *mu);
                                                /* Barrett reduction       */
 mp_err   s_mp_add(mp_int *a, const mp_int *b); /* magnitude addition      */
@@ -232,6 +231,9 @@ void     s_mpv_mul_d_add(const mp_digit *a, mp_size a_len, mp_digit b,
 			 mp_digit *c);
 void     s_mpv_mul_d_add_prop(const mp_digit *a, mp_size a_len, mp_digit b, 
 			      mp_digit *c);
+void     s_mpv_sqr_add_prop(const mp_digit *a, mp_size a_len, mp_digit *sqrs);
+mp_err   s_mpv_div_2dx1d(mp_digit Nhi, mp_digit Nlo, mp_digit divisor, 
+		         mp_digit *quot, mp_digit *rem);
 
 /* c += a * b * (MP_RADIX ** offset);  */
 #define s_mp_mul_d_add_offset(a, b, c, off) \

@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.8 2000/08/22 01:57:33 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.9 2000/08/31 02:51:23 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -72,7 +72,7 @@ typedef unsigned int      mp_sign;
 typedef unsigned int      mp_size;
 typedef int               mp_err;
 
-#ifndef MP_USE_32
+#ifndef MP_NO_MP_WORD
 #if defined(ULONG_LONG_MAX)			/* GCC, HPUX */
 #define MP_ULONG_LONG_MAX ULONG_LONG_MAX
 #elif defined(ULLONG_MAX)			/* Solaris */
@@ -81,10 +81,10 @@ typedef int               mp_err;
 #define MP_ULONG_LONG_MAX ULONGLONG_MAX
 #endif
 
-#if defined(MP_ULONG_LONG_MAX) && MP_ULONG_LONG_MAX > UINT_MAX
 typedef unsigned int      mp_digit;
 #define MP_DIGIT_MAX      UINT_MAX
 
+#if defined(MP_ULONG_LONG_MAX) && MP_ULONG_LONG_MAX > UINT_MAX
 #if MP_ULONG_LONG_MAX == ULONG_MAX
 typedef unsigned long     mp_word;
 typedef          long     mp_sword;
@@ -94,28 +94,28 @@ typedef unsigned long long mp_word;
 typedef          long long mp_sword;
 #define MP_WORD_MAX       MP_ULONG_LONG_MAX
 #endif
+#else /* MP_ULONG_LONG_MAX not defined */
+#define MP_NO_MP_WORD 1
 #endif
-#endif /* !USE_32 */
+#endif /* !MP_NO_MP_WORD */
 
-#if !defined(MP_DIGIT_MAX)
-#if ULONG_MAX == UINT_MAX
-typedef unsigned short    mp_digit;
+#if !defined(MP_WORD_MAX) && defined(MP_DEFINE_SMALL_WORD)
 typedef unsigned int      mp_word;
 typedef          int      mp_sword;
-#define MP_DIGIT_MAX      USHRT_MAX
 #define MP_WORD_MAX       UINT_MAX
-#else
-typedef unsigned int      mp_digit;
-typedef unsigned long     mp_word;
-typedef          long     mp_sword;
-#define MP_DIGIT_MAX      UINT_MAX
-#define MP_WORD_MAX       ULONG_MAX
-#endif
 #endif
 
 #define MP_DIGIT_BIT      (CHAR_BIT*sizeof(mp_digit))
 #define MP_WORD_BIT       (CHAR_BIT*sizeof(mp_word))
 #define MP_RADIX          (1+(mp_word)MP_DIGIT_MAX)
+
+#define MP_HALF_DIGIT_BIT (MP_DIGIT_BIT/2)
+#define MP_HALF_DIGIT_MAX USHRT_MAX
+#define MP_HALF_RADIX     (1+(mp_digit)MP_HALF_DIGIT_MAX)
+/* MP_HALF_RADIX really ought to be called MP_SQRT_RADIX, but it's named 
+** MP_HALF_RADIX because it's the radix for MP_HALF_DIGITs, and it's 
+** consistent with the other _HALF_ names.
+*/
 
 #if MP_DIGIT_MAX == USHRT_MAX
 #define MP_DIGIT_FMT      "%04X"     /* printf() format for 1 digit */
