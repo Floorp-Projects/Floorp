@@ -27,8 +27,6 @@ Todo:
 - have client report versions of files it updates so a correct "C" letter can happen
 
 Bugs:
-- clients don't reliably kill all children (should be able to solve by continually killing the last child in the chain with SIGINT--the nicest way).
-- clients don't accept kill command while children are hung or taking a long operation that has no output (like cvs checkout) (timeless suggests that select() would help--not sure how yet).
 - add proper constraints into the DB
 - make tree_id, make most tables link to it (inputs to cgi scripts still use tree name)
 - round times to nearest minute, ensure nothing goes beyond bottom of shown tree
@@ -51,6 +49,9 @@ Would be nice:
 - make Kinderbox possible (build on one machine and test on another)
 - upload installer builds
 - page showing a list of all builds for a particular time range or even forever (possibly using ShowBuilds)
+- allow creation of a machine without a machine connecting (this allows
+  pre-configuration of branch and .mozconfig)
+- show status as text, not number ("upgraded client" instead of 302, for example)
 
 Test:
 - --notrust and friends
