@@ -53,6 +53,10 @@
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
 
+#include "nsIDOMHTMLTitleElement.h"
+
+static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
+
 #define XXX_ART_HACK 1
 
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
@@ -432,6 +436,7 @@ AddAttributes(const nsIParserNode& aNode,
   return NS_OK;
 }
 
+// XXX compare switch statement against nsHTMLTags.h's list
 static nsresult
 MakeContentObject(nsHTMLTag aNodeType,
                   nsIAtom* aAtom,
@@ -441,6 +446,10 @@ MakeContentObject(nsHTMLTag aNodeType,
 {
   nsresult rv = NS_OK;
   switch (aNodeType) {
+  default:
+    rv = NS_NewHTMLSpanElement(aResult, aAtom);
+    break;
+
   case eHTMLTag_a:
     rv = NS_NewHTMLAnchorElement(aResult, aAtom);
     break;
@@ -456,32 +465,55 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_basefont:
     rv = NS_NewHTMLBaseFontElement(aResult, aAtom);
     break;
+  case eHTMLTag_blockquote:/* XXX need a real object??? how does type=cite work? */
+    rv = NS_NewHTMLSpanElement(aResult, aAtom);
+    break;
   case eHTMLTag_body:
-    rv = NS_NewBodyPart(aResult, aAtom);
+    rv = NS_NewHTMLBodyElement(aResult, aAtom);
     break;
   case eHTMLTag_br:
     rv = NS_NewHTMLBRElement(aResult, aAtom);
     break;
   case eHTMLTag_caption:
-    rv = NS_NewTableCaptionPart(aResult, aAtom);/* XXX */
+    rv = NS_NewTableCaptionPart(aResult, aAtom);/* XXX old style */
     break;
   case eHTMLTag_col:
-    rv = NS_NewTableColPart(aResult, aAtom);/* XXX */
+    rv = NS_NewTableColPart(aResult, aAtom);/* XXX old style */
     break;
   case eHTMLTag_colgroup:
-    rv = NS_NewTableColGroupPart(aResult, aAtom);/* XXX */
+    rv = NS_NewTableColGroupPart(aResult, aAtom);/* XXX old style */
+    break;
+  case eHTMLTag_dir:
+    rv = NS_NewHTMLDirectoryElement(aResult, aAtom);
+    break;
+  case eHTMLTag_div:
+    rv = NS_NewHTMLDivElement(aResult, aAtom);
+    break;
+  case eHTMLTag_dl:
+    rv = NS_NewHTMLDListElement(aResult, aAtom);
     break;
   case eHTMLTag_embed:
     rv = NS_NewHTMLEmbedElement(aResult, aAtom);
+    break;
+  case eHTMLTag_font:
+    rv = NS_NewHTMLFontElement(aResult, aAtom);
     break;
   case eHTMLTag_form:
     rv = NS_NewHTMLFormElement(aResult, aAtom);
     break;
   case eHTMLTag_frame:
-    rv = NS_NewHTMLFrame(aResult, aAtom, aWebShell);
+    rv = NS_NewHTMLFrame(aResult, aAtom, aWebShell);/* XXX old style */
     break;
   case eHTMLTag_frameset:
-    rv = NS_NewHTMLFrameset(aResult, aAtom, aWebShell);
+    rv = NS_NewHTMLFrameset(aResult, aAtom, aWebShell);/* XXX old style */
+    break;
+  case eHTMLTag_h1:
+  case eHTMLTag_h2:
+  case eHTMLTag_h3:
+  case eHTMLTag_h4:
+  case eHTMLTag_h5:
+  case eHTMLTag_h6:
+    rv = NS_NewHTMLHeadingElement(aResult, aAtom);
     break;
   case eHTMLTag_head:
     rv = NS_NewHTMLHeadElement(aResult, aAtom);
@@ -490,13 +522,34 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLHRElement(aResult, aAtom);
     break;
   case eHTMLTag_iframe:
-    rv = NS_NewHTMLIFrame(aResult, aAtom, aWebShell);
+    rv = NS_NewHTMLIFrame(aResult, aAtom, aWebShell);/* XXX old style */
+    break;
+  case eHTMLTag_img:
+    rv = NS_NewHTMLImageElement(aResult, aAtom);
     break;
   case eHTMLTag_input:
     rv = NS_NewHTMLInputElement(aResult, aAtom);
     break;
+  case eHTMLTag_isindex:
+    rv = NS_NewHTMLIsIndexElement(aResult, aAtom);
+    break;
+  case eHTMLTag_label:
+    rv = NS_NewHTMLLabelElement(aResult, aAtom);
+    break;
+  case eHTMLTag_legend:
+    rv = NS_NewHTMLLegendElement(aResult, aAtom);
+    break;
+  case eHTMLTag_li:
+    rv = NS_NewHTMLLIElement(aResult, aAtom);
+    break;
   case eHTMLTag_link:
     rv = NS_NewHTMLLinkElement(aResult, aAtom);
+    break;
+  case eHTMLTag_map:
+    rv = NS_NewHTMLMapElement(aResult, aAtom);
+    break;
+  case eHTMLTag_menu:
+    rv = NS_NewHTMLMenuElement(aResult, aAtom);
     break;
   case eHTMLTag_meta:
     rv = NS_NewHTMLMetaElement(aResult, aAtom);
@@ -504,48 +557,65 @@ MakeContentObject(nsHTMLTag aNodeType,
   case eHTMLTag_object:
     rv = NS_NewHTMLObjectElement(aResult, aAtom);
     break;
+  case eHTMLTag_ol:
+    rv = NS_NewHTMLOListElement(aResult, aAtom);
+    break;
+  case eHTMLTag_optgroup:
+    rv = NS_NewHTMLOptGroupElement(aResult, aAtom);
+    break;
   case eHTMLTag_option:
-    rv = NS_NewHTMLOption(aResult, aAtom);
+    rv = NS_NewHTMLOption(aResult, aAtom);/* XXX old style */
+    break;
+  case eHTMLTag_p:
+    rv = NS_NewHTMLParagraphElement(aResult, aAtom);
+    break;
+  case eHTMLTag_pre:
+    rv = NS_NewHTMLPreElement(aResult, aAtom);
     break;
   case eHTMLTag_param:
     rv = NS_NewHTMLParamElement(aResult, aAtom);
+    break;
+  case eHTMLTag_q:
+    rv = NS_NewHTMLQuoteElement(aResult, aAtom);
     break;
   case eHTMLTag_script:
     rv = NS_NewHTMLScriptElement(aResult, aAtom);
     break;
   case eHTMLTag_select:
-    rv = NS_NewHTMLSelect(aResult, aAtom, aForm);
+    rv = NS_NewHTMLSelect(aResult, aAtom, aForm);/* XXX old style */
     break;
   case eHTMLTag_spacer:
-    rv = NS_NewHTMLSpacer(aResult, aAtom);
+    rv = NS_NewHTMLSpacer(aResult, aAtom);/* XXX old style */
     break;
   case eHTMLTag_style:
     rv = NS_NewHTMLStyleElement(aResult, aAtom);
     break;
   case eHTMLTag_table:
-    rv = NS_NewTablePart(aResult, aAtom);/* XXX */
+    rv = NS_NewTablePart(aResult, aAtom);/* XXX old style */
     break;
   case eHTMLTag_tbody:
   case eHTMLTag_thead:
   case eHTMLTag_tfoot:
-    rv = NS_NewTableRowGroupPart(aResult, aAtom);/* XXX */
+    rv = NS_NewTableRowGroupPart(aResult, aAtom);/* XXX old style */
     break;
   case eHTMLTag_td:
   case eHTMLTag_th:
-    rv = NS_NewTableCellPart(aResult, aAtom);/* XXX */
+    rv = NS_NewTableCellPart(aResult, aAtom);/* XXX old style */
+    break;
+  case eHTMLTag_textarea:
+    rv = NS_NewHTMLTextAreaElement(aResult, aAtom);
+    break;
+  case eHTMLTag_title:
+    rv = NS_NewHTMLTitleElement(aResult, aAtom);
     break;
   case eHTMLTag_tr:
-    rv = NS_NewTableRowPart(aResult, aAtom);/* XXX */
+    rv = NS_NewTableRowPart(aResult, aAtom);/* XXX old style */
+    break;
+  case eHTMLTag_ul:
+    rv = NS_NewHTMLUListElement(aResult, aAtom);
     break;
   case eHTMLTag_wbr:
-    rv = NS_NewHTMLWordBreak(aResult, aAtom);/* XXX */
-    break;
-  default:
-    rv = NS_NewHTMLContainer(aResult, aAtom);
-    break;
-
-  case eHTMLTag_title:
-    NS_NOTREACHED("illegal MakeContentObject call");
+    rv = NS_NewHTMLWordBreak(aResult, aAtom);/* XXX old style */
     break;
   }
   return rv;
@@ -1396,8 +1466,14 @@ HTMLContentSink::SetTitle(const nsString& aValue)
 
   nsIAtom* atom = NS_NewAtom("TITLE");
   nsIHTMLContent* it = nsnull;
-  nsresult rv = NS_NewHTMLTitle(&it, atom, aValue);
+  nsresult rv = NS_NewHTMLTitleElement(&it, atom);
   if (NS_OK == rv) {
+    nsIDOMHTMLTitleElement* domtitle = nsnull;
+    it->QueryInterface(kIDOMHTMLTitleElementIID, (void**) &domtitle);
+    if (nsnull != domtitle) {
+      domtitle->SetText(aValue);
+      NS_RELEASE(domtitle);
+    }
     mHead->AppendChildTo(it, PR_FALSE);
     NS_RELEASE(it);
   }
