@@ -1334,8 +1334,8 @@ down:
             ? OBJ_SCOPE(obj)
             : NULL;
 
-    vp = obj->slots;
     /* Mark slots if they are small enough to be GC-allocated. */
+    vp = obj->slots;
     if ((vp[-1] + 1) * sizeof(jsval) <= GC_NBYTES_MAX)
         GC_MARK(cx, vp - 1, "slots", NULL);
 
