@@ -35,7 +35,7 @@ endif
 endif
 endif #!USE_AUTOCONF
 
-INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include
 
 CSRCS = \
 	plarena.c \

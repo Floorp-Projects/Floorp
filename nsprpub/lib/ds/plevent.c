@@ -15,6 +15,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#if defined(_WIN32) || defined(WIN16)
+#include <windows.h>
+#endif
+
 #if defined(XP_OS2)
 #define INCL_WIN
 #include <os2.h>
@@ -22,7 +27,7 @@
 typedef MPARAM WPARAM,LPARAM;
 #endif /* XP_OS2 */
 
-#include "primpl.h"
+#include "nspr.h"
 #include "plevent.h"
 
 #if !defined(WIN32)
@@ -41,6 +46,9 @@ typedef MPARAM WPARAM,LPARAM;
 
 #if defined(XP_MAC)
 #include <AppleEvents.h>
+#include "pprthred.h"
+#else
+#include "private/pprthred.h"
 #endif /* XP_MAC */
 
 #if defined(VMS)
@@ -290,8 +298,7 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
 	result = event->handler(event);
     }
     else {
-	int inEventQueueMon = PR_GetMonitorEntryCount(self->monitor);
-	int i, entryCount = self->monitor->entryCount;
+	int i, entryCount = PR_GetMonitorEntryCount(self->monitor);
 
 	event->synchronousResult = (void*)PR_TRUE;
 	PL_PostEvent(self, event);
@@ -299,12 +306,12 @@ PL_PostSynchronousEvent(PLEventQueue* self, PLEvent* event)
 	   we're holding it, otherwise, the thread we're going to wait
 	   for notification from won't be able to enter it to process
 	   the event. */
-	if (inEventQueueMon) {
+	if (entryCount) {
 	    for (i = 0; i < entryCount; i++)
 		PR_ExitMonitor(self->monitor);
 	}
 	PR_CWait(event, PR_INTERVAL_NO_TIMEOUT);	/* wait for event to be handled or destroyed */
-	if (inEventQueueMon) {
+	if (entryCount) {
 	    for (i = 0; i < entryCount; i++)
 		PR_EnterMonitor(self->monitor);
 	}
