@@ -212,6 +212,9 @@ char * SSMControlConnection_GenerateKeyOldStyle(SSMControlConnection * ctrl,
   PRUint32 keyGenMechanism;
   SSMStatus rv;
 
+  if (choiceString == NULL) {
+    goto loser;
+  }
   while (PORT_Strcmp(choice->name, choiceString) != 0)
     choice++;
 
@@ -259,6 +262,7 @@ found_match:
     SSM_DEBUG("Could not create KeyGenContext for oldStyleKeyGen.\n");
     goto loser;
   }
+  ct->mech = keyGenMechanism;
   rv = SSMKeyGenContext_GetSlot(ct, keyGenMechanism);
   if (rv != SSM_SUCCESS)
     goto loser;
