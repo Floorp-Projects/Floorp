@@ -3682,7 +3682,7 @@ char* nsImapProtocol::CreateNewLineFromSocket()
   } while (!newLine); // until we get the next line and haven't been interrupted
   
   Log("CreateNewLineFromSocket", nsnull, newLine);
-  SetConnectionStatus(newLine ? *newLine : 0); // set > 0 if string is not null or empty
+  SetConnectionStatus(newLine && numBytesInLine ? 1 : 0); // set > 0 if string is not null or empty
   return newLine;
 }
 
