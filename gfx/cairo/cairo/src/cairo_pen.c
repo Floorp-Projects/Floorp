@@ -372,32 +372,14 @@ _cairo_pen_vertices_needed (double	    tolerance,
 			    double	    radius,
 			    cairo_matrix_t  *matrix)
 {
-    double  a = matrix->m[0][0],   c = matrix->m[0][1];
-    double  b = matrix->m[1][0],   d = matrix->m[1][1];
+    double min, max, major_axis;
+    int num_vertices;
 
-    double  i = a*a + c*c;
-    double  j = b*b + d*d;
-
-    double  f = 0.5 * (i + j);
-    double  g = 0.5 * (i - j);
-    double  h = a*b + c*d;
-    
-    /* 
-     * compute major and minor axes lengths for 
-     * a pen with the specified radius 
-     */
-    
-    double  major_axis = radius * sqrt (f + sqrt (g*g+h*h));
-
-    /*
-     * we don't need the minor axis length, which is
-     * double min = radius * sqrt (f - sqrt (g*g+h*h));
-     */
-    
+    _cairo_matrix_compute_expansion_factors (matrix, &min, &max);
+    major_axis = radius * max;
     /*
      * compute number of vertices needed
      */
-    int	    num_vertices;
     
     /* Where tolerance / M is > 1, we use 4 points */
     if (tolerance >= major_axis) {

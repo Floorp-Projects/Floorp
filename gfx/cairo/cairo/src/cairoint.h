@@ -858,6 +858,8 @@ typedef struct _cairo_gstate {
     double *dash;
     int num_dashes;
     double dash_offset;
+    double max_dash_length;
+    double fraction_dash_lit;
 
     char *font_family; /* NULL means CAIRO_FONT_FAMILY_DEFAULT; */
     cairo_font_slant_t font_slant; 
@@ -1644,6 +1646,9 @@ _cairo_matrix_compute_eigen_values (cairo_matrix_t *matrix, double *lambda1, dou
 
 cairo_private cairo_status_t
 _cairo_matrix_compute_scale_factors (cairo_matrix_t *matrix, double *sx, double *sy, int x_major);
+
+cairo_private cairo_status_t
+_cairo_matrix_compute_expansion_factors (cairo_matrix_t *matrix, double *min, double *max);
 
 cairo_private cairo_bool_t
 _cairo_matrix_is_integer_translation(cairo_matrix_t *matrix, int *itx, int *ity);
