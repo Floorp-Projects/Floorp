@@ -24,6 +24,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
+#include "nsIDocShell.h"
 #include "nsWebBrowser.h"
 #include "nsWebBrowserSetup.h"
 
