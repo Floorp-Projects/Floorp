@@ -570,7 +570,7 @@ nsChromeProtocolHandler::~nsChromeProtocolHandler()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsChromeProtocolHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsChromeProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference);
 
 NS_METHOD
 nsChromeProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
