@@ -38,6 +38,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIAppShellService.h" 
 #include "nsAppShellCIDs.h"
+#include "jsapi.h"	// for JS_PushArguments and JS_PopArguments
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
