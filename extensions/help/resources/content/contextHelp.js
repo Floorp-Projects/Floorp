@@ -17,7 +17,7 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Constributor(s):
+ * Contributor(s):
  *   R.J. Keller <rlk@trfenv.com>
  */
 
