@@ -26,8 +26,47 @@
  * The nsIXULWindow
  */
 
+interface nsIDocShell;
+interface nsIDocShellTreeItem;
+
 [scriptable, uuid(D9CB00E0-CA39-11d3-B029-00A024FFC08C)]
 interface nsIXULWindow : nsISupports
 {
+	/*
+	The docshell owning the XUL for this window.
+	*/
+	readonly attribute nsIDocShell docShell;
+
+	/*
+	This returns the primary content shell.  
+	
+	Note that this is a docshell tree item and therefore can not be assured of
+	what object it is.  It could be an editor, a docshell, or a browser object.
+	Or down the road any other object that supports being a DocShellTreeItem
+	Query accordingly	to determine the capabilities.
+	*/
+	readonly attribute nsIDocShellTreeItem primaryContentShell;
+
+	/*
+	This returns the content shell specified by the supplied id.
+	  
+	Note that this is a docshell tree item and therefore can not be assured of
+	what object it is.  It could be an editor, a docshell, or a browser object.
+	Or down the road any other object that supports being a DocShellTreeItem
+	Query accordingly	to determine the capabilities.
+	*/
+	nsIDocShellTreeItem getContentShellById(in wstring ID);
+
+	/*
+	Sets the persistence of different dimentions of the window.
+	*/
+	void setPersistence(in boolean persistX, in boolean persistY, 
+		in boolean persistCX, in boolean persistCY);
+
+	/*
+	Gets the current persistence states of the window.
+	*/
+	void getPersistence(out boolean persistX, out boolean persistY, 
+		out boolean persistCX, out boolean persistCY);
 };
 
