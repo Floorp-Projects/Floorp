@@ -54,6 +54,7 @@
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h" 
+#include "nsCRT.h"
 
 #ifdef USE_XPRINT
 #include "xprintutil.h"
