@@ -3815,18 +3815,14 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   event.eventStructType = NS_MOUSE_EVENT;
 
   //Dblclicks are used to set the click count, then changed to mousedowns
-#if 0 // old way for single and double clicks
-  if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
-      aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
-    event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
-                     NS_MOUSE_LEFT_BUTTON_DOWN : NS_MOUSE_RIGHT_BUTTON_DOWN;
-    event.clickCount = 2;
-  }
-  else {
-    event.clickCount = 1;
-  }
-#else // new way for single and double clicks
   LONG curMsgTime = ::GetMessageTime();
+  const short kDoubleClickMoveThreshold  = 5;
+  POINT mp;
+  DWORD pos = ::GetMessagePos();
+  mp.x      = LOWORD(pos);
+  mp.y      = HIWORD(pos);
+  PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mp.x) < kDoubleClickMoveThreshold) &&
+                                   (abs(gLastMousePoint.y - mp.y) < kDoubleClickMoveThreshold);
 
   // we're going to time double-clicks from mouse *up* to next mouse *down*
   if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
@@ -3843,29 +3839,27 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 
   } else if (aEventType == NS_MOUSE_LEFT_BUTTON_DOWN) {
     // now look to see if we want to convert this to a double- or triple-click
-    const short kDoubleClickMoveThreshold  = 5;
-    POINT mp;
-    DWORD pos = ::GetMessagePos();
-    mp.x      = LOWORD(pos);
-    mp.y      = HIWORD(pos);
-    
-    //printf("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, gLastMsgTime, curMsgTime-gLastMsgTime, ::GetDoubleClickTime());
-    //printf("Mouse %d %d\n", abs(gLastMousePoint.x - mp.x), abs(gLastMousePoint.y - mp.y));
-    if (((curMsgTime - gLastMsgTime) < (LONG)::GetDoubleClickTime()) &&
-        (((abs(gLastMousePoint.x - mp.x) < kDoubleClickMoveThreshold) &&
-           (abs(gLastMousePoint.y - mp.y) < kDoubleClickMoveThreshold)))) {    
+   
+#ifdef NS_DEBUG_XX
+    printf("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, gLastMsgTime, curMsgTime-gLastMsgTime, ::GetDoubleClickTime());
+    printf("Mouse %d %d\n", abs(gLastMousePoint.x - mp.x), abs(gLastMousePoint.y - mp.y));
+#endif
+    if (((curMsgTime - gLastMsgTime) < (LONG)::GetDoubleClickTime()) && insideMovementThreshold) {
       gLastClickCount ++;
     } else {
       // reset the click count, to count *this* click
       gLastClickCount = 1;
     }
-    event.clickCount = gLastClickCount;
+  } else if (aEventType == NS_MOUSE_MOVE && !insideMovementThreshold) {
+    gLastClickCount = 0;
   }
+  event.clickCount = gLastClickCount;
 
-  //printf("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
+#ifdef NS_DEBUG_XX
+  printf("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
+#endif
 
   gLastMsgTime = curMsgTime;
-#endif
 
   nsPluginEvent pluginEvent;
 
