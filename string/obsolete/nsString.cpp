@@ -165,7 +165,7 @@ void nsString::EnsureCapacityFor(PRInt32 aNewLength)
     mCapacity=newCapacity;
     chartype* temp = new chartype[newCapacity+1];
     if (mLength > 0) {
-      nsCRT::memcpy(temp, mStr, mLength * sizeof(chartype));
+      nsCRT::memcpy(temp, mStr, mLength * sizeof(chartype) + sizeof(chartype));
     }
     if(mStr && (mStr!=kCommonEmptyBuffer))
       delete [] mStr;
@@ -1795,7 +1795,7 @@ void nsAutoString::EnsureCapacityFor(PRInt32 aNewLength) {
     mCapacity=size;
     chartype* temp = new chartype[mCapacity+1];
     if (mLength > 0) {
-      nsCRT::memcpy(temp, mStr, mLength * sizeof(chartype));
+      nsCRT::memcpy(temp, mStr, mLength * sizeof(chartype) + sizeof(chartype));
     }
     if ((mStr != mBuf) && (0 != mStr)) {
       delete [] mStr;
