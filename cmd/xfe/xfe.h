@@ -1291,6 +1291,9 @@ typedef struct fe_ContextData
    NewPixmapPtr       NewPixmap;
    ImageCompletePtr   ImageComplete;
 
+  /* Extra info needed for fe_refresh_url_timer() */
+  NET_ReloadMethod url_refresh_force_reload;
+
 } fe_ContextData;
 
 #define EDITOR_CONTEXT_DATA(context)	((&CONTEXT_DATA(context)->editor))
