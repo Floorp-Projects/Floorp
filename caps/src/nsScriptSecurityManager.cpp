@@ -664,7 +664,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                     return NS_ERROR_FAILURE;
                 }
                 rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
-                                            aAction, (PRBool)aTargetURI);
+                                            aAction, aTargetURI != nsnull);
                 break;
             }
         default:
