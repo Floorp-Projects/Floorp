@@ -349,7 +349,7 @@ class nsNonDestructingSharedBufferHandle
         {
           // Oops, threads raced to set the refcount.  Set the refcount
           // back to 1.
-          set_refcount(1);
+          this->set_refcount(1);
         }
 
   };
