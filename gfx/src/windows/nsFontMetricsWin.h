@@ -23,6 +23,7 @@
 
 #include "plhash.h"
 #include "nsIFontMetrics.h"
+#include "nsIFontEnumerator.h"
 #include "nsFont.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
@@ -69,6 +70,7 @@ typedef struct nsGlobalFont
   LOGFONT       logFont;
   PRUint8*      map;
   PRUint8       skip;
+  FONTSIGNATURE signature;
 } nsGlobalFont;
 
 class nsFontMetricsWin : public nsIFontMetrics
@@ -118,6 +120,8 @@ public:
 
   static nsGlobalFont* gGlobalFonts;
   static int gGlobalFontsCount;
+
+  static nsGlobalFont* InitializeGlobalFonts(HDC aDC);
 
   static void SetFontWeight(PRInt32 aWeight, PRUint16* aWeightTable);
   static PRBool IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeightTable);
@@ -171,9 +175,16 @@ protected:
   static PLHashTable* gFamilyNames;
   static PLHashTable* gFontWeights;
 
-  static nsGlobalFont* InitializeGlobalFonts(HDC aDC);
-
   static PRUint8* GetCMAP(HDC aDC, const char* aShortName, int* aIsUnicode);
+};
+
+
+class nsFontEnumeratorWin : public nsIFontEnumerator
+{
+public:
+  nsFontEnumeratorWin();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFONTENUMERATOR
 };
 
 

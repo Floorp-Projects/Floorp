@@ -35,6 +35,7 @@
 #include "nsScriptableRegion.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
+static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
@@ -200,6 +201,11 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
       inst = (nsISupports *)scriptableRgn;
     }
   }
+  else if (mClassID.Equals(kCFontEnumerator)) {
+    nsFontEnumeratorWin* fe;
+    NS_NEWXPCOM(fe, nsFontEnumeratorWin);
+    inst = (nsISupports *)fe;
+  } 
 
 
   if (inst == NULL) {  
