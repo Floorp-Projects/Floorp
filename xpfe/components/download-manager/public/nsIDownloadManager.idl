@@ -50,6 +50,8 @@ interface nsIWebBrowserPersist;
 [scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
 interface nsIDownloadManager : nsISupports {
 
+  // Methods called by clients to carry out various managing functions
+
   /**
   * Creates an nsIDownload and adds it to be managed by the download manager.
   *
@@ -111,6 +113,8 @@ interface nsIDownloadManager : nsISupports {
   */
 
   void removeDownload(in string aPersistentDescriptor);
+
+  // UI-related methods
 
   /**
   * Opens the Download Manager front end.
