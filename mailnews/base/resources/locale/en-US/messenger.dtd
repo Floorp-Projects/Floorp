@@ -103,25 +103,25 @@ Rights Reserved.
 <!ENTITY showLocationToolbarCmd.accesskey	"l">
 <!ENTITY showMessageCmd.label				"Message">  
 <!ENTITY showMessageCmd.accesskey				"">  
-<!ENTITY sortMenu.label "Sort"> 
+<!ENTITY sortMenu.label "Sort by"> 
 <!ENTITY sortMenu.accesskey "o"> 
-<!ENTITY sortByDateCmd.label "by Date">  
+<!ENTITY sortByDateCmd.label "Date">  
 <!ENTITY sortByDateCmd.accesskey "e">  
-<!ENTITY sortByFlagCmd.label "by Flag">  
+<!ENTITY sortByFlagCmd.label "Flag">  
 <!ENTITY sortByFlagCmd.accesskey "f">  
-<!ENTITY sortByPriorityCmd.label "by Priority">  
+<!ENTITY sortByPriorityCmd.label "Priority">  
 <!ENTITY sortByPriorityCmd.accesskey "p">  
-<!ENTITY sortBySenderCmd.label "by Sender">  
+<!ENTITY sortBySenderCmd.label "Sender">  
 <!ENTITY sortBySenderCmd.accesskey "r">  
-<!ENTITY sortBySizeCmd.label "by Size">  
+<!ENTITY sortBySizeCmd.label "Size">  
 <!ENTITY sortBySizeCmd.accesskey "z">  
-<!ENTITY sortByStatusCmd.label "by Status">  
-<!ENTITY sortByStatusCmd.accesskey "by Status">  
-<!ENTITY sortBySubjectCmd.label "by Subject">  
+<!ENTITY sortByStatusCmd.label "Status">  
+<!ENTITY sortByStatusCmd.accesskey "Status">  
+<!ENTITY sortBySubjectCmd.label "Subject">  
 <!ENTITY sortBySubjectCmd.accesskey "s">  
-<!ENTITY sortByUnreadCmd.label "by Unread">  
+<!ENTITY sortByUnreadCmd.label "Unread">  
 <!ENTITY sortByUnreadCmd.accesskey "u">  
-<!ENTITY sortByOrderReceivedCmd.label "by Order Received">  
+<!ENTITY sortByOrderReceivedCmd.label "Order Received">  
 <!ENTITY sortByOrderReceivedCmd.accesskey "o">  
 <!ENTITY msgsMenu.label "Messages"> 
 <!ENTITY msgsMenu.accesskey "m"> 

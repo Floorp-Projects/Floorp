@@ -118,7 +118,7 @@ Rights Reserved.
   
 	<key id="key_nextMsg" key="&nextMsgCmd.key;" control="false" shift="true" observes="cmd_nextMsg"/>
 	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
-	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" control="false" shift="false" observes="cmd_nextUnreadThread"/>
+	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" control="false" shift="false" alt="false" observes="cmd_nextUnreadThread"/>
 	<key id="key_previousMsg" key="&previousMsgCmd.key;" control="false" shift="true" observes="cmd_previousMsg"/>
 	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_previousUnreadMsg"/>
 	<key id="key_reply" key="&replyMsgCmd.key;" xulkey="true" shift="false" observes="cmd_reply"/>
@@ -343,7 +343,6 @@ Rights Reserved.
 					<menuitem id="menu_newEditor"/>
 				</menupopup>
 			</menu>
-			<menuitem value="&openAttachmentCmd.label;" disabled="true" oncommand="MsgOpenAttachment();"/>
 			<menuseparator/>
 			<menuitem id="menu_close"/>
 			<menu value="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
@@ -363,22 +362,20 @@ Rights Reserved.
 			<menuitem value="&sendUnsentCmd.label;"
 			 accesskey="&sendUnsentCmd.accesskey;"
 			 oncommand="MsgSendUnsentMsg();"/>
-			<menuitem value="&emptyTrashCmd.label;"
-             accesskey="&emptyTrashCmd.accesskey;"
-             oncommand="MsgEmptyTrash();"/>
 			<menuitem value="&subscribeCmd.label;"
 			 accesskey="&subscribeCmd.accesskey;"
 			 oncommand="MsgSubscribe();"/>
-			<menuseparator/>
+			 <menuseparator/>
 			<menuitem id="menu_renameFolder" value="&renameFolder.label;"
              accesskey="&renameFolder.accesskey;"
              observes="cmd_renameFolder"/>
+			<menuitem value="&emptyTrashCmd.label;"
+             accesskey="&emptyTrashCmd.accesskey;"
+             oncommand="MsgEmptyTrash();"/>
 			<menuitem value="&compactFolder.label;" accesskey="&compactFolder.accesskey;" oncommand="MsgCompactFolder();"/>
 			<menuseparator/>
 			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
 			<menuseparator/>
-			<menuitem observes="cmd_pageSetup"/>
-			<menuitem value="&printPreviewCmd.label;" accesskey="&printPreviewCmd.accesskey;" disabled="true" oncommand="PrintPreview();"/>
 			<menuitem id="printMenuItem" value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="PrintEnginePrint();"/>
 			<menuseparator/>
 		</menupopup>
@@ -396,16 +393,6 @@ Rights Reserved.
 			<menuitem id="menu_delete"/>
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
-			<menu value="&selectMenu.label;" accesskey="&selectMenu.accesskey;" id="menu_selectMenu">
-				<menupopup>
-					<menuitem value="&selectThreadCmd.label;" accesskey="&selectThreadCmd.accesskey;" disabled="true" oncommand="MsgSelectThread();"/>
-					<menuitem value="&selectFlaggedCmd.label;" accesskey="&selectFlaggedCmd.accesskey;" disabled="true" oncommand="MsgSelectFlaggedMsg();"/>
-<!--
-					<menuseparator/>
-					<menuitem value="&selectInvertCmd.label;" accesskey="&selectInvertCmd.accesskey;" disabled="true" oncommand="MsgSelectInvertMsg();"/>
--->
-				</menupopup>
-			</menu>
 			<menuseparator/>
 			<menuitem value="&filtersCmd.label;"
                       accesskey="&filtersCmd.accesskey;"
@@ -437,15 +424,15 @@ Rights Reserved.
 			<menuseparator/>
 			<menu value="&sortMenu.label;">
 				<menupopup>
-					<menuitem value="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" observes="cmd_sortByDate"/>
-					<menuitem value="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" observes="cmd_sortByFlag"/>
-					<menuitem value="&sortByPriorityCmd.label;" accesskey="&sortByPriorityCmd.accesskey;" observes="cmd_sortByPriority"/>
-					<menuitem value="&sortBySenderCmd.label;" accesskey="&sortBySenderCmd.accesskey;" observes="cmd_sortBySender"/>
-					<menuitem value="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" observes="cmd_sortBySize"/>
-					<menuitem value="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" observes="cmd_sortByStatus"/>
-					<menuitem value="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" observes="cmd_sortBySubject"/>
-					<menuitem value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" observes="cmd_sortByRead"/>
-					<menuitem value="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" observes="cmd_sortByOrderReceived"/>
+					<menuitem id="sortByDateMenuitem" type="checkbox" value="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" observes="cmd_sortByDate"/>
+					<menuitem id="sortByFlagMenuitem" type="checkbox" value="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" observes="cmd_sortByFlag"/>
+					<menuitem id="sortByOrderReceivedMenuitem" type="checkbox" value="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" observes="cmd_sortByOrderReceived"/>
+					<menuitem id="sortByPriorityMenuitem" type="checkbox" value="&sortByPriorityCmd.label;" accesskey="&sortByPriorityCmd.accesskey;" observes="cmd_sortByPriority"/>
+					<menuitem id="sortBySenderMenuitem" type="checkbox" value="&sortBySenderCmd.label;" accesskey="&sortBySenderCmd.accesskey;" observes="cmd_sortBySender"/>
+					<menuitem id="sortBySizeMenuitem" type="checkbox" value="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" observes="cmd_sortBySize"/>
+					<menuitem id="sortByStatusMenuitem" type="checkbox" value="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" observes="cmd_sortByStatus"/>
+					<menuitem id="sortBySubjectMenuitem" type="checkbox" value="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" observes="cmd_sortBySubject"/>
+					<menuitem id="sortByUnreadMenuitem" type="checkbox" value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" observes="cmd_sortByRead"/>
 				</menupopup>
 			</menu>
 			<menu value="&msgsMenu.label;" accesskey="&msgsMenu.accesskey;">
@@ -469,13 +456,6 @@ Rights Reserved.
 					 value="&headersNormalCmd.label;"
 					 accesskey="&headersNormalCmd.accesskey;"
 					 oncommand="MsgViewNormalHeaders();"/>
-					<menuitem id="viewbriefheaders"
-					 type="radio"
-					 name="viewheadergroup"
-					 value="&headersBriefCmd.label;"
-					 accesskey="&headersBriefCmd.accesskey;"
-					 disabled="true"
-					 oncommand="MsgViewBriefHeaders();"/>
 				</menupopup>
 			</menu>
 			<menuitem id="menu_showThreads"
@@ -491,17 +471,11 @@ Rights Reserved.
 			</menu>
 			<menuseparator/>
 			<menuitem value="&viewAttachmentsInlineCmd.label;" accesskey="&viewAttachmentsInlineCmd.accesskey;" disabled="true" oncommand="MsgViewAttachInline();"/>
-			<menuitem value="&wrapLongLinesCmd.label;" accesskey="&wrapLongLinesCmd.accesskey;" disabled="true" oncommand="MsgWrapLongLines();"/>
-			<menuseparator/>
-			<menuitem value="&increaseFontCmd.label;" accesskey="&increaseFontCmd.accesskey;" disabled="true" oncommand="MsgIncreaseFont();"/>
-			<menuitem value="&decreaseFontCmd.label;" accesskey="&decreaseFontCmd.accesskey;" disabled="true" oncommand="MsgDecreaseFont();"/>
 			<menuseparator/>
 			<menuitem value="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" oncommand="MsgReload();"/>
-			<menuitem value="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="MsgShowImages();"/>
 			<menuitem value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
 			<menuseparator/>
 			<menuitem value="&pageSourceCmd.label;" accesskey="&pageSourceCmd.accesskey;" oncommand="MsgViewPageSource();"/>
-			<menuitem value="&pageInfoCmd.label;" accesskey="&pageInfoCmd.accesskey;" disabled="true" oncommand="MsgViewPageInfo();"/>
 			<menuseparator/>
 			<menu id = "mailviewCharsetMenu" />
 		</menupopup>
@@ -664,9 +638,6 @@ Rights Reserved.
 			</template>
 		</menu>
 		<menuseparator/>
-		<menuitem value="&addSenderToAddressBookCmd.label;" accesskey="&addSenderToAddressBookCmd.accesskey;" disabled="true" oncommand="MsgAddSenderToAddressBook();"/>
-		<menuitem value="&addAllToAddressBookCmd.label;" accesskey="&addAllToAddressBookCmd.accesskey;" disabled="true" oncommand="MsgAddAllToAddressBook();"/>
-		<menuseparator/>
 		<menu value="&markMenu.label;" accesskey="&markMenu.accesskey;">
 			<menupopup>
 				<menuitem value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" oncommand="MsgMarkMsgAsRead(true);"/>
@@ -678,9 +649,6 @@ Rights Reserved.
 				<menuitem value="&markUnflaggedCmd.label;" accesskey="&markUnflaggedCmd.accesskey;" oncommand="MsgMarkAsFlagged(false);"/>
 			</menupopup>
 		</menu>
-		<menuseparator/>
-		<menuitem value="&ignoreThreadCmd.label;" accesskey="&ignoreThreadCmd.accesskey;" disabled="true" oncommand="MsgIgnoreThread();"/>
-		<menuitem value="&watchThreadCmd.label;" accesskey="&watchThreadCmd.accesskey;" disabled="true" oncommand="MsgWatchThread();"/>
 	</menupopup>
 </menu>
 

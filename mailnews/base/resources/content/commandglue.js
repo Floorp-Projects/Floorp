@@ -416,6 +416,7 @@ function SortThreadPane(column, sortKey, secondarySortKey, toggleCurrentDirectio
 	}
 
 	UpdateSortIndicator(column, direction);
+	UpdateSortMenu(column);
 
    var folder = GetSelectedFolder();
 	if(folder)
@@ -492,6 +493,29 @@ function UpdateSortIndicator(column,sortDirection)
 	}
 }
 
+function UpdateSortMenu(currentSortColumn)
+{
+	UpdateSortMenuitem(currentSortColumn, "sortByDateMenuitem", "DateColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortByFlagMenuitem", "FlaggedButtonColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortByOrderReceivedMenuitem", "OrderReceivedColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortByPriorityMenuitem", "PriorityColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortBySenderMenuitem", "AuthorColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortBySizeMenuitem", "SizeColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortByStatusMenuitem", "StatusColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortBySubjectMenuitem", "SubjectColumn");
+	UpdateSortMenuitem(currentSortColumn, "sortByUnreadMenuitem", "UnreadButtonColumn");
+
+}
+
+function UpdateSortMenuitem(currentSortColumnID, menuItemID, columnID)
+{
+	var menuItem = document.getElementById(menuItemID);
+	if(menuItem)
+	{
+		menuItem.setAttribute("checked", currentSortColumnID == columnID);
+	}
+}
+
 function SortFolderPane(column, sortKey)
 {
 	var node = FindInSidebar(window, column);
@@ -500,7 +524,10 @@ function SortFolderPane(column, sortKey)
 		dump('Couldnt find sort column\n');
 		return false;
 	}
-	return SortColumn(node, sortKey, null, null);
+	SortColumn(node, sortKey, null, null);
+	//Remove the sortActive attribute because we don't want this pane to have any
+	//sort styles.
+	node.setAttribute("sortActive", "false");
 }
 
 function SortColumn(node, sortKey, secondarySortKey, direction)
