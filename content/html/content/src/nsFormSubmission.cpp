@@ -47,7 +47,6 @@
 #include "nsIPrefService.h"
 #include "nsLinebreakConverter.h"
 #include "nsICharsetConverterManager.h"
-#include "xp_path.h"
 #include "nsICharsetAlias.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
