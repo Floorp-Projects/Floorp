@@ -569,7 +569,7 @@
       (setq charset (charset-difference charset partition-charset)))))
 
 
-; Return an updated grammar-source whose character class nonterminals replaced with sets of
+; Return an updated grammar-source whose character class nonterminals are replaced with sets of
 ; terminals inside :- and :-- constraints.
 (defun update-constraint-nonterminals (lexer grammar-source)
   (mapcar
