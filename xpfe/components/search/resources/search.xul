@@ -10,6 +10,15 @@
 <!ENTITY internet.title.label        "Search the Internet">
 <!ENTITY mailnews.title.label        "Search Mail/News">
 <!ENTITY addressbook.title.label     "Search Addressbook">
+
+<!ENTITY menu.file.label             "File">
+<!ENTITY menuitem.close.label        "Close">
+
+<!ENTITY menu.edit.label             "Edit">
+<!ENTITY menuitem.undo.label         "Undo">
+<!ENTITY menuitem.cut.label          "Cut">
+<!ENTITY menuitem.copy.label         "Copy">
+<!ENTITY menuitem.paste.label        "Paste">
 ]>
 
 
@@ -18,6 +27,23 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	onload="loadPage(window.arguments[0], window.arguments[1])" >
+
+	<menubar>
+		<menu value="&menu.file.label;">
+			<menupopup>
+				<menuitem value="&menuitem.close.label;" oncommand="window.close()" />
+			</menupopup>
+		</menu>
+		<menu value="&menu.edit.label;">
+			<menupopup>
+				<menuitem value="x&menuitem.undo.label;"/>
+				<menuseparator/>
+				<menuitem value="x&menuitem.cut.label;"/>
+				<menuitem value="x&menuitem.copy.label;"/>
+				<menuitem value="x&menuitem.paste.label;"/>
+			</menupopup>
+		</menu>
+	</menubar>
 
 	<html:script src="search.js" />
 
