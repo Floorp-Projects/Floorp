@@ -69,11 +69,9 @@ public class GrendelToolBar extends JToolBar {
 
       b.setRolloverEnabled(true);
       b.setBorder(BorderFactory.createEmptyBorder());
-      b.setMargin(new Insets(5,5,5,5));
+      b.setMargin(new Insets(0,3,0,3));
       b.setToolTipText(aToolTip);
       
-      System.out.println(aImageName);
-
       URL iconUrl = getClass().getResource("toolbar/mozilla/" + aImageName + ".gif");
       b.setIcon(new ImageIcon(iconUrl));
       //iconUrl = getClass().getResource("toolbar/mozilla/" + aImageName + "-disabled.gif");
@@ -84,8 +82,6 @@ public class GrendelToolBar extends JToolBar {
       //b.setRolloverIcon(new ImageIcon(iconUrl));
 
       Dimension d=b.getPreferredSize();
-      System.out.println(d.getWidth());
-      System.out.println(d.getHeight());
       double w=d.getWidth();
       if (w > 48) {
         d.setSize(w, 38);
