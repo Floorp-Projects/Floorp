@@ -25,11 +25,13 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsMacWindow.h"
+#include "nsDialog.h"
 #include "nsAppShell.h"
 #include "nsButton.h"
 #include "nsRadioButton.h"
 #include "nsCheckButton.h"
 #include "nsTextWidget.h"
+#include "nsLabel.h"
 #include "nsFileWidget.h"
 #include "nsScrollbar.h"
 #include "nsMenuBar.h"
@@ -210,10 +212,10 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         inst = (nsISupports*)new nsLookAndFeel();
     }
     else if (mClassID.Equals(kCDialog)) {
-//        inst = (nsISupports*)(nsWindow*)new nsDialog();
+        inst = (nsISupports*)(nsWindow*)new nsDialog();
     }
     else if (mClassID.Equals(kCLabel)) {
-//        inst = (nsISupports*)(nsWindow*)new nsLabel();
+        inst = (nsISupports*)(nsWindow*)new nsLabel();
     }
     else if (mClassID.Equals(kCMenuBar)) {
         inst = (nsISupports*)new nsMenuBar();
