@@ -71,6 +71,8 @@
 #include "nsIURI.h"
 #include "nsIMsgWindow.h"
 
+#include "mimeebod.h"
+
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -204,6 +206,9 @@ CountTotalMimeAttachments(MimeContainer *aObj)
   if ( (!aObj) || (!aObj->children) || (aObj->nchildren <= 0) )
     return 0;
 
+  if (mime_typep((MimeObject *)aObj, (MimeObjectClass *)&mimeExternalBodyClass))
+    return 0;
+
   for (i=0; i<aObj->nchildren; i++)
     rc += CountTotalMimeAttachments((MimeContainer *)aObj->children[i]) + 1;
 
@@ -287,7 +292,8 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
   PRBool                isAlternativeOrRelated;
   PRBool                isIMAPPart = PR_FALSE;
 
-  if ( (!aChild) || (!cobj->children) )
+  if ( (!aChild) || (!cobj->children) || 
+       (mime_typep(aChild, (MimeObjectClass *)&mimeExternalBodyClass)))
     return NS_OK;
 
   if (MimeObjectChildIsMessageBody(aChild, &isAlternativeOrRelated))

@@ -294,7 +294,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  obj->options->write_html_p)
 	{
 	  PRBool all_headers_p = obj->options->headers == MimeHeadersAll;
-	  MimeDisplayOptions newopt = *obj->options;  /* copy it */
+	  MimeDisplayOptions *newopt = obj->options;  /* copy it */
 
 	  char *ct = MimeHeaders_get(obj->headers, HEADER_CONTENT_TYPE,
 								 PR_FALSE, PR_FALSE);
@@ -428,8 +428,8 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 			}
 		}
 
-	  newopt.fancy_headers_p = PR_TRUE;
-	  newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
+	  newopt->fancy_headers_p = PR_TRUE;
+	  newopt->headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
 
 	FAIL:
 	  if (hdrs)
