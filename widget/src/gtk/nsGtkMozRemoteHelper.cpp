@@ -254,7 +254,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
   *end_command = '\0';
   
   // get the action type
-  actionString.Append(origString, (begin_command - origString));
+  actionString.Append(origString, (begin_command - (char *)origString));
 
   // figure out how long the command is
   commandLen = (end_command - begin_command) - 1;
@@ -546,7 +546,7 @@ nsGtkMozRemoteHelper::OpenURL        (const char *aURL, PRBool aNewWindow)
   if (tempString)
     navChromeURL = tempString;
   // default to this
-  if (!navChromeURL)
+  if (!(char *)navChromeURL)
     navChromeURL = "chrome://navigator/content/navigator.xul";
 
   newURL.AssignWithConversion(aURL);
