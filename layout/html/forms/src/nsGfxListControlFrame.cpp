@@ -1720,6 +1720,9 @@ nsGfxListControlFrame::GetOptionAsContent(nsIDOMHTMLCollection* aCollection, PRI
 {
   nsIContent * content = nsnull;
   nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*aCollection, aIndex));
+
+  NS_ASSERTION(optionElement.get() != nsnull, "could get option element by index!");
+
   if (optionElement) {
     optionElement->QueryInterface(NS_GET_IID(nsIContent),(void**) &content);
   }
@@ -1737,9 +1740,11 @@ nsGfxListControlFrame::GetOptionContent(PRInt32 aIndex)
 {
   nsIContent* content = nsnull;
   nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+  NS_ASSERTION(options.get() != nsnull, "Collection of options is null!");
+
   if (options) {
     content = GetOptionAsContent(options, aIndex);
-  }
+  } 
   return(content);
 }
 
@@ -1776,12 +1781,15 @@ nsGfxListControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRInt32 aInd
 {
   nsIDOMNode* node = nsnull;
   if (NS_SUCCEEDED(aCollection.Item(aIndex, &node))) {
+    NS_ASSERTION(nsnull != node, "Item was succussful, but node from collection was null!");
     if (nsnull != node) {
       nsIDOMHTMLOptionElement* option = nsnull;
       node->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), (void**)&option);
       NS_RELEASE(node);
       return option;
     }
+  } else {
+    NS_ASSERTION(0, "Couldn't get option by index from collection!");
   }
   return nsnull;
 }
@@ -1869,15 +1877,28 @@ nsGfxListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
   if (aIndex == kNothingSelected) {
     return;
   }
-  nsIContent* content = GetOptionContent(aIndex);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
-  nsIFrame * childframe;
-  nsresult result = presShell->GetPrimaryFrameFor(content, &childframe);
-  if (NS_SUCCEEDED(result) && childframe != nsnull) {
-    //NS_ASSERTION(nsnull != content && aIndex == 0, "Failed to retrieve option content");
-    if (nsnull != content) {
+#ifdef NS_DEBUG
+  PRInt32 numOptions = 0;
+  if (NS_SUCCEEDED(GetNumberOfOptions(&numOptions))) {
+    if (aIndex >= numOptions || aIndex < 0) {
+      printf("Index: %d Range 0:%d  (setting to %s)\n", aIndex, numOptions, aSelected?"TRUE":"FALSE");
+      NS_ASSERTION(0, "Bad Index has been passed into SetContentSelected!");
+    }
+  } else {
+    NS_ASSERTION(0, "Couldn't get number of options for select!");
+  }
+#endif
+
+  nsIContent* content = GetOptionContent(aIndex);
+  NS_ASSERTION(content != nsnull, "Content should not be null!");
+
+  if (content != nsnull) {
+    nsCOMPtr<nsIPresShell> presShell;
+    mPresContext->GetShell(getter_AddRefs(presShell));
+    nsIFrame * childframe;
+    nsresult result = presShell->GetPrimaryFrameFor(content, &childframe);
+    if (NS_SUCCEEDED(result) && childframe != nsnull) {
       if (aSelected) {
         DisplaySelected(content);
         // Now that it is selected scroll to it
@@ -1885,11 +1906,11 @@ nsGfxListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
       } else {
         DisplayDeselected(content);
       }
-      NS_RELEASE(content);
+    } else {
+      mDelayedIndexSetting = aIndex;
+      mDelayedValueSetting = aSelected;
     }
-  } else {
-    mDelayedIndexSetting = aIndex;
-    mDelayedValueSetting = aSelected;
+    NS_RELEASE(content);
   }
 }
 
