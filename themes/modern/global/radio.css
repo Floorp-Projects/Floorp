@@ -27,23 +27,16 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: radiogroup ::::: */
-
-radiogroup {
-  -moz-user-focus: ignore;
-}
-  
 /* ::::: radio ::::: */
 
 radio {
   border: 2px solid transparent;
   margin: 0px 3px 0px 3px;
-  -moz-user-focus: normal !important;
 }
 
 /* ..... focused state ..... */
 
-radio:focus {
+radio[focused="true"] {
   border-color: #A5A8B1;
   -moz-border-radius: 4px 5px 4px 5px;
 }
