@@ -21,6 +21,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsITransport.h"
+#include "nsCOMPtr.h"
 #include "rosetta.h"
 #include HG40855
 
@@ -124,20 +125,21 @@ private:
 	PRBool			m_urlInProgress;	
 	PRBool			m_socketIsOpen;
 	PRUint32		m_flags; // used to store flag information
-	nsIMailboxUrl	*m_runningUrl; // the nsIMailboxURL that is currently running
+	nsCOMPtr<nsIMailboxUrl>	m_runningUrl; // the nsIMailboxURL that is currently running
 	nsMailboxAction m_mailboxAction; // current mailbox action associated with this connnection...
 	PRInt32			m_originalContentLength; /* the content length at the time of calling graph progress */
 
 	// Event sink handles
-	nsIStreamListener *m_mailboxParser;
-	nsIStreamListener *m_mailboxCopyHandler;
+	nsCOMPtr<nsIStreamListener> m_mailboxParser;
+	nsCOMPtr<nsIStreamListener> m_mailboxCopyHandler;
 
 	// Local state for the current operation
 
 	// Ouput stream for writing commands to the socket
-	nsITransport			* m_transport; 
-	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
-	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
+	nsCOMPtr<nsITransport>		m_transport; 
+	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
+	nsCOMPtr<nsIStreamListener> m_outputConsumer; // this will be obtained from the transport interface
+	
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
 
 	// Generic state information -- What state are we in? What state do we want to go to
@@ -148,7 +150,7 @@ private:
 	PRUint32	m_messageID;
 
 	PRFileDesc* m_tempMessageFile;
-	nsIWebShell				* m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
+	nsCOMPtr<nsIWebShell>	 m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 	
 
 	PRInt32	  ProcessMailboxState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);

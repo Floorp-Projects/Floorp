@@ -79,15 +79,6 @@ nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL)
 
 nsMailboxProtocol::~nsMailboxProtocol()
 {
-	// release all of our event sinks
-	NS_IF_RELEASE(m_mailboxParser);
-	
-	// free handles on all networking objects...
-	NS_IF_RELEASE(m_outputStream); 
-	NS_IF_RELEASE(m_outputConsumer);
-	NS_IF_RELEASE(m_transport);
-	NS_IF_RELEASE(m_runningUrl);
-
 	// free our local state 
 	if (m_lineStreamBuffer)
 		delete m_lineStreamBuffer;
@@ -99,47 +90,32 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 
 	m_flags = 0;
 
-	// query the URL for a nsIMAILBOXUrl
-	m_runningUrl = nsnull; // initialize to NULL
-	m_transport = nsnull;
-	m_displayConsumer = nsnull;
-	m_mailboxCopyHandler = nsnull;
-
 	if (aURL)
 	{
-		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **)&m_runningUrl);
+		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) getter_AddRefs(m_runningUrl));
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
 			// extract the file name and create a file transport...
-            nsINetService* pNetService;
-            rv = nsServiceManager::GetService(kNetServiceCID,
-                                              nsINetService::GetIID(),
-                                              (nsISupports**)&pNetService);
+			NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
 			if (NS_SUCCEEDED(rv) && pNetService)
 			{
 				const nsFileSpec * fileSpec = nsnull;
 				m_runningUrl->GetFilePath(&fileSpec);
 
 				nsFilePath filePath(*fileSpec);
-				rv = pNetService->CreateFileSocketTransport(&m_transport, filePath);
-                (void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+				rv = pNetService->CreateFileSocketTransport(getter_AddRefs(m_transport), filePath);
 			}
 		}
 	}
 	
-	m_outputStream = NULL;
-	m_outputConsumer = NULL;
-
-	nsresult rv = m_transport->GetOutputStream(&m_outputStream);
+	nsresult rv = m_transport->GetOutputStream(getter_AddRefs(m_outputStream));
 	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to create an output stream");
-	rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
+	rv = m_transport->GetOutputStreamConsumer(getter_AddRefs(m_outputConsumer));
 	NS_ASSERTION(NS_SUCCEEDED(rv), "ooops, transport layer unable to provide us with an output consumer!");
 
 	// register self as the consumer for the socket...
 	rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register MAILBOX instance as a consumer on the socket");
-
-	m_mailboxParser = nsnull;
 
 	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, MSG_LINEBREAK, PR_TRUE);
 
@@ -268,13 +244,10 @@ PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
 		{
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningUrl once we have NNTP url support...
-			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) &inputStream);
+			nsCOMPtr<nsIInputStream> inputStream;
+			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) getter_AddRefs(inputStream));
 			if (inputStream)
-			{
 				m_outputConsumer->OnDataAvailable(m_runningUrl, inputStream, writeCount);
-				NS_RELEASE(inputStream);
-			}
 			status = 1; // mscott: we need some type of MK_OK? MK_SUCCESS? Arrgghhh
 		}
 		else // the write failed for some reason, returning 0 trips an error by the caller
@@ -296,32 +269,25 @@ PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 	m_runningUrl->GetMessageKey(messageKey);
 	if (dbFileSpec)
 	{
-		nsIMsgDatabase * mailDBFactory = nsnull;
-		nsIMsgDatabase *mailDB;
+		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+		nsIMsgDatabase *mailDB = nsnull;
 
-		nsIMsgDBHdr * msgHdr = nsnull;
-		nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+		nsCOMPtr<nsIMsgDBHdr> msgHdr;
+		nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), 
+														 (void **) getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
-		{
 			rv = mailDBFactory->Open((nsFileSpec&) *dbFileSpec, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
-			mailDBFactory->Release();
-		}
-//		nsMailDatabase::Open((nsFileSpec&) *dbFileSpec, PR_FALSE, &mailDb);
 		if (mailDB) // did we get a db back?
 		{
-			mailDB->GetMsgHdrForKey(messageKey, &msgHdr);
+			mailDB->GetMsgHdrForKey(messageKey, getter_AddRefs(msgHdr));
 			if (msgHdr)
-			{
 				msgHdr->GetMessageSize(&messageSize);
-				msgHdr->Release();
-			}
 			mailDB->Close(PR_TRUE);
 		}
 	}
 	m_runningUrl->SetMessageSize(messageSize);
 	return NS_OK;
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Begin protocol state machine functions...
@@ -331,18 +297,14 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
-	nsIMailboxUrl * mailboxUrl = nsnull;
 	HG77067
 	if (aURL)
 	{
-		rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &mailboxUrl);
-		if (NS_SUCCEEDED(rv) && mailboxUrl)
+		m_runningUrl = do_QueryInterface(aURL);
+		if (m_runningUrl)
 		{
-			NS_IF_RELEASE(m_runningUrl);
-			m_runningUrl = mailboxUrl; // we have transferred ref cnt contro to m_runningUrl
-
 			if (aConsumer)
-				rv = aConsumer->QueryInterface(kIWebShell, (void **) &m_displayConsumer);
+				m_displayConsumer = do_QueryInterface(aConsumer);
 
 			// find out from the url what action we are supposed to perform...
 			rv = m_runningUrl->GetMailboxAction(&m_mailboxAction);
@@ -353,8 +315,7 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 				{
 				case nsMailboxActionParseMailbox:
 					// extract the mailbox parser..
-					NS_IF_RELEASE(m_mailboxParser);
-					rv = m_runningUrl->GetMailboxParser(&m_mailboxParser);
+					rv = m_runningUrl->GetMailboxParser(getter_AddRefs(m_mailboxParser));
 					m_nextState = MAILBOX_READ_FOLDER;
 					break;
 
@@ -370,8 +331,7 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 
 				case nsMailboxActionCopyMessage:
 				case nsMailboxActionMoveMessage:
-					NS_IF_RELEASE(m_mailboxCopyHandler);
-					rv = m_runningUrl->GetMailboxCopyHandler(&m_mailboxCopyHandler);
+					rv = m_runningUrl->GetMailboxCopyHandler(getter_AddRefs(m_mailboxCopyHandler));
 					SetupMessageExtraction();
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
@@ -389,9 +349,7 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 			m_urlInProgress = PR_TRUE;
 			m_runningUrl->SetUrlState(PR_TRUE, NS_OK);
 			if (transportOpen == PR_FALSE)
-			{
 				m_transport->Open(m_runningUrl);  // opening the url will cause to get notified when the connection is established
-			}
 			else  // the connection is already open so we should begin processing our new url...
 			{
 				// mscott - I think mailbox urls always come in fresh for each mailbox protocol connection
@@ -477,7 +435,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 				{
 					if (line)
 						PR_Write(m_tempMessageFile,(void *) line,PL_strlen(line));
-					PR_Write(m_tempMessageFile, (void *) MSG_LINEBREAK, PL_strlen(MSG_LINEBREAK));
+					PR_Write(m_tempMessageFile, (void *) MSG_LINEBREAK, MSG_LINEBREAK_LEN);
 				}
 			} 
 		}
@@ -550,17 +508,12 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 
 PRInt32	  nsMailboxProtocol::CloseConnection()
 {
-	NS_IF_RELEASE(m_outputStream); 
-	m_outputStream = nsnull;
-	NS_IF_RELEASE(m_outputConsumer);
-	m_outputConsumer = nsnull;
-	NS_IF_RELEASE(m_transport);
-	m_transport = nsnull;
-	NS_IF_RELEASE(m_runningUrl);
-	m_runningUrl = nsnull;
-	// release all of our event sinks
-	NS_IF_RELEASE(m_mailboxParser);
-	m_mailboxParser = nsnull;
+	// how do you force a release when closing the connection??
+	m_outputStream = null_nsCOMPtr();
+	m_outputConsumer = null_nsCOMPtr();
+	m_transport = null_nsCOMPtr();
+	m_runningUrl = null_nsCOMPtr();
+	m_mailboxParser = null_nsCOMPtr();
 	return 0;
 }
 
