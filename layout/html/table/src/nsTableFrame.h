@@ -49,9 +49,12 @@ struct nsStyleSpacing;
 /* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
-  * Used as a pseudo-frame within nsTableOuterFrame, 
-  * it may also be used stand-alone as the top-level frame.
-  * The meaningful child frames of nsTableFrame map rowgroups.
+  * Used as a pseudo-frame within nsTableOuterFrame, it may also be used
+  * stand-alone as the top-level frame.
+  *
+  * The flowed child list contains row group framess. There is also an additional
+  * named child list:
+  * - "ColGroup-list" which contains the col group frames
   *
   * @author  sclark
   *
@@ -76,6 +79,8 @@ public:
 
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
   /** helper method for determining if this is a nested table or not */
   PRBool IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const;

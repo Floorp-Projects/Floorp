@@ -308,6 +308,13 @@ nsTableFrame::~nsTableFrame()
 }
 
 NS_IMETHODIMP
+nsTableFrame::DeleteFrame(nsIPresContext& aPresContext)
+{
+  DeleteFrameList(aPresContext, &mColGroups);
+  return nsHTMLContainerFrame::DeleteFrame(aPresContext);
+}
+
+NS_IMETHODIMP
 nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList)
