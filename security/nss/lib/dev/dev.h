@@ -35,7 +35,7 @@
 #define DEV_H
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.18 $ $Date: 2002/03/04 17:13:52 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.19 $ $Date: 2002/03/04 17:17:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVT_H
@@ -452,7 +452,7 @@ NSSAlgorithmAndParameters_CreateMD5Digest
 
 #ifdef NSS_3_4_CODE
 /* exposing this for the smart card cache code */
-NSS_IMPLEMENT nssCryptokiInstance *
+NSS_EXTERN nssCryptokiInstance *
 nssCryptokiInstance_Create
 (
   NSSArena *arena,
