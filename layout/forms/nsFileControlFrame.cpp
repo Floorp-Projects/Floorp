@@ -59,10 +59,6 @@
 #include "nsIScriptGlobalObject.h"
 
 
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMMouseListenerIID,     NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 
 nsresult
 NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -96,7 +92,7 @@ nsFileControlFrame::~nsFileControlFrame()
   // remove ourself as a listener of the button (bug 40533)
   if (mBrowse) {
     nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mBrowse));
-    reciever->RemoveEventListenerByIID(this, kIDOMMouseListenerIID);
+    reciever->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
   }
 
   if (mCachedState) {
@@ -146,7 +142,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
     // register as an event listener of the button to open file dialog on mouse click
     nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mBrowse));
-    reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
+    reciever->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
   }
 
   nsString value;
@@ -164,13 +160,13 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
     return NS_OK;
-  } else if (aIID.Equals(kIFormControlFrameIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  } else  if (aIID.Equals(kIDOMMouseListenerIID)) {
+  } else  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;
     return NS_OK;
   } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {

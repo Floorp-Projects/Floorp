@@ -31,7 +31,6 @@
 #ifdef DEBUG
 #include "nsIFrameDebug.h"
 #endif
-static NS_DEFINE_IID(kISpaceManagerIID, NS_ISPACEMANAGER_IID);
 
 /////////////////////////////////////////////////////////////////////////////
 // BandList
@@ -89,7 +88,7 @@ nsSpaceManager::~nsSpaceManager()
   ClearFrameInfo();
 }
 
-NS_IMPL_ISUPPORTS(nsSpaceManager, kISpaceManagerIID);
+NS_IMPL_ISUPPORTS(nsSpaceManager, NS_GET_IID(nsISpaceManager));
 
 NS_IMETHODIMP
 nsSpaceManager::GetFrame(nsIFrame*& aFrame) const

@@ -59,9 +59,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
-static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 // XXX end bad code
 
 static void Usage(void)
@@ -106,7 +104,7 @@ int main(int argc, char** argv)
   // Create the Event Queue for this thread...
   nsIEventQueueService* pEventQService = nsnull;
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                    kIEventQueueServiceIID,
+                                    NS_GET_IID(nsIEventQueueService),
                                     (nsISupports **)&pEventQService);
   if (NS_SUCCEEDED(rv)) {
     // XXX: What if this fails?
@@ -117,7 +115,7 @@ int main(int argc, char** argv)
   nsCOMPtr<nsICSSParser> css;
   rv = nsComponentManager::CreateInstance(kCSSParserCID,
 	nsnull,
-	kICSSParserIID,
+	NS_GET_IID(nsICSSParser),
 	getter_AddRefs(css));
 	
   if (NS_FAILED(rv)) {

@@ -105,7 +105,6 @@ NS_IMETHODIMP nsMenuDismissalListener::ShouldRollupOnMouseWheelEvent(PRBool *aSh
 
 
 // uggggh.
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 
 NS_IMETHODIMP
@@ -121,7 +120,7 @@ nsMenuDismissalListener::GetSubmenuWidgetChain(nsISupportsArray **_retval)
     
     // move up the chain
     nsIFrame* currAsFrame = nsnull;
-    if ( NS_SUCCEEDED(curr->QueryInterface(kIFrameIID, NS_REINTERPRET_CAST(void**,&currAsFrame))) ) {
+    if ( NS_SUCCEEDED(curr->QueryInterface(NS_GET_IID(nsIFrame), NS_REINTERPRET_CAST(void**,&currAsFrame))) ) {
       nsIFrame* parentFrame = nsnull;
       currAsFrame->GetParent(&parentFrame);
       nsIMenuParent* next;

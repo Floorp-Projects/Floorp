@@ -61,7 +61,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"
 
-static NS_DEFINE_IID(kScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
 
@@ -69,14 +68,6 @@ static NS_DEFINE_IID(kScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 #include "nsIFontMetrics.h"
 #endif
 
-static NS_DEFINE_IID(kIFormControlFrameIID,      NS_IFORMCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIComboboxControlFrameIID,  NS_ICOMBOBOXCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIListControlFrameIID,      NS_ILISTCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIDOMMouseListenerIID,      NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIFrameIID,                 NS_IFRAME_IID);
-static NS_DEFINE_IID(kIAnonymousContentCreatorIID, NS_IANONYMOUS_CONTENT_CREATOR_IID);
-static NS_DEFINE_IID(kIDOMNodeIID,               NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIPrivateDOMEventIID,       NS_IPRIVATEDOMEVENT_IID);
 
 #define FIX_FOR_BUG_53259
 
@@ -283,13 +274,13 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(kIComboboxControlFrameIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIComboboxControlFrame))) {
     *aInstancePtr = (void*) ((nsIComboboxControlFrame*) this);
     return NS_OK;
-  } else if (aIID.Equals(kIFormControlFrameIID)) {
+  } else if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
+  } else if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
     return NS_OK;   
   } else if (aIID.Equals(NS_GET_IID(nsISelectControlFrame))) {
@@ -357,7 +348,7 @@ nsComboboxControlFrame::MakeSureSomethingIsSelected(nsIPresContext* aPresContext
   REFLOW_DEBUG_MSG("CBX::MakeSureSomethingIsSelected\n");
 
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult rv = mDropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  nsresult rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   if (NS_SUCCEEDED(rv) && fcFrame) {
     // If nothing selected, and there are options, default selection to item 0
    rv = mListControlFrame->GetSelectedIndex(&mSelectedIndex);
@@ -413,7 +404,7 @@ nsComboboxControlFrame::Reset(nsIPresContext* aPresContext)
 
    // Reset the dropdown list to its original state
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = mDropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  nsresult result = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   if ((NS_OK == result) && (nsnull != fcFrame)) {
     fcFrame->Reset(aPresContext); 
   }
@@ -538,7 +529,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     mDropdownFrame->GetRect(rect);
     viewManager->ResizeView(view, rect.width, rect.height);
     nsIScrollableView* scrollingView;
-    if (NS_SUCCEEDED(view->QueryInterface(kScrollableViewIID, (void**)&scrollingView))) {
+    if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
       scrollingView->ComputeScrollOffsets(PR_TRUE);
     }
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
@@ -557,7 +548,7 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
 
   // Get parent view
   nsIFrame * listFrame;
-  if (NS_OK == mListControlFrame->QueryInterface(kIFrameIID, (void **)&listFrame)) {
+  if (NS_OK == mListControlFrame->QueryInterface(NS_GET_IID(nsIFrame), (void **)&listFrame)) {
     nsIView * view = nsnull;
     listFrame->GetView(aPresContext, &view);
     NS_ASSERTION(view != nsnull, "nsComboboxControlFrame view is null");
@@ -645,7 +636,7 @@ void
 nsComboboxControlFrame::SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight) 
 {
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = aFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  nsresult result = aFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
     fcFrame->SetSuggestedSize(aWidth, aHeight); 
   }
@@ -1341,7 +1332,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         return rv;
       } else {
         nsIFrame * plainLstFrame;
-        if (NS_SUCCEEDED(mListControlFrame->QueryInterface(kIFrameIID, (void**)&plainLstFrame))) {
+        if (NS_SUCCEEDED(mListControlFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&plainLstFrame))) {
           nsIFrame * frame;
           plainLstFrame->FirstChild(aPresContext, nsnull, &frame);
           nsIScrollableFrame * scrollFrame;
@@ -1703,7 +1694,7 @@ nsComboboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
                                      nsString* aValues, nsString* aNames)
 {
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = mDropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  nsresult result = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   if ((NS_SUCCEEDED(result)) && (nsnull != fcFrame)) {
     return fcFrame->GetNamesValues(aMaxNumValues, aNumValues, aValues, aNames);
   }
@@ -1795,7 +1786,7 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
 {
   mDropdownFrame = aDropDownFrame;
  
-  if (NS_OK != mDropdownFrame->QueryInterface(kIListControlFrameIID, (void**)&mListControlFrame)) {
+  if (NS_OK != mDropdownFrame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&mListControlFrame)) {
 
     return NS_ERROR_FAILURE;
   }
@@ -2089,7 +2080,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = mDropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  nsresult result = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   if ((NS_SUCCEEDED(result)) && (nsnull != fcFrame)) {
     return fcFrame->SetProperty(aPresContext, aName, aValue);
   }
@@ -2100,7 +2091,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = mDropdownFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+  nsresult result = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
   if ((NS_SUCCEEDED(result)) && (nsnull != fcFrame)) {
     return fcFrame->GetProperty(aName, aValue);
   }
@@ -2320,7 +2311,7 @@ nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
     nsCOMPtr<nsIWidget> widget;
     // Get parent view
     nsIFrame * listFrame;
-    if (NS_OK == mListControlFrame->QueryInterface(kIFrameIID, (void **)&listFrame)) {
+    if (NS_OK == mListControlFrame->QueryInterface(NS_GET_IID(nsIFrame), (void **)&listFrame)) {
       nsIView * view = nsnull;
       listFrame->GetView(aPresContext, &view);
       NS_ASSERTION(view != nsnull, "nsComboboxControlFrame view is null");
@@ -2375,7 +2366,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
     nsIFrame * child = aChildList;
     while (child != nsnull) {
       nsIFormControlFrame* fcFrame = nsnull;
-      rv = child->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+      rv = child->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
       if (NS_FAILED(rv) && fcFrame == nsnull) {
         mDisplayFrame = child;
       } else if (fcFrame != nsnull) {

@@ -42,7 +42,6 @@
 #include "nsIFrameManager.h"
 #include "nsMenuPopupFrame.h"
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 //
 // NS_NewMenuBarFrame
@@ -355,7 +354,7 @@ nsMenuBarFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
   nsIFrame* currFrame = nsnull;
   nsIFrame* startFrame = nsnull;
   if (aStart) {
-    aStart->QueryInterface(kIFrameIID, (void**)&currFrame); 
+    aStart->QueryInterface(NS_GET_IID(nsIFrame), (void**)&currFrame); 
     if (currFrame) {
       startFrame = currFrame;
       currFrame->GetNextSibling(&currFrame);
@@ -423,7 +422,7 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult
   nsIFrame* currFrame = nsnull;
   nsIFrame* startFrame = nsnull;
   if (aStart) {
-    aStart->QueryInterface(kIFrameIID, (void**)&currFrame);
+    aStart->QueryInterface(NS_GET_IID(nsIFrame), (void**)&currFrame);
     if (currFrame) {
       startFrame = currFrame;
       currFrame = frames.GetPrevSiblingFor(currFrame);

@@ -419,17 +419,15 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
   NS_InitToolkit(PR_GetCurrentThread());
 
   //NS_NewDeviceContext(&scribbleData.mContext);
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-  NS_NewWindow(NULL, kIWidgetIID, nsnull);
+  NS_NewWindow(NULL, NS_GET_IID(nsIWidget), nsnull);
 
 #endif
 
   nsIDeviceContext *dx;
   
   static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-  static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-  nsresult rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&dx);
+  nsresult rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, NS_GET_IID(nsIDeviceContext), (void **)&dx);
 
   if (NS_OK == rv) {
     dx->Init(nsnull);
@@ -451,11 +449,10 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
   nsIViewManager * vm = nsnull;
 
   static NS_DEFINE_IID(kViewManagerCID, NS_VIEW_MANAGER_CID);
-  static NS_DEFINE_IID(kIViewManagerIID, NS_IVIEWMANAGER_IID);
 
   status = nsComponentManager::CreateInstance(kViewManagerCID, 
                                         nsnull, 
-                                        kIViewManagerIID, 
+                                        NS_GET_IID(nsIViewManager), 
                                         (void **)&vm);
 
   if ((NS_FAILED(status)) ||  nsnull==vm)
@@ -469,11 +466,10 @@ GeometryTest::GeometryTest(BasicTest *aDoc)
 
   // Create a view
   static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
-  static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
   status = nsComponentManager::CreateInstance(kScrollingViewCID, 
                                         nsnull, 
-                                        kIViewIID, 
+                                        NS_GET_IID(nsIView), 
                                         (void **)&rootView);
 
   if ((NS_FAILED(status)) ||  nsnull==rootView)

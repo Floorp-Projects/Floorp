@@ -710,11 +710,6 @@ void CircleArea::GetShapeName(nsString& aResult) const
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLAreaElementIID, NS_IDOMHTMLAREAELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLAnchorElementIID, NS_IDOMHTMLANCHORELEMENT_IID);
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 nsImageMap::nsImageMap()
 {
@@ -800,7 +795,7 @@ nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIDOMHTMLMapE
   mImageFrame = aImageFrame;
   mDomMap = aMap;
 
-  nsresult rv = aMap->QueryInterface(kIContentIID, (void**) &mMap);
+  nsresult rv = aMap->QueryInterface(NS_GET_IID(nsIContent), (void**) &mMap);
   if (NS_SUCCEEDED(rv)) {
     rv = mMap->GetDocument(mDocument);
     if (NS_SUCCEEDED(rv) && (nsnull != mDocument)) {
@@ -828,7 +823,7 @@ nsImageMap::UpdateAreasForBlock(nsIContent* aParent)
     rv = aParent->ChildAt(i, child);
     if (NS_SUCCEEDED(rv)) {
       nsIDOMHTMLAnchorElement* area;
-      rv = child->QueryInterface(kIDOMHTMLAnchorElementIID, (void**) &area);
+      rv = child->QueryInterface(NS_GET_IID(nsIDOMHTMLAnchorElement), (void**) &area);
       if (NS_SUCCEEDED(rv)) {
         rv = AddArea(child);
         NS_RELEASE(area);
@@ -860,7 +855,7 @@ nsImageMap::UpdateAreas()
     if (NS_SUCCEEDED(rv)) {
       // Only look at elements and not text, comments, etc.
       nsIDOMHTMLElement* element;
-      rv = child->QueryInterface(kIDOMHTMLElementIID, (void**)&element);
+      rv = child->QueryInterface(NS_GET_IID(nsIDOMHTMLElement), (void**)&element);
       if (NS_FAILED(rv)) {
         rv = NS_OK;
         continue;
@@ -871,7 +866,7 @@ nsImageMap::UpdateAreas()
       // If so, we only look for AREA elements
       if (!containsBlock) {
         nsIDOMHTMLAreaElement* area;
-        rv = child->QueryInterface(kIDOMHTMLAreaElementIID, (void**) &area);
+        rv = child->QueryInterface(NS_GET_IID(nsIDOMHTMLAreaElement), (void**) &area);
         if (NS_SUCCEEDED(rv)) {
           containsArea = PR_TRUE;
           rv = AddArea(child);

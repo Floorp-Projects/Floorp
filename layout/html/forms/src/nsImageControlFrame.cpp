@@ -54,9 +54,7 @@
   eMouseUp
 };
 */
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 #define nsImageControlFrameSuper nsImageFrame
 class nsImageControlFrame : public nsImageControlFrameSuper,
@@ -197,7 +195,7 @@ nsImageControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIFormControlFrameIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   }
@@ -231,7 +229,7 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
   nsIView* view;
   GetView(aPresContext, &view);
   if (!view) {
-    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+    nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&view);
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
     nsCOMPtr<nsIViewManager> viewMan;

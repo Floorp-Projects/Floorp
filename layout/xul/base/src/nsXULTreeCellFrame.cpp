@@ -34,7 +34,6 @@
 #include "nsMonumentLayout.h"
 #include "nsTempleLayout.h"
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 //
 // NS_NewXULTreeCellFrame
@@ -145,7 +144,7 @@ nsXULTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
           child->GetNextBox(&splitBox);
         nsIFrame* splitter = nsnull;
         if (splitBox)
-          splitBox->QueryInterface(kIFrameIID, (void**)&splitter); 
+          splitBox->QueryInterface(NS_GET_IID(nsIFrame), (void**)&splitter); 
         nsCOMPtr<nsIAtom> tag;
         nsCOMPtr<nsIContent> content;
         if (splitter) {

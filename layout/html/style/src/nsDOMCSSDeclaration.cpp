@@ -42,9 +42,6 @@ nsDOMCSSDeclaration::~nsDOMCSSDeclaration()
 NS_IMPL_ADDREF(nsDOMCSSDeclaration);
 NS_IMPL_RELEASE(nsDOMCSSDeclaration);
 
-static NS_DEFINE_IID(kIDOMCSS2PropertiesIID, NS_IDOMCSS2PROPERTIES_IID);
-static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 NS_IMETHODIMP
@@ -55,19 +52,19 @@ nsDOMCSSDeclaration::QueryInterface(REFNSIID aIID,
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDOMCSS2PropertiesIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMCSS2Properties))) {
     nsIDOMCSS2Properties *tmp = this;
     AddRef();
     *aInstancePtr = (void*) tmp;
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMCSSStyleDeclarationIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMCSSStyleDeclaration))) {
     nsIDOMCSSStyleDeclaration *tmp = this;
     AddRef();
     *aInstancePtr = (void*) tmp;
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner *tmp = this;
     AddRef();
     *aInstancePtr = (void*) tmp;

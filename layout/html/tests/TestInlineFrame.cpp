@@ -35,7 +35,6 @@
 #include "nsInlineFrame.h"
 #include "nsIAtom.h"
 
-static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -1582,9 +1581,8 @@ int main(int argc, char** argv)
   nsIDeviceContext *dx;
   
   static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-  static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
-  nsresult rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&dx);
+  nsresult rv = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, NS_GET_IID(nsIDeviceContext), (void **)&dx);
 
   if (NS_OK == rv) {
     dx->Init(nsull);

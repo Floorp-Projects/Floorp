@@ -76,9 +76,7 @@ PrefChangedCallback(const char* aPrefName, void* instance_data)
   return 0;  // PREF_OK
 }
 
-static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 nsPresContext::nsPresContext()
   : mDefaultFont("serif", NS_FONT_STYLE_NORMAL,

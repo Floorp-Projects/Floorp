@@ -64,7 +64,6 @@
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
 #ifdef ENDER_LITE
@@ -896,7 +895,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsIFrame* formFrame = nsnull;
 
   if (formControlFrame &&
-      NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID,
+      NS_SUCCEEDED(formControlFrame->QueryInterface(NS_GET_IID(nsIFrame),
                                                     (void **)&formFrame)) &&
       formFrame) {
     const nsStyleUserInterface* uiStyle;

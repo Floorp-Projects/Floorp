@@ -51,8 +51,6 @@
 #include "nsIFrameSelection.h"
 #include "nsILookAndFeel.h"
 
-static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
 
 nsTableCellFrame::nsTableCellFrame()
 {
@@ -118,7 +116,7 @@ void nsTableCellFrame::SetPass1MaxElementSize(const nsSize& aMaxElementSize)
     nscoord styleWidth = stylePosition->mWidth.GetCoordValue();
     if (styleWidth > 0) {
       nsIDOMHTMLTableCellElement* cellContent = nsnull;
-      nsresult rv = mContent->QueryInterface(kIDOMHTMLTableCellElementIID, (void **)&cellContent);  
+      nsresult rv = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTableCellElement), (void **)&cellContent);  
       if (cellContent && NS_SUCCEEDED(rv)) {
         PRBool nowrap = PR_FALSE;
         cellContent->GetNoWrap(&nowrap);
@@ -209,7 +207,7 @@ nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
     return rv;
 
   nsIHTMLTableCellElement* cellContent = nsnull;
-  rv = cell->QueryInterface(kIHTMLTableCellElementIID, 
+  rv = cell->QueryInterface(NS_GET_IID(nsIHTMLTableCellElement), 
                             (void **)&cellContent);  // cellContent: REFCNT++
   if (cellContent && NS_SUCCEEDED(rv)) { // it's a table cell
     cellContent->SetColIndex(aColIndex);

@@ -273,22 +273,8 @@ NS_NewResizerFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 #endif
 
-//static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
-static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
-static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
-static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
-static NS_DEFINE_IID(kIComboboxControlFrameIID, NS_ICOMBOBOXCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIRadioControlFrameIID,    NS_IRADIOCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIListControlFrameIID,     NS_ILISTCONTROLFRAME_IID);
-static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
-static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 
 //----------------------------------------------------------------------
 //
@@ -1358,7 +1344,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     NS_NewTextNode(&textContent);
     if (textContent) {
       // Set the text
-      textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+      textContent->QueryInterface(NS_GET_IID(nsIDOMCharacterData), (void**)&domData);
       domData->SetData(contentString);
       NS_RELEASE(domData);
   
@@ -1719,7 +1705,7 @@ GetNonScrollFrame(nsIFrame&  aFrameIn,
   if (nsLayoutAtoms::scrollFrame == frameType) {
     // get the scrolled frame if there is a scroll frame
     nsIScrollableFrame* scrollable = nsnull;
-    nsresult rv = aFrameIn.QueryInterface(kIScrollableFrameIID, (void **)&scrollable);
+    nsresult rv = aFrameIn.QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **)&scrollable);
     if (NS_SUCCEEDED(rv) && (scrollable)) {
       scrollable->GetScrolledFrame(nsnull, aNonScrollFrame);
     }
@@ -3765,7 +3751,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       nsIView* view = nsnull;
       newScrollableFrame->GetView(aPresContext, &view);
       nsIScrollableView* scrollableView;
-      view->QueryInterface(kScrollViewIID, (void**)&scrollableView);
+      view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
       viewManager->SetRootScrollableView(scrollableView);
       parentFrame = newScrollableFrame;
 
@@ -3942,7 +3928,7 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresShell*        aPresShel
   aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::radioPseudo, 
     aStyleContext, PR_FALSE, getter_AddRefs(radioStyle));
   nsIRadioControlFrame* radio = nsnull;
-  if (aNewFrame != nsnull && NS_SUCCEEDED(aNewFrame->QueryInterface(kIRadioControlFrameIID, (void**)&radio))) {
+  if (aNewFrame != nsnull && NS_SUCCEEDED(aNewFrame->QueryInterface(NS_GET_IID(nsIRadioControlFrame), (void**)&radio))) {
     radio->SetRadioButtonFaceStyleContext(radioStyle);
     NS_RELEASE(radio);
   }
@@ -4113,7 +4099,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           ///////////////////////////////////////////////////////////////////
           // Construct a frame-based list box 
           nsIComboboxControlFrame* comboBox = nsnull;
-          if (NS_SUCCEEDED(comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox))) {
+          if (NS_SUCCEEDED(comboboxFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboBox))) {
             comboBox->SetFrameConstructor(this);
 
             nsIFrame * listFrame; 
@@ -4121,7 +4107,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 
               // Notify the listbox that it is being used as a dropdown list.
             nsIListControlFrame * listControlFrame;
-            if (NS_SUCCEEDED(listFrame->QueryInterface(kIListControlFrameIID, (void**)&listControlFrame))) {
+            if (NS_SUCCEEDED(listFrame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&listControlFrame))) {
               listControlFrame->SetComboboxFrame(comboboxFrame);
             }
                // Notify combobox that it should use the listbox as it's popup
@@ -4287,7 +4273,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           // Combobox - Old Native Implementation
           ///////////////////////////////////////////////////////////////////
           nsIComboboxControlFrame* comboBox = nsnull;
-          if (NS_SUCCEEDED(comboboxFrame->QueryInterface(kIComboboxControlFrameIID, (void**)&comboBox))) {
+          if (NS_SUCCEEDED(comboboxFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboBox))) {
             comboBox->SetFrameConstructor(this);
 
               // Create a listbox
@@ -4296,7 +4282,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 
               // Notify the listbox that it is being used as a dropdown list.
             nsIListControlFrame * listControlFrame;
-            if (NS_SUCCEEDED(listFrame->QueryInterface(kIListControlFrameIID, (void**)&listControlFrame))) {
+            if (NS_SUCCEEDED(listFrame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&listControlFrame))) {
               listControlFrame->SetComboboxFrame(comboboxFrame);
             }
                // Notify combobox that it should use the listbox as it's popup
@@ -4342,7 +4328,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
             //listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
             nsIFrame* frame = nsnull;
-            if (NS_SUCCEEDED(comboboxFrame->QueryInterface(kIFrameIID, (void**)&frame))) {
+            if (NS_SUCCEEDED(comboboxFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame))) {
               nsFrameItems childItems;
             
                 // Create display and button frames from the combobox'es anonymous content
@@ -7769,7 +7755,7 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
       // If the primary frame supports IScrollableFrame, then get the scrolled frame.
       // That's the frame that gets the reflow command                          
       nsIScrollableFrame *pScrollableFrame = nsnull;                            
-      if (NS_SUCCEEDED( frame->QueryInterface(nsIScrollableFrame::GetIID(),     
+      if (NS_SUCCEEDED( frame->QueryInterface(NS_GET_IID(nsIScrollableFrame),     
                                               (void **)&pScrollableFrame) ))    
       {                                                                         
         pScrollableFrame->GetScrolledFrame( aPresContext, frame );              
@@ -10434,7 +10420,7 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
 
   // Set the content's text
   nsIDOMCharacterData* domData;
-  altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+  altTextContent->QueryInterface(NS_GET_IID(nsIDOMCharacterData), (void**)&domData);
   domData->SetData(altText);
   NS_RELEASE(domData);
   

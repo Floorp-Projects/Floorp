@@ -73,8 +73,6 @@ static PRInt32 gEatMouseMove = PR_FALSE;
 nsMenuDismissalListener* nsMenuFrame::mDismissalListener = nsnull;
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 //
@@ -424,7 +422,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
 
       nsILookAndFeel * lookAndFeel;
       if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, 
-                      kILookAndFeelIID, (void**)&lookAndFeel)) {
+                      NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel)) {
         lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
        NS_RELEASE(lookAndFeel);
       }
@@ -1600,7 +1598,7 @@ nsMenuFrame::GetActiveChild(nsIDOMElement** aResult)
   }
   else {
     nsIFrame* f;
-    menuFrame->QueryInterface(kIFrameIID, (void**)&f);
+    menuFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&f);
     nsCOMPtr<nsIContent> c;
     f->GetContent(getter_AddRefs(c));
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(c));

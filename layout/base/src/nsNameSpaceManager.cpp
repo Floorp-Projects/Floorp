@@ -27,8 +27,6 @@
 #include "nsString.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_IID(kINameSpaceManagerIID, NS_INAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kINameSpaceIID, NS_INAMESPACE_IID);
 
 
 static const char kXMLNSNameSpaceURI[] = "http://www.w3.org/2000/xmlns";
@@ -196,7 +194,7 @@ NameSpaceImpl::~NameSpaceImpl()
   NS_IF_RELEASE(mPrefix);
 }
 
-NS_IMPL_ISUPPORTS(NameSpaceImpl, kINameSpaceIID)
+NS_IMPL_ISUPPORTS(NameSpaceImpl, NS_GET_IID(nsINameSpace))
 
 NS_IMETHODIMP
 NameSpaceImpl::GetNameSpaceManager(nsINameSpaceManager*& aManager) const
@@ -299,7 +297,7 @@ NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, const nsAReadableString& a
   NameSpaceImpl* child = new NameSpaceImpl(mManager, this, aPrefix, aURI);
 
   if (child) {
-    return child->QueryInterface(kINameSpaceIID, (void**)&aChildNameSpace);
+    return child->QueryInterface(NS_GET_IID(nsINameSpace), (void**)&aChildNameSpace);
   }
   aChildNameSpace = nsnull;
   return NS_ERROR_OUT_OF_MEMORY;
@@ -313,7 +311,7 @@ NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
     NameSpaceImpl* child = new NameSpaceImpl(mManager, this, aPrefix, aNameSpaceID);
 
     if (child) {
-      return child->QueryInterface(kINameSpaceIID, (void**)&aChildNameSpace);
+      return child->QueryInterface(NS_GET_IID(nsINameSpace), (void**)&aChildNameSpace);
     }
     aChildNameSpace = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
@@ -360,7 +358,7 @@ NameSpaceManagerImpl::~NameSpaceManagerImpl()
   ReleaseTable();
 }
 
-NS_IMPL_ISUPPORTS(NameSpaceManagerImpl, kINameSpaceManagerIID)
+NS_IMPL_ISUPPORTS(NameSpaceManagerImpl, NS_GET_IID(nsINameSpaceManager))
 
 NS_IMETHODIMP
 NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace*& aRootNameSpace)
@@ -372,7 +370,7 @@ NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace*& aRootNameSpace)
   if (nsnull != xmlns) {
     NameSpaceImpl* xml = new NameSpaceImpl(this, xmlns, nsLayoutAtoms::xmlNameSpace, kNameSpaceID_XML);
     if (nsnull != xml) {
-      rv = xml->QueryInterface(kINameSpaceIID, (void**)&aRootNameSpace);
+      rv = xml->QueryInterface(NS_GET_IID(nsINameSpace), (void**)&aRootNameSpace);
     }
     else {
       delete xmlns;
@@ -430,5 +428,5 @@ NS_NewNameSpaceManager(nsINameSpaceManager** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kINameSpaceManagerIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsINameSpaceManager), (void **) aInstancePtrResult);
 }

@@ -51,7 +51,6 @@
 
 #include "nsISizeOfHandler.h"
 
-static NS_DEFINE_IID(kIStyleSetIID, NS_ISTYLE_SET_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
 // - fast cache uses a CRC32 on the style context to quickly find sharing candidates.
@@ -394,7 +393,7 @@ StyleSetImpl::~StyleSetImpl()
 }
 
 #ifndef MOZ_PERF_METRICS
-NS_IMPL_ISUPPORTS(StyleSetImpl, kIStyleSetIID)
+NS_IMPL_ISUPPORTS(StyleSetImpl, NS_GET_IID(nsIStyleSet))
 #else
 NS_IMPL_ISUPPORTS2(StyleSetImpl, nsIStyleSet, nsITimeRecorder)
 #endif
@@ -729,7 +728,7 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
       sheet = getter_AddRefs(GetBackstopStyleSheetAt(i));
       if (sheet) {
         nsCOMPtr<nsICSSStyleSheet> cssSheet;
-        sheet->QueryInterface(nsICSSStyleSheet::GetIID(), getter_AddRefs(cssSheet));
+        sheet->QueryInterface(NS_GET_IID(nsICSSStyleSheet), getter_AddRefs(cssSheet));
         if (cssSheet) {
           nsCOMPtr<nsIStyleSheet> quirkSheet;
           PRBool bHasSheet = PR_FALSE;
@@ -1388,7 +1387,7 @@ NS_NewStyleSet(nsIStyleSet** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kIStyleSetIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIStyleSet), (void **) aInstancePtrResult);
 }
 
 // nsITimeRecorder implementation

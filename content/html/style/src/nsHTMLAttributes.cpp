@@ -37,7 +37,6 @@
 
 #include "nsIStyleSet.h"
 
-static NS_DEFINE_IID(kIHTMLAttributesIID, NS_IHTML_ATTRIBUTES_IID);
 
 MOZ_DECL_CTOR_COUNTER(HTMLAttribute);
 
@@ -983,7 +982,7 @@ HTMLAttributesImpl::~HTMLAttributesImpl(void)
 NS_IMPL_ADDREF(HTMLAttributesImpl)
 NS_IMPL_RELEASE(HTMLAttributesImpl)
 
-NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, kIHTMLAttributesIID);
+NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, NS_GET_IID(nsIHTMLAttributes));
 
 const PRUnichar kNullCh = PRUnichar('\0');
 

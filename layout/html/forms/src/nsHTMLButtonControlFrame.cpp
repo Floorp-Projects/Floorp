@@ -55,10 +55,7 @@
 #include "nsIFrameManager.h"
 #include "nsINameSpaceManager.h"
 
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 nsresult
 NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -161,7 +158,7 @@ nsHTMLButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIFormControlFrameIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
   }
@@ -226,7 +223,7 @@ nsHTMLButtonControlFrame::GetType(PRInt32* aType) const
   nsresult result = NS_FORM_NOTOK;
   if (mContent) {
     nsIFormControl* formControl = nsnull;
-    result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+    result = mContent->QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
     if ((NS_OK == result) && formControl) {
       result = formControl->GetType(aType);
       NS_RELEASE(formControl);
@@ -595,7 +592,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
     nsIView* view;
     GetView(&view);
     if (!view) {
-      nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+      nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView), (void **)&view);
 	    nsCOMPtr<nsIPresShell> presShell;
       aPresContext->GetShell(getter_AddRefs(presShell));
 	    nsCOMPtr<nsIViewManager> viewMan;

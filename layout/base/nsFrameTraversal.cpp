@@ -26,7 +26,6 @@
 #include "nsFrameList.h"
 
 
-static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 

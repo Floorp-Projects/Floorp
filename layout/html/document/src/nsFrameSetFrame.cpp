@@ -56,7 +56,6 @@
 
 static NS_DEFINE_IID(kIFramesetFrameIID, NS_IFRAMESETFRAME_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 /*******************************************************************************
  * nsFramesetDrag
@@ -233,7 +232,6 @@ nsresult nsHTMLFramesetFrame::QueryInterface(const nsIID& aIID,
 }
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
@@ -262,7 +260,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
 
   // create the view. a view is needed since it needs to be a mouse grabber
   nsIView* view;
-  nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
+  nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView),
                                                  (void **)&view);
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
@@ -1619,7 +1617,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext*      aPresContext,
   nscolor sdwColor = NS_RGB(128,128,128);
 
   nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel)) {
    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
    lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);

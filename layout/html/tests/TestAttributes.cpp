@@ -255,8 +255,7 @@ int main(int argc, char** argv)
   }
 
   nsIDOMText* txt = nsnull;
-  static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-  text->QueryInterface(kIDOMTextIID, (void**) &txt);
+  text->QueryInterface(NS_GET_IID(nsIDOMText), (void**) &txt);
   nsAutoString tmp(destStr);
   txt->AppendData(tmp);
   NS_RELEASE(txt);
@@ -268,9 +267,8 @@ int main(int argc, char** argv)
 
 #if 0
   // Query ITextContent interface
-  static NS_DEFINE_IID(kITextContentIID, NS_ITEXTCONTENT_IID);
   nsITextContent* textContent;
-  rv = text->QueryInterface(kITextContentIID,(void **)&textContent);
+  rv = text->QueryInterface(NS_GET_IID(nsITextContent),(void **)&textContent);
   if (NS_OK != rv) {
     printf("Created text content does not have the ITextContent interface.\n");
     return -1;

@@ -66,7 +66,6 @@
 // do we wait before checking again?
 #define SMOOTH_INTERVAL 100
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 nsresult NS_NewAutoScrollTimer(nsXULTreeOuterGroupFrame* aTree, nsDragAutoScrollTimer **aResult) ;
 
@@ -751,7 +750,7 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PR
       nsIBox* nextBox;
       currBox->GetNextBox(&nextBox);
       nsIFrame* frame;
-      currBox->QueryInterface(kIFrameIID, (void**)&frame); 
+      currBox->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame); 
       mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, frame, nsnull);
       currBox = nextBox;
     }

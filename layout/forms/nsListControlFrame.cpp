@@ -62,12 +62,6 @@
 #include "nsISelectElement.h"
 #include "nsIPrivateDOMEvent.h"
 
-static NS_DEFINE_IID(kIDOMMouseListenerIID,       NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID,         NS_IDOMKEYLISTENER_IID);
-static NS_DEFINE_IID(kIDOMNodeIID,                NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIFrameIID,                  NS_IFRAME_IID);
-static NS_DEFINE_IID(kIPrivateDOMEventIID,        NS_IPRIVATEDOMEVENT_IID);
 //static NS_DEFINE_IID(kBlockFrameCID,              NS_BLOCK_FRAME_CID);
 
 // Constants
@@ -317,15 +311,15 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void *)((nsISelectControlFrame*)this);
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {                                         
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
     return NS_OK;                                                        
   }
-  if (aIID.Equals(kIDOMMouseMotionListenerIID)) {                                         
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {                                         
     *aInstancePtr = (void*)(nsIDOMMouseMotionListener*) this;                                        
     return NS_OK;                                                        
   }
-  if (aIID.Equals(kIDOMKeyListenerIID)) {                                         
+  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {                                         
     *aInstancePtr = (void*)(nsIDOMKeyListener*) this;                                        
     return NS_OK;                                                        
   }

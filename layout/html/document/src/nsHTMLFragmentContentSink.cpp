@@ -51,11 +51,6 @@
 // at some pointe really soon!
 //
 
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
-static NS_DEFINE_IID(kIHTMLFragmentContentSinkIID, NS_IHTML_FRAGMENT_CONTENT_SINK_IID);
-static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
-static NS_DEFINE_IID(kIDOMDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 class nsHTMLFragmentContentSink : public nsIHTMLFragmentContentSink {
@@ -163,7 +158,7 @@ NS_NewHTMLFragmentContentSink(nsIHTMLFragmentContentSink** aResult)
     return rv;
   }
 
-  return it->QueryInterface(kIHTMLFragmentContentSinkIID, (void **)aResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLFragmentContentSink), (void **)aResult);
 }
 
 nsHTMLFragmentContentSink::nsHTMLFragmentContentSink()
@@ -217,13 +212,13 @@ nsHTMLFragmentContentSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   *aInstancePtr = NULL;                                                  
                                                                          
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  if (aIID.Equals(kIHTMLFragmentContentSinkIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLFragmentContentSink))) {
     nsIHTMLFragmentContentSink* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   } 
-  if (aIID.Equals(kIHTMLContentSinkIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIHTMLContentSink))) {
     nsIHTMLContentSink* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -261,7 +256,7 @@ nsHTMLFragmentContentSink::WillBuildModel(void)
 
     result = NS_NewDocumentFragment(&frag, nsnull);
     if (NS_SUCCEEDED(result)) {
-      result = frag->QueryInterface(kIContentIID, (void**)&mRoot);
+      result = frag->QueryInterface(NS_GET_IID(nsIContent), (void**)&mRoot);
       NS_RELEASE(frag);
     }
   }
@@ -651,7 +646,7 @@ nsHTMLFragmentContentSink::AddComment(const nsIParserNode& aNode)
   
   result = NS_NewCommentNode(&comment);
   if (NS_OK == result) {
-    result = comment->QueryInterface(kIDOMCommentIID, 
+    result = comment->QueryInterface(NS_GET_IID(nsIDOMComment), 
                                      (void **)&domComment);
     if (NS_OK == result) {
       domComment->AppendData(aNode.GetText());
@@ -698,7 +693,7 @@ NS_IMETHODIMP
 nsHTMLFragmentContentSink::GetFragment(nsIDOMDocumentFragment** aFragment)
 {
   if (nsnull != mRoot) {
-    return mRoot->QueryInterface(kIDOMDocumentFragmentIID, (void**)aFragment);
+    return mRoot->QueryInterface(NS_GET_IID(nsIDOMDocumentFragment), (void**)aFragment);
   }
   else {
     *aFragment = nsnull;
@@ -812,9 +807,8 @@ nsHTMLFragmentContentSink::FlushText()
     if (NS_OK == rv) {
       
       // Set the text in the text node
-      static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
       nsITextContent* text = nsnull;
-      content->QueryInterface(kITextContentIID, (void**) &text);
+      content->QueryInterface(NS_GET_IID(nsITextContent), (void**) &text);
       text->SetText(mText, mTextLength, PR_FALSE);
       NS_RELEASE(text);
 

@@ -34,6 +34,7 @@ class nsIURI;
  */
 class nsIFrameUtil : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAME_UTIL_IID)
   /**
    * Compare two regression data dumps. The return status will be NS_OK
    * if the trees compare favoribly, otherwise the return will indicate

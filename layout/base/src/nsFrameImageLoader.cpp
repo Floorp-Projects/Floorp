@@ -38,8 +38,6 @@
 #undef NOISY_IMAGE_LOADING
 #endif
 
-static NS_DEFINE_IID(kIFrameImageLoaderIID, NS_IFRAME_IMAGE_LOADER_IID);
-static NS_DEFINE_IID(kIImageRequestObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 NS_LAYOUT nsresult
@@ -53,7 +51,7 @@ NS_NewFrameImageLoader(nsIFrameImageLoader** aResult)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIFrameImageLoaderIID, (void**) aResult);
+  return it->QueryInterface(NS_GET_IID(nsIFrameImageLoader), (void**) aResult);
 }
 
 nsFrameImageLoader::nsFrameImageLoader()
@@ -93,13 +91,13 @@ nsFrameImageLoader::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (!aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIFrameImageLoaderIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIFrameImageLoader))) {
     nsIFrameImageLoader* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIImageRequestObserverIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIImageRequestObserver))) {
     nsIImageRequestObserver* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();

@@ -26,7 +26,6 @@
 #include "nsScrollPortFrame.h"
 #include "nsIFormControlFrame.h"
 
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 
 nsresult
 NS_NewScrollPortFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -53,7 +52,7 @@ nsScrollPortFrame::NeedsClipWidget()
   nsIFormControlFrame* fcFrame;
 
   while (parentFrame) {
-    if ((NS_SUCCEEDED(parentFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame)))) {
+    if ((NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame)))) {
       return(PR_FALSE);
     }
     parentFrame->GetParent(&parentFrame); 

@@ -32,7 +32,6 @@
 #include "nsFrame.h"
 #include "nsContainerFrame.h"
 
-static NS_DEFINE_IID(kIReflowCommandIID, NS_IREFLOWCOMMAND_IID);
 
 nsresult
 NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
@@ -50,7 +49,7 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return cmd->QueryInterface(kIReflowCommandIID, (void**)aInstancePtrResult);
+  return cmd->QueryInterface(NS_GET_IID(nsIReflowCommand), (void**)aInstancePtrResult);
 }
 
 // Construct a reflow command given a target frame, reflow command type,
@@ -77,7 +76,7 @@ nsHTMLReflowCommand::~nsHTMLReflowCommand()
   NS_IF_RELEASE(mListName);
 }
 
-NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, kIReflowCommandIID);
+NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, NS_GET_IID(nsIReflowCommand));
 
 nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater) const
 {

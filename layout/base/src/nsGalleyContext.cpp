@@ -23,7 +23,6 @@
 #include "nsGfxCIID.h"
 #include "nsLayoutAtoms.h"
 
-static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
 class GalleyContext : public nsPresContext {
 public:
@@ -102,5 +101,5 @@ NS_NewGalleyContext(nsIPresContext** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kIPresContextIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIPresContext), (void **) aInstancePtrResult);
 }

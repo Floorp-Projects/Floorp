@@ -47,8 +47,6 @@
 #include "nsHTMLParts.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 PRMonitor*   nsRange::mMonitor = nsnull;
@@ -347,7 +345,7 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;    
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
@@ -1895,7 +1893,7 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
   // Create a new parser for this entire operation
   result = nsComponentManager::CreateInstance(kCParserCID, 
                                               nsnull, 
-                                              kCParserIID, 
+                                              NS_GET_IID(nsIParser), 
                                               (void **)getter_AddRefs(parser));
   if (NS_SUCCEEDED(result)) {
     result = parser->CreateTagStack(&tagStack);
@@ -2000,7 +1998,7 @@ nsRange::IsValidFragment(const nsAReadableString& aFragment, PRBool* aReturn)
   // Create a new parser for this entire operation
   result = nsComponentManager::CreateInstance(kCParserCID, 
                                               nsnull, 
-                                              kCParserIID, 
+                                              NS_GET_IID(nsIParser), 
                                               (void **)getter_AddRefs(parser));
   if (NS_SUCCEEDED(result)) {
     result = parser->CreateTagStack(&tagStack);

@@ -69,7 +69,6 @@
 
 #include "nsObjectFrame.h"
 
-static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIPluginTagInfo2,
@@ -230,12 +229,8 @@ nsObjectFrame::~nsObjectFrame()
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
-static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 PRIntn
@@ -432,7 +427,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   // Create our view and widget
 
   nsresult result = 
-    nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
+    nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView),
                                  (void **)&view);
   if (NS_OK != result) {
     return result;
@@ -900,8 +895,7 @@ nsObjectFrame::InstantiateWidget(nsIPresContext*          aPresContext,
   PRInt32 height = NSTwipsToIntPixels(aMetrics.height, t2p);
   nsRect r = nsRect(x, y, width, height);
 
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-  if((rv = nsComponentManager::CreateInstance(aWidgetCID, nsnull, kIWidgetIID, (void**)&mWidget)) != NS_OK)
+  if((rv = nsComponentManager::CreateInstance(aWidgetCID, nsnull, NS_GET_IID(nsIWidget), (void**)&mWidget)) != NS_OK)
     return rv;
 
   nsIWidget *parent;
@@ -1052,7 +1046,7 @@ nsObjectFrame::HandleImage(nsIPresContext*          aPresContext,
 
   // adjust kidReflowState
   nsIHTMLContent* hc = nsnull;
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
+  mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) &hc);
 
   if(hc != nsnull)
   {
@@ -1095,7 +1089,7 @@ nsresult
 nsObjectFrame::GetBaseURL(nsIURI* &aURL)
 {
   nsIHTMLContent* htmlContent;
-  if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) 
+  if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**)&htmlContent))) 
   {
     htmlContent->GetBaseURL(aURL);
     NS_RELEASE(htmlContent);
@@ -1574,7 +1568,7 @@ nsresult nsPluginInstanceOwner::QueryInterface(const nsIID& aIID,
     return NS_OK;
   }
 
-  if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
+  if (aIID.Equals(NS_GET_IID(nsIDOMMouseListener))) {                                         
     *aInstancePtrResult = (void*)(nsIDOMMouseListener*) this;    
     AddRef();
     return NS_OK;                                                        
@@ -1777,7 +1771,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
 
       if (NS_OK == rv)
       {
-        rv = container->QueryInterface(kILinkHandlerIID, (void **)&lh);
+        rv = container->QueryInterface(NS_GET_IID(nsILinkHandler), (void **)&lh);
 
         if (NS_OK == rv)
         {

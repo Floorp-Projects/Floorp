@@ -49,9 +49,6 @@
 
 #undef NOISY_REGISTRY
 
-static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
-static NS_DEFINE_IID(kIDocStreamLoaderFactoryIID, NS_IDOCSTREAMLOADERFACTORY_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
@@ -169,7 +166,7 @@ NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIDocumentLoaderFactoryIID, (void**)aResult);
+  return it->QueryInterface(NS_GET_IID(nsIDocumentLoaderFactory), (void**)aResult);
 }
 
 nsLayoutDLF::nsLayoutDLF()
@@ -192,13 +189,13 @@ nsLayoutDLF::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   }
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kIDocumentLoaderFactoryIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDocumentLoaderFactory))) {
     nsIDocumentLoaderFactory *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIDocStreamLoaderFactoryIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDocStreamLoaderFactory))) {
     nsIDocStreamLoaderFactory *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     AddRef();
@@ -364,7 +361,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
   do {
     // Create the document
     rv = nsComponentManager::CreateInstance(aDocumentCID, nsnull,
-                                            kIDocumentIID,
+                                            NS_GET_IID(nsIDocument),
                                             getter_AddRefs(doc));
     if (NS_FAILED(rv))
       break;
@@ -427,7 +424,7 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
     
   // Create the XUL document
   rv = nsComponentManager::CreateInstance(kXULDocumentCID, nsnull,
-                                          kIDocumentIID,
+                                          NS_GET_IID(nsIDocument),
                                           getter_AddRefs(*doc));
   if (NS_FAILED(rv)) return rv;
 

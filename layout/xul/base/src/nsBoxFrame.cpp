@@ -83,7 +83,6 @@
 #include "nsHTMLContainerFrame.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
 //define DEBUG_REDRAW
@@ -2370,11 +2369,10 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 
       // Create a view
       static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-      static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
       nsresult result = nsComponentManager::CreateInstance(kViewCID, 
                                                      nsnull, 
-                                                     kIViewIID, 
+                                                     NS_GET_IID(nsIView), 
                                                      (void **)&view);
       if (NS_OK == result) {
         nsIViewManager* viewManager;
@@ -2397,7 +2395,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
         // Insert the view into the view hierarchy. If the parent view is a
         // scrolling view we need to do this differently
         nsIScrollableView*  scrollingView;
-        if (NS_SUCCEEDED(parentView->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+        if (NS_SUCCEEDED(parentView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
           scrollingView->SetScrolledView(view);
         } else {
           viewManager->InsertChild(parentView, view, zIndex);

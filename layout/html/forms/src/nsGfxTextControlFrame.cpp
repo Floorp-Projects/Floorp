@@ -107,23 +107,14 @@
 
 #include "nsLayoutAtoms.h"
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
-static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID);
-static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
-static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 #define EMPTY_DOCUMENT "about:blank"
 #define PASSWORD_REPLACEMENT_CHAR '*'
@@ -990,7 +981,7 @@ nsGfxTextControlFrame::RedispatchMouseEventToSubDoc(nsIPresContext* aPresContext
   if (viewer) 
   {
     nsCOMPtr<nsIDocumentViewer> docv;
-    viewer->QueryInterface(kIDocumentViewerIID, getter_AddRefs(docv));
+    viewer->QueryInterface(NS_GET_IID(nsIDocumentViewer), getter_AddRefs(docv));
     if (docv) 
     {
       nsCOMPtr<nsIPresContext> cx;
@@ -1150,7 +1141,7 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
   else 
   {
     nsIDOMHTMLTextAreaElement* textArea = nsnull;
-    result = mContent->QueryInterface(kIDOMHTMLTextAreaElementIID, (void**)&textArea);
+    result = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLTextAreaElement), (void**)&textArea);
     if ((NS_OK == result) && textArea) {
       if (PR_TRUE == aInitialValue) {
         result = textArea->GetDefaultValue(*aText);
@@ -1941,7 +1932,7 @@ nsGfxTextControlFrame::CreateDocShell(nsIPresContext* aPresContext,
 
   // create, init, set the parent of the view
   nsIView* view;
-  rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, kIViewIID,
+  rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, NS_GET_IID(nsIView),
                                          (void **)&view);
   if (NS_FAILED(rv)) { return rv; }
 
@@ -3310,7 +3301,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     {
       nsIFrame *sFrame = nsnull;
 
-      result = scrollFrame->QueryInterface(kIFrameIID, (void **)&sFrame);
+      result = scrollFrame->QueryInterface(NS_GET_IID(nsIFrame), (void **)&sFrame);
 
       if (NS_FAILED(result) && result != NS_NOINTERFACE)
         return result;
@@ -3759,7 +3750,7 @@ nsEnderDocumentObserver::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDocumentObserverIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDocumentObserver))) {
     *aInstancePtr = (void*) ((nsIStreamObserver*)this);
     AddRef();
     return NS_OK;
@@ -3971,8 +3962,7 @@ nsEnderEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);  
-  if (aIID.Equals(kIDOMEventListenerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventListener))) {
     nsIDOMKeyListener *kl = (nsIDOMKeyListener*)this;
     nsIDOMEventListener *temp = kl;
     *aInstancePtr = (void*)temp;
@@ -4834,7 +4824,7 @@ EnderTempObserver::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDocumentLoaderObserver))) {
     *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
     AddRef();
     return NS_OK;

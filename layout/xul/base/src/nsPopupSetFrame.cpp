@@ -56,7 +56,6 @@
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
-static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 //
 // NS_NewPopupSetFrame
@@ -712,7 +711,7 @@ nsPopupSetFrame::GetActiveChild(nsIDOMElement** aResult)
   }
   else {
     nsIFrame* f;
-    menuFrame->QueryInterface(kIFrameIID, (void**)&f);
+    menuFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&f);
     nsCOMPtr<nsIContent> c;
     f->GetContent(getter_AddRefs(c));
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(c));

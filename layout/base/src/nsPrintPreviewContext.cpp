@@ -28,7 +28,6 @@
 #include "nsLayoutAtoms.h"
 #include "prlog.h"
 
-static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
 class PrintPreviewContext : public nsPresContext {
 public:
@@ -151,5 +150,5 @@ NS_NewPrintPreviewContext(nsIPresContext** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kIPresContextIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIPresContext), (void **) aInstancePtrResult);
 }

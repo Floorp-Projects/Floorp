@@ -59,12 +59,6 @@
 
 #include <iostream.h>
 
-static NS_DEFINE_IID(kICSSLoaderIID, NS_ICSS_LOADER_IID);
-//static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
-//static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
-//static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 class CSSLoaderImpl;
@@ -486,7 +480,7 @@ CSSLoaderImpl::~CSSLoaderImpl(void)
   mSheetMapTable.Enumerate(DeleteSheetMap);
 }
 
-NS_IMPL_ISUPPORTS(CSSLoaderImpl, kICSSLoaderIID)
+NS_IMPL_ISUPPORTS(CSSLoaderImpl, NS_GET_IID(nsICSSLoader))
 
 NS_IMETHODIMP
 CSSLoaderImpl::Init(nsIDocument* aDocument)
@@ -1073,13 +1067,13 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
 
   if (nsnull != aElement) {
     nsIDOMNode* domNode = nsnull;
-    if (NS_SUCCEEDED(aElement->QueryInterface(kIDOMNodeIID, (void**)&domNode))) {
+    if (NS_SUCCEEDED(aElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&domNode))) {
       aSheet->SetOwningNode(domNode);
       NS_RELEASE(domNode);
     }
 
     nsIStyleSheetLinkingElement* element;
-    if (NS_SUCCEEDED(aElement->QueryInterface(kIStyleSheetLinkingElementIID,
+    if (NS_SUCCEEDED(aElement->QueryInterface(NS_GET_IID(nsIStyleSheetLinkingElement),
                                               (void**)&element))) {
       element->SetStyleSheet(aSheet);
       NS_RELEASE(element);
@@ -1557,7 +1551,7 @@ nsresult NS_NewCSSLoader(nsIDocument* aDocument, nsICSSLoader** aLoader)
   }
 
   it->Init(aDocument);
-  return it->QueryInterface(kICSSLoaderIID, (void **)aLoader);
+  return it->QueryInterface(NS_GET_IID(nsICSSLoader), (void **)aLoader);
 }
 
 nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
@@ -1568,7 +1562,7 @@ nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(kICSSLoaderIID, (void **)aLoader);
+  return it->QueryInterface(NS_GET_IID(nsICSSLoader), (void **)aLoader);
 }
 
 

@@ -60,10 +60,6 @@
 #include "nsIPresShell.h"
 #include "nsMutationEvent.h"
 
-static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
-static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
-static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
-static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 
 nsEventListenerManager::nsEventListenerManager() 
 {
@@ -2236,7 +2232,7 @@ NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstanceP
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  if (NS_OK == l->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult)) {
+  if (NS_OK == l->QueryInterface(NS_GET_IID(nsIEventListenerManager), (void**) aInstancePtrResult)) {
     return NS_OK;
   }
 

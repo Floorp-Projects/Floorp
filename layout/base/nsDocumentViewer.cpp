@@ -1527,7 +1527,6 @@ DocumentViewerImpl::GetSaveable(PRBool *aSaveable)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-static NS_DEFINE_IID(kIDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
 
@@ -1544,7 +1543,7 @@ PRInt32                               width,height;
 
   nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, 
                                      nsnull,
-                                     kIDeviceContextSpecFactoryIID,
+                                     NS_GET_IID(nsIDeviceContextSpecFactory),
                                      (void **)getter_AddRefs(factory));
 
   if (factory) {
