@@ -60,7 +60,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 NS_INTERFACE_MAP_END
 
@@ -94,7 +93,8 @@ NS_IMETHODIMP nsWebBrowserChrome::SetJSDefaultStatus(const PRUnichar* aStatus)
 
 NS_IMETHODIMP nsWebBrowserChrome::SetOverLink(const PRUnichar* aLink)
 {
-   NS_ENSURE_STATE(mBrowserWindow->mStatus);
+   if(!mBrowserWindow->mStatus)
+      return NS_OK;
 
    PRUint32 size;
    mBrowserWindow->mStatus->SetText(aLink, size);
@@ -150,8 +150,26 @@ NS_IMETHODIMP nsWebBrowserChrome::GetNewBrowser(PRUint32 aChromeMask,
 NS_IMETHODIMP nsWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
    nsIDocShellTreeItem** aBrowserItem)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aBrowserItem);
+   *aBrowserItem = nsnull;
+
+   PRInt32 i = 0;
+   PRInt32 n = mBrowserWindow->gBrowsers.Count();
+
+   nsString aNameStr(aName);
+
+   for (i = 0; i < n; i++)
+      {
+      nsBrowserWindow* bw = (nsBrowserWindow*)mBrowserWindow->gBrowsers.ElementAt(i);
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(bw->mWebBrowser));
+      NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+      docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aBrowserItem);
+
+      if(!*aBrowserItem)
+         return NS_OK;
+      }
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
@@ -162,66 +180,8 @@ NS_IMETHODIMP nsWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 
 NS_IMETHODIMP nsWebBrowserChrome::ShowAsModal()
 {
-   return ShowModal();
-}
-
-//*****************************************************************************
-// nsWebBrowserChrome::nsIDocShellTreeOwner
-//*****************************************************************************   
-
-NS_IMETHODIMP nsWebBrowserChrome::FindItemWithName(const PRUnichar* aName,
-   nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
-{
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-   PRBool aPrimary, const PRUnichar* aID)
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::SizeShellTo(nsIDocShellTreeItem* aShell,
-   PRInt32 aCX, PRInt32 aCY)
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::ShowModal()
-{
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::GetNewWindow(PRInt32 aChromeFlags, 
-   nsIDocShellTreeItem** aDocShellTreeItem)
-{
-   if(mBrowserWindow->mWebCrawler && (mBrowserWindow->mWebCrawler->Crawling() || 
-      mBrowserWindow->mWebCrawler->LoadingURLList()))
-      {
-      // Do not fly javascript popups when we are crawling
-      *aDocShellTreeItem = nsnull;
-      return NS_ERROR_NOT_IMPLEMENTED;
-      }
-
-   nsBrowserWindow* browser = nsnull;
-   mBrowserWindow->mApp->OpenWindow(nsIWebBrowserChrome::allChrome, browser);
-
-   NS_ENSURE_TRUE(browser, NS_ERROR_FAILURE);
-
-   nsCOMPtr<nsIDocShellTreeItem> newDocShellAsItem(do_QueryInterface(browser->mDocShell));
-   *aDocShellTreeItem = newDocShellAsItem;
-   NS_IF_ADDREF(*aDocShellTreeItem);
-   return NS_OK;
 }
 
 //*****************************************************************************

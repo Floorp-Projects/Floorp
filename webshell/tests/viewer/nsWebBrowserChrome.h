@@ -35,7 +35,6 @@
 class nsBrowserWindow;
 
 class nsWebBrowserChrome : public nsIWebBrowserChrome,
-                           public nsIDocShellTreeOwner,
                            public nsIBaseWindow,
                            public nsIInterfaceRequestor
 {
@@ -46,19 +45,6 @@ public:
 
    NS_DECL_NSIWEBBROWSERCHROME
    
-   NS_DECL_NSIDOCSHELLTREEOWNER
-   // nsIDocShellTreeOwner
-/*   NS_IMETHOD FindItemWithName(const PRUnichar* aName,
-         nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem);
-   NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
-         PRBool aPrimary, const PRUnichar* aID);
-   NS_IMETHOD GetPrimaryContentShell(nsIDocShellTreeItem** aShell);
-   NS_IMETHOD SizeShellTo(nsIDocShellTreeItem* aShell, PRInt32 aCX, PRInt32 aCY);
-   NS_IMETHOD ShowModal();
-
-   NS_IMETHOD GetNewBrowserChrome(PRInt32 aChromeFlags,
-         nsIWebBrowserChrome** aWebBrowserChrome); */
-
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSIINTERFACEREQUESTOR
 
