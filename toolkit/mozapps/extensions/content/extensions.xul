@@ -56,6 +56,8 @@
       
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://mozapps/content/extensions/extensions.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   
   <stringbundleset id="extensionsSet">
     <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
@@ -63,25 +65,30 @@
   </stringbundleset>
     
   <keyset id="extensionsKeys">
-    <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close"/>
-    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about"/>
-    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"/>
+    <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close" 
+         oncommand="gExtensionsViewController.doCommand('cmd_close');"/>
+    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about" 
+         oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
+    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options" 
+         oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
   </keyset>
   
   <commandset id="extensionsCommands"
-              events="richview-select"
+              events="richview-select,focus"
               commandupdater="true"
-              oncommandupdate="gExtensionsViewController.onCommandUpdate();">
-    <command id="cmd_close"       oncommand="closeWindow(true);"/>
-    <command id="cmd_options"     oncommand="onExtensionViewOptions();"/>
-    <command id="cmd_about"       oncommand="onExtensionViewAbout();"/>
-    <command id="cmd_homepage"    oncommand="onExtensionViewHomepage();"/>
-    <command id="cmd_uninstall"   oncommand="onExtensionUninstall();"/>
-    <command id="cmd_update"      oncommand="onExtensionUpdate();"/>
-    <command id="cmd_disable"     oncommand="onExtensionEnableDisable();"/>
-    <command id="cmd_movetop"     oncommand="onExtensionMoveTop();"/>
-    <command id="cmd_moveup"      oncommand="onExtensionMoveUp();"/>
-    <command id="cmd_movedn"      oncommand="onExtensionMoveDn();"/>
+              oncommandupdate="gExtensionsViewController.onCommandUpdate();"
+              oncommand="gExtensionsViewController.doCommand(event.target.id);">
+    <command id="cmd_close"/>
+    <command id="cmd_options"/>
+    <command id="cmd_about"/>
+    <command id="cmd_homepage"/>
+    <command id="cmd_uninstall"/>
+    <command id="cmd_update"/>
+    <command id="cmd_enable"/>
+    <command id="cmd_disable"/>
+    <command id="cmd_movetop"/>
+    <command id="cmd_moveup"/>
+    <command id="cmd_movedn"/>
   </commandset>
   
   <vbox id="contextMenuPalette" hidden="true">
@@ -96,6 +103,8 @@
               label="&cmd.uninstall.label;" accesskey="&cmd.uninstall.accesskey;"/>
     <menuitem id="menuitem_update" command="cmd_update"
               label="&cmd.update.label;" accesskey="&cmd.update.accesskey;"/>
+    <menuitem id="menuitem_enable" command="cmd_enable"
+              label="&cmd.enable.label;" accesskey="&cmd.enable.accesskey;"/>
     <menuitem id="menuitem_disable" command="cmd_disable"
               label="&cmd.disable.label;" accesskey="&cmd.disable.accesskey;"/>
     <menuseparator id="menuseparator_2"/>
@@ -110,7 +119,9 @@
   <popup id="extensionContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
   <view id="extensionsView" flex="1" style="overflow: auto;"
-        datasources="rdf:null">
+        datasources="rdf:null" persist="last-selected"
+        ondragover="nsDragAndDrop.dragOver(event, gExtensionsDNDObserver);"
+        ondragdrop="nsDragAndDrop.drop(event, gExtensionsDNDObserver);">
     <template>
       <rule>
         <conditions>
@@ -151,12 +162,16 @@
           <binding subject="?extension"
                    predicate="http://www.mozilla.org/2004/em-rdf#blockUninstall"
                    object="?block-uninstall"/>
+          <binding subject="?extension"
+                   predicate="http://www.mozilla.org/2004/em-rdf#blockDisable"
+                   object="?block-disable"/>
         </bindings>            
         <action>
           <extension uri="?extension" context="extensionContextMenu"
                      image="?icon" name="?name" version="?version" 
                      description="?description" creator="?creator"
-                     disabled="?disabled" blockUninstall="?block-uninstall"
+                     disabled="?disabled" 
+                     blockUninstall="?block-uninstall" blockDisable="?block-disable"
                      optionsURL="?options-url" homepageURL="?homepage-url"
                      aboutURL="?about-url" updateURL="?update-url"/>
         </action>

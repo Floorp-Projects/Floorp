@@ -40,14 +40,17 @@
 
 #include "nsCOMPtr.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFCompositeDataSource.h"
 
 class nsIFile;
 
-class nsExtensionManagerDataSource : public nsIRDFDataSource
+class nsExtensionManagerDataSource : public nsIRDFDataSource, 
+                                     public nsIRDFRemoteDataSource
 {
 public:
   NS_DECL_NSIRDFDATASOURCE
+  NS_DECL_NSIRDFREMOTEDATASOURCE
   NS_DECL_ISUPPORTS
 
   nsExtensionManagerDataSource();
@@ -68,6 +71,7 @@ protected:
                                 nsIRDFResource* aPropertyArc, 
                                 nsIRDFNode* aPropertyValue);
   void      InitLexicalResources();
+  nsresult  Flush(PRBool aIsProfile);
 
 private:
   nsCOMPtr<nsIRDFCompositeDataSource> mComposite; // A convenience to handle 

@@ -8,78 +8,11 @@ var gDownloadListener = null;
 var gExtensionssView  = null;
 var gWindowState      = "";
 
+///////////////////////////////////////////////////////////////////////////////
+// Utility Functions 
 function stripPrefix(aResourceURI)
 {
   return aResourceURI.substr("urn:mozilla:extension:".length, aResourceURI.length);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Utility Functions 
-function setRDFProperty(aID, aProperty, aValue)
-{
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-  var db = gDownloadManager.datasource;
-  var propertyArc = rdf.GetResource(NC_NS + aProperty);
-  
-  var res = rdf.GetResource(aID);
-  var node = db.GetTarget(res, propertyArc, true);
-  if (node)
-    db.Change(res, propertyArc, node, rdf.GetLiteral(aValue));
-  else
-    db.Assert(res, propertyArc, rdf.GetLiteral(aValue), true);
-}
-
-function getRDFProperty(aID, aProperty)
-{
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-  var db = gDownloadManager.datasource;
-  var propertyArc = rdf.GetResource(NC_NS + aProperty);
-  
-  var res = rdf.GetResource(aID);
-  var node = db.GetTarget(res, propertyArc, true);
-  if (!node) return "";
-  try {
-    node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    return node.Value;
-  }
-  catch (e) {
-    try {
-      node = node.QueryInterface(Components.interfaces.nsIRDFInt);
-      return node.Value;
-    }
-    catch (e) {
-      node = node.QueryInterface(Components.interfaces.nsIRDFResource);
-      return node.Value;
-    }
-  }
-  return "";
-}
-
-function fireEventForElement(aElement, aEventType)
-{
-  var e = document.createEvent("Events");
-  e.initEvent("extension-" + aEventType, false, true);
-  
-  aElement.dispatchEvent(e);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Download Event Handlers
-
-function onExtensionViewOptions(aEvent)
-{
-  var optionsURL = gExtensionsView.selected.getAttribute("optionsURL");
-  if (optionsURL != "")
-    openDialog(optionsURL, "", "chrome,modal");
-}
-
-function onExtensionVisitHomepage(aEvent)
-{
-  var homepageURL = gExtensionsView.selected.getAttribute("homepageURL");
-  if (homepageURL != "")
-    openURL(homepageURL);
 }
 
 function openURL(aURL)
@@ -100,178 +33,61 @@ function openURL(aURL)
 #endif
 }
 
-function onExtensionViewAbout(aEvent)
-{
-  var aboutURL = gExtensionsView.selected.getAttribute("aboutURL");
-  if (aboutURL != "")
-    openDialog(aboutURL, "", "chrome,modal");
-  else
-    openDialog("chrome://mozapps/content/extensions/about.xul", "", "chrome,modal", gExtensionsView.selected.id, gExtensionsView.database);
-}
-
-function onExtensionMoveTop(aEvent)
-{
-  var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-  var extensions = rdfs.GetResource("urn:mozilla:extension:root");
-  var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
-  container.Init(gExtensionManager.datasource, extensions);
-  
-  var extension = rdfs.GetResource(aEvent.target.id);
-  var index = container.IndexOf(extension);
-  if (index > 1) {
-    container.RemoveElement(extension, false);
-    container.InsertElementAt(extension, 1, true);
-  }
-  
-  flushDataSource();
-}
-
-function onExtensionMoveUp(aEvent)
-{
-  var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-  var extensions = rdfs.GetResource("urn:mozilla:extension:root");
-  var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
-  container.Init(gExtensionManager.datasource, extensions);
-  
-  var extension = rdfs.GetResource(aEvent.target.id);
-  var index = container.IndexOf(extension);
-  if (index > 1) {
-    container.RemoveElement(extension, false);
-    container.InsertElementAt(extension, index - 1, true);
-  }
-  
-  flushDataSource();
-}
-
-function onExtensionMoveDown(aEvent)
-{
-  var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
-  var extensions = rdfs.GetResource("urn:mozilla:extension:root");
-  var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
-  container.Init(gExtensionManager.datasource, extensions);
-  
-  var extension = rdfs.GetResource(aEvent.target.id);
-  var index = container.IndexOf(extension);
-  var count = container.GetCount();
-  if (index < count) {
-    container.RemoveElement(extension, false);
-    container.InsertElementAt(extension, index + 1, true);
-  }
-  
-  flushDataSource();
-}
-
-function onExtensionUpdate(aEvent)
-{
-
-}
-
-function onExtensionEnableDisable(aEvent)
-{
-  var titleKey = null;
-  var disabling;
-  if (aEvent.target.getAttribute("disabled") == "true") {
-    disabling = false;
-    if (gWindowState == "extensions") {
-      gExtensionManager.enableExtension(stripPrefix(aEvent.target.id));
-      titleKey = "restartBeforeEnableExtensionTitle";
-    }
-    else if (gWindowState == "themes") {
-      gExtensionManager.enableTheme(stripPrefix(aEvent.target.id));
-      titleKey = "restartBeforeEnableThemeTitle";
-    }
-  }
-  else {
-    disabling = true;
-    if (gWindowState == "extensions") {
-      gExtensionManager.disableExtension(stripPrefix(aEvent.target.id));
-      titleKey = "restartBeforeDisableExtensionTitle";
-    }
-    else if (gWindowState == "themes") {
-      gExtensionManager.disableTheme(stripPrefix(aEvent.target.id));
-      titleKey = "restartBeforeDisableThemeTitle";
-    }
-  }
-  
-  if (titleKey) {
-    var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                              .getService(Components.interfaces.nsIPromptService);
-                              
-    var extensionsStrings = document.getElementById("extensionsStrings");
-    
-    var messageKey = disabling ? "restartBeforeDisableMessage" : "restartBeforeEnableMessage";
-    var brandStrings = document.getElementById("brandStrings");
-    var message = extensionsStrings.getFormattedString(messageKey, 
-                                                       [aEvent.target.getAttribute("name"),
-                                                       brandStrings.getString("brandShortName")]);
-    promptSvc.alert(window, extensionsStrings.getString(titleKey), message);
-  }
-}
-
-function onExtensionUninstall(aEvent)
-{
-
-}
-
 function flushDataSource()
 {
-#if 0
-  var rds = gExtensionManager.datasource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  var rds = gExtensionManager.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
   if (rds)
     rds.Flush();
-#endif
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Event Handlers
+function onExtensionSelect(aEvent)
+{
+  aEvent.target.setAttribute("last-selected", aEvent.target.selected.id);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Startup, Shutdown
 function Startup() 
 {
-  gExtensionsView = document.getElementById("extensionsView");
+  gWindowState = window.arguments[0];
 
+  gExtensionsView = document.getElementById("extensionsView");
   gExtensionManager = Components.classes["@mozilla.org/extension-manager;1"]
                                 .getService(Components.interfaces.nsIExtensionManager);
   
-  // Handlers for events generated by the Download Manager (download events)
-  var observerService = Components.classes[kObserverServiceProgID]
-                                  .getService(Components.interfaces.nsIObserverService);
-
-  gWindowState = window.arguments[0];
-
-  // This is for the "Clean Up" button, which requires there to be
-  // non-active downloads before it can be enabled. 
+  // Extension Command Updating is handled by a command controller.
   gExtensionsView.controllers.appendController(gExtensionsViewController);
-  gExtensionsView.addEventListener("extension-open", onExtensionViewOptions, false);
-  gExtensionsView.addEventListener("extension-show-options", onExtensionViewOptions, false);
-  gExtensionsView.addEventListener("extension-show-homepage", onExtensionVisitHomepage, false);
-  gExtensionsView.addEventListener("extension-show-info", onExtensionViewAbout, false);
-  gExtensionsView.addEventListener("extension-uninstall", onExtensionUninstall, false);
-  gExtensionsView.addEventListener("extension-update", onExtensionUpdate, false);
-  gExtensionsView.addEventListener("extension-disable", onExtensionEnableDisable, false);
-  gExtensionsView.addEventListener("extension-move-top", onExtensionMoveTop, false);
-  gExtensionsView.addEventListener("extension-move-up", onExtensionMoveUp, false);
-  gExtensionsView.addEventListener("extension-move-dn", onExtensionMoveDown, false);
+
+  // This persists the last-selected extension
+  gExtensionsView.addEventListener("richview-select", onExtensionSelect, false);
 
   // Finally, update the UI. 
   gExtensionsView.database.AddDataSource(gExtensionManager.datasource);
   gExtensionsView.setAttribute("ref", "urn:mozilla:extension:root");
   gExtensionsView.focus();
+  
+  // Restore the last-selected extension
+  var lastSelected = gExtensionsView.getAttribute("last-selected");
+  if (lastSelected != "")
+    lastSelected = document.getElementById(lastSelected);
+  if (!lastSelected) 
+    gExtensionsView.selectionForward();
+  else
+    gExtensionsView.selected = lastSelected;
 }
 
 function Shutdown() 
 {
-  var observerService = Components.classes[kObserverServiceProgID]
-                                  .getService(Components.interfaces.nsIObserverService);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // View Context Menus
 var gExtensionContextMenus = ["menuitem_options", "menuitem_homepage", "menuitem_about", 
                               "menuseparator_1", "menuitem_uninstall", "menuitem_update",
-                              "menuitem_disable", "menuseparator_2", "menuitem_moveTop",
-                              "menuitem_moveUp", "menuitem_moveDn"];
+                              "menuitem_enable", "menuitem_disable", "menuseparator_2", 
+                              "menuitem_moveTop", "menuitem_moveUp", "menuitem_moveDn"];
 var gThemeContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator_1", 
                           "menuitem_uninstall", "menuitem_update"];
 
@@ -296,6 +112,19 @@ function buildContextMenu(aEvent)
   var name = document.popupNode.getAttribute("name");
   menuitem_about.setAttribute("label", extensionsStrings.getFormattedString("aboutExtension", [name]));
   
+  var canEnable = gExtensionsViewController.isCommandEnabled("cmd_enable");
+  var menuitemToShow, menuitemToHide;
+  if (canEnable) {
+    menuitemToShow = document.getElementById("menuitem_enable_clone");
+    menuitemToHide = document.getElementById("menuitem_disable_clone");
+  }
+  else {
+    menuitemToShow = document.getElementById("menuitem_disable_clone");
+    menuitemToHide = document.getElementById("menuitem_enable_clone");
+  }
+  menuitemToShow.hidden = false;
+  menuitemToHide.hidden = true;
+  
   return true;
 }
 
@@ -304,19 +133,70 @@ function buildContextMenu(aEvent)
 
 var gExtensionsDNDObserver =
 {
-  onDragOver: function (aEvent, aFlavour, aDragSession)
+  _ioServ: null,
+  _filePH: null,
+  _mimeSvc: null,
+  
+  _ensureServices: function ()
   {
+    if (!this._ioServ) {
+      this._ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                               .getService(Components.interfaces.nsIIOService);
+      this._filePH = this._ioServ.getProtocolHandler("file")
+                         .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+      this._mimeSvc = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
+                                .getService(Components.interfaces.nsIMIMEService);
+    }
+  },
+  
+  onDragOver: function (aEvent, aFlavor, aDragSession)
+  {
+    this._ensureServices();
+  
     aDragSession.canDrop = true;
+    var count = aDragSession.numDropItems;
+    for (var i = 0; i < count; ++i) {
+      var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
+                          .createInstance(Components.interfaces.nsITransferable);
+      xfer.addDataFlavor("text/x-moz-url");
+      aDragSession.getData(xfer, i);
+      
+      var data = { }, length = { };
+      xfer.getTransferData("text/x-moz-url", data, length);
+      var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
+
+      var file = this._filePH.getFileFromURLSpec(fileURL);
+      var mimeType = this._mimeSvc.getTypeFromFile(file);
+      if (mimeType != "application/x-xpinstall") {
+        aDragSession.canDrop = false;
+        break;
+      }
+    }
   },
   
   onDrop: function(aEvent, aXferData, aDragSession)
   {
-    var split = aXferData.data.split("\n");
-    var url = split[0];
-    if (url != aXferData.data) {  //do nothing, not a valid URL
-      var name = split[1];
-      saveURL(url, name, null, true, true);
+    this._ensureServices();
+    
+    var xpinstallObj = {};
+  
+    var count = aDragSession.numDropItems;
+    for (var i = 0; i < count; ++i) {
+      var xfer = Components.classes["@mozilla.org/widget/transferable;1"]
+                          .createInstance(Components.interfaces.nsITransferable);
+      xfer.addDataFlavor("text/x-moz-url");
+      aDragSession.getData(xfer, i);
+      
+      var data = { }, length = { };
+      xfer.getTransferData("text/x-moz-url", data, length);
+      var fileURL = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
+      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                          .createInstance(Components.interfaces.nsIURI);
+      uri.spec = fileURL;
+      var url = uri.QueryInterface(Components.interfaces.nsIURL);
+      xpinstallObj[url.fileName] = fileURL;
     }
+    InstallTrigger.install(xpinstallObj);
   },
   _flavourSet: null,  
   getSupportedFlavours: function ()
@@ -324,7 +204,6 @@ var gExtensionsDNDObserver =
     if (!this._flavourSet) {
       this._flavourSet = new FlavourSet();
       this._flavourSet.appendFlavour("text/x-moz-url");
-      this._flavourSet.appendFlavour("text/unicode");
     }
     return this._flavourSet;
   }
@@ -343,23 +222,23 @@ var gExtensionsViewController = {
   isCommandEnabled: function (aCommand)
   {
     var selectedItem = gExtensionsView.selected;
-    var i;
     switch (aCommand) {
     case "cmd_close":
       return true;
     case "cmd_options":
-      dump("*** ice = " + selectedItem.disabled + "\n");
-      return !selectedItem.disabled;
+      return selectedItem && !selectedItem.disabled;
     case "cmd_about":
-      return !selectedItem || selectedItem.disabled ? selectedItem.getAttribute("aboutURL") == "" : true;
+      return !selectedItem || (selectedItem.disabled ? selectedItem.getAttribute("aboutURL") == "" : true);
     case "cmd_homepage":
       return (selectedItem && selectedItem.getAttribute("homepageURL") != "");
     case "cmd_uninstall":
-      return selectedItem.getAttribute("blockUninstall") != "true";
+      return selectedItem && selectedItem.getAttribute("blockUninstall") != "true";
     case "cmd_update":
       return true;
+    case "cmd_enable":
+      return selectedItem && selectedItem.disabled;
     case "cmd_disable":
-      return !selectedItem.disabled;
+      return selectedItem && selectedItem.getAttribute("blockDisable") != "true" && !selectedItem.disabled;
     case "cmd_movetop":
       return (gExtensionsView.children[0] != selectedItem);
     case "cmd_moveup":
@@ -373,19 +252,7 @@ var gExtensionsViewController = {
 
   doCommand: function (aCommand)
   {
-    dump("*** doCommand = " + aCommand + "\n");
-    switch (aCommand) {
-    case "cmd_close":
-    case "cmd_options":
-    case "cmd_about":
-    case "cmd_homepage":
-    case "cmd_uninstall":
-    case "cmd_update":
-    case "cmd_disable":
-    case "cmd_movetop":
-    case "cmd_moveup":
-    case "cmd_movedn":
-    }
+    this.commands[aCommand]();
   },  
   
   onCommandUpdate: function ()
@@ -398,8 +265,156 @@ var gExtensionsViewController = {
       else
         command.setAttribute("disabled", "true");
     }
+  },
+  
+  commands: { 
+    cmd_close: function ()
+    {
+      dump("*** close \n");
+      closeWindow(true);
+    },  
+      
+    cmd_options: function ()
+    {
+      var optionsURL = gExtensionsView.selected.getAttribute("optionsURL");
+      if (optionsURL != "")
+        openDialog(optionsURL, "", "chrome,modal");
+    },
+    
+    cmd_homepage: function ()
+    {
+      var homepageURL = gExtensionsView.selected.getAttribute("homepageURL");
+      if (homepageURL != "")
+        openURL(homepageURL);
+    },
+    
+    cmd_about: function ()
+    {
+      var aboutURL = gExtensionsView.selected.getAttribute("aboutURL");
+      if (aboutURL != "")
+        openDialog(aboutURL, "", "chrome,modal");
+      else
+        openDialog("chrome://mozapps/content/extensions/about.xul", "", "chrome,modal", gExtensionsView.selected.id, gExtensionsView.database);
+    },  
+    
+    cmd_movetop: function ()
+    {
+      var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+
+      var extensions = rdfs.GetResource("urn:mozilla:extension:root");
+      var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
+      container.Init(gExtensionManager.datasource, extensions);
+      
+      var movingID = gExtensionsView.selected.id;
+      var extension = rdfs.GetResource(movingID);
+      var index = container.IndexOf(extension);
+      if (index > 1) {
+        container.RemoveElement(extension, false);
+        container.InsertElementAt(extension, 1, true);
+      }
+      
+      flushDataSource();
+      
+      gExtensionsView.selected = document.getElementById(movingID);
+    },
+    
+    cmd_moveup: function ()
+    {
+      var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+
+      var extensions = rdfs.GetResource("urn:mozilla:extension:root");
+      var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
+      container.Init(gExtensionManager.datasource, extensions);
+      
+      var movingID = gExtensionsView.selected.id;
+      var extension = rdfs.GetResource(movingID);
+      var index = container.IndexOf(extension);
+      if (index > 1) {
+        container.RemoveElement(extension, false);
+        container.InsertElementAt(extension, index - 1, true);
+      }
+      
+      flushDataSource();
+      
+      gExtensionsView.selected = document.getElementById(movingID);
+    },
+    
+    cmd_movedn: function ()
+    {
+      var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+
+      var extensions = rdfs.GetResource("urn:mozilla:extension:root");
+      var container = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
+      container.Init(gExtensionManager.datasource, extensions);
+      
+      var movingID = gExtensionsView.selected.id;
+      var extension = rdfs.GetResource(movingID);
+      var index = container.IndexOf(extension);
+      var count = container.GetCount();
+      if (index < count) {
+        container.RemoveElement(extension, true);
+        container.InsertElementAt(extension, index + 1, true);
+      }
+      
+      flushDataSource();
+      
+      gExtensionsView.selected = document.getElementById(movingID);
+    },
+    
+    cmd_update: function ()
+    {
+      var updateURL = gExtensionsView.selected.getAttribute("updateURL");
+      if (updateURL) {
+      
+      }
+      else {
+        "smartupdate.update.extensions"
+      }
+    },
+    
+    cmd_uninstall: function ()
+    {
+    
+    },
+    
+    cmd_disable: function ()
+    {
+      gExtensionManager.disableExtension(stripPrefix(gExtensionsView.selected.id));
+
+      // Show an alert message telling the user they need to restart for the
+      // action to take effect.
+      var extensionsStrings = document.getElementById("extensionsStrings");
+      var brandStrings = document.getElementById("brandStrings");
+
+      var message = extensionsStrings.getFormattedString("restartBeforeDisableMessage", 
+                                                         [gExtensionsView.selected.getAttribute("name"),
+                                                         brandStrings.getString("brandShortName")]);
+
+      var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                .getService(Components.interfaces.nsIPromptService);
+      promptSvc.alert(window, extensionsStrings.getString("restartBeforeDisableTitle"), message);
+    },
+    
+    cmd_enable: function ()
+    {
+      gExtensionManager.enableExtension(stripPrefix(gExtensionsView.selected.id));
+
+      // Show an alert message telling the user they need to restart for the
+      // action to take effect.
+      var extensionsStrings = document.getElementById("extensionsStrings");
+      var brandStrings = document.getElementById("brandStrings");
+
+      var message = extensionsStrings.getFormattedString("restartBeforeEnableMessage", 
+                                                         [gExtensionsView.selected.getAttribute("name"),
+                                                         brandStrings.getString("brandShortName")]);
+
+      var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                .getService(Components.interfaces.nsIPromptService);
+      promptSvc.alert(window, extensionsStrings.getString("restartBeforeEnableTitle"), message);
+    },
   }
 };
+
 
 # -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
