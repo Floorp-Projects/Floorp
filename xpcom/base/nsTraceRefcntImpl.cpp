@@ -840,8 +840,7 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
 void
 nsTraceRefcnt::WalkTheStack(FILE* aStream)
 {
-	WalkTheStack(gStackBuffer, sizeof(gStackBuffer));
-	fprintf(aStream, "%s\n", gStackBuffer);
+	fprintf(aStream, "write me, dammit!\n");
 }
 
 #endif
