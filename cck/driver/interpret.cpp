@@ -1316,6 +1316,29 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 
         ((CPrefEditView*)w->control)->SetFocus();
       }
+      else if (strcmp(pcmd, "SynchHomeURLLockRemote") == 0)
+      {
+     	  WIDGET* tmpWidget = findWidget("HomePageURLLocked");
+ 
+        if (tmpWidget)
+        {
+          CButton *pBtn = (CButton*)tmpWidget->control;
+ 
+          CString locked = GetGlobal("HomePageURLRemoteAdmin");
+          if (locked[0] == '0')
+          {
+            SetGlobal("HomePageURLLocked","0");
+  					pBtn->SetCheck(0);
+            pBtn->EnableWindow(TRUE);
+          }
+          else
+          {
+            SetGlobal("HomePageURLLocked","1");
+  				  pBtn->SetCheck(1);
+            pBtn->EnableWindow(FALSE);
+          }
+        }
+      }
 		}
 		// This is an extra free...
 		//free(pcmd);
