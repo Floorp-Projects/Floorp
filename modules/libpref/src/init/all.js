@@ -50,6 +50,7 @@ pref("general.fullcircle_collect_ns_data",  false);
 
 pref("general.open_location.last_url",      "");
 
+pref("browser.chrome.toolbar_tips",         true);
 pref("browser.enable_style_sheets",         true);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 pref("browser.startup.page",                1);     
