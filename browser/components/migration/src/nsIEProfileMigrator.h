@@ -53,7 +53,7 @@ class nsIRDFResource;
 class nsIBookmarksService;
 class nsIPrefBranch;
 
-#import PSTOREC_DLL
+#import PSTOREC_DLL raw_interfaces_only
 using namespace PSTORECLib;
 
 class nsIEProfileMigrator : public nsIBrowserProfileMigrator {
