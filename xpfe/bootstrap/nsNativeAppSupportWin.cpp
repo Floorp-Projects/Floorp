@@ -585,7 +585,7 @@ nsNativeAppSupportWin::CheckConsole() {
                     ||
                     strcmp( "/server", __argv[i] ) == 0 ) {         
             // Start in server mode (and suppress splash screen).   
-            mStartupServerMode = PR_TRUE;
+            mServerMode = PR_TRUE;
             __argv[i] = "-nosplash"; // Bit of a hack, but it works!
             // Ignore other args.                                   
             break;                                                  

@@ -830,7 +830,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       PRBool serverMode = PR_FALSE;
       rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
       // Create special Nav window.
-      if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->GetIsStartupServerMode(&serverMode)) && serverMode) {
+      if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->GetIsServerMode(&serverMode)) && serverMode) {
          nativeApp->StartServerMode();
          return NS_OK;
       } 
@@ -1275,8 +1275,11 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && prefs) {
       PRBool serverMode = PR_FALSE;
-      prefs->GetBoolPref(TURBO_PREF, &serverMode);
-      nativeApps->SetIsServerMode(serverMode);
+      nativeApps->GetIsServerMode(&serverMode);
+      if (!serverMode) {    // okay, so it's not -turbo
+        prefs->GetBoolPref(TURBO_PREF, &serverMode);
+        nativeApps->SetIsServerMode(serverMode);
+      }
     }
   }
     

@@ -26,7 +26,6 @@ nsNativeAppSupportBase::nsNativeAppSupportBase()
     : mRefCnt( 0 ),
       mSplash( 0 ),
       mServerMode( PR_FALSE ),
-      mStartupServerMode( PR_FALSE ),
       mNeedsProfileUI( PR_FALSE ) {
 }
 
@@ -91,13 +90,6 @@ NS_IMETHODIMP
 nsNativeAppSupportBase::GetIsServerMode(PRBool *aIsServerMode) {
     NS_ENSURE_ARG( aIsServerMode );
     *aIsServerMode = mServerMode;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportBase::GetIsStartupServerMode(PRBool *aIsStartupServerMode) {
-    NS_ENSURE_ARG( aIsStartupServerMode );
-    *aIsStartupServerMode = mStartupServerMode;
     return NS_OK;
 }
 
