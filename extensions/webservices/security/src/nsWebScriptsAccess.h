@@ -114,6 +114,19 @@ protected:
   nsCOMPtr<nsIScriptSecurityManager> mSecurityManager;
   nsStringArray mMasterServices;
   nsHashtable mAccessInfoTable;
+
+  const nsLiteralString kNamespace2002;
+  // Element set
+  const nsLiteralString kWebScriptAccessTag;
+  const nsLiteralString kDelegateTag;
+  const nsLiteralString kAllowTag;
+  // Attribute set
+  const nsLiteralString kTypeAttr;
+  const nsLiteralString kFromAttr;
+  // Default attribute value
+  const nsLiteralString kAny;
+  // Method name. Note: This method should be implemented by master services.
+  const nsLiteralString kIsServicePublic;
 };
 
 #endif

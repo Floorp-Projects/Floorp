@@ -88,8 +88,6 @@ nsresult DebugPrintDOM(nsIDOMNode * node)
 #define DEBUG_DUMP_DOCUMENT(message,doc)
 #endif
 
-static NS_NAMED_LITERAL_STRING(kAnyURISchemaType, "anyURI");
-
 /**
   * This method will replace the target document's 
   * codebase principal with the subject codebase to
@@ -225,8 +223,8 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
     //  Remove any existing elements that may conflict with this verifySource identification
     nsCOMPtr<nsIDOMElement> verifySource;
     for (;;) {
-      nsSOAPUtils::GetSpecificChildElement(nsnull, element, nsSOAPUtils::kVerifySourceNamespaceURI, 
-        nsSOAPUtils::kVerifySourceHeader, getter_AddRefs(verifySource));
+      nsSOAPUtils::GetSpecificChildElement(nsnull, element, gSOAPStrings->kVerifySourceNamespaceURI, 
+        gSOAPStrings->kVerifySourceHeader, getter_AddRefs(verifySource));
       if (verifySource) {
         element->RemoveChild(verifySource, getter_AddRefs(ignore));
         if (NS_FAILED(rc))
@@ -250,30 +248,30 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
     nsAutoString XSIURI;
     nsAutoString SOAPEncURI;
     if (version == nsISOAPMessage::VERSION_1_1) {
-      XSURI.Assign(nsSOAPUtils::kXSURI1999);
-      XSIURI.Assign(nsSOAPUtils::kXSIURI1999);
-      SOAPEncURI.Assign(nsSOAPUtils::kSOAPEncURI11);
+      XSURI.Assign(gSOAPStrings->kXSURI1999);
+      XSIURI.Assign(gSOAPStrings->kXSIURI1999);
+      SOAPEncURI.Assign(gSOAPStrings->kSOAPEncURI11);
     }
     else {
-      XSURI.Assign(nsSOAPUtils::kXSURI);
-      XSIURI.Assign(nsSOAPUtils::kXSIURI);
-      SOAPEncURI.Assign(nsSOAPUtils::kSOAPEncURI);
+      XSURI.Assign(gSOAPStrings->kXSURI);
+      XSIURI.Assign(gSOAPStrings->kXSIURI);
+      SOAPEncURI.Assign(gSOAPStrings->kSOAPEncURI);
     }
     //  Create the header and append it with mustUnderstand and normal encoding.
-    rc = document->CreateElementNS(nsSOAPUtils::kVerifySourceNamespaceURI, 
-      nsSOAPUtils::kVerifySourceHeader, 
+    rc = document->CreateElementNS(gSOAPStrings->kVerifySourceNamespaceURI, 
+      gSOAPStrings->kVerifySourceHeader, 
       getter_AddRefs(verifySource));
     if (NS_FAILED(rc)) 
       return rc;
     rc = element->AppendChild(verifySource, getter_AddRefs(ignore));
     if (NS_FAILED(rc)) 
       return rc;
-    rc = verifySource->SetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[version],
-      nsSOAPUtils::kMustUnderstandAttribute,nsSOAPUtils::kTrueA);// mustUnderstand
+    rc = verifySource->SetAttributeNS(*gSOAPStrings->kSOAPEnvURI[version],
+      gSOAPStrings->kMustUnderstandAttribute,gSOAPStrings->kTrueA);// mustUnderstand
     if (NS_FAILED(rc)) 
       return rc;
-    rc = verifySource->SetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[version], 
-      nsSOAPUtils::kEncodingStyleAttribute, SOAPEncURI);// 1.2 encoding
+    rc = verifySource->SetAttributeNS(*gSOAPStrings->kSOAPEnvURI[version], 
+      gSOAPStrings->kEncodingStyleAttribute, SOAPEncURI);// 1.2 encoding
     if (NS_FAILED(rc)) 
       return rc;
 
@@ -284,21 +282,21 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
       rc = nsSOAPUtils::MakeNamespacePrefix(nsnull, verifySource, XSURI, stringType);
       if (NS_FAILED(rc)) 
         return rc;
-      stringType.Append(nsSOAPUtils::kQualifiedSeparator);
-      stringType.Append(kAnyURISchemaType);
+      stringType.Append(gSOAPStrings->kQualifiedSeparator);
+      stringType.Append(NS_LITERAL_STRING("anyURI"));
     }
 
     //  If it is available, add the sourceURI 
     if (!sourceURI.IsEmpty()) {
-      rc = document->CreateElementNS(nsSOAPUtils::kVerifySourceNamespaceURI,
-        nsSOAPUtils::kVerifySourceURI,getter_AddRefs(element));
+      rc = document->CreateElementNS(gSOAPStrings->kVerifySourceNamespaceURI,
+        gSOAPStrings->kVerifySourceURI,getter_AddRefs(element));
       if (NS_FAILED(rc)) 
         return rc;
       rc = verifySource->AppendChild(element, getter_AddRefs(ignore));
       if (NS_FAILED(rc)) 
         return rc;
       rc = element->SetAttributeNS(XSIURI,
-        nsSOAPUtils::kXSITypeAttribute,stringType);
+        gSOAPStrings->kXSITypeAttribute,stringType);
       if (NS_FAILED(rc)) 
         return rc;
       nsCOMPtr<nsIDOMText> text;

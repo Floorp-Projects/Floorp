@@ -68,8 +68,8 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetActorURI(nsAString & aActorURI)
   if (mElement) {
     if (mVersion == nsISOAPMessage::VERSION_UNKNOWN)
       return SOAP_EXCEPTION(NS_ERROR_NOT_AVAILABLE,"SOAP_HEADER_INIT", "Header has not been properly initialized.");
-    return mElement->GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],
-                                    nsSOAPUtils::kActorAttribute,
+    return mElement->GetAttributeNS(*gSOAPStrings->kSOAPEnvURI[mVersion],
+                                    gSOAPStrings->kActorAttribute,
                                     aActorURI);
   } else {
     aActorURI.Assign(mActorURI);
@@ -98,17 +98,17 @@ NS_IMETHODIMP nsSOAPHeaderBlock::GetMustUnderstand(PRBool *
     nsresult
         rc =
         mElement->
-        GetAttributeNS(*nsSOAPUtils::kSOAPEnvURI[mVersion],
-                       nsSOAPUtils::kMustUnderstandAttribute, m);
+        GetAttributeNS(*gSOAPStrings->kSOAPEnvURI[mVersion],
+                       gSOAPStrings->kMustUnderstandAttribute, m);
     if (NS_FAILED(rc))
       return rc;
     if (m.IsEmpty())
       *aMustUnderstand = PR_FALSE;
-    else if (m.Equals(nsSOAPUtils::kTrue)
-             || m.Equals(nsSOAPUtils::kTrueA))
+    else if (m.Equals(gSOAPStrings->kTrue)
+             || m.Equals(gSOAPStrings->kTrueA))
       *aMustUnderstand = PR_TRUE;
-    else if (m.Equals(nsSOAPUtils::kFalse)
-             || m.Equals(nsSOAPUtils::kFalseA))
+    else if (m.Equals(gSOAPStrings->kFalse)
+             || m.Equals(gSOAPStrings->kFalseA))
       *aMustUnderstand = PR_FALSE;
     else
       return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_HEADER_MUSTUNDERSTAND", "Must understand value in header has an illegal value.");

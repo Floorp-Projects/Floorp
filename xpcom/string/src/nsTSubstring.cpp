@@ -528,13 +528,17 @@ nsTSubstring_CharT::Equals( const abstract_string_type& readable, const comparat
 PRBool
 nsTSubstring_CharT::Equals( const char_type* data ) const
   {
-    return Equals(nsTDependentString_CharT(data));
+    // XXX avoid length calculation?
+    size_type length = char_traits::length(data);
+    return mLength == length && char_traits::compare(mData, data, mLength) == 0;
   }
 
 PRBool
 nsTSubstring_CharT::Equals( const char_type* data, const comparator_type& comp ) const
   {
-    return Equals(nsTDependentString_CharT(data), comp);
+    // XXX avoid length calculation?
+    size_type length = char_traits::length(data);
+    return mLength == length && comp(mData, data, mLength) == 0;
   }
 
 nsTSubstring_CharT::size_type

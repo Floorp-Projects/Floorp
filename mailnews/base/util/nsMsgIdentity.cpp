@@ -62,7 +62,7 @@
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-static NS_NAMED_LITERAL_CSTRING(REL_FILE_PREF_SUFFIX, "-rel");
+#define REL_FILE_PREF_SUFFIX NS_LITERAL_CSTRING("-rel")
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgIdentity,
                    nsIMsgIdentity)

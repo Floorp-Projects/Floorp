@@ -159,10 +159,6 @@ nsSOAPException::GetData(nsISupports * *aData)
   return NS_OK;
 }
 
-static NS_NAMED_LITERAL_STRING(kErrorSeparator1, ": ");
-static NS_NAMED_LITERAL_STRING(kErrorSeparator2, ", called by ");
-static NS_NAMED_LITERAL_STRING(kErrorSeparator3, ", caused by ");
-
 /* string toString (); */
 NS_IMETHODIMP 
 nsSOAPException::ToString(char **_retval)
@@ -170,13 +166,13 @@ nsSOAPException::ToString(char **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   nsAutoString s;
   s.Append(mName);
-  s.Append(kErrorSeparator1);
+  s.Append(NS_LITERAL_STRING(": "));
   s.Append(mMessage);
   if (mFrame) {
     char* str = nsnull;
     mFrame->ToString(&str);
     if (str) {
-      s.Append(kErrorSeparator2);
+      s.Append(NS_LITERAL_STRING(", called by "));
       nsAutoString i;
       CopyASCIItoUCS2(nsDependentCString(str),i);
       nsMemory::Free(str);
@@ -190,7 +186,7 @@ nsSOAPException::ToString(char **_retval)
       nsAutoString i;
       CopyASCIItoUCS2(nsDependentCString(str),i);
       nsMemory::Free(str);
-      s.Append(kErrorSeparator3);
+      s.Append(NS_LITERAL_STRING(", caused by "));
       s.Append(i);
     }
   }
@@ -198,12 +194,6 @@ nsSOAPException::ToString(char **_retval)
   *_retval = ToNewUTF8String(s);
   return NS_OK;
 }
-
-NS_NAMED_LITERAL_STRING(realSOAPExceptionEmpty, "");
-const nsAString & nsSOAPException::kEmpty = realSOAPExceptionEmpty;
-
-static NS_NAMED_LITERAL_STRING(kFailure, "SOAP_FAILURE");
-static NS_NAMED_LITERAL_STRING(kNoDescription, "No description");
 
 nsresult nsSOAPException::AddException(nsresult aStatus, const nsAString & aName,
   const nsAString & aMessage,PRBool aClear)
@@ -217,11 +207,6 @@ nsresult nsSOAPException::AddException(nsresult aStatus, const nsAString & aName
       nsCOMPtr<nsIException> old;
       if (!aClear)
         xs->GetCurrentException(getter_AddRefs(old));
-      // Need to cast the NS_LITERAL_STRING to const nsAString& to make
-      // it compile on CW on Mac.
-//  The evil ? operator caused bustage.  This time, eliminate that.
-//      const nsAString& name = aName.IsEmpty() ? kFailure : aName;
-//      const nsAString& message = aMessage.IsEmpty() ? kNoDescription : aMessage;
       nsCOMPtr<nsIException> exception = new nsSOAPException(aStatus, aName, 
         aMessage, old);
       if (exception) {

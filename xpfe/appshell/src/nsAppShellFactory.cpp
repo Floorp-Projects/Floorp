@@ -49,6 +49,7 @@
 #include "nsCommandLineService.h"  
 #include "nsAppShellService.h"
 #include "nsWindowMediator.h"
+#include "nsChromeTreeOwner.h"
 
 #include "nsUserInfo.h"
 
@@ -89,5 +90,18 @@ static const nsModuleComponentInfo gAppShellModuleInfo[] =
   },
 };
 
-NS_IMPL_NSGETMODULE(appshell, gAppShellModuleInfo)
+PR_STATIC_CALLBACK(nsresult)
+nsAppShellModuleConstructor(nsIModule *aModule)
+{
+  return nsChromeTreeOwner::InitGlobals();
+}
 
+PR_STATIC_CALLBACK(void)
+nsAppShellModuleDestructor(nsIModule *aModule)
+{
+  nsChromeTreeOwner::FreeGlobals();
+}
+
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(appshell, gAppShellModuleInfo,
+                                   nsAppShellModuleConstructor,
+                                   nsAppShellModuleDestructor)

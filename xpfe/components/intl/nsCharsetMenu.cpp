@@ -122,7 +122,6 @@ static void CloneCStringArray(const nsCStringArray& src, nsCStringArray& dest)
   }
 }
 
-NS_NAMED_LITERAL_STRING(gCharsetMenuSelectedTopic, "charsetmenu-selected");
 //----------------------------------------------------------------------------
 // Class nsMenuEntry [declaration]
 

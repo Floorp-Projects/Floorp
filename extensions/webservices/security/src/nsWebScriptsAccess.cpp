@@ -68,23 +68,6 @@
 #define SERVICE_LISTED_PUBLIC       (1 << 3)
 #define HAS_MASTER_SERVICE_DECISION (1 << 4)
 
-NS_NAMED_LITERAL_STRING(kNamespace2002, "http://www.mozilla.org/2002/soap/security");
-
-// Element set
-NS_NAMED_LITERAL_STRING(kWebScriptAccessTag, "webScriptAccess");
-NS_NAMED_LITERAL_STRING(kDelegateTag, "delegate");
-NS_NAMED_LITERAL_STRING(kAllowTag, "allow");
-
-// Attribute set
-NS_NAMED_LITERAL_STRING(kTypeAttr, "type");
-NS_NAMED_LITERAL_STRING(kFromAttr, "from");
-
-// Default attribute value
-NS_NAMED_LITERAL_STRING(kAny, "any");
-
-// Method name. Note: This method should be implemented by master services.
-NS_NAMED_LITERAL_STRING(kIsServicePublic, "isServicePublic");
-
 static PRBool PR_CALLBACK 
 FreeEntries(nsHashKey *aKey, void *aData, void* aClosure)
 {
@@ -95,9 +78,16 @@ FreeEntries(nsHashKey *aKey, void *aData, void* aClosure)
 
 NS_IMPL_ISUPPORTS1(nsWebScriptsAccess, 
                    nsIWebScriptsAccessService)
-                   
 
 nsWebScriptsAccess::nsWebScriptsAccess()
+  : NS_LITERAL_STRING_INIT(kNamespace2002, "http://www.mozilla.org/2002/soap/security")
+  , NS_LITERAL_STRING_INIT(kWebScriptAccessTag, "webScriptAccess")
+  , NS_LITERAL_STRING_INIT(kDelegateTag, "delegate")
+  , NS_LITERAL_STRING_INIT(kAllowTag, "allow")
+  , NS_LITERAL_STRING_INIT(kTypeAttr, "type")
+  , NS_LITERAL_STRING_INIT(kFromAttr, "from")
+  , NS_LITERAL_STRING_INIT(kAny, "any")
+  , NS_LITERAL_STRING_INIT(kIsServicePublic, "isServicePublic")
 {
 }
 

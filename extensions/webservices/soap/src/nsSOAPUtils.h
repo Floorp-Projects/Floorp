@@ -83,49 +83,85 @@ public:
                                   const nsAString & aNamespaceURI,
                                   const nsAString & aLocalName,
                                   nsAString & aValue);
-
-// All those missing string functions have to come from somewhere...
-
-  static PRBool StartsWith(nsAString & aSuper, nsAString & aSub);
-
-  static const nsAString *kSOAPEnvURI[];
-
-  static const nsAString & kSOAPEncURI;
-  static const nsAString & kSOAPEncURI11;
-  static const nsAString & kXSIURI;
-  static const nsAString & kXSURI;
-  static const nsAString & kXSIURI1999;
-  static const nsAString & kXSURI1999;
-  static const nsAString & kSOAPEnvPrefix;
-  static const nsAString & kSOAPEncPrefix;
-  static const nsAString & kXSIPrefix;
-  static const nsAString & kXSITypeAttribute;
-  static const nsAString & kXSPrefix;
-  static const nsAString & kEncodingStyleAttribute;
-  static const nsAString & kActorAttribute;
-  static const nsAString & kMustUnderstandAttribute;
-  static const nsAString & kEnvelopeTagName;
-  static const nsAString & kHeaderTagName;
-  static const nsAString & kBodyTagName;
-  static const nsAString & kFaultTagName;
-  static const nsAString & kFaultCodeTagName;
-  static const nsAString & kFaultStringTagName;
-  static const nsAString & kFaultActorTagName;
-  static const nsAString & kFaultDetailTagName;
-  static const nsAString & kEncodingSeparator;
-  static const nsAString & kQualifiedSeparator;
-  static const nsAString & kXMLNamespaceNamespaceURI;
-  static const nsAString & kXMLNamespaceURI;
-  static const nsAString & kXMLNamespacePrefix;
-  static const nsAString & kXMLPrefix;
-  static const nsAString & kTrue;
-  static const nsAString & kTrueA;
-  static const nsAString & kFalse;
-  static const nsAString & kFalseA;
-  static const nsAString & kVerifySourceHeader;
-  static const nsAString & kVerifySourceURI;
-  static const nsAString & kVerifySourceNamespaceURI;
 };
+
+struct nsSOAPStrings
+{
+  const nsLiteralString  kSOAPEnvURI1;
+  const nsLiteralString  kSOAPEnvURI2;
+  const nsLiteralString *kSOAPEnvURI[2];
+
+  const nsLiteralString  kSOAPEncURI;
+  const nsLiteralString  kSOAPEncURI11;
+  const nsLiteralString  kXSIURI;
+  const nsLiteralString  kXSURI;
+  const nsLiteralString  kXSIURI1999;
+  const nsLiteralString  kXSURI1999;
+  const nsLiteralString  kSOAPEnvPrefix;
+  const nsLiteralString  kSOAPEncPrefix;
+  const nsLiteralString  kXSIPrefix;
+  const nsLiteralString  kXSITypeAttribute;
+  const nsLiteralString  kXSPrefix;
+  const nsLiteralString  kEncodingStyleAttribute;
+  const nsLiteralString  kActorAttribute;
+  const nsLiteralString  kMustUnderstandAttribute;
+  const nsLiteralString  kEnvelopeTagName;
+  const nsLiteralString  kHeaderTagName;
+  const nsLiteralString  kBodyTagName;
+  const nsLiteralString  kFaultTagName;
+  const nsLiteralString  kFaultCodeTagName;
+  const nsLiteralString  kFaultStringTagName;
+  const nsLiteralString  kFaultActorTagName;
+  const nsLiteralString  kFaultDetailTagName;
+  const nsLiteralString  kEncodingSeparator;
+  const nsLiteralString  kQualifiedSeparator;
+  const nsLiteralString  kXMLNamespaceNamespaceURI;
+  const nsLiteralString  kXMLNamespaceURI;
+  const nsLiteralString  kXMLNamespacePrefix;
+  const nsLiteralString  kXMLPrefix;
+  const nsLiteralString  kTrue;
+  const nsLiteralString  kTrueA;
+  const nsLiteralString  kFalse;
+  const nsLiteralString  kFalseA;
+  const nsLiteralString  kVerifySourceHeader;
+  const nsLiteralString  kVerifySourceURI;
+  const nsLiteralString  kVerifySourceNamespaceURI;
+
+  // used by nsDefaultSOAPEncoder.cpp
+  const nsLiteralString  kEmpty;
+  const nsLiteralString  kNull;
+  const nsLiteralString  kSOAPArrayTypeAttribute;
+  const nsLiteralString  kSOAPArrayOffsetAttribute;
+  const nsLiteralString  kSOAPArrayPositionAttribute;
+  const nsLiteralString  kAnyTypeSchemaType;
+  const nsLiteralString  kAnySimpleTypeSchemaType;
+  const nsLiteralString  kArraySOAPType;
+  const nsLiteralString  kStructSOAPType;
+  const nsLiteralString  kStringSchemaType;
+  const nsLiteralString  kBooleanSchemaType;
+  const nsLiteralString  kFloatSchemaType;
+  const nsLiteralString  kDoubleSchemaType;
+  const nsLiteralString  kLongSchemaType;
+  const nsLiteralString  kIntSchemaType;
+  const nsLiteralString  kShortSchemaType;
+  const nsLiteralString  kByteSchemaType;
+  const nsLiteralString  kUnsignedLongSchemaType;
+  const nsLiteralString  kUnsignedIntSchemaType;
+  const nsLiteralString  kUnsignedShortSchemaType;
+  const nsLiteralString  kUnsignedByteSchemaType;
+  const nsLiteralString  kNormalizedStringSchemaType;
+  const nsLiteralString  kTokenSchemaType;
+  const nsLiteralString  kNameSchemaType;
+  const nsLiteralString  kNCNameSchemaType;
+  const nsLiteralString  kDecimalSchemaType;
+  const nsLiteralString  kIntegerSchemaType;
+  const nsLiteralString  kNonPositiveIntegerSchemaType;
+  const nsLiteralString  kNonNegativeIntegerSchemaType;
+
+  nsSOAPStrings();
+};
+
+extern nsSOAPStrings *gSOAPStrings;
 
 //  Used to support null strings.
 
@@ -136,7 +172,6 @@ inline PRBool AStringIsNull(const nsAString & aString)
 
 inline void SetAStringToNull(nsAString & aString)
 {
-  aString.Truncate();
   aString.SetIsVoid(PR_TRUE);
 }
 
@@ -147,9 +182,7 @@ inline void
 SOAPEncodingKey(const nsAString & aURI, const nsAString & aType,
                 nsAString & result)
 {
-  result.Assign(aURI);
-  result.Append(nsSOAPUtils::kEncodingSeparator);
-  result.Append(aType);
+  result = aURI + gSOAPStrings->kEncodingSeparator + aType;
 }
 
 #endif

@@ -51,8 +51,8 @@
  }                                 \
  PR_END_MACRO
 
-static NS_NAMED_LITERAL_CSTRING(kWellKnownLocation, "/w3c/p3p.xml");
-static NS_NAMED_LITERAL_CSTRING(kW3C, "/w3c/");
+static const char kWellKnownLocation[] = "/w3c/p3p.xml";
+static const char kW3C[] = "/w3c/";
 
 static nsresult
 RequestSucceeded(nsIXMLHttpRequest* aRequest, PRBool* aReturn)
@@ -186,7 +186,7 @@ nsPolicyReference::LoadPolicyReferenceFileFor(nsIURI* aURI,
     if (!mDocument) {
       nsXPIDLCString value;
       mMainURI->GetPrePath(value);
-      value += kWellKnownLocation;
+      value += NS_LITERAL_CSTRING(kWellKnownLocation);
       result = Load(value);
     }
     else {
@@ -200,7 +200,7 @@ nsPolicyReference::LoadPolicyReferenceFileFor(nsIURI* aURI,
     // well known location
     nsXPIDLCString value;
     mCurrentURI->GetPrePath(value);
-    value += kWellKnownLocation;
+    value += NS_LITERAL_CSTRING(kWellKnownLocation);
     result = Load(value);
   }
   else if (mFlags & IS_LINKED_URI) {
@@ -322,13 +322,13 @@ nsPolicyReference::ProcessPolicyReferenceFile(nsIDOMDocument* aDocument,
     }
     if (mFlags & IS_MAIN_URI) {
       nsCOMPtr<nsIURI> tmpURI= mMainURI;
-      tmpURI->SetPath(kW3C);
+      tmpURI->SetPath(NS_LITERAL_CSTRING(kW3C));
       result = NS_MakeAbsoluteURI(absURI, policyLocation,  tmpURI);
       NS_ENSURE_SUCCESS(result, result);
     }
     else {
       // it is ok to do this because we won't be needing current uri beyond this.
-      mCurrentURI->SetPath(kW3C); 
+      mCurrentURI->SetPath(NS_LITERAL_CSTRING(kW3C));
       result = NS_MakeAbsoluteURI(absURI, policyLocation,  mCurrentURI);
       NS_ENSURE_SUCCESS(result, result);
     }

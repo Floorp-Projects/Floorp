@@ -44,127 +44,78 @@
 #include "nsCOMPtr.h"
 #include "nsSOAPException.h"
 
-NS_NAMED_LITERAL_STRING(realSOAPEnvURI1,
-                        "http://schemas.xmlsoap.org/soap/envelope/");
-NS_NAMED_LITERAL_STRING(realSOAPEnvURI2,
-                        "http://www.w3.org/2001/09/soap-envelope");
-const nsAString *nsSOAPUtils::kSOAPEnvURI[] =
-    { &realSOAPEnvURI1, &realSOAPEnvURI2
-};
+nsSOAPStrings::nsSOAPStrings()
+  : NS_LITERAL_STRING_INIT(kSOAPEnvURI1, "http://schemas.xmlsoap.org/soap/envelope/")
+  , NS_LITERAL_STRING_INIT(kSOAPEnvURI2, "http://www.w3.org/2001/09/soap-envelope")
+  , NS_LITERAL_STRING_INIT(kSOAPEncURI, "http://www.w3.org/2001/09/soap-encoding")
+  , NS_LITERAL_STRING_INIT(kSOAPEncURI11, "http://schemas.xmlsoap.org/soap/encoding/")
+  , NS_LITERAL_STRING_INIT(kXSIURI, "http://www.w3.org/2001/XMLSchema-instance")
+  , NS_LITERAL_STRING_INIT(kXSURI, "http://www.w3.org/2001/XMLSchema")
+  , NS_LITERAL_STRING_INIT(kXSIURI1999, "http://www.w3.org/1999/XMLSchema-instance")
+  , NS_LITERAL_STRING_INIT(kXSURI1999, "http://www.w3.org/1999/XMLSchema")
+  , NS_LITERAL_STRING_INIT(kSOAPEnvPrefix, "env")
+  , NS_LITERAL_STRING_INIT(kSOAPEncPrefix, "enc")
+  , NS_LITERAL_STRING_INIT(kXSIPrefix, "xsi")
+  , NS_LITERAL_STRING_INIT(kXSITypeAttribute, "type")
+  , NS_LITERAL_STRING_INIT(kXSPrefix, "xs")
+  , NS_LITERAL_STRING_INIT(kEncodingStyleAttribute, "encodingStyle")
+  , NS_LITERAL_STRING_INIT(kActorAttribute, "actor")
+  , NS_LITERAL_STRING_INIT(kMustUnderstandAttribute, "mustUnderstand")
+  , NS_LITERAL_STRING_INIT(kEnvelopeTagName, "Envelope")
+  , NS_LITERAL_STRING_INIT(kHeaderTagName, "Header")
+  , NS_LITERAL_STRING_INIT(kBodyTagName, "Body")
+  , NS_LITERAL_STRING_INIT(kFaultTagName, "Fault")
+  , NS_LITERAL_STRING_INIT(kFaultCodeTagName, "faultcode")
+  , NS_LITERAL_STRING_INIT(kFaultStringTagName, "faultstring")
+  , NS_LITERAL_STRING_INIT(kFaultActorTagName, "faultactor")
+  , NS_LITERAL_STRING_INIT(kFaultDetailTagName, "detail")
+  , NS_LITERAL_STRING_INIT(kEncodingSeparator, "#")
+  , NS_LITERAL_STRING_INIT(kQualifiedSeparator, ":")
+  , NS_LITERAL_STRING_INIT(kXMLNamespaceNamespaceURI, "http://www.w3.org/2000/xmlns/")
+  , NS_LITERAL_STRING_INIT(kXMLNamespaceURI, "http://www.w3.org/XML/1998/namespace")
+  , NS_LITERAL_STRING_INIT(kXMLNamespacePrefix, "xmlns:")
+  , NS_LITERAL_STRING_INIT(kXMLPrefix, "xml:")
+  , NS_LITERAL_STRING_INIT(kTrue, "true")
+  , NS_LITERAL_STRING_INIT(kTrueA, "1")
+  , NS_LITERAL_STRING_INIT(kFalse, "false")
+  , NS_LITERAL_STRING_INIT(kFalseA, "0")
+  , NS_LITERAL_STRING_INIT(kVerifySourceHeader, "verifySource")
+  , NS_LITERAL_STRING_INIT(kVerifySourceURI, "uri")
+  , NS_LITERAL_STRING_INIT(kVerifySourceNamespaceURI, "urn:inet:www.mozilla.org:user-agent")
 
-NS_NAMED_LITERAL_STRING(realSOAPEncURI,
-                        "http://www.w3.org/2001/09/soap-encoding");
-const nsAString & nsSOAPUtils::kSOAPEncURI = realSOAPEncURI;
-NS_NAMED_LITERAL_STRING(realSOAPEncURI11,
-                        "http://schemas.xmlsoap.org/soap/encoding/");
-const nsAString & nsSOAPUtils::kSOAPEncURI11 = realSOAPEncURI11;
-NS_NAMED_LITERAL_STRING(realXSIURI, "http://www.w3.org/2001/XMLSchema-instance");
-const nsAString & nsSOAPUtils::kXSIURI = realXSIURI;
-NS_NAMED_LITERAL_STRING(realXSURI, "http://www.w3.org/2001/XMLSchema");
-const nsAString & nsSOAPUtils::kXSURI = realXSURI;
-NS_NAMED_LITERAL_STRING(realXSIURI1999, "http://www.w3.org/1999/XMLSchema-instance");
-const nsAString & nsSOAPUtils::kXSIURI1999 = realXSIURI1999;
-NS_NAMED_LITERAL_STRING(realXSURI1999, "http://www.w3.org/1999/XMLSchema");
-const nsAString & nsSOAPUtils::kXSURI1999 = realXSURI1999;
-
-NS_NAMED_LITERAL_STRING(realSOAPEnvPrefix, "env");
-const nsAString & nsSOAPUtils::kSOAPEnvPrefix = realSOAPEnvPrefix;
-
-NS_NAMED_LITERAL_STRING(realSOAPEncPrefix, "enc");
-const nsAString & nsSOAPUtils::kSOAPEncPrefix = realSOAPEncPrefix;
-
-NS_NAMED_LITERAL_STRING(realXSIPrefix, "xsi");
-const nsAString & nsSOAPUtils::kXSIPrefix = realXSIPrefix;
-
-NS_NAMED_LITERAL_STRING(realXSITypeAttribute, "type");
-const nsAString & nsSOAPUtils::kXSITypeAttribute = realXSITypeAttribute;
-
-NS_NAMED_LITERAL_STRING(realXSPrefix, "xs");
-const nsAString & nsSOAPUtils::kXSPrefix = realXSPrefix;
-
-NS_NAMED_LITERAL_STRING(realEncodingStyleAttribute, "encodingStyle");
-const
-    nsAString &
-    nsSOAPUtils::kEncodingStyleAttribute = realEncodingStyleAttribute;
-
-NS_NAMED_LITERAL_STRING(realActorAttribute, "actor");
-const nsAString & nsSOAPUtils::kActorAttribute = realActorAttribute;
-
-NS_NAMED_LITERAL_STRING(realMustUnderstandAttribute, "mustUnderstand");
-const
-    nsAString &
-    nsSOAPUtils::kMustUnderstandAttribute = realMustUnderstandAttribute;
-
-NS_NAMED_LITERAL_STRING(realEnvelopeTagName, "Envelope");
-const nsAString & nsSOAPUtils::kEnvelopeTagName = realEnvelopeTagName;
-
-NS_NAMED_LITERAL_STRING(realHeaderTagName, "Header");
-const nsAString & nsSOAPUtils::kHeaderTagName = realHeaderTagName;
-
-NS_NAMED_LITERAL_STRING(realBodyTagName, "Body");
-const nsAString & nsSOAPUtils::kBodyTagName = realBodyTagName;
-
-NS_NAMED_LITERAL_STRING(realFaultTagName, "Fault");
-const nsAString & nsSOAPUtils::kFaultTagName = realFaultTagName;
-
-NS_NAMED_LITERAL_STRING(realFaultCodeTagName, "faultcode");
-const nsAString & nsSOAPUtils::kFaultCodeTagName = realFaultCodeTagName;
-
-NS_NAMED_LITERAL_STRING(realFaultStringTagName, "faultstring");
-const
-    nsAString & nsSOAPUtils::kFaultStringTagName = realFaultStringTagName;
-
-NS_NAMED_LITERAL_STRING(realFaultActorTagName, "faultactor");
-const nsAString & nsSOAPUtils::kFaultActorTagName = realFaultActorTagName;
-
-NS_NAMED_LITERAL_STRING(realFaultDetailTagName, "detail");
-const
-    nsAString & nsSOAPUtils::kFaultDetailTagName = realFaultDetailTagName;
-
-NS_NAMED_LITERAL_STRING(realEncodingSeparator, "#");
-const nsAString & nsSOAPUtils::kEncodingSeparator = realEncodingSeparator;
-
-NS_NAMED_LITERAL_STRING(realQualifiedSeparator, ":");
-const
-    nsAString & nsSOAPUtils::kQualifiedSeparator = realQualifiedSeparator;
-
-NS_NAMED_LITERAL_STRING(realXMLNamespaceNamespaceURI,
-                        "http://www.w3.org/2000/xmlns/");
-const nsAString &
-    nsSOAPUtils::kXMLNamespaceNamespaceURI = realXMLNamespaceNamespaceURI;
-
-NS_NAMED_LITERAL_STRING(realXMLNamespaceURI,
-                        "http://www.w3.org/XML/1998/namespace");
-const
- nsAString & nsSOAPUtils::kXMLNamespaceURI = realXMLNamespaceURI;
-
-NS_NAMED_LITERAL_STRING(realXMLPrefix, "xml:");
-const nsAString & nsSOAPUtils::kXMLPrefix = realXMLPrefix;
-
-NS_NAMED_LITERAL_STRING(realXMLNamespacePrefix, "xmlns:");
-const
-    nsAString & nsSOAPUtils::kXMLNamespacePrefix = realXMLNamespacePrefix;
-
-NS_NAMED_LITERAL_STRING(realTrue, "true");
-const nsAString & nsSOAPUtils::kTrue = realTrue;
-
-NS_NAMED_LITERAL_STRING(realFalse, "false");
-const nsAString & nsSOAPUtils::kFalse = realFalse;
-
-NS_NAMED_LITERAL_STRING(realTrueA, "1");
-const nsAString & nsSOAPUtils::kTrueA = realTrueA;
-
-NS_NAMED_LITERAL_STRING(realFalseA, "0");
-const nsAString & nsSOAPUtils::kFalseA = realFalseA;
-
-NS_NAMED_LITERAL_STRING(realVerifySourceHeader, "verifySource");
-const nsAString & nsSOAPUtils::kVerifySourceHeader = realVerifySourceHeader;
-
-NS_NAMED_LITERAL_STRING(realVerifySourceURI, "uri");
-const nsAString & nsSOAPUtils::kVerifySourceURI = realVerifySourceURI;
-
-NS_NAMED_LITERAL_STRING(realVerifySourceNamespaceURI, "urn:inet:www.mozilla.org:user-agent");
-const nsAString & nsSOAPUtils::kVerifySourceNamespaceURI = realVerifySourceNamespaceURI;
+  , NS_LITERAL_STRING_INIT(kEmpty, "")
+  , NS_LITERAL_STRING_INIT(kNull, "null")
+  , NS_LITERAL_STRING_INIT(kSOAPArrayTypeAttribute, "arrayType")
+  , NS_LITERAL_STRING_INIT(kSOAPArrayOffsetAttribute, "offset")
+  , NS_LITERAL_STRING_INIT(kSOAPArrayPositionAttribute, "position")
+  , NS_LITERAL_STRING_INIT(kAnyTypeSchemaType, "anyType")
+  , NS_LITERAL_STRING_INIT(kAnySimpleTypeSchemaType, "anySimpleType")
+  , NS_LITERAL_STRING_INIT(kArraySOAPType, "Array")
+  , NS_LITERAL_STRING_INIT(kStructSOAPType, "Struct")
+  , NS_LITERAL_STRING_INIT(kStringSchemaType, "string")
+  , NS_LITERAL_STRING_INIT(kBooleanSchemaType, "boolean")
+  , NS_LITERAL_STRING_INIT(kFloatSchemaType, "float")
+  , NS_LITERAL_STRING_INIT(kDoubleSchemaType, "double")
+  , NS_LITERAL_STRING_INIT(kLongSchemaType, "long")
+  , NS_LITERAL_STRING_INIT(kIntSchemaType, "int")
+  , NS_LITERAL_STRING_INIT(kShortSchemaType, "short")
+  , NS_LITERAL_STRING_INIT(kByteSchemaType, "byte")
+  , NS_LITERAL_STRING_INIT(kUnsignedLongSchemaType, "unsignedLong")
+  , NS_LITERAL_STRING_INIT(kUnsignedIntSchemaType, "unsignedInt")
+  , NS_LITERAL_STRING_INIT(kUnsignedShortSchemaType, "unsignedShort")
+  , NS_LITERAL_STRING_INIT(kUnsignedByteSchemaType, "unsignedByte")
+  , NS_LITERAL_STRING_INIT(kNormalizedStringSchemaType, "normalizedString")
+  , NS_LITERAL_STRING_INIT(kTokenSchemaType, "token")
+  , NS_LITERAL_STRING_INIT(kNameSchemaType, "Name")
+  , NS_LITERAL_STRING_INIT(kNCNameSchemaType, "NCName")
+  , NS_LITERAL_STRING_INIT(kDecimalSchemaType, "decimal")
+  , NS_LITERAL_STRING_INIT(kIntegerSchemaType, "integer")
+  , NS_LITERAL_STRING_INIT(kNonPositiveIntegerSchemaType, "nonPositiveInteger")
+  , NS_LITERAL_STRING_INIT(kNonNegativeIntegerSchemaType, "nonNegativeInteger")
+{
+  kSOAPEnvURI[0] = &kSOAPEnvURI1;
+  kSOAPEnvURI[1] = &kSOAPEnvURI2;
+}
 
 void nsSOAPUtils::GetSpecificChildElement(nsISOAPEncoding * aEncoding,
                                           nsIDOMElement * aParent,
@@ -347,8 +298,8 @@ nsresult
   prefix = Substring(aQName, 0, i);
 
   nsAutoString result;
-  if (prefix.Equals(kXMLPrefix)) {
-    result.Assign(kXMLNamespaceURI);
+  if (prefix.Equals(gSOAPStrings->kXMLPrefix)) {
+    result.Assign(gSOAPStrings->kXMLNamespaceURI);
   }
   else {
 
@@ -362,7 +313,7 @@ nsresult
       if (NS_FAILED(rc))
         return rc;
       if (attrs) {
-        rc = attrs->GetNamedItemNS(kXMLNamespaceNamespaceURI, prefix,
+        rc = attrs->GetNamedItemNS(gSOAPStrings->kXMLNamespaceNamespaceURI, prefix,
                                    getter_AddRefs(temp));
         if (NS_FAILED(rc))
           return rc;
@@ -420,8 +371,8 @@ nsresult
   aPrefix.Truncate();
   if (externalURI.IsEmpty())
     return NS_OK;
-  if (externalURI.Equals(nsSOAPUtils::kXMLNamespaceURI)) {
-    aPrefix.Assign(nsSOAPUtils::kXMLPrefix);
+  if (externalURI.Equals(gSOAPStrings->kXMLNamespaceURI)) {
+    aPrefix.Assign(gSOAPStrings->kXMLPrefix);
     return NS_OK;
   }
   nsCOMPtr < nsIDOMNode > current = aScope;
@@ -445,7 +396,7 @@ nsresult
         if (!temp)
           break;
         temp->GetNamespaceURI(tstr);
-        if (!tstr.Equals(nsSOAPUtils::kXMLNamespaceNamespaceURI))
+        if (!tstr.Equals(gSOAPStrings->kXMLNamespaceNamespaceURI))
           continue;
         temp->GetNodeValue(tstr);
         if (tstr.Equals(externalURI)) {
@@ -460,8 +411,7 @@ nsresult
             echeck = do_QueryInterface(check);
             if (echeck) {
               rc = echeck->
-                  HasAttributeNS(nsSOAPUtils::
-                                 kXMLNamespaceNamespaceURI, prefix,
+                  HasAttributeNS(gSOAPStrings->kXMLNamespaceNamespaceURI, prefix,
                                  &hasDecl);
               if (NS_FAILED(rc))
                 return rc;
@@ -535,9 +485,9 @@ nsresult
 
   // Declare the fabricated prefix
   if (aScope) {
-    tstr.Assign(nsSOAPUtils::kXMLNamespacePrefix);
+    tstr.Assign(gSOAPStrings->kXMLNamespacePrefix);
     tstr.Append(aPrefix);
-    rc = aScope->SetAttributeNS(nsSOAPUtils::kXMLNamespaceNamespaceURI,
+    rc = aScope->SetAttributeNS(gSOAPStrings->kXMLNamespaceNamespaceURI,
                                 tstr, externalURI);
   }
   return NS_OK;
@@ -609,25 +559,3 @@ PRBool nsSOAPUtils::GetAttribute(nsISOAPEncoding *aEncoding,
   SetAStringToNull(aValue);
   return PR_FALSE;
 }
-
-PRBool nsSOAPUtils::StartsWith(nsAString & aSuper, nsAString & aSub)
-{
-  PRUint32 c1 = aSuper.Length();
-  PRUint32 c2 = aSub.Length();
-  if (c1 < c2)
-    return PR_FALSE;
-  if (c1 == c2)
-    return aSuper.Equals(aSub);
-  nsReadingIterator < PRUnichar > i1;
-  nsReadingIterator < PRUnichar > i2;
-  aSuper.BeginReading(i1);
-  aSub.BeginReading(i2);
-  while (c2--) {
-    if (*i1 != *i2)
-      return PR_FALSE;
-    i1++;
-    i2++;
-  }
-  return PR_TRUE;
-}
-

@@ -174,7 +174,7 @@ nsSOAPEncoding::nsSOAPEncoding() : mEncoders(),
                                    mMappedInternal(), 
                                    mMappedExternal()
 {
-  mStyleURI.Assign(nsSOAPUtils::kSOAPEncURI11);
+  mStyleURI.Assign(gSOAPStrings->kSOAPEncURI11);
   mRegistry = new nsSOAPEncodingRegistry(this);
   mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODING_1_1_CONTRACTID);
 }

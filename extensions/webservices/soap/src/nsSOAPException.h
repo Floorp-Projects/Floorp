@@ -55,7 +55,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEXCEPTION
 
-  static const nsAString & kEmpty;
   static nsresult AddException(nsresult aStatus, const nsAString & aName, const nsAString & aMessage,PRBool aClear = PR_FALSE);
 
 protected:

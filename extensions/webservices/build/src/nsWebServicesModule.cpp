@@ -505,13 +505,29 @@ static const nsModuleComponentInfo gComponents[] = {
   }
 };
 
-void PR_CALLBACK
+nsSOAPStrings *gSOAPStrings;
+
+PR_STATIC_CALLBACK(nsresult)
+nsWebServicesModuleConstructor(nsIModule* self)
+{
+  NS_ASSERTION(gSOAPStrings == nsnull, "already initialized");
+  gSOAPStrings = new nsSOAPStrings();
+  if (!gSOAPStrings)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+PR_STATIC_CALLBACK(void)
 nsWebServicesModuleDestructor(nsIModule* self)
 {
   nsSchemaAtoms::DestroySchemaAtoms();
   nsWSDLAtoms::DestroyWSDLAtoms();
+
+  delete gSOAPStrings;
+  gSOAPStrings = nsnull;
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsWebServicesModule, gComponents, 
-                              nsWebServicesModuleDestructor)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsWebServicesModule, gComponents, 
+                                   nsWebServicesModuleConstructor,
+                                   nsWebServicesModuleDestructor)
 
