@@ -86,6 +86,8 @@ GTK_VERSION=1.2.0
 GDK_PIXBUF_VERSION=0.8.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.004
+QT_VERSION=2.2.0
+QT_VERSION_NUM=220
 
 dnl Set various checks
 dnl ========================================================
@@ -1650,9 +1652,7 @@ then
 	[ QTDIR=$withval],
 	[ QTDIR="/usr"])
 
-	AC_MSG_CHECKING(for Qt insanity)
-
-    QT_CFLAGS="-I${QTDIR}/include/qt"
+    QT_CFLAGS="-I${QTDIR}/include -DQT_GENUINE_STR"
     QT_LIBS="-L/usr/X11R6/lib -L${QTDIR}/lib -lqt -lXext -lX11"
 dnl    AM_PATH_QT($QT_VERSION,,
 dnl      AC_MSG_ERROR(Test for QT failed.))
@@ -1679,6 +1679,32 @@ dnl      AC_MSG_ERROR(Test for QT failed.))
     fi
 
     MOZ_QT_CFLAGS=$QT_CFLAGS
+
+    AC_LANG_CPLUSPLUS
+
+    _SAVE_CXXFLAGS=$CXXFLAGS
+    _SAVE_LIBS=$LIBS
+
+    CXXFLAGS="$CXXFLAGS $QT_CFLAGS"
+    LIBS="$LIBS $QT_LIBS"
+    
+    AC_MSG_CHECKING(Qt - version >= $QT_VERSION)
+    AC_TRY_COMPILE([#include <qglobal.h>],
+    [
+        #if (QT_VERSION < $QT_VERSION_NUM)
+            #error  "QT_VERSION too old"
+        #endif
+        exit(0);
+    ],result="yes",result="no")
+
+    AC_MSG_RESULT("$result")
+    if test "$result" = "no"; then
+       AC_MSG_ERROR([Qt Mozilla requires at least version $QT_VERSION of Qt])
+    fi
+    CXXFLAGS=$_SAVE_CXXFLAGS
+    LIBS=$_SAVE_LIBS
+
+    AC_LANG_C
 fi
 dnl ========================================================
 dnl = 													   =
