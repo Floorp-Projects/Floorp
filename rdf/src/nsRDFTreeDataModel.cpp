@@ -287,5 +287,6 @@ nsRDFTreeDataModel::CreateItem(RDF_Resource r, nsRDFDataModelItem*& result)
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 
+    result->AddRef(); // like a good little COM citizen
     return NS_OK;
 }
