@@ -45,19 +45,21 @@
 }
 
 class imgContainerGIF : public imgIContainer,
-                        public nsITimerCallback,
-                        public imgIDecoderObserver
+                        public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGICONTAINER
-  NS_DECL_IMGIDECODEROBSERVER
-  NS_DECL_IMGICONTAINEROBSERVER
   NS_DECL_NSITIMERCALLBACK
 
 
   imgContainerGIF();
   virtual ~imgContainerGIF();
+
+  /**
+   *  New Image Data has been decoded, update the composite frame as needed
+   */
+  NS_IMETHOD NewFrameData(gfxIImageFrame *aFrame, const nsRect * aRect);
 
 private:
 

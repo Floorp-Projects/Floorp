@@ -212,12 +212,18 @@ nsGIFDecoder2::FlushImageData()
   nsRect frameRect;
   mImageFrame->GetRect(frameRect);
   
+  // Tell imgContainerGIF we have new data, so that it can update its
+  // composited frame before we tell the observers that the frame is changed.
+  imgContainerGIF *container = NS_STATIC_CAST(imgContainerGIF *, 
+                                              NS_STATIC_CAST(imgIContainer*, 
+                                                             mImageContainer));
   switch (mCurrentPass - mLastFlushedPass) {
     case 0: {  // same pass
       PRInt32 remainingRows = mCurrentRow - mLastFlushedRow;
       if (remainingRows) {
         nsRect r(0, frameRect.y + mLastFlushedRow + 1,
                  imgWidth, remainingRows);
+        container->NewFrameData(mImageFrame, &r);
         mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
       }    
     }
@@ -225,15 +231,18 @@ nsGIFDecoder2::FlushImageData()
   
     case 1: {  // one pass on - need to handle bottom & top rects
       nsRect r(0, frameRect.y, imgWidth, mCurrentRow + 1);
+      container->NewFrameData(mImageFrame, &r);
       mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
       nsRect r2(0, frameRect.y + mLastFlushedRow + 1,
                 imgWidth, frameRect.height - mLastFlushedRow - 1);
+      container->NewFrameData(mImageFrame, &r2);
       mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r2);
     }
     break;
 
     default: {  // more than one pass on - push the whole frame
       nsRect r(0, frameRect.y, imgWidth, frameRect.height);
+      container->NewFrameData(mImageFrame, &r);
       mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
     }
   }
