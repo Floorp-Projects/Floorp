@@ -1063,13 +1063,13 @@ nsCachedNetData::Delete(void)
 
 // Truncate the content data for a cache entry, so as to make space in the
 // cache for incoming data for another entry.
+//
+// Deals with error case where the underlying recored is non-existent. In such
+// a situation, we delete the entry.
 nsresult
 nsCachedNetData::Evict(PRUint32 aTruncatedContentLength)
 {
-    nsCOMPtr<nsINetDataCacheRecord> record;
-    nsresult rv = GetRecord(getter_AddRefs(record));
-		if ( NS_FAILED( rv ) ) return rv;
-		if ( record.get() == NULL ) return NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
     // Tell observers about the eviction, so that they can release their
     // references to this cache object.
     Notify(nsIStreamAsFileObserver::REQUEST_DELETION, NS_OK);
@@ -1084,8 +1084,16 @@ nsCachedNetData::Evict(PRUint32 aTruncatedContentLength)
         if (!GetFlag(ALLOW_PARTIAL))
             aTruncatedContentLength = 0;
 
-        nsresult rv = record->SetStoredContentLength(aTruncatedContentLength);
-        if (NS_FAILED(rv)) return rv;
+        // Tell the record about the eviction
+        nsCOMPtr<nsINetDataCacheRecord> record;
+        rv = GetRecord(getter_AddRefs(record));
+
+        if (NS_SUCCEEDED(rv) && record)
+        {
+            rv = record->SetStoredContentLength(aTruncatedContentLength);
+            if (NS_FAILED(rv))
+                return rv;
+        }
 
         if (aTruncatedContentLength == 0) {
             SetFlag(VESTIGIAL);
