@@ -69,7 +69,7 @@
                     onclick="if (event.button != 1 || event.target.localName != 'tab') return; this.parentNode.parentNode.parentNode.removeTab(event.target);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode); event.stopPropagation();"
                     ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode); event.stopPropagation();">
-            <xul:tab validate="never" onerror="this.removeAttribute('image');" maxwidth="250" width="0" minwidth="30" flex="100000" class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
+            <xul:tab validate="never" onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');" maxwidth="250" width="0" minwidth="30" flex="100000" class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:stack>
         <xul:tabpanels flex="1" style="margin:0px; padding:0px; border:0px;">
@@ -111,6 +111,9 @@
       </field>
       <field name="mIsBusy">
         false
+      </field>
+      <field name="mMissedIconCache">
+        null
       </field>
 
       <!-- A web progress listener object definition for a given tab. --> 
@@ -175,9 +178,9 @@
                   this.mTab.setAttribute("image", this.mIcon);
                   mIcon = "";
                 }
-                else if (pref.getBoolPref("browser.chrome.site_icons") && location && (location.schemeIs("http") || location.schemeIs("https")))
-                  this.mTab.setAttribute("image", this.mTabBrowser.buildFavIconString(location));
-                  
+                else if (this.mTabBrowser.shouldLoadFavIcon(location))
+                  this.mTabBrowser.loadFavIcon(location, "image", this.mTab); 
+				          
                 if (this.mTab.label == this.mTabBrowser.mStringBundle.getString("tabs.loading"))
                   this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.untitled")
               
@@ -249,6 +252,57 @@
           <![CDATA[
             var end = (aURI.port == -1) ? "/favicon.ico" : (":" + aURI.port + "/favicon.ico");
             return aURI.scheme + "://" + aURI.host + end;
+          ]]>
+        </body>
+      </method>
+
+      <method name="shouldLoadFavIcon">
+        <parameter name="aURI"/>
+        <body>
+          <![CDATA[
+            return (aURI && pref.getBoolPref("browser.chrome.site_icons") &&
+                    pref.getBoolPref("browser.chrome.favicons") && 
+                    ("schemeIs" in aURI) && (aURI.schemeIs("http") || aURI.schemeIs("https")));
+          ]]>
+        </body>
+      </method>
+
+      <method name="loadFavIcon">
+        <parameter name="aURI"/>
+        <parameter name="aAttr"/>
+        <parameter name="aElt"/>
+        <body>
+          <![CDATA[
+            var iconURL = this.buildFavIconString(aURI);
+            if (!this.mMissedIconCache) {
+              var cacheService = Components.classes['@mozilla.org/network/cache-service;1'].getService(Components.interfaces.nsICacheService);
+              this.mMissedIconCache = cacheService.createSession("MissedIconCache", Components.interfaces.nsICache.STORE_ON_DISK, true);
+              if (!this.mMissedIconCache)
+                return;
+            }
+        
+            try {
+              var entry = this.mMissedIconCache.openCacheEntry(iconURL, Components.interfaces.nsICache.ACCESS_READ, true);
+            }
+            catch (exc) {}
+            if (!entry)
+              aElt.setAttribute(aAttr, iconURL);
+            else
+              entry = null;
+          ]]>
+        </body>
+      </method>
+
+      <method name="addToMissedIconCache">
+        <parameter name="aURI"/>
+        <body>
+          <![CDATA[
+            var entry = this.mMissedIconCache.openCacheEntry(aURI, Components.interfaces.nsICache.ACCESS_READ_WRITE, true);
+            if (entry.accessGranted == Components.interfaces.nsICache.ACCESS_WRITE)
+              // It's a new entry.  Just write a bit of metadata in to the entry.
+              entry.setMetaDataElement("Icon", "Missed");
+            entry.markValid();
+            entry.close();
           ]]>
         </body>
       </method>
@@ -351,7 +405,10 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            if (event.target.rel.indexOf("icon") == -1)
+            if (!pref.getBoolPref("browser.chrome.site_icons"))
+              return;
+
+            if (!event.target.rel.match((/(?:^|\s)icon(?:\s|$)/i)))
               return;
 
             // We have an icon.
@@ -470,9 +527,9 @@
 
               // Hook up our favicon.
               var uri = this.mCurrentBrowser.currentURI;
-              if (pref.getBoolPref("browser.chrome.site_icons") && uri && (uri.schemeIs('http') || uri.schemeIs('https')))
-                this.mCurrentTab.setAttribute("image", this.buildFavIconString(uri));
-
+              if (this.shouldLoadFavIcon(uri))
+                this.loadFavIcon(uri, "image", this.mCurrentTab);
+                
               // Remove all our progress listeners from the active browser.
               if (this.mProgressListeners) {
                 for (var i = 0; i < this.mProgressListeners.length; i++) {
@@ -504,7 +561,7 @@
             t.width = 0;
             t.setAttribute("flex", "100000");
             t.setAttribute("validate", "never");
-            t.setAttribute("onerror", "this.removeAttribute('image');");
+            t.setAttribute("onerror", "this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');");
             this.mTabContainer.appendChild(t);
 
             b.setAttribute("type", "content");

@@ -142,7 +142,7 @@ nsBrowserStatusHandler.prototype =
   },
 
   onLinkIconAvailable : function(aHref) {
-    if (gProxyFavIcon)
+    if (gProxyFavIcon && pref.getBoolPref("browser.chrome.site_icons"))
       gProxyFavIcon.setAttribute("src", aHref);
   },
 
