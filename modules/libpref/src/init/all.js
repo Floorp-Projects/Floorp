@@ -625,3 +625,6 @@ pref("layout.word_select.stop_at_punctuation", true);
 
 // pref to force frames to be resizable
 pref("layout.frames.force_resizability", false);
+
+// pref to permit users to make verified SOAP calls by default
+pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
