@@ -116,6 +116,15 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
     /* First, look in the hash table for an existing reflection of the same
        JavaScript object.  If one is found, return it. */
     hep = PR_HashTableRawLookup(js_obj_reflections, (prhashcode)js_obj, js_obj);
+
+#ifdef PRESERVE_JSOBJECT_IDENTITY
+    /* If the same JSObject is reflected into Java more than once then we should
+       return the same Java object, both for efficiency and so that the '=='
+       operator works as expected in Java when comparing two JSObjects.
+       However, it is not possible to hold a reference to a Java object without
+       inhibiting GC of that object, at least not in a portable way, i.e.
+       a weak reference. So, for now, JSObject identity is broken. */
+
     he = *hep;
     if (he) {
         java_wrapper_obj = (jobject)he->value;
@@ -123,6 +132,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
         if (java_wrapper_obj)
             goto done;
     }
+#endif /* PRESERVE_JSOBJECT_IDENTITY */
 
     /* No existing reflection found, so create a new Java object that wraps
        the JavaScript object by storing its address in a private integer field. */
