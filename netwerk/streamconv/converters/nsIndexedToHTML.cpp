@@ -549,7 +549,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     PRInt64 size;
     aIndex->GetSize(&size);
     
-    if (nsUint64(PRUint64(size)) != LL_MAXUINT &&
+    if (nsUint64(PRUint64(size)) != nsUint64(LL_MAXUINT) &&
         type != nsIDirIndex::TYPE_DIRECTORY &&
         type != nsIDirIndex::TYPE_SYMLINK) {
         nsAutoString  sizeString;
