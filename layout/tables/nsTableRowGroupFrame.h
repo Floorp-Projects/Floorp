@@ -235,7 +235,8 @@ protected:
 
   void CalculateRowHeights(nsIPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState);
+                           const nsHTMLReflowState& aReflowState,
+                           nsTableRowFrame*         aStartRowFrameIn = nsnull);
 
 
   /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
@@ -287,7 +288,8 @@ protected:
                            nsRowGroupReflowState& aReflowState,
                            nsReflowStatus&        aStatus,
                            nsTableRowFrame*       aStartFrame,
-                           PRBool                 aDirtyOnly = PR_FALSE);
+                           PRBool                 aDirtyOnly,
+                           nsTableRowFrame**      aFirstRowReflowed = nsnull);
 
   /**
    * Pull-up all the row frames from our next-in-flow
