@@ -530,11 +530,11 @@ function MsgGetNextNMessages()
 
 function MsgDeleteMessage(reallyDelete, fromToolbar)
 {
-    var srcFolder = GetLoadedMsgFolder();
     // if from the toolbar, return right away if this is a news message
     // only allow cancel from the menu:  "Edit | Cancel / Delete Message"
     if (fromToolbar)
     {
+        var srcFolder = GetLoadedMsgFolder();
         var folderResource = srcFolder.QueryInterface(Components.interfaces.nsIRDFResource);
         var uri = folderResource.Value;
         if (isNewsURI(uri)) {
@@ -542,9 +542,6 @@ function MsgDeleteMessage(reallyDelete, fromToolbar)
             return;
         }
     }
-
-    var compositeDataSource = GetCompositeDataSource("DeleteMessages");
-    var messages = GetSelectedMessages();
 
     SetNextMessageAfterDelete();
     if (reallyDelete) {
@@ -868,7 +865,6 @@ function MsgOpenSelectedMessages()
 
   var indices = GetSelectedIndices(dbView);
   var numMessages = indices.length;
-
   for (var i = 0; i < numMessages; i++) {
     MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]),dbView.getFolderForViewIndex(indices[i]).URI);
   }
@@ -1158,7 +1154,7 @@ function IsGetNextNMessagesEnabled()
         var menuLabel = gMessengerBundle.getFormattedString("getNextNMessages",
                                                             [ newsServer.maxArticles ]);
         menuItem.setAttribute("label",menuLabel);
-        menuItem.setAttribute("hidden","false");
+        menuItem.removeAttribute("hidden");
         return true;
     }
     else {
