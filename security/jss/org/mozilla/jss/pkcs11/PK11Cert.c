@@ -376,7 +376,7 @@ Java_org_mozilla_jss_pkcs11_PK11Cert_getUniqueID
     (JNIEnv *env, jobject this)
 {
     CERTCertificate *cert;
-    SECItem id = {0,0,0};
+    SECItem *id = NULL;
     jbyteArray byteArray=NULL;
 
     PR_ASSERT(env!=NULL && this!=NULL);
@@ -387,37 +387,34 @@ Java_org_mozilla_jss_pkcs11_PK11Cert_getUniqueID
     if( JSS_PK11_getCertPtr(env, this, &cert) != PR_SUCCESS) {
         goto finish;
     }
-    PR_ASSERT( cert->slot != NULL );
 
     /***************************************************
-     * Get the id attribute
+     * Get the id
      ***************************************************/
-    if( PK11_ReadAttribute( cert->slot,
-                            cert->pkcs11ID,
-                            CKA_ID,
-                            NULL /*arena*/,
-                            &id) != SECSuccess)
-    {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to read ID attribute");
+    id = PK11_GetLowLevelKeyIDForCert(NULL /*slot*/, cert, NULL/*pinarg*/);
+    if( id == NULL ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to read ID");
         goto finish;
     }
 
     /***************************************************
      * Write the id to a new byte array
      ***************************************************/
-    byteArray = (*env)->NewByteArray(env, id.len);
+    byteArray = (*env)->NewByteArray(env, id->len);
     if(byteArray == NULL) {
         ASSERT_OUTOFMEM(env);
         goto finish;
     }
-    (*env)->SetByteArrayRegion(env, byteArray, 0, id.len, (jbyte*)id.data);
+    (*env)->SetByteArrayRegion(env, byteArray, 0, id->len, (jbyte*)id->data);
     if( (*env)->ExceptionOccurred(env) != NULL) {
         PR_ASSERT(PR_FALSE);
         goto finish;
     }
 
 finish:
-    SECITEM_FreeItem(&id, PR_FALSE /*freeit*/);
+    if( id != NULL ) {
+        SECITEM_FreeItem(id, PR_TRUE /*freeit*/);
+    }
 
     return byteArray;
 }

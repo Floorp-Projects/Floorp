@@ -319,56 +319,48 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_getUniqueID
 {
     SECKEYPrivateKey *key = NULL;
     PK11SlotInfo *slot = NULL;
-    SECItem keyItem = {0, 0, 0};
+    SECItem *idItem = NULL;
     jbyteArray byteArray = NULL;
 
     PR_ASSERT(env!=NULL && this!=NULL);
 
     /***************************************************
-     * Get the private key and slot C structures
+     * Get the private key structure
      ***************************************************/
     if( JSS_PK11_getPrivKeyPtr(env, this, &key) != PR_SUCCESS) {
         PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
         goto finish;
     }
-    slot = PK11_GetSlotFromPrivateKey(key);
-    PR_ASSERT(slot!=NULL);
 
     /***************************************************
-     * Try to login to the token if necessary
+     * Get the key id
      ***************************************************/
-    PK11_Authenticate(slot, PR_TRUE /*readCerts*/, NULL /*wincx*/);
-
-    /***************************************************
-     * Get the key id attribute
-     ***************************************************/
-    if( PK11_ReadAttribute( slot,
-                            key->pkcs11ID,
-                            CKA_ID,
-                            NULL/*arena*/,
-                            &keyItem) != SECSuccess)
-    {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to read ID attribute");
+    idItem = PK11_GetLowLevelKeyIDForPrivateKey(key);
+    if(idItem == NULL ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to get key id");
         goto finish;
     }
 
     /***************************************************
      * Write the key id to a new byte array
      ***************************************************/
-    byteArray = (*env)->NewByteArray(env, keyItem.len);
+    PR_ASSERT(idItem->len > 0);
+    byteArray = (*env)->NewByteArray(env, idItem->len);
     if(byteArray == NULL) {
         ASSERT_OUTOFMEM(env);
         goto finish;
     }
-    (*env)->SetByteArrayRegion(env, byteArray, 0, keyItem.len,
-                (jbyte*)keyItem.data);
+    (*env)->SetByteArrayRegion(env, byteArray, 0, idItem->len,
+                (jbyte*)idItem->data);
     if( (*env)->ExceptionOccurred(env) != NULL) {
         PR_ASSERT(PR_FALSE);
         goto finish;
     }
 
 finish:
-    SECITEM_FreeItem(&keyItem, PR_FALSE /*freeit*/);
+    if(idItem != NULL) {
+        SECITEM_FreeItem(idItem, PR_TRUE /*freeit*/);
+    }
     
     return byteArray;
 }
