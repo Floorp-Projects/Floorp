@@ -1365,7 +1365,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
         float percent = cellPosition->mWidth.GetPercentValue();
         if (percent > maxColPct) {
           maxColPct = percent;
-          maxColPctWidth = NSToCoordRound( ((float)basis) * maxColPct );
+          maxColPctWidth = nsTableFrame::RoundToPixel(NSToCoordRound( ((float)basis) * maxColPct ), aPixelToTwips);
           percentContributor = cellFrame;
           if (!mIsNavQuirksMode) { 
             // need to add padding
