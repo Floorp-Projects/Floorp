@@ -107,12 +107,10 @@ protected:
                     nsIRDFNode* object);
 
 public:
-    BookmarkParser(nsIRDFResourceManager* resourceMgr,
-                   nsIRDFDataSource* dataSource);
-
+    BookmarkParser(void);
     ~BookmarkParser();
 
-    nsresult Parse(PRFileDesc* file);
+    nsresult Parse(PRFileDesc* file, nsIRDFDataSource* dataSource);
 };
 
 
@@ -126,34 +124,38 @@ const char* BookmarkParser::kOpenTitleString  = "<TITLE>";
 const char* BookmarkParser::kSeparatorString  = "<HR>";
 
 
-BookmarkParser::BookmarkParser(nsIRDFResourceManager* resourceMgr,
-                               nsIRDFDataSource* dataSource)
-    : mResourceMgr(resourceMgr),
-      mDataSource(dataSource)
+BookmarkParser::BookmarkParser(void)
+    : mResourceMgr(NULL), mDataSource(NULL)
 {
-    NS_IF_ADDREF(mResourceMgr);
-    //NS_IF_ADDREF(mDataSource);
+    nsresult rv;
+    rv = nsServiceManager::GetService(kRDFResourceManagerCID,
+                                      kIRDFResourceManagerIID,
+                                      (nsISupports**) &mResourceMgr);
+
+    PR_ASSERT(NS_SUCCEEDED(rv));
 }
 
 BookmarkParser::~BookmarkParser(void)
 {
-    //NS_IF_RELEASE(mDataSource);
-    NS_IF_RELEASE(mResourceMgr);
+    if (mResourceMgr)
+        nsServiceManager::ReleaseService(kRDFResourceManagerCID, mResourceMgr);
 }
 
 nsresult
-BookmarkParser::Parse(PRFileDesc* file)
+BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
 {
+    NS_PRECONDITION(file && dataSource && mResourceMgr, "null ptr");
     if (! file)
         return NS_ERROR_NULL_POINTER;
 
-    if (! mResourceMgr)
+    if (! dataSource)
         return NS_ERROR_NULL_POINTER;
 
-    if (! mDataSource)
-        return NS_ERROR_NULL_POINTER;
+    if (! mResourceMgr)
+        return NS_ERROR_NOT_INITIALIZED;
 
     // Initialize the parser for a run...
+    mDataSource = dataSource;
     mState = eBookmarkParserState_Initial;
     mCounter = 0;
     mLastItem = NULL;
@@ -455,24 +457,15 @@ nsBookmarkDataSource::Flush(void)
 nsresult
 nsBookmarkDataSource::ReadBookmarks(void)
 {
-    nsresult rv;
-    nsIRDFResourceManager* mgr;
+    nsresult rv = NS_ERROR_FAILURE;
 
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFResourceManagerCID,
-                                                    kIRDFResourceManagerIID,
-                                                    (nsISupports**) &mgr)))
-        return rv;
-
-    BookmarkParser parser(mgr, this);
     PRFileDesc* f;
-
-    rv = NS_ERROR_FAILURE;
     if ((f = PR_Open(kBookmarksFilename, PR_RDONLY, 0644))) {
-        rv = parser.Parse(f);
+        BookmarkParser parser;
+        rv = parser.Parse(f, this);
         PR_Close(f);
     }
 
-    nsServiceManager::ReleaseService(kRDFResourceManagerCID, mgr);
     return rv;
 }
 
