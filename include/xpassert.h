@@ -60,6 +60,15 @@
 #define XP_ASSERT(X)			assert(X) /* are we having fun yet? */
 #endif
 
+#elif defined (XP_BEOS)
+
+#ifdef DEBUG
+#include <assert.h>
+#define XP_ASSERT(X)            assert(X)
+#else
+#define XP_ASSERT(X)
+#endif
+
 #elif defined (XP_WIN)
 #ifdef DEBUG
 
