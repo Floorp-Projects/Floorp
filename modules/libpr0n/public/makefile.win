@@ -22,8 +22,6 @@
 
 DEPTH		= ..\..\..
 
-include <$(DEPTH)/config/config.mak>
-
 MODULE		= imglib2
 XPIDL_MODULE	= imglib2
 

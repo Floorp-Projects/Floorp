@@ -20,9 +20,10 @@
 #   Tim Rowley <tor@cs.brown.edu>
 
 DEPTH=..\..\..\..
+MODULE		= imgmng
+REQUIRES = xpcom necko imglib2 gfx gfx2 mng jpeg timer zlib
 include <$(DEPTH)/config/config.mak>
 
-MODULE		= imgmng
 LIBRARY_NAME	= imgmng
 DLL		= $(OBJDIR)\$(LIBRARY_NAME).dll
 MAKE_OBJ_TYPE	= DLL

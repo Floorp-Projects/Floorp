@@ -22,9 +22,10 @@
 #
 
 DEPTH=..\..\..\..
+MODULE		= imggif
+REQUIRES	= xpcom necko gfx gfx2 imglib2
 include <$(DEPTH)/config/config.mak>
 
-MODULE		= imggif
 LIBRARY_NAME	= imggif
 MODULE_NAME	= nsGIFModule2
 

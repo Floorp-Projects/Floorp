@@ -22,11 +22,11 @@
 #
 
 DEPTH=..\..\..\..
-include <$(DEPTH)/config/config.mak>
 
 DIRS=win
 
 MODULE		= imgicon
+REQUIRES=xpcom string imglib2 gfx gfx2 necko
 LIBRARY_NAME	= imgicon
 XPIDL_MODULE	= imgicon
 MODULE_NAME	= nsIconDecoderModule

@@ -23,9 +23,10 @@ DEPTH=..\..
 
 DIRS = windows
 
+MODULE=gfx
+REQUIRES	= xpcom string widget util dom locale view necko pref timer uriloader gfx2 imglib2 intl mimetype content layout
 include <$(DEPTH)\config\config.mak>
 
-MODULE=gfx
 LIBRARY_NAME=gkgfx
 EXPORT_LIBRARY=1
 

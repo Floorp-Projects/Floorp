@@ -22,7 +22,9 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=layouthtmltable_s 
-MODULE=raptor 
+MODULE=layout
+REQUIRES	= xpcom string dom widget locale webshell view accessibility gfx content raptor
+
 
 DEFINES		=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN -DoffDEBUG_TABLE_REFLOW \
 		-DoffDEBUG_TABLE_REFLOW_TIMING -DoffDEBUG_TABLE_REFLOW_TIMING_DETAIL \

@@ -20,6 +20,9 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+MODULE=layout
+REQUIRES	= xpcom string dom widget view locale timer htmlparser webshell necko uconv pref uriloader unicharutil docshell imglib2 gfx2 raptor content gfx
+
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=layoutbase_s 
@@ -50,7 +53,6 @@ CPPSRCS =				\
 !endif        
 	$(NULL)
 
-MODULE=raptor 
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsAutoCopy.obj		\

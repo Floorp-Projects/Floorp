@@ -50,7 +50,8 @@ EXPORTS =				\
 	nsIContentList.h		\
 	$(NULL)
 
-MODULE=content_base
+MODULE=content
+XPIDL_MODULE=content_base
 
 XPIDLSRCS=					\
 		.\nsIContentPolicy.idl		\

@@ -22,7 +22,8 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=contentxulcontent_s 
-MODULE=raptor 
+MODULE=content
+REQUIRES	= xpcom string widget htmlparser necko dom js caps rdf xpconnect locale timer lwbrk pref xul xuldoc xultmpl webshell layout layout_xul raptor gfx
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -44,11 +45,7 @@ CPP_OBJS=					        \
         .\$(OBJDIR)\nsXULTreeElement.obj                \
 	$(NULL)
 
-EXPORTS =					\
-	$(NULL)
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I$(PUBLIC)\dom -I$(PUBLIC)\netlib -I$(PUBLIC)\pref \
+LINCS= \
   -I..\..\document\src -I..\..\..\xml\content\src \
   -I..\..\..\base\src
 

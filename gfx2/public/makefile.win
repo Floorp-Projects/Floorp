@@ -22,9 +22,9 @@
 
 DEPTH		= ..\..
 
+MODULE		= gfx2
 include <$(DEPTH)/config/config.mak>
 
-MODULE		= gfx2
 XPIDL_MODULE	= gfx2
 
 XPIDLSRCS	= \

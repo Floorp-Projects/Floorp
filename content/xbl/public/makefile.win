@@ -33,6 +33,6 @@ EXPORTS =				\
     nsIXBLPrototypeProperty.h \
     $(NULL)
 
-MODULE=raptor 
+MODULE=content
 
 include <$(DEPTH)\config\rules.mak>

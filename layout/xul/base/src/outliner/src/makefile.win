@@ -23,6 +23,7 @@ DEPTH=..\..\..\..\..\..
 
 LIBRARY_NAME=raptorxuloutliner_s 
 MODULE=raptor 
+REQUIRES	= xpcom string dom widget timer locale view xultmpl rdf necko gfx2 imglib2 gfx layout layout_xul content
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -43,12 +44,12 @@ CPP_OBJS=		\
 EXPORTS = nsOutlinerColFrame.h	\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
+LINCS= \
   -I..\.. \
-  -I..\..\..\..\..\html\style\src -I..\..\..\..\..\html\base\src -I$(PUBLIC)\dom \
+  -I..\..\..\..\..\html\style\src -I..\..\..\..\..\html\base\src \
    -I..\..\..\..\content\src \
    -I..\..\..\..\..\html\forms\src \
-  -I$(PUBLIC)\netlib -I..\..\..\..\..\base\src -I$(PUBLIC)\pref \
+	-I..\..\..\..\..\base\src \
   -I..\..\..\..\..\xml\content\src \
   -I..\..\..\..\..\base\public
 

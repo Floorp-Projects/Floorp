@@ -20,11 +20,16 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-
+MODULE=widget 
+REQUIRES=xpcom string dom content accessibility layout gfx xuldoc raptor necko pref plugin timer uconv intl
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME = raptorwidget_s
 DEFINES =-D_IMPL_NS_WIDGET -DMOZ_AIMM
+
+EXPORTS = \
+	nsdefs.h \
+	$(NULL)
 
 CPPSRCS =              \
 !ifdef ACCESSIBILITY
@@ -48,8 +53,7 @@ CPPSRCS =              \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
 	$(NULL)
-	
-MODULE=raptor 
+
 
 OBJS =                             \
 !ifdef ACCESSIBILITY
@@ -74,13 +78,8 @@ OBJS =                             \
 	.\$(OBJDIR)\nsBidiKeyboard.obj   \
 	$(NULL)
 
-LINCS=                                  \
-	-I$(PUBLIC)\raptor              \
-	-I$(PUBLIC)\xpcom               \
-	-I..\xpwidgets               \
-	-I$(PUBLIC)\dom   \
-	-I$(PUBLIC)\network   \
-	-I$(PUBLIC)\netlib   \
+LINCS= \
+	-I..\xpwidgets \
 	$(NULL)
 
 LCFLAGS =                               \

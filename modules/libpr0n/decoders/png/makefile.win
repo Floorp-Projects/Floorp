@@ -22,9 +22,10 @@
 #
 
 DEPTH=..\..\..\..
+MODULE		= imgpng
+REQUIRES	= xpcom necko gfx gfx2 imglib2 png zlib
 include <$(DEPTH)/config/config.mak>
 
-MODULE		= imgpng
 LIBRARY_NAME	= imgpng
 MODULE_NAME	= nsPNGDecoderModule
 

@@ -22,7 +22,8 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=contenthtmlstyle_s 
-MODULE=raptor 
+MODULE=content
+REQUIRES	= xpcom string dom widget caps locale js necko webshell xul htmlparser docshell uconv xuldoc xpconnect pref layout raptor gfx
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

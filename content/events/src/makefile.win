@@ -22,10 +22,13 @@
 DEPTH=..\..\..
 
 
-include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=contentevents_s 
-MODULE=raptor 
+MODULE=content
+REQUIRES	= xpcom string dom js locale widget timer caps xpconnect docshell webshell pref htmlparser view gfx raptor layout layout_xul
+
+include <$(DEPTH)\config\config.mak>
+
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

@@ -22,7 +22,8 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=contentxultemplates_s 
-MODULE=raptor 
+MODULE=content
+REQUIRES	= xpcom string js xpconnect timer caps widget dom rdf necko locale xul xuldoc xultmpl layout raptor gfx layout_xul
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -76,13 +77,11 @@ CPP_OBJS=					        \
         .\$(OBJDIR)\nsXULTemplateBuilder.obj            \
 	$(NULL)
 
-EXPORTS =					\
-	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
+LINCS= \
+  -I..\..\..\html\style\src -I..\..\..\html\base\src \
    -I..\..\..\html\document\src -I..\..\content\src \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
+	-I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

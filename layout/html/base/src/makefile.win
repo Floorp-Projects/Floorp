@@ -20,10 +20,11 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
+MODULE=layout
+REQUIRES	= xpcom string dom widget locale view necko js caps pref htmlparser webshell plugin gkplugin timer docshell mimetype webBrowser_core oji util unicharutil lwbrk gfx2 gfx imglib2 accessibility xpconnect java exthandler content raptor
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=layouthtmlbase_s 
-MODULE=raptor 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
@@ -129,17 +130,13 @@ CPP_OBJS=						\
 !endif        
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
- -I$(PUBLIC)\dom -I$(PUBLIC)\netlib	-I$(PUBLIC)\unicharutil			\
+LINCS=\
  -I..\..\style\src						\
  -I..\..\forms\src						\
- -I..\..\..\base\src -I$(PUBLIC)\plugin -I$(PUBLIC)\java \
- -I$(PUBLIC)\pref \
- -I$(PUBLIC)\lwbrk \
- -I$(PUBLIC)\unicharutil \
- -I$(PUBLIC)\oji \
+ -I..\..\..\base\src \
  -I..\..\..\xul\content\src				\
  -I..\..\..\xul\base\src				\
+	$(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
