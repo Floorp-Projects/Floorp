@@ -737,7 +737,6 @@ NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aD
   if (devmode) {
     dc = ::CreateDC(drivername, devicename, NULL, devmode);
   }
-  devSpecWin->UnlockDevMode();
 
   return devConWin->Init(dc, this); // take ownership of the DC
 }

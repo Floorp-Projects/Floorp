@@ -58,6 +58,8 @@ public:
   nsPrintSettingsWin& operator=(const nsPrintSettingsWin& rhs);
 
 protected:
+  void CopyDevMode(DEVMODE* aInDevMode, DEVMODE *& aOutDevMode);
+
   char*     mDeviceName;
   char*     mDriverName;
   LPDEVMODE mDevMode;

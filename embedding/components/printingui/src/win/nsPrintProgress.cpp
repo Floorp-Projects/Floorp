@@ -45,8 +45,41 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
+#if 0
 NS_IMPL_THREADSAFE_ADDREF(nsPrintProgress);
 NS_IMPL_THREADSAFE_RELEASE(nsPrintProgress);
+#else
+NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  nsrefcnt count;
+  count = PR_AtomicIncrement((PRInt32*)&mRefCnt);
+  //NS_LOG_ADDREF(this, count, #_class, sizeof(*this));
+  return count;
+}
+
+/**
+ * Use this macro to implement the Release method for a given <i>_class</i>
+ * @param _class The name of the class implementing the method
+ */
+
+NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::Release(void)
+{
+  nsrefcnt count;
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+  //NS_LOG_RELEASE(this, count, #_class);
+  if (0 == count) {
+    mRefCnt = 1; /* stabilize */
+    /* enable this to find non-threadsafe destructors: */
+    /* NS_ASSERT_OWNINGTHREAD(_class); */
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return count;
+}
+
+#endif
 
 NS_INTERFACE_MAP_BEGIN(nsPrintProgress)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrintStatusFeedback)
