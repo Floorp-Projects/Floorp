@@ -79,6 +79,10 @@
 
 #define XPRODUCT        1
 
+struct mozReplaceTable {
+  nsString pattern;
+  nsString replacement;
+};
 
 class myspPrefix;
 class myspSuffix;
@@ -91,6 +95,8 @@ public:
   ~myspAffixMgr();
   nsresult GetPersonalDictionary(mozIPersonalDictionary * *aPersonalDictionary);
   nsresult SetPersonalDictionary(mozIPersonalDictionary * aPersonalDictionary);
+  mozReplaceTable *getReplaceTable();
+  PRUint32 getReplaceTableLength();
   PRBool check(const nsAFlatString &word);
   void get_try_string(nsAString &aTryString);
   nsresult Load(const nsString &aDictionary);
@@ -101,7 +107,9 @@ protected:
   PRBool  suffixCheck(const nsAFlatCString &word,PRBool cross=PR_FALSE,char crossID=' ');
 
   nsresult LoadDictionary(nsIInputStream *strm);
-  nsresult  parse_file(nsIInputStream *strm);
+  nsresult parse_file(nsIInputStream *strm);
+
+  nsresult DecodeString(const nsAFlatCString &aSource, nsAString &aDest);
 
   mozAffixState prefixes;
   mozAffixState suffixes;
@@ -110,6 +118,8 @@ protected:
   nsCString             mEncoding;
   nsString              mLanguage;
   mozCStr2CStrHashtable mHashTable;
+  mozReplaceTable      *mReplaceTable;
+  PRUint32              mReplaceTableLength;
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
   nsCOMPtr<nsIUnicodeEncoder>      mEncoder; 
   nsCOMPtr<nsIUnicodeDecoder>      mDecoder; 

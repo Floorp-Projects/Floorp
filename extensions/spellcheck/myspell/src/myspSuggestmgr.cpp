@@ -57,6 +57,7 @@
 #include "plstr.h"
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
+#include "nsUnicharUtils.h"
 
 myspSuggestMgr::myspSuggestMgr()
 {
@@ -104,9 +105,15 @@ nsresult myspSuggestMgr::suggest(PRUnichar ***slst,const nsAFlatString &word, PR
     nsug=*num;
   }
 
+  // perhaps we made a typical spelling error.
+  res = replacechars(wlst, word, &nsug);
+
   // did we forget to add a char
   res = forgotchar(wlst, word, &nsug);
-
+  if ((nsug < maxSug) && NS_SUCCEEDED(res)){
+    res = forgotchar(wlst, word, &nsug);
+  }
+ 
   // did we swap the order of chars by mistake
   if ((nsug < maxSug) && NS_SUCCEEDED(res)){
     res = swapchar(wlst, word, &nsug);
@@ -141,6 +148,60 @@ nsresult myspSuggestMgr::suggest(PRUnichar ***slst,const nsAFlatString &word, PR
 }
 
 
+// suggestions for a typical spelling error that
+// differs by more than 1 letter from the right spelling
+nsresult myspSuggestMgr::replacechars(PRUnichar ** wlst,const nsAFlatString &word, PRUint32 *ns)
+{
+  nsAutoString candidate;
+  PRBool cwrd;
+  PRUint32 i,k;
+  PRUint32 startOffset, findOffset;
+
+  if (word.Length() < 2 || !pAMgr)
+    return NS_OK;
+
+  PRUint32 replaceTableLength = pAMgr->getReplaceTableLength();
+  struct mozReplaceTable *replaceTable = pAMgr->getReplaceTable();
+
+  if (replaceTable == nsnull)
+    return NS_OK;
+
+  for (i = 0; i < replaceTableLength; i++) {
+    startOffset = 0;
+
+    candidate.Assign(word);
+    ToLowerCase(candidate);
+
+    while ((findOffset = candidate.Find(replaceTable[i].pattern, startOffset)) != -1) {
+      candidate.Assign(word);
+      ToLowerCase(candidate);
+      candidate.Replace(findOffset, replaceTable[i].pattern.Length(), replaceTable[i].replacement);
+
+      cwrd = PR_TRUE;
+      for (k = 0; k < *ns; k++) {
+        if (candidate.Equals(wlst[k])){ 
+          cwrd = PR_FALSE;
+          break;
+        }
+      }
+
+      if (cwrd && pAMgr->check(candidate)) {
+        if (*ns < maxSug) {
+          wlst[*ns] = ToNewUnicode(candidate);
+          if (!wlst[*ns])
+            return NS_ERROR_OUT_OF_MEMORY;
+          (*ns)++;
+        } else {
+          return NS_OK;
+        }
+      }
+
+      startOffset = findOffset + replaceTable[i].pattern.Length();
+    }
+  }
+
+  return NS_OK;
+}
 
 // error is wrong char in place of correct one
 nsresult myspSuggestMgr::badchar(PRUnichar ** wlst,const nsAFlatString &word, PRUint32 *ns)
