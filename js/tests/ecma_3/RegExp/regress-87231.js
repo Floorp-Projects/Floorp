@@ -24,41 +24,67 @@
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=87231
 * Key case:
+*
 *            pattern = /^(A)?(A.*)$/;
 *            string = 'A';
-*            expectedmatch = Array( 'A',  '',  'A' );
+*            expectedmatch = Array('A', '', 'A');
+*
 *
 * We expect the 1st subexpression (A)? NOT to consume the single 'A'.
-* Recall the "?" means "match 0 or 1 times". It should NOT do greedy matching;
-* it should match 0 times instead of 1. It thus allows the 2nd subexpression to
-* make the only match it can: the single 'A'. This is the only way there can be
-* a successful global match...
+* Recall that "?" means "match 0 or 1 times". Here, it should NOT do
+* greedy matching: it should match 0 times instead of 1. This allows
+* the 2nd subexpression to make the only match it can: the single 'A'.
+* Such "altruism" is the only way there can be a successful global match...
 */
 //-------------------------------------------------------------------------------------------------
 var i = 0;
 var bug = 87231;
 var cnEmptyString = '';
 var summary = 'Testing regular expression /(A)?(A.*)/';
-var pattern = ''; var patterns = new Array();
-var string = ''; var strings = new Array();
-var actualmatch = '';  var actualmatches = new Array();
-var expectedmatch = ''; var expectedmatches = new Array();
+var pattern = '';
+var patterns = new Array();
+var string = '';
+var strings = new Array();
+var actualmatch = '';
+var actualmatches = new Array();
+var expectedmatch = '';
+var expectedmatches = new Array();
 
 
 pattern = /^(A)?(A.*)$/;
     string = 'AAA';
     actualmatch = string.match(pattern);
-    expectedmatch = Array(string,  'A',  'AA');
+    expectedmatch = Array('AAA', 'A', 'AA');
     addThis();
 
     string = 'AA';
     actualmatch = string.match(pattern);
-    expectedmatch = Array(string,  'A',  'A');
+    expectedmatch = Array('AA', 'A', 'A');
     addThis();
 
     string = 'A';
     actualmatch = string.match(pattern);
-    expectedmatch = Array(string, cnEmptyString,  'A');
+    expectedmatch = Array('A', cnEmptyString, 'A'); // 'altruistic' case: see above
+    addThis();
+
+
+pattern = /(A)?(A.*)/;
+var strL = 'zxcasd;fl\\\  ^';
+var strR = 'aaAAaaaf;lrlrzs';
+
+    string =  strL + 'AAA' + strR;
+    actualmatch = string.match(pattern);
+    expectedmatch = Array('AAA' + strR, 'A', 'AA' + strR);
+    addThis();
+
+    string =  strL + 'AA' + strR;
+    actualmatch = string.match(pattern);
+    expectedmatch = Array('AA' + strR, 'A', 'A' + strR);
+    addThis();
+
+    string =  strL + 'A' + strR;
+    actualmatch = string.match(pattern);
+    expectedmatch = Array('A' + strR, cnEmptyString, 'A' + strR); // 'altruistic' case: see above
     addThis();
 
 
