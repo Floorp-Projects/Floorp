@@ -2327,9 +2327,13 @@ nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
   *aDOMEvent = nsnull;
 
   nsAutoString str(aEventType);
-  if (!aEvent && !str.EqualsIgnoreCase("MouseEvents") && !str.EqualsIgnoreCase("KeyEvents") &&
-      !str.EqualsIgnoreCase("HTMLEvents") && !str.EqualsIgnoreCase("MutationEvents") &&
-      !str.EqualsIgnoreCase("MouseScrollEvents") && !str.EqualsIgnoreCase("Events")) {
+  if (!aEvent && !str.EqualsIgnoreCase("MouseEvents") &&
+                 !str.EqualsIgnoreCase("KeyEvents") &&
+                 !str.EqualsIgnoreCase("HTMLEvents") &&
+                 !str.EqualsIgnoreCase("MutationEvents") &&
+                 !str.EqualsIgnoreCase("MouseScrollEvents") &&
+                 !str.EqualsIgnoreCase("PopupBlockedEvents") &&
+                 !str.EqualsIgnoreCase("Events")) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 

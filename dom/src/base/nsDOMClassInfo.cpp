@@ -184,6 +184,7 @@
 #include "nsIDOMEntityReference.h"
 #include "nsIDOMNotation.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMDocumentStyle.h"
 #include "nsIDOMDocumentRange.h"
@@ -1456,6 +1457,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMKeyEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMouseEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMPopupBlockedEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSUIEvent)
   DOM_CLASSINFO_MAP_END
 

@@ -41,6 +41,7 @@
 
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsISupports.h"
@@ -61,6 +62,7 @@ class nsIScrollableView;
 class nsDOMEvent : public nsIDOMKeyEvent,
                    public nsIDOMNSEvent,
                    public nsIDOMMouseEvent,
+                   public nsIDOMPopupBlockedEvent,
                    public nsIDOMNSUIEvent,
                    public nsIPrivateDOMEvent,
                    public nsIPrivateTextEvent,
@@ -118,7 +120,8 @@ public:
     eDOMEvents_noderemovedfromdocument,
     eDOMEvents_nodeinsertedintodocument,
     eDOMEvents_attrmodified,
-    eDOMEvents_characterdatamodified
+    eDOMEvents_characterdatamodified,
+    eDOMEvents_popupBlocked
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
@@ -135,6 +138,8 @@ public:
 
   // nsIDOMUIEvent Interface
   NS_DECL_NSIDOMUIEVENT
+
+  NS_DECL_NSIDOMPOPUPBLOCKEDEVENT
 
   // nsIDOMMouseEvent Interface and nsIDOMKeyEvent Interface
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);
