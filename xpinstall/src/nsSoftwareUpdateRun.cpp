@@ -73,17 +73,13 @@
 
 #include "nsIExtensionManager.h"
 
-#ifndef MOZ_XUL_APP
-#include "nsIChromeRegistrySea.h"
-#endif
-
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, 
                                       nsIFile* jarfile, const PRUnichar* url, 
                                       const PRUnichar* args, PRUint32 flags, 
-                                      nsIXULChromeRegistry* registry, 
+                                      CHROMEREG_IFACE* registry, 
                                       nsIZipReader* hZip);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
@@ -94,7 +90,7 @@ static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, char** scriptBuf
 static PRInt32  OpenAndValidateArchive(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrincipal);
 
 static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, 
-                                    PRUint32 flags, nsIXULChromeRegistry* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
+                                    PRUint32 flags, CHROMEREG_IFACE* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
@@ -245,7 +241,6 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 }
 
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Function name    : OpenAndValidateArchive
 // Description      : Opens install archive and validates contents
@@ -291,7 +286,6 @@ OpenAndValidateArchive(nsIZipReader* hZip, nsIFile* jarFile, nsIPrincipal* aPrin
  
     return nsInstall::SUCCESS;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Function name    : GetInstallScriptFromJarfile
@@ -370,7 +364,7 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
                                     const PRUnichar* url,
                                     const PRUnichar* args,
                                     PRUint32 flags,
-                                    nsIXULChromeRegistry* reg,
+                                    CHROMEREG_IFACE* reg,
                                     JSRuntime *rt,
                                     JSContext **jsCX,
                                     JSObject **jsGlob)
@@ -498,13 +492,13 @@ extern "C" void RunInstallOnThread(void *data)
 
     nsCOMPtr<nsIFile> jarpath = installInfo->GetFile();
 
-    PRBool installed = PR_FALSE;
     finalStatus = OpenAndValidateArchive( hZip,
                                           jarpath,
                                           installInfo->mPrincipal);
 
     if (finalStatus == nsInstall::SUCCESS)
     {
+#ifdef MOZ_XUL_APP
         if (NS_SUCCEEDED(hZip->Test("install.rdf")))
         {
             // appears to be an Extension Manager install
@@ -512,16 +506,18 @@ extern "C" void RunInstallOnThread(void *data)
             if (em)
             {
                 rv = em->InstallExtension(jarpath, nsIExtensionManager::FLAG_INSTALL_PROFILE);
-                if (NS_SUCCEEDED(rv))
-                    installed = PR_TRUE;
+                if (NS_FAILED(rv))
+                    finalStatus = nsInstall::EXECUTION_ERROR;
+            } else {
+                finalStatus = nsInstall::UNEXPECTED_ERROR;
             }
-        }
-
-        if (!installed)
+            // If install.rdf exists, but the install failed, we don't want
+            // to try an install.js install.
+        } else
+#endif
         {
-            // Either no install.rdf, EM doesn't exist (Suite), or EM install failed:
+            // If we're the suite, or there is no install.rdf,
             // try original XPInstall
-            // XXX: Shouldn't the third case be an error and skip the old-style attempt?
             finalStatus = GetInstallScriptFromJarfile( hZip,
                                                        &scriptBuffer,
                                                        &scriptLength);
@@ -643,107 +639,91 @@ extern "C" void RunChromeInstallOnThread(void *data)
         listener->OnInstallStart(info->GetURL());
 
     // make sure we've got a chrome registry -- can't proceed if not
-    nsIXULChromeRegistry* reg = info->GetChromeRegistry();
-#ifndef MOZ_XUL_APP
-    nsCOMPtr<nsIChromeRegistrySea> cr = do_QueryInterface(reg);
-#endif
+    CHROMEREG_IFACE* reg = info->GetChromeRegistry();
+    NS_ASSERTION(reg, "We shouldn't get here without a chrome registry.");
+
     if (reg)
     {
-        // build up jar: URL
-        nsCString spec;
-        spec.SetCapacity(200);
-        spec = "jar:";
+#ifdef MOZ_XUL_APP
+        PRBool installed = PR_FALSE;
 
-        nsCAutoString localURL;
-        rv = NS_GetURLSpecFromFile(info->GetFile(), localURL);
-        if (NS_SUCCEEDED(rv)) {
-            spec.Append(localURL);
-            spec.Append("!/");
+        if (info->GetType() == CHROME_SKIN) {
+            static NS_DEFINE_CID(kZipReaderCID,  NS_ZIPREADER_CID);
+            nsCOMPtr<nsIZipReader> hZip = do_CreateInstance(kZipReaderCID, &rv);
+            if (hZip)
+                rv = hZip->Init(info->GetFile());
+            if (NS_SUCCEEDED(rv))
+                rv = hZip->Open();
+
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = hZip->Test("install.rdf");
+                nsIExtensionManager* em = info->GetExtensionManager();
+                if (NS_SUCCEEDED(rv) && em) {
+                    rv = em->InstallTheme(info->GetFile(), nsIExtensionManager::FLAG_INSTALL_PROFILE);
+                    if (NS_SUCCEEDED(rv)) {
+                        installed = PR_TRUE;
+                        info->GetFile()->Remove(PR_FALSE);
+                        // Extension Manager copies the theme .jar file to 
+                        // a different location, so remove the temporary file.
+                    }
+                }
+    
+                hZip->Close();
+            }
         }
 
-        // Now register the new chrome
-        if (NS_SUCCEEDED(rv))
+        if (!installed) {
+            reg->ProcessContentsManifest(info->GetFileJARURL(),
+                                         info->GetManifestURL(),
+                                         PR_TRUE,
+                                         info->GetType() == CHROME_SKIN);
+            reg->CheckForNewChrome();
+        }
+
+#else
+        PRBool isSkin    = (info->GetType() & CHROME_SKIN);
+        PRBool isLocale  = (info->GetType() & CHROME_LOCALE);
+        PRBool isContent = (info->GetType() & CHROME_CONTENT);
+        PRBool selected  = (info->GetFlags() != 0);
+
+        const nsCString& spec = info->GetFileJARSpec();
+
+        if ( isContent )
+            rv = reg->InstallPackage(spec.get(), PR_TRUE);
+
+        if ( isSkin )
         {
-            PRBool isSkin    = (info->GetType() & CHROME_SKIN);
-            PRBool isLocale  = (info->GetType() & CHROME_LOCALE);
-            PRBool isContent = (info->GetType() & CHROME_CONTENT);
-            PRBool selected  = (info->GetFlags() != 0);
-
-            if ( isContent )
-            {
-                rv = reg->InstallPackage(spec.get(), PR_TRUE);
-            }
-
-            if ( isSkin )
-            {
-                PRBool installed = PR_FALSE;
-
-                // Look for a theme manifest
-
-                static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
-                static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
-                nsresult rv;
-                nsCOMPtr<nsIZipReader> hZip = do_CreateInstance(kZipReaderCID, &rv);
-                if (hZip)
-                    rv = hZip->Init(info->GetFile());
-                if (NS_SUCCEEDED(rv))
-                {
-                    hZip->Open();
-
-                    nsIExtensionManager* em = info->GetExtensionManager();
-                    rv = hZip->Test("install.rdf");
-                    if (NS_SUCCEEDED(rv) && em)
-                    {
-                        rv = em->InstallTheme(info->GetFile(), nsIExtensionManager::FLAG_INSTALL_PROFILE);
-                        if (NS_SUCCEEDED(rv))
-                            installed = PR_TRUE;
-                    }
-    
-                    hZip->Close();
-                    // Extension Manager copies the theme .jar file to 
-                    // a different location, so remove the temporary file.
-                    info->GetFile()->Remove(PR_FALSE);
-                }
+            rv = reg->InstallSkin(spec.get(), PR_TRUE, PR_FALSE);
                 
-                // We either have an old-style theme with no theme.rdf 
-                // manifest, OR we have a new style theme and InstallTheme
-                // returned an error (e.g. it's not implemented in Seamonkey, 
-                // or something else went wrong)
-                if (!installed)
-                    rv = reg->InstallSkin(spec.get(), PR_TRUE, PR_FALSE);
-                
-#ifndef MOZ_XUL_APP
-                if (NS_SUCCEEDED(rv) && selected && cr)
-                {
-                    NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
-                    rv = cr->SelectSkin(utf8Args, PR_TRUE);
-                }
-#endif
-            }
-
-            if ( isLocale )
+            if (NS_SUCCEEDED(rv) && selected)
             {
-                rv = reg->InstallLocale(spec.get(), PR_TRUE);
-
-#ifndef MOZ_XUL_APP
-                if (NS_SUCCEEDED(rv) && selected && cr)
-                {
-                    NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
-                    rv = cr->SelectLocale(utf8Args, PR_TRUE);
-                }
-#endif
+                NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
+                rv = reg->SelectSkin(utf8Args, PR_TRUE);
             }
+        }
 
-            // now that all types are registered try to activate
-            if ( isSkin && selected )
-                reg->RefreshSkins();
+        if ( isLocale )
+        {
+            rv = reg->InstallLocale(spec.get(), PR_TRUE);
+
+            if (NS_SUCCEEDED(rv) && selected)
+            {
+                NS_ConvertUCS2toUTF8 utf8Args(info->GetArguments());
+                rv = reg->SelectLocale(utf8Args, PR_TRUE);
+            }
+        }
+
+        // now that all types are registered try to activate
+        if ( isSkin && selected )
+            reg->RefreshSkins();
 
 #ifdef RELOAD_CHROME_WORKS
 // XXX ReloadChrome() crashes right now
             if ( isContent || (isLocale && selected) )
                 reg->ReloadChrome();
 #endif
-        }
+#endif
     }
 
     if (listener)

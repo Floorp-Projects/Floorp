@@ -43,6 +43,7 @@
 */
 
 #include "nsChromeProtocolHandler.h"
+#include "nsChromeRegistry.h"
 #include "nsCOMPtr.h"
 #include "nsContentCID.h"
 #include "nsCRT.h"
@@ -65,10 +66,8 @@
 #include "nsIServiceManager.h"
 #include "nsIStandardURL.h"
 #include "nsIStreamListener.h"
-#ifdef MOZ_XUL
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
-#endif
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
@@ -76,12 +75,7 @@
 
 //----------------------------------------------------------------------
 
-#ifdef MOZ_XUL
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
-#endif
-
-// This comes from nsChromeRegistry.cpp
-extern nsIChromeRegistry* gChromeRegistry;
 
 //----------------------------------------------------------------------
 //
@@ -464,50 +458,32 @@ nsChromeProtocolHandler::NewURI(const nsACString &aSpec,
                                 nsIURI *aBaseURI,
                                 nsIURI **result)
 {
-    NS_PRECONDITION(result, "Null out param");
-    
     nsresult rv;
-
-    *result = nsnull;
 
     // Chrome: URLs (currently) have no additional structure beyond that provided
     // by standard URLs, so there is no "outer" given to CreateInstance
 
-    nsCOMPtr<nsIStandardURL> url(do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv));
+    nsCOMPtr<nsIStandardURL> surl(do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = surl->Init(nsIStandardURL::URLTYPE_STANDARD, -1, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv))
         return rv;
 
-    rv = url->Init(nsIStandardURL::URLTYPE_STANDARD, -1, aSpec, aCharset, aBaseURI);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIURI> uri(do_QueryInterface(url, &rv));
-    if (NS_FAILED(rv))
-        return rv;
+    nsCOMPtr<nsIURL> url(do_QueryInterface(surl, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Canonify the "chrome:" URL; e.g., so that we collapse
     // "chrome://navigator/content/" and "chrome://navigator/content"
     // and "chrome://navigator/content/navigator.xul".
 
-    // Try the global cache first.
-    nsCOMPtr<nsIChromeRegistry> reg = gChromeRegistry;
-
-    // If that fails, the service has not been instantiated yet; let's
-    // do that now.
-    if (!reg) {
-        reg = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-        if (NS_FAILED(rv))
-            return rv;
-    }
-
-    NS_ASSERTION(reg, "Must have a chrome registry by now");
-    
-    rv = reg->Canonify(uri);
+    rv = nsChromeRegistry::Canonify(url);
     if (NS_FAILED(rv))
         return rv;
 
-    *result = uri;
-    NS_ADDREF(*result);
+    surl->SetMutable(PR_FALSE);
+
+    NS_ADDREF(*result = url);
     return NS_OK;
 }
 
@@ -521,20 +497,17 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
 #ifdef DEBUG
     // Check that the uri we got is already canonified
     nsresult debug_rv;
-    nsCOMPtr<nsIChromeRegistry> debugReg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &debug_rv));
+    nsCOMPtr<nsIURI> debugClone;
+    debug_rv = aURI->Clone(getter_AddRefs(debugClone));
     if (NS_SUCCEEDED(debug_rv)) {
-        nsCOMPtr<nsIURI> debugClone;
-        debug_rv = aURI->Clone(getter_AddRefs(debugClone));
+        nsCOMPtr<nsIURL> debugURL (do_QueryInterface(debugClone));
+        debug_rv = nsChromeRegistry::Canonify(debugURL);
         if (NS_SUCCEEDED(debug_rv)) {
-            debug_rv = debugReg->Canonify(debugClone);
+            PRBool same;
+            debug_rv = aURI->Equals(debugURL, &same);
             if (NS_SUCCEEDED(debug_rv)) {
-                PRBool same;
-                debug_rv = aURI->Equals(debugClone, &same);
-                if (NS_SUCCEEDED(debug_rv)) {
-                    NS_ASSERTION(same, "Non-canonified chrome uri passed to nsChromeProtocolHandler::NewChannel!");
-                }
+                NS_ASSERTION(same, "Non-canonified chrome uri passed to nsChromeProtocolHandler::NewChannel!");
             }
-                
         }
     }
 #endif
@@ -542,15 +515,16 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     nsresult rv;
     nsCOMPtr<nsIChannel> result;
 
-#ifdef MOZ_XUL
     // Check the prototype cache to see if we've already got the
     // document in the cache.
-    nsCOMPtr<nsIXULPrototypeCache> cache =
-             do_GetService(kXULPrototypeCacheCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
+    nsCOMPtr<nsIXULPrototypeCache> cache
+        (do_GetService(kXULPrototypeCacheCID));
     nsCOMPtr<nsIXULPrototypeDocument> proto;
-    cache->GetPrototype(aURI, getter_AddRefs(proto));
+
+    if (cache)
+        cache->GetPrototype(aURI, getter_AddRefs(proto));
+    else
+        NS_WARNING("Unable to obtain the XUL prototype cache!");
 
     // Same comment as nsXULDocument::StartDocumentLoad and
     // nsXULDocument::ResumeWalk
@@ -575,39 +549,31 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         if (! result)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-    else
-#endif
-        {
+    else {
         // Miss. Resolve the chrome URL using the registry and do a
         // normal necko load.
         //nsXPIDLCString oldSpec;
         //aURI->GetSpec(getter_Copies(oldSpec));
         //printf("*************************** %s\n", (const char*)oldSpec);
 
-        nsCOMPtr<nsIChromeRegistry> reg = gChromeRegistry;
-        if (!reg) {
-            reg = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-            if (NS_FAILED(rv)) return rv;
-        }
+        nsCOMPtr<nsIChromeRegistry> reg (do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
+        NS_ENSURE_TRUE(reg, NS_ERROR_FAILURE);
 
-        nsCAutoString spec;
-        rv = reg->ConvertChromeURL(aURI, spec);
+        nsCOMPtr<nsIURI> resolvedURI;
+        rv = reg->ConvertChromeURL(aURI, getter_AddRefs(resolvedURI));
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
+            nsCAutoString spec;
             aURI->GetSpec(spec);
             printf("Couldn't convert chrome URL: %s\n", spec.get());
 #endif
             return rv;
         }
 
-        nsCOMPtr<nsIIOService> ioServ(do_GetIOService(&rv));
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIIOService> ioServ (do_GetIOService(&rv));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsIURI> chromeURI;
-        rv = ioServ->NewURI(spec, nsnull, nsnull, getter_AddRefs(chromeURI));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = ioServ->NewChannelFromURI(chromeURI, getter_AddRefs(result));
+        rv = ioServ->NewChannelFromURI(resolvedURI, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
 
         // XXX Will be removed someday when we handle remote chrome.
@@ -700,10 +666,8 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
 
                 if (file) {
                     rv = fastLoadServ->AddDependency(file);
-#ifdef MOZ_XUL
                     if (NS_FAILED(rv))
                         cache->AbortFastLoads();
-#endif
                 }
             }
         }
