@@ -45,10 +45,8 @@ public:
   virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset);
   virtual PRBool ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool ForEachRect(nsRectInRegionFunc *func, void *closure);
-
-  //windows specific
-
-  HRGN GetHRGN(void);
+  NS_IMETHOD GetNativeRegion(void *&aRegion) const;
+  NS_IMETHOD GetRegionComplexity(nsRegionComplexity &aComplexity) const;
 
 private:
   ~nsRegionWin();

@@ -226,9 +226,19 @@ PRBool nsRegionMac :: ForEachRect(nsRectInRegionFunc *func, void *closure)
 
 //---------------------------------------------------------------------
 
-RgnHandle nsRegionMac :: GetRegion(void)
+
+NS_IMETHODIMP nsRegionMac :: GetNativeRegion(void *&aRegion) const
 {
-  return (mRegion);
+  aRegion = (void *)mRegion;
+  return NS_OK;
+}
+
+//---------------------------------------------------------------------
+
+NS_IMETHODIMP nsRegionMac :: GetRegionComplexity(nsRegionComplexity &aComplexity) const
+{
+  aComplexity = mRegionType;
+  return NS_OK;
 }
 
 //---------------------------------------------------------------------

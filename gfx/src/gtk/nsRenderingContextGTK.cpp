@@ -334,9 +334,9 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
 {
   nsRect rect;
   GdkRectangle gdk_rect;
+  GdkRegion *gdk_region;
 
-  nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
-  GdkRegion *gdk_region = pRegion->GetGTKRegion();
+  aRegion.GetNativeRegion((void *&)gdk_region);
 
   ::gdk_region_get_clipbox (gdk_region, &gdk_rect);
 

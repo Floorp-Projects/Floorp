@@ -212,10 +212,16 @@ PRBool nsRegionGTK :: ForEachRect(nsRectInRegionFunc *func, void *closure)
   return PR_FALSE;
 }
 
-
-GdkRegion * nsRegionGTK :: GetGTKRegion(void)
+NS_IMETHODIMP nsRegionGTK :: GetNativeRegion(void *&aRegion) const
 {
-  return (mRegion);
+  aRegion = (void *)mRegion;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRegionGTK :: GetRegionComplexity(nsRegionComplexity &aComplexity) const
+{
+  aComplexity = mRegionType;
+  return NS_OK;
 }
 
 void nsRegionGTK :: SetRegionType()
@@ -247,11 +253,3 @@ GdkRegion * nsRegionGTK :: CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWid
   
   return (rRegion);
 }
-
-
-
-
-
-
-
-
