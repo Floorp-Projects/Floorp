@@ -117,6 +117,34 @@ nsresult nsJSThunk::Init(nsIURI* uri)
     return NS_OK;
 }
 
+static void
+GetInterfaceFromChannel(nsIChannel* aChannel,
+                        const nsIID &aIID,
+                        void **aResult)
+{
+    NS_PRECONDITION(aChannel, "Must have a channel");
+    NS_PRECONDITION(aResult, "Null out param");
+    *aResult = nsnull;
+
+    // Get an interface requestor from the channel callbacks.
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    aChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    if (callbacks) {
+        callbacks->GetInterface(aIID, aResult);
+    }
+    if (!*aResult) {
+        // Try the loadgroup
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+        if (loadGroup) {
+            loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+            if (callbacks) {
+                callbacks->GetInterface(aIID, aResult);
+            }
+        }
+    }
+}
+
 nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
 {
     nsresult rv;
@@ -128,25 +156,14 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     rv = mURI->GetPath(script);
     if (NS_FAILED(rv)) return rv;
 
-    // Get an interface requestor from the channel callbacks.
-    nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    rv = aChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-
-    NS_ASSERTION(NS_SUCCEEDED(rv) && callbacks,
-                 "Unable to get an nsIInterfaceRequestor from the channel");
-    if (NS_FAILED(rv) || !callbacks) {
-        return NS_ERROR_FAILURE;
-    }
-
-    // The requestor must be able to get a script global object owner.
+    // The the global object owner from the channel
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
-    rv = callbacks->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
-                                 getter_AddRefs(globalOwner));
-
-    NS_ASSERTION(NS_SUCCEEDED(rv) && globalOwner, 
+    GetInterfaceFromChannel(aChannel, NS_GET_IID(nsIScriptGlobalObjectOwner),
+                            getter_AddRefs(globalOwner));
+    NS_ASSERTION(globalOwner, 
                  "Unable to get an nsIScriptGlobalObjectOwner from the "
-                 "InterfaceRequestor!");
-    if (NS_FAILED(rv) || !globalOwner) {
+                 "channel!");
+    if (!globalOwner) {
         return NS_ERROR_FAILURE;
     }
 
@@ -355,14 +372,12 @@ nsJSChannel::~nsJSChannel()
 
 nsresult nsJSChannel::StopAll()
 {
-    nsCOMPtr<nsIInterfaceRequestor> callbacks;
-    mStreamChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-
     nsresult rv = NS_ERROR_UNEXPECTED;
-    nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(callbacks));
+    nsCOMPtr<nsIWebNavigation> webNav;
+    GetInterfaceFromChannel(mStreamChannel, NS_GET_IID(nsIWebNavigation),
+                            getter_AddRefs(webNav));
 
-    NS_ASSERTION(webNav, "Can't get nsIWebNavigation from callbacks!");
-
+    NS_ASSERTION(webNav, "Can't get nsIWebNavigation from channel!");
     if (webNav) {
         rv = webNav->Stop(nsIWebNavigation::STOP_ALL);
     }
@@ -540,10 +555,9 @@ nsJSChannel::InternalOpen(PRBool aIsAsync, nsIStreamListener *aListener,
             // we'll blow away the current document. Make sure that's
             // ok. If so, stop all pending network loads.
 
-            nsCOMPtr<nsIInterfaceRequestor> cb;
-            mStreamChannel->GetNotificationCallbacks(getter_AddRefs(cb));
-
-            nsCOMPtr<nsIDocShell> docShell(do_GetInterface(cb));
+            nsCOMPtr<nsIDocShell> docShell;
+            GetInterfaceFromChannel(mStreamChannel, NS_GET_IID(nsIDocShell),
+                                    getter_AddRefs(docShell));
             if (docShell) {
                 nsCOMPtr<nsIContentViewer> cv;
                 docShell->GetContentViewer(getter_AddRefs(cv));
