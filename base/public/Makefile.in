@@ -44,6 +44,8 @@ EXPORTS =		\
     nsQuickSort.h	\
     nsIPageManager.h	\
     nsIBuffer.h		\
+    nsIByteBufferInputStream.h	\
+    nsIThread.h		\
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
