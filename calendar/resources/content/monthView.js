@@ -251,16 +251,22 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
    
    //instead of making a bunch of new date objects, make one here and modify in the for loop
    var DisplayDate = new Date( );
+   var eventDayInView;
+   var dayBoxItem;
+   var calendarEventDisplay
 
    // add each calendarEvent
    for( var eventIndex = 0; eventIndex < monthEventList.length; ++eventIndex )
    {
-      var calendarEventDisplay = monthEventList[ eventIndex ];
+      calendarEventDisplay = monthEventList[ eventIndex ];
       
       // get the day box for the calendarEvent's day
       DisplayDate.setTime( calendarEventDisplay.displayDate );
+      var MillisecondsOffset = ( this.firstDateOfView.getTimezoneOffset( ) - DisplayDate.getTimezoneOffset() ) * 60 * 1000;
+      eventDayInView = Math.floor( ( ( DisplayDate.getTime() + MillisecondsOffset ) - this.firstDateOfView.getTime() ) / ( 1000 * 60 * 60 * 24 ) ) ;
+      dayBoxItem = this.dayBoxItemArray[ eventDayInView ];
 
-      var dayBoxItem = this.dayBoxItemByDateArray[ DisplayDate.getDate( ) ];       
+      //var dayBoxItem = this.dayBoxItemByDateArray[ DisplayDate.getDate( ) ];       
             
       if( !dayBoxItem )
          break;
