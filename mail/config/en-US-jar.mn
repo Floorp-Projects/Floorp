@@ -50,14 +50,10 @@ locale/en-US/communicator/utilityOverlay.dtd,             en-US/locale/en-US/com
 locale/en-US/communicator/utilityOverlay.properties,      en-US/locale/en-US/communicator/utilityOverlay.properties
 locale/en-US/communicator/wallet/wallet.properties,       en-US/locale/en-US/communicator/wallet/wallet.properties
 locale/en-US/communicator/pref/pref-charset.dtd,          en-US/locale/en-US/communicator/pref/pref-charset.dtd
-locale/en-US/communicator/pref/pref-colors.dtd,           en-US/locale/en-US/communicator/pref/pref-colors.dtd
 locale/en-US/communicator/pref/pref-fonts.dtd,            en-US/locale/en-US/communicator/pref/pref-fonts.dtd
-locale/en-US/communicator/pref/pref-languages.dtd,        en-US/locale/en-US/communicator/pref/pref-languages.dtd
-locale/en-US/communicator/pref/pref-languages.properties, en-US/locale/en-US/communicator/pref/pref-languages.properties
 locale/en-US/communicator/pref/pref-themes.dtd,           en-US/locale/en-US/communicator/pref/pref-themes.dtd
 locale/en-US/communicator/pref/pref-extensions.dtd,       en-US/locale/en-US/communicator/pref/pref-extensions.dtd
 locale/en-US/communicator/pref/pref.dtd,                  en-US/locale/en-US/communicator/pref/pref.dtd
-locale/en-US/communicator/pref/preftree.dtd,              en-US/locale/en-US/communicator/pref/preftree.dtd
 locale/en-US/communicator/pref/prefutilities.properties,  en-US/locale/en-US/communicator/pref/prefutilities.properties
 locale/en-US/communicator/pref/pref-applications.properties, en-US/locale/en-US/communicator/pref/pref-applications.properties
 locale/en-US/communicator/pref/pref-applications.dtd,     en-US/locale/en-US/communicator/pref/pref-applications.dtd

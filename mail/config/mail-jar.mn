@@ -50,11 +50,7 @@ content/communicator/XPCNativeWrapper.js,             comm/content/communicator/
 
 # from xpfe\components jar.mn
 content/communicator/alerts,                          comm/content/communicator/alerts
-content/communicator/pref/pref-advanced.xul,          comm/content/communicator/pref/pref-advanced.xul
-content/communicator/pref/pref-appearance.xul,        comm/content/communicator/pref/pref-appearance.xul
 content/communicator/pref/overrideHandler.js,         comm/content/communicator/pref/overrideHandler.js
-content/communicator/pref/pref-colors.js,             comm/content/communicator/pref/pref-colors.js
-content/communicator/pref/pref-colors.xul,            comm/content/communicator/pref/pref-colors.xul
 content/communicator/pref/pref-help.js,               comm/content/communicator/pref/pref-help.js
 content/communicator/pref/pref-themes.xul,            comm/content/communicator/pref/pref-themes.xul
 content/communicator/pref/pref-themes.js,             comm/content/communicator/pref/pref-themes.js
@@ -64,12 +60,6 @@ content/communicator/pref/pref-charset.js,            comm/content/communicator/
 content/communicator/pref/pref-charset.xul,           comm/content/communicator/pref/pref-charset.xul
 content/communicator/pref/pref-fonts.js,              comm/content/communicator/pref/pref-fonts.js
 content/communicator/pref/pref-fonts.xul,             comm/content/communicator/pref/pref-fonts.xul
-content/communicator/pref/pref-languages.xul,         comm/content/communicator/pref/pref-languages.xul
-content/communicator/pref/pref-languages-add.xul,     comm/content/communicator/pref/pref-languages-add.xul
-content/communicator/pref/pref-languages.js,          comm/content/communicator/pref/pref-languages.js
-content/communicator/pref/pref-proxies.js,            comm/content/communicator/pref/pref-proxies.js
-content/communicator/pref/pref-policies.xul,          comm/content/communicator/pref/pref-policies.xul
-content/communicator/pref/pref-proxies.xul,           comm/content/communicator/pref/pref-proxies.xul
 content/communicator/pref/pref.xul,                   comm/content/communicator/pref/pref.xul
 content/communicator/pref/nsPrefWindow.js,            comm/content/communicator/pref/nsPrefWindow.js
 content/communicator/pref/pref-applications-edit.xul, comm/content/communicator/pref/pref-applications-edit.xul
