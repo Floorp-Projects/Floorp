@@ -694,15 +694,15 @@ toolbar[iconsize="small"] #calendar-publish-button:hover:active {
  *-------------------------------------------------------------------*/
 
 /*toolbar[iconsize="small"] #calendar-local-reload {
-        -moz-image-region: rect(0px 224px 16px 208px);
+        -moz-image-region: rect(0px 304px 16px 288px);
 }
 toolbar[iconsize="small"] #calendar-local-reload[disabled="true"],
 toolbar[iconsize="small"] #calendar-local-reload[disabled="true"]:hover,
 toolbar[iconsize="small"] #calendar-local-reload[disabled="true"]:hover:active {
-        -moz-image-region: rect(32px 224px 48px 208px);
+        -moz-image-region: rect(32px 304px 48px 288px);
 }
 toolbar[iconsize="small"] #calendar-local-reload:hover {
-        -moz-image-region: rect(16px 224px 32px 208px);
+        -moz-image-region: rect(16px 304px 32px 288px);
 }
 toolbar[iconsize="small"] #calendar-local-reload:hover:active {
 }*/
@@ -730,18 +730,19 @@ toolbar[iconsize="small"] #calendar-local-reload:hover:active {
  *-------------------------------------------------------------------*/
 
 toolbar[iconsize="small"] #calendar-remote-reload-button { 
-        -moz-image-region: rect(0px 322px 16px 306px);
+        -moz-image-region: rect(0px 320px 16px 304px);
 }
 toolbar[iconsize="small"] #calendar-remote-reload-button[disabled="true"],
 toolbar[iconsize="small"] #calendar-remote-reload-button[disabled="true"]:hover,
 toolbar[iconsize="small"] #calendar-remote-reload-button[disabled="true"]:hover:active {
-        -moz-image-region: rect(32px 322px 48px 306px);
+        -moz-image-region: rect(32px 320px 48px 304px);
 }
 toolbar[iconsize="small"] #calendar-remote-reload-button:hover {
-        -moz-image-region: rect(16px 322px 32px 306px);
+        -moz-image-region: rect(16px 320px 32px 304px);
 }
 toolbar[iconsize="small"] #calendar-remote-reload-button:hover:active {
 }
+
 /*--------------------------------------------------------------------
  *   Print button
  *-------------------------------------------------------------------*/
