@@ -53,7 +53,7 @@ INCLUDES += \
 
 MODULE = raptor
 
-REQUIRES = xpcom raptor dom netlib js
+REQUIRES = xpcom raptor dom netlib js pref
 
 MKSHLIB :=
 
