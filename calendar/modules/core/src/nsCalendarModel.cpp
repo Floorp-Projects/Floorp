@@ -97,6 +97,8 @@ NS_IMPL_RELEASE(nsCalendarModel)
 
 nsCalendarModel::~nsCalendarModel()
 {
+// XXX
+#if 0
   nsIXPFCObserverManager* om;
 
   nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
@@ -104,7 +106,7 @@ nsCalendarModel::~nsCalendarModel()
   nsresult res = om->Unregister((nsISupports *)(void*)this);
 
   nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
-
+#endif
   mCalendarUser = nsnull; // Do Not Release
 }
 

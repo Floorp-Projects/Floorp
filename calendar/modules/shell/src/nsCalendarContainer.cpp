@@ -213,6 +213,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
     //mRootCanvas->SetVisibility(PR_FALSE);
     ((nsBoxLayout *)(mRootCanvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
 
+    NS_RELEASE(calmodel);
 
   }
 

@@ -75,6 +75,15 @@ NS_IMPL_RELEASE(nsLayerCollection)
 nsLayerCollection::~nsLayerCollection()
 {
   // XXX: Need to add a way to remove ref when delete all!
+  nsILayer * pLayer;
+
+  while (mLayers->Count() > 0 )
+  {
+    pLayer = (nsILayer*)mLayers->ElementAt(0);
+    RemoveLayer(pLayer);
+    mLayers->RemoveAt(0);
+  }
+
   NS_IF_RELEASE(mLayers);
 }
 
@@ -198,6 +207,7 @@ nsresult nsLayerCollection::SetCurl(const JulianString& sC)
     pLayer->Init();
     pLayer->SetCurl(s);
     AddLayer(pLayer);
+    NS_RELEASE(pLayer);
   }
   return (NS_OK);
 }
