@@ -38,7 +38,7 @@ CONFIG_CONFIG_MAK=1
 #//
 #//------------------------------------------------------------------------
 
-!if "$(WINOS)" == ""
+!if !defined(WINOS)
 !if [$(MOZ_TOOLS)\bin\uname > osuname.inc]
 !endif
 WINOS=\
