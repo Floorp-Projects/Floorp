@@ -814,16 +814,36 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       ::DeleteObject(memDC);
   
     return(PR_TRUE);
+    } 
+  }
+
+
+  // figure out which case to use for tiling
+  PRBool  useSlow = PR_FALSE;
+
+  if ((mAlphaDepth>8) || ((mAlphaDepth==8)&&tryAgain) || (canRaster==DT_RASPRINTER) 
+      || (256==mNumPaletteColors)){
+    // CASE 1 -- ALPHA DEPTH IS TO HIGH OR WE ARE PRINTING OR ALPHA ALGORITHM FROM ABOVE FAILED
+    useSlow = PR_TRUE;
+  } else if ( (imageScaledWidth>MAX_BUFFER_WIDTH) || (imageScaledHeight>MAX_BUFFER_HEIGHT)) {
+    if(PR_TRUE != gIsWinNT){
+      // CASE 2 -- THE PLATFORM IS NOT ON NT AND CAN NOT USE A PATBLT
+      useSlow = PR_TRUE;
+    } else {
+      if( (imageScaledWidth < MAX_BUFFER_WIDTH) || (imageScaledHeight < MAX_BUFFER_HEIGHT) ) {
+        // CASE 3 -- THE PLATFORM IS ON NT AND WE HAVE ONE LARGE AND ONE SMALL WIDTH AND HEIGHT
+        return ( PatBltTile(aContext,aSurface,aX0,aY0,aX1,aY1) );
+      } else {
+      // CASE 4 -- THE PLATFORM IS ON NT AND BOTH THE WIDTH AND HEIGHT ARE LARGE.  
+      //        -- THIS IS AN ODD CASE.. SEEMS PATBLT WITH LARGER BRUSHES HAS A DIFFICULT TIME
+      //        -- AND THE TIMES ARE SLOWER.
+      useSlow = PR_TRUE;
+      }
     }
   }
 
 
-  // if Alpha is greater than 8 or is 8 but failed or we are printing or we have a color lookup
-  // or.. we are not on windows NT and the tile is larger than our buffer, PatBlt on nt can handle that case
-  if ((mAlphaDepth>8) || ((mAlphaDepth==8)&&tryAgain) || (canRaster==DT_RASPRINTER) 
-      || (256==mNumPaletteColors) || 
-      ( (PR_TRUE != gIsWinNT) && ((imageScaledWidth>MAX_BUFFER_WIDTH) || (imageScaledHeight>MAX_BUFFER_HEIGHT)) )   ){
-    
+  if(useSlow){
     for(y=aY0;y<aY1;y+=imageScaledHeight){
       for(x=aX0;x<aX1;x+=imageScaledWidth){
       Draw(aContext, aSurface,
@@ -831,12 +851,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
            x, y, PR_MIN(destScaledWidth, aX1-x), PR_MIN(destScaledHeight, aY1-y));
       }
     } 
-    return(PR_TRUE);
-  } 
-  
-  // now try to pattern blit.. if that fails.. we use our own algorithm to get
-  // things fast
-  if ( PR_TRUE == PatBltTile(aContext,aSurface,aX0,aY0,aX1,aY1) ){
     return(PR_TRUE);
   }
 
