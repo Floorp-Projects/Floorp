@@ -108,6 +108,8 @@ public:
 // End of methods implemented in nsEditor
 //=============================================================
 // HTML Editing methods
+  NS_IMETHOD SetBackgroundColor(const nsString& aColor);
+  NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue);
   NS_IMETHOD GetParagraphStyle(nsStringArray *aTagList);
   NS_IMETHOD AddBlockParent(nsString& aParentTag);
   NS_IMETHOD ReplaceBlockParent(nsString& aParentTag);
@@ -132,6 +134,9 @@ public:
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, nsIDOMElement** aReturn);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
+  PRBool     IsElementInBody(nsIDOMElement* aElement);
+  NS_IMETHOD SelectElement(nsIDOMElement* aElement);
+  NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
 
 // Table Editing (implemented in EditTable.cpp)
   NS_IMETHOD CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn);
@@ -150,6 +155,8 @@ public:
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
   NS_IMETHOD JoinTableCells(PRBool aCellToRight);
+
+  NS_IMETHOD GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn);
 
 // Data members
 

@@ -310,14 +310,20 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
       return result;
     }
     //cmanske: Shouldn't we check result from this?
-    erP->AddEventListenerByIID(mKeyListenerP, kIDOMKeyListenerIID);
+    result = erP->AddEventListenerByIID(mKeyListenerP, kIDOMKeyListenerIID);
+    if (!NS_SUCCEEDED(result))
+    {
+      printf("nsTextEditor::Init -- faile to add mKeyListenerP\n");
+      return result;
+    }
+
 #ifdef NEW_DRAG_AND_DROP
     erP->AddEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
 #endif
     erP->AddEventListenerByIID(mMouseListenerP, kIDOMMouseListenerIID);
 	
-	erP->AddEventListenerByIID(mTextListenerP,kIDOMTextListenerIID);
-	erP->AddEventListenerByIID(mCompositionListenerP,kIDOMCompositionListenerIID);
+    erP->AddEventListenerByIID(mTextListenerP,kIDOMTextListenerIID);
+    erP->AddEventListenerByIID(mCompositionListenerP,kIDOMCompositionListenerIID);
 
     result = NS_OK;
 

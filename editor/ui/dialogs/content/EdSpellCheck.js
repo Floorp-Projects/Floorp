@@ -1,34 +1,19 @@
-// OnOK(), Undo(), and Cancel() are in EdDialogCommon.js
-// applyChanges() must be implemented here
-
 var edAppCore;
-var toolkitCore;
 var misspelledWord;
 
 // dialog initialization code
 function Startup()
 {
   dump("Doing Startup...\n");
-  toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-  if (!toolkitCore) {
-    toolkitCore = new ToolkitCore();
-    if (toolkitCore)
-      toolkitCore.Init("ToolkitCore");
-  }
-  if(!toolkitCore) {
-    dump("toolkitCore not found!!! And we can't close the dialog!\n");
-  }
-
   // NEVER create an edAppCore here - we must find parent editor's
 
-  // temporary while this window is opend with ShowWindowWithArgs
   dump("Getting parent appcore\n");
-  var editorName = document.getElementById("args").getAttribute("value");
-  dump("Got editorAppCore called " + editorName + "\n");
+  var editorName = window.arguments[0];
+  dump("EditorAppCore name =" + editorName + "\n");
   edAppCore = XPAppCoresManager.Find(editorName);  
-  if(!edAppCore || !toolkitCore) {
+  if(!edAppCore) {
     dump("EditoredAppCore not found!!!\n");
-    toolkitCore.CloseWindow(window);
+    window.close();
   }
   dump("EditoredAppCore found for Spell Checker dialog\n");
 
@@ -37,7 +22,7 @@ function Startup()
   if (!dialog)
   {
     dump("Failed to create dialog object!!!\n");
-    toolkitCore.CloseWindow(window);
+    window.close();
   }
 
   dialog.wordInput = document.getElementById("Word");
@@ -51,12 +36,14 @@ function Startup()
   }
   // NOTE: We shouldn't have been created if there was no misspelled word
   
-  misspelledWord = edAppCore.getFirstMisspelledWord();
+  // The first misspelled word is passed as the 2nd extra parameter in window.openDialog()
+  misspelledWord = window.arguments[1];
   
   if (misspelledWord != "") {
     dump("First misspelled word = "+misspelledWord+"\n");
     // Put word in input field
     dialog.wordInput.value = misspelledWord;
+    // Get the list of suggested replacements
     FillSuggestedList();
   } else {
     dump("No misspelled word found\n");
@@ -64,6 +51,7 @@ function Startup()
 
   dialog.suggestedList.focus();  
 }
+
 function NextWord()
 {
   misspelledWord = edAppCore.getNextMisspelledWord();
@@ -80,17 +68,24 @@ function CheckWord()
 {
   dump("SpellCheck: CheckWord\n");
   word = dialog.wordInput.value;
-  dump("Word in edit field = "+word+"\n");
   if (word != "") {
+    dump("CheckWord: Word in edit field="+word+"\n");
     isMisspelled = edAppCore.checkCurrentWord(word);
-    misspelledWord = word;
+    if (isMisspelled) {
+      dump("CheckWord says word was misspelled\n");
+      misspelledWord = word;
+      FillSuggestedList();
+    } else {
+      ClearList(dialog.suggestedList);
+      AppendStringToList(dialog.suggestedList, "(correct spelling)");
+    }
   }
 }
 
 function SelectSuggestedWord()
 {
   dump("SpellCheck: SelectSuggestedWord\n");
-  dialog.wordInput.value = dialog.suggestedList.value;
+  dialog.wordInput.value = dialog.suggestedList.options[dialog.suggestedList.selectedIndex].value;
 }
 
 function Ignore()
@@ -139,6 +134,8 @@ function AddToDictionary()
 function EditDictionary()
 {
   dump("SpellCheck: EditDictionary TODO: IMPLEMENT DIALOG\n");
+  window.width = 700;
+  window.height = 700;
 }
 
 function SelectLanguage()
@@ -149,8 +146,10 @@ function SelectLanguage()
 
 function Close()
 {
-  dump("SpellCheck: Close (can't close yet - CRASHES!)\n");
+  dump("SpellCheck: Spell Checker Closed\n");
+  // Shutdown the spell check and close the dialog
   edAppCore.closeSpellChecking();
+  window.close();
 }
 
 function Help()
@@ -163,14 +162,12 @@ function FillSuggestedList(firstWord)
   list = dialog.suggestedList;
 
   // Clear the current contents of the list
-  while (list.hasChildNodes()) {
-    dump("Removing list option node, value = "+list.lastChild.value+"\n");
-    list.removeChild(list.lastChild);
-  }
+  ClearList(list);
+
   // We may have the initial word
   if (firstWord && firstWord != "") {
     dump("First Word = "+firstWord+"\n");
-    AppendSuggestedList(firstWord);
+    AppendStringToList(list, firstWord);
   }
 
   // Get suggested words until an empty string is returned
@@ -178,19 +175,8 @@ function FillSuggestedList(firstWord)
     word = edAppCore.getSuggestedWord();
     dump("Suggested Word = "+word+"\n");
     if (word != "") {
-      AppendSuggestedList(word);
+      AppendStringToList(list, word);
     }
   } while (word != "");
 }
 
-function AppendSuggestedList(word)
-{
-  optionNode = document.createElement("option");
-  if (optionNode) {
-    dump("Appending word to an OPTION node: "+word+"\n");
-    optionNode.setAttribute("value", word);
-    dialog.suggestedList.appendChild(optionNode);    
-  } else {
-    dump("Failed to create OPTION node: "+word+"\n");
-  }
-}

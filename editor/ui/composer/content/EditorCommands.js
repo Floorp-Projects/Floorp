@@ -2,9 +2,9 @@
 
 /*the editor type, i.e. "text" or "html" */
 /* the name of the editor. Must be unique globally, hence the timestamp */
-var editorName = "EditorAppCore." + ( new Date() ).getTime().toString();
+var editorName = "EditorAppCore" + ( new Date() ).getTime().toString();
 var appCore = null;  
-var toolkitCore = null;
+var toolbar;
 
 function EditorStartup()
 {
@@ -38,7 +38,7 @@ function EditorStartup()
     dump("EditorAppCore has already been created! Why?\n");
   }
   EditorSetup(editorName, appCore);
-  
+
   // Set focus to the edit window
   window.focus();
 }
@@ -47,18 +47,15 @@ function EditorSetup(p_editorName, p_appCore)
 {
   editorName = p_editorName;
   appCore = p_appCore;
-  
-  toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-  if (!toolkitCore)
-  {
-    toolkitCore = new ToolkitCore();
-    if (toolkitCore) {
-      toolkitCore.Init("ToolkitCore");
-      dump("ToolkitCore initialized for Editor\n");
-    }
-  } else {
-    dump("ToolkitCore found\n");
+
+  // Create an object to store controls for easy access
+  toolbar = new Object;
+  if (!toolbar) {
+    dump("Failed to create toolbar object!!!\n");
+    EditorExit();
   }
+  toolbar.boldButton = document.getElementById("BoldButton");
+  toolbar.IsBold = document.getElementById("Editor:Style:IsBold");
 }
 
 function EditorShutdown()
@@ -190,8 +187,8 @@ function EditorSelectAll()
 
 function EditorFind(firstTime)
 {
-  if (toolkitCore && firstTime) {
-    toolkitCore.ShowWindow("resource:/res/samples/find.xul", window);
+  if (firstTime) {
+    window.openDialog("resource:/res/samples/find.xul", "find", "chrome");
   }
   
   if (appCore) {
@@ -211,28 +208,33 @@ function EditorShowClipboard()
 
 // --------------------------- Text style ---------------------------
 
-function SetTextProperty(property, attribute, value)
+// Currently not used???
+function EditorSetTextProperty(property, attribute, value)
 {
   if (appCore) {
     appCore.setTextProperty(property, attribute, value);
   }        
+  dump("Set text property -- calling focus()\n");
+  window.focus();
 }
 
-function SetParagraphFormat(paraFormat)
+function EditorSetParagraphFormat(paraFormat)
 {
   if (appCore) {
     appCore.setParagraphFormat(paraFormat);
   }        
+  window.focus();
 }
 
-function SetFontSize(size)
+function EditorSetFontSize(size)
 {
   if (appCore) {
     appCore.setTextProperty("font", "size", size);
   }        
+  window.focus();
 }
 
-function SetFontFace(fontFace)
+function EditorSetFontFace(fontFace)
 {
   if (appCore) {
     if( fontFace == "tt") {
@@ -243,29 +245,21 @@ function SetFontFace(fontFace)
     }
     appCore.setTextProperty("font", "face", fontFace);
   }        
+  window.focus();
 }
 
-function SetFontColor(color)
+function EditorSetFontColor(color)
 {
   if (appCore) {
     appCore.setTextProperty("font", "color", color);
   }        
+  window.focus();
 }
 
-// Debug methods to test the SELECT element used in a toolbar:  
-function OnChangeParaFormat()
+function EditorSetBackgroundColor(color)
 {
-  dump(" *** Change Paragraph Format combobox setting\n");
-}
-
-function OnFocusParaFormat()
-{
-  dump(" *** OnFocus -- Paragraph Format\n");
-}
-
-function OnBlurParaFormat()
-{
-  dump(" *** OnBlur -- Paragraph Format\n");
+  appCore.setBackgroundColor(color);
+  window.focus();
 }
 
 function EditorApplyStyle(styleName)
@@ -274,6 +268,7 @@ function EditorApplyStyle(styleName)
     dump("Applying Style\n");
     appCore.setTextProperty(styleName, null, null);
   }
+  window.focus();
 }
 
 function EditorRemoveStyle(styleName)
@@ -282,6 +277,7 @@ function EditorRemoveStyle(styleName)
     dump("Removing Style\n");
     appCore.removeTextProperty(styleName, null);
   }
+  window.focus();
 }
 
 // --------------------------- Output ---------------------------
@@ -314,12 +310,10 @@ function EditorInsertText()
 
 function EditorInsertLink()
 {
-  dump("Starting Insert Link... appCore, toolkitCore: "+(appCore==null)+(toolkitCore==null)+"\n");
-  if (appCore && toolkitCore) {
+  dump("Starting Insert Link...\n");
+  if (appCore) {
     dump("Link Properties Dialog starting...\n");
-    // go back to using this when window.opener works.
-    //toolkitCore.ShowModalDialog("chrome://editordlgs/content/EdLinkProps.xul", window);
-    toolkitCore.ShowWindowWithArgs("chrome://editordlgs/content/EdLinkProps.xul", window, editorName);
+    window.openDialog("chrome://editordlgs/content/EdLinkProps.xul", "LinkDlg", "chrome", editorName);
   }
 }
 
@@ -335,11 +329,9 @@ function EditorInsertList(listType)
 
 function EditorInsertImage()
 {
-  dump("Starting Insert Image...\n");
-  if (appCore && toolkitCore) {
-    dump("Link Properties Dialog starting...\n");
-    //toolkitCore.ShowModalDialog("chrome://editordlgs/content/EdImageProps.xul", window);
-    toolkitCore.ShowWindowWithArgs("chrome://editordlgs/content/EdImageProps.xul", window, editorName);
+  if (appCore) {
+    dump("Image Properties Dialog starting. Editor Name="+editorName+"\n");
+    window.openDialog("chrome://editordlgs/content/EdImageProps.xul", "dlg", "chrome", editorName);
   }
 }
 
@@ -369,26 +361,24 @@ function EditorExit()
 }
 
 function EditorPrintPreview() {
-  if (toolkitCore) {
-    toolkitCore.ShowWindow("resource:/res/samples/printsetup.html", window);
-  }
+  window.openDialog("resource:/res/samples/printsetup.html", "PrintPreview", "chrome", editorName);
 }
 
 function CheckSpelling()
 {
-  if (appCore && toolkitCore) {
+  if (appCore) {
     dump("Check Spelling starting...\n");
     // Start the spell checker module. Return is first misspelled word
-    word = appCore.startSpellChecking();
-    dump(word+"\n");
-    if( word == "")
+    firstMisspelledWord = appCore.startSpellChecking();
+    dump(firstMisspelledWord+"\n");
+    if( firstMisspelledWord == "")
     {
       dump("THERE IS NO MISSPELLED WORD!\n");
       // TODO: PUT UP A MESSAGE BOX TO TELL THE USER
       appCore.CloseSpellChecking();
     } else {
       dump("We found a MISSPELLED WORD\n");
-      toolkitCore.ShowWindowWithArgs("chrome://editordlgs/content/EdSpellCheck.xul", window, editorName);
+      window.openDialog("chrome://editordlgs/content/EdSpellCheck.xul", "SpellDlg", "chrome", editorName, firstMisspelledWord);
     }
   }
 }
@@ -445,6 +435,7 @@ function EditorTestDocument()
 function OpenFile(url)
 {
   // This is invoked from the browser app core.
+  // TODO: REMOVE THIS WHEN WE STOP USING TOOLKIT CORE
   core = XPAppCoresManager.Find("toolkitCore");
   if ( !core ) {
       core = new ToolkitCore();
@@ -453,30 +444,23 @@ function OpenFile(url)
       }
   }
   if ( core ) {
+      // TODO: Convert this to use window.open() instead
       core.ShowWindowWithArgs( "chrome://editor/content/", window, url );
   } else {
       dump("Error; can't create toolkitCore\n");
   }
+  window.focus();
 }
-
 
 // --------------------------- Status calls ---------------------------
 function onBoldChange()
 {
-  var button = document.getElementById("Editor:Style:IsBold");
-  if (button)
-  {
-    var bold = button.getAttribute("bold");
-
-    if ( bold == "true" ) {
-      button.setAttribute( "disabled", false );
-    }
-    else {
-      button.setAttribute( "disabled", true );
-    }
-  }
-  else
-  {
-    dump("Can't find bold broadcaster!\n");
-  }
+	bold = toolbar.IsBold.getAttribute("bold");
+	if ( bold == "true" ) {
+		toolbar.boldButton.setAttribute( "disabled", false );
+	}
+	else {
+		toolbar.boldButton.setAttribute( "disabled", true );
+	}
 }
+

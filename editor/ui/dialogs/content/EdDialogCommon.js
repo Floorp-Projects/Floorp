@@ -1,25 +1,23 @@
-function onUndo() {
-  if (undoCount > 0)
-  {
-    dump("Undo count = "+undoCount+"\n");
-    undoCount = undoCount - 1;
-    appCore.undo();
+function ClearList(list)
+{
+  for( i = (list.length-1); i >= 0; i-- ) {
+    list.remove(i);
   }
 }
 
-function onOK() {
-  applyChanges();
-  //TODO: Allow this after bug 6005 is fixed
-  //toolkitCore.CloseWindow(window);
-}
+function AppendStringToList(list, string)
+{
+  
+  // THIS DOESN'T WORK! Result is a XULElement -- namespace problem
+  //optionNode1 = document.createElement("option");
+  // "Unsanctioned method from Vidur:
+  // createElementWithNamespace("http://... [the HTML4 URL], "option);
 
-function onCancel() {
-  // Undo all actions performed within the dialog
-  // TODO: We need to suppress reflow/redraw untill all levels are undone
-  while (undoCount > 0) {
-    onUndo();
+  // This works - Thanks to Vidur! Params = name, value
+  optionNode = new Option(string, string);
+  if (optionNode) {
+    list.add(optionNode, null);    
+  } else {
+    dump("Failed to create OPTION node. String content="+string+"\n");
   }
-  //TODO: Allow this after bug 6005 is fixed
-  //toolkitCore.CloseWindow(window);
 }
-

@@ -105,6 +105,8 @@ public:
 
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
 
+  NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);
+
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
 
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);

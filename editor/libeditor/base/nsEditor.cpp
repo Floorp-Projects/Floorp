@@ -367,6 +367,54 @@ nsEditor::GetDocument(nsIDOMDocument **aDoc)
   return mDoc->QueryInterface(kIDOMDocumentIID, (void **)aDoc);
 }
 
+// This seems like too much work! There should be a "nsDOMDocument::GetBody()"
+NS_IMETHODIMP 
+nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
+{
+  nsresult result;
+
+  if (!aBodyElement)
+    return NS_ERROR_NULL_POINTER;
+
+  *aBodyElement = 0;
+  
+  NS_PRECONDITION(mDoc, "bad state, null mDoc");
+  if (!mDoc)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDOMNodeList>nodeList; 
+  nsString bodyTag = "body"; 
+
+  result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+
+  if (NS_FAILED(result))
+    return result;
+  
+  if (!nodeList)
+    return NS_ERROR_NULL_POINTER;
+
+  PRUint32 count; 
+  nodeList->GetLength(&count);
+
+  NS_ASSERTION(1==count, "More than one body found in document!"); 
+
+  if (count < 1)
+    return NS_ERROR_FAILURE;
+
+  // Use the first body node in the list:
+  nsCOMPtr<nsIDOMNode> node;
+  result = nodeList->Item(0, getter_AddRefs(node)); 
+  if (NS_SUCCEEDED(result) && node)
+  {
+    //return node->QueryInterface(kIDOMElementIID, (void **)aBodyElement);
+    // Is above equivalent to this:
+    nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(node);
+    if (bodyElement)
+      *aBodyElement = bodyElement;
+  }
+  return result;
+}
+
 nsresult 
 nsEditor::GetPresShell(nsIPresShell **aPS)
 {
