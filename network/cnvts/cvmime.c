@@ -437,7 +437,7 @@ net_RegisterDefaultDecoders (void)
 									NULL, 
 									NET_PlainTextConverter);
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 #if defined(XP_MAC)
   NET_RegisterContentTypeConverter (MULTIPART_APPLEDOUBLE, FO_SAVE_AS,
 								    NULL, fe_MakeAppleDoubleDecodeStream_1);
@@ -461,7 +461,7 @@ net_RegisterDefaultDecoders (void)
 								    NULL, fe_MakeAppleSingleDecodeStream_1);
 								    
 #endif /* XP_MAC || XP_UNIX */
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 	/* don't register UNKNOWN_CONTENT_TYPE for FO_SAVE_AS_TEXT
      * since it is already text
 	 */
@@ -815,7 +815,7 @@ NET_RegisterMIMEDecoders (void)
   MIME_RegisterConverters();
 #endif /* SMART_MAIL */
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   /* Decoders for libmsg/compose.c */
   MSG_RegisterConverters ();
 #endif  
