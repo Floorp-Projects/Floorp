@@ -73,7 +73,8 @@ static JSClass gGlobalClass = {
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
 };
 
-mozJSComponentLoader::mozJSComponentLoader()
+mozJSComponentLoader::mozJSComponentLoader() :
+    mContext(NULL), mModules(NULL), mGlobals(NULL), mInitialized(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -98,12 +99,16 @@ RemoveRoot_enumerate(PLHashEntry *he, PRIntn cnt, void *arg)
 
 mozJSComponentLoader::~mozJSComponentLoader()
 {
-    PL_HashTableEnumerateEntries(mModules, Release_enumerate, 0);
-    PL_HashTableDestroy(mModules);
+    if (mModules) {
+        PL_HashTableEnumerateEntries(mModules, Release_enumerate, 0);
+        PL_HashTableDestroy(mModules);
+    }
 
-    if (mContext)
-        PL_HashTableEnumerateEntries(mGlobals, RemoveRoot_enumerate, mContext);
-    PL_HashTableDestroy(mGlobals);
+    if (mGlobals) {
+        if (mContext)
+            PL_HashTableEnumerateEntries(mGlobals, RemoveRoot_enumerate, mContext);
+        PL_HashTableDestroy(mGlobals);
+    }
 
     if (mContext) {
         JS_RemoveRoot(mContext, &mCompMgrWrapper);
@@ -113,7 +118,6 @@ mozJSComponentLoader::~mozJSComponentLoader()
         JS_DestroyContext(mContext);
     }
     mXPC = nsnull;
-    mCompMgr = nsnull;
     mRegistry = nsnull;
 }
 
@@ -187,7 +191,13 @@ mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
             /* if we can't get the XPCOM key, just skip all registry ops */
             mRegistry = nsnull;
     }
+    return NS_OK;
+}
 
+NS_IMETHODIMP
+mozJSComponentLoader::ReallyInit()
+{
+    nsresult rv;
     NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
     // get the JSRuntime from the runtime svc, if possible
     if (NS_FAILED(rv))
@@ -229,7 +239,7 @@ mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "WrapNative(%p,%p,nsIComponentManager) failed: %x\n",
-                mContext, mCompMgr.get(), rv);
+                mContext, mCompMgr, rv);
 #endif
         return rv;
     }
@@ -256,6 +266,7 @@ mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 #ifdef DEBUG_shaver
     fprintf(stderr, "mJCL: context initialized!\n");
 #endif
+    mInitialized = PR_TRUE;
     return NS_OK;
 }
 
@@ -513,7 +524,6 @@ JSObject *
 mozJSComponentLoader::GlobalForLocation(const char *aLocation,
                                         nsIFileSpec *component)
 {
-
     PRBool needRelease = PR_FALSE;
     PLHashNumber hash = PL_HashString(aLocation);
     PLHashEntry **hep = PL_HashTableRawLookup(mGlobals, hash,
@@ -521,6 +531,10 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     PLHashEntry *he = *hep;
     if (he)
         return (JSObject *)he->value;
+
+    if (!mInitialized &&
+        NS_FAILED(ReallyInit()))
+        return nsnull;
     
     JSObject *obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal,
                                  mSuperGlobal);

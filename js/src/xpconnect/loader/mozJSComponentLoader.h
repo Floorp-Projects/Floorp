@@ -43,6 +43,7 @@ public:
     virtual ~mozJSComponentLoader();
 
  protected:
+    nsresult ReallyInit();
     nsresult RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
     JSObject *GlobalForLocation(const char *aLocation, nsIFileSpec *component);
     nsIModule *ModuleForLocation(const char *aLocation,
@@ -51,7 +52,7 @@ public:
     nsresult SetRegistryInfo(const char *registryLocation,
                              nsIFileSpec *component);
 
-    nsCOMPtr<nsIComponentManager> mCompMgr;
+    nsIComponentManager* mCompMgr; // XXX weak ref
     nsCOMPtr<nsIRegistry> mRegistry;
     nsCOMPtr<nsIXPConnect> mXPC;
 
@@ -63,4 +64,6 @@ public:
     PLHashTable *mModules;
     PLHashTable *mGlobals;
     nsIRegistry::Key mXPCOMKey;
+
+    PRBool mInitialized;
 };
