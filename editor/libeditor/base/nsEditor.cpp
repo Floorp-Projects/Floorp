@@ -148,6 +148,7 @@ nsEditor::nsEditor()
 ,  mTxnStartNode(nsnull)
 ,  mTxnStartOffset(0)
 ,  mShouldTxnSetSelection(PR_TRUE)
+,  mBodyElement(nsnull)
 ,  mInIMEMode(PR_FALSE)
 ,  mIMETextRangeList(nsnull)
 ,  mIMETextNode(nsnull)
@@ -1556,12 +1557,20 @@ nsEditor::ForceCompositionEnd()
 NS_IMETHODIMP 
 nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
 {
-  nsresult result;
+  nsresult result = NS_OK;
 
   if (!aBodyElement)
     return NS_ERROR_NULL_POINTER;
 
   *aBodyElement = 0;
+  
+  if (mBodyElement)
+  {
+    // if we have cached the body element, use that
+    *aBodyElement = mBodyElement;
+    NS_ADDREF(*aBodyElement);
+    return result;
+  }
   
   NS_PRECONDITION(mDocWeak, "bad state, null mDocWeak");
   if (!mDocWeak)
@@ -1596,6 +1605,7 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
     nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(node);
     if (bodyElement)
     {
+      mBodyElement = do_QueryInterface(bodyElement);
       *aBodyElement = bodyElement;
       // A "getter" method should always addref
       NS_ADDREF(*aBodyElement);

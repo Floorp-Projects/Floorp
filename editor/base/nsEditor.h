@@ -649,6 +649,7 @@ protected:
   nsCOMPtr<nsIDOMNode> mTxnStartNode;  // saved selection info to pass to placeholder at init time
   PRInt32         mTxnStartOffset;     //  "  "  "  "
   PRBool          mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
+  nsCOMPtr<nsIDOMElement> mBodyElement;    // cached body node
   //
   // data necessary to build IME transactions
   //

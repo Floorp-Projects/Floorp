@@ -156,6 +156,7 @@ protected:
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
 
   nsresult ConvertWhitespace(const nsString & inString, nsString & outString);
+  nsresult ConfirmSelectionInBody();
 
 // removed from use:
 #if 0
