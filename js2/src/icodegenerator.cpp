@@ -791,16 +791,15 @@ namespace ICG {
 
     Formatter& ICodeGenerator::print(Formatter& f)
     {
-        f << "ICG! " << (uint32)iCode->size() << "\n" << *iCode;
-        return f;
+        f << "ICG! " << (uint32)iCode->size() << "\n"; // << *iCode;
+        return VM::operator<<(f, *iCode);
     }
 
     Formatter& ICodeModule::print(Formatter& f)
     {
-        f << "ICM! " << (uint32)its_iCode->size() << "\n" << *its_iCode;
-        return f;
+        f << "ICM! " << (uint32)its_iCode->size() << "\n";
+        return VM::operator<<(f, *its_iCode);
     }
-    
 
         
 } // namespace ICG
