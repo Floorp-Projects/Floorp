@@ -42,10 +42,10 @@ function Startup()
   StartupLatin();
 
   // Dialog is non-modal:
-  // Change "Ok" to "Insert, change "Cancel" to "Close"
-  var okButton = document.getElementById("insertCharsDlg").getButton("accept");
-  if (okButton)
-    okButton.setAttribute("label", GetString("Insert"));
+  // Change button text: "Ok" to "Insert"; "Cancel" to "Close"
+  var insertButton = document.documentElement.getButton("accept");
+  if (insertButton)
+    insertButton.setAttribute("label", GetString("Insert"));
 
   var cancelButton = document.getElementById("insertCharsDlg").getButton("cancel");
   if (cancelButton)
@@ -83,7 +83,7 @@ function onFocus()
   if ("gEditorDisplayMode" in window.opener)
     enable = !window.opener.IsInHTMLSourceMode();
 
-  SetElementEnabledById("ok", enable);
+  SetElementEnabled(document.documentElement.getButton("accept"), enable);
 }
 
 function onClose()
@@ -121,7 +121,7 @@ function StartupLatin()
 
   var Symbol      = document.getElementById("Symbol");
   var AccentUpper = document.getElementById("AccentUpper");
-  var AccentLower = document.getElementById("AccentUpper");
+  var AccentLower = document.getElementById("AccentLower");
   var Upper       = document.getElementById("Upper");
   var Lower       = document.getElementById("Lower");
   CategoryGroup   = document.getElementById("CatGrp");
