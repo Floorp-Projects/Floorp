@@ -97,6 +97,9 @@ NS_IMETHODIMP nsComboBox::Create(nsIWidget *aParent,
 				popupData->mID = mMenuID;
 			}
 #endif
+			::SetControlMinimum(mControl, 0);
+			::SetControlMaximum(mControl, 0);
+			::SetControlValue(mControl, 0);
 			EndDraw();
   		}
   		else
@@ -340,6 +343,7 @@ PRBool nsComboBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 				thePoint.h = aEvent.point.x;
 				thePoint.v = aEvent.point.y;
 				::TrackControl(mControl, thePoint, nil);
+				ControlChanged(::GetControlValue(mControl));
 				//¥TODO: the mouseUp event is eaten by TrackControl.
 				//¥ We must create it and dispatch it after the mouseDown;
 				eatEvent = PR_TRUE;

@@ -60,6 +60,7 @@ protected:
 	NS_METHOD				CreateOrReplaceMacControl(short inControlType);
 	virtual void		GetRectForMacControl(nsRect &outRect);
 	void						SetupMacControlFont();
+	void						ControlChanged(PRInt32 aNewValue);
 	
 	nsString				mLabel;
 	PRBool					mWidgetArmed;
