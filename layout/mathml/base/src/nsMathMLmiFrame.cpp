@@ -144,8 +144,8 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
 
     // set the -moz-math-font-style attribute without notifying that we want a reflow
     fontstyle.Assign(NS_LITERAL_STRING("normal"));
-    mContent->SetAttribute(kNameSpaceID_None, nsMathMLAtoms::fontstyle,
-                           fontstyle, PR_FALSE);
+    mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontstyle,
+                      fontstyle, PR_FALSE);
     // then, re-resolve the style contexts in our subtree
     nsCOMPtr<nsIStyleContext> parentStyleContext;
     parentStyleContext = getter_AddRefs(mStyleContext->GetParent());
