@@ -257,6 +257,7 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("verifyreflow");
 #endif
 
 static PRBool gVerifyReflow = PRBool(0x55);
+static PRBool gVerifyReflowAll;
 
 NS_LAYOUT PRBool
 nsIPresShell::GetVerifyReflowEnable()
@@ -264,8 +265,17 @@ nsIPresShell::GetVerifyReflowEnable()
 #ifdef NS_DEBUG
   if (gVerifyReflow == PRBool(0x55)) {
     gVerifyReflow = 0 != gLogModule->level;
-    printf("Note: verifyreflow is %sabled\n",
+    if (gLogModule->level > 1) {
+      gVerifyReflowAll = PR_TRUE;
+    }
+    printf("Note: verifyreflow is %sabled",
            gVerifyReflow ? "en" : "dis");
+    if (gVerifyReflowAll) {
+      printf(" (diff all enabled)\n");
+    }
+    else {
+      printf("\n");
+    }
   }
 #endif
   return gVerifyReflow;
@@ -1117,157 +1127,173 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 static void
-ShowDiffs(nsIFrame* k1, nsIFrame* k2, const nsRect& r1, const nsRect& r2)
+LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg)
+{
+  printf("verifyreflow: ");
+  nsAutoString name;
+  if (nsnull != k1) {
+    k1->GetFrameName(name);
+  }
+  else {
+    name = "(null)";
+  }
+  fputs(name, stdout);
+
+  printf(" != ");
+
+  if (nsnull != k2) {
+    k2->GetFrameName(name);
+  }
+  else {
+    name = "(null)";
+  }
+  fputs(name, stdout);
+
+  printf(" %s", aMsg);
+}
+
+static void
+LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
+                 const nsRect& r1, const nsRect& r2)
 {
   printf("verifyreflow: ");
   nsAutoString name;
   k1->GetFrameName(name);
   fputs(name, stdout);
-  printf(" ");
   stdout << r1;
+
   printf(" != ");
+
   k2->GetFrameName(name);
   fputs(name, stdout);
-  printf(" ");
   stdout << r2;
-  printf("\n");
+
+  printf(" %s\n", aMsg);
 }
 
 static void
 CompareTrees(nsIFrame* aA, nsIFrame* aB)
 {
-  nsIFrame* k1, *k2;
-  aA->FirstChild(nsnull, k1);
-  aB->FirstChild(nsnull, k2);
-  NS_ASSERTION(nsContainerFrame::LengthOf(k1) == nsContainerFrame::LengthOf(k2),
-               "child counts don't match");
+  PRBool whoops = PR_FALSE;
+  nsIAtom* listName = nsnull;
+  PRInt32 listIndex = 0;
+  do {
+    nsIFrame* k1, *k2;
+    aA->FirstChild(listName, k1);
+    aB->FirstChild(listName, k2);
+    PRInt32 l1 = nsContainerFrame::LengthOf(k1);
+    PRInt32 l2 = nsContainerFrame::LengthOf(k2);
+    if (l1 != l2) {
+      LogVerifyMessage(k1, k2, "child counts don't match: ");
+      printf("%d != %d\n", l1, l2);
+      if (!gVerifyReflowAll) {
+        break;
+      }
+    }
 
-  nsRect r1, r2;
-  nsIView* v1, *v2;
-  nsIWidget* w1, *w2;
-  for (;;) {
-    if (nsnull == k1) {
-      NS_ASSERTION(nsnull == k2, "child lists are different");
+    nsRect r1, r2;
+    nsIView* v1, *v2;
+    nsIWidget* w1, *w2;
+    for (;;) {
+      if (((nsnull == k1) && (nsnull != k2)) ||
+          ((nsnull != k1) && (nsnull == k2))) {
+        LogVerifyMessage(k1, k2, "child lists are different\n");
+        whoops = PR_TRUE;
+        break;
+      }
+      else if (nsnull != k1) {
+        // Verify that the frames are the same size
+        k1->GetRect(r1);
+        k2->GetRect(r2);
+        if (r1 != r2) {
+          LogVerifyMessage(k1, k2, "(frame rects)", r1, r2);
+          whoops = PR_TRUE;
+        }
+
+        // Make sure either both have views or neither have views; if they
+        // do have views, make sure the views are the same size. If the
+        // views have widgets, make sure they both do or neither does. If
+        // they do, make sure the widgets are the same size.
+        k1->GetView(v1);
+        k2->GetView(v2);
+        if (((nsnull == v1) && (nsnull != v2)) ||
+            ((nsnull != v1) && (nsnull == v2))) {
+          LogVerifyMessage(k1, k2, "child views are not matched\n");
+          whoops = PR_TRUE;
+        }
+        else if (nsnull != v1) {
+          v1->GetBounds(r1);
+          v2->GetBounds(r2);
+          if (r1 != r2) {
+            LogVerifyMessage(k1, k2, "(view rects)", r1, r2);
+            whoops = PR_TRUE;
+          }
+
+          v1->GetWidget(w1);
+          v2->GetWidget(w2);
+          if (((nsnull == w1) && (nsnull != w2)) ||
+              ((nsnull != w1) && (nsnull == w2))) {
+            LogVerifyMessage(k1, k2, "child widgets are not matched\n");
+            whoops = PR_TRUE;
+          }
+          else if (nsnull != w1) {
+            w1->GetBounds(r1);
+            w2->GetBounds(r2);
+            if (r1 != r2) {
+              LogVerifyMessage(k1, k2, "(widget rects)", r1, r2);
+              whoops = PR_TRUE;
+            }
+          }
+        }
+        if (whoops && !gVerifyReflowAll) {
+          break;
+        }
+
+        // Compare the sub-trees too
+        CompareTrees(k1, k2);
+
+        // Advance to next sibling
+        k1->GetNextSibling(k1);
+        k2->GetNextSibling(k2);
+      }
+      else {
+        break;
+      }
+    }
+    if (whoops && !gVerifyReflowAll) {
       break;
     }
-    NS_ASSERTION(nsnull != k2, "child lists are different");
+    NS_IF_RELEASE(listName);
 
-    // Verify that the frames are the same size
-    k1->GetRect(r1);
-    k2->GetRect(r2);
-    if (r1 != r2) {
-      ShowDiffs(k1, k2, r1, r2);
-    }
-    else {
-      // Make sure either both have views or neither have views; if they
-      // do have views, make sure the views are the same size. If the
-      // views have widgets, make sure they both do or neither does. If
-      // they do, make sure the widgets are the same size.
-      k1->GetView(v1);
-      k2->GetView(v2);
-      if (nsnull != v1) {
-        NS_ASSERTION(nsnull != v2, "child views are not matched");
-        v1->GetBounds(r1);
-        v2->GetBounds(r2);
-        NS_ASSERTION(r1 == r2, "child views are different sizes");
-
-        v1->GetWidget(w1);
-        v2->GetWidget(w2);
-        if (nsnull != w1) {
-          NS_ASSERTION(nsnull != w2, "child widgets are not matched");
-          w1->GetBounds(r1);
-          w2->GetBounds(r2);
-          NS_ASSERTION(r1 == r2, "child widgets are different sizes");
-        }
-        else {
-          NS_ASSERTION(nsnull == w2, "child widgets are not matched");
-        }
+    nsIAtom* listName1;
+    nsIAtom* listName2;
+    aA->GetAdditionalChildListName(listIndex, listName1);
+    aB->GetAdditionalChildListName(listIndex, listName2);
+    listIndex++;
+    if (listName1 != listName2) {
+      LogVerifyMessage(k1, k2, "child list names are not matched: ");
+      nsAutoString tmp;
+      if (nsnull != listName1) {
+        listName1->ToString(tmp);
+        fputs(tmp, stdout);
       }
-      else {
-        NS_ASSERTION(nsnull == v2, "child views are not matched");
+      else
+        fputs("(null)", stdout);
+      printf(" != ");
+      if (nsnull != listName2) {
+        listName2->ToString(tmp);
+        fputs(tmp, stdout);
       }
-
-      // Compare the sub-trees too
-      CompareTrees(k1, k2);
+      else
+        fputs("(null)", stdout);
+      printf("\n");
+      NS_IF_RELEASE(listName1);
+      NS_IF_RELEASE(listName2);
+      break;
     }
-
-    // Advance to next sibling
-    k1->GetNextSibling(k1);
-    k2->GetNextSibling(k2);
-  }
-}
-
-// XXX: copy of nsWebWidget's ua.css loading code!!!
-#define UA_CSS_URL "resource:/res/ua.css"
-
-static nsIStyleSheet* gUAStyleSheet;
-
-static nsresult
-InitUAStyleSheet()
-{
-  nsresult rv = NS_OK;
-
-  if (nsnull == gUAStyleSheet) {  // snarf one
-    nsIURL* uaURL;
-    rv = NS_NewURL(&uaURL, nsnull, UA_CSS_URL); // XXX this bites, fix it
-    if (NS_OK == rv) {
-      // Get an input stream from the url
-      PRInt32 ec;
-      nsIInputStream* in = uaURL->Open(&ec);
-      if (nsnull != in) {
-        // Translate the input using the argument character set id into unicode
-        nsIUnicharInputStream* uin;
-        rv = NS_NewConverterStream(&uin, nsnull, in);
-        if (NS_OK == rv) {
-          // Create parser and set it up to process the input file
-          nsICSSParser* css;
-          rv = NS_NewCSSParser(&css);
-          if (NS_OK == rv) {
-            // Parse the input and produce a style set
-            // XXX note: we are ignoring rv until the error code stuff in the
-            // input routines is converted to use nsresult's
-            css->Parse(uin, uaURL, gUAStyleSheet);
-            NS_RELEASE(css);
-          }
-          NS_RELEASE(uin);
-        }
-        NS_RELEASE(in);
-      }
-      else {
-//        printf("open of %s failed: error=%x\n", UA_CSS_URL, ec);
-        rv = NS_ERROR_ILLEGAL_VALUE;  // XXX need a better error code here
-      }
-
-      NS_RELEASE(uaURL);
-    }
-  }
-  return rv;
-}
-
-static nsresult
-CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet)
-{
-  nsresult rv = InitUAStyleSheet();
-  if (NS_OK != rv) {
-    NS_WARNING("unable to load UA style sheet");
-  }
-
-  rv = NS_NewStyleSet(aStyleSet);
-  if (NS_OK == rv) {
-    PRInt32 index = aDocument->GetNumberOfStyleSheets();
-    while (0 < index--) {
-      // NOTE: turn the order around for the set
-      nsIStyleSheet* sheet = aDocument->GetStyleSheetAt(index);
-      (*aStyleSet)->AppendDocStyleSheet(sheet);
-      NS_RELEASE(sheet);
-    }
-    // XXX this is just wrong, the UA style sheet should be owned by the UA
-    // for that matter, the style set should be created by the UA too
-    if (nsnull != gUAStyleSheet) {
-      (*aStyleSet)->AppendBackstopStyleSheet(gUAStyleSheet);
-    }
-  }
-  return rv;
+    NS_IF_RELEASE(listName2);
+    listName = listName1;
+  } while (listName != nsnull);
 }
 
 // After an incremental reflow, we verify the correctness by doing a
@@ -1280,7 +1306,6 @@ PresShell::VerifyIncrementalReflow()
   nsIViewManager* vm;
   nsIView* view;
   nsIPresShell* sh;
-  nsIStyleSet* ss;
 
   // Create a presentation context to view the new frame tree
   nsresult rv;
@@ -1296,9 +1321,6 @@ PresShell::VerifyIncrementalReflow()
   mPresContext->GetPrefs(prefs);
   cx->Init(dc, prefs);
   NS_IF_RELEASE(prefs);
-
-  rv = CreateStyleSet(mDocument, &ss);
-  NS_ASSERTION(NS_OK == rv, "failed to create style set");
 
   // Get our scrolling preference
   nsScrollPreference scrolling;
@@ -1328,7 +1350,6 @@ PresShell::VerifyIncrementalReflow()
   // Create a view
   nsRect tbounds;
   mPresContext->GetVisibleArea(tbounds);
-//  tbounds *= mPresContext->GetPixelsToTwips();
   rv = nsRepository::CreateInstance(kScrollingViewCID, nsnull, kIViewIID,
                                     (void **) &view);
   if ((NS_OK != rv) || (NS_OK != view->Init(vm, tbounds, nsnull))) {
@@ -1359,20 +1380,18 @@ PresShell::VerifyIncrementalReflow()
   mPresContext->GetVisibleArea(r);
   cx->SetVisibleArea(r);
 
-  // Create a new presentation shell to view the document
-  rv = mDocument->CreateShell(cx, vm, ss, &sh);
+  // Create a new presentation shell to view the document. Use the
+  // exact same style information that this document has.
+  rv = mDocument->CreateShell(cx, vm, mStyleSet, &sh);
   NS_ASSERTION(NS_OK == rv, "failed to create presentation shell");
-  sh->ResizeReflow(r.width, r.height);
+  sh->InitialReflow(r.width, r.height);
 
   // Now that the document has been reflowed, use its frame tree to
   // compare against our frame tree.
   CompareTrees(GetRootFrame(), sh->GetRootFrame());
 
   NS_RELEASE(vm);
-
   NS_RELEASE(cx);
   NS_RELEASE(sh);
-
-  NS_RELEASE(ss);
 }
 #endif
