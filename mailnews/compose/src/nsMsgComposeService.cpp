@@ -215,7 +215,7 @@ nsresult nsMsgComposeService::OpenWindow(const char *chrome, nsIMsgComposeParams
 
   nsCOMPtr<nsIDOMWindow> newWindow;
   rv = wwatch->OpenWindow(0, chrome && *chrome ? chrome : DEFAULT_CHROME,
-                 "_blank", "chrome,dialog=no,all", msgParamsWrapper,
+                 "_blank", "all,chrome,dialog=no,status,toolbar", msgParamsWrapper,
                  getter_AddRefs(newWindow));
 
   return rv;

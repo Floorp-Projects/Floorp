@@ -720,6 +720,19 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				}
 				nsWatchTask::GetTask().Resume();
 				break;
+
+#if TARGET_CARBON
+            case inToolbarButton:           // rjc: Mac OS X
+                nsWatchTask::GetTask().Suspend();			  
+    			nsMacWindow *mw = mMessageSink->GetNSWindowFromMacWindow(whichWindow);
+    			if (mw)
+                {
+                    gEventDispatchHandler.DispatchGuiEvent(mw, NS_OS_TOOLBAR);
+                }
+                nsWatchTask::GetTask().Resume();			  
+                break;
+#endif
+
 	}
 }
 

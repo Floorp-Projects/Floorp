@@ -131,7 +131,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
     <menu id="menu_Help"/>
   </menubar>
 
-  <toolbar id="ToolbarMode" grippytooltip="aTooltip" grippytooltiptext="&modeToolbar.tooltip;">
+  <toolbar class="chromeclass-toolbar" id="ToolbarMode" grippytooltip="aTooltip" grippytooltiptext="&modeToolbar.tooltip;">
     <toolbarbutton type="radio" group="mode" observes="Console:modeAll"/>
     <toolbarbutton type="radio" group="mode" observes="Console:modeErrors"/>
     <toolbarbutton type="radio" group="mode" observes="Console:modeWarnings"/>
@@ -140,7 +140,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
     <toolbarbutton observes="Console:clear"/>
   </toolbar>
   
-  <toolbar id="ToolbarEval" grippytooltip="aTooltip" grippytooltiptext="&entryToolbar.tooltip;">
+  <toolbar class="chromeclass-toolbar" id="ToolbarEval" grippytooltip="aTooltip" grippytooltiptext="&entryToolbar.tooltip;">
     <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
     <toolbarbutton id="ButtonEval" label="&evaluate.label;" oncommand="evaluateTypein()"/>
   </toolbar>

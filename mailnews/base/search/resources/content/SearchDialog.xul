@@ -180,5 +180,5 @@ Rights Reserved.
     </vbox>      
   </groupbox>
   </vbox>
-  <statusbar id="status-bar"/>
+  <statusbar class="chromeclass-status" id="status-bar"/>
 </window>

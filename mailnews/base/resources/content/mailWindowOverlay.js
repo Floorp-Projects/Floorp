@@ -826,9 +826,9 @@ function MsgOpenNewWindowForFolder(uri, key)
     var layoutType = gPrefs.getIntPref("mail.pane_config");
 
     if(layoutType == 0)
-      window.openDialog("chrome://messenger/content/messenger.xul", "_blank", "chrome,all,dialog=no", {uri: uriToOpen, key: keyToSelect});
+      window.openDialog("chrome://messenger/content/messenger.xul", "_blank", "all,chrome,dialog=no,status,toolbar", {uri: uriToOpen, key: keyToSelect});
     else
-      window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "chrome,all,dialog=no", {uri: uriToOpen, key: keyToSelect});
+      window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "all,chrome,dialog=no,status,toolbar", {uri: uriToOpen, key: keyToSelect});
   }
 }
 
@@ -865,7 +865,7 @@ function MsgOpenNewWindowForMessage(messageUri, folderUri)
 
     // be sure to pass in the current view....
     if (messageUri && folderUri) {
-        window.openDialog( "chrome://messenger/content/messageWindow.xul", "_blank", "chrome,all,dialog=no", messageUri, folderUri, gDBView );
+        window.openDialog( "chrome://messenger/content/messageWindow.xul", "_blank", "all,chrome,dialog=no,status,toolbar", messageUri, folderUri, gDBView );
     }
 }
 
@@ -953,7 +953,7 @@ function MsgSearchMessages()
         searchWindow.focus();
     else
         window.openDialog("chrome://messenger/content/SearchDialog.xul", "", 
-                          "chrome,resizable,centerscreen,dialog=no", { folder: preselectedFolder });
+                          "chrome,resizable,status,centerscreen,dialog=no", { folder: preselectedFolder });
 }
 
 function MsgFilters(emailAddress)

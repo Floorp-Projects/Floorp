@@ -345,6 +345,36 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
 
 /*
+ * Toolbar
+ */
+NS_METHOD
+nsWebShellWindow::Toolbar()
+{
+    nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(this);
+    nsCOMPtr<nsIWebBrowserChrome> wbc(do_GetInterface(kungFuDeathGrip));
+    if (!wbc) return(PR_FALSE);
+
+    // rjc: don't use "nsIWebBrowserChrome::CHROME_EXTRA"
+    //      due to components with multiple sidebar components
+    //      (such as Mail/News, Addressbook, etc)... and frankly,
+    //      Mac IE, OmniWeb, and other Mac OS X apps all work this way
+
+    PRUint32    chromeMask = (nsIWebBrowserChrome::CHROME_TOOLBAR |
+                              nsIWebBrowserChrome::CHROME_LOCATIONBAR |
+                              nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR |
+                              nsIWebBrowserChrome::CHROME_STATUSBAR);
+
+    PRUint32    chromeFlags, newChromeFlags = 0;
+    wbc->GetChromeFlags(&chromeFlags);
+    newChromeFlags = chromeFlags & chromeMask;
+    if (!newChromeFlags)    chromeFlags |= chromeMask;
+    else                    chromeFlags &= (~newChromeFlags);
+    wbc->SetChromeFlags(chromeFlags);
+    return NS_OK;
+}
+
+
+/*
  * Close the window
  */
 NS_METHOD
@@ -411,6 +441,11 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         // the state and pass the event on to the OS. The day is coming
         // when we'll handle the event here, and the return result will
         // then need to be different.
+        break;
+      }
+      case NS_OS_TOOLBAR: {
+        nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(eventWindow);
+        eventWindow->Toolbar();
         break;
       }
       case NS_XUL_CLOSE: {

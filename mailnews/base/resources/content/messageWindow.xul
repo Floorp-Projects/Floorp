@@ -136,6 +136,6 @@ Rights Reserved.
   </vbox>  
 
 
-  <statusbar id="status-bar"/>
+  <statusbar class="chromeclass-status" id="status-bar"/>
 
 </window>

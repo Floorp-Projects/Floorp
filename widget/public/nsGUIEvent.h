@@ -403,7 +403,7 @@ enum nsDragDropEventStatus {
 // Tab control's selected tab has changed
 #define NS_TABCHANGE                    (NS_WINDOW_START + 35)
 
-
+#define NS_OS_TOOLBAR                   (NS_WINDOW_START + 36)
 
 // Menu item selected
 #define NS_MENU_SELECTED                (NS_WINDOW_START + 38)

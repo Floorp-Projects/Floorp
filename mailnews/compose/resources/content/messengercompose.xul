@@ -431,7 +431,7 @@
     </toolbar>
   
     <!-- These toolbar items get filled out from the editorOverlay -->
-    <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="never" grippytooltip="aTooltip" grippytooltiptext="&formatToolbar.tooltip;">
+    <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbautostretch="never" grippytooltip="aTooltip" grippytooltiptext="&formatToolbar.tooltip;">
       <menulist id="ParagraphSelect"/>
       <menulist id="FontFaceSelect"/>
       <stack id="ColorButtons"/>
@@ -462,7 +462,7 @@
             onkeypress="editorKeyPress(event);"/>
   </vbox>
 
-  <statusbar id="status-bar">
+  <statusbar id="status-bar" class="chromeclass-status">
     <hbox id="component-bar"/>
     <statusbarpanel id="statusText" flex="1"/>
 

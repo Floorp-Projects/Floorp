@@ -240,7 +240,7 @@
 
   <!-- Statusbar (hey, it's /almost/ a menu) -->
   <overlaytarget id="statusbar-overlay-target">
-    <statusbar id="status-bar" flex="1">
+    <statusbar class="chromeclass-status" id="status-bar" flex="1">
       <hbox id="component-bar"/>
       <statusbarpanel id="status-text" label="&StatusText.label;" flex="1"
         crop="right"/>

@@ -1402,7 +1402,7 @@ Rights Reserved.
   <button id="advancedButton" label="&advancedButton.label;" tooltip="aTooltip" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"/>
 </hbox>
 
-<statusbar id="status-bar"> 
+<statusbar class="chromeclass-status" id="status-bar"> 
   <hbox insertbefore="unreadMessageCount" flex="1">
     <hbox id="component-bar"/>
     <statusbarpanel id="statusText" label="&statusText.label;" crop="right" flex="1"/> 
