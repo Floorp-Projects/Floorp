@@ -116,6 +116,7 @@ public:
 
 
 protected:
+
   void MarkAsGenerated(nsIContent* aPopupContent);
   void UpdateDismissalListener(nsIMenuParent* aMenuParent);
 

@@ -75,6 +75,8 @@
 #include "nsIBoxLayout.h"
 #include "nsSprocketLayout.h"
 
+#undef DEBUG_evaughan
+
 #define CONSTANT 0
 //#define DEBUG_REFLOW
 //define DEBUG_REDRAW
@@ -623,7 +625,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
 
   // coelesce reflows if we are root.
-  state.HandleReflow(this, PR_FALSE);
+  state.HandleReflow(this);
   
   nsSize computedSize(aReflowState.mComputedWidth,aReflowState.mComputedHeight);
 
@@ -1084,6 +1086,33 @@ nsBoxFrame::GetInset(nsMargin& margin)
   return NS_OK;
 }
 
+#ifdef DEBUG_evaughan
+static PRInt32 StyleCoelesced = 0;
+#endif
+
+PRBool
+nsBoxFrame::HasStyleChange()
+{
+  return mState & NS_STATE_STYLE_CHANGE;
+}
+
+void
+nsBoxFrame::SetStyleChangeFlag(PRBool aDirty)
+{
+  if (aDirty)
+     mState |= (NS_STATE_STYLE_CHANGE | NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
+  else 
+     mState &= ~NS_STATE_STYLE_CHANGE;
+}
+
+nsresult
+nsBoxFrame::SyncLayout(nsBoxLayoutState& aState)
+{
+  nsresult rv = nsBox::SyncLayout(aState);
+  mState &= ~(NS_STATE_STYLE_CHANGE);
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsBoxFrame :: Paint ( nsIPresContext* aPresContext,
@@ -1157,6 +1186,8 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
   nscoord onePixel;
   nsRect inner;
 
+  GetBorder(border);
+
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
   {
         PRBool isHorizontal = IsHorizontal();
@@ -1176,10 +1207,8 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
 
         GetContentRect(inner);
         inner.Deflate(debugMargin);
-        GetBorder(border);
-
         inner.Deflate(border);
-        nsRect borderRect(inner);
+        //nsRect borderRect(inner);
 
         nscolor color;
         if (isHorizontal) {
@@ -1228,12 +1257,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
   // don't leak out of us
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     nsMargin im(0,0,0,0);
-    nsBoxLayoutState state(aPresContext);
     GetInset(im);
-    nsMargin border(0,0,0,0);
-    const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    spacing->GetBorderPadding(border);
     r.Deflate(im);
     r.Deflate(border);    
   }
@@ -1703,7 +1727,7 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
 
         inner.Deflate(debugMargin);
 
-        nsRect borderRect(inner);
+        //nsRect borderRect(inner);
 
         nscolor color;
         if (isHorizontal) {

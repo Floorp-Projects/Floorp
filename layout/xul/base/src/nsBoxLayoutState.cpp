@@ -37,7 +37,13 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPresContext.h"
 
-nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aPresContext), mReflowState(nsnull), mMaxElementSize(nsnull)
+nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aPresContext), 
+                                                                 mReflowState(nsnull), 
+                                                                 mMaxElementSize(nsnull),
+                                                                 mType(Dirty),
+                                                                 mOverFlowSize(0,0),
+                                                                 mIncludeOverFlow(PR_TRUE),
+                                                                 mLayoutFlags(0)
 {
 }
 
@@ -49,12 +55,27 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mMaxElementSize = aState.mMaxElementSize;
 }
 
-nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), mMaxElementSize(nsnull)
+nsBoxLayoutState::nsBoxLayoutState(nsIPresShell* aShell):mReflowState(nsnull), 
+                                                         mType(Dirty),
+                                                         mMaxElementSize(nsnull),
+                                                         mOverFlowSize(0,0),
+                                                         mIncludeOverFlow(PR_TRUE),
+                                                         mLayoutFlags(0)
 {
    aShell->GetPresContext(getter_AddRefs(mPresContext));
 }
 
-nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize):mReflowState(&aReflowState),mPresContext(aPresContext),mType(Dirty)
+nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, 
+                                   const nsHTMLReflowState& aReflowState, 
+                                   nsHTMLReflowMetrics& aDesiredSize):mReflowState(&aReflowState),
+                                                                      mPresContext(aPresContext),
+                                                                      mType(Dirty),
+                                                                      mIncludeOverFlow(PR_TRUE),
+                                                                      mOverFlowSize(0,0),
+                                                                      mLayoutFlags(0)
+
+                                                                                        
+
 {
   mMaxElementSize = aDesiredSize.maxElementSize;
 }
@@ -67,24 +88,54 @@ nsBoxLayoutState::GetMaxElementSize(nsSize** aMaxElementSize)
      *aMaxElementSize = mMaxElementSize;
 }
 
+void 
+nsBoxLayoutState::GetOverFlowSize(nsSize& aSize)
+{
+  aSize = mOverFlowSize;
+}
 
-PRBool
-nsBoxLayoutState::HandleReflow(nsIBox* aRootBox, PRBool aCoelesce)
+void 
+nsBoxLayoutState::SetOverFlowSize(const nsSize& aSize)
+{
+  mOverFlowSize = aSize;
+}
+
+void 
+nsBoxLayoutState::GetIncludeOverFlow(PRBool& aOverflow)
+{
+  aOverflow = mIncludeOverFlow;
+}
+
+void 
+nsBoxLayoutState::SetLayoutFlags(const PRUint32& aFlags)
+{
+  mLayoutFlags = aFlags;
+}
+
+void 
+nsBoxLayoutState::GetLayoutFlags(PRUint32& aFlags)
+{
+  aFlags = mLayoutFlags;
+}
+
+void 
+nsBoxLayoutState::SetIncludeOverFlow(const PRBool& aOverflow)
+{
+  mIncludeOverFlow = aOverflow;
+}
+
+void
+nsBoxLayoutState::HandleReflow(nsIBox* aRootBox)
 {
       switch(mReflowState->reason)
       {
          case eReflowReason_Incremental: 
          {
-            nsIReflowCommand::ReflowType  type;
-            mReflowState->reflowCommand->GetType(type);
-
              // ok if the target was not a box. Then unwind it down 
-            if (UnWind(mReflowState->reflowCommand, aRootBox, aCoelesce)) {
-               mType = Dirty;
-               return PR_TRUE;
-            }
-           
-         } // fall into dirty
+            UnWind(mReflowState->reflowCommand, aRootBox);
+            mType = Dirty;
+            break;  
+         }
 
          case eReflowReason_Dirty: 
             mType = Dirty;
@@ -104,23 +155,20 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox, PRBool aCoelesce)
 
          case eReflowReason_StyleChange:
             printf("STYLE CHANGE REFLOW. Blowing away all box caches!!\n");
-            DirtyAllChildren(*this, aRootBox);
+            aRootBox->MarkChildrenStyleChange();
             // fall through to dirty
 
          default:
             mType = Dirty;
       }
-
-      return PR_FALSE;
 }
 
 
-PRBool
-nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoelesce)
+void
+nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox)
 {
   // if incremental unwindow the chain
   nsIFrame* incrementalChild = nsnull;
-  nsIBox* lastBox = nsnull;
   nsIFrame* target = nsnull;
   aCommand->GetTarget(target);
   nsIReflowCommand::ReflowType  type;
@@ -130,7 +178,7 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
   {
     aCommand->GetNext(incrementalChild, PR_FALSE);
     if (incrementalChild == nsnull)
-      return PR_FALSE;
+      return;
 
     // get the box for the given incrementalChild. If adaptor is true then
     // it is some wrapped HTML frame.
@@ -145,24 +193,22 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
       // ok we got a box is it the target?
       if (incrementalChild == target) {
 
-        nsFrameState state;
+        nsFrameState boxState;
         nsIFrame* frame;
         aBox->GetFrame(&frame);
-        frame->GetFrameState(&state);
+        frame->GetFrameState(&boxState);
 
-        if (aCoelesce) 
-          state &= ~NS_FRAME_HAS_DIRTY_CHILDREN;
-        else
-          state |= NS_FRAME_HAS_DIRTY_CHILDREN;
+        boxState |= NS_FRAME_HAS_DIRTY_CHILDREN;
 
-        frame->SetFrameState(state);
+        frame->SetFrameState(boxState);
 
         // the target is a box?
          // mark it dirty generating a new reflow command targeted
          // at us and coelesce out this one.
-         ibox->MarkDirty(*this);      
 
          if (type == nsIReflowCommand::StyleChanged) {
+            ibox->MarkStyleChange(*this);
+
             // could be a visiblity change. Like collapse so we need to dirty
             // parent so it gets redrawn. But be carefull we
             // don't want to just mark dirty that would notify the
@@ -182,11 +228,11 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
               parentFrame->SetFrameState(parentState);
             }
 
-            DirtyAllChildren(*this, ibox);
-         } 
+         } else {
+            ibox->MarkDirty(*this);      
+         }
 
-         // yes we coelesed
-         return aCoelesce ? PR_TRUE : PR_FALSE;
+         return;
       }
 
       // was the child html?
@@ -209,7 +255,7 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
         ibox->MarkDirty(*this);      
         
         // we are done and we did not coelesce
-        return PR_FALSE;
+        return;
       }
 
     } else {
@@ -219,8 +265,6 @@ nsBoxLayoutState::UnWind(nsIReflowCommand* aCommand, nsIBox* aBox, PRBool aCoele
   
     aCommand->GetNext(incrementalChild);
   }
-   
-  return PR_FALSE;
 }
 
 /*
@@ -312,6 +356,7 @@ nsBoxLayoutState::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
   return ibox;
 }
 
+/*
 void
 nsBoxLayoutState::DirtyAllChildren(nsBoxLayoutState& aState, nsIBox* aBox)
 {
@@ -328,6 +373,7 @@ nsBoxLayoutState::DirtyAllChildren(nsBoxLayoutState& aState, nsIBox* aBox)
       first->GetNextBox(&first);
     }
 }
+*/
 
 void* 
 nsBoxLayoutState::Allocate(size_t sz, nsIPresShell* aPresShell)

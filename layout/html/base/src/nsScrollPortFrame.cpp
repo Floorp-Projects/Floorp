@@ -297,6 +297,9 @@ nsScrollPortFrame::GetBorder(nsMargin& aMargin)
 NS_IMETHODIMP
 nsScrollPortFrame::Layout(nsBoxLayoutState& aState)
 {
+  PRUint32 flags = 0;
+  aState.GetLayoutFlags(flags);
+
   nsRect clientRect(0,0,0,0);
   GetClientRect(clientRect);
   nsIBox* kid = nsnull;
@@ -324,8 +327,10 @@ nsScrollPortFrame::Layout(nsBoxLayoutState& aState)
  if (min.width > childRect.width)
     childRect.width = min.width;
 
+  aState.SetLayoutFlags(NS_FRAME_NO_MOVE_VIEW);
   kid->SetBounds(aState, childRect);
   kid->Layout(aState);
+
   kid->GetBounds(childRect);
 
   clientRect.Inflate(margin);
@@ -342,6 +347,8 @@ nsScrollPortFrame::Layout(nsBoxLayoutState& aState)
 
     kid->SetBounds(aState, childRect);
   }
+
+  aState.SetLayoutFlags(flags);
 
   SyncLayout(aState);
 

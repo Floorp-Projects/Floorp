@@ -244,15 +244,15 @@ nsSliderFrame::Paint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::Layout(nsBoxLayoutState& aBoxLayoutState)
+nsSliderFrame::Layout(nsBoxLayoutState& aState)
 {
   EnsureOrient();
 
   if (mState & NS_STATE_DEBUG_WAS_SET) {
       if (mState & NS_STATE_SET_TO_DEBUG)
-          SetDebug(aBoxLayoutState, PR_TRUE);
+          SetDebug(aState, PR_TRUE);
       else
-          SetDebug(aBoxLayoutState, PR_FALSE);
+          SetDebug(aState, PR_FALSE);
   }
 
   // get the content area inside our borders
@@ -273,7 +273,7 @@ nsSliderFrame::Layout(nsBoxLayoutState& aBoxLayoutState)
 
   // get the thumb's pref size
   nsSize thumbSize(0,0);
-  thumbBox->GetPrefSize(aBoxLayoutState, thumbSize);
+  thumbBox->GetPrefSize(aState, thumbSize);
 
   if (isHorizontal)
     thumbSize.height = clientRect.height;
@@ -290,7 +290,7 @@ nsSliderFrame::Layout(nsBoxLayoutState& aBoxLayoutState)
      curpospx = maxpospx;
 
   float p2t;
-  aBoxLayoutState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
+  aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   /*
@@ -331,7 +331,7 @@ nsSliderFrame::Layout(nsBoxLayoutState& aBoxLayoutState)
 
   if (thumbsize > thumbcoord) {
     nscoord flex = 0;
-    thumbBox->GetFlex(aBoxLayoutState, flex);
+    thumbBox->GetFlex(aState, flex);
 
     // if the thumb is flexible make the thumb bigger.
     if (flex > 0) {
@@ -356,10 +356,9 @@ nsSliderFrame::Layout(nsBoxLayoutState& aBoxLayoutState)
   else
     thumbRect.y += pos;
 
-  thumbBox->SetBounds(aBoxLayoutState, thumbRect);
-  thumbBox->Layout(aBoxLayoutState);
-  
-  SyncLayout(aBoxLayoutState);
+  LayoutChildAt(aState, thumbBox, thumbRect);
+
+  SyncLayout(aState);
 
   if (DEBUG_SLIDER) {
      PRInt32 c = GetCurrentPosition(scrollbar);
@@ -500,7 +499,6 @@ nsSliderFrame::GetContentOf(nsIBox* aBox, nsIContent** aContent)
 {
    nsIFrame* frame = nsnull;
    aBox->GetFrame(&frame);
-   nsIContent* content = nsnull;
    frame->GetContent(aContent);
 }
 

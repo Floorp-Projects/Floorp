@@ -416,7 +416,7 @@ nsContainerBox::SanityCheck(nsFrameList& aFrameList)
 
 
 NS_IMETHODIMP
-nsContainerBox::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsContainerBox::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   nsresult rv = NS_OK;
 
@@ -424,22 +424,22 @@ nsContainerBox::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
   aSize.height = 0;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize)) 
+  if (!nsIBox::AddCSSPrefSize(aState, this, aSize)) 
   {
     aSize.width = 0;
     aSize.height = 0;
 
     if (mLayoutManager) {
-      rv = mLayoutManager->GetPrefSize(this, aBoxLayoutState, aSize);
-      nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize);
+      rv = mLayoutManager->GetPrefSize(this, aState, aSize);
+      nsIBox::AddCSSPrefSize(aState, this, aSize);
     } else 
-      rv = nsBox::GetPrefSize(aBoxLayoutState, aSize);
+      rv = nsBox::GetPrefSize(aState, aSize);
   }
 
   nsSize minSize(0,0);
   nsSize maxSize(0,0);
-  GetMinSize(aBoxLayoutState, minSize);
-  GetMaxSize(aBoxLayoutState, maxSize);
+  GetMinSize(aState, minSize);
+  GetMaxSize(aState, maxSize);
 
   BoundsCheck(minSize, aSize, maxSize);
 
@@ -447,7 +447,7 @@ nsContainerBox::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 }
 
 NS_IMETHODIMP
-nsContainerBox::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsContainerBox::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   nsresult rv = NS_OK;
 
@@ -455,16 +455,16 @@ nsContainerBox::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
   aSize.height = 0;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize)) 
+  if (!nsIBox::AddCSSMinSize(aState, this, aSize)) 
   {
     aSize.width = 0;
     aSize.height = 0;
 
     if (mLayoutManager) {
-        rv = mLayoutManager->GetMinSize(this, aBoxLayoutState, aSize);
-        nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);
+        rv = mLayoutManager->GetMinSize(this, aState, aSize);
+        nsIBox::AddCSSMinSize(aState, this, aSize);
     } else {
-        rv = nsBox::GetMinSize(aBoxLayoutState, aSize);        
+        rv = nsBox::GetMinSize(aState, aSize);        
     }  
   }
 
@@ -472,7 +472,7 @@ nsContainerBox::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 }
 
 NS_IMETHODIMP
-nsContainerBox::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsContainerBox::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   nsresult rv = NS_OK;
 
@@ -480,16 +480,16 @@ nsContainerBox::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
   aSize.height = NS_INTRINSICSIZE;
 
   // if the size was not completely redefined in CSS then ask our children
-  if (!nsIBox::AddCSSMaxSize(aBoxLayoutState, this, aSize)) 
+  if (!nsIBox::AddCSSMaxSize(aState, this, aSize)) 
   {
     aSize.width = NS_INTRINSICSIZE;
     aSize.height = NS_INTRINSICSIZE;
 
     if (mLayoutManager) {
-        rv = mLayoutManager->GetMaxSize(this, aBoxLayoutState, aSize);
-        nsIBox::AddCSSMaxSize(aBoxLayoutState, this, aSize);
+        rv = mLayoutManager->GetMaxSize(this, aState, aSize);
+        nsIBox::AddCSSMaxSize(aState, this, aSize);
     } else {
-        rv = nsBox::GetMaxSize(aBoxLayoutState, aSize);        
+        rv = nsBox::GetMaxSize(aState, aSize);        
     }
   }
 
@@ -498,28 +498,33 @@ nsContainerBox::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 
 
 NS_IMETHODIMP
-nsContainerBox::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
+nsContainerBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 {
   nsresult rv = NS_OK;
 
   aAscent = 0;
   if (mLayoutManager)
-    rv = mLayoutManager->GetAscent(this, aBoxLayoutState, aAscent);
+    rv = mLayoutManager->GetAscent(this, aState, aAscent);
   else
-    rv = nsBox::GetAscent(aBoxLayoutState, aAscent);
+    rv = nsBox::GetAscent(aState, aAscent);
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsContainerBox::Layout(nsBoxLayoutState& aBoxLayoutState)
+nsContainerBox::Layout(nsBoxLayoutState& aState)
 {
   nsresult rv = NS_OK;
 
-  if (mLayoutManager)
-    rv = mLayoutManager->Layout(this, aBoxLayoutState);
+  PRUint32 oldFlags = 0;
+  aState.GetLayoutFlags(oldFlags);
 
-  nsBox::Layout(aBoxLayoutState);
+  if (mLayoutManager)
+    rv = mLayoutManager->Layout(this, aState);
+
+  aState.SetLayoutFlags(oldFlags);
+
+  nsBox::Layout(aState);
 
   return rv;
 }
@@ -538,6 +543,19 @@ nsContainerBox::GetLayoutManager(nsIBoxLayout** aLayout)
   NS_IF_ADDREF(*aLayout);
   return NS_OK;
 }
+
+/*
+nsresult
+nsContainerBox::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect, PRUint32 aLayoutFlags)
+{
+    PRUint32 oldFlags = 0;
+    aState.GetLayoutFlags(oldFlags);
+    aState.SetLayoutFlags(aLayoutFlags);
+    nsresult rv = LayoutChildAt(aState, aBox, aRect);
+    aState.SetLayoutFlags(oldFlags);
+    return rv;
+}
+*/
 
 nsresult
 nsContainerBox::LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect)

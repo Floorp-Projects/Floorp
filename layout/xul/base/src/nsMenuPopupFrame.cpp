@@ -185,6 +185,12 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
+void
+nsMenuPopupFrame::GetLayoutFlags(PRUint32& aFlags)
+{
+  aFlags = NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS;
+}
+
 PRBool
 nsMenuPopupFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 {

@@ -682,6 +682,7 @@ nsMenuFrame::Layout(nsBoxLayoutState& aState)
   nsIFrame* popupChild = mPopupFrames.FirstChild();
 
   if (popupChild) {
+
     nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(mContent);
 
     nsIBox* ibox = nsnull;
@@ -704,7 +705,7 @@ nsMenuFrame::Layout(nsBoxLayoutState& aState)
     if (menulist && prefSize.width < contentRect.width)
         prefSize.width = contentRect.width;
 
-    // lay it out
+    // lay it out but make sure we don't move the view.
     LayoutChildAt(aState, ibox, nsRect(0,0,prefSize.width, prefSize.height));
   }
 

@@ -71,13 +71,15 @@ NS_NewGrippyFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewGrippyFrame
 
-nsGrippyFrame::nsGrippyFrame(nsIPresShell* aShell):nsTitledButtonFrame(aShell),mCollapsed(PR_FALSE)
+nsGrippyFrame::nsGrippyFrame(nsIPresShell* aShell):nsButtonBoxFrame(aShell),mCollapsed(PR_FALSE)
 {
 }
 
 void
 nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
+    //nsButtonBoxFrame::MouseClicked(aPresContext);
+
     nsIFrame* splitter;
     nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::splitter, this, splitter);
     if (splitter == nsnull)
@@ -96,6 +98,7 @@ nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext)
     }
 
     content->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, a, PR_TRUE);
+
 }
 
 /*

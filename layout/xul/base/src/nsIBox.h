@@ -99,7 +99,10 @@ public:
   NS_IMETHOD NeedsRecalc()=0;
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox)=0;
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)=0;
+  NS_IMETHOD RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild)=0;
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough)=0;
+  NS_IMETHOD MarkChildrenStyleChange()=0;
+  NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
 
   // XXX Eventually these will move into nsIFrame.
   // These methods are used for XBL <children>.

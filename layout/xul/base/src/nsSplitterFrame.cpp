@@ -1093,9 +1093,7 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInf
     for (int i=0; i < aCount; i++) 
     {
         nscoord   pref       = aChildInfos[i].changed;
-        nscoord   current    = aChildInfos[i].current;
         nsIBox* childBox     = aChildInfos[i].child;
-        PRInt32 index        = aChildInfos[i].index;
 
         SetPreferredSize(state, childBox, onePixel, aIsHorizontal, &pref);
     }

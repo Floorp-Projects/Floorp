@@ -57,6 +57,7 @@ class nsHTMLInfo;
 #define NS_STATE_DEBUG_WAS_SET           0x08000000
 #define NS_STATE_IS_COLLAPSED            0x10000000
 #define NS_STATE_DEFAULT_HORIZONTAL      0x20000000
+#define NS_STATE_STYLE_CHANGE            0x40000000
 
 class nsBoxFrame : public nsHTMLContainerFrame, public nsContainerBox
 {
@@ -90,6 +91,7 @@ public:
   NS_IMETHOD GetInset(nsMargin& aInset);
   NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD GetDebug(PRBool& aDebug);
+
   //NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
   // ----- child and sibling operations ---
@@ -153,7 +155,6 @@ public:
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
-
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
@@ -164,12 +165,16 @@ public:
   virtual ~nsBoxFrame();
 
   virtual nsresult GetContentOf(nsIContent** aContent);
+  virtual nsresult SyncLayout(nsBoxLayoutState& aBoxLayoutState);
 
   nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull, PRBool aDefaultHorizontal = PR_TRUE);
  
 protected:
+    virtual PRBool HasStyleChange();
+    virtual void SetStyleChangeFlag(PRBool aDirty);
 
     virtual void PropagateDebug(nsBoxLayoutState& aState);
+
 
 
     // Paint one child frame
