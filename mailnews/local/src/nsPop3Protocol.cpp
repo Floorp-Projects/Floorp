@@ -962,14 +962,9 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
     if (!m_pop3ConData->command_succeeded) 
     {
         /* AUTH command not implemented 
-         * so try & error with fallbacks
+         * so no secure mechanisms available
          */
         m_pop3ConData->command_succeeded = PR_TRUE;
-        SetCapFlag(POP3_HAS_AUTH_USER | POP3_HAS_AUTH_LOGIN);
-        nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
-        // this checks if psm is installed...
-        if (NS_SUCCEEDED(rv))
-            SetCapFlag(POP3_HAS_AUTH_CRAM_MD5);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
         m_pop3ConData->next_state = POP3_PROCESS_AUTH;
         return 0;
