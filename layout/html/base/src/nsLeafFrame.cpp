@@ -46,7 +46,7 @@ nsLeafFrame::Paint(nsIPresContext& aPresContext,
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *mySpacing, 0);
+                                  aDirtyRect, rect, *mySpacing, mStyleContext, 0);
     }
   }
   return NS_OK;
