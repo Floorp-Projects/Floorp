@@ -25,7 +25,7 @@
 #include "nsIDateTimeFormat.h"
 
 #ifdef XP_MAC
-#define LOCALE_DLL_NAME "LOCALE_DLL"
+#define LOCALE_DLL_NAME "NSLOCALE_DLL"
 #elif defined(NP_WIN)
 #define LOCALE_DLL_NAME "NSLOCALE.DLL"
 #else
