@@ -392,16 +392,6 @@ sub is_legal_product
 	return grep { $_ eq $product} @myproducts;
 	}
 
-sub header
-	{
-	print <<FIN;
-<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
-<TR><TD><A HREF="http://www.mozilla.org/"><IMG
- SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
- BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
-FIN
-	}
-
 sub show_chart
 	{
   my $when = localtime (time);
