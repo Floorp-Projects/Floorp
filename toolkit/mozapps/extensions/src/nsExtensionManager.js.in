@@ -107,7 +107,6 @@ function getDirInternal(aKey, aSubDirs, aCreate)
 {
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                               .getService(Components.interfaces.nsIProperties);
-  
   var dir = fileLocator.get(aKey, Components.interfaces.nsIFile);
   for (var i = 0; i < aSubDirs.length; ++i) {
     dir.append(aSubDirs[i]);
@@ -1448,6 +1447,7 @@ nsExtensionManager.prototype = {
   _extInstaller     : null,
   _extUninstaller   : null,
   _extEnabler       : null,
+  _started          : false,
   
   /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
@@ -1494,6 +1494,8 @@ nsExtensionManager.prototype = {
   
   start: function (aIsDirty)
   {
+    this._started = true;
+    
     var needsRestart = false;
   
     ensureExtensionsFiles(true);
@@ -1641,6 +1643,23 @@ nsExtensionManager.prototype = {
     }
     
     this._finishOperations();
+  },
+  
+  register: function ()
+  {
+    if (!this._started) {
+      // Loads the datasource and installs any pre-configured items.
+      this._ds = new nsExtensionsDataSource();
+      this._ds.loadExtensions(false);
+      
+      // Write bin/extensions/Extensions.rdf
+      //       bin/extensions/installed-extensions-processed.txt
+      (new nsInstalledExtensionReader(this)).read();
+
+      // Write bin/components.ini
+      var manifest = getFile(KEY_APPDIR, [FILE_COMPONENT_MANIFEST]);
+      this._writeProfileFile(manifest, this._getComponentsDir, false);
+    }
   },
 
   _cancelDownloads: function ()

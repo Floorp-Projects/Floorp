@@ -63,6 +63,8 @@ interface nsIExtensionManager : nsISupports
 
   void handleCommandLineArgs();
 
+  void register();
+
   // Installing Extensions
   const unsigned long FLAG_INSTALL_PROFILE = 0x01;
   const unsigned long FLAG_INSTALL_GLOBAL  = 0x02;
