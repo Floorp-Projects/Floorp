@@ -135,6 +135,8 @@ public:
 
    // nsPIDOMWindow
    NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult);
+   NS_IMETHOD GetPrivateRoot(nsIDOMWindow** aResult);
+
    NS_IMETHOD GetLocation(nsIDOMLocation** aLocation);
    //NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
    NS_IMETHOD Activate();

@@ -53,7 +53,7 @@
         void  resizeBy(in long widthDif, in long heightDif);
         void  sizeToContent();
         void  GetAttention();
-	void  scroll(in long xScroll, in long yScroll);
+				void  scroll(in long xScroll, in long yScroll);
         void  scrollTo(in long xScroll, in long yScroll);
         void  scrollBy(in long xScrollDif, in long yScrollDif);
 
@@ -73,7 +73,9 @@
         noscript void  close();
         void  close(/* ... */);
 
-	DOMString escape(in DOMString str);
+				void updateCommands(in DOMString action);
+
+				DOMString escape(in DOMString str);
         DOMString unescape(in DOMString str);
       };
 

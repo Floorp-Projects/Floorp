@@ -80,6 +80,11 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
 
+// XXX An unfortunate dependency exists here.
+#include "nsIDOMXULDocument.h"
+#include "nsIDOMXULCommandDispatcher.h"
+
+
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -1508,6 +1513,51 @@ NS_IMETHODIMP GlobalWindowImpl::Close(JSContext* cx, jsval* argv, PRUint32 argc)
    return result;
 }
 
+NS_IMETHODIMP 
+GlobalWindowImpl::UpdateCommands(const nsString& anAction)
+{
+  if (mChromeEventHandler) {
+    // Just jump out to the chrome event handler.
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mChromeEventHandler);
+    if (content) {
+      // Cross the chrome/content boundary and get the nearest enclosing
+      // chrome window.
+      nsCOMPtr<nsIDocument> doc;
+      content->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIScriptGlobalObject> global;
+      doc->GetScriptGlobalObject(getter_AddRefs(global));
+      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(global);
+      return domWindow->UpdateCommands(anAction);
+    }
+    else {
+      // XXX Handle the embedding case.  The chrome handler could be told
+      // to poke menu items/update commands etc.  This can be used by
+      // embedders if we set it up right and lets them know all sorts of
+      // interesting things about Ender text fields.
+    }
+
+  }
+  else {
+    // See if we contain a XUL document.
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(domDoc);
+    if (xulDoc) {
+      // Retrieve the command dispatcher and call updateCommands on it.
+      nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
+      xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
+      xulCommandDispatcher->UpdateCommands(anAction);
+    }
+
+    // Now call UpdateCommands on our parent window.
+    nsCOMPtr<nsIDOMWindow> parent;
+    GetParent(getter_AddRefs(parent));
+    return parent->UpdateCommands(anAction);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
 {
    nsresult result;
@@ -1991,6 +2041,42 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
 
    return NS_OK;
 }
+
+NS_IMETHODIMP GlobalWindowImpl::GetPrivateRoot(nsIDOMWindow** aParent)
+{
+   *aParent = nsnull; // Set to null so we can bail out later
+
+   nsCOMPtr<nsIDOMWindow> parent;
+   GetTop(getter_AddRefs(parent));
+
+   nsCOMPtr<nsIScriptGlobalObject> parentTop = do_QueryInterface(parent);
+   nsCOMPtr<nsIDocShell> docShell;
+   parentTop->GetDocShell(getter_AddRefs(docShell));
+   nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+   docShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+
+   nsCOMPtr<nsIContent> chromeElement(do_QueryInterface(mChromeEventHandler));
+   if(chromeElement) {
+     nsCOMPtr<nsIDocument> doc;
+     chromeElement->GetDocument(*getter_AddRefs(doc));
+     if (doc) {
+       nsCOMPtr<nsIScriptGlobalObject> globalObject;
+       doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+      
+       parent = do_QueryInterface(globalObject);
+       parent->GetTop(aParent); // Addref done here.
+       return NS_OK;
+     }
+   }
+
+   if (parent) {
+     *aParent = parent.get();
+     NS_ADDREF(*aParent);
+   }
+
+   return NS_OK;
+}
+
 
 NS_IMETHODIMP GlobalWindowImpl::GetLocation(nsIDOMLocation** aLocation)
 {
