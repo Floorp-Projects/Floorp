@@ -48,6 +48,7 @@ LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\netlib.lib \
+	$(DIST)\lib\js3250.lib \
 	$(NULL)
 
 #//------------------------------------------------------------------------
