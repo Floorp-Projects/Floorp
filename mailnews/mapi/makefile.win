@@ -22,6 +22,6 @@
 
 DEPTH=..\..
 
-DIRS=resources
+DIRS=resources mapiDll mapihook
 
 include <$(DEPTH)\config\rules.mak>

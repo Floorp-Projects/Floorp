@@ -38,6 +38,6 @@ Contributor(s):
 <hbox align="center" id="mapi">
   <checkbox id="mailnewsEnableMapi" label="&enableMapi.label;"
             accesskey="&enableMapi.accesskey;" 
-            initFunc="mailnewsOverlayInit();"/>
+            preftype="bool" prefstring="mailnews.default_mail_client" prefattribute="checked"/>
 </hbox>
 </overlay> 
