@@ -80,110 +80,16 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="startup()" title="&msgComposeWindow.title;"
+        onload="startup()"
+		onunload="finish()"
+		title="&msgComposeWindow.title;"
 		style="width:100%;height:100%"> 
   
-<html:script src="resource:/res/mailnews/messenger/widgetglue.js"></html:script>
 
-<html:script>
-	var editorAppCore;
-	var composeAppCore;
-
-	function startup()
-	{
-	  dump("Compose: StartUp\n");
-
-	  editorAppCore = XPAppCoresManager.Find("EditorAppCore");  
-	  dump("Looking up EditorAppCore...\n");
-	  if (editorAppCore == null) {
-	    dump("Creating EditorAppCore...\n");
-	    editorAppCore = new EditorAppCore();
-	    editorAppCore.Init("EditorAppCore");
-		dump("editor app core correctly added to app cores manager");
-	  }
-	  if (editorAppCore != null) {
-		dump("initalizing the editor app core");
-	    editorAppCore.setContentWindow(window.frames[0]);
-	    editorAppCore.setWebShellWindow(window);
-	    editorAppCore.setToolbarWindow(window);
-	  }
-
-	  composeAppCore = XPAppCoresManager.Find("ComposeAppCore");
-	  if (composeAppCore == null) {
-		dump("creating new compose app core with new editor");
-	    composeAppCore = new ComposeAppCore();
-	    if (composeAppCore != null) {
-	      dump("ComposeAppCore was created!\n");
-	      composeAppCore.Init("ComposeAppCore");
-	    }
-	  }
-	  if(composeAppCore != null) {
-	    dump("setting window &amp; editor for compose app core");
-	    composeAppCore.SetWindow(window);
-	    composeAppCore.SetEditor(editorAppCore);
-	    composeAppCore.CompleteCallback("MessageSent();");
-	  }
-	}
-
-  function SetDocumentCharacterSet(aCharset)
-	{
-    dump("SetDocumentCharacterSet Callback!\n");
-		if (composeAppCore != null) {
-		  composeAppCore.SetDocumentCharset(aCharset);
-		} else
-			dump("ComposeAppCore has not been created!\n");
-	}
-
-        function EditorGetText()
-	{
-		if (editorAppCore != null) {
-			var	outputText = editorAppCore.contentsAsText;
-			dump(outputText + "\n");
-			return outputText;
-		} else
-			dump("EditorAppCore has not been created!\n");
-	}
-
-
-	function SendMessage()
-	{
-		dump("SendMessage!\n");
-		if (composeAppCore != null) {
-//			composeAppCore.SendMessage(document.getElementById('msgTo').value, 
-//					   document.getElementById('msgCc').value, 
-//					   document.getElementById('msgBcc').value, 
-//					   document.getElementById('msgNewsgroup').value, 
-//					   document.getElementById('msgSubject').value, 
-//					   window.parent.frames[0].document.forms["fbody"].elements["body"].value);
-//					   EditorGetText());
-			composeAppCore.SendMessage2();
-		}
-	}
-
-	function MessageSent()
-	{
-		dump("MessageSent Callback!\n");
-
-		// Clear Them
-		document.getElementById('msgTo').value = "";
-		document.getElementById('msgCc').value = "";
-		document.getElementById('msgBcc').value = "";
-		document.getElementByID('msgNewsgroup').value = "";
-		document.getElementById('msgSubject').value = "";
-//		window.parent.frames[0].document.forms["fbody"].elements["body"].value = "";
-	}
-
-	function ComposeExit()
-	{
-		dump("\nExit from XUL\n");
-		composeAppCore = XPAppCoresManager.Find("ComposeAppCore");
-		if (composeAppCore != null) {
-			dump("\nClosing compose app core\n");
-			composeAppCore.SetWindow(window);
-			composeAppCore.exit();
-		}
-	}
+<html:script language="JavaScript" src="MsgComposeCommands.js">
 </html:script>
+
+<broadcaster id="args" value=""/>
 
 <menubar>
 	<menu name="File">
