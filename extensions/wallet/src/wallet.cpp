@@ -325,7 +325,7 @@ wallet_GetUsingDialogsPref(void)
 
 PRBool FE_Confirm(char * szMessage) {
   if (!wallet_GetUsingDialogsPref()) {
-    return JS_TRUE;
+    return PR_TRUE;
   }
   fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
   PRBool result;
@@ -556,76 +556,124 @@ wallet_ReadFromSublist(nsAutoString& value, XP_List*& resume)
 char key[maxKeySize+1];
 PRUint32 keyPosition = 0;
 PRBool keyFailure = FALSE;
-
-PUBLIC PRBool
-wallet_BadKey() {
-  return keyFailure;
-}
+PRBool keySet = FALSE;
 
 PUBLIC void
-wallet_SetKey() {
-  keyFailure = FALSE;
-  keyPosition = 0;
-
-  if (!wallet_GetUsingDialogsPref()) {
-    key[keyPosition++] = '~';
-    return;
-  }
-  fprintf(stdout, "%cpassword=", '\007');
-  char c;
-  for (;;) {
-    c = getchar();
-    if (c == '\n') {
-      key[keyPosition] = '\0';
-
-      break;
-    }
-    if (keyPosition < maxKeySize) {
-      key[keyPosition++] = c;
-    }
-  }
+Wallet_RestartKey() {
   keyPosition = 0;
 }
 
 PUBLIC char
-wallet_GetKey() {
+Wallet_GetKey() {
   if (keyPosition >= PL_strlen(key)) {
     keyPosition = 0;
   }
+char c = key[keyPosition];
   return key[keyPosition++];
 }
 
-PUBLIC void
-wallet_RestartKey() {
-  keyPosition = 0;
+PUBLIC PRBool
+Wallet_BadKey() {
+  return keyFailure;
 }
 
-PUBLIC void
-wallet_WriteKey(nsOutputFileStream strm) {
-  /* If we store the key obscured by the key itself, then the result will be zero
-   * for all keys (since we are using XOR to obscure).  So instead we store
-   * key[1..n],key[0] obscured by the actual key.
-   */
-  char* p = key+1;
-  while (*p) {
-    strm.put(*(p++)^wallet_GetKey());
+PUBLIC PRBool
+Wallet_SetKey() {
+  if (keySet) {
+    return TRUE;
   }
-  strm.put((*key)^wallet_GetKey());  
-}
 
-void
-wallet_ReadKey(nsInputFileStream strm) {
-  char* p = key+1;
-  while (*p) {
-    if (strm.get() != (*(p++)^wallet_GetKey())) {
+  Wallet_RestartKey();
+
+  /* ask the user for his key */
+  if (!wallet_GetUsingDialogsPref()) {
+    key[keyPosition++] = '~';
+  } else {
+    fprintf(stdout, "%cpassword=", '\007');
+    char c;
+    for (;;) {
+      c = getchar();
+      if (c == '\n') {
+        key[keyPosition] = '\0';
+        break;
+      }
+      if (keyPosition < maxKeySize) {
+        key[keyPosition++] = c;
+      }
+    }
+    Wallet_RestartKey();
+  }
+
+  /* verify this with the saved key */
+  nsSpecialSystemDirectory keyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  keyFile += "res";
+//  keyFile += "wallet";
+  keyFile += "key";
+  nsInputFileStream strm(keyFile);
+
+  if (!strm.is_open()) {
+
+    /* file of saved key doesn't exist, so create it */
+    nsOutputFileStream strm2(keyFile);
+    if (!strm2.is_open()) {
       keyFailure = TRUE;
       *key = '\0';
-      return;
+      return FALSE;
     }
-  }
-  if (strm.get() != ((*key)^wallet_GetKey())) {
-    keyFailure = TRUE;
-    *key = '\0';
+
+    /* If we store the key obscured by the key itself, then the result will be zero
+     * for all keys (since we are using XOR to obscure).  So instead we store
+     * key[1..n],key[0] obscured by the actual key.
+     */
+
+    char* p = key+1;
+    while (*p) {
+      strm2.put(*(p++)^Wallet_GetKey());
+    }
+    strm2.put((*key)^Wallet_GetKey());
+    strm2.flush();
+    strm2.close();
+    Wallet_RestartKey();
+    keySet = TRUE;
+    return TRUE;
+
+  } else {
+
+    /* file of saved key existed so see if it matches the key the user typed in */
+
+    /*
+     * Note that eof() is not set until after we read past the end of the file.  That
+     * is why the following code reads a character and immediately after the read
+     * checks for eof()
+     */
+    Wallet_RestartKey();
+    char* p = key+1;
+    while (*p) {
+      if (strm.get() != (*(p++)^Wallet_GetKey()) || strm.eof()) {
+        strm.close();
+        keyFailure = TRUE;
+        *key = '\0';
+        return FALSE;
+      }
+    }
+    if (strm.get() != ((*key)^Wallet_GetKey()) || strm.eof()) {
+      strm.close();
+      keyFailure = TRUE;
+      *key = '\0';
+      return FALSE;
+    }
+    strm.get(); /* to get past the end of the file so eof() will get set */
+    PRBool rv = strm.eof();
+    strm.close();
+    if (rv) {
+      Wallet_RestartKey();
+      keySet = TRUE;
+      return TRUE;
+    } else {
+      keyFailure = TRUE;
+      *key = '\0';
+      return FALSE;
+    }
   }
 }
 
@@ -645,13 +693,16 @@ wallet_GetLine(nsInputFileStream strm, nsAutoString*& aLine, PRBool obscure) {
   aLine = new nsAutoString("");   
   char c;
   for (;;) {
-    if (strm.eof()) {
-      return -1;
-    }
-    c = strm.get()^(obscure ? wallet_GetKey() : (char)0);
+    c = strm.get()^(obscure ? Wallet_GetKey() : (char)0);
     if (c == '\n') {
       break;
     }
+
+    /* note that eof is not set until we read past the end of the file */
+    if (strm.eof()) {
+      return -1;
+    }
+
     if (c != '\r') {
       *aLine += c;
     }
@@ -678,9 +729,9 @@ wallet_PutLine(nsOutputFileStream strm, const nsString& aLine, PRBool obscure)
   /* output each character */
   char* p = cp;
   while (*p) {
-    strm.put(*(p++)^(obscure ? wallet_GetKey() : (char)0));
+    strm.put(*(p++)^(obscure ? Wallet_GetKey() : (char)0));
   }
-  strm.put('\n'^(obscure ? wallet_GetKey() : (char)0));
+  strm.put('\n'^(obscure ? Wallet_GetKey() : (char)0));
 
   delete[] cp;
   return 0;
@@ -694,7 +745,7 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   XP_List * list_ptr;
   wallet_MapElement * ptr;
 
-  if (obscure && wallet_BadKey()) {
+  if (obscure && Wallet_BadKey()) {
     return;
   }
 
@@ -708,15 +759,12 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
     NS_ERROR("unable to open file");
     return;
   }
-  if (obscure) {
-    wallet_RestartKey();
-    wallet_WriteKey(strm);
-  }
 
   /* make sure the list exists */
   if(!list) {
     return;
   }
+  Wallet_RestartKey();
 
   /* traverse the list */
   list_ptr = list;
@@ -757,15 +805,7 @@ wallet_ReadFromFile
     /* file doesn't exist -- that's not an error */
     return;
   }
-  if (obscure) {
-    wallet_RestartKey();
-    wallet_ReadKey(strm);
-    if (wallet_BadKey()) {
-      FE_Confirm("Key failure -- value file will not be opened");
-      strm.close();
-      return;
-    }
-  }
+  Wallet_RestartKey();
 
   for (;;) {
     nsAutoString * aItem1;
@@ -850,7 +890,7 @@ wallet_ReadFromURLFieldToSchemaFile
     /* file doesn't exist -- that's not an error */
     return;
   }
-  /* wallet_RestartKey();  not needed since file is not encoded */
+  /* Wallet_RestartKey();  not needed since file is not encoded */
 
   /* make sure the list exists */
   if(!list) {
@@ -1192,8 +1232,8 @@ wallet_GetPrefills(
  */
 void
 wallet_Initialize() {
-  static PRBool wallet_initialized = FALSE;
-  if (!wallet_initialized) {
+  static PRBool wallet_Initialized = FALSE;
+  if (!wallet_Initialized) {
     wallet_FetchFieldSchemaFromNetCenter();
     wallet_FetchURLFieldSchemaFromNetCenter();
     wallet_FetchSchemaConcatFromNetCenter();
@@ -1202,15 +1242,21 @@ wallet_Initialize() {
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
     wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, FALSE);
 
-    wallet_SetKey();
+    wallet_Initialized = TRUE;
+
+    Wallet_RestartKey();
+    while (!Wallet_SetKey()) {
+      if (!FE_Confirm("incorrect key -- do you want to try again?")) {
+        FE_Confirm("Key failure -- wallet file will not be opened");
+        return;
+      }
+    }
     wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
+  }
 
 #if DEBUG
 //    fprintf(stdout,"Field to Schema table \n");
 //    wallet_Dump(wallet_FieldToSchema_list);
-
-//    fprintf(stdout,"Schema to Value table \n");
-//    wallet_Dump(wallet_SchemaToValue_list);
 
 //    fprintf(stdout,"SchemaConcat table \n");
 //    wallet_Dump(wallet_SchemaConcat_list);
@@ -1226,12 +1272,10 @@ wallet_Initialize() {
 //      fprintf(stdout,"\n");
 //      wallet_Dump(ptr->itemList);
 //    }
+//    fprintf(stdout,"Schema to Value table \n");
+//    wallet_Dump(wallet_SchemaToValue_list);
 #endif
-    wallet_initialized = TRUE;
-  } else if (wallet_BadKey()) {
-    wallet_SetKey();
-    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, TRUE);
-  }
+
 }
 
 /*
@@ -1648,7 +1692,7 @@ wallet_RequestToPrefill(XP_List * list) {
 
 void
 wallet_PostEdit() {
-  if (wallet_BadKey()) {
+  if (Wallet_BadKey()) {
     return;
   }
 
@@ -1703,8 +1747,6 @@ wallet_PostEdit() {
       delete []cookies;
       return;
     }
-    wallet_RestartKey();
-    wallet_WriteKey(strm);
 
     /* write the values in the cookie to the file */
     for (int i=0; ((*cookie != '\0') && (*cookie != ';')); i++) {
@@ -1945,6 +1987,9 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
   /* read in the mappings if they are not already present */
   wallet_Initialize();
   wallet_InitializeCurrentURL(doc);
+  if (Wallet_BadKey()) {
+    return;
+  }
 
   nsAutoString oldValue;
 

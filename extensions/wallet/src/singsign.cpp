@@ -21,11 +21,9 @@
 
 #define alphabetize 1
 #include "libi18n.h"            /* For the character code set conversions */
-#include "secnav.h"             /* For SECNAV_UnMungeString and SECNAV_MungeString */
 #ifndef ClientWallet
 #include "allxpstr.h"		/* Already included in wallet.cpp */
 #endif
-#include "xp_file.h"
 
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */
@@ -43,6 +41,8 @@
 #endif
 
 #include "prefapi.h"
+#include "nsFileStream.h"
+#include "nsSpecialSystemDirectory.h"
 
 ///////////////////
 #include "nsINetService.h"
@@ -115,6 +115,9 @@ static const char *pref_useDialogs =
     "wallet.useDialogs";
 PRIVATE PRBool si_useDialogs = PR_FALSE;
 
+static PRBool si_PartiallyLoaded = FALSE;
+static PRBool si_FullyLoaded = FALSE;
+
 PRIVATE void
 si_SetUsingDialogsPref(PRBool x)
 {
@@ -161,22 +164,29 @@ si_GetUsingDialogsPref(void)
 PRBool
 MyFE_Confirm(const char* szMessage)
 {
-    char c;
-
     if (!si_GetUsingDialogsPref()) {
       return PR_TRUE;
     }
 
     fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
+    PRBool result;
+    char c;
     for (;;) {
         c = getchar();
         if (tolower(c) == 'y') {
-            return PR_TRUE;
+            result = PR_TRUE;
+            break;
         }
         if (tolower(c) == 'n') {
-            return PR_FALSE;
+            result = PR_FALSE;
+            break;
         }
     }
+
+    while (c != '\n') {
+        c = getchar();
+    }
+    return result;
 }
 
 PRBool
@@ -185,6 +195,7 @@ MyFE_SelectDialog
 {
     char c;
     int i;
+    PRBool result;
 
     if (!si_GetUsingDialogsPref()) {
       *pCount = 0;
@@ -200,73 +211,46 @@ MyFE_SelectDialog
         c = getchar();
         if (c >= '0' && c <= '9') {
             *pCount = c - '0';
-            return PR_TRUE;
+            result = PR_TRUE;
         }
         if (tolower(c) == 'n') {
-            return PR_FALSE;
+            result = PR_FALSE;
         }
     }
+
+    while (c != '\n') {
+        c = getchar();
+    }
+    return result;
 }
 
 /*
  * Temporary routines until real encryption routines become available
  */
 
-extern char wallet_GetKey();
-extern void wallet_RestartKey();
-extern void wallet_ReadKey(XP_File fp);
-extern void wallet_WriteKey(XP_File fp);
-extern wallet_BadKey();
-extern void wallet_SetKey();
-
-char
-si_GetKey() {
-  return '~';
-}
+extern void Wallet_RestartKey();
+extern char Wallet_GetKey();
+extern PRBool Wallet_BadKey();
+extern PRBool Wallet_SetKey();
 
 void
 si_RestartKey() {
+  Wallet_RestartKey();
 }
 
-void
-si_ReadKey(XP_File fp) {
-}
-
-void
-si_WriteKey(XP_File fp) {
+char
+si_GetKey() {
+  return Wallet_GetKey();
 }
 
 PRBool
 si_BadKey() {
-  return PR_FALSE;
+  return Wallet_BadKey();
 }
 
-void
+PRBool
 si_SetKey() {
-}
-
-char *
-MY_SECNAV_UnMungeString(char * text) {
-  char * result = NULL;
-  char* p;
-  StrAllocCopy(result, text);
-  p = result;
-  while (*p) {
-    *(p++) ^= si_GetKey();
-  }
-  return result;
-}
-
-char *
-MY_SECNAV_MungeString(char * text) {
-  char * result = NULL;
-  char* p;
-  StrAllocCopy(result, text);
-  p = result;
-  while (*p) {
-    *(p++) ^= si_GetKey();
-  }
-  return result;
+  return Wallet_SetKey();
 }
 
 /* end of temporary */
@@ -329,7 +313,16 @@ static const char *pref_rememberSignons =
 PRIVATE PRBool si_RememberSignons = PR_FALSE;
 
 PRIVATE int
-si_SaveSignonDataLocked(char * filename);
+si_SaveSignonDataLocked();
+
+PRIVATE int
+si_SaveSignonData();
+
+PRIVATE int
+si_LoadSignonData(PRBool fullLoad);
+
+PRIVATE void
+si_RemoveAllSignonData();
 
 PRIVATE void
 si_SetSignonRememberingPref(PRBool x)
@@ -342,7 +335,7 @@ si_SetSignonRememberingPref(PRBool x)
     /* if pref is being turned off, save the current signons to a file */
     if (x == 0) {
         si_lock_signon_list();
-        si_SaveSignonDataLocked(NULL);
+        si_SaveSignonDataLocked();
         si_unlock_signon_list();
 #ifdef APPLE_KEYCHAIN
             /* We no longer need the Keychain callback installed */
@@ -357,8 +350,7 @@ si_SetSignonRememberingPref(PRBool x)
 
     /* if pref is being turned on, load the signon file into memory */
     if (x == 1) {
-        SI_RemoveAllSignonData();
-        SI_LoadSignonData(NULL);
+        si_LoadSignonData(FALSE);
     }
 }
 
@@ -395,12 +387,11 @@ si_GetSignonRememberingPref(void)
     if (si_list_invalid)
     {
         /*
-         * set si_list_invalid to PR_FALSE first because SI_RemoveAllSignonData
+         * set si_list_invalid to PR_FALSE first because si_RemoveAllSignonData
          * calls si_GetSignonRememberingPref
          */
         si_list_invalid = PR_FALSE;
-        SI_RemoveAllSignonData();
-        SI_LoadSignonData(NULL);
+        si_LoadSignonData(FALSE);
     }
 #endif
 
@@ -438,7 +429,6 @@ PRIVATE XP_List * si_signon_list=0;
 PRIVATE XP_List * si_reject_list=0;
 
 PRIVATE PRBool si_signon_list_changed = PR_FALSE;
-PRIVATE int si_TagCount = 0;
 PRIVATE PRBool si_NoticeGiven = PR_FALSE;
 
 
@@ -452,15 +442,6 @@ si_StrippedURL (char* URLName) {
     if (URLName == NULL || XP_STRLEN(URLName) == 0) {
         return NULL;
     }
-
-#ifdef junk
-nsIURL* url;
-NS_NewURL(&url, nsString(URLName));
-url->SetSpec(URLName);
-const char* host;
-url->GetHost(&host);
-return (char*)host;
-#endif
 
     /* remove protocol */
     s = URLName;
@@ -630,7 +611,7 @@ SI_RemoveUser(char *URLName, char *userName, PRBool save) {
     /* write out the change to disk */
     if (save) {
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked(NULL);
+        si_SaveSignonDataLocked();
     }
 
     si_unlock_signon_list();
@@ -822,7 +803,7 @@ si_GetUserForChangeForm(char* URLName, int messageNumber)
                 XP_ListRemoveObject(url->signonUser_list, user);
                 XP_ListAddObject(url->signonUser_list, user);
                 si_signon_list_changed = PR_TRUE;
-                si_SaveSignonDataLocked(NULL);
+                si_SaveSignonDataLocked();
                 XP_FREE(message);
                 return user;
             }
@@ -920,7 +901,7 @@ si_GetURLAndUserForChangeForm(char* password)
         XP_ListRemoveObject(url->signonUser_list, user);
         XP_ListAddObject(url->signonUser_list, user);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked(NULL);
+        si_SaveSignonDataLocked();
     } else {
         user = NULL;
     }
@@ -984,11 +965,11 @@ si_PutReject(char * URLName, char * userName, PRBool save) {
     if (reject) {
         /*
          * lock the signon list
-         *  Note that, for efficiency, SI_LoadSignonData already sets the lock
+         *  Note that, for efficiency, si_LoadSignonData already sets the lock
          *  before calling this routine whereas none of the other callers do.
          *  So we need to determine whether or not we were called from
-         *  SI_LoadSignonData before setting or clearing the lock.  We can
-         *  determine this by testing "save" since only SI_LoadSignonData
+         *  si_LoadSignonData before setting or clearing the lock.  We can
+         *  determine this by testing "save" since only si_LoadSignonData
          *  passes in a value of PR_FALSE for "save".
          */
         XP_List * list_ptr;
@@ -1037,7 +1018,7 @@ si_PutReject(char * URLName, char * userName, PRBool save) {
 
         if (save) {
             si_signon_list_changed = PR_TRUE;
-            SI_SaveSignonData(NULL);
+            si_SaveSignonData();
         }
         if (save) {
             si_unlock_signon_list();
@@ -1065,7 +1046,7 @@ si_OkToSave(char *URLName, char *userName) {
         char* notification = 0;
         si_NoticeGiven = PR_TRUE;
         si_signon_list_changed = PR_TRUE;
-        SI_SaveSignonData(NULL);
+        si_SaveSignonData();
         StrAllocCopy(notification, XP_GetString(MK_SIGNON_NOTIFICATION));
         StrAllocCat(notification, XP_GetString(MK_SIGNON_NOTIFICATION_1));
         if (!MyFE_Confirm(notification)) {
@@ -1126,11 +1107,11 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
 
     /*
      * lock the signon list
-     *   Note that, for efficiency, SI_LoadSignonData already sets the lock
+     *   Note that, for efficiency, si_LoadSignonData already sets the lock
      *   before calling this routine whereas none of the other callers do.
      *   So we need to determine whether or not we were called from
-     *   SI_LoadSignonData before setting or clearing the lock.  We can
-     *   determine this by testing "save" since only SI_LoadSignonData passes
+     *   si_LoadSignonData before setting or clearing the lock.  We can
+     *   determine this by testing "save" since only si_LoadSignonData passes
      *   in a value of PR_FALSE for "save".
      */
     if (save) {
@@ -1292,7 +1273,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
             /* return */
             if (save) {
                 si_signon_list_changed = PR_TRUE;
-                si_SaveSignonDataLocked(NULL);
+                si_SaveSignonDataLocked();
                 si_unlock_signon_list();
             }
             return; /* nothing more to do since data already exists */
@@ -1363,19 +1344,11 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     if (save) {
         XP_ListAddObject(url->signonUser_list, user);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked(NULL);
+        si_SaveSignonDataLocked();
         si_unlock_signon_list();
     } else {
         XP_ListAddObjectToEnd(url->signonUser_list, user);
     }
-}
-
-/*
- * When a new form is started, set the tagCount to 0
- */
-PUBLIC void
-SI_StartOfForm() {
-    si_TagCount = 0;
 }
 
 /*
@@ -1410,10 +1383,8 @@ si_LoadSignonDataFromKeychain() {
     char* value_array[MAX_ARRAY_SIZE];
     uint8 type_array[MAX_ARRAY_SIZE];
     char buffer[BUFFER_SIZE];
-    XP_File fp;
     PRBool badInput = PR_FALSE;
     int i;
-    char* unmungedValue;
     KCItemRef   itemRef;
     KCAttributeList     attrList;
     KCAttribute         attr[2];
@@ -1607,82 +1578,137 @@ si_LoadSignonDataFromKeychain() {
 #endif
 
 /*
- * Load signon data from disk file
- * The parameter passed in on entry is ignored
+ * get a line from a file
+ * return -1 if end of file reached
+ * strip carriage returns and line feeds from end of line
  */
+PRIVATE PRInt32
+si_ReadLine
+  (nsInputFileStream strm, nsInputFileStream strmx, char * lineBuffer, PRBool obscure) {
 
-PUBLIC int
-SI_LoadSignonData(char * filename) {
+  int count = 0;
+
+  /* read the line */
+  char c;
+  for (;;) {
+    if (obscure) {
+      c = strm.get(); /* get past the asterisk */
+      c = strmx.get()^si_GetKey(); /* get the real character */
+    } else {
+      c = strm.get();
+    }
+
+    /* note that eof is not set until we read past the end of the file */
+    if (strm.eof()) {
+      return -1;
+    }
+
+    if (c == '\n') {
+      lineBuffer[count] = '\0';
+      break;
+    }
+    if (c != '\r') {
+      lineBuffer[count++] = c;
+      if (count == BUFFER_SIZE) {
+        return -1;
+      }
+    }
+  }
+  return 0;
+}
+
+/*
+ * Load signon data from disk file
+ */
+PRIVATE int
+si_LoadSignonData(PRBool fullLoad) {
+    /*
+     * This routine is called initially with fullLoad set to FALSE.  That will cause
+     * the main file (consisting of URLs and usernames but having dummy passwords) to
+     * be read in.  Later, when a password is needed for the first time, the internal
+     * table is flushed and this routine is called again to read in the main file
+     * along with the file containing the real passwords.
+     *
+     * This is done because the reading of the password file requires the user to
+     * give a password to unlock the file.  We don't want to bother the user until
+     * we absolutely have to.  So if he never goes to fill out a password form, he
+     * should never have to give his password to unlock the password file
+     */
     char * URLName;
     LO_FormSubmitData submit;
     char* name_array[MAX_ARRAY_SIZE];
     char* value_array[MAX_ARRAY_SIZE];
     uint8 type_array[MAX_ARRAY_SIZE];
-    char buffer[BUFFER_SIZE];
-    XP_File fp;
+    char buffer[BUFFER_SIZE+1];
     PRBool badInput;
     int i;
-    char* unmungedValue;
 
     /* do nothing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()) {
-        return 0;
+    }
+
+    if (si_FullyLoaded && fullLoad) {
+      return 0;
     }
 
 #ifdef APPLE_KEYCHAIN
     if (KeychainManagerAvailable()) {
+        si_RemoveAllSignonData();
         return si_LoadSignonDataFromKeychain();
     }
 #endif
 
     /* open the signon file */
-
-#ifdef junk
-#include "nsIRegistry.h" 
-nsIRegsitry *reg = NULL; 
-DEFINE_IID(kRegistryIID, NS_IREGISTRY_IID); 
-rv = nsComponentManager::CreateInstance(NS_REGISTRY_PROGID, NULL, kRegistryIID, &reg); 
-if (NS_FAILED(rv)) {
-  return -1;
-}
-rv = reg->Open("signons.txt");
-if (NS_FAILED(rv)) {
-  return -1;
-}
-#endif 
-
-//!!! -- bad  if(!(fp = XP_FileOpen(filename, xpHTTPSingleSignon, XP_FILE_READ))) {
-    if(!(fp = fopen("signons.txt", XP_FILE_READ))) {
-        return(-1);
+    nsSpecialSystemDirectory signonFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    signonFile += "res";
+//  signonFile += "wallet";
+    signonFile += "signon.tbl";
+    nsInputFileStream strm(signonFile);
+    if (!strm.is_open()) {
+      return -1;
     }
 
-    si_SetKey();
-    si_RestartKey();
-    si_ReadKey(fp);
-    if (si_BadKey()) {
-        MyFE_Confirm("Key failure -- signon file will not be opened");
-        return 1;
+    nsSpecialSystemDirectory signonFilex(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    signonFilex += "res";
+//  signonFilex += "wallet";
+    signonFilex += "signonx.tbl";
+    nsInputFileStream strmx(signonFilex);
+    if (!strmx.is_open()) {
+      return -1;
     }
 
+    si_RemoveAllSignonData();
 
-    /* skip the initial comment lines */
-    do {
-        XP_FileReadLine(buffer, BUFFER_SIZE, fp);
-    } while (buffer[0] == '#');
+    if (fullLoad) {
+      si_RestartKey();
+      while (!si_SetKey()) {
+          if (!MyFE_Confirm("incorrect key -- do you want to try again?")) {
+              MyFE_Confirm("Key failure -- password file will not be opened");
+              return 1;
+          }
+      }
+    }
 
-    /* first line after comment indicates if notice was given */
+    /* first line indicates if notice was given */
+    if (NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
+        return -1;
+    }
     si_NoticeGiven = (buffer[0] == 'T');
 
     /* read the reject list */
     si_lock_signon_list();
-    while(XP_FileReadLine(buffer, BUFFER_SIZE, fp)) {
+    while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
         if (buffer[0] == '.') {
             break; /* end of reject list */
         }
         si_StripLF(buffer);
         URLName = NULL;
         StrAllocCopy(URLName, buffer);
-        XP_FileReadLine(buffer, BUFFER_SIZE, fp); /* get username */
+        if (NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
+            /* error in input file so give up */
+            badInput = PR_TRUE;
+            break;
+        }
         si_StripLF(buffer);
         si_PutReject(URLName, buffer, PR_FALSE);
         XP_FREE (URLName);
@@ -1694,7 +1720,7 @@ if (NS_FAILED(rv)) {
     submit.type_array = (PA_Block)type_array;
 
     /* read the URL line */
-    while(XP_FileReadLine(buffer, BUFFER_SIZE, fp)) {
+    while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
 
         si_StripLF(buffer);
         URLName = NULL;
@@ -1704,7 +1730,7 @@ if (NS_FAILED(rv)) {
         submit.value_cnt = 0;
         badInput = PR_FALSE;
 
-        while(XP_FileReadLine(buffer, BUFFER_SIZE, fp)) {
+        while(!NS_FAILED(si_ReadLine(strm, strmx, buffer, FALSE))) {
 
             /* line starting with . terminates the pairs for this URL entry */
             if (buffer[0] == '.') {
@@ -1714,37 +1740,28 @@ if (NS_FAILED(rv)) {
             /* line just read is the name part */
 
             /* save the name part and determine if it is a password */
+            PRBool rv;
             si_StripLF(buffer);
             name_array[submit.value_cnt] = NULL;
             if (buffer[0] == '*') {
                 type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
                 StrAllocCopy(name_array[submit.value_cnt], buffer+1);
+                rv = si_ReadLine(strm, strmx, buffer, fullLoad);
             } else {
                 type_array[submit.value_cnt] = FORM_TYPE_TEXT;
                 StrAllocCopy(name_array[submit.value_cnt], buffer);
+                rv = si_ReadLine(strm, strmx, buffer, FALSE);
             }
 
             /* read in and save the value part */
-            if(!XP_FileReadLine(buffer, BUFFER_SIZE, fp)) {
+            if(NS_FAILED(rv)) {
                 /* error in input file so give up */
                 badInput = PR_TRUE;
                 break;
             }
             si_StripLF(buffer);
             value_array[submit.value_cnt] = NULL;
-            /* note that we need to skip over leading '=' of value */
-            if (type_array[submit.value_cnt] == FORM_TYPE_PASSWORD) {
-                if ((unmungedValue=MY_SECNAV_UnMungeString(buffer+1)) == NULL) {
-                    /* this is the free source and there is no obscuring of passwords */
-                    unmungedValue = buffer+1;
-                    StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
-                } else {
-                    StrAllocCopy(value_array[submit.value_cnt++], unmungedValue);
-                    XP_FREE(unmungedValue);
-                }
-            } else {
-                StrAllocCopy(value_array[submit.value_cnt++], buffer+1);
-            }
+            StrAllocCopy(value_array[submit.value_cnt++], buffer);
 
             /* check for overruning of the arrays */
             if (submit.value_cnt >= MAX_ARRAY_SIZE) {
@@ -1771,11 +1788,12 @@ if (NS_FAILED(rv)) {
             return (1);
         }
     }
+
     si_unlock_signon_list();
+    si_PartiallyLoaded = TRUE;
+    si_FullyLoaded = fullLoad;
     return(0);
 }
-
-
 
 /*
  * APPLE
@@ -1936,8 +1954,31 @@ si_SaveSignonDataInKeychain() {
  * This routine is called only if signon pref is enabled!!!
  */
 
+PRIVATE void
+si_WriteChar(nsOutputFileStream strm, char c) {
+    strm.put(c);
+}
+
+PRIVATE void
+si_WriteLine(nsOutputFileStream strm, nsOutputFileStream strmx, char * lineBuffer, PRBool obscure) {
+    char* p = lineBuffer;
+    while (*p) {
+        if (obscure) {
+            strm.put('*');
+            strmx.put(*(p++)^si_GetKey());
+
+        } else {
+            strm.put(*p++);
+        }
+    }
+    strm.put('\n');
+    if (obscure) {
+        strmx.put('\n'^si_GetKey());
+    }
+}
+
 PRIVATE int
-si_SaveSignonDataLocked(char * filename) {
+si_SaveSignonDataLocked() {
     XP_List * list_ptr;
     XP_List * user_ptr;
     XP_List * data_ptr;
@@ -1945,7 +1986,6 @@ si_SaveSignonDataLocked(char * filename) {
     si_SignonUserStruct * user;
     si_SignonDataStruct * data;
     si_Reject * reject;
-    XP_File fp;
 
     /* do nothing if signon list has not changed */
     if(!si_signon_list_changed) {
@@ -1969,17 +2009,26 @@ si_SaveSignonDataLocked(char * filename) {
 #endif
 
     /* do nothing if we are unable to open file that contains signon list */
-//!!! -- bad  if(!(fp = XP_FileOpen(filename, xpHTTPSingleSignon, XP_FILE_WRITE))) {
-    if(!(fp = fopen("signons.txt", XP_FILE_WRITE))) {
-        return(-1);
+    nsSpecialSystemDirectory signonFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    signonFile += "res";
+//  signonFile += "wallet";
+    signonFile += "signon.tbl";
+    nsOutputFileStream strm(signonFile);
+    if (!strm.is_open()) {
+      return 0;
+    }
+
+    nsSpecialSystemDirectory signonFilex(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    signonFilex += "res";
+//  signonFilex += "wallet";
+    signonFilex += "signonx.tbl";
+    nsOutputFileStream strmx(signonFilex);
+    if (!strmx.is_open()) {
+      return 0;
     }
     si_RestartKey();
-    si_WriteKey(fp);
 
     /* format for head of file shall be:
-     * # comment
-     * # comment
-     * # comment
      * TRUE -- indicates if notification has already been given to user
      * URLName -- first url/username on reject list
      * userName
@@ -1989,29 +2038,22 @@ si_SaveSignonDataLocked(char * filename) {
      * .       -- end of list
      */
 
-    /* write out leading comments */
-    XP_FileWrite("# Netscape HTTP Signons File" LINEBREAK
-                  "# This is a generated file!  Do not edit."
-                  LINEBREAK "#" LINEBREAK, -1, fp);
-
     /* write out si_NoticeGiven */
     if (si_NoticeGiven) {
-        XP_FileWrite("TRUE" LINEBREAK, -1, fp);
+        si_WriteLine(strm, strmx, "TRUE", FALSE);
     } else {
-        XP_FileWrite("FALSE" LINEBREAK, -1, fp);
+        si_WriteLine(strm, strmx, "FALSE", FALSE);
     }
 
     /* write out reject list */
     if (si_reject_list) {
         list_ptr = si_reject_list;
         while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
-            XP_FileWrite(reject->URLName, -1, fp);
-            XP_FileWrite(LINEBREAK, -1, fp);
-            XP_FileWrite(reject->userName, -1, fp);
-            XP_FileWrite(LINEBREAK, -1, fp);
+            si_WriteLine(strm, strmx, reject->URLName, FALSE);
+            si_WriteLine(strm, strmx, reject->userName, FALSE);
         }
     }
-    XP_FileWrite("." LINEBREAK, -1, fp);
+    si_WriteLine(strm, strmx, ".", FALSE);
 
     /* format for cached logins shall be:
      * url LINEBREAK {name LINEBREAK value LINEBREAK}*  . LINEBREAK
@@ -2029,53 +2071,41 @@ si_SaveSignonDataLocked(char * filename) {
             /* write out each user node of the URL node */
             while((user = (si_SignonUserStruct *)
                     XP_ListNextObject(user_ptr)) != NULL) {
-                XP_FileWrite(url->URLName, -1, fp);
-                XP_FileWrite(LINEBREAK, -1, fp);
-
+                si_WriteLine(strm, strmx, url->URLName, FALSE);
                 data_ptr = user->signonData_list;
 
                 /* write out each data node of the user node */
                 while((data = (si_SignonDataStruct *)
                         XP_ListNextObject(data_ptr)) != NULL) {
-                    char* mungedValue;
                     if (data->isPassword) {
-                        XP_FileWrite("*", -1, fp);
-                    }
-                    XP_FileWrite(data->name, -1, fp);
-                    XP_FileWrite(LINEBREAK, -1, fp);
-                    XP_FileWrite("=", -1, fp); /* precede values with '=' */
-                    if (data->isPassword) {
-                        if ((mungedValue = MY_SECNAV_MungeString(data->value))) {
-                            XP_FileWrite(mungedValue, -1, fp);
-                            XP_FREE(mungedValue);
-                        } else {
-                            /* in free source, passwords are not obscured */
-                            XP_FileWrite(data->value, -1, fp);
-                        }
+                        si_WriteChar(strm, '*');
+                        si_WriteLine(strm, strmx, data->name, FALSE);
+                        si_WriteLine(strm, strmx, data->value, TRUE);
                     } else {
-                        XP_FileWrite(data->value, -1, fp);
+                        si_WriteLine(strm, strmx, data->name, FALSE);
+                        si_WriteLine(strm, strmx, data->value, FALSE);
                     }
-                    XP_FileWrite(LINEBREAK, -1, fp);
                 }
-                XP_FileWrite(".", -1, fp);
-                XP_FileWrite(LINEBREAK, -1, fp);
+                si_WriteLine(strm, strmx, ".", FALSE);
             }
         }
     }
 
     si_signon_list_changed = PR_FALSE;
-    XP_FileClose(fp);
-    return(0);
+    strm.flush();
+    strm.close();
+    strmx.flush();
+    strmx.close();
+    return 0;
 }
-
 
 /*
  * Save signon data to disk file
  * The parameter passed in on entry is ignored
  */
 
-PUBLIC int
-SI_SaveSignonData(char * filename) {
+PRIVATE int
+si_SaveSignonData() {
     int retval;
 
     /* do nothing if signon preference is not enabled */
@@ -2085,7 +2115,7 @@ SI_SaveSignonData(char * filename) {
 
     /* lock and call common save routine */
     si_lock_signon_list();
-    retval = si_SaveSignonDataLocked(filename);
+    retval = si_SaveSignonDataLocked();
     si_unlock_signon_list();
     return retval;
 }
@@ -2094,12 +2124,15 @@ SI_SaveSignonData(char * filename) {
  * Remove all the signons and free everything
  */
 
-PUBLIC void
-SI_RemoveAllSignonData() {
-
-    /* repeatedly remove first user node of first URL node */
-    while (SI_RemoveUser(NULL, NULL, PR_FALSE)) {
+PRIVATE void
+si_RemoveAllSignonData() {
+    if (si_PartiallyLoaded) {
+        /* repeatedly remove first user node of first URL node */
+        while (SI_RemoveUser(NULL, NULL, PR_FALSE)) {
+        }
     }
+    si_PartiallyLoaded = FALSE;
+    si_FullyLoaded = FALSE;
 }
 
 /*
@@ -2147,6 +2180,7 @@ SI_RememberSignonData
 
         if ((j<submit.value_cnt) && si_OkToSave(URLName, /* urlname */
                 ((char **)submit.value_array)[j] /* username */)) {
+            si_LoadSignonData(TRUE);
             si_PutData(URLName, &submit, PR_TRUE);
         }
     } else if (passwordCount == 2) {
@@ -2179,6 +2213,13 @@ SI_RememberSignonData
         }
 
         /* get to password being saved */
+        si_LoadSignonData(TRUE); /* this destroys "user" so we need to recalculate it */
+        user = si_GetURLAndUserForChangeForm
+            (((char **)submit.value_array)[pswd[0]]);
+        if (!user) { /* this should never happen but just in case */
+            si_unlock_signon_list();
+            return;
+        }
         data_ptr = user->signonData_list;
         while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
             if (data->isPassword) {
@@ -2200,7 +2241,7 @@ SI_RememberSignonData
                ((char **)submit.value_array)[pswd[1]]);
         StrAllocCopy(data->value, ((char **)submit.value_array)[pswd[1]]);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked(NULL);
+        si_SaveSignonDataLocked();
         si_unlock_signon_list();
     }
 }
@@ -2231,6 +2272,8 @@ SI_RestoreSignonData
     /* get first saved user just so we can see the name of the first item on the form */
     user = si_GetUser(URLName, PR_TRUE, NULL); /* this is the first saved user */
     if (user) {
+        si_LoadSignonData(TRUE); /* this destroys "user" so need to recalculate it */
+        user = si_GetUser(URLName, PR_TRUE, NULL);
         data_ptr = user->signonData_list; /* this is first item on form */
         data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
         if(data->isPassword && name && XP_STRCMP(data->name, name)==0) {
@@ -2255,12 +2298,16 @@ SI_RestoreSignonData
     /* restore the data from previous time this URL was visited */
     user = si_GetUser(URLName, PR_FALSE, name);
     if (user) {
-        data_ptr = user->signonData_list;
-        while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
-            if(name && XP_STRCMP(data->name, name)==0) {
-                *value = data->value;
-                si_unlock_signon_list();
-                return;
+        si_LoadSignonData(TRUE); /* this destroys user so need to recaculate it */
+        user = si_GetUser(URLName, PR_FALSE, name);
+        if (user) { /* this should alwlays be true but just in case */
+            data_ptr = user->signonData_list;
+            while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+                if(name && XP_STRCMP(data->name, name)==0) {
+                    *value = data->value;
+                    si_unlock_signon_list();
+                    return;
+                }
             }
         }
     }
@@ -2550,7 +2597,7 @@ PUBLIC void
 SI_UnanonymizeSignons()
 {
     if (si_anonymous) {
-        SI_RemoveAllSignonData();
+        si_RemoveAllSignonData();
         si_lock_signon_list();
         si_signon_list = si_dormant_signon_list;
         si_unlock_signon_list();
@@ -2685,7 +2732,7 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
         /* do the deletion */
         SI_RemoveUser(URLToDelete->URLName, data->value, PR_TRUE);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked(NULL);
+        si_SaveSignonDataLocked();
     }
 
     /* get the comma-separated sequence of rejections to be deleted */
@@ -2714,7 +2761,7 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
     if (rejectToDelete) {
         si_FreeReject(rejectToDelete);
         si_signon_list_changed = PR_TRUE;
-        si_SaveSignonDataLocked(NULL);
+        si_SaveSignonDataLocked();
     }
     si_unlock_signon_list();
     return PR_FALSE;
@@ -2767,11 +2814,11 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
            we need to reload the signon data */
         if (si_list_invalid)
         {
-                /* set si_list_invalid to PR_FALSE first because SI_RemoveAllSignonData
+                /* set si_list_invalid to PR_FALSE first because si_RemoveAllSignonData
                    calls si_GetSignonRememberingPref */
             si_list_invalid = PR_FALSE;
-            SI_RemoveAllSignonData();
-            SI_LoadSignonData(NULL);
+            si_RemoveAllSignonData();
+            si_LoadSignonData(TRUE);
         }
 #endif
 
