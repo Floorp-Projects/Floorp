@@ -2633,7 +2633,6 @@ js_Interpret(JSContext *cx, jsval *result)
 	    PR_ASSERT(js_CodeSpec[JSOP_GOSUB].length == 3);
 	    i = pc - script->code + 3;
 	    PUSH(INT_TO_JSVAL(i));
-	    CHECK_BRANCH(len);
 	    break;
 
 	  case JSOP_RETSUB:
@@ -2642,7 +2641,6 @@ js_Interpret(JSContext *cx, jsval *result)
 	    i = JSVAL_TO_INT(rval);
 	    pc = script->code + i;
 	    len = 0;
-	    CHECK_BRANCH(-1);
 	    break;
 
 	  case JSOP_EXCEPTION:
