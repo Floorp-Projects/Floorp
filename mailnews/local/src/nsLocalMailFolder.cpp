@@ -290,7 +290,6 @@ nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 {
-  printf("nsMsgLocalMailFolder::GetSubFolders..\n");
   if (!mInitialized) {
     nsFileSpec path;
     nsresult rv = GetPath(path);
@@ -1126,10 +1125,6 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 	if(NS_SUCCEEDED(rv))
 		rv = nsBuildLocalMessageURI(mURI, key, &msgURI);
   
-#ifdef DEBUG_alecf
-  fprintf(stderr, "nsBuildLocalMessageURI(%s, %d -> %s) in nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr\n", mURI, key, msgURI);
-#endif
-
 	if(NS_SUCCEEDED(rv))
 	{
 		rv = rdfService->GetResource(msgURI, getter_AddRefs(resource));
