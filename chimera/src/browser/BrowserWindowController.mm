@@ -662,22 +662,10 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)performSearch
 {
-  NSString *searchEngine = nil;
-
-  // Try and get the search engine from the pref service
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService("@mozilla.org/preferences-service;1"));
-  if (prefBranch) {
-    char *buf = nsnull;
-    prefBranch->GetCharPref("search.default_engine", &buf);
-    if (buf) {
-      if (*buf)
-        searchEngine = [NSString stringWithCString:buf];
-      free(buf);
-    }
-  }
+  NSString *searchEngine = NSLocalizedStringFromTable( @"SearchPageDefault", @"WebsiteDefaults", nil );
 
   // Get the users preferred search engine from IC
-  if (!searchEngine) {
+  if (!searchEngine || [searchEngine isEqualToString:@"SearchPageDefault"]) {
     searchEngine = [[CHPreferenceManager sharedInstance] getICStringPref:kICWebSearchPagePrefs];
       if (!searchEngine || ([searchEngine cStringLength] == 0))
         searchEngine = @"http://dmoz.org/";
@@ -723,8 +711,8 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)clickThrobber:(id)aSender
 {
-  // need to pref this
-  [self loadURL:@"http://www.mozilla.org"];
+  NSString *pageToLoad = NSLocalizedStringFromTable( @"ThrobberPageDefault", @"WebsiteDefaults", nil );
+  [self loadURL:pageToLoad];
 }
 
 - (void)startThrobber
