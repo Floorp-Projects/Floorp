@@ -90,6 +90,13 @@ isAbsolute(char*name)
     return (name[0]!=FILESEPARATOR);
 }
 
+static JSBool
+isRoot(char*name)
+{
+    return JS_FALSE;
+}
+
+
 /* We assume: base is a valid absolute path, not ending with :
           name is a valid relative path. */
 static char *
@@ -155,17 +162,7 @@ fileDirectoryName(JSContext *cx, char * pathname)
 #    define CURRENT_DIR "c:\\"
 #    define POPEN   _popen
 #    define PCLOSE  _pclose
-
-static JSBool
-filenameHasAPipe(char *filename){
-#ifdef XP_MAC
-    /* pipes are not supported on the MAC */
-    return JS_FALSE;
-#else
-    if(!filename) return JS_FALSE;
-    return filename[0]==PIPE_SYMBOL || filename[strlen(filename)-1]==PIPE_SYMBOL;
-#endif
-}
+#    define ACCESS  _access
 
 static JSBool
 isAbsolute(char*name)
@@ -178,6 +175,16 @@ isAbsolute(char*name)
 
     return JS_FALSE; /* First approximation, ignore "/tmp" case.. */
 }
+
+/* x: or x:\ */
+static JSBool
+isRoot(char *name)
+{
+    int len=strlen(name);
+
+    return (len==2||(len==3 && name[2]==FILESEPARATOR))&&(name[1]==':');
+}
+
 
 /* We assume: base is a valid absolute path, starting with x:, ending with /.
           name is a valid relative path, and may have a drive selector. */
@@ -278,14 +285,22 @@ fileDirectoryName(JSContext *cx, char * pathname)
 #      define FILESEPARATOR     '/'
 #      define FILESEPARATOR2    '\0'
 #      define CURRENT_DIR "/"
-#      define POPEN popen
+#      define POPEN   popen
 #      define PCLOSE  pclose
+#      define ACCESS  access
 
 static JSBool
 isAbsolute(char*name)
 {
     return (name[0]==FILESEPARATOR);
 }
+
+static JSBool
+isRoot(char *name)
+{
+    return !strcmp(name, FILESEPARATOR);
+}
+
 
 /* We assume: base is a valid absolute path[, ending with /]. name is a valid relative path. */
 static char *
@@ -676,7 +691,7 @@ typedef struct JSFile {
 /* a few forward declarations... */
 static JSClass file_class;
 JS_EXPORT_API(JSObject*) js_NewFileObject(JSContext *cx, char *bytes);
-JS_EXPORT_API(JSObject*) js_NewFileObjectFromFILE(JSContext *cx, FILE *f, char *filename, JSBool open);
+JS_EXPORT_API(JSObject*) js_NewFileObjectFromFILEFromFILE(JSContext *cx, FILE *f, char *filename, JSBool open);
 static JSBool file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static JSBool file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
@@ -970,18 +985,28 @@ js_FileWrite(JSContext *cx, JSFile* f, jschar*buf, int32 len, int32 mode)
 
 /* ----------------------------- non-file access methods ------------------------- */
 static JSBool
-js_exists(JSFile*file)
+js_exists(JSFile *file)
 {
     /* SECURITY */
-    return (PR_Access(file->path, PR_ACCESS_EXISTS)==PR_SUCCESS);
+    if(!file->isNative){
+        return (PR_Access(file->path, PR_ACCESS_EXISTS)==PR_SUCCESS);
+    }else{
+        /* TODO: */
+        return (ACCESS(file->path, PR_ACCESS_EXISTS)==PR_SUCCESS);
+    }
 }
 
 static JSBool
 js_canRead(JSFile *file)
 {
+
     if(!(file->mode&PR_RDONLY)) return JS_FALSE;
     /* SECURITY */
-    return (PR_Access(file->path, PR_ACCESS_READ_OK)==PR_SUCCESS);
+    if(!file->isNative){
+        return (PR_Access(file->path, PR_ACCESS_EXISTS)==PR_SUCCESS);
+    }else{
+        return (ACCESS(file->path, PR_ACCESS_READ_OK)==PR_SUCCESS);
+    }
 }
 
 static JSBool
@@ -989,7 +1014,11 @@ js_canWrite(JSFile *file)
 {
     if(!(file->mode&PR_WRONLY)) return JS_FALSE;
     /* SECURITY */
-    return (PR_Access(file->path, PR_ACCESS_WRITE_OK)==PR_SUCCESS);
+    if(!file->isNative){
+        return (PR_Access(file->path, PR_ACCESS_EXISTS)==PR_SUCCESS);
+    }else{
+        return (ACCESS(file->path, PR_ACCESS_WRITE_OK)==PR_SUCCESS);
+    }
 }
 
 static JSBool
@@ -1893,10 +1922,13 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     /* SECURITY ??? */
     switch (tiny) {
     case FILE_PARENT:
-        str = fileDirectoryName(cx, file->path);
-        newobj = js_NewFileObject(cx, str);
-        JS_free(cx, str);
-        *vp = OBJECT_TO_JSVAL(newobj);
+        if(!isRoot(file->path){
+            str = fileDirectoryName(cx, file->path);
+            newobj = js_NewFileObject(cx, str);
+            JS_free(cx, str);
+            *vp = OBJECT_TO_JSVAL(newobj);
+        }else
+            *vp = JSVAL_NULL;
         break;
     case FILE_PATH:
         *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, file->path));
@@ -2247,6 +2279,9 @@ js_NewFileObjectFromFILE(JSContext *cx, FILE *nativehandle, char *filename, JSBo
 {
     JSObject *obj;
     JSFile   *file;
+#ifdef XP_MAC
+    JS_ReportWarning(cx, "Native files are not fully supported on the MAC");
+#endif
 
     obj = JS_NewObject(cx, &file_class, NULL, NULL);
     if (!obj){
