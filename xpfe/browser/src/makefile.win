@@ -81,6 +81,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) navigator-goofy.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) navigator-shiny.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) raindrops_light.gif $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) skindemo.xul $(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll

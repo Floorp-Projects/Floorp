@@ -31,9 +31,10 @@ function applySkin(url)
    dump("Doing the assert.\n");
    ds.Assert(s, p, newTarget, true);
 
+   dump("Saving the chrome to disk.\n");
    ds.Flush();
-   dump("Loading the new chrome.\n");
-   window.top.location.href = "chrome://navigator/content/";
+
+   dump("Done. Open a new window to see the chrome.\n");
 }
 </html:script>
 
