@@ -532,7 +532,12 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:xpfe:components:sidebar:resources:locale:MANIFEST",		"$sidebar_chrome_dir:locale");
 		_InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",					"${dist_dir}Components");
 	}
-
+	{
+		my($directory_dir) = "$chrome_dir"."timebomb";
+		_InstallResources(":mozilla:xpfe:components:timebomb:resources:content:MANIFEST",   "$directory_dir:content:default");
+		_InstallResources(":mozilla:xpfe:components:timebomb:resources:locale:en-US:MANIFEST",	"$directory_dir:locale:en-US");
+	}
+	
 	_InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",					"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:components:ucth:resources:locale:MANIFEST",			"$global_chrome_dir:locale");
 	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",					"$global_chrome_dir:content:default");
@@ -917,6 +922,7 @@ sub BuildClientDist()
 	 for $dir (qw(bookmarks find history related sample search shistory sidebar ucth xfer)) {
 	 _InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",		"$distdirectory:idl:");
 	 }
+	 _InstallFromManifest(":mozilla:xpfe:components:timbomb:MANIFEST_IDL",		    "$distdirectory:idl:");
 
 	 # directory
 	 _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",		"$distdirectory:idl:");
@@ -1193,7 +1199,9 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 	BuildIDLProject(":mozilla:xpfe:components:search:macbuild:SearchIDL.mcp",	"search");
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
-
+	BuildIDLProject(":mozilla:xpfe:components:timebomb:macbuild:timebombIDL.mcp",	"tmbm");
+	
+	
 	BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.mcp",				"appshell");
 	
 	BuildIDLProject(":mozilla:xpfe:browser:macbuild:mozBrowserIDL.mcp",				"mozBrowser");
@@ -1589,6 +1597,7 @@ sub BuildXPAppProjects()
 	print("--- Starting XPApp projects ----\n");
 
 	# Components
+	BuildOneProject(":mozilla:xpfe:components:timebomb:macbuild:timebomb.mcp", "tmbm$D.shlb", "tmbmComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp", "FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:ucth:macbuild:ucth.mcp",	"ucth$D.shlb", "ucth.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.mcp",	"xfer$D.shlb", "xfer.toc", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1599,7 +1608,7 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.mcp", "shistory$D.shlb", "shistoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	
+		
 	# Applications
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.mcp",			"mozBrowser$D.shlb", "mozBrowser.toc", 1, $main::ALIAS_SYM_FILES, 1);
