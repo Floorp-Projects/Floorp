@@ -60,6 +60,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/content4.xul \
 	$(srcdir)/cpw.xul \
 	$(srcdir)/navigation.xul \
+	$(srcdir)/common.css \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
