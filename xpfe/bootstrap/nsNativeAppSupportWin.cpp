@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -30,45 +30,13 @@
  
 class nsSplashScreenWin : public nsISplashScreen {
 public:
+    NS_DECL_ISUPPORTS
+
     nsSplashScreenWin();
     ~nsSplashScreenWin();
 
     NS_IMETHOD Show();
     NS_IMETHOD Hide();
-
-    // nsISupports methods
-    NS_IMETHOD_(nsrefcnt) AddRef() {
-        mRefCnt++;
-        return mRefCnt;
-    }
-    NS_IMETHOD_(nsrefcnt) Release() {
-        --mRefCnt;
-        if ( !mRefCnt ) {
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
-    NS_IMETHOD QueryInterface( const nsIID &iid, void**p ) {
-        nsresult rv = NS_OK;
-        if ( p ) {
-            *p = 0;
-            if ( iid.Equals( NS_GET_IID( nsISplashScreen ) ) ) {
-                nsISplashScreen *result = this;
-                *p = result;
-                NS_ADDREF( result );
-            } else if ( iid.Equals( NS_GET_IID( nsISupports ) ) ) {
-                nsISupports *result = NS_STATIC_CAST( nsISupports*, this );
-                *p = result;
-                NS_ADDREF( result );
-            } else {
-                rv = NS_NOINTERFACE;
-            }
-        } else {
-            rv = NS_ERROR_NULL_POINTER;
-        }
-        return rv;
-    }
 
     void SetDialog( HWND dlg );
     static void CheckConsole();
@@ -79,8 +47,9 @@ public:
     static DWORD WINAPI ThreadProc( LPVOID );
 
     HWND mDlg;
-    nsrefcnt mRefCnt;
 }; // class nsSplashScreenWin
+
+NS_IMPL_ISUPPORTS1(nsSplashScreenWin, nsISplashScreen)
 
 nsSplashScreenWin::nsSplashScreenWin()
     : mRefCnt( 0 ), mDlg( 0 ) {
