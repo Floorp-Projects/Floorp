@@ -110,3 +110,8 @@ CXXFLAGS        += $(MOZ_QT_CFLAGS)
 CFLAGS          += $(MOZ_QT_CFLAGS)
 endif		#MOZ_ENABLE_QT
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CXXFLAGS	+= $(TK_CFLAGS)
+endif
+
+

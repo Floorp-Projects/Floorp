@@ -53,11 +53,13 @@ LIBS        = \
         -lmozregsa_s \
         $(NULL)
 
-ifeq ($(OS_ARCH),Darwin)
-LIBS += -lmacmorefiles_s
-endif
-
 DEFINES += -DSTANDALONE_REGISTRY
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+LIBS += -lmacmorefiles_s
+LDFLAGS += $(TK_LIBS)
+endif
+
 
