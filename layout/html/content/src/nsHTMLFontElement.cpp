@@ -279,20 +279,22 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
             (value.GetUnit() == eHTMLUnit_Enumerated)) { 
           PRInt32 size = value.GetIntValue();
         
-          if (value.GetUnit() == eHTMLUnit_Integer) { // int (+/-)
-            size = 3 + size;  // XXX should be BASEFONT, not three
-          }
-          size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
-          PRInt32 scaler;
-          aPresContext->GetFontScaler(&scaler);
-          float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-          font->mFont.size =
-            nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFont.size,
-                                           scaleFactor, aPresContext);
-          font->mFixedFont.size =
-            nsStyleUtil::CalcFontPointSize(size,
-                                           (PRInt32)defaultFixedFont.size,
-                                           scaleFactor, aPresContext);
+          if (size != 0) {  // bug 32063: ignore <font size="">
+	          if (value.GetUnit() == eHTMLUnit_Integer) { // int (+/-)
+	            size = 3 + size;  // XXX should be BASEFONT, not three
+	          }
+	          size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
+	          PRInt32 scaler;
+	          aPresContext->GetFontScaler(&scaler);
+	          float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+	          font->mFont.size =
+	            nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFont.size,
+	                                           scaleFactor, aPresContext);
+	          font->mFixedFont.size =
+	            nsStyleUtil::CalcFontPointSize(size,
+	                                           (PRInt32)defaultFixedFont.size,
+	                                           scaleFactor, aPresContext);
+					}
         }
       }
     }
