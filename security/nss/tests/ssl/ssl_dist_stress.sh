@@ -97,6 +97,9 @@ ssl_ds_usage()
   echo "           ...host who runs the server, for distributed stress test"
   echo "        -stress "
   echo "           ...runs the server sider of the distributed stress test"
+  echo "        -dir unixdirectory "
+  echo "           ...lets the server side of the distributed stress test"
+  echo "              know where to find the scritp to start on the remote side"
   echo "        -certnum start-end"
   echo "           ... provides the range of certs for distributed stress test"
   echo "               for example -certnum 10-20 will connect 10 times"
@@ -144,7 +147,7 @@ ssl_ds_eval_opts()
             fi
             echo "$0 `uname -n`: will use certs from $MIN_CERT to $MAX_CERT"
             ;;
-        -stress|-dist*st*)
+        -server|-stress|-dist*st*)
             BUILD_OPT=1
             export BUILD_OPT
             DO_DIST_ST="TRUE"
@@ -152,6 +155,7 @@ ssl_ds_eval_opts()
         -dir|-unixdir|-uxdir|-qadir)
             shift
             UX_DIR=$1
+	    #FIXME - we need a default unixdir
             if [ -z "$UX_DIR" ] ; then # -o ! -d "$UX_DIR" ] ; then can't do, Win doesn't know...
                 echo "$0 `uname -n`: -dir requires directoryname "
                 ssl_ds_usage
@@ -194,9 +198,9 @@ ssl_ds_rem_stress()
   CONTINUE=$MAX_CERT
   while [ $CONTINUE -ge $MIN_CERT ]
   do
-      echo "strsclnt -D -p ${PORT} -d . -w nss -c 5 $verbose  "
+      echo "strsclnt -D -p ${PORT} -d . -w nss -c 1 $verbose  "
       echo "         -n TestUser$CONTINUE ${HOSTADDR} #`uname -n`"
-      strsclnt -D -p ${PORT} -d . -w nss -c 5 $verbose  \
+      strsclnt -D -p ${PORT} -d . -w nss -c 1 $verbose  \
                -n "TestUser$CONTINUE" ${HOSTADDR} &
                #${HOSTADDR} &
       CONTINUE=`expr $CONTINUE - 1 `
@@ -213,7 +217,7 @@ ssl_ds_rem_stress()
 
 ssl_ds_dist_stress()
 {
-  clientlist=" 
+  max_clientlist=" 
                box-200
                washer-200
                dryer-200
@@ -240,8 +244,9 @@ ssl_ds_dist_stress()
                compaqtor-10"
 
   #clientlist="  box-200 washer-50 charm-10 jordan-10 louie-10 smarch-10 phaedrus-10 charm-10 hbombaix-20 box-200 washer-50 "
-  clientlist=" box-200 washer-50 louie-10 hbombaix-10 charm-10 trex-20 jordan-10 box-200 compaqtor-10 "
-  clientlist=" box-2 washer-5"
+  #clientlist=" box-200 washer-50 louie-10 hbombaix-10 charm-10 trex-20 jordan-10 box-200 compaqtor-10 "
+  #clientlist=" box-2 washer-5" #FIXME ADJUST
+  clientlist="  box-200 charm-10 jordan-10 louie-10 smarch-10 phaedrus-10 charm-10 "
 
   html_head "SSL Distributed Stress Test"
 
@@ -281,11 +286,13 @@ ssl_ds_dist_stress()
   echo cd "${CLIENTDIR}"
   cd "${CLIENTDIR}"
 
-  sleep 600 # give the clients time to finish
+  sleep 300 # give the clients time to finish #FIXME ADJUST
  
   echo "GET /stop HTTP/1.0\n\n" > stdin.txt #check to make sure it has /r/n
-  echo "sleep 600"
-  echo "tstclnt -h clio.red.iplanet.com -p  8443 -d ${CLIENTDIR} -n TestUser0 -w nss -f < stdin.txt"
+  echo "tstclnt -h clio.red.iplanet.com -p  8443 -d ${CLIENTDIR} -n TestUser0 "
+  echo "        -w nss -f < stdin.txt"
+  tstclnt -h clio.red.iplanet.com -p  8443 -d ${CLIENTDIR} -n TestUser0 \
+	  -w nss -f < stdin.txt
   
   html_msg 0 0 "${testname}"
   html "</TABLE><BR>"
