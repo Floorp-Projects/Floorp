@@ -61,6 +61,7 @@ OBJS = \
     .\$(OBJDIR)\nsSSLIOLayer.obj \
     .\$(OBJDIR)\nsSSLSocketProvider.obj \
     .\$(OBJDIR)\nsSDR.obj \
+    .\$(OBJDIR)\nsFSDR.obj \
     .\$(OBJDRI)\nsCrypto.obj \
     $(NULL)
 
