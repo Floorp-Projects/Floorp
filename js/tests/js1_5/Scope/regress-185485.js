@@ -112,7 +112,11 @@ expect = 'function';
 addThis();
 
 
-// Compare use of function expression instead of function statement
+/*
+ * Compare use of function expression instead of function statement.
+ * Note it is important that |x.g| already exists. Otherwise, this
+ * would newly define |g| in global scope -
+ */
 with (x)
 {
   var g = function() {}
