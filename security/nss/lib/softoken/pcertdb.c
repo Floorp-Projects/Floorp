@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.13 2002/01/31 00:16:29 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.14 2002/04/05 03:33:42 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3535,6 +3535,16 @@ nsslowcert_CertNicknameConflict(char *nickname, SECItem *derSubject,
     return(rv);
 }
 
+#ifdef DBM_USING_NSPR
+#define NO_RDONLY	PR_RDONLY
+#define NO_RDWR		PR_RDWR
+#define NO_CREATE	(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE)
+#else
+#define NO_RDONLY	O_RDONLY
+#define NO_RDWR		O_RDWR
+#define NO_CREATE	(O_RDWR | O_CREAT | O_TRUNC)
+#endif
+
 /*
  * Open the certificate database and index databases.  Create them if
  * they are not there or bad.
@@ -3556,13 +3566,9 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
     if ( certdbname == NULL ) {
 	return(SECFailure);
     }
-    
-    if ( readOnly ) {
-	openflags = O_RDONLY;
-    } else {
-	openflags = O_RDWR;
-    }
-    
+
+    openflags = readOnly ? NO_RDONLY : NO_RDWR;
+
     /*
      * first open the permanent file based database.
      */
@@ -3596,9 +3602,7 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
 	    goto loser;
 	}
 	
-	handle->permCertDB = dbopen(certdbname,
-				    O_RDWR | O_CREAT | O_TRUNC,
-				    0600, DB_HASH, 0);
+	handle->permCertDB = dbopen(certdbname, NO_CREATE, 0600, DB_HASH, 0);
 
 	/* if create fails then we lose */
 	if ( handle->permCertDB == 0 ) {
@@ -3621,7 +3625,7 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
 	/* try to upgrade old db here */
 	tmpname = (* namecb)(cbarg, 6);	/* get v6 db name */
 	if ( tmpname ) {
-	    updatedb = dbopen( tmpname, O_RDONLY, 0600, DB_HASH, 0 );
+	    updatedb = dbopen( tmpname, NO_RDONLY, 0600, DB_HASH, 0 );
 	    PORT_Free(tmpname);
 	    if ( updatedb ) {
 		rv = UpdateV6DB(handle, updatedb);
@@ -3632,7 +3636,7 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
 	    } else { /* no v6 db, so try v5 db */
 		tmpname = (* namecb)(cbarg, 5);	/* get v5 db name */
 		if ( tmpname ) {
-		    updatedb = dbopen( tmpname, O_RDONLY, 0600, DB_HASH, 0 );
+		    updatedb = dbopen( tmpname, NO_RDONLY, 0600, DB_HASH, 0 );
 		    PORT_Free(tmpname);
 		    if ( updatedb ) {
 			rv = UpdateV5DB(handle, updatedb);
@@ -3644,8 +3648,8 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
 			/* try to upgrade v4 db */
 			tmpname = (* namecb)(cbarg, 4);	/* get v4 db name */
 			if ( tmpname ) {
-			    updatedb = dbopen( tmpname, O_RDONLY, 0600,
-					      DB_HASH, 0 );
+			    updatedb = dbopen( tmpname, NO_RDONLY, 0600, 
+			                       DB_HASH, 0 );
 			    PORT_Free(tmpname);
 			    if ( updatedb ) {
 				/* NES has v5 db's with v4 db names! */

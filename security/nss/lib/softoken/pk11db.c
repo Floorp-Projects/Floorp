@@ -296,7 +296,9 @@ static SECStatus secmod_MakeKey(DBT *key, char * module) {
 }
 
 /* free out constructed database key */
-static void secmod_FreeKey(DBT *key) {
+static void 
+secmod_FreeKey(DBT *key) 
+{
     if (key->data) {
 	PORT_Free(key->data);
     }
@@ -359,7 +361,9 @@ struct secmodSlotDataStr {
 /*
  * build a data base entry from a module 
  */
-static SECStatus secmod_EncodeData(DBT *data, char * module) {
+static SECStatus 
+secmod_EncodeData(DBT *data, char * module) 
+{
     secmodData *encoded = NULL;
     secmodSlotData *slot;
     unsigned char *dataPtr;
@@ -437,7 +441,7 @@ static SECStatus secmod_EncodeData(DBT *data, char * module) {
     SECMOD_PUTLONG(encoded->ssl,ssl[0]);
     SECMOD_PUTLONG(&encoded->ssl[4],ssl[1]);
 
-    offset = (unsigned long) &(((secmodData *)0)->names[0]);
+    offset = (unsigned short) &(((secmodData *)0)->names[0]);
     SECMOD_PUTSHORT(encoded->nameStart,offset);
     offset = offset + len + len2 + len3 + 3*sizeof(unsigned short);
     SECMOD_PUTSHORT(encoded->slotOffset,offset);
@@ -611,8 +615,10 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	    trustOrder = 100;
 	}
 
-	slotStrings[i] = pk11_mkSlotString(slotID,defaultFlags,
-			timeout,slots[i].askpw,hasRootCerts,hasRootTrust);
+	slotStrings[i] = pk11_mkSlotString(slotID, defaultFlags, timeout, 
+	                                   (unsigned char)slots[i].askpw, 
+	                                   (unsigned char)hasRootCerts, 
+	                                   (unsigned char)hasRootTrust);
     }
 
     nss = pk11_mkNSS(slotStrings, slotCount, internal, isFIPS, isModuleDB, 
@@ -625,25 +631,40 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 }
 
 
+#ifdef DBM_USING_NSPR
+#define NO_RDONLY	PR_RDONLY
+#define NO_RDWR		PR_RDWR
+#define NO_CREATE	(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE)
+#else
+#define NO_RDONLY	O_RDONLY
+#define NO_RDWR		O_RDWR
+#define NO_CREATE	(O_RDWR | O_CREAT | O_TRUNC)
+#endif
 
-static DB *secmod_OpenDB(char *dbName, PRBool readOnly) {
+
+static DB *
+secmod_OpenDB(char *dbName, PRBool readOnly) 
+{
     DB *pkcs11db = NULL;
    
     /* I'm sure we should do more checks here sometime... */
-    pkcs11db = dbopen(dbName, readOnly ? O_RDONLY : O_RDWR, 0600, DB_HASH, 0);
+    pkcs11db = dbopen(dbName, readOnly ? NO_RDONLY : NO_RDWR, 0600, DB_HASH, 0);
 
     /* didn't exist? create it */
     if (pkcs11db == NULL) {
-	 if (readOnly) return NULL;
+	 if (readOnly) 
+	     return NULL;
 
-	 pkcs11db = dbopen( dbName,
-			     O_RDWR | O_CREAT | O_TRUNC, 0600, DB_HASH, 0 );
-	 if (pkcs11db) (* pkcs11db->sync)(pkcs11db, 0);
+	 pkcs11db = dbopen( dbName, NO_CREATE, 0600, DB_HASH, 0 );
+	 if (pkcs11db) 
+	     (* pkcs11db->sync)(pkcs11db, 0);
     }
     return pkcs11db;
 }
 
-static void secmod_CloseDB(DB *pkcs11db) {
+static void 
+secmod_CloseDB(DB *pkcs11db) 
+{
      (*pkcs11db->close)(pkcs11db);
 }
 
@@ -681,7 +702,8 @@ secmod_addEscape(const char *string, char quote)
  * Read all the existing modules in
  */
 char **
-secmod_ReadPermDB(char *dbname, char *params, PRBool rw) {
+secmod_ReadPermDB(char *dbname, char *params, PRBool rw) 
+{
     DBT key,data;
     int ret;
     DB *pkcs11db = NULL;
@@ -743,7 +765,8 @@ done:
  * Delete a module from the Data Base
  */
 SECStatus
-secmod_DeletePermDB(char *dbname, char *args, PRBool rw) {
+secmod_DeletePermDB(char *dbname, char *args, PRBool rw) 
+{
     DBT key;
     SECStatus rv = SECFailure;
     DB *pkcs11db = NULL;
@@ -777,7 +800,8 @@ done:
  * Add a module to the Data base 
  */
 SECStatus
-secmod_AddPermDB(char *dbname, char *module, PRBool rw) {
+secmod_AddPermDB(char *dbname, char *module, PRBool rw) 
+{
     DBT key,data;
     SECStatus rv = SECFailure;
     DB *pkcs11db = NULL;

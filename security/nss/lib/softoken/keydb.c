@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.13 2002/02/21 22:41:37 ian.mcgreer%sun.com Exp $
+ * $Id: keydb.c,v 1.14 2002/04/05 03:33:42 nelsonb%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -958,8 +958,15 @@ done:
     return(SECSuccess);
 }
 
-	
-	    
+#ifdef DBM_USING_NSPR
+#define NO_RDONLY	PR_RDONLY
+#define NO_RDWR		PR_RDWR
+#define NO_CREATE	(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE)
+#else
+#define NO_RDONLY	O_RDONLY
+#define NO_RDWR		O_RDWR
+#define NO_CREATE	(O_RDWR | O_CREAT | O_TRUNC)
+#endif
 
 NSSLOWKEYDBHandle *
 nsslowkey_OpenKeyDB(PRBool readOnly, NSSLOWKEYDBNameFunc namecb, void *cbarg)
@@ -976,12 +983,8 @@ nsslowkey_OpenKeyDB(PRBool readOnly, NSSLOWKEYDBNameFunc namecb, void *cbarg)
 	PORT_SetError (SEC_ERROR_NO_MEMORY);
 	return NULL;
     }
-    
-    if ( readOnly ) {
-	openflags = O_RDONLY;
-    } else {
-	openflags = O_RDWR;
-    }
+
+    openflags = readOnly ? NO_RDONLY : NO_RDWR;
 
     dbname = (*namecb)(cbarg, NSSLOWKEY_DB_FILE_VERSION);
     if ( dbname == NULL ) {
@@ -1020,7 +1023,7 @@ newdb:
 	    if (dbname3 == NULL) {
 		goto loser;
 	    }
-	    handle->db = dbopen( dbname3, O_RDONLY, 0600, DB_HASH, 0 );
+	    handle->db = dbopen( dbname3, NO_RDONLY, 0600, DB_HASH, 0 );
 	    PORT_Free(handle->dbname);
     	    handle->dbname = dbname3;
 	    dbname3 = NULL;
@@ -1041,9 +1044,8 @@ newdb:
 	    goto loser;
 	}
 #endif
-	
-	handle->db = dbopen( dbname,
-			     O_RDWR | O_CREAT | O_TRUNC, 0600, DB_HASH, 0 );
+
+	handle->db = dbopen( dbname, NO_CREATE, 0600, DB_HASH, 0 );
 
         PORT_Free( dbname );
         dbname = NULL;
@@ -1059,7 +1061,7 @@ newdb:
 	}
 
 #ifdef NSS_USE_KEY4_DB
-	handle->updatedb = dbopen( dbname3, O_RDONLY, 0600, DB_HASH, 0 );
+	handle->updatedb = dbopen( dbname3, NO_RDONLY, 0600, DB_HASH, 0 );
 	PORT_Free(dbname3);
 	dbname3 = NULL;
 	if (handle->updatedb) {
@@ -1078,7 +1080,7 @@ newdb:
 	 */
 	dbname = (*namecb)(cbarg, 2);
 	if ( dbname != NULL ) {
-	    handle->updatedb = dbopen( dbname, O_RDONLY, 0600, DB_HASH, 0 );
+	    handle->updatedb = dbopen( dbname, NO_RDONLY, 0600, DB_HASH, 0 );
             PORT_Free( dbname );
             dbname = NULL;
 
@@ -2542,8 +2544,7 @@ nsslowkey_ResetKeyDB(NSSLOWKEYDBHandle *handle)
     }
 
     (* handle->db->close)(handle->db);
-    handle->db = dbopen( handle->dbname,
-			     O_RDWR | O_CREAT | O_TRUNC, 0600, DB_HASH, 0 );
+    handle->db = dbopen( handle->dbname, NO_CREATE, 0600, DB_HASH, 0 );
     if (handle->db == NULL) {
 	/* set an error code */
 	return SECFailure;
