@@ -1413,12 +1413,15 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
   ptr = PL_strcasestr(setCookieHeader, MAXAGE);
   if(ptr) {
     ptr += PL_strlen(MAXAGE);
-    gmtCookieExpires = get_current_time() + atoi(ptr);
-    // Before downgrading we need to test for case of cookie being intentionally set to a
-    // time in the past (trick that servers use to delete cookies) and not turn that into
-    // a cookie that exires at end of current session.
-    if (downgrade && ((unsigned)gmtCookieExpires > (unsigned)get_current_time())) {
-      gmtCookieExpires = 0;
+    time_t delta = atoi(ptr);
+    if (delta >= 0) { // negative max-age is not allowed -- see rfc 2109
+      gmtCookieExpires = get_current_time() + delta;
+      // Before downgrading we need to test for case of cookie being intentionally set to a
+      // time in the past (trick that servers use to delete cookies) and not turn that into
+      // a cookie that exires at end of current session.
+      if (downgrade && ((unsigned)gmtCookieExpires > (unsigned)get_current_time())) {
+        gmtCookieExpires = 0;
+      }
     }
   }
 
