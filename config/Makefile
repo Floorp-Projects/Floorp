@@ -32,7 +32,9 @@ PLSRCS		= nfspwd.pl revdepth.pl
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
 
 # Generate the build number on the fly.
+ifdef BUILD_OFFICIAL
 TARGETS		+= $(DEPTH)/build/build_number
+endif
 
 ifneq ($(subst /,_,$(shell uname -s)),WINNT)
 PROGRAM		= nsinstall$(BIN_SUFFIX)
