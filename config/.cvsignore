@@ -17,3 +17,4 @@ trace.lib
 elf-dynstr-gc
 final-link-libs
 doxygen.cfg
+asdecode

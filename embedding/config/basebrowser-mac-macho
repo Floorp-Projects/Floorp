@@ -232,6 +232,7 @@ components/uriloader.xpt
 ; widget
 components/libwidget_mac.dylib
 components/widget.xpt
+libwidget.rsrc
 
 ; xpconnect
 components/libxpconnect.dylib

@@ -41,13 +41,17 @@ else
 CSRCS		= nsinstall.c pathsub.c
 endif
 
-TARGETS		= $(HOST_PROGRAM) $(PROGRAM) $(PLSRCS:.pl=)
+TARGETS		= $(HOST_PROGRAM) $(PROGRAM) $(PLSRCS:.pl=) $(SIMPLE_PROGRAMS)
 
 # Generate the build number on the fly.
 TARGETS		+= build_number nsBuildID.h
 
 ifdef USE_ELF_DYNSTR_GC
 TARGETS		+= elf-dynstr-gc
+endif
+
+ifeq ($(OS_ARCH), Darwin)
+SIMPLE_PROGRAMS	+= asdecode
 endif
 
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have

@@ -97,6 +97,21 @@ XPIDLSRCS	+= \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
+# nsMacWidget.rsrc is an AppleSingle encoded resource file.
+# For Mach-O, we want to decode it and copy it to a data-fork resource file 
+# that lives in the application directory.
+
+RES_DEST = $(DIST)/bin/libwidget.rsrc
+RES_SRC = $(srcdir)/../mac/nsMacWidget.rsrc
+
+$(RES_DEST): $(RES_SRC)
+	$(DIST)/bin/asdecode $(RES_SRC) $(RES_DEST).tmp
+	rm -f $(RES_DEST)
+	cp $(RES_DEST).tmp/rsrc $(RES_DEST)
+	rm -rf $(RES_DEST).tmp
+
+libs:: $(RES_DEST)
+
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_UNICHARUTIL_LIBS) \
                 $(TK_LIBS) \
