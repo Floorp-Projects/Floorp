@@ -1013,12 +1013,12 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // acknowledge that we are running the url now..
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
-    if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
-    {
-        m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_TRUE,
+  if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
+  {
+    m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_TRUE,
                                              NS_OK);
-        WaitForFEEventCompletion();
-    }
+    WaitForFEEventCompletion();
+  }
 
     // if we are set up as a channel, we should notify our channel listener that we are starting...
   // so pass in ourself as the channel and not the underlying socket or file channel the protocol
@@ -1103,7 +1103,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     rv = m_channelListener->OnStopRequest(m_mockChannel, m_channelContext, NS_OK, nsnull);
 
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
-  PseudoInterrupt(PR_FALSE);  // clear this, because we must be done interrupting?
+    PseudoInterrupt(PR_FALSE);  // clear this, because we must be done interrupting?
     nsCOMPtr<nsISupports> copyState;
 
   if (m_runningUrl)
@@ -1114,9 +1114,15 @@ PRBool nsImapProtocol::ProcessCurrentURL()
         WaitForFEEventCompletion();
     }
 
+  // removing the channel from the current url needs to be done on the UI thread
+  // because it triggers a set of events that perculate back to JS that require it 
+  // being on the UI thread....so call a proxy instead of removing the channel ourselves...
+
   // probably the wrong place to remove the channel - we need
   // a place where we know we're finished with the url.
-  if (m_runningUrl)
+  if (m_runningUrl && m_imapServerSink)
+    m_imapServerSink->RemoveChannelFromUrl(mailnewsurl, NS_OK);
+    
     m_runningUrl->RemoveChannel(NS_OK);
 
   // release this by hand so that we can load the next queued url without thinking

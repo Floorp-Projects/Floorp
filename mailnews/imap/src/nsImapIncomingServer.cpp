@@ -1443,3 +1443,16 @@ NS_IMETHODIMP nsImapIncomingServer::GetManageMailAccountUrl(char **manageMailAcc
 	*manageMailAccountUrl = m_manageMailAccountUrl.ToNewCString();
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsImapIncomingServer::RemoveChannelFromUrl(nsIMsgMailNewsUrl *aUrl, PRUint32 statusCode)
+{
+  nsresult rv = NS_OK;
+  if (aUrl)
+  {
+    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl);
+    if (imapUrl)
+      rv = imapUrl->RemoveChannel(statusCode);
+  }
+
+  return rv;
+}
