@@ -2068,7 +2068,9 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     }
 
     if (entry && entry->mServiceObject) {
-        return entry->mServiceObject->QueryInterface(aIID, result);
+        nsCOMPtr<nsISupports> supports = entry->mServiceObject;
+        mon.Exit();
+        return supports->QueryInterface(aIID, result);
     }
 
 #ifdef XPCOM_CHECK_PENDING_CIDS
