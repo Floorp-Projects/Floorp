@@ -76,6 +76,7 @@ nsWidget::nsWidget() : nsBaseWidget()
 
   mBaseWindow = 0;
   mBackground = NS_RGB(192, 192, 192);
+  mBorderRGB = NS_RGB(192, 192, 192);
   mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
   mBackground = NS_RGB(192, 192, 192);
   mBorderPixel = xlib_rgb_xpixel_from_rgb(mBorderRGB);

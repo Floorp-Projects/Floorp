@@ -260,6 +260,8 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
 
 NS_IMETHODIMP nsScrollbar::Show(PRBool bState)
 {
+  PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::Show(): %s\n",
+                                         (bState == PR_TRUE) ? "true" : "false"));
   nsWidget::Show(bState);
   if (bState) {
     if (mBar) {
@@ -314,6 +316,8 @@ nsresult nsScrollbar::NextPage(void)
     sevent.widget = (nsWidget *)this;
     sevent.eventStructType = NS_SCROLLBAR_EVENT;
     sevent.position = (mPosition);
+    sevent.point.x = 0;
+    sevent.point.y = 0;
     // send the event
     result = ConvertStatus((*mEventCallback) (&sevent));
     // the gtk code indicates that the callback can
