@@ -913,8 +913,6 @@ mime_display_stream_complete (nsMIMESession *stream)
     //
     if (!msd->options->part_to_load)
     {
-      extern void  mime_dump_attachments ( nsMsgAttachmentData *attachData );
-
       nsMsgAttachmentData *attachments;
       nsresult rv = MimeGetAttachmentList(obj, msd->url_name, &attachments);
       if (NS_SUCCEEDED(rv))

@@ -168,6 +168,7 @@ typedef enum {
                                   // DON'T remove.
 } nsMsgBoolHeaderSet;
 
+#ifdef NS_DEBUG
 extern "C" void
 mime_dump_attachments ( nsMsgAttachmentData *attachData )
 {
@@ -185,16 +186,17 @@ mime_dump_attachments ( nsMsgAttachmentData *attachData )
       printf("URL               : %s\n", spec.get());
     }
 
-    printf("Desired Type      : %s\n", tmp->desired_type);
-    printf("Real Type         : %s\n", tmp->real_type);
-    printf("Real Encoding     : %s\n", tmp->real_encoding); 
-    printf("Description       : %s\n", tmp->description);
-    printf("Mac Type          : %s\n", tmp->x_mac_type);
-    printf("Mac Creator       : %s\n", tmp->x_mac_creator);
+    printf("Desired Type      : %s\n", tmp->desired_type ? tmp->desired_type : "nsnull");
+    printf("Real Type         : %s\n", tmp->real_type ? tmp->real_type : "nsnull");
+    printf("Real Encoding     : %s\n", tmp->real_encoding ? tmp->real_encoding : "nsnull"); 
+    printf("Description       : %s\n", tmp->description) ? tmp->description : "nsnull";
+    printf("Mac Type          : %s\n", tmp->x_mac_type ? tmp->x_mac_type : "nsnull");
+    printf("Mac Creator       : %s\n", tmp->x_mac_creator ? tmp->x_mac_creator : "nsnull");
     i++;
     tmp++;
   }
 }
+#endif
 
 nsresult
 CreateTheComposeWindow(nsIMsgCompFields     *compFields,
