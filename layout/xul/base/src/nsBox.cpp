@@ -1312,7 +1312,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     // we will assume 0 means not set.
     if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
         nscoord min = position->mMinWidth.GetCoordValue();
-        if (min && min > aSize.width) {
+        if (min && (!widthSet || min > aSize.width)) {
            aSize.width = min;
            widthSet = PR_TRUE;
         }
@@ -1320,7 +1320,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
         nscoord min = position->mMinHeight.GetCoordValue();
-        if (min && min > aSize.height) {
+        if (min && (!heightSet || min > aSize.height)) {
            aSize.height = min;
            heightSet = PR_TRUE;
         }
