@@ -217,8 +217,16 @@ nsMsgSearchAdapter::GetImapCharsetParam(const PRUnichar *destCharset)
 	return result;
 }
 
+/* 
+   09/21/2000 - taka@netscape.com
+   This method is bogus. Escape must be done against char * not PRUnichar *
+   should be rewritten later.
+   for now, just duplicate the string.
+*/
 PRUnichar *nsMsgSearchAdapter::EscapeSearchUrl (const PRUnichar *nntpCommand)
 {
+	return nsCRT::strdup(nntpCommand);
+#if 0
 	PRUnichar *result = nsnull;
 	// max escaped length is two extra characters for every character in the cmd.
   PRUnichar *scratchBuf = (PRUnichar*) PR_Malloc(sizeof(PRUnichar) * (3*nsCRT::strlen(nntpCommand) + 1));
@@ -246,11 +254,20 @@ PRUnichar *nsMsgSearchAdapter::EscapeSearchUrl (const PRUnichar *nntpCommand)
         nsCRT::free (scratchBuf);
 	}
 	return result;
+#endif
 }
 
+/* 
+   09/21/2000 - taka@netscape.com
+   This method is bogus. Escape must be done against char * not PRUnichar *
+   should be rewritten later.
+   for now, just duplicate the string.
+*/
 PRUnichar *
 nsMsgSearchAdapter::EscapeImapSearchProtocol(const PRUnichar *imapCommand)
 {
+	return nsCRT::strdup(imapCommand);
+#if 0
 	PRUnichar *result = nsnull;
 	// max escaped length is one extra character for every character in the cmd.
     PRUnichar *scratchBuf =
@@ -276,11 +293,20 @@ nsMsgSearchAdapter::EscapeImapSearchProtocol(const PRUnichar *imapCommand)
         nsCRT::free (scratchBuf);
 	}
 	return result;
+#endif
 }
 
+/* 
+   09/21/2000 - taka@netscape.com
+   This method is bogus. Escape must be done against char * not PRUnichar *
+   should be rewritten later.
+   for now, just duplicate the string.
+*/
 PRUnichar *
 nsMsgSearchAdapter::EscapeQuoteImapSearchProtocol(const PRUnichar *imapCommand)
 {
+	return nsCRT::strdup(imapCommand);
+#if 0
 	PRUnichar *result = nsnull;
 	// max escaped length is one extra character for every character in the cmd.
     PRUnichar *scratchBuf =
@@ -306,6 +332,7 @@ nsMsgSearchAdapter::EscapeQuoteImapSearchProtocol(const PRUnichar *imapCommand)
     nsCRT::free (scratchBuf);
 	}
 	return result;
+#endif
 }
 
 
@@ -616,37 +643,32 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
             // do all sorts of crazy escaping
 			convertedValue = reallyDredd ? EscapeSearchUrl (searchTermValue) :
                 EscapeImapSearchProtocol(searchTermValue);
-            
 			useQuotes = !reallyDredd ||
                 (nsAutoString(convertedValue).FindChar((PRUnichar)' ') != -1);
-
 			// now convert to char* and escape quoted_specials
 			value = TryToConvertCharset(convertedValue, destCharset, reallyDredd);
 			if (value)
 			{
-				if (useQuotes)
+				char *oldValue = value;
+				// max escaped length is one extra character for every character in the cmd.
+				char *newValue = (char*)PR_Malloc(sizeof(char) * (2*nsCRT::strlen(value) + 1));
+				if (newValue)
 				{
-					char *oldValue = value;
-					// max escaped length is one extra character for every character in the cmd.
-					char *newValue = (char*)PR_Malloc(sizeof(char) * (2*nsCRT::strlen(value) + 1));
-					if (newValue)
+					char *p = newValue;
+					while (1)
 					{
-						char *p = newValue;
-						while (1)
-						{
-							char ch = *value++;
-							if (!ch)
-								break;
-							if (ch == '"' || ch == '\\')
-								*p++ = '\\';
-							*p++ = ch;
-						}
-						*p = '\0';
-						value = nsCRT::strdup(newValue); // realloc down to smaller size
-						nsCRT::free(newValue);
+						char ch = *value++;
+						if (!ch)
+							break;
+						if ((useQuotes ? ch == '"' : 0) || ch == '\\')
+							*p++ = '\\';
+						*p++ = ch;
 					}
-					nsCRT::free(oldValue);
+					*p = '\0';
+					value = nsCRT::strdup(newValue); // realloc down to smaller size
+					nsCRT::free(newValue);
 				}
+				nsCRT::free(oldValue);
 			}
 			nsCRT::free(convertedValue);
 			valueWasAllocated = PR_TRUE;

@@ -772,7 +772,12 @@ NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
 	urlSpec.AppendWithConversion(hierarchySeparator);
     urlSpec.Append((const char *) folderName);
     urlSpec.Append('>');
-    urlSpec.Append(aSearchUri);
+    // escape aSearchUri so that IMAP special characters (i.e. '\')
+    // won't be replaced with '/' in NECKO.
+    // it will be unescaped in nsImapUrl::ParseUrl().
+    char *search_cmd = nsEscape((char *)aSearchUri, url_XAlphas);
+    urlSpec.Append(search_cmd);
+    nsCRT::free(search_cmd);
     rv = mailNewsUrl->SetSpec((char *) urlSpec.GetBuffer());
     if (NS_SUCCEEDED(rv))
     {
