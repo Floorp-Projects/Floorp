@@ -172,7 +172,7 @@ nsCookieService::SetCookieString(nsIURI *aURL, const nsString& aCookie) {
   char *cookie = aCookie.ToNewCString();
   COOKIE_SetCookieString((char *)spec, cookie);
   nsCRT::free(spec);
-  delete []cookie;
+  nsCRT::free(cookie);
   return NS_OK;
 }
 
