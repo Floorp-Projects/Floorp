@@ -436,6 +436,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     NS_RELEASE(nsServiceManager::mGlobalServiceManager);
     NS_RELEASE(nsComponentManagerImpl::gComponentManager);
+#ifdef DEBUG
+    extern void _FreeAutoLockStatics();
+    _FreeAutoLockStatics();
+#endif
     return NS_OK;
 }
 
