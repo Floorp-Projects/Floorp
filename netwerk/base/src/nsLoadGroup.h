@@ -84,7 +84,7 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    friend nsLoadGroupEntry;
+    friend class nsLoadGroupEntry;
 
 protected:
     typedef nsresult (*PropagateDownFun)(nsIRequest* request);
