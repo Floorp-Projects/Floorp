@@ -1447,7 +1447,8 @@ nsDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aN
   PRUint32 oldCount;
   aOldSheets->Count(&oldCount);
   nsCOMPtr<nsIStyleSheet> sheet;
-  for (PRUint32 i = 0; i < oldCount; i++) {
+  PRUint32 i;
+  for (i = 0; i < oldCount; i++) {
     nsCOMPtr<nsISupports> supp;
     aOldSheets->GetElementAt(i, getter_AddRefs(supp));
     sheet = do_QueryInterface(supp);
