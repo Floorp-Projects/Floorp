@@ -52,11 +52,14 @@ native jsuword(jsuword);
 interface jsdIValue;
 
 /* handle objects */
+
+/*
 [scriptable, uuid(a2dd25a4-1dd1-11b2-bda6-ed525acd4c35)]
 interface jsdIContext : nsISupports
 {
     [noscript] readonly attribute JSDContext JSDContext;
 };
+*/
 
 [scriptable, uuid(d500e8b8-1dd1-11b2-89a1-cdf55d91cbbd)]
 interface jsdIObject : nsISupports
@@ -149,6 +152,7 @@ interface jsdIStackFrame : nsISupports
 
 };
 
+/*
 [scriptable, uuid(b6d1c006-1dd1-11b2-b9d8-b4d1ccfb74d8)]
 interface jsdIThreadState : nsISupports
 {
@@ -160,6 +164,7 @@ interface jsdIThreadState : nsISupports
     
     attribute jsdIValue pendingException;
 };
+*/
 
 [scriptable, uuid(b7964304-1dd1-11b2-ba20-cf4205772e9d)]
 interface jsdIValue : nsISupports
@@ -171,14 +176,15 @@ interface jsdIValue : nsISupports
     readonly attribute boolean isNumber;
     readonly attribute boolean isPrimitive;
 
-    const unsigned long TYPE_DOUBLE = 0;
-    const unsigned long TYPE_INT = 1;
-    const unsigned long TYPE_FUNCTION = 2;
-    const unsigned long TYPE_NULL = 3;
-    const unsigned long TYPE_OBJECT = 4;
-    const unsigned long TYPE_STRING = 5;
-    const unsigned long TYPE_VOID = 6;
-    const unsigned long TYPE_UNKNOWN = 7;
+    const unsigned long TYPE_BOOLEAN  = 0;
+    const unsigned long TYPE_DOUBLE   = 1;
+    const unsigned long TYPE_INT      = 2;
+    const unsigned long TYPE_FUNCTION = 3;
+    const unsigned long TYPE_NULL     = 4;
+    const unsigned long TYPE_OBJECT   = 5;
+    const unsigned long TYPE_STRING   = 6;
+    const unsigned long TYPE_VOID     = 7;
+    const unsigned long TYPE_UNKNOWN  = 8;
     
     readonly attribute unsigned long jsType;
     readonly attribute jsdIValue     jsPrototype;
@@ -193,7 +199,7 @@ interface jsdIValue : nsISupports
     readonly attribute jsdIObject objectValue;
     readonly attribute string     stringValue;
 
-    readonly attribute unsigned long propertyCount;
+    readonly attribute long propertyCount;
     
     void getProperties ([array, size_is(length)] out jsdIProperty propArray,
                         out unsigned long length);
@@ -206,8 +212,8 @@ interface jsdIValue : nsISupports
 [scriptable, uuid(ae89a7e2-1dd1-11b2-8c2f-af82086291a5)]
 interface jsdIScriptHook : nsISupports
 {
-    void onScriptCreated (in jsdIContext cx, in jsdIScript script);
-    void onScriptDestroyed (in jsdIContext cx, in jsdIScript script);
+    void onScriptCreated (in jsdIScript script);
+    void onScriptDestroyed (in jsdIScript script);
 };
 
 [scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
@@ -226,9 +232,13 @@ interface jsdIExecutionHook : nsISupports
     const unsigned long RETURN_THROW_WITH_VAL = 4;
     const unsigned long RETURN_CONTINUE_THROW = 5;
 
-    unsigned long onExecute (in jsdIContext cx,
-                             in jsdIThreadState threadState,
-                             in unsigned long type, out jsdIValue rval);
+    /* val is current exception (if any) when this method is called.  If you
+     * return with RETURN_THROW_WITH_VAL, whatever you set |val| to will be
+     * thrown.  If you return with RETURN_RET_WITH_VAL, whatever you set |val|
+     * to will be the return value of this script. 
+     */
+    unsigned long onExecute (in jsdIStackFrame frame, 
+                             in unsigned long type, inout jsdIValue val);
 };
 
 /* debugger service */
@@ -236,10 +246,11 @@ interface jsdIExecutionHook : nsISupports
 interface jsdIDebuggerService : nsISupports
 {
     attribute jsdIExecutionHook breakpointHook;
-    attribute jsdIExecutionHook debugBreakHook;
     attribute jsdIExecutionHook debuggerHook;
+    attribute jsdIExecutionHook errorHook;
     attribute jsdIExecutionHook interruptHook;
     attribute jsdIScriptHook    scriptHook;
+    attribute jsdIExecutionHook throwHook;
     
     void on ();
     void off ();
