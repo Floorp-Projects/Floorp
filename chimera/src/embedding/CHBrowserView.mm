@@ -541,7 +541,7 @@ NS_IMETHODIMP
 nsCocoaBrowserListener::GetSiteWindow(void * *aSiteWindow)
 {
   NS_ENSURE_ARG_POINTER(aSiteWindow);
-
+  *aSiteWindow = nsnull;
   if (!mView) {
     return NS_ERROR_FAILURE;
   }
@@ -715,7 +715,7 @@ private:
 NS_IMPL_ISUPPORTS1(nsHeaderSniffer, nsIWebProgressListener)
 
 // Implementation of nsIWebProgressListener
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP 
 nsHeaderSniffer::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, 
                                 PRUint32 aStatus)
@@ -1357,7 +1357,6 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
           filterList: aFilterList];
 }
 
-
 -(IBAction)cut:(id)aSender
 {
     nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
@@ -1378,8 +1377,9 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 
 -(IBAction)delete:(id)aSender
 {
-    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-    clipboard->SelectNone();
+//    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
+//    clipboard->SelectNone();
+  NSLog(@"delete not implemented\n");
 }
 
 -(IBAction)selectAll:(id)aSender

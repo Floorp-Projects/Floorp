@@ -205,7 +205,9 @@ GetNSWindowForDOMWindow(nsIDOMWindow* window)
   }
 
   NSWindow* nswin;
-  siteWindow->GetSiteWindow((void**)&nswin);
+  nsresult rv = siteWindow->GetSiteWindow((void**)&nswin);
+  if (NS_FAILED(rv))
+    return nsnull;
 
   return nswin;
 }
@@ -224,6 +226,8 @@ nsCocoaBrowserService::Alert(nsIDOMWindow *parent,
   NSString* titleStr = [NSString stringWithCharacters:dialogTitle length:(dialogTitle ? nsCRT::strlen(dialogTitle) : 0)];
   NSString* textStr = [NSString stringWithCharacters:text length:(text ? nsCRT::strlen(text) : 0)];
   NSWindow* window = GetNSWindowForDOMWindow(parent);
+  if (!window)
+    return NS_ERROR_FAILURE;
 
   [controller alert:window title:titleStr text:textStr];
 
@@ -650,7 +654,7 @@ nsCocoaBrowserService::CertExpired(nsITransportSecurityInfo *socketInfo,
   // HACK: there is no way to get which window this is for from the API. The
   // security team in mozilla just cheats and assumes the frontmost window so
   // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
-  *_retval = (PRBool)[controller certExpired:[NSApp mainWindow]];
+  *_retval = (PRBool)[controller expiredCert:[NSApp mainWindow]];
   
   return NS_OK;
 }
