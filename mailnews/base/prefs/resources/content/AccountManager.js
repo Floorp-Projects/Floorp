@@ -63,10 +63,7 @@ function onLoad() {
   accountArray = new Array;
   RDF = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
 
-  var mailsession =
-    Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
-
-  accountManager = mailsession.accountManager;
+  accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 
   smtpService =
     Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
@@ -386,14 +383,16 @@ function restorePage(serverId, pageId) {
 // gets the value of a widget
 //
 function getFormElementValue(formElement) {
-  if (formElement.type=="checkbox") {
+
+  var type = formElement.type.toLowerCase();
+  if (type=="checkbox") {
     if (formElement.getAttribute("reversed"))
       return !formElement.checked;
     else
       return formElement.checked;
   }
 
-  else if (formElement.type == "text" &&
+  else if (type == "text" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (formElement.value) {
       var filespec = Components.classes["component://netscape/filespec"].createInstance(Components.interfaces.nsIFileSpec);
@@ -416,8 +415,8 @@ function setFormElementValue(formElement, value) {
   
   //formElement.value = formElement.defaultValue;
   //  formElement.checked = formElement.defaultChecked;
-  
-  if (formElement.type == "checkbox") {
+  var type = formElement.type.toLowerCase();
+  if (type == "checkbox") {
     if (value == undefined) {
       formElement.checked = formElement.defaultChecked;
     } else {
@@ -430,7 +429,7 @@ function setFormElementValue(formElement, value) {
   }
 
   // handle nsIFileSpec
-  else if (formElement.type == "text" &&
+  else if (type == "text" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (value) {
       var filespec = value.QueryInterface(Components.interfaces.nsIFileSpec);
