@@ -18,6 +18,9 @@ call rtest.bat %1
 
 cd ..\..\table
 call rtest.bat %1
+
+cd ..\formctls
+call rtest.bat %1
 cd ..\block
 
 if %HAS_SUBST%=0 subst s: /D

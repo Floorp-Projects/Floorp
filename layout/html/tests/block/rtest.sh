@@ -23,6 +23,8 @@ dirs="	base			\
 	../table/other		\
 	../table/dom		\
 	../table/printing	\
+        ../formctls/base        \
+        ../formctls/bugs        \
 	../xbl"
 
 # This doesn't appear to work on Linux right now; needs support for a
