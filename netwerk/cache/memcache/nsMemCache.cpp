@@ -161,8 +161,12 @@ nsMemCache::Delete(nsMemCacheRecord* aRecord)
     removedRecord = (nsMemCacheRecord*)mHashTable->Remove(&opaqueKey);
     NS_ASSERTION(removedRecord == aRecord, "memory cache database inconsistent");
 
+    PRUint32 bytesUsed = 0;
+    aRecord->GetStoredContentLength(&bytesUsed);
+
     aRecord->Release();
 
+    mOccupancy -= bytesUsed;
     mNumEntries--;
     
     return NS_OK;
