@@ -62,9 +62,9 @@ static const PRInt64 kOneThousand = LL_INIT(0, 1000);
 static nsresult readEntry(FILE *inStream, nsCString& url, HistoryEntry **entry);
 static nsresult writeEntry(FILE *outStm, nsCStringKey *url, HistoryEntry *entry);
 
-static PRIntn enumWriteEntry(nsHashKey *aKey, void *aData, void* closure);
-static PRIntn enumWriteEntryIfUnwritten(nsHashKey *aKey, void *aData, void* closure);
-static PRIntn enumDeleteEntry(nsHashKey *aKey, void *aData, void* closure);
+static PRIntn PR_CALLBACK enumWriteEntry(nsHashKey *aKey, void *aData, void* closure);
+static PRIntn PR_CALLBACK enumWriteEntryIfUnwritten(nsHashKey *aKey, void *aData, void* closure);
+static PRIntn PR_CALLBACK enumDeleteEntry(nsHashKey *aKey, void *aData, void* closure);
 
 //*****************************************************************************
 // HistoryEntry
@@ -506,7 +506,7 @@ nsresult writeEntry(FILE *outStm, nsCStringKey *url, HistoryEntry *entry)
   return NS_OK;
 }
 
-PRBool enumWriteEntry(nsHashKey *aKey, void *aData, void* closure)
+PRBool PR_CALLBACK enumWriteEntry(nsHashKey *aKey, void *aData, void* closure)
 {
   FILE *outStm = NS_STATIC_CAST(FILE*, closure);
   if (!outStm)
@@ -523,7 +523,7 @@ PRBool enumWriteEntry(nsHashKey *aKey, void *aData, void* closure)
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
 }
 
-PRBool enumWriteEntryIfUnwritten(nsHashKey *aKey, void *aData, void* closure)
+PRBool PR_CALLBACK enumWriteEntryIfUnwritten(nsHashKey *aKey, void *aData, void* closure)
 {
   FILE *outStm = NS_STATIC_CAST(FILE*, closure);
   if (!outStm)
@@ -535,14 +535,14 @@ PRBool enumWriteEntryIfUnwritten(nsHashKey *aKey, void *aData, void* closure)
   if (!entry)
     return PR_FALSE;
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!entry->GetIsWritten())
     rv = writeEntry(outStm, stringKey, entry);
     
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
 }
 
-PRIntn enumDeleteEntry(nsHashKey *aKey, void *aData, void* closure)
+PRIntn PR_CALLBACK enumDeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 {
   HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry*, aData);
   delete entry;
