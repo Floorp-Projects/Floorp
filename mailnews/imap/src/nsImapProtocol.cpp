@@ -1517,7 +1517,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
     nsCString curUrlFolderName;
     if (inSelectedState)
     {
-        curUrlFolderName =
+        curUrlFolderName = 
             GetServerStateParser().GetSelectedMailboxName();
     }
     else if (isBusy)
@@ -1527,8 +1527,10 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
 		if (m_runningUrl) {
 			m_runningUrl->GetRequiredImapState(&curUrlImapState);
 			if (curUrlImapState == nsIImapUrl::nsImapSelectedState) {
-				curUrlFolderName = OnCreateServerSourceFolderPathString();
+				char *folderName = OnCreateServerSourceFolderPathString();
+        curUrlFolderName.Assign(folderName);
 				inSelectedState = PR_TRUE;
+        PR_FREEIF(folderName);
 			}
         }
     }
