@@ -204,8 +204,9 @@ else
     selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss -i ${SERVERPID} & 
 fi
 # wait until it's alive
-echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}"
-tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}
+
+echo "tstclnt -p ${PORT} -h ${HOST} -q"
+tstclnt -p ${PORT} -h ${HOST} -q
 if [ $? -ne 0 ]; then
     echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
 else
@@ -239,8 +240,8 @@ do
 			else
 				selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
 			fi
-			echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}"
-			tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}
+			echo "tstclnt -p ${PORT} -h ${HOST} -q"
+			tstclnt -p ${PORT} -h ${HOST} -q
 			if [ $? -ne 0 ]; then
     			echo "<TR><TD> Wait for Server - NULL </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
 			else
@@ -287,11 +288,10 @@ do
 	else
 	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
 	fi
-	echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}"
-	tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}
+	tstclnt -p ${PORT} -h ${HOST} -q
 	if [ $? -ne 0 ]; then
     	echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-		tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}
+		tstclnt -p ${PORT} -h ${HOST} -q
 	fi
 	#sleep 20
 	pwd
@@ -350,11 +350,10 @@ do
 	    selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose &
 	fi
 	#sleep 20
-	echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}"
-	tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}
+	tstclnt -p ${PORT} -h ${HOST} -q
 	if [ $? -ne 0 ]; then
     	echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-		tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR}
+		tstclnt -p ${PORT} -h ${HOST} -q
 	fi
 
 	echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF} "
