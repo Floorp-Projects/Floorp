@@ -207,8 +207,8 @@ nsHTMLTableCellElement::GetTable()
 {
   nsIContent *result = nsnull;
 
-  if (mParent) {  // mParent should be a row
-    nsIContent* section = mParent->GetParent();
+  if (GetParent()) {  // GetParent() should be a row
+    nsIContent* section = GetParent()->GetParent();
     if (section) {
       if (section->IsContentOfType(eHTML) &&
           section->GetNodeInfo()->Equals(nsHTMLAtoms::table)) {

@@ -127,8 +127,7 @@ public:
   NS_DECL_NSIDOM3NODE
 
   // nsIContent
-  NS_IMETHOD SetParent(nsIContent* aParent)
-    { return NS_OK; }
+  NS_IMETHOD_(void) SetParent(nsIContent* aParent) { }
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue,
                      PRBool aNotify)

@@ -58,8 +58,6 @@ class nsURI;
 
 #define PARENT_BIT_RANGELISTS       ((PtrBits)0x1 << 0)
 #define PARENT_BIT_LISTENERMANAGER  ((PtrBits)0x1 << 1)
-#define PARENT_BIT_MASK             (PARENT_BIT_RANGELISTS | \
-                                     PARENT_BIT_LISTENERMANAGER)
 
 class nsGenericDOMDataNode : public nsITextContent
 {
@@ -169,11 +167,9 @@ public:
                        const nsAString& aArg);
 
   // Implementation for nsIContent
-  NS_IMETHOD_(nsIDocument*) GetDocument() const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
-  NS_IMETHOD_(nsIContent*) GetParent() const;
-  NS_IMETHOD SetParent(nsIContent* aParent);
+  NS_IMETHOD_(void) SetParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
   NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
@@ -253,15 +249,7 @@ public:
   static void Shutdown();
 
 protected:
-  nsIContent *GetParentWeak() const
-  {
-    PtrBits bits = mParentPtrBits & ~PARENT_BIT_MASK;
-
-    return NS_REINTERPRET_CAST(nsIContent *, bits);
-  }
-
   nsTextFragment mText;
-  nsIDocument* mDocument; // WEAK
 
 private:
   void LookupListenerManager(nsIEventListenerManager **aListenerManager) const;
@@ -269,8 +257,6 @@ private:
 
   void SetBidiStatus();
 
-
-  typedef long PtrBits;
 
   void SetHasRangeList(PRBool aHasRangeList)
   {
@@ -301,10 +287,6 @@ private:
     return (mParentPtrBits & PARENT_BIT_LISTENERMANAGER &&
             nsGenericElement::sEventListenerManagersHash.ops);
   }
-
-  // Weak parent pointer (nsIContent *) and bits for knowing if
-  // there's a rangelist or listener manager for this node
-  PtrBits mParentPtrBits;
 };
 
 //----------------------------------------------------------------------

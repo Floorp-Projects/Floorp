@@ -83,10 +83,6 @@ public:
   NS_DECL_ISUPPORTS
 
   // Implementation for nsIContent
-  NS_IMETHOD_(nsIDocument*) GetDocument() const;
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
-  NS_IMETHOD_(nsIContent*) GetParent() const;
-  NS_IMETHOD SetParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const { return PR_TRUE; }
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous) { }
 
@@ -226,13 +222,18 @@ public:
 
   void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
+  nsIContent*  GetParent() const {
+    // Override nsIContent::GetParent to be more efficient internally,
+    // since we don't use the low 2 bits of mParentPtrBits for anything.
+ 
+    return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits);
+  }
+
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
   // ourselves, so this is needed to ask the real object to do the
   // work.
   nsIContent*  mContent;
-  nsIDocument* mDocument;
-  nsIContent*  mParent;
 
   nsTextFragment mText;
   PRInt32        mNameSpaceID;
@@ -259,8 +260,6 @@ NS_NewAttributeContent(nsIContent** aContent)
 nsAttributeContent::nsAttributeContent()
   : mText()
 {
-  mDocument = nsnull;
-  mParent   = nsnull;
   mContent  = nsnull;
   mAttrName = nsnull;
 }
@@ -318,34 +317,6 @@ nsAttributeContent::ToCString(nsAString& aBuf, PRInt32 aOffset,
 {
 }
 
-NS_IMETHODIMP_(nsIDocument*)
-nsAttributeContent::GetDocument() const
-{
-  return mDocument;
-}
-
-
-nsresult
-nsAttributeContent::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
-{
-  mDocument = aDocument;
-  //NS_IF_ADDREF(mDocument);
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsIContent*)
-nsAttributeContent::GetParent() const
-{
-  return mParent;
-}
-
-nsresult
-nsAttributeContent::SetParent(nsIContent* aParent)
-{
-  mParent = aParent;
-  return NS_OK;
-}
-
 nsresult
 nsAttributeContent::HandleDOMEvent(nsIPresContext* aPresContext,
                                      nsEvent* aEvent,
@@ -381,8 +352,8 @@ nsAttributeContent::GetRangeList(nsVoidArray** aResult) const
 NS_IMETHODIMP
 nsAttributeContent::GetBaseURL(nsIURI** aURI) const
 {
-  if (mParent) {
-    return mParent->GetBaseURL(aURI);
+  if (GetParent()) {
+    return GetParent()->GetBaseURL(aURI);
   }
 
   if (mDocument) {

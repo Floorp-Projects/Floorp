@@ -68,7 +68,7 @@ nsGenericDOMDataNode::Shutdown()
 //----------------------------------------------------------------------
 
 nsGenericDOMDataNode::nsGenericDOMDataNode()
-  : mText(), mDocument(nsnull), mParentPtrBits(0)
+  : mText()
 {
 }
 
@@ -125,7 +125,7 @@ nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
 {
   nsresult res = NS_OK;
 
-  nsIContent *parent_weak = GetParentWeak();
+  nsIContent *parent_weak = GetParent();
 
   if (parent_weak) {
     res = CallQueryInterface(parent_weak, aParentNode);
@@ -148,7 +148,7 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
   nsresult rv = NS_OK;
 
-  nsIContent *parent_weak = GetParentWeak();
+  nsIContent *parent_weak = GetParent();
   nsIContent *sibling = nsnull;
 
   if (parent_weak) {
@@ -180,7 +180,7 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
 {
   nsresult rv = NS_OK;
 
-  nsIContent *parent_weak = GetParentWeak();
+  nsIContent *parent_weak = GetParent();
   nsIContent *sibling = nsnull;
 
   if (parent_weak) {
@@ -301,7 +301,7 @@ nsGenericDOMDataNode::LookupPrefix(const nsAString& aNamespaceURI,
 {
   aPrefix.Truncate();
 
-  nsIContent *parent_weak = GetParentWeak();
+  nsIContent *parent_weak = GetParent();
 
   // DOM Data Node passes the query on to its parent
   nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(parent_weak));
@@ -318,7 +318,7 @@ nsGenericDOMDataNode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 {
   aNamespaceURI.Truncate();
 
-  nsIContent *parent_weak = GetParentWeak();
+  nsIContent *parent_weak = GetParent();
 
   // DOM Data Node passes the query on to its parent
   nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(parent_weak));
@@ -624,18 +624,11 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
 }
 #endif
 
-NS_IMETHODIMP_(nsIDocument*)
-nsGenericDOMDataNode::GetDocument() const
-{
-  return mDocument;
-}
-
-
 NS_IMETHODIMP
 nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                   PRBool aCompileEventHandlers)
 {
-  mDocument = aDocument;
+  nsIContent::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   if (mDocument && mText.IsBidi()) {
     mDocument->SetBidiEnabled(PR_TRUE);
@@ -644,28 +637,20 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsIContent*)
-nsGenericDOMDataNode::GetParent() const
-{
-  return GetParentWeak();
-}
-
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsGenericDOMDataNode::SetParent(nsIContent* aParent)
 {
   PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
 
-  new_bits |= mParentPtrBits & PARENT_BIT_MASK;
+  new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
 
   mParentPtrBits = new_bits;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP_(PRBool)
 nsGenericDOMDataNode::IsNativeAnonymous() const
 {
-  nsIContent* parent = GetParentWeak();
+  nsIContent* parent = GetParent();
   return parent && parent->IsNativeAnonymous();
 }
 
@@ -787,7 +772,7 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
     aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
   }
 
-  nsIContent *parent_weak = GetParentWeak();
+  nsIContent *parent_weak = GetParent();
 
   //Capturing stage evaluation
   if (NS_EVENT_FLAG_CAPTURE & aFlags) {
@@ -1059,7 +1044,7 @@ NS_IMETHODIMP
 nsGenericDOMDataNode::GetBaseURL(nsIURI** aURI) const
 {
   // DOM Data Node inherits the base from its parent element/document
-  nsIContent* parent_weak = GetParentWeak();
+  nsIContent* parent_weak = GetParent();
   if (parent_weak) {
     return parent_weak->GetBaseURL(aURI);
   }
@@ -1121,7 +1106,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
     return rv;
   }
 
-  nsIContent* parentNode = GetParentWeak();
+  nsIContent* parentNode = GetParent();
 
   if (parentNode) {
     PRInt32 index = parentNode->IndexOf(this);

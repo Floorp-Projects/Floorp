@@ -416,10 +416,8 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIContent (from nsIStyledContent)
-    NS_IMETHOD_(nsIDocument*) GetDocument() const;
     NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
-    NS_IMETHOD_(nsIContent*) GetParent() const;
-    NS_IMETHOD SetParent(nsIContent* aParent);
+    NS_IMETHOD_(void) SetParent(nsIContent* aParent);
     NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
     NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
     NS_IMETHOD_(PRBool) CanContainChildren() const;
@@ -548,11 +546,16 @@ protected:
 
     nsresult AddPopupListener(nsIAtom* aName);
 
+    nsIContent* GetParent() const {
+        // Override nsIContent::GetParent to be more efficient internally,
+        // we don't use the low 2 bits of mParentPtrBits for anything.
+ 
+        return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits);
+    }
+
 protected:
     // Required fields
     nsXULPrototypeElement*              mPrototype;
-    nsIDocument*                        mDocument;           // [WEAK]
-    nsIContent*                         mParent;             // [WEAK]
     nsSmallVoidArray                    mChildren;           // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 

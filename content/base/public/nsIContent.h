@@ -71,11 +71,14 @@ class nsIContent : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
+  nsIContent()
+    : mDocument(nsnull), mParentPtrBits(0) { }
+
   /**
    * Get the document for this content.
    * @return the document
    */
-  NS_IMETHOD_(nsIDocument*) GetDocument() const = 0;
+  nsIDocument* GetDocument() const { return mDocument; }
 
   /**
    * Set the document for this content.
@@ -85,20 +88,31 @@ public:
    * @param aCompileEventHandlers whether to initialize the event handlers in
    *        the document (used by nsXULElement)
    */
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers) = 0;
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
+  {
+    mDocument = aDocument;
+    return NS_OK;
+  }
 
   /**
    * Get the parent content for this content.
    * @return the parent, or null if no parent
    */
-  NS_IMETHOD_(nsIContent*) GetParent() const = 0;
+  nsIContent* GetParent() const
+  {
+    return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits & ~kParentBitMask);
+  }
 
   /**
    * Set the parent content for this content.  (This does not add the child to
-   * its parent's child list.)
+   * its parent's child list.)  This clobbers the low 2 bits of the parent
+   * pointer, so subclasses which use those bits should override this.
    * @param aParent the new parent content to set (could be null)
    */
-  NS_IMETHOD SetParent(nsIContent* aParent) = 0;
+  NS_IMETHOD_(void) SetParent(nsIContent* aParent)
+  {
+    mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aParent);
+  }
 
   /**
    * Get whether this content is C++-generated anonymous content
@@ -553,6 +567,15 @@ public:
    */
   NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const = 0;
 #endif
+
+protected:
+  typedef long PtrBits;
+
+  // Subclasses may use the low two bits of mParentPtrBits to store other data
+  static const int kParentBitMask = ((PtrBits) 0x3);
+
+  nsIDocument *mDocument;
+  PtrBits      mParentPtrBits;
 };
 
 #endif /* nsIContent_h___ */

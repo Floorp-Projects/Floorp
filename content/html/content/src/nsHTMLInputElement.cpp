@@ -192,7 +192,7 @@ public:
                             
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
-  NS_IMETHOD SetParent(nsIContent* aParent);
+  NS_IMETHOD_(void) SetParent(nsIContent* aParent);
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                      const nsAString& aValue, PRBool aNotify) {
@@ -1779,7 +1779,7 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mType == NS_FORM_INPUT_IMAGE &&
-      documentChanging && aDocument && mParent) {
+      documentChanging && aDocument && GetParent()) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
     nsAutoString uri;
@@ -1805,10 +1805,10 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsHTMLInputElement::SetParent(nsIContent* aParent)
 {
-  nsresult rv = nsGenericHTMLLeafFormElement::SetParent(aParent);
+  nsGenericHTMLLeafFormElement::SetParent(aParent);
   if (mType == NS_FORM_INPUT_IMAGE && aParent && mDocument) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
@@ -1818,7 +1818,6 @@ nsHTMLInputElement::SetParent(nsIContent* aParent)
       ImageURIChanged(uri);
     }
   }
-  return rv;
 }
 
 

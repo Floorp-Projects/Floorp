@@ -215,7 +215,7 @@ void
 nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
 {
   *aSelectElement = nsnull;
-  for (nsIContent* parent = mParent; parent; parent = parent->GetParent()) {
+  for (nsIContent* parent = GetParent(); parent; parent = parent->GetParent()) {
     CallQueryInterface(parent, aSelectElement);
     if (*aSelectElement) {
       break;

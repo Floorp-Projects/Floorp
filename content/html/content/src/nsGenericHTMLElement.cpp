@@ -1387,7 +1387,7 @@ nsGenericHTMLElement::FindForm(nsIDOMHTMLFormElement **aForm)
   return NS_OK;
 }
 
-nsresult
+void
 nsGenericHTMLElement::FindAndSetForm(nsIFormControl *aFormControl)
 {
   nsCOMPtr<nsIDOMHTMLFormElement> form;
@@ -1395,10 +1395,8 @@ nsGenericHTMLElement::FindAndSetForm(nsIFormControl *aFormControl)
   FindForm(getter_AddRefs(form));
 
   if (form) {
-    return aFormControl->SetForm(form);
+    aFormControl->SetForm(form);  // always succeeds
   }
-
-  return NS_OK;
 }
 
 static PRBool
@@ -3955,28 +3953,22 @@ nsGenericHTMLContainerFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsGenericHTMLContainerFormElement::SetParent(nsIContent* aParent)
 {
-  nsresult rv = NS_OK;
-
   if (!aParent && mForm) {
     SetForm(nsnull);
-  } else if (mDocument && aParent && (mParent || !mForm)) {
+  } else if (mDocument && aParent && (GetParent() || !mForm)) {
     // If we have a new parent and either we had an old parent or we
     // don't have a form, search for a containing form.  If we didn't
     // have an old parent, but we do have a form, we shouldn't do the
     // search. In this case, someone (possibly the content sink) has
     // already set the form for us.
 
-    rv = FindAndSetForm(this);
+    FindAndSetForm(this);
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    rv = nsGenericElement::SetParent(aParent);
-  }
-
-  return rv;
+  nsGenericElement::SetParent(aParent);
 }
 
 NS_IMETHODIMP
@@ -3984,32 +3976,26 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
                                                PRBool aDeep,
                                                PRBool aCompileEventHandlers)
 {
-  nsresult rv = NS_OK;
-
   // Save state before doing anything if the document is being removed
   if (!aDocument) {
     SaveState();
   }
 
-  if (aDocument && mParent && !mForm) {
-    rv = FindAndSetForm(this);
+  if (aDocument && GetParent() && !mForm) {
+    FindAndSetForm(this);
   } else if (!aDocument && mForm) {
     // We got removed from document.  We have a parent form.  Check
     // that the form is still in the document, and if so remove
     // ourselves from the form.  This keeps ghosts from appearing in
     // the form's |elements| array
-    nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm, &rv));
+    nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm));
     if (formContent && formContent->GetDocument()) {
       SetForm(nsnull);
     }
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    rv = nsGenericHTMLElement::SetDocument(aDocument, aDeep,
+  return nsGenericHTMLElement::SetDocument(aDocument, aDeep,
                                            aCompileEventHandlers);
-  }
-
-  return rv;
 }
 
 
@@ -4198,16 +4184,12 @@ nsGenericHTMLLeafFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
 {
-  nsresult rv = NS_OK;
+  PRBool old_parent = NS_PTR_TO_INT32(GetParent());
 
-  PRBool old_parent = NS_PTR_TO_INT32(mParent);
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = nsGenericElement::SetParent(aParent);
-  }
+  nsGenericElement::SetParent(aParent);
 
   if (!aParent && mForm) {
     SetForm(nsnull);
@@ -4218,10 +4200,8 @@ nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
   // search. In this case, someone (possibly the content sink) has
   // already set the form for us.
   else if (mDocument && aParent && (old_parent || !mForm)) {
-    rv = FindAndSetForm(this);
+    FindAndSetForm(this);
   }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -4229,32 +4209,26 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
                                           PRBool aDeep,
                                           PRBool aCompileEventHandlers)
 {
-  nsresult rv = NS_OK;
-
   // Save state before doing anything if the document is being removed
   if (!aDocument) {
     SaveState();
   }
 
-  if (aDocument && mParent && !mForm) {
-    rv = FindAndSetForm(this);
+  if (aDocument && GetParent() && !mForm) {
+    FindAndSetForm(this);
   } else if (!aDocument && mForm) {
     // We got removed from document.  We have a parent form.  Check
     // that the form is still in the document, and if so remove
     // ourselves from the form.  This keeps ghosts from appearing in
     // the form's |elements| array
-    nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm, &rv));
+    nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm));
     if (formContent && formContent->GetDocument()) {
       SetForm(nsnull);
     }
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    rv = nsGenericHTMLElement::SetDocument(aDocument, aDeep,
+  return nsGenericHTMLElement::SetDocument(aDocument, aDeep,
                                            aCompileEventHandlers);
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP

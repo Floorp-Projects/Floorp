@@ -143,7 +143,7 @@ public:
 
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);  
-  NS_IMETHOD SetParent(nsIContent* aParent);  
+  NS_IMETHOD_(void) SetParent(nsIContent* aParent);  
 
 protected:
   void GetImageFrame(nsIImageFrame** aImageFrame);
@@ -272,7 +272,7 @@ nsHTMLImageElement::GetImageFrame(nsIImageFrame** aImageFrame)
 {
   *aImageFrame = nsnull;
   // If we have no parent, then we won't have a frame yet
-  if (!mParent)
+  if (!GetParent())
     return;
 
   nsIFrame* frame = GetPrimaryFrame(PR_TRUE);
@@ -645,7 +645,7 @@ nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   
   nsresult rv = nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
                                                       aCompileEventHandlers);
-  if (documentChanging && mParent) {
+  if (documentChanging && GetParent()) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
     nsAutoString uri;
@@ -657,10 +657,10 @@ nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   return rv;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsHTMLImageElement::SetParent(nsIContent* aParent)
 {
-  nsresult rv = nsGenericHTMLLeafElement::SetParent(aParent);
+  nsGenericHTMLLeafElement::SetParent(aParent);
   if (aParent && mDocument) {
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
@@ -670,7 +670,6 @@ nsHTMLImageElement::SetParent(nsIContent* aParent)
       ImageURIChanged(uri);
     }
   }
-  return rv;
 }
 
 NS_IMETHODIMP
