@@ -25,7 +25,6 @@
 #include "nsFrame.h"
 #include "nsReflowCommand.h"
 #include "nsIViewManager.h"
-#include "nsIView.h"
 #include "nsCRT.h"
 #include "plhash.h"
 
@@ -407,7 +406,8 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
       mRootFrame->VerifyTree();
     }
 #endif
-    nsRect          bounds = mPresContext->GetVisibleArea();
+    nsRect          bounds;
+    mPresContext->GetVisibleArea(bounds);
     nsSize          maxSize(bounds.width, bounds.height);
     nsReflowMetrics desiredSize;
     nsReflowStatus  status;
