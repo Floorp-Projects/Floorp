@@ -360,8 +360,10 @@ my $cgi = Bugzilla->cgi;
 
 Bugzilla->switch_to_shadow_db();
 
-ThrowUserError("timetracking_access_denied") unless 
-    UserInGroup(Param("timetrackinggroup"));
+UserInGroup(Param("timetrackinggroup"))
+    || ThrowUserError("auth_failure", {group  => "time-tracking",
+                                       action => "access",
+                                       object => "timetracking_summaries"});
 
 my @ids = split(",", $cgi->param('id'));
 map { ValidateBugID($_) } @ids;
