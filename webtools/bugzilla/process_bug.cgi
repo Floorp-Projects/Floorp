@@ -547,45 +547,28 @@ sub CheckonComment( $ ) {
 # select lists.  This means that instead of looking for the bit-X values in
 # the form, we need to loop through all the bug groups this user has access
 # to, and for each one, see if it's selected.
-# In addition, adding a little extra work so that we don't clobber groupsets
-# for bugs where the user doesn't have access to the group, but does to the
-# bug (as with the proposed reporter access patch.)
+# In order to make mass changes work correctly, keep a sum of bits for groups
+# added, and another one for groups removed, and then let mysql do the bit
+# operations
+# If the form element isn't present, or the user isn't in the group, leave
+# it as-is
 if($::usergroupset ne '0') {
-  # We want to start from zero and build up, since if all boxes have been
-  # unchecked, we want to revert to 0.
-  DoComma();
-  $::query .= "groupset = 0";
-  my ($id) = (@idlist);
-  SendSQL(<<_EOQ_);
-    SELECT bit, bit & $::usergroupset != 0, bit & bugs.groupset != 0
-    FROM groups, bugs
-    WHERE isbuggroup != 0 AND bug_id = $id
-    ORDER BY bit
-_EOQ_
-  while (my ($b, $userhasgroup, $bughasgroup) = FetchSQLData()) {
-    if (!$::FORM{"bit-$b"}) {
-      # If we make it here, the item didn't exist on the form or the user
-      # said to clear it.  The only time we add this group back in is if
-      # the bug already has this group on it and the user can't access it.
-      if ($bughasgroup && !$userhasgroup) {
-        $::query .= " + $b";
-      }
-    } elsif ($::FORM{"bit-$b"} == -1) {
-      # If we get here, the user came from the change several bugs form, and
-      # said not to change this group restriction.  So we'll add this group
-      # back in only if the bug already has it.
-      if ($bughasgroup) {
-        $::query .= " + $b";
-      }
-    } else {
-      # If we get here, the user said to set this group.  If they don't have
-      # access to it, we'll use what's already on the bug, otherwise we'll
-      # add this one in.
-      if ($userhasgroup || $bughasgroup) {
-        $::query .= " + $b";
-      }
+    my $groupAdd = "0";
+    my $groupDel = "0";
+
+    SendSQL("SELECT bit, isactive FROM groups WHERE " .
+            "isbuggroup != 0 AND bit & $::usergroupset != 0 ORDER BY bit");
+    while (my ($b, $isactive) = FetchSQLData()) {
+        if (!$::FORM{"bit-$b"}) {
+            $groupDel .= "+$b";
+        } elsif ($::FORM{"bit-$b"} == 1 && $isactive) {
+            $groupAdd .= "+$b";
+        }
     }
-  }
+    if ($groupAdd ne "0" || $groupDel ne "0") {
+        DoComma();
+        $::query .= "groupset = ((groupset & ~($groupDel)) | ($groupAdd))";
+    }
 }
 
 foreach my $field ("rep_platform", "priority", "bug_severity",          
