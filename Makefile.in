@@ -219,6 +219,10 @@ ifdef MOZ_LDAP_XPCOM
 tier_9_dirs	+= directory/xpcom
 endif
 
+ifndef MOZ_XUL
+tier_9_dirs    += embedding/minimo/chromelite
+endif
+
 #
 # tier 40 - security
 #
