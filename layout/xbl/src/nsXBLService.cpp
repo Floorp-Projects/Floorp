@@ -121,6 +121,9 @@ class nsXBLService: public nsIXBLService
   // This function clears out the bindings on a given content node.
   NS_IMETHOD FlushBindings(nsIContent* aContent);
 
+  // This function clears out the binding doucments in our cache.
+  NS_IMETHOD FlushBindingDocuments();
+
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
   NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement);
@@ -159,6 +162,7 @@ protected:
   // XBL Atoms
   static nsIAtom* kExtendsAtom; 
   static nsIAtom* kHasChildrenAtom;
+  static nsIAtom* kURIAtom;
 };
 
 
@@ -173,6 +177,7 @@ nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
 
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
 nsIAtom* nsXBLService::kHasChildrenAtom = nsnull;
+nsIAtom* nsXBLService::kURIAtom = nsnull;
 
 PRInt32 nsXBLService::kNameSpaceID_XBL;
 
@@ -208,6 +213,7 @@ nsXBLService::nsXBLService(void)
     // Create our atoms
     kExtendsAtom = NS_NewAtom("extends");
     kHasChildrenAtom = NS_NewAtom("haschildren");
+    kURIAtom = NS_NewAtom("uri");
   }
 }
 
@@ -223,6 +229,7 @@ nsXBLService::~nsXBLService(void)
     // Release our atoms
     NS_RELEASE(kExtendsAtom);
     NS_RELEASE(kHasChildrenAtom);
+    NS_RELEASE(kURIAtom);
   }
 }
 
@@ -239,8 +246,14 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
 
   nsCOMPtr<nsIXBLBinding> binding;
   bindableContent->GetBinding(getter_AddRefs(binding));
-  if (binding)
-    return NS_OK;
+  if (binding) {
+    nsAutoString bindingURI;
+    binding->GetBindingURI(bindingURI);
+    if(aURL.Equals(bindingURI))    
+      return NS_OK;
+    else
+      FlushBindings(aContent);
+  }
 
   nsCAutoString url; url.AssignWithConversion(aURL);
   if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(binding)))) {
@@ -338,6 +351,14 @@ nsXBLService::FlushBindings(nsIContent* aContent)
 }
 
 NS_IMETHODIMP
+nsXBLService::FlushBindingDocuments()
+{
+  delete mBindingTable;
+  mBindingTable = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLService::GetBaseTag(nsIContent* aContent, nsIAtom** aResult)
 {
   *aResult = nsnull;
@@ -390,6 +411,8 @@ NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding**
     
     // If no ref is specified just use this.
     if ((bindingName.IsEmpty()) || (bindingName == value)) {
+      child->SetAttribute(kNameSpaceID_None, kURIAtom, aURLStr, PR_FALSE);
+
       // Make a new binding
       NS_NewXBLBinding(aResult);
 
