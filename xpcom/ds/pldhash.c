@@ -49,7 +49,7 @@
 #include "prlog.h"     /* for PR_ASSERT */
 
 #ifdef PL_DHASHMETER
-# if defined MOZILLA_CLIENT && defined DEBUG_brendan
+# if defined MOZILLA_CLIENT && defined DEBUG_XXXbrendan
 #  include "nsTraceMalloc.h"
 # endif
 # define METER(x)       x
@@ -296,7 +296,7 @@ PL_DHashTableFinish(PLDHashTable *table)
     PRUint32 entrySize;
     PLDHashEntryHdr *entry;
 
-#ifdef DEBUG_brendan
+#ifdef DEBUG_XXXbrendan
     static FILE *dumpfp = NULL;
     if (!dumpfp) dumpfp = fopen("/tmp/pldhash.bigdump", "w");
     if (dumpfp) {

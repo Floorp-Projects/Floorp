@@ -45,7 +45,7 @@
 
 JS_BEGIN_EXTERN_C
 
-#ifdef DEBUG_brendan
+#ifdef DEBUG_XXXbrendan
 #define JS_DHASHMETER 1
 #endif
 

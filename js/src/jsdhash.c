@@ -48,7 +48,7 @@
 #include "jsutil.h"     /* for JS_ASSERT */
 
 #ifdef JS_DHASHMETER
-# if defined MOZILLA_CLIENT && defined DEBUG_brendan
+# if defined MOZILLA_CLIENT && defined DEBUG_XXXbrendan
 #  include "nsTraceMalloc.h"
 # endif
 # define METER(x)       x
@@ -295,7 +295,7 @@ JS_DHashTableFinish(JSDHashTable *table)
     uint32 entrySize;
     JSDHashEntryHdr *entry;
 
-#ifdef DEBUG_brendan
+#ifdef DEBUG_XXXbrendan
     static FILE *dumpfp = NULL;
     if (!dumpfp) dumpfp = fopen("/tmp/jsdhash.bigdump", "w");
     if (dumpfp) {

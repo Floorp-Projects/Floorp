@@ -46,7 +46,7 @@
 
 PR_BEGIN_EXTERN_C
 
-#ifdef DEBUG_brendan
+#ifdef DEBUG_XXXbrendan
 #define PL_DHASHMETER 1
 #endif
 
