@@ -44,6 +44,7 @@ CPPSRCS		= \
 		nsInstallVersion.cpp \
 		nsInstallFolder.cpp \
 		nsJSInstall.cpp \
+		nsJSFile.cpp \
 		nsJSInstallTriggerGlobal.cpp \
 		nsJSInstallVersion.cpp \
 		nsSoftwareUpdate.cpp \
