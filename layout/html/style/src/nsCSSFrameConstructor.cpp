@@ -7385,6 +7385,12 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
 {
   NS_PRECONDITION(aPresContext, "null pres context argument");
   
+#ifdef DEBUG
+  if (gNoisyContentUpdates) {
+    printf("nsCSSFrameConstructor::ReconstructDocElementHierarchy\n");
+  }
+#endif
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -8089,17 +8095,21 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   // Get the frame associated with the content
   nsIFrame* parentFrame = GetFrameFor(shell, aPresContext, aContainer);
   if (nsnull != parentFrame) {
-    // If the frame we are manipulating is a special frame then do
-    // something different instead of just appending newly created
-    // frames. Note that only the first-in-flow is marked so we check
-    // before getting to the last-in-flow.
+    // If the frame we are manipulating is a ``special'' frame (that
+    // is, one that's been created as a result of a block-in-inline
+    // situation) then do something different instead of just
+    // appending newly created frames. Note that only the
+    // first-in-flow is marked so we check before getting to the
+    // last-in-flow.
+    //
+    // We run into this situation occasionally while loading web
+    // pages, typically when some content generation tool has
+    // sprinkled invalid markup into the document. More often than
+    // not, we'll be able to just use the normal fast-path frame
+    // construction code, because the frames will be appended to the
+    // ``anonymous'' block that got created to parent the block
+    // children of the inline.
     if (IsFrameSpecial(parentFrame)) {
-      // We are pretty harsh here (and definitely not optimal) -- we
-      // wipe out the entire containing block and recreate it from
-      // scratch. The reason is that because we know that a special
-      // inline frame has propogated some of its children upward to be
-      // children of the block and that those frames may need to move
-      // around. This logic guarantees a correct answer.
 #ifdef DEBUG
       if (gNoisyContentUpdates) {
         printf("nsCSSFrameConstructor::ContentAppended: parentFrame=");
@@ -8107,7 +8117,32 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         printf(" is special\n");
       }
 #endif
-      return ReframeContainingBlock(aPresContext, parentFrame);
+
+      // Since we're appending, we'll walk to the last anonymous frame
+      // that was created for the broken inline frame.
+      nsCOMPtr<nsIFrameManager> frameManager;
+      shell->GetFrameManager(getter_AddRefs(frameManager));
+
+      while (1) {
+        nsIFrame* sibling;
+        GetSpecialSibling(frameManager, parentFrame, &sibling);
+        if (! sibling)
+          break;
+
+        parentFrame = sibling;
+      }
+
+      // If this frame is the anonymous block frame, then all's well:
+      // just append frames as usual.
+      const nsStyleDisplay* display;
+      parentFrame->GetStyleData(eStyleStruct_Display,
+                                NS_REINTERPRET_CAST(const nsStyleStruct*&, display));
+
+      if (NS_STYLE_DISPLAY_BLOCK != display->mDisplay) {
+        // Nope, it's an inline, so just reframe the entire stinkin'
+        // mess. We _could_ do better here with a little more work...
+        return ReframeContainingBlock(aPresContext, parentFrame);
+      }
     }
 
     // Get the parent frame's last-in-flow
@@ -9557,6 +9592,14 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          nsIAtom* aAttribute)
 {
+#ifdef DEBUG
+  if (gNoisyContentUpdates) {
+    printf("nsCSSFrameConstructor::StyleChangeReflow: aFrame=");
+    nsFrame::ListTag(stdout, aFrame);
+    printf("\n");
+  }
+#endif
+
   // Is it a box? If so we can coelesce.
   nsresult rv;
   nsCOMPtr<nsIBox> box = do_QueryInterface(aFrame, &rv);
@@ -9571,13 +9614,6 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
     // inline frame has propogated some of its children upward to be
     // children of the block and that those frames may need to move
     // around. This logic guarantees a correct answer.
-#ifdef DEBUG
-    if (gNoisyContentUpdates) {
-      printf("nsCSSFrameConstructor::StyleChangeReflow: aFrame=");
-      nsFrame::ListTag(stdout, aFrame);
-      printf(" is special\n");
-    }
-#endif
     ReframeContainingBlock(aPresContext, aFrame);
   }
   else {
@@ -12994,71 +13030,77 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
  * Recursively split an inline frame until we reach a block frame.
  * Below is an example of how SplitToContainingBlock() works.
  *
- * 1. In the initial state, you've got a block frame B that contains a
- *    bunch of inline frames eventually winding down to the <object>
- *    frame o
+ * 1. In the initial state, you've got a block frame |B| that contains
+ *    a bunch of inline frames eventually winding down to the <object>
+ *    frame |o|. (Block frames are indicated with upper case letters,
+ *    inline frames are indicated with lower case.)
  *
  *     A-->B-->C
  *         |
- *         a-->1-->a'
+ *         i-->j-->k
  *             |
- *             b-->2-->b'
+ *             l-->m-->n
  *                 |
  *                 o
  *
- * 2. Now the object frame o gets split into the left inlines (o), the
- *    block frames (O), and the right inlines (o').
+ * 2. Now the object frame |o| gets split into the left inlines |o|,
+ *    the block frames |O|, and the right inlines |o'|.
  *
  *             o O o'
  *
- * 3. We call SplitToContainingBlock(), which will split 2 as follows. 
+ * 3. We call SplitToContainingBlock(), which will split |m| as follows. 
  *
  *             .--------.
  *            /          \
- *       b-->2==>2*=>2'   b'
+ *       l-->m==>M==>m'   n
  *           |   |   |
  *           o   O   o'
  *
- *    Note that 2 gets split into 2* and 2', which correspond to the
- *    anonymous block and inline frames, respectively. Furthermore,
- *    note that 2 still refers to b' as its next sibling, and that 2'
- *    does not.
+ *    Note that |m| gets split into |M| and |m'|, which correspond to
+ *    the anonymous block and inline frames,
+ *    respectively. Furthermore, note that |m| still refers to |n| as
+ *    its next sibling, and that |m'| does not yet have a next sibling.
  *
  *    The double-arrow line indicates that an annotation is made in
- *    the frame manager that indicates 2* is the `special sibling' of
- *    2, and that 2' is the `special sibling' of 2*.
+ *    the frame manager that indicates |M| is the ``special sibling''
+ *    of |m|, and that |m'| is the ``special sibling'' of |M|.
  *
- * 4. We recurse again to split 1. At this point, we'll break the
- *    link between 2 and b', and make b' be the next sibling of 2'.
+ * 4. We recurse again to split |j|. At this point, we'll break the
+ *    link between |m| and |n|, and make |n| be the next sibling of
+ *    |m'|.
  *
  *             .-----------.
  *            /             \
- *       a-->1=====>1*=>1'   a'
+ *       i-->j=====>J==>j'   k
  *           |      |   |
- *           b-->2=>2*=>2'-->b'
+ *           l-->m=>M==>m'-->n
  *               |  |   |
  *               o  O   o'
  *
- *     As before, 1 retains a' as its next sibling. 
+ *     As before, |j| retains |k| as its next sibling, and |j'| is not
+ *     yet assigned its next sibling.
  *
- * 5. When we hit B, the recursion terminates. We now insert 1* and 1'
- *    immediately after 1, resulting in the following frame model. This
- *    is done using the "normal" frame insertion mechanism,
- *    nsIFrame::InsertFrames(), which properly recomputes the line boxes.
+ * 5. When we hit B, the recursion terminates. We now insert |J| and
+ *    |j'| immediately after |j|, resulting in the following frame
+ *    model. This is done using the "normal" frame insertion
+ *    mechanism, nsIFrame::InsertFrames(), which properly recomputes
+ *    the line boxes.
  *
  *     A-->B-->C
  *         |
- *         a-->1-=-=-=>1*-=>1'-->a'      
+ *         i-->j-=-=-=>J-=->j'-->k
  *             |       |    |
- *             b-->2==>2*==>2'-->b'
+ *             l-->m==>M===>m'-->n
  *                 |   |    |
  *                 o   O    o'
  *
  *    Since B is a block, it is allowed to contain both block and
- *    inline frames, so we can let 1* and 1' be "real siblings" of 1.
+ *    inline frames, so we can let |J| and |j'| be "real siblings" of
+ *    |j|.
  *
- *    Note that 1* is both the `normal' sibling and `special' sibling
- *    of 1, and 1' is both the `normal' and `special sibling of 1*.
+ *    Note that |J| is both the ``normal'' sibling and ``special''
+ *    sibling of |j|, and |j'| is both the ``normal'' and ``special''
+ *    sibling of |J|.
  */
 nsresult
 nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
@@ -13263,6 +13305,12 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
 nsresult
 nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
+#ifdef DEBUG
+  if (gNoisyContentUpdates) {
+    printf("nsCSSFrameConstructor::ReframeContainingBlock frame=%p\n", aFrame);
+  }
+#endif
+
   // Get the first "normal" parent of the target frame. From there we
   // look for the containing block in case the target frame is already
   // a block (which can happen when an inline frame wraps some of its
