@@ -41,7 +41,6 @@
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "xp_core.h"
-#include "xp_file.h"
 #include "nsMsgSend.h"
 
 typedef int (*MSG_SendPartWriteFunc)(const char* line, PRInt32 size,
