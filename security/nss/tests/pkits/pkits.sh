@@ -320,16 +320,22 @@ pkits_SignatureVerification()
   certImport DSACACert
   crlImport DSACACRL.crl
   pkits $certs/ValidDSASignaturesTest4EE.crt $certs/DSACACert.crt
+  delete DSACACert
 
   VFY_ACTION="Valid DSA Parameter Inheritance Test5"; log_banner
+  certImport DSACACert
+  crlImport DSACACRL.crl
   certImport DSAParametersInheritedCACert
   crlImport DSAParametersInheritedCACRL.crl
   pkits $certs/ValidDSAParameterInheritanceTest5EE.crt \
       $certs/DSAParametersInheritedCACert.crt \
       $certs/DSACACert.crt
   delete DSAParametersInheritedCACert
+  delete DSACACert
 
   VFY_ACTION="Invalid DSA Signature Test6"; log_banner
+  certImport DSACACert
+  crlImport DSACACRL.crl
   pkitsn $certs/InvalidDSASignatureTest6EE.crt $certs/DSACACert.crt
   delete DSACACert
 }
@@ -352,12 +358,18 @@ pkits_ValidityPeriods()
   crlImport GoodCACRL.crl
   pkitsn $certs/InvalidEEnotBeforeDateTest2EE.crt \
       $certs/GoodCACert.crt
+  delete GoodCACert
 
   VFY_ACTION="Valid pre2000 UTC notBefore Date Test3"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
   pkits $certs/Validpre2000UTCnotBeforeDateTest3EE.crt \
       $certs/GoodCACert.crt
+  delete GoodCACert
 
   VFY_ACTION="Valid GeneralizedTime notBefore Date Test4"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
   pkits $certs/ValidGeneralizedTimenotBeforeDateTest4EE.crt \
       $certs/GoodCACert.crt
   delete GoodCACert
@@ -376,12 +388,18 @@ pkits_ValidityPeriods()
   crlImport GoodCACRL.crl
   pkitsn $certs/InvalidEEnotAfterDateTest6EE.crt \
       $certs/GoodCACert.crt
+  delete GoodCACert
 
   VFY_ACTION="Invalid pre2000 UTC EE notAfter Date Test7"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
   pkitsn $certs/Invalidpre2000UTCEEnotAfterDateTest7EE.crt \
       $certs/GoodCACert.crt
+  delete GoodCACert
 
   VFY_ACTION="ValidGeneralizedTime notAfter Date Test8"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
   pkits $certs/ValidGeneralizedTimenotAfterDateTest8EE.crt \
       $certs/GoodCACert.crt
   delete GoodCACert
@@ -410,12 +428,18 @@ pkits_NameChaining()
   crlImport GoodCACRL.crl
   pkits $certs/ValidNameChainingWhitespaceTest3EE.crt \
       $certs/GoodCACert.crt
+  delete GoodCACert
 
   VFY_ACTION="Valid Name Chaining Whitespace Test4"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
   pkits $certs/ValidNameChainingWhitespaceTest4EE.crt \
       $certs/GoodCACert.crt
+  delete GoodCACert
 
   VFY_ACTION="Valid Name Chaining Capitalization Test5"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
   pkits $certs/ValidNameChainingCapitalizationTest5EE.crt \
       $certs/GoodCACert.crt
   delete GoodCACert
@@ -478,8 +502,11 @@ pkits_BasicCertRevocation()
   pkitsn $certs/InvalidRevokedCATest2EE.crt \
      $certs/RevokedsubCACert.crt $certs/GoodCACert.crt
   delete RevokedsubCACert
+  delete GoodCACert
 
   VFY_ACTION="Invalid Revoked EE Test3"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
   pkitsn $certs/InvalidRevokedEETest3EE.crt \
      $certs/GoodCACert.crt
   delete GoodCACert
@@ -514,7 +541,7 @@ pkits_BasicCertRevocation()
   VFY_ACTION="Valid Two CRLs Test7"; log_banner
   certImport TwoCRLsCACert
   crlImport TwoCRLsCAGoodCRL.crl
-  crlImport TwoCRLsCABadCRL.crl
+  crlImportn TwoCRLsCABadCRL.crl
   pkits $certs/ValidTwoCRLsTest7EE.crt \
      $certs/TwoCRLsCACert.crt
   delete TwoCRLsCACert
@@ -535,8 +562,10 @@ pkits_BasicCertRevocation()
       pkitsn $certs/InvalidUnknownCRLExtensionTest9EE.crt \
 	 $certs/UnknownCRLExtensionCACert.crt
   fi
+  delete UnknownCRLExtensionCACert
 
   VFY_ACTION="Invalid Unknown CRL Extension Test10"; log_banner
+  certImport UnknownCRLExtensionCACert
   crlImportn UnknownCRLExtensionCACRL.crl
   if [ $RET -eq 0 ] ; then 
       pkitsn $certs/InvalidUnknownCRLExtensionTest10EE.crt \
@@ -570,8 +599,11 @@ pkits_BasicCertRevocation()
   crlImport NegativeSerialNumberCACRL.crl
   pkits $certs/ValidNegativeSerialNumberTest14EE.crt \
      $certs/NegativeSerialNumberCACert.crt
+  delete NegativeSerialNumberCACert
 
   VFY_ACTION="Invalid Negative Serial Number Test15"; log_banner
+  certImport NegativeSerialNumberCACert
+  crlImport NegativeSerialNumberCACRL.crl
   pkitsn $certs/InvalidNegativeSerialNumberTest15EE.crt \
      $certs/NegativeSerialNumberCACert.crt
   delete NegativeSerialNumberCACert
@@ -581,12 +613,18 @@ pkits_BasicCertRevocation()
   crlImport LongSerialNumberCACRL.crl
   pkits $certs/ValidLongSerialNumberTest16EE.crt \
      $certs/LongSerialNumberCACert.crt
+  delete LongSerialNumberCACert
 
   VFY_ACTION="Valid Long Serial Number Test17"; log_banner
+  certImport LongSerialNumberCACert
+  crlImport LongSerialNumberCACRL.crl
   pkits $certs/ValidLongSerialNumberTest17EE.crt \
      $certs/LongSerialNumberCACert.crt
+  delete LongSerialNumberCACert
 
   VFY_ACTION="Invalid Long Serial Number Test18"; log_banner
+  certImport LongSerialNumberCACert
+  crlImport LongSerialNumberCACRL.crl
   pkitsn $certs/InvalidLongSerialNumberTest18EE.crt \
      $certs/LongSerialNumberCACert.crt
   delete LongSerialNumberCACert
@@ -602,8 +640,11 @@ pkits_PathVerificWithSelfIssuedCerts()
   pkits $certs/ValidBasicSelfIssuedOldWithNewTest1EE.crt \
       $certs/BasicSelfIssuedNewKeyOldWithNewCACert.crt \
       $certs/BasicSelfIssuedNewKeyCACert.crt
+  delete BasicSelfIssuedNewKeyCACert
 
   VFY_ACTION="Invalid Basic Self-Issued Old With New Test2"; log_banner
+  certImport BasicSelfIssuedNewKeyCACert
+  crlImport BasicSelfIssuedNewKeyCACRL.crl
   pkitsn $certs/InvalidBasicSelfIssuedOldWithNewTest2EE.crt \
       $certs/BasicSelfIssuedNewKeyOldWithNewCACert.crt \
       $certs/BasicSelfIssuedNewKeyCACert.crt
@@ -615,13 +656,19 @@ pkits_PathVerificWithSelfIssuedCerts()
   pkits $certs/ValidBasicSelfIssuedNewWithOldTest3EE.crt \
       $certs/BasicSelfIssuedOldKeyNewWithOldCACert.crt \
       $certs/BasicSelfIssuedOldKeyCACert.crt
+  delete BasicSelfIssuedOldKeyCACert
 
   VFY_ACTION="Valid Basic Self-Issued New With Old Test4"; log_banner
+  certImport BasicSelfIssuedOldKeyCACert
+  crlImport BasicSelfIssuedOldKeyCACRL.crl
   pkits $certs/ValidBasicSelfIssuedNewWithOldTest4EE.crt \
       $certs/BasicSelfIssuedOldKeyNewWithOldCACert.crt \
       $certs/BasicSelfIssuedOldKeyCACert.crt
+  delete BasicSelfIssuedOldKeyCACert
 
   VFY_ACTION="Invalid Basic Self-Issued New With Old Test5"; log_banner
+  certImport BasicSelfIssuedOldKeyCACert
+  crlImport BasicSelfIssuedOldKeyCACRL.crl
   pkitsn $certs/InvalidBasicSelfIssuedNewWithOldTest5EE.crt \
       $certs/BasicSelfIssuedOldKeyNewWithOldCACert.crt \
       $certs/BasicSelfIssuedOldKeyCACert.crt
@@ -633,13 +680,19 @@ pkits_PathVerificWithSelfIssuedCerts()
   pkits $certs/ValidBasicSelfIssuedCRLSigningKeyTest6EE.crt \
       $certs/BasicSelfIssuedCRLSigningKeyCRLCert.crt \
       $certs/BasicSelfIssuedCRLSigningKeyCACert.crt
+  delete BasicSelfIssuedCRLSigningKeyCACert
 
   VFY_ACTION="Invalid Basic Self-Issued CRL Signing Key Test7"; log_banner
+  certImport BasicSelfIssuedCRLSigningKeyCACert
+  crlImport BasicSelfIssuedOldKeyCACRL.crl
   pkitsn $certs/InvalidBasicSelfIssuedCRLSigningKeyTest7EE.crt \
       $certs/BasicSelfIssuedCRLSigningKeyCRLCert.crt \
       $certs/BasicSelfIssuedCRLSigningKeyCACert.crt
+  delete BasicSelfIssuedCRLSigningKeyCACert
 
   VFY_ACTION="Invalid Basic Self-Issued CRL Signing Key Test8"; log_banner
+  certImport BasicSelfIssuedCRLSigningKeyCACert
+  crlImport BasicSelfIssuedOldKeyCACRL.crl
   pkitsn $certs/InvalidBasicSelfIssuedCRLSigningKeyTest8EE.crt \
       $certs/BasicSelfIssuedCRLSigningKeyCRLCert.crt \
       $certs/BasicSelfIssuedCRLSigningKeyCACert.crt
@@ -686,18 +739,30 @@ pkits_BasicConstraints()
   pkitsn $certs/InvalidpathLenConstraintTest5EE.crt \
       $certs/pathLenConstraint0subCACert.crt \
       $certs/pathLenConstraint0CACert.crt
+  delete pathLenConstraint0CACert
+  delete pathLenConstraint0subCACert
 
   VFY_ACTION="Invalid pathLenConstraint Test6"; log_banner
+  certImport pathLenConstraint0CACert
+  crlImport pathLenConstraint0CACRL.crl
+  certImport pathLenConstraint0subCACert
+  crlImport pathLenConstraint0subCACRL.crl
   pkitsn $certs/InvalidpathLenConstraintTest6EE.crt \
       $certs/pathLenConstraint0subCACert.crt \
       $certs/pathLenConstraint0CACert.crt
+  delete pathLenConstraint0CACert
   delete pathLenConstraint0subCACert
 
   VFY_ACTION="Valid pathLenConstraint Test7"; log_banner
+  certImport pathLenConstraint0CACert
+  crlImport pathLenConstraint0CACRL.crl
   pkits $certs/ValidpathLenConstraintTest7EE.crt \
       $certs/pathLenConstraint0CACert.crt
+  delete pathLenConstraint0CACert
 
   VFY_ACTION="Valid pathLenConstraint test8"; log_banner
+  certImport pathLenConstraint0CACert
+  crlImport pathLenConstraint0CACRL.crl
   pkits $certs/ValidpathLenConstraintTest8EE.crt \
       $certs/pathLenConstraint0CACert.crt
   delete pathLenConstraint0CACert
@@ -713,16 +778,28 @@ pkits_BasicConstraints()
       $certs/pathLenConstraint6subsubCA00Cert.crt \
       $certs/pathLenConstraint6subCA0Cert.crt \
       $certs/pathLenConstraint6CACert.crt
+  delete pathLenConstraint6CACert
+  delete pathLenConstraint6subCA0Cert
+  delete pathLenConstraint6subsubCA00Cert
 
   VFY_ACTION="Invalid pathLenConstraint Test10"; log_banner
+  certImport pathLenConstraint6CACert
+  crlImport pathLenConstraint6CACRL.crl
+  certImport pathLenConstraint6subCA0Cert
+  crlImport pathLenConstraint6subCA0CRL.crl
+  certImport pathLenConstraint6subsubCA00Cert
+  crlImport pathLenConstraint6subsubCA00CRL.crl
   pkitsn $certs/InvalidpathLenConstraintTest10EE.crt \
       $certs/pathLenConstraint6subsubCA00Cert.crt \
       $certs/pathLenConstraint6subCA0Cert.crt \
       $certs/pathLenConstraint6CACert.crt
+  delete pathLenConstraint6CACert
   delete pathLenConstraint6subCA0Cert
   delete pathLenConstraint6subsubCA00Cert
 
   VFY_ACTION="Invalid pathLenConstraint Test11"; log_banner
+  certImport pathLenConstraint6CACert
+  crlImport pathLenConstraint6CACRL.crl
   certImport pathLenConstraint6subCA1Cert
   crlImport pathLenConstraint6subCA1CRL.crl
   certImport pathLenConstraint6subsubCA11Cert
@@ -734,18 +811,33 @@ pkits_BasicConstraints()
       $certs/pathLenConstraint6subsubCA11Cert.crt \
       $certs/pathLenConstraint6subCA1Cert.crt \
       $certs/pathLenConstraint6CACert.crt
+  delete pathLenConstraint6CACert
+  delete pathLenConstraint6subCA1Cert
+  delete pathLenConstraint6subsubCA11Cert
+  delete pathLenConstraint6subsubsubCA11XCert
 
   VFY_ACTION="Invalid pathLenConstraint test12"; log_banner
+  certImport pathLenConstraint6CACert
+  crlImport pathLenConstraint6CACRL.crl
+  certImport pathLenConstraint6subCA1Cert
+  crlImport pathLenConstraint6subCA1CRL.crl
+  certImport pathLenConstraint6subsubCA11Cert
+  crlImport pathLenConstraint6subsubCA11CRL.crl
+  certImport pathLenConstraint6subsubsubCA11XCert
+  crlImport pathLenConstraint6subsubsubCA11XCRL.crl
   pkitsn $certs/InvalidpathLenConstraintTest12EE.crt \
       $certs/pathLenConstraint6subsubsubCA11XCert.crt \
       $certs/pathLenConstraint6subsubCA11Cert.crt \
       $certs/pathLenConstraint6subCA1Cert.crt \
       $certs/pathLenConstraint6CACert.crt
+  delete pathLenConstraint6CACert
   delete pathLenConstraint6subCA1Cert
   delete pathLenConstraint6subsubCA11Cert
   delete pathLenConstraint6subsubsubCA11XCert
 
   VFY_ACTION="Valid pathLenConstraint Test13"; log_banner
+  certImport pathLenConstraint6CACert
+  crlImport pathLenConstraint6CACRL.crl
   certImport pathLenConstraint6subCA4Cert
   crlImport pathLenConstraint6subCA4CRL.crl
   certImport pathLenConstraint6subsubCA41Cert
@@ -757,8 +849,20 @@ pkits_BasicConstraints()
       $certs/pathLenConstraint6subsubCA41Cert.crt \
       $certs/pathLenConstraint6subCA4Cert.crt \
       $certs/pathLenConstraint6CACert.crt
+  delete pathLenConstraint6CACert
+  delete pathLenConstraint6subCA4Cert
+  delete pathLenConstraint6subsubCA41Cert
+  delete pathLenConstraint6subsubsubCA41XCert
 
   VFY_ACTION="Valid pathLenConstraint Test14"; log_banner
+  certImport pathLenConstraint6CACert
+  crlImport pathLenConstraint6CACRL.crl
+  certImport pathLenConstraint6subCA4Cert
+  crlImport pathLenConstraint6subCA4CRL.crl
+  certImport pathLenConstraint6subsubCA41Cert
+  crlImport pathLenConstraint6subsubCA41CRL.crl
+  certImport pathLenConstraint6subsubsubCA41XCert
+  crlImport pathLenConstraint6subsubsubCA41XCRL.crl
   pkits $certs/ValidpathLenConstraintTest14EE.crt \
       $certs/pathLenConstraint6subsubsubCA41XCert.crt \
       $certs/pathLenConstraint6subsubCA41Cert.crt \
@@ -775,8 +879,11 @@ pkits_BasicConstraints()
   pkits $certs/ValidSelfIssuedpathLenConstraintTest15EE.crt \
       $certs/pathLenConstraint0SelfIssuedCACert.crt \
       $certs/pathLenConstraint0CACert.crt
+  delete pathLenConstraint0CACert
 
   VFY_ACTION="Invalid Self-Issued pathLenConstraint Test16"; log_banner
+  certImport pathLenConstraint0CACert
+  crlImport pathLenConstraint0CACRL.crl
   certImport pathLenConstraint0subCA2Cert
   crlImport pathLenConstraint0subCA2CRL.crl
   pkitsn $certs/InvalidSelfIssuedpathLenConstraintTest16EE.crt \
@@ -823,6 +930,7 @@ pkits_KeyUsage()
   crlImport keyUsageNotCriticalCACRL.crl
   pkits $certs/ValidkeyUsageNotCriticalTest3EE.crt \
       $certs/keyUsageNotCriticalCACert.crt
+  delete keyUsageNotCriticalCACert
 
   VFY_ACTION="Invalid keyUsage Critical cRLSign False Test4"; log_banner
   certImport keyUsageCriticalcRLSignFalseCACert
@@ -831,6 +939,7 @@ pkits_KeyUsage()
       pkitsn $certs/InvalidkeyUsageCriticalcRLSignFalseTest4EE.crt \
 	  $certs/keyUsageCriticalcRLSignFalseCACert.crt
   fi
+  delete keyUsageCriticalcRLSignFalseCACert
 
   VFY_ACTION="Invalid keyUsage Not Critical cRLSign False Test5"; log_banner
   certImport keyUsageNotCriticalcRLSignFalseCACert
@@ -839,6 +948,7 @@ pkits_KeyUsage()
       pkitsn $certs/InvalidkeyUsageNotCriticalcRLSignFalseTest5EE.crt \
 	  $certs/keyUsageNotCriticalcRLSignFalseCACert.crt
   fi
+  delete keyUsageNotCriticalcRLSignFalseCACert
 }
 
 pkits_NameConstraints()
@@ -850,16 +960,25 @@ pkits_NameConstraints()
   crlImport nameConstraintsDN1CACRL.crl
   pkits $certs/ValidDNnameConstraintsTest1EE.crt \
       $certs/nameConstraintsDN1CACert.crt
+  delete nameConstraintsDN1CACert
 
   VFY_ACTION="Invalid DN nameConstraints Test2"; log_banner
+  certImport nameConstraintsDN1CACert
+  crlImport nameConstraintsDN1CACRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest2EE.crt \
       $certs/nameConstraintsDN1CACert.crt
+  delete nameConstraintsDN1CACert
 
   VFY_ACTION="Invalid DN nameConstraints Test3"; log_banner
+  certImport nameConstraintsDN1CACert
+  crlImport nameConstraintsDN1CACRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest3EE.crt \
       $certs/nameConstraintsDN1CACert.crt
+  delete nameConstraintsDN1CACert
 
   VFY_ACTION="Valid DN nameConstraints Test4"; log_banner
+  certImport nameConstraintsDN1CACert
+  crlImport nameConstraintsDN1CACRL.crl
   pkits $certs/ValidDNnameConstraintsTest4EE.crt \
       $certs/nameConstraintsDN1CACert.crt
   delete nameConstraintsDN1CACert
@@ -876,8 +995,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsDN3CACRL.crl
   pkits $certs/ValidDNnameConstraintsTest6EE.crt \
       $certs/nameConstraintsDN3CACert.crt
+  delete nameConstraintsDN3CACert
 
   VFY_ACTION="Invalid DN nameConstraints Test7"; log_banner
+  certImport nameConstraintsDN3CACert
+  crlImport nameConstraintsDN3CACRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest7EE.crt \
       $certs/nameConstraintsDN3CACert.crt
   delete nameConstraintsDN3CACert
@@ -887,8 +1009,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsDN4CACRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest8EE.crt \
       $certs/nameConstraintsDN4CACert.crt
+  delete nameConstraintsDN4CACert
 
   VFY_ACTION="Invalid DN nameConstraints Test9"; log_banner
+  certImport nameConstraintsDN4CACert
+  crlImport nameConstraintsDN4CACRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest9EE.crt \
       $certs/nameConstraintsDN4CACert.crt
   delete nameConstraintsDN4CACert
@@ -898,8 +1023,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsDN5CACRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest10EE.crt \
       $certs/nameConstraintsDN5CACert.crt
+  delete nameConstraintsDN5CACert
 
   VFY_ACTION="Valid DN nameConstraints Test11"; log_banner
+  certImport nameConstraintsDN5CACert
+  crlImport nameConstraintsDN5CACRL.crl
   pkits $certs/ValidDNnameConstraintsTest11EE.crt \
       $certs/nameConstraintsDN5CACert.crt
   delete nameConstraintsDN5CACert
@@ -912,16 +1040,25 @@ pkits_NameConstraints()
   pkitsn $certs/InvalidDNnameConstraintsTest12EE.crt \
       $certs/nameConstraintsDN1subCA1Cert.crt \
       $certs/nameConstraintsDN1CACert.crt
+  delete nameConstraintsDN1CACert
   delete nameConstraintsDN1subCA1Cert
 
   VFY_ACTION="Invalid DN nameConstraints Test13"; log_banner
+  certImport nameConstraintsDN1CACert
+  crlImport nameConstraintsDN1CACRL.crl
   certImport nameConstraintsDN1subCA2Cert
   crlImport nameConstraintsDN1subCA2CRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest13EE.crt \
       $certs/nameConstraintsDN1subCA2Cert.crt \
       $certs/nameConstraintsDN1CACert.crt
+  delete nameConstraintsDN1CACert
+  delete nameConstraintsDN1subCA2Cert
 
   VFY_ACTION="Valid DN nameConstraints Test14"; log_banner
+  certImport nameConstraintsDN1CACert
+  crlImport nameConstraintsDN1CACRL.crl
+  certImport nameConstraintsDN1subCA2Cert
+  crlImport nameConstraintsDN1subCA2CRL.crl
   pkits $certs/ValidDNnameConstraintsTest14EE.crt \
       $certs/nameConstraintsDN1subCA2Cert.crt \
       $certs/nameConstraintsDN1CACert.crt
@@ -936,25 +1073,41 @@ pkits_NameConstraints()
   pkitsn $certs/InvalidDNnameConstraintsTest15EE.crt \
       $certs/nameConstraintsDN3subCA1Cert.crt \
       $certs/nameConstraintsDN3CACert.crt
+  delete nameConstraintsDN3subCA1Cert
+  delete nameConstraintsDN3CACert
 
   VFY_ACTION="Invalid DN nameConstraints Test16"; log_banner
+  certImport nameConstraintsDN3CACert
+  crlImport nameConstraintsDN3CACRL.crl
+  certImport nameConstraintsDN3subCA1Cert
+  crlImport nameConstraintsDN3subCA1CRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest16EE.crt \
       $certs/nameConstraintsDN3subCA1Cert.crt \
       $certs/nameConstraintsDN3CACert.crt
   delete nameConstraintsDN3subCA1Cert
+  delete nameConstraintsDN3CACert
 
   VFY_ACTION="Invalid DN nameConstraints Test17"; log_banner
+  certImport nameConstraintsDN3CACert
+  crlImport nameConstraintsDN3CACRL.crl
   certImport nameConstraintsDN3subCA2Cert
   crlImport nameConstraintsDN3subCA2CRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest17EE.crt \
       $certs/nameConstraintsDN3subCA2Cert.crt \
       $certs/nameConstraintsDN3CACert.crt
+  delete nameConstraintsDN3subCA2Cert
+  delete nameConstraintsDN3CACert
 
   VFY_ACTION="Valid DN nameConstraints Test18"; log_banner
+  certImport nameConstraintsDN3CACert
+  crlImport nameConstraintsDN3CACRL.crl
+  certImport nameConstraintsDN3subCA2Cert
+  crlImport nameConstraintsDN3subCA2CRL.crl
   pkits $certs/ValidDNnameConstraintsTest18EE.crt \
       $certs/nameConstraintsDN3subCA2Cert.crt \
       $certs/nameConstraintsDN3CACert.crt
   delete nameConstraintsDN3subCA2Cert
+  delete nameConstraintsDN3CACert
 
   VFY_ACTION="Valid Self-Issued DN nameConstraints Test19"; log_banner
   certImport nameConstraintsDN1CACert
@@ -962,8 +1115,11 @@ pkits_NameConstraints()
   pkits $certs/ValidDNnameConstraintsTest19EE.crt \
       $certs/nameConstraintsDN1SelfIssuedCACert.crt \
       $certs/nameConstraintsDN1CACert.crt
+  delete nameConstraintsDN1CACert
 
   VFY_ACTION="Invalid Self-Issued DN nameConstraints Test20"; log_banner
+  certImport nameConstraintsDN1CACert
+  crlImport nameConstraintsDN1CACRL.crl
   pkitsn $certs/InvalidDNnameConstraintsTest20EE.crt \
       $certs/nameConstraintsDN1CACert.crt
   delete nameConstraintsDN1CACert
@@ -973,8 +1129,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsRFC822CA1CRL.crl
   pkits $certs/ValidRFC822nameConstraintsTest21EE.crt \
       $certs/nameConstraintsRFC822CA1Cert.crt
+  delete nameConstraintsRFC822CA1Cert
 
   VFY_ACTION="Invalid RFC822 nameConstraints Test22"; log_banner
+  certImport nameConstraintsRFC822CA1Cert
+  crlImport nameConstraintsRFC822CA1CRL.crl
   pkitsn $certs/InvalidRFC822nameConstraintsTest22EE.crt \
       $certs/nameConstraintsRFC822CA1Cert.crt
   delete nameConstraintsRFC822CA1Cert
@@ -984,8 +1143,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsRFC822CA2CRL.crl
   pkits $certs/ValidRFC822nameConstraintsTest23EE.crt \
       $certs/nameConstraintsRFC822CA2Cert.crt
+  delete nameConstraintsRFC822CA2Cert
 
   VFY_ACTION="Invalid RFC822 nameConstraints Test24"; log_banner
+  certImport nameConstraintsRFC822CA2Cert
+  crlImport nameConstraintsRFC822CA2CRL.crl
   pkitsn $certs/InvalidRFC822nameConstraintsTest24EE.crt \
       $certs/nameConstraintsRFC822CA2Cert.crt
   delete nameConstraintsRFC822CA2Cert
@@ -995,8 +1157,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsRFC822CA3CRL.crl
   pkits $certs/ValidRFC822nameConstraintsTest25EE.crt \
       $certs/nameConstraintsRFC822CA3Cert.crt
+  delete nameConstraintsRFC822CA3Cert
 
   VFY_ACTION="Invalid RFC822 nameConstraints Test26"; log_banner
+  certImport nameConstraintsRFC822CA3Cert
+  crlImport nameConstraintsRFC822CA3CRL.crl
   pkitsn $certs/InvalidRFC822nameConstraintsTest26EE.crt \
       $certs/nameConstraintsRFC822CA3Cert.crt
   delete nameConstraintsRFC822CA3Cert
@@ -1009,13 +1174,25 @@ pkits_NameConstraints()
   pkits $certs/ValidDNandRFC822nameConstraintsTest27EE.crt \
       $certs/nameConstraintsDN1subCA3Cert.crt \
       $certs/nameConstraintsDN1CACert.crt
+  delete nameConstraintsDN1CACert
+  delete nameConstraintsDN1subCA3Cert
 
   VFY_ACTION="Invalid DN and RFC822 nameConstraints Test28"; log_banner
+  certImport nameConstraintsDN1CACert
+  crlImport nameConstraintsDN1CACRL.crl
+  certImport nameConstraintsDN1subCA3Cert
+  crlImport nameConstraintsDN1subCA3CRL.crl
   pkitsn $certs/InvalidDNandRFC822nameConstraintsTest28EE.crt \
       $certs/nameConstraintsDN1subCA3Cert.crt \
       $certs/nameConstraintsDN1CACert.crt
+  delete nameConstraintsDN1CACert
+  delete nameConstraintsDN1subCA3Cert
 
   VFY_ACTION="Invalid DN and RFC822 nameConstraints Test29"; log_banner
+  certImport nameConstraintsDN1CACert
+  crlImport nameConstraintsDN1CACRL.crl
+  certImport nameConstraintsDN1subCA3Cert
+  crlImport nameConstraintsDN1subCA3CRL.crl
   pkitsn $certs/InvalidDNandRFC822nameConstraintsTest29EE.crt \
       $certs/nameConstraintsDN1subCA3Cert.crt \
       $certs/nameConstraintsDN1CACert.crt
@@ -1027,8 +1204,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsDNS1CACRL.crl
   pkits $certs/ValidDNSnameConstraintsTest30EE.crt \
       $certs/nameConstraintsDNS1CACert.crt
+  delete nameConstraintsDNS1CACert
 
   VFY_ACTION="Invalid DNS nameConstraints Test31"; log_banner
+  certImport nameConstraintsDNS1CACert
+  crlImport nameConstraintsDNS1CACRL.crl
   pkitsn $certs/InvalidDNSnameConstraintsTest31EE.crt \
       $certs/nameConstraintsDNS1CACert.crt
   delete nameConstraintsDNS1CACert
@@ -1038,8 +1218,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsDNS2CACRL.crl
   pkits $certs/ValidDNSnameConstraintsTest32EE.crt \
       $certs/nameConstraintsDNS2CACert.crt
+  delete nameConstraintsDNS2CACert
 
   VFY_ACTION="Invalid DNS nameConstraints Test33"; log_banner
+  certImport nameConstraintsDNS2CACert
+  crlImport nameConstraintsDNS2CACRL.crl
   pkitsn $certs/InvalidDNSnameConstraintsTest33EE.crt \
       $certs/nameConstraintsDNS2CACert.crt
   delete nameConstraintsDNS2CACert
@@ -1049,8 +1232,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsURI1CACRL.crl
   pkits $certs/ValidURInameConstraintsTest34EE.crt \
       $certs/nameConstraintsURI1CACert.crt
+  delete nameConstraintsURI1CACert
 
   VFY_ACTION="Invalid URI nameConstraints Test35"; log_banner
+  certImport nameConstraintsURI1CACert
+  crlImport nameConstraintsURI1CACRL.crl
   pkitsn $certs/InvalidURInameConstraintsTest35EE.crt \
       $certs/nameConstraintsURI1CACert.crt
   delete nameConstraintsURI1CACert
@@ -1060,8 +1246,11 @@ pkits_NameConstraints()
   crlImport nameConstraintsURI2CACRL.crl
   pkits $certs/ValidURInameConstraintsTest36EE.crt \
       $certs/nameConstraintsURI2CACert.crt
+  delete nameConstraintsURI2CACert
 
   VFY_ACTION="Invalid URI nameConstraints Test37"; log_banner
+  certImport nameConstraintsURI2CACert
+  crlImport nameConstraintsURI2CACRL.crl
   pkitsn $certs/InvalidURInameConstraintsTest37EE.crt \
       $certs/nameConstraintsURI2CACert.crt
   delete nameConstraintsURI2CACert
