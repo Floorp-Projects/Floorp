@@ -1,10 +1,12 @@
 browser.jar:
         content/browser/contents.rdf                  (content/contents.rdf)
         content/browser-region/contents.rdf           (content/contents-region.rdf)
+        content/browser/about.png                     (content/about.png)
         content/browser/aboutCredits.png              (content/aboutCredits.png)
         content/browser/aboutFooter.png               (content/aboutFooter.png)
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/aboutDialog.js                (content/aboutDialog.js)
+*	content/browser/aboutDialog.css               (content/aboutDialog.css)
         content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xul                   (content/browser.xul)
