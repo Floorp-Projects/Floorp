@@ -32,11 +32,6 @@
   onload = "selectProduct(document.forms['chartform']);"
 %]
 
-<p style="color: red">
-  Note: there is currently a restriction that data sets will only count public
-  [%+ terms.bugs %] (those not in any group).
-</p>
-
 <form method="get" action="chart.cgi" name="chartform">
   
 [% PROCESS search/form.html.tmpl %]

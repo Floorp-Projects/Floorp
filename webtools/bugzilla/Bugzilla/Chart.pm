@@ -71,8 +71,8 @@ sub init {
             foreach my $series_id ($cgi->param($param)) {
                 detaint_natural($series_id) 
                                      || &::ThrowCodeError("invalid_series_id");
-                push(@{$self->{'lines'}[$1]}, 
-                     new Bugzilla::Series($series_id));
+                my $series = new Bugzilla::Series($series_id);
+                push(@{$self->{'lines'}[$1]}, $series) if $series;
             }
         }
 
@@ -130,8 +130,10 @@ sub add {
     # for inventing something sensible.
     foreach my $series_id (@series_ids) {
         my $series = new Bugzilla::Series($series_id);
-        push(@{$self->{'lines'}}, [$series]);
-        push(@{$self->{'labels'}}, "");
+        if ($series) {
+            push(@{$self->{'lines'}}, [$series]);
+            push(@{$self->{'labels'}}, "");
+        }
     }
 }
 
@@ -199,6 +201,8 @@ sub readData {
     my $self = shift;
     my @data;
 
+    # Note: you get a bad image if getSeriesIDs returns nothing
+    # We need to handle errors better.
     my $series_ids = join(",", $self->getSeriesIDs());
 
     # Work out the date boundaries for our data.
@@ -206,7 +210,8 @@ sub readData {
     
     # The date used is the one given if it's in a sensible range; otherwise,
     # it's the earliest or latest date in the database as appropriate.
-    my $datefrom = $dbh->selectrow_array("SELECT MIN(date) FROM series_data " .
+    my $datefrom = $dbh->selectrow_array("SELECT MIN(series_date) " . 
+                                         "FROM series_data " .
                                          "WHERE series_id IN ($series_ids)");
     $datefrom = &::str2time($datefrom);
 
@@ -214,7 +219,8 @@ sub readData {
         $datefrom = $self->{'datefrom'};
     }
 
-    my $dateto = $dbh->selectrow_array("SELECT MAX(date) FROM series_data " .
+    my $dateto = $dbh->selectrow_array("SELECT MAX(series_date) " . 
+                                       "FROM series_data " .
                                        "WHERE series_id IN ($series_ids)");
     $dateto = &::str2time($dateto); 
 
@@ -223,12 +229,13 @@ sub readData {
     }
 
     # Prepare the query which retrieves the data for each series
-    my $query = "SELECT TO_DAYS(date) - TO_DAYS(FROM_UNIXTIME($datefrom)), " . 
-                "value FROM series_data " .
+    my $query = "SELECT TO_DAYS(series_date) - " . 
+                "  TO_DAYS(FROM_UNIXTIME($datefrom)), " . 
+                "series_value FROM series_data " .
                 "WHERE series_id = ? " .
-                "AND date >= FROM_UNIXTIME($datefrom)";
+                "AND series_date >= FROM_UNIXTIME($datefrom)";
     if ($dateto) {
-        $query .= " AND date <= FROM_UNIXTIME($dateto)";
+        $query .= " AND series_date <= FROM_UNIXTIME($dateto)";
     }
     
     my $sth = $dbh->prepare($query);
@@ -296,19 +303,24 @@ sub getSeriesIDs {
 sub getVisibleSeries {
     my %cats;
 
+    # List of groups the user is in; use -1 to make sure it's not empty.
+    my $grouplist = join(", ", (-1, values(%{Bugzilla->user->groups})));
+    
     # Get all visible series
     my $dbh = Bugzilla->dbh;
     my $serieses = $dbh->selectall_arrayref("SELECT cc1.name, cc2.name, " .
                         "series.name, series.series_id " .
                         "FROM series " .
-                        "LEFT JOIN series_categories AS cc1 " .
-                        "    ON series.category = cc1.category_id " .
-                        "LEFT JOIN series_categories AS cc2 " .
-                        "    ON series.subcategory = cc2.category_id " .
-                        "LEFT JOIN user_series_map AS ucm " .
-                        "    ON series.series_id = ucm.series_id " .
-                        "WHERE ucm.user_id = 0 OR ucm.user_id = $::userid");
-
+                        "INNER JOIN series_categories AS cc1 " .
+                        "    ON series.category = cc1.id " .
+                        "INNER JOIN series_categories AS cc2 " .
+                        "    ON series.subcategory = cc2.id " .
+                        "LEFT JOIN category_group_map AS cgm " .
+                        "    ON series.category = cgm.category_id " .
+                        "    AND cgm.group_id NOT IN($grouplist) " .
+                        "WHERE creator = " . Bugzilla->user->id . " OR " .
+                        "      cgm.category_id IS NULL " . 
+                        "GROUP BY series_id");
     foreach my $series (@$serieses) {
         my ($cat, $subcat, $name, $series_id) = @$series;
         $cats{$cat}{$subcat}{$name} = $series_id;

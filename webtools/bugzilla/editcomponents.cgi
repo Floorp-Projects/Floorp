@@ -34,6 +34,7 @@ require "globals.pl";
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Series;
+use Bugzilla::Util;
 
 use vars qw($template $vars);
 
@@ -328,15 +329,19 @@ if ($action eq 'new') {
 
     my @series;
 
-    my $prodcomp = "&product=$product&component=$component";
+    my $prodcomp = "&product=" . url_quote($product) . 
+                   "&component=" . url_quote($component);
 
     # For localisation reasons, we get the title of the queries from the
     # submitted form.
     my $open_name = $cgi->param('open_name');
     my $closed_name = $cgi->param('closed_name');
     my @openedstatuses = OpenStates();
-    my $statuses = join("&", map { "bug_status=$_" } @openedstatuses) . $prodcomp;
-    my $resolved = "field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---" . $prodcomp;
+    my $statuses = 
+                  join("&", map { "bug_status=" . url_quote($_) } @openedstatuses) . 
+                  $prodcomp;
+    my $resolved = "field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---" . 
+                   $prodcomp;
 
     # trick_taint is ok here, as these variables aren't used as a command
     # or in SQL unquoted

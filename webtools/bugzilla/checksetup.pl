@@ -1974,27 +1974,27 @@ $table{series} =
      frequency    smallint    not null,
      last_viewed  datetime    default null,
      query        mediumtext  not null,
+     public       tinyint(1)  not null default 0,
      
      index(creator),
      unique(creator, category, subcategory, name)';
 
 $table{series_data} = 
-    'series_id mediumint not null,
-     date      datetime  not null,
-     value     mediumint not null,
+    'series_id    mediumint not null,
+     series_date  datetime  not null,
+     series_value mediumint not null,
      
-     unique(series_id, date)';
+     unique(series_id, series_date)';
 
-$table{user_series_map} =
-    'user_id   mediumint not null,
-     series_id mediumint not null, 
+$table{category_group_map} =
+    'category_id smallint not null,
+     group_id    mediumint not null,
      
-     index(series_id),
-     unique(user_id, series_id)';
+     unique(category_id, group_id)';
      
 $table{series_categories} =
-    'category_id smallint    auto_increment primary key,
-     name        varchar(64) not null,
+    'id   smallint    auto_increment primary key,
+     name varchar(64) not null,
      
      unique(name)';
      
@@ -2403,6 +2403,7 @@ sub RenameField ($$$)
         print "Updating field $field in table $table ...\n";
         my $type = $$ref[1];
         $type .= " NOT NULL" if !$$ref[2];
+        $type .= " auto_increment" if $$ref[5] =~ /auto_increment/;
         $dbh->do("ALTER TABLE $table
                   CHANGE $field
                   $newname $type");
@@ -3835,6 +3836,35 @@ if ($mapcnt == 0) {
     }
 }
 
+# 2004-07-17 GRM - Remove "subscriptions" concept from charting, and add
+# group-based security instead. 
+if (TableExists("user_series_map")) {
+    # Oracle doesn't like "date" as a column name, and apparently some DBs
+    # don't like 'value' either. We use the changes to subscriptions as 
+    # something to hang these renamings off.
+    RenameField('series_data', 'date', 'series_date');
+    RenameField('series_data', 'value', 'series_value');
+    
+    # series_categories.category_id produces a too-long column name for the
+    # auto-incrementing sequence (Oracle again).
+    RenameField('series_categories', 'category_id', 'id');
+    
+    # We nuke all the chart data and re-import it, partly because there were 
+    # several data corruption bugs in the initial cut of the code, and partly 
+    # because otherwise migration is too complex.
+    print "Deleting possibly-corrupt new-chart data " . 
+           "(it will be re-migrated) ...\n" unless $silent;
+    $dbh->do("DELETE FROM series");
+    $dbh->do("DELETE FROM series_data");
+    $dbh->do("DELETE FROM series_categories");
+
+    # No need to migrate the "publicness" from user_series_map, as we've just
+    # deleted all the series!
+    AddField("series", "public", "tinyint(1) not null default 0");
+
+    $dbh->do("DROP TABLE user_series_map");
+}    
+
 # 2003-06-26 Copy the old charting data into the database, and create the
 # queries that will keep it all running. When the old charting system goes
 # away, if this code ever runs, it'll just find no files and do nothing.
@@ -3847,11 +3877,15 @@ if (!$series_exists) {
       
     # We prepare the handle to insert the series data    
     my$seriesdatasth = $dbh->prepare("INSERT INTO series_data " . 
-                                     "(series_id, date, value) " . 
+                                     "(series_id, series_date, series_value) " .
                                      "VALUES (?, ?, ?)");
-    
+
     my $deletesth = $dbh->prepare("DELETE FROM series_data 
-                                   WHERE series_id = ? AND date = ?");
+                                   WHERE series_id = ? AND series_date = ?");
+    
+    my $groupmapsth = $dbh->prepare("INSERT INTO category_group_map " . 
+                                    "(category_id, group_id) " . 
+                                    "VALUES (?, ?)");
                                      
     # Fields in the data file (matches the current collectstats.pl)
     my @statuses = 
@@ -3956,7 +3990,31 @@ if (!$series_exists) {
                                         $dbh->quote($date), 
                                         $fielddata{$date} || 0);
             }
-        }        
+        }
+        
+        # Create the groupsets for the category
+        my $category_id = 
+            $dbh->selectrow_array("SELECT id " . 
+                                  "FROM series_categories " . 
+                                  "WHERE name = " . $dbh->quote($product));
+        my $product_id =
+            $dbh->selectrow_array("SELECT id FROM products " . 
+                                  "WHERE name = " . $dbh->quote($product));
+                                  
+        if (defined($category_id) && defined($product_id)) {
+          
+            # Get all the mandatory groups for this product
+            my $group_ids = 
+                $dbh->selectcol_arrayref("SELECT group_id " . 
+                     "FROM group_control_map " . 
+                     "WHERE product_id = $product_id " . 
+                     "AND (membercontrol = " . CONTROLMAPMANDATORY . 
+                       " OR othercontrol = " . CONTROLMAPMANDATORY . ")");
+                                            
+            foreach my $group_id (@$group_ids) {
+                $groupmapsth->execute($category_id, $group_id);
+            }
+        }
     }
 }
 

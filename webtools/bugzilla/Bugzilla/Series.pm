@@ -47,6 +47,11 @@ sub new {
 
     my $arg_count = scalar(@_);
     
+    # new() can return undef if you pass in a series_id and the user doesn't 
+    # have sufficient permissions. If you create a new series in this way,
+    # you need to check for an undef return, and act appropriately.
+    my $retval = $self;
+
     # There are three ways of creating Series objects. Two (CGI and Parameters)
     # are for use when creating a new series. One (Database) is for retrieving
     # information on existing series.
@@ -60,7 +65,7 @@ sub new {
         else {
             # We've been given a series_id, which should represent an existing
             # Series.
-            $self->initFromDatabase($_[0]);
+            $retval = $self->initFromDatabase($_[0]);
         }
     }
     elsif ($arg_count >= 6 && $arg_count <= 8) {
@@ -73,7 +78,7 @@ sub new {
         die("Bad parameters passed in - invalid number of args: $arg_count");
     }
 
-    return $self;
+    return $retval;
 }
 
 sub initFromDatabase {
@@ -86,23 +91,29 @@ sub initFromDatabase {
     my $dbh = Bugzilla->dbh;
     my @series = $dbh->selectrow_array("SELECT series.series_id, cc1.name, " .
         "cc2.name, series.name, series.creator, series.frequency, " .
-        "series.query " .
+        "series.query, series.public " .
         "FROM series " .
         "LEFT JOIN series_categories AS cc1 " .
-        "    ON series.category = cc1.category_id " .
+        "    ON series.category = cc1.id " .
         "LEFT JOIN series_categories AS cc2 " .
-        "    ON series.subcategory = cc2.category_id " .
-        "WHERE series.series_id = $series_id");
+        "    ON series.subcategory = cc2.id " .
+        "LEFT JOIN category_group_map AS cgm " .
+        "    ON series.category = cgm.category_id " .
+        "LEFT JOIN user_group_map AS ugm " .
+        "    ON cgm.group_id = ugm.group_id " .
+        "    AND ugm.user_id = " . Bugzilla->user->id .
+        "    AND isbless = 0 " .
+        "WHERE series.series_id = $series_id AND " .
+        "(public = 1 OR creator = " . Bugzilla->user->id . " OR " .
+        "(ugm.group_id IS NOT NULL)) " . 
+        "GROUP BY series_id");
     
     if (@series) {
-        # Note that we calculate $self->{'public'} ourselves instead of passing
-        # it as the last parameter in @series; this is because isSubscribed()
-        # requires the rest of the object to be set up correctly.
         $self->initFromParameters(@series);
-        $self->{'public'} = $self->isSubscribed(PUBLIC_USER_ID);
+        return $self;
     }
     else {
-        &::ThrowCodeError("invalid_series_id", { 'series_id' => $series_id });
+        return undef;
     }
 }
 
@@ -146,16 +157,20 @@ sub initFromCGI {
     $self->{'query'} = $cgi->canonicalise_query("format", "ctype", "action",
                                         "category", "subcategory", "name",
                                         "frequency", "public", "query_format");
+    trick_taint($self->{'query'});
                                         
-    $self->{'public'} = $cgi->param('public') ? 1 : 0;    
+    $self->{'public'} = $cgi->param('public') ? 1 : 0;
+    
+    # Change 'admin' here and in series.html.tmpl, or remove the check
+    # completely, if you want to change who can make series public.
+    $self->{'public'} = 0 unless &::UserInGroup('admin');
 }
 
 sub writeToDatabase {
     my $self = shift;
 
     my $dbh = Bugzilla->dbh;
-    $dbh->do("LOCK TABLES series_categories WRITE, series WRITE, " .
-             "user_series_map WRITE");
+    $dbh->do("LOCK TABLES series_categories WRITE, series WRITE");
 
     my $category_id = getCategoryID($self->{'category'});
     my $subcategory_id = getCategoryID($self->{'subcategory'});
@@ -173,37 +188,28 @@ sub writeToDatabase {
         my $dbh = Bugzilla->dbh;
         $dbh->do("UPDATE series SET " .
                  "category = ?, subcategory = ?," .
-                 "name = ?, frequency = ? " .
+                 "name = ?, frequency = ?, public = ?  " .
                  "WHERE series_id = ?", undef,
                  $category_id, $subcategory_id, $self->{'name'},
-                 $self->{'frequency'}, $self->{'series_id'});
+                 $self->{'frequency'}, $self->{'public'}, 
+                 $self->{'series_id'});
     }
     else {
         # Insert the new series into the series table
         $dbh->do("INSERT INTO series (creator, category, subcategory, " .
-                 "name, frequency, query) VALUES ($self->{'creator'}, " .
+                 "name, frequency, query, public) VALUES " . 
+                 "($self->{'creator'}, " . 
                  "$category_id, $subcategory_id, " .
                  $dbh->quote($self->{'name'}) . ", $self->{'frequency'}," .
-                 $dbh->quote($self->{'query'}) . ")");
+                 $dbh->quote($self->{'query'}) . ", $self->{'public'})");
 
         # Retrieve series_id
         $self->{'series_id'} = $dbh->selectrow_array("SELECT MAX(series_id) " .
                                                      "FROM series");
         $self->{'series_id'}
           || &::ThrowCodeError("missing_series_id", { 'series' => $self });
-
-        # Subscribe creator to the newly-created series.
-        $self->subscribe($self->{'creator'});
     }
     
-    # Update publicness by changing subscription
-    if ($self->{'public'}) {
-        $self->subscribe(PUBLIC_USER_ID);
-    }
-    else {
-        $self->unsubscribe(PUBLIC_USER_ID);
-    }             
-
     $dbh->do("UNLOCK TABLES");
 }
 
@@ -236,51 +242,17 @@ sub getCategoryID {
         # We are quoting this to put it in the DB, so we can remove taint
         trick_taint($category);
 
-        $category_id = $dbh->selectrow_array("SELECT category_id " .
+        $category_id = $dbh->selectrow_array("SELECT id " .
                                       "from series_categories " .
                                       "WHERE name =" . $dbh->quote($category));
-        last if $category_id;
+
+        last if defined($category_id);
 
         $dbh->do("INSERT INTO series_categories (name) " .
                  "VALUES (" . $dbh->quote($category) . ")");
     }
 
     return $category_id;
-}        
-
-sub subscribe {
-    my $self = shift;
-    my $userid = shift;
-    
-    if (!$self->isSubscribed($userid)) {
-        # Subscribe current user to series_id
-        my $dbh = Bugzilla->dbh;
-        $dbh->do("INSERT INTO user_series_map " .
-                 "VALUES($userid, $self->{'series_id'})");
-    }    
-}
-
-sub unsubscribe {
-    my $self = shift;
-    my $userid = shift;
-    
-    if ($self->isSubscribed($userid)) {
-        # Remove current user's subscription to series_id
-        my $dbh = Bugzilla->dbh;
-        $dbh->do("DELETE FROM user_series_map " .
-                "WHERE user_id = $userid AND series_id = $self->{'series_id'}");
-    }        
-}
-
-sub isSubscribed {
-    my $self = shift;
-    my $userid = shift;
-    
-    my $dbh = Bugzilla->dbh;
-    my $issubscribed = $dbh->selectrow_array("SELECT 1 FROM user_series_map " .
-                                       "WHERE user_id = $userid " .
-                                       "AND series_id = $self->{'series_id'}");
-    return $issubscribed;
 }
 
 1;

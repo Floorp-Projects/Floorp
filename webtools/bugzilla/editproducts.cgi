@@ -557,25 +557,27 @@ if ($action eq 'new') {
     
         # We do every status, every resolution, and an "opened" one as well.
         foreach my $bug_status (@::legal_bug_status) {
-            push(@series, [$bug_status, "bug_status=$bug_status"]);
+            push(@series, [$bug_status, 
+                           "bug_status=" . url_quote($bug_status)]);
         }
 
         foreach my $resolution (@::legal_resolution) {
             next if !$resolution;
-            push(@series, [$resolution, "resolution=$resolution"]);
+            push(@series, [$resolution, "resolution=" .url_quote($resolution)]);
         }
 
         # For localisation reasons, we get the name of the "global" subcategory
         # and the title of the "open" query from the submitted form.
-        my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
-        my $query = join("&", map { "bug_status=$_" } @openedstatuses);
+        my @openedstatuses = OpenStates();
+        my $query = 
+               join("&", map { "bug_status=" . url_quote($_) } @openedstatuses);
         push(@series, [$::FORM{'open_name'}, $query]);
     
         foreach my $sdata (@series) {
             my $series = new Bugzilla::Series(undef, $product, 
-                                              $::FORM{'subcategory'},
-                                              $sdata->[0], $::userid, 1,
-                                              $sdata->[1] . "&product=$product", 1);
+                            $::FORM{'subcategory'},
+                            $sdata->[0], $::userid, 1,
+                            $sdata->[1] . "&product=" . url_quote($product), 1);
             $series->writeToDatabase();
         }
     }

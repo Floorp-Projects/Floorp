@@ -741,10 +741,8 @@
       
       <para>
         Data sets may be public or private. Everyone sees public data sets in
-        the list, plus any private data sets they are subscribed to. You are 
-        automatically subscribed to any data sets you create, but others may 
-        subscribe to them too if they know about them. Only administrators can 
-        make data sets public.
+        the list, but only their creator sees private data sets. Only 
+        administrators can make data sets public.
         No two data sets, even two private ones, can have the same set of 
         category, subcategory and name. So if you are creating private data 
         sets, one idea is to have the Category be your username.
@@ -780,11 +778,7 @@
 
         <para>
           Once a data set is in the list, one can also perform certain 
-          actions on it.
-          For example, one can Subscribe to or Unsubscribe from a private 
-          data set. This is useful if someone else has shown you a chart,
-          and you want to make some of their data sets appear in your list,
-          so you can use them in your own charts. One can also edit the
+          actions on it. For example, one can edit the
           data set's parameters (name, frequency etc.) if it's one you
           created or if you are an administrator.
         </para>

@@ -60,14 +60,6 @@ function subcatSelected() {
 [% gttext = "Grand Total" %]
 
 <form method="get" action="chart.cgi" name="chartform">  
-  <p>
-    <span style="color: red">
-      Note: this new charting system is in beta. This means that retention of
-      data or defined data sets is on a best-efforts basis only, and cannot be
-      guaranteed. Please file any [% terms.bugs %] you find or enhancement 
-      ideas you think of.
-    </span>
-  </p>
   
   <table cellpadding="2" cellspacing="2" border="0">
     [% IF NOT category OR category.size == 0 %]
@@ -144,7 +136,6 @@ function subcatSelected() {
         <th></th>
         <th>Data Set</th>
         <th></th>
-        <th></th>
       </tr>
       
       [%# The external loop has two counters; one which keeps track of where we
@@ -190,18 +181,6 @@ function subcatSelected() {
             </td>
 
             <td align="center">
-              [% IF NOT series.public %]
-                [% IF series.isSubscribed(user.id) %]
-                  <input type="submit" value="Unsubscribe" style="width: 12ex;"
-                         name="action-unsubscribe[% series.series_id %]">
-                [% ELSE %]
-                  <input type="submit" value="Subscribe" style="width: 12ex;"
-                         name="action-subscribe[% series.series_id %]">
-                [% END %]
-              [% END %]
-            </td>
-
-            <td align="center">
               [% IF user.id == series.creator OR UserInGroup("admin") %]
                <a href="chart.cgi?action=edit&series_id=
                        [% series.series_id %]">Edit</a> |
@@ -233,7 +212,6 @@ function subcatSelected() {
             <i>[% gttext FILTER html %]</i>
           </td>
           <td></td>
-          <td></td>
         </tr>
       [% END %]
       <tr>
@@ -255,7 +233,7 @@ function subcatSelected() {
         </td>
 
         <td></td>
-        <td valign="bottom" colspan="2"> 
+        <td valign="bottom"> 
           <b>Date Range:</b> 
           <input type="text" size="12" name="datefrom" 
             value="[% time2str("%Y-%m-%d", chart.datefrom) IF chart.datefrom%]">
@@ -274,23 +252,9 @@ function subcatSelected() {
   [% END %]  
 </form>
 
-<h4>How Subscriptions Work</h4>
-
-<p>
-Administrators may mark data sets as public, which then show up in everyone's
-list. All others are not public, and you must explicitly subscribe to them in
-order for them to appear in your list.
-</p>
-
-<p>
-When you 
 [% IF UserInGroup('editbugs') %]
-  <a href="query.cgi?format=create-series">create a new data set</a>,
-[% ELSE %]
-  create a new data set,
+  <h3><a href="query.cgi?format=create-series">Create New Data Set</a></h3>
 [% END %]                 
-you are automatically subscribed to it. When the last person unsubscribes 
-from a data set, data stops being collected.
-</p>
 
 [% PROCESS global/footer.html.tmpl %]
+

@@ -25,7 +25,9 @@
 #                 Jean-Sebastien Guay <jean_seb@hybride.com>
 
 # Run me out of cron at midnight to collect Bugzilla statistics.
-
+#
+# To run new charts for a specific date, pass it in on the command line in
+# ISO (2004-08-14) format.
 
 use AnyDBM_File;
 use strict;
@@ -58,6 +60,7 @@ Bugzilla->switch_to_shadow_db();
 # To recreate the daily statistics,  run "collectstats.pl --regenerate" .
 my $regenerate = 0;
 if ($#ARGV >= 0 && $ARGV[0] eq "--regenerate") {
+    shift(@ARGV);
     $regenerate = 1;
 }
 
@@ -446,9 +449,7 @@ sub CollectSeriesData {
     # (days_since_epoch + series_id) % frequency = 0. So they'll run every
     # <frequency> days, but the start date depends on the series_id.
     my $days_since_epoch = int(time() / (60 * 60 * 24));
-    my $today = today_dash();
-
-    CleanupChartTables() if ($days_since_epoch % 7 == 0);
+    my $today = $ARGV[0] || today_dash();
 
     # We save a copy of the main $dbh and then switch to the shadow and get
     # that one too. Remember, these may be the same.
@@ -465,13 +466,13 @@ sub CollectSeriesData {
 
     # We prepare the insertion into the data table, for efficiency.
     my $sth = $dbh->prepare("INSERT INTO series_data " .
-                            "(series_id, date, value) " .
+                            "(series_id, series_date, series_value) " .
                             "VALUES (?, " . $dbh->quote($today) . ", ?)");
 
     # We delete from the table beforehand, to avoid SQL errors if people run
     # collectstats.pl twice on the same day.
     my $deletesth = $dbh->prepare("DELETE FROM series_data 
-                                   WHERE series_id = ? AND date = " .
+                                   WHERE series_id = ? AND series_date = " .
                                    $dbh->quote($today));
                                      
     foreach my $series_id (keys %$serieses) {
@@ -485,37 +486,23 @@ sub CollectSeriesData {
                                           'user'   => $user);
         my $sql = $search->getSQL();
         
-        # We need to count the returned rows. Without subselects, we can't
-        # do this directly in the SQL for all queries. So we do it by hand.
-        my $data = $shadow_dbh->selectall_arrayref($sql);
+        my $data;
         
-        my $count = scalar(@$data) || 0;
+        # We can't die if we get dodgy SQL back for whatever reason, so we
+        # eval() this and, if it fails, just ignore it and carry on.
+        # One day we might even log an error.
+        eval { 
+            $data = $shadow_dbh->selectall_arrayref($sql);
+        };
+        
+        if (!$@) {
+            # We need to count the returned rows. Without subselects, we can't
+            # do this directly in the SQL for all queries. So we do it by hand.
+            my $count = scalar(@$data) || 0;
 
-        $deletesth->execute($series_id);
-        $sth->execute($series_id, $count);
+            $deletesth->execute($series_id);
+            $sth->execute($series_id, $count);
+        }
     }
 }
 
-sub CleanupChartTables {
-    Bugzilla->switch_to_main_db();
-    my $dbh = Bugzilla->dbh;
-
-    $dbh->do("LOCK TABLES series WRITE, user_series_map AS usm READ");
-
-    # Find all those that no-one subscribes to
-    my $series_data = $dbh->selectall_arrayref("SELECT series.series_id " .
-                              "FROM series LEFT JOIN user_series_map AS usm " .
-                              "ON series.series_id = usm.series_id " .
-                              "WHERE usm.series_id IS NULL");
-
-    my $series_ids = join(",", map({ $_->[0] } @$series_data));
-
-    # Stop collecting data on all series which no-one is subscribed to.
-    if ($series_ids) {
-        $dbh->do("UPDATE series SET frequency = 0 " . 
-                 "WHERE series_id IN($series_ids)");
-    }
-   
-    $dbh->do("UNLOCK TABLES");
-    Bugzilla->switch_to_shadow_db();
-}
