@@ -34,6 +34,7 @@
 class nsIButton : public nsISupports {
 
 public:
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBUTTON_IID) 
  
    /**
     * Set the label

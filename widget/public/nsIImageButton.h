@@ -49,6 +49,7 @@ class nsIImageButton : public nsISupports
 {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEBUTTON_IID)
 
  /**
   * Sets the label on the Image Button

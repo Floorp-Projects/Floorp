@@ -38,6 +38,7 @@
 class nsIScrollbar : public nsISupports
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLBAR_IID)
     
     /**
      * Set the scrollbar range

@@ -50,6 +50,7 @@ class nsITextWidget : public nsISupports
 {
 
   public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTWIDGET_IID)
 
     /**
      * Get the text of this component.

@@ -40,6 +40,7 @@ class nsITextAreaWidget : public nsISupports
 {
 
   public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTAREAWIDGET_IID)
 
     /**
      * Get the text of this component.

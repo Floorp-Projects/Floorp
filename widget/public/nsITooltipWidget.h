@@ -32,6 +32,8 @@
 
 class nsITooltipWidget : public nsISupports
 {
+  public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITOOLTIPWIDGET_IID)
 };
 
 #endif // nsITooltipWidget_h__

@@ -53,6 +53,7 @@ class nsIAppShell : public nsISupports
 {
 
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IAPPSHELL_IID)
 
  /**
   * Creates an application shell

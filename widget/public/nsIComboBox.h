@@ -46,6 +46,8 @@ struct nsComboBoxInitData : public nsWidgetInitData {
 
 class nsIComboBox : public nsISupports {
 public:
+     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMBOBOX_IID);
+
     /**
      * Set an item at the specific position
      *

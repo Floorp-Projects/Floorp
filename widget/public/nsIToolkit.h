@@ -39,6 +39,7 @@
 class nsIToolkit : public nsISupports {
 
   public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITOOLKIT_IID)
 
     /**
      * Initialize this toolkit with aThread. 
