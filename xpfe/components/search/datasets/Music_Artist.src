@@ -4,8 +4,8 @@
 # 
 
 <search 
-     name        = "Music - Artist"
-     description = "Music - Artist"
+     name        = "Music - Artist by Rolling Stone"
+     description = "Music - Artist by Rolling Stone"
      method      = "GET"
      action      = "http://rollingstone.netscape.com/artist/list.btq"
 >
