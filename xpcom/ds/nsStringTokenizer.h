@@ -120,7 +120,7 @@ protected:
 
   PRInt32         SkipOver(nsString& aSkipSet);
   PRInt32         SkipOver(PRUnichar  aSkipChar);
-  PRInt32         ReadUntil(nsString& aString,PRUnichar* aTermSet,PRBool aState);
+  PRInt32         ReadUntil(nsString& aString,nsString& aTermSet,PRBool aState);
   PRInt32         ReadUntil(nsString& aString,PRUnichar aChar,PRBool aState);
   PRBool          More(void);
   PRInt32         GetChar(PRUnichar& aChar);
