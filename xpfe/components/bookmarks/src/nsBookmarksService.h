@@ -188,6 +188,9 @@ protected:
     Sort(nsIRDFResource* aFolder, nsIRDFResource* aProperty,
          PRInt32 aDirection, PRBool aFoldersFirst, PRBool aRecurse);
 
+    nsresult
+    GetURLFromResource(nsIRDFResource* aResource, nsAString& aURL);
+
     nsresult LoadBookmarks();
     nsresult initDatasource();
 
