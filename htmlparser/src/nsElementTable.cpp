@@ -386,7 +386,7 @@ nsHTMLElement gHTMLElements[] = {
     /*req-parent excl-parent*/          eHTMLTag_table,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,	
     /*autoclose starttags and endtags*/ &gCaptionAutoClose,0,0,
-    /*parent,incl,exclgroups*/          kNone, kInlineEntity, kSelf,	
+    /*parent,incl,exclgroups*/          kNone, kFlowEntity, kSelf,	
     /*special props, prop-range*/       kNoPropagate,kDefaultPropRange,
     /*special parents,kids,skip*/       &gInTable,0,eHTMLTag_unknown},
 
