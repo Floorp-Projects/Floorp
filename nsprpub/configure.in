@@ -1197,7 +1197,7 @@ mips-sony-newsos*)
     MKSHLIB='vmsld $(OPTIMIZER)'
     ;;
 
-*-osf1*)
+*-osf*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(OSF1)
 
