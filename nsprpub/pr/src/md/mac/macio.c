@@ -1044,6 +1044,12 @@ static OSErr CreateMacPathFromUnixPath(const char *unixPath, char **macPath)
 	char		*tgt;
 	OSErr		err = noErr;
 
+	PR_ASSERT(unixPath != nil);
+	if (nil == unixPath) {
+		err = paramErr;
+		goto exit;
+	}
+
 	// If unixPath is a zero-length string, we copy ":" into
 	// macPath, so we need a minimum of two bytes to handle
 	// the case of ":". 
@@ -1611,6 +1617,12 @@ static OSErr CreateMacPathFromUnixPath(const char *unixPath, char **macPath)
 	const char	*src;
 	char		*tgt;
 	OSErr		err = noErr;
+
+	PR_ASSERT(unixPath != nil);
+	if (nil == unixPath) {
+		err = paramErr;
+		goto exit;
+	}
 
 	// If unixPath is a zero-length string, we copy ":" into
 	// macPath, so we need a minimum of two bytes to handle
