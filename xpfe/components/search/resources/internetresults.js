@@ -25,10 +25,10 @@ function searchResultsOpenURL(event)
 	if (url.substring(0, 3) == "NC:")
 		return false;
 
-  if (top.appCore) 
-    top.appCore.loadUrl(url); // arghghghgh
-  else
-    top._content.location.href = url;
+	if ("loadURI" in top)
+		top.loadURI(url);
+	else
+		top._content.location.href = url;
 
 	return true;
 }
@@ -37,25 +37,10 @@ function searchResultsOpenURL(event)
 
 function onLoadInternetResults()
 {
-  // HACK HACK HACK HACK HACK HACK - chrome urls are being stored in sh as file urls!
-  // access to xpconnect is denied! ack! erk! ork!
-  try {
-    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-    if (pref) pref = pref.QueryInterface(Components.interfaces.nsIPref);
-  } 
-  catch(e) {
-    // ok, we're toast. user clicked back, loaded as file url, no xpconnect. abort, 
-    // reload.
-    const searchResults = "chrome://communicator/content/search/internetresults.xul"
-    if (top.appCore) top.appCore.loadUrl(searchResults);
-    else top._content.location.href = searchResults;
-    return; // ABORT. 
-  }
-
   // clear any previous results on load
-	var iSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
-	if (iSearch) iSearch = iSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
-	if (iSearch) iSearch.ClearResultSearchSites();
+  var iSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
+                          .getService(Components.interfaces.nsIInternetSearchService);
+  iSearch.ClearResultSearchSites();
 
   // the search URI is passed in as a parameter, so get it and them root the results tree
   var searchURI = top._content.location.href;
