@@ -701,7 +701,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       static eHTMLTags passThru[]= {
         eHTMLTag_html,eHTMLTag_comment,eHTMLTag_newline,
         eHTMLTag_whitespace,eHTMLTag_script,eHTMLTag_noscript,
-        eHTMLTag_userdefined};
+        eHTMLTag_nolayer,eHTMLTag_markupDecl,eHTMLTag_userdefined};
       if(!FindTagInSet(theTag,passThru,sizeof(passThru)/sizeof(eHTMLTag_unknown))){
         if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
           if((!mHadBody) && (!mHadFrameset)){
@@ -1186,19 +1186,23 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
       isNotWhiteSpace = mSaveBadTokens  = PR_TRUE;
     }
     if(mSaveBadTokens) {
+      aToken->mRecycle=PR_FALSE;
       mBodyContext->SaveToken(aToken,theBCIndex);
       // If the token is attributed then save those attributes too.
       if(attrCount > 0) {
         nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
         while(attrCount > 0){ 
-           mBodyContext->SaveToken(theAttrNode->PopAttributeToken(),theBCIndex);
+           CToken* theAttrToken=theAttrNode->PopAttributeToken();
+           if(theAttrToken) {
+             mBodyContext->SaveToken(theAttrToken,theBCIndex);
+             theAttrToken->mRecycle=PR_FALSE;
+           }
            attrCount--;
         }
       }
       if(!IsContainer(aChildTag) && isNotWhiteSpace) {
         mSaveBadTokens = PR_FALSE;
       }
-      result=NS_ERROR_HTMLPARSER_MISPLACED;
     }
   }
 
@@ -1297,8 +1301,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
         default:
           {
-            if(theHeadIsParent)
+            if(theHeadIsParent) {
               result=AddHeadLeaf(*theNode);
+            }
             else result=HandleDefaultStartToken(aToken,theChildTag,*theNode); 
           }
           break;
@@ -1553,7 +1558,7 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
               }
               theBadTokenCount--;
             }
-            result=NavDispatchTokenHandler(theToken,this);
+            result=HandleToken(theToken,mParser);
           }
         }
         theBadTokenCount--;

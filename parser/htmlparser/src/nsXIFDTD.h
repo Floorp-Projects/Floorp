@@ -83,9 +83,9 @@ enum eXIFTags
   eXIFTag_url,    
   eXIFTag_xml,    
   
-  eXIFTag_mdo = eHTMLTag_mdo,
-  eXIFTag_newline = eHTMLTag_newline,
-  eXIFTag_text = eHTMLTag_text,
+  eXIFTag_markupDecl = eHTMLTag_markupDecl,
+  eXIFTag_newline    = eHTMLTag_newline,
+  eXIFTag_text       = eHTMLTag_text,
   eXIFTag_whitespace = eHTMLTag_whitespace,
 
   eXIFTag_userdefined

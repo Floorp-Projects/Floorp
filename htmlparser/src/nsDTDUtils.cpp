@@ -200,6 +200,18 @@ nsDTDContext::nsDTDContext() : mStack(), mSkipped(0), mStyles(0) {
  * @update	gess9/10/98
  */
 nsDTDContext::~nsDTDContext() {
+  PRInt32 theSize=mSkipped.GetSize();
+  if(theSize>0) {
+    CTokenDeallocator theDeallocator;
+    for(PRInt32 i=0;i<theSize;i++) {
+      nsDeque* theDeque=(nsDeque*)mSkipped.Pop();
+      if(theDeque) {
+        if(theDeque->GetSize()>0) theDeque->ForEach(theDeallocator);
+        delete theDeque;
+        theDeque=nsnull;
+      }
+    }
+  }
 }
 
 /**
@@ -439,6 +451,7 @@ CTokenRecycler::~CTokenRecycler() {
     }
   }
 }
+
 
 class CTokenFinder: public nsDequeFunctor{
 public:

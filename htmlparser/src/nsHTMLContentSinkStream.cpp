@@ -874,7 +874,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
 
-  if(tag==eHTMLTag_mdo) { 
+  if(tag==eHTMLTag_markupDecl) { 
     Write("<!"); // mdo => Markup Declaration Open.
     return;
   }
@@ -966,7 +966,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   {
     tagName = "--";
   }
-  else if(tag == eHTMLTag_mdo) 
+  else if(tag == eHTMLTag_markupDecl) 
   {
     // mod => Markup Declaration Open, i.e., "<!"
     Write(kGreaterThan);
