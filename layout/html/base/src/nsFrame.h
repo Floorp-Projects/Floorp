@@ -274,10 +274,14 @@ public:
 #endif
 
   void ListTag(FILE* out) const {
+    ListTag(out, this);
+  }
+
+  static void ListTag(FILE* out, const nsIFrame* aFrame) {
     nsAutoString tmp;
-    GetFrameName(tmp);
+    aFrame->GetFrameName(tmp);
     fputs(tmp, out);
-    fprintf(out, "@%p", this);
+    fprintf(out, "@%p", aFrame);
   }
 
   static void IndentBy(FILE* out, PRInt32 aIndent) {
