@@ -304,17 +304,23 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
       popup->SelectBy(reverse, page);
 
       // Fill in the value of the textbox with whatever is selected in the popup
-      PRInt32 selectedIndex;
-      popup->GetSelectedIndex(&selectedIndex);
-      if (selectedIndex >= 0) {
-        //  A result is selected, so fill in its value
-        nsAutoString value;
-        if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value)))
-          CompleteValue(value, PR_FALSE);
-      } else {
-        // Nothing is selected, so fill in the last typed value
-        mInput->SetTextValue(mSearchString);
-        mInput->SelectTextRange(mSearchString.Length(), mSearchString.Length());
+      // if the completeSelectedIndex attribute is set
+      PRBool completeSelection;
+      mInput->GetCompleteSelectedIndex(&completeSelection);
+      if (completeSelection)
+      {
+        PRInt32 selectedIndex;
+        popup->GetSelectedIndex(&selectedIndex);
+        if (selectedIndex >= 0) {
+          //  A result is selected, so fill in its value
+          nsAutoString value;
+          if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, PR_TRUE, value)))
+            CompleteValue(value, PR_FALSE);
+        } else {
+          // Nothing is selected, so fill in the last typed value
+          mInput->SetTextValue(mSearchString);
+          mInput->SelectTextRange(mSearchString.Length(), mSearchString.Length());
+        }
       }
     } else {
       // Open the popup if there has been a previous search, or else kick off a new search

@@ -92,6 +92,7 @@ nsFormFillController::nsFormFillController() :
   mMaxRows(0),
   mDisableAutoComplete(PR_FALSE), 
   mCompleteDefaultIndex(PR_FALSE),
+  mCompleteSelectedIndex(PR_FALSE),
   mForceComplete(PR_FALSE),
   mSuppressOnInput(PR_FALSE)
 {
@@ -267,6 +268,20 @@ NS_IMETHODIMP
 nsFormFillController::SetCompleteDefaultIndex(PRBool aCompleteDefaultIndex)
 {
   mCompleteDefaultIndex = aCompleteDefaultIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::GetCompleteSelectedIndex(PRBool *aCompleteSelectedIndex)
+{
+  *aCompleteSelectedIndex = mCompleteSelectedIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::SetCompleteSelectedIndex(PRBool aCompleteSelectedIndex)
+{
+  mCompleteSelectedIndex = aCompleteSelectedIndex;
   return NS_OK;
 }
 
