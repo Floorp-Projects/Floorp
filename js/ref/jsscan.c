@@ -679,7 +679,7 @@ retry:
 		    RETURN(TOK_ERROR);
 		c = GetChar(ts);
 		radix = 16;
-	    } else if (JS7_ISDEC(c) && c < '8') {
+	    } else if (JS7_ISDEC(c)) {
 		radix = 8;
 	    }
 	}
