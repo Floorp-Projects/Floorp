@@ -16,6 +16,14 @@
 #
 
 DEPTH	= ..
-DIRS	= xfe patcher
+
+ifeq ($(shell uname -s),Rhapsody)
+DIRS  = ybfe
+else
+DIRS  = xfe
+endif
+
+DIRS  += patcher
 
 include $(DEPTH)/config/rules.mk
+
