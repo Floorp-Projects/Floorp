@@ -228,7 +228,7 @@ nsImageDocument::StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener)
         const char* spec;
         (void)aURL->GetSpec(&spec);
         nsIStreamListener* listener = nsnull;
-        rv = group->GetImageFromStream(spec, nsnull, &mBlack,
+        rv = group->GetImageFromStream(spec, nsnull, nsnull,
                                        0, 0, 0,
                                        mImageRequest, listener);
         aListener = listener;
