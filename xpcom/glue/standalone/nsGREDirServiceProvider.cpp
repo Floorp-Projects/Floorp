@@ -42,7 +42,7 @@
 #include "nspr.h"
 #include "prenv.h"
 
-#ifdef XP_PC
+#ifdef XP_WIN32
 #include <windows.h>
 #include <stdlib.h>
 #endif 
@@ -143,7 +143,7 @@ nsGREDirServiceProvider::GetGREDirectoryPath()
     return pGreLocation;
 #endif
   
-#if XP_PC
+#if XP_WIN32
   char szKey[256];
   HKEY hRegKey = NULL;
   DWORD dwLength = _MAX_PATH * sizeof(char);
