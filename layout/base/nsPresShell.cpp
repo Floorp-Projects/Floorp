@@ -193,7 +193,7 @@ FrameArena::AllocateFrame(size_t aSize, void** aResult)
   void* result = nsnull;
   
   // Round size to multiple of 4
-  PR_ROUNDUP(aSize, 4);
+  aSize = PR_ROUNDUP(aSize, 4);
 
   // Check recyclers first
   if (aSize < gMaxRecycledSize) {
