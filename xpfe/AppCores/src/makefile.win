@@ -43,6 +43,7 @@ LINCS= \
     -I$(XPDIST)\public\pref 	\
 	-I$(XPDIST)\public\raptor   \
 	-I$(XPDIST)\public\appcores \
+	-I$(XPDIST)\public\rdf \
     $(NULL)
 
 LLIBS =				            \
