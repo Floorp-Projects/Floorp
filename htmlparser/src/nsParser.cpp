@@ -41,7 +41,7 @@
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIBufferInputStream.h"
-#include "CRTFDTD.h"
+#include "CRtfDTD.h"
 
 //#define rickgdebug 
 
