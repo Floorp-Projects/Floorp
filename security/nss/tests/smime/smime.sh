@@ -190,32 +190,42 @@ echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULT
 cd ${SMIMEDIR}
 cp ${CURDIR}/alice.txt ${SMIMEDIR}
 # Test basic signed and enveloped messages from 1 --> 2
+echo "cmsutil -S -N Alice -i alice.txt -d ${ALICEDIR} -p nss -o alice.sig"
 cmsutil -S -N Alice -i alice.txt -d ${ALICEDIR} -p nss -o alice.sig
 if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Create Signature Alice"}
 fi
+echo "cmsutil -D -i alice.sig -d ${BOBDIR} -o alice.data1"
 cmsutil -D -i alice.sig -d ${BOBDIR} -o alice.data1
 if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Decode Alice's Signature"}
 fi
+echo "diff alice.txt alice.data1"
 diff alice.txt alice.data1
 if [ $? -ne 0 ]; then
+   echo "Signing attached message Failed ($CMSFAILED)" 
    echo "<TR><TD>Signing attached message</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
 else
+   echo "Signing attached message Passed" 
    echo "<TR><TD>Signing attached message</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
+echo "cmsutil -E -r bob@bogus.com -i alice.txt -d ${ALICEDIR} -p nss -o alice.env"
 cmsutil -E -r bob@bogus.com -i alice.txt -d ${ALICEDIR} -p nss -o alice.env
 if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Create Enveloped Data Alice"}
 fi
+echo "cmsutil -D -i alice.env -d ${BOBDIR} -p nss -o alice.data1"
 cmsutil -D -i alice.env -d ${BOBDIR} -p nss -o alice.data1
 if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Decode Enveloped Data Alice"}
 fi
+echo "diff alice.txt alice.data1"
 diff alice.txt alice.data1
 if [ $? -ne 0 ]; then
+   echo "Enveloped Data Failed ($CMSFAILED)" 
    echo "<TR><TD>Enveloped Data</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
 else
+   echo "Enveloped Data Passed"
    echo "<TR><TD>Enveloped Data</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
 # multiple recip
@@ -228,13 +238,16 @@ cmsutil -O -r "Alice,bob@bogus.com,dave@bogus.com" -d ${ALICEDIR} > co.der
 if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Create Certs-Only Alice"}
 fi
-cmsutil -D -i co.der -d ${CADIR}
+echo "cmsutil -D -i co.der -d ${BOBDIR}"
+cmsutil -D -i co.der -d ${BOBDIR}
 if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Verify Certs-Only by CA"}
 fi
 if [ -n "${CMSFAILED}" ]; then
+    echo "Sending certs-only message Failed ($CMSFAILED)"
     echo "<TR><TD>Sending certs-only message</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
 else
+    echo "Sending certs-only message Passed"
     echo "<TR><TD>Sending certs-only message</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
 echo "cmsutil -C -i alice.txt -e alicehello.env -d ${ALICEDIR} -r \"bob@bogus.com\" > alice.enc"
@@ -254,8 +267,10 @@ if [ $? -ne 0 ]; then
    CMSFAILED=${CMSFAILED-"Decode Encrypted-Data"}
 fi
 if [ -n "${CMSFAILED}" ]; then
+    echo "Encrypted-Data message Failed ($CMSFAILED)"
     echo "<TR><TD>Encrypted-Data message</TD><TD bgcolor=red>Failed ($CMSFAILED)</TD><TR>" >> ${RESULTS}
 else
+    echo "Encrypted-Data message Passed"
     echo "<TR><TD>Encrypted-Data message</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
 

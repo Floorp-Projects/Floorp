@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.9 2000/09/15 20:23:26 mcgreer%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.10 2000/10/06 23:26:10 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -527,17 +527,23 @@ NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
     CERTCertificate *cert;
     SECStatus rv = SECSuccess;
     int i;
+    int count;
 
     if (!sigd || !certdb || !sigd->rawCerts) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
 
-    for (i=0; i < NSS_CMSArray_Count((void**)sigd->rawCerts); i++) {
+    count = NSS_CMSArray_Count((void**)sigd->rawCerts);
+    for (i=0; i < count; i++) {
 	if (sigd->certs && sigd->certs[i]) {
 	    cert = sigd->certs[i];
 	} else {
 	    cert = CERT_FindCertByDERCert(certdb, sigd->rawCerts[i]);
+	    if (!cert) {
+		rv = SECFailure;
+		break;
+	    }
 	}
 	rv |= CERT_VerifyCert(certdb, cert, PR_TRUE, usage, PR_Now(), 
                               NULL, NULL);
