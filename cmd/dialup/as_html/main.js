@@ -87,7 +87,9 @@ function loadData()
 	
 		var thePlatform = parent.parent.globals.getPlatform();
 	
-		var profileDir = parent.parent.globals.document.setupPlugin.GetCurrentProfileDirectory();
+		//var profileDir = parent.parent.globals.document.setupPlugin.GetCurrentProfileDirectory();
+		var profileDir = parent.parent.globals.currentProfileDirectory;
+		parent.parent.globals.debug("****Priofile Dir = " + profileDir);
 		if ( profileDir != null && profileDir != "" )
 		{
 			if ( thePlatform == "Macintosh" )				// Macintosh support

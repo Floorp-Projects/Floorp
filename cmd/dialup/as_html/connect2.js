@@ -325,7 +325,8 @@ function configureDialer()
 	navigator.preference("browser.mac.use_internet_config", false);
 
 
-	var profileDir = parent.parent.globals.document.setupPlugin.GetCurrentProfileDirectory();
+	//var profileDir = parent.parent.globals.document.setupPlugin.GetCurrentProfileDirectory();
+	var profileDir = parent.parent.globals.currentProfileDirectory;
 	if (profileDir != null && profileDir != "")	{
 
 		// write MUC Configuration file
