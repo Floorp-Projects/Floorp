@@ -34,6 +34,7 @@
 #define IDD_HEADERFOOTER_TAB            156
 #define IDD_FORMAT_OPTIONS_TAB          157
 #define IDD_CUSTOM_PROMPT_DIALOG        159
+#define IDD_DIALOG_LINK_PROPERTIES      160
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -92,6 +93,8 @@
 #define IDC_EDIT_HOMEPAGE               1055
 #define IDC_PRT_PORTRAIT_RD             1056
 #define IDC_PRT_LANDSCAPE_RD            1057
+#define IDC_EDIT_LINK_TEXT              1058
+#define IDC_EDIT_LINK_LOCATION          1059
 #define IDC_FIND_EDIT                   0x0480
 #define ID_NAV_BACK                     32773
 #define ID_NAV_FORWARD                  32774

@@ -34,6 +34,7 @@
 #include "MfcEmbed.h"
 #include "BrowserFrm.h"
 #include "EditorFrm.h"
+#include "Dialogs.h"
 
 //------------------------------------------------------------
 //              Editor Command/Parameter Names
@@ -244,18 +245,17 @@ NS_METHOD
 CEditorFrame::MakeEditable()
 {
     nsresult rv;
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    m_wndBrowserView.mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (!domWindow)
+
+    m_wndBrowserView.mWebBrowser->GetContentDOMWindow(getter_AddRefs(mDOMWindow));
+    if (!mDOMWindow)
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIEditingSession> editingSession = do_GetInterface(m_wndBrowserView.mWebBrowser);
-    if (!editingSession)
+    mEditingSession = do_GetInterface(m_wndBrowserView.mWebBrowser);
+    if (!mEditingSession)
         return NS_ERROR_FAILURE;
   
-    rv= editingSession->MakeWindowEditable(domWindow, NULL, PR_TRUE);
+    rv= mEditingSession->MakeWindowEditable(mDOMWindow, NULL, PR_TRUE);
   
-
     return rv;  
 }
 
@@ -292,26 +292,22 @@ CEditorFrame::ExecuteNoParam(const char *aCommand)
 
 void CEditorFrame::OnIndent() 
 {
-    // TODO: Add your command handler code here
     ExecuteNoParam(INDENT_COMMAND);    
 }
 
 void CEditorFrame::OnUpdateIndent(CCmdUI* pCmdUI) 
 {
     // TODO: Add your command update UI handler code here
-    
 }
 
 void CEditorFrame::OnOutdent() 
 {
-    // TODO: Add your command handler code here
     ExecuteNoParam(OUTDENT_COMMAND);    
 }
 
 void CEditorFrame::OnUpdateOutdent(CCmdUI* pCmdUI) 
 {
     // TODO: Add your command update UI handler code here
-    
 }
 
 NS_METHOD
@@ -352,94 +348,77 @@ CEditorFrame::GetAttributeParamValue(const char *aCommand, nsCString &aValue)
 
 void CEditorFrame::OnFontred() 
 {
-    // TODO: Add your command handler code here
     ExecuteAttribParam(FONTCOLOR_COMMAND,COLOR_RED);    
 }
 
 void CEditorFrame::OnUpdateFontred(CCmdUI* pCmdUI) 
 {
     // TODO: Add your command update UI handler code here
-    
 }
 
 void CEditorFrame::OnFontblack() 
 {
-    // TODO: Add your command handler code here
     ExecuteAttribParam(FONTCOLOR_COMMAND,COLOR_BLACK);        
 }
 
 void CEditorFrame::OnUpdateFontblack(CCmdUI* pCmdUI) 
 {
-    // TODO: Add your command update UI handler code here
-    
+    // TODO: Add your command update UI handler code here   
 }
 
 void CEditorFrame::OnBgcolor() 
 {
-    // TODO: Add your command handler code here
-    ExecuteAttribParam(BACKGROUNDCOLOR_COMMAND,COLOR_RED);        
-    
+    ExecuteAttribParam(BACKGROUNDCOLOR_COMMAND,COLOR_RED);
 }
 
 void CEditorFrame::OnUpdateBgcolor(CCmdUI* pCmdUI) 
 {
     // TODO: Add your command update UI handler code here
-    
 }
 
 void CEditorFrame::OnNobgcolor() 
 {
-    // TODO: Add your command handler code here
     ExecuteAttribParam(BACKGROUNDCOLOR_COMMAND,STATE_EMPTY);
 }
 
 void CEditorFrame::OnUpdateNobgcolor(CCmdUI* pCmdUI) 
 {
     // TODO: Add your command update UI handler code here
-    
 }
 
 void CEditorFrame::OnFontsizeincrease() 
 {
-    // TODO: Add your command handler code here
     ExecuteNoParam(INCREASEFONT_COMMAND);
 }
 
 void CEditorFrame::OnFontsizedecrease() 
 {
-    // TODO: Add your command handler code here
     ExecuteNoParam(DECREASEFONT_COMMAND);    
 }
 
 void CEditorFrame::OnArial() 
 {
-    // TODO: Add your command handler code here
     ExecuteAttribParam(FONTFACE_COMMAND,FONT_ARIAL);
 }
 
 void CEditorFrame::OnTimes() 
 {
-    // TODO: Add your command handler code here
     ExecuteAttribParam(FONTFACE_COMMAND,FONT_TIMES);    
 }
 
 void CEditorFrame::OnCourier() 
 {
-    // TODO: Add your command handler code here
     ExecuteAttribParam(FONTFACE_COMMAND,FONT_COURIER);
 }
 
 void CEditorFrame::OnAlignleft() 
 {
-    // TODO: Add your command handler code here
-    ExecuteAttribParam(ALIGN_COMMAND,ALIGN_LEFT);
-    
+    ExecuteAttribParam(ALIGN_COMMAND,ALIGN_LEFT);    
 }
 
 
 void CEditorFrame::OnUpdateAlignleft(CCmdUI* pCmdUI) 
 {
-    // TODO: Add your command update UI handler code here
   nsCAutoString tValue;
 
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
@@ -454,15 +433,11 @@ void CEditorFrame::OnUpdateAlignleft(CCmdUI* pCmdUI)
 
 void CEditorFrame::OnAlignright() 
 {
-    // TODO: Add your command handler code here
     ExecuteAttribParam(ALIGN_COMMAND,ALIGN_RIGHT);
-    
 }
 
 void CEditorFrame::OnUpdateAlignright(CCmdUI* pCmdUI) 
 {
-    // TODO: Add your command update UI handler code here
-    // TODO: Add your command update UI handler code here
   nsCAutoString tValue;
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
   if (NS_SUCCEEDED(rv))
@@ -476,15 +451,11 @@ void CEditorFrame::OnUpdateAlignright(CCmdUI* pCmdUI)
 
 void CEditorFrame::OnAligncenter() 
 {
-    // TODO: Add your command handler code here
     ExecuteAttribParam(ALIGN_COMMAND,ALIGN_CENTER);
-    
 }
 
 void CEditorFrame::OnUpdateAligncenter(CCmdUI* pCmdUI) 
 {
-     // TODO: Add your command update UI handler code here
-    // TODO: Add your command update UI handler code here
   nsCAutoString tValue;
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
   if (NS_SUCCEEDED(rv))
@@ -498,25 +469,118 @@ void CEditorFrame::OnUpdateAligncenter(CCmdUI* pCmdUI)
 
 void CEditorFrame::OnInsertlink() 
 {
-    // TODO: Add your command handler code here
-    
+    if (InLink())
+       ShowEditLinkDlg();
+    else
+       ShowInsertLinkDlg();
+}
+
+void CEditorFrame::ShowInsertLinkDlg()
+{
+    CLinkPropertiesDlg dlg;
+
+    if(dlg.DoModal() == IDOK)
+    {
+        InsertLink(dlg.m_LinkText, dlg.m_LinkLocation);
+    }
+}
+
+void CEditorFrame::InsertLink(CString& linkText, CString& linkLocation)
+{
+    CString html = " &nbsp;<A HREF=\"" + linkLocation + "\">" + linkText + "</A>&nbsp; ";
+
+    InsertHTML(html);
+}
+
+void CEditorFrame::InsertHTML(CString& str)
+{
+    nsString htmlToInsert;
+    htmlToInsert.AssignWithConversion(str.GetBuffer(0));
+
+    nsCOMPtr<nsIHTMLEditor> htmlEditor;
+    GetHTMLEditor(getter_AddRefs(htmlEditor)); 
+    if (htmlEditor) 
+       htmlEditor->InsertHTML(htmlToInsert);
+}
+
+void CEditorFrame::ShowEditLinkDlg()
+{
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement;
+    CLinkPropertiesDlg dlg;
+
+    if (GetCurrentLinkInfo(dlg.m_LinkText, dlg.m_LinkLocation, getter_AddRefs(anchorElement)))
+    {
+        if(dlg.DoModal() == IDOK)
+        {
+            //Select the link being edited and then insert the
+            //new link into it's place i.e. essentially a replace operation
+            nsCOMPtr<nsIHTMLEditor> htmlEditor;
+            GetHTMLEditor(getter_AddRefs(htmlEditor)); 
+            if (htmlEditor) 
+               htmlEditor->SelectElement(anchorElement);
+
+            InsertLink(dlg.m_LinkText, dlg.m_LinkLocation);
+        }
+    }
+}
+
+BOOL CEditorFrame::GetCurrentLinkInfo(CString& strLinkText, CString& strLinkLocation, nsIDOMHTMLAnchorElement** anchorElement)
+{
+    USES_CONVERSION;
+
+    nsCOMPtr<nsIHTMLEditor> htmlEditor;
+
+    GetHTMLEditor(getter_AddRefs(htmlEditor));
+    if (!htmlEditor)
+        return FALSE;
+
+    nsCOMPtr<nsIDOMElement> domElement;
+    htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), 
+                                            nsnull,
+                                            getter_AddRefs(domElement));
+    if (!domElement)
+        return FALSE;
+
+    nsAutoString linkLocation, linkText;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    // Determine linkLocation
+    nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(domElement, &rv));
+    if (NS_SUCCEEDED(rv))
+        rv = linkElement->GetHref(linkLocation);
+    if (NS_FAILED(rv))
+        return FALSE;
+
+    // Determine linkText
+    nsCOMPtr<nsIDOMNode> firstChild;
+    rv = linkElement->GetFirstChild(getter_AddRefs(firstChild));
+    if (NS_FAILED(rv))
+        return FALSE;
+    firstChild->GetNodeValue(linkText);
+    if (NS_FAILED(rv))
+        return FALSE;
+
+    strLinkText = W2T(linkText.get());
+    strLinkLocation = W2T(linkLocation.get());
+
+    *anchorElement = linkElement;
+    NS_ADDREF(*anchorElement);
+
+	return TRUE;
 }
 
 void CEditorFrame::OnEditUndo() 
 {
-    // TODO: Add your command handler code here
     ExecuteNoParam(UNDO_COMMAND);
 }
 
 void CEditorFrame::OnEditRedo() 
 {
-    // TODO: Add your command handler code here
     ExecuteNoParam(REDO_COMMAND);    
 }
 
 void CEditorFrame::OnUpdateEditRedo(CCmdUI* pCmdUI) 
 {
-    // TODO: Add your command update UI handler code here
   nsresult rv;
   nsCOMPtr<nsICommandParams> params;
   rv = MakeCommandParams(REDO_COMMAND,getter_AddRefs(params));
@@ -540,7 +604,6 @@ void CEditorFrame::OnUpdateEditRedo(CCmdUI* pCmdUI)
 
 void CEditorFrame::OnUpdateEditUndo(CCmdUI* pCmdUI) 
 {
-    // TODO: Add your command update UI handler code here
   nsresult rv;
   nsCOMPtr<nsICommandParams> params;
   rv = MakeCommandParams(UNDO_COMMAND,getter_AddRefs(params));
@@ -560,4 +623,41 @@ void CEditorFrame::OnUpdateEditUndo(CCmdUI* pCmdUI)
     }
   }
   pCmdUI->Enable(FALSE);        
+}
+
+void CEditorFrame::GetEditor(nsIEditor** editor)
+{
+    mEditingSession->GetEditorForWindow(mDOMWindow, editor);
+}
+
+void CEditorFrame::GetHTMLEditor(nsIHTMLEditor** htmlEditor)
+{
+    *htmlEditor = 0;
+
+    nsCOMPtr<nsIEditor> editor;
+    GetEditor(getter_AddRefs(editor));
+    if (!editor) 
+	{
+        return;
+    }
+
+    editor->QueryInterface(NS_GET_IID(nsIHTMLEditor), (void**)htmlEditor);
+}
+
+BOOL CEditorFrame::InLink()
+{
+    nsCOMPtr<nsIHTMLEditor> htmlEditor;
+
+    GetHTMLEditor(getter_AddRefs(htmlEditor));
+
+    if (htmlEditor) 
+	{
+        nsCOMPtr<nsIDOMElement> domElememt;
+        htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), 
+                                                nsnull,
+                                                getter_AddRefs(domElememt));
+        return domElememt ? TRUE : FALSE;
+    }
+
+    return false;
 }

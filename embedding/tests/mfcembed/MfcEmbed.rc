@@ -517,6 +517,21 @@ BEGIN
     LTEXT           "Custom:",IDC_STATIC,7,8,26,8
 END
 
+IDD_DIALOG_LINK_PROPERTIES DIALOG DISCARDABLE  0, 0, 262, 162
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Link Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        " Link Text ",IDC_STATIC,7,7,248,52
+    GROUPBOX        " Link Location ",IDC_STATIC,7,73,248,52
+    LTEXT           "Enter &text to display for the link:",IDC_STATIC,16,20,
+                    223,8
+    EDITTEXT        IDC_EDIT_LINK_TEXT,16,34,232,14,ES_AUTOHSCROLL
+    LTEXT           "Enter a web page &location:",IDC_STATIC,16,88,223,8
+    EDITTEXT        IDC_EDIT_LINK_LOCATION,16,103,232,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,69,140,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,128,140,50,14
+END
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////

@@ -66,4 +66,23 @@ protected:
     virtual void PostNcDestroy();
 };
 
+/////////////////////////////////////////////////////////////////////////////
+// CLinkPropertiesDlg dialog
+
+class CLinkPropertiesDlg : public CDialog
+{
+public:
+	CLinkPropertiesDlg(CWnd* pParent = NULL);
+
+	enum { IDD = IDD_DIALOG_LINK_PROPERTIES };
+	CString	m_LinkText;
+	CString	m_LinkLocation;
+
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX);
+	virtual void OnOK();
+
+	DECLARE_MESSAGE_MAP()
+};
+
 #endif //_DIALOG_H_

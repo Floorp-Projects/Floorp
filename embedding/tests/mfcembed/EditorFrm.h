@@ -38,7 +38,9 @@
 #include "nsICommandManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsISimpleEnumerator.h"
-    
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
+
 class CEditorFrame : public CBrowserFrame
 {    
 public:
@@ -54,6 +56,15 @@ public:
     NS_METHOD DoCommand(const char *aCommand, nsICommandParams *aCommandParams);
     NS_METHOD IsCommandEnabled(const char *aCommand, PRBool *retval);
     NS_METHOD GetCommandState(const char *aCommand, nsICommandParams *aCommandParams);
+
+    void GetEditor(nsIEditor** editor);
+    void GetHTMLEditor(nsIHTMLEditor** htmlEditor);
+    BOOL InLink();
+    void ShowInsertLinkDlg();
+    void ShowEditLinkDlg();
+    BOOL GetCurrentLinkInfo(CString& strLinkText, CString& strLinkLocation, nsIDOMHTMLAnchorElement** anchorElement);
+    void InsertLink(CString& linkText, CString& linkLocation);
+    void InsertHTML(CString& str);
 
 // Generated message map functions
 protected:
@@ -107,6 +118,8 @@ private:
 
 private:
     nsCOMPtr<nsICommandManager> mCommandManager;
+    nsCOMPtr<nsIDOMWindow> mDOMWindow;
+	nsCOMPtr<nsIEditingSession> mEditingSession;
 };
 
 #endif //_EDITORFRM_H_
