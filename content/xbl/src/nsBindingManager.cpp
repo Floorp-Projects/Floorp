@@ -58,19 +58,20 @@
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleSet.h"
-#include "nsIXBLPrototypeHandler.h"
+#include "nsIXBLPrototypeBinding.h"
+#include "nsIWeakReference.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kParserCID,                  NS_PARSER_IID); // XXX What's up with this???
 
-class nsXBLDocumentInfo : public nsIXBLDocumentInfo
+class nsXBLDocumentInfo : public nsIXBLDocumentInfo, public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
   
-  nsXBLDocumentInfo(nsIDocument* aDocument);
+  nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument);
   virtual ~nsXBLDocumentInfo();
   
   NS_IMETHOD GetDocument(nsIDocument** aResult) { *aResult = mDocument; NS_IF_ADDREF(*aResult); return NS_OK; };
@@ -79,32 +80,36 @@ public:
   NS_IMETHOD GetScriptAccess(PRBool* aResult) { *aResult = mScriptAccess; return NS_OK; };
   NS_IMETHOD SetScriptAccess(PRBool aAccess) { mScriptAccess = aAccess; return NS_OK; };
 
-  NS_IMETHOD GetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler** aResult);
-  NS_IMETHOD SetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler* aHandler);
+  NS_IMETHOD GetDocumentURI(nsCString& aDocURI) { aDocURI = mDocURI; return NS_OK; };
+
+  NS_IMETHOD GetPrototypeBinding(const nsCString& aRef, nsIXBLPrototypeBinding** aResult);
+  NS_IMETHOD SetPrototypeBinding(const nsCString& aRef, nsIXBLPrototypeBinding* aBinding);
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
+  nsCString mDocURI;
   nsCOMPtr<nsISupportsArray> mRuleProcessors;
   PRBool mScriptAccess;
-  nsSupportsHashtable* mHandlerTable;
+  nsSupportsHashtable* mBindingTable;
 };
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsXBLDocumentInfo, nsIXBLDocumentInfo)
+NS_IMPL_ISUPPORTS2(nsXBLDocumentInfo, nsIXBLDocumentInfo, nsISupportsWeakReference)
 
-nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
+nsXBLDocumentInfo::nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
+  mDocURI = aDocURI;
   mDocument = aDocument;
   mScriptAccess = PR_TRUE;
-  mHandlerTable = nsnull;
+  mBindingTable = nsnull;
 }
 
 nsXBLDocumentInfo::~nsXBLDocumentInfo()
 {
   /* destructor code */
-  delete mHandlerTable;
+  delete mBindingTable;
 }
 
 NS_IMETHODIMP
@@ -144,33 +149,39 @@ nsXBLDocumentInfo::GetRuleProcessors(nsISupportsArray** aResult)
 }
 
 NS_IMETHODIMP
-nsXBLDocumentInfo::GetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler** aResult)
+nsXBLDocumentInfo::GetPrototypeBinding(const nsCString& aRef, nsIXBLPrototypeBinding** aResult)
 {
   *aResult = nsnull;
-  if (!mHandlerTable)
+  if (!mBindingTable)
     return NS_OK;
 
   nsCStringKey key(aRef);
-  *aResult = NS_STATIC_CAST(nsIXBLPrototypeHandler*, mHandlerTable->Get(&key)); // Addref happens here.
+  *aResult = NS_STATIC_CAST(nsIXBLPrototypeBinding*, mBindingTable->Get(&key)); // Addref happens here.
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLDocumentInfo::SetPrototypeHandler(const nsCString& aRef, nsIXBLPrototypeHandler* aHandler)
+nsXBLDocumentInfo::SetPrototypeBinding(const nsCString& aRef, nsIXBLPrototypeBinding* aBinding)
 {
-  if (!mHandlerTable)
-    mHandlerTable = new nsSupportsHashtable();
+  if (!mBindingTable)
+    mBindingTable = new nsSupportsHashtable();
 
   nsCStringKey key(aRef);
-  mHandlerTable->Put(&key, aHandler);
+  mBindingTable->Put(&key, aBinding);
 
   return NS_OK;
 }
 
 nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult)
 {
-  *aResult = new nsXBLDocumentInfo(aDocument);
+  nsCOMPtr<nsIURI> url = getter_AddRefs(aDocument->GetDocumentURL());
+  
+  nsXPIDLCString str;
+  url->GetSpec(getter_Copies(str));
+
+  *aResult = new nsXBLDocumentInfo((const char*)str, aDocument);
+  
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
@@ -683,10 +694,7 @@ nsBindingManager::RemoveLoadingDocListener(const nsCString& aURL)
 PRBool PR_CALLBACK MarkForDeath(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsIXBLBinding* binding = (nsIXBLBinding*)aData;
-  nsCAutoString docURI;
-  binding->GetDocURI(docURI);
-  if (!docURI.CompareWithConversion("chrome", PR_FALSE, 6))
-    binding->MarkForDeath();
+  binding->MarkForDeath();
   return PR_TRUE;
 }
 

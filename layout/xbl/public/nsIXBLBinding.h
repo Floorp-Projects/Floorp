@@ -38,6 +38,7 @@
 class nsIContent;
 class nsIDocument;
 class nsIScriptContext;
+class nsIXBLPrototypeBinding;
 
 // {DDDBAD20-C8DF-11d3-97FB-00400553EEF0}
 #define NS_IXBLBINDING_IID \
@@ -47,6 +48,9 @@ class nsIXBLBinding : public nsISupports
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IXBLBINDING_IID; return iid; }
+
+  NS_IMETHOD GetPrototypeBinding(nsIXBLPrototypeBinding** aResult)=0;
+  NS_IMETHOD SetPrototypeBinding(nsIXBLPrototypeBinding* aProtoBinding)=0;
 
   NS_IMETHOD GetBaseBinding(nsIXBLBinding** aResult) = 0;
   NS_IMETHOD SetBaseBinding(nsIXBLBinding* aBinding) = 0;
@@ -92,13 +96,11 @@ public:
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
   NS_IMETHOD WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)=0;
 
-  NS_IMETHOD SetAllowScripts(PRBool aFlag)=0;
-
   NS_IMETHOD MarkForDeath()=0;
   NS_IMETHOD MarkedForDeath(PRBool* aResult)=0;
 };
 
 extern nsresult
-NS_NewXBLBinding(const nsCString& aDocURI, const nsCString& aID, nsIXBLBinding** aResult);
+NS_NewXBLBinding(nsIXBLPrototypeBinding* aProtoBinding, nsIXBLBinding** aResult);
 
 #endif // nsIXBLBinding_h__

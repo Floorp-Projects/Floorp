@@ -28,6 +28,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
   nsXBLBinding.cpp \
+  nsXBLPrototypeBinding.cpp \
   nsXBLService.cpp \
   nsXBLEventHandler.cpp \
   nsXBLWindowKeyHandler.cpp \
@@ -46,6 +47,7 @@ CPPSRCS=					\
 
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
+  .\$(OBJDIR)\nsXBLPrototypeBinding.obj \
   .\$(OBJDIR)\nsXBLEventHandler.obj \
   .\$(OBJDIR)\nsXBLWindowKeyHandler.obj \
   .\$(OBJDIR)\nsXBLKeyHandler.obj \
