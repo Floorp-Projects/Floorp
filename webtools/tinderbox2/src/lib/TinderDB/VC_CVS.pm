@@ -35,8 +35,8 @@
 #	 kestes@walrus.com Home.
 # Contributor(s): 
 
-# $Revision: 1.26 $ 
-# $Date: 2002/05/02 04:12:41 $ 
+# $Revision: 1.27 $ 
+# $Date: 2002/05/03 00:19:39 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_CVS.pm,v $ 
 # $Name:  $ 
@@ -139,7 +139,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.26 $ )[1];
+$VERSION = ( qw $Revision: 1.27 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -597,11 +597,25 @@ sub status_table_row {
 
   my $cell_options;
   my $text_browser_color_string;
+  my $empty_cell_contents = $HTMLPopUp::EMPTY_TABLE_CELL;
+
   if ( ($LAST_TREESTATE) && ($cell_color) ) {
        my ($cell_options) = "bgcolor=$cell_color ";
 
        $text_browser_color_string = 
          HTMLPopUp::text_browser_color_string($cell_color, $char);
+
+       # for those who like empty cells to be truely empty, we need to
+       # be sure that they see the different cell colors when they
+       # change.
+
+       if (
+           ($cell_color !~ m/white/) &&
+           (!($text_browser_color_string)) &&
+           (!($empty_cell_contents) &&
+            ) {
+               $empty_cell_contents = "&nbsp;";
+           }
   }
   
   my ($query_links) = '';
@@ -744,12 +758,9 @@ sub status_table_row {
                "");
     
   } else {
-    
-      my $cell_contents = $text_browser_color_string ||
-          $HTMLPopUp::EMPTY_TABLE_CELL;
 
-    @outrow = ("\t<!-- skipping: VC_CVS: tree: $tree -->".
-               "<td align=center $cell_options>$cell_contents</td>\n");
+    @outrow = ("\t<!-- skipping: VC_Bonsai: tree: $tree -->".
+               "<td align=center $cell_options>$empty_cell_contents</td>\n");
   }
   
   

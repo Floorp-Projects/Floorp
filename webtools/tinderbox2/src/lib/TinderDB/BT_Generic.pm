@@ -37,8 +37,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.15 $ 
-# $Date: 2002/05/02 22:56:33 $ 
+# $Revision: 1.16 $ 
+# $Date: 2002/05/03 00:19:39 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
@@ -76,7 +76,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.15 $ )[1];
+$VERSION = ( qw $Revision: 1.16 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -299,7 +299,7 @@ sub status_table_row {
 
 	# a link to the cgibin page which displays the bug
 	
-	my ($href) = BTData::bug_id2bug_url($rec);
+	my ($href) = BTData::rec2bug_url($rec);
 	my ($window_title) = "$BT_NAME Info bug_id: $bug_id";
 
 	# we display the list of names in 'teletype font' so that the

@@ -4,8 +4,8 @@
 # Tracking system and its relationship to the tinderbox trees.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2002/04/30 17:58:26 $ 
+# $Revision: 1.10 $ 
+# $Date: 2002/05/03 00:19:41 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BTData.pm,v $ 
 # $Name:  $ 
@@ -245,13 +245,15 @@ sub update2tree {
 }
 
 
-# Given a bug id  return a URL ('href') to the bug. 
+
+# It would be great if all bug tracking systems allowed a simple
+# conversion from bug id to url.  I doubt this will happen. Where it
+# makes sense though, let other modules peek at this.
 # If the bug tracker does not support URL's to a bug number,
 # return a 'mailto: ' to someone who cares about the bug.
 
 sub bug_id2bug_url {
-  my ($tinderbox_ref) = @_;
-  my ($bug_id) = $tinderbox_ref->{$BTData::BUGID_FIELD_NAME};
+  my ($bug_id) = @_;
 
   my ($out);
 
@@ -271,6 +273,21 @@ sub bug_id2bug_url {
           '/show_bug.cgi?id='.
 	  $bug_id.
 	  "");
+
+  return $out;
+}
+
+
+# Given a bug record  return a URL ('href') to the bug. 
+# this might work for a larger collection of trackers then the above.
+
+sub rec2bug_url {
+  my ($tinderbox_ref) = @_;
+  my ($bug_id) = $tinderbox_ref->{$BTData::BUGID_FIELD_NAME};
+
+  my ($out);
+
+  $out = bug_id2bug_url($bug_id);
 
   return $out;
 }
