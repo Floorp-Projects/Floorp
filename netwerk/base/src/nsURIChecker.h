@@ -43,13 +43,16 @@
 #include "nsIRequest.h"
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
+#include "nsIHttpEventSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
 
 #include "nsIIOService.h"
 #include "nsCOMPtr.h"
 
 class nsURIChecker : public nsIURIChecker, public nsIRequest,
-                     public nsIStreamListener
+                     public nsIStreamListener, public nsIHttpEventSink,
+                     public nsIInterfaceRequestor
 {
 public:
     nsURIChecker();
@@ -63,6 +66,8 @@ public:
 
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIHTTPEVENTSINK
+    NS_DECL_NSIINTERFACEREQUESTOR
 
 protected:
     nsresult mStatus;

@@ -46,8 +46,9 @@
 #include "nsReadableUtils.h"  // for ToNewUnicode()
 
 //Interfaces for addref, release and queryinterface
-NS_IMPL_ISUPPORTS3(nsURIChecker, nsIURIChecker,
-                   nsIRequest, nsIStreamListener);
+NS_IMPL_ISUPPORTS5(nsURIChecker, nsIURIChecker,
+                   nsIRequest, nsIStreamListener,
+                   nsIHttpEventSink, nsIInterfaceRequestor);
 
 nsURIChecker::nsURIChecker()
 {
@@ -118,6 +119,9 @@ nsURIChecker::AsyncCheckURI(const char* aURI, nsIRequestObserver *aObserver,
     if (httpChannel)
         httpChannel->SetRequestMethod("HEAD");
 
+    // Hook us up to listen to redirects and the like
+    mChannel->SetNotificationCallbacks(this);
+    
     // and start the request:
     return mChannel->AsyncOpen(this, nsnull);
 }
@@ -285,3 +289,22 @@ nsURIChecker::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
     return NS_BINDING_ABORTED;
 }
 
+/////////////////////////////////////////////////////
+// nsIInterfaceRequestor methods:
+//
+NS_IMETHODIMP
+nsURIChecker::GetInterface(const nsIID & aIID, void **aResult)
+{
+    return QueryInterface(aIID, aResult);
+}
+
+/////////////////////////////////////////////////////
+// nsIHttpEventSink methods:
+//
+NS_IMETHODIMP
+nsURIChecker::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
+{
+    // We have a new channel
+    mChannel = aNewChannel;
+    return NS_OK;
+}
