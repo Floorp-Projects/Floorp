@@ -57,6 +57,7 @@ CSRCS = \
 	pk11kea.c \
 	pk11util.c \
 	pk11sdr.c \
+	pk11pqg.c \
 	$(NULL)
 
 REQUIRES = security dbm
