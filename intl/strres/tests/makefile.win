@@ -36,9 +36,6 @@ LINCS=\
 LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
- $(GLOWDIR)\glowcode.lib	\
-!endif
  $(RESFILE)
 
 include <$(DEPTH)\config\rules.mak>

@@ -63,10 +63,6 @@ DEFFILE=$(DLL1NAME).def
 LCFLAGS = -Zi -GM
 LINCS = -I$(PUBLIC)/java
 
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
-
 #//------------------------------------------------------------------------
 #// 
 #// Define the files necessary to build the target (ie. OBJS)

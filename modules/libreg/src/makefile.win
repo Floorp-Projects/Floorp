@@ -86,9 +86,6 @@ LCFLAGS=$(LCFLAGS) -DUSE_BUFFERED_REGISTRY_IO
 
 LLIBS = \
     $(LIBNSPR)                  \
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-    $(GLOWDIR)\glowcode.lib     \
-!endif
     $(NULL)
 
 

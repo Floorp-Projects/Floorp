@@ -84,9 +84,6 @@ WIN_LIBS =                             \
 !if defined(MOZ_DEBUG)
         imagehlp.lib                   \
 !endif
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-        $(GLOWDIR)\glowcode.lib        \
-!endif
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
