@@ -31,10 +31,13 @@ EXPORTS =                               \
         nsILinkHandler.h                \
         nsIThrobber.h                   \
         nsIWebShell.h                   \
-		nsIWebShellServices.h			\
+        nsIWebShellServices.h           \
         nsIClipboardCommands.h          \
         nsIUrlDispatcher.h    \
         nsweb.h                         \
+!ifdef NECKO
+        nsIRefreshURI.h                 \
+!endif
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

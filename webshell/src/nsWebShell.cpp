@@ -29,6 +29,7 @@
 #include "nsNeckoUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsIDNSService.h"
+#include "nsIRefreshURI.h"
 #else
 #include "nsINetSupport.h"
 #include "nsIRefreshUrl.h"
@@ -143,6 +144,7 @@ class nsWebShell : public nsIWebShell,
                    public nsIDocumentLoaderObserver,
 #ifdef NECKO
                    public nsIPrompt,
+                   public nsIRefreshURI,
 #else
                    public nsIRefreshUrl,
                    public nsINetSupport,
@@ -354,11 +356,17 @@ public:
 #endif
 //  NS_IMETHOD OnConnectionsComplete();
 
-  // nsIRefreshURL interface methods...
-  NS_IMETHOD RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat);
-  NS_IMETHOD RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat);
-  NS_IMETHOD CancelRefreshURLTimers(void);
 
+  NS_IMETHOD RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat);
+
+  // nsIRefreshURL interface methods...
+#ifndef NECKO
+  NS_IMETHOD RefreshURL(nsIURI* aURL, PRInt32 aMillis, PRBool aRepeat);
+  NS_IMETHOD CancelRefreshURLTimers(void);
+#else
+  NS_IMETHOD RefreshURI(nsIURI* aURI, PRInt32 aMillis, PRBool aRepeat);
+  NS_IMETHOD CancelRefreshURITimers(void);
+#endif // NECKO
 
 #if 0
   // nsIStreamObserver
@@ -545,7 +553,10 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 #ifndef NECKO
 static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kRefreshURLIID,          NS_IREFRESHURL_IID);
+#else
+static NS_DEFINE_IID(kRefreshURIIID,          NS_IREFRESHURI_IID);
 #endif
+
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellServicesIID,   NS_IWEB_SHELL_SERVICES_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
@@ -664,7 +675,11 @@ nsWebShell::~nsWebShell()
     NS_RELEASE(mDocLoader);
   }
   // Cancel any timers that were set for this loader.
+#ifndef NECKO
   CancelRefreshURLTimers();
+#else
+  CancelRefreshURITimers();
+#endif // NECKO
 
   ++mRefCnt; // following releases can cause this destructor to be called
              // recursively if the refcount is allowed to remain 0
@@ -813,16 +828,15 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#ifndef NECKO
-  if (aIID.Equals(kRefreshURLIID)) {
-    *aInstancePtr = (void*)(nsIRefreshUrl*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif
+
 #ifdef NECKO
   if (aIID.Equals(nsIPrompt::GetIID())) {
     *aInstancePtr = (void*) ((nsIPrompt*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kRefreshURIIID)) {
+    *aInstancePtr = (void*) ((nsIRefreshURI*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -832,7 +846,12 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#endif
+  if (aIID.Equals(kRefreshURLIID)) {
+    *aInstancePtr = (void*)((nsIRefreshUrl*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+#endif // NECKO
   if (aIID.Equals(kIClipboardCommandsIID)) {
     *aInstancePtr = (void*) ((nsIClipboardCommands*)this);
     NS_ADDREF_THIS();
@@ -1976,6 +1995,10 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   urlStr.Trim(" ", PR_TRUE, PR_TRUE);
   convertFileToURL(urlStr, urlSpec);
 
+#ifdef NECKO
+  CancelRefreshURITimers();
+#endif // NECKO
+
 //#ifdef NECKO
 //  nsCOMPtr<nsIURI> url;
 //  rv = NS_NewURI(getter_AddRefs(url), urlSpec);
@@ -2131,7 +2154,11 @@ NS_IMETHODIMP nsWebShell::Stop(void)
   }
 
   // Cancel any timers that were set for this loader.
+#ifndef NECKO
   CancelRefreshURLTimers();
+#else
+  CancelRefreshURITimers();
+#endif // NECKO
 
   if (mDocLoader) {
     // Stop any documents that are currently being loaded...
@@ -2179,7 +2206,11 @@ nsWebShell::StopAfterURLAvailable()
   }
 
   // Cancel any timers that were set for this loader.
+#ifndef NECKO
   CancelRefreshURLTimers();
+#else
+  CancelRefreshURITimers();
+#endif // NECKO
 
   // Recurse down the webshell hierarchy.
   PRInt32 i, n = mChildren.Count();
@@ -3223,12 +3254,16 @@ void refreshData::Notify(nsITimer *aTimer)
 
 
 NS_IMETHODIMP
-nsWebShell::RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat)
+#ifndef NECKO
+nsWebShell::RefreshURL(nsIURI* aURI, PRInt32 millis, PRBool repeat)
+#else
+nsWebShell::RefreshURI(nsIURI* aURI, PRInt32 millis, PRBool repeat)
+#endif // NECKO
 {
   
   nsresult rv = NS_OK;
-  if (nsnull == aURL) {
-    NS_PRECONDITION((aURL != nsnull), "Null pointer");
+  if (nsnull == aURI) {
+    NS_PRECONDITION((aURI != nsnull), "Null pointer");
     rv = NS_ERROR_NULL_POINTER;
     goto done;
   }
@@ -3238,7 +3273,7 @@ nsWebShell::RefreshURL(nsIURI* aURL, PRInt32 millis, PRBool repeat)
 #else
   const char* spec;
 #endif
-  aURL->GetSpec(&spec);
+  aURI->GetSpec(&spec);
   rv = RefreshURL(spec, millis, repeat);
 #ifdef NECKO
   nsCRT::free(spec);
@@ -3248,14 +3283,14 @@ done:
 }
 
 NS_IMETHODIMP
-nsWebShell::RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat)
+nsWebShell::RefreshURL(const char* aURI, PRInt32 millis, PRBool repeat)
 {
   nsresult rv = NS_OK;
   nsITimer *timer=nsnull;
   refreshData *data;
 
-  if (nsnull == aURL) {
-    NS_PRECONDITION((aURL != nsnull), "Null pointer");
+  if (nsnull == aURI) {
+    NS_PRECONDITION((aURI != nsnull), "Null pointer");
     rv = NS_ERROR_NULL_POINTER;
     goto done;
   }
@@ -3272,7 +3307,7 @@ nsWebShell::RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat)
   data->mShell = this;
   NS_ADDREF(data->mShell);
 
-  data->mUrlSpec  = aURL;
+  data->mUrlSpec  = aURI;
   data->mDelay    = millis;
   data->mRepeat   = repeat;
 
@@ -3292,7 +3327,11 @@ done:
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+nsWebShell::CancelRefreshURITimers(void)
+#else
 nsWebShell::CancelRefreshURLTimers(void)
+#endif // NECKO
 {
   PRInt32 i;
   nsITimer* timer;
