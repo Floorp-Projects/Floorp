@@ -65,6 +65,8 @@ public:
   NS_IMETHOD GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aResult);
   NS_IMETHOD GetControllers(nsIControllers** aResult);
 
+  NS_IMETHOD MoveFocus(PRBool aForward, nsIDOMElement* aElt);
+
   // nsIDOMFocusListener
   virtual nsresult Focus(nsIDOMEvent* aEvent);
   virtual nsresult Blur(nsIDOMEvent* aEvent);

@@ -42,4 +42,8 @@ interface nsIDOMXULCommandDispatcher : nsISupports
 
   nsIController             getControllerForCommand(in DOMString command);
   nsIControllers            getControllers();
+
+  void advanceFocus();
+  void rewindFocus();
+  void advanceFocusIntoSubtree(in nsIDOMElement elt);
 };
