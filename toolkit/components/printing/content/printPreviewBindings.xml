@@ -405,7 +405,7 @@
       <method name="updateSettings">
         <body>
         <![CDATA[
-          var print = this.getWebBrowserPrint();
+          var print = PrintUtils.getWebBrowserPrint();
           var settings = print.currentPrintSettings;
 
           var isPortrait = settings.orientation == Components.interfaces.nsIPrintSettings.kPortraitOrientation;
