@@ -9221,13 +9221,13 @@ fi
 
 
 
-MOZ_EXTENSIONS="cookie wallet"
+MOZ_EXTENSIONS="cookie wallet psm-glue"
 
 # Check whether --with-extensions or --without-extensions was given.
 if test "${with_extensions+set}" = set; then
   withval="$with_extensions"
    if test "$withval" = "yes" || test "$withval" = "all"; then
-        MOZ_EXTENSIONS="cookie irc wallet"
+        MOZ_EXTENSIONS="cookie irc wallet psm-glue"
     elif test "$withval" = "no" || test "$withval" = "none"; then
         MOZ_EXTENSIONS=""
     elif test "$withval" != ""; then
