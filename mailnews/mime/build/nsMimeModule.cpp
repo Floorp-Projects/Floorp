@@ -187,6 +187,8 @@ static Components gComponents[] = {
       NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID },
     { "Mailnews Mime Stream Converter", &kCStreamConverterCID,
       NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID1 },
+    { "Mailnews Mime Stream Converter", &kCStreamConverterCID,
+      NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID2 },
     { "Mime Headers", &kCIMimeHeadersCID,
       nsnull }
 };
