@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -87,6 +88,7 @@ class nsComboboxControlFrame : public nsAreaFrame,
 {
 public:
   friend nsresult NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags);
+  friend class RedisplayTextEvent;
 
   nsComboboxControlFrame();
   ~nsComboboxControlFrame();
@@ -247,7 +249,8 @@ protected:
   void CheckFireOnChange();
   void FireValueChangeEvent();
   nsresult RedisplayText(PRInt32 aIndex);
-  nsresult ActuallyDisplayText(nsAString& aText, PRBool aNotify);
+  void     HandleRedisplayTextEvent(const nsAString& aText);
+  nsresult ActuallyDisplayText(const nsAString& aText, PRBool aNotify);
   nsresult GetPrimaryComboFrame(nsPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
   NS_IMETHOD ToggleList(nsPresContext* aPresContext);
 
@@ -294,6 +297,8 @@ protected:
   // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
   // then open or close the combo box.
   nsCOMPtr<nsIDOMMouseListener> mButtonListener;
+
+  nsCOMPtr<nsIEventQueueService> mEventQueueService;
 
   // static class data member for Bug 32920
   // only one control can be focused at a time
