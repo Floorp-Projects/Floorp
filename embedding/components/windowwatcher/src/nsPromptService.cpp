@@ -48,11 +48,11 @@
 #include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 
-static const char *kPromptURL="chrome://global/content/commonDialog.xul";
-static const char *kSelectPromptURL="chrome://global/content/selectDialog.xul";
-static const char *kQuestionIconClass ="question-icon";
-static const char *kAlertIconClass ="alert-icon";
-static const char *kWarningIconClass ="message-icon";
+static const char kPromptURL[] = "chrome://global/content/commonDialog.xul";
+static const char kSelectPromptURL[] = "chrome://global/content/selectDialog.xul";
+static const char kQuestionIconClass[] = "question-icon";
+static const char kAlertIconClass[] = "alert-icon";
+static const char kWarningIconClass[] = "message-icon";
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
