@@ -114,6 +114,7 @@ public:
   NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *databsae);
   NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
   NS_IMETHOD MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead);
+  NS_IMETHOD MarkMessageRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markRead);
 
   NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 						const char *name);
@@ -126,6 +127,7 @@ protected:
 	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
+	nsresult DoMarkMessagesRead(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markRead);
 private:
   
   nsString mId;
@@ -799,6 +801,32 @@ nsMessenger::ViewAllThreadMessages(nsIRDFCompositeDataSource *database)
 }
 
 NS_IMETHODIMP
+nsMessenger::MarkMessageRead(nsIRDFCompositeDataSource *database, nsIDOMXULElement *message, PRBool markRead)
+{
+	if(!database || !message)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv;
+
+	nsCOMPtr<nsIRDFResource> messageResource;
+	rv = message->GetResource(getter_AddRefs(messageResource));
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsISupportsArray> resourceArray;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(resourceArray));
+	if(NS_FAILED(rv))
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	resourceArray->AppendElement(messageResource);
+
+	rv = DoMarkMessagesRead(database, resourceArray, markRead);
+
+	return rv;
+}
+
+NS_IMETHODIMP
 nsMessenger::MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead)
 {
 	nsresult rv;
@@ -806,12 +834,24 @@ nsMessenger::MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeLis
 	if(!database || !messages)
 		return NS_ERROR_NULL_POINTER;
 
-	nsCOMPtr<nsISupportsArray> resourceArray, argumentArray;
+	nsCOMPtr<nsISupportsArray> resourceArray;
 
 
 	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(resourceArray));
 	if(NS_FAILED(rv))
 		return rv;
+
+	rv= DoMarkMessagesRead(database, resourceArray, markRead);
+
+
+	return rv;
+}
+
+nsresult
+nsMessenger::DoMarkMessagesRead(nsIRDFCompositeDataSource *database, nsISupportsArray *resourceArray, PRBool markRead)
+{
+	nsresult rv;
+	nsCOMPtr<nsISupportsArray> argumentArray;
 
 	rv = NS_NewISupportsArray(getter_AddRefs(argumentArray));
 	if(NS_FAILED(rv))
@@ -825,6 +865,7 @@ nsMessenger::MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeLis
 		rv = DoCommand(database, NC_RDF_MARKUNREAD, resourceArray,  argumentArray);
 
 	return rv;
+
 }
 
 NS_IMETHODIMP
