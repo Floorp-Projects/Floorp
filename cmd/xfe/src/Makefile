@@ -99,6 +99,7 @@ CPPSRCS		= \
 		  HTMLView.cpp \
 		  HistoryFrame.cpp \
 		  IconGroup.cpp \
+		  Image.cpp \
 		  LocationDrag.cpp \
 		  Logo.cpp \
 		  Menu.cpp \
@@ -107,7 +108,6 @@ CPPSRCS		= \
 		  MozillaApp.cpp \
 		  NavCenterFrame.cpp \
 		  NavCenterView.cpp \
-		  RDFImage.cpp \
 		  Netcaster.cpp \
 		  NotificationCenter.cpp \
 		  Outliner.cpp \
@@ -123,6 +123,7 @@ CPPSRCS		= \
 		  PrefsDialogMailnews.cpp \
 		  PrefsLang.cpp \
 		  PrefsProxiesView.cpp \
+		  RDFImage.cpp \
 		  RDFView.cpp \
 		  RDFTreeView.cpp \
 		  RadioGroup.cpp \
