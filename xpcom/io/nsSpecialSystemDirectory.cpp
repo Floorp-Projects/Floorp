@@ -541,12 +541,22 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
         
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 		{
-			char *tPath = PR_GetEnv("TMPDIR");
-			if (!tPath || PL_strlen(tPath) == 0)
-				*this = "/tmp/";
-			else
-				*this = tPath;
-       }
+			static const char *tPath = nsnull;
+			if (!tPath) {
+				tPath = PR_GetEnv("TMPDIR");
+				if (!tPath || !*tPath) {
+					tPath = PR_GetEnv("TMP");
+					if (!tPath || !*tPath) {
+						tPath = PR_GetEnv("TEMP");
+						if (!tPath || !*tPath) {
+							tPath = "/tmp/";
+						}
+					}
+				}
+			}
+			
+			*this = tPath;
+		}
 #endif
         break;
 
