@@ -534,8 +534,10 @@ static void dump_graphedge_list(graphedge *list, FILE *fp)
     for (edge = list; edge; edge = edge->next)
         total += edge->total;
     for (edge = list; edge; edge = edge->next) {
-        fprintf(fp, "<a href='#%s'>%s&nbsp;(%1.2f%%)</a>\n",
-                graphnode_name(edge->node),
+        const char *node_name = graphnode_name(edge->node);
+        fprintf(fp, "<a href='#%s' onmouseover='window.status=\"%s\"'>"
+                "%s&nbsp;(%1.2f%%)</a>\n",
+                node_name, node_name,
                 prettybig(edge->total, buf, sizeof buf),
                 percent(edge->total, total));
     }
