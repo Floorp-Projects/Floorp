@@ -631,8 +631,14 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
   // check if the stream is of seekable type and later its destruction
   // see bug 91140    
   nsresult rv = NS_OK;
-  if(mStreamType != nsPluginStreamType_Seek)
-    rv = CleanUpStream(NPRES_DONE);
+  if(mStreamType != nsPluginStreamType_Seek) {
+    NPReason reason = NPRES_DONE;
+
+    if (NS_FAILED(status))
+      reason = NPRES_NETWORK_ERR;   // since the stream failed, we need to tell the plugin that
+
+    rv = CleanUpStream(reason);
+  }
   
   if(rv != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
