@@ -16,8 +16,6 @@ JAVAINCLUDE = -I${JAVADIR}/include -I${JAVADIR}/include/genunix -I${JAVADIR}/inc
 # For JDK1.2
 # Native threads
 JAVALIBS = -L${JAVADIR}/jre/lib/i386 -L${JAVADIR}/jre/lib/i386/classic -L${JAVADIR}/jre/lib/i386/native_threads -ljava
-# Green threads
-#JAVALIBS = -L${JAVADIR}/jre/lib/i386 -L${JAVADIR}/jre/lib/i386/classic -L${JAVADIR}/jre/lib/i386/green_threads -ljava
 INCLUDE = ${JAVAINCLUDE} -I${DIST}/include ${GTKINCLUDES} ${GTKMOZILLAINCLUDE}
 DEFINES = -D_REENTRANT -DNECKO -DXP_UNIX -DDEBUG_RAPTOR_CANVAS -DMOZ_DLL_SUFFIX=\".so\"
 STUBDEFINES = -D_REENTRANT
@@ -25,10 +23,8 @@ STUBINCLUDE = ${JAVAINCLUDE}
 STUBLIBS = ${JAVALIBS}
 # For the latest mozilla build
 LIBS =  ${GTKLIBS} ${JAVALIBS} \
--L${DIST}/bin -lraptorgfx -lexpat -lxmltok -ljsurl -lmozdbm -lmozjs -lsecfree -lmozutil -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lgfx_gtk -lraptorwebwidget -lraptorhtmlpars -lraptorplugin -lpref -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_gtk_s
-# For the old m8 mozilla
-#LIBS =  ${GTKLIBS} ${JAVALIBS} \
-#-L${DIST}/lib -lraptorgfx -lexpat -lxmltok -labouturl -lfileurl -lftpurl -lgophurl -lhttpurl -lremoturl -lsockstuburl -lmimetype -lnetcache -lnetcnvts -lnetwork -ljsurl -lmozdbm -lpwcac -lreg -lmozjs -lsecfree -lmozutil -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lwidgetgtk -lgfxgtk -lraptorwebwidget -lraptorhtmlpars -lnetlib -lpref -lplds3 -lplc3 -ljsdom
+-L${DIST}/bin -lraptorgfx -ljsurl -lmozdbm -lmozjs -lsecfree -lmozutil -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lgfx_gtk -lraptorwebwidget -lraptorhtmlpars -lraptorplugin -lpref -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_s
+
 LN = ln -f -s
 
 all: libwebclientstub.so libwebclient.so component.reg components
