@@ -2218,7 +2218,7 @@ function cmdFindString (e)
 
     var browser = source2View.sourceTabList[index].iframe;
 
-    if (typeof nsFindData != "undefined")
+    if (typeof nsFindInstData != "undefined")
     {
         if (!("findData" in console))
             console.findData = new nsFindInstData();

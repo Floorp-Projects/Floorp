@@ -21,7 +21,6 @@
  *  Robert Ginda, rginda@ndcico.com, original author
  */
 
-
 function getAccessKey (str)
 {
     var i = str.indexOf("&");
@@ -44,7 +43,6 @@ function CommandRecord (name, func, usage, help, label, flags, keystr)
     this.keyNodes = new Array();
     this.keystr = keystr;
     this.uiElements = new Array();
-
 }
 
 CommandRecord.prototype.__defineGetter__ ("enabled", cr_getenable);
@@ -184,15 +182,18 @@ function cmgr_defcmds (cmdary)
             var ary = func.match(/(\S+)/);
             if (ary)
                 aliasFor = ary[1];
+            else
+                aliasFor = null;
             helpDefault = getMsg (MSN_DEFAULT_ALIAS_HELP, func); 
-            labelDefault = getMsgFrom (bundle,
-                                       "cmd." + aliasFor + ".label", null, name);
+            if (aliasFor)
+                labelDefault = getMsgFrom (bundle, "cmd." + aliasFor + ".label",
+                                           null, name);
         }
 
-        var label = getMsgFrom(bundle,
-                               "cmd." + name + ".label", null, labelDefault);
-        var help  = getMsgFrom(bundle,
-                               "cmd." + name + ".help", null, helpDefault);
+        var label = getMsgFrom(bundle, "cmd." + name + ".label", null,
+                               labelDefault);
+        var help  = getMsgFrom(bundle, "cmd." + name + ".help", null,
+                               helpDefault);
         var keystr = getMsgFrom (bundle, "cmd." + name + ".key", null, "");
         var command = new CommandRecord (name, func, usage, help, label, flags,
                                          keystr);
@@ -516,8 +517,8 @@ function cmgr_parseargs (e)
  *   <toggle>  parses like a <state>, except allows "toggle" as well.
  *   <...>     parses according to the parameter type before it, until the end
  *             of the input data.  Results are stored in an array named
- *             paramnameList, where paramname is the name of the parameter before
- *             <...>.  The value of the parameter before this will be
+ *             paramnameList, where paramname is the name of the parameter
+ *             before <...>.  The value of the parameter before this will be
  *             paramnameList[0].
  *
  * If there is no parse function for an argument type, "word" will be used by
@@ -608,8 +609,11 @@ function parse_parseargsraw (e)
 }
 
 /**
- * Returns true if |e| has the properties required to call the command |command|.
+ * Returns true if |e| has the properties required to call the command
+ * |command|.
+ *
  * If |command| is not provided, |e.command| is used instead.
+ *
  * @param e        Event object to test against the command.
  * @param command  Command to test.
  */
@@ -630,7 +634,7 @@ function cmgr_isok (e, command)
         if (!(command.argNames[i] in e))
         {
             e.parseError = getMsg(MSN_ERR_REQUIRED_PARAM, command.argNames[i]);
-            //dd ("command '" + command.name + "' unsatisfied: " + e.parseError);
+            //dd("command '" + command.name + "' unsatisfied: " + e.parseError);
             return false;
         }
     }
