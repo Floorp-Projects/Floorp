@@ -25,8 +25,6 @@ LIBRARY_NAME=nntp
 MODULE= mailnews
 REQUIRES=xpcom js nspr netlib
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
-
 CPPSRCS=    nsNNTPProtocol.cpp				\
 			nsNntpUrl.cpp					\
 			nsNNTPArticleSet.cpp			\
@@ -34,6 +32,7 @@ CPPSRCS=    nsNNTPProtocol.cpp				\
 			nsNNTPNewsgroupList.cpp			\
 			nsNNTPNewsgroupPost.cpp			\
 			nsNNTPHost.cpp					\
+			nsNntpService.cpp				\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
@@ -43,6 +42,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNNTPNewsgroupList.obj			\
 			.\$(OBJDIR)\nsNNTPNewsgroupPost.obj			\
 			.\$(OBJDIR)\nsNNTPHost.obj					\
+			.\$(OBJDIR)\nsNntpService.obj				\
 			$(NULL)
 
 
@@ -53,9 +53,17 @@ EXPORTS=	nsNNTPProtocol.h				\
 			nsNNTPNewsgroup.h				\
 			nntpCore.h						\
 			nsNNTPNewsgroupPost.h			\
+			nsNntpService.h					\
             $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
+LINCS=							\
+		-I$(PUBLIC)\xpcom		\
+		-I$(PUBLIC)\mailnews	\
+		-I$(PUBLIC)\raptor		\
+		-I$(PUBLIC)\netlib		\
+		-I$(PUBLIC)\security	\
+		-I$(PUBLIC)\rdf			\
+		$(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
