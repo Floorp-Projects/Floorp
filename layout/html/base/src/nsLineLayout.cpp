@@ -46,6 +46,7 @@
 #undef  NOISY_MAX_ELEMENT_SIZE
 #undef   REALLY_NOISY_MAX_ELEMENT_SIZE
 #undef  NOISY_CAN_PLACE_FRAME
+#undef NOISY_TRIM
 #else
 #undef NOISY_HORIZONTAL_ALIGN
 #undef  REALLY_NOISY_HORIZONTAL_ALIGN
@@ -59,6 +60,7 @@
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef  REALLY_NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_CAN_PLACE_FRAME
+#undef NOISY_TRIM
 #endif
 
 nsTextRun::nsTextRun()
@@ -744,6 +746,7 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
   }
   pfd->mSpan = nsnull;
   pfd->mNext = nsnull;
+  pfd->mPrev = nsnull;
 #ifdef DEBUG
   pfd->mVerticalAlign = 0xFF;
   pfd->mRelativePos = PRBool(0xFF);
@@ -2000,9 +2003,119 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   }
 }
 
-void
-nsLineLayout::TrimTrailingWhiteSpace(nsRect& aLineBounds)
+PRBool
+nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
+                                       nscoord* aDeltaWidth)
 {
+// XXX what about NS_STYLE_DIRECTION_RTL?
+  if (NS_STYLE_DIRECTION_RTL == psd->mDirection) {
+    *aDeltaWidth = 0;
+    return PR_TRUE;
+  }
+
+  PerFrameData* pfd = psd->mFirstFrame;
+  if (!pfd) {
+    *aDeltaWidth = 0;
+    return PR_FALSE;
+  }
+  pfd = pfd->Last();
+  while (nsnull != pfd) {
+    if (pfd->mSpan) {
+      // Maybe the child span has the trailing white-space in it?
+      if (TrimTrailingWhiteSpaceIn(pfd->mSpan, aDeltaWidth)) {
+        // Shrink our span
+        if (psd->mFrame) {
+          psd->mFrame->mBounds.width -= *aDeltaWidth;
+          if (psd != mRootSpan) {
+            nsRect r;
+            psd->mFrame->mFrame->GetRect(r);
+            r.width -= *aDeltaWidth;
+            psd->mFrame->mFrame->SetRect(r);
+          }
+#ifdef NOISY_TRIM
+          nsFrame::ListTag(stdout, psd->mFrame->mFrame);
+          printf(": trimmed %d\n", *aDeltaWidth);
+#endif
+        }
+        return PR_TRUE;
+      }
+    }
+    else if (!pfd->mIsTextFrame) {
+      // If we hit a frame on the end that's not text, then there is
+      // no trailing whitespace to trim. Stop the search.
+      *aDeltaWidth = 0;
+      return PR_TRUE;
+    }
+    else if (pfd->mIsNonEmptyTextFrame) {
+      nscoord deltaWidth = 0;
+      nsIHTMLReflow* hr;
+      nsresult rv = pfd->mFrame->QueryInterface(kIHTMLReflowIID, (void**)&hr);
+      if (NS_SUCCEEDED(rv)) {
+        hr->TrimTrailingWhiteSpace(&mPresContext,
+                                   *mBlockReflowState->rendContext,
+                                   deltaWidth);
+        if (deltaWidth) {
+          pfd->mBounds.width -= deltaWidth;
+          if (psd != mRootSpan) {
+            // The text frame has already been placed in it's
+            // parent. Therefore we need to update its rectangle now.
+            pfd->mFrame->SetRect(pfd->mBounds);
+          }
+          else {
+            psd->mX -= deltaWidth;
+          }
+          if (0 == pfd->mBounds.width) {
+            pfd->mIsNonEmptyTextFrame = PR_TRUE;
+            pfd->mMaxElementSize.width = 0;
+            pfd->mMaxElementSize.height = 0;
+          }
+
+          // Slide any frames that follow over by the right amount. The
+          // only think that can follow this frame is empty stuff, so we
+          // are just making things sensible.
+          while (pfd->mNext) {
+            pfd = pfd->mNext;
+            pfd->mBounds.x -= deltaWidth;
+          }
+
+#ifdef NOISY_TRIM
+          nsFrame::ListTag(stdout, pfd->mFrame);
+          printf(": trimmed %d\n", deltaWidth);
+#endif
+
+          // Shrink our span
+          if (psd->mFrame) {
+            psd->mFrame->mBounds.width -= deltaWidth;
+            if (psd != mRootSpan) {
+              nsRect r;
+              psd->mFrame->mFrame->GetRect(r);
+              r.width -= deltaWidth;
+              psd->mFrame->mFrame->SetRect(r);
+            }
+#ifdef NOISY_TRIM
+            nsFrame::ListTag(stdout, psd->mFrame->mFrame);
+            printf(": trimming %d (done by child)\n", deltaWidth);
+#endif
+          }
+        }
+      }
+
+      // Pass up to caller so they can shrink their span
+      *aDeltaWidth = deltaWidth;
+      return PR_TRUE;
+    }
+    pfd = pfd->mPrev;
+  }
+  *aDeltaWidth = 0;
+  return PR_FALSE;
+}
+
+void
+nsLineLayout::TrimTrailingWhiteSpace()
+{
+  PerSpanData* psd = mRootSpan;
+  nscoord deltaWidth;
+  TrimTrailingWhiteSpaceIn(psd, &deltaWidth);
 }
 
 void
@@ -2071,7 +2184,8 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify)
       }
     }
 
-    if (NS_STYLE_DIRECTION_RTL == psd->mDirection && !psd->mChangedFrameDirection) {
+    if ((NS_STYLE_DIRECTION_RTL == psd->mDirection) &&
+        !psd->mChangedFrameDirection) {
       psd->mChangedFrameDirection = PR_TRUE;
   
       /* Assume that all frames have been right aligned.*/
@@ -2119,6 +2233,7 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   }
 
   pfd = psd->mFirstFrame;
+  PRBool updatedCombinedArea = PR_FALSE;
   while (nsnull != pfd) {
     nscoord x = pfd->mBounds.x;
     nscoord y = pfd->mBounds.y;
@@ -2147,31 +2262,46 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       RelativePositionFrames(pfd->mSpan, spanCombinedArea);
     }
 
-    nscoord xl = x + r->x;
-    nscoord xr = x + r->XMost();
-    if (xl < x0) {
-      x0 = xl;
-    }
-    if (xr > x1) {
-      x1 = xr;
-    }
-    nscoord yt = y + r->y;
-    nscoord yb = y + r->YMost();
-    if (yt < y0) {
-      y0 = yt;
-    }
-    if (yb > y1) {
-      y1 = yb;
+    // Only if the frame has some area do we let it affect the
+    // combined area. Otherwise empty frames placed next to a floating
+    // element will cause the floaters margin to be relevant, which we
+    // don't want to happen.
+    if (r->width && r->height) {
+      nscoord xl = x + r->x;
+      nscoord xr = x + r->XMost();
+      if (xl < x0) {
+        x0 = xl;
+      }
+      if (xr > x1) {
+        x1 = xr;
+      }
+      nscoord yt = y + r->y;
+      nscoord yb = y + r->YMost();
+      if (yt < y0) {
+        y0 = yt;
+      }
+      if (yb > y1) {
+        y1 = yb;
+      }
+      updatedCombinedArea = PR_TRUE;
     }
 
     pfd = pfd->mNext;
   }
 
   // Compute aggregated combined area
-  aCombinedArea.x = x0;
-  aCombinedArea.y = y0;
-  aCombinedArea.width = x1 - x0;
-  aCombinedArea.height = y1 - y0;
+  if (updatedCombinedArea) {
+    aCombinedArea.x = x0;
+    aCombinedArea.y = y0;
+    aCombinedArea.width = x1 - x0;
+    aCombinedArea.height = y1 - y0;
+  }
+  else {
+    aCombinedArea.x = 0;
+    aCombinedArea.y = y0;
+    aCombinedArea.width = 0;
+    aCombinedArea.height = 0;
+  }
 
   // If we just computed a spans combined area, we need to update its
   // NS_FRAME_OUTSIDE_CHILDREN bit..

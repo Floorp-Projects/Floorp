@@ -103,7 +103,7 @@ public:
   void VerticalAlignFrames(nsRect& aLineBoxResult,
                            nsSize& aMaxElementSizeResult);
 
-  void TrimTrailingWhiteSpace(nsRect& aLineBounds);
+  void TrimTrailingWhiteSpace();
 
   void HorizontalAlignFrames(nsRect& aLineBounds, PRBool aAllowJustify);
 
@@ -273,6 +273,14 @@ protected:
     PRUint8 mVerticalAlign;
     PRBool mIsTextFrame;
     PRBool mIsNonEmptyTextFrame;
+
+    PerFrameData* Last() {
+      PerFrameData* pfd = this;
+      while (pfd->mNext) {
+        pfd = pfd->mNext;
+      }
+      return pfd;
+    }
   };
   PerFrameData mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES];
   PerFrameData* mFrameFreeList;
@@ -367,6 +375,8 @@ protected:
                             nscoord aLineHeight);
 
   void RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea);
+
+  PRBool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaWidth);
 
 #ifdef DEBUG
   void DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent);
