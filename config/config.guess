@@ -245,6 +245,10 @@ EOF
 		echo mips-sni-sinix
 	fi
 	exit 0 ;;
+    *:Rhapsody:*:*)
+	test ! -z "`echo ${UNAME_MACHINE} | grep Power`" && echo ppc-apple-rhapsody${UNAME_RELEASE} && exit 0
+	echo ${UNAME_MACHINE}-apple-rhapsody${UNAME_RELEASE}
+	exit 0 ;;
     *:QNX:*:*)
 	echo x86-qnx-qnx`echo ${UNAME_VERSION} | sed 's/^\([0-9]\)\([0-9]*\)$/\1.\2/'`
 	exit 0 ;;
