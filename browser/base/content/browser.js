@@ -3003,8 +3003,8 @@ nsContextMenu.prototype = {
         this.showItem( "context-paste", this.onTextInput );
         this.showItem( "context-delete", this.onTextInput );
         this.showItem( "context-sep-paste", this.onTextInput );
-        this.showItem( "context-selectall", true );
-        this.showItem( "context-sep-selectall", this.isTextSelected && !this.onTextInput );
+        this.showItem( "context-selectall", this.isTextSelected || this.onTextInput );
+        this.showItem( "context-sep-selectall", this.isTextSelected );
 
         // XXX dr
         // ------
