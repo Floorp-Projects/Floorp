@@ -12,7 +12,7 @@
 
 <html:script language="JavaScript" src="DOMDataSourceViewer.js"/>
 <box align="vertical" flex="30%">
-  <html:input value="chrome://communicator/content/domviewer/domviewer.html" type="text" name="url" id="url" onkeyup="if (event.which == 13) loadUrl();"/>
+  <html:input value="chrome://communicator/content/domviewer/domviewer.html" type="text" name="url" id="url" onkeypress="if (event.which == 13) loadUrl();"/>
   <html:div>
     Show: 
     <html:input type="checkbox" onclick="setMode('content', event.target.checked);"/>
