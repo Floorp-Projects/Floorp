@@ -94,10 +94,10 @@
     var newvalue = value.toString();
     var keyboardShortcut = getAccKeyboardShortcut();
 
-    var expectedName          = "";
+    var expectedName          = "Second Menu Item";
     var expectedRole          = "46";
     var expectedState         = "1074791492";
-    var expectedValue         = "";
+    var expectedValue         = "Second Menu Item";
     var expectednodeFocus     = "Focused";
     var expectedaccFocused    = "Focused";
     var expectedkeyboardShortcut = "Alt+m";
