@@ -380,6 +380,10 @@ static NSArray* sToolbarDefaults = nil;
 #endif
   [self autosaveWindowFrame];
   
+  // ensure that the URL auto-complete popup is closed before the mork
+  // database is shut down, or we crash
+  [mURLBar clearResults];
+
   { // scope...
     nsCOMPtr<nsIRDFRemoteDataSource> dataSource ( do_QueryInterface(mGlobalHistory) );
     if (dataSource)
