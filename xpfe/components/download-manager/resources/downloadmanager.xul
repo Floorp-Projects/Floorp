@@ -111,6 +111,31 @@
          command="cmd_properties" modifiers="accel"/>
   </keyset>
 
+  <popup id="downloadPaneContext">
+    <menuitem id="downloadPaneContext-properties"
+              label="&cmd.properties.label;"
+              accesskey="&cmd.properties.accesskey;"
+              command="cmd_properties"/>
+    <menuseparator id="downloadPaneContext-sep1"/>
+    <menuitem id="downloadPaneContext-cancel"
+              label="&cmd.cancel.label;"
+              accesskey="&cmd.cancel.accesskey;"
+              command="cmd_cancel"/>
+    <menuitem id="downloadPaneContext-remove"
+              label="&cmd.remove.label;"
+              accesskey="&cmd.remove.accesskey;"
+              command="cmd_remove"/>
+    <menuseparator id="downloadPaneContext-sep2"/>
+    <menuitem id="downloadPaneContext-openfile"
+              label="&cmd.openfile.label;"
+              accesskey="&cmd.openfile.accesskey;"
+              command="cmd_openfile"/>
+    <menuitem id="downloadPaneContext-showinshell"
+              label="&cmd.showinshell.label;"
+              accesskey="&cmd.showinshell.accesskey;"
+              command="cmd_showinshell"/>
+  </popup>
+
   <toolbox id="toolbox">
     <toolbar id="download-toolbar" tbalign="stretch" class="chromeclass-toolbar" persist="collapsed" grippytooltiptext="&dm.tooltip;">
       <toolbarbutton label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
@@ -128,9 +153,9 @@
     </toolbar>
   </toolbox>
 
-  <tree id="downloadView" flex="1" class="plain"
+  <tree id="downloadView" flex="1" class="plain" context="downloadPaneContext"
             datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"
-            ondblclick="return goDoCommand('cmd_properties');" enableColumnDrag="true"
+            ondblclick="onDoubleClick();" enableColumnDrag="true"
             onselect="onSelect(event);">
     <treecols onclick="doSort(event.target)">
       <treecol id="Name" primary="true"
