@@ -2788,11 +2788,26 @@ nsWebBrowserPersist::GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut)
 {
     if (!(mPersistFlags & PERSIST_FLAGS_FIXUP_ORIGINAL_DOM))
     {
-        return aNodeIn->CloneNode(PR_FALSE, aNodeOut);
+        nsresult rv = aNodeIn->CloneNode(PR_FALSE, aNodeOut);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
-
-    *aNodeOut = aNodeIn;
-    NS_ADDREF((*aNodeOut));
+    else
+    {
+        NS_ADDREF(*aNodeOut = aNodeIn);
+    }
+    nsCOMPtr<nsIDOMHTMLElement> element(do_QueryInterface(*aNodeOut));
+    if (element) {
+        // Make sure this is not XHTML
+        nsAutoString namespaceURI;
+        element->GetNamespaceURI(namespaceURI);
+        if (namespaceURI.IsEmpty()) {
+            // This is a tag-soup node.  It may have a _base_href attribute
+            // stuck on it by the parser, but since we're fixing up all URIs
+            // relative to the overall document base that will screw us up.
+            // Just remove the _base_href.
+            element->RemoveAttribute(NS_LITERAL_STRING("_base_href"));
+        }
+    }
     return NS_OK;
 }
 
