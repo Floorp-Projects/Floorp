@@ -31,11 +31,14 @@
 
 // MacFE
 #include "CHTMLView.h"
-#include "CNSContext.h"
+#include "CBrowserContext.h"
+#include "CEditorWindow.h"
+#include "CURLDispatcher.h"
 #include "resgui.h"
 #include "uprefd.h"
 #include "mforms.h"
 #include "CConfigActiveScroller.h"
+#include "CHyperScroller.h"
 #include "macgui.h"
 #include "macutil.h"
 #include "ufilemgr.h"
@@ -47,6 +50,7 @@
 #include "xlate.h"
 #include "fe_proto.h"
 #include "prefapi.h"
+#include "edt.h"
 
 // macros
 #define FEDATAPANE	((FormFEData *)formElem->element_data->ele_minimal.FE_Data)->fPane	
@@ -69,6 +73,9 @@ void FE_FreeFormElement(
 {
 	UFormElementFactory::FreeFormElement(inFormData);
 }
+
+// moose: temporary hack until we fix up lo_ele.h and ntypes.h to have an HTMLarea struct
+typedef struct lo_FormElementTextareaData_struct lo_FormElementHTMLareaData;
 
 // prototypes
 Boolean SetFE_Data(LO_FormElementStruct *formElem, LPane * pane, LFormElement *host, LCommander *commander);
@@ -221,6 +228,7 @@ void UFormElementFactory::RegisterFormTypes()
 	RegisterClass_( CFormList);
 	RegisterClass_( CFormLittleText);
 	RegisterClass_( CFormBigText);
+	RegisterClass_( CFormHTMLArea);
 	RegisterClass_( CFormRadio);
 	RegisterClass_( CGAFormRadio);
 	RegisterClass_( CFormCheckbox);
@@ -259,6 +267,12 @@ void UFormElementFactory::MakeFormElem(
 		case FORM_TYPE_TEXTAREA:
 			MakeTextArea(inHTMLView, inNSContext, width, height, baseline, formElem);
 			break;
+		
+#ifdef ENDER
+		case FORM_TYPE_HTMLAREA:
+			MakeHTMLArea(inHTMLView, inNSContext, width, height, baseline, formElem);
+			break;
+#endif /*ENDER*/
 		
 		case FORM_TYPE_RADIO:
 		case FORM_TYPE_CHECKBOX:
@@ -547,6 +561,95 @@ LPane* UFormElementFactory::MakeTextArea(
 		theTextView->SetLayoutElement(formElem);
 		::GetFontInfo(&fontInfo);
 		}		
+	
+	SDimension16 size;
+	theScroller->GetFrameSize(size);
+	width = size.width + textLeftExtra + textRightExtra;;
+	height = size.height + textTopExtra + textBottomExtra;;
+	baseline = fontInfo.ascent + 2;
+	
+	return theScroller;
+}
+
+// Creates an HTML area
+//	htmlAreaData->default_text;
+//	htmlAreaData->rows;
+//	htmlAreaData->cols;
+LPane* UFormElementFactory::MakeHTMLArea(
+	CHTMLView* inHTMLView,
+	CNSContext*	inNSContext,
+	Int32 &width,
+	Int32 &height,
+	Int32& baseline,
+	LO_FormElementStruct *formElem)
+{
+	if (!formElem->element_data)
+		return nil;
+	CHyperScroller * theScroller = NULL;
+	CFormHTMLArea * theHTMLAreaView = NULL;
+	FontInfo fontInfo;
+	if (!HasFormWidget(formElem))				// If there is no form, create it
+	{	
+		lo_FormElementHTMLareaData * htmlAreaData = (lo_FormElementHTMLareaData *) formElem->element_data;
+	
+		// Create the view
+		LCommander::SetDefaultCommander(inHTMLView);
+		LView::SetDefaultView(inHTMLView);
+	
+		theScroller = (CHyperScroller *)UReanimator::ReadObjects('PPob', formHTMLArea);
+		ThrowIfNil_(theScroller);
+		theScroller->FinishCreate();
+		theScroller->PutInside(inHTMLView);
+	
+		theHTMLAreaView = (CFormHTMLArea*)theScroller->FindPaneByID(formHTMLAreaID);
+		ThrowIfNil_(theHTMLAreaView);
+
+		URL_Struct* url = 0;	
+		url = NET_CreateURLStruct ("about:editfilenew", NET_NORMAL_RELOAD );
+
+		CBrowserContext *nscontext = new CBrowserContext();
+		ThrowIfNil_(nscontext);
+		theHTMLAreaView->SetContext(nscontext);
+		
+		MWContext *context = *nscontext;
+		context->is_editor = true;
+
+		CURLDispatcher::DispatchURL( url, nscontext, false, false, CEditorWindow::res_ID );
+		
+		LModelObject* theSuper = inHTMLView->GetFormElemBaseModel();
+		theHTMLAreaView->InitFormElement(*inNSContext, formElem);
+
+		// Resize to proper size
+		theHTMLAreaView->FocusDraw();
+		::GetFontInfo(&fontInfo);
+		short wantedWidth = htmlAreaData->cols * ::CharWidth('M') + 8;
+		short wantedHeight = htmlAreaData->rows * (fontInfo.ascent + fontInfo.descent + fontInfo.leading) + 8;
+		
+		theScroller->ResizeFrameTo(wantedWidth + 16 + BigTextLeftIndent + BigTextRightIndent,
+								   wantedHeight + 16 + BigTextTopIndent + BigTextBottomIndent,
+								   FALSE);
+								   
+	// Set the default values.
+		ResetFormElement(formElem, FALSE, SetFE_Data(formElem, theScroller, theHTMLAreaView, theHTMLAreaView));
+
+		theScroller->Show();
+	}
+	else
+	{
+		theScroller = (CHyperScroller*)FEDATAPANE;
+		if (!theScroller)
+			return NULL;
+		theHTMLAreaView = (CFormHTMLArea*)theScroller->FindPaneByID(formHTMLAreaID);
+		theHTMLAreaView->FocusDraw();
+		
+		//
+		// We've already created a widget for the
+		// form element, but layout has gone and
+		// reallocated the form element, so we must
+		// update our reference to it.
+		//
+		theHTMLAreaView->SetLayoutElement(formElem);
+	}		
 	
 	SDimension16 size;
 	theScroller->GetFrameSize(size);
@@ -1039,6 +1142,9 @@ void UFormElementFactory::FreeFormElement(
 			formElem->ele_text.FE_Data = NULL;
 			break;
 		case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+		case FORM_TYPE_HTMLAREA:
+#endif /*ENDER*/
 			if (formElem->ele_textarea.current_text)		// Free up the old memory
 				PA_FREE(formElem->ele_textarea.current_text);
 			formElem->ele_textarea.current_text = NULL;
@@ -1155,6 +1261,9 @@ void UFormElementFactory::DisplayFormElement(
 			case FORM_TYPE_ISINDEX:
 			case FORM_TYPE_READONLY:
 			case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+			case FORM_TYPE_HTMLAREA:
+#endif /*ENDER*/
 				if (GetFEData (formElem)) {
 					pane = GetFEDataPane(formElem);
 					extraX = textLeftExtra;
@@ -1437,6 +1546,29 @@ void UFormElementFactory::GetFormElementValue(
 				}
 				break;
 				
+#ifdef ENDER
+			case FORM_TYPE_HTMLAREA:
+				{
+				if ( !GetFEData( formElem ) )
+					return;
+				lo_FormElementHTMLareaData * htmlAreaData = (lo_FormElementHTMLareaData *) formElem->element_data;
+				if (htmlAreaData->current_text)		// Free up the old memory
+					PA_FREE(htmlAreaData->current_text);
+				htmlAreaData->current_text = NULL;
+				// find the views
+				LView * scroller = (LView*)FEDATAPANE;
+				if (!scroller)
+					return;
+				CFormHTMLArea*  htmlEdit = (CFormHTMLArea*)scroller->FindPaneByID(formHTMLAreaID);
+				Assert_(htmlEdit != NULL);
+				// Copy the text over
+				char* newTextPtr = 0;
+				EDT_SaveToBuffer(*(((CHTMLView*)htmlEdit)->GetContext()), (XP_HUGE_CHAR_PTR*) &newTextPtr);
+				htmlAreaData->current_text = (PA_Block)newTextPtr;
+				}
+				break;
+#endif /*ENDER*/
+
 			case FORM_TYPE_RADIO:
 			case FORM_TYPE_CHECKBOX:	// Sets the original check state
 				if ( !GetFEData( formElem ) )
@@ -1524,6 +1656,9 @@ void UFormElementFactory::HideFormElement(
 		case FORM_TYPE_PASSWORD:
 		case FORM_TYPE_ISINDEX:
 		case FORM_TYPE_TEXTAREA:
+#ifdef ENDER
+		case FORM_TYPE_HTMLAREA:
+#endif /*ENDER*/
 		case FORM_TYPE_RADIO:
 		case FORM_TYPE_CHECKBOX:
 		case FORM_TYPE_SUBMIT:
@@ -1784,6 +1919,34 @@ void UFormElementFactory::ResetFormElementData(
 				textEdit->Refresh();
 		}
 		break;
+
+#ifdef ENDER
+		case FORM_TYPE_HTMLAREA:
+		{		
+			if ( !GetFEData( formElem ) )
+				return;
+			lo_FormElementHTMLareaData* htmlAreaData = (lo_FormElementHTMLareaData*) formElem->element_data;
+			LView* scroller = (LView*)FEDATAPANE;
+			if (!scroller)
+				return;
+			CFormHTMLArea* htmlEdit = (CFormHTMLArea*)scroller->FindPaneByID(formHTMLAreaID);
+			if (!htmlEdit)
+				return;
+			MWContext *pContext = *(((CHTMLView*)htmlEdit)->GetContext());
+			if ( fromDefaults )
+			{
+				EDT_SetDefaultText( pContext,(char*)(htmlAreaData->default_text) );
+			}
+			else
+			{
+				// moose: this is probably all wrong... revisit.
+				EDT_ReadFromBuffer( pContext, (XP_HUGE_CHAR_PTR)htmlAreaData->current_text );
+			}
+			if ( redraw )
+				htmlEdit->Refresh();
+		}
+		break;
+#endif /*ENDER*/
 
 		case FORM_TYPE_RADIO:		// Set the toggle to on or off
 		case FORM_TYPE_CHECKBOX:

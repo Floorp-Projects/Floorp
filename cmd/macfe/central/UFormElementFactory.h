@@ -69,6 +69,14 @@ public:
 							Int32& baseline,
 							LO_FormElementStruct *formElem
 							);
+	static	LPane*	MakeHTMLArea(
+							CHTMLView* inHTMLView,
+							CNSContext*	inNSContext,
+							Int32 &width,
+							Int32 &height,
+							Int32& baseline,
+							LO_FormElementStruct *formElem
+							);
 	static	LPane*	MakeButton(
 							CHTMLView* inHTMLView,
 							CNSContext* inNSContext,
