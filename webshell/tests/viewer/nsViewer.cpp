@@ -22,7 +22,11 @@
  */
 
 #include <stdio.h>
+#ifdef XP_MAC
+#include <stdlib.h>
+#else
 #include <malloc.h>
+#endif
 
 #include "nsViewer.h"
 #include "resources.h"          // #defines ID's for menu items
