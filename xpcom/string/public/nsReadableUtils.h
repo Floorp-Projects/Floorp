@@ -45,7 +45,7 @@ class nsCString;
 NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
 NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
 
-NS_COM void CopyUTF16toASCII( const nsAString& aSource, nsACString& aDest );
+NS_COM void LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest );
 NS_COM void CopyASCIItoUTF16( const nsACString& aSource, nsAString& aDest );
 
 NS_COM void CopyUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
@@ -63,7 +63,7 @@ NS_COM void AppendUTF8toUTF16( const char* aSource, nsAString& aDest );
 // Backward compatibility
 inline 
 NS_COM void CopyUCS2toASCII( const nsAString& aSource, nsACString& aDest )
-{ CopyUTF16toASCII(aSource, aDest); }
+{ LossyCopyUTF16toASCII(aSource, aDest); }
 inline 
 NS_COM void CopyASCIItoUCS2( const nsACString& aSource, nsAString& aDest )
 { CopyASCIItoUTF16(aSource, aDest); }
