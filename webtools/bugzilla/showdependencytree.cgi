@@ -57,8 +57,16 @@ sub DumpKids {
     if (@list) {
         print "<ul>\n";
         foreach my $kid (@list) {
-            SendSQL("select bug_id, bug_status, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
-            my ($bugid, $stat, $short_desc) = (FetchSQLData());
+            my ($bugid, $stat, $milestone) = ("", "", "");
+            my ($userid, $short_desc) = ("", "");
+            if (Param('usetargetmilestone')) {
+                SendSQL("select bug_id, bug_status, target_milestone, assigned_to, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
+                ($bugid, $stat, $milestone, $userid, $short_desc) = (FetchSQLData());
+            } else {
+                SendSQL("select bug_id, bug_status, userid, short_desc from bugs where bug_id = $kid and bugs.groupset & $::usergroupset = bugs.groupset");
+                ($bugid, $stat, $userid, $short_desc) = (FetchSQLData());
+
+            }
             if (!defined $bugid) {
                 next;
             }
@@ -69,7 +77,13 @@ sub DumpKids {
                 print "<strike>";
             }
             $short_desc = html_quote($short_desc);
-            print qq{<a href="show_bug.cgi?id=$kid">$kid $short_desc</a>};
+            SendSQL("select login_name from profiles where userid = $userid");
+            my ($owner) = (FetchSQLData());
+            if ( (Param('usetargetmilestone')) && ($milestone) ) {
+                print qq{<a href="show_bug.cgi?id=$kid">$kid [$milestone, $owner] - $short_desc</a>};
+            } else {
+                print qq{<a href="show_bug.cgi?id=$kid">$kid [$owner] - $short_desc</a>};
+            }
             if (!$opened) {
                 print "</strike>";
             }
