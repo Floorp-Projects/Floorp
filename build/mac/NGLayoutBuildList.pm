@@ -655,8 +655,8 @@ sub BuildDist()
 	mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
 	
 	#make default plugins folder so that apprunner won't go looking for 3.0 and 4.0 plugins.
-	mkpath([ ":mozilla:dist:viewer:plugins", ":mozilla:dist:viewer_debug:plugins"]);
-	mkpath([ ":mozilla:dist:client:plugins", ":mozilla:dist:client_debug:plugins"]);
+	mkpath([ ":mozilla:dist:viewer:Plugins", ":mozilla:dist:viewer_debug:Plugins"]);
+	mkpath([ ":mozilla:dist:client:Plugins", ":mozilla:dist:client_debug:Plugins"]);
 	
 	if ($main::MOZ_FULLCIRCLE)
 	{
@@ -1080,7 +1080,7 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",                "$navigator_chrome_dir:skin:default");
 
 	 my($global_chrome_dir) = "$chrome_dir" . "Global";
-    _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",             "$global_chrome_dir:content:default");
+    #_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",             "$global_chrome_dir:content:default");
     _InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",                "$global_chrome_dir:skin:default");
 
 
