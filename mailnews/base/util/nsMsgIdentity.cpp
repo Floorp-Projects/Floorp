@@ -441,7 +441,7 @@ nsMsgIdentity::SetSmtpServer(nsISmtpServer *aServer)
 {
   nsresult rv;
   
-  m_smtpServer = NS_GetWeakReference(aServer, &rv);
+  m_smtpServer = getter_AddRefs(NS_GetWeakReference(aServer, &rv));
 
   if (aServer) {
     nsXPIDLCString smtpServerKey;

@@ -539,7 +539,7 @@ NS_IMETHODIMP nsMessage::GetMsgFolder(nsIMsgFolder **aFolder)
 
 NS_IMETHODIMP nsMessage::SetMsgFolder(nsIMsgFolder *folder)
 {
-	mFolder = NS_GetWeakReference(folder);
+	mFolder = getter_AddRefs(NS_GetWeakReference(folder));
 	return NS_OK;
 }
 
