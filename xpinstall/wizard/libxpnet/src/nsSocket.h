@@ -96,7 +96,7 @@ private:
 #endif
 
 #ifndef NULL
-#define NULL ((void *) 0L)
+#define NULL 0
 #endif
 
 #ifdef DUMP
