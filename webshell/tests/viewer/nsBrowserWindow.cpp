@@ -521,7 +521,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   mStatus->Create(mWindow, r, HandleLocationEvent, NULL);
   mStatus->SetText("");
   mStatus->SetForegroundColor(NS_RGB(255, 0, 0));
-  mStatus->SetBackgroundColor(NS_RGB(255, 255, 255));
+  //mStatus->SetBackgroundColor(NS_RGB(255, 255, 255));
   mStatus->Show(PR_TRUE);
 
   return NS_OK;
