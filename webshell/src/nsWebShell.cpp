@@ -154,7 +154,8 @@ public:
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIPostData* aPostData=nsnull,
-                     PRBool aModifyHistory=PR_TRUE);
+                     PRBool aModifyHistory=PR_TRUE,
+                     nsReloadType type = nsReload);
   NS_IMETHOD Stop(void);
   NS_IMETHOD Reload(nsReloadType aType);
    
@@ -952,7 +953,8 @@ static void convertFileToURL(nsString &aIn, nsString &aOut)
 NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsIPostData* aPostData,
-                    PRBool aModifyHistory)
+                    PRBool aModifyHistory,
+                    nsReloadType type)
 {
   nsresult rv;
   PRInt32 colon, fSlash;
@@ -1024,7 +1026,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                            this,           // Container
                            aPostData,      // Post Data
                            nsnull,         // Extra Info...
-                           mObserver);      // Observer
+                           mObserver,       // Observer
+                           (PRInt32)type);      // reload type
 
 
   return rv;
@@ -1048,7 +1051,7 @@ NS_IMETHODIMP nsWebShell::Reload(nsReloadType aType)
   nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
   if (nsnull != s) {
     // XXX What about the post data?
-    return LoadURL(*s, nsnull, PR_FALSE);
+    return LoadURL(*s, nsnull, PR_FALSE, aType);
   }
   return NS_ERROR_FAILURE;
 }
@@ -1121,7 +1124,8 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
                              this,           // Container
                              nsnull,         // Post Data
                              nsnull,         // Extra Info...
-                             mObserver);      // Observer
+                             mObserver,      // Observer
+                             nsReload);      // the reload type
   }
   return rv;
 }
@@ -1613,7 +1617,7 @@ nsWebShell::CancelRefreshURLTimers(void) {
 void nsWebShell::RefreshURLCallback(nsITimer* aTimer, void* aClosure) {
     refreshData *data=(refreshData*)aClosure;
     NS_PRECONDITION((data != nsnull), "Null pointer...");
-    data->shell->LoadURL(*data->aUrlSpec, nsnull, PR_TRUE);
+    data->shell->LoadURL(*data->aUrlSpec, nsnull, PR_TRUE, nsReload);
 }
 
 //----------------------------------------------------------------------
