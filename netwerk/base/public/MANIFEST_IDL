@@ -11,4 +11,5 @@ nsIRequest.idl
 nsISocketTransportService.idl
 nsIFileTransportService.idl
 nsIFileSystem.idl
+nsIPrompt.idl
 nsIUnicharStreamLoader.idl
