@@ -105,93 +105,6 @@ function InitDialog()
   dialog.HeadSrcInput.value = editorShell.GetHeadContentsAsHTML();
 }
 
-
-function GetMetaElement(name)
-{
-  if (name)
-  {
-    name = name.toLowerCase();
-    if (name != "")
-    {
-      var metaNodes = editorShell.editorDocument.getElementsByTagName("meta");
-      if (metaNodes && metaNodes.length > 0)
-      {
-        for (var i = 0; i < metaNodes.length; i++)
-        {
-          var metaNode = metaNodes.item(i);
-          if (metaNode && metaNode.getAttribute("name") == name)
-            return metaNode;
-        }
-      }
-    }
-  }
-  return null;
-}
-
-function CreateMetaElement(name)
-{
-  metaElement = editorShell.CreateElementWithDefaults("meta");
-  if (metaElement)
-    metaElement.setAttribute("name", name);
-  else
-    dump("Failed to create metaElement!\n");
-  
-  return metaElement;
-}
-
-function CreateHTTPEquivElement(name)
-{
-  metaElement = editorShell.CreateElementWithDefaults("meta");
-  if (metaElement)
-    metaElement.setAttribute("http-equiv", name);
-  else
-    dump("Failed to create metaElement for http-equiv!\n");
-  
-  return metaElement;
-}
-
-// Change "content" attribute on a META element,
-//   or delete entire element it if content is empty
-// This uses undoable editor transactions 
-function SetMetaElementContent(metaElement, content, insertNew)
-{
-  if (metaElement)
-  {
-    if(!content || content == "")
-    {
-      if (!insertNew)
-        editorShell.DeleteElement(metaElement);
-    }
-    else
-    {
-      if (insertNew)
-      {
-        // Don't need undo for set attribute, just for InsertElement
-        metaElement.setAttribute("content", content);
-        AppendHeadElement(metaElement);
-      }
-      else
-        editorShell.SetAttribute(metaElement, "content", content);
-    }
-  }
-}
-
-function GetHeadElement()
-{
-  var headList = editorShell.editorDocument.getElementsByTagName("head");
-  if (headList)
-    return headList.item(0);
-  
-  return null;
-}
-
-function AppendHeadElement(element)
-{
-  var head = GetHeadElement();
-  if (head)
-    head.appendChild(element);
-}
-
 function TextfieldChanged(ID)
 {
   switch(ID)
@@ -220,23 +133,18 @@ function onOK()
 {
   if (ValidateData())
   {
-    editorShell.BeginBatchChanges();
-
     // Save only if advanced "head editing" region is open?
     if (SeeMore)
     {
       // Delete existing children of HEAD      
-      // Note that we must use editorShell method so this is undoable
-      var children = dialog.HeadSrcInput.childNodes;
-      if (children)
-      {
-        for(i=0; i < children.length; i++) 
-          editorShell.DeleteElement(children.item(i));
-      }
+      // Note that we DO NOT use editorShell method 
+      //  because this is not an undoable task
+      while(headNode.firstChild)
+        headNode.removeChild(headNode.firstChild);
 
-      var headSrcString = dialog.HeadSrcInput.value;
-      if (headSrcString.length > 0)
-        editorShell.ReplaceHeadContentsWithHTML(headSrcString);        
+      // This method does not use the transaction system:
+      if (dialog.HeadSrcInput.value.length > 0)
+        editorShell.ReplaceHeadContentsWithHTML(dialog.HeadSrcInput.value);        
     }
 
     //Problem: How do we reconcile changes in same elements in 
@@ -256,7 +164,6 @@ function onOK()
     if (descWasEdited)
       SetMetaElementContent(descriptionElement, description, insertNewDescription);
 
-    editorShell.EndBatchChanges();
     return true; // do close the window
   }
   return false;

@@ -61,7 +61,7 @@
  -->
 		
 		<menuitem id="tableMenu" value="&tableMenu.label;"/>
-		<menuitem id="tableProperties" value="&tableProperties.label;"/>
+		<menuitem id="menu_tableProperties" value="&tableProperties.label;"/>
 		<menuseparator id="tableMenu-separator"/>
 		
 		<menuitem id="objectProperties" value="&properties.label;"/>

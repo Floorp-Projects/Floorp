@@ -38,8 +38,7 @@
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EditorSaveAsCharset.js"/>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
@@ -48,14 +47,16 @@
 
   <box orient="vertical">
     <titledbox orient="vertical"><title><text align="left" value="&documentTitleTitle.label;"/></title>
-      <text class="label" value="&documentTitleDesc.label;"/> 
+      <!-- Text labels filled in from editor.properties -->
+      <text id="EnterTitleLabel" class="label"/> 
 	    <textfield id="TitleInput" flex="1" onkeyup="TitleChanged();"/>
+      <html id="TitleHelp" class="label wrap" style="width:1em" flex="1"/>
     </titledbox>
 
     <titledbox orient="vertical"><title><text class="label" value="&documentCharsetTitle.label;"/></title>
       <text class="label" value="&documentCharsetDesc.label;"/>
-      <box>
-      <tree class="list" id="CharsetTree" rows="10" flex="1" onselect="SelectCharset();"/>
+      <box flex="1">
+        <tree class="list" id="CharsetTree" rows="10" flex="1" onselect="SelectCharset();"/>
       </box>
     </titledbox>
   </box>

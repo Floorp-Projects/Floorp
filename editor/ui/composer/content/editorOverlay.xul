@@ -798,7 +798,8 @@
   <button id="TagModeButton"      class="EditModeButton plain" type="text" selected="0" value="&showAllTags.label;"   onclick="SetEditMode(2)"/>
   <button id="SourceModeButton"   class="EditModeButton plain" type="text" selected="0" value="&sourceMode.label;"    onclick="SetEditMode(3)"/>
   <button id="PreviewModeButton"  class="EditModeButton plain" type="text" selected="0" value="&previewMode.label;"   onclick="SetEditMode(0)"/>
-  <button id="ToggleEditModeType" class="plain" onclick="ToggleEditModeType()"/>
+  <!-- button id="ToggleEditModeType" class="plain" onclick="ToggleEditModeType()"/ -->
+  <image id="ToggleEditModeType" onclick="ToggleEditModeType()"/>
 
  <!-- InsertPopupButton is used by messengercompose.xul -->
   <button class="plain format popup" id="InsertPopupButton"/>

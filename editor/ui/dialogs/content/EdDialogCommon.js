@@ -753,3 +753,122 @@ dump(fs.URLString+" = URL string\n");
   }
   return null;
 }
+
+function GetMetaElement(name)
+{
+  if (name)
+  {
+    name = name.toLowerCase();
+    if (name != "")
+    {
+      var metaNodes = editorShell.editorDocument.getElementsByTagName("meta");
+      if (metaNodes && metaNodes.length > 0)
+      {
+        for (var i = 0; i < metaNodes.length; i++)
+        {
+          var metaNode = metaNodes.item(i);
+          if (metaNode && metaNode.getAttribute("name") == name)
+            return metaNode;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function CreateMetaElement(name)
+{
+  metaElement = editorShell.CreateElementWithDefaults("meta");
+  if (metaElement)
+    metaElement.setAttribute("name", name);
+  else
+    dump("Failed to create metaElement!\n");
+  
+  return metaElement;
+}
+
+function GetHTTPEquivMetaElement(name)
+{
+  if (name)
+  {
+    name = name.toLowerCase();
+    if (name != "")
+    {
+      var metaNodes = editorShell.editorDocument.getElementsByTagName("meta");
+      if (metaNodes && metaNodes.length > 0)
+      {
+        for (var i = 0; i < metaNodes.length; i++)
+        {
+          var metaNode = metaNodes.item(i);
+          if (metaNode && metaNode.getAttribute("http-equiv") == name)
+            return metaNode;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function CreateHTTPEquivMetaElement(name)
+{
+  metaElement = editorShell.CreateElementWithDefaults("meta");
+  if (metaElement)
+    metaElement.setAttribute("http-equiv", name);
+  else
+    dump("Failed to create httpequivMetaElement!\n");
+  
+  return metaElement;
+}
+
+function CreateHTTPEquivElement(name)
+{
+  metaElement = editorShell.CreateElementWithDefaults("meta");
+  if (metaElement)
+    metaElement.setAttribute("http-equiv", name);
+  else
+    dump("Failed to create metaElement for http-equiv!\n");
+  
+  return metaElement;
+}
+
+// Change "content" attribute on a META element,
+//   or delete entire element it if content is empty
+// This uses undoable editor transactions 
+function SetMetaElementContent(metaElement, content, insertNew)
+{
+  if (metaElement)
+  {
+    if(!content || content == "")
+    {
+      if (!insertNew)
+        editorShell.DeleteElement(metaElement);
+    }
+    else
+    {
+      if (insertNew)
+      {
+        // Don't need undo for set attribute, just for InsertElement
+        metaElement.setAttribute("content", content);
+        AppendHeadElement(metaElement);
+      }
+      else
+        editorShell.SetAttribute(metaElement, "content", content);
+    }
+  }
+}
+
+function GetHeadElement()
+{
+  var headList = editorShell.editorDocument.getElementsByTagName("head");
+  if (headList)
+    return headList.item(0);
+  
+  return null;
+}
+
+function AppendHeadElement(element)
+{
+  var head = GetHeadElement();
+  if (head)
+    head.appendChild(element);
+}

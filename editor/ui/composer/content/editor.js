@@ -44,7 +44,7 @@ var docWasModified = false;  // Check if clean document, if clean then unload wh
 var contentWindow = 0;
 var sourceContentWindow = 0;
 var ContentWindowDeck;
-var EditorToolbox;
+var FormatToolbar;
 // Bummer! Can't get at enums from nsIDocumentEncoder.h
 var gOutputSelectionOnly = 1;
 var gOutputFormatted     = 2;
@@ -63,6 +63,7 @@ var gPreviewModeButton;
 var gIsWindows;
 var gIsMac;
 var gIsUNIX;
+var gIsHTMLEditor = false;
 
 var gPrefs;
 // These must be kept in synch with the XUL <options> lists
@@ -99,6 +100,9 @@ function TextEditorOnLoad()
 
 function PageIsEmptyAndUntouched()
 {
+dump("Editorshell="+editorShell+"\n");
+dump("DocumentIsEmpty="+editorShell.documentIsEmpty+"\n");
+dump("docWasModified="+docWasModified+"\n");
   return (editorShell != null) && (editorShell.documentIsEmpty == true) && (docWasModified == false);
 }
 
@@ -136,26 +140,32 @@ function EditorStartup(editorType, editorElement)
 {
   contentWindow = window.content;
   sourceContentWindow = document.getElementById("content-source");
-  gEditModeLabel     = document.getElementById("EditModeLabel"); 
-  gNormalModeButton  = document.getElementById("NormalModeButton");
-  gTagModeButton     = document.getElementById("TagModeButton");
-  gSourceModeButton  = document.getElementById("SourceModeButton");
-  gPreviewModeButton = document.getElementById("PreviewModeButton");
+  gIsHTMLEditor = (editorType == "html");
+
+  if (gIsHTMLEditor)
+  {
+    gEditModeLabel     = document.getElementById("EditModeLabel"); 
+    gNormalModeButton  = document.getElementById("NormalModeButton");
+    gTagModeButton     = document.getElementById("TagModeButton");
+    gSourceModeButton  = document.getElementById("SourceModeButton");
+    gPreviewModeButton = document.getElementById("PreviewModeButton");
+
+    // The "type" attribute persists, so use that value
+    //  to setup edit mode buttons
+dump("Edit Mode: "+gNormalModeButton.getAttribute('type')+"\n");
+    ToggleEditModeType(gNormalModeButton.getAttribute("type"));
+
+    // XUL elements we use when switching from normal editor to edit source
+    ContentWindowDeck = document.getElementById("ContentWindowDeck");
+    FormatToolbar = document.getElementById("FormatToolbar");
+  }
 
   gIsWin = navigator.appVersion.indexOf("Win") != -1;
   gIsUNIX = (navigator.appVersion.indexOf("X11") || 
              navigator.appVersion.indexOf("nux")) != -1;
   gIsMac = !gIsWin && !gIsUNIX;
-dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
+  dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
 
-  // The "type" attribute persists, so use that value
-  //  to setup edit mode buttons
-  ToggleEditModeType(gNormalModeButton.getAttribute("type"));
-
-  // XUL elements we use when switching from normal editor to edit source
-  ContentWindowDeck = document.getElementById("ContentWindowDeck");
-  EditorToolbox = document.getElementById("EditorToolbox");
-  
   // store the editor shell in the window, so that child windows can get to it.
   editorShell = editorElement.editorShell;
   
@@ -177,8 +187,6 @@ dump("IsWin="+gIsWin+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
   // set up our global prefs object
   GetPrefsService();
    
-//  editorShell.editorDocument.onDblClick = "EditorDblClick()";
-
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
@@ -727,51 +735,55 @@ function EditorAlign(commandID, alignType)
 
 function SetEditMode(mode)
 {
-  var bodyNode = editorShell.editorDocument.getElementsByTagName("body").item(0);
-  if (!bodyNode)
+  if (gIsHTMLEditor)
   {
-    dump("SetEditMode: We don't have a body node!\n");
-    return;
-  }
-  // Switch the UI mode before inserting contents
-  //   so user can't type in source window while new window is being filled
-  var previousMode = EditorDisplayMode;
-  if (!SetDisplayMode(mode))
-    return;
-
-  if (mode == DisplayModeSource)
-  {
-    // Get the current contents and output into the SourceWindow
-    if (bodyNode)
+    var bodyNode = editorShell.editorDocument.getElementsByTagName("body").item(0);
+    if (!bodyNode)
     {
-      var childCount = bodyNode.childNodes.length;
-      if( childCount)
-      {
-        // KLUDGE until we have an output flag that strips out <body> and </body> for us
-        var sourceContent = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
-        sourceContentWindow.value = sourceContent.replace(/<body>/,"").replace(/<\/body>/,"");
-        sourceContentWindow.focus();
-        setTimeout("sourceContentWindow.focus()", 10);
-        return;
-      }
+      dump("SetEditMode: We don't have a body node!\n");
+      return;
     }
-    // If we fall through, revert to previous node
-    SetDisplayMode(PreviousNonSourceDisplayMode);
-  }
-  else if (previousMode == DisplayModeSource) 
-  {
-    // We are comming from edit source mode,
-    //   so transfer that back into the document
-    editorShell.SelectAll();
-    editorShell.InsertSource(sourceContentWindow.value);
-    // Clear out the source editor buffer
-    sourceContentWindow.value = "";
-    // reset selection to top of doc (wish we could preserve it!)
-    if (bodyNode)
-      editorShell.editorSelection.collapse(bodyNode, 0);
+    // Switch the UI mode before inserting contents
+    //   so user can't type in source window while new window is being filled
+    var previousMode = EditorDisplayMode;
+    if (!SetDisplayMode(mode))
+      return;
 
-    contentWindow.focus();
-    setTimeout("contentWindow.focus()", 10);
+    if (mode == DisplayModeSource)
+    {
+      // Get the current contents and output into the SourceWindow
+      if (bodyNode)
+      {
+        var childCount = bodyNode.childNodes.length;
+        if( childCount)
+        {
+          // KLUDGE until we have an output flag that strips out <body> and </body> for us
+          //var sourceContent = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
+          //sourceContentWindow.value = sourceContent.replace(/<body>/,"").replace(/<\/body>/,"");
+          sourceContentWindow.value = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
+          sourceContentWindow.focus();
+          setTimeout("sourceContentWindow.focus()", 10);
+          return;
+        }
+      }
+      // If we fall through, revert to previous node
+      SetDisplayMode(PreviousNonSourceDisplayMode);
+    }
+    else if (previousMode == DisplayModeSource) 
+    {
+      // We are comming from edit source mode,
+      //   so transfer that back into the document
+      editorShell.SelectAll();
+      editorShell.InsertSource(sourceContentWindow.value);
+      // Clear out the source editor buffer
+      sourceContentWindow.value = "";
+      // reset selection to top of doc (wish we could preserve it!)
+      if (bodyNode)
+        editorShell.editorSelection.collapse(bodyNode, 0);
+
+      contentWindow.focus();
+      setTimeout("contentWindow.focus()", 10);
+    }
   }
 }
 
@@ -784,81 +796,81 @@ function CancelSourceEditing()
 
 function SetDisplayMode(mode)
 {
-  // Already in requested mode:
-  //  return false to indicate we didn't switch
-  if (mode == EditorDisplayMode)
-    return false;
+  if (gIsHTMLEditor)
+  {
+    // Already in requested mode:
+    //  return false to indicate we didn't switch
+    if (mode == EditorDisplayMode)
+      return false;
 
-  EditorDisplayMode = mode;
+    EditorDisplayMode = mode;
 
-  // Save the last non-source mode so we can cancel source editing easily
-  if (mode != DisplayModeSource)
-    PreviousNonSourceDisplayMode = mode;
+    // Save the last non-source mode so we can cancel source editing easily
+    if (mode != DisplayModeSource)
+      PreviousNonSourceDisplayMode = mode;
   
   
-  // Editorshell does the style sheet loading/unloading
-  editorShell.SetDisplayMode(mode);
+    // Editorshell does the style sheet loading/unloading
+    editorShell.SetDisplayMode(mode);
 
-  // Set the UI states
-  gPreviewModeButton.setAttribute("selected",Number(mode == DisplayModePreview));
-  gNormalModeButton.setAttribute("selected",Number(mode == DisplayModeNormal));
-  gTagModeButton.setAttribute("selected",Number(mode == DisplayModeAllTags));
-  gSourceModeButton.setAttribute("selected", Number(mode == DisplayModeSource));
+    // Set the UI states
+    gPreviewModeButton.setAttribute("selected",Number(mode == DisplayModePreview));
+    gNormalModeButton.setAttribute("selected",Number(mode == DisplayModeNormal));
+    gTagModeButton.setAttribute("selected",Number(mode == DisplayModeAllTags));
+    gSourceModeButton.setAttribute("selected", Number(mode == DisplayModeSource));
 
-  if (mode == DisplayModeSource)
-  {
-    // Switch to the sourceWindow (second in the deck)
-    ContentWindowDeck.setAttribute("index","1");
+    if (mode == DisplayModeSource)
+    {
+      // Switch to the sourceWindow (second in the deck)
+      ContentWindowDeck.setAttribute("index","1");
 
-    // Hide normal chrome
-    EditorToolbox.setAttribute("collapsed", "true");
+      // TODO: WE MUST DISABLE ALL KEYBOARD COMMANDS!
 
-    // TODO: WE MUST DISABLE ALL KEYBOARD COMMANDS!
+      // THIS DOESN'T WORK!
+      sourceContentWindow.focus();
+    }
+    else 
+    {
+      // Switch to the normal editor (first in the deck)
+      ContentWindowDeck.setAttribute("index","0");
 
-    // THIS DOESN'T WORK!
-    sourceContentWindow.focus();
+      // TODO: WE MUST ENABLE ALL KEYBOARD COMMANDS!
+
+      contentWindow.focus();
+    }
+    return true;
   }
-  else 
-  {
-    // Switch to the normal editor (first in the deck)
-    ContentWindowDeck.setAttribute("index","0");
-
-    // Show normal chrome
-    EditorToolbox.removeAttribute("collapsed");
-
-    // TODO: WE MUST ENABLE ALL KEYBOARD COMMANDS!
-
-    contentWindow.focus();
-  }
-  return true;
 }
 
 function ToggleEditModeType()
 {
-  if (EditModeType == "text")
+  if (gIsHTMLEditor)
   {
-    EditModeType = "image";
-    gNormalModeButton.setAttribute("value","");
-    gTagModeButton.setAttribute("value","");
-    gSourceModeButton.setAttribute("value","");
-    gPreviewModeButton.setAttribute("value","");
-    // Advanced users don't need to see the label (cleaner look)
-    gEditModeLabel.setAttribute("hidden","true");
-  }
-  else
-  {
-    EditModeType = "text";
-    gNormalModeButton.setAttribute("value","Normal");
-    gTagModeButton.setAttribute("value","Show All Tags");
-    gSourceModeButton.setAttribute("value","HTML Source");
-    gPreviewModeButton.setAttribute("value","Edit Preview");
-    gEditModeLabel.removeAttribute("hidden");
-  }
+    if (EditModeType == "text")
+    {
+      EditModeType = "image";
+      gNormalModeButton.setAttribute("value","");
+      gTagModeButton.setAttribute("value","");
+      gSourceModeButton.setAttribute("value","");
+      gPreviewModeButton.setAttribute("value","");
+      // Advanced users don't need to see the label (cleaner look)
+      gEditModeLabel.setAttribute("hidden","true");
+    }
+    else
+    {
+      EditModeType = "text";
+      gNormalModeButton.setAttribute("value","Normal");
+      gTagModeButton.setAttribute("value","Show All Tags");
+      gSourceModeButton.setAttribute("value","HTML Source");
+      gPreviewModeButton.setAttribute("value","Edit Preview");
+      gEditModeLabel.removeAttribute("hidden");
+    }
 
-  gNormalModeButton.setAttribute("type",EditModeType);
-  gTagModeButton.setAttribute("type",EditModeType);
-  gSourceModeButton.setAttribute("type",EditModeType);
-  gPreviewModeButton.setAttribute("type",EditModeType);
+    gNormalModeButton.setAttribute("type",EditModeType);
+    gTagModeButton.setAttribute("type",EditModeType);
+    gSourceModeButton.setAttribute("type",EditModeType);
+    gPreviewModeButton.setAttribute("type",EditModeType);
+  }
 }
 
 function EditorToggleParagraphMarks()
@@ -989,38 +1001,6 @@ function EditorInitFormatMenu()
   }
 }
 
-function EditorInitTableMenu()
-{
-  // Change text on the "Join..." item depending if we
-  //   are joining selected cells or just cell to right
-  // TODO: What to do about normal selection that crosses
-  //       table border? Try to figure out all cells
-  //       included in the selection?
-  var menuText;
-  if (editorShell.GetFirstSelectedCell())
-    menuText = GetString("JoinSelectedCells");
-  else
-    menuText = GetString("JoinCellToRight");
-
-  document.getElementById("tableJoinCells").setAttribute("value",menuText);
-
-  // Set platform-specific hints for how to select cells
-  if (gIsWin) osKey = "XulKeyWin";
-  if (gIsMac) osKey = "XulKeyMac";
-  if (gIsUNIX) osKey = "XulKeyUnix";
-
-  var DragStr = GetString(osKey)+GetString("Drag");
-  var ClickStr = GetString(osKey)+GetString("Click");
-  var DelStr = GetString(gIsMac ? "Clear" : "Del");
-
-  document.getElementById("menu_DeleteCell").setAttribute("acceltext",ClickStr);
-  document.getElementById("menu_SelectRow").setAttribute("acceltext",DragStr);
-  document.getElementById("menu_SelectColumn").setAttribute("acceltext",DragStr);
-  document.getElementById("menu_SelectAllCells").setAttribute("acceltext",DragStr);
-  // And add "Del" or "Clear"
-  document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
-}
-
 function EditorInitToolbars()
 {
   // Nothing to do now, but we might want some state updating here
@@ -1042,12 +1022,15 @@ function EditorSetDefaultPrefs()
   }
 
   // doctype
-  var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN",
-               "");
+  var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN","");
   if (!domdoc.doctype)
+  {
     domdoc.insertBefore(newdoctype, domdoc.firstChild);
+  }
   else
+  {
     domdoc.replaceChild(newdoctype, domdoc.doctype);
+  }
   
   // search for head; we'll need this for meta tag additions
   var headelement = 0;
