@@ -647,21 +647,14 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
     case gif_global_colormap:
     {
-      GIF_RGB* map = (GIF_RGB*)PR_Calloc(gs->global_colormap_size,
-                                         sizeof(GIF_RGB));
+      PRUint8* map = (PRUint8*)PR_MALLOC(3 * gs->global_colormap_size);
       if (!map) {
         gs->state = gif_oom;
         break;
       }
 
       gs->global_colormap = map;
-
-      for (int i = 0; i < gs->global_colormap_size; i++, map++)
-      {
-        map->red = *q++;
-        map->green = *q++;
-        map->blue = *q++;
-      }
+      memcpy(map, q, 3 * gs->global_colormap_size);
 
       GETN(1, gif_image_start);
     }
@@ -957,21 +950,16 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
     case gif_image_colormap:
     {
-      GIF_RGB *map = gs->local_colormap;
+      PRUint8 *map = gs->local_colormap;
       if (!map) {
-        map = gs->local_colormap = (GIF_RGB*)PR_Calloc(gs->local_colormap_size,
-                                                       sizeof(GIF_RGB));
+        map = gs->local_colormap = (PRUint8*)PR_MALLOC(3 * gs->local_colormap_size);
         if (!map) {
           gs->state = gif_oom;
           break;
         }
       }
 
-      for (int i = 0; i < gs->local_colormap_size; i++, map++) {
-        map->red   = *q++;
-        map->green = *q++;
-        map->blue  = *q++;
-      }
+      memcpy(map, q, 3 * gs->local_colormap_size);
 
       GETN(1, gif_lzw_start);
     }

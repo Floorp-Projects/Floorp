@@ -82,32 +82,6 @@ typedef enum
     DISPOSE_OVERWRITE_PREVIOUS = 3  /* Save-under */
 } gdispose;
 
-/* A RGB triplet representing a single pixel in the image's colormap
-   (if present.) */
-typedef struct _GIF_RGB
-{
-  PRUint8 red, green, blue, pad; /* Windows requires the fourth byte &
-                                    many compilers pad it anyway. */
-} GIF_RGB;
-    
-/* Colormap information. */
-typedef struct _GIF_ColorMap {
-    int32 num_colors;           /* Number of colors in the colormap.
-                                   A negative value can be used to denote a
-                                   possibly non-unique set. */
-    GIF_RGB *map;                /* Colormap colors. */
-    PRUint8 *index;             /* NULL, if map is in index order.  Otherwise
-                                   specifies the indices of the map entries. */
-    void *table;                /* Lookup table for this colormap.  Private to
-                                   the Image Library. */
-} GIF_ColorMap;
-    
-/* An indexed RGB triplet. */
-typedef struct _GIF_IRGB {
-    PRUint8 index;
-    PRUint8 red, green, blue;
-} GIF_IRGB;
-
 /* A GIF decoder's state */
 typedef struct gif_struct {
     void* clientptr;
@@ -157,7 +131,7 @@ typedef struct gif_struct {
     int is_local_colormap_defined;
     gdispose disposal_method;   /* Restore to background, leave in place, etc.*/
     gdispose last_disposal_method;
-    GIF_RGB *local_colormap;     /* Per-image colormap */
+    PRUint8 *local_colormap;    /* Per-image colormap */
     int local_colormap_size;    /* Size of local colormap array. */
     PRUint32 delay_time;        /* Display time, in milliseconds,
                                    for this image in a multi-image GIF */
@@ -167,7 +141,7 @@ typedef struct gif_struct {
     int version;                /* Either 89 for GIF89 or 87 for GIF87 */
     PRUintn screen_width;       /* Logical screen width & height */
     PRUintn screen_height;
-    GIF_RGB *global_colormap;    /* Default colormap if local not supplied  */
+    PRUint8 *global_colormap;   /* Default colormap if local not supplied  */
     int global_colormap_size;   /* Size of global colormap array. */
     int images_decoded;         /* Counts images for multi-part GIFs */
     int destroy_pending;        /* Stream has ended */
