@@ -42,8 +42,8 @@
 
 
 
-# $Revision: 1.4 $ 
-# $Date: 2002/05/02 22:56:33 $ 
+# $Revision: 1.5 $ 
+# $Date: 2002/05/10 21:18:52 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Req.pm,v $ 
 # $Name:  $ 
@@ -82,7 +82,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -137,25 +137,6 @@ sub clean_bug_input {
   $var =~ s/\s+/_/g;
 
   return ($var, $value);
-}
-
-
-# remove all records from the database which are older then last_time.
-
-sub trim_db_history {
-  my ($self, $tree,) = (@_);
-
-  my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
-
-  # sort numerically ascending
-  my (@times) = sort {$a <=> $b} keys %{ $DATABASE{$tree} };
-  foreach $time (@times) {
-    ($time >= $last_time) && last;
-
-    delete $DATABASE{$tree}{$time};
-  }
-
-  return ;
 }
 
 
@@ -287,7 +268,7 @@ sub apply_db_updates {
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
        ) {
       $METADATA{$tree}{'updates_since_trim'}=0;
-      trim_db_history(@_);
+      $self->trim_db_history(@_);
   }
   
   $self->savetree_db($tree);
