@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.10 $ 
-# $Date: 2002/05/02 23:15:46 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/10 22:00:42 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -77,80 +77,157 @@ sub page_header {
     ( $refresh =  "<META HTTP-EQUIV=\"Refresh\" CONTENT=\"$args{'refresh'}\">" );
   
 $header .=<<EOF;
-<HTML>
+<html>
         <!-- This file was automatically created by $main::0  -->
         <!-- version: $main::VERSION -->
         <!-- at $main::LOCALTIME -->
-<HEAD>
+<head>
 	$refresh
-	<SCRIPT>
-var event = 0;	// Nav3.0 compatibility
-document.loaded = false;
+<script>
 
-popup_offset = 5;
-max_link_length = 0;
+var tipRef=null;
+var fixedLayer=null;
 
-initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A000><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=6><TR><TD BGCOLOR=#FFFFFF><B>Page loading...please wait.</B></TD></TR></TABLE></td></tr></table>";
+function tip(w,h,c) {
+	
+
+	var divX=lastX;
+	var divY=lastY;
+
+	if(navigator.userAgent.indexOf("Gecko")>-1) {
+		if((lastX+w)>window.innerWidth) {
+			divX-=((lastX+w)-window.innerWidth);
+		}
+		if((lastY+h)>window.innerHeight) {
+			divY-=((lastY+h)-window.innerHeight);
+		}
+		divPanel=document.createElement("div");
+		divPanel.style.position="absolute";
+		divPanel.style.left=(divX-10)+"px";
+		divPanel.style.top=(divY-10)+"px";
+		divPanel.style.height=h+"px";
+		divPanel.style.width=w+"px";
+		divPanel.style.backgroundColor="#F0A000";
+		document.body.appendChild(divPanel);
 
 
-function finishedLoad() {
-    if ( (parseInt(navigator.appVersion) < 4) ||
-	 (navigator.userAgent.toLowerCase().indexOf("msie") != -1) ) {
-      return true;
-    }
-    document.loaded = true;
-    document.layers['popup'].visibility='hide';
-    
-    return true;
+		//window.onmousedown=hideTip;	
+		divPanel.innerHTML=c;
+		tipRef=divPanel;
+
+	} else if(document.all) {
+
+		if((lastX+w)>document.body.scrollWidth) {
+			divX-=((lastX+w)-document.body.scrollWidth);
+		}
+		if((lastY+h)>document.body.scrollHeight) {
+			divY-=((lastY+h)-document.body.scrollHeight);
+		}
+		divPanel=document.createElement("div");
+		divPanel.style.position="absolute";
+		divPanel.style.left=(divX-10)+"px";
+		divPanel.style.top=(divY-10)+"px";
+		divPanel.style.height=h+"px";
+		divPanel.style.width=w+"px";
+		divPanel.style.backgroundColor="#eeee77";
+		document.body.appendChild(divPanel);
+		document.onmousedown=hideTip;	
+		divPanel.innerHTML=c;
+		tipRef=divPanel;
+
+	} else if(document.layers) {
+
+		if((lastX+w)>window.innerWidth) {
+			divX-=((lastX+w)-window.innerWidth);
+		}
+		if((lastY+h)>window.innerHeight) {
+			divY-=((lastY+h)-window.innerHeight);
+		}
+		divPanel=fixedLayer;
+		divPanel.position="absolute";
+		divPanel.left=(divX-10);
+		divPanel.top=(divY-10);
+		divPanel.clip.height=h;
+		divPanel.clip.width=w;
+		divPanel.width=w;
+		divPanel.height=h;
+		divPanel.bgColor="#eeee77";
+		divPanel.visibility="show";
+
+		document.onmousedown=hideTip;	
+
+		divPanel.document.open("text/html");
+		divPanel.document.write(c);
+		divPanel.document.close();
+
+		tipRef=divPanel;
+
+	}
+
+}
+
+function hideTip(e) {
+	if(navigator.userAgent.indexOf("Gecko")>-1) {
+		document.body.removeChild(divPanel);
+		window.onmousedown=null;
+	}
+	if(document.all) {
+		document.body.removeChild(divPanel);
+		document.onmousedown=null;
+	}
+
+	if(document.layers) {
+		fixedLayer.visibility="hide";
+		document.onmousedown=null;
+	}
 }
 
 
-function log(event, rev) {
-    if ( (parseInt(navigator.appVersion) < 4) ||
-	 (navigator.userAgent.toLowerCase().indexOf("msie") != -1) ) {
-      return true;
-    }
+function addEvents() {
+	if(navigator.userAgent.indexOf("Gecko")>-1) {
+		window.onmousemove=logMouse;
+	}
+	if(document.all) {
+		document.onmousemove=logMouse;
+	}
+	if(document.layers) {
+		document.captureEvents(Event.MOUSEMOVE|Event.MOUSEDOWN);
+		document.onmousemove=logMouse;
+		fixedLayer=new Layer(300);
 
-    var l = document.layers['popup'];
-    var guide = document.layers['popup_guide'];
-
-    if (event.target.text.length > max_link_length) {
-      max_link_length = event.target.text.length;
-
-      guide.document.write("<PRE>" + event.target.text);
-      guide.document.close();
-
-      popup_offset = guide.clip.width;
-    }
-
-    if (document.loaded) {
-        l.document.write("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A000>");
-        l.document.write("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=6><TR><TD BGCOLOR=#FFFFFF><tt>");
-        l.document.write(eval("logtxt" + rev));
-        l.document.write("</TD></TR></TABLE>");
-	l.document.write("</td></tr></table>");
-        l.document.close();
-    }
-
-    if (event.target.y > (window.innerHeight + window.pageYOffset - l.clip.height) ) { 
-         l.top = (window.innerHeight + window.pageYOffset - l.clip.height) - 15;
-    } else {
-         l.top = event.target.y - 9;
-    }
-    l.left = event.target.x + popup_offset;
-
-    l.visibility="show";
-
-    return true;
+	}
 }
 
-</SCRIPT>
+var lastY=0;
+var lastX=0;
+
+function logMouse(e) {
+	if(navigator.userAgent.indexOf("Gecko")>-1) {
+		lastX=e.clientX;
+		lastY=e.clientY;
+	}
+
+	if(document.layers) {
+		lastX=e.pageX;
+		lastY=e.pageY;
+	}
+
+	if(document.all) {
+		lastX=event.clientX;
+		lastY=event.clientY;
+	}
+
+
+}
+
+function start() {
+	addEvents();
+}
+
+</script>
         <TITLE>$args{'title'}</TITLE>
-</HEAD>
-
-<BODY onLoad="finishedLoad();" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">
-<LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
-<LAYER SRC="javascript:initialLayer" NAME='popup_guide' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 VISIBILITY='hide'></LAYER>
+</head>
+<body onload="start()" >
 
 <TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">
 <TR><TD>
