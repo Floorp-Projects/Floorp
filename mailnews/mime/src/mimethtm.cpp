@@ -82,7 +82,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
     if (NS_SUCCEEDED(GetMailNewsFont(obj, PR_FALSE, &fontSize, &fontSizePercentage,fontLang)))
     {
       PR_snprintf(buf, 256, "<div class=\"moz-text-html\"  lang=\"%s\">", 
-                  PromiseFlatCString(fontLang).get());
+                  fontLang.get());
       status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
     }
     else

@@ -2001,60 +2001,61 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
 {
   nsresult rv = NS_OK;
 
-  nsIPref *aPrefs = GetPrefServiceManager(obj->options);
-  if (aPrefs) {
+  nsIPref *prefs = GetPrefServiceManager(obj->options);
+  if (prefs) {
     MimeInlineText  *text = (MimeInlineText *) obj;
-    nsCAutoString aCharset;
+    nsCAutoString charset;
 
     // get a charset
     if (!text->initializeCharset)
       ((MimeInlineTextClass*)&mimeInlineTextClass)->initialize_charset(obj);
 
     if (!text->charset || !(*text->charset))
-      aCharset.Assign("us-ascii");
+      charset.Assign("us-ascii");
     else
-      aCharset.Assign(text->charset);
+      charset.Assign(text->charset);
 
-    nsCOMPtr<nsICharsetConverterManager2> aCharSetConverterManager2;
+    nsCOMPtr<nsICharsetConverterManager2> charSetConverterManager2;
     nsCOMPtr <nsIAtom> charsetAtom;
-    nsCOMPtr<nsIAtom> aLangGroup;
+    nsCOMPtr<nsIAtom> langGroupAtom;
     const PRUnichar* langGroup = nsnull;
-    nsCAutoString aPrefStr;
+    nsCAutoString prefStr;
 
-    ToLowerCase(aCharset);
+    ToLowerCase(charset);
 
-    aCharSetConverterManager2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+    charSetConverterManager2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
     if ( NS_FAILED(rv))
       return rv;
 
     // get a language, e.g. x-western, ja
-    rv = aCharSetConverterManager2->GetCharsetAtom2(PromiseFlatCString(aCharset).get(),getter_AddRefs(charsetAtom));
+    rv = charSetConverterManager2->GetCharsetAtom2(charset.get(),getter_AddRefs(charsetAtom));
     if (NS_FAILED(rv))
       return rv;
-    rv = aCharSetConverterManager2->GetCharsetLangGroup(charsetAtom,getter_AddRefs(aLangGroup));
+    rv = charSetConverterManager2->GetCharsetLangGroup(charsetAtom,getter_AddRefs(langGroupAtom));
     if (NS_FAILED(rv))
       return rv;
-    rv = aLangGroup->GetUnicode(&langGroup);
+    rv = langGroupAtom->GetUnicode(&langGroup);
     if (NS_FAILED(rv))
       return rv;
 
     fontLang.AssignWithConversion(langGroup);
 
     // get a font size from pref
-    aPrefStr.Assign(!styleFixed ? "font.size.variable." : "font.size.fixed.");
-    aPrefStr.AppendWithConversion(langGroup);
-    rv = aPrefs->GetIntPref(aPrefStr.get(), fontPixelSize);
+    prefStr.Assign(!styleFixed ? "font.size.variable." : "font.size.fixed.");
+    prefStr.AppendWithConversion(langGroup);
+    rv = prefs->GetIntPref(prefStr.get(), fontPixelSize);
     if (NS_FAILED(rv))
       return rv;
 
     // get original font size
     PRInt32 originalSize;
-    rv = aPrefs->GetDefaultIntPref(aPrefStr.get(), &originalSize);
+    rv = prefs->GetDefaultIntPref(prefStr.get(), &originalSize);
     if (NS_FAILED(rv))
       return rv;
 
     // calculate percentage
-    *fontSizePercentage = (PRInt32)((float)*fontPixelSize / (float)originalSize * 100);
+    *fontSizePercentage = originalSize ? 
+                          (PRInt32)((float)*fontPixelSize / (float)originalSize * 100) : 0;
 
   }
 
