@@ -59,8 +59,11 @@ static inline JSExceptionState* DoPreScriptEvaluated(JSContext* cx)
     // a JSExceptionState with no information) when there is no pending
     // exception.
     if(JS_IsExceptionPending(cx))
-        return JS_SaveExceptionState(cx);
-
+    {
+        JSExceptionState* state = JS_SaveExceptionState(cx);
+        JS_ClearPendingException(cx);
+        return state;
+    }
     return nsnull;
 }
 
@@ -68,7 +71,9 @@ static inline void DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
 {
     if(state)
         JS_RestoreExceptionState(cx, state);
-    
+    else
+        JS_ClearPendingException(cx);
+
     if(JS_GetContextThread(cx))
         JS_EndRequest(cx);
 
@@ -257,8 +262,6 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     // XXX we should install an error reporter that will sent reports to
     // the JS error console service.
 
-    jsval e;
-    JSBool hadExpection = JS_GetPendingException(cx, &e);
     JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
     id = xpc_NewIDObject(cx, jsobj, aIID);
     if(id)
@@ -270,10 +273,6 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     if(success)
         success = JS_ValueToObject(cx, retval, &retObj);
     JS_SetErrorReporter(cx, older);
-    if(hadExpection)
-        JS_SetPendingException(cx, e);
-    else
-        JS_ClearPendingException(cx);
 
     DoPostScriptEvaluated(cx, saved_exception);
 
