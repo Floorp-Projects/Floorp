@@ -19,6 +19,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+MODULE = netwerk
+
 LIBRARY_NAME = netwerkbase_s
 
 include $(DEPTH)/config/autoconf.mk
@@ -36,18 +38,6 @@ CPPSRCS =                              \
 	nsNetModuleMgr.cpp             \
 	nsNetModRegEntry.cpp           \
         $(NULL)
-
-EXPORTS = 				\
-	nsIOService.h			\
-	nsFileTransportService.h	\
-	nsSocketTransportService.h	\
-	nsStandardUrl.h			\
-	nsNetModuleMgr.h		\
-	$(NULL)
-
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-MODULE = netwerk
 
 include $(topsrcdir)/config/config.mk
 
