@@ -22,7 +22,7 @@
 #include "nsICmdLineService.h"
 #include "nsAppShellCIDs.h"
 
-#if defined(XP_PC) || defined(XP_MAC)
+//#if defined(XP_PC) || defined(XP_MAC)
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCores.h"
 #include "nsIDOMMailCore.h"
@@ -34,7 +34,7 @@ static NS_DEFINE_IID(kAppCoresCID,       NS_AppCores_CID);
 static NS_DEFINE_IID(kMailCoreCID,       NS_MailCore_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,    NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID, NS_BROWSERAPPCORE_CID);
-#endif
+//#endif
 
 #ifdef XP_PC
 
@@ -89,11 +89,11 @@ NS_SetupRegistry_1()
   nsRepository::RegisterFactory(kCAppShellServiceCID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCmdLineServiceCID,  APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
-#if defined(XP_PC) || defined(XP_MAC)
+//#if defined(XP_PC) || defined(XP_MAC)
   nsRepository::RegisterFactory(kAppCoresCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kMailCoreCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kToolbarCoreCID,    APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kBrowserAppCoreCID, APPCORES_DLL, PR_FALSE, PR_FALSE);
-#endif
+//#endif
 ///  nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }
