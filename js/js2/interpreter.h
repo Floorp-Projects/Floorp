@@ -25,12 +25,14 @@
 #include "icodegenerator.h"
 #include "gc_allocator.h"
 
-namespace JavaScript {    
+namespace JavaScript {
+namespace Interpreter {
+
     using namespace ICG;
     using namespace JSTypes;
 
-    struct JSLinkage;
-
+    struct Linkage;
+    
     class Context : public gc_base {
     public:
         explicit Context(World& world, JSObject* aGlobal)
@@ -47,13 +49,35 @@ namespace JavaScript {
             return t;
         }
 
+        class Listener {
+        public:
+            virtual void listen(Context* context, InstructionIterator pc, JSValues* registers, ICodeModule* iCode) = 0;
+        };
+    
+        void addListener(Listener* listener);
+        void removeListener(Listener* listener);
+    
+        class Frame {
+        public:
+            virtual Frame* getNext() = 0;
+            virtual void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode) = 0;
+        };
+    
+        Frame* getFrames();
+
         JSValue interpret(ICodeModule* iCode, const JSValues& args);
+
+    private:
+        void broadcast(InstructionIterator pc, JSValues* registers, ICodeModule* iCode);
 
     private:
         World& mWorld;
         JSObject* mGlobal;
-        JSLinkage* mLinkage;
-    }; /* class Interpreter */
+        Linkage* mLinkage;
+        std::vector<Listener*> mListeners;
+    }; /* class Context */
+
+} /* namespace Interpreter */
 } /* namespace JavaScript */
 
 #endif /* interpreter_h */
