@@ -21,8 +21,8 @@ MODULE=xpfe\components
 
 DEPTH=..\..\..\..
 
-EXPORTS=\
-	nsISampleAppShellComponent.h \
+XPIDLSRCS=\
+	nsIPrefWindow.idl \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
