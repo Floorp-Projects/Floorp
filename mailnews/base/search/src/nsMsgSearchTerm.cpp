@@ -1396,6 +1396,9 @@ nsresult nsMsgResultElement::AddValue (nsMsgSearchValue *value)
 
 nsresult nsMsgResultElement::AssignValues (nsIMsgSearchValue *src, nsMsgSearchValue *dst)
 {
+    NS_ENSURE_ARG_POINTER(src);
+    NS_ENSURE_ARG_POINTER(dst);
+
 	// Yes, this could be an operator overload, but nsMsgSearchValue is totally public, so I'd
 	// have to define a derived class with nothing by operator=, and that seems like a bit much
 	nsresult err = NS_OK;

@@ -221,6 +221,11 @@
           ]]>
         </getter>
       </property>
+      <constructor>
+      <![CDATA[
+        initializeTermFromId(this.id);
+      ]]>
+      </constructor>
     </implementation>
   </binding>
 
@@ -266,7 +271,6 @@
        status
   -->
   <binding id="searchvalue" name="searchValue">
-    <!-- yeah yeah, this stuff needs to be localized. I'm working on it! -->
     <content>
       <xul:textbox flex="1" class="search-value-textbox"/>
       <xul:menulist flex="1" class="search-value-menulist">
@@ -281,9 +285,9 @@
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
           <xul:menuitem value="2" stringTag="replied" class="search-value-menuitem"/>
-          <xul:menuitem value ="1" stringTag="read" class="search-value-menuitem"/>
-          <xul:menuitem value ="1048576" stringTag="new" class="search-value-menuitem"/>
-          <xul:menuitem value ="65536" stringTag="forwarded" class="search-value-menuitem"/>
+          <xul:menuitem value="1" stringTag="read" class="search-value-menuitem"/>
+          <xul:menuitem value="1048576" stringTag="new" class="search-value-menuitem"/>
+          <xul:menuitem value="65536" stringTag="forwarded" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
       <xul:textbox flex="1" class="search-value-textbox"/>
@@ -325,9 +329,9 @@
           this.searchAttribute = attrib;
           if (attrib == nsMsgSearchAttrib.Priority) {
             var matchingPriority =
-                children[1].getElementsByAttribute("value", val.priority);
+              children[1].getElementsByAttribute("value", val.priority);
             if (matchingPriority.length > 0)
-                children[1].selectedItem = matchingPriority[0];
+              children[1].selectedItem = matchingPriority[0];
           }
           else if (attrib == nsMsgSearchAttrib.MsgStatus) {
             var matchingStatus =
@@ -395,12 +399,30 @@
           ]]>
         </body>
       </method>
-	  <constructor>
+      <method name="initialize">
+        <parameter name="menulist"/>
+        <parameter name="bundle"/>
+        <body>
+          <![CDATA[
+            this.fillStringsForChildren(menulist.firstChild, bundle);
+
+            // to work around bug #78429, set and reset the selectedItem
+            var item = menulist.selectedItem;
+            menulist.selectedItem = null;
+            menulist.selectedItem = item;
+          ]]>
+        </body>
+      </method>
+      <constructor>
       <![CDATA[
         // initialize strings
         var bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
-        this.fillStringsForChildren(document.getAnonymousNodes(this)[1].firstChild, bundle);
-        this.fillStringsForChildren(document.getAnonymousNodes(this)[2].firstChild, bundle);
+
+        // intialize the priority picker
+        this.initialize(document.getAnonymousNodes(this)[1], bundle);
+
+        // initialize the status picker
+        this.initialize(document.getAnonymousNodes(this)[2], bundle);
 
         // preflight the date picker to today's date
         var datePicker = document.getAnonymousNodes(this)[3];

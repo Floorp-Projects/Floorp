@@ -17,8 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s):
+ * Original Author:
  *   Alec Flett <alecf@netscape.com>
+ *
+ * Contributor(s):
+ *   Seth Spitzer <sspitzer@netscape.com>
  */
 
 var gTotalSearchTerms=0;
@@ -28,6 +31,7 @@ var gSearchRemovedTerms = new Array;
 var gSearchScope;
 var gSearchLessButton;
 var gSearchBooleanRadiogroup;
+var gSearchTermTree;
 
 //
 function searchTermContainer() {}
@@ -128,9 +132,9 @@ searchTermContainer.prototype = {
         searchTerm.attrib = this.searchattribute.value;
         searchTerm.op = this.searchoperator.value;
         if (this.searchvalue.value)
-          this.searchvalue.save();
+            this.searchvalue.save();
         else
-          this.searchvalue.saveTo(searchTerm.value);
+            this.searchvalue.saveTo(searchTerm.value);
         searchTerm.value = this.searchvalue.value;
         searchTerm.booleanAnd = this.booleanAnd;
     },
@@ -146,24 +150,25 @@ var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 function initializeSearchWidgets() {
     gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
     gSearchRowContainer = document.getElementById("searchTermList");
+    gSearchTermTree = document.getElementById("searchTermTree");
     gSearchLessButton = document.getElementById("less");
     if (!gSearchLessButton)
         dump("I couldn't find less button!");
 }
 
-function initializeBooleanWidgets() {
-
+function initializeBooleanWidgets() 
+{
     var booleanAnd = true;
     // get the boolean value from the first term
-    var firstTerm = gSearchTerms[0];
+    var firstTerm = gSearchTerms[0].obj;
     if (firstTerm)
         booleanAnd = firstTerm.booleanAnd;
 
     // target radio items have value="and" or value="or"
-    targetValue = "or";
+    var targetValue = "or";
     if (booleanAnd) targetValue = "and";
 
-    targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("value", targetValue)[0];
+    var targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("value", targetValue)[0];
 
     gSearchBooleanRadiogroup.selectedItem = targetElement;
 }
@@ -178,11 +183,19 @@ function initializeSearchRows(scope, searchTerms)
     initializeBooleanWidgets();
 }
 
+function scrollToLastSearchTerm(index)
+{
+    if (index > 0)
+      gSearchTermTree.ensureIndexIsVisible(index-1);
+}
+ 
 function onMore(event)
 {
     if(gTotalSearchTerms==1)
-  gSearchLessButton .removeAttribute("disabled", "false");
+      gSearchLessButton .removeAttribute("disabled", "false");
     createSearchRow(gTotalSearchTerms++, gSearchScope, null);
+    // the user just added a term, so scroll to it
+    scrollToLastSearchTerm(gTotalSearchTerms);
 }
 
 function onLess(event)
@@ -191,13 +204,17 @@ function onLess(event)
         removeSearchRow(--gTotalSearchTerms);
     if (gTotalSearchTerms==1)
         gSearchLessButton .setAttribute("disabled", "true");
+
+    // the user removed a term, so scroll to the bottom so they are aware of it
+    scrollToLastSearchTerm(gTotalSearchTerms);
 }
 
-// set scope on all visible searhattribute tags
+// set scope on all visible searchattribute tags
 function setSearchScope(scope) {
     gSearchScope = scope;
     for (var i=0; i<gSearchTerms.length; i++) {
-        gSearchTerms[i].searchattribute.searchScope = scope;
+        gSearchTerms[i].obj.searchattribute.searchScope = scope;
+        gSearchTerms[i].scope = scope;
     }
 }
 
@@ -208,7 +225,7 @@ function booleanChanged(event) {
     var newBoolValue =
         (event.target.getAttribute("value") == "and") ? true : false;
     for (var i=0; i<gSearchTerms.length; i++) {
-        var searchTerm = gSearchTerms[i];
+        var searchTerm = gSearchTerms[i].obj;
         searchTerm.booleanAnd = newBoolValue;
     }
 }
@@ -232,13 +249,11 @@ function createSearchRow(index, scope, searchTerm)
                             null, searchVal,
                             null);
     var searchrow = constructRow(rowdata);
-
     searchrow.id = "searchRow" + index;
 
     var searchTermObj = new searchTermContainer;
-    // is this necessary?
-    //searchTermElement.id = "searchTerm" + index;
-    gSearchTerms[gSearchTerms.length] = searchTermObj;
+
+    gSearchTerms[gSearchTerms.length] = {obj:searchTermObj, scope:scope, searchTerm:searchTerm, initialized:false};
 
     searchTermObj.searchattribute = searchAttr;
     searchTermObj.searchoperator = searchOp;
@@ -262,20 +277,33 @@ function createSearchRow(index, scope, searchTerm)
     searchTermObj.booleanNodes = stringNodes;
 
     gSearchRowContainer.appendChild(searchrow);
+}
 
-    searchTermObj.searchScope = scope;
+function initializeTermFromId(id)
+{
+    // id is of the form searchAttr<n>
+    // strlen("searchAttr") == 10
+    // turn searchAttr<n> -> <n>
+    var index = eval(id.slice(10)); 
+    initializeTermFromIndex(index)
+}
+
+function initializeTermFromIndex(index)
+{
+    var searchTermObj = gSearchTerms[index].obj;
+
+    searchTermObj.searchScope = gSearchTerms[index].scope;
     // the search term will initialize the searchTerm element, including
     // .booleanAnd
-    if (searchTerm) {
-        searchTermObj.searchTerm = searchTerm;
-    }
-
+    if (gSearchTerms[index].searchTerm)
+        searchTermObj.searchTerm = gSearchTerms[index].searchTerm;
     // here, we don't have a searchTerm, so it's probably a new element -
     // we'll initialize the .booleanAnd from the existing setting in
     // the UI
     else
         searchTermObj.booleanAnd = getBooleanAnd();
 
+    gSearchTerms[index].initialized = true;
 }
 
 // creates a <treerow> using the array treeCellChildren as
@@ -301,10 +329,15 @@ function constructRow(treeCellChildren)
 
 function removeSearchRow(index)
 {
-    var searchTermObj = gSearchTerms[index];
+    var searchTermObj = gSearchTerms[index].obj;
     if (!searchTermObj) {
         return;
     }
+
+    // if it is an existing (but offscreen) term,
+    // make sure it is initialized before we remove it.
+    if (!gSearchTerms[index].searchTerm && !gSearchTerms[index].initialized)
+        initializeTermFromIndex(index);
 
     // need to remove row from tree, so walk upwards from the
     // searchattribute to find the first <treeitem>
@@ -351,13 +384,21 @@ function saveSearchTerms(searchTerms, termOwner)
     var i;
     for (i = 0; i<gSearchTerms.length; i++) {
         try {
-            var searchTerm = gSearchTerms[i].searchTerm;
+            var searchTerm = gSearchTerms[i].obj.searchTerm;
+
+            // the term might be an offscreen one we haven't initialized yet
+            // if so, don't bother saving it.
+            if (!searchTerm && !gSearchTerms[i].initialized) {
+                // is an existing term, but not initialize, so skip saving
+                continue;
+            }
+
             if (searchTerm)
-                gSearchTerms[i].save();
+                gSearchTerms[i].obj.save();
             else {
                 // need to create a new searchTerm, and somehow save it to that
                 searchTerm = termOwner.createTerm();
-                gSearchTerms[i].saveTo(searchTerm);
+                gSearchTerms[i].obj.saveTo(searchTerm);
                 termOwner.appendTerm(searchTerm);
             }
         } catch (ex) {
