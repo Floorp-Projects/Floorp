@@ -1965,11 +1965,11 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   PRInt32 colon, fSlash;
   PRUnichar port;
-  fSlash=urlSpec.Find('/');
+  fSlash=urlSpec.FindChar('/');
   
 
   // if no scheme (protocol) is found, assume http.
-  if ( ((colon=urlSpec.Find(':')) == -1) // no colon at all
+  if ( ((colon=urlSpec.FindChar(':')) == -1) // no colon at all
        || ( (fSlash > -1) && (colon > fSlash) ) // the only colon comes after the first slash
        || ( (colon < urlSpec.Length()-1) // the first char after the first colon is a digit (i.e. a port)
             && ((port=urlSpec.CharAt(colon+1)) <= '9')
