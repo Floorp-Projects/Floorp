@@ -7,11 +7,9 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgThread.h" /* interface nsIMsgThread */
-#include "nsISupportsArray.h" /* interface nsISupportsArray */
+#include "nsIMsgIncomingServer.h" /* interface nsIMsgIncomingServer */
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
-#include "nsIInputStream.h" /* interface nsIInputStream */
-#include "nsIBaseStream.h" /* interface nsIBaseStream */
 #include "nsIMsgFolder.h" /* interface nsIMsgFolder */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsrootidl.h" /* interface nsrootidl */
@@ -19,10 +17,9 @@
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIMessage.h" /* interface nsIMessage */
 #include "nsIFolder.h" /* interface nsIFolder */
+class nsIInputStream; /* forward decl */
+#include "nsIInputStream.h";
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
 
 /* starting interface:    nsICopyMessageListener */
 
@@ -44,11 +41,6 @@ class nsICopyMessageListener : public nsISupports {
 
   /* void EndCopy (in boolean copySucceeded); */
   NS_IMETHOD EndCopy(PRBool copySucceeded) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsICopyMessageListener *priv);
-#endif
 };
 
 #endif /* __gen_nsICopyMessageListener_h__ */

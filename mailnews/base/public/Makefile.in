@@ -23,23 +23,25 @@ MODULE		= mailnews
 
 include $(DEPTH)/config/autoconf.mk
 XPIDLSRCS =				  \
-		nsIFolder.idl		\
-		nsIMsgHost.idl		  \
-		nsIMsgFolder.idl	  \
+		nsICopyMessageListener.idl	\
 		nsIDOMMsgAppCore.idl	\
-		nsIMsgGroupRecord.idl   \
-		nsIMsgIncomingServer.idl	\
-		nsIMsgThread.idl	\
-		nsIMsgMessageService.idl \
-		nsIUrlListener.idl	\
+		nsIFolder.idl		\
 		nsIFolderListener.idl	\
-		nsIMsgIdentity.idl			\
-		nsIMsgIncomingServer.idl	\
+		nsIMessage.idl			\
+		nsIMessageView.idl		\
 		nsIMsgAccount.idl			\
 		nsIMsgAccountManager.idl	\
+		nsIMsgFolder.idl	  \
+		nsIMsgGroupRecord.idl   \
+		nsIMsgHost.idl		  \
+		nsIMsgIdentity.idl			\
+		nsIMsgIncomingServer.idl	\
 		nsIMsgMailSession.idl	\
+		nsIMsgMessageService.idl \
 		nsIMsgSignature.idl		\
+		nsIMsgThread.idl	\
 		nsIMsgVCard.idl			\
+		nsIUrlListener.idl	\
 		$(NULL)
 
 EXPORTS =				\

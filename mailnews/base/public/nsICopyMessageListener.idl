@@ -17,9 +17,13 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIInputStream.idl"
 #include "nsIMessage.idl"
 
+interface nsIInputStream;
+
+%{C++
+#include "nsIInputStream.h";
+%}
 
 [scriptable, uuid(53CA78FE-E231-11d2-8A4D-0060B0FC04D2)]
 

@@ -8,10 +8,6 @@
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
 
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
 /* starting interface:    nsIMessageView */
 
 /* {14495572-E945-11d2-8A52-0060B0FC04D2} */
@@ -38,11 +34,6 @@ class nsIMessageView : public nsISupports {
 
   /* void SetShowThreads (in boolean showThreads); */
   NS_IMETHOD SetShowThreads(PRBool showThreads) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMessageView *priv);
-#endif
 };
 
 #endif /* __gen_nsIMessageView_h__ */

@@ -7,6 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgThread.h" /* interface nsIMsgThread */
+#include "nsIMsgIncomingServer.h" /* interface nsIMsgIncomingServer */
 #include "MailNewsTypes.h" /* interface MailNewsTypes */
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIMsgFolder.h" /* interface nsIMsgFolder */
@@ -15,11 +16,6 @@
 #include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIFolder.h" /* interface nsIFolder */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-class nsIMsgFolder; /* forward decl */
 
 /* starting interface:    nsIMessage */
 
@@ -38,11 +34,6 @@ class nsIMessage : public nsIMsgHdr {
 
   /* void SetMsgFolder (in nsIMsgFolder folder); */
   NS_IMETHOD SetMsgFolder(nsIMsgFolder *folder) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMessage *priv);
-#endif
 };
 
 /* starting interface:    nsIDBMessage */
@@ -62,11 +53,6 @@ class nsIDBMessage : public nsIMessage {
 
   /* nsIMsgDBHdr GetMsgDBHdr (); */
   NS_IMETHOD GetMsgDBHdr(nsIMsgDBHdr **_retval) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDBMessage *priv);
-#endif
 };
 
 #endif /* __gen_nsIMessage_h__ */
