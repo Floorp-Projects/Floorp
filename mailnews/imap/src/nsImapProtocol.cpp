@@ -6770,14 +6770,17 @@ NS_IMETHODIMP nsImapMockChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 
 NS_IMETHODIMP nsImapMockChannel::GetContentType(char * *aContentType)
 {
-  *aContentType = nsCRT::strdup("message/rfc822");
+  if (m_ContentType.IsEmpty())
+    *aContentType = nsCRT::strdup("message/rfc822");
+  else
+    *aContentType = m_ContentType.ToNewCString();
   return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::SetContentType(const char *aContentType)
 {
-  // Do not allow the content-type to change.
-  return NS_ERROR_FAILURE;
+  m_ContentType = aContentType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::GetContentLength(PRInt32 * aContentLength)
@@ -6872,14 +6875,15 @@ nsImapMockChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 
 NS_IMETHODIMP nsImapMockChannel::GetOwner(nsISupports * *aPrincipal)
 {
-  *aPrincipal = nsnull;
+  *aPrincipal = mOwner;
+  NS_IF_ADDREF(*aPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::SetOwner(nsISupports * aPrincipal)
 {
-    NS_NOTREACHED("nsImapMockChannel::SetOwner");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mOwner = aPrincipal;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

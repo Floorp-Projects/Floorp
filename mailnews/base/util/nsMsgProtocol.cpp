@@ -419,14 +419,17 @@ NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
   // us to optimize the case where the message url actual refers to  
   // a part in the message that has a content type that is not message/rfc822
 
-	*aContentType = nsCRT::strdup("message/rfc822");
+  if (m_ContentType.IsEmpty())
+	  *aContentType = nsCRT::strdup("message/rfc822");
+  else
+    *aContentType = m_ContentType.ToNewCString();
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgProtocol::SetContentType(const char *aContentType)
 {
-    // XXX: Do not allow the content type to be changed (yet)
-    return NS_ERROR_FAILURE;
+    m_ContentType = aContentType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgProtocol::GetContentLength(PRInt32 * aContentLength)
@@ -521,14 +524,15 @@ nsMsgProtocol::SetPipeliningAllowed(PRBool aPipeliningAllowed)
 
 NS_IMETHODIMP nsMsgProtocol::GetOwner(nsISupports * *aPrincipal)
 {
-    *aPrincipal = nsnull;
+  *aPrincipal = mOwner;
+  NS_IF_ADDREF(*aPrincipal);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgProtocol::SetOwner(nsISupports * aPrincipal)
 {
-    NS_NOTREACHED("SetOwner");
-	return NS_ERROR_NOT_IMPLEMENTED;
+  mOwner = aPrincipal;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgProtocol::GetLoadGroup(nsILoadGroup * *aLoadGroup)

@@ -602,6 +602,8 @@ protected:
   nsLoadFlags mLoadAttributes;
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+  nsCOMPtr<nsISupports> mOwner;
+  nsCString m_ContentType;
 };
 
 #endif  // nsImapProtocol_h___

@@ -117,6 +117,8 @@ protected:
   nsLoadFlags                 mLoadAttributes;
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+  nsCOMPtr<nsISupports>       mOwner;
+  nsCString                   m_ContentType;
 };
 
 #endif /* nsMsgProtocol_h__ */
