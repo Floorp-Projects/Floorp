@@ -347,7 +347,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInHTML,	&gInHTML,
     /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,
     /*parent,incl,exclgroups*/          kHTMLContent, kFlow, kNone,	
-    /*special properties*/              kOmitEndTag,
+    /*special properties*/              kOmitEndTag|kLegalOpen,
     /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_br,
@@ -712,7 +712,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-    /*special properties*/              0,
+    /*special properties*/              kDiscardTag,
     /*special parents,kids,skip*/       0,0,eHTMLTag_noembed},
 
   { /*tag*/                             eHTMLTag_noframes,
