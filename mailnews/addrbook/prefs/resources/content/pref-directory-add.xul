@@ -44,6 +44,7 @@
     <tabbox style="margin:5px">
       <tabs id="directoryTabBox">
         <tab label="&General.tab;"/>
+        <tab label="&Offline.tab;"/>
         <tab label="&Advanced.tab;"/>
       </tabs>
 	   
@@ -78,6 +79,16 @@
                      </row>
                  </rows>
              </grid>
+           <vbox>
+              <description>&offlineText.label;</description>
+              <separator/>
+              <hbox>
+                  <button label="&downloadNowButton.label;" 
+                      accesskey="&downloadNowButton.accesskey;"
+                      oncommand="DownloadNow();"/>
+                  <spacer flex="1"/>
+              </hbox>
+           </vbox>
            <grid>
              <columns>
                <column/>
