@@ -177,7 +177,7 @@ void CNsIRequest::RunAllTests(int reqTotal)
 
 	int i=0;
 
-    QAOutput("Start nsIRequest tests.", 2);	
+    QAOutput("Start nsIRequest tests.", 1);	
 
 	for (i=0; i<reqTotal; i++)
 	{
@@ -211,7 +211,7 @@ void CNsIRequest::RunAllTests(int reqTotal)
 
 		QAOutput("- - - - - - - - - - - - - - - - - - - - -", 1);
 	} // end for loop
-    QAOutput("End nsIRequest tests.", 2);
+    QAOutput("End nsIRequest tests.", 1);
 }
 
 

@@ -296,7 +296,7 @@ void CNsIWebBrowFind::OnStartTests(UINT nMenuID)
 
 void CNsIWebBrowFind::RunAllTests()
 {
-	QAOutput("Begin WebBrowserFind tests.", 2);
+	QAOutput("Begin WebBrowserFind tests.", 1);
 	GetWebBrowFindObject();
 	SetSearchStringTest(1);
 	GetSearchStringTest(1);
@@ -334,5 +334,5 @@ void CNsIWebBrowFind::RunAllTests()
 	SetSearchFrames(PR_FALSE, 1);
 	GetSearchFrames(PR_FALSE, 1);
 	FindNextTest(PR_FALSE, 1);		// shouldn't find frame
-	QAOutput("End WebBrowserFind tests.", 2);
+	QAOutput("End WebBrowserFind tests.", 1);
 }

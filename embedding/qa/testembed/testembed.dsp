@@ -138,6 +138,14 @@ SOURCE=.\nsIClipboardCmd.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\nsICmdParams.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsICommandMgr.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsiDirServ.cpp
 # End Source File
 # Begin Source File
@@ -263,6 +271,14 @@ SOURCE=.\MostRecentUrls.h
 # Begin Source File
 
 SOURCE=.\nsIClipboardCmd.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsICmdParams.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\nsICommandMgr.h
 # End Source File
 # Begin Source File
 

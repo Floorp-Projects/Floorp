@@ -82,9 +82,9 @@ void CNsIFile::OnStartTests(UINT nMenuID)
 	switch(nMenuID)
 	{		
 		case ID_INTERFACES_NSIFILE_RUNALLTESTS	:
-			QAOutput("Begin nsIFile tests.", 2);
+			QAOutput("Begin nsIFile tests.", 1);
 			RunAllTests(theTestFile,theFileOpDir);
-			QAOutput("End nsIFile tests.", 2);
+			QAOutput("End nsIFile tests.", 1);
 			break ;
 
 		case ID_INTERFACES_NSIFILE_INITWITHPATH	:

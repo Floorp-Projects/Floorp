@@ -129,9 +129,9 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
 	switch(nMenuID)
 	{
 		case ID_INTERFACES_NSISHISTORY_RUNALLTESTS :
-			QAOutput("Begin nsISHistory tests.", 2);
+			QAOutput("Begin nsISHistory tests.", 1);
 			RunAllTests();
-			QAOutput("End nsISHistory tests.", 2);
+			QAOutput("End nsISHistory tests.", 1);
 			break ;
 		case ID_INTERFACES_NSISHISTORY_GETCOUNT :
 			GetCountTest(theSessionHistory, &numEntries, 2);
