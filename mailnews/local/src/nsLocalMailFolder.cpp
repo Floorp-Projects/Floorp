@@ -3002,8 +3002,9 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
   if (!messageUIDLs)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  PRInt32 uidlIndex = 0;
   header = (char*) PR_MALLOC(512);
-  for (PRInt32 uidlIndex = 0, i = 0; header && (i < srcCount); i++)
+  for (PRInt32 i = 0; header && (i < srcCount); i++)
   {
     /* get uidl for this message */
     uidl = nsnull;
