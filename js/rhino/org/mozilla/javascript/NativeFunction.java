@@ -322,7 +322,7 @@ public class NativeFunction extends ScriptableObject implements Function {
                     lbits |= (long)source.charAt(i);
 
                     double dval = Double.longBitsToDouble(lbits);
-                    result.append(ScriptRuntime.numberToString(dval));
+                    result.append(ScriptRuntime.numberToString(dval, 10));
                     break;
                 }
                 break;

@@ -73,8 +73,12 @@ public class NativeNumber extends ScriptableObject {
     	return new Double(d);
     }
 
-    public String toString() {
-	    return ScriptRuntime.numberToString(doubleValue);
+    public String toString(Object base) {
+        if (base == Undefined.instance)            
+    	    return ScriptRuntime.numberToString(doubleValue, 10);
+    	else
+    	    return ScriptRuntime.numberToString(doubleValue, 
+    	                            ScriptRuntime.toInt32(base));
     }
 
     public double valueOf() {
