@@ -376,7 +376,7 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
                   (!aCustom)  )
             {
 #ifdef DEBUG
-                printf("%s %d: DOWNLOAD_ONLY for %s is %d", __FILE__, __LINE__, 
+                printf("%s %d: DOWNLOAD_ONLY for %s is %d\n", __FILE__, __LINE__, 
                     currComp->GetArchive(), currComp->IsDownloadOnly());
 #endif
                 if (!currComp->IsDownloadOnly())
