@@ -31,19 +31,17 @@
           
     
     
-   <html:table>
+   <html:table border="1">
    <html:tr >
    	<html:td>
-   		<html:img html:src="resource:/res/samples/questionl.gif"></html:img>
+   		<html:img html:src="chrome://navigator/skin/questionl.gif"></html:img>
    	</html:td>
    	
    	<html:td>	
    		<html:span id="message">m</html:span>
 	 </html:td>
-   	
 
    </html:tr>
- 
 	
   <html:tr>
   	<html:td></html:td>
