@@ -225,6 +225,10 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
   case NS_KEY_UP:
   case NS_KEY_DOWN:
     *aCharCode = ((nsKeyEvent*)mEvent)->charCode;
+#ifdef NS_DEBUG
+    if (0==*aCharCode)
+      printf("key event broken, GetCharChode returning 0x0 as the char code.\n");
+#endif
     break;
   default:
     return NS_ERROR_FAILURE;
