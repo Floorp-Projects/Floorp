@@ -935,7 +935,7 @@ nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aM
  * @param   
  * @return  nsresult
  */
-CRTFContent::CRTFContent(PRUnichar* aKey) : CToken(aKey) {
+CRTFContent::CRTFContent(PRUnichar* aKey) : CToken(nsAutoString(aKey)) {
 }
 
 
