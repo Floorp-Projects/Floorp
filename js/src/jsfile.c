@@ -426,6 +426,7 @@ canonicalPath(JSContext *cx, char *path)
 
     base = fileBaseName(cx, current);
     dir = fileDirectoryName(cx, current);
+    /* TODO: MAC??? */
     while (strcmp(dir, current)) {
         if (!strcmp(base, "..")) {
             back++;
@@ -1874,7 +1875,7 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     tiny = JSVAL_TO_INT(id);
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
 
-    /* SECURITY */
+    /* SECURITY ??? */
     switch (tiny) {
     case FILE_PARENT:
         str = fileDirectoryName(cx, file->path);
@@ -2044,7 +2045,7 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             /* TODO: error */
             return JS_FALSE;
         }
-        
+
         break;
     case FILE_RANDOMACCESS:
             *vp = BOOLEAN_TO_JSVAL(file->randomAccess);
@@ -2062,8 +2063,8 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     default:{
         char *prop_name = JS_GetStringBytes(JS_ValueToString(cx, id));
         /* TODO: ugly! */
-        if(!strcmp(prop_name, "constructor") || !strcmp(prop_name, "toString"))
-            break;
+        /*if(!strcmp(prop_name, "constructor") || !strcmp(prop_name, "toString"))
+            break;*/
 		/* this is some other property -- try to use the dir["file"] syntax */
 		if(js_isDirectory(file)){
 			PRDir *dir = NULL;
@@ -2093,28 +2094,29 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 file_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSFile *file;
-    jsint slot;
-    int32 offset;
-    int32 count;
+    JSFile  *file;
+    jsint   slot;
+    int32   offset;
+    int32   count;
 
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
 
+    /* SECURITY ? */
     if (JSVAL_IS_STRING(id)){
         return JS_TRUE;
     }
 
     slot = JSVAL_TO_INT(id);
 
+
     switch (slot) {
+    /* File.position  = 10 */
     case FILE_POSITION:
         if (file->randomAccess) {
             offset = JSVAL_TO_INT(*vp);
-            if (file->handle) {
-                count = PR_Seek( file->handle, offset, PR_SEEK_SET);
-            } else {
-                count = fseek( file->nativehandle, offset, SEEK_SET);
-            }
+            count = (file->handle)?
+                        PR_Seek( file->handle, offset, PR_SEEK_SET):
+                        fseek(file->nativehandle, offset, SEEK_SET);
             js_ResetBuffers(file);
             *vp = INT_TO_JSVAL(count);
         }
@@ -2126,10 +2128,52 @@ file_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+/*
+    File.currentDir = new File("D:\") or File.currentDir = "D:\"
+*/
+static JSBool
+file_currentDirSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    JSObject *rhsObject;
+    char     *path;
+    JSFile   *file;
+
+    /* Look at the rhs and extract a file object from it */
+    if (JSVAL_IS_OBJECT(*vp)){
+        if (JS_InstanceOf(cx, rhsObject, &file_class, NULL)){
+            file = JS_GetInstancePrivate(cx, rhsObject, &file_class, NULL);
+            /* Braindamaged rhs -- just return the old value */
+            if (file && (!js_exists(file) || !js_isDirectory(file))){
+                JS_GetProperty(cx, obj, CURRENTDIR_PROPERTY, vp);
+                return JS_FALSE;
+            }else{
+                rhsObject = JSVAL_TO_OBJECT(*vp);
+                chdir(file->path);
+                return JS_TRUE;
+            }
+        }else
+            return JS_FALSE;
+    }else{
+        path      = JS_GetStringBytes(JS_ValueToString(cx, *vp));
+        rhsObject = js_NewFileObject(cx, path);
+        if (!rhsObject)  return JS_FALSE;
+
+        file = JS_GetInstancePrivate(cx, rhsObject, &file_class, NULL);
+        if (!file || !js_exists(file) || !js_isDirectory(file)){
+            JS_GetProperty(cx, obj, CURRENTDIR_PROPERTY, vp);
+        }else{
+            *vp = OBJECT_TO_JSVAL(rhsObject);
+            chdir(path);
+        }
+    }
+    return JS_TRUE;
+}
+
 static void
 file_finalize(JSContext *cx, JSObject *obj)
 {
     JSFile *file;
+
     file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
     JS_free(cx, file->path);
     if (file->linebuffer)
@@ -2182,7 +2226,10 @@ js_NewFileObject(JSContext *cx, char *bytes)
     JSFile      *file;
 
     obj = JS_NewObject(cx, &file_class, NULL, NULL);
-    if (!obj) return NULL;
+    if (!obj){
+        /* TODO: error ? */
+        return NULL;
+    }
     file = file_init(cx, obj, bytes);
     if(!file) return NULL;
     return obj;
@@ -2196,13 +2243,16 @@ js_NewFileObjectFromFILE(JSContext *cx, FILE *nativehandle, char *filename, JSBo
     JSFile   *file;
 
     obj = JS_NewObject(cx, &file_class, NULL, NULL);
-    if (!obj) return NULL;
+    if (!obj){
+        /* TODO: error ? */
+        return NULL;
+    }
     file = file_init(cx, obj, filename);
     if(!file) return NULL;
 
     file->nativehandle = nativehandle;
     file->path = strdup(filename);
-    file->open = open;      /* maybe need to make a parameter */
+    file->open = open;
     return obj;
 }
 
@@ -2224,61 +2274,17 @@ File(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
+    /* SECURITY? */
     file = file_init(cx, obj, JS_GetStringBytes(str));
-    if (!file) {
-        *rval = JSVAL_VOID;
-        return JS_FALSE;
-    }
+    if (!file)  return JS_FALSE;
 
-    return JS_TRUE;
-}
-
-/*
-    File.currentDir = new File("D:\") or File.currentDir = "D:\"
-*/
-static JSBool
-file_currentDirSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
-{
-    JSObject *rhsObject;
-    char     *path;
-    JSFile   *file;
-
-    /* Look at the rhs and extract a file object from it */
-    if (JSVAL_IS_OBJECT(*vp)){
-        if (JS_InstanceOf(cx, rhsObject, &file_class, NULL)){
-            file = JS_GetInstancePrivate(cx, rhsObject, &file_class, NULL);
-            /* Braindamaged rhs -- just return the old value */
-            if (file && (!js_exists(file) || !js_isDirectory(file))){
-                JS_GetProperty(cx, obj, CURRENTDIR_PROPERTY, vp);
-                return JS_FALSE;
-            }else{
-                rhsObject = JSVAL_TO_OBJECT(*vp);
-                chdir(file->path);
-                return JS_TRUE;
-            }
-        }else
-            return JS_FALSE;
-    }else{
-        path      = JS_GetStringBytes(JS_ValueToString(cx, *vp));
-        rhsObject = js_NewFileObject(cx, path);
-        if (!rhsObject)  return JS_FALSE;
-
-        file = JS_GetInstancePrivate(cx, rhsObject, &file_class, NULL);
-        if (!file || !js_exists(file) || !js_isDirectory(file)){
-            JS_GetProperty(cx, obj, CURRENTDIR_PROPERTY, vp);
-        }else{
-            *vp = OBJECT_TO_JSVAL(rhsObject);
-            chdir(path);
-        }
-    }
     return JS_TRUE;
 }
 
 JS_EXPORT_API(JSObject*)
 js_InitFileClass(JSContext *cx, JSObject* obj)
 {
-    JSObject *file, *ctor;
-    JSObject *afile;
+    JSObject *file, *ctor, *afile;
     JSFile   *fileObj;
     jsval    vp;
     char     *currentdir;
