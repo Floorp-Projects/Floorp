@@ -22,14 +22,23 @@
 #include "wallet.h"
 #include "singsign.h"
 #include "nsIObserverService.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIDocumentLoader.h"
+#include "nsIWebShell.h"
+#include "nsIDocumentViewer.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIFormControl.h"
 
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormSubmitObserverIID, NS_IFORMSUBMITOBSERVER_IID);
+static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
+static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 
 
 nsWalletlibService::nsWalletlibService()
@@ -70,6 +79,11 @@ nsWalletlibService::QueryInterface(REFNSIID iid, void** result)
 	AddRef();
 	return NS_OK;
     }
+    if (iid.Equals(nsIDocumentLoaderObserver::GetIID())) {
+    *result = (void*) ((nsIDocumentLoaderObserver*)this);
+    AddRef();
+    return NS_OK;
+  }
     return NS_NOINTERFACE;
 }
 
@@ -195,6 +209,8 @@ NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode)
 void nsWalletlibService::Init() 
 {
     nsIObserverService *svc = 0;
+    nsIDocumentLoader *docLoaderService;
+
     nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
                                                 nsIObserverService::GetIID(),
                                                 (nsISupports**)&svc );
@@ -203,8 +219,258 @@ void nsWalletlibService::Init()
         rv = svc->AddObserver( this, topic.GetUnicode());
         nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
     }
+
+    // Get the global document loader service...  
+    rv = nsServiceManager::GetService(kDocLoaderServiceCID,
+                                    kIDocumentLoaderIID,
+                                    (nsISupports **)&docLoaderService);
+    if (NS_SUCCEEDED(rv) && docLoaderService) {
+        //Register ourselves as an observer for the new doc loader
+        docLoaderService->AddObserver((nsIDocumentLoaderObserver*)this);
+        nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService );
+    }
 }
 
+// nsIDocumentLoaderObserver methods
+
+NS_IMETHODIMP
+nsWalletlibService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+#ifdef NECKO
+nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, PRInt32 aStatus,
+									nsIDocumentLoaderObserver * aObserver)
+#else
+nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
+									nsIDocumentLoaderObserver * aObserver)
+#endif
+{
+    nsresult rv = NS_OK;
+
+    nsIContentViewerContainer *cont = nsnull;
+
+    nsIWebShell *ws = nsnull;
+
+    if (aLoader == nsnull) {
+        return rv;
+    }
+
+    rv = aLoader->GetContainer(&cont);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+    if (cont == nsnull) {
+        return rv;
+    }
+
+ 
+    rv = cont->QueryInterface(nsIWebShell::GetIID(), (void **)&ws);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(cont);
+        return rv;
+    }
+    if (ws == nsnull) {
+        NS_RELEASE(cont);
+        return rv;
+    }
+
+   
+    nsIContentViewer* cv = nsnull;
+    rv = ws->GetContentViewer(&cv);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(ws);
+        NS_RELEASE(cont);
+        return rv;
+    }
+    if (cv == nsnull) {
+        NS_RELEASE(ws);
+        NS_RELEASE(cont);
+        return rv;
+    }
+           
+    nsIDocumentViewer* docViewer = nsnull;
+    rv = cv->QueryInterface(nsIDocumentViewer::GetIID(), (void**) &docViewer);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(cv);
+        NS_RELEASE(ws);
+        NS_RELEASE(cont);
+        return rv;
+    }
+    if (docViewer == nsnull) {
+        NS_RELEASE(cv);
+        NS_RELEASE(ws);
+        NS_RELEASE(cont);
+        return rv;
+    }
+  
+    nsIDocument *doc = nsnull;
+    rv = docViewer->GetDocument(doc);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(docViewer);
+        NS_RELEASE(cv);
+        NS_RELEASE(ws);
+        NS_RELEASE(cont);
+        return rv;
+    }
+    if (doc == nsnull) {
+        NS_RELEASE(docViewer);
+        NS_RELEASE(cv);
+        NS_RELEASE(ws);
+        NS_RELEASE(cont);
+        return rv;
+    }
+  
+    nsIURI *docURL = nsnull;
+    docURL = doc->GetDocumentURL();
+
+    nsIDOMHTMLDocument *htmldoc = nsnull;
+    rv = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
+    if ((NS_SUCCEEDED(rv)) && (nsnull != htmldoc)) {
+        nsIDOMHTMLCollection* forms = nsnull;
+        rv = htmldoc->GetForms(&forms);
+        if (nsnull != forms) {
+            PRUint32 numForms;
+            forms->GetLength(&numForms);
+            for (PRUint32 formX = 0; formX < numForms; formX++) {
+                nsIDOMNode* formNode = nsnull;
+                forms->Item(formX, &formNode);
+                if (nsnull != formNode) {
+                    nsIDOMHTMLFormElement* formElement = nsnull;
+                    rv = formNode->QueryInterface(kIDOMHTMLFormElementIID,
+                                                    (void**)&formElement);
+                    if ((NS_SUCCEEDED(rv)) && (nsnull != formElement)) {
+                        nsIDOMHTMLCollection* elements = nsnull;
+                        rv = formElement->GetElements(&elements);
+                        if ((NS_SUCCEEDED(rv)) && (nsnull != elements)) {
+                            /* got to the form elements at long last */ 
+                            PRUint32 numElements;
+                            elements->GetLength(&numElements);
+                            for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+                                nsIDOMNode* elementNode = nsnull;
+                                elements->Item(elementX, &elementNode);
+                                if (nsnull != elementNode) {
+                                    PRUint16 nodeType;
+                                    nsIDOMHTMLInputElement *inputElement = nsnull;
+                                    rv = elementNode->QueryInterface(
+                                            nsIDOMHTMLInputElement::GetIID(),
+                                            (void**)&inputElement);
+                                    if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
+                                        nsAutoString type("");
+                                        rv = inputElement->GetType(type);
+                                        if (NS_SUCCEEDED(rv)) {
+                                            if ((type.Compare("text", PR_TRUE) == 0) ||
+                                                (type.Compare("password", PR_TRUE) == 0)) {
+                                                char* t = type.ToNewCString();
+                                                if (t) {
+                                                    delete[] t;
+                                                }
+                                        
+                                                nsAutoString field;
+                                                rv = inputElement->GetName(field);
+                                                if (NS_SUCCEEDED(rv)) {
+                                                    char* f = field.ToNewCString();
+                                                    if (f) {
+                                                        delete[] f;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        NS_RELEASE(inputElement);
+                                    }
+                                    NS_RELEASE(elementNode);
+                                }
+                            }
+                            NS_RELEASE(elements);
+                        }
+                        NS_RELEASE(formElement);
+                    }
+                    NS_RELEASE(formNode);
+                }
+            }
+            NS_RELEASE(forms);
+        }
+        NS_RELEASE(htmldoc);
+    }
+    NS_RELEASE(docViewer);
+    NS_RELEASE(cv);
+    NS_RELEASE(ws);
+    NS_RELEASE(cont);
+    return rv;
+}
+
+NS_IMETHODIMP
+#ifdef NECKO
+nsWalletlibService::OnStartURLLoad(nsIDocumentLoader* loader, 
+                                 nsIChannel* channel,
+                                 nsIContentViewer* aViewer)
+#else
+nsWalletlibService::OnStartURLLoad(nsIDocumentLoader* loader, 
+                                 nsIURI* aURL, const char* aContentType,
+                                 nsIContentViewer* aViewer)
+#endif
+{
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+#ifdef NECKO
+nsWalletlibService::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                                    nsIChannel* channel, PRUint32 aProgress, 
+                                    PRUint32 aProgressMax)
+#else
+nsWalletlibService::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                                    nsIURI* aURL, PRUint32 aProgress, 
+                                    PRUint32 aProgressMax)
+#endif
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+#ifdef NECKO
+nsWalletlibService::OnStatusURLLoad(nsIDocumentLoader* loader, 
+                                  nsIChannel* channel, nsString& aMsg)
+#else
+nsWalletlibService::OnStatusURLLoad(nsIDocumentLoader* loader, 
+                                  nsIURI* aURL, nsString& aMsg)
+#endif
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+#ifdef NECKO
+nsWalletlibService::OnEndURLLoad(nsIDocumentLoader* loader, 
+                               nsIChannel* channel, PRInt32 aStatus)
+#else
+nsWalletlibService::OnEndURLLoad(nsIDocumentLoader* loader, 
+                               nsIURI* aURL, PRInt32 aStatus)
+#endif
+{
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+#ifdef NECKO
+nsWalletlibService::HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                           nsIChannel* channel,
+                                           const char *aContentType,
+                                           const char *aCommand )
+#else
+nsWalletlibService::HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                           nsIURI *aURL,
+                                           const char *aContentType,
+                                           const char *aCommand )
+#endif
+{
+    return NS_OK;
+}
 
 /* call to create the wallet object */
 

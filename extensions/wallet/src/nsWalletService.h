@@ -23,10 +23,12 @@
 #include "nsIWalletService.h"
 #include "nsIObserver.h"
 #include "nsIFormSubmitObserver.h"
+#include "nsIDocumentLoaderObserver.h"
 
 class nsWalletlibService : public nsIWalletService,
                            public nsIObserver,
-                           public nsIFormSubmitObserver {
+                           public nsIFormSubmitObserver,
+                           public nsIDocumentLoaderObserver {
 
 public:
     NS_DECL_ISUPPORTS
@@ -65,6 +67,33 @@ public:
     NS_DECL_IOBSERVER
 
     NS_IMETHOD Notify(nsIContent* formNode);
+
+    
+    // nsIDocumentLoaderObserver
+#ifdef NECKO
+    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus, nsIDocumentLoaderObserver* aObserver);
+     NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer);
+    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
+    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus);
+    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,const char *aCommand );		
+#else
+    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
+								 nsIDocumentLoaderObserver * aObserver);
+
+    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, 
+                            nsIContentViewer* aViewer);
+    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsString& aMsg);
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus);
+    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
+                                        nsIURI *aURL,
+                                        const char *aContentType,
+                                        const char *aCommand );
+#endif
 
 
 protected:
