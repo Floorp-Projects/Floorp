@@ -1630,7 +1630,7 @@ ChildLayout(Widget				child,
 		width -= _XfeWidth(right);
 	}
 
-#ifdef 0
+#if 0
 	/* Child */
 	if (child == sp->child_two)
 		printf("child_two(new y pos = %d\n",y);
