@@ -56,7 +56,7 @@ sub _addToJar($$$$)
 sub JarIt($$)
 {
     my ($jarfile, $zip) = @_;
-    #print "+++ jaring $jarfile\n";
+    #print "+++ jarring $jarfile\n";
     #flush();
     #system "zip -u $jarfile $args\n";
     my $jarTempFile = $jarfile . ".temp";
@@ -66,7 +66,7 @@ sub JarIt($$)
     # set the file type/creator to something reasonable
     MacPerl::SetFileInfo("ZIP ", "ZIP ", $jarTempFile);
     rename($jarTempFile, $jarfile);
-    print "+++ finished jaring $jarfile\n";
+    print "+++ finished jarring $jarfile\n";
 }
 
 sub MkDirs($)
@@ -85,7 +85,7 @@ sub MkDirs($)
     }
     else {
         my $dir = $path;
-        if ($dir =~ "") { return 0; } 
+        if ($dir eq "") { return 0; } 
         if (!-e $dir) {
             mkdir($dir, 0777) || die "error: can't create '$dir': $!";
         }
@@ -147,7 +147,7 @@ sub ProcessJarManifest($$)
     $destPath = Moz::full_path_to($destPath);
     #print "ProcessJarManifest($jarManPath, $destPath)\n";
 
-    print "+++ jaring $jarManPath\n";
+    print "+++ jarring $jarManPath\n";
     
 	my $jarManDir = "";
 	my $jarManFile = "";
@@ -159,6 +159,7 @@ sub ProcessJarManifest($$)
     	die "bad jar.mn specification";
     }
 
+	my $prevDir = cwd();
     chdir($jarManDir);
 
     open(FILE, "<$jarManPath") || die "could not open $jarManPath: $!";
@@ -173,7 +174,7 @@ sub ProcessJarManifest($$)
             my $zip = Archive::Zip->new();
             #print "new jar $jarfile\n";
 	        if (-e $jarfile) {
-	        	print "=====> $jarfile exists\n";
+	        	#print "=====> $jarfile exists\n";
 	        	my $ok = $zip->read($jarfile);
 	        	if ($ok != AZ_OK) {
 	        	    die "zip read $jarfile failed: $ok";
@@ -212,5 +213,6 @@ sub ProcessJarManifest($$)
 	    }
 	}
     close(FILE);
+    chdir($prevDir);
 }
 
