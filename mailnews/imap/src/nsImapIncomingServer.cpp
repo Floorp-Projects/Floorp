@@ -2345,22 +2345,22 @@ NS_IMPL_GETSET(nsImapIncomingServer, UserAuthenticated, PRBool, m_userAuthentica
 /* void SetMailServerUrls (in string manageMailAccount, in string manageLists, in string manageFilters); */
 NS_IMETHODIMP  nsImapIncomingServer::SetMailServerUrls(const char *manageMailAccount, const char *manageLists, const char *manageFilters)
 {
-	return SetManageMailAccountUrl((char *) manageMailAccount);
+  return SetManageMailAccountUrl((char *) manageMailAccount);
 }
 
 NS_IMETHODIMP nsImapIncomingServer::SetManageMailAccountUrl(const char *manageMailAccountUrl)
 {
-	m_manageMailAccountUrl = manageMailAccountUrl;
-	return NS_OK;
+  m_manageMailAccountUrl = manageMailAccountUrl;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::GetManageMailAccountUrl(char **manageMailAccountUrl)
 {
-	if (!manageMailAccountUrl)
-		return NS_ERROR_NULL_POINTER;
-
-	*manageMailAccountUrl = ToNewCString(m_manageMailAccountUrl);
-	return NS_OK;
+  if (!manageMailAccountUrl)
+    return NS_ERROR_NULL_POINTER;
+  
+  *manageMailAccountUrl = ToNewCString(m_manageMailAccountUrl);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::RemoveChannelFromUrl(nsIMsgMailNewsUrl *aUrl, PRUint32 statusCode)
