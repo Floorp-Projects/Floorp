@@ -116,7 +116,7 @@ interface nsIURLParser : nsISupports
     {0xae, 0x14, 0x4e, 0x7f, 0xa5, 0x76, 0x6e, 0xb6} \
 }
 
-#define NS_NOAUTHORITYURLPARSER_CONTRACT_ID "@mozilla.org/network/authority-urlparser;1"
+#define NS_NOAUTHORITYURLPARSER_CONTRACT_ID "@mozilla.org/network/noauthority-urlparser;1"
 #define NS_NOAUTHORITYURLPARSER_CID                  \
 { /* 9eeb1b89-c87e-4404-9de6-dbd41aeaf3d7 */         \
     0x9eeb1b89,                                      \
