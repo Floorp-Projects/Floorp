@@ -212,4 +212,6 @@ struct _MDCPU {
 */
 #define _MD_SELECT		select
 
+#define SA_RESTART 0
+
 #endif /* nspr_nto_defs_h___ */
