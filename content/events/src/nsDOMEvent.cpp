@@ -62,6 +62,7 @@
 #include "nsContentUtils.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMutationEvent.h"
+#include "nsIURI.h"
 
 static const char* const mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
@@ -73,7 +74,8 @@ static const char* const mEventNames[] = {
   "scroll","overflow", "underflow", "overflowchanged",
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
   "DOMNodeRemovedFromDocument", "DOMNodeInsertedIntoDocument",
-  "DOMAttrModified", "DOMCharacterDataModified"
+  "DOMAttrModified", "DOMCharacterDataModified",
+  "popupBlocked"
 }; 
 
 /** event pool used as a simple recycler for objects of this class */
@@ -185,6 +187,10 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
       mEvent = PR_NEWZAP(nsGUIEvent);
       mEvent->eventStructType = NS_POPUP_EVENT;
     }
+    else if (eventType.EqualsIgnoreCase("PopupBlockedEvents")) {
+      mEvent = PR_NEWZAP(nsPopupBlockedEvent);
+      mEvent->eventStructType = NS_POPUPBLOCKED_EVENT;
+    }
     else {
       mEvent = PR_NEWZAP(nsEvent);
       mEvent->eventStructType = NS_EVENT;
@@ -268,6 +274,11 @@ nsDOMEvent::~nsDOMEvent()
     if (mEvent->userType) {
       delete mEvent->userType;
     }
+    if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
+      nsPopupBlockedEvent* event = NS_STATIC_CAST(nsPopupBlockedEvent*, mEvent);
+      NS_IF_RELEASE(event->mRequestingWindowURI);
+      NS_IF_RELEASE(event->mPopupWindowURI);
+    }
     PR_DELETE(mEvent);
   }
 
@@ -284,6 +295,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSUIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMPopupBlockedEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateTextEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateCompositionEvent)
@@ -587,49 +599,52 @@ nsDOMEvent::GetDetail(PRInt32* aDetail)
 
 NS_METHOD nsDOMEvent::GetText(nsString& aText)
 {
-	if (mEvent->message == NS_TEXT_EVENT) {
-		aText = *mText;
-		return NS_OK;
-	}
-
-	return NS_ERROR_FAILURE;
+  if (mEvent->message == NS_TEXT_EVENT) {
+    aText = *mText;
+    return NS_OK;
+  }
+  aText.Assign(NS_LITERAL_STRING(""));
+  return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsDOMEvent::GetInputRange(nsIPrivateTextRangeList** aInputRange)
 {
-	if (mEvent->message == NS_TEXT_EVENT) {
-		*aInputRange = mTextRange;
-		return NS_OK;
-	}
-
-	return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aInputRange);
+  if (mEvent->message == NS_TEXT_EVENT) {
+    *aInputRange = mTextRange;
+    return NS_OK;
+  }
+  *aInputRange = 0;
+  return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsDOMEvent::GetEventReply(nsTextEventReply** aReply)
 {
-	if (mEvent->message==NS_TEXT_EVENT) {
-			*aReply = &(((nsTextEvent*)mEvent)->theReply);
-			return NS_OK;
-	}
-
-	return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG_POINTER(aReply);
+  if (mEvent->message==NS_TEXT_EVENT) {
+    *aReply = &(((nsTextEvent*)mEvent)->theReply);
+    return NS_OK;
+  }
+  *aReply = 0;
+  return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsDOMEvent::GetCompositionReply(nsTextEventReply** aReply)
 {
+  NS_ENSURE_ARG_POINTER(aReply);
   if((mEvent->message==NS_COMPOSITION_START) ||
      (mEvent->message==NS_COMPOSITION_QUERY)) {
     *aReply = &(((nsCompositionEvent*)mEvent)->theReply);
     return NS_OK;
   }
-
+  *aReply = 0;
   return NS_ERROR_FAILURE;
-
 }
 
 NS_METHOD
 nsDOMEvent::GetReconversionReply(nsReconversionEventReply** aReply)
 {
+  NS_ENSURE_ARG_POINTER(aReply);
   *aReply = &(((nsReconversionEvent*)mEvent)->theReply);
   return NS_OK;
 }
@@ -637,6 +652,7 @@ nsDOMEvent::GetReconversionReply(nsReconversionEventReply** aReply)
 
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 {
+  NS_ENSURE_ARG_POINTER(aScreenX);
   if (!mEvent || 
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
@@ -661,6 +677,7 @@ NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 
 NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 {
+  NS_ENSURE_ARG_POINTER(aScreenY);
   if (!mEvent || 
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
@@ -685,6 +702,7 @@ NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 
 NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 {
+  NS_ENSURE_ARG_POINTER(aClientX);
   if (!mEvent || 
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
@@ -738,6 +756,7 @@ NS_METHOD nsDOMEvent::GetClientX(PRInt32* aClientX)
 
 NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 {
+  NS_ENSURE_ARG_POINTER(aClientY);
   if (!mEvent || 
        (mEvent->eventStructType != NS_MOUSE_EVENT &&
         mEvent->eventStructType != NS_POPUP_EVENT &&
@@ -791,30 +810,35 @@ NS_METHOD nsDOMEvent::GetClientY(PRInt32* aClientY)
 
 NS_METHOD nsDOMEvent::GetAltKey(PRBool* aIsDown)
 {
+  NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ((nsInputEvent*)mEvent)->isAlt;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetCtrlKey(PRBool* aIsDown)
 {
+  NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ((nsInputEvent*)mEvent)->isControl;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetShiftKey(PRBool* aIsDown)
 {
+  NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ((nsInputEvent*)mEvent)->isShift;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetMetaKey(PRBool* aIsDown)
 {
+  NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ((nsInputEvent*)mEvent)->isMeta;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
 {
+  NS_ENSURE_ARG_POINTER(aCharCode);
   if (!mEvent || mEvent->eventStructType != NS_KEY_EVENT) {
     *aCharCode = 0;
     return NS_OK;
@@ -839,6 +863,7 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
 
 NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
 {
+  NS_ENSURE_ARG_POINTER(aKeyCode);
   if (!mEvent || mEvent->eventStructType != NS_KEY_EVENT) {
     *aKeyCode = 0;
     return NS_OK;
@@ -858,6 +883,7 @@ NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
 
 NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
 {
+  NS_ENSURE_ARG_POINTER(aButton);
   if (!mEvent || mEvent->eventStructType != NS_MOUSE_EVENT) {
     NS_WARNING("Tried to get mouse button for null or non-mouse event!");
     *aButton = (PRUint16)-1;
@@ -897,6 +923,7 @@ NS_METHOD nsDOMEvent::GetButton(PRUint16* aButton)
 
 NS_METHOD nsDOMEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 {
+  NS_ENSURE_ARG_POINTER(aRelatedTarget);
   *aRelatedTarget = nsnull;
 
   if (!mPresContext) {
@@ -921,6 +948,7 @@ NS_METHOD nsDOMEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 // nsINSEventInterface
 NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 {
+  NS_ENSURE_ARG_POINTER(aLayerX);
   if (!mEvent || (mEvent->eventStructType != NS_MOUSE_EVENT) ||
       !mPresContext) {
     *aLayerX = 0;
@@ -935,6 +963,7 @@ NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 
 NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 {
+  NS_ENSURE_ARG_POINTER(aLayerY);
   if (!mEvent || (mEvent->eventStructType != NS_MOUSE_EVENT) ||
       !mPresContext) {
     *aLayerY = 0;
@@ -950,6 +979,9 @@ NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 nsresult nsDOMEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
    float* aP2T, float* aT2P)
 {
+  NS_ENSURE_ARG_POINTER(aScrollableView);
+  NS_ENSURE_ARG_POINTER(aP2T);
+  NS_ENSURE_ARG_POINTER(aT2P);
   if (!mPresContext) {
     *aScrollableView = nsnull;
     return NS_ERROR_FAILURE;
@@ -971,6 +1003,7 @@ nsresult nsDOMEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
 
 NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)
 {
+  NS_ENSURE_ARG_POINTER(aPageX);
   nsresult ret = NS_OK;
   PRInt32 scrollX = 0;
   nsIScrollableView* view = nsnull;
@@ -996,6 +1029,7 @@ NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)
 
 NS_METHOD nsDOMEvent::GetPageY(PRInt32* aPageY)
 {
+  NS_ENSURE_ARG_POINTER(aPageY);
   nsresult ret = NS_OK;
   PRInt32 scrollY = 0;
   nsIScrollableView* view = nsnull;
@@ -1021,6 +1055,7 @@ NS_METHOD nsDOMEvent::GetPageY(PRInt32* aPageY)
 
 NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
 {
+  NS_ENSURE_ARG_POINTER(aWhich);
   switch (mEvent->eventStructType) {
   case NS_KEY_EVENT:
 	  switch (mEvent->message) {
@@ -1057,6 +1092,7 @@ NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
 
 NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 {
+  NS_ENSURE_ARG_POINTER(aRangeParent);
   nsIFrame* targetFrame = nsnull;
   nsCOMPtr<nsIEventStateManager> manager;
 
@@ -1088,6 +1124,7 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 
 NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
 {
+  NS_ENSURE_ARG_POINTER(aRangeOffset);
   nsIFrame* targetFrame = nsnull;
   nsIEventStateManager* manager;
 
@@ -1117,6 +1154,7 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
 
 NS_METHOD nsDOMEvent::GetCancelBubble(PRBool* aCancelBubble)
 {
+  NS_ENSURE_ARG_POINTER(aCancelBubble);
   if (mEvent->flags & NS_EVENT_FLAG_BUBBLE || mEvent->flags & NS_EVENT_FLAG_INIT) {
     *aCancelBubble = (mEvent->flags &= NS_EVENT_FLAG_STOP_DISPATCH) ? PR_TRUE : PR_FALSE;
   }
@@ -1141,6 +1179,7 @@ NS_METHOD nsDOMEvent::SetCancelBubble(PRBool aCancelBubble)
 
 NS_METHOD nsDOMEvent::GetIsChar(PRBool* aIsChar)
 {
+  NS_ENSURE_ARG_POINTER(aIsChar);
   if (!mEvent) {
     *aIsChar = PR_FALSE;
     return NS_OK;
@@ -1160,6 +1199,7 @@ NS_METHOD nsDOMEvent::GetIsChar(PRBool* aIsChar)
 
 NS_METHOD nsDOMEvent::GetPreventDefault(PRBool* aReturn)
 {
+  NS_ENSURE_ARG_POINTER(aReturn);
   if (!mEvent) {
     *aReturn = PR_FALSE; 
   }
@@ -1291,6 +1331,7 @@ nsDOMEvent::InitMouseEvent(const nsAString & aTypeArg, PRBool aCanBubbleArg, PRB
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
   mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
 
+  NS_ASSERTION(mEvent->eventStructType == NS_MOUSE_EVENT || mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT, "event type mismatch");
   if (mEvent->eventStructType == NS_MOUSE_EVENT || mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT) {
     nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, mEvent);
     inputEvent->isControl = aCtrlKeyArg;
@@ -1313,10 +1354,11 @@ nsDOMEvent::InitMouseEvent(const nsAString & aTypeArg, PRBool aCanBubbleArg, PRB
       nsMouseEvent* mouseEvent = NS_STATIC_CAST(nsMouseEvent*, mEvent);
       mouseEvent->clickCount = aDetailArg;
     }
+    return NS_OK;
   }
   //include a way to set view once we have more than one
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1330,6 +1372,7 @@ nsDOMEvent::InitKeyEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, PRBool
   mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
   mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_NONE;
 
+  NS_ASSERTION(mEvent->eventStructType == NS_KEY_EVENT, "event type mismatch");
   if (mEvent->eventStructType == NS_KEY_EVENT) {
     nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, mEvent);
     keyEvent->isControl = aCtrlKeyArg;
@@ -1338,10 +1381,62 @@ nsDOMEvent::InitKeyEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, PRBool
     keyEvent->isMeta = aMetaKeyArg;
     keyEvent->keyCode = aKeyCodeArg;
     keyEvent->charCode = aCharCodeArg;
+    return NS_OK;
   }
   //include a way to set view once we have more than one
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDOMEvent::InitPopupBlockedEvent(const nsAString & aTypeArg,
+                            PRBool aCanBubbleArg, PRBool aCancelableArg,
+                            nsIURI *aRequestingWindowURI,
+                            nsIURI *aPopupWindowURI)
+{
+  NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
+  mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
+  mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  mEvent->internalAppFlags |= NS_APP_EVENT_FLAG_NONE;
+
+  NS_ASSERTION(mEvent->eventStructType == NS_POPUPBLOCKED_EVENT, "event type mismatch");
+  if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
+    nsPopupBlockedEvent* event = NS_STATIC_CAST(nsPopupBlockedEvent*, mEvent);
+    event->mRequestingWindowURI = aRequestingWindowURI;
+    event->mPopupWindowURI = aPopupWindowURI;
+    NS_IF_ADDREF(event->mRequestingWindowURI);
+    NS_IF_ADDREF(event->mPopupWindowURI);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+/* readonly attribute nsIURI requestingWindowURI; */
+NS_IMETHODIMP nsDOMEvent::GetRequestingWindowURI(nsIURI **aRequestingWindowURI)
+{
+  NS_ENSURE_ARG_POINTER(aRequestingWindowURI);
+  if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
+    nsPopupBlockedEvent* event = NS_STATIC_CAST(nsPopupBlockedEvent*, mEvent);
+    *aRequestingWindowURI = event->mRequestingWindowURI;
+    NS_IF_ADDREF(*aRequestingWindowURI);
+    return NS_OK;
+  }
+  *aRequestingWindowURI = 0;
+  return NS_ERROR_FAILURE;
+}
+
+/* readonly attribute nsIURI popupWindowURI; */
+NS_IMETHODIMP nsDOMEvent::GetPopupWindowURI(nsIURI **aPopupWindowURI)
+{
+  NS_ENSURE_ARG_POINTER(aPopupWindowURI);
+  if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
+    nsPopupBlockedEvent* event = NS_STATIC_CAST(nsPopupBlockedEvent*, mEvent);
+    *aPopupWindowURI = event->mPopupWindowURI;
+    NS_IF_ADDREF(*aPopupWindowURI);
+    return NS_OK;
+  }
+  *aPopupWindowURI = 0;
+  return NS_ERROR_FAILURE;
 }
 
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
@@ -1406,6 +1501,7 @@ nsDOMEvent::SetHandled(PRBool aHandled)
 NS_IMETHODIMP
 nsDOMEvent::GetInternalNSEvent(nsEvent** aNSEvent)
 {
+  NS_ENSURE_ARG_POINTER(aNSEvent);
   *aNSEvent = mEvent;
   return NS_OK;
 }
