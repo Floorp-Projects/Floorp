@@ -36,8 +36,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.Hashtable;
-
 /**
  * This class implements the Object native object.
  * See ECMA 15.2.

@@ -37,7 +37,6 @@
 package org.mozilla.javascript;
 
 import java.io.*;
-import java.util.*;
 
 public class VariableTable {
 
@@ -55,7 +54,7 @@ public class VariableTable {
     }
 
     public LocalVariable getVariable(int index) {
-        return (LocalVariable)(itsVariables.elementAt(index));
+        return (LocalVariable)(itsVariables.get(index));
     }
 
     public boolean hasVariable(String name) {
@@ -65,7 +64,7 @@ public class VariableTable {
     public LocalVariable getVariable(String name) {
         int vIndex = itsVariableNames.get(name, -1);
         if (vIndex != -1)
-            return (LocalVariable)(itsVariables.elementAt(vIndex));
+            return (LocalVariable)(itsVariables.get(vIndex));
         else
             return null;
     }
@@ -92,7 +91,7 @@ public class VariableTable {
 
     public void establishIndices() {
         for (int i = 0; i < itsVariables.size(); i++) {
-            LocalVariable lVar = (LocalVariable)(itsVariables.elementAt(i));
+            LocalVariable lVar = (LocalVariable)(itsVariables.get(i));
             lVar.setIndex(i);
         }
     }
@@ -107,7 +106,7 @@ public class VariableTable {
         }
         int index = varStart++;
         LocalVariable lVar = createLocalVariable(pName, true);
-        itsVariables.addElement(lVar);
+        itsVariables.add(lVar);
         itsVariableNames.put(pName, index);
     }
 
@@ -119,7 +118,7 @@ public class VariableTable {
         }
         int index = itsVariables.size();
         LocalVariable lVar = createLocalVariable(vName, false);
-        itsVariables.addElement(lVar);
+        itsVariables.add(lVar);
         itsVariableNames.put(vName, index);
     }
 
@@ -127,7 +126,7 @@ public class VariableTable {
     public void removeLocal(String name) {
         int i = itsVariableNames.get(name, -1);
         if (i != -1) {
-            itsVariables.removeElementAt(i);
+            itsVariables.remove(i);
             itsVariableNames.remove(name);
             ObjToIntMap.Iterator iter = itsVariableNames.newIterator();
             for (iter.start(); !iter.done(); iter.next()) {
@@ -140,7 +139,7 @@ public class VariableTable {
     }
 
     // a list of the formal parameters and local variables
-    private Vector itsVariables = new Vector();
+    private ObjArray itsVariables = new ObjArray();
 
     // mapping from name to index in list
     private ObjToIntMap itsVariableNames = new ObjToIntMap(11);

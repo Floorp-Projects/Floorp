@@ -40,8 +40,6 @@ package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
 
-import java.util.Stack;
-
 public class StmtNodeIterator {
 
     public StmtNodeIterator(Node start)
@@ -87,7 +85,7 @@ public class StmtNodeIterator {
             return itsCurrentNode = findFirstInterestingNode(itsCurrentNode);
     }
 
-    private Stack itsStack = new Stack();
+    private ObjArray itsStack = new ObjArray();
     private Node itsStart;
     private Node itsCurrentNode;
 

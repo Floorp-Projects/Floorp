@@ -45,7 +45,6 @@ import java.io.FileOutputStream;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.Vector;
 import java.util.Hashtable;
 
 public class Optimizer {
@@ -1028,18 +1027,16 @@ public class Optimizer {
 
     private Node[] buildStatementList(FunctionNode theFunction)
     {
-        Vector nodeList = new Vector();
+        ObjArray nodeList = new ObjArray();
 
         StmtNodeIterator iterator = new StmtNodeIterator(theFunction);
         Node node = iterator.nextNode();
         while (node != null) {
-            nodeList.addElement(node);
+            nodeList.add(node);
             node = iterator.nextNode();
         }
         Node[] result = new Node[nodeList.size()];
-        for (int i = 0; i < nodeList.size(); i++) {
-            result[i] = (Node)(nodeList.elementAt(i));
-        }
+        nodeList.toArray(result);
         return result;
     }
 

@@ -50,10 +50,11 @@ public class ObjArray implements Serializable {
         minimalAllocation = 8;
     }
 
-    public ObjArray(int initialCapacity) {
-        if (initialCapacity < 0) throw new IllegalArgumentException();
-        if (initialCapacity - FIELDS_STORE_SIZE > 0) {
-            minimalAllocation = initialCapacity - FIELDS_STORE_SIZE;
+    public ObjArray(int capacityHint) {
+        this();
+        if (capacityHint < 0) throw new IllegalArgumentException();
+        if (minimalAllocation < capacityHint - FIELDS_STORE_SIZE) {
+            minimalAllocation = capacityHint - FIELDS_STORE_SIZE;
         }
     }
 
@@ -63,6 +64,21 @@ public class ObjArray implements Serializable {
 
     public final int size() {
         return size;
+    }
+
+    public final void setSize(int newSize) {
+        if (newSize < 0) throw new IllegalArgumentException();
+        int N = size;
+        if (newSize < N) {
+            for (int i = newSize; i != N; ++i) {
+                setImpl(i, null);
+            }
+        }else if (newSize > N) {
+            if (newSize >= FIELDS_STORE_SIZE) {
+                ensureCapacity(newSize);
+            }
+        }
+        size = newSize;
     }
 
     public final Object get(int index) {
@@ -220,18 +236,28 @@ public class ObjArray implements Serializable {
         size = 0;
     }
 
-    public final void toArray(Object[] copy) {
+    public final Object[] toArray() {
+        Object[] array = new Object[size];
+        toArray(array, 0);
+        return array;
+    }
+
+    public final void toArray(Object[] array) {
+        toArray(array, 0);
+    }
+
+    public final void toArray(Object[] array, int offset) {
         int N = size;
         switch (N) {
             default:
-                System.arraycopy(data, 0, copy, FIELDS_STORE_SIZE,
+                System.arraycopy(data, 0, array, offset + FIELDS_STORE_SIZE,
                                  N - FIELDS_STORE_SIZE);
-            case 6: copy[5] = f5;
-            case 5: copy[4] = f4;
-            case 4: copy[3] = f3;
-            case 3: copy[2] = f2;
-            case 2: copy[1] = f1;
-            case 1: copy[0] = f0;
+            case 6: array[offset + 5] = f5;
+            case 5: array[offset + 4] = f4;
+            case 4: array[offset + 3] = f3;
+            case 3: array[offset + 2] = f2;
+            case 2: array[offset + 1] = f1;
+            case 1: array[offset + 0] = f0;
             case 0: break;
         }
     }

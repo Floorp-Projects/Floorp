@@ -72,8 +72,8 @@ public class Codegen extends Interpreter {
                           SecuritySupport securitySupport,
                           ClassNameHelper nameHelper)
     {
-        Vector classFiles = new Vector();
-        Vector names = new Vector();
+        ObjArray classFiles = new ObjArray();
+        ObjArray names = new ObjArray();
         String generatedName = null;
 
         Exception e = null;
@@ -90,8 +90,8 @@ public class Codegen extends Interpreter {
             ClassRepository repository = nameHelper.getClassRepository();
 
             for (int i=0; i < names.size(); i++) {
-                String name = (String) names.elementAt(i);
-                byte[] classFile = (byte[]) classFiles.elementAt(i);
+                String name = (String) names.get(i);
+                byte[] classFile = (byte[]) classFiles.get(i);
                 boolean isTopLevel = name.equals(generatedName);
 
                 try {
@@ -361,7 +361,7 @@ public class Codegen extends Interpreter {
 
     }
 
-    public String generateCode(Node tree, Vector names, Vector classFiles,
+    public String generateCode(Node tree, ObjArray names, ObjArray classFiles,
                                ClassNameHelper nameHelper)
     {
         this.itsNameHelper = (OptClassNameHelper) nameHelper;
@@ -504,8 +504,8 @@ public class Codegen extends Interpreter {
 
         byte[] bytes = classFile.toByteArray();
 
-        namesVector.addElement(name);
-        classFilesVector.addElement(bytes);
+        namesVector.add(name);
+        classFilesVector.add(bytes);
 
         classFile = null;
         namesVector = null;
@@ -1174,13 +1174,13 @@ public class Codegen extends Interpreter {
         }
 
         // precompile all regexp literals
-        Vector regexps = (Vector) tree.getProp(Node.REGEXP_PROP);
+        ObjArray regexps = (ObjArray) tree.getProp(Node.REGEXP_PROP);
         if (regexps != null) {
             setNonTrivialInit(methodName);
             generateRegExpLiterals(regexps, inCtor);
         }
 
-        Vector fns = (Vector) tree.getProp(Node.FUNCTION_PROP);
+        ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
         if (fns != null) {
             setNonTrivialInit(methodName);
             generateFunctionInits(fns);
@@ -1189,7 +1189,7 @@ public class Codegen extends Interpreter {
         if (tree instanceof OptFunctionNode) {
 
             OptFunctionNode fnNode = (OptFunctionNode)tree;
-            Vector directCallTargets
+            ObjArray directCallTargets
                         = ((OptFunctionNode)tree).getDirectCallTargets();
             if (directCallTargets != null) {
                 setNonTrivialInit(methodName);
@@ -1227,9 +1227,9 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void generateRegExpLiterals(Vector regexps, boolean inCtor) {
+    private void generateRegExpLiterals(ObjArray regexps, boolean inCtor) {
         for (int i=0; i < regexps.size(); i++) {
-            Node regexp = (Node) regexps.elementAt(i);
+            Node regexp = (Node) regexps.get(i);
             StringBuffer sb = new StringBuffer("_re");
             sb.append(i);
             String fieldName = sb.toString();
@@ -1270,7 +1270,7 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void generateFunctionInits(Vector fns) {
+    private void generateFunctionInits(ObjArray fns) {
         // make an array to put them in, so they're available
         // for decompilation.
         push(fns.size());
@@ -1287,7 +1287,7 @@ public class Codegen extends Interpreter {
             addByteCode(ByteCode.DUP); // make another reference to the array
             push(i);            // to set up for aastore at end of loop
 
-            Node def = (Node) fns.elementAt(i);
+            Node def = (Node) fns.get(i);
             Codegen codegen = new Codegen();
             String fnClassName = codegen.generateCode(def, namesVector,
                                                       classFilesVector,
@@ -1524,10 +1524,10 @@ public class Codegen extends Interpreter {
         }
         astore(variableObjectLocal);
 
-        Vector fns = (Vector) tree.getProp(Node.FUNCTION_PROP);
+        ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
         if (inFunction && fns != null) {
             for (int i=0; i < fns.size(); i++) {
-                FunctionNode fn = (FunctionNode) fns.elementAt(i);
+                FunctionNode fn = (FunctionNode) fns.get(i);
                 if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
                     visitFunction(fn, true);
                     addByteCode(ByteCode.POP);
@@ -2305,9 +2305,9 @@ public class Codegen extends Interpreter {
         short selector = getNewWordLocal();
         astore(selector);
 
-        Vector cases = (Vector) node.getProp(Node.CASES_PROP);
+        ObjArray cases = (ObjArray) node.getProp(Node.CASES_PROP);
         for (int i=0; i < cases.size(); i++) {
-            Node thisCase = (Node) cases.elementAt(i);
+            Node thisCase = (Node) cases.get(i);
             Node first = thisCase.getFirstChild();
             generateCodeFromNode(first, thisCase, -1, -1);
             aload(selector);
@@ -3767,8 +3767,8 @@ public class Codegen extends Interpreter {
     boolean inFunction;
     boolean inDirectCallFunction;
     private ClassFileWriter classFile;
-    private Vector namesVector;
-    private Vector classFilesVector;
+    private ObjArray namesVector;
+    private ObjArray classFilesVector;
     private short scriptRuntimeIndex;
     private int version;
     private OptClassNameHelper itsNameHelper;

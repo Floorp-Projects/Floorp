@@ -39,7 +39,6 @@
 package org.mozilla.javascript;
 
 import java.io.*;
-import java.util.Vector;
 import java.util.Enumeration;
 
 import org.mozilla.javascript.debug.*;
@@ -131,12 +130,12 @@ public class Interpreter extends LabelTable {
 
     private Object[] generateRegExpLiterals(Context cx,
                                             Scriptable scope,
-                                            Vector regexps)
+                                            ObjArray regexps)
     {
         Object[] result = new Object[regexps.size()];
         RegExpProxy rep = cx.getRegExpProxy();
         for (int i = 0; i < regexps.size(); i++) {
-            Node regexp = (Node) regexps.elementAt(i);
+            Node regexp = (Node) regexps.get(i);
             Node left = regexp.getFirstChild();
             Node right = regexp.getLastChild();
             result[i] = rep.newRegExp(cx, scope, left.getString(),
@@ -153,12 +152,12 @@ public class Interpreter extends LabelTable {
     {
         itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
         itsData.itsSourceFile = itsSourceFile;
-        itsFunctionList = (Vector) tree.getProp(Node.FUNCTION_PROP);
+        itsFunctionList = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
         debugSource = (String) tree.getProp(Node.DEBUGSOURCE_PROP);
         if (itsFunctionList != null)
             generateNestedFunctions(scope, cx, securityDomain);
         Object[] regExpLiterals = null;
-        Vector regexps = (Vector)tree.getProp(Node.REGEXP_PROP);
+        ObjArray regexps = (ObjArray)tree.getProp(Node.REGEXP_PROP);
         if (regexps != null)
             regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
 
@@ -185,7 +184,7 @@ public class Interpreter extends LabelTable {
     {
         itsNestedFunctions = new InterpretedFunction[itsFunctionList.size()];
         for (short i = 0; i < itsFunctionList.size(); i++) {
-            FunctionNode def = (FunctionNode)itsFunctionList.elementAt(i);
+            FunctionNode def = (FunctionNode)itsFunctionList.get(i);
             Interpreter jsi = new Interpreter();
             jsi.itsSourceFile = itsSourceFile;
             jsi.itsData = new InterpreterData(securityDomain,
@@ -204,11 +203,11 @@ public class Interpreter extends LabelTable {
     generateFunctionICode(Context cx, Scriptable scope,
                           FunctionNode theFunction, Object securityDomain)
     {
-        itsFunctionList = (Vector) theFunction.getProp(Node.FUNCTION_PROP);
+        itsFunctionList = (ObjArray) theFunction.getProp(Node.FUNCTION_PROP);
         if (itsFunctionList != null)
             generateNestedFunctions(scope, cx, securityDomain);
         Object[] regExpLiterals = null;
-        Vector regexps = (Vector)theFunction.getProp(Node.REGEXP_PROP);
+        ObjArray regexps = (ObjArray)theFunction.getProp(Node.REGEXP_PROP);
         if (regexps != null)
             regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
 
@@ -236,7 +235,7 @@ public class Interpreter extends LabelTable {
     }
 
     boolean itsInFunctionFlag;
-    Vector itsFunctionList;
+    ObjArray itsFunctionList;
 
     InterpreterData itsData;
     VariableTable itsVariableTable;
@@ -353,9 +352,9 @@ public class Interpreter extends LabelTable {
             to pass to the addGoto routine. (Parallels codegen here).
             Seems unnecessary.
          */
-                    Vector cases = (Vector) node.getProp(Node.CASES_PROP);
+                    ObjArray cases = (ObjArray) node.getProp(Node.CASES_PROP);
                     for (int i = 0; i < cases.size(); i++) {
-                        Node thisCase = (Node)cases.elementAt(i);
+                        Node thisCase = (Node)cases.get(i);
                         Node first = thisCase.getFirstChild();
                         // the case expression is the firstmost child
                         // the rest will be generated when the case

@@ -37,9 +37,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.Stack;
-import java.util.Vector;
-
 /**
  * This class transforms a tree to a lower-level representation for codegen.
  *
@@ -64,8 +61,8 @@ public class NodeTransformer {
     public Node transform(Node tree, Node enclosing, TokenStream ts,
                           Scriptable scope)
     {
-        loops = new Stack();
-        loopEnds = new Stack();
+        loops = new ObjArray();
+        loopEnds = new ObjArray();
         inFunction = tree.getType() == TokenStream.FUNCTION;
         if (!inFunction) {
             addVariables(tree, getVariableTable(tree));
@@ -117,12 +114,12 @@ public class NodeTransformer {
                     fnNode = (FunctionNode)
                             inner.transform(fnNode, tree, ts, scope);
                     node.putProp(Node.FUNCTION_PROP, fnNode);
-                    Vector fns = (Vector) tree.getProp(Node.FUNCTION_PROP);
+                    ObjArray fns = (ObjArray) tree.getProp(Node.FUNCTION_PROP);
                     if (fns == null) {
-                        fns = new Vector(7);
+                        fns = new ObjArray();
                         tree.putProp(Node.FUNCTION_PROP, fns);
                     }
-                    fns.addElement(fnNode);
+                    fns.add(fnNode);
                 }
                 break;
 
@@ -134,7 +131,7 @@ public class NodeTransformer {
 
                 // check against duplicate labels...
                 for (int i=loops.size()-1; i >= 0; i--) {
-                    Node n = (Node) loops.elementAt(i);
+                    Node n = (Node) loops.get(i);
                     if (n.getType() == TokenStream.LABEL) {
                         String otherId = (String)n.getProp(Node.LABEL_PROP);
                         if (id.equals(otherId)) {
@@ -196,7 +193,7 @@ public class NodeTransformer {
                 node.putProp(Node.BREAK_PROP, breakTarget);
                 loops.push(node);
                 loopEnds.push(breakTarget);
-                node.putProp(Node.CASES_PROP, new Vector(13));
+                node.putProp(Node.CASES_PROP, new ObjArray());
                 break;
               }
 
@@ -205,8 +202,8 @@ public class NodeTransformer {
               {
                 Node sw = (Node) loops.peek();
                 if (type == TokenStream.CASE) {
-                    Vector cases = (Vector) sw.getProp(Node.CASES_PROP);
-                    cases.addElement(node);
+                    ObjArray cases = (ObjArray) sw.getProp(Node.CASES_PROP);
+                    cases.add(node);
                 } else {
                     sw.putProp(Node.DEFAULT_PROP, node);
                 }
@@ -254,7 +251,7 @@ public class NodeTransformer {
 
               case TokenStream.TARGET:
               case TokenStream.LEAVEWITH:
-                if (!loopEnds.empty() && loopEnds.peek() == node) {
+                if (!loopEnds.isEmpty() && loopEnds.peek() == node) {
                     loopEnds.pop();
                     loops.pop();
                 }
@@ -274,7 +271,7 @@ public class NodeTransformer {
 
                 Node parent = iterator.getCurrentParent();
                 for (int i=loops.size()-1; i >= 0; i--) {
-                    Node n = (Node) loops.elementAt(i);
+                    Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
                     if (elemtype == TokenStream.TRY) {
                         Node jsrnode = new Node(TokenStream.JSR);
@@ -305,7 +302,7 @@ public class NodeTransformer {
                 int i;
                 Node parent = iterator.getCurrentParent();
                 for (i=loops.size()-1; i >= 0; i--) {
-                    Node n = (Node) loops.elementAt(i);
+                    Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
                     if (elemtype == TokenStream.WITH) {
                         parent.addChildBefore(new Node(TokenStream.LEAVEWITH),
@@ -392,12 +389,12 @@ public class NodeTransformer {
 
               case TokenStream.OBJECT:
               {
-                Vector regexps = (Vector) tree.getProp(Node.REGEXP_PROP);
+                ObjArray regexps = (ObjArray) tree.getProp(Node.REGEXP_PROP);
                 if (regexps == null) {
-                    regexps = new Vector(3);
+                    regexps = new ObjArray();
                     tree.putProp(Node.REGEXP_PROP, regexps);
                 }
-                regexps.addElement(node);
+                regexps.add(node);
                 Node n = new Node(TokenStream.OBJECT);
                 iterator.replaceCurrent(n);
                 n.putProp(Node.REGEXP_PROP, node);
@@ -649,7 +646,7 @@ public class NodeTransformer {
 
     protected boolean inWithStatement() {
         for (int i=loops.size()-1; i >= 0; i--) {
-            Node n = (Node) loops.elementAt(i);
+            Node n = (Node) loops.get(i);
             if (n.getType() == TokenStream.WITH)
                 return true;
         }
@@ -720,8 +717,8 @@ public class NodeTransformer {
             cx.reportWarning(msg, (String) prop, lineno, null, 0);
     }
 
-    protected Stack loops;
-    protected Stack loopEnds;
+    protected ObjArray loops;
+    protected ObjArray loopEnds;
     protected boolean inFunction;
     protected IRFactory irFactory;
 }

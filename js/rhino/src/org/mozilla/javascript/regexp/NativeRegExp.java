@@ -1961,7 +1961,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         if (state.parenCount > re.parenCount)
             throw new RuntimeException();
         if (state.parenCount == 0) {
-            res.parens.setSize(0);
+            res.parens.clear();
             res.lastParen = SubString.emptySubString;
         } else {
             SubString parsub = null;
@@ -1969,7 +1969,7 @@ public class NativeRegExp extends IdScriptable implements Function {
             res.parens.setSize(state.parenCount);
             for (num = 0; num < state.parenCount; num++) {
                 parsub = state.parens[num];
-                res.parens.setElementAt(parsub, num);
+                res.parens.set(num, parsub);
                 if (matchType == TEST) continue;
                 String parstr = parsub == null ? "": parsub.toString();
                 obj.put(num+1, obj, parstr);

@@ -355,7 +355,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         Member  bestFit = null;
         Class[] bestFitTypes = null;
 
-        java.util.Vector ambiguousMethods = null;
+        ObjArray ambiguousMethods = null;
 
         for (int i = 0; i < methodsOrCtors.length; i++) {
             Member member = methodsOrCtors[i];
@@ -389,8 +389,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                     if (debug) printDebug("Deferring ", member, args);
                     // add to "ambiguity list"
                     if (ambiguousMethods == null)
-                        ambiguousMethods = new java.util.Vector();
-                    ambiguousMethods.addElement(member);
+                        ambiguousMethods = new ObjArray();
+                    ambiguousMethods.add(member);
                 }
                 else if (preference == PREFERENCE_FIRST_ARG) {
                     if (debug) printDebug("Substituting ", member, args);
@@ -424,7 +424,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         // Compare ambiguous methods with best fit, in case
         // the current best fit removes the ambiguities.
         for (int i = ambiguousMethods.size() - 1; i >= 0 ; i--) {
-            Member member = (Member)ambiguousMethods.elementAt(i);
+            Member member = (Member)ambiguousMethods.get(i);
             Class paramTypes[] = hasMethods
                                  ? ((Method) member).getParameterTypes()
                                  : ((Constructor) member).getParameterTypes();
@@ -437,11 +437,11 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 if (debug) printDebug("Substituting ", member, args);
                 bestFit = member;
                 bestFitTypes = paramTypes;
-                ambiguousMethods.removeElementAt(i);
+                ambiguousMethods.remove(i);
             }
             else if (preference == PREFERENCE_SECOND_ARG) {
                 if (debug) printDebug("Rejecting ", member, args);
-                ambiguousMethods.removeElementAt(i);
+                ambiguousMethods.remove(i);
             }
             else {
                 if (debug) printDebug("UNRESOLVED: ", member, args);
@@ -453,13 +453,13 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             StringBuffer buf = new StringBuffer();
             boolean isCtor = (bestFit instanceof Constructor);
 
-            ambiguousMethods.addElement(bestFit);
+            ambiguousMethods.add(bestFit);
 
             for (int i = 0; i < ambiguousMethods.size(); i++) {
                 if (i != 0) {
                     buf.append(", ");
                 }
-                Member member = (Member)ambiguousMethods.elementAt(i);
+                Member member = (Member)ambiguousMethods.get(i);
                 if (!isCtor) {
                     Class rtnType = ((Method)member).getReturnType();
                     buf.append(rtnType);

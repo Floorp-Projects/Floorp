@@ -38,8 +38,6 @@ package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
 import java.util.Hashtable;
-import java.util.Stack;
-import java.util.Vector;
 
 /**
  * This class performs node transforms to prepare for optimization.

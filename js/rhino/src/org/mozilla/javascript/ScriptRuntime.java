@@ -40,7 +40,7 @@
 
 package org.mozilla.javascript;
 
-import java.util.*;
+import java.util.Enumeration;
 import java.lang.reflect.*;
 import org.mozilla.classfile.DefiningClassLoader;
 
@@ -2070,7 +2070,7 @@ public class ScriptRuntime {
  *
  * See ECMA 12.6.3.
  *
- * IdEnumeration maintains a Hashtable to make sure a given
+ * IdEnumeration maintains a ObjToIntMap to make sure a given
  * id is enumerated only once across multiple objects in a
  * prototype chain.
  *
@@ -2082,7 +2082,7 @@ public class ScriptRuntime {
  */
 class IdEnumeration implements Enumeration {
     IdEnumeration(Scriptable m) {
-        used = new Hashtable(27);
+        used = new ObjToIntMap(27);
         changeObject(m);
         next = getNext();
     }
@@ -2094,8 +2094,8 @@ class IdEnumeration implements Enumeration {
     public Object nextElement() {
         Object result = next;
 
-        // only key used; 'next' as value for convenience
-        used.put(next, next);
+        // only key used; 0 as value for convenience
+        used.put(next, 0);
 
         next = getNext();
         return result;
@@ -2129,7 +2129,7 @@ class IdEnumeration implements Enumeration {
                 if (!obj.has(((Number) result).intValue(), obj))
                     continue;   // must have been deleted
             }
-            if (!used.containsKey(result)) {
+            if (!used.has(result)) {
                 break;
             }
         }
@@ -2140,5 +2140,5 @@ class IdEnumeration implements Enumeration {
     private Scriptable obj;
     private int index;
     private Object[] array;
-    private Hashtable used;
+    private ObjToIntMap used;
 }

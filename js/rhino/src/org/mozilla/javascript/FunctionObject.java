@@ -40,7 +40,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.Vector;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -252,7 +251,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
     static Method[] findMethods(Method[] methods, String name) {
         // Usually we're just looking for a single method, so optimize
         // for that case.
-        Vector v = null;
+        ObjArray v = null;
         Method first = null;
         for (int i=0; i < methods.length; i++) {
             if (methods[i] == null)
@@ -262,10 +261,10 @@ public class FunctionObject extends NativeFunction implements Serializable {
                     first = methods[i];
                 } else {
                     if (v == null) {
-                        v = new Vector(5);
-                        v.addElement(first);
+                        v = new ObjArray(5);
+                        v.add(first);
                     }
-                    v.addElement(methods[i]);
+                    v.add(methods[i]);
                 }
             }
         }
@@ -276,7 +275,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
             return single;
         }
         Method[] result = new Method[v.size()];
-        v.copyInto(result);
+        v.toArray(result);
         return result;
     }
 

@@ -38,10 +38,6 @@ package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
 
-import java.util.Vector;
-import java.util.Hashtable;
-import java.util.Enumeration;
-
 public class FatBlock {
 
     public FatBlock(int startNodeIndex, int endNodeIndex, Node[] statementNodes)
@@ -55,15 +51,15 @@ public class FatBlock {
     public Block getSlimmerSelf()
         { return itsShadowOfFormerSelf; }
 
-    private Block[] reduceToArray(Hashtable h)
+    private Block[] reduceToArray(ObjToIntMap map)
     {
         Block[] result = null;
-        if (!h.isEmpty()) {
-            result = new Block[h.size()];
-            Enumeration enum = h.elements();
+        if (!map.isEmpty()) {
+            result = new Block[map.size()];
             int i = 0;
-            while (enum.hasMoreElements()) {
-                FatBlock fb = (FatBlock)(enum.nextElement());
+            ObjToIntMap.Iterator iter = map.newIterator();
+            for (iter.start(); !iter.done(); iter.next()) {
+                FatBlock fb = (FatBlock)(iter.getKey());
                 result[i++] = fb.itsShadowOfFormerSelf;
             }
         }
@@ -77,13 +73,13 @@ public class FatBlock {
         return itsShadowOfFormerSelf;
     }
 
-    public void addSuccessor(FatBlock b)  { itsSuccessors.put(b, b); }
-    public void addPredecessor(FatBlock b)  { itsPredecessors.put(b, b); }
+    public void addSuccessor(FatBlock b)  { itsSuccessors.put(b, 0); }
+    public void addPredecessor(FatBlock b)  { itsPredecessors.put(b, 0); }
 
         // all the Blocks that come immediately after this
-    private Hashtable itsSuccessors = new Hashtable(4);
+    private ObjToIntMap itsSuccessors = new ObjToIntMap();
         // all the Blocks that come immediately before this
-    private Hashtable itsPredecessors = new Hashtable(4);
+    private ObjToIntMap itsPredecessors = new ObjToIntMap();
 
     private Block itsShadowOfFormerSelf;
 

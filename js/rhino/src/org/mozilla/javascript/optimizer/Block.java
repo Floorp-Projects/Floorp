@@ -38,7 +38,6 @@ package org.mozilla.javascript.optimizer;
 import org.mozilla.javascript.*;
 import org.mozilla.classfile.*;
 
-import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Enumeration;
 
@@ -66,7 +65,7 @@ public class Block {
     {
             // a mapping from each target node to the block it begins
         Hashtable theTargetBlocks = new Hashtable();
-        Vector theBlocks = new Vector();
+        ObjArray theBlocks = new ObjArray();
 
             // there's a block that starts at index 0
         int beginNodeIndex = 0;
@@ -81,7 +80,7 @@ public class Block {
                             if (statementNodes[beginNodeIndex].getType()
                                                         == TokenStream.TARGET)
                                 theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
-                            theBlocks.addElement(fb);
+                            theBlocks.add(fb);
                              // start the next block at this node
                             beginNodeIndex = i;
                         }
@@ -96,7 +95,7 @@ public class Block {
                         if (statementNodes[beginNodeIndex].getType()
                                                        == TokenStream.TARGET)
                             theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
-                        theBlocks.addElement(fb);
+                        theBlocks.add(fb);
                             // start the next block at the next node
                         beginNodeIndex = i + 1;
                     }
@@ -110,20 +109,20 @@ public class Block {
                                                              statementNodes);
             if (statementNodes[beginNodeIndex].getType() == TokenStream.TARGET)
                 theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
-            theBlocks.addElement(fb);
+            theBlocks.add(fb);
         }
 
         // build successor and predecessor links
 
         for (int i = 0; i < theBlocks.size(); i++) {
-            FatBlock fb = (FatBlock)(theBlocks.elementAt(i));
+            FatBlock fb = (FatBlock)(theBlocks.get(i));
 
             Node blockEndNode = fb.getEndNode();
             int blockEndNodeType = blockEndNode.getType();
 
             if ((blockEndNodeType != TokenStream.GOTO)
                                          && (i < (theBlocks.size() - 1))) {
-                FatBlock fallThruTarget = (FatBlock)(theBlocks.elementAt(i + 1));
+                FatBlock fallThruTarget = (FatBlock)(theBlocks.get(i + 1));
                 fb.addSuccessor(fallThruTarget);
                 fallThruTarget.addPredecessor(fb);
             }
@@ -145,7 +144,7 @@ public class Block {
         Block[] result = new Block[theBlocks.size()];
 
         for (int i = 0; i < theBlocks.size(); i++) {
-            FatBlock fb = (FatBlock)(theBlocks.elementAt(i));
+            FatBlock fb = (FatBlock)(theBlocks.get(i));
             result[i] = fb.diet();
             result[i].setBlockID(i);
         }

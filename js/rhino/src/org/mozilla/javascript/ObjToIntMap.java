@@ -202,15 +202,20 @@ public class ObjToIntMap implements Serializable {
 
     /** Return array of present keys */
     public Object[] getKeys() {
+        Object[] array = new Object[keyCount];
+        getKeys(array, 0);
+        return array;
+    }
+
+    public void getKeys(Object[] array, int offset) {
         int count = keyCount;
-        Object[] result = new Object[count];
         for (int i = 0; count != 0; ++i) {
             Object key = keys[i];
             if (key != null && key != DELETED) {
-                result[--count] = key;
+                --count;
+                array[offset++] = key;
             }
         }
-        return result;
     }
 
     private static int tableLookupStep(int fraction, int mask, int power) {

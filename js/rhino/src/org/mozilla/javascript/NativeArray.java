@@ -36,7 +36,6 @@
  */
 
 package org.mozilla.javascript;
-import java.util.Hashtable;
 
 /**
  * This class implements the Array native object.

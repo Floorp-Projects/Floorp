@@ -210,8 +210,8 @@ public class JavaAdapter extends ScriptableObject {
         if (scriptClassName != null)
             generateEmptyCtor(cfw, adapterName, superName, scriptClassName);
 
-        Hashtable generatedOverrides = new Hashtable();
-        Hashtable generatedMethods = new Hashtable();
+        ObjToIntMap generatedOverrides = new ObjToIntMap();
+        ObjToIntMap generatedMethods = new ObjToIntMap();
 
         // generate methods to satisfy all specified interfaces.
         for (int i = 0; i < interfacesCount; i++) {
@@ -240,12 +240,12 @@ public class JavaAdapter extends ScriptableObject {
                 // method/signature.
                 String methodName = method.getName();
                 String methodKey = methodName + getMethodSignature(method);
-                if (! generatedOverrides.containsKey(methodKey)) {
+                if (! generatedOverrides.has(methodKey)) {
                     generateMethod(cfw, adapterName, methodName,
                                    method.getParameterTypes(),
                                    method.getReturnType());
-                    generatedOverrides.put(methodKey, Boolean.TRUE);
-                    generatedMethods.put(methodName, Boolean.TRUE);
+                    generatedOverrides.put(methodKey, 0);
+                    generatedMethods.put(methodName, 0);
                 }
             }
         }
@@ -272,12 +272,12 @@ public class JavaAdapter extends ScriptableObject {
                 String methodName = method.getName();
                 String methodSignature = getMethodSignature(method);
                 String methodKey = methodName + methodSignature;
-                if (! generatedOverrides.containsKey(methodKey)) {
+                if (! generatedOverrides.has(methodKey)) {
                     generateMethod(cfw, adapterName, methodName,
                                    method.getParameterTypes(),
                                    method.getReturnType());
-                    generatedOverrides.put(methodKey, Boolean.TRUE);
-                    generatedMethods.put(methodName, Boolean.TRUE);
+                    generatedOverrides.put(methodKey, 0);
+                    generatedMethods.put(methodName, 0);
                 }
                 // if a method was overridden, generate a "super$method"
                 // which lets the delegate call the superclass' version.
@@ -298,7 +298,7 @@ public class JavaAdapter extends ScriptableObject {
                 if (!(ids[j] instanceof String))
                     continue;
                 String id = (String) ids[j];
-                if (generatedMethods.containsKey(id))
+                if (generatedMethods.has(id))
                     continue;
                 Object f = o.get(id, o);
                 int length;

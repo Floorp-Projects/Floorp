@@ -38,8 +38,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.Vector;
-
 /**
  * Class ImporterTopLevel
  *

@@ -1537,21 +1537,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @since 1.5R2
      */
     public static Object[] getPropertyIds(Scriptable obj) {
-        Hashtable h = new Hashtable();  // JDK1.2: use HashSet
+        ObjToIntMap map = new ObjToIntMap();
         while (obj != null) {
             Object[] ids = obj.getIds();
             for (int i=0; i < ids.length; i++) {
-                h.put(ids[i], ids[i]);
+                map.put(ids[i], 0);
             }
             obj = (Scriptable)obj.getPrototype();
         }
-        Object[] result = new Object[h.size()];
-        java.util.Enumeration e = h.elements();
-        int n = 0;
-        while (e.hasMoreElements()) {
-            result[n++] = e.nextElement();
-        }
-        return result;
+        return map.getKeys();
     }
 
     /**

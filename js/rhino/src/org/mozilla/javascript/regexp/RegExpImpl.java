@@ -35,7 +35,6 @@
 package org.mozilla.javascript.regexp;
 
 import org.mozilla.javascript.*;
-import java.util.Vector;
 
 /**
  *
@@ -43,7 +42,7 @@ import java.util.Vector;
 public class RegExpImpl implements RegExpProxy {
 
     public RegExpImpl() {
-        parens = new Vector(9);
+        parens = new ObjArray();
     }
 
     public boolean isRegExp(Object obj) {
@@ -281,12 +280,12 @@ public class RegExpImpl implements RegExpProxy {
     SubString getParenSubString(int i) {
         if (i >= parens.size())
             return SubString.emptySubString;
-        return (SubString) parens.elementAt(i);
+        return (SubString) parens.get(i);
     }
 
     String          input;         /* input string to match (perl $_, GC root) */
     boolean         multiline;     /* whether input contains newlines (perl $*) */
-    Vector          parens;        /* Vector of SubString; last set of parens
+    ObjArray        parens;        /* Vector of SubString; last set of parens
                                       matched (perl $1, $2) */
     SubString       lastMatch;     /* last string matched (perl $&) */
     SubString       lastParen;     /* last paren matched (perl $+) */
@@ -472,12 +471,12 @@ class ReplaceData extends GlobData {
         if (lambda != null) {
             // invoke lambda function with args lastMatch, $1, $2, ... $n,
             // leftContext.length, whole string.
-            Vector parens = reImpl.parens;
+            ObjArray parens = reImpl.parens;
             int parenCount = parens.size();
             Object[] args = new Object[parenCount + 3];
             args[0] = reImpl.lastMatch.toString();
             for (int i=0; i < parenCount; i++) {
-                SubString sub = (SubString) parens.elementAt(i);
+                SubString sub = (SubString) parens.get(i);
                 args[i+1] = sub.toString();
             }
             args[parenCount+1] = new Integer(reImpl.leftContext.length);

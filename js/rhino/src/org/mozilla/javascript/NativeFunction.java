@@ -38,8 +38,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.Hashtable;
-
 /**
  * This class implements the Function native object.
  * See ECMA 15.3.

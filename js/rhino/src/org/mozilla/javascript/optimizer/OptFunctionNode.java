@@ -73,14 +73,14 @@ public class OptFunctionNode extends FunctionNode {
 
     public void addDirectCallTarget(FunctionNode target) {
         if (itsDirectCallTargets == null)
-            itsDirectCallTargets = new Vector();
+            itsDirectCallTargets = new ObjArray();
         for (int i = 0; i < itsDirectCallTargets.size(); i++)   // OPT !!
-            if (((FunctionNode)itsDirectCallTargets.elementAt(i)) == target)
+            if (((FunctionNode)itsDirectCallTargets.get(i)) == target)
                 return;
-        itsDirectCallTargets.addElement(target);
+        itsDirectCallTargets.add(target);
     }
 
-    public Vector getDirectCallTargets() {
+    public ObjArray getDirectCallTargets() {
         return itsDirectCallTargets;
     }
 
@@ -119,5 +119,5 @@ public class OptFunctionNode extends FunctionNode {
     private boolean itsContainsCalls;
     private boolean[] itsContainsCallsCount = new boolean[4];
     private boolean itsParameterNumberContext;
-    private Vector itsDirectCallTargets;
+    private ObjArray itsDirectCallTargets;
 }
