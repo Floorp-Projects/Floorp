@@ -19,10 +19,8 @@
 #ifndef _MD_X86_ASM_H_
 #define _MD_X86_ASM_H_
 
-#if defined(LINUX)
-#include "x86LinuxAsm.h"
-#elif defined(FREEBSD)
-#include "x86FreeBSDAsm.h"
+#ifndef WIN32
+#include "x86Asm_gas.h"
 #endif
 
 #endif /* _MD_X86_ASM_H_ */
