@@ -756,3 +756,17 @@ if [ `echo "$MOZ_EXTENSIONS" | grep -c pics` != 0 ]; then
   extensions/pics/tests/Makefile
 END_EXTENSIONS_PICS_MAKEFILES
 fi
+
+if [ `echo "$MOZ_EXTENSIONS" | grep -c xmlterm` != 0 ]; then
+  add_makefiles <<END_EXTENSIONS_XMLTERM_MAKEFILES
+  extensions/xmlterm/Makefile
+  extensions/xmlterm/base/Makefile
+  extensions/xmlterm/geckoterm/Makefile
+  extensions/xmlterm/linetest/Makefile
+  extensions/xmlterm/scripts/Makefile
+  extensions/xmlterm/tests/Makefile
+  extensions/xmlterm/ui/Makefile
+  extensions/xmlterm/ui/content/Makefile
+  extensions/xmlterm/ui/skin/Makefile
+END_EXTENSIONS_XMLTERM_MAKEFILES
+fi
