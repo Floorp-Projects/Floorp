@@ -53,13 +53,20 @@ public class CertRequest implements ASN1Value {
     private CertRequest() { }
 
     /**
-     * Private constructor for the Template class.
+     * @param certReqId May NOT be null.
+     * @param certTemplate May NOT be null.
      * @param controls May be null.
      */
-    CertRequest(INTEGER certReqId, CertTemplate certTemplate,
+    public CertRequest(INTEGER certReqId, CertTemplate certTemplate,
             SEQUENCE controls)
     {
+        if( certReqId == null ) {
+            throw new NullPointerException("certReqId is null");
+        }
         this.certReqId = certReqId;
+        if( certTemplate == null ) {
+            throw new NullPointerException("certTemplate is null");
+        }
         this.certTemplate = certTemplate;
         this.controls = controls;
     }

@@ -62,7 +62,11 @@ public class CertTemplate implements ASN1Value {
     private BIT_STRING subjectUID;
     private SEQUENCE extensions;
 
-    CertTemplate() { }
+    /**
+     * Creates an empty CertTemplate. Use the accessor methods to fill it
+     * up with stuff.
+     */
+    public CertTemplate() { }
 
     /**
      * Returns true if the version field is present.
