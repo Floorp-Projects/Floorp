@@ -51,38 +51,43 @@ class basic_nsAWritableString
 
       struct Fragment
         {
-          CharT* mStart;
-          CharT* mEnd;
+          CharT*    mStart;
+          CharT*    mEnd;
+          PRUint32  mFragmentIdentifier;
 
-          basic_nsAWritableString<CharT>* mOwningString;
-          PRUint32                        mFragmentIdentifier;
-
-          explicit
-          Fragment( basic_nsAWritableString<CharT>* aOwner = 0 )
-              : mStart(0), mEnd(0), mOwningString(aOwner), mFragmentIdentifier(0)
+          Fragment()
+              : mStart(0), mEnd(0), mFragmentIdentifier(0)
             {
               // nothing else to do here
             }
         };
 
     public:
-      using basic_nsAReadableString<CharT>::GetFragment;
       virtual CharT* GetFragment( Fragment&, FragmentRequest, PRUint32 = 0 ) = 0;
 
       friend class Iterator;
       class Iterator
           : public std::bidirectional_iterator_tag
         {
+          public:
+            typedef ptrdiff_t                   difference_type;
+            typedef CharT                       value_type;
+            typedef const CharT*                pointer;
+            typedef const CharT&                reference;
+            typedef bidirectional_iterator_tag  iterator_category;
+
+          private:
             friend class basic_nsAWritableString<CharT>;
 
             Fragment  mFragment;
             CharT*    mPosition;
+            basic_nsAWritableString<CharT>* mOwningString;
 
             void
             normalize_forward()
               {
                 if ( mPosition == mFragment.mEnd )
-                  if ( mFragment.mOwningString->GetFragment(mFragment, kNextFragment) )
+                  if ( mOwningString->GetFragment(mFragment, kNextFragment) )
                     mPosition = mFragment.mStart;
               }
 
@@ -90,12 +95,16 @@ class basic_nsAWritableString
             normalize_backward()
               {
                 if ( mPosition == mFragment.mStart )
-                  if ( mFragment.mOwningString->GetFragment(mFragment, kPrevFragment) )
+                  if ( mOwningString->GetFragment(mFragment, kPrevFragment) )
                     mPosition = mFragment.mEnd;
               }
 
-            Iterator( Fragment& aFragment, CharT* aStartingPosition )
-                : mFragment(aFragment), mPosition(aStartingPosition)
+            Iterator( Fragment& aFragment,
+                      CharT* aStartingPosition,
+                      basic_nsAWritableString<CharT>& aOwningString )
+                : mFragment(aFragment),
+                  mPosition(aStartingPosition),
+                  mOwningString(&aOwningString)
               {
                 // nothing else to do here
               }
@@ -146,40 +155,55 @@ class basic_nsAWritableString
               }
 
             PRBool
-            operator==( const ConstIterator& rhs )
+            operator==( const Iterator& rhs )
               {
                 return mPosition == rhs.mPosition;
               }
 
             PRBool
-            operator!=( const ConstIterator& rhs )
+            operator!=( const Iterator& rhs )
               {
                 return mPosition != rhs.mPosition;
               }
         };
 
     public:
+
+#ifdef HAVE_CPP_USING
       using basic_nsAReadableString<CharT>::Begin;
+      using basic_nsAReadableString<CharT>::End;
+#else
+      basic_nsAReadableString<CharT>::ConstIterator
+      Begin( PRUint32 aOffset = 0 ) const
+        {
+          return basic_nsAReadableString<CharT>::Begin(aOffset);
+        }
+
+      basic_nsAReadableString<CharT>::ConstIterator
+      End( PRUint32 aOffset = 0 ) const
+        {
+          return basic_nsAReadableString<CharT>::End(aOffset);
+        }
+#endif
 
       Iterator
       Begin( PRUint32 aOffset = 0 )
         {
-          Fragment fragment(this);
+          Fragment fragment;
           CharT* startPos = GetFragment(fragment, kFragmentAt, aOffset);
-          return Iterator(fragment, startPos);
+          return Iterator(fragment, startPos, *this);
         }
 
-      using basic_nsAReadableString<CharT>::End;
 
       Iterator
       End( PRUint32 aOffset = 0 )
         {
-          Fragment fragment(this);
+          Fragment fragment;
           CharT* startPos = GetFragment(fragment, kFragmentAt, max(0U, Length()-aOffset));
-          return Iterator(fragment, startPos);
+          return Iterator(fragment, startPos, *this);
         }
 
-      // virtual void Splice( ... );
+      virtual void Splice();
 
       virtual void SetCapacity( PRUint32 ) = 0;
       virtual void SetLength( PRUint32 ) = 0;
@@ -195,8 +219,8 @@ class basic_nsAWritableString
 
       // virtual PRBool SetCharAt( char_type, index_type ) = 0;
 
-      void ToLowerCase();
-      void ToUpperCase();
+      // void ToLowerCase();
+      // void ToUpperCase();
 
       // void StripChars( const CharT* aSet );
       // void StripChar( ... );
@@ -248,7 +272,14 @@ NS_DEF_STRING_COMPARISONS(basic_nsAWritableString<CharT>)
 
 template <class CharT>
 void
+basic_nsAWritableString<CharT>::Splice()
+  {
+  }
+
+template <class CharT>
+void
 basic_nsAWritableString<CharT>::Assign( const basic_nsAReadableString<CharT>& rhs )
+    // Default implementation.  Derived classes may be able to do something smarter...
   {
     SetLength(rhs.Length());
     std::copy(rhs.Begin(), rhs.End(), Begin());
