@@ -699,12 +699,9 @@ nsMsgIncomingServer::SetLocalPath(nsIFileSpec *spec)
 NS_IMETHODIMP
 nsMsgIncomingServer::SetRememberPassword(PRBool value)
 {
-    // for now, only handle the case where we're un-remembering the password
-    // fix after beta1
     if (!value)
         ForgetPassword();
-    
-    return NS_OK;
+    return SetBoolValue("remember_password", value);
 }
 
 NS_IMETHODIMP
@@ -712,19 +709,7 @@ nsMsgIncomingServer::GetRememberPassword(PRBool* value)
 {
     NS_ENSURE_ARG_POINTER(value);
 
-    nsresult rv;
-
-    nsXPIDLCString serverURI;
-    rv = GetServerURI(getter_Copies(serverURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIWalletService> walletService =
-        do_GetService(kWalletServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = walletService->HaveData(serverURI, PR_FALSE /* no strip */, nsnull, value);
-
-    return rv;
+    return GetBoolValue("remember_password", value);
 }
 
 NS_IMETHODIMP
