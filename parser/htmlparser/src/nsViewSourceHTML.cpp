@@ -665,11 +665,11 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
   PRUnichar theNextChar=0;
 
   while(++theOffset<theEnd){
-    theNextChar=aTextString[theOffset-1];
+    //theNextChar=aTextString[theOffset-1];
     theChar=aTextString[theOffset];
     switch(theChar){
       case kSpace:
-        theNextChar=aTextString[theOffset+1];
+        theNextChar=(theOffset+1 != theEnd) ? aTextString[theOffset+1] : '\0';
         if((!aPlainText) && aPreserveSpace) { //&& ((kSpace==theNextChar) || (0==theNextChar)))
           if(theTextOffset<theOffset) {
             if(kSpace==theNextChar) {
@@ -705,7 +705,7 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
           theTextOffset=theOffset--;  //back up one on purpose...
         }
         else {
-          theNextChar=aTextString.CharAt(theOffset+1);
+          theNextChar=(theOffset+1 != theEnd) ? aTextString.CharAt(theOffset+1) : '\0';
           if((kCR==theChar) && (kLF==theNextChar)) {
             theOffset++;
           }

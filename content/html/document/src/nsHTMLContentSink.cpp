@@ -548,7 +548,7 @@ void HTMLContentSink::ReduceEntities(nsString& aString) {
 
         theStartPos=theSemiPos+1;
 
-        PRUnichar theChar=aString.CharAt(theAmpPos+1);
+        PRUnichar theChar=(theLen>theAmpPos+1) ? aString.CharAt(theAmpPos+1) : '\0';
         PRUnichar theEntity=0;
         PRInt32   theErr=0;
         PRInt32   theNCRValue=0;
@@ -3059,7 +3059,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
       publicId.Trim(" \t\n\r");
 
       // Strip quotes
-      PRUnichar ch = publicId.First();
+      PRUnichar ch = publicId.Length() ? publicId.First() : '\0';
 
       if (ch == '"' || ch == '\'') {
         publicId.Cut(0, 1);
@@ -3120,7 +3120,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
       systemId.Trim(" \t\n\r");
 
       // Strip quotes
-      PRUnichar ch = systemId.First();
+      PRUnichar ch = systemId.Length() ? systemId.First() : '\0';
 
       if (ch == '"' || ch == '\'') {
         systemId.Cut(0, 1);
@@ -3168,7 +3168,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
    */
   PRInt32 nameEnd = 0;
 
-  if (name.First() != '"' && name.First() != '\'') {
+  if (name.Length() && name.First() != '"' && name.First() != '\'') {
     nameEnd = name.FindCharInSet(" \n\r\t");
   }
 
@@ -3180,7 +3180,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
     name.Mid(publicId, nameEnd, name.Length() - nameEnd);
     publicId.Trim(" \t\n\r");
 
-    PRUnichar ch = publicId.First();
+    PRUnichar ch = publicId.Length() ? publicId.First() : '\0';
 
     if (ch == '"' || ch == '\'') {
       publicId.Cut(0, 1);
