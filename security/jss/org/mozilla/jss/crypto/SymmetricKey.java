@@ -47,6 +47,7 @@ public interface SymmetricKey {
     public CryptoToken getOwningToken();
 
     public int getStrength();
+    public int getLength();
 
     public byte[] getKeyData() throws NotExtractableException;
 

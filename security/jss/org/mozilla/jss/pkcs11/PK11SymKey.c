@@ -134,7 +134,7 @@ finish:
 
 /***********************************************************************
  *
- * PK11SymKey.getSize
+ * PK11SymKey.getStrength
  */
 JNIEXPORT jint JNICALL
 Java_org_mozilla_jss_pkcs11_PK11SymKey_getStrength
@@ -152,6 +152,28 @@ Java_org_mozilla_jss_pkcs11_PK11SymKey_getStrength
 
 finish:
     return strength;
+}
+
+/***********************************************************************
+ *
+ * PK11SymKey.getLength
+ */
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getLength
+    (JNIEnv *env, jobject this)
+{
+    PK11SymKey *key=NULL;
+    unsigned int strength = 0;
+
+    /* get the key pointer */
+    if( JSS_PK11_getSymKeyPtr(env, this, &key) != PR_SUCCESS) {
+        goto finish;
+    }
+
+    strength = PK11_GetKeyLength(key);
+
+finish:
+    return (jint) strength;
 }
 
 /***********************************************************************
@@ -250,6 +272,9 @@ Java_org_mozilla_jss_pkcs11_PK11SymKey_getKeyType
             break;
           case CKK_RC2:
             typeFieldName = RC2_KEYTYPE_FIELD;
+            break;
+          case CKK_AES:
+            typeFieldName = AES_KEYTYPE_FIELD;
             break;
           default:
             PR_ASSERT(PR_FALSE);

@@ -74,6 +74,13 @@ public final class PK11SymKey implements SymmetricKey {
      */
     public native int getStrength();
 
+
+    /**
+     * Returns the length of the key in bytes, as returned by
+     * PK11_GetKeyLength().
+     */
+    public native int getLength();
+
     public native byte[] getKeyData()
         throws SymmetricKey.NotExtractableException;
 
