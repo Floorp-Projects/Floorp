@@ -431,20 +431,20 @@ public:
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const ;
 #endif
 
-  NS_IMETHOD GetPosition(nsPresContext* aCX,
+  NS_IMETHOD GetPosition(nsPresContext*  aPresContext,
                          const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd);
 
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsPresContext* aPresContext,
                          const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
                          PRInt32&        aContentOffsetEnd,
                          PRBool&         aBeginFrameContent);
 
-  NS_IMETHOD GetPositionSlowly(nsPresContext* aCX,
+  NS_IMETHOD GetPositionSlowly(nsPresContext*  aPresContext,
                          nsIRenderingContext * aRendContext,
                          const nsPoint&        aPoint,
                          nsIContent **         aNewContent,
@@ -2518,7 +2518,7 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
   }
   nsIView * view;
   nsPoint origin;
-  GetOffsetFromView(aPresContext, origin, &view);
+  GetOffsetFromView(origin, &view);
 
   /* This if clause is the cause of much pain.  If aNewContent is set, then any
    * code path that returns an error must set aNewContent to null before returning,
@@ -3371,7 +3371,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
 // aTextWidth returns the (in twips) the length of the text that falls before the cursor
 // aIndex contains the index of the text where the cursor falls
 PRBool
-BinarySearchForPosition(nsIRenderingContext* acx, 
+BinarySearchForPosition(nsIRenderingContext* aRendContext, 
                         const PRUnichar* aText,
                         PRInt32    aBaseWidth,
                         PRInt32    aBaseInx,
@@ -3384,7 +3384,7 @@ BinarySearchForPosition(nsIRenderingContext* acx,
   PRInt32 range = aEndInx - aStartInx;
   if ((range == 1) || (range == 2 && IS_HIGH_SURROGATE(aText[aStartInx]))) {
     aIndex   = aStartInx + aBaseInx;
-    acx->GetWidth(aText, aIndex, aTextWidth);
+    aRendContext->GetWidth(aText, aIndex, aTextWidth);
     return PR_TRUE;
   }
 
@@ -3395,7 +3395,7 @@ BinarySearchForPosition(nsIRenderingContext* acx,
     inx++;
 
   PRInt32 textWidth = 0;
-  acx->GetWidth(aText, inx, textWidth);
+  aRendContext->GetWidth(aText, inx, textWidth);
 
   PRInt32 fullWidth = aBaseWidth + textWidth;
   if (fullWidth == aCursorPos) {
@@ -3404,12 +3404,12 @@ BinarySearchForPosition(nsIRenderingContext* acx,
     return PR_TRUE;
   } else if (aCursorPos < fullWidth) {
     aTextWidth = aBaseWidth;
-    if (BinarySearchForPosition(acx, aText, aBaseWidth, aBaseInx, aStartInx, inx, aCursorPos, aIndex, aTextWidth)) {
+    if (BinarySearchForPosition(aRendContext, aText, aBaseWidth, aBaseInx, aStartInx, inx, aCursorPos, aIndex, aTextWidth)) {
       return PR_TRUE;
     }
   } else {
     aTextWidth = fullWidth;
-    if (BinarySearchForPosition(acx, aText, aBaseWidth, aBaseInx, inx, aEndInx, aCursorPos, aIndex, aTextWidth)) {
+    if (BinarySearchForPosition(aRendContext, aText, aBaseWidth, aBaseInx, inx, aEndInx, aCursorPos, aIndex, aTextWidth)) {
       return PR_TRUE;
     }
   }
@@ -3423,7 +3423,7 @@ BinarySearchForPosition(nsIRenderingContext* acx,
 // display of selection is based on the compressed text.
 //---------------------------------------------------------------------------
 NS_IMETHODIMP
-nsTextFrame::GetPosition(nsPresContext* aCX,
+nsTextFrame::GetPosition(nsPresContext*  aPresContext,
                          const nsPoint&  aPoint,
                          nsIContent **   aNewContent,
                          PRInt32&        aContentOffset,
@@ -3431,21 +3431,21 @@ nsTextFrame::GetPosition(nsPresContext* aCX,
 
 {
   // pre-condition tests
-  NS_PRECONDITION(aCX && aNewContent, "null arg");
-  if (!aCX || !aNewContent) {
+  NS_PRECONDITION(aPresContext && aNewContent, "null arg");
+  if (!aPresContext || !aNewContent) {
     return NS_ERROR_NULL_POINTER;
   }
   // initialize out param
   *aNewContent = nsnull;
 
-  nsIPresShell *shell = aCX->GetPresShell();
+  nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
-    nsCOMPtr<nsIRenderingContext> acx;      
-    nsresult rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
+    nsCOMPtr<nsIRenderingContext> rendContext;      
+    nsresult rv = shell->CreateRenderingContext(this, getter_AddRefs(rendContext));
     if (NS_SUCCEEDED(rv)) {
-      TextStyle ts(aCX, *acx, mStyleContext);
+      TextStyle ts(aPresContext, *rendContext, mStyleContext);
       if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing || ts.mJustifying) {
-        nsresult result = GetPositionSlowly(aCX, acx, aPoint, aNewContent,
+        nsresult result = GetPositionSlowly(aPresContext, rendContext, aPoint, aNewContent,
                                  aContentOffset);
         aContentOffsetEnd = aContentOffset;
         return result;
@@ -3460,11 +3460,11 @@ nsTextFrame::GetPosition(nsPresContext* aCX,
       }
 
       // Find the font metrics for this text
-      SetFontFromStyle(acx, mStyleContext);
+      SetFontFromStyle(rendContext, mStyleContext);
 
       // Get the renderable form of the text
-      nsIDocument *doc = GetDocument(aCX);
-      nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aCX);
+      nsIDocument *doc = GetDocument(aPresContext);
+      nsTextTransformer tx(doc->GetLineBreaker(), nsnull, aPresContext);
       PRInt32 textLength;
       // no need to worry about justification, that's always on the slow path
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
@@ -3476,7 +3476,7 @@ nsTextFrame::GetPosition(nsPresContext* aCX,
 
       nsPoint origin;
       nsIView * view;
-      GetOffsetFromView(aCX, origin, &view);
+      GetOffsetFromView(origin, &view);
 
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
       PRInt32 prefInt =
@@ -3513,13 +3513,13 @@ nsTextFrame::GetPosition(nsPresContext* aCX,
         nscoord posX = (getReversedPos) ?
                        (mRect.width + origin.x) - (aPoint.x - origin.x) : aPoint.x;
 
-        PRBool found = BinarySearchForPosition(acx, text, origin.x, 0, 0,
+        PRBool found = BinarySearchForPosition(rendContext, text, origin.x, 0, 0,
                                                PRInt32(textLength),
                                                PRInt32(posX) , //go to local coordinates
                                                indx, textWidth);
 
 #else
-        PRBool found = BinarySearchForPosition(acx, text, origin.x, 0, 0,
+        PRBool found = BinarySearchForPosition(rendContext, text, origin.x, 0, 0,
                                                PRInt32(textLength),
                                                PRInt32(aPoint.x) , //go to local coordinates
                                                indx, textWidth);
@@ -3527,9 +3527,9 @@ nsTextFrame::GetPosition(nsPresContext* aCX,
         if (found) {
           PRInt32 charWidth;
           if (IS_HIGH_SURROGATE(text[indx]))
-            acx->GetWidth(&text[indx], 2, charWidth);
+            rendContext->GetWidth(&text[indx], 2, charWidth);
           else
-            acx->GetWidth(text[indx], charWidth);
+            rendContext->GetWidth(text[indx], charWidth);
           charWidth /= 2;
 
 #ifdef IBMBIDI
@@ -3580,7 +3580,7 @@ nsTextFrame::GetPosition(nsPresContext* aCX,
 }
 
 NS_IMETHODIMP
-nsTextFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
+nsTextFrame::GetContentAndOffsetsFromPoint(nsPresContext*  aPresContext,
                                            const nsPoint&  aPoint,
                                            nsIContent **   aNewContent,
                                            PRInt32&        aContentOffset,
@@ -3600,7 +3600,7 @@ nsTextFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
     newPoint.x = 0;
   else
     newPoint.x = aPoint.x;
-  nsresult rv = GetPosition(aCX, newPoint, aNewContent, aContentOffset, aContentOffsetEnd);
+  nsresult rv = GetPosition(aPresContext, newPoint, aNewContent, aContentOffset, aContentOffsetEnd);
   if (NS_FAILED(rv))
     return rv;
   if (aContentOffset == mContentOffset)

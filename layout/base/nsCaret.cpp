@@ -361,7 +361,7 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   // we don't need drawingView anymore so reuse that; reset viewOffset values for our purposes
   if (aRelativeToType == eClosestViewCoordinates)
   {
-    theFrame->GetOffsetFromView(presContext, viewOffset, &drawingView);
+    theFrame->GetOffsetFromView(viewOffset, &drawingView);
     if (outView)
       *outView = drawingView;
   }
@@ -737,18 +737,14 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     *outRelativeView = nsnull;
   
   NS_ASSERTION(caretFrame, "Should have frame here");
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
-  if (!presShell)
-    return;
-  
+ 
   viewOffset.x = 0;
   viewOffset.y = 0;
   
   nsPoint   withinViewOffset(0, 0);
   // get the offset of this frame from its parent view (walks up frame hierarchy)
   nsIView* theView = nsnull;
-  caretFrame->GetOffsetFromView(presShell->GetPresContext(),
-                                withinViewOffset, &theView);
+  caretFrame->GetOffsetFromView(withinViewOffset, &theView);
   if (theView == nsnull) return;
 
   if (outRelativeView && coordType == eClosestViewCoordinates)

@@ -4162,7 +4162,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   nsRect  frameBounds = aFrame->GetRect();
   nsPoint offset;
   nsIView* closestView;
-  aFrame->GetOffsetFromView(mPresContext, offset, &closestView);
+  aFrame->GetOffsetFromView(offset, &closestView);
   frameBounds.MoveTo(offset);
 
   // If this is an inline frame and either the bounds height is 0 (quirks
@@ -4198,7 +4198,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
                                           lineBounds, &trash3))) {
             nsPoint blockOffset;
             nsIView* blockView;
-            frame->GetOffsetFromView(mPresContext, blockOffset, &blockView);
+            frame->GetOffsetFromView(blockOffset, &blockView);
 
             if (blockView == closestView) {
               // XXX If views not equal, this is hard.  Do we want to bother?
@@ -5781,8 +5781,7 @@ PresShell::HandleEvent(nsIView         *aView,
       mCurrentTargetRect = mCurrentEventFrame->GetRect();
       mCurrentTargetView = mCurrentEventFrame->GetView();
       if (!mCurrentTargetView ) {
-        mCurrentEventFrame->GetOffsetFromView(mPresContext, offset,
-                                              &mCurrentTargetView);
+        mCurrentEventFrame->GetOffsetFromView(offset, &mCurrentTargetView);
       }
       if (mCurrentTargetView) {
         mCurrentTargetRect.x = offset.x;

@@ -467,9 +467,8 @@ nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
 //   viewmanager if aStopAtViewManagerRoot is true; otherwise it's the
 //   root view of the root viewmanager.
 void
-nsMenuPopupFrame::GetRootViewForPopup(nsPresContext* aPresContext, 
-                                      nsIFrame* aStartFrame,
-                                      PRBool aStopAtViewManagerRoot,
+nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame,
+                                      PRBool    aStopAtViewManagerRoot,
                                       nsIView** aResult)
 {
   *aResult = nsnull;
@@ -566,12 +565,9 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
         shell->GetPrimaryFrameFor(targetAsContent, &targetFrame);
         nsIView* parentView = nsnull;
         if (targetFrame) {
-          nsPresContext *targetContext = shell->GetPresContext();
-          if (targetContext) {
-            GetRootViewForPopup(targetContext, targetFrame, PR_TRUE, &parentView);
-            if (parentView) {
-              targetDocumentWidget = parentView->GetNearestWidget(nsnull);
-            }
+          GetRootViewForPopup(targetFrame, PR_TRUE, &parentView);
+          if (parentView) {
+            targetDocumentWidget = parentView->GetNearestWidget(nsnull);
           }
         }
         if (!targetDocumentWidget) {
@@ -823,7 +819,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   nsIView* containingView = nsnull;
   nsPoint offset;
   nsMargin margin;
-  aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
+  aFrame->GetOffsetFromView(offset, &containingView);
   if (!containingView)
     return NS_OK;
 
@@ -993,7 +989,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   //   frames inside a toplevel window, this is the root view of the toplevel
   //   window.
   nsIView* parentView = nsnull;
-  GetRootViewForPopup(aPresContext, aFrame, PR_FALSE, &parentView);
+  GetRootViewForPopup(aFrame, PR_FALSE, &parentView);
   if (!parentView)
     return NS_OK;
 
@@ -1927,7 +1923,7 @@ nsMenuPopupFrame::GetWidget(nsIWidget **aWidget)
   // Get parent view
   nsIView * view = nsnull;
   // XXX should this be passing PR_FALSE or PR_TRUE for aStopAtViewManagerRoot?
-  nsMenuPopupFrame::GetRootViewForPopup(mPresContext, this, PR_FALSE, &view);
+  nsMenuPopupFrame::GetRootViewForPopup(this, PR_FALSE, &view);
   if (!view)
     return NS_OK;
 

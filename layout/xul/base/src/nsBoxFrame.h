@@ -272,8 +272,7 @@ protected:
 private: 
 
     // helper methods
-    void TranslateEventCoords(nsPresContext* aPresContext,
-                                    const nsPoint& aPoint,
+    void TranslateEventCoords(const nsPoint& aPoint,
                                     nsPoint& aResult);
 
     static PRBool AdjustTargetToScope(nsIFrame* aParent, nsIFrame*& aTargetFrame);

@@ -1886,7 +1886,7 @@ nsBoxFrame::GetCursor(nsPresContext* aPresContext,
  */
 
     nsPoint newPoint;
-    TranslateEventCoords(aPresContext, aPoint, newPoint);
+    TranslateEventCoords(aPoint, newPoint);
     
 #ifdef DEBUG_LAYOUT
     // if we are in debug and we are in the debug area
@@ -1912,8 +1912,7 @@ nsBoxFrame::GetCursor(nsPresContext* aPresContext,
 // view) into a localized pixel coordinate that is relative to the
 // content area of this frame (inside the border+padding).
 void
-nsBoxFrame::TranslateEventCoords(nsPresContext* aPresContext,
-                                 const nsPoint& aPoint,
+nsBoxFrame::TranslateEventCoords(const nsPoint& aPoint,
                                  nsPoint& aResult)
 {
   nscoord x = aPoint.x;
@@ -1925,7 +1924,7 @@ nsBoxFrame::TranslateEventCoords(nsPresContext* aPresContext,
   if (!HasView()) {
     nsPoint offset;
     nsIView* view;
-    GetOffsetFromView(aPresContext, offset, &view);
+    GetOffsetFromView(offset, &view);
     if (nsnull != view) {
       x -= offset.x;
       y -= offset.y;

@@ -6666,8 +6666,7 @@ nsTypedSelection::GetFrameToScrolledViewOffsets(nsIScrollableView *aScrollableVi
   if (!shell)
     return NS_ERROR_NULL_POINTER;
 
-  nsPresContext *presContext = shell->GetPresContext();
-  aFrame->GetOffsetFromView(presContext, offset, &closestView);
+  aFrame->GetOffsetFromView(offset, &closestView);
 
   // XXX Deal with the case where there is a scrolled element, e.g., a
   // DIV in the middle...
@@ -6713,7 +6712,7 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
   nsIView *closestView = nsnull;
   nsPoint offset(0, 0);
 
-  rv = aFrame->GetOffsetFromView(presContext, offset, &closestView);
+  rv = aFrame->GetOffsetFromView(offset, &closestView);
 
   while (!widget && closestView)
   {

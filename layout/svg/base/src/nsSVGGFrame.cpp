@@ -230,7 +230,7 @@ nsSVGGFrame::SetMatrixPropagation(PRBool aPropagate)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGMatrix>)
+already_AddRefed<nsIDOMSVGMatrix>
 nsSVGGFrame::GetCanvasTM()
 {
   if (!mPropagateTransform) {

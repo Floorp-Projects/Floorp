@@ -386,7 +386,7 @@ static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect
 
 #ifdef DO_DIRTY_INTERSECT
   // convert relative coordinates to absolute
-  static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&aContainerWidget);
+  static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame, nsPoint& aRel, nsPoint& aAbs, nsIWidget *&aContainerWidget);
 #endif
 
   enum { ePluginPaintIgnore, ePluginPaintEnable, ePluginPaintDisable };
@@ -758,10 +758,9 @@ nsObjectFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 nsresult
-nsObjectFrame::CreateWidget(nsPresContext* aPresContext,
-                            nscoord aWidth,
+nsObjectFrame::CreateWidget(nscoord aWidth,
                             nscoord aHeight,
-                            PRBool aViewOnly)
+                            PRBool  aViewOnly)
 {
   // Create our view and widget
 
@@ -840,7 +839,7 @@ nsObjectFrame::CreateWidget(nsPresContext* aPresContext,
     nsRect r(0, 0, mRect.width, mRect.height);
 
     viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
-    GetOffsetFromView(aPresContext, origin, &parentWithView);
+    GetOffsetFromView(origin, &parentWithView);
     viewMan->ResizeView(view, r);
     viewMan->MoveViewTo(view, origin.x, origin.y);
   }
@@ -1187,7 +1186,7 @@ nsObjectFrame::InstantiateWidget(nsPresContext*          aPresContext,
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
   nsIView *parentWithView;
   nsPoint origin;
-  GetOffsetFromView(aPresContext, origin, &parentWithView);
+  GetOffsetFromView(origin, &parentWithView);
   // Just make the frigging widget
 
   float           t2p;
@@ -1233,7 +1232,7 @@ nsObjectFrame::InstantiatePlugin(nsPresContext* aPresContext,
 
   NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
 
-  GetOffsetFromView(aPresContext, origin, &parentWithView);
+  GetOffsetFromView(origin, &parentWithView);
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
   window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
@@ -1322,7 +1321,7 @@ nsObjectFrame::ReinstantiatePlugin(nsPresContext* aPresContext, nsHTMLReflowMetr
   
   NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
 
-  GetOffsetFromView(aPresContext, origin, &parentWithView);
+  GetOffsetFromView(origin, &parentWithView);
 
   window->x = NSTwipsToIntPixels(origin.x, t2p);
   window->y = NSTwipsToIntPixels(origin.y, t2p);
@@ -1401,8 +1400,7 @@ nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
   nsIView * parentWithView;
   nsPoint origin(0,0);
 
-  nsPresContext *presContext = GetPresContext();
-  GetOffsetFromView(presContext, origin, &parentWithView);
+  GetOffsetFromView(origin, &parentWithView);
 
   // if it's windowless, let's make sure we have our origin set right
   // it may need to be corrected, like after scrolling
@@ -1422,7 +1420,7 @@ nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
   }
 
   float t2p;
-  t2p = presContext->TwipsToPixels();
+  t2p = GetPresContext()->TwipsToPixels();
   origin.x = NSTwipsToIntPixels(origin.x, t2p);
   origin.y = NSTwipsToIntPixels(origin.y, t2p);
 
@@ -3612,7 +3610,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
   nsCOMPtr<nsIWidget> containerWidget;
 
   // Convert dirty rect relative coordinates to absolute and also get the containerWidget
-  ConvertRelativeToWindowAbsolute(mOwner, mContext, rel, abs, *getter_AddRefs(containerWidget));
+  ConvertRelativeToWindowAbsolute(mOwner, rel, abs, *getter_AddRefs(containerWidget));
 
   nsRect absDirtyRect = nsRect(abs.x, abs.y, aDirtyRect.width, aDirtyRect.height);
 
@@ -3875,8 +3873,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
       // always create widgets in Twips, not pixels
       float p2t = mContext->ScaledPixelsToTwips();
-      rv = mOwner->CreateWidget(mContext,
-                                NSIntPixelsToTwips(mPluginWindow->width, p2t),
+      rv = mOwner->CreateWidget(NSIntPixelsToTwips(mPluginWindow->width, p2t),
                                 NSIntPixelsToTwips(mPluginWindow->height, p2t),
                                 windowless);
       if (NS_OK == rv)
@@ -3944,9 +3941,10 @@ static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect
 #ifdef DO_DIRTY_INTERSECT
 // Convert from a frame relative coordinate to a coordinate relative to its
 // containing window
-static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame,
-  nsPresContext* aPresContext, nsPoint& aRel, nsPoint& aAbs,
-  nsIWidget *& aContainerWidget)
+static void ConvertRelativeToWindowAbsolute(nsIFrame*   aFrame,
+                                            nsPoint&    aRel, 
+                                            nsPoint&    aAbs,
+                                            nsIWidget*& aContainerWidget)
 {
   // See if this frame has a view
   nsIView *view = aFrame->GetView();
@@ -3954,9 +3952,7 @@ static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame,
     aAbs.x = 0;
     aAbs.y = 0;
     // Calculate frames offset from its nearest view
-    aFrame->GetOffsetFromView(aPresContext,
-                   aAbs,
-                   &view);
+    aFrame->GetOffsetFromView(aAbs, &view);
   } else {
     // Store frames offset from its view.
     aAbs = aFrame->GetPosition();

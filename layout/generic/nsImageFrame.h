@@ -163,8 +163,7 @@ protected:
 
   PRBool IsServerImageMap();
 
-  void TranslateEventCoords(nsPresContext* aPresContext,
-                            const nsPoint& aPoint,
+  void TranslateEventCoords(const nsPoint& aPoint,
                             nsPoint& aResult);
 
   PRBool GetAnchorHREFAndTarget(nsIURI** aHref, nsString& aTarget);
@@ -184,8 +183,7 @@ protected:
                           nsIRenderingContext& aRenderingContext,
                           imgIRequest*         aRequest);
 
-  void GetInnerArea(nsPresContext* aPresContext,
-                    nsRect& aInnerArea) const;
+  nsRect GetInnerArea() const;
 
 protected:
   friend class nsImageListener;

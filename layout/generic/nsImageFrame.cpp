@@ -911,16 +911,17 @@ nsImageFrame::GetDesiredSize(nsPresContext* aPresContext,
   aDesiredSize.height = mComputedSize.height;
 }
 
-void
-nsImageFrame::GetInnerArea(nsPresContext* aPresContext,
-                           nsRect& aInnerArea) const
+nsRect 
+nsImageFrame::GetInnerArea() const
 {
-  aInnerArea.x = mBorderPadding.left;
-  aInnerArea.y = mPrevInFlow ? 0 : mBorderPadding.top;
-  aInnerArea.width = mRect.width - mBorderPadding.left - mBorderPadding.right;
-  aInnerArea.height = mRect.height -
+  nsRect r;
+  r.x = mBorderPadding.left;
+  r.y = mPrevInFlow ? 0 : mBorderPadding.top;
+  r.width = mRect.width - mBorderPadding.left - mBorderPadding.right;
+  r.height = mRect.height -
     (mPrevInFlow ? 0 : mBorderPadding.top) -
     (mNextInFlow ? 0 : mBorderPadding.bottom);
+  return r;
 }
 
 // get the offset into the content area of the image where aImg starts if it is a continuation.
@@ -1177,8 +1178,7 @@ nsImageFrame::DisplayAltFeedback(nsPresContext*      aPresContext,
                                  imgIRequest*         aRequest)
 {
   // Calculate the inner area
-  nsRect  inner;
-  GetInnerArea(aPresContext, inner);
+  nsRect  inner = GetInnerArea();
 
   // Display a recessed one pixel border
   nscoord borderEdgeWidth;
@@ -1340,8 +1340,7 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
         if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && imgCon) {
           // Render the image into our content area (the area inside
           // the borders and padding)
-          nsRect inner;
-          GetInnerArea(aPresContext, inner);
+          nsRect inner = GetInnerArea();
           nsRect paintArea(inner);
 
           nscoord offsetY = 0; 
@@ -1398,8 +1397,7 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
 
         nsImageMap* map = GetImageMap(aPresContext);
         if (nsnull != map) {
-          nsRect inner;
-          GetInnerArea(aPresContext, inner);
+          nsRect inner = GetInnerArea();
           aRenderingContext.SetColor(NS_RGB(0, 0, 0));
           aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
           aRenderingContext.PushState();
@@ -1413,8 +1411,7 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
             GetShowFrameBorders()) {
           nsImageMap* map = GetImageMap(aPresContext);
           if (nsnull != map) {
-            nsRect inner;
-            GetInnerArea(aPresContext, inner);
+            nsRect inner = GetInnerArea();
             aRenderingContext.SetColor(NS_RGB(0, 0, 0));
             aRenderingContext.PushState();
             aRenderingContext.Translate(inner.x, inner.y);
@@ -1573,9 +1570,8 @@ nsImageFrame::IsServerImageMap()
 // view) into a localized pixel coordinate that is relative to the
 // content area of this frame (inside the border+padding).
 void
-nsImageFrame::TranslateEventCoords(nsPresContext* aPresContext,
-                                   const nsPoint& aPoint,
-                                   nsPoint& aResult)
+nsImageFrame::TranslateEventCoords(const nsPoint& aPoint,
+                                         nsPoint& aResult)
 {
   nscoord x = aPoint.x;
   nscoord y = aPoint.y;
@@ -1586,7 +1582,7 @@ nsImageFrame::TranslateEventCoords(nsPresContext* aPresContext,
   if (!HasView()) {
     nsPoint offset;
     nsIView *view;
-    GetOffsetFromView(aPresContext, offset, &view);
+    GetOffsetFromView(offset, &view);
     if (nsnull != view) {
       x -= offset.x;
       y -= offset.y;
@@ -1595,14 +1591,13 @@ nsImageFrame::TranslateEventCoords(nsPresContext* aPresContext,
 
   // Subtract out border and padding here so that the coordinates are
   // now relative to the content area of this frame.
-  nsRect inner;
-  GetInnerArea(aPresContext, inner);
+  nsRect inner = GetInnerArea();
   x -= inner.x;
   y -= inner.y;
 
   // Translate the coordinates from twips to pixels
   float t2p;
-  t2p = aPresContext->TwipsToPixels();
+  t2p = GetPresContext()->TwipsToPixels();
   aResult.x = NSTwipsToIntPixels(x, t2p);
   aResult.y = NSTwipsToIntPixels(y, t2p);
 }
@@ -1656,7 +1651,7 @@ nsImageFrame::GetContentForEvent(nsPresContext* aPresContext,
 
   if (nsnull != map) {
     nsPoint p;
-    TranslateEventCoords(aPresContext, aEvent->point, p);
+    TranslateEventCoords(aEvent->point, p);
     PRBool inside = PR_FALSE;
     nsCOMPtr<nsIContent> area;
     inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
@@ -1689,7 +1684,7 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
       PRBool isServerMap = IsServerImageMap();
       if ((nsnull != map) || isServerMap) {
         nsPoint p;
-        TranslateEventCoords(aPresContext, aEvent->point, p);
+        TranslateEventCoords(aEvent->point, p);
         PRBool inside = PR_FALSE;
         // Even though client-side image map triggering happens
         // through content, we need to make sure we're not inside
@@ -1747,7 +1742,7 @@ nsImageFrame::GetCursor(nsPresContext* aPresContext,
   nsImageMap* map = GetImageMap(aPresContext);
   if (nsnull != map) {
     nsPoint p;
-    TranslateEventCoords(aPresContext, aPoint, p);
+    TranslateEventCoords(aPoint, p);
     aCursor = NS_STYLE_CURSOR_DEFAULT;
     if (map->IsInside(p.x, p.y)) {
       // Use style defined cursor if one is provided, otherwise when
@@ -1995,8 +1990,7 @@ void nsImageFrame::InvalidateIcon()
 
   nsPresContext *presContext = GetPresContext();
   float   p2t = presContext->ScaledPixelsToTwips();
-  nsRect inner;
-  GetInnerArea(presContext, inner);
+  nsRect inner = GetInnerArea();
 
   nsRect rect(inner.x,
               inner.y,

@@ -526,7 +526,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   nsPoint frameOffset;
   nsIView *containingView = frame->GetViewExternal();
   if (!containingView) {
-    frame->GetOffsetFromView(presContext, frameOffset, &containingView);
+    frame->GetOffsetFromView(frameOffset, &containingView);
     if (!containingView)
       return PR_FALSE;  // no view -- not visible
     relFrameRect.x = frameOffset.x;
@@ -646,7 +646,7 @@ void nsAccessible::GetScreenOrigin(nsPresContext *aPresContext, nsIFrame *aFrame
   nsPoint origin(0,0);
   nsIView *view = aFrame->GetViewExternal();
   if (!view) {
-    aFrame->GetOffsetFromView(aPresContext, origin, &view);
+    aFrame->GetOffsetFromView(origin, &view);
     NS_ASSERTION(view, "Frame has no view");
   }
 

@@ -112,10 +112,9 @@ public:
 #endif
 
   //local methods
-  nsresult CreateWidget(nsPresContext* aPresContext,
-                        nscoord aWidth,
+  nsresult CreateWidget(nscoord aWidth,
                         nscoord aHeight,
-                        PRBool aViewOnly);
+                        PRBool  aViewOnly);
   nsIURI* GetFullURL() { return mFullURL; }
   
   static PRBool IsSupportedImage(nsIContent* aContent);

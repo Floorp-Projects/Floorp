@@ -129,12 +129,11 @@ inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
 }
 
 nsPoint
-inLayoutUtils::GetClientOrigin(nsPresContext* aPresContext,
-                               nsIFrame* aFrame)
+inLayoutUtils::GetClientOrigin(nsIFrame* aFrame)
 {
   nsPoint result(0,0);
   nsIView* view;
-  aFrame->GetOffsetFromView(aPresContext, result, &view);
+  aFrame->GetOffsetFromView(result, &view);
   nsIView* rootView = nsnull;
   if (view) {
       nsIViewManager* viewManager = view->GetViewManager();
