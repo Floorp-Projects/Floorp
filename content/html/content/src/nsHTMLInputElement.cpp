@@ -1008,6 +1008,8 @@ NS_IMETHODIMP
 nsHTMLInputElement::Select()
 {
   nsresult rv = NS_OK;
+  if (!mDocument)
+    return NS_OK;
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
