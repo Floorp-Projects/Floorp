@@ -52,10 +52,6 @@
 #define VARARGS_ASSIGN(foo, bar)	(foo) = (bar)
 #endif
 
-/*
-** WARNING: This code may *NOT* call PR_LOG (because PR_LOG calls it)
-*/
-
 typedef struct SprintfStateStr SprintfState;
 
 struct SprintfStateStr {
