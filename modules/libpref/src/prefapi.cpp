@@ -180,13 +180,20 @@ static PLDHashTableOps     pref_HashTableOps = {
     
 class PrefNameBuffer;
 
+#ifdef PR_ALIGN_OF_WORD
+#define ALIGN_OF_WORD PR_ALIGN_OF_WORD
+#else
+#define PR_ALIGN_OF_WORD sizeof(void*)
+#endif
+
 // making PrefNameBuffer exactly 8k for nice allocation
 #define PREFNAME_BUFFER_LEN (8192 - (sizeof(PrefNameBuffer*) + sizeof(char*)))
-#define WORD_ALIGN_MASK (PR_ALIGN_OF_WORD - 1)
+
+#define WORD_ALIGN_MASK (ALIGN_OF_WORD - 1)
 
 // sanity checking
-#if (PR_ALIGN_OF_WORD & WORD_ALIGN_MASK) != 0
-#error "PR_ALIGN_OF_WORD must be a power of 2!"
+#if (ALIGN_OF_WORD & WORD_ALIGN_MASK) != 0
+#error "ALIGN_OF_WORD must be a power of 2!"
 #endif
 
 class PrefNameBuffer {
