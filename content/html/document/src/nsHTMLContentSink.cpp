@@ -1027,6 +1027,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       }
       switch (nodeType) {
       case eHTMLTag_img:
+      case eHTMLTag_frame:
+      case eHTMLTag_input:
         mSink->AddBaseTagInfo(content);
         break;
       }

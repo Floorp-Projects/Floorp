@@ -613,6 +613,9 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   }
 
   nsAutoString base;
+  if (NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttribute(NS_HTML_BASE_HREF, base)) {
+    base = ""; 
+  }
   nsresult rv = NS_MakeAbsoluteURL(docURL, base, aRelURL, aAbsURL);
   NS_IF_RELEASE(docURL);
 }
