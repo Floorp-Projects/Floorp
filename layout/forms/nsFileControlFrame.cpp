@@ -36,6 +36,7 @@
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
+#include "nsFileSpec.h"
 
 // XXX make this pixels
 #define CONTROL_SPACING 40  
