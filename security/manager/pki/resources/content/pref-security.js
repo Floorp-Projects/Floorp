@@ -35,7 +35,7 @@
 
 function onLoad()
 {
-  parent.initPanel('chrome://pippki/content/SecurityPrefs.xul');
+  parent.initPanel('chrome://pippki/content/pref-security.xul');
   var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
 
