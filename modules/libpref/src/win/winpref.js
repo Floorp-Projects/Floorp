@@ -55,19 +55,27 @@ pref("font.name-list.serif.he", "Narkisim, David");
 pref("font.name-list.monospace.he", "Fixed Miriam Transparent, Miriam Fixed, Rod, Courier New");
 pref("font.name-list.cursive.he", "Gutmann Yad, Ktav, Arial");
 
+// For CJK fonts, we list a font twice in name-list, once in the native script and once in English
+// because the name of a CJK font returned by Win32 API is beyond our control and depends on
+// whether or not Mozilla is run on CJK Win 9x/ME or Win 2k/XP with a CJK locale.
+// (see bug 227815)
+
 pref("font.name.serif.ja", "ＭＳ Ｐ明朝"); // "MS PMincho"
 pref("font.name.sans-serif.ja", "ＭＳ Ｐゴシック"); // "MS PGothic"
 pref("font.name.monospace.ja", "ＭＳ ゴシック"); // "MS Gothic"
-pref("font.name-list.serif.ja", "MS PMincho, MS PGothic, MS Mincho, MS Gothic");
-pref("font.name-list.sans-serif.ja", "MS PGothic, MS PMincho, MS Gothic, MS Mincho");
-pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, MS PGothic, MS PMincho");
+pref("font.name-list.serif.ja", "MS PMincho, ＭＳ Ｐ明朝, MS Mincho, MS PGothic, MS Gothic");
+pref("font.name-list.sans-serif.ja", "MS PGothic, ＭＳ Ｐゴシック, MS Gothic, MS PMincho, MS Mincho");
+pref("font.name-list.monospace.ja", "MS Gothic, ＭＳ ゴシック, MS Mincho, ＭＳ 明朝, MS PGothic, MS PMincho");
 
 pref("font.name.serif.ko", "바탕"); // "Batang" 
 pref("font.name.sans-serif.ko", "굴림"); // "Gulim" 
 pref("font.name.monospace.ko", "굴림체"); // "GulimChe" 
-pref("font.name-list.serif.ko", "Batang, Gulim"); 
-pref("font.name-list.sans-serif.ko", "Gulim"); 
-pref("font.name-list.monospace.ko", "GulimChe"); 
+pref("font.name.cursive.ko", "궁서"); // "Gungseo"
+
+pref("font.name-list.serif.ko", "Batang, 바탕, Gulim, 굴림"); 
+pref("font.name-list.sans-serif.ko", "Gulim, 굴림"); 
+pref("font.name-list.monospace.ko", "GulimChe, 굴림체"); 
+pref("font.name-list.cursive.ko", "Gungseo, 궁서"); 
 
 pref("font.name.serif.th", "Times New Roman");
 pref("font.name.sans-serif.th", "Arial");
@@ -107,24 +115,24 @@ pref("font.name.cursive.x-western", "Comic Sans MS");
 pref("font.name.serif.zh-CN", "宋体"); //MS Song
 pref("font.name.sans-serif.zh-CN", "宋体"); //MS Song
 pref("font.name.monospace.zh-CN", "宋体"); //MS Song
-pref("font.name-list.serif.zh-CN", "MS Song, SimSun");
-pref("font.name-list.sans-serif.zh-CN", "MS Song, SimSun");
-pref("font.name-list.monospace.zh-CN", "MS Song, SimSun");
+pref("font.name-list.serif.zh-CN", "MS Song, 宋体, SimSun");
+pref("font.name-list.sans-serif.zh-CN", "MS Song, 宋体, SimSun");
+pref("font.name-list.monospace.zh-CN", "MS Song, 宋体, SimSun");
 
 pref("font.name.serif.zh-TW", "細明體"); // "MingLiU" 
 pref("font.name.sans-serif.zh-TW", "細明體"); // "MingLiU" 
 pref("font.name.monospace.zh-TW", "細明體"); // "MingLiU" 
-pref("font.name-list.serif.zh-TW", "MingLiU"); 
-pref("font.name-list.sans-serif.zh-TW", "MingLiU"); 
-pref("font.name-list.monospace.zh-TW", "MingLiU"); 
+pref("font.name-list.serif.zh-TW", "MingLiU, 細明體"); 
+pref("font.name-list.sans-serif.zh-TW", "MingLiU, 細明體");
+pref("font.name-list.monospace.zh-TW", "MingLiU, 細明體");
 
 // hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs
 pref("font.name.serif.zh-HK", "細明體_HKSCS"); 
 pref("font.name.sans-serif.zh-HK", "細明體_HKSCS"); 
 pref("font.name.monospace.zh-HK", "細明體_HKSCS"); 
-pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU"); 
-pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");  
-pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");   
+pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, 細明體_HKSCS, Ming(for ISO10646), MingLiU, 細明體"); 
+pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, 細明體_HKSCS, Ming(for ISO10646), MingLiU, 細明體");  
+pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS,  細明體_HKSCS, Ming(for ISO10646), MingLiU, 細明體");
 
 pref("font.name.serif.x-devanagari", "Mangal");
 pref("font.name.sans-serif.x-devanagari", "Raghindi");
