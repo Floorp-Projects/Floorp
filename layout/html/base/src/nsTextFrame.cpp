@@ -109,6 +109,7 @@ nsAutoIndexBuffer::nsAutoIndexBuffer()
   : mBuffer(mAutoBuffer),
     mBufferLen(TEXT_BUF_SIZE)
 {
+  nsCRT::memset(mAutoBuffer, 0, sizeof(mAutoBuffer));
 }
 
 nsAutoIndexBuffer::~nsAutoIndexBuffer()
@@ -121,20 +122,24 @@ nsAutoIndexBuffer::~nsAutoIndexBuffer()
 nsresult
 nsAutoIndexBuffer::GrowTo(PRInt32 aAtLeast)
 {
-  PRInt32 newSize = mBufferLen * 2;
-  if (newSize < mBufferLen + aAtLeast) {
-    newSize = mBufferLen * 2 + aAtLeast;
+  if (aAtLeast > mBufferLen)
+  {
+    PRInt32 newSize = mBufferLen * 2;
+    if (newSize < mBufferLen + aAtLeast) {
+      newSize = mBufferLen * 2 + aAtLeast;
+    }
+    PRInt32* newBuffer = new PRInt32[newSize];
+    if (!newBuffer) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nsCRT::memset(newBuffer, 0, sizeof(PRInt32) * newSize);
+    nsCRT::memcpy(newBuffer, mBuffer, sizeof(PRInt32) * mBufferLen);
+    if (mBuffer != mAutoBuffer) {
+      delete [] mBuffer;
+    }
+    mBuffer = newBuffer;
+    mBufferLen = newSize;
   }
-  PRInt32* newBuffer = new PRInt32[newSize];
-  if (!newBuffer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsCRT::memcpy(newBuffer, mBuffer, sizeof(PRInt32) * mBufferLen);
-  if (mBuffer != mAutoBuffer) {
-    delete [] mBuffer;
-  }
-  mBuffer = newBuffer;
-  mBufferLen = newSize;
   return NS_OK;
 }
 
@@ -1619,8 +1624,10 @@ nsTextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
                       PRUnichar* aBuffer, PRInt32 aLength,
                       nscoord* aWidthResult)
 {
+  PRUnichar *inBuffer = aBuffer;
+  PRInt32 length = aLength;
   nsAutoTextBuffer widthBuffer;
-  if (NS_FAILED(widthBuffer.GrowTo(aLength))) {
+  if (NS_FAILED(widthBuffer.GrowTo(length))) {
     *aWidthResult = 0;
     return;
   }
@@ -1629,9 +1636,9 @@ nsTextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
   nsIFontMetrics* lastFont = aTextStyle.mLastFont;
   nscoord sum = 0;
   nscoord charWidth;
-  while (--aLength >= 0) {
+  while (--length >= 0) {
     nscoord glyphWidth;
-    PRUnichar ch = *aBuffer++;
+    PRUnichar ch = *inBuffer++;
     if (aTextStyle.mSmallCaps && nsCRT::IsLower(ch)) {
       ch = nsCRT::ToUpper(ch);
       if (lastFont != aTextStyle.mSmallFont) {
