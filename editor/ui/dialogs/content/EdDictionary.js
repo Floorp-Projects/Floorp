@@ -185,8 +185,7 @@ dump("ResetSelectedItem to index="+index+"\n");
 
 function Close()
 {
-  // Shutdown the spell check and close the dialog
-  spellChecker.UninitSpellChecker();
+  // Close the dialog
   SaveWindowLocation();
   window.close();
 }
