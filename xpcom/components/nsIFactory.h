@@ -54,6 +54,8 @@ public:
   NS_IMETHOD LockFactory(PRBool aLock) = 0;
 };
 
+#if 0
+/* Excluding IFactory2 until there is proof of its use - dp */
 /**
  * nsIFactory2 allows passing in a signature token when creating an
  * instance. This allows instance recycling.
@@ -73,5 +75,6 @@ public:
                              void *aSignature,
                              void **aResult) = 0;
 };
+#endif /* 0 */
 
 #endif
