@@ -40,14 +40,14 @@ nsMsgComposeService::nsMsgComposeService()
 	NS_INIT_REFCNT();
     rv = NS_NewISupportsArray(getter_AddRefs(m_msgQueue));
     
-    /*--- tempory hack ---*/
+    /*--- temporary hack ---*/
     int i;
     for (i = 0; i < 16; i ++)
     {
     	hack_uri[i] = "";
 		hack_object[i] = nsnull;
 	}
-	/*--- tempory hack ---*/
+	/*--- temporary hack ---*/
 }
 
 
@@ -65,17 +65,21 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	nsAutoString args = "";
 	nsresult rv;
 
-    /*--- tempory hack ---*/
-    int i;
-    for (i = 0; i < 16; i ++)
-    	if (hack_uri[i].IsEmpty())
-    	{
-    		hack_uri[i] = originalMsgURI;
-			hack_object[i] = object;
-			NS_ADDREF(hack_object[i]);
-			break;
-		}
-    /*--- tempory hack ---*/
+    /*--- temporary hack ---*/
+    if (originalMsgURI)
+    {
+	    int i;
+	    for (i = 0; i < 16; i ++)
+	    	if (hack_uri[i].IsEmpty())
+	    	{
+	    		hack_uri[i] = originalMsgURI;
+				hack_object[i] = object;
+				if (hack_object[i])
+					NS_ADDREF(hack_object[i]);
+				break;
+			}
+	}
+    /*--- temporary hack ---*/
 
 	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv); 
     if (NS_FAILED(rv))
@@ -114,26 +118,27 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar
 	                                        (void **) &msgCompose);
 	if (NS_SUCCEEDED(rv) && msgCompose)
 	{
-    	/*--- tempory hack ---*/
+    	/*--- temporary hack ---*/
 	    int i;
 		nsISupports * object = nsnull;
-	    for (i = 0; i < 16; i ++)
-	    	if (hack_uri[i] == originalMsgURI)
-	    	{
-	    		hack_uri[i] = "";
-				object = hack_object[i];
-				hack_object[i] = nsnull;
-				break;
-			}
-    	/*--- tempory hack ---*/
+	    if (originalMsgURI)
+		    for (i = 0; i < 16; i ++)
+		    	if (hack_uri[i] == originalMsgURI)
+		    	{
+		    		hack_uri[i] = "";
+					object = hack_object[i];
+					hack_object[i] = nsnull;
+					break;
+				}
+    	/*--- temporary hack ---*/
 	
 		msgCompose->Initialize(aWindow, originalMsgURI, type, format, object);
 		m_msgQueue->AppendElement(msgCompose);
 		*_retval = msgCompose;
 
-    	/*--- tempory hack ---*/
+    	/*--- temporary hack ---*/
     	NS_IF_RELEASE(object);
-    	/*--- tempory hack ---*/
+    	/*--- temporary hack ---*/
 	}
 	
 	return rv;
