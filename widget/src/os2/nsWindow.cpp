@@ -566,21 +566,33 @@ nsWindow :: DealWithPopups ( ULONG inMsg, MRESULT* outResult )
 // Are both windows from this app?
 BOOL bothFromSameWindow( HWND hwnd1, HWND hwnd2 )
 {
-   HWND hwnd1Owner = WinQueryWindow( hwnd1, QW_OWNER);
-   HWND hwnd1GOwner = WinQueryWindow( hwnd1Owner, QW_OWNER);
-   HWND hwnd2Owner = WinQueryWindow( hwnd2, QW_OWNER);
-   HWND hwnd2GOwner = WinQueryWindow( hwnd2Owner, QW_OWNER);
-   while( hwnd1GOwner) {
-      hwnd1 = hwnd1Owner;
-      hwnd1Owner = hwnd1GOwner;
-      hwnd1GOwner = WinQueryWindow( hwnd1Owner, QW_OWNER);
-   }
-   while( hwnd2GOwner) {
-      hwnd2 = hwnd2Owner;
-      hwnd2Owner = hwnd2GOwner;
-      hwnd2GOwner = WinQueryWindow( hwnd2Owner, QW_OWNER);
-   }
-   return (hwnd1 == hwnd2);
+  HWND hwnd1Chain = WinQueryWindow( hwnd1, QW_OWNER );
+  if (!hwnd1Chain)
+    hwnd1Chain = WinQueryWindow( hwnd1, QW_PARENT );
+  HWND hwnd1GChain = WinQueryWindow( hwnd1Chain, QW_OWNER );
+  if (!hwnd1GChain)
+    hwnd1GChain = WinQueryWindow( hwnd1Chain, QW_PARENT );
+  HWND hwnd2Chain = WinQueryWindow( hwnd2, QW_OWNER );
+  if (!hwnd2Chain)
+    hwnd2Chain = WinQueryWindow( hwnd2, QW_PARENT );
+  HWND hwnd2GChain = WinQueryWindow( hwnd2Chain, QW_OWNER );
+  if (!hwnd2GChain)
+    hwnd2GChain = WinQueryWindow( hwnd2Chain, QW_PARENT );
+  while( hwnd1GChain) {
+    hwnd1 = hwnd1Chain;
+    hwnd1Chain = hwnd1GChain;
+    hwnd1GChain = WinQueryWindow( hwnd1Chain, QW_OWNER );
+    if (!hwnd1GChain)
+      hwnd1GChain = WinQueryWindow( hwnd1Chain, QW_PARENT );
+  }
+  while( hwnd2GChain) {
+    hwnd2 = hwnd2Chain;
+    hwnd2Chain = hwnd2GChain;
+    hwnd2GChain = WinQueryWindow( hwnd2Chain, QW_OWNER );
+    if (!hwnd2GChain)
+      hwnd2GChain = WinQueryWindow( hwnd2Chain, QW_PARENT );
+  }
+  return (hwnd1 == hwnd2);
 }
 
 //-------------------------------------------------------------------------
