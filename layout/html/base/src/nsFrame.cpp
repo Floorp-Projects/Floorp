@@ -4365,13 +4365,81 @@ nsFrame::GetParentStyleContextFrame(nsIPresContext* aPresContext,
   return DoGetParentStyleContextFrame(aPresContext, aProviderFrame, aIsChild);
 }
 
+
+/**
+ * This function takes a "special" frame and _if_ that frame is the
+ * anonymous block crated by an ib split it returns the split inline
+ * as aSpecialSibling.  This is needed because the split inline's
+ * style context is the parent of the anonymous block's style context.
+ *
+ * If aFrame is not the anonymous block, aSpecialSibling is not
+ * touched.
+ */
+static nsresult
+GetIBSpecialSibling(nsIPresContext* aPresContext,
+                    nsIFrame* aFrame,
+                    nsIFrame** aSpecialSibling)
+{
+  NS_PRECONDITION(aFrame, "Must have a non-null frame!");
+#ifdef DEBUG
+  nsFrameState frameState;
+  aFrame->GetFrameState(&frameState);
+  NS_ASSERTION(frameState & NS_FRAME_IS_SPECIAL,
+               "GetIBSpecialSibling should not be called on a non-special frame");
+#endif // DEBUG
+  
+  // Find the first-in-flow of the frame.  (Ugh.  This ends up
+  // being O(N^2) when it is called O(N) times.)
+  for (;;) {
+    nsIFrame *prevInFlow;
+    aFrame->GetPrevInFlow(&prevInFlow);
+    if (!prevInFlow)
+      break;
+    aFrame = prevInFlow;
+  }
+
+  /*
+   * Now look up the nsLayoutAtoms::IBSplitSpecialPrevSibling
+   * property, which is only set on the anonymous block frames we're
+   * interested in.
+   */
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIFrameManager> frameManager;
+  presShell->GetFrameManager(getter_AddRefs(frameManager));
+  nsIFrame *specialSibling;
+  nsresult rv =
+    frameManager->GetFrameProperty(aFrame,
+                                   nsLayoutAtoms::IBSplitSpecialPrevSibling,
+                                   0, (void**)&specialSibling);
+  if (NS_OK == rv) {
+    NS_ASSERTION(specialSibling, "null special sibling");
+    *aSpecialSibling = specialSibling;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
                                       nsIFrame**      aProviderFrame,
                                       PRBool*         aIsChild)
 {
   *aIsChild = PR_FALSE;
+  *aProviderFrame = nsnull;
   if (!(mState & NS_FRAME_OUT_OF_FLOW)) {
+    /*
+     * If this frame is the anonymous block created when an inline
+     * with a block inside it got split, then the parent style context
+     * is on the first of the three special frames.  We can get to it
+     * using GetIBSpecialSibling
+     */
+    if (mState & NS_FRAME_IS_SPECIAL) {
+      GetIBSpecialSibling(aPresContext, this, aProviderFrame);
+      if (*aProviderFrame)
+        return NS_OK;
+    }
+
     // If this frame is one of the blocks that split an inline, we must
     // return the "special" inline parent, i.e., the parent that this
     // frame would have if we didn't mangle the frame structure.
@@ -4410,30 +4478,7 @@ nsFrame::GetIBSpecialParent(nsIPresContext* aPresContext,
     nsFrameState parentState;
     mParent->GetFrameState(&parentState);
     if (parentState & NS_FRAME_IS_SPECIAL) {
-      // Find the first-in-flow of the parent.  (Ugh.  This ends up
-      // being O(N^2) when it is called O(N) times.)
-      nsIFrame *parentFIF = mParent;
-      for (;;) {
-        nsIFrame *prevInFlow;
-        parentFIF->GetPrevInFlow(&prevInFlow);
-        if (!prevInFlow)
-          break;
-        parentFIF = prevInFlow;
-      }
-
-      nsCOMPtr<nsIPresShell> presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
-      nsCOMPtr<nsIFrameManager> frameManager;
-      presShell->GetFrameManager(getter_AddRefs(frameManager));
-      nsIFrame *specialParent;
-      nsresult rv =
-        frameManager->GetFrameProperty(parentFIF,
-                                       nsLayoutAtoms::IBSplitSpecialPrevSibling,
-                                       0, (void**)&specialParent);
-      if (NS_OK == rv) {
-        NS_ASSERTION(specialParent, "null special parent");
-        *aSpecialParent = specialParent;
-      }
+      GetIBSpecialSibling(aPresContext, mParent, aSpecialParent);
     }
   }
 

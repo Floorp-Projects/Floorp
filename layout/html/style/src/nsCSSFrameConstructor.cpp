@@ -535,12 +535,13 @@ FindLastBlock(nsIPresContext* aPresContext, nsIFrame* aKid)
 
 /*
  * Unlike the special (next) sibling, the special previous sibling
- * property points only from the anonymous block to the original inline
- * that preceded it.  It is useful for finding the "special parent" of a
- * frame (i.e., a frame from which a good parent style context can be
- * obtained), one looks at the special previous sibling annotation of
- * the real parent of the frame (if the real parent has
- * NS_FRAME_IS_SPECIAL).
+ * property points only from the anonymous block to the original
+ * inline that preceded it.  DO NOT CHANGE THAT -- the
+ * GetParentStyleContextFrame code depends on it!  It is useful for
+ * finding the "special parent" of a frame (i.e., a frame from which a
+ * good parent style context can be obtained), one looks at the
+ * special previous sibling annotation of the real parent of the frame
+ * (if the real parent has NS_FRAME_IS_SPECIAL).
  */
 inline void
 MarkIBSpecialPrevSibling(nsIPresContext* aPresContext,
@@ -10711,24 +10712,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame, 
                                             aNameSpaceID, aAttribute,
                                             changeList, aHint, maxHint);
-
-        if (IsFrameSpecial(primaryFrame)) {
-          // Block-in-inline construction, oh no! Compute style
-          // changes for the IB siblings, too.
-          // XXXwaterson ComputeStyleChangeFor is broken when
-          // re-resolving the style for the anonymous block. Don't
-          // know why yet: deep magic there.
-          nsIFrame *sibling = primaryFrame;
-          while (1) {
-            GetSpecialSibling(frameManager, sibling, &sibling);
-            if (! sibling)
-              break;
-
-            frameManager->ComputeStyleChangeFor(aPresContext, sibling,
-                                                aNameSpaceID, aAttribute,
-                                                changeList, aHint, maxHint);
-          }
-        }
       } else {
 #ifdef DEBUG_shaver
         fputc('-', stderr);

@@ -1970,6 +1970,7 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   aTopLevelChange = NS_STYLE_HINT_NONE;
   nsIFrame* frame = aFrame;
+  nsIFrame* frame2 = aFrame;
 
 #ifdef DEBUG
   {
@@ -1979,30 +1980,49 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
   }
 #endif
 
+  // We want to start with this frame and walk all its next-in-flows,
+  // as well as all its special siblings and their next-in-flows,
+  // reresolving style on all the frames we encounter in this walk.
+  
   do {
-    nsChangeHint frameChange;
-    ReResolveStyleContext(aPresContext, frame, nsnull,
-                          aAttrNameSpaceID, aAttribute,
-                          aChangeList, aMinChange, frameChange);
+    // Outer loop over special siblings
+    do {
+      // Inner loop over next-in-flows of the current frame
+      nsChangeHint frameChange;
+      ReResolveStyleContext(aPresContext, frame, nsnull,
+                            aAttrNameSpaceID, aAttribute,
+                            aChangeList, aMinChange, frameChange);
 #ifdef NS_DEBUG
-    VerifyStyleTree(aPresContext, frame, nsnull);
+      VerifyStyleTree(aPresContext, frame, nsnull);
 #endif
-    NS_UpdateHint(aTopLevelChange, frameChange);
+      NS_UpdateHint(aTopLevelChange, frameChange);
 
-    if (aTopLevelChange & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame)) {
-      // If it's going to cause a framechange, then don't bother with
-      // the continutaions since they'll be clobbered by the frame
-      // reconstruct anyway.
+      if (aTopLevelChange & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame)) {
+        // If it's going to cause a framechange, then don't bother
+        // with the continuations or special siblings since they'll be
+        // clobbered by the frame reconstruct anyway.
 #ifdef NS_DEBUG
-      nsIFrame* prevInFlow;
-      frame->GetPrevInFlow(&prevInFlow);
-      NS_ASSERTION(!prevInFlow, "continuing frame had more severe impact than first-in-flow");
+        nsIFrame* prevInFlow;
+        frame->GetPrevInFlow(&prevInFlow);
+        NS_ASSERTION(!prevInFlow, "continuing frame had more severe impact than first-in-flow");
 #endif
-      break;
+        return NS_OK;
+      }
+
+      frame->GetNextInFlow(&frame);
+    } while (frame);
+
+    // Might we have special siblings?
+    nsFrameState frame2state;
+    frame2->GetFrameState(&frame2state);
+    if (! (frame2state & NS_FRAME_IS_SPECIAL)) {
+      // nothing more to do here
+      return NS_OK;
     }
-
-    frame->GetNextInFlow(&frame);
-  } while (frame);
+    
+    GetFrameProperty(frame2, nsLayoutAtoms::IBSplitSpecialSibling, 0, (void**)&frame2);
+    frame = frame2;
+  } while (frame2);
   return NS_OK;
 }
 
