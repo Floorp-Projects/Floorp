@@ -61,6 +61,14 @@ class nsTimer;
 
 #define NS_PRIORITY_IMMEDIATE 10
 
+#define PM_MESSAGES_WAITING  (WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,    \
+                                         0, WM_TIMER-1, PM_NOREMOVE) ||    \
+                              WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,    \
+                                         WM_TIMER+1, WM_USER-1, PM_NOREMOVE))
+
+#define ANY_MESSAGES_WAITING  (WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,     \
+                                          WM_TIMER+1, WM_TIMER-1, PM_NOREMOVE))
+
 
 void CALLBACK FireTimeout(HWND aWindow, 
                           UINT aMessage, 
@@ -87,10 +95,7 @@ void CALLBACK FireTimeout(HWND aWindow,
   if (!sTimerQueue) return;
 
   QMSG wmsg;
-  BOOL eventQueueEmpty = !(WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,
-                                      0, WM_TIMER-1, PM_NOREMOVE) ||
-                           WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE,
-                                      WM_TIMER+1, WM_USER-1, PM_NOREMOVE));
+  BOOL eventQueueEmpty = !PM_MESSAGES_WAITING;
 
   if (aTimerID != HEARTBEATTIMERID) {
     BOOL timerQueueEmpty = !sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST);
@@ -105,16 +110,22 @@ void CALLBACK FireTimeout(HWND aWindow,
       // defer timer firing
       sTimerQueue->AddReadyQueue(timer);
     }
+
+    if (eventQueueEmpty) {
+      // while event queue is empty, fire off waiting timers
+      while (sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST) &&
+             !ANY_MESSAGES_WAITING) {
+  
+        sTimerQueue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
+      }
+    }
   } 
-
-  if (eventQueueEmpty) {
-    // while event queue is empty, fire off waiting timers
-    while (sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST) &&
-           !WinPeekMsg(NULLHANDLE, &wmsg, NULLHANDLE, WM_TIMER+1, WM_TIMER-1, PM_NOREMOVE) ) {
-
+  else {
+    if (sTimerQueue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
       sTimerQueue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
     }
   }
+
 }
 
 
@@ -263,18 +274,18 @@ void nsTimer::StartOSTimer(PRUint32 aDelay)
 
   // If the time-out is very small, set this timer to fire on the next cycle
   if (sTimerQueue && aDelay <= HEARTBEATTIMEOUT) {
-     PRUint32 aType = GetType();
-     if (aType != NS_TYPE_REPEATING_PRECISE && aType != NS_TYPE_REPEATING_SLACK) {
-        // For very short non-repeating timeouts, use a "heartbeat" timer
-        if (!heartbeatTimer) {
-           HWND timerHWND;
-           timerHWND = sGlue->Get();
-           heartbeatTimer = WinStartTimer(NULLHANDLE, timerHWND, HEARTBEATTIMERID, HEARTBEATTIMEOUT);
-        }
-        SetDeferred(PR_TRUE); // Defer this timer to the next heartbeat cycle
-        sTimerQueue->AddReadyQueue(this);
-        return;
-     }
+    PRUint32 aType = GetType();
+    if (aType == NS_TYPE_ONE_SHOT) {
+      // For very short non-repeating timeouts, use a "heartbeat" timer
+      if (!heartbeatTimer) {
+        HWND timerHWND;
+        timerHWND = sGlue->Get();
+        heartbeatTimer = WinStartTimer(NULLHANDLE, timerHWND, HEARTBEATTIMERID, HEARTBEATTIMEOUT);
+      }
+      SetDeferred(PR_TRUE); // Defer this timer to the next heartbeat cycle
+      sTimerQueue->AddReadyQueue(this);
+      return;
+    }
   }
 
   if (!sTimerMap) return;
