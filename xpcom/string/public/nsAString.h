@@ -810,8 +810,10 @@ operator> ( const nsACString& lhs, const nsACString& rhs )
   }
 
   // Once you've got strings, you shouldn't need to do anything else to have concatenation
+#ifndef XPCOM_GLUE
 #ifndef nsDependentConcatenation_h___
 #include "nsDependentConcatenation.h"
 #endif
+#endif 
 
 #endif // !defined(nsAString_h___)
