@@ -6,3 +6,5 @@ taskbarOverlay.xul
 tasksOverlay.js
 tasksOverlay.xul
 dialogBindings.xml
+browserBindings.xul
+editorBindings.xul

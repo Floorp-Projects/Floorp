@@ -34,10 +34,6 @@ CHROME_MISC= \
 	$(NULL)
 
 CHROME_CONTENT= \
-	.\browserBindings.xul \
-	.\editorBindings.xul \
-	.\inputBindings.xul \
-	.\textAreaBindings.xul \
 	.\hiddenWindow.xul \
 	.\globalOverlay.xul \
 	.\globalOverlay.js \

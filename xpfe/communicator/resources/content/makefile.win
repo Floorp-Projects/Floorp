@@ -41,6 +41,8 @@ CHROME_CONTENT = \
 	.\tasksOverlay.js \
 	.\tasksOverlay.xul \
 	.\dialogBindings.xml \
+	.\browserBindings.xul \
+	.\editorBindings.xul \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

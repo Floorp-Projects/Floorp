@@ -43,10 +43,6 @@ CHROME_MISC= \
 
 CHROME_CONTENT= \
 		manifest.rdf \
-		browserBindings.xul \
-		editorBindings.xul \
-		inputBindings.xul \
-		textAreaBindings.xul \
 		hiddenWindow.xul \
 		globalOverlay.xul \
 		globalOverlay.js \

@@ -32,11 +32,6 @@ CHROME_CONTENT_DIR = global/content
 CHROME_CONTENT = \
 		platformGlobalOverlay.xul \
 		platformDialogOverlay.xul \
-		platformInputBindings.xul \
-		platformBrowserBindings.xul \
-		platformInputBindings.xul \
-		platformEditorBindings.xul \
-		platformTextAreaBindings.xul \
 		platformHTMLBindings.xml \
 		printdialog.xul \
 		printdialog.js \
