@@ -987,6 +987,84 @@ PRBool nsWidget::DispatchFocus(nsGUIEvent &aEvent)
   return PR_FALSE;
 }
 
+//////////////////////////////////////////////////////////////////
+//
+// OnSomething handlers
+//
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+//
+// Turning TRACE_EVENTS on will cause printfs for all
+// mouse events that are dispatched.
+//
+// These are extra noisy, and thus have their own switch:
+//
+// NS_MOUSE_MOVE
+// NS_PAINT
+// NS_MOUSE_ENTER, NS_MOUSE_EXIT
+//
+//////////////////////////////////////////////////////////////////
+
+#undef TRACE_EVENTS
+#undef TRACE_EVENTS_MOTION
+#undef TRACE_EVENTS_PAINT
+#undef TRACE_EVENTS_CROSSING
+
+#if defined(DEBUG_mcafee) || defined(DEBUG_pavlov)
+#define TRACE_EVENTS 1
+#define TRACE_EVENTS_MOTION 1
+#endif
+
+#ifdef DEBUG
+void
+nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
+                          GtkWidget *    aGtkWidget)
+{
+#ifndef TRACE_EVENTS_MOTION
+  if (aEvent.message == NS_MOUSE_MOVE)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_PAINT
+  if (aEvent.message == NS_PAINT)
+  {
+    return;
+  }
+#endif
+
+#ifndef TRACE_EVENTS_CROSSING
+  if (aEvent.message == NS_MOUSE_ENTER || aEvent.message == NS_MOUSE_EXIT)
+  {
+    return;
+  }
+#endif
+
+  static int sPrintCount=0;
+
+  printf("%4d %-26s(this=%-8p , name=%-12s",
+         sPrintCount++,
+         (const char *) nsAutoCString(GuiEventToString(aEvent)),
+         this,
+         aGtkWidget ? gtk_widget_get_name(aGtkWidget) : "null");
+         
+  Window win = 0;
+  
+  if (aGtkWidget && GTK_WIDGET_REALIZED(aGtkWidget))
+  {
+    win = GDK_WINDOW_XWINDOW(aGtkWidget->window);
+  }
+  
+  printf(" , xid=%-8p",(void *) win);
+  
+  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
+
+  printf("\n");
+}
+#endif // DEBUG
+//////////////////////////////////////////////////////////////////
 
 //-------------------------------------------------------------------------
 //
@@ -1213,83 +1291,6 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 }
 //////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////
-//
-// OnSomething handlers
-//
-//////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////
-//
-// Turning TRACE_EVENTS on will cause printfs for all
-// mouse events that are dispatched.
-//
-// These are extra noisy, and thus have their own switch:
-//
-// NS_MOUSE_MOVE
-// NS_PAINT
-// NS_MOUSE_ENTER, NS_MOUSE_EXIT
-//
-//////////////////////////////////////////////////////////////////
-
-#undef TRACE_EVENTS
-#undef TRACE_EVENTS_MOTION
-#undef TRACE_EVENTS_PAINT
-#undef TRACE_EVENTS_CROSSING
-
-#if defined(DEBUG_mcafee) || defined(DEBUG_pavlov)
-#define TRACE_EVENTS 1
-#define TRACE_EVENTS_MOTION 1
-#endif
-
-#ifdef DEBUG
-void
-nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
-                          GtkWidget *    aGtkWidget)
-{
-#ifndef TRACE_EVENTS_MOTION
-  if (aEvent.message == NS_MOUSE_MOVE)
-  {
-    return;
-  }
-#endif
-
-#ifndef TRACE_EVENTS_PAINT
-  if (aEvent.message == NS_PAINT)
-  {
-    return;
-  }
-#endif
-
-#ifndef TRACE_EVENTS_CROSSING
-  if (aEvent.message == NS_MOUSE_ENTER || aEvent.message == NS_MOUSE_EXIT)
-  {
-    return;
-  }
-#endif
-
-  static int sPrintCount=0;
-
-  printf("%4d %-26s(this=%-8p , name=%-12s",
-         sPrintCount++,
-         (const char *) nsAutoCString(GuiEventToString(aEvent)),
-         this,
-         aGtkWidget ? gtk_widget_get_name(aGtkWidget) : "null");
-         
-  Window win = 0;
-  
-  if (aGtkWidget && GTK_WIDGET_REALIZED(aGtkWidget))
-  {
-    win = GDK_WINDOW_XWINDOW(aGtkWidget->window);
-  }
-  
-  printf(" , xid=%-8p",(void *) win);
-  
-  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
-
-  printf("\n");
-}
-#endif // DEBUG
 //////////////////////////////////////////////////////////////////
 /* virtual */ void 
 nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
