@@ -137,6 +137,9 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                             nsIScriptableRegion *aRegion,
                                             PRUint32 aActionType)
 {
+  if (mDoingDrag)
+    return NS_ERROR_UNEXPECTED;
+
   nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferables,
                                          aRegion, aActionType );
   mSourceDataItems = aTransferables;
