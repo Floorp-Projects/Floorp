@@ -28,8 +28,6 @@ DIRS= \
     pref-migrator \
     defaults \
     idlservices \
-    acct \
-    acctidl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
