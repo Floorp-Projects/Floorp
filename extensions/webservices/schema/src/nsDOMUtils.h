@@ -137,10 +137,8 @@ public:
       if (!nodeInfo) {
         return NS_ERROR_FAILURE;
       }
-      
-      nsCOMPtr<nsIAtom> name = nodeInfo->GetNameAtom();
-      *aElementName = name;
-      NS_ADDREF(*aElementName);
+
+      *aElementName = nodeInfo->GetNameAtom().get();
 
       *aChildElement = childElement;
       NS_ADDREF(*aChildElement);
