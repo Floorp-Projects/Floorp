@@ -145,14 +145,6 @@ make_copy_string(char  *read_pos,
 }
 
 
-static char *
-PasswordStub(PK11SlotInfo  *slot, 
-	     void          *cx)
-{
-	return NULL;
-}
-
-
 static SECStatus
 clean_input(Pair *data)
     /* converts the non-alphanumeric characters in a form post 
@@ -1517,7 +1509,7 @@ MakeGeneralName(char             *name,
     int                          nameType;
     PRBool                       binary = PR_FALSE;
     SECStatus                    rv = SECSuccess;
-    PRBool                       nickname;
+    PRBool                       nickname = PR_FALSE;
 
     PORT_Assert(genName);
     PORT_Assert(arena);
@@ -1832,14 +1824,11 @@ AddAltName(void              *extHandle,
     PRBool             autoIssuer = PR_FALSE;
     PRArenaPool        *arena = NULL;
     CERTGeneralName    *genName = NULL;
-    CERTName           *directoryName = NULL;
     char               *which = NULL;
     char               *name = NULL;
     SECStatus          rv = SECSuccess;
     SECItem            *issuersAltName = NULL;
     CERTCertificate    *issuerCert = NULL;
-    void               *mark = NULL;
-
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
@@ -1895,11 +1884,6 @@ AddAltName(void              *extHandle,
     if (issuerCert != NULL) {
 	CERT_DestroyCertificate(issuerCert);
     }
-#if 0
-    if (arena != NULL) {
-	PORT_ArenaRelease (arena, mark);
-    }
-#endif
     return rv;
 }
 
@@ -1908,10 +1892,8 @@ static SECStatus
 AddNameConstraints(void  *extHandle,
 		   Pair  *data)
 {
-    PRBool              autoIssuer = PR_FALSE;
     PRArenaPool         *arena = NULL;
     CERTNameConstraints *constraints = NULL;
-    char                *constraint = NULL;
     SECStatus           rv = SECSuccess;
 
 
@@ -2126,7 +2108,6 @@ FindPrivateKeyFromNameStr(char              *name,
     SECKEYPrivateKey                        *key;
     CERTCertificate                         *cert;
     CERTCertificate                         *p11Cert;
-    SECStatus                               status = SECSuccess;
 
 
     /* We don't presently have a PK11 function to find a cert by 
@@ -2156,7 +2137,6 @@ SignCert(CERTCertificate   *cert,
          int               which_key)
 {
     SECItem                der;
-    SECItem                *result = NULL;
     SECKEYPrivateKey       *caPrivateKey = NULL;
     SECStatus              rv;
     PRArenaPool            *arena;
@@ -2221,7 +2201,6 @@ main(int argc, char **argv)
     int                    length = 500;
     int                    remaining = 500;
     int                    n;
-    int                    fields = 3;
     int                    i;
     int                    serial;
     int                    chainLen;
