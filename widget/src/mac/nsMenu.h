@@ -35,7 +35,6 @@
 
 class nsIMenuBar;
 class nsIMenuListener;
-class nsIDOMElement;
 
 
 // temporary hack to get apple menu -- sfraser, approved saari
@@ -68,14 +67,14 @@ public:
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
   nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                void * menuNode, void * aWebShell);
+                                void* unused, void * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   nsEventStatus CheckRebuild(PRBool & aMenuEvent);
   nsEventStatus SetRebuild(PRBool aMenuEvent);
  
   // nsIMenu Methods
   NS_IMETHOD Create ( nsISupports * aParent, const nsAReadableString &aLabel, const nsAReadableString &aAccessKey, 
-                        nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode ) ;
+                        nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) ;
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(const nsAReadableString &aText);
@@ -92,7 +91,7 @@ public:
   NS_IMETHOD SetNativeData(void* aData);
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
-  NS_IMETHOD GetDOMNode(nsIDOMNode ** aMenuNode);
+  NS_IMETHOD GetMenuContent(nsIContent ** aMenuNode);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
   NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
   NS_IMETHOD IsHelpMenu(PRBool* aIsEnabled);
@@ -112,13 +111,12 @@ public:
 protected:
   nsString          mLabel;
   PRUint32          mNumMenuItems;
-  nsSupportsArray   mMenuItemsArray;       // array holds refs
+  nsSupportsArray   mMenuItemsArray;              // array holds refs
 
-  nsIMenu*          mMenuParent;           // weak, my parent owns me
-  nsIMenuBar*       mMenuBarParent;
-  nsIChangeManager* mManager;             // weak ref, it will outlive us
+  nsISupports*      mParent;                      // weak, my parent owns me
+  nsIChangeManager* mManager;                     // weak ref, it will outlive us
   nsWeakPtr                  mWebShellWeakRef;    // weak ref to webshell
-  nsCOMPtr<nsIDOMNode>       mDOMNode;     //strong ref
+  nsCOMPtr<nsIContent>       mMenuContent;        // the |menu| tag, strong ref
   nsCOMPtr<nsIMenuListener>  mListener;
 
   bool                  mConstructed;
@@ -135,17 +133,16 @@ protected:
   nsresult GetNextVisibleMenu(nsIMenu** outNextVisibleMenu);
 
     // fetch the content node associated with the menupopup item
-  void GetMenuPopupElement ( nsIDOMNode** aResult ) ;
+  void GetMenuPopupContent ( nsIContent** aResult ) ;
 
     // fire handlers for oncreate/ondestroy
   PRBool OnDestroy() ;
   PRBool OnCreate() ;
   
-  void LoadMenuItem( nsIMenu * pParentMenu, nsIDOMElement * menuitemElement,
-                      nsIDOMNode * menuitemNode, nsIWebShell * aWebShell);  
-  void LoadSubMenu( nsIMenu * pParentMenu, nsIDOMElement * menuElement, nsIDOMNode * menuNode);  
+  void LoadMenuItem ( nsIMenu* pParentMenu, nsIContent* menuitemContent);  
+  void LoadSubMenu( nsIMenu * pParentMenu, nsIContent* menuitemContent);  
   nsEventStatus HelpMenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
-                                    void* menuNode, void* aWebShell);
+                                    void* unused, void* aWebShell);
   
   MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
 

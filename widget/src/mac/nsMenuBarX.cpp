@@ -42,6 +42,7 @@
 #include "nsIDocumentObserver.h"
 
 #include "nsIDOMXULDocument.h"
+#include "nsWidgetAtoms.h"
 
 #include <Menus.h>
 #include <TextUtils.h>
@@ -232,67 +233,63 @@ nsEventStatus
 nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                             void * menubarNode, void * aWebShell )
 {
-    mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWebShell*, aWebShell)));
-    mDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);   // strong ref
+  mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWebShell*, aWebShell)));
+  mDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);   // strong ref
 
-    Create(aParentWindow);
+  Create(aParentWindow);
 
-    nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
-    if (webShell) RegisterAsDocumentObserver(webShell);
+  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
+  if (webShell) RegisterAsDocumentObserver(webShell);
 
-    // set this as a nsMenuListener on aParentWindow
-    aParentWindow->AddMenuListener((nsIMenuListener *)this);
+  // set this as a nsMenuListener on aParentWindow
+  aParentWindow->AddMenuListener((nsIMenuListener *)this);
 
-    nsCOMPtr<nsIDOMNode> menuNode;
-    mDOMNode->GetFirstChild(getter_AddRefs(menuNode));
-    while (menuNode) {
-        nsCOMPtr<nsIDOMElement> menuElement(do_QueryInterface(menuNode));
-        if (menuElement) {
-            nsAutoString menuNodeType;
-            nsAutoString menuName;
-            nsAutoString menuAccessKey; menuAccessKey.AssignWithConversion(" ");
+  PRInt32 count;
+  mMenuBarContent->ChildCount(count);
+  for ( int i = 0; i < count; ++i ) { 
+    nsCOMPtr<nsIContent> menu;
+    mMenuBarContent->ChildAt ( i, *getter_AddRefs(menu) );
+    if ( menu ) {
+      nsCOMPtr<nsIAtom> tag;
+      menu->GetTag ( *getter_AddRefs(tag) );
+      if (tag == nsWidgetAtoms::menu) {
+        nsAutoString menuName;
+        nsAutoString menuAccessKey(NS_LITERAL_STRING(" "));
+        menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
+        menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::accesskey, menuAccessKey);
+			  
+        // Don't create the whole menu yet, just add in the top level names
+              
+        // Create nsMenu, the menubar will own it
+        nsCOMPtr<nsIMenu> pnsMenu ( do_CreateInstance(kMenuCID) );
+        if ( pnsMenu ) {
+          pnsMenu->Create(NS_STATIC_CAST(nsIMenuBar*, this), menuName, menuAccessKey, 
+                          NS_STATIC_CAST(nsIChangeManager *, this), 
+                          NS_REINTERPRET_CAST(nsIWebShell*, aWebShell), menu);
 
-            menuElement->GetNodeName(menuNodeType);
-            if (menuNodeType == NS_LITERAL_STRING("menu")) {
-                menuElement->GetAttribute(NS_LITERAL_STRING("label"), menuName);
-                menuElement->GetAttribute(NS_LITERAL_STRING("accesskey"), menuAccessKey);
-
-                // Don't create the whole menu yet, just add in the top level names
-
-                // Create nsMenu, the menubar will own it
-                nsCOMPtr<nsIMenu> pnsMenu ( do_CreateInstance(kMenuCID) );
-                if ( pnsMenu ) {
-                    pnsMenu->Create(NS_STATIC_CAST(nsIMenuBar*, this), menuName, menuAccessKey, 
-                    NS_STATIC_CAST(nsIChangeManager *, this), 
-                    NS_REINTERPRET_CAST(nsIWebShell*, aWebShell), menuNode);
-
-                    // Make nsMenu a child of nsMenuBarX. nsMenuBarX takes ownership
-                    AddMenu(pnsMenu); 
-
-                    nsAutoString menuIDstring;
-                    menuElement->GetAttribute(NS_LITERAL_STRING("id"), menuIDstring);
-                    if (menuIDstring == NS_LITERAL_STRING("menu_Help")) {
-                        nsMenuEvent event;
-                        MenuHandle handle = nsnull;
-                        #if !(defined(RHAPSODY) || defined(TARGET_CARBON))
-                        ::HMGetHelpMenuHandle(&handle);
-                        #endif
-                        event.mCommand = (unsigned int) handle;
-                        nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
-                        listener->MenuSelected(event);
-                    }          
-                }
-            } 
+          // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
+          AddMenu(pnsMenu); 
+                  
+          nsAutoString menuIDstring;
+          menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
+          if ( menuIDstring == NS_LITERAL_STRING("menu_Help") ) {
+            nsMenuEvent event;
+            MenuHandle handle = nsnull;
+            ::HMGetHelpMenuHandle(&handle);
+            event.mCommand = (unsigned int) handle;
+            nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
+            listener->MenuSelected(event);
+          }          
         }
-        nsCOMPtr<nsIDOMNode> tempNode = menuNode;  
-        tempNode->GetNextSibling(getter_AddRefs(menuNode));
-    } // end while (nsnull != menuNode)
+      } 
+    }
+  } // for each menu
 
-    // Give the aParentWindow this nsMenuBarX to hold onto.
-    // The parent takes ownership
-    aParentWindow->SetMenuBar(this);
+  // Give the aParentWindow this nsMenuBarX to hold onto.
+  // The parent takes ownership
+  aParentWindow->SetMenuBar(this);
 
-    return nsEventStatus_eIgnore;
+  return nsEventStatus_eIgnore;
 }
 
 
@@ -332,30 +329,29 @@ NS_METHOD nsMenuBarX::SetParent(nsIWidget *aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
 {
-    // keep track of all added menus.
-    mMenusArray.AppendElement(aMenu);    // owner
+  // keep track of all added menus.
+  mMenusArray.AppendElement(aMenu);    // owner
 
-    MenuRef menuRef = nsnull;
-    aMenu->GetNativeData((void**)&menuRef);
+  MenuRef menuRef = nsnull;
+  aMenu->GetNativeData((void**)&menuRef);
 
-    mNumMenus++;
-    PRBool helpMenu;
-    aMenu->IsHelpMenu(&helpMenu);
-    if(!helpMenu) {
-        nsCOMPtr<nsIDOMNode> domNode;
-        aMenu->GetDOMNode(getter_AddRefs(domNode));
-        nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(domNode);
-        nsAutoString menuHidden;
-        domElement->GetAttribute(NS_LITERAL_STRING("hidden"), menuHidden);
-        if (menuHidden != NS_LITERAL_STRING("true")) {
-            Str255 title;
-            ::InsertMenuItem(mRootMenu, ::GetMenuTitle(menuRef, title), mNumMenus);
-            OSStatus status = ::SetMenuItemHierarchicalMenu(mRootMenu, mNumMenus, menuRef);
-            NS_ASSERTION(status == noErr, "nsMenuBarX::AddMenu: SetMenuItemHierarchicalMenu failed.");
-        }
+  mNumMenus++;
+  PRBool helpMenu;
+  aMenu->IsHelpMenu(&helpMenu);
+  if(!helpMenu) {
+    nsCOMPtr<nsIContent> menu;
+    aMenu->GetMenuContent(getter_AddRefs(menu));
+    nsAutoString menuHidden;
+    menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
+    if( menuHidden != NS_LITERAL_STRING("true"))
+      Str255 title;
+      ::InsertMenuItem(mRootMenu, ::GetMenuTitle(menuRef, title), mNumMenus);
+      OSStatus status = ::SetMenuItemHierarchicalMenu(mRootMenu, mNumMenus, menuRef);
+      NS_ASSERTION(status == noErr, "nsMenuBarX::AddMenu: SetMenuItemHierarchicalMenu failed.");
     }
+  }
 
-    return NS_OK;
+  return NS_OK;
 }
 
                                 

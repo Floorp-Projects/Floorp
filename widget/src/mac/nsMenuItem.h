@@ -54,7 +54,7 @@ public:
   // nsIMenuItem Methods
   NS_IMETHOD Create ( nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
                         EMenuItemType aItemType, PRBool aEnabled, 
-                        nsIChangeManager* aManager, nsIWebShell* aShell, nsIDOMNode* aNode ) ;
+                        nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode ) ;
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);
@@ -84,7 +84,7 @@ public:
 
 protected:
 
-  void UncheckRadioSiblings ( nsIDOMElement* inCheckedElement ) ;
+  void UncheckRadioSiblings ( nsIContent* inCheckedElement ) ;
 
   nsString        mLabel;
   nsString        mKeyEquivalent;
@@ -96,7 +96,7 @@ protected:
   nsCOMPtr<nsIMenuListener> mXULCommandListener;
   
   nsWeakPtr                 mWebShellWeakRef;     // weak ref to webshell
-  nsCOMPtr<nsIDOMNode>      mDOMNode; 
+  nsCOMPtr<nsIContent>      mContent; 
   
   PRUint8           mModifiers;
   PRPackedBool      mIsSeparator;
