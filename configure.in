@@ -734,6 +734,24 @@ then
     fi
 
     MOZ_GTK_CFLAGS=$GTK_CFLAGS
+
+	dnl ========================================================
+	dnl =
+	dnl = GtkMozilla support
+	dnl = 
+	dnl = On by default on linux whenever ENABLE_GTK is true
+	dnl = 
+	dnl ========================================================
+	case "$target" in
+		*-linux*)
+			MOZ_ENABLE_GTK_MOZILLA=1
+			MOZ_BUILD_ROOT=`pwd`
+		;;
+	esac
+
+	MOZ_ARG_DISABLE_BOOL(gtk-mozilla,
+	[  --disable-gtk-mozilla     Disable building of GtkMozilla GTK+ widget],
+		MOZ_ENABLE_GTK_MOZILLA=)
 fi
 dnl ========================================================
 dnl = 													   =
@@ -2010,32 +2028,6 @@ if test "$SingleSignon"
 then
   AC_DEFINE(SingleSignon)
 fi
-
-
-dnl ========================================================
-dnl =
-dnl = GtkMozilla support
-dnl = 
-dnl ========================================================
-MOZ_ENABLE_GTK_MOZILLA=
-
-MOZ_ARG_ENABLE_BOOL(gtk-mozilla,
-[  --enable-gtk-mozilla           Enable building of GtkMozilla GTK+ widget],
-  MOZ_ENABLE_GTK_MOZILLA=1 MOZ_BUILD_ROOT=`pwd`)
-
-dnl Make sure GtkMozilla is only built if gtk is the mail toolkit
-if test ! "$MOZ_WIDGET_TOOLKIT" = "gtk" -a "$MOZ_ENABLE_GTK_MOZILLA"
-then
-  echo
-  echo "*** You can only build GtkMozilla (A GTK+ widget to embed gecko)"
-  echo "*** into any GTK+ app) if the main toolkit is \"gtk\"."
-  echo "*** You have currently chosen \"$MOZ_WIDGET_TOOLKIT\" as your main toolkit."
-  echo "*** GtkMozilla will not be built."
-  echo
-  MOZ_ENABLE_GTK_MOZILLA= MOZ_BUILD_ROOT=
-  sleep 3
-fi
-dnl ========================================================
 
 dnl ========================================================
 dnl =
