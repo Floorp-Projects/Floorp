@@ -1654,6 +1654,7 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
         ::SelectObject(aDC, oldFont);
         ::DeleteObject(font);
         if (!gGlobalFonts[i].map) {
+          gGlobalFonts[i].skip = 1;
           continue;
         }
         if (SameAsPreviousMap(i)) {
@@ -1747,7 +1748,11 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
         &fontType, nsnull);
       ::SelectObject(aDC, oldFont);
       ::DeleteObject(font);
-      if (!gGlobalFonts[i].map || fontType != NS_FONT_TYPE_UNICODE) {
+      if (!gGlobalFonts[i].map) {
+        gGlobalFonts[i].skip = 1;
+        continue;
+      }
+      if (fontType != NS_FONT_TYPE_UNICODE) {
         continue;
       }
       if (SameAsPreviousMap(i)) {
@@ -3786,6 +3791,7 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
         ::SelectObject(aDC, oldFont);
         ::DeleteObject(font);
         if (!gGlobalFonts[i].map) {
+          gGlobalFonts[i].skip = 1;
           continue;
         }
         if (SameAsPreviousMap(i)) {
