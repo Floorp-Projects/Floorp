@@ -1015,6 +1015,8 @@ nsFontMetricsXft::CacheFontMetrics(void)
     if (os2 && os2->ySubscriptYOffset) {
         val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySubscriptYOffset,
                                              face->size->metrics.y_scale);
+        // some fonts have the incorrect sign. 
+        val = (val < 0) ? -val : val;
         mSubscriptOffset = nscoord(PR_MAX(f, NSToIntRound(val * f)));
     }
     else {
