@@ -1,9 +1,34 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Darin Fisher <darin@netscape.com> (original author)
+ */
+
 #ifndef nsNetCID_h__
 #define nsNetCID_h__
 
-//
-// nsCacheService
-//
+
+/******************************************************************************
+ * Cache CIDs
+ */
+
 #define NS_CACHESERVICE_CLASSNAME \
     "Cache Service"
 #define NS_CACHESERVICE_CONTRACTID \
@@ -17,9 +42,10 @@
 }
 
 
-//
-// nsStreamObserverProxy
-//
+/******************************************************************************
+ * Stream observer/listener/provider CIDs
+ */
+
 #define NS_STREAMOBSERVERPROXY_CLASSNAME \
     "Stream Observer Proxy"
 #define NS_STREAMOBSERVERPROXY_CONTRACTID \
@@ -32,9 +58,6 @@
     {0x9c, 0x46, 0xd0, 0x3f, 0xaa, 0x7b, 0x69, 0x6b} \
 }
 
-//
-// nsStreamListenerProxy
-//
 #define NS_STREAMLISTENERPROXY_CLASSNAME \
     "Stream Listener Proxy"
 #define NS_STREAMLISTENERPROXY_CONTRACTID \
@@ -47,9 +70,6 @@
     {0xa9, 0xd5, 0xe8, 0x42, 0xbd, 0x76, 0xf0, 0x15} \
 }
 
-//
-// nsStreamProviderProxy
-//
 #define NS_STREAMPROVIDERPROXY_CLASSNAME \
     "Stream Provider Proxy"
 #define NS_STREAMPROVIDERPROXY_CONTRACTID \
@@ -62,9 +82,6 @@
     {0x9b, 0xbd, 0x78, 0x89, 0x4b, 0xfc, 0x1f, 0x31} \
 }
 
-//
-// nsSimpleStreamListener
-//
 #define NS_SIMPLESTREAMLISTENER_CLASSNAME \
     "Simple Stream Listener"
 #define NS_SIMPLESTREAMLISTENER_CONTRACTID \
@@ -77,9 +94,6 @@
     {0xb1, 0xd6, 0x53, 0x88, 0xe0, 0x41, 0xfb, 0x67} \
 }
 
-//
-// nsSimpleStreamProvider
-//
 #define NS_SIMPLESTREAMPROVIDER_CLASSNAME \
     "Simple Stream Provider"
 #define NS_SIMPLESTREAMPROVIDER_CONTRACTID \
@@ -92,9 +106,10 @@
     {0xaf, 0x40, 0x2a, 0x5e, 0xc3, 0x99, 0x27, 0x10} \
 }
 
-//
-// nsAsyncStreamObserver
-//
+#define NS_ASYNCSTREAMOBSERVER_CLASSNAME \
+    "Async Stream Observer"
+#define NS_ASYNCSTREAMOBSERVER_CONTRACTID \
+    "@mozilla.org/network/async-stream-observer;1"
 #define NS_ASYNCSTREAMOBSERVER_CID                   \
 { /* fcc7c380-91b3-11d3-8cd9-0060b0fc14a3 */         \
     0xfcc7c380,                                      \
@@ -103,9 +118,10 @@
     {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-//
-// nsAsyncStreamListener
-//
+#define NS_ASYNCSTREAMLISTENER_CLASSNAME \
+    "Async Stream Listener"
+#define NS_ASYNCSTREAMLISTENER_CONTRACTID \
+    "@mozilla.org/network/async-stream-listener;1"
 #define NS_ASYNCSTREAMLISTENER_CID                   \
 { /* 60047bb2-91c0-11d3-8cd9-0060b0fc14a3 */         \
     0x60047bb2,                                      \
@@ -114,9 +130,23 @@
     {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-//
-// nsStorageTransport
-//
+#define NS_STREAMLISTENERTEE_CLASSNAME \
+    "Stream Listener Tee"
+#define NS_STREAMLISTENERTEE_CONTRACTID \
+    "@mozilla.org/network/stream-listener-tee;1"
+#define NS_STREAMLISTENERTEE_CID                     \
+{ /* 831f8f13-7aa8-485f-b02e-77c881cc5773 */         \
+    0x831f8f13,                                      \
+    0x7aa8,                                          \
+    0x485f,                                          \
+    {0xb0, 0x2e, 0x77, 0xc8, 0x81, 0xcc, 0x57, 0x73} \
+}
+
+
+/******************************************************************************
+ * Transport CIDs
+ */
+
 #define NS_STORAGETRANSPORT_CLASSNAME \
     "Storage Transport"
 #define NS_STORAGETRANSPORT_CONTRACTID \
@@ -129,4 +159,4 @@
     {0x86, 0xb5, 0x3b, 0x0f, 0x4d, 0x54, 0xb9, 0xd2} \
 }
 
-#endif /* !nsNetCID_h__ */
+#endif /* !defined(nsNetCID_h__) */
