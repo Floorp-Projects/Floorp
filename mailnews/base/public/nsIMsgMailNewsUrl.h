@@ -70,4 +70,24 @@ public:
 	NS_IMETHOD GetUrlState(PRBool *runningUrl) = 0;
 };
 
+//////////////////////////////////////////////////////////////////////////////////
+// This is a very small interface which I'm grouping with the mailnewsUrl interface.
+// Several url types (mailbox, imap, nntp) have urls which can be have URI 
+// equivalents. We want to provide the app the ability to get the URI for the 
+// url. This URI to URL mapping doesn't exist for all mailnews urls...hence I'm
+// grouping it into a separate interface...
+//////////////////////////////////////////////////////////////////////////////////
+
+/* 02338DD2-E7B9-11d2-8070-006008128C4E */
+
+#define NS_IMSGURIURL_IID							\
+{ 0x2338dd2, 0xe7b9, 0x11d2,							\
+    { 0x80, 0x70, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
+
+class nsIMsgUriUrl : public nsISupports
+{
+	static const nsIID& GetIID() { static nsIID iid = NS_IMSGURIURL_IID; return iid; }
+	NS_IMETHOD GetURI(char ** aURI) = 0; 
+};
+
 #endif /* nsIMsgMailNewsUrl_h___ */
