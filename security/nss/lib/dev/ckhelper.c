@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.26 $ $Date: 2002/08/30 22:56:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.27 $ $Date: 2002/10/10 20:30:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -46,6 +46,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.26 $ $D
 #ifndef CKHELPER_H
 #include "ckhelper.h"
 #endif /* CKHELPER_H */
+
+extern const NSSError NSS_ERROR_DEVICE_ERROR;
 
 static const CK_BBOOL s_true = CK_TRUE;
 NSS_IMPLEMENT_DATA const NSSItem
@@ -124,7 +126,7 @@ nssCKObject_GetAttributes
 	    ckrv != CKR_ATTRIBUTE_SENSITIVE) 
 	{
 	    nssSession_ExitMonitor(session);
-	    /* set an error here */
+	    nss_SetError(NSS_ERROR_DEVICE_ERROR);
 	    goto loser;
 	}
 	/* Allocate memory for each attribute. */
@@ -154,7 +156,7 @@ nssCKObject_GetAttributes
         ckrv != CKR_ATTRIBUTE_TYPE_INVALID &&
         ckrv != CKR_ATTRIBUTE_SENSITIVE) 
     {
-	/* set an error here */
+	nss_SetError(NSS_ERROR_DEVICE_ERROR);
 	goto loser;
     }
     if (alloced && arenaOpt) {
