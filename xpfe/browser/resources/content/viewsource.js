@@ -526,7 +526,7 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
     }
   }
 
-  return found;
+  return found || ("range" in result);
 }
 
 //function to toggle long-line wrapping and set the view_source.wrap_long_lines 
