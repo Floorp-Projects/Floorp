@@ -201,7 +201,7 @@ NS_METHOD MRJSecurityContext::Implies(const char* target, const char* action, PR
 }
 
 NS_METHOD 
-nsCSecurityContext::GetOrigin(char* buf, int len)
+MRJSecurityContext::GetOrigin(char* buf, int len)
 {
     // ACTION: Implement me.
 
@@ -209,7 +209,7 @@ nsCSecurityContext::GetOrigin(char* buf, int len)
 }
 
 NS_METHOD 
-nsCSecurityContext::GetCertificateID(char* buf, int len)
+MRJSecurityContext::GetCertificateID(char* buf, int len)
 {
     // ACTION: Implement me.
 
