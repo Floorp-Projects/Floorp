@@ -1095,7 +1095,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::GetKeyBindingDocument(nsCAutoString& aURLStr
     nsCOMPtr<nsISupports> supports;
     supports = NS_STATIC_CAST(nsISupports*, mKeyBindingTable->Get(&key));
 
-    if (supports != mMissObject) {
+    if (supports.get() != mMissObject) {
       document = do_QueryInterface(supports);
       if (!document) {
         LoadKeyBindingDocument(uri, getter_AddRefs(document));
