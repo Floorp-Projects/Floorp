@@ -264,9 +264,9 @@ nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
           }
         }
 
-        char ch[100];
-        sprintf(ch,"%d", current);
-        scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
+        nsAutoString currentStr;
+        currentStr.AppendInt(current);
+        scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, currentStr, PR_FALSE);
       }
   }
 
@@ -859,22 +859,22 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
     scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
     if (mediator) {
       mediator->PositionChanged(GetCurrentPosition(scrollbar), newpos);
-      char ch[100];
-      sprintf(ch,"%d", newpos);
-      scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_FALSE);
+      nsAutoString newposStr;
+      newposStr.AppendInt(newpos);
+      scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, newposStr, PR_FALSE);
       CurrentPositionChanged(mPresContext);
       return;
     }
   }
 
-  char ch[100];
-  sprintf(ch,"%d", newpos);
+  nsAutoString newposStr;
+  newposStr.AppendInt(newpos);
 
   // set the new position
-  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
+  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, newposStr, PR_TRUE);
 
 #ifdef DEBUG_SLIDER
-  printf("Current Pos=%s\n",ch);
+  printf("Current Pos=%d\n",newpos);
 #endif
 
 }
