@@ -49,6 +49,7 @@
 #include "prtime.h"
 #include "prlong.h"
 #include "secerr.h"
+#include "secpkcs5.h"
 #define NSSCKT_H /* we included pkcs11t.h, so block ckt.h from including nssckt.h */
 #include "ckt.h"
 
@@ -741,7 +742,7 @@ PK11_HandlePasswordCheck(PK11SlotInfo *slot,void *wincx)
 void
 PK11_SlotDBUpdate(PK11SlotInfo *slot)
 {
-    pk11_AddPermDB(slot->module);
+    SECMOD_UpdateModule(slot->module);
 }
 
 /*
@@ -1475,10 +1476,8 @@ PK11_VerifySlotMechanisms(PK11SlotInfo *slot)
     CK_MECHANISM_TYPE *mechList = mechListArray;
     static SECItem data;
     static SECItem iv;
-    static SECItem key;
     static unsigned char dataV[8];
     static unsigned char ivV[8];
-    static unsigned char keyV[8];
     static PRBool generated = PR_FALSE;
     CK_ULONG count;
     int i;

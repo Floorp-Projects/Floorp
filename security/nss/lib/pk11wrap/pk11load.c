@@ -123,9 +123,9 @@ SECMOD_SetRootCerts(PK11SlotInfo *slot, SECMODModule *mod) {
  * load a new module into our address space and initialize it.
  */
 SECStatus
-SECMOD_LoadModule(SECMODModule *mod) {
+SECMOD_LoadPKCS11Module(SECMODModule *mod) {
     PRLibrary *library = NULL;
-    CK_C_GetFunctionList entry;
+    CK_C_GetFunctionList entry = NULL;
     char * full_name;
     CK_INFO info;
     CK_ULONG slotCount = 0;
@@ -144,7 +144,10 @@ SECMOD_LoadModule(SECMODModule *mod) {
 	if (mod->isModuleDB) {
 	    mod->moduleDBFunc = (void *) NSC_ModuleDBFunc;
 	}
-	if (mod->moduleDBOnly) return SECSuccess;
+	if (mod->moduleDBOnly) {
+	    mod->loaded = PR_TRUE;
+	    return SECSuccess;
+	}
     } else {
 	/* Not internal, load the DLL and look up C_GetFunctionList */
 	if (mod->dllName == NULL) {

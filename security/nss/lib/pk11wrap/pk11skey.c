@@ -49,6 +49,7 @@
 #include "sechash.h"
 #include "cert.h"
 #include "secerr.h"
+#include "secpkcs5.h"
 
 #define PAIRWISE_SECITEM_TYPE			siBuffer
 #define PAIRWISE_DIGEST_LENGTH			SHA1_LENGTH /* 160-bits */
@@ -156,7 +157,6 @@ pk11_ExitKeyMonitor(PK11SymKey *symKey) {
 }
 
 
-static PK11SymKey *pk11SymKeyHead = NULL;
 static PK11SymKey *
 pk11_getKeyFromList(PK11SlotInfo *slot) {
     PK11SymKey *symKey = NULL;
@@ -1058,14 +1058,13 @@ pk11_backupGetSignLength(SECKEYPrivateKey *key)
 int
 PK11_SignatureLen(SECKEYPrivateKey *key)
 {
-    PK11SlotInfo *slot = key->pkcs11Slot;
     int val;
 
     switch (key->keyType) {
     case rsaKey:
 	val = PK11_GetPrivateModulusLen(key);
 	if (val == -1) {
-	    break;			/* failed */
+	    return pk11_backupGetSignLength(key);
 	}
 	return (unsigned long) val;
 	
@@ -1214,7 +1213,6 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
     CK_MECHANISM mechanism;
     CK_RV crv;
     PRBool weird = PR_FALSE;   /* hack for fortezza */
-    CK_BBOOL ckfalse = CK_FALSE;
     CK_BBOOL cktrue = CK_TRUE;
     CK_ULONG ck_key_size;       /* only used for variable-length keys */
 
@@ -1780,8 +1778,8 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
     int dhPubCount = sizeof(dhPubTemplate)/sizeof(dhPubTemplate[0]);
     int pubCount = 0;
     PK11RSAGenParams *rsaParams;
-    PQGParams *dsaParams;
-    DHParams * dhParams;
+    SECKEYPQGParams *dsaParams;
+    SECKEYDHParams * dhParams;
     CK_MECHANISM mechanism;
     CK_MECHANISM test_mech;
     CK_SESSION_HANDLE session_handle;
@@ -1889,7 +1887,7 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	test_mech.mechanism = CKM_RSA_PKCS;
 	break;
     case CKM_DSA_KEY_PAIR_GEN:
-	dsaParams = (PQGParams *)param;
+	dsaParams = (SECKEYPQGParams *)param;
 	attrs = dsaPubTemplate;
 	PK11_SETATTRS(attrs, CKA_PRIME, dsaParams->prime.data,
 				dsaParams->prime.len); attrs++;
@@ -1903,7 +1901,7 @@ PK11_GenerateKeyPair(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	test_mech.mechanism = CKM_DSA;
 	break;
     case CKM_DH_PKCS_KEY_PAIR_GEN:
-        dhParams = (DHParams *)param;
+        dhParams = (SECKEYDHParams *)param;
         attrs = dhPubTemplate;
         PK11_SETATTRS(attrs, CKA_PRIME, dhParams->prime.data,
                       dhParams->prime.len);   attrs++;
@@ -2544,8 +2542,8 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
     case nullKey:
 	PORT_SetError(SEC_ERROR_BAD_KEY);
 	break;
-    /* case keaKey: */
     case dsaKey:
+    case keaKey:
     case fortezzaKey:
 	{
 	    CK_KEA_DERIVE_PARAMS param;
@@ -2644,7 +2642,6 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     PK11SymKey *symKey;
     CK_RV crv;
     PRBool owner = PR_TRUE;
-    PRBool bool = PR_TRUE;
     CK_SESSION_HANDLE session;
 
     /* remove any VALUE_LEN parameters */
@@ -2723,7 +2720,6 @@ pk11_AnyUnwrapKey(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
 {
     PK11SymKey *    symKey;
     SECItem *       param_free	= NULL;
-    CK_BBOOL        ckfalse	= CK_FALSE; 
     CK_BBOOL        cktrue	= CK_TRUE; 
     CK_OBJECT_CLASS keyClass	= CKO_SECRET_KEY;
     CK_KEY_TYPE     keyType	= CKK_GENERIC_SECRET;
@@ -2949,8 +2945,7 @@ PK11_VerifyRecover(SECKEYPublicKey *key,
 SECStatus
 PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
 {
-    PK11SlotInfo *slot = key->pkcs11Slot;
-    PK11SlotInfo *tmpslot = key->pkcs11Slot;
+    PK11SlotInfo *slot = PK11_ReferenceSlot(key->pkcs11Slot);
     CK_OBJECT_HANDLE id = key->pkcs11ID;
     CK_MECHANISM mech = {0, NULL, 0 };
     PRBool owner = PR_TRUE;
@@ -2960,12 +2955,7 @@ PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
     mech.mechanism = pk11_mapSignKeyType(key->keyType);
 
     if (slot == NULL) {
-        if (mech.mechanism == CKM_DSA) {
-            slot = PK11_GetInternalSlot(); /* use internal slot for 
-                                              DSA verify  */
-        } else { 
-	    slot = PK11_GetBestSlot(mech.mechanism,wincx);
-        };
+	slot = PK11_GetBestSlot(mech.mechanism,wincx);
        
 	if (slot == NULL) {
 	    PORT_SetError( SEC_ERROR_NO_MODULE );
@@ -2981,6 +2971,7 @@ PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
     if (crv != CKR_OK) {
 	if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
 	pk11_CloseSession(slot,session,owner);
+	PK11_FreeSlot(slot);
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
     }
@@ -2988,6 +2979,7 @@ PK11_Verify(SECKEYPublicKey *key, SECItem *sig, SECItem *hash, void *wincx)
 					hash->len, sig->data, sig->len);
     if (!owner || !(slot->isThreadSafe)) PK11_ExitSlotMonitor(slot);
     pk11_CloseSession(slot,session,owner);
+    PK11_FreeSlot(slot);
     if (crv != CKR_OK) {
 	PORT_SetError( PK11_MapError(crv) );
 	return SECFailure;
@@ -3694,7 +3686,6 @@ PK11_CipherOp(PK11Context *context, unsigned char * out, int *outlen,
     CK_RV crv = CKR_OK;
     CK_ULONG length = maxout;
     CK_ULONG offset =0;
-    PK11SymKey *symKey = context->key;
     SECStatus rv = SECSuccess;
     unsigned char *saveOut = out;
     unsigned char *allocOut = NULL;
@@ -4161,9 +4152,9 @@ PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
     CK_RV crv;
     SECKEYPrivateKey *privKey = NULL;
     PRBool faulty3DES = PR_FALSE;
-    int usageCount;
+    int usageCount = 0;
     CK_KEY_TYPE key_type;
-    CK_ATTRIBUTE_TYPE *usage;
+    CK_ATTRIBUTE_TYPE *usage = NULL;
     CK_ATTRIBUTE_TYPE rsaUsage[] = {
 		 CKA_UNWRAP, CKA_DECRYPT, CKA_SIGN, CKA_SIGN_RECOVER };
     CK_ATTRIBUTE_TYPE dsaUsage[] = { CKA_SIGN };
@@ -4233,6 +4224,8 @@ try_faulty_3des:
     crypto_param.data = (unsigned char*)cryptoMech.pParameter;
     crypto_param.len = cryptoMech.ulParameterLen;
 
+    PORT_Assert(usage != NULL);
+    PORT_Assert(usageCount = 0);
     privKey = PK11_UnwrapPrivKey(slot, key, cryptoMech.mechanism, 
 				 &crypto_param, &epki->encryptedData, 
 				 nickname, publicValue, isPerm, isPrivate,
@@ -4287,276 +4280,6 @@ done:
 
     if(key != NULL) {
     	PK11_FreeSymKey(key);
-    }
-
-    return rv;
-}
-
-SECStatus
-PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot, SECItem *derPKI, 
-	SECItem *nickname, SECItem *publicValue, PRBool isPerm, 
-	PRBool isPrivate, unsigned int keyUsage, void *wincx) 
-{
-    SECKEYPrivateKeyInfo *pki = NULL;
-    PRArenaPool *temparena = NULL;
-    SECStatus rv = SECFailure;
-
-    temparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    pki = PORT_ZNew(SECKEYPrivateKeyInfo);
-
-    rv = SEC_ASN1DecodeItem(temparena, pki, SECKEY_PrivateKeyInfoTemplate,
-		derPKI);
-    if( rv != SECSuccess ) {
-	goto finish;
-    }
-
-    rv = PK11_ImportPrivateKeyInfo(slot, pki, nickname, publicValue,
-			isPerm, isPrivate, keyUsage, wincx);
-
-finish:
-    if( pki != NULL ) {
-	SECKEY_DestroyPrivateKeyInfo(pki, PR_TRUE /*freeit*/);
-    }
-    if( temparena != NULL ) {
-	PORT_FreeArena(temparena, PR_TRUE);
-    }
-    return rv;
-}
-        
-/*
- * import a private key info into the desired slot
- */
-SECStatus
-PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot, SECKEYPrivateKeyInfo *pki, 
-	SECItem *nickname, SECItem *publicValue, PRBool isPerm, 
-	PRBool isPrivate, unsigned int keyUsage, void *wincx) 
-{
-    CK_BBOOL cktrue = CK_TRUE;
-    CK_BBOOL ckfalse = CK_FALSE;
-    CK_OBJECT_CLASS keyClass = CKO_PRIVATE_KEY;
-    CK_KEY_TYPE keyType = CKK_RSA;
-    CK_OBJECT_HANDLE objectID;
-    CK_ATTRIBUTE theTemplate[20];
-    int templateCount = 0;
-    SECStatus rv = SECFailure;
-    SECKEYLowPrivateKey *lpk = NULL;
-    const SEC_ASN1Template *keyTemplate, *paramTemplate;
-    void *paramDest = NULL;
-    PRArenaPool *arena;
-    CK_ATTRIBUTE *attrs;
-    CK_ATTRIBUTE *signedattr = NULL;
-    int signedcount = 0;
-    CK_ATTRIBUTE *ap;
-    SECItem *ck_id = NULL;
-
-    arena = PORT_NewArena(2048);
-    if(!arena) {
-	return SECFailure;
-    }
-
-    /* need to change this to use RSA/DSA keys */
-    lpk = (SECKEYLowPrivateKey *)PORT_ArenaZAlloc(arena,
-						  sizeof(SECKEYLowPrivateKey));
-    if(lpk == NULL) {
-	goto loser;
-    }
-    lpk->arena = arena;
-
-    attrs = theTemplate;
-    switch(SECOID_GetAlgorithmTag(&pki->algorithm)) {
-	case SEC_OID_PKCS1_RSA_ENCRYPTION:
-	    keyTemplate = SECKEY_RSAPrivateKeyTemplate;
-	    paramTemplate = NULL;
-	    paramDest = NULL;
-	    lpk->keyType = rsaKey;
-	    keyType = CKK_RSA;
-	    break;
-	case SEC_OID_ANSIX9_DSA_SIGNATURE:
-	    keyTemplate = SECKEY_DSAPrivateKeyExportTemplate;
-	    paramTemplate = SECKEY_PQGParamsTemplate;
-	    paramDest = &(lpk->u.dsa.params);
-	    lpk->keyType = dsaKey;
-	    keyType = CKK_DSA;
-	    break;
-	case SEC_OID_X942_DIFFIE_HELMAN_KEY:
-	    if(!publicValue) {
-		goto loser;
-	    }
-	    keyTemplate = SECKEY_DHPrivateKeyExportTemplate;
-	    paramTemplate = NULL;
-	    paramDest = NULL;
-	    lpk->keyType = dhKey;
-	    keyType = CKK_DH;
-	    break;
-
-	default:
-	    keyTemplate   = NULL;
-	    paramTemplate = NULL;
-	    paramDest     = NULL;
-	    break;
-    }
-
-    if(!keyTemplate) {
-	goto loser;
-    }
-
-    /* decode the private key and any algorithm parameters */
-    rv = SEC_ASN1DecodeItem(arena, lpk, keyTemplate, &pki->privateKey);
-    if(rv != SECSuccess) {
-	goto loser;
-    }
-    if(paramDest && paramTemplate) {
-	rv = SEC_ASN1DecodeItem(arena, paramDest, paramTemplate, 
-				 &(pki->algorithm.parameters));
-	if(rv != SECSuccess) {
-	    goto loser;
-	}
-    }
-
-    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass) ); attrs++;
-    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType) ); attrs++;
-    PK11_SETATTRS(attrs, CKA_TOKEN, isPerm ? &cktrue : &ckfalse, 
-						sizeof(CK_BBOOL) ); attrs++;
-    PK11_SETATTRS(attrs, CKA_SENSITIVE, isPrivate ? &cktrue : &ckfalse, 
-						sizeof(CK_BBOOL) ); attrs++;
-    PK11_SETATTRS(attrs, CKA_PRIVATE, isPrivate ? &cktrue : &ckfalse,
-						 sizeof(CK_BBOOL) ); attrs++;
-
-    switch (lpk->keyType) {
-    case rsaKey:
-	    PK11_SETATTRS(attrs, CKA_UNWRAP, (keyUsage & KU_KEY_ENCIPHERMENT) ?
-				&cktrue : &ckfalse, sizeof(CK_BBOOL) ); attrs++;
-	    PK11_SETATTRS(attrs, CKA_DECRYPT, (keyUsage & KU_DATA_ENCIPHERMENT) ?
-				&cktrue : &ckfalse, sizeof(CK_BBOOL) ); attrs++;
-	    PK11_SETATTRS(attrs, CKA_SIGN, (keyUsage & KU_DIGITAL_SIGNATURE) ? 
-				&cktrue : &ckfalse, sizeof(CK_BBOOL) ); attrs++;
-	    PK11_SETATTRS(attrs, CKA_SIGN_RECOVER, 
-				(keyUsage & KU_DIGITAL_SIGNATURE) ? 
-				&cktrue : &ckfalse, sizeof(CK_BBOOL) ); attrs++;
-	    ck_id = PK11_MakeIDFromPubKey(&lpk->u.rsa.modulus);
-	    if (ck_id == NULL) {
-		goto loser;
-	    }
-	    PK11_SETATTRS(attrs, CKA_ID, ck_id->data,ck_id->len); attrs++;
-	    if (nickname) {
-		PK11_SETATTRS(attrs, CKA_LABEL, nickname->data, nickname->len); attrs++; 
-	    } 
-	    signedattr = attrs;
-	    PK11_SETATTRS(attrs, CKA_MODULUS, lpk->u.rsa.modulus.data,
-						lpk->u.rsa.modulus.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_PUBLIC_EXPONENT, 
-	     			lpk->u.rsa.publicExponent.data,
-				lpk->u.rsa.publicExponent.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_PRIVATE_EXPONENT, 
-	     			lpk->u.rsa.privateExponent.data,
-				lpk->u.rsa.privateExponent.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_PRIME_1, 
-	     			lpk->u.rsa.prime1.data,
-				lpk->u.rsa.prime1.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_PRIME_2, 
-	     			lpk->u.rsa.prime2.data,
-				lpk->u.rsa.prime2.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_EXPONENT_1, 
-	     			lpk->u.rsa.exponent1.data,
-				lpk->u.rsa.exponent1.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_EXPONENT_2, 
-	     			lpk->u.rsa.exponent2.data,
-				lpk->u.rsa.exponent2.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_COEFFICIENT, 
-	     			lpk->u.rsa.coefficient.data,
-				lpk->u.rsa.coefficient.len); attrs++;
-	    break;
-    case dsaKey:
-	    /* To make our intenal PKCS #11 module work correctly with 
-	     * our database, we need to pass in the public key value for 
-	     * this dsa key. We have a netscape only CKA_ value to do this.
-	     * Only send it to internal slots */
-	    if( publicValue == NULL ) {
-		/*
-		 * Try to extract the public value out of the private key.
-		 * This might not work, since the public value is not
-	 	 * required to be in the private key.
-		 */
-		publicValue = &lpk->u.dsa.publicValue;
-		if( publicValue->data == NULL || publicValue->len == 0) {
-		    goto loser;
-		}
-	    }
-	    if (PK11_IsInternal(slot)) {
-	        PK11_SETATTRS(attrs, CKA_NETSCAPE_DB,
-				publicValue->data, publicValue->len); attrs++;
-	    }
-	    PK11_SETATTRS(attrs, CKA_SIGN, &cktrue, sizeof(CK_BBOOL)); attrs++;
-	    PK11_SETATTRS(attrs, CKA_SIGN_RECOVER, &cktrue, sizeof(CK_BBOOL)); attrs++;
-	    if(nickname) {
-		PK11_SETATTRS(attrs, CKA_LABEL, nickname->data, nickname->len);
-		attrs++; 
-	    } 
-	    ck_id = PK11_MakeIDFromPubKey(publicValue);
-	    if (ck_id == NULL) {
-		goto loser;
-	    }
-	    PK11_SETATTRS(attrs, CKA_ID, ck_id->data,ck_id->len); attrs++;
-	    signedattr = attrs;
-	    PK11_SETATTRS(attrs, CKA_PRIME,    lpk->u.dsa.params.prime.data,
-				lpk->u.dsa.params.prime.len); attrs++;
-	    PK11_SETATTRS(attrs,CKA_SUBPRIME,lpk->u.dsa.params.subPrime.data,
-				lpk->u.dsa.params.subPrime.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_BASE,  lpk->u.dsa.params.base.data,
-					lpk->u.dsa.params.base.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_VALUE,    lpk->u.dsa.privateValue.data, 
-					lpk->u.dsa.privateValue.len); attrs++;
-	    break;
-     case dhKey:
-	    /* To make our intenal PKCS #11 module work correctly with 
-	     * our database, we need to pass in the public key value for 
-	     * this dh key. We have a netscape only CKA_ value to do this.
-	     * Only send it to internal slots */
-	    if (PK11_IsInternal(slot)) {
-	        PK11_SETATTRS(attrs, CKA_NETSCAPE_DB,
-				publicValue->data, publicValue->len); attrs++;
-	    }
-	    PK11_SETATTRS(attrs, CKA_DERIVE, &cktrue, sizeof(CK_BBOOL)); attrs++;
-	    if(nickname) {
-		PK11_SETATTRS(attrs, CKA_LABEL, nickname->data, nickname->len);
-		attrs++; 
-	    } 
-	    ck_id = PK11_MakeIDFromPubKey(publicValue);
-	    if (ck_id == NULL) {
-		goto loser;
-	    }
-	    PK11_SETATTRS(attrs, CKA_ID, ck_id->data,ck_id->len); attrs++;
-	    signedattr = attrs;
-	    PK11_SETATTRS(attrs, CKA_PRIME,    lpk->u.dh.prime.data,
-				lpk->u.dh.prime.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_BASE,  lpk->u.dh.base.data,
-					lpk->u.dh.base.len); attrs++;
-	    PK11_SETATTRS(attrs, CKA_VALUE,    lpk->u.dh.privateValue.data, 
-					lpk->u.dh.privateValue.len); attrs++;
-	    break;
-	/* what about fortezza??? */
-    default:
-	    PORT_SetError(SEC_ERROR_BAD_KEY);
-	    goto loser;
-    }
-    templateCount = attrs - theTemplate;
-    PR_ASSERT(templateCount <= sizeof(theTemplate)/sizeof(CK_ATTRIBUTE));
-    signedcount = attrs - signedattr;
-
-    for (ap=signedattr; signedcount; ap++, signedcount--) {
-	pk11_SignedToUnsigned(ap);
-    }
-
-    rv = PK11_CreateNewObject(slot, CK_INVALID_SESSION,
-			theTemplate, templateCount, isPerm, &objectID);
-
-    if (ck_id) {
-	SECITEM_ZfreeItem(ck_id, PR_TRUE);
-    }
-
-loser:
-    if (lpk!= NULL) {
-	SECKEY_LowDestroyPrivateKey(lpk);
     }
 
     return rv;

@@ -53,13 +53,13 @@ CSRCS = \
 	pk11load.c \
 	pk11pars.c \
 	pk11slot.c \
-	pk11modu.c \
 	pk11list.c \
 	pk11skey.c \
 	pk11kea.c \
 	pk11util.c \
 	pk11sdr.c \
 	pk11pqg.c \
+	pk11pk12.c \
 	$(NULL)
 
 REQUIRES = security dbm

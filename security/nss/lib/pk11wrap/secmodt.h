@@ -36,6 +36,17 @@
 #ifndef _SECMODT_H_
 #define _SECMODT_H_ 1
 
+#include "secoid.h"
+#include "secasn1.h"
+
+/* find a better home for these... */
+extern const SEC_ASN1Template SECKEY_PointerToEncryptedPrivateKeyInfoTemplate[];
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToEncryptedPrivateKeyInfoTemplate;
+extern const SEC_ASN1Template SECKEY_PrivateKeyInfoTemplate[];
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PrivateKeyInfoTemplate;
+extern const SEC_ASN1Template SECKEY_PointerToPrivateKeyInfoTemplate[];
+extern SEC_ASN1TemplateChooser NSS_Get_SECKEY_PointerToPrivateKeyInfoTemplate;
+
 /* PKCS11 needs to be included */
 typedef struct SECMODModuleStr SECMODModule;
 typedef struct SECMODModuleListStr SECMODModuleList;
@@ -79,7 +90,6 @@ struct SECMODModuleStr {
     PRBool	moduleDBOnly;	/* this module only has lists of PKCS #11 modules */
     int		trustOrder;	/* order for this module's certificate trust rollup */
     int		cipherOrder;	/* order for cipher operations */
-
 };
 
 struct SECMODModuleListStr {
@@ -188,5 +198,41 @@ typedef enum {
 typedef char *(*PK11PasswordFunc)(PK11SlotInfo *slot, PRBool retry, void *arg);
 typedef PRBool (*PK11VerifyPasswordFunc)(PK11SlotInfo *slot, void *arg);
 typedef PRBool (*PK11IsLoggedInFunc)(PK11SlotInfo *slot, void *arg);
+
+/*
+ * PKCS #11 key structures
+ */
+
+/*
+** Attributes
+*/
+struct SECKEYPrivAttributeStr {
+    SECItem attrType;
+    SECItem **attrValue;
+};
+typedef struct SECKEYPrivAttributeStr SECKEYPrivAttribute;
+
+/*
+** A PKCS#8 private key info object
+*/
+struct SECKEYPrivateKeyInfoStr {
+    PLArenaPool *arena;
+    SECItem version;
+    SECAlgorithmID algorithm;
+    SECItem privateKey;
+    SECKEYPrivAttribute **attributes;
+};
+typedef struct SECKEYPrivateKeyInfoStr SECKEYPrivateKeyInfo;
+#define SEC_PRIVATE_KEY_INFO_VERSION		0	/* what we *create* */
+
+/*
+** A PKCS#8 private key info object
+*/
+struct SECKEYEncryptedPrivateKeyInfoStr {
+    PLArenaPool *arena;
+    SECAlgorithmID algorithm;
+    SECItem encryptedData;
+};
+typedef struct SECKEYEncryptedPrivateKeyInfoStr SECKEYEncryptedPrivateKeyInfo;
 
 #endif /*_SECMODT_H_ */

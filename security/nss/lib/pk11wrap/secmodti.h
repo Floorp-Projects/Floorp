@@ -135,6 +135,16 @@ struct PK11PreSlotInfoStr {
     char hasRootTrust;		/* is this the root cert PKCS #11 module? */
 };
 
+#define SECMOD_SLOT_FLAGS "slotFlags={RSA,DSA,DH,RC2,RC4,DES,RANDOM,SHA1,MD5,MD2,SSL,TLS,AES}"
+
+#define SECMOD_MAKE_NSS_FLAGS(fips,slot) \
+"Flags=internal,critical"fips" slotparams=("#slot"={"SECMOD_SLOT_FLAGS"})"
+
+#define SECMOD_INT_NAME "NSS Internal PKCS #11 Module"
+#define SECMOD_INT_FLAGS SECMOD_MAKE_NSS_FLAGS("",1)
+#define SECMOD_FIPS_NAME "NSS Internal FIPS PKCS #11 Module"
+#define SECMOD_FIPS_FLAGS SECMOD_MAKE_NSS_FLAGS(",fips",3)
+
 /* Symetric Key structure. Reference Counted */
 struct PK11SymKeyStr {
     CK_MECHANISM_TYPE type;	/* type of operation this key was created for*/
