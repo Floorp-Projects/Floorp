@@ -38,6 +38,11 @@
 #include "DefProcFakery.h"
 #include "nsMacResources.h"
 #include "nsRegionMac.h"
+#if TARGET_CARBON
+#include <CFString.h>
+#include <Gestalt.h>
+
+#endif
 
 #include <Quickdraw.h>
 
@@ -1168,6 +1173,25 @@ PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::SetTitle(const nsString& aTitle)
 {
+#if TARGET_CARBON
+    static gInitVer = PR_FALSE;
+    static gOnMacOSX = PR_FALSE;
+    if(! gInitVer) {
+        long version;
+    	OSErr err = ::Gestalt(gestaltSystemVersion, &version);
+    	gOnMacOSX = (err == noErr && version >= 0x00001000);
+    	gInitVer = PR_TRUE;
+    }
+    if(gOnMacOSX) {
+	    // On MacOS X try to use the unicode friendly CFString version first
+	    CFStringRef labelRef = ::CFStringCreateWithCharacters(kCFAllocatorDefault, (UniChar*)aTitle.get(), aTitle.Length());
+	    if(labelRef) {
+	       ::SetWindowTitleWithCFString(mWindowPtr, labelRef);
+	       ::CFRelease(labelRef);
+	       return NS_OK;
+	    }
+    }
+#endif
 	Str255 title;
 	// unicode to file system charset
 	nsMacControl::StringToStr255(aTitle, title);
