@@ -29,10 +29,10 @@
 #include "xp.h"
 #include "npglue.h"
 #include "plstr.h"
+#include "nsCaps.h"
 #ifdef OJI
 #include "jni.h"
 #include "jvmmgr.h"
-#include "nsCaps.h"
 #endif
 
 #ifdef ANTHRAX

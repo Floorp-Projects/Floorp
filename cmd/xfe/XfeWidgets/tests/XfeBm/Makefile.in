@@ -20,8 +20,8 @@
 
 DEPTH			= ../../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -32,6 +32,7 @@ CSRCS			= \
 REQUIRES		= \
 				XfeTest \
 				XfeBm \
+				XfeToolBar \
 				XfeWidgets
 
 STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))

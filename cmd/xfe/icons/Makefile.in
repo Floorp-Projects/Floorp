@@ -17,8 +17,8 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -32,13 +32,13 @@ EXPORTS		= $(ICONS_GEN_HDR) $(srcdir)/icondata.h
 
 REQUIRES	= img java jtools layer nspr util xp xpcom
 
-LOCAL_INCLUDES	= -I$(srcdir) -I$(OBJDIR)
+LOCAL_INCLUDES	= -I$(srcdir)/. -I$(OBJDIR)
 
 ICONS_GEN_HDR	= $(OBJDIR)/icon_extern.h
 ICONS_GEN_SRC	= $(OBJDIR)/icondata.c
-ICONLIST	= $(OBJDIR)/icon.list
-ICONANIMLIST	= $(OBJDIR)/iconanim.list
-MKICONS_EXE	= $(OBJDIR)/mkicons
+ICONLIST	 = $(OBJDIR)/icon.list
+ICONANIMLIST = $(OBJDIR)/iconanim.list
+MKICONS_EXE	 = $(OBJDIR)/mkicons
 
 GARBAGE		+= $(MKICONS_EXE) \
 		  $(ICONS_GEN_HDR) \
@@ -76,7 +76,7 @@ DEFINES		+= -DXFE
 # therefore, split the icon list among several variables.
 ICONS = $(wildcard $(srcdir)/images/[AGIHL]*.gif $(srcdir)/images/BM*.gif $(srcdir)/images/DTB*.gif)
 ICONS += $(wildcard $(srcdir)/images/Dash*.gif $(srcdir)/images/TB*.gif)
-NICONS += \
+ICONS += $(addprefix $(srcdir)/, \
 	images/Desk_AdminKit.gif \
 	images/Desk_Bookmark.gif \
 	images/Desk_Calendar.gif \
@@ -87,32 +87,45 @@ NICONS += \
 	images/Desk_Search.gif \
 	images/SEC_Replace.gif \
 	images/Splash.gif \
-	images/cparent.gif
+	images/cparent.gif )
 
-# Icons for the Outliner -- needed for Mail/News but also edit bookmarks
-NICONS += \
-	images/hidecolumn.gif \
-	images/hidecolumn.i.gif \
-	images/oparent.gif \
-	images/showcolumn.gif \
-	images/showcolumn.i.gif \
-	images/threadoff.gif \
+# Icons for the Outliner
+ICONS += $(wildcard $(srcdir)/images/hidecolumn*.gif $(srcdir)/images/showcolumn*.gif) \
+	$(srcdir)/images/oparent.gif
+
+# Icons referenced in rosetta.h
+ICONS += $(wildcard $(srcdir)/images/M_*.gif)
+
+MAIL_OR_COMPOSE_ICONS = $(wildcard $(srcdir)/images/MNC*.gif \
+	$(srcdir)/images/MNTB_Next*.gif \
+	$(srcdir)/images/MNTB_Forward*.gif \
+	$(srcdir)/images/MNAB_NewPerson*.gif \
+	$(srcdir)/images/MN_*)
+
+ifdef MOZ_MAIL_NEWS
+ICONS += $(MAIL_OR_COMPOSE_ICONS) \
+	$(wildcard $(srcdir)/images/MNTB*.gif $(srcdir)/images/MNAB*.gif) \
+    	$(addprefix $(srcdir)/, images/threadoff.gif \
 	images/threadon.gif
-
-ICONS += $(wildcard $(srcdir)/images/M*.gif)
-NICONS += \
 	images/Desk_Address.gif \
 	images/Desk_Collabra.gif \
 	images/Desk_Messenger.gif \
 	images/Desk_MsgCenter.gif \
-	images/Desk_MsgCompose.gif \
-	images/Desk_NewMail.gif
+	images/Desk_NewMail.gif )
+endif
+
+ifdef MOZ_MAIL_COMPOSE
+ifndef MOZ_MAIL_NEWS
+ICONS += $(MAIL_OR_COMPOSE_ICONS)
+endif
+ICONS += \
+	$(srcdir)/images/Desk_MsgCompose.gif
+endif
 
 ifdef MOZ_EDITOR
 ICONS += $(wildcard $(srcdir)/images/e*.gif $(srcdir)/images/Desk_Composer.gif)
 endif
 
-# Should the taskbar icons be broken up by type?
 ifdef MOZ_TASKBAR
 ICONS += $(wildcard $(srcdir)/images/Task*.gif)
 endif
@@ -121,9 +134,6 @@ ifdef MOZ_NETCAST
 ICONS += $(srcdir)/images/Desk_Netcaster.gif
 endif
 
-NICONS 	:= $(addprefix $(srcdir)/, $(NICONS))
-ICONS	+= $(NICONS)
-
 ifdef NETSCAPE_COMMERCIAL
 ANIM		= $(wildcard $(XFEPRIVDIR)/icons/anim/main/*.gif)
 else
@@ -131,7 +141,7 @@ ANIM		= $(wildcard $(srcdir)/anim/main/*.gif)
 endif
 
 ifdef JAVA_OR_NSJVM
-JAVA_JMC = $(DIST)/lib/libjmc.a			# XXX To be removed...	
+JAVA_JMC = $(DIST)/lib/libjmc.a        # XXX To be removed...
 else
 JAVA_JMC = $(DIST)/lib/libstubsj.a
 endif

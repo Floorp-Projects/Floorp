@@ -28,8 +28,8 @@ CSRCS		= nsinstall.c pathsub.c
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)
 DIRS		= os2
-LOCAL_INCLUDES	+= -I$(srcdir)/os2
-HSRCS		+= $(srcdir)/dirent.h $(srcdir)/getopt.h
+LOCAL_INCLUDES	+= -Ios2
+HSRCS		+= dirent.h getopt.h
 endif
 
 PLSRCS		= nfspwd.pl revdepth.pl
@@ -37,7 +37,7 @@ PLSRCS		= nfspwd.pl revdepth.pl
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
 
 # Generate the build number on the fly.
-ifdef BUILD_OFFICIAL
+ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
 TARGETS		+= $(DEPTH)/build/build_number
 endif
 

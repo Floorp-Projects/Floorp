@@ -14,7 +14,13 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ../..
+ifdef MOZ_TREX
+NS_DEPTH=../..
+else
+NS_DEPTH=..
+endif
+
+DEPTH = $(NS_DEPTH)
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -23,8 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS		= src
-MODULE		= calendar
-CSRCS		= julmain.c
+DIRS = src
+
+CSRCS = julmain.c
 
 include $(topsrcdir)/config/rules.mk

@@ -35,6 +35,7 @@ LIBRARY_NAME	= xfe2
 REQUIRES	=\
 			XfeWidgets \
 			XfeBm \
+			XfeToolBar \
 			Microline \
 			nspr \
 			layer \
@@ -127,6 +128,7 @@ CPPSRCS		= \
 		  PrefsDialogBrowser.cpp \
 		  PrefsDialogGeneral.cpp \
 		  PrefsDialogMailnews.cpp \
+		  PrefsDialogSmart.cpp \
 		  PrefsLang.cpp \
 		  PrefsProxiesView.cpp \
 		  RDFBase.cpp \
@@ -137,7 +139,6 @@ CPPSRCS		= \
 		  RDFToolbar.cpp \
 		  RDFToolbox.cpp \
 		  RadioGroup.cpp \
-		  Splash.cpp \
 		  Toolbar.cpp \
 		  ToolbarDrop.cpp \
 		  Toolbox.cpp \
@@ -150,6 +151,12 @@ CPPSRCS		= \
 		  pref.cpp \
 		  $(NULL)
 
+
+ifdef NSPR_SPLASH
+CPPSRCS		+= \
+			Splash.cpp \
+			$(NULL)
+endif
 
 ifdef USE_MOTIF_DND
 CPPSRCS		+= \
@@ -268,6 +275,7 @@ CPPSRCS		+= \
 		  EditorView.cpp \
 		  EditRecentMenu.cpp \
 		  EditTableDialog.cpp \
+		  EmbeddedEditor.cpp \
 		  EmbeddedEditorView.cpp \
 		  PrefsDialogEditor.cpp \
 		  SpellHandler.cpp \
@@ -310,7 +318,7 @@ INCLUDES	+= -I$(OBJDIR) -I$(srcdir)/.. -I$(srcdir)/../DtWidgets -I$(topsrcdir)/m
 		-I$(DEPTH)/dist/public/security
 
 ifdef MOZ_MAIL_NEWS
-INCLUDES	+= -I$(DEPTH)/lib/libmsg  -I$(DEPTH)/dist/public/ldap
+INCLUDES	+= -I$(topsrcdir)/lib/libmsg  -I$(DEPTH)/dist/public/ldap
 endif
 
 DEFINES		+= -DNEW_DECODERS -DDELAYED_MENU_CREATION -DNETCASTER_ZAXIS_HACKERY

@@ -31,7 +31,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef  ENABLE_TESTS
+ifdef ENABLE_TESTS
 ifdef XFE_WIDGETS_BUILD_TESTS
 TEST_DIRS		= \
 				XfeTest \
@@ -51,6 +51,7 @@ endif
 DIRS			= \
 				Xfe \
 				XfeBm \
+				XfeToolBar \
 				$(UNUSED_DIRS) \
 				$(TEST_DIRS)
 

@@ -18,7 +18,7 @@
 
 # 
 
-DEPTH		= ../../../../..
+DEPTH			= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -34,6 +34,7 @@ REQUIRES		= \
 				XfeTest \
 				XfeCaption \
 				XfeBm \
+				XfeToolBar \
 				XfeWidgets
 
 STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))

@@ -26,8 +26,8 @@
 
 DEPTH			= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -51,13 +51,14 @@ CSRCS			= \
 REQUIRES		= \
 				XfeTest \
 				XfeWidgets \
-				XfeBm
+				XfeBm \
+				XfeToolBar
 
 EXPORTS			= \
 				XfeTest.h \
 				$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 
