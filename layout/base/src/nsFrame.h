@@ -80,33 +80,33 @@ public:
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect);
-
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
                           nsGUIEvent*     aEvent,
                           nsEventStatus&  aEventStatus);
-
   NS_IMETHOD  GetCursorAt(nsIPresContext& aPresContext,
                           const nsPoint&  aPoint,
                           nsIFrame**      aFrame,
                           PRInt32&        aCursor);
 
+  NS_IMETHOD  GetFrameState(nsFrameState& aResult);
+  NS_IMETHOD  SetFrameState(nsFrameState aNewState);
+
   // Resize reflow methods
+  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
+  NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
+                        nsDidReflowStatus aStatus);
   NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
                            nsReflowMetrics& aDesiredSize,
                            const nsSize&    aMaxSize,
                            nsSize*          aMaxElementSize,
                            nsReflowStatus&  aStatus);
-
   NS_IMETHOD  JustifyReflow(nsIPresContext* aPresContext,
                             nscoord         aAvailableSpace);
-
-  // Incremental reflow methods
   NS_IMETHOD  IncrementalReflow(nsIPresContext*  aPresContext,
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize&    aMaxSize,
                                 nsReflowCommand& aReflowCommand,
                                 nsReflowStatus&  aStatus);
-
   NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
                               nsIPresContext* aPresContext,
                               nsIContent*     aContainer);
@@ -130,7 +130,6 @@ public:
                              nsIPresContext* aPresContext,
                              nsIContent*     aChild,
                              nsISupports*    aSubContent);
-
   NS_IMETHOD  GetReflowMetrics(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aMetrics);
 
@@ -238,6 +237,7 @@ protected:
   nsIFrame*        mContentParent;
   nsIFrame*        mGeometricParent;
   nsIFrame*        mNextSibling;  // singly linked list of frames
+  nsFrameState     mState;
 
   ///////////////////////////////////
   // Important Selection Variables

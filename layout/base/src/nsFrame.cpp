@@ -927,6 +927,38 @@ NS_METHOD nsFrame::GetCursorAt(nsIPresContext& aPresContext,
 }
 
 // Resize and incremental reflow
+NS_METHOD
+nsFrame::GetFrameState(nsFrameState& aResult)
+{
+  aResult = mState;
+  return NS_OK;
+}
+
+NS_METHOD
+nsFrame::SetFrameState(nsFrameState aNewState)
+{
+  mState = aNewState;
+  return NS_OK;
+}
+
+// Resize reflow methods
+
+NS_METHOD
+nsFrame::WillReflow(nsIPresContext& aPresContext)
+{
+  mState |= NS_FRAME_IN_REFLOW;
+  return NS_OK;
+}
+
+NS_METHOD
+nsFrame::DidReflow(nsIPresContext& aPresContext,
+                   nsDidReflowStatus aStatus)
+{
+  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+    mState &= ~NS_FRAME_IN_REFLOW;
+  }
+  return NS_OK;
+}
 
 NS_METHOD nsFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                 nsReflowMetrics& aDesiredSize,
