@@ -1003,8 +1003,11 @@ NS_IMETHODIMP
 StyleSetImpl::Shutdown()
 {
   delete mRuleWalker;
-  mRuleTree->Destroy();
-  mRuleTree = nsnull;
+  if (mRuleTree)
+  {
+    mRuleTree->Destroy();
+    mRuleTree = nsnull;
+  }
   return NS_OK;
 }
 
