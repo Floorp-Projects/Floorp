@@ -86,6 +86,8 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsITransactionManager.h"
 
+#include "nsIRefreshURI.h"
+
 ///////////////////////////////////////
 // Editor Includes
 ///////////////////////////////////////
@@ -4012,11 +4014,14 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
       nsCOMPtr<nsIScriptContext> scriptContext;
       sgo->GetContext(getter_AddRefs(scriptContext));
       if (scriptContext)
-      {
         scriptContext->SetScriptsEnabled(PR_FALSE);
-      }
     }
   }
+
+  // Disable meta-refresh
+  nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mDocShell);
+  if (refreshURI)
+    refreshURI->CancelRefreshURITimers();
 
   // set up a parser observer
   if (!mParserObserver)
