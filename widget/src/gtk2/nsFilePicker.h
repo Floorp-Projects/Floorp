@@ -47,6 +47,7 @@
 class nsIWidget;
 class nsILocalFile;
 class nsISupportsArray;
+class PRLibrary;
 
 class nsFilePicker : public nsBaseFilePicker
 {
@@ -60,7 +61,10 @@ public:
 
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle, PRInt16 aMode);
 
+  static void Shutdown();
+
 protected:
+  static nsresult LoadSymbolsGTK24();
 
   void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 
@@ -78,10 +82,9 @@ protected:
   nsCStringArray mFilters;
   nsCStringArray mFilterNames;
 
-  /* If we don't have GTK2.4, we need to proxy calls on to a XUL filepicker */
-  nsCOMPtr<nsIFilePicker> mXULPicker;
-
-  static nsString mLastUsedUnicodeDirectory;
+private:
+  static nsILocalFile *mPrevDisplayDirectory;
+  static PRLibrary *mGTK24;
 };
 
 #endif

@@ -55,11 +55,11 @@
 
 #include "nsFilePicker.h"
 
-/* from nsFilePicker.js */
-#define XULFILEPICKER_CID \
-  { 0x54ae32f8, 0x1dd2, 0x11b2, \
-    { 0xa2, 0x09, 0xdf, 0x7c, 0x50, 0x53, 0x70, 0xf8} }
-static NS_DEFINE_CID(kXULFilePickerCID, XULFILEPICKER_CID);
+#define DECL_FUNC_PTR(func) static _##func##_fn _##func
+#define GTK_FILE_CHOOSER(widget) ((GtkFileChooser*) widget)
+
+PRLibrary    *nsFilePicker::mGTK24 = nsnull;
+nsILocalFile *nsFilePicker::mPrevDisplayDirectory = nsnull;
 
 // XXX total ass.  We should really impose a build-time requirement on gtk2.4
 // and then check at run-time whether the user is actually running gtk2.4.
@@ -90,17 +90,18 @@ typedef GtkWidget* (*_gtk_file_chooser_dialog_new_fn)(const gchar *title,
                                                       const gchar *third_button_text /* NULL */);
 typedef void (*_gtk_file_chooser_set_select_multiple_fn)(GtkFileChooser* chooser, gboolean truth);
 typedef void (*_gtk_file_chooser_set_current_name_fn)(GtkFileChooser* chooser, const gchar* name);
+typedef void (*_gtk_file_chooser_set_current_folder_fn)(GtkFileChooser* chooser, const gchar* folder);
 typedef void (*_gtk_file_chooser_add_filter_fn)(GtkFileChooser* chooser, GtkFileFilter* filter);
 typedef GtkFileFilter* (*_gtk_file_filter_new_fn)();
 typedef void (*_gtk_file_filter_add_pattern_fn)(GtkFileFilter* filter, const gchar* pattern);
 typedef void (*_gtk_file_filter_set_name_fn)(GtkFileFilter* filter, const gchar* name);
 
-#define DECL_FUNC_PTR(func) static _##func##_fn _##func
 
 DECL_FUNC_PTR(gtk_file_chooser_get_filename);
 DECL_FUNC_PTR(gtk_file_chooser_dialog_new);
 DECL_FUNC_PTR(gtk_file_chooser_set_select_multiple);
 DECL_FUNC_PTR(gtk_file_chooser_set_current_name);
+DECL_FUNC_PTR(gtk_file_chooser_set_current_folder);
 DECL_FUNC_PTR(gtk_file_chooser_add_filter);
 DECL_FUNC_PTR(gtk_file_filter_new);
 DECL_FUNC_PTR(gtk_file_filter_add_pattern);
@@ -117,29 +118,34 @@ LoadVersionedLibrary(const char* libName, const char* libVersion)
   return PR_LoadLibrary(versionLibName.get());
 }
 
-static nsresult
-InitGTK24()
+/* static */
+nsresult
+nsFilePicker::LoadSymbolsGTK24()
 {
-  static PRLibrary *libgtk24 = nsnull;
+  static PRBool initialized;
+  if (initialized) {
+    return NS_OK;
+  }
+
+  initialized = PR_TRUE;
 
   #define GET_LIBGTK_FUNC(func) \
     PR_BEGIN_MACRO \
-    _##func = (_##func##_fn) PR_FindFunctionSymbol(libgtk24, #func); \
+    _##func = (_##func##_fn) PR_FindFunctionSymbol(mGTK24, #func); \
     if (!_##func) { \
       NS_WARNING("Can't load ##func##"); \
       return NS_ERROR_NOT_AVAILABLE; \
     } \
     PR_END_MACRO
 
-  // This is easier
   PRFuncPtr func = PR_FindFunctionSymbolAndLibrary("gtk_file_chooser_get_filename",
-                                                   &libgtk24);
-  if (libgtk24) {
+                                                   &mGTK24);
+  if (mGTK24) {
     _gtk_file_chooser_get_filename = (_gtk_file_chooser_get_filename_fn)func;
   } else {
     // XXX hmm, this seems to fail when gtk 2.4 is already loaded...
-    libgtk24 = LoadVersionedLibrary("gtk-2", ".4");
-    if (!libgtk24) {
+    mGTK24 = LoadVersionedLibrary("gtk-2", ".4");
+    if (!mGTK24) {
       return NS_ERROR_NOT_AVAILABLE;
     }
     GET_LIBGTK_FUNC(gtk_file_chooser_get_filename);
@@ -148,6 +154,7 @@ InitGTK24()
   GET_LIBGTK_FUNC(gtk_file_chooser_dialog_new);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_select_multiple);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_current_name);
+  GET_LIBGTK_FUNC(gtk_file_chooser_set_current_folder);
   GET_LIBGTK_FUNC(gtk_file_chooser_add_filter);
   GET_LIBGTK_FUNC(gtk_file_filter_new);
   GET_LIBGTK_FUNC(gtk_file_filter_add_pattern);
@@ -155,6 +162,14 @@ InitGTK24()
 
   // Woot.
   return NS_OK;
+}
+
+void
+nsFilePicker::Shutdown()
+{
+  PR_UnloadLibrary(mGTK24);
+
+  NS_IF_RELEASE(mPrevDisplayDirectory);
 }
 
 // Ok, lib loading crap is done... the real code starts here:
@@ -186,27 +201,14 @@ GetGtkFileChooserAction(PRInt16 aMode)
   return action;
 }
 
-nsString nsFilePicker::mLastUsedUnicodeDirectory;
 
-//NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
-
-NS_IMPL_ADDREF(nsFilePicker)
-NS_IMPL_RELEASE(nsFilePicker)
-
-NS_INTERFACE_MAP_BEGIN(nsFilePicker)
-  if (mXULPicker) {
-    return mXULPicker->QueryInterface(aIID, aInstancePtr);
-  }
-  NS_INTERFACE_MAP_ENTRY(nsIFilePicker)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFilePicker)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
 nsFilePicker::nsFilePicker()
   : mMode(nsIFilePicker::modeOpen),
     mSelectedType(0)
 {
 }
-
 
 nsFilePicker::~nsFilePicker()
 {
@@ -216,7 +218,7 @@ void
 nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
 {
   // Grab the filename
-  gchar *filename = _gtk_file_chooser_get_filename ((GtkFileChooser*) (file_chooser));
+  gchar *filename = _gtk_file_chooser_get_filename (GTK_FILE_CHOOSER(file_chooser));
   mFile.Assign(filename);
   g_free(filename);
 
@@ -228,7 +230,7 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
     file->GetParent(getter_AddRefs(dir));
     nsCOMPtr<nsILocalFile> localDir(do_QueryInterface(dir));
     if (localDir) {
-      mDisplayDirectory = localDir;
+      localDir.swap(mPrevDisplayDirectory);
     }
   }
 }
@@ -236,26 +238,12 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
 NS_IMETHODIMP
 nsFilePicker::Init(nsIDOMWindow *aParent, const nsAString &aTitle, PRInt16 aMode)
 {
-  // The GtkFileChooser API was first exposed in GTK+ 2.4.  Make sure we have it,
-  // else fall back to the XUL picker.
-  nsresult rv = InitGTK24();
+  nsresult rv = LoadSymbolsGTK24();
   if (NS_FAILED(rv)) {
-    NS_WARNING("Couldn't load GTK+ 2.4 -- falling back to XUL file chooser.");
-    mXULPicker = do_CreateInstance(kXULFilePickerCID);
-    if (!mXULPicker) {
-      NS_WARNING("Couldn't load XUL file chooser.  Running in circles!");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    return mXULPicker->Init(aParent, aTitle, aMode);
+    return rv;
   }
 
-  nsIWidget *parent = DOMWindowToWidget(aParent);
-  NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
-
-  InitNative(parent, aTitle, aMode);
-
-  return NS_OK;
+  return nsBaseFilePicker::Init(aParent, aTitle, aMode);
 }
 
 void
@@ -271,20 +259,12 @@ nsFilePicker::InitNative(nsIWidget *aParent,
 NS_IMETHODIMP
 nsFilePicker::AppendFilters(PRInt32 aFilterMask)
 {
-  if (mXULPicker) {
-    return mXULPicker->AppendFilters(aFilterMask);
-  }
-
   return nsBaseFilePicker::AppendFilters(aFilterMask);
 }
 
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
-  if (mXULPicker) {
-    return mXULPicker->AppendFilter(aTitle, aFilter);
-  }
-
   if (aFilter.Equals(NS_LITERAL_STRING("..apps"))) {
     // No platform specific thing we can do here, really....
     return NS_OK;
@@ -303,10 +283,6 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 NS_IMETHODIMP
 nsFilePicker::SetDefaultString(const nsAString& aString)
 {
-  if (mXULPicker) {
-    return mXULPicker->SetDefaultString(aString);
-  }
-
   mDefault = aString;
 
   return NS_OK;
@@ -315,10 +291,6 @@ nsFilePicker::SetDefaultString(const nsAString& aString)
 NS_IMETHODIMP
 nsFilePicker::GetDefaultString(nsAString& aString)
 {
-  if (mXULPicker) {
-    return mXULPicker->GetDefaultString(aString);
-  }
-
   // Per API...
   return NS_ERROR_FAILURE;
 }
@@ -326,10 +298,6 @@ nsFilePicker::GetDefaultString(nsAString& aString)
 NS_IMETHODIMP
 nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 {
-  if (mXULPicker) {
-    return mXULPicker->SetDefaultExtension(aExtension);
-  }
-
   mDefaultExtension = aExtension;
 
   return NS_OK;
@@ -338,10 +306,6 @@ nsFilePicker::SetDefaultExtension(const nsAString& aExtension)
 NS_IMETHODIMP
 nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 {
-  if (mXULPicker) {
-    return mXULPicker->GetDefaultExtension(aExtension);
-  }
-
   aExtension = mDefaultExtension;
 
   return NS_OK;
@@ -350,10 +314,6 @@ nsFilePicker::GetDefaultExtension(nsAString& aExtension)
 NS_IMETHODIMP
 nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
 {
-  if (mXULPicker) {
-    return mXULPicker->GetFilterIndex(aFilterIndex);
-  }
-
   *aFilterIndex = mSelectedType;
 
   return NS_OK;
@@ -362,10 +322,6 @@ nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
 NS_IMETHODIMP
 nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
 {
-  if (mXULPicker) {
-    return mXULPicker->SetFilterIndex(aFilterIndex);
-  }
-
   mSelectedType = aFilterIndex;
 
   return NS_OK;
@@ -374,10 +330,6 @@ nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
 NS_IMETHODIMP
 nsFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
 {
-  if (mXULPicker) {
-    return mXULPicker->SetDisplayDirectory(aDirectory);
-  }
-
   mDisplayDirectory = aDirectory;
 
   return NS_OK;
@@ -386,10 +338,6 @@ nsFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
 NS_IMETHODIMP
 nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 {
-  if (mXULPicker) {
-    return mXULPicker->GetDisplayDirectory(aDirectory);
-  }
-
   NS_IF_ADDREF(*aDirectory = mDisplayDirectory);
 
   return NS_OK;
@@ -398,10 +346,6 @@ nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
 NS_IMETHODIMP
 nsFilePicker::GetFile(nsILocalFile **aFile)
 {
-  if (mXULPicker) {
-    return mXULPicker->GetFile(aFile);
-  }
-
   NS_ENSURE_ARG_POINTER(aFile);
 
   *aFile = nsnull;
@@ -422,10 +366,6 @@ nsFilePicker::GetFile(nsILocalFile **aFile)
 NS_IMETHODIMP
 nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
-  if (mXULPicker) {
-    return mXULPicker->GetFileURL(aFileURL);
-  }
-
   nsCOMPtr<nsILocalFile> file;
   GetFile(getter_AddRefs(file));
 
@@ -439,10 +379,6 @@ nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 NS_IMETHODIMP
 nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 {
-  if (mXULPicker) {
-    return mXULPicker->GetFiles(aFiles);
-  }
-
   NS_ENSURE_ARG_POINTER(aFiles);
 
   if (mMode == nsIFilePicker::modeOpenMultiple) {
@@ -455,10 +391,6 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
 NS_IMETHODIMP
 nsFilePicker::Show(PRInt16 *aReturn)
 {
-  if (mXULPicker) {
-    return mXULPicker->Show(aReturn);
-  }
-
   NS_ENSURE_ARG_POINTER(aReturn);
 
   nsXPIDLCString title;
@@ -475,14 +407,28 @@ nsFilePicker::Show(PRInt16 *aReturn)
                                    accept_button, GTK_RESPONSE_ACCEPT,
                                    NULL);
   if (mMode == nsIFilePicker::modeOpenMultiple) {
-    _gtk_file_chooser_set_select_multiple ((GtkFileChooser*) (file_chooser), TRUE);
+    _gtk_file_chooser_set_select_multiple (GTK_FILE_CHOOSER(file_chooser), TRUE);
   }
 
   if (mMode == nsIFilePicker::modeSave) {
     char *default_filename = ToNewUTF8String(mDefault);
-    _gtk_file_chooser_set_current_name((GtkFileChooser*) (file_chooser),
+    _gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
                                        NS_STATIC_CAST(const gchar*, default_filename));
     nsMemory::Free(default_filename);
+  }
+
+  gtk_dialog_set_default_response(GTK_DIALOG(file_chooser), GTK_RESPONSE_ACCEPT);
+
+  nsCAutoString directory;
+  if (mDisplayDirectory) {
+    mDisplayDirectory->GetNativePath(directory);
+  } else if (mPrevDisplayDirectory) {
+    mPrevDisplayDirectory->GetNativePath(directory);
+  }
+
+  if (!directory.IsEmpty()) {
+    _gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(file_chooser),
+                                         directory.get());
   }
 
   PRInt32 count = mFilters.Count();
@@ -512,7 +458,6 @@ nsFilePicker::Show(PRInt16 *aReturn)
         --cur;
         const char* pattern = ToNewCString(Substring(start, cur));
         _gtk_file_filter_add_pattern(filter, pattern);
-        printf("%s\n", pattern);
         nsMemory::Free((void*)pattern);
         ++cur; ++cur;
         start = cur;
