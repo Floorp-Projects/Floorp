@@ -23,6 +23,7 @@
 #include "nsString.h"
 #include "nsIMenuListener.h"
 
+class nsIDOMNode;
 class nsIMenu;
 class nsIPopUpMenu;
 class nsIWidget;
@@ -64,6 +65,8 @@ public:
   NS_IMETHOD AddMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener);
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
+  NS_IMETHOD SetDOMNode(nsIDOMNode *aDOMNode);
+  NS_IMETHOD GetDOMNode(nsIDOMNode ** aDOMNode);
    
   NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);
