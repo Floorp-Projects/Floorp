@@ -115,7 +115,7 @@ NS_IMETHODIMP nsMsgDatabase::RemoveListener(nsIDBChangeListener *listener)
 }
 
 	// change announcer methods - just broadcast to all listeners.
-NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 flags, 
+NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 oldFlags, PRUint32 newFlags,
 	nsIDBChangeListener *instigator)
 {
     if (m_ChangeListeners == nsnull)
@@ -125,7 +125,7 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 fla
 		nsIDBChangeListener *changeListener =
             (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
 
-		nsresult rv = changeListener->OnKeyChange(keyChanged, flags, instigator); 
+		nsresult rv = changeListener->OnKeyChange(keyChanged, oldFlags, newFlags, instigator); 
         if (NS_FAILED(rv)) 
 			return rv;
 	}
@@ -1077,7 +1077,9 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                              nsIDBChangeListener *instigator)
 {
     nsMsgKey key;
+	PRUint32 oldFlags;
     (void)msgHdr->GetMessageKey(&key);
+	msgHdr->GetFlags(&oldFlags);
 	SetHdrFlag(msgHdr, bRead, MSG_FLAG_READ);
 	if (m_newSet)
 		m_newSet->Remove(key);
@@ -1091,7 +1093,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
 
     PRUint32 flags;
     (void)msgHdr->GetFlags(&flags);
-	return NotifyKeyChangeAll(key, flags, instigator);
+	return NotifyKeyChangeAll(key, oldFlags, flags, instigator);
 }
 
 NS_IMETHODIMP nsMsgDatabase::MarkRead(nsMsgKey key, PRBool bRead, 
@@ -1212,7 +1214,7 @@ nsresult nsMsgDatabase::IsMDNSent(nsMsgKey key, PRBool *pSent)
 }
 
 
-nsresult	nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRInt32 flag,
+nsresult	nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
 							  nsIDBChangeListener *instigator)
 {
 	nsresult rv;
@@ -1222,11 +1224,14 @@ nsresult	nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRInt32 flag,
     if (NS_FAILED(rv) || !msgHdr) 
 		return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
 
+	PRUint32 oldFlags;
+	msgHdr->GetFlags(&oldFlags);
+
 	SetHdrFlag(msgHdr, set, flag);
 
     PRUint32 flags;
     (void)msgHdr->GetFlags(&flags);
-	NotifyKeyChangeAll(key, flags, instigator);
+	NotifyKeyChangeAll(key, oldFlags, flags, instigator);
 
 	NS_RELEASE(msgHdr);
 	return rv;
@@ -1398,7 +1403,7 @@ NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
                     (void)msgHdr->GetMessageKey(&key);
                     PRUint32 flags;
                     (void)msgHdr->GetFlags(&flags);
-					NotifyKeyChangeAll(key, flags, NULL);
+					NotifyKeyChangeAll(key, flags | MSG_FLAG_NEW, flags, NULL);
 					NS_RELEASE(msgHdr);
 				}
 			}

@@ -47,7 +47,7 @@ public:
   NS_IMETHOD AddListener(nsIDBChangeListener *listener);
   NS_IMETHOD RemoveListener(nsIDBChangeListener *listener);
 
-  NS_IMETHOD NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 flags, 
+  NS_IMETHOD NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                                 nsIDBChangeListener *instigator);
   NS_IMETHOD NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags, 
                                nsIDBChangeListener *instigator);
@@ -263,7 +263,7 @@ protected:
 #endif
 
 	// Flag handling routines
-	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRInt32 flag,
+	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
 							  nsIDBChangeListener *instigator = NULL);
 	virtual PRBool	SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
 	virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr);

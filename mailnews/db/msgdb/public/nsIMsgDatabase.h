@@ -60,7 +60,7 @@ public:
   NS_IMETHOD AddListener(nsIDBChangeListener *listener) = 0;
   NS_IMETHOD RemoveListener(nsIDBChangeListener *listener) = 0;
 
-  NS_IMETHOD NotifyKeyChangeAll(nsMsgKey keyChanged, PRInt32 flags, 
+  NS_IMETHOD NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                                 nsIDBChangeListener *instigator) = 0;
   NS_IMETHOD NotifyKeyAddedAll(nsMsgKey keyAdded, PRInt32 flags, 
                                nsIDBChangeListener *instigator) = 0;

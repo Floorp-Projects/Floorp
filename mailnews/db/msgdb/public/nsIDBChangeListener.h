@@ -12,7 +12,7 @@ class nsIDBChangeListener : public nsISupports
 public:
     static const nsIID& IID(void) { static nsIID iid = NS_IDBCHANGELISTENER_IID; return iid; }
   
-    NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
+    NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                            nsIDBChangeListener * aInstigator) = 0;
     NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                             nsIDBChangeListener * aInstigator) = 0;
