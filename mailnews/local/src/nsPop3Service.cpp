@@ -125,7 +125,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 		// we need to escape the username because it may contain
 		// characters like / % or @
         char * urlSpec = PR_smprintf("pop3://%s@%s:%d/?check", (const char *)escapedUsername, (const char *)popHost, popPort);
-        rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow, popPort);
+        rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
         PR_FREEIF(urlSpec);
     }
 
@@ -185,7 +185,7 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 
 		if (aInbox) 
 		{
-			rv = BuildPop3Url(urlSpec, aInbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow, popPort );
+			rv = BuildPop3Url(urlSpec, aInbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
 		}
 
         PR_FREEIF(urlSpec);
@@ -208,11 +208,11 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 }
 
 nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
-									 nsIMsgFolder *inbox,
+                                     nsIMsgFolder *inbox,
                                      nsIPop3IncomingServer *server,
-									 nsIUrlListener * aUrlListener,
+                                     nsIUrlListener * aUrlListener,
                                      nsIURI ** aUrl,
-									 nsIMsgWindow *aMsgWindow, PRInt32 popPort)
+                                     nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
   
@@ -226,11 +226,6 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
   // now create a pop3 url and a protocol instance to run the url....
   nsCOMPtr<nsIPop3URL> pop3Url = do_CreateInstance(kPop3UrlCID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
-  
-	nsXPIDLCString userName;
-  nsCOMPtr<nsIMsgIncomingServer> msgServer = do_QueryInterface(server);
-  rv = msgServer->GetUsername(getter_Copies(userName));
-  NS_ENSURE_SUCCESS(rv,rv);
     
   pop3Url->SetPop3Sink(pop3Sink);
     
@@ -238,22 +233,6 @@ nsresult nsPop3Service::BuildPop3Url(const char * urlSpec,
   NS_ENSURE_SUCCESS(rv,rv);
     
   (*aUrl)->SetSpec(urlSpec);
-  // the following is only a temporary work around hack because necko
-  // is loosing our port when the url is just scheme://host:port.
-  // when they fix this bug I can remove the following code where we
-  // manually set the port.
-  //
-  // XXX is this still necessary?
-  (*aUrl)->SetPort(popPort);
-    
-  // escape the username before we call SetUsername().  we do this because GetUsername()
-  // will unescape the username
-  //
-  // XXX is this still necessary.  before removing, make sure to test on accounts where
-  // the username has changed.
-  nsXPIDLCString escapedUsername;
-  *((char **)getter_Copies(escapedUsername)) = nsEscape((const char *)userName, url_XAlphas);
-  (*aUrl)->SetUsername((const char *)escapedUsername);
     
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(pop3Url);
   if (mailnewsurl)
@@ -396,7 +375,7 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     nsCOMPtr<nsIUrlListener> urlListener = do_QueryInterface(folder, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = BuildPop3Url(popSpec.get(), folder, popServer,
-                      urlListener, _retval, nsnull, port); 
+                      urlListener, _retval, nsnull); 
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = 
