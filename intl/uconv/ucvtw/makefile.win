@@ -34,6 +34,7 @@ CPPSRCS =				\
 	nsUnicodeToBIG5.cpp		\
 	nsBIG5HKSCSToUnicode.cpp		\
 	nsUnicodeToBIG5HKSCS.cpp		\
+	nsUnicodeToHKSCS.cpp		\
 	nsCP950ToUnicode.cpp		\
 	nsUnicodeToCP950.cpp		\
 	nsUnicodeToBIG5NoAscii.cpp		\
@@ -46,6 +47,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToBIG5.obj			\
 	.\$(OBJDIR)\nsBIG5HKSCSToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToBIG5HKSCS.obj			\
+	.\$(OBJDIR)\nsUnicodeToHKSCS.obj			\
 	.\$(OBJDIR)\nsCP950ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToCP950.obj			\
 	.\$(OBJDIR)\nsUnicodeToBIG5NoAscii.obj			\
