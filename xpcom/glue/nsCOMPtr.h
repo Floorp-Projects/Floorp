@@ -1204,7 +1204,7 @@ operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
 // This is defined by an autoconf test, but VC++ also has a bug that
 // prevents us from using these.  (It also, fortunately, has the bug
 // that we don't need them either.)
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && (_MSC_VER < 1310)
 #define NSCAP_DONT_PROVIDE_NONCONST_OPEQ
 #endif
 
