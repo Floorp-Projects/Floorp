@@ -94,9 +94,9 @@ public:
   NS_IMETHOD RedisplaySelectedText() = 0;
 
   /**
-   * Method for the listbox to ask the combobox if onChange should be fired
+   * Method for the listbox to set and get the recent index
    */
-  NS_IMETHOD_(PRBool) NeededToFireOnChange() = 0;
+  NS_IMETHOD_(PRInt32) UpdateRecentIndex(PRInt32 aIndex) = 0;
 
   /**
    *
