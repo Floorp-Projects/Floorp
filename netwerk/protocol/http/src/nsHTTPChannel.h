@@ -17,13 +17,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
  */
 
-#ifndef _nsHTTPChannel_h_
-#define _nsHTTPChannel_h_
+#ifndef nsHTTPChannel_h__
+#define nsHTTPChannel_h__
 
 #include "nsIHTTPChannel.h"
 #include "nsIChannel.h"
@@ -46,6 +46,8 @@
 #include "nsIHTTPEventSink.h"
 
 #ifdef MOZ_NEW_CACHE
+#include "nsICacheSession.h"
+#include "nsICacheEntryDescriptor.h"
 #include "nsICachingChannel.h"
 #else
 #include "nsIStreamAsFile.h"
@@ -200,6 +202,7 @@ protected:
     nsCOMPtr<nsICacheSession>           mCacheSession;
     nsCOMPtr<nsICacheEntryDescriptor>   mCacheEntry;
     nsCOMPtr<nsITransport>              mCacheTransport;
+    nsCOMPtr<nsIRequest>                mCacheReadRequest;
 #else
     nsCOMPtr<nsICachedNetData>          mCacheEntry;
     nsCOMPtr<nsIChannel>                mCacheChannel;
@@ -268,4 +271,4 @@ protected:
     PRPackedBool                mProcessing;
 };
 
-#endif /* _nsHTTPChannel_h_ */
+#endif
