@@ -40,6 +40,7 @@
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <stdlib.h>
 
 
 nsScreenGtk :: nsScreenGtk (  )

@@ -41,6 +41,7 @@
 
 #include <qcolor.h>
 #include <qapplication.h>
+#include <stdlib.h>
 
 //JCG #define DBG_JCG 1
 
