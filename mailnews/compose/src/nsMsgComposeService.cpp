@@ -107,6 +107,39 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 	return rv;
 }
 
+nsresult nsMsgComposeService::OpenComposeWindowWithValues(const PRUnichar *msgComposeWindowURL,
+														  MSG_ComposeFormat format,
+														  const PRUnichar *to,
+														  const PRUnichar *cc,
+														  const PRUnichar *bcc,
+														  const PRUnichar *newsgroups,
+														  const PRUnichar *subject,
+														  const PRUnichar *body)
+{
+	nsAutoString args = "";
+	nsresult rv;
+
+	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv); 
+    if (NS_FAILED(rv))
+		return rv;
+
+	args.Append("format=");
+	args.Append(format);
+	
+	if (to)			{args.Append(",to="); args.Append(to);}
+	if (cc)			{args.Append(",cc="); args.Append(cc);}
+	if (bcc)		{args.Append(",bcc="); args.Append(bcc);}
+	if (newsgroups)	{args.Append(",newsgroups="); args.Append(newsgroups);}
+	if (subject)	{args.Append(",subject="); args.Append(subject);}
+	if (body)		{args.Append(",body="); args.Append(body);}
+
+	if (msgComposeWindowURL && *msgComposeWindowURL)
+		toolkitCore->ShowWindowWithArgs(msgComposeWindowURL, nsnull, args);
+	else
+		toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content/", nsnull, args);
+	
+	return rv;
+}
 
 nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow, const PRUnichar *originalMsgURI, PRInt32 type, PRInt32 format, nsIMsgCompose **_retval)
 {
