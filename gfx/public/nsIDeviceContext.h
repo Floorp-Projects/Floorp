@@ -51,8 +51,8 @@ typedef void * nsPalette;
 //structure used to return information about a device's palette capabilities
 struct nsPaletteInfo {
   PRPackedBool  isPaletteDevice;
-  PRUint8       sizePalette;  // number of entries in the palette
-  PRUint8       numReserved;  // number of reserved palette entries
+  PRUint16      sizePalette;  // number of entries in the palette
+  PRUint16      numReserved;  // number of reserved palette entries
   nsPalette     palette;      // native palette handle
 };
 
