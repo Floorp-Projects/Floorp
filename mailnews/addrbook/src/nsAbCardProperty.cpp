@@ -52,16 +52,11 @@
 #include "plbase64.h"
 #include "nsIAddrBookSession.h"
 
+#include "nsIRDFResource.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+
 #define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
-
-#define LIST_ATTRS_COUNT 4
-
-static const char *LIST_ARRTS_ARRAY[] = {
-  kMailListName,
-  kMailListNickName,
-  kMailListDescription,
-  kMailListTotalAddresses
-};
 
 #define   CARD_ATTRS_COUNT      37
 
@@ -1027,22 +1022,26 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLData(PRUnichar **aXMLSubstr)
   nsresult rv;
   nsString xmlStr;
 
-  xmlStr.Append(NS_LITERAL_STRING("<abcard>\n").get());
+  if (m_IsMailList)
+    xmlStr.Append(NS_LITERAL_STRING("<mailinglist>\n").get());
+  else
+    xmlStr.Append(NS_LITERAL_STRING("<card>\n").get());
+
   // get the generated name
   nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
-
+  
   nsCOMPtr<nsIPrefBranch> prefBranch;
   rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
   NS_ENSURE_SUCCESS(rv,rv);
-
+  
   PRInt32 generatedNameFormat;
   rv = prefBranch->GetIntPref(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, &generatedNameFormat);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
-    
+  
   nsXPIDLString generatedName;
   rv = abSession->GenerateNameFromCard(this, generatedNameFormat, getter_Copies(generatedName));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1050,15 +1049,53 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLData(PRUnichar **aXMLSubstr)
   xmlStr.Append(NS_LITERAL_STRING("<GeneratedName>\n").get());
   xmlStr.Append(generatedName.get());
   xmlStr.Append(NS_LITERAL_STRING("</GeneratedName>\n").get());
-
+  
   PRUint32 i;
   for (i=0;i<CARD_ATTRS_COUNT;i++) {
-   rv = AppendData(CARD_ATTRS_ARRAY[i], xmlStr);
-   NS_ENSURE_SUCCESS(rv,rv);
+    rv = AppendData(CARD_ATTRS_ARRAY[i], xmlStr);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
+ 
+  if (m_IsMailList) {
+    // print out all the email addresses in the list
+    nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+      
+    nsCOMPtr <nsIRDFResource> resource;
+    rv = rdfService->GetResource(m_MailListURI, getter_AddRefs(resource));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    nsCOMPtr <nsIAbDirectory> mailList = do_QueryInterface(resource, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    nsCOMPtr<nsISupportsArray> addresses;
+    rv = mailList->GetAddressLists(getter_AddRefs(addresses));
+    if (addresses) {
+      PRUint32 total = 0;
+      addresses->Count(&total);
+      if (total) {
+        PRUint32 i;
+        nsXPIDLString primaryEmail;
+        for (i = 0; i < total; i++) {
+          nsCOMPtr <nsISupports> item = getter_AddRefs(addresses->ElementAt(i));
+				  
+          nsCOMPtr <nsIAbCard> listCard = do_QueryInterface(item, &rv);
+          NS_ENSURE_SUCCESS(rv,rv);
 
-  xmlStr.Append(NS_LITERAL_STRING("</abcard>\n").get());
+          rv = listCard->GetPrimaryEmail(getter_Copies(primaryEmail));
+          NS_ENSURE_SUCCESS(rv,rv);
 
+          xmlStr.Append(NS_LITERAL_STRING("<PrimaryEmail>\n").get());
+          xmlStr.Append(primaryEmail.get());
+          xmlStr.Append(NS_LITERAL_STRING("</PrimaryEmail>\n").get());
+        }
+      }
+    }
+    xmlStr.Append(NS_LITERAL_STRING("</mailinglist>\n").get());
+  }
+  else
+    xmlStr.Append(NS_LITERAL_STRING("</card>\n").get());
+ 
   *aXMLSubstr = ToNewUnicode(xmlStr);
   return NS_OK;
 }

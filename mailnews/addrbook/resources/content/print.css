@@ -34,8 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 directory {display:table;}
-abcard {display:table-row;}
-abcard *{display:table-cell; padding:5px;}
+card {display:table-row;}
+card *{display:table-cell; padding:5px;}
+mailinglist {display:table-row;}
+mailinglist *{display:table-cell; padding:5px;}
 GeneratedName {display:block; font-weight:bold;}
 FirstName {display:block;}
 LastName {display:block;}
@@ -74,6 +76,3 @@ Custom2 {display:block;}
 Custom3 {display:block;}
 Custom4 {display:block;}
 Notes {display:block;}
-ListName {display:block;}
-ListNickName {display:block;}
-ListDescription {display:block;}
