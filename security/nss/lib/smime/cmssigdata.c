@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.24 2003/12/19 03:58:28 nelsonb%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.25 2003/12/19 22:08:12 wchang0222%aol.com Exp $
  */
 
 #include "cmslocal.h"
@@ -213,10 +213,8 @@ NSS_CMSSignedData_Encode_BeforeData(NSSCMSSignedData *sigd)
         return SECFailure;
     }
     /* set up the digests */
-    if (sigd->digests && sigd->digests[0]) {
-	sigd->contentInfo.digcx = NULL; /* don't attempt to make new ones. */
-    } else 
-    if (sigd->digestAlgorithms != NULL) {
+    if (sigd->digestAlgorithms != NULL && sigd->digests == NULL) {
+	/* if digests are already there, do nothing */
 	sigd->contentInfo.digcx = 
 	        NSS_CMSDigestContext_StartMultiple(sigd->digestAlgorithms);
 	if (sigd->contentInfo.digcx == NULL)
