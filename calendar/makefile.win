@@ -78,11 +78,14 @@ install::
 	$(GMAKE) $(GMAKE_PR_FLAGS) $(GMAKE_DBG_FLAGS) $(GMAKE_OS_FLAGS)
 
 # a rule like this one must only be used for explicitly named targets!
-all install clobber clobber_all clean::
+all install::
 	$(GMAKE) $(GMAKE_PR_FLAGS) $(GMAKE_DBG_FLAGS) $(GMAKE_OS_FLAGS) 
 
 depend:
 	$(GMAKE) $(GMAKE_PR_FLAGS) $(GMAKE_DBG_FLAGS) $(GMAKE_OS_FLAGS) depend
+
+clobber_all clobber:
+	$(GMAKE) $(GMAKE_PR_FLAGS) $(GMAKE_DBG_FLAGS) $(GMAKE_OS_FLAGS) clobber_all
 
 show:
 	@echo "MAKEFLAGS = $(MAKEFLAGS)"
