@@ -47,6 +47,7 @@ CPPSRCS =				\
 	nsXULTreeElement.cpp		\
 	nsXULDocumentInfo.cpp		\
 	nsXULPopupListener.cpp \
+	nsXULFocusTracker.cpp \
 	$(NULL)
 
 EXPORTS = \

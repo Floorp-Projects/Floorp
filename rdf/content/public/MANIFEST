@@ -11,4 +11,5 @@ nsIXULParentDocument.h
 nsIXULChildDocument.h
 nsIXULDocumentInfo.h
 nsIXULPopupListener.h
+nsIXULFocusTracker.h
 nsIStreamLoadableDocument.h
