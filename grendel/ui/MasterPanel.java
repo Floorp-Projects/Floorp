@@ -19,6 +19,7 @@
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.ui;
@@ -35,6 +36,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -72,6 +75,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 
+import grendel.composition.Composition;
 import grendel.storage.FolderExtraFactory;
 import grendel.storage.SearchResultsFolderFactory;
 import grendel.ui.UIAction;
@@ -206,6 +210,8 @@ public class MasterPanel extends GeneralPanel {
 
     fStoreChangeListener = new StoreChangeListener();
     StoreFactory.Instance().addChangeListener(fStoreChangeListener);
+    
+    ActionFactory.SetComposeMessageThread(new ComposeMessageThread());
   }
 
   public void dispose() {
@@ -370,6 +376,33 @@ public class MasterPanel extends GeneralPanel {
           e.printStackTrace();
         }
       }
+    }
+  }
+
+  class ComposeMessageThread implements Runnable {
+    public void run() {
+
+      int identity;
+      try {
+        Preferences prefs = PreferencesFactory.Get();
+        InetAddress ia = InetAddress.getByName(getSelectedViewedFolder().getViewedStore().getHost());
+        String fPrefBase = "mail." + getSelectedViewedFolder().getViewedStore().getProtocol()
+                    + "-" + ia.getHostName();
+        System.out.println("fPrefBase");
+        identity = prefs.getInt(fPrefBase + ".default-identity", 0);
+      } catch (NullPointerException npe) {
+      	identity = 0;
+      } catch (UnknownHostException uhe) {
+      	uhe.printStackTrace();
+      	identity = 0;
+      }
+
+      ActionFactory.setIdent(identity);
+
+      Composition frame = new Composition();
+ 
+      frame.show();
+      frame.requestFocus();
     }
   }
 

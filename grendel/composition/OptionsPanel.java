@@ -32,6 +32,8 @@ import javax.swing.border.*;
 import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
+import grendel.ui.ActionFactory;
+
 public class OptionsPanel extends JPanel implements Serializable  {
   // private final int BOX_WIDTH = 300;
     private final int BOX_WIDTH = 160;
@@ -96,10 +98,10 @@ public class OptionsPanel extends JPanel implements Serializable  {
         Preferences prefs = PreferencesFactory.Get();
         int numIdentities = prefs.getInt("mail.identities", 1);
         for (int i=0; i<numIdentities; i++) {
-            ident.addPossibleValue(prefs.getString("mail.identity-" + i + ".description", "(nobody)"));
+            ident.addPossibleValue(prefs.getString("mail.identity-" + i + ".description", "(no description available)"));
         }
-        // Select the first (default) identity (number 0)
-        ident.setSelectedIndex(0);
+        // Select the default identity
+        ident.setSelectedIndex(ActionFactory.getIdent());
         
         addToGridBag(new FixedSizedPanel (BOX_WIDTH, BOX_HEIGHT, ident), gridbag, c);
 

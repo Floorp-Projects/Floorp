@@ -20,6 +20,7 @@
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
  *               Giao Nguyen <grail@cafebabe.org>
+ *               Edwin Woudt <edwin@woudt.nl>
  */
 
 package grendel.ui;
@@ -56,6 +57,10 @@ public class ActionFactory {
   static SearchAction fSearchAction = new SearchAction();
   static RunFiltersAction fRunFiltersAction = new RunFiltersAction();
   static ShowTooltipsAction fShowTooltipsAction = new ShowTooltipsAction();
+  
+  static int fIdent = 0;
+  
+  static Runnable fComposeMessageThread = new DummyComposeMessageThread();
 
   static public ExitAction GetExitAction() {
     return fExitAction;
@@ -69,8 +74,18 @@ public class ActionFactory {
     return fComposeMessageAction;
   }
 
-  static public void SetComposeMessageAction(ComposeMessageAction aAction) {
-    fComposeMessageAction = aAction;
+  static public void SetComposeMessageThread(Runnable aThread) {
+    fComposeMessageThread = aThread;
+  }
+  
+  static public void setIdent(int aIdent) {
+    System.out.println("setIdent "+aIdent);
+    fIdent = aIdent;
+  }
+
+  static public int getIdent() {
+    System.out.println("getIdent "+fIdent);
+    return fIdent;
   }
 
   static public PreferencesAction GetPreferencesAction() {
@@ -131,16 +146,14 @@ class ComposeMessageAction extends UIAction {
   }
 
   public void actionPerformed(ActionEvent aEvent) {
-    new Thread(new ComposeThread(), "Composition Starter").start();
+    new Thread(ActionFactory.fComposeMessageThread, "Composition Starter").start();
   }
 
-  class ComposeThread implements Runnable {
-    public void run() {
-      Composition frame = new Composition();
+}
 
-      frame.show();
-      frame.requestFocus();
-    }
+class DummyComposeMessageThread implements Runnable {
+  public void run() {
+    System.out.println("This should not happen! DummyComposeMessageThread called.");
   }
 }
 
