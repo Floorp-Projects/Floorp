@@ -24,6 +24,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsObserverService.h"
+#include "nsObserverList.h"
 #include "nsObserver.h"
 #include "nsProperties.h"
 #include "nsIProperties.h"
@@ -442,6 +443,12 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                                 NS_OBSERVER_CLASSNAME,
                                 NS_OBSERVER_CONTRACTID,
                                 nsObserver::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, nsObserverList::GetCID(), 
+                                NS_OBSERVERLIST_CLASSNAME,
+                                NS_OBSERVERLIST_CONTRACTID,
+                                nsObserverList::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, nsObserverService::GetCID(),

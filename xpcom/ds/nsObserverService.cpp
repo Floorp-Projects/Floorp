@@ -155,7 +155,7 @@ nsresult nsObserverService::AddObserver(nsIObserver* anObserver, const PRUnichar
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
-        return anObserverList->AddObserver(&anObserver);
+        return anObserverList->AddObserver(anObserver);
     }
  	
 	return NS_ERROR_FAILURE;
@@ -180,7 +180,7 @@ nsresult nsObserverService::RemoveObserver(nsIObserver* anObserver, const PRUnic
 	if (NS_FAILED(rv)) return rv;
 
 	if (anObserverList) {
-        return anObserverList->RemoveObserver(&anObserver);
+        return anObserverList->RemoveObserver(anObserver);
     }
  	
 	return NS_ERROR_FAILURE;
