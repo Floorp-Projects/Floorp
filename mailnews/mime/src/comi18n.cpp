@@ -1684,10 +1684,10 @@ MIME_get_unicode_decoder(const char* aInputCharset, nsIUnicodeDecoder **aDecoder
            do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res); 
   if (NS_SUCCEEDED(res)) {
     nsCOMPtr <nsIAtom> charsetAtom;
-    if (*aInputCharset)
-      res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aInputCharset).get(), getter_AddRefs(charsetAtom));
-    else
+    if (!*aInputCharset || !nsCRT::strcasecmp("us-ascii", aInputCharset))
       res = ccm2->GetCharsetAtom(NS_LITERAL_STRING("ISO-8859-1").get(), getter_AddRefs(charsetAtom));
+    else
+      res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aInputCharset).get(), getter_AddRefs(charsetAtom));
     // create a decoder (conv to unicode), ok if failed if we do auto detection
     if (NS_SUCCEEDED(res))
       res = ccm2->GetUnicodeDecoder(charsetAtom, aDecoder);
