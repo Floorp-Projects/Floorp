@@ -244,6 +244,12 @@ if test "`echo | $AS -V 2>&1 | grep -c GNU`" != "0"; then
 fi
 rm -f a.out
 
+if test "$cross_compiling"  = "yes"; then
+    CROSS_COMPILE=1
+else
+    CROSS_COMPILE=
+fi
+
 dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
@@ -1047,6 +1053,7 @@ AC_SUBST(HOST_CC)
 AC_SUBST(HOST_CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(GNU_CC)
+AC_SUBST(CROSS_COMPILE)
 
 AC_SUBST(MOZ_OPTIMIZE)
 
