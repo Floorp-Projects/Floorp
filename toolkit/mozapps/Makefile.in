@@ -42,7 +42,7 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = installer downloads
+DIRS = downloads
 
 include $(topsrcdir)/config/rules.mk
 
