@@ -43,13 +43,13 @@ extern int MK_OUT_OF_MEMORY;
 MimeDefClass(MimeInlineTextCalendar, MimeInlineTextCalendarClass,
              mimeInlineTextCalendarClass, NULL);  
 
-PUBLIC char *
+extern "C" char *
 MIME_GetContentType(void)
 {
   return CAL_CONTENT_TYPE;
 }
 
-PUBLIC MimeObjectClass *
+extern "C" MimeObjectClass *
 MIME_CreateContentTypeHandlerClass(const char *content_type, 
                                    contentTypeHandlerInitStruct *initStruct)
 {

@@ -143,12 +143,14 @@ extern MimeMultipartSignedClass  *MIME_GetmimeMultipartSignedClass(void);
  * MIME_GetContentType() is called by libmime to identify the content
  * type handled by this plugin.
  */ 
+extern "C" 
 char            *MIME_GetContentType(void);
 
 /* 
  * This will create the MimeObjectClass object to be used by the libmime
  * object system.
  */
+extern "C" 
 MimeObjectClass *MIME_CreateContentTypeHandlerClass(const char *content_type, 
                                    contentTypeHandlerInitStruct *initStruct);
 
