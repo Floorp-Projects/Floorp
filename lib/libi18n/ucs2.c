@@ -1990,6 +1990,7 @@ PUBLIC uint32    INTL_TextToUnicode(
 		srclen -= scanlen, src += scanlen, ustr++, ubuflen--,validlen++)
 	{
 		uint16 i;
+		scanlen = 0;
 		if(*src < 0x20)
 		{
 			*ustr = (INTL_Unicode)(*src);
@@ -2013,6 +2014,8 @@ PUBLIC uint32    INTL_TextToUnicode(
 #ifdef STRICTUNICODETEST
 			XP_ASSERT(i!=num);
 #endif
+			if(scanlen == 0)
+				scanlen = 1;
 			*ustr= NOMAPPING;
 		}
 	}
