@@ -420,10 +420,13 @@ function DoSort(column, key, direction)
 	if ( node )
 	{
 		var selectionArray = RememberResultsTreeSelection();
-		xulSortService.Sort(node, key, direction);
-		ClearResultsTreeSelection()	;
-		WaitUntilDocumentIsLoaded();
-		RestoreResultsTreeSelection(selectionArray);
+		if (selectionArray.length)
+		{
+			xulSortService.Sort(node, key, direction);
+			ClearResultsTreeSelection()	;
+			WaitUntilDocumentIsLoaded();
+			RestoreResultsTreeSelection(selectionArray);
+		}
 	}
 }
 
