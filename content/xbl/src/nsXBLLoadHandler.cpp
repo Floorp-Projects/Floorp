@@ -41,7 +41,6 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLLoadHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
@@ -88,62 +87,22 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLLoadHandler, nsXBLEventHandler, nsIDOMLoadList
 
 nsresult nsXBLLoadHandler::Load(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kLoadAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kLoadAtom, aEvent);
 }
 
 nsresult nsXBLLoadHandler::Unload(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kUnloadAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kUnloadAtom, aEvent);
 }
 
 nsresult nsXBLLoadHandler::Error(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kErrorAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kErrorAtom, aEvent);
 }
 
 nsresult nsXBLLoadHandler::Abort(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kAbortAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kAbortAtom, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

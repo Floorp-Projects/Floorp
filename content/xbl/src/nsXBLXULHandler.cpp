@@ -106,122 +106,42 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLXULHandler, nsXBLEventHandler, nsIDOMXULListen
 
 nsresult nsXBLXULHandler::Command(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != nsXBLAtoms::command)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(nsXBLAtoms::command, aEvent);
 }
 
 nsresult nsXBLXULHandler::PopupShowing(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kPopupShowingAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kPopupShowingAtom, aEvent);
 }
 
 nsresult nsXBLXULHandler::PopupShown(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kPopupShownAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kPopupShownAtom, aEvent);
 }
 
 nsresult nsXBLXULHandler::PopupHiding(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kPopupHidingAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kPopupHidingAtom, aEvent);
 }
 
 nsresult nsXBLXULHandler::PopupHidden(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kPopupHiddenAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kPopupHiddenAtom, aEvent);
 }
 
 nsresult nsXBLXULHandler::Close(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kCloseAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kCloseAtom, aEvent);
 }
 
 nsresult nsXBLXULHandler::Broadcast(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kBroadcastAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kBroadcastAtom, aEvent);
 }
 
 nsresult nsXBLXULHandler::CommandUpdate(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kCommandUpdateAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kCommandUpdateAtom, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

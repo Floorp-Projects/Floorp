@@ -41,7 +41,6 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLMutationHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
@@ -97,107 +96,37 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLMutationHandler, nsXBLEventHandler, nsIDOMMuta
 
 nsresult nsXBLMutationHandler::SubtreeModified(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kSubtreeModifiedAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kSubtreeModifiedAtom, aEvent);
 }
 
 nsresult nsXBLMutationHandler::AttrModified(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kAttrModifiedAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kAttrModifiedAtom, aEvent);
 }
 
 nsresult nsXBLMutationHandler::CharacterDataModified(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kCharacterDataModifiedAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kCharacterDataModifiedAtom, aEvent);
 }
 
 nsresult nsXBLMutationHandler::NodeInserted(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kNodeInsertedAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kNodeInsertedAtom, aEvent);
 }
 
 nsresult nsXBLMutationHandler::NodeRemoved(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kNodeRemovedAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kNodeRemovedAtom, aEvent);
 }
 
 nsresult nsXBLMutationHandler::NodeInsertedIntoDocument(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kNodeInsertedAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kNodeInsertedAtom, aEvent);
 }
 
 nsresult nsXBLMutationHandler::NodeRemovedFromDocument(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIAtom> eventName;
-  mProtoHandler->GetEventName(getter_AddRefs(eventName));
-
-  if (eventName.get() != kNodeRemovedAtom)
-    return NS_OK;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(kNodeRemovedAtom, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

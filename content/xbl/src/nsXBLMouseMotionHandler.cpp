@@ -41,7 +41,6 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLMouseMotionHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -85,25 +84,9 @@ nsXBLMouseMotionHandler::~nsXBLMouseMotionHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLMouseMotionHandler, nsXBLEventHandler, nsIDOMMouseMotionListener)
 
-static inline nsresult DoMouse(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, nsIDOMEvent* aMouseEvent,
-                               nsIDOMEventReceiver* aReceiver)
-{
-  if (!aHandler)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-  aHandler->MouseEventMatched(aEventType, mouse, &matched);
-
-  if (matched)
-    aHandler->ExecuteHandler(aReceiver, aMouseEvent);
-  
-  return NS_OK;
-}
-
 nsresult nsXBLMouseMotionHandler::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-  return DoMouse(kMouseMoveAtom, mProtoHandler, aMouseEvent, mEventReceiver);
+  return DoMouse(kMouseMoveAtom, aMouseEvent);
 }
 
 

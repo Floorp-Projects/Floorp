@@ -41,9 +41,6 @@
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLKeyHandler.h"
 #include "nsIContent.h"
-#include "nsIAtom.h"
-#include "nsIDOMKeyEvent.h"
-#include "nsIDOMMouseEvent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
@@ -92,33 +89,19 @@ nsXBLKeyHandler::~nsXBLKeyHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLKeyHandler, nsXBLEventHandler, nsIDOMKeyListener)
 
-static inline nsresult DoKey(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, nsIDOMEvent* aKeyEvent,
-                             nsIDOMEventReceiver* aReceiver)
-{
-  if (!aHandler)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-  aHandler->KeyEventMatched(aEventType, key, &matched);
-  if (matched)
-    aHandler->ExecuteHandler(aReceiver, aKeyEvent);
-  return NS_OK;
-}
-
 nsresult nsXBLKeyHandler::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  return DoKey(kKeyUpAtom, mProtoHandler, aKeyEvent, mEventReceiver);
+  return DoKey(kKeyUpAtom, aKeyEvent);
 }
 
 nsresult nsXBLKeyHandler::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  return DoKey(kKeyDownAtom, mProtoHandler, aKeyEvent, mEventReceiver);
+  return DoKey(kKeyDownAtom, aKeyEvent);
 }
 
 nsresult nsXBLKeyHandler::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  return DoKey(kKeyPressAtom, mProtoHandler, aKeyEvent, mEventReceiver);
+  return DoKey(kKeyPressAtom, aKeyEvent);
 }
  
 ///////////////////////////////////////////////////////////////////////////////////

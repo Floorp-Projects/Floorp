@@ -52,11 +52,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLCustomHandler, nsXBLEventHandler, nsIDOMEventL
 
 nsresult nsXBLCustomHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-  return NS_OK;
+  return DoGeneric(nsnull, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
