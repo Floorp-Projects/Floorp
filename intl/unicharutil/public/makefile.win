@@ -31,6 +31,8 @@ EXPORTS = \
 	nsHankakuToZenkakuCID.h \
 	nsArabicBasicLToPFormBVCID.h \
 	nsUnicharUtilCIID.h \
+	nsIUBidiUtils.h \
+	nsIBidi.h \
 	$(NULL)
 
 MODULE=unicharutil
