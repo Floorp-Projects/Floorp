@@ -606,5 +606,35 @@ inline PRBool nsTableFrame::IsRowGroup(PRInt32 aDisplayType)
                 (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == aDisplayType));
 }
 
-
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

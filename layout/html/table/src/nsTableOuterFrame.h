@@ -201,6 +201,7 @@ inline nscoord nsTableOuterFrame::GetMinCaptionWidth()
 { return mMinCaptionWidth; }
 
 
-
-
 #endif
+
+
+
