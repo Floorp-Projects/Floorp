@@ -674,14 +674,14 @@ void
 ServiceImpl::RegisterBuiltInResourceFactories(void)
 {
     extern nsresult NS_NewRDFDefaultResourceFactory(nsIRDFResourceFactory** result);
-    extern nsresult NS_NewRDFMailResourceFactory(nsIRDFResourceFactory** result);
-    extern nsresult NS_NewRDFMailAccountResourceFactory(nsIRDFResourceFactory** result);
+//    extern nsresult NS_NewRDFMailResourceFactory(nsIRDFResourceFactory** result);
+//    extern nsresult NS_NewRDFMailAccountResourceFactory(nsIRDFResourceFactory** result);
     extern nsresult NS_NewRDFFileResourceFactory(nsIRDFResourceFactory** result);
 
     static ResourceFactoryTable gTable[] = {
         "",                NS_NewRDFDefaultResourceFactory,
-        "mailaccount:",    NS_NewRDFMailAccountResourceFactory,
-        "mailbox:",        NS_NewRDFMailResourceFactory,
+//        "mailaccount:",    NS_NewRDFMailAccountResourceFactory,
+//        "mailbox:",        NS_NewRDFMailResourceFactory,
 #if 0
         "file:",           NS_NewRDFFileResourceFactory,
 #endif
