@@ -1124,7 +1124,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 			WritePrivateProfileString("Site Selector", NULL, "", configiniPath);
 			WritePrivateProfileString("Site Selector", "Identifier0", "Site0", configiniPath);
 			WritePrivateProfileString("Site Selector", "Description0", "Default", configiniPath);
-			WritePrivateProfileString("Site Selector", "Domain0", "ftp://", configiniPath);
+			WritePrivateProfileString("Site Selector", "Domain0", ftpLocation, configiniPath);
 //		}
 		
 	}
