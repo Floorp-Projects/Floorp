@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.47 $ 
-# $Date: 2002/05/06 20:45:18 $ 
+# $Revision: 1.48 $ 
+# $Date: 2002/05/06 21:53:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -429,13 +429,17 @@ sub trim_db_history {
   my ($self, $tree, ) = (@_);
   
   my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
-  my (@run_times) = ();
-  my (@dead_times) = ();
+  my (@all_build_names);
 
-  my (@all_build_names) = all_build_names($tree);
+  # compute averages.
+
+  @all_build_names = all_build_names($tree);
   foreach $buildname (@all_build_names) {
 
     my ($last_index) = undef;
+    my (@run_times) = ();
+    my (@dead_times) = ();
+
     my $recs = $DATABASE{$tree}{$buildname}{'recs'};
     foreach $db_index (0 .. $#{ $recs }) {
       
@@ -488,6 +492,17 @@ sub trim_db_history {
     if (defined($last_index)) {
       my @new_table = @{ $recs }[0 .. $last_index];
       $DATABASE{$tree}{$buildname}{'recs'} = [ @new_table ];
+    }
+
+    # columns which have not received data in a long while are purged.
+
+    my ($rec) = $DATABASE{$tree}{$buildname}{'recs'}[0];
+    
+    if ( 
+         !(defined($rec)) ||
+         ($rec->{'starttime'} < $last_time)
+         0) {
+        delete $DATABASE{$tree}{$buildname};
     }
 
   }
