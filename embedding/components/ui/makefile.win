@@ -22,6 +22,7 @@ DEPTH=..\..\..
 
 DIRS= \
     helperAppDlg \
+    progressDlg \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
