@@ -7,3 +7,4 @@
 <!ENTITY control.label	"When using the wheel and pressing the Control key">
 <!ENTITY shift.label	"When using the wheel and pressing the Shift key">
 <!ENTITY alt.label	"When using the wheel and pressing the Alt key">
+<!ENTITY sysdefault.label "Use system default">

@@ -51,6 +51,11 @@
 #include "nsIGfxTextControlFrame.h"
 #include "nsPIDOMWindow.h"
 
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+#include "prefapi.h"
+#include "nsISessionHistory.h"
+
 #undef DEBUG_scroll     // define to see ugly mousewheel messages
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -76,6 +81,226 @@ nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
+
+// For caching mousewheel prefs
+struct IntPrefPair
+{
+  char* name;
+  PRInt32 value;
+};
+
+struct BoolPrefPair
+{
+  char* name;
+  PRBool value;
+};
+
+enum {
+ MOUSE_SCROLL_N_LINES,
+ MOUSE_SCROLL_PAGE,
+ MOUSE_SCROLL_HISTORY
+};
+
+static IntPrefPair	mwIntPrefValues[] = 
+{
+  { "mousewheel.withnokey.action", MOUSE_SCROLL_N_LINES },
+  { "mousewheel.withnokey.numlines", 3 },
+  { "mousewheel.withcontrolkey.action", MOUSE_SCROLL_N_LINES },
+  { "mousewheel.withcontrolkey.numlines", 3 },
+  { "mousewheel.withshiftkey.action", MOUSE_SCROLL_N_LINES },
+  { "mousewheel.withshiftkey.numlines", 3 },
+  { "mousewheel.withaltkey.action", MOUSE_SCROLL_N_LINES },
+  { "mousewheel.withaltkey.numlines", 3 }
+};
+
+static BoolPrefPair mwBoolPrefValues[] =
+{
+  { "mousewheel.withnokey.sysnumlines", PR_FALSE },
+  { "mousewheel.withcontrolkey.sysnumlines", PR_FALSE },
+  { "mousewheel.withshiftkey.sysnumlines", PR_FALSE },
+  { "mousewheel.withaltkey.sysnumlines", PR_FALSE }
+};
+
+static PRUint32 numIntPrefValues =
+  (sizeof(mwIntPrefValues) / sizeof(mwIntPrefValues[0]));
+
+static PRUint32 numBoolPrefValues =
+  (sizeof(mwBoolPrefValues) / sizeof(mwBoolPrefValues[0]));
+
+static PRInt32 getCachedIntPref (const char* aPrefName)
+{
+  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null");
+
+  for (PRUint32 i = 0; i < numIntPrefValues; i++)
+  {
+    if (nsAutoString(mwIntPrefValues[i].name) == aPrefName)
+    {
+      return mwIntPrefValues[i].value;
+    }
+  }
+
+  // Hopefully we never reach this code
+  NS_ASSERTION(PR_FALSE,
+               "Attempt to get a cached pref that is not in the cache.");
+  return 0;
+}
+
+static PRBool getCachedBoolPref(const char* aPrefName)
+{
+  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null");
+
+  for (PRUint32 i = 0; i < numBoolPrefValues; i++)
+  {
+    if (nsAutoString(mwBoolPrefValues[i].name) == aPrefName)
+    {
+      return mwBoolPrefValues[i].value;
+    }
+  }
+
+  // Hopefully we never reach this code
+  NS_ASSERTION(PR_FALSE,
+               "Attempt to get a cached pref that is not in the cache.");
+  return 0;
+}
+
+static void setCachedIntPref (const char* aPrefName, PRInt32 aValue)
+{
+  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null");
+
+  for (PRUint32 i = 0; i < numIntPrefValues; i++)
+  {
+    if (nsAutoString(mwIntPrefValues[i].name) == aPrefName)
+    {
+      mwIntPrefValues[i].value = aValue;
+      return;
+    }
+  }
+
+  NS_ASSERTION(PR_FALSE,
+               "Attempt to set a cached pref that is not in the cache.");
+}
+
+static void setCachedBoolPref (const char* aPrefName, PRBool aValue)
+{
+  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null");
+
+  for (PRUint32 i = 0; i < numBoolPrefValues; i++)
+  {
+    if (nsAutoString(mwBoolPrefValues[i].name) == aPrefName)
+    {
+      mwBoolPrefValues[i].value = aValue;
+      return;
+    }
+  }
+
+  NS_ASSERTION(PR_FALSE,
+               "Attempt to set a cached pref that is not in the cache.");
+}
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+int mwIntPrefChangedCallback(const char* name, void * closure)
+{
+  nsIPref* prefs = nsnull;
+  nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
+                                              (nsISupports**) &prefs);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
+  NS_ASSERTION(nsnull != prefs,"Prefs service is null.");
+
+  if (NS_SUCCEEDED(rv))
+  {
+    PRInt32 value;
+    prefs->GetIntPref(name, &value);
+    setCachedIntPref(name, value);
+    NS_RELEASE(prefs);
+  }
+
+  return PREF_NOERROR;
+}
+
+int mwBoolPrefChangedCallback(const char* name, void * closure)
+{
+  nsIPref* prefs = nsnull;
+  nsresult rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
+                                              (nsISupports**) &prefs);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
+  NS_ASSERTION(nsnull != prefs,"Prefs service is null.");
+
+  if (NS_SUCCEEDED(rv))
+  {
+    PRBool value;
+    prefs->GetBoolPref(name, &value);
+    setCachedBoolPref(name, value);
+    NS_RELEASE(prefs);
+  }
+
+  return PREF_NOERROR;
+}
+
+PRInt32 getIntPref(nsIPref* aPrefs, const char* aPrefName)
+{
+  NS_ASSERTION(nsnull != aPrefName,"aPrefName = null.");
+  NS_ASSERTION(nsnull != aPrefs,"aPrefs = null.");
+
+  PRInt32 value = 0;
+  if (aPrefs)
+  {
+    aPrefs->GetIntPref(aPrefName, &value);
+  }
+
+  return value;
+}
+
+PRBool getBoolPref(nsIPref* aPrefs, const char* aPrefName)
+{
+  NS_ASSERTION(nsnull != aPrefName, "aPrefName = null.");
+  NS_ASSERTION(nsnull != aPrefs, "aPrefs = null.");
+
+  PRBool value = PR_FALSE;
+  if (aPrefs)
+  {
+    aPrefs->GetBoolPref(aPrefName, &value);
+  }
+
+  return value;
+}
+      
+void mwRegisterPrefCallbacks()
+{
+  static PRBool once = PR_TRUE;
+
+  if (once) {
+    once = PR_FALSE;
+    nsIPref* prefs = nsnull;
+    nsresult rv = nsServiceManager::GetService(kPrefCID,
+                                 NS_GET_IID(nsIPref), (nsISupports**) &prefs);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
+    NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
+
+    if (NS_SUCCEEDED(rv))
+    {
+     PRUint32 i;
+ 
+     for (i = 0; i < numIntPrefValues; i++)
+      {
+        mwIntPrefValues[i].value = getIntPref(prefs, mwIntPrefValues[i].name);
+        prefs->RegisterCallback(mwIntPrefValues[i].name,
+                                mwIntPrefChangedCallback, NULL);
+      }
+
+      for (i = 0; i < numBoolPrefValues; i++)
+      {
+        mwBoolPrefValues[i].value = getBoolPref(prefs,
+                                                mwBoolPrefValues[i].name);
+        prefs->RegisterCallback(mwBoolPrefValues[i].name,
+                                mwBoolPrefChangedCallback, NULL);
+      }
+
+      NS_RELEASE(prefs);
+    }
+  }
+}
+
 
 nsEventStateManager::nsEventStateManager()
   : mGestureDownPoint(0,0)
@@ -109,6 +334,7 @@ nsEventStateManager::nsEventStateManager()
   NS_INIT_REFCNT();
   
   ++mInstanceCount;
+  mwRegisterPrefCallbacks();
 }
 
 nsEventStateManager::~nsEventStateManager()
@@ -564,129 +790,200 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_MOUSE_SCROLL:
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
+      nsMouseScrollEvent *msEvent = (nsMouseScrollEvent*) aEvent;
+      PRInt32 action = 0;
+      PRInt32 numLines = 0;
 
-      nsIFrame* focusFrame = nsnull;
-      nsISelfScrollingFrame* sf = nsnull;
-      nsIView* focusView = nsnull;
-      nsCOMPtr<nsIPresShell> presShell;
-
-      aPresContext->GetShell(getter_AddRefs(presShell));
-      if(!presShell)    // this is bad
-        break;
-
-#ifdef DEBUG_scroll
-      printf("PostHandleEvent: aTargetFrame = %p, aView = %p\n",
-             aTargetFrame, aView);
-#endif
-
-      if (mCurrentFocus) {
-        // Something is focused
-
-#ifdef DEBUG_scroll
-        printf("PostHandleEvent: mCurrentFocus = %p\n", mCurrentFocus);
-#endif
-        
-        presShell->GetPrimaryFrameFor(mCurrentFocus, &focusFrame);
-        if (focusFrame)
-          focusFrame->GetView(aPresContext, &focusView);
-
+      if (msEvent->isShift) {
+        action = getCachedIntPref("mousewheel.withshiftkey.action");
+        if (getCachedBoolPref("mousewheel.withshiftkey.sysnumlines"))
+          numLines = msEvent->deltaLines;
+        else
+          numLines = getCachedIntPref("mousewheel.withshiftkey.numlines");
+      } else if (msEvent->isControl) {
+        action = getCachedIntPref("mousewheel.withcontrolkey.action");
+        if (getCachedBoolPref("mousewheel.withcontrolkey.sysnumlines"))
+          numLines = msEvent->deltaLines;
+        else
+          numLines = getCachedIntPref("mousewheel.withcontrolkey.numlines");
+      } else if (msEvent->isAlt) {
+        action = getCachedIntPref("mousewheel.withaltkey.action");
+        if (getCachedBoolPref("mousewheel.withaltkey.sysnumlines"))
+          numLines = msEvent->deltaLines;
+        else
+          numLines = getCachedIntPref("mousewheel.withaltkey.numlines");
+      } else {
+        action = getCachedIntPref("mousewheel.withnokey.action");
+        if (getCachedBoolPref("mousewheel.withnokey.sysnumlines"))
+          numLines = msEvent->deltaLines;
+        else
+          numLines = getCachedIntPref("mousewheel.withnokey.numlines");
       }
 
-      if (focusFrame) {
-        if (!focusView) {
-          // The focused frame doesn't have a view
-          // Revert to the parameters passed in
-          // XXX this might not be right
+      if ((msEvent->deltaLines < 0) && (numLines > 0))
+        numLines = -numLines;
 
+      switch (action) {
+      case MOUSE_SCROLL_N_LINES:
+        {
+          nsIFrame* focusFrame = nsnull;
+          nsISelfScrollingFrame* sf = nsnull;
+          nsIView* focusView = nsnull;
+          nsCOMPtr<nsIPresShell> presShell;
+          
+          aPresContext->GetShell(getter_AddRefs(presShell));
+          if(!presShell)    // this is bad
+            break;
+          
 #ifdef DEBUG_scroll
-          printf("Could not get a view for the focused frame\n");
+          printf("PostHandleEvent: aTargetFrame = %p, aView = %p\n",
+                 aTargetFrame, aView);
 #endif
           
-          focusFrame = aTargetFrame;
-          focusView = aView;
-        }
-      } else {
-        // Focus is null.  This means the main document has the focus,
-        // and we should scroll that.
-
+          if (mCurrentFocus) {
+            
 #ifdef DEBUG_scroll
-        printf("PostHandleEvent: mCurrentFocus = NULL\n");
+            printf("PostHandleEvent: mCurrentFocus = %p\n", mCurrentFocus);
 #endif
-
-        // We need to make an exception here if we can get a SelfScrollingFrame
-        // This needs reviewed
-
-        sf = GetNearestSelfScrollingFrame(aTargetFrame);
-        if (sf) {
+            
+            presShell->GetPrimaryFrameFor(mCurrentFocus, &focusFrame);
+            if (focusFrame)
+              focusFrame->GetView(aPresContext, &focusView);
+            
+          }
+          
+          if (focusFrame) {
+            if (!focusView) {
+              // The focused frame doesn't have a view
+              // Revert to the parameters passed in
+              // XXX this might not be right
+              
 #ifdef DEBUG_scroll
-          printf("Found a SelfScrollingFrame: sf = %p\n", sf);
+              printf("Could not get a view for the focused frame\n");
 #endif
-          focusView = aView;
-        } else {
-          focusFrame = GetDocumentFrame(aPresContext);
-          focusFrame->GetView(aPresContext, &focusView);
-
+              
+              focusFrame = aTargetFrame;
+              focusView = aView;
+            }
+          } else {
+            // Focus is null.  This means the main document has the focus,
+            // and we should scroll that.
+            
 #ifdef DEBUG_scroll
-          if (focusView)
-            printf("Got view for document frame!\n");
-          else      // hopefully we won't be here
-            printf("Couldn't get view for document frame\n");
+            printf("PostHandleEvent: mCurrentFocus = NULL\n");
 #endif
-
-        }
-      }
-
+            
+            // We need to make an exception here if we can get a
+            // SelfScrollingFrame. This needs reviewed
+            
+            sf = GetNearestSelfScrollingFrame(aTargetFrame);
+            if (sf) {
 #ifdef DEBUG_scroll
-      printf("PostHandleEvent: focusFrame = %p, focusView = %p\n", focusFrame,
-             focusView);
+              printf("Found a SelfScrollingFrame: sf = %p\n", sf);
 #endif
-
-      nsIScrollableView* sv = GetNearestScrollingView(focusView);
-      if (sv) {
-
+              focusView = aView;
+            } else {
+              focusFrame = GetDocumentFrame(aPresContext);
+              focusFrame->GetView(aPresContext, &focusView);
+              
 #ifdef DEBUG_scroll
-        printf("Found a ScrollingView\n");
+              if (focusView)
+                printf("Got view for document frame!\n");
+              else      // hopefully we won't be here
+                printf("Couldn't get view for document frame\n");
 #endif
-        sv->ScrollByLines(((nsMouseScrollEvent*)aEvent)->deltaLines);
-        
-        // force the update to happen now, otherwise multiple scrolls can
-        // occur before the update is processed. (bug #7354)
-        nsIViewManager* vm = nsnull;
-        if (NS_OK == focusView->GetViewManager(vm) && nsnull != vm) {
-          // I'd use Composite here, but it doesn't always work.
-          // vm->Composite();
-          nsIView* rootView = nsnull;
-          if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
-            nsIWidget* rootWidget = nsnull;
-            if (NS_OK == rootView->GetWidget(rootWidget) && nsnull != rootWidget) {
-              rootWidget->Update();
-              NS_RELEASE(rootWidget);
+              
             }
           }
-          NS_RELEASE(vm);
+
+#ifdef DEBUG_scroll
+          printf("PostHandleEvent: focusFrame = %p, focusView = %p\n",
+                 focusFrame, focusView);
+#endif
+          
+          nsIScrollableView* sv = GetNearestScrollingView(focusView);
+          if (sv) {
+
+#ifdef DEBUG_scroll
+            printf("Found a ScrollingView\n");
+#endif
+            sv->ScrollByLines(numLines);
+        
+            // force the update to happen now, otherwise multiple scrolls can
+            // occur before the update is processed. (bug #7354)
+            nsIViewManager* vm = nsnull;
+            if (NS_OK == focusView->GetViewManager(vm) && nsnull != vm) {
+              // I'd use Composite here, but it doesn't always work.
+              // vm->Composite();
+              nsIView* rootView = nsnull;
+              if (NS_OK == vm->GetRootView(rootView) && nsnull != rootView) {
+                nsIWidget* rootWidget = nsnull;
+                if (NS_OK == rootView->GetWidget(rootWidget) &&
+                    nsnull != rootWidget) {
+                  rootWidget->Update();
+                  NS_RELEASE(rootWidget);
+                }
+              }
+              NS_RELEASE(vm);
+            }
+          } else {
+#ifdef DEBUG_scroll
+            printf("No scrolling view, looking for a scrolling frame\n");
+#endif
+            if (!sf)
+              sf = GetNearestSelfScrollingFrame(focusFrame);
+            if (sf) {
+#ifdef DEBUG_scroll
+              printf("Found a scrolling frame\n");
+#endif
+              sf->ScrollByLines(aPresContext, numLines);
+              // Do we need to do something here like above?
+            }
+#ifdef DEBUG_scroll
+            else
+              printf("Could not find a scrolling frame\n");
+#endif
+          }
         }
-      } else {
-#ifdef DEBUG_scroll
-        printf("No scrolling view, looking for a scrolling frame\n");
-#endif
-        if (!sf)
-          sf = GetNearestSelfScrollingFrame(focusFrame);
-        if (sf) {
-#ifdef DEBUG_scroll
-          printf("Found a scrolling frame\n");
-#endif
-          sf->ScrollByLines(aPresContext,
-                            ((nsMouseScrollEvent*)aEvent)->deltaLines);
-          // Do we need to do something here like above?
+        break;
+      case MOUSE_SCROLL_PAGE:
+        if (!mCurrentFocus) {
+          nsIScrollableView* sv = GetNearestScrollingView(aView);
+          if (sv) {
+            sv->ScrollByPages((numLines > 0) ? 1 : -1);
+          }
         }
-#ifdef DEBUG_scroll
-        else
-          printf("Could not find a scrolling frame\n");
-#endif
+        break;
+      case MOUSE_SCROLL_HISTORY:
+        {
+          nsCOMPtr<nsIWebShell> webShell;
+          mPresContext->GetContainer(getter_AddRefs(webShell));
+          if (nsnull != webShell) {
+            nsCOMPtr<nsIWebShell> root;
+              webShell->GetRootWebShell(*getter_AddRefs(root));
+              if (nsnull != root) {
+                nsCOMPtr<nsISessionHistory> sHist;
+                root->GetSessionHistory(*getter_AddRefs(sHist));
+                if (sHist) {
+                  if (numLines > 0)
+                  {
+                    sHist->GoBack(root);
+                  }
+                  else
+                  {
+                    sHist->GoForward(root);
+                  }
+                }
+              }
+          }
+        }
+        break;
+        
       }
     }
-    break;
 
+    break;
+  
   case NS_DRAGDROP_DROP:
   case NS_DRAGDROP_EXIT:
     // clean up after ourselves. make sure we do this _after_ the event, else we'll

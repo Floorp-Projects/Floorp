@@ -34,6 +34,20 @@
 		debug="false">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+<html:script language="javascript">
+
+function toggleField(aField, aCheckbox)
+{
+  var field = document.getElementById(aField);
+  var check = document.getElementById(aCheckbox);
+  if (check.checked)
+    field.setAttribute("disabled", "true);
+  else
+    field.removeAttribute("disabled");
+}
+
+</html:script>
+
 <box class="header" align="horizontal">  
       <titledbutton class="left-header-text" value="&info.label;"/>
 	  <spring class="header-spring" flex="1"/>
@@ -49,16 +63,21 @@
 	<html:tr>
 	<html:td>
 		<html:label>
-		<html:input name="nonedefault" type="radio" id="pref:0:int:mousewheel.withnokey" val="checked" />
+		<html:input name="nonedefault" type="radio" id="pref:0:int:mousewheel.withnokey.action" val="checked" />
 		&numberoflines.label;
 		</html:label>
 		<html:input name="nonenumlines" type="text" size="4" id="pref:int:mousewheel.withnokey.numlines" />
+		<html:label>
+		<html:input name="nonesysnumlines" type="checkbox" id="pref:0:bool:mousewheel.withnokey.sysnumlines"
+          onclick="toggleField('pref:int:mousewheel.withnokey.numlines', 'pref:0:bool:mousewheel.withnokey.sysnumlines');" />
+		&sysdefault.label;
+		</html:label>
 	</html:td>
 	</html:tr>
 	<html:tr>
 	<html:td>
 		<html:label>
-		<html:input name="nonedefault" type="radio" id="pref:1:int:mousewheel.withnokey" />
+		<html:input name="nonedefault" type="radio" id="pref:1:int:mousewheel.withnokey.action" />
 		&pageup.label;
 		</html:label>
 	</html:td>
@@ -66,7 +85,7 @@
 	<html:tr>
 	<html:td>
 		<html:label>
-		<html:input name="nonedefault" type="radio" id="pref:2:int:mousewheel.withnokey" />
+		<html:input name="nonedefault" type="radio" id="pref:2:int:mousewheel.withnokey.action" />
 		&history.label;
 		</html:label>
 	</html:td>
@@ -81,16 +100,21 @@
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="controldefault" type="radio" id="pref:0:int:mousewheel.withcontrolkey" val="checked" />
+		<html:input name="controldefault" type="radio" id="pref:0:int:mousewheel.withcontrolkey.action" val="checked" />
 		&numberoflines.label;
 	</html:label>
 	<html:input name="controlnumlines" type="text" size="4" id="pref:int:mousewheel.withcontrolkey.numlines" />
+	<html:label>
+		<html:input name="controlsysnumlines" type="checkbox" id="pref:0:bool:mousewheel.withcontrolkey.sysnumlines"
+          onclick="toggleField('pref:int:mousewheel.withcontrolkey.numlines', 'pref:0:bool:mousewheel.withcontrolkey.sysnumlines');" />
+		&sysdefault.label;
+	</html:label>
 	</html:td>
 	</html:tr>
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="controldefault" type="radio" id="pref:1:int:mousewheel.withcontrolkey" />
+		<html:input name="controldefault" type="radio" id="pref:1:int:mousewheel.withcontrolkey.action" />
 		&pageup.label;
 	</html:label>
 	</html:td>
@@ -98,7 +122,7 @@
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="controldefault" type="radio" id="pref:2:int:mousewheel.withcontrolkey" />
+		<html:input name="controldefault" type="radio" id="pref:2:int:mousewheel.withcontrolkey.action" />
 		&history.label;
 		</html:label>
 	</html:td>
@@ -113,16 +137,21 @@
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="shiftdefault" type="radio" id="pref:0:int:mousewheel.withshiftkey" val="checked" />
+		<html:input name="shiftdefault" type="radio" id="pref:0:int:mousewheel.withshiftkey.action" val="checked" />
 		&numberoflines.label;
 	</html:label>
 	<html:input name="shiftnumlines" type="text" size="4" id="pref:int:mousewheel.withshiftkey.numlines" />
+	<html:label>
+		<html:input name="shiftsysnumlines" type="checkbox" id="pref:0:bool:mousewheel.withshiftkey.sysnumlines"
+          onclick="toggleField('pref:int:mousewheel.withshiftkey.numlines', 'pref:0:bool:mousewheel.withshiftkey.sysnumlines');" />
+		&sysdefault.label;
+	</html:label>
 	</html:td>
 	</html:tr>
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="shiftdefault" type="radio" id="pref:1:int:mousewheel.withshiftkey" />
+		<html:input name="shiftdefault" type="radio" id="pref:1:int:mousewheel.withshiftkey.action" />
 		&pageup.label;
 	</html:label>
 	</html:td>
@@ -130,7 +159,7 @@
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="shiftdefault" type="radio" id="pref:2:int:mousewheel.withshiftkey" />
+		<html:input name="shiftdefault" type="radio" id="pref:2:int:mousewheel.withshiftkey.action" />
 		&history.label;
 	</html:label>
 	</html:td>
@@ -145,15 +174,20 @@
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="altdefault" type="radio" id="pref:0:int:mousewheel.withaltkey" val="checked" />
+		<html:input name="altdefault" type="radio" id="pref:0:int:mousewheel.withaltkey.action" val="checked" />
 		&numberoflines.label;
 	</html:label>
-		<html:input name="altnumlines" type="text" size="4" id="pref:int:mousewheel.withaltkey.numlines" />
+	<html:input name="altnumlines" type="text" size="4" id="pref:int:mousewheel.withaltkey.numlines" />
+	<html:label>
+		<html:input name="altsysnumlines" type="checkbox" id="pref:0:bool:mousewheel.withaltkey.sysnumlines"
+          onclick="toggleField('pref:int:mousewheel.withaltkey.numlines', 'pref:0:bool:mousewheel.withaltkey.sysnumlines');" />
+		&sysdefault.label;
+	</html:label>
 	</html:td></html:tr>
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="altdefault" type="radio" id="pref:1:int:mousewheel.withaltkey" />
+		<html:input name="altdefault" type="radio" id="pref:1:int:mousewheel.withaltkey.action" />
 		&pageup.label;
 	</html:label>
 	</html:td>
@@ -161,7 +195,7 @@
 	<html:tr>
 	<html:td>
 	<html:label>
-		<html:input name="altdefault" type="radio" id="pref:2:int:mousewheel.withaltkey" />
+		<html:input name="altdefault" type="radio" id="pref:2:int:mousewheel.withaltkey.action" />
 		&history.label;
 	</html:label>
 	</html:td>
