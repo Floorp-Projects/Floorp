@@ -832,6 +832,7 @@ PRInt32 ConsumeAttributeValueText(PRUnichar,nsString& aString,CScanner& aScanner
 nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   aScanner.SkipWhitespace();             //skip leading whitespace                                      
+  static nsAutoString kAllButEqualOrGT("=>");
   nsresult result=aScanner.Peek(aChar);
   if(NS_OK==result) {
     if(kQuote==aChar) {               //if you're here, handle quoted key...
@@ -857,25 +858,28 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
       //now it's time to Consume the (optional) value...
     if(NS_OK == (result=aScanner.SkipWhitespace())) { 
-      if(NS_OK == (result=aScanner.Peek(aChar))) {
-        if(kEqual==aChar){
-          result=aScanner.GetChar(aChar);  //skip the equal sign...
-          if(NS_OK==result) {
-            result=aScanner.SkipWhitespace();     //now skip any intervening whitespace
+      //Skip ahead until you find an equal sign or a '>'...
+      if(NS_OK == (result=aScanner.SkipTo(kAllButEqualOrGT))) { 
+        if(NS_OK == (result=aScanner.Peek(aChar))) {  
+          if(kEqual==aChar){
+            result=aScanner.GetChar(aChar);  //skip the equal sign...
             if(NS_OK==result) {
-              result=aScanner.GetChar(aChar);  //and grab the next char.    
+              result=aScanner.SkipWhitespace();     //now skip any intervening whitespace
               if(NS_OK==result) {
-                if((kQuote==aChar) || (kApostrophe==aChar)) {
-                  mTextValue=aChar;
-                  result=ConsumeQuotedString(aChar,mTextValue,aScanner);
-                }
-                else {      
-                  mTextValue=aChar;       //it's an alphanum attribute...
-                  result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
-                } 
+                result=aScanner.GetChar(aChar);  //and grab the next char.    
+                if(NS_OK==result) {
+                  if((kQuote==aChar) || (kApostrophe==aChar)) {
+                    mTextValue=aChar;
+                    result=ConsumeQuotedString(aChar,mTextValue,aScanner);
+                  }
+                  else {      
+                    mTextValue=aChar;       //it's an alphanum attribute...
+                    result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
+                  } 
+                }//if
+                if(NS_OK==result)
+                  result=aScanner.SkipWhitespace();     
               }//if
-              if(NS_OK==result)
-                result=aScanner.SkipWhitespace();     
             }//if
           }//if
         }//if
