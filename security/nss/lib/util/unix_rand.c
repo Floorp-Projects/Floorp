@@ -514,6 +514,45 @@ GiveSystemInfo(void)
 }
 #endif /* sinix */
 
+#if defined(VMS)
+#include <c_asm.h>
+
+static void
+GiveSystemInfo(void)
+{
+    long si;
+ 
+    /* 
+     * This is copied from the SCO/UNIXWARE etc section. And like the comment
+     * there says, what's the point? This isn't random, it generates the same
+     * stuff every time its run!
+     */
+    si = sysconf(_SC_CHILD_MAX);
+    RNG_RandomUpdate(&si, sizeof(si));
+ 
+    si = sysconf(_SC_STREAM_MAX);
+    RNG_RandomUpdate(&si, sizeof(si));
+ 
+    si = sysconf(_SC_OPEN_MAX);
+    RNG_RandomUpdate(&si, sizeof(si));
+}
+ 
+/*
+ * Use the "get the cycle counter" instruction on the alpha.
+ * The low 32 bits completely turn over in less than a minute.
+ * The high 32 bits are some non-counter gunk that changes sometimes.
+ */
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    unsigned long t;
+ 
+    t = asm("rpcc %v0");
+    return CopyLowBits(buf, maxbytes, &t, sizeof(t));
+}
+ 
+#endif /* VMS */
+
 #if defined(nec_ews)
 #include <sys/systeminfo.h>
 
@@ -680,6 +719,8 @@ safe_pclose(FILE *fp)
     return status;
 }
 
+
+#if !defined(VMS)
 void RNG_SystemInfoForRNG(void)
 {
     FILE *fp;
@@ -758,6 +799,65 @@ for the small amount of entropy it provides.
 	RNG_FileForRNG(*cp);
 
 }
+#else
+void RNG_SystemInfoForRNG(void)
+{
+    FILE *fp;
+    char buf[BUFSIZ];
+    size_t bytes;
+    int extra;
+    extern char **environ;
+    char **cp;
+    char *randfile;
+ 
+    GiveSystemInfo();
+ 
+    bytes = RNG_GetNoise(buf, sizeof(buf));
+    RNG_RandomUpdate(buf, bytes);
+ 
+    /*
+     * Pass the C environment and the addresses of the pointers to the
+     * hash function. This makes the random number function depend on the
+     * execution environment of the user and on the platform the program
+     * is running on.
+     */
+    cp = environ;
+    while (*cp) {
+	RNG_RandomUpdate(*cp, strlen(*cp));
+	cp++;
+    }
+    RNG_RandomUpdate(environ, (char*)cp - (char*)environ);
+ 
+    /* Give in system information */
+    if (gethostname(buf, sizeof(buf)) > 0) {
+	RNG_RandomUpdate(buf, strlen(buf));
+    }
+    GiveSystemInfo();
+ 
+    /* If the user points us to a random file, pass it through the rng */
+    randfile = getenv("NSRANDFILE");
+    if ( ( randfile != NULL ) && ( randfile[0] != '\0') ) {
+	RNG_FileForRNG(randfile);
+    }
+
+    /*
+    ** We need to generate at least 1024 bytes of seed data. Since we don't
+    ** do the file stuff for VMS, and because the environ list is so short
+    ** on VMS, we need to make sure we generate enough. So do another 1000
+    ** bytes to be sure.
+    */
+    extra = 1000;
+    while (extra > 0) {
+        cp = environ;
+        while (*cp) {
+	    int n = strlen(*cp);
+	    RNG_RandomUpdate(*cp, n);
+	    extra -= n;
+	    cp++;
+        }
+    }
+}
+#endif
 
 void RNG_FileForRNG(char *fileName)
 {
