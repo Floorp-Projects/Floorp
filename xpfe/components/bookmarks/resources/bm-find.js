@@ -122,9 +122,8 @@ function saveFind()
 
   var searchTitle = "Find: " + gMatchName + " " + gMethodName + " '" + gTextName + "' in " + gDatasourceName;
   var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                       .getService()
-                       .QueryInterface(Components.interfaces.nsIBookmarksService)
-                       .AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE, null);
+                       .getService(Components.interfaces.nsIBookmarksService);
+      bmks = bmks.AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE, null);
   return true;
 }
 
