@@ -57,13 +57,15 @@ LIBS = \
 	-lraptorhtmlpars \
 	-lexpat \
 	-lxmltok \
-	-lraptorgfx	\
 	-ljsdom	\
 	-ljsurl	\
 	-limg	\
 	-lpng	\
 	-ljpeg	\
 	-lxp	\
+	-lgfxgtk    \
+	-lraptorgfx \
+	-lgfxps \
 	-lmozutil \
 	-lsecfree \
 	$(ZLIB_LIBS) \
