@@ -85,11 +85,7 @@ endif
 $(SHARED_LIBRARY): $(CILIB) $(DIRS)
 
 cilib_name:
-ifeq ($(CILIB), $(patsubst /%,/,$(CILIB)))
-	@echo $(shell pwd)"/"$(CILIB)
-else
 	@echo $(CILIB)
-endif
 
 $(CILIB):
 	@$(MAKE_OBJDIR)

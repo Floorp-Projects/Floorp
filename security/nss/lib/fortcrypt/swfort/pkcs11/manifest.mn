@@ -37,12 +37,13 @@ MODULE		= security
 LIBRARY_NAME	= swft
 #LIBRARY_VERSION	= 32
 
-BUILT_CSRCS	= $(OBJDIR)/forsock.c  \
-		  $(OBJDIR)/fortpk11.c \
-		  $(OBJDIR)/fmutex.c   \
+COPIED_CSRCS	= forsock.c  \
+		  fortpk11.c \
+		  fmutex.c   \
 		  $(NULL)
 
 CSRCS		= \
+		  $(COPIED_CSRCS) \
 		  stub.c \
 		  $(NULL)
 
