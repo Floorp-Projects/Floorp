@@ -21,7 +21,7 @@ bugzilla.mozilla.org unless otherwise specified.
 
 *** Recommended Practice For The Upgrade ***
 
-As always, please ensure you have ran checksetup.pl after
+As always, please ensure you have run checksetup.pl after
 replacing the files in your installation.
 
 It is recommended that you view the sanity check page
@@ -136,7 +136,7 @@ fix the problem on your installation.
   (bug 130821)
 
 ***********************************************
-*** USERS UPGRADING FROM 2.16.1 OR EARLIER  ***
+*** USERS UPGRADING FROM 2.16.2 OR EARLIER  ***
 ***********************************************
 
 *** SECURITY ISSUES RESOLVED ***
@@ -147,9 +147,26 @@ fix the problem on your installation.
 
 *** Bug fixes of note ***
 
-*********************************************
-*** USERS UPGRADING FROM 2.16 OR EARLIER  ***
-*********************************************
+*****************************************************************
+*** USERS UPGRADING FROM 2.16.1 OR EARLIER, 2.14.4 OR EARLIER ***
+*****************************************************************
+
+*** SECURITY ISSUES RESOLVED ***
+
+- Fixed a cross site scriptability issue in quips.  This is only a problem
+  if quips with HTML could have been inserted into your quips files.  Bugzilla
+  has not allowed this since 2.12.
+  (bug 179329)
+- checksetup.pl will now attempt to prevent access to "editor backups" of
+  localconfig.
+  (bug 186383)
+- collectstats.pl no longer makes data/mining (which contains graphing
+  information) world writeable.
+  (bug 183188)
+
+***********************************************
+*** USERS UPGRADING FROM 2.16.0 OR EARLIER  ***
+***********************************************
 
 *** SECURITY ISSUES RESOLVED ***
 
@@ -190,7 +207,7 @@ See also next major section.
 See also next section.
 
 ******************************************************
-*** USERS UPGRADING FROM 2.14.3 OR EARLIER, 2.16.0 ***
+*** USERS UPGRADING FROM 2.16.0, 2.14.3 OR EARLIER ***
 ******************************************************
 
 *** SECURITY ISSUES RESOLVED ***
@@ -218,7 +235,7 @@ See also next section.
   (bug 160631)
 
 ***********************************************
-*** USERS UPGRADING FROM 2.14.4 OR EARLIER  ***
+*** USERS UPGRADING FROM 2.14.5 OR EARLIER  ***
 ***********************************************
 
 *** SECURITY ISSUES RESOLVED ***
@@ -433,6 +450,13 @@ See also next section.
 - QA contacts now receive emails when a new bug is created and
   their only email preference was being added or removed from QA.
   (bug 143091)
+
+***********************************************
+*** USERS UPGRADING FROM 2.14.4 OR EARLIER  ***
+***********************************************
+
+See section above about users upgrading from 2.16.1 or earlier,
+2.14.4 or earlier.
 
 ***********************************************
 *** USERS UPGRADING FROM 2.14.3 OR EARLIER  ***
