@@ -73,6 +73,9 @@ LINCS= \
     -I$(PUBLIC)\network \
     -I$(PUBLIC)\mimetype \
     -I$(PUBLIC)\security \
+!ifdef MOZ_SMOOTH_PROGRESS
+    -I$(PUBLIC)\progress \
+!endif
     $(NULL)
 #!endif
 

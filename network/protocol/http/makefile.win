@@ -75,6 +75,10 @@ LINCS= \
     -I$(PUBLIC)\netcache	\
     -I$(PUBLIC)\network \
     -I$(PUBLIC)\mimetype \
+!ifdef MOZ_SMOOTH_PROGRESS
+    -I$(PUBLIC)\progress        \
+!endif
+    $(NULL)
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 
