@@ -44,6 +44,7 @@ var gCurrentLoadingFolderURI;
 var gCurrentLoadingFolderIsThreaded = false;
 var gCurrentLoadingFolderSortID ="";
 
+
 // get the messenger instance
 var messenger = Components.classes[messengerProgID].createInstance();
 messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
@@ -52,6 +53,8 @@ messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 var accountManagerDataSource = Components.classes[accountManagerDSProgID].createInstance();
 var folderDataSource         = Components.classes[folderDSProgID].createInstance();
 var messageDataSource        = Components.classes[messageDSProgID].createInstance();
+
+var pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
 
 //Create windows status feedback
 var statusFeedback           = Components.classes[statusFeedbackProgID].createInstance();
@@ -148,6 +151,41 @@ function OnLoadMessenger()
     loadStartFolder();
 
     AddToSession();
+
+	var id = null;
+	var headerchoice = null;
+
+	try {
+		headerchoice = pref.GetIntPref("mail.show_headers");
+	}
+	catch (ex) {
+		dump("failed to get the header pref\n");
+	}
+
+	switch (headerchoice) {
+		case 2:	
+			id = "viewallheaders";
+			break;
+		case 0:
+			id = "viewbriefheaders";
+			break;
+		case 1:	
+			id = "viewnormalheaders";
+			break;
+		default:
+			id = "viewnormalheaders";
+			break;
+	}
+
+	var menuitem = document.getElementById(id);
+
+	try {
+		// not working right yet.  see bug #??????
+		// menuitem.setAttribute("checked", "true"); 
+	}
+	catch (ex) {
+		dump("failed to set the view headers menu item\n");
+	}
 }
 
 function OnUnloadMessenger()
@@ -218,8 +256,6 @@ function loadStartPage() {
 	var startpage = "about:blank";
 
     try {
-        var pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
-
 		startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
         
 		if (startpageenabled)
@@ -238,8 +274,6 @@ function loadStartFolder()
 {
 	//Load StartFolder
     try {
-        var pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
-        
         var startFolder = pref.CopyCharPref("mailnews.start_folder");
         //ChangeFolderByURI(startFolder);
 		//	var folder = OpenFolderTreeToFolder(startFolder);

@@ -237,11 +237,11 @@ Rights Reserved.
         <menuitem value="&ignoreThreadMsgsCmd.label;" oncommand="MsgViewIgnoreThread();"/>
 		</menupopup>
       </menu>
-      <menu value="&headersMenu.label;">
+      <menu id="viewheadersmenu" value="&headersMenu.label;">
         <menupopup>
-		<menuitem value="&headersAllCmd.label;" oncommand="MsgViewAllHeaders();"/>
-        <menuitem value="&headersNormalCmd.label;" oncommand="MsgViewNormalHeaders();"/>
-        <menuitem value="&headersBriefCmd.label;" oncommand="MsgViewBriefHeaders();"/>
+		<menuitem id="viewallheaders" type="radio" name="viewheadergroup" value="&headersAllCmd.label;" oncommand="MsgViewAllHeaders();"/>
+        <menuitem id="viewnormalheaders" type="radio" name="viewheadergroup" value="&headersNormalCmd.label;" oncommand="MsgViewNormalHeaders();"/>
+        <menuitem id="viewbriefheaders" type="radio" name="viewheadergroup" value="&headersBriefCmd.label;" oncommand="MsgViewBriefHeaders();"/>
 		</menupopup>
       </menu>
       <menuseparator/>

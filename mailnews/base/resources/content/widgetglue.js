@@ -801,17 +801,20 @@ function MsgViewIgnoreThread() {}
 function MsgViewAllHeaders() 
 {
 	prefs.SetIntPref("mail.show_headers",2);
-	MsgReload()
+	MsgReload();
+	return true;
 }
 function MsgViewNormalHeaders() 
 {
 	prefs.SetIntPref("mail.show_headers",1);
-	MsgReload()
+	MsgReload();
+	return true;
 }
 function MsgViewBriefHeaders() 
 {
 	prefs.SetIntPref("mail.show_headers",0);
-	MsgReload()
+	MsgReload();
+	return true;
 }
 
 function MsgViewAttachInline() {}
