@@ -19,9 +19,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIUrlListener.idl"
 
 interface nsIURL;
+interface nsIUrlListener;
 interface nsIStreamListener;
 
 %{C++

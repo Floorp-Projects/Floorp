@@ -7,12 +7,12 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsrootidl.h" /* interface nsrootidl */
-#include "nsIUrlListener.h" /* interface nsIUrlListener */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
 class nsIURL; /* forward decl */
+class nsIUrlListener; /* forward decl */
 class nsIStreamListener; /* forward decl */
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
