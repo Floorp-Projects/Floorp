@@ -401,7 +401,7 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
         if (aNaturalOrderPos > 0)
 	    {
             // XXX Add this to menu builder as well, or better yet, abstract out.
-		    nsAutoString	pos, zero("0");;
+		    nsAutoString	pos, zero("0000");
 		    pos.Append(aNaturalOrderPos, 10);
 		    if (pos.Length() < 4)
 		    {
