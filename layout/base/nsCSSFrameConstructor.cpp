@@ -377,10 +377,8 @@ struct nsTableCreator {
   virtual nsresult CreateTableColGroupFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
-//MathML Mod - RBS
-#ifdef MOZ_MATHML
   virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
-#endif
+
   virtual PRBool IsTreeCreator() { return PR_FALSE; };
 };
 
@@ -419,6 +417,11 @@ nsTableCreator::CreateTableCellFrame(nsIFrame** aNewFrame) {
   return NS_NewTableCellFrame(aNewFrame);
 }
 
+nsresult
+nsTableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
+  return NS_NewTableCellInnerFrame(aNewFrame);
+}
+
 #ifdef INCLUDE_XUL
 
 // Structure used when creating tree frames
@@ -428,6 +431,7 @@ struct nsTreeCreator: public nsTableCreator {
   nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
   nsresult CreateTableRowGroupFrame(nsIFrame** aNewFrame);
   nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
+  nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
 
   PRBool IsTreeCreator() { return PR_TRUE; };
 };
@@ -461,14 +465,15 @@ nsTreeCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
   return NS_NewTreeRowFrame(aNewFrame);
 }
 
+nsresult
+nsTreeCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
+  return NS_NewBoxFrame(aNewFrame);
+}
+
 #endif // INCLUDE_XUL
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
-nsresult
-nsTableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableCellInnerFrame(aNewFrame);
-}
 
 // Structure used when creating MathML mtable frames
 struct nsMathMLmtableCreator: public nsTableCreator {
@@ -1754,12 +1759,8 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
                       nsnull);
 
   // Create an area frame that will format the cell's content
-//MathML Mod - RBS
-#ifdef MOZ_MATHML
   rv = aTableCreator.CreateTableCellInnerFrame(&aNewCellBodyFrame);
-#else
-  rv = NS_NewTableCellInnerFrame(&aNewCellBodyFrame);
-#endif
+
   if (NS_FAILED(rv)) {
     aNewCellFrame->Destroy(aPresContext);
     aNewCellFrame = nsnull;
@@ -3560,6 +3561,8 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
       content = do_QueryInterface(node);
       anonymousItems->AppendElement(content);
       content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, nsAutoString("tree-icon"), PR_FALSE);
+      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, nsAutoString("1"), PR_FALSE);
+      
       boxElement = do_QueryInterface(content);
 
       // Make the indentation.
@@ -3601,6 +3604,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresContext*  aPresConte
     aParent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
     if (crop == "") crop = "right";
     buttonContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
+    buttonContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, nsAutoString("1"), PR_FALSE);
 
     nsAutoString align;
     aParent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align);
