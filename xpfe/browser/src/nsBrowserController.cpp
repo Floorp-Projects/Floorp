@@ -86,7 +86,7 @@ nsBrowserController::Initialize(nsIDOMDocument* aDocument, nsISupports* aContain
   if (NS_SUCCEEDED(rv)) {
     nsAutoString name("browser.webwindow");
 
-    rv = mWebShell->FindChildWithName(name, mWebWindow);
+    rv = mWebShell->FindChildWithName(name.GetUnicode(), mWebWindow);
     /*
      * If a web shell was found, then hook up an IDOMLoadEvent listener
      */
@@ -168,7 +168,7 @@ nsresult nsBrowserController::KeyUp(nsIDOMEvent* aKeyEvent)
           nsAutoString name;
 
           element->GetValue(name);
-          mWebWindow->LoadURL(name);
+          mWebWindow->LoadURL(name.GetUnicode());
           NS_RELEASE(element);
         }
       }
