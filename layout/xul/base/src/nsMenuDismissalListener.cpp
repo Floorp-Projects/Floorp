@@ -109,8 +109,10 @@ nsMenuDismissalListener::Rollup()
 {
   if (mEnabled) {
     if (mMenuParent) {
+      AddRef();
       mMenuParent->HideChain();
       mMenuParent->DismissChain();
+      Release();
     }
     else
       Unregister();

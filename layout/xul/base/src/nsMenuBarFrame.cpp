@@ -452,6 +452,12 @@ nsMenuBarFrame::Enter()
 NS_IMETHODIMP
 nsMenuBarFrame::HideChain()
 {
+  // Stop capturing rollups
+  // (must do this during Hide, which happens before the menu item is executed,
+  // since this reinstates normal event handling.)
+  if (nsMenuFrame::mDismissalListener)
+    nsMenuFrame::mDismissalListener->Unregister();
+
   if (mCurrentMenu) {
     mCurrentMenu->ActivateMenu(PR_FALSE);
     mCurrentMenu->SelectMenu(PR_FALSE);
