@@ -1101,12 +1101,6 @@ NS_IMETHODIMP nsMsgCompose::GetProgress(nsIMsgComposeProgress **_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgCompose::SetMessageSend(nsIMsgSend *msgSend)
-{
-  mMsgSend = msgSend;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgCompose::GetMessageSend(nsIMsgSend **_retval)
 {
   NS_ENSURE_ARG(_retval);
@@ -1821,9 +1815,6 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 			compose->NotifyStateListeners(eComposeProcessDone);
       if (progress)
         progress->CloseProgress(PR_TRUE);
-
-      // Need to relelase the mComposeObj...
-      compose->SetMessageSend(nsnull);
 		}
 	}
 

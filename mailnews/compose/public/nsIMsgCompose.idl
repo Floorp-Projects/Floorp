@@ -207,9 +207,6 @@ interface nsIMsgCompose : nsISupports {
   /* Retreive the progress object */
   [nocript] nsIMsgComposeProgress getProgress();
   
-  /* Set the message send object */
-  [nocript] void setMessageSend(in nsIMsgSend msgSend);
-  
   /* Retreive the message send object */
   [nocript] nsIMsgSend getMessageSend();
   
