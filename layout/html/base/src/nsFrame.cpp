@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsFrame.h"
+#include "nsFrameList.h"
 #include "nsLineLayout.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -243,6 +244,10 @@ nsFrame::AppendFrames(nsIPresContext& aPresContext,
 #if 0
   return NS_ERROR_UNEXPECTED;
 #else
+#ifdef NS_DEBUG
+  nsFrameList tmp(aFrameList);
+  tmp.VerifyParent(this);
+#endif
   // XXX temporary code until frame containers stop using the old
   // reflow command api's
   nsIReflowCommand* reflowCmd = nsnull;
@@ -271,11 +276,25 @@ nsFrame::InsertFrames(nsIPresContext& aPresContext,
 #if 0
   return NS_ERROR_UNEXPECTED;
 #else
+#ifdef NS_DEBUG
+  nsFrameList tmp(aFrameList);
+  tmp.VerifyParent(this);
+#endif
+
   // XXX temporary code until frame containers stop using the old
   // reflow command api's
+
+  // By default, the reflow command is aimed at the first-in-flow. We
+  // map that to the flow block that contains aPrevFrame for
+  // compatability.
+  nsIFrame* target = this;
+  if (nsnull != aPrevFrame) {
+    aPrevFrame->GetParent(target);
+  }
+
   nsIReflowCommand* reflowCmd = nsnull;
   nsresult rv;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, this, aFrameList, aPrevFrame);
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, target, aFrameList, aPrevFrame);
   if (NS_SUCCEEDED(rv)) {
     if (nsnull != aListName) {
       reflowCmd->SetChildListName(aListName);
@@ -288,16 +307,6 @@ nsFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::ReplaceFrame(nsIPresContext& aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aOldFrame,
-                      nsIFrame*       aNewFrame)
-{
-  return NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
 nsFrame::RemoveFrame(nsIPresContext& aPresContext,
                      nsIPresShell&   aPresShell,
                      nsIAtom*        aListName,
@@ -306,11 +315,26 @@ nsFrame::RemoveFrame(nsIPresContext& aPresContext,
 #if 0
   return NS_ERROR_UNEXPECTED;
 #else
+#ifdef NS_DEBUG
+  nsIFrame* parent;
+  aOldFrame->GetParent(parent);
+  NS_ASSERTION(parent == this, "bad child parent");
+#endif
+
   // XXX temporary code until frame containers stop using the old
   // reflow command api's
+
+  // By default, the reflow command is aimed at the first-in-flow. We
+  // map that to the flow block that contains aPrevFrame for
+  // compatability.
+  nsIFrame* target = this;
+  if (nsnull != aOldFrame) {
+    aOldFrame->GetParent(target);
+  }
+
   nsIReflowCommand* reflowCmd = nsnull;
   nsresult rv;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, target,
                                nsIReflowCommand::FrameRemoved,
                                aOldFrame);
   if (NS_SUCCEEDED(rv)) {
@@ -1541,6 +1565,7 @@ NS_IMETHODIMP nsFrame::GetNextSibling(nsIFrame*& aNextSibling) const
 
 NS_IMETHODIMP nsFrame::SetNextSibling(nsIFrame* aNextSibling)
 {
+  NS_ASSERTION(aNextSibling != this, "attempt to create circular frame list");
   mNextSibling = aNextSibling;
   return NS_OK;
 }
