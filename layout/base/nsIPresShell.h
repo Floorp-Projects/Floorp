@@ -59,6 +59,10 @@ public:
 
   virtual nsIStyleSet* GetStyleSet() = 0;
 
+  NS_IMETHOD EnterReflowLock() = 0;
+
+  NS_IMETHOD ExitReflowLock() = 0;
+
   // Make shell be a document observer
   virtual void BeginObservingDocument() = 0;
 
