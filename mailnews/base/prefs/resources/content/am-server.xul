@@ -116,8 +116,7 @@ Contributors:
              observes="broadcaster_doBiff"
              preftype="int"
              prefstring="mail.server.%serverkey%.check_time"/>
-    <label id="biffEnd" control="server.biffMinutes" value="&biffEnd.label;"
-           observes="broadcaster_doBiff"/>
+    <label id="biffEnd" control="server.biffMinutes" value="&biffEnd.label;"/>
   </hbox>
   <!-- POP3 -->
   <vbox iscontrolcontainer="true" align="start">

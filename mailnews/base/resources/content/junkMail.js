@@ -202,13 +202,12 @@ function conditionallyEnableUI(id)
     var checked = document.getElementById("purge").checked;
     document.getElementById("purge").disabled = !enabled;
     document.getElementById("purgeInterval").disabled = !enabled || !checked;
-    document.getElementById("purgeLabel").disabled = !enabled || !checked;
+    document.getElementById("purgeLabel").disabled = !enabled;
   }
 
   if (id == "purge") {
     enabled = document.getElementById("purge").checked;
     document.getElementById("purgeInterval").disabled = !enabled;
-    document.getElementById("purgeLabel").disabled = !enabled;
   }
 
   if (!id || id == "useWhiteList") {
