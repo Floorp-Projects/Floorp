@@ -2,12 +2,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"[
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
     %brandDTD;
-]
->
-#
-#Contributors:
-#  David Tenser <david.tenser@comhem.se> (original author)
-
+]>
+<!--
+Contributors:
+  David Tenser <david.tenser@comhem.se> (original author)
+-->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<title>Managing Cookies</title>
@@ -26,7 +25,6 @@
     <li><a href="#what_is_a_cookie">What is a Cookie?</a></li>
     <li><a href="#setting_up_cookie_rules">Setting Up Cookie Rules</a></li>
     <li><a href="#accepting_and_blocking_cookies">Accepting and Blocking Cookies</a></li>
-<!--XXXid-->
     <li><a href="#the_cookie_manager">Managing Cookies</a></li>
   </ul>
 </div>
@@ -45,120 +43,155 @@
 <p>Cookies can also store personally identifiable information. Personally identifiable
   information is information that can be used to identify or contact you, such as
   your name, e-mail address, home or work address, or telephone number. However, a
-  Web site only has access to the personal information that you provide. For
-  example, a Web site cannot determine your e-mail address unless you provide it. Also,
-  a Web site cannot gain access to other information on your computer.</p>
+  web site only has access to the personal information that you provide. For
+  example, a web site cannot determine your e-mail address unless you provide it. Also,
+  a web site cannot gain access to other information on your computer.</p>
 
 <p>When you use the default cookie settings, this activity is invisible to you,
-  and you won't know when a Web site is setting a cookie or when &brandShortName;
-  is sending a Web site its cookie. However, you can set your cookies options so that
+  and you won't know when a web site is setting a cookie or when &brandShortName;
+  is sending a web site its cookie. However, you can set your cookies options so that
   you will be asked before a cookie is set.</p>
 
 <h2 id="setting_up_cookie_rules">Setting Up Cookie Rules</h2>
 
-<div>
-By default &brandShortName; accepts all cookies. If you want to gain more control over
-what cookies are stored, follow these instructions:
+<p>By default &brandShortName; accepts all cookies. If you want to gain more control over
+what cookies are stored, follow these instructions:</p>
+
 <ol>
   <li>Select <span class="menuPath">Tools &gt; Options</span>.</li>
   <li>Click the Privacy panel and then click on the Cookies label.</li>
-  <li>Check the <em>Ask for each cookie</em> checkbox.</li>
+  <li>Select the <em>ask me every time</em> option from the <span class="menuPath">
+    Keep Cookies</span> combo box.</li>
 </ol>
-</div>
 
-<p><img src="http://mozilla.org/projects/firefox/help/0.9/cookie_ask.png" alt="" width="454" height="153"/><br/>
-After this is done, you may decide exactly which cookies should and should not be saved.
-</p>
+<p><img src="http://mozilla.org/projects/firefox/help/1.0rc1/cookie_ask.png" alt=""
+  width="557" height="282"/></p>
+
+<p>After this is done, you may decide exactly which cookies should and should not be saved.</p>
 
 <h3 id="other_settings">Other Settings</h3>
 
-<div>There are also other options that affect how cookies are managed by &brandShortName;.
-  They are not needed for the cookie rules to work but are explained anyway:
-<ul>
-  <li><strong>Enable Cookies</strong><br/>If you don't want any sites to store
-    cookies on your computer, uncheck this option. Note that some sites may not work
-    properly when cookies are disabled.</li>
-  <li><strong>for the originating Web site only</strong><br/>If &brandShortName;
-    stores a site's cookie, it will return the cookie only to that particular site.
-    &brandShortName; will not provide one site with cookies set by another. Since a Web
-    site can only receive its own cookies, it can learn about your activities while you
-    are at that site but not your activities in general while surfing the Web.<br/><br/>
-    However, sometimes a Web site displays content that is hosted on another site.
-    That content can be anything from an image to text or an advertisement. The other
-    Web site that hosts also has the ability to store a cookie in &brandShortName;, even
-    though you haven't visited the site directly.<br/><br/>
-    Cookies that are stored by a site other than the one you are visiting are called
-    third-party cookies or foreign cookies. Web sites sometimes use third-party
-    cookies with transparent GIFs, which are special images that help sites count
-    users, track email responses, learn more about how visitors use the site, or
-    customize your browsing experience. (Transparent GIFs are also known as web
-    beacons or web bugs.)<br/><br/>
-    When this checkbox is checked, it blocks these foreign cookies from being saved.</li>
-  <li><strong>for the current session only</strong><br/>If this option is selected,
-    the cookie information will be removed when you restart &brandShortName;. Web sites
-    requiring the use of cookies will still work, but if you restart &brandShortName;,
-    the Web site will think that you logged into the site for the first time again.</li>
-</ul>
-</div>
+<p>There are also other options that affect how cookies are managed by &brandShortName;.
+  They are not needed for the cookie rules to work but are explained anyway:</p>
+
+<dl>
+  <dt>Allow sites to set cookies</dt>
+  <dd><p>If you don't want any sites to store cookies on your computer, uncheck
+    this option. Note that some sites may not work properly when cookies are
+    disabled.</p></dd>
+  <dt>for the originating web site only</dt>
+  <dd>
+    <p>If &brandShortName; stores a site's cookie, it will return the cookie
+      only to that particular site.  &brandShortName; will not provide one site
+      with cookies set by another. Since a web site can only receive its own
+      cookies, it can learn about your activities while you are at that site
+      but not your activities in general while surfing the Web.</p>
+    <p>However, sometimes a web site displays content that is hosted on another
+      site. That content can be anything from an image to text or an
+      advertisement. The other web site that hosts also has the ability to
+      store a cookie in &brandShortName;, even though you haven't visited the
+      site directly.</p>
+    <p>Cookies that are stored by a site other than the one you are visiting
+      are called third-party cookies or foreign cookies. Web sites sometimes
+      use third-party cookies with transparent GIFs, which are special images
+      that help sites count users, track email responses, learn more about how
+      visitors use the site, or customize your browsing experience.
+      (Transparent GIFs are also known as web beacons or web bugs.) When this
+      checkbox is checked, it blocks these foreign cookies from being
+      saved.</p>
+  </dd>
+  <dt>Keep Cookies:</dt>
+  <dd>
+  <ul>
+    <li><strong>until they expire</strong>: If this option is selected, the
+      cookie information will be removed when they hit their expiration
+      date.</li>
+    <li><strong>until I close &brandShortName;:</strong> If this option is
+      selected, the cookie information will be removed when you restart
+      &brandShortName;. Web sites requiring the use of cookies will still
+      work, but if you restart &brandShortName;, the web site will think that
+      you logged into the site for the first time again.</li>
+    <li><strong>ask me every time:</strong> Display an alert every time a web
+      site tries to store a cookie to ask you if you want that cookie
+      stored.</li>
+  </ul>
+  </dd>
+</dl>
 
 <h2 id="accepting_and_blocking_cookies">Accepting and Blocking Cookies</h2>
-<div>
-Assuming that you've enabled the cookie rules explained above, you'll see a dialog
-whenever a site tries to save a cookie on your computer:<br/>
-<img src="http://mozilla.org/projects/firefox/help/0.9/cookie_accept.png" alt="" width="379" height="111"/>
-<ul>
-  <li><strong>Allowing a Cookie</strong><br/>To allow this particular cookie, just
-    click <em>Allow</em>. If you trust the site and don't want this dialog to be
-    shown each time the site tries to save a cookie, check the <em>Use my choice for all
-    cookies from this site</em> checkbox and then click <em>Allow</em>. &brandShortName;
-    will remember this and never ask about cookies for this site again. If you later regret
-    your choice, read about the <em>Cookie Manager</em>.</li>
-  <li><strong>Blocking a Cookie</strong><br/>If you don't want this cookie to be
-    saved, click Deny. If you don't trust the site or suspect that it's compromising
-    your privacy, check the <em>Use my choice for all cookies from this site</em>
-    checkbox and then click <em>Block</em>. &brandShortName; will then put this site
-    on the list of blocked sites and never save cookies for it. This choice can be
-    undone using the Cookie Manager.</li>
-</ul>
-</div>
 
-<!--XXXid-->
+<p>Assuming that you've enabled the cookie rules explained above, you'll see a
+  dialog whenever a site tries to save a cookie on your computer:</p>
+
+<p><img src="http://mozilla.org/projects/firefox/help/0.9/cookie_accept.png"
+  alt="" width="379" height="111"/></p>
+
+<dl>
+  <dt>Allowing a Cookie</dt>
+  <dd>To allow this particular cookie, just click <em>Allow</em>. If you trust
+    the site and don't want this dialog to be shown each time the site tries to
+    save a cookie, check the <em>Use my choice for all cookies from this
+    site</em> checkbox and then click <em>Allow</em>. &brandShortName; will
+    remember this and never ask about cookies for this site again. If you later
+    regret your choice, read about the <em>Cookie Manager</em>.</dd>
+  <dt>Blocking a Cookie</dt>
+  <dd>If you don't want this cookie to be saved, click Deny. If you don't trust
+    the site or suspect that it's compromising your privacy, check the <em>Use
+    my choice for all cookies from this site</em> checkbox and then click
+    <em>Block</em>. &brandShortName; will then put this site on the list of
+    blocked sites and never save cookies for it. This choice can be undone using
+    the Cookie Manager.</dd>
+</dl>
+
 <h2 id="the_cookie_manager">Managing Cookies</h2>
 
-<p>Use the Cookie Manager to view and remove cookies and manage per-site cookie options.
-It is accessible through the Cookies section in the Privacy tab of Options.</p>
+<p>Use the Cookie Manager to view and remove cookies and manage per-site cookie
+  options.  It is accessible through the Cookies section in the Privacy tab of
+  Options.</p>
 
 <h3 id="the_cookie_list">The Cookie List</h3>
-<p>
-<img src="http://mozilla.org/projects/firefox/help/0.9/cookie_manager.png" alt="" width="384" height="358"/><br/>
-The <em>Stored Cookies</em> dialog lists all cookies currently stored on your computer.
-You can select them to display more information about them.  Use the <em>Stored Cookies</em>
-button in cookies options to access this window.</p>
 
-<p>To remove a cookie from the list, select it and click <em>Remove Cookie</em>. To
-remove all cookies, click <em>Remove All Cookies</em>. (This is the same as clicking
-the <em>Clear</em> button from the <a href="prefs.xhtml#privacy_options">Privacy panel</a>
-of the <a href="prefs.xhtml">Options window</a>.)</p>
+<p><img src="http://mozilla.org/projects/firefox/help/1.0rc1/cookie_list.png"
+  width="365" height="396" alt=""/></p>
+
+<p>The <em>Cookie Manager</em> dialog lists all cookies currently stored on your
+  computer. You can select them to display more information about them.  Use the
+  <em>View Cookies</em> button in cookies options to access this window.</p>
+
+<p>To remove a cookie from the list, select it and click <em>Remove Cookie</em>.
+  To remove all cookies, click <em>Remove All Cookies</em>. (This is the same as
+  clicking the <em>Clear</em> button from the <a
+  href="prefs.xhtml#privacy_options">Privacy panel</a> of the <a
+  href="prefs.xhtml">Options window</a>.)</p>
+
 <p><strong>Don't allow sites that set removed cookies to set future cookies</strong><br/>
 Even if you remove cookies now, you will reacquire those same cookies the next time
-you return to the Web site. To prevent that from happening, select this checkbox.
-When this checkbox is selected, Web sites for the cookies that you are removing are
+you return to the web site. To prevent that from happening, select this checkbox.
+When this checkbox is selected, web sites for the cookies that you are removing are
 added to the list of sites whose cookies will automatically be rejected.
 <strong>Important</strong>: You must check this option before you start to remove cookies,
 or the sites will not be added to the list of blocked sites.</p>
 
 <h3 id="the_site_list">The Site List</h3>
 
-<p><img src="http://mozilla.org/projects/firefox/help/0.9/cookie_list.png" width="384" height="265" alt=""/><br/>
-  This is the list of sites that are either allowed or not allowed to store cookies on
-  your computer. In the Status column, you can see if a site is blocked or allowed.
-  Use the <em>Exceptions</em> button in cookies options to access this window.</p>
+<p><img src="http://mozilla.org/projects/firefox/help/1.0rc1/cookie_manager.png"
+  alt="" width="329" height="407"/></p>
 
-<p>To remove a site from this list, select it and click <em>Remove Site</em>. To clear
-  the list completely, click <em>Remove All Sites</em>. This will reset the cookie
-  rules and you will see dialogs for each cookie again.</p>
+<p>This is the list of sites that are either allowed or not allowed to store
+  cookies on your computer. In the Status column, you can see if a site is
+  blocked or allowed. Use the <em>Exceptions</em> button in cookies options to
+  access this window.</p>
 
-<div class="contentsBox"><em>21 March 2004</em></div>
-<p>Copyright &copy; 2003 Contributors to the Firebird Help Project.</p>
+<p>To add a site to the this list, simply type the site's domain name in the
+  field labeled <em>Address of web site:</em>.  Then click <em>Block</em> to
+  reject cookies from the site, or click <em>Allow</em> to allow cookies from
+  the site.</p>  
+
+<p>To remove a site from this list, select it and click <em>Remove Site</em>. To
+  clear the list completely, click <em>Remove All Sites</em>. This will reset
+  the cookie rules and you will see dialogs for each cookie again.</p>
+
+<div class="contentsBox"><em>18 July 2004</em></div>
+<p>Copyright &copy; 2003-2004 Contributors to the Mozilla Help Viewer Project.</p>
 </body>
 </html>
