@@ -47,6 +47,7 @@
 
 use strict;
 use vars qw(@param_list);
+use File::Spec; # for find_languages
 
 # Checking functions for the various values
 # Some generic checking functions are included in Bugzilla::Config
@@ -148,6 +149,35 @@ sub check_loginmethod {
     return "";
 }
 
+sub check_languages {
+    my @languages = split /,/, trim($_);
+    if(!scalar(@languages)) {
+       return "You need to specify a language tag."
+    }
+    foreach my $language (@languages) {
+       if(   ! -d 'template/'.trim($language).'/custom' 
+          && ! -d 'template/'.trim($language).'/default') {
+          return "The template directory for $language does not exist";
+       }
+    }
+    return "";
+}
+
+sub find_languages {
+    my @languages = ();
+    opendir(DIR, "template") || return "Can't open 'template' directory: $!";
+    my @langdirs = grep { /^[a-z-]+$/i } readdir(DIR);
+    closedir DIR;
+
+    foreach my $lang (@langdirs) {
+        next if($lang =~ /^CVS$/i);
+        my $deft_path = File::Spec->catdir('template', $lang, 'default');
+        my $cust_path = File::Spec->catdir('template', $lang, 'custom');
+        push(@languages, $lang) if(-d $deft_path or -d $cust_path);
+    }
+    return join(', ', @languages);
+}
+
 # OK, here are the parameter definitions themselves.
 #
 # Each definition is a hash with keys:
@@ -233,9 +263,11 @@ sub check_loginmethod {
            'to be displayed. Note that you must install the appropriate ' .
            'language pack before adding a language to this Param. The ' .
            'language used is the one in this list with the highest ' .
-           'q-value in the user\'s Accept-Language header.' ,
+           'q-value in the user\'s Accept-Language header.<br>' .
+           'Available languages: ' . find_languages() ,
    type => 't' ,
-   default => 'en'
+   default => 'en' ,
+   checker => \&check_languages
   },
 
   {
@@ -243,7 +275,8 @@ sub check_loginmethod {
    desc => 'The UI language Bugzilla falls back on if no suitable ' .
            'language is found in the user\'s Accept-Language header.' ,
    type => 't' ,
-   default => 'en'
+   default => 'en' ,
+   checker => \&check_languages
   },
 
   {
