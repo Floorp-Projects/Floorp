@@ -65,7 +65,7 @@ function onSortCol(sortColName)
     var node = document.getElementById(sortColName);
     // determine column resource to sort on
     var sortResource =
-        node.getAttribute("rdf:resource");
+        node.getAttribute("resource");
     if (!node)
         return false;
  
