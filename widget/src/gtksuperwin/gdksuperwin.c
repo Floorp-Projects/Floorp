@@ -222,16 +222,6 @@ gdk_superwin_scroll (GdkSuperWin *superwin,
       superwin->translate_queue = g_list_append (superwin->translate_queue, translate);
     }
   
-  /* If we're scrolling more than a page just shortcut and expose the
-     whole window.  This saves us some X request traffic. */
-  if (dx >= width || -dx >= width ||
-      dy >= height || -dy >= height)
-    {
-      gdk_superwin_expose_area(superwin, 0, 0,
-                               width, height);
-      return;
-    }
-
   gdk_window_move_resize (superwin->bin_window,
 			  MIN (0, -dx), MIN (0, -dy),
 			  width + ABS(dx), height + ABS(dy));
