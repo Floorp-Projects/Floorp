@@ -1710,7 +1710,7 @@ pk11_TLSPRFVerify(TLSPRFContext *cx,
     	pk11_TLSPRFHashUpdate(cx, hash, hashLen);
     }
     rv = pk11_TLSPRFUpdate(cx, tmp, &tmpLen, sigLen, NULL, 0);
-    if (rv = SECSuccess) {
+    if (rv == SECSuccess) {
     	rv = (SECStatus)(1 - !PORT_Memcmp(tmp, sig, sigLen));
     }
     PORT_ZFree(tmp, sigLen);
