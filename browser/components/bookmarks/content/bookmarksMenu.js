@@ -1004,7 +1004,9 @@ var BookmarksInsertion =
     this.hide();
 
     // special case for the menu items...
-    if (aTarget.localName == "menuitem" || aTarget.localName == "menu") {
+    if (aTarget.localName == "menu"       ||
+        aTarget.localName == "menuitem"   ||
+        aTarget.localName == "menuseparator") {
       this.showMenuitem(aTarget, aOrientation);
       return;
     }
@@ -1074,8 +1076,9 @@ var BookmarksInsertion =
       return;
 
     // special case for the menu items...
-    if (this.mTarget.localName == "menuitem" ||
-        this.mTarget.localName == "menu") {
+    if (this.mTarget.localName == "menu"       ||
+        this.mTarget.localName == "menuitem"   ||
+        this.mTarget.localName == "menuseparator") {
       this.hideMenuitem();
       return;
     }
