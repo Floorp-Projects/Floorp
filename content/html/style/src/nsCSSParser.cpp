@@ -1679,6 +1679,19 @@ void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
                                     nsresult& aErrorCode)
 {
   if (!mToken.mIdent.IsEmpty()) { // verify is legal ID
+    PRUnichar first = mToken.mIdent.First();
+    PRUnichar second = 0;
+    if (mToken.mIdent.Length() >= 2) {
+      second = mToken.mIdent.CharAt(1);
+    }
+    if (!nsCSSScanner::StartsIdent(first, second,
+                                   nsCSSScanner::GetLexTable())) {
+      REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING(
+        "Expected identifier for ID selector but found"));
+      UngetToken();
+      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+      return;
+    }
     aDataMask |= SEL_MASK_ID;
     aSelector.AddID(mToken.mIdent);
   }
