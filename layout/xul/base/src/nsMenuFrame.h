@@ -50,16 +50,12 @@ class nsMenuPopupFrame;
 
 class nsMenuFrame : public nsBoxFrame, 
                     public nsIMenuFrame,
-                    public nsITimerCallback, 
-                    public nsIAnonymousContentCreator
+                    public nsITimerCallback
 {
 public:
   nsMenuFrame(nsIPresShell* aShell);
 
   NS_DECL_ISUPPORTS
-  
-  // The nsIAnonymousContentCreator interface
-  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousItems);
   
   // The nsITimerCallback interface
   NS_IMETHOD_(void) Notify(nsITimer *timer);

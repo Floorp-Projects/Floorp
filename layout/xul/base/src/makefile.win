@@ -28,6 +28,7 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+		nsXULButtonFrame.cpp \
         nsSpringFrame.cpp \
         nsXULLeafFrame.cpp \
         nsXULTextFrame.cpp \
@@ -73,6 +74,7 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+		.\$(OBJDIR)\nsXULButtonFrame.obj    \
         .\$(OBJDIR)\nsSpringFrame.obj    \
         .\$(OBJDIR)\nsXULLeafFrame.obj    \
         .\$(OBJDIR)\nsXULTextFrame.obj    \

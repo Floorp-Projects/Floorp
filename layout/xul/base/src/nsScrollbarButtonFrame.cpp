@@ -53,7 +53,7 @@ NS_NewScrollbarButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsScrollbarButtonFrame* it = new (aPresShell) nsScrollbarButtonFrame;
+  nsScrollbarButtonFrame* it = new (aPresShell) nsScrollbarButtonFrame(aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -62,10 +62,11 @@ NS_NewScrollbarButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewScrollBarButtonFrame
 
-/*
-nsScrollbarButtonFrame::nsScrollbarButtonFrame()
+
+nsScrollbarButtonFrame::nsScrollbarButtonFrame(nsIPresShell* aPresShell)
+:nsXULButtonFrame(aPresShell)
 {
-}*/
+}
 
 
 
@@ -78,7 +79,7 @@ nsScrollbarButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;                                                        
   }   
 
-  return nsTitledButtonFrame::QueryInterface(aIID, aInstancePtr);                                     
+  return nsXULButtonFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
 
 NS_IMETHODIMP
@@ -90,7 +91,7 @@ nsScrollbarButtonFrame::HandleEvent(nsIPresContext* aPresContext,
   if (aEvent->message == NS_MOUSE_EXIT|| aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP || aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
      HandleRelease(aPresContext, aEvent, aEventStatus);
   
-  return nsTitledButtonFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsXULButtonFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 
@@ -244,5 +245,5 @@ nsScrollbarButtonFrame::Destroy(nsIPresContext* aPresContext)
   // Ensure our repeat service isn't going... it's possible that a scrollbar can disappear out
   // from under you while you're in the process of scrolling.
   nsRepeatService::GetInstance()->Stop();
-  return nsTitledButtonFrame::Destroy(aPresContext);
+  return nsXULButtonFrame::Destroy(aPresContext);
 }

@@ -43,7 +43,7 @@ NS_NewXULCheckboxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXULCheckboxFrame* it = new (aPresShell) nsXULCheckboxFrame;
+  nsXULCheckboxFrame* it = new (aPresShell) nsXULCheckboxFrame(aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -53,8 +53,6 @@ NS_NewXULCheckboxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewXULCheckboxFrame
 
-PRIntn nsXULCheckboxFrame::GetDefaultAlignment()
-{
-  return NS_SIDE_LEFT;
-}
-
+nsXULCheckboxFrame::nsXULCheckboxFrame(nsIPresShell* aPresShell)
+:nsXULButtonFrame(aPresShell)
+{}

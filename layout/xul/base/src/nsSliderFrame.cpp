@@ -88,43 +88,6 @@ nsSliderFrame::~nsSliderFrame()
    mRedrawImmediate = PR_FALSE;
 }
 
-nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
-
-/**
- * Anonymous interface
- */
-NS_IMETHODIMP
-nsSliderFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
-                                      nsISupportsArray& aAnonymousChildren)
-{
-  // supply anonymous content if there is no content
-  PRInt32 count = 0;
-  mContent->ChildCount(count); 
-  if (count == 0) 
-  {
-    nsCOMPtr<nsIContent> content;
-    NS_CreateAnonymousNode(mContent, nsXULAtoms::thumb, nsXULAtoms::nameSpaceID, content);
-    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, "horizontal", PR_FALSE);
-
-    // if we are not in a scrollbar default our thumbs flex to be
-    // flexible.
-    nsIContent* scrollbar = GetScrollBar();
-
-    if (scrollbar) { 
-      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_FALSE);
-      nsString value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == scrollbar->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value))
-         mContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value, PR_FALSE);
-    }
-
-    aAnonymousChildren.AppendElement(content);
-  }
-
-  return NS_OK;
-}
-
-
-
 NS_IMETHODIMP
 nsSliderFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
@@ -891,11 +854,9 @@ nsSliderFrame::RemoveListener()
 
 
 NS_INTERFACE_MAP_BEGIN(nsSliderFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAnonymousContentCreator)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsHTMLContainerFrame)
 
 
 NS_IMETHODIMP_(nsrefcnt) 
@@ -1028,48 +989,3 @@ NS_IMETHODIMP_(void) nsSliderFrame::Notify(nsITimer *timer)
       PageUpDown(thumbFrame, mChange);
     }
 }
-
-class nsThumbFrame : public nsTitledButtonFrame
-{
-public:
-
-  friend nsresult NS_NewThumbFrame(nsIFrame** aNewFrame);
-
-  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus) { return NS_OK; }
-
-  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus)  { return NS_OK; }
-
-  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
-                        nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus)  { return NS_OK; }
-
-  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
-                           nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus)  { return NS_OK; }
-
-};
-
-
-nsresult
-NS_NewThumbFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
-{
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsThumbFrame* it = new (aPresShell) nsThumbFrame();
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
-} // NS_NewSliderFrame
-
-
-
-
