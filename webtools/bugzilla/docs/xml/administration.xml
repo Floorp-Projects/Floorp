@@ -1100,6 +1100,19 @@
         By modifying this, you can tell your users how they should report
         bugs.
       </para>
+
+      <para>
+        <command>bug/process/midair.html.tmpl</command>:
+        This is the page used if two people submit simultaneous changes to the
+        same bug.  The second person to submit their changes will get this page
+        to tell them what the first person did, and ask if they wish to
+        overwrite those changes or go back and revisit the bug.  The default
+        title and header on this page read "Mid-air collision detected!"  If
+        you work in the aviation industry, or other environment where this
+        might be found offensive (yes, we have true stories of this happening)
+        you'll want to change this to something more appropriate for your
+        environment.
+      </para>
         
       <para>
         <command>bug/create/create.html.tmpl</command> and
