@@ -467,11 +467,11 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
               }
             }
           }
+          if (expireMasterPassword) {
+            PRBool status;
+            WLLT_ExpirePassword(&status);
+          }
         }
-    }
-    if (expireMasterPassword) {
-      PRBool status;
-      WLLT_ExpirePassword(&status);
     }
     return rv;
 }
