@@ -635,8 +635,10 @@ nsresult	nsDBFolderInfo::SetUint32PropertyWithToken(mdb_token aProperty, PRUint3
 	yarn.mYarn_Fill = sizeof(int32StrBuf);
 
 	nsMsgDatabase::UInt32ToYarn(&yarn, propertyValue);
-	nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, &yarn);
-	return err;
+	if (m_mdbRow)
+		return m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, &yarn);
+	else
+		return NS_ERROR_FAILURE;
 }
 
 nsresult	nsDBFolderInfo::SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue)
