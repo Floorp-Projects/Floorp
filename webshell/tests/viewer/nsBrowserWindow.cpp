@@ -1279,7 +1279,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   // Create web shell
   rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                          kIWebShellIID,
+                                          NS_GET_IID(nsIDocShell),
                                           (void**)&mDocShell);
   if (NS_OK != rv) {
     return rv;
