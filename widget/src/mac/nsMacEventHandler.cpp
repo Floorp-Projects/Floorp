@@ -60,6 +60,7 @@ nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 	supportedServices[0] = kTextService;
 	err = ::NewTSMDocument(1,supportedServices,&mTSMDocument,(long)this);
 	NS_ASSERTION(err==noErr,"nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
+
 	printf("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n",mTSMDocument);
 		
 	mIMEIsComposing = PR_FALSE;
@@ -530,7 +531,9 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			// Activate The TSMDocument associated with this handler
 			//
 			err = ::ActivateTSMDocument(mTSMDocument);
+#if 0
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: ActivateTSMDocument failed");
+#endif
 			printf("nsEventHandler::HandleActivateEvent: ActivateTSMDocument[%p]\n",mTSMDocument);
 			
 			//¥TODO: retrieve the focused widget for that window
@@ -560,7 +563,9 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 			// Deactivate the TSMDocument assoicated with this EventHandler
 			//
 			err = ::DeactivateTSMDocument(mTSMDocument);
+#if 0
 			NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
+#endif
 			printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p]\n",mTSMDocument);
 			
 			//¥TODO: save the focused widget for that window
