@@ -170,7 +170,7 @@ struct nsStyleText : public nsStyleStruct {
   nsStyleCoord  mWordSpacing;           // [inherited] 
   nsStyleCoord  mVerticalAlign;         // [reset] see nsStyleConsts.h for enums
 
-  PRBool WhiteSpaceIsSignificant() {
+  PRBool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE;
   }
 
