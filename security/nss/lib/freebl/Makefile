@@ -129,9 +129,10 @@ endif
 
 ifeq ($(OS_TARGET),Linux)
 ifeq ($(CPU_ARCH),x86_64)
-    ASFILES  = arcfour-amd64-gas.s
-    ASFLAGS += -march=opteron -m64
-    DEFINES += -DNSS_BEVAND_ARCFOUR 
+    ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
+    ASFLAGS += -march=opteron -m64 -fPIC
+    DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
+    MPI_SRCS += mpi_amd64.c
 endif
 ifeq ($(CPU_ARCH),x86)
     ASFILES  = mpi_x86.s
@@ -246,13 +247,14 @@ else
     ifeq ($(USE_64),1)
 	# Solaris for AMD64
 	ifdef NS_USE_GCC
-	    ASFILES  = arcfour-amd64-gas.s
-	    ASFLAGS += -march=opteron -m64
+	    ASFILES  = arcfour-amd64-gas.s mpi_amd64_gas.s
+	    ASFLAGS += -march=opteron -m64 -fPIC
 	else
-	    ASFILES  = arcfour-amd64-sun.s
+	    ASFILES  = arcfour-amd64-sun.s mpi_amd64_sun.s
 	    ASFLAGS += -xarch=generic64 -K PIC
 	endif
-	DEFINES += -DNSS_BEVAND_ARCFOUR 
+	DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
+	MPI_SRCS += mpi_amd64.c
     else
 	# Solaris x86
 	DEFINES += -D_X86_
