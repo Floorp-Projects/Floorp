@@ -363,24 +363,6 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = PR_FALSE;
 
-  nsCOMPtr<nsIChannel> channel;
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv;
-  
-  // Partial Reset, need to restore principal for security reasons and
-  // event listener manager so that load listeners etc. will
-  // remain. This should be done before the security check is done to
-  // ensure that the document is reset even if the new document can't
-  // be loaded.
-
-  nsCOMPtr<nsIPrincipal> principal(mPrincipal);
-  nsCOMPtr<nsIEventListenerManager> elm(mListenerManager);
-
-  Reset(nsnull, nsnull);
-
-  mPrincipal = principal;
-  mListenerManager = elm;
-
   nsIScriptContext *callingContext = nsnull;
 
   nsCOMPtr<nsIJSContextStack> stack =
@@ -412,10 +394,24 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   }
 
   // Create a new URI
-  rv = NS_NewURI(getter_AddRefs(uri), aUrl, charset.get(), baseURI);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aUrl, charset.get(), baseURI);
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  // Partial Reset, need to restore principal for security reasons and
+  // event listener manager so that load listeners etc. will
+  // remain. This should be done before the security check is done to
+  // ensure that the document is reset even if the new document can't
+  // be loaded.
+  nsCOMPtr<nsIPrincipal> principal(mPrincipal);
+  nsCOMPtr<nsIEventListenerManager> elm(mListenerManager);
+
+  ResetToURI(uri, nsnull);
+
+  mPrincipal = principal;
+  mListenerManager = elm;
 
   // Get security manager, check to see if we're allowed to load this URI
   nsCOMPtr<nsIScriptSecurityManager> secMan = 
@@ -432,9 +428,6 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     // this code the exception might be lost.
     return NS_OK;
   }
-
-  this->nsIDocument::SetDocumentURI(uri);
-  SetBaseURI(uri);
 
   // Store script context, if any, in case we encounter redirect
   // (because we need it there)
@@ -459,6 +452,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(getter_AddRefs(loadGroup));
 
+  nsCOMPtr<nsIChannel> channel;
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
   // which in turn keeps STOP button from becoming active  
   rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, loadGroup, this, 
