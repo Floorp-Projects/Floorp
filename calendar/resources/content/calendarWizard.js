@@ -46,46 +46,30 @@ function checkInitialPage()
 
 function buildCalendarsListbox( ListBoxId )
 {
-   for( var i = 0; i < opener.gCalendarWindow.calendarManager.calendars.length; i++ )
-   {
-      addCalendarToListBox( opener.gCalendarWindow.calendarManager.calendars[i], ListBoxId );
-   }
-}
+   document.getElementById( ListBoxId ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
 
-function addCalendarToListBox( ThisCalendarObject, ListBoxId )
-{
-   var calendarListItem = document.createElement( "listitem" );
-   calendarListItem.calendarObject = ThisCalendarObject;
-
-   calendarListItem.setAttribute( "id", "calendar-list-item-"+ThisCalendarObject.serverNumber );
-   calendarListItem.setAttribute( "class", "calendar-list-item-class" );
-   calendarListItem.setAttribute( "src", "chrome://calendar/skin/synch_animated.gif" );
-   calendarListItem.setAttribute( "label", ThisCalendarObject.name );
-   calendarListItem.setAttribute( "flex", "1" );
-   calendarListItem.setAttribute( "calendarPath", ThisCalendarObject.path );
-   
-   document.getElementById( ListBoxId ).appendChild( calendarListItem );
+   document.getElementById( ListBoxId ).builder.rebuild();
 }
 
 function doWizardFinish( )
 {
    switch( gWizardType )
    {
-   case "import":
-      return doWizardImport();
-      break;
-
-   case "export":
-      return doWizardExport();
-      break;
-
-   case "subscribe":
-      return doWizardSubscribe();
-      break;
-
-   case "publish":
-      return doWizardPublish();
-      break;
+      case "import":
+         return doWizardImport();
+         break;
+   
+      case "export":
+         return doWizardExport();
+         break;
+   
+      case "subscribe":
+         return doWizardSubscribe();
+         break;
+   
+      case "publish":
+         return doWizardPublish();
+         break;
    }
 }
 
@@ -132,7 +116,6 @@ function doWizardExport()
 
    if( fileName.indexOf( ".ics" ) == -1 )
    {
-
       aDataStream = eventArrayToICalString( calendarEventArray, true );
       extension   = extensionCalendar;
       charset = "UTF-8";

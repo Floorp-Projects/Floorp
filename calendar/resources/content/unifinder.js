@@ -700,8 +700,7 @@ treeView.prototype.getCellText = function(row,column)
       case "unifinder-search-results-tree-col-enddate":
          var eventEndDate = new Date( calendarEvent.end.getTime() );
          var endTime = formatUnifinderEventTime( eventEndDate );
-         var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
-         var endDate = formatUnifinderEventDate( eventStartDate );
+         var endDate = formatUnifinderEventDate( eventEndDate );
          if( calendarEvent.allDay )
          {
             endText = "All day " + endDate;
@@ -761,7 +760,7 @@ function refreshEventTree( eventArray )
       eventArray = getEventTable();
    }
    
-   document.getElementById(UnifinderTreeName).view = new treeView( eventArray );
+   document.getElementById( UnifinderTreeName ).view = new treeView( eventArray );
 
    document.getElementById( UnifinderTreeName ).eventView = new calendarEventView( eventArray );
 

@@ -103,8 +103,7 @@ oeTimePicker.gPopup  = null;
 /** The currently selected time */
 oeTimePicker.gSelectedTime = new Date(); 
 
-/** The selected Am/pm, selected hour and selected minute items */
-oeTimePicker.gSelectedAmPmItem = null;
+/** The selected hour and selected minute items */
 oeTimePicker.gSelectedHourItem = null;
 oeTimePicker.gSelectedMinuteItem = null;
 
@@ -136,29 +135,12 @@ oeTimePicker.onpopupshowing = function( popup )
       oeTimePicker.gSelectedTime = new Date();
    }
       
-   // Select the AM or PM item based on whether the hour is 0-11 or 12-23 
-   
-   var hours24 = oeTimePicker.gSelectedTime.getHours();
-   
-   var amPmItem = null;
-   var hours12 = null;
 
-   if( oeTimePicker.isTimeAm( oeTimePicker.gSelectedTime ) )
-   {
-      amPmItem = document.getElementById( "oe-time-picker-am-box" );
-      hours12 = hours24;
-   }
-   else
-   {
-      amPmItem = document.getElementById( "oe-time-picker-pm-box" );
-      hours12 = hours24 - 12;
-   }
-   
-   oeTimePicker.selectAmPmItem( amPmItem );
+   var hours24 = oeTimePicker.gSelectedTime.getHours();
    
    // select the hour item
    
-   var hourItem = document.getElementById( "oe-time-picker-hour-box-" + hours12 );
+   var hourItem = document.getElementById( "oe-time-picker-hour-box-" + hours24 );
    oeTimePicker.selectHourItem( hourItem );
  
    // Show the five minute view if we are an even five minutes, one minute 
@@ -178,45 +160,6 @@ oeTimePicker.onpopupshowing = function( popup )
 
 
 /**
-*   Called when the AM box is clicked
-*/
-
-oeTimePicker.clickAm = function( theItem )
-{
-   // if not already AM, set the selected time to AM ( by subtracting 12 from what must be a PM time )
-   // and select the AM item
-   
-   if( !oeTimePicker.isTimeAm( oeTimePicker.gSelectedTime ) )
-   {
-      var hours = oeTimePicker.gSelectedTime.getHours();
-      oeTimePicker.gSelectedTime.setHours( hours - 12 ); 
-      
-      oeTimePicker.selectAmPmItem( theItem );
-   }
-}
-
-
-/**
-*   Called when the PM box is clicked
-*/
-
-oeTimePicker.clickPm = function( theItem )
-{
-   // if not already PM, set the selected time to PM ( by adding 12 to what must be an AM time )
-   // and select the PM item
-   
-   if( oeTimePicker.isTimeAm( oeTimePicker.gSelectedTime ) )
-   {
-      var hours = oeTimePicker.gSelectedTime.getHours();
-      oeTimePicker.gSelectedTime.setHours( hours + 12 ); 
-      
-      oeTimePicker.selectAmPmItem( theItem );
-   }
-}
-
-
-
-/**
 *   Called when one of the hour boxes is clicked
 */
 
@@ -226,18 +169,10 @@ oeTimePicker.clickHour = function( hourItem, hourNumber )
    
    oeTimePicker.selectHourItem( hourItem );
    
-   // Change the hour in the selected time, add 12 if PM. 
+   // Change the hour in the selected time. 
    
    var hour24 = null;
-
-   if( oeTimePicker.isTimeAm( oeTimePicker.gSelectedTime ) )
-   {
-      hour24 = hourNumber;
-   }
-   else
-   {
-      hour24 = hourNumber + 12;
-   }
+   hour24 = hourNumber;
    
    oeTimePicker.gSelectedTime.setHours( hour24 );
 
@@ -372,29 +307,6 @@ oeTimePicker.switchMinuteView = function( view )
    }
 }
 
-/**
-*   Helper function to select the AM or PM box 
-*/
-
-oeTimePicker.selectAmPmItem = function( amPmItem )
-{
-   // clear old selection, if there is one
-   
-   if( oeTimePicker.gSelectedAmPmItem != null )
-   {
-      oeTimePicker.gSelectedAmPmItem.removeAttribute( "selected" );
-   }
-   
-   // set selected attribute, to cause the selected style to apply
-   
-   amPmItem.setAttribute( "selected" , "true" );
-   
-   // remember the selected item so we can deselect it
-   
-   oeTimePicker.gSelectedAmPmItem = amPmItem;
-
-   this.selectTime();
-}
 
 /**
 *   Helper function to select an hour item 
@@ -457,24 +369,6 @@ oeTimePicker.calcNearestFiveMinutes = function( time )
    }
    
    return minutesByFive;
-}
-
-/**
-*   Helper function to work out if the 24-hour time is AM or PM
-*/
-
-oeTimePicker.isTimeAm = function( time )
-{
-   var currentHour = time.getHours( );
-   
-   if( currentHour >= 12 )
-   {
-      return false;
-   }
-   else
-   {
-      return true;
-   }
 }
 
 

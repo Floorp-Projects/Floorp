@@ -123,12 +123,10 @@ function loadCalendarToDoDialog()
 
    // fill in fields from the event
    var dueDate = new Date( gToDo.due.getTime() );
-   
-   setDateFieldValue( "due-date-text", dueDate );
+   document.getElementById( "due-date-picker" ).value = dueDate;
 
    var startDate = new Date( gToDo.start.getTime() );
-   
-   setDateFieldValue( "start-date-text", startDate );
+   document.getElementById( "start-date-picker" ).value = startDate;
 
    setFieldValue( "priority-levels", gToDo.priority );
    
@@ -137,16 +135,14 @@ function loadCalendarToDoDialog()
    if( gToDo.completed.getTime() > 0 )
    {
       var completedDate = new Date( gToDo.completed.getTime() );
-
-      setDateFieldValue( "completed-date-text", completedDate );
-   
+      document.getElementById( "completed-date-picker" ).value = completedDate; 
+      
       setFieldValue( "completed-checkbox", "true", "checked" );
    }
    else
    {
       var Today = new Date();
-
-      setDateFieldValue( "completed-date-text", Today );
+      document.getElementById( "completed-date-picker" ).value = Today;
    }
 
    setFieldValue( "title-field", gToDo.title  );
@@ -197,18 +193,30 @@ function loadCalendarToDoDialog()
    
    /* Server stuff */
    var serverList = opener.gCalendarWindow.calendarManager.calendars;
+   document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
+   document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
    
-
-   var oldMenulist = document.getElementById( "server-menulist-menupopup" );
-   while( oldMenulist.hasChildNodes() )
-      oldMenulist.removeChild( oldMenulist.lastChild );
-   
-   for (var i = 0; i < serverList.length ; i++)
+   if( args.mode == "new" )
    {
-      document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+      if( args.server )
+      {
+         setFieldValue( "server-field", args.server );
+      }
+      else
+      {
+         document.getElementById( "server-field" ).selectedIndex = 1;
+      }
+   }
+   else
+   {
+      setFieldValue( "server-field", gToDo.parent.server );
+
+      //for now you can't edit which file the event is in.
+      setFieldValue( "server-field", "true", "disabled" );
+
+      setFieldValue( "server-field-label", "true", "disabled" );
    }
    
-   document.getElementById( "server-field" ).selectedIndex = 0;
    //the next line seems to crash Mozilla
    //setFieldValue( "server-field", gEvent.parent.server );
    
@@ -235,14 +243,14 @@ function onOKCommand()
    gToDo.title       = getFieldValue( "title-field" );
    gToDo.description = getFieldValue( "description-field" );
    
-   var dueDate = getDateTimeFieldValue( "due-date-text" );
+   var dueDate = document.getElementById( "due-date-picker" ).value;
    gToDo.due.year = dueDate.getYear()+1900;
    gToDo.due.month = dueDate.getMonth();
    gToDo.due.day = dueDate.getDate();
    gToDo.due.hour = 23;
    gToDo.due.minute = 59;
    
-   var startDate = getDateTimeFieldValue( "start-date-text" );
+   var startDate = document.getElementById( "start-date-picker" ).value;
    gToDo.start.year = startDate.getYear()+1900;
    gToDo.start.month = startDate.getMonth();
    gToDo.start.day = startDate.getDate();
@@ -275,7 +283,7 @@ function onOKCommand()
    if( completed )
    {
       //get the time for the completed event
-      var completedDate = getDateTimeFieldValue( "completed-date-text" );
+      var completedDate = document.getElementById( "completed-date-picker" ).value;
 
       gToDo.completed.year = completedDate.getYear() + 1900;
       gToDo.completed.month = completedDate.getMonth();
@@ -358,10 +366,10 @@ function onDatePick( datepopup )
 
 function checkStartAndDueDates()
 {
-   var StartDate = getDateTimeFieldValue( "start-date-text" );
+   var StartDate = document.getElementById( "start-date-picker" ).value;
 
-   var DueDate = getDateTimeFieldValue( "due-date-text" );
-
+   var dueDate = document.getElementById( "due-date-picker" ).value;
+      
    if( DueDate.getTime() < StartDate.getTime() )
    {
       //show alert message, disable OK button
@@ -432,16 +440,14 @@ function updateCompletedItemEnabled()
 
    if( getFieldValue( completedCheckbox, "checked" ) )
    {
-      setFieldValue( "completed-date-text", false, "disabled" );
-      setFieldValue( "completed-date-button", false, "disabled" );
+      setFieldValue( "completed-date-poicker", false, "disabled" );
       setFieldValue( "percent-complete-menulist", "100" );
       setFieldValue( "percent-complete-menulist", true, "disabled" );
       setFieldValue( "percent-complete-text", true, "disabled" );
    }
    else
    {
-      setFieldValue( "completed-date-text", true, "disabled" );
-      setFieldValue( "completed-date-button", true, "disabled" );
+      setFieldValue( "completed-date-picker", true, "disabled" );
       setFieldValue( "percent-complete-menulist", false, "disabled" );
       setFieldValue( "percent-complete-text", false, "disabled" );
       if( getFieldValue( "percent-complete-menulist" ) == 100 )
@@ -580,6 +586,9 @@ function setFieldValue( elementId, newValue, propertyName  )
    {
       var field = document.getElementById( elementId );
       
+      if( !field )
+         alert( elementId+" not found" );
+
       if( newValue === false )
       {
          field.removeAttribute( propertyName );

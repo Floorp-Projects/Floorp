@@ -40,7 +40,6 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/datepicker/datepicker-overlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
@@ -130,8 +129,7 @@
                             <label value="&newtodo.startdate.label;"/>
                         </hbox>
                         <hbox id="start-date-box" align="center">
-                            <textbox class="date-text-class" id="start-date-text" readonly="true" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <image id="start-date-button" class="event-date-button-class"         onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                            <datepicker id="start-date-picker" value=""/>
                         </hbox>
                     </row>
                     
@@ -141,8 +139,7 @@
                             <label value="&newtodo.duedate.label;"/>
                         </hbox>
                         <hbox  id="due-date-box" align="center">
-                            <textbox class="date-text-class" id="due-date-text" readonly="true"                 onmousedown="prepareDatePicker('due-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <image id="start-date-button" class="event-date-button-class" onmousedown="prepareDatePicker('due-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                            <datepicker id="due-date-picker" value=""/>
                             <label id="start-date-warning" class="warning-text-class" value="&newtodo.starttime.warning;" collapsed="true"/>
                         </hbox>
                     </row>
@@ -224,25 +221,24 @@
                         </hbox>
                         <hbox>
                            <checkbox id="completed-checkbox" oncommand="updateCompletedItemEnabled()"/>
-                           <textbox disabled="true" class="date-text-class" id="completed-date-text" readonly="true" value=""      onmousedown="prepareDatePicker('completed-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                           <image disabled="true" id="completed-date-button" class="event-date-button-class" onmousedown="prepareDatePicker('completed-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <spacer/>  
-                            <menulist  id="percent-complete-menulist" editable="true" oncommand="percentCompleteCommand()">
-                                <menupopup>
-                                    <menuitem label="0" value="0"/>
-                                    <menuitem label="10" value="10"/>
-                                    <menuitem label="20" value="20"/>
-                                    <menuitem label="30" value="30"/>
-                                    <menuitem label="40" value="40"/>
-                                    <menuitem label="50" value="50"/>
-                                    <menuitem label="60" value="60"/>
-                                    <menuitem label="70" value="70"/>
-                                    <menuitem label="80" value="80"/>
-                                    <menuitem label="90" value="90"/>
-                                    <menuitem label="100" value="100"/>
-                                </menupopup>
-                            </menulist>
-                            <label id="percent-complete-text" value="&newtodo.percentcomplete.label;"/>
+                           <datepicker id="completed-date-picker" disabled="true" value=""/>
+                           <spacer/>  
+                           <menulist  id="percent-complete-menulist" editable="true" oncommand="percentCompleteCommand()">
+                              <menupopup>
+                                 <menuitem label="0" value="0"/>
+                                 <menuitem label="10" value="10"/>
+                                 <menuitem label="20" value="20"/>
+                                 <menuitem label="30" value="30"/>
+                                 <menuitem label="40" value="40"/>
+                                 <menuitem label="50" value="50"/>
+                                 <menuitem label="60" value="60"/>
+                                 <menuitem label="70" value="70"/>
+                                 <menuitem label="80" value="80"/>
+                                 <menuitem label="90" value="90"/>
+                                 <menuitem label="100" value="100"/>
+                              </menupopup>
+                           </menulist>
+                           <label id="percent-complete-text" value="&newtodo.percentcomplete.label;"/>
                         </hbox>
                     </row>
 
@@ -269,11 +265,15 @@
                     <!-- Calendar Server -->
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
-                            <label value="&newevent.server.label;"/>
+                            <label id="server-field-label" value="&newevent.server.label;"/>
                         </hbox>
                         <menulist id="server-field">
-                            <menupopup id="server-menulist-menupopup">
-                                <menuitem label="&priority.level.none;" value="0"/>
+                           <menupopup id="server-menulist-menupopup" datasources="rdf:null" ref="urn:calendarcontainer">
+                              <template>
+                                 <rule>   
+                                    <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#path" label="rdf:http://home.netscape.com/NC-rdf#name"/>
+                                 </rule>
+                              </template>
                             </menupopup>
                         </menulist>
                     </row>

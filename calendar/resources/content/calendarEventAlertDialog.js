@@ -146,7 +146,10 @@ function createAlarmBox( Event )
    
    OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0].setAttribute( "onclick", "snoozeAlarm( this.event );removeAlarmBox( this.event );" ); 
    
-   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = opener.getIntPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "event.defaultsnoozelength", 60 );
+   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+   
+   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = getIntPref(prefService.getBranch("calendar."), "event.defaultsnoozelength", 60 );
       
    kungFooDeathGripOnEventBoxes.push( OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0] );
    
@@ -265,6 +268,7 @@ function launchEditEvent( Event )
    args.calendarEvent = Event;
 
    // open the dialog modally
+   window.setCursor( "wait" );
    opener.openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
 
@@ -339,4 +343,18 @@ function getFormatedTime( date )
    var timeString = opener.gCalendarWindow.dateFormater.getFormatedTime( date );
    
    return timeString;
+}
+
+
+function getIntPref (prefObj, prefName, defaultValue)
+{
+    try
+    {
+        return prefObj.getIntPref (prefName);
+    }
+    catch (e)
+    {
+       prefObj.setIntPref( prefName, defaultValue );  
+       return defaultValue;
+    }
 }

@@ -285,10 +285,11 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
 DayView.prototype.createEventBox = function dayview_createEventBox( calendarEventDisplay )
 {
    var eventStartDate = calendarEventDisplay.displayDate;
+   var eventEndDate = calendarEventDisplay.displayEndDate;
    var startHour = eventStartDate.getHours();
    var startMinutes = eventStartDate.getMinutes();
 
-   var eventEndDateTime = new Date( 2000, 1, 1, calendarEventDisplay.event.end.hour, calendarEventDisplay.event.end.minute, 0 );
+   var eventEndDateTime = new Date( 2000, 1, 1, eventEndDate.getHours(), eventEndDate.getMinutes(), 0 );
    var eventStartDateTime = new Date( 2000, 1, 1, eventStartDate.getHours(), eventStartDate.getMinutes(), 0 );
 
    var eventDuration = new Date( eventEndDateTime - eventStartDateTime );

@@ -73,7 +73,7 @@
     
     <!-- AM/PM controls -->
     
-    <hbox id="oe-time-picker-ampm-controls-box"  >
+    <!--<hbox id="oe-time-picker-ampm-controls-box"  >
 
         <box class="oe-time-picker-am-pm-box-class" id="oe-time-picker-am-box"  flex="1" onclick="oeTimePicker.clickAm( this )">
             <label id="oe-time-picker-year-title-text" value="&time.AM;" />
@@ -85,7 +85,7 @@
 
 
     </hbox> 
-    
+	-->    
     
     <!-- Hour Grid -->
 
@@ -108,7 +108,7 @@
             <row flex="1"  >
                 <vbox class="oe-time-picker-hour-box-class"  id="oe-time-picker-hour-box-0" onclick="oeTimePicker.clickHour(this, 0)" >
                     <spacer flex="1" />
-                    <box ><label  class="oe-time-picker-hour-name-class"  value="12" /></box> 
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="0" /></box> 
                     <spacer flex="1" />
                 </vbox>  
                 <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-1"  onclick="oeTimePicker.clickHour(this, 1)" >
@@ -167,7 +167,68 @@
                     <spacer flex="1" />
                 </vbox>  
             </row>  
-        
+	    <row flex="1"  >
+                <vbox class="oe-time-picker-hour-box-class"  id="oe-time-picker-hour-box-12" onclick="oeTimePicker.clickHour(this, 12)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="12" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-13"  onclick="oeTimePicker.clickHour(this, 13)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="13" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-14"  onclick="oeTimePicker.clickHour(this, 14)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="14" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-15"  onclick="oeTimePicker.clickHour(this, 15)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="15" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-16"  onclick="oeTimePicker.clickHour(this, 16)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="16" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-17"  onclick="oeTimePicker.clickHour(this, 17)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="17" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-18"  onclick="oeTimePicker.clickHour(this, 18)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="18" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-19"  onclick="oeTimePicker.clickHour(this, 19)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="19" /></box> 
+                    <spacer flex="1" />
+                </vbox>    
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-20"  onclick="oeTimePicker.clickHour(this, 20)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="20" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-21"  onclick="oeTimePicker.clickHour(this, 21)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="21" /></box> 
+                    <spacer flex="1" />
+                </vbox>  
+                <vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-22"  onclick="oeTimePicker.clickHour(this, 22)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="22" /></box> 
+                    <spacer flex="1" />
+                </vbox>
+		<vbox class="oe-time-picker-hour-box-class" id="oe-time-picker-hour-box-23"  onclick="oeTimePicker.clickHour(this, 23)" >
+                    <spacer flex="1" />
+                    <box ><label  class="oe-time-picker-hour-name-class"  value="23" /></box> 
+                    <spacer flex="1" />
+                </vbox>
+            </row>
         
         </rows>
     

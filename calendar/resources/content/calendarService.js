@@ -23,14 +23,14 @@
 
 /*
  * This file contains the following chatzilla related components:
- * 1. Command line handler service, for responding to the -chat command line
+ * 1. Command line handler service, for responding to the -webcal command line
  *    option. (CLineHandler)
- * 2. Content handler for responding to content of type x-application-irc
- *    (IRCContentHandler)
- * 3. Protocol handler for supplying a channel to the browser when an irc://
- *    link is clicked. (IRCProtocolHandler)
+ * 2. Content handler for responding to content of type text/calendar
+ *    (ICALContentHandler)
+ * 3. Protocol handler for supplying a channel to the browser when an webcal://
+ *    link is clicked. (ICALProtocolHandler)
  * 4. A (nearly empty) imeplementation of nsIChannel for telling the browser
- *    that irc:// links have the content type x-application-irc (BogusChannel)
+ *    that webcal:// links have the content type text/calendar (BogusChannel)
  */
 
 /* components defined in this file */
@@ -38,13 +38,13 @@ const CLINE_SERVICE_CONTRACTID =
     "@mozilla.org/commandlinehandler/general-startup;1?type=webcal";
 const CLINE_SERVICE_CID =
     Components.ID("{65ef4b0b-d116-4b93-bf8a-84525992bf27}");
-const IRCCNT_HANDLER_CONTRACTID =
+const ICALCNT_HANDLER_CONTRACTID =
     "@mozilla.org/uriloader/content-handler;1?type=text/calendar";
-const IRCCNT_HANDLER_CID =
+const ICALCNT_HANDLER_CID =
     Components.ID("{9ebf4c8a-7770-40a6-aeed-e1738129535a}");
-const IRCPROT_HANDLER_CONTRACTID =
+const ICALPROT_HANDLER_CONTRACTID =
     "@mozilla.org/network/protocol;1?name=webcal";
-const IRCPROT_HANDLER_CID =
+const ICALPROT_HANDLER_CID =
     Components.ID("{d320ba05-88cf-44a6-b718-87a72ef05918}");
 
 /* components used in this file */
@@ -94,11 +94,11 @@ function (outer, iid) {
     return new CLineService();
 }
 
-/* x-application-irc content handler */
-function IRCContentHandler ()
+/* text/calendar content handler */
+function ICALContentHandler ()
 {}
 
-IRCContentHandler.prototype.QueryInterface =
+ICALContentHandler.prototype.QueryInterface =
 function (iid) {
 
     if (!iid.equals(nsIContentHandler))
@@ -107,14 +107,14 @@ function (iid) {
     return this;
 }
 
-IRCContentHandler.prototype.handleContent =
+ICALContentHandler.prototype.handleContent =
 function (aContentType, aCommand, aWindowTarget, aRequest)
 {
     var e;
     var channel = aRequest.QueryInterface(nsIChannel);
     
     /*
-    dump ("ircLoader.handleContent (" + aContentType + ", " +
+    dump ("ICALContentHandler.handleContent (" + aContentType + ", " +
           aCommand + ", " + aWindowTarget + ", " + channel.URI.spec + ")\n");
     */
 
@@ -127,7 +127,7 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
     {
         w.focus();
         
-        w.gCalendarWindow.calendarManager.checkCalendarURL( channel.URI.spec );
+        w.gCalendarWindow.calendarManager.checkCalendarURL( channel );
     }
     else
     {
@@ -143,10 +143,10 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
     
 }
 
-/* content handler factory object (IRCContentHandler) */
-var IRCContentHandlerFactory = new Object();
+/* content handler factory object (ICALContentHandler) */
+var ICALContentHandlerFactory = new Object();
 
-IRCContentHandlerFactory.createInstance =
+ICALContentHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -154,27 +154,27 @@ function (outer, iid) {
     if (!iid.equals(nsIContentHandler) && !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-    return new IRCContentHandler();
+    return new ICALContentHandler();
 }
 
-/* irc protocol handler component */
-function IRCProtocolHandler()
+/* webcal protocol handler component */
+function ICALProtocolHandler()
 {
 }
 
-IRCProtocolHandler.prototype.scheme = "webcal";
-IRCProtocolHandler.prototype.defaultPort = 8080;
-IRCProtocolHandler.prototype.protocolFlags = 
+ICALProtocolHandler.prototype.scheme = "webcal";
+ICALProtocolHandler.prototype.defaultPort = 8080;
+ICALProtocolHandler.prototype.protocolFlags = 
                    nsIProtocolHandler.URI_NORELATIVE |
                    nsIProtocolHandler.ALLOWS_PROXY;
 
-IRCProtocolHandler.prototype.allowPort =
+ICALProtocolHandler.prototype.allowPort =
 function (aPort, aScheme)
 {
     return false;
 }
 
-IRCProtocolHandler.prototype.newURI =
+ICALProtocolHandler.prototype.newURI =
 function (aSpec, aCharset, aBaseURI)
 {
     var url = Components.classes[STANDARDURL_CONTRACTID].
@@ -184,16 +184,16 @@ function (aSpec, aCharset, aBaseURI)
     return url.QueryInterface(nsIURI);
 }
 
-IRCProtocolHandler.prototype.newChannel =
+ICALProtocolHandler.prototype.newChannel =
 function (aURI)
 {
     return new BogusChannel (aURI);
 }
 
-/* protocol handler factory object (IRCProtocolHandler) */
-var IRCProtocolHandlerFactory = new Object();
+/* protocol handler factory object (ICALProtocolHandler) */
+var ICALProtocolHandlerFactory = new Object();
 
-IRCProtocolHandlerFactory.createInstance =
+ICALProtocolHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -201,10 +201,10 @@ function (outer, iid) {
     if (!iid.equals(nsIProtocolHandler) && !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-    return new IRCProtocolHandler();
+    return new ICALProtocolHandler();
 }
 
-/* bogus IRC channel used by the IRCProtocolHandler */
+/* bogus webcal channel used by the ICALProtocolHandler */
 function BogusChannel (aURI)
 {
     this.URI = aURI;
@@ -294,17 +294,17 @@ function (compMgr, fileSpec, location, type)
                             CLINE_SERVICE_CONTRACTID, true, true);
 
     dump("*** Registering text/calendar handler.\n");
-    compMgr.registerFactoryLocation(IRCCNT_HANDLER_CID,
+    compMgr.registerFactoryLocation(ICALCNT_HANDLER_CID,
                                     "Webcal Content Handler",
-                                    IRCCNT_HANDLER_CONTRACTID, 
+                                    ICALCNT_HANDLER_CONTRACTID, 
                                     fileSpec,
                                     location, 
                                     type);
 
     dump("*** Registering webcal protocol handler.\n");
-    compMgr.registerFactoryLocation(IRCPROT_HANDLER_CID,
+    compMgr.registerFactoryLocation(ICALPROT_HANDLER_CID,
                                     "Webcal protocol handler",
-                                    IRCPROT_HANDLER_CONTRACTID, 
+                                    ICALPROT_HANDLER_CONTRACTID, 
                                     fileSpec, 
                                     location,
                                     type);
@@ -329,11 +329,11 @@ function (compMgr, cid, iid) {
     if (cid.equals(CLINE_SERVICE_CID))
         return CLineFactory;
 
-    if (cid.equals(IRCCNT_HANDLER_CID))
-        return IRCContentHandlerFactory;
+    if (cid.equals(ICALCNT_HANDLER_CID))
+        return ICALContentHandlerFactory;
 
-    if (cid.equals(IRCPROT_HANDLER_CID))
-        return IRCProtocolHandlerFactory;
+    if (cid.equals(ICALPROT_HANDLER_CID))
+        return ICALProtocolHandlerFactory;
     
     if (!iid.equals(Components.interfaces.nsIFactory))
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;

@@ -85,7 +85,17 @@
          
    </wizardpage>
    
-   <wizardpage pageid="import-2" onpagehide="" onpageshow="">
+   <wizardpage pageid="import-2" label="Select Calendar" description="Choose the file to import into." onpagehide="" onpageshow="buildCalendarsListbox( 'import-calendar-radiogroup' )" next="import-3">
+      <radiogroup id="import-calendar-radiogroup" datasources="rdf:null" ref="urn:calendarcontainer">
+         <template>
+            <rule>
+               <radio uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#name"/>
+            </rule>
+         </template>
+      </radiogroup>
+   </wizardpage>
+   
+   <wizardpage pageid="import-3" onpagehide="" onpageshow="">
       <description>Should I open each event before importing it?</description>
       <radiogroup id="import-2-radiogroup">
          <radio id="import-2-no"  value="silent"  label="No, just import the events." selected="true"/>
@@ -96,8 +106,8 @@
    <wizardpage pageid="export" label="Export Events" onpagehide="" onpageshow="buildCalendarsListbox( 'export-calendars-listbox' )" next="export-2">
       <radiogroup>
          <radio id="export-calendars"   label="Export Entire Calendar" selected="true"/>
-         <listbox id="export-calendars-listbox" flex="1" 
-            contextmenu="calendarlist-context-menu">
+         <listbox id="export-calendars-listbox" class="unifinder-tree-class" flex="1" 
+            contextmenu="calendarlist-context-menu" datasources="rdf:null" ref="urn:calendarcontainer">
             <listhead>
                <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
                <listheader/>
@@ -106,6 +116,25 @@
                <listcol flex="1"/>
                <listcol/>
             </listcols>
+            <template>
+               <rule>   
+                  <listitem uri="rdf:*" 
+                     calendarPath="rdf:http://home.netscape.com/NC-rdf#path"
+                     onclick="switchCalendar( event );">
+                     <listcell id="calendar-list-item-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
+                        class="calendar-list-item-class"
+                        label="rdf:http://home.netscape.com/NC-rdf#name"
+                        flex="1"
+                        type="checkbox"
+                        checked="rdf:http://home.netscape.com/NC-rdf#active"
+                        />
+                     <listcell>
+                        <image id="calendar-list-image-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
+                           class="calendar-list-item-class"/>
+                     </listcell>
+                  </listitem>
+               </rule>
+            </template>
          </listbox>
             
          <radio id="export-events"      label="Export Selected Events" disabled="true"/>
@@ -138,7 +167,7 @@
          <radio id="publish-calendars"   label="Publish Entire Calendar" selected="true"/>
          <!-- show a list of calendars here -->
          <listbox id="publish-calendars-listbox" class="unifinder-tree-class" flex="1" 
-            contextmenu="calendarlist-context-menu">
+            contextmenu="calendarlist-context-menu" datasources="rdf:null" ref="urn:calendarcontainer">
             <listhead>
                <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
                <listheader/>
@@ -147,6 +176,24 @@
                <listcol flex="1"/>
                <listcol/>
             </listcols>
+            <template>
+               <rule>   
+                  <listitem uri="rdf:*" 
+                     calendarPath="rdf:http://home.netscape.com/NC-rdf#path">
+                     <listcell id="calendar-list-item-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
+                        class="calendar-list-item-class"
+                        label="rdf:http://home.netscape.com/NC-rdf#name"
+                        flex="1"
+                        type="checkbox"
+                        checked="rdf:http://home.netscape.com/NC-rdf#active"
+                        />
+                     <listcell>
+                        <image id="calendar-list-image-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
+                           class="calendar-list-item-class"/>
+                     </listcell>
+                  </listitem>
+               </rule>
+            </template>
          </listbox>
          
          <radio id="publish-events"      label="Publish Selected Events" disabled="true"/>

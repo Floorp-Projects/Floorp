@@ -158,6 +158,10 @@ function calendarInit()
    {
       gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].url );
    }
+
+   //a bit of a hack since the menulist doesn't remember the selected value     
+
+   document.getElementById( 'event-filter-menulist' ).setAttribute( "label", document.getElementById( 'event-filter-menulist' ).selectedItem.getAttribute( 'label' ) );
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -570,7 +574,7 @@ function newEvent( startDate, endDate )
 
    if( selectedCalendarItem )
    {
-      server = selectedCalendarItem.calendarObject.path;
+      server = selectedCalendarItem.calendarPath;
    }
    
    editNewEvent( calendarEvent, server );
@@ -594,6 +598,7 @@ function editNewEvent( calendarEvent, server )
    if( server )
       args.server = server;
 
+   window.setCursor( "wait" );
    // open the dialog modally
    openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
@@ -639,6 +644,7 @@ function editEvent( calendarEvent )
 
    // open the dialog modally
    
+   window.setCursor( "wait" );
    openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome,modal", args );
 }
    
@@ -688,6 +694,17 @@ function modifyToDoDialogResponse( calendarToDo, Server )
    gICalLib.modifyTodo( calendarToDo, Server );
 }
 
+
+function goFindNewCalendars()
+{
+   //launch the browser to http://www.apple.com/ical/library/
+   var browserService = penapplication.getService( "org.penzilla.browser" );
+   if(browserService)
+   {
+       browserService.setUrl("http://www.icalshare.com/");
+       browserService.focusBrowser();
+   }
+}
 
 function displayCalendarVersion()
 {
@@ -798,7 +815,7 @@ function getNumberOfRepeatTimes( Event, DateToCompare )
 
 function reloadApplication()
 {
-	gCalendarWindow.currentView.refreshEvents();
+	gCalendarWindow.eventSource.calendarManager.refreshAllRemoteCalendars();
 }
 
 

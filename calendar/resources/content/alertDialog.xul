@@ -39,7 +39,6 @@
    
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/datepicker/datepicker-overlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
@@ -131,10 +130,5 @@
             <button id="dialog-btn-yes" label="&calendar.alarm.acknowledgeall.label;" default="true" oncommand="doOKButton();"/>
 			</box>
       </vbox> 
-        
-      
-      
-        
     </vbox> <!-- dialog-box -->
-
 </window>

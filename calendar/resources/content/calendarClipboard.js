@@ -85,6 +85,14 @@ function createSupportsString()
 }
 
 
+function createSupportsWString()
+{
+   const kSuppStringContractID = "@mozilla.org/supports-wstring;1";
+   const kSuppStringIID = Components.interfaces.nsISupportsWString;
+   return Components.classes[kSuppStringContractID].createInstance(kSuppStringIID);
+}
+
+
 /** 
 * Test if the clipboard has items that can be pasted into Calendar.
 * This must be of type "text/calendar" or "text/unicode"

@@ -65,8 +65,8 @@
 <!ENTITY newevent.location.label     "Location" >
 <!ENTITY newevent.start.label        "Start" >
 <!ENTITY newevent.date.label         "Date" >
-<!ENTITY newevent.startdate.label    "Start Date" >
-<!ENTITY newevent.enddate.label      "End Date" >
+<!ENTITY newevent.startdate.label    "Start" >
+<!ENTITY newevent.enddate.label      "End" >
 <!ENTITY newevent.end.label          "End" >
 <!ENTITY newevent.alldayevent.label  "This event lasts all day." >
 <!ENTITY newevent.description.label  "Note" >
@@ -208,7 +208,7 @@
 
 <!ENTITY calendar.menu.options.modify       "Edit" >
 <!ENTITY calendar.menu.options.remove       "Delete" >
-<!ENTITY calendar.menu.options.close        "Close Calendar" >
+<!ENTITY calendar.menu.options.close        "Close Window" >
 
 <!ENTITY calendar.main.tab.label        "Events" >
 <!ENTITY calendar.search.tab.label			        "Search">
@@ -300,7 +300,7 @@
 <!ENTITY calendar.server.dialog.title.new           "Add New Calendar">
 <!ENTITY calendar.server.dialog.title.edit          "Edit Calendar">
 <!ENTITY calendar.server.dialog.name.label          "Name">
-<!ENTITY calendar.server.dialog.location.label      "Location">
+<!ENTITY calendar.server.dialog.location.label      "Location (Optional)">
 <!ENTITY calendar.server.dialog.browse.label        "Browse For Local File...">
 <!ENTITY calendar.server.dialog.help.label          "You can enter a local file path, or a remote file path like http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics">
 
@@ -310,4 +310,6 @@
 <!ENTITY calendar.publish.remotefilename.label      "Remote File Name">
 <!ENTITY calendar.publish.username.label            "Username">
 <!ENTITY calendar.publish.password.label            "Password">
+
+<!ENTITY allDayEvents.label "All Day Events">
 

@@ -59,8 +59,6 @@
 <!ENTITY time.22 "10:00 PM" >
 <!ENTITY time.23 "11:00 PM" >
 
-<!ENTITY allDayEvents.label "All Day Events">
-
 <!-- Month Names -->
 <!ENTITY day.1.Ddd "Sun" >
 <!ENTITY day.2.Ddd "Mon" >

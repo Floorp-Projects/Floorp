@@ -45,8 +45,7 @@
 *   Garth Smedley
 * REQUIRED INCLUDES 
 *   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-*   <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
-*
+*   
 * NOTES
 *   Code for the calendar's new/edit event dialog.
 *
@@ -133,11 +132,14 @@ function loadCalendarEventDialog()
    
    // fill in fields from the event
    var startDate = new Date( gEvent.start.getTime() );
+   document.getElementById( "start-date-picker" ).value = startDate;
+   
    var endDate = new Date( gEvent.end.getTime() );
-   setDateFieldValue( "start-date-text", startDate );
-   setDateFieldValue( "end-date-text", endDate );
+   document.getElementById( "end-date-picker" ).value = endDate;
+   
    setTimeFieldValue( "start-time-text", startDate );
    setTimeFieldValue( "end-time-text", endDate );
+   
    gTimeDifference = gEvent.end.getTime() - gEvent.start.getTime(); //the time difference in ms
    
    var today = new Date();
@@ -149,8 +151,6 @@ function loadCalendarEventDialog()
 
    var recurEndDate = new Date( gEvent.recurEnd.getTime() );
    
-   setDateFieldValue( "repeat-end-date-text", recurEndDate );
-
    //do the stuff for exceptions
    var ArrayOfExceptions = gEvent.getExceptions();
 
@@ -171,8 +171,8 @@ function loadCalendarEventDialog()
       addAttachment( thisAttachment );
    }
 
-   setDateFieldValue( "exception-dates-text", startDate );
-
+   document.getElementById( "exceptions-date-picker" ).value = startDate;
+      
    setFieldValue( "title-field", gEvent.title  );
    setFieldValue( "description-field", gEvent.description );
    setFieldValue( "location-field", gEvent.location );
@@ -264,40 +264,37 @@ function loadCalendarEventDialog()
    
    /* Server stuff */
    var serverList = opener.gCalendarWindow.calendarManager.calendars;
-   
-   var oldMenulist = document.getElementById( "server-menulist-menupopup" );
-   while( oldMenulist.hasChildNodes() )
-      oldMenulist.removeChild( oldMenulist.lastChild );
+   document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
+   document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
    
    if( args.mode == "new" )
    {
-      for (var i = 0; i < serverList.length ; i++)
-      {
-         document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
-      }
       if( args.server )
       {
          setFieldValue( "server-field", args.server );
       }
       else
       {
-         document.getElementById( "server-field" ).selectedIndex = 0;
+         document.getElementById( "server-field" ).selectedIndex = 1;
       }
    }
    else
    {
-      for (var i = 0; i < serverList.length ; i++)
+      /*alert( gEvent.parent.server );
+      if( gEvent.parent )
+         setFieldValue( "server-field", gEvent.parent.server );
+      else
       {
-         document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+         alert( "set selected index to 1" );
+         document.getElementById( "server-field" ).selectedIndex = 1;
       }
-      setFieldValue( "server-field", gEvent.parent.server );
-
+         
       //for now you can't edit which file the event is in.
       setFieldValue( "server-field", "true", "disabled" );
 
       setFieldValue( "server-field-label", "true", "disabled" );
+      */
    }
-   
    
    // update enabling and disabling
    updateRepeatItemEnabled();
@@ -321,6 +318,8 @@ function loadCalendarEventDialog()
    // start focus on title
    var firstFocus = document.getElementById( "title-field" );
    firstFocus.focus();
+
+   opener.setCursor( "default" );
 }
 
 
@@ -340,7 +339,7 @@ function onOKCommand()
       gEvent.status      = eval( "gEvent."+getFieldValue( "status-field" ) );
    
    gEvent.allDay      = getFieldValue( "all-day-event-checkbox", "checked" );
-   var startDate = getDateTimeFieldValue( "start-date-text" );
+   var startDate = document.getElementById( "start-date-picker" ).value;
    gEvent.start.year = startDate.getYear()+1900;
    gEvent.start.month = startDate.getMonth();
    gEvent.start.day = startDate.getDate();
@@ -349,7 +348,7 @@ function onOKCommand()
    gEvent.start.hour = startTime.getHours();
    gEvent.start.minute = startTime.getMinutes();
    
-   var endDate = getDateTimeFieldValue( "end-date-text" );
+   var endDate = document.getElementById( "end-date-picker" ).value;
    //do this because the end date is always the same as the start date.
    gEvent.end.year = endDate.getYear()+1900;
    gEvent.end.month = endDate.getMonth();
@@ -396,7 +395,7 @@ function onOKCommand()
    if( gEvent.recurInterval == 0 )
       gEvent.recur = false;
 
-   var recurEndDate = getDateTimeFieldValue( "repeat-end-date-text" );
+   var recurEndDate = document.getElementById( "repeat-end-date-picker" ).value;
    
    gEvent.recurEnd.setTime( recurEndDate );
    gEvent.recurEnd.hour = gEvent.start.hour;
@@ -515,9 +514,9 @@ function checkEndTime()
 
 function checkRecurTime()
 {
-   var recurEndDate = getDateTimeFieldValue( "repeat-end-date-text" );
+   var recurEndDate = document.getElementById( "repeat-end-date-picker" ).value;
 
-   var endDate = getDateTimeFieldValue( "end-time-text" );
+   var endDate = document.getElementById( "end-date-picker" ).value;
 
    var recurForever = getFieldValue( "repeat-forever-radio", "selected" );
    
@@ -577,11 +576,11 @@ function onDatePick( datepopup )
 {
    // display the new date in the textbox
    
-   datepopup.dateField.value = formatDate( datepopup.value );
+   //datepopup.dateField.value = formatDate( datepopup.value );
    
    // remember the new date in a property, "editDate".  we created on the date textbox
    
-   datepopup.dateField.editDate = datepopup.value;
+   //datepopup.dateField.editDate = datepopup.value;
 
    var Now = new Date();
 
@@ -589,9 +588,7 @@ function onDatePick( datepopup )
 
    if ( datepopup.value > Now && !getFieldValue( "repeat-checkbox", "checked" ) ) 
    {
-      document.getElementById( "repeat-end-date-text" ).value = formatDate( datepopup.value );
-
-      document.getElementById( "repeat-end-date-text" ).editDate = datepopup.value;
+      document.getElementById( "repeat-end-date-picker" ).value = formatDate( datepopup.value );
    }
 
    updateAdvancedWeekRepeat();
@@ -835,20 +832,12 @@ function updateInviteItemEnabled()
 
 function updateRepeatItemEnabled()
 {
-   var exceptionsDateButton = document.getElementById( "exception-dates-button" );
-   var exceptionsDateText = document.getElementById( "exception-dates-text" );
-
    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
    
    var repeatDisableList = document.getElementsByAttribute( "disable-controller", "repeat" );
    
    if( repeatCheckBox.checked )
    {
-      exceptionsDateButton.setAttribute( "popup", "oe-date-picker-popup" );
-      exceptionsDateText.setAttribute( "popup", "oe-date-picker-popup" );
-
-      // call remove attribute beacuse some widget code checks for the presense of a 
-      // disabled attribute, not the value.
       for( var i = 0; i < repeatDisableList.length; ++i )
       {
          if( repeatDisableList[i].getAttribute( "today" ) != "true" )
@@ -857,13 +846,8 @@ function updateRepeatItemEnabled()
    }
    else
    {
-      exceptionsDateButton.removeAttribute( "popup" );
-      exceptionsDateText.removeAttribute( "popup" );
-
       for( var j = 0; j < repeatDisableList.length; ++j )
-      {
          repeatDisableList[j].setAttribute( "disabled", "true" );
-      }
    }
    
    // udpate plural/singular
@@ -964,22 +948,15 @@ function updateUntilItemEnabled()
    var repeatUntilRadio = document.getElementById( "repeat-until-radio" );
    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
    
-   var repeatEndText = document.getElementById( "repeat-end-date-text" );
-   var repeatEndPicker = document.getElementById( "repeat-end-date-button" );
-  
+   var repeatEndText = document.getElementById( "repeat-end-date-picker" );
+   
    if( repeatCheckBox.checked && repeatUntilRadio.selected  )
    {
       repeatEndText.removeAttribute( "disabled"  );
-      repeatEndText.setAttribute( "popup", "oe-date-picker-popup" );
-      repeatEndPicker.removeAttribute( "disabled" );
-      repeatEndPicker.setAttribute( "popup", "oe-date-picker-popup" );
    }
    else
    {
       repeatEndText.setAttribute( "disabled", "true" );
-      repeatEndText.removeAttribute( "popup" );
-      repeatEndPicker.setAttribute( "disabled", "true" );
-      repeatEndPicker.removeAttribute( "popup" );
    }
 }
 
@@ -1033,11 +1010,9 @@ function updateStartEndItemEnabled()
 {
    var allDayCheckBox = document.getElementById( "all-day-event-checkbox" );
    
-   var startTimeLabel = document.getElementById( "start-time-label" );
    var startTimePicker = document.getElementById( "start-time-button" );
    var startTimeText = document.getElementById( "start-time-text" );
    
-   var endTimeLabel = document.getElementById( "end-time-label" );
    var endTimePicker = document.getElementById( "end-time-button" );
    var endTimeText = document.getElementById( "end-time-text" );
    
@@ -1045,13 +1020,11 @@ function updateStartEndItemEnabled()
    {
       // disable popups by removing the popup attribute
       
-      startTimeLabel.setAttribute( "disabled", "true" );
       startTimeText.setAttribute( "disabled", "true" );
       startTimeText.removeAttribute( "popup" );
       startTimePicker.setAttribute( "disabled", "true" );
       startTimePicker.removeAttribute( "popup" );
       
-      endTimeLabel.setAttribute( "disabled", "true" );
       endTimeText.setAttribute( "disabled", "true" );
       endTimeText.removeAttribute( "popup" );
       endTimePicker.setAttribute( "disabled", "true" );
@@ -1061,13 +1034,11 @@ function updateStartEndItemEnabled()
    {
       // enable popups by setting the popup attribute
       
-      startTimeLabel.removeAttribute( "disabled" );
       startTimeText.removeAttribute( "disabled" );
       startTimeText.setAttribute( "popup", "oe-time-picker-popup" );
       startTimePicker.removeAttribute( "disabled" );
       startTimePicker.setAttribute( "popup", "oe-time-picker-popup" );
       
-      endTimeLabel.removeAttribute( "disabled" );
       endTimeText.removeAttribute( "disabled" );
       endTimeText.setAttribute( "popup", "oe-time-picker-popup" );
       endTimePicker.removeAttribute( "disabled" );
@@ -1124,9 +1095,7 @@ function setAdvancedWeekRepeat()
    }
   
    //get the day number for today.
-   var startTime = getDateTimeFieldValue( "start-date-text" );
-   
-   var dayNumber = startTime.getDay();
+   var dayNumber = document.getElementById( "start-date-picker" ).value.getDay();
    
    setFieldValue( "advanced-repeat-week-"+dayNumber, "true", "checked" );
 
@@ -1160,10 +1129,8 @@ function getAdvancedWeekRepeat()
 function updateAdvancedWeekRepeat()
 {
    //get the day number for today.
-   var startTime = getDateTimeFieldValue( "start-date-text" );
+   var dayNumber = document.getElementById( "start-date-picker" ).value.getDay();
    
-   var dayNumber = startTime.getDay();
-
    //uncheck them all if the repeat checkbox is checked
    var repeatCheckBox = document.getElementById( "repeat-checkbox" );
    
@@ -1175,6 +1142,14 @@ function updateAdvancedWeekRepeat()
          setFieldValue( "advanced-repeat-week-"+i, false, "disabled" );
       
          setFieldValue( "advanced-repeat-week-"+i, false, "today" );
+      }
+   }
+
+   if( !repeatCheckBox.checked )
+   {
+      for( i = 0; i < 7; i++ )
+      {
+         setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
       }
    }
 
@@ -1191,10 +1166,8 @@ function updateAdvancedWeekRepeat()
 function updateAdvancedRepeatDayOfMonth()
 {
    //get the day number for today.
-   var startTime = getDateTimeFieldValue( "start-date-text" );
+   var dayNumber = document.getElementById( "start-date-picker" ).value.getDate();
    
-   var dayNumber = startTime.getDate();
-
    var dayExtension = getDayExtension( dayNumber );
 
    var weekNumber = getWeekNumberOfMonth();
@@ -1231,7 +1204,7 @@ function updateAdvancedRepeatDayOfMonth()
 function updateAddExceptionButton()
 {
    //get the date from the picker
-   var datePickerValue = getDateTimeFieldValue( "exception-dates-text" );
+   var datePickerValue = document.getElementById( "exceptions-date-picker" ).value;
    
    if( isAlreadyException( datePickerValue ) || document.getElementById( "repeat-checkbox" ).getAttribute( "checked" ) != "true" )
    {
@@ -1259,7 +1232,7 @@ function addException( dateToAdd )
    {
       //get the date from the date and time box.
       //returns a date object
-      var dateToAdd = getDateTimeFieldValue( "exception-dates-text" );
+      var dateToAdd = document.getElementById( "exceptions-date-picker" ).value;
    }
    
    if( isAlreadyException( dateToAdd ) )
@@ -1311,10 +1284,8 @@ function getDayExtension( dayNumber )
 function getDayOfWeek( )
 {
    //get the day number for today.
-   var startTime = getDateTimeFieldValue( "start-date-text" );
+   var dayNumber = document.getElementById( "start-date-picker" ).value.getDay();
    
-   var dayNumber = startTime.getDay();
-
    var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
    //add one to the dayNumber because in the above prop. file, it starts at day1, but JS starts at 0
@@ -1327,7 +1298,7 @@ function getDayOfWeek( )
 function getWeekNumberOfMonth()
 {
    //get the day number for today.
-   var startTime = getDateTimeFieldValue( "start-date-text" );
+   var startTime = document.getElementById( "start-date-picker" ).value;
    
    var oldStartTime = startTime;
 
@@ -1352,7 +1323,7 @@ function getWeekNumberOfMonth()
 function isLastDayOfWeekOfMonth()
 {
    //get the day number for today.
-   var startTime = getDateTimeFieldValue( "start-date-text" );
+   var startTime = document.getElementById( "start-date-picker" ).value;
    
    var oldStartTime = startTime;
 

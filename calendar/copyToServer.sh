@@ -1,1 +1,1 @@
-scp calendar_*.xpi mikep@www:/var/www/html/generated/files/
+scp calendar_*.xpi mikep@www:/var/www/www/generated/files/

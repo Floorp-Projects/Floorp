@@ -268,15 +268,14 @@ CalendarEventDataSource.prototype.getEventsForDay = function calEvent_getEventsF
    
    while( eventList.hasMoreElements() )
    {
-      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
-      
-      var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
+      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
       
       var EventObject = new Object;
       
-      EventObject.event = tmpevent;
+      EventObject.event = tmpevent.event;
       
-      EventObject.displayDate = displayDate;
+      EventObject.displayDate = new Date( tmpevent.displayDate );
+      EventObject.displayEndDate = new Date( tmpevent.displayDateEnd );
       
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
@@ -309,7 +308,7 @@ CalendarEventDataSource.prototype.getEventsForWeek = function calEvent_getEvents
    
    while( eventList.hasMoreElements() )
    {
-      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
+      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
       
       var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
       
@@ -318,7 +317,8 @@ CalendarEventDataSource.prototype.getEventsForWeek = function calEvent_getEvents
       EventObject.event = tmpevent;
       
       EventObject.displayDate = displayDate;
-      
+      EventObject.displayEndDate = new Date( tmpevent.displayDateEnd );
+
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
 
@@ -348,19 +348,14 @@ CalendarEventDataSource.prototype.getEventsForMonth = function calEvent_getEvent
    
    while( eventList.hasMoreElements() )
    {
-//      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
       var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
-      
-//      var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
       
       var EventObject = new Object;
       
-//      EventObject.event = tmpevent;
       EventObject.event = tmpevent.event;
       
-//      EventObject.displayDate = displayDate;
       EventObject.displayDate = new Date( tmpevent.displayDate );
-      EventObject.displayDateEnd = new Date( tmpevent.displayDateEnd );
+      EventObject.displayEndDate = new Date( tmpevent.displayDateEnd );
       
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
@@ -392,15 +387,14 @@ CalendarEventDataSource.prototype.getNextEvents = function calEvent_getNextEvent
    
    while( eventList.hasMoreElements() )
    {
-      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
-      
-      var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
+      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
       
       var EventObject = new Object;
       
       EventObject.event = tmpevent;
       
       EventObject.displayDate = displayDate;
+      EventObject.displayEndDate = displayDateEnd;
       
       eventDisplays[ eventDisplays.length ] = EventObject;
    }
@@ -584,13 +578,15 @@ CalendarEventDataSource.prototype.orderRawEventsByDate = function calEvent_order
 
 function getNextOrPreviousRecurrence( calendarEvent )
 {
+   var isValid = false;
+
    if( calendarEvent.recur )
    {
       var now = new Date();
 
       var result = new Object();
 
-      var isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
+      isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
 
       if( isValid )
       {
@@ -604,9 +600,15 @@ function getNextOrPreviousRecurrence( calendarEvent )
       }
    }
    
-   if( !isValid || !calendarEvent.recur )
+   if( !isValid )
    {
-      var eventStartDate = new Date( calendarEvent.start.getTime() );
+      if( calendarEvent.start )
+      {
+         var eventStartDate = new Date( calendarEvent.start.getTime() );
+      }
+      else
+         var eventStartDate = new Date( calendarEvent.event.start.getTime() );
+      
    }
       
    return eventStartDate;

@@ -42,12 +42,14 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/datepicker/datepicker-overlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
 <?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
+
+<?xml-stylesheet href="chrome://calendar/context/datepicker/datepicker.css" ?>
+<?xml-stylesheet href="chrome://calendar/context/datepicker/calendar.css" ?>
 
 <!-- CSS for selecting contacts to invite to event -->
 <?xml-stylesheet href="chrome://calendar/skin/contactsSelectAddressesDialog.css" ?>
@@ -171,21 +173,30 @@
                             <label value="&newevent.startdate.label;"/>
                         </hbox>
                         <hbox  id="start-date-box" align="center">
-                            <textbox class="date-text-class" id="start-date-text" readonly="true"                 onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <image class="event-date-button-class" id="start-date-button" onmousedown="prepareDatePicker('start-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                            <datepicker id="start-date-picker" value=""/>
+                            <textbox id="start-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                            <image id="start-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
                     </row>
                     
                     <!-- End Date -->    
-                    <row align="center" collapsed="true">
+                    <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.enddate.label;"/>
                         </hbox>
                         <hbox  id="end-date-box" align="center">
-                            <textbox class="date-text-class" id="end-date-text" readonly="true"                 onmousedown="prepareDatePicker('end-date-text')" popup="oe-date-picker-popup" position="after_start"/>
-                            <image class="event-date-button-class" id="end-date-button" onmousedown="prepareDatePicker('end-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                            <datepicker id="end-date-picker" value=""/>
+                            <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                            <image id="end-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
                     </row>
+                    
+                    <!-- All Day -->    
+                    <row align="center">
+                        <spacer />
+                        <label id="end-time-warning" class="warning-text-class" value="&newevent.endtime.warning;" collapsed="true"/>
+                    </row>
+                    
                     
                     <!-- All Day -->    
                     <row align="center">
@@ -193,31 +204,6 @@
                         <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" checked="false" oncommand="commandAllDay()"/>
                     </row>
             
-                    
-                    <!-- Start Time -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label id="start-time-label" value="&newevent.start.label;"/>
-                        </hbox>
-                        <hbox id="start-event-time-box" align="center">
-                            <textbox id="start-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
-                            <image id="start-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
-                        </hbox>
-                    </row>
-                    
-                    
-                    <!-- End Time -->    
-                    <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label id="end-time-label" value="&newevent.end.label;"/>
-                        </hbox>
-                        <hbox id="end-event-time-box" align="center">
-                            <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
-                            <image id="end-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
-                            <label id="end-time-warning" class="warning-text-class" value="&newevent.endtime.warning;" collapsed="true"/>
-                        </hbox>
-                    </row>
-                    
                     
                     <!-- Description -->    
                     <row flex="1" align="start">
@@ -305,8 +291,12 @@
                             <label id="server-field-label" value="&newevent.server.label;"/>
                         </hbox>
                         <menulist id="server-field">
-                            <menupopup id="server-menulist-menupopup">
-                                <menuitem label="&priority.level.none;" value="0"/>
+                           <menupopup id="server-menulist-menupopup" datasources="rdf:null" ref="urn:calendarcontainer">
+                              <template>
+                                 <rule>   
+                                    <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#path" label="rdf:http://home.netscape.com/NC-rdf#name"/>
+                                 </rule>
+                              </template>
                             </menupopup>
                         </menulist>
                     </row>
@@ -363,8 +353,7 @@
                                      <hbox>
                                         <radio id="repeat-until-radio" disable-controller="repeat" label="&newevent.until.label;" oncommand="commandUntil()"/>
                                         <spacer id="until-spacer"/>
-                                        <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
-                                        <image class="event-date-button-class" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                        <datepicker id="repeat-end-date-picker" value=""/>
                                      </hbox>
                                      <label id="repeat-time-warning" class="warning-text-class" value="&newevent.recurend.warning;" collapsed="true"/>
                                   </vbox>
@@ -384,8 +373,7 @@
                                  <rows>
                                     <row>
                                        <hbox align="center">
-                                          <textbox id="exception-dates-text" disable-controller="repeat" readonly="true" value="" onmousedown="prepareDatePicker('exception-dates-text')" popup="oe-date-picker-popup"  position="before_start"/>
-                                          <image class="event-date-button-class" disable-controller="repeat" id="exception-dates-button" onmousedown="prepareDatePicker('exception-dates-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                          <datepicker id="exceptions-date-picker" disable-controller="repeat" value=""/>
                                        </hbox>   
                                        <button id="exception-add-button" label="&newevent.addexceptions.label;" disable-controller="repeat" oncommand="addException()"/>
                                     </row>

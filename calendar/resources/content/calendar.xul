@@ -50,7 +50,6 @@
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarMenuOverlay.xul"?>
-<?xul-overlay href="chrome://calendar/content/datepicker/datepicker-overlay.xul"?>
 
 <?xul-overlay href="chrome://calendar/content/calendarDayView.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarWeekView.xul"?>
@@ -96,7 +95,8 @@
 
    <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
    <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
-   <command id="delete_server_command" oncommand="deleteCalendar()"/>
+   <command id="delete_server_command" oncommand="deleteCalendar()" disabled="true" collapsed="true"/>
+   <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
 
    <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
    <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
@@ -152,6 +152,8 @@
 
 <!-- Javascript includes -->
 
+<script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
+
 <!-- NEEDED FOR DRAG AND DROP SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarDragDrop.js"/>
 
@@ -182,6 +184,7 @@
 <script type="application/x-javascript" src="chrome://calendar/content/unifinderToDo.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
 
+<!--<script type="application/x-javascript" src="chrome://calendar/content/email.js"/>-->
 
 <!-- GENERAL CONTEXT MENU -->
 <popup id="context-menu" onpopuphidden="gNewDateVariable = null;">
@@ -205,7 +208,6 @@
 
    <menuseparator/>
    <menuitem label="&calendar.context.emailevent.label;" accesskey="&calendar.context.emailevent.accesskey;" observes="send_event_command"/>
-   
    <!--
    <menuseparator/>
    <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
@@ -292,7 +294,7 @@
       <vbox id="left-hand-content" flex="1" persist="width">
          <vbox id="left-hand-above-splitter" flex="1">
             <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
-               contextmenu="calendarlist-context-menu">
+               contextmenu="calendarlist-context-menu" datasources="rdf:null" ref="urn:calendarcontainer">
                <listhead>
                   <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
                   <listheader/>
@@ -301,6 +303,25 @@
                   <listcol flex="1"/>
                   <listcol/>
                </listcols>
+               <template>
+                  <rule>   
+                     <listitem uri="rdf:*" 
+                        calendarPath="rdf:http://home.netscape.com/NC-rdf#path"
+                        onclick="switchCalendar( event );">
+                        <listcell id="calendar-list-item-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
+                           class="calendar-list-item-class"
+                           label="rdf:http://home.netscape.com/NC-rdf#name"
+                           flex="1"
+                           type="checkbox"
+                           checked="rdf:http://home.netscape.com/NC-rdf#active"
+                           />
+                        <listcell>
+                           <image id="calendar-list-image-^rdf://http://home.netscape.com/NC-rdf#serverNumber"
+                              class="calendar-list-item-class"/>
+                        </listcell>
+                     </listitem>
+                  </rule>
+               </template>
             </listbox>
          </vbox>
          <splitter id="calendar-todo-splitter" collapse="after" persist="state"
