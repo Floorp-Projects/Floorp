@@ -123,7 +123,7 @@ static void activateWindow( nsIDOMWindowInternal *win )
 }
 // end shameless copying from nsNativeAppWinSupport.cpp
 
-static void openMailWindow(const PRUnichar * aMailWindowName, const PRUnichar * aFolderUri)
+static void openMailWindow(const PRUnichar * aMailWindowName, const char * aFolderUri)
 {
   nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
   if (mediator)
@@ -139,7 +139,7 @@ static void openMailWindow(const PRUnichar * aMailWindowName, const PRUnichar * 
         piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgWindowCommands").get(), getter_AddRefs(xpConnectObj));
         nsCOMPtr<nsIMsgWindowCommands> msgWindowCommands = do_QueryInterface(xpConnectObj);
         if (msgWindowCommands)
-          msgWindowCommands->SelectFolder(NS_ConvertUCS2toUTF8(aFolderUri).get());
+          msgWindowCommands->SelectFolder(aFolderUri);
       }
 
       activateWindow(domWindow);
@@ -151,7 +151,7 @@ static void openMailWindow(const PRUnichar * aMailWindowName, const PRUnichar * 
       // if we want to preselect the first account with new mail, here is where we would try to generate
       // a uri to pass in (and add code to the messenger window service to make that work)
       if (messengerWindowService) 
-        messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", NS_ConvertUCS2toUTF8(aFolderUri).get(), nsMsgKey_None);
+        messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", aFolderUri, nsMsgKey_None);
     }
   }
 }
@@ -549,7 +549,11 @@ NS_IMETHODIMP nsMessengerWinIntegration::OnAlertClickCallback(const PRUnichar * 
 {
   // make sure we don't insert the icon in the system tray since the user clicked on the alert.
   mSuppressBiffIcon = PR_TRUE;
-  openMailWindow(NS_LITERAL_STRING("mail:3pane").get(), aAlertCookie);
+  
+  nsXPIDLCString folderURI;
+  GetFirstFolderWithNewMail(getter_Copies(folderURI));
+
+  openMailWindow(NS_LITERAL_STRING("mail:3pane").get(), folderURI);
  
   return NS_OK;
 }
@@ -560,6 +564,7 @@ void nsMessengerWinIntegration::FillToolTipInfo()
   nsXPIDLCString userName;
   nsXPIDLCString hostName; 
   nsAutoString toolTipText;
+  nsAutoString animatedAlertText;
   nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIMsgFolder> folder;
   nsCOMPtr<nsIWeakReference> weakReference;
@@ -601,6 +606,11 @@ void nsMessengerWinIntegration::FillToolTipInfo()
         else
           bundle->FormatStringFromName(NS_LITERAL_STRING("biffNotification_messages").get(), formatStrings, 2, getter_Copies(finalText));
 
+        // the alert message is special...we actually only want to show the first account with 
+        // new mail in the alert. 
+        if (animatedAlertText.IsEmpty()) // if we haven't filled in the animated alert text yet
+          animatedAlertText = finalText;
+
         // only add this new string if it will fit without truncation....
         if (maxTooltipSize >= toolTipText.Length() + finalText.Length() + 2)
         {
@@ -616,9 +626,7 @@ void nsMessengerWinIntegration::FillToolTipInfo()
 
   if (!mBiffIconVisible)
   {
-    nsXPIDLCString folderURI;
-    GetFirstFolderWithNewMail(getter_Copies(folderURI));
-    ShowAlertMessage(toolTipText.get(), folderURI);
+    ShowAlertMessage(animatedAlertText.get(), "");
   }
   else
    GenericShellNotify( NIM_MODIFY);
