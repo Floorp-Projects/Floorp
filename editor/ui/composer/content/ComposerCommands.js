@@ -37,14 +37,14 @@ function SetupControllerCommands()
   
   dump("Registering commands\n");
   
-  gComposerCommandManager.registerCommand("cmd_newEditor",  nsNewEditorCommand);
+  gComposerCommandManager.registerCommand("cmd_newEditor",     nsNewEditorCommand);
 
-  gComposerCommandManager.registerCommand("cmd_open",       nsOpenCommand);
-  gComposerCommandManager.registerCommand("cmd_saveAsCharset",       nsSaveAsCharsetCommand);
-  gComposerCommandManager.registerCommand("cmd_revert",     nsRevertCommand);
-  gComposerCommandManager.registerCommand("cmd_openRemote", nsOpenRemoteCommand);
-  gComposerCommandManager.registerCommand("cmd_preview",    nsPreviewCommand);
-  gComposerCommandManager.registerCommand("cmd_quit",       nsQuitCommand);
+  gComposerCommandManager.registerCommand("cmd_open",          nsOpenCommand);
+  gComposerCommandManager.registerCommand("cmd_saveAsCharset", nsSaveAsCharsetCommand);
+  gComposerCommandManager.registerCommand("cmd_revert",        nsRevertCommand);
+  gComposerCommandManager.registerCommand("cmd_openRemote",    nsOpenRemoteCommand);
+  gComposerCommandManager.registerCommand("cmd_preview",       nsPreviewCommand);
+  gComposerCommandManager.registerCommand("cmd_quit",          nsQuitCommand);
 
   gComposerCommandManager.registerCommand("cmd_find",       nsFindCommand);
   gComposerCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
@@ -61,14 +61,14 @@ function SetupControllerCommands()
 
   gComposerCommandManager.registerCommand("cmd_image",         nsImageCommand);
   gComposerCommandManager.registerCommand("cmd_hline",         nsHLineCommand);
-  gComposerCommandManager.registerCommand("cmd_table",         nsInsertOrEditTableCommand);
-  gComposerCommandManager.registerCommand("cmd_editTable",     nsEditTableCommand);
   gComposerCommandManager.registerCommand("cmd_link",          nsLinkCommand);
   gComposerCommandManager.registerCommand("cmd_anchor",        nsAnchorCommand);
   gComposerCommandManager.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
   gComposerCommandManager.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
   gComposerCommandManager.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
 
+  gComposerCommandManager.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
+  gComposerCommandManager.registerCommand("cmd_editTable",          nsEditTableCommand);
   gComposerCommandManager.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
   gComposerCommandManager.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
   gComposerCommandManager.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
@@ -86,7 +86,8 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
   gComposerCommandManager.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
   gComposerCommandManager.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
-  gComposerCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
+  gComposerCommandManager.registerCommand("cmd_tableJoinCells",     nsJoinTableCellsCommand);
+  gComposerCommandManager.registerCommand("cmd_tableSplitCell",     nsSplitTableCellCommand);
 }
 
 //-----------------------------------------------------------------------------------
@@ -444,7 +445,7 @@ var nsSpellingCommand =
         }
       }
     }
-    contentWindow.focus();
+    window.content.focus();
   }
 };
 
@@ -807,13 +808,14 @@ function goUpdateTableMenuItems(commandset)
 
 function IsInTable()
 {
+dump("IsInTable?\n");
   return (window.editorShell && window.editorShell.documentEditable &&
           null != window.editorShell.GetElementOrParentByTagName("table", null));
 }
 
 function IsInTableCell()
 {
-dump("IsInTableCell???\n");
+dump("IsInTableCell?\n");
   return (window.editorShell && window.editorShell.documentEditable &&
           null != window.editorShell.GetElementOrParentByTagName("td", null));
 }
@@ -825,7 +827,7 @@ function EditorInsertOrEditTable(insertAllowed)
   if (IsInTable()) {
     // Edit properties of existing table
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
-    contentWindow.focus();
+    window.content.focus();
   } else if(insertAllowed) {
     EditorInsertTable();
   }
@@ -833,9 +835,10 @@ function EditorInsertOrEditTable(insertAllowed)
 
 function EditorInsertTable()
 {
+dump("EditorInsertTable\n");
   // Insert a new table
   window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
-  contentWindow.focus();
+  window.content.focus();
 }
 
 function EditorTableCellProperties()
@@ -844,7 +847,7 @@ function EditorTableCellProperties()
   if (cell) {
     // Start Table Properties dialog on the "Cell" panel
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
-    contentWindow.focus();
+    window.content.focus();
   }
 }
 
@@ -857,6 +860,7 @@ var nsInsertOrEditTableCommand =
   },
   doCommand: function(aCommand)
   {
+dump("nsInsertOrEditTableCommand\n");
     if (this.isCommandEnabled(aCommand))
       EditorInsertOrEditTable(true);
   }
@@ -871,6 +875,7 @@ var nsEditTableCommand =
   },
   doCommand: function(aCommand)
   {
+dump("nsEditTableCommand\n");
     if (this.isCommandEnabled(aCommand))
       EditorInsertOrEditTable(false);
   }
@@ -885,10 +890,11 @@ var nsSelectTableCommand =
   },
   doCommand: function(aCommand)
   {
+dump("nsSelectTableCommand\n");
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.SelectTable();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -901,10 +907,11 @@ var nsSelectTableRowCommand =
   },
   doCommand: function(aCommand)
   {
+dump("nsSelectTableRowCommand\n");
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.SelectTableRow();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -917,10 +924,11 @@ var nsSelectTableColumnCommand =
   },
   doCommand: function(aCommand)
   {
+dump("nsSelectTableColumnCommand\n");
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.SelectTableColumn();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -933,10 +941,11 @@ var nsSelectTableCellCommand =
   },
   doCommand: function(aCommand)
   {
+dump("nsSelectTableCellCommand\n");
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.SelectTableCell();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -945,14 +954,15 @@ var nsSelectAllTableCellsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return IsInTableCell();
+    return IsInTable();
   },
   doCommand: function(aCommand)
   {
+dump("nsSelectAllTableCellsCommand\n");
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.SelectAllTableCells();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -982,7 +992,7 @@ var nsInsertTableRowAboveCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.InsertTableRow(false);
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -998,7 +1008,7 @@ var nsInsertTableRowBelowCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.InsertTableRow(true);
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1014,7 +1024,7 @@ var nsInsertTableColumnBeforeCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.InsertTableColumn(false);
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1030,7 +1040,7 @@ var nsInsertTableColumnAfterCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.InsertTableColumn(true);
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1059,7 +1069,7 @@ var nsInsertTableCellAfterCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.InsertTableCell(true);
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1076,7 +1086,7 @@ var nsDeleteTableCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.DeleteTable();        
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1092,7 +1102,7 @@ var nsDeleteTableRowCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.DeleteTableRow(1);   
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1108,7 +1118,7 @@ var nsDeleteTableColumnCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.DeleteTableColumn(1); 
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1124,7 +1134,7 @@ var nsDeleteTableCellCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.DeleteTableCell(1);   
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1140,7 +1150,7 @@ var nsDeleteTableCellContentsCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.DeleteTableCellContents();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1157,7 +1167,7 @@ var nsNormalizeTableCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.NormalizeTable();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1175,7 +1185,7 @@ var nsJoinTableCellsCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.JoinTableCells();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };
@@ -1193,7 +1203,7 @@ var nsSplitTableCellCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.SplitTableCell();
-      contentWindow.focus();
+      window.content.focus();
     }
   }
 };

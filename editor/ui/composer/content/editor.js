@@ -41,10 +41,10 @@ var EditorDisplayMode = 1;  // Normal Editor mode
 var EditModeType = "";
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
-var contentWindow = 0;
-var sourceContentWindow = 0;
-var ContentWindowDeck;
-var FormatToolbar;
+var gContentWindow = 0;
+var gSourceContentWindow = 0;
+var gContentWindowDeck;
+var gFormatToolbar;
 // Bummer! Can't get at enums from nsIDocumentEncoder.h
 var gOutputSelectionOnly = 1;
 var gOutputFormatted     = 2;
@@ -138,8 +138,8 @@ var DocumentStateListener =
 
 function EditorStartup(editorType, editorElement)
 {
-  contentWindow = window.content;
-  sourceContentWindow = document.getElementById("content-source");
+  gContentWindow = window.content;
+  gSourceContentWindow = document.getElementById("content-source");
   gIsHTMLEditor = (editorType == "html");
 
   if (gIsHTMLEditor)
@@ -156,8 +156,8 @@ dump("Edit Mode: "+gNormalModeButton.getAttribute('type')+"\n");
     ToggleEditModeType(gNormalModeButton.getAttribute("type"));
 
     // XUL elements we use when switching from normal editor to edit source
-    ContentWindowDeck = document.getElementById("ContentWindowDeck");
-    FormatToolbar = document.getElementById("FormatToolbar");
+    gContentWindowDeck = document.getElementById("ContentWindowDeck");
+    gFormatToolbar = document.getElementById("FormatToolbar");
   }
 
   gIsWin = navigator.appVersion.indexOf("Win") != -1;
@@ -173,7 +173,7 @@ dump("Edit Mode: "+gNormalModeButton.getAttribute('type')+"\n");
   editorShell.SetEditorType(editorType);
 
   editorShell.webShellWindow = window;
-  editorShell.contentWindow = contentWindow;
+  editorShell.contentWindow = gContentWindow;
 
   // hide UI that we don't have components for
   HideInapplicableUIElements();
@@ -412,7 +412,7 @@ function EditorSetDocumentCharacterSet(aCharset)
 function EditorSetTextProperty(property, attribute, value)
 {
   editorShell.SetTextProperty(property, attribute, value);
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function onParagraphFormatChange(commandID)
@@ -484,7 +484,7 @@ function EditorSetFontFace(fontFace)
     }
   }        
 //dump("Setting focus to content window...\n");
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function EditorSelectFontSize()
@@ -573,7 +573,7 @@ function EditorSetFontSize(size)
     editorShell.SetTextProperty("span", "style", "font-size:"+size);
   }
 */
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function EditorSelectTextColor(ColorPickerID, ColorWellID)
@@ -591,7 +591,7 @@ function EditorSelectTextColor(ColorPickerID, ColorWellID)
   if (menupopup) menupopup.closePopup();
 
   EditorSetFontColor(color);
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function EditorRemoveTextColor(ColorWellID)
@@ -604,7 +604,7 @@ function EditorRemoveTextColor(ColorWellID)
 
   //TODO: Set colorwell to browser's default color
   editorShell.SetTextProperty("font", "color", "");
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function EditorSelectBackColor(ColorPickerID, ColorWellID)
@@ -622,7 +622,7 @@ dump("EditorSelectBackColor: "+color+"\n");
   if (menupopup) menupopup.closePopup();
 
   EditorSetBackgroundColor(color);
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function EditorRemoveBackColor(ColorWellID)
@@ -634,7 +634,7 @@ function EditorRemoveBackColor(ColorWellID)
   }
   //TODO: Set colorwell to browser's default color
   editorShell.SetBackgroundColor("");
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 
@@ -649,26 +649,26 @@ function SetManualTextColor()
 function EditorSetFontColor(color)
 {
   editorShell.SetTextProperty("font", "color", color);
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function EditorSetBackgroundColor(color)
 {
   editorShell.SetBackgroundColor(color);
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function EditorApplyStyle(tagName)
 {
   dump("applying style\n");
   editorShell.SetTextProperty(tagName, "", "");
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 function EditorRemoveLinks()
 {
   editorShell.RemoveTextProperty("href", "");
-  contentWindow.focus();
+  gContentWindow.focus();
 }
 
 /*TODO: We need an oncreate hook to do enabling/disabling for the 
@@ -723,10 +723,10 @@ function SetEditMode(mode)
         {
           // KLUDGE until we have an output flag that strips out <body> and </body> for us
           //var sourceContent = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
-          //sourceContentWindow.value = sourceContent.replace(/<body>/,"").replace(/<\/body>/,"");
-          sourceContentWindow.value = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
-          sourceContentWindow.focus();
-          setTimeout("sourceContentWindow.focus()", 10);
+          //gSourceContentWindow.value = sourceContent.replace(/<body>/,"").replace(/<\/body>/,"");
+          gSourceContentWindow.value = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
+          gSourceContentWindow.focus();
+          setTimeout("gSourceContentWindow.focus()", 10);
           return;
         }
       }
@@ -738,15 +738,15 @@ function SetEditMode(mode)
       // We are comming from edit source mode,
       //   so transfer that back into the document
       editorShell.SelectAll();
-      editorShell.InsertSource(sourceContentWindow.value);
+      editorShell.InsertSource(gSourceContentWindow.value);
       // Clear out the source editor buffer
-      sourceContentWindow.value = "";
+      gSourceContentWindow.value = "";
       // reset selection to top of doc (wish we could preserve it!)
       if (bodyNode)
         editorShell.editorSelection.collapse(bodyNode, 0);
 
-      contentWindow.focus();
-      setTimeout("contentWindow.focus()", 10);
+      gContentWindow.focus();
+      setTimeout("gContentWindow.focus()", 10);
     }
   }
 }
@@ -754,7 +754,7 @@ function SetEditMode(mode)
 function CancelSourceEditing()
 {
   // Empty the source window
-  sourceContentWindow.value="";
+  gSourceContentWindow.value="";
   SetDisplayMode(PreviousNonSourceDisplayMode);
 }
 
@@ -786,21 +786,21 @@ function SetDisplayMode(mode)
     if (mode == DisplayModeSource)
     {
       // Switch to the sourceWindow (second in the deck)
-      ContentWindowDeck.setAttribute("index","1");
+      gContentWindowDeck.setAttribute("index","1");
 
       // TODO: WE MUST DISABLE ALL KEYBOARD COMMANDS!
 
       // THIS DOESN'T WORK!
-      sourceContentWindow.focus();
+      gSourceContentWindow.focus();
     }
     else 
     {
       // Switch to the normal editor (first in the deck)
-      ContentWindowDeck.setAttribute("index","0");
+      gContentWindowDeck.setAttribute("index","0");
 
       // TODO: WE MUST ENABLE ALL KEYBOARD COMMANDS!
 
-      contentWindow.focus();
+      gContentWindow.focus();
     }
     return true;
   }
