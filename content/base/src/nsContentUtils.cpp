@@ -1117,8 +1117,8 @@ nsContentUtils::ComparePositionWithAncestors(nsIDOMNode *aNode,
                                              nsIDOMNode *aOther)
 {
 #ifdef DEBUG
-  PRInt16 nodeType = 0;
-  PRInt16 otherType = 0;
+  PRUInt16 nodeType = 0;
+  PRUInt16 otherType = 0;
   aNode->GetNodeType(&nodeType);
   aOther->GetNodeType(&otherType);
 
