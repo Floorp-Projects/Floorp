@@ -15,19 +15,19 @@
 # Reserved.
 #
 
-DEPTH = ../../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/rules.mk
-
 EXPORT_RESOURCE_CONTENT = \
-	$(srcdir)/platformGlobalOverlay.xul \
-	$(srcdir)/platformDialogOverlay.xul \
-	$(NULL)
+		$(srcdir)/platformGlobalOverlay.xul \
+		$(srcdir)/platformDialogOverlay.xul \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/global/content/default

@@ -15,13 +15,14 @@
 # Reserved.
 #
 
-DEPTH = ../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = resources
+DIRS		= resources
 
 include $(topsrcdir)/config/rules.mk
+
