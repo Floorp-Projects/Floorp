@@ -41,6 +41,13 @@ public:
                              nsIProtocolConnection* *result);
     NS_IMETHOD HasActiveConnections();
 
+    NS_IMETHOD GetAppCodeName(nsString2& aAppCodeName);
+    NS_IMETHOD GetAppVersion(nsString2& aAppVersion);
+    NS_IMETHOD GetAppName(nsString2& aAppName);
+    NS_IMETHOD GetLanguage(nsString2& aLanguage);
+    NS_IMETHOD GetPlatform(nsString2& aPlatform);
+    NS_IMETHOD GetUserAgent(nsString2& aUA);
+
     // nsNetService methods:
     nsNetService();
     virtual ~nsNetService();
@@ -48,7 +55,11 @@ public:
     nsresult Init();
 
 protected:
-
+    nsString2   XP_AppName;
+    nsString2   XP_AppCodeName;
+    nsString2   XP_AppVersion;
+    nsString2   XP_AppLanguage;
+    nsString2   XP_AppPlatform;
 };
 
 #endif // nsNetService_h__

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -28,6 +28,9 @@
 #include "nsConnectionGroup.h"
 #include <ctype.h>      // for isalpha
 #include "nsCOMPtr.h"
+#include "nspr.h"
+
+
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -221,6 +224,45 @@ nsNetService::HasActiveConnections()
 #else
     return NS_OK;
 #endif
+}
+
+NS_IMETHODIMP
+nsNetService::GetAppCodeName(nsString2& aAppCodeName) {
+    aAppCodeName.SetString(XP_AppCodeName);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetService::GetAppVersion(nsString2& aAppVersion) {
+    aAppVersion.SetString(XP_AppVersion);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetService::GetAppName(nsString2& aAppName) {
+    aAppName.SetString(XP_AppName);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetService::GetLanguage(nsString2& aLanguage) {
+    aLanguage.SetString(XP_AppLanguage);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetService::GetPlatform(nsString2& aPlatform) {
+    aPlatform.SetString(XP_AppPlatform);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetService::GetUserAgent(nsString2& aUA) {
+    // XXX this should load the http module and ask for the user agent string from it.
+    char buf[64];
+    PR_snprintf(buf, 64, "%.100s/%.90s", XP_AppCodeName.GetBuffer(), XP_AppVersion.GetBuffer());
+    aUA.SetString(buf);
+    return NS_OK;
 }
 
 //////////////////////////
