@@ -36,8 +36,8 @@ static nsIServiceManager *sServiceManager = nsnull;
 static PRBool             sRegistryInitializedFlag = PR_FALSE;
 static PRUint32           sInitCounter = 0;
 
-#define HACK_AROUND_THREADING_ISSUES
-#define HACK_AROUND_NONREENTRANT_INITXPCOM
+//#define HACK_AROUND_THREADING_ISSUES
+//#define HACK_AROUND_NONREENTRANT_INITXPCOM
 
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 // XXX hack class to clean up XPCOM when this module is unloaded
@@ -178,11 +178,12 @@ nsresult NS_TermEmbedding()
 		nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
 	}
 
+	NS_RELEASE(sServiceManager);
+
 	// Terminate XPCOM & cleanup
 #ifndef HACK_AROUND_NONREENTRANT_INITXPCOM
 	NS_ShutdownXPCOM(sServiceManager);
 #endif
-	NS_RELEASE(sServiceManager);
 
 	return NS_OK;
 }
