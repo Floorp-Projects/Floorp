@@ -367,6 +367,25 @@ LocationImpl::SetHref(const nsAReadableString& aHref)
 }
 
 nsresult
+LocationImpl::SetHrefWithContext(JSContext* cx, jsval val)
+{
+  nsCOMPtr<nsIURI> base;
+  nsAutoString href;
+
+  // Get the parameter passed in
+  nsJSUtils::nsConvertJSValToString(href, cx, val);
+    
+  // Get the source of the caller
+  nsresult result = GetSourceURL(cx, getter_AddRefs(base));
+    
+  if (NS_FAILED(result)) {
+    return result;
+  }
+
+  return SetHrefWithBase(href, base, PR_FALSE);
+}                                
+
+nsresult
 LocationImpl::SetHrefWithBase(const nsAReadableString& aHref, 
                               nsIURI* aBase,
                               PRBool aReplace)

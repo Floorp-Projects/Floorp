@@ -100,7 +100,8 @@ enum Document_slots {
   DOCUMENTSTYLE_STYLESHEETS = -4,
   DOCUMENTVIEW_DEFAULTVIEW = -5,
   NSDOCUMENT_CHARACTERSET = -6,
-  NSDOCUMENT_PLUGINS = -7
+  NSDOCUMENT_PLUGINS = -7,
+  NSDOCUMENT_LOCATION = -8
 };
 
 /***********************************************************************/
@@ -241,6 +242,21 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NSDOCUMENT_LOCATION:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_LOCATION, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMNSDocument* b;
+          if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+            rv = b->GetLocation(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
     }
@@ -274,7 +290,26 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case NSDOCUMENT_LOCATION:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_LOCATION, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMNSDocument *b;
+          if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+            b->SetLocation(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -1396,6 +1431,7 @@ static JSPropertySpec DocumentProperties[] =
   {"defaultView",    DOCUMENTVIEW_DEFAULTVIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"plugins",    NSDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"location",    NSDOCUMENT_LOCATION,    JSPROP_ENUMERATE},
   {0}
 };
 

@@ -55,6 +55,7 @@
 #include "nsIDOMCrypto.h"
 #include "nsIDOMWindow.h"
 #include "nsIControllers.h"
+#include "nsIDOMWindowEventOwner.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -81,6 +82,7 @@ static NS_DEFINE_IID(kIViewCSSIID, NS_IDOMVIEWCSS_IID);
 static NS_DEFINE_IID(kICryptoIID, NS_IDOMCRYPTO_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
+static NS_DEFINE_IID(kIWindowEventOwnerIID, NS_IDOMWINDOWEVENTOWNER_IID);
 
 //
 // Window property ids
@@ -113,18 +115,44 @@ enum Window_slots {
   WINDOW_STATUS = -25,
   WINDOW_DEFAULTSTATUS = -26,
   WINDOW_NAME = -27,
-  WINDOW_INNERWIDTH = -28,
-  WINDOW_INNERHEIGHT = -29,
-  WINDOW_OUTERWIDTH = -30,
-  WINDOW_OUTERHEIGHT = -31,
-  WINDOW_SCREENX = -32,
-  WINDOW_SCREENY = -33,
-  WINDOW_PAGEXOFFSET = -34,
-  WINDOW_PAGEYOFFSET = -35,
-  WINDOW_SCROLLX = -36,
-  WINDOW_SCROLLY = -37,
-  WINDOW_LENGTH = -38,
-  ABSTRACTVIEW_DOCUMENT = -39
+  WINDOW_LOCATION = -28,
+  WINDOW_TITLE = -29,
+  WINDOW_INNERWIDTH = -30,
+  WINDOW_INNERHEIGHT = -31,
+  WINDOW_OUTERWIDTH = -32,
+  WINDOW_OUTERHEIGHT = -33,
+  WINDOW_SCREENX = -34,
+  WINDOW_SCREENY = -35,
+  WINDOW_PAGEXOFFSET = -36,
+  WINDOW_PAGEYOFFSET = -37,
+  WINDOW_SCROLLX = -38,
+  WINDOW_SCROLLY = -39,
+  WINDOW_LENGTH = -40,
+  WINDOWEVENTOWNER_ONMOUSEDOWN = -41,
+  WINDOWEVENTOWNER_ONMOUSEUP = -42,
+  WINDOWEVENTOWNER_ONCLICK = -43,
+  WINDOWEVENTOWNER_ONMOUSEOVER = -44,
+  WINDOWEVENTOWNER_ONMOUSEOUT = -45,
+  WINDOWEVENTOWNER_ONKEYDOWN = -46,
+  WINDOWEVENTOWNER_ONKEYUP = -47,
+  WINDOWEVENTOWNER_ONKEYPRESS = -48,
+  WINDOWEVENTOWNER_ONMOUSEMOVE = -49,
+  WINDOWEVENTOWNER_ONFOCUS = -50,
+  WINDOWEVENTOWNER_ONBLUR = -51,
+  WINDOWEVENTOWNER_ONSUBMIT = -52,
+  WINDOWEVENTOWNER_ONRESET = -53,
+  WINDOWEVENTOWNER_ONCHANGE = -54,
+  WINDOWEVENTOWNER_ONSELECT = -55,
+  WINDOWEVENTOWNER_ONLOAD = -56,
+  WINDOWEVENTOWNER_ONUNLOAD = -57,
+  WINDOWEVENTOWNER_ONCLOSE = -58,
+  WINDOWEVENTOWNER_ONABORT = -59,
+  WINDOWEVENTOWNER_ONERROR = -60,
+  WINDOWEVENTOWNER_ONPAINT = -61,
+  WINDOWEVENTOWNER_ONDRAGDROP = -62,
+  WINDOWEVENTOWNER_ONRESIZE = -63,
+  WINDOWEVENTOWNER_ONSCROLL = -64,
+  ABSTRACTVIEW_DOCUMENT = -65
 };
 
 /***********************************************************************/
@@ -134,15 +162,16 @@ enum Window_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == a) {
-    return JS_TRUE;
-  }
 
   nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
+    nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+    // If there's no private data, this must be the prototype, so ignore
+    if (nsnull == a) {
+      return JS_TRUE;
+    }
+
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
@@ -377,6 +406,14 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case WINDOW_LOCATION:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATION, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          rv = a->GetLocation(vp);
+        }
+        break;
+      }
       case WINDOW_INNERWIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_INNERWIDTH, PR_FALSE);
@@ -509,6 +546,366 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case WINDOWEVENTOWNER_ONMOUSEDOWN:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEDOWN, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnmousedown(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONMOUSEUP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEUP, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnmouseup(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONCLICK:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONCLICK, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnclick(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONMOUSEOVER:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEOVER, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnmouseover(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONMOUSEOUT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEOUT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnmouseout(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONKEYDOWN:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONKEYDOWN, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnkeydown(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONKEYUP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONKEYUP, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnkeyup(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONKEYPRESS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONKEYPRESS, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnkeypress(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONMOUSEMOVE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEMOVE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnmousemove(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONFOCUS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONFOCUS, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnfocus(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONBLUR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONBLUR, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnblur(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONSUBMIT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONSUBMIT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnsubmit(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONRESET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONRESET, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnreset(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONCHANGE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONCHANGE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnchange(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONSELECT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONSELECT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnselect(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONLOAD:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONLOAD, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnload(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONUNLOAD:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONUNLOAD, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnunload(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONCLOSE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONCLOSE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnclose(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONABORT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONABORT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnabort(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONERROR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONERROR, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnerror(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONPAINT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONPAINT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnpaint(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONDRAGDROP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONDRAGDROP, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOndragdrop(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONRESIZE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONRESIZE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnresize(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONSCROLL:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONSCROLL, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMWindowEventOwner* b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            rv = b->GetOnscroll(vp);
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
       case ABSTRACTVIEW_DOCUMENT:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_ABSTRACTVIEW_DOCUMENT, PR_FALSE);
@@ -530,11 +927,25 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
+      {
+        JSObject* global = JS_GetGlobalObject(cx);
+        if (global != obj) {
+          nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+          rv = secMan->CheckScriptAccess(cx, obj,
+                                         NS_DOM_PROP_WINDOW_SCRIPTGLOBALS,
+                                         PR_FALSE);
+        }
+      }
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
+    JSObject* global = JS_GetGlobalObject(cx);
+    if (global != obj) {
+      nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+      rv = secMan->CheckScriptAccess(cx, obj,
+                                     NS_DOM_PROP_WINDOW_SCRIPTGLOBALS,
+                                     PR_FALSE);
+    }
   }
 
   if (NS_FAILED(rv))
@@ -549,15 +960,16 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == a) {
-    return JS_TRUE;
-  }
 
   nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
+    nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+    // If there's no private data, this must be the prototype, so ignore
+    if (nsnull == a) {
+      return JS_TRUE;
+    }
+
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
@@ -611,6 +1023,18 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
           rv = a->SetName(prop);
+          
+        }
+        break;
+      }
+      case WINDOW_LOCATION:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_LOCATION, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          rv = a->SetLocation(prop);
           
         }
         break;
@@ -767,12 +1191,506 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case WINDOWEVENTOWNER_ONMOUSEDOWN:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEDOWN, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnmousedown(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONMOUSEUP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEUP, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnmouseup(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONCLICK:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONCLICK, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnclick(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONMOUSEOVER:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEOVER, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnmouseover(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONMOUSEOUT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEOUT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnmouseout(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONKEYDOWN:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONKEYDOWN, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnkeydown(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONKEYUP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONKEYUP, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnkeyup(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONKEYPRESS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONKEYPRESS, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnkeypress(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONMOUSEMOVE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONMOUSEMOVE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnmousemove(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONFOCUS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONFOCUS, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnfocus(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONBLUR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONBLUR, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnblur(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONSUBMIT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONSUBMIT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnsubmit(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONRESET:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONRESET, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnreset(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONCHANGE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONCHANGE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnchange(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONSELECT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONSELECT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnselect(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONLOAD:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONLOAD, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnload(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONUNLOAD:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONUNLOAD, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnunload(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONCLOSE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONCLOSE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnclose(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONABORT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONABORT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnabort(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONERROR:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONERROR, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnerror(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONPAINT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONPAINT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnpaint(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONDRAGDROP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONDRAGDROP, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOndragdrop(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONRESIZE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONRESIZE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnresize(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case WINDOWEVENTOWNER_ONSCROLL:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWEVENTOWNER_ONSCROLL, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          jsval prop;
+         prop = *vp;
+      
+          nsIDOMWindowEventOwner *b;
+          if (NS_OK == a->QueryInterface(kIWindowEventOwnerIID, (void **)&b)) {
+            b->SetOnscroll(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
       default:
-        return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
+      {
+        JSObject* global = JS_GetGlobalObject(cx);
+        if (global != obj) {
+          nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+          rv = secMan->CheckScriptAccess(cx, obj,
+                                         NS_DOM_PROP_WINDOW_SCRIPTGLOBALS,
+                                         PR_TRUE);
+        }
+      }
     }
   }
   else {
-    return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
+    JSObject* global = JS_GetGlobalObject(cx);
+    if (global != obj) {
+      nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+      rv = secMan->CheckScriptAccess(cx, obj,
+                                     NS_DOM_PROP_WINDOW_SCRIPTGLOBALS,
+                                     PR_TRUE);
+    }
   }
 
   if (NS_FAILED(rv))
@@ -1326,6 +2244,66 @@ WindowcontrollersSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
   JS_DefineProperty(cx, obj, "controllers", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// title Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowtitleGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TITLE, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsAutoString prop;
+          rv = a->GetTitle(prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// title Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowtitleSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_TITLE, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "title", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
   return PR_TRUE;
 }
 
@@ -3095,6 +4073,8 @@ static JSPropertySpec WindowProperties[] =
   {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
   {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},
   {"name",    WINDOW_NAME,    JSPROP_ENUMERATE},
+  {"location",    WINDOW_LOCATION,    JSPROP_ENUMERATE},
+  {"title",    WINDOW_TITLE,    JSPROP_ENUMERATE, WindowtitleGetter, WindowtitleSetter},
   {"innerWidth",    WINDOW_INNERWIDTH,    JSPROP_ENUMERATE},
   {"innerHeight",    WINDOW_INNERHEIGHT,    JSPROP_ENUMERATE},
   {"outerWidth",    WINDOW_OUTERWIDTH,    JSPROP_ENUMERATE},
@@ -3106,6 +4086,30 @@ static JSPropertySpec WindowProperties[] =
   {"scrollX",    WINDOW_SCROLLX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"scrollY",    WINDOW_SCROLLY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"length",    WINDOW_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"onmousedown",    WINDOWEVENTOWNER_ONMOUSEDOWN,    JSPROP_ENUMERATE},
+  {"onmouseup",    WINDOWEVENTOWNER_ONMOUSEUP,    JSPROP_ENUMERATE},
+  {"onclick",    WINDOWEVENTOWNER_ONCLICK,    JSPROP_ENUMERATE},
+  {"onmouseover",    WINDOWEVENTOWNER_ONMOUSEOVER,    JSPROP_ENUMERATE},
+  {"onmouseout",    WINDOWEVENTOWNER_ONMOUSEOUT,    JSPROP_ENUMERATE},
+  {"onkeydown",    WINDOWEVENTOWNER_ONKEYDOWN,    JSPROP_ENUMERATE},
+  {"onkeyup",    WINDOWEVENTOWNER_ONKEYUP,    JSPROP_ENUMERATE},
+  {"onkeypress",    WINDOWEVENTOWNER_ONKEYPRESS,    JSPROP_ENUMERATE},
+  {"onmousemove",    WINDOWEVENTOWNER_ONMOUSEMOVE,    JSPROP_ENUMERATE},
+  {"onfocus",    WINDOWEVENTOWNER_ONFOCUS,    JSPROP_ENUMERATE},
+  {"onblur",    WINDOWEVENTOWNER_ONBLUR,    JSPROP_ENUMERATE},
+  {"onsubmit",    WINDOWEVENTOWNER_ONSUBMIT,    JSPROP_ENUMERATE},
+  {"onreset",    WINDOWEVENTOWNER_ONRESET,    JSPROP_ENUMERATE},
+  {"onchange",    WINDOWEVENTOWNER_ONCHANGE,    JSPROP_ENUMERATE},
+  {"onselect",    WINDOWEVENTOWNER_ONSELECT,    JSPROP_ENUMERATE},
+  {"onload",    WINDOWEVENTOWNER_ONLOAD,    JSPROP_ENUMERATE},
+  {"onunload",    WINDOWEVENTOWNER_ONUNLOAD,    JSPROP_ENUMERATE},
+  {"onclose",    WINDOWEVENTOWNER_ONCLOSE,    JSPROP_ENUMERATE},
+  {"onabort",    WINDOWEVENTOWNER_ONABORT,    JSPROP_ENUMERATE},
+  {"onerror",    WINDOWEVENTOWNER_ONERROR,    JSPROP_ENUMERATE},
+  {"onpaint",    WINDOWEVENTOWNER_ONPAINT,    JSPROP_ENUMERATE},
+  {"ondragdrop",    WINDOWEVENTOWNER_ONDRAGDROP,    JSPROP_ENUMERATE},
+  {"onresize",    WINDOWEVENTOWNER_ONRESIZE,    JSPROP_ENUMERATE},
+  {"onscroll",    WINDOWEVENTOWNER_ONSCROLL,    JSPROP_ENUMERATE},
   {"document",    ABSTRACTVIEW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

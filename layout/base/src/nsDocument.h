@@ -397,6 +397,8 @@ public:
   NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, 
                                            const nsAReadableString& aNameSpace, 
                                            nsIDOMElement** aReturn);
+  NS_IMETHOD    GetLocation(jsval* aLocation);
+  NS_IMETHOD    SetLocation(jsval aLocation);
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
   NS_IMETHOD    Load (const nsAReadableString& aUrl);
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);

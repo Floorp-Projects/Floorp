@@ -3085,6 +3085,30 @@ nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement,
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsXULDocument::GetLocation(jsval* aLocation)
+{
+  if (mScriptGlobalObject) {
+    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+    if(window) {
+      return window->GetLocation(aLocation);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsXULDocument::SetLocation(jsval aLocation)
+{
+  if (mScriptGlobalObject) {
+    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+    if(window) {
+      return window->SetLocation(aLocation);
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXULDocument::Load(const nsAReadableString& aUrl)
 {
@@ -3754,19 +3778,6 @@ nsXULDocument::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
 PRBool
 nsXULDocument::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
-    if (JSVAL_IS_STRING(aID)) {
-        JSString *jsString = JS_ValueToString(aContext, aID);
-        if (!jsString)
-            return PR_FALSE;
-
-        if (PL_strcmp("location", JS_GetStringBytes(jsString)) == 0) {
-           nsCOMPtr<nsIJSScriptObject> window = do_QueryInterface(mScriptGlobalObject);
-           if (nsnull != window) {
-               return window->GetProperty(aContext, aObj, aID, aVp);
-           }
-        }
-    }
-
     return PR_TRUE;
 }
 
@@ -3801,10 +3812,6 @@ nsXULDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval
                 rv = docShellWin->SetTitle(title.GetUnicode());
                 if (NS_FAILED(rv)) return PR_FALSE;
             }
-        }
-        else if (PL_strcmp("location", s) == 0) {
-            NS_NOTYETIMPLEMENTED("write me");
-            return PR_FALSE;
         }
     }
     return PR_TRUE;

@@ -177,13 +177,27 @@ XPCOMGen::GenerateIncludes(IdlInterface &aInterface)
     *file << buf;
   }
 
-  int m, mcount = aInterface.FunctionCount();
-  for (m = 0; m < mcount; m++) {
-    IdlFunction *func = aInterface.GetFunctionAt(m);
-      
-    if (func->GetHasEllipsis()) {
+  PRBool includedJSAPI = 0;
+  int a, acount = aInterface.AttributeCount();
+  for (a = 0; a < acount; a++) {
+    IdlAttribute *attr = aInterface.GetAttributeAt(a);
+
+    if (attr->GetType() == TYPE_JSVAL) {
       *file << kIncludeJSStr;
+      includedJSAPI = 1;
       break;
+    }
+  }
+
+  if (!includedJSAPI) {
+    int m, mcount = aInterface.FunctionCount();
+    for (m = 0; m < mcount; m++) {
+      IdlFunction *func = aInterface.GetFunctionAt(m);
+      
+      if (func->GetHasEllipsis()) {
+        *file << kIncludeJSStr;
+        break;
+      }
     }
   }
   

@@ -30,6 +30,8 @@ interface Window {
                  attribute  wstring status;
                  attribute  wstring defaultStatus;
                  attribute  wstring name;
+		 attribute  jsval location;
+		 replaceable attribute DOMString title;
                  attribute  long innerWidth;
                  attribute  long innerHeight;
                  attribute  long outerWidth;
@@ -89,16 +91,46 @@ interface Window {
 		DOMString escape(in DOMString str);
         DOMString unescape(in DOMString str);
         Selection getSelection();
-        
+
+};
+
+interface WindowEventOwner {
+  /* IID: { 0xef1876f0, 0x7881, 0x11d4, \
+   { 0x9a, 0x80, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74 } } */
+
+        attribute jsval onmousedown;
+        attribute jsval onmouseup;
+        attribute jsval onclick;
+        attribute jsval onmouseover;
+        attribute jsval onmouseout;
+        attribute jsval onkeydown;
+        attribute jsval onkeyup;
+        attribute jsval onkeypress;
+        attribute jsval onmousemove;
+        attribute jsval onfocus;
+        attribute jsval onblur;
+        attribute jsval onsubmit;
+        attribute jsval onreset;
+        attribute jsval onchange;
+        attribute jsval onselect;
+        attribute jsval onload;
+        attribute jsval onunload;
+        attribute jsval onclose;
+        attribute jsval onabort;
+        attribute jsval onerror;
+        attribute jsval onpaint;
+        attribute jsval ondragdrop;
+        attribute jsval onresize;
+        attribute jsval onscroll;
 };
 
 interface EventTarget {
  /* IID: { 0x1c773b30, 0xd1cf, 0x11d2, \
   { 0xbd, 0x95, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4 } } */
 
-	   void	addEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
-	   void	removeEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
-	   void	dispatchEvent(in Event evt);
+           void addEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
+           void removeEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
+           void dispatchEvent(in Event evt);
 };
 
 // Introduced in DOM Level 2:
