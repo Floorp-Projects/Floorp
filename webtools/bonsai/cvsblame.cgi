@@ -180,6 +180,7 @@ if (defined $::FORM{data}) {
 }
 
 print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$::opt_rev}), "GMT")."\n";
+print "Expires: ".time2str("%a, %d %b %Y %T %Z", time+1200, "GMT")."\n";
 print "\n"; 
 #ENDHEADERS!!
 

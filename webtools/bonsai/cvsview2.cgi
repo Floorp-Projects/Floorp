@@ -207,6 +207,7 @@ sub http_lastmod {
     my $lm2=str2time($::revision_ctime{$opt_rev2});
     $lm = $lm2 if $lm2 > $lm;
     print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", $lm, "GMT")."\n";
+    print "Expires: ".time2str("%a, %d %b %Y %T %Z", time+1200, "GMT")."\n";
     print $request->header();
     print "\n";
 }
