@@ -3330,6 +3330,34 @@ done:
   return found;
 }
 
+static PRInt32 ComputeChangeHint(nsCSSProperty aPropID,
+                                 const nsCSSValue& aOldValue,
+                                 const nsCSSValue& aValue) 
+{
+  NS_ASSERTION(aOldValue != aValue,
+    "ComputeChangeHint should not be called with equal values");
+
+  switch (aPropID) {
+  case eCSSProperty_opacity:
+    // If the opacity is changing to or from 1.0, then reframe to (possibly)
+    // cause a view to be created or eliminated
+    // Otherwise we just need a visual change. This is important because
+    // opacity is frequently used for fade effects, and we don't want to reframe
+    // for every step of the fade.
+    if (aOldValue.GetUnit() == eCSSUnit_Number && aValue.GetUnit() == eCSSUnit_Number) {
+      if (aOldValue.GetFloatValue() == 1.0 || aValue.GetFloatValue() == 1.0) {
+        // XXX: it would be better to pass out a hint NS_STYLE_HINT_VIEWCHANGE,
+        // but it does not exist
+        return NS_STYLE_HINT_FRAMECHANGE;
+      } else {
+        return NS_STYLE_HINT_VISUAL;
+      }
+    }
+  }
+  
+  return nsCSSProps::kHintTable[aPropID];
+}
+
 nsresult CSSParserImpl::AppendValue(nsCSSDeclaration* aDeclaration, nsCSSProperty aPropID,
                                     const nsCSSValue& aValue, PRInt32& aChangeHint)
 {
@@ -3339,8 +3367,10 @@ nsresult CSSParserImpl::AppendValue(nsCSSDeclaration* aDeclaration, nsCSSPropert
 
   if (aValue != oldValue) {
     result = aDeclaration->AppendValue(aPropID, aValue);
-    if (aChangeHint < nsCSSProps::kHintTable[aPropID]) {
-      aChangeHint = nsCSSProps::kHintTable[aPropID];
+
+    PRInt32 newHint = ComputeChangeHint(aPropID, oldValue, aValue);
+    if (aChangeHint < newHint) {
+      aChangeHint = newHint;
     }
   }
   return result;

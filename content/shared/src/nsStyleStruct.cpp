@@ -978,6 +978,12 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
 
 PRInt32 nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) const
 {
+  if (mBackgroundAttachment != aOther.mBackgroundAttachment
+    && (NS_STYLE_BG_ATTACHMENT_FIXED == mBackgroundAttachment) ||
+      (NS_STYLE_BG_ATTACHMENT_FIXED == aOther.mBackgroundAttachment))
+    // this might require creation of a view
+    return NS_STYLE_HINT_FRAMECHANGE;
+
   if ((mBackgroundAttachment == aOther.mBackgroundAttachment) &&
       (mBackgroundFlags == aOther.mBackgroundFlags) &&
       (mBackgroundRepeat == aOther.mBackgroundRepeat) &&
@@ -1075,13 +1081,18 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
 
 PRInt32 nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
 {
-  if (mOpacity != aOther.mOpacity)
-    return NS_STYLE_HINT_VISUAL;
+  if (mOpacity != aOther.mOpacity
+      && ((mOpacity < 1.0) != (aOther.mOpacity < 1.0)))
+     // might need to create a view to handle change from 1.0 to partial opacity
+     return NS_STYLE_HINT_FRAMECHANGE;
 
   if ((mDirection == aOther.mDirection) &&
       (mLanguage == aOther.mLanguage)) {
     if ((mVisible == aOther.mVisible)) {
-      return NS_STYLE_HINT_NONE;
+      if (mOpacity == aOther.mOpacity)
+        return NS_STYLE_HINT_NONE;
+      else
+        return NS_STYLE_HINT_VISUAL;
     }
     if ((mVisible != aOther.mVisible) && 
         ((NS_STYLE_VISIBILITY_COLLAPSE == mVisible) || 
