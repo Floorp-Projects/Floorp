@@ -178,6 +178,13 @@ public:
                                  nsIContentViewerContainer* aContainer,
                                  nsIStreamListener** aDocListener,
                                  nsIContentViewer** aDocViewer);
+
+    nsresult CreatePluginDocument(nsIURL* aURL, 
+                                  const char* aCommand,
+                                  const char* aContentType,
+                                  nsIContentViewerContainer* aContainer,
+                                  nsIStreamListener** aDocListener,
+                                  nsIContentViewer** aDocViewer);
 };
 
 static nsIStyleSheet* gUAStyleSheet;
@@ -195,6 +202,24 @@ NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 static char* gValidTypes[] = {"text/html","text/xml","application/rtf",0};
 
 static char* gImageTypes[] = {"image/gif", "image/jpeg", 0 };
+
+static char* gPluginTypes[] = {
+    "video/quicktime",
+    "video/msvideo",
+    "video/x-msvideo",
+    "application/vnd.netfpx",
+    "image/vnd.fpx",
+    "model/vrml",
+    "x-world/x-vrml",
+    "audio/midi",
+    "audio/x-midi",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/aiff",
+    "audio/x-aiff",
+    "audio/basic",
+    0
+};
 
 NS_IMETHODIMP
 nsDocFactoryImpl::CreateInstance(nsIURL* aURL, 
@@ -215,7 +240,7 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
       }
     }
 
-    // Try secondary types
+    // Try image types
     typeIndex = 0;
     while(gImageTypes[typeIndex]) {
       if (0== PL_strcmp(gImageTypes[typeIndex++], aContentType)) {
@@ -223,6 +248,17 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
                                      aContainer,
                                      aDocListener,
                                      aDocViewer);
+      }
+    }
+
+    // Try plugin types
+    typeIndex = 0;
+    while(gPluginTypes[typeIndex]) {
+      if (0== PL_strcmp(gPluginTypes[typeIndex++], aContentType)) {
+          return CreatePluginDocument(aURL, aCommand, aContentType,
+                                      aContainer,
+                                      aDocListener,
+                                      aDocViewer);
       }
     }
     goto done;
@@ -326,6 +362,28 @@ nsDocFactoryImpl::CreateImageDocument(nsIURL* aURL,
 
 done:
     NS_IF_RELEASE(doc);
+    return rv;
+}
+
+extern nsresult
+NS_NewPluginContentViewer(const char* aCommand,
+                          nsIStreamListener** aDocListener,
+                          nsIContentViewer** aDocViewer);
+
+nsresult
+nsDocFactoryImpl::CreatePluginDocument(nsIURL* aURL, 
+                                       const char* aCommand,
+                                       const char* aContentType,
+                                       nsIContentViewerContainer* aContainer,
+                                       nsIStreamListener** aDocListener,
+                                       nsIContentViewer** aDocViewer)
+{
+    /*
+     * Create the plugin content viewer and stream listener...
+     */
+    nsresult rv = NS_NewPluginContentViewer(aCommand,
+                                            aDocListener,
+                                            aDocViewer);
     return rv;
 }
 
@@ -803,14 +861,7 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
      * end nsIContentViewerContainer for refreshing urls.
      */
     if (m_Container) {
-        nsISupports* container = nsnull;
-        rv = m_Container->QueryInterface(kISupportsIID, (void**)&container);
-        if (rv != NS_OK) {
-            return rv;
-        }
-        rv = NS_NewURL(&m_Url, aURLSpec, container);
-        NS_RELEASE(container);
-        container = nsnull;
+        rv = NS_NewURL(&m_Url, aURLSpec, m_Container);
         if (NS_OK != rv) {
             return rv;
         }
