@@ -79,7 +79,7 @@ nsLoadAttribs::nsLoadAttribs()
   mLocalIP    = 0;
   mLoadType   = nsURLLoadNormal;
   mReloadType = nsURLReload;
-  mByteRangeHeader = NULL;
+  mByteRangeHeader = nsnull;
 }
 
 nsLoadAttribs::~nsLoadAttribs() 
@@ -220,7 +220,13 @@ nsLoadAttribs::SetByteRangeHeader(const char* aByteRangeHeader)
 {
   NS_LOCK_INSTANCE();
 
-  mByteRangeHeader = PL_strdup(aByteRangeHeader);
+  // Free the old range header if any...
+  PR_FREEIF(mByteRangeHeader);
+  mByteRangeHeader = nsnull;
+
+  if (nsnull != aByteRangeHeader) {
+    mByteRangeHeader = PL_strdup(aByteRangeHeader);
+  }
 
   NS_UNLOCK_INSTANCE();
   return NS_OK;
@@ -231,16 +237,17 @@ nsLoadAttribs::GetByteRangeHeader(char **aByteRangeHeader)
 {
   nsresult rv = NS_OK;
 
-  if (nsnull == aByteRangeHeader) 
-  {
+  NS_LOCK_INSTANCE();
+
+  if (nsnull == aByteRangeHeader) {
     rv = NS_ERROR_NULL_POINTER;
-  } 
-  else 
-  {
-    NS_LOCK_INSTANCE();
+  } else if (nsnull != mByteRangeHeader) {
     *aByteRangeHeader = PL_strdup(mByteRangeHeader);
-    NS_UNLOCK_INSTANCE();
+  } else {
+    *aByteRangeHeader = nsnull;
   }
+
+  NS_UNLOCK_INSTANCE();
   return rv;
 }
 
