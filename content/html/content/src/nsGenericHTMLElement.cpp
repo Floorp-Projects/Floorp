@@ -1352,13 +1352,19 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
     }
   }
 
-  if ((NS_OK == ret) && (aEvent->message == NS_MOUSE_ENTER_SYNTH || 
-                         aEvent->message == NS_MOUSE_EXIT_SYNTH ||
-                         nsEventStatus_eIgnore == *aEventStatus) &&
+  if (NS_FAILED(ret))
+    return ret;
+
+  if ((*aEventStatus == nsEventStatus_eIgnore ||
+       (*aEventStatus != nsEventStatus_eConsumeNoDefault &&
+        (aEvent->message == NS_MOUSE_ENTER_SYNTH ||
+         aEvent->message == NS_MOUSE_EXIT_SYNTH))) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
+
     // If we're here, then aOuter should be an nsILink. We'll use the
     // nsILink interface to get a canonified URL that has been
     // correctly escaped and URL-encoded for the document's charset.
+
     nsCOMPtr<nsILink> link = do_QueryInterface(aOuter);
     if (!link)
       return NS_ERROR_UNEXPECTED;
