@@ -33,6 +33,10 @@
  *
  */
 
+/* dd is declared first in venkman-utils.js */
+var warn;
+var ASSERT;
+
 if (DEBUG)
 {
     dd = function (msg) { dumpln("-*- venkman: " + msg); }
@@ -55,7 +59,7 @@ function display(message, msgtype)
         throw BadMojo(ERR_REQUIRED_PARAM, "message");
 
     if (typeof message != "string" && typeof message != "object")
-        throw BadMojo(ERR_INVALID_PARAM, "message");
+        throw BadMojo(ERR_INVALID_PARAM, ["message", String(message)]);
 
     if (typeof msgtype == "undefined")
         msgtype = MT_INFO;
@@ -111,7 +115,7 @@ function displayCommands (pattern)
     if (pattern)
         display (getMsg(MSN_CMDMATCH,
                         [pattern, "["  + 
-                         console._commands.listNames(pattern).join(", ") + "]"]));
+                        console._commands.listNames(pattern).join(", ") + "]"]));
     else
         display (getMsg(MSN_CMDMATCH_ALL,
                         "[" + console._commands.listNames().join(", ") + "]"));
@@ -121,14 +125,16 @@ function evalInDebuggerScope (script)
 {
     try
     {
-        display (script, "EVAL-IN");
+        display (script, MT_EVAL_IN);
         var rv = String(console.doEval (script));
         if (typeof rv != "undefined")
-            display (rv, "EVAL-OUT");
+            display (rv, MT_EVAL_OUT);
+        return rv;
     }
     catch (ex)
     {
         display (formatEvalException(ex), MT_ERROR);
+        return null;
     }
 }
 
@@ -145,16 +151,18 @@ function evalInTargetScope (script)
 
     try
     {
-        display (script, "FEVAL-IN");
+        display (script, MT_FEVAL_IN);
         var l = $.length;
         $[l] = 
             console.frames[console.currentFrameIndex].eval (script,
                                                             MSG_VAL_CONSOLE, 1);
-        display ("$[" + l + "] = " + formatValue ($[l]), "FEVAL-OUT");
+        display ("$[" + l + "] = " + formatValue ($[l]), MT_FEVAL_OUT);
+        return $[l]
     }
     catch (ex)
     {
         display (formatEvalException (ex), MT_ERROR);
+        return null;
     }
 }
 
@@ -237,15 +245,20 @@ function init()
     initDebugger();
     
     window._content = console._outputDocument = window.frames[0].document;
-    // This should be = document.getElementById("output-iframe").contentDocument;
-    // XUL iframes don't do contentDocument, and html iframes don't support
-    // tooltips or drag and drop, so we've got to bend over.
-    // Also, we need to set window._content manually here because the
-    // drag and drop code fails as quietly as possible without it.
+    /* This should be = document.getElementById("output-iframe").contentDocument;
+     * XUL iframes don't do contentDocument, and html iframes don't support
+     * tooltips or drag and drop, so we've got to bend over.
+     * Also, we need to set window._content manually here because the
+     * drag and drop code fails as quietly as possible without it.
+     */
     
     console._outputElement = 
         console._outputDocument.getElementById("output-tbody");    
 
+    console._slInputElement = 
+        document.getElementById("input-single-line");
+    console._slInputElement.focus();
+    
     display(htmlSpan(null, MSG_HELLO1 + " ",
                      htmlVA(null, 
                             "chrome://venkman/content/tests/testpage.html"),
@@ -286,7 +299,7 @@ const ERR_INVALID_PARAM   = 2;
 const ERR_SUBSCRIPT_LOAD  = 3;
 
 /* venkman exception factory, can be used with or without |new|.
- * throw BadMojo (ERR_FOO, MSG_VAL_UNDEFINED);
+ * throw BadMojo (ERR_REQUIRED_PARAM, MSG_VAL_OBJECT);
  * throw new BadMojo (ERR_NOT_IMPLEMENTED);
  */
 function BadMojo (errno, params)
