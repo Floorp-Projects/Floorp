@@ -17,23 +17,22 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
 #include "nsIDOMElement.h"
-#include "nsIXULKeyListener.h"
+#include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsRDFCID.h"
-
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
-#include "nsIScriptContextOwner.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIDocument.h"
-#include "nsIContent.h"
 #include "nsIDOMUIEvent.h"
-#include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMXULDocument.h"
 #include "nsINSEvent.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIXULKeyListener.h"
+#include "nsRDFCID.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -268,10 +267,10 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 		         keyName.ToUpperCase();
 		         tempChar2.ToUpperCase();
 		        if (tempChar2 == keyName) {
-			      keyElement->GetAttribute(nsAutoString("modifiercommand"), modCommand);
-			      keyElement->GetAttribute(nsAutoString("modifiercontrol"), modControl);
-			      keyElement->GetAttribute(nsAutoString("modifiershift"),   modShift);
-			      keyElement->GetAttribute(nsAutoString("modifieralt"),     modAlt);
+			      keyElement->GetAttribute(nsAutoString("command"), modCommand);
+			      keyElement->GetAttribute(nsAutoString("control"), modControl);
+			      keyElement->GetAttribute(nsAutoString("shift"),   modShift);
+			      keyElement->GetAttribute(nsAutoString("alt"),     modAlt);
 			      keyElement->GetAttribute(nsAutoString("onkeypress"),      cmdToExecute);
 			      //printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
 		          do {
