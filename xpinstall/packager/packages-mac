@@ -293,7 +293,6 @@ viewer:res:cmessage.txt
 viewer:res:samples:sampleimages
 viewer:res:builtin:htmlBindings.xml
 viewer:res:builtin:platformHTMLBindings.xml
-viewer:res:xml:*
 
 -viewer:res:samples:.cvsignore
 -viewer:res:samples:Makefile.in

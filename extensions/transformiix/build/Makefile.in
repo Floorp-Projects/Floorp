@@ -112,7 +112,6 @@ LOBJS =../source/base/ArrayList.$(OBJ_SUFFIX) \
   ../source/xml/XMLUtils.$(OBJ_SUFFIX) \
   ../source/xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../source/xml/parser/XMLParser.$(OBJ_SUFFIX) \
-  ../source/xml/parser/nsSyncLoader.$(OBJ_SUFFIX) \
   ../source/xslt/txOutputFormat.$(OBJ_SUFFIX) \
   ../source/xslt/Names.$(OBJ_SUFFIX) \
   ../source/xslt/ProcessorState.$(OBJ_SUFFIX) \

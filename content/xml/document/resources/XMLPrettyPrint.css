@@ -35,17 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-body {
-  font-family: 'Verdana', sans-serif;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
+@import url("resource:/res/viewsource.css");
 
-html {
-  width: 100%;
-  margin: 0;
-  padding: 0;
+#top {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  position: absolute;
 }
 
 #header {
@@ -53,11 +50,6 @@ html {
   border-bottom: 3px solid black;
   padding: 0.5em;
   margin-bottom: 1em;
-}
-
-img {
-  float: left;
-  margin: 0.5em;
 }
 
 table {
@@ -69,41 +61,11 @@ td {
   padding: 0;
 }
 
-.markup {
-  color: blue
-}
-
-.elemname {
-  color: red;
-}
-
-.attrname {
-  color: #f88;
-}
-
-.attrvalue {
-  color: black;
-}
-
-.text {
-  color: black;
-  font-weight: bold;
-}
-
 .indent {
   margin-left: 1em;
 }
 
-.comment {
-  color: green;
-  font-style: italic;
-}
-
-.pi {
-  color: blue;
-}
-
-.expander > div {
+.spacer {
   width: 1em;
 }
 
@@ -114,6 +76,6 @@ td {
   text-align: center;
 }
 
-.expander-closed .expander-content {
+.expander-closed > * > .expander-content {
   display: none;
 }

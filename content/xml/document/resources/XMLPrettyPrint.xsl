@@ -36,49 +36,29 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet version="1.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns="http://www.w3.org/1999/xhtml">
 
-  <xsl:output method="html"/>
+  <xsl:output method="xml"/>
 
   <xsl:template match="/">
-    <html>
-      <head>
-        <link rel="stylesheet" href="resource:///res/xml/XMLPrettyPrint.css"/>
-        <script><![CDATA[
-function clicked(event) {
-  try {
-    var par = event.target.parentNode;
-    if (par.nodeName == 'td' && par.className == 'expander') {
-      if (par.parentNode.className == 'expander-closed') {
-        par.parentNode.className = '';
-        event.target.data = '-';
-      }
-      else {
-        par.parentNode.className = 'expander-closed';
-        event.target.data = '+';
-      }
-    }
-  } catch (e) {
-  }
-}
-        ]]></script>
-      </head>
-      <body onclick="clicked(event)">
-        <div id="header">
-          <p>
-            This XML file does not appear to have any style information
-            associated with it. The document tree is shown below.
-          </p>
-        </div>
-        <xsl:apply-templates/>
-      </body>
-    </html>
+    <div>
+      <link href="chrome://communicator/content/xml/XMLPrettyPrint.css" type="text/css" rel="stylesheet"/>
+      <div id="header">
+        <p>
+          This XML file does not appear to have any style information
+          associated with it. The document tree is shown below.
+        </p>
+      </div>
+      <xsl:apply-templates/>
+    </div>
   </xsl:template>
 
   <xsl:template match="*">
     <div class="indent">
       <span class="markup">&lt;</span>
-      <span class="elemname"><xsl:value-of select="name(.)"/></span>
+      <span class="start-tag"><xsl:value-of select="name(.)"/></span>
       <xsl:apply-templates select="@*"/>
       <span class="markup">/&gt;</span>
     </div>
@@ -87,14 +67,14 @@ function clicked(event) {
   <xsl:template match="*[node()]">
     <div class="indent">
       <span class="markup">&lt;</span>
-      <span class="elemname"><xsl:value-of select="name(.)"/></span>
+      <span class="start-tag"><xsl:value-of select="name(.)"/></span>
       <xsl:apply-templates select="@*"/>
       <span class="markup">&gt;</span>
 
       <span class="text"><xsl:value-of select="."/></span>
 
       <span class="markup">&lt;/</span>
-      <span class="elemname"><xsl:value-of select="name(.)"/></span>
+      <span class="end-tag"><xsl:value-of select="name(.)"/></span>
       <span class="markup">&gt;</span>
     </div>
   </xsl:template>
@@ -102,17 +82,17 @@ function clicked(event) {
   <xsl:template match="*[* or processing-instruction() or comment() or string-length(.) &gt; 50]">
     <table>
       <tr>
-        <td class="expander">-<div/></td>
+        <xsl:call-template name="expander"/>
         <td>
           <span class="markup">&lt;</span>
-          <span class="elemname"><xsl:value-of select="name(.)"/></span>
+          <span class="start-tag"><xsl:value-of select="name(.)"/></span>
           <xsl:apply-templates select="@*"/>
           <span class="markup">&gt;</span>
 
           <div class="expander-content"><xsl:apply-templates/></div>
 
           <span class="markup">&lt;/</span>
-          <span class="elemname"><xsl:value-of select="name(.)"/></span>
+          <span class="end-tag"><xsl:value-of select="name(.)"/></span>
           <span class="markup">&gt;</span>
         </td>
       </tr>
@@ -121,10 +101,9 @@ function clicked(event) {
 
   <xsl:template match="@*">
     <xsl:text> </xsl:text>
-    <span class="attrname"><xsl:value-of select="name(.)"/></span>
-    <span class="markup">="</span>
-    <span class="attrvalue"><xsl:value-of select="."/></span>
-    <span class="markup">"</span>
+    <span class="attribute-name"><xsl:value-of select="name(.)"/></span>
+    <span class="markup">=</span>
+    <span class="attribute-value">"<xsl:value-of select="."/>"</span>
   </xsl:template>
 
   <xsl:template match="text()">
@@ -135,16 +114,18 @@ function clicked(event) {
 
   <xsl:template match="processing-instruction()">
     <div class="indent pi">
-      &lt;?<xsl:value-of select="name(.)"/>
+      <xsl:text>&lt;?</xsl:text>
+      <xsl:value-of select="name(.)"/>
       <xsl:text> </xsl:text>
-      <xsl:value-of select="."/>?&gt;
+      <xsl:value-of select="."/>
+      <xsl:text>?&gt;</xsl:text>
     </div>
   </xsl:template>
 
   <xsl:template match="processing-instruction()[string-length(.) &gt; 50]">
     <table>
       <tr>
-        <td class="expander">-<div/></td>
+        <xsl:call-template name="expander"/>
         <td class="pi">
           &lt;?<xsl:value-of select="name(.)"/>
           <div class="indent expander-content"><xsl:value-of select="."/></div>
@@ -156,23 +137,27 @@ function clicked(event) {
 
   <xsl:template match="comment()">
     <div class="comment indent">
-      &lt;!--
+      <xsl:text>&lt;!--</xsl:text>
       <xsl:value-of select="."/>
-      --&gt;
+      <xsl:text>--&gt;</xsl:text>
     </div>
   </xsl:template>
 
   <xsl:template match="comment()[string-length(.) &gt; 50]">
     <table>
       <tr>
-        <td class="expander">-<div/></td>
+        <xsl:call-template name="expander"/>
         <td class="comment">
-          &lt;!--
+          <xsl:text>&lt;!--</xsl:text>
           <div class="indent expander-content"><xsl:value-of select="."/></div>
           <xsl:text>--&gt;</xsl:text>
         </td>
       </tr>
     </table>
+  </xsl:template>
+  
+  <xsl:template name="expander">
+    <td class="expander"><img src="chrome://global/skin/tree/twisty-open.gif"/><div class="spacer"/></td>
   </xsl:template>
 
 </xsl:stylesheet>

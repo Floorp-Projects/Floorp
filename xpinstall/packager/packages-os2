@@ -342,7 +342,6 @@ bin/res/throbber/*
 bin/res/samples/*
 bin/res/builtin/htmlBindings.xml
 bin/res/builtin/platformHTMLBindings.xml
-bin/res/xml/*
 
 [mail]
 bin/msgbsutl.dll

@@ -9,9 +9,9 @@ nsISelectionListener.idl
 nsISelectionPrivate.idl
 nsIScriptLoader.idl
 nsIScriptLoaderObserver.idl
+nsISyncLoadDOMService.idl
 nsIPrintProgress.idl
 nsIPrintStatusFeedback.idl
 nsIPrintProgressParams.idl
 nsIDragDropHandler.idl
 nsIDragDropOverride.idl
-

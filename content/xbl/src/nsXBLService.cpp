@@ -77,6 +77,8 @@
 #include "nsXBLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsCRT.h"
+#include "nsContentUtils.h"
+#include "nsISyncLoadDOMService.h"
 
 #include "nsIXBLPrototypeHandler.h"
 
@@ -465,75 +467,6 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 
   return rv;
 }
-
-// nsProxyStream 
-// A helper class used for synchronous parsing of URLs.
-class nsProxyStream : public nsIInputStream
-{
-private:
-  const char* mBuffer;
-  PRUint32    mSize;
-  PRUint32    mIndex;
-
-public:
-  nsProxyStream(void) : mBuffer(nsnull)
-  {
-      NS_INIT_ISUPPORTS();
-  }
-
-  virtual ~nsProxyStream(void) {
-  }
-
-  // nsISupports
-  NS_DECL_ISUPPORTS
-
-  // nsIBaseStream
-  NS_IMETHOD Close(void) {
-      return NS_OK;
-  }
-
-  // nsIInputStream
-  NS_IMETHOD Available(PRUint32 *aLength) {
-      *aLength = mSize - mIndex;
-      return NS_OK;
-  }
-
-  NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) {
-      PRUint32 readCount = PR_MIN(aCount, (mSize-mIndex));
-      
-      memcpy(aBuf, mBuffer+mIndex, readCount);
-      mIndex += readCount;
-
-      *aReadCount = readCount;
-
-      return NS_OK;
-  }
-
-  NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) {
-    PRUint32 readCount = PR_MIN(count, (mSize-mIndex));
-    
-    *_retval = 0;
-    nsresult rv = writer (this, closure, mBuffer+mIndex, mIndex, readCount, _retval);
-    mIndex += *_retval;
-    
-    return rv;
-  }
-
-  NS_IMETHOD IsNonBlocking(PRBool *aNonBlocking) {
-    *aNonBlocking = PR_TRUE;
-    return NS_OK;
-  }
-
-  // Implementation
-  void SetBuffer(const char* aBuffer, PRUint32 aSize) {
-      mBuffer = aBuffer;
-      mSize = aSize;
-      mIndex = 0;
-  }
-};
-
-NS_IMPL_ISUPPORTS1(nsProxyStream, nsIInputStream)
-
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -1198,100 +1131,27 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
 NS_IMETHODIMP
 nsXBLService::FetchSyncXMLDocument(nsIURI* aURI, nsIDocument** aResult)
 {
-  // Initialize our out pointer to nsnull
   *aResult = nsnull;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsCOMPtr<nsISyncLoadDOMService> loader =
+    do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Create the XML document
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = nsComponentManager::CreateInstance(kXMLDocumentCID, nsnull,
-                                                   NS_GET_IID(nsIDocument),
-                                                   getter_AddRefs(doc));
-
-  if (NS_FAILED(rv)) return rv;
-
-  // XXX This is evil, but we're living in layout, so I'm
-  // just going to do it.
-  nsXMLDocument* xmlDoc = (nsXMLDocument*)(doc.get());
- 
-  // Now we have to synchronously load the binding file.
-  // Create an XML content sink and a parser. 
-  nsCOMPtr<nsIRequest> request;
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, nsnull);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIStreamListener> listener;
-    // Now do a blocking synchronous parse of the file.
-  nsCOMPtr<nsIInputStream> in;
-  rv = channel->Open(getter_AddRefs(in));
-
-  // If we couldn't open the channel, then just return.
-  if (NS_FAILED(rv)) return NS_OK;
-
-  request = do_QueryInterface(channel);
-
-  NS_ASSERTION(request != nsnull, "no request info");
-  NS_ASSERTION(in != nsnull, "no input stream");
-  
-  NS_ENSURE_TRUE(in,NS_ERROR_FAILURE);
-
-  nsProxyStream* proxy = new nsProxyStream();
-  NS_ENSURE_TRUE(proxy,NS_ERROR_OUT_OF_MEMORY);
-
-  // Do this after making sure the |channel->Open| succeeded (which it
-  // won't if the file doesn't exist) so that we don't have to go
-  // through the work of breaking the circular references between
-  // content sink, script loader, and document.
-  nsCOMPtr<nsIXMLContentSink> xmlSink;
-  NS_NewXMLContentSink(getter_AddRefs(xmlSink), xmlDoc, aURI, nsnull, nsnull);
-  if (!xmlSink)
-    return NS_ERROR_FAILURE;
-
-  // Call StartDocumentLoad
-  if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("loadAsData", 
-                                               channel, 
-                                               nsnull, 
-                                               nsnull, 
-                                               getter_AddRefs(listener),
-                                               PR_TRUE,
-                                               xmlSink))) {
-    NS_ERROR("Failure to init XML doc prior to load.");
-    return rv;
+  rv = loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(domDoc));
+  if (rv == NS_ERROR_FILE_NOT_FOUND) {
+      return NS_OK;
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  listener->OnStartRequest(request, nsnull);
-  
-  while (PR_TRUE) {
-    char buf[4096];
-    PRUint32 readCount;
-
-    if (NS_FAILED(rv = in->Read(buf, sizeof(buf), &readCount)))
-        break; // error
-  
-    if (readCount == 0)
-        break; // eof
-
-    proxy->SetBuffer(buf, readCount);
-
-    PRUint32 sourceOffset = 0;
-    rv = listener->OnDataAvailable(request, nsnull, proxy, sourceOffset, readCount);
-    sourceOffset += readCount;
-    if (NS_FAILED(rv))
-        break;
-  }
-  listener->OnStopRequest(request, nsnull, NS_OK);
-
-  // don't leak proxy!
-  proxy->Close();
-  delete proxy;
-  
   // The document is parsed. We now have a prototype document.
   // Everything worked, so we can just hand this back now.
-  *aResult = doc;
-  NS_IF_ADDREF(*aResult);
 
-  return NS_OK;
-
+  return CallQueryInterface(domDoc, aResult);
 }
   
 NS_IMETHODIMP
@@ -1299,30 +1159,15 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
                                    nsIURI* aURI, const nsCString& aRef, 
                                    PRBool aForceSyncLoad, nsIDocument** aResult)
 {
+  nsresult rv = NS_OK;
   // Initialize our out pointer to nsnull
   *aResult = nsnull;
-
-  // Create the XML document
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = nsComponentManager::CreateInstance(kXMLDocumentCID, nsnull,
-                                                   NS_GET_IID(nsIDocument),
-                                                   getter_AddRefs(doc));
-
-  if (NS_FAILED(rv)) return rv;
-
-  // XXX This is evil, but we're living in layout, so I'm
-  // just going to do it.
-  nsXMLDocument* xmlDoc = (nsXMLDocument*)(doc.get());
 
   // Now we have to synchronously load the binding file.
   // Create an XML content sink and a parser. 
   nsCOMPtr<nsILoadGroup> loadGroup;
   if (aBoundDocument)
     aBoundDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-  nsCOMPtr<nsIRequest> request;
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, loadGroup);
-  if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIAtom> tagName;
   if (aBoundElement)
@@ -1333,20 +1178,28 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
       tagName == nsHTMLAtoms::select || IsResourceURI(aURI))
     aForceSyncLoad = PR_TRUE;
 
-  nsCOMPtr<nsIStreamListener> listener;
   if(!aForceSyncLoad) {
+    // Create the XML document
+    nsCOMPtr<nsIDocument> doc = do_CreateInstance(kXMLDocumentCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, loadGroup);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIStreamListener> listener;
     nsCOMPtr<nsIXMLContentSink> xblSink;
-    NS_NewXBLContentSink(getter_AddRefs(xblSink), xmlDoc, aURI, nsnull);
+    NS_NewXBLContentSink(getter_AddRefs(xblSink), doc, aURI, nsnull);
     if (!xblSink)
       return NS_ERROR_FAILURE;
 
-    if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("loadAsData", 
-                                                 channel, 
-                                                 loadGroup, 
-                                                 nsnull, 
-                                                 getter_AddRefs(listener),
-                                                 PR_TRUE,
-                                                 xblSink))) {
+    if (NS_FAILED(rv = doc->StartDocumentLoad("loadAsData", 
+                                              channel,
+                                              loadGroup,
+                                              nsnull,
+                                              getter_AddRefs(listener),
+                                              PR_TRUE,
+                                              xblSink))) {
       NS_ERROR("Failure to init XBL doc prior to load.");
       return rv;
     }
@@ -1379,75 +1232,24 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   }
 
   // Now do a blocking synchronous parse of the file.
-  nsCOMPtr<nsIInputStream> in;
-  rv = channel->Open(getter_AddRefs(in));
 
-  // If we couldn't open the channel, then just return.
-  if (NS_FAILED(rv)) return NS_OK;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsCOMPtr<nsISyncLoadDOMService> loader =
+    do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  request = do_QueryInterface(channel);
+  // Open channel
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nsnull, loadGroup);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ASSERTION(request != nsnull, "no request info");
-  NS_ASSERTION(in != nsnull, "no input stream");
-  
-  NS_ENSURE_TRUE(in,NS_ERROR_FAILURE);
-
-  nsProxyStream* proxy = new nsProxyStream();
-  NS_ENSURE_TRUE(proxy,NS_ERROR_OUT_OF_MEMORY);
-
-  // Do this after making sure the |channel->Open| succeeded (which it
-  // won't if the file doesn't exist) so that we don't have to go
-  // through the work of breaking the circular references between
-  // content sink, script loader, and document.
-  nsCOMPtr<nsIXMLContentSink> xblSink;
-  NS_NewXBLContentSink(getter_AddRefs(xblSink), xmlDoc, aURI, nsnull);
-  if (!xblSink)
-    return NS_ERROR_FAILURE;
-
-  // Call StartDocumentLoad
-  if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("loadAsData", 
-                                               channel, 
-                                               loadGroup, 
-                                               nsnull, 
-                                               getter_AddRefs(listener),
-                                               PR_TRUE,
-                                               xblSink))) {
-    NS_ERROR("Failure to init XBL doc prior to load.");
-    return rv;
+  rv = loader->LoadLocalXBLDocument(channel, getter_AddRefs(domDoc));
+  if (rv == NS_ERROR_FILE_NOT_FOUND) {
+      return NS_OK;
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  listener->OnStartRequest(request, nsnull);
-  
-  while (PR_TRUE) {
-    char buf[4096];
-    PRUint32 readCount;
-
-    if (NS_FAILED(rv = in->Read(buf, sizeof(buf), &readCount)))
-        break; // error
-
-    if (readCount == 0)
-        break; // eof
-
-    proxy->SetBuffer(buf, readCount);
-
-    PRUint32 sourceOffset = 0;
-    rv = listener->OnDataAvailable(request, nsnull, proxy, sourceOffset, readCount);
-    sourceOffset += readCount;
-    if (NS_FAILED(rv))
-        break;
-  }
-  listener->OnStopRequest(request, nsnull, NS_OK);
-
-  // don't leak proxy!
-  proxy->Close();
-  delete proxy;
-
-  // The document is parsed. We now have a prototype document.
-  // Everything worked, so we can just hand this back now.
-  *aResult = doc;
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
+  return CallQueryInterface(domDoc, aResult);
 }
 
 static void GetImmediateChild(nsIAtom* aTag, nsIContent* aParent, nsIContent** aResult) 
