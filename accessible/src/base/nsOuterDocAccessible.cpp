@@ -37,18 +37,17 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsOuterDocAccessible.h"
+#include "nsIAccessibilityService.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIServiceManager.h"
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsOuterDocAccessible, nsBlockAccessible)
 
 nsOuterDocAccessible::nsOuterDocAccessible(nsIDOMNode* aNode, 
-                                          nsIAccessible* aDocAccessible, 
                                           nsIWeakReference* aShell):
   nsBlockAccessible(aNode, aShell)
 {
-  SetAccFirstChild(aDocAccessible); // weak ref
-  if (aDocAccessible) {
-    aDocAccessible->SetAccParent(this);
-  }
   mAccChildCount = 1;
 }
 
@@ -86,4 +85,41 @@ NS_IMETHODIMP nsOuterDocAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y,
                                                  PRInt32 *width, PRInt32 *height)
 {
   return mFirstChild? mFirstChild->AccGetBounds(x, y, width, height): NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsOuterDocAccessible::Init()
+{
+  nsresult rv = nsBlockAccessible::Init(); 
+  
+  // We're in the accessibility cache now
+  // In these variable names, "outer" relates to the nsOuterDocAccessible
+  // as opposed to the nsDocAccessibleWrap which is "inner".
+  // The outer node is a <browser>, <iframe> or <editor> tag, whereas the inner node
+  // corresponds to the inner document root.
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(content, "No nsIContent for <browser>/<iframe>/<editor> dom node");
+
+  nsCOMPtr<nsIDocument> outerDoc;
+  content->GetDocument(*getter_AddRefs(outerDoc));
+  NS_ENSURE_TRUE(outerDoc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> innerDoc;
+  outerDoc->GetSubDocumentFor(content, getter_AddRefs(innerDoc));
+  nsCOMPtr<nsIDOMNode> innerNode(do_QueryInterface(innerDoc));
+  NS_ENSURE_TRUE(innerNode, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPresShell> innerPresShell;
+  innerDoc->GetShellAt(0, getter_AddRefs(innerPresShell));
+  NS_ENSURE_TRUE(innerPresShell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAccessible> innerAccessible;
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  accService->GetAccessibleInShell(innerNode, innerPresShell, 
+                                   getter_AddRefs(innerAccessible));
+  NS_ENSURE_TRUE(innerAccessible, NS_ERROR_FAILURE);
+
+  SetAccFirstChild(innerAccessible); // weak ref
+  return innerAccessible->SetAccParent(this);
 }
