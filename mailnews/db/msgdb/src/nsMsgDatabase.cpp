@@ -1691,7 +1691,7 @@ nsresult nsMsgDatabase::RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_to
 	nsresult err;
 	nsString nakedString;
 	err = RowCellColumnTonsString(row, columnToken, nakedString);
-	if (NS_SUCCEEDED(err))
+	if (NS_SUCCEEDED(err) && nakedString.Length() > 0)
 	{
  
 		// apply mime decode
