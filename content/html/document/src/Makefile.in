@@ -56,6 +56,8 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  xpconnect \
 		  unicharutil \
+		  commandhandler \
+		  composer \
 		  $(NULL)
 
 CPPSRCS		= \
