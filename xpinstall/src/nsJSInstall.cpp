@@ -1893,12 +1893,12 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   JSObject *installObject  = nsnull;
   nsInstall *nativeInstallObject;
 
-    if (global == nsnull)
-    {
-        //we are the global
-        // new global object
-        global = JS_NewObject(jscontext, &InstallClass, nsnull, nsnull);
-    }
+  if (global == nsnull)
+  {
+    //we are the global
+    // new global object
+    global = JS_NewObject(jscontext, &InstallClass, nsnull, nsnull);
+  }
 
   installObject  = JS_InitClass( jscontext,         // context
                                  global,            // global object
@@ -1913,13 +1913,15 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
 
   if (nsnull == installObject)
   {
-      return nsnull;
+    return nsnull;
   }
 
   if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
-            return nsnull;
+    return nsnull;
 
   nativeInstallObject = new nsInstall(theJARFile);
+  if (!nativeInstallObject)
+    return nsnull;
 
   nativeInstallObject->SetJarFileLocation(jarfile);
   nativeInstallObject->SetInstallArguments(nsAutoString(args));
@@ -1941,13 +1943,18 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
 
   gFileOpObject = JS_NewObject(jscontext, &FileOpClass, gFileOpProto, nsnull);
   if (gFileOpObject == nsnull)
-      return nsnull;
+    return nsnull;
 
   JS_SetPrivate(jscontext, gFileOpObject, nativeInstallObject);
 
-  JS_DefineProperty (jscontext, installObject, "File", OBJECT_TO_JSVAL(gFileOpObject),
-                     JS_PropertyStub, JS_PropertyStub, JSPROP_READONLY | JSPROP_PERMANENT);
-
+  if (!JS_DefineProperty (jscontext,
+                          installObject, 
+                          "File", 
+                          OBJECT_TO_JSVAL(gFileOpObject),
+                          JS_PropertyStub, 
+                          JS_PropertyStub, 
+                          JSPROP_READONLY | JSPROP_PERMANENT))
+    return nsnull;
 
   //
   // Initialize the FileSpecObject
@@ -1967,13 +1974,13 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
 
   if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
   {
-      return nsnull;
+    return nsnull;
   }
   nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
 
   if(NS_OK != InitWinProfilePrototype(jscontext, global, &winProfilePrototype))
   {
-      return nsnull;
+    return nsnull;
   }
   nativeInstallObject->SaveWinProfilePrototype(winProfilePrototype);
 #endif

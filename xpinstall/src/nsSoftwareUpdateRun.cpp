@@ -386,7 +386,7 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
 
     JS_SetErrorReporter(cx, XPInstallErrorReporter);
 
-
+    JS_BeginRequest(cx);
     glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, flags, reg, hZip);
     if (!glob)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -397,7 +397,7 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
     // Add our Install class to this context
     InitInstallVersionClass(cx, glob, nsnull);
     InitInstallTriggerGlobalClass(cx, glob, nsnull);
-
+    JS_EndRequest(cx);
     *jsCX   = cx;
     *jsGlob = glob;
 
