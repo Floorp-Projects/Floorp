@@ -69,7 +69,6 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\Anieyes.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\gear1.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\rock_gra.gif $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) samples\woofer.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\bg.jpg $(DIST)\bin\res\samples
 
 clobber::
@@ -87,5 +86,4 @@ clobber::
 	rm -f $(DIST)\bin\res\samples\Anieyes.gif
 	rm -f $(DIST)\bin\res\samples\gear1.gif
 	rm -f $(DIST)\bin\res\samples\rock_gra.gif
-	rm -f $(DIST)\bin\res\samples\woofer.gif
 	rm -f $(DIST)\bin\res\samples\bg.jpg
