@@ -54,6 +54,8 @@ typedef enum {
         u1ByteGLCharset,
         uComposedHangulCharset,
         uComposedHangulGLCharset,
+        uJohabHangulCharset,
+        uJohabSymbolCharset,
         uNumOfCharsetType
 } uScanClassID;
 
