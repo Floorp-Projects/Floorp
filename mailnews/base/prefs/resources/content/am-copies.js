@@ -39,8 +39,8 @@ var tmplFolderPickerId = "msgStationeryFolderPicker";
  * Set the global radio element choices and initialize folder/account pickers. 
  * Also, initialize other UI elements (bcc self, fcc picker controller checkboxes). 
  */
-function onInit() {
-
+function onInit() 
+{
     SetGlobalRadioElemChoices();
                      
     SetFolderDisplay(gFccRadioElemChoice, gFccRadioElemChoiceLocked, 

@@ -70,7 +70,6 @@
 // XXX Remove
 #include "nsIWebShell.h"
 
-
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 
@@ -419,7 +418,7 @@ NS_IMETHODIMP nsMsgWindow::StopUrls()
 // nsIURIContentListener support
 NS_IMETHODIMP nsMsgWindow::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 {
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, PRBool aIsContentPreferred,

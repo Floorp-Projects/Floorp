@@ -72,18 +72,6 @@ function GetNewMessages(selectedFolders, compositeDataSource)
 	}
 }
 
-function DeleteMessages(compositeDataSource, srcFolder, messages, reallyDelete)
-{
-    dump("fix or remove this\n");
-    // going away...
-}
-
-function CopyMessages(compositeDataSource, srcFolder, destFolder, messages, isMove)
-{
-    dump("fix or remove this\n");
-    // going away...
-}
-
 function getIdentityForServer(server)
 {
     var identity = null;

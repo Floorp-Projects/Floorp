@@ -109,7 +109,6 @@ function initializeGlobalListeners()
   gSearchSession.addFolderListener(folderListener);
   // Setup the javascript object as a listener on the search results
   gSearchSession.registerListener(gSearchNotificationListener);
-    
 }
 
 function createQuickSearchView()
