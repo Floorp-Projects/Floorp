@@ -32,14 +32,20 @@ var cert;
 
 function setWindowName()
 {
-  myName = self.name;
-  var certname = document.getElementById("certname");
-  certname.setAttribute("value", myName);
+  //myName = self.name;
+  certkey = self.name;
 
   //  Get the cert from the cert database
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   //var cert = certdb.getCertByNickname(token, myName);
-  cert = certdb.getCertByNickname(null, myName);
+  //cert = certdb.getCertByNickname(null, myName);
+  cert = certdb.getCertByDBKey(certkey, null);
+
+  var windowReference = document.getElementById('editCert');
+  windowReference.setAttribute("title", cert.commonName);
+
+  var certname = document.getElementById("certname");
+  certname.setAttribute("value", cert.commonName);
 
   var ssl = document.getElementById("trustSSL");
   if (certdb.getCertTrust(cert, 1)) {

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.14 2001/03/28 02:05:54 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.15 2001/03/30 19:54:57 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -1000,16 +1000,19 @@ nsNSSCertificateDB::GetCertByNickname(nsIPK11Token *aToken,
   return NS_ERROR_FAILURE;
 }
 
-/* nsIX509Cert getCertByKeyDB (in string dbkey); */
+/* nsIX509Cert getCertByDBKey(in string aDBkey, in nsIPK11Token aToken); */
 NS_IMETHODIMP 
-nsNSSCertificateDB::GetCertByKeyDB(const char *dbkey, nsIX509Cert **_retval)
+nsNSSCertificateDB::GetCertByDBKey(const char *aDBkey, nsIPK11Token *aToken,
+                                   nsIX509Cert **_cert)
 {
   SECItem keyItem = {siBuffer, nsnull, 0};
   SECItem *dummy;
-
-  *_retval = nsnull; 
-  dummy = NSSBase64_DecodeBuffer(nsnull, &keyItem, dbkey,
-                                 (PRUint32)PL_strlen(dbkey)); 
+  *_cert = nsnull; 
+  if (!aDBkey) return NS_ERROR_FAILURE;
+  dummy = NSSBase64_DecodeBuffer(nsnull, &keyItem, aDBkey,
+                                 (PRUint32)PL_strlen(aDBkey)); 
+  // In the future, this should actually look on the token.  But for now,
+  // take it for granted that the cert has been loaded into the temp db.
   CERTCertificate *cert = CERT_FindCertByKey(CERT_GetDefaultCertDB(),
                                              &keyItem);
   PR_FREEIF(keyItem.data);
@@ -1017,9 +1020,8 @@ nsNSSCertificateDB::GetCertByKeyDB(const char *dbkey, nsIX509Cert **_retval)
     nsNSSCertificate *nssCert = new nsNSSCertificate(cert);
     if (nssCert == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
-
     NS_ADDREF(nssCert);
-    *_retval = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+    *_cert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
   }
   return NS_OK;
 }
@@ -1124,6 +1126,24 @@ done:
 }
 
 /*
+ * void deleteCertificate(in nsIX509Cert aCert);
+ */
+NS_IMETHODIMP 
+nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
+{
+#if 0
+  if (getCertType(aCert->mCert) == nsNSSCertificate::USER_CERT) {
+    return ((PK11_DeleteTokenCertAndKey(aCert->mCert, NULL)) == SECSuccess) ?
+              NS_OK : NS_ERROR_FAILURE;
+  } else {
+    return ((SEC_DeletePermCertificate(aCert->mCert)) == SECSuccess) ?
+              NS_OK : NS_ERROR_FAILURE;
+  }
+#endif
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/*
  * void setCertTrust(in nsIX509Cert cert,
  *                   in unsigned long type,
  *                   in unsigned long trust);
@@ -1218,14 +1238,16 @@ NS_IMETHODIMP
 nsNSSCertificateDB::ExportPKCS12File(nsIPK11Token     *aToken, 
                                      nsILocalFile     *aFile,
                                      PRUint32          count,
-                                     const PRUnichar **aCertNames)
+                                     nsIX509Cert     **certs)
+                                     //const PRUnichar **aCertNames)
 {
   NS_ENSURE_ARG(aFile);
   nsPKCS12Blob blob;
   if (count == 0) return NS_OK;
   blob.SetToken(aToken);
-  blob.LoadCerts(aCertNames, count);
-  return blob.ExportToFile(aFile);
+  //blob.LoadCerts(aCertNames, count);
+  //return blob.ExportToFile(aFile);
+  return blob.ExportToFile(aFile, certs, count);
 }
 
 /*
@@ -1245,6 +1267,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
                                  PRUint32     *_count,
                                  PRUnichar  ***_certNames)
 {
+  nsresult rv;
   CERTCertListNode *node;
   PRUint32 numcerts = 0, i=0;
   PRUnichar **tmpArray = NULL;
@@ -1264,14 +1287,26 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
        !CERT_LIST_END(node, certList);
        node = CERT_LIST_NEXT(node)) {
     if (getCertType(node->cert) == type) {
+      nsNSSCertificate pipCert(node->cert);
+      char *dbkey = NULL;
+      char *namestr = NULL;
+      nsAutoString certstr;
+      rv = pipCert.GetDbKey(&dbkey);
+      nsAutoString keystr = NS_ConvertASCIItoUCS2(dbkey);
+      PR_FREEIF(dbkey);
       if (type == nsIX509Cert::EMAIL_CERT) {
-        nsAutoString certname = NS_ConvertASCIItoUCS2(node->cert->emailAddr);
-        tmpArray[i++] = certname.ToNewUnicode();
+        namestr = node->cert->emailAddr;
       } else {
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert [%d]<%s>\n", i,node->cert->nickname));
-        nsAutoString certname = NS_ConvertASCIItoUCS2(node->cert->nickname);
-        tmpArray[i++] = certname.ToNewUnicode();
+        namestr = node->cert->nickname;
+        char *sc = strchr(namestr, ':');
+        if (sc) *sc = DELIM;
       }
+      nsAutoString certname = NS_ConvertASCIItoUCS2(namestr);
+      certstr.AppendWithConversion(DELIM);
+      certstr += certname;
+      certstr.AppendWithConversion(DELIM);
+      certstr += keystr;
+      tmpArray[i++] = certstr.ToNewUnicode();
     }
   }
 finish:

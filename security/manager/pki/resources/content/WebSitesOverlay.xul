@@ -40,6 +40,7 @@
       <outlinercol id="certcol" label="Certificate Name" flex="1"/>
       <splitter/>
       <outlinercol id="tokencol" label="Token Name" flex="1"/>
+      <outlinercol id="certdbkeycol" collapsed="true" flex="1"/>
       <outlinerbody flex="1"/>
     </outliner>
     <box>
