@@ -39,12 +39,6 @@ public:
   /** Equality operator */
   NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const = 0;
 
-  // XXX Temporary...
-  virtual PRBool operator==(const nsIURL &aURL) const {
-    NS_ASSERTION(0, "change your code to use the Equals method");
-    return PR_FALSE;
-  }
-
   /** Accessors */
   //@{
   /** @return string originally used to construct the URL */
@@ -102,7 +96,6 @@ public:
 
   /** Write the URL to aString, overwriting previous contents. */
   NS_IMETHOD ToString(PRUnichar* *aString) const = 0;
-
 };
 
 // XXXwhh (re)move these...
