@@ -37,6 +37,10 @@ CHROME_L10N = \
 		viewSource.dtd \
 		editorOverlay.dtd \
 		editor.properties \
+		pref-composer.dtd \
+		pref-publish.dtd \
+		pref-editing.dtd \
+		editorPrefsOverlay.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

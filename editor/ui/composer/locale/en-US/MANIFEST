@@ -28,3 +28,7 @@ sidebar-editor.dtd
 viewSource.dtd
 editorOverlay.dtd
 editor.properties
+pref-composer.dtd
+pref-editing.dtd
+pref-publish.dtd
+editorPrefsOverlay.dtd

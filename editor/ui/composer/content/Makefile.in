@@ -57,6 +57,11 @@ CHROME_CONTENT = \
 		sb-FileWidgetFileHandler.js \
 		editorOverlay.xul \
 		editorOverlay.js \
+		pref-composer.xul \
+		pref-composer.js \
+		pref-editing.xul \
+		pref-publish.xul \
+		editorPrefsOverlay.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

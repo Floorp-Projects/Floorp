@@ -31,6 +31,10 @@ CHROME_L10N = \
 	.\viewSource.dtd \
 	.\editorOverlay.dtd \
 	.\editor.properties \
+	.\pref-editing.dtd \
+	.\pref-composer.dtd \
+	.\pref-publish.dtd \
+	.\editorPrefsOverlay.dtd \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
