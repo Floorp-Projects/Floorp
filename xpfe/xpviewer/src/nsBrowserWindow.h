@@ -32,9 +32,7 @@
 #include "nsIToolbarManagerListener.h"
 #include "nsIImageButtonListener.h"
 
-#ifdef NGEDITOR
 #include "nsIEditor.h"
-#endif //NGEDITOR
 
 class nsILabel;
 class nsICheckButton;
@@ -297,12 +295,8 @@ protected:
 
   void UpdateToolbarBtns();
 
-#ifdef NGEDITOR
   void AddEditor(nsIEditor *); //this function is temporary and WILL be depricated
   nsIEditor      * mEditor; //this will hold the editor for future commands. we must think about this mjudge
-#endif
-
-
 };
 
 // nsViewSourceWindow
