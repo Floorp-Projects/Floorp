@@ -434,6 +434,12 @@ nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
   aPoint.x = 0;
   aPoint.y = 0;
  
+  // Keep track of the root view so that we know to stop there
+  nsCOMPtr<nsIViewManager> vm;
+  aView->GetViewManager(*getter_AddRefs(vm));
+  nsIView* rootView;
+  vm->GetRootView(rootView);
+
   nsIView *parent;
   nsRect bounds;
 
@@ -481,6 +487,8 @@ nsMenuPopupFrame::GetViewOffset(nsIView* aView, nsPoint& aPoint)
       aPoint.y += bounds.y;
       aPoint.x += bounds.x;
     }
+    if (parent == rootView)
+      break;
     parent->GetParent(parent);
   }
 }
