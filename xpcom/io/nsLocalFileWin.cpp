@@ -1510,15 +1510,9 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
     
     ResolveAndStat(PR_FALSE);
     
-    const char *filePath = mResolvedPath.get();
-
     PRInt64 int64;
     
     LL_I2L(int64 , LONG_MAX);
-
-    char aDrive[_MAX_DRIVE + 2];
-	_splitpath( (const char*)filePath, aDrive, NULL, NULL, NULL);
-	strcat(aDrive, "\\");
 
     // Check disk space
     DWORD dwSecPerClus, dwBytesPerSec, dwFreeClus, dwTotalClus;
@@ -1542,18 +1536,23 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
         FreeLibrary(hInst);
     }
 
-    if (getDiskFreeSpaceExA && (*getDiskFreeSpaceExA)(aDrive,
+    if (getDiskFreeSpaceExA && (*getDiskFreeSpaceExA)(mResolvedPath.get(),
                                                       &liFreeBytesAvailableToCaller, 
                                                       &liTotalNumberOfBytes,  
                                                       &liTotalNumberOfFreeBytes))
     {
         nBytes = (double)(signed __int64)liFreeBytesAvailableToCaller.QuadPart;
     }
-    else if ( GetDiskFreeSpace(aDrive, &dwSecPerClus, &dwBytesPerSec, &dwFreeClus, &dwTotalClus))
-    {
-        nBytes = (double)dwFreeClus*(double)dwSecPerClus*(double) dwBytesPerSec;
-    }
+    else {
+        char aDrive[_MAX_DRIVE + 2];
+        _splitpath( mResolvedPath.get(), aDrive, NULL, NULL, NULL);
+        strcat(aDrive, "\\");
 
+        if ( GetDiskFreeSpace(aDrive, &dwSecPerClus, &dwBytesPerSec, &dwFreeClus, &dwTotalClus))
+        {
+            nBytes = (double)dwFreeClus*(double)dwSecPerClus*(double) dwBytesPerSec;
+        }
+    }
     LL_D2L(*aDiskSpaceAvailable, nBytes);
 
     return NS_OK;
