@@ -1524,20 +1524,34 @@ NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
     return err;
 }
 
-NS_IMETHODIMP nsMsgDatabase::HasNew()
+NS_IMETHODIMP nsMsgDatabase::HasNew(PRBool *_retval)
 {
-	return (m_newSet && m_newSet->getLength() > 0) ? NS_OK : NS_COMFALSE;
+	if (!_retval) return NS_ERROR_NULL_POINTER;
+
+	if (m_newSet && m_newSet->getLength() > 0) {
+		*_retval = PR_TRUE;
+	}
+	else {
+		*_retval = PR_FALSE;
+	}
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::GetFirstNew(nsMsgKey *result)
 {
 	// even though getLength is supposedly for debugging only, it's the only
 	// way I can tell if the set is empty (as opposed to having a member 0.
-	if (NS_SUCCEEDED(HasNew()))
+	PRBool hasnew;
+	nsresult rv;
+
+	rv = HasNew(&hasnew);
+	if (NS_FAILED(rv)) return rv;
+	if (hasnew)
 		*result = m_newSet->GetFirstMember();
 	else
 		*result = nsMsgKey_None;
-    return NS_OK;
+	return NS_OK;
 }
 
 

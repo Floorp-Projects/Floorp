@@ -167,7 +167,7 @@ public:
                              nsIDBChangeListener *instigator);
 
   NS_IMETHOD GetFirstNew(nsMsgKey *result);
-  NS_IMETHOD HasNew(void);  // returns NS_OK if true, NS_COMFALSE if false
+  NS_IMETHOD HasNew(PRBool *_retval);  
   NS_IMETHOD ClearNewList(PRBool notify);
   NS_IMETHOD AddToNewList(nsMsgKey key);
 

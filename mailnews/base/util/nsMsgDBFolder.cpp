@@ -229,8 +229,15 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 
 				folderInfo->GetCharacterSet(&mCharset);
         
-				if (db && !db->HasNew() && mNumPendingUnreadMessages <= 0)
-					ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
+				if (db) {
+					PRBool hasnew;
+					nsresult rv;
+					rv = db->HasNew(&hasnew);
+					if (NS_FAILED(rv)) return rv;
+					if (!hasnew && mNumPendingUnreadMessages <= 0) {
+						ClearFlag(MSG_FOLDER_FLAG_GOT_NEW);
+					}
+				}
             }
 
         }

@@ -149,7 +149,7 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
                              in nsIDBChangeListener instigator);
 
   readonly attribute nsMsgKey FirstNew;
-  void HasNew();  // returns NS_OK if true, NS_COMFALSE if false
+  boolean HasNew();  
   void ClearNewList(in boolean notify);
   void AddToNewList(in nsMsgKey key);
 
