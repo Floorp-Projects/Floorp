@@ -128,7 +128,7 @@ nsUnknownContentTypeDialog.prototype = {
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
       try {
         result = prefs.getComplexValue(kDownloadFolderPref, Components.interfaces.nsILocalFile);
-        result = this.validateLeafName(result, aDefaultFile);
+        result = this.validateLeafName(result, aDefaultFile, aSuggestedFileExtension);
       }
       catch (e) { 
         // If we get here, it's because we have a new profile and the user has never configured download
@@ -185,7 +185,7 @@ nsUnknownContentTypeDialog.prototype = {
           // code block. 
           prefs.setComplexValue("browser.download.defaultFolder", Components.interfaces.nsILocalFile, defaultFolder);
           
-          result = this.validateLeafName(defaultFolder, aDefaultFile);
+          result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
         }
       }
       
@@ -251,8 +251,10 @@ nsUnknownContentTypeDialog.prototype = {
       return result;
     },
     
-    validateLeafName: function (aLocalFile, aLeafName)
+    validateLeafName: function (aLocalFile, aLeafName, aFileExt)
     {
+      if (aLeafName == "")
+        aLeafName = "unnamed" + (aFileExt ? "." + aFileExt : "");
       aLocalFile.append(aLeafName);
       
       // Since we're automatically downloading, we don't get the file picker's 
@@ -734,7 +736,7 @@ nsUnknownContentTypeDialog.prototype = {
                                                Components.interfaces.nsILocalFile);
             var leafName = this.dialogElement("location").value;                                               
             // Ensure that we don't overwrite any existing files here. 
-            targetFile = this.validateLeafName(targetFile, leafName);
+            targetFile = this.validateLeafName(targetFile, leafName, null);
           }
           catch(e) {}
           
