@@ -819,7 +819,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
   PRUint32 writeCount;
 
   if (closeNeeded && GetDeleteIsMoveToTrash() &&
-      TestFlag(IMAP_CONNECTION_IS_OPEN))
+      TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
   {
     IncrementCommandTagNumber();
     command = GetServerCommandTag();
