@@ -120,9 +120,6 @@ A:out-of-date IMG { border: 2px solid red; text-decoration: underline }
 
 HR {
   display: block;
-  height: 3px;
-  margin-top: 5px;
-  margin-bottom: 5px;
 }
 
 BR {
