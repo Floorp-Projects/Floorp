@@ -879,6 +879,39 @@ Reason: %reason%
    default => '32',
    checker => \&check_netmask
   },
+
+  {
+   name => 'usermatchmode',
+   desc => 'Allow match strings to be entered for user names when entering ' .
+           'and editing bugs.  <p>' .
+           '"off" disables matching,<br> ' .
+           '"wildcard" allows only wildcards,<br> ' .
+           'and "search" allows both wildcards and substring (freetext) ' .
+           'matches.',
+   type => 's',
+   choices => ['off', 'wildcard', 'search'],
+   default => 'off'
+  },
+
+  {
+   name    => 'maxusermatches',
+   desc    => 'Search for no more than this many matches.  <br>'.
+              'If set to "1", no users will be displayed on ambiguous matches.  '.
+              'This is useful for user privacy purposes.  <br>'.
+              'A value of zero means no limit.',
+   type    => 't',
+   default => '1000',
+   checker => \&check_numeric
+  },
+
+  {
+   name    => 'confirmuniqueusermatch',
+   desc    => 'Whether a confirmation screen should be displayed when only ' .
+               'one user matches a search entry',
+   type    => 'b',
+   default => 1,
+  },
+
 );
 
 1;

@@ -34,6 +34,8 @@ use lib qw(.);
 require "CGI.pl";
 require "bug_form.pl";
 
+use Bugzilla::User;
+
 use RelationSet;
 
 # Use the Flag module to modify flag data if the user set flags.
@@ -85,6 +87,14 @@ if (defined $::FORM{'id'}) {
 
 # Make sure there are bugs to process.
 scalar(@idlist) || ThrowUserError("no_bugs_chosen");
+
+# do a match on the fields if applicable
+
+&Bugzilla::User::match_field({
+    'qa_contact'    => { 'type' => 'single' },
+    'newcc'         => { 'type' => 'multi'  },
+    'assigned_to'   => { 'type' => 'single' },
+});
 
 # If we are duping bugs, let's also make sure that we can change 
 # the original.  This takes care of issue A on bug 96085.

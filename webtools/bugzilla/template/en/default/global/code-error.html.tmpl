@@ -90,6 +90,10 @@
     Attempted to add bug to an inactive group, identified by the bit 
     '[% bit FILTER html %]'.
     
+  [% ELSIF error == "bad_arg" %]
+    Bad argument <code>[% argument %]</code> sent to
+    <code>[% function %]</code> function.
+
   [% ELSIF error == "invalid_attach_id_to_obsolete" %]
      The attachment number of one of the attachments you wanted to obsolete,
      [% attach_id FILTER html %], is invalid.

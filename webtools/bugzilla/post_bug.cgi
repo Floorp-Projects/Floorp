@@ -29,6 +29,8 @@ use lib qw(.);
 require "CGI.pl";
 require "bug_form.pl";
 
+use Bugzilla::User;
+
 # Shut up misguided -w warnings about "used only once". For some reason,
 # "use vars" chokes on me when I try it here.
 sub sillyness {
@@ -51,6 +53,12 @@ use vars qw($vars $template);
 ConnectToDatabase();
 my $whoid = confirm_login();
 
+# do a match on the fields if applicable
+
+&Bugzilla::User::match_field ({
+    'cc'            => { 'type' => 'multi'  },
+    'assigned_to'   => { 'type' => 'single' },
+});
 
 # The format of the initial comment can be structured by adding fields to the
 # enter_bug template and then referencing them in the comment template.

@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
+#                 Erik Stambaugh <not_erik@dasbistro.com>
 
 ################################################################################
 # Module Initialization
@@ -79,31 +80,253 @@ sub new {
 
 sub match {
     # Generates a list of users whose login name (email address) or real name
-    # matches a substring.
+    # matches a substring or wildcard.
 
-    # $str contains the string to match against, while $limit contains the
+    # $str contains the string to match, while $limit contains the
     # maximum number of records to retrieve.
     my ($str, $limit, $exclude_disabled) = @_;
     
-    # Build the query.
-    my $sqlstr = &::SqlQuote($str);
-    my $qry = "
-          SELECT  userid, realname, login_name
-            FROM  profiles
-           WHERE  (INSTR(login_name, $sqlstr) OR INSTR(realname, $sqlstr))
-    ";
-    $qry .= "AND disabledtext = '' " if $exclude_disabled;
-    $qry .= "ORDER BY realname, login_name ";
-    $qry .= "LIMIT $limit " if $limit;
+    my @users = ();
 
-    # Execute the query, retrieve the results, and make them into User objects.
-    my @users;
-    &::PushGlobalSQLState();
-    &::SendSQL($qry);
-    push(@users, new Bugzilla::User(&::FetchSQLData())) while &::MoreSQLData();
-    &::PopGlobalSQLState();
+    return \@users if $str =~ /^\s*$/;
+
+    # The search order is wildcards, then exact match, then INSTR search.
+    # Wildcard matching is skipped if there is no '*', and exact matches will
+    # not (?) have a '*' in them.  If any search comes up with something, the
+    # ones following it will not execute.
+
+    # first try wildcards
+
+    my $wildstr = $str;
+
+    if ($wildstr =~ s/\*/\%/g) {   # don't do wildcards if no '*' in the string
+
+        # Build the query.
+        my $sqlstr = &::SqlQuote($wildstr);
+        my $query  = "SELECT userid, realname, login_name " .
+                     "FROM profiles " .
+                     "WHERE (login_name LIKE $sqlstr " .
+                     "OR realname LIKE $sqlstr) ";
+        $query    .= "AND disabledtext = '' " if $exclude_disabled;
+        $query    .= "ORDER BY length(login_name) ";
+        $query    .= "LIMIT $limit " if $limit;
+
+        # Execute the query, retrieve the results, and make them into
+        # User objects.
+
+        &::PushGlobalSQLState();
+        &::SendSQL($query);
+        push(@users, new Bugzilla::User(&::FetchSQLData())) while &::MoreSQLData();
+        &::PopGlobalSQLState();
+
+    }
+    else {    # try an exact match
+
+        my $sqlstr = &::SqlQuote($str);
+        my $query  = "SELECT userid, realname, login_name " .
+                     "FROM profiles " .
+                     "WHERE login_name = $sqlstr ";
+        $query    .= "AND disabledtext = '' " if $exclude_disabled;
+
+        &::PushGlobalSQLState();
+        &::SendSQL($query);
+        push(@users, new Bugzilla::User(&::FetchSQLData())) if &::MoreSQLData();
+        &::PopGlobalSQLState();
+    }
+
+    # then try instr
+
+    if ((scalar(@users) == 0)
+        && (&::Param('usermatchmode') eq 'search')
+        && (length($str) >= 3))
+    {
+
+        my $sqlstr = &::SqlQuote($str);
+
+        my $query  = "SELECT  userid, realname, login_name " .
+                     "FROM  profiles " .
+                     "WHERE  (INSTR(login_name, $sqlstr) " .
+                     "OR INSTR(realname, $sqlstr)) ";
+        $query    .= "AND disabledtext = '' " if $exclude_disabled;
+        $query    .= "ORDER BY length(login_name) ";
+        $query    .= "LIMIT $limit " if $limit;
+
+        &::PushGlobalSQLState();
+        &::SendSQL($query);
+        push(@users, new Bugzilla::User(&::FetchSQLData())) while &::MoreSQLData();
+        &::PopGlobalSQLState();
+    }
+
+    # order @users by alpha
+
+    @users = sort { uc($a->{'email'}) cmp uc($b->{'email'}) } @users;
 
     return \@users;
+}
+
+# match_field() is a CGI wrapper for the match() function.
+#
+# Here's what it does:
+#
+# 1. Accepts a list of fields along with whether they may take multiple values
+# 2. Takes the values of those fields from $::FORM and passes them to match()
+# 3. Checks the results of the match and displays confirmation or failure
+#    messages as appropriate.
+#
+# The confirmation screen functions the same way as verify-new-product and
+# confirm-duplicate, by rolling all of the state information into a
+# form which is passed back, but in this case the searched fields are
+# replaced with the search results.
+#
+# The act of displaying the confirmation or failure messages means it must
+# throw a template and terminate.  When confirmation is sent, all of the
+# searchable fields have been replaced by exact fields and the calling script
+# is executed as normal.
+#
+# match_field must be called early in a script, before anything external is
+# done with the form data.
+#
+# In order to do a simple match without dealing with templates, confirmation,
+# or globals, simply calling Bugzilla::User::match instead will be
+# sufficient.
+
+# How to call it:
+#
+# Bugzilla::User::match_field ({
+#   'field_name'    => { 'type' => fieldtype },
+#   'field_name2'   => { 'type' => fieldtype },
+#   [...]
+# });
+#
+# fieldtype can be either 'single' or 'multi'.
+#
+
+sub match_field {
+
+    my $fields         = shift;   # arguments as a hash
+    my $matches      = {};      # the values sent to the template
+    my $matchsuccess = 1;       # did the match fail?
+    my $need_confirm = 0;       # whether to display confirmation screen
+
+    # prepare default form values
+
+    my $vars = $::vars;
+    $vars->{'form'}  = \%::FORM;
+    $vars->{'mform'} = \%::MFORM;
+
+    # Skip all of this if the option has been turned off
+    return 1 if (&::Param('usermatchmode') eq 'off');
+
+    for my $field (keys %{$fields}) {
+
+        # Tolerate fields that do not exist.
+        #
+        # This is so that fields like qa_contact can be specified in the code
+        # and it won't break if $::MFORM does not define them.
+        #
+        # It has the side-effect that if a bad field name is passed it will be
+        # quietly ignored rather than raising a code error.
+
+        next if !defined($vars->{'mform'}->{$field});
+
+        # We need to move the query to $raw_field, where it will be split up,
+        # modified by the search, and put back into $::FORM and $::MFORM
+        # incrementally.
+
+        my $raw_field = join(" ", @{$vars->{'mform'}->{$field}});
+        $vars->{'form'}->{$field}  = '';
+        $vars->{'mform'}->{$field} = [];
+
+        my @queries = ();
+
+        # Now we either split $raw_field by spaces/commas and put the list
+        # into @queries, or in the case of fields which only accept single
+        # entries, we simply use the verbatim text.
+
+        $raw_field =~ s/^\s+|\s+$//sg;  # trim leading/trailing space
+
+        # single field
+        if ($fields->{$field}->{'type'} eq 'single') {
+            @queries = ($raw_field) unless $raw_field =~ /^\s*$/;
+
+        # multi-field
+        }
+        elsif ($fields->{$field}->{'type'} eq 'multi') {
+            @queries =  split(/[\s,]+/, $raw_field);
+
+        }
+        else {
+            # bad argument
+            $vars->{'argument'} = $fields->{$field}->{'type'};
+            $vars->{'function'} = 'Bugzilla::User::match_field';
+            &::ThrowCodeError('bad_arg');
+        }
+
+        for my $query (@queries) {
+
+            my $users = match(
+                $query,                                 # match string
+                (&::Param('maxusermatches') || 0) + 1,  # match limit
+                1                                       # exclude_disabled
+            );
+
+            # skip confirmation for exact matches
+            if ((scalar(@{$users}) == 1)
+                && (@{$users}[0]->{'email'} eq $query))
+            {
+                $vars->{'form'}->{$field} .= @{$users}[0]->{'email'} . " ";
+                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'email'} . " ";
+                next;
+            }
+
+            $matches->{$field}->{$query}->{'users'}      = $users;
+            $matches->{$field}->{$query}->{'status'}     = 'success';
+            $matches->{$field}->{$query}->{'selecttype'} =
+                    $fields->{$field}->{'type'};
+
+            # here is where it checks for multiple matches
+
+            if (scalar(@{$users}) == 1) {
+                # exactly one match
+                $vars->{'form'}->{$field} .= @{$users}[0]->{'email'} . " ";
+                push @{$vars->{'mform'}->{$field}}, @{$users}[0]->{'email'} . " ";
+                $need_confirm = 1 if &::Param('confirmuniqueusermatch');
+
+            }
+            elsif ((scalar(@{$users}) > 1)
+                    && (&::Param('maxusermatches') != 1)) {
+                $need_confirm = 1;
+
+                if ((&::Param('maxusermatches'))
+                   && (scalar(@{$users}) > &::Param('maxusermatches')))
+                {
+                    $matches->{$field}->{$query}->{'status'} = 'trunc';
+                    pop @{$users};  # take the last one out
+                }
+
+            }
+            else {
+                # everything else fails
+                $matchsuccess = 0; # fail
+                $matches->{$field}->{$query}->{'status'} = 'fail';
+                $need_confirm = 1;  # confirmation screen shows failures
+            }
+        }
+    }
+
+    return 1 unless $need_confirm; # skip confirmation if not needed.
+
+    $vars->{'script'}        = $ENV{'SCRIPT_NAME'}; # for self-referencing URLs
+    $vars->{'matches'}       = $matches; # matches that were made
+    $vars->{'matchsuccess'}  = $matchsuccess; # continue or fail
+
+    print "Content-type: text/html\n\n";
+
+    $::template->process("global/confirm-user-match.html.tmpl", $vars)
+      || &::ThrowTemplateError($::template->error());
+
+    exit;
+
 }
 
 sub email_prefs {
