@@ -883,7 +883,10 @@ nsDocLoaderImpl::OpenStream(nsIURI *aUrl, nsIStreamListener *aConsumer)
   nsCRT::free(buffer);
 #endif
 #endif /* DEBUG */
+
+#ifndef NECKO
   nsURLLoadType loadType;
+#endif // NECKO
 
   NS_NEWXPCOM(loader, nsDocumentBindInfo);
   if (nsnull == loader) {
@@ -1855,7 +1858,11 @@ nsDocumentBindInfo::OnStartBinding(nsIURI* aURL, const char *aContentType)
             printf("DocLoaderFactory: Unable to create ContentViewer for command=%s, content-type=%s\n", m_Command ? m_Command : "(null)", aContentType);
             if ( m_Container ) {
                 // Give content container a chance to do something with this URL.
+#ifndef NECKO
                 rv = m_Container->HandleUnknownContentType( (nsIDocumentLoader*) m_DocLoader, aURL, aContentType, m_Command );
+#else
+                rv = m_Container->HandleUnknownContentType( (nsIDocumentLoader*) m_DocLoader, channel, aContentType, m_Command );
+#endif // NECKO
             }
             // Stop the binding.
             // This crashes on Unix/Mac... Stop();
