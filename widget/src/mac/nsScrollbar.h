@@ -83,7 +83,6 @@ protected:
 
 private:
 
-	void							DrawWidget();
 	static void				ScrollActionProc(ControlHandle, ControlPartCode);
 	void							DoScrollAction(ControlPartCode);
 

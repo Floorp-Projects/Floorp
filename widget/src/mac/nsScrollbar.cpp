@@ -168,7 +168,6 @@ void nsScrollbar::DoScrollAction(ControlPartCode part)
 	Inherited::DispatchWindowEvent(scrollBarEvent);
 
 	// update the area of the parent uncovered by the scrolling
-	WindowRecord* savePort;
 	nsIWidget* parent = GetParent();
 	parent->Update();
 	NS_RELEASE(parent);
@@ -266,18 +265,6 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 	}
 	return (Inherited::DispatchMouseEvent(aEvent));
 
-}
-
-/**-------------------------------------------------------------------------------
- *	Draw in the scrollbar and thumb
- *	@update	dc 10/16/98
- *	@param aMouseInside -- A boolean indicating if the mouse is inside the control
- *	@return	nothing is returned
- */
-void
-nsScrollbar::DrawWidget()
-{
-	Invalidate(PR_TRUE);
 }
 
 /**-------------------------------------------------------------------------------
