@@ -38,7 +38,8 @@ LINCS = $(LINCS) -I..\src         # for implementation headers
 
 LLIBS=\
  $(DIST)\lib\xpcom.lib         \
- $(DIST)\lib\chrome_s.lib        \
+ $(DIST)\lib\chrome_s.lib      \
+ $(DIST)\lib\timer_s.lib       \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
