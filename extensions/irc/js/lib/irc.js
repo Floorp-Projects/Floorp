@@ -1503,6 +1503,12 @@ function serv_ctcp (e)
     e.CTCPData = ary[2] ? ary[2] : "";
 
     e.CTCPCode = ary[1].toLowerCase();
+    if (e.CTCPCode.search (/^reply/i) == 0)
+    {
+        dd ("dropping spoofed reply.");
+        return false;
+    }
+    
     e.type = "ctcp-" + e.CTCPCode;
     e.destMethod = "onCTCP" + ary[1][0].toUpperCase() +
         ary[1].substr (1, ary[1].length).toLowerCase();
@@ -1525,6 +1531,24 @@ function serv_ctcp (e)
     
 }
 
+CIRCServer.prototype.onCTCPClientinfo =
+function serv_ccinfo (e)
+{
+    var clientinfo = new Array();
+
+    for (var fname in this)
+    {
+        var ary = fname.match(/^onCTCP(.*)/);
+        if (ary && ary[1].search(/^Reply/) == -1)
+            clientinfo.push (ary[1].toUpperCase());
+    }
+
+    e.server.ctcpTo (e.user.nick, "CLIENTINFO", clientinfo.join(" "),
+                     "NOTICE");
+
+    return true;
+}
+
 CIRCServer.prototype.onCTCPAction =
 function serv_cact (e)
 {
@@ -1533,6 +1557,15 @@ function serv_cact (e)
 
 }
 
+CIRCServer.prototype.onCTCPTime = 
+function serv_cping (e)
+{
+
+    e.server.ctcpTo (e.user.nick, "TIME", new Date(), "NOTICE");
+
+    return true;
+    
+}
 
 CIRCServer.prototype.onCTCPVersion = 
 function serv_cver (e)

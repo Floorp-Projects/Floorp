@@ -177,12 +177,6 @@ function (aPort, aScheme)
 IRCProtocolHandler.prototype.newURI =
 function (aSpec, aCharset, aBaseURI)
 {
-    if (aBaseURI)
-    {
-        debug ("-*- ircHandler: aBaseURI passed to newURI, bailing.\n");
-        return null;
-    }
-    
     var url = Components.classes[STANDARDURL_CONTRACTID].
       createInstance(nsIStandardURL);
     url.init(nsIStandardURL.URLTYPE_STANDARD, 6667, aSpec, aCharset, aBaseURI);

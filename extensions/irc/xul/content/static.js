@@ -36,7 +36,7 @@ const MSG_UNKNOWN   = getMsg ("unknown");
 
 client.defaultNick = getMsg( "defaultNick" );
 
-client.version = "0.8.9";
+client.version = "0.8.10";
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
@@ -314,7 +314,7 @@ function processStartupURLs()
     if (!wentSomewhere)
     {
         /* if we had nowhere else to go, connect to any default urls */
-        ary = client.INITIAL_URLS.split(/\s*;\s*/).reverse();
+        var ary = client.INITIAL_URLS.split(/\s*;\s*/).reverse();
         for (var i in ary)
         {
             if (ary[i] && ary[i] != "irc://")

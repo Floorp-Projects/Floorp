@@ -32,11 +32,11 @@
  *   |                       seperated
  *   +- initialScripts (String) urls for scripts to run at startup,
  *   |                          semicolon seperated
- *   +- newTabThreshold (Number) max number of tabs to have open before disabling
- *   |                           automatic tab creation for private messages.
- *   |                           use 0 for unlimited new tabs, or 1 to disable
- *   |                           automatic tab creation.
- *   +- focusNewTab (Boolean) bring new tabs created in response to a private
+ *   +- newTabLimit (Number) max number of tabs to have open before disabling
+ *   |                       automatic tab creation for private messages.
+ *   |                       use 0 for unlimited new tabs, or 1 to disable
+ *   |                       automatic tab creation.
+ *   +- raiseNewTab (Boolean) bring new tabs created in response to a private
  *   |                        message to the front.
  *   +- munger   (Boolean) send output through text->html munger
  *   |  +- colorCodes (Boolean) enable color code handling
@@ -112,10 +112,10 @@ function readIRCPrefs (rootNode)
         client.INITIAL_URLS = "irc://";
     client.INITIAL_SCRIPTS =
         getCharPref (pref, rootNode + "initialScripts", "");
-    client.NEW_TAB_THRESHOLD =
-        getIntPref (pref, rootNode + "newTabThreshold", 15);
-    client.FOCUS_NEW_TAB =
-        getIntPref (pref, rootNode + "focusNewTab", false);
+    client.NEW_TAB_LIMIT =
+        getIntPref (pref, rootNode + "newTabLimit", 15);
+    client.RAISE_NEW_TAB =
+        getBoolPref (pref, rootNode + "raiseNewTab", false);
     client.ADDRESSED_NICK_SEP =
         getCharPref (pref, rootNode + "nickCompleteStr",
                      client.ADDRESSED_NICK_SEP).replace(/\s*$/, "");
@@ -212,8 +212,8 @@ function writeIRCPrefs (rootNode)
     pref.setCharPref (rootNode + "nickCompleteStr", client.ADDRESSED_NICK_SEP);
     pref.setCharPref (rootNode + "initialURLs", client.INITIAL_URLS);
     pref.setCharPref (rootNode + "initialScripts", client.INITIAL_SCRIPTS);
-    pref.setCharPref (rootNode + "newTabThreshold", client.NEW_TAB_THRESHOLD);
-    pref.setCharPref (rootNode + "focusNewTab", client.FOCUS_NEW_TAB);
+    pref.setIntPref  (rootNode + "newTabLimit", client.NEW_TAB_LIMIT);
+    pref.setBoolPref (rootNode + "raiseNewTab", client.RAISE_NEW_TAB);
     pref.setCharPref (rootNode + "style.default", client.DEFAULT_STYLE);
     pref.setCharPref (rootNode + "stalkWords",
                       client.stalkingVictims.join ("; "));

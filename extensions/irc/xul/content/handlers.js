@@ -3265,8 +3265,8 @@ function my_cprivmsg (e)
     else
     {        
         playSounds(client.MSG_BEEP);
-        if (client.NEW_TAB_THRESHOLD == 0 ||
-            client.viewsArray.length < client.NEW_TAB_THRESHOLD)
+        if (client.NEW_TAB_LIMIT == 0 ||
+            client.viewsArray.length < client.NEW_TAB_LIMIT)
         {
             var tab = openQueryTab (e.server, e.user.nick);
             if (client.FOCUS_NEW_TAB)
