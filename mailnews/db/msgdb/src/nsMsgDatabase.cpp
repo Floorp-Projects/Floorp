@@ -1401,6 +1401,13 @@ nsresult nsMsgDatabase::RemoveHeaderFromThread(nsMsgHdr *msgHdr)
   return ret;
 }
 
+NS_IMETHODIMP nsMsgDatabase::RemoveHeaderMdbRow(nsIMsgDBHdr *msg)
+{
+  NS_ENSURE_ARG_POINTER(msg);
+  nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, msg);  // closed system, so this is ok
+  return RemoveHeaderFromDB(msgHdr);
+}
+
 // This is a lower level routine which doesn't send notifcations or
 // update folder info. One use is when a rule fires moving a header
 // from one db to another, to remove it from the first db.

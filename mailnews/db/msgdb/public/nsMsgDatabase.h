@@ -163,6 +163,8 @@ public:
   NS_IMETHOD DeleteHeader(nsIMsgDBHdr *msgHdr, nsIDBChangeListener *instigator,
                           PRBool commit, PRBool notify);
 
+  NS_IMETHOD RemoveHeaderMdbRow(nsIMsgDBHdr *msgHdr);
+
   NS_IMETHOD UndoDelete(nsIMsgDBHdr *msgHdr);
 
   NS_IMETHOD MarkLater(nsMsgKey key, PRTime until);

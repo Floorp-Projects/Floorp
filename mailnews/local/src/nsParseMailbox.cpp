@@ -1617,7 +1617,6 @@ PRInt32 nsParseNewMailState::PublishMsgHeader()
 #endif
 
 		}		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == nsnull
-	
 		m_newMsgHdr = null_nsCOMPtr();
 	}
 	return 0;
@@ -2025,6 +2024,9 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	if (loggingEnabled)
 		filter->LogRuleHit(GetLogFile(), mailHdr);
 
+  // cleanup after mailHdr in source DB because we moved the message.
+  m_mailDB->RemoveHeaderMdbRow(mailHdr);
+	
 	return err;
 
 }

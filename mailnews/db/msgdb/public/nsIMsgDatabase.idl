@@ -147,6 +147,9 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   void DeleteHeader(in nsIMsgDBHdr msgHdr, in nsIDBChangeListener instigator,
                           in boolean commit, in boolean notify);
 
+  // lower level routine that doesn't remove hdr from thread or adjust counts
+  void RemoveHeaderMdbRow(in nsIMsgDBHdr msgHdr);
+
   void UndoDelete(in nsIMsgDBHdr msgHdr);
 
   void MarkLater(in nsMsgKey key, in PRTime until);
