@@ -1963,10 +1963,11 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
             }
           }
         }
-        // at end of each line, bump pointers
-        dst += dest->mRowBytes - 3*8*iterations;
-        src += rgbStride - 3*8*iterations;
-        alpha += alphaStride - iterations;
+        // at end of each line, bump pointers.  Use wordy code because of
+        // bug 127455 to avoid possibility of unsigned underflow
+        dst = (dst - 3*8*iterations) + dest->mRowBytes;
+        src = (src - 3*8*iterations) + rgbStride;
+        alpha = (alpha - iterations) + alphaStride;
         dstAlpha += dest->mAlphaRowBytes;
       }
     }
