@@ -22,6 +22,7 @@
  */
 
 #include "nsUnicharUtils.h"
+#include "nsReadableUtils.h"
 #include "nsUnicharUtilCIID.h"
 #include "nsICaseConversion.h"
 #include "nsIServiceManager.h"
@@ -30,7 +31,7 @@
 static nsICaseConversion *gCaseConv = nsnull;
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
-nsresult NS_InitCaseConversion() {
+static nsresult NS_InitCaseConversion() {
     if (gCaseConv) return NS_OK;
 
     return nsServiceManager::GetService(kUnicharUtilCID,
@@ -46,8 +47,9 @@ public:
     
     PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
     {
+        NS_InitCaseConversion();
         gCaseConv->ToLower(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
-        return 0;
+        return aSourceLength;
     }
 };
 
@@ -66,6 +68,7 @@ public:
     
     PRUint32 write( const PRUnichar* aSource, PRUint32 aSourceLength)
     {
+        NS_InitCaseConversion();
         gCaseConv->ToUpper(aSource, NS_CONST_CAST(PRUnichar*,aSource), aSourceLength);
         return 0;
     }
@@ -84,6 +87,8 @@ class CaseInsensitivePRUnicharComparator
   {
     public:
       PRBool operator()( PRUnichar lhs, PRUnichar rhs ) const {
+          NS_InitCaseConversion();
+          
           PRUnichar lhsUpper; PRUnichar rhsUpper;
           gCaseConv->ToUpper(lhs, &lhsUpper);
           gCaseConv->ToUpper(rhs, &rhsUpper);
@@ -92,12 +97,23 @@ class CaseInsensitivePRUnicharComparator
   };
 
 PRBool
-CaseInsensitiveFindInReadable( const nsAString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
   {
-      NS_NOTYETIMPLEMENTED("Need to copy over string code");
-#if 0
-      return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, CaseInsensitivePRUnicharComparator());
-#endif
-      return PR_FALSE;
+      nsAutoString lowerPattern(aPattern);
+      ToLowerCase(lowerPattern);
+
+      nsAutoString lowerString;
+      CopyUnicodeTo(aSearchStart, aSearchEnd, lowerString);
+
+      nsAString::const_iterator match_start, match_end;
+      return FindInReadable(lowerPattern,
+                            lowerString.BeginReading(match_start),
+                            lowerString.EndReading(match_end));
+  }
+
+int
+nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
+  {
+    return 0; //nsCRT::strncasecmp(lhs, rhs, aLength);
   }
 
