@@ -426,6 +426,7 @@ sub viewall
   $vars->{'attachments'} = \@attachments;
   $vars->{'bugassignee_id'} = $assignee_id;
   $vars->{'bugsummary'} = $bugsummary;
+  $vars->{'GetBugLink'} = \&GetBugLink;
 
   # Return the appropriate HTTP response headers.
   print "Content-Type: text/html\n\n";
@@ -470,6 +471,7 @@ sub enter
   $vars->{'attachments'} = \@attachments;
   $vars->{'bugassignee_id'} = $assignee_id;
   $vars->{'bugsummary'} = $bugsummary;
+  $vars->{'GetBugLink'} = \&GetBugLink;
 
   # Return the appropriate HTTP response headers.
   print "Content-Type: text/html\n\n";
@@ -653,6 +655,7 @@ sub edit
   $vars->{'isprivate'} = $isprivate; 
   $vars->{'isviewable'} = $isviewable; 
   $vars->{'attachments'} = \@bugattachments; 
+  $vars->{'GetBugLink'} = \&GetBugLink;
 
   # Return the appropriate HTTP response headers.
   print "Content-Type: text/html\n\n";

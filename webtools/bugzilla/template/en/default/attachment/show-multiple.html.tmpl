@@ -20,9 +20,11 @@
   #%]
 
 [% filtered_summary = bugsummary FILTER html %]
+[% h1 = BLOCK %]View All Attachments for
+  [%+ GetBugLink(bugid, "Bug $bugid") %][% END %]
 [% PROCESS global/header.html.tmpl 
   title = "View All Attachments for Bug #$bugid"
-  h1 = "View All Attachments for <a href=\"show_bug.cgi?id=$bugid\">Bug #$bugid</a>"
+  h1 = h1
   h2 = filtered_summary
   style = "
     table.attachment_info th { text-align: right; vertical-align: top; }
