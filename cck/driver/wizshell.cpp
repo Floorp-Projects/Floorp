@@ -7,12 +7,18 @@ extern char iniFilePath[MAX_SIZE];
 extern char customizationPath[MAX_SIZE];
 
 extern CWizardMachineApp theApp;
+extern char currDirPath[MAX_SIZE];
+ 
 //CString CDout="CD_output";
-CString CDdir = CString(customizationPath) + "\\" + "CD_output";
 
 void CreateRshell (void)
 {
-		CWnd Mywnd;
+	CString root   = GetGlobal("Root");
+	CString config = GetGlobal("CustomizationList");
+
+	CString destPath = root + "\\Configs\\" + config + "\\Rshell";
+
+	CWnd Mywnd;
 
 //		Mywnd.MessageBox(CString(iniFilePath),iniFilePath,MB_OK);
 
@@ -20,8 +26,8 @@ void CreateRshell (void)
 
 	ifstream part1("part1.ini");
 	ifstream part2("part2.ini");
-	_mkdir (CDdir);
-	CString Rsh = CDdir + "\\" +"rshell.ini";
+	_mkdir (destPath);
+	CString Rsh = destPath + "\\" +"rshell.ini";
 //	FILE* rshell = theApp.OpenAFile(CDdir +"rshell.ini", "w");
 
 	ofstream rshell(Rsh);
