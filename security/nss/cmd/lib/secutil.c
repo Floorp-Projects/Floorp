@@ -704,13 +704,13 @@ SECU_PrintAsHex(FILE *out, SECItem *data, const char *m, int level)
 	}
 	if (i != data->len - 1) {
 	    fprintf(out, "%02x:", data->data[i]);
-	    column += 4;
+	    column += 3;
 	} else {
 	    fprintf(out, "%02x", data->data[i]);
-	    column += 3;
+	    column += 2;
 	    break;
 	}
-	if (column > 76) {
+	if (column > 76 || (i % 16 == 15)) {
 	    secu_Newline(out);
 	    SECU_Indent(out, level); column = level*INDENT_MULT;
 	}
@@ -798,7 +798,14 @@ SECU_PrintInteger(FILE *out, SECItem *i, char *m, int level)
 {
     int iv;
 
-    if (i->len > 4) {
+    if (!i || !i->len || !i->data) {
+	SECU_Indent(out, level); 
+	if (m) {
+	    fprintf(out, "%s: (null)\n", m);
+	} else {
+	    fprintf(out, "(null)\n");
+	}
+    } else if (i->len > 4) {
 	SECU_PrintAsHex(out, i, m, level);
     } else {
 	iv = DER_GetInteger(i);
@@ -1211,36 +1218,34 @@ secu_PrintSubjectPublicKeyInfo(FILE *out, PRArenaPool *arena,
 		       CERTSubjectPublicKeyInfo *i,  char *msg, int level)
 {
     SECKEYPublicKey *pk;
-    int rv;
 
     SECU_Indent(out, level); fprintf(out, "%s:\n", msg);
     SECU_PrintAlgorithmID(out, &i->algorithm, "Public Key Algorithm", level+1);
 
-    pk = (SECKEYPublicKey*) PORT_ZAlloc(sizeof(SECKEYPublicKey));
-    if (!pk)
-	return PORT_GetError();
+    pk = SECKEY_ExtractPublicKey(i);
+    if (pk) {
+	switch (pk->keyType) {
+	case rsaKey:
+	    secu_PrintRSAPublicKey(out, pk, "RSA Public Key", level +1);
+	    break;
 
-    DER_ConvertBitString(&i->subjectPublicKey);
-    switch(SECOID_FindOIDTag(&i->algorithm.algorithm)) {
-      case SEC_OID_PKCS1_RSA_ENCRYPTION:
-	rv = SEC_ASN1DecodeItem(arena, pk, 
-	                        SEC_ASN1_GET(SECKEY_RSAPublicKeyTemplate),
-				&i->subjectPublicKey);
-	if (rv)
-	    return rv;
-	secu_PrintRSAPublicKey(out, pk, "RSA Public Key", level +1);
-	break;
-      case SEC_OID_ANSIX9_DSA_SIGNATURE:
-	rv = SEC_ASN1DecodeItem(arena, pk, 
-	                        SEC_ASN1_GET(SECKEY_DSAPublicKeyTemplate),
-				&i->subjectPublicKey);
-	if (rv)
-	    return rv;
-	secu_PrintDSAPublicKey(out, pk, "DSA Public Key", level +1);
-	break;
-      default:
-	fprintf(out, "bad SPKI algorithm type\n");
-	return 0;
+	case dsaKey:
+	    secu_PrintDSAPublicKey(out, pk, "DSA Public Key", level +1);
+	    break;
+
+	case dhKey:
+	case fortezzaKey:
+	case keaKey:
+	case ecKey:
+    	    fprintf(out, "unable to format this SPKI algorithm type\n");
+	    break;
+	default:
+	    fprintf(out, "unknown SPKI algorithm type\n");
+	    break;
+	}
+	PORT_FreeArena(pk->arena, PR_FALSE);
+    } else {
+	SECU_PrintError("Error", "Parsing public key");
     }
 
     return 0;
