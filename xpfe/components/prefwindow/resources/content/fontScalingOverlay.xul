@@ -24,13 +24,13 @@ Contributor(s): ______________________________________. -->
 
 <overlay id="fontScaling"
          xmlns:html="http://www.w3.org/1999/xhtml"
-    		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          >
 
   <window id="fontPanel">
     <titledbox orient="vertical">
-      <title><text value="&fontScaling;"/></title>
+      <label value="&fontScaling;"/>
       <html:div>&fontScalingIntro;</html:div>
       <spring style="height: 10px;"/>
       <html:div>

@@ -54,33 +54,33 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   <broadcaster id="cmd_close" oncommand="window.close()"/>
   <broadcaster id="cmd_quit"/>
 
-  <broadcaster id="Console:clear" value="&clear.label;" oncommand="clearConsole();"/>
+  <broadcaster id="Console:clear" label="&clear.label;" oncommand="clearConsole();"/>
   
-  <broadcaster id="Console:sortAscend" value="&sortFirst.label;" 
+  <broadcaster id="Console:sortAscend" label="&sortFirst.label;" 
                accesskey="&sortFirst.accesskey;"
                oncommand="changeSortOrder(1);"/>
-  <broadcaster id="Console:sortDescend" value="&sortLast.label;"
+  <broadcaster id="Console:sortDescend" label="&sortLast.label;"
                accesskey="&sortLast.accesskey;"
                oncommand="changeSortOrder(-1);"/>
 
-  <broadcaster id="Console:toggleToolbarMode" value="&toolbarMode.label;" 
+  <broadcaster id="Console:toggleToolbarMode" label="&toolbarMode.label;" 
                oncommand="toggleToolbar(this);"
                type="checkbox" checked="true" 
                _toolbar="ToolbarMode"/>
-  <broadcaster id="Console:toggleToolbarEval" value="&toolbarEval.label;"
+  <broadcaster id="Console:toggleToolbarEval" label="&toolbarEval.label;"
                oncommand="toggleToolbar(this);"
                type="checkbox" checked="true" 
                _toolbar="ToolbarEval"/>
 </broadcasterset>
 
 <broadcasterset id="ModeBroadcasters">
-  <broadcaster id="Console:modeAll" value="&all.label;" 
+  <broadcaster id="Console:modeAll" label="&all.label;" 
                oncommand="changeMode('All');"/>
-  <broadcaster id="Console:modeErrors" value="&errors.label;"
+  <broadcaster id="Console:modeErrors" label="&errors.label;"
                oncommand="changeMode('Errors');"/>
-  <broadcaster id="Console:modeWarnings" value="&warnings.label;"
+  <broadcaster id="Console:modeWarnings" label="&warnings.label;"
                oncommand="changeMode('Warnings');"/>
-  <broadcaster id="Console:modeMessages" value="&messages.label;"
+  <broadcaster id="Console:modeMessages" label="&messages.label;"
                oncommand="changeMode('Messages');"/>
 </broadcasterset>
 
@@ -95,7 +95,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
     <menuitem type="radio" observes="Console:sortAscend"/>
     <menuitem type="radio" observes="Console:sortDescend"/>
     <menuseparator/>
-    <menuitem id="menu_copy_cm" observes="cmd_copy" value="&copyCmd.label;" accesskey="&copyCmd.accesskey;"/>
+    <menuitem id="menu_copy_cm" observes="cmd_copy" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"/>
   </popup>
 </popupset>
   
@@ -116,7 +116,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   
     <menu id="menu_View">
       <menupopup>
-       <menu value="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;">
+       <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;">
           <menupopup> 
             <menuitem observes="Console:toggleToolbarMode"/>
             <menuitem observes="Console:toggleToolbarEval"/>
@@ -146,7 +146,7 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   
   <toolbar id="ToolbarEval">
     <textbox id="TextboxEval" class="toolbar" value="" onkeypress="onEvalKeyPress(event)" flex="1"/>
-    <button id="ButtonEval" value="&evaluate.label;" class="button-toolbar" oncommand="evaluateTypein()"/>
+    <button id="ButtonEval" label="&evaluate.label;" class="button-toolbar" oncommand="evaluateTypein()"/>
   </toolbar>
 </toolbox>
   

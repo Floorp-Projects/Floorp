@@ -25,19 +25,19 @@
 
   <popupset id="psPopups">
     <popup id="ppStyleRuleContext" oncreate="return viewer.onCreateRulePopup()">
-      <menuitem value="New" oncommand="viewer.cmdNewRule()"/>
-      <menuitem value="Delete" oncommand="viewer.cmdDeleteSelectedRule()"/>
-      <menuitem value="Disable" oncommand="viewer.cmdToggleSelectedRule()"/>
+      <menuitem label="New" oncommand="viewer.cmdNewRule()"/>
+      <menuitem label="Delete" oncommand="viewer.cmdDeleteSelectedRule()"/>
+      <menuitem label="Disable" oncommand="viewer.cmdToggleSelectedRule()"/>
       <menuseparator/>
-      <menuitem value="Open File in Editor" oncommand="viewer.cmdOpenSelectedFileInEditor()"/>
+      <menuitem label="Open File in Editor" oncommand="viewer.cmdOpenSelectedFileInEditor()"/>
     </popup>
 
     <popup id="ppStyleDecContext">
-      <menuitem value="New Property" oncommand="viewer.cmdNewProperty()"/>
-      <menuitem value="Edit" oncommand="viewer.cmdEditSelectedProperty()"/>
-      <menuitem value="Delete" oncommand="viewer.cmdDeleteSelectedProperty()"/>
+      <menuitem label="New Property" oncommand="viewer.cmdNewProperty()"/>
+      <menuitem label="Edit" oncommand="viewer.cmdEditSelectedProperty()"/>
+      <menuitem label="Delete" oncommand="viewer.cmdDeleteSelectedProperty()"/>
       <menuseparator/>
-      <menuitem value="Toggle !important" oncommand="viewer.cmdToggleSelectedImportant()"/>
+      <menuitem label="Toggle !important" oncommand="viewer.cmdToggleSelectedImportant()"/>
     </popup>
   </popupset>
 
@@ -67,10 +67,10 @@
             <treechildren>
               <treeitem uri="?rule">
                 <treerow>
-                  <treecell value="?selector"/>
-                  <treecell value="?fileURL"/>
-                  <treecell value="?weight"/>
-                  <treecell value="?lineNum"/>
+                  <treecell label="?selector"/>
+                  <treecell label="?fileURL"/>
+                  <treecell label="?weight"/>
+                  <treecell label="?lineNum"/>
                 </treerow>
               </treeitem>
             </treechildren>
@@ -90,10 +90,10 @@
       
       <treehead>
         <treerow>
-          <treecell class="treecell-header" value="Selector"/>
-          <treecell class="treecell-header" value="File"/>
-          <treecell class="treecell-header" value="Weight"/>
-          <treecell class="treecell-header" value="Line"/>
+          <treecell class="treecell-header" label="Selector"/>
+          <treecell class="treecell-header" label="File"/>
+          <treecell class="treecell-header" label="Weight"/>
+          <treecell class="treecell-header" label="Line"/>
         </treerow>
       </treehead>
 
@@ -128,8 +128,8 @@
             <treeitem uri="?prop">
               <treerow>
                 <treecell class="treecell-priority treecell-iconic" ins-type="priority" ins:priority="?priority"/>
-                <treecell value="?name" ins-type="name"/>
-                <treecell class="treecell-editable" value="?value" ins-type="value"/>
+                <treecell label="?name" ins-type="name"/>
+                <treecell class="treecell-editable" label="?value" ins-type="value"/>
               </treerow>
             </treeitem>
           </treechildren>
@@ -146,9 +146,9 @@
     
     <treehead>
       <treerow>
-        <treecell class="treecell-header" value="!"/>
-        <treecell class="treecell-header" value="Name"/>
-        <treecell class="treecell-header" value="Value"/>
+        <treecell class="treecell-header" label="!"/>
+        <treecell class="treecell-header" label="Name"/>
+        <treecell class="treecell-header" label="Value"/>
       </treerow>
     </treehead>
 

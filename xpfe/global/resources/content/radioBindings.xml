@@ -7,8 +7,8 @@
  
   <binding id="radio" extends="chrome://global/content/xulBindings.xml#checkbox">
     <implementation>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
       <property name="group" onset="this.setAttribute('group',val); return val;"
                             onget="return this.getAttribute('group');"/>
     </implementation>
@@ -17,8 +17,8 @@
   <binding id="radiogroup" extends="xul:box">
 
     <implementation>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
       <property name="disabled">
         <getter>
         <![CDATA[
@@ -60,7 +60,7 @@
         <![CDATA[
           if (this.getAttribute("focused") == "true") 
             val.setAttribute("focused", "true");
-          this.data = val.data;
+          this.value = val.value;
 
           val.checked = true;
           

@@ -49,11 +49,11 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox id="generalStartupPreferences" orient="vertical" autostretch="never">
-    <title><text value="&onStartLegend.label;"/></title>
+    <label value="&onStartLegend.label;"/>
     
     <!-- XXX remove when navigator overlays.rdf works -->
     <checkbox id="generalStartupBrowser" wsm_persist="true"
-              value="&navCheck.label;" accesskey="&navCheck.accesskey;"
+              label="&navCheck.label;" accesskey="&navCheck.accesskey;"
               pref="true" preftype="bool" prefstring="general.startup.browser"
               prefattribute="checked"/>
     <!-- XXX -->
@@ -62,17 +62,17 @@
   
   <!-- displaying none for beta -->
   <titledbox id="toolbarStyleBox" orient="vertical" style="display: none;">
-  	<title><text value="&showToolsLegend.label;"/></title>
+    <label value="&showToolsLegend.label;"/>
     <radiogroup id="toolbarStyle" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="browser.chrome.toolbar_style"
-                prefattribute="data" wsm_persist="true">
-      <radio group="toolbarStyle" data="2" value="&picsNtextRadio.label;" accesskey="&picsNtextRadio.accesskey;"/>
-      <radio group="toolbarStyle" data="0" value="&picsOnlyRadio.label;" accesskey="&picsOnlyRadio.accesskey;"/>
-      <radio group="toolbarStyle" data="1" value="&textonlyRadio.label;" accesskey="&textonlyRadio.accesskey;"/>
+                prefattribute="value" wsm_persist="true">
+      <radio group="toolbarStyle" value="2" label="&picsNtextRadio.label;" accesskey="&picsNtextRadio.accesskey;"/>
+      <radio group="toolbarStyle" value="0" label="&picsOnlyRadio.label;" accesskey="&picsOnlyRadio.accesskey;"/>
+      <radio group="toolbarStyle" value="1" label="&textonlyRadio.label;" accesskey="&textonlyRadio.accesskey;"/>
     </radiogroup>
   </titledbox>
   <box autostretch="never">
-    <checkbox id="showHideTooltips" value="&showHideTooltips.label;"
+    <checkbox id="showHideTooltips" label="&showHideTooltips.label;"
               accesskey="&showHideTooltips.accesskey;" pref="true"
               preftype="bool" prefstring="browser.chrome.toolbar_tips"
               prefattribute="checked"/>

@@ -3,7 +3,7 @@
 *  Manages the reading and writing of forms via simple maps of
 *  attribute/value pairs.  A "form" is simply a XUL window which
 *  contains "form widgets" such as textboxes and menulists.
-* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 * REQUIRED IMPORTS:
 ****************************************************************/
 
@@ -27,10 +27,10 @@ var inFormManager =
           map[aIds[i]] = fn(el);
       }
     }
-    
+
     return map;
   },
-  
+
   // void
   writeWindow: function(aWindow, aMap)
   {
@@ -45,7 +45,7 @@ var inFormManager =
       }
     }
   },
-  
+
   persistIf: function(aDoc, aEl)
   {
     if (aEl.getAttribute("persist") == "true" && aEl.hasAttribute("id")) {
@@ -53,15 +53,15 @@ var inFormManager =
       aDoc.persist(aEl.getAttribute("id"), "value");
     }
   },
-  
+
   read_textbox: function(aEl)
   {
     return aEl.value;
   },
-  
+
   read_menulist: function(aEl)
   {
-    return aEl.getAttribute("data");
+    return aEl.getAttribute("value");
   },
 
   read_checkbox: function(aEl)
@@ -71,22 +71,22 @@ var inFormManager =
 
   read_radiogroup: function(aEl)
   {
-    return aEl.getAttribute("data");
+    return aEl.getAttribute("value");
   },
 
   read_colorpicker: function(aEl)
   {
     return aEl.getAttribute("color");
   },
-  
+
   write_textbox: function(aEl, aValue)
   {
     aEl.setAttribute("value", aValue);
   },
-  
+
   write_menulist: function(aEl, aValue)
   {
-    aEl.setAttribute("data", aValue);
+    aEl.setAttribute("value", aValue);
   },
 
   write_checkbox: function(aEl, aValue)
@@ -96,7 +96,7 @@ var inFormManager =
 
   write_radiogroup: function(aEl, aValue)
   {
-    aEl.setAttribute("data", aValue);
+    aEl.setAttribute("value", aValue);
   },
 
   write_colorpicker: function(aEl, aValue)

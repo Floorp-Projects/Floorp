@@ -5203,7 +5203,7 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
 
   nsAutoString doneText;
   GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
-  SetChromeAttribute(mDocShell, "statusText", "value", doneText);
+  SetChromeAttribute(mDocShell, "statusText", "label", doneText);
 
   // Display an Alert dialog if the page cannot be edited...
   if (mCloseWindowWhenLoaded)

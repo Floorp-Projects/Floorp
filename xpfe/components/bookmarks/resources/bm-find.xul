@@ -124,21 +124,21 @@
       <menu id="menu_View">
         <menupopup oncreate="fillViewMenu(this)">
           <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
-                    value="&menuitem.view.unsorted.label;"
+                    label="&menuitem.view.unsorted.label;"
                     accesskey="&menuitem.view.unsorted.accesskey;"
                     oncommand="return SetSortDirection('natural');"/>
           <menuseparator id="fill_after_this_node" collapsed="true"/>
           <menuseparator id="fill_before_this_node"/>
           <menuitem type="radio" name="sort_direction" id="sort_ascending"
-                    value="&menuitem.view.ascending.label;"
+                    label="&menuitem.view.ascending.label;"
                     accesskey="&menuitem.view.ascending.accesskey;"
                     oncommand="return SetSortDirection('ascending');"/>
           <menuitem type="radio" name="sort_direction" id="sort_descending"
-                    value="&menuitem.view.descending.label;"
+                    label="&menuitem.view.descending.label;"
                     accesskey="&menuitem.view.descending.accesskey;"
                     oncommand="return SetSortDirection('descending');"/>
           <menuseparator/>
-          <menu value="&menuitem.view.show_columns.label;"
+          <menu label="&menuitem.view.show_columns.label;"
                 accesskey="&menuitem.view.show_columns.accesskey;">
             <menupopup oncreate="BuildTreePopup(document.getElementById('theColumns'), 
                                                 document.getElementById('headRow'),
@@ -157,12 +157,12 @@
     <box align="vertical">
       <box align="horizontal">
         <spring align="horizontal" flex="100%"/>
-	<text value="&search1.label;"/>
+  <text value="&search1.label;"/>
         <menulist id="datasource">
           <menupopup id="datasourcePopup">
-            <menuitem id="searchBookmarksItem" data="rdf:bookmarks" value="&bookmarks.label;"
+            <menuitem id="searchBookmarksItem" value="rdf:bookmarks" label="&bookmarks.label;"
                       oncommand="toggleItems('bookmarks');"/>
-            <menuitem id="searchHistoryItem" data="rdf:history" value="&history.label;"
+            <menuitem id="searchHistoryItem" value="rdf:history" label="&history.label;"
                       oncommand="toggleItems('history');"/>
           </menupopup>
         </menulist>
@@ -174,29 +174,29 @@
         <spring align="horizontal" flex="100%"/>
         <menulist id="match">
           <menupopup id="matchPopup">
-            <menuitem data="http://home.netscape.com/NC-rdf#Name" value="&name.label;"/>
-            <menuitem data="http://home.netscape.com/NC-rdf#URL" value="&url.label;"/>
-            <menuitem id="matchShortcutItem" data="http://home.netscape.com/NC-rdf#ShortcutURL" value="&shortcut.label;"/>
-            <menuitem data="http://home.netscape.com/NC-Description" value="&description.label;"/>
+            <menuitem value="http://home.netscape.com/NC-rdf#Name" label="&name.label;"/>
+            <menuitem value="http://home.netscape.com/NC-rdf#URL" label="&url.label;"/>
+            <menuitem id="matchShortcutItem" value="http://home.netscape.com/NC-rdf#ShortcutURL" label="&shortcut.label;"/>
+            <menuitem value="http://home.netscape.com/NC-Description" label="&description.label;"/>
           </menupopup>
-	</menulist>
+  </menulist>
         <menulist id="method">
           <menupopup id="methodPopup">
-            <menuitem data="contains" value="&contains.label;"/>
-            <menuitem data="startswith" value="&startswith.label;"/>
-            <menuitem data="endswith" value="&endswith.label;"/>
-            <menuitem data="is" value="&is.label;"/>
-            <menuitem data="isnot" value="&isnot.label;"/>
-            <menuitem data="doesntcontain" value="&doesntcontain.label;"/>
+            <menuitem value="contains" label="&contains.label;"/>
+            <menuitem value="startswith" label="&startswith.label;"/>
+            <menuitem value="endswith" label="&endswith.label;"/>
+            <menuitem value="is" label="&is.label;"/>
+            <menuitem value="isnot" label="&isnot.label;"/>
+            <menuitem value="doesntcontain" label="&doesntcontain.label;"/>
           </menupopup>
         </menulist>
 
         <textbox id="findtext" flex="1" oninput="doEnabling();"
                    onkeypress="if (event.keyCode == 13) doFind();"/>
         <box autostretch="never">
-          <button id="search" class="dialog toolbar-non-iconic" value="&search.button.label;"
+          <button id="search" class="dialog toolbar-non-iconic" label="&search.button.label;"
                   accesskey="&search.button.accesskey;" default="true" oncommand="doFind();"/>
-          <button id="SaveSearch" class="dialog toolbar-non-iconic" value="&save.button.label;"			                               accesskey="&save.button.accesskey;" disabled="true" oncommand="saveFind();"/>
+          <button id="SaveSearch" class="dialog toolbar-non-iconic" label="&save.button.label;"                                    accesskey="&save.button.accesskey;" disabled="true" oncommand="saveFind();"/>
         </box>
         <spring align="horizontal" flex="100%" />
       </box>
@@ -237,18 +237,18 @@
                 <separator class="groove" flex="1" align="center"/>
               </treecell>
             </treerow>
-          </treeitem>  	
-        </treechildren>	
+          </treeitem>   
+        </treechildren> 
       </rule>
 
       <rule>
         <treechildren flex="1">
           <treeitem uri="rdf:*">
             <treerow>
-               <treecell align="left" crop="right" indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"                                     src="rdf:http://home.netscape.com/NC-rdf#Icon"/>
-              <treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#URL"/>
-              <treecell id="shortcutCell" align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
-              <treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Description"/>
+              <treecell align="left" crop="right" indent="true" label="rdf:http://home.netscape.com/NC-rdf#Name"                                     src="rdf:http://home.netscape.com/NC-rdf#Icon"/>
+              <treecell align="left" crop="right" label="rdf:http://home.netscape.com/NC-rdf#URL"/>
+              <treecell id="shortcutCell" align="left" crop="right" label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+              <treecell align="left" crop="right" label="rdf:http://home.netscape.com/NC-rdf#Description"/>
             </treerow>
           </treeitem>
         </treechildren>
@@ -258,20 +258,20 @@
     <treehead>
       <treerow id="headRow">
         <treecell class="treecell-header sortDirectionIndicator" observes="NameColumn"
-                  value="&name.label;" resource="http://home.netscape.com/NC-rdf#Name"
+                  label="&name.label;" resource="http://home.netscape.com/NC-rdf#Name"
                   onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending"/>
         <treecell class="treecell-header sortDirectionIndicator" observes="URLColumn"
-                  value="&url.label;" resource="http://home.netscape.com/NC-rdf#URL"
+                  label="&url.label;" resource="http://home.netscape.com/NC-rdf#URL"
                   onclick="return doSort('URLColumn', null);"/>
         <treecell id="shortcutCell2" class="treecell-header sortDirectionIndicator" observes="ShortcutURLColumn"
-                  value="&shortcut.label;" resource="http://home.netscape.com/NC-rdf#ShortcutURL"
+                  label="&shortcut.label;" resource="http://home.netscape.com/NC-rdf#ShortcutURL"
                   onclick="return doSort('ShortcutURLColumn', null);"/>
-        <treecell class="treecell-header sortDirectionIndicator"                                                               observes="DescriptionColumn" value="&description.label;"                                                      resource="http://home.netscape.com/NC-rdf#Description"
+        <treecell class="treecell-header sortDirectionIndicator"                                                               observes="DescriptionColumn" label="&description.label;"                                                      resource="http://home.netscape.com/NC-rdf#Description"
                  onclick="return doSort('DescriptionColumn', null);"/>
         <treecell class="treecell-header" allowevents="true" id="popupCell">
           <menu>
             <image class="treecell-popup-icon"/>
-	    <menupopup popupanchor="bottomright" popupalign="topright"
+      <menupopup popupanchor="bottomright" popupalign="topright"
                        oncreate="BuildTreePopup(document.getElementById('theColumns'),
                                  document.getElementById('headRow'),
                                  this,

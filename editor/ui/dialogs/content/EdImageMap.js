@@ -1,23 +1,23 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1999-2000 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Dan Haddix (dan6992@hotmail.com)
  *   Brian King (briano9@yahoo.com)
  */
@@ -141,14 +141,14 @@ function hideToolbar(){
     // If it is show it
     document.getElementById("toolbar").setAttribute("collapsed", "false");
     // Set the menu items text back to "Hide Toolbar"
-    document.getElementById("view_hidetoolbar").setAttribute("value", GetString("HideToolbar"));
+    document.getElementById("view_hidetoolbar").setAttribute("label", GetString("HideToolbar"));
     tHide = false
   }
   else{
     // If not hide it
     document.getElementById("toolbar").setAttribute("collapsed", "true");
     //Set the menu items text to "Show Toolbar"
-    document.getElementById("view_hidetoolbar").setAttribute("value", GetString("ShowToolbar"));
+    document.getElementById("view_hidetoolbar").setAttribute("label", GetString("ShowToolbar"));
     tHide = true;
   }
 }
@@ -268,7 +268,7 @@ function createCir(which){
   var newCir = frameDoc.createElement("area");
   if ( !newCir )
     return;
-  
+
   newCir.setAttribute("shape", "circle");
   radius = Math.floor(parseInt(which.style.width)/2);
   coords = (parseInt(which.style.left)+radius)+","+(parseInt(which.style.top)+radius)+","+radius;
@@ -293,7 +293,7 @@ function createPoly(which){
   var newPoly = frameDoc.createElement("area");
   if ( !newPoly )
     return;
-  
+
   newPoly.setAttribute("shape", "poly");
   var coords = '';
   var len = which.childNodes.length;

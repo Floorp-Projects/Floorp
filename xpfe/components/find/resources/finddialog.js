@@ -70,7 +70,7 @@ function onLoad()
   finder = finder.QueryInterface(Components.interfaces.nsIFindComponent);
 
   // Change "OK" to "Find".
-  dialog.find.value = document.getElementById("fBLT").getAttribute("value");
+  dialog.find.label = document.getElementById("fBLT").getAttribute("label");
 
   // Setup the dialogOverlay.xul button handlers.
   doSetOKCancel(onOK, onCancel);

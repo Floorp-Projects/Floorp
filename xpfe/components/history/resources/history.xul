@@ -94,8 +94,8 @@
     <menupopup id="menu_FilePopup">
       <menu id="menu_New">
         <menupopup id="menu_NewPopup">
-	    <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-	    <menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
+      <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
+      <menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
         </menupopup>
       </menu>
       <menuseparator/>
@@ -115,27 +115,27 @@
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator/>
-      <menuitem value="&findHisCmd.label;" accesskey="&findHisCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'history');"/>
+      <menuitem label="&findHisCmd.label;" accesskey="&findHisCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'history');"/>
     </menupopup>
   </menu>
   <menu id="menu_View">
     <menupopup oncreate="fillViewMenu(this)">
       <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
-        value="&menuitem.view.unsorted.label;"
+        label="&menuitem.view.unsorted.label;"
         accesskey="&menuitem.view.unsorted.accesskey;"
         oncommand="return SetSortDirection('natural');"/>
       <menuseparator id="fill_after_this_node"/>
       <menuseparator id="fill_before_this_node"/>
       <menuitem type="radio" name="sort_direction" id="sort_ascending"
-        value="&menuitem.view.ascending.label;"
+        label="&menuitem.view.ascending.label;"
         accesskey="&menuitem.view.ascending.accesskey;"
         oncommand="return SetSortDirection('ascending');"/>
       <menuitem type="radio" name="sort_direction" id="sort_descending"
-        value="&menuitem.view.descending.label;"
+        label="&menuitem.view.descending.label;"
         accesskey="&menuitem.view.descending.accesskey;"
         oncommand="return SetSortDirection('descending');"/>
       <menuseparator/>
-      <menu value="&menuitem.view.show_columns.label;"
+      <menu label="&menuitem.view.show_columns.label;"
                  accesskey="&menuitem.view.show_columns.accesskey;">
         <menupopup
           oncreate="BuildTreePopup(document.getElementById('theColumns'), 
@@ -151,7 +151,7 @@
 
 <popupset>
   <popup id="contextual" oncreate="return fillContextMenu('contextual', 'historyTree');" >
-	  <menu />
+    <menu />
   </popup>
 </popupset>
 

@@ -46,11 +46,11 @@
       persist="hidden">
 
       <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
-        value="&sidebar.panels.label;" persist="hidden" type="box"
+        label="&sidebar.panels.label;" persist="hidden" type="box"
         collapse="after" onmouseup="PersistHeight();">
         <menubutton id="sidebar-panel-picker" menubuttontype="sidebar-panels" class="button-toolbar-4" crop="right"
           oncreate="SidebarBuildPickerPopup();"
-          value="&sidebar.picker.label;" >
+          label="&sidebar.picker.label;" >
           <menupopup id="sidebar-panel-picker-popup" popupanchor="topright"
             datasources="rdf:null"
             ref="urn:sidebar:current-panel-list"
@@ -74,13 +74,13 @@
                 </bindings>
                 <action>
                   <menuitem uri="?panel" type="checkbox"
-                    value="?title" exclude="?exclude"/>
+                    label="?title" exclude="?exclude"/>
                 </action>
               </rule>
             </template>
-            <menuitem value="&sidebar.customize.label;"
+            <menuitem label="&sidebar.customize.label;"
               oncommand="SidebarCustomize();" />
-			<menuitem value="&sidebar.sbDirectory.label;"
+      <menuitem label="&sidebar.sbDirectory.label;"
               oncommand="BrowseMorePanels();" />
             <menuseparator />
           </menupopup>
@@ -112,7 +112,7 @@
             <action>
               <box uri="?panel" class="box-texttab texttab-sidebar"
                 onclick="SidebarSelectPanel(this,false,false)" align="left" 
-                hidden="true" value="?title" exclude="?exclude" />
+                hidden="true" label="?title" exclude="?exclude" />
               <box uri="?panel" flex='1*' hidden="true" orient="vertical"
                 loadstate="never loaded">
                 <box flex='1' orient="vertical" class="iframe-panel loadarea">
@@ -120,7 +120,7 @@
                     <image class="image-panel-loading"/>
                     <text class="text-panel-loading"
                       value="&sidebar.loading.label;"/>
-                    <button value="&sidebar.loading.stop.label;" hidden="true"
+                    <button label="&sidebar.loading.stop.label;" hidden="true"
                       onclick="SidebarStopPanelLoad(this.parentNode.parentNode.parentNode.previousSibling);"/>
                   </box>
                   <spring flex="100%"/>
@@ -156,7 +156,7 @@
   <!-- View->Sidebar toggle -->
   <menupopup id="menu_View_Popup">
     <menuitem id="sidebar-menu" type="checkbox"
-      value="&sidebarCmd.label;"
+      label="&sidebarCmd.label;"
       accesskey="&sidebarCmd.accesskey;"
       observes="toggleSidebar"
       key="showHideSidebar"

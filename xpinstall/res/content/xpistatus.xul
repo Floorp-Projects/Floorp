@@ -65,8 +65,8 @@
                     </treecolgroup>
                     <treehead>
                         <treerow>
-                            <treecell id="moduleName" class="treecell-header" value="&moduleName.label;" />
-                            <treecell id="moduleSource" class="treecell-header" value="&moduleSource.label;"/>
+                            <treecell id="moduleName" class="treecell-header" label="&moduleName.label;" />
+                            <treecell id="moduleSource" class="treecell-header" label="&moduleSource.label;"/>
                         </treerow>
                     </treehead>
 
@@ -84,7 +84,7 @@
 
         <box id="progressBox" orient="horizontal" autostretch="never">
             <progressmeter id="dialog.progress" mode="normal" value="0"/>
-            <button class="dialog push" id="cancel" onclick="cancel()" value="&dialogCancel.label;"/>
+            <button class="dialog push" id="cancel" onclick="cancel()" label="&dialogCancel.label;"/>
         </box>
 
     </box>

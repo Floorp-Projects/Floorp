@@ -32,7 +32,7 @@
   <treechildren id="advancedChildren">
     <treeitem id="winhooks">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-winhooks.xul" value="&winhooks.label;"/>
+        <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
       </treerow>
     </treeitem>  
   </treechildren>

@@ -60,15 +60,15 @@ Contributor(s):
     <box orient="vertical">
       <textbox id="dialog.findKey" oninput="doEnabling();"/>
       <box orient="vertical" autostretch="never">
-        <checkbox id="dialog.caseSensitive" value="&caseSensitiveCheckbox.label;"/>
-        <checkbox id="dialog.wrap" value="&wrapCheckbox.label;"/>
-        <checkbox id="dialog.searchBackwards" value="&backwardsCheckbox.label;"/>
+        <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;"/>
+        <checkbox id="dialog.wrap" label="&wrapCheckbox.label;"/>
+        <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;"/>
       </box>
     </box>
   </box>
 
   <!-- used to store the find text -->
-  <foo style="display:none;" id="fBLT" value="&findButton.label;"/>
+  <foo style="display:none;" id="fBLT" label="&findButton.label;"/>
 
   <separator/>
 

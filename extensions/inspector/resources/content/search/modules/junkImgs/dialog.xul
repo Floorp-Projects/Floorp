@@ -30,7 +30,7 @@
       <textbox id="txfRemotePath" flex="1" persist="true"/>
     </box>
     <box autostretch="never">
-      <checkbox id="cbIsSkin" value="Target is a Skin" checked="true" persist="true"/>
+      <checkbox id="cbIsSkin" label="Target is a Skin" checked="true" persist="true"/>
     </box>
     -->
   </box>

@@ -36,7 +36,7 @@
   <script src="chrome://editor/content/sb-FileWidgetFileHandler.js"/>
 
 <popup id="contextual" oncreate="return fillContextMenu('contextual',event.target.parentNode.parentNode);" >
-	<menu />
+  <menu />
 </popup>
   
 <tree id="fileTree" context="contextual" ref="NC:FilesRoot"
@@ -52,7 +52,7 @@
           <treerow>
             <treecell>
               <treeindentation />
-              <button value="rdf:http://home.netscape.com/NC-rdf#Name"
+              <button label="rdf:http://home.netscape.com/NC-rdf#Name"
                             align="left" />
             </treecell>
           </treerow>

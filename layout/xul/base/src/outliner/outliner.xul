@@ -29,16 +29,16 @@
   <spring style="height: 16px"/>
 
   <outliner id="out" flex="1">
-    <outlinercol id="Col1" value="Col1" flex="1"/>
-    <outlinercol id="Col2" value="Col2" flex="1"/>
-	<outlinercol id="Col3" value="Col3" flex="1"/>
-    <outlinercol id="Col4" value="Col4" flex="1"/>
+    <outlinercol id="Col1" label="Col1" flex="1"/>
+    <outlinercol id="Col2" label="Col2" flex="1"/>
+  <outlinercol id="Col3" label="Col3" flex="1"/>
+    <outlinercol id="Col4" label="Col4" flex="1"/>
     <outlinerbody flex="1" onselect="dump('selection changed!\n')"/>
   </outliner>
 
   <hbox>
-    <button value="Attach View" oncommand="setView(document.getElementById('out'), view)"/>
-    <button value="Clear View" oncommand="setView(document.getElementById('out'), null)"/>
+    <button label="Attach View" oncommand="setView(document.getElementById('out'), view)"/>
+    <button label="Clear View" oncommand="setView(document.getElementById('out'), null)"/>
 
   </hbox>
 </window>

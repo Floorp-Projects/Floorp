@@ -66,14 +66,14 @@
                     <box autostretch="never">
                         <radio id="runApp"
                                group="mode"
-                               value="&runApp.label;"
+                               label="&runApp.label;"
                                accesskey="&runApp.accesskey;"/>
                     </box>
                     <box class="indent">
                         <textbox id="appName" readonly="true" flex="1"/>
                         <button id="chooseApp"
                                 class="dialog"
-                                value="&chooseApp.label;"
+                                label="&chooseApp.label;"
                                 accesskey="&chooseApp.accesskey;"
                                 oncommand="dialog.chooseApp()"/>
                     </box>
@@ -82,14 +82,14 @@
                     <box autostretch="never">
                         <radio id="saveToDisk"
                                group="mode"
-                               value="&saveToDisk.label;"
+                               label="&saveToDisk.label;"
                                accesskey="&saveToDisk.accesskey;"/>
                     </box>
                  </box>
             </radiogroup>
             <separator orient="horizontal" class="thin"/>
             <box autostretch="never">
-                <checkbox id="alwaysAskMe" value="&alwaysAskMe.label;" accesskey="&alwaysAskMe.accesskey;"/>
+                <checkbox id="alwaysAskMe" label="&alwaysAskMe.label;" accesskey="&alwaysAskMe.accesskey;"/>
             </box>
         </box>
     </box>

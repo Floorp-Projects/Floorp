@@ -14,9 +14,9 @@
         </xul:box>
         <xul:menulist editable="true" class="location-field" flex="1"
                       autocomplete="true" timeout="300" searchSessionType="urlbar"
-                      inherits="value=content"
-                      tooltip="aTooltip" tooltiptext="fuck" ubattr="field"/>
-        <xul:button class="button-toolbar-3 go-button" value="Go" 
+                      inherits="label=content"
+                      tooltip="aTooltip" tooltiptext="" ubattr="field"/>
+        <xul:button class="button-toolbar-3 go-button" label="Go" 
                     ubattr="go-button" tooltip="aTooltip" tooltiptext="Go"/> 
         <xul:box class="urlbar-post-buttons">
           <children includes="button"/>
@@ -114,7 +114,7 @@
   <!-- XXX work in progress -->
   <binding id="back-button">
     <content>
-      <xul:menubutton id="back-button" value="Back" buttontooltiptext="Go Back"
+      <xul:menubutton id="back-button" label="Back" buttontooltiptext="Go Back"
                       oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
                       class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
         <xul:menupopup oncreate="BrowserBackMenu(event);"/>

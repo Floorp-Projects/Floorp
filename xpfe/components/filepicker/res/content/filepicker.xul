@@ -51,7 +51,7 @@
   <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);" crop="left">
     <menupopup id="lookInMenu"/>
   </menulist>
-  <button value=".." onclick="goUp();"/>
+  <button label=".." onclick="goUp();"/>
 </box>
 
 <box flex="1">
@@ -67,9 +67,9 @@
             <treerow path="rdf:http://home.netscape.com/NC-rdf#URL">
               <treecell class="treecell-filename treecell-indent"
                         indent="true" type="rdf:http://home.netscape.com/NC-rdf#File-Type"
-                        value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-              <treecell value="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
-              <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
+              <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
             </treerow>
           </treeitem>
         </treechildren>
@@ -86,9 +86,9 @@
     </treecolgroup>
     <treehead>
       <treerow>
-        <treecell class="treecell-header" value="&name.label;"/>
-        <treecell class="treecell-header" value="&size.label;"/>
-        <treecell class="treecell-header" value="&lastModified.label;"/>
+        <treecell class="treecell-header" label="&name.label;"/>
+        <treecell class="treecell-header" label="&size.label;"/>
+        <treecell class="treecell-header" label="&lastModified.label;"/>
       </treerow>
     </treehead>
     <treechildren flex="1" onclick="onClick(event)"/>

@@ -11,11 +11,11 @@
   <menupopup id="mppSearchPlugins">
   
     <menuitem id="item:startFindFiles" position="1"
-      value="&findFiles.title;..."
+      label="&findFiles.title;..."
       observes="cmd:startFindFiles"/>
 
     <menuitem id="item:startJunkImgs" position="2"
-      value="&junkImgs.title;..."
+      label="&junkImgs.title;..."
       isDisabled="return !inspector.isViewingContent"
       observes="cmd:startJunkImgs"/>
     

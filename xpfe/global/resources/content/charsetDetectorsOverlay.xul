@@ -23,21 +23,21 @@ Contributor(s): ______________________________________. -->
 <!DOCTYPE window SYSTEM "chrome://global/locale/charsetDetectorsOverlay.dtd" >
 
 <overlay id="charsetDetectorsOverlay"
-		 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          >
 <script type="application/x-javascript" src="chrome://global/content/charsetDetectorsOverlay.js" />
 
  
-      <menu value="&charsetDetectorsMenu.label;"
+      <menu label="&charsetDetectorsMenu.label;"
                            datasources="rdf:null" id="CharsetDetectorsMenu" 
                            containment="urn:mozilla-registry:subkeys"
                            oncommand="SelectDetectors( event )" >
-		<template>
-			  <menupopup>
-				<menuitem uri="rdf:*" value="rdf:urn:mozilla-registry:value:defaultEnglishText" 
+    <template>
+        <menupopup>
+        <menuitem uri="rdf:*" label="rdf:urn:mozilla-registry:value:defaultEnglishText" 
                                            />
-			  </menupopup>
-		</template>
+        </menupopup>
+    </template>
     </menu>
 </overlay>

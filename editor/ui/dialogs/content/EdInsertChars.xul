@@ -44,13 +44,13 @@
   <keyset id="keyset"/>
   <broadcaster id="args" value=""/>
 
-  <titledbox orient="vertical"><title value="&category.label;"/>
+  <titledbox orient="vertical"><label value="&category.label;"/>
     <radiogroup id="CatGrp" orient="vertical" persist="category letter_index char_index">
-      <radio group="CatGrp" id="AccentUpper" value="&accentUpper.label;"   oncommand="ChangeCategory(this.id)"/>
-      <radio group="CatGrp" id="AccentLower" value="&accentLower.label;"   oncommand="ChangeCategory(this.id)"/>
-      <radio group="CatGrp" id="Upper"       value="&otherUpper.label;"    oncommand="ChangeCategory(this.id)"/>
-      <radio group="CatGrp" id="Lower"       value="&otherLower.label;"    oncommand="ChangeCategory(this.id)"/>
-      <radio group="CatGrp" id="Symbol"      value="&commonSymbols.label;" oncommand="ChangeCategory(this.id)"/>
+      <radio group="CatGrp" id="AccentUpper" label="&accentUpper.label;"   oncommand="ChangeCategory(this.id)"/>
+      <radio group="CatGrp" id="AccentLower" label="&accentLower.label;"   oncommand="ChangeCategory(this.id)"/>
+      <radio group="CatGrp" id="Upper"       label="&otherUpper.label;"    oncommand="ChangeCategory(this.id)"/>
+      <radio group="CatGrp" id="Lower"       label="&otherLower.label;"    oncommand="ChangeCategory(this.id)"/>
+      <radio group="CatGrp" id="Symbol"      label="&commonSymbols.label;" oncommand="ChangeCategory(this.id)"/>
     </radiogroup> 
     <spring class="spacer"/>
   </titledbox>

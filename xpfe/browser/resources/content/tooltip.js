@@ -17,20 +17,20 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
- 
+
 function FillInTooltip ( tipElement )
 {
   var retVal = false;
   var button = document.getElementById('replaceMe');
-  if ( button ) {  
+  if ( button ) {
     var tipText = tipElement.getAttribute('tooltiptext');
     if ( tipText != "" ) {
-      button.setAttribute('value', tipText);
+      button.label = tipText;
       retVal = true;
     }
   }
-  
+
   return retVal;
 }

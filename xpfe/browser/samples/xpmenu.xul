@@ -23,111 +23,111 @@ Contributor(s): ______________________________________. -->
 
 
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
-	    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		align="vertical"> 
+    align="vertical"> 
  <toolbox>
    <menubar chromeclass="menubar">
-	  <menu value="File" accesskey="f">
-	    <html:div><html:u>F</html:u>ile</html:div>
-		<menupopup> 
-		<menu value="New" accesskey="n" key="newKey">
-		  <button class="menu-left"/> 
-		  <html:div><html:u>N</html:u>ew </html:div> 
-	      <spring flex="100%"/> 
-	      <html:div>Ctrl+N</html:div>
-		  <button class="menu-right"/> 
-		  <menupopup>
-		    <menuitem value="Lambda" accesskey="a" oncommand="dump('Lambda lambda lambda!\n')"/>
-			<menuitem value="Phi" accesskey="p"/>
-		  </menupopup>
-	    </menu>
-	    <menuitem>
-		  <button class="menu-left"/> 
-		  <html:div><html:u>O</html:u>pen...</html:div> 
-	      <spring flex="100%"/> 
-	      <html:div>Ctrl+O</html:div>
+    <menu label="File" accesskey="f">
+      <html:div><html:u>F</html:u>ile</html:div>
+    <menupopup> 
+    <menu label="New" accesskey="n" key="newKey">
+      <button class="menu-left"/> 
+      <html:div><html:u>N</html:u>ew </html:div> 
+        <spring flex="100%"/> 
+        <html:div>Ctrl+N</html:div>
+      <button class="menu-right"/> 
+      <menupopup>
+        <menuitem label="Lambda" accesskey="a" oncommand="dump('Lambda lambda lambda!\n')"/>
+      <menuitem label="Phi" accesskey="p"/>
+      </menupopup>
+      </menu>
+      <menuitem>
+      <button class="menu-left"/> 
+      <html:div><html:u>O</html:u>pen...</html:div> 
+        <spring flex="100%"/> 
+        <html:div>Ctrl+O</html:div>
           <button class="menu-right"/>
-	    </menuitem> 
-		  <menuitem>
-		      <button class="menu-left"/> 
-			  <html:div><html:u>C</html:u>lose</html:div>
-			  <spring flex="100%"/>
-			  <button class="menu-right"/>
-		  </menuitem> 
-		  <menuseparator/>
-		  <menuitem disabled="true"> 
-		      <button class="menu-left"/> 
-			  <html:div><html:u>S</html:u>ave</html:div>
-		      <spring flex="100%"/> 
-		      <html:div>Ctrl+S</html:div>
-			  <button class="menu-right"/>  
-		  </menuitem> 
-		  <menuitem> 
-		      <button class="menu-left"/> 
-			  <html:div>S<html:u>a</html:u>ve as...</html:div>
-			  <spring flex="100%"/>
-			  <button class="menu-right"/>  
-		  </menuitem> 
-		  <menuitem>
-		      <button class="menu-left"/> 
-			  <html:div><html:u>Q</html:u>uit</html:div>
-			  <spring flex="100%"/> 
-		      <html:div>Ctrl+Q</html:div>
-			  <button class="menu-right"/>  
-		  </menuitem> 
-	  </menupopup> 
+      </menuitem> 
+      <menuitem>
+          <button class="menu-left"/> 
+        <html:div><html:u>C</html:u>lose</html:div>
+        <spring flex="100%"/>
+        <button class="menu-right"/>
+      </menuitem> 
+      <menuseparator/>
+      <menuitem disabled="true"> 
+          <button class="menu-left"/> 
+        <html:div><html:u>S</html:u>ave</html:div>
+          <spring flex="100%"/> 
+          <html:div>Ctrl+S</html:div>
+        <button class="menu-right"/>  
+      </menuitem> 
+      <menuitem> 
+          <button class="menu-left"/> 
+        <html:div>S<html:u>a</html:u>ve as...</html:div>
+        <spring flex="100%"/>
+        <button class="menu-right"/>  
+      </menuitem> 
+      <menuitem>
+          <button class="menu-left"/> 
+        <html:div><html:u>Q</html:u>uit</html:div>
+        <spring flex="100%"/> 
+          <html:div>Ctrl+Q</html:div>
+        <button class="menu-right"/>  
+      </menuitem> 
+    </menupopup> 
   
-	  </menu>
-	  <menu>
-	    <html:div><html:u>E</html:u>dit</html:div>
-		<menupopup>
-		  <menuitem><html:div>Sample Item</html:div></menuitem>
-		</menupopup>
-	  </menu>
-	  <menu>
-	    <html:div><html:u>V</html:u>iew</html:div>
-		<menupopup>
-		  <menuitem><html:div>Sample Item</html:div></menuitem>
-		</menupopup>
-	  </menu>
-	  <menu>
-	    <html:div><html:u>S</html:u>earch</html:div>
-	    <menupopup>
-		  <menuitem><html:div>Sample Item</html:div></menuitem>
-		</menupopup>
-	  </menu>
-	  <menu>
-	    <html:div><html:u>G</html:u>o</html:div>
-	    <menupopup>
-		  <menuitem><html:div>Sample Item</html:div></menuitem>
-		</menupopup>
-	  </menu>
-	  <menu>
-	    <html:div><html:u>B</html:u>ookmarks</html:div>
-	    <menupopup>
-		  <menuitem><html:div>Sample Item</html:div></menuitem>
-		</menupopup>
-	  </menu>
-	  <menu>
-	    <html:div><html:u>T</html:u>asks</html:div>
-	    <menupopup>
-		  <menuitem><html:div>Sample Item</html:div></menuitem>
-		</menupopup>
-	  </menu>
-	  <menu>
-	    <html:div><html:u>D</html:u>ebug</html:div>
-		<menupopup>
-		  <menuitem><html:div>Sample Item</html:div></menuitem>
-		</menupopup>
-	  </menu>
-	  <menu>
-	    <html:div><html:u>Q</html:u>A</html:div>
-		<menupopup>
-		  <menuitem><html:div>Sample Item</html:div></menuitem>
-		</menupopup>
-	  </menu>
-	  <spring flex="100%"/>
+    </menu>
+    <menu>
+      <html:div><html:u>E</html:u>dit</html:div>
+    <menupopup>
+      <menuitem><html:div>Sample Item</html:div></menuitem>
+    </menupopup>
+    </menu>
+    <menu>
+      <html:div><html:u>V</html:u>iew</html:div>
+    <menupopup>
+      <menuitem><html:div>Sample Item</html:div></menuitem>
+    </menupopup>
+    </menu>
+    <menu>
+      <html:div><html:u>S</html:u>earch</html:div>
+      <menupopup>
+      <menuitem><html:div>Sample Item</html:div></menuitem>
+    </menupopup>
+    </menu>
+    <menu>
+      <html:div><html:u>G</html:u>o</html:div>
+      <menupopup>
+      <menuitem><html:div>Sample Item</html:div></menuitem>
+    </menupopup>
+    </menu>
+    <menu>
+      <html:div><html:u>B</html:u>ookmarks</html:div>
+      <menupopup>
+      <menuitem><html:div>Sample Item</html:div></menuitem>
+    </menupopup>
+    </menu>
+    <menu>
+      <html:div><html:u>T</html:u>asks</html:div>
+      <menupopup>
+      <menuitem><html:div>Sample Item</html:div></menuitem>
+    </menupopup>
+    </menu>
+    <menu>
+      <html:div><html:u>D</html:u>ebug</html:div>
+    <menupopup>
+      <menuitem><html:div>Sample Item</html:div></menuitem>
+    </menupopup>
+    </menu>
+    <menu>
+      <html:div><html:u>Q</html:u>A</html:div>
+    <menupopup>
+      <menuitem><html:div>Sample Item</html:div></menuitem>
+    </menupopup>
+    </menu>
+    <spring flex="100%"/>
     </menubar>
   </toolbox>
 

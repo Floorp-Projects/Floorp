@@ -51,7 +51,7 @@
       </row>
       <row>
         <textbox id="WordInput" flex="1"/>
-        <button class="dialog" flex="1" id="AddWord" oncommand="AddWord()" value="&AddButton.label;"/>
+        <button class="dialog" flex="1" id="AddWord" oncommand="AddWord()" label="&AddButton.label;"/>
       </row>
       <row>
         <text class="label" value="&DictionaryList.label;"/>
@@ -62,12 +62,12 @@
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
         <box orient="vertical" flex="1">
-          <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" value="&ReplaceButton.label;"/>
+          <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" label="&ReplaceButton.label;"/>
           <spring class="spacer"/>
-          <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" value="&RemoveButton.label;"/>
+          <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" label="&RemoveButton.label;"/>
           <spring class="spacer"/>
           <spring flex="1"/>
-          <button class="exit-dialog" id="close" value="&CloseButton.label;" default="true" oncommand="Close();"/>	
+          <button class="exit-dialog" id="close" label="&CloseButton.label;" default="true" oncommand="Close();"/>  
         </box>
       </row>
     </rows>

@@ -81,8 +81,8 @@
     <popup type="floater" id="panelpopup" oncreate="initPopup();" 
            menugenerated="true" popupanchor="bottomleft" popupalign="topleft">
       <box orient="vertical" flex="1">
-        <menuitem value="Add Current Page" class="menuitem-floater"/>
-        <menuitem value="Manage Bookmarks..." class="menuitem-floater"/>             
+        <menuitem label="Add Current Page" class="menuitem-floater"/>
+        <menuitem label="Manage Bookmarks..." class="menuitem-floater"/>             
         <iframe flex="1" id="panelsrc" style="min-width: 1px; min-height: 1px;"/>
       </box>
     </popup>
@@ -180,7 +180,7 @@
                    object="?item-type"/>
         </bindings>
         <action>
-          <button uri="?items" class="?item-class button-toolbar bookmarkitem" value="?uri"
+          <button uri="?items" class="?item-class button-toolbar bookmarkitem" label="?uri"
                   tooltip="aTooltip" tooltiptext="?item-name" 
                   src="?item-icon" type="?item-icon" crop="right"/>
         </action>
@@ -206,7 +206,7 @@
         </conditions>
         <action>
           <button uri="?panel" class="button-toolbar bookmarkitem" 
-                  value="?title" content="?content"
+                  label="?title" content="?content"
                   popup="panelpopup"/>
         </action>
       </rule>
@@ -235,7 +235,7 @@
                    object="?item-type"/>
         </bindings>
         <action>
-          <button uri="?items" class="?item-class button-toolbar bookmarkitem" value="?item-name" 
+          <button uri="?items" class="?item-class button-toolbar bookmarkitem" label="?item-name" 
                   src="?item-icon" type="?item-icon" crop="right"/>
         </action>
       </rule>      
@@ -249,8 +249,8 @@
         
     <treehead>
       <treerow>
-        <treecell class="treecell-header" value="Item Name"/>
-        <treecell class="treecell-header" value="Item URI"/>
+        <treecell class="treecell-header" label="Item Name"/>
+        <treecell class="treecell-header" label="Item URI"/>
       </treerow>
     </treehead>
             
@@ -270,8 +270,8 @@
           <treechildren>
             <treeitem uri="?item">
               <treerow>
-                <treecell class="treecell-indent bookmarkitem" value="?name"/>
-                <treecell value="?item"/>
+                <treecell class="treecell-indent bookmarkitem" label="?name"/>
+                <treecell label="?item"/>
               </treerow>
             </treeitem>
           </treechildren>

@@ -179,7 +179,7 @@ function SearchPanelStartup()
   var found = false;
   for (var i = 0; i < categoryPopup.childNodes.length; ++i) {
     if (lastCategoryName == "" &&
-        categoryPopup.childNodes[i].getAttribute("data") == "NC:SearchEngineRoot" ||
+        categoryPopup.childNodes[i].getAttribute("value") == "NC:SearchEngineRoot" ||
         categoryPopup.childNodes[i].getAttribute("id") == lastCategoryName)
     {
       categoryList.selectedItem = categoryPopup.childNodes[i];
@@ -272,7 +272,7 @@ function saveEngines()
     var treeitemNode = engineBox.childNodes[x];
 
     var checkboxNode = treeitemNode.firstChild.firstChild.firstChild;
-    if (checkboxNode) {    
+    if (checkboxNode) {
       var engineURI = treeitemNode.getAttribute("id");
       var engineSRC = rdf.GetResource(engineURI, true);
 
@@ -332,10 +332,10 @@ function doStop()
 {
   if (!gSearchButtonText)
     gSearchButtonText = searchBundle.getString("searchButtonText");
-    
+
   var searchButtonNode = document.getElementById("searchButton");
   searchButtonNode.removeAttribute("stop");
-  searchButtonNode.setAttribute("value", gSearchButtonText);
+  searchButtonNode.setAttribute("label", gSearchButtonText);
 
   // should stop button press also stop the load of the page in the browser? I think so.
   var progressNode = parent.document.getElementById("statusbar-icon");
@@ -496,10 +496,10 @@ function doSearch()
   }
   if (!gStopButtonText)
     gStopButtonText = searchBundle.getString("stopButtonText");
-  
+
   var searchButtonNode = document.getElementById("searchButton");
   searchButtonNode.setAttribute("stop", "true");
-  searchButtonNode.setAttribute("value", gStopButtonText);
+  searchButtonNode.setAttribute("label", gStopButtonText);
 
   var progressNode = top.document.getElementById("statusbar-icon");
   if (progressNode)

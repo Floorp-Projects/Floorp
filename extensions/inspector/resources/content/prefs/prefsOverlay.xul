@@ -8,12 +8,12 @@
   <treechildren id="panelChildren">
     <treeitem id="inspector" container="true" open="true">
       <treerow>       
-        <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-inspector.xul" value="&Inspector.label;"/> 
+        <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-inspector.xul" label="&Inspector.label;"/> 
       </treerow>
       <treechildren id="inspectorChildren">
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-sidebar.xul" value="&Sidebar.label;"/> 
+            <treecell class="treecell-indent" url="chrome://inspector/content/prefs/pref-sidebar.xul" label="&Sidebar.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>

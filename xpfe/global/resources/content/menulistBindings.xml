@@ -12,7 +12,7 @@
   <binding id="menulist" extends="xul:menu">
     <content>
       <xul:image class="menu-icon" inherits="src"/>
-      <xul:text class="menu-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:image class="menu-dropmarker"/>
       <children includes="menupopup"/>
     </content>
@@ -30,18 +30,18 @@
       </handler>
     </handlers>
     <implementation>
-	  <constructor>
-	    this.setInitialSelection()
-	  </constructor>
+    <constructor>
+      this.setInitialSelection()
+    </constructor>
       <method name="setInitialSelection">
         <body>
           <![CDATA[
             this.setAttribute('sizetopopup', 'true');
-            if (!this.value && this.childNodes.length) {
+            if (!this.label && this.childNodes.length) {
               var arr = this.firstChild.getElementsByAttribute('selected', 'true');
 
-              if (!arr.length && this.data)
-                arr = this.firstChild.getElementsByAttribute('data', this.data);
+              if (!arr.length && this.value)
+                arr = this.firstChild.getElementsByAttribute('value', this.value);
 
               if (arr.length)
                 this.selectedItem = arr[0];
@@ -51,18 +51,18 @@
           ]]>
         </body>
       </method>
-      <property name="data" onget="return this.getAttribute('data');">
+      <property name="value" onget="return this.getAttribute('value');">
         <setter>
           <![CDATA[
             var arr;
 
             if (this.childNodes.length)
-              arr = this.firstChild.getElementsByAttribute('data', val);
+              arr = this.firstChild.getElementsByAttribute('value', val);
 
             if (arr && arr.length)
               this.selectedItem = arr[0];
             else
-              this.setAttribute('data', val);
+              this.setAttribute('value', val);
 
             return val;
           ]]>
@@ -72,8 +72,8 @@
                             onget="return this.getAttribute('crop');"/>
       <property name="src"  onset="this.setAttribute('src',val); return val;"
                             onget="return this.getAttribute('src');"/>
-      <property name="value" onset="this.setAttribute('value',val); return val;"
-                             onget="return this.getAttribute('value');"/>
+      <property name="label" onset="this.setAttribute('label',val); return val;"
+                             onget="return this.getAttribute('label');"/>
       <property name="disabled" onset="if (val) this.setAttribute('disabled',true); 
                                        else this.removeAttribute('disabled');
                                        return val;"
@@ -130,17 +130,17 @@
 
             this.selectedInternal = val;
             if (!this.selectedInternal) {
-              this.removeAttribute('data');
-              this.removeAttribute('src');
               this.removeAttribute('value');
+              this.removeAttribute('src');
+              this.removeAttribute('label');
               return val;
             }
              
             val.setAttribute('selected', 'true');
 
-            this.setAttribute('data', val.getAttribute('data'));
-            this.setAttribute('src', val.getAttribute('src'));
             this.setAttribute('value', val.getAttribute('value'));
+            this.setAttribute('src', val.getAttribute('src'));
+            this.setAttribute('label', val.getAttribute('label'));
 
             return val;
 
@@ -158,7 +158,7 @@
     <content>
       <xul:box flex="1" class="menulist-editable-box">
         <xul:image class="menu-icon" inherits="src"/>
-        <html:input type="text" flex="1" class="menulist-editable-text" allowevents="true" inherits="value,disabled"/>
+        <html:input type="text" flex="1" class="menulist-editable-text" allowevents="true" inherits="value=label,disabled"/>
         <xul:image class="menu-dropmarker"/>
       </xul:box>
       <children includes="menupopup"/>
@@ -180,7 +180,7 @@
         input;
       ]]>
       </property>
-      <property name="value"      onset="this.inputField.value = val; return val;"
+      <property name="label"      onset="this.inputField.value = val; return val;"
                                   onget="return this.inputField.value;"/>
     </implementation>
   </binding>
@@ -192,7 +192,7 @@
   <binding id="menubutton-single-right" extends="xul:menu">
     <content>
       <xul:box class="menubutton-internal-box" autostretch="never">
-        <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
+        <xul:text class="menubutton-single-text" inherits="value=label,crop,accesskey"/>
         <xul:image class="menubutton-single-icon"/>
       </xul:box>
       <children includes="menupopup|template"/>
@@ -203,7 +203,7 @@
     <content>
       <xul:box class="menubutton-internal-box" autostretch="never">
         <xul:image class="menubutton-single-icon"/>
-        <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
+        <xul:text class="menubutton-single-text" inherits="value=label,crop,accesskey"/>
       </xul:box>
       <children includes="menupopup|template"/>
     </content>
@@ -213,7 +213,7 @@
     <content>
       <xul:box class="button-internal-box" autostretch="never" orient="vertical" flex="1">
         <xul:image class="menubutton-single-icon"/>
-        <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
+        <xul:text class="menubutton-single-text" inherits="value=label,crop,accesskey"/>
       </xul:box>
       <children includes="menupopup"/>
     </content>
@@ -222,7 +222,7 @@
   <binding id="menubutton-single-bottom">
     <content>
       <xul:box class="button-internal-box" autostretch="never" orient="vertical" flex="1">
-        <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
+        <xul:text class="menubutton-single-text" inherits="value=label,crop,accesskey"/>
         <xul:image class="menubutton-single-icon"/>
       </xul:box>
       <children includes="menupopup"/>
@@ -250,7 +250,7 @@
     <content>
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button top" allowevents="true" 
-                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
           <xul:image class="menubutton-dropmarker"/>
         </xul:box>
@@ -263,7 +263,7 @@
     <content>
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button left" allowevents="true" 
-                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
           <xul:image class="menubutton-dropmarker"/>
         </xul:box>
@@ -276,7 +276,7 @@
     <content>
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button right" allowevents="true" 
-                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
           <xul:image class="menubutton-dropmarker"/>
         </xul:box>
@@ -289,7 +289,7 @@
     <content>
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button bottom" allowevents="true" 
-                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey"/>
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey"/>
         <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle">
           <xul:image class="menubutton-dropmarker"/>
         </xul:box>
@@ -301,7 +301,7 @@
   <binding id="menubutton-dual-ex" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-top">
     <content>
       <xul:button class="menubutton-dual-ex-button top" allowevents="true"
-                  inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"
+                  inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey,disabled"
                   onmouseover="this.parentNode.buttonover = true;"
                   onmouseout="this.parentNode.buttonover = false;"
                   onmousedown="this.parentNode.buttondown = true; this.parentNode.captureMouseUp();"/>
@@ -381,7 +381,7 @@
   <binding id="menubutton-dual-ex-left" extends="chrome://global/content/menulistBindings.xml#menubutton-dual-ex">
     <content>
       <xul:button class="menubutton-dual-ex-button left" allowevents="true"
-                  inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"
+                  inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,label,crop,accesskey,disabled"
                   onmouseover="this.parentNode.buttonover = true;"
                   onmouseout="this.parentNode.buttonover = false;"
                   onmousedown="this.parentNode.buttondown = true;"
@@ -399,7 +399,7 @@
   -->  
   <binding id="menubutton-item">
     <content autostretch="never">
-      <xul:text class="menubutton-text" flex="1" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menubutton-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
   </binding>  

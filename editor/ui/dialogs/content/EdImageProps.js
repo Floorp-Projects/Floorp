@@ -1,23 +1,23 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Pete Collins
  *   Brian King
  *   Ben Goodger
@@ -59,7 +59,7 @@ var StartupCalled = false;
 function Startup()
 {
   //XXX Very weird! When calling this with an existing image,
-  //    we get called twice. That causes dialog layout 
+  //    we get called twice. That causes dialog layout
   //    to explode to fullscreen!
   if (StartupCalled)
   {
@@ -102,23 +102,23 @@ function Startup()
   dialog.PreviewWidth      = document.getElementById( "PreviewWidth" );
   dialog.PreviewHeight     = document.getElementById( "PreviewHeight" );
   dialog.PreviewSize       = document.getElementById( "PreviewSize" );
-  
+
   // Get a single selected image element
   var tagName = "img"
   imageElement = editorShell.GetSelectedElement(tagName);
 
-  if (imageElement) 
+  if (imageElement)
   {
     // We found an element and don't need to insert one
     insertNew = false;
     actualWidth  = imageElement.naturalWidth;
     actualHeight = imageElement.naturalHeight;
-  } 
+  }
   else
   {
     insertNew = true;
 
-    // We don't have an element selected, 
+    // We don't have an element selected,
     //  so create one with default attributes
 
     imageElement = editorShell.CreateElementWithDefaults(tagName);
@@ -126,12 +126,12 @@ function Startup()
     {
       dump("Failed to get selected element or create a new one!\n");
       window.close();
-    }  
+    }
   }
 
   // Make a copy to use for AdvancedEdit
   globalElement = imageElement.cloneNode(false);
-  
+
 
   // Get image map for image
   var usemap = globalElement.getAttribute("usemap");
@@ -163,10 +163,10 @@ function Startup()
   // By default turn constrain on, but both width and height must be in pixels
   dialog.constrainCheckbox.checked =
     dialog.widthUnitsMenulist.selectedIndex == 0 &&
-    dialog.heightUnitsMenulist.selectedIndex == 0;    
+    dialog.heightUnitsMenulist.selectedIndex == 0;
 
   // Set SeeMore bool to the OPPOSITE of the current state,
-  //   which is automatically saved by using the 'persist="more"' 
+  //   which is automatically saved by using the 'persist="more"'
   //   attribute on the MoreFewerButton button
   //   onMoreFewerImage will toggle the state and redraw the dialog
   SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
@@ -192,19 +192,19 @@ function InitDialog()
     dialog.srcInput.value = str;
     GetImageFromURL();
   }
-  
+
   str = globalElement.getAttribute("alt");
   if (str)
     dialog.altTextInput.value = str;
-  
+
   // setup the height and width widgets
-  var width = InitPixelOrPercentMenulist(globalElement, 
-                    insertNew ? null : imageElement, 
+  var width = InitPixelOrPercentMenulist(globalElement,
+                    insertNew ? null : imageElement,
                     "width", "widthUnitsMenulist", gPixel);
-  var height = InitPixelOrPercentMenulist(globalElement, 
-                    insertNew ? null : imageElement, 
+  var height = InitPixelOrPercentMenulist(globalElement,
+                    insertNew ? null : imageElement,
                     "height", "heightUnitsMenulist", gPixel);
-  
+
   // Set actual radio button if both set values are the same as actual
   if (actualWidth && actualHeight)
     dialog.actualSizeRadio.checked = (width == actualWidth) && (height == actualHeight);
@@ -213,32 +213,32 @@ function InitDialog()
 
   if (!dialog.actualSizeRadio.checked)
     dialog.customSizeRadio.checked = true;
-  
+
   dialog.widthInput.value  = constrainWidth = width ? width : (actualWidth ? actualWidth : "");
   dialog.heightInput.value = constrainHeight = height ? height : (actualHeight ? actualHeight : "");
 
   // set spacing editfields
   dialog.imagelrInput.value = globalElement.getAttribute("hspace");
   dialog.imagetbInput.value = globalElement.getAttribute("vspace");
-  dialog.border.value       = globalElement.getAttribute("border");    
+  dialog.border.value       = globalElement.getAttribute("border");
 
-  // Get alignment setting  
+  // Get alignment setting
   var align = globalElement.getAttribute("align");
   if (align) {
-	  align = align.toLowerCase();
+    align = align.toLowerCase();
   }
   var imgClass;
   var textID;
   switch ( align )
   {
-	  case "top":
-	  case "center":
-	  case "right":
-	  case "left":
-      dialog.alignTypeSelect.data = align;
+    case "top":
+    case "center":
+    case "right":
+    case "left":
+      dialog.alignTypeSelect.value = align;
       break;
-	  default:  // Default or "bottom"
-	    dialog.alignTypeSelect.data = "bottom";
+    default:  // Default or "bottom"
+      dialog.alignTypeSelect.value = "bottom";
   }
 
   // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
@@ -273,7 +273,7 @@ function GetImageFromURL()
     //previewImage.setAttribute("height", 0);
     dialog.ImageHolder.removeChild(dialog.ImageHolder.firstChild);
   }
-  
+
   var imageSrc = dialog.srcInput.value;
   if (imageSrc) imageSrc = imageSrc.trimString();
   if (!imageSrc) return;
@@ -357,7 +357,7 @@ function GetActualSize()
       if (dialog.actualSizeRadio.checked)
         SetActualSize();
     }
-    else 
+    else
     {
       //dump("*** Waiting for image loading...\n");
       // Accumulate time so we don't do try this forever
@@ -397,7 +397,7 @@ function onMoreFewerImage()
   if (SeeMore)
   {
     dialog.MoreSection.setAttribute("collapsed","true");
-    dialog.MoreFewerButton.setAttribute("value", GetString("MoreProperties"));
+    dialog.MoreFewerButton.setAttribute("label", GetString("MoreProperties"));
     dialog.MoreFewerButton.setAttribute("more","0");
     SeeMore = false;
     // Show the "Advanced Edit" button on same line as "More Properties"
@@ -409,8 +409,7 @@ function onMoreFewerImage()
   else
   {
     dialog.MoreSection.setAttribute("collapsed","false");
-    dialog.MoreFewerButton.setAttribute("value", "");
-    dialog.MoreFewerButton.setAttribute("value", GetString("FewerProperties"));
+    dialog.MoreFewerButton.setAttribute("label", GetString("FewerProperties"));
     dialog.MoreFewerButton.setAttribute("more","1");
     SeeMore = true;
 
@@ -425,7 +424,7 @@ function doDimensionEnabling()
 {
   // Enabled only if "Custom" is checked
   var enable = (dialog.customSizeRadio.checked);
-  
+
   if ( !dialog.customSizeRadio.checked && !dialog.actualSizeRadio.checked)
     dump("BUG!  neither radio button is checked!!!! \n");
 
@@ -437,17 +436,17 @@ function doDimensionEnabling()
   SetElementEnabledById( "heightLabel", enable );
   SetElementEnabledById( "heightUnitsMenulist", enable );
 
-  var constrainEnable = enable 
+  var constrainEnable = enable
          && ( dialog.widthUnitsMenulist.selectedIndex == 0 )
          && ( dialog.heightUnitsMenulist.selectedIndex == 0 );
 
   SetElementEnabledById( "constrainCheckbox", constrainEnable );
 
-  // Counteracting another weird caret 
+  // Counteracting another weird caret
   //  (appears in Height input, but not really focused!)
 
 // not sure why we want to give the width field focus;
-// it certainly doesn't make sense to do this in a generic 
+// it certainly doesn't make sense to do this in a generic
 // enable/disable function which could be called at any time
   //if (enable)
   //  dialog.widthInput.focus();
@@ -458,7 +457,7 @@ function doOverallEnabling()
   var canEnableOk = IsValidImage(dialog.srcInput.value);
   if ( wasEnableAll == canEnableOk )
     return;
-  
+
   wasEnableAll = canEnableOk;
 
   SetElementEnabledById("ok", canEnableOk );
@@ -489,7 +488,7 @@ function constrainProportions( srcID, destID )
   var srcElement = document.getElementById ( srcID );
   if ( !srcElement )
     return;
-  
+
   var destElement = document.getElementById( destID );
   if ( !destElement )
     return;
@@ -501,23 +500,23 @@ function constrainProportions( srcID, destID )
   if (!actualWidth || !actualHeight ||
       !(dialog.constrainCheckbox.checked && !dialog.constrainCheckbox.disabled))
     return;
- 
+
   // double-check that neither width nor height is in percent mode; bail if so!
   if ( (dialog.widthUnitsMenulist.selectedIndex != 0)
-     || (dialog.heightUnitsMenulist.selectedIndex != 0) ) 
+     || (dialog.heightUnitsMenulist.selectedIndex != 0) )
     return;
 
   // This always uses the actual width and height ratios
   // which is kind of funky if you change one number without the constrain
   // and then turn constrain on and change a number
-  // I prefer the old strategy (below) but I can see some merit to this solution 
+  // I prefer the old strategy (below) but I can see some merit to this solution
   if (srcID == "widthInput")
     destElement.value = Math.round( srcElement.value * actualHeight / actualWidth );
   else
     destElement.value = Math.round( srcElement.value * actualWidth / actualHeight );
 
-/*  
-  // With this strategy, the width and height ratio 
+/*
+  // With this strategy, the width and height ratio
   //   can be reset to whatever the user entered.
   if (srcID == "widthInput")
     destElement.value = Math.round( srcElement.value * constrainHeight / constrainWidth );
@@ -535,8 +534,8 @@ function editImageMap()
     globalMap = imageMap.cloneNode(true);
   }
   else
-    globalMap = imageMap;  
-  
+    globalMap = imageMap;
+
   window.openDialog("chrome://editor/content/EdImageMap.xul", "_blank", "chrome,close,titlebar,modal", globalElement, globalMap);
 }
 
@@ -565,8 +564,8 @@ function ValidateData()
   // We must convert to "file:///" or "http://" format else image doesn't load!
   var src = dialog.srcInput.value.trimString();
   globalElement.setAttribute("src", src);
-  
-  // Note: allow typing spaces, 
+
+  // Note: allow typing spaces,
   // Warn user if empty string just once per dialog session
   //   but don't consider this a failure
   var alt = dialog.altTextInput.value;
@@ -578,7 +577,7 @@ function ValidateData()
     return false;
   }
   globalElement.setAttribute("alt", alt);
-  
+
   var width = "";
   var height = "";
   var isPercentWidth, isPercentHeight;
@@ -591,10 +590,10 @@ function ValidateData()
   }
   else
   {
-	  isPercentWidth = (dialog.widthUnitsMenulist.selectedIndex == 1);
-	  isPercentHeight = (dialog.heightUnitsMenulist.selectedIndex == 1);
+    isPercentWidth = (dialog.widthUnitsMenulist.selectedIndex == 1);
+    isPercentHeight = (dialog.heightUnitsMenulist.selectedIndex == 1);
 
-	  maxLimitWidth = isPercentWidth ? 100 : maxPixels;  // Defined in EdDialogCommon.js
+    maxLimitWidth = isPercentWidth ? 100 : maxPixels;  // Defined in EdDialogCommon.js
     width = ValidateNumberString(dialog.widthInput.value, 1, maxLimitWidth);
     if (width == "")
     {
@@ -606,7 +605,7 @@ function ValidateData()
     if (isPercentWidth)
       width = width + "%";
 
-	  maxLimitHeight = isPercentHeight ? 100 : maxPixels;  // Defined in EdDialogCommon.js
+    maxLimitHeight = isPercentHeight ? 100 : maxPixels;  // Defined in EdDialogCommon.js
     height = ValidateNumberString(dialog.heightInput.value, 1, maxLimitHeight);
     if (height == "")
     {
@@ -633,52 +632,52 @@ function ValidateData()
 
   // spacing attributes
   var amount;
-	if ( dialog.imagelrInput.value )
-	{
-	  amount = ValidateNumberString(dialog.imagelrInput.value, 0, maxPixels);
-	  if (amount == "")
-	    return false;
+  if ( dialog.imagelrInput.value )
+  {
+    amount = ValidateNumberString(dialog.imagelrInput.value, 0, maxPixels);
+    if (amount == "")
+      return false;
     globalElement.setAttribute( "hspace", amount );
   }
   else
     globalElement.removeAttribute( "hspace" );
 
-	if ( dialog.imagetbInput.value )
-	{
-	  var vspace = ValidateNumberString(dialog.imagetbInput.value, 0, maxPixels);
-	  if (vspace == "")
-	    return false;
-	  globalElement.setAttribute( "vspace", vspace );
-	}
-	else
-	  globalElement.removeAttribute( "vspace" );
+  if ( dialog.imagetbInput.value )
+  {
+    var vspace = ValidateNumberString(dialog.imagetbInput.value, 0, maxPixels);
+    if (vspace == "")
+      return false;
+    globalElement.setAttribute( "vspace", vspace );
+  }
+  else
+    globalElement.removeAttribute( "vspace" );
 
   // note this is deprecated and should be converted to stylesheets
-	if ( dialog.border.value )
-	{
-	  var border = ValidateNumberString(dialog.border.value, 0, maxPixels);
-	  if (border == "")
-	    return false;
-	  globalElement.setAttribute( "border", border );
-	}
-	else
-	  globalElement.removeAttribute( "border" );
+  if ( dialog.border.value )
+  {
+    var border = ValidateNumberString(dialog.border.value, 0, maxPixels);
+    if (border == "")
+      return false;
+    globalElement.setAttribute( "border", border );
+  }
+  else
+    globalElement.removeAttribute( "border" );
 
-	// Default or setting "bottom" means don't set the attribute
+  // Default or setting "bottom" means don't set the attribute
   // Note that the attributes "left" and "right" are opposite
   //  of what we use in the UI, which describes where the TEXT wraps,
   //  not the image location (which is what the HTML describes)
-	switch ( dialog.alignTypeSelect.data )
-	{
-	  case "top":
-	  case "center":
-	  case "right":
-	  case "left":
-      globalElement.setAttribute( "align", dialog.alignTypeSelect.data );
+  switch ( dialog.alignTypeSelect.value )
+  {
+    case "top":
+    case "center":
+    case "right":
+    case "left":
+      globalElement.setAttribute( "align", dialog.alignTypeSelect.value );
       break;
     default:
       globalElement.removeAttribute( "align" );
-	}
+  }
 
   return true;
 }
@@ -688,9 +687,9 @@ function onOK()
   // handle insertion of new image
   if (ValidateData())
   {
-	  // Assign to map if there is one
-	  if ( globalMap )
-	  {
+    // Assign to map if there is one
+    if ( globalMap )
+    {
       var mapName = globalMap.getAttribute("name");
       dump("mapName = "+mapName+"\n");
       if (mapName != "")
@@ -716,7 +715,7 @@ function onOK()
       }
     }
 
-    // All values are valid - copy to actual element in doc or 
+    // All values are valid - copy to actual element in doc or
     //   element created to insert
     editorShell.CloneAttributes(imageElement, globalElement);
     if (insertNew)

@@ -34,7 +34,7 @@
   <script src="chrome://editor/content/sb-bookmarks.js"/>
 
 <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
-	<menu />
+  <menu />
 </popup>
 
 <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
@@ -52,17 +52,17 @@
               <html:hr width="75%" align="center" size="1" />
             </treecell>
           </treerow>
-        </treeitem>  		
+        </treeitem>     
       </treechildren>
     </rule>
-  	
+    
     <rule>
       <treechildren flex="1">
         <treeitem uri="...">
           <treerow>
             <treecell>
               <treeindentation />
-              <button value="rdf:http://home.netscape.com/NC-rdf#Name"
+              <button label="rdf:http://home.netscape.com/NC-rdf#Name"
                             align="left" />
             </treecell>
           </treerow>

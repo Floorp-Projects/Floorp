@@ -43,25 +43,25 @@
     </grid>
     <box orient="horizontal" autostretch="never" style="vertical-align: top">
       <titledbox id="tbxType">
-        <title value="Search By"/>
+        <label value="Search By"/>
         <radiogroup id="rgType" orient="vertical">
-          <radio id="rdType_id" value="ID" oncommand="dialog.toggleType('id')"/>
-          <radio id="rdType_tag" value="Tag" oncommand="dialog.toggleType('tag')"/>
-          <radio id="rdType_attr" value="Attribute" oncommand="dialog.toggleType('attr')"/>
+          <radio id="rdType_id" label="ID" oncommand="dialog.toggleType('id')"/>
+          <radio id="rdType_tag" label="Tag" oncommand="dialog.toggleType('tag')"/>
+          <radio id="rdType_attr" label="Attribute" oncommand="dialog.toggleType('attr')"/>
         </radiogroup>
       </titledbox>
       <titledbox id="tbxDirection" hide="true">
-        <title value="Direction"/>
+        <label value="Direction"/>
         <radiogroup id="rgDirection" orient="horizontal">
-          <radio id="rdDir_up" value="Up"/>
-          <radio id="rdDir_down" value="Down"/>
+          <radio id="rdDir_up" label="Up"/>
+          <radio id="rdDir_down" label="Down"/>
         </radiogroup>
       </titledbox>
     </box>
   </box>
 
   <box orient="vertical">
-    <button value="Find" observes="cmdFind" default="true"/>
-    <button value="Close" observes="cmdClose"/>
+    <button label="Find" observes="cmdFind" default="true"/>
+    <button label="Close" observes="cmdClose"/>
   </box>
 </window>

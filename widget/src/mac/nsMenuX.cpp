@@ -646,7 +646,7 @@ nsEventStatus nsMenuX::MenuConstruct(
     nsCOMPtr<nsIDOMElement> menuitemElement(do_QueryInterface(menuitemNode));
     if (menuitemElement) {
       nsAutoString label;
-      menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), label);
+      menuitemElement->GetAttribute(NS_LITERAL_STRING("label"), label);
       //printf("label = %s \n", label.ToNewCString());
       
       // depending on the type, create a menu item, separator, or submenu
@@ -705,7 +705,7 @@ nsEventStatus nsMenuX::HelpMenuConstruct(
       nsAutoString menuitemName;
       
       nsAutoString label;
-      menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), label);
+      menuitemElement->GetAttribute(NS_LITERAL_STRING("label"), label);
       //printf("label = %s \n", label.ToNewCString());
       
       menuitemElement->GetNodeName(menuitemNodeType);
@@ -935,7 +935,7 @@ void nsMenuX::LoadMenuItem(
   menuitemElement->GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
   menuitemElement->GetAttribute(NS_LITERAL_STRING("checked"), checked);
   menuitemElement->GetAttribute(NS_LITERAL_STRING("type"), type);
-  menuitemElement->GetAttribute(NS_LITERAL_STRING("value"), menuitemName);
+  menuitemElement->GetAttribute(NS_LITERAL_STRING("label"), menuitemName);
   menuitemElement->GetAttribute(NS_LITERAL_STRING("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsCOMPtr<nsIMenuItem> pnsMenuItem = do_CreateInstance ( kMenuItemCID ) ;
@@ -1055,7 +1055,7 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIDOMElement * menuElement, nsIDOM
     return;
   
   nsAutoString menuName; 
-  menuElement->GetAttribute(NS_LITERAL_STRING("value"), menuName);
+  menuElement->GetAttribute(NS_LITERAL_STRING("label"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenuX
@@ -1293,7 +1293,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
     return NS_OK;
         
   nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
-  nsCOMPtr<nsIAtom> valueAtom = NS_NewAtom("value");
+  nsCOMPtr<nsIAtom> labelAtom = NS_NewAtom("label");
   nsCOMPtr<nsIAtom> hiddenAtom = NS_NewAtom("hidden");
   nsCOMPtr<nsIAtom> collapsedAtom = NS_NewAtom("collapsed");
   
@@ -1318,11 +1318,11 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
       
     ::DrawMenuBar();
   } 
-  else if (aAttribute == valueAtom.get())  // value
+  else if (aAttribute == labelAtom.get())  // value
   {
     mNeedsRebuild = PR_TRUE;
     
-    domElement->GetAttribute(NS_LITERAL_STRING("value"), mLabel);
+    domElement->GetAttribute(NS_LITERAL_STRING("label"), mLabel);
 
     // reuse the existing menu, to avoid invalidating root menu bar.
     NS_ASSERTION(mMacMenuHandle != NULL, "nsMenuX::AttributeChanged: invalid menu handle.");

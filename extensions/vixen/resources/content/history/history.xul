@@ -65,10 +65,10 @@
                        state="?transaction-state"
                        position="?transaction-position">
                 <treecell state="?transaction-state" 
-                          class="treecell-history-grabber" allowevents="true" value="+"/>
+                          class="treecell-history-grabber" allowevents="true" label="+"/>
                 <treecell class="treecell-history-cell"
                           state="?transaction-state"
-                          value="?description" crop="right" flex="1"/>
+                          label="?description" crop="right" flex="1"/>
               </treerow>
             </treeitem>
           </treechildren>

@@ -388,7 +388,7 @@ nsMenuItemX :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, 
 {
   nsCOMPtr<nsIAtom> checkedAtom = NS_NewAtom("checked");
   nsCOMPtr<nsIAtom> disabledAtom = NS_NewAtom("disabled");
-  nsCOMPtr<nsIAtom> valueAtom = NS_NewAtom("value");
+  nsCOMPtr<nsIAtom> labelAtom = NS_NewAtom("label");
   nsCOMPtr<nsIAtom> hiddenAtom = NS_NewAtom("hidden");
   nsCOMPtr<nsIAtom> collapsedAtom = NS_NewAtom("collapsed");
   

@@ -17,16 +17,16 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
- 
+
 /*
   This is the old bookmarks code, included here for the sake of the bookmarks sidebar panel,
-  which will be fixed to use my new code in .9. In the mean time, this file provides a 
-  life line to various functionality. 
- */ 
- 
- 
+  which will be fixed to use my new code in .9. In the mean time, this file provides a
+  life line to various functionality.
+ */
+
+
 
 var NC_NS  = "http://home.netscape.com/NC-rdf#";
 var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
@@ -119,7 +119,7 @@ function CommandUpdate_Bookmarks()
     var oneAddressBookSelected = false;
     if ( dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1) )
         oneAddressBookSelected = true;
-    
+
     // get selection info from results pane
     var selectedCards = GetSelectedAddresses();
     var oneOrMoreCardsSelected = false;
@@ -150,7 +150,7 @@ function copySelectionToClipboard()
     var nameRes = RDF.GetResource(NC_NS + "Name");
     if (!nameRes) return false;
 
-    // Build a url that encodes all the select nodes 
+    // Build a url that encodes all the select nodes
     // as well as their parent nodes
     var url = "";
     var text = "";
@@ -163,13 +163,13 @@ function copySelectionToClipboard()
 
         var ID = getAbsoluteID("bookmarksTree", node);
         if (!ID) continue;
-        
+
         var IDRes = RDF.GetResource(ID);
         if (!IDRes) continue;
         var nameNode = Bookmarks.GetTarget(IDRes, nameRes, true);
         var theName = "";
         if (nameNode)
-            nameNode = 
+            nameNode =
                 nameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
         if (nameNode) theName = nameNode.Value;
 
@@ -187,7 +187,7 @@ function copySelectionToClipboard()
             else
             {
                 text += ID + "\r";
-            
+
                 html += "<a href='" + ID + "'>";
                 if (theName != "")
                 {
@@ -223,7 +223,7 @@ function copySelectionToClipboard()
     data.data = url;
     // double byte data
     trans.setTransferData("moz/bookmarkclipboarditem", data, url.length*2);
-    
+
     if (text != "")
     {
         trans.addDataFlavor("text/unicode");
@@ -277,7 +277,7 @@ function doPaste()
     var select_list = treeNode.selectedItems;
     if (!select_list) return false;
     if (select_list.length != 1) return false;
-    
+
     var pasteNodeID = select_list[0].getAttribute("id");
     var isContainerFlag = (select_list[0].getAttribute("container") == "true");
 
@@ -304,7 +304,7 @@ function doPaste()
     }
     var url = null;
    // double byte data
-    if (data) url = data.data.substring(0, dataLen.value / 2); 
+    if (data) url = data.data.substring(0, dataLen.value / 2);
     if (!url) return false;
 
     var strings = url.split(";");
@@ -507,7 +507,7 @@ function BookmarkProperties()
 {
     var treeNode = document.getElementById('bookmarksTree');
     var select_list = treeNode.selectedItems;
-  
+
     if (select_list.length >= 1) {
         // don't bother showing properties on bookmark separators
         var type = select_list[0].getAttribute('type');
@@ -608,10 +608,10 @@ function doContextCmd(cmdName)
     var nameVal = "";
     var urlVal = "";
     var promptStr;
-    
+
     var picker_uri;
     var filePicker;
-    
+
     if (cmdName == NC_NS + "command?cmd=newbookmark")
     {
         while (true)
@@ -619,7 +619,7 @@ function doContextCmd(cmdName)
             promptStr = get_localized_string("NewBookmarkURLPrompt");
             urlVal = prompt(promptStr, "");
             if (!urlVal || urlVal=="") return false;
-            
+
             // ensure we get a fully qualified URL (protocol colon address)
             var colonOffset = urlVal.indexOf(":");
             if (colonOffset > 0) break;
@@ -734,7 +734,7 @@ function doContextCmd(cmdName)
 
     var uri;
     var rdfNode;
-    
+
     if (select_list.length < 1)
     {
         // if nothing is selected, default to using the "ref"
@@ -834,6 +834,6 @@ function bookmarkSelect()
             val = "";
         }
     }
-    status.setAttribute("value", val);
+    status.label = val;
     return true;
 }

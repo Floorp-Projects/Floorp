@@ -42,8 +42,8 @@
         <tree id="domTree" style="height: 0px; width: 0px;" flex="1">
           <treehead>
             <treerow>
-              <treecell value="Node/Attribute Name" class="treecell-header treecell-inset-header"/>
-              <treecell value="Attribute Value" class="treecell-header treecell-inset-header"/>
+              <treecell label="Node/Attribute Name" class="treecell-header treecell-inset-header"/>
+              <treecell label="Attribute Value" class="treecell-header treecell-inset-header"/>
             </treerow>
           </treehead>
           <treecolgroup>
@@ -53,26 +53,26 @@
           <treechildren>
             <treeitem>
               <treerow>
-                <treecell value="foopy"/>
+                <treecell label="foopy"/>
                 <splitter class="tree-splitter"/>
-                <treecell value="noopy"/>
+                <treecell label="noopy"/>
               </treerow>
             </treeitem>
           </treechildren>
         </tree> 
         <box>
-          <button class="button-toolbar" value="Insert Node"/>
-          <button class="button-toolbar" value="Remove Node"/>
+          <button class="button-toolbar" label="Insert Node"/>
+          <button class="button-toolbar" label="Remove Node"/>
           <toolbarseparator/>
-          <button class="button-toolbar" value="Add Attribute"/>
-          <button class="button-toolbar" value="Remove Attribute"/>
+          <button class="button-toolbar" label="Add Attribute"/>
+          <button class="button-toolbar" label="Remove Attribute"/>
           <spring flex="1"/>
         </box>
       </box>
     </tabpanel>
     <tabbox>
-      <tab value="Designer"/>
-      <tab value="DOM Tree"/>
+      <tab label="Designer"/>
+      <tab label="DOM Tree"/>
     </tabbox>
   </tabcontrol>
 </window>

@@ -31,7 +31,7 @@
       <treerow>
         <treecell class="treecell-indent"
                   url="chrome://cookie/content/pref-cookies.xul"
-                  value="&cookies.label;"
+                  label="&cookies.label;"
                   id="cookiesCell"/> 
       </treerow>
     </treeitem>
@@ -39,7 +39,7 @@
       <treerow>
         <treecell class="treecell-indent"
                   url="chrome://cookie/content/pref-images.xul"
-                  value="&images.label;"/> 
+                  label="&images.label;"/> 
       </treerow>
     </treeitem>
   </treechildren>

@@ -10,11 +10,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
- * Corporation.  Portions created by Netscape are 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  *
@@ -30,7 +30,7 @@ var externalProtocolServiceID = "@mozilla.org/uriloader/external-protocol-servic
 var dialog;
 
 // the helperAppLoader is a nsIHelperAppLauncher object
-var helperAppLoader; 
+var helperAppLoader;
 
 // random global variables...
 var completed = false;
@@ -64,12 +64,12 @@ var progressListener = {
         dialog.progress.setAttribute( "mode", "normal" );
         var percentMsg = getString( "percentMsg" );
         percentMsg = replaceInsert( percentMsg, 1, 100 );
-        dialog.progressText.setAttribute("value", percentMsg);
+        dialog.progressText.setAttribute("label", percentMsg);
 
         processEndOfDownload();
       }
     },
-    
+
     onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
 
@@ -78,7 +78,7 @@ var progressListener = {
       // Get current time.
       var now = ( new Date() ).getTime();
       // If interval hasn't elapsed, ignore it.
-      if ( now - lastUpdate < interval && aMaxTotalProgress != "-1" &&  eval(aCurTotalProgress) < eval(aMaxTotalProgress) ) 
+      if ( now - lastUpdate < interval && aMaxTotalProgress != "-1" &&  eval(aCurTotalProgress) < eval(aMaxTotalProgress) )
         return;
 
       // Update this time.
@@ -89,7 +89,7 @@ var progressListener = {
       var rate; // aCurTotalProgress/sec
       if ( elapsed )
         rate = ( aCurTotalProgress * 1000 ) / elapsed;
-      else 
+      else
         rate = 0;
 
       // Update elapsed time display.
@@ -97,16 +97,16 @@ var progressListener = {
 
       // Calculate percentage.
       var percent;
-      if ( aMaxTotalProgress != "-1" ) 
+      if ( aMaxTotalProgress != "-1" )
       {
         percent = parseInt( (overallProgress*100)/aMaxTotalProgress + .5 );
         if ( percent > 100 )
           percent = 100;
-        
+
         // Advance progress meter.
         dialog.progress.setAttribute( "value", percent );
-      } 
-      else 
+      }
+      else
       {
         percent = "??";
 
@@ -124,24 +124,24 @@ var progressListener = {
       // Insert 2 is the total number of kilobytes to be downloaded (if known).
       if ( aMaxTotalProgress != "-1" )
          status = replaceInsert( status, 2, parseInt( aMaxTotalProgress/1024 + .5 ) );
-      else 
+      else
          status = replaceInsert( status, 2, "??" );
 
-      if ( rate ) 
+      if ( rate )
       {
         // rate is bytes/sec
         var kRate = rate / 1024; // K bytes/sec;
         kRate = parseInt( kRate * 10 + .5 ); // xxx (3 digits)
         // Don't update too often!
-        if ( kRate != priorRate ) 
+        if ( kRate != priorRate )
         {
-          if ( rateChanges++ == rateChangeLimit ) 
+          if ( rateChanges++ == rateChangeLimit )
           {
              // Time to update download rate.
              priorRate = kRate;
              rateChanges = 0;
-          } 
-          else 
+          }
+          else
           {
             // Stick with old rate for a bit longer.
             kRate = priorRate;
@@ -155,7 +155,7 @@ var progressListener = {
 
          // Insert 3 is the download rate (in kilobytes/sec).
          status = replaceInsert( status, 3, kRate + "." + fraction );
-      } 
+      }
       else
        status = replaceInsert( status, 3, "??.?" );
 
@@ -168,7 +168,7 @@ var progressListener = {
       dialog.progressText.setAttribute("value", percentMsg);
 
       // Update time remaining.
-      if ( rate && aMaxTotalProgress != "-1" ) 
+      if ( rate && aMaxTotalProgress != "-1" )
       {
         var rem = ( aMaxTotalProgress - aCurTotalProgress ) / rate;
             rem = parseInt( rem + .5 );
@@ -177,7 +177,7 @@ var progressListener = {
       else
             dialog.timeLeft.setAttribute("value", getString( "unknownTime" ));
     },
-	  onLocationChange: function(aWebProgress, aRequest, aLocation)
+    onLocationChange: function(aWebProgress, aRequest, aLocation)
     {
       // we can ignore this notification
     },
@@ -191,7 +191,7 @@ var progressListener = {
     {
      if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
       return this;
-     
+
      throw Components.results.NS_NOINTERFACE;
     }
 };
@@ -219,7 +219,7 @@ function getString( stringId ) {
    return dialog.strings[ stringId ];
 }
 
-function formatSeconds( secs ) 
+function formatSeconds( secs )
 {
   // Round the number of seconds to remove fractions.
   secs = parseInt( secs + .5 );
@@ -228,18 +228,18 @@ function formatSeconds( secs )
   var mins = parseInt( secs/60 );
   secs -= mins*60;
   var result;
-  if ( hours ) 
+  if ( hours )
     result = getString( "longTimeFormat" );
-  else 
+  else
     result = getString( "shortTimeFormat" );
-  
-  if ( hours < 10 ) 
+
+  if ( hours < 10 )
      hours = "0" + hours;
   if ( mins < 10 )
      mins = "0" + mins;
   if ( secs < 10 )
      secs = "0" + secs;
- 
+
   // Insert hours, minutes, and seconds into result string.
   result = replaceInsert( result, 1, hours );
   result = replaceInsert( result, 2, mins );
@@ -248,8 +248,8 @@ function formatSeconds( secs )
   return result;
 }
 
-function loadDialog() 
-{ 
+function loadDialog()
+{
   var sourceUrlValue = {};
   var initialDownloadTimeValue = {};
   // targetFile is global because we are going to want re-use later one...
@@ -268,7 +268,7 @@ function loadDialog()
 
   dialog.location.setAttribute("value", sourceUrlValue.value.spec );
   dialog.fileName.setAttribute( "value", targetFile.unicodePath );
-  
+
   var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPref);
   if (prefs)
     keepProgressWindowUpBox.checked = prefs.GetBoolPref("browser.download.progressDnldDialog.keepAlive");
@@ -318,7 +318,7 @@ function onLoad() {
     moveToAlertPosition();
 }
 
-function onUnload() 
+function onUnload()
 {
 
   // remember the user's decision for the checkbox.
@@ -330,30 +330,30 @@ function onUnload()
    // Cancel app launcher.
    if (helperAppLoader)
    {
-     try 
+     try
      {
        helperAppLoader.closeProgressWindow();
        helperAppLoader = null;
      }
-      
+
      catch( exception ) {}
    }
 }
 
 // If the user presses cancel, tell the app launcher and close the dialog...
-function onCancel () 
+function onCancel ()
 {
    // Cancel app launcher.
    if (helperAppLoader)
    {
-     try 
+     try
      {
        helperAppLoader.Cancel();
      }
-      
+
      catch( exception ) {}
    }
-    
+
   // Close up dialog by returning true.
   return true;
 }
@@ -385,7 +385,7 @@ function setupPostProgressUI()
   // enable the open and open folder buttons
   var openFolderButton = document.getElementById('openFolder');
   var openButton = document.getElementById('open');
-  
+
   openFolderButton.removeAttribute("disabled");
   openButton.removeAttribute("disabled");
 }
@@ -397,7 +397,7 @@ function processEndOfDownload()
 {
   if (!keepProgressWindowUpBox.checked)
     return window.setTimeout( "closeWindow();", 2000 ); // shut down, we are all done.
-  
+
   // o.t the user has asked the window to stay open so leave it open and enable the open and open new folder buttons
   setupPostProgressUI();
 }

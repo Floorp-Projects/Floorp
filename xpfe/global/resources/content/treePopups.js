@@ -1,5 +1,5 @@
 /* -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*-
- * 
+ *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
@@ -35,16 +35,16 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
 
     if (skipCell != currTreeCol) {
       // Construct an entry for each cell in the row.
-      var columnName = currTreeCol.getAttribute("value");
+      var columnName = currTreeCol.getAttribute("label");
       if (firstTime) {
         if (currTreeCol.getAttribute("collapsed") != "true") {
           popupChild = document.createElement("menuitem");
           popupChild.setAttribute("type", "checkbox");
-          popupChild.setAttribute("value", columnName);
+          popupChild.setAttribute("label", columnName);
           if (!count++) popupChild.setAttribute("disabled", "true");
           if (columnName == "") {
             var display = currTreeCol.getAttribute("display");
-            popupChild.setAttribute("value", display);
+            popupChild.setAttribute("label", display);
           }
           popupChild.setAttribute("colid", currColNode.id);
           popupChild.setAttribute("oncommand", "ToggleColumnState(this, document)");
@@ -68,7 +68,7 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
 
         popupChild = popupChild.nextSibling;
       }
-    } 
+    }
 
     currTreeCol = currTreeCol.nextSibling;
     currColNode = currColNode.nextSibling;

@@ -44,21 +44,21 @@ Contributor(s): ______________________________________. -->
   <!-- Context menu -->
   <popupset>
     <popup id="context" oncreate="InitContextMenu(this)">
-      <menuitem id="context-back" value="&backCmd.label;"
+      <menuitem id="context-back" label="&backCmd.label;"
           accesskey="" oncommand="BrowserBack()"/>
-      <menuitem id="context-forward" value="&forwardCmd.label;"
+      <menuitem id="context-forward" label="&forwardCmd.label;"
           accesskey="" oncommand="BrowserForward()"/>
-      <menuitem id="context-stop" value="&stopCmd.label;"
+      <menuitem id="context-stop" label="&stopCmd.label;"
           accesskey="" oncommand="BrowserStop()"/>
-      <menuitem id="context-reload" value="&reloadCmd.label;"
+      <menuitem id="context-reload" label="&reloadCmd.label;"
           accesskey="" oncommand="BrowserReload()"/>
       
       <!-- The following DEBUG MENU ITEMS can be removed -->
       <menuseparator/>
       <menu value="Debug">
         <menupopup>
-          <menuitem id="command-handler" value="CommandHandler::Exec" oncommand="CHExecTest()"/>
-          <menuitem id="command-handler" value="CommandHandler::Query" oncommand="CHQueryTest()"/>
+          <menuitem id="command-handler" label="CommandHandler::Exec" oncommand="CHExecTest()"/>
+          <menuitem id="command-handler" label="CommandHandler::Query" oncommand="CHQueryTest()"/>
         </menupopup>
       </menu>
       <!-- End DEBUG MENU ITEMS -->
@@ -71,10 +71,10 @@ Contributor(s): ______________________________________. -->
   <toolbox>
     <toolbar id="nav-bar">
       <box id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
-        <button id="back-button" crop="right" onclick="BrowserBack()" value="&backButton.label;"/>  
-        <button id="forward-button" crop="right" onclick="BrowserForward()" value="&forwardButton.label;"/>  
-        <button id="reload-button" crop="right" onclick="BrowserReload()" value="&reloadButton.label;"/>
-        <button id="stop-button" crop="right" onclick="BrowserStop()" value="&stopButton.label;"/>
+        <button id="back-button" crop="right" onclick="BrowserBack()" label="&backButton.label;"/>  
+        <button id="forward-button" crop="right" onclick="BrowserForward()" label="&forwardButton.label;"/>  
+        <button id="reload-button" crop="right" onclick="BrowserReload()" label="&reloadButton.label;"/>
+        <button id="stop-button" crop="right" onclick="BrowserStop()" label="&stopButton.label;"/>
         <box class="box-toolbar-group" flex="1">
           <box autostretch="never" valign="middle" flex="1">
             <textbox autocomplete="true" timeout="300"

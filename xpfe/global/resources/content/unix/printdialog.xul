@@ -47,10 +47,10 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
       <row>
         <text class="label" value="&printTo.label;" flex ="1"/>
           <radiogroup id="destGroup" orient="horizontal">
-            <radio group = "destGroup" id = "printerRadio" value = "&printerRadio.label;"
-								oncommand = "doPrintToFile( false );"/>
-            <radio group = "destGroup" id = "fileRadio" value = "&fileRadio.label;"
-								oncommand = "doPrintToFile( true );"/>
+            <radio group = "destGroup" id = "printerRadio" label = "&printerRadio.label;"
+                oncommand = "doPrintToFile( false );"/>
+            <radio group = "destGroup" id = "fileRadio" label = "&fileRadio.label;"
+                oncommand = "doPrintToFile( true );"/>
           </radiogroup>
       </row>
       <row>
@@ -61,58 +61,58 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
         <text id="fileLabel" class="label" value="&fileInput.label;"/>
         <box>
           <textbox id="fileInput" flex ="1" onblur="stripTrailingWhitespace(this)"/>
-          <button id="chooseFile" value = "&chooseButton.label;" oncommand = "onChooseFile()"/>
+          <button id="chooseFile" label = "&chooseButton.label;" oncommand = "onChooseFile()"/>
         </box>
       </row>
       <row>
         <text class="label" value="&reverseGroup.label;" flex ="1"/>
         <radiogroup id="reverseGroup" orient="horizontal">
-          <radio group = "reverseGroup" id = "firstRadio" value = "&firstRadio.label;" />
-          <radio group = "reverseGroup" id = "lastRadio" value = "&lastRadio.label;" />
+          <radio group = "reverseGroup" id = "firstRadio" label = "&firstRadio.label;" />
+          <radio group = "reverseGroup" id = "lastRadio" label = "&lastRadio.label;" />
         </radiogroup>
       </row>
       <row>
         <text class="label" value="&colorGroup.label;" flex ="1"/>
         <radiogroup id="colorGroup" orient="horizontal">
-          <radio group = "colorGroup" id = "grayRadio" value = "&grayRadio.label;" />
-          <radio group = "colorGroup" id = "colorRadio" value = "&colorRadio.label;"/>
+          <radio group = "colorGroup" id = "grayRadio" label = "&grayRadio.label;" />
+          <radio group = "colorGroup" id = "colorRadio" label = "&colorRadio.label;"/>
         </radiogroup>
       </row>
       <row>
         <text class="label" value="&paperGroup.label;" flex ="1"/>
         <radiogroup id="paperGroup" orient="vertical">
-          <radio group = "paperGroup" id = "letterRadio" value = "&letterRadio.label;"/>
-          <radio group = "paperGroup" id = "legalRadio" value = "&legalRadio.label;"/>
-          <radio group = "paperGroup" id = "exectiveRadio" value = "&exectiveRadio.label;"/>
-          <radio group = "paperGroup" id = "a4Radio" value = "&a4Radio.label;" />
+          <radio group = "paperGroup" id = "letterRadio" label = "&letterRadio.label;"/>
+          <radio group = "paperGroup" id = "legalRadio" label = "&legalRadio.label;"/>
+          <radio group = "paperGroup" id = "exectiveRadio" label = "&exectiveRadio.label;"/>
+          <radio group = "paperGroup" id = "a4Radio" label = "&a4Radio.label;" />
         </radiogroup>
       </row>
       <row>
         <text class="label" value="&printrangeGroup.label;" flex ="1"/>
         <radiogroup id="printrangeGroup" orient="vertical">
-          <radio group = "printrangeGroup" id = "allpagesRadio" value = "&allpagesRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
+          <radio group = "printrangeGroup" id = "allpagesRadio" label = "&allpagesRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
           <box orient="horizontal" autostretch="never">
-            <radio group = "printrangeGroup" id = "rangeRadio" value = "&rangeRadio.label;" onclick = "doPrintRange(!this.checked);"/>
+            <radio group = "printrangeGroup" id = "rangeRadio" label = "&rangeRadio.label;" onclick = "doPrintRange(!this.checked);"/>
             <text class = "label" id = "frompageLabel" for = "frompageInput" value = "&frompageInput.label;" />
             <textbox id = "frompageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
             <text class = "label" id = "topageLabel" for = "topageInput" value = "&topageInput.label;" />
             <textbox id = "topageInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
-          <radio group = "printrangeGroup" id = "selectionRadio" value = "&selectionRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
+          <radio group = "printrangeGroup" id = "selectionRadio" label = "&selectionRadio.label;" onclick = "doPrintRange(!document.getElementById('rangeRadio').checked);"/>
         </radiogroup>
       </row>
       <row>
         <text class="label" value="&printframeGroup.label;" id="printrangeGroupLabel" flex ="1"/>
         <radiogroup id="printrangeGroup" orient="vertical">
-          <radio group = "printrangeGroup" id = "aslayedoutRadio" value = "&aslayedoutRadio.label;" />
-          <radio group = "printrangeGroup" id = "selectedframeRadio" value = "&selectedframeRadio.label;" />
-          <radio group = "printrangeGroup" id = "eachframesepRadio" value = "&eachframesepRadio.label;" />
+          <radio group = "printrangeGroup" id = "aslayedoutRadio" label = "&aslayedoutRadio.label;" />
+          <radio group = "printrangeGroup" id = "selectedframeRadio" label = "&selectedframeRadio.label;" />
+          <radio group = "printrangeGroup" id = "eachframesepRadio" label = "&eachframesepRadio.label;" />
         </radiogroup>
       </row>
       <row>
         <text class="label" value="&marginInput.label;" flex ="1"/>
-	      <box orient="horizontal">
-	        <box orient="horizontal" autostretch="never">
+        <box orient="horizontal">
+          <box orient="horizontal" autostretch="never">
             <text class = "label" id = "topLabel" for = "topInput" value = "&topInput.label;" />
             <textbox id = "topInput" style = "width:5em;" onkeyup="checkValid(this.id)"/>
           </box>
@@ -134,10 +134,10 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
   </grid>
 
   <!-- used to store the print -->
-  <foo style="display:none;" id="printButton" value="&printButton.label;"/>
+  <foo style="display:none;" id="printButton" label="&printButton.label;"/>
 
   <!-- used to store the print -->
-  <foo style="display:none;" id="fpDialog" value="&fpDialog.title;"/>
+  <foo style="display:none;" id="fpDialog" label="&fpDialog.title;"/>
 
   <separator/>
 

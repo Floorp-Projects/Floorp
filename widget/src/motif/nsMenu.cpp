@@ -357,7 +357,7 @@ void nsMenu::LoadSubMenu(nsIMenu *       pParentMenu,
                          nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("value"), menuName);
+  menuElement->GetAttribute(nsAutoString("label"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
   
   // Create nsMenu

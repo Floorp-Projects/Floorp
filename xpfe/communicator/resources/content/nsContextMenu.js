@@ -10,15 +10,15 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     William A. ("PowerGUI") Law <law@netscape.com>
  *     Blake Ross <blakeross@telocity.com>
  */
@@ -61,7 +61,7 @@ nsContextMenu.prototype = {
 
         // Get contextual info.
         this.setTarget( document.popupNode );
-    
+
         // Initialize (disable/remove) menu items.
         this.initItems();
     },
@@ -77,50 +77,50 @@ nsContextMenu.prototype = {
         // Remove open/edit link if not applicable.
         this.showItem( "context-openlink", this.onSaveableLink || ( this.inDirList && this.onLink ) );
         this.showItem( "context-editlink", this.onSaveableLink && !this.inDirList );
-    
+
         // Remove open frame if not applicable.
         this.showItem( "context-openframe", this.inFrame );
         this.showItem( "context-showonlythisframe", this.inFrame );
-    
+
         // Remove separator after open items if neither link nor frame.
         this.showItem( "context-sep-open", this.onSaveableLink || ( this.inDirList && this.onLink ) || this.inFrame );
     },
     initNavigationItems : function () {
         // Back determined by canGoBack broadcaster.
         this.setItemAttrFromNode( "context-back", "disabled", "canGoBack" );
-    
+
         // Forward determined by canGoForward broadcaster.
         this.setItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
-    
+
         // Reload is OK if not on a frame; vice-versa for reload-frame.
         this.showItem( "context-reload", !this.inFrame );
         this.showItem( "context-reload-frame", this.inFrame );
-    
+
         // XXX: Stop is determined in navigator.js; the canStop broadcaster is broken
         //this.setItemAttrFromNode( "context-stop", "disabled", "canStop" );
     },
     initSaveItems : function () {
         // Save page is always OK, unless in directory listing.
         this.showItem( "context-savepage", !this.inDirList );
-    
+
         // Save frame as depends on whether we're in a frame.
         this.showItem( "context-saveframe", this.inFrame );
-    
+
         // Save link depends on whether we're in a link.
         this.showItem( "context-savelink", this.onSaveableLink );
-    
+
         // Save background image depends on whether there is one.
         this.showItem( "context-savebgimage", this.hasBGImage );
-    
+
         // Save image depends on whether there is one.
         this.showItem( "context-saveimage", this.onImage );
-        if (this.onImage){ //if onImage, let's get the imagename into the context menu       
+        if (this.onImage){ //if onImage, let's get the imagename into the context menu
            var saveImageMenuItem = document.getElementById( 'context-saveimage' );
            var imageName = extractFileNameFromUrl(this.imageURL);
            var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
            var caption = bundle.formatStringFromName("saveImageAs",[imageName],1);
 
-           saveImageMenuItem.setAttribute( "value", caption );
+           saveImageMenuItem.setAttribute( "label", caption );
         }
 
         // Remove separator if none of these were shown.
@@ -130,16 +130,16 @@ nsContextMenu.prototype = {
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
         this.showItem( "context-viewsource", !this.inDirList );
-    
+
         // View frame source depends on whether we're in a frame.
         this.showItem( "context-viewframesource", this.inFrame );
-    
+
         // View Info is available, unless in directory listing
         this.showItem( "context-viewinfo", !this.inDirList );
-    
+
         // View Frame Info depends on whether we're in a frame
         this.showItem( "context-viewframeinfo", this.inFrame );
-    
+
         // View Image depends on whether an image was clicked on.
         this.showItem( "context-viewimage", this.onImage );
 
@@ -150,14 +150,14 @@ nsContextMenu.prototype = {
         // Use "Bookmark This Link" if on a link.
         this.showItem( "context-bookmarkpage", !this.onLink );
         this.showItem( "context-bookmarklink", this.onLink );
-    
+
         // Send Page not working yet.
         this.showItem( "context-sendpage", false );
     },
     initClipboardItems : function () {
         // Select All is always OK, unless in directory listing.
         this.showItem( "context-selectall", !this.inDirList );
-    
+
         // Copy depends on whether there is selected text.
         // Enabling this context menu item is now done through the global
         // command updating system
@@ -168,10 +168,10 @@ nsContextMenu.prototype = {
         // Items for text areas
         this.showItem( "context-cut", this.onTextInput );
         this.showItem( "context-paste", this.onTextInput );
-        
+
         // Copy link location depends on whether we're on a link.
         this.showItem( "context-copylink", this.onLink );
-    
+
         // Copy image location depends on whether we're on an image.
         this.showItem( "context-copyimage", this.onImage );
     },
@@ -187,7 +187,7 @@ nsContextMenu.prototype = {
 
         // Remember the node that was clicked.
         this.target = node;
-    
+
         // See if the user clicked on an image.
         if ( this.target.nodeType == 1 ) {
              if ( this.target.tagName.toUpperCase() == "IMG" ) {
@@ -231,7 +231,7 @@ nsContextMenu.prototype = {
                             }
                         }
                     }
-                }   
+                }
              } else if ( this.target.tagName.toUpperCase() == "OBJECT"
                          &&
                          // See if object tag is for an image.
@@ -271,28 +271,28 @@ nsContextMenu.prototype = {
                         }
                         // Build pseudo link object so link-related functions work.
                         this.onLink = true;
-                        this.link = { href : root.getAttribute("URL") }; 
+                        this.link = { href : root.getAttribute("URL") };
                         // If element is a directory, then you can't save it.
                         if ( root.getAttribute( "container" ) == "true" ) {
                             this.onSaveableLink = false;
                         } else {
-                            this.onSaveableLink = true;                        
+                            this.onSaveableLink = true;
                         }
                     } else {
                         root = root.parentNode;
                     }
                 }
-            } else if ( this.target.parentNode.tagName == "scrollbar" 
+            } else if ( this.target.parentNode.tagName == "scrollbar"
                         ||
-                        this.target.parentNode.tagName == "thumb" 
-                        || 
+                        this.target.parentNode.tagName == "thumb"
+                        ||
                         this.target.parentNode.tagName == "xul:slider") {
                 this.shouldDisplay = false;
             } else {
                 try {
                     var cssAttr = this.target.style.getPropertyValue( "list-style-image" ) ||
-                                  this.target.style.getPropertyValue( "list-style" ) || 
-                                  this.target.style.getPropertyValue( "background-image" ) || 
+                                  this.target.style.getPropertyValue( "list-style" ) ||
+                                  this.target.style.getPropertyValue( "background-image" ) ||
                                   this.target.style.getPropertyValue( "background" );
                     if ( cssAttr ) {
                         this.onImage = true;
@@ -304,7 +304,7 @@ nsContextMenu.prototype = {
                 }
             }
         }
-    
+
         // See if the user clicked in a frame.
         if ( this.target.ownerDocument != window._content.document ) {
             this.inFrame = true;
@@ -320,12 +320,12 @@ nsContextMenu.prototype = {
             }
             elem = elem.parentNode;
         }
-    
+
         // Bubble out, looking for link.
         elem = this.target;
         while ( elem && !this.onLink ) {
             // Test for element types of interest.
-            if ( elem.nodeType == 1 && 
+            if ( elem.nodeType == 1 &&
                  ( elem.tagName.toUpperCase() == "A"
                    ||
                    elem.tagName.toUpperCase() == "AREA"
@@ -354,7 +354,7 @@ nsContextMenu.prototype = {
              if (protocol) {
                protocol = protocol.substr( 0, 11 );
              }
-           }           
+           }
            return protocol.toLowerCase() != "javascript:";
         } else {
            // Presume all but javascript: urls are saveable.
@@ -497,14 +497,14 @@ nsContextMenu.prototype = {
     cloneNode : function ( item ) {
         // Create another element like the one we're cloning.
         var node = document.createElement( item.tagName );
-    
+
         // Copy attributes from argument item to the new one.
         var attrs = item.attributes;
         for ( var i = 0; i < attrs.length; i++ ) {
             var attr = attrs.item( i );
             node.setAttribute( attr.nodeName, attr.nodeValue );
         }
-    
+
         // Voila!
         return node;
     },
@@ -600,7 +600,7 @@ nsContextMenu.prototype = {
         // other OS's will probably map to a no-op.
         var transferableForSelection = this.createInstance( "@mozilla.org/widget/transferable;1",
                                                          "nsITransferable" );
-        
+
         if ( clipboard && transferableForSelection ) {
           transferableForSelection.addDataFlavor( "text/unicode" );
           // Create wrapper for text.
@@ -610,7 +610,7 @@ nsContextMenu.prototype = {
             selectionData.data = text;
             transferableForSelection.setTransferData( "text/unicode", selectionData, text.length * 2 );
             // Put on clipboard.
-            clipboard.setData( transferableForSelection, null, 
+            clipboard.setData( transferableForSelection, null,
                                Components.interfaces.nsIClipboard.kSelectionClipboard );
           }
         }

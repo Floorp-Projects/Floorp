@@ -20,7 +20,7 @@
  *  Original Author(s):
  *    Robert John Churchill    <rjc@netscape.com>
  *
- * Contributor(s): 
+ * Contributor(s):
  *    Blake Ross   <blakeross@telocity.com>
  *    Peter Annema <disttsc@bart.nl>
  */
@@ -52,7 +52,7 @@ function doLoad()
   else {
     toggleItems("bookmarks");  // default is bookmarks
   }
-      
+
   doEnabling();
 
   //set initial focus
@@ -71,28 +71,28 @@ function doFind()
   if (!datasourceNode)
     return false;
 
-  var datasource = datasourceNode.selectedItem.getAttribute("data");
-  gDatasourceName = datasourceNode.selectedItem.getAttribute("value");
+  var datasource = datasourceNode.selectedItem.getAttribute("value");
+  gDatasourceName = datasourceNode.selectedItem.getAttribute("label");
 
   // get match
   var matchNode = document.getElementById("match");
   if (!matchNode)
     return false;
 
-  var match = matchNode.selectedItem.getAttribute("data");
-  gMatchName = matchNode.selectedItem.getAttribute("value");
+  var match = matchNode.selectedItem.getAttribute("value");
+  gMatchName = matchNode.selectedItem.getAttribute("label");
 
   // get method
   var methodNode = document.getElementById("method");
   if (!methodNode)
     return false;
-  var method = methodNode.selectedItem.getAttribute("data");
-  gMethodName = methodNode.selectedItem.getAttribute("value");
+  var method = methodNode.selectedItem.getAttribute("value");
+  gMethodName = methodNode.selectedItem.getAttribute("label");
 
   // get user text to find
   if (!gFindText || !gFindText.value)
     return false;
- 
+
   gTextName = gFindText.value;
 
   // construct find URL
@@ -133,7 +133,7 @@ function saveFind()
 function getAbsoluteID(root, node)
 {
   var url = node.getAttribute("ref");
-  if (!url) 
+  if (!url)
     url = node.getAttribute("id");
 
   try {
@@ -141,7 +141,7 @@ function getAbsoluteID(root, node)
     var ds = null;
     if (rootNode)
       ds = rootNode.database;
-	
+
     // add support for anonymous resources such as Internet Search results,
     // IE favorites under Win32, and NetPositive URLs under BeOS
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -195,10 +195,10 @@ function itemSelect()
     var val = getAbsoluteID("findresultstree", tree.selectedItems[0]);
 
     // Ignore "NC:" urls.
-    if (val.substring(0, 3) == "NC:") 
-      status.value = "";
+    if (val.substring(0, 3) == "NC:")
+      status.label = "";
     else
-      status.value = val;
+      status.label = val;
   }
 }
 

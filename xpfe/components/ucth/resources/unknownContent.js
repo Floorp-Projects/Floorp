@@ -17,14 +17,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 var data;
 var dialog;
 var bundle;
 
-function initData() 
+function initData()
 {
     // Create data object and initialize.
     data = new Object;
@@ -45,13 +45,13 @@ function initDialog() {
 
     var pickApp = document.getElementById("Button2");
     pickApp.setAttribute( "style", "display: inherit" );
-    pickApp.setAttribute( "value", bundle.GetStringFromName("pick") );
+    pickApp.setAttribute( "label", bundle.GetStringFromName("pick") );
     var saveButton = document.getElementById("ok");
-    saveButton.setAttribute( "value", bundle.GetStringFromName("save") );
+    saveButton.setAttribute( "label", bundle.GetStringFromName("save") );
     doSetOKCancel( save, null, pick, null );
 }
 
-function loadDialog() 
+function loadDialog()
 {
   // Set initial dialog field contents.
 
@@ -65,12 +65,12 @@ function loadDialog()
   dialog.contentType.childNodes[0].nodeValue = text;
 }
 
-function onUnload() 
+function onUnload()
 {
   // do nothing
 }
 
-function onLoad() 
+function onLoad()
 {
     // Init data.
     initData();
@@ -83,7 +83,7 @@ function onLoad()
 }
 
 
-function more() 
+function more()
 {
     // Have parent browser window go to appropriate web page.
     var moreInfo = "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi?";
@@ -91,7 +91,7 @@ function more()
     window.opener._content.location = moreInfo;
 }
 
-function pick() 
+function pick()
 {
     alert( "PickApp not implemented yet!" );
 }
@@ -110,7 +110,7 @@ function fileNameFromContentDisp( contentDisp ) {
 
 }
 
-function save() 
+function save()
 {
     // Use stream xfer component to prompt for destination and save.
     var xfer = Components.classes[ "@mozilla.org/appshell/component/xfer;1" ].getService();
@@ -133,7 +133,7 @@ function save()
     }
 }
 
-function cancel() 
+function cancel()
 {
     // Close this dialog.
     window.close();

@@ -8,8 +8,8 @@ function showManualProxyConfig()
     manualRow.style.display = "inherit";
   }
   else {
-    viewHideButton.value = prefutilitiesBundle.getString("viewrow");
-    manualRow.style.display = "none"
+    viewHideButton.label = prefutilitiesBundle.getString("viewrow");
+    manualRow.style.display = "none";
   }
 }
 
@@ -38,28 +38,28 @@ function DoEnabling()
   // convenience arrays
   var manual = [ftp, ftpPort, gopher, gopherPort, http, httpPort, ssl, sslPort, socks, socksPort, noProxy];
   var auto = [autoURL, autoReload];
-  
+
   // radio buttons
   var radiogroup = document.getElementById("networkProxyType");
 
-  switch ( radiogroup.data ) {
-    case "0":  
-      for (i = 0; i < manual.length; i++) 
+  switch ( radiogroup.value ) {
+    case "0":
+      for (i = 0; i < manual.length; i++)
         manual[i].setAttribute( "disabled", "true" );
-      for (i = 0; i < auto.length; i++) 
+      for (i = 0; i < auto.length; i++)
         auto[i].setAttribute( "disabled", "true" );
       break;
     case "1":
-      for (i = 0; i < auto.length; i++) 
+      for (i = 0; i < auto.length; i++)
         auto[i].setAttribute( "disabled", "true" );
-      for (i = 0; i < manual.length; i++) 
+      for (i = 0; i < manual.length; i++)
         manual[i].removeAttribute( "disabled" );
       break;
     case "2":
     default:
-      for (i = 0; i < manual.length; i++) 
+      for (i = 0; i < manual.length; i++)
         manual[i].setAttribute( "disabled", "true" );
-      for (i = 0; i < auto.length; i++) 
+      for (i = 0; i < auto.length; i++)
         auto[i].removeAttribute( "disabled" );
       break;
   }

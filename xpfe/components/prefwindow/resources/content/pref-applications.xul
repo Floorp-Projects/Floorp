@@ -44,7 +44,7 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox>
-    <title><text value="&descript;"/></title>
+    <label value="&descript;"/>
     
     <box orient="vertical" flex="1">
       <text class="label" value="&fileTypes.label;"/>
@@ -73,7 +73,7 @@
               <treechildren flex="1">
                 <treeitem uri="?type">
                   <treerow>
-                    <treecell value="?value"/>
+                    <treecell label="?value"/>
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -85,19 +85,19 @@
     
     <box orient="vertical">
       <button id="newTypeButton" 
-              value="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
+              label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
               oncommand="newType();"/>
       <button id="editButton" 
-              value="&editButton.label;" accesskey="&editButton.accesskey;" 
+              label="&editButton.label;" accesskey="&editButton.accesskey;" 
               oncommand="editType();"/>
       <button id="removeButton" 
-              value="&removeButton.label;" accesskey="&removeButton.accesskey;" 
+              label="&removeButton.label;" accesskey="&removeButton.accesskey;" 
               oncommand="removeType();"/>
     </box>
   </titledbox>
     
   <titledbox orient="vertical">
-    <title><text value="&file;"/></title>
+    <label value="&file;"/>
     <grid flex="1">
       <columns>
         <column/>

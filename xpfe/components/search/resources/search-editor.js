@@ -20,7 +20,7 @@
  *  Original Author(s):
  *    Robert John Churchill    <rjc@netscape.com>
  *
- * Contributor(s): 
+ * Contributor(s):
  *    Blake Ross <BlakeR1234@aol.com>
  */
 
@@ -39,117 +39,117 @@ var internetSearchDS = null;
 
 try
 {
-	pref = Components.classes["@mozilla.org/preferences;1"].getService();
-	if (pref)	pref = pref.QueryInterface( Components.interfaces.nsIPref );
+  pref = Components.classes["@mozilla.org/preferences;1"].getService();
+  if (pref) pref = pref.QueryInterface( Components.interfaces.nsIPref );
 
-	RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-	if (RDF)	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+  RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
+  if (RDF)  RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
-	RDFC = Components.classes["@mozilla.org/rdf/container;1"].getService();
-	if (RDFC)	RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
+  RDFC = Components.classes["@mozilla.org/rdf/container;1"].getService();
+  if (RDFC) RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
 
-	RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService();
-	if (RDFCUtils)	RDFCUtils = RDFCUtils.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
+  RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService();
+  if (RDFCUtils)  RDFCUtils = RDFCUtils.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
 }
 catch(e)
 {
-	pref = null;
-	RDF = null;
-	RDFC = null;
-	RDFCUtils = null;
+  pref = null;
+  RDF = null;
+  RDFC = null;
+  RDFCUtils = null;
 }
 
 
 
 function debug(msg)
 {
-	// uncomment for noise
-	// dump(msg+"\n");
+  // uncomment for noise
+  // dump(msg+"\n");
 }
 
 
 
 function doLoad()
 {
-	doSetOKCancel(Commit);
-  
+  doSetOKCancel(Commit);
+
   // adjust category popup
-	var internetSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
-	if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
-	if (internetSearch)
-	{
-		internetSearchDS = internetSearch.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  var internetSearch = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"].getService();
+  if (internetSearch) internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
+  if (internetSearch)
+  {
+    internetSearchDS = internetSearch.QueryInterface(Components.interfaces.nsIRDFDataSource);
 
-		catDS = internetSearch.GetCategoryDataSource();
-		if (catDS)	catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
-		if (catDS)
-		{
-			var categoryList = document.getElementById("categoryList");
-			if (categoryList)
-			{
-				categoryList.database.AddDataSource(catDS);
-				var ref = categoryList.getAttribute("ref");
-				if (ref)	categoryList.setAttribute("ref", ref);
-			}
-			var engineList = document.getElementById("engineList");
-			if (engineList)
-			{
-				engineList.database.AddDataSource(catDS);
-			}
-		}
-	}
+    catDS = internetSearch.GetCategoryDataSource();
+    if (catDS)  catDS = catDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    if (catDS)
+    {
+      var categoryList = document.getElementById("categoryList");
+      if (categoryList)
+      {
+        categoryList.database.AddDataSource(catDS);
+        var ref = categoryList.getAttribute("ref");
+        if (ref)  categoryList.setAttribute("ref", ref);
+      }
+      var engineList = document.getElementById("engineList");
+      if (engineList)
+      {
+        engineList.database.AddDataSource(catDS);
+      }
+    }
+  }
 
-	// try and determine last category name used
-	var lastCategoryName = "";
-	try
-	{
-		var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-		if (pref)	pref = pref.QueryInterface( Components.interfaces.nsIPref );
-		if (pref)	lastCategoryName = pref.CopyCharPref( "browser.search.last_search_category" );
+  // try and determine last category name used
+  var lastCategoryName = "";
+  try
+  {
+    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
+    if (pref) pref = pref.QueryInterface( Components.interfaces.nsIPref );
+    if (pref) lastCategoryName = pref.CopyCharPref( "browser.search.last_search_category" );
 
-		if (lastCategoryName != "")
-		{
-			// strip off the prefix if necessary
-			var prefix="NC:SearchCategory?category=";
-			if (lastCategoryName.indexOf(prefix) == 0)
-			{
-				lastCategoryName = lastCategoryName.substr(prefix.length);
-			}
-		}
+    if (lastCategoryName != "")
+    {
+      // strip off the prefix if necessary
+      var prefix="NC:SearchCategory?category=";
+      if (lastCategoryName.indexOf(prefix) == 0)
+      {
+        lastCategoryName = lastCategoryName.substr(prefix.length);
+      }
+    }
 
-	}
-	catch( e )
-	{
-		debug("Exception in SearchPanelStartup\n");
-		lastCategoryName = "";
-	}
-	debug("\nSearchPanelStartup: lastCategoryName = '" + lastCategoryName + "'\n");
+  }
+  catch( e )
+  {
+    debug("Exception in SearchPanelStartup\n");
+    lastCategoryName = "";
+  }
+  debug("\nSearchPanelStartup: lastCategoryName = '" + lastCategoryName + "'\n");
 
-	// select the appropriate category
-	var categoryList = document.getElementById( "categoryList" );
-	var categoryPopup = document.getElementById( "categoryPopup" );
-	if( categoryList && categoryPopup )
-	{
-	 	var found = false;
-		for( var i = 0; i < categoryPopup.childNodes.length; i++ )
-		{
-			if( ( lastCategoryName == "" && categoryPopup.childNodes[i].getAttribute("data") == "NC:SearchEngineRoot" ) ||
-			    ( categoryPopup.childNodes[i].getAttribute("id") == lastCategoryName ) )
-			{
-				categoryList.selectedItem = categoryPopup.childNodes[i];
-				found = true;
-				break;
-			}
-		}
-		if (categoryPopup.childNodes.length > 0)
-		{
-			if (found == false)
-			{
-				categoryList.selectedItem = categoryPopup.childNodes[0];
-			}
-			chooseCategory(categoryList.selectedItem);
-		}
-	}
+  // select the appropriate category
+  var categoryList = document.getElementById( "categoryList" );
+  var categoryPopup = document.getElementById( "categoryPopup" );
+  if( categoryList && categoryPopup )
+  {
+    var found = false;
+    for( var i = 0; i < categoryPopup.childNodes.length; i++ )
+    {
+      if( ( lastCategoryName == "" && categoryPopup.childNodes[i].getAttribute("value") == "NC:SearchEngineRoot" ) ||
+          ( categoryPopup.childNodes[i].getAttribute("id") == lastCategoryName ) )
+      {
+        categoryList.selectedItem = categoryPopup.childNodes[i];
+        found = true;
+        break;
+      }
+    }
+    if (categoryPopup.childNodes.length > 0)
+    {
+      if (found == false)
+      {
+        categoryList.selectedItem = categoryPopup.childNodes[0];
+      }
+      chooseCategory(categoryList.selectedItem);
+    }
+  }
 
 }
 
@@ -157,17 +157,17 @@ function doLoad()
 
 function Commit()
 {
-	// flush
-	if (catDS)
-	{
-		var flushableDS = catDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-		if (flushableDS)
-		{
-			flushableDS.Flush();
-		}
-	}
+  // flush
+  if (catDS)
+  {
+    var flushableDS = catDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+    if (flushableDS)
+    {
+      flushableDS.Flush();
+    }
+  }
 
-	window.close();
+  window.close();
 }
 
 
@@ -195,229 +195,229 @@ function doUnload()
  */
 function doSort(sortColName, naturalOrderResource)
 {
-	var node = document.getElementById(sortColName);
-	// determine column resource to sort on
-	var sortResource = node.getAttribute('resource');
-	if (!sortResource) return(false);
+  var node = document.getElementById(sortColName);
+  // determine column resource to sort on
+  var sortResource = node.getAttribute('resource');
+  if (!sortResource) return(false);
 
-	var sortDirection="ascending";
-	var isSortActive = node.getAttribute('sortActive');
-	if (isSortActive == "true")
-	{
-		sortDirection = "ascending";
+  var sortDirection="ascending";
+  var isSortActive = node.getAttribute('sortActive');
+  if (isSortActive == "true")
+  {
+    sortDirection = "ascending";
 
-		var currentDirection = node.getAttribute('sortDirection');
-		if (currentDirection == "ascending")
-		{
-			if (sortResource != naturalOrderResource)
-			{
-				sortDirection = "descending";
-			}
-		}
-		else if (currentDirection == "descending")
-		{
-			if (naturalOrderResource != null && naturalOrderResource != "")
-			{
-				sortResource = naturalOrderResource;
-			}
-		}
-	}
+    var currentDirection = node.getAttribute('sortDirection');
+    if (currentDirection == "ascending")
+    {
+      if (sortResource != naturalOrderResource)
+      {
+        sortDirection = "descending";
+      }
+    }
+    else if (currentDirection == "descending")
+    {
+      if (naturalOrderResource != null && naturalOrderResource != "")
+      {
+        sortResource = naturalOrderResource;
+      }
+    }
+  }
 
-	var isupports = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
-	if (!isupports)    return(false);
-	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
-	if (!xulSortService)    return(false);
-	try
-	{
-		xulSortService.Sort(node, sortResource, sortDirection);
-	}
-	catch(ex)
-	{
-		debug("Exception calling xulSortService.Sort()");
-	}
-	return(true);
+  var isupports = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
+  if (!isupports)    return(false);
+  var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+  if (!xulSortService)    return(false);
+  try
+  {
+    xulSortService.Sort(node, sortResource, sortDirection);
+  }
+  catch(ex)
+  {
+    debug("Exception calling xulSortService.Sort()");
+  }
+  return(true);
 }
 
 
 
 function chooseCategory( aNode )
 {
-	var category = "NC:SearchCategory?category=" + aNode.getAttribute("id");
-	debug("chooseCategory: '" + category + "'\n");
+  var category = "NC:SearchCategory?category=" + aNode.getAttribute("id");
+  debug("chooseCategory: '" + category + "'\n");
 
-	var treeNode = document.getElementById("engineList");
-	if (treeNode)
-	{
-		dump("*** Set search engine list to category=" + category + "\n");
-		treeNode.setAttribute( "ref", category );
+  var treeNode = document.getElementById("engineList");
+  if (treeNode)
+  {
+    dump("*** Set search engine list to category=" + category + "\n");
+    treeNode.setAttribute( "ref", category );
     treeNode.builder.rebuild();
-	}
-	return(true);
+  }
+  return(true);
 }
 
 
 
 function AddEngine()
 {
-	var allenginesList = document.getElementById("allengines");
-	if (!allenginesList)	return(false);
-	var select_list = allenginesList.selectedItems;
-	if (!select_list)	return(false)
-	if (select_list.length < 1)	return(false);
+  var allenginesList = document.getElementById("allengines");
+  if (!allenginesList)  return(false);
+  var select_list = allenginesList.selectedItems;
+  if (!select_list) return(false)
+  if (select_list.length < 1) return(false);
 
-	// make sure we have at least one category to add engine into
-	var categoryPopup = document.getElementById( "categoryPopup" );
-	if (!categoryPopup)	return(false);
-	if (categoryPopup.childNodes.length < 1)
-	{
-		if (NewCategory() == false)	return(false);
-	}
+  // make sure we have at least one category to add engine into
+  var categoryPopup = document.getElementById( "categoryPopup" );
+  if (!categoryPopup) return(false);
+  if (categoryPopup.childNodes.length < 1)
+  {
+    if (NewCategory() == false) return(false);
+  }
 
-	var engineList = document.getElementById("engineList");
-	if (!engineList)	return(false);
+  var engineList = document.getElementById("engineList");
+  if (!engineList)  return(false);
 
-	var ref = engineList.getAttribute("ref");
-	if ((!ref) || (ref == ""))	return(false);
+  var ref = engineList.getAttribute("ref");
+  if ((!ref) || (ref == ""))  return(false);
 
-	var categoryRes = RDF.GetResource(ref);
-	if (!categoryRes)	return(false);
+  var categoryRes = RDF.GetResource(ref);
+  if (!categoryRes) return(false);
 
-	RDFCUtils.MakeSeq(catDS, categoryRes);
+  RDFCUtils.MakeSeq(catDS, categoryRes);
 
-	RDFC.Init(catDS, categoryRes);
+  RDFC.Init(catDS, categoryRes);
 
-	var urlRes = RDF.GetResource("http://home.netscape.com/NC-rdf#URL");
-	if (!urlRes)	return(false);
-	var typeRes = RDF.GetResource("http://home.netscape.com/NC-rdf#searchtype");
-	if (!typeRes)	return(false);
-	var engineRes = RDF.GetResource("http://home.netscape.com/NC-rdf#Engine");
-	if (!engineRes)	return(false);
+  var urlRes = RDF.GetResource("http://home.netscape.com/NC-rdf#URL");
+  if (!urlRes)  return(false);
+  var typeRes = RDF.GetResource("http://home.netscape.com/NC-rdf#searchtype");
+  if (!typeRes) return(false);
+  var engineRes = RDF.GetResource("http://home.netscape.com/NC-rdf#Engine");
+  if (!engineRes) return(false);
 
-	for (var x = 0; x < select_list.length; x++)
-	{
-		var id = select_list[x].getAttribute("id");
-		if ((!id) || (id == ""))	return(false);
-		var idRes = RDF.GetResource(id);
-		if (!idRes)	return(false);
+  for (var x = 0; x < select_list.length; x++)
+  {
+    var id = select_list[x].getAttribute("id");
+    if ((!id) || (id == ""))  return(false);
+    var idRes = RDF.GetResource(id);
+    if (!idRes) return(false);
 
-		// try and find/use alias to search engine
-		var privateEngineFlag = internetSearchDS.HasAssertion(idRes, typeRes, engineRes, true);
-		if (privateEngineFlag == true)
-		{
-			var node = internetSearchDS.GetTarget(idRes, urlRes, true);
-			if (node)	node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
-			if (node)
-			{
-				if (node.Value)
-				{
-					id = node.Value;
-					idRes = RDF.GetResource(id);
-					if (!idRes)	return(false);
-				}
-			}
-		}
+    // try and find/use alias to search engine
+    var privateEngineFlag = internetSearchDS.HasAssertion(idRes, typeRes, engineRes, true);
+    if (privateEngineFlag == true)
+    {
+      var node = internetSearchDS.GetTarget(idRes, urlRes, true);
+      if (node) node = node.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (node)
+      {
+        if (node.Value)
+        {
+          id = node.Value;
+          idRes = RDF.GetResource(id);
+          if (!idRes) return(false);
+        }
+      }
+    }
 
-		var nodeIndex = RDFC.IndexOf(idRes);
-		if (nodeIndex < 1)
-		{
-			RDFC.AppendElement(idRes);
-		}
-	}
+    var nodeIndex = RDFC.IndexOf(idRes);
+    if (nodeIndex < 1)
+    {
+      RDFC.AppendElement(idRes);
+    }
+  }
 
-	return(true);
+  return(true);
 }
 
 
 
 function RemoveEngine()
 {
-	var engineList = document.getElementById("engineList");
-	if (!engineList)	return(false);
-	var select_list = engineList.selectedItems;
-	if (!select_list)	return(false)
-	if (select_list.length < 1)	return(false);
+  var engineList = document.getElementById("engineList");
+  if (!engineList)  return(false);
+  var select_list = engineList.selectedItems;
+  if (!select_list) return(false)
+  if (select_list.length < 1) return(false);
 
-	var ref = engineList.getAttribute("ref");
-	if ((!ref) || (ref == ""))	return(false);
-	var categoryRes = RDF.GetResource(ref);
-	if (!categoryRes)	return(false);
+  var ref = engineList.getAttribute("ref");
+  if ((!ref) || (ref == ""))  return(false);
+  var categoryRes = RDF.GetResource(ref);
+  if (!categoryRes) return(false);
 
-	RDFC.Init(catDS, categoryRes);
+  RDFC.Init(catDS, categoryRes);
 
-	// Note: walk backwards to make deletion easier
-	for (var x = select_list.length - 1; x >= 0; x--)
-	{
-		var id = select_list[x].getAttribute("id");
-		if ((!id) || (id == ""))	return(false);
-		var idRes = RDF.GetResource(id);
-		if (!idRes)	return(false);
+  // Note: walk backwards to make deletion easier
+  for (var x = select_list.length - 1; x >= 0; x--)
+  {
+    var id = select_list[x].getAttribute("id");
+    if ((!id) || (id == ""))  return(false);
+    var idRes = RDF.GetResource(id);
+    if (!idRes) return(false);
 
-		var nodeIndex = RDFC.IndexOf(idRes);
-		if (nodeIndex > 0)
-		{
-			RDFC.RemoveElementAt(nodeIndex, true, idRes);
-		}
-	}
-	
-	return(true);
+    var nodeIndex = RDFC.IndexOf(idRes);
+    if (nodeIndex > 0)
+    {
+      RDFC.RemoveElementAt(nodeIndex, true, idRes);
+    }
+  }
+
+  return(true);
 }
 
 
 
 function MoveUp()
 {
-	return	MoveDelta(-1);
+  return  MoveDelta(-1);
 }
 
 
 
 function MoveDown()
 {
-	return	MoveDelta(1);
+  return  MoveDelta(1);
 }
 
 
 
 function MoveDelta(delta)
 {
-	var engineList = document.getElementById("engineList");
-	if (!engineList)	return(false);
-	var select_list = engineList.selectedItems;
-	if (!select_list)	return(false)
-	if (select_list.length != 1)	return(false);
+  var engineList = document.getElementById("engineList");
+  if (!engineList)  return(false);
+  var select_list = engineList.selectedItems;
+  if (!select_list) return(false)
+  if (select_list.length != 1)  return(false);
 
-	var ref = engineList.getAttribute("ref");
-	if (!ref)	return(false);
-	var categoryRes = RDF.GetResource(ref);
-	if (!categoryRes)	return(false);
+  var ref = engineList.getAttribute("ref");
+  if (!ref) return(false);
+  var categoryRes = RDF.GetResource(ref);
+  if (!categoryRes) return(false);
 
-	var id = select_list[0].id;
-	if (!id)	return(false);
-	var idRes = RDF.GetResource(id);
-	if (!idRes)	return(false);
+  var id = select_list[0].id;
+  if (!id)  return(false);
+  var idRes = RDF.GetResource(id);
+  if (!idRes) return(false);
 
-	RDFC.Init(catDS, categoryRes);
+  RDFC.Init(catDS, categoryRes);
 
-	var nodeIndex = RDFC.IndexOf(idRes);
-	if (nodeIndex < 1)	return(false);		// how did that happen?
+  var nodeIndex = RDFC.IndexOf(idRes);
+  if (nodeIndex < 1)  return(false);    // how did that happen?
 
-	var numItems = RDFC.GetCount();
+  var numItems = RDFC.GetCount();
 
-	var newPos = -1;
-	if (((delta == -1) && (nodeIndex > 1)) ||
-		((delta == 1) && (nodeIndex < numItems)))
-	{
-		newPos = nodeIndex + delta;
-		RDFC.RemoveElementAt(nodeIndex, true, idRes);
-	}
-	if (newPos > 0)
-	{
-		RDFC.InsertElementAt(idRes, newPos, true);
-	}
+  var newPos = -1;
+  if (((delta == -1) && (nodeIndex > 1)) ||
+    ((delta == 1) && (nodeIndex < numItems)))
+  {
+    newPos = nodeIndex + delta;
+    RDFC.RemoveElementAt(nodeIndex, true, idRes);
+  }
+  if (newPos > 0)
+  {
+    RDFC.InsertElementAt(idRes, newPos, true);
+  }
 
-	selectItems(engineList, ref, id);
+  selectItems(engineList, ref, id);
 
-	return(true);
+  return(true);
 }
 
 function doMoveDirectionEnabling()
@@ -435,7 +435,7 @@ function doMoveDirectionEnabling()
   var moveDownButton = document.getElementById("down");
   moveUpButton.removeAttribute("disabled");
   moveDownButton.removeAttribute("disabled");
-  if (nodeIndex <= 1)  
+  if (nodeIndex <= 1)
     moveUpButton.setAttribute("disabled", "true");
   if (nodeIndex >= RDFC.GetCount())
     moveDownButton.setAttribute("disabled", "true");
@@ -444,169 +444,169 @@ function doMoveDirectionEnabling()
 
 function NewCategory()
 {
-	var promptStr = bundle.GetStringFromName("NewCategoryPrompt");
-	var newTitle = bundle.GetStringFromName("NewCategoryTitle");
-	var result = {value:0};
-	var name = commonDialogsService.Prompt(window, newTitle, promptStr,"",result);
-	if ((!result.value) || result.value == "")      return(false);
+  var promptStr = bundle.GetStringFromName("NewCategoryPrompt");
+  var newTitle = bundle.GetStringFromName("NewCategoryTitle");
+  var result = {value:0};
+  var name = commonDialogsService.Prompt(window, newTitle, promptStr,"",result);
+  if ((!result.value) || result.value == "")      return(false);
 
-	var newName = RDF.GetLiteral(result.value);
-	if (!newName)	return(false);
+  var newName = RDF.GetLiteral(result.value);
+  if (!newName) return(false);
 
-	var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
-	if (!categoryRes)	return(false);
+  var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
+  if (!categoryRes) return(false);
 
-	RDFC.Init(catDS, categoryRes);
+  RDFC.Init(catDS, categoryRes);
 
-	var randomID = Math.random();
-	var categoryID = "NC:SearchCategory?category=urn:search:category:" + randomID.toString();
-	var currentCatRes = RDF.GetResource(categoryID);
-	if (!currentCatRes)	return(false);
+  var randomID = Math.random();
+  var categoryID = "NC:SearchCategory?category=urn:search:category:" + randomID.toString();
+  var currentCatRes = RDF.GetResource(categoryID);
+  if (!currentCatRes) return(false);
 
-	var titleRes = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
-	if (!titleRes)	return(false);
+  var titleRes = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
+  if (!titleRes)  return(false);
 
-	// set the category's name
-	catDS.Assert(currentCatRes, titleRes, newName, true);
+  // set the category's name
+  catDS.Assert(currentCatRes, titleRes, newName, true);
 
-	// and insert the category
-	RDFC.AppendElement(currentCatRes);
+  // and insert the category
+  RDFC.AppendElement(currentCatRes);
 
-	RDFCUtils.MakeSeq(catDS, currentCatRes);
+  RDFCUtils.MakeSeq(catDS, currentCatRes);
 
-	// try and select the new category
-	var categoryList = document.getElementById( "categoryList" );
-	var select_list = categoryList.getElementsByAttribute("id", categoryID);
-	if (select_list && select_list.length > 0)
-	{
-		categoryList.selectedItem = select_list[0];
-		chooseCategory(categoryList.selectedItem);
-	}
-	return(true);
+  // try and select the new category
+  var categoryList = document.getElementById( "categoryList" );
+  var select_list = categoryList.getElementsByAttribute("id", categoryID);
+  if (select_list && select_list.length > 0)
+  {
+    categoryList.selectedItem = select_list[0];
+    chooseCategory(categoryList.selectedItem);
+  }
+  return(true);
 }
 
 
 
 function RenameCategory()
 {
-	// make sure we have at least one category
-	var categoryPopup = document.getElementById( "categoryPopup" );
-	if (!categoryPopup)	return(false);
-	if (categoryPopup.childNodes.length < 1)	return(false);
+  // make sure we have at least one category
+  var categoryPopup = document.getElementById( "categoryPopup" );
+  if (!categoryPopup) return(false);
+  if (categoryPopup.childNodes.length < 1)  return(false);
 
-	var categoryList = document.getElementById( "categoryList" );
-	var currentName = categoryList.selectedItem.getAttribute("value");
-	var promptStr = bundle.GetStringFromName("RenameCategoryPrompt");
-	var renameTitle = bundle.GetStringFromName("RenameCategoryTitle");
-	var result = {value:0};
-	var name = commonDialogsService.Prompt(window,renameTitle,promptStr,currentName,result);
-	if ((!result.value) || (result.value == "") || result.value == currentName)     return(false);
+  var categoryList = document.getElementById( "categoryList" );
+  var currentName = categoryList.selectedItem.getAttribute("label");
+  var promptStr = bundle.GetStringFromName("RenameCategoryPrompt");
+  var renameTitle = bundle.GetStringFromName("RenameCategoryTitle");
+  var result = {value:0};
+  var name = commonDialogsService.Prompt(window,renameTitle,promptStr,currentName,result);
+  if ((!result.value) || (result.value == "") || result.value == currentName)     return(false);
 
-	var currentCatID = categoryList.selectedItem.getAttribute("id");
-	var currentCatRes = RDF.GetResource(currentCatID);
-	if (!currentCatRes)	return(false);
+  var currentCatID = categoryList.selectedItem.getAttribute("id");
+  var currentCatRes = RDF.GetResource(currentCatID);
+  if (!currentCatRes) return(false);
 
-	var titleRes = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
-	if (!titleRes)	return(false);
+  var titleRes = RDF.GetResource("http://home.netscape.com/NC-rdf#title");
+  if (!titleRes)  return(false);
 
-	var newName = RDF.GetLiteral(result.value);
-	if (!newName)	return(false);
+  var newName = RDF.GetLiteral(result.value);
+  if (!newName) return(false);
 
-	var oldName = catDS.GetTarget(currentCatRes, titleRes, true);
-	if (oldName)	oldName = oldName.QueryInterface(Components.interfaces.nsIRDFLiteral);
-	if (oldName)
-	{
-		catDS.Change(currentCatRes, titleRes, oldName, newName);
-	}
-	else
-	{
-		catDS.Assert(currentCatRes, titleRes, newName, true);
-	}
+  var oldName = catDS.GetTarget(currentCatRes, titleRes, true);
+  if (oldName)  oldName = oldName.QueryInterface(Components.interfaces.nsIRDFLiteral);
+  if (oldName)
+  {
+    catDS.Change(currentCatRes, titleRes, oldName, newName);
+  }
+  else
+  {
+    catDS.Assert(currentCatRes, titleRes, newName, true);
+  }
 
-	// force popup to update
-	chooseCategory(categoryList.selectedItem);
+  // force popup to update
+  chooseCategory(categoryList.selectedItem);
 
-	return(true);
+  return(true);
 }
 
 
 
 function RemoveCategory()
 {
-	// make sure we have at least one category
-	var categoryPopup = document.getElementById( "categoryPopup" );
-	if (!categoryPopup)	return(false);
-	if (categoryPopup.childNodes.length < 1)	return(false);
+  // make sure we have at least one category
+  var categoryPopup = document.getElementById( "categoryPopup" );
+  if (!categoryPopup) return(false);
+  if (categoryPopup.childNodes.length < 1)  return(false);
 
-	var promptStr = bundle.GetStringFromName("RemoveCategoryPrompt");
-	if (!confirm(promptStr))	return(false);
+  var promptStr = bundle.GetStringFromName("RemoveCategoryPrompt");
+  if (!confirm(promptStr))  return(false);
 
-	var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
-	if (!categoryRes)	return(false);
+  var categoryRes = RDF.GetResource("NC:SearchCategoryRoot");
+  if (!categoryRes) return(false);
 
-	var categoryList = document.getElementById( "categoryList" );
-	if (!categoryList)	return(false);
+  var categoryList = document.getElementById( "categoryList" );
+  if (!categoryList)  return(false);
 
-	var idNum = categoryList.selectedIndex;
+  var idNum = categoryList.selectedIndex;
 
-	var id = categoryList.selectedItem.getAttribute("id");
-	if ((!id) || (id == ""))	return(false);
+  var id = categoryList.selectedItem.getAttribute("id");
+  if ((!id) || (id == ""))  return(false);
 
-	var idRes = RDF.GetResource(id);
-	if (!idRes)	return(false);
+  var idRes = RDF.GetResource(id);
+  if (!idRes) return(false);
 
-	RDFC.Init(catDS, categoryRes);
+  RDFC.Init(catDS, categoryRes);
 
-	var nodeIndex = RDFC.IndexOf(idRes);
-	if (nodeIndex < 1)	return(false);		// how did that happen?
+  var nodeIndex = RDFC.IndexOf(idRes);
+  if (nodeIndex < 1)  return(false);    // how did that happen?
 
-	RDFC.RemoveElementAt(nodeIndex, true, idRes);
+  RDFC.RemoveElementAt(nodeIndex, true, idRes);
 
-	// try and select another category
-	if (idNum > 0)	--idNum;
-	else		idNum = 0;
+  // try and select another category
+  if (idNum > 0)  --idNum;
+  else    idNum = 0;
 
-	if (categoryPopup.childNodes.length > 0)
-	{
-		categoryList.selectedItem = categoryPopup.childNodes[idNum];
-		chooseCategory(categoryList.selectedItem);
-	}
-	else
-	{
-		// last category was deleted, so empty out engine list
-		var treeNode = document.getElementById("engineList");
-		if (treeNode)
-		{
-			treeNode.setAttribute( "ref", "" );
-		}
-	}
-	return(true);
+  if (categoryPopup.childNodes.length > 0)
+  {
+    categoryList.selectedItem = categoryPopup.childNodes[idNum];
+    chooseCategory(categoryList.selectedItem);
+  }
+  else
+  {
+    // last category was deleted, so empty out engine list
+    var treeNode = document.getElementById("engineList");
+    if (treeNode)
+    {
+      treeNode.setAttribute( "ref", "" );
+    }
+  }
+  return(true);
 }
 
 
 
 function selectItems(treeRoot, containerID, targetID)
 {
-	var select_list = treeRoot.getElementsByAttribute("id", targetID);
-	for (var x=0; x<select_list.length; x++)
-	{
-		var node = select_list[x];
-		if (!node)	continue;
+  var select_list = treeRoot.getElementsByAttribute("id", targetID);
+  for (var x=0; x<select_list.length; x++)
+  {
+    var node = select_list[x];
+    if (!node)  continue;
 
-		var parent = node.parentNode.parentNode;
-		if (!parent)	continue;
+    var parent = node.parentNode.parentNode;
+    if (!parent)  continue;
 
-		var id = parent.getAttribute("ref");
-		if (!id || id=="")
-		{
-			id = parent.getAttribute("id");
-		}
-		if (!id || id=="")	continue;
+    var id = parent.getAttribute("ref");
+    if (!id || id=="")
+    {
+      id = parent.getAttribute("id");
+    }
+    if (!id || id=="")  continue;
 
-		if (id == containerID)
-		{
-			treeRoot.selectItem(node);
-			break;
-		}
-	}
+    if (id == containerID)
+    {
+      treeRoot.selectItem(node);
+      break;
+    }
+  }
 }

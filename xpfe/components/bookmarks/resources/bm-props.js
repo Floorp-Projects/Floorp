@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 var NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
@@ -93,7 +93,7 @@ function Init()
         var dayNode = document.getElementById("dayRange");
         var dayItems = dayNode.childNodes[0].childNodes;
         for (x=0; x < dayItems.length; ++x) {
-          if (dayItems[x].getAttribute("data") == days) {
+          if (dayItems[x].getAttribute("value") == days) {
             dayNode.selectedItem = dayItems[x];
             break;
           }
@@ -113,7 +113,7 @@ function Init()
         var startHourNode = document.getElementById("startHourRange");
         var startHourItems = startHourNode.childNodes[0].childNodes;
         for (x=0; x < startHourItems.length; ++x) {
-          if (startHourItems[x].getAttribute("data") == startHour) {
+          if (startHourItems[x].getAttribute("value") == startHour) {
             startHourNode.selectedItem = startHourItems[x];
             break;
           }
@@ -123,7 +123,7 @@ function Init()
         var endHourNode = document.getElementById("endHourRange");
         var endHourItems = endHourNode.childNodes[0].childNodes;
         for (x=0; x < endHourItems.length; ++x) {
-          if (endHourItems[x].getAttribute("data") == endHour) {
+          if (endHourItems[x].getAttribute("value") == endHour) {
             endHourNode.selectedItem = endHourItems[x];
             break;
           }
@@ -225,7 +225,7 @@ function Commit()
       }
     }
   }
-  
+
   // Update bookmark schedule if necessary;
   // if the tab was removed, just skip it
   var scheduleTab = document.getElementById("ScheduleTab");
@@ -235,14 +235,14 @@ function Commit()
                                    RDF.GetResource(scheduleRes), true);
     newvalue = "";
     var dayRangeNode = document.getElementById("dayRange");
-    var dayRange = dayRangeNode.selectedItem.getAttribute("data");
+    var dayRange = dayRangeNode.selectedItem.getAttribute("value");
 
     if (dayRange) {
       var startHourRangeNode = document.getElementById("startHourRange");
-      var startHourRange = startHourRangeNode.selectedItem.getAttribute("data");
+      var startHourRange = startHourRangeNode.selectedItem.getAttribute("value");
 
       var endHourRangeNode = document.getElementById("endHourRange");
-      var endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
+      var endHourRange = endHourRangeNode.selectedItem.getAttribute("value");
 
       if (parseInt(startHourRange) > parseInt(endHourRange)) {
         var temp = startHourRange;
@@ -330,11 +330,11 @@ function setEndHourRange()
 {
   // Get the values of the start-time and end-time as ints
   var startHourRangeNode = document.getElementById("startHourRange");
-  var startHourRange = startHourRangeNode.selectedItem.getAttribute("data");
+  var startHourRange = startHourRangeNode.selectedItem.getAttribute("value");
   var startHourRangeInt = parseInt(startHourRange);
 
   var endHourRangeNode = document.getElementById("endHourRange");
-  var endHourRange = endHourRangeNode.selectedItem.getAttribute("data");
+  var endHourRange = endHourRangeNode.selectedItem.getAttribute("value");
   var endHourRangeInt = parseInt(endHourRange);
 
   var endHourItemNode = endHourRangeNode.firstChild.firstChild;

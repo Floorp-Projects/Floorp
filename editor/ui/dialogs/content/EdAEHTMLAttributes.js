@@ -1,5 +1,5 @@
 /** EdAEHTMLAttributes.js
- *  - this file applies to the Editor Advanced Edit dialog box. 
+ *  - this file applies to the Editor Advanced Edit dialog box.
  *  - contains functions for creating the HTML Attributes list
  **/
 
@@ -75,7 +75,7 @@ function UpdateHTMLAttributes()
   for( i = 0; i < HTMLAList.childNodes.length; i++)
   {
     var item = HTMLAList.childNodes[i];
-    name = TrimString(item.firstChild.firstChild.getAttribute("value"));
+    name = TrimString(item.firstChild.firstChild.getAttribute("label"));
     var value = TrimString(item.firstChild.lastChild.firstChild.value);
     // set the attribute
     element.setAttribute(name,value);

@@ -4,7 +4,7 @@
 *  set of data with titled columns and optionally an icon for each row.
 *  The tree that is supplied must begin with no children other than
 *  a single template element.  The template is required.
-* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 * REQUIRED IMPORTS:
 *   chrome://inspector/content/jsutil/xul/DNDUtils.js
 ****************************************************************/
@@ -23,12 +23,12 @@ function inTreeTableBuilder(aTree, aNameSpace, aArcName)
   this.tree = aTree;
   this.nameSpace = aNameSpace;
   this.arcName = aArcName;
-  
+
   this.mColumns = [];
   this.mExtras = [];
 }
 
-inTreeTableBuilder.prototype = 
+inTreeTableBuilder.prototype =
 {
   mTree: null,
   // datasource stuff
@@ -46,10 +46,10 @@ inTreeTableBuilder.prototype =
   mAllowDND: false,
   mLastDragCol: null,
   mLastDragColWhere: null,
-  
+
   ////////////////////////////////////////////////////////////////////////////
   //// properties
-  
+
   // the xul tree node we will construct
   get tree() { return this.mTree },
   set tree(aVal) { this.mTree = aVal; aVal._treeBuilder = this },
@@ -57,7 +57,7 @@ inTreeTableBuilder.prototype =
   // the namespace to use for all fields
   get nameSpace() { return this.mNameSpace },
   set nameSpace(aVal) { this.mNameSpace = aVal },
-  
+
   // the name of the arc to the container
   get arcName() { return this.mArcName },
   set arcName(aVal) { this.mArcName = aVal },
@@ -65,7 +65,7 @@ inTreeTableBuilder.prototype =
   // is the datasource ref an arc to a container, or a container itself
   get isRefContainer() { return this.mIsRefContainer },
   set isRefContainer(aVal) { this.mIsRefContainer = aVal },
-  
+
   // is each row a potential container?
   get isContainer() { return this.mIsContainer },
   set isContainer(aVal) { this.mIsContainer = aVal },
@@ -73,7 +73,7 @@ inTreeTableBuilder.prototype =
   // place an icon before the first column of each row
   get isIconic() { return this.mIsIconic },
   set isIconic(aVal) { this.mIsIconic = aVal },
-  
+
   // put splitters between the columns?
   get useSplitters() { return this.mSplitters },
   set useSplitters(aVal) { this.mSplitters = aVal },
@@ -92,7 +92,7 @@ inTreeTableBuilder.prototype =
 
   ////////////////////////////////////////////////////////////////////////////
   //// event handlers
-  
+
   get onColumnAdd() { return this.mOnColumnAdd },
   set onColumnAdd(aFn) { this.mOnColumnAdd = aFn },
 
@@ -107,44 +107,44 @@ inTreeTableBuilder.prototype =
     this.initColumns();
     this.initTemplate();
   },
-  
+
   initColumns: function()
   {
     // initialize the treehead
     var treehead = document.createElementNS(kXULNSURI, "treehead");
     var treerow = document.createElementNS(kXULNSURI, "treerow");
     this.mTreeHeadRow = treerow;
-    
+
     treehead.appendChild(treerow);
     this.mTree.appendChild(treehead);
-    
+
     // initialize the treecolgroup
     var colgroup = document.createElementNS(kXULNSURI, "treecolgroup");
     this.mColGroup = colgroup;
     this.mTree.appendChild(colgroup);
-    
+
     this.initDND();
   },
-  
+
   initTemplate: function()
   {
     var template = this.mTree.getElementsByTagNameNS(kXULNSURI, "template")[0];
     this.mTemplate = template;
     this.clearChildren(template);
-    
+
     var rule = document.createElementNS(kXULNSURI, "rule");
     template.appendChild(rule);
     this.mRule = rule;
-    
+
     this.createDefaultConditions();
-    
+
     var bindings = document.createElementNS(kXULNSURI, "bindings");
     rule.appendChild(bindings);
     this.mBindings = bindings;
-    
+
     this.createDefaultAction();
   },
-  
+
   createDefaultConditions: function()
   {
     var conditions = document.createElementNS(kXULNSURI, "conditions");
@@ -154,7 +154,7 @@ inTreeTableBuilder.prototype =
     content.setAttribute("uri", "?uri");
     conditions.appendChild(content);
 
-    var triple = this.createTriple("?uri", this.mNameSpace+this.mArcName, 
+    var triple = this.createTriple("?uri", this.mNameSpace+this.mArcName,
       this.mIsRefContainer ? "?table" : "?item");
     conditions.appendChild(triple);
 
@@ -163,12 +163,12 @@ inTreeTableBuilder.prototype =
       conditions.appendChild(member);
     }
   },
-  
+
   createDefaultAction: function()
   {
     var action = document.createElementNS(kXULNSURI, "action");
     this.mRule.appendChild(action);
-    
+
     var treechildren = this.createTemplatePart("treechildren");
     action.appendChild(treechildren);
     treechildren.setAttribute("flex", "1");
@@ -185,7 +185,7 @@ inTreeTableBuilder.prototype =
       for (key in this.mItemAttrs)
         treeitem.setAttribute(key, this.mItemAttrs[key]);
   },
-  
+
   createDefaultBindings: function()
   {
     // assign the item fields
@@ -198,34 +198,34 @@ inTreeTableBuilder.prototype =
       }
     }
   },
-  
+
   createTriple: function(aSubject, aPredicate, aObject)
   {
     var triple = document.createElementNS(kXULNSURI, "triple");
     triple.setAttribute("subject", aSubject);
     triple.setAttribute("predicate", aPredicate);
     triple.setAttribute("object", aObject);
-    
+
     return triple;
   },
-  
+
   createMember: function(aContainer, aChild)
   {
     var member = document.createElementNS(kXULNSURI, "member");
     member.setAttribute("container", aContainer);
     member.setAttribute("child", aChild);
-    
+
     return member;
   },
-  
+
   reset: function()
   {
     this.mColumns = [];
     this.mIsIconic = false;
-    
+
     this.resetTree();
   },
-  
+
   resetTree: function()
   {
     this.clearChildren(this.mColGroup);
@@ -234,13 +234,13 @@ inTreeTableBuilder.prototype =
     this.clearChildren(this.mTreeRow);
     this.createDefaultBindings();
   },
-  
+
   clearChildren: function(aEl)
   {
     while (aEl.childNodes.length)
       aEl.removeChild(aEl.lastChild);
   },
-  
+
   ////////////////////////////////////////////////////////////////////////////
   //// column drag and drop
 
@@ -254,59 +254,59 @@ inTreeTableBuilder.prototype =
       this.addDNDListener(this.mTree, "ondraggesture");
       this.addDNDListener(this.mTree, "ondragdrop");
     }
-  },  
-  
+  },
+
   onDragEnter: function(aEvent)
   {
   },
-  
+
   onDragOver: function(aEvent)
   {
     if (!DNDUtils.checkCanDrop("TreeTableBuilder/column-add"))
       return;
-      
+
     var idx = this.getColumnIndexFromX(aEvent.clientX, 50);
     this.mColumnInsertIndex = idx;
-    var kids = this.mColGroup.childNodes; 
+    var kids = this.mColGroup.childNodes;
     var col = this.getColumnAt(idx);
     if (idx == -1)
       this.markColumnInsert(col, "after", idx);
     else
       this.markColumnInsert(col, "before", idx);
   },
-  
+
   onDragExit: function(aEvent)
   {
   },
-  
+
   onDragDrop: function(aEvent)
   {
     this.markColumnInsert(null);
     var dragService = XPCU.getService("@mozilla.org/widget/dragservice;1", "nsIDragService");
     var dragSession = dragService.getCurrentSession();
-    
+
     if (!dragSession.isDataFlavorSupported("TreeTableBuilder/column-add"))
       return false;
-      
+
     var trans = XPCU.createInstance("@mozilla.org/widget/transferable;1", "nsITransferable");
     trans.addDataFlavor("TreeTableBuilder/column-add");
-  
+
     dragSession.getData(trans, 0);
     var data = new Object();
     trans.getAnyTransferData ({}, data, {});
-    
+
     var string = XPCU.QI(data.value, "nsISupportsWString");
-    
-    this.insertColumn(this.mColumnInsertIndex, 
+
+    this.insertColumn(this.mColumnInsertIndex,
       {
-        name: string.data, 
+        name: string.data,
         title: string.data,
         flex: 1
       });
     this.build();
     // if we rebuildContent during this thread, it will crash in the dnd service
     setTimeout(function(aTreeBuilder) { aTreeBuilder.buildContent() }, 1, this);
-    
+
     // bug 56270 - dragSession.sourceDocument is null --
     // causes me to code this very temporary, very nasty hack
     // to tell columnsDialog.js about the drop
@@ -314,20 +314,20 @@ inTreeTableBuilder.prototype =
       this.mTree.onClientDrop();
     }
   },
-  
+
   markColumnInsert: function (aColumn, aWhere, aIdx)
   {
     var col = this.mLastDragCol;
     var lastWhere = this.mLastDragColWhere;
     if (col)
       col.setAttribute("dnd-insert-"+lastWhere, "false");
-    
+
     if (aWhere != "before" && aWhere != "after") {
       this.mLastDragCol = null;
       this.mLastDragColWhere = null;
       return;
     }
-      
+
     col = aColumn;
     if (col) {
       this.mLastDragCol = col;
@@ -335,7 +335,7 @@ inTreeTableBuilder.prototype =
       col.setAttribute("dnd-insert-"+aWhere, "true");
     }
   },
-  
+
   getColumnIndexFromX: function(aX, aThresh)
   {
     var colgroup = this.mColGroup;
@@ -349,7 +349,7 @@ inTreeTableBuilder.prototype =
       if (width-(cw*pct) > aX)
         return i;
     }
-    
+
     return -1;
   },
 
@@ -358,46 +358,46 @@ inTreeTableBuilder.prototype =
     var headers = this.mTreeHeadRow.childNodes;
     for (var i = 0; i < headers.length; ++i) {
       if (headers[i] == aHeader)
-        return i;      
+        return i;
     }
     return -1;
   },
-  
+
   //// for drag-n-drop removal/arrangement of columns
-  
+
   onDragGesture: function(aEvent)
   {
     var target = aEvent.target;
     if (target.parentNode == this.mTreeHeadRow) {
-      var column = target.getAttribute("value");
-      
+      var column = target.getAttribute("label");
+
       var idx = this.getColumnIndexFromHeader(target);
       if (idx == -1) return;
       this.mColumnDragging = idx;
-      
+
       DNDUtils.invokeSession(target, ["TreeTableBuilder/column-remove"], [column]);
     }
   },
-  
+
   addColumnDropTarget: function(aBox)
-  { 
+  {
     aBox._treeBuilderDropTarget = this;
     this.addDNDListener(aBox, "ondragover", "Target");
     this.addDNDListener(aBox, "ondragdrop", "Target");
   },
-  
+
   removeColumnDropTarget: function(aBox)
   {
     aBox._treeBuilderDropTarget = this;
     this.removeDNDListener(aBox, "ondragover", "Target");
     this.removeDNDListener(aBox, "ondragdrop", "Target");
   },
-  
+
   onDragOverTarget: function(aBox, aEvent)
   {
     DNDUtils.checkCanDrop("TreeTableBuilder/column-remove");
   },
-  
+
   onDragDropTarget: function(aBox, aEvent)
   {
     this.removeColumn(this.mColumnDragging);
@@ -408,7 +408,7 @@ inTreeTableBuilder.prototype =
 
   // these are horrible hacks to compensate for the lack of true multiple
   // listener support for the DND events
-  
+
   addDNDListener: function(aBox, aType, aModifier)
   {
    var js = "inTreeTableBuilder_"+aType+(aModifier?"_"+aModifier:"")+"(this, event);";
@@ -417,7 +417,7 @@ inTreeTableBuilder.prototype =
    attr = attr ? attr : "";
    aBox.setAttribute(aType, attr + js);
   },
-  
+
   removeDNDListener: function(aBox, aType, aModifier)
   {
    var js = "inTreeTableBuilder_"+aType+(aModifier?"_"+aModifier:"")+"(this, event);";
@@ -435,11 +435,11 @@ inTreeTableBuilder.prototype =
   addColumn: function(aData)
   {
     this.mColumns.push(aData);
-    
+
     if (this.mOnColumnAdd)
       this.mOnColumnAdd(this.mColumns.length-1)
   },
-  
+
   insertColumn: function(aIndex, aData)
   {
     var idx;
@@ -454,7 +454,7 @@ inTreeTableBuilder.prototype =
     if (this.mOnColumnAdd)
       this.mOnColumnAdd(idx);
   },
-    
+
   removeColumn: function(aIndex)
   {
     this.mColumns.splice(aIndex, 1);
@@ -462,7 +462,7 @@ inTreeTableBuilder.prototype =
     if (this.mOnColumnRemove)
       this.mOnColumnRemove(aIndex);
   },
-  
+
   getColumnAt: function(aIndex)
   {
     var idx;
@@ -474,9 +474,9 @@ inTreeTableBuilder.prototype =
       var step = this.mSplitters ? 2 : 1;
       idx = aIndex*step;
     }
-    return kids[idx]   
+    return kids[idx]
   },
-  
+
   get columnCount() { return this.mColumns.length },
 
   getColumnName: function(aIndex) { return this.mColumns[aIndex].name  },
@@ -511,18 +511,18 @@ inTreeTableBuilder.prototype =
         this.buildContent();
     } catch (ex) {
       debug("### ERROR - inTreeTableBuilder::build failed.\n" + ex);
-    } 
+    }
 
     //if ("dumpDOM" in window)
       //dumpDOM(this.mTemplate);
-    
+
   },
-  
+
   buildContent: function()
   {
     this.mTree.builder.rebuild();
   },
-  
+
   buildColGroup: function()
   {
     var cols = this.mColumns;
@@ -548,7 +548,7 @@ inTreeTableBuilder.prototype =
       }
     }
   },
-  
+
   buildTreeHead: function()
   {
     var cols = this.mColumns;
@@ -559,51 +559,51 @@ inTreeTableBuilder.prototype =
       cell.setAttribute("class", "treecell-header");
       val = cols[i].title;
       if (val)
-        cell.setAttribute("value", val);
+        cell.setAttribute("label", val);
       row.appendChild(cell);
     }
   },
-  
+
   buildTemplate: function()
   {
     var cols = this.mColumns;
     var bindings = this.mBindings;
     var row = this.mTreeRow;
     var cell, binding, val, extras, attrs, key, className;
-    
+
     if (this.mIsIconic) {
       binding = this.createBinding("_icon");
       bindings.appendChild(binding);
     }
-    
+
     for (var i = 0; i < cols.length; ++i) {
       val = cols[i].name;
-      if (!val) 
+      if (!val)
         throw "Column data is incomplete - missing name at index " + i + ".";
 
       cell = this.createTemplatePart("treecell");
       className = "";
-      
+
       // build the icon data field
       if (i == 0 && this.mIsIconic) {
         className += "treecell-iconic ";
         cell.setAttribute("src", "?_icon");
       }
-      
+
       // mark first node as a container, if necessary
       if (i == 0 && this.mIsContainer)
         className += "treecell-indent";
-      
+
       // build the default value data field
       binding = this.createBinding(val);
       bindings.appendChild(binding);
-      cell.setAttribute("value", "?" + val);
+      cell.setAttribute("label", "?" + val);
 
       cell.setAttribute("class", className);
       row.appendChild(cell);
     }
-  }, 
-  
+  },
+
   createBinding: function(aName)
   {
     var binding = document.createElementNS(kXULNSURI, "binding");
@@ -612,7 +612,7 @@ inTreeTableBuilder.prototype =
     binding.setAttribute("object", "?" + aName);
     return binding;
   },
-  
+
   createTemplatePart: function(aTagName)
   {
     var el = document.createElementNS(kXULNSURI, aTagName);
@@ -620,7 +620,7 @@ inTreeTableBuilder.prototype =
     inTreeTableBuilderPartCount++;
     return el;
   }
-    
+
 };
 
 function inTreeTableBuilder_ondraggesture(aTree, aEvent)

@@ -23,21 +23,21 @@
         <menubutton class="button-toolbar-4" 
                     uri="..." tooltip="aTooltip"
                     tooltiptext="rdf:http://home.netscape.com/NC-rdf#tooltip"
-                    value="rdf:http://home.netscape.com/NC-rdf#title">
+                    label="rdf:http://home.netscape.com/NC-rdf#title">
           <menupopup popupalign="bottomleft" popupanchor="topleft"/>
         </menubutton>
         <spring uri="rdf:*" class="taskbarspacer" flex="1"/>
       </rule>
       
       <rule parent="box">
-        <button class="button-toolbar-4" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#title"
+        <button class="button-toolbar-4" uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#title"
                 crop="right"/>
       </rule>
 
       <!-- Recursive rules for nested folders -->
       <rule iscontainer="true">
         <menupopup>
-          <menu uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#title" >
+          <menu uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#title" >
             <menupopup/>
           </menu>
         </menupopup>
@@ -46,7 +46,7 @@
       <!-- second level folders -->
       <rule iscontainer="true">
         <menupopup popupalign="bottomleft" popupanchor="topleft">
-          <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#title">
+          <menu uri="..." label="rdf:http://home.netscape.com/NC-rdf#title">
             <menupopup/>
           </menu>
         </menupopup>
@@ -62,7 +62,7 @@
 
       <rule>
         <menupopup>
-          <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#title"
+          <menuitem uri="..." label="rdf:http://home.netscape.com/NC-rdf#title"
                     oncommand="rdf:http://home.netscape.com/NC-rdf#content"/>
         </menupopup>
       </rule>
@@ -77,10 +77,10 @@
     <menubutton oncommand="ShowWindowFromResource(event.target)"
                 datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
                 tooltip="aTooltip" tooltiptext="&taskWindowList.tooltip;"
-                value="&openWinButton.label;" class="button-toolbar-4">
+                label="&openWinButton.label;" class="button-toolbar-4">
       <template>
         <menupopup>
-          <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
         </menupopup>
       </template>
       <menupopup popupalign="bottomleft" popupanchor="topleft" />

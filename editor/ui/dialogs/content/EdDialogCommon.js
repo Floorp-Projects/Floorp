@@ -1,23 +1,23 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Pete Collins
  *   Brian King
  */
@@ -28,7 +28,7 @@
   e.g.:
   var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
 */
-  
+
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
@@ -52,7 +52,7 @@ var maxPixels  = 10000;
 // For dialogs that expand in size. Default is smaller size see "onMoreFewer()" below
 var SeeMore = false;
 
-// A XUL element with id="location" for managing 
+// A XUL element with id="location" for managing
 // dialog location relative to parent window
 var gLocation;
 
@@ -76,7 +76,7 @@ function InitEditorShell()
   // Save as a property of the window so it can be used by child dialogs
 
   window.editorShell = editorShell;
-  
+
   return true;
 }
 
@@ -124,7 +124,7 @@ function SetTextboxFocus(textbox)
   if (textbox)
   {
     // Select entire contents
-    // This "fixes" bug 48400 temporarily by 
+    // This "fixes" bug 48400 temporarily by
     //   not calling "select" on empty textboxes
     if (textbox.value.length > 0)
       textbox.select();
@@ -199,8 +199,8 @@ function TruncateStringAtWordEnd(string, maxLength, addEllipses)
       return string;
 
     // We need to truncate the string to maxLength or fewer chars
-    if (addEllipses) 
-      maxLength -= 3; 
+    if (addEllipses)
+      maxLength -= 3;
     string = string.replace(RegExp("(.{0," + maxLength + "})\\s.*"), "$1")
 
     if (string.length > maxLength)
@@ -218,7 +218,7 @@ function ReplaceWhitespace(string, charReplace) {
   return string.replace(/(^\s+)|(\s+$)/g,'').replace(/\s+/g,charReplace)
 }
 
-// Replace whitespace with "_" and allow only HTML CDATA 
+// Replace whitespace with "_" and allow only HTML CDATA
 //   characters: "a"-"z","A"-"Z","0"-"9", "_", ":", "-", and "."
 function ConvertToCDATAString(string)
 {
@@ -302,7 +302,7 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
   var pixelItem;
   var percentItem;
 
-  if (!menulist) 
+  if (!menulist)
   {
     dump("NO MENULIST found for ID="+menulistID+"\n");
     return size;
@@ -324,7 +324,7 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
       size = size.substr(0, percentIndex);
       if (percentItem)
         menulist.selectedItem = percentItem;
-    } 
+    }
     else
       menulist.selectedItem = pixelItem;
   }
@@ -359,7 +359,7 @@ function AppendStringToMenulist(menulist, string)
     var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     if (menuItem)
     {
-      menuItem.setAttribute("value", string);
+      menuItem.setAttribute("label", string);
       menupopup.appendChild(menuItem);
       return menuItem;
     }
@@ -367,7 +367,7 @@ function AppendStringToMenulist(menulist, string)
   return null;
 }
 
-function AppendValueAndDataToMenulist(menulist, valueStr, dataStr)
+function AppendLabelAndValueToMenulist(menulist, labelStr, valueStr)
 {
   if (menulist)
   {
@@ -387,8 +387,8 @@ function AppendValueAndDataToMenulist(menulist, valueStr, dataStr)
     var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     if (menuItem)
     {
+      menuItem.setAttribute("label", labelStr);
       menuItem.setAttribute("value", valueStr);
-      menuItem.setAttribute("data", dataStr);
       menupopup.appendChild(menuItem);
       return menuItem;
     }
@@ -415,7 +415,7 @@ function ClearMenulist(menulist)
     <treechildren>
       <treeitem>
         <treerow>
-          <treecell value="the text the user sees"/>
+          <treecell label="the text the user sees"/>
 */
 
 function AppendStringToTreelistById(tree, stringID)
@@ -455,7 +455,7 @@ function AppendStringToTreelist(tree, string)
       treerow.appendChild(treecell);
       treeitem.appendChild(treerow);
       treechildren.appendChild(treeitem)
-      treecell.setAttribute("value", string);
+      treecell.setAttribute("label", string);
       //var len = Number(tree.getAttribute("length"));
       //if (!len) len = -1;
       tree.setAttribute("length", treechildren.childNodes.length);
@@ -487,7 +487,7 @@ function ReplaceStringInTreeList(tree, index, string)
     var row = childNodes.item(index).firstChild;
     if (row && row.firstChild)
     {
-      row.firstChild.setAttribute("value", string);
+      row.firstChild.setAttribute("label", string);
     }
   }
 }
@@ -507,7 +507,7 @@ function ClearTreelist(tree)
         tree.removeChild(nextChild);
         nextChild = nextTmp;
       }
-    }    
+    }
     // Count list items
     tree.setAttribute("length", 0);
   }
@@ -518,8 +518,8 @@ function GetSelectedTreelistAttribute(tree, attr)
   if (tree)
   {
     if (tree.selectedIndex >= 0 &&
-        tree.selectedItems.length > 0 && 
-        tree.selectedItems[0] && 
+        tree.selectedItems.length > 0 &&
+        tree.selectedItems[0] &&
         tree.selectedItems[0].firstChild &&
         tree.selectedItems[0].firstChild.firstChild)
     {
@@ -531,7 +531,7 @@ function GetSelectedTreelistAttribute(tree, attr)
 
 function GetSelectedTreelistValue(tree)
 {
-  return GetSelectedTreelistAttribute(tree,"value")
+  return GetSelectedTreelistAttribute(tree,"label")
 }
 
 function RemoveSelectedTreelistItem(tree)
@@ -563,7 +563,7 @@ function GetTreelistValueAt(tree, index)
   {
     var item = tree.getItemAtIndex(index);
     if (item && item.firstChild && item.firstChild.firstChild)
-      return item.firstChild.firstChild.getAttribute("value");
+      return item.firstChild.firstChild.getAttribute("label");
   }
   return "";
 }
@@ -588,7 +588,7 @@ function forceInteger(elementID)
 function onAdvancedEdit()
 {
   // First validate data from widgets in the "simpler" property dialog
-  if (ValidateData()) 
+  if (ValidateData())
   {
     // Set true if OK is clicked in the Advanced Edit dialog
     window.AdvancedEditOK = false;
@@ -610,7 +610,7 @@ function GetSelectionAsText()
 }
 
 
-// ** getSelection () 
+// ** getSelection ()
 // ** This function checks for existence of table around the focus node
 // ** Brian King - XML Workshop
 
@@ -636,7 +636,7 @@ function getContainer ()
         {
           oneup = focusN.parentNode;
           return oneup;
-         }  
+         }
     }
     else
       return null;
@@ -649,7 +649,7 @@ function getColor(ColorPickerID)
 {
   var colorPicker = document.getElementById(ColorPickerID);
   var color;
-  if (colorPicker) 
+  if (colorPicker)
   {
     // Extract color from colorPicker and assign to colorWell.
     color = colorPicker.getAttribute("color");
@@ -699,20 +699,20 @@ function IsValidImage(imageName)
   var image = imageName.trimString();
   if ( !image )
     return false;
-  
+
   /* look for an extension */
-  var tailindex = image.lastIndexOf("."); 
+  var tailindex = image.lastIndexOf(".");
   if ( tailindex == 0 || tailindex == -1 ) /* -1 is not found */
-    return false; 
-  
+    return false;
+
   /* move past period, get the substring from the first character after the '.' to the last character (length) */
   tailindex = tailindex + 1;
   var type = image.substring(tailindex,image.length);
-  
+
   /* convert extension to lower case */
   if (type)
     type = type.toLowerCase();
-  
+
   // TODO: Will we convert .BMPs to a web format?
   switch( type )
   {
@@ -729,7 +729,7 @@ function IsValidImage(imageName)
 function InitMoreFewer()
 {
   // Set SeeMore bool to the OPPOSITE of the current state,
-  //   which is automatically saved by using the 'persist="more"' 
+  //   which is automatically saved by using the 'persist="more"'
   //   attribute on the dialog.MoreFewerButton button
   //   onMoreFewer will toggle it and redraw the dialog
   SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
@@ -743,7 +743,7 @@ function onMoreFewer()
     dialog.MoreSection.setAttribute("collapsed","true");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
-    dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
+    dialog.MoreFewerButton.setAttribute("label",GetString("MoreProperties"));
     SeeMore = false;
   }
   else
@@ -751,7 +751,7 @@ function onMoreFewer()
     dialog.MoreSection.removeAttribute("collapsed");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","1");
-    dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
+    dialog.MoreFewerButton.setAttribute("label",GetString("FewerProperties"));
     SeeMore = true;
   }
 }
@@ -771,7 +771,7 @@ function GetPrefs()
   }
   catch(ex)
   {
-	  dump("failed to get prefs service!\n");
+    dump("failed to get prefs service!\n");
   }
   return null;
 }
@@ -796,7 +796,7 @@ function GetLocalFileURL(filterType)
     fp.appendFilters(nsIFilePicker.filterHTML);
     fp.appendFilters(nsIFilePicker.filterText);
     fp.appendFilters(nsIFilePicker.filterAll);
-  }  
+  }
 
   /* doesn't handle *.shtml files */
   try {
@@ -841,7 +841,7 @@ function CreateMetaElement(name)
     metaElement.setAttribute("name", name);
   else
     dump("Failed to create metaElement!\n");
-  
+
   return metaElement;
 }
 
@@ -874,7 +874,7 @@ function CreateHTTPEquivMetaElement(name)
     metaElement.setAttribute("http-equiv", name);
   else
     dump("Failed to create httpequivMetaElement!\n");
-  
+
   return metaElement;
 }
 
@@ -885,13 +885,13 @@ function CreateHTTPEquivElement(name)
     metaElement.setAttribute("http-equiv", name);
   else
     dump("Failed to create metaElement for http-equiv!\n");
-  
+
   return metaElement;
 }
 
 // Change "content" attribute on a META element,
 //   or delete entire element it if content is empty
-// This uses undoable editor transactions 
+// This uses undoable editor transactions
 function SetMetaElementContent(metaElement, content, insertNew)
 {
   if (metaElement)
@@ -920,7 +920,7 @@ function GetHeadElement()
   var headList = editorShell.editorDocument.getElementsByTagName("head");
   if (headList)
     return headList.item(0);
-  
+
   return null;
 }
 
@@ -943,9 +943,9 @@ function SetWindowLocation()
   gLocation = document.getElementById("location");
   if (gLocation)
   {
-    window.screenX = Math.max(0, Math.min(window.opener.screenX + Number(gLocation.getAttribute("offsetX")), 
+    window.screenX = Math.max(0, Math.min(window.opener.screenX + Number(gLocation.getAttribute("offsetX")),
                                           screen.availWidth - window.outerWidth));
-    window.screenY = Math.max(0, Math.min(window.opener.screenY + Number(gLocation.getAttribute("offsetY")), 
+    window.screenY = Math.max(0, Math.min(window.opener.screenY + Number(gLocation.getAttribute("offsetY")),
                                           screen.availHeight - window.outerHeight));
   }
 }
@@ -985,7 +985,7 @@ function GetDefaultBrowserColors()
   // Use OS colors for text and background if explicitly asked or pref is not set
   if (!colors.TextColor)
     colors.TextColor = "windowtext";
-  
+
   if (!colors.BackgroundColor)
     colors.BackgroundColor = "window";
 

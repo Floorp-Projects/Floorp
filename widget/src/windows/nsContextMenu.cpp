@@ -651,7 +651,7 @@ void nsContextMenu::LoadSubMenu(
   nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("value"), menuName);
+  menuElement->GetAttribute(nsAutoString("label"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
@@ -696,7 +696,7 @@ void nsContextMenu::LoadMenuItem(
   nsString menuitemCmd;
 
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
-  menuitemElement->GetAttribute(nsAutoString("value"), menuitemName);
+  menuitemElement->GetAttribute(nsAutoString("label"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
@@ -744,7 +744,7 @@ void nsContextMenu::LoadSubMenu(
   nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(nsAutoString("value"), menuName);
+  menuElement->GetAttribute(nsAutoString("label"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu

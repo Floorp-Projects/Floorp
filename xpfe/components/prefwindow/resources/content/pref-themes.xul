@@ -30,7 +30,7 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-themes.dtd" >
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         onload="Startup()"
         orient="vertical">
@@ -61,9 +61,9 @@
                     name="rdf:http://www.mozilla.org/rdf/chrome#name"
                     description="rdf:http://www.mozilla.org/rdf/chrome#description"
                     image="rdf:http://www.mozilla.org/rdf/chrome#image"
-					loctype="rdf:http://www.mozilla.org/rdf/chrome#locType">
+          loctype="rdf:http://www.mozilla.org/rdf/chrome#locType">
             <treerow>
-              <treecell value="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
+              <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
             </treerow>
           </treeitem>
         </treechildren>
@@ -90,8 +90,8 @@
       <html id="description" flex="1"/>
     </box>
     <box orient="vertical" align="top">
-      <button id="applySkin" value="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="applySkin();"/>
-	  <button id="uninstallSkin" value="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
+      <button id="applySkin" label="&selectSkin.label;" accesskey="&selectSkin.accesskey;" oncommand="applySkin();"/>
+    <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
     </box>
   </box>
   

@@ -13,8 +13,8 @@
   <binding id="thumb" extends="xul:box">
     <content>
       <xul:spring flex="1"/>
-		  <xul:image inherits="src"/>
-		  <xul:spring flex="1"/>
+      <xul:image inherits="src"/>
+      <xul:spring flex="1"/>
     </content>
   </binding>
 
@@ -27,26 +27,26 @@
   <binding id="scrollbar">
     <content>
       <xul:scrollbarbutton type="decrement">
-	      <xul:image inherits="src"/>
-	    </xul:scrollbarbutton>
+        <xul:image inherits="src"/>
+      </xul:scrollbarbutton>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment"/>
       <xul:scrollbarbutton type="increment">
-	    <xul:image inherits="src"/>
-	  </xul:scrollbarbutton>
+      <xul:image inherits="src"/>
+    </xul:scrollbarbutton>
     </content>
   </binding>
 
   <binding id="tab">
     <content>
       <xul:image inherits="src" class="tab-left"/>
-      <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+      <xul:text flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
     </content>
   </binding>
 
 
   <binding id="menu-menubar">
     <content>
-      <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menubar-text" inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
   </binding>
@@ -54,34 +54,34 @@
   <binding id="menu-menubar-iconic">
     <content>
       <xul:image class="menubar-left"/>
-      <xul:text class="menubar-text" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menubar-text" inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>
   </binding>
 
   <binding id="menu">
     <content autostretch="never">
-      <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
-      <xul:text class="menu-accel" inherits="acceltext:value"/>
+      <xul:text class="menu-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:text class="menu-accel" inherits="value=acceltext"/>
       <xul:box autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
       <children includes="menupopup"/>
     </content>
     <implementation>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
     </implementation>  
   </binding>
 
   <binding id="menuitem">
     <content autostretch="never">
-      <xul:text class="menu-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="value=acceltext"/>
     </content>
     <implementation>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
     </implementation>  
   </binding>
 
@@ -90,12 +90,12 @@
       <xul:box class="menu-iconic-left" orient="vertical" autostretch="never" inherits="selected,menuactive,disabled,checked">
         <xul:image inherits="src"/>
       </xul:box>
-      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
     <implementation>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
     </implementation>  
   </binding>
 
@@ -104,7 +104,7 @@
       <xul:box class="menu-iconic-left" orient="vertical" autostretch="never">
         <xul:image inherits="src"/>
       </xul:box>
-      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
       <xul:box orient="vertical" autostretch="never" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
@@ -112,8 +112,8 @@
       <children includes="menupopup|template"/>
     </content>
     <implementation>
-      <property name="data" onset="this.setAttribute('data',val); return val;"
-                            onget="return this.getAttribute('data');"/>
+      <property name="value" onset="this.setAttribute('value',val); return val;"
+                            onget="return this.getAttribute('value');"/>
     </implementation>  
   </binding>
   
@@ -145,7 +145,7 @@
           <xul:image class="checkbox-check"/>
         </xul:box>
         <xul:image class="checkbox-icon" inherits="src"/>
-        <xul:html class="checkbox-label" inherits="value,accesskey,crop" flex="1">
+        <xul:html class="checkbox-label" inherits="value=label,accesskey,crop" flex="1">
           <children/>
         </xul:html>
       </xul:box>
@@ -167,10 +167,10 @@
   <!-- XUL <button>s -->
   <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
     <content>
-  	  <xul:box class="button-internal-box" autostretch="never" flex="1">
+      <xul:box class="button-internal-box" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-          <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
         </xul:box>
       </xul:box>
       <children includes="menupopup"/>
@@ -179,10 +179,10 @@
 
   <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
     <content>
-  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+      <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:image class="button-icon" inherits="src"/>
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-          <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
         </xul:box>
       </xul:box>
       <children includes="menupopup"/>
@@ -191,9 +191,9 @@
   
   <binding id="buttonright" extends="chrome://global/content/xulBindings.xml#basetext">
     <content>
-  	  <xul:box class="button-internal-box" inherits="orient" autostretch="never" flex="1">
+      <xul:box class="button-internal-box" inherits="orient" autostretch="never" flex="1">
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-          <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
         </xul:box>
         <xul:image class="button-icon" inherits="src"/>
       </xul:box>
@@ -203,9 +203,9 @@
 
   <binding id="buttonbottom" extends="chrome://global/content/xulBindings.xml#basetext">
     <content>
-  	  <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+      <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
         <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
-          <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top"/>
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top"/>
         </xul:box>
         <xul:image class="button-icon" inherits="src"/>
       </xul:box>
@@ -226,31 +226,31 @@
           </xul:progressbar>
           <xul:box>
             <xul:spring flex="1"/>
-            <xul:text class="progress-text" inherits="progresstext:value"/>
+            <xul:text class="progress-text" inherits="value=label"/>
             <xul:spring flex="1"/>
           </xul:box>
         </xul:stack>
       </xul:box>
     </content>
     <implementation>
-      <property name="progresstext"   onset="if (this.progresstext != val) this.setAttribute('progresstext',val); return val;"
-                                      onget="return this.getAttribute('progresstext');"/>
+      <property name="label"   onset="if (this.label != val) this.setAttribute('label',val); return val;"
+                                      onget="return this.getAttribute('label');"/>
       <property name="value" onget="return this.getAttribute('value');">
-	    <setter>
-		  <![CDATA[
-		    var p = Math.round(val);
-			var c = this.value; 
-			if (p != c) {
-			  var delta = p - c;
-			  if (delta < 0) delta = -delta;
-			  if (delta > 3 || p == 0 || p == 100) {
-			    this.setAttribute('value',p); 
-			  }
-		    }
-			return p;
-		  ]]>
-		</setter>
-	  </property>
+      <setter>
+      <![CDATA[
+        var p = Math.round(val);
+      var c = this.value; 
+      if (p != c) {
+        var delta = p - c;
+        if (delta < 0) delta = -delta;
+        if (delta > 3 || p == 0 || p == 100) {
+          this.setAttribute('value',p); 
+        }
+        }
+      return p;
+      ]]>
+    </setter>
+    </property>
       <property name="mode"           onset="if (this.mode != val) this.setAttribute('mode', val); return val;"
                                       onget="return this.getAttribute('mode');"/>
     </implementation>
@@ -263,24 +263,24 @@
       </xul:box>
       <xul:popupset>
         <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
-          <xul:menuitem value="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo" oncommand="
+          <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
           <xul:menuseparator/>
-          <xul:menuitem value="&cutCmd.label;" accesskey="&cutCmd.accesskey;" command="cmd_cut" oncommand="
+          <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" command="cmd_cut" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
             controller.doCommand('cmd_cut');"/>
-          <xul:menuitem value="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy" oncommand="
+          <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
             controller.doCommand('cmd_copy');"/>
-          <xul:menuitem value="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" command="cmd_paste" oncommand="
+          <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" command="cmd_paste" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
             controller.doCommand('cmd_paste');"/>
-          <xul:menuitem value="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" command="cmd_delete" oncommand="
+          <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" command="cmd_delete" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_delete');
             controller.doCommand('cmd_delete');"/>
            <xul:menuseparator/>
-          <xul:menuitem value="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll" oncommand="
+          <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
             controller.doCommand('cmd_selectAll');"/>
         </xul:popup>
@@ -399,24 +399,24 @@
       </xul:box>
       <xul:popupset>
         <xul:popup oncreate="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
-          <xul:menuitem value="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo" oncommand="
+          <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" command="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
           <xul:menuseparator/>
-          <xul:menuitem value="&cutCmd.label;" accesskey="&cutCmd.accesskey;" command="cmd_cut" oncommand="
+          <xul:menuitem label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" command="cmd_cut" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
             controller.doCommand('cmd_cut');"/>
-          <xul:menuitem value="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy" oncommand="
+          <xul:menuitem label="&copyCmd.label;" accesskey="&copyCmd.accesskey;" command="cmd_copy" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
             controller.doCommand('cmd_copy');"/>
-          <xul:menuitem value="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" command="cmd_paste" oncommand="
+          <xul:menuitem label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;" command="cmd_paste" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
             controller.doCommand('cmd_paste');"/>
-          <xul:menuitem value="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" command="cmd_delete" oncommand="
+          <xul:menuitem label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;" command="cmd_delete" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_delete');
             controller.doCommand('cmd_delete');"/>
            <xul:menuseparator/>
-          <xul:menuitem value="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll" oncommand="
+          <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
             controller.doCommand('cmd_selectAll');"/>
         </xul:popup>
@@ -476,9 +476,9 @@
       </xul:box-->
 
       <xul:arrowscrollbox class="popup-internal-box" flex="1" orient="vertical">
-		  <!--xul:box class="popup-internal-box" orient="vertical"-->
-			<children/>
-		  <!--/xul:box-->
+      <!--xul:box class="popup-internal-box" orient="vertical"-->
+      <children/>
+      <!--/xul:box-->
       </xul:arrowscrollbox>
 
     </content>
@@ -563,12 +563,12 @@
   <binding id="statusbar-panel" extends="xul:button">
     <content autostretch="never" valign="middle">
       <xul:image class="statusbar-panel-icon" inherits="src"/>
-      <xul:text class="statusbar-panel-text" inherits="value,crop" crop="right" flex="1"/>
+      <xul:text class="statusbar-panel-text" inherits="value=label,crop" crop="right" flex="1"/>
     </content>
     <implementation>
-      <property name="value"
-                onget="return this.getAttribute('value');"
-                onset="this.setAttribute('value',val); return val;"/>
+      <property name="label"
+                onget="return this.getAttribute('label');"
+                onset="this.setAttribute('label',val); return val;"/>
       <property name="src"
                 onget="return this.getAttribute('src');"
                 onset="this.setAttribute('src',val); return val;"/>
@@ -617,26 +617,15 @@
   <binding id="titledbox">
     <content>
       <xul:box class="titledbox-title" autostretch="never" orient="vertical">
-        <children includes="title"/>
+        <children includes="label"/>
       </xul:box>
       <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
         <children/>
       </xul:box>
     </content>    
   </binding>
-  
-  <binding id="titledboxvalue">
-    <content>
-      <xul:box class="titledbox-title" autostretch="never" orient="vertical">
-        <xul:title inherits="value"/>
-      </xul:box>
-      <xul:box flex="1" class="titledbox-body" inherits="orient,autostretch,align,valign">
-        <children/>
-      </xul:box>
-    </content>    
-  </binding>
-  
-  <binding id="title" extends="xul:box">
+    
+  <binding id="label" extends="xul:box">
     <content>
       <xul:text inherits="value"/>
     </content>
@@ -644,47 +633,47 @@
 
   <binding id="autorepeatbutton-up">
      <content>
-	    <xul:image class="autorepeatbutton-up"/>
-	 </content>
+      <xul:image class="autorepeatbutton-up"/>
+   </content>
   </binding>
 
   <binding id="autorepeatbutton-down">
      <content>
-	    <xul:image class="autorepeatbutton-down"/>
-	 </content>
+      <xul:image class="autorepeatbutton-down"/>
+   </content>
   </binding>
 
   <binding id="scrollbox">
     <content>
-	  <xul:box class="scrollbox-innerbox" inherits="orient,autostretch,align,valign">
-	    <children/>
-	  </xul:box>
-	</content>
+    <xul:box class="scrollbox-innerbox" inherits="orient,autostretch,align,valign">
+      <children/>
+    </xul:box>
+  </content>
   </binding>
 
   <binding id="arrowscrollbox">
     <content>
-	  <xul:vbox 
-	  onunderflow="
-		  var button1 = this.firstChild;
-		  var button2 = this.childNodes[2];
- 		  button1.setAttribute('collapsed', 'true');
-		  button2.setAttribute('collapsed', 'true');
+    <xul:vbox 
+    onunderflow="
+      var button1 = this.firstChild;
+      var button2 = this.childNodes[2];
+      button1.setAttribute('collapsed', 'true');
+      button2.setAttribute('collapsed', 'true');
       " 
-	  onoverflow="
-		  var button1 = this.firstChild;
-		  var button2 = this.childNodes[2];
- 		  button1.removeAttribute('collapsed');
-		  button2.removeAttribute('collapsed');
+    onoverflow="
+      var button1 = this.firstChild;
+      var button2 = this.childNodes[2];
+      button1.removeAttribute('collapsed');
+      button2.removeAttribute('collapsed');
       ">
-	  <xul:autorepeatbutton autostretch="never" class="up" collapsed="true" 
-	      oncommand="parentNode.childNodes[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject).scrollByIndex(-1);"/>
-	  <xul:scrollbox orient="vertical" flex="1">
-		 <children/>
-	  </xul:scrollbox>
-	  <xul:autorepeatbutton autostretch="never" class="down" collapsed="true" 
-	      oncommand="parentNode.childNodes[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject).scrollByIndex(1);"/>
-	  </xul:vbox>
+    <xul:autorepeatbutton autostretch="never" class="up" collapsed="true" 
+        oncommand="parentNode.childNodes[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject).scrollByIndex(-1);"/>
+    <xul:scrollbox orient="vertical" flex="1">
+     <children/>
+    </xul:scrollbox>
+    <xul:autorepeatbutton autostretch="never" class="down" collapsed="true" 
+        oncommand="parentNode.childNodes[1].boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject).scrollByIndex(1);"/>
+    </xul:vbox>
     </content>
   </binding>
 

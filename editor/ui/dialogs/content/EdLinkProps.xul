@@ -32,8 +32,8 @@
 
 <window title="&windowTitle.label;"
    class="dialog"
-	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	 xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:html="http://www.w3.org/1999/xhtml"
    onload = "Startup()"
    orient="vertical" >
 
@@ -46,12 +46,12 @@
   <keyset id="keyset"/>
 
   <box orient="vertical" style="min-width: 20em">
-    <titledbox orient="vertical"><title id="linkTextCaption" align="left"/>
+    <titledbox orient="vertical"><label id="linkTextCaption" align="left"/>
       <text class="label" id="linkTextMessage"/> 
 	    <textbox id="linkTextInput" flex="1" oninput="ChangeText()"/>
     </titledbox>
 
-    <titledbox orient="vertical"><title value="&LinkURLBox.label;"/>
+    <titledbox orient="vertical"><label value="&LinkURLBox.label;"/>
       <text class="label" value="&LinkURLEditField.label;"/>
       <box autostretch="never" valign="middle">
         <textbox id="hrefInput" flex="1" style="min-width: 18em" oninput="ChangeLocation()"/>
@@ -80,5 +80,5 @@
   <!-- from EdDialogOverlay -->
   <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/> 
+  <box id="okCancelButtons"/> 
 </window>

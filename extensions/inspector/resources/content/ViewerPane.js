@@ -2,7 +2,7 @@
 * ViewerPane ---------------------------------------------------
 *  Interface for a pane accepts a node and displays all eligible
 *  viewers in a list and activates the selected viewer.
-* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 * REQUIRED IMPORTS:
 *   chrome://inspector/content/jsutil/xpcom/XPCU.js
 ****************************************************************/
@@ -18,7 +18,7 @@ function ViewerPane() // implements inIViewerPane
 {
 }
 
-ViewerPane.prototype = 
+ViewerPane.prototype =
 {
   ////////////////////////////////////////////////////////////////////////////
   //// Initialization
@@ -40,7 +40,7 @@ ViewerPane.prototype =
   get title() { return this.mTitle; },
   get uiElement() { return this.mUIElement; },
   get viewerReg() { return this.mViewerReg; },
-  
+
   //// methods
 
   initialize: function (aTitle, aContainer, aUIElement, aRegistry)
@@ -66,7 +66,7 @@ ViewerPane.prototype =
     this.mCurrentEntry = this.mPendingEntry;
 
     this.rebuildViewerContextMenu();
-    
+
     var title = this.mViewerReg.getEntryProperty(this.mCurrentEntry, "description");
     this.setTitle(title);
 
@@ -100,7 +100,7 @@ ViewerPane.prototype =
   onViewerListCommand: function(aItem)
   {
     this.switchViewer(aItem.entry);
-    
+
   },
 
   ///////////////////////////////////////////////////////////////////////////
@@ -117,7 +117,7 @@ ViewerPane.prototype =
     // get the list of viewers which match the node
     var entries = this.mViewerReg.findViewersForObject(aObject);
     this.rebuildViewerList(entries);
-    
+
     if (entries.length > 0 && !this.entryInList(this.mCurrentEntry, entries)) {
       this.switchViewer(entries[0]);
     } else {
@@ -135,17 +135,17 @@ ViewerPane.prototype =
   rebuildViewerList: function(aEntries)
   {
     var mpp = this.mListElPopup;
-    
+
     this.mListEl.setAttribute("disabled", aEntries.length <= 0);
 
     // empty the list
     while (mpp.childNodes.length)
       mpp.removeChild(mpp.childNodes[0]);
-    
+
     for (var i = 0; i < aEntries.length; i++) {
       var entry = aEntries[i];
       var menuitem = document.createElement("menuitem");
-      menuitem.setAttribute("value", this.mViewerReg.getEntryProperty(entry, "description"));
+      menuitem.setAttribute("label", this.mViewerReg.getEntryProperty(entry, "description"));
       menuitem.entry = entry;
       mpp.appendChild(menuitem);
     }
@@ -166,9 +166,9 @@ ViewerPane.prototype =
       var oldURL = this.mViewerReg.getEntryURL(this.mCurrentEntry);
       if (oldURL == url) {
         loadNew = false;
-      } 
+      }
     }
-    
+
     if (loadNew) {
       this.mPendingEntry = aEntry;
       this.loadViewerURL(url);
@@ -187,7 +187,7 @@ ViewerPane.prototype =
       // tell the old viewer it's about to go away
       this.mCurrentViewer.destroy();
     }
-    
+
     // load the new document
     FrameExchange.loadURL(this.mIFrameEl, aURL, this);
   },
@@ -219,7 +219,7 @@ ViewerPane.prototype =
       this.mMenuEl.setAttribute("disabled", "true");
     }
   },
-  
+
   ///////////////////////////////////////////////////////////////////////////
   // Check to see if an entry exists in an arry of entries
   //

@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 /* Insert Source HTML dialog */
@@ -33,8 +33,8 @@ function Startup()
   if (okButton)
   {
     okButton.removeAttribute("default");
-    okButton.setAttribute("value",GetString("Insert"));
-  }  
+    okButton.setAttribute("label",GetString("Insert"));
+  }
   // Create dialog object to store controls for easy access
   srcInput = document.getElementById("srcInput");
 
@@ -58,7 +58,7 @@ function onOK()
     return false;
   }
   SaveWindowLocation();
-  
+
   return true;
 }
 

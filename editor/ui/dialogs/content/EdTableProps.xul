@@ -47,15 +47,15 @@
   <keyset id="keyset"/>
 
   <tabcontrol align="vertical" orient="vertical">
-	  <tabbox flex="1">
-		  <tab id="TableTab" oncommand="SelectTableTab()" value="&tableTab.label;"/>
-		  <tab id="CellTab" oncommand="SelectCellTab()" value="&cellTab.label;"/>
-	  </tabbox>
+    <tabbox flex="1">
+      <tab id="TableTab" oncommand="SelectTableTab()" label="&tableTab.label;"/>
+      <tab id="CellTab" oncommand="SelectCellTab()" label="&cellTab.label;"/>
+    </tabbox>
     <tabpanel orient="vertical" id="TabPanel">
 
       <!-- TABLE PANEL -->
       <box id="TablePanel" orient="vertical">
-        <titledbox><title value="&size.label;"/>
+        <titledbox><label value="&size.label;"/>
           <grid>
             <columns><column/><column/></columns>
             <rows>
@@ -81,7 +81,7 @@
             </rows>
           </grid>
         </titledbox>
-        <titledbox orient="vertical"><title align="left" value="&tableBorderSpacing.label;"/>
+        <titledbox orient="vertical"><label align="left" value="&tableBorderSpacing.label;"/>
         <grid>
           <columns><column/><column/><column/></columns>
           <rows>
@@ -108,18 +108,18 @@
           <text class="label" value="&tableAlignment.label;"/>
           <menulist id="TableAlignList">
             <menupopup>
-              <menuitem value="&AlignLeft.label;"   data="left"/>
-              <menuitem value="&AlignCenter.label;" data="center"/>
-              <menuitem value="&AlignRight.label;"  data="right"/>
+              <menuitem label="&AlignLeft.label;"   value="left"/>
+              <menuitem label="&AlignCenter.label;" value="center"/>
+              <menuitem label="&AlignRight.label;"  value="right"/>
             </menupopup>
           </menulist>
           <spring class="spacer"/>
           <text class="label" value="&tableCaption.label;"/>
           <menulist id="TableCaptionList">
             <menupopup>
-              <menuitem value="&tableCaptionNone.label;"  data=""/>
-              <menuitem value="&tableCaptionAbove.label;" data="top"/>
-              <menuitem value="&tableCaptionBelow.label;" data="bottom"/>
+              <menuitem label="&tableCaptionNone.label;"  value=""/>
+              <menuitem label="&tableCaptionAbove.label;" value="top"/>
+              <menuitem label="&tableCaptionBelow.label;" value="bottom"/>
             </menupopup>
           </menulist>
         </box>
@@ -128,7 +128,7 @@
           <text class="label" value="&backgroundColor.label;"/>
           <stack>
             <button class="dialog color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');"/>
-    	      <box autostretch="never" valign="middle" mousethrough="always">
+            <box autostretch="never" valign="middle" mousethrough="always">
               <spring flex="1"/>
               <spring id="tableBackgroundCW" class="color-well"/>
               <spring flex="1"/>
@@ -147,21 +147,21 @@
       </box><!-- Table Panel -->
 
       <!-- CELL PANEL -->
-    	<box id="CellPanel" orient="vertical">
+      <box id="CellPanel" orient="vertical">
         <titledbox autostretch="never" valign="middle">
-          <title value="&cellSelection.label;"/>
+          <label value="&cellSelection.label;"/>
           <box orient="vertical">
-            <menulist id="SelectionList" oncommand="ChangeSelection(event.target.data)" flex="1">
+            <menulist id="SelectionList" oncommand="ChangeSelection(event.target.value)" flex="1">
               <menupopup>
                 <!-- JS code assumes order is Cell, Row, Column -->
-                <menuitem value="&cellSelectCell.label;"   data="1"/>
-                <menuitem value="&cellSelectRow.label;"    data="2"/>
-                <menuitem value="&cellSelectColumn.label;" data="3"/>
+                <menuitem label="&cellSelectCell.label;"   value="1"/>
+                <menuitem label="&cellSelectRow.label;"    value="2"/>
+                <menuitem label="&cellSelectColumn.label;" value="3"/>
               </menupopup>
             </menulist>
             <box flex="1">
-              <button id="PreviousButton" class="dialog"       value="&cellSelectPrevious.label;" oncommand="MoveSelection(0)" flex="1"/>
-              <button id="NextButton"     class="dialog right" value="&cellSelectNext.label;"     oncommand="MoveSelection(1)" flex="1"/>
+              <button id="PreviousButton" class="dialog"       label="&cellSelectPrevious.label;" oncommand="MoveSelection(0)" flex="1"/>
+              <button id="NextButton"     class="dialog right" label="&cellSelectNext.label;"     oncommand="MoveSelection(1)" flex="1"/>
             </box>
           </box>
           <spring class="bigspacer"/>
@@ -172,7 +172,7 @@
         </titledbox>
 
         <!-- cell size titledbox -->
-        <titledbox><title align="left" value="&size.label;"/>
+        <titledbox><label align="left" value="&size.label;"/>
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>
@@ -195,12 +195,12 @@
             <columns><column/><column/></columns>
             <rows>
               <row valign="middle" autostretch="never">
-                <checkbox id="RowSpanCheckbox" value="&cellRowSpan.label;"/>
+                <checkbox id="RowSpanCheckbox" label="&cellRowSpan.label;"/>
                 <textbox class="narrow" id="RowSpanInput"
                          oninput="ChangeIntTextbox(this.id,'RowSpanCheckbox');"/>
               </row>
               <row valign="middle" autostretch="never">
-                <checkbox id="ColSpanCheckbox" value="&cellColSpan.label;"/>
+                <checkbox id="ColSpanCheckbox" label="&cellColSpan.label;"/>
                 <textbox class="narrow" id="ColSpanInput"
                          oninput="ChangeIntTextbox(this.id,'ColSpanCheckbox');"/>
               </row>
@@ -210,23 +210,23 @@
 
         <!-- Alignment -->
         <titledbox valign="middle" autostretch="never">
-          <title value="&cellContentAlignment.label;"/>
+          <label value="&cellContentAlignment.label;"/>
           <checkbox id="CellHAlignCheckbox" value="&cellHorizontal.label;"/>
           <menulist id="CellHAlignList"  oncommand="SelectCellHAlign()">
             <menupopup>
-              <menuitem value="&AlignLeft.label;"        data="left"/>
-              <menuitem value="&AlignCenter.label;"      data="center"/>
-              <menuitem value="&AlignRight.label;"       data="right"/>
-              <menuitem value="&cellAlignJustify.label;" data="justify"/>
+              <menuitem label="&AlignLeft.label;"        value="left"/>
+              <menuitem label="&AlignCenter.label;"      value="center"/>
+              <menuitem label="&AlignRight.label;"       value="right"/>
+              <menuitem label="&cellAlignJustify.label;" value="justify"/>
             </menupopup>
           </menulist>
           <spring class="spacer"/>
           <checkbox id="CellVAlignCheckbox" value="&cellVertical.label;"/>
           <menulist id="CellVAlignList" oncommand="SetCheckbox('CellVAlignCheckbox');">
             <menupopup>
-              <menuitem value="&cellAlignTop.label;"    data="top"/>
-              <menuitem value="&cellAlignMiddle.label;" data="middle"/>
-              <menuitem value="&cellAlignBottom.label;" data="bottom"/>
+              <menuitem label="&cellAlignTop.label;"    value="top"/>
+              <menuitem label="&cellAlignMiddle.label;" value="middle"/>
+              <menuitem label="&cellAlignBottom.label;" value="bottom"/>
             </menupopup>
           </menulist>
         </titledbox>
@@ -235,25 +235,25 @@
           <checkbox id="CellStyleCheckbox" value="&cellStyle.label;"/>
           <menulist id="CellStyleList" oncommand="SetCheckbox('CellStyleCheckbox');">
             <menupopup>
-              <menuitem value="&cellNormal.label;" data="td"/>
-              <menuitem value="&cellHeader.label;" data="th"/>
+              <menuitem label="&cellNormal.label;" value="td"/>
+              <menuitem label="&cellHeader.label;" value="th"/>
             </menupopup>
           </menulist>
           <spring class="bigspacer"/>
           <checkbox id="TextWrapCheckbox" value="&cellTextWrap.label;"/>
           <menulist id="TextWrapList" oncommand="SetCheckbox('TextWrapCheckbox');">
             <menupopup>
-              <menuitem value="&cellWrap.label;" data="wrap"/>
-              <menuitem value="&cellNoWrap.label;" data="nowrap"/>
+              <menuitem label="&cellWrap.label;" value="wrap"/>
+              <menuitem label="&cellNoWrap.label;" value="nowrap"/>
             </menupopup>
           </menulist>
         </box>
         <separator class="groove"/>
         <box valign="middle" autostretch="never">
-          <checkbox id="CellColorCheckbox" value="&backgroundColor.label;"/>
+          <checkbox id="CellColorCheckbox" label="&backgroundColor.label;"/>
           <stack>
             <button class="dialog color-button" oncommand="GetColorAndUpdate('cellBackgroundCW');" flex="1"/>
-    	      <box autostretch="never" valign="middle" mousethrough="always">
+            <box autostretch="never" valign="middle" mousethrough="always">
               <spring flex="1"/>
               <spring id="cellBackgroundCW" class="color-well"/>
               <spring flex="1"/>
@@ -276,7 +276,7 @@
     <!-- from EdDialogOverlay -->
     <box>
       <spring flex="1"/>
-	    <button class="dialog" value="&applyButton.label;" oncommand="Apply();"/>
+      <button class="dialog" label="&applyButton.label;" oncommand="Apply();"/>
       <box id="okCancelButtons"/> 
     </box>
   </tabcontrol>

@@ -81,10 +81,10 @@ Contributor(s): ______________________________________. -->
   </stringbundleset>
   
   <commands id="commands">
-  	<commandset id="globalEditMenuItems"/>
-  	<commandset id="selectEditMenuItems"/>
-  	<commandset id="undoEditMenuItems"/>
-  	<commandset id="clipboardEditMenuItems"/>
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="undoEditMenuItems"/>
+    <commandset id="clipboardEditMenuItems"/>
   </commands>
   
   <!-- broadcasters are appended from the overlay -->
@@ -114,7 +114,7 @@ Contributor(s): ______________________________________. -->
   
   <popupset>
     <popup id="contextual" oncreate="return fillContextMenu('contextual', 'innermostBox');" >
-  	  <menu />
+      <menu />
     </popup>
   </popupset>
   
@@ -133,20 +133,20 @@ Contributor(s): ______________________________________. -->
              grippytooltip="aTooltip" grippytooltiptext="&navigationBar.tooltip;"
              tbautostretch="always">
       <hbox id="nav-bar-buttons">
-        <menubutton id="back-button" value="&backButton.label;" tooltiptext="&backButton.tooltip;"
+        <menubutton id="back-button" label="&backButton.label;" tooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
                     class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
-       	  <menupopup context="" oncreate="BrowserBackMenu(event);"/>
+          <menupopup context="" oncreate="BrowserBackMenu(event);"/>
         </menubutton>
-        <menubutton id="forward-button" value="&forwardButton.label;" tooltiptext="&forwardButton.tooltip;"
+        <menubutton id="forward-button" label="&forwardButton.label;" tooltiptext="&forwardButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();" context="forwardMenu"
                     class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoForward">
-      	  <menupopup context="" oncreate="BrowserForwardMenu(event);"/>
+          <menupopup context="" oncreate="BrowserForwardMenu(event);"/>
         </menubutton>
 
-        <button class="button-toolbar-1 top" id="reload-button" crop="right" oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();" value="&reloadButton.label;" 
+        <button class="button-toolbar-1 top" id="reload-button" crop="right" oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();" label="&reloadButton.label;" 
                 tooltip="aTooltip" tooltiptext="&reloadButton.tooltip;"/>
-        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" oncommand="BrowserStop();" value="&stopButton.label;" 
+        <button class="button-toolbar-1 top" id="stop-button" crop="right" observes="canStop" oncommand="BrowserStop();" label="&stopButton.label;" 
                 tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"/>
       </hbox>
                 
@@ -158,7 +158,7 @@ Contributor(s): ______________________________________. -->
 	                     searchSessionType="urlbar" id="urlbar" tooltip="aTooltip" tooltiptext="&locationBar.tooltip;"
                          onclick="if (event.button == 0) URLBarLeftClickHandler(event);"
                          onblur="URLBarBlurHandler(event);"
-						 onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
+             onkeypress="if( event.keyCode == 13 ) { addToUrlbarHistory(); BrowserLoadURL(); }" flex="1"/>  
           </hbox>
           <menubutton class="menubutton-icon" id="ubhist">
             <menupopup id="ubhist-popup" popupalign="topright" popupanchor="bottomright"
@@ -168,19 +168,19 @@ Contributor(s): ______________________________________. -->
           
         </hbox>
 
-        <button class="button-toolbar-3 chromeclass-location" id="go-button" persist="hidden" hidden="true" value="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
+        <button class="button-toolbar-3 chromeclass-location" id="go-button" persist="hidden" hidden="true" label="&goButton.label;" oncommand="addToUrlbarHistory(); BrowserLoadURL();" 
                   tooltip="aTooltip" tooltiptext="&goButton.tooltip;"/> 
 
         <button class="button-toolbar-3 chromeclass-location" persist="hidden" 
-                id="search-button" value="&searchButton.label;" 
+                id="search-button" label="&searchButton.label;" 
                 oncommand="OpenSearch('internet',false, document.getElementById('urlbar').value);" 
                 tooltip="aTooltip" tooltiptext="&searchButton.tooltip;"/> 
       </hbox>
 
-      <menubutton class="menubutton-dual toolbar top" id="print-button" persist="hidden" value="&printButton.label;" 
+      <menubutton class="menubutton-dual toolbar top" id="print-button" persist="hidden" label="&printButton.label;" 
                   crop="right" buttonaction="BrowserPrint()" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu" popupalign="topright" popupanchor="bottomright">
-          <menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
+          <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" oncommand="BrowserPrint()" default="true"/>
         </menupopup>
       </menubutton>
 
@@ -199,7 +199,7 @@ Contributor(s): ______________________________________. -->
 
       <!-- "Bookmarks" button on personal toolbar -->                           
       <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
-                  persist="hidden" value="&bookmarksButton.label;" hidden="false"
+                  persist="hidden" label="&bookmarksButton.label;" hidden="false"
                   datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
                   ref="NC:BookmarksRoot" container="true" flags="dont-test-empty"
                   oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" >
@@ -207,7 +207,7 @@ Contributor(s): ______________________________________. -->
           <rule iscontainer="true">
             <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*"
-                    value="rdf:http://home.netscape.com/NC-rdf#Name" >
+                    label="rdf:http://home.netscape.com/NC-rdf#Name" >
                 <menupopup/>
               </menu>
             </menupopup>
@@ -220,7 +220,7 @@ Contributor(s): ______________________________________. -->
           <rule>
             <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                        value="rdf:http://home.netscape.com/NC-rdf#Name" />
+                        label="rdf:http://home.netscape.com/NC-rdf#Name" />
             </menupopup>
            </rule>
         </template>
@@ -242,7 +242,7 @@ Contributor(s): ______________________________________. -->
           <rule parent="hbox" iscontainer="true">
             <menubutton class="button-toolbar bookmark-item" uri="rdf:*" 
                         tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-                        value="rdf:http://home.netscape.com/NC-rdf#Name">
+                        label="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup/>
             </menubutton>
           </rule>
@@ -254,13 +254,13 @@ Contributor(s): ______________________________________. -->
           <rule parent="hbox">
             <button class="button-toolbar bookmark-item" uri="rdf:*" 
               tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-              value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
+              label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
           </rule>
         
           <rule iscontainer="true">
             <menupopup>
               <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-                    value="rdf:http://home.netscape.com/NC-rdf#Name">
+                    label="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
               </menu>
             </menupopup>
@@ -273,12 +273,12 @@ Contributor(s): ______________________________________. -->
           <rule>
             <menupopup>
               <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                        value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                        label="rdf:http://home.netscape.com/NC-rdf#Name"/>
             </menupopup>
           </rule>
         </template>
        
-        <button class="button-toolbar bookmark-item" id="home-button" value="&homeButton.label;"
+        <button class="button-toolbar bookmark-item" id="home-button" label="&homeButton.label;"
                 tooltip="aTooltip" persist="hidden"
                 ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
                 ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
@@ -313,7 +313,7 @@ Contributor(s): ______________________________________. -->
       <statusbar id="status-bar" class="chromeclass-status">
         <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
         <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
-        <statusbarpanel id="statusbar-display" value="&statusText.label;" crop="right" flex="1"/>
+        <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
         <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
       </statusbar>  
     

@@ -103,31 +103,31 @@
   <treehead>
     <treerow id="headRow">
       <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.name.label;"
+        label="&tree.header.name.label;"
         onclick="return TriStateColumnSort('Name');"
         observes="Name" />
       <treecell class="treecell-header sortDirectionIndicator" 
-        value="&tree.header.url.label;"
+        label="&tree.header.url.label;"
         onclick="return TriStateColumnSort('URL');"
         observes="URL" />
       <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.date.label;"
+        label="&tree.header.date.label;"
         onclick="return TriStateColumnSort('Date');"
         observes="Date"/>
       <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.firstvisitdate.label;"
+        label="&tree.header.firstvisitdate.label;"
         onclick="return TriStateColumnSort('FirstVisitDate');"
         observes="FirstVisitDate"/>
       <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.hostname.label;"
+        label="&tree.header.hostname.label;"
         onclick="return TriStateColumnSort('Hostname');"
         observes="Hostname"/>
       <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.referrer.label;"
+        label="&tree.header.referrer.label;"
         onclick="return TriStateColumnSort('Referrer');"
         observes="Referrer"/>
       <treecell class="treecell-header sortDirectionIndicator"
-        value="&tree.header.visitcount.label;"
+        label="&tree.header.visitcount.label;"
         onclick="return TriStateColumnSort('VisitCount');"
         observes="VisitCount"/>
       <treecell class="treecell-header" allowevents="true" id="popupCell">
@@ -148,14 +148,14 @@
        <treeitem uri="rdf:*" class="bookmark-item"
          rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
          <treerow>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
+           <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
              class="treecell-indent treecell-bookmark"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Date" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Hostname" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Referrer" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#VisitCount" />
+           <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+           <treecell label="rdf:http://home.netscape.com/NC-rdf#Date" />
+           <treecell label="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate" />
+           <treecell label="rdf:http://home.netscape.com/NC-rdf#Hostname" />
+           <treecell label="rdf:http://home.netscape.com/NC-rdf#Referrer" />
+           <treecell label="rdf:http://home.netscape.com/NC-rdf#VisitCount" />
          </treerow>
        </treeitem>
       </treechildren>

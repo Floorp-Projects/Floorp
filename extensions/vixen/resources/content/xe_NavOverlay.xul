@@ -37,9 +37,9 @@ function loadXULEdit()
 </script>
 
 <menupopup id="taskPopup">
-	<menuitem
+  <menuitem
         position="7"
-        value="ViXEn"
+        label="ViXEn"
         oncommand="loadXULEdit();"/>
 </menupopup>
 

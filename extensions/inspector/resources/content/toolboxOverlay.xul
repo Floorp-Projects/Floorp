@@ -15,15 +15,15 @@
 
   <menubar id="mbrInspectorMain">
 
-    <menu id="mnFile" value="&mnFile.label;" accesskey="&mnFile.accesskey;">
+    <menu id="mnFile" label="&mnFile.label;" accesskey="&mnFile.accesskey;">
       <menupopup id="mppFile">
         <menu 
-          id="mnWindowsFile" value="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
+          id="mnWindowsFile" label="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
           datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
           <template>
             <rule>
               <menupopup>
-                <menuitem uri="rdf:*" value="&NC-rdf;Name" oncommand="inspector.goToWindow(this)"/>
+                <menuitem uri="rdf:*" label="&NC-rdf;Name" oncommand="inspector.goToWindow(this)"/>
               </menupopup>
             </rule>
           </template>
@@ -31,19 +31,19 @@
       </menupopup>
     </menu>
 
-    <menu id="mnEdit" value="&mnEdit.label;" accesskey="&mnEdit.accesskey;">
+    <menu id="mnEdit" label="&mnEdit.label;" accesskey="&mnEdit.accesskey;">
       <menupopup id="mppEdit"/>
     </menu>
 
-    <menu id="mnSearch" value="&mnSearch.label;" accesskey="&mnSearch.accesskey;">
+    <menu id="mnSearch" label="&mnSearch.label;" accesskey="&mnSearch.accesskey;">
       <menupopup id="mppSearch"/>
     </menu>
 
-    <menu id="mnView" value="&mnView.label;" accesskey="&mnView.accesskey;">
+    <menu id="mnView" label="&mnView.label;" accesskey="&mnView.accesskey;">
       <menupopup id="mppView"/>
     </menu>
 
-    <menu id="mnHelp" value="&mnHelp.label;" accesskey="&mnHelp.accesskey;">
+    <menu id="mnHelp" label="&mnHelp.label;" accesskey="&mnHelp.accesskey;">
       <menupopup id="mppHelp"/>
     </menu>
 
@@ -79,7 +79,7 @@
                 </conditions>
 
                 <action>
-                  <menuitem uri="?item" value="?url" oncommand="inspector.goToHistoryItem(this)"/>
+                  <menuitem uri="?item" label="?url" oncommand="inspector.goToHistoryItem(this)"/>
                 </action>
               </rule>
             </template>
@@ -89,7 +89,7 @@
         </menubutton>
       </box>
 
-      <button class="button-toolbar-3" value="&btnInspect.label;" observes="cmdGotoURL"/>
+      <button class="button-toolbar-3" label="&btnInspect.label;" observes="cmdGotoURL"/>
     </box>
 
   </toolbar>

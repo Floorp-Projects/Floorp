@@ -4,21 +4,21 @@
 <!DOCTYPE window SYSTEM "chrome://global-platform/locale/platformGlobalOverlay.dtd">
 
 <overlay id="platformGlobalOverlay"
-		 xmlns:html="http://www.w3.org/1999/xhtml"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+     xmlns:html="http://www.w3.org/1999/xhtml"
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
     <!-- close -->
-    <menuitem id="menu_close" value="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" observes="cmd_close"/>
+    <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" observes="cmd_close"/>
     <key id="key_close"  key="&closeCmd.key;" observes="cmd_close" modifiers="accel"/>
 
     <!-- quit -->
     <menupopup id="menu_FilePopup">
-    <menuitem value="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" observes="cmd_quit"/>
+    <menuitem label="&quitApplicationCmd.label;" key="key_quit" accesskey="&quitApplicationCmd.accesskey;" observes="cmd_quit"/>
     </menupopup>
     <key id="key_quit"  key="&quitApplicationCmd.key;" observes="cmd_quit" modifiers="accel"/>
     <broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
-	
+  
     <!-- Edit Menu -->
-    <menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
+    <menuitem id="menu_redo" label="&redoCmd.label;" key="key_redo" accesskey="&redoCmd.accesskey;" observes="cmd_redo"/>
 
-</overlay>		
+</overlay>    

@@ -40,11 +40,11 @@
  <box class="sidebartitle">
   <spring flex="1"/>
   <button class="dialog borderless paneltitle" 
-        value="&sidebar.reload.label;"
+        label="&sidebar.reload.label;"
         oncommand="window.location.reload()" />
   <button class="borderless paneltitle" 
-        value="&sidebar.customize.label;" 
-				oncommand="var dialogWindow=customize();" />
+        label="&sidebar.customize.label;" 
+        oncommand="var dialogWindow=customize();" />
  </box>
 </box>
 </window>

@@ -3,20 +3,20 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
+ *
  */
 
 //////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ var original_panels = new Array();
 function sidebar_customize_init()
 {
   doSetOKCancel(Save);
-  
+
   allPanelsObj.datasources = window.arguments[0];
   allPanelsObj.resource    = window.arguments[1];
   sidebarObj.datasource_uri     = window.arguments[2];
@@ -73,7 +73,7 @@ function sidebar_customize_init()
     all_panels.database.AddDataSource(datasource);
     current_panels.database.AddDataSource(datasource);
   }
-  
+
   // Add the datasource for current list of panels. It selects panels out
   // of the other datasources.
   debug("Init: Adding current panels, "+sidebarObj.datasource_uri);
@@ -87,7 +87,7 @@ function sidebar_customize_init()
   current_panels.setAttribute('ref', sidebarObj.resource);
   save_initial_panels();
   enable_buttons_for_current_panels();
-  
+
   sizeToContent();
 }
 
@@ -113,7 +113,7 @@ function sidebar_customize_destruct()
 // Panels' RDF Datasource Observer
 //////////////////////////////////////////////////////////////////
 var panels_observer = {
-  onAssert : function(ds,src,prop,target) { 
+  onAssert : function(ds,src,prop,target) {
     //debug ("observer: assert");
     // "refresh" is asserted by select menu and by customize.js.
     if (prop == RDF.GetResource(NC + "link")) {
@@ -177,12 +177,12 @@ function get_attr(registry,service,attr_name)
 }
 
 function SelectChangeForOtherPanels(event, target)
-{ 
+{
   enable_buttons_for_other_panels();
 }
 
 function ClickOnOtherPanels(event)
-{ 
+{
   debug("ClickOnOtherPanels(...)");
 
   var t = event.originalTarget;
@@ -207,7 +207,7 @@ function ClickOnOtherPanels(event)
       treeitem = treeitem.parentNode;
     }
   }
-  
+
   // Remove the selection in the "current" panels list
   var current_panels = document.getElementById('current-panels');
   current_panels.clearItemSelection();
@@ -250,7 +250,7 @@ function add_datasource_to_other_panels(link) {
   uri = uri.resolve(link);
 
   debug("New URL:      " +uri);
-  
+
   // Add the datasource to the tree
   var all_panels = document.getElementById('other-panels');
   all_panels.database.AddDataSource(RDF.GetDataSource(uri));
@@ -271,7 +271,7 @@ function SelectChangeForCurrentPanels() {
 
 // Move the selected item up the the current panels list.
 function MoveUp() {
-  var tree = document.getElementById('current-panels'); 
+  var tree = document.getElementById('current-panels');
   if (tree.selectedItems.length == 1) {
     var selected = tree.selectedItems[0];
     var before = selected.previousSibling
@@ -283,7 +283,7 @@ function MoveUp() {
   }
   enable_buttons_for_current_panels();
 }
-   
+
 // Move the selected item down the the current panels list.
 function MoveDown() {
   var tree = document.getElementById('current-panels');
@@ -302,7 +302,7 @@ function MoveDown() {
   enable_buttons_for_current_panels();
 }
 
-function PreviewPanel() 
+function PreviewPanel()
 {
   var tree = document.getElementById('other-panels');
   var database = tree.database;
@@ -330,7 +330,7 @@ function PreviewPanel()
 }
 
 // Add the selected panel(s).
-function AddPanel() 
+function AddPanel()
 {
   var tree = document.getElementById('other-panels');
   var database = tree.database;
@@ -373,8 +373,8 @@ function add_node_to_current_list(registry, service)
   var option_customize = get_attr(registry, service, 'customize');
   var option_content   = get_attr(registry, service, 'content');
 
-  var tree     = document.getElementById('current-panels'); 
-  var treeroot = document.getElementById('current-panels-root'); 
+  var tree     = document.getElementById('current-panels');
+  var treeroot = document.getElementById('current-panels-root');
 
   // Check to see if the panel already exists...
   for (var ii = treeroot.firstChild; ii != null; ii = ii.nextSibling) {
@@ -391,7 +391,7 @@ function add_node_to_current_list(registry, service)
   var item = document.createElement('treeitem');
   var row  = document.createElement('treerow');
   var cell = document.createElement('treecell');
-  
+
   // Copy over the attributes
   item.setAttribute('id', service.Value);
   if (option_customize && option_customize != '') {
@@ -399,8 +399,8 @@ function add_node_to_current_list(registry, service)
   }
   item.setAttribute('content', option_content);
   cell.setAttribute('class', 'treecell-indent treecell-panel');
-  cell.setAttribute('value', option_title);
- 
+  cell.setAttribute('label', option_title);
+
   // Add it to the current panels tree
   item.appendChild(row);
   row.appendChild(cell);
@@ -425,17 +425,17 @@ function RemovePanel()
       nextNode = selectedNode.previousSibling;
     }
     selectedNode.parentNode.removeChild(selectedNode)
-  } 
-  
+  }
+
   if (nextNode) {
     tree.selectItem(nextNode)
   }
   enable_buttons_for_current_panels();
 }
 
-// Bring up a new window with the customize url 
+// Bring up a new window with the customize url
 // for an individual panel.
-function CustomizePanel() 
+function CustomizePanel()
 {
   var tree  = document.getElementById('current-panels');
   var numSelected = tree.selectedItems.length;
@@ -498,7 +498,7 @@ function Save()
 
   // See if list membership has changed
   var root = document.getElementById('current-panels-root');
-  var panels = root.childNodes;  
+  var panels = root.childNodes;
   var list_unchanged = (panels.length == original_panels.length);
   for (var i = 0; i < panels.length && list_unchanged; i++) {
     if (original_panels[i] != panels.item(i).getAttribute('id')) {

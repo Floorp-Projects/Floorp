@@ -65,16 +65,16 @@
 
       <box autostretch="never">
         <textbox id="dialog.input" flex="1" oninput="doEnabling();"/>
-        <button value="&chooseFile.label;" onclick="onChooseFile();"/>
+        <button label="&chooseFile.label;" onclick="onChooseFile();"/>
       </box>
       <box autostretch="never" valign="center">
         <text class="label" value="&openWhere.label;"/>
         <menulist id="openAppList">
           <menupopup>
-            <menuitem data="0" id="currentWindow" value="&topWindow.label;"/>
-            <menuitem data="1" value="&newWindow.label;"/>
+            <menuitem value="0" id="currentWindow" label="&topWindow.label;"/>
+            <menuitem value="1" label="&newWindow.label;"/>
             <menuseparator/>
-            <menuitem data="2" id="editWindow" value="&editNewWindow.label;"/>
+            <menuitem value="2" id="editWindow" label="&editNewWindow.label;"/>
           </menupopup>
         </menulist>
         <spring flex="1"/>

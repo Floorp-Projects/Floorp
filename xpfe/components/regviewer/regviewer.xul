@@ -46,7 +46,7 @@
           <treechildren flex="1">
             <treeitem uri="rdf:*">
               <treerow>
-                <treecell indent="true" value="rdf:*" />
+                <treecell indent="true" label="rdf:*" />
               </treerow>
             </treeitem>
           </treechildren>
@@ -54,7 +54,7 @@
   
         <treehead>
           <treerow>
-            <treecell value="&regviewerWindow.key.label;" />
+            <treecell label="&regviewerWindow.key.label;" />
           </treerow>
         </treehead>
       </tree>

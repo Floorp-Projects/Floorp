@@ -48,7 +48,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />
-  <titledbox orient="vertical"><title value="&size.label;"/>
+  <titledbox orient="vertical"><label value="&size.label;"/>
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>
@@ -82,5 +82,5 @@
   <!-- from EdDialogOverlay -->
   <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/> 
+  <box id="okCancelButtons"/> 
 </window>

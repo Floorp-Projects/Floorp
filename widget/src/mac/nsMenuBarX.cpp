@@ -254,7 +254,7 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
 
             menuElement->GetNodeName(menuNodeType);
             if (menuNodeType == NS_LITERAL_STRING("menu")) {
-                menuElement->GetAttribute(NS_LITERAL_STRING("value"), menuName);
+                menuElement->GetAttribute(NS_LITERAL_STRING("label"), menuName);
                 menuElement->GetAttribute(NS_LITERAL_STRING("accesskey"), menuAccessKey);
 
                 // Don't create the whole menu yet, just add in the top level names

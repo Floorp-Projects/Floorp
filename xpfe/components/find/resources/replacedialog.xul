@@ -55,16 +55,16 @@ Contributor(s): Kin Blas <kin@netscape.com>
       <textbox id="dialog.findKey" oninput="doEnabling();"/>
       <textbox id="dialog.replaceKey" oninput="doEnabling();"/>
       <vbox autostretch="never">
-        <checkbox id="dialog.caseSensitive" value="&caseSensitiveCheckbox.label;"/>
-        <checkbox id="dialog.wrap" value="&wrapCheckbox.label;"/>
-        <checkbox id="dialog.searchBackwards" value="&backwardsCheckbox.label;"/>
+        <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;"/>
+        <checkbox id="dialog.wrap" label="&wrapCheckbox.label;"/>
+        <checkbox id="dialog.searchBackwards" label="&backwardsCheckbox.label;"/>
       </vbox>
     </vbox>
     <vbox>
-      <button class="dialog" id="findNext" value="&findNextButton.label;" oncommand="onFindNext();"/>
-      <button class="dialog" id="replace" value="&replaceButton.label;" oncommand="onReplace();"/>
-      <button class="dialog" id="replaceAll" value="&replaceAllButton.label;" oncommand="onReplaceAll();"/>
-      <button class="dialog" id="close" value="&closeButton.label;" oncommand="close();"/>
+      <button class="dialog" id="findNext" label="&findNextButton.label;" oncommand="onFindNext();"/>
+      <button class="dialog" id="replace" label="&replaceButton.label;" oncommand="onReplace();"/>
+      <button class="dialog" id="replaceAll" label="&replaceAllButton.label;" oncommand="onReplaceAll();"/>
+      <button class="dialog" id="close" label="&closeButton.label;" oncommand="close();"/>
     </vbox>
   </box>
 

@@ -50,33 +50,33 @@
   
   <toolbox id="xuledit-toolbox" flex="1">
     <menubar id="xuledit-menubar">
-      <menu id="menu_File" value="File" accesskey="f">
+      <menu id="menu_File" label="File" accesskey="f">
         <menupopup>
-          <menuitem value="New..." accesskey="n" oncommand="vxShell.newDocument();"/>
+          <menuitem label="New..." accesskey="n" oncommand="vxShell.newDocument();"/>
           <menuseparator/>
-          <menuitem value="Open..." accesskey="o" oncommand="vxShell.loadFormDesignerWithUI();"/>
+          <menuitem label="Open..." accesskey="o" oncommand="vxShell.loadFormDesignerWithUI();"/>
           <menuseparator/>
-          <menuitem value="Save As..." accesskey="a" oncommand="vxShell.saveDocument();"/>
+          <menuitem label="Save As..." accesskey="a" oncommand="vxShell.saveDocument();"/>
           <menuseparator/>
-          <menuitem value="Exit" accesskey="x" key="quitKey"/>
+          <menuitem label="Exit" accesskey="x" key="quitKey"/>
         </menupopup>
       </menu>
-      <menu id="menu_Edit" value="Edit" accesskey="e">
+      <menu id="menu_Edit" label="Edit" accesskey="e">
         <menupopup>
-          <menuitem value="Undo" accesskey="u" oncommand="vxShell.undo();" key="undo"/>
-          <menuitem value="Redo" accesskey="r" oncommand="vxShell.redo();" key="redo"/>
+          <menuitem label="Undo" accesskey="u" oncommand="vxShell.undo();" key="undo"/>
+          <menuitem label="Redo" accesskey="r" oncommand="vxShell.redo();" key="redo"/>
           <menuseparator/>
-          <menuitem value=" "/>
+          <menuitem label=" "/>
         </menupopup>
       </menu>
-      <menu id="menu_Help" value="Help" accesskey="h">
+      <menu id="menu_Help" label="Help" accesskey="h">
         <menupopup>
-          <menuitem value="About" oncommand="vxShell.appAbout();"/>
+          <menuitem label="About" oncommand="vxShell.appAbout();"/>
         </menupopup>
       </menu>
     </menubar>
     <toolbar id="xuledit-toolbar" flex="1">
-      <button class="button-toolbar" value="Dump DOM" oncommand="XXX_dumpDOM();"/>
+      <button class="button-toolbar" label="Dump DOM" oncommand="XXX_dumpDOM();"/>
     </toolbar>
   </toolbox>
 </window>
