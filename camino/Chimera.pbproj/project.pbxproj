@@ -206,6 +206,7 @@
 				089C165CFE840E0CC02AAC07,
 				F52CE65C02BFA8B701026D5D,
 				F51B70B4026EC8A601A80166,
+				F5CA1A1902D3956F01F34900,
 				F5F190BB02D1F81A01026D5D,
 				F5F190BE02D217C201026D5D,
 			);
@@ -536,6 +537,7 @@
 				F52CE65D02BFA8B701026D5D,
 				F5F190BC02D1F81A01026D5D,
 				F5F190BF02D217C201026D5D,
+				F5CA1A1B02D3957001F34900,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -4670,6 +4672,7 @@
 				F52CE65E02BFA8B701026D5D,
 				F5F190BD02D1F81A01026D5D,
 				F5F190C002D217C201026D5D,
+				F5CA1A1C02D3957001F34900,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -6460,6 +6463,33 @@
 		};
 		F5C3AB840270072A01A80166 = {
 			fileRef = F5C3AB820270072A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5CA1A1902D3956F01F34900 = {
+			children = (
+				F5CA1A1A02D3956F01F34900,
+			);
+			isa = PBXVariantGroup;
+			name = Navigator.scriptTerminology;
+			path = "";
+			refType = 4;
+		};
+		F5CA1A1A02D3956F01F34900 = {
+			isa = PBXFileReference;
+			name = English;
+			path = English.lproj/Navigator.scriptTerminology;
+			refType = 4;
+		};
+		F5CA1A1B02D3957001F34900 = {
+			fileRef = F5CA1A1902D3956F01F34900;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5CA1A1C02D3957001F34900 = {
+			fileRef = F5CA1A1902D3956F01F34900;
 			isa = PBXBuildFile;
 			settings = {
 			};
