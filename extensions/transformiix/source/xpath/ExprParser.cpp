@@ -20,13 +20,17 @@
  * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
+ *
  * Olivier Gerardin, ogerardin@vo.lu
+ *   -- added support for number function calls
  *   -- fixed a bug in CreateExpr (@xxx=/yyy was parsed as @xxx=@xxx/yyy)
+ *
  * Marina Mechtcheriakova
+ *   -- added support for lang()
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: ExprParser.cpp,v 1.4 2000/04/19 10:35:52 kvisco%ziplink.net Exp $
+ * $Id: ExprParser.cpp,v 1.5 2000/05/23 08:30:09 kvisco%ziplink.net Exp $
  */
 
 /**
@@ -34,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.4 $ $Date: 2000/04/19 10:35:52 $
+ * @version $Revision: 1.5 $ $Date: 2000/05/23 08:30:09 $
 **/
 
 #include "ExprParser.h"
@@ -411,6 +415,9 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     else if ( XPathNames::FALSE_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall();
     }
+    else if ( XPathNames::LANG_FN.isEqual(tok->value) ) {
+        fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_LANG);
+    }
     else if ( XPathNames::LAST_FN.isEqual(tok->value) ) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LAST);
     }
@@ -669,6 +676,11 @@ PathExpr* ExprParser::createPathExpr(ExprLexer& lexer) {
             case Token::R_PAREN:
             case Token::R_BRACKET:
             case Token::UNION_OP:
+				//Marina, addition start
+				// When parsing a list of parameters for a function comma should signal a spot
+				// without it further processing pathExpr was causing "invalid token" error
+			case Token::COMMA:
+				// Marina, addition ends
                 lexer.pushBack();
                 return pathExpr;
             case Token::ANCESTOR_OP :
