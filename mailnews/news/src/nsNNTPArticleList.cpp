@@ -32,14 +32,14 @@ class nsNNTPArticleList : nsINNTPArticleList
 #endif
 {
 public:
-	nsNNTPArticleList(const nsINNTPHost * newshost,
+	nsNNTPArticleList(nsINNTPHost * newshost,
                       nsINNTPNewsgroup* newsgroup);
                                   /* , MSG_Pane *pane); */
     virtual ~nsNNTPArticleList();
     NS_DECL_ISUPPORTS
   
     // nsINNTPArticleKeysState
-    NS_METHOD Init(const nsINNTPHost *newsHost,
+    NS_METHOD Init(nsINNTPHost *newsHost,
                    nsINNTPNewsgroup *newsgroup);
 	NS_IMETHOD AddArticleKey(PRInt32 key);
 	NS_IMETHOD FinishAddingArticleKeys();
@@ -68,7 +68,7 @@ protected:
 
 NS_IMPL_ISUPPORTS(nsNNTPArticleList, IID())
 
-nsNNTPArticleList::nsNNTPArticleList(const nsINNTPHost* newsHost,
+nsNNTPArticleList::nsNNTPArticleList(nsINNTPHost* newsHost,
                                      nsINNTPNewsgroup* newsgroup)
 {
     NS_INIT_REFCNT();
@@ -76,7 +76,7 @@ nsNNTPArticleList::nsNNTPArticleList(const nsINNTPHost* newsHost,
 }
 
 nsresult
-nsNNTPArticleList::Init(const nsINNTPHost * newsHost,
+nsNNTPArticleList::Init(nsINNTPHost * newsHost,
                               nsINNTPNewsgroup* newsgroup)
 {
 	m_host = newsHost;
@@ -167,7 +167,7 @@ NS_BEGIN_EXTERN_C
 
 nsresult
 NS_NewArticleList(nsINNTPArticleList **articleList,
-                  const nsINNTPHost* newsHost,
+                  nsINNTPHost* newsHost,
                   nsINNTPNewsgroup* newsgroup)
 {
     nsNNTPArticleList* aArticleList =
