@@ -263,6 +263,7 @@ Contributor(s): ______________________________________. -->
       </menu>
 
                   <menuseparator />
+<!-- Deprecated BEGIN
                 <menu value="&dcharMenu.label;">
                      <menupopup>
                                  <menuitem value="&dcharIso1Cmd.label;" oncommand="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
@@ -343,6 +344,7 @@ Contributor(s): ______________________________________. -->
                                  <menuitem value="&dcharWinGreekCmd.label;" oncommand="BrowserSetDefaultCharacterSet('windows-1253');"/>
                         </menupopup>
                  </menu>
+END of Deprecated -->
       <menu id = "charsetMenu" />
       <menu id="CharsetDetectorsMenu" />
    </menupopup>
