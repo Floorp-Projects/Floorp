@@ -89,7 +89,7 @@ static PRInt32 gEntityCodes[] = {
 };
 #undef HTML_ENTITY
 
-#define NS_HTML_ENTITY_COUNT (sizeof(gEntityCodes) / sizeof(PRInt32))
+#define NS_HTML_ENTITY_COUNT ((PRInt32)(sizeof(gEntityCodes) / sizeof(PRInt32)))
 
 void
 nsHTMLEntities::AddRefTable(void) 

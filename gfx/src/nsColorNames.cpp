@@ -131,8 +131,6 @@ nsColorNames::LookupName(const nsStr& aColorName)
 const nsCString& 
 nsColorNames::GetStringValue(nsColorName aColorName)
 {
-  nsCAutoString* value = nsnull;
-
   NS_ASSERTION(gColorArray, "no lookup table, needs addref");
   if ((eColorName_UNKNOWN < aColorName) && 
       (aColorName < eColorName_COUNT) && gColorArray) {
