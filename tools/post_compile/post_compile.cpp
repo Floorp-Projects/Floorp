@@ -48,6 +48,7 @@ bool	gDebug=false;
 bool    gCompact=false;
 bool    gOptimize=false;
 bool    gAssembly=false;
+bool    gfirst=false;
 
 #define bswap_32(x) \
      ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |           \
@@ -224,15 +225,6 @@ int DIGIT_MAP[256] = {
 /*
 * Dceclation of the Instruction types
 */
-char reg_name[14][4] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi",
-        "cs", "ss", "ds", "es", "fs", "gs" };
-
-char instr_name[][8] = { "unknown", "push", "add", "sub", "cmp", "mov", "j", "lea",
-        "inc", "pop", "xor", "nop", "ret", "call" };
-
-char cond_name[][4] = { "o", "no", "b", "nb", "z", "nz", "be", "nbe",
-        "s", "ns", "pe", "po", "l", "ge", "le", "g", "mp", "cxz" };
-
 
 enum eRegister {
     kNoReg = -1,
@@ -240,10 +232,21 @@ enum eRegister {
     kcs, kss, kds, kes, kfs, kgs
 };
 
+char reg_name[14][4] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi",
+        "cs", "ss", "ds", "es", "fs", "gs" };
+
+
 enum eInstruction {
     kunknown, kpush, kadd, ksub, kcmp, kmov, kjmp, klea,
-    kinc, kpop, kxor, knop, kret, kcall, 
+    kinc, kpop, kxor, knop, kret, kcall, kand,  
 };
+
+char instr_name[][8] = { "unknown", "push", "add", "sub", "cmp", "mov", "j", "lea",
+        "inc", "pop", "xor", "nop", "ret", "call", "and", };
+
+
+char cond_name[][4] = { "o", "no", "b", "nb", "z", "nz", "be", "nbe",
+        "s", "ns", "pe", "po", "l", "ge", "le", "g", "mp", "cxz" };
 
 enum eCond {
     kjo, kjno, kjb, kjnb, kjz, kjnz, kjbe, kjnbe,
@@ -355,10 +358,16 @@ struct CPush:CInstruction {
 
     CPush( char imm8 )
     {
+        fInstr = kpush;
+        fFormat = kfreg;
+        fImm32 = imm8;
     }
 
     CPush( long imm32 )
     {
+        fInstr = kpush;
+        fFormat = kfreg;
+        fImm32 = imm32;
     }
 
     CPush( uchar *pCode, eFormat format )
@@ -375,7 +384,7 @@ struct CPush:CInstruction {
 struct CInc:CInstruction {
     CInc( eRegister reg )
     {
-        fInstr = kpush;
+        fInstr = kinc;
         fFormat = kfreg;
         fReg1 = reg;
     }
@@ -392,6 +401,14 @@ struct CInc:CInstruction {
 
 
 struct CMov:CInstruction {
+    CMov( eRegister reg, uchar *pCode, eFormat format )
+    {
+        fReg1 = reg;
+        fInstr = kmov;
+        fFormat = format;
+        fSize += am_rm32( pCode );
+    }
+
     CMov( uchar *pCode, eFormat format )
     {
         fInstr = kmov;
@@ -399,6 +416,7 @@ struct CMov:CInstruction {
         fSize += am_rm32_reg( pCode );
     }
 
+    virtual void    optimize( void );
     virtual int     generate_opcode( uchar *buffer );
 };
 
@@ -441,6 +459,18 @@ struct CSub:CInstruction {
 };
 
 
+struct CAnd:CInstruction {
+    CAnd( uchar *pCode, eFormat format )
+    {
+        fInstr = kand;
+        fFormat = format;
+        fSize += am_rm32_reg( pCode );
+    }
+
+    virtual int     generate_opcode( uchar *buffer );
+};
+
+
 struct CXor:CInstruction {
     CXor( uchar *pCode, eFormat format )
     {
@@ -469,7 +499,7 @@ struct CCall:CInstruction {
 struct CJmp:CInstruction {
     eCond   fCond;
 
-    CJmp( eCond cond, uchar imm8 )
+    CJmp( eCond cond, char imm8 )
     {
         fInstr = kjmp;
         fImm32 = imm8;
@@ -560,6 +590,13 @@ int CInstruction::am_rm32( uchar *pCode )
     else if ((reg & 0xC0) == 0x00) // no disp
     {
         fFormat = (eFormat)(fFormat | kfmDeref);
+		if (fReg2  == 0x05)	// absolute address
+		{
+			fReg2 = kNoReg;
+	        fDisp32 = bswap_32( *(long*)pCode );
+	        pCode += 4;
+    	    isize += 4;
+		}
     }
 
     if (fFormat & kfmImm8)
@@ -624,7 +661,14 @@ int CInstruction::am_encode( uchar *buffer, eRegister reg1 )
         isize++;
     }
 
-    if (fDisp32 == 0)
+    if ( (fReg2 == kNoReg) && (fFormat & kfmDeref) )	// absolute address
+	{
+        *buffer = 0x00 | (reg1 << 3) | 0x05;
+        long bsDisp32 = bswap_32( fDisp32 );
+        memcpy( buffer+1, &bsDisp32, 4 );
+        isize += 4;
+	}
+    else if (fDisp32 == 0)
     {
         if (format & kfmDeref)
         {
@@ -641,7 +685,7 @@ int CInstruction::am_encode( uchar *buffer, eRegister reg1 )
         *(buffer+1) = (uchar)fDisp32;
         isize++;
     }
-    else
+	else
     {
         *buffer = 0x40 | (reg1 << 3) | fReg2;
         long bsDisp32 = bswap_32( fDisp32 );
@@ -744,6 +788,13 @@ int CLea::generate_opcode( uchar *buffer )
 }
 
 
+void CMov::optimize( void )
+{
+    if ( (fReg1 == fReg2) && (fReg3 == kNoReg) && !(fFormat & kfmDeref) )
+        fInstr = knop;
+}
+
+
 int CMov::generate_opcode( uchar *buffer )
 {
     int     isize = 1;
@@ -841,6 +892,43 @@ int CCmp::generate_opcode( uchar *buffer )
             buffer[0] = 0x3A;
         else
             buffer[0] = 0x3B;
+    }
+
+    isize += am_encode( &buffer[1], fReg1 );
+    return isize;
+}
+
+
+int CAnd::generate_opcode( uchar *buffer )
+{
+    int     isize = 1;
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+
+    if (format == kfrm32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x80;
+        else if (fFormat & kfmImm8)
+            buffer[0] = 0x83;
+        else
+            buffer[0] = 0x81;
+
+        isize += am_encode( &buffer[1], (eRegister)4 );
+        return isize;
+    }
+    else if (format == kfrm32_r32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x20;
+        else
+            buffer[0] = 0x21;
+    }
+    else if (format == kfr32_rm32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x22;
+        else
+            buffer[0] = 0x23;
     }
 
     isize += am_encode( &buffer[1], fReg1 );
@@ -1061,7 +1149,10 @@ void CInstruction::output_text( void )
             cout << reg_name[fReg1] << ", ";
             if (fDisp32) cout << fDisp32;
             if (fFormat & kfmDeref)  cout << "(";
-            cout << reg_name[fReg2];
+			if (fReg2 != kNoReg)
+	            cout << reg_name[fReg2];
+			else
+				cout.form( "0x%08X", (long)(bswap_32(fDisp32)) );
             if (fFormat & kfmDeref)  cout << ")";
             break;
     }
@@ -1076,7 +1167,8 @@ void CInstruction::output_text( void )
 void CJmp::output_text( void )
 {
     cout << "j" << cond_name[fCond];
-    cout.form( "\t.+0x%02X\n", fImm32 );
+//    cout.form( "\t.+0x%02X\n", fImm32 );
+    cout.form( "\t.+%ld\n", fImm32 );
 }
 
 
@@ -1100,6 +1192,29 @@ int hexdump( CInstruction *instr )
 }
 
 
+CInstruction* get_2byte_instruction( uchar *pCode )
+{
+    CInstruction    *retInstr=NULL;
+    uchar           *reg = pCode+1;
+
+	switch (*pCode)
+	{
+		case 0xBE:
+            retInstr = new CMov( reg, (eFormat)(kfr32_rm32 | kfmSize8) );
+			break;
+		case 0xBF:
+            retInstr = new CMov( reg, (eFormat)(kfr32_rm32 | kfmSize16) );
+			break;
+	}
+
+// ek only until the table above is completed
+    if (retInstr == NULL)   retInstr = new CInstruction();
+
+	retInstr->fSize++;
+	return retInstr;
+}
+
+
 CInstruction* get_next_instruction( uchar *pCode )
 {
     CInstruction    *retInstr=NULL;
@@ -1118,6 +1233,15 @@ CInstruction* get_next_instruction( uchar *pCode )
             break;
         case 0x03:
             retInstr = new CAdd( reg, kfr32_rm32 );
+            break;
+        case 0x06:
+            retInstr = new CPush( kes );
+            break;
+		case 0x0F:
+			retInstr = get_2byte_instruction( reg );
+			break;
+        case 0x25:
+            retInstr = new CAnd( reg, kfr32_rm32 );
             break;
         case 0x28:
             retInstr = new CSub( reg, (eFormat)(kfrm32_r32 | kfmSize8) );
@@ -1163,6 +1287,27 @@ CInstruction* get_next_instruction( uchar *pCode )
         case 0x5e:
         case 0x5f:
             retInstr = new CPop( (eRegister)(*pCode & 0x07) );
+            break;
+        case 0x6A:
+            retInstr = new CPush( (char)(*reg) );
+            break;
+        case 0x70:
+        case 0x71:
+        case 0x72:
+        case 0x73:
+        case 0x74:
+        case 0x75:
+        case 0x76:
+        case 0x77:
+        case 0x78:
+        case 0x79:
+        case 0x7A:
+        case 0x7B:
+        case 0x7C:
+        case 0x7D:
+        case 0x7E:
+        case 0x7F:
+            retInstr = new CJmp( (eCond)(*pCode - 0x70), (char)*reg );
             break;
         case 0x80:
             switch (DIGIT_MAP[*reg])
@@ -1233,6 +1378,16 @@ CInstruction* get_next_instruction( uchar *pCode )
         case 0x90:
             retInstr = new CNop();
             break;
+        case 0xB8:
+        case 0xB9:
+        case 0xBA:
+        case 0xBB:
+        case 0xBC:
+        case 0xBD:
+        case 0xBE:
+        case 0xBF:
+            retInstr = new CMov( (eRegister)(*pCode & 0x07), reg, (eFormat)(kfrm32 | kfmImm32) );
+            break;
         case 0xC3:
             retInstr = new CRet();
             break;
@@ -1241,9 +1396,6 @@ CInstruction* get_next_instruction( uchar *pCode )
             break;
 
 
-        case 0x7E:
-            retInstr = new CJmp( kjle, *reg );
-            break;
         case 0xE8:
             retInstr = new CCall( (long)bswap_32( *(long*)reg ));
             break;
@@ -1271,7 +1423,16 @@ CInstruction* get_next_instruction( uchar *pCode )
     }
 
 // ek only until the table above is completed
-    if (retInstr == NULL)   retInstr = new CInstruction();
+    if (retInstr == NULL)
+    {
+        if (!gfirst)
+        {
+            cout << (unsigned long)*pCode << " was the first\n";
+            cout << (unsigned long)*(pCode+1) << "\n";
+        }
+        gfirst = true;
+        retInstr = new CInstruction();
+    }
 
     return retInstr;
 }
@@ -1353,6 +1514,7 @@ process_mapping(char* mapping, size_t size)
         else if (name == ".strtab") {
             strtabsh = shdrs + i;
         }
+cout << name << " size = " << (shdrs+i)->sh_size << "\n";
     }
 
     // find the .strtab
@@ -1361,6 +1523,7 @@ process_mapping(char* mapping, size_t size)
     // find the .text
     char* text = mapping + textsh->sh_offset;
     int textaddr = textsh->sh_addr;
+
 
     // find the symbol table
     int nentries = symtabsh->sh_size / sizeof(Elf32_Sym);
