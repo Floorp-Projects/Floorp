@@ -61,6 +61,8 @@
 #include "nsCopyMessageStreamListener.h"
 #include "nsICopyMessageListener.h"
 
+#include "nsIMessageView.h"
+
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
@@ -106,6 +108,8 @@ public:
                                       nsIDOMNodeList *nodeList, nsISupports
                                       **aSupport); 
   NS_IMETHOD Exit();
+  NS_IMETHOD ViewAllMessages(nsIRDFCompositeDataSource *databsae);
+  NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *databsae);
 
 private:
   
@@ -161,6 +165,48 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 	return rv;
 }
 
+static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **messageView)
+{
+	if(!messageView)
+		return NS_ERROR_NULL_POINTER;
+
+	nsIRDFService* gRDFService = nsnull;
+	nsIRDFDataSource *view, *datasource;
+	nsresult rv;
+	rv = nsServiceManager::GetService(kRDFServiceCID,
+												nsIRDFService::GetIID(),
+												(nsISupports**) &gRDFService);
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = gRDFService->GetDataSource("rdf:mail-messageview", &view);
+		rv = NS_SUCCEEDED(rv) && gRDFService->GetDataSource("rdf:mailnews", &datasource);
+		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+	}
+
+	if(!NS_SUCCEEDED(rv))
+		return rv;
+
+	database->RemoveDataSource(datasource);
+
+	database->AddDataSource(view); 
+
+			//add the datasource
+		//return the view as an nsIMessageView
+	nsIRDFCompositeDataSource *viewCompositeDataSource;
+	if(NS_SUCCEEDED(view->QueryInterface(nsIRDFCompositeDataSource::GetIID(), (void**)&viewCompositeDataSource)))
+	{
+		viewCompositeDataSource->AddDataSource(datasource);
+		NS_IF_RELEASE(viewCompositeDataSource);
+	}
+	rv = view->QueryInterface(nsIMessageView::GetIID(), (void**)messageView);
+
+	NS_IF_RELEASE(view);
+	NS_IF_RELEASE(datasource);
+
+	return rv;
+
+
+}
 nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset) 
 {
 	nsresult res = NS_OK;
@@ -705,6 +751,34 @@ nsMsgAppCore::Exit()
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   } 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAppCore::ViewAllMessages(nsIRDFCompositeDataSource *database)
+{
+	nsIMessageView *messageView;
+	if(NS_SUCCEEDED(AddView(database, &messageView)))
+	{
+		messageView->SetShowAll(PR_TRUE);
+		NS_IF_RELEASE(messageView);
+	}
+
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP
+nsMsgAppCore::ViewUnreadMessages(nsIRDFCompositeDataSource *database)
+{
+	nsIMessageView *messageView;
+	if(NS_SUCCEEDED(AddView(database, &messageView)))
+	{
+		messageView->SetShowUnread(PR_TRUE);
+		NS_IF_RELEASE(messageView);
+	}
+
+	return NS_OK;
+
 }
 
 //  to load the webshell!

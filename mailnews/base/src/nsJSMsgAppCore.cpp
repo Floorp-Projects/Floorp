@@ -32,6 +32,8 @@
 #include "nsRepository.h"
 #include "nsDOMCID.h"
 #include "nsIDOMXULTreeElement.h"
+#include "nsIRDFCompositeDataSource.h"
+#include "nsIMessageView.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -488,6 +490,81 @@ MsgAppCoreMoveMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 		return JS_FALSE;
 }
 
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreViewAllMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+	nsIRDFCompositeDataSource *db;
+	const nsString typeName;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return NS_OK;
+  }
+
+  if (argc >= 1) {
+		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&db,
+									nsIRDFCompositeDataSource::GetIID(),
+									typeName,
+									cx,
+									argv[0]);
+
+		
+    if (!rBool || NS_OK != nativeThis->ViewAllMessages(db)) {
+      return JS_FALSE;
+    }
+
+		NS_RELEASE(db);
+  }
+  else {
+    JS_ReportError(cx, "Function CopyMessages requires 1 parameter");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreViewUnreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+	nsIRDFCompositeDataSource *db;
+	const nsString typeName;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return NS_OK;
+  }
+
+  if (argc >= 1) {
+		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&db,
+									nsIRDFCompositeDataSource::GetIID(),
+									typeName,
+									cx,
+									argv[0]);
+
+		
+    if (!rBool || NS_OK != nativeThis->ViewUnreadMessages(db)) {
+      return JS_FALSE;
+    }
+
+		NS_RELEASE(db);
+  }
+  else {
+    JS_ReportError(cx, "Function CopyMessages requires 1 parameter");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
 /***********************************************************************/
 //
 // class for MsgAppCore
@@ -529,6 +606,8 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"exit",				MsgAppCoreExit, 0},
   {"CopyMessages",		MsgAppCoreCopyMessages, 3},
   {"MoveMessages",		MsgAppCoreMoveMessages, 3},
+  {"ViewAllMessages",	MsgAppCoreViewAllMessages, 1},
+	{"ViewUnreadMessages", MsgAppCoreViewUnreadMessages, 1},
   {0}
 };
 
