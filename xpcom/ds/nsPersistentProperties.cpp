@@ -362,7 +362,7 @@ ParseBuffer(nsParserState& aState,
   const PRUnichar* end = aBuffer + aBufferLength;
   
   // points the start/end of the current key or value
-  const PRUnichar* tokenStart = nsnull, tokenEnd = nsnull;
+  const PRUnichar* tokenStart = nsnull;
 
   // if we're in the middle of parsing a key or value, make sure
   // the current token points to the beginning of the current buffer
@@ -559,7 +559,7 @@ nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
   // Step through hash entries populating a transient array
   PRUint32 n =
       PL_DHashTableEnumerate(&mTable, AddElemToArray, (void *)propArray);
-  if ( n < (PRIntn) mTable.entryCount )
+  if ( n < mTable.entryCount )
       return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_NewArrayEnumerator(aResult, propArray); 
