@@ -237,6 +237,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
                         if(!globalObject) break;
                     
                         globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+						mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
                       }   
                   }
                 }
@@ -274,6 +275,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
                 if(!globalObject) break;
                      
                 globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, status); 
+				mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, status);
               }
       }
     }
