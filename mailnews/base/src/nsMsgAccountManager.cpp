@@ -893,7 +893,7 @@ PRBool nsMsgAccountManager::writeFolderCache(nsHashKey *aKey, void *aData,
 }
 
 // enumeration for empty trash on exit
-PRBool PR_CALLBACK nsMsgAccountManager::CleanupOnExit(nsHashKey *aKey, void *aData,
+PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aData,
                                              void *closure)
 {
   nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
@@ -1373,7 +1373,7 @@ nsMsgAccountManager::CloseCachedConnections()
 NS_IMETHODIMP
 nsMsgAccountManager::CleanupOnExit()
 {
-	m_incomingServers.Enumerate(CleanupOnExit,nsnull);
+	m_incomingServers.Enumerate(cleanupOnExit, nsnull);
 	return NS_OK;
 }
 

@@ -127,7 +127,7 @@ private:
                                      void *closure);
 
   // clean up on exit
-  static PRBool PR_CALLBACK CleanupOnExit(nsHashKey *aKey, void *aData,
+  static PRBool PR_CALLBACK cleanupOnExit(nsHashKey *aKey, void *aData,
                                      void *closure);
   //
   // account enumerators
