@@ -66,6 +66,11 @@
 
 #include "nsStyleConsts.h"
 
+#if defined(XP_WIN32)
+#include <windows.h>   // for SetProcessWorkingSetSize()
+#include <malloc.h>    // for _heapmin()
+#endif
+
 #define ABS(x) ((x)<0?-(x):x)
 
 // XXX Get rid of this
@@ -330,6 +335,27 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    
    mBeingDestroyed = PR_TRUE;
 
+#if defined(XP_WIN32)
+   // Heap compact if this the close of a major window
+   // like composer, mail, browser
+   PRBool compact = PR_FALSE;
+   nsCOMPtr<nsIDOMElement> windowElement;
+   GetWindowDOMElement(getter_AddRefs(windowElement));
+   if (windowElement)
+   {
+     nsAutoString windowType;
+     nsresult rv = windowElement->GetAttribute(WINDOWTYPE_ATTRIBUTE, windowType);
+     if (NS_SUCCEEDED(rv) && 
+         (windowType.Equals(NS_LITERAL_STRING("mail:3pane")) ||
+          windowType.Equals(NS_LITERAL_STRING("navigator:browser")) ||
+          windowType.Equals(NS_LITERAL_STRING("composer:html")) ||
+          windowType.Equals(NS_LITERAL_STRING("msgcompose"))))
+     {
+       compact = PR_TRUE;
+     }
+   }
+#endif
+
    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
    if (parentWindow)
      parentWindow->RemoveChildWindow(this);
@@ -407,6 +433,54 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       mWindow->SetClientData(0); // nsWebShellWindow hackery
       mWindow = nsnull;
    }
+
+#if defined(XP_WIN32)
+   if (compact)
+   {
+     // Heap compaction and shrink working set now 
+#ifdef DEBUG_dp
+     PRIntervalTime start = PR_IntervalNow();
+     int ret = 
+#endif
+       _heapmin();
+#ifdef DEBUG_dp
+     printf("DEBUG: HeapCompact() %s - %d ms\n", (!ret ? "success" : "FAILED"),
+            PR_IntervalToMilliseconds(PR_IntervalNow()-start));
+#endif
+
+     // shrink working set if we can
+     // static to figure out address of SetProcessWorkingSetSize()
+     // This function call is available only on winnt and above.
+     typedef BOOL WINAPI SetProcessWorkingSetProc(HANDLE hProcess, SIZE_T dwMinimumWorkingSetSize,
+                                                  SIZE_T dwMaximumWorkingSetSize);
+     static PRBool firstTime = PR_TRUE;
+     static SetProcessWorkingSetProc *setProcessWorkingSetSizeP = NULL;
+
+     if (firstTime)
+     {
+       firstTime = PR_FALSE;
+       HMODULE kernel = GetModuleHandle("kernel32.dll");
+       if (kernel)
+       {
+         setProcessWorkingSetSizeP = (SetProcessWorkingSetProc *)
+           GetProcAddress(kernel, "SetProcessWorkingSetSize");
+       }
+     }
+
+     if (setProcessWorkingSetSizeP)
+     {
+       // shrink working set
+#ifdef DEBUG_dp
+       start = PR_IntervalNow();
+#endif
+       (*setProcessWorkingSetSizeP)(GetCurrentProcess(), -1, -1);
+#ifdef DEBUG_dp
+       printf("DEBUG: Honey! I shrunk the resident-set! - %d ms\n",
+              PR_IntervalToMilliseconds(PR_IntervalNow() - start));
+#endif
+     }
+   } // compact
+#endif
 
    return NS_OK;
 }
