@@ -376,14 +376,15 @@ NS_METHOD nsBaseWidget::SetCursor(nsCursor aCursor)
 //-------------------------------------------------------------------------
 nsIRenderingContext* nsBaseWidget::GetRenderingContext()
 {
-  nsRect  bounds;
   nsIRenderingContext *renderingCtx = NULL;
   nsresult  res;
 
   static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-  res = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&renderingCtx);
+  res = nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
+                                           kRenderingContextIID,
+                                           (void **)&renderingCtx);
 
   if (NS_OK == res)
     renderingCtx->Init(mContext, this);
@@ -755,7 +756,6 @@ void nsBaseWidget::DrawScaledLine(nsIRenderingContext& aRenderingContext,
   float sy = (float)aSY;
   float ex = (float)aEX;
   float ey = (float)aEY;
-  float twoAppUnits = aAppUnits * 2.0f;
 
   for (int i=0;i<int(aScale);i++) {
     aSX = nscoord(sx);
