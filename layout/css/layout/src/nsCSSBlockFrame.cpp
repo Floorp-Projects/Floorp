@@ -1405,6 +1405,7 @@ nsCSSBlockFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
       // Insert the bullet. Do not allow an incremental reflow operation
       // to occur.
       mContent->InsertChildAt(bullet, 0, PR_FALSE);
+      NS_RELEASE(bullet);
     }
   }
 
