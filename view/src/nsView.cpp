@@ -82,7 +82,7 @@ class ViewWrapper : public nsISupports
     nsView* mView;
 };
 
-NS_IMPL_ISUPPORTS1(ViewWrapper, ViewWrapper);
+NS_IMPL_ISUPPORTS1(ViewWrapper, ViewWrapper)
 
 /**
  * Given a widget, returns the stored ViewWrapper on it, or NULL if no
