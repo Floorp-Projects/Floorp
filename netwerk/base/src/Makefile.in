@@ -49,7 +49,12 @@ MODULE = netwerk
 
 include $(topsrcdir)/config/config.mk
 
-TARGET = $(LIBARY)
+MKSHLIB :=
+
+# we don't want the shared lib, but we want to force the creation of a 
+# static l\ib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(DEPTH)/config/rules.mk
 
