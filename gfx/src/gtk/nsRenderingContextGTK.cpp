@@ -1480,6 +1480,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 }
 
 
+#if 0
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
@@ -1502,7 +1503,7 @@ nsRenderingContextGTK::DrawTile(nsIImage *aImage,
 
   return NS_OK;
 }
-
+#endif
 
 
 
