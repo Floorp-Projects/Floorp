@@ -390,13 +390,6 @@
 
           <!-- yes, the type attribute is necessary otherwise all leaves are 
                treated as containers for some reason -->
-          <xul:rule parent="hbox" iscontainer="true" nc:FolderGroup="true">
-            <xul:toolbarbutton class="bookmark-item bookmark-group" uri="rdf:*" xulcontentsgenerated="true" 
-                               group="true" container="false"
-                               rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                               label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </xul:rule>
-
           <xul:rule parent="hbox" iscontainer="true" isempty="true"
                     rdf:type="http://home.netscape.com/NC-rdf#Folder">
             <xul:toolbarbutton type="menu" editable="true" class="bookmark-item"
@@ -423,16 +416,6 @@
                                statustext="rdf:http://home.netscape.com/NC-rdf#URL"
                                tooltip="ptTooltip"
                                label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </xul:rule>
-
-          <xul:rule nc:FolderGroup="true" iscontainer="true">
-            <xul:menupopup>
-              <xul:menuitem class="menuitem-iconic bookmark-group" 
-                            label="rdf:http://home.netscape.com/NC-rdf#Name"
-                            group="true"
-                            uri="rdf:*"
-                            xulcontentsgenerated="true"/>
-            </xul:menupopup>
           </xul:rule>
 
           <xul:rule iscontainer="true" isempty="true" rdf:type="http://home.netscape.com/NC-rdf#Folder">
