@@ -48,6 +48,7 @@
 #include "nsIPresShell.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
+#include "nsINameSpaceManager.h"
 
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
@@ -378,6 +379,14 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   return result;
 }
 
+nsresult
+nsGenericHTMLElement::GetNameSpaceID(PRInt32& aID) const
+{
+  aID = kNameSpaceID_HTML;
+  return NS_OK;
+}
+
+
 //void
 //nsHTMLTagContent::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 //{
@@ -481,6 +490,15 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
       AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID); 
     else if (nsHTMLAtoms::onpaint == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
+    // check for class and upper case it
+    else if (nsHTMLAtoms::kClass == aAttribute) {
+      nsAutoString buffer;
+      aValue.ToUpperCase(buffer);
+      nsIAtom* classAtom = NS_NewAtom(buffer);
+      result = SetClass(classAtom);
+      NS_RELEASE(classAtom);
+      return result;
+    }
 
     nsHTMLValue val;
     nsIHTMLContent* htmlContent;

@@ -26,6 +26,7 @@
 #include "nsTextFragment.h"
 #include "nsHTMLValue.h"
 #include "nsVoidArray.h"
+#include "nsINameSpaceManager.h"
 
 extern const nsIID kIDOMCharacterDataIID;
 extern const nsIID kIDOMNodeIID;
@@ -126,6 +127,10 @@ struct nsGenericDOMDataNode {
   nsresult SetParent(nsIContent* aParent);
   nsresult IsSynthetic(PRBool& aResult) {
     aResult = PR_FALSE;
+    return NS_OK;
+  }
+  nsresult GetNameSpaceID(PRInt32& aID) const {
+    aID = kNameSpaceID_None;
     return NS_OK;
   }
   nsresult GetTag(nsIAtom*& aResult) const {
@@ -424,6 +429,9 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
     return _g.IsSynthetic(aResult);                                        \
+  }                                                                        \
+  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const {                          \
+    return _g.GetNameSpaceID(aID);                                         \
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \

@@ -63,6 +63,7 @@ public:
   nsresult    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
 
   // Implementation for nsIContent
+  nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
   nsresult SetAttribute(const nsString& aName, const nsString& aValue,
                         PRBool aNotify);
