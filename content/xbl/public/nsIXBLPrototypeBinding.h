@@ -32,8 +32,11 @@ class nsIDocument;
 class nsIDOMEventReceiver;
 class nsIXBLDocumentInfo;
 class nsIXBLPrototypeHandler;
+class nsIXBLPrototypeProperty; 
 class nsIXBLBinding;
 class nsISupportsArray;
+class nsCString; 
+class nsIScriptContext;
 
 // {34D700F5-C1A2-4408-A0B1-DD8F891DD1FE}
 #define NS_IXBLPROTOTYPEBINDING_IID \
@@ -62,6 +65,12 @@ public:
 
   NS_IMETHOD GetPrototypeHandlers(nsIXBLPrototypeHandler** aHandler)=0;
   NS_IMETHOD SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler)=0;
+  
+  NS_IMETHOD GetPrototypeProperties(nsIXBLPrototypeProperty** aResult) = 0;
+  NS_IMETHOD SetProtoTypeProperties(nsIXBLPrototypeProperty* aResult) = 0;
+  NS_IMETHOD GetCompiledClassObject(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject) = 0;
+  
+  NS_IMETHOD InitClass(const nsCString& aClassName, nsIScriptContext * aContext, void * aScriptObject, void ** aClassObject) = 0;
   
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag, 
                               nsIContent* aChangedElement, nsIContent* aAnonymousContent)=0;

@@ -33,6 +33,7 @@ REQUIRES	= xpcom string js dom widget caps htmlparser necko xpconnect pref docsh
 CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLPrototypeBinding.cpp \
+    nsXBLPrototypeProperty.cpp \
     nsXBLEventHandler.cpp \
     nsXBLWindowHandler.cpp \
     nsXBLWindowKeyHandler.cpp \

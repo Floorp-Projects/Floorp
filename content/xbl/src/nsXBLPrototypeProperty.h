@@ -68,9 +68,9 @@ protected:
   static nsIAtom* kNameAtom;
   static nsIAtom* kReadOnlyAtom;
   
-  void * mJSMethod; // precompiled JS for a method
-  void * mJSGetterObject; // precompiled JS for a getter property
-  void * mJSSetterObject; // precompiled JS for a setter property
+  JSObject * mJSMethodObject; // precompiled JS for a method
+  JSObject * mJSGetterObject; // precompiled JS for a getter property
+  JSObject * mJSSetterObject; // precompiled JS for a setter property
   nsString mLiteralPropertyString; // the property is just a literal string
 
   JSObject* mClassObject;

@@ -26,10 +26,11 @@ EXPORTS =				\
     nsIXBLBinding.h \
     nsIXBLBindingAttachedHandler.h \
     nsIXBLDocumentInfo.h \
-	nsIXBLInsertionPoint.h \
+    nsIXBLInsertionPoint.h \
     nsIXBLPrototypeBinding.h \
     nsIXBLPrototypeHandler.h \
     nsIXBLService.h \
+    nsIXBLPrototypeProperty.h \
     $(NULL)
 
 MODULE=raptor 

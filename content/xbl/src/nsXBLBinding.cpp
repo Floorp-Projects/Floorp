@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): Brendan Eich (brendan@mozilla.org)
+ *                 Scott MacGregor (mscott@netscape.com)
  */
 
 #include "nsCOMPtr.h"
@@ -53,6 +54,7 @@
 #include "nsXBLService.h"
 #include "nsIXBLInsertionPoint.h"
 #include "nsIXPConnect.h"
+#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptContext.h"
 
 // Event listeners
@@ -73,6 +75,7 @@
 #include "nsIDOMNamedNodeMap.h"
 
 #include "nsIXBLPrototypeHandler.h"
+#include "nsIXBLPrototypeProperty.h"
 
 #include "nsXBLKeyHandler.h"
 #include "nsXBLFocusHandler.h"
@@ -1054,281 +1057,47 @@ nsXBLBinding::InstallEventHandlers()
   return NS_OK;
 }
 
-const char* gPropertyArg[] = { "val" };
-
 NS_IMETHODIMP
 nsXBLBinding::InstallProperties()
 {
   // Always install the base class properties first, so that
   // derived classes can reference the base class properties.
+
   if (mNextBinding)
     mNextBinding->InstallProperties();
 
-   // Fetch the interface element for this binding.
-  nsCOMPtr<nsIContent> interfaceElement;
-  GetImmediateChild(kImplementationAtom, getter_AddRefs(interfaceElement));
+  // iterate through each property in the prototype's list and install the property.
+  if (AllowScripts()) {
+    nsCOMPtr<nsIXBLPrototypeProperty> propertyChain;
+    mPrototypeBinding->GetPrototypeProperties(getter_AddRefs(propertyChain));
 
-  if (interfaceElement && AllowScripts()) {
-    // Get our bound element's script context.
-    nsresult rv;
+    if (!propertyChain) return NS_OK; // kick out if our list is empty
+
     nsCOMPtr<nsIDocument> document;
     mBoundElement->GetDocument(*getter_AddRefs(document));
-    if (!document)
-      return NS_OK;
+    if (!document) return NS_OK;
 
     nsCOMPtr<nsIScriptGlobalObject> global;
     document->GetScriptGlobalObject(getter_AddRefs(global));
-
-    if (!global)
-      return NS_OK;
+    if (!global) return NS_OK;
 
     nsCOMPtr<nsIScriptContext> context;
-    rv = global->GetContext(getter_AddRefs(context));
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = global->GetContext(getter_AddRefs(context));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!context) return NS_OK;
 
-    // Init our class and insert it into the prototype chain.
-    nsAutoString className;
-    nsCAutoString classStr; 
-    interfaceElement->GetAttr(kNameSpaceID_None, kNameAtom, className);
-    if (!className.IsEmpty()) {
-      classStr.AssignWithConversion(className);
-    }
-    else {
-      GetBindingURI(classStr);
-    }
+    void * targetScriptObject = nsnull;
+    void * targetClassObject = nsnull;
+    rv = propertyChain->InitTargetObjects(context, mBoundElement, &targetScriptObject, &targetClassObject);
+    NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
 
-    JSObject* scriptObject;
-    JSObject* classObject;
-    if (NS_FAILED(rv = InitClass(classStr, context, document, (void**)&scriptObject, (void**)&classObject)))
-      return rv;
-
-    JSContext* cx = (JSContext*)context->GetNativeContext();
-
-    // Do a walk.
-    PRInt32 childCount;
-    interfaceElement->ChildCount(childCount);
-    for (PRInt32 i = 0; i < childCount; i++) {
-      nsCOMPtr<nsIContent> child;
-      interfaceElement->ChildAt(i, *getter_AddRefs(child));
-
-      // See if we're a property or a method.
-      nsCOMPtr<nsIAtom> tagName;
-      child->GetTag(*getter_AddRefs(tagName));
-
-      if (tagName.get() == kMethodAtom && classObject) {
-        // Obtain our name attribute.
-        nsAutoString name, body;
-        child->GetAttr(kNameSpaceID_None, kNameAtom, name);
-
-        // Now walk all of our args.
-        // XXX I'm lame. 32 max args allowed.
-        char* args[32];
-        PRUint32 argCount = 0;
-        PRInt32 kidCount;
-        child->ChildCount(kidCount);
-        for (PRInt32 j = 0; j < kidCount; j++)
-        {
-          nsCOMPtr<nsIContent> arg;
-          child->ChildAt(j, *getter_AddRefs(arg));
-          nsCOMPtr<nsIAtom> kidTagName;
-          arg->GetTag(*getter_AddRefs(kidTagName));
-          if (kidTagName.get() == kParameterAtom) {
-            // Get the argname and add it to the array.
-            nsAutoString argName;
-            arg->GetAttr(kNameSpaceID_None, kNameAtom, argName);
-            char* argStr = argName.ToNewCString();
-            args[argCount] = argStr;
-            argCount++;
-          }
-          else if (kidTagName.get() == kBodyAtom) {
-            PRInt32 textCount;
-            arg->ChildCount(textCount);
-            
-            for (PRInt32 k = 0; k < textCount; k++) {
-              // Get the child.
-              nsCOMPtr<nsIContent> textChild;
-              arg->ChildAt(k, *getter_AddRefs(textChild));
-              nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
-              if (text) {
-                nsAutoString data;
-                text->GetData(data);
-                body += data;
-              }
-            }
-          }
-        }
-
-        // Now that we have a body and args, compile the function
-        // and then define it as a property.
-        if (!body.IsEmpty()) {
-          void* myFunc;
-          nsCAutoString cname; cname.AssignWithConversion(name.get());
-          nsCAutoString functionUri = classStr;
-          functionUri += ".";
-          functionUri += cname;
-          functionUri += "()";
-          
-          rv = context->CompileFunction(classObject,
-                                        cname,
-                                        argCount,
-                                        (const char**)args,
-                                        body, 
-                                        functionUri.get(),
-                                        0,
-                                        PR_FALSE,
-                                        &myFunc);
-        }
-        for (PRUint32 l = 0; l < argCount; l++) {
-          nsMemory::Free(args[l]);
-        }
-      }
-      else if (tagName.get() == kPropertyAtom) {
-        // Obtain our name attribute.
-        nsAutoString name;
-        child->GetAttr(kNameSpaceID_None, kNameAtom, name);
-
-        if (!name.IsEmpty()) {
-          // We have a property.
-          nsAutoString getter, setter, readOnly;
-          child->GetAttr(kNameSpaceID_None, kOnGetAtom, getter);
-          child->GetAttr(kNameSpaceID_None, kOnSetAtom, setter);
-          child->GetAttr(kNameSpaceID_None, kReadOnlyAtom, readOnly);
-
-          void* getFunc = nsnull;
-          void* setFunc = nsnull;
-          uintN attrs = JSPROP_ENUMERATE;
-
-          if (readOnly == NS_LITERAL_STRING("true"))
-            attrs |= JSPROP_READONLY;
-
-          // try for first <getter> tag
-          if (getter.IsEmpty()) {
-            PRInt32 childCount;
-            child->ChildCount(childCount);
-
-            nsCOMPtr<nsIContent> getterElement;
-            for (PRInt32 j=0; j<childCount; j++) {
-              child->ChildAt(j, *getter_AddRefs(getterElement));
-              
-              if (!getterElement) continue;
-              
-              nsCOMPtr<nsIAtom> getterTag;
-              getterElement->GetTag(*getter_AddRefs(getterTag));
-              
-              if (getterTag.get() == kGetterAtom) {
-                GetTextData(getterElement, getter);
-                break;          // stop at first tag
-              }
-            }
-
-          }
-          
-          if (!getter.IsEmpty() && classObject) {
-            nsCAutoString functionUri = classStr;
-            functionUri += ".";
-            functionUri.AppendWithConversion(name.get());
-            functionUri += " (getter)";
-            rv = context->CompileFunction(classObject,
-                                          nsCAutoString("onget"),
-                                          0,
-                                          nsnull,
-                                          getter, 
-                                          functionUri.get(),
-                                          0,
-                                          PR_FALSE,
-                                          &getFunc);
-            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-            attrs |= JSPROP_GETTER | JSPROP_SHARED;
-          }
-
-          // try for first <setter> tag
-          if (setter.IsEmpty()) {
-            PRInt32 childCount;
-            child->ChildCount(childCount);
-
-            nsCOMPtr<nsIContent> setterElement;
-            for (PRInt32 j=0; j<childCount; j++) {
-              child->ChildAt(j, *getter_AddRefs(setterElement));
-              
-              if (!setterElement) continue;
-              
-              nsCOMPtr<nsIAtom> setterTag;
-              setterElement->GetTag(*getter_AddRefs(setterTag));
-              if (setterTag.get() == kSetterAtom) {
-                GetTextData(setterElement, setter);
-                break;          // stop at first tag
-              }
-            }
-          }
-          
-          if (!setter.IsEmpty() && classObject) {
-            nsCAutoString functionUri = classStr;
-            functionUri += ".";
-            functionUri.AppendWithConversion(name.get());
-            functionUri += " (setter)";
-            rv = context->CompileFunction(classObject,
-                                          nsCAutoString("onset"),
-                                          1,
-                                          gPropertyArg,
-                                          setter, 
-                                          functionUri.get(),
-                                          0,
-                                          PR_FALSE,
-                                          &setFunc);
-            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-            attrs |= JSPROP_SETTER | JSPROP_SHARED;
-          }
-
-          if ((getFunc || setFunc) && classObject) {
-            // Having either a getter or setter results in the
-            // destruction of any initial value that might be set.
-            // This means we only have to worry about defining the getter
-            // or setter.
-            ::JS_DefineUCProperty(cx, (JSObject*)classObject, NS_REINTERPRET_CAST(const jschar*, name.get()), 
-                                       name.Length(), JSVAL_VOID,
-                                       (JSPropertyOp) getFunc, 
-                                       (JSPropertyOp) setFunc, 
-                                       attrs); 
-          } else {
-            // Look for a normal value and just define that.
-            nsCOMPtr<nsIContent> textChild;
-            PRInt32 textCount;
-            child->ChildCount(textCount);
-            nsAutoString answer;
-            for (PRInt32 j = 0; j < textCount; j++) {
-              // Get the child.
-              child->ChildAt(j, *getter_AddRefs(textChild));
-              nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
-              if (text) {
-                nsAutoString data;
-                text->GetData(data);
-                answer += data;
-              }
-            }
-
-            if (!answer.IsEmpty()) {
-              // Evaluate our script and obtain a value.
-              jsval result = nsnull;
-              PRBool undefined;
-              rv = context->EvaluateStringWithValue(answer, 
-                                           scriptObject,
-                                           nsnull, nsnull, 0, nsnull,
-                                           (void*) &result, &undefined);
-              
-              if (!undefined) {
-                // Define that value as a property
-                ::JS_DefineUCProperty(cx, (JSObject*)scriptObject, NS_REINTERPRET_CAST(const jschar*, name.get()), 
-                                           name.Length(), result,
-                                           nsnull, nsnull,
-                                           attrs); 
-              }
-            }
-          }
-        }
-      }
-    }
+    nsCOMPtr<nsIXBLPrototypeProperty> curr = propertyChain;
+    do  {
+      curr->InstallProperty(context, mBoundElement, targetScriptObject, targetClassObject);
+      curr->GetNextProperty(getter_AddRefs(propertyChain));
+      curr = propertyChain;
+    } while (curr);
   }
 
   return NS_OK;
@@ -1441,8 +1210,11 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             // XXX Sanity check to make sure our class name matches
             // Pull ourselves out of the proto chain.
             JSObject* ourProto = ::JS_GetPrototype(jscontext, scriptObject);
-            JSObject* grandProto = ::JS_GetPrototype(jscontext, ourProto);
-            ::JS_SetPrototype(jscontext, scriptObject, grandProto);
+            if (ourProto)
+            {
+              JSObject* grandProto = ::JS_GetPrototype(jscontext, ourProto);
+              ::JS_SetPrototype(jscontext, scriptObject, grandProto);
+            }
 
             // Don't remove the reference from the document to the
             // wrapper here since it'll be removed by the element
