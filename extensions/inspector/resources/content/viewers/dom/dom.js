@@ -246,7 +246,7 @@ DOMViewer.prototype =
     if (!node) return false;
     
     var n = node.localName.toLowerCase();
-    return n == "browser" || n == "iframe" || n == "frame" || n == "editor";
+    return n == "tabbrowser" || n == "browser" || n == "iframe" || n == "frame" || n == "editor";
   },
   
   cmdInspectBrowser: function()
@@ -255,6 +255,9 @@ DOMViewer.prototype =
     var n = node.localName.toLowerCase();
     if (node && n == "browser" && node.namespaceURI == kXULNSURI) {
       // xul browser
+      this.subject = node.contentDocument;
+    } else if (node && n == "tabbrowser" && node.namespaceURI == kXULNSURI) {
+      // xul tabbrowser
       this.subject = node.contentDocument;
     } else if (n == "iframe" && node.namespaceURI == kXULNSURI) {
       // xul iframe
@@ -485,7 +488,6 @@ DOMViewer.prototype =
       } else
         break;
     } 
-  
     var bx = this.mDOMOutliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
     var view = bx.view;
 
@@ -685,6 +687,7 @@ DOMViewer.prototype =
     this.addKidsToArray(aDoc.getElementsByTagName("frame"), aArray);
     this.addKidsToArray(aDoc.getElementsByTagName("iframe"), aArray);
     this.addKidsToArray(aDoc.getElementsByTagNameNS(kXULNSURI, "browser"), aArray);
+    this.addKidsToArray(aDoc.getElementsByTagNameNS(kXULNSURI, "tabbrowser"), aArray);
     this.addKidsToArray(aDoc.getElementsByTagNameNS(kXULNSURI, "editor"), aArray);
   },
   
