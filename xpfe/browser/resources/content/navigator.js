@@ -1562,7 +1562,7 @@ function BrowserEditBookmarks()
 
   function browserHandleMiddleClick(event)
   {
-    var target = event.target;
+    var target = event.originalTarget;
     if (pref.GetBoolPref("middlemouse.openNewWindow"))
     {
       var node = enclosingLink(target);
