@@ -6808,12 +6808,20 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
 
         // verify that neither frame has a space manager,
         // or they both do and the space managers are equivalent
-        nsSpaceManager *sm1 = NS_STATIC_CAST(nsSpaceManager*,
-                         k1->GetProperty(nsLayoutAtoms::spaceManagerProperty));
+        nsFrameManager *fm1 = aFirstPresContext->FrameManager();
+        NS_ASSERTION(fm1, "no frame manager for primary tree!");
+
+        nsSpaceManager *sm1 =
+          NS_STATIC_CAST(nsSpaceManager*, fm1->GetFrameProperty(k1,
+                                      nsLayoutAtoms::spaceManagerProperty, 0));
 
         // look at the test frame
-        nsSpaceManager *sm2 = NS_STATIC_CAST(nsSpaceManager*,
-                         k2->GetProperty(nsLayoutAtoms::spaceManagerProperty));
+        nsFrameManager *fm2 = aSecondPresContext->FrameManager();
+        NS_ASSERTION(fm2, "no frame manager for test tree!");
+
+        nsSpaceManager *sm2 =
+          NS_STATIC_CAST(nsSpaceManager*, fm2->GetFrameProperty(k2,
+                                      nsLayoutAtoms::spaceManagerProperty, 0));
 
         // now compare the space managers
         if (((nsnull == sm1) && (nsnull != sm2)) ||

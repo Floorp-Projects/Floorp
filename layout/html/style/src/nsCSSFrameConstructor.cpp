@@ -384,7 +384,9 @@ GetSpecialSibling(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** aR
   // frame in the flow. Walk back to find that frame now.
   aFrame = aFrame->GetFirstInFlow();
 
-  void* value = aFrame->GetProperty(nsLayoutAtoms::IBSplitSpecialSibling);
+  void* value =
+    aFrameManager->GetFrameProperty(aFrame,
+                                    nsLayoutAtoms::IBSplitSpecialSibling, 0);
 
   *aResult = NS_STATIC_CAST(nsIFrame*, value);
 }
@@ -436,8 +438,9 @@ SetFrameIsSpecial(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aSp
 
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
-    aFrame->SetProperty(nsLayoutAtoms::IBSplitSpecialSibling,
-                        aSpecialSibling, nsnull);
+    aFrameManager->SetFrameProperty(aFrame,
+                                    nsLayoutAtoms::IBSplitSpecialSibling,
+                                    aSpecialSibling, nsnull);
   }
 }
 
@@ -568,8 +571,10 @@ MarkIBSpecialPrevSibling(nsPresContext* aPresContext,
                          nsIFrame *aAnonymousFrame,
                          nsIFrame *aSpecialParent)
 {
-  aAnonymousFrame->SetProperty(nsLayoutAtoms::IBSplitSpecialPrevSibling,
-                               aSpecialParent, nsnull);
+  aFrameManager->SetFrameProperty(aAnonymousFrame,
+                                  nsLayoutAtoms::IBSplitSpecialPrevSibling,
+                                  aSpecialParent,
+                                  nsnull);
 }
 
 // -----------------------------------------------------------
@@ -4744,9 +4749,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
         // there is no reasonable way to get the value there.
         // so we store it as a frame property.
         nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
-        aPresContext->PropertyTable()->SetProperty(newFrame, contentParentAtom,
-                                                   aParentFrame, nsnull,
-                                                   nsnull);
+        aState.mFrameManager->SetFrameProperty(newFrame,
+                                               contentParentAtom, 
+                                               aParentFrame, nsnull);
       }
     }
   }
@@ -9821,6 +9826,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   if (!count)
     return NS_OK;
 
+  nsFrameManager *frameManager = aPresContext->FrameManager();
+
   // Mark frames so that we skip frames that die along the way, bug 123049.
   // A frame can be in the list multiple times with different hints. Further
   // optmization is possible if nsStyleChangeList::AppendChange could coalesce
@@ -9829,8 +9836,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     const nsStyleChangeData* changeData;
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
-      changeData->mFrame->SetProperty(nsLayoutAtoms::changeListProperty,
-                                      nsnull, nsnull);
+      frameManager->SetFrameProperty(changeData->mFrame,
+        nsLayoutAtoms::changeListProperty, nsnull, nsnull);
     }
   }
 
@@ -9845,9 +9852,12 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     if (frame) {
       nsresult res;
 
-      void* dummy = frame->GetProperty(nsLayoutAtoms::changeListProperty, &res);
+      void* dummy =
+        frameManager->GetFrameProperty(frame,
+                                       nsLayoutAtoms::changeListProperty, 0,
+                                       &res);
 
-      if (NS_PROPTABLE_PROP_NOT_THERE == res)
+      if (NS_IFRAME_MGR_PROP_NOT_THERE == res)
         continue;
     }
 
@@ -9883,7 +9893,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
     const nsStyleChangeData* changeData;
     aChangeList.ChangeAt(index, &changeData);
     if (changeData->mFrame) {
-      changeData->mFrame->DeleteProperty(nsLayoutAtoms::changeListProperty);
+      frameManager->RemoveFrameProperty(changeData->mFrame,
+        nsLayoutAtoms::changeListProperty);
     }
   }
 

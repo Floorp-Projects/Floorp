@@ -7375,30 +7375,30 @@ PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
 
 // Destructor function for nscoord properties
 static void
-DestroyCoordFunc(void*           aFrame,
+DestroyCoordFunc(nsPresContext* aPresContext,
+                 nsIFrame*       aFrame,
                  nsIAtom*        aPropertyName,
-                 void*           aPropertyValue,
-                 void*           aDtorData)
+                 void*           aPropertyValue)
 {
   delete (nscoord*)aPropertyValue;
 }
 
 // Destructor function point properties
 static void
-DestroyPointFunc(void*           aFrame,
+DestroyPointFunc(nsPresContext* aPresContext,
+                 nsIFrame*       aFrame,
                  nsIAtom*        aPropertyName,
-                 void*           aPropertyValue,
-                 void*           aDtorData)
+                 void*           aPropertyValue)
 {
   delete (nsPoint*)aPropertyValue;
 }
 
 // Destructor function for nscoord properties
 static void
-DestroyBCPropertyDataFunc(void*           aFrame,
+DestroyBCPropertyDataFunc(nsPresContext* aPresContext,
+                          nsIFrame*       aFrame,
                           nsIAtom*        aPropertyName,
-                          void*           aPropertyValue,
-                          void*           aDtorData)
+                          void*           aPropertyValue)
 {
   delete (BCPropertyData*)aPropertyValue;
 }
@@ -7409,14 +7409,16 @@ nsTableFrame::GetProperty(nsPresContext*      aPresContext,
                           nsIAtom*             aPropertyName,
                           PRBool               aCreateIfNecessary)
 {
-  void *value = aFrame->GetProperty(aPropertyName);
+  nsFrameManager *frameManager = aPresContext->FrameManager();
+
+  void *value = frameManager->GetFrameProperty(aFrame, aPropertyName, 0);
   if (value) {
     return (nsPoint*)value;  // the property already exists
   } else if (aCreateIfNecessary) {
     // The property isn't set yet, so allocate a new value, set the property,
     // and return the newly allocated value
     void* value = nsnull;
-    NSPropertyDtorFunc dtorFunc = nsnull;
+    NSFramePropertyDtorFunc dtorFunc = nsnull;
     if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
       value = new nsPoint(0, 0);
       dtorFunc = DestroyPointFunc;
@@ -7431,7 +7433,7 @@ nsTableFrame::GetProperty(nsPresContext*      aPresContext,
     }
     if (!value) return nsnull;
 
-    aFrame->SetProperty(aPropertyName, value, dtorFunc);
+    frameManager->SetFrameProperty(aFrame, aPropertyName, value, dtorFunc);
     return value;
   }
 

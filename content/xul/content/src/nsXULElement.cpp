@@ -1616,10 +1616,6 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
           nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
           nsDoc->SetBoxObjectFor(this, nsnull);
-
-          if (mSlots && mSlots->mHasProperties) {
-              mDocument->PropertyTable()->DeleteAllPropertiesFor(this);
-          }
         }
 
         // mControllers can own objects that are implemented
@@ -2932,55 +2928,6 @@ nsXULElement::GetRangeList() const
 }
 
 
-void*
-nsXULElement::GetProperty(nsIAtom *aPropertyName, nsresult *aStatus) const
-{
-    nsIDocument *doc = GetDocument();
-    if (!doc)
-        return nsnull;
-
-    return doc->PropertyTable()->GetProperty(this, aPropertyName, aStatus);
-}
-
-nsresult
-nsXULElement::SetProperty(nsIAtom            *aPropertyName,
-                          void               *aValue,
-                          NSPropertyDtorFunc  aDtor)
-{
-    nsIDocument *doc = GetDocument();
-    if (!doc)
-        return NS_ERROR_FAILURE;
-
-    nsresult rv = doc->PropertyTable()->SetProperty(this, aPropertyName,
-                                                    aValue, aDtor, nsnull);
-    if (NS_SUCCEEDED(rv)) {
-        EnsureSlots();
-        mSlots->mHasProperties = PR_TRUE;
-    }
-
-    return rv;
-}
-
-nsresult
-nsXULElement::DeleteProperty(nsIAtom *aPropertyName)
-{
-  nsIDocument *doc = GetDocument();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable()->DeleteProperty(this, aPropertyName);
-}
-
-void*
-nsXULElement::UnsetProperty(nsIAtom *aPropertyName, nsresult *aStatus)
-{
-  nsIDocument *doc = GetDocument();
-  if (!doc)
-    return nsnull;
-
-  return doc->PropertyTable()->UnsetProperty(this, aPropertyName, aStatus);
-}
-
 // XXX This _should_ be an implementation method, _not_ publicly exposed :-(
 NS_IMETHODIMP
 nsXULElement::GetResource(nsIRDFResource** aResource)
@@ -4097,8 +4044,8 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
 //
 
 nsXULElement::Slots::Slots()
+    : mLazyState(0)
 {
-    mLazyState = mHasProperties = 0;
     MOZ_COUNT_CTOR(nsXULElement::Slots);
 }
 
