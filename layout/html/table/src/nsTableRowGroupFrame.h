@@ -25,6 +25,7 @@
 #include "nscore.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIAtom.h"
+#include "nsILineIterator.h"
 
 class nsTableFrame;
 class nsTableRowFrame;
@@ -82,9 +83,11 @@ struct RowGroupReflowState {
  * @see nsTableFrame
  * @see nsTableRowFrame
  */
-class nsTableRowGroupFrame : public nsHTMLContainerFrame
+class nsTableRowGroupFrame : public nsHTMLContainerFrame, public nsILineIterator
 {
 public:
+  // nsISupports
+  NS_DECL_ISUPPORTS_INHERITED
 
   // default constructor supplied by the compiler
 
@@ -97,8 +100,6 @@ public:
     */
   friend nsresult 
   NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-
-  NS_METHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
@@ -194,6 +195,29 @@ public:
   virtual PRBool ContinueReflow(nsIFrame* aFrame, nsIPresContext* aPresContext, nscoord y, nscoord height) { return PR_TRUE; }
 
   void GetMaxElementSize(nsSize& aMaxElementSize) const;
+
+// nsILineIterator methods
+public:
+  NS_IMETHOD GetNumLines(PRInt32* aResult);
+  NS_IMETHOD GetDirection(PRBool* aIsRightToLeft);
+  
+  NS_IMETHOD GetLine(PRInt32 aLineNumber,
+                     nsIFrame** aFirstFrameOnLine,
+                     PRInt32* aNumFramesOnLine,
+                     nsRect& aLineBounds,
+                     PRUint32* aLineFlags);
+  
+  NS_IMETHOD FindLineContaining(nsIFrame* aFrame, PRInt32* aLineNumberResult);
+  NS_IMETHOD FindLineAt(nscoord aY, PRInt32* aLineNumberResult);
+  
+  NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
+                         nscoord aX,
+                         nsIFrame** aFrameFound,
+                         PRBool* aXIsBeforeFirstFrame,
+                         PRBool* aXIsAfterLastFrame);
+
+  NS_IMETHOD GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber);
+
 
 protected:
 

@@ -94,7 +94,7 @@ public:
                   PRInt32         aNumRowsToRemove,
                   PRBool          aConsiderSpans);
 
-  PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
+  PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex);
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
   PRInt32 GetEffectiveRowSpan(PRInt32 aRowIndex,

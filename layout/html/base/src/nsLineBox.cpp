@@ -768,6 +768,12 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLineIterator::GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber)
+{
+  return aFrame->GetNextSibling(&aFrame);
+}
+
 //----------------------------------------------------------------------
 
 nsFloaterCacheList::~nsFloaterCacheList()

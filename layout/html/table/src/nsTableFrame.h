@@ -427,7 +427,7 @@ public:
 
 protected:
 
-  /** protected constructor.
+  /** protected constructor. 
     * @see NewFrame
     */
   nsTableFrame();
