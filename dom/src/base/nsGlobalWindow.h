@@ -186,6 +186,7 @@ protected:
    NS_IMETHOD GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
       float* aT2P);
    PRBool CheckForEventListener(JSContext* aContext, nsString& aPropName);
+   void FlushPendingNotifications();
 
 protected:
    nsCOMPtr<nsIScriptContext>    mContext;
