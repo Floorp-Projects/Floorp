@@ -146,13 +146,8 @@ sub CheckCanChangeField {
                 "WHERE bug_id = $bugid");
         ($reporterid, $ownerid, $qacontactid) = (FetchSQLData());
     }
-    if ($reporterid eq $whoid || $ownerid eq $whoid || $qacontactid eq $whoid) {
-        if ($f ne "bug_status") {
-            return 1;
-        }
-        if ($newvalue eq $::unconfirmedstate || !IsOpenedState($newvalue)) {
-            return 1;
-        }
+    if ($f eq "bug_status" && $newvalue ne $::unconfirmedstate &&
+        IsOpenedState($newvalue)) {
 
         # Hmm.  They are trying to set this bug to some opened state
         # that isn't the UNCONFIRMED state.  Are they in the right
@@ -165,16 +160,14 @@ sub CheckCanChangeField {
         if ($UserInCanConfirmGroupSet) {
             return 1;
         }
-        my $fieldid = GetFieldID("bug_status");
-        SendSQL("SELECT newvalue FROM bugs_activity " .
-                "WHERE fieldid = $fieldid " .
-                "  AND oldvalue = '$::unconfirmedstate'");
-        while (MoreSQLData()) {
-            my $n = FetchOneColumn();
-            if (IsOpenedState($n) && $n ne $::unconfirmedstate) {
-                return 1;
-            }
+        SendSQL("SELECT everconfirmed FROM bugs WHERE bug_id = $bugid");
+        my $everconfirmed = FetchOneColumn();
+        if ($everconfirmed) {
+            return 1;
         }
+    } elsif ($reporterid eq $whoid || $ownerid eq $whoid ||
+             $qacontactid eq $whoid) {
+        return 1;
     }
     SendSQL("UNLOCK TABLES");
     $oldvalue = value_quote($oldvalue);
