@@ -63,6 +63,10 @@
 #define XPROP_ALARMUNITS    "X-MOZILLA-ALARM-DEFAULT-UNITS"
 #define XPROP_ALARMLENGTH   "X-MOZILLA-ALARM-DEFAULT-LENGTH"
 
+#define DEFAULT_ALARM_UNITS "minutes"
+#define DEFAULT_ALARM_LENGTH 15
+#define DEFAULT_RECUR_UNITS "weeks"
+
 char *EmptyReturn() {
     return (char*) nsMemory::Clone( "", 1 );
 }
@@ -252,7 +256,7 @@ oeICalEventImpl::oeICalEventImpl()
     m_syncid = nsnull;
     m_allday = false;
     m_hasalarm = false;
-    m_alarmlength = 0;
+    m_alarmlength = DEFAULT_ALARM_LENGTH;
     m_alarmemail = nsnull;
     m_inviteemail = nsnull;
     m_recurinterval = 1;
@@ -263,8 +267,8 @@ oeICalEventImpl::oeICalEventImpl()
     m_recurweekdays = 0;
     m_recurweeknumber = 0;
     m_lastalarmack = icaltime_null_time();
-    SetAlarmUnits( "minutes" );
-    SetRecurUnits( "weeks" );
+    SetAlarmUnits( DEFAULT_ALARM_UNITS );
+    SetRecurUnits( DEFAULT_RECUR_UNITS );
     SetSyncId( "" );
     NS_NewISupportsArray(getter_AddRefs(m_attachments));
     NS_NewISupportsArray(getter_AddRefs(m_contacts));
@@ -1691,7 +1695,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         tmpstr = icalproperty_get_value_as_string( prop );
         SetAlarmUnits( tmpstr );
     } else
-        SetAlarmUnits( "minutes" );
+        SetAlarmUnits( DEFAULT_ALARM_UNITS );
     //alarmlength
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
         prop != 0 ;
@@ -1708,7 +1712,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         tmpstr = (char *)icalproperty_get_value_as_string( prop );
         m_alarmlength= atol( tmpstr );
     } else
-        m_alarmlength = 0;
+        m_alarmlength = DEFAULT_ALARM_LENGTH;
 
     //alarmemail
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
@@ -1784,7 +1788,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         tmpstr = (char *)icalproperty_get_value_as_string( prop );
         SetRecurUnits( tmpstr );
     } else
-        SetRecurUnits( "weeks" );
+        SetRecurUnits( DEFAULT_RECUR_UNITS );
 
     //startdate
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
@@ -2087,7 +2091,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     }
 
     //alarmunits
-    if( m_alarmunits && strlen( m_alarmunits ) != 0 ){
+    if( m_alarmunits && strlen( m_alarmunits ) != 0 && strcasecmp( m_alarmunits, DEFAULT_ALARM_UNITS ) != 0 ){
         prop = icalproperty_new_x( m_alarmunits );
         icalproperty_set_x_name( prop, XPROP_ALARMUNITS);
         icalcomponent_add_property( vevent, prop );
@@ -2095,7 +2099,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     char tmpstr[20];
     //alarmlength
-    if( m_alarmlength ) {
+    if( m_alarmlength && m_alarmlength != DEFAULT_ALARM_LENGTH ) {
         sprintf( tmpstr, "%lu", m_alarmlength );
         prop = icalproperty_new_x( tmpstr );
         icalproperty_set_x_name( prop, XPROP_ALARMLENGTH);
@@ -2132,17 +2136,19 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     }
 
     //recurunits
-    if( m_recurunits && strlen( m_recurunits ) != 0 ){
+    if( m_recurunits && strlen( m_recurunits ) != 0 && strcasecmp( m_recurunits, DEFAULT_RECUR_UNITS ) != 0 ){
         prop = icalproperty_new_x( m_recurunits );
         icalproperty_set_x_name( prop, XPROP_RECURUNITS);
         icalcomponent_add_property( vevent, prop );
     }
 
     //recurinterval
-    sprintf( tmpstr, "%lu", m_recurinterval );
-    prop = icalproperty_new_x( tmpstr );
-    icalproperty_set_x_name( prop, XPROP_RECURINTERVAL);
-    icalcomponent_add_property( vevent, prop );
+    if( m_recurinterval && m_recurinterval != 1 ){
+        sprintf( tmpstr, "%lu", m_recurinterval );
+        prop = icalproperty_new_x( tmpstr );
+        icalproperty_set_x_name( prop, XPROP_RECURINTERVAL);
+        icalcomponent_add_property( vevent, prop );
+    }
 
     //recurrence
 
