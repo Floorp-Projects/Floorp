@@ -75,7 +75,8 @@ INCLUDES += \
 			-I$(PUBLIC)/js \
 			-I$(PUBLIC)/pref \
 			-I$(PUBLIC)/network \
-			-I$(PUBLIC)/xp
+			-I$(PUBLIC)/xp \
+			-I$(PUBLIC)/editor
 
 ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
