@@ -1413,9 +1413,8 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 static const char kMsgRootFolderPref[] = "mail.rootFolder";
 static char *gMailboxRoot = nsnull;
 
-/* sspitzer:  don't panic, this is all temporary */
-static const char kNewsRootFolderPref[] = "news.rootFolder";
-static char *gNewsRoot = nsnull;
+/* sspitzer:  don't panic, this is temporary */
+static const char gNewsRoot[] = "/tmp/mozillanews";
 
 nsresult
 nsGetNewsRoot(nsFileSpec &result)
@@ -1509,14 +1508,15 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
   nsresult rv;
 
-#ifdef DEBUG_alecf
-  printf("nsPath2URI(%s, %s, ??)", rootURI, uriStr);
+#ifdef DEBUG
+  printf("nsURI2Path(%s, %s, ??)", rootURI, uriStr);
 #endif
   
   nsAutoString sep;
   sep += PR_GetDirectorySeparator();
 
   nsAutoString sbdSep;
+  /* sspitzer: is this ok for mail and news? */
   rv = nsGetMailFolderSeparator(sbdSep);
   if (NS_FAILED(rv)) return rv;
 
@@ -1581,25 +1581,31 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if(path.Length() > 0)
 	  pathResult +=path;
 
-#ifdef DEBUG_alecf
+#ifdef DEBUG
   printf("->%s\n", (const char *)pathResult);
 #endif
   return NS_OK;
 }
 
 nsresult
-nsPath2URI(const char* rootURI, const nsFileSpec& spec, char* *uri)
+nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
 {
   nsresult rv;
 
   nsAutoString sep;
+  /* sspitzer: is this ok for mail and news? */
   rv = nsGetMailFolderSeparator(sep);
   if (NS_FAILED(rv)) return rv;
 
   PRUint32 sepLen = sep.Length();
 
   nsFileSpec root;
-  rv = nsGetMailboxRoot(root);
+  if (strcmp(rootURI, kNewsMessageRootURI) == 0) {
+    rv = nsGetNewsRoot(root);
+  }
+  else {
+    rv = nsGetMailboxRoot(root);
+  }    
   if (NS_FAILED(rv)) return rv;
 
   const char *path = spec;
@@ -1635,7 +1641,7 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char* *uri)
     if (pos < 0) 
       pos = pathStrLen;
 
-	PRInt32 leftRes = pathStr.Left(folderName, pos);
+    PRInt32 leftRes = pathStr.Left(folderName, pos);
     NS_ASSERTION(leftRes == pos,
                  "something wrong with nsString");
 
