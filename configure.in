@@ -456,7 +456,8 @@ if test "$no_x" != "yes"; then
     MOTIF_STATIC_FLAGS=`${detect_motif} -sf`
     MOTIF_DYNAMIC_FLAGS=`${detect_motif} -df`
     MOTIF_DYNAMIC_PATHS=`${detect_motif} -dp`
-    MOTIF_REQUIRES_XPM=`${detect_motif} -xpm`
+dnl    MOTIF_REQUIRES_XPM=`${detect_motif} -xpm`
+    MOTIF_REQUIRES_XPM="False"
 
     ${srcdir}/config/mkdetect/detect_motif.sh --cleanup
 fi
