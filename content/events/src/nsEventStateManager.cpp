@@ -3092,6 +3092,9 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
             if (type.EqualsIgnoreCase("hidden")) {
               hidden = PR_TRUE;
             }
+            else if (type.EqualsIgnoreCase("file")) {
+              disabled = PR_TRUE;
+            }
           }
         }
         else if (nsHTMLAtoms::select==tag.get()) {
