@@ -201,7 +201,7 @@ shift_expression[boolean initial]
 	;
 
 // ********* Relational Operators **********
-relational_operator[bool allowIn]
+relational_operator[boolean allowIn]
 	:	{allowIn}? "in"
 	|	"<"
 	|	">"
@@ -323,7 +323,7 @@ statement[int scope, int abbrev]
 code_statement[int abbrev]
 	:	empty_statement[abbrev]
 	|	expression_statement semicolon[abbrev]
-	|	block[context]
+	|	block[BlockScope]
 /*	|	labeled_statement[abbrev]
 	|	if_statement[abbrev]
 	|	switch_statement[abbrev]
@@ -391,7 +391,7 @@ case_groups
 	;
 
 case_group
-	:	(case_guard)+ (code_statement[full])+
+	:	(case_guard)+ (code_statement[Full])+
 	;
 
 last_case_group
@@ -563,7 +563,7 @@ class JSLexer extends Lexer;
 options {
 	tokenVocabulary=JS;    // Name the token vocabulary
 	testLiterals=false;    // Don't automatically test every token to see if it's a literal.
-			       // Rather, test only the ones that we explicitly indicate.
+			       		   // Rather, test only the ones that we explicitly indicate.
 	k=4;                   // Set number of lookahead characters
 }
 
