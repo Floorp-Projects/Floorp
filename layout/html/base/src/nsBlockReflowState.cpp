@@ -5098,7 +5098,12 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   // Reflow the floater. Since floaters are continued we given them an
   // unbounded height. Floaters with an auto width are sized to zero
   // according to the css2 spec.
-  nsRect availSpace(0, 0, aState.mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
+  // XXX We also need to take into account whether we should clear any
+  // preceeding floaters...
+  // XXX Why do we have to add in our border/padding?
+  nsRect availSpace(aState.mAvailSpaceRect.x + aState.BorderPadding().left,
+                    aState.mAvailSpaceRect.y + aState.BorderPadding().top,
+                    aState.mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
   nsIFrame* floater = aPlaceholder->GetOutOfFlowFrame();
   PRBool isAdjacentWithTop = aState.IsAdjacentWithTop();
 
