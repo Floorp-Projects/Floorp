@@ -1512,10 +1512,13 @@ nsCookieService::ParseAttributes(nsDependentCString &aCookieHeader,
   while (cookieStart != cookieEnd && !newCookie) {
     newCookie = GetTokenValue(cookieStart, cookieEnd, tokenString, tokenValue, equalsFound);
 
-    if (!tokenValue.IsEmpty() && *tokenValue.BeginReading(tempBegin) == '"'
-                              && *tokenValue.EndReading(tempEnd) == '"') {
-      // our parameter is a quoted-string; remove quotes for later parsing
-      tokenValue.Rebind(++tempBegin, --tempEnd);
+    if (!tokenValue.IsEmpty()) {
+      tokenValue.BeginReading(tempBegin);
+      tokenValue.EndReading(tempEnd);
+      if (*tempBegin == '"' && *--tempEnd == '"') {
+        // our parameter is a quoted-string; remove quotes for later parsing
+        tokenValue.Rebind(++tempBegin, tempEnd);
+      }
     }
 
     // decide which attribute we have, and copy the string
