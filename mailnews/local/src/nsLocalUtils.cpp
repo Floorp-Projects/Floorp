@@ -79,18 +79,30 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
 #endif /* HAVE_MOVEMAIL */
 
   // if that fails, look for the pop hosts matching the given hostname
-  nsCOMPtr<nsIMsgIncomingServer> pop3_server;
-  if (NS_FAILED(rv)) {
-	rv = accountManager->FindServer(username,
-                                  hostname,
-                                  "pop3",
-                                  getter_AddRefs(pop3_server));
-	if (NS_SUCCEEDED(rv)) {
-		*aResult = pop3_server;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  if (NS_FAILED(rv)) 
+  {
+	  rv = accountManager->FindServer(username,
+                                    hostname,
+                                    "pop3",
+                                    getter_AddRefs(server));
+
+    // if we can't find a pop server, maybe it's a local message 
+    // in an imap hiearchy. look for an imap server.
+    if (NS_FAILED(rv)) 
+    {
+	  rv = accountManager->FindServer(username,
+                                    hostname,
+                                    "imap",
+                                    getter_AddRefs(server));
+    }
+  }
+	if (NS_SUCCEEDED(rv)) 
+  {
+		*aResult = server;
 		NS_ADDREF(*aResult);
 		return rv;
 	}
-  }
 
   // if you fail after looking at all "pop3", "movemail" and "none" servers, you fail.
   return rv;
