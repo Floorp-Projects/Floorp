@@ -1,0 +1,15 @@
+
+.viewer-list {
+  border: none;
+  list-style-image: url("chrome://inspector/skin/iconViewerList.gif");
+}
+
+.viewer-menu {
+  border: none;
+  list-style-image: url("chrome://inspector/skin/iconViewerMenu.gif");
+}
+
+.viewer-menu[disabled="true"] {
+  list-style-image: url("chrome://inspector/skin/iconViewerMenu-dis.gif");
+}
+

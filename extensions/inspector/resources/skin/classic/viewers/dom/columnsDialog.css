@@ -1,0 +1,23 @@
+
+@import url("chrome://inspector/skin");
+
+#trColumns {
+  background-color: ThreeDFace;
+}
+
+.column-selector {
+  border: 1px outset ThreeDFace;
+  padding: 2px;
+  background-color: ThreeDFace;
+  vertical-align: middle;
+}
+
+.attr-column-selector,
+.attr-column-selector[focused="true"] {
+  margin: none;
+  border: none;
+}
+
+[col-dragging="true"] {
+  border: 1px solid ButtonText;
+}

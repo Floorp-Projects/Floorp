@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<?xml-stylesheet href="chrome://inspector/skin/viewers/dom/dom.css"?>
+
+<window id="winDOMViewer" class="color-dialog" 
+        orient="vertical"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:ins="http://www.mozilla.org/inspector#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script language="javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script language="javascript" src="chrome://inspector/content/utils.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/xul/DNDUtils.js"/>
+
+  <!-- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    The template for this tree will be filled in by inTreeTableBuilder
+    ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+  
+  <tree id="trDOMTree" 
+    flex="1" onselect="viewer.onTreeItemSelected()"
+    datasources="rdf:null" ref="inspector:DOMRoot"
+    containment="&INS-rdf;HasChildren" flags="dont-test-empty">
+    <template/>
+  </tree>
+
+</window>
+
+        

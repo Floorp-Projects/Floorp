@@ -1,0 +1,18 @@
+  <!ENTITY cmdShowFindDialog.label "Find Nodes...">
+  <!ENTITY cmdShowFindDialog.accesskey "f">
+  <!ENTITY cmdShowFindDialog.accelkey "f">
+
+  <!ENTITY cmdFindNext.label "Find Next">
+  <!ENTITY cmdFindNext.accesskey "n">
+
+  <!ENTITY cmdToggleAnonContent.label "Show Anonymous Content">
+  <!ENTITY cmdToggleAnonContent.accesskey "a">
+
+  <!ENTITY cmdSelectByClick.label "Select Element By Click">
+  <!ENTITY cmdSelectByClick.accesskey "s">
+
+  <!ENTITY ColumnsDialog.title "Columns">
+
+  <!ENTITY cmdShowColumnsDialog.label "Columns...">
+  <!ENTITY cmdShowColumnsDialog.accesskey "c">
+  

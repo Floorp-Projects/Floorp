@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/viewers/dom.dtd">
+
+<?xml-stylesheet href="chrome://inspector/skin/viewers/dom/columnsDialog.css"?>
+
+<window id="winEditCols" class="color-dialog" 
+        title="&ColumnsDialog.title;"
+        persist="screenX screenY"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script language="javascript" src="chrome://inspector/content/viewers/dom/columnsDialog.js"/>
+  <script language="javascript" src="chrome://inspector/content/utils.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
+  <script language="javascript" src="chrome://inspector/content/jsutil/xul/DNDUtils.js"/>
+
+  <box id="bxColumns" flex="1" orient="vertical"
+    ondragdrop="dialog.onDragDropIn(event);"
+    ondraggesture="dialog.onDragGesture(event);"/>
+    
+</window>
+

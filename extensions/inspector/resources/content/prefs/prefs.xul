@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://inspector/content/prefs/prefOverlay.xul"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://inspector/skin/"?>
+<?xml-stylesheet href="chrome://inspector/skin/prefs.css"?>
+
+<window id="winInspectorPrefs" title="Preferences"
+        width="550" height="400" orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script language="Javascript" src="chrome://inspector/content/prefs/InspectorPrefs.js"/>
+
+  <tabcontrol flex="1">
+    <tabbox id="tbxPrefs"/>
+    <tabpanel id="tbpPrefs" flex="1"/>
+  </tabcontrol>
+
+  <box id="okCancelButtonsRight"/>
+
+</window>
+
+        

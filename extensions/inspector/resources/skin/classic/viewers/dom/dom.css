@@ -1,0 +1,38 @@
+
+@import url("chrome://inspector/skin");
+
+/* :::::::: node type color coding :::::::: */
+
+treeitem {
+  color: #000000;
+}
+
+treeitem[NodeType="1"] {
+  color: #000000;
+}
+
+treeitem[NodeType="3"] {
+  color: #0000AA;
+}
+
+treeitem[NodeType="8"] {
+  color: #88ff00;
+}
+
+treeitem[NodeType="9"] {
+  color: #ff00ff;
+}
+
+treeitem[Anonymous="true"] {
+  color: #ff0000;
+}
+
+/* :::::::: drag and drop insertion indicators :::::::: */
+
+treecol[dnd-insert-before="true"] {
+  border-left: 2px solid ButtonText;
+}
+
+treecol[dnd-insert-after="true"] {
+  border-right: 2px solid ButtonText;
+}

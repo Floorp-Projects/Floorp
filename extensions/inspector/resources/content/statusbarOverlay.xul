@@ -1,0 +1,11 @@
+<?xml version="1.0"?> 
+
+<overlay id="ovStatusbar"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <box id="bxStatus">
+    <progressmeter id="pmStatus" mode="normal" value="0"/>
+    <text id="txStatus" value="Ready"/>
+  </box>
+
+</overlay>

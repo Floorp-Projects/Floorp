@@ -1,0 +1,56 @@
+@import url("chrome://inspector/skin");
+
+#mlViewers {
+  min-width: 10em;
+  max-width: 10em;
+}
+
+.toolbar-header1 {
+  margin: 2px;
+  color: #000000;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#bxURLBar {
+  padding: 3px;
+}
+
+#bxURLBarContainer {
+  margin: 0px 3px 0px 3px;
+  border: 1px inset ThreeDFace;
+  padding: 0px 1px 0px 1px;
+  background-color: -moz-field;
+}
+
+#mbHistory.menubutton-icon {
+  border: 1px outset ThreeDFace;
+  background-color: ThreeDFace;
+  list-style-image: url("chrome://global/skin/scroll-down.gif");
+}
+
+.button-toolbar-3 {
+  margin: 0px !important;
+  border: 0px !important;
+}
+
+#imgURLBarIcon {
+  margin: 1px 1px 0px 1px;
+  list-style-image: url("chrome://communicator/skin/bookmarks/location.gif");
+}
+
+#bxSearch {
+  height: 150px;
+}
+
+#bxStatus {
+  border-top: 1px outset ThreeDFace;
+  padding: 2px;
+  min-width: 1px;
+  background-color: ThreeDFace;
+  font-size: smaller;
+}
+
+#txStatus {
+  margin-left: 5px;
+}

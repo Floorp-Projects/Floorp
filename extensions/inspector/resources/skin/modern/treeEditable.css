@@ -1,0 +1,14 @@
+
+.treecell-editor,
+.treecell-editor > box {
+  margin: 0px !important;
+  padding: 0px !important;
+}
+
+.treecell-editor {
+  border: 0px !important;
+}
+
+.treecell-editor {
+  border: 1px solid black;
+}

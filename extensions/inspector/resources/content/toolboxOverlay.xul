@@ -1,0 +1,97 @@
+<?xml version="1.0"?> 
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<?xul-overlay href="chrome://inspector/content/popupOverlay.xul"?>
+
+<overlay id="ovToolbox"
+         xmlns:ins="http://www.mozilla.org/inspector#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <popupset id="ppsGlobalPopupset"/>
+
+  <menubar id="mbrInspectorMain">
+
+    <menu id="mnFile" value="&mnFile.label;" accesskey="&mnFile.accesskey;">
+      <menupopup id="mppFile">
+        <menu 
+          id="mnWindowsFile" value="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
+          datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
+          <template>
+            <rule>
+              <menupopup>
+                <menuitem uri="rdf:*" value="&NC-rdf;Name" oncommand="inspector.goToWindow(this)"/>
+              </menupopup>
+            </rule>
+          </template>
+        </menu>
+      </menupopup>
+    </menu>
+
+    <menu id="mnEdit" value="&mnEdit.label;" accesskey="&mnEdit.accesskey;">
+      <menupopup id="mppEdit"/>
+    </menu>
+
+    <menu id="mnSearch" value="&mnSearch.label;" accesskey="&mnSearch.accesskey;">
+      <menupopup id="mppSearch"/>
+    </menu>
+
+    <menu id="mnView" value="&mnView.label;" accesskey="&mnView.accesskey;">
+      <menupopup id="mppView"/>
+    </menu>
+
+    <menu id="mnHelp" value="&mnHelp.label;" accesskey="&mnHelp.accesskey;">
+      <menupopup id="mppHelp"/>
+    </menu>
+
+  </menubar>
+
+  <toolbar id="tbInspectorPrimary">
+
+    <box id="bxURLBar" flex="1" autostretch="never" valign="middle">
+      <text id="txDocument" class="toolbar-header1" value="&txDocument.label;"/>
+      <box id="bxURLBarContainer" flex="1">
+        <box autostretch="never" valign="middle" flex="1">
+          <image id="imgURLBarIcon"/>
+
+          <textfield 
+            id="tfURLBar" class="plain" flex="1" 
+            observes="cmdGotoURL"
+            tooltip="PPTooltip" tooltiptext="Enter a URL to inspect"/>  
+        </box>
+
+        <menubutton id="mbHistory" class="menubutton-icon">
+
+          <menupopup 
+            id="mppHistory"
+            popupalign="topright" popupanchor="bottomright"
+            datasources="rdf:null" ref="inspector:history">
+
+            <template>
+              <rule>
+                <conditions>
+                  <content uri="?uri"/>
+                  <member container="?uri" child="?item"/>
+                  <triple subject="?item" predicate="&INS-rdf;URL" object="?url"/>
+                </conditions>
+
+                <action>
+                  <menuitem uri="?item" value="?url" oncommand="inspector.goToHistoryItem(this)"/>
+                </action>
+              </rule>
+            </template>
+          
+          </menupopup>
+
+        </menubutton>
+      </box>
+
+      <button class="button-toolbar-3" value="&btnInspect.label;" observes="cmdGotoURL"/>
+    </box>
+
+  </toolbar>
+
+</overlay>
