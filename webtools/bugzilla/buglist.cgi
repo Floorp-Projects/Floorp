@@ -256,6 +256,9 @@ if (defined $::FORM{'sql'}) {
 
 
 foreach my $id ("1", "2") {
+    if (!defined ($::FORM{"email$id"})) {
+        next;
+    }
     my $email = trim($::FORM{"email$id"});
     if ($email eq "") {
         next;
