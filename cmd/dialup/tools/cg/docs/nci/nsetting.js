@@ -166,7 +166,8 @@ function saveNewConfigFile(fileName, inValue, doPrompt)
 
 function debug(theString)
 {
-	top.globals.debug(theString);
+	if (top.debugFlag == true)
+		top.globals.debug(theString);
 }
 
 
@@ -180,7 +181,8 @@ function GetNameValuePair(inFileName, sectionName, flagName)
 	var data = top.globals.document.setupPlugin.GetNameValuePair(fileName, sectionName, flagName);
 	
 	
-	//debug("\tGetNameValuePair: (" + inFileName + ") [" +sectionName+ "] " +flagName+ "=" + data);
+	debug("\tGetNameValuePair: (" + inFileName + ") [" +sectionName+ "] " +flagName+ "=" + data);
+
 	return data;
 }
 
@@ -192,7 +194,8 @@ function SetNameValuePair(inFileName, section, variable, data)
 	var fileName = completeConfigFilePath(inFileName);
 
 	top.globals.document.setupPlugin.SetNameValuePair(fileName, section, variable, data);
-	//debug("\tSetNameValuePair: (" + fileName + ")[" +section+ "] " +variable+ "=" + data);
+
+ 	debug("\tSetNameValuePair: (" + fileName + ")[" +section+ "] " +variable+ "=" + data);
 }
 
 function getFileListFromConfigFolder(fileSuffix)
@@ -234,9 +237,9 @@ function fillSelectListWithConfigFiles(formName, selectListName, fileSuffix, off
 				curConfigDescription 	= GetNameValuePair(fileList[i], "Dial-In Configuration", "Description");
 
 				if ((curConfigName != null)  && (curConfigName != ""))
-					parent.tabs.tabbody.document[formName][selectListName].options[parent.tabs.tabbody.document[formName][selectListName].length] = new Option(curConfigName,fileList[i], false, false);
+					parent.tabs.tabbody.document[formName][selectListName].options[parent.tabs.tabbody.document[formName][selectListName].length] = new Option(curConfigName + " (" + fileList[i] + ")",fileList[i], false, false);
 				else if ((curConfigDescription != null) && (curConfigDescription != ""))
-					parent.tabs.tabbody.document[formName][selectListName].options[parent.tabs.tabbody.document[formName][selectListName].length] = new Option(curConfigDescription,fileList[i], false, false);
+					parent.tabs.tabbody.document[formName][selectListName].options[parent.tabs.tabbody.document[formName][selectListName].length] = new Option(curConfigDescription + " (" + fileList[i] + ")",fileList[i], false, false);
 				else
 					parent.tabs.tabbody.document[formName][selectListName].options[parent.tabs.tabbody.document[formName][selectListName].length] = new Option(fileList[i],fileList[i], false, false);
 					
