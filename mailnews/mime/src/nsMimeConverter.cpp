@@ -134,7 +134,7 @@ nsMimeConverter::EncodeMimePartIIStr(const char    *header,
                                            PRBool        structured, 
                                            const char    *mailCharset, 
                                            PRInt32       fieldnamelen,
-                                           const PRInt32 encodedWordSize, 
+                                           PRInt32 encodedWordSize, 
                                            char          **encodedString)
 {
 
@@ -151,7 +151,7 @@ nsMimeConverter::EncodeMimePartIIStr_UTF8(const char    *header,
                                           PRBool        structured, 
                                           const char    *mailCharset, 
                                           PRInt32       fieldnamelen,
-                                          const PRInt32 encodedWordSize, 
+                                          PRInt32       encodedWordSize, 
                                           char          **encodedString)
 {
   char *retString = MIME_EncodeMimePartIIStr(header, structured, mailCharset, fieldnamelen, encodedWordSize);

@@ -97,7 +97,7 @@ public:
                                  PRBool        structured, 
                                  const char    *mailCharset, 
                                  PRInt32       fieldnamelen,
-                                 const PRInt32 encodedWordSize, 
+                                 PRInt32       encodedWordSize, 
                                  char          **encodedString);
 
   // Encode routine (utf-8 input)
@@ -105,7 +105,7 @@ public:
                                       PRBool        structured, 
                                       const char    *mailCharset, 
                                       PRInt32       fieldnamelen,
-                                      const PRInt32 encodedWordSize, 
+                                      PRInt32       encodedWordSize, 
                                       char          **encodedString);
 
   NS_IMETHOD B64EncoderInit(nsresult (*PR_CALLBACK output_fn) (const char *buf, PRInt32 size, void *closure), 
