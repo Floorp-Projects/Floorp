@@ -239,13 +239,19 @@ struct JSParseNode {
 #define pn_attrs        pn_u.name.attrs
 #define pn_dval         pn_u.dval
 
-/* Copy pn2 over pn, preserving pn->pn_pos and pn->pn_offset. */
-#define PN_COPY_OVER(pn, pn2)                                                 \
+/*
+ * Move pn2 into pn, preserving pn->pn_pos and pn->pn_offset and handing off
+ * any kids in pn2->pn_u, by clearing pn2.
+ */
+#define PN_MOVE_NODE(pn, pn2)                                                 \
     JS_BEGIN_MACRO                                                            \
         (pn)->pn_type = (pn2)->pn_type;                                       \
         (pn)->pn_op = (pn2)->pn_op;                                           \
         (pn)->pn_arity = (pn2)->pn_arity;                                     \
         (pn)->pn_u = (pn2)->pn_u;                                             \
+        (pn2)->pn_type = TOK_EOF;                                             \
+        (pn2)->pn_op = JSOP_NOP;                                              \
+        (pn2)->pn_arity = PN_NULLARY;                                         \
     JS_END_MACRO
 
 /* True if pn is a parsenode representing a literal constant. */

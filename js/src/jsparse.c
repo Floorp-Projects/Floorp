@@ -3016,7 +3016,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
         if (pn2) {
             /* pn2 is the then- or else-statement subtree to compile. */
-            PN_COPY_OVER(pn, pn2);
+            PN_MOVE_NODE(pn, pn2);
         } else {
             /* False condition and no else: make pn an empty statement. */
             pn->pn_type = TOK_SEMI;
