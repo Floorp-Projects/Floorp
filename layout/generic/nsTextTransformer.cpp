@@ -22,6 +22,7 @@
 #include "nsIStyleContext.h"
 #include "nsITextContent.h"
 #include "nsStyleConsts.h"
+#include "nsILineBreaker.h"
 
 
 #include "nsIServiceManager.h"
@@ -32,7 +33,6 @@ static NS_DEFINE_IID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 static nsICaseConversion* gCaseConv =  nsnull;
 
-
 // XXX put a copy in nsHTMLIIDs
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
@@ -41,12 +41,15 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 #define MAX_UNIBYTE 127
 
-nsTextTransformer::nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen)
+nsTextTransformer::nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen, 
+                                     nsILineBreaker* aLineBreaker)
   : mAutoBuffer(aBuffer),
     mBuffer(aBuffer),
     mBufferLength(aBufLen < 0 ? 0 : aBufLen),
+    mLineBreaker(aLineBreaker),
     mHasMultibyte(PR_FALSE)
 {
+  NS_IF_ADDREF(mLineBreaker);
 }
 
 nsTextTransformer::~nsTextTransformer()
@@ -54,6 +57,7 @@ nsTextTransformer::~nsTextTransformer()
   if (mBuffer != mAutoBuffer) {
     delete [] mBuffer;
   }
+  NS_IF_RELEASE(mLineBreaker);
 }
 
 nsresult
@@ -244,35 +248,51 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
         contentLen += numChars;
       }
       else {
-        while (cp < end) {
-          PRUnichar ch = *cp;
-          if (!XP_IS_SPACE(ch)) {
-            if (CH_NBSP == ch) ch = ' ';
-            if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
-            cp++;
+		if(wordLen > 0) {
+			nsresult res = NS_OK;
+			PRBool breakBetween = PR_FALSE;
+			res = mLineBreaker->BreakInBetween(mBuffer, wordLen, 
+				                         cp, (fragLen-offset), &breakBetween);
+			if ( breakBetween )
+				goto done;
 
-            // Store character in buffer; grow buffer if we have to
-            NS_ASSERTION(bp < bufEnd, "whoops");
-            *bp++ = ch;
-            if (bp == bufEnd) {
-              PRInt32 delta = bp - mBuffer;
-              if (!GrowBuffer()) {
-                goto done;
-              }
-              bp = mBuffer + delta;
-              bufEnd = mBuffer + mBufferLength;
-            }
-            continue;
-          }
-          numChars = (cp - offset) - cp0;
-          wordLen += numChars;
-          contentLen += numChars;
-          mCurrentFragOffset += numChars;
-          goto done;
-        }
-        numChars = (cp - offset) - cp0;
-        wordLen += numChars;
-        contentLen += numChars;
+			PRBool tryNextFrag = PR_FALSE;
+			PRUint32 next;
+
+			// Find next position
+			res = mLineBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
+			
+			numChars = (next - offset);
+			// check buffer size before copy
+			if((bp + numChars ) > bufEnd) {
+				PRInt32 delta = bp - mBuffer;
+				if(!GrowBuffer()) {
+					goto done;
+				}
+				bp = mBuffer + delta;
+				bufEnd = mBuffer + mBufferLength;
+			}
+
+			wordLen += numChars;
+			mCurrentFragOffset += numChars;
+			contentLen += numChars;
+			end = cp + numChars;
+
+			// 1. convert nbsp into space
+			// 2. check mHasMultibyte flag
+			// 3. copy buffer
+
+			while(cp < end) {
+		        PRUnichar ch = *cp++;
+				if (CH_NBSP == ch) ch = ' ';
+				if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+				*bp++ = ch;
+			}
+			if(! tryNextFrag) {
+				// can decide break position inside this TextFrag
+				goto done;
+			}
+		}
       }
     }
     else {
