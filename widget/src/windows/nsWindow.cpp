@@ -401,6 +401,11 @@ nsWindow::~nsWindow()
     gCurrentWindow = nsnull;
   }
 
+  MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
+  if (mouseTrailer->GetMouseTrailerWindow() == this) {
+    mouseTrailer->DestroyTimer();
+  } 
+
   // If the widget was released without calling Destroy() then the native
   // window still exists, and we need to destroy it
   if (NULL != mWnd) {

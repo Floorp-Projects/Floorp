@@ -895,7 +895,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
       NS_RELEASE(currentContent);
       NS_RELEASE(newContent);
-    } else {
+    } else if ((nsnull != mStartSelectionPoint) && (nsnull != mEndSelectionPoint)) {
       if (SELECTION_DEBUG) printf("HandleDrag::Same Frame.\n");
 
       // Same Frame as before
@@ -1532,6 +1532,9 @@ void nsFrame::NewContentIsBefore(nsIPresContext& aPresContext,
   //    and the mouse is "before" the anchor in the content
   //    and each new piece of content is being added to the selection
 
+  if ((nsnull == mStartSelectionPoint) || (nsnull == mEndSelectionPoint)) {
+    return;
+  }
   nsIPresShell * shell           = aPresContext.GetShell();
   nsIDocument  * doc             = shell->GetDocument();
   nsIContent   * selStartContent = mStartSelectionPoint->GetContent();

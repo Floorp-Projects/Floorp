@@ -94,6 +94,7 @@ public:
   nsSize mFrameSize;
 };
 
+
 /*******************************************************************************
  * nsHTMLFrameOuterFrame
  ******************************************************************************/
@@ -117,6 +118,7 @@ public:
   PRBool IsInline();
 
 protected:
+  virtual ~nsHTMLFrameOuterFrame();
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
@@ -222,6 +224,11 @@ nsHTMLFrameOuterFrame::nsHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aPa
 {
 }
 
+nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
+{
+  //printf("nsHTMLFrameOuterFrame destructor %X \n", this);
+}
+
 nscoord
 nsHTMLFrameOuterFrame::GetBorderWidth(nsIPresContext& aPresContext)
 {
@@ -279,7 +286,7 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-  //printf("outer paint %d (%d,%d,%d,%d) ", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  //printf("outer paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   if (nsnull != mFirstChild) {
     mFirstChild->Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
@@ -303,6 +310,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
+  //printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsHTMLFrameOuterFrame::Reflow: maxSize=%d,%d reason=%d",
       aReflowState.maxSize.width,
@@ -378,6 +386,7 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame(nsIContent* aContent,
 
 nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 {
+  printf("nsHTMLFrameInnerFrame destructor %X \n", this);
   if (nsnull != mWebShell) {
     // XXX: Is the needed (or wanted?)
     mWebShell->SetContainer(nsnull);
@@ -439,6 +448,7 @@ nsHTMLFrameInnerFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
+  //printf("inner paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   return NS_OK;
 }
 
@@ -570,6 +580,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
+  //printf("InnerFrame::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsHTMLFrameInnerFrame::Reflow: maxSize=%d,%d reason=%d",
       aReflowState.maxSize.width,
@@ -619,7 +630,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
   subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
   mWebShell->SetBounds(subBounds.x, subBounds.y,
                        subBounds.width, subBounds.height);
-
+  mWebShell->Repaint(PR_TRUE); 
   aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
@@ -668,14 +679,17 @@ nsHTMLFrame::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
-nsHTMLFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aString,
+nsHTMLFrame::SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify)
 {
   nsHTMLValue val;
-  if (ParseImageProperty(aAttribute, aString, val)) { // convert width or height to pixels
+  if (aAttribute == nsHTMLAtoms::bordercolor) {
+    ParseColor(aValue, val);
+    return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
+  } else if (ParseImageProperty(aAttribute, aValue, val)) { // convert width or height to pixels
     return nsHTMLTagContent::SetAttribute(aAttribute, val, aNotify);
   }
-  return nsHTMLContainer::SetAttribute(aAttribute, aString, aNotify);
+  return nsHTMLContainer::SetAttribute(aAttribute, aValue, aNotify);
 }
 
 
