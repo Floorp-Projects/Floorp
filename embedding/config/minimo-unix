@@ -174,7 +174,6 @@ res/unixcharset.properties
 
 ; required prefs files
 greprefs/*
-defaults/pref/all.js
 
 chrome/embed.jar
 
