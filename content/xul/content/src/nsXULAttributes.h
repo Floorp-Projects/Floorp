@@ -203,7 +203,7 @@ protected:
     nsAutoVoidArray        mAttributes;
 private:
     // Hide so that all construction and destruction use Create and Destroy.
-    static void *operator new(size_t) { };
+    static void *operator new(size_t) { return 0; };
     static void operator delete(void *, size_t) { };
 };
 
