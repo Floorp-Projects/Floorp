@@ -39,9 +39,8 @@
     (deftag inaccessible)
     (deftag uninitialised)
     
-    (deftype object (union undefined null boolean float64 long u-long character string namespace compound-attribute class method-closure prototype instance package global))
-    (deftype general-number (union float64 long u-long))
-    (deftype primitive-object (union undefined null boolean float64 long u-long character string))
+    (deftype object (union undefined null boolean long u-long float32 float64 character string namespace compound-attribute class method-closure prototype instance package global))
+    (deftype primitive-object (union undefined null boolean long u-long float32 float64 character string))
     (deftype dynamic-object (union prototype dynamic-instance global))
     
     (deftype object-opt (union object (tag none)))
@@ -60,14 +59,6 @@
     (%heading (3 :semantics) "Null")
     (deftag null)
     (deftype null (tag null))
-    
-    
-    (%heading (3 :semantics) "Signed and Unsigned Long Integers")
-    (deftuple long
-      (value (integer-range (neg (expt 2 63)) (- (expt 2 63) 1))))
-    
-    (deftuple u-long
-      (value (integer-range 0 (- (expt 2 64) 1))))
     
     
     (%heading (3 :semantics) "Strings")
@@ -433,14 +424,15 @@
     
     (define (truncate-to-integer (x general-number)) integer
       (case x
-        (:select (tag +infinity -infinity nan) (return 0))
+        (:select (tag +infinity32 +infinity64 -infinity32 -infinity64 nan32 nan64) (return 0))
+        (:narrow finite-float32 (return (truncate-finite-float32 x)))
         (:narrow finite-float64 (return (truncate-finite-float64 x)))
         (:narrow (union long u-long) (return (& value x)))))
     
     (define (check-integer (x general-number)) integer
-      (rwhen (in x (tag nan) :narrow-false)
+      (rwhen (in x (tag nan32 nan64) :narrow-false)
         (throw bad-value-error))
-      (rwhen (in x (tag +infinity -infinity) :narrow-false)
+      (rwhen (in x (tag +infinity32 +infinity64 -infinity32 -infinity64) :narrow-false)
         (throw range-error))
       (const r rational (to-rational x))
       (rwhen (not-in r integer :narrow-false)
@@ -457,28 +449,42 @@
         (return (new u-long i))
         (throw range-error)))
     
-    (define (to-rational (x (union finite-float64 long u-long))) rational
+    (define (to-rational (x finite-general-number)) rational
       (case x
-        (:select (tag +zero -zero) (return 0))
-        (:narrow nonzero-finite-float64 (return x))
-        (:narrow (union long u-long) (return (& value x)))))
+        (:select (tag +zero32 +zero64 -zero32 -zero64) (return 0))
+        (:narrow (union nonzero-finite-float32 nonzero-finite-float64 long u-long) (return (& value x)))))
+    
+    (define (float-to-float64 (x (union float32 float64))) float64
+      (case x
+        (:narrow float32 (return (float32-to-float64 x)))
+        (:narrow float64 (return x))))
+    
+    
+    (deftag less)
+    (deftag equal)
+    (deftag greater)
+    (deftag unordered)
+    (deftype order (tag less equal greater unordered))
     
     (define (general-number-compare (x general-number) (y general-number)) order
       (cond
-       ((and (in x float64 :narrow-true) (in y float64 :narrow-true))
-        (return (float64-compare x y)))
-       ((or (in x (tag nan) :narrow-false) (in y (tag nan) :narrow-false))
+       ((or (in x (tag nan32 nan64) :narrow-false) (in y (tag nan32 nan64) :narrow-false))
         (return unordered))
-       ((or (in x (tag +infinity) :narrow-false) (in y (tag -infinity) :narrow-false))
+       ((and (in x (tag +infinity32 +infinity64)) (in y (tag +infinity32 +infinity64)))
+        (return equal))
+       ((and (in x (tag -infinity32 -infinity64)) (in y (tag -infinity32 -infinity64)))
+        (return equal))
+       ((or (in x (tag +infinity32 +infinity64) :narrow-false) (in y (tag -infinity32 -infinity64) :narrow-false))
         (return greater))
-       ((or (in x (tag -infinity) :narrow-false) (in y (tag +infinity) :narrow-false))
+       ((or (in x (tag -infinity32 -infinity64) :narrow-false) (in y (tag +infinity32 +infinity64) :narrow-false))
         (return less))
-       (nil (return (rational-compare (to-rational x) (to-rational y))))))
-    
-    
-    ;***** Make me into a built-in
-    (define (float64-to-string (x float64)) string
-      (todo))
+       (nil
+        (const xr rational (to-rational x))
+        (const yr rational (to-rational y))
+        (cond
+         ((< xr yr rational) (return less))
+         ((> xr yr rational) (return greater))
+         (nil (return equal))))))
     
     
     (%heading (2 :semantics) "Object Utilities")
@@ -494,9 +500,10 @@
         (:select undefined (return undefined-class))
         (:select null (return null-class))
         (:select boolean (return boolean-class))
-        (:select float64 (return number-class))
         (:select long (return long-class))
         (:select u-long (return u-long-class))
+        (:select float32 (return float-class))
+        (:select float64 (return number-class))
         (:select character (return character-class))
         (:select string (return string-class))
         (:select namespace (return namespace-class))
@@ -536,8 +543,9 @@
       (case o
         (:select (union undefined null) (return false))
         (:narrow boolean (return o))
-        (:narrow float64 (return (not-in o (tag +zero -zero nan))))
         (:narrow (union long u-long) (return (/= (& value o) 0)))
+        (:narrow float32 (return (not-in o (tag +zero32 -zero32 nan32))))
+        (:narrow float64 (return (not-in o (tag +zero64 -zero64 nan64))))
         (:narrow string (return (/= o "" string)))
         (:select (union character namespace compound-attribute class method-closure prototype instance package global) (return true))))
     
@@ -547,8 +555,8 @@
            (:local phase) " is " (:tag compile) ", only compile-time conversions are permitted.")
     (define (to-general-number (o object) (phase phase :unused)) general-number
       (case o
-        (:select undefined (return nan))
-        (:select (union null (tag false)) (return +zero))
+        (:select undefined (return nan64))
+        (:select (union null (tag false)) (return +zero64))
         (:select (tag true) (return 1.0))
         (:narrow general-number (return o))
         (:select (union character string) (todo))
@@ -565,8 +573,9 @@
         (:select null (return "null"))
         (:select (tag false) (return "false"))
         (:select (tag true) (return "true"))
-        (:narrow float64 (return (float64-to-string o)))
         (:narrow (union long u-long) (return (integer-to-string (& value o))))
+        (:narrow float32 (return (float32-to-string o)))
+        (:narrow float64 (return (float64-to-string o)))
         (:narrow character (return (vector o)))
         (:narrow string (return o))
         (:select namespace (todo))
@@ -588,6 +597,108 @@
       (if (= q 0)
         (return (vector c))
         (return (append (integer-to-string q) (vector c)))))
+    
+    
+    (%text :comment (:global-call integer-to-string-with-sign i) " is the same as " (:global-call integer-to-string i)
+           " except that the resulting string always begins with a plus or minus sign.")
+    (define (integer-to-string-with-sign (i integer)) string
+      (if (>= i 0)
+        (return (cons #\+ (integer-to-string i)))
+        (return (cons #\- (integer-to-string (neg i))))))
+    
+    
+    (%text :comment (:global-call float32-to-string x) " converts a " (:type float32) " " (:local x) " to a string using fixed-point notation if "
+           "the absolute value of " (:local x) " is between " (:expr rational (expt 10 -6)) " inclusive and " (:expr rational (expt 10 21)) " exclusive and "
+           "exponential notation otherwise. The result has the fewest significant digits possible while still ensuring that converting the string back into a "
+           (:type float32) " value would result in the same value " (:local x) " (except that " (:tag -zero32) " would become " (:tag +zero32) ").")
+    (define (float32-to-string (x float32)) string
+      (case x
+        (:select (tag nan32) (return "NaN"))
+        (:select (tag +zero32 -zero32) (return "0"))
+        (:select (tag +infinity32) (return "Infinity"))
+        (:select (tag -infinity32) (return "-Infinity"))
+        (:narrow nonzero-finite-float32
+          (const r rational (& value x))
+          (cond
+           ((< r 0 rational) (return (append "-" (float32-to-string (float32-negate x)))))
+           (nil
+            (/* (:def-const n integer) (:def-const k integer) (:def-const s integer)
+                "Let " (:local n) ", " (:local k) ", and " (:local s) " be integers such that "
+                (:expr boolean (>= k 1)) ", " (:expr boolean (cascade rational (expt 10 (- k 1)) <= s <= (expt 10 k))) ", "
+                (:expr boolean (= (real-to-float32 (rat* s (expt 10 (- n k)))) x float32)) ", and " (:local k) " is as small as possible. "
+                "Note that " (:local k) " is the number of digits in the decimal representation of " (:local s) ", that " (:local s)
+                " is not divisible by 10, and that the least significant digit of " (:local s)
+                " is not necessarily uniquely determined by these criteria.")
+            (const n integer (bottom))
+            (const k integer (bottom))
+            (const s integer (bottom))
+            (*/)
+            (// "When there are multiple possibilities for " (:local s) " according to the rules above, "
+                "implementations are encouraged but not required to select the one according to the following rules: "
+                "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- n k)))) " is closest in value to " (:local r)
+                "; if there are two such possible values of " (:local s) ", choose the one that is even.")
+            (const digits string (integer-to-string s))
+            (cond
+             ((cascade integer k <= n <= 21)
+              (return (append digits (repeat character #\0 (- n k)))))
+             ((cascade integer 0 < n <= 21)
+              (return (append (subseq digits 0 (- n 1)) "." (subseq digits n))))
+             ((cascade integer -6 < n <= 0)
+              (return (append "0." (repeat character #\0 (neg n)) digits)))
+             (nil
+              (var mantissa string)
+              (if (= k 1)
+                (<- mantissa digits)
+                (<- mantissa (append (subseq digits 0 0) "." (subseq digits 1))))
+              (return (append mantissa "e" (integer-to-string-with-sign (- n 1)))))))))))
+    (defprimitive float32-to-string (lambda (x) (float32-to-string x)))
+    
+    
+    (%text :comment (:global-call float64-to-string x) " converts a " (:type float64) " " (:local x) " to a string using fixed-point notation if "
+           "the absolute value of " (:local x) " is between " (:expr rational (expt 10 -6)) " inclusive and " (:expr rational (expt 10 21)) " exclusive and "
+           "exponential notation otherwise. The result has the fewest significant digits possible while still ensuring that converting the string back into a "
+           (:type float64) " value would result in the same value " (:local x) " (except that " (:tag -zero64) " would become " (:tag +zero64) ").")
+    (define (float64-to-string (x float64)) string
+      (case x
+        (:select (tag nan64) (return "NaN"))
+        (:select (tag +zero64 -zero64) (return "0"))
+        (:select (tag +infinity64) (return "Infinity"))
+        (:select (tag -infinity64) (return "-Infinity"))
+        (:narrow nonzero-finite-float64
+          (const r rational (& value x))
+          (cond
+           ((< r 0 rational) (return (append "-" (float64-to-string (float64-negate x)))))
+           (nil
+            (/* (:def-const n integer) (:def-const k integer) (:def-const s integer)
+                "Let " (:local n) ", " (:local k) ", and " (:local s) " be integers such that "
+                (:expr boolean (>= k 1)) ", " (:expr boolean (cascade rational (expt 10 (- k 1)) <= s <= (expt 10 k))) ", "
+                (:expr boolean (= (real-to-float64 (rat* s (expt 10 (- n k)))) x float64)) ", and " (:local k) " is as small as possible. "
+                "Note that " (:local k) " is the number of digits in the decimal representation of " (:local s) ", that " (:local s)
+                " is not divisible by 10, and that the least significant digit of " (:local s)
+                " is not necessarily uniquely determined by these criteria.")
+            (const n integer (bottom))
+            (const k integer (bottom))
+            (const s integer (bottom))
+            (*/)
+            (// "When there are multiple possibilities for " (:local s) " according to the rules above, "
+                "implementations are encouraged but not required to select the one according to the following rules: "
+                "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- n k)))) " is closest in value to " (:local r)
+                "; if there are two such possible values of " (:local s) ", choose the one that is even.")
+            (const digits string (integer-to-string s))
+            (cond
+             ((cascade integer k <= n <= 21)
+              (return (append digits (repeat character #\0 (- n k)))))
+             ((cascade integer 0 < n <= 21)
+              (return (append (subseq digits 0 (- n 1)) "." (subseq digits n))))
+             ((cascade integer -6 < n <= 0)
+              (return (append "0." (repeat character #\0 (neg n)) digits)))
+             (nil
+              (var mantissa string)
+              (if (= k 1)
+                (<- mantissa digits)
+                (<- mantissa (append (subseq digits 0 0) "." (subseq digits 1))))
+              (return (append mantissa "e" (integer-to-string-with-sign (- n 1)))))))))))
+    (defprimitive float64-to-string (lambda (x) (float64-to-string x)))
     
     
     (%heading (3 :semantics) (:global to-primitive nil))
@@ -696,7 +807,7 @@
     
     
     (%text :comment "If " (:local r) " is a " (:type reference) ", " (:global-call delete-reference r) " deletes it. If "
-           (:local r) " is an " (:type object) ", this function signals an error in strict mode or returns " (:type true) " in non-strict mode. "
+           (:local r) " is an " (:type object) ", this function signals an error in strict mode or returns " (:tag true) " in non-strict mode. "
            (:global delete-reference) " is never called from a compile-time expression.")
     (define (delete-reference (r obj-or-ref) (strict boolean) (phase (tag run))) boolean
       (var result boolean-opt)
@@ -1172,7 +1283,7 @@
     (define (read-property (container (union obj-optional-limit frame)) (multiname multiname) (kind lookup-kind) (phase phase))
             object-opt
       (case container
-        (:narrow (union undefined null boolean float64 long u-long character string namespace compound-attribute method-closure instance)
+        (:narrow (union undefined null boolean general-number character string namespace compound-attribute method-closure instance)
           (const c class (object-type container))
           (const qname qualified-name-opt (resolve-instance-member-name c multiname read phase))
           (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
@@ -1301,7 +1412,7 @@
                             (new-value object) (phase (tag run)))
             (tag none ok)
       (case container
-        (:select (union undefined null boolean float64 long u-long character string namespace compound-attribute method-closure)
+        (:select (union undefined null boolean general-number character string namespace compound-attribute method-closure)
           (return none))
         (:narrow (union system-frame global package parameter-frame block-frame)
           (const m static-member-opt (find-flat-member container multiname write phase))
@@ -1436,7 +1547,7 @@
     (%heading (3 :semantics) "Deleting a Property")
     (define (delete-property (container (union obj-optional-limit frame)) (multiname multiname) (kind lookup-kind) (phase (tag run))) boolean-opt
       (case container
-        (:narrow (union undefined null boolean float64 long u-long character string namespace compound-attribute method-closure instance)
+        (:narrow (union undefined null boolean general-number character string namespace compound-attribute method-closure instance)
           (const c class (object-type container))
           (const qname qualified-name-opt (resolve-instance-member-name c multiname read phase))
           (if (and (in qname (tag none)) (in container dynamic-instance :narrow-true))
@@ -1518,7 +1629,7 @@
     
     (declare-action name $identifier string :action nil
       (terminal-action name $identifier identity))
-    (declare-action value $number float64 :action nil
+    (declare-action value $number general-number :action nil
       (terminal-action value $number identity))
     (declare-action value $string string :action nil
       (terminal-action value $string identity))
@@ -1728,8 +1839,8 @@
         ((validate (cxt :unused) (env :unused)) (return (list-set (value $string))))
         ((eval (env :unused) (phase :unused)) (return (value $string))))
       (production :field-name ($number) field-name-number
-        ((validate (cxt :unused) (env :unused)) (return (list-set (float64-to-string (value $number)))))
-        ((eval (env :unused) (phase :unused)) (return (float64-to-string (value $number)))))
+        ((validate (cxt :unused) (env :unused)) (return (list-set (to-string (value $number) compile))))
+        ((eval (env :unused) (phase :unused)) (return (to-string (value $number) compile))))
       (? js2
         (production :field-name (:paren-expression) field-name-paren-expression
           ((validate cxt env)
@@ -1853,13 +1964,13 @@
          (const r obj-or-ref ((eval :full-postfix-expression) env phase))
          (const a object (read-reference r phase))
          (return ((eval :member-operator) env a phase))))
-      (production :full-postfix-expression (:super-expression :dot-operator) full-postfix-expression-super-dot-operator
+      (production :full-postfix-expression (:super-expression :member-operator) full-postfix-expression-super-member-operator
         ((validate cxt env)
          ((validate :super-expression) cxt env)
-         ((validate :dot-operator) cxt env))
+         ((validate :member-operator) cxt env))
         ((eval env phase)
          (const a obj-optional-limit ((eval :super-expression) env phase))
-         (return ((eval :dot-operator) env a phase))))
+         (return ((eval :member-operator) env a phase))))
       (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call
         ((validate cxt env)
          ((validate :full-postfix-expression) cxt env)
@@ -1925,13 +2036,13 @@
          (const r obj-or-ref ((eval :full-new-subexpression) env phase))
          (const a object (read-reference r phase))
          (return ((eval :member-operator) env a phase))))
-      (production :full-new-subexpression (:super-expression :dot-operator) full-new-subexpression-super-dot-operator
+      (production :full-new-subexpression (:super-expression :member-operator) full-new-subexpression-super-member-operator
         ((validate cxt env)
          ((validate :super-expression) cxt env)
-         ((validate :dot-operator) cxt env))
+         ((validate :member-operator) cxt env))
         ((eval env phase)
          (const a obj-optional-limit ((eval :super-expression) env phase))
-         (return ((eval :dot-operator) env a phase)))))
+         (return ((eval :member-operator) env a phase)))))
     
     (rule :short-new-expression ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production :short-new-expression (new :short-new-subexpression) short-new-expression-new
@@ -1965,7 +2076,7 @@
     
     (define (call (this object) (a object) (args argument-list) (phase phase)) object
       (case a
-        (:select (union undefined null boolean float64 long u-long character string namespace compound-attribute prototype package global) (throw bad-value-error))
+        (:select (union undefined null boolean general-number character string namespace compound-attribute prototype package global) (throw bad-value-error))
         (:narrow class (return ((& call a) this args phase)))
         (:narrow instance
           (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
@@ -1976,7 +2087,7 @@
     
     (define (construct (a object) (args argument-list) (phase phase)) object
       (case a
-        (:select (union undefined null boolean float64 long u-long character string namespace compound-attribute method-closure prototype package global) (throw bad-value-error))
+        (:select (union undefined null boolean general-number character string namespace compound-attribute method-closure prototype package global) (throw bad-value-error))
         (:narrow class (return ((& construct a) args phase)))
         (:narrow instance
           (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
@@ -1984,19 +2095,11 @@
     
     
     (%heading 2 "Member Operators")
-    (rule :member-operator ((validate (-> (context environment) void)) (eval (-> (environment object phase) obj-or-ref)))
-      (production :member-operator (:dot-operator) member-operator-dot-operator
-        ((validate cxt env) ((validate :dot-operator) cxt env))
-        ((eval env base phase) (return ((eval :dot-operator) env base phase))))
-      (production :member-operator (\. :paren-expression) member-operator-indirect
-        ((validate cxt env) ((validate :paren-expression) cxt env))
-        ((eval (env :unused) (base :unused) (phase :unused)) (todo))))
-    
-    (rule :dot-operator ((validate (-> (context environment) void)) (eval (-> (environment obj-optional-limit phase) obj-or-ref)))
-      (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier
+    (rule :member-operator ((validate (-> (context environment) void)) (eval (-> (environment obj-optional-limit phase) obj-or-ref)))
+      (production :member-operator (\. :qualified-identifier) member-operator-qualified-identifier
         ((validate cxt env) ((validate :qualified-identifier) cxt env))
         ((eval (env :unused) base (phase :unused)) (return (new dot-reference base (multiname :qualified-identifier)))))
-      (production :dot-operator (:brackets) dot-operator-brackets
+      (production :member-operator (:brackets) member-operator-brackets
         ((validate cxt env) ((validate :brackets) cxt env))
         ((eval env base phase)
          (const args argument-list ((eval :brackets) env phase))
@@ -2092,9 +2195,10 @@
            (:select undefined (return "undefined"))
            (:select (union null prototype package global) (return "object"))
            (:select boolean (return "boolean"))
-           (:select float64 (return "number"))
            (:select long (return "long"))
            (:select u-long (return "ulong"))
+           (:select float32 (return "float"))
+           (:select float64 (return "number"))
            (:select character (return "character"))
            (:select string (return "string"))
            (:select namespace (return "namespace"))
@@ -2135,6 +2239,10 @@
          (const r obj-or-ref ((eval :unary-expression) env phase))
          (const a object (read-reference r phase))
          (return (minus a phase))))
+      (production :unary-expression (- $negated-min-long) unary-expression-min-long
+        ((validate (cxt :unused) (env :unused)))
+        ((eval (env :unused) (phase :unused))
+         (return (new long (neg (expt 2 63))))))
       (production :unary-expression (~ :unary-expression) unary-expression-bitwise-not
         ((validate cxt env) ((validate :unary-expression) cxt env))
         ((eval env phase)
@@ -2157,24 +2265,28 @@
     
     (define (minus (a object) (phase phase)) object
       (const x general-number (to-general-number a phase))
+      (return (general-number-negate x)))
+    
+    (define (general-number-negate (x general-number)) general-number
       (case x
-        (:narrow float64 (return (float64-negate x)))
         (:narrow (union long u-long)
           (const i integer (neg (& value x)))
-          (return (check-long i)))))
+          (return (check-long i)))
+        (:narrow float32 (return (float32-negate x)))
+        (:narrow float64 (return (float64-negate x)))))
     
     (define (bit-not (a object) (phase phase)) object
       (const x general-number (to-general-number a phase))
       (case x
-        (:narrow float64
-          (const i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
-          (return (real-to-float64 (bitwise-xor i -1))))
         (:narrow long
           (const i (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)) (& value x))
           (return (new long (bitwise-xor i -1))))
         (:narrow u-long
           (const i (integer-range 0 (- (expt 2 64) 1)) (& value x))
-          (return (new u-long (bitwise-xor i (hex #xFFFFFFFFFFFFFFFF)))))))
+          (return (new u-long (bitwise-xor i (hex #xFFFFFFFFFFFFFFFF)))))
+        (:narrow (union float32 float64)
+          (const i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
+          (return (real-to-float64 (bitwise-xor i -1))))))
     
     (%text :comment (:global-call logical-not a phase) " returns the value of the unary expression " (:character-literal "!") (:local a) ". If "
            (:local phase) " is " (:tag compile) ", only compile-time operations are permitted.")
@@ -2230,7 +2342,9 @@
         (if (or (in x u-long) (in y u-long))
           (return (check-u-long k))
           (return (check-long k))))
-       (nil (return (float64-multiply x y)))))
+       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
+        (return (float64-multiply (float-to-float64 x) (float-to-float64 y))))
+       (nil (return (float32-multiply x y)))))
     
     (define (divide (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
@@ -2246,7 +2360,9 @@
         (if (or (in x u-long) (in y u-long))
           (return (check-u-long k))
           (return (check-long k))))
-       (nil (return (float64-divide x y)))))
+       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
+        (return (float64-divide (float-to-float64 x) (float-to-float64 y))))
+       (nil (return (float32-divide x y)))))
     
     (define (remainder (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
@@ -2263,7 +2379,9 @@
         (if (in x u-long)
           (return (new u-long r))
           (return (new long r))))
-       (nil (return (float64-remainder x y)))))
+       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
+        (return (float64-remainder (float-to-float64 x) (float-to-float64 y))))
+       (nil (return (float32-remainder x y)))))
     
     
     (%heading 2 "Additive Operators")
@@ -2308,7 +2426,9 @@
         (if (or (in x u-long) (in y u-long))
           (return (check-u-long k))
           (return (check-long k))))
-       (nil (return (float64-add x y)))))
+       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
+        (return (float64-add (float-to-float64 x) (float-to-float64 y))))
+       (nil (return (float32-add x y)))))
     
     (define (subtract (a object) (b object) (phase phase)) object
       (const x general-number (to-general-number a phase))
@@ -2321,7 +2441,9 @@
         (if (in x u-long)
           (return (check-u-long k))
           (return (check-long k))))
-       (nil (return (float64-subtract x y)))))
+       ((or (in x float64 :narrow-false) (in y float64 :narrow-false))
+        (return (float64-subtract (float-to-float64 x) (float-to-float64 y))))
+       (nil (return (float32-subtract x y)))))
     
     
     (%heading 2 "Bitwise Shift Operators")
@@ -2365,7 +2487,7 @@
       (const x general-number (to-general-number a phase))
       (var count integer (truncate-to-integer (to-general-number b phase)))
       (case x
-        (:narrow float64
+        (:narrow (union float32 float64)
           (var i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
           (<- count (bitwise-and count (hex #x1F)))
           (<- i (signed-wrap32 (bitwise-shift i count)))
@@ -2383,7 +2505,7 @@
       (const x general-number (to-general-number a phase))
       (var count integer (truncate-to-integer (to-general-number b phase)))
       (case x
-        (:narrow float64
+        (:narrow (union float32 float64)
           (var i (integer-range (neg (expt 2 31)) (- (expt 2 31) 1)) (signed-wrap32 (truncate-to-integer x)))
           (<- count (bitwise-and count (hex #x1F)))
           (<- i (bitwise-shift i (neg count)))
@@ -2401,7 +2523,7 @@
       (const x general-number (to-general-number a phase))
       (var count integer (truncate-to-integer (to-general-number b phase)))
       (case x
-        (:narrow float64
+        (:narrow (union float32 float64)
           (var i (integer-range 0 (- (expt 2 32) 1)) (unsigned-wrap32 (truncate-to-integer x)))
           (<- count (bitwise-and count (hex #x1F)))
           (<- i (bitwise-shift i (neg count)))
@@ -2580,14 +2702,16 @@
         (return (is-strictly-equal (& original a) b phase)))
        ((in b alias-instance :narrow-true)
         (return (is-strictly-equal a (& original b) phase)))
+       ((and (in a float32 :narrow-true) (in b float32 :narrow-true))
+        (return (= (general-number-compare a b) equal order)))
        ((and (in a float64 :narrow-true) (in b float64 :narrow-true))
-        (return (= (float64-compare a b) equal order)))
+        (return (= (general-number-compare a b) equal order)))
        (nil
         (// "Note that a " (:type long) " 5 is strictly equal to itself but not to " (:type u-long) " 5 or " (:type float64) " 5.")
         (return (= a b object)))))
     
     
-    (%heading 2 "Binary Bit Operators")
+    (%heading 2 "Binary Bitwise Operators")
     (rule (:bitwise-and-expression :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) obj-or-ref)))
       (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality
         ((validate cxt env) ((validate :equality-expression) cxt env))
@@ -3556,7 +3680,8 @@
       (production :pragma-argument (true) pragma-argument-true (value true))
       (production :pragma-argument (false) pragma-argument-false (value false))
       (production :pragma-argument ($number) pragma-argument-number (value (value $number)))
-      (production :pragma-argument (- $number) pragma-argument-negative-number (value (float64-negate (value $number))))
+      (production :pragma-argument (- $number) pragma-argument-negative-number (value (general-number-negate (value $number))))
+      (production :pragma-argument (- $negated-min-long) pragma-argument-min-long (value (new long (neg (expt 2 63)))))
       (production :pragma-argument ($string) pragma-argument-string (value (value $string))))
     (%print-actions ("Validation" validate))
     
@@ -4095,9 +4220,10 @@
     (define null-class class (make-built-in-class object-class false true true))
     (define boolean-class class (make-built-in-class object-class false false true))
     (define general-number-class class (make-built-in-class object-class false false false))
-    (define number-class class (make-built-in-class general-number-class false false true))
     (define long-class class (make-built-in-class general-number-class false false true))
     (define u-long-class class (make-built-in-class general-number-class false false true))
+    (define float-class class (make-built-in-class general-number-class false false true))
+    (define number-class class (make-built-in-class general-number-class false false true))
     (define character-class class (make-built-in-class object-class false false true))
     (define string-class class (make-built-in-class object-class false true true))
     (define namespace-class class (make-built-in-class object-class false true true))
