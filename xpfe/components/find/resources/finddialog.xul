@@ -1,0 +1,137 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="platform.css" type="text/css"?> 
+<?xml-stylesheet href="dialogs.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad()" title="Search">
+
+    <data>
+        <broadcaster id="data.searchTerm" type="string" value=""/>
+        <broadcaster id="data.execute" command=""/>
+    </data>
+
+    <html:script>
+        var data;
+        var dialog;
+
+        function initData() {
+            // Create data object and initialize.
+            data = new Object;
+            data.searchTerm    = document.getElementById("data.searchTerm");
+            data.caseSensitive = document.getElementById("data.caseSensitive");
+            data.wrap          = document.getElementById("data.wrap");
+            data.backwards     = document.getElementById("data.backwards");
+            data.execute       = document.getElementById("data.execute");
+        }
+
+        function initDialog() {
+            // Create dialog object and initialize.
+            dialog = new Object;
+            dialog.searchTerm    = document.getElementById("dialog.searchTerm");
+            dialog.caseSensitive = document.getElementById("dialog.caseSensitive");
+            dialog.wrap          = document.getElementById("dialog.wrap");
+            dialog.backwards     = document.getElementById("dialog.backwards");
+            dialog.ok            = document.getElementById("dialog.ok");
+            dialog.enabled       = false;
+        }
+
+        function loadDialog() {
+            // Set initial dialog field contents.
+            dialog.searchTerm.setAttribute( "value", "");
+            dialog.caseSensitive.setAttribute( "value", false );
+            dialog.wrap.setAttribute( "value", true);
+            dialog.backwards.setAttribute( "value", false);
+        }
+
+        function onLoad() {
+            // Init data.
+            initData();
+
+            // Init dialog.
+            initDialog();
+
+            // Fill dialog.
+            loadDialog();
+        }
+
+        function ok() {
+            // Proceed with find.
+            data.execute.setAttribute("searchTerm", dialog.searchTerm.value );
+            data.execute.setAttribute("command", "ok");
+        }
+
+        function cancel() {
+            // Close the window.
+            data.execute.setAttribute("command","close");
+        }
+
+        function onTyping( key ) {
+            if ( key == 13 &amp;&amp; dialog.enabled ) {
+                ok();
+            } else {
+                if ( dialog.enabled ) {
+                    // Disable OK if they delete all the text.
+                    if ( dialog.searchTerm.value == "" ) {
+                        dialog.enabled = false;
+                        dialog.ok.setAttribute( "disabled", "" );
+                    }
+                } else {
+                    // Enable OK once the user types something.
+                    if ( dialog.searchTerm.value != "" ) {
+                        dialog.enabled = true;
+                        dialog.ok.removeAttribute( "disabled" );
+                    }
+                }
+            }
+        }
+    </html:script>
+
+	<html:form>
+    <html:table border="0" style="width:400px;">
+        <html:tr>
+            <html:td class="fieldlabel">
+                Find:
+            </html:td>
+            <html:td align="left">
+                <html:input id="dialog.searchTerm" readonly="" style="background-color:lightgray;width:300px;" onkeyup="onTyping(event.which)"/>
+            </html:td>
+        </html:tr>
+    
+        <html:tr class="checkboxrow">
+            <html:td align="right">
+            </html:td>
+            <html:td class="buttonlabel">
+                <html:input type="checkbox" id="dialog.caseSensitive" readonly=""/>
+                Case Sensitive
+            </html:td>
+        </html:tr>
+    
+        <html:tr>
+            <html:td align="right">
+            </html:td>
+            <html:td  class="buttonlabel" align="left">
+                <html:input type="checkbox" id="dialog.wrap" value=""/>
+                Wrap
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="right">
+            </html:td>
+            <html:td  class="buttonlabel" align="left">
+                <html:input type="checkbox" id="dialog.backwards" value=""/>
+                Backwards
+            </html:td>
+        </html:tr>
+        <html:tr>
+            <html:td align="right" colspan="2">
+                <html:button class="cancelbutton" id="dialog.cancel" onclick="cancel()" disabled="">Cancel</html:button>
+                <html:button class="defaultbutton" id="dialog.ok" onclick="ok()" disabled="">OK</html:button>
+            </html:td>
+        </html:tr>
+    </html:table>
+	</html:form>
+</window>

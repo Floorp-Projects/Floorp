@@ -1,0 +1,56 @@
+/** Contains style definitions for navigator dialogs
+		This file is experimental right now, but will sometime
+		be the base CSS file for all dialogs.
+ **/
+
+
+table {
+  display: list;
+  cell-spacing: 2px;
+  cell-padding: 2px;
+  margin-top: 10;
+  margin-bottom: 10;
+  background: transparent;
+}
+
+tr.checkboxrow {
+	  vertical-align: middle;
+		cell-spacing: 20px;
+		cell-padding: 20px;
+}
+
+input {
+  vertical-align: middle;
+}
+
+td.fieldlabel {
+	text-align: right;
+/*	font-family: "Geneva"; */
+	font-size: 9pt;
+	font-weight: bold;
+	padding-right: 4px;
+}
+
+
+button.defaultbutton {
+/*	font-family: "Charcoal"; */
+	font-size: 12pt;
+	padding-left: 24px;
+	padding-right: 24px;
+	margin-left: 4px;
+	margin-right: 4px;
+}
+
+button.cancelbutton {
+/*	font-family: "Arial, Charcoal"; */
+	font-size: 12pt;
+	padding-left: 24px;
+	padding-right: 24px;
+	margin-left: 4px;
+	margin-right: 4px;
+}
+
+td.buttonlabel {
+/*	font-family: "Geneva"; */
+	font-size: 9pt;
+}
