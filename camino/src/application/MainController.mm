@@ -203,7 +203,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController newTab:NO];
+    [browserController newTab:eNewTabAboutBlank];
 }
 
 -(IBAction)closeTab:(id)aSender
