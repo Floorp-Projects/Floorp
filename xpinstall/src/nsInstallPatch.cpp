@@ -62,7 +62,7 @@ static int32   gdiff_validateFile( pDIFFDATA dd, int file );
 
 nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
                                 const nsString& inVRName,
-                                nsIDOMInstallVersion* inVInfo,
+                                const nsString& inVInfo,
                                 const nsString& inJarLocation,
                                 PRInt32 *error)
 
@@ -87,21 +87,18 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mPatchedFile    =   nsnull;
     mRegistryName   =   new nsString(inVRName);
     mJarLocation    =   new nsString(inJarLocation);
-
-    nsString tempString;
-    inVInfo->ToString(tempString);
-    mVersionInfo = new nsInstallVersion();
-    mVersionInfo->Init(tempString);
+    mTargetFile     =   new nsFileSpec(folderSpec);
     
-
-     mTargetFile = new nsFileSpec(folderSpec);
+    mVersionInfo    =   new nsInstallVersion();
+    
+    mVersionInfo->Init(inVInfo);
     
 }
 
 
 nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
                                 const nsString& inVRName,
-                                nsIDOMInstallVersion* inVInfo,
+                                const nsString& inVInfo,
                                 const nsString& inJarLocation,
                                 const nsString& folderSpec,
                                 const nsString& inPartialPath,
@@ -120,15 +117,12 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mPatchedFile    =   nsnull;
     mRegistryName   =   new nsString(inVRName);
     mJarLocation    =   new nsString(inJarLocation);
-
-    nsString tempString;
-    inVInfo->ToString(tempString);
-    mVersionInfo = new nsInstallVersion();
-    mVersionInfo->Init(tempString);
+    mVersionInfo    =   new nsInstallVersion();
     
-
-     mTargetFile = new nsFileSpec(folderSpec);
-     if(inPartialPath != "null")
+    mVersionInfo->Init(inVInfo);
+    
+    mTargetFile = new nsFileSpec(folderSpec);
+    if(inPartialPath != "null")
         *mTargetFile += inPartialPath;
 }
 
@@ -216,7 +210,7 @@ PRInt32 nsInstallPatch::Prepare()
 	
     if ( deleteOldSrc ) 
     {
-		DeleteFileLater(*fileName );
+		DeleteFileNowOrSchedule(*fileName );
     }
   
     return err;
@@ -239,7 +233,7 @@ PRInt32 nsInstallPatch::Complete()
     if (fileName != nsnull && (*fileName == *mPatchedFile) )
     {
         // the patch has not been superceded--do final replacement
-		err = ReplaceFileLater( *mTargetFile, *mPatchedFile);
+		err = ReplaceFileNowOrSchedule( *mTargetFile, *mPatchedFile);
         if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
         {
             nsString tempVersionString;
@@ -280,7 +274,7 @@ void nsInstallPatch::Abort()
 
     if (fileName != nsnull && (*fileName == *mPatchedFile) )
     {
-        DeleteFileLater( *mPatchedFile );
+        DeleteFileNowOrSchedule( *mPatchedFile );
     }
 }
 

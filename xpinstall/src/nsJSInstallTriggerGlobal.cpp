@@ -29,19 +29,19 @@
 #include "nsIDOMInstallVersion.h"
 #include "nsIDOMInstallTriggerGlobal.h"
 
-extern void nsCvrtJSValToStr(nsString&  aString,
+extern void ConvertJSValToStr(nsString&  aString,
                              JSContext* aContext,
                              jsval      aValue);
 
-extern void nsCvrtStrToJSVal(const nsString& aProp,
+extern void ConvertStrToJSVal(const nsString& aProp,
                              JSContext* aContext,
                              jsval* aReturn);
 
-extern PRBool nsCvrtJSValToBool(PRBool* aProp,
+extern PRBool ConvertJSValToBool(PRBool* aProp,
                                 JSContext* aContext,
                                 jsval aValue);
 
-extern PRBool nsCvrtJSValToObj(nsISupports** aSupports,
+extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                REFNSIID aIID,
                                const nsString& aTypeName,
                                JSContext* aContext,
@@ -199,7 +199,7 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
     //  public int StartSoftwareUpdate(String url,
     //                                 int flag);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b0, cx, argv[0]);
 
     if(!JS_ValueToInt32(cx, argv[1], (int32 *)&b1))
     {
@@ -218,7 +218,7 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
   {
     //  public int StartSoftwareUpdate(String url);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b0, cx, argv[0]);
 
     if(NS_OK != nativeThis->StartSoftwareUpdate(b0, &nativeRet))
     {
@@ -269,8 +269,8 @@ InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uint
     //                                       String version, --OR-- VersionInfo version
     //                                       int    mode);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     if(!JS_ValueToInt32(cx, argv[2], (int32 *)&b2int))
     {
@@ -283,7 +283,7 @@ InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uint
       JS_ReportError(cx, "5th parameter must be a number");
       return JS_FALSE;
     }
-
+    
     if(JSVAL_IS_OBJECT(argv[3]))
     {
         JSObject* jsobj = JSVAL_TO_OBJECT(argv[3]);
@@ -300,7 +300,7 @@ InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uint
     }
     else
     {
-        nsCvrtJSValToStr(b3str, cx, argv[3]);
+        ConvertJSValToStr(b3str, cx, argv[3]);
         if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, b2int, b3str, b4, &nativeRet))
         {
           return JS_FALSE;
@@ -316,8 +316,8 @@ InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uint
     //                                       String version,  --OR-- VersionInfo version
     //                                       int    mode);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     if(!JS_ValueToInt32(cx, argv[3], (int32 *)&b3int))
     {
@@ -341,7 +341,7 @@ InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uint
     }
     else
     {
-        nsCvrtJSValToStr(b2str, cx, argv[2]);
+        ConvertJSValToStr(b2str, cx, argv[2]);
         if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, b2str, b3int, &nativeRet))
         {
           return JS_FALSE;
@@ -356,8 +356,8 @@ InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uint
     //                                       String registryName,
     //                                       String version);  --OR-- VersionInfo version
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     if(JSVAL_IS_OBJECT(argv[2]))
     {
@@ -375,7 +375,7 @@ InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uint
     }
     else
     {
-        nsCvrtJSValToStr(b2str, cx, argv[2]);
+        ConvertJSValToStr(b2str, cx, argv[2]);
         if(NS_OK != nativeThis->ConditionalSoftwareUpdate(b0, b1, b2str, &nativeRet))
         {
           return JS_FALSE;
@@ -425,7 +425,7 @@ InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsv
     //                            int    release,
     //                            int    build);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b0, cx, argv[0]);
 
     if(!JS_ValueToInt32(cx, argv[1], (int32 *)&b1int))
     {
@@ -460,7 +460,7 @@ InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsv
     //  public int CompareVersion(String registryName,
     //                            String version); --OR-- VersionInfo version
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b0, cx, argv[0]);
 
     if(JSVAL_IS_OBJECT(argv[1]))
     {
@@ -478,7 +478,7 @@ InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsv
     }
     else
     {
-        nsCvrtJSValToStr(b1str, cx, argv[1]);
+        ConvertJSValToStr(b1str, cx, argv[1]);
         if(NS_OK != nativeThis->CompareVersion(b0, b1str, &nativeRet))
         {
           return JS_FALSE;

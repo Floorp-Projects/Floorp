@@ -135,31 +135,29 @@ class nsInstall
         nsInstall();
         virtual ~nsInstall();
         
-        PRInt32      SetScriptObject(void* aScriptObject);
+        PRInt32    SetScriptObject(void* aScriptObject);
 
-        
         PRInt32    SaveWinRegPrototype(void* aScriptObject);
         PRInt32    SaveWinProfilePrototype(void* aScriptObject);
         
         JSObject*  RetrieveWinRegPrototype(void);
         JSObject*  RetrieveWinProfilePrototype(void);
-        
+
         PRInt32    GetUserPackageName(nsString& aUserPackageName);
         PRInt32    GetRegPackageName(nsString& aRegPackageName);
 
         PRInt32    AbortInstall();
+        
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
-        PRInt32    AddDirectory(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);
-        PRInt32    AddDirectory(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aSubdir, PRInt32* aReturn);
         PRInt32    AddDirectory(const nsString& aJarSource, PRInt32* aReturn);
+        
         PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
-        PRInt32    AddSubcomponent(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
-        PRInt32    AddSubcomponent(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aJarSource, PRInt32* aReturn);
+        
         PRInt32    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);
         PRInt32    DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
         PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRInt32* aReturn);
@@ -175,17 +173,12 @@ class nsInstall
         PRInt32    GetWinProfile(const nsString& aFolder, const nsString& aFile, JSContext* jscontext, JSClass* WinProfileClass, jsval* aReturn);
         PRInt32    GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
-        PRInt32    Patch(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    ResetError();
         PRInt32    SetPackageFolder(const nsString& aFolder);
-        PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32 aFlags, PRInt32* aReturn);
-        PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, nsIDOMInstallVersion* aVersion, PRInt32 aFlags, PRInt32* aReturn);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
-        PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn);
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
         
-
 
         PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName);
         void       AddPatch(nsHashKey *aKey, nsFileSpec* fileName);
@@ -230,10 +223,12 @@ class nsInstall
         PRInt32     SanityCheck(void);
         void        GetTime(nsString &aString);
 
-        nsString *  GetQualifiedRegName( const nsString& name );
-        nsString*   GetQualifiedPackageName( const nsString& name );
-        nsString*   CurrentUserNode();
-        PRBool      BadRegName(nsString* regName);
+        
+        PRInt32     GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName );
+        PRInt32     GetQualifiedPackageName( const nsString& name, nsString& qualifiedName );
+        
+        void        CurrentUserNode(nsString& userRegNode);
+        PRBool      BadRegName(const nsString& regName);
         PRInt32     SaveError(PRInt32 errcode);
 
         void        CleanUp();

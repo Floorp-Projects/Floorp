@@ -87,7 +87,7 @@ PRInt32 nsInstallExecute::Complete()
 
     PRInt32 result = app.Execute( mArgs );
     
-    DeleteFileLater( app );
+    DeleteFileNowOrSchedule( app );
     
     return result;
 }
@@ -98,15 +98,25 @@ void nsInstallExecute::Abort()
     if (mExecutableFile == nsnull) 
         return;
 
-    DeleteFileLater(*mExecutableFile);
+    DeleteFileNowOrSchedule(*mExecutableFile);
 }
 
 char* nsInstallExecute::toString()
 {
     char* buffer = new char[1024];
     
-    sprintf( buffer, nsInstallResources::GetExecuteString(), mExecutableFile->GetCString());
-        
+    // if the FileSpec is NULL, just us the in jar file name.
+
+    if (mExecutableFile == nsnull)
+    {
+        char *tempString = mJarLocation.ToNewCString();
+        sprintf( buffer, nsInstallResources::GetExecuteString(), tempString);
+        delete [] tempString;
+    }
+    else
+    {
+        sprintf( buffer, nsInstallResources::GetExecuteString(), mExecutableFile->GetCString());
+    }
     return buffer;
 
 }

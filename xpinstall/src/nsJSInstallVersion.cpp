@@ -31,23 +31,25 @@
 #include "nsRepository.h"
 #include "nsDOMCID.h"
 
-extern void nsCvrtJSValToStr(nsString&  aString,
+extern void ConvertJSValToStr(nsString&  aString,
                              JSContext* aContext,
                              jsval      aValue);
 
-extern void nsCvrtStrToJSVal(const nsString& aProp,
+extern void ConvertStrToJSVal(const nsString& aProp,
                              JSContext* aContext,
                              jsval* aReturn);
 
-extern PRBool nsCvrtJSValToBool(PRBool* aProp,
+extern PRBool ConvertJSValToBool(PRBool* aProp,
                                 JSContext* aContext,
                                 jsval aValue);
 
-extern PRBool nsCvrtJSValToObj(nsISupports** aSupports,
+extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                REFNSIID aIID,
                                const nsString& aTypeName,
                                JSContext* aContext,
                                jsval aValue);
+
+void ConvertJSvalToVersionString(nsString& versionString, JSContext* cx, jsval* argument);
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -399,7 +401,7 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
     if(JSVAL_IS_OBJECT(argv[0]))
     {
-        if(JS_FALSE == nsCvrtJSValToObj((nsISupports **)&versionObj,
+        if(JS_FALSE == ConvertJSValToObj((nsISupports **)&versionObj,
                                          kIInstallVersionIID,
                                          "InstallVersion",
                                          cx,
@@ -415,7 +417,7 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     }
     else
     {
-        nsCvrtJSValToStr(b0str, cx, argv[0]);
+        ConvertJSValToStr(b0str, cx, argv[0]);
 
         if(NS_OK != nativeThis->CompareTo(b0str, &nativeRet))
         {

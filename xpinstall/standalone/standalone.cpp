@@ -36,8 +36,8 @@
 #include "nsSoftwareUpdateIIDs.h"
 
 static nsISoftwareUpdate *softwareUpdate= NULL;
-static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
-static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
+static NS_DEFINE_IID(kFileLocatorIID, NS_IFILELOCATOR_IID);
+static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 /*********************************************/
 
 

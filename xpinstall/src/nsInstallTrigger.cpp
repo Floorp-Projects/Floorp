@@ -136,10 +136,8 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRIn
     nsString localFile;
     CreateTempFileFromURL(aURL, localFile);
 
-    nsInstallInfo *nextInstall = new nsInstallInfo( aURL, localFile, aFlags);
-
     // start the download (this will clean itself up)
-    nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(nextInstall);
+    nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(aURL, localFile, aFlags);
 
     *aReturn = NS_OK;  // maybe we should do something more.
     return NS_OK;
@@ -151,10 +149,8 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn)
     nsString localFile;
     CreateTempFileFromURL(aURL, localFile);
 
-    nsInstallInfo *nextInstall = new nsInstallInfo( aURL, localFile, 0);
-
     // start the download (this will clean itself up)
-    nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(nextInstall);
+    nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(aURL, localFile, 0);
 
     *aReturn = NS_OK;  // maybe we should do something more.
     return NS_OK;

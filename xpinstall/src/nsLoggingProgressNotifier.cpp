@@ -35,22 +35,20 @@
 
 nsLoggingProgressNotifier::nsLoggingProgressNotifier()
 {
-    nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    logFile += "Install.log";
-
-    mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
-    mLogStream->seek(logFile.GetFileSize());
 }
 
 nsLoggingProgressNotifier::~nsLoggingProgressNotifier()
 {
-    mLogStream->close();
-    delete mLogStream;
 }
 
 void
 nsLoggingProgressNotifier::BeforeJavascriptEvaluation(void)
 {
+    nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    logFile += "Install.log";
+
+    mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
+    mLogStream->seek(logFile.GetFileSize());
 }
 
 void
@@ -63,11 +61,17 @@ nsLoggingProgressNotifier::AfterJavascriptEvaluation(void)
     *mLogStream << "     Finished Installation  " << time << nsEndl << nsEndl;
 
     PL_strfree(time);
+
+    mLogStream->close();
+    delete mLogStream;
+    mLogStream = nsnull;
 }
 
 void
 nsLoggingProgressNotifier::InstallStarted(const char* UIPackageName)
 {
+    if (mLogStream == nsnull) return;
+
     char* time;
     GetTime(&time);
     
@@ -91,12 +95,16 @@ nsLoggingProgressNotifier::ItemScheduled(const char* message )
 void
 nsLoggingProgressNotifier::InstallFinalization(const char* message, long itemNum, long totNum )
 {
-    *mLogStream << "     " << message << nsEndl;
+    if (mLogStream == nsnull) return;
+
+    *mLogStream << "     Item [" << (itemNum+1) << "/" << totNum << "]\t" << message << nsEndl;
 }
 
 void
 nsLoggingProgressNotifier::InstallAborted(void)
 {
+    if (mLogStream == nsnull) return;
+
     char* time;
     GetTime(&time);
     

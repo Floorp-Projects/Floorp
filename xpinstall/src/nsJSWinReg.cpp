@@ -27,19 +27,19 @@
 
 static void PR_CALLBACK WinRegCleanup(JSContext *cx, JSObject *obj);
 
-extern void nsCvrtJSValToStr(nsString&  aString,
+extern void ConvertJSValToStr(nsString&  aString,
                              JSContext* aContext,
                              jsval      aValue);
 
-extern void nsCvrtStrToJSVal(const nsString& aProp,
+extern void ConvertStrToJSVal(const nsString& aProp,
                              JSContext* aContext,
                              jsval* aReturn);
 
-extern PRBool nsCvrtJSValToBool(PRBool* aProp,
+extern PRBool ConvertJSValToBool(PRBool* aProp,
                                 JSContext* aContext,
                                 jsval aValue);
 
-extern PRBool nsCvrtJSValToObj(nsISupports** aSupports,
+extern PRBool ConvertJSValToObj(nsISupports** aSupports,
                                REFNSIID aIID,
                                const nsString& aTypeName,
                                JSContext* aContext,
@@ -124,8 +124,8 @@ WinRegCreateKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
     //  public int createKey ( String subKey,
     //                         String className);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     if(NS_OK != nativeThis->createKey(b0, b1, &nativeRet))
     {
@@ -165,7 +165,7 @@ WinRegDeleteKey(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   {
     //  public int deleteKey ( String subKey);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b0, cx, argv[0]);
 
     if(NS_OK != nativeThis->deleteKey(b0, &nativeRet))
     {
@@ -208,8 +208,8 @@ WinRegDeleteValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     //  public int deleteValue ( String subKey,
     //                           String valueName);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     if(NS_OK != nativeThis->deleteValue(b0, b1, &nativeRet))
     {
@@ -253,9 +253,9 @@ WinRegSetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     //                              String valueName,
     //                              String value);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
-    nsCvrtJSValToStr(b2, cx, argv[2]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b2, cx, argv[2]);
 
     if(NS_OK != nativeThis->setValueString(b0, b1, b2, &nativeRet))
     {
@@ -297,8 +297,8 @@ WinRegGetValueString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
     //  public int getValueString ( String subKey,
     //                              String valueName);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     if(NS_OK != nativeThis->getValueString(b0, b1, &nativeRet))
     {
@@ -342,12 +342,12 @@ WinRegSetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     //                        String        valueName,
     //                        nsWinRegItem  *value);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     // fix: this parameter is an object, not a string.
     // A way needs to be figured out to convert the JSVAL to this object type
-//    nsCvrtJSValToStr(b2, cx, argv[2]);
+//    ConvertJSValToStr(b2, cx, argv[2]);
 
 //    if(NS_OK != nativeThis->setValue(b0, b1, b2, &nativeRet))
 //    {
@@ -389,8 +389,8 @@ WinRegGetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     //  public int getValue ( String subKey,
     //                        String valueName);
 
-    nsCvrtJSValToStr(b0, cx, argv[0]);
-    nsCvrtJSValToStr(b1, cx, argv[1]);
+    ConvertJSValToStr(b0, cx, argv[0]);
+    ConvertJSValToStr(b1, cx, argv[1]);
 
     if(NS_OK != nativeThis->getValue(b0, b1, &nativeRet))
     {

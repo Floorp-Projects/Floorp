@@ -26,7 +26,7 @@
 
 #include "nsInstall.h"
 #include "nsInstallFolder.h"
-#include "nsIDOMInstallVersion.h"
+#include "nsInstallVersion.h"
 
 
 class nsInstallPatch : public nsInstallObject 
@@ -35,7 +35,7 @@ class nsInstallPatch : public nsInstallObject
 
         nsInstallPatch( nsInstall* inInstall,
                         const nsString& inVRName,
-                        nsIDOMInstallVersion* inVInfo,
+                        const nsString& inVInfo,
                         const nsString& inJarLocation,
                         const nsString& folderSpec,
                         const nsString& inPartialPath,
@@ -43,7 +43,7 @@ class nsInstallPatch : public nsInstallObject
 
         nsInstallPatch( nsInstall* inInstall,
                         const nsString& inVRName,
-                        nsIDOMInstallVersion* inVInfo,
+                        const nsString& inVInfo,
                         const nsString& inJarLocation,
                         PRInt32 *error);
 
