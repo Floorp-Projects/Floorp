@@ -59,6 +59,13 @@ DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/plc.res
 RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
 EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
+
+ifdef MOZ_DEBUG
+ifdef GLOWCODE
+EXTRA_LIBS += c:/bin/glowcode/glowcode.lib
+endif
+endif
+
 endif
 else
 ifeq ($(OS_ARCH), AIX)

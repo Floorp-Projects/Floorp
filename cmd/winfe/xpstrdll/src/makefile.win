@@ -60,6 +60,9 @@ CPP_OBJS=.\$(OBJDIR)\xpstrdll.obj
 LINCS=-I$(XPDIST)\public\coreincl -I$(XPDIST)\public\nspr \
     -I$(XPDIST)\public\security 
 !endif
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
+!endif
 
 ## Include support for MOZ_LITE/MOZ_MEDIUM
 include <$(DEPTH)/config/liteness.mak>

@@ -21,7 +21,11 @@ MAPFILE =$(EXENAME).map
 MAKE_OBJ_TYPE = EXE
 
 !if "$(MOZ_BITS)" == "32"
+!if defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=ole32.lib $(GLOWDIR)\glowcode.lib
+!else
 LLIBS=ole32.lib
+!endif
 !else
 LLIBS=ole2.lib
 !endif

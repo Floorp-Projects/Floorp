@@ -115,6 +115,11 @@ include <$(DEPTH)\config\rules.mak>
 
 #LCFLAGS=-D_USE_PR_DEBUG_MEMORY $(LCFLAGS)
 
+export::
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+    $(MAKE_INSTALL) $(GLOWDIR)\glowcode.dll $(DIST)\bin
+!endif
+
 clobber_all::
     cd $(DEPTH)
     -rd /s /q dist

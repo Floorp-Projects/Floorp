@@ -36,6 +36,9 @@ LLIBS32 = ole32.lib uuid.lib
 !if "$(_MSC_VER)" != "1100"
 LLIBS32 = $(LLIBS32) uuid2.lib
 !endif
+!if defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS32 = $(LLIBS32) $(GLOWDIR)\glowcode.lib
+!endif
 
 !if "$(MOZ_BITS)" == "32"
 LLIBS = $(LLIBS) $(LLIBS32)

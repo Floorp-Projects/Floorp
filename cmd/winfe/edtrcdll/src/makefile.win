@@ -30,6 +30,9 @@ OBJS = $(OBJS) .\$(OBJDIR)\imewrp16.obj
 !endif
 
 LLIBS = $(DIST)\lib\nsdlg$(MOZ_BITS).lib comdlg32.lib
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
+!endif
 
 MODULE=edtrcdll 
 DEPTH=..\..\..\.. 

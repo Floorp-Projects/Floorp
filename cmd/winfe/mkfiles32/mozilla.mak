@@ -218,6 +218,9 @@ CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
 !endif
 !IF "$(MOZ_BITS)"=="32"
 	/Gm /Gi \
+!if defined(GLOWCODE) && defined(GLOWPROF)
+	/Gh \
+!endif
 !IF 0 #defined(MOZ_BATCH)
     /MDd /Od /Gy /Z7
 !else
@@ -233,7 +236,11 @@ CFLAGS_DEBUG=$(MOZ_DEBUG_FLAG) /Bd /DDEBUG /D_DEBUG $(MOZ_USERDEBUG)\
 RCFLAGS_DEBUG=/DDEBUG
 LINKFLAGS_DEBUG= \
 !if "$(MOZ_BITS)"=="32"
+!ifdef GLOWCODE
+    /debug /debugtype:both /include:_GlowCode comctl32.lib msvcrtd.lib winmm.lib
+!else
     /debug /incremental:yes comctl32.lib msvcrtd.lib winmm.lib
+!endif
 !else
     /STACK:$(MOZ_STACK) /ALIGN:128 /PACKC:61440 /SEG:1024 /NOD /PACKD /NOI /ONERROR:NOEXE /CO /MAP /DETAILEDMAP /CHECKEXE /RELOCATIONCHECK /W
 !endif
@@ -483,11 +490,14 @@ LINK_LIBS= \
  $(NGLAYOUT_DIST)\lib\raptorweb.lib	\
 !endif
 !if "$(WINOS)" == "WIN95"
-    $(DIST)\lib\xpcom$(MOZ_BITS).lib
+    $(DIST)\lib\xpcom$(MOZ_BITS).lib \
 !else
     $(DIST)\lib\xpcom$(MOZ_BITS).lib \
-    $(NULL)
 !endif
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+    $(GLOWDIR)\glowcode.lib \
+!endif
+    $(NULL)
 
 ##      Specify MFC libs before other libs and before .obj files,
 ##              such that _CrtDumpMemoryLeaks will be called
@@ -1748,7 +1758,12 @@ install:    \
 	    $(OUTDIR)\editor32.dll   \
 !ENDIF
 !endif
-!ELSE
+!if defined(MOZ_DEBUG) && defined(GLOWCODE)
+!IF EXIST($(DIST)\bin\glowcode.dll)
+	    $(OUTDIR)\glowcode.dll    \
+!ENDIF
+!endif
+!ELSE # MOZ_BITS==32 way above
 !IFDEF JAVA_OR_OJI
 !IF EXIST($(DIST)\bin\npj16$(VERSION_NUMBER).dll)
 	    $(JAVABIN_DIR)\npj16$(VERSION_NUMBER).dll    \
@@ -1825,7 +1840,7 @@ install:    \
 	    $(OUTDIR)\nsldap.dll    \
 !ENDIF
 !endif
-!ENDIF
+!ENDIF # MOZ_BITS==32 (end of "else" clause)
 !if defined(JAVA_OR_OJI)
 	    $(JAVACLS_DIR)\$(JAR_NAME) \
 !endif
@@ -1883,6 +1898,7 @@ install:    \
 !ENDIF
 !endif 
 ### End NGLayout DLLs
+
 !ifdef EDITOR
 !IF EXIST($(SPELLCHK_DATA)\pen4s324.dat)
 	   $(OUTDIR)\spellchk\pen4s324.dat    \
@@ -2073,7 +2089,12 @@ $(JAVABIN_DIR)\jit32$(VERSION_NUMBER).dll:   $(DIST)\bin\jit32$(VERSION_NUMBER).
     @IF NOT EXIST "$(JAVABIN_DIR)/$(NULL)" mkdir "$(JAVABIN_DIR)"
     @IF EXIST $(DIST)\bin\jit32$(VERSION_NUMBER).dll copy $(DIST)\bin\jit32$(VERSION_NUMBER).dll $(JAVABIN_DIR)\jit32$(VERSION_NUMBER).dll
 
-!ELSE
+!if defined(MOZ_DEBUG) && defined(GLOWCODE)
+$(OUTDIR)\glowcode.dll:   $(DIST)\bin\glowcode.dll
+    @IF EXIST $(DIST)\bin\glowcode.dll copy $(DIST)\bin\glowcode.dll $(OUTDIR)\glowcode.dll
+!endif
+
+!ELSE # (MOZ_BITS==32)
 !ifndef NSPR20
 $(OUTDIR)\pr16$(VERSION_NUMBER).dll:   $(DIST)\bin\pr16$(VERSION_NUMBER).dll
     @IF EXIST $(DIST)\bin\pr16$(VERSION_NUMBER).dll copy $(DIST)\bin\pr16$(VERSION_NUMBER).dll $(OUTDIR)\pr16$(VERSION_NUMBER).dll
@@ -2151,7 +2172,7 @@ $(JAVABIN_DIR)\zpw16$(VERSION_NUMBER).dll:   $(DIST)\bin\zpw16$(VERSION_NUMBER).
 $(OUTDIR)\nsinit.exe: $(DIST)\bin\nsinit.exe
     @IF EXIST $(DIST)\bin\nsinit.exe copy $(DIST)\bin\nsinit.exe $(OUTDIR)\nsinit.exe
 
-!ENDIF
+!ENDIF # (MOZ_BITS==32 (end of ELSE clause))
 
 !if defined(MOZ_CALENDAR)
 $(OUTDIR)\cal3240.dll:   $(DIST)\bin\cal3240.dll
@@ -2297,7 +2318,6 @@ $(OUTDIR)\spellchk\pdu2s341.dat:   $(SPELLCHK_DATA)\pdu2s341.dat
 $(OUTDIR)\spellchk\pfn2s311.dat:   $(SPELLCHK_DATA)\pfn2s311.dat
     @IF NOT EXIST "$(OUTDIR)\spellchk/$(NULL)" mkdir "$(OUTDIR)\spellchk"
     @IF EXIST $(SPELLCHK_DATA)\pfn2s311.dat copy $(SPELLCHK_DATA)\pfn2s311.dat $(OUTDIR)\spellchk\pfn2s311.dat
-
 
 BATCH_BUILD_1:          \
 	BATCH_LIBI18N_C         \
@@ -2915,4 +2935,7 @@ ns.zip:
 		sched32.dll			\
 		xpcom32.dll		\
 		netscape.cfg		\
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+		glowcode.dll		\
+!endif
 		moz40p3

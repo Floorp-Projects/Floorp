@@ -85,7 +85,10 @@ DEFFILE	= $(DLLNAME).def
 !endif
 !else
 LLIBS	= $(LIBNSPR) $(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib \
-$(HASHLIBS)
+!if defined(MOZ_DEBUG) && defined(GLOWCODE)
+	$(GLOWDIR)\glowcode.lib \
+!endif
+	$(HASHLIBS)
 !endif
 
 

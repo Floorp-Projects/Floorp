@@ -49,7 +49,11 @@ LCFLAGS = -DMOZILLA_CLIENT
 LLIBS=$(LIBNSPR) 
 DEFFILE		= $(DLLNAME).def
 !else
+!if defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LIBNSPR) $(GLOWDIR)\glowcode.lib
+!else
 LLIBS=$(LIBNSPR)
+!endif
 !endif
 
 

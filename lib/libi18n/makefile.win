@@ -71,6 +71,9 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LINCS=$(LINCS) -I_gen -I$(PUBLIC)\dbm -I$(DEPTH)\include -I$(XPDIST)\applet
 
+!if defined(MOZ_DEBUG) && defined(GLOWCODE)
+LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
+!endif
 
 #// End of MOZ_BITS == 32
 !endif 
