@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.19 $ ';
+$Version = '$Revision: 1.20 $ ';
 
 
 sub PrintUsage {
@@ -443,7 +443,7 @@ sub BuildIt {
       
       foreach $fe (@felist) {            
         if (&BinaryExists($fe)) {
-          print LOG "deleting existing binary\n";
+          print LOG "deleting existing binary: $fe\n";
           &DeleteBinary($fe);
         }
       }
