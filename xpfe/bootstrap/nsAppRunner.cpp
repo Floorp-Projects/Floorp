@@ -550,7 +550,6 @@ static nsresult main1(int argc, char* argv[])
   if ( NS_FAILED(rv) ) return rv; 
 
   rv = profileMgr->StartupWithArgs(cmdLineArgs);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed profile manager StartupWithArgs");
   if (NS_FAILED(rv)) {
 	return rv;
   }
