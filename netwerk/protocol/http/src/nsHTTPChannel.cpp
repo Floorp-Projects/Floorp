@@ -91,8 +91,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mCachedContentIsValid(PR_FALSE),
     mFiredOnHeadersAvailable(PR_FALSE),
     mFiredOpenOnStartRequest(PR_FALSE),
-    mFiredResponseOnStartRequest(PR_FALSE),
-    mResponseCompleted(PR_FALSE),
     mAuthTriedWithPrehost(PR_FALSE),
     mProxy(0),
     mProxyPort(-1),
@@ -1048,7 +1046,7 @@ nsHTTPChannel::ReadFromCache()
     rv = mCacheTransport->AsyncRead(listener, mResponseContext);
     NS_RELEASE(listener);
     if (NS_FAILED(rv)) {
-        ResponseCompleted(rv, 0);
+        ResponseCompleted(nsnull, rv, nsnull);
     }
     return rv;
 }
@@ -1066,11 +1064,14 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     if (!mCacheEntry)
         return NS_OK;
 
-    // ruslan/hack: don't cache secure connections in case of the persistent cache
     nsCOMPtr<nsISupports> securityInfo;
+
+    // ruslan/hack: don't cache secure connections in case of the persistent cache
+    PRBool dontCache = (mCacheEntry -> GetSecurityInfo (getter_AddRefs (securityInfo))
+                    == NS_ERROR_NOT_IMPLEMENTED);
+
     if (NS_SUCCEEDED (GetSecurityInfo (getter_AddRefs (securityInfo))) &&
-        securityInfo
-        && ! (mLoadAttributes & nsIChannel::INHIBIT_PERSISTENT_CACHING) )
+        securityInfo  && dontCache)
         return NS_OK;
 
     // If the current response is itself from the cache rather than the network
@@ -1350,7 +1351,7 @@ nsHTTPChannel::Open(void)
 
         if (NS_FAILED (rv)) 
         {
-            ResponseCompleted (rv, nsnull);
+            ResponseCompleted (mResponseDataListener, rv, nsnull);
             return rv;
         }
     }
@@ -1359,6 +1360,12 @@ nsHTTPChannel::Open(void)
     mConnected = PR_TRUE;
 
     return rv;
+}
+
+PRUint32
+nsHTTPChannel::getChannelState ()
+{
+    return mState;
 }
 
 
@@ -1471,53 +1478,33 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   return rv;
 }
 
-nsresult
-nsHTTPChannel::AssureResponseOnStartFired ()
-{
-    if (mOpenObserver && !mFiredOpenOnStartRequest)
-    {
-        PR_LOG (gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::AssureResponseOnStartFired () [this=%x] "
-                " calling mOpenObserver -> OnStartRequest ()\n",
-                this));
-
-        mFiredOpenOnStartRequest = PR_TRUE;
-        mOpenObserver -> OnStartRequest (this, mOpenContext);
-    }
-
-    if (mResponseDataListener && !mFiredResponseOnStartRequest)
-    {
-        PR_LOG (gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::AssureResponseOnStartFired () [this=%x] "
-                " calling mResponseDataListener -> OnStartRequest ()\n",
-                this));
-
-        mFiredResponseOnStartRequest = PR_TRUE;
-        mResponseDataListener -> OnStartRequest (this, mResponseContext);
-    }
-    return NS_OK;
-}
-
-nsresult nsHTTPChannel::ResponseCompleted (nsresult aStatus, const PRUnichar* aMsg)
+nsresult nsHTTPChannel::ResponseCompleted (nsIStreamListener *aListener,
+                                           nsresult aStatus, const PRUnichar* aMsg)
 {
     nsresult rv = NS_OK;
-
-    if (!mResponseCompleted)
-        mResponseCompleted = PR_TRUE;
-    else
-        return rv;
 
     PR_LOG(gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::ResponseComplete () [this=%x] "
                 " mDataListenet=%x, Status=%o\n",
                 this, mResponseDataListener, aStatus));
+
+#if 0
+    if (NS_FAILED (aStatus) && !mResponse)
+    {
+        // ruslan: must have failed during connect phase
+
+        mCachedContentIsValid = PR_TRUE;
+        nsresult rv1 = ReadFromCache ();
+        
+        if (NS_SUCCEEDED (rv1))
+            aStatus = NS_ERROR_GENERATE_SUCCESS (NS_ERROR_MODULE_NETWORK, NS_ERROR_GET_CODE (aStatus));
+    }
+#endif
+
     {
         // ruslan: grab the security info before the transport disappears
         nsCOMPtr<nsISupports> secInfo;
         GetSecurityInfo (getter_AddRefs (secInfo)); // this will store it
     }
-
-#if 0
-    // XXX/ruslan: waiting on Travis to fix DocShell
-    AssureResponseOnStartFired ();
-#endif
 
     //
     // First:
@@ -1525,7 +1512,6 @@ nsresult nsHTTPChannel::ResponseCompleted (nsresult aStatus, const PRUnichar* aM
     // Call the consumer OnStopRequest(...) to end the request...
     if (mResponseDataListener)
     {
-        mFiredResponseOnStartRequest = PR_FALSE;
         rv = mResponseDataListener -> OnStopRequest (this, mResponseContext, aStatus, aMsg);
 
         if (NS_FAILED (rv))
@@ -1548,10 +1534,7 @@ nsresult nsHTTPChannel::ResponseCompleted (nsresult aStatus, const PRUnichar* aM
     // Finally, notify the OpenObserver that the request has completed.
     //
     if (mOpenObserver)
-    {
-        mFiredOpenOnStartRequest = PR_FALSE;
         mOpenObserver -> OnStopRequest (this, mOpenContext, aStatus, aMsg);
-    }
 
     // Null out pointers that are no longer needed...
 
@@ -1777,8 +1760,6 @@ nsHTTPChannel::FinishedResponseHeaders(void)
 {
     nsresult rv;
 
-    AssureResponseOnStartFired ();
-
     if (mFiredOnHeadersAvailable)
         return NS_OK;
 
@@ -1788,10 +1769,16 @@ nsHTTPChannel::FinishedResponseHeaders(void)
            ("nsHTTPChannel::FinishedResponseHeaders [this=%x].\n",
             this));
 
-    if (!mResponseDataListener)
-        return rv;
+    if (mOpenObserver && !mFiredOpenOnStartRequest) {
+        rv = mOpenObserver->OnStartRequest(this, mOpenContext);
+        mFiredOpenOnStartRequest = PR_TRUE;
 
-    AssureResponseOnStartFired ();
+        // We want to defer header completion notification until the 
+        // caller actually does an AsyncRead();
+        if (!mResponseDataListener)
+            return rv;
+    }
+
 
     // Notify the consumer that headers are available...
     OnHeadersAvailable();
@@ -2017,7 +2004,7 @@ nsHTTPChannel::ProcessNotModifiedResponse (nsIStreamListener *aListener)
 
     rv = mCacheTransport->AsyncRead(cacheListener, mResponseContext);
     if (NS_FAILED(rv)) {
-      ResponseCompleted (rv, nsnull);
+      ResponseCompleted(cacheListener, rv, nsnull);
     }
     NS_RELEASE(cacheListener);
 

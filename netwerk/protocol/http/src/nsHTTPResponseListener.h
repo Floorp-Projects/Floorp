@@ -99,7 +99,7 @@ public:
     virtual nsresult Abort();
 
     nsresult Discard304Response(void);
-
+    nsresult nsHTTPServerListener::FinishedResponseHeaders ();
 
 protected:
     // nsHTTPResponseListener methods...
