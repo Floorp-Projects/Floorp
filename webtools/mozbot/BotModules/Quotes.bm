@@ -351,19 +351,37 @@ sub getQuote {
     }
 }
 
-sub randomQuote {
+sub randomQuoteInternal {
     my $self = shift;
     my ($event) = @_;
-    $self->sanitiseTableName();
     my($id, $quote, $author, $note);
-    return unless $self->attempt($event, sub { ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note, shown/age AS freq FROM $self->{tableName} ORDER BY freq, RAND() LIMIT 1", undef); }, 'read from the database for some reason', 'read a random quote from');
+    return 0 unless $self->attempt($event, sub { ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note, shown/age AS freq FROM $self->{tableName} ORDER BY freq, RAND() LIMIT 1", undef); }, 'read from the database for some reason', 'read a random quote from');
     if (defined $quote) {
         $self->markRead($id);
         $note = defined $note ? " ($note)" : '';
         $self->say($event, "Quote $id: $quote - $author$note");
-    } else {
-        $self->say($event, "$event->{from}: There are no quotes in the database yet.");
+        return 0;
     }
+    return 1; # try again
+}
+
+sub randomQuote {
+    my $self = shift;
+    my ($event) = @_;
+    $self->sanitiseTableName();
+    if ($self->randomQuoteInternal($event)) {
+        # no quotes?
+        # weird... let's see if reconnecting helps
+        if ($self->dbconnect()) {
+            if ($self->randomQuoteInternal($event)) {
+                # there must really be no quotes
+                $self->say($event, "$event->{from}: There are no quotes in the database yet.");
+            } # else ok
+        } else {
+            $self->say($event, "$event->{from}: I'm sorry, I can't reach the database right now.");
+            $self->tellAdmin($event, "While trying to get a random quote from the database, I found no quotes, so I tried reconnecting to the database, but it said '$self->{dberror}'!");
+        }
+    } # else ok
 }
 
 sub getQuoteById {
