@@ -40,7 +40,7 @@ CSRCS            = \
 		spacecategory.c \
 		$(NULL)
 
-PROGRAM		= spacetrace
+PROGRAM		= spacetrace$(BIN_SUFFIX)
 
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= -I$(topsrcdir)/config/os2
