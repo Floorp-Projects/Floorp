@@ -147,7 +147,6 @@ static ICodeModule* genCode(Context &cx, StmtNode *p, const String &fileName)
     
     TypedRegister ret(NotARegister, &None_Type);
     while (p) {
-        icg.preprocess(p);
         ret = icg.genStmt(p);
         p = p->next;
     }
@@ -155,7 +154,7 @@ static ICodeModule* genCode(Context &cx, StmtNode *p, const String &fileName)
 
     ICodeModule *icm = icg.complete();
 
-//stdOut << icg;
+stdOut << icg;
 
     icm->setFileName (fileName);
     return icm;
@@ -344,7 +343,8 @@ class Tracer : public Context::Listener {
 
 char * tests[] = {
     "function fact(n) { if (n > 1) return n * fact(n-1); else return 1; } print(fact(6), \" should be 720\"); return;" ,
-    "a = { f1: 1, f2: 2}; print(a.f2++, \" should be 2\"); print(a.f2 <<= 1, \" should be 6\"); return;"
+    "a = { f1: 1, f2: 2}; print(a.f2++, \" should be 2\"); print(a.f2 <<= 1, \" should be 6\"); return;" ,
+    "class A { static var b = 3; static function s() { return b++; } }  var a:A = new A; print(a.s()); print(A.b); return;"
 };
 
 static void testCompile()
@@ -362,14 +362,10 @@ static void testCompile()
         ICodeGenerator icg(&world, &glob);
         StmtNode *s = parsedStatements;
         while (s) {
-            icg.preprocess(s);
-            s = s->next;
-        }
-        s = parsedStatements;
-        while (s) {
             icg.genStmt(s);
             s = s->next;
         }
+//        stdOut << icg;
         cx.interpret(icg.complete(), JSValues());
     }
 }

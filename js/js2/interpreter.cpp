@@ -679,14 +679,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             InstructionIterator nextPC = ++mPC;
                             do {
                                 // call the constructor(s), if any.
-                                ICodeModule* ctor = thisClass->getConstructor();
-                                if (ctor) {
+                                ICodeModule* init = thisClass->getInitializer();
+                                if (init) {
                                     mLinkage = new Linkage(mLinkage, nextPC,
                                                            mActivation, mGlobal, voidRegister);
-                                    mActivation = new Activation(ctor, args);
+                                    mActivation = new Activation(init, args);
                                     registers = &mActivation->mRegisters;
-                                    nextPC = ctor->its_iCode->begin();
-                                    endPC = ctor->its_iCode->end();
+                                    nextPC = init->its_iCode->begin();
+                                    endPC = init->its_iCode->end();
                                 }
                                 thisClass = thisClass->getSuperClass();
                             } while (thisClass);

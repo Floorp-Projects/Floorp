@@ -175,6 +175,10 @@ SOURCE=..\hash.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\icode.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\icodegenerator.h
 # End Source File
 # Begin Source File
