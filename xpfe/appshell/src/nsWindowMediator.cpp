@@ -139,7 +139,7 @@ void GetAttribute( nsIXULWindow* inWindow, const nsAutoString& inAttribute, nsAu
 	  {
 	  	nsCOMPtr<nsIDOMElement> webshellElement( do_QueryInterface(node));
   		if ( webshellElement.get() )
-  			webshellElement->GetAttribute(inAttribute.GetUnicode(), outValue );
+  			webshellElement->GetAttribute(inAttribute, outValue );
   	  }
   }
 }
