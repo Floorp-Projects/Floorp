@@ -1,6 +1,11 @@
 TransforMiiX (TM)
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+Build 20000725
+
+-- Windows Makefiles are up to date to create Mozilla module
+   - thanx to Arthur Barrett and Justin Smith
+
 Build 20000722
 
 -- Fixed leading + trailing whitspace when printing comments

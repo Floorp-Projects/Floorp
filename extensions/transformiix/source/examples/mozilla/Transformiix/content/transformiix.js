@@ -82,7 +82,7 @@ function tryToTransform() {
   dump("Mal sehen, "+xsltProcessor+"\n");
   var outDocument = resultDocument.implementation.createDocument("", "", null);
   xsltProcessor.TransformDocument(xmlDocumentNode, xslDocumentNode, outDocument, null);
-  DumpDOM(outDocument.documentElement);
-  DumpDOM(xmlDocument.documentElement);
+  // DumpDOM(outDocument.documentElement);
+  // DumpDOM(xmlDocument.documentElement);
   }
 }
