@@ -596,6 +596,14 @@ BookmarkParser::ParseBookmarkSeparator(const nsString& aLine, nsIRDFResource* aC
 
 	if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(kURINC_BookmarksRoot, getter_AddRefs(separator))))
 	{
+		nsAutoString		defaultSeparatorName("-----");
+		nsCOMPtr<nsIRDFLiteral> nameLiteral;
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(defaultSeparatorName.GetUnicode(), getter_AddRefs(nameLiteral))))
+		{
+			if (NS_SUCCEEDED(rv = mDataSource->Assert(separator, kNC_Name, nameLiteral, PR_TRUE)))
+			{
+			}
+		}
 		if (NS_SUCCEEDED(rv = mDataSource->Assert(separator, kRDF_type, kNC_BookmarkSeparator, PR_TRUE)))
 		{
 			if (NS_SUCCEEDED(rv = rdf_ContainerAppendElement(mDataSource, aContainer, separator)))
