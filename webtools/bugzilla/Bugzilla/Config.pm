@@ -130,7 +130,11 @@ sub _load_datafiles {
 _load_datafiles();
 
 # Load in the param defintions
-do 'defparams.pl';
+unless (my $ret = do 'defparams.pl') {
+    die "Couldn't parse defparams.pl: $@" if $@;
+    die "Couldn't do defparams.pl: $!" unless defined $ret;
+    die "Couldn't run defparams.pl" unless $ret;
+}
 
 # Stick the params into a hash
 my %params;
