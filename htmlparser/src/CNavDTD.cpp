@@ -564,6 +564,8 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         }
         else result = mSink->DidBuildModel(0);
       }
+      else result=mSink->DidBuildModel(0);
+
       if(mDTDDebug) {
         mDTDDebug->DumpVectorRecord();
       }
