@@ -35,6 +35,68 @@ typedef PRBool (* XP_HTMLDialogHandler)
 #include "prmem.h"
 #define LocalStrAllocCopy(dest, src) Local_SACopy (&(dest), src)
 #define LocalStrAllocCat(dest, src) Local_SACat (&(dest), src)
+
+struct _XPDialogState {
+  PRArenaPool *arena;
+  void *window;
+  void *proto_win;
+  XPDialogInfo *dialogInfo;
+  void *arg;
+  void (* deleteCallback)(void *arg);
+  void *cbarg;
+  PRBool deleted;
+};
+
+struct _XPDialogInfo {
+  unsigned int buttonFlags;
+  XP_HTMLDialogHandler handler;
+  int width;
+  int height;
+};
+
+struct _XPDialogStrings
+{
+  PRArenaPool *arena;
+  int basestringnum;
+  int nargs;
+  char **args;
+  char *contents;
+};
+
+#ifdef InSingleSignon
+
+char *
+Local_SACopy(char **destination, const char *source);
+
+char *
+Local_SACat(char **destination, const char *source);
+
+XPDialogState *
+XP_MakeHTMLDialog(
+  void *proto_win,
+  XPDialogInfo *dialogInfo,
+  int titlenum,
+  XPDialogStrings *strings,
+  void *arg,
+  PRBool utf8CharSet);
+
+void
+XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo);
+
+XPDialogStrings *
+XP_GetDialogStrings(int stringnum);
+
+void
+XP_SetDialogString(XPDialogStrings *strings, int argNum, char *string);
+
+void
+XP_CopyDialogString(XPDialogStrings *strings, int argNum, const char *string);
+
+char *
+XP_FindValueInArgs(const char *name, char **av, int ac);
+
+#else
+
 char *
 Local_SACopy(char **destination, const char *source)
 {
@@ -63,31 +125,6 @@ Local_SACat(char **destination, const char *source)
   }
   return *destination;
 }
-
-struct _XPDialogState {
-  PRArenaPool *arena;
-  void *window;
-  void *proto_win;
-  XPDialogInfo *dialogInfo;
-  void *arg;
-  void (* deleteCallback)(void *arg);
-  void *cbarg;
-  PRBool deleted;
-};
-struct _XPDialogInfo {
-  unsigned int buttonFlags;
-  XP_HTMLDialogHandler handler;
-  int width;
-  int height;
-};
-struct _XPDialogStrings
-{
-  PRArenaPool *arena;
-  int basestringnum;
-  int nargs;
-  char **args;
-  char *contents;
-};
 
 XPDialogState *
 XP_MakeHTMLDialog(
@@ -325,6 +362,8 @@ XP_FindValueInArgs(const char *name, char **av, int ac)
   }
   return(0);
 }
+
+#endif
 
 #define BUFLEN 5000
 
