@@ -505,7 +505,16 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
             td->prefix.flags = TD_BOOL;
             break;
           case IDLN_TYPE_FLOAT:
-            td->prefix.flags = TD_FLOAT;
+            switch (IDL_TYPE_FLOAT (type).f_type) {
+              case IDL_FLOAT_TYPE_FLOAT: 
+                td->prefix.flags = TD_FLOAT;
+                break;
+              case IDL_FLOAT_TYPE_DOUBLE: 
+                td->prefix.flags = TD_DOUBLE;
+                break;
+              /* XXX 'long double' just ignored, or what? */
+              default: break;
+            }
             break;
           case IDLN_IDENT:
             if (!(up = IDL_NODE_UP(type))) {

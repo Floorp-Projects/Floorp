@@ -227,6 +227,20 @@ xpcom_type(TreeState *state)
       case IDLN_TYPE_BOOLEAN:
         fputs("PRBool", state->file);
         break;
+      case IDLN_TYPE_FLOAT:
+        switch (IDL_TYPE_FLOAT(state->tree).f_type) {
+          case IDL_FLOAT_TYPE_FLOAT: 
+            fputs("float", state->file);
+            break;
+          case IDL_FLOAT_TYPE_DOUBLE: 
+            fputs("double", state->file);
+            break;
+          /* XXX 'long double' just ignored, or what? */
+          default:
+            fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
+            break;
+        }
+        break;
       case IDLN_IDENT:
         if (UP_IS_NATIVE(state->tree)) {
             fputs(IDL_NATIVE(IDL_NODE_UP(state->tree)).user_type, state->file);
