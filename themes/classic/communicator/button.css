@@ -112,7 +112,6 @@
 .button-toolbar, 
 .button-toolbar[disabled="true"]:hover,
 .button-toolbar[disabled="true"]:hover:active {
-  border: 2px solid;
   -moz-border-top-colors: transparent ThreeDHighlight;
   -moz-border-right-colors: transparent ThreeDShadow;
   -moz-border-bottom-colors: transparent ThreeDShadow;
