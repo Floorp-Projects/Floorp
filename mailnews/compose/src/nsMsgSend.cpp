@@ -104,7 +104,6 @@
 #include "nsMsgUtils.h"
 #include "nsIMsgMdnGenerator.h"
 #include "nsISmtpServer.h"
-#include "nsIMsgCompose.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIMsgAccountManager.h"
@@ -519,51 +518,29 @@ char * mime_get_stream_write_buffer(void)
   return mime_mailto_stream_write_buffer;
 }
 
-static PRBool isEmpty( const char* _pHeaderLine )
+static PRBool isEmpty(const char* aString)
 {
-	return ( nsnull == _pHeaderLine ) || ( 0 == *_pHeaderLine );
+  return (!aString) || (!*aString);
 }
 
-void nsMsgComposeAndSend::GenerateMessageId( )
+void nsMsgComposeAndSend::GenerateMessageId()
 {
-  // When only saving the message, do not generate an id
-  // This is because when really sending the message later, the characteristics which control the
-  // generation may have changed, so we want to re-check them then (which we would not do if there is
-  // already an id present).
-  if  (   ( nsIMsgCompDeliverMode::Now == m_deliver_mode )
-      ||  ( nsIMsgCompDeliverMode::Later == m_deliver_mode )
-      )
+  if (isEmpty(mCompFields->GetMessageId()))
   {
-    // is there already a message id?
-    if ( isEmpty( mCompFields->GetMessageId() ) )
-    { // nope. check if we need to generate one
-
-      // spec:
-      // * if there is at least one mail target, we always generate an id
-      // * if there are only news targets, we check the preference "generate_news_message_id"
-      // * (then) if and only if the preference exists and is set to true, we do generate an id
-
-      if  (   isEmpty( mCompFields->GetTo() )
-          &&  isEmpty( mCompFields->GetCc() )
-          &&  isEmpty( mCompFields->GetBcc() )
-          ) 
-      { // no mail target. assume news targets (messages without both mail and news targets
-        // would not make sense, would they?)
-
-        // what does the identity say 'bout message id generation?
-        PRBool bGenerateMessageId = PR_FALSE;
-        mUserIdentity->GetBoolAttribute( "generate_news_message_id", &bGenerateMessageId );
-          // Note: if the preference is not found, this defaults to PR_FALSE. As we do not initially write
-          // this pref when deploying Mozilla, this means that by default, no ids are generated for news targets.
-        if ( !bGenerateMessageId )
-          return;
-      }
-
-      // here we are, finally required to generate an id ....
-      char* msgID = msg_generate_message_id( mUserIdentity );
-      mCompFields->SetMessageId( msgID );
-      PR_FREEIF( msgID );
+    if (isEmpty(mCompFields->GetTo()) &&
+        isEmpty(mCompFields->GetCc()) &&
+        isEmpty(mCompFields->GetBcc()) &&
+        !isEmpty(mCompFields->GetNewsgroups()))
+    {
+      PRBool generateNewsMessageId = PR_FALSE;
+      mUserIdentity->GetBoolAttribute("generate_news_message_id", &generateNewsMessageId);
+      if (!generateNewsMessageId)
+        return;
     }
+
+    char* msgID = msg_generate_message_id(mUserIdentity);
+    mCompFields->SetMessageId(msgID);
+    PR_Free(msgID);
   }
 }
 
