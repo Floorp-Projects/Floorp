@@ -450,9 +450,8 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
   } else if (aAttribute == nsHTMLAtoms::checked) {
     if (mType != eMenuType_Normal)
         UpdateMenuSpecialState(aPresContext);
-  } else if (aAttribute == nsHTMLAtoms::type) {
+  } else if ( aAttribute == nsHTMLAtoms::type || aAttribute == nsHTMLAtoms::name )
     UpdateMenuType(aPresContext);
-  }
 
   /* we need to reflow, if these change */
   if (aAttribute == nsHTMLAtoms::value ||
@@ -871,11 +870,17 @@ nsMenuFrame::UpdateMenuType(nsIPresContext* aPresContext)
 {
   nsAutoString value;
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value);
-  if (value == "checkbox") {
+  if (value == "checkbox")
     mType = eMenuType_Checkbox;
-  } else if (value == "radio") {
+  else if (value == "radio") {
     mType = eMenuType_Radio;
-  } else {
+
+    nsAutoString value;
+    mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value);
+    if ( mGroupName != value )
+      mGroupName = value;
+  } 
+  else {
     if (mType != eMenuType_Normal)
       mContent->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::checked,
                                PR_TRUE);
@@ -903,8 +908,6 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
     mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value);
     if (value == mGroupName)
       return;                   // no interesting change
-
-    mGroupName = value;
   } else { 
     mChecked = newChecked;
     if (mType != eMenuType_Radio || !mChecked)
@@ -950,10 +953,12 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
   NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't get parent of radio menu frame\n");
   if (NS_FAILED(rv)) return;
   
+  // get the first sibling in this menu popup. This frame may be it, and if we're
+  // being called at creation time, this frame isn't yet in the parent's child list.
+  // All I'm saying is that this may fail, but it's most likely alright.
   rv = parent->FirstChild(aPresContext, NULL, &sib);
-  NS_ASSERTION((NS_SUCCEEDED(rv) && sib), 
-               "couldn't get first sib of radio menu frame\n");
-  if (NS_FAILED(rv) || !sib) return;
+  if ( NS_FAILED(rv) || !sib )
+    return;
 
   do {
     if (NS_FAILED(sib->QueryInterface(NS_GET_IID(nsIMenuFrame),
