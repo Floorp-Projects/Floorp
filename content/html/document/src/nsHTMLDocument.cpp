@@ -1957,7 +1957,8 @@ nsHTMLDocument::GetSourceDocumentURI(nsIURI** sourceURI)
 
 // XXX TBI: accepting arguments to the open method.
 nsresult
-nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, PRBool aReplace)
+nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, const nsACString& aContentType,
+                           PRBool aReplace)
 {
   // If we already have a parser we ignore the document.open call.
   if (mParser) {
@@ -2077,6 +2078,9 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURI, PRBool aReplace)
 
   mParser = do_CreateInstance(kCParserCID, &rv);
 
+  // This will be propagated to the parser when someone actually calls write()
+  mContentType = aContentType;
+
   mIsWriting = 1;
 
   if (NS_SUCCEEDED(rv)) {
@@ -2137,11 +2141,12 @@ NS_IMETHODIMP
 nsHTMLDocument::Open()
 {
   nsCOMPtr<nsIDOMDocument> doc;
-  return Open(PR_FALSE, getter_AddRefs(doc));
+  return Open(NS_LITERAL_CSTRING("text/html"), PR_FALSE, getter_AddRefs(doc));
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Open(PRBool aReplace, nsIDOMDocument** aReturn)
+nsHTMLDocument::Open(const nsACString& aContentType, PRBool aReplace,
+                     nsIDOMDocument** aReturn)
 {
   // XXX The URI of the newly created document will match
   // that of the source document. Is this right?
@@ -2157,7 +2162,7 @@ nsHTMLDocument::Open(PRBool aReplace, nsIDOMDocument** aReturn)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = OpenCommon(sourceURI, aReplace);
+  rv = OpenCommon(sourceURI, aContentType, aReplace);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(this, aReturn);
@@ -2179,10 +2184,12 @@ nsHTMLDocument::Close()
 
   if (mParser && mIsWriting) {
     ++mWriteLevel;
-    rv = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
-                        NS_GENERATE_PARSER_KEY(),
-                        NS_LITERAL_CSTRING("text/html"), PR_FALSE,
-                        PR_TRUE);
+    if (mContentType.EqualsLiteral("text/html")) {
+      rv = mParser->Parse(NS_LITERAL_STRING("</HTML>"),
+                          NS_GENERATE_PARSER_KEY(),
+                          mContentType, PR_FALSE,
+                          PR_TRUE);
+    }
     --mWriteLevel;
     mIsWriting = 0;
     mParser = nsnull;
@@ -2260,12 +2267,12 @@ nsHTMLDocument::WriteCommon(const nsAString& aText,
   if (aNewlineTerminate) {
     rv = mParser->Parse(aText + new_line,
                         NS_GENERATE_PARSER_KEY(),
-                        NS_LITERAL_CSTRING("text/html"), PR_FALSE,
+                        mContentType, PR_FALSE,
                         (!mIsWriting || (mWriteLevel > 1)));
   } else {
     rv = mParser->Parse(aText,
                         NS_GENERATE_PARSER_KEY(),
-                        NS_LITERAL_CSTRING("text/html"), PR_FALSE,
+                        mContentType, PR_FALSE,
                         (!mIsWriting || (mWriteLevel > 1)));
   }
 
