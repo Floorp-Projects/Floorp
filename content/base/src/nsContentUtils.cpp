@@ -716,7 +716,6 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aChild,
   }
 
   JSObject *old;
-
   rv = old_wrapper->GetJSObject(&old);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -786,7 +785,7 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
       ni->GetDocument(*getter_AddRefs(old_doc));
     }
 
-    if (!aOldDocument) {
+    if (!old_doc) {
       // If we can't find our old document we don't know what our old
       // scope was so there's no way to find the old wrapper
 
