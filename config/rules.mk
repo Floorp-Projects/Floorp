@@ -608,12 +608,14 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_EXPORT_DIRS)
-	-rm -f $(ALL_TRASH) ; \
-	rm -rf $(ALL_TRASH_DIRS) ;
-	-rm -rf $(wildcard *.map) \
+	-rm -rf $(ALL_TRASH_DIRS) 
+	-rm -f $(ALL_TRASH)  \
 	Makefile .HSancillary \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) \
 	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX))
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	-rm -f $(PROGRAM:.exe=.map)
+endif
 
 alltags:
 	rm -f TAGS
