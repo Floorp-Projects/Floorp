@@ -942,6 +942,19 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
   
+  nsCOMPtr<nsIContent> parentContent;
+  aFrame->GetContent(getter_AddRefs(parentContent));
+  nsCOMPtr<nsIAtom> tag;
+  mContent->GetTag(*getter_AddRefs(tag));
+  PRBool sizedToPopup = (tag != nsXULAtoms::tooltip)
+                        && (nsMenuFrame::IsSizedToPopup(parentContent, PR_FALSE));
+  
+  // If we stick to our parent's width, set it here before we move the
+  // window around, because moving is done with respect to the width...
+  if (sizedToPopup) {
+    mRect.width = parentRect.width;
+  }
+
   // |xpos| and |ypos| hold the x and y positions of where the popup will be moved to,
   // in _twips_, in the coordinate system of the _parent view_.
   PRInt32 xpos = 0, ypos = 0;
@@ -1054,13 +1067,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   PRInt32 screenViewLocX = NSIntPixelsToTwips(screenParentWidgetRect.x,p2t) + (xpos - parentPos.x);
   PRInt32 screenViewLocY = NSIntPixelsToTwips(screenParentWidgetRect.y,p2t) + (ypos - parentPos.y);
 
-  nsCOMPtr<nsIContent> parentContent;
-  aFrame->GetContent(getter_AddRefs(parentContent));
-  nsCOMPtr<nsIAtom> tag;
-  mContent->GetTag(*getter_AddRefs(tag));
-  PRBool sizedToPopup = (tag.get() != nsXULAtoms::tooltip)
-    && (nsMenuFrame::IsSizedToPopup(parentContent, PR_FALSE));
-
   if ( anchoredToParent ) {
     
     //
@@ -1094,12 +1100,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     parentViewWidget->WidgetToScreen ( screenParentFrameRect, screenParentFrameRect );
     screenParentFrameRect.x = NSIntPixelsToTwips(screenParentFrameRect.x, p2t);
     screenParentFrameRect.y = NSIntPixelsToTwips(screenParentFrameRect.y, p2t);
-
-    // If we stick to our parent's width, set it here before we move the
-    // window around, because moving is done with respect to the width...
-    if (sizedToPopup) {
-      mRect.width = screenParentFrameRect.width;
-    }
 
     // Don't let it spill off the screen to the top
     if (screenViewLocY < screenTopTwips) {
