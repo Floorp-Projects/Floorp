@@ -846,16 +846,14 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
   
 extern "C"
 nsresult
-NS_NewComposeAppCore(nsIDOMComposeAppCore **aResult)
+NS_NewComposeAppCore(const nsIID &aIID, void **aResult)
 {
   if (!aResult) return NS_ERROR_NULL_POINTER;
 
   nsComposeAppCore *appcore = new nsComposeAppCore();
-  if (appcore) {
-    return appcore->QueryInterface(nsIDOMComposeAppCore::GetIID(),
-                                   (void **)aResult);
-
-  }
-  return NS_ERROR_NOT_INITIALIZED;
+  if (appcore) 
+     return appcore->QueryInterface(aIID, aResult);
+  else
+	  return NS_ERROR_NOT_INITIALIZED;
 }
 

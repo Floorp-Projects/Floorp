@@ -29,8 +29,7 @@
 
 NS_BEGIN_EXTERN_C
 
-nsresult
-NS_NewComposeAppCore(nsIDOMComposeAppCore **);
+nsresult NS_NewComposeAppCore(const nsIID &aIID, void **);
 
 NS_END_EXTERN_C
 
