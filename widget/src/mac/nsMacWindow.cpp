@@ -188,6 +188,7 @@ nsMacWindow::nsMacWindow() : Inherited()
   , mWindowMadeHere(PR_FALSE)
   , mIsDialog(PR_FALSE)
   , mIsSheet(PR_FALSE)
+  , mIgnoreDeactivate(PR_FALSE)
   , mMacEventHandler(nsnull)
   , mAcceptsActivation(PR_TRUE)
   , mIsActive(PR_FALSE)
@@ -803,6 +804,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 #if TARGET_CARBON
   // Mac OS X sheet support
   nsIWidget *parentWidget = mParent;
+  nsCOMPtr<nsPIWidgetMac> piParentWidget ( do_QueryInterface(parentWidget) );
   WindowRef parentWindowRef = (parentWidget) ?
     reinterpret_cast<WindowRef>(parentWidget->GetNativeData(NS_NATIVE_DISPLAY)) : nsnull;
 #endif
@@ -816,6 +818,8 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 #if TARGET_CARBON
     if ( mIsSheet && parentWindowRef ) {
         WindowPtr top = GetWindowTop(parentWindowRef);
+        if (piParentWidget)
+          piParentWidget->SetIgnoreDeactivate(PR_TRUE);
         ::ShowSheetWindow(mWindowPtr, top);
         UpdateWindowMenubar(parentWindowRef, PR_FALSE);
         gEventDispatchHandler.DispatchGuiEvent(this, NS_GOTFOCUS);
@@ -849,6 +853,8 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 #if TARGET_CARBON
     // Mac OS X sheet support
     if (mIsSheet) {
+        if (piParentWidget)
+          piParentWidget->SetIgnoreDeactivate(PR_FALSE);
         ::HideSheetWindow(mWindowPtr);
 
         gEventDispatchHandler.DispatchGuiEvent(this, NS_DEACTIVATE);
@@ -1292,6 +1298,26 @@ nsMacWindow::GetMenuBar(nsIMenuBar **_retval)
 {
   *_retval = mMenuBar;
   NS_IF_ADDREF(*_retval);
+  return(NS_OK);
+}
+
+//-------------------------------------------------------------------------
+//
+// getter/setter for window to ignore the next deactivate event received
+// if a Mac OS X sheet is being opened
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP
+nsMacWindow::GetIgnoreDeactivate(PRBool *_retval)
+{
+  *_retval = mIgnoreDeactivate;
+  return(NS_OK);
+}
+
+NS_IMETHODIMP
+nsMacWindow::SetIgnoreDeactivate(PRBool ignoreDeactivate)
+{
+  mIgnoreDeactivate = ignoreDeactivate;
   return(NS_OK);
 }
 

@@ -941,9 +941,26 @@ void  nsMacMessagePump::DoActivate(EventRecord &anEvent)
   WindowPtr whichWindow = (WindowPtr)anEvent.message;
   nsGraphicsUtils::SafeSetPortWindowPort(whichWindow);
   if (anEvent.modifiers & activeFlag)
+  {
     ::HiliteWindow(whichWindow,TRUE);
+  }
   else
-    ::HiliteWindow(whichWindow,FALSE);
+  {
+    PRBool ignoreDeactivate = PR_FALSE;
+    nsCOMPtr<nsIWidget> windowWidget;
+    nsToolkit::GetTopWidget ( whichWindow, getter_AddRefs(windowWidget));
+    if (windowWidget)
+    {
+      nsCOMPtr<nsPIWidgetMac> window ( do_QueryInterface(windowWidget) );
+      if (window)
+      {
+        window->GetIgnoreDeactivate(&ignoreDeactivate);
+        window->SetIgnoreDeactivate(PR_FALSE);
+      }
+    }
+    if (!ignoreDeactivate)
+      ::HiliteWindow(whichWindow,FALSE);
+  }
 
   DispatchOSEventToRaptor(anEvent, whichWindow);
 }

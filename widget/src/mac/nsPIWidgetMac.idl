@@ -42,6 +42,9 @@ interface nsPIWidgetMac : nsISupports
 
     // Obtain the menubar for a window
   nsIMenuBar GetMenuBar ( );
+
+    // True if window should ignore the next deactivate event it receives
+  attribute boolean ignoreDeactivate;
   
 }; // nsPIWidgetMac
 
