@@ -39,8 +39,14 @@ sub provides {
     return ($service eq 'user.field.factory' or $class->SUPER::provides($service));
 }
 
-sub createField {
+sub createFieldByID {
     my $self = shift;
     my($app, $user, $fieldID, $fieldData) = @_;
+    return undef; # XXX
+}
+
+sub createFieldByName {
+    my $self = shift;
+    my($app, $user, $fieldCategory, $fieldName, $fieldData) = @_;
     return undef; # XXX
 }

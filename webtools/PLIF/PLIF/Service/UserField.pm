@@ -61,6 +61,18 @@ sub type {
     $self->notImplemented();
 }
 
+sub validate {
+    return 1;
+}
+
+# Contact fields should generate usernames (for their 'username'
+# member function) with the syntax "ServiceName: username" e.g., my
+# AIM username would be "AIM: HixieDaPixie". Services are fully
+# allowed to make an exception to this if they have very
+# distinguishable username syntaxes, for example e-mail addresses
+# should be returned "raw", as in "ian@hixie.ch" and not "E-MAIL:
+# ian@hixie.ch".
+
 sub propertySet {
     my $self = shift;
     my $result = $self->SUPER::propertySet(@_);

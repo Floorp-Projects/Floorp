@@ -65,6 +65,7 @@ sub getUserByID {
     $self->notImplemented();
     # return userID, disabled, password, adminMessage, newFieldID, newFieldValue, 
     # newFieldKey, { fieldID => data }*, { groupID => name }*, [rightNames]*
+    # or () if unsuccessful
 }
 
 sub setUser {

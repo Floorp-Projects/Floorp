@@ -41,8 +41,8 @@ sub provides {
 
 sub getUserByCredentials {
     my $self = shift;
-    my($username, $password) = @_;
-    my $object = $self->getUserByUsername($username);
+    my($app, $username, $password) = @_;
+    my $object = $self->getUserByUsername($app, $username);
     if ($object->checkPassword($password)) {
         return $object;
     } else {
@@ -52,16 +52,24 @@ sub getUserByCredentials {
 
 sub getUserByUsername {
     my $self = shift;
-    my($username) = @_;
-    # XXX
-    return undef;
+    my($app, $username) = @_;
+    my(@data) = $app->getService('dataSource.user')->getUserByUsername($app, $username);
+    if (@data) {
+        return $self->objectCreate($app, @data);
+    } else {
+        return undef;
+    }
 }
 
 sub getUserByID {
     my $self = shift;
-    my($id) = @_;
-    # XXX
-    return undef;
+    my($app, $id) = @_;
+    my(@data) = $app->getService('dataSource.user')->getUserByUserID($app, $userID);
+    if (@data) {
+        return $self->objectCreate($app, @data);
+    } else {
+        return undef;
+    }
 }
 
 sub objectProvides {
@@ -82,10 +90,12 @@ sub objectInit {
     $self->newFieldValue($newFieldValue);
     $self->newFieldPassword($newFieldPassword);
     $self->fields({});
+    $self->fieldsByID({});
     my $fieldFactory = $self->app->getService('user.field.factory');
     foreach my $fieldID (keys($fields)) {
-        my $field = $fieldFactory->createField($app, $self, $fieldID, $fields->{$fieldID});
+        my $field = $fieldFactory->createFieldByID($app, $self, $fieldID, $fields->{$fieldID});
         $self->fields->{$field->category}->{$field->name} = $field;
+        $self->fieldsByID->{$field->fieldID} = $field;
     }
     $self->groups({%$groups}); # hash of groupID => groupName
     $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
@@ -98,26 +108,31 @@ sub hasRight {
     return defined($self->rights->{$right});
 }
 
-sub getField {
+sub hasField {
     my $self = shift;
-    my($type, $name) = @_;
-    if (defined($self->fields->{$type})) {
-        return $self->fields->{$type}->{$name};
+    my($category, $name) = @_;
+    if (defined($self->fields->{$category})) {
+        return $self->fields->{$category}->{$name};
     }
     return undef;
 }
 
+sub getField {
+    my $self = shift;
+    my($category, $name) = @_;
+    my $field = $self->hasField($category, $name);
+    if (not defined($field)) {
+        my $field = $fieldFactory->createFieldByName($app, $self, $fieldCategory, $fieldName);
+        $self->fields->{$field->category}->{$field->name} = $field;
+        $self->fieldsByID->{$field->fieldID} = $field;        
+    }
+    return $field;
+}
+
 sub getAddress {
-    # Contact methods should generate usernames (for their 'username'
-    # member function) with the syntax "ServiceName: username" e.g.,
-    # my AIM username would be "AIM: HixieDaPixie". Services are fully
-    # allowed to make an exception to this if they have very
-    # distinguishable username syntaxes, for example e-mail addresses
-    # should be returned "raw", as in "ian@hixie.ch" and not "E-MAIL:
-    # ian@hixie.ch".
     my $self = shift;
     my($protocol) = @_;
-    my $field = $self->getField('contact', $protocol);
+    my $field = $self->hasField('contact', $protocol);
     if (defined($field)) {
         return $field->data;
     } else {
@@ -128,21 +143,34 @@ sub getAddress {
 sub prepareAddressChange {
     my $self = shift;
     my($field, $newAddress, $password) = @_;
-    $self->newFieldID($field->fieldID);
-    $self->newFieldValue($newAddress);
-    $self->newFieldPassword($password);
-    return $self->objectCreate($self->app, $self->userID, $self->disabled, $self->adminMessage, 
-                               $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
-                               {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
+    if ($field->validate($newAddress)) {
+        $self->newFieldID($field->fieldID);
+        $self->newFieldValue($newAddress);
+        $self->newFieldPassword($password);
+        return $self->objectCreate($self->app, $self->userID, $self->disabled, $self->adminMessage, 
+                                   $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
+                                   {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
+    } else {
+        return undef;
+    }
 }
 
 sub doAddressChange {
     my $self = shift;
     my($password) = @_;
-    if ($self->app->getService('service.passwords')->checkPassword($self->newFieldPassword, $password)) {
-        # XXX change address
+    if ($self->newFieldID and $self->newFieldValue) {
+        my $field;
+        if ($self->app->getService('service.passwords')->checkPassword($self->newFieldPassword, $password)) {
+            $field = $self->fieldsByID->{$self->newFieldID};
+            if (defined($field)) {
+                $field->data = $self->newFieldValue;
+            } # else XXX create it? How do we enable the user to add contact fields?
+        }
+        $self->newFieldID(undef);
+        $self->newFieldValue(undef);
+        $self->newFieldPassword(undef);
+        return $field;
     } else {
-        # XXX reset fields
         return 0;
     }
 }
