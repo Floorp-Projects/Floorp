@@ -86,8 +86,8 @@ sub CrossCheck {
                     else {
                         $alert .= " ($key2 == '$key')";
                     }
-                    Alert($alert);
                 }
+                Alert($alert);
             }
         }
     }
