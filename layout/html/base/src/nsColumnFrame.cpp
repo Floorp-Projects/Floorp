@@ -304,8 +304,6 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
 
     // Special handling for incomplete children
     if (frNotComplete == status) {
-      // XXX It's good to assume that we might still have room
-      // even if the child didn't complete (floaters will want this)
       nsIFrame* kidNextInFlow;
        
       kidFrame->GetNextInFlow(kidNextInFlow);
@@ -826,9 +824,6 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
         if (nsnull != pseudoFrame) {
           pseudoFrame = (nsBlockFrame*) kidFrame;
         }
-
-        // XXX We probably shouldn't assume that there is no room for
-        // the continuation
       }
     } while (frNotComplete == status);
     NS_RELEASE(kidStyleContext);
@@ -1110,12 +1105,23 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
       }
       NS_RELEASE(kidSC);
 
-      // XXX Was it complete?
+      // Is the child complete?
       if (frNotComplete == aStatus) {
-        // XXX Need to push remaining frames and trigger a reflow there
-        NS_ABORT();
+        // No. Create a continuing frame
+        nsIFrame* continuingFrame;
+         
+        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
+
+        // Insert the frame. We'll reflow it next pass through the loop
+        nsIFrame* nextSibling;
+         
+        kidFrame->GetNextSibling(nextSibling);
+        continuingFrame->SetNextSibling(nextSibling);
+        kidFrame->SetNextSibling(continuingFrame);
+        mChildCount++;
       }
 
+      // Get the next child frame
       prevKidFrame = kidFrame;
       kidFrame->GetNextSibling(kidFrame);
     }
