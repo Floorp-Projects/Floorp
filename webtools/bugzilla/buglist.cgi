@@ -313,7 +313,6 @@ sub GenerateSQL {
         }
     }
 
-
     my $chartid;
     my $f;
     my $ff;
@@ -334,11 +333,17 @@ sub GenerateSQL {
                   "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid");
              $f = "map_$f.login_name";
          },
+
          "^cc," => sub {
-             push(@supptables,
-                  ("LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid"));
-             $f = "map_cc_$chartid.login_name";
+                my $tablecc = "cc_" . $chartid;
+                my $tableprof = "cc_prof_" . $chartid;
+		push(@supptables, "cc $tablecc, profiles $tableprof");
+		$ff = "$tableprof.login_name ";
+		$ref = $funcsbykey{",$t"};
+		&$ref;
+                push(@wherepart, " $tablecc.bug_id = bugs.bug_id AND $tablecc.who=$tableprof.userid ");
          },
+
          "^long_?desc,changedby" => sub {
              my $table = "longdescs_$chartid";
              push(@supptables, "longdescs $table");
@@ -433,12 +438,22 @@ sub GenerateSQL {
              }
          },
 
-	 "^(dependson|blocked)," => sub {
-		push(@supptables, "dependencies");
-		$ff = "dependencies.$f";
+	 "^dependson," => sub {
+                my $table = "dependson_" . $chartid;
+		push(@supptables, "dependencies $table");
+		$ff = "$table.$f";
 		$ref = $funcsbykey{",$t"};
 		&$ref;
-		push(@wherepart, "$term");
+                push(@wherepart, "$table.blocked = bugs.bug_id");
+	 },
+
+	 "^blocked," => sub {
+                my $table = "blocked_" . $chartid;
+		push(@supptables, "dependencies $table");
+		$ff = "$table.$f";
+		$ref = $funcsbykey{",$t"};
+		&$ref;
+                push(@wherepart, "$table.dependson = bugs.bug_id");
 	 },
 
 
@@ -562,11 +577,93 @@ sub GenerateSQL {
     }
 
 
+# A boolean chart is a way of representing the terms in a logical 
+# expression.  Bugzilla builds SQL queries depending on how you enter
+# terms into the boolean chart. Boolean charts are represented in 
+# urls as tree-tuples of (chart id, row, column). The query form 
+# (query.cgi) may contain an arbitrary number of boolean charts where
+# each chart represents a clause in a SQL query. 
+#
+# The query form starts out with one boolean chart containing one
+# row and one column.  Extra rows can be created by pressing the 
+# AND button at the bottom of the chart.  Extra columns are created 
+# by pressing the OR button at the right end of the chart. Extra
+# charts are created by pressing "Add another boolean chart".
+#
+# Each chart consists of an artibrary number of rows and columns.
+# The terms within a row are ORed together. The expressions represented
+# by each row are ANDed together. The expressions represented by each
+# chart are ANDed together.
+#
+#        ----------------------
+#        | col2 | col2 | col3 |
+# --------------|------|------|
+# | row1 |  a1  |  a2  |      |
+# |------|------|------|------|  => ((a1 OR a2) AND (b1 OR b2 OR b3) AND (c1))
+# | row2 |  b1  |  b2  |  b3  |
+# |------|------|------|------|
+# | row3 |  c1  |      |      |
+# -----------------------------
+#
+#        --------
+#        | col2 |
+# --------------|
+# | row1 |  d1  | => (d1)
+# ---------------
+#
+# Together, these two charts represent a SQL expression like this
+# SELECT blah FROM blah WHERE ( (a1 OR a2)AND(b1 OR b2 OR b3)AND(c1)) AND (d1)
+#
+# The terms within a single row of a boolean chart are all constraints
+# on a single piece of data.  If you're looking for a bug that has two 
+# different people cc'd on it, then you need to use two boolean charts. 
+# This will find bugs with one CC mathing 'foo@blah.org' and and another 
+# CC matching 'bar@blah.org'. 
+# 
+# --------------------------------------------------------------
+# CC    | equal to
+# foo@blah.org
+# --------------------------------------------------------------
+# CC    | equal to
+# bar@blah.org
+#
+# If you try to do this query by pressing the AND button in the 
+# original boolean chart then what you'll get is an expression that
+# looks for a single CC where the login name is both "foo@blah.org",
+# and "bar@blah.org". This is impossible.
+#
+# --------------------------------------------------------------
+# CC    | equal to
+# foo@blah.org
+# AND
+# CC    | equal to
+# bar@blah.org
+# --------------------------------------------------------------
+
+# $chartid is the number of the current chart whose SQL we're contructing
+# $row is the current row of the current chart
+
+# names for table aliases are constructed using $chartid and $row
+#   SELECT blah  FROM $table "$table_$chartid_$row" WHERE ....
+
+# $f  = field of table in bug db (e.g. bug_id, reporter, etc)
+# $ff = qualified field name (field name prefixed by table)
+#       e.g. bugs_activity.bug_id
+# $t  = type of query. e.g. "equal to", "changed after", case sensitive substr"
+# $v  = value - value the user typed in to the form 
+# $q  = sanitized version of user input (SqlQuote($v))
+# @supptables = Tables and/or table aliases used in query
+# %suppseen   = A hash used to store all the tables in supptables to weed
+#               out duplicates.
+# $suppstring = String which is pasted into query containing all table names
+
+
+    $row = 0;
     for ($chart=-1 ;
          $chart < 0 || exists $F{"field$chart-0-0"} ;
          $chart++) {
         $chartid = $chart >= 0 ? $chart : "";
-        for (my $row = 0 ;
+        for ($row = 0 ;
              exists $F{"field$chart-$row-0"} ;
              $row++) {
             my @orlist;
