@@ -57,6 +57,8 @@ public:
   virtual ~nsListBoxObject();
 
   nsIListBoxObject* GetListBoxBody();
+
+  NS_IMETHOD InvalidatePresentationStuff();
   
 protected:
 };
@@ -210,8 +212,7 @@ FindBodyContent(nsIContent* aParent, nsIContent** aResult)
 nsIListBoxObject*
 nsListBoxObject::GetListBoxBody()
 {
-  nsAutoString listboxbody;
-  listboxbody.AssignWithConversion("listboxbody");
+  NS_NAMED_LITERAL_STRING(listboxbody, "listboxbody");
 
   nsCOMPtr<nsISupports> supp;
   GetPropertyAsSupports(listboxbody.get(), getter_AddRefs(supp));
@@ -254,6 +255,12 @@ nsListBoxObject::GetListBoxBody()
   yeahBaby->QueryInterface(NS_GET_IID(nsIListBoxObject), getter_AddRefs(body));
   SetPropertyAsSupports(listboxbody.get(), body);
   return body;
+}
+
+NS_IMETHODIMP
+nsListBoxObject::InvalidatePresentationStuff()
+{
+  return SetPropertyAsSupports(NS_LITERAL_STRING("listboxbody").get(), nsnull);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

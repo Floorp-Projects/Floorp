@@ -167,9 +167,9 @@ public:
   NS_IMETHOD OnResumeContentSink() = 0;
 
   /**
-   * Clear the box object hash
+   * Notify the XUL document that it's being hidden
    */
-  NS_IMETHOD ClearBoxObjectTable() = 0;
+  NS_IMETHOD OnHide() = 0;
 };
 
 // factory functions

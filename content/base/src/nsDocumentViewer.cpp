@@ -2081,8 +2081,9 @@ DocumentViewerImpl::Hide(void)
     mPreviousViewer = nsnull;
   }
 
-  if (mDeviceContext)
+  if (mDeviceContext) {
     mDeviceContext->FlushFontCache();
+  }
 
   // Break circular reference (or something)
   mPresShell->EndObservingDocument();
@@ -2092,13 +2093,14 @@ DocumentViewerImpl::Hide(void)
 
   nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
 
-  if (selPrivate && mSelectionListener)
+  if (selPrivate && mSelectionListener) {
     selPrivate->RemoveSelectionListener(mSelectionListener);
+  }
 
   nsCOMPtr<nsIXULDocument> xul_doc(do_QueryInterface(mDocument));
 
   if (xul_doc) {
-    xul_doc->ClearBoxObjectTable();
+    xul_doc->OnHide();
   }
 
   mPresShell->Destroy();
