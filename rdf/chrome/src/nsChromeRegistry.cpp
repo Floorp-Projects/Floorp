@@ -86,6 +86,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIPref.h"
 #include "nsIObserverService.h"
+#include "nsIDOMElement.h"
+#include "nsIChromeEventHandler.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kAllPackagesName[] = "all-packages.rdf";
@@ -1646,9 +1648,9 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
     if (NS_FAILED(rv)) return rv;
   }
 
-  if(aProvider.Equals("skin") && mScrollbarSheet)
-    LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
-  
+  if (aProvider.Equals("skin") && mScrollbarSheet)
+    LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css"));
+
   return NS_OK;
 }
 
@@ -2697,9 +2699,11 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
+nsChromeRegistry::GetBackstopSheets(nsIDocShell* aDocShell, nsISupportsArray **aResult)
 {
-  nsresult rv;
+  nsresult rv = NS_NewISupportsArray(aResult);
+    
+  // Determine the agent sheets that should be loaded.
   if (!mScrollbarSheet)
     LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
   
@@ -2709,19 +2713,66 @@ nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
     LoadStyleSheet(getter_AddRefs(mFormSheet), sheetURL); 
   }
 
-  if(mScrollbarSheet || mFormSheet)
-  {
-    rv = NS_NewISupportsArray(aResult);
-    if (NS_FAILED(rv)) return rv;
-    if (mScrollbarSheet) {
-      rv = (*aResult)->AppendElement(mScrollbarSheet) ? NS_OK : NS_ERROR_FAILURE;
-      if (NS_FAILED(rv)) return rv;
-    }  
-    if (mFormSheet) {
-      rv = (*aResult)->AppendElement(mFormSheet) ? NS_OK : NS_ERROR_FAILURE;
-      if (NS_FAILED(rv)) return rv;
-    }  
+  PRBool shouldOverride = PR_FALSE;
+  nsCOMPtr<nsIChromeEventHandler> chromeHandler;
+  aDocShell->GetChromeEventHandler(getter_AddRefs(chromeHandler));
+  if (chromeHandler) {
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(chromeHandler));
+    if (elt) {
+      nsAutoString sheets;
+      elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
+      if (!sheets.IsEmpty()) {
+        // Construct the URIs and try to load each sheet.
+        nsCAutoString sheetsStr; sheetsStr.AssignWithConversion(sheets);
+        char* str = sheets.ToNewCString();
+        char* newStr;
+        char* token = nsCRT::strtok( str, ", ", &newStr );
+        while( token != NULL ) {
+          nsCOMPtr<nsIURI> url;
+          rv = NS_NewURI(getter_AddRefs(url), token, nsnull);
+
+          PRBool enabled = PR_FALSE;
+          nsCOMPtr<nsICSSStyleSheet> sheet;
+          nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
+          if (cache) {
+            cache->GetEnabled(&enabled);
+            if (enabled) {
+              nsCOMPtr<nsICSSStyleSheet> cachedSheet;
+              cache->GetStyleSheet(url, getter_AddRefs(cachedSheet));
+              if (cachedSheet)
+                sheet = cachedSheet;
+            }
+          }
+
+          if (!sheet) {
+            LoadStyleSheetWithURL(url, getter_AddRefs(sheet));
+            if (sheet) {
+              if (enabled)
+                cache->PutStyleSheet(sheet);
+            }
+          }
+
+          if (sheet) {
+            // A sheet was loaded successfully.  We will *not* use the default
+            // set of agent sheets (which consists solely of the scrollbar sheet).
+            shouldOverride = PR_TRUE;
+            (*aResult)->AppendElement(sheet);
+          }
+
+          // Advance to the next sheet URL.
+          token = nsCRT::strtok( newStr, ", ", &newStr );
+        }
+        nsMemory::Free(str);
+      }
+    }
   }
+
+  if (mScrollbarSheet && !shouldOverride)
+    (*aResult)->AppendElement(mScrollbarSheet);
+    
+  if (mFormSheet) 
+    (*aResult)->AppendElement(mFormSheet);
+ 
   return NS_OK;
 }
 
