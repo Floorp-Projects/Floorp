@@ -982,7 +982,6 @@ nsHttpChannel::ReadFromCache()
         // server to validate at this time, so just mark the cache entry as
         // valid in order to allow others access to this cache entry.
         mCacheEntry->MarkValid();
-        mCacheAccess = nsICache::ACCESS_READ;
     }
 
     // if this is a cached redirect, we must process the redirect asynchronously
@@ -1594,7 +1593,7 @@ nsHttpChannel::PromptForUserPass(const char *host,
     domain.Append(':');
     domain.AppendInt(port);
 
-    nsAutoString hostU = NS_ConvertASCIItoUCS2(domain);
+    NS_ConvertASCIItoUCS2 hostU(domain);
 
     domain.Append(" (");
     domain.Append(realm);
@@ -2285,6 +2284,9 @@ nsHttpChannel::GetResponseHeader(const char *header, char **value)
 NS_IMETHODIMP
 nsHttpChannel::SetResponseHeader(const char *header, const char *value)
 {
+    LOG(("nsHttpChannel::SetResponseHeader [this=%x header=\"%s\" value=\"%s\"]\n",
+        this, header, value));
+
     if (!mResponseHead)
         return NS_ERROR_NOT_AVAILABLE;
     nsHttpAtom atom = nsHttp::ResolveAtom(header);
