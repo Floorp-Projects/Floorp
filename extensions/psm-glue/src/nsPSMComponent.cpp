@@ -120,9 +120,10 @@ nsPSMComponent::CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aR
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsPSMComponent, 
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsPSMComponent, 
                               nsIPSMComponent, 
-                              nsIContentHandler); 
+                              nsIContentHandler,
+                              nsISignatureVerifier);
 
 #define INIT_NUM_PREFS 100
 /* preference types */
@@ -758,9 +759,9 @@ nsPSMComponent::HandleContent(const char * aContentType,
 }
 
 
-//-----------------------------------------
-// Secure Hash Functions 
-//-----------------------------------------
+//---------------------------------------------
+// Functions Implenenting NSISignatureVerifier
+//---------------------------------------------
 NS_IMETHODIMP
 nsPSMComponent::HashBegin(PRUint32 alg, PRUint32* id)
 {
@@ -791,8 +792,8 @@ nsPSMComponent::HashUpdate(PRUint32 id, const char* buf, PRUint32 buflen)
 }
 
 NS_IMETHODIMP
-nsPSMComponent::HashEnd(PRUint32 id, char** hash, PRUint32* hashlen,
-                        PRUint32 maxLen)
+nsPSMComponent::HashEnd(PRUint32 id, unsigned char** hash, 
+                        PRUint32* hashLen, PRUint32 maxLen)
 {
   if (!hash)
     return NS_ERROR_ILLEGAL_VALUE;
@@ -801,147 +802,105 @@ nsPSMComponent::HashEnd(PRUint32 id, char** hash, PRUint32* hashlen,
   if (NS_FAILED(GetControlConnection( &controlConnection )))
     return NS_ERROR_FAILURE;
  
-  if(CMT_HASH_End(controlConnection, id, (unsigned char*)*hash,
-                        (CMUint32*)hashlen, maxLen) != CMTSuccess)
+  if(CMT_HASH_End(controlConnection, id, *hash,
+                        (CMUint32*)hashLen, maxLen) != CMTSuccess)
     return NS_ERROR_FAILURE;
   CMT_HASH_Destroy(controlConnection, id);
   return NS_OK;
 }
 
-//-----------------------------------------
-// Signature Verification Functions
-//-----------------------------------------
+NS_IMETHODIMP
+nsPSMComponent::CreatePrincipalFromSignature(const char* aRSABuf, PRUint32 aRSABufLen,
+                                             nsIPrincipal** aPrincipal)
+{
+  PRInt32 errorCode;
+  return VerifySignature(aRSABuf, aRSABufLen, nsnull, 0, &errorCode, aPrincipal);
+}
+
 PR_STATIC_CALLBACK(void)
 UselessPK7DataSink(void* arg, const char* buf, CMUint32 len)
 {
 }
 
 NS_IMETHODIMP
-nsPSMComponent::VerifyRSABegin(PRUint32* id)
+nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen, 
+                                const char* aPlaintext, PRUint32 aPlaintextLen,
+                                PRInt32* aErrorCode,
+                                nsIPrincipal** aPrincipal)
 {
-  if (!id)
-    return NS_ERROR_ILLEGAL_VALUE;
+  if (!aPrincipal || !aErrorCode)
+    return NS_ERROR_NULL_POINTER;
+  *aErrorCode = 0;
+  *aPrincipal = nsnull;
 
   CMT_CONTROL *controlConnection;
   if (NS_FAILED(GetControlConnection( &controlConnection )))
     return NS_ERROR_FAILURE;
   
+  //-- Decode the signature stream
+  CMUint32 decoderID;
   CMInt32* blah = nsnull;
   CMTStatus result = CMT_PKCS7DecoderStart(controlConnection, nsnull,
-                                           (CMUint32*)id, blah,
+                                           &decoderID, blah,
                                            UselessPK7DataSink, nsnull);
-  if (result == CMTSuccess)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPSMComponent::VerifyRSAUpdate(PRUint32 id, const char* buf, PRUint32 buflen)
-{
-  CMT_CONTROL *controlConnection;
-  if (NS_FAILED(GetControlConnection( &controlConnection )))
-    return NS_ERROR_FAILURE;
-
-  CMTStatus result = CMT_PKCS7DecoderUpdate(controlConnection, id, buf, buflen);
-  if (result == CMTSuccess)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsPSMComponent::VerifyRSAEnd(PRUint32 id, const char* plaintext,
-                             PRUint32 plaintextLen,
-                             PRBool aKeepCert, 
-                             nsIPrincipal** aPrincipal,
-                             PRInt32* aVerifyError)
-{
-  *aVerifyError = -1;
-  CMT_CONTROL *controlConnection;
-  if (NS_FAILED(GetControlConnection( &controlConnection )))
-    return NS_ERROR_FAILURE;
-  
+  if (result != CMTSuccess) return NS_ERROR_FAILURE;
+  result = CMT_PKCS7DecoderUpdate(controlConnection, decoderID, aRSABuf, aRSABufLen);
+  if (result != CMTSuccess) return NS_ERROR_FAILURE;
   CMUint32 contentInfo;
-  CMTStatus result = CMT_PKCS7DecoderFinish(controlConnection, 
-                                            id, &contentInfo);
-  if (result != CMTSuccess)
-    return NS_ERROR_FAILURE;
-
-  //-- Make sure a signature is present
-  CMInt32 isSigned;
-  result = CMT_GetNumericAttribute(controlConnection, contentInfo,
-                                   SSM_FID_P7CINFO_IS_SIGNED, &isSigned);
-  if (result != CMTSuccess) return NS_ERROR_FAILURE;
-  if (!isSigned)
-  {
-    *aPrincipal = nsnull;
-    *aVerifyError = nsIPSMComponent::VERIFY_NOSIG;
-    return NS_OK;
-  }
-  // SHA1 hash the plaintext to compare it to the signature
-  CMUint32 hashId;
-  CMT_HashCreate(controlConnection, nsIPSMComponent::SHA1, &hashId);
-  CMT_HASH_Begin(controlConnection, hashId);
-  result = CMT_HASH_Update(controlConnection, hashId, 
-                           (const unsigned char*)plaintext, plaintextLen);
+  result = CMT_PKCS7DecoderFinish(controlConnection, 
+                                            decoderID, &contentInfo);
   if (result != CMTSuccess) return NS_ERROR_FAILURE;
 
-  unsigned char* hash = (unsigned char*)PR_MALLOC(nsIPSMComponent::SHA1_LENGTH);
-  if (!hash) return NS_ERROR_OUT_OF_MEMORY;
-  CMUint32 hashLen;
-  result = CMT_HASH_End(controlConnection, hashId, hash,
-                        &hashLen, nsIPSMComponent::SHA1_LENGTH);
-  NS_ASSERTION(hashLen == nsIPSMComponent::SHA1_LENGTH,
-               "PSMComponent: Hash too short.");
-  CMT_HASH_Destroy(controlConnection, hashId);
-  if (result != CMTSuccess) 
+  CMTItem hashItem;
+  hashItem.data = 0;
+  hashItem.len = 0;
+  //-- If a plaintext was provided, hash it.
+  if (aPlaintext)
   {
-    PR_FREEIF(hash);
-    return NS_ERROR_FAILURE;
+    CMUint32 hashId;
+    CMT_HashCreate(controlConnection, nsISignatureVerifier::SHA1, &hashId);
+    CMT_HASH_Begin(controlConnection, hashId);
+    CMTStatus result = CMT_HASH_Update(controlConnection, hashId, 
+                                       (const unsigned char*)aPlaintext, aPlaintextLen);
+    if (result != CMTSuccess) return NS_ERROR_FAILURE;
+    
+    unsigned char* hash = (unsigned char*)PR_MALLOC(nsISignatureVerifier::SHA1_LENGTH);
+    if (!hash) return NS_ERROR_OUT_OF_MEMORY;
+    CMUint32 hashLen;
+    result = CMT_HASH_End(controlConnection, hashId, hash,
+                          &hashLen, nsISignatureVerifier::SHA1_LENGTH);
+    if (result != CMTSuccess)
+    {
+      PR_FREEIF(hash);
+      return NS_ERROR_FAILURE;
+    }
+    NS_ASSERTION(hashLen == nsISignatureVerifier::SHA1_LENGTH,
+                 "PSMComponent: Hash too short.");
+    CMT_HASH_Destroy(controlConnection, hashId);
+    hashItem.data = hash;
+    hashItem.len = hashLen;
   }
+
   //-- Verify signature
-  CMTItemStr hashItem;
-  hashItem.data = hash;
-  hashItem.len = hashLen;
+  // We need to call this function even if we're only creating a principal, not
+  // verifying, because PSM won't give us certificate information unless this
+  // function has been called.
   result = CMT_PKCS7VerifyDetachedSignature(controlConnection, contentInfo,
                                             6 /* =Object Signing Cert */,
                                             3 /* =SHA1 algorithm (MD5=2)*/,
-                                            (CMUint32)aKeepCert,
-                                            &hashItem, (CMInt32*)aVerifyError);
-  PR_FREEIF(hash);
+                                            1,/* Save Certificate */
+                                            &hashItem, (CMInt32*)aErrorCode);
+
   if (result != CMTSuccess) return NS_ERROR_FAILURE;
-  //-- Did it verify?
+  if (aPlaintext && *aErrorCode != 0) return NS_OK; // Verification failed.
+
+  CMUint32 certID;
+  result = CMT_GetRIDAttribute(controlConnection, contentInfo,
+                               SSM_FID_P7CINFO_SIGNER_CERT, &certID);
+  if ((result != CMTSuccess) || !certID) return NS_OK; // No signature present
   
-  if (*aVerifyError != 0)
-    *aPrincipal = nsnull;
-  else
-    {
-      //-- Generate a principal from the cert
-      CMUint32 certID;
-      result = CMT_GetRIDAttribute(controlConnection, contentInfo,
-                                       SSM_FID_P7CINFO_SIGNER_CERT, &certID);
-      if (result != CMTSuccess) return NS_ERROR_FAILURE;
-      if (NS_FAILED(CreatePrincipalFromCert(certID, aPrincipal))) 
-        return NS_ERROR_FAILURE;
-    }
-
-  CMT_PKCS7DestroyContentInfo(controlConnection, contentInfo);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPSMComponent::CreatePrincipalFromCert(PRUint32 aCertID, nsIPrincipal** aPrincipal)
-{
-  CMT_CONTROL *controlConnection;
-  if (NS_FAILED(GetControlConnection( &controlConnection )))
-    return NS_ERROR_FAILURE;
-
-  //-- Read cert ID
-  CMTStatus result;
-
   CMTItem fingerprint;
-  result = CMT_GetStringAttribute(controlConnection, aCertID,
+  result = CMT_GetStringAttribute(controlConnection, certID,
                                   SSM_FID_CERT_FINGERPRINT, &fingerprint);
   if (result != CMTSuccess) return NS_ERROR_FAILURE;
 
@@ -960,11 +919,11 @@ nsPSMComponent::CreatePrincipalFromCert(PRUint32 aCertID, nsIPrincipal** aPrinci
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   CMTItem common;
-  result = CMT_GetStringAttribute(controlConnection, aCertID,
+  result = CMT_GetStringAttribute(controlConnection, certID,
                                   SSM_FID_CERT_COMMON_NAME, &common);
   if (result != CMTSuccess) return NS_ERROR_FAILURE;
   CMTItem subject;
-  result = CMT_GetStringAttribute(controlConnection, aCertID,
+  result = CMT_GetStringAttribute(controlConnection, certID,
                                   SSM_FID_CERT_SUBJECT_NAME, &subject);
   if (result != CMTSuccess) return NS_ERROR_FAILURE;
 
@@ -990,4 +949,3 @@ nsPSMComponent::CreatePrincipalFromCert(PRUint32 aCertID, nsIPrincipal** aPrinci
   Recycle(commonChar);
   return rv;
 }
- 

@@ -33,10 +33,6 @@
 #include "plbase64.h"
 #include "nsIConsoleService.h"
 
-#ifndef XP_MAC
-#include "nsIPSMComponent.h"
-#endif
-
 #ifdef XP_UNIX
   #include <sys/stat.h>
 #elif defined (XP_PC)
@@ -298,17 +294,10 @@ nsJAR::GetInputStream(const char *aFilename, nsIInputStream **result)
 NS_IMETHODIMP
 nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
 {
-#ifdef XP_MAC
-	return NS_ERROR_NOT_IMPLEMENTED;
-#else
   //-- Parameter check
   if (!aPrincipal)
     return NS_ERROR_NULL_POINTER;
   *aPrincipal = nsnull;
-
-  DumpMetadata("GetPrincipal");
-  if (!mParsedManifest)
-    ParseManifest();
 
   PRInt16 requestedStatus;
   if (aFilename)
@@ -323,18 +312,24 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
     }
     if (!manItem->step2Complete)
     {
-      //-- Creating an input stream causes step 2 of verification
-      nsCOMPtr<nsIInputStream> tempStream;
-      if (NS_FAILED(CreateInputStream(aFilename, PR_TRUE, getter_AddRefs(tempStream))))
-        return NS_ERROR_FAILURE;
-      NS_ASSERTION(manItem->step2Complete, "Verification step 2 is not complete");
-      if (!manItem->step2Complete)
-        return NS_ERROR_FAILURE;
+      NS_ASSERTION(manItem->step2Complete, 
+                   "nsJAR: Attempt to get principal before verification.");
+      return NS_ERROR_FAILURE;
     }
     requestedStatus = manItem->status;
   }
   else // User wants identity of signer w/o verifying any entries
+  {
+    if (!mParsedManifest)
+    {
+      nsresult rv;
+      NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
+      if (NS_FAILED(rv)) // No signature verifier available
+        return NS_ERROR_FAILURE;
+      ParseManifest(verifier);
+    }
     requestedStatus = mGlobalStatus;
+  }
 
   if (requestedStatus != nsIZipReader::VALID)
     ReportError(aFilename, requestedStatus);
@@ -344,7 +339,15 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
     NS_IF_ADDREF(*aPrincipal);
   }
   return NS_OK;
-#endif
+}
+
+NS_IMETHODIMP
+nsJAR::VerifyExternalData(const char* aFilename, const char* aData, PRUint32 aLen, 
+                          nsIPrincipal** result)
+{
+  if (NS_FAILED(VerifyEntry(aFilename, aData, aLen)))
+    return NS_ERROR_FAILURE;
+  return GetCertificatePrincipal(aFilename, result);
 }
 
 //----------------------------------------------
@@ -431,11 +434,8 @@ nsJAR::ReadLine(const char** src)
 #define JAR_SF_HEADER (const char*)"Signature-Version: 1.0"
 
 nsresult
-nsJAR::ParseManifest()
+nsJAR::ParseManifest(nsISignatureVerifier* verifier)
 {
-#ifdef XP_MAC
-return NS_OK;
-#else
   //-- Verification Step 1
   if (mParsedManifest)
     return NS_OK;
@@ -464,7 +464,7 @@ return NS_OK;
   if (NS_FAILED(rv)) return rv;
 
   //-- Parse it
-  rv = ParseOneFile(manifestBuffer, JAR_MF);
+  rv = ParseOneFile(verifier, manifestBuffer, JAR_MF);
   if (NS_FAILED(rv)) return rv;
   DumpMetadata("PM Pass 1 End");
 
@@ -497,23 +497,30 @@ return NS_OK;
   if (NS_FAILED(rv)) return rv;
   
   //-- Verify that the signature file is a valid signature of the SF file
-  rv = VerifySignature(manifestBuffer, manifestLen, 
-                       sigBuffer, sigLen, getter_AddRefs(mPrincipal), &mGlobalStatus);
+  PRInt32 verifyError;
+  rv = verifier->VerifySignature(sigBuffer, sigLen, manifestBuffer, manifestLen, 
+                                 &verifyError, getter_AddRefs(mPrincipal));
   if (NS_FAILED(rv)) return rv;
-  
+  if (mPrincipal)
+    mGlobalStatus = nsIZipReader::VALID;
+  else if (verifyError == nsISignatureVerifier::VERIFY_ERROR_UNKNOWN_CA)
+    mGlobalStatus = nsIZipReader::INVALID_UNKNOWN_CA;
+  else
+    mGlobalStatus = nsIZipReader::INVALID_SIG;
+
   //-- Parse the SF file. If the verification above failed, principal
   // is null, and ParseOneFile will mark the relevant entries as invalid.
   // if ParseOneFile fails, then it has no effect, and we can safely 
   // continue to the next SF file, or return. 
-  ParseOneFile(manifestBuffer, JAR_SF);
+  ParseOneFile(verifier, manifestBuffer, JAR_SF);
   DumpMetadata("PM Pass 2 End");
 
   return NS_OK;
-  #endif
 }
 
 nsresult
-nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
+nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
+                    const char* filebuf, PRInt16 aFileType)
 {
   //-- Check file header
   const char* nextLineStart = filebuf;
@@ -579,7 +586,7 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
         else //-- calculate section digest
         {
           PRUint32 sectionLength = curPos - sectionStart;
-          CalculateDigest(sectionStart, sectionLength,
+          CalculateDigest(verifier, sectionStart, sectionLength,
                           &(curItemMF->calculatedSectionDigest));
           //-- Save item in the hashtable
           nsStringKey itemKey(curItemName);
@@ -691,15 +698,17 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
 } //ParseOneFile()
 
 nsresult
-nsJAR::VerifyEntry(const char* aEntryName, char* aEntryData,
+nsJAR::VerifyEntry(const char* aEntryName, const char* aEntryData,
                    PRUint32 aLen)
 {
-#ifndef XP_MAC
+  nsresult rv;
+  NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
+  if (NS_FAILED(rv)) return NS_OK; // No verifier available; just continue.
+    
   //-- Verification Step 2
   // Check that verification is supported and step 1 has been done
-
   if (!mParsedManifest)
-    ParseManifest();
+    ParseManifest(verifier);
   NS_ASSERTION(mParsedManifest, 
                "Verification step 2 called before step 1 complete");
   if (!mParsedManifest) return NS_ERROR_FAILURE;
@@ -717,25 +726,25 @@ nsJAR::VerifyEntry(const char* aEntryName, char* aEntryData,
     else
     { //-- Calculate and compare digests
       char* calculatedEntryDigest;
-      nsresult rv = CalculateDigest(aEntryData, aLen, &calculatedEntryDigest);
-      if (NS_FAILED(rv)) return rv;
+      rv = CalculateDigest(verifier, aEntryData, aLen, &calculatedEntryDigest);
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
       if (PL_strcmp(manItem->storedEntryDigest, calculatedEntryDigest) != 0)
         manItem->status = nsIZipReader::INVALID_ENTRY;
       JAR_NULLFREE(calculatedEntryDigest)
       JAR_NULLFREE(manItem->storedEntryDigest)
     }
   }
-
-  manItem->step2Complete = PR_TRUE;
+  if (NS_SUCCEEDED(rv))
+    manItem->step2Complete = PR_TRUE;
   DumpMetadata("VerifyEntry end");
-#endif
-  return NS_OK;
+  return rv;
 }
 
 void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
 {
   //-- Generate error message
-  nsAutoString message; message.AssignWithConversion("Signature Verification Error: the signature on ");
+  nsAutoString message; 
+  message.AssignWithConversion("Signature Verification Error: the signature on ");
   if (aFilename)
     message.AppendWithConversion(aFilename);
   else
@@ -747,27 +756,23 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
     message.AppendWithConversion("the archive did not contain a valid PKCS7 signature.");
     break;
   case nsIZipReader::INVALID_SIG:
-    message.AppendWithConversion("the digital signature (*.RSA) file is not a valid signature of ");
-    message.AppendWithConversion("the signature instruction file (*.SF).");
+    message.AppendWithConversion("the digital signature (*.RSA) file is not a valid signature of the signature instruction file (*.SF).");
     break;
   case nsIZipReader::INVALID_UNKNOWN_CA:
     message.AppendWithConversion("the certificate used to sign this file has an unrecognized issuer.");
     break;
   case nsIZipReader::INVALID_MANIFEST:
-    message.AppendWithConversion("the signature instruction file (*.SF) does not contain a valid hash ");
-    message.AppendWithConversion("of the MANIFEST.MF file.");
+    message.AppendWithConversion("the signature instruction file (*.SF) does not contain a valid hash of the MANIFEST.MF file.");
     break;
   case nsIZipReader::INVALID_ENTRY:
-    message.AppendWithConversion("the MANIFEST.MF file does not contain a valid hash of the file ");
-    message.AppendWithConversion("being verified.");
+    message.AppendWithConversion("the MANIFEST.MF file does not contain a valid hash of the file being verified.");
     break;
   default:
     message.AppendWithConversion("of an unknown problem.");
   }
   
   // Report error in JS console
-  nsCOMPtr<nsIConsoleService> console
-    (do_GetService("mozilla.consoleservice.1"));
+  nsCOMPtr<nsIConsoleService> console(do_GetService("mozilla.consoleservice.1"));
   if (console)
   {
     PRUnichar* messageUni = message.ToNewUnicode();
@@ -775,7 +780,9 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
     console->LogStringMessage(messageUni);
     nsAllocator::Free(messageUni);
   }
+#ifndef DEBUG
   else // If JS console reporting failed, print to stderr.
+#endif
   {
     char* messageCstr = message.ToNewCString();
     if (!messageCstr) return;
@@ -813,77 +820,38 @@ nsJAR::RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile)
   return rv;
 }
 
-//----------------------------------------------
-// Hashing and verification functions
-//----------------------------------------------
-
-nsresult nsJAR::CalculateDigest(const char* aInBuf, PRUint32 aLen,
-				char** digest)
+nsresult nsJAR::CalculateDigest(nsISignatureVerifier* verifier,
+                                const char* aInBuf, PRUint32 aLen,
+                                char** digest)
 {
-#ifndef XP_MAC
   *digest = nsnull;
   nsresult rv;
-  NS_WITH_SERVICE(nsIPSMComponent, psmComp, PSM_COMPONENT_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
   
   //-- Calculate the digest
   PRUint32 id;
-  rv = psmComp->HashBegin(nsIPSMComponent::SHA1, &id);
+  rv = verifier->HashBegin(nsISignatureVerifier::SHA1, &id);
   if (NS_FAILED(rv)) return rv;
 
-  rv = psmComp->HashUpdate(id, aInBuf, aLen);
+  rv = verifier->HashUpdate(id, aInBuf, aLen);
   if (NS_FAILED(rv)) return rv;
   
   PRUint32 len;
-  char* rawDigest = (char*)PR_MALLOC(nsIPSMComponent::SHA1_LENGTH);
+  unsigned char* rawDigest = (unsigned char*)PR_MALLOC(nsISignatureVerifier::SHA1_LENGTH);
   if (rawDigest == nsnull) return NS_ERROR_OUT_OF_MEMORY;
-  rv = psmComp->HashEnd(id, &rawDigest, &len, nsIPSMComponent::SHA1_LENGTH);
+  rv = verifier->HashEnd(id, &rawDigest, &len, nsISignatureVerifier::SHA1_LENGTH);
   if (NS_FAILED(rv)) { PR_FREEIF(rawDigest); return rv; }
 
   //-- Encode the digest in base64
-  *digest = PL_Base64Encode(rawDigest, len, *digest);
+  *digest = PL_Base64Encode((char*)rawDigest, len, *digest);
   if (!(*digest)) { PR_FREEIF(rawDigest); return NS_ERROR_OUT_OF_MEMORY; }
   
   PR_FREEIF(rawDigest);
-#endif
   return NS_OK;
-}
-
-nsresult nsJAR::VerifySignature(const char* sfBuf, PRUint32 sfBufLen,
-				const char* rsaBuf, PRUint32 rsaBufLen,
-				nsIPrincipal** aPrincipal, PRInt16* status)
-{
-  nsresult rv = NS_OK;
-#ifndef XP_MAC
-  NS_WITH_SERVICE(nsIPSMComponent, psmComp, PSM_COMPONENT_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  PRUint32 id;
-  rv = psmComp->VerifyRSABegin(&id);
-  if (NS_SUCCEEDED(rv))
-    rv = psmComp->VerifyRSAUpdate(id, rsaBuf, rsaBufLen);
-  PRInt32 psmStatus;
-  if (NS_SUCCEEDED(rv))
-    rv = psmComp->VerifyRSAEnd(id, sfBuf, sfBufLen, PR_TRUE, aPrincipal, &psmStatus);
-  switch (psmStatus)
-  {
-  case nsIPSMComponent::VERIFY_NOSIG:
-    *status = nsIZipReader::NOT_SIGNED; break;
-  case nsIPSMComponent::VERIFY_OK:
-    *status = nsIZipReader::VALID; break;
-  case nsIPSMComponent::VERIFY_ERROR_UNKNOWN_CA: 
-    *status = nsIZipReader::INVALID_UNKNOWN_CA; break;
-  default:
-    *status = nsIZipReader::INVALID_SIG;
-  }
-#endif
-  return rv;
 }
 
 //----------------------------------------------
 // Debugging functions
 //----------------------------------------------
-
 #if 0
 PR_STATIC_CALLBACK(PRBool)
 PrintManItem(nsHashKey* aKey, void* aData, void* closure)

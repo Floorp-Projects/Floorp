@@ -24,6 +24,7 @@
 
 #include "nscore.h"
 #include "nsIPSMComponent.h"
+#include "nsISignatureVerifier.h"
 #include "nsIStringBundle.h"
 
 #include "nsIContentHandler.h"
@@ -33,7 +34,9 @@
 #define NS_PSMCOMPONENT_CID {0xddcae170, 0x5412, 0x11d3, {0xbb, 0xc8, 0x00, 0x00, 0x86, 0x1d, 0x12, 0x37}}
 
 // Implementation of the PSM component interface.
-class nsPSMComponent : public nsIPSMComponent, public nsIContentHandler
+class nsPSMComponent : public nsIPSMComponent, 
+                       public nsIContentHandler, 
+                       public nsISignatureVerifier
 {
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_PSMCOMPONENT_CID );
@@ -44,6 +47,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPSMCOMPONENT
   NS_DECL_NSICONTENTHANDLER
+  NS_DECL_NSISIGNATUREVERIFIER
 
   static NS_METHOD CreatePSMComponent(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 
