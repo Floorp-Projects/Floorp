@@ -108,14 +108,19 @@ NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 
 NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
-  NS_ALLOC_STR_BUF(textc, aItem, 256);
-//  str = XmStringCreateLocalized(val);
-  gchar *text[2];
-  text[0] = textc;
-  gtk_clist_insert(GTK_CLIST(mCList), (int)aPosition, text);
-  gtk_clist_set_row_data(GTK_CLIST(mCList), (int)aPosition, aItem);
+//  cout << "nsListBox::AddItemAt(" << aItem << "," << aPosition << ")" << endl;
 
-  NS_FREE_STR_BUF(textc);
+  char *buf = aItem.ToNewCString();
+  gchar *text[2];
+  text[0] = buf;
+  text[1] = (char *)NULL;
+  gtk_clist_insert(GTK_CLIST(mCList), (int)aPosition, text);
+
+  // XXX Im not sure using the string address is the right thing to 
+  // store in the row data.
+  gtk_clist_set_row_data(GTK_CLIST(mCList), (int)aPosition, (gpointer)&aItem);
+
+  delete[] buf;
 
   return NS_OK;
 }
@@ -127,7 +132,9 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-  int index = gtk_clist_find_row_from_data(GTK_CLIST(mCList), aItem);
+//  cout << "nsListBox::FindItem(" << aItem << "," << aStartPos << ")" << endl;
+
+  int index = gtk_clist_find_row_from_data(GTK_CLIST(mCList), (gpointer)&aItem);
 
   if (index < aStartPos) {
     index = -1;
