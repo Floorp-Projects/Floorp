@@ -552,7 +552,7 @@
           <computeroutput>
             <prompt>mysql&gt;</prompt>
 
-            <command>UPDATE user SET Password=PASSWORD('&lt;new_password'&gt;)
+            <command>UPDATE user SET Password=PASSWORD('&lt;new_password&gt;')
             WHERE user='root';</command>
           </computeroutput>
         </member>
