@@ -182,6 +182,46 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
     return rv;
 }
 
+NS_IMETHODIMP
+nsUnknownContentTypeHandler::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
+    nsresult rv = NS_ERROR_FAILURE;
+
+    // Get parent window (from context).
+    nsCOMPtr<nsIDOMWindowInternal> parent( do_GetInterface( aContext ) );
+    if ( parent ) {
+        // Get JS context from parent window.
+        nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( parent, &rv );
+        if ( NS_SUCCEEDED( rv ) && sgo ) {
+            nsCOMPtr<nsIScriptContext> context;
+            sgo->GetContext( getter_AddRefs( context ) );
+            if ( context ) {
+                // Get native context.
+                JSContext *jsContext = (JSContext*)context->GetNativeContext();
+                if ( jsContext ) {
+                    // Set up window.arguments[0]...
+                    void *stackPtr;
+                    jsval *argv = JS_PushArguments( jsContext,
+                                                    &stackPtr,
+                                                    "sss%ip",
+                                                    "chrome://global/content/helperAppDldProgress.xul",
+                                                    "_blank",
+                                                    "chrome,titlebar",
+                                                    (const nsIID*)(&NS_GET_IID(nsIHelperAppLauncher)),
+                                                    (nsISupports*)aLauncher );
+                    if ( argv ) {
+                        // Open the dialog.
+                        nsCOMPtr<nsIDOMWindowInternal> dialog;
+                        rv = parent->OpenDialog( jsContext, argv, 4, getter_AddRefs( dialog ) );
+                        // Pop arguments.
+                        JS_PopArguments( jsContext, stackPtr );
+                    }
+                }
+            }
+        }
+    }
+    return rv;
+}
+
 // Show the helper app launch confirmation dialog as instructed.
 NS_IMETHODIMP
 nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
@@ -206,7 +246,7 @@ nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports 
                                                     "sss%ip",
                                                     "chrome://global/content/helperAppLauncher.xul",
                                                     "_blank",
-                                                    "chrome",
+                                                    "chrome,titlebar",
                                                     (const nsIID*)(&NS_GET_IID(nsIHelperAppLauncher)),
                                                     (nsISupports*)aLauncher );
                     if ( argv ) {
@@ -244,7 +284,13 @@ nsUnknownContentTypeHandler::PromptForSaveToFile(nsISupports * aWindowContext, c
     nsCOMPtr<nsIDOMWindowInternal> parent( do_GetInterface( aWindowContext ) );
     filePicker->Init(parent, windowTitle, nsIFilePicker::modeSave);
     filePicker->SetDefaultString(aDefaultFile);
-    filePicker->AppendFilter(aSuggestedFileExtension, aSuggestedFileExtension);
+    nsAutoString wildCardExtension (NS_LITERAL_STRING("*").get());
+    if (aSuggestedFileExtension)
+      wildCardExtension.Append(aSuggestedFileExtension);
+    else
+      wildCardExtension.Append(NS_LITERAL_STRING(".*").get());
+
+    filePicker->AppendFilter(wildCardExtension.GetUnicode(), wildCardExtension.GetUnicode());
     filePicker->AppendFilters(nsIFilePicker::filterAll);
 
     PRInt16 dialogResult;
