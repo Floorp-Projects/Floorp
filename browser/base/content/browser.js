@@ -3129,9 +3129,6 @@ nsBrowserStatusHandler.prototype =
     //fix bug 253793 - turn off highlight when page changes
     if (document.getElementById("highlight").checked)
       document.getElementById("highlight").removeAttribute("checked");
-           
-    // clear missing plugins
-    gMissingPluginInstaller.clearMissingPlugins(getBrowser().selectedTab);
        
     setTimeout(function () { updatePageLivemarks(); }, 0);
 #ifdef ALTSS_ICON
@@ -3215,6 +3212,9 @@ nsBrowserStatusHandler.prototype =
       observerService.notifyObservers(content, "StartDocumentLoad", urlStr);
     } catch (e) {
     }
+
+    // clear missing plugins
+    gMissingPluginInstaller.clearMissingPlugins(getBrowser().selectedTab);
   },
 
   endDocumentLoad : function(aRequest, aStatus)
@@ -5686,10 +5686,9 @@ missingPluginInstaller.prototype.observe = function(aSubject, aTopic, aData){
       if (missingPluginsArray) {
         window.openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
           "PFSWindow", "modal,chrome,resizable=yes", {plugins: missingPluginsArray, tab: tabbrowser.mCurrentTab});
-      }            
+      }
 
-      tabbrowser.hideMessage(tabbrowser.selectedBrowser, "top");
-      break;      
+      break;
   }
 }
 var gMissingPluginInstaller = new missingPluginInstaller();
