@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.14 2001/02/08 23:43:00 javi%netscape.com Exp $
+ # $Id: nssinit.c,v 1.15 2001/02/09 01:34:12 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -97,6 +97,9 @@ nss_keydb_name_cb(void *arg, int dbVersion)
     switch (dbVersion) {
       case 3:
 	dbver = "3";
+	break;
+      case 1:
+	dbver = "1";
 	break;
       case 2:
       default:
@@ -209,8 +212,27 @@ nss_OpenVolatileSecModDB() {
       return rv;
 }
 
+/*
+ * OK there are now lots of options here, lets go through them all:
+ *
+ * configdir - base directory where all the cert, key, and module datbases live.
+ * certPrefix - prefix added to the beginning of the cert database example: "
+ * 			"https-server1-"
+ * keyPrefix - prefix added to the beginning of the key database example: "
+ * 			"https-server1-"
+ * secmodName - name of the security module database (usually "secmod.db").
+ * readOnly - Boolean: true if the databases are to be openned read only.
+ * nocertdb - Don't open the cert DB and key DB's, just initialize the 
+ *			Volatile certdb.
+ * nomoddb - Don't open the security module DB, just initialize the 
+ *			PKCS #11 module.
+ * forceOpen - Continue to force initializations even if the databases cannot
+ * 			be opened.
+ */
 static SECStatus
-nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readOnly, PRBool nodb)
+nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
+		 const char *secmodName, PRBool readOnly, PRBool noCertDB, 
+					PRBool noModDB, PRBool forceOpen)
 {
     SECStatus status;
     SECStatus rv      = SECFailure;
@@ -220,27 +242,44 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix, c
 	goto loser;
     RNG_SystemInfoForRNG();
 
-    status = nss_OpenCertDB(configdir, certPrefix, readOnly);
-    if (status != SECSuccess) {
-	if (!nodb) goto loser;
+    if (noCertDB) {
 	status = nss_OpenVolatileCertDB();
 	if (status != SECSuccess) {
 	    goto loser;
 	}
+    } else {
+	status = nss_OpenCertDB(configdir, certPrefix, readOnly);
+	if (status != SECSuccess) {
+	    if (!forceOpen) goto loser;
+	    status = nss_OpenVolatileCertDB();
+	    if (status != SECSuccess) {
+		goto loser;
+	    }
+	}
+
+	status = nss_OpenKeyDB(configdir, keyPrefix, readOnly);
+	if (status != SECSuccess) {
+	    if (!forceOpen) goto loser;
+	}
     }
 
-    status = nss_OpenKeyDB(configdir, keyPrefix, readOnly);
-    if (status != SECSuccess) {
-	if (!nodb) goto loser;
+    if (noModDB) {
+	status = nss_OpenVolatileSecModDB();
+	if (status != SECSuccess) {
+	    goto loser;
+	}
+    } else {
+	status = nss_OpenSecModDB(configdir, secmodName);
+	if (status != SECSuccess) {
+	    if (!forceOpen) goto loser;
+	    status = nss_OpenVolatileSecModDB();
+	    if (status != SECSuccess) {
+		goto loser;
+	    }
+	}
     }
-
-
-    status = nss_OpenSecModDB(configdir, secmodName);
-    if (status != SECSuccess) {
-	goto loser;
-    }
-
     rv = SECSuccess;
+
 
 loser:
     if (rv != SECSuccess) 
@@ -251,20 +290,24 @@ loser:
 SECStatus
 NSS_Init(const char *configdir)
 {
-    return nss_Init(configdir, "", "", SECMOD_DB, PR_TRUE, PR_FALSE);
+    return nss_Init(configdir, "", "", SECMOD_DB, PR_TRUE, 
+		PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 SECStatus
 NSS_InitReadWrite(const char *configdir)
 {
-    return nss_Init(configdir, "", "", SECMOD_DB, PR_FALSE, PR_FALSE);
+    return nss_Init(configdir, "", "", SECMOD_DB, PR_FALSE, 
+		PR_FALSE, PR_FALSE, PR_FALSE);
 }
 
 SECStatus
-NSS_Initialize(const char *configdir, const char *certPrefix, const char *keyPrefix, const char *secmodName, PRBool readOnly)
+NSS_Initialize(const char *configdir, const char *certPrefix, 
+	const char *keyPrefix, const char *secmodName, 
+	PRBool readOnly, PRBool noCertDB, PRBool noModDB, PRBool forceOpen)
 {
-    return nss_Init(configdir, certPrefix, keyPrefix, 
-						secmodName, readOnly, PR_TRUE);
+    return nss_Init(configdir, certPrefix, keyPrefix, secmodName, 
+		readOnly, noCertDB, noModDB, forceOpen);
 }
 
 /*
