@@ -319,7 +319,12 @@
   (with-standard-io-syntax
     (let ((*print-readably* nil)
           (*print-escape* nil))
-      (sort (hash-table-keys hash-table) #'string< :key #'write-to-string))))
+      (sort (hash-table-keys hash-table) #'string<
+            :key #'(lambda (item)
+                     (if (symbolp item)
+                       (or (get item :sort-key)
+                           (symbol-name item))
+                       (write-to-string item)))))))
 
 
 ; Given an association list ((key1 . data1) (key2 . data2) ... (keyn datan)),
