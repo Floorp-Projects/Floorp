@@ -39,13 +39,7 @@ struct TagNode {
       mEnum(eHTMLTag_unknown)
   {}
 
-  TagNode(const nsStr& aStringValue)
-    : mStr(),
-      mEnum(eHTMLTag_unknown)
-  { // point to the incomming buffer
-    // note that the incomming buffer may really be 2 byte
-    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity, 
-                      aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
+  TagNode(const nsCString& aString) : mStr(aString), mEnum(eHTMLTag_unknown) { 
   }
 
   nsCAutoString mStr;
@@ -111,29 +105,6 @@ nsHTMLTags::ReleaseTable(void)
 
 
 nsHTMLTag 
-nsHTMLTags::LookupTag(const nsString& aTag)
-{
-  NS_ASSERTION(gTagTree, "no lookup table, needs addref");
-  if (gTagTree) {
-    TagNode node(aTag);
-    TagNode*  found = (TagNode*)gTagTree->FindItem(&node);
-    if (found) {
-      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aTag), "bad tree");
-      return found->mEnum;
-    }
-    else {
-    // hack: this can come out when rickg provides a way for the editor to ask
-    // CanContain() questions without having to first fetch the parsers
-    // internal enum values for a tag name.
-      nsAutoString textTag("__moz_text");
-      if (textTag==aTag)
-        return eHTMLTag_text;
-    }
-  }
-  return eHTMLTag_userdefined;
-}
-
-nsHTMLTag 
 nsHTMLTags::LookupTag(const nsCString& aTag)
 {
   NS_ASSERTION(gTagTree, "no lookup table, needs addref");
@@ -148,13 +119,19 @@ nsHTMLTags::LookupTag(const nsCString& aTag)
     // hack: this can come out when rickg provides a way for the editor to ask
     // CanContain() questions without having to first fetch the parsers
     // internal enum values for a tag name.
-      nsAutoString textTag("__moz_text");
-      if (textTag==aTag)
+      if (aTag.Equals("__moz_text"))
         return eHTMLTag_text;
     }
   }
   return eHTMLTag_userdefined;
 }
+
+nsHTMLTag 
+nsHTMLTags::LookupTag(const nsString& aTag) {
+  nsCAutoString theTag(aTag);
+  return LookupTag(theTag);
+}
+
 
 
 const nsCString& 

@@ -602,8 +602,8 @@ eParseMode DetermineParseMode(nsParser& aParser) {
 
         else if(kNotFound<(theSubIndex=theBuffer.Find("HTML",PR_TRUE,theStartPos,theCount))) {
 
-          PRInt32 theStartPos=theSubIndex+5;
-          PRInt32 theCount=theEnd-theStartPos;
+          theStartPos=theSubIndex+5;
+          theCount=theEnd-theStartPos;
           nsAutoString theNum;
           theBuffer.Mid(theNum,theStartPos-1,3);
           
