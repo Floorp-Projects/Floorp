@@ -420,7 +420,7 @@ protected:
     RemoveElementFromMap(nsIContent* aElement);
 
     static PRIntn
-    RemoveElementsFromMapByContent(const nsString& aID,
+    RemoveElementsFromMapByContent(const PRUnichar* aID,
                                    nsIContent* aElement,
                                    void* aClosure);
 
