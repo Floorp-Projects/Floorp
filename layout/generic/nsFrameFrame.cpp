@@ -1204,6 +1204,14 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
+  // If doing Printing or Print Preview return here
+  // the printing/print preview mechanism will resize the subshell
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+  if (isPaginated) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDocShell> docShell;
   GetDocShell(getter_AddRefs(docShell));
 

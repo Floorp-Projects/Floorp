@@ -2041,11 +2041,22 @@ DocumentViewerImpl::Show(void)
 NS_IMETHODIMP
 DocumentViewerImpl::Hide(void)
 {
-  PRBool is_in_print_preview = PR_FALSE;
+  PRBool is_in_print_mode = PR_FALSE;
 
-  GetDoingPrintPreview(&is_in_print_preview);
+  GetDoingPrint(&is_in_print_mode);
 
-  if (is_in_print_preview) {
+  if (is_in_print_mode) {
+    // If we, or one of our parents, is in print mode it means we're
+    // right now returning from print and the layout frame that was
+    // created for this document is being destroyed. In such a case we
+    // ignore the Hide() call.
+
+    return NS_OK;
+  }
+
+  GetDoingPrintPreview(&is_in_print_mode);
+
+  if (is_in_print_mode) {
     // If we, or one of our parents, is in print preview mode it means
     // we're right now returning from print preview and the layout
     // frame that was created for this document is being destroyed. In
@@ -2973,9 +2984,9 @@ DocumentViewerImpl::DonePrintingPages(PrintObject* aPO)
   DoProgressForAsIsFrames();
   DoProgressForSeparateFrames();
 
-  mIsDoingPrinting = PR_FALSE;
   delete mPrt;
   mPrt = nsnull;
+  mIsDoingPrinting = PR_FALSE;
 
   NS_IF_RELEASE(mPagePrintTimer);
 
@@ -8154,6 +8165,49 @@ DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetti
   return rv;
 }
 
+static void
+GetParentWebBrowserPrint(nsISupports *aContainer, nsIWebBrowserPrint **aParent)
+{
+  *aParent = nsnull;
+
+  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aContainer));
+
+  if (item) {
+    nsCOMPtr<nsIDocShellTreeItem> parent;
+    item->GetParent(getter_AddRefs(parent));
+
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(parent));
+
+    if (docShell) {
+      nsCOMPtr<nsIContentViewer> viewer;
+      docShell->GetContentViewer(getter_AddRefs(viewer));
+
+      if (viewer) {
+        CallQueryInterface(viewer, aParent);
+      }
+    }
+  }
+}
+
+/* readonly attribute boolean doingPrint; */
+NS_IMETHODIMP
+DocumentViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
+{
+  NS_ENSURE_ARG_POINTER(aDoingPrint);
+  *aDoingPrint = mIsDoingPrinting;
+
+  if (!*aDoingPrint) {
+    nsCOMPtr<nsIWebBrowserPrint> wbp;
+    GetParentWebBrowserPrint(mContainer, getter_AddRefs(wbp));
+
+    if (wbp) {
+      return wbp->GetDoingPrint(aDoingPrint);
+    }
+  }
+
+  return NS_OK;
+}
+
 /* readonly attribute boolean doingPrintPreview; */
 NS_IMETHODIMP
 DocumentViewerImpl::GetDoingPrintPreview(PRBool *aDoingPrintPreview)
@@ -8162,21 +8216,8 @@ DocumentViewerImpl::GetDoingPrintPreview(PRBool *aDoingPrintPreview)
   *aDoingPrintPreview = mIsDoingPrintPreview;
 
   if (!*aDoingPrintPreview) {
-    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mContainer));
-    nsCOMPtr<nsIContentViewer> viewer;
-
-    if (item) {
-      nsCOMPtr<nsIDocShellTreeItem> parent;
-      item->GetParent(getter_AddRefs(parent));
-
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(parent));
-
-      if (docShell) {
-        docShell->GetContentViewer(getter_AddRefs(viewer));
-      }
-    }
-
-    nsCOMPtr<nsIWebBrowserPrint> wbp(do_QueryInterface(viewer));
+    nsCOMPtr<nsIWebBrowserPrint> wbp;
+    GetParentWebBrowserPrint(mContainer, getter_AddRefs(wbp));
 
     if (wbp) {
       return wbp->GetDoingPrintPreview(aDoingPrintPreview);
