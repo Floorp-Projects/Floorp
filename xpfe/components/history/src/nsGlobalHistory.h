@@ -184,6 +184,7 @@ protected:
   
   static nsresult FindUrlToTokenList(const char *aURL, nsVoidArray& aResult);
   static void FreeTokenList(nsVoidArray& tokens);
+  static void FreeSearchQuery(searchQuery& aQuery);
   static PRBool IsFindResource(nsIRDFResource *aResource);
   void GetFindUriPrefix(const searchQuery& aQuery,
                         const PRBool aDoGroupBy,
