@@ -24,7 +24,6 @@
 #include "nsEditor.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMSelection.h"
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -39,12 +38,12 @@ JoinElementTxn::JoinElementTxn()
   /* log description initialized in parent constructor */
 }
 
-NS_IMETHODIMP JoinElementTxn::Init(nsIEditor  *aEditor,
+NS_IMETHODIMP JoinElementTxn::Init(nsEditor   *aEditor,
                                    nsIDOMNode *aLeftNode,
                                    nsIDOMNode *aRightNode)
 {
-	NS_PRECONDITION((aEditor && aLeftNode && aRightNode), "null arg");
-	if (!aEditor || !aLeftNode || !aRightNode) { return NS_ERROR_NULL_POINTER; }
+  NS_PRECONDITION((aEditor && aLeftNode && aRightNode), "null arg");
+  if (!aEditor || !aLeftNode || !aRightNode) { return NS_ERROR_NULL_POINTER; }
   mEditor = aEditor;
   mLeftNode = do_QueryInterface(aLeftNode);
   mRightNode = do_QueryInterface(aRightNode);
@@ -60,20 +59,20 @@ JoinElementTxn::~JoinElementTxn()
 NS_IMETHODIMP JoinElementTxn::Do(void)
 {
   if (gNoisy) { printf("%p Do Join of %p and %p\n", this, mLeftNode.get(), mRightNode.get()); }
-	NS_PRECONDITION((mEditor && mLeftNode && mRightNode), "null arg");
-	if (!mEditor || !mLeftNode || !mRightNode) { return NS_ERROR_NOT_INITIALIZED; }
+  NS_PRECONDITION((mEditor && mLeftNode && mRightNode), "null arg");
+  if (!mEditor || !mLeftNode || !mRightNode) { return NS_ERROR_NOT_INITIALIZED; }
 
   // get the parent node
   nsCOMPtr<nsIDOMNode>leftParent;
   nsresult result = mLeftNode->GetParentNode(getter_AddRefs(leftParent));
-	if (NS_FAILED(result)) return result;
-	if (!leftParent) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(result)) return result;
+  if (!leftParent) return NS_ERROR_NULL_POINTER;
 
   // verify that mLeftNode and mRightNode have the same parent
   nsCOMPtr<nsIDOMNode>rightParent;
   result = mRightNode->GetParentNode(getter_AddRefs(rightParent));
-	if (NS_FAILED(result)) return result;
-	if (!rightParent) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(result)) return result;
+  if (!rightParent) return NS_ERROR_NULL_POINTER;
 
   if (leftParent==rightParent)
   {
@@ -89,21 +88,16 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
     {
       nsCOMPtr<nsIDOMNodeList> childNodes;
       result = mLeftNode->GetChildNodes(getter_AddRefs(childNodes));
-  	  if (NS_FAILED(result)) return result;
+      if (NS_FAILED(result)) return result;
       if (childNodes) 
       {
         childNodes->GetLength(&mOffset);
       }
     }
-    result = nsEditor::JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
+    result = mEditor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
     if (NS_SUCCEEDED(result))
     {
       if (gNoisy) { printf("  left node = %p removed\n", mLeftNode.get()); }
-      nsCOMPtr<nsIDOMSelection>selection;
-      result = mEditor->GetSelection(getter_AddRefs(selection));
-			if (NS_FAILED(result)) return result;
-			if (!selection) return NS_ERROR_NULL_POINTER;
-      selection->Collapse(mRightNode, mOffset);
     }
   }
   else 

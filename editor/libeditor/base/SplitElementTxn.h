@@ -33,6 +33,8 @@
 0x690c6290, 0xac48, 0x11d2, \
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
+class nsEditor;
+
 /**
  * A transaction that splits an element E into two identical nodes, E1 and E2
  * with the children of E divided between E1 and E2.
@@ -50,7 +52,7 @@ public:
     *                 aOffset may refer to children of aNode, or content of aNode.
     *                 The left node will have child|content 0..aOffset-1.
     */
-  NS_IMETHOD Init (nsIEditor  *aEditor,
+  NS_IMETHOD Init (nsEditor   *aEditor,
                    nsIDOMNode *aNode,
                    PRInt32     aOffset);
 protected:
@@ -93,7 +95,7 @@ protected:
 
   /** the parent shared by mExistingRightNode and mNewLeftNode */
   nsCOMPtr<nsIDOMNode> mParent;
-  nsIEditor*  mEditor;
+  nsEditor*  mEditor;
 
   friend class TransactionFactory;
 

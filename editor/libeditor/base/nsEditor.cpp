@@ -632,6 +632,14 @@ nsEditor::EndPlaceHolderTransaction()
   return NS_OK;
 }
 
+NS_IMETHODIMP nsEditor::ShouldTxnSetSelection(PRBool *aResult)
+{
+  if (!aResult) return NS_ERROR_NULL_POINTER;
+  *aResult = mShouldTxnSetSelection;
+  return NS_OK;
+}
+
+
 // XXX: the rule system should tell us which node to select all on (ie, the root, or the body)
 NS_IMETHODIMP nsEditor::SelectAll()
 {
@@ -1743,24 +1751,24 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
 
   if (NS_SUCCEEDED(result))
   {
-	EditTxn *txn;
-	if (mInIMEMode)
-	{
-	  if (!mIMETextNode)
-	  {
+    EditTxn *txn;
+    if (mInIMEMode)
+    {
+      if (!mIMETextNode)
+      {
         mIMETextNode = nodeAsText;
         mIMETextOffset = offset;
       }
-	  result = CreateTxnForIMEText(aStringToInsert,(IMETextTxn**)&txn); 
-	}
-	else
-	{
-	  result = CreateTxnForInsertText(aStringToInsert, nodeAsText, offset, (InsertTextTxn**)&txn);
-	}
-	if (NS_FAILED(result)) return result;
-	if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
-	
-	// let listeners know whats up
+      result = CreateTxnForIMEText(aStringToInsert,(IMETextTxn**)&txn); 
+    }
+    else
+    {
+      result = CreateTxnForInsertText(aStringToInsert, nodeAsText, offset, (InsertTextTxn**)&txn);
+    }
+    if (NS_FAILED(result)) return result;
+    if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
+    
+    // let listeners know whats up
     PRInt32 i;
     nsIEditActionListener *listener;
     if (mActionListeners)
@@ -1780,7 +1788,7 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
     NS_IF_RELEASE(txn);
     EndUpdateViewBatch();
 
-	// let listeners know what happened
+    // let listeners know what happened
     if (mActionListeners)
     {
       for (i = 0; i < mActionListeners->Count(); i++)
@@ -2024,9 +2032,10 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
   result = TransactionFactory::GetNewTransaction(InsertTextTxn::GetCID(), (EditTxn **)aTxn);
   if (NS_FAILED(result)) return result;
   if (!*aTxn) return NS_ERROR_OUT_OF_MEMORY;
-  result = (*aTxn)->Init(aTextNode, aOffset, aStringToInsert, mPresShellWeak);
+  result = (*aTxn)->Init(aTextNode, aOffset, aStringToInsert, this);
   return result;
 }
+
 
 NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
                               PRUint32             aOffset,
@@ -2037,7 +2046,7 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
   nsAutoRules beginRulesSniffing(this, kOpDeleteText, nsIEditor::ePrevious);
   if (NS_SUCCEEDED(result))  
   {
-	// let listeners know whats up
+    // let listeners know whats up
     PRInt32 i;
     nsIEditActionListener *listener;
     if (mActionListeners)
@@ -2052,7 +2061,7 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
     
     result = Do(txn); 
     
-	// let listeners know what happened
+    // let listeners know what happened
     if (mActionListeners)
     {
       for (i = 0; i < mActionListeners->Count(); i++)
@@ -2127,7 +2136,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
 #pragma mark -
 #endif
 
-// BEGIN nsEditor public static helper methods
+// BEGIN nsEditor public helper methods
 
 nsresult
 nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
@@ -2147,6 +2156,20 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
       (nsnull!=aNewLeftNode) &&
       (nsnull!=aParent))
   {
+    // get selection
+    nsCOMPtr<nsIDOMSelection> selection;
+    GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(result)) return result;
+    if (!selection) return NS_ERROR_NULL_POINTER;
+
+    // remember some selection points
+    nsCOMPtr<nsIDOMNode> selStartNode, selEndNode;
+    PRInt32 selStartOffset, selEndOffset;
+    result = GetStartNodeAndOffset(selection, &selStartNode, &selStartOffset);
+    if (NS_FAILED(result)) return result;
+    result = GetEndNodeAndOffset(selection, &selEndNode, &selEndOffset);
+    if (NS_FAILED(result)) return result;
+
     nsCOMPtr<nsIDOMNode> resultNode;
     result = aParent->InsertBefore(aNewLeftNode, aExistingRightNode, getter_AddRefs(resultNode));
     //printf("  after insert\n"); content->List();  // DEBUG
@@ -2197,6 +2220,41 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
             }
           }        
         }
+        // handle selection
+        if (GetShouldTxnSetSelection())
+        {
+          // editor wants us to set selection at split point
+          selection->Collapse(aNewLeftNode, aOffset);
+        }
+        else
+        {
+          // and adjust the selection if needed
+          // HACK: this is overly simplified - multi-range selections need more work than this
+          if (selStartNode == aExistingRightNode)
+          {
+            if (selStartOffset < aOffset)
+            {
+              selStartNode = aNewLeftNode;
+            }
+            else
+            {
+              selStartOffset -= aOffset;
+            }
+          }
+          if (selEndNode == aExistingRightNode)
+          {
+            if (selEndOffset < aOffset)
+            {
+              selEndNode = aNewLeftNode;
+            }
+            else
+            {
+              selEndOffset -= aOffset;
+            }
+          }
+          selection->Collapse(selStartNode,selStartOffset);
+          selection->Extend(selEndNode,selEndOffset);
+        }
       }
     }
   }
@@ -2213,14 +2271,28 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
                         PRBool       aNodeToKeepIsFirst)
 {
   nsresult result = NS_OK;
-  NS_ASSERTION(((nsnull!=aNodeToKeep) &&
-                (nsnull!=aNodeToJoin) &&
-                (nsnull!=aParent)),
-                "null arg");
-  if ((nsnull!=aNodeToKeep) &&
-      (nsnull!=aNodeToJoin) &&
-      (nsnull!=aParent))
+  NS_ASSERTION(aNodeToKeep && aNodeToJoin && aParent, "null arg");
+  if (aNodeToKeep && aNodeToJoin && aParent)
   {
+    // get selection
+    nsCOMPtr<nsIDOMSelection> selection;
+    GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(result)) return result;
+    if (!selection) return NS_ERROR_NULL_POINTER;
+
+    // remember some selection points
+    nsCOMPtr<nsIDOMNode> selStartNode, selEndNode;
+    PRInt32 selStartOffset, selEndOffset;
+    result = GetStartNodeAndOffset(selection, &selStartNode, &selStartOffset);
+    if (NS_FAILED(result)) return result;
+    result = GetEndNodeAndOffset(selection, &selEndNode, &selEndOffset);
+    if (NS_FAILED(result)) return result;
+    PRUint32 firstNodeLength;
+    nsCOMPtr<nsIDOMNode> leftNode = aNodeToJoin;
+    if (aNodeToKeepIsFirst) leftNode = aNodeToKeep;
+    result = GetLengthOfDOMNode(leftNode, firstNodeLength);
+    if (NS_FAILED(result)) return result;
+    
     // if it's a text node, just shuffle around some text
     nsCOMPtr<nsIDOMCharacterData> keepNodeAsText( do_QueryInterface(aNodeToKeep) );
     nsCOMPtr<nsIDOMCharacterData> joinNodeAsText( do_QueryInterface(aNodeToJoin) );
@@ -2249,9 +2321,9 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
       {
         PRInt32 i;  // must be signed int!
         PRUint32 childCount=0;
-        childNodes->GetLength(&childCount);
         nsCOMPtr<nsIDOMNode> firstNode; //only used if aNodeToKeepIsFirst is false
-        if (PR_FALSE==aNodeToKeepIsFirst)
+        childNodes->GetLength(&childCount);
+        if (!aNodeToKeepIsFirst)
         { // remember the first child in aNodeToKeep, we'll insert all the children of aNodeToJoin in front of it
           result = aNodeToKeep->GetFirstChild(getter_AddRefs(firstNode));  
           // GetFirstChild returns nsnull firstNode if aNodeToKeep has no children, that's ok.
@@ -2265,7 +2337,7 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
           result = childNodes->Item(i, getter_AddRefs(childNode));
           if ((NS_SUCCEEDED(result)) && (childNode))
           {
-            if (PR_TRUE==aNodeToKeepIsFirst)
+            if (aNodeToKeepIsFirst)
             { // append children of aNodeToJoin
               //was result = aNodeToKeep->AppendChild(childNode, getter_AddRefs(resultNode));
               result = aNodeToKeep->InsertBefore(childNode, previousChild, getter_AddRefs(resultNode));
@@ -2288,6 +2360,35 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     { // delete the extra node
       nsCOMPtr<nsIDOMNode> resultNode;
       result = aParent->RemoveChild(aNodeToJoin, getter_AddRefs(resultNode));
+      
+      if (GetShouldTxnSetSelection())
+      {
+        // editor wants us to set selection at join point
+        selection->Collapse(aNodeToKeep, firstNodeLength);
+      }
+      else
+      {
+        // and adjust the selection if needed
+        // HACK: this is overly simplified - multi-range selections need more work than this
+        if (selStartNode == aNodeToJoin)
+        {
+          selStartNode = aNodeToKeep;
+          if (aNodeToKeepIsFirst)
+          {
+            selStartOffset += firstNodeLength;
+          }
+        }
+        if (selEndNode == aNodeToJoin)
+        {
+          selEndNode = aNodeToKeep;
+          if (aNodeToKeepIsFirst)
+          {
+            selEndOffset += firstNodeLength;
+          }
+        }
+        selection->Collapse(selStartNode,selStartOffset);
+        selection->Extend(selEndNode,selEndOffset);
+      }
     }
   }
   else
@@ -3998,13 +4099,13 @@ nsresult nsEditor::EndUpdateViewBatch()
 {
   NS_PRECONDITION(mUpdateCount>0, "bad state");
   
-  nsCOMPtr<nsIPresShell>	presShell;
+  nsCOMPtr<nsIPresShell>    presShell;
   nsresult  rv = GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(rv))
     return rv;
     
   StCaretHider caretHider(presShell);
-    	
+        
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(selectionResult) && selection) {
@@ -4028,6 +4129,18 @@ nsresult nsEditor::EndUpdateViewBatch()
   return NS_OK;
 }
 
+PRBool 
+nsEditor::GetShouldTxnSetSelection()
+{
+  return mShouldTxnSetSelection;
+}
+
+
+void   
+nsEditor::SetShouldTxnSetSelection(PRBool aShould)
+{
+  mShouldTxnSetSelection = aShould;
+}
 
 #ifdef XP_MAC
 #pragma mark -
@@ -4270,7 +4383,7 @@ nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
 {
   NS_ASSERTION(aTxn, "illegal value- null ptr- aTxn");
   if(!aTxn) return NS_ERROR_NULL_POINTER;
- 	
+     
   nsresult  result;
 
   result = TransactionFactory::GetNewTransaction(IMETextTxn::GetCID(), (EditTxn **)aTxn);

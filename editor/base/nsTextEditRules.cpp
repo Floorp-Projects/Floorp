@@ -1080,9 +1080,6 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
               res = mEditor->JoinNodes(selectedNode, siblingNode, parentNode);
               if (NS_FAILED(res)) return res;
               // selectedNode will remain after the join, siblingNode is removed
-              // set selection
-              res = aSelection->Collapse(siblingNode, selectedNodeLength);
-              if (NS_FAILED(res)) return res;
             }
           }
           // if, after all this work, selectedNode is empty, delete it

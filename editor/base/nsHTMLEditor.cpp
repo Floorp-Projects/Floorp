@@ -1818,13 +1818,9 @@ NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
   //Kinda sad to waste memory just to force lower case
   nsAutoString tag = aParagraphFormat;
   tag.ToLowerCase();
-  if (tag == "normal") 
-  {
-    res = InsertBasicBlock("p");
-  } 
   //XXX: TODO: Do we really want to support setting list types here?
   // If yes, we need to add "dd", "dt" for <dl> support 
-  else if (tag == "li") 
+  if (tag == "li") 
   {
     //XXX: Why do we assume "ul" What about "ol"? This will change an OL into a UL list!
     res = MakeOrChangeList("ul");

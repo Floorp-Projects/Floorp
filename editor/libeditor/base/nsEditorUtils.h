@@ -107,5 +107,36 @@ class nsAutoRules
 };
 
 
+/***************************************************************************
+ * stack based helper class for turning off active selection adjustment
+ * by low level transactions
+ */
+class nsAutoTxnsConserveSelection
+{
+  public:
+  
+  nsAutoTxnsConserveSelection(nsEditor *ed) : mEd(ed), mOldState(PR_TRUE)
+  {
+    if (mEd) 
+    {
+      mOldState = mEd->GetShouldTxnSetSelection();
+      mEd->SetShouldTxnSetSelection(PR_FALSE);
+    }
+  }
+  
+  ~nsAutoTxnsConserveSelection() 
+  {
+    if (mEd) 
+    {
+      mEd->SetShouldTxnSetSelection(mOldState);
+    }
+  }
+  
+  protected:
+  nsEditor *mEd;
+  PRBool mOldState;
+};
+
+
 
 #endif // nsEditorUtils_h__

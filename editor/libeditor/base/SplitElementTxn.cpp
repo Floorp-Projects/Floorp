@@ -41,12 +41,12 @@ SplitElementTxn::SplitElementTxn()
   /* log description initialized in parent constructor */
 }
 
-NS_IMETHODIMP SplitElementTxn::Init(nsIEditor  *aEditor,
+NS_IMETHODIMP SplitElementTxn::Init(nsEditor   *aEditor,
                                     nsIDOMNode *aNode,
                                     PRInt32     aOffset)
 {
-	NS_ASSERTION(aEditor && aNode, "bad args");
-	if (!aEditor || !aNode) { return NS_ERROR_NOT_INITIALIZED; }
+  NS_ASSERTION(aEditor && aNode, "bad args");
+  if (!aEditor || !aNode) { return NS_ERROR_NOT_INITIALIZED; }
 
   mEditor = aEditor;
   mExistingRightNode = do_QueryInterface(aNode);
@@ -67,17 +67,17 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
   // create a new node
   nsresult result = mExistingRightNode->CloneNode(PR_FALSE, getter_AddRefs(mNewLeftNode));
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewLeftNode)), "could not create element.");
-	if (NS_FAILED(result)) return result;
-	if (!mNewLeftNode) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(result)) return result;
+  if (!mNewLeftNode) return NS_ERROR_NULL_POINTER;
 
   if (gNoisy) { printf("  created left node = %p\n", mNewLeftNode.get()); }
   // get the parent node
   result = mExistingRightNode->GetParentNode(getter_AddRefs(mParent));
-	if (NS_FAILED(result)) return result;
-	if (!mParent) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(result)) return result;
+  if (!mParent) return NS_ERROR_NULL_POINTER;
 
   // insert the new node
-  result = nsEditor::SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+  result = mEditor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
   if (NS_SUCCEEDED(result) && mNewLeftNode)
   {
     // Insert formatting whitespace for the new node:
@@ -85,8 +85,8 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
 
     nsCOMPtr<nsIDOMSelection>selection;
     mEditor->GetSelection(getter_AddRefs(selection));
-		if (NS_FAILED(result)) return result;
-		if (!selection) return NS_ERROR_NULL_POINTER;
+    if (NS_FAILED(result)) return result;
+    if (!selection) return NS_ERROR_NULL_POINTER;
     result = selection->Collapse(mNewLeftNode, mOffset);
   }
   else {
@@ -107,8 +107,7 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
   }
 
   // this assumes Do inserted the new node in front of the prior existing node
-  nsresult result;
-  result = nsEditor::JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
+  nsresult result = mEditor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
   if (gNoisy) 
   { 
     printf("** after join left child node %p into right node %p\n", mNewLeftNode.get(), mExistingRightNode.get());
@@ -117,14 +116,6 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
   if (NS_SUCCEEDED(result))
   {
     if (gNoisy) { printf("  left node = %p removed\n", mNewLeftNode.get()); }
-    nsCOMPtr<nsIDOMSelection>selection;
-    mEditor->GetSelection(getter_AddRefs(selection));
-		if (NS_FAILED(result)) return result;
-		if (!selection) return NS_ERROR_NULL_POINTER;
-    result = selection->Collapse(mExistingRightNode, mOffset);
-  }
-  else {
-    result = NS_ERROR_NOT_IMPLEMENTED;
   }
   return result;
 }

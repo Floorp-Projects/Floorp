@@ -212,6 +212,7 @@ public:
 
   NS_IMETHOD BeginPlaceHolderTransaction(nsIAtom *aName)=0;
   NS_IMETHOD EndPlaceHolderTransaction()=0;
+  NS_IMETHOD ShouldTxnSetSelection(PRBool *aResult)=0;
 
   /* ------------ Clipboard methods -------------- */
 

@@ -103,16 +103,25 @@ NS_IMETHODIMP InsertElementTxn::Do(void)
 
   nsCOMPtr<nsIDOMNode> resultNode;
   result = mParent->InsertBefore(mNode, refNode, getter_AddRefs(resultNode));
-	if (NS_FAILED(result)) return result;
-	if (!resultNode) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(result)) return result;
+  if (!resultNode) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMSelection> selection;
-  result = mEditor->GetSelection(getter_AddRefs(selection));
-	if (NS_FAILED(result)) return result;
-	if (!selection) return NS_ERROR_NULL_POINTER;
-  // place the selection just after the inserted element
-  selection->Collapse(mParent, mOffset+1);
-  //selection->Extend(mParent, mOffset+1);
+  // only set selection to insertion point if editor gives permission
+  PRBool bAdjustSelection;
+  mEditor->ShouldTxnSetSelection(&bAdjustSelection);
+  if (bAdjustSelection)
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(result)) return result;
+    if (!selection) return NS_ERROR_NULL_POINTER;
+    // place the selection just after the inserted element
+    selection->Collapse(mParent, mOffset+1);
+  }
+  else
+  {
+    // do nothing - dom range gravity will adjust selection
+  }
   return result;
 }
 
