@@ -1676,13 +1676,13 @@ nsMsgComposeAndSend::DeliverFileAsMail ()
 
 	PL_strcpy (buf, "");
 	buf2 = buf + PL_strlen (buf);
-	if (mCompFields->GetTo())
+	if (mCompFields->GetTo() && *mCompFields->GetTo())
 		PL_strcat (buf2, mCompFields->GetTo());
-	if (mCompFields->GetCc()) {
+	if (mCompFields->GetCc() && *mCompFields->GetCc()) {
 		if (*buf2) PL_strcat (buf2, ",");
 			PL_strcat (buf2, mCompFields->GetCc());
 	}
-	if (mCompFields->GetBcc()) {
+	if (mCompFields->GetBcc() && *mCompFields->GetBcc()) {
 		if (*buf2) PL_strcat (buf2, ",");
 			PL_strcat (buf2, mCompFields->GetBcc());
 	}
