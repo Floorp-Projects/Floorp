@@ -63,8 +63,7 @@
 #include "xpassert.h"
 #include "xp_str.h"
 
-/* WHS TEMPORARY */
-#define XP_QSORT qsort
+#include "nsQuickSort.h"
 
 #if defined(XP_MAC) && defined (__MWERKS__)
 /* Can't get the xp people to fix warnings... */
@@ -935,7 +934,7 @@ pref_savePref(PRHashEntry *he, int i, void *arg)
 }
 
 PR_IMPLEMENT(int)
-pref_CompareStrings (const void *v1, const void *v2)
+pref_CompareStrings (const void *v1, const void *v2, void *data)
 {
 	char *s1 = *(char**) v1;
 	char *s2 = *(char**) v2;
@@ -1016,7 +1015,7 @@ PREF_SavePrefFileWith(const char *filename, PRHashEnumerator heSaveProc)
 		PR_HashTableEnumerateEntries(m_HashTable, heSaveProc, valueArray);
 		
 		/* Sort the preferences to make a readable file on disk */
-		XP_QSORT(valueArray, m_HashTable->nentries, sizeof(char*), pref_CompareStrings);
+		nsQuickSort(valueArray, m_HashTable->nentries, sizeof(char*), pref_CompareStrings, NULL);
 		for (valueIdx = 0; valueIdx < m_HashTable->nentries; valueIdx++)
 		{
 			if (valueArray[valueIdx])
