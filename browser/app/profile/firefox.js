@@ -77,7 +77,7 @@ pref("update.severity", 0);
 pref("update.extensions.count", 0);
 
 pref("keyword.enabled", true);
-pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
+pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&sourceid=mozilla-search&q=");
 
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
