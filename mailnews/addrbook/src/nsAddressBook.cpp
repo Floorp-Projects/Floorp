@@ -89,6 +89,8 @@
 #include "nsAutoPtr.h"
 #include "nsIMsgVCardService.h"
 
+#include "nsCRT.h"
+
 // according to RFC 2849
 // SEP = (CR LF / LF)
 // so we LF for unix and beos (since that is the natural line ending for
@@ -580,7 +582,7 @@ nsresult AddressBookParser::str_parse_line(
     }
 
     /* trim any space between type and : */
-    for ( p = s - 1; p > line && nsString::IsSpace( *p ); p-- ) {
+    for ( p = s - 1; p > line && nsCRT::IsAsciiSpace( *p ); p-- ) {
         *p = '\0';
     }
     *s++ = '\0';

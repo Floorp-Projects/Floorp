@@ -1110,25 +1110,6 @@ nsString::EqualsWithConversion( const char* aString, PRBool aIgnoreCase, PRInt32
     return CompareWithConversion(aString, aIgnoreCase, aCount) == 0;
   }
 
-PRBool
-nsString::IsASCII( const PRUnichar* aBuffer )
-  {
-    // XXX nsDependentString will compute the length of aBuffer and that is
-    // something we could potentially optimize away, but there probably isn't
-    // much point to doing so since this function is obsolete.
-
-    return ::IsASCII(aBuffer ?
-        NS_STATIC_CAST(const self_type&, nsDependentString(aBuffer)) : *this);
-  }
-
-PRBool
-nsString::IsSpace( PRUnichar c )
-  {
-    // XXX i18n
-    return (c == ' ') || (c == '\r') || (c == '\n') || (c == '\t');
-  }
-
-  
   /**
    * ToCString, ToFloat, ToInteger
    */

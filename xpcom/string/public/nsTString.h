@@ -268,26 +268,6 @@ class nsTString_CharT : public nsTSubstring_CharT
 
 
         /**
-         *  Determine if given buffer is plain ascii
-         *  
-         *  @param   aBuffer -- if null, then we test *this, otherwise we test given buffer
-         *  @return  TRUE if is all ascii chars or if strlen==0
-         */
-
-      NS_COM PRBool IsASCII(const PRUnichar* aBuffer=0);
-
-
-        /**
-         *  Determine if given char is a valid space character
-         *  
-         *  @param   aChar is character to be tested
-         *  @return  TRUE if is valid space char
-         */
-
-      NS_COM static PRBool IsSpace(PRUnichar ch);
-
-      
-        /**
          * Copies data from internal buffer onto given char* buffer
          *
          * NOTE: This only copies as many chars as will fit in given buffer (clips)
