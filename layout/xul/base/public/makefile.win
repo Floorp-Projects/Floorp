@@ -39,6 +39,6 @@ XPIDLSRCS=      .\nsIBoxObject.idl                  \
                 .\nsIEditorBoxObject.idl \
                 $(NULL)
 
-MODULE=raptor 
+MODULE=layout_xul
 
 include <$(DEPTH)\config\rules.mak>
