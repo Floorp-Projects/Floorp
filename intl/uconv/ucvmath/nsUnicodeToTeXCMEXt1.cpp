@@ -54,12 +54,6 @@ nsUnicodeToTeXCMEXt1::nsUnicodeToTeXCMEXt1()
 {
 }
 
-nsresult nsUnicodeToTeXCMEXt1::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToTeXCMEXt1();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
