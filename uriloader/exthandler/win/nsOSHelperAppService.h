@@ -40,6 +40,7 @@ public:
   // override nsIExternalHelperAppService methods....
   NS_IMETHOD CanHandleContent(const char *aMimeContentType, nsIURI * aURI, PRBool *_retval);
   NS_IMETHOD DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, PRBool *aAbortProcess, nsIStreamListener **_retval);
+  NS_IMETHOD LaunchAppWithTempFile(nsIFile * aTempFile, nsISupports * aAppCookie);
 
 protected:
 
