@@ -30,13 +30,13 @@ CPPSRCS =			 \
 	nsJSWindowCollection.cpp \
 	nsGlobalWindow.cpp       \
 	nsLocation.cpp		 \
-	nsFrameList.cpp		 \
+	nsDOMWindowList.cpp	 \
 	nsJSSecurityManager.cpp  \
 	nsJSUtils.cpp		 \
-	nsScreen.cpp	\
-	nsJSScreen.cpp \
-	nsHistory.cpp	\
-	nsJSHistory.cpp	\
+	nsScreen.cpp		 \
+	nsJSScreen.cpp		 \
+	nsHistory.cpp		 \
+	nsJSHistory.cpp		 \
 	$(NULL)
 
 EXPORTS=nsJSUtils.h
@@ -52,14 +52,14 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSNavigator.obj		\
 	.\$(OBJDIR)\nsLocation.obj		\
 	.\$(OBJDIR)\nsJSLocation.obj		\
-	.\$(OBJDIR)\nsFrameList.obj		\
+	.\$(OBJDIR)\nsDOMWindowList.obj		\
 	.\$(OBJDIR)\nsJSWindowCollection.obj	\
 	.\$(OBJDIR)\nsJSSecurityManager.obj	\
-	 .\$(OBJDIR)\nsJSUtils.obj		\
-	 .\$(OBJDIR)\nsScreen.obj		\
-	 .\$(OBJDIR)\nsJSScreen.obj		\
-	 .\$(OBJDIR)\nsHistory.obj		\
-	 .\$(OBJDIR)\nsJSHistory.obj		\
+	.\$(OBJDIR)\nsJSUtils.obj		\
+	.\$(OBJDIR)\nsScreen.obj		\
+	.\$(OBJDIR)\nsJSScreen.obj		\
+	.\$(OBJDIR)\nsHistory.obj		\
+	.\$(OBJDIR)\nsJSHistory.obj		\
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
