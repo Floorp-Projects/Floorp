@@ -68,7 +68,7 @@ if ($query->param()) {
     exit 0;
   } elsif ($query->param(saveas) eq "1") {
     print "Content-type: text/saveas\n\n";
-    print print_script();
+    print $query->param(code-to-save);
     exit 0;
   }
 }
@@ -117,6 +117,7 @@ sub print_script_preview {
       <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/base/template.css"  media="screen">
       <link rel="stylesheet" type="text/css" href="http://www.mozilla.org/css/cavendish/template.css" title="Cavendish" media="screen">
       <link rel="icon" href="http://www.mozilla.org/images/mozilla-16.png" type="image/png">
+      <style type="text/css">textarea { border: 1px solid black; }</style>
     </HEAD>
     <body>
 
@@ -143,8 +144,11 @@ sub print_script_preview {
   my $script = &print_script;
 
       print qq(
+<!--
       <pre class="code">$script</pre>
+-->
   
+      <textarea name="code-to-save" cols="60">$script</textarea>
       <p><input type='submit' value='Save the script'>
 	</form>
 
