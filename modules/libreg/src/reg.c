@@ -49,10 +49,6 @@
   #include <unistd.h>  /* for SEEK_SET */
 #endif /* SUNOS4 */
 
-#ifdef XP_MAC
-#include "prmacos.h"
-#endif
-
 #include "reg.h"
 #include "NSReg.h"
 
