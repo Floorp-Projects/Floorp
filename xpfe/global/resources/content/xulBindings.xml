@@ -662,7 +662,7 @@
 	</content>
   </binding>
 
-  <binding id="arrowscrollbox" extends="xul:stack">
+  <binding id="arrowscrollbox">
     <content>
 	  <xul:vbox 
 	  onunderflow="
