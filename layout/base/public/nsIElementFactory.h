@@ -46,7 +46,7 @@ public:
 #define NS_ELEMENT_FACTORY_PROGID          "component://netscape/layout/element-factory"
 #define NS_ELEMENT_FACTORY_PROGID_PREFIX   NS_ELEMENT_FACTORY_PROGID "?namespace="
 
-#define NS_HTML_NAMESPACE                  "http://www.w3.org/TR/REC-html40"
+#define NS_HTML_NAMESPACE                  "http://www.w3.org/1999/xhtml"
 #define NS_XML_NAMESPACE                   "http://www.w3.org/XML/1998/namespace"
  
 #define NS_HTML_ELEMENT_FACTORY_PROGID     NS_ELEMENT_FACTORY_PROGID_PREFIX NS_HTML_NAMESPACE

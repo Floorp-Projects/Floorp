@@ -1222,7 +1222,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
     nsCOMPtr<nsIDOMElement>brElement;
     nsString qualifiedTag;
     qualifiedTag.AssignWithConversion("html:br");
-    res = domDoc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/TR/REC-html40"), qualifiedTag, getter_AddRefs(brElement));
+    res = domDoc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/1999/xhtml"), qualifiedTag, getter_AddRefs(brElement));
     if (NS_FAILED(res)) return res;
     
     // set mBogusNode to be the newly created <br>

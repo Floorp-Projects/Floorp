@@ -31,7 +31,7 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
 
 <window title="&bookmarksWindowTitle.label;" id="bookmark-window" onunload="doUnload()"
-  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

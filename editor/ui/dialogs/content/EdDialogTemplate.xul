@@ -32,7 +32,7 @@
 <!-- WE SHOULD NOT USE ABSOLUTE WITH AND HEIGHT - USE BOXES INSTEAD? -->
 <xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
     orient="vertical">
 

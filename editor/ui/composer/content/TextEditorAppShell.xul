@@ -31,7 +31,7 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
 
 <!-- NOTE: If we don't have "title" set, text editor doesn't work! -->
-<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TextEditorOnLoad()"
         onunload="EditorShutdown()"

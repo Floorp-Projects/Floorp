@@ -67,11 +67,11 @@ function addToToc(root, tocFrame)
 
       // Create the image and toggling container in the table of contents
       if (i < searchTags.length-1) {
-        var img = document.createElementNS("http://www.w3.org/TR/REC-html40","html:img");
+        var img = document.createElementNS("http://www.w3.org/1999/xhtml","html:img");
         img.src = "minus.gif";
         newTocElement.insertBefore(img,newTocLink);
  
-        newTocFrame = document.createElementNS("http://www.w3.org/TR/REC-html40","div");
+        newTocFrame = document.createElementNS("http://www.w3.org/1999/xhtml","div");
         newTocElement.appendChild(newTocFrame);
       }
       else {

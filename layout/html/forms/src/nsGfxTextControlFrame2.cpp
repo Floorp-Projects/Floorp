@@ -1232,7 +1232,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 ////
   NS_WITH_SERVICE(nsIElementFactory, elementFactory,
                   NS_ELEMENT_FACTORY_PROGID_PREFIX
-                  "http://www.w3.org/TR/REC-html40",
+                  "http://www.w3.org/1999/xhtml",
                   &rv);
   if (!elementFactory)
     return NS_ERROR_FAILURE;

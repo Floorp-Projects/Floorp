@@ -39,7 +39,7 @@
 ]>
 
 <window
-  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   width="475" height="335"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
   class="color-dialog profile"

@@ -61,7 +61,7 @@ static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
 static const char* kDocTypeDeclPrefix = "<!DOCTYPE";
 static const char* kChromeProtocol = "chrome";
 static const char* kDTDDirectory = "dtd/";
-static const char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";
+static const char kHTMLNameSpaceURI[] = "http://www.w3.org/1999/xhtml";
 
 const nsIID&
 nsExpatTokenizer::GetIID()

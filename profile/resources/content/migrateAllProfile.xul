@@ -4,7 +4,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/profileManagerMigrateAll.dtd" >
 <window
-  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&title;" width="300" height="120">

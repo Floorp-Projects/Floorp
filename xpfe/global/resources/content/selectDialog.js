@@ -62,7 +62,7 @@ function selectDialogOnLoad() {
       }
 
       // This is needed when the default namespace of the document is XUL
-      breakNode = document.createElementWithNameSpace("BR", "http://www.w3.org/TR/REC-html40");
+      breakNode = document.createElementWithNameSpace("BR", "http://www.w3.org/1999/xhtml");
       if (breakNode) {
         messageParent.appendChild(breakNode);
       }

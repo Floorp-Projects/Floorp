@@ -2,7 +2,7 @@
 <?xml-stylesheet href="layout.css" type="text/css"?>
 <!DOCTYPE Documentation>
 
-<Documentation xmlns:html="http://www.w3.org/TR/REC-HTML40"
+<Documentation xmlns:html="http://www.w3.org/1999/xhtml"
                xmlns:xlink="http://www.w3.org/1999/xlink">
 
 <Title>Gecko Layout Engine</Title>

@@ -26,7 +26,7 @@
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window>
-<window id="xmlterm-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window id="xmlterm-window" xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="StartupXMLTerm();"
         title="xmlterm" align="vertical" width="586" height="412">
