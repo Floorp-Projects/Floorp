@@ -38,6 +38,7 @@
 #include "nsIPref.h"
 #include "nsILocaleService.h"
 #include "nsLocaleCID.h"
+#include "nsQuickSort.h"
 #include "nsObjectArray.h"
 
 static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
@@ -146,12 +147,6 @@ private:
       nsICharsetConverterManager * aCCMan);
   PRInt32 FindItem(nsObjectArray * aArray, nsString * aCharset, 
       nsMenuItem ** aResult);
-  PRInt32 CompareItemTitle(nsMenuItem * aItem1, nsMenuItem * aItem2, 
-      nsICollation * aCollation);
-  void QuickSort(nsMenuItem ** aArray, PRInt32 aLow, PRInt32 aHigh, 
-      nsICollation * aCollation);
-  PRInt32 QSPartition(nsMenuItem ** aArray, PRInt32 aLow, PRInt32 aHigh, 
-      nsICollation * aCollation);
   nsresult GetCollation(nsICollation ** aCollation);
   nsresult NewRDFContainer(nsIRDFDataSource * aDataSource, 
       nsIRDFResource * aResource, nsIRDFContainer ** aResult);
@@ -215,6 +210,8 @@ public:
   NS_IMETHOD DoCommand(nsISupportsArray* aSources, nsIRDFResource*   aCommand, 
       nsISupportsArray* aArguments);
 };
+
+static int CompareItemTitle(const void* aArg1, const void* aArg2, void *data);
 
 //----------------------------------------------------------------------------
 // Global functions and data [implementation]
@@ -539,7 +536,8 @@ nsresult nsCharsetMenu::InitBrowserMoreMenu(nsIRDFService * aRDFServ,
   // reorder the array
   nsCOMPtr<nsICollation> collation = nsnull;
   res = GetCollation(getter_AddRefs(collation));
-  if (NS_SUCCEEDED(res)) QuickSort(array, 0, size - 1, collation);
+  if (NS_SUCCEEDED(res)) 
+      NS_QuickSort(array, size, sizeof(*array), CompareItemTitle, collation);
 
   for (i=0; i < size; i++) 
       AddItemToContainer(aRDFServ, aCCMan, container, array[i]);
@@ -757,55 +755,17 @@ PRInt32 nsCharsetMenu::FindItem(nsObjectArray * aArray,
   return -1;
 }
 
-PRInt32 nsCharsetMenu::CompareItemTitle(nsMenuItem * aItem1, 
-                                        nsMenuItem * aItem2,
-                                        nsICollation * aCollation)
+static int CompareItemTitle(const void* aArg1, const void* aArg2, void *data)
 {
   PRInt32 res; 
-  aCollation->CompareString(kCollationStrengthDefault, *aItem1->mTitle, 
+  nsMenuItem * aItem1 = *((nsMenuItem **) aArg1);
+  nsMenuItem * aItem2 = *((nsMenuItem **) aArg2);
+  nsICollation * aCollation = (nsICollation *) data;
+
+  aCollation->CompareString(kCollationCaseInSensitive, *aItem1->mTitle, 
       *aItem2->mTitle, &res);
 
   return res;
-}
-
-// XXX use already available QS rutine
-void nsCharsetMenu::QuickSort(nsMenuItem ** aArray, PRInt32 aLow, 
-                              PRInt32 aHigh, nsICollation * aCollation)
-{
-  PRInt32 pivot;
-
-  // termination condition
-  if (aHigh > aLow) {
-    pivot = QSPartition(aArray, aLow, aHigh, aCollation);
-    QuickSort(aArray, aLow, pivot-1, aCollation);
-    QuickSort(aArray, pivot+1, aHigh, aCollation);
-  }
-}
-
-// XXX improve performance by generating and storing collation keys
-PRInt32 nsCharsetMenu::QSPartition(nsMenuItem ** aArray, PRInt32 aLow, 
-                                   PRInt32 aHigh, nsICollation * aCollation)
-{
-  PRInt32 left, right;
-  nsMenuItem * pivot_item;
-  pivot_item = aArray[aLow];
-  left = aLow;
-  right = aHigh;
-  while ( left < right ) {
-    /* Move left while item < pivot */
-    while ((CompareItemTitle(aArray[left], pivot_item, aCollation) <= 0) && (left < right)) left++;
-    /* Move right while item > pivot */
-    while (CompareItemTitle(aArray[right], pivot_item, aCollation) > 0) right--;
-    if (left < right) {
-      nsMenuItem * temp = aArray[left];
-      aArray[left] = aArray[right];
-      aArray[right] = temp;
-    }
-  }
-  /* right is final position for the pivot */
-  aArray[aLow] = aArray[right];
-  aArray[right] = pivot_item;
-  return right;
 }
 
 nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
