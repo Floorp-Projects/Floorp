@@ -4169,7 +4169,7 @@ void SECMOD_InitCallOnce(void) {
     PORT_Assert(NULL != mod_init.cv);
 }
 
-void SECMOD_CleanupCallOnce()
+void SECMOD_CleanupCallOnce(void)
 {
     if (mod_init.ml) {
 	PR_DestroyLock(mod_init.ml);
