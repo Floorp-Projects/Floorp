@@ -144,6 +144,16 @@ protected:
     nsDeque*  mTokenCache[eToken_last-1];
 };
 
+/************************************************************************
+  ITagHandler class offers an API for taking care of specific tokens.
+ ************************************************************************/
+class nsITagHandler {
+public:
+  
+  virtual PRBool  HandleToken(CToken* aToken,nsIDTD* aDTD)=0;
+  virtual PRBool  HandleCapturedTokens(CToke* aToken,nsIDTD* aDTD)=0;
+};
+
 
 #endif
 
