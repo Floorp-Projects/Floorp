@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.6 $
+ *  Version: $Revision: 1.7 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.6 2000/05/09 11:33:41 mj%digicool.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.7 2000/05/25 20:10:47 mj%digicool.com Exp $
  */
 
 /*
@@ -835,7 +835,7 @@ Value.prototype = {
     set value(val) {
         // accepts [0-9]+ or x[0-9a-fA-F]+ and returns the character.
         function entityTrans(substr, code) {
-            'return String.fromCharCode("0" + code);';
+            return String.fromCharCode("0" + code);
         }
         
         switch (this.type) {
