@@ -449,13 +449,19 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
   while((theDTDIndex<=gSharedObjects.mDTDDeque.GetSize()) && (aParserContext.mAutoDetectStatus!=ePrimaryDetect)){
     theDTD=(nsIDTD*)gSharedObjects.mDTDDeque.ObjectAt(theDTDIndex++);
     if(theDTD) {
-      aParserContext.mAutoDetectStatus=theDTD->CanParse(aParserContext,aBuffer,0);
-      if(eValidDetect==aParserContext.mAutoDetectStatus){
+      // Store detect status in temp ( theResult ) to avoid bugs such as
+      // 36233, 36754, 36491, 36323. Basically, we should avoid calling DTD's
+      // WillBuildModel() multiple times, i.e., we shouldn't leave auto-detect-status
+      // unknown.
+      eAutoDetectResult theResult=theDTD->CanParse(aParserContext,aBuffer,0);
+      if(eValidDetect==theResult){
+        aParserContext.mAutoDetectStatus=eValidDetect;
         theBestDTD=theDTD;
       }
-      else if(ePrimaryDetect==aParserContext.mAutoDetectStatus) {  
+      else if(ePrimaryDetect==theResult) {  
         theBestDTD=theDTD;
         thePrimaryFound=PR_TRUE;
+        aParserContext.mAutoDetectStatus=ePrimaryDetect;
       }
     }
     if((theDTDIndex==gSharedObjects.mDTDDeque.GetSize()) && (!thePrimaryFound)) {
