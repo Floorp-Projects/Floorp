@@ -278,6 +278,8 @@ extern nsresult NS_NewLegendFrame(nsIFrame*& aResult);
 extern nsresult NS_NewTextControlFrame(nsIFrame*& aResult);
 extern nsresult NS_NewRadioControlFrame(nsIFrame*& aResult);
 extern nsresult NS_NewSelectControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewListControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewComboboxControlFrame(nsIFrame*& aResult);
 
 // table frame factories
 
