@@ -27,7 +27,7 @@ TIMER_LIBS -ltimer_gtk_s
 BASE_LIBS =          \
         -lpref       \
         $(ZLIB_LIBS) \
-        -lreg        \
+        -lmozreg        \
         -l$(MOZ_LIB_JS_PREFIX)js             \
 		$(TIMER_LIBS) \
         -lxpcom      \
