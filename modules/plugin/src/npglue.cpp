@@ -1487,6 +1487,29 @@ np_posturlinternal(NPP npp, const char* relativeURL, const char *target,
             LM_ForceJSEnabled(cx);
             urls->pre_exit_fn = np_redisable_js;
         }
+
+		/* 
+		 * NOTE:  The following (compound) if block was added to avoid the crash
+		 * encountered when np_GetURL is used when the target resolves to replacing
+		 * the context in which the plugin lives, thereby shutting down the context.
+		 * The problem here was that np_GetURL was copying the fe_data pointer
+		 * into owner_data, and that fe_data was being (correctly) deleted and nulled
+		 * somewhere, but not so the owner_data.  Other possible solutions to this
+		 * problem would be to null out the owner_data in the appropriate place,
+		 * or perhaps to call np_GetURL w/ a null exit routine.
+		 */
+		if ((cx == instance->cx) || 
+			(XP_IsChildContext(cx,instance->cx)) ) {
+			/* use NET_GetURL here to avoid crashing... */
+#ifdef XP_WIN32
+			pPrevState = WFE_BeginSetModuleState();
+#endif
+			(void) NET_GetURL(urls, FO_CACHE_AND_PRESENT, cx, NPL_URLExit);
+#ifdef XP_WIN32
+			WFE_EndSetModuleState(pPrevState);
+#endif
+			return NPERR_NO_ERROR;
+		}
 		
 #ifdef XP_MAC
 		/*
