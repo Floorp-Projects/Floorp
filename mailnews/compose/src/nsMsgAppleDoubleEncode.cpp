@@ -35,6 +35,10 @@
 #include "nsMsgAppleCodes.h"
 #include "nsFileSpec.h"
 #include "nsMsgCompUtils.h"
+#include "nsIMIMEService.h"
+#include "nsIMIMEInfo.h"
+
+static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 
 #ifdef XP_MAC
 
@@ -77,70 +81,56 @@ nsMsgIsMacFile(char *aUrlString)
 }
 
 void	
-MacGetFileType(nsFileSpec   *path, 
+MacGetFileType(nsFileSpec   *fs, 
                PRBool       *useDefault, 
                char         **fileType, 
                char         **encoding)
 {
-	if ((path == NULL) || (fileType == NULL) || (encoding == NULL))
+	if ((fs == NULL) || (fileType == NULL) || (encoding == NULL))
 		return;
+
+  if (!fs->Exists())
+    return;
 
 	*useDefault = TRUE;
 	*fileType = NULL;
 	*encoding = NULL;
 
-	char *pathPart = NET_ParseURL( path, GET_PATH_PART);
-	if (pathPart == NULL)
-		return;
+	FInfo		fndrInfo;
+  OSErr err = FSpGetFInfo( &fs, &fndrInfo );
+  if ( (err != noErr) || (fndrInfo.fdType == 'TEXT') )
+    *fileType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
+  else
+  {
+    // At this point, we should call the mime service and
+    // see what we can find out?
+    nsresult      rv;
+    nsIURI        *tURI = nsnull;
+    nsFileURL     tFileURL(fs);
 
-	nsFilePath thePath(pathPart);
-	nsNativeFileSpec spec(thePath);
-	XP_FREE(pathPart);
+    if (NS_SUCCEEDED(nsMsgNewURL(&tURI, tFileURL.GetURLString())) && aURI)
+    {
+      NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
+      if (NS_SUCCEEDED(rv) && mimeFinder) 
+      {
+        nsIMIMEInfo *mimeInfo = nsnull;
+        rv = mimeFinder->GetTypeFromURI(tURI, &mimeInfo);
+        if (NS_SUCCEEDED(rv) && mimeInfo) 
+        {
+          char *mimeType = nsnull;
 
-	CMimeMapper * mapper = CPrefs::sMimeTypes.FindMimeType(spec);
-	if (mapper != NULL)
-	{
-		*useDefault = FALSE;
-		*fileType = nsCRT::strdup(mapper->GetMimeName());
-	}
-	else
-	{
-		FInfo		fndrInfo;
-		OSErr err = FSpGetFInfo( &spec, &fndrInfo );
-		if ( (err != noErr) || (fndrInfo.fdType == 'TEXT') )
-      *fileType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
-		else
-		{
-			// Time to call IC to see if it knows anything
-			ICMapEntry ICMapper;
-			
-			ICError  error = 0;
-			CStr255 fileName( spec.name );
-			error = CInternetConfigInterface::GetInternetConfigFileMapping(
-					fndrInfo.fdType, fndrInfo.fdCreator,  fileName ,  &ICMapper );	
-			if( error != icPrefNotFoundErr && StrLength(ICMapper.MIME_type) )
-			{
-				*useDefault = FALSE;
-				CStr255 mimeName( ICMapper.MIME_type );
-				*fileType = nsCRT::strdup( mimeName );
-			}
-			else
-			{
-				// That failed try using the creator type		
-				mapper = CPrefs::sMimeTypes.FindCreator(fndrInfo.fdCreator);
-				if( mapper)
-				{
-					*useDefault = FALSE;
-					*fileType = nsCRT::strdup(mapper->GetMimeName());
-				}
-				else
-				{
-					// don't have a mime mapper
-					*fileType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
-				}
-			}
-		}
-	}
+          if ( (NS_SUCCEEDED(mimeInfo->GetMIMEType(&mimeType))) && mimeType)
+          {
+            *fileType = mimeType;
+            return;
+          }
+        }        
+      }
+    }
+
+    // If we hit here, return something...default to this...
+    *fileType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
+  }
 }
 
 #pragma cplusplus reset
