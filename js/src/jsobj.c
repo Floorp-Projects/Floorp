@@ -2453,6 +2453,12 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     if (!js_LookupProperty(cx, obj, id, &pobj, (JSProperty **)&sprop))
         return JS_FALSE;
+
+    if (sprop && !OBJ_IS_NATIVE(pobj)) {
+        OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+        sprop = NULL;
+    }
+
     rt = cx->runtime;
     clasp = OBJ_GET_CLASS(cx, obj);
     hash = js_HashId(id);
