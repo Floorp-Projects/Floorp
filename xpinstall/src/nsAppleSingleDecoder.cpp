@@ -29,41 +29,6 @@
 #include "MoreDesktopMgr.h"
 #include "IterateDirectory.h"
 
-OSErr DTSetAPPL(Str255 volName,
-                short vRefNum,
-                OSType creator,
-                long applParID,
-                Str255 applName)
-{
-    OSErr err;
-    DTPBRec *pb = NULL;
-    short dtRefNum;
-    short realVRefNum;
-    Boolean newDTDatabase;
-    /* get the real vRefnum */
-    err = DetermineVRefNum(volName, vRefNum, &realVRefNum);
-    if (err == noErr)
-    {
-        err = DTOpen(volName, vRefNum, &dtRefNum, &newDTDatabase);
-        if (err == noErr && !newDTDatabase)
-        {
-            pb = (DTPBRec*) NewPtrClear( sizeof(DTPBRec) );
-            
-            if (pb==NULL) return -1;
-
-            pb->ioNamePtr      =   applName;
-            pb->ioDTRefNum     =   dtRefNum;
-            pb->ioDirID        =   applParID;
-            pb->ioFileCreator  =   creator;
-
-            err = PBDTAddAPPLSync(pb);
-            
-            if (pb) DisposePtr((Ptr)pb);
-        }        
-    }
-    return err;
-}
-
 /*----------------------------------------------------------------------*
  *   Constructors/Destructor
  *----------------------------------------------------------------------*/
@@ -454,10 +419,10 @@ nsAppleSingleDecoder::ProcessFileDates(ASEntry inEntry)
 	err = PBGetCatInfoSync(&pb);
 	if ( err != noErr )
 		return -1;
-#define YR_2000_SECONDS 3029572800
-	pb.hFileInfo.ioFlCrDat = dates.create + 3029572800;
-	pb.hFileInfo.ioFlMdDat = dates.modify + 3029572800;
-	pb.hFileInfo.ioFlBkDat = dates.backup + 3029572800;
+#define YR_2000_SECONDS 3029529600
+	pb.hFileInfo.ioFlCrDat = dates.create + YR_2000_SECONDS;
+	pb.hFileInfo.ioFlMdDat = dates.modify + YR_2000_SECONDS;
+	pb.hFileInfo.ioFlBkDat = dates.backup + YR_2000_SECONDS;
 	/* Not sure if mac has the last access time */
 	
 	nsAppleSingleDecoder::PLstrncpy(name, mOutSpec->name, mOutSpec->name[0]);
@@ -593,6 +558,41 @@ nsAppleSingleDecoder::EntryToMacFile(ASEntry inEntry, UInt16 inTargetSpecRefNum)
 	}	
 	
 	return err;
+}
+
+OSErr DTSetAPPL(Str255 volName,
+                short vRefNum,
+                OSType creator,
+                long applParID,
+                Str255 applName)
+{
+    OSErr err;
+    DTPBRec *pb = NULL;
+    short dtRefNum;
+    short realVRefNum;
+    Boolean newDTDatabase;
+    /* get the real vRefnum */
+    err = DetermineVRefNum(volName, vRefNum, &realVRefNum);
+    if (err == noErr)
+    {
+        err = DTOpen(volName, vRefNum, &dtRefNum, &newDTDatabase);
+        if (err == noErr && !newDTDatabase)
+        {
+            pb = (DTPBRec*) NewPtrClear( sizeof(DTPBRec) );
+            
+            if (pb==NULL) return -1;
+
+            pb->ioNamePtr      =   applName;
+            pb->ioDTRefNum     =   dtRefNum;
+            pb->ioDirID        =   applParID;
+            pb->ioFileCreator  =   creator;
+
+            err = PBDTAddAPPLSync(pb);
+            
+            if (pb) DisposePtr((Ptr)pb);
+        }        
+    }
+    return err;
 }
 
 OSErr

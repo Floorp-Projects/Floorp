@@ -205,6 +205,18 @@ private:
 	OSErr	FSMakeUnique(FSSpec *ioSpec);
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+OSErr DTSetAPPL(Str255 volName,short vRefNum,OSType creator,long applParID,Str255 applName);
+pascal void
+DecodeDirIterateFilter(const CInfoPBRec * const cpbPtr, Boolean *quitFlag, void *yourDataPtr);
+
+#ifdef __cplusplus
+}
+#endif
+
 #pragma options align=reset
 
 #endif /* _NS_APPLESINGLEDECODER_H_ */
