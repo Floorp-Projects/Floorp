@@ -25,6 +25,7 @@
 
 #include <stdio.h>
 #include "nsGCCache.h"
+#include "nsISupportsUtils.h"
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
 #include <X11/Xlib.h>
@@ -33,8 +34,11 @@
 
 GdkRegion *nsGCCache::copyRegion = NULL;
 
+MOZ_DECL_CTOR_COUNTER(nsGCCache)
+
 nsGCCache::nsGCCache()
 {
+  MOZ_COUNT_CTOR(nsGCCache);
   PR_INIT_CLIST(&GCCache);
   PR_INIT_CLIST(&GCFreeList);
   for (int i = 0; i < GC_CACHE_SIZE; i++) {
@@ -70,6 +74,8 @@ nsGCCache::free_cache_entry(PRCList *clist)
 nsGCCache::~nsGCCache()
 {
   PRCList *head;
+
+  MOZ_COUNT_DTOR(nsGCCache);
 
   ReportStats();
 
