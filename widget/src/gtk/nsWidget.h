@@ -219,6 +219,8 @@ public:
   // release the sButtonMotionTarget if it is set.
   static void DragStarted(void) { DropMotionTarget(); };
 
+  virtual void ThemeChanged();
+
 protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
@@ -236,9 +238,6 @@ protected:
 
 
   PRBool DispatchWindowEvent(nsGUIEvent* event);
-
-  // Return the Gdk window whose background should change
-  virtual GdkWindow *GetWindowForSetBackground();
 
   // this is the "native" destroy code that will destroy any
   // native windows / widgets for this logical widget
@@ -269,8 +268,6 @@ protected:
   // GTK signal installers
   //
   //////////////////////////////////////////////////////////////////
-  void InstallMotionNotifySignal(GtkWidget * aWidget);
-
   void InstallEnterNotifySignal(GtkWidget * aWidget);
 
   void InstallLeaveNotifySignal(GtkWidget * aWidget);
@@ -320,10 +317,6 @@ protected:
   // GTK widget signals
   //
   //////////////////////////////////////////////////////////////////
-
-  static gint MotionNotifySignal(GtkWidget *       aWidget,
-                                 GdkEventMotion *  aGdkMotionEvent,
-                                 gpointer          aData);
 
   static gint EnterNotifySignal(GtkWidget *        aWidget, 
                                 GdkEventCrossing * aGdkCrossingEvent, 
@@ -375,7 +368,6 @@ protected:
   PRInt32       debug_GetRenderXID(GtkWidget * aGtkWidget);
 #endif
 
-  guint32 mGrabTime;
   GtkWidget *mWidget;
   // our mozbox for those native widgets
   GtkWidget *mMozBox;
@@ -394,15 +386,12 @@ protected:
   // this is the rollup listener variables
   static nsCOMPtr<nsIRollupListener> gRollupListener;
   static nsWeakPtr                   gRollupWidget;
-  static PRBool                      gRollupConsumeRollupEvent;
 
   // this is the last time that an event happened.  we keep this
   // around so that we can synth drag events properly
   static guint32 sLastEventTime;
 
 private:
-  static PRUint32 sWidgetCount;
-
   // this will keep track of whether or not the gdk handler
   // is installed yet
   static PRBool mGDKHandlerInstalled;
