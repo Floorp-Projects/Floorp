@@ -1,0 +1,9 @@
+<!ENTITY  mismatch.title          "Incompatible Extensions">
+<!ENTITY  intro1.label            "The following extensions are not compatible with the new version
+                                   of &brandShortName; you have just installed.">
+<!ENTITY  intro2.label            "They have been disabled until compatible versions are 
+                                   installed.">
+<!ENTITY  intro3.label            "&brandShortName; can check for and install newer, compatible 
+                                   versions of these extensions.">
+                                   
+
