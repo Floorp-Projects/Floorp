@@ -390,7 +390,7 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 
 		nsCOMPtr<nsIMsgFolder> folder;
 		rv = message->GetMsgFolder(getter_AddRefs(folder));
-		if(NS_SUCCEEDED(rv))
+		if(NS_SUCCEEDED(rv) && folder)
 		{
 			nsCOMPtr<nsIMsgThread> thread;
 			rv =folder->GetThreadForMessage(message, getter_AddRefs(thread));
