@@ -22,7 +22,7 @@
 
 #include "nsISupports.idl"
 
-[uuid(4A3019E0-1CF3-11d3-A15B-0050041CAF44)]
+[scriptable, uuid(4A3019E0-1CF3-11d3-A15B-0050041CAF44)]
 interface nsINetNotify : nsISupports {
 
 };
