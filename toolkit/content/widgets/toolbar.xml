@@ -210,21 +210,22 @@
             var newItem = null;
             
             // Create special cases of palette items.
+            var uniqueId;
             if (aId == "separator") {
               newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                  "toolbarseparator");
-              var uniqueId = (new Date()).getTime()+this.childNodes.length;
+              uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "separator" + uniqueId;
             } else if (aId == "spring") {
               newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                  "toolbarspring");
-              var uniqueId = (new Date()).getTime()+this.childNodes.length;
+              uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.flex = 1;
               newItem.id = "spring" + uniqueId;
             } else if (aId == "spacer") {
               newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                  "toolbarspacer");
-              var uniqueId = (new Date()).getTime()+this.childNodes.length;
+              uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "spacer" + uniqueId;
             } else {
               // Attempt to locate an item with a matching id within palette.
@@ -240,7 +241,7 @@
             }
             
             if (!newItem)
-              return;
+              return false;
 
             var insertItem = newItem;
             

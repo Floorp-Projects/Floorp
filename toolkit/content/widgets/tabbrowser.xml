@@ -758,10 +758,7 @@
 
             // Now select the new tab before nuking the old one.
             var currentIndex = this.mPanelContainer.selectedIndex;
-            
-            // Now select the new tab before nuking the old one.
-            var currentIndex = this.mPanelContainer.selectedIndex;
-            
+
             var newIndex = -1;
             if (currentIndex > index)
               newIndex = currentIndex-1;
