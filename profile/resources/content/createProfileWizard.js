@@ -128,7 +128,10 @@ function displayPage(content)
 		{
 			contentFrame.setAttribute("src", content);
 		}
-	}
+               //hack for onLoadHandler problem bug #15458
+               var tmpUrl = content.split(".");
+               var tag = tmpUrl[0];
+               wizardPageLoaded(tag);	}
 }
 
 
