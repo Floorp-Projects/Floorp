@@ -68,7 +68,6 @@
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIFileChannel.h"
-#include "nsMPFileLocProvider.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "macstdlibextras.h"
@@ -84,6 +83,8 @@
 #ifdef USE_PROFILES
 #include "CProfileManager.h"
 #include "nsIProfileChangeStatus.h"
+#else
+#include "nsProfileDirServiceProvider.h"
 #endif
 
 static const char* kProgramName = "PPEmbed";
@@ -268,20 +269,25 @@ CBrowserApp::StartUp()
     // to make an nsMPFileLocProvider. This will provide the same file
     // locations as the profile service but always within the specified folder.
     
-    nsCOMPtr<nsIFile> rootDir;   
-    nsMPFileLocProvider *locationProvider = new nsMPFileLocProvider;
-    ThrowIfNil_(locationProvider);
+    nsCOMPtr<nsIFile> rootDir;
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(rootDir));
     ThrowIfNil_(rootDir);
-    rv = locationProvider->Initialize(rootDir, "guest");   
-    ThrowIfError_(rv);
+    rv = rootDir->AppendNative(nsDependentCString("guest"));
+    ThrowIfError_(rv);       
     
-    nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-    ThrowIfNil_(prefs);
-    // Needed because things read default prefs during startup
-    prefs->ResetUserPrefs();
-    prefs->ReadUserPrefs(nsnull);
-
+    nsCOMPtr<nsProfileDirServiceProvider> locProvider;
+    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
+    if (!locProvider)
+      return NS_ERROR_FAILURE;
+    
+    // Directory service holds an strong reference to any
+    // provider that is registered with it. Let it hold the
+    // only ref. locProvider won't die when we leave this scope.
+    rv = locProvider->Register();
+    ThrowIfError_(rv);
+    nsCOMPtr<nsILocalFile> profileDir(do_QueryInterface(rootDir));
+    rv = locProvider->SetProfileDir(profileDir);
+    ThrowIfError_(rv);
 #endif
 
 

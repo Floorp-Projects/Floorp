@@ -163,7 +163,6 @@ endif
 tier_9_dirs	+= \
 		modules/libutil \
 		netwerk \
-		modules/mpfilelocprovider \
 		uriloader \
 		modules/libpref \
 		modules/libimg \
@@ -183,10 +182,10 @@ tier_9_dirs	+= \
 		db \
 		docshell \
 		webshell \
+		profile \
 		embedding \
 		editor \
 		sun-java \
-		profile \
 		themes \
 		$(NULL)
 

@@ -326,12 +326,6 @@ layout/xul/base/src/tree/src/Makefile
 layout/xul/base/src/tree/public/Makefile
 "
 
-MAKEFILES_mpfilelocprovider="
-modules/mpfilelocprovider/Makefile
-modules/mpfilelocprovider/public/Makefile
-modules/mpfilelocprovider/src/Makefile
-"
-
 MAKEFILES_libimg="
 modules/libimg/Makefile
 "
@@ -463,6 +457,9 @@ profile/pref-migrator/public/Makefile
 profile/pref-migrator/src/Makefile
 profile/pref-migrator/resources/Makefile
 profile/defaults/Makefile
+profile/dirserviceprovider/Makefile
+profile/dirserviceprovider/public/Makefile
+profile/dirserviceprovider/src/Makefile
 "
 
 MAKEFILES_rdf="
@@ -1234,7 +1231,6 @@ $MAKEFILES_libutil
 $MAKEFILES_liveconnect
 $MAKEFILES_macmorefiles
 $MAKEFILES_mailnews
-$MAKEFILES_mpfilelocprovider
 $MAKEFILES_oji
 $MAKEFILES_plugin
 $MAKEFILES_netwerk

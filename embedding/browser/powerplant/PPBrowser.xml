@@ -1140,7 +1140,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocproviderDebug.o</PATH>
+                    <PATH>profDirServiceProviderDebug.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -1502,7 +1502,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocproviderDebug.o</PATH>
+                    <PATH>profDirServiceProviderDebug.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2715,7 +2715,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocprovider.o</PATH>
+                    <PATH>profDirServiceProvider.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -2946,7 +2946,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocprovider.o</PATH>
+                    <PATH>profDirServiceProvider.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -4206,7 +4206,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocproviderDebug.o</PATH>
+                    <PATH>profDirServiceProviderDebug.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -4522,7 +4522,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocproviderDebug.o</PATH>
+                    <PATH>profDirServiceProviderDebug.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -5673,7 +5673,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocprovider.o</PATH>
+                    <PATH>profDirServiceProvider.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -5943,7 +5943,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocprovider.o</PATH>
+                    <PATH>profDirServiceProvider.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -6394,7 +6394,7 @@
                 <FILEREF>
                     <TARGETNAME>PPEmbedDebug</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocproviderDebug.o</PATH>
+                    <PATH>profDirServiceProviderDebug.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -6438,7 +6438,7 @@
                 <FILEREF>
                     <TARGETNAME>PPEmbedCarbon</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>mpfilelocprovider.o</PATH>
+                    <PATH>profDirServiceProvider.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>

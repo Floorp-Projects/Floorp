@@ -49,7 +49,7 @@
 #include <nsIFocusController.h>
 
 // for profiles
-#include <nsMPFileLocProvider.h>
+#include <nsProfileDirServiceProvider.h>
 
 // all of our local includes
 #include "EmbedPrivate.h"
@@ -784,33 +784,28 @@ EmbedPrivate::StartupProfile(void)
   if (sProfileDir && sProfileName) {
     nsresult rv;
     nsCOMPtr<nsILocalFile> profileDir;
-    PRBool exists = PR_FALSE;
-    PRBool isDir = PR_FALSE;
-    profileDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-    rv = profileDir->InitWithNativePath(nsDependentCString(sProfileDir));
+    NS_NewNativeLocalFile(nsDependentCString(sProfileDir), PR_TRUE,
+                          getter_AddRefs(profileDir));
+    if (!profileDir)
+      return NS_ERROR_FAILURE;
+    rv = profileDir->AppendNative(nsDependentCString(sProfileName));
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    profileDir->Exists(&exists);
-    profileDir->IsDirectory(&isDir);
-    // if it exists and it isn't a directory then give up now.
-    if (!exists) {
-      rv = profileDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-      if NS_FAILED(rv) {
-	return NS_ERROR_FAILURE;
-      }
-    }
-    else if (exists && !isDir) {
+
+    nsCOMPtr<nsProfileDirServiceProvider> locProvider;
+    NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
+    if (!locProvider)
       return NS_ERROR_FAILURE;
-    }
-    // actually create the loc provider and initialize prefs.
-    nsMPFileLocProvider *locProvider;
-    // Set up the loc provider.  This has a really strange ownership
-    // model.  When I initialize it it will register itself with the
-    // directory service.  The directory service becomes the owning
-    // reference.  So, when that service is shut down this object will
-    // be destroyed.  It's not leaking here.
-    locProvider = new nsMPFileLocProvider;
-    rv = locProvider->Initialize(profileDir, sProfileName);
+    
+    // Directory service holds an strong reference to any
+    // provider that is registered with it. Let it hold the
+    // only ref. locProvider won't die when we leave this scope.
+    rv = locProvider->Register();
+    if (NS_FAILED(rv))
+      return rv;
+    rv = locProvider->SetProfileDir(profileDir);
+    if (NS_FAILED(rv))
+      return rv;
 
     // get prefs
     nsCOMPtr<nsIPref> pref;
@@ -819,8 +814,6 @@ EmbedPrivate::StartupProfile(void)
       return NS_ERROR_FAILURE;
     sPrefs = pref.get();
     NS_ADDREF(sPrefs);
-    sPrefs->ResetPrefs();
-    sPrefs->ReadUserPrefs(nsnull);
   }
   return NS_OK;
 }

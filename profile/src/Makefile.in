@@ -27,10 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= profile
-LIBRARY_NAME	= profile
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsProfileModule
+LIBRARY_NAME	= profile_s
 REQUIRES	= xpcom \
 		  string \
 		  chrome \
@@ -46,19 +43,15 @@ REQUIRES	= xpcom \
 		  appshell \
 		  uconv \
 		  windowwatcher \
+      profdirserviceprovider \
 		  $(NULL)
 
 CPPSRCS		= 	nsProfile.cpp	\
-			nsProfileFactory.cpp	\
 			nsProfileAccess.cpp	\
 			$(NULL)
 
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(XPCOM_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NSPR_LIBS) \
-		$(NULL)
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
