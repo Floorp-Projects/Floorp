@@ -26,7 +26,10 @@
 #include "nsSocketTransportService.h"
 #include "nsSocketTransport.h"
 #include "nsAutoLock.h"
+#include "nsIOService.h"
+#include "nsIServiceManager.h"
 
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsSocketTransportService::nsSocketTransportService()
 {
@@ -90,11 +93,19 @@ nsSocketTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aRes
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
+    nsresult rv;
+    NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    PRBool offline;
+    rv = ios->GetOffline(&offline);
+    if (NS_FAILED(rv)) return rv;
+    if (offline) return NS_ERROR_FAILURE;
+
     nsSocketTransportService* trans = new nsSocketTransportService();
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    nsresult rv = trans->Init();
+    rv = trans->Init();
     if (NS_SUCCEEDED(rv)) {
         rv = trans->QueryInterface(aIID, aResult);
     }
