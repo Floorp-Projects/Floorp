@@ -962,10 +962,6 @@ MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
   aAttributes->GetAttribute(nsHTMLAtoms::frame, frameValue);
   if (frameValue.GetUnit() == eHTMLUnit_Enumerated)
   {
-    // store the value of frame
-    nsStyleTable *tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-    tableStyle->mFrame = frameValue.GetIntValue();
-    tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // most values of frame imply default rules=all
     // adjust the border style based on the value of frame
     switch (frameValue.GetIntValue())
     {
