@@ -131,6 +131,7 @@ int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int)
                 RegDeleteValue(hkRunOnceHandle, cleanupKeyName);
                 NR_RegClose(&reg);
             }
+            NR_ShutdownRegistry();
             DeleteFile(regFilePath);
         }
     }

@@ -521,7 +521,7 @@ void main(void)
                     gQuitFlag = true;
                 }
             }
-            
+            NR_RegClose(&reg);
             NR_ShutdownRegistry();
         }
         
