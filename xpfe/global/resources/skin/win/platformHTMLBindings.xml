@@ -6,10 +6,14 @@
  
   <binding name="inputFields" extends="resource:/chrome/htmlBindings.xml#inputFieldsBase">
     <handlers>
-      <handler type="keypress" id="key_up" keycode="VK_UP" alt="false"
+      <handler type="keypress" id="key_up" keycode="VK_UP" alt="false" shift="false" control="false"
         command="cmd_charPrevious"/>
-      <handler type="keypress" id="key_down" keycode="VK_DOWN" alt="false"
+      <handler type="keypress" id="key_down" keycode="VK_DOWN" alt="false" shift="false" control="false"
         command="cmd_charNext"/>
+      <handler type="keypress" id="key_leftshift" keycode="VK_UP" shift="true" alt="false" control="false"
+	      command="cmd_selectCharPrevious"/>
+      <handler type="keypress" id="key_rightshift" keycode="VK_DOWN" shift="true" alt="false" control="false"
+	      command="cmd_selectCharNext"/>
     </handlers>
   </binding>
 

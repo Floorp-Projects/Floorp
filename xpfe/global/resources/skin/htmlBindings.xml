@@ -15,10 +15,6 @@
         command="cmd_charPrevious"/>
     <handler type="keypress" id="key_right" keycode="VK_RIGHT" alt="false" shift="false" control="false"
         command="cmd_charNext"/>
-    <handler type="keypress" id="key_left" keycode="VK_UP" alt="false" shift="false" control="false"
-        command="cmd_charPrevious"/>
-    <handler type="keypress" id="key_right" keycode="VK_DOWN" alt="false" shift="false" control="false"
-        command="cmd_charNext"/>
     <handler type="keypress" id="key_pageup" keycode="VK_PAGE_UP" alt="false" shift="false" control="false"
         command="cmd_scrollPageUp"/>
     <handler type="keypress" id="key_pagedown" keycode="VK_PAGE_DOWN" alt="false" shift="false" control="false"
@@ -31,10 +27,6 @@
     <handler type="keypress" id="key_leftshift" keycode="VK_LEFT" shift="true" alt="false" control="false"
         command="cmd_selectCharPrevious"/>
     <handler type="keypress" id="key_rightshift" keycode="VK_RIGHT" shift="true" alt="false" control="false"
-        command="cmd_selectCharNext"/>
-    <handler type="keypress" id="key_leftshift" keycode="VK_UP" shift="true" alt="false" control="false"
-        command="cmd_selectCharPrevious"/>
-    <handler type="keypress" id="key_rightshift" keycode="VK_DOWN" shift="true" alt="false" control="false"
         command="cmd_selectCharNext"/>
     <handler type="keypress" id="key_leftcontrol" keycode="VK_LEFT" control="true" alt="false" shift="false"
         command="cmd_wordPrevious"/>
