@@ -36,7 +36,6 @@
 
 extern nsGenericHTMLElement::EnumTable kListTypeTable[];
 
-static NS_DEFINE_IID(kIDOMHTMLMenuElementIID, NS_IDOMHTMLMENUELEMENT_IID);
 
 class nsHTMLMenuElement : public nsIDOMHTMLMenuElement,
                           public nsIJSScriptObject,
@@ -86,7 +85,7 @@ NS_NewHTMLMenuElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -108,7 +107,7 @@ nsresult
 nsHTMLMenuElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLMenuElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLMenuElement))) {
     nsIDOMHTMLMenuElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -126,7 +125,7 @@ nsHTMLMenuElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_BOOL_ATTR(nsHTMLMenuElement, Compact, compact)

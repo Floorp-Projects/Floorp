@@ -28,11 +28,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
 
-static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
-static NS_DEFINE_IID(kIDOMAttributePrivateIID, NS_IDOMATTRIBUTEPRIVATE_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
-
 //----------------------------------------------------------------------
 
 nsDOMAttribute::nsDOMAttribute(nsIContent* aContent,
@@ -63,31 +58,31 @@ nsDOMAttribute::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIDOMAttrIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMAttr))) {
     nsIDOMAttr* tmp = this;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMAttributePrivateIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMAttributePrivate))) {
     nsIDOMAttributePrivate* tmp = this;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMNodeIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
     nsIDOMNode* tmp = this;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     nsIDOMAttr* tmp1 = this;
     nsISupports* tmp2 = tmp1;
     *aInstancePtr = (void*)tmp2;
@@ -293,7 +288,7 @@ nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
     NS_ADDREF(mChildList);
   }
 
-  return mChildList->QueryInterface(kIDOMNodeListIID, (void**)aChildNodes);
+  return mChildList->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void**)aChildNodes);
 }
 
 NS_IMETHODIMP
@@ -333,11 +328,11 @@ nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
       if (NS_OK != result) {
         return result;
       }
-      result = content->QueryInterface(kIDOMTextIID, (void**)&mChild);
+      result = content->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&mChild);
       NS_RELEASE(content);
     }
     mChild->SetData(value);
-    result = mChild->QueryInterface(kIDOMNodeIID, (void**)aFirstChild);
+    result = mChild->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aFirstChild);
   }
   else {
     *aFirstChild = nsnull;
@@ -426,7 +421,7 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return newAttr->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+  return newAttr->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
 }
 
 NS_IMETHODIMP 
@@ -435,7 +430,7 @@ nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   nsresult result = NS_OK;
   if (nsnull != mContent) {
     nsIDOMNode* node;
-    result = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    result = mContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
     if (NS_SUCCEEDED(result)) {
       result = node->GetOwnerDocument(aOwnerDocument);
       NS_RELEASE(node);

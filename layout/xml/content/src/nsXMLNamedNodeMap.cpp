@@ -35,7 +35,6 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 
-static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 
 class nsXMLNamedNodeMap : public nsIDOMNamedNodeMap,
                           public nsIScriptObjectOwner
@@ -83,7 +82,7 @@ NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIDOMNamedNodeMapIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNamedNodeMap), (void **) aInstancePtrResult);
 }
 
 nsXMLNamedNodeMap::nsXMLNamedNodeMap(nsISupportsArray *aArray)
@@ -111,20 +110,20 @@ nsXMLNamedNodeMap::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(kISupportsIID)) {                          
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {                          
     nsIDOMNamedNodeMap* tmp = this;                                
     nsISupports* tmp2 = tmp;                                
     *aInstancePtrResult = (void*) tmp2;                                  
     NS_ADDREF_THIS();                                       
     return NS_OK;                                           
   }                                                         
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {                 
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {                 
     nsIScriptObjectOwner* tmp = this;                      
     *aInstancePtrResult = (void*) tmp;                                   
     NS_ADDREF_THIS();                                       
     return NS_OK;                                           
   }                                                         
-  if (aIID.Equals(kIDOMNamedNodeMapIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNamedNodeMap))) {
     nsIDOMNamedNodeMap* tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();

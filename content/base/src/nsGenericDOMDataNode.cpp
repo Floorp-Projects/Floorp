@@ -45,16 +45,6 @@
 #include "prprf.h"
 #include "nsCOMPtr.h"
 
-// XXX share all id's in this dir
-
-NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
-
-static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
-static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 
 //----------------------------------------------------------------------
 
@@ -97,7 +87,7 @@ nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
   nsresult res = NS_OK;
 
   if (nsnull != mParent) {
-    res = mParent->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+    res = mParent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aParentNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
   }
   else if (nsnull == mDocument) {
@@ -107,7 +97,7 @@ nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
     // If we don't have a parent, but we're in the document, we must
     // be the root node of the document. The DOM says that the root
     // is the document.
-    res = mDocument->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+    res = mDocument->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aParentNode);
   }
 
   return res;
@@ -138,7 +128,7 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIContent *aOuterContent,
   }
 
   if (nsnull != sibling) {
-    result = sibling->QueryInterface(kIDOMNodeIID,(void**)aPrevSibling);
+    result = sibling->QueryInterface(NS_GET_IID(nsIDOMNode),(void**)aPrevSibling);
     NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
     NS_RELEASE(sibling); // balance the AddRef in ChildAt()
   }
@@ -174,7 +164,7 @@ nsGenericDOMDataNode::GetNextSibling(nsIContent *aOuterContent,
   }
 
   if (nsnull != sibling) {
-    result = sibling->QueryInterface(kIDOMNodeIID,(void**)aNextSibling);
+    result = sibling->QueryInterface(NS_GET_IID(nsIDOMNode),(void**)aNextSibling);
     NS_ASSERTION(NS_OK == result, "Must be a DOM Node");
     NS_RELEASE(sibling); // balance the AddRef in ChildAt()
   }
@@ -196,7 +186,7 @@ nsGenericDOMDataNode::GetChildNodes(nsIDOMNodeList** aChildNodes)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  return list->QueryInterface(kIDOMNodeListIID, (void**)aChildNodes);
+  return list->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void**)aChildNodes);
 }
 
 nsresult    
@@ -206,7 +196,7 @@ nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   // the node has been created. We should be able to get at it
   // whether or not we are attached to the document.
   if (nsnull != mDocument) {
-    return mDocument->QueryInterface(kIDOMDocumentIID, (void **)aOwnerDocument);
+    return mDocument->QueryInterface(NS_GET_IID(nsIDOMDocument), (void **)aOwnerDocument);
   }
   else {
     *aOwnerDocument = nsnull;
@@ -494,7 +484,7 @@ nsGenericDOMDataNode::GetScriptObject(nsIContent *aOuterContent,
     nsIDOMNode* node;
     PRUint16 nodeType;
 
-    res = aOuterContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    res = aOuterContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
     if (NS_OK != res) {
       return res;
     }
@@ -805,7 +795,7 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
         // hasn't been malloc'd.  Force a copy of the data here so the
         // DOM Event is still valid.
         nsIPrivateDOMEvent *privateEvent;
-        if (NS_OK == (*aDOMEvent)->QueryInterface(kIPrivateDOMEventIID, (void**)&privateEvent)) {
+        if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&privateEvent)) {
           privateEvent->DuplicatePrivateData();
           NS_RELEASE(privateEvent);
         }
@@ -978,7 +968,7 @@ nsGenericDOMDataNode::SplitText(nsIContent *aOuterContent, PRUint32 aOffset,
     }
   }
   
-  return newNode->QueryInterface(kIDOMTextIID, (void**)aReturn);
+  return newNode->QueryInterface(NS_GET_IID(nsIDOMText), (void**)aReturn);
 }
 
 //----------------------------------------------------------------------

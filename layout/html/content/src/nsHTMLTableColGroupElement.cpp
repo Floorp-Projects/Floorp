@@ -32,7 +32,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
-static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
 
 class nsHTMLTableColGroupElement : public nsIDOMHTMLTableColElement,
                                    public nsIJSScriptObject,
@@ -81,7 +80,7 @@ NS_NewHTMLTableColGroupElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -104,7 +103,7 @@ nsHTMLTableColGroupElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   // DOM treats COLGROUP like COL
-  if (aIID.Equals(kIDOMHTMLTableColElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableColElement))) {
     nsIDOMHTMLTableColElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -122,7 +121,7 @@ nsHTMLTableColGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Align, align)

@@ -35,8 +35,6 @@
 #include "nsIHTMLDocument.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_IID(kIDOMHTMLMapElementIID, NS_IDOMHTMLMAPELEMENT_IID);
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 class nsHTMLMapElement : public nsIDOMHTMLMapElement,
                          public nsIJSScriptObject,
@@ -221,7 +219,7 @@ NS_NewHTMLMapElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -248,7 +246,7 @@ nsresult
 nsHTMLMapElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLMapElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLMapElement))) {
     nsIDOMHTMLMapElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -265,7 +263,7 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
   if (nsnull != mInner.mDocument) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc;
     
-    rv = mInner.mDocument->QueryInterface(kIHTMLDocumentIID, 
+    rv = mInner.mDocument->QueryInterface(NS_GET_IID(nsIHTMLDocument), 
                                           getter_AddRefs(htmlDoc));
     if (NS_OK == rv) {
       htmlDoc->RemoveImageMap(this);
@@ -277,7 +275,7 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
   if (NS_SUCCEEDED(rv) && (nsnull != aDocument)) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc;
     
-    rv = aDocument->QueryInterface(kIHTMLDocumentIID, 
+    rv = aDocument->QueryInterface(NS_GET_IID(nsIHTMLDocument), 
                                    getter_AddRefs(htmlDoc));
     if (NS_OK == rv) {
       htmlDoc->AddImageMap(this);
@@ -296,7 +294,7 @@ nsHTMLMapElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP

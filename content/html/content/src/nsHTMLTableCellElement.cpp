@@ -35,9 +35,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
-static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
-static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLTableRowElementIID, NS_IDOMHTMLTABLEROWELEMENT_IID);
 
 class nsHTMLTableCellElement :  public nsIHTMLTableCellElement,
                                 public nsIDOMHTMLTableCellElement,
@@ -99,7 +96,7 @@ NS_NewHTMLTableCellElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -122,13 +119,13 @@ nsresult
 nsHTMLTableCellElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLTableCellElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableCellElement))) {
     nsIDOMHTMLTableCellElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(kIHTMLTableCellElementIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIHTMLTableCellElement))) {
     nsIHTMLTableCellElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -146,7 +143,7 @@ nsHTMLTableCellElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 /** @return the starting column for this cell in aColIndex.  Always >= 1 */
@@ -169,7 +166,7 @@ nsHTMLTableCellElement::GetRow(nsIDOMHTMLTableRowElement** aRow)
 {
   nsIDOMNode *rowNode;
   GetParentNode(&rowNode); 
-  nsresult result = rowNode->QueryInterface(kIDOMHTMLTableRowElementIID, (void**)aRow);
+  nsresult result = rowNode->QueryInterface(NS_GET_IID(nsIDOMHTMLTableRowElement), (void**)aRow);
   NS_RELEASE(rowNode);
   return result;
 }
@@ -256,7 +253,7 @@ nsHTMLTableCellElement::GetContentStyleRules(nsISupportsArray* aRules)
       nsIContent* table = nsnull;
       if (NS_SUCCEEDED(section->GetParent(table)) && table) {
         nsIStyledContent* styledTable = nsnull;
-        if (NS_SUCCEEDED(table->QueryInterface(kIStyledContentIID, (void**)&styledTable))) {
+        if (NS_SUCCEEDED(table->QueryInterface(NS_GET_IID(nsIStyledContent), (void**)&styledTable))) {
           styledTable->GetContentStyleRules(aRules);
           NS_RELEASE(styledTable);
         }

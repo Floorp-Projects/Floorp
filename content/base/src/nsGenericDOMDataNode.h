@@ -34,13 +34,6 @@
 #include "nsDOMError.h"
 #include "nsIEventListenerManager.h"
 
-extern const nsIID kIDOMCharacterDataIID;
-extern const nsIID kIDOMNodeIID;
-extern const nsIID kIDOMEventReceiverIID;
-extern const nsIID kIDOMEventTargetIID;
-extern const nsIID kIScriptObjectOwnerIID;
-extern const nsIID kISupportsIID;
-extern const nsIID kIContentIID;
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -607,46 +600,46 @@ struct nsGenericDOMDataNode {
  * generic to all html content objects.
  */
 #define NS_IMPL_DOM_DATA_QUERY_INTERFACE(_id, _iptr, _this) \
-  if (_id.Equals(kISupportsIID)) {                          \
+  if (_id.Equals(NS_GET_IID(nsISupports))) {                \
     nsIContent* tmp = _this;                                \
     nsISupports* tmp2 = tmp;                                \
     *_iptr = (void*) tmp2;                                  \
     NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
-  if (_id.Equals(kIDOMNodeIID)) {                           \
+  if (_id.Equals(NS_GET_IID(nsIDOMNode))) {                 \
     nsIDOMNode* tmp = _this;                                \
     *_iptr = (void*) tmp;                                   \
     NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
-  if (_id.Equals(kIDOMCharacterDataIID)) {                  \
+  if (_id.Equals(NS_GET_IID(nsIDOMCharacterData))) {        \
     nsIDOMCharacterData* tmp = _this;                       \
     *_iptr = (void*) tmp;                                   \
     NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
-  if (_id.Equals(kIDOMEventReceiverIID)) {                  \
+  if (_id.Equals(NS_GET_IID(nsIDOMEventReceiver))) {        \
     nsCOMPtr<nsIEventListenerManager> man;                  \
     if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){ \
-      return man->QueryInterface(kIDOMEventReceiverIID, (void**)_iptr); \
+      return man->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void**)_iptr); \
     }                                                       \
     return NS_NOINTERFACE;                                  \
   }                                                         \
-  if (_id.Equals(kIDOMEventTargetIID)) {                    \
+  if (_id.Equals(NS_GET_IID(nsIDOMEventTarget))) {          \
     nsCOMPtr<nsIEventListenerManager> man;                  \
     if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){ \
-      return man->QueryInterface(kIDOMEventTargetIID, (void**)_iptr); \
+      return man->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)_iptr); \
     }                                                       \
     return NS_NOINTERFACE;                                  \
   }                                                         \
-  if (_id.Equals(kIScriptObjectOwnerIID)) {                 \
+  if (_id.Equals(NS_GET_IID(nsIScriptObjectOwner))) {       \
     nsIScriptObjectOwner* tmp = _this;                      \
     *_iptr = (void*) tmp;                                   \
     NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \
   }                                                         \
-  if (_id.Equals(kIContentIID)) {                           \
+  if (_id.Equals(NS_GET_IID(nsIContent))) {                 \
     nsIContent* tmp = _this;                                \
     *_iptr = (void*) tmp;                                   \
     NS_ADDREF_THIS();                                       \

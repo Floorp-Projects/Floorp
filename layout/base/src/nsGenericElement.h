@@ -28,6 +28,10 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMLinkStyle.h"
+#include "nsIStyleSheetLinkingElement.h"
+#include "nsICSSStyleSheet.h"
+#include "nsICSSLoaderObserver.h"
 #include "nsVoidArray.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIJSScriptObject.h"
@@ -35,15 +39,7 @@
 #include "nsGenericDOMNodeList.h"
 #include "nsIEventListenerManager.h"
 #include "nsINodeInfo.h"
-
-extern const nsIID kIDOMNodeIID;
-extern const nsIID kIDOMElementIID;
-extern const nsIID kIDOMEventReceiverIID;
-extern const nsIID kIDOMEventTargetIID;
-extern const nsIID kIScriptObjectOwnerIID;
-extern const nsIID kIJSScriptObjectIID;
-extern const nsIID kISupportsIID;
-extern const nsIID kIContentIID;
+#include "nsIParser.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -1403,53 +1399,53 @@ public:
   }
 
 #define NS_IMPL_CONTENT_QUERY_INTERFACE(_id, _iptr, _this, _base) \
-  if (_id.Equals(kISupportsIID)) {                              \
+  if (_id.Equals(NS_GET_IID(nsISupports))) {                    \
     _base* tmp = _this;                                         \
     nsISupports* tmp2 = tmp;                                    \
     *_iptr = (void*) tmp2;                                      \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \
   }                                                             \
-  if (_id.Equals(kIDOMNodeIID)) {                               \
+  if (_id.Equals(NS_GET_IID(nsIDOMNode))) {                     \
     nsIDOMNode* tmp = _this;                                    \
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \
   }                                                             \
-  if (_id.Equals(kIDOMElementIID)) {                            \
+  if (_id.Equals(NS_GET_IID(nsIDOMElement))) {                  \
     nsIDOMElement* tmp = _this;                                 \
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \
   }                                                             \
-  if (_id.Equals(kIDOMEventReceiverIID)) {                      \
+  if (_id.Equals(NS_GET_IID(nsIDOMEventReceiver))) {            \
     nsCOMPtr<nsIEventListenerManager> man;                      \
     if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){ \
-      return man->QueryInterface(kIDOMEventReceiverIID, (void**)_iptr); \
+      return man->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), (void**)_iptr); \
     }                                                           \
     return NS_NOINTERFACE;                                      \
   }                                                             \
-  if (_id.Equals(kIDOMEventTargetIID)) {                        \
+  if (_id.Equals(NS_GET_IID(nsIDOMEventTarget))) {              \
     nsCOMPtr<nsIEventListenerManager> man;                      \
     if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){ \
-      return man->QueryInterface(kIDOMEventTargetIID, (void**)_iptr); \
+      return man->QueryInterface(NS_GET_IID(nsIDOMEventTarget), (void**)_iptr); \
     }                                                           \
     return NS_NOINTERFACE;                                      \
   }                                                             \
-  if (_id.Equals(kIScriptObjectOwnerIID)) {                     \
+  if (_id.Equals(NS_GET_IID(nsIScriptObjectOwner))) {           \
     nsIScriptObjectOwner* tmp = _this;                          \
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \
   }                                                             \
-  if (_id.Equals(kIContentIID)) {                               \
+  if (_id.Equals(NS_GET_IID(nsIContent))) {                     \
     _base* tmp = _this;                                         \
     nsIContent* tmp2 = tmp;                                     \
     *_iptr = (void*) tmp2;                                      \
     NS_ADDREF_THIS();                                           \
     return NS_OK;                                               \
   }                                                             \
-  if (_id.Equals(kIJSScriptObjectIID)) {                        \
+  if (_id.Equals(NS_GET_IID(nsIJSScriptObject))) {              \
     nsIJSScriptObject* tmp = _this;                             \
     *_iptr = (void*) tmp;                                       \
     NS_ADDREF_THIS();                                           \

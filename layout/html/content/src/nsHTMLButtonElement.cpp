@@ -42,7 +42,6 @@
 #include "nsISizeOfHandler.h"
 #include "nsIDocument.h"
 
-static NS_DEFINE_IID(kIDOMHTMLButtonElementIID, NS_IDOMHTMLBUTTONELEMENT_IID);
 
 class nsHTMLButtonElement : public nsIDOMHTMLButtonElement,
                             public nsIJSScriptObject,
@@ -147,9 +146,6 @@ protected:
   PRInt32                           mType;
 };
 
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 
 // Construction, destruction
 
@@ -164,7 +160,7 @@ NS_NewHTMLButtonElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -191,12 +187,12 @@ nsresult
 nsHTMLButtonElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLButtonElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLButtonElement))) {
     *aInstancePtr = (void*)(nsIDOMHTMLButtonElement*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(kIFormControlIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
     *aInstancePtr = (void*)(nsIFormControl*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -245,7 +241,7 @@ nsHTMLButtonElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 // nsIContent
@@ -269,7 +265,7 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
   *aForm = nsnull;
   if (nsnull != mForm) {
     nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    result = mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&formElem);
     if (NS_OK == result) {
       *aForm = formElem;
     }
@@ -615,7 +611,7 @@ NS_IMETHODIMP
 nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
   nsCOMPtr<nsIFormControl> formControl;
-  nsresult result = QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
+  nsresult result = QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
   if (NS_FAILED(result)) formControl = nsnull;
 
   nsAutoString nameVal, idVal;

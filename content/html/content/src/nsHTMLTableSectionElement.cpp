@@ -34,9 +34,6 @@
 #include "nsIPresContext.h"
 #include "GenericElementCollection.h"
 
-static NS_DEFINE_IID(kIDOMHTMLTableSectionElementIID, NS_IDOMHTMLTABLESECTIONELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
-
 // you will see the phrases "rowgroup" and "section" used interchangably
 
 class nsHTMLTableSectionElement : public nsIDOMHTMLTableSectionElement,
@@ -87,7 +84,7 @@ NS_NewHTMLTableSectionElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -114,7 +111,7 @@ nsresult
 nsHTMLTableSectionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLTableSectionElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableSectionElement))) {
     nsIDOMHTMLTableSectionElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -132,7 +129,7 @@ nsHTMLTableSectionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, Align, align)
@@ -149,7 +146,7 @@ nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
     mRows = new GenericElementCollection(this, nsHTMLAtoms::tr);
     NS_ADDREF(mRows); // this table's reference, released in the destructor
   }
-  mRows->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);   // caller's addref 
+  mRows->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);   // caller's addref 
   return NS_OK;
 }
 
@@ -173,7 +170,7 @@ nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
   nsresult rv = NS_NewHTMLTableRowElement(&rowContent, nodeInfo);
   if (NS_SUCCEEDED(rv) && (nsnull != rowContent)) {
     nsIDOMNode* rowNode = nsnull;
-    rv = rowContent->QueryInterface(kIDOMNodeIID, (void **)&rowNode); 
+    rv = rowContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&rowNode); 
     if (NS_SUCCEEDED(rv) && (nsnull != rowNode)) {
       if (doInsert) {
         PRInt32 refIndex = PR_MAX(aIndex, 0);   

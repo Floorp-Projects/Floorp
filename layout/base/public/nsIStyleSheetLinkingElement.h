@@ -33,6 +33,8 @@ class nsIStyleSheet;
 
 class nsIStyleSheetLinkingElement : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLESHEETLINKINGELEMENT_IID)
+
   /**
    * Used to make the association between a style sheet and
    * the element that linked it to the document.

@@ -35,8 +35,6 @@
 extern nsGenericHTMLElement::EnumTable kListTypeTable[];
 extern nsGenericHTMLElement::EnumTable kOldListTypeTable[];
 
-static NS_DEFINE_IID(kIDOMHTMLUListElementIID, NS_IDOMHTMLULISTELEMENT_IID);
-
 class nsHTMLUListElement : public nsIDOMHTMLUListElement,
                            public nsIJSScriptObject,
                            public nsIHTMLContent
@@ -84,7 +82,7 @@ NS_NewHTMLUListElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -106,7 +104,7 @@ nsresult
 nsHTMLUListElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLUListElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLUListElement))) {
     nsIDOMHTMLUListElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -124,7 +122,7 @@ nsHTMLUListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_BOOL_ATTR(nsHTMLUListElement, Compact, compact)

@@ -41,9 +41,6 @@
 #include "nsIRefreshURI.h"
 
 
-//static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
-
 nsresult
 NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
@@ -55,7 +52,7 @@ NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIXMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIXMLContent), (void**) aInstancePtrResult);
 }
 
 static nsIAtom* kSimpleAtom;  // XXX these should get moved to nsXMLAtoms
@@ -107,7 +104,7 @@ nsXMLElement::QueryInterface(REFNSIID aIID,
                              void** aInstancePtr)
 {
   NS_IMPL_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this, nsIXMLContent)
-  if (aIID.Equals(kIXMLContentIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
     nsIXMLContent* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -496,7 +493,7 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   mInner.CopyInnerTo((nsIContent *)(nsIXMLContent *)this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 // nsIStyledContent implementation

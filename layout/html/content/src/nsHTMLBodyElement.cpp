@@ -51,11 +51,6 @@
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
 
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
-static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
-static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
-static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
 //----------------------------------------------------------------------
 
@@ -226,7 +221,7 @@ BodyRule::~BodyRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(BodyRule, kIStyleRuleIID);
+NS_IMPL_ISUPPORTS(BodyRule, NS_GET_IID(nsIStyleRule));
 
 NS_IMETHODIMP
 BodyRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
@@ -442,13 +437,12 @@ nsresult BodyFixupRule::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-//  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(kIStyleRuleIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtrResult = (void*) ((nsISupports*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -586,7 +580,7 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
     presShell->GetDocument(getter_AddRefs(doc));
     if (doc) {
       nsIHTMLContentContainer*  htmlContainer;
-      if (NS_OK == doc->QueryInterface(kIHTMLContentContainerIID,
+      if (NS_OK == doc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer),
                                        (void**)&htmlContainer)) {
         nsIHTMLStyleSheet* styleSheet;
         if (NS_OK == htmlContainer->GetAttributeStyleSheet(&styleSheet)) {
@@ -695,7 +689,7 @@ NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -717,7 +711,7 @@ nsresult
 nsHTMLBodyElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLBodyElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLBodyElement))) {
     nsIDOMHTMLBodyElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -735,7 +729,7 @@ nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, ALink, alink)
@@ -854,7 +848,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       presShell->GetDocument(getter_AddRefs(doc));
       if (doc) {
         nsIHTMLContentContainer*  htmlContainer;
-        if (NS_OK == doc->QueryInterface(kIHTMLContentContainerIID,
+        if (NS_OK == doc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer),
                                          (void**)&htmlContainer)) {
           nsIHTMLStyleSheet* styleSheet;
           if (NS_OK == htmlContainer->GetAttributeStyleSheet(&styleSheet)) {
@@ -914,7 +908,7 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
   nsIHTMLContentContainer*  htmlContainer;
   
   if (nsnull != aDocument) {
-    if (NS_OK == aDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer)) {
+    if (NS_OK == aDocument->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer)) {
       htmlContainer->GetAttributeStyleSheet(&sheet);
       NS_RELEASE(htmlContainer);
     }
@@ -951,7 +945,7 @@ static nsIHTMLCSSStyleSheet* GetInlineStyleSheet(nsIDocument* aDocument)
   nsIHTMLContentContainer*  htmlContainer;
   
   if (nsnull != aDocument) {
-    if (NS_OK == aDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer)) {
+    if (NS_OK == aDocument->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer)) {
       htmlContainer->GetInlineStyleSheet(&sheet);
       NS_RELEASE(htmlContainer);
     }

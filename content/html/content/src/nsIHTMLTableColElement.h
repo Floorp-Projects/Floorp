@@ -34,6 +34,7 @@
 class nsIHTMLTableColElement : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLTABLECOLELEMENT_IID)
   
   /** @return the number of columns this column object represents.  Always >= 1 */
   NS_IMETHOD GetSpanValue (PRInt32* aSpan) = 0;

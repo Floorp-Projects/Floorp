@@ -33,7 +33,6 @@
 
 // XXX add nsIDOMHTMLWBR?
 
-//static NS_DEFINE_IID(kIDOMHTMLWBRElementIID, NS_IDOMHTMLWBRELEMENT_IID);
 
 class nsHTMLWBRElement : public nsIDOMHTMLElement,
                             public nsIJSScriptObject,
@@ -79,7 +78,7 @@ NS_NewHTMLWBRElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -102,7 +101,7 @@ nsHTMLWBRElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
 #if 0
-  if (aIID.Equals(kIDOMHTMLWBRElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLWBRElement))) {
     nsIDOMHTMLWBRElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -121,7 +120,7 @@ nsHTMLWBRElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP

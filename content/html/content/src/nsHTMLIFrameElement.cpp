@@ -38,7 +38,6 @@
 #include "nsIChromeEventHandler.h"
 #include "nsDOMError.h"
 
-static NS_DEFINE_IID(kIDOMHTMLIFrameElementIID, NS_IDOMHTMLIFRAMEELEMENT_IID);
 
 class nsHTMLIFrameElement : public nsIDOMHTMLIFrameElement,
                             public nsIJSScriptObject,
@@ -91,7 +90,7 @@ NS_NewHTMLIFrameElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -113,7 +112,7 @@ nsresult
 nsHTMLIFrameElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLIFrameElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLIFrameElement))) {
     nsIDOMHTMLIFrameElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -136,7 +135,7 @@ nsHTMLIFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Align, align)

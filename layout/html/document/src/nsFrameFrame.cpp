@@ -66,13 +66,9 @@
 
 class nsHTMLFrame;
 
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
-static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
-static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kIDOMHTMLFrameElementIID, NS_IDOMHTMLFRAMEELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLIFrameElementIID, NS_IDOMHTMLIFRAMEELEMENT_IID);
+static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
+static NS_DEFINE_CID(kCViewCID, NS_VIEW_CID);
+static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
 /*******************************************************************************
  * FrameLoadingInfo 
@@ -800,7 +796,7 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
 
   // create, init, set the parent of the view
   nsIView* view;
-  rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, kIViewIID,
+  rv = nsComponentManager::CreateInstance(kCViewCID, nsnull, NS_GET_IID(nsIView),
                                         (void **)&view);
   if (NS_OK != rv) {
     NS_ASSERTION(0, "Could not create view for nsHTMLFrame");
@@ -1036,5 +1032,5 @@ FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
 /*
  * Implementation of ISupports methods...
  */
-NS_IMPL_ISUPPORTS(FrameLoadingInfo,kISupportsIID);
+NS_IMPL_ISUPPORTS(FrameLoadingInfo, NS_GET_IID(nsISupports));
 

@@ -60,16 +60,8 @@
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
 
-static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMNSHTMLSelectElementIID, NS_IDOMNSHTMLSELECTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMNSHTMLOptionCollectionIID, NS_IDOMNSHTMLOPTIONCOLLECTION_IID);
-static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kISelectElementIID, NS_ISELECTELEMENT_IID);
-static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
+
 
 class nsHTMLSelectElement;
 
@@ -334,7 +326,7 @@ NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -371,28 +363,28 @@ nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   // NS_IMPL_HTML_CONTENT_QUERY_INTERFACE returns mInner as the script object
   // We need to be our own so we can implement setprop to set select[i]
-  if (aIID.Equals(kIJSScriptObjectIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
     *aInstancePtr = (void*)(nsIJSScriptObject*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLSelectElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLSelectElement))) {
     *aInstancePtr = (void*)(nsIDOMHTMLSelectElement*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(kIDOMNSHTMLSelectElementIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLSelectElement))) {
     *aInstancePtr = (void*)(nsIDOMNSHTMLSelectElement*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(kIFormControlIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
     *aInstancePtr = (void*)(nsIFormControl*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(kISelectElementIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsISelectElement))) {
     *aInstancePtr = (void*)(nsISelectElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -411,7 +403,7 @@ nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  nsresult rv = it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  nsresult rv = it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
   return rv;
 }
 
@@ -537,7 +529,7 @@ nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
   *aForm = nsnull;
   if (nsnull != mForm) {
     nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElem);
+    result = mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&formElem);
     if (NS_OK == result) {
       *aForm = formElem;
     }
@@ -1470,7 +1462,7 @@ NS_IMETHODIMP
 nsHTMLSelectElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
   nsCOMPtr<nsIFormControl> formControl;
-  nsresult result = QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
+  nsresult result = QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
   if (NS_FAILED(result)) formControl = nsnull;
 
   nsAutoString nameVal, idVal;
@@ -1561,7 +1553,7 @@ nsHTMLSelectElement::SetProperty(JSContext *aContext,
   // Set options in the options list by indexing into select
   if (JSVAL_IS_INT(aID) && mOptions) {
     nsIJSScriptObject* optList = nsnull;
-    res = mOptions->QueryInterface(kIJSScriptObjectIID, (void **)&optList);
+    res = mOptions->QueryInterface(NS_GET_IID(nsIJSScriptObject), (void **)&optList);
     if (NS_SUCCEEDED(res) && optList) {
       res = optList->SetProperty(aContext, aObj, aID, aVp);
       NS_RELEASE(optList);
@@ -1610,7 +1602,7 @@ void GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
   for (int i = 0; i < numChildren; i++) {
     aContent->ChildAt(i, child);
     if (child) {
-      nsresult result = child->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+      nsresult result = child->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), (void**)&option);
       if ((NS_OK == result) && option) {
         aOptions.AppendElement(option); // keep the ref count
       } else {
@@ -1660,12 +1652,12 @@ nsresult
 nsHTMLOptionCollection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-  if (aIID.Equals(kIJSScriptObjectIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
     *aInstancePtr = (void*)(nsIJSScriptObject*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMNSHTMLOptionCollectionIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLOptionCollection))) {
     *aInstancePtr = (void*)(nsIDOMNSHTMLOptionCollection*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -1758,7 +1750,7 @@ nsHTMLOptionCollection::NamedItem(const nsAReadableString& aName, nsIDOMNode** a
     if (nsnull != option) {
       nsIContent *content;
       
-      result = option->QueryInterface(kIContentIID, (void **)&content);
+      result = option->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
       if (NS_OK == result) {
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
@@ -1766,7 +1758,7 @@ nsHTMLOptionCollection::NamedItem(const nsAReadableString& aName, nsIDOMNode** a
              (aName.Equals(name))) ||
             ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
-          result = option->QueryInterface(kIDOMNodeIID, (void **)aReturn);
+          result = option->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
         }
         NS_RELEASE(content);
       }
@@ -1791,7 +1783,7 @@ nsHTMLOptionCollection::RemoveOption(nsIContent* aOption)
   nsIDOMHTMLOptionElement* option;
 
   if ((nsnull != aOption) &&
-      NS_SUCCEEDED(aOption->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option))) {
+      NS_SUCCEEDED(aOption->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), (void**)&option))) {
     if (mElements.RemoveElement(option)) {
       nsresult result;
       NS_RELEASE2(option, result);
@@ -1809,7 +1801,7 @@ nsHTMLOptionCollection::IndexOf(nsIContent* aOption)
     GetOptions();
   }
   if ((nsnull != aOption) &&
-    NS_SUCCEEDED(aOption->QueryInterface(kIDOMHTMLOptionElementIID, getter_AddRefs(option)))) {
+    NS_SUCCEEDED(aOption->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), getter_AddRefs(option)))) {
     return mElements.IndexOf(option);
   }
   return -1;
@@ -1900,7 +1892,7 @@ nsHTMLOptionCollection::SetProperty(JSContext *aContext,
           nsIDOMNode* refChild;
           nsIDOMNode* ret;
 
-          if (NS_OK == supports->QueryInterface(kIDOMNodeIID, (void **)&option)) {
+          if (NS_OK == supports->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&option)) {
             if (indx == length) {
               result = mSelect->AppendChild(option, &ret);
               NS_IF_RELEASE(ret);

@@ -49,12 +49,6 @@
 
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 64;
 
-static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
-static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
-static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
-static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
-
 class nsFormControlList;
 
 // nsHTMLFormElement
@@ -171,7 +165,7 @@ NS_NewHTMLFormElement(nsIHTMLContent** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -208,24 +202,24 @@ nsHTMLFormElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // Note that this has to stay above the generic element
   // QI macro, since it overrides the nsIJSScriptObject implementation
   // from the generic element.
-  if (aIID.Equals(kIJSScriptObjectIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
     nsIJSScriptObject* tmp = this;
     *aInstancePtr = (void*) tmp;
     AddRef();
     return NS_OK;
   }                                                             
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIFormIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIForm))) {
     *aInstancePtr = (void*)(nsIForm*)this;
     AddRef();
     return NS_OK;
   } 
-  else if (aIID.Equals(kIDOMHTMLFormElementIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIDOMHTMLFormElement))) {
     *aInstancePtr = (void*)(nsIDOMHTMLFormElement*)this;
     AddRef();
     return NS_OK;
   } 
-  else if (aIID.Equals(kIDOMNSHTMLFormElementIID)) {
+  else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLFormElement))) {
     *aInstancePtr = (void*)(nsIDOMNSHTMLFormElement*)this;
     AddRef();
     return NS_OK;
@@ -246,7 +240,7 @@ nsHTMLFormElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   }
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMETHODIMP
@@ -291,7 +285,7 @@ nsHTMLFormElement::Submit()
       shell->GetPrimaryFrameFor(this, &frame);
       if (frame) {
         nsIFormManager* formMan = nsnull;
-        res = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
+        res = frame->QueryInterface(NS_GET_IID(nsIFormManager), (void**)&formMan);
         if (NS_SUCCEEDED(res) && formMan) {
           nsCOMPtr<nsIPresContext> context;
           shell->GetPresContext(getter_AddRefs(context));
@@ -458,7 +452,7 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
          shell->GetPrimaryFrameFor(this, &frame);
          if (frame) {
            nsIFormManager* formMan = nsnull;
-           ret = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
+           ret = frame->QueryInterface(NS_GET_IID(nsIFormManager), (void**)&formMan);
            if (NS_SUCCEEDED(ret) && formMan) {
              ret = formMan->OnReset(aPresContext);
            }
@@ -708,7 +702,7 @@ nsHTMLFormElement::Item(PRUint32 aIndex, nsIDOMElement** aReturn)
     nsIDOMNode *node;
     nsresult result = mControls->Item(aIndex, &node);
     if ((NS_OK == result) && (nsnull != node)) {
-      result = node->QueryInterface(kIDOMElementIID, (void **)aReturn);
+      result = node->QueryInterface(NS_GET_IID(nsIDOMElement), (void **)aReturn);
       NS_RELEASE(node);
     }
     else {
@@ -795,7 +789,7 @@ nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsIFormControl *control = (nsIFormControl*)mElements.ElementAt(aIndex);
   if (control) {
-    return control->QueryInterface(kIDOMNodeIID, (void**)aReturn); // keep the ref
+    return control->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn); // keep the ref
   }
   *aReturn = nsnull;
   return NS_OK;

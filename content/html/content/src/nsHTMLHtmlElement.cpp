@@ -32,7 +32,6 @@
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 
-static NS_DEFINE_IID(kIDOMHTMLHtmlElementIID, NS_IDOMHTMLHTMLELEMENT_IID);
 
 class nsHTMLHtmlElement : public nsIDOMHTMLHtmlElement,
                           public nsIJSScriptObject,
@@ -85,7 +84,7 @@ NS_NewHTMLHtmlElement(nsIHTMLContent** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->mInner.Init(it, aNodeInfo);
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
 }
 
 
@@ -106,7 +105,7 @@ nsresult
 nsHTMLHtmlElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(kIDOMHTMLHtmlElementIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLHtmlElement))) {
     nsIDOMHTMLHtmlElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
@@ -126,7 +125,7 @@ nsHTMLHtmlElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
   it->mInner.Init(it, mInner.mNodeInfo);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLHtmlElement, Version, version)
