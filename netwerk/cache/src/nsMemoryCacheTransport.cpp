@@ -583,7 +583,8 @@ nsMemoryCacheReadRequest::Close()
 NS_IMETHODIMP
 nsMemoryCacheReadRequest::Available(PRUint32 *aCount)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_TRUE(mTransport, NS_BASE_STREAM_CLOSED);
+    return mTransport->Available(mTransferOffset, aCount);
 }
 
 NS_IMETHODIMP
