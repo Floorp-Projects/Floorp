@@ -20,8 +20,9 @@
  */
 
 var gPrefs;
-var addButton;
-var removeButton;
+var gAddButton;
+var gOKButton;
+var gRemoveButton;
 var gHeaderInputElement;
 var gArrayHdrs;
 var gHdrsList;
@@ -40,16 +41,21 @@ function onLoad()
       hdrs =null;
     }
     gHeaderInputElement = document.getElementById("headerInput");
+    gHeaderInputElement.focus();
+
     gHdrsList = document.getElementById("headerList");
     gArrayHdrs = new Array();
-    addButton = document.getElementById("addButton");
-    removeButton = document.getElementById("removeButton");
+    gAddButton = document.getElementById("addButton");
+    gRemoveButton = document.getElementById("removeButton");
+    gOKButton = document.getElementById("ok");
 
     initializeDialog(hdrs);
 
     doSetOKCancel(onOk, null);
 
-    updateButtons();
+    updateAddButton(true);
+    updateRemoveButton();
+
     moveToAlertPosition();
 }
 
@@ -68,8 +74,29 @@ function initializeRows()
     addRow(TrimString(gArrayHdrs[i]));
 }
 
+function onTextInput()
+{
+  // enable the add button if the user has started to type text
+  updateAddButton( (gHeaderInputElement.value == "") );
+}
+
+function enterKeyPressed()
+{
+   // if the add button is currently the default action then add the text
+  if (gHeaderInputElement.value != "" && !gAddButton.disable)
+  {
+    onAddHeader();
+  } 
+  else
+  {
+    // otherwise, the default action for the dialog is the OK button
+    if (! gOKButton.disabled) 
+      doOKButton();
+  }
+}
+
 function onOk()
-{ 
+{  
   if (gArrayHdrs.length)
   {
     var hdrs = gArrayHdrs.join(": ");
@@ -97,7 +124,11 @@ function onAddHeader()
   if (!duplicateHdrExists(newHdr))
   {
     gArrayHdrs[gArrayHdrs.length] = newHdr;
-    addRow(newHdr);
+    var newItem = addRow(newHdr);
+    gHdrsList.selectItem (newItem); // make sure the new entry is selected in the tree
+    // now disable the add button
+    updateAddButton(true);
+    gHeaderInputElement.focus(); // refocus the input field for the next custom header
   }
 }
 
@@ -110,7 +141,7 @@ function duplicateHdrExists(hdr)
   }
   return false;
 }
-  
+ 
 function onRemoveHeader()
 {
   var listitem = gHdrsList.selectedItems[0]
@@ -140,18 +171,38 @@ function addRow(newHdr)
 {
   var listitem = document.createElement("listitem");
   listitem.setAttribute("label", newHdr);
-  gHdrsList.appendChild(listitem);  
+  gHdrsList.appendChild(listitem); 
+  return listitem;  
 }
 
-function updateButtons()
+function updateAddButton(aDisable)
 {
-    var headerSelected = (gHdrsList.selectedItems.length > 0);
-    removeButton.disabled = !headerSelected;
+  // only update the button if we absolutely have to...
+  if (aDisable != gAddButton.disabled)
+  {
+    gAddButton.disabled = aDisable;
+    if (aDisable)
+    {
+      gOKButton.setAttribute('default', true); 
+      gAddButton.removeAttribute('default');
+    }
+    else
+    {
+      gOKButton.removeAttribute('default');
+      gAddButton.setAttribute('default', true); 
+    }
+  }
+}
+
+function updateRemoveButton()
+{
+  var headerSelected = (gHdrsList.selectedItems.length > 0);
+  gRemoveButton.disabled = !headerSelected;
 }
 
 //Remove whitespace from both ends of a string
 function TrimString(string)
 {
-   if (!string) return "";
-   return string.replace(/(^\s+)|(\s+$)/g, '')
+  if (!string) return "";
+  return string.replace(/(^\s+)|(\s+$)/g, '')
 }

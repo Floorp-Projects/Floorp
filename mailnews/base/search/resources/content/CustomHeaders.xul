@@ -37,7 +37,14 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
   <script type="application/x-javascript" src="chrome://messenger/content/CustomHeaders.js"/>
   <script src="chrome://messenger/content/searchTermOverlay.js"/>
 
-  <keyset id="dialogKeys"/>
+  <!-- we need to override the dialogs default key behavior so we can re-route enter/return
+       to the add button if the add button is suddenly the default action
+  -->
+  <keyset id="customHeaderDialogKeys">
+    <key keycode="VK_ENTER" oncommand="enterKeyPressed();"/>
+    <key keycode="VK_RETURN" oncommand="enterKeyPressed();"/>
+    <key keycode="VK_ESCAPE" oncommand="doCancelButton();"/>
+ </keyset>
 
   <grid flex="1">
     <columns>
@@ -49,12 +56,12 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
         <description>&newMsgHeader.label;</description>
       </row>
       <row>
-        <textbox id="headerInput"/>
+        <textbox id="headerInput" onfocus="this.select();" oninput="onTextInput();"/>
       </row>
 
       <row flex="1">
         <vbox>
-          <listbox id="headerList" flex="1" onselect="updateButtons();"/>
+          <listbox id="headerList" flex="1" onselect="updateRemoveButton();" />
         </vbox>
 
         <vbox>
