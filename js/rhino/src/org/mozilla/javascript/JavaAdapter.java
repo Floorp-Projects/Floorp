@@ -277,6 +277,17 @@ public class JavaAdapter extends ScriptableObject {
         return Context.getUndefinedValue();
     }
     
+    public static Scriptable toObject(Object value, Scriptable scope,
+                                      Class staticType)
+    {
+        Context.enter();
+        try {
+            return Context.toObject(value, scope, staticType);
+        } finally {
+            Context.exit();
+        }
+    }
+    
     private static void generateCtor(ClassFileWriter cfw, String adapterName, 
                                      String superName) 
     {
@@ -547,7 +558,7 @@ public class JavaAdapter extends ScriptableObject {
                         "Ljava/lang/Class;");
       
                 cfw.add(ByteCode.INVOKESTATIC, 
-                        "org/mozilla/javascript/Context", 
+                        "org/mozilla/javascript/JavaAdapter", 
                         "toObject", 
                         "(Ljava/lang/Object;" +
                          "Lorg/mozilla/javascript/Scriptable;" +
