@@ -51,27 +51,7 @@
 #include "nsUnicharUtils.h"
 #include "nsURLProperties.h"
 #include "nsITimelineService.h"
-//==============================================================
-class nsCharsetAlias2 : public nsICharsetAlias
-{
-  NS_DECL_ISUPPORTS
-
-public:
-
-  nsCharsetAlias2();
-  virtual ~nsCharsetAlias2();
-
-   NS_IMETHOD GetPreferred(const nsAString& aAlias, nsAString& oResult);
-   NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** oResult) ;
-   NS_IMETHOD GetPreferred(const char* aAlias, char* oResult, PRInt32 aBufLength) ;
-
-   NS_IMETHOD Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* oResult) ;
-   NS_IMETHOD Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* oResult) ;
-   NS_IMETHOD Equals(const char* aCharset1, const char* aCharset2, PRBool* oResult) ;
-
-private:
-   nsURLProperties* mDelegate;
-};
+#include "nsCharsetAlias.h"
 
 //--------------------------------------------------------------
 NS_IMPL_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias);
@@ -89,7 +69,7 @@ nsCharsetAlias2::~nsCharsetAlias2()
      delete mDelegate;
 }
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& oResult)
+NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAReadableString& aAlias, nsAWritableString& oResult)
 {
    if (aAlias.IsEmpty()) return NS_ERROR_NULL_POINTER;
    NS_TIMELINE_START_TIMER("nsCharsetAlias2:GetPreferred");
@@ -117,10 +97,9 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& 
        return NS_OK;
      } 
      //load charsetalias.properties string bundle with all remaining aliases
-     nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/charsetalias.properties");
      // we may need to protect the following section with a lock so we won't call the 
      // 'new nsURLProperties' from two different threads
-     mDelegate = new nsURLProperties( propertyURL );
+     mDelegate = new nsURLProperties( NS_LITERAL_STRING("resource:/res/charsetalias.properties") );
      NS_ASSERTION(mDelegate, "cannot create nsURLProperties");
      if(nsnull == mDelegate)
        return NS_ERROR_OUT_OF_MEMORY;
@@ -144,7 +123,7 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const char* aAlias, char* oResult, P
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* oResult)
+NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAReadableString& aCharset1, const nsAReadableString& aCharset2, PRBool* oResult)
 {
    nsresult res = NS_OK;
 
@@ -185,29 +164,3 @@ NS_IMETHODIMP nsCharsetAlias2::Equals(const char* aCharset1, const char* aCharse
 }
  
 
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP
-NS_NewCharsetAlias(nsISupports* aOuter, 
-                   const nsIID &aIID,
-                   void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsCharsetAlias2* inst = new nsCharsetAlias2();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}

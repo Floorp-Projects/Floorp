@@ -46,36 +46,19 @@
 #include "nsIMacLocale.h"
 #include "nsLocaleCID.h"
 #include "nsReadableUtils.h"
+#include "nsPlatformCharset.h"
 
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt = 0;
 
-class nsMacCharset : public nsIPlatformCharset
-{
-  NS_DECL_ISUPPORTS
+NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
 
-public:
-
-  nsMacCharset();
-  virtual ~nsMacCharset();
-
-  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
-  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
-
-private:
-  nsresult InitInfo();
-  nsresult MapToCharset(short script, short region, nsString& outCharset); 
-  nsString mCharset;
-};
-
-NS_IMPL_ISUPPORTS1(nsMacCharset, nsIPlatformCharset);
-
-nsMacCharset::nsMacCharset()
+nsPlatformCharset::nsPlatformCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&gCnt);
 }
-nsMacCharset::~nsMacCharset()
+nsPlatformCharset::~nsPlatformCharset()
 {
   PR_AtomicDecrement(&gCnt);
   if((0 == gCnt) && (nsnull != gInfo)) {
@@ -84,14 +67,11 @@ nsMacCharset::~nsMacCharset()
   }
 }
 
-nsresult nsMacCharset::InitInfo()
+nsresult nsPlatformCharset::InitInfo()
 {  
   // load the .property file if necessary
   if (gInfo == nsnull) {
-  
-    nsAutoString propertyURL(NS_LITERAL_STRING("resource:/res/maccharset.properties"));
-
-    nsURLProperties *info = new nsURLProperties( propertyURL );
+    nsURLProperties *info = new nsURLProperties( NS_LITERAL_STRING("resource:/res/maccharset.properties") );
     NS_ASSERTION(info , "cannot open properties file");
     NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
     gInfo = info;
@@ -100,7 +80,7 @@ nsresult nsMacCharset::InitInfo()
   return NS_OK;
 }
 
-nsresult nsMacCharset::MapToCharset(short script, short region, nsString& outCharset)
+nsresult nsPlatformCharset::MapToCharset(short script, short region, nsAWritableString& outCharset)
 {
   switch (region) {
     case verUS:
@@ -123,12 +103,12 @@ nsresult nsMacCharset::MapToCharset(short script, short region, nsString& outCha
 
   rv = gInfo->Get(key, outCharset);
   if (NS_FAILED(rv)) {
-    key.AssignWithConversion("script.");
+    key.Assign(NS_LITERAL_STRING("script."));
     key.AppendInt(script, 10);
     rv = gInfo->Get(key, outCharset);
     // not found in the .property file, assign x-mac-roman
     if (NS_FAILED(rv)) { 
-      outCharset.AssignWithConversion("x-mac-roman");
+      outCharset.Assign(NS_LITERAL_STRING("x-mac-roman"));
     }
   }
   
@@ -136,7 +116,7 @@ nsresult nsMacCharset::MapToCharset(short script, short region, nsString& outCha
 }
 
 NS_IMETHODIMP 
-nsMacCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
+nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult)
 {
   if (mCharset.IsEmpty()) {
     nsresult rv = MapToCharset((short)(0x0000FFFF & ::GetScriptManagerVariable(smSysScript)), 
@@ -150,7 +130,7 @@ nsMacCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 }
 
 NS_IMETHODIMP 
-nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
 {
   nsCOMPtr<nsIMacLocale>	pMacLocale;
   nsAutoString localeAsString(localeName), charset(NS_LITERAL_STRING("x-mac-roman"));
@@ -170,29 +150,32 @@ nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
   return rv;
 }
 
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP
-NS_NewPlatformCharset(nsISupports* aOuter, 
-                      const nsIID &aIID,
-                      void **aResult)
+NS_IMETHODIMP 
+nsPlatformCharset::Init()
 {
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsMacCharset* inst = new nsMacCharset();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
+  return NS_OK;
+}
+
+nsresult 
+nsPlatformCharset::MapToCharset(nsString& inANSICodePage, nsAWritableString& outCharset)
+{
+  return NS_OK;
+}
+
+nsresult
+nsPlatformCharset::InitGetCharset(nsAWritableString &oString)
+{
+  return NS_OK;
+}
+
+nsresult
+nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAWritableString& oResult)
+{
+  return NS_OK;
+}
+
+nsresult
+nsPlatformCharset::VerifyCharset(nsString &aCharset)
+{
+  return NS_OK;
 }

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
@@ -35,27 +35,56 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsUnicodeEncodeHelper_h__
+#define nsUnicodeEncodeHelper_h__
 
-#include "nsUCvMinSupport.h"
-#include "nsCP1252ToUnicode.h"
-
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-static const PRUint16 g_utMappingTable[] = {
-#include "cp1252.ut"
-};
-
-static const PRInt16 g_utShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
+#include "nsIUnicodeEncoder.h"
+#include "nsIUnicodeEncodeHelper.h"
 
 //----------------------------------------------------------------------
-// Class nsCP1252ToUnicode [implementation]
+// Class nsUnicodeEncodeHelper [declaration]
 
-nsCP1252ToUnicode::nsCP1252ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+/**
+ * The actual implementation of the nsIUnicodeEncodeHelper interface.
+ *
+ * @created         22/Nov/1998
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsUnicodeEncodeHelper : public nsIUnicodeEncodeHelper
 {
-}
+  NS_DECL_ISUPPORTS
+
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUnicodeEncodeHelper();
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsUnicodeEncodeHelper();
+
+  //--------------------------------------------------------------------
+  // Interface nsIUnicodeEncodeHelper [declaration]
+
+  NS_IMETHOD ConvertByTable(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+      char * aDest, PRInt32 * aDestLength, uShiftTable * aShiftTable, 
+      uMappingTable  * aMappingTable);
+
+  NS_IMETHOD ConvertByMultiTable(const PRUnichar * aSrc, PRInt32 * aSrcLength,
+      char * aDest, PRInt32 * aDestLength, PRInt32 aTableCount, 
+      uShiftTable ** aShiftTable, uMappingTable  ** aMappingTable);
+
+  NS_IMETHOD CreateCache(nsMappingCacheType aType, nsIMappingCache* aResult);
+
+  NS_IMETHOD DestroyCache(nsIMappingCache aCache);
+ 
+  NS_IMETHOD FillInfo(PRUint32* aInfo, uMappingTable  * aMappingTable);
+  NS_IMETHOD FillInfo(PRUint32* aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable);
+};
+
+#endif // nsUnicodeEncodeHelper_h__
+
+

@@ -55,6 +55,7 @@
 // just for CIDs
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
+#include "nsCharsetConverterManager.h"
 
 static NS_DEFINE_IID(kRegistryNodeIID, NS_IREGISTRYNODE_IID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
@@ -65,138 +66,7 @@ static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 // Pattern of cached, commonly used, single byte decoder
 #define NS_1BYTE_CODER_PATTERN "ISO-8859"
 #define NS_1BYTE_CODER_PATTERN_LEN 8
-//----------------------------------------------------------------------------
-// Class nsCharsetConverterManager [declaration]
 
-/**
- * The actual implementation of the nsICharsetConverterManager2 interface. It   
- * alsoimplements the soon to be deprecated nsICharsetConverterManager. 
- *
- * XXX completely deprecate the nsICharsetConverterManager interface
- * XXX optimise the memory allocations in "scriptable" and "friendly" methods
- *
- * @created         15/Nov/1999
- * @author  Catalin Rotaru [CATA]
- */
-class nsCharsetConverterManager : public nsICharsetConverterManager, 
-public nsICharsetConverterManager2
-{
-  NS_DECL_ISUPPORTS
-
-private:
-
-  nsIStringBundle * mDataBundle;
-  nsIStringBundle * mTitleBundle;
-
-  nsresult LoadExtensibleBundle(const char * aRegistryKey, 
-      nsIStringBundle ** aResult);
-
-  static nsresult RegisterConverterTitles(nsIRegistry * aRegistry, 
-      const char * aRegistryPath);
-
-  static nsresult RegisterConverterData(nsIRegistry * aRegistry, 
-      const char * aRegistryPath);
-
-  nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
-                          const nsAFlatString& aProp, PRUnichar ** aResult);
-
-  nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
-                          const nsAFlatString& aProp, nsIAtom ** aResult);
-
-  nsresult GetRegistryEnumeration(const char * aRegistryKey,
-    const char * aAddPrefix, nsISupportsArray ** aArray);
-
-  nsresult GetRegistryEnumeration2(const char * aRegistryKey, PRBool aDecoder,
-    nsISupportsArray ** aArray);
-
-public:
-
-  nsCharsetConverterManager();
-  virtual ~nsCharsetConverterManager();
-
-  static nsresult RegisterConverterManagerData();
-
-  //--------------------------------------------------------------------------
-  // Interface nsICharsetConverterManager [declaration]
-
-  NS_IMETHOD GetUnicodeEncoder(const nsString * aDest, 
-      nsIUnicodeEncoder ** aResult);
-  NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
-      nsIUnicodeDecoder ** aResult);
-
-  NS_IMETHOD GetCharsetLangGroup(nsString * aCharset, nsIAtom ** aResult);
-
-  //--------------------------------------------------------------------------
-  // Interface nsICharsetConverterManager2 [declaration]
-
-  NS_IMETHOD GetUnicodeDecoder(const nsIAtom * aCharset,
-    nsIUnicodeDecoder ** aResult);
-  NS_IMETHOD GetUnicodeEncoder(const nsIAtom * aCharset,
-    nsIUnicodeEncoder ** aResult);
-
-  NS_IMETHOD GetDecoderList(nsISupportsArray ** aResult);
-  NS_IMETHOD GetEncoderList(nsISupportsArray ** aResult);
-  NS_IMETHOD GetCharsetDetectorList(nsISupportsArray ** aResult);
-
-  NS_IMETHOD GetCharsetAtom(const PRUnichar * aCharset, nsIAtom ** aResult);
-  NS_IMETHOD GetCharsetAtom2(const char * aCharset, nsIAtom ** aResult);
-  NS_IMETHOD GetCharsetTitle(const nsIAtom * aCharset, PRUnichar ** aResult);
-  NS_IMETHOD GetCharsetTitle2(const nsIAtom * aCharset, nsString * aResult);
-  NS_IMETHOD GetCharsetData(const nsIAtom * aCharset, const PRUnichar * aProp, 
-    PRUnichar ** aResult);
-  NS_IMETHOD GetCharsetData2(const nsIAtom * aCharset, const PRUnichar * aProp, 
-    nsString * aResult);
-  NS_IMETHOD GetCharsetLangGroup(const nsIAtom * aCharset, nsIAtom ** aResult);
-};
-
-//----------------------------------------------------------------------------
-// Global functions and data [implementation]
-
-NS_IMETHODIMP NS_NewCharsetConverterManager(nsISupports* aOuter, 
-                                            const nsIID& aIID,
-                                            void** aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsCharsetConverterManager * inst = new nsCharsetConverterManager();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}
-
-NS_IMETHODIMP
-NS_RegisterConverterManagerData(nsIComponentManager* aCompMgr,
-                                nsIFile* aPath,
-                                const char *aLocation,
-                                const char *aType,
-                                const nsModuleComponentInfo* aInfo)
-{
-  return nsCharsetConverterManager::RegisterConverterManagerData();
-}
-
-NS_IMETHODIMP
-NS_UnregisterConverterManagerData(nsIComponentManager* aCompMgr,
-                                  nsIFile* aPath,
-                                  const char* aRegistryLocation,
-                                  const nsModuleComponentInfo* aInfo)
-{
-  // XXX TODO remove converter manager cruft
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------------
 // Class nsCharsetConverterManager [implementation]
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsCharsetConverterManager,
@@ -561,8 +431,6 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
   if (aResult == NULL) return NS_ERROR_NULL_POINTER;
   *aResult = NULL;
 
-  nsAutoString prop; prop.AssignWithConversion(".LangGroup");
-
   nsCOMPtr<nsIAtom> atom;
   nsresult res = GetCharsetAtom(aCharset->get(), getter_AddRefs(atom));
   if (NS_FAILED(res)) return res;
@@ -570,9 +438,6 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetLangGroup(
   res = GetCharsetLangGroup(atom, aResult);
   return res;
 }
-
-//----------------------------------------------------------------------------
-// Interface nsICharsetConverterManager2 [implementation]
 
 NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
                                          const nsIAtom * aCharset, 
@@ -685,7 +550,6 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(
   *aResult = NULL;
 
   nsresult res = NS_OK;
-  nsAutoString prop; prop.AssignWithConversion(".title");
 
   if (mTitleBundle == NULL) {
     res = LoadExtensibleBundle(NS_TITLE_BUNDLE_REGISTRY_KEY, &mTitleBundle);

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
@@ -35,27 +35,20 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsTextToSubURI_h__
+#define nsTextToSubURI_h__
 
-#include "nsUCvMinSupport.h"
-#include "nsCP1252ToUnicode.h"
+#include "nsITextToSubURI.h"
 
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
+//==============================================================
+class nsTextToSubURI: public nsITextToSubURI {
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITEXTTOSUBURI
 
-static const PRUint16 g_utMappingTable[] = {
-#include "cp1252.ut"
+public:
+  nsTextToSubURI();
+  virtual ~nsTextToSubURI();
 };
 
-static const PRInt16 g_utShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
+#endif // nsTextToSubURI_h__
 
-//----------------------------------------------------------------------
-// Class nsCP1252ToUnicode [implementation]
-
-nsCP1252ToUnicode::nsCP1252ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
-{
-}

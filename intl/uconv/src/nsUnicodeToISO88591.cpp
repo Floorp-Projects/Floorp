@@ -39,30 +39,6 @@
 #include "nsUCvMinSupport.h"
 #include "nsUnicodeToISO88591.h"
 
-NS_IMETHODIMP NS_NewUnicodeToISO88591(nsISupports* aOuter, 
-                                            const nsIID& aIID,
-                                            void** aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsUnicodeToISO88591 * inst = new nsUnicodeToISO88591();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}
-
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 

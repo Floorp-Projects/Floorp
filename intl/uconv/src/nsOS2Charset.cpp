@@ -32,28 +32,14 @@
 #include "nsCOMPtr.h"
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
+#include "nsPlatformCharset.h"
 
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt= 0;
 
-class nsOS2Charset : public nsIPlatformCharset
-{
-  NS_DECL_ISUPPORTS
+NS_IMPL_ISUPPORTS1(PlatformCharset, nsIPlatformCharset);
 
-public:
-
-  nsOS2Charset();
-  virtual ~nsOS2Charset();
-
-  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
-  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
-private:
-  nsString mCharset;
-};
-
-NS_IMPL_ISUPPORTS1(nsOS2Charset, nsIPlatformCharset);
-
-nsOS2Charset::nsOS2Charset()
+PlatformCharset::PlatformCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&gCnt); // count for gInfo
@@ -61,132 +47,96 @@ nsOS2Charset::nsOS2Charset()
   // XXX We should make the following block critical section
   if(nsnull == gInfo)
   {
-     nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/os2charset.properties");
-
-     nsURLProperties *info = new nsURLProperties( propertyURL );
-     NS_ASSERTION( info , " cannot create nsURLProperties");
-     gInfo = info;
+    nsURLProperties *info = new nsURLProperties(NS_LITERAL_STRING("resource:/res/os2charset.properties"));
+    NS_ASSERTION( info , " cannot create nsURLProperties");
+    gInfo = info;
   }
   NS_ASSERTION(gInfo, "Cannot open property file");
   if( gInfo ) 
   {
     UINT acp = ::WinQueryCp(HMQ_CURRENT);
     PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
-    nsAutoString acpKey; acpKey.AssignWithConversion("os2.");
+    nsAutoString acpKey; acpKey.Assign(NS_LITERAL_STRING("os2."));
     acpKey.AppendInt(acpint, 10);
 
     nsresult res = gInfo->Get(acpKey, mCharset);
     if(NS_FAILED(res)) {
-      mCharset.AssignWithConversion("IBM850");
+      mCharset.Assign(NS_LITERAL_STRING("IBM850"));
     }
 
   } else {
-    mCharset.AssignWithConversion("IBM850");
+    mCharset.Assign(NS_LITERAL_STRING("IBM850"));
   }
 }
 
-nsOS2Charset::~nsOS2Charset()
+PlatformCharset::~PlatformCharset()
 {
   PR_AtomicDecrement(&gCnt);
   if(0 == gCnt) {
-     delete gInfo;
-     gInfo = nsnull;
+    delete gInfo;
+    gInfo = nsnull;
   }
 }
 
 NS_IMETHODIMP
-nsOS2Charset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
+PlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult)
 {
-   if (selector == kPlatformCharsetSel_4xBookmarkFile) {
-      if ((mCharset.Find("IBM850", IGNORE_CASE) != -1) || (mCharset.Find("IBM437", IGNORE_CASE) != -1)) 
-         oResult.AssignWithConversion("ISO-8859-1");
-      else if (mCharset.Find("IBM852", IGNORE_CASE) != -1)
-         oResult.AssignWithConversion("windows-1250");
-      else if ((mCharset.Find("IBM855", IGNORE_CASE) != -1) || (mCharset.Find("IBM866", IGNORE_CASE) != -1))
-         oResult.AssignWithConversion("windows-1251");
-      else if ((mCharset.Find("IBM869", IGNORE_CASE) != -1) || (mCharset.Find("IBM813", IGNORE_CASE) != -1))
-         oResult.AssignWithConversion("windows-1253");
-      else if (mCharset.Find("IBM857", IGNORE_CASE) != -1)
-         oResult.AssignWithConversion("windows-1254");
-      else
-         oResult = mCharset;
-   } else {
+  if (selector == kPlatformCharsetSel_4xBookmarkFile) {
+    if ((mCharset.Find("IBM850", IGNORE_CASE) != -1) || (mCharset.Find("IBM437", IGNORE_CASE) != -1)) 
+      oResult.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+    else if (mCharset.Find("IBM852", IGNORE_CASE) != -1)
+      oResult.Assign(NS_LITERAL_STRING("windows-1250"));
+    else if ((mCharset.Find("IBM855", IGNORE_CASE) != -1) || (mCharset.Find("IBM866", IGNORE_CASE) != -1))
+      oResult.Assign(NS_LITERAL_STRING("windows-1251"));
+    else if ((mCharset.Find("IBM869", IGNORE_CASE) != -1) || (mCharset.Find("IBM813", IGNORE_CASE) != -1))
+      oResult.Assign(NS_LITERAL_STRING("windows-1253"));
+    else if (mCharset.Find("IBM857", IGNORE_CASE) != -1)
+      oResult.Assign(NS_LITERAL_STRING("windows-1254"));
+    else
       oResult = mCharset;
-   }
-   return NS_OK;
+  } else {
+    oResult = mCharset;
+  }
+  return NS_OK;
 }
 
-class nsOS2CharsetFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
-
-public:
-   nsOS2CharsetFactory() {
-     NS_INIT_REFCNT();
-   }
-   virtual ~nsOS2CharsetFactory() {
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
-
-};
-
-NS_IMPL_ISUPPORTS1( nsOS2CharsetFactory , nsIFactory)
-
-NS_IMETHODIMP nsOS2CharsetFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+NS_IMETHODIMP 
+nsPlatformCharset::Init()
 {
-  if( !aResult)
-        return NS_ERROR_NULL_POINTER;
-  if( aDelegate)
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-  nsISupports *inst = new nsOS2Charset;
-  if( !inst)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res))
-     delete inst;
-
-  return res;
+  return NS_OK;
 }
-NS_IMETHODIMP nsOS2CharsetFactory::LockFactory(PRBool aLock)
+nsresult 
+nsPlatformCharset::MapToCharset(short script, short region, nsAWritableString& outCharset)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsOS2Charset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+nsresult 
+nsPlatformCharset::MapToCharset(nsString& inANSICodePage, nsAWritableString& outCharset)
 {
-  // OS2TODO
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP
-NS_NewPlatformCharset(nsISupports* aOuter,
-                      const nsIID &aIID,
-                      void **aResult)
+nsresult
+nsPlatformCharset::InitGetCharset(nsAWritableString &oString)
 {
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsOS2Charset* inst = new nsOS2Charset();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
+  return NS_OK;
+}
+
+nsresult
+nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAWritableString& oResult)
+{
+  return NS_OK;
+}
+
+nsresult
+nsPlatformCharset::VerifyCharset(nsString &aCharset)
+{
+  return NS_OK;
+}
+
+nsresult 
+nsPlatformCharset::InitInfo()
+{  
+  return NS_OK;
 }

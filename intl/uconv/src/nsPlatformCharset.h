@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
@@ -35,27 +35,36 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsPlatformCharset_h__
+#define nsPlatformCharset_h__
 
-#include "nsUCvMinSupport.h"
-#include "nsCP1252ToUnicode.h"
+#include "nsIPlatformCharset.h"
 
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-static const PRUint16 g_utMappingTable[] = {
-#include "cp1252.ut"
-};
-
-static const PRInt16 g_utShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-//----------------------------------------------------------------------
-// Class nsCP1252ToUnicode [implementation]
-
-nsCP1252ToUnicode::nsCP1252ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+class nsPlatformCharset : public nsIPlatformCharset
 {
-}
+  NS_DECL_ISUPPORTS
+
+public:
+
+  nsPlatformCharset();
+  virtual ~nsPlatformCharset();
+
+  NS_IMETHOD Init();
+  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult);
+  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
+
+private:
+  nsString mCharset;
+  nsString mLocale; // remember the locale & charset
+
+  nsresult InitInfo();
+  nsresult MapToCharset(short script, short region, nsAWritableString& outCharset); 
+  nsresult MapToCharset(nsString& inANSICodePage, nsAWritableString& outCharset);
+  nsresult InitGetCharset(nsAWritableString& oString);
+  nsresult ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAWritableString& oResult);
+  nsresult VerifyCharset(nsString &aCharset);
+};
+
+#endif // nsPlatformCharset_h__
+
+

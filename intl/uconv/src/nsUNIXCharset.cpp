@@ -59,105 +59,82 @@
 #if HAVE_NL_LANGINFO
 #include <langinfo.h>
 #endif
+#include "nsPlatformCharset.h"
 
-class nsUNIXCharset : public nsIPlatformCharset
-{
-  NS_DECL_ISUPPORTS
-
-public:
-
-  nsUNIXCharset();
-  virtual ~nsUNIXCharset();
-
-  NS_IMETHOD Init();
-  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
-  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
-
-private:
-  nsString mCharset;
-  nsString mLocale; // remember the locale & charset
-
-  NS_IMETHOD InitGetCharset(nsString&);
-  NS_IMETHOD ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString&, nsString&);
-  NS_IMETHOD VerifyCharset(nsString &aCharset);
-};
-
-NS_IMPL_ISUPPORTS1(nsUNIXCharset, nsIPlatformCharset);
+NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
 
 static nsURLProperties *gNLInfo = nsnull;
 static nsURLProperties *gInfo_deprecated = nsnull;
 static PRInt32 gCnt=0;
 
-nsUNIXCharset::nsUNIXCharset()
+nsPlatformCharset::nsPlatformCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&gCnt);
 }
 
-NS_IMETHODIMP
-nsUNIXCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsString& oResult)
+nsresult
+nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& locale, nsAWritableString& oResult)
 {
 
   // XXX for thread safety the following block should be locked
   if(nsnull == gInfo_deprecated)
   {
-      nsAutoString propertyURL;
-      propertyURL.AssignWithConversion("resource:/res/unixcharset.properties");
-      nsURLProperties *info = new nsURLProperties( propertyURL );
-      NS_ASSERTION( info, "cannot create nsURLProperties");
-      gInfo_deprecated = info;
+    nsURLProperties *info = new nsURLProperties( NS_LITERAL_STRING("resource:/res/unixcharset.properties") );
+    NS_ASSERTION( info, "cannot create nsURLProperties");
+    gInfo_deprecated = info;
   }
 
   if(gInfo_deprecated && locale.Length())
   {
-      nsAutoString platformLocaleKey;
-      // note: NS_LITERAL_STRING("locale." OSTYPE ".") does not compile on AIX
-      platformLocaleKey.Assign(NS_LITERAL_STRING("locale."));
-      platformLocaleKey.AppendWithConversion(OSTYPE);
-      platformLocaleKey.Append(NS_LITERAL_STRING("."));
-      platformLocaleKey.Append(locale.get());
+    nsAutoString platformLocaleKey;
+    // note: NS_LITERAL_STRING("locale." OSTYPE ".") does not compile on AIX
+    platformLocaleKey.Assign(NS_LITERAL_STRING("locale."));
+    platformLocaleKey.AppendWithConversion(OSTYPE);
+    platformLocaleKey.Append(NS_LITERAL_STRING("."));
+    platformLocaleKey.Append(locale.get());
 
-      nsresult res = gInfo_deprecated->Get(platformLocaleKey, oResult);
-      if(NS_SUCCEEDED(res))  {
-         return NS_OK;
-      }
-      nsAutoString localeKey;
-      localeKey.Assign(NS_LITERAL_STRING("locale.all."));
-      localeKey.Append(locale.get());
-      res = gInfo_deprecated->Get(localeKey, oResult);
-      if(NS_SUCCEEDED(res))  {
-         return NS_OK;
-      }
+    nsresult res = gInfo_deprecated->Get(platformLocaleKey, oResult);
+    if(NS_SUCCEEDED(res))  {
+      return NS_OK;
+    }
+    nsAutoString localeKey;
+    localeKey.Assign(NS_LITERAL_STRING("locale.all."));
+    localeKey.Append(locale.get());
+    res = gInfo_deprecated->Get(localeKey, oResult);
+    if(NS_SUCCEEDED(res))  {
+      return NS_OK;
+    }
    }
    NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
-   mCharset.AssignWithConversion("ISO-8859-1");
+   mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
    return NS_ERROR_USING_FALLBACK_LOCALE;
 }
 
-nsUNIXCharset::~nsUNIXCharset()
+nsPlatformCharset::~nsPlatformCharset()
 {
   PR_AtomicDecrement(&gCnt);
   if(0 == gCnt) {
-     if (gNLInfo) {
-        delete gNLInfo;
-        gNLInfo = nsnull;
-     }
-     if (gInfo_deprecated) {
-        delete gInfo_deprecated;
-        gInfo_deprecated = nsnull;
-     }
+    if (gNLInfo) {
+      delete gNLInfo;
+      gNLInfo = nsnull;
+    }
+    if (gInfo_deprecated) {
+      delete gInfo_deprecated;
+      gInfo_deprecated = nsnull;
+    }
   }
 }
 
 NS_IMETHODIMP 
-nsUNIXCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
+nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAWritableString& oResult)
 {
-   oResult = mCharset; 
-   return NS_OK;
+  oResult = mCharset; 
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
 {
   nsAutoString localeNameAsString(localeName);
 
@@ -166,8 +143,8 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
   // we already determined at initialization
   // 
   if (mLocale.Equals(localeNameAsString) ||
-     // support the 4.x behavior
-     (mLocale.EqualsIgnoreCase("en_US") && localeNameAsString.EqualsIgnoreCase("C"))) {
+    // support the 4.x behavior
+    (mLocale.EqualsIgnoreCase("en_US") && localeNameAsString.EqualsIgnoreCase("C"))) {
     *_retValue = ToNewUnicode(mCharset);
     return NS_OK;
   }
@@ -204,43 +181,8 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
   return NS_ERROR_USING_FALLBACK_LOCALE;
 }
 
-//----------------------------------------------------------------------
-
-NS_IMETHODIMP
-NS_NewPlatformCharset(nsISupports* aOuter, 
-                      const nsIID &aIID,
-                      void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsUNIXCharset* inst = new nsUNIXCharset();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->Init();
-  if (NS_FAILED(res)) {
-    if (res != NS_ERROR_USING_FALLBACK_LOCALE) {
-      delete inst;
-      return res;
-    }
-  }
-
-  res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}
-
-NS_IMETHODIMP
-nsUNIXCharset::InitGetCharset(nsString &oString)
+nsresult
+nsPlatformCharset::InitGetCharset(nsAWritableString &oString)
 {
   char* nl_langinfo_codeset = nsnull;
   nsString aCharset;
@@ -290,11 +232,11 @@ nsUNIXCharset::InitGetCharset(nsString &oString)
       localeKey.AppendWithConversion(nl_langinfo_codeset);
       res = gNLInfo->Get(localeKey, aCharset);
       if (NS_SUCCEEDED(res)) {
-         res = VerifyCharset(aCharset);
-         if (NS_SUCCEEDED(res)) {
-           oString = aCharset;
-           return res;
-         }
+        res = VerifyCharset(aCharset);
+        if (NS_SUCCEEDED(res)) {
+          oString = aCharset;
+          return res;
+        }
       }
     }
 #endif
@@ -306,11 +248,11 @@ nsUNIXCharset::InitGetCharset(nsString &oString)
     localeKey.AppendWithConversion(nl_langinfo_codeset);
     res = gNLInfo->Get(localeKey, aCharset);
     if (NS_SUCCEEDED(res)) {
-       res = VerifyCharset(aCharset);
-       if (NS_SUCCEEDED(res)) {
-         oString = aCharset;
-         return res;
-       }
+      res = VerifyCharset(aCharset);
+      if (NS_SUCCEEDED(res)) {
+        oString = aCharset;
+        return res;
+      }
     }
   }
 
@@ -328,7 +270,7 @@ nsUNIXCharset::InitGetCharset(nsString &oString)
   }
 
 #if HAVE_NL_LANGINFO
-   NS_ASSERTION(0, "unable to use nl_langinfo(CODESET)");
+  NS_ASSERTION(0, "unable to use nl_langinfo(CODESET)");
 #endif
 
   //
@@ -347,7 +289,7 @@ nsUNIXCharset::InitGetCharset(nsString &oString)
 }
 
 NS_IMETHODIMP 
-nsUNIXCharset::Init()
+nsPlatformCharset::Init()
 {
   nsString charset;
   nsresult res;
@@ -376,8 +318,8 @@ nsUNIXCharset::Init()
   return NS_ERROR_USING_FALLBACK_LOCALE;
 }
 
-NS_IMETHODIMP 
-nsUNIXCharset::VerifyCharset(nsString &aCharset)
+nsresult
+nsPlatformCharset::VerifyCharset(nsString &aCharset)
 {
   nsresult res;
   //
@@ -429,3 +371,20 @@ nsUNIXCharset::VerifyCharset(nsString &aCharset)
   return NS_OK;
 }
 
+nsresult 
+nsPlatformCharset::MapToCharset(short script, short region, nsAWritableString& outCharset)
+{
+  return NS_OK;
+}
+
+nsresult 
+nsPlatformCharset::MapToCharset(nsString& inANSICodePage, nsAWritableString& outCharset)
+{
+  return NS_OK;
+}
+
+nsresult 
+nsPlatformCharset::InitInfo()
+{  
+  return NS_OK;
+}

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
@@ -35,27 +35,34 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsCharsetAlias_h__
+#define nsCharsetAlias_h__
 
-#include "nsUCvMinSupport.h"
-#include "nsCP1252ToUnicode.h"
+#include "nsICharsetAlias.h"
+#include "nsURLProperties.h"
 
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-static const PRUint16 g_utMappingTable[] = {
-#include "cp1252.ut"
-};
-
-static const PRInt16 g_utShiftTable[] =  {
-  0, u1ByteCharset ,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-//----------------------------------------------------------------------
-// Class nsCP1252ToUnicode [implementation]
-
-nsCP1252ToUnicode::nsCP1252ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+//==============================================================
+class nsCharsetAlias2 : public nsICharsetAlias
 {
-}
+  NS_DECL_ISUPPORTS
+
+public:
+
+  nsCharsetAlias2();
+  virtual ~nsCharsetAlias2();
+
+  NS_IMETHOD GetPreferred(const nsAReadableString& aAlias, nsAWritableString& oResult);
+  NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** oResult) ;
+  NS_IMETHOD GetPreferred(const char* aAlias, char* oResult, PRInt32 aBufLength) ;
+
+  NS_IMETHOD Equals(const nsAReadableString& aCharset1, const nsAReadableString& aCharset2, PRBool* oResult) ;
+  NS_IMETHOD Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* oResult) ;
+  NS_IMETHOD Equals(const char* aCharset1, const char* aCharset2, PRBool* oResult) ;
+
+private:
+  nsURLProperties* mDelegate;
+};
+
+#endif // nsCharsetAlias_h__
+
+

@@ -44,17 +44,10 @@
 #include "nsUConvDll.h"
 #include "nsEscape.h"
 #include "prmem.h"
+#include "nsTextToSubURI.h"
 
 static NS_DEFINE_CID(kITextToSubURIIID, NS_ITEXTTOSUBURI_IID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
-class nsTextToSubURI: public nsITextToSubURI {
-    NS_DECL_ISUPPORTS
-public:
-    nsTextToSubURI();
-    virtual ~nsTextToSubURI();
-    NS_DECL_NSITEXTTOSUBURI
-};
 
 nsTextToSubURI::nsTextToSubURI()
 {
@@ -164,28 +157,3 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
 }
 
 //----------------------------------------------------------------------
-
-NS_IMETHODIMP
-NS_NewTextToSubURI(nsISupports* aOuter, 
-                   const nsIID &aIID,
-                   void **aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsTextToSubURI* inst = new nsTextToSubURI();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}

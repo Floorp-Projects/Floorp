@@ -39,31 +39,6 @@
 #include "nsUCvMinSupport.h"
 #include "nsUnicodeToCP1252.h"
 
-NS_IMETHODIMP NS_NewUnicodeToCP1252(nsISupports* aOuter, 
-                                            const nsIID& aIID,
-                                            void** aResult)
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aOuter) {
-    *aResult = nsnull;
-    return NS_ERROR_NO_AGGREGATION;
-  }
-  nsUnicodeToCP1252 * inst = new nsUnicodeToCP1252();
-  if (!inst) {
-    *aResult = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res = inst->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) {
-    *aResult = nsnull;
-    delete inst;
-  }
-  return res;
-}
-
-
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
