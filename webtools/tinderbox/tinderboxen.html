@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+l<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html>
   <head>
     <title>Tinderboxen Big Picture</title>
@@ -25,7 +25,7 @@
 
   // Add trees here.
   var $tree1 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey&express=1";
-  var $tree2 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey-Embed&express=1";
+  //var $tree2 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey-Embed&express=1";
   var $tree3 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey-Ports&express=1";
 
 
@@ -48,16 +48,16 @@
       // 4.x 
       printLayer($tree1);
       document.write("<hr>");
-      printLayer($tree2);
-      document.write("<hr>");
+      //printLayer($tree2);
+      //document.write("<hr>");
       printLayer($tree3);
 
   } else {
       // Mozilla or IE
       printIFrame($tree1);
       document.write("<hr>");
-      printIFrame($tree2);
-      document.write("<hr>");
+      //printIFrame($tree2);
+      //document.write("<hr>");
       printIFrame($tree3);
 
   }
