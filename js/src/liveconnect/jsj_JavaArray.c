@@ -161,7 +161,7 @@ access_java_array_element(JSContext *cx,
                         *vp = INT_TO_JSVAL(array_length);
                     return JS_TRUE;
                 }
-
+                
                 /* Check to see if we're reflecting a Java array method */
                 return JavaObject_getPropertyById(cx, obj, id, vp);
             }
@@ -242,7 +242,6 @@ JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                             )
 {
     JNIEnv *jEnv;
-    JSBool result;
     JSErrorReporter old_reporter;
     JSJavaThreadState *jsj_env;
 
@@ -251,12 +250,16 @@ JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
         return JS_FALSE;
 
     old_reporter = JS_SetErrorReporter(cx, NULL);
-    result = access_java_array_element(cx, jEnv, obj, id, NULL, JS_FALSE);
-    if (result && objp) 
+    if (access_java_array_element(cx, jEnv, obj, id, NULL, JS_FALSE)) {
         *objp = obj;
+        *propp = (JSProperty*)1;
+    } else {
+        *objp = NULL;
+        *propp = NULL;
+    }
     JS_SetErrorReporter(cx, old_reporter);
     jsj_ExitJava(jsj_env);
-    return result;
+    return JS_TRUE;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
