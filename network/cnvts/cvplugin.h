@@ -20,6 +20,8 @@
 #ifndef CVPLUGIN_H
 #define CVPLUGIN_H
 
+#include "ntypes.h"
+
 extern NET_StreamClass *
 NET_PluginStream(int format_out, void* data_obj,
                  URL_Struct* URL_s, MWContext* window_id);

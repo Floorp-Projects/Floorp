@@ -151,6 +151,8 @@ unregister_converter(char *mime_type, void *data_id)
 }
 
 
+extern "C" NET_StreamClass * NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w);
+
 extern "C" NET_StreamClass *
 NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 {
