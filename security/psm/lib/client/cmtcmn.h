@@ -1872,9 +1872,14 @@ typedef struct _NameList {
    char ** names;
 } NameList;
 
+CMTStatus CMT_CreateKeyGenContextForKeyGenTag(PCMT_CONTROL control, 
+                                              CMUint32       *keyGenContext,
+                                              CMUint32       *errorCode);
+
 char * CMT_GenKeyOldStyle(PCMT_CONTROL control, CMKeyGenTagArg * arg, 
                           CMKeyGenTagReq * next);
-
+char * CMT_GetGenKeyResponse(PCMT_CONTROL control, CMKeyGenTagArg * arg, 
+                             CMKeyGenTagReq *next);
 /* Certificates */
 CMTStatus CMT_FindCertificateByNickname(PCMT_CONTROL control, char * nickname, CMUint32 *resID);
 CMTStatus CMT_FindCertificateByKey(PCMT_CONTROL control, CMTItem *key, CMUint32 *resID);
