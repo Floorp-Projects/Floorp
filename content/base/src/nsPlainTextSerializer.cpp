@@ -420,8 +420,8 @@ nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 {
-  // XXX What do we need this?
-  // mParserNode = NS_CONST_CAST(nsIParserNode*, &aNode);
+  // XXXXXXXXXX - Do this to fix the regression test.
+  mParserNode = 0;
   return DoCloseContainer(aTag);
 }
  
@@ -899,7 +899,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     nsAutoString value;
     nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
 
-    if (NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite")) {
+    if (mCiteQuoteLevel) {
       mCiteQuoteLevel--;
     }
     else {
