@@ -1298,13 +1298,30 @@ static JSPropertySpec xml_static_props[] = {
  */
 #define XSF_PRECOMPILED_ROOT    (XSF_CACHE_VALID << 1)
 
-/* Macros for special-casing xmlns= and xmlns:foo= in ParseNodeToQName. */
+/* Macros for special-casing xml:, xmlns= and xmlns:foo= in ParseNodeToQName. */
+#define IS_XML(str)                                                           \
+    (JSSTRING_LENGTH(str) == 3 && IS_XML_CHARS(JSSTRING_CHARS(str)))
+
 #define IS_XMLNS(str)                                                         \
     (JSSTRING_LENGTH(str) == 5 && IS_XMLNS_CHARS(JSSTRING_CHARS(str)))
 
+#define IS_XML_CHARS(chars)                                                   \
+    (JS_TOLOWER((chars)[0]) == 'x' &&                                         \
+     JS_TOLOWER((chars)[1]) == 'm' &&                                         \
+     JS_TOLOWER((chars)[2]) == 'l')
+
+#define HAS_NS_AFTER_XML(chars)                                               \
+    (JS_TOLOWER((chars)[3]) == 'n' &&                                         \
+     JS_TOLOWER((chars)[4]) == 's')
+
 #define IS_XMLNS_CHARS(chars)                                                 \
-    ((chars)[0] == 'x' && (chars)[1] == 'm' && (chars)[2] == 'l' &&           \
-     (chars)[3] == 'n' && (chars)[4] == 's')
+    (IS_XML_CHARS(chars) && HAS_NS_AFTER_XML(chars))
+
+#define STARTS_WITH_XML(chars,length)                                         \
+    (length >= 3 && IS_XML_CHARS(chars))
+
+static const char xml_namespace_str[] = "http://www.w3.org/XML/1998/namespace";
+static const char xmlns_namespace_str[] = "http://www.w3.org/2000/xmlns/";
 
 static JSXMLQName *
 ParseNodeToQName(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
@@ -1332,7 +1349,19 @@ ParseNodeToQName(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
         if (!prefix)
             return NULL;
 
-        if (!IS_XMLNS(prefix)) {
+        if (STARTS_WITH_XML(start, offset)) {
+            if (offset == 3) {
+                uri = JS_InternString(cx, xml_namespace_str);
+                if (!uri)
+                    return NULL;
+            } else if (offset == 5 && HAS_NS_AFTER_XML(start)) {
+                uri = JS_InternString(cx, xmlns_namespace_str);
+                if (!uri)
+                    return NULL;
+            } else {
+                uri = NULL;
+            }
+        } else {
             uri = NULL;
             n = inScopeNSes->length;
             while (n != 0) {
@@ -1342,14 +1371,15 @@ ParseNodeToQName(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                     break;
                 }
             }
-            if (!uri) {
-                js_ReportCompileErrorNumber(cx, pn,
-                                            JSREPORT_PN | JSREPORT_ERROR,
-                                            JSMSG_BAD_XML_NAMESPACE,
-                                            js_ValueToPrintableString(cx,
-                                                STRING_TO_JSVAL(prefix)));
-                return NULL;
-            }
+        }
+
+        if (!uri) {
+            js_ReportCompileErrorNumber(cx, pn,
+                                        JSREPORT_PN | JSREPORT_ERROR,
+                                        JSMSG_BAD_XML_NAMESPACE,
+                                        js_ValueToPrintableString(cx,
+                                            STRING_TO_JSVAL(prefix)));
+            return NULL;
         }
 
         localName = js_NewStringCopyN(cx, colon + 1, length - (offset + 1), 0);

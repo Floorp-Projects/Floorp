@@ -884,7 +884,7 @@ GetXMLEntity(JSContext *cx, JSTokenStream *ts)
     if (length > 2 && bp[1] == '#') {
         /* Match a well-formed XML Character Reference. */
         i = 2;
-        if (length > 3 && (bp[i] | 0x20) == 'x') {
+        if (length > 3 && JS_TOLOWER(bp[i]) == 'x') {
             if (length > 9)     /* at most 6 hex digits allowed */
                 goto badncr;
             while (++i < length) {
