@@ -38,21 +38,21 @@ nsBasicFileStream::nsBasicFileStream()
 //----------------------------------------------------------------------------------------
     :    mFileDesc(0)
     ,    mNSPRMode(0)
-    ,    mFailed(false)
-    ,    mEOF(false)
+    ,    mFailed(PR_FALSE)
+    ,    mEOF(PR_FALSE)
 {
 }
 
 //----------------------------------------------------------------------------------------
 nsBasicFileStream::nsBasicFileStream(
-    const nsFilePath& inFile, 
+    const nsFileSpec& inFile, 
     int nsprMode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
     :    mFileDesc(0)
     ,    mNSPRMode(0)
-    ,    mFailed(false)
-    ,    mEOF(false)
+    ,    mFailed(PR_FALSE)
+    ,    mEOF(PR_FALSE)
 {
     open(inFile, nsprMode, accessMode);
 }
@@ -62,8 +62,8 @@ nsBasicFileStream::nsBasicFileStream(PRFileDesc* desc, int nsprMode)
 //----------------------------------------------------------------------------------------
     :    mFileDesc(desc)
     ,    mNSPRMode(nsprMode)
-    ,    mFailed(false)
-    ,    mEOF(false)
+    ,    mFailed(PR_FALSE)
+    ,    mEOF(PR_FALSE)
 {
 }
 
@@ -76,7 +76,7 @@ nsBasicFileStream::~nsBasicFileStream()
 
 //----------------------------------------------------------------------------------------
 void nsBasicFileStream::open(
-	const nsFilePath& inFile,
+	const nsFileSpec& inFile,
     int nsprMode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ void nsBasicFileStream::open(
      // several files on the Macintosh (you can have several volumes with the
      // same name, see).
     mFileDesc = 0;
-    if (inFile.GetNativeSpec().Error() != noErr)
+    if (inFile.Error() != noErr)
         return;
     OSErr err = noErr;
 #if DEBUG
@@ -118,10 +118,9 @@ void nsBasicFileStream::open(
 #else
     const OSType kCreator = 'MOSS';
 #endif
-	nsNativeFileSpec nativeSpec = inFile.GetNativeSpec();
-    FSSpec* spec = (FSSpec*)nativeSpec;
+    const FSSpec& spec = inFile.operator const FSSpec&();
     if (nsprMode & PR_CREATE_FILE)
-    	err = FSpCreate(spec, kCreator, 'TEXT', 0);
+    	err = FSpCreate(&spec, kCreator, 'TEXT', 0);
     if (err == dupFNErr)
     	err = noErr;
     if (err != noErr)
@@ -136,7 +135,7 @@ void nsBasicFileStream::open(
        perm = fsRdPerm;
 
     short refnum;
-    err = FSpOpenDF(spec, perm, &refnum);
+    err = FSpOpenDF(&spec, perm, &refnum);
 
     if (err == noErr && (nsprMode & PR_TRUNCATE))
     	err = SetEOF(refnum, 0);
@@ -151,7 +150,7 @@ void nsBasicFileStream::open(
 	//	Platforms other than Macintosh...
 	//  Another bug in NSPR: Mac PR_Open assumes a unix style path, but Win PR_Open assumes
 	//  a windows path.
-    if ((mFileDesc = PR_Open((const char*)nsNativeFileSpec(inFile), nsprMode, accessMode)) == 0)
+    if ((mFileDesc = PR_Open((const char*)nsFileSpec(inFile), nsprMode, accessMode)) == 0)
     	return;
 #endif
      mNSPRMode = nsprMode;
@@ -175,8 +174,8 @@ void nsBasicFileStream::seek(PRSeekWhence whence, PRInt32 offset)
 {
     if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || mFileDesc == 0) 
        return;
-    mFailed = false; // reset on a seek.
-    mEOF = false; // reset on a seek.
+    mFailed = PR_FALSE; // reset on a seek.
+    mEOF = PR_FALSE; // reset on a seek.
     PRInt32 position = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
     PRInt32 available = PR_Available(mFileDesc);
     PRInt32 fileSize = position + available;
@@ -190,15 +189,15 @@ void nsBasicFileStream::seek(PRSeekWhence whence, PRInt32 offset)
     if (newPosition < 0)
     {
     	newPosition = 0;
-    	mFailed = true;
+    	mFailed = PR_TRUE;
     }
     else if (newPosition >= fileSize)
     {
     	newPosition = fileSize;
-    	mEOF = true;
+    	mEOF = PR_TRUE;
     }
     if (PR_Seek(mFileDesc, newPosition, PR_SEEK_SET) < 0)
-    	mFailed = true;
+    	mFailed = PR_TRUE;
 } // nsBasicFileStream::seek
 
 //----------------------------------------------------------------------------------------
@@ -234,15 +233,15 @@ PRBool nsBasicInStream::readline(char* s, PRInt32 n)
 // This will truncate if the buffer is too small.  Result will always be null-terminated.
 //----------------------------------------------------------------------------------------
 {
-    PRBool bufferLargeEnough = true; // result
+    PRBool bufferLargeEnough = PR_TRUE; // result
     if (!s || !n)
-        return true;
+        return PR_TRUE;
     PRIntn position = mBase.tell();
     if (position < 0)
-        return false;
+        return PR_FALSE;
     PRInt32 bytesRead = read(s, n - 1);
     if (mBase.failed())
-        return false;
+        return PR_FALSE;
     s[bytesRead] = '\0'; // always terminate at the end of the buffer
     char* tp = strpbrk(s, "\n\r");
     if (tp)
@@ -254,7 +253,7 @@ PRBool nsBasicInStream::readline(char* s, PRInt32 n)
         bytesRead = (tp - s);
     }
     else if (!mBase.eof())
-        bufferLargeEnough = false;
+        bufferLargeEnough = PR_FALSE;
     position += bytesRead;
     mBase.seek(position);
     return bufferLargeEnough;
@@ -276,9 +275,9 @@ PRInt32 nsBasicInStream::read(void* s, PRInt32 n)
         return -1;
     PRInt32 bytesRead = PR_Read(mBase.GetFileDescriptor(), s, n);
     if (bytesRead < 0)
-        mBase.mFailed = true;
+        mBase.mFailed = PR_TRUE;
     else if (bytesRead < n)
-        mBase.mEOF = true;
+        mBase.mEOF = PR_TRUE;
     return bytesRead;
 }
 
@@ -342,7 +341,7 @@ PRInt32 nsBasicOutStream::write(const void* s, PRInt32 n)
        return -1;
     PRInt32 bytesWrit = PR_Write(mBase.mFileDesc, s, n);
     if (bytesWrit != n)
-        mBase.mFailed = true;
+        mBase.mFailed = PR_TRUE;
     return bytesWrit;
 }
 
@@ -416,7 +415,7 @@ void nsBasicOutStream::flush()
 #ifdef XP_MAC
     // On unix, it seems to fail always.
     if (itFailed)
-    	mBase.mFailed = true;
+    	mBase.mFailed = PR_TRUE;
 #endif
 } // nsBasicOutStream::flush
 
