@@ -30,6 +30,7 @@ nsUnitConversion.h
 nsVector.h
 nsVoidArray.h
 nsVoidBTree.h
+nsWorkString.h
 nsXPIDLString.h
 plvector.h
 nsTextFormater.h
