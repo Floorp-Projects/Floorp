@@ -685,7 +685,7 @@ function AppendHeadElement(element)
     try {
       // Use editor's undoable transaction
       // Last param "true" says "don't change the selection"
-      editor.insertElement(element, head, position, true);
+      editor.insertNode(element, head, position, true);
     } catch (e) {}
   }
 }
@@ -871,7 +871,7 @@ function nodeIsBlock(node)
  * if (editor.isInlineRange(range) && editor.nodeIsBlock(node)) return false;
  * while (!editor.containmentAllowed(range.anchorNode, element))
  *   range = editor.parentRangeOf(range);
- * editor.insertElementAtRange(element, range);
+ * editor.insertNodeAtRange(element, range);
  * return true;
  */
 function InsertElementAroundSelection(element)
@@ -987,13 +987,13 @@ function InsertElementAroundSelection(element)
   editor.beginTransaction();
   try {
     var anchorOffset = 0;
-    // Calculate the insertion point for the undoable InsertElement method
+    // Calculate the insertion point for the undoable insertNode method
     if (!anchor)
       anchor = anchorParent.firstChild;
     else
       for (node = anchorParent.firstChild; node != anchor; node = node.nextSibling)
         anchorOffset++;
-    editor.insertElement(element, anchorParent, anchorOffset, true);
+    editor.insertNode(element, anchorParent, anchorOffset, true);
     // Move all the old child nodes to the element
     // Use editor methods in case of text nodes
     while (anchor)
@@ -1012,7 +1012,7 @@ function InsertElementAroundSelection(element)
 }
 
 // Should I set the selection to the element, then insert HTML the element's innerHTML?
-// I would prefer to say editor.deleteElement(element, FLAG_TO_KEEP_CHILD_NODES);
+// I would prefer to say editor.deleteNode(element, FLAG_TO_KEEP_CHILD_NODES);
 function RemoveElementKeepingChildren(element)
 {
   var editor = GetCurrentEditor();
@@ -1032,7 +1032,7 @@ function RemoveElementKeepingChildren(element)
         editor.insertNode(node, parent, offset++);
       }
     }
-    editor.deleteElement(element);
+    editor.deleteNode(element);
   }
   catch (ex) {}
 
