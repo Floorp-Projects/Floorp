@@ -1092,7 +1092,9 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 {
   nsresult rv = NS_OK;
 
-  if (aType.EqualsIgnoreCase(kXSLType))
+  if (aType.EqualsIgnoreCase(kXSLType) ||
+      aType.EqualsIgnoreCase(kXMLTextContentType) ||
+      aType.EqualsIgnoreCase(kXMLApplicationContentType))
     rv = ProcessXSLStyleLink(aElement, aHref, aAlternate, aTitle, aType, aMedia);
 
   return rv;
