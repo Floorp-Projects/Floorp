@@ -199,6 +199,7 @@
                                object:self
                              userInfo:userInfo];
   textMovement = [[aNotification userInfo] objectForKey:@"NSTextMovement"];
+  [userInfo release];
 
   if (textMovement) {
     switch ([(NSNumber *)textMovement intValue]) {
