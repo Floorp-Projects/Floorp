@@ -65,6 +65,7 @@ interface nsIDocShellLoadInfo : nsISupports
    const long loadLink = 7;
    const long loadRefresh = 8;
    const long loadReloadCharsetChange = 9;
+   const long loadBypassHistory = 10;
 
    attribute nsDocShellInfoLoadType loadType;
 
