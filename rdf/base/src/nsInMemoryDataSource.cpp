@@ -502,7 +502,7 @@ InMemoryArcsCursor::InMemoryArcsCursor(InMemoryDataSource* ds,
 
         for (PRInt32 i = mElements.Count() - 1; i >= 0; --i) {
             if (mElements[i] == as->mProperty) {
-                alreadyHadIt = PR_FALSE;
+                alreadyHadIt = PR_TRUE;
                 break;
             }
         }
