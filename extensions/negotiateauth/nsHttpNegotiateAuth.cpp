@@ -230,6 +230,10 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
         if (!inToken)
             return (NS_ERROR_OUT_OF_MEMORY);
 
+        // strip off any padding (see bug 230351)
+        while (challenge[len - 1] == '=')
+            len--;
+
         //
         // Decode the response that followed the "Negotiate" token
         //

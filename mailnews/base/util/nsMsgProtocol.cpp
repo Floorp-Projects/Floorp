@@ -892,14 +892,20 @@ nsresult nsMsgProtocol::DoNtlmStep2(nsCString &commandResponse, nsCString &respo
     nsresult rv;
     void *inBuf, *outBuf;
     PRUint32 inBufLen, outBufLen;
+    PRUint32 len = commandResponse.Length();
 
     // decode into the input secbuffer
-    inBufLen = (commandResponse.Length() * 3)/4;      // sufficient size (see plbase64.h)
+    inBufLen = (len * 3)/4;      // sufficient size (see plbase64.h)
     inBuf = nsMemory::Alloc(inBufLen);
     if (!inBuf)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = (PL_Base64Decode(commandResponse.get(), commandResponse.Length(), (char *)inBuf))
+    // strip off any padding (see bug 230351)
+    const char *challenge = commandResponse.get();
+    while (challenge[len - 1] == '=')
+        len--;
+
+    rv = (PL_Base64Decode(challenge, len, (char *)inBuf))
          ? m_authModule->GetNextToken(inBuf, inBufLen, &outBuf, &outBufLen)
          : NS_ERROR_FAILURE;
 

@@ -128,6 +128,10 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpChannel  *httpChannel,
         if (!inBuf)
             return NS_ERROR_OUT_OF_MEMORY;
 
+        // strip off any padding (see bug 230351)
+        while (challenge[len - 1] == '=')
+          len--;
+
         if (PL_Base64Decode(challenge, len, (char *) inBuf) == nsnull) {
             nsMemory::Free(inBuf);
             return NS_ERROR_UNEXPECTED; // improper base64 encoding
