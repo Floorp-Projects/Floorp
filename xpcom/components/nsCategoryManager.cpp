@@ -233,11 +233,19 @@ nsCategoryManager::find_category( const char* aCategoryName )
 nsresult
 nsCategoryManager::persist( const char* aCategoryName, const char* aKey, const char* aValue )
   {
+    nsresult status;
+    NS_ASSERTION(mRegistry,     "mRegistry is NULL!");
+
+    if (!mRegistry) {
+        mRegistry = do_GetService(NS_REGISTRY_PROGID, &status);
+    }
+    if (NS_FAILED(status)) return status;
+
     NS_ASSERTION(mRegistry, "mRegistry is NULL!");
     if (!mRegistry) return NS_ERROR_FAILURE;
 
     nsRegistryKey categoryRegistryKey;
-    nsresult status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
+    status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
 
     if ( status == NS_ERROR_REG_NOT_FOUND )
       status = mRegistry->AddSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
@@ -255,8 +263,18 @@ nsCategoryManager::dont_persist( const char* aCategoryName, const char* aKey )
     NS_ASSERTION(aKey,          "aKey is NULL!");
     NS_ASSERTION(mRegistry,     "mRegistry is NULL!");
 
+    nsresult status;
+
+    if (!mRegistry) {
+        mRegistry = do_GetService(NS_REGISTRY_PROGID, &status);
+    }
+    if (NS_FAILED(status)) return status;
+
+    NS_ASSERTION(mRegistry, "mRegistry is NULL!");
+    if (!mRegistry) return NS_ERROR_FAILURE;
+
     nsRegistryKey categoryRegistryKey;
-    nsresult status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
+    status = mRegistry->GetSubtreeRaw(mCategoriesRegistryKey, aCategoryName, &categoryRegistryKey);
 
     if ( NS_SUCCEEDED(status) )
       status = mRegistry->DeleteValue(categoryRegistryKey, aKey);
@@ -350,7 +368,7 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
     category->Put(&entryNameKey, entry);
 
     if ( aPersist )
-      persist(aCategoryName, aEntryName, aValue);
+      status = persist(aCategoryName, aEntryName, aValue);
 
     return status;
   }
@@ -363,6 +381,8 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
                                         PRBool aDontPersist,
                                         char **_retval )
   {
+    nsresult rv = NS_OK;
+
     NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
     NS_ASSERTION(aEntryName,    "aEntryName is NULL!");
     NS_ASSERTION(_retval,       "_retval is NULL!");
@@ -381,9 +401,9 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
       }
 
     if ( aDontPersist )
-      dont_persist(aCategoryName, aEntryName);
+      rv = dont_persist(aCategoryName, aEntryName);
 
-    return NS_OK;
+    return rv;
   }
 
 
