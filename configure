@@ -5052,8 +5052,8 @@ EOF
         AS_DASH_C_FLAG=''
         LD='-ilink'
         TARGET_MD_ARCH=os2
-        CFLAGS="/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9"
-        CXXFLAGS="/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9 /Gx+"
+        CFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9"
+        CXXFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9 /Gx+"
         MOZ_DEBUG_FLAGS="/Ti+"
         MOZ_OPTIMIZE_FLAGS="/O+ /qtune=pentium /qarch=pentium"
         LDFLAGS="/NOL /M"
