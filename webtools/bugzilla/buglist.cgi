@@ -1213,6 +1213,7 @@ my @bugarray;
 my %prodhash;
 my %statushash;
 my %ownerhash;
+my %qahash;
 
 my $pricol = -1;
 my $sevcol = -1;
@@ -1282,6 +1283,9 @@ while (@row = FetchSQLData()) {
                 }
                 if ($c eq "owner") {
                     $ownerhash{$value} = 1;
+                }
+                if ($c eq "qa_contact") {
+                    $qahash{$value} = 1;
                 }
                 if ( ($c eq "owner" || $c eq "qa_contact" ) &&
                         length $value > $maxemailsize )  {
@@ -1682,14 +1686,23 @@ if ($count > 0) {
         print "Change several bugs at once</A></NOBR>\n";
     }
     my @owners = sort(keys(%ownerhash));
+    my $suffix = Param('emailsuffix');
     if (@owners > 1 && UserInGroup("editbugs")) {
-        my $suffix = Param('emailsuffix');
         if ($suffix ne "") {
             map(s/$/$suffix/, @owners);
         }
         my $list = join(',', @owners);
         print qq{&nbsp;&nbsp;\n};
-        print qq{<NOBR><A HREF="mailto:$list">Send mail to bug owners</A></NOBR>\n};
+        print qq{<A HREF="mailto:$list">Send&nbsp;mail&nbsp;to&nbsp;bug&nbsp;owners</A>\n};
+    }
+    my @qacontacts = sort(keys(%qahash));
+    if (@qacontacts > 1 && UserInGroup("editbugs") && Param("useqacontact")) {
+        if ($suffix ne "") {
+            map(s/$/$suffix/, @qacontacts); 
+        }
+        my $list = join(',', @qacontacts);
+        print qq{&nbsp;&nbsp;\n};
+        print qq{<A HREF="mailto:$list">Send&nbsp;mail&nbsp;to&nbsp;bug&nbsp;QA&nbsp;contacts</A>\n};
     }
     print qq{&nbsp;&nbsp;\n};
     print qq{<NOBR><A HREF="query.cgi?$::buffer">Edit this query</A></NOBR>\n};
