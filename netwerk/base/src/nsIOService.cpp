@@ -31,6 +31,7 @@
 #include <ctype.h>      // for isalpha
 #include "nsIFileProtocolHandler.h"     // for NewChannelFromNativePath
 #include "nsLoadGroup.h"
+#include "nsIFileChannel.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -97,6 +98,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     if (NS_FAILED(rv)) return rv;
 
     *result = handler;
+	NS_ADDREF(handler);
     return NS_OK;
 }
 
@@ -147,7 +149,6 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
     if (NS_FAILED(rv)) return rv;
 
     rv = handler->NewURI(aSpec, aBaseURI, result);
-    //NS_RELEASE(handler);
     return rv;
 }
 
@@ -305,19 +306,15 @@ NS_IMETHODIMP
 nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **result)
 {
     nsresult rv;
-    nsIProtocolHandler* handler;
-    rv = GetProtocolHandler("file", &handler);
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = GetProtocolHandler("file", getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
-    nsIFileProtocolHandler* fileHandler = nsnull;
-    rv = handler->QueryInterface(nsCOMTypeInfo<nsIFileProtocolHandler>::GetIID(), 
-                                 (void**)&fileHandler);
-    NS_RELEASE(handler);
+    nsCOMPtr<nsIFileProtocolHandler> fileHandler = do_QueryInterface(handler, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    nsIFileChannel* channel;
-    rv = fileHandler->NewChannelFromNativePath(nativePath, &channel);
-    NS_RELEASE(fileHandler);
+    nsCOMPtr<nsIFileChannel> channel;
+    rv = fileHandler->NewChannelFromNativePath(nativePath, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
     
     *result = channel;
