@@ -30,6 +30,7 @@
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsMenuFrame.h"
+#include "nsMenuPopupEntryListener.h"
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -87,7 +88,7 @@ NS_IMETHODIMP nsMenuPopupFrame::QueryInterface(REFNSIID aIID, void** aInstancePt
 // nsMenuPopupFrame cntr
 //
 nsMenuPopupFrame::nsMenuPopupFrame()
-:mCurrentMenu(nsnull)
+:mCurrentMenu(nsnull), mMenuPopupEntryListener(nsnull)
 {
 
 } // cntr
@@ -149,10 +150,16 @@ nsMenuPopupFrame::Init(nsIPresContext&  aPresContext,
                      &widgetData,
                      nsnull);
 
-  // XXX: Don't need? 
-  // ourView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
+  // Register a listener so that we know when the mouse enters
+  // the menu (have to use moves, since enter is completely flaky).
+  
+  // Create the menu bar listener.
+  mMenuPopupEntryListener = new nsMenuPopupEntryListener(this);
 
-  return rv;
+  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
+  nsIDOMEventListener* domEventListener = (nsIDOMMouseMotionListener*)mMenuPopupEntryListener;
+  target->AddEventListener("mousemove", domEventListener, PR_FALSE); 
+	return rv;
 }
 
 void
@@ -174,20 +181,33 @@ nsMenuPopupFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView,
   }
 }
 
+void
+nsMenuPopupFrame::GetNearestEnclosingView(nsIFrame* aStartFrame, nsIView** aResult)
+{
+  *aResult = nsnull;
+  aStartFrame->GetView(aResult);
+  if (!*aResult) {
+    nsIFrame* parent;
+    aStartFrame->GetParentWithView(&parent);
+    if (parent)
+      parent->GetView(aResult);
+  }
+}
+
 nsresult 
-nsMenuPopupFrame::SyncViewWithFrame(PRBool aOnMenuBar)
+nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext& aPresContext,
+                                    PRBool aOnMenuBar, 
+                                    nsIFrame* aFrame, 
+                                    PRInt32 aXPos, PRInt32 aYPos)
 {
   nsPoint parentPos;
   nsCOMPtr<nsIViewManager> viewManager;
 
-     //Get parent frame
-  nsIFrame* parent;
-  GetParentWithView(&parent);
-  NS_ASSERTION(parent, "GetParentWithView failed");
-
-  // Get parent view
+  //Get the nearest enclosing parent view to aFrame.
   nsIView* parentView = nsnull;
-  parent->GetView(&parentView);
+  GetNearestEnclosingView(aFrame, &parentView);
+  if (!parentView)
+    return NS_OK;
 
   parentView->GetViewManager(*getter_AddRefs(viewManager));
   GetViewOffset(viewManager, parentView, parentPos);
@@ -196,18 +216,22 @@ nsMenuPopupFrame::SyncViewWithFrame(PRBool aOnMenuBar)
 
   nsIView* containingView = nsnull;
   nsPoint offset;
-  GetOffsetFromView(offset, &containingView);
-  nsSize size;
-  GetSize(size);
-  
-  nsIFrame* parentFrame;
-  GetParent(&parentFrame);
+  aFrame->GetOffsetFromView(offset, &containingView);
   
   nsRect parentRect;
-  parentFrame->GetRect(parentRect);
+  aFrame->GetRect(parentRect);
 
   viewManager->ResizeView(view, mRect.width, mRect.height);
-  if (aOnMenuBar)
+  if (aXPos != -1 || aYPos != -1) {
+    // Convert the screen coords to twips
+    float p2t;
+    aPresContext.GetScaledPixelsToTwips(&p2t);
+    PRInt32 xpos = NSIntPixelsToTwips(aXPos, p2t);
+    PRInt32 ypos = NSIntPixelsToTwips(aYPos, p2t);
+    viewManager->MoveViewTo(view, xpos, ypos);
+  }
+
+  else if (aOnMenuBar)
     viewManager->MoveViewTo(view, parentPos.x + offset.x, parentPos.y + parentRect.height + offset.y );
   else viewManager->MoveViewTo(view, parentPos.x + parentRect.width + offset.x, parentPos.y + offset.y );
 
@@ -219,7 +243,6 @@ nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {
   nsresult rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
-  //SyncViewWithFrame();
   return rv;
 }
 
@@ -345,15 +368,20 @@ nsMenuPopupFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
+  nsCOMPtr<nsIWidget> widget;
+
   if (view) {
     view->GetViewManager(*getter_AddRefs(viewMan));
     if (viewMan) {
+      view->GetWidget(*getter_AddRefs(widget));
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
         mIsCapturingMouseEvents = PR_TRUE;
+        widget->CaptureMouse(PR_TRUE);
       } else {
         viewMan->GrabMouseEvents(nsnull,result);
         mIsCapturingMouseEvents = PR_FALSE;
+        widget->CaptureMouse(PR_FALSE);
       }
     }
   }
@@ -566,4 +594,26 @@ nsMenuPopupFrame::IsDisabled(nsIContent* aContent)
   if (disabled == "true")
     return PR_TRUE;
   return PR_FALSE;
+}
+
+NS_IMETHODIMP 
+nsMenuPopupFrame::HandleEvent(nsIPresContext& aPresContext, 
+                              nsGUIEvent*     aEvent,
+                              nsEventStatus&  aEventStatus)
+{
+  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  if (aEvent->message == NS_MOUSE_MOVE) {
+    printf("Mouse enter!\n");
+    //HandleMouseEnterEvent(aPresContext, aEvent, aEventStatus);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::Destroy(nsIPresContext& aPresContext)
+{
+  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mContent);
+  target->RemoveEventListener("mousemove", mMenuPopupEntryListener, PR_TRUE);
+  return NS_OK;
 }

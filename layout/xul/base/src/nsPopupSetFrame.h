@@ -94,18 +94,23 @@ public:
                          const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment);
 
+  PRBool OnCreate(nsIContent* aPopupContent);
+  PRBool OnDestroy();
 
-  void ActivateMenuPopup(PRBool aActivateFlag);
+  void ActivatePopup(PRBool aActivateFlag);
+  void OpenPopup(PRBool aOpenFlag);
+
+  nsIFrame* GetActiveChild();
+  void GetActiveChildElement(nsIContent** aResult);
 
 protected:
   void MarkAsGenerated(nsIContent* aPopupContent);
-  void SetActiveChild(nsIContent* aPopupContent);
-
+  
 protected:
   nsFrameList mPopupFrames;
-  nsIFrame* mActiveChild;
-  nsIContent* mActiveContent; // [WEAK]
   nsIPresContext* mPresContext; // Our pres context.
+
+  nsIFrame* mElementFrame; // The frame that is having something popped up over it.
 
   PRInt32 mXPos; // Active child's x position
   PRInt32 mYPos; // Active child's y position

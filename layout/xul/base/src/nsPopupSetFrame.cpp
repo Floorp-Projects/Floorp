@@ -95,10 +95,16 @@ NS_IMETHODIMP nsPopupSetFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr
 // nsPopupSetFrame cntr
 //
 nsPopupSetFrame::nsPopupSetFrame()
-:mActiveChild(nsnull), mPresContext(nsnull)
+:mPresContext(nsnull), mElementFrame(nsnull)
 {
 
 } // cntr
+
+nsIFrame*
+nsPopupSetFrame::GetActiveChild()
+{
+  return mPopupFrames.FirstChild();
+}
 
 NS_IMETHODIMP
 nsPopupSetFrame::Init(nsIPresContext&  aPresContext,
@@ -146,7 +152,7 @@ nsPopupSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
       frame->GetContent(getter_AddRefs(content));
       nsCOMPtr<nsIAtom> tag;
       content->GetTag(*getter_AddRefs(tag));
-      if (tag.get() == nsXULAtoms::menupopup) {
+      if (tag.get() == nsXULAtoms::popup) {
         // Remove this frame from the list and place it in the other list.
         frames.RemoveFrame(frame);
         mPopupFrames.AppendFrame(this, frame);
@@ -195,7 +201,7 @@ nsPopupSetFrame::Reflow(nsIPresContext&   aPresContext,
                     nsReflowStatus&          aStatus)
 {
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  nsIFrame* frame = mActiveChild;
+  nsIFrame* frame = GetActiveChild();
     
   if (!frame || (rv != NS_OK))
     return rv;
@@ -233,15 +239,10 @@ nsPopupSetFrame::DidReflow(nsIPresContext& aPresContext,
                             nsDidReflowStatus aStatus)
 {
   // Sync up the view.
-  /*PRBool onMenuBar = PR_FALSE;
-  if (mMenuParent)
-    mMenuParent->IsMenuBar(onMenuBar);
-
-  nsIFrame* frame = mPopupFrames.FirstChild();
-  nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
-  if (menuPopup && mMenuOpen)
-    menuPopup->SyncViewWithFrame(onMenuBar);
-  */
+  nsIFrame* activeChild = GetActiveChild();
+  if (activeChild) {
+    ((nsMenuPopupFrame*)activeChild)->SyncViewWithFrame(aPresContext, PR_TRUE, mElementFrame, mXPos, mYPos);
+  }
 
   return nsBoxFrame::DidReflow(aPresContext, aStatus);
 }
@@ -266,7 +267,7 @@ nsPopupSetFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& increme
   if (rv != NS_OK || incrementalChild)
     return rv;
 
-  nsIFrame* popup = mActiveChild;
+  nsIFrame* popup = GetActiveChild();
   if (popup && (frame == popup)) {
     // An incremental reflow command is targeting something inside our
     // hidden popup view.  We can't actually return the child, since it
@@ -324,7 +325,7 @@ nsPopupSetFrame::InsertFrames(nsIPresContext& aPresContext,
   nsCOMPtr<nsIAtom> tag;
   nsresult          rv;
   frameChild->GetTag(*getter_AddRefs(tag));
-  if (tag && tag.get() == nsXULAtoms::menupopup) {
+  if (tag && tag.get() == nsXULAtoms::popup) {
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
     rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
   } else {
@@ -354,7 +355,7 @@ nsPopupSetFrame::AppendFrames(nsIPresContext& aPresContext,
   nsresult          rv;
   
   frameChild->GetTag(*getter_AddRefs(tag));
-  if (tag && tag.get() == nsXULAtoms::menupopup) {
+  if (tag && tag.get() == nsXULAtoms::popup) {
     mPopupFrames.AppendFrames(nsnull, aFrameList);
     rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
   } else {
@@ -370,18 +371,26 @@ nsPopupSetFrame::CreatePopup(nsIFrame* aElementFrame, nsIContent* aPopupContent,
                              const nsString& aPopupType, const nsString& anAnchorAlignment,
                              const nsString& aPopupAlignment)
 {
-  // Generate the popup.
-  MarkAsGenerated(aPopupContent);
-
-  // Now we'll have it in our child frame list. Make it our active child.
-  SetActiveChild(aPopupContent);
+  // Cache the element frame.
+  mElementFrame = aElementFrame;
 
   // Show the popup at the specified position.
   mXPos = aXPos;
   mYPos = aYPos;
 
-  // Mark the view as active.
-  ActivateMenuPopup(PR_TRUE);
+  printf("X Pos: %d\n", mXPos);
+  printf("Y Pos: %d\n", mYPos);
+
+  if (!OnCreate(aPopupContent))
+    return NS_OK;
+
+  // Generate the popup.
+  MarkAsGenerated(aPopupContent);
+
+  // Now we'll have it in our child frame list.
+  
+  // Now open the popup.
+  OpenPopup(PR_TRUE);
 
   return NS_OK;
 }
@@ -414,32 +423,99 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
   aPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
                               value);
   if (value != "true") {
-    // Ungenerate this element.
+    // Generate this element.
     aPopupContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, "true",
                                 PR_TRUE);
   }
 }
 
 void
-nsPopupSetFrame::SetActiveChild(nsIContent* aPopupContent)
+nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
 {
-  mActiveContent = aPopupContent; // Weak ref
-  nsIFrame* frame = mPopupFrames.FirstChild();
-  while (frame) {
-    nsCOMPtr<nsIContent> childContent;
-    frame->GetContent(getter_AddRefs(childContent));
-    if (childContent.get() == mActiveContent) {
-      mActiveChild = frame;
-      break;
-    }
+  if (aActivateFlag) {
+    ActivatePopup(PR_TRUE);
+    
+    nsIFrame* activeChild = GetActiveChild();
+  }
+  else {
+    // Close the menu. 
+    nsIFrame* frame = GetActiveChild();
+    nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
+  
+    // Make sure we clear out our own items.
+    if (menuPopup)
+      menuPopup->SetCurrentMenuItem(nsnull);
 
-    frame->GetNextSibling(&frame);
+    ActivatePopup(PR_FALSE);
+
+    // Set the focus back to our view's widget.
+    nsIView*  view;
+    mElementFrame->GetView(&view);
+    if (!view) {
+      nsPoint offset;
+      mElementFrame->GetOffsetFromView(offset, &view);
+    }
+    nsCOMPtr<nsIWidget> widget;
+    view->GetWidget(*getter_AddRefs(widget));
+    if (widget)
+      widget->SetFocus();
   }
 }
 
 void
-nsPopupSetFrame::ActivateMenuPopup(PRBool aActivateFlag)
+nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
 {
+  nsCOMPtr<nsIContent> content;
+  GetActiveChildElement(getter_AddRefs(content));
+  if (content) {
+    if (aActivateFlag)
+      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+    else content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+  }
+}
 
+PRBool
+nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_CREATE;
 
+  if (aPopupContent) {
+    nsresult rv = aPopupContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+PRBool
+nsPopupSetFrame::OnDestroy()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_DESTROY;
+
+  nsCOMPtr<nsIContent> content;
+  GetActiveChildElement(getter_AddRefs(content));
+  
+  if (content) {
+    nsresult rv = content->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+void
+nsPopupSetFrame::GetActiveChildElement(nsIContent** aResult)
+{
+  *aResult = nsnull;
+  nsIFrame* child = GetActiveChild();
+  if (child) {
+    child->GetContent(aResult);
+  }
 }
