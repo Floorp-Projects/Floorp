@@ -866,7 +866,11 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
 nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
   if(this!=&aString){
     nsStr::Truncate(*this,0,0);
-    if(-1==aCount) aCount=aString.mLength;
+
+    if(aCount<0)
+      aCount=aString.mLength;
+    else aCount=MinInt(aCount,aString.mLength);
+
     nsStr::Assign(*this,aString,0,aCount,mAgent);
   }
   return *this;
@@ -950,7 +954,11 @@ nsString& nsString::operator=(const nsSubsumeStr& aSubsumeString) {
  * @return  this
  */
 nsString& nsString::Append(const nsStr& aString,PRInt32 aCount) {
-  if(-1==aCount) aCount=aString.mLength;
+
+  if(aCount<0)
+    aCount=aString.mLength;
+  else aCount=MinInt(aCount,aString.mLength);
+
   if(0<aCount)
     nsStr::Append(*this,aString,0,aCount,mAgent);
   return *this;
@@ -964,7 +972,9 @@ nsString& nsString::Append(const nsStr& aString,PRInt32 aCount) {
  * @return  this
  */
 nsString& nsString::Append(const nsString& aString,PRInt32 aCount) {
-  if(-1==aCount) aCount=aString.mLength;
+  if(aCount<0)
+    aCount=aString.mLength;
+  else aCount=MinInt(aCount,aString.mLength);
   if(0<aCount)
     nsStr::Append(*this,aString,0,aCount,mAgent);
   return *this;
@@ -985,6 +995,7 @@ nsString& nsString::Append(const char* aCString,PRInt32 aCount) {
     temp.mLength=nsCRT::strlen(aCString);
     if(aCount<0)
       aCount=temp.mLength;
+    else aCount=MinInt(aCount,temp.mLength);
     if(0<aCount)
       nsStr::Append(*this,temp,0,aCount,mAgent);
   }
@@ -1006,6 +1017,7 @@ nsString& nsString::Append(const PRUnichar* aString,PRInt32 aCount) {
     temp.mLength=nsCRT::strlen(aString);
     if(aCount<0)
       aCount=temp.mLength;
+    else aCount=MinInt(aCount,temp.mLength);
     if(0<aCount)
       nsStr::Append(*this,temp,0,aCount,mAgent);
   }
@@ -1096,6 +1108,10 @@ nsString& nsString::Append(float aFloat){
  *  @return  number of chars copied
  */
 PRUint32 nsString::Left(nsString& aDest,PRInt32 aCount) const{
+
+  if(aCount<0)
+    aCount=mLength;
+  else aCount=MinInt(aCount,mLength);
   nsStr::Assign(aDest,*this,0,aCount,mAgent);
 
   return aDest.mLength;
@@ -1113,6 +1129,9 @@ PRUint32 nsString::Left(nsString& aDest,PRInt32 aCount) const{
  *  @return  number of chars copied
  */
 PRUint32 nsString::Mid(nsString& aDest,PRUint32 anOffset,PRInt32 aCount) const{
+  if(aCount<0)
+    aCount=mLength;
+  else aCount=MinInt(aCount,mLength);
   nsStr::Assign(aDest,*this,anOffset,aCount,mAgent);
 
   return aDest.mLength;
@@ -1167,6 +1186,7 @@ nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount
     temp.mLength=nsCRT::strlen(aCString);
     if(aCount<0)
       aCount=temp.mLength;
+    else aCount=MinInt(aCount,temp.mLength);
     if(temp.mLength && (0<aCount)){
       nsStr::Insert(*this,anOffset,temp,0,aCount,0);
     }
@@ -1192,6 +1212,7 @@ nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aC
     temp.mLength=nsCRT::strlen(aString);
     if(aCount<0)
       aCount=temp.mLength;
+    else aCount=MinInt(aCount,temp.mLength);
     if(temp.mLength && (0<aCount)){
       nsStr::Insert(*this,anOffset,temp,0,aCount,0);
     }
@@ -1230,7 +1251,9 @@ nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
  *  @return *this
  */
 nsString& nsString::Cut(PRUint32 anOffset, PRInt32 aCount) {
-  nsStr::Delete(*this,anOffset,aCount,mAgent);
+  if(0<aCount) {
+    nsStr::Delete(*this,anOffset,aCount,mAgent);
+  }
   return *this;
 }
 
