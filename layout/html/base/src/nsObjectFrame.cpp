@@ -842,8 +842,8 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aMetrics.descent = 0;
 
   // for EMBED and APPLET, default to 240x200 for compatibility
-  nsIAtom *atom;
-  mContent->GetTag(atom);
+  nsCOMPtr<nsIAtom> atom;
+  mContent->GetTag(*getter_AddRefs(atom));
   if ( nsnull != atom &&
      ((atom == nsHTMLAtoms::applet) || (atom == nsHTMLAtoms::embed))) {
     
@@ -868,21 +868,8 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
     if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)
       aMetrics.width = NSToCoordRound (factor * aReflowState.availableWidth);
-    else {  // unconstrained percent case
-      nsRect rect;
-      aPresContext->GetVisibleArea(rect);
-      nscoord w = rect.width;
-      // now make it nicely fit counting margins
-      nsIFrame *containingBlock = nsnull;
-      if (NS_SUCCEEDED(GetContainingBlock(this, &containingBlock)) && containingBlock) {
-        containingBlock->GetRect(rect);
-        w -= 2*rect.x;
-        // XXX: this math seems suspect to me.  Is the parent's margin really twice the x-offset?
-        //      in CSS, a frame can have independent top and bottom margins
-        // but for now, let's just copy what we had before
-      }
-      aMetrics.width = NSToCoordRound (factor * w);
-    }
+    else // unconstrained percent case
+      aMetrics.width = (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) ? 0 : aReflowState.mComputedWidth;
   }
 
   // height
@@ -896,30 +883,12 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
     if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)
       aMetrics.height = NSToCoordRound (factor * aReflowState.availableHeight);
-    else {  // unconstrained percent case
-      nsRect rect;
-      aPresContext->GetVisibleArea(rect);
-      nscoord h = rect.height;
-      // now make it nicely fit counting margins
-      nsIFrame *containingBlock = nsnull;
-      if (NS_SUCCEEDED(GetContainingBlock(this, &containingBlock)) && containingBlock) {
-        containingBlock->GetRect(rect);
-        h -= 2*rect.y;
-        // XXX: this math seems suspect to me.  Is the parent's margin really twice the x-offset?
-        //      in CSS, a frame can have independent top and bottom margins
-        // but for now, let's just copy what we had before
-      }
-      aMetrics.height = NSToCoordRound (factor * h);
-    }
+    else // unconstrained percent case
+      aMetrics.height = (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) ? 0 : aReflowState.mComputedHeight;
   }
+  
   // accent
   aMetrics.ascent = aMetrics.height;
-  
-  if (aMetrics.width || aMetrics.height) {
-    // Make sure that the other dimension is non-zero
-    if (!aMetrics.width) aMetrics.width = 1;
-    if (!aMetrics.height) aMetrics.height = 1;
-  }
 
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = aMetrics.width;
