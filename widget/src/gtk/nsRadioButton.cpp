@@ -98,6 +98,12 @@ NS_METHOD nsRadioButton::Create(nsIWidget *aParent,
  * the radio buttons that go with this one.
  */
   mWidget = gtk_radio_button_new(NULL);
+
+  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+
+  gtk_widget_show(mWidget);
+
 /*
   mWidget = ::XmCreateRadioBox(parentWidget, "radio", nsnull, 0);
   XtVaSetValues(mWidget, XmNwidth, aRect.width,
@@ -224,7 +230,6 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 //
 // Set this button state
-//
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {

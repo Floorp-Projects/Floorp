@@ -86,6 +86,12 @@ nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 {
   mMultiSelect = aMultipleSelections;
+
+  if (mMultiSelect)
+    gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_MULTIPLE);
+  else
+    gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_BROWSE);
+
   return NS_OK;
 }
 
@@ -315,9 +321,8 @@ NS_METHOD nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::Deselect()
 {
-#if 0
-  XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
-#endif
+  gtk_clist_unselect_all(GTK_CLIST(mWidget));
+//  XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
   return NS_OK;
 }
 
@@ -334,6 +339,8 @@ NS_METHOD nsListBox::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  GtkWidget *scrolled_win;
+
   aParent->AddChild(this);
   GtkWidget *parentWidget = nsnull;
 
@@ -346,20 +353,23 @@ NS_METHOD nsListBox::Create(nsIWidget *aParent,
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
-  GtkSelectionMode selectionPolicy;
+  // to handle scrolling
+  scrolled_win = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
+                                  GTK_POLICY_AUTOMATIC,
+				  GTK_POLICY_ALWAYS);
 
   mWidget = gtk_clist_new(1);
-
-  if (mMultiSelect) {
-    //selectionPolicy = XmEXTENDED_SELECT;
-    gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_MULTIPLE);
-  } else {
-    gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_BROWSE);
-  }
-
   gtk_clist_column_titles_hide(GTK_CLIST(mWidget));
+  // Default (it may be changed)
+  gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_BROWSE);
 
-  gtk_layout_put(GTK_LAYOUT(aParent), mWidget, aRect.x, aRect.y);
+  gtk_container_add (GTK_CONTAINER (scrolled_win), mWidget);
+
+  gtk_layout_put(GTK_LAYOUT(parentWidget), scrolled_win, aRect.x, aRect.y);
+  gtk_widget_set_usize(scrolled_win, aRect.width, aRect.height);
+
+  gtk_widget_show_all(scrolled_win);
 /*
   mWidget = ::XtVaCreateManagedWidget("",
                                     xmListWidgetClass,

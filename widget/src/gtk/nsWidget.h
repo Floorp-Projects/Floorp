@@ -37,6 +37,7 @@ class nsWidget : public nsIWidget
 
     NS_DECL_ISUPPORTS
 
+    NS_IMETHOD Destroy(void);
     nsIWidget* GetParent(void);
     nsIEnumerator* GetChildren(void);
 

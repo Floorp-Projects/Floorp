@@ -81,9 +81,14 @@ NS_IMETHODIMP nsWidget::SetClientData(void* aClientData)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWidget::Destroy(void)
+{
+  ::gtk_widget_destroy(mWidget);
+}
+
 nsIWidget *nsWidget::GetParent(void)
 {
-    return mParent;
+  return mParent;
 }
 
 nsIEnumerator* nsWidget::GetChildren()

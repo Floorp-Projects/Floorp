@@ -29,10 +29,13 @@ LIBRARY_NAME = $(addsuffix $(MOZ_TOOLKIT), widget)
 ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
 TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
 TOOLKIT_LIBS += $(TK_GTK_LIBS)
+TOOLKIT_INCLUDES += -I$(srcdir)/../gtk
+
 else
 ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
 TOOLKIT_CFLAGS += $(TK_MOTIF_CFLAGS)
 TOOLKIT_LIBS += $(TK_MOTIF_LIBS)
+TOOLKIT_INCLUDES += -I$(srcdir)/../motif
 endif
 endif
 
@@ -40,7 +43,7 @@ MODULE=raptor
 
 REQUIRES=util img xpcom raptor netlib
 
-INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
+INCLUDES+= -I$(srcdir)/../xpwidgets $(TOOLKIT_INCLUDES) -I$(srcdir)/.
 
 CFLAGS += $(TOOLKIT_CFLAGS)
 

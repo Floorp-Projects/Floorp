@@ -69,7 +69,6 @@ public:
   void DisArmed();
 
 protected:
-  GtkWidget *mWidget;
   GtkWidget *mLabel;
 
 private:
