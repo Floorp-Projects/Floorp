@@ -35,9 +35,8 @@ INCLUDES += \
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
-	nsXULAtoms.cpp			\
-	nsToolboxFrame.cpp			\
 	nsToolbarFrame.cpp			\
+	nsToolboxFrame.cpp			\
 	$(NULL)
 
 EXPORTS = \
