@@ -393,9 +393,44 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
   memcpy((void*) &(plptr->fCallbacks), (void*)&callbacks, sizeof(callbacks));
 #endif
 
-#if defined(XP_PC) && !defined(XP_WIN)
-  // XXX this probably should be factored out and
-  //      just use trailing XP_WIN.
+#ifdef XP_WIN
+  // Note: on Windows, we must use the fCallback because plugins may change
+  // the function table. The Shockwave installer makes changes in the table while running
+  *aResult = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
+
+  if (*aResult == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+
+  // we must init here because the plugin may call NPN functions 
+  // when we call into the NP_Initialize entry point - NPN functions
+  // require that mBrowserManager be set up
+  if (NS_FAILED((*aResult)->Initialize())) {
+    NS_RELEASE(*aResult);
+    return NS_ERROR_FAILURE;
+  }
+
+  // the NP_Initialize entry point was misnamed as NP_PluginInit,
+  // early in plugin project development.  Its correct name is
+  // documented now, and new developers expect it to work.  However,
+  // I don't want to break the plugins already in the field, so
+  // we'll accept either name
+
+  NP_PLUGININIT pfnInitialize = (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_Initialize");
+
+  if (!pfnInitialize)
+    pfnInitialize = (NP_PLUGININIT)PR_FindSymbol(aLibrary, "NP_PluginInit");
+
+  if (pfnInitialize == NULL)
+    return NS_ERROR_UNEXPECTED; // XXX Right error?
+
+  if (pfnInitialize(&(ns4xPlugin::CALLBACKS)) != NS_OK)
+    return NS_ERROR_UNEXPECTED;
+#endif
+
+#ifdef XP_OS2
+  // XXX Do we need to do this on OS/2 or can we look more like Windows?
   NP_GETENTRYPOINTS pfnGetEntryPoints = (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
 
   if (pfnGetEntryPoints == NULL)
@@ -416,12 +451,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
 
   // create the new plugin handler
   *aResult = new ns4xPlugin(&callbacks, aLibrary, pfnShutdown, aServiceMgr);
-#elif defined(XP_WIN)
-  // Note: on Windows, we must use the fCallback because plugins may change
-  // the function table. The Shockwave installer makes changes in the table while running
-  *aResult = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
-#endif
-#ifdef XP_PC
+
   if (*aResult == NULL)
     return NS_ERROR_OUT_OF_MEMORY;
 
