@@ -178,6 +178,7 @@ private:
     PRUint32                        mSentData           : 1;
     PRUint32                        mReceivedData       : 1;
     PRUint32                        mStatusEventPending : 1;
+    PRUint32                        mHasRequestBody     : 1;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

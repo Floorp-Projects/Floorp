@@ -3468,6 +3468,28 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
     if (mListener) {
         //
+        // synthesize transport progress event.  we do this here since we want
+        // to delay OnProgress events until we start streaming data.  this is
+        // crucially important since it impacts the lock icon (see bug 240053).
+        //
+        nsresult transportStatus;
+        if (request == mCachePump)
+            transportStatus = nsITransport::STATUS_READING;
+        else
+            transportStatus = nsISocketTransport::STATUS_RECEIVING_FROM;
+
+        // mResponseHead may reference new or cached headers, but either way it
+        // holds our best estimate of the total content length.  Even in the case
+        // of a byte range request, the content length stored in the cached
+        // response headers is what we want to use here.
+
+        PRUint32 progressMax = mResponseHead->ContentLength();
+        PRUint32 progress = mLogicalOffset + count;
+        NS_ASSERTION(progress <= progressMax, "unexpected progress values");
+
+        OnTransportStatus(nsnull, transportStatus, progress, progressMax);
+
+        //
         // we have to manually keep the logical offset of the stream up-to-date.
         // we cannot depend soley on the offset provided, since we may have 
         // already streamed some data from another source (see, for example,
@@ -3479,7 +3501,7 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                                   mLogicalOffset,
                                                   count);
         if (NS_SUCCEEDED(rv))
-            mLogicalOffset += count;
+            mLogicalOffset = progress;
         return rv;
     }
 
@@ -3502,11 +3524,8 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
         NS_ConvertASCIItoUCS2 host(mConnectionInfo->Host());
         mProgressSink->OnStatus(this, nsnull, status, host.get());
 
-        // suppress "sending to" progress event if not uploading
-        if (status == nsISocketTransport::STATUS_RECEIVING_FROM ||
-            (status == nsISocketTransport::STATUS_SENDING_TO && mUploadStream)) {
+        if (progress > 0)
             mProgressSink->OnProgress(this, nsnull, progress, progressMax);
-        }
     }
 #ifdef DEBUG
     else
