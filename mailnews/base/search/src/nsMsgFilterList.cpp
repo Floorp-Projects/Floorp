@@ -525,7 +525,7 @@ nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 
 		char curChar;
     curChar = LoadAttrib(attrib, aStream);
-    if (curChar == -1)  //reached eof
+    if (curChar == (char) -1)  //reached eof
       break;
     err = LoadValue(value, aStream);
     if (err != NS_OK)
