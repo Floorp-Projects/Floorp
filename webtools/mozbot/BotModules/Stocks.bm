@@ -16,7 +16,7 @@ sub Help {
     my $self = shift;
     my ($event) = @_;
     return {
-        '' => 'This module gets stock quotes. Ask me a ticker symbol, I will retieve the quote.',
+        '' => 'This module gets stock quotes. Ask me a ticker symbol, I will retrieve the quote.',
         'stock' => 'Call this command with a ticker symbol to get the current stock price and change. Syntax: stock FBAR',
     };
 }
