@@ -80,12 +80,20 @@ $userid = escape_string($_GET["id"]);
     $username = $row["UserName"];
     $useremail = $row["UserEmail"];
     $userwebsite = $row["UserWebsite"];
-    $userpass = $row["UserPass"];
-    $userrole = $row["UserRole"];
+    $usermode = $row["UserMode"];
     $useremailhide = $row["UserEmailHide"];
+
+    if ($usermode=="A") {
+        $usermode_text = "Mozilla Update Administrator";
+    } else if ($usermode=="E") {
+        $usermode_text = "Mozilla Update Editor";
+    } else if ($usermode=="U") {
+        $usermode_text = "Extension/Theme Author";
+    }
 ?>
 
 <h2>Author Profile &#187; <?php echo"$username"; ?></h2>
+<?php if ($usermode_text) { echo"<div style=\"margin-bottom: 5px\"><strong>$usermode_text</strong></div>\n"; } ?>
 
 Homepage: <?php 
 if ($userwebsite) {echo"<A HREF=\"$userwebsite\">$userwebsite</A>";
