@@ -78,7 +78,7 @@ XPIDLSRCS	= \
 		nsIBidiKeyboard.idl \
 		nsIXRemoteClient.idl \
 		nsIFullScreen.idl \
-		nsNativeScrollbar.idl \
+		nsINativeScrollbar.idl \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
