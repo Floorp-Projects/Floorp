@@ -61,7 +61,6 @@ nsViewManager :: ~nsViewManager()
   }
 
   NS_IF_RELEASE(mRootWindow);
-  NS_IF_RELEASE(mRootView);
   NS_IF_RELEASE(mDirtyRegion);
 
   if (nsnull != mDrawingSurface)
@@ -97,15 +96,13 @@ nsrefcnt nsViewManager::Release(void)
 {
   mRefCnt--;
 
-  if ((mRefCnt == 1) && (nsnull != mRootView))
-  {
-    nsIView *pRoot = mRootView;
-    mRootView = nsnull;         //set to null so that we don't get in here again
-    NS_RELEASE(pRoot);          //kill the root view
-  }
-
   if (mRefCnt == 0)
   {
+    if (nsnull != mRootView) {
+      // Destroy any remaining views
+      mRootView->Destroy();
+      mRootView = nsnull;
+    }
     delete this;
     return 0;
   }
@@ -157,16 +154,15 @@ void nsViewManager :: SetRootWindow(nsIWidget *aRootWindow)
 
 nsIView * nsViewManager :: GetRootView()
 {
-  NS_IF_ADDREF(mRootView);
   return mRootView;
 }
 
 void nsViewManager :: SetRootView(nsIView *aView)
 {
   UpdateTransCnt(mRootView, aView);
-  NS_IF_RELEASE(mRootView);
+  // Do NOT destroy the current root view. It's the caller's responsibility
+  // to destroy it
   mRootView = aView;
-  NS_IF_ADDREF(mRootView);
 }
 
 PRUint32 nsViewManager :: GetFrameRate()
@@ -239,7 +235,6 @@ void nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
     if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
     {
       scroller->GetVisibleOffset(xoffset, yoffset);
-      NS_RELEASE(scroller);
     }
     else
       *xoffset = *yoffset = 0;
@@ -259,7 +254,6 @@ void nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset)
     if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
     {
       scroller->SetVisibleOffset(xoffset, yoffset);
-      NS_RELEASE(scroller);
     }
   }
 }
@@ -275,7 +269,6 @@ void nsViewManager :: ResetScrolling(void)
     if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
     {
       scroller->ComputeContainerSize();
-      NS_RELEASE(scroller);
     }
   }
 }
@@ -630,6 +623,7 @@ void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIView *sibl
 
     for (PRInt32 cnt = 0; cnt < numkids; cnt++)
     {
+      // XXX This is extremely inefficient...
       kid = parent->GetChild(cnt);
 
       if (kid == sibling)
@@ -673,6 +667,7 @@ void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRInt32 zinde
     {
       PRInt32 idx;
     
+      // XXX This is extremely inefficient...
       kid = parent->GetChild(cnt);
 
       idx = kid->GetZIndex();
@@ -941,7 +936,6 @@ void nsViewManager :: ShowQuality(PRBool aShow)
   if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
   {
     scroller->ShowQuality(aShow);
-    NS_RELEASE(scroller);
   }
 }
 
@@ -955,7 +949,6 @@ PRBool nsViewManager :: GetShowQuality(void)
   if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
   {
     retval = scroller->GetShowQuality();
-    NS_RELEASE(scroller);
   }
 
   return retval;
@@ -970,7 +963,6 @@ void nsViewManager :: SetQuality(nsContentQuality aQuality)
   if (NS_OK == mRootView->QueryInterface(kscroller, (void **)&scroller))
   {
     scroller->SetQuality(aQuality);
-    NS_RELEASE(scroller);
   }
 }
 

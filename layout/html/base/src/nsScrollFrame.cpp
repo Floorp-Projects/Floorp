@@ -353,7 +353,6 @@ nsScrollInnerFrame::Reflow(nsIPresContext&      aPresContext,
     if ((NS_OK != rv) || (NS_OK != view->Init(viewManager, 
                                               mRect,
                                               parentView))) {
-      NS_RELEASE(parentView);
       NS_RELEASE(viewManager);
       return rv;
     }
@@ -362,13 +361,13 @@ nsScrollInnerFrame::Reflow(nsIPresContext&      aPresContext,
     viewManager->InsertChild(parentView, view, 0);
     NS_RELEASE(viewManager);
 
-    NS_RELEASE(parentView);
+    // NS_RELEASE(parentView);
     SetView(view);
   }
   if (nsnull == view) {
     return NS_OK;
   }
-  NS_RELEASE(view);
+  // NS_RELEASE(view);
 
   if (nsnull == mFirstChild) {
     mFirstChild = new nsScrollBodyFrame(mContent, this);

@@ -469,7 +469,6 @@ nsBrowserWindow::ForceRefresh()
       nsIView* root = vm->GetRootView();
       if (nsnull != root) {
         vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
-        NS_RELEASE(root);
       }
       NS_RELEASE(vm);
     }
@@ -1243,7 +1242,6 @@ DumpViewsRecurse(nsBrowserWindow* aBrowser, nsIWebShell* aWebShell, FILE* out)
         nsIView* root = vm->GetRootView();
         if (nsnull != root) {
           root->List(out);
-          NS_RELEASE(root);
         }
         NS_RELEASE(vm);
       }

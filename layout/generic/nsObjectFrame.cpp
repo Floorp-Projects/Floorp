@@ -155,9 +155,6 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   SetView(view);
 
 exit:
-  NS_RELEASE(view);
-	  
-  NS_IF_RELEASE(parView);
   NS_IF_RELEASE(viewMan);  
   NS_IF_RELEASE(presShell); 
 
@@ -319,13 +316,8 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
                 //since the plugin is holding on to private data in the widget,
                 //we probably need to keep around the ref on the view and/or widget.
                 //(i.e. this is bad...) MMP
-
-                NS_RELEASE(view);
                 NS_RELEASE(widget);
               }
-            }
-            else {
-              NS_RELEASE(view);
             }
             NS_RELEASE(pm);
           }
@@ -354,7 +346,6 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
     GetView(view);
     if (nsnull != view) {
       view->SetVisibility(nsViewVisibility_kShow);
-      NS_RELEASE(view);
     }
   }
   return rv;

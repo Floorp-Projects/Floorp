@@ -34,8 +34,6 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
 
   virtual nsresult Init(nsIViewManager* aManager,
 					const nsRect &aBounds,
@@ -75,6 +73,10 @@ public:
 
   //private
   void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
 
 protected:
   virtual ~nsScrollingView();

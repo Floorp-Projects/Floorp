@@ -343,13 +343,13 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
   nsIView* view;
   GetView(view);
 
+  nsIWidget*     widget = view->GetWidget();
   nsIListWidget* list;
-  nsresult stat = view->QueryInterface(kListWidgetIID, (void **) &list);
-  if (NS_OK != stat) {
-    NS_ASSERTION((NS_OK == stat), "invalid widget");
+  if ((nsnull == widget) || NS_FAILED(widget->QueryInterface(kListWidgetIID, (void **) &list))) {
+    NS_ASSERTION(PR_FALSE, "invalid widget");
     return;
   }
-
+  NS_RELEASE(widget);
   list->SetBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF));
 
   const nsStyleFont* styleFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
@@ -395,7 +395,7 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     NS_RELEASE(child);  
   }
 
-  NS_RELEASE(view);
+  NS_RELEASE(list);
 
   select->Reset();  // initializes selections 
 }

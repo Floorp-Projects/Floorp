@@ -136,7 +136,6 @@ nsInputCheckboxFrame::MouseClicked(nsIPresContext* aPresContext)
 	checkbox->SetState(newState);
     NS_RELEASE(checkbox);
   }
-  NS_RELEASE(view);
 }
 
 

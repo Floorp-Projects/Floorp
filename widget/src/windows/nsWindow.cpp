@@ -663,6 +663,7 @@ void nsWindow::Destroy()
 
     if (mPalette) {
         VERIFY(::DeleteObject(mPalette));
+        mPalette = NULL;
     }
 
       // Destroy the tooltip control
@@ -1766,6 +1767,7 @@ void nsWindow::OnDestroy()
     // free GDI objects
     if (mBrush) {
       ::DeleteObject(mBrush);
+      mBrush = nsnull;
     }
 
     // release references to children, device context, and toolkit

@@ -114,17 +114,12 @@ nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
 
       // Remember our view
       aFrame->SetView(view);
-      NS_RELEASE(view);
-      NS_RELEASE(parView);
 
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
         ("nsHTMLBase::CreateViewForFrame: frame=%p view=%p",
          aFrame));
       return result;
     }
-  }
-  else {
-    NS_RELEASE(view);
   }
   return NS_OK;
 }

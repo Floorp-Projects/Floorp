@@ -99,7 +99,6 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
   }
   NS_RELEASE(fileWidget);
   NS_RELEASE(parentWidget);
-  NS_RELEASE(textView);
   NS_RELEASE(textWidget);
 }
 
@@ -140,7 +139,6 @@ nsInputFileFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   GetView(view);
   if (nsnull != view) {
     view->SetDimensions(aWidth, aHeight);
-    NS_RELEASE(view);
   }
   return NS_OK;
 }

@@ -62,14 +62,22 @@ typedef enum
 
 //----------------------------------------------------------------------
 
-// View interface
-
+/**
+ * View interface
+ *
+ * Views are NOT reference counted. Use the Destroy() member function to
+ * destroy a frame.
+ *
+ * The lifetime of the view hierarchy is bounded by the lifetime of the
+ * view manager that owns the views.
+ */
 class nsIView : public nsISupports
 {
 public:
   /**
    * Initialize the view
-   * @param aManager view manager that "owns" the view
+   * @param aManager view manager that "owns" the view. The view does NOT
+   *        hold a reference to the view manager
    * @param aBounds initial bounds for view
    * @param aParent parent view
    * @param aWindowIID IID for Widget type that this view
@@ -98,7 +106,14 @@ public:
 						nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
 
   /**
-   * Destroy the view
+   * Destroy the view.
+   *
+   * The view destroys its child views, and destroys and releases its
+   * widget (if it has one).
+   *
+   * Also informs the view manager that the view is destroyed by calling
+   * SetRootView(NULL) if the view is the root view and calling RemoveChild()
+   * otherwise.
    */
   virtual void Destroy() = 0;
 
@@ -381,6 +396,10 @@ public:
    * @param aIndent indentation depth
    */
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
+  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
 
 //this is passed down to child views during painting and event handling

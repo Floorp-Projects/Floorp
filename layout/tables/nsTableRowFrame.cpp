@@ -195,8 +195,6 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
         }
         aRenderingContext.PopState();
       }
-    } else {
-      NS_RELEASE(pView);
     }
     kid->GetNextSibling(kid);
   }

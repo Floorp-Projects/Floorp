@@ -416,7 +416,6 @@ void TextTimer::Notify(nsITimer *timer)
     bounds.y = offset.y;
     vm->UpdateView(view, bounds, 0);
     NS_RELEASE(vm);
-    NS_RELEASE(view);
   }
 }
 
@@ -1655,7 +1654,6 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
   GetView(view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
-    NS_RELEASE(view);
   }
 
   // Output the first/last content offset and prev/next in flow info

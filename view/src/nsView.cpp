@@ -44,11 +44,12 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
 //printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->widgetSupports, 
 //       aEvent->message, aEvent->point.x, aEvent->point.y);
-  nsIView *view;
-  nsEventStatus  result = nsEventStatus_eIgnore; 
+  nsIView*      view = nsView::GetViewFor(aEvent->widget);
+  nsEventStatus result = nsEventStatus_eIgnore;
 
-  if (NS_OK == aEvent->widget->QueryInterface(kIViewIID, (void**)&view))
+  if (nsnull != view)
   {
+
     switch(aEvent->message)
     {
       case NS_SIZE:
@@ -83,12 +84,9 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
             scrollView->GetClipSize(&sizex, &sizey);
 
-            NS_RELEASE(scrollView);
-
             if ((width == NSTwipsToIntPixels(sizex, t2p)) &&
                 (height == NSTwipsToIntPixels(sizey, t2p)))
             {
-              NS_IF_RELEASE(rootView);
               NS_RELEASE(presContext);
               NS_RELEASE(vm);
               break;
@@ -100,7 +98,6 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
           result = nsEventStatus_eConsumeNoDefault;
         }
 
-        NS_IF_RELEASE(rootView);
         NS_RELEASE(presContext);
         NS_RELEASE(vm);
 
@@ -158,8 +155,6 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
         break;
     }
-
-    NS_RELEASE(view);
   }
 
   return result;
@@ -200,35 +195,34 @@ nsView :: ~nsView()
     {
       if (rootView == this)
       {
-        //This code should never be reached since there is a circular ref between nsView and nsViewManager
-        mViewManager->SetRootView(nsnull);  // this resets our ref count to 0
+        // Inform the view manager that the root view has gone away...
+        mViewManager->SetRootView(nsnull);
       }
       else
       {
         if (nsnull != mParent)
+        {
           mViewManager->RemoveChild(mParent, this);
-
-        NS_RELEASE(rootView);
+        }
       }
-    }
+    } 
     else if (nsnull != mParent)
+    {
       mParent->RemoveChild(this);
+    }
 
-    NS_RELEASE(mViewManager);
     mViewManager = nsnull;
   }
   else if (nsnull != mParent)
+  {
     mParent->RemoveChild(this);
-
-  if (nsnull != mFrame) {
-    // Temporarily raise our refcnt because the frame is going to
-    // Release us.
-    mRefCnt = 99;
-    mFrame->SetView(nsnull);
-    mRefCnt = 0;
   }
-  if (nsnull != mInnerWindow) {
-	  NS_RELEASE(mInnerWindow); // this should destroy the widget and its native windows
+
+  // Destroy and release the widget
+  if (nsnull != mWindow) {
+    mWindow->SetClientData(nsnull);
+    mWindow->Destroy();
+    NS_RELEASE(mWindow);
   }
 }
 
@@ -242,53 +236,42 @@ nsresult nsView :: QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   if (aIID.Equals(kClassIID) || (aIID.Equals(kISupportsIID))) {
     *aInstancePtr = (void*)(nsIView*)this;
-    AddRef();
     return NS_OK;
   }
-
-  if (nsnull != mInnerWindow)
-    return mInnerWindow->QueryInterface(aIID, aInstancePtr);
 
   return NS_NOINTERFACE;
 }
 
 nsrefcnt nsView::AddRef() 
 {
-  return ++mRefCnt;
+  NS_WARNING("not supported for views");
+  return 1;
 }
 
 nsrefcnt nsView::Release()
 {
-  mRefCnt--;
+  NS_WARNING("not supported for views");
+  return 1;
+}
 
-  if (!(mVFlags & VIEW_FLAG_DYING))
-  {
-    if ((mRefCnt == 1) && (nsnull != mViewManager))
-    {
-      nsIView *pRoot = mViewManager->GetRootView();
+nsIView* nsView::GetViewFor(nsIWidget* aWidget)
+{           
+  nsIView*  view = nsnull;
+  void*     clientData;
 
-      if (nsnull != pRoot)
-      {
-        if (pRoot == this)
-        {
-          nsIViewManager *vm = mViewManager;
-          mViewManager = nsnull;  //set to null so that we don't get in here again
-          NS_RELEASE(pRoot);      //set our ref count back to 1
-          NS_RELEASE(vm);         //kill the ViewManager
-        }
-        else
-          NS_RELEASE(pRoot);  //release root again
-      }
-    }
+  // The widget's client data points back to the owning view
+  if (NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
+    view = (nsIView*)clientData;
 
-    if (mRefCnt == 0)
-    {
-      delete this;
-      return 0;
-    }
+#ifdef NS_DEBUG
+    // Verify the pointer is really a view
+    nsView* widgetView;
+    NS_ASSERTION((NS_SUCCEEDED(view->QueryInterface(kIViewIID, (void **)&widgetView))) &&
+                 (widgetView == view), "bad client data");
+#endif
   }
 
-  return mRefCnt;
+  return view;
 }
 
 nsresult nsView :: Init(nsIViewManager* aManager,
@@ -310,9 +293,8 @@ nsresult nsView :: Init(nsIViewManager* aManager,
   if (nsnull != mViewManager) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+  // we don't hold a reference to the view manager
   mViewManager = aManager;
-
-  NS_ADDREF(aManager);
 
   if (aClip != nsnull)
     mClip = *aClip;
@@ -341,7 +323,6 @@ nsresult nsView :: Init(nsIViewManager* aManager,
 
     trect *= cx->GetTwipsToPixels();
 
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
     if (NS_OK == LoadWidget(*aWindowCIID))
     {
       if (aNative)
@@ -589,8 +570,6 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       clipres = rc.SetClipRect(brect, nsClipCombine_kSubtract);
   }
 
-  NS_RELEASE(pRoot);
-
   return clipres;
 }
 
@@ -744,8 +723,6 @@ void nsView :: GetPosition(nscoord *x, nscoord *y)
     *x = mBounds.x;
     *y = mBounds.y;
   }
-
-  NS_IF_RELEASE(rootView);
 }
 
 void nsView :: SetDimensions(nscoord width, nscoord height)
@@ -761,7 +738,6 @@ void nsView :: SetDimensions(nscoord width, nscoord height)
     if (NS_OK == mParent->QueryInterface(kscroller, (void **)&scroller))
     {
       scroller->ComputeContainerSize();
-      NS_RELEASE(scroller);
     }
   }
 
@@ -803,8 +779,6 @@ void nsView :: GetBounds(nsRect &aBounds) const
 
   if ((nsIView *)this == rootView)
     aBounds.x = aBounds.y = 0;
-
-  NS_IF_RELEASE(rootView);
 }
 
 void nsView :: SetClip(nscoord aLeft, nscoord aTop, nscoord aRight, nscoord aBottom)
@@ -1005,23 +979,20 @@ nsIFrame * nsView :: GetFrame()
 //
 nsresult nsView :: LoadWidget(const nsCID &aClassIID)
 {
-  nsresult rv;
+  nsISupports*  window;
+  nsresult      rv;
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  rv = NSRepository::CreateInstance(aClassIID, this, kISupportsIID, (void**)&mInnerWindow);
+  rv = NSRepository::CreateInstance(aClassIID, nsnull, kISupportsIID, (void**)&window);
 
   if (NS_OK == rv) {
-    // load the convenience nsIWidget pointer.
-    // NOTE: mWindow is released so not to create a circulare refcount
+    // get a pointer to the nsIWidget* interface
     static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-    rv = mInnerWindow->QueryInterface(kIWidgetIID, (void**)&mWindow);
-    if (NS_OK != rv) {
-	    mInnerWindow->Release();
-	    mInnerWindow = NULL;
-    }
-    else {
-      mWindow->Release();
-    }
+    rv = window->QueryInterface(kIWidgetIID, (void**)&mWindow);
+    window->Release();
+
+    // Set the widget's client data
+    mWindow->SetClientData((void*)this);
   }
 
   return rv;
@@ -1093,7 +1064,6 @@ void nsView :: GetScrollOffset(nscoord *aDx, nscoord *aDy)
     if (NS_OK == ancestor->QueryInterface(kscroller, (void **)&sview))
     {
       sview->GetVisibleOffset(aDx, aDy);
-      NS_RELEASE(sview);
       return;
     }
 
