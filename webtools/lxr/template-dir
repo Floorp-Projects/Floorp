@@ -12,6 +12,8 @@
     <TD NOWRAP VALIGN=TOP ALIGN=LEFT>$namelink </TD>
     <TD NOWRAP VALIGN=TOP ALIGN=RIGHT>$filesize{$kbytes} </TD>
     <TD NOWRAP VALIGN=TOP ALIGN=RIGHT><FONT SIZE="-1">$modtime</FONT> </TD>
-    <TD VALIGN=TOP ALIGN=LEFT>&nbsp;$description{<i>$desctext</i>}}</TD>
+    <TD VALIGN=TOP ALIGN=LEFT>&nbsp;$description{<i>$desctext</i>} 
+    </TD>
   </TR>
+  }
 </TABLE>
