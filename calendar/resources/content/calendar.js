@@ -462,7 +462,7 @@ function weekEventItemClick(eventBox, event)
     //do this check, otherwise on double click you get into an infinite loop
     if (event.detail == 1) {
         var calEvent = eventBox.calEvent;
-        
+
         gCalendarWindow.EventSelection.replaceSelection(calEvent);
 
         var newDate = new Date(calEvent.startDate.jsDate);
@@ -667,23 +667,7 @@ var gNewDateVariable = null;
 
 function newEventCommand( event )
 {
-    /*
-   var startDate;
-
-   if( gNewDateVariable != null )
-   {
-      startDate = gNewDateVariable;
-   }
-   else
-      startDate = gCalendarWindow.currentView.getNewEventDate();
-
-   var Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
-   
-   date = jsDateToDateTime(startDate);
-   date.minute = Minutes;
-    */
-    date = null;
-   newEvent( date );
+   newEvent();
 }
 
 
@@ -697,13 +681,12 @@ function newToDoCommand()
 }
 
 
-function createEvent ()
+function createEvent()
 {
     return Components.classes["@mozilla.org/calendar/event;1"].createInstance(Components.interfaces.calIEvent);
 }
 
-
-function createToDo ()
+function createToDo()
 {
     return Components.classes["@mozilla.org/calendar/todo;1"].createInstance(Components.interfaces.calITodo);
 }
@@ -742,13 +725,13 @@ function createCalendar()
     return calendar;
 }
 
-function isEvent ( aObject )
+function isEvent(aObject)
 {
    return aObject instanceof Components.interfaces.calIEvent;
 }
 
 
-function isToDo ( aObject )
+function isToDo(aObject)
 {
    return aObject instanceof Components.interfaces.calITodo;
 }
@@ -803,7 +786,7 @@ function fetchItem( aObject ){
 * Calls editNewEvent. 
 */
 
-function newEvent( startDate, endDate, allDay )
+function newEvent(startDate, endDate, allDay)
 {
    // create a new event to be edited and added
    var calendarEvent = createEvent();
@@ -1030,6 +1013,8 @@ function editEventCommand()
 //used to check if there were external changes for shared calendar
 function saveItem( calendarEvent, Server, functionToRun, originalEvent )
 {
+    dump(functionToRun + " " + calendarEvent.title + "\n");
+
     if (functionToRun == 'addEvent')
         gCalendar.addItem(calendarEvent, null);
 
@@ -1112,25 +1097,32 @@ function saveItem( calendarEvent, Server, functionToRun, originalEvent )
 */
 function deleteItems( SelectedItems, DoNotConfirm )
 {
-   if ( !SelectedItems ) {
-      return;
-   }
+    if (!SelectedItems)
+        return;
 
-   //Confirmation
-   if ( !DoNotConfirm ) {
-      var calendarEvent = SelectedItems[0];
-      var confirmText;
-      if ( SelectedItems.length > 1 ) {
-         confirmText = confirmDeleteAllEvents;
-      } else if ( calendarEvent.title ) {
-         confirmText = (confirmDeleteEvent+" "+calendarEvent.title+"?" );
-      } else {
-         confirmText = confirmDeleteUntitledEvent;
-      }
-      if ( !confirm( confirmText ) ) {
-         return;
-      }
-   }
+    //Confirmation
+    if (!DoNotConfirm) {
+        var calendarEvent = SelectedItems[0];
+        var confirmText;
+        if (SelectedItems.length > 1) {
+            confirmText = confirmDeleteAllEvents;
+        } else if (calendarEvent.title) {
+            confirmText = (confirmDeleteEvent + " " + calendarEvent.title + "?");
+        } else {
+            confirmText = confirmDeleteUntitledEvent;
+        }
+        if (!confirm(confirmText)) {
+            return;
+        }
+    }
+
+    ccalendar = createCalendar();
+
+    for (i in  SelectedItems) {
+        ccalendar.deleteItem(SelectedItems[i], null);
+    }
+
+   /*
 
    //group items to delete by calendarServer
    calendarsToPublish = new Array();
@@ -1214,6 +1206,7 @@ function deleteItems( SelectedItems, DoNotConfirm )
          gCalendarWindow.calendarManager.removeLocalLock(calendarServer);
       }
    }
+   */
 }
 
 
