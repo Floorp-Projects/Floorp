@@ -86,6 +86,11 @@ main(int argc, char *argv[])
         if (argv[i][0] != '-')
             break;
         switch (argv[i][1]) {
+          case '-':
+            argc++;
+            /* fall through */
+          case 0:               /* - is a legal input filename (stdin)  */
+            goto done_options;
           case 'w':
             enable_warnings = TRUE;
             break;
@@ -153,7 +158,7 @@ main(int argc, char *argv[])
             return 1;
         }
     }
-    
+ done_options:
     if (!mode) {
         fprintf(stderr, "ERROR: must specify output mode\n");
         xpidl_usage(argc, argv);
@@ -161,7 +166,7 @@ main(int argc, char *argv[])
     }
 
     for (idlfiles = 0; i < argc; i++) {
-        if (argv[i][0] && argv[i][0] != '-')
+        if (argv[i][0])
             idlfiles += xpidl_process_idl(argv[i], inc_head, basename, mode);
     }
     

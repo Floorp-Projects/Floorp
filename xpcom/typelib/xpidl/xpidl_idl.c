@@ -59,7 +59,6 @@ xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 gboolean
 process_node(TreeState *state)
 {
-    char *name = NULL;
     nodeHandler *handlerp = state->dispatch, handler;
     gint type;
     assert(state->tree);
@@ -140,6 +139,9 @@ fopen_from_includes(const char *filename, const char *mode,
 {
     char *filebuf = NULL;
     FILE *file = NULL;
+    if (!strcmp(filename, "-"))
+        return stdin;
+
     for (; include_path && !file; include_path = include_path->next) {
         filebuf = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s", 
                                   include_path->directory, filename);
@@ -190,8 +192,8 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 {
     struct input_callback_stack *stack = user_data;
     struct input_callback_data *data = stack->top, *new_data = NULL;
-    int rv, avail, copy;
-    char *search, *check_point, *ptr, *end_copy, *raw_start, *comment_start,
+    int avail, copy;
+    char *check_point, *ptr, *end_copy, *raw_start, *comment_start,
         *include_start;
 
     switch(reason) {
@@ -214,7 +216,6 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
             data->point = data->buf;
 
             /* fill the buffer */
-        fill_buffer:
             data->len = fread(data->buf, 1, data->max, data->input);
             if (!data->len) {
                 if (ferror(data->input))
@@ -415,7 +416,8 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 	
       case IDL_INPUT_REASON_ABORT:
       case IDL_INPUT_REASON_FINISH:
-        fclose(data->input);
+        if (data->input != stdin)
+            fclose(data->input);
         data->input = NULL;
         free(data->buf);
         data->buf = data->point = NULL;
@@ -444,6 +446,20 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         fprintf(stderr, "failed to create hashtable (EOM?)\n");
         return 0;
     }
+
+    state.basename = strdup(filename);
+    tmp = strrchr(state.basename, '.');
+    if (tmp)
+        *tmp = '\0';
+    
+    if (!basename)
+        outname = strdup(state.basename);
+    else
+        outname = strdup(basename);
+
+    /* so we don't include it again! */
+    g_hash_table_insert(stack.includes, filename, state.basename);
+
     stack.include_path = include_path;
 
     rv = IDL_parse_filename_with_input(filename, input_callback, &stack,
@@ -459,15 +475,8 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         return 0;
     }
 
-    state.basename = strdup(filename);
-    tmp = strrchr(state.basename, '.');
-    if (tmp)
-        *tmp = '\0';
-    
-    if (!basename)
-        outname = strdup(state.basename);
-    else
-        outname = strdup(basename);
+    /* so we don't make a #include for it  */
+    g_hash_table_remove(stack.includes, filename);
 
     state.includes = stack.includes;
     state.include_path = include_path;
