@@ -5883,6 +5883,18 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
   nsCOMPtr<nsIEventStateManager> manager = mPresContext->EventStateManager();
   nsresult rv = NS_OK;
 
+  // Grab the offset of aView from our root view.  We can use this to adjust
+  // coordinates as needed.  Note that we can't just adjust them later, because
+  // event dispatch can destroy aView.  Also note that at times aView is null
+  // here.  When that happens, there isn't much we can do about getting
+  // coordinates right....
+  nsPoint offsetOfaView(0,0);
+  if (aView) {
+    nsIView* rootView;
+    mViewManager->GetRootView(rootView);
+    offsetOfaView = aView->GetOffsetTo(rootView);
+  }
+
   if (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame()) {
     PRBool isHandlingUserInput = PR_FALSE;
 
@@ -5969,13 +5981,17 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
       // 3. Give event to the Frames for browser default processing.
       if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) &&
           aEvent->eventStructType != NS_EVENT) {
-        // Handle coordinate transformations.  Note that at times aView is null
-        // here.  When that happens, there isn't much we can do about getting
-        // coordinates right....
+        // If aView is non-null, adjust coordinates of aEvent to be in the
+        // coordinate system of mCurrentEventFrame's closest view.  Don't use
+        // aView here, since it may be dead by now.
         nsPoint offset(0,0);
         if (aView) {
+          NS_ASSERTION(mViewManager,
+                       "How did GetCurrentEventFrame() succeed?");
+          nsIView* rootView;
+          mViewManager->GetRootView(rootView);
           nsIView* frameView = mCurrentEventFrame->GetClosestView();
-          offset = frameView->GetOffsetTo(aView);
+          offset = frameView->GetOffsetTo(rootView) - offsetOfaView;
         }
 
         // Transform aEvent->point from aView's coordinate system to
