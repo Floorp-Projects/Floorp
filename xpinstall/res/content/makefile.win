@@ -25,10 +25,14 @@ DEPTH=..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-  $(MAKE_INSTALL) xpistatus.xul $(DIST)\bin\chrome\xpinstall\content\default
-  $(MAKE_INSTALL) xpistatus.js  $(DIST)\bin\chrome\xpinstall\content\default
-  $(MAKE_INSTALL) institems.xul $(DIST)\bin\chrome\xpinstall\content\default
-  $(MAKE_INSTALL) institems.js  $(DIST)\bin\chrome\xpinstall\content\default
+  $(MAKE_INSTALL) xpistatus.xul                $(DIST)\bin\chrome\xpinstall\content\default
+  $(MAKE_INSTALL) xpistatus.js                 $(DIST)\bin\chrome\xpinstall\content\default
+  $(MAKE_INSTALL) institems.xul                $(DIST)\bin\chrome\xpinstall\content\default
+  $(MAKE_INSTALL) institems.js                 $(DIST)\bin\chrome\xpinstall\content\default
+#  $(MAKE_INSTALL) updateNotification.xul       $(DIST)\bin\chrome\xpinstall\content\default
+#  $(MAKE_INSTALL) SoftwareUpdate-Source-1.rdf  $(DIST)\bin\chrome\xpinstall\content\default
+#  $(MAKE_INSTALL) SoftwareUpdates.rdf          $(DIST)\bin\chrome\xpinstall\content\default
+
 
 
 clobber::
@@ -36,4 +40,6 @@ clobber::
   rm -f $(DIST)\bin\chrome\xpinstall\content\default\xpistatus.js
   rm -f $(DIST)\bin\chrome\xpinstall\content\default\institems.xul
   rm -f $(DIST)\bin\chrome\xpinstall\content\default\institems.js
-
+#  rm -f $(DIST)\bin\chrome\xpinstall\content\default\updateNotification.xul
+#  rm -f $(DIST)\bin\chrome\xpinstall\content\default\SoftwareUpdate-Source-1.rdf
+#  rm -f $(DIST)\bin\chrome\xpinstall\content\default\SoftwareUpdates.rdf 
