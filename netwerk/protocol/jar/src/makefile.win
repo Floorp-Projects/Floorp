@@ -22,39 +22,21 @@
 DEPTH=..\..\..\..
 MODULE=necko
 
-IS_COMPONENT=1
-MAKE_OBJ_TYPE=DLL
-DLLNAME=nkjar
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=nkjar_s
 
-LLIBS= $(LLIBS)                     \
-	$(LIBNSPR)                  \
-	$(DIST)\lib\xpcom.lib       \
-	$(DIST)\lib\zlib.lib        \
-	$(NULL)
+LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 CPP_OBJS=                                    \
 	.\$(OBJDIR)\nsJARURI.obj             \
 	.\$(OBJDIR)\nsJARChannel.obj         \
 	.\$(OBJDIR)\nsJARProtocolHandler.obj \
-	.\$(OBJDIR)\nsJARProtocolModule.obj  \
 	$(NULL)
-
-LOCAL_INCLUDES=-I.	
-
-INCLUDES = $(LOCAL_INCLUDES) \
-	   $(DIST)\include \
-	   $(NULL)
-
-REQUIRES= necko 
-
-INCS = $(INCS)                  \
-        -I$(DEPTH)\dist\include \
-        $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 

@@ -27,7 +27,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
-XPIDL_MODULE	= necko_base
 
 XPIDLSRCS	= \
 		nsIFileStreams.idl \

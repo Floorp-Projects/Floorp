@@ -72,7 +72,7 @@ typedef struct _writeData {
     char *data;
 } writeData;
 
-NS_METHOD
+static NS_METHOD
 nsReadData(void* closure, // the data from
            char* toRawSegment, // where to put the data
            PRUint32 offset, // where to start

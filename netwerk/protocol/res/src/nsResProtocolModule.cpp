@@ -29,6 +29,6 @@ static nsModuleComponentInfo gResComponents[] = {
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "resource",
       nsResProtocolHandler::Create
     }
-};
+2};
 
 NS_IMPL_NSGETMODULE("res", gResComponents)

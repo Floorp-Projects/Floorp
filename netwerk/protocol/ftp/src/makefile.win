@@ -21,9 +21,7 @@ MODULE = necko
 
 DEPTH = ..\..\..\..
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=nkftp
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=nkftp_s
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
@@ -35,20 +33,13 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsFtpProtocolHandler.obj      \
         .\$(OBJDIR)\nsFTPChannel.obj              \
         .\$(OBJDIR)\nsFtpConnectionThread.obj	  \
-        .\$(OBJDIR)\nsFtpModule.obj               \
         .\$(OBJDIR)\nsAsyncEvent.obj              \
         $(NULL)
 
-LLIBS=                                \
-        $(DIST)\lib\necko.lib       \
-        $(DIST)\lib\xpcom.lib       \
-        $(LIBNSPR)  
+include <$(DEPTH)\config\rules.mak> 
 
-INCS = $(INCS)                  \
-        -I$(DEPTH)\dist\include \
-        $(NULL)
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
-include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

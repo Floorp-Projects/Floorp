@@ -26,7 +26,6 @@ DIRS= 	\
 	mgr			\
 	memcache		\
 	filecache		\
-	build                   \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

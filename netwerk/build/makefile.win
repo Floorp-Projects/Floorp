@@ -32,18 +32,49 @@ CPP_OBJS=                            \
         .\$(OBJDIR)\nsNetModule.obj \
 	$(NULL)
 
-LLIBS=                              \
-        $(DIST)\lib\neckobase_s.lib \
-        $(DIST)\lib\neckodns_s.lib  \
-        $(DIST)\lib\neckosocket_s.lib  \
-        $(DIST)\lib\xpcom.lib       \
+LLIBS=                                \
+        $(DIST)\lib\neckobase_s.lib   \
+        $(DIST)\lib\neckodns_s.lib    \
+        $(DIST)\lib\neckosocket_s.lib \
+        $(DIST)\lib\nkconv_s.lib      \
+        $(DIST)\lib\nkcnvts_s.lib     \
+        $(DIST)\lib\xpcom.lib         \
+        $(DIST)\lib\nkcachemgr_s.lib  \
+        $(DIST)\lib\nkfilecache_s.lib \
+        $(DIST)\lib\nkmemcache_s.lib  \
+        $(DIST)\lib\dbm32.lib         \
+        $(DIST)\lib\nkmime_s.lib      \
+        $(DIST)\lib\nkhttp_s.lib      \
+        $(DIST)\lib\nkfile_s.lib      \
+        $(DIST)\lib\nkdata_s.lib      \
+        $(DIST)\lib\nkjar_s.lib       \
+        $(DIST)\lib\nkres_s.lib       \
+        $(DIST)\lib\nkabout_s.lib     \
+        $(DIST)\lib\nkkwd_s.lib       \
+!ifdef MOZ_PERF
+        $(DIST)\lib\util.lib          \
+!endif
+	$(DIST)\lib\zlib.lib          \
         $(LIBNSPR)  
 
-INCS = $(INCS)                      \
-        -I$(DEPTH)\dist\include     \
-        -I$(DEPTH)\netwerk\base\src \
-        -I$(DEPTH)\netwerk\dns\src  \
-        -I$(DEPTH)\netwerk\socket\base \
+INCS = $(INCS)                                   \
+        -I$(DEPTH)\dist\include                  \
+        -I$(DEPTH)\netwerk\base\src              \
+        -I$(DEPTH)\netwerk\dns\src               \
+        -I$(DEPTH)\netwerk\socket\base           \
+        -I$(DEPTH)\netwerk\streamconv\src        \
+        -I$(DEPTH)\netwerk\streamconv\converters \
+        -I$(DEPTH)\netwerk\cache\memcache        \
+        -I$(DEPTH)\netwerk\cache\filecache       \
+        -I$(DEPTH)\netwerk\cache\mgr             \
+        -I$(DEPTH)\netwerk\mime\src              \
+        -I$(DEPTH)\netwerk\protocol\http\src     \
+        -I$(DEPTH)\netwerk\protocol\file\src     \
+        -I$(DEPTH)\netwerk\protocol\data\src     \
+        -I$(DEPTH)\netwerk\protocol\jar\src      \
+        -I$(DEPTH)\netwerk\protocol\res\src      \
+        -I$(DEPTH)\netwerk\protocol\about\src    \
+        -I$(DEPTH)\netwerk\protocol\keyword\src  \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
@@ -52,3 +83,6 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
+clobber::
+        $(RM) $(DIST)\bin\components\$(DLLNAME).dll
+	$(RM) $(DIST)\lib\$(DLLNAME).lib 

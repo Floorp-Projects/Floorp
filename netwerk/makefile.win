@@ -24,14 +24,15 @@ DEPTH = ..
 MODULE = necko
 
 DIRS=              \
-	cache      \
 	base       \
+	cache      \
 	dns        \
 	socket     \
 	mime       \
 	streamconv \
-	build      \
 	protocol   \
+	build      \
+	build2     \
 	resources  \
 !if !defined(DISABLE_TESTS)
         test \

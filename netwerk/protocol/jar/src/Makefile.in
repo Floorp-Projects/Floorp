@@ -27,20 +27,20 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
-LIBRARY_NAME	= necko_jar
-SHORT_LIBNAME	= neckojar
-IS_COMPONENT	= 1
+LIBRARY_NAME	= nkjar_s
 
 REQUIRES	= xpcom necko
 
 CPPSRCS		= \
 		nsJARProtocolHandler.cpp \
-		nsJARProtocolModule.cpp  \
 		nsJARChannel.cpp  \
 		nsJARURI.cpp  \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) 
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 

@@ -58,7 +58,6 @@ bin/components/libbookmarks.so
 bin/components/libcaps.so
 bin/components/libchardet.so
 bin/components/libchrome.so
-bin/components/libconverters.so
 bin/components/libcookie.so
 bin/components/libdirectory.so
 bin/components/libeditor.so
@@ -66,20 +65,10 @@ bin/components/libgfxps.so
 bin/components/libhistory.so
 bin/components/libjsurl.so
 bin/components/liblwbrk.so
-bin/components/libmimetype.so
 bin/components/libmozbrwsr.so
 bin/components/libmozfind.so
 bin/components/libmozucth.so
 bin/components/libmozxfer.so
-bin/components/libnecko.so
-bin/components/libnecko_about.so
-bin/components/libnecko_data.so
-bin/components/libnecko_file.so
-bin/components/libnecko_finger.so
-bin/components/libnecko_ftp.so
-bin/components/libnecko_http.so
-bin/components/libnecko_jar.so
-bin/components/libnecko_resource.so
 bin/components/libnsgif.so
 bin/components/libnsjpg.so
 bin/components/libnslocale.so
@@ -93,7 +82,6 @@ bin/components/libraptorview.so
 bin/components/librdf.so
 bin/components/librelated.so
 bin/components/libshistory.so
-bin/components/libstreamconv.so
 bin/components/libstrres.so
 bin/components/libtimer_gtk.so
 bin/components/libtoolkit_service.so
@@ -122,15 +110,19 @@ bin/components/mozcomps.xpt
 bin/components/mozfind.xpt
 bin/components/mozucth.xpt
 bin/components/mozxfer.xpt
+bin/components/libnecko.so
+bin/components/libnecko2.so
+bin/components/necko.xpt
+bin/components/necko_cache.xpt
+bin/components/necko_strconv.xpt
 bin/components/necko_about.xpt
-bin/components/necko_base.xpt
 bin/components/necko_data.xpt
 bin/components/necko_dns.xpt
 bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
+bin/components/necko_jar.xpt
+bin/components/necko_res.xpt
 bin/components/necko_socket.xpt
-bin/components/necko_stream_converter.xpt
-bin/components/nkcache.xpt
 bin/components/nsSidebar.js
 bin/components/xpinstall.xpt
 bin/components/oji.xpt
@@ -162,17 +154,10 @@ bin/components/layout.xpt
 ; this is only there if you build the irc client
 ; bin/components/libbs.so
 bin/components/libjsloader.so
-bin/components/libnecko_cache.so
-bin/components/libnecko_jar.so
-bin/components/libnecko_res.so
-bin/components/libnkkyword.so
-bin/components/libnecko_datetime.so
 bin/components/libnsprefm.so
 bin/components/libregviewer.so
 bin/components/libsample.so
 bin/components/libsearch.so
-bin/components/necko_jar.xpt
-bin/components/necko_res.xpt
 bin/components/nsSample.js
 bin/components/prefmigr.xpt
 bin/components/profile.xpt

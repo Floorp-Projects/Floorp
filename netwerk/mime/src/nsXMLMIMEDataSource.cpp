@@ -53,7 +53,7 @@ const char* kMacType="mactype";
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 // Hash table helper functions
-PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
+static PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)aData;
     NS_ASSERTION(entry, "mapping problem");
 	NS_RELEASE(entry);
@@ -193,7 +193,7 @@ nsXMLMIMEDataSource::Add( nsIMIMEInfo* aMapper )
 
 // used to cleanup any file extension mappings when 
 // a root MIME entry is removed.
-PRBool removeExts(nsCString& aElement, void *aData) {
+static PRBool removeExts(nsCString& aElement, void *aData) {
     nsHashtable* infoObjects = (nsHashtable*)aData;
     NS_ASSERTION(infoObjects, "hash table botched up");
 

@@ -1026,7 +1026,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   // Look for simple entities not included in a tags and scan them.
   /* Skip all tags ("<[...]>") and content in an a tag ("<a[...]</a>").
      Unescape the rest (text between tags) and pass it to ScanTXT. */
-  for (PRInt32 i = 0; i < aInString.Length();)
+  for (PRUint32 i = 0; i < aInString.Length();)
   {
     if (aInString[i] == '<')  // html tag
     {

@@ -19,7 +19,8 @@
 #
 # Contributor(s): 
 
-MODULE = nkcache
+MODULE = necko
+XPIDL_MODULE = necko_cache
 
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>

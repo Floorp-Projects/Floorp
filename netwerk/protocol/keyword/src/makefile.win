@@ -22,34 +22,16 @@
 DEPTH=..\..\..\..
 MODULE=necko
 
-IS_COMPONENT=1
-MAKE_OBJ_TYPE=DLL
-DLLNAME=nkkyword
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-LLIBS= $(LLIBS)                 \
-	$(LIBNSPR)              \
-	$(DIST)\lib\xpcom.lib   \
-	$(NULL)
+LIBRARY_NAME=nkkwd_s
 
 CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsKeywordProtocolHandler.obj \
-	.\$(OBJDIR)\nsKeywordModule.obj \
 	$(NULL)
-
-LOCAL_INCLUDES=-I.	
-
-INCLUDES = $(LOCAL_INCLUDES)
-
-REQUIRES= necko 
-
-INCS = $(INCS)                  \
-        -I$(DEPTH)\dist\include \
-        $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

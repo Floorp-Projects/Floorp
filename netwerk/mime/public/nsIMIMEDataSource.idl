@@ -34,11 +34,11 @@
     { 0xa1, 0x2b, 0xa7, 0xae, 0xf7, 0xa2, 0xf2, 0xfc } \
 }
 #define NS_XMLMIMEDATASOURCE_PROGID \
-"component:||netscape|mimexmldatasource"
+"component://netscape/mime-xml-data-source"
 
 
 #define NS_NATIVEMIMEDATASOURCE_PROGID \
-"component:||netscape|mimenativedatasource"
+"component://netscape/mime-native-data-source"
 %}
 
 
