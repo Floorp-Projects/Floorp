@@ -45,6 +45,7 @@ CNavigationButtonPopup::CNavigationButtonPopup(
 	LStream* inStream)
 
 	:	mBrowserContext(nil),
+		mBrowserWindow(nil),
 		mHistory(nil),
 		mCurrentEntry(nil),
 		mCurrentEntryIndex(0),
@@ -61,7 +62,23 @@ CNavigationButtonPopup::CNavigationButtonPopup(
 CNavigationButtonPopup::~CNavigationButtonPopup()
 {
 }
+
+
+//
+// FinishCreateSelf
+//
+void
+CNavigationButtonPopup :: FinishCreateSelf ( )
+{
+	CToolbarBevelButton::FinishCreateSelf();
 	
+	// LBevelButton will broadcast when an item in the popup menu is picked or when
+	// the button is pressed. We want to handle that here instead of elsewhere
+	AddListener(this);
+
+} // FinishCreateSelf
+
+
 #pragma mark -
 
 // ---------------------------------------------------------------------------
@@ -138,28 +155,36 @@ CNavigationButtonPopup::InsertHistoryItemIntoMenu(
 	
 #pragma mark -
 
-// ---------------------------------------------------------------------------
-//		¥ HandleNewValue
-// ---------------------------------------------------------------------------
 
-Boolean
-CNavigationButtonPopup::HandleNewValue(
-	Int32	inNewValue)
+//
+// ListenToMessage
+//
+// The message sent will have
+//
+void
+CNavigationButtonPopup :: ListenToMessage ( MessageT inMessage, void* ioParam )
 {
-	if (AssertPreconditions() && inNewValue)
-	{
-		Int32 historyIndex = 0;
-
-		if (GetCommandNumber() == cmd_GoBack)
-			historyIndex = SHIST_GetIndex(mHistory, mCurrentEntry) - inNewValue;
-		else if (GetCommandNumber() == cmd_GoForward)
-			historyIndex = SHIST_GetIndex(mHistory, mCurrentEntry) + inNewValue;
-
-		if (historyIndex)
-			mBrowserContext->LoadHistoryEntry(historyIndex);
-	}
+	Uint32 menuValue = *reinterpret_cast<Uint32*>(ioParam);
 	
-	return true;
+	if ( AssertPreconditions() ) {
+		if ( menuValue ) {
+			Int32 historyIndex = 0;
+
+			if (inMessage == cmd_GoBack)
+				historyIndex = SHIST_GetIndex(mHistory, mCurrentEntry) - menuValue;
+			else if (inMessage == cmd_GoForward)
+				historyIndex = SHIST_GetIndex(mHistory, mCurrentEntry) + menuValue;
+
+			if (historyIndex)
+				mBrowserContext->LoadHistoryEntry(historyIndex);
+		}
+		else {
+			if (inMessage == cmd_GoBack)
+				mBrowserWindow->SendAEGo(kAEPrevious);
+			else if (inMessage == cmd_GoForward)
+				mBrowserWindow->SendAEGo(kAENext);		
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -170,17 +195,15 @@ CNavigationButtonPopup::HandleNewValue(
 Boolean
 CNavigationButtonPopup::AssertPreconditions()
 {	
-	CMediatedWindow* topWindow = CWindowMediator::GetWindowMediator()->FetchTopWindow(WindowType_Any, regularLayerType);
-	
+	CMediatedWindow* topWindow = CWindowMediator::GetWindowMediator()->FetchTopWindow(WindowType_Any, regularLayerType);	
 	if (!topWindow || topWindow->GetWindowType() != WindowType_Browser)
 		return false;
 	
-	CBrowserWindow* browserWindow = dynamic_cast<CBrowserWindow*>(topWindow);
-
-	if (!browserWindow)
+	mBrowserWindow = dynamic_cast<CBrowserWindow*>(topWindow);
+	if (!mBrowserWindow)
 		return false;
 	
-	if (!(mBrowserContext = (CBrowserContext*)browserWindow->GetWindowContext()))
+	if (!(mBrowserContext = (CBrowserContext*)mBrowserWindow->GetWindowContext()))
 		return false;
 
 	if (!(mHistory = &((MWContext*)(*mBrowserContext))->hist))

@@ -33,10 +33,11 @@
 // Forward declarations
 
 class CBrowserContext;
+class CBrowserWindow;
 
 // Class declaration
 
-class CNavigationButtonPopup : public CToolbarBevelButton
+class CNavigationButtonPopup : public CToolbarBevelButton, public LListener
 {
 public:
 	enum { class_ID = 'TbNv' };
@@ -48,17 +49,19 @@ public:
 	
 protected:
 	virtual void			ClickSelf ( const SMouseDownEvent & inEvent );
-
+	virtual void			FinishCreateSelf ( ) ;
+	
 	virtual void			AdjustMenuContents();
 	
 	virtual void			InsertHistoryItemIntoMenu(
 												Int32				inHistoryItemIndex,
 												Int16				inAfterItem);
 
-	virtual Boolean			HandleNewValue(Int32 inNewValue);
+	virtual void			ListenToMessage ( MessageT inMessage, void* ioParam ) ;
 
 	Boolean					AssertPreconditions();
 
+	CBrowserWindow*			mBrowserWindow;
 	CBrowserContext*		mBrowserContext;
 	History*				mHistory;
 	History_entry*			mCurrentEntry;
