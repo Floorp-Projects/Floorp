@@ -9,5 +9,5 @@
 
 		void back();
 		void forward();
-		void go(in int index);
+		void go(/* ... */);
       };
