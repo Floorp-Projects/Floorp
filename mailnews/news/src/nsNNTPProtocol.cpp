@@ -4238,26 +4238,24 @@ PRBool nsNNTPProtocol::CheckIfAuthor(nsISupports *aElement, void *data)
         return PR_TRUE;
     }
 
-    char *us = nsnull;
-    char *them = nsnull;
-    nsresult rv1 = parser->ExtractHeaderAddressMailboxes(nsnull, cancelInfo->from, &us);
-    nsresult rv2 = parser->ExtractHeaderAddressMailboxes(nsnull, cancelInfo->old_from, &them);
+    nsXPIDLCString us;
+    nsXPIDLCString them;
+    nsresult rv1 = parser->ExtractHeaderAddressMailboxes(nsnull, cancelInfo->from, getter_Copies(us));
+    nsresult rv2 = parser->ExtractHeaderAddressMailboxes(nsnull, cancelInfo->old_from, getter_Copies(them));
     
-	PR_LOG(NNTP,PR_LOG_ALWAYS,("us = %s, them = %s", us, them));
+	PR_LOG(NNTP,PR_LOG_ALWAYS,("us = %s, them = %s", us.get(), them.get()));
 
     if ((NS_FAILED(rv1) || NS_FAILED(rv2) || PL_strcasecmp(us, them))) {
         //no match.  don't set cancel email
         PR_FREEIF(cancelInfo->from);
         cancelInfo->from = nsnull;
 
-        PR_FREEIF(us);
-        PR_FREEIF(them);
-
         // keep going
         return PR_TRUE;
     }
     else {
-        // we have a match, stop.
+
+      // we have a match, stop.
         return PR_FALSE;
     }          
 }
