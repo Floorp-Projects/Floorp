@@ -24,10 +24,11 @@
 #
 # nglayout pull script 
 #
-use Mac::Processes;
-use MozillaBuildList;
+
 use Cwd;
+
 use Moz;
+use MozillaBuildList;
 
 #-----------------------------------------------
 # hashes to hold build options
@@ -46,4 +47,4 @@ $MOZ_SRC = cwd();
 my($do_checkout)    = 1;
 my($do_build)       = 0;
 
-RunBuild($do_checkout, $do_build);
+RunBuild($do_checkout, $do_build, "");

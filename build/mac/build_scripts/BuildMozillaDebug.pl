@@ -24,10 +24,11 @@
 #
 # build script (debug)
 #
-use Mac::Processes;
-use MozillaBuildList;
+
 use Cwd;
+
 use Moz;
+use MozillaBuildList;
 
 #-------------------------------------------------------------
 # Where have the build options gone?
@@ -59,6 +60,7 @@ $CARBON                 = 0;    # turn on to build with TARGET_CARBON
 $PROFILE                = 0;
 $RUNTIME                = 0;    # turn on to just build runtime support and NSPR projects
 $GC_LEAK_DETECTOR       = 0;    # turn on to use GC leak detection
+$MOZILLA_OFFICIAL       = 0;    # generate build number
 
 #-------------------------------------------------------------
 # configuration variables that affect the manner of building, 
@@ -96,4 +98,4 @@ $MOZ_SRC = cwd();
 my($do_checkout)    = 0;
 my($do_build)       = 1;
 
-RunBuild($do_checkout, $do_build);
+RunBuild($do_checkout, $do_build, "Mozilla debug build prefs");
