@@ -79,7 +79,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
                                         PRUint32 stringLen,
-                                        const char *string)
+                                        const PRUint8 *string)
 {
 #ifdef DEBUG_faulkner
   fprintf(stderr, "\n////////// nsSound::Init() in xlib called //////////\n");
