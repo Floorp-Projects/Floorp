@@ -481,7 +481,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     }
     else {
         // has a nsNative parent
-       parent = aNativeParent;
+       parent = (HWND)aNativeParent;
     }
 
     mWnd = ::CreateWindowEx(WindowExStyle(),
