@@ -37,6 +37,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  necko \
 		  content \
+		  jar \
 		  $(NULL)
 
 CPPSRCS		= nsChromeFactory.cpp

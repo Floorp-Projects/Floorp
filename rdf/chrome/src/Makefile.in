@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  imglib2 \
 		  xpconnect \
+		  jar \
 		  $(NULL)
 
 CPPSRCS		= \

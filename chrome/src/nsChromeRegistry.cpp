@@ -539,6 +539,11 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsACString& aResult)
   }
 
   nsCAutoString finalURL;
+
+  rv = GetOverrideURL(package, provider, remaining, finalURL);
+  if (NS_SUCCEEDED(rv))
+    return NS_OK;
+  
   rv = GetBaseURL(package, provider, finalURL);
 #ifdef DEBUG
   if (NS_FAILED(rv)) {
@@ -658,10 +663,122 @@ nsChromeRegistry::GetBaseURL(const nsACString& aPackage,
   }
 
   // From this resource, follow the "baseURL" arc.
-  return nsChromeRegistry::FollowArc(mChromeDataSource,
-                                     aBaseURL,
-                                     resource,
-                                     mBaseURL);
+  return FollowArc(mChromeDataSource, aBaseURL, resource, mBaseURL);
+}
+
+nsresult
+nsChromeRegistry::GetOverrideURL(const nsACString& aPackage,
+                                 const nsACString& aProvider,
+                                 const nsACString& aPath,
+                                 nsACString& aResult)
+{
+  nsresult rv = InitOverrideJAR();
+  if (NS_FAILED(rv)) return rv;
+
+  // ok, if we get here, we have an override JAR
+
+  aResult.SetCapacity(mOverrideJARURL.Length() +
+                      aPackage.Length() +
+                      aProvider.Length() +
+                      aPath.Length() + 2);
+  
+  aResult = mOverrideJARURL;
+  aResult += aPackage;
+  aResult += '/';
+  aResult += aProvider;
+  aResult += '/';
+
+  // skins and locales get their name tacked on, like
+  // skin/modern/foo.css or
+  // locale/en-US/navigator.properties
+  if (aProvider.Equals(NS_LITERAL_CSTRING("skin")) ||
+      aProvider.Equals(NS_LITERAL_CSTRING("locale"))) {
+
+    // little hack here to get the right arc
+    nsIRDFResource* providerArc;
+    if (aProvider.Equals("skin"))
+      providerArc = mSelectedSkin;
+    else
+      providerArc = mSelectedLocale;
+    
+    nsCAutoString selectedProvider;
+    rv = GetSelectedProvider(aPackage, aProvider, providerArc, selectedProvider);
+
+    if (NS_SUCCEEDED(rv)) {
+      aResult += selectedProvider;
+      aResult += '/';
+    }
+  }
+  
+  aResult += aPath;
+
+  nsCOMPtr<nsIZipEntry> zipEntry;
+  rv = mOverrideJAR->GetEntry(PromiseFlatCString(aResult).get(),
+                              getter_AddRefs(zipEntry));
+  if (NS_FAILED(rv)) {
+    aResult.Truncate();
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsChromeRegistry::InitOverrideJAR()
+{
+  // generic failure if we know there's no override
+  if (mSearchedForOverride && !mOverrideJAR)
+    return NS_ERROR_FAILURE;
+
+  mSearchedForOverride = PR_TRUE;
+
+  nsresult rv;
+  //
+  // look for custom.jar
+  //
+  nsCOMPtr<nsIFile> overrideFile;
+  rv = GetInstallRoot(getter_AddRefs(overrideFile));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = overrideFile->AppendNative(NS_LITERAL_CSTRING("custom.jar"));
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool exists;
+  rv = overrideFile->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+
+  // ok, if the file doesn't exist, its just a generic failure
+  if (!exists)
+    return NS_ERROR_FAILURE;
+
+  //
+  // cache the url so we can later append
+  //
+  mOverrideJARURL.Assign("jar:");
+  nsCAutoString jarURL;
+  rv = NS_GetURLSpecFromFile(overrideFile, jarURL);
+  if (NS_FAILED(rv)) return rv;
+
+  mOverrideJARURL.Append(jarURL);
+  mOverrideJARURL.Append("!/");
+  if (NS_FAILED(rv)) return rv;
+
+  //
+  // also cache the zip file itself
+  //
+  nsCOMPtr<nsIZipReaderCache> readerCache =
+    do_CreateInstance("@mozilla.org/libjar/zip-reader-cache;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = readerCache->Init(32);
+  
+  rv = readerCache->GetZip(overrideFile, getter_AddRefs(mOverrideJAR));
+  if (NS_FAILED(rv)) {
+    mOverrideJARURL.Truncate();
+    return rv;
+  }
+  
+  return NS_OK;
 }
 
 // locate
@@ -746,7 +863,7 @@ nsresult
 nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
                                           const nsACString& aPackage,
                                           const nsACString& aProvider,
-                                          const nsCString& aProviderName,
+                                          const nsACString& aProviderName,
                                           nsIRDFResource *aArc,
                                           nsIRDFNode **aSelectedProvider)
 {
@@ -2217,10 +2334,9 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
   if (NS_FAILED(rv)) return rv;
 
   // Get the literal for our script access.
-  nsAutoString scriptstr;
-  scriptstr.Assign(NS_LITERAL_STRING("false"));
   nsCOMPtr<nsIRDFLiteral> scriptLiteral;
-  rv = mRDFService->GetLiteral(scriptstr.get(), getter_AddRefs(scriptLiteral));
+  rv = mRDFService->GetLiteral(NS_LITERAL_STRING("false").get(),
+                               getter_AddRefs(scriptLiteral));
   if (NS_FAILED(rv)) return rv;
 
   // Build the prefix string. Only resources with this prefix string will have their
@@ -2639,8 +2755,8 @@ nsChromeRegistry::GetProfileRoot(nsACString& aFileURL)
 
        // copy along
        // It aint an error if these files dont exist
-       (void) defaultUserContentFile->CopyToNative(userChromeDir, nsCString());
-       (void) defaultUserChromeFile->CopyToNative(userChromeDir, nsCString());
+       (void) defaultUserContentFile->CopyToNative(userChromeDir, NS_LITERAL_CSTRING(""));
+       (void) defaultUserChromeFile->CopyToNative(userChromeDir, NS_LITERAL_CSTRING(""));
      }
    }
    if (NS_FAILED(rv))
@@ -2713,7 +2829,7 @@ nsChromeRegistry::ReloadChrome()
 
 nsresult
 nsChromeRegistry::GetArcs(nsIRDFDataSource* aDataSource,
-                          const nsCString& aType,
+                          const nsACString& aType,
                           nsISimpleEnumerator** aResult)
 {
   nsCOMPtr<nsIRDFContainer> container;
@@ -2803,7 +2919,7 @@ nsChromeRegistry::GetAgentSheets(nsIDocShell* aDocShell, nsISupportsArray **aRes
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
       if (!sheets.IsEmpty()) {
         // Construct the URIs and try to load each sheet.
-        nsCAutoString sheetsStr; sheetsStr.AssignWithConversion(sheets);
+
         char* str = ToNewCString(sheets);
         char* newStr;
         char* token = nsCRT::strtok( str, ", ", &newStr );
@@ -2919,7 +3035,7 @@ nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsACString & aURL)
   return NS_OK;
 }
 
-nsresult nsChromeRegistry::GetFormSheetURL(nsCString& aURL)
+nsresult nsChromeRegistry::GetFormSheetURL(nsACString& aURL)
 {
   aURL = mUseXBLForms ? "chrome://forms/skin/forms.css" : "resource:/res/forms.css";
 
@@ -3310,14 +3426,14 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
   return rv;
 }
 
-NS_IMETHODIMP nsChromeRegistry::CheckThemeVersion(const PRUnichar *aSkin,
+NS_IMETHODIMP nsChromeRegistry::CheckThemeVersion(const nsACString& aSkin,
                                                   PRBool* aResult)
 {
   return CheckProviderVersion(NS_LITERAL_CSTRING("skin"), aSkin, mSkinVersion, aResult);
 }
 
 
-NS_IMETHODIMP nsChromeRegistry::CheckLocaleVersion(const PRUnichar *aLocale,
+NS_IMETHODIMP nsChromeRegistry::CheckLocaleVersion(const nsACString& aLocale,
                                                    PRBool* aResult)
 {
   nsCAutoString provider("locale");
@@ -3327,7 +3443,7 @@ NS_IMETHODIMP nsChromeRegistry::CheckLocaleVersion(const PRUnichar *aLocale,
 
 nsresult
 nsChromeRegistry::CheckProviderVersion (const nsACString& aProviderType,
-                                        const PRUnichar* aProviderName,
+                                        const nsACString& aProviderName,
                                         nsIRDFResource* aSelectionArc,
                                         PRBool *aCompatible)
 {
@@ -3338,7 +3454,7 @@ nsChromeRegistry::CheckProviderVersion (const nsACString& aProviderType,
   nsCAutoString resourceStr( "urn:mozilla:" );
   resourceStr += aProviderType;
   resourceStr += ":";
-  resourceStr.AppendWithConversion(aProviderName);
+  resourceStr += aProviderName;
 
   // Obtain the provider resource.
   nsresult rv = NS_OK;

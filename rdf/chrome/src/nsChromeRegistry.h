@@ -53,7 +53,7 @@ class nsIDocument;
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsString.h"
-
+#include "nsIZipReader.h"
      
 // for component registration
 // {D8C7D8A2-E84C-11d2-BF87-00105A1B0627}
@@ -111,7 +111,7 @@ protected:
   nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
   
   nsresult GetUserSheetURL(PRBool aIsChrome, nsACString & aURL);
-  nsresult GetFormSheetURL(nsCString& aURL);
+  nsresult GetFormSheetURL(nsACString& aURL);
   
   nsresult LoadInstallDataSource();
   nsresult LoadProfileDataSource();
@@ -130,7 +130,7 @@ private:
   nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
 
   nsresult GetArcs(nsIRDFDataSource* aDataSource,
-                   const nsCString& aType,
+                   const nsACString& aType,
                    nsISimpleEnumerator** aResult);
 
   nsresult AddToCompositeDataSource(PRBool aUseProfile);
@@ -139,6 +139,12 @@ private:
                       const nsACString& aProvider, 
                       nsACString& aBaseURL);
 
+  nsresult InitOverrideJAR();
+  nsresult GetOverrideURL(const nsACString& aPackage,
+                          const nsACString& aProvider,
+                          const nsACString& aPath,
+                          nsACString& aResult);
+  
   nsresult FindProvider(const nsACString& aPackage,
                         const nsACString& aProvider,
                         nsIRDFResource *aArc,
@@ -147,7 +153,7 @@ private:
   nsresult SelectPackageInProvider(nsIRDFResource *aPackageList,
                                    const nsACString& aPackage,
                                    const nsACString& aProvider,
-                                   const nsCString& aProviderName,
+                                   const nsACString& aProviderName,
                                    nsIRDFResource *aArc,
                                    nsIRDFNode **aSelectedProvider);
 
@@ -177,7 +183,7 @@ private:
                                nsACString& aResult);
   
   nsresult CheckProviderVersion (const nsACString& aProviderType,
-                                 const PRUnichar* aProviderName,
+                                 const nsACString& aProviderName,
                                  nsIRDFResource* aSelectionArc,
                                  PRBool *aCompatible);
 
@@ -238,6 +244,9 @@ protected:
   nsCOMPtr<nsICSSStyleSheet> mUserChromeSheet;
   nsCOMPtr<nsICSSStyleSheet> mUserContentSheet;
   nsCOMPtr<nsICSSStyleSheet> mFormSheet;
+
+  nsCOMPtr<nsIZipReader> mOverrideJAR;
+  nsCString              mOverrideJARURL;
   
   PRBool mUseXBLForms;
   
