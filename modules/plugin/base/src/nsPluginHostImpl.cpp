@@ -4366,8 +4366,10 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsPluginsDir& pluginsDir,
         continue;
 
       // if we don't have mime type -- don't proceed, this is not a plugin
-      if(!info.fMimeTypeArray)
+      if(!info.fMimeTypeArray) {
+        pluginFile.FreePluginInfo(info);
         continue;
+      }
 
       nsPluginTag* pluginTag = new nsPluginTag(&info);
       pluginFile.FreePluginInfo(info);
