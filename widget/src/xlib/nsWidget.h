@@ -96,6 +96,7 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
   PRBool                  OnPaint(nsPaintEvent &event);
+  PRBool                  OnResize(nsSizeEvent &event);
   static nsWidget        *getWidgetForWindow(Window aWindow);
 protected:
   // create the native window for this class

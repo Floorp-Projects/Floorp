@@ -149,6 +149,7 @@ NS_IMETHODIMP nsWidget::Destroy()
 
 NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
+  XMoveWindow(gDisplay, mBaseWindow, aX, aY);
   return NS_OK;
 }
 
@@ -156,6 +157,7 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
+  XMoveWindow(gDisplay, mBaseWindow, aWidth, aHeight);
   return NS_OK;
 }
 
@@ -165,6 +167,7 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
                                PRUint32 aHeight,
                                PRBool   aRepaint)
 {
+  XMoveResizeWindow(gDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
   return NS_OK;
 }
 
@@ -440,6 +443,16 @@ nsWidget::OnPaint(nsPaintEvent &event)
     else {
       result = PR_FALSE;
     }
+  }
+  return result;
+}
+
+PRBool
+nsWidget::OnResize(nsSizeEvent &event)
+{
+  nsresult result = PR_FALSE;
+  if (mEventCallback) {
+      result = DispatchWindowEvent(&event);
   }
   return result;
 }

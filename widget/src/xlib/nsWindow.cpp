@@ -67,15 +67,15 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
 
   printf("Creating XWindow: x %d y %d w %d h %d\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
-  if (aRect.width == 0) {
-    printf("*** Fixing width...\n");
+  if (aRect.width <= 0) {
+    printf("*** Fixing width from %d...\n", aRect.width);
     width = 1;
   }
   else {
     width = aRect.width;
   }
-  if (aRect.height == 0) {
-    printf("*** Fixing height...\n");
+  if (aRect.height <= 0) {
+    printf("*** Fixing height from %d...\n", aRect.height);
     height = 1;
   }
   else {

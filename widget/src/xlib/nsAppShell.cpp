@@ -307,8 +307,11 @@ nsAppShell::DispatchEvent(XEvent *event)
   case Expose:
     HandleExposeEvent(event, widget);
     break;
+  case ConfigureNotify:
+    HandleConfigureNotifyEvent(event, widget);
+    break;
   default:
-    printf("Unhandled window event: Window %ld Got a %s event\n",
+    printf("Unhandled window event: Window 0x%lxd Got a %s event\n",
            event->xany.window, event_names[event->type]);
     break;
   }
@@ -317,7 +320,7 @@ nsAppShell::DispatchEvent(XEvent *event)
 void
 nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
 {
-  printf("Expose event for window %ld %d %d %d %d\n", event->xany.window,
+  printf("Expose event for window 0x%lxd %d %d %d %d\n", event->xany.window,
          event->xexpose.x, event->xexpose.y, event->xexpose.width, event->xexpose.height);
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
@@ -331,6 +334,31 @@ nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
   aWidget->OnPaint(pevent);
   NS_RELEASE(aWidget);
   delete pevent.rect;
+}
+
+void
+nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
+{
+  printf("ConfigureNotify event for window 0x%lxd %d %d %d %d\n",
+         event->xconfigure.window,
+         event->xconfigure.x, event->xconfigure.y,
+         event->xconfigure.width, event->xconfigure.height);
+  nsSizeEvent sevent;
+  sevent.message = NS_SIZE;
+  sevent.widget = aWidget;
+  sevent.eventStructType = NS_SIZE_EVENT;
+  sevent.windowSize = new nsRect (event->xconfigure.x, event->xconfigure.y,
+                                  event->xconfigure.width, event->xconfigure.height);
+  sevent.point.x = event->xconfigure.x;
+  sevent.point.y = event->xconfigure.y;
+  sevent.mWinWidth = event->xconfigure.width;
+  sevent.mWinWidth = event->xconfigure.height;
+  // XXX fix this
+  sevent.time = 0;
+  NS_ADDREF(aWidget);
+  aWidget->OnResize(sevent);
+  NS_RELEASE(aWidget);
+  delete sevent.windowSize;
 }
 
 static PRUint8 convertMaskToCount(unsigned long val)
