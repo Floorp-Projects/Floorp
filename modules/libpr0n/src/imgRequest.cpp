@@ -265,7 +265,7 @@ NS_IMETHODIMP imgRequest::GetURI(nsIURI **aURI)
          ("[this=%p] imgRequest::GetURI\n", this));
 
   if (mChannel)
-    mChannel->GetOriginalURI(aURI);
+    return mChannel->GetOriginalURI(aURI);
   else if (mURI) {
     *aURI = mURI;
     NS_ADDREF(*aURI);
