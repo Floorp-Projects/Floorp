@@ -574,6 +574,9 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
       !(aStateFlags & nsIWebProgressListener::STATE_STOP))
     return NS_OK;
 
+  // Don't do anything if the global signon pref is disabled
+  if (!SingleSignonEnabled())
+    return NS_OK;
 
   nsCOMPtr<nsIDOMWindow> domWin;
   nsresult rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWin));
@@ -713,6 +716,10 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                           nsIURI* aActionURL,
                           PRBool* aCancelSubmit)
 {
+  // Don't do anything if the global signon pref is disabled
+  if (!SingleSignonEnabled())
+    return NS_OK;
+
   // Check the reject list
   nsCOMPtr<nsIURI> uri;
   aFormNode->GetDocument()->GetDocumentURL(getter_AddRefs(uri));
@@ -1100,7 +1107,7 @@ nsPasswordManager::AutoCompleteSearch(const nsAString& aSearchString,
                                       nsIAutoCompleteResult** aResult)
 {
   PRInt32 dummy;
-  if (!mAutoCompleteInputs.Get(aElement, &dummy))
+  if (!SingleSignonEnabled() || !mAutoCompleteInputs.Get(aElement, &dummy))
     return PR_FALSE;
 
   UserAutoComplete* result = nsnull;
