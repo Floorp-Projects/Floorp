@@ -57,7 +57,7 @@
     </menu>
   </menubar>
 
-  <tree rdf:datasources="rdf:history rdf:find"
+  <tree rdf:datasources="rdf:history rdf:localsearch"
         ondblclick="OpenURL(event,event.target.parentNode.parentNode);"
         ref="NC:HistoryRoot"
         style="height:100%;">

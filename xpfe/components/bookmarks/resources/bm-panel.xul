@@ -37,7 +37,7 @@
 
     <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
           style="height: 100%; width:100%;"
-          datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch" 
+          datasources="rdf:bookmarks rdf:files rdf:ftp rdf:localsearch rdf:internetsearch" 
           ondblclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');">
 
       <template>
