@@ -79,7 +79,7 @@ function Init()
         gChannel.value = params[2];
         gServerAlso.checked = (gChannel.value != '');
         
-        if (params.length >= 4)
+        if (arrayHasElementAt(params, 3))
         {
             var modifiers = params[3].split(/,/);
             

@@ -41,6 +41,7 @@
     title="&startup-newURL.window.title;"
     ondialogaccept="return onOK();">
 
+  <script src="chrome://chatzilla/content/lib/js/utils.js"/>
   <script src="chrome://chatzilla/content/prefpanel/startup-newURL.js"/>
   
   <radiogroup id="czURLType" onselect="updateType();">
