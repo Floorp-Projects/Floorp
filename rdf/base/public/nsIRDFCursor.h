@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+/*
+
+  Interfaces for RDF cursors, including nsIRDFCursor,
+  nsIRDFAssertionCursor, nsIRDFArcsInCursor, and nsIRDFArcsOutCursor.
+
+ */
+
 #ifndef nsIRDFCursor_h__
 #define nsIRDFCursor_h__
 

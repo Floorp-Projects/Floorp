@@ -16,18 +16,7 @@
  * Reserved.
  */
 
-#ifndef nsIRDFService_h__
-#define nsIRDFService_h__
-
-#include "nscore.h"
-#include "nsISupports.h"
-class nsIRDFDataBase;
-class nsIRDFDataSource;
-class nsIRDFLiteral;
-class nsIRDFResource;
-class nsIRDFResourceFactory;
-
-/**
+/*
 
   The RDF service interface. This is a singleton object, and should be
   obtained from the <tt>nsServiceManager</tt>.
@@ -42,6 +31,17 @@ class nsIRDFResourceFactory;
   sources is unnecessary.
 
  */
+
+#ifndef nsIRDFService_h__
+#define nsIRDFService_h__
+
+#include "nscore.h"
+#include "nsISupports.h"
+class nsIRDFDataBase;
+class nsIRDFDataSource;
+class nsIRDFLiteral;
+class nsIRDFResource;
+class nsIRDFResourceFactory;
 
 class nsIRDFService : public nsISupports {
 public:

@@ -17,6 +17,14 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  Implementations for a bunch of useful RDF utility routines.  Many of
+  these will eventually be exported outside of RDF.DLL via the
+  nsIRDFService interface.
+
+ */
+
 #include "nsIRDFCursor.h"
 #include "nsIRDFDataBase.h"
 #include "nsIRDFNode.h"

@@ -18,9 +18,13 @@
  */
 
 
-// XXX This should really be a first-class utility interface that's
-// available via the service manager. The only reason that I'm not
-// making it so right now is to keep stuff light and easy to hack.
+/*
+
+  A bunch of useful RDF utility routines.  Many of these will
+  eventually be exported outside of RDF.DLL via the nsIRDFService
+  interface.
+
+ */
 
 #ifndef rdfutil_h__
 #define rdfutil_h__

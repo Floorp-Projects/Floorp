@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+/*
+
+  The RDF data source interface. An RDF data source presents a
+  graph-like interface to a back-end service.
+
+ */
+
 #ifndef nsIRDFDataSource_h__
 #define nsIRDFDataSource_h__
 

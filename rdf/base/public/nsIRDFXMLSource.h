@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+/*
+
+  The RDF/XML source interface. An RDF/XML source is capable of
+  producing serialized RDF/XML to an output stream.
+
+ */
+
 #ifndef nsIRDFXMLSource_h__
 #define nsIRDFXMLSource_h__
 

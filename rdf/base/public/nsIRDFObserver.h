@@ -16,6 +16,13 @@
  * Reserved.
  */
 
+/*
+
+  The RDF data source observer interface. Data source observers are
+  notified when the contents of the graph change.
+
+ */
+
 #ifndef nsIRDFObserver_h__
 #define nsIRDFObserver_h__
 

@@ -16,6 +16,14 @@
  * Reserved.
  */
 
+/*
+
+  The default resource factory implementation. This resource factory
+  produces nsIRDFResource objects for any URI prefix that is not
+  covered by some other factory.
+
+ */
+
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceFactory.h"
 #include "nsIRDFService.h"
