@@ -588,7 +588,7 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSubject,
             // generated (via CreateContents()) when somebody asks for
             // them later.
             nsAutoString contentsGenerated;
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_XUL,
+            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
                                                      kContentsGeneratedAtom,
                                                      contentsGenerated))) {
                 NS_ERROR("severe problem trying to get attribute");
@@ -670,7 +670,7 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
             // generated (via CreateContents()) when somebody asks for
             // them later.
             nsAutoString contentsGenerated;
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_XUL,
+            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
                                                      kContentsGeneratedAtom,
                                                      contentsGenerated))) {
                 NS_ERROR("severe problem trying to get attribute");
@@ -1476,7 +1476,7 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
     if (aTag == kTreeAtom) {
         nsAutoString dataSources;
         if (NS_CONTENT_ATTR_HAS_VALUE ==
-            element->GetAttribute(kNameSpaceID_XUL,
+            element->GetAttribute(kNameSpaceID_None,
                                   kDataSourcesAtom,
                                   dataSources)) {
             rv = CreateTreeBuilder(element, dataSources);

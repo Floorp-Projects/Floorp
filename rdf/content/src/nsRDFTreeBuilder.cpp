@@ -854,7 +854,7 @@ RDFTreeBuilderImpl::OnAssert(nsIRDFResource* aSubject,
             // generated (via CreateContents()) when somebody asks for
             // them later.
             nsAutoString contentsGenerated;
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_XUL,
+            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
                                                      kContentsGeneratedAtom,
                                                      contentsGenerated))) {
                 NS_ERROR("severe problem trying to get attribute");
@@ -1888,7 +1888,7 @@ RDFTreeBuilderImpl::IsOpen(nsIContent* aElement)
         return PR_FALSE;
 
     nsAutoString value;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_XUL, kOpenAtom, value))) {
+    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, value))) {
         NS_ERROR("unable to get xul:open attribute");
         return rv;
     }

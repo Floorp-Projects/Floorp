@@ -974,7 +974,7 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
         if (nameSpaceID != kNameSpaceID_XUL)
             continue;
 
-        if (attr.EqualsIgnoreCase(kXULID)) {
+        if (attr == kXULID) {
             nsAutoString uri = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(uri);
 
