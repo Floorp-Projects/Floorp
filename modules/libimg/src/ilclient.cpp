@@ -535,7 +535,9 @@ il_get_container(IL_GroupContext *img_cx,
         ILTRACE(2, ("il: create ic=0x%08x\n", ic));
 
 #ifdef PIN_CHROME
-        if (nsCRT::strncmp(image_url,"chrome", 6) == 0) 
+        if((nsCRT::strncmp(image_url,"chrome", 6) == 0)&&
+		(nsCRT::strncmp(image_url+(nsCRT::strlen(image_url) - 9), "throb", 4) != 0)&&
+		(nsCRT::strncmp(image_url+(nsCRT::strlen(image_url) - 9), "busy", 4) != 0))
 		    ic->moz_type = TYPE_CHROME;
 	    else 
 #endif
@@ -715,7 +717,7 @@ il_removefromcache(il_container *ic)
     if (ic)
     {
 #ifdef PIN_CHROME
-    	NS_ASSERTION((ic->moz_type != TYPE_CHROME), "removing a chrome image from the image cache"); 
+   	ILTRACE(2,("\nRemoving a chrome image from the image cache")); 
 #endif
 
 	    if ( ic->moz_type == TYPE_CHROME )
@@ -863,14 +865,14 @@ IL_ShrinkCache(void)
 }
 
 IL_IMPLEMENT(void)
-IL_FlushCache(void)
+IL_FlushCache(PRUint8 img_catagory)
 {
     ILTRACE(3,("flush"));
 
     il_container *ic = il_cache.head;
     while (ic)
     {
-        if (ic->is_in_use || ic->moz_type == TYPE_CHROME) {
+        if (ic->is_in_use ||((img_catagory == 0 )&&(ic->moz_type == TYPE_CHROME))){
 #ifdef DEBUG_kipp
             printf("IL_FlushCache: il_container %p in use '%s'\n",
                    ic, ic->url_address ? ic->url_address : "(null)");
