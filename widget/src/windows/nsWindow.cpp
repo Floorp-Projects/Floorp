@@ -667,6 +667,9 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
+  mBounds.x = aX;
+  mBounds.y = aY;
+
     if (mWnd) {
         nsIWidget *par = GetParent();
         HDWP      deferrer = NULL;
@@ -697,6 +700,10 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
+  // Set cached value for lightweight and printing
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+
     if (mWnd) {
         nsIWidget *par = GetParent();
         HDWP      deferrer = NULL;
@@ -736,6 +743,12 @@ NS_METHOD nsWindow::Resize(PRUint32 aX,
                       PRUint32 aHeight,
                       PRBool   aRepaint)
 {
+  // Set cached value for lightweight and printing
+  mBounds.x      = aX;
+  mBounds.y      = aY;
+  mBounds.width  = aWidth;
+  mBounds.height = aHeight;
+
     if (mWnd) {
         nsIWidget *par = GetParent();
         HDWP      deferrer = NULL;
@@ -830,7 +843,7 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
     aRect.x = r.left;
     aRect.y = r.top;
   } else {
-    aRect.SetRect(0,0,0,0);
+    aRect = mBounds;
   }
 
   return NS_OK;
@@ -927,27 +940,29 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 {
-    if (nsnull == mContext) {
-      return NS_ERROR_FAILURE;
-    }
+  // Cache Font for owner draw
+  if (mFont == nsnull) {
+    mFont = new nsFont(aFont);
+  } else {
+    *mFont  = aFont;
+  }
+  
+  // Bail out if there is no context
+  if (nsnull == mContext) {
+    return NS_ERROR_FAILURE;
+  }
 
-    nsIFontMetrics* metrics;
-    mContext->GetMetricsFor(aFont, metrics);
-    nsFontHandle  fontHandle;
-    metrics->GetFontHandle(fontHandle);
-    HFONT hfont = (HFONT)fontHandle;
+  nsIFontMetrics* metrics;
+  mContext->GetMetricsFor(aFont, metrics);
+  nsFontHandle  fontHandle;
+  metrics->GetFontHandle(fontHandle);
+  HFONT hfont = (HFONT)fontHandle;
 
-      // Draw in the new font
-    ::SendMessage(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0); 
-    NS_RELEASE(metrics);
+    // Draw in the new font
+  ::SendMessage(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0); 
+  NS_RELEASE(metrics);
 
-     // XXX Temporary, should not be caching the font
-    if (mFont == nsnull) {
-      mFont = new nsFont(aFont);
-    } else {
-      *mFont  = aFont;
-    }
-    return NS_OK;
+  return NS_OK;
 }
 
         
@@ -1454,15 +1469,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               newWidth = PRInt32(r.right - r.left);
               newHeight = PRInt32(r.bottom - r.top);
               nsRect rect(wp->x, wp->y, newWidth, newHeight);
-              //if (newWidth != mWidth)
+              //if (newWidth != mBounds.width)
               {
                 RECT drect;
 
                 //getting wider
 
-                drect.left = wp->x + mWidth;
+                drect.left = wp->x + mBounds.width;
                 drect.top = wp->y;
-                drect.right = drect.left + (newWidth - mWidth);
+                drect.right = drect.left + (newWidth - mBounds.width);
                 drect.bottom = drect.top + newHeight;
 
 //                ::InvalidateRect(mWnd, NULL, FALSE);
@@ -1470,24 +1485,24 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 ::RedrawWindow(mWnd, &drect, NULL,
                                RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
               }
-              //if (newHeight != mHeight)
+              //if (newHeight != mBounds.height)
               {
                 RECT drect;
 
                 //getting taller
 
                 drect.left = wp->x;
-                drect.top = wp->y + mHeight;
+                drect.top = wp->y + mBounds.height;
                 drect.right = drect.left + newWidth;
-                drect.bottom = drect.top + (newHeight - mHeight);
+                drect.bottom = drect.top + (newHeight - mBounds.height);
 
 //                ::InvalidateRect(mWnd, NULL, FALSE);
 //                ::InvalidateRect(mWnd, &drect, FALSE);
                 ::RedrawWindow(mWnd, &drect, NULL,
                                RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
               }
-              mWidth = newWidth;
-              mHeight = newHeight;
+              mBounds.width  = newWidth;
+              mBounds.height = newHeight;
               ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
 
               // recalculate the width and height

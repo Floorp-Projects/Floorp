@@ -133,6 +133,7 @@ public:
     NS_IMETHOD            DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
     NS_IMETHOD            GetClientBounds(nsRect &aRect);
     NS_IMETHOD            GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
+    NS_IMETHOD            Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
 
 
     virtual PRBool IsChild() { return(PR_FALSE); };

@@ -23,6 +23,17 @@
 #include "nsString.h"
 #include <windows.h>
 
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsRepository.h"
+
+#include "nsIDeviceContext.h"
+#include "nsIFontMetrics.h"
+
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+
+
 NS_IMPL_ADDREF(nsTextWidget)
 NS_IMPL_RELEASE(nsTextWidget)
 
@@ -174,6 +185,107 @@ NS_METHOD nsTextWidget::GetBounds(nsRect &aRect)
 {
     nsWindow::GetNonClientBounds(aRect);
     return NS_OK;
+}
+
+/**
+ * Renders the TextWidget for Printing
+ *
+ **/
+NS_METHOD nsTextWidget::Paint(nsIRenderingContext& aRenderingContext,
+                              const nsRect& aDirtyRect)
+{
+  nsRect rect;
+  float  appUnits;
+  float  scale;
+  nsIDeviceContext * context;
+  aRenderingContext.GetDeviceContext(context);
+
+  context->GetCanonicalPixelScale(scale);
+  context->GetDevUnitsToAppUnits(appUnits);
+
+  GetBoundsAppUnits(rect, appUnits);
+
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  nscolor bgColor  = NS_RGB(255,255,255);
+  nscolor fgColor  = NS_RGB(0,0,0);
+  nscolor hltColor = NS_RGB(240,240,240);
+  nscolor sdwColor = NS_RGB(128,128,128);
+  nscolor txtBGColor = NS_RGB(255,255,255);
+  nscolor txtFGColor = NS_RGB(0,0,0);
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DHighlight, hltColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground,    txtBGColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground,    txtFGColor);
+  }
+
+  aRenderingContext.SetColor(txtBGColor);
+  aRenderingContext.FillRect(rect);
+
+  // Paint Black border
+  //nsBaseWidget::Paint(aRenderingContext, aDirtyRect);
+
+  nscoord onePixel  = nscoord(scale);
+  nscoord twoPixels = nscoord(scale*2);
+
+  rect.x      += onePixel; 
+  rect.y      += onePixel;
+  rect.width  -= twoPixels+onePixel; 
+  rect.height -= twoPixels+onePixel;
+
+  nscoord right     = rect.x+rect.width;
+  nscoord bottom    = rect.y+rect.height;
+
+
+  // Draw Left & Top
+  aRenderingContext.SetColor(NS_RGB(128,128,128));
+  DrawScaledLine(aRenderingContext, rect.x, rect.y, right, rect.y, scale, appUnits, PR_TRUE); // top
+  DrawScaledLine(aRenderingContext, rect.x, rect.y, rect.x, bottom, scale, appUnits, PR_FALSE); // left
+
+  //DrawScaledLine(aRenderingContext, rect.x+onePixel, rect.y+onePixel, right-onePixel, rect.y+onePixel, scale, appUnits, PR_TRUE); // top + 1
+  //DrawScaledLine(aRenderingContext, rect.x+onePixel, rect.y+onePixel, rect.x+onePixel, bottom-onePixel, scale, appUnits, PR_FALSE); // left + 1
+
+  // Draw Right & Bottom
+  aRenderingContext.SetColor(NS_RGB(192,192,192));
+  DrawScaledLine(aRenderingContext, right, rect.y+onePixel, right, bottom, scale, appUnits, PR_FALSE); // right 
+  DrawScaledLine(aRenderingContext, rect.x+onePixel, bottom, right, bottom, scale, appUnits, PR_TRUE); // bottom
+
+  //DrawScaledLine(aRenderingContext, right-onePixel, rect.y+twoPixels, right-onePixel, bottom, scale, appUnits, PR_FALSE); // right + 1
+  //DrawScaledLine(aRenderingContext, rect.x+twoPixels, bottom-onePixel, right, bottom-onePixel, scale, appUnits, PR_TRUE); // bottom + 1
+  
+
+  aRenderingContext.SetFont(*mFont);
+
+  nscoord textWidth;
+  nscoord textHeight;
+  aRenderingContext.GetWidth(mText, textWidth);
+
+  nsIFontMetrics* metrics;
+  context->GetMetricsFor(*mFont, metrics);
+  metrics->GetMaxAscent(textHeight);
+
+  nscoord x = (twoPixels * 2)  + rect.x;
+  nscoord y = ((rect.height - textHeight) / 2) + rect.y;
+  aRenderingContext.SetColor(txtFGColor);
+  if (!mIsPassword) {
+    aRenderingContext.DrawString(mText, x, y, 0);
+  } else {
+    nsString astricks;
+    PRInt32 i;
+    for (i=0;i<mText.Length();i++) {
+      astricks.Append("*");
+    }
+    aRenderingContext.DrawString(astricks, x, y, 0);
+
+  }
+
+  NS_RELEASE(context);
+
+  return NS_OK;
 }
 
 

@@ -46,12 +46,17 @@ public:
   NS_IMETHOD SetLabel(const nsString& aText);
   NS_IMETHOD GetLabel(nsString& aBuffer);
   
-  
+  // nsBaseWidget
+  NS_IMETHOD Paint(nsIRenderingContext& aRenderingContext,
+                 const nsRect& aDirtyRect);
+
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
   virtual PRBool OnResize(nsRect &aWindowRect);
 
 protected:
+  nsString mLabel;
+
   virtual LPCTSTR WindowClass();
   virtual DWORD   WindowStyle();
   virtual DWORD   WindowExStyle();

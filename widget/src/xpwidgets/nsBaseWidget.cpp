@@ -67,7 +67,8 @@ NS_METHOD nsBaseWidget::RemoveTooltips()
 // nsBaseWidget constructor
 //
 //-------------------------------------------------------------------------
-nsBaseWidget::nsBaseWidget() 
+nsBaseWidget::nsBaseWidget() :
+  mBounds(0,0,0,0)
 {
     mChildren      = nsnull;
     mEventCallback = nsnull;
@@ -77,7 +78,6 @@ nsBaseWidget::nsBaseWidget()
     mEventListener = nsnull;
     mClientData    = nsnull;
     mContext       = nsnull;
-    mWidth = mHeight = 0;
     mCursor        = eCursor_standard;
     mBorderStyle   = eBorderStyle_none;
 }
@@ -563,6 +563,43 @@ NS_METHOD nsBaseWidget::GetClientBounds(nsRect &aRect)
   return GetBounds(aRect);
 }
 
+/**
+ * If the implementation of nsWindow supports borders this method MUST be overridden
+ *
+ **/
+NS_METHOD nsBaseWidget::GetBounds(nsRect &aRect)
+{
+  aRect = mBounds;
+  return NS_OK;
+}
+
+/**
+ * If the implementation of nsWindow supports borders this method MUST be overridden
+ *
+ **/
+NS_METHOD nsBaseWidget::GetBoundsAppUnits(nsRect &aRect, float aAppUnits)
+{
+  aRect = mBounds;
+  // Convert to twips
+  aRect.x      = nscoord((PRFloat64)aRect.x * aAppUnits);
+  aRect.y      = nscoord((PRFloat64)aRect.y * aAppUnits);
+  aRect.width  = nscoord((PRFloat64)aRect.width * aAppUnits); 
+  aRect.height = nscoord((PRFloat64)aRect.height * aAppUnits);
+  return NS_OK;
+}
+
+/**
+ * 
+ *
+ **/
+NS_METHOD nsBaseWidget::SetBounds(const nsRect &aRect)
+{
+  mBounds = aRect;
+
+  return NS_OK;
+}
+
+
 
 /**
  * Calculates the border width and height  
@@ -571,16 +608,103 @@ NS_METHOD nsBaseWidget::GetClientBounds(nsRect &aRect)
 NS_METHOD nsBaseWidget::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
 {
   nsRect rectWin;
-  nsRect rectClient;
+  nsRect rect;
   GetBounds(rectWin);
-  GetClientBounds(rectClient);
+  GetClientBounds(rect);
 
-  aWidth  = (rectWin.width - rectClient.width) / 2;
-  aHeight = (rectWin.height - rectClient.height) / 2;
+  aWidth  = (rectWin.width - rect.width) / 2;
+  aHeight = (rectWin.height - rect.height) / 2;
 
   return NS_OK;
 }
 
+
+/**
+ * Calculates the border width and height  
+ *
+ **/
+void nsBaseWidget::DrawScaledRect(nsIRenderingContext& aRenderingContext, const nsRect & aRect, float aScale, float aAppUnits)
+{
+  nsRect rect = aRect;
+
+  float x = (float)rect.x;
+  float y = (float)rect.y;
+  float w = (float)rect.width;
+  float h = (float)rect.height;
+  float twoAppUnits = aAppUnits * 2.0f;
+
+  for (int i=0;i<int(aScale);i++) {
+    rect.x      = nscoord(x);
+    rect.y      = nscoord(y);
+    rect.width  = nscoord(w);
+    rect.height = nscoord(h);
+    aRenderingContext.DrawRect(rect);
+    x += aAppUnits; 
+    y += aAppUnits;
+    w -= twoAppUnits; 
+    h -= twoAppUnits;
+  }
+}
+
+/**
+ * Calculates the border width and height  
+ *
+ **/
+void nsBaseWidget::DrawScaledLine(nsIRenderingContext& aRenderingContext, 
+                                  nscoord aSX, 
+                                  nscoord aSY, 
+                                  nscoord aEX, 
+                                  nscoord aEY, 
+                                  float   aScale, 
+                                  float   aAppUnits,
+                                  PRBool  aIsHorz)
+{
+  float sx = (float)aSX;
+  float sy = (float)aSY;
+  float ex = (float)aEX;
+  float ey = (float)aEY;
+  float twoAppUnits = aAppUnits * 2.0f;
+
+  for (int i=0;i<int(aScale);i++) {
+    aSX = nscoord(sx);
+    aSY = nscoord(sy);
+    aEX = nscoord(ex);
+    aEY = nscoord(ey);
+    aRenderingContext.DrawLine(aSX, aSY, aEX, aEY);
+    if (aIsHorz) {
+      sy += aAppUnits; 
+      ey += aAppUnits;
+    } else {
+      sx += aAppUnits; 
+      ex += aAppUnits;
+    }
+  }
+}
+
+/**
+ * Paints default border (XXX - this should be done by CSS)
+ *
+ **/
+NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
+                              const nsRect&        aDirtyRect)
+{
+  nsRect rect;
+  float  appUnits;
+  float  scale;
+  nsIDeviceContext * context;
+  aRenderingContext.GetDeviceContext(context);
+
+  context->GetCanonicalPixelScale(scale);
+  context->GetDevUnitsToAppUnits(appUnits);
+
+  GetBoundsAppUnits(rect, appUnits);
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  DrawScaledRect(aRenderingContext, rect, scale, appUnits);
+
+  NS_RELEASE(context);
+  return NS_OK;
+}
 
 
 

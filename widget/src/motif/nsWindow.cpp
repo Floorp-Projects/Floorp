@@ -1625,3 +1625,19 @@ NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
   return NS_OK;
 }
 
+/**
+ * Paints default border (XXX - this should be done by CSS)
+ * (This method is in nsBaseWidget)
+ *
+ **/
+NS_METHOD nsWindow::Paint(nsIRenderingContext& aRenderingContext,
+                              const nsRect&        aDirtyRect)
+{
+  nsRect rect;
+  GetBounds(rect);
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  aRenderingContext.DrawRect(rect);
+
+  return NS_OK;
+}

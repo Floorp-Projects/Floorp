@@ -56,6 +56,8 @@ NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PR
 
 NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 { 
+  mText = aText;
+
   NS_ALLOC_STR_BUF(buf, aText, 512);
   SetWindowText(mWnd, buf);
   NS_FREE_STR_BUF(buf);
@@ -66,13 +68,16 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize)
 { 
   nsString currentText;
-  
+
   PRUint32 actualSize;
   GetText(currentText, 256, actualSize);
   nsString newText(aText);
   currentText.Insert(newText, aStartPos, aText.Length());
   SetText(currentText,actualSize);
   aActualSize = aText.Length();
+
+  mText = currentText;
+
   return NS_OK;
 }
 NS_METHOD  nsTextHelper::RemoveText()

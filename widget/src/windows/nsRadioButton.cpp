@@ -21,8 +21,14 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsStringUtil.h"
-
 #include <windows.h>
+
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsRepository.h"
+
+#include "nsIDeviceContext.h"
+
 NS_IMPL_ADDREF(nsRadioButton)
 NS_IMPL_RELEASE(nsRadioButton)
 
@@ -171,6 +177,76 @@ DWORD nsRadioButton::WindowExStyle()
     return 0;
 }
 
+/**
+ * Renders the RadioButton for Printing
+ *
+ **/
+NS_METHOD nsRadioButton::Paint(nsIRenderingContext& aRenderingContext,
+                              const nsRect&        aDirtyRect)
+{
+  float  appUnits;
+  float  scale;
+  nsIDeviceContext * context;
+  aRenderingContext.GetDeviceContext(context);
+
+  context->GetCanonicalPixelScale(scale);
+  context->GetDevUnitsToAppUnits(appUnits);
+  nsRect rect;
+  GetBounds(rect);
+
+  rect.x++;
+  rect.y++;
+  rect.width  -= 2;
+  rect.height -= 2;
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  nscoord one = nscoord(PRFloat64(rect.width) * 1.0/12.0);
+
+  rect.x      = nscoord((PRFloat64)rect.x * appUnits);
+  rect.y      = nscoord((PRFloat64)rect.y * appUnits);
+  rect.width  = nscoord((PRFloat64)rect.width * appUnits); 
+  rect.height = nscoord((PRFloat64)rect.height * appUnits); 
+  rect.x      += one;
+  rect.width  = nscoord(PRFloat64(rect.width)  * 11.0/12.0);
+  rect.height = nscoord(PRFloat64(rect.height) * 11.0/12.0);
+
+  for (nscoord i=0;i<nscoord(scale*1.25);i++) {
+    aRenderingContext.DrawArc(rect, 0, 180);
+    aRenderingContext.DrawArc(rect, 180, 360);
+    rect.x++;
+    rect.y++;
+    rect.width  -= 2;
+    rect.height -= 2;
+  }
+
+  if (fState) {
+    GetBounds(rect);
+    nscoord xHalf = rect.width / 4;
+    nscoord yHalf = rect.height / 4;
+    rect.x      += xHalf;
+    rect.y      += yHalf;
+    rect.width  -= xHalf*2;
+    rect.height -= yHalf*2;
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+    nscoord one    = nscoord(PRFloat64(rect.width) * 1.0/12.0);
+
+    rect.x      = nscoord((PRFloat64)rect.x * appUnits);
+    rect.y      = nscoord((PRFloat64)rect.y * appUnits);
+    rect.width  = nscoord((PRFloat64)rect.width * appUnits); 
+    rect.height = nscoord((PRFloat64)rect.height * appUnits); 
+    rect.x      += one;
+    rect.width  = nscoord(PRFloat64(rect.width)  * 11.0/12.0);
+    rect.height = nscoord(PRFloat64(rect.height) * 11.0/12.0);
+
+    aRenderingContext.FillArc(rect, 0, 180);
+    aRenderingContext.FillArc(rect, 180, 360);
+
+  }
+
+  NS_RELEASE(context);
+  return NS_OK;
+}
 
 
 
