@@ -314,6 +314,25 @@ js2val dump(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint
                             stdOut << "\t" << *wib->second->qname.nameSpace->name << "::" << wib->second->qname.id << " [write-only]" << "\n";
                     }
                 }
+                else {
+                    if (fObj->kind == PrototypeInstanceKind) {
+                        PrototypeInstance *pInst = checked_cast<PrototypeInstance *>(fObj);
+                        stdOut << "Prototype Instance\n";
+                        if (pInst->parent)
+                            printFormat(stdOut, "Parent @ 0x%08X\n", pInst->parent);
+                        else
+                            stdOut << " Null Parent\n";
+                        if (pInst->type)
+                            stdOut << " Type: " << *pInst->type->getName() << "\n";
+                        else
+                            stdOut << " Null Type\n";
+
+                        stdOut << " Dynamic Properties:\n";                    
+                        for (DynamicPropertyIterator dpi = pInst->dynamicProperties.begin(), dpend = pInst->dynamicProperties.end(); (dpi != dpend); dpi++) {
+                            stdOut << "\t" << dpi->first << " = " << *meta->toString(dpi->second) << "\n";
+                        }
+                    }
+                }
             }
         }
     }

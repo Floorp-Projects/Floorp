@@ -950,7 +950,7 @@ public:
     js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);
     JS2Class *EvalTypeExpression(Environment *env, Phase phase, ExprNode *p);
-    Reference *EvalExprNode(Environment *env, Phase phase, ExprNode *p);
+    Reference *EvalExprNode(Environment *env, Phase phase, ExprNode *p, JS2Class **exprType);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
     void EvalStmt(Environment *env, Phase phase, StmtNode *p);
 

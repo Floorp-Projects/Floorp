@@ -716,6 +716,7 @@ namespace MetaData {
      */
     void JS2Metadata::EvalStmt(Environment *env, Phase phase, StmtNode *p) 
     {
+        JS2Class *exprType;
         switch (p->getKind()) {
         case StmtNode::block:
         case StmtNode::group:
@@ -744,7 +745,7 @@ namespace MetaData {
             {
                 BytecodeContainer::LabelID skipOverStmt = bCon->getLabel();
                 UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
-                Reference *r = EvalExprNode(env, phase, i->expr);
+                Reference *r = EvalExprNode(env, phase, i->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchFalse, skipOverStmt, p->pos);
                 EvalStmt(env, phase, i->stmt);
@@ -756,7 +757,7 @@ namespace MetaData {
                 BytecodeContainer::LabelID falseStmt = bCon->getLabel();
                 BytecodeContainer::LabelID skipOverFalseStmt = bCon->getLabel();
                 BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
-                Reference *r = EvalExprNode(env, phase, i->expr);
+                Reference *r = EvalExprNode(env, phase, i->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchFalse, falseStmt, p->pos);
                 EvalStmt(env, phase, i->stmt);
@@ -807,7 +808,7 @@ namespace MetaData {
                 else {
                     if (f->initializer->getKind() == StmtNode::expression) {
                         ExprStmtNode *e = checked_cast<ExprStmtNode *>(f->initializer);
-                        v = EvalExprNode(env, phase, e->expr);
+                        v = EvalExprNode(env, phase, e->expr, &exprType);
                         if (v == NULL)
                             reportError(Exception::semanticError, "for..in needs an lValue", p->pos);
                     }
@@ -817,7 +818,7 @@ namespace MetaData {
 
                 BytecodeContainer::LabelID loopTop = bCon->getLabel();
 
-                Reference *r = EvalExprNode(env, phase, f->expr2);
+                Reference *r = EvalExprNode(env, phase, f->expr2, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eFirst, p->pos);
                 bCon->emitBranch(eBranchFalse, f->breakLabelID, p->pos);
@@ -852,12 +853,12 @@ namespace MetaData {
                 targetList.pop_back();
                 bCon->setLabel(f->continueLabelID);
                 if (f->expr3) {
-                    Reference *r = EvalExprNode(env, phase, f->expr3);
+                    Reference *r = EvalExprNode(env, phase, f->expr3, &exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                 }
                 bCon->setLabel(testLocation);
                 if (f->expr2) {
-                    Reference *r = EvalExprNode(env, phase, f->expr2);
+                    Reference *r = EvalExprNode(env, phase, f->expr2, &exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     bCon->emitBranch(eBranchTrue, loopTop, p->pos);
                 }
@@ -901,7 +902,7 @@ namespace MetaData {
                 uint16 swVarIndex = env->getTopFrame()->allocateTemp();
                 BytecodeContainer::LabelID defaultLabel = NotALabel;
 
-                Reference *r = EvalExprNode(env, phase, sw->expr);
+                Reference *r = EvalExprNode(env, phase, sw->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eSlotWrite, p->pos);
                 bCon->addShort(swVarIndex);
@@ -914,7 +915,7 @@ namespace MetaData {
                         if (c->expr) {
                             bCon->emitOp(eSlotRead, c->pos);
                             bCon->addShort(swVarIndex);
-                            Reference *r = EvalExprNode(env, phase, c->expr);
+                            Reference *r = EvalExprNode(env, phase, c->expr, &exprType);
                             if (r) r->emitReadBytecode(bCon, c->pos);
                             bCon->emitOp(eEqual, c->pos);
                             bCon->emitBranch(eBranchTrue, c->labelID, c->pos);
@@ -955,7 +956,7 @@ namespace MetaData {
                 EvalStmt(env, phase, w->stmt);
                 targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
-                Reference *r = EvalExprNode(env, phase, w->expr);
+                Reference *r = EvalExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchTrue, loopTop, p->pos);
                 bCon->setLabel(w->breakLabelID);
@@ -970,7 +971,7 @@ namespace MetaData {
                 EvalStmt(env, phase, w->stmt);
                 targetList.pop_back();
                 bCon->setLabel(w->continueLabelID);
-                Reference *r = EvalExprNode(env, phase, w->expr);
+                Reference *r = EvalExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchTrue, loopTop, p->pos);
                 bCon->setLabel(w->breakLabelID);
@@ -979,7 +980,7 @@ namespace MetaData {
         case StmtNode::Throw:
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                Reference *r = EvalExprNode(env, phase, e->expr);
+                Reference *r = EvalExprNode(env, phase, e->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eThrow, p->pos);
             }
@@ -1091,7 +1092,7 @@ namespace MetaData {
                         if (c->next && c->type) {
                             nextCatch = bCon->getLabel();
                             bCon->emitOp(eDup, p->pos);
-                            Reference *r = EvalExprNode(env, phase, c->type);
+                            Reference *r = EvalExprNode(env, phase, c->type, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
                             bCon->emitOp(eIs, p->pos);
                             bCon->emitBranch(eBranchFalse, nextCatch, p->pos);
@@ -1121,7 +1122,7 @@ namespace MetaData {
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                 if (e->expr) {
-                    Reference *r = EvalExprNode(env, phase, e->expr);
+                    Reference *r = EvalExprNode(env, phase, e->expr, &exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     bCon->emitOp(eReturn, p->pos);
                 }
@@ -1192,7 +1193,7 @@ namespace MetaData {
                                         // variable inaccessible until it is defined at run time.
                                         if (x.kind != Exception::compileExpressionError)
                                             throw x;
-                                        Reference *r = EvalExprNode(env, phase, vb->initializer);
+                                        Reference *r = EvalExprNode(env, phase, vb->initializer, &exprType);
                                         if (r) r->emitReadBytecode(bCon, p->pos);
                                         LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
                                         lVal->variableMultiname->addNamespace(publicNamespace);
@@ -1222,7 +1223,7 @@ namespace MetaData {
                     }
                     else { // HoistedVariable
                         if (vb->initializer) {
-                            Reference *r = EvalExprNode(env, phase, vb->initializer);
+                            Reference *r = EvalExprNode(env, phase, vb->initializer, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
                             LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
                             lVal->variableMultiname->addNamespace(publicNamespace);
@@ -1236,7 +1237,7 @@ namespace MetaData {
         case StmtNode::expression:
             {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
-                Reference *r = EvalExprNode(env, phase, e->expr);
+                Reference *r = EvalExprNode(env, phase, e->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(ePopv, p->pos);
             }
@@ -1692,10 +1693,11 @@ namespace MetaData {
     {
         js2val retval;
         uint8 *savePC = NULL;
+        JS2Class *exprType;
 
         CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
         try {
-            Reference *r = EvalExprNode(env, phase, p);
+            Reference *r = EvalExprNode(env, phase, p, &exprType);
             if (r) r->emitReadBytecode(bCon, p->pos);
             bCon->emitOp(eReturn, p->pos);
             savePC = engine->pc;
@@ -1715,9 +1717,10 @@ namespace MetaData {
     /*
      * Evaluate the expression (i.e. generate bytecode, but don't execute) rooted at p.
      */
-    Reference *JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p)
+    Reference *JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p, JS2Class **exprType)
     {
         Reference *returnRef = NULL;
+        *exprType = NULL;
         JS2Op op;
 
         switch (p->getKind()) {
@@ -1725,18 +1728,20 @@ namespace MetaData {
         case ExprNode::parentheses:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                returnRef = EvalExprNode(env, phase, u->op);
+                returnRef = EvalExprNode(env, phase, u->op, exprType);
             }
             break;
         case ExprNode::assignment:
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                JS2Class *l_exprType = *exprType;
                 if (lVal) {
-                    Reference *rVal = EvalExprNode(env, phase, b->op2);
+                    Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
                     if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                     lVal->emitWriteBytecode(bCon, p->pos);
+                    *exprType = l_exprType;
                 }
                 else
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
@@ -1782,11 +1787,13 @@ doAssignBinary:
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
+                JS2Class *l_exprType = *exprType;
                 if (lVal) {
                     lVal->emitReadForWriteBackBytecode(bCon, p->pos);
-                    Reference *rVal = EvalExprNode(env, phase, b->op2);
+                    Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
                     if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                    *exprType = l_exprType;
                 }
                 else
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
@@ -1796,21 +1803,24 @@ doAssignBinary:
             break;
         case ExprNode::lessThan:
             op = eLess;
-            goto doBinary;
+            goto boolBinary;
         case ExprNode::lessThanOrEqual:
             op = eLessEqual;
-            goto doBinary;
+            goto boolBinary;
         case ExprNode::greaterThan:
             op = eGreater;
-            goto doBinary;
+            goto boolBinary;
         case ExprNode::greaterThanOrEqual:
             op = eGreaterEqual;
-            goto doBinary;
+            goto boolBinary;
         case ExprNode::equal:
             op = eEqual;
-            goto doBinary;
+            goto boolBinary;
         case ExprNode::notEqual:
             op = eNotEqual;
+            goto boolBinary;
+boolBinary:
+            *exprType = booleanClass;
             goto doBinary;
 
         case ExprNode::leftShift:
@@ -1849,10 +1859,11 @@ doAssignBinary:
             goto doBinary;
 doBinary:
             {
+                JS2Class *l_exprType, *r_exprType;
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *lVal = EvalExprNode(env, phase, b->op1, &l_exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                Reference *rVal = EvalExprNode(env, phase, b->op2, &r_exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(op, p->pos);
             }
@@ -1872,7 +1883,7 @@ doBinary:
 doUnary:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *rVal = EvalExprNode(env, phase, u->op);
+                Reference *rVal = EvalExprNode(env, phase, u->op, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(op, p->pos);
             }
@@ -1883,7 +1894,7 @@ doUnary:
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
                 if (lVal) 
                     lVal->emitReadForWriteBackBytecode(bCon, p->pos);
                 else
@@ -1891,7 +1902,7 @@ doUnary:
                 bCon->emitOp(eDup, p->pos);
                 bCon->emitBranch(eBranchFalse, skipOverSecondHalf, p->pos);
                 bCon->emitOp(ePop, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->setLabel(skipOverSecondHalf);
                 lVal->emitWriteBackBytecode(bCon, p->pos);
@@ -1903,7 +1914,7 @@ doUnary:
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
                 if (lVal) 
                     lVal->emitReadForWriteBackBytecode(bCon, p->pos);
                 else
@@ -1911,7 +1922,7 @@ doUnary:
                 bCon->emitOp(eDup, p->pos);
                 bCon->emitBranch(eBranchTrue, skipOverSecondHalf, p->pos);
                 bCon->emitOp(ePop, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->setLabel(skipOverSecondHalf);
                 lVal->emitWriteBackBytecode(bCon, p->pos);
@@ -1922,12 +1933,12 @@ doUnary:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eDup, p->pos);
                 bCon->emitBranch(eBranchFalse, skipOverSecondHalf, p->pos);
                 bCon->emitOp(ePop, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->setLabel(skipOverSecondHalf);
             }
@@ -1936,9 +1947,9 @@ doUnary:
         case ExprNode::logicalXor:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eLogicalXor, p->pos);
             }
@@ -1948,12 +1959,12 @@ doUnary:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
-                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                Reference *lVal = EvalExprNode(env, phase, b->op1, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eDup, p->pos);
                 bCon->emitBranch(eBranchTrue, skipOverSecondHalf, p->pos);
                 bCon->emitOp(ePop, p->pos);
-                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->setLabel(skipOverSecondHalf);
             }
@@ -2010,18 +2021,18 @@ doUnary:
                 BytecodeContainer::LabelID labelAtBottom = bCon->getLabel();
 
                 TernaryExprNode *c = checked_cast<TernaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, c->op1);
+                Reference *lVal = EvalExprNode(env, phase, c->op1, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranchFalse, falseConditionExpression, p->pos);
 
-                lVal = EvalExprNode(env, phase, c->op2);
+                lVal = EvalExprNode(env, phase, c->op2, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitBranch(eBranch, labelAtBottom, p->pos);
 
                 bCon->setLabel(falseConditionExpression);
                 //adjustStack(-1);        // the true case will leave a stack entry pending
                                           // but we can discard it since only one path will be taken.
-                lVal = EvalExprNode(env, phase, c->op3);
+                lVal = EvalExprNode(env, phase, c->op3, exprType);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
 
                 bCon->setLabel(labelAtBottom);
@@ -2048,12 +2059,53 @@ doUnary:
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
                 returnRef = new LexicalReference(&i->name, cxt.strict);
                 ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
+                
+                // Try to find this identifier at compile time, we have to stop if we reach
+                // a frame that supports dynamic properties - the identifier could be
+                // created at runtime without us finding it here.
+                Multiname *multiname = ((LexicalReference *)returnRef)->variableMultiname;
+                Frame *pf = env->getTopFrame();
+                while (pf) {
+                    if (pf->kind != ClassKind) {
+                        StaticMember *m = findFlatMember(pf, multiname, ReadAccess, CompilePhase);
+                        if (m && m->kind == Member::Variable) {
+                            *exprType = checked_cast<Variable *>(m)->type;
+                            break;
+                        }
+                        if (pf->kind == GlobalObjectKind)
+                            break;
+                    }
+                    else {
+                        JS2Class *c = checked_cast<JS2Class *>(pf);
+                        MemberDescriptor m2;
+                        if (findStaticMember(c, multiname, ReadAccess, CompilePhase, &m2) 
+                                && m2.staticMember) {
+                            if (m2.staticMember->kind == StaticMember::Variable)
+                                *exprType = checked_cast<Variable *>(m2.staticMember)->type;
+                            break;
+                        }
+                        if (m2.qname) {   // an instance member
+                            InstanceMember *m = findInstanceMember(c, m2.qname, ReadAccess);
+                            if (m) {
+                                if (m->kind == InstanceMember::InstanceVariableKind)
+                                    *exprType = checked_cast<InstanceVariable *>(m)->type;
+                                break;
+                            }
+                            else
+                                break;  // XXX Shouldn't findStaticMember guarantee this not possible?
+                        }
+                        else
+                            break;
+                            // XXX ok to keep going? Suppose the class allows dynamic properties?
+                    }
+                    pf = pf->nextFrame;
+                }
             }
             break;
         case ExprNode::Delete:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op);
+                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitDeleteBytecode(bCon, p->pos);
                 else
@@ -2063,7 +2115,7 @@ doUnary:
         case ExprNode::postIncrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op);
+                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitPostIncBytecode(bCon, p->pos);
                 else
@@ -2073,7 +2125,7 @@ doUnary:
         case ExprNode::postDecrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op);
+                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitPostDecBytecode(bCon, p->pos);
                 else
@@ -2083,7 +2135,7 @@ doUnary:
         case ExprNode::preIncrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op);
+                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitPreIncBytecode(bCon, p->pos);
                 else
@@ -2093,7 +2145,7 @@ doUnary:
         case ExprNode::preDecrement:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *lVal = EvalExprNode(env, phase, u->op);
+                Reference *lVal = EvalExprNode(env, phase, u->op, exprType);
                 if (lVal)
                     lVal->emitPreDecBytecode(bCon, p->pos);
                 else
@@ -2103,11 +2155,11 @@ doUnary:
         case ExprNode::index:
             {
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
-                Reference *baseVal = EvalExprNode(env, phase, i->op);
+                Reference *baseVal = EvalExprNode(env, phase, i->op, exprType);
                 if (baseVal) baseVal->emitReadBytecode(bCon, p->pos);
                 ExprPairList *ep = i->pairs;
                 while (ep) {    // Validate has made sure there is only one, unnamed argument
-                    Reference *argVal = EvalExprNode(env, phase, ep->value);
+                    Reference *argVal = EvalExprNode(env, phase, ep->value, exprType);
                     if (argVal) argVal->emitReadBytecode(bCon, p->pos);
                     ep = ep->next;
                 }
@@ -2117,7 +2169,7 @@ doUnary:
         case ExprNode::dot:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                Reference *baseVal = EvalExprNode(env, phase, b->op1);
+                Reference *baseVal = EvalExprNode(env, phase, b->op1, exprType);
                 if (baseVal) baseVal->emitReadBytecode(bCon, p->pos);
 
                 if (b->op2->getKind() == ExprNode::identifier) {
@@ -2126,11 +2178,13 @@ doUnary:
                 } 
                 else {
                     if (b->op2->getKind() == ExprNode::qualify) {
-                        Reference *rVal = EvalExprNode(env, phase, b->op2);                        
+                        Reference *rVal = EvalExprNode(env, phase, b->op2, exprType);
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
                         returnRef = new DotReference(((LexicalReference *)rVal)->variableMultiname);
                     }
-                    // else bracketRef...
+                    // XXX else bracketRef...
+                    else
+                        NOT_REACHED("do we support these, or not?");
                 }
             }
             break;
@@ -2147,7 +2201,7 @@ doUnary:
                 ExprPairList *e = plen->pairs;
                 while (e) {
                     if (e->value) {
-                        Reference *rVal = EvalExprNode(env, phase, e->value);
+                        Reference *rVal = EvalExprNode(env, phase, e->value, exprType);
                         if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                     }
                     argCount++;
@@ -2164,7 +2218,7 @@ doUnary:
                 ExprPairList *e = plen->pairs;
                 while (e) {
                     ASSERT(e->field && e->value);
-                    Reference *rVal = EvalExprNode(env, phase, e->value);
+                    Reference *rVal = EvalExprNode(env, phase, e->value, exprType);
                     if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                     switch (e->field->getKind()) {
                     case ExprNode::identifier:
@@ -2189,7 +2243,7 @@ doUnary:
         case ExprNode::Typeof:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                Reference *rVal = EvalExprNode(env, phase, u->op);
+                Reference *rVal = EvalExprNode(env, phase, u->op, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eTypeof, p->pos);
             }
@@ -2197,12 +2251,12 @@ doUnary:
         case ExprNode::call:
             {
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
-                Reference *rVal = EvalExprNode(env, phase, i->op);
+                Reference *rVal = EvalExprNode(env, phase, i->op, exprType);
                 if (rVal) rVal->emitReadForInvokeBytecode(bCon, p->pos);
                 ExprPairList *args = i->pairs;
                 uint16 argCount = 0;
                 while (args) {
-                    Reference *r = EvalExprNode(env, phase, args->value);
+                    Reference *r = EvalExprNode(env, phase, args->value, exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     argCount++;
                     args = args->next;
@@ -2214,12 +2268,12 @@ doUnary:
         case ExprNode::New: 
             {
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
-                Reference *rVal = EvalExprNode(env, phase, i->op);
+                Reference *rVal = EvalExprNode(env, phase, i->op, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 ExprPairList *args = i->pairs;
                 uint16 argCount = 0;
                 while (args) {
-                    Reference *r = EvalExprNode(env, phase, args->value);
+                    Reference *r = EvalExprNode(env, phase, args->value, exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     argCount++;
                     args = args->next;
