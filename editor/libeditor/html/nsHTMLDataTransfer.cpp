@@ -1661,7 +1661,7 @@ nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
 
     // If no newline found, lineStart is now strEnd and we can finish up,
     // inserting from curHunk to lineStart then returning.
-    const nsDependentSubstring &curHunk = Substring(hunkStart, lineStart);
+    const nsAString &curHunk = Substring(hunkStart, lineStart);
     nsCOMPtr<nsIDOMNode> dummyNode;
 #ifdef DEBUG_akkana_verbose
     printf("==== Inserting text as %squoted: ---\n%s---\n",
