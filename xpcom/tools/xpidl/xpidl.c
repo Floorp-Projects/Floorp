@@ -142,13 +142,19 @@ int main(int argc, char *argv[])
             emit_js_stub_decls = TRUE;
             break;
           case 'I':
-            if (i == argc) {
+            if (argv[i][2] == '\0' && i == argc) {
                 fputs("ERROR: missing path after -I\n", stderr);
                 xpidl_usage(argc, argv);
                 return 1;
             }
             inc = xpidl_malloc(sizeof *inc);
-            inc->directory = argv[++i];
+            if (argv[i][2] == '\0') {
+                /* is it the -I foo form? */
+                inc->directory = argv[++i];
+            } else {
+                /* must be the -Ifoo form.  Don't preincrement i. */
+                inc->directory = argv[i] + 2;
+            }
 #ifdef DEBUG_shaver_includes
             fprintf(stderr, "adding %s to include path\n", inc->directory);
 #endif
