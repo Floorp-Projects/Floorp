@@ -23,6 +23,7 @@ include <$(DEPTH)/config/config.mak>
 XPIDL_MODULE = necko_http
 
 XPIDLSRCS =                          \
+        .\nsIHTTPHeader.idl          \
         .\nsIHTTPChannel.idl         \
 	.\nsIHttpNotify.idl          \
 	.\nsIHTTPProtocolHandler.idl \

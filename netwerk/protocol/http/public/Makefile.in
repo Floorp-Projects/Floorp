@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 XPIDL_MODULE = necko_http
 
 XPIDLSRCS =			   \
+        nsIHTTPHeader.idl	   \
         nsIHTTPChannel.idl	   \
 	nsIHttpNotify.idl	   \
 	nsIHTTPProtocolHandler.idl \
@@ -34,9 +35,6 @@ XPIDLSRCS =			   \
 EXPORTS =                       \
         nsIHttpEventSink.h      \
 	nsHTTPEnums.h		\
-        nsIHTTPCommonHeaders.h 	\
-        nsIHTTPRequest.h 	\
-        nsIHTTPResponse.h 	\
         $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
