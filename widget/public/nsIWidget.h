@@ -80,19 +80,41 @@ typedef void* nsNativeWidget;
  * Border styles
  */
 
-enum nsBorderStyle {   
-                  // no border
-                eBorderStyle_none,
-                  // dialog box border + title area
-                eBorderStyle_dialog,
-                  // window border
-                eBorderStyle_window,
-                  // child window 3D border hint
-                eBorderStyle_3DChildWindow,
-                  // top level window without border (drop down in combo
-		  // boxes, etc)
-                eBorderStyle_BorderlessTopLevel
-              }; 
+enum nsWindowType {
+  // default top level window
+  eWindowType_toplevel,
+  // top level window but usually handled differently by the OS
+  eWindowType_dialog,
+  // used for combo boxes, etc
+  eWindowType_popup,
+  // child windows (contained inside a window on the desktop (has no border))
+  eWindowType_child
+};
+
+
+enum nsBorderStyle
+{
+  // no border.. opposite of all
+  eBorderStyle_none     = 0,
+  // all window decorations
+  eBorderStyle_all      = 1 << 0,
+  // show the border
+  eBorderStyle_border   = 1 << 1,
+  // show the horizontal resize bar
+  eBorderStyle_resizeh  = 1 << 2,
+  // show the titlebar
+  eBorderStyle_title    = 1 << 3,
+  // show the OS menu thing that might be in the corner
+  eBorderStyle_menu     = 1 << 4,
+  // show the minimize button
+  eBorderStyle_minimize = 1 << 5,
+  // show the maximize button
+  eBorderStyle_maximize = 1 << 6,
+  // show the close button
+  eBorderStyle_close    = 1 << 7,
+  // whatever the OS wants... i.e. don't do anything
+  eBorderStyle_default  = -1
+};
 
 /**
  * Cursor types.
@@ -133,12 +155,14 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
 struct nsWidgetInitData {
   nsWidgetInitData()
     : clipChildren(PR_FALSE), clipSiblings(PR_FALSE),
-      mBorderStyle(eBorderStyle_window)
+      mWindowType(eWindowType_child),
+      mBorderStyle(eBorderStyle_default)
   {
   }
 
   // when painting exclude area occupied by child windows and sibling windows
   PRPackedBool  clipChildren, clipSiblings;
+  nsWindowType mWindowType;
   nsBorderStyle mBorderStyle;
 };
 

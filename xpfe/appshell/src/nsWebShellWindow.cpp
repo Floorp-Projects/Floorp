@@ -1247,7 +1247,8 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   // temporarily disabling parentage because non-Windows platforms
   // seem to be interpreting it in unexpected ways.
   nsWidgetInitData widgetInitData;
-  widgetInitData.mBorderStyle = eBorderStyle_BorderlessTopLevel;
+  widgetInitData.mWindowType = eWindowType_popup;
+  widgetInitData.mBorderStyle = eBorderStyle_default;
 
   window->SetIntrinsicallySized(PR_TRUE);
   rv = window->Initialize((nsIWebShellWindow *) nsnull, nsnull, nsnull,
@@ -2541,7 +2542,8 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    // questions from netlib.  Observers are generally appcores.  We'll have to supply
    // a generic browser appcore here someday.
    nsWidgetInitData widgetInitData;
-   widgetInitData.mBorderStyle = eBorderStyle_window;
+   widgetInitData.mWindowType = eWindowType_child;
+   widgetInitData.mBorderStyle = eBorderStyle_default;
 
    rv = Initialize(nsnull, aAppShell, urlObj, PR_TRUE,
        nsnull, nsnull, aBounds.width, aBounds.height, widgetInitData);

@@ -189,6 +189,7 @@ protected:
                                         LPARAM lParam);
     
     static PRBool ConvertStatus(nsEventStatus aStatus);
+    DWORD  GetWindowType(nsWindowType aWindowType);
     DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);
 
     PRBool DispatchStandardEvent(PRUint32 aMsg);

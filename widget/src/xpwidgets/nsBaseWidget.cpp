@@ -569,11 +569,19 @@ nsBaseWidget::Enumerator::IsDone()
 }
 
 
-NS_METHOD nsBaseWidget::SetBorderStyle(nsBorderStyle aBorderStyle) 
+NS_METHOD nsBaseWidget::SetWindowType(nsWindowType aWindowType) 
 {
-  mBorderStyle = aBorderStyle; 
+  mWindowType = aWindowType;
   return NS_OK;
-} 
+}
+
+
+NS_METHOD nsBaseWidget::SetBorderStyle(nsBorderStyle aBorderStyle)
+{
+  mBorderStyle = aBorderStyle;
+  return NS_OK;
+}
+
 
 NS_METHOD nsBaseWidget::SetTitle(const nsString& aTitle) 
 {

@@ -97,7 +97,8 @@ nsWindow::nsWindow() : nsBaseWidget()
     mHas3DBorder        = PR_FALSE;
     mMenuBar            = nsnull;
     mMenuCmdId          = 0;
-    mBorderStyle        = eBorderStyle_window;
+    mWindowType         = eWindowType_child;
+    mBorderStyle        = eBorderStyle_default;
     mBorderlessParent   = 0;
    
     mHitMenu            = nsnull;
@@ -665,14 +666,12 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
     DWORD extendedStyle = WindowExStyle();
     if (nsnull != aInitData) {
+      SetWindowType(aInitData->mWindowType);
       SetBorderStyle(aInitData->mBorderStyle);
 
-      if (aInitData->mBorderStyle == eBorderStyle_dialog ||
-          aInitData->mBorderStyle == eBorderStyle_none) {
+      if (mWindowType == eWindowType_dialog) {
         extendedStyle &= ~WS_EX_CLIENTEDGE;
-      } else if (aInitData->mBorderStyle == eBorderStyle_3DChildWindow) {
-        extendedStyle |= WS_EX_CLIENTEDGE;
-      }  else if (aInitData->mBorderStyle == eBorderStyle_BorderlessTopLevel) {
+      }  else if (mWindowType == eWindowType_popup) {
         extendedStyle = WS_EX_TOPMOST;
         style = WS_POPUP;
         mBorderlessParent = parent;
@@ -880,7 +879,7 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
    // to calculate the parent's location then add the x,y passed to
    // the move to get the screen coordinate for the borderless top-level
    // window.
-  if (mBorderStyle == eBorderStyle_BorderlessTopLevel) { 
+  if (mWindowType == eWindowType_popup) {
     HWND parent = mBorderlessParent;
     if (parent) { 
       RECT pr; 
@@ -3371,7 +3370,8 @@ HBRUSH nsWindow::OnControlColor()
 //-------------------------------------------------------------------------
 DWORD ChildWindow::WindowStyle()
 {
-    return WS_CHILD | WS_CLIPCHILDREN | GetBorderStyle(mBorderStyle);
+  //    return WS_CHILD | WS_CLIPCHILDREN | GetBorderStyle(mBorderStyle);
+  return WS_CHILD | WS_CLIPCHILDREN | GetWindowType(mWindowType);
 }
 
 //-------------------------------------------------------------------------
@@ -3408,8 +3408,35 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   return nsWindow::DispatchMouseEvent(aEventType, aPoint);
 }
 
+DWORD nsWindow::GetWindowType(nsWindowType aWindowType)
+{
+  switch(aWindowType)
+  {
+    case eWindowType_child:
+      return(0);
+    break;
+
+    case eWindowType_dialog:
+     return(WS_DLGFRAME | DS_3DLOOK);
+    break;
+
+    case eWindowType_popup:
+      return(0);
+    break;
+
+    case eWindowType_toplevel:
+      return(0);
+    break;
+
+    default:
+      NS_ASSERTION(0, "unknown border style");
+      return(WS_OVERLAPPEDWINDOW);
+  }
+}
+
 DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
 {
+  /*
   switch(aBorderStyle)
   {
     case eBorderStyle_none:
@@ -3432,6 +3459,7 @@ DWORD nsWindow::GetBorderStyle(nsBorderStyle aBorderStyle)
       NS_ASSERTION(0, "unknown border style");
       return(WS_OVERLAPPEDWINDOW);
   }
+  */
 }
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 

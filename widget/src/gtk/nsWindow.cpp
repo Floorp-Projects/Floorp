@@ -54,7 +54,8 @@ nsWindow::nsWindow()
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
-  mBorderStyle = eBorderStyle_none;
+  mWindowType = eWindowType_child;
+  mBorderStyle = eBorderStyle_default;
   mIsDestroyingWindow = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
@@ -219,7 +220,8 @@ gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   if (nsnull != aInitData) {
-    mBorderStyle = aInitData->mBorderStyle;
+    SetWindowType(aInitData->mWindowType);
+    SetBorderStyle(aInitData->mBorderStyle);
 
     return NS_OK;
   }
@@ -241,6 +243,33 @@ static GtkTargetEntry target_table[] = {
 
 static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 
+
+GdkWMDecoration nsWindow::ConvertBorderStyles(nsBorderStyle bs)
+{
+  GdkWMDecoration w;
+
+  if (bs & eBorderStyle_default)
+    return -1;
+
+  if (bs & eBorderStyle_all)
+    w |= GDK_DECOR_ALL;
+  if (bs & eBorderStyle_border)
+    w |= GDK_DECOR_BORDER;
+  if (bs & eBorderStyle_resizeh)
+    w |= GDK_DECOR_RESIZEH;
+  if (bs & eBorderStyle_title)
+    w |= GDK_DECOR_TITLE;
+  if (bs & eBorderStyle_menu)
+    w |= GDK_DECOR_MENU;
+  if (bs & eBorderStyle_minimize)
+    w |= GDK_DECOR_MINIMIZE;
+  if (bs & eBorderStyle_maximize)
+    w |= GDK_DECOR_MAXIMIZE;
+  if (bs & eBorderStyle_close)
+    printf("we don't handle eBorderStyle_close yet... please fix me\n");
+
+  return w;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -267,13 +296,15 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                  GDK_POINTER_MOTION_MASK);
 
 
-  switch(mBorderStyle)
+  g_print("windowtype = %i\n", mWindowType);
+  switch(mWindowType)
   {
-  case eBorderStyle_dialog:
+  case eWindowType_dialog:
     mIsToplevel = PR_TRUE;
 
     mShell = gtk_window_new(GTK_WINDOW_DIALOG);
     gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
+    InstallRealizeSignal(mShell);
 
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
 
@@ -283,31 +314,32 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                        this);
     break;
 
-  case eBorderStyle_BorderlessTopLevel:
+  case eWindowType_popup:
     mIsToplevel = PR_TRUE;
     mShell = gtk_window_new(GTK_WINDOW_POPUP);
     gtk_container_add(GTK_CONTAINER(mShell), mWidget);
     break;
 
-  case eBorderStyle_window:
-    if (!parentWidget)
-    {
-      mIsToplevel = PR_TRUE;
-      mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-      gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
+  case eWindowType_toplevel:
+    mIsToplevel = PR_TRUE;
+    mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
+    InstallRealizeSignal(mShell);
 
-      // VBox for the menu, etc.
-      mVBox = gtk_vbox_new(PR_FALSE, 0);
-      gtk_container_add(GTK_CONTAINER(mShell), mVBox);
-      gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
+    // VBox for the menu, etc.
+    mVBox = gtk_vbox_new(PR_FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(mShell), mVBox);
+    gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
+    
+    gtk_signal_connect(GTK_OBJECT(mShell),
+                       "delete_event",
+                       GTK_SIGNAL_FUNC(handle_delete_event),
+                       this);
+    break;
 
-      gtk_signal_connect(GTK_OBJECT(mShell),
-                         "delete_event",
-                         GTK_SIGNAL_FUNC(handle_delete_event),
-                         this);
-    }
-  case eBorderStyle_none:
-  case eBorderStyle_3DChildWindow:
+  case eWindowType_child:
+    break;
+
   default:
     break;
   }
@@ -319,11 +351,16 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                      GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
 
 
-  if (mIsToplevel && parentWidget)
+  if (mIsToplevel)
   {
-    GtkWidget *tlw = gtk_widget_get_toplevel(parentWidget);
-    if (GTK_IS_WINDOW(tlw))
-      gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(tlw));
+
+
+    if (parentWidget)
+    {
+      GtkWidget *tlw = gtk_widget_get_toplevel(parentWidget);
+      if (GTK_IS_WINDOW(tlw))
+        gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(tlw));
+    }
   }
 
   return NS_OK;
@@ -341,10 +378,6 @@ void nsWindow::InitCallbacks(char * aName)
                            "size_allocate",
                            GTK_SIGNAL_FUNC(handle_size_allocate),
                            this);
-
-  // realize on toplevel
-  if (mIsToplevel && mShell)
-    InstallRealizeSignal(mShell);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "draw",
@@ -515,13 +548,13 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
-  gtk_layout_freeze(GTK_LAYOUT(mWidget));
+  //  gtk_layout_freeze(GTK_LAYOUT(mWidget));
   return NS_OK;
 }
 
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
-  gtk_layout_thaw(GTK_LAYOUT(mWidget));
+  //  gtk_layout_thaw(GTK_LAYOUT(mWidget));
   return NS_OK;
 }
 
@@ -739,7 +772,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-#ifdef DEBUG_pavlov
+#ifndef DEBUG_pavlov
   g_print("     nsWindow::Invalidate(nr)  (this=%p , aIsSynchronous=%i)\n",
           this, aIsSynchronous);
 #endif
@@ -757,16 +790,20 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 
   if (aIsSynchronous)
   {
-    if (mIsToplevel && mShell)
+    /*
+      if (mIsToplevel && mShell)
       gtk_widget_draw(mShell, (GdkRectangle *) NULL);
+    */
 
     gtk_widget_draw(mWidget, (GdkRectangle *) NULL);
     mUpdateArea.SetRect(0, 0, 0, 0);
   }
   else
   {
-    if (mIsToplevel && mShell)
+    /*
+      if (mIsToplevel && mShell)
       gtk_widget_queue_draw(mShell);
+    */
 
     gtk_widget_queue_draw(mWidget);
     mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
@@ -777,7 +814,7 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 
 NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-#ifdef DEBUG_pavlov
+#ifndef DEBUG_pavlov
   g_print("     nsWindow::Invalidate(wr)  (this=%p, x=%i , y=%i , width=%i , height = %i , aIsSynchronous=%i)\n",
           this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous);
 #endif
@@ -798,19 +835,21 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
       GdkRectangle nRect;
       NSRECT_TO_GDKRECT(aRect, nRect);
       gtk_widget_draw(mWidget, &nRect);
-
-    if (mIsToplevel && mShell)
-      gtk_widget_draw(mShell, &nRect);
-
+      /*
+        if (mIsToplevel && mShell)
+        gtk_widget_draw(mShell, &nRect);
+      */
   } else {
       mUpdateArea.UnionRect(mUpdateArea, aRect);
       ::gtk_widget_queue_draw_area(mWidget,
                                    aRect.x, aRect.y,
                                    aRect.width, aRect.height);
-    if (mIsToplevel && mShell)
-      gtk_widget_queue_draw_area(mShell,
-                                 aRect.x, aRect.y,
-                                 aRect.width, aRect.height);
+      /*
+        if (mIsToplevel && mShell)
+        gtk_widget_queue_draw_area(mShell,
+        aRect.x, aRect.y,
+        aRect.width, aRect.height);
+      */
   }
 
   return NS_OK;
@@ -821,22 +860,17 @@ nsWindow::OnRealize()
 {
   SetIcon();
 
-  /*
-  nsGUIEvent gevent;
-  gevent.message = NS_GOTFOCUS;
-  gevent.widget  = (nsWidget *)this;
+  if (!mShell)
+    return;
 
-  gevent.eventStructType = NS_GUI_EVENT;
+  // we were just realized, so we better have a window, but we will make sure...
+  if (mShell->window)
+  {
+    GdkWMDecoration wmd = ConvertBorderStyles(mBorderStyle);
+    if (wmd != -1)
+      gdk_window_set_decorations(mShell->window, ConvertBorderStyles(mBorderStyle));
+  }
 
-  gevent.time = 0;
-  gevent.point.x = 0;
-  gevent.point.y = 0;
-
-  NS_ADDREF_THIS();
-  DispatchFocus(gevent);
-  NS_RELEASE_THIS();
-  */
-  g_print("generating focus event\n");
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -853,9 +887,11 @@ nsWindow::InitDrawEvent(GdkRectangle * aArea,
   aPaintEvent.widget  = (nsWidget *) this;
 
   aPaintEvent.eventStructType = NS_PAINT_EVENT;
-  aPaintEvent.point.x = 0;
-  aPaintEvent.point.y = 0;
-  aPaintEvent.time = 0;
+  //  aPaintEvent.point.x = 0;
+  //  aPaintEvent.point.y = 0;
+  aPaintEvent.point.x = aArea->x;
+  aPaintEvent.point.y = aArea->y; 
+  aPaintEvent.time = GDK_CURRENT_TIME;
 
   if (aArea != NULL) 
   {
