@@ -130,6 +130,10 @@ LINE:
           
           ConnectToDatabase();
           AddToDatabase($appendjunk, $plainlog);
+          DisconnectFromDatabase(); # Minimize time connected to the DB, and
+                                # only do it while Lock()'d.  That way,
+                                # zillions of addcheckin processes can't 
+                                # lock up mysqld.
           @treestocheck = @::TreeList;
      }
      Unlock();
