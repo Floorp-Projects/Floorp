@@ -55,11 +55,13 @@ enum JS2Op {
     eNumber,
     eString,            // <string pointer>
     eObject,            // <named argument count>
-    eLexicalRead,       // <multiname index>
-    eLexicalWrite,      // <multiname index>
+    eLexicalRead,
+    eLexicalWrite,
     eReturn,
     eReturnVoid,
-    eNewObject          // <argCount:16>
+    eNewObject,         // <argCount:16>
+    eMultiname,         // <multiname index>
+    eQMultiname,        // <multiname index>
 };
 
 

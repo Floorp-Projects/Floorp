@@ -35,27 +35,38 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             mn->addNamespace(meta->cxt);
+            push(OBJECT_TO_JS2VAL(mn));
         }
         break;
 
-        case eQualifiedMultiname: {
+        case eQMultiname: {
+            js2val nsVal = pop();
+            if (!JS2VAL_IS_OBJECT(nsVal))
+                meta->reportError(Exception::badValueError, "Expected a namespace", meta->errorPos);
+            JS2Object *obj = JS2VAL_TO_OBJECT(nsVal);
+            if ((obj->kind != AttributeObjectKind) || ((checked_cast<Attribute *>(obj))->attrKind != Attribute::NamespaceAttr))
+                meta->reportError(Exception::badValueError, "Expected a namespace", meta->errorPos);            
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            mn->addNamespace(meta->cxt);
+            mn->addNamespace(checked_cast<Namespace *>(obj));
+            push(OBJECT_TO_JS2VAL(mn));
         }
         break;
 
         case eLexicalRead: {
-            js2val n = pop();
-            ASSERT(JS2VAL_IS_OBJECT(n));
-            meta->env.lexicalRead(meta, mn, phase);
+            js2val mnVal = pop();
+            ASSERT(JS2VAL_IS_OBJECT(mnVal));
+            JS2Object *obj = JS2VAL_TO_OBJECT(mnVal);
+            Multiname *mn = checked_cast<Multiname *>(obj);
+            push(meta->env.lexicalRead(meta, mn, phase));
 	}
         break;
 
         case eLexicalWrite: {
-            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
-            pc += sizeof(short);
-            mn->addNamespace(meta->cxt);
+            js2val mnVal = pop();
+            ASSERT(JS2VAL_IS_OBJECT(mnVal));
+            JS2Object *obj = JS2VAL_TO_OBJECT(mnVal);
+            Multiname *mn = checked_cast<Multiname *>(obj);
             retval = pop();
             meta->env.lexicalWrite(meta, mn, retval, true, phase);
 	}

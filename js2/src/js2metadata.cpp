@@ -154,6 +154,20 @@ namespace MetaData {
                 ValidateExpression(cxt, env, e->expr);
             }
             break;
+        case StmtNode::Namespace:
+            {
+                NamespaceStmtNode *ns = checked_cast<NamespaceStmtNode *>(p);
+                ValidateAttributeExpression(cxt, env, ns->attributes);
+                Attribute *attr = EvalAttributeExpression(env, CompilePhase, ns->attributes);
+                CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
+                if (a->dynamic || a->prototype)
+                    reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                if ( ! ((a->memberMod == Attribute::NoModifier) || ((a->memberMod == Attribute::Static) && (env->getTopFrame()->kind == ClassKind))) )
+                    reportError(Exception::definitionError, "Illegal attribute", p->pos);
+                Variable *v = new Variable(namespaceClass, OBJECT_TO_JS2VAL(new Namespace(ns->name)), true);
+                env->defineStaticMember(this, ns->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v);
+            }
+            break;
         }   // switch (p->getKind())
     }
 
@@ -213,6 +227,10 @@ namespace MetaData {
                 ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                 Reference *r = EvalExprNode(env, phase, e->expr);
                 if (r) r->emitReadBytecode(bCon);
+            }
+            break;
+        case StmtNode::Namespace:
+            {
             }
             break;
         default:
@@ -293,7 +311,7 @@ namespace MetaData {
             {
                 BinaryExprNode *j = checked_cast<BinaryExprNode *>(p);
                 Attribute *a = EvalAttributeExpression(env, phase, j->op1);
-                if (a && (a->kind == Attribute::FalseKind))
+                if (a && (a->attrKind == Attribute::FalseAttr))
                     return a;
                 Attribute *b = EvalAttributeExpression(env, phase, j->op2);
                 try {
@@ -352,25 +370,25 @@ namespace MetaData {
     // a is not false
     Attribute *Attribute::combineAttributes(Attribute *a, Attribute *b)
     {
-        if (b && (b->kind == FalseKind)) {
+        if (b && (b->attrKind == FalseAttr)) {
             if (a) delete a;
             return b;
         }
-        if (!a || (a->kind == TrueKind)) {
+        if (!a || (a->attrKind == TrueAttr)) {
             if (a) delete a;
             return b;
         }
-        if (!b || (b->kind == TrueKind)) {
+        if (!b || (b->attrKind == TrueAttr)) {
             if (b) delete b;
             return a;
         }
-        if (a->kind == NamespaceKind) {
+        if (a->attrKind == NamespaceAttr) {
             if (a == b) {
                 delete b;
                 return a;
             }
             Namespace *na = checked_cast<Namespace *>(a);
-            if (b->kind == NamespaceKind) {
+            if (b->kind == NamespaceAttr) {
                 Namespace *nb = checked_cast<Namespace *>(b);
                 CompoundAttribute *c = new CompoundAttribute();
                 c->addNamespace(na);
@@ -380,7 +398,7 @@ namespace MetaData {
                 return (Attribute *)c;
             }
             else {
-                ASSERT(b->kind == CompoundKind);
+                ASSERT(b->attrKind == CompoundAttr);
                 CompoundAttribute *cb = checked_cast<CompoundAttribute *>(b);
                 cb->addNamespace(na);
                 delete a;
@@ -389,7 +407,7 @@ namespace MetaData {
         }
         else {
             // Both a and b are compound attributes. Ensure that they have no conflicting contents.
-            ASSERT((a->kind == CompoundKind) && (b->kind == CompoundKind));
+            ASSERT((a->attrKind == CompoundAttr) && (b->attrKind == CompoundAttr));
             CompoundAttribute *ca = checked_cast<CompoundAttribute *>(a);
             CompoundAttribute *cb = checked_cast<CompoundAttribute *>(b);
             if ((ca->memberMod != NoModifier) && (cb->memberMod != NoModifier) && (ca->memberMod != cb->memberMod))
@@ -420,7 +438,7 @@ namespace MetaData {
         namespaces->push_back(n);
     }
 
-    CompoundAttribute::CompoundAttribute() : Attribute(CompoundKind),
+    CompoundAttribute::CompoundAttribute() : Attribute(CompoundAttr),
             namespaces(NULL), xplicit(false), dynamic(false), memberMod(NoModifier), 
             overrideMod(NoOverride), prototype(false), unused(false) 
     { 
@@ -551,9 +569,8 @@ namespace MetaData {
             {
                 QualifyExprNode *qe = checked_cast<QualifyExprNode *>(p);
                 const StringAtom &name = checked_cast<IdentifierExprNode *>(p)->name;
-                const StringAtom &qualifierName = checked_cast<IdentifierExprNode *>(qe->qualifier)->name;
-
-                returnRef = new LexicalReference(i->name, cxt.strict);
+                EvalExprNode(env, phase, qe->qualifier);
+                returnRef = new LexicalReference(name, cxt.strict, true);
             }
             break;
         case ExprNode::identifier:
@@ -604,6 +621,7 @@ namespace MetaData {
                 }
                 else {
                 if (b->op2->getKind() == ExprNode::qualify) {
+                }
                 }
             }
             break;
@@ -713,6 +731,58 @@ namespace MetaData {
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->errorPos, multiname->name);
     }
 
+    void Environment::defineStaticMember(JS2Metadata *meta, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m)
+    {
+        NamespaceList publicNamespaceList;
+
+        Frame *localFrame = firstFrame;
+        if ((overrideMod != Attribute::NoOverride) || (xplicit && localFrame->kind != PackageKind))
+            meta->reportError(Exception::definitionError, "Illegal definition", meta->errorPos);
+        if (namespaces->empty()) {
+            publicNamespaceList.push_back(meta->publicNamespace);
+            namespaces = &publicNamespaceList;
+        }
+        Multiname *mn = new Multiname(id, true);
+        mn->addNamespace(namespaces);
+
+
+        for (StaticBindingIterator b = localFrame->staticReadBindings.lower_bound(id),
+                end = localFrame->staticReadBindings.upper_bound(id); (b != end); b++) {
+            if (b->second->qname == qName)
+                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+        }
+
+        
+        Frame *regionalFrame = getRegionalFrame();
+        Frame *fr = firstFrame->nextFrame;
+        while (true) {
+            for (b = fr->staticReadBindings.lower_bound(id),
+                    end = fr->staticReadBindings.upper_bound(id); (b != end); b++) {
+                if ((b->second->qname == qName) && (b->second->content->kind != Forbidden))
+                    reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+            }
+            fr = fr->nextFrame;
+            if (fr == regionalFrame) break;
+        }
+        if (regionalFrame->kind == GlobalObjectKind) {
+            GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
+            DynamicPropertyIterator dp = gObj->dynamicProperties.find(id);
+            if (dp != gObj->dynamicProperties.end())
+                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+        }
+        
+        for (NamespaceListIterator nli = mn->nsList.begin(), end = mn->nsList.end(); (nli != end); nli++) {
+            QualifiedName qName(*nli, id);
+            StaticBinding *sb = new StaticBinding(qName, new HoistedVar());
+            const StaticBindingMap::value_type e(id, sb);
+            if ((access == ReadAccess) || (access == ReadWriteAccess))
+                regionalFrame->staticReadBindings.insert(e);
+            if ((access == WriteAccess) || (access == ReadWriteAccess))
+                regionalFrame->staticWriteBindings.insert(e);
+        }
+
+    }
+
 
 /************************************************************************************
  *
@@ -720,9 +790,12 @@ namespace MetaData {
  *
  ************************************************************************************/
 
+    // clone a context
     Context::Context(Context *cxt) : strict(cxt->strict), openNamespaces(cxt->openNamespaces)
     {
+        ASSERT(false);  // ?? used ??
     }
+
 
 /************************************************************************************
  *
@@ -740,9 +813,16 @@ namespace MetaData {
         return false;
     }
 
-    void Multiname::addNamespace(Context &cxt)
+    void Multiname::addNamespace(Context &cxt)    
+    { 
+        addNamespace(&cxt.openNamespaces); 
+    }
+
+
+    // add every namespace from the list to this Multiname
+    void Multiname::addNamespace(NamespaceList *ns)
     {
-        for (NamespaceListIterator nli = cxt.openNamespaces.begin(), end = cxt.openNamespaces.end();
+        for (NamespaceListIterator nli = ns->begin(), end = ns->end();
                 (nli != end); nli++)
             nsList.push_back(*nli);
     }
@@ -1122,13 +1202,42 @@ namespace MetaData {
 
 /************************************************************************************
  *
+ *  Pond
+ *
+ ************************************************************************************/
+
+    Pond::Pond(size_t sz, Pond *next) : pondSize(sz + POND_SIZE), pondBase(new uint8[pondSize]), pondTop(pondBase), nextPond(next) 
+    { 
+    }
+    
+    void *Pond::allocFromPond(size_t sz)
+    {
+        if (sz > (pondSize - (pondTop - pondBase))) {
+            if (nextPond == NULL)
+                nextPond = new Pond(sz, nextPond);
+            return nextPond->allocFromPond(sz);
+        }
+        void *p = pondTop;
+        pondTop += sz;
+        return p;
+    }
+
+ 
+ /************************************************************************************
+ *
  *  JS2Object
  *
  ************************************************************************************/
 
+    Pond JS2Object::pond(POND_SIZE, NULL);
+
     void *JS2Object::operator new(size_t s)
     {
-        return STD::malloc(s);
+        // make sure that the thing is 8-byte aligned
+        if (s & 0x7) s += 8 - (s & 0x7);
+
+        return pond.allocFromPond(s);
+
     }
 
 }; // namespace MetaData

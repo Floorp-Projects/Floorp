@@ -224,6 +224,7 @@ int JS2Engine::getStackEffect(JS2Op op)
     case eReturn:
     case ePlus:
         return -1;
+
     case eString:
     case eTrue:
     case eFalse:
@@ -231,12 +232,17 @@ int JS2Engine::getStackEffect(JS2Op op)
         return 1;
 
     case eLexicalRead:
-        return 0;
+        return 0;       // consumes a multiname, pushes the value
     case eLexicalWrite:
-        return -1;
+        return -2;      // consumes a multiname and the value
 
     case eReturnVoid:
         return 0;
+
+    case eMultiname:
+    case eQMultiname:
+        return 1;       // push the multiname object
+
 
     default:
         ASSERT(false);

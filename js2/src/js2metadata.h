@@ -64,7 +64,23 @@ enum ObjectKind {
     BlockKind, 
     PrototypeInstanceKind, 
     FixedInstanceKind, 
-    DynamicInstanceKind };
+    DynamicInstanceKind,
+    MultinameKind
+};
+
+#define POND_SIZE (8000)
+
+class Pond {
+public:
+    Pond(size_t sz, Pond *nextPond);
+    
+    void *allocFromPond(size_t t);
+
+    size_t pondSize;
+    uint8 *pondBase;
+    uint8 *pondTop;
+    Pond *nextPond;
+};
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
@@ -76,7 +92,7 @@ public:
 
     ObjectKind kind;
 
-    
+    static Pond pond;    
     void *operator new(size_t s);
 
 
@@ -87,28 +103,31 @@ public:
 
 class Attribute : public JS2Object {
 public:
-    enum AttributeKind { TrueKind, FalseKind, NamespaceKind, CompoundKind } kind;
+    enum AttributeKind { TrueAttr, FalseAttr, NamespaceAttr, CompoundAttr };
     enum MemberModifier { NoModifier, Static, Constructor, Operator, Abstract, Virtual, Final};
     enum OverrideModifier { NoOverride, DoOverride, DontOverride, OverrideUndefined };
 
 
-    Attribute(AttributeKind kind) : JS2Object(AttributeObjectKind), kind(kind) { }
+    Attribute(AttributeKind akind) : JS2Object(AttributeObjectKind), attrKind(akind) { }
 
     static Attribute *combineAttributes(Attribute *a, Attribute *b);
     static CompoundAttribute *toCompoundAttribute(Attribute *a);
 
     virtual CompoundAttribute *toCompoundAttribute()    { ASSERT(false); return NULL; }
 
+
+    AttributeKind attrKind;
+
 };
 
 // A Namespace (is also an attribute)
 class Namespace : public Attribute {
 public:
-    Namespace(StringAtom &name) : Attribute(NamespaceKind), name(name) { }
+    Namespace(const StringAtom &name) : Attribute(NamespaceAttr), name(name) { }
 
     virtual CompoundAttribute *toCompoundAttribute();
 
-    StringAtom &name;       // The namespace's name used by toString
+    const StringAtom &name;       // The namespace's name used by toString
 };
 
 // A QualifiedName is the combination of an identifier and a namespace
@@ -128,19 +147,25 @@ public:
 // Pointers to Multiname instances get embedded in the bytecode.
 typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;
-class Multiname {
-public:
+class Multiname : public JS2Object {
+public:    
+
+    Multiname(const StringAtom &name) : JS2Object(MultinameKind), name(name), qualified(false) { }
+    Multiname(const StringAtom &name, bool qualified) : JS2Object(MultinameKind), name(name), qualified(qualified) { }
     
-    Multiname(const StringAtom &name) : name(name) { }
-    Multiname(const StringAtom &name, Context &cxt) : name(name) { addNamespace(cxt); }
-    void addNamespace(Namespace *ns)    { nsList.push_back(ns); }
+
+    void emitBytecode(BytecodeContainer *bCon)      { bCon->emitOp(qualified ? eQMultiname : eMultiname); bCon->addMultiname(this); }
+
+    void addNamespace(Namespace *ns)                { nsList.push_back(ns); }
+    void addNamespace(NamespaceList *ns);
     void addNamespace(Context &cxt);
 
-    bool matches(QualifiedName &q)      { return (name == q.id) && onList(q.nameSpace); }
+    bool matches(QualifiedName &q)                  { return (name == q.id) && onList(q.nameSpace); }
     bool onList(Namespace *nameSpace);
 
     NamespaceList nsList;
     const StringAtom &name;
+    bool qualified;                     // true for q::a, otherwise false
 
 };
 
@@ -184,6 +209,7 @@ public:
 class Variable : public StaticMember {
 public:
     Variable() : StaticMember(StaticMember::Variable), type(NULL), value(JS2VAL_VOID), immutable(false) { }
+    Variable(JS2Class *type, js2val value, bool immutable) : StaticMember(StaticMember::Variable), type(type), value(value), immutable(immutable) { }
 
     JS2Class *type;                 // Type of values that may be stored in this variable
     js2val value;                   // This variable's current value; future if the variable has not been declared yet;
@@ -401,8 +427,8 @@ class LexicalReference : public Reference {
 // q::a.
 public:
     LexicalReference(const StringAtom &name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
-    LexicalReference(const StringAtom &name, const StringAtom &qualifiedName, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
-    LexicalReference(Multiname *vm, Environment *env, bool strict) : variableMultiname(vm), env(env), strict(strict) { }
+    LexicalReference(const StringAtom &name, bool strict, bool qualified) : variableMultiname(new Multiname(name, qualified)), env(NULL), strict(strict) { }
+
     
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
     Environment *env;               // The environment in which the reference was created.
@@ -410,8 +436,8 @@ public:
     
 
     
-    virtual void emitReadBytecode(BytecodeContainer *bCon)              { bCon->emitOp(eLexicalRead); bCon->addMultiname(variableMultiname); }
-    virtual void emitWriteBytecode(BytecodeContainer *bCon)             { bCon->emitOp(eLexicalWrite); bCon->addMultiname(variableMultiname); }
+    virtual void emitReadBytecode(BytecodeContainer *bCon)      { variableMultiname->emitBytecode(bCon); bCon->emitOp(eLexicalRead); }
+    virtual void emitWriteBytecode(BytecodeContainer *bCon)     { variableMultiname->emitBytecode(bCon); bCon->emitOp(eLexicalWrite); }
 };
 
 class DotReference : public Reference {
@@ -511,6 +537,7 @@ public:
     js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
 
+    void defineStaticMember(JS2Metadata *meta, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m);
 
 private:
     Frame *firstFrame;
@@ -532,14 +559,14 @@ public:
 // The 'true' attribute
 class TrueAttribute : public Attribute {
 public:
-    TrueAttribute() : Attribute(TrueKind) { }
+    TrueAttribute() : Attribute(TrueAttr) { }
     virtual CompoundAttribute *toCompoundAttribute();
 };
 
 // The 'false' attribute
 class FalseAttribute : public Attribute {
 public:
-    FalseAttribute() : Attribute(FalseKind) { }
+    FalseAttribute() : Attribute(FalseAttr) { }
 };
 
 // Compound attribute objects are all values obtained from combining zero or more syntactic attributes 
@@ -624,6 +651,7 @@ public:
     JS2Class *characterClass;
     JS2Class *stringClass;
     JS2Class *objectClass;
+    JS2Class *namespaceClass;
 
     Parser *mParser;                // used for error reporting
     size_t errorPos;
