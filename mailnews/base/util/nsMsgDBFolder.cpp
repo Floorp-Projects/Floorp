@@ -153,6 +153,7 @@ nsMsgDBFolder::nsMsgDBFolder(void)
   mLastMessageLoaded(nsMsgKey_None),
   mFlags(0),
   mNumUnreadMessages(-1),
+  mNumTotalMessages(-1),
   mNotifyCountChanges(PR_TRUE),
   mExpungedBytes(0),
   mInitializedFromCache(PR_FALSE),
