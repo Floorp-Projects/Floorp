@@ -78,7 +78,7 @@ package org.mozilla.javascript;
  * find the proper generated NativeFunction instance.
 
  */
-class Decompiler
+public class Decompiler
 {
 
     void startScript()
