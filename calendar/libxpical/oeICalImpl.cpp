@@ -1614,7 +1614,7 @@ oeICalImpl::RemoveObserver(oeIICalObserver *observer)
         for( unsigned int i=0; i<m_observerlist.size(); i++ ) {
             if( observer == m_observerlist[i] ) {
 //                m_observerlist.erase( &m_observerlist[i] );
-                observer->Release();
+//                observer->Release();
                 break;
             }
         }
