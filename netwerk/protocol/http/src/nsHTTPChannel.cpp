@@ -1095,7 +1095,10 @@ nsHTTPChannel::CheckCache()
         mCacheEntry->GetLastAccessTime(&lastAccessTime);
         sessionStartTime = mHandler->GetSessionStartTime();
         mCacheEntry->GetLastUpdateTime(&lastUpdateTime);
-        firstAccessThisSession = LL_UCMP(lastUpdateTime, >= ,lastAccessTime);
+        if (LL_UCMP(sessionStartTime, > ,lastAccessTime))
+            firstAccessThisSession = PR_TRUE;
+        else
+            firstAccessThisSession = LL_UCMP(lastUpdateTime, >= ,lastAccessTime);
 
         // Check to see if we can use the cache data without revalidating 
         // it with the server.
@@ -1761,6 +1764,40 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
             PR_LOG(gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::OnStopRequest(...) [this=%x]."
                 "\tOnStopRequest to consumer failed! Status:%x\n",
                 this, rv));
+        }
+    }
+
+    // The no-store directive within the 'Cache-Control:' header indicates
+    // that we should not store the response in the cache
+    nsXPIDLCString header;
+    GetResponseHeader(nsHTTPAtoms::Cache_Control, getter_Copies(header));
+    if (header) {
+        PRInt32 offset;
+
+        nsCAutoString cacheControlHeader = (const char*)header;
+        offset = cacheControlHeader.Find("no-store", PR_TRUE);
+        if (offset != kNotFound) {
+            if (mCacheEntry)
+            {
+                mCacheEntry->SetStoredContentLength(0);
+            }
+        }
+    }
+
+    // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
+    // a request header), caching is inhibited when this header is present so
+    // as to match existing Navigator behavior.
+    GetResponseHeader(nsHTTPAtoms::Pragma, getter_Copies(header));
+    if (header) {
+        PRInt32 offset;
+
+        nsCAutoString pragmaHeader = (const char*)header;
+        offset = pragmaHeader.Find("no-cache", PR_TRUE);
+        if (offset != kNotFound) {
+            if (mCacheEntry)
+            {
+                mCacheEntry->SetStoredContentLength(0);
+            }
         }
     }
 
