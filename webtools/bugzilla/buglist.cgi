@@ -1195,7 +1195,9 @@ if ($toolong) {
 if (Param('usequip')){
   print "<HR><A HREF=newquip.html><I>$quip</I></A></CENTER>\n";
 }
-print "<HR SIZE=10>$tablestart\n";
+print "<HR SIZE=10>";
+print "$count bugs found." if $count > 9;
+print $tablestart, "\n";
 print $::bugl;
 print "</TABLE>\n";
 
