@@ -1290,7 +1290,9 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
     // If it's a XSL stylesheet PI...
     nsAutoString type;
     nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
-    if (target.EqualsWithConversion(kStyleSheetPI) && !type.EqualsIgnoreCase("text/css")) {
+    if (mState == eXMLContentSinkState_InProlog && 
+        target.EqualsWithConversion(kStyleSheetPI) && 
+        !type.EqualsIgnoreCase("text/css")) {
       nsAutoString href, title, media, alternate;
 
       nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);

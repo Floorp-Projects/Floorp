@@ -500,6 +500,41 @@ nsXMLProcessingInstruction::IsContentOfType(PRUint32 aFlags)
   return PR_FALSE;
 }
 
+static PRBool InProlog(nsIDOMNode *aThis)
+{
+  // Check that there are no ancestor elements
+  // Typically this should loop once
+  nsCOMPtr<nsIDOMNode> current = aThis;
+  for(;;) {
+    nsCOMPtr<nsIDOMNode> parent;
+    current->GetParentNode(getter_AddRefs(parent));
+    if (!parent)
+      break;
+    PRUint16 type;
+    parent->GetNodeType(&type);
+    if (type == nsIDOMNode::ELEMENT_NODE)
+      return PR_FALSE;
+    current = parent;
+  }
+
+  // Check that there are no elements before
+  // Makes sure we are not in epilog
+  current = aThis;
+  for(;;) {
+    nsCOMPtr<nsIDOMNode> prev;
+    current->GetPreviousSibling(getter_AddRefs(prev));
+    if (!prev)
+      break;
+    PRUint16 type;
+    prev->GetNodeType(&type);
+    if (type == nsIDOMNode::ELEMENT_NODE)
+      return PR_FALSE;
+    current = prev;
+  }
+
+  return PR_TRUE;
+}
+
 void
 nsXMLProcessingInstruction::GetStyleSheetInfo(nsAWritableString& aUrl,
                                               nsAWritableString& aTitle,
@@ -518,6 +553,10 @@ nsXMLProcessingInstruction::GetStyleSheetInfo(nsAWritableString& aUrl,
   if (!mTarget.Equals(NS_LITERAL_STRING("xml-stylesheet"))) {
     return;
   }
+
+  // xml-stylesheet PI is special only in prolog
+  if (!InProlog(this))
+    return;
 
   nsAutoString href, title, type, media, alternate;
 
