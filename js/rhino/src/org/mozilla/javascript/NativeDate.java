@@ -1055,6 +1055,13 @@ public class NativeDate extends IdScriptable {
                 result.append(' ');
             result.append(dateStr);
             result.append(' ');
+            if (year < 0)
+                result.append('-');
+            for (int i = yearStr.length(); i < 4; i++)
+                result.append('0');
+            result.append(yearStr);
+            if (format != FORMATSPEC_DATE)
+                result.append(' ');
         }
 
         if (format != FORMATSPEC_DATE) {
@@ -1088,16 +1095,6 @@ public class NativeDate extends IdScriptable {
                 result.append(timeZoneFormatter.format(date));
                 result.append(')');
             }
-            if (format != FORMATSPEC_TIME)
-                result.append(' ');
-        }
-
-        if (format != FORMATSPEC_TIME) {
-            if (year < 0)
-                result.append('-');
-            for (int i = yearStr.length(); i < 4; i++)
-                result.append('0');
-            result.append(yearStr);
         }
 
         return result.toString();
