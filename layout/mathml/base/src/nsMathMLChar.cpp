@@ -1056,19 +1056,32 @@ GetPrefValue(nsIPrefBranch* aPrefBranch, const char* aPrefKey, nsString& aPrefVa
   return !aPrefValue.IsEmpty();
 }
 
-// Store the list of preferred extension fonts for this char
+// Store the list of preferred extension fonts for a char
 static void
-SetPreferredFonts(PRUnichar aChar, const char* aExtension, nsString& aFamilyList)
+SetPreferredFonts(const char* aKey, nsString& aFamilyList)
 {
+  NS_ASSERTION(30 < strlen(aKey), "invalid call");
+
+  // expected key:
+  // "font.mathfont-family.\uNNNN.base"     -- fonts for the base size
+  // "font.mathfont-family.\uNNNN.parts"    -- fonts for partial glyphs
+  // "font.mathfont-family.\uNNNN.variants" -- fonts for larger glyphs
+  PRInt32 error = 0;
+  // 22 is to skip "font.mathfont-family.\\u";
+  PRUnichar uchar = nsCAutoString(aKey + 22).ToInteger(&error, 16);
+  if (error) return;
+  // 27 is to skip "font.mathfont-family.\\uNNNN"
+  const char* extension = aKey + 27;
+
 #ifdef DEBUG_rbs
   char str[50];
   aFamilyList.ToCString(str, sizeof(str));
-  printf("Setting preferred fonts for \\u%04X%s: %s\n", aChar, aExtension, str);
+  printf("Setting preferred fonts for \\u%04X%s: %s\n", uchar, extension, str);
 #endif
 
-  if (!strcmp(aExtension, ".base")) {
+  if (!strcmp(extension, ".base")) {
     // fonts to be used for the base size of the char (i.e., no stretching)
-    nsBaseFontEntry* entry = nsGlyphTableList::gBaseFonts.AddEntry(aChar);
+    nsBaseFontEntry* entry = nsGlyphTableList::gBaseFonts.AddEntry(uchar);
     if (entry) {
       entry->mFontFamily = aFamilyList;
     }
@@ -1076,14 +1089,14 @@ SetPreferredFonts(PRUnichar aChar, const char* aExtension, nsString& aFamilyList
   }
 
   PRBool isFontForParts;
-  if (!strcmp(aExtension, ".parts"))
+  if (!strcmp(extension, ".parts"))
     isFontForParts = PR_TRUE;
-  else if (!strcmp(aExtension, ".variants"))
+  else if (!strcmp(extension, ".variants"))
     isFontForParts = PR_FALSE;
   else return; // input is not applicable
 
   // Ensure that this is a valid stretchy operator
-  PRInt32 k = nsMathMLOperators::FindStretchyOperator(aChar);
+  PRInt32 k = nsMathMLOperators::FindStretchyOperator(uchar);
   if (k != kNotFound) {
     // We just want to iterate over the font-family list using the
     // callback mechanism that nsFont has...
@@ -1228,16 +1241,7 @@ InitGlobals(nsIPresContext* aPresContext)
 #endif
     if ((30 < strlen(allKey[i])) && 
         GetPrefValue(prefBranch, allKey[i], value)) {
-      // expected key:
-      // "font.mathfont-family.\uNNNN.base"     -- fonts for the base size
-      // "font.mathfont-family.\uNNNN.parts"    -- fonts for partial glyphs
-      // "font.mathfont-family.\uNNNN.variants" -- fonts for larger glyphs
-      PRInt32 error = 0;
-      // 22 is to skip "font.mathfont-family.\\u";
-      PRUnichar uchar = nsCAutoString(allKey[i]+22).ToInteger(&error, 16);
-      if (error) continue;
-      // 27 is to skip "font.mathfont-family.\\uNNNN"
-      SetPreferredFonts(uchar, allKey[i]+27, value);
+      SetPreferredFonts(allKey[i], value);
     }
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, allKey);
@@ -1250,21 +1254,12 @@ InitGlobals(nsIPresContext* aPresContext)
       nsCOMPtr<nsIPropertyElement> element;
       if (NS_SUCCEEDED(iterator->GetNext(getter_AddRefs(element)))) {
         if (NS_SUCCEEDED(element->GetKey(key))) {
-          // expected key:
-          // "font.mathfont-family.\uNNNN.base"     -- fonts for the base size
-          // "font.mathfont-family.\uNNNN.parts"    -- fonts for partial glyphs
-          // "font.mathfont-family.\uNNNN.variants" -- fonts for larger glyphs
           if ((30 < key.Length()) && 
               (0 == key.Find("font.mathfont-family.\\u")) &&
               !GetPrefValue(prefBranch, key.get(), value) && // priority to user
               NS_SUCCEEDED(element->GetValue(value))) {
-            PRInt32 error = 0;
-            key.Cut(0, 23); // 23 is the length of "font.mathfont-family.\\u";
-            PRUnichar uchar = key.ToInteger(&error, 16);
-            if (error) continue;
-            key.Cut(0, 4); // the digits of the unicode point ("NNNN")
             Clean(value);
-            SetPreferredFonts(uchar, key.get(), value);
+            SetPreferredFonts(key.get(), value);
           }
         }
       }
