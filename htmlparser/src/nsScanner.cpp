@@ -411,9 +411,7 @@ nsresult nsScanner::Eof() {
     return kEOF;
   }
 
-  if (mCurrentPosition == mEndPosition) {
-    theError=FillBuffer();  
-  }
+  theError=FillBuffer();  
 
   if(NS_OK==theError) {
     if (0==(PRUint32)mSlidingBuffer->Length()) {
@@ -473,10 +471,11 @@ nsresult nsScanner::Peek(PRUnichar& aChar, PRUint32 aOffset) {
 
   if(NS_OK == result){
     if (aOffset) {
-      if (mCountRemaining < aOffset) {
+      while ((NS_OK == result) && (mCountRemaining <= aOffset)) {
         result = Eof();
       }
-      else {
+
+      if (NS_OK == result) {
         nsReadingIterator<PRUnichar> pos = mCurrentPosition;
         pos.advance(aOffset);
         aChar=*pos;

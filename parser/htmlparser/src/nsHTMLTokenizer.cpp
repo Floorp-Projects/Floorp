@@ -539,7 +539,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
           aScanner.GetChar(oldChar);
           result=ConsumeStartTag(aChar,aToken,aScanner,aFlushTokens);
         }
-        else if(kEOF!=aChar) {
+        else {
           // We are not dealing with a tag. So, don't consume the original
           // char and leave the decision to ConsumeText().
           result=ConsumeText(aToken,aScanner);
