@@ -444,7 +444,6 @@
                       oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/addressbook/pref-addressing.xul', 'mailaddressbookpref')"/>
 #else
 #ifdef XP_MACOSX
-        <menuseparator id="prefSep"/>
         <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
                   oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/addressbook/pref-addressing.xul', 'mailaddressbookpref')"/>
 #endif
