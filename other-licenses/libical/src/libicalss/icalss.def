@@ -1,4 +1,4 @@
-LIBRARY         "icalss"
+LIBRARY         "mozicalss_lgpl"
 
 DESCRIPTION     '"""icalss library"""'
 

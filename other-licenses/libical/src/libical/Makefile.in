@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 MODULE = ical
-LIBRARY_NAME=mozical
+LIBRARY_NAME=mozical_lgpl
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map
@@ -102,6 +102,8 @@ BUILT_SOURCES =			\
 #//
 #//------------------------------------------------------------------------
 
+SRCS_IN_OBJDIR	= 1
+
 include $(topsrcdir)/config/rules.mk
 
 exports:: $(BUILT_SOURCES)
@@ -121,10 +123,10 @@ PARAMETERDEPS =	\
 	$(srcdir)/icalderivedparameter.h.in
 
 icalderivedparameter.h: $(PARAMETERDEPS) Makefile
-	$(PERL) -I $(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i $(srcdir)/icalderivedparameter.h.in -h $(DESIGNDATA)/parameters.csv > icalderivedparameter.h
+	$(PERL) -I$(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i $(srcdir)/icalderivedparameter.h.in -h $(DESIGNDATA)/parameters.csv > icalderivedparameter.h
 
 icalderivedparameter.c: $(PARAMETERDEPS) $(BUILT_COMBINEDHEADERS) Makefile
-	$(PERL) -I $(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i $(srcdir)/icalderivedparameter.c.in -c $(DESIGNDATA)/parameters.csv > icalderivedparameter.c
+	$(PERL) -I$(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i $(srcdir)/icalderivedparameter.c.in -c $(DESIGNDATA)/parameters.csv > icalderivedparameter.c
 
 # values
 

@@ -1,4 +1,4 @@
-LIBRARY         "ical"
+LIBRARY         "mozical_lgpl"
 
 DESCRIPTION     '"""ical library"""'
 
@@ -164,11 +164,9 @@ EXPORTS
 	icalproperty_get_class			@145
 	icalproperty_get_priority		@146
 	icalproperty_get_url			@147
-
-
-
-
-
-
-
-
+	icaldurationtype_null_duration		@148
+	icaltime_add				@149
+	icaltime_subtract			@150
+	icalproperty_get_dtend			@151
+	icaldurationtype_is_null_duration	@152
+	icalproperty_get_duration		@153
