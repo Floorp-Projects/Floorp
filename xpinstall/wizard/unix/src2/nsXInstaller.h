@@ -50,9 +50,10 @@ public:
     static gint Kill(GtkWidget *widget, GtkWidget *event, gpointer data);
 
 private:
-    int InitContext();
-    int DrawLogo();
-    int DrawNavButtons();
+    int         InitContext();
+    GtkWidget   *DrawLogo();
+    int         DrawCancelButton(GtkWidget *aLogoVBox);
+    int         DrawNavButtons();
 };
 
 int     main(int argc, char **argv);
