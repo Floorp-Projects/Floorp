@@ -176,10 +176,11 @@ sub collect {
     my $constructor = $super;
     
     my $rem = $c->{"rem"};
-    my ($dec_list, $call_list, $tostr_list, $template_list) =
+    my ($dec_list, $call_list, $template_list) =
       &get_paramlists(@{$c->{"params"}});
     my $params = $call_list ? $opname . ", " . $call_list : $opname;
-    my $tostr = $tostr_list ? " << \"\\t\" << $tostr_list" : "";
+    my $printbody = &get_printbody(split (", ", $template_list));
+
     if ($super =~ /Instruction_\d/) {
         $super .= "<" . $template_list . ">";
     }    
@@ -194,12 +195,11 @@ sub collect {
                     "{};\n" .
                     $tab2 . $tab . 
                     "virtual Formatter& print (Formatter& f) {\n" .
-                    $tab2 . $tab . $tab . "f << " .
-                    "opcodeNames[$opname]$tostr;\n" .
+                    $tab2 . $tab . $tab . "f << opcodeNames[$opname];\n" .
+                    $printbody .
                     $tab2 . $tab . $tab . "return f;\n" .
                     $tab2 . $tab . "}\n" .
                     $tab2 . "};\n\n");
-    
 }
 
 sub spew {
@@ -263,22 +263,42 @@ sub get_paramlists {
         push (@dec, "$type op$op" . "A$default");
         push (@call, "op$op" . "A");
         push (@template, $type);
-        if ($type eq "Register") {
-            $pfx = "R";
-        } elsif ($type eq "Label*") {
-            $member = "op1->offset";
-            $pfx = "Offset ";
-        } elsif ($type eq "StringAtom*") {
-            $deref = "*";
-        }
-        if ($pfx) {
-            push (@tostr, "\"" . $pfx . "\" << " . $deref . $member);
-        } else {
-            push (@tostr, $deref . "op$op");
-        }
         $op++;
     }
 
-    return (join (", ", @dec), join (", ", @call),
-            join (" << \", \" << ", @tostr), join (", ", @template));
+    return (join (", ", @dec), join (", ", @call), join (", ", @template));
+}
+
+sub get_printbody {
+    my (@types) = @_;
+    my $type;
+    my @oplist;
+    my $op = 1;
+    my $in = $tab2 . $tab . $tab;
+
+    for $type (@types) {
+        print "type $type\n";
+
+        if ($type eq "Register") {
+            push (@oplist, $in . "if (op$op == NotARegister) {\n" .
+                  $in . $tab . "f << \"R~\";\n" .
+                  $in . "} else {\n" .
+                  $in . $tab . "f << \"R\" << op$op;\n" .
+                  $in . "}\n");
+        } elsif ($type eq "Label*") {
+            push (@oplist, $in . "f << \"Offset \" << op$op->offset;\n");
+        } elsif ($type eq "StringAtom*") {
+            push (@oplist, $in . "f << \"'\" << *op$op << \"'\";\n");
+        } else {
+            push (@oplist, $in . "f << op$op;\n");
+        }
+
+        $op++;
+    }
+
+    my $rv = join ($in . "f << \", \";\n", @oplist);
+    if ($rv ne "") {
+        $rv = $in . "f << \"\\t\";\n" . $rv;
+    }
+            
 }
