@@ -119,8 +119,7 @@ sub Checkout()
 	if ($main::pull{all})
 	{
 		$session->checkout("RaptorMac")						|| die "checkout failure";
-		#//$session->checkout("mozilla/modules/libpref")		|| die "checkout failure";
-		
+  
 		#// beard:  additional libraries needed to make shared libraries link.
 		#//$session->checkout("mozilla/lib/mac/PowerPlant")	|| die "checkout failure";
 		#//$session->checkout("mozilla/lib/xlate")				|| die "checkout failure";
@@ -300,6 +299,9 @@ sub BuildDist()
 	#EDITOR
    InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
    InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",						"$distdirectory:editor:txmgr");
+   
+    #SILENTDL
+    InstallFromManifest(":mozilla:silentdl:MANIFEST",								"$distdirectory:silentdl:");
 
    #FULL CIRCLE    
    if ($main::MOZ_FULLCIRCLE)
