@@ -1181,6 +1181,10 @@ PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
     return PR_FALSE;
   }
 
+// XXX Turn back on once all frame code has been changed to always add
+// a child frame to the sibling list before reflowing the child. Right now
+// that's not true for inline and column when reflowing unmapped children...
+#if 0
   // Check that aChild is in our sibling list
   PRInt32 index;
 
@@ -1188,6 +1192,7 @@ PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
   if (-1 == index) {
     return PR_FALSE;
   }
+#endif
 
   return PR_TRUE;
 }
