@@ -6,7 +6,7 @@
  * the License at http://www.mozilla.org/NPL/
  *
  * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express oqr
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
@@ -200,19 +200,29 @@ public class NativeArray extends IdScriptable {
             return dense[index] != NOT_FOUND;
         return super.has(index, start);
     }
+    
+    // if id is an array index (ECMA 15.4.0), return the number, 
+    // otherwise return -1L
+    private static long toArrayIndex(String id) {
+        double d = ScriptRuntime.toNumber(id);
+        if (d == d) {
+            long index = ScriptRuntime.toUint32(d);
+            if (index == d && index != 4294967295L) {
+                // Assume that ScriptRuntime.toString(index) is the same 
+                // as java.lang.Long.toString(index) for long
+                if (Long.toString(index).equals(id)) {
+                    return index;
+                }
+            }
+        }
+        return -1;
+    }
 
     public void put(String id, Scriptable start, Object value) {
         if (start == this) {
-            // only set the array length if given an array index (ECMA 15.4.0)
-
-            // try to get an array index from id
-            double d = ScriptRuntime.toNumber(id);
-
-            if (ScriptRuntime.toUint32(d) == d &&
-                ScriptRuntime.numberToString(d, 10).equals(id) &&
-                this.length <= d && d != 4294967295.0)
-            {
-                this.length = (long)d + 1;
+            long index = toArrayIndex(id);
+            if (index >= length) {
+                length = index + 1;
             }
         }
         super.put(id, start, value);
@@ -246,24 +256,34 @@ public class NativeArray extends IdScriptable {
 
     public Object[] getIds() {
         Object[] superIds = super.getIds();
-        if (dense == null)
-            return superIds;
-        int count = 0;
-        int last = dense.length;
-        if (last > length)
-            last = (int) length;
-        for (int i=last-1; i >= 0; i--) {
-            if (dense[i] != NOT_FOUND)
-                count++;
+        if (dense == null) { return superIds; }
+        int N = dense.length;
+        long currentLength = length;
+        if (N > currentLength) {
+            N = (int)currentLength;
         }
-        count += superIds.length;
-        Object[] result = new Object[count];
-        System.arraycopy(superIds, 0, result, 0, superIds.length);
-        for (int i=last-1; i >= 0; i--) {
-            if (dense[i] != NOT_FOUND)
-                result[--count] = new Integer(i);
+        if (N == 0) { return superIds; }
+        int shift = superIds.length;
+        Object[] ids = new Object[shift + N];
+        // Make a copy of dense to be immune to removing 
+        // of array elems from other thread when calculating presentCount
+        System.arraycopy(dense, 0, ids, shift, N);
+        int presentCount = 0;
+        for (int i = 0; i != N; ++i) {
+            // Replace existing elements by their indexes
+            if (ids[shift + i] != NOT_FOUND) {
+                ids[shift + presentCount] = new Integer(i);
+                ++presentCount;
+            }
         }
-        return result;
+        if (presentCount != N) {
+            // dense contains deleted elems, need to shrink the result
+            Object[] tmp = new Object[shift + presentCount];
+            System.arraycopy(ids, shift, tmp, shift, presentCount);
+            ids = tmp;
+        }
+        System.arraycopy(superIds, 0, ids, 0, shift);
+        return ids;
     }
     
     public Object getDefaultValue(Class hint) {
@@ -320,11 +340,9 @@ public class NativeArray extends IdScriptable {
          * ?
          */
 
-        if (!(val instanceof Number))
-            throw Context.reportRuntimeError0("msg.arraylength.bad");
-        
-        long longVal = ScriptRuntime.toUint32(val);
-        if (longVal != (((Number)val).doubleValue()))
+        double d = ScriptRuntime.toNumber(val);
+        long longVal = ScriptRuntime.toUint32(d);
+        if (longVal != d)
             throw Context.reportRuntimeError0("msg.arraylength.bad");
 
         if (longVal < length) {
@@ -333,24 +351,23 @@ public class NativeArray extends IdScriptable {
                 // assume that the representation is sparse
                 Object[] e = getIds(); // will only find in object itself
                 for (int i=0; i < e.length; i++) {
-                    if (e[i] instanceof String) {
+                    Object id = e[i]; 
+                    if (id instanceof String) {
                         // > MAXINT will appear as string
-                        String id = (String) e[i];
-                        double d = ScriptRuntime.toNumber(id);
-                        if (d == d && d < length)
-                            delete(id);
-                        continue;
+                        String strId = (String)id;
+                        long index = toArrayIndex(strId);
+                        if (index >= longVal)
+                            delete(strId);
+                    } else {
+                        int index = ((Integer)id).intValue();
+                        if (index >= longVal)
+                            delete(index);
                     }
-                    int index = ((Number) e[i]).intValue();
-                    if (index >= longVal)
-                        delete(index);
                 }
             } else {
                 // assume a dense representation
-                for (long i=longVal; i < length; i++) {
-                    // only delete if defined in the object itself
-                    if (hasElem(this, i))
-                        ScriptRuntime.delete(this, new Long(i));
+                for (long i = longVal; i < length; i++) {
+                    deleteElem(this, i);
                 }
             }
         }
@@ -393,10 +410,10 @@ public class NativeArray extends IdScriptable {
      * be necessary to use the general ScriptRuntime.get/setElem
      * functions... though this is probably premature optimization.
      */
-    private static boolean hasElem(Scriptable target, long index) {
-        return index > Integer.MAX_VALUE
-               ? target.has(Long.toString(index), target)
-               : target.has((int)index, target);
+    private static void deleteElem(Scriptable target, long index) {
+        int i = (int)index;
+        if (i == index) { target.delete(i); }
+        else { target.delete(Long.toString(index)); }
     }
 
     private static Object getElem(Scriptable target, long index) {
