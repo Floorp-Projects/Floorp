@@ -492,6 +492,10 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
     // Generate this element.
     aPopupContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"),
                            PR_TRUE);
+    // Menus assume the frame for the popup exists hereafter, so we need to
+    // flush out the style reresolve we just caused to ensure the frame gets
+    // constructed.
+    mPresContext->PresShell()->FlushPendingNotifications(Flush_StyleReresolves);
   }
 }
 
