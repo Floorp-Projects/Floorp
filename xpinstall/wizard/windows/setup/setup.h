@@ -237,15 +237,23 @@ typedef struct dlgProgramFolder
   LPSTR szMessage0;
 } diPF;
 
-typedef struct dlgAdvancedSettings
+typedef struct dlgDownloadOptions
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
   LPSTR szMessage0;
   LPSTR szMessage1;
+  LPSTR szMessage2;
+  BOOL  bSaveInstaller;
+} diDO;
+
+typedef struct dlgAdvancedSettings
+{
+  BOOL  bShowDialog;
+  LPSTR szTitle;
+  LPSTR szMessage0;
   LPSTR szProxyServer;
   LPSTR szProxyPort;
-  BOOL  bSaveInstaller;
 } diAS;
 
 typedef struct dlgStartInstall

@@ -1739,15 +1739,36 @@ void DeInitDlgProgramFolder(diPF *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
-HRESULT InitDlgAdvancedSettings(diAS *diDialog)
+HRESULT InitDlgDownloadOptions(diDO *diDialog)
 {
-  diDialog->bShowDialog    = FALSE;
-  diDialog->bSaveInstaller = FALSE;
-  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  diDialog->bShowDialog       = FALSE;
+  diDialog->bSaveInstaller    = FALSE;
+  if((diDialog->szTitle       = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage0    = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szMessage1    = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage2    = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  return(0);
+}
+
+void DeInitDlgDownloadOptions(diDO *diDialog)
+{
+  FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szMessage0));
+  FreeMemory(&(diDialog->szMessage1));
+  FreeMemory(&(diDialog->szMessage2));
+}
+
+HRESULT InitDlgAdvancedSettings(diAS *diDialog)
+{
+  diDialog->bShowDialog       = FALSE;
+  if((diDialog->szTitle       = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage0    = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->szProxyServer = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -1761,7 +1782,6 @@ void DeInitDlgAdvancedSettings(diAS *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szMessage0));
-  FreeMemory(&(diDialog->szMessage1));
   FreeMemory(&(diDialog->szProxyServer));
   FreeMemory(&(diDialog->szProxyPort));
 }
@@ -4026,6 +4046,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgProgramFolder(&diProgramFolder))
     return(1);
+  if(InitDlgDownloadOptions(&diDownloadOptions))
+    return(1);
   if(InitDlgAdvancedSettings(&diAdvancedSettings))
     return(1);
   if(InitDlgStartInstall(&diStartInstall))
@@ -4253,16 +4275,24 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diProgramFolder.bShowDialog = TRUE;
 
+  /* Download Options dialog */
+  GetPrivateProfileString("Dialog Download Options",       "Show Dialog",    "", szShowDialog,                     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Download Options",       "Title",          "", diDownloadOptions.szTitle,        MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Download Options",       "Message0",       "", diDownloadOptions.szMessage0,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Download Options",       "Message1",       "", diDownloadOptions.szMessage1,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Download Options",       "Message2",       "", diDownloadOptions.szMessage2,     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Download Options",       "Save Installer", "", szBuf,                            MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diDownloadOptions.bSaveInstaller = TRUE;
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diDownloadOptions.bShowDialog = TRUE;
+
   /* Advanced Settings dialog */
   GetPrivateProfileString("Dialog Advanced Settings",       "Show Dialog",    "", szShowDialog,                     MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Advanced Settings",       "Title",          "", diAdvancedSettings.szTitle,       MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Advanced Settings",       "Message0",       "", diAdvancedSettings.szMessage0,    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Advanced Settings",       "Message1",       "", diAdvancedSettings.szMessage1,    MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Advanced Settings",       "Proxy Server",   "", diAdvancedSettings.szProxyServer, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Advanced Settings",       "Proxy Port",     "", diAdvancedSettings.szProxyPort,   MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Advanced Settings",       "Save Installer", "", szBuf,                            MAX_BUF, szFileIniConfig);
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diAdvancedSettings.bSaveInstaller = TRUE;
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diAdvancedSettings.bShowDialog = TRUE;
 
@@ -4332,6 +4362,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diSelectAdditionalComponents.bShowDialog  = FALSE;
       diWindowsIntegration.bShowDialog          = FALSE;
       diProgramFolder.bShowDialog               = FALSE;
+      diDownloadOptions.bShowDialog             = FALSE;
       diAdvancedSettings.bShowDialog            = FALSE;
       diStartInstall.bShowDialog                = FALSE;
       break;
@@ -5436,6 +5467,7 @@ void DeInitialize()
   DeInitSDObject();
   DeInitDlgReboot(&diReboot);
   DeInitDlgStartInstall(&diStartInstall);
+  DeInitDlgDownloadOptions(&diDownloadOptions);
   DeInitDlgAdvancedSettings(&diAdvancedSettings);
   DeInitDlgProgramFolder(&diProgramFolder);
   DeInitDlgWindowsIntegration(&diWindowsIntegration);
@@ -5459,6 +5491,27 @@ void DeInitialize()
   DeInitializeSmartDownload();
 }
 
+char *GetSaveInstallerPath(char *szBuf, DWORD dwBufSize)
+{
+  char szBuf2[MAX_BUF];
+
+  /* determine the path to where the setup and downloaded files will be saved to */
+  lstrcpy(szBuf, sgProduct.szPath);
+  AppendBackSlash(szBuf, dwBufSize);
+  if(*sgProduct.szSubPath != '\0')
+  {
+    lstrcat(szBuf, sgProduct.szSubPath);
+    lstrcat(szBuf, " ");
+  }
+
+  if(NS_LoadString(hSetupRscInst, IDS_STR_SETUP, szBuf2, MAX_BUF) == WIZ_OK)
+    lstrcat(szBuf, szBuf2);
+  else
+    lstrcat(szBuf, "Setup");
+
+  return(szBuf);
+}
+
 void SaveInstallerFiles()
 {
   int       i;
@@ -5470,14 +5523,7 @@ void SaveInstallerFiles()
   DWORD     dwIndex0;
   siC       *siCObject = NULL;
 
-  lstrcpy(szDestination, sgProduct.szPath);
-  AppendBackSlash(szDestination, sizeof(szDestination));
-  if(*sgProduct.szSubPath != '\0')
-  {
-    lstrcat(szDestination, sgProduct.szSubPath);
-    AppendBackSlash(szDestination, sizeof(szDestination));
-  }
-  lstrcat(szDestination, "Install");
+  GetSaveInstallerPath(szDestination, sizeof(szDestination));
   AppendBackSlash(szDestination, sizeof(szDestination));
 
   /* copy all files from the ns_temp dir to the install dir */

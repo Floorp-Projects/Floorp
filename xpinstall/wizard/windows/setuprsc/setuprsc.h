@@ -100,6 +100,10 @@
 #define IDC_EDIT_PROXY_PORT             1063
 #define IDC_TAB1                        1064
 #define IDC_DELETE_PATH                 1065
+#define IDC_LOCAL_INSTALLER_PATH        1066
+#define IDC_EDIT_LOCAL_INSTALLER_PATH   1066
+#define IDC_BUTTON_ADDITIONAL_SETTINGS  1067
+#define IDC_BUTTON_PROXY_SETTINGS       1067
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -115,6 +119,7 @@
 #define DLG_ADVANCED_SETTINGS           10207
 #define DLG_SELECT_ADDITIONAL_COMPONENTS 10208
 #define DLG_UPGRADE                     10209
+#define DLG_DOWNLOAD_OPTIONS            10210
 #define IDB_BOX_CHECKED                 10304
 #define IDB_BOX_UNCHECKED               10306
 #define IDB_BOX_CHECKED_DISABLED        10307
@@ -130,6 +135,7 @@
 #define IDWIZBACK                       11013
 #define IDWIZNEXT                       11014
 #define IDS_MSG_CREATE_DIRECTORY        11015
+#define IDWIZNEXT2                      11015
 #define IDS_STR_CREATE_DIRECTORY        11016
 #define IDS_ERROR_PROGRAM_FOLDER_NAME   11017
 #define IDS_CB_DEFAULT                  11018
@@ -139,6 +145,9 @@
 #define IDS_STR_DESTINATION_DIRECTORY   11022
 #define IDS_STR_PROGRAM_FOLDER          11023
 #define IDS_STR_DELETING_DESTINATION_DIR 11024
+#define IDS_STR_SETUP                   11025
+#define IDS_STR_DOWNLOAD_SITE           11026
+#define IDS_STR_SAVE_INSTALLER_FILES    11027
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -148,7 +157,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1066
+#define _APS_NEXT_CONTROL_VALUE         1070
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -82,6 +82,7 @@ diSC            diSelectComponents;
 diSC            diSelectAdditionalComponents;
 diWI            diWindowsIntegration;
 diPF            diProgramFolder;
+diDO            diDownloadOptions;
 diAS            diAdvancedSettings;
 diSI            diStartInstall;
 diR             diReboot;
