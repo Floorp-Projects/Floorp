@@ -505,12 +505,14 @@ function onOKCommand()
             event.entryDate.timezone = tzid;
         } else {
             event.entryDate.reset();
+        }
 
         if ( getElementValue("due-datetime") ) {
             event.dueDate.jsdate = getElementValue("due-datetime");
             event.dueDate.timezone = tzid;
         } else {
             event.dueDate.reset();
+        }
 
         event.isAllDay.reset();
         event.status          = getElementValue("todo-status-field");
