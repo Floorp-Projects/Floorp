@@ -565,6 +565,15 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
     if (rv != NS_OK) return rv;
     nsAutoString theName(spec);
 
+    // XXX temp hack to make parser use UTF-8 as default charset for XML, RDF, XUL
+    // XXX This should be removed once we have the SetDefaultCharset in the nsIParser interface
+	nsString last4;
+	theName.Right(last4, 4);
+	if(last4.EqualsIgnoreCase(".xul") || last4.EqualsIgnoreCase(".xml") || last4.EqualsIgnoreCase(".rdf") ) 
+	{
+		charset = "UTF-8";
+	}
+
     // XXX begin of meta tag charset hack
 
 	if(theName.Equals(nsParser::gHackMetaCharsetURL) && (! nsParser::gHackMetaCharset.Equals("")))
@@ -675,11 +684,15 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,const nsString& aCon
   // charset =
   // charsetSource = kCharsetFromUserDefault;
 
-  // XXXX get Doc Type Default (e.g. UTF-8 for XML)
-
-  // XXX We should really put if doc == html for the following line
-  charset = "ISO-8859-1";
-  charsetSource = kCharsetFromDocTypeDefault;
+  // XXX temp hack to make parser use UTF-8 as default charset for XML, RDF, XUL
+  // XXX This should be removed once we have the SetDefaultCharset in the nsIParser interface
+  if(aContentType.EqualsIgnoreCase("text/xul") || aContentType.EqualsIgnoreCase("text/xml") || aContentType.EqualsIgnoreCase("text/rdf") ) 
+  {
+	charset = "UTF-8";
+  } else {
+    charset = "ISO-8859-1";
+  }
+   charsetSource = kCharsetFromDocTypeDefault;
 
   // XXX begin of meta tag charset hack
   nsAutoString theFakeURL("fromString");
