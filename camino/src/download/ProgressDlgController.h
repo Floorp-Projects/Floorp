@@ -22,6 +22,7 @@
  * Contributor(s):
  *    Simon Fraser <sfraser@netscape.com>
  *    Calum Robinson <calumr@mac.com>
+ *    Josh Aas <josha@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -36,6 +37,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 
 #import <AppKit/AppKit.h>
 
@@ -56,56 +58,54 @@
   CHDownloadProgressDisplay protocol, which are used to display
   the progress of a single download. It does so by returning instances of
   ProgressViewController, which manage an NSView that contains a progress
-  indicator, some text fields for status info and a cancel button. 
+  indicator and some text fields for status info. 
   
   After a ProgressViewController is requested, the CHStackView is reloaded,
   which causes it to ask the ProgressDlgController (it's datasource) to
   provide it with a list of all the subviews to be diaplyed. It calculates
-  it's new frame, and arranges the subviews in a vertical list. 
-  
-  The ProgressDlgController now needs to resize its window. It knows when
-  to do this because is watches for changes in the CHStackViews frame (using
-  NSViews built in NSNotification for this). 
-  
-  
-  Expanding/contracting download progress views
-  
-  When a disclosure triangle is clicked, the ProgressViewController just swaps
-  the expanded view for a smaller one. It saves the new state as the users
-  preference for "browser.download.compactView". If the option key was held down,
-  a notification is posted (that all ProgressViewControllers listen for) that
-  makes all ProgressViewControllers change their state to the new state of the sender. 
-
+  it's new frame, and arranges the subviews in a vertical list.
 */
 
 #import "CHDownloadProgressDisplay.h"
+#import "ProgressViewController.h"
+
+//
+// interface ProgressDlgController
+//
+// A window controller managing multiple simultaneous downloads. The user
+// can cancel, remove, or get information about any of the downloads it
+// manages. It maintains one |ProgressViewController| object for each download.
+//
 
 @interface ProgressDlgController : NSWindowController<CHDownloadDisplayFactory, CHStackViewDataSource>
 {
   IBOutlet CHStackView  *mStackView;
   IBOutlet NSScrollView *mScrollView;
-  IBOutlet NSTextField  *mNoDownloadsText;
   
-  NSSize                mDefaultWindowSize;                
-  NSTimer               *mDownloadTimer;
-  NSMutableArray        *mProgressViewControllers;
+  NSSize                mDefaultWindowSize;
+  NSTimer               *mDownloadTimer;            // used for updating the status, STRONG ref
+  NSMutableArray        *mProgressViewControllers;  // the downloads we manage, STRONG ref
   int                   mNumActiveDownloads;
+  int                   mSelectionPivotIndex;
 }
 
-+ (ProgressDlgController *)sharedDownloadController;
++(ProgressDlgController *)sharedDownloadController;
 
-- (int)numDownloadsInProgress;
+-(IBAction)cancel:(id)sender;
+-(IBAction)remove:(id)sender;
+-(IBAction)reveal:(id)sender;
+-(IBAction)cleanUpDownloads:(id)sender;
+-(IBAction)open:(id)sender;
 
-- (void)autosaveWindowFrame;
+-(int)numDownloadsInProgress;
 
-- (void)setupDownloadTimer;
-- (void)killDownloadTimer;
-- (void)setDownloadProgress:(NSTimer *)aTimer;
+-(void)setupDownloadTimer;
+-(void)killDownloadTimer;
+-(void)setDownloadProgress:(NSTimer *)aTimer;
 
-- (void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
-- (void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
-- (void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
-
-- (NSApplicationTerminateReply)allowTerminate;
+-(void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
+-(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
+-(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay;
+-(NSApplicationTerminateReply)allowTerminate;
 
 @end

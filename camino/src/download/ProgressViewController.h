@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
@@ -22,6 +22,7 @@
  * Contributor(s):
  *    Calum Robinson <calumr@mac.com>
  *    Simon Fraser <sfraser@netscape.com>
+ *    Josh Aas <josha@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,40 +38,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 #import "CHDownloadProgressDisplay.h"
 
 class CHDownloader;
 @class ProgressDlgController;
+@class ProgressView;
 
+// do this because there is no "no" key in the set of key modifiers.
+// it is in this header because both classes that need it include this file
+// (ProgressDlgController and ProgressView)
+enum {
+  kNoKey = 0,
+  kShiftKey = 1,
+  kCommandKey = 2
+};
+
+//
+// interface ProgressViewController
+//
+// There is a 1-to-1 correspondence between a download in the manager and
+// one of these objects. It implements what you can do with the item as 
+// well as managing the download. It holds onto two views, one for while
+// the item is downloading, the other for after it has completed.
+//
 @interface ProgressViewController : NSObject<CHDownloadProgressDisplay>
 {
   // we share one progress bar between both views. It's in the expanded
   // view by default
-  IBOutlet NSProgressIndicator    *mProgressBar;
+  IBOutlet NSProgressIndicator *mProgressBar;
 
-  // in-progress expanded view
-  IBOutlet NSView                 *mProgressView;
-  IBOutlet NSButton               *mExpandedCancelButton;
+  IBOutlet ProgressView *mProgressView;      // in-progress view, STRONG ref
+  IBOutlet ProgressView *mCompletedView;     // completed view, STRONG ref
   
-  // in-progress collapsed view
-  IBOutlet NSView                 *mProgressViewCompact;
-  
-  // completed expanded view
-  IBOutlet NSView                 *mCompletedView;
-  IBOutlet NSButton               *mExpandedRevealButton;
-  IBOutlet NSButton               *mExpandedOpenButton;
-  
-  // completed collapsed view
-  IBOutlet NSView                 *mCompletedViewCompact;  
-  
-  BOOL            mViewIsCompact;
   BOOL            mIsFileSave;
   BOOL            mUserCancelled;
   BOOL            mDownloadingError;
   BOOL            mDownloadDone;
-  BOOL            mRemoveWhenDone;
     
-  NSTimeInterval  mDownloadTime;		// only set when done
+  NSTimeInterval  mDownloadTime; // only set when done
 
   long            mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
   long            mDownloadSize;
@@ -79,27 +85,28 @@ class CHDownloader;
   NSString        *mDestPath;
   NSDate          *mStartTime;
   
-  CHDownloader    *mDownloader;   // we hold a ref to this
+  CHDownloader    *mDownloader;             // wraps gecko download, STRONG ref
   
-  ProgressDlgController *mProgressWindowController;		// not retained
+  ProgressDlgController *mProgressWindowController;    // window controller, WEAK ref (owns us)
 }
 
-+ (NSString *)formatTime:(int)aSeconds;
-+ (NSString *)formatFuzzyTime:(int)aSeconds;
-+ (NSString *)formatBytes:(float)aBytes;
++(NSString *)formatTime:(int)aSeconds;
++(NSString *)formatFuzzyTime:(int)aSeconds;
++(NSString *)formatBytes:(float)aBytes;
 
-- (NSView *)view;
+-(ProgressView *)view;
 
-- (IBAction)close:(id)sender;
+-(IBAction)cancel:(id)sender;
+-(IBAction)remove:(id)sender;
+-(IBAction)reveal:(id)sender;
+-(IBAction)open:(id)sender;
 
-- (IBAction)stop:(id)sender;
-- (IBAction)toggleDisclosure:(id)sender;
+-(BOOL)isActive;
+-(BOOL)isCanceled;
+-(BOOL)isSelected;
 
-- (IBAction)reveal:(id)sender;
-- (IBAction)open:(id)sender;
+-(NSMenu*)contextualMenu;
 
-- (BOOL)isActive;
-
-- (void)setProgressWindowController:(ProgressDlgController*)progressWindowController;
+-(void)setProgressWindowController:(ProgressDlgController*)progressWindowController;
 
 @end

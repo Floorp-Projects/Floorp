@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  *
  * Contributor(s):
  *    Calum Robinson <calumr@mac.com>
+ *    Josh Aas <josha@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,13 +36,13 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+/*
+ This class was inspired by the OAStack view from OmniGroup, but not copied directly. This
+ implementation is a little simpler, which is fine. 
  
- /*
-  This class was inspired by the OAStack view from OmniGroup, but not copied directly. This
-  implementation is a little simpler, which is fine. 
-  
-  It's like NSTableView, except the data source returns views instead of strings/images etc.
-*/
+ It's like NSTableView, except the data source returns views instead of strings/images etc.
+ */
 
 #import "CHStackView.h"
 
@@ -49,56 +51,55 @@ NSString* StackViewResizedNotificationName = @"StackViewResized";
 
 @implementation CHStackView
 
-- (id)initWithFrame:(NSRect)frameRect
+-(id)initWithFrame:(NSRect)frameRect
 {
-  if ((self = [super initWithFrame:frameRect]))
-  {
+  if ((self = [super initWithFrame:frameRect])) {
     // Register for notifications when one of the subviews changes size
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                            selector:@selector(reloadNotification:)
-                                            name:StackViewReloadNotificationName
-                                            object:nil];
-  
+                                             selector:@selector(reloadNotification:)
+                                                 name:StackViewReloadNotificationName
+                                               object:nil];
   }
   return self;
 }
 
-- (void)dealloc
+-(void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
 }
 
-- (void)setDataSource:(id)aDataSource
+-(void)setDataSource:(id)aDataSource
 {
-  mDataSource = aDataSource;   // should this retain?
-  
+  mDataSource = aDataSource; // should this retain?
   [self reloadSubviews];
 }
 
-- (void)reloadNotification:(NSNotification *)notification
+-(void)reloadNotification:(NSNotification*)notification
 {
   [self reloadSubviews];
 }
 
-- (void)reloadSubviews
+-(void)reloadSubviews
 {
   NSRect newFrame  = [self frame];
   NSSize oldSize   = [self bounds].size;
   int i, subviewCount = [mDataSource subviewsForStackView:self];
-    
   NSPoint nextOrigin = NSZeroPoint;
   
-  // we'll maintain the width  of the stack view, assuming that it's
-  // scaled by its superview.
+  // maintain the width of the stack view, assuming that it's scaled by its superview.
   newFrame.size.height = 0.0;
   
-  [[self subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+  // be really careful about this since we're changing the length of the array
+  // as we go through it
+  while ([[self subviews] count] > 0) {
+    [((NSView*)[[self subviews] objectAtIndex:0]) removeFromSuperview];
+  }
   
-  for (i = 0; i < subviewCount; i++)
-  {
+  for (i = 0; i < subviewCount; i++) {
     NSView *subview      = [mDataSource viewForStackView:self atIndex:i];
     NSRect  subviewFrame = [subview frame];
+    NSBox *separator;
     
     unsigned int autoResizeMask = [subview autoresizingMask];
     if (autoResizeMask & NSViewWidthSizable)
@@ -112,16 +113,13 @@ NSString* StackViewResizedNotificationName = @"StackViewResized";
     
     [self addSubview:subview];
     
-    // If there are more subviews, add a separator
-    if (i + 1 < subviewCount)
-    {
-      NSBox *separator = [[NSBox alloc] initWithFrame:
-          NSMakeRect(nextOrigin.x, nextOrigin.y - 1.0, NSWidth([subview frame]), 1.0)];      
-      [separator setBoxType:NSBoxSeparator];
-      [separator setAutoresizingMask:NSViewWidthSizable];
-      [self addSubview:separator];
-      [separator release];
-    }
+    // always add a separator
+    separator = [[NSBox alloc] initWithFrame:
+                               NSMakeRect(nextOrigin.x, nextOrigin.y - 1.0, NSWidth([subview frame]), 1.0)];      
+    [separator setBoxType:NSBoxSeparator];
+    [separator setAutoresizingMask:NSViewWidthSizable];
+    [self addSubview:separator];
+    [separator release];
   }
   
   NSRect newBounds = newFrame;
@@ -129,13 +127,13 @@ NSString* StackViewResizedNotificationName = @"StackViewResized";
   
   [self setFrame:newFrame];
   [self setNeedsDisplay:YES];
-
+  
   [[NSNotificationCenter defaultCenter] postNotificationName:StackViewResizedNotificationName
-              object:self
-              userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSValue valueWithSize:oldSize], @"oldsize", nil]];
+                                        object:self
+                                        userInfo:[NSDictionary dictionaryWithObjectsAndKeys:[NSValue valueWithSize:oldSize], @"oldsize", nil]];
 }
 
-- (BOOL)isFlipped
+-(BOOL)isFlipped
 {
   return YES;
 }

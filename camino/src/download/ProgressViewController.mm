@@ -22,6 +22,7 @@
  * Contributor(s):
  *    Calum Robinson <calumr@mac.com>
  *    Simon Fraser <sfraser@netscape.com>
+ *    Josh Aas <josha@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -43,60 +44,50 @@
 #import "ProgressViewController.h"
 #import "ProgressDlgController.h"
 #import "PreferenceManager.h"
+#import "ProgressView.h"
 
-enum
-{
-  kLabelTagFilename    = 1000,
-  kLabelTagProgress,
-  kLabelTagSource,
-  kLabelTagDestination,
+enum {
+  kLabelTagFilename = 1000,
+  kLabelTagStatus,
   kLabelTagTimeRemaining,
-  kLabelTagStatus,		// 1005
-  kLabelTagTimeRemainingLabel
+  kLabelTagIcon
 };
-
-
-// Notification sent when user holds option key and expands/contracts a progress view
-static NSString *ProgressViewsShouldResize = @"ProgressViewsShouldResize";
 
 @interface ProgressViewController(ProgressViewControllerPrivate)
 
-- (void)viewDidLoad;
-- (void)refreshDownloadInfo;
-- (void)moveProgressBarToCurrentView;
-- (void)updateButtons;
-- (void)launchFileIfAppropriate;
+-(void)viewDidLoad;
+-(void)refreshDownloadInfo;
+-(void)launchFileIfAppropriate;
 
 @end
 
 @implementation ProgressViewController
 
-+ (NSString *)formatTime:(int)seconds
++(NSString *)formatTime:(int)seconds
 {
   NSMutableString *theTime = [NSMutableString stringWithCapacity:8];
-
+  
   NSString *padZero = [NSString stringWithString:@"0"];
   //write out new elapsed time
-  if (seconds >= 3600)
-  {
+  if (seconds >= 3600) {
     [theTime appendFormat:@"%d:",(seconds / 3600)];
     seconds = seconds % 3600;
   }
-
+  
   NSString *elapsedMin = [NSString stringWithFormat:@"%d:",(seconds / 60)];
   if ([elapsedMin length] == 2)
     [theTime appendString:[padZero stringByAppendingString:elapsedMin]];
   else
     [theTime appendString:elapsedMin];
-
+  
   seconds = seconds % 60;
   NSString *elapsedSec = [NSString stringWithFormat:@"%d",seconds];
-
+  
   if ([elapsedSec length] == 2)
     [theTime appendString:elapsedSec];
   else
     [theTime appendString:[padZero stringByAppendingString:elapsedSec]];
-
+  
   return theTime;
 }
 
@@ -115,7 +106,7 @@ static NSString *ProgressViewsShouldResize = @"ProgressViewsShouldResize";
   seconds = seconds/60;
   if (seconds < 60) {
     if (seconds < 2)
-       return [NSString stringWithFormat:NSLocalizedString(@"AboutMin",@"About a minute")];
+      return [NSString stringWithFormat:NSLocalizedString(@"AboutMin",@"About a minute")];
     // OK, tell the good people how much time we have left.
     return [NSString stringWithFormat:NSLocalizedString(@"AboutMins",@"About %d minutes"), seconds];
   }
@@ -126,7 +117,7 @@ static NSString *ProgressViewsShouldResize = @"ProgressViewsShouldResize";
   return [NSString stringWithFormat:NSLocalizedString(@"AboutHours", @"Over %d hours"), seconds];
 }
 
-+ (NSString *)formatBytes:(float)bytes
++(NSString*)formatBytes:(float)bytes
 {
   // if bytes are negative, we return question marks.
   if (bytes < 0)
@@ -149,406 +140,360 @@ static NSString *ProgressViewsShouldResize = @"ProgressViewsShouldResize";
 
 #pragma mark -
 
-- (id)init
+-(id)init
 {
-  if ((self = [super init]))
-  {
+  if ((self = [super init])) {
     [NSBundle loadNibNamed:@"ProgressView" owner:self];
-    
     [self viewDidLoad];
-    
-    // Register for notifications when one of the progress views is expanded/contracted
-    // whilst holding the option button
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                            selector:@selector(changeCollapsedStateNotification:)
-                                            name:ProgressViewsShouldResize
-                                            object:nil];
-    
-    [mExpandedRevealButton setEnabled:NO];
-    [mExpandedOpenButton   setEnabled:NO];
   }
-  
   return self;
 }
 
-- (void)dealloc
+-(void)dealloc
 {
-  [[NSNotificationCenter defaultCenter] removeObserver:self
-                                          name:ProgressViewsShouldResize
-                                          object:nil];
-  
   // if we get here because we're quitting, the listener will still be alive
   // yet we're going away. As a result, we need to tell the d/l listener to
   // forget it ever met us and necko will clean it up on its own.
-  if (mDownloader) 
+  if (mDownloader) {
     mDownloader->DetachDownloadDisplay();
+  }
   NS_IF_RELEASE(mDownloader);
-
+  
   [mStartTime release];
   [mSourceURL release];
   [mDestPath release];
   [mProgressBar release];
-  
+
+  // loading the nib has retained these, we have to release them.
+  [mCompletedView release];
+  [mProgressView release];
+
   [super dealloc];
 }
 
-// Save the expand/contract view pref (called when the user clicks the dislosure triangle)
-- (void)setCompactViewPref
+-(void)viewDidLoad
 {
-  [[PreferenceManager sharedInstance] setPref:"browser.download.compactView" toBoolean:mViewIsCompact];
+  [mProgressBar retain]; // make sure it survives being moved between views
+                         // this isn't necessarily better. Need to profile.
+  [mProgressBar setUsesThreadedAnimation:YES];
+  // give the views this controller as their controller
+  [mCompletedView setController:self];
+  [mProgressView setController:self];
 }
 
-- (void)viewDidLoad
+-(ProgressView*)view
 {
-  mViewIsCompact = [[PreferenceManager sharedInstance] getBooleanPref:"browser.download.compactView" withSuccess:NULL];
-  [mProgressBar retain];		// make sure it survives being moved between views
-  
-  if (mViewIsCompact)
-    [self moveProgressBarToCurrentView];
-  
-  // this isn't necessarily better. Need to profile.
-  [mProgressBar setUsesThreadedAnimation:YES];      
+  return (mDownloadDone ? mCompletedView : mProgressView);
 }
 
-- (NSView *)view
+-(IBAction)copySourceURL:(id)sender
 {
-  if (mViewIsCompact)
-    return (mDownloadDone ? mCompletedViewCompact : mProgressViewCompact);
-  else
-    return (mDownloadDone ? mCompletedView : mProgressView);
+  NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+  [pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+  [pasteboard setString:mSourceURL forType:NSStringPboardType];
 }
 
-- (IBAction)toggleDisclosure:(id)sender
-{
-  mViewIsCompact = !mViewIsCompact;
-  
-  [self moveProgressBarToCurrentView];
-
-  // Is option/alt held down?
-  if ([[[sender window] currentEvent] modifierFlags] & NSAlternateKeyMask)
-  {
-    // Get all progress views to look the same as self
-    [[NSNotificationCenter defaultCenter] postNotificationName:ProgressViewsShouldResize
-                                            object:[NSNumber numberWithBool:mViewIsCompact]];
-  }
-  
-  // Set the pref only when the user clicks the disclosure triangle
-  [self setCompactViewPref];
-  
-  // Re-calculate the new view & window sizes
-  [[NSNotificationCenter defaultCenter] postNotificationName:StackViewReloadNotificationName
-                                          object:self];
-  [self refreshDownloadInfo];
-}
-
-- (void)changeCollapsedStateNotification:(NSNotification *)notification
-{
-  // note that this will get called on the view that is being clicked, as well
-  // as the other views. Don't do redundant work here, like redrawing.
-  mViewIsCompact = [[notification object] boolValue];
-  // Don't call [enclosingStackView reloadSubviews]; here, because it will be done
-  // by the original view that was option-clicked, not us
-}
-
--(void)cancel
+-(IBAction)cancel:(id)sender
 {
   mUserCancelled = YES;
-
-  if (mDownloader)    // we should always have one
+  
+  if (mDownloader) { // we should always have one
     mDownloader->CancelDownload();
-
+  }
+  
   // note that we never want to delete downloaded files here,
   // because the file does not have its final path yet.
   // Necko will delete the evil temp file.
 }
 
-- (IBAction)close:(id)sender
+-(IBAction)reveal:(id)sender
 {
-  if (!mDownloadDone)
-  {
-    mRemoveWhenDone = YES;
-    [self cancel];
-  }
-  else
-  {
-    [mProgressWindowController removeDownload:self];
+  if (![[NSWorkspace sharedWorkspace] selectFile:mDestPath
+      inFileViewerRootedAtPath:[mDestPath stringByDeletingLastPathComponent]]) {
+    NSBeep();
   }
 }
 
-- (IBAction)stop:(id)sender
+-(IBAction)open:(id)sender
 {
-  [self cancel];
+  if (![[NSWorkspace sharedWorkspace] openFile:mDestPath]) {
+    NSBeep();
+  }
+  return;
 }
 
-- (IBAction)reveal:(id)sender
+-(IBAction)remove:(id)sender
 {
-  if ([[NSWorkspace sharedWorkspace] selectFile:mDestPath
-                        inFileViewerRootedAtPath:[mDestPath stringByDeletingLastPathComponent]])
-    return;
-  // hmmm.  it didn't work.  that's odd. need localized error messages. for now, just beep.
-  NSBeep();
-}
-
-- (IBAction)open:(id)sender
-{
-  if ([[NSWorkspace sharedWorkspace] openFile:mDestPath])
-    return;
-  // hmmm.  it didn't work.  that's odd.  need localized error message. for now, just beep.
-  NSBeep();
+  [mProgressWindowController removeDownload:self];
 }
 
 // Called just before the view will be shown to the user
-- (void)downloadDidStart
+-(void)downloadDidStart
 {
   mStartTime = [[NSDate alloc] init];
-//  [mProgressBar startAnimation:self];	// moved to onStartDownload
   [self refreshDownloadInfo];
 }
 
-- (void)downloadDidEnd
+-(void)downloadDidEnd
 {
-  if (!mDownloadDone)		// some error conditions can cause this to get called twice
-  {
+  if (!mDownloadDone) { // some error conditions can cause this to get called twice
+    // retain the selection when the view switches - do this before mDownloadDone changes
+    [mCompletedView setSelected:[self isSelected]];
+    
     mDownloadDone = YES;
     mDownloadTime = -[mStartTime timeIntervalSinceNow];
     [mProgressBar stopAnimation:self];
     
-    [mExpandedCancelButton setEnabled:NO];
-
-    // get the Finder to update
+    // get the Finder to update - doesn't work on some earlier version of Mac OS X
+    // (I think it was fixed by 10.2.2 or so)
     [[NSWorkspace sharedWorkspace] noteFileSystemChanged:mDestPath];
-
+    
     [self refreshDownloadInfo];
     [self launchFileIfAppropriate];
   }
 }
 
-- (void)launchFileIfAppropriate
+-(void)launchFileIfAppropriate
 {
-  if (!mIsFileSave && !mUserCancelled && !mDownloadingError)
-  {
-    if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.download.autoDispatch" withSuccess:NULL])
+  if (!mIsFileSave && !mUserCancelled && !mDownloadingError) {
+    if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.download.autoDispatch" withSuccess:NULL]) {
       [[NSWorkspace sharedWorkspace] openFile:mDestPath withApplication:nil andDeactivate:NO];
+    }
   }
 }
 
-// this handles lots of things.
-- (void)refreshDownloadInfo
+// this handles lots of things - all of the status updates
+-(void)refreshDownloadInfo
 {
   NSView* curView = [self view];
-  
   NSString* filename = [mSourceURL lastPathComponent];
-  NSString *destPath = [mDestPath stringByAbbreviatingWithTildeInPath];
-  NSString* tooltipFormat = NSLocalizedString(mDownloadDone ? @"DownloadedTooltipFormat" : @"DownloadingTooltipFormat", @"");
-
+  id iconLabel = [curView viewWithTag:kLabelTagIcon];
+  
   id filenameLabel = [curView viewWithTag:kLabelTagFilename];
   [filenameLabel setStringValue:filename];
-  [filenameLabel setToolTip:[NSString stringWithFormat:tooltipFormat, [mSourceURL lastPathComponent], mSourceURL, destPath]];
   
-  id destLabel = [curView viewWithTag:kLabelTagDestination];
-  [destLabel setStringValue:destPath];
-
-  id locationLabel = [curView viewWithTag:kLabelTagSource];
-  [locationLabel setStringValue:mSourceURL];
-
-  if (mDownloadDone)
-  {
-    id statusLabel = [curView viewWithTag:kLabelTagStatus];
-    if (statusLabel)
-    {
-      NSString* statusString;
-      if (mUserCancelled)
-        statusString = NSLocalizedString(@"DownloadCancelled", @"Cancelled");
-      else if (mDownloadingError)
-        statusString = NSLocalizedString(@"DownloadInterrupted", @"Interrupted");
-      else
-        statusString = NSLocalizedString(@"DownloadCompleted", @"Completed");
-      
-      [statusLabel setStringValue: statusString];
+  if (iconLabel) { // update the icon image
+    NSImage *iconImage = [[NSWorkspace sharedWorkspace] iconForFile:mDestPath];
+    // sometimes the finder doesn't have an icon for us (rarely)
+    // when that happens just leave it at what it was before
+    if (iconImage != nil) {
+      [iconLabel setImage:iconImage];
     }
-
-    // set progress label
-    id progressLabel = [curView viewWithTag:kLabelTagProgress];
-    if (progressLabel)
-    {
-      float byteSec = mCurrentProgress / mDownloadTime;
-      // show how much we downloaded, become some types of disconnects make us think
-      // we finished successfully
-      [progressLabel setStringValue:[NSString stringWithFormat:
-          NSLocalizedString(@"DownloadDoneStatusString", @"%@ of %@ done (at %@/sec)"), 
-              [[self class] formatBytes:mCurrentProgress],
-              [[self class] formatBytes:mDownloadSize],
-              [[self class] formatBytes:byteSec]]];
-    }
-    
-    id timeLabel = [curView viewWithTag:kLabelTagTimeRemaining];
-    if (timeLabel)
-    	[timeLabel setStringValue:[[self class] formatTime:(int)mDownloadTime]];
-      
-    id timeLabelLabel = [curView viewWithTag:kLabelTagTimeRemainingLabel];
-    if (timeLabelLabel)
-      [timeLabelLabel setStringValue:NSLocalizedString(@"DownloadRemainingLabelDone", @"Time elapsed:")];
-      
-    [self updateButtons];
   }
-  else
-  {
+  
+  if (mDownloadDone) { // just update the status field
+    id statusLabel = [curView viewWithTag:kLabelTagStatus];
+    if (statusLabel) {
+      NSString* statusString;
+      if (mUserCancelled) {
+        statusString = NSLocalizedString(@"DownloadCancelled", @"Cancelled");
+      }
+      else if (mDownloadingError) {
+        statusString = NSLocalizedString(@"DownloadInterrupted", @"Interrupted");
+      }
+      else {
+        statusString = [NSString stringWithFormat:NSLocalizedString(@"DownloadCompleted", @"Completed in %@ (%@)"),
+          [[self class] formatTime:(int)mDownloadTime], [[self class] formatBytes:mDownloadSize]];
+      }
+      
+      [statusLabel setStringValue:statusString];
+    }
+  }
+  else {
     NSTimeInterval elapsedTime = -[mStartTime timeIntervalSinceNow];
-
+    
     // update status field
-    id progressLabel = [curView viewWithTag:kLabelTagProgress];
-    if (progressLabel)
-    {
-      NSString *statusLabelString = NSLocalizedString(@"DownloadStatusString", @"%@ of %@ total (at %@/sec)");
+    id statusLabel = [curView viewWithTag:kLabelTagStatus];
+    if (statusLabel) {
+      NSString *statusLabelString = NSLocalizedString(@"DownloadStatusString", @"%@ of %@ (at %@/sec)");
       float byteSec = mCurrentProgress / elapsedTime;
-      [progressLabel setStringValue:[NSString stringWithFormat:statusLabelString, 
-                                      [[self class] formatBytes:mCurrentProgress],
-                                      (mDownloadSize > 0 ? [[self class] formatBytes:mDownloadSize] : @"?"),
-                                      [[self class] formatBytes:byteSec]]];
+      [statusLabel setStringValue:[NSString stringWithFormat:statusLabelString, 
+                   [[self class] formatBytes:mCurrentProgress],
+                   (mDownloadSize > 0 ? [[self class] formatBytes:mDownloadSize] : @"?"),
+                   [[self class] formatBytes:byteSec]]];
     }
     
     id timeLabel = [curView viewWithTag:kLabelTagTimeRemaining];
-    if (timeLabel)
-    {
-      if (mDownloadSize > 0)
-      {
+    if (timeLabel) {
+      if (mDownloadSize > 0) {
         int secToGo = (int)ceil((elapsedTime * mDownloadSize / mCurrentProgress) - elapsedTime);
         [timeLabel setStringValue:[[self class] formatFuzzyTime:secToGo]];
       }
-      else // mDownloadSize is undetermined.  Set remaining time to question marks.
-      {
-        NSString *calculatingString = NSLocalizedString(@"DownloadCalculatingString", @"Unknown");
-        [timeLabel setStringValue:calculatingString];
+      else { // mDownloadSize is undetermined.  Set remaining time to question marks.
+        [timeLabel setStringValue:NSLocalizedString(@"DownloadCalculatingString", @"Unknown")];
       }
     }
   }
 }
 
-- (void)updateButtons
-{
-  // note: this will stat every time, which will be expensive! We could use
-  // FNNotify/FNSubscribe to avoid this (writing a Cocoa wrapper around it).
-  if (mDownloadDone && !mDownloadingError)
-  {
-    BOOL destFileExists = [[NSFileManager defaultManager] fileExistsAtPath:mDestPath];
-    [mExpandedRevealButton setEnabled:destFileExists];
-    [mExpandedOpenButton   setEnabled:destFileExists];
-  }
-}
-
-- (void)moveProgressBarToCurrentView
-{
-  [mProgressBar moveToView:(mViewIsCompact ? mProgressViewCompact : mProgressView) resize:YES];
-  [mProgressBar startAnimation:self];		// this is necessary to keep it animating for some reason
-}
-
-- (void)setProgressWindowController:(ProgressDlgController*)progressWindowController
+-(void)setProgressWindowController:(ProgressDlgController*)progressWindowController
 {
   mProgressWindowController = progressWindowController;
 }
 
-- (BOOL)isActive
+-(BOOL)isActive
 {
   return !mDownloadDone;
 }
 
+-(BOOL)isCanceled
+{
+  return mUserCancelled;
+}
+
+-(BOOL)isSelected
+{
+  return [[self view] isSelected];
+}
+
+-(NSMenu*)contextualMenu
+{
+  NSMenu *menu = [[NSMenu alloc] init];
+  NSMenuItem *revealItem;
+  NSMenuItem *cancelItem;
+  NSMenuItem *removeItem;
+  NSMenuItem *openItem;
+  NSMenuItem *copySourceURLItem;
+  
+  revealItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlRevealCMLabel", @"Show in Finder")
+                                   action:@selector(reveal:) keyEquivalent:@""];
+  cancelItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlCancelCMLabel", @"Cancel")
+                                   action:@selector(cancel:) keyEquivalent:@""];
+  removeItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlRemoveCMLabel", @"Remove")
+                                   action:@selector(remove:) keyEquivalent:@""];
+  openItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlOpenCMLabel", @"Open")
+                                   action:@selector(open:) keyEquivalent:@""];
+  copySourceURLItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"dlCopySourceURLCMLabel", @"Copy Source URL")
+                                   action:@selector(copySourceURL:) keyEquivalent:@""];
+  
+  [revealItem setTarget:mProgressWindowController];
+  [cancelItem setTarget:mProgressWindowController];
+  [removeItem setTarget:mProgressWindowController];
+  [openItem setTarget:mProgressWindowController];
+  [copySourceURLItem setTarget:self];
+  
+  [menu addItem:revealItem];
+  [menu addItem:cancelItem];
+  [menu addItem:removeItem];
+  [menu addItem:openItem];
+  [menu addItem:[NSMenuItem separatorItem]];
+  [menu addItem:copySourceURLItem];
+  
+  [revealItem release];
+  [cancelItem release];
+  [removeItem release];
+  [openItem release];
+  [copySourceURLItem release];
+  
+  return [menu autorelease];    
+}
+
+- (BOOL)validateMenuItem:(id <NSMenuItem>)menuItem
+{
+  SEL action = [menuItem action];
+  if (action == @selector(cancel:)) {
+    return ((!mUserCancelled) && (!mDownloadDone));
+  }
+  if (action == @selector(remove:)) {
+    return (mUserCancelled || mDownloadDone);
+  }
+  return YES;
+}
+
 #pragma mark -
 
-- (void)onStartDownload:(BOOL)isFileSave
+-(void)onStartDownload:(BOOL)isFileSave
 {
   mIsFileSave = isFileSave;
   [self downloadDidStart];
   [mProgressWindowController didStartDownload:self];
-
+  
   // need to do this after the view as been put in the window, otherwise it doesn't work
   [mProgressBar startAnimation:self];
 }
 
-- (void)onEndDownload:(BOOL)completedOK
+-(void)onEndDownload:(BOOL)completedOK
 {
   mDownloadingError = !completedOK;
-
+  
   [self downloadDidEnd];
   [mProgressWindowController didEndDownload:self];
-  if (mRemoveWhenDone)
-    [mProgressWindowController removeDownload:self];
 }
 
-- (void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress
+-(void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress
 {
   mCurrentProgress = aCurProgress;         // fall back for stat calcs
   mDownloadSize = aMaxProgress;
   
-  if (![mProgressBar isIndeterminate])      //most likely - just update value
-  {
-    if (aCurProgress == aMaxProgress)      //handles little bug in FTP download size
+  if (![mProgressBar isIndeterminate]) {   //most likely - just update value
+    if (aCurProgress == aMaxProgress) {    //handles little bug in FTP download size
       [mProgressBar setMaxValue:aMaxProgress];
-    
+    }
     [mProgressBar setDoubleValue:aCurProgress];
   }
-  else if (aMaxProgress > 0)               // ok, we're starting up with good max & cur values
-  {
+  else if (aMaxProgress > 0) {            // ok, we're starting up with good max & cur values
     [mProgressBar setIndeterminate:NO];
     [mProgressBar setMaxValue:aMaxProgress];
     [mProgressBar setDoubleValue:aCurProgress];
-  } // if neither case was true, it's barber pole city.
+  } // if neither case was true, it's barber pole city
 }
 
 -(void)setDownloadListener:(CHDownloader*)aDownloader
 {
-  if (mDownloader != aDownloader)
+  if (mDownloader != aDownloader) {
     NS_IF_RELEASE(mDownloader);
+  }
   
   NS_IF_ADDREF(mDownloader = aDownloader);
 }
 
 #if 0
 /*
-    This is kind of a hack. It should probably be done somewhere else so Mozilla can have
-    it too, but until Apple fixes the problems with the setting of comments without 
-    reverting to Applescript, I have left it in. 
-    
-    Turned off for now, until we find a better way to do this. Won't Carbon APIs work?
-*/
+ This is kind of a hack. It should probably be done somewhere else so Mozilla can have
+ it too, but until Apple fixes the problems with the setting of comments without 
+ reverting to Applescript, I have left it in. 
+ 
+ Turned off for now, until we find a better way to do this. Won't Carbon APIs work?
+ */
 - (void)tryToSetFinderComments
 {
-  if (mDestPath && mSourceURL)
-  {
+  if (mDestPath && mSourceURL) {
     CFURLRef fileURL = CFURLCreateWithFileSystemPath(   NULL,
                                                         (CFStringRef)mDestPath,
                                                         kCFURLPOSIXPathStyle,
                                                         NO);
     
     NSString *hfsPath = (NSString *)CFURLCopyFileSystemPath(fileURL,
-                                                    kCFURLHFSPathStyle);
+                                                            kCFURLHFSPathStyle);
     
     CFRelease(fileURL);
     
     NSAppleScript *setCommentScript = [[NSAppleScript alloc] initWithSource:
-        [NSString stringWithFormat:@"tell application \"Finder\" to set comment of file \"%@\" to \"%@\"", hfsPath, mSourceURL]];
+      [NSString stringWithFormat:@"tell application \"Finder\" to set comment of file \"%@\" to \"%@\"", hfsPath, mSourceURL]];
     NSDictionary *errorInfo = NULL;
     
     [setCommentScript executeAndReturnError:&errorInfo];
     
-    if (errorInfo)
-    {
-        NSLog(@"Get error when running AppleScript to set comments for '%@':\n %@", 
-                                mDestPath,
-                                [errorInfo objectForKey:NSAppleScriptErrorMessage]);
+    if (errorInfo) {
+      NSLog(@"Get error when running AppleScript to set comments for '%@':\n %@", 
+            mDestPath,
+            [errorInfo objectForKey:NSAppleScriptErrorMessage]);
     }
   }
 }
+
 #endif
 
-- (void)setSourceURL:(NSString*)aSourceURL
+-(void)setSourceURL:(NSString*)aSourceURL
 {
   [mSourceURL autorelease];
   mSourceURL = [aSourceURL copy];
-  
+  [mProgressView setToolTip:mSourceURL];
+  [mCompletedView setToolTip:mSourceURL];
   //[self tryToSetFinderComments];
 }
 
-- (void)setDestinationPath:(NSString*)aDestPath
+-(void)setDestinationPath:(NSString*)aDestPath
 {
   [mDestPath autorelease];
   mDestPath = [aDestPath copy];

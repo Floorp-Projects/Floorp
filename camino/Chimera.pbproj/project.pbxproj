@@ -761,6 +761,7 @@
 				3FB2BAB10545EA80002B9691,
 				3FB2BAB30545EA80002B9691,
 				3FB2BAB50545EA80002B9691,
+				3FC0FB8105A0D2DC002F47DE,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -849,6 +850,11 @@
 				3FB2BB030545EBF2002B9691,
 				3F63719C057CE0DE00B62EE2,
 				3FAA54C80587778700BBF630,
+				3FC0FB8805A0D2F4002F47DE,
+				3FC0FB8905A0D2F4002F47DE,
+				3FC0FB8A05A0D2F4002F47DE,
+				3FC0FB8B05A0D2F4002F47DE,
+				3FC0FB8C05A0D2F4002F47DE,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -930,6 +936,7 @@
 				3FB2BAB20545EA80002B9691,
 				3FB2BAB40545EA80002B9691,
 				3FB2BAB60545EA80002B9691,
+				3FC0FB8205A0D2DC002F47DE,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2336,6 +2343,92 @@
 			settings = {
 			};
 		};
+		3FC0FB7F05A0D2DC002F47DE = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = ProgressView.h;
+			path = src/download/ProgressView.h;
+			refType = 2;
+		};
+		3FC0FB8005A0D2DC002F47DE = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = ProgressView.mm;
+			path = src/download/ProgressView.mm;
+			refType = 2;
+		};
+		3FC0FB8105A0D2DC002F47DE = {
+			fileRef = 3FC0FB7F05A0D2DC002F47DE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FC0FB8205A0D2DC002F47DE = {
+			fileRef = 3FC0FB8005A0D2DC002F47DE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FC0FB8305A0D2F4002F47DE = {
+			isa = PBXFileReference;
+			name = dl_cancel.tif;
+			path = resources/images/toolbar/dl_cancel.tif;
+			refType = 2;
+		};
+		3FC0FB8405A0D2F4002F47DE = {
+			isa = PBXFileReference;
+			name = dl_clearall.tif;
+			path = resources/images/toolbar/dl_clearall.tif;
+			refType = 2;
+		};
+		3FC0FB8505A0D2F4002F47DE = {
+			isa = PBXFileReference;
+			name = dl_open.tif;
+			path = resources/images/toolbar/dl_open.tif;
+			refType = 2;
+		};
+		3FC0FB8605A0D2F4002F47DE = {
+			isa = PBXFileReference;
+			name = dl_remove.tif;
+			path = resources/images/toolbar/dl_remove.tif;
+			refType = 2;
+		};
+		3FC0FB8705A0D2F4002F47DE = {
+			isa = PBXFileReference;
+			name = dl_reveal.tif;
+			path = resources/images/toolbar/dl_reveal.tif;
+			refType = 2;
+		};
+		3FC0FB8805A0D2F4002F47DE = {
+			fileRef = 3FC0FB8305A0D2F4002F47DE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FC0FB8905A0D2F4002F47DE = {
+			fileRef = 3FC0FB8405A0D2F4002F47DE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FC0FB8A05A0D2F4002F47DE = {
+			fileRef = 3FC0FB8505A0D2F4002F47DE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FC0FB8B05A0D2F4002F47DE = {
+			fileRef = 3FC0FB8605A0D2F4002F47DE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FC0FB8C05A0D2F4002F47DE = {
+			fileRef = 3FC0FB8705A0D2F4002F47DE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //3F0
 //3F1
 //3F2
@@ -2966,6 +3059,8 @@
 				F50D9DE302ECC2C601BB4219,
 				F5F415CA03B9223E01A80166,
 				F517395B020CE3740189DA0C,
+				3FC0FB7F05A0D2DC002F47DE,
+				3FC0FB8005A0D2DC002F47DE,
 			);
 			isa = PBXGroup;
 			name = Camino;
@@ -4357,6 +4452,11 @@
 		};
 		F5264FCB020D4C25010001CA = {
 			children = (
+				3FC0FB8305A0D2F4002F47DE,
+				3FC0FB8405A0D2F4002F47DE,
+				3FC0FB8505A0D2F4002F47DE,
+				3FC0FB8605A0D2F4002F47DE,
+				3FC0FB8705A0D2F4002F47DE,
 				F5555C8202022F070164C72B,
 				F5555C8302022F070164C72B,
 				F5555C8402022F070164C72B,

@@ -12,11 +12,7 @@
         {
             CLASS = ProgressDlgController; 
             LANGUAGE = ObjC; 
-            OUTLETS = {
-                mNoDownloadsText = NSTextField; 
-                mScrollView = NSScrollView; 
-                mStackView = CHStackView; 
-            }; 
+            OUTLETS = {mScrollView = NSScrollView; mStackView = CHStackView; }; 
             SUPERCLASS = NSWindowController; 
         }, 
         {

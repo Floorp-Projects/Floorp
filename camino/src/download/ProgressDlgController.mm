@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    Calum Robinson <calumr@mac.com>
+ *    Josh Aas <josha@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -40,189 +41,397 @@
 
 #import "ProgressDlgController.h"
 
-#import "ProgressViewController.h"
 #import "PreferenceManager.h"
+#import "ProgressView.h"
 
-static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
-
-
+static NSString *ProgressWindowFrameSaveName = @"ProgressWindow";
 
 @interface ProgressDlgController(PrivateProgressDlgController)
 
-- (void)resizeWindowToFit;
-- (void)rebuildViews;
-- (NSSize)windowSizeForStackSize:(NSSize)stackSize;
+-(void)rebuildViews;
+-(NSMutableArray*)getSelectedProgressViewControllers;
+-(void)deselectAllDLInstances:(NSArray*)instances;
+-(void)makeDLInstanceVisibleIfItsNotAlready:(ProgressViewController*)controller;
 
 @end
-
-
 
 @implementation ProgressDlgController
 
 static id gSharedProgressController = nil;
 
-+ (ProgressDlgController *)sharedDownloadController;
++(ProgressDlgController *)sharedDownloadController
 {
-  if (gSharedProgressController == nil)
+  if (gSharedProgressController == nil) {
     gSharedProgressController = [[ProgressDlgController alloc] init];
+  }
   
   return gSharedProgressController;
 }
 
-- (id)init
+-(id)init
 {
-  if ((self == [super initWithWindowNibName:@"ProgressDialog"]))
-  {
-    // Register for notifications when the stack view changes size
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                            selector:@selector(stackViewResized:)
-                                            name:StackViewResizedNotificationName
-                                            object:nil];
-
+  if ((self == [super initWithWindowNibName:@"ProgressDialog"])) {
     mProgressViewControllers = [[NSMutableArray alloc] init];
-    
     mDefaultWindowSize = [[self window] frame].size;
     // it would be nice if we could get the frame from the name, and then
     // mess with it before setting it.
     [[self window] setFrameUsingName:ProgressWindowFrameSaveName];
-    // set the window to its default height
-    NSRect windowFrame = [[self window] frame];
-    windowFrame.size.height = mDefaultWindowSize.height;
-    [[self window] setFrame:windowFrame display:NO];
     
     // We provide the views for the stack view, from mProgressViewControllers
     [mStackView setDataSource:self];
-    
-    [mScrollView setDrawsBackground:NO];
-    [mNoDownloadsText retain];		// so we can remove it from its superview
+    mSelectionPivotIndex = -1;
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(DLInstanceSelected:)
+                                                 name:@"DownloadInstanceSelected" object:nil];
   }
-
   return self;
 }
 
-- (void)dealloc
+-(void)awakeFromNib
 {
-  if (self == gSharedProgressController)
-    gSharedProgressController = nil;
+  NSToolbar *toolbar = [[NSToolbar alloc] initWithIdentifier:@"dlmanager"];
+  [toolbar setDelegate:self];
+  [toolbar setAllowsUserCustomization:YES];
+  [toolbar setAutosavesConfiguration:YES];
+  [[self window] setToolbar:toolbar];    
+}
 
+-(void)dealloc
+{
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  if (self == gSharedProgressController) {
+    gSharedProgressController = nil;
+  }
   [mProgressViewControllers release];
-  [mNoDownloadsText release];
   [self killDownloadTimer];
   [super dealloc];
 }
 
-- (void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay
+// cancel all selected instances
+-(IBAction)cancel:(id)sender
+{
+  NSMutableArray* selected = [self getSelectedProgressViewControllers];
+  unsigned count = [selected count];
+  for (unsigned i = 0; i < count; i++) {
+    [[selected objectAtIndex:i] cancel:self];
+  }
+}
+
+// reveal all selected instances in the Finder
+-(IBAction)reveal:(id)sender
+{
+  NSMutableArray* selected = [self getSelectedProgressViewControllers];
+  unsigned count = [selected count];
+  for (unsigned i = 0; i < count; i++) {
+    [[selected objectAtIndex:i] reveal:self];
+  }
+}
+
+// open all selected instances
+-(IBAction)open:(id)sender
+{
+  NSMutableArray* selected = [self getSelectedProgressViewControllers];
+  unsigned count = [selected count];
+  for (unsigned i = 0; i < count; i++) {
+    [[selected objectAtIndex:i] open:self];
+  }
+}
+
+// remove all selected instances, don't remove anything that is active as a guard against bad things
+-(IBAction)remove:(id)sender
+{
+  // take care of selecting a download instance to replace the selection being removed
+  NSMutableArray* selected = [self getSelectedProgressViewControllers];
+  unsigned selectedCount = [selected count];
+  unsigned indexOfLastSelection = [mProgressViewControllers indexOfObject:[selected objectAtIndex:(((int)selectedCount) - 1)]];
+  // if dl instance after last selection exists, select it or look for something else to select
+  if ((indexOfLastSelection + 1) < [mProgressViewControllers count]) {
+    [[((ProgressViewController*)[mProgressViewControllers objectAtIndex:(indexOfLastSelection + 1)]) view] setSelected:YES];
+  }
+  else { // find the first unselected DL instance before the last one marked for removal and select it
+    // use an int in the loop, not unsigned because we might make it negative
+    for (int i = ([mProgressViewControllers count] - 1); i >= 0; i--) {
+	    if (![((ProgressViewController*)[mProgressViewControllers objectAtIndex:i]) isSelected]) {
+          [[((ProgressViewController*)[mProgressViewControllers objectAtIndex:i]) view] setSelected:YES];
+          break;
+	    }
+    }
+  }
+  mSelectionPivotIndex = -1; // nothing is selected any more so nothing to pivot on
+  
+  // now remove stuff
+  for (unsigned i = 0; i < selectedCount; i++) {
+    if (![[selected objectAtIndex:i] isActive]) {
+      [self removeDownload:[selected objectAtIndex:i]];
+    }
+  }
+}
+
+// remove all inactive instances
+-(IBAction)cleanUpDownloads:(id)sender
+{
+  for (int i = 0; i < [mProgressViewControllers count]; i++) {
+    if ((![[mProgressViewControllers objectAtIndex:i] isActive]) || [[mProgressViewControllers objectAtIndex:i] isCanceled]) {
+	    [self removeDownload:[mProgressViewControllers objectAtIndex:i]]; // remove the download
+	    i--; // leave index at the same position because the dl there got removed
+    }
+  }
+  mSelectionPivotIndex = -1;
+}
+
+// calculate what buttons should be enabled/disabled because the user changed the selection state
+-(void)DLInstanceSelected:(NSNotification*)notification
+{
+  // make sure the notification object is the kind we want
+  ProgressView* sender = ((ProgressView*)[notification object]);
+  if (![sender isKindOfClass:[ProgressView class]])
+    return;
+
+  NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
+  int lastMod = [sender lastModifier];
+
+  // check for key modifiers and select more instances if appropriate
+  // if its shift key, extend the selection one way or another
+  // if its command key, just let the selection happen wherever it is (don't mess with it here)
+  // if its not either clear all selections except the one that just happened
+  if (lastMod == kNoKey) {
+    // deselect everything
+    [self deselectAllDLInstances:selectedArray];
+    [sender setSelected:YES];
+    mSelectionPivotIndex = [mProgressViewControllers indexOfObject:[sender getController]];
+  }
+  else if (lastMod == kCommandKey) {
+    if (![sender isSelected]) {
+      // if this was at the pivot index set the pivot index to -1
+      if ([mProgressViewControllers indexOfObject:[sender getController]] == mSelectionPivotIndex) {
+        mSelectionPivotIndex = -1;
+      }
+    }
+    else {
+      if ([selectedArray count] == 1) {
+        mSelectionPivotIndex = [mProgressViewControllers indexOfObject:[sender getController]];
+      }
+    }
+  }
+  else if (lastMod == kShiftKey) {
+    if (mSelectionPivotIndex == -1) {
+      mSelectionPivotIndex = [mProgressViewControllers indexOfObject:[sender getController]];
+    }
+    else { 
+      if ([selectedArray count] == 1) {
+          mSelectionPivotIndex = [mProgressViewControllers indexOfObject:[sender getController]];
+      }
+      else {
+        int senderLocation = [mProgressViewControllers indexOfObject:[sender getController]];
+        // deselect everything
+        [self deselectAllDLInstances:selectedArray];
+        if (senderLocation <= mSelectionPivotIndex) {
+          for (int i = senderLocation; i <= mSelectionPivotIndex; i++) {
+            [[((ProgressViewController*)[mProgressViewControllers objectAtIndex:i]) view] setSelected:YES];
+          }
+        }
+        else if (senderLocation > mSelectionPivotIndex) {
+          for (int i = mSelectionPivotIndex; i <= senderLocation; i++) {
+            [[((ProgressViewController*)[mProgressViewControllers objectAtIndex:i]) view] setSelected:YES];
+          }
+        }
+      }
+    }
+  }
+}
+
+-(void)keyDown:(NSEvent *)theEvent
+{
+  // we don't care about anything if no downloads exist
+  if ([mProgressViewControllers count] > 0) {
+    int key = [[theEvent characters] characterAtIndex:0];
+    int instanceToSelect = -1;
+    unsigned int mods = [theEvent modifierFlags];
+    if (key == NSUpArrowFunctionKey) { // was it the up arrow key that got pressed?
+      // find the first selected item
+      int i; // we use this outside the loop so declare it here
+      for (i = 0; i < [mProgressViewControllers count]; i++) {
+        if ([[mProgressViewControllers objectAtIndex:i] isSelected]) {
+          break;
+        }
+      }      
+      // deselect everything if the shift key isn't a modifier
+      if (!(mods & NSShiftKeyMask)) {
+        [self deselectAllDLInstances:[self getSelectedProgressViewControllers]];
+      }
+      if (i == [mProgressViewControllers count]) { // if nothing was selected select the first item
+        instanceToSelect = 0;
+      }
+      else if (i == 0) { // if selection was already at the top leave it there
+        instanceToSelect = 0;
+      }
+      else { // select the next highest instance
+        instanceToSelect = i - 1;
+      }
+      // select and make sure its visible
+      if (instanceToSelect != -1) {
+        [[((ProgressViewController*)[mProgressViewControllers objectAtIndex:instanceToSelect]) view] setSelected:YES];
+        [self makeDLInstanceVisibleIfItsNotAlready:((ProgressViewController*)[mProgressViewControllers objectAtIndex:instanceToSelect])];
+        if (!(mods & NSShiftKeyMask)) {
+          mSelectionPivotIndex = instanceToSelect;
+        }
+      }
+    }
+    else if (key == NSDownArrowFunctionKey) { // was it the down arrow key that got pressed?
+      // find the last selected item
+      int instanceToSelect = -1;
+      int i; // we use this outside the coming loop so declare it here
+      for (i = [mProgressViewControllers count] - 1; i >= 0 ; i--) {
+        if ([[mProgressViewControllers objectAtIndex:i] isSelected]) {
+          break;
+        }
+      }
+      // deselect everything if the shift key isn't a modifier
+      if (!(mods & NSShiftKeyMask)) {
+        [self deselectAllDLInstances:[self getSelectedProgressViewControllers]];
+      }
+      if (i < 0) { // if nothing was selected select the first item
+        instanceToSelect = ([mProgressViewControllers count] - 1);
+      }
+      else if (i == ([mProgressViewControllers count] - 1)) { // if selection was already at the bottom leave it there
+        instanceToSelect = ([mProgressViewControllers count] - 1);
+      }
+      else { // select the next lowest instance
+        instanceToSelect = i + 1;
+      }
+      if (instanceToSelect != -1) {
+        [[((ProgressViewController*)[mProgressViewControllers objectAtIndex:instanceToSelect]) view] setSelected:YES];
+        [self makeDLInstanceVisibleIfItsNotAlready:((ProgressViewController*)[mProgressViewControllers objectAtIndex:instanceToSelect])];
+        if (!(mods & NSShiftKeyMask)) {
+          mSelectionPivotIndex = instanceToSelect;
+        }
+      }
+    }
+    else if (key == (int)'\177') { // delete key - remove all selected items unless an active one is selected
+      NSMutableArray *selected = [self getSelectedProgressViewControllers];
+      BOOL activeFound = NO;
+      for (unsigned i = 0; i < [selected count]; i++) {
+        if ([[selected objectAtIndex:i] isActive]) {
+          activeFound = YES;
+          break;
+        }
+      }
+      if (activeFound) {
+        NSBeep();
+      }
+      else {
+        [self remove:self];
+      }
+    }
+    else if (key == NSPageUpFunctionKey) {
+      if ([mProgressViewControllers count] > 0) {
+        // make the first instance completely visible
+        [self makeDLInstanceVisibleIfItsNotAlready:((ProgressViewController*)[mProgressViewControllers objectAtIndex:0])];
+      }
+    }
+    else if (key == NSPageDownFunctionKey) {
+      if ([mProgressViewControllers count] > 0) {
+        // make the last instance completely visible
+        [self makeDLInstanceVisibleIfItsNotAlready:((ProgressViewController*)[mProgressViewControllers lastObject])];
+      }
+    }
+    else { // ignore any other keys
+      NSBeep();
+    }
+  }
+  else {
+    NSBeep();
+  }
+}
+
+-(void)deselectAllDLInstances:(NSArray*)instances
+{
+  unsigned count = [instances count];
+  for (unsigned i = 0; i < count; i++) {
+    [[((ProgressViewController*)[instances objectAtIndex:i]) view] setSelected:NO];
+  }
+}
+
+// return a mutable array with instance in order top-down
+-(NSMutableArray*)getSelectedProgressViewControllers
+{
+  NSMutableArray *selectedArray = [[NSMutableArray alloc] init];
+  unsigned selectedCount = [mProgressViewControllers count];
+  for (unsigned i = 0; i < selectedCount; i++) {
+    if ([[mProgressViewControllers objectAtIndex:i] isSelected]) {
+	    // insert at zero so they're in order to-down
+	    [selectedArray addObject:[mProgressViewControllers objectAtIndex:i]];
+    }
+  }
+  [selectedArray autorelease];
+  return selectedArray;
+}
+
+-(void)makeDLInstanceVisibleIfItsNotAlready:(ProgressViewController*)controller
+{
+  NSRect instanceFrame = [[controller view] frame];
+  NSRect visibleRect = [[mScrollView contentView] documentVisibleRect];
+  // for some reason there is a 1 pixel discrepancy we need to get rid of here
+  instanceFrame.size.width -= 1;
+  // NSLog([NSString stringWithFormat:@"Instance Frame: %@", NSStringFromRect(instanceFrame)]);
+  // NSLog([NSString stringWithFormat:@"Visible Rect: %@", NSStringFromRect(visibleRect)]);
+  if (!NSContainsRect(visibleRect, instanceFrame)) { // if instance isn't completely visible
+    if (instanceFrame.origin.y < visibleRect.origin.y) { // if the dl instance is at least partly above visible rect
+      // just go to the instance's frame origin point
+      [[mScrollView contentView] scrollToPoint:instanceFrame.origin];
+    }
+    else { // if the dl instance is at least partly below visible rect
+      // take  instance's frame origin y, subtract content view height, 
+      // add instance view height, no parenthesizing
+      NSPoint adjustedPoint = NSMakePoint(0,(instanceFrame.origin.y - [[mScrollView contentView] frame].size.height) + instanceFrame.size.height);
+      [[mScrollView contentView] scrollToPoint:adjustedPoint];
+    }
+    [mScrollView reflectScrolledClipView:[mScrollView contentView]];
+  }
+}
+
+-(void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay
 {
   if (![[self window] isVisible]) {
-    [self showWindow:nil];		// make sure the window is visible
+    [self showWindow:nil]; // make sure the window is visible
   }
-
+  
   [self rebuildViews];
   [self setupDownloadTimer];
+  
+  // make sure new download is visible
+  [self makeDLInstanceVisibleIfItsNotAlready:progressDisplay];
 }
 
-- (void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay
+-(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay
 {
-  [self rebuildViews];		// to swap in the completed view
+  [self rebuildViews]; // to swap in the completed view
 }
 
-- (void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay
+-(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay
 {
   [mProgressViewControllers removeObject:progressDisplay];
   
-  if ([mProgressViewControllers count] == 0)
-  {
+  if ([mProgressViewControllers count] == 0) {
     // Stop doing stuff if there aren't any downloads going on
     [self killDownloadTimer];
   }
-  
   [self rebuildViews];
 }
 
-- (void)stackViewResized:(NSNotification *)notification
-{
-  NSDictionary* userInfo = [notification userInfo];
-  NSSize oldStackSize = [[userInfo objectForKey:@"oldsize"] sizeValue];
-  
-  // this code is used to auto-resize the downloads window when
-  // its contents change size, if the window is in its standard, "zoomed"
-  // state. This allows the user to choose between auto-resizing behavior,
-  // by leaving the window alone, or their own size, by resizing it.
-  
-  // get the size the window would have been if it had been in the
-  // standard state, given the old size of the contents
-  NSSize oldZoomedWindowSize = [self windowSizeForStackSize:oldStackSize];
-  NSSize curWindowSize = [[self window] frame].size;
-    
-  // only resize if the window matches the stack size
-  if (CHCloseSizes(oldZoomedWindowSize, curWindowSize, 4.0))
-    [self resizeWindowToFit];
-}
-
-// given the dimensions of our stack view, return the dimensions of the window,
-// assuming the window is zoomed to show as much of the contents as possible.
-- (NSSize)windowSizeForStackSize:(NSSize)stackSize
-{
-  NSSize actualScrollFrame = [mScrollView frame].size;
-  NSSize scrollFrameSize   = [NSScrollView frameSizeForContentSize:stackSize
-               hasHorizontalScroller:NO hasVerticalScroller:YES borderType:NSNoBorder];
-  
-  // frameSizeForContentSize seems to return a width 1 pixel too narrow
-  scrollFrameSize.width += 1;
-  
-  NSRect contentRect       = [[[self window] contentView] frame];
-  contentRect.size.width  += scrollFrameSize.width  - actualScrollFrame.width;
-  contentRect.size.height += scrollFrameSize.height - actualScrollFrame.height;
-  contentRect.origin = [[self window] convertBaseToScreen:contentRect.origin];	// convert to screen
-
-  NSRect advisoryWindowFrame = [NSWindow frameRectForContentRect:contentRect styleMask:[[self window] styleMask]];
-  NSRect constrainedRect     = [[self window] constrainFrameRect:advisoryWindowFrame toScreen:[[self window] screen]];
-  return constrainedRect.size;
-}
-
-- (void)resizeWindowToFit
-{
-  if ([mProgressViewControllers count] > 0)
-  {
-    NSSize scrollFrameSize = [NSScrollView frameSizeForContentSize:[mStackView bounds].size
-          hasHorizontalScroller:NO hasVerticalScroller:YES borderType:NSNoBorder];
-    NSSize curScrollFrameSize = [mScrollView frame].size;
-    
-    NSRect windowFrame = [[self window] frame];
-
-    float frameDelta = (scrollFrameSize.height - curScrollFrameSize.height);
-    windowFrame.size.height += frameDelta;
-    windowFrame.origin.y    -= frameDelta;		// maintain top
-
-    [[self window] setFrame:windowFrame display:YES];
-  }
-}
-
-- (void)rebuildViews
+-(void)rebuildViews
 {
   [mStackView reloadSubviews];
-  
-  if ([mProgressViewControllers count] == 0)
-  {
-    [[[self window] contentView] addSubview:mNoDownloadsText];
-  }
-  else
-  {
-    [mNoDownloadsText removeFromSuperview];
-  }
-  
 }
 
-- (int)numDownloadsInProgress
+-(int)numDownloadsInProgress
 {
-  unsigned int numViews = [mProgressViewControllers count];
-  int          numActive = 0;
+  unsigned numViews = [mProgressViewControllers count];
+  int numActive = 0;
   
-  for (unsigned int i = 0; i < numViews; i++)
-  {
-    if ([[mProgressViewControllers objectAtIndex:i] isActive])
+  for (unsigned int i = 0; i < numViews; i++) {
+    if ([[mProgressViewControllers objectAtIndex:i] isActive]) {
       ++numActive;
+    }
   }
   return numActive;
 }
@@ -232,15 +441,14 @@ static id gSharedProgressController = nil;
   [[self window] saveFrameUsingName:ProgressWindowFrameSaveName];
 }
 
-- (void)windowWillClose:(NSNotification *)notification
+-(void)windowWillClose:(NSNotification *)notification
 {
   [self autosaveWindowFrame];
 }
 
-- (void)killDownloadTimer
+-(void)killDownloadTimer
 {
-  if (mDownloadTimer)
-  {
+  if (mDownloadTimer) {
     [mDownloadTimer invalidate];
     [mDownloadTimer release];
     mDownloadTimer = nil;
@@ -250,25 +458,22 @@ static id gSharedProgressController = nil;
 - (void)setupDownloadTimer
 {
   [self killDownloadTimer];
-  
   mDownloadTimer = [[NSTimer scheduledTimerWithTimeInterval:1.0
-                                                  target:self
-                                                  selector:@selector(setDownloadProgress:)
-                                                  userInfo:nil
-                                                  repeats:YES] retain];
+                                                     target:self
+                                                   selector:@selector(setDownloadProgress:)
+                                                   userInfo:nil
+                                                    repeats:YES] retain];
 }
 
 // Called by our timer to refresh all the download stats
 - (void)setDownloadProgress:(NSTimer *)aTimer
 {
   [mProgressViewControllers makeObjectsPerformSelector:@selector(refreshDownloadInfo)];
-  // if the window is minimized, we want to update the dock image here. But how?
 }
 
-- (NSApplicationTerminateReply)allowTerminate
+-(NSApplicationTerminateReply)allowTerminate
 {
-  if ([self numDownloadsInProgress] > 0)
-  {
+  if ([self numDownloadsInProgress] > 0) {
     // make sure the window is visible
     [self showWindow:self];
     
@@ -276,7 +481,7 @@ static id gSharedProgressController = nil;
     NSString *message   = NSLocalizedString(@"QuitWithDownloadsExpl", @"");
     NSString *okButton  = NSLocalizedString(@"QuitWithdownloadsButtonDefault",@"Cancel");
     NSString *altButton = NSLocalizedString(@"QuitWithdownloadsButtonAlt",@"Quit");
-
+    
     // while the panel is up, download dialogs won't update (no timers firing) but
     // downloads continue (PLEvents being processed)
     id panel = NSGetAlertPanel(alert, message, okButton, altButton, nil, message);
@@ -293,30 +498,166 @@ static id gSharedProgressController = nil;
     
     return (sheetResult == NSAlertDefaultReturn) ? NSTerminateCancel : NSTerminateNow;
   }
-
+  
   return NSTerminateNow;
 }
 
-- (void)sheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
+-(void)sheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
   [NSApp stopModalWithCode:returnCode];
+}
+
+-(BOOL)shouldAllowCancelAction
+{
+  NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
+  unsigned selectedCount = [selectedArray count];
+  // if no selections are inactive or canceled then allow cancel
+  for (unsigned i = 0; i < selectedCount; i++) {
+    if ((![[selectedArray objectAtIndex:i] isActive]) || [[selectedArray objectAtIndex:i] isCanceled]) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+-(BOOL)shouldAllowRemoveAction
+{
+  NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
+  unsigned selectedCount = [selectedArray count];
+  // if no selections are active then allow remove
+  for (unsigned i = 0; i < selectedCount; i++) {
+    if ([[selectedArray objectAtIndex:i] isActive]) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+-(BOOL)shouldAllowOpenAction
+{
+  NSMutableArray* selectedArray = [self getSelectedProgressViewControllers];
+  unsigned selectedCount = [selectedArray count];
+  // if no selections are are active or canceled then allow open
+  for (unsigned i = 0; i < selectedCount; i++) {
+    if ([[selectedArray objectAtIndex:i] isActive] || [[selectedArray objectAtIndex:i] isCanceled]) {
+      return FALSE;
+    }
+  }
+  return TRUE;
+}
+
+-(BOOL)validateMenuItem:(id <NSMenuItem>)menuItem {
+  SEL action = [menuItem action];
+  if (action == @selector(cancel:)) {
+    return [self shouldAllowCancelAction];
+  }
+  else if (action == @selector(remove:)) {
+    return [self shouldAllowRemoveAction];
+  }
+  else if (action == @selector(open:)) {
+    return [self shouldAllowOpenAction];
+  }
+  return YES;
+}
+
+-(BOOL)validateToolbarItem:(NSToolbarItem *)theItem
+{
+  SEL action = [theItem action];
+  
+  // validate items not dependent on the current selection
+  if (action == @selector(cleanUpDownloads:)) {
+    unsigned pcControllersCount = [mProgressViewControllers count];
+    for (unsigned i = 0; i < pcControllersCount; i++) {
+      if ((![[mProgressViewControllers objectAtIndex:i] isActive]) ||
+          [[mProgressViewControllers objectAtIndex:i] isCanceled]) {
+        return YES;
+      }
+    }
+    return NO;
+  }
+  
+  // validate items that depend on current selection
+  if ([[self getSelectedProgressViewControllers] count] == 0) {
+    return NO;
+  }
+  else if (action == @selector(remove:)) {
+	  return [self shouldAllowRemoveAction];
+  }
+  else if (action == @selector(open:)) {
+    return [self shouldAllowOpenAction];
+  }
+  else if (action == @selector(cancel:)) {
+    return [self shouldAllowCancelAction];
+  }
+  return TRUE;
+}
+
+-(NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
+{
+  NSToolbarItem *theItem = [[NSToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+  [theItem setTarget:self];
+  [theItem setEnabled:NO];
+  if ([itemIdentifier isEqualToString:@"removebutton"]) {
+    [theItem setToolTip:NSLocalizedString(@"dlRemoveButtonTooltip", @"Remove selected download(s)")];
+    [theItem setLabel:NSLocalizedString(@"dlRemoveButtonLabel", @"Remove")];
+    [theItem setAction:@selector(remove:)];
+    [theItem setImage:[NSImage imageNamed:@"dl_remove.tif"]];
+  }
+  else if ([itemIdentifier isEqualToString:@"cancelbutton"]) {
+    [theItem setToolTip:NSLocalizedString(@"dlCancelButtonTooltip", @"Cancel selected download(s)")];
+    [theItem setLabel:NSLocalizedString(@"dlCancelButtonLabel", @"Cancel")];
+    [theItem setAction:@selector(cancel:)];
+    [theItem setImage:[NSImage imageNamed:@"dl_cancel.tif"]];
+  }
+  else if ([itemIdentifier isEqualToString:@"revealbutton"]) {
+    [theItem setToolTip:NSLocalizedString(@"dlRevealButtonTooltip", @"Show selected download(s) in Finder")];
+    [theItem setLabel:NSLocalizedString(@"dlRevealButtonLabel", @"Show")];
+    [theItem setAction:@selector(reveal:)];
+    [theItem setImage:[NSImage imageNamed:@"dl_reveal.tif"]];
+  }
+  else if ([itemIdentifier isEqualToString:@"openbutton"]) {
+    [theItem setToolTip:NSLocalizedString(@"dlOpenButtonTooltip", @"Open saved file(s)")];
+    [theItem setLabel:NSLocalizedString(@"dlOpenButtonLabel", @"Open")];
+    [theItem setAction:@selector(open:)];
+    [theItem setImage:[NSImage imageNamed:@"dl_open.tif"]];
+  }
+  else if ([itemIdentifier isEqualToString:@"cleanupbutton"]) {
+    [theItem setToolTip:NSLocalizedString(@"dlCleanUpButtonTooltip", @"Remove all inactive download(s)")];
+    [theItem setLabel:NSLocalizedString(@"dlCleanUpButtonLabel", @"Clean Up")];
+    [theItem setAction:@selector(cleanUpDownloads:)];
+    [theItem setImage:[NSImage imageNamed:@"dl_clearall.tif"]];
+  }
+  else {
+    return nil;
+  }
+  return theItem;
+}
+
+-(NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar
+{
+  return [NSArray arrayWithObjects:@"removebutton", @"cleanupbutton", @"cancelbutton", @"openbutton", @"revealbutton", NSToolbarFlexibleSpaceItemIdentifier, nil];
+}
+
+-(NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar
+{
+  return [NSArray arrayWithObjects:@"cleanupbutton", @"removebutton", @"cancelbutton", @"openbutton", NSToolbarFlexibleSpaceItemIdentifier, @"revealbutton", nil];
 }
 
 #pragma mark -
 
 // implement to zoom to a size that just fits the contents
-- (NSRect)windowWillUseStandardFrame:(NSWindow *)sender defaultFrame:(NSRect)defaultFrame
+-(NSRect)windowWillUseStandardFrame:(NSWindow *)sender defaultFrame:(NSRect)defaultFrame
 {
   NSSize scrollFrameSize = [NSScrollView frameSizeForContentSize:[mStackView bounds].size
-        hasHorizontalScroller:NO hasVerticalScroller:YES borderType:NSNoBorder];
+                                           hasHorizontalScroller:NO hasVerticalScroller:YES borderType:NSNoBorder];
   
   NSSize curScrollFrameSize = [mScrollView frame].size;
   float frameDelta = (scrollFrameSize.height - curScrollFrameSize.height);
-
+  
   NSRect windowFrame = [[self window] frame];
   windowFrame.size.height += frameDelta;
   windowFrame.origin.y    -= frameDelta;		// maintain top
-
+  
   windowFrame.size.width  = mDefaultWindowSize.width;
   // cocoa will ensure that the window fits onscreen for us
 	return windowFrame;
@@ -325,31 +666,30 @@ static id gSharedProgressController = nil;
 #pragma mark -
 
 /*
-    CHStackView datasource methods
-*/
+ CHStackView datasource methods
+ */
 
-- (int)subviewsForStackView:(CHStackView *)stackView
+-(int)subviewsForStackView:(CHStackView *)stackView
 {
   return [mProgressViewControllers count];
 }
 
-- (NSView *)viewForStackView:(CHStackView *)aResizingView atIndex:(int)index
+-(NSView *)viewForStackView:(CHStackView *)aResizingView atIndex:(int)index
 {
-  return [[mProgressViewControllers objectAtIndex:index] view];
+  return [((ProgressViewController*)[mProgressViewControllers objectAtIndex:index]) view];
 }
 
 #pragma mark -
 
 /*
-    Just create a progress view, but don't display it (otherwise the URL fields etc. 
-    are just blank)
-*/
-- (id <CHDownloadProgressDisplay>)createProgressDisplay
+ Just create a progress view, but don't display it (otherwise the URL fields etc. 
+                                                    are just blank)
+ */
+-(id <CHDownloadProgressDisplay>)createProgressDisplay
 {
-  ProgressViewController *newController = [[ProgressViewController alloc] init];
+  ProgressViewController *newController = [[[ProgressViewController alloc] init] autorelease];
   [newController setProgressWindowController:self];
-  //[mProgressViewControllers addObject:newController];
-  [mProgressViewControllers insertObject:newController atIndex:0];		// new downoads at the top
+  [mProgressViewControllers addObject:newController];
   
   return newController;
 }
