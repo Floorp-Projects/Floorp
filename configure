@@ -975,7 +975,7 @@ fi
 MOZ_BUILD_ROOT=`pwd`
 
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
+*-cygwin*|*-mingw*|*-msvc*|*-mks*)
     MAKE_VERSION=3.79
     if test -z "$CC"; then CC=cl; fi
     if test -z "$CXX"; then CXX=cl; fi
@@ -2506,7 +2506,7 @@ if test "$GNU_CC"; then
 fi
 
 case "$target" in
-*-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
+*-cygwin*|*-mingw*|*-msvc*|*-mks*)
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
@@ -3044,7 +3044,7 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-for ac_prog in gawk mawk nawk awk
+for ac_prog in mawk gawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -4635,7 +4635,7 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
-*cygwin*|*mingw*|*mksnt*|*msvc*)
+*cygwin*|*mingw*|*mks*|*msvc*)
     if test -n "$_WIN32_MSVC"; then
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
     fi
@@ -4899,7 +4899,7 @@ EOF
     esac
     ;;
 
-*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
     CYGWIN_WRAPPER="sh ${srcdir}/build/cygwin-wrapper"
     if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
         _pwd=`pwd`
@@ -5545,7 +5545,7 @@ case "$target" in
 *-openvms*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-msvc*|*-mksnt*|*-mingw*|*-cygwin*)
+*-msvc*|*-mks*|*-mingw*|*-cygwin*)
     if test -z "$GNU_CC"; then
         NO_LD_ARCHIVE_FLAGS=
     fi
@@ -5603,7 +5603,7 @@ fi
           echo "$ac_t""no" 1>&6
         fi
         ;;
-    *-cygwin*|*-mingw*|*-mksnt|*-msvc)
+    *-cygwin*|*-mingw*|*-mks*|*-msvc)
         if test -n "$GNU_CC"; then
            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         fi
@@ -8665,7 +8665,7 @@ EOF
 fi
 
 case $target_os in
-    os2*|msvc*|mksnt*|cygwin*|mingw*)
+    os2*|msvc*|mks*|cygwin*|mingw*)
         ;;
     *)
     
@@ -11567,7 +11567,7 @@ if test "${enable_crypto+set}" = set; then
 fi
 
 case $target in
-*-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
+*-cygwin*|*-mingw*|*-msvc*|*-mks*)
     if test -n "$MOZ_PSM" -a ! -e "$AS_BIN"; then
         { echo "configure: error: Building crypto support requires a valid version of the standalone assembler, ml.exe." 1>&2; exit 1; }
     fi
@@ -11849,7 +11849,7 @@ fi
 
 MOZ_IMG_DECODERS_DEFAULT="ppm png gif jpeg bmp mng xbm"
 case "$target_os" in
-cygwin*|mingw*|msvc*|mksnt*|os2*)
+cygwin*|mingw*|msvc*|mks*|os2*)
     MOZ_IMG_DECODERS_DEFAULT="$MOZ_IMG_DECODERS_DEFAULT icon"
     ;;
 esac
@@ -11942,7 +11942,7 @@ EOF
 fi
 
 case "$target_os" in
-    aix*|solaris*|linux*|msvc*|mksnt*|cygwin*|mingw*|os2*)
+    aix*|solaris*|linux*|msvc*|mks*|cygwin*|mingw*|os2*)
         MOZ_INSTALLER=1
         ;;
 esac
@@ -11968,7 +11968,7 @@ fi
 MOZ_NO_ACTIVEX_SUPPORT=1
 
 case "$target_os" in
-    msvc*|mksnt*|cygwin*|mingw*)
+    msvc*|mks*|cygwin*|mingw*)
         MOZ_NO_ACTIVEX_SUPPORT=
         ;;
 esac
@@ -12140,7 +12140,7 @@ MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
     beos*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
         ;;
-    msvc*|mksnt*|cygwin*|mingw*|os2*)
+    msvc*|mks*|cygwin*|mingw*|os2*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -13440,7 +13440,7 @@ if test "$BUILD_MODULES" != "all" &&
 fi
 
 case "$target_os" in
-msvc*|mksnt*|cygwin*|mingw*)
+msvc*|mks*|cygwin*|mingw*)
     SKIP_IDL_CHECK="yes"
     ;;
 *)
@@ -14465,7 +14465,7 @@ if test "$MOZ_SVG"; then
   if test "$MOZ_INTERNAL_LIBART_LGPL"; then
             MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
     case "$target_os" in
-    msvc*|mksnt*|cygwin*|mingw*)
+    msvc*|mks*|cygwin*|mingw*)
         MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(LIB_SUFFIX)' 
         ;;
     beos*)
@@ -14918,7 +14918,7 @@ done
 
 my_srcdir=$srcdir
 case "$target_os" in
-msvc*|mksnt*|cygwin*|mingw*)
+msvc*|mks*|cygwin*|mingw*)
     my_srcdir=`cygpath -w ${srcdir} | sed  's|\\\\|/|g'`
     my_perl=$_WIN32_PERL
     ;;
