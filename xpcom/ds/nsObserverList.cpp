@@ -20,7 +20,7 @@
  * Contributor(s): 
  */
 
-#define NS_WEAK_OBSERVERS
+// #define NS_WEAK_OBSERVERS
 
 #define NS_IMPL_IDS
 #include "pratom.h"
