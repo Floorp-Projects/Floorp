@@ -97,8 +97,10 @@ sub new {
             'htmljs' => \&html_js_filter, # for use in strings in JS in HTML <script> blocks
             'js' => \&js_filter, # for use in strings in JS
             'css' => \&css_filter, # for use in strings in CSS
+            'acronymise' => \&acronymise_filter, # convert strings into acryonyms (e.g. "Internet Explorer" to "IE")
+            'substr' => [\&substr_filter_factory, 1], # substring function
             'uri' => \&uri_light_filter, # ensuring a theoretically valid URI
-            'uri_parameter' => \&uri_heavy_filter, # for use in embedding strings into a URI
+            'uriparameter' => \&uri_heavy_filter, # for use in embedding strings into a URI
         }
     });
     if (defined($self)) {
@@ -268,6 +270,36 @@ sub css_filter {
     my $text = shift;
     $text =~ s/([\\'"])/\\$1/go; # escape backslashes and quotes
     return $text;
+}
+
+sub acronymise_filter {
+    my $text = shift;
+    if ($text =~ m/\w\W+\w/os) {
+        # more than one word
+        # remove any non-word characters and truncate each word
+        # to one character
+        $text =~ s/\W*(\w)\w+\W*/$1/gos;
+    } else {
+        # just one word, remove any non-word characters
+        $text =~ s/\W//gos;
+    }
+    return $text;
+}
+
+#------------------------------------------------------------------------
+# substr_filter_factory($i, $l)                 [% FILTER substr(i, l) %]
+#
+# Create a filter to return the substring of text starting at index i
+# and having length l.
+#------------------------------------------------------------------------
+sub substr_filter_factory {
+    my ($context, $index, $length) = @_;
+    $index = 0 unless defined $index;
+    $length = 3 unless defined $length;
+    return sub {
+        my $text = shift;
+        return substr($text, $index, $length);
+    }
 }
 
 # This was based on the equivalent function in Template::Filters,
