@@ -81,7 +81,7 @@ nsMsgIncomingServer::~nsMsgIncomingServer()
         nsCOMPtr<nsIMsgFilterService> filterService =
             do_GetService(kMsgFilterServiceCID, &rv);
         if (NS_SUCCEEDED(rv))
-            rv = filterService->CloseFilterList(mFilterList);
+            rv = filterService->SaveFilterList(mFilterList, &mFilterFile);
     }
     if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
                                                   m_prefs,
@@ -910,18 +910,16 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
       rv = msgFolder->GetPath(getter_AddRefs(thisFolder));
       NS_ENSURE_SUCCESS(rv, rv);
       
-      nsFileSpec filterFile;
-      
-      rv = thisFolder->GetFileSpec(&filterFile);
+      rv = thisFolder->GetFileSpec(&mFilterFile);
       NS_ENSURE_SUCCESS(rv, rv);
       
-      filterFile += "rules.dat";
+      mFilterFile += "rules.dat";
       
       nsCOMPtr<nsIMsgFilterService> filterService =
           do_GetService(kMsgFilterServiceCID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       
-      rv = filterService->OpenFilterList(&filterFile, msgFolder, getter_AddRefs(mFilterList));
+      rv = filterService->OpenFilterList(&mFilterFile, msgFolder, getter_AddRefs(mFilterList));
       NS_ENSURE_SUCCESS(rv, rv);
   }
   
