@@ -21,27 +21,12 @@
  */
 
 #include "nsGIFDecoder.h"
-
-/*--- needed for autoregistry ---*/
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsIGenericFactory.h"
-
-PR_BEGIN_EXTERN_C
-extern int MK_OUT_OF_MEMORY;
-PR_END_EXTERN_C
-
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kGIFDecoderCID, NS_GIFDECODER_CID);
-static NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
-
 
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
 
-NS_IMPL_ISUPPORTS(GIFDecoder, kIImgDecoderIID)
+NS_IMPL_ISUPPORTS(GIFDecoder, NS_GET_IID(nsIImgDecoder));
 
 GIFDecoder::GIFDecoder(il_container* aContainer)
 {

@@ -21,26 +21,9 @@
  */
 
 
-#include "nsIImgDecoder.h" // include if_struct.h Needs to be first
-#include "jpeg.h"
-#include "prmem.h"
-#include "merrors.h"
-
-
-#include "dllcompat.h"
-#include "nsJPGDecoder.h"
-#include "nscore.h"
-
-/*--- needed for autoregistry ---*/
-
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-
-PR_BEGIN_EXTERN_C
-extern int MK_OUT_OF_MEMORY;
-PR_END_EXTERN_C
-
+#include "nsJPGDecoder.h"
+#include "jpeg.h"
 
 /*-----------class----------------*/
 /*-------------------------------------------------*/
@@ -56,31 +39,7 @@ JPGDecoder::~JPGDecoder(void)
 {
 };
 
-
-NS_IMPL_ADDREF(JPGDecoder)
-NS_IMPL_RELEASE(JPGDecoder)
-
-static NS_DEFINE_IID(kJPGDecoderIID, NS_JPGDECODER_IID);
-
-NS_IMETHODIMP 
-JPGDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
-{ 
-  if (NULL == aInstPtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
-
-  if (aIID.Equals(kJPGDecoderIID) ||     
-      aIID.Equals(kIImgDecoderIID) ||
-      aIID.Equals(kISupportsIID)) {
-	  *aInstPtr = (void*) this;
-    NS_INIT_REFCNT();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS(JPGDecoder, NS_GET_IID(nsIImgDecoder))
 
 /*------------------------------------------------------*/
 /* api functions
