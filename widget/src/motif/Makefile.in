@@ -26,13 +26,6 @@ LIBRARY_NAME = widget_motif
 
 REQUIRES=util img xpcom raptor netlib
 
-DEFINES += -D_IMPL_NS_WIDGET 
-
-
-DEFINES += \
-		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/.
-
 CPPSRCS = \
 	$(topsrcdir)/widget/src/build/nsWidgetSupport.cpp \
 	nsAppShell.cpp \
@@ -63,26 +56,35 @@ DIRS =\
 	app_context \
 	$(NULL)
 
-include $(topsrcdir)/config/config.mk
-
-CXXFLAGS += $(TK_CFLAGS)
-DEFINES += $(TK_CFLAGS)
-
 SHARED_LIBRARY_LIBS =			    \
 	$(DIST)/lib/libraptorbasewidget_s.a \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS+=	       \
-	$(TOOLKIT_DSO_LDOPTS) \
 	$(MKSHLIB_FORCE_ALL)   \
 	$(SHARED_LIBRARY_LIBS) \
 	$(MKSHLIB_UNFORCE_ALL) \
 	$(NULL)
 
 ifdef TOOLKIT_EXORCISM
-EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb -L/usr/X11R6/lib -lXm -lXmu  -lXt -lXext -lX11
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_MOTIF_LDFLAGS)
+else
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef TOOLKIT_EXORCISM
+CXXFLAGS += $(MOZ_XLIB_CFLAGS)
+else
+CXXFLAGS += $(TK_CFLAGS)
+endif
+
+DEFINES		+= -D_IMPL_NS_WIDGET
+
+INCLUDES	+= \
+		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/. \
+		$(NULL)
 
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile

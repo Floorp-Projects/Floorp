@@ -22,17 +22,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
 LIBRARY_NAME = gfx_gtk
 
 MODULE=raptor 
 
 REQUIRES=util img xpcom raptor netlib ps
-
-DEFINES += -D_IMPL_NS_GFXNONXP
-CXXFLAGS += $(TK_CFLAGS)
-INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 
 CPPSRCS = \
 	nsDeviceContextGTK.cpp \
@@ -51,9 +45,24 @@ CSRCS = \
 	nsPrintdGTK.c
 
 ifdef TOOLKIT_EXORCISM
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
+else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef TOOLKIT_EXORCISM
+CXXFLAGS += $(MOZ_GTK_CFLAGS)
+CFLAGS += $(MOZ_GTK_CFLAGS)
+else
+CXXFLAGS += $(TK_CFLAGS)
+CFLAGS += $(TK_CFLAGS)
+endif
 
+DEFINES		+= -D_IMPL_NS_GFXNONXP
+
+INCLUDES	+= \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
+		$(NULL)

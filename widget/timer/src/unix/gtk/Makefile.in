@@ -26,18 +26,17 @@ include $(topsrcdir)/config/config.mk
 
 ifdef TOOLKIT_EXORCISM
 
-LIBRARY_NAME = timer_gtk
-IS_COMPONENT=1
-REQUIRES=xpcom
-CXXFLAGS += $(TK_CFLAGS)
-INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
+LIBRARY_NAME	= timer_gtk
+IS_COMPONENT	= 1
+REQUIRES		= xpcom
+INCLUDES		+= $(MOZ_GTK_CFLAGS) -I$(srcdir)/..
 
-CPPSRCS = \
-	nsTimerGtk.cpp \
-	nsTimerGtkFactory.cpp \
-	$(NULL)
+CPPSRCS			= \
+				nsTimerGtk.cpp \
+				nsTimerGtkFactory.cpp \
+				$(NULL)
 
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
 
 else
 
