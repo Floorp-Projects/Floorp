@@ -2675,6 +2675,7 @@ var attachmentBucketObserver = {
     }
 };
 
+
 function DisplaySaveFolderDlg(folderURI)
 {
   try{
@@ -2869,4 +2870,38 @@ function loadThrobberUrl(urlPref)
         messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
         messenger.loadURL(window, url);  
     } catch (ex) {}
+}
+
+function toggleAddressPicker()
+{
+  var sidebarBox = document.getElementById("sidebar-box");
+  var sidebarSplitter = document.getElementById("sidebar-splitter");
+  var menuItem = document.getElementById("menu_AddressSidebar");
+  if (sidebarBox.hidden) 
+  {
+    sidebarBox.hidden = false;
+    sidebarSplitter.hidden = false;
+
+    var sidebar = document.getElementById("sidebar");
+    var sidebarUrl = sidebar.getAttribute("src");
+    // if we have yet to initialize the src url on the sidebar than go ahead and do so now...
+    // we do this lazily here, so we don't spend time when bringing up the compose window loading the address book
+    // data sources. Only when the user opens the address picker do we set the src url for the sidebar...
+    if (sidebarUrl == "")
+      sidebar.setAttribute("src", "chrome://messenger/content/addressbook/abSelectAddresses-panel.xul");
+    menuItem.setAttribute("checked","true");
+  }
+  else
+  {
+    sidebarBox.hidden = true;
+    sidebarSplitter.hidden = true;
+    menuItem.setAttribute("checked","false");
+  }
+
+}
+
+// public method called by the address picker sidebar
+function AddRecipient(recipientType, address)
+{
+  awAddRecipient(recipientType, address);
 }

@@ -727,3 +727,12 @@ treechildren:-moz-tree-image(remote-err) {
 #HighlightColorButton[disabled="true"]:hover:active {
   -moz-image-region: rect(260px 64px 272px 48px);
 }
+
+/* ::::: address book sidebar ::::: */
+.ab-closebutton {
+   list-style-image: url("chrome://global/skin/icons/close-button.gif");
+}
+
+#sidebar {
+  background-color: Window;
+}

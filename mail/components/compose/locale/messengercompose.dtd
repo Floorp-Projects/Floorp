@@ -95,6 +95,9 @@
 <!ENTITY customizeToolbar.label "Customize...">
 <!ENTITY customizeToolbar.accesskey "C">
 
+<!ENTITY addressSidebar.label "Address Sidebar"> 
+<!ENTITY addressSidebar.accesskey "A"> 
+
 <!-- Format Menu -->
 <!ENTITY formatMenu.label "Format">
 <!ENTITY formatMenu.accesskey "o">

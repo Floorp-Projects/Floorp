@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+
+#  -*- Mode: xml; indent-tabs-mode: nil; -*-
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#  
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+# the License for the specific language governing rights and
+# limitations under the License.
+# 
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+# 
+#  Original Author:
+#    Blake Ross <blakeross@telocity.com>
+#  Contributor(s): 
+#    Seth Spitzer <sspitzer@netscape.com>
+#
+
+
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/abSelectAddresses-panel.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressPanes.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/abResultsPane.css" type="text/css"?>
+
+<?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
+
+<!DOCTYPE page [
+<!ENTITY % abSelectAddressesDialogDTD SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd" >
+%abSelectAddressesDialogDTD;
+<!ENTITY % abResultsPaneOverlayDTD SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd" >
+%abResultsPaneOverlayDTD;
+]>
+
+<page id="abSelectAddresses-panel"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="AbPanelLoad();"
+      onunload="AbPanelUnload();"
+      xmlns:nc="http://home.netscape.com/NC-rdf#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      selectedaddresses="true">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abResultsPane.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abSelectAddressesDialog.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abSelectAddresses-panel.js"/>
+    
+  <vbox id="results_box" flex="1">     
+    <hbox id="panel-bar" class="toolbar" align="center">
+      <menulist id="addressbookList" 
+                oncommand="DirPaneSelectionChangeMenulist(); AbPanelOnChange(event)" flex="1"
+                persist="selectedAB">
+        <menupopup id="addressbookList-menupopup" 
+                   datasources="rdf:addressdirectory" 
+                   ref="moz-abdirectory://"
+                   sortActive="true"
+                   sortDirection="ascending"
+                   sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
+          <template>
+            <rule nc:IsMailList="false">
+              <menuitem uri="..."
+                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+            </rule>
+          </template>
+        </menupopup>
+      </menulist>
+    </hbox>
+
+    <hbox align="center">
+	    <label value="Search:"/> 
+      <spacer class="thin"/>
+	    <textbox id="searchInput" flex="1"  oninput="onAbSearchInput(false);"  onkeypress="onAbSearchKeyPress(event);"/>
+	  </hbox>
+
+    <tree id="abResultsTree" flex="1" class="plain" sortCol="GeneratedName" persist="sortCol" ondblclick="addSelectedAddresses('addr_to')">
+      <treecols>
+        <!-- these column ids must match up to the mork column names, see nsIAddrDatabase.idl -->
+        <treecol id="GeneratedName" class="sortDirectionIndicator" 
+                 persist="hidden ordinal width sortDirection" flex="1" label="&GeneratedName.label;" primary="true"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="PrimaryEmail" class="sortDirectionIndicator" 
+                 persist="hidden ordinal width sortDirection" hiddenbydefault="true"
+                 flex="1" label="&PrimaryEmail.label;"/>
+      </treecols>
+      <treechildren ondraggesture="nsDragAndDrop.startDrag(event, abResultsPaneObserver);"/>
+    </tree>
+    <spacer/>
+    <hbox>
+      <spring flex="1"/>
+      <button id="toButton" label="To:" oncommand="addSelectedAddresses('addr_to')"/> 
+      <spacer class="thin"/>
+      <button id="ccButton" label="Cc:" oncommand="addSelectedAddresses('addr_cc')"/> 
+      <spring flex="1"/>
+    </hbox>
+
+  </vbox>
+</page>

@@ -134,7 +134,7 @@
   <command id="cmd_showFormatToolbar" oncommand="goDoCommand('cmd_showFormatToolbar')"/>
   
   <!-- Options Menu -->
-  <command id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
+  <command id="cmd_selectAddress" oncommand="toggleAddressPicker();"/>
   <command id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
   <command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/>
   <command id="cmd_insert"/>
@@ -299,6 +299,7 @@
                     
             </menupopup>
           </menu>
+          <menuitem id="menu_AddressSidebar" type="checkbox" checked="false" label="&addressSidebar.label;" accesskey="&addressSidebar.accesskey;" command="cmd_selectAddress"/>
           <menuseparator/>
           <menu id="maileditCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:MaileditCharsetMenuRoot" oncommand="SetDocumentCharacterSet(event.target.getAttribute('id'));" onpopupshowing="CreateMenu('mailedit');InitCharsetMenuCheckMark();" onpopupshown="CreateMenu('more-menu');">
             <template>
@@ -330,7 +331,6 @@
   
       <menu id="optionsMenu" label="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
         <menupopup id="optionsMenuPopup" onpopupshowing="updateOptionItems();"> 
-          <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" command="cmd_selectAddress"/>
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
           <menuitem label="&quoteCmd.label;" accesskey="&quoteCmd.accesskey;" command="cmd_quoteMessage"/>
           <menuseparator/>
@@ -485,7 +485,21 @@
   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
   </toolbox>
 
-  <toolbox id="headers-box" class="toolbox-top" mode="icons"> 
+  <hbox flex="1">
+    <vbox id="sidebar-box" hidden="true">
+      <sidebarheader align="center">
+        <label id="sidebar-title" value="Addresses"/>
+        <spacer flex="1"/>
+        <toolbarbutton class="ab-closebutton" oncommand="toggleAddressPicker();"/>      
+      </sidebarheader>  
+      <browser id="sidebar" flex="1" src=""
+               style="min-width: 150px; width: 200px; max-width: 400px;"/>         
+    </vbox> 
+
+    <splitter id="sidebar-splitter" hidden="true"/>
+    
+    <vbox flex="1">  
+    <toolbox id="headers-box" class="toolbox-top" mode="icons"> 
     <toolbar id="MsgHeadersToolbar" persist="collapsed" flex="1"
              tborient="vertical" tbalign="stretch"
              customizable="true">
@@ -557,8 +571,8 @@
                    ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
         </vbox>
       </hbox>
-    </toolbar>
-  
+    </toolbar>   
+       
     <!-- These toolbar items get filled out from the editorOverlay -->
     <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbautostretch="never" customizable="true">
       <menulist id="ParagraphSelect"/>
@@ -627,6 +641,9 @@
     <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="1"
             onkeypress="editorKeyPress(event);" context="msgComposeContext"/>
   </vbox>
+  
+  </vbox>
+  </hbox>
 
   <statusbar id="status-bar" class="chromeclass-status">
     <statusbarpanel id="statusText" flex="1"/>
