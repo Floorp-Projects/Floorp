@@ -56,7 +56,7 @@
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIControllerContext.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 #include "nsIEditorObserver.h"
@@ -1470,7 +1470,7 @@ PRBool nsTextControlFrame::IsPasswordTextControl() const
 PRInt32
 nsTextControlFrame::GetCols()
 {
-  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent);
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
   NS_ASSERTION(content, "Content is not HTML content!");
 
   if (IsTextArea()) {
@@ -1501,7 +1501,8 @@ PRInt32
 nsTextControlFrame::GetRows()
 {
   if (IsTextArea()) {
-    nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent);
+    nsGenericHTMLElement *content =
+      nsGenericHTMLElement::FromContent(mContent);
     NS_ASSERTION(content, "Content is not HTML content!");
 
     nsHTMLValue attr;
@@ -2791,10 +2792,9 @@ nsTextControlFrame::AttributeChanged(nsIContent*     aChild,
   } 
   else if (mEditor && nsHTMLAtoms::readonly == aAttribute) 
   {
-    nsresult rv = DoesAttributeExist(nsHTMLAtoms::readonly);
     PRUint32 flags;
     mEditor->GetFlags(&flags);
-    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+    if (AttributeExists(nsHTMLAtoms::readonly))
     { // set readonly
       flags |= nsIPlaintextEditor::eEditorReadonlyMask;
       if (mSelCon && IsFocusedContent(GetPresContext(), mContent))
@@ -2817,10 +2817,9 @@ nsTextControlFrame::AttributeChanged(nsIContent*     aChild,
     if (!shell)
       return NS_ERROR_FAILURE;
 
-    rv = DoesAttributeExist(nsHTMLAtoms::disabled);
     PRUint32 flags;
     mEditor->GetFlags(&flags);
-    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+    if (AttributeExists(nsHTMLAtoms::disabled))
     { // set disabled
       flags |= nsIPlaintextEditor::eEditorDisabledMask;
       if (mSelCon)
@@ -2905,7 +2904,7 @@ nsTextControlFrame::GetMaxLength(PRInt32* aSize)
   *aSize = -1;
   nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
 
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
     nsHTMLValue value;
@@ -2913,20 +2912,6 @@ nsTextControlFrame::GetMaxLength(PRInt32* aSize)
     if (eHTMLUnit_Integer == value.GetUnit()) { 
       *aSize = value.GetIntValue();
     }
-  }
-  return rv;
-}
-
-nsresult
-nsTextControlFrame::DoesAttributeExist(nsIAtom *aAtt)
-{
-  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
-
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
-
-  if (content) {
-    nsHTMLValue value;
-    rv = content->GetHTMLAttribute(aAtt, value);
   }
   return rv;
 }
@@ -3216,12 +3201,11 @@ PRInt32
 nsTextControlFrame::GetWidthInCharacters() const
 {
   // see if there's a COL attribute, if so it wins
-  nsCOMPtr<nsIHTMLContent> content;
-  nsresult rv = mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), getter_AddRefs(content));
-  if (NS_SUCCEEDED(rv) && content)
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
+  if (content)
   {
     nsHTMLValue resultValue;
-    rv = content->GetHTMLAttribute(nsHTMLAtoms::cols, resultValue);
+    nsresult rv = content->GetHTMLAttribute(nsHTMLAtoms::cols, resultValue);
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     {
       if (resultValue.GetUnit() == eHTMLUnit_Integer) 

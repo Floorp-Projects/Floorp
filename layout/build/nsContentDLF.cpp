@@ -45,7 +45,6 @@
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
-#include "nsIHTMLContent.h"
 #include "nsIURL.h"
 #include "nsICSSStyleSheet.h"
 #include "nsNodeInfo.h"
@@ -342,20 +341,17 @@ nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup, nsIDocument **aDocum
     // generate an html html element
     nim->GetNodeInfo(nsHTMLAtoms::html, 0, kNameSpaceID_None,
                      getter_AddRefs(htmlNodeInfo));
-    nsCOMPtr<nsIHTMLContent> htmlElement =
-      NS_NewHTMLHtmlElement(htmlNodeInfo);
+    nsCOMPtr<nsIContent> htmlElement = NS_NewHTMLHtmlElement(htmlNodeInfo);
 
     // generate an html head element
     nim->GetNodeInfo(nsHTMLAtoms::head, 0, kNameSpaceID_None,
                      getter_AddRefs(htmlNodeInfo));
-    nsCOMPtr<nsIHTMLContent> headElement =
-      NS_NewHTMLHeadElement(htmlNodeInfo);
+    nsCOMPtr<nsIContent> headElement = NS_NewHTMLHeadElement(htmlNodeInfo);
 
     // generate an html body element
     nim->GetNodeInfo(nsHTMLAtoms::body, 0, kNameSpaceID_None,
                      getter_AddRefs(htmlNodeInfo));
-    nsCOMPtr<nsIHTMLContent> bodyElement =
-      NS_NewHTMLBodyElement(htmlNodeInfo);
+    nsCOMPtr<nsIContent> bodyElement = NS_NewHTMLBodyElement(htmlNodeInfo);
 
     // blat in the structure
     if (htmlElement && headElement && bodyElement) {

@@ -42,7 +42,7 @@
 #include "nsIURL.h"
 #include "nsISupportsArray.h"
 #include "nsCSSPseudoElements.h"
-#include "nsIHTMLContent.h"
+#include "nsIStyledContent.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsICSSStyleRule.h"

@@ -59,7 +59,6 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMCDATASection.h"
 #include "nsDOMDocumentType.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"

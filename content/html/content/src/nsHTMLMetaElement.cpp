@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLMetaElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"

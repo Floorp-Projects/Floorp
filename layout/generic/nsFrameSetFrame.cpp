@@ -38,7 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsFrameSetFrame.h"
 #include "nsContentUtils.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsPresContext.h"
@@ -671,7 +671,7 @@ PRInt32 nsHTMLFramesetFrame::GetBorderWidth(nsPresContext* aPresContext,
   }
   float p2t = aPresContext->ScaledPixelsToTwips();
   nsHTMLValue htmlVal;
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
     if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::border, htmlVal))) {
@@ -892,7 +892,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
 }
 
 static
-nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent)
+nsFrameborder GetFrameBorderHelper(nsGenericHTMLElement* aContent)
 {
   if (nsnull != aContent) {
     nsHTMLValue value;
@@ -919,7 +919,7 @@ nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent)
 nsFrameborder nsHTMLFramesetFrame::GetFrameBorder() 
 {
   nsFrameborder result = eFrameborder_Notset;
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
     result = GetFrameBorderHelper(content);
@@ -934,7 +934,7 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 {
   nsFrameborder result = eFrameborder_Notset;
 
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(aContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(aContent);
 
   if (content) {
     result = GetFrameBorderHelper(content);
@@ -947,7 +947,7 @@ nsFrameborder nsHTMLFramesetFrame::GetFrameBorder(nsIContent* aContent)
 
 nscolor nsHTMLFramesetFrame::GetBorderColor() 
 {
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
     nsHTMLValue value;
@@ -964,7 +964,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor()
 
 nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent) 
 {
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(aContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(aContent);
 
   if (content) {
     nsHTMLValue value;
@@ -1312,15 +1312,7 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
   PRBool result = PR_FALSE;
   nsIContent* content = aChildFrame->GetContent();
 
-  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(content));
-
-  if (htmlContent) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::noresize, value)) {
-      result = PR_TRUE;
-    }
-  }
-  return result;
+  return content && content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::noresize);
 }
 
 PRBool 

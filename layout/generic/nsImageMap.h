@@ -44,7 +44,6 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIFrame.h"
 #include "nsIImageMap.h"
-#include "nsIHTMLContent.h"
 
 class nsIDOMHTMLAreaElement;
 class nsIDOMHTMLMapElement;
@@ -129,7 +128,7 @@ protected:
   nsIPresShell* mPresShell; // WEAK - owns the frame that owns us
   nsIFrame* mImageFrame;  // the frame that owns us
   nsIDocument* mDocument; // WEAK - the imagemap will not outlive the document
-  nsCOMPtr<nsIHTMLContent> mMap;
+  nsCOMPtr<nsIContent> mMap;
   nsAutoVoidArray mAreas; // almost always has some entries
   PRBool mContainsBlockContents;
 };

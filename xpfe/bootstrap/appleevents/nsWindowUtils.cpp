@@ -52,7 +52,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIHTMLContent.h"
 #include "nsIServiceManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebShellWindow.h"

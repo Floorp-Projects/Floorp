@@ -162,6 +162,7 @@ include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../content/base/src \
+		-I$(srcdir)/../../content/html/content/src \
 		$(NULL)
 
 _FILES	= \

@@ -53,7 +53,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIHTMLContent.h"
 #include "nsIDOMNode.h" // for Find
 #include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"

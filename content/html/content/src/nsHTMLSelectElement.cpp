@@ -42,7 +42,6 @@
 #include "nsIDOMNSXBLFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsITextContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
@@ -249,7 +248,7 @@ public:
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -1059,7 +1058,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::option,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIHTMLContent> element = NS_NewHTMLOptionElement(nodeInfo);
+    nsCOMPtr<nsIContent> element = NS_NewHTMLOptionElement(nodeInfo);
     if (!element) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1471,47 +1470,13 @@ nsHTMLSelectElement::GetValue(nsAString& aValue)
 
     rv = Item(selectedIndex, getter_AddRefs(node));
 
-    if (NS_SUCCEEDED(rv) && node) {
-      nsCOMPtr<nsIHTMLContent> option = do_QueryInterface(node);
-
-      if (option) {
-        nsHTMLValue value;
-        // first check to see if value is there and has a value
-        rv = option->GetHTMLAttribute(nsHTMLAtoms::value, value);
-
-        if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-          if (eHTMLUnit_String == value.GetUnit()) {
-            value.GetStringValue(aValue);
-          } else {
-            aValue.SetLength(0);
-          }
-
-          return NS_OK;
-        }
-#if 0 // temporary for bug 4050
-        // first check to see if label is there and has a value
-        rv = option->GetHTMLAttribute(nsHTMLAtoms::label, value);
-
-        if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-          if (eHTMLUnit_String == value.GetUnit()) {
-            value.GetStringValue(aValue);
-          } else {
-            aValue.SetLength(0);
-          }
-
-          return NS_OK;
-        }
-#endif
-        nsCOMPtr<nsIDOMHTMLOptionElement> optElement(do_QueryInterface(node));
-        if (optElement) {
-          optElement->GetText(aValue);
-        }
-
-        return NS_OK;
-      }
+    nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
+    if (NS_SUCCEEDED(rv) && option) {
+      return option->GetValue(aValue);
     }
   }
 
+  aValue.Truncate(0);
   return rv;
 }
 
@@ -1739,12 +1704,10 @@ nsHTMLSelectElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
-NS_IMETHODIMP
-nsHTMLSelectElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsMapRuleToAttributesFunc
+nsHTMLSelectElement::GetAttributeMappingFunction() const
 {
-  aMapRuleFunc = &MapAttributesIntoRule;
-
-  return NS_OK;
+  return &MapAttributesIntoRule;
 }
 
 

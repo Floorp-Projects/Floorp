@@ -42,7 +42,6 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresState.h"
 #include "nsWidgetsCID.h"

@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLTableColElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
@@ -76,7 +75,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
 
@@ -265,14 +264,12 @@ nsHTMLTableColElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 
-NS_IMETHODIMP
-nsHTMLTableColElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsMapRuleToAttributesFunc
+nsHTMLTableColElement::GetAttributeMappingFunction() const
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::col)) {
-    aMapRuleFunc = &ColMapAttributesIntoRule;
-  } else {
-    aMapRuleFunc = &MapAttributesIntoRule;
+    return &ColMapAttributesIntoRule;
   }
 
-  return NS_OK;
+  return &MapAttributesIntoRule;
 }

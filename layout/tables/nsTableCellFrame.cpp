@@ -48,7 +48,7 @@
 #include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLAtoms.h"
@@ -633,7 +633,7 @@ nsTableCellFrame::HasVerticalAlignBaseline()
 PRInt32 nsTableCellFrame::GetRowSpan()
 {  
   PRInt32 rowSpan=1;
-  nsCOMPtr<nsIHTMLContent> hc(do_QueryInterface(mContent));
+  nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
     nsHTMLValue val;
@@ -648,7 +648,7 @@ PRInt32 nsTableCellFrame::GetRowSpan()
 PRInt32 nsTableCellFrame::GetColSpan()
 {  
   PRInt32 colSpan=1;
-  nsCOMPtr<nsIHTMLContent> hc(do_QueryInterface(mContent));
+  nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
     nsHTMLValue val;

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAttrAndChildArray.h"
-#include "nsIContent.h"
+#include "nsGenericHTMLElement.h"
 #include "prmem.h"
 #include "prbit.h"
 #include "nsString.h"
@@ -420,7 +420,7 @@ nsAttrAndChildArray::IndexOfAttr(nsIAtom* aLocalName, PRInt32 aNamespaceID) cons
 nsresult
 nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
                                           nsAttrValue& aValue,
-                                          nsIHTMLContent* aContent,
+                                          nsGenericHTMLElement* aContent,
                                           nsHTMLStyleSheet* aSheet)
 {
   nsRefPtr<nsMappedAttributes> mapped;
@@ -541,7 +541,7 @@ nsAttrAndChildArray::MappedAttrCount() const
 }
 
 nsresult
-nsAttrAndChildArray::GetModifiableMapped(nsIHTMLContent* aContent,
+nsAttrAndChildArray::GetModifiableMapped(nsGenericHTMLElement* aContent,
                                          nsHTMLStyleSheet* aSheet,
                                          PRBool aWillAddAttr,
                                          nsMappedAttributes** aModifiable)
@@ -559,8 +559,8 @@ nsAttrAndChildArray::GetModifiableMapped(nsIHTMLContent* aContent,
 
   NS_ASSERTION(aContent, "Trying to create modifiable without content");
 
-  nsMapRuleToAttributesFunc mapRuleFunc;
-  aContent->GetAttributeMappingFunction(mapRuleFunc);
+  nsMapRuleToAttributesFunc mapRuleFunc =
+    aContent->GetAttributeMappingFunction();
   *aModifiable = new nsMappedAttributes(aSheet, mapRuleFunc);
   NS_ENSURE_TRUE(*aModifiable, NS_ERROR_OUT_OF_MEMORY);
 

@@ -41,7 +41,7 @@
 #include "nsHTMLValue.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFontMetrics.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
@@ -395,7 +395,8 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
   nsHTMLValue value;
   nsIContent* parentContent = mParent->GetContent();
   if (parentContent) {
-    nsCOMPtr<nsIHTMLContent> hc = do_QueryInterface(parentContent);
+    nsGenericHTMLElement *hc =
+      nsGenericHTMLElement::FromContent(parentContent);
     if (hc) {
       if (NS_CONTENT_ATTR_HAS_VALUE ==
           hc->GetHTMLAttribute(nsHTMLAtoms::value, value)) {

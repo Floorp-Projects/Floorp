@@ -241,9 +241,11 @@ protected:
   /**
    * Find out whether an attribute exists on the content or not.
    * @param aAtt the attribute to determine the existence of
-   * @throws NS_CONTENT_ATTR_NOT_THERE if it does not exist
+   * @returns PR_FALSE if it does not exist
    */
-  nsresult DoesAttributeExist(nsIAtom *aAtt);
+  PRBool AttributeExists(nsIAtom *aAtt) const
+  { return mContent && mContent->HasAttr(kNameSpaceID_None, aAtt); }
+
   /**
    * We call this when we are being destroyed or removed from the PFM.
    * @param aPresContext the current pres context

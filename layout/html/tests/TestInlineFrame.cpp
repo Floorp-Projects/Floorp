@@ -38,7 +38,6 @@
 #include "nscore.h"
 #include "nsCRT.h"
 #include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
 #include "nsIDocument.h"
 #include "nsVoidArray.h"
 #include "nsDocument.h"
@@ -281,7 +280,7 @@ static PRBool
 TestReflowUnmapped(nsPresContext* presContext)
 {
   // Create an HTML container
-  nsIHTMLContent* b;
+  nsIContent* b;
   NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements.
@@ -377,7 +376,7 @@ static PRBool
 TestChildrenThatDontFit(nsPresContext* presContext)
 {
   // Create an HTML container
-  nsIHTMLContent* b;
+  nsIContent* b;
   NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Add one fixed width element.
@@ -548,7 +547,7 @@ static PRBool
 TestOverflow(nsPresContext* presContext)
 {
   // Create an HTML container
-  nsIHTMLContent* b;
+  nsIContent* b;
   NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements.
@@ -661,7 +660,7 @@ static PRBool
 TestPushingPulling(nsPresContext* presContext)
 {
   // Create an HTML container
-  nsIHTMLContent* b;
+  nsIContent* b;
   NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements.
@@ -1083,7 +1082,7 @@ static PRBool
 TestSplittableChildren(nsPresContext* presContext)
 {
   // Create an HTML container
-  nsIHTMLContent* b;
+  nsIContent* b;
   NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements that can split
@@ -1443,7 +1442,7 @@ static PRBool
 TestMaxElementSize(nsPresContext* presContext)
 {
   // Create an HTML container
-  nsIHTMLContent* b;
+  nsIContent* b;
   NS_NewHTMLContainer(&b, NS_NewAtom("span"));
 
   // Append three fixed width elements.

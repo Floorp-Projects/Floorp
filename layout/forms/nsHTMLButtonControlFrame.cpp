@@ -55,7 +55,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsIImage.h"
 #include "nsStyleConsts.h"
-#include "nsIHTMLContent.h"
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
 #include "nsIDocument.h"
@@ -608,22 +607,17 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsPresContext* aPresContext,
                                                     nsIAtom* aName, const nsAString& aValue)
 {
   if (nsHTMLAtoms::value == aName) {
-    nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
-    if (formControl) {
-      return formControl->SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue, PR_TRUE);
-    }
+    return mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
+                             aValue, PR_TRUE);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 {
-  if (nsHTMLAtoms::value == aName) {
-    nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
-    if (formControl) {
-      formControl->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
-    }
-  }
+  if (nsHTMLAtoms::value == aName)
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
+
   return NS_OK;
 }
 

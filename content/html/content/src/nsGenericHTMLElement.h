@@ -51,7 +51,6 @@ class nsIDOMEventListener;
 class nsIDOMNodeList;
 class nsIFrame;
 class nsMappedAttributes;
-class nsIHTMLContent;
 class nsIStyleRule;
 class nsISupportsArray;
 class nsChildContentList;
@@ -66,6 +65,11 @@ class nsILayoutHistoryState;
 class nsHTMLValue;
 struct nsRect;
 struct nsSize;
+struct nsRuleData;
+
+typedef void (*nsMapRuleToAttributesFunc)(const nsMappedAttributes* aAttributes, 
+                                          nsRuleData* aData);
+
 
 /**
  * A common superclass for HTML elements
@@ -78,11 +82,16 @@ public:
   {
   }
 
+  /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
+  static nsGenericHTMLElement* FromContent(nsIContent *aContent)
+  {
+    if (aContent->IsContentOfType(eHTML))
+      return NS_STATIC_CAST(nsGenericHTMLElement*, aContent);
+    return nsnull;
+  }
+
   /** Call on shutdown to release globals */
   static void Shutdown();
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   /**
    * Handle QI for the standard DOM interfaces (DOMNode, DOMElement,
@@ -208,8 +217,12 @@ public:
   // Callers must hold a reference to nsHTMLUtils's global reference count.
   nsresult GetHrefURIForAnchors(nsIURI** aURI);
 
-  // Implementation for nsIHTMLContent
-  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
+  // HTML element methods
+  void Compact() { mAttrsAndChildren.Compact(); }
+  nsresult GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
+
+  // Implementation for nsIStyledContent
   virtual const nsAttrValue* GetClasses() const;
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
@@ -251,7 +264,6 @@ public:
                                 nsAttrValue& aResult);
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
   /**
    * Get the base target for any links within this piece
@@ -601,7 +613,7 @@ public:
    * @param aContent the content to get presentation state for.
    * @param aPresState the presentation state (out param)
    */
-  static nsresult GetPrimaryPresState(nsIHTMLContent* aContent,
+  static nsresult GetPrimaryPresState(nsGenericHTMLElement* aContent,
                                       nsIPresState** aPresState);
   /**
    * Get the layout history object *and* generate the key for a particular
@@ -611,19 +623,19 @@ public:
    * @param aState the history state object (out param)
    * @param aKey the key (out param)
    */
-  static nsresult GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
+  static nsresult GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
                                          nsILayoutHistoryState** aState,
                                          nsACString& aKey);
   /**
    * Restore the state for a form control.  Ends up calling
    * nsIFormControl::RestoreState().
    *
-   * @param aContent an nsIHTMLContent* pointing to the form control
+   * @param aContent an nsGenericHTMLElement* pointing to the form control
    * @param aControl an nsIFormControl* pointing to the form control
    * @return PR_FALSE if RestoreState() was not called, the return
    *         value of RestoreState() otherwise.
    */
-  static PRBool RestoreFormControlState(nsIHTMLContent* aContent,
+  static PRBool RestoreFormControlState(nsGenericHTMLElement* aContent,
                                         nsIFormControl* aControl);
 
   /**
@@ -975,14 +987,14 @@ protected:
  * A macro to implement the NS_NewHTMLXXXElement() functions.
  */
 #define NS_IMPL_NS_NEW_HTML_ELEMENT(_elementName)                            \
-nsIHTMLContent*                                                              \
+nsGenericHTMLElement*                                                        \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 {                                                                            \
   return new nsHTML##_elementName##Element(aNodeInfo);                       \
 }
 
 #define NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(_elementName)               \
-nsIHTMLContent*                                                              \
+nsGenericHTMLElement*                                                        \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 {                                                                            \
   return new nsHTML##_elementName##Element(aNodeInfo, aFromParser);          \
@@ -1145,7 +1157,7 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
 // Element class factory methods
 
 #define NS_DECLARE_NS_NEW_HTML_ELEMENT(_elementName)              \
-nsIHTMLContent*                                                   \
+nsGenericHTMLElement*                                             \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
                                   PRBool aFromParser = PR_FALSE);
 

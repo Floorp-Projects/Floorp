@@ -37,7 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsFormControlFrame.h"
 #include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -663,7 +663,7 @@ nsFormControlFrame::GetMaxLength(PRInt32* aSize)
   *aSize = -1;
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
 
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
     nsHTMLValue value;
@@ -681,7 +681,7 @@ nsFormControlFrame::GetSizeFromContent(PRInt32* aSize) const
   *aSize = -1;
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
 
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
     nsHTMLValue value;

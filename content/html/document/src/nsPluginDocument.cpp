@@ -67,7 +67,7 @@ public:
 protected:
   nsresult CreateSyntheticPluginDocument();
 
-  nsCOMPtr<nsIHTMLContent>                 mPluginContent;
+  nsCOMPtr<nsIContent>                     mPluginContent;
   nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
   nsCString                                mMimeType;
 };

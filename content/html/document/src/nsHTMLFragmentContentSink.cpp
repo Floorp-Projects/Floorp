@@ -40,7 +40,6 @@
 #include "nsIHTMLContentSink.h"
 #include "nsIParser.h"
 #include "nsIParserService.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLTokens.h"
 #include "nsGenericHTMLElement.h"
@@ -147,7 +146,7 @@ public:
   nsIContent* mRoot;
   nsIParser* mParser;
   nsIDOMHTMLFormElement* mCurrentForm;
-  nsIHTMLContent* mCurrentMap;
+  nsGenericHTMLElement* mCurrentMap;
 
   nsVoidArray* mContentStack;
 
@@ -318,7 +317,7 @@ nsHTMLFragmentContentSink::SetTitle(const nsString& aValue)
                                          kNameSpaceID_None,
                                          getter_AddRefs(nodeInfo));
   if(NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIHTMLContent> content = NS_NewHTMLTitleElement(nodeInfo);
+    nsRefPtr<nsGenericHTMLElement> content = NS_NewHTMLTitleElement(nodeInfo);
 
     if (!content) {
       result = NS_ERROR_OUT_OF_MEMORY;

@@ -37,7 +37,6 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsHTMLAtoms.h"

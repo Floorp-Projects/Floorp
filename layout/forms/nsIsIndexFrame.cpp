@@ -41,7 +41,6 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresState.h"
 #include "nsWidgetsCID.h"
@@ -137,18 +136,9 @@ nsIsIndexFrame::UpdatePromptLabel()
   // Get the text from the "prompt" attribute.
   // If it is zero length, set it to a default value (localized)
   nsAutoString prompt;
-  if (mContent) {
-    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(mContent, &result);
-    if ((NS_OK == result) && htmlContent) {
-      nsHTMLValue value;
-      result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::prompt, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        if (eHTMLUnit_String == value.GetUnit()) {
-          value.GetStringValue(prompt);
-        }
-      }
-    }
-  }
+  if (mContent)
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::prompt, prompt);
+
   if (prompt.IsEmpty()) {
     // Generate localized label.
     // We can't make any assumption as to what the default would be

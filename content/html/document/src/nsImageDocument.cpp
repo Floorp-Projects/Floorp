@@ -127,7 +127,7 @@ protected:
                   (float)mVisibleHeight / mImageHeight);
   }
 
-  nsCOMPtr<nsIHTMLContent>      mImageContent;
+  nsCOMPtr<nsIContent>          mImageContent;
 
   PRInt32                       mVisibleWidth;
   PRInt32                       mVisibleHeight;
@@ -559,7 +559,7 @@ nsImageDocument::CreateSyntheticDocument()
   nsresult rv = nsMediaDocument::CreateSyntheticDocument();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> body = do_QueryInterface(mBodyContent);
+  nsCOMPtr<nsIContent> body = do_QueryInterface(mBodyContent);
   if (!body) {
     NS_WARNING("no body on image document!");
     return NS_ERROR_FAILURE;

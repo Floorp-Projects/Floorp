@@ -37,7 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsFormControlHelper.h"
 #include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -134,7 +134,7 @@ nsFormControlHelper::GetWrapProperty(nsIContent * aContent, nsString &aOutValue)
 {
   aOutValue.SetLength(0);
   nsresult result = NS_CONTENT_ATTR_NOT_THERE;
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(aContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(aContent);
 
   if (content) {
     nsHTMLValue value;
@@ -340,7 +340,8 @@ nsresult
 nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "Null pointer bad!");
-  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(aContent));
+  nsGenericHTMLElement *formControl =
+    nsGenericHTMLElement::FromContent(aContent);
   if (!formControl)
     return NS_ERROR_FAILURE;
 
@@ -368,7 +369,8 @@ nsresult
 nsFormControlHelper::GetValueAttr(nsIContent* aContent, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "Null pointer bad!");
-  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(aContent));
+  nsGenericHTMLElement *formControl =
+    nsGenericHTMLElement::FromContent(aContent);
   if (!formControl)
     return NS_ERROR_FAILURE;
 

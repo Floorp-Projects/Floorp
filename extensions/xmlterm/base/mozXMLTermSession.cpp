@@ -70,8 +70,6 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 
-#include "nsIHTMLContent.h"
-
 #include "mozXMLT.h"
 #include "mozIXMLTerminal.h"
 #include "mozIXMLTermStream.h"
