@@ -162,7 +162,9 @@ PRBool nsDocumentOpenInfo::ProcessCanceledCase(nsIChannel * aChannel)
   if (aChannel)
   {
     aChannel->GetStatus(&rv);
-    if (rv == NS_BINDING_ABORTED)
+
+    // if we were aborted or if the js returned no result (i.e. we aren't replacing any window content)
+    if (rv == NS_BINDING_ABORTED || rv == NS_ERROR_DOM_RETVAL_UNDEFINED)
     {
       canceled = PR_TRUE;
       // free any local state for this load since we are aborting it so we 
