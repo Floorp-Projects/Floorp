@@ -50,11 +50,29 @@ PutHeader("Bugzilla Sanity Check");
 
 print "OK, now running sanity checks.<P>\n";
 
+my @row;
+
+Status("Checking components/products");
+
+my @checklist;
+SendSQL("select distinct product, component from bugs");
+while (@row = FetchSQLData()) {
+    my @copy = @row;
+    push(@checklist, \@copy);
+}
+
+foreach my $ref (@checklist) {
+    my ($product, $component) = (@$ref);
+    SendSQL("select count(*) from components where program = '$product' and value = '$component'");
+    if (FetchOneColumn() != 1) {
+        Alert("Bug(s) found with invalid product/component: $product/$component");
+    }
+}
+
+
 Status("Checking profile ids...");
 
 SendSQL("select userid,login_name from profiles");
-
-my @row;
 
 my %profid;
 
