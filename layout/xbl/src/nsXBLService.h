@@ -38,6 +38,8 @@ class nsString;
 class nsIURI;
 class nsSupportsHashtable;
 class nsHashtable;
+class nsIXULPrototypeCache;
+class nsIXULContentUtils;
 
 class nsXBLService : public nsIXBLService, public nsIMemoryPressureObserver
 {
@@ -50,9 +52,6 @@ class nsXBLService : public nsIXBLService, public nsIMemoryPressureObserver
 
   // This function clears out the bindings on a given content node.
   NS_IMETHOD FlushStyleBindings(nsIContent* aContent);
-
-  // This function clears out the binding doucments in our cache.
-  NS_IMETHOD FlushBindingDocuments();
 
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
@@ -71,10 +70,10 @@ public:
   virtual ~nsXBLService();
 
   // This method loads a binding doc and then builds the specific binding required.
-  NS_IMETHOD GetBinding(const nsCString& aURLStr, nsIXBLBinding** aResult);
+  NS_IMETHOD GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult);
 
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
-  NS_IMETHOD GetBindingDocument(const nsCString& aURI, nsIDocument** aResult);
+  NS_IMETHOD GetBindingDocument(nsIContent* aBoundElement, const nsCString& aURI, nsIDocument** aResult);
 
   // This method synchronously loads and parses an XBL file.
   NS_IMETHOD FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult);
@@ -85,10 +84,9 @@ public:
 
 // MEMBER VARIABLES
 public:
-  static nsSupportsHashtable* mBindingTable; // This is a table of all the bindings files
-                                             // we have loaded
-                                             // during this session.
-  static nsSupportsHashtable* mScriptAccessTable;   // Can the doc's bindings access scripts
+  static nsIXULContentUtils* gXULUtils;
+  static nsIXULPrototypeCache* gXULCache;
+    
   static nsINameSpaceManager* gNameSpaceManager; // Used to register the XBL namespace
   static PRInt32  kNameSpaceID_XBL;          // Convenient cached XBL namespace.
 
