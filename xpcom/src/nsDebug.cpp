@@ -104,6 +104,8 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
   //XXX this works on win32 only for now. For all the other platforms call Abort
 #if defined(_WIN32)
   ::DebugBreak();
+#elif defined(XP_UNIX)
+  fprintf(stderr, "\07");  fflush(stderr);
 #else
   Abort(aFile, aLine);
 #endif
@@ -137,6 +139,10 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
   PR_LOG(gDebugLog, PR_LOG_ERROR,
          ("Assertion: \"%s\" (%s) at file %s, line %d", aStr, aExpr,
           aFile, aLine));
+#if defined(XP_UNIX)
+  fprintf(stderr, "Assertion: \"%s\" (%s) at file %s, line %d\n", aStr, aExpr,
+          aFile, aLine);
+#endif
   Break(aFile, aLine);
 }
 
