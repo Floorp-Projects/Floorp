@@ -31,7 +31,7 @@ Contributor(s): ______________________________________. -->
 playsound
  <toolbox>
    <xpmenubar chromeclass="menubar">
-	  <xpmenu>
+	  <xpmenu value="File" shortcut="f">
 	    <html:div><html:u>F</html:u>ile</html:div>
 		<xpmenuchildren> 
 		<xpmenu value="New" shortcut="n" key="newKey"> 
