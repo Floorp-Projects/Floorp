@@ -29,7 +29,7 @@ function StartUp(windowName)
 	if (prefwindow == null)
 	{
 		dump("Creating prefwindow object...\n");
-    	prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
+    	prefwindow = Components.classes['component://netscape/prefwindow'].getService(Components.interfaces.nsIPrefWindow);
 	}
 	else
 	{
