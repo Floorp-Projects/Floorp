@@ -822,7 +822,17 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
       url->chosen_user = user;
 
     } else if (pickFirstUser) {
-      user = (si_SignonUserStruct *) (url->signonUser_list->ElementAt(0));
+      PRInt32 userCount = LIST_COUNT(url->signonUser_list);
+      for (PRInt32 i=0; i<userCount; i++) {
+        user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+        /* consider first data node to be the identifying item */
+        data = (si_SignonDataStruct *) (user->signonData_list->ElementAt(0));
+        if (PL_strcmp(data->name, userText)) {
+          /* name of current data item does not match name in data node */
+          continue;
+        }
+        break;
+      }
       url->chosen_user = user;
 
     } else {
@@ -888,7 +898,7 @@ si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
       if (user_count == 0) {
         /* not first data node for any saved user, so simply pick first user */
         if (url->chosen_user) {
-          user = (si_SignonUserStruct *) (url->signonUser_list->ElementAt(0));
+          user = url->chosen_user;
         } else {
           /* no user selection had been made for first data node */
           user = NULL;
@@ -2110,7 +2120,7 @@ SINGSIGN_RestoreSignonData (char* URLName, char* name, char** value, PRUint32 el
   user = si_GetUser(URLName, PR_FALSE, name);
   if (user) {
     SI_LoadSignonData(PR_TRUE); /* this destroys user so need to recaculate it */
-    user = si_GetUser(URLName, PR_TRUE, name);
+    user = si_GetUser(URLName, PR_FALSE, name);
     if (user) { /* this should always be true but just in case */
       PRInt32 dataCount = LIST_COUNT(user->signonData_list);
       for (PRInt32 i=0; i<dataCount; i++) {

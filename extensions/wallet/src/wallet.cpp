@@ -3078,15 +3078,17 @@ WLLT_OnSubmit(nsIContent* formNode) {
                 } else if (isPassword) {
                   type_array[value_cnt] = FORM_TYPE_PASSWORD;
                 }
-                nsAutoString value;
-                result = inputElement->GetValue(value);
-                if (NS_SUCCEEDED(result)) {
-                  nsAutoString field;
-                  result = inputElement->GetName(field);
+                if (isText || isPassword) {
+                  nsAutoString value;
+                  result = inputElement->GetValue(value);
                   if (NS_SUCCEEDED(result)) {
-                    value_array[value_cnt] = value.ToNewCString();
-                    name_array[value_cnt] = field.ToNewCString();
-                    value_cnt++;
+                    nsAutoString field;
+                    result = inputElement->GetName(field);
+                    if (NS_SUCCEEDED(result)) {
+                      value_array[value_cnt] = value.ToNewCString();
+                      name_array[value_cnt] = field.ToNewCString();
+                      value_cnt++;
+                    }
                   }
                 }
               }
