@@ -44,11 +44,9 @@
 		  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
           ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
 	  		<treerow >
-				<treecell treeallowevents="true">
-					<titledbutton class="twisty" onclick="return top.ToggleTwisty(event.target.parentNode.parentNode.parentNode)" />
-				</treecell>
 				<treecell>
 					<treeindentation />
+					<titledbutton class="twisty" treeallowevents="true" onclick="return top.ToggleTwisty(event.target.parentNode.parentNode.parentNode)" />
 					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" class="folderIcon"/>
 				</treecell>
 				<treecell>
@@ -63,13 +61,11 @@
 	</rule>
   </template>
 
-  <treecol style="width:20px"/>
   <treecol style="width:65%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
   <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treerow>
-	  <treecell></treecell>
       <treecell>&nameColumn.label;</treecell>
       <treecell>&unreadColumn.label;</treecell>
       <treecell>&totalColumn.label;</treecell>
