@@ -92,12 +92,8 @@ MimeInlineText_initialize (MimeObject *obj)
       {
         if (obj->options && obj->options->default_charset)
           text->charset = PL_strdup(obj->options->default_charset);
-          // Do not label US-ASCII if the app default charset is multibyte.
-          // Perhaps US-ASCII label should be removed for all cases.
-        else if (MULTIBYTE & INTL_DefaultDocCharSetID(0))
-          ;
         else
-          text->charset = PL_strdup("US-ASCII");
+          text->charset = PL_strdup("");
       }
     }
   }
