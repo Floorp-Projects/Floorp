@@ -3304,7 +3304,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
                                             PRBool                   aIsFixedPositioned)
 {
   nsIFrame * newFrame;
-  nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame);
+  PRUint32 flags = aIsAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0;
+  nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame, flags);
 
 
   nsCOMPtr<nsIPresShell> shell;
@@ -3331,10 +3332,14 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   const nsStyleDisplay* styleDisplay;
   newFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   
-  PRUint8 flags = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay) ? NS_BLOCK_SHRINK_WRAP : 0;
+  PRUint32 childFlags = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay) ? NS_BLOCK_SHRINK_WRAP : 0;
+  // inherit the FieldSet state 
+  PRUint32 parentState;
+  newFrame->GetFrameState( &parentState );
+  childFlags |= parentState;
 
   nsIFrame * areaFrame;
-  NS_NewAreaFrame(shell, &areaFrame, flags);
+  NS_NewAreaFrame(shell, &areaFrame, childFlags);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
@@ -3573,7 +3578,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
                                     isFixedPositioned);
         processChildren = PR_FALSE;
 #else
-        rv = NS_NewFieldSetFrame(aPresShell, &newFrame);
+        rv = NS_NewFieldSetFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
         processChildren = PR_TRUE;
 #endif
       }
