@@ -157,7 +157,7 @@
   </xsl:template>
   
   <xsl:template name="expander">
-    <td class="expander">-<div class="spacer"/></td>
+    <td class="expander">&#x2212;<div class="spacer"/></td>
   </xsl:template>
 
 </xsl:stylesheet>
