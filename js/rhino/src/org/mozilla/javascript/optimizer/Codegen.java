@@ -2552,24 +2552,12 @@ public class Codegen extends Interpreter {
             generateCodeFromNode(child.getNext(), node);
             genSimpleCompare(op, trueGOTO, falseGOTO);
         } else {
-            if (op == Token.INSTANCEOF) {
-                aload(variableObjectLocal);
-                generateCodeFromNode(child, node);
-                generateCodeFromNode(child.getNext(), node);
-                addScriptRuntimeInvoke(
-                    "instanceOf",
-                    "(Lorg/mozilla/javascript/Scriptable;"
-                    +"Ljava/lang/Object;"
-                    +"Ljava/lang/Object;"
-                    +")Z");
-                addByteCode(ByteCode.IFNE, trueGOTO);
-                addByteCode(ByteCode.GOTO, falseGOTO);
-            } else if (op == Token.IN) {
+            if (op == Token.INSTANCEOF || op == Token.IN) {
                 generateCodeFromNode(child, node);
                 generateCodeFromNode(child.getNext(), node);
                 aload(variableObjectLocal);
                 addScriptRuntimeInvoke(
-                    "in",
+                    (op == Token.INSTANCEOF) ? "instanceOf" : "in",
                     "(Ljava/lang/Object;"
                     +"Ljava/lang/Object;"
                     +"Lorg/mozilla/javascript/Scriptable;"
@@ -2699,24 +2687,14 @@ public class Codegen extends Interpreter {
                 || op == Token.INSTANCEOF
                 || op == Token.IN)
         {
-            if (op == Token.INSTANCEOF)
-                aload(variableObjectLocal);
             generateCodeFromNode(child, node);
             generateCodeFromNode(child.getNext(), node);
             int trueGOTO = acquireLabel();
             int skip = acquireLabel();
-            if (op == Token.INSTANCEOF) {
-                addScriptRuntimeInvoke(
-                    "instanceOf",
-                    "(Lorg/mozilla/javascript/Scriptable;"
-                    +"Ljava/lang/Object;"
-                    +"Ljava/lang/Object;"
-                    +")Z");
-                addByteCode(ByteCode.IFNE, trueGOTO);
-            } else if (op == Token.IN) {
+            if (op == Token.INSTANCEOF || op == Token.IN) {
                 aload(variableObjectLocal);
                 addScriptRuntimeInvoke(
-                    "in",
+                    (op == Token.INSTANCEOF) ? "instanceOf" : "in",
                     "(Ljava/lang/Object;"
                     +"Ljava/lang/Object;"
                     +"Lorg/mozilla/javascript/Scriptable;"

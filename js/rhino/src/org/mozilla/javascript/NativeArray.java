@@ -1023,7 +1023,7 @@ public class NativeArray extends IdScriptable {
         /* Put the target in the result array; only add it as an array
          * if it looks like one.
          */
-        if (ScriptRuntime.instanceOf(scope, thisObj, ctor)) {
+        if (ScriptRuntime.instanceOf(thisObj, ctor, scope)) {
             length = getLengthProperty(thisObj);
 
             // Copy from the target object into the result
@@ -1040,7 +1040,7 @@ public class NativeArray extends IdScriptable {
          * elements separately; otherwise, just copy the argument.
          */
         for (int i = 0; i < args.length; i++) {
-            if (ScriptRuntime.instanceOf(scope, args[i], ctor)) {
+            if (ScriptRuntime.instanceOf(args[i], ctor, scope)) {
                 // ScriptRuntime.instanceOf => instanceof Scriptable
                 Scriptable arg = (Scriptable)args[i];
                 length = getLengthProperty(arg);

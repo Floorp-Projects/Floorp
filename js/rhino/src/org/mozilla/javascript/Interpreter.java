@@ -1924,7 +1924,7 @@ public class Interpreter
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.instanceOf(scope, lhs, rhs);
+        boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         break;
     }
