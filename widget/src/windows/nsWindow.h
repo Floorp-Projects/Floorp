@@ -164,7 +164,12 @@ protected:
     virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
-    virtual PRBool          OnKey(PRUint32 aEventType, PRBool aCalcCharCode, TCHAR aCharCode, UINT nChar, UINT nRepCnt, UINT nFlags);
+
+    BOOL                    OnChar(UINT aVirtualKeyCode);
+    BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode);
+    BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode);
+    ULONG                   IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey);
+    virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode);
 
     virtual PRBool          DispatchFocus(PRUint32 aEventType);
     virtual PRBool          OnScroll(UINT scrollCode, int cPos);
