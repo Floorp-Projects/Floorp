@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<bindings id="sidebarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="sbtab" extends="xul:button">
+    <content>
+      <xul:image class="sbtab-twisty" xbl:inherits="selected"/>
+      <xul:label class="sbtab-label" xbl:inherits="value=label" crop="right"/>
+      <xul:spacer flex="1"/>
+      <xul:image class="sbtab-texture"/>
+    </content>
+  </binding>
+
+</bindings>
