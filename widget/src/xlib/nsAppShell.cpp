@@ -1235,7 +1235,9 @@ void nsAppShell::HandleUnmapNotifyEvent(XEvent *event, nsWidget *aWidget)
 void nsAppShell::HandleClientMessageEvent(XEvent *event, nsWidget *aWidget)
 {
   // check to see if it's a WM_DELETE message
+#if defined(DEBUG_warren) || defined(DEBUG_quy)
   printf("handling client message\n");
+#endif
   if (nsWidget::WMProtocolsInitialized) {
     if ((Atom)event->xclient.data.l[0] == nsWidget::WMDeleteWindow) {
       printf("got a delete window event\n");
