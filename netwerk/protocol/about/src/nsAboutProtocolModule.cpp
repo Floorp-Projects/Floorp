@@ -49,6 +49,12 @@ static nsModuleComponentInfo components[] =
      nsAboutBloat::Create
    },
 
+   { "about:config",
+     NS_ABOUT_CONFIG_MODULE_CID,
+     NS_ABOUT_MODULE_CONTRACTID_PREFIX "config",
+     nsAboutConfig::Create
+   },
+
    { "about:credits",
      NS_ABOUT_CREDITS_MODULE_CID,
      NS_ABOUT_MODULE_CONTRACTID_PREFIX "credits",

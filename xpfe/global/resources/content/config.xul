@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/content/config.css" type="text/css"?>
+
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+-->
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/config.dtd">
+
+<window id="config"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:web="http://home.netscape.com/WEB-rdf#" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        orient="vertical"
+        width="750"
+        height="500"
+        onload="onConfigLoad();">
+
+<script src="chrome://global/content/config.js"/>
+
+
+<outliner id="out" flex="1" >
+  <outlinercol id="indexCol" label="Index" flex="1"/>
+  <splitter class="tree-splitter" />
+  <outlinercol id="prefCol" label="Prefs" flex="7"/>
+  <splitter class="tree-splitter" />
+  <outlinercol id="lockCol" label="Lock State"  flex="1"/>
+  <splitter class="tree-splitter" />
+  <outlinercol id="typeCol" label="Type"  flex="1"/>
+  <splitter class="tree-splitter" />
+  <outlinercol id="valueCol" label="Value" flex="10"/>
+
+  <outlinerbody id="configOutlinerBody" flex="1" />
+
+</outliner>
+
+
+  
+
+</window>
+
