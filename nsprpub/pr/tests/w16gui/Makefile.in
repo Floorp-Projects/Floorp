@@ -53,9 +53,9 @@ CSRCS = poppad.c \
        popprnt0.c
           
 
-INCLUDES = -I$(includedir) 
-LIBPR = $(libdir)/nspr$(MOD_VERSION).lib
-LIBPLDS = $(libdir)/plds$(MOD_VERSION).lib
+INCLUDES = -I$(dist_includedir) 
+LIBPR = $(dist_libdir)/nspr$(MOD_MAJOR_VERSION).lib
+LIBPLDS = $(dist_libdir)/plds$(MOD_MAJOR_VERSION).lib
 TARGETS = $(OBJDIR)/poppad.exe
 OS_CFLAGS = $(OS_EXE_CFLAGS)
 
