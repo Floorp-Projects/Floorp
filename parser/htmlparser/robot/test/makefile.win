@@ -15,40 +15,41 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-MAKE_OBJ_TYPE	= DLL
+MAKE_OBJ_TYPE   = EXE
+PROGRAM = .\$(OBJDIR)\htmlrobot.exe
 
-DEPTH=..\..
-
-LLIBS=				\
- $(DIST)\lib\raptorhtmlpars.lib	\
+MISCDEP=			\
+ $(DIST)\lib\DebugRobot.lib	\
  $(DIST)\lib\raptorbase.lib	\
  $(DIST)\lib\xpcom32.lib	\
- $(LIBNSPR)			\
- $(DIST)\lib\libplc21.lib	\
- $(DIST)\lib\netlib.lib \
  $(NULL)
 
-LIBNAME = .\$(OBJDIR)\DebugRobot
-DLL = $(LIBNAME).dll
+MYLIBS=				\
+ $(DIST)\lib\DebugRobot.lib	\
+ $(DIST)\lib\raptorbase.lib	\
+ $(DIST)\lib\xpcom32.lib	\
+ $(NULL)
+
+LLIBS= $(MYLIBS)                \
+ shell32.lib                    \
+ -SUBSYSTEM:CONSOLE
 
 CPPSRCS=			\
- nsRobotSink.cpp		\
- nsDebugRobot.cpp		\
+ RobotMain.cpp			\
  $(NULL)
 
 CPP_OBJS=			\
- .\$(OBJDIR)\nsRobotSink.obj	\
- .\$(OBJDIR)\nsDebugRobot.obj  \
- $(NULL)
+ .\$(OBJDIR)\RobotMain.obj
 
-MODULE = DebugRobot
-
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor  -I$(XPDIST)\public\netlib -I..\src
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor  -I$(XPDIST)\public\netlib -I.. 
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
-	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
-	$(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
+install:: $(PROGRAM)
+	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+
+clobber::
+	rm -f $(DIST)\bin\htmlrobot.exe
