@@ -312,6 +312,21 @@ nsBrowserAppCore::SetDocumentCharset(const nsString& aCharset)
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsBrowserAppCore::Back()
+{
+  Back(mContentAreaWebShell);
+	return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::Forward()
+{
+  Forward(mContentAreaWebShell);
+	return NS_OK;
+}
+
+
 
 NS_IMETHODIMP    
 nsBrowserAppCore::Stop()
@@ -1081,7 +1096,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PR
 done:
   // Stop the throbber and set the urlbar string
 	if (aStatus == NS_OK)
-      setAttribute( mWebShell, "urlbar", "value", url);
+      setAttribute( mWebShell, "urlbar", "value", url);  
 
 	    /* To satisfy a request from the QA group */
 	if (aStatus == NS_OK) {
@@ -1186,25 +1201,25 @@ nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader,
 //             nsISessionHistory methods              //
 ////////////////////////////////////////////////////////
 
+
 NS_IMETHODIMP    
-nsBrowserAppCore::Back()
+nsBrowserAppCore::Back(nsIWebShell * aPrev)
 {
   if (mSHistory) {
-    mSHistory->Back();
+    mSHistory->Back(aPrev);
   }
-  //  mContentAreaWebShell->Back();
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsBrowserAppCore::Forward()
+nsBrowserAppCore::Forward(nsIWebShell * aPrev)
 {
   if (mSHistory) {
-    mSHistory->Forward();
+    mSHistory->Forward(aPrev);
   }
-  //  mContentAreaWebShell->Forward();
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsBrowserAppCore::add(nsIWebShell * aWebShell)
@@ -1216,17 +1231,24 @@ nsBrowserAppCore::add(nsIWebShell * aWebShell)
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::Goto(PRInt32 aGotoIndex)
+nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev)
 {
    nsresult rv;
       if (mSHistory) 
-   rv = mSHistory->Goto(aGotoIndex);
+   rv = mSHistory->Goto(aGotoIndex, aPrev);
    return rv;
 }
 
 
 NS_IMETHODIMP
 nsBrowserAppCore::SetLoadingFlag(PRBool aFlag)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::GetLoadingFlag(PRBool &aFlag)
 {
   return NS_OK;
 }
