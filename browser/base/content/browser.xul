@@ -416,7 +416,7 @@ Contributor(s):
               oncommand="gContextMenu.showMetadata();"/>
   </popup>
 
-  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons">
+  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons" iconsize="small">
     <!-- Menu -->
       <menubar id="main-menubar" class="chromeclass-menubar">
         <menu label="&fileMenu.label;"
@@ -838,8 +838,8 @@ Contributor(s):
 
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
-             fullscreentoolbar="true"
-             customizable="true" mode="icons" iconsize="small"
+             fullscreentoolbar="true" mode="icons" iconsize="small"
+             customizable="true"
              defaultset="back-button,forward-button,reload-button,stop-button,urlbar-container,search-container"
              context="toolbar-context-menu">
 
