@@ -466,7 +466,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
 		}
 
 		ClearFlag(POP3_PASSWORD_FAILED);
-		rv = server->GetPassword(PR_TRUE /* ask for UI */, aPassword);
+		rv = server->GetPasswordWithUI(aPassword);
 
 	}
 	else
@@ -1913,7 +1913,9 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     PRInt32 flags = 0;
     char *uidl = NULL;
     char *newStr;
+#if 0
     PRInt32 old_bytes_received = m_totalBytesReceived;
+#endif
     PRBool fix = PR_FALSE;
     PRUint32 status = 0;
 	

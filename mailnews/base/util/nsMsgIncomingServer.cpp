@@ -422,7 +422,7 @@ NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgIncomingServer::GetPassword(PRBool aWithUI, char ** aPassword)
+NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
 {
 	nsresult rv = NS_OK;
 	PRBool rememberPassword = PR_FALSE;
@@ -444,12 +444,20 @@ NS_IMETHODIMP nsMsgIncomingServer::GetPassword(PRBool aWithUI, char ** aPassword
 			m_password = password;
 		}
 	}
+    
+	*aPassword = m_password.ToNewCString();
+    return rv;
+}
 
-	// if we still don't have a password fall to case (3)
-	if (m_password.IsEmpty() && aWithUI)
-	{
+NS_IMETHODIMP
+nsMsgIncomingServer::GetPasswordWithUI(char **aPassword) {
 
-		// case (3) prompt the user for the password
+    nsXPIDLCString prefvalue;
+    GetPassword(getter_Copies(prefvalue));
+
+    nsresult rv = NS_OK;
+    if (m_password.IsEmpty()) {
+		// prompt the user for the password
 		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
@@ -562,13 +570,28 @@ nsMsgIncomingServer::SetLocalPath(nsIFileSpec *spec)
     }
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::SetRememberPassword(PRBool value)
+{
+    if (value)
+        SetPrefPassword(m_password);
+    else
+        SetPrefPassword(nsnull);
+    return SetBoolValue("remember_password", value);
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetRememberPassword(PRBool* value)
+{
+    return GetBoolValue("remember_password", value);
+}
+
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, PrefPassword, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, RememberPassword, "remember_password");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");
 
 /* what was this called in 4.x? */

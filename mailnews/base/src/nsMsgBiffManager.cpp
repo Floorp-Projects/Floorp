@@ -226,7 +226,7 @@ nsresult nsMsgBiffManager::PerformBiff()
 			// we don't want to prompt the user for password UI so pass in false to
 			// the server->GetPassword method. If we don't already know the passsword then 
 			// we just won't biff this server
-			current->server->GetPassword(PR_FALSE, &password);
+			current->server->GetPassword(&password);
 			current->server->GetServerBusy(&serverBusy);
 
 			//Make sure we're logged on before doing a biff

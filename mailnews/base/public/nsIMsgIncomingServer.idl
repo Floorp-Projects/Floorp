@@ -54,8 +54,8 @@ interface nsIMsgIncomingServer : nsISupports {
 	  want us to bring up UI to ask for the password. If you pass
 	  in false, we will return an empty password if we don't know 
 	  it already and we will NOT ask the user */
-  string getPassword(in boolean aWithUI);
-  void setPassword([const] in  string aPassword);
+  attribute string password;
+  string getPasswordWithUI();
 
   /* should we download whole messages when biff goes off? */
   attribute boolean downloadOnBiff;

@@ -1282,7 +1282,7 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 
 NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
 {
-	return GetPassword(PR_TRUE, aPassword);
+	return GetPasswordWithUI(aPassword);
 }
 
 // for the nsIImapServerSink interface

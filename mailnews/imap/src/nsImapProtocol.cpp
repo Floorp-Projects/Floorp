@@ -5973,7 +5973,7 @@ PRBool nsImapProtocol::TryToLogon()
 	if (m_server)
 	{
 		// we are in the imap thread so *NEVER* try to extract the password with UI
-		rv = m_server->GetPassword(PR_FALSE, &password);
+		rv = m_server->GetPassword(&password);
 		rv = m_server->GetUsername(&userName);
 
 	}
