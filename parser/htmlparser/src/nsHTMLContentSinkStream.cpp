@@ -229,6 +229,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode,ostream
  * @param 
  * @return
  */
+static
 void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab,ostream& aStream,PRBool aNewline) {
   int i=0;
   for(i=0;i<tab*gTabSize;i++) 
@@ -247,6 +248,7 @@ void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab
  * @param 
  * @return
  */
+static
 void OpenTag(const char* theTag,int tab,ostream& aStream,PRBool aNewline) {
   int i=0;
   for(i=0;i<tab*gTabSize;i++) 
@@ -263,6 +265,7 @@ void OpenTag(const char* theTag,int tab,ostream& aStream,PRBool aNewline) {
  * @param 
  * @return
  */
+static
 void CloseTag(const char* theTag,int tab,ostream& aStream) {
   int i=0;
   for(i=0;i<tab*gTabSize;i++) 
@@ -277,6 +280,7 @@ void CloseTag(const char* theTag,int tab,ostream& aStream) {
  * @param 
  * @return
  */
+static
 void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
   const char* titleStr = GetTagName(aTag);
   OpenTag(titleStr,tab,aStream,PR_FALSE);
