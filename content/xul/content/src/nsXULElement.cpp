@@ -3442,6 +3442,6 @@ RDFElementImpl::RemoveFocus(nsIPresContext* aPresContext)
 PRBool
 RDFElementImpl::IsFocusableContent()
 {
-  return (mTag == kTitledButtonAtom) || (mTag == kTreeCellAtom) ||
+  return (mTag == kTitledButtonAtom) ||
          (mTag == kTreeAtom);
 }
