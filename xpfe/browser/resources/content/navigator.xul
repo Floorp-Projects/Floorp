@@ -129,7 +129,7 @@ Contributor(s): ______________________________________. -->
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <!-- Menu -->
-    <menubar id="main-menubar" persist="collapsed">
+    <menubar id="main-menubar" persist="collapsed"/>
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
              tbautostretch="always">
