@@ -29,9 +29,8 @@ include $(topsrcdir)/config/rules.mk
 SAMPLES_DIR = $(DIST)/bin/res/mailnews/compose
 
 EXPORT_RESOURCE_SAMPLES = \
-	./compose.xul \
-	./ComposeBody.html \
-	./ComposeFrame.html \
+	./msgcompose.xul \
+	./msgcomposeBody.html \
 	./send.gif \
 	./quote.gif \
 	./address.gif \

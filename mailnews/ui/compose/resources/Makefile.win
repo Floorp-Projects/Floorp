@@ -22,9 +22,8 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) Compose.xul $(DIST)\bin\res\mailnews\compose
-	$(MAKE_INSTALL) ComposeBody.html $(DIST)\bin\res\mailnews\compose
-	$(MAKE_INSTALL) ComposeFrame.html $(DIST)\bin\res\mailnews\compose
+	$(MAKE_INSTALL) msgcompose.xul $(DIST)\bin\res\mailnews\compose
+	$(MAKE_INSTALL) msgcomposeBody.html $(DIST)\bin\res\mailnews\compose
 	$(MAKE_INSTALL) send.gif $(DIST)\bin\res\mailnews\compose
 	$(MAKE_INSTALL) quote.gif $(DIST)\bin\res\mailnews\compose
 	$(MAKE_INSTALL) address.gif $(DIST)\bin\res\mailnews\compose
@@ -34,9 +33,8 @@ install:: $(DLL)
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\res\mailnews\compose
 
 clobber::
-	rm -f $(DIST)\bin\res\mailnews\compose\Compose.xul
-	rm -f $(DIST)\bin\res\mailnews\compose\ComposeBody.html
-	rm -f $(DIST)\bin\res\mailnews\compose\ComposeFrame.html
+	rm -f $(DIST)\bin\res\mailnews\compose\msgcompose.xul
+	rm -f $(DIST)\bin\res\mailnews\compose\msgcomposeBody.html
 	rm -f $(DIST)\bin\res\mailnews\compose\send.gif
 	rm -f $(DIST)\bin\res\mailnews\compose\quote.gif
 	rm -f $(DIST)\bin\res\mailnews\compose\address.gif
