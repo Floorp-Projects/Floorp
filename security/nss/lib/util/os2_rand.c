@@ -36,6 +36,9 @@
 #include <os2.h>
 #include <secrng.h>
 #include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+#include <stat.h>
 
 static BOOL clockTickTime(unsigned long *phigh, unsigned long *plow)
 {

@@ -59,7 +59,11 @@ include config.mk
 ifeq ($(OS_ARCH),WINNT)
 CSRCS	+= win32err.c
 else
+ifeq ($(OS_ARCH),OS2)
+CSRCS	+= os2err.c
+else
 CSRCS	+= unix_err.c
+endif
 endif
 
 #######################################################################

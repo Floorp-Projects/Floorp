@@ -60,7 +60,7 @@ EXTRA_LIBS = \
 else
 
 EXTRA_LIBS += \
-	../../../lib/fortcrypt/$(OBJDIR)/cilib.a \
+	../../../lib/fortcrypt/$(OBJDIR)/cilib.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 

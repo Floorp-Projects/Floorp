@@ -76,33 +76,33 @@ else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 ifdef MOZILLA_SECURITY_BUILD
-	CRYPTOLIB=$(DIST)/lib/libcrypto.a
+	CRYPTOLIB=$(DIST)/lib/libcrypto.$(LIB_SUFFIX)
 endif
 ifdef MOZILLA_BSAFE_BUILD
-	CRYPTOLIB=$(DIST)/lib/libbsafe.a
+	CRYPTOLIB=$(DIST)/lib/libbsafe.$(LIB_SUFFIX)
 endif
 EXTRA_LIBS += \
-	$(DIST)/lib/libsmime.a \
-	$(DIST)/lib/libssl.a \
-	$(DIST)/lib/libjar.a \
-	$(DIST)/lib/libzlib.a \
-	$(DIST)/lib/libnss.a \
-	$(DIST)/lib/libssl.a \
-	$(DIST)/lib/libsectool.a \
-	$(DIST)/lib/libpkcs7.a \
-	$(DIST)/lib/libcerthi.a \
-	$(DIST)/lib/libpk11wrap.a \
-	$(DIST)/lib/libcryptohi.a \
-	$(DIST)/lib/libcerthi.a \
-	$(DIST)/lib/libpk11wrap.a \
-	$(DIST)/lib/libsoftoken.a \
-	$(DIST)/lib/libcertdb.a \
-	$(DIST)/lib/libswfci.a \
-	$(DIST)/lib/libfreebl.a \
+	$(DIST)/lib/libsmime.$(LIB_SUFFIX) \
+	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
+	$(DIST)/lib/libjar.$(LIB_SUFFIX) \
+	$(DIST)/lib/libzlib.$(LIB_SUFFIX) \
+	$(DIST)/lib/libnss.$(LIB_SUFFIX) \
+	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsectool.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
+	$(DIST)/lib/libcertdb.$(LIB_SUFFIX) \
+	$(DIST)/lib/libswfci.$(LIB_SUFFIX) \
+	$(DIST)/lib/libfreebl.$(LIB_SUFFIX) \
 	$(CRYPTOLIB) \
-	$(DIST)/lib/libfreebl.a \
-	$(DIST)/lib/libsecutil.a \
-	$(DIST)/lib/libdbm.a \
+	$(DIST)/lib/libfreebl.$(LIB_SUFFIX) \
+	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
+	$(DIST)/lib/libdbm.$(LIB_SUFFIX) \
 	$(NULL)
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
