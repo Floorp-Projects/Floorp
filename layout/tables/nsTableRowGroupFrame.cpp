@@ -389,7 +389,6 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
   PRBool    adjustSiblings  = PR_TRUE;
   nsIFrame* kidFrame = (aStartFrame) ? aStartFrame : mFrames.FirstChild();
 
-  nsTableFrame* tableFirstInFlow = (nsTableFrame*)tableFrame->GetFirstInFlow();
   for ( ; kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
     // Get the frame state bits
     nsCOMPtr<nsIAtom> kidType;
@@ -453,7 +452,6 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
                        0, aReflowState.y, 0, aStatus);
 
       // Place the child
-      nsRect kidRect (0, aReflowState.y, desiredSize.width, desiredSize.height);
       PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize);
       aReflowState.y += cellSpacingY;
       lastReflowedRow = kidFrame;
@@ -1832,7 +1830,7 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber,
 {
   PRInt32 cellCount = 0;
   CellData* cellData;
-  nsIFrame* tempFrame;
+  nsIFrame* tempFrame = nsnull;
   nsRect tempRect;
   nsRect& tempRectRef = tempRect;
   nsresult rv;
