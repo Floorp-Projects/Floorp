@@ -218,7 +218,10 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   nsPoint parentPos;
   nsCOMPtr<nsIViewManager> viewManager;
 
-  //Get the nearest enclosing parent view to aFrame.
+  //
+  // Collect info about our parent view and the frame we're sync'ing to
+  //
+
   nsIView* parentView = nsnull;
   GetNearestEnclosingView(aPresContext, aFrame, &parentView);
   if (!parentView)
@@ -254,11 +257,11 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   viewManager->GetDeviceContext(*getter_AddRefs(dx));
   dx->GetAppUnitsToDevUnits(t2p);
   
-  PRInt32 xpos;
-  PRInt32 ypos;
-  viewManager->ResizeView(view, mRect.width, mRect.height);
+  // |xpos| and |ypos| hold the x and y positions of where the popup will be moved to,
+  // in _twips_, in the coordinate system of the _parent view_.
+  PRInt32 xpos = 0, ypos = 0;
+
   if (aXPos != -1 || aYPos != -1) {
-    // Convert the screen coords to twips
     xpos = NSIntPixelsToTwips(aXPos, p2t);
     ypos = NSIntPixelsToTwips(aYPos, p2t);
     xpos += offset.x;
@@ -298,15 +301,15 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     }
   }
   
-  viewManager->MoveViewTo(view, xpos, ypos);
+  //
+  // At this point, we should be positioned where we're told. Ensure that we fit
+  // on the screen. 
+  //
 
-  // Check if we fit on the screen, if not, resize and/or move so we do
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
-  
   nsCOMPtr<nsIDocument> document;
   presShell->GetDocument(getter_AddRefs(document));
-  
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   document->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
   
@@ -317,75 +320,65 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   PRInt32 screenHeight;
   screen->GetAvailWidth(&screenWidth);
   screen->GetAvailHeight(&screenHeight);
-   
-  PRInt32 screenLeft; // May be negative on MacOS!
-  PRInt32 screenTop;  // May be negative on MacOS!
-  screen->GetAvailLeft(&screenLeft);
-  screen->GetAvailTop(&screenTop);
   
+  // Compute info about the screen dimensions. Because of multiple monitor systems,
+  // the left or top sides of the screen may be in negative space (main monitor is on the
+  // right, etc). We need to be sure to do the right thing.
+  PRInt32 screenLeft;
+  PRInt32 screenTop;
+  screen->GetAvailLeft(&screenLeft);
+  screen->GetAvailTop(&screenTop); 
   PRInt32 screenRight;
   if(screenLeft<0)
     screenRight = screenWidth + screenLeft;
   else
-    screenRight = screenWidth - screenLeft;
-   
+    screenRight = screenWidth - screenLeft;  
   PRInt32 screenBottom;
   if(screenTop<0)
     screenBottom = screenHeight + screenTop;
   else
-    screenBottom = screenHeight - screenTop;
+    screenBottom = screenHeight - screenTop; 
+  PRInt32 screenWidthTwips  = NSIntPixelsToTwips(screenWidth, p2t);
+  PRInt32 screenHeightTwips = NSIntPixelsToTwips(screenHeight, p2t);
+  PRInt32 screenRightTwips  = NSIntPixelsToTwips(screenRight, p2t);
+  PRInt32 screenBottomTwips = NSIntPixelsToTwips(screenBottom, p2t);
   
-  screenWidth  = NSIntPixelsToTwips(screenWidth, p2t);
-  screenHeight = NSIntPixelsToTwips(screenHeight, p2t);
-  screenRight  = NSIntPixelsToTwips(screenRight, p2t);
-  screenBottom = NSIntPixelsToTwips(screenBottom, p2t);
+  // shrink to fit onto the screen, vertically and horizontally
+  if(mRect.width > screenWidthTwips) 
+      mRect.width = screenWidthTwips;    
+  if(mRect.height > screenHeightTwips)
+      mRect.height = screenHeightTwips;   
   
-  if(mRect.width > screenWidth || mRect.height > screenHeight) {
-    if(mRect.width > screenWidth) mRect.width = screenWidth;
-    
-    if(mRect.height > screenHeight) mRect.height = screenHeight;
-    
-    viewManager->ResizeView(view, mRect.width, mRect.height);
-  }
-  
-  // Get pixel distance from popup widget 0,0 to screen 0,0
-  nsCOMPtr<nsIWidget> widget;
-  view->GetWidget(*getter_AddRefs(widget));
-  
-  nsRect inRect, outRect;
-  inRect.x = 0;
-  inRect.y = 0;
-  widget->WidgetToScreen(inRect, outRect);
-  
-  if(outRect.x < screenLeft || outRect.y < screenTop) {
-    if(outRect.x < screenLeft) {
-      PRInt32 diff = NSIntPixelsToTwips(screenLeft - outRect.x,p2t);
-      if(diff>0)
-        xpos += diff;
-      else
-        xpos -= diff;
-    }
-    if(outRect.y < screenTop) {
-      PRInt32 diff = NSIntPixelsToTwips(screenTop - outRect.y,p2t);
-      if(diff>0)
-        ypos += diff;
-      else
-        ypos -= diff;
-    }
-    
-    viewManager->MoveViewTo(view, xpos, ypos); 
-  }
+  // Recall that |xpos| and |ypos| are in the coordinate system of the parent view. In
+  // order to determine the screen coordinates of where our view will end up, we
+  // need to find the x/y position of the parent view in screen coords. That is done
+  // by getting the widget associated with the parent view and determining the offset 
+  // based on converting (0,0) in its coordinate space to screen coords. We then
+  // offset that point by (|xpos|,|ypos|) to get the true screen coorindates of
+  // the view. *whew*
+  nsCOMPtr<nsIWidget> parentViewWidget;
+  parentView->GetWidget ( *getter_AddRefs(parentViewWidget) );
+  nsRect localParentRect(0,0,0,0), screenParentRect;
+  parentViewWidget->WidgetToScreen ( localParentRect, screenParentRect );
+  PRInt32 screenViewLocX = screenParentRect.x + NSTwipsToIntPixels(xpos - parentPos.x, t2p);
+  PRInt32 screenViewLocY = screenParentRect.y + NSTwipsToIntPixels(ypos - parentPos.y, t2p);
 
-  if ((NSIntPixelsToTwips(outRect.x,p2t) + mRect.width) > screenRight) {
-    xpos -= (NSIntPixelsToTwips(outRect.x,p2t) + mRect.width) - screenRight;
-    viewManager->MoveViewTo(view, xpos, ypos); 
-  }
-  
-  if ((NSIntPixelsToTwips(outRect.y,p2t) + mRect.height) > screenBottom) {
-    ypos -= (NSIntPixelsToTwips(outRect.y,p2t) + mRect.height) - screenBottom;
-    viewManager->MoveViewTo(view, xpos, ypos); 
-  }
+  // we now know where the view is...check that it's still onscreen at all!
+  if ( screenViewLocX < screenLeft )
+    xpos += NSIntPixelsToTwips(screenLeft - screenViewLocX,p2t);
+  if ( screenViewLocY < screenTop )
+    ypos += NSIntPixelsToTwips(screenTop - screenViewLocY,p2t);  
 
+  // ensure it is not even partially offscreen.
+  if ((NSIntPixelsToTwips(screenViewLocX,p2t) + mRect.width) > screenRightTwips)
+    xpos -= (NSIntPixelsToTwips(screenViewLocX,p2t) + mRect.width) - screenRightTwips;  
+  if ((NSIntPixelsToTwips(screenViewLocY,p2t) + mRect.height) > screenBottomTwips)
+    ypos -= (NSIntPixelsToTwips(screenViewLocY,p2t) + mRect.height) - screenBottomTwips;
+
+  // finally move and resize it
+  viewManager->MoveViewTo(view, xpos, ypos); 
+  viewManager->ResizeView(view, mRect.width, mRect.height);
+  
   if ((! viewWasVisible) && viewIsVisible) {
     view->SetVisibility(nsViewVisibility_kShow);
   }
