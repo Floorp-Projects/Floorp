@@ -30,6 +30,7 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
@@ -39,11 +40,13 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IDOMXULCOMMANDDISPATCHER_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMElement);
+NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMXULCommandDispatcher);
 NS_DEF_PTR(nsIDOMXULDocument);
 NS_DEF_PTR(nsIDOMNodeList);
@@ -52,8 +55,8 @@ NS_DEF_PTR(nsIDOMNodeList);
 // XULDocument property ids
 //
 enum XULDocument_slots {
-  XULDOCUMENT_POPUPELEMENT = -1,
-  XULDOCUMENT_TOOLTIPELEMENT = -2,
+  XULDOCUMENT_POPUPNODE = -1,
+  XULDOCUMENT_TOOLTIPNODE = -2,
   XULDOCUMENT_COMMANDDISPATCHER = -3
 };
 
@@ -78,16 +81,16 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
-      case XULDOCUMENT_POPUPELEMENT:
+      case XULDOCUMENT_POPUPNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupnode", PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         nsresult result = NS_OK;
-        result = a->GetPopupElement(&prop);
+        result = a->GetPopupNode(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
@@ -97,16 +100,16 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case XULDOCUMENT_TOOLTIPELEMENT:
+      case XULDOCUMENT_TOOLTIPNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipnode", PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         nsresult result = NS_OK;
-        result = a->GetTooltipElement(&prop);
+        result = a->GetTooltipNode(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
@@ -167,39 +170,39 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
-      case XULDOCUMENT_POPUPELEMENT:
+      case XULDOCUMENT_POPUPNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupnode", PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                kIElementIID, "Element",
+                                                kINodeIID, "Node",
                                                 cx, *vp)) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
         }
       
-        a->SetPopupElement(prop);
+        a->SetPopupNode(prop);
         NS_IF_RELEASE(prop);
         break;
       }
-      case XULDOCUMENT_TOOLTIPELEMENT:
+      case XULDOCUMENT_TOOLTIPNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipnode", PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
-        nsIDOMElement* prop;
+        nsIDOMNode* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                kIElementIID, "Element",
+                                                kINodeIID, "Node",
                                                 cx, *vp)) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
         }
       
-        a->SetTooltipElement(prop);
+        a->SetTooltipNode(prop);
         NS_IF_RELEASE(prop);
         break;
       }
@@ -421,8 +424,8 @@ JSClass XULDocumentClass = {
 //
 static JSPropertySpec XULDocumentProperties[] =
 {
-  {"popupElement",    XULDOCUMENT_POPUPELEMENT,    JSPROP_ENUMERATE},
-  {"tooltipElement",    XULDOCUMENT_TOOLTIPELEMENT,    JSPROP_ENUMERATE},
+  {"popupNode",    XULDOCUMENT_POPUPNODE,    JSPROP_ENUMERATE},
+  {"tooltipNode",    XULDOCUMENT_TOOLTIPNODE,    JSPROP_ENUMERATE},
   {"commandDispatcher",    XULDOCUMENT_COMMANDDISPATCHER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

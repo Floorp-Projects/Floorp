@@ -86,7 +86,7 @@ public:
 protected:
 
     virtual nsresult LaunchPopup(nsIDOMEvent* anEvent);
-    virtual nsresult LaunchPopup(nsIDOMElement* aElement, PRInt32 aClientX, PRInt32 aClientY) ;
+    virtual nsresult LaunchPopup(PRInt32 aClientX, PRInt32 aClientY) ;
 
     nsresult FindDocumentForNode(nsIDOMNode* inNode, nsIDOMXULDocument** outDoc) ;
 
@@ -183,12 +183,35 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   PRUint16 button;
 
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  nsCOMPtr<nsIDOMUIEvent> uiEvent;
   uiEvent = do_QueryInterface(aMouseEvent);
   if (!uiEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
+
+  // Get the node that was clicked on.
+  nsCOMPtr<nsIDOMNode> targetNode;        
+  uiEvent->GetTarget( getter_AddRefs( targetNode ) );
+
+  // Get the document with the popup.
+  nsCOMPtr<nsIDocument> document;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
+  nsresult rv;
+  if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+    NS_ERROR("Unable to retrieve the document.");
+    return rv;
+  }
+
+  // Turn the document into a XUL document so we can use SetPopupNode.
+  nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
+  if (xulDocument == nsnull) {
+    NS_ERROR("Popup attached to an element that isn't in XUL!");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Store clicked-on node in xul document.
+  xulDocument->SetPopupNode( targetNode );
 
   switch (popupType) {
     case eXULPopupType_popup:
@@ -301,7 +324,7 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
     nsCOMPtr<nsIDOMXULDocument> doc;
     FindDocumentForNode ( eventTarget, getter_AddRefs(doc) );
     if ( doc )
-      doc->SetTooltipElement(nsnull);
+      doc->SetTooltipNode(nsnull);
   }
   
   return NS_OK;
@@ -365,7 +388,7 @@ XULPopupListenerImpl::LaunchPopup ( nsIDOMEvent* anEvent )
   uiEvent->GetClientX(&xPos); 
   uiEvent->GetClientY(&yPos); 
 
-  return LaunchPopup(mElement, xPos, yPos);
+  return LaunchPopup(xPos, yPos);
 }
 
 
@@ -381,7 +404,7 @@ XULPopupListenerImpl::LaunchPopup ( nsIDOMEvent* anEvent )
 // the popup content in the document.
 //
 nsresult
-XULPopupListenerImpl::LaunchPopup(nsIDOMElement* aElement, PRInt32 aClientX, PRInt32 aClientY)
+XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
 {
   nsresult rv = NS_OK;
 
@@ -442,9 +465,6 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMElement* aElement, PRInt32 aClientX, PRI
         nsAutoString popupAlignment("topleft");
         mElement->GetAttribute("popupalign", popupAlignment);
 
-        // Set the popup in the document for the duration of this call.
-        xulDocument->SetPopupElement(mElement);
-        
         PRInt32 xPos = aClientX, yPos = aClientY;
         
         mPopupContent = popupContent.get();
@@ -490,9 +510,13 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
         nsAutoString disabledState;
         element->GetAttribute ( "disabled", disabledState );
         if ( disabledState != "true" ) {
-          doc->SetTooltipElement ( element );        
-          self->LaunchPopup (element, self->mMouseClientX, self->mMouseClientY+16);
+          doc->SetTooltipNode ( element );        
+          self->LaunchPopup (self->mMouseClientX, self->mMouseClientY+16);
         } // if node enabled
+      } else {
+          // Tooltip on non-element; e.g., text
+          doc->SetTooltipNode ( self->mPossibleTooltipNode );        
+          self->LaunchPopup ( self->mMouseClientX, self->mMouseClientY+16);
       }
     } // if document
   } // if "self" data valid
