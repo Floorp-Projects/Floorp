@@ -450,7 +450,7 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "null URL passed into Imap Protocol");
 
-	m_flags = 0;
+	// m_flags = 0;
 
 	// query the URL for a nsIImapUrl
 	m_runningUrl = nsnull; // initialize to NULL
@@ -468,9 +468,6 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 			m_runningUrl->GetHost(&hostName);
 			m_runningUrl->GetHostPort(&port);
 
-			/*JT - Should go away when netlib registers itself! */
-			nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, 
-												  "netlib.dll", PR_FALSE, PR_FALSE); 
             nsINetService* pNetService;
             rv = nsServiceManager::GetService(kNetServiceCID,
                                               nsINetService::GetIID(),

@@ -50,7 +50,9 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsImapMailFolder::nsImapMailFolder() :
 	nsMsgFolder(), m_pathName(""), m_mailDatabase(nsnull),
-    m_initialized(PR_FALSE), m_haveReadNameFromDB(PR_FALSE)
+    m_initialized(PR_FALSE), m_haveReadNameFromDB(PR_FALSE),
+    m_msgParser(nsnull), m_curMsgUid(0), m_nextMessageByteLength(0),
+    m_urlRunning(PR_FALSE)
 {
     //XXXX This is a hack for the moment.  I'm assuming the only listener is
     //our rdf:mailnews datasource. 
@@ -380,8 +382,69 @@ NS_IMETHODIMP nsImapMailFolder::GetThreadForMessage(nsIMessage *message,
 
 NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
+	nsresult rv = NS_OK;
+    
+	nsFileSpec path;
+    nsIMsgFolder *child = nsnull;
+	//Get a directory based on our current path.
+	rv = CreateDirectoryForFolder(path);
+	if(NS_FAILED(rv))
+		return rv;
+
+
+	//Now we have a valid directory or we have returned.
+	//Make sure the new folder name is valid
+	path += folderName;
+	path.MakeUnique();
+
+	nsOutputFileStream outputStream(path);	
+   
+	// Create an empty database for this mail folder, set its name from the user  
+	nsIMsgDatabase * mailDBFactory = nsnull;
+
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+        nsIMsgDatabase *unusedDB = NULL;
+		rv = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &unusedDB, PR_TRUE);
+
+        if (NS_SUCCEEDED(rv) && unusedDB)
+        {
+			//need to set the folder name
+			nsIDBFolderInfo *folderInfo;
+			rv = unusedDB->GetDBFolderInfo(&folderInfo);
+			if(NS_SUCCEEDED(rv))
+			{
+				//folderInfo->SetMailboxName(leafNameFromUser);
+				NS_IF_RELEASE(folderInfo);
+			}
+
+			//Now let's create the actual new folder
+			nsAutoString folderNameStr(folderName);
+			rv = AddSubfolder(folderName, &child);
+            unusedDB->SetSummaryValid(PR_TRUE);
+            unusedDB->Close(PR_TRUE);
+        }
+        else
+        {
+			path.Delete(PR_FALSE);
+            rv = NS_MSG_CANT_CREATE_FOLDER;
+        }
+		NS_IF_RELEASE(mailDBFactory);
+	}
+	if(rv == NS_OK && child)
+	{
+		nsISupports *folderSupports;
+
+		rv = child->QueryInterface(kISupportsIID, (void**)&folderSupports);
+		if(NS_SUCCEEDED(rv))
+		{
+			NotifyItemAdded(folderSupports);
+			NS_IF_RELEASE(folderSupports);
+		}
+	}
+	NS_IF_RELEASE(child);
+	return rv;
 }
     
 NS_IMETHODIMP nsImapMailFolder::RemoveSubFolder (nsIMsgFolder *which)
@@ -577,10 +640,11 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 {
 	nsresult rv = NS_ERROR_FAILURE;
     nsIMsgDatabase* mailDBFactory;
-    // **** fix me *** this is temporary stuff
-    nsString pathName = "/tmp";
-    pathName += aSpec->allocatedPathName;
-    nsFileSpec dbName(pathName);
+    nsNativeFileSpec dbName;
+
+    GetPathName(dbName);
+
+    dbName += aSpec->allocatedPathName;
 
     rv = nsComponentManager::CreateInstance(kCImapDB, nsnull,
                                             nsIMsgDatabase::GetIID(),
@@ -603,6 +667,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
             NS_IF_RELEASE (mailDBFactory);
             return NS_ERROR_NULL_POINTER;
         }
+        m_mailDatabase->AddListener(this);
     }
     if (aSpec->folderSelected)
     {
@@ -647,6 +712,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 					delete originalInfo;
 				}
 				SummaryChanged();
+                m_mailDatabase->AddListener(this);
 #endif
 			}
 			// store the new UIDVALIDITY value
@@ -871,16 +937,42 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged,
 											 int32 aFlags, 
 											 nsIDBChangeListener * aInstigator)
 {
-	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
+	nsIMessage *pMessage;
+	m_mailDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
+	nsString author, subject;
+	nsISupports *msgSupports;
+	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	{
+		PRUint32 i;
+		for(i = 0; i < mListeners->Count(); i++)
+		{
+			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+			listener->OnItemRemoved(this, msgSupports);
+			NS_RELEASE(listener);
+		}
+	}
+	UpdateSummaryTotals();
+	NS_RELEASE(msgSupports);
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, 
 										   int32 aFlags, 
 										   nsIDBChangeListener * aInstigator)
 {
-	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
+	nsIMessage *pMessage;
+	m_mailDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
+	nsString author, subject;
+	nsISupports *msgSupports;
+	if(pMessage && NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	{
+		NotifyItemAdded(msgSupports);
+	}
+	UpdateSummaryTotals();
+	NS_RELEASE(msgSupports);
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
@@ -1404,5 +1496,46 @@ nsImapMailFolder::ProcessTunnel(nsIImapProtocol* aProtocol,
                                 TunnelInfo *aInfo)
 {
     return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
+{
+	nsresult rv = NS_OK;
+
+	rv = GetPathName(path);
+	if(NS_FAILED(rv))
+		return rv;
+
+	if(!path.IsDirectory())
+	{
+		//If the current path isn't a directory, add directory separator
+		//and test it out.
+		rv = AddDirectorySeparator(path);
+		if(NS_FAILED(rv))
+			return rv;
+
+		//If that doesn't exist, then we have to create this directory
+		if(!path.IsDirectory())
+		{
+			//If for some reason there's a file with the directory separator
+			//then we are going to fail.
+			if(path.Exists())
+			{
+				return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
+			}
+			//otherwise we need to create a new directory.
+			else
+			{
+				path.CreateDirectory();
+				//Above doesn't return an error value so let's see if
+				//it was created.
+				if(!path.IsDirectory())
+					return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
+			}
+		}
+	}
+
+	return rv;
 }
 

@@ -252,6 +252,7 @@ protected:
                                      mailbox_spec *boxSpec);
 	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMessage *tweakMe);
     nsresult AddDirectorySeparator(nsFileSpec &path);
+    nsresult CreateDirectoryForFolder(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	//Creates a subfolder with the name 'name' and adds it to the list of
     //children. Returns the child as well.
