@@ -51,8 +51,8 @@
 #include <stdio.h>
 
 #define PLUGINFINDER_COMMAND_BEGINNING "javascript:window.open(\""
-#define PLUGINFINDER_COMMAND_END "\",\"plugin\",\"toolbar=no,status=no,resizeable=no,scrollbars=no,height=252,width=626\");"
-#define PLUGINFINDER_COMMAND_END2 "\",\"plugin\",\"toolbar=no,status=no,resizeable=yes,scrollbars=yes,height=252,width=626\");"
+#define PLUGINFINDER_COMMAND_END "\",\"plugin\",\"toolbar=no,status=no,resizable=no,scrollbars=no,height=252,width=626\");"
+#define PLUGINFINDER_COMMAND_END2 "\",\"plugin\",\"toolbar=no,status=no,resizable=yes,scrollbars=yes,height=252,width=626\");"
 
 
 //
