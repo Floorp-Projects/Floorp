@@ -844,17 +844,37 @@ flush_tag(MimeMultipartRelated* relobj)
     while(buf < ptr)
     {
       /* ### mwelch For each word in the value string, see if
-                      the word is a cid: URL. If so, attempt to
-              substitute the appropriate mailbox part URL in
-              its place. */
+         the word is a cid: URL. If so, attempt to substitute the appropriate mailbox part URL in its place. 
+         
+           mscott: but that's not good enough. A given word may have a cid url inside of it such as
+                   with style rules for background images: url(cid:....). 
+                 
+      */
       ptr2=buf; /* walk from the left end rightward */
       while((ptr2<ptr) && (!nsCRT::IsAsciiSpace(*ptr2)))
         ptr2++;
+
+      // make sure we are not dealing with a case of url(cid:....)..if so, account for the url( and the closing ); at the 
+      // end of the style rule
+      if ( (ptr2 - buf) > 8 && ( nsCRT::ToLower(buf[0]) == 'u' && nsCRT::ToLower(buf[1]) == 'r' && 
+                                   nsCRT::ToLower(buf[2]) == 'l' && buf[3] == '(' &&
+                                   nsCRT::ToLower(buf[4]) =='c'  && nsCRT::ToLower(buf[5]) =='i' && 
+                                   nsCRT::ToLower(buf[6]) =='d'  && buf[7]==':'))
+      {
+        // write out "url(:
+        status = real_write(relobj, buf, 4);
+        buf += 4;
+
+        // adjust the end ptr2 to go back to the close paren
+        if ( *(ptr2  - 1) == ';' && *(ptr2 - 2) == ')')
+          ptr2 -= 2;
+      }
+
       /* Compare the beginning of the word with "cid:". Yuck. */
       if (((ptr2 - buf) > 4) && 
-        ((buf[0]=='c' || buf[0]=='C') && 
-         (buf[1]=='i' || buf[1]=='I') && 
-         (buf[2]=='d' || buf[2]=='D') && 
+        ((nsCRT::ToLower(buf[0]) =='c') && 
+         (nsCRT::ToLower(buf[1]) =='i') && 
+         (nsCRT::ToLower(buf[2]) =='d') && 
           buf[3]==':'))
       {
         // Make sure it's lowercase, otherwise it won't be found in the hash table

@@ -4140,9 +4140,9 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
       {
         PRBool hasAttribute;
         nsAutoString color;
-        if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("background"), &hasAttribute))
-            && hasAttribute)  // There is a background image
-          *_retval = nsIMsgCompConvertible::No; 
+        nsAutoString backgroundUrl;
+        if (NS_SUCCEEDED(GetBackgroundImageUrl(domElement, NS_LITERAL_STRING("background-image"), backgroundUrl)) && !backgroundUrl.IsEmpty())
+          *_retval = nsIMsgCompConvertible::No; // There is a background image
         else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("text"), &hasAttribute)) &&
                  hasAttribute &&
                  NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("text"), color)) &&
@@ -4358,7 +4358,7 @@ nsresult nsMsgCompose::SetBodyAttribute(nsIEditor* editor, nsIDOMElement* elemen
       name.CompareWithConversion("link", PR_TRUE) == 0 ||
       name.CompareWithConversion("vlink", PR_TRUE) == 0 ||
       name.CompareWithConversion("alink", PR_TRUE) == 0 ||
-      name.CompareWithConversion("background", PR_TRUE) == 0)
+      name.CompareWithConversion("style", PR_TRUE) == 0)
   {
     /* cleanup the attribute value */
     value.Trim(" \t\n\r");
@@ -4423,6 +4423,8 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
       {
         /* we found the end of an attribute name */
         attributeName.Assign(start, data - start);
+        // strip any leading or trailing white space from the attribute name.
+        attributeName.CompressWhitespace();
         start = data + 1;
         if (start < end && *start == '\"')
         {
@@ -4438,25 +4440,18 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
       }
       else
       {
-        if (delimiter == '\"')
-        {
-          /* we found the closing double-quote of an attribute value,
-             let's find now the real attribute delimiter */
-          delimiter = ' ';
-        }
-        else
-        {
-          /* we found the end of an attribute value */
-          attributeValue.Assign(start, data - start);
-          rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
-          NS_ENSURE_SUCCESS(rv, rv);
+        /* we found the end of an attribute value */
+        if (delimiter =='\"')
+          data ++; // include the training quote for attribute values which are quoted
+        attributeValue.Assign(start, data - start);
+        rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-          /* restart the search for the next pair of attribute */
-          start = data + 1;
-          attributeName.Truncate();
-          attributeValue.Truncate();
-          delimiter = '=';
-        }
+        /* restart the search for the next pair of attribute */
+        start = data + 1;
+        attributeName.Truncate();
+        attributeValue.Truncate();
+        delimiter = '=';
       }
     }
 

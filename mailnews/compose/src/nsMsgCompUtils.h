@@ -46,6 +46,8 @@
 #include "nsIMsgCompUtils.h"
 #include "nsComObsolete.h"
 
+class nsIDOMElement;
+
 class nsIPrompt; 
 
 #define ANY_SERVER "anyfolder://"
@@ -169,6 +171,10 @@ nsresult ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed = PR_FALSE
 
 // Check if we should use format=flowed 
 PRBool UseFormatFlowed(const char *charset);
+
+// dom helper method shared by nsMsgSend and nsMsgCompose
+
+nsresult GetBackgroundImageUrl(nsIDOMElement * aElement, const nsAString& aPropertyName, nsAString& aBackgroundUrl);
 
 
 NS_END_EXTERN_C
