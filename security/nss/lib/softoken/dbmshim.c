@@ -34,7 +34,7 @@
 /*
  * Berkeley DB 1.85 Shim code to handle blobs.
  *
- * $Id: dbmshim.c,v 1.1 2002/08/28 21:51:08 relyea%netscape.com Exp $
+ * $Id: dbmshim.c,v 1.2 2002/09/05 00:25:29 jpierre%netscape.com Exp $
  */
 #include "mcom_db.h"
 #include "secitem.h"
@@ -282,6 +282,8 @@ dbs_freemap(void)
 	dbs_len = 0;
     } else if (dbs_addr) {
 	PORT_Free(dbs_addr);
+	dbs_addr = NULL;
+	dbs_len = 0;
     }
     return;
 }
