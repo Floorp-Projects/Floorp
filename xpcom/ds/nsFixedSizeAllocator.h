@@ -55,11 +55,19 @@
     public:
       // Implement placement new & delete operators that will
       // use the fixed size allocator.
-      static operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-        return aAllocator.Alloc(aSize); }
+      static Foo *
+      Create(nsFixedSizeAllocator &aAllocator)
+      {
+        void *place = aAllocator.Alloc(sizeof(Foo));
+        return place ? ::new (place) Foo() : nsnull;
+      }
 
-      static operator delete(void* aPtr, size_t aSize) {
-        nsFixedSizeAllocator::Free(aPtr, aSize); }
+      static void
+      Destroy(nsFixedSizeAllocator &aAllocator, Foo *aFoo)
+      {
+        aFoo->~Foo();
+        aAllocator.Free(aFoo, sizeof(Foo));
+      }
 
       // ctor & dtor
       Foo() {}
@@ -96,18 +104,18 @@
       // Now we can use the pool.
 
       // Create a new Foo object using the pool:
-      Foo* foo = new (pool) Foo();
+      Foo* foo = Foo::Create(pool);
       if (! foo) {
         // uh oh, out of memory!
       }
 
       // Delete the object. The memory used by `foo' is recycled in
       // the pool, and placed in a freelist
-      delete foo;
+      Foo::Destroy(foo);
 
       // Create another foo: this one will be allocated from the
       // free-list
-      foo = new (pool) foo();
+      foo = Foo::Create(pool);
 
       // When pool is destroyed, all of its memory is automatically
       // freed. N.B. it will *not* call your objects' destructors! In
