@@ -89,7 +89,7 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
 
   rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("options"), PR_FALSE, &found);
   if (NS_SUCCEEDED(rv) && found) {
-    wwatch->OpenWindow(nsnull, "chrome://communicator/content/pref/pref.xul", "_blank",
+    wwatch->OpenWindow(nsnull, "chrome://messenger/content/preferences/preferences.xul", "_blank",
                       "chrome,dialog=no,all", nsnull, getter_AddRefs(opened));
   }
 
