@@ -25,10 +25,12 @@
 #include "nsIDOMDocument.h"
 #include "nsIContent.h"
 #include "nsVoidArray.h"
+#include "nsIDOMText.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
 class nsRange : public nsIDOMRange
 {
@@ -885,7 +887,27 @@ nsresult nsRange::DeleteContents()
     }
     else // textnode, or somesuch.  offsets refer to data in node
     {
-      // not done yet  
+      nsIDOMText *textNode;
+      res = mStartParent->QueryInterface(kIDOMTextIID, (void**)&textNode);
+      if (!NS_SUCCEEDED(res)) // if it's not a text node, punt
+      {
+        NS_NOTREACHED("nsRange::DeleteContents");
+        NS_IF_RELEASE(cStart);
+        NS_IF_RELEASE(cEnd);
+        return NS_ERROR_UNEXPECTED;
+      }
+      // delete the text
+      res = textNode->DeleteData(mStartOffset, mEndOffset);
+      if (!NS_SUCCEEDED(res)) 
+      {
+        NS_NOTREACHED("nsRange::DeleteContents");
+        NS_IF_RELEASE(cStart);
+        NS_IF_RELEASE(cEnd);
+        NS_IF_RELEASE(textNode);
+        return res;
+      }
+      NS_IF_RELEASE(textNode);
+      return NS_OK;
     }
   } 
   
