@@ -28,12 +28,12 @@ messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 var statusFeedback = Components.classes["component://netscape/messenger/statusfeedback"].createInstance();
 statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
-function OpenAttachURL(url)
+function OpenAttachURL(url, displayName, messageUri)
 {
   dump("\nOpenAttachURL from XUL\n");
   dump(url);
   dump("\n");
   messenger.SetWindow(window, statusFeedback);
-  messenger.openAttachment(url);
+  messenger.openAttachment(url, displayName, messageUri);
 }
 
