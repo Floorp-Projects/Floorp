@@ -1,0 +1,14 @@
+;
+; temp def file for nsgif dll
+;
+
+LIBRARY		nsgif3250.dll
+DESCRIPTION  	'test dll'
+
+EXPORTS		
+		ImgDInit @1002		PRIVATE
+		ImgDWrite @1003		PRIVATE  
+		ImgDWriteReady @1004	PRIVATE
+		ImgDComplete @1005	PRIVATE
+		ImgDAbort @1006		PRIVATE
+
