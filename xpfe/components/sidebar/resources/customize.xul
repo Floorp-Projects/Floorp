@@ -54,7 +54,7 @@
   id="main-window"
   title="&sidebar.customize.title.label;"
   windowtype="sidebar:customize"
-  width="450" height="400"
+  height="400"
   persist="screenX screenY width height"
   ondialogaccept="return Save();">
 
