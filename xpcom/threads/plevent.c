@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#if defined(_WIN32) || defined(WIN16)
+#if defined(_WIN32) 
 #include <windows.h>
 #endif
 
@@ -75,6 +75,35 @@
 #include <stsdef.h>
 #endif /* VMS */
 
+#if defined(_WIN32)
+/* Comment out the following USE_TIMER define to prevent 
+ * WIN32 from using a WIN32 native timer for PLEvent notification. 
+ * With USE_TIMER defined we will use a timer when pending input 
+ * or paint events are starved, otherwise it will use a posted 
+ * WM_APP msg for PLEvent notification. 
+ */
+#define USE_TIMER
+
+/* Threshold defined in milliseconds for determining when the input 
+ * and paint events have been held in the WIN32 msg queue too long
+ */
+#define INPUT_STARVATION_LIMIT    50
+/* The paint starvation limit is set to the smallest value which 
+ * does not cause performance degradation while running page load tests
+ */
+#define PAINT_STARVATION_LIMIT   750
+/* The WIN9X paint starvation limit is larger because it was 
+ * determined that the following value was required to prevent performance
+ * degradation on page load tests for WIN98/95 only.
+ */
+#define WIN9X_PAINT_STARVATION_LIMIT 3000
+
+#define TIMER_ID 0
+static HHOOK   _md_MouseMsgFilterHook = NULL;
+static PRBool  _md_MovingWindow       = PR_FALSE;
+static PRInt32 _md_WindowCount        = 0;
+#endif
+
 static PRLogModuleInfo *event_lm = NULL;
 
 /*******************************************************************************
@@ -100,6 +129,10 @@ struct PLEventQueue {
     EventQueueType type;
     PRPackedBool   processingEvents;
     PRPackedBool   notified;
+#if defined(_WIN32) 
+    PRPackedBool   timerSet;
+#endif
+
 #if defined(XP_UNIX)
 #if defined(VMS)
     int		 efn;
@@ -108,7 +141,7 @@ struct PLEventQueue {
 #endif
     PLGetEventIDFunc idFunc;
     void            *idFuncClosure;
-#elif defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
+#elif defined(_WIN32) || defined(XP_OS2)
     HWND         eventReceiverWindow;
     PRBool       removeMsg;
 #elif defined(XP_BEOS)
@@ -129,14 +162,25 @@ static void        _md_CreateEventQueue( PLEventQueue *eventQueue );
 static PRInt32     _pl_GetEventCount(PLEventQueue* self);
 
 
-#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2)
 #if defined(XP_OS2)
 ULONG _pr_PostEventMsgId;
 #else
 UINT _pr_PostEventMsgId;
 #endif /* OS2 */
 static char *_pr_eventWindowClass = "XPCOM:EventWindow";
-#endif /* Win32, Win16, OS2 */
+#endif /* Win32, OS2 */
+
+#if defined(_WIN32)
+
+static LPCTSTR _md_GetEventQueuePropName() {
+  static ATOM atom = 0;
+  if (!atom) {
+    atom = GlobalAddAtom("XPCOM_EventQueue");
+  }
+  return MAKEINTATOM(atom);
+}
+#endif
 
 /*******************************************************************************
  * Event Queue Operations
@@ -169,7 +213,10 @@ static PLEventQueue * _pl_CreateEventQueue(char *name,
     self->handlerThread = handlerThread;
     self->processingEvents = PR_FALSE;
     self->type = qtype;
-#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
+#if defined(_WIN32) 
+    self->timerSet = PR_FALSE;
+#endif
+#if defined(_WIN32) || defined(XP_OS2)
     self->removeMsg = PR_TRUE;
 #endif
     self->notified = PR_FALSE;
@@ -820,22 +867,217 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #elif defined(XP_UNIX)
     close(self->eventPipe[0]);
     close(self->eventPipe[1]);
-#elif defined(_WIN32) || defined(WIN16)
+#elif defined(_WIN32) 
+    if (self->timerSet) {
+      KillTimer(self->eventReceiverWindow, TIMER_ID);
+      self->timerSet = PR_FALSE;
+    }
+    RemoveProp(self->eventReceiverWindow, _md_GetEventQueuePropName());
     DestroyWindow(self->eventReceiverWindow);
+    _md_WindowCount--;
+    if ((_md_WindowCount <= 0) && (_md_MouseMsgFilterHook != NULL)) {
+      UnhookWindowsHookEx(_md_MouseMsgFilterHook);
+      _md_MouseMsgFilterHook = NULL;
+    }
 #elif defined(XP_OS2)
     WinDestroyWindow(self->eventReceiverWindow);
 #endif
 }
 
-#if defined(_WIN32) || defined(WIN16)
+#if defined(_WIN32) 
+
+static PRBool   _md_WasInputPending = PR_FALSE;
+static PRUint32 _md_InputTime = 0;
+static PRBool   _md_WasPaintPending = PR_FALSE;
+static PRUint32 _md_PaintTime = 0;
+/* last mouse location */
+static POINT    _md_LastMousePos;
+
+/*******************************************************************************
+ * Timer callback function. Timers are used on WIN32 instead of APP events
+ * when there are pending UI events because APP events can cause the GUI to lockup
+ * because posted messages are processed before other messages.
+ ******************************************************************************/
+
+static void CALLBACK _md_TimerProc( HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime )
+{
+    PREventQueue* queue =  (PREventQueue  *) GetProp(hwnd, _md_GetEventQueuePropName());
+    PR_ASSERT(queue != NULL);
+
+    KillTimer(hwnd, TIMER_ID);
+    queue->timerSet = PR_FALSE;
+    queue->removeMsg = PR_FALSE;
+    PL_ProcessPendingEvents( queue );
+    queue->removeMsg = PR_TRUE;
+}
+
+static PRBool _md_IsWIN9X = PR_FALSE;
+static PRBool _md_IsOSSet = PR_FALSE;
+
+static void _md_DetermineOSType()
+{
+  OSVERSIONINFO os;
+  os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  GetVersionEx(&os);
+  if (VER_PLATFORM_WIN32_WINDOWS == os.dwPlatformId) {
+    _md_IsWIN9X = PR_TRUE;
+  } 
+}
+
+static PRUint32 _md_GetPaintStarvationLimit() {
+
+  if (! _md_IsOSSet) {
+    _md_DetermineOSType();
+    _md_IsOSSet = PR_TRUE;
+  }
+
+  if (_md_IsWIN9X) {
+    return WIN9X_PAINT_STARVATION_LIMIT;
+  }
+
+  return PAINT_STARVATION_LIMIT;
+}
+
+
+/* Determine if an event is being starved (i.e the starvation limit has
+ * been exceeded.  
+ * Note: this function uses the current setting and updates 
+ * the contents of the wasPending and lastTime arguments
+ *
+ * ispending:       PR_TRUE if the event is currently pending 
+ * starvationLimit: Threshold defined in milliseconds for determining when the event
+ *                  has been held in the queue too long
+ * wasPending:      PR_TRUE if the last time _md_EventIsStarved was called the event was pending.
+ *                  This value is updated within this function. 
+ * lastTime:        Holds the last time the event was in the queue. 
+ *                  This value is updated within this function
+ * returns:         PR_TRUE if the event is starved, PR_FALSE otherwise
+ */
+   
+static PRBool _md_EventIsStarved(PRBool isPending, PRUint32 starvationLimit, 
+                                 PRBool *wasPending, PRUint32 *lastTime) 
+{
+  if ((*wasPending) && (isPending)) {
+      /* It was pending previously and the event is still
+       * pending so check to see if the elapsed time is
+       * over the limit which indicates the event was starved
+       */
+      PRUint32 now = PR_IntervalToMilliseconds(PR_IntervalNow()); 
+    
+      if ((now - *lastTime) > starvationLimit) {
+        return PR_TRUE; /* pending and over the limit */
+      }
+
+      return PR_FALSE; /* pending but within the limit */
+  }
+  
+  if (isPending) {
+    /* was_pending must be false so record the current time
+     * so the elapsed time can be computed the next time this
+     * function is called 
+     */
+    *lastTime = PR_IntervalToMilliseconds(PR_IntervalNow());
+    *wasPending = PR_TRUE; 
+    return PR_FALSE; 
+  }
+
+  /* Event is no longer pending */
+  *wasPending = PR_FALSE;
+  return PR_FALSE;
+}
+
+/* Determines if the there is a pending Mouse or input event */
+
+static PRBool _md_IsInputPending(WORD qstatus)
+{
+  if (qstatus == 0) {
+    /* return immediately there isn't any pending input or paints */
+    return PR_FALSE;  
+  }
+
+  /* Is there anything other than a QS_MOUSEMOVE pending? */
+  if ((qstatus & QS_MOUSEBUTTON) ||
+      (qstatus & QS_KEY) ||
+      (qstatus & QS_HOTKEY)) {
+    return PR_TRUE;
+  }
+
+  /* Mouse moves need extra processing to determine if the mouse
+   * pointer actually changed location because Windows automatically 
+   * generates WM_MOVEMOVE events when a new window is created which 
+   * we need to filter out.
+   */
+  if (qstatus & QS_MOUSEMOVE) {
+    POINT cursorPos;
+    GetCursorPos(&cursorPos);
+    if ((_md_LastMousePos.x == cursorPos.x) && 
+        (_md_LastMousePos.y == cursorPos.y)) {
+      return PR_FALSE; /* This is a fake mouse move */
+    } 
+      
+    /* Real mouse move */
+    _md_LastMousePos.x = cursorPos.x; 
+    _md_LastMousePos.y = cursorPos.y;  
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
+#ifdef USE_TIMER
+    WORD qstatus;
+
+    if (_md_MovingWindow) {
+      SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
+      self->timerSet = PR_TRUE;
+      _md_WasInputPending = PR_FALSE; 
+      _md_WasPaintPending = PR_FALSE; 
+      return PR_SUCCESS;
+    }
+
+    qstatus = HIWORD(GetQueueStatus(QS_INPUT | QS_PAINT));
+
+    /* Check for starved input */
+    if (_md_EventIsStarved( _md_IsInputPending(qstatus), INPUT_STARVATION_LIMIT, 
+        &_md_WasInputPending, &_md_InputTime )) {
+      /* Use timer for notification. Timers have the lowest priority. They are not processed 
+       * until all other events have been processed. This allows the starved paints and input to
+       * be processed 
+       */
+      SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
+      self->timerSet = PR_TRUE;
+      /* Clear out any pending paint, _md_WasInputPending was cleared in _md_EventIsStarved */
+      _md_WasPaintPending = PR_FALSE; 
+      return PR_SUCCESS;
+    }
+    
+    if (_md_EventIsStarved( (qstatus & QS_PAINT), _md_GetPaintStarvationLimit(), 
+        &_md_WasPaintPending, &_md_PaintTime) ) {
+      /* Use timer for notification. Timers have the lowest priority. They are not processed 
+       * until all other events have been processed. This allows the starved paints and input to
+       * be processed 
+       */
+      SetTimer(self->eventReceiverWindow, TIMER_ID, 0 ,_md_TimerProc);
+      self->timerSet = PR_TRUE;
+      /* Clear out any pending input, _md_WasPaintPending was cleared in _md_EventIsStarved */
+      _md_WasInputPending = PR_FALSE; 
+      return PR_SUCCESS;
+    }
+    
+    /* Nothing is being starved so post a message instead of using a timer
+     * Posted messages are processed before other messages so they have the highest priority.
+     */
+#endif
     PostMessage( self->eventReceiverWindow, _pr_PostEventMsgId,
-                 (WPARAM)0, (LPARAM)self);
+                (WPARAM)0, (LPARAM)self );
+    
     return PR_SUCCESS;
 }/* --- end _pl_NativeNotify() --- */
 #endif
+
 
 #if defined(XP_OS2)
 static PRStatus
@@ -915,7 +1157,7 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 {
-#if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2)
 #ifdef XP_OS2
     QMSG aMsg;
 #else
@@ -936,6 +1178,10 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 #else
         PeekMessage(&aMsg, self->eventReceiverWindow,
                 _pr_PostEventMsgId, _pr_PostEventMsgId, PM_REMOVE);
+        if (self->timerSet) {
+          KillTimer(self->eventReceiverWindow, TIMER_ID);
+          self->timerSet = PR_FALSE;
+        }
 #endif
     }
     return PR_SUCCESS;
@@ -1006,7 +1252,7 @@ PL_IsQueueNative(PLEventQueue *queue)
     return queue->type == EventQueueIsNative ? PR_TRUE : PR_FALSE;
 }
 
-#if defined(WIN16) || defined(_WIN32)
+#if defined(_WIN32)
 /*
 ** Global Instance handle...
 ** In Win32 this is the module handle of the DLL.
@@ -1015,18 +1261,6 @@ PL_IsQueueNative(PLEventQueue *queue)
 static HINSTANCE _pr_hInstance;
 #endif
 
-#if defined(WIN16)
-/*
-** Function LibMain() is required by Win16
-**
-*/
-int CALLBACK LibMain( HINSTANCE hInst, WORD wDataSeg, 
-                      WORD cbHeapSize, LPSTR lpszCmdLine )
-{
-    _pr_hInstance = hInst;
-    return TRUE;
-}
-#endif /* WIN16 */
 
 #if defined(_WIN32)
 
@@ -1058,15 +1292,12 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 #endif
 
 
-#if defined(WIN16) || defined(_WIN32) || defined(XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2)
 #ifdef XP_OS2
 MRESULT EXPENTRY
 _md_EventReceiverProc(HWND hwnd, ULONG uMsg, MPARAM wParam, MPARAM lParam)
 #else
 LRESULT CALLBACK 
-#if defined(WIN16)
-__loadds
-#endif
 _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 {
@@ -1084,7 +1315,6 @@ _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
-
 
 static PRBool   isInitialized;
 static PRCallOnceType once;
@@ -1105,9 +1335,33 @@ static PRStatus InitEventLib( void )
         return PR_SUCCESS;
 } /* end InitWinEventLib() */
 
-#endif /* Win16, Win32, OS2 */
+#endif /* Win32, OS2 */
 
-#if defined(_WIN32) || defined(WIN16)
+#if defined(_WIN32) 
+
+/* Detect when the user is moving a top-level window */
+
+LRESULT CALLBACK _md_DetectWindowMove(int code, WPARAM wParam, LPARAM lParam)
+{
+    /* This msg filter is required to determine when the user has
+     * clicked in the window title bar and is moving the window. 
+     * This is necessary because there aren't any pending
+     * input events reported while Windows spins the modal message loop
+     * used when moving a top-level window.
+     */
+
+    CWPSTRUCT* sysMsg = (CWPSTRUCT*)lParam;
+    if (sysMsg) {
+      if (sysMsg->message == WM_ENTERSIZEMOVE) {
+        _md_MovingWindow = PR_TRUE;   
+      } else if (sysMsg->message == WM_EXITSIZEMOVE) {
+        _md_MovingWindow = PR_FALSE;
+      }
+    }
+
+    return CallNextHookEx(_md_MouseMsgFilterHook, code, wParam, lParam);
+}
+
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
@@ -1150,6 +1404,20 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
                                             NULL, NULL, _pr_hInstance,
                                             NULL);
     PR_ASSERT(eventQueue->eventReceiverWindow);
+    /* Set a property which can be used to retrieve the event queue 
+     * within the _md_TimerProc callback 
+     */
+    SetProp(eventQueue->eventReceiverWindow,
+            _md_GetEventQueuePropName(), (HANDLE)eventQueue);
+
+    /* Setup a message hook to detect when the user is moving 
+     * a top level window 
+     */
+    _md_WindowCount++;
+    if (_md_MouseMsgFilterHook == NULL) {
+      _md_MouseMsgFilterHook = SetWindowsHookEx(WH_CALLWNDPROC, _md_DetectWindowMove, 
+                                                NULL, GetCurrentThreadId());
+    }
 
     return;    
 } /* end _md_CreateEventQueue() */
