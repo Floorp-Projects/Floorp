@@ -1712,19 +1712,18 @@ nsCookieService::CheckPrefs(nsIURI         *aHostURI,
     // check to see if P3P conditions are satisfied. see nsICookie.idl for
     // P3P-related constants.
 
-    nsCookieStatus p3pStatus = nsICookie::STATUS_REJECTED;
+    nsCookieStatus p3pStatus = nsICookie::STATUS_UNKNOWN;
 
     nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-    if (httpChannel) {
-      // lazily init the P3P service
-      if (!mP3PService)
-        mP3PService = do_GetService(NS_COOKIECONSENT_CONTRACTID);
 
-      if (mP3PService) {
-        // get the site policy and a status decision for the cookie
-        PRBool isForeign = IsForeign(aHostURI, aFirstURI);
-        mP3PService->GetConsent(aHostURI, httpChannel, isForeign, &aPolicy, &p3pStatus);
-      }
+    // lazily init the P3P service
+    if (!mP3PService)
+      mP3PService = do_GetService(NS_COOKIECONSENT_CONTRACTID);
+
+    if (mP3PService) {
+      // get the site policy and a status decision for the cookie
+      PRBool isForeign = IsForeign(aHostURI, aFirstURI);
+      mP3PService->GetConsent(aHostURI, httpChannel, isForeign, &aPolicy, &p3pStatus);
     }
 
     if (p3pStatus == nsICookie::STATUS_REJECTED) {
