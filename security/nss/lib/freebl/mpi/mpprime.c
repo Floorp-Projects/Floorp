@@ -204,7 +204,7 @@ mp_err  mpp_divis_primes(mp_int *a, mp_digit *np)
 
   ARGCHK(a != NULL && np != NULL, MP_BADARG);
 
-  size = *np;
+  size = (int)*np;
   if(size > prime_tab_size)
     size = prime_tab_size;
 

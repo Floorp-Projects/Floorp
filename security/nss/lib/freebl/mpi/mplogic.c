@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.1 2000/07/14 00:44:22 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.2 2000/07/20 04:20:21 nelsonb%netscape.com Exp $
  */
 
 #include "mplogic.h"
@@ -318,7 +318,7 @@ mp_err mpl_num_set(mp_int *a, int *num)
     cur = DIGIT(a, ix);
     
     for(db = 0; db < sizeof(mp_digit); db++) {
-      reg = (cur >> (CHAR_BIT * db)) & UCHAR_MAX;
+      reg = (unsigned char)(cur >> (CHAR_BIT * db));
 
       nset += bitc[reg];
     }
@@ -347,7 +347,7 @@ mp_err mpl_num_clear(mp_int *a, int *num)
     cur = DIGIT(a, ix);
     
     for(db = 0; db < sizeof(mp_digit); db++) {
-      reg = (cur >> (CHAR_BIT * db)) & UCHAR_MAX;
+      reg = (unsigned char)(cur >> (CHAR_BIT * db));
 
       nset += bitc[UCHAR_MAX - reg];
     }
