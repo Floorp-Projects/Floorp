@@ -61,7 +61,7 @@ public:
 
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsString& aURL) = 0;
   NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL) = 0;
-  NS_IMETHOD LoadBindingDocument(const nsString& aURL) = 0;
+  NS_IMETHOD LoadBindingDocument(nsIDocument* aDocument, const nsString& aURL) = 0;
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding)=0;
   NS_IMETHOD ClearAttachedQueue()=0;

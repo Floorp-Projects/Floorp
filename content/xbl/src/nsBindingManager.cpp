@@ -165,7 +165,7 @@ public:
 
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsString& aURL);
   NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL);
-  NS_IMETHOD LoadBindingDocument(const nsString& aURL);
+  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsString& aURL);
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
   NS_IMETHOD ClearAttachedQueue();
@@ -371,7 +371,7 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsString& aUR
 }
 
 NS_IMETHODIMP
-nsBindingManager::LoadBindingDocument(const nsString& aURL)
+nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsString& aURL)
 {
   // First we need to load our binding.
   nsresult rv;
@@ -382,7 +382,7 @@ nsBindingManager::LoadBindingDocument(const nsString& aURL)
   // Load the binding doc.
   nsCString url; url.AssignWithConversion(aURL);
   nsCOMPtr<nsIXBLDocumentInfo> info;
-  xblService->LoadBindingDocumentInfo(nsnull, url, nsCAutoString(), PR_TRUE, getter_AddRefs(info));
+  xblService->LoadBindingDocumentInfo(nsnull, aBoundDoc, url, nsCAutoString(), PR_TRUE, getter_AddRefs(info));
   if (!info)
     return NS_ERROR_FAILURE;
 
