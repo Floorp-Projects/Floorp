@@ -195,6 +195,9 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
         nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
       }
 
+      // XXX Commented this out because the absolute positioning code
+      // above doesn't check if it needs to position the absolute frame.
+#if 0
       // XXX Temporary code: if the frame we just reflowed is a
       // floating frame then fall through into the main reflow pathway
       // after clearing out our incremental reflow status. This forces
@@ -211,6 +214,7 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
       if (NS_STYLE_FLOAT_NONE == display->mFloats) {
         return NS_OK;
       }
+#endif
 
       // Switch over to a reflow-state that is called resize instead
       // of an incremental reflow state like we were passed in.
