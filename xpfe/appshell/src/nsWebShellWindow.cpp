@@ -1472,7 +1472,6 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
     return rv;
   }
 
-#ifdef XP_PC // XXX: Won't work on any other platforms yet. Sigh.
   // We need to create a new top level window and then enter a nested
   // loop. Eventually the new window will be told that it has loaded,
   // at which time we know it is safe to spin out of the nested loop
@@ -1480,12 +1479,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 
   // First push a nested event queue for event processing from netlib
   // onto our UI thread queue stack.
-  NS_WITH_SERVICE(nsIEventQueueService, eQueueService, kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Unable to obtain queue service.");
-    return rv;
-  }
-  eQueueService->PushThreadEventQueue();
+  appShell->PushThreadEventQueue();
 
   nsCOMPtr<nsIURI> urlObj;
   char * urlStr = "chrome://navigator/content/";
@@ -1540,8 +1534,8 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
       newWindow->GetLockedState(locked);
     }
 
-    // Get rid of the nested UI thread queue used for netlib, and release the event queue service.
-    eQueueService->PopThreadEventQueue();
+    // Get rid of the nested UI thread queue used for netlib
+    appShell->PopThreadEventQueue();
 
     subshell->Spindown();
     NS_RELEASE(subshell);
@@ -1558,7 +1552,6 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
       return rv;
     }
   }
-#endif // XP_PC
 
   return rv;
 }
