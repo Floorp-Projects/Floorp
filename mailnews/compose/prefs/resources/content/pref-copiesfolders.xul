@@ -1,0 +1,79 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+<!ENTITY window.title "Copies and Folders">
+<!ENTITY pane.title "Copies and Folders">
+<!ENTITY sendMsg.label "When sending a mail message, automatically">
+<!ENTITY place.label "Place a copy in FOLDER">
+<!ENTITY bccEmail.label "BCC: EMAIL">
+<!ENTITY bccOther.label "BCC Other Address:">
+<!ENTITY sendNews.label "When sending a newsgroup message, automatically">
+<!ENTITY storage.label "Storage for Drafts and Templates">
+<!ENTITY keepDraft.label "Keep Draft in FOLDER">
+<!ENTITY keepTemplate.label "Keep Templates in FOLDER">
+<!ENTITY chooseFolder.label "Choose Folder...">
+]>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		onload="StartUp('Mailnews-Copies and Folders')" >
+
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+
+<html:div flex="100%">
+	<html:div id="top">
+		<html:span id="lefttext">&pane.title;</html:span>
+	</html:div>
+ 
+&sendMsg.label;
+<html:form>
+	<html:table>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:mail.use_fcc"/>&place.label;
+			<html:input name="choose" type="button" value="&chooseFolder.label;"/>
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:mail.cc_self"/>&bccEmail.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:mail.use_default_cc"/>&bccOther.label;
+			<html:input name="bccother" id="pref:string:mail.default_cc" size="10"/> 
+		</html:td></html:tr>
+	</html:table>
+</html:form>
+ 
+&sendNews.label;
+<html:form>
+	<html:table>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:news.use_fcc"/>&place.label;
+			<html:input name="choose" type="button" value="&chooseFolder.label;"/>
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:news.cc_self"/>&bccEmail.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:news.use_default_cc"/>&bccOther.label;
+			<html:input name="bccother" id="pref:string:news.default_cc" size="10"/> 
+		</html:td></html:tr>
+	</html:table>
+</html:form>
+
+&storage.label;
+<html:form>
+	<html:table>
+		<html:tr><html:td>&keepDraft.label;
+			<html:input name="choose" type="button" value="&chooseFolder.label;"/>
+		</html:td></html:tr>
+		<html:tr><html:td>&keepTemplate.label;
+			<html:input name="choose" type="button" value="&chooseFolder.label;"/>
+		</html:td></html:tr>
+	</html:table>
+</html:form>
+
+</html:div>
+</window>
