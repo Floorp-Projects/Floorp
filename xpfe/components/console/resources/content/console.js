@@ -40,7 +40,7 @@ var consoleListener = {
 function onLoadJSConsole() 
 {
     try {
-        var cs_class = Components.classes['consoleservice'];
+        var cs_class = Components.classes['mozilla.consoleservice.1'];
         var cs_iface = Components.interfaces.nsIConsoleService;
         var cs_isupports = cs_class.getService();
         var cs = cs_isupports.QueryInterface(cs_iface);
@@ -77,7 +77,7 @@ function onUnloadJSConsole()
     // keep a global ref. to it instead???
 
     try {
-        var cs_class = Components.classes['consoleservice'];
+        var cs_class = Components.classes['mozilla.consoleservice.1'];
         var cs_iface = Components.interfaces.nsIConsoleService;
         var cs_isupports = cs_class.getService();
         var cs = cs_isupports.QueryInterface(cs_iface);
@@ -135,7 +135,7 @@ function appendMessage(messageObject)
         text += scriptError.sourceName;
         text += " line " + scriptError.lineNumber +
             ", column " + scriptError.columnNumber + ": " + scriptError.message;
-        text += "Source line: " + scriptError.sourceLine;
+        text += " Source line: " + scriptError.sourceLine;
 
         msgContent = document.createTextNode(text);
     } catch (exn) {
