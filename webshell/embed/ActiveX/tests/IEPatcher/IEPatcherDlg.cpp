@@ -409,6 +409,7 @@ PatchStatus CIEPatcherDlg::ScanBuffer(char *pszBuffer, long nBufferSize, BOOL bA
 				TraceProgress("Patching with CLSID_MozillaBrowser");
 				memcpy(&pszBuffer[i], &CLSID_MozillaBrowser, sizeof(CLSID));
 				TraceProgress("Patching with CLSID_MozillaBrowser");
+				bPatchApplied = TRUE;
 			}
 		}
 		else if (memcmp(&pszBuffer[i], &IID_IWebBrowser, sizeof(CLSID)) == 0)
