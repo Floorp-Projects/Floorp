@@ -1569,10 +1569,15 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.width  = mRect.width;
     aDesiredSize.height = mRect.height;
 
-    // We know our view (if we have one) has been positioned
-    // correctly, but it's up to us to make sure that our child views
-    // are correctly positioned, too.
-    nsContainerFrame::PositionChildViews(aPresContext, this);
+    // for floaters, our view has not been positioned yet as we have not been placed
+    //  - the block code will position our views after the floater is placed
+    if (aOuterRS.mStyleDisplay &&
+        !aOuterRS.mStyleDisplay->IsFloating()) {
+      // We know our view (if we have one) has been positioned
+      // correctly, but it's up to us to make sure that our child views
+      // are correctly positioned, too.
+      nsContainerFrame::PositionChildViews(aPresContext, this);
+    }
   }
   else if (eReflowReason_Incremental == aOuterRS.reason) {
     rv = IncrementalReflow(aPresContext, aDesiredSize, aOuterRS, aStatus);
