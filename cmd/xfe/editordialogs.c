@@ -22,7 +22,7 @@
  *  Should only be built for the editor.
  *  Created: David Williams <djw@netscape.com>, Mar-12-1996
  *
- *  RCSID: "$Id: editordialogs.c,v 3.5 1998/09/03 21:33:45 akkana%netscape.com Exp $"
+ *  RCSID: "$Id: editordialogs.c,v 3.6 1998/09/03 21:43:52 akkana%netscape.com Exp $"
  */
 
 #include "mozilla.h"
@@ -11581,8 +11581,6 @@ ED_CharsetEncode FE_EncodingDialog(MWContext* context, char* newCharset)
     Cardinal depth = 0;
     XmString xm_message;
     char* pMessage;
-    /* newCharset needs to be plugged in to the strings in the togglebuttons */
-    char* newCharset = "the new character set";
 
     XtVaGetValues (mainw, XtNvisual, &v, XtNcolormap, &cmap,
                    XtNdepth, &depth, 0);
@@ -11598,6 +11596,8 @@ ED_CharsetEncode FE_EncodingDialog(MWContext* context, char* newCharset)
     XtSetArg(av[ac], XmNorientation, XmVERTICAL); ac++;
     radio = XmCreateRowColumn(dialog, "_radio", av, ac);
     XtManageChild(radio);
+
+    /* newCharset needs to be plugged in to the strings in the togglebuttons */
 
     ac = 0;
     XtSetArg(av[ac], XmNindicatorType, XmN_OF_MANY); ac++;
