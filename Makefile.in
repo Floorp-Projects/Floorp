@@ -28,10 +28,26 @@ DIRS =				\
   config			\
   dbm				\
   nsprpub			\
+  $(NULL)
+
+ifndef MOZ_NATIVE_JPEG
+DIRS +=				\
   jpeg				\
+  $(NULL)
+endif
+
+DIRS +=				\
   modules/libreg		\
   xpcom				\
+  $(NULL)
+
+ifndef MOZ_NATIVE_ZLIB
+DIRS +=				\
   modules/zlib			\
+  $(NULL)
+endif
+
+DIRS +=				\
   modules/libutil		\
   sun-java			\
   nav-java			\

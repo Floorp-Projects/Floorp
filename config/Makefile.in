@@ -93,7 +93,7 @@ endif
 
 # Artificial target to make parallel builds play nice
 $(DIST)/bin/bsdecho$(BIN_SUFFIX): $(OBJDIR)/nsinstall$(BINSUFFIX) $(OBJDIR)/bsdecho$(BINSUFFIX)
-	$(INSTALL) -m 444 $@ $(DIST)/bin
+	$(INSTALL) -m 444 $^ $(DIST)/bin
 
 $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 	@$(MAKE_OBJDIR)

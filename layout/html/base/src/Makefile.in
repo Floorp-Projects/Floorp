@@ -80,4 +80,4 @@ MKSHLIB :=
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) broken-image.gif $(DIST)/bin/res/html
+	$(INSTALL) $(srcdir)/broken-image.gif $(DIST)/bin/res/html

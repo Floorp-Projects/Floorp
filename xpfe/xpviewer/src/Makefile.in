@@ -86,7 +86,7 @@ OBJS	= $(CPPSRCS:.cpp=.o)
 EX_LIBS = \
 	-L$(DIST)/bin \
 	-lraptorbase    \
-	-lpng \
+	$(PNG_LIBS) \
 	-lpref \
 	-lraptorbase \
 	$(TOOLKIT_WIDGET_LIB) \
@@ -104,7 +104,7 @@ EX_LIBS = \
 	-lgophurl \
 	-lhttpurl \
 	-limg \
-	-ljpeg \
+	$(JPEG_LIBS) \
 	-ljs \
 	-ljsdom \
 	$(DIST)/lib/libjsdomcore_s.a \
@@ -125,15 +125,14 @@ EX_LIBS = \
 	-lutil \
 	-lxp \
 	-lxpcom \
-	-lzlib \
 	-lutil \
 	-lxp \
 	-lxpcom \
-	-lzlib \
+	$(ZLIB_LIBS) \
 	-lraptorplugin \
 	$(NULL)
 
-ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
+ifneq (,$(filter FreeBSD Linux SunOS,$(OS_ARCH)))
 EX_LIBS += \
 	-lpwcac \
 	-ldbm \
@@ -151,33 +150,37 @@ $(PROGS): $(OBJS) # $(EX_LIBS)
 ifeq ($(OS_ARCH),Linux)
 	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
 else
+ifeq ($(OS_ARCH),IRIX)
 	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
+else
+	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(OS_LIBS)
+endif
 endif
 
 export::
 
 install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
-	$(INSTALL) $(srcdir)/samples/test0.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test1.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test2.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test3.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test4.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test5.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test6.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test7.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test8.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test8siz.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test8sca.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test8tab.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test9.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test9a.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test9b.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/raptor.jpg $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/Anieyes.gif $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/gear1.gif $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/rock_gra.gif $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/bg.jpg $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test0.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test1.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test2.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test3.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test4.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test5.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test6.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test7.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test8.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test8siz.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test8sca.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test8tab.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test9.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test9a.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/test9b.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/raptor.jpg $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/Anieyes.gif $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/gear1.gif $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/rock_gra.gif $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/../../../webshell/tests/viewer/samples/bg.jpg $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/resources/throbber/LargeAnimation00.gif $(DIST)/bin/res/throbber
 	$(INSTALL) $(srcdir)/resources/throbber/LargeAnimation01.gif $(DIST)/bin/res/throbber
 	$(INSTALL) $(srcdir)/resources/throbber/LargeAnimation02.gif $(DIST)/bin/res/throbber

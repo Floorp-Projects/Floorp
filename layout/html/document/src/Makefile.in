@@ -70,7 +70,7 @@ include $(topsrcdir)/config/rules.mk
 export::
 
 install:: $(TARGETS)
-	$(INSTALL) ua.css $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/ua.css $(DIST)/bin/res
 
 
 clobber::

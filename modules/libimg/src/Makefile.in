@@ -28,10 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= img
 LIBRARY_NAME	= img
 
-ifdef STANDALONE_IMAGE_LIB
+REQUIRES	= $(JPEG_REQUIRES) $(PNG_REQUIRES) $(ZLIB_REQUIRES)
+LOCAL_INCLUDES	= -I$(srcdir) $(PNG_CFLAGS) $(ZLIB_CFLAGS)
+EXTRA_LIBS	= $(PNG_LIBS) $(ZLIB_LIBS)
 
 CPPSRCS		= ilNetReader.cpp \
-		  xpcompat.cpp \
 		  color.cpp \
 		  colormap.cpp \
 		  dither.cpp \
@@ -46,71 +47,21 @@ CPPSRCS		= ilNetReader.cpp \
 		  png_png.cpp \
 		  $(NULL)
 
-EXPORTS		= PIMGCB.h PPSIMGCB.h
+ifdef STANDALONE_IMAGE_LIB
 
-REQUIRES	= zlib jpeg util img png xpcom
-
-ifdef NU_CACHE
-REQUIRES 	+= cache
-endif
-
-LOCAL_INCLUDES	= -I$(srcdir)/../png -I$(srcdir) -I$(DEPTH)/dist/public/zlib
-
-EXTRA_LIBS	= $(DIST)/lib/libzlib.a $(DIST)/lib/libpng.a $(DIST)/lib/libnspr21.a $(dist)/lib/libjpeg.a $(DIST)/lib/libplc21.a $(DIST)/lib/libutil.a
-
-symbols::
-	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
-	@echo "LIBRARY          is $(LIBRARY)"
-	@echo  "DIST		is $(DIST)"
-
-else
-CPPSRCS		= color.cpp \
-		  colormap.cpp \
-		  dither.cpp \
-		  dummy_nc.cpp \
-		  external.cpp \
-		  gif.cpp \
-		  if.cpp \
-		  ilclient.cpp \
-		  il_util.cpp \
-		  jpeg.cpp \
-		  scale.cpp \
-		  xbm.cpp \
-		  ipng.cpp \
-		  png_png.cpp \
-		  ilNetReader.cpp \
+CPPSRCS		+= xpcompat.cpp \
 		  $(NULL)
 
-EXPORTS		= PIMGCB.h PPSIMGCB.h
+REQUIRES	+= util img xpcom
 
-REQUIRES	= jtools java dbm util img layer js xpcom
+EXTRA_LIBS	+= $(NSPR_LIBS)
 
-ifdef NU_CACHE
-REQUIRES 	+= cache
-endif
-
-LOCAL_INCLUDES	= -I$(srcdir)
-EXTRA_LIBS	= 
-
-ifndef MOZ_NATIVE_JPEG
-REQUIRES	+= jpeg
-endif
-
-ifdef MOZ_NATIVE_PNG
-EXTRA_LIBS	+= -lpng
 else
-REQUIRES	+= png
-LOCAL_INCLUDES	+= -I$(srcdir)/../png
-EXTRA_LIBS	+= $(DIST)/lib/libpng.a
-endif
+CPPSRCS		+= dummy_nc.cpp \
+		  external.cpp \
+		  $(NULL)
 
-ifdef MOZ_NATIVE_ZLIB
-EXTRA_LIBS	+= -lz
-else
-REQUIRES	+= zlib
-LOCAL_INCLUDES	+= -I$(DEPTH)/dist/public/zlib
-EXTRA_LIBS 	+= $(DIST)/lib/libzlib.a
-endif
+REQUIRES	+= jtools java dbm util img layer js xpcom
 
 #
 # Generate MIMGCB.c (and similar sources) here.
@@ -120,7 +71,18 @@ JMC_GEN		= MIMGCB MPSIMGCB
 JMC_GEN_FLAGS	= -cimpl -noexc -module
 endif
 
+EXPORTS		= PIMGCB.h PPSIMGCB.h
+
+ifdef NU_CACHE
+REQUIRES 	+= cache
+endif
+
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+
+symbols::
+	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
+	@echo "LIBRARY          is $(LIBRARY)"
+	@echo  "DIST		is $(DIST)"
 
 include $(topsrcdir)/config/rules.mk
 
