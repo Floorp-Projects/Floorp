@@ -139,6 +139,12 @@ NS_METHOD TimerImpl::SetupTimer( PRUint32 aDelay )
   tv.it_value.tv_sec     = ( aDelay / 1000 );
   tv.it_value.tv_nsec    = ( aDelay % 1000 ) * 1000000L;
 
+  /* If delay is set to 0 seconds then change it to 1 nsec. */
+  if ( (tv.it_value.tv_sec == 0) && (tv.it_value.tv_nsec == 0))
+  {
+    tv.it_value.tv_nsec = 1;
+  }
+  
   err = timer_settime( mTimerId, 0, &tv, 0 );
   if( err != 0 )
   {
