@@ -54,6 +54,12 @@ public:
                           nsISupports *ctxt,
                           nsIStreamObserver *observer);
 
+    NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes);
+    NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes);
+
+    NS_IMETHOD GetContentType(char * *aContentType);
+
+
     // nsIRunnable methods:
     NS_IMETHOD Run(void);
 

@@ -26,6 +26,7 @@
 #include "nsIBuffer.h"
 #include "nsIBufferInputStream.h"
 #include "nsIEventQueueService.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
@@ -35,7 +36,7 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 nsFileTransport::nsFileTransport()
     : mPath(nsnull), mContext(nsnull), mListener(nsnull), mState(ENDED),
       mSuspended(PR_FALSE), mFileStream(nsnull), mBuffer(nsnull),
-      mBufferStream(nsnull), mStatus(NS_OK), mService(nsnull), mSourceOffset(0)
+      mBufferStream(nsnull), mStatus(NS_OK), mService(nsnull), mSourceOffset(0), mEventQueue(nsnull)
 {
     NS_INIT_REFCNT();
     mMonitor = PR_NewMonitor();    
@@ -222,6 +223,23 @@ nsFileTransport::AsyncWrite(nsIInputStream* fromStream,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
+NS_IMETHODIMP
+nsFileTransport::GetLoadAttributes(nsLoadFlags *aLoadAttributes) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetLoadAttributes(nsLoadFlags aLoadAttributes) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetContentType(char * *aContentType) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP
 nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, 
                                  nsIInputStream* *result)
@@ -231,7 +249,9 @@ nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
     nsIStreamListener* syncListener;
     nsIInputStream* inStr;
-    rv = NS_NewSyncStreamListener(&syncListener, &inStr);
+    nsIBufferOutputStream* outStream;
+
+    rv = NS_NewSyncStreamListener(&inStr, &outStream, &syncListener);
     if (NS_FAILED(rv)) return rv;
 
     rv = Init(nsnull, syncListener, START_READ, 0, -1);
@@ -272,7 +292,7 @@ nsFileTransport::Process(void)
           nsISupports* fs;
           nsFileSpec spec(mPath);
 
-          mStatus = mListener->OnStartRequest(mContext);  // always send the start notification
+          mStatus = mListener->OnStartRequest(this, mContext);  // always send the start notification
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewTypicalInputFileStream(&fs, spec);
@@ -283,7 +303,7 @@ nsFileTransport::Process(void)
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewBuffer(&mBuffer, NS_FILE_TRANSPORT_BUFFER_SIZE,
-                                 NS_FILE_TRANSPORT_BUFFER_SIZE);
+                                 NS_FILE_TRANSPORT_BUFFER_SIZE, nsnull);
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewBufferInputStream(&mBufferStream, mBuffer, PR_FALSE);
@@ -307,7 +327,7 @@ nsFileTransport::Process(void)
 
           // and feed the buffer to the application via the byte buffer stream:
           // XXX maybe amt should be mBufferStream->GetLength():
-          mStatus = mListener->OnDataAvailable(mContext, mBufferStream, mSourceOffset, amt);
+          mStatus = mListener->OnDataAvailable(this, mContext, mBufferStream, mSourceOffset, amt);
           if (NS_FAILED(mStatus)) goto error;
           
           mSourceOffset += amt;
@@ -319,7 +339,7 @@ nsFileTransport::Process(void)
           nsISupports* fs;
           nsFileSpec spec(mPath);
 
-          mStatus = mListener->OnStartRequest(mContext);  // always send the start notification
+          mStatus = mListener->OnStartRequest(this, mContext);  // always send the start notification
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewTypicalOutputFileStream(&fs, spec);
@@ -330,7 +350,7 @@ nsFileTransport::Process(void)
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewBuffer(&mBuffer, NS_FILE_TRANSPORT_BUFFER_SIZE,
-                                 NS_FILE_TRANSPORT_BUFFER_SIZE);
+                                 NS_FILE_TRANSPORT_BUFFER_SIZE, nsnull);
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewBufferInputStream(&mBufferStream, mBuffer, PR_FALSE);
@@ -349,7 +369,7 @@ nsFileTransport::Process(void)
           mFileStream = nsnull;
 
           // XXX where do we get the error message?
-          (void)mListener->OnStopRequest(mContext, mStatus, nsnull);
+          (void)mListener->OnStopRequest(this, mContext, mStatus, nsnull);
 
           mState = ENDED;
           break;
