@@ -70,11 +70,11 @@ PL_strnchr(const char *s, char c, PRUint32 n)
 {
     if( (const char *)0 == s ) return (char *)0;
 
-    for( ; *s && n; s++, n-- )
+    for( ; n && *s; s++, n-- )
         if( *s == c )
             return (char *)s;
 
-    if( ((char)0 == c) && ((char)0 == *s) && (n > 0)) return (char *)s;
+    if( ((char)0 == c) && (n > 0) && ((char)0 == *s) ) return (char *)s;
 
     return (char *)0;
 }
@@ -86,10 +86,10 @@ PL_strnrchr(const char *s, char c, PRUint32 n)
 
     if( (const char *)0 == s ) return (char *)0;
 
-    for( p = s; *p && n; p++, n-- )
+    for( p = s; n && *p; p++, n-- )
         ;
 
-    if( ((char)0 == c) && ((char)0 == *p) && (n > 0) ) return (char *)p;
+    if( ((char)0 == c) && (n > 0) && ((char)0 == *p) ) return (char *)p;
 
     for( p--; p >= s; p-- )
         if( *p == c )
