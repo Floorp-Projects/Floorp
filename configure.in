@@ -5218,12 +5218,6 @@ dnl This does not change the $MAKEFILES variable.
 dnl
 dnl OpenVMS gets a line overflow on the long eval command, so use a temp file.
 dnl
-case "$target_os" in
-msvc*|mksnt*|cygwin*|mingw*)
-    MAKEFILES=`echo $MAKEFILES | sed -e 's|/cygdrive/\(.\)/|\1:/|g'`
-    ;;
-*)
-esac
 echo $MAKEFILES | $my_perl $my_srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh
