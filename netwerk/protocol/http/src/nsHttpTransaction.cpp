@@ -588,9 +588,9 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
     // a line buf with only a new line char signifies the end of headers.
     if (mLineBuf.First() == '\n') {
         mLineBuf.Truncate();
-        // discard this response if it is a 100 continue.
-        if (mResponseHead->Status() == 100) {
-            LOG(("ignoring 100 response\n"));
+        // discard this response if it is a 100 continue or other 1xx status.
+        if (mResponseHead->Status() / 100 == 1) {
+            LOG(("ignoring 1xx response\n"));
             mHaveStatusLine = PR_FALSE;
             mResponseHead->Reset();
             return NS_OK;
