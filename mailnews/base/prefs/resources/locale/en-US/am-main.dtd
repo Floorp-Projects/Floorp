@@ -1,6 +1,7 @@
 <!-- extracted from am-main.xul -->
 
 <!ENTITY accountTitle.label "Account Settings">
+<!ENTITY accountSettingsDesc.label "The following information is needed before you can send mail. If you do not know the information requested, please contact your system administractor or Internet Service Provider.">
 <!ENTITY accountName.label "Account Name:">
 <!ENTITY accountNameDesc.label "The account name identitifies each account">
 <!ENTITY identityTitle.label "Identity">
@@ -10,6 +11,7 @@
 <!ENTITY replyTo.label "Reply-to Address">
 <!ENTITY organization.label "Organization">
 <!ENTITY signature.label "Attach this signature">
+<!ENTITY editSignature.label "Edit...">
 <!ENTITY sampleSig1.label "Sample Signature 1">
 <!ENTITY sampleSig2.label "Sample Signature 2">
 <!ENTITY sampleSig3.label "Sample Signature 3">

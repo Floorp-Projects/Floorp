@@ -1,64 +1,68 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
-
+<?xml-stylesheet href="chrome://messenger/skin/AccountManager.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-main.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+     onload="parent.onPageLoad(event, 'main');"
      align="vertical"> 
      
 
-    <html:div>&accountTitle.label;</html:div>
-    <box align="vertical" flex="100%" class="cleanborder">
+    <html:div class="pageTitle">&accountTitle.label;</html:div>
+    <box align="vertical" flex="100%">
+    <html:div>&accountSettingsDesc.label;</html:div>
+    <html:div>&accountNameDesc.label;</html:div>
     <box align="horizontal">
-      <spring flex="100%"/>
       <html:div>&accountName.label;</html:div>
       <html:spacer/>
-      <html:input type="text"/>
+      <html:input type="text" name="accountname" flex="100%"/>
     </box>
-    <html:div>&accountNameDesc.label;</html:div>
     </box>
 
-    <html:div>&identityTitle.label;</html:div>
-    <box align="vertical" flex="100%" class="cleanborder">
+    <html:div class="pageTitle">&identityTitle.label;</html:div>
+    <box align="vertical" flex="100%">
     <html:div>&identityDesc.label;</html:div>
     <box align="horizonal">
-      <spring flex="100%"/>
-      <html:div>&name.label;</html:div>
-      <html:spacer/>
-      <html:input name="username" type="text"/>
+      <html:div flex="40%">&name.label;</html:div>
+      <html:input name="fullName" type="text" flex="60%"/>
     </box>
     <box align="horizonal">
-      <spring flex="100%"/>
-      <html:div>&email.label;</html:div>
-      <html:spacer/>
-      <html:input name="email" type="text"/>
+      <html:div flex="40%">&email.label;</html:div>
+      <html:input name="email" type="text" flex="60%"/>
     </box>
     <box align="horizonal">
-      <spring flex="100%"/>
-      <html:div>&replyTo.label;</html:div>
-      <html:spacer/>
-      <html:input name="replyto" type="text"/>
+      <html:div flex="40%">&replyTo.label;</html:div>
+      <html:input name="replyTo" type="text" flex="60%"/>
     </box>
     <box align="horizonal">
-      <spring flex="100%"/>
-      <html:div>&organization.label;</html:div>
-      <html:spacer/>
-      <html:input name="organization" type="text"/>
+      <html:div flex="40%">&organization.label;</html:div>
+      <html:input name="organization" type="text" flex="60%"/>
     </box>
-    <html:div><html:input type="checkbox"/>&useHtml.label;</html:div>
-    <html:div><html:input type="checkbox"/>&attachVCard.label;</html:div>
-    <html:div>
+    <box align="horizontal">
+      <html:div>
+        <html:input name="composeHtml" type="checkbox"/>
+        &useHtml.label;</html:div>
+    </box>
+    <box align="horizontal">
+      <html:div>
+        <html:input name="attachVCard" type="checkbox"/>
+        &attachVCard.label;</html:div>
+    </box>
+    <box align="horizontal">
       <html:input type="checkbox"/>
       &signature.label;
-      <html:select id="pref">
-         <html:option>&sampleSig1.label;</html:option>
-         <html:option>&sampleSig2.label;</html:option>
-         <html:option>&sampleSig3.label;</html:option>
+      <html:spacer/>
+      <html:select name="signature" id="pref">
+         <html:option value="sig1">&sampleSig1.label;</html:option>
+         <html:option value="sig2">&sampleSig2.label;</html:option>
+         <html:option value="sig3">&sampleSig3.label;</html:option>
       </html:select>
-    </html:div>
+      <spring flex="100%"/>
+      <titledbutton value="&editSignature.label;"/>
+    </box>
     </box>
 
 </window>

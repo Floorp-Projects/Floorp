@@ -11,6 +11,7 @@
 		align="horizontal">
 
     <html:script src="resource:/res/samples/DumpDOM.js"/>
+    <html:script src="AccountManager.js"/>
 	<box align="horizontal" flex="90%" style="padding: 10px">
 		<box align="vertical" flex="25%">
 			<html:iframe flex="80%" name="accounttree" style="border-style:inset" src="chrome://messenger/content/accounttree.xul"/>
