@@ -757,8 +757,6 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
                                       const nsSize& aSize)
 {
   nsresult rv;
-  nsIContent* content;
-  GetContent(&content); // ??? 
 
   rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull, kIWebShellIID,
                                     (void**)&mWebShell);
@@ -770,54 +768,24 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   // pass along marginwidth, marginheight, scrolling so sub document can use it
   mWebShell->SetMarginWidth(0);
   mWebShell->SetMarginHeight(0);
-  nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(&mode);
  
-#if 0
-  mWebShell->SetIsFrame(PR_TRUE);
-  
-  /* XXX
-  nsString frameName;
-  if (GetName(content, frameName)) {
-    mWebShell->SetName(frameName.GetUnicode());
-  }
-  */
-#endif
+  /* our parent must be a webshell.  we need to get our prefs from our parent */
+  nsCOMPtr<nsISupports> container;
+  aPresContext.GetContainer(getter_AddRefs(container));
+  NS_ASSERTION(container, "bad container");
+  if (!container) return NS_ERROR_UNEXPECTED;
 
-  // If our container is a web-shell, inform it that it has a new
-  // child. If it's not a web-shell then some things will not operate
-  // properly.
-  nsISupports* container;
-  aPresContext.GetContainer(&container);
-  if (nsnull != container) 
-  {
-    nsIWebShell* outerShell = nsnull;
-    container->QueryInterface(kIWebShellIID, (void**) &outerShell);
+  nsCOMPtr<nsIWebShell> outerShell = do_QueryInterface(container);
+  NS_ASSERTION(outerShell, "parent must be a webshell");
+  if (!outerShell) return NS_ERROR_UNEXPECTED;
 
-    if (nsnull != outerShell) 
-    {
-/* test
-      outerShell->AddChild(mWebShell);
+  nsIPref* outerPrefs = nsnull;  // connect the prefs
+  outerShell->GetPrefs(outerPrefs);
+  NS_ASSERTION(outerPrefs, "no prefs");
+  if (!outerPrefs) return NS_ERROR_UNEXPECTED;
 
-      // connect the container...
-      nsIWebShellContainer* outerContainer = nsnull;
-      container->QueryInterface(kIWebShellContainerIID, (void**) &outerContainer);
-      if (nsnull != outerContainer) {
-        mWebShell->SetContainer(outerContainer);
-        NS_RELEASE(outerContainer);
-      }
-*/
-      nsIPref*  outerPrefs = nsnull;  // connect the prefs
-      outerShell->GetPrefs(outerPrefs);
-      if (nsnull != outerPrefs) 
-      {
-        mWebShell->SetPrefs(outerPrefs);
-        NS_RELEASE(outerPrefs);
-      } 
-      NS_RELEASE(outerShell);
-    }
-    NS_RELEASE(container);
-  }
+  mWebShell->SetPrefs(outerPrefs);
+  NS_RELEASE(outerPrefs);
 
   float t2p;
   aPresContext.GetTwipsToPixels(&t2p);
@@ -842,7 +810,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   presShell->GetViewManager(getter_AddRefs(viewMan));  
   rv = view->Init(viewMan, viewBounds, parView);
   viewMan->InsertChild(parView, view, 0);
-  rv = view->CreateWidget(kCChildCID, nsnull, nsnull, PR_FALSE);
+  rv = view->CreateWidget(kCChildCID);
   SetView(view);
 
   // if the visibility is hidden, reflect that in the view
@@ -867,12 +835,10 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
                   webBounds.x, webBounds.y,
                   webBounds.width, webBounds.height);
-  NS_RELEASE(content);
   NS_RELEASE(widget);
 
   mWebShell->SetObserver(mTempObserver);
   mWebShell->Show();
-
   return NS_OK;
 }
 
@@ -949,9 +915,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     subBounds.y = NSToCoordRound(border.top * t2p);
     subBounds.width  = NSToCoordRound((aMetrics.width - (border.left + border.right)) * t2p);
     subBounds.height = NSToCoordRound((aMetrics.height - (border.top + border.bottom)) * t2p);
-    mWebShell->SetBounds(subBounds.x, subBounds.y, 106, 20);
     mWebShell->SetBounds(subBounds.x, subBounds.y, subBounds.width, subBounds.height);
-    mWebShell->Repaint(PR_TRUE); 
 #ifdef NOISY
     printf("webshell set to (%d, %d, %d %d)\n", 
            border.left, border.top, 
