@@ -237,102 +237,18 @@ function GetComposerCommandManager()
 }
 
 //-----------------------------------------------------------------------------------
-
-// this function should go away when we move to nsICommandGroups for command handling
-function noUIStateUpdateNeeded(commandID)
+function goUpdateCommandState(command)
 {
-  if (commandID == "cmd_removeNamedAnchors"
-   || commandID == "cmd_removeLinks"
-   || commandID == "cmd_advancedProperties"
-   || commandID == "cmd_spelling"
-   || commandID == "cmd_validate"
-   || commandID == "cmd_findNext"
-   || commandID == "cmd_findPrev"
-   || commandID == "cmd_find"
-   || commandID == "cmd_preview"
-   || commandID == "cmd_revert"
-   || commandID == "cmd_publishAs"
-   || commandID == "cmd_publish"
-   || commandID == "cmd_saveAsCharset"
-   || commandID == "cmd_exportToText"
-   || commandID == "cmd_saveAs"
-   || commandID == "cmd_save"
-   || commandID == "cmd_renderedHTMLEnabler"
-   || commandID == "cmd_editLink"
-   || commandID == "cmd_checkLinks"
-   || commandID == "cmd_PreviewMode"
-   || commandID == "cmd_HTMLSourceMode"
-   || commandID == "cmd_AllTagsMode"
-   || commandID == "cmd_NormalMode"
-   || commandID == "cmd_insertBreakAll"
-   || commandID == "cmd_insertBreak"
-   || commandID == "cmd_insertHTML"
-   || commandID == "cmd_insertChars"
-   || commandID == "cmd_objectProperties" 
-   || commandID == "cmd_colorProperties"
-   || commandID == "cmd_pageProperties"
-   || commandID == "cmd_listProperties"
-   || commandID == "cmd_image"
-   || commandID == "cmd_link"  
-   || commandID == "cmd_anchor"
-   || commandID == "cmd_hline"
-   || commandID == "cmd_table"
-   || commandID == "cmd_form"
-   || commandID == "cmd_inputtag"
-   || commandID == "cmd_inputimage"
-   || commandID == "cmd_textarea"
-   || commandID == "cmd_select"
-   || commandID == "cmd_button"
-   || commandID == "cmd_label"
-   || commandID == "cmd_fieldset"
-   || commandID == "cmd_isindex"
-   || commandID == "cmd_editSendPage"
-   || commandID == "cmd_open"
-   || commandID == "cmd_openRemote"
-   || commandID == "cmd_close"
-   || commandID == "cmd_printSetup"
-   || commandID == "cmd_print"
-   || commandID == "cmd_quit"
-   || commandID == "cmd_publishSettings"
-   || commandID == "cmd_preferences")
-      return true;
-
-  return false;
-}
-
-function goUpdateCommandState(cmdController, command)
-{
-  // this code need to be trimmed down and possibly reworked 
-  // when we move to nsICommandGroup for command handling
-  if (noUIStateUpdateNeeded(command))
-    return;
-
-  // these commands need to go somewhere:
-  if (command == "cmd_smiley"
-   || command == "cmd_dt"
-   || command == "cmd_dd"
-   || command == "cmd_removeList"
-   || command == "cmd_cut"
-   || command == "cmd_copy"
-   || command == "cmd_paste"
-   || command == "cmd_pasteNoFormatting"
-   || command == "cmd_pasteQuote"
-   || command == "cmd_delete"
-   || command == "cmd_selectAll"
-   || command == "cmd_redo"
-   || command == "cmd_undo")
-     return;
-
   try
   {
+    var controller = top.document.commandDispatcher.getControllerForCommand(command);
+    if (!(controller instanceof Components.interfaces.nsICommandController))
+      return;
+
     var params = newCommandParams();
     if (!params) return;
 
-    try {
-      cmdController.getCommandStateWithParams(command, params);
-    } catch(e) {
-//      dump("getCommandStateWithParams error "+e+" updating "+command+"\n");
-    }
+    controller.getCommandStateWithParams(command, params);
 
     switch (command)
     {
@@ -357,7 +273,6 @@ function goUpdateCommandState(cmdController, command)
         pokeStyleUI(command, params.getBooleanValue("state_all"));
         break;
 
-      case "cmd_smiley":
       case "cmd_paragraphState":
       case "cmd_align":
       case "cmd_highlight":
@@ -365,7 +280,6 @@ function goUpdateCommandState(cmdController, command)
       case "cmd_fontColor":
       case "cmd_fontFace":
       case "cmd_fontSize":
-      case "cmd_updateStructToolbar":
         pokeMultiStateUI(command, params);
         break;
 
@@ -382,37 +296,19 @@ function goUpdateCommandState(cmdController, command)
   catch (e) { dump("An error occurred updating the "+command+" command: \n"+e+"\n"); }
 }
 
-var gMenuControllers = [{key:null}];
-
 function goUpdateComposerMenuItems(commandset)
 {
   //dump("Updating commands for " + commandset.id + "\n");
 
-  for (var i = 0; i < commandset.childNodes.length; i++) {
-    var commandID = commandset.childNodes[i].id;
-    if (commandID) {
+  for (var i = 0; i < commandset.childNodes.length; i++)
+  {
+    var commandNode = commandset.childNodes[i];
+    var commandID = commandNode.id;
+    if (commandID)
+    {
       goUpdateCommand(commandID);  // enable or disable
-      var controller = top.document.commandDispatcher.getControllerForCommand(commandID);
-      if (controller) {
-        /* gMenuControllers contains a single entry buffer to allow for --j */
-        for (var j = gMenuControllers.length;
-             --j && gMenuControllers[j].key != controller;
-            );
-
-        if (!j) {
-          /* obj stores the controller for the command and whether the QI succeeded */
-          var obj = {key:controller, isCommandController:false};
-          try {
-            /* QI modifies the object including the one wrapped in obj.key */
-            controller.QueryInterface(Components.interfaces.nsICommandController);
-            obj.isCommandController = true;
-          } catch(e) {}
-          j = gMenuControllers.length;
-          gMenuControllers[j] = obj;
-        }
-        if (gMenuControllers[j].isCommandController)
-          goUpdateCommandState(controller, commandID);
-      }
+      if (commandNode.hasAttribute("state"))
+        goUpdateCommandState(commandID);
     }
   }
 }
@@ -425,19 +321,13 @@ function goDoCommandParams(command, params)
     var controller = top.document.commandDispatcher.getControllerForCommand(command);
     if (controller && controller.isCommandEnabled(command))
     {
-      var cmdController;
-      try
+      if (controller instanceof Components.interfaces.nsICommandController)
       {
-        cmdController = controller.QueryInterface(Components.interfaces.nsICommandController);
-      } catch(e) {}
-
-      if (cmdController)
-      {
-        cmdController.doCommandWithParams(command, params);
+        controller.doCommandWithParams(command, params);
 
         // the following two lines should be removed when we implement observers
         if (params)
-          cmdController.getCommandStateWithParams(command, params);
+          controller.getCommandStateWithParams(command, params);
       }
       else
       {
