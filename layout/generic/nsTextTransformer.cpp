@@ -1070,14 +1070,6 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
         if (NeedsArabicShaping()) {
           DoArabicShaping(result, wordLen, aWasTransformed);
         }
-        else {
-          // We need to strip zero-width joiners and non-joiners even when not
-          // doing Arabic shaping, in order to catch cases where these
-          // characters appear in preshaped text (Bug 192088)
-          // We can't strip them any earlier, because they affect the results
-          // of the Arabic shaping algorithm.
-          StripZeroWidthJoinControls(result, result, wordLen, aWasTransformed);
-        }
         if (NeedsNumericShaping()) {
           DoNumericShaping(result, wordLen, aWasTransformed);
         }
