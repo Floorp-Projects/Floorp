@@ -25,6 +25,7 @@
 #include "nsIWidget.h"
 #include "nsDrawingSurfaceOS2.h"
 #include "nsFontMetricsOS2.h"
+#include "nsPaletteOS2.h"
 
 
 // Base class -- fonts, palette and xpcom -----------------------------------
@@ -188,6 +189,8 @@ nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
 
       if( GPI_ERROR != mPS)
       {
+         nsPaletteOS2::SelectGlobalPalette(mPS);
+
          // now create a bitmap of the right size
          BITMAPINFOHEADER2 hdr = { 0 };
       

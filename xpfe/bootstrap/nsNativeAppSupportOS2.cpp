@@ -56,6 +56,7 @@
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
+#include "nsPaletteOS2.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -338,7 +339,8 @@ private:
  * whether Mozilla is already running.
  */
 
-class nsNativeAppSupportOS2 : public nsNativeAppSupportBase {
+class nsNativeAppSupportOS2 : public nsNativeAppSupportBase
+{
 public:
     // Overrides of base implementation.
     NS_IMETHOD Start( PRBool *aResult );
@@ -589,6 +591,7 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
     else if ( msg == WM_PAINT ) {
         nsSplashScreenOS2 *splashScreen = (nsSplashScreenOS2*)WinQueryWindowPtr( dlg, QWL_USER );
         HPS hps = WinBeginPaint (dlg, NULLHANDLE, NULL);
+        nsPaletteOS2::SelectGlobalPalette(hps, dlg);
         GpiErase (hps);
         POINTL aptl[8] = {0, 0, splashScreen->mBitmapCX, splashScreen->mBitmapCY,
                           0, 0, 0, 0,
@@ -597,6 +600,13 @@ MRESULT EXPENTRY DialogProc( HWND dlg, ULONG msg, MPARAM mp1, MPARAM mp2 ) {
 
         GpiBitBlt( hps, splashScreen->hpsMemory, 3L, aptl, ROP_SRCCOPY, 0L );
         WinEndPaint( hps );
+        return (MRESULT)TRUE;
+    }
+    else if ( msg == WM_REALIZEPALETTE ) {
+        HPS hps = WinGetPS(dlg);
+        nsPaletteOS2::SelectGlobalPalette(hps, dlg);
+        WinReleasePS(hps);
+        WinInvalidateRect( dlg, 0, TRUE);
         return (MRESULT)TRUE;
     }
     return WinDefDlgProc (dlg, msg, mp1, mp2);

@@ -61,6 +61,7 @@
 #include "nsIFile.h"
 
 #include "nsOS2Uni.h"
+#include "nsPaletteOS2.h"
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -1844,8 +1845,12 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
         case NS_NATIVE_GRAPHIC:
             if( !mPS)
             {
-                if( mDragInside) mPS = DrgGetPS( mWnd);
-                else mPS = WinGetPS( mWnd);
+              if( mDragInside) { 
+                mPS = DrgGetPS(mWnd);
+              } else {
+                mPS = WinGetPS(mWnd);
+              }
+              nsPaletteOS2::SelectGlobalPalette(mPS, mWnd);
             }
             mPSRefs++;
             rc = (void*) mPS;
@@ -2592,32 +2597,24 @@ PRBool nsWindow::OnReposition( PSWP pSwp)
    return result;
 }
 
-// Realize-palette.  I reckon only top-level windows get the message, so
-// there's code in frame to broadcast it to children.
 PRBool nsWindow::OnRealizePalette()
 {
-   PRBool rc = PR_FALSE;
+  if (WinQueryWindowUShort(mWnd, QWS_ID) == FID_CLIENT) {
+    HWND hwndFocus = WinQueryFocus(HWND_DESKTOP);
+    if (WinIsChild(hwndFocus, mWnd)) {
+      /* We are getting the focus */
+      HPS hps = WinGetPS(hwndFocus);
+      nsPaletteOS2::SelectGlobalPalette(hps, hwndFocus);
+      WinReleasePS(hps);
+      WinInvalidateRect( mWnd, 0, TRUE);
+    } else {
+      /* We are losing the focus */
+      WinInvalidateRect( mWnd, 0, TRUE);
+    }
+  }
 
-#ifdef COLOR_256
-   // Get palette info from device 
-   nsPaletteInfo palInfo;
-   mContext->GetPaletteInfo( palInfo);
-
-   if( mPS && palInfo.isPaletteDevice && palInfo.palette)
-   {
-      // An onscreen nsDrawingSurface has been created for the window,
-      // and we have a palette.  So realize it.
-      ULONG cclr;
-      long palrc = WinRealizePalette( mWnd, mPS, &cclr);
-      if( palrc && palrc != PAL_ERROR)
-         // Colours have changed, redraw.
-         WinInvalidateRect( mWnd, 0, FALSE);
-
-      rc = PR_TRUE;
-   }
-#endif
-
-   return rc;
+  // Always call the default window procedure
+  return PR_TRUE;
 }
 
 PRBool nsWindow::OnPresParamChanged( MPARAM mp1, MPARAM mp2)
@@ -2715,6 +2712,7 @@ PRBool nsWindow::OnPaint()
       RECTL rcl = { 0 };
 
       HPS hPS = WinBeginPaint(mWnd, NULLHANDLE, &rcl); 
+      nsPaletteOS2::SelectGlobalPalette(hPS, mWnd);
      
       // XXX What is this check doing? If it's trying to check for an empty
       // paint rect then use the IsRectEmpty() function...
@@ -2764,15 +2762,6 @@ PRBool nsWindow::OnPaint()
                     if (NS_OK == winrc->CreateDrawingSurface(hPS, surf, event.widget))
                     {
                       event.renderingContext->Init(mContext, surf);
-#ifdef COLOR_256
-                      nsPaletteInfo palInfo;
-                      mContext->GetPaletteInfo(palInfo);
-                      if (palInfo.isPaletteDevice && palInfo.palette)
-                      {
-                          ULONG cclr;
-                          ::WinRealizePalette(mWnd, hPS, &cclr);
-                      }
-#endif
                       rc = DispatchWindowEvent(&event);
                       event.renderingContext->DestroyDrawingSurface(surf);
                     }
