@@ -9,6 +9,7 @@
 (defparameter *jw-source* 
   '((line-grammar code-grammar :lr-1 :program)
     
+    (%subsection :semantics "Values")
     (deftype value (oneof
                     undefined
                     null
@@ -19,6 +20,7 @@
                     (class class)
                     (object object)))
     
+    (%text :comment "Return " (:local v) "'s most specific type.")
     (define (value-type (v value)) class
       (case v
         (undefined undefined-class)
@@ -31,6 +33,10 @@
         ((object o object) (& type o))))
     
     
+    (%subsection :semantics "Errors")
+    (deftype semantic-exception (oneof syntax-error method-not-found))
+       
+    (%subsection :semantics "Namespaces")
     (deftype namespace (tuple
                          (id id)))
     (deftype ns (oneof no-ns (ns namespace)))
@@ -38,26 +44,28 @@
     (define public-namespace namespace (tuple namespace unique))
     
     
+    (%subsection :semantics "Classes")
     (deftype class (tuple
                      (id id)
                      (superclass class-opt)
                      (globals (address (vector property)))
-                     (prototype (address value))))
+                     (prototype (address value))
+                     (primitive boolean)))
     (deftype class-opt (oneof no-cls (cls class)))
     
-    (define object-class class (tuple class unique (oneof no-cls) (new (vector-of property)) (new (oneof null))))
-    (define undefined-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
-    (define null-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
-    (define boolean-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
-    (define number-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
-    (define string-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
-    (define namespace-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
-    (define class-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null))))
+    (define object-class class (tuple class unique (oneof no-cls) (new (vector-of property)) (new (oneof null)) true))
+    (define undefined-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null)) true))
+    (define null-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null)) true))
+    (define boolean-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null)) true))
+    (define number-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null)) true))
+    (define string-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null)) true))
+    (define namespace-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null)) false))
+    (define class-class class (tuple class unique (oneof cls object-class) (new (vector-of property)) (new (oneof null)) false))
     
     (define (same-class (c class) (d class)) boolean
       (id= (& id c) (& id d)))
     
-    (%text :semantics "Return " (:global true) " if " (:local c) " is " (:local d) " or a subclass of " (:local d) ".")
+    (%text :comment "Return " (:global true) " if " (:local c) " is " (:local d) " or a subclass of " (:local d) ".")
     (define (is-subclass (c class) (d class)) boolean
       (if (id= (& id c) (& id d))
         true
@@ -65,14 +73,51 @@
           (no-cls false)
           ((cls c-super class) (is-subclass c-super d)))))
     
+    (%text :comment "Return " (:global true) " if " (:local v) " is an instance of class " (:local c) ". Consider "
+           (:character-literal "null") " to be an instance of the classes " (:character-literal "Null") " and "
+           (:character-literal "Object") " only.")
+    (define (instance-of (v value) (c class)) boolean
+      (is-subclass (value-type v) c))
+    
+    (%text :comment "Return " (:global true) " if " (:local v) " is an instance of class " (:local c) ". Consider "
+           (:character-literal "null") " to be an instance of the classes " (:character-literal "Null") ", "
+           (:character-literal "Object") ", and all other non-primitive classes.")
+    (define (member-of (v value) (c class)) boolean
+      (let ((t class (value-type v)))
+        (or (is-subclass t c)
+            (and (is null v) (not (& primitive c))))))
+    
+    
+    (%subsection :semantics "Objects")
     (deftype object (tuple
                       (id id)
                       (type class)
+                      (slots (address (vector slot)))
                       (properties (address (vector property)))))
     
+    
+    (%subsection :semantics "Slots")
+    (deftype slot (tuple
+                    (id id)
+                    (v (address value))))
+    
+    (define (find-slot (id id) (slots (vector slot))) slot
+      (if (empty slots)
+        (bottom)
+        (let ((s slot (nth slots 0)))
+          (if (id= id (& id s))
+            s
+            (find-slot id (subseq slots 1))))))
+    
+    
+    (%subsection :semantics "Properties")
     (deftype property (tuple
                         (name property-name)
-                        (value value)))
+                        (getter accessor)
+                        (setter accessor)
+                        (fixed boolean)
+                        (enumerable boolean)
+                        (deletable boolean)))
     (deftype property-opt (oneof no-prop (prop property)))
     
     (deftype property-name (tuple (namespace namespace) (name string)))
@@ -81,13 +126,84 @@
       (and (id= (& id (& namespace m)) (& id (& namespace n)))
            (string-equal (& name m) (& name n))))
     
-    (define (find-property (n property-name) (properties (vector property))) property-opt
+    (define (find-property (n property-name) (properties (vector property))) (vector property)
+      (map properties p p (same-property-name n (& name p))))
+    #|
       (if (empty properties)
         (oneof no-prop)
         (let ((p property (nth properties 0)))
           (if (same-property-name n (& name p))
             (oneof prop p)
-            (find-property n (subseq properties 1))))))
+            (find-property n (subseq properties 1))))))|#
+    
+    
+    (%subsection :semantics "Accessors")
+    (deftype accessor (tuple
+                        (self-type class)
+                        (slot-type class)
+                        (final boolean)
+                        (data accessor-data)))
+    
+    (deftype accessor-data (oneof
+                            inaccessible
+                            abstract
+                            (constant value)
+                            (slot-id id)
+                            (indirect value)
+                            (alias property-name)))
+    
+    
+    (%subsection :semantics "Operators")
+    (deftype binary-operator (tuple
+                               (left-type class)
+                               (right-type class)
+                               (right-final boolean)
+                               (left-final boolean)
+                               (data binary-operator-data)))
+    
+    (deftype binary-operator-data (oneof
+                                   (built-in (-> (value value) value))
+                                   (user value)))
+    
+    (define (add-numbers (a value) (b value)) value
+      (oneof double (double-add (select double a) (select double b))))
+    (define (add-strings (a value) (b value)) value
+      (oneof string (append (select string a) (select string b))))
+
+    (define binary-add (address (vector binary-operator))
+      (new (vector
+            (tuple binary-operator number-class number-class true true (typed-oneof binary-operator-data built-in add-numbers))
+            (tuple binary-operator string-class string-class true true (typed-oneof binary-operator-data built-in add-strings)))))
+    
+    (%text :comment "Return " (:global true) " if " (:local op1) " is at least as specific as " (:local op2) ".")
+    (define (is-bin-op-subclass (op1 binary-operator) (op2 binary-operator)) boolean
+      (and (is-subclass (& left-type op1) (& left-type op2))
+           (is-subclass (& right-type op1) (& right-type op2))))
+
+    (define (eval-binary-operator (op-table (vector binary-operator)) (left value) (right value)) value
+      (let ((applicable-ops (vector binary-operator)
+                            (map op-table op op (and (instance-of left (& left-type op)) (instance-of right (& right-type op))))))
+        (let ((best-ops (vector binary-operator)
+                        (map applicable-ops op op
+                             (empty (map applicable-ops op2 op2 (not (is-bin-op-subclass op op2)))))))
+          (if (empty best-ops)
+            (throw (oneof method-not-found))
+            (let ((op binary-operator (nth best-ops 0)))
+              (case (& data op)
+                ((built-in f (-> (value value) value)) (f left right))
+                (user (todo))))))))
+    
+    
+    (deftype unary-operator (tuple
+                              (operand-type class)
+                              (final boolean)
+                              (data unary-operator-data)))
+    
+    (deftype unary-operator-data (oneof
+                                  (built-in (-> (value) value))
+                                  (user value)))
+    
+    
     
     
     (%section "Expressions")
@@ -778,9 +894,9 @@
     
     
     (%section "Programs")
-    (rule :program ((eval integer))
+    (rule :program ((eval value))
       (production :program (:directives) program-directives
-        (eval 1)))))
+        (eval (eval-binary-operator (@ binary-add) (oneof string "abc") (oneof string "xyz")))))))
 
 
 (defparameter *jw* (generate-world "J" *jw-source* '((js2 . :js2) (es4 . :es4))))
