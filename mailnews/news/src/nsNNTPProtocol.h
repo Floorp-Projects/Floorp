@@ -42,18 +42,14 @@
 
 #ifdef XP_UNIX
 #define ARTICLE_PATH "/usr/tmp/tempArticle.eml"
-#define ARTICLE_PATH_URL ARTICLE_PATH
 #endif
 
 #ifdef XP_PC
 #define ARTICLE_PATH  "c:\\temp\\tempArticle.eml"
-#define ARTICLE_PATH_URL "C|/temp/tempArticle.eml"
 #endif
 
 #ifdef XP_MAC
-#define ARTICLE_PATH "tempArticle.eml"
-// this isn't correct, but will do for now
-#define ARTICLE_PATH_URL ARTICLE_PATH		
+#define ARTICLE_PATH "tempArticle.eml"	
 #endif
 
 // State Flags (Note, I use the word state in terms of storing 

@@ -2041,23 +2041,19 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		if (m_tempArticleFile)
 			PR_Close(m_tempArticleFile);
 
-		// mscott: hack alert...now that the file is done...turn around and fire a file url 
-		// to display the message....
-		char * fileUrl = PR_smprintf("file:///%s", ARTICLE_PATH_URL);
 		if (m_displayConsumer)
 		{
-			nsIURL * url = nsnull;
-			rv = NS_NewURL(&url, fileUrl, nsnull, nsnull, nsnull);	
-			if (url)
-			{
-				//  to load the webshell!
-				//  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 
-				//                      nsnull, PR_TRUE, nsURLReload, 0);
-				m_displayConsumer->LoadURL(nsAutoString(fileUrl).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+			nsFilePath filePath(ARTICLE_PATH);
+			nsFileURL  fileURL(filePath);
+			char * article_path_url = PL_strdup(fileURL.GetAsString());
 
-			}
+#ifdef DEBUG_sspitzer
+			printf("load this url to display the message: %s\n", article_path_url);
+#endif
 
-			// mscott: we may need to release our reference on the url....
+			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+			
+			PR_FREEIF(article_path_url);
 		}
 
 		ClearFlag(NNTP_PAUSE_FOR_READ);
