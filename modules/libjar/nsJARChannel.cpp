@@ -33,6 +33,8 @@
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
+static NS_DEFINE_CID(kFileChannelCID, NS_FILECHANNEL_CID);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsJARDownloadObserver : public nsIStreamObserver 
@@ -50,7 +52,7 @@ public:
                              nsresult status, 
                              const PRUnichar* aMsg) {
         nsresult rv = NS_OK;
-        nsAutoLock lock(mJARChannel->mLock);
+        nsAutoMonitor monitor(mJARChannel->mMonitor);
 
         if (NS_SUCCEEDED(status) && mJARChannel->mJarCacheTransport) {
             NS_ASSERTION(jarCacheTransport == (mJARChannel->mJarCacheTransport).get(),
@@ -100,7 +102,8 @@ NS_IMPL_ISUPPORTS1(nsJARDownloadObserver, nsIStreamObserver)
 nsJARChannel::nsJARChannel()
     : mCommand(nsnull),
       mContentType(nsnull),
-      mJAREntry(nsnull)
+      mJAREntry(nsnull),
+      mMonitor(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -113,6 +116,8 @@ nsJARChannel::~nsJARChannel()
         nsCRT::free(mContentType);
     if (mJAREntry)
         nsCRT::free(mJAREntry);
+    if (mMonitor)
+        PR_DestroyMonitor(mMonitor);
 }
 
 NS_IMPL_ISUPPORTS6(nsJARChannel,
@@ -171,8 +176,8 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler,
     rv = SetNotificationCallbacks(notificationCallbacks);
     if (NS_FAILED(rv)) return rv;
 
-    mLock = PR_NewLock();
-    if (mLock == nsnull)
+    mMonitor = PR_NewMonitor();
+    if (mMonitor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
 	return NS_OK;
@@ -191,7 +196,7 @@ NS_IMETHODIMP
 nsJARChannel::Cancel()
 {
     nsresult rv;
-    nsAutoLock lock(mLock);
+    nsAutoMonitor monitor(mMonitor);
 
     if (mJarCacheTransport) {
         rv = mJarCacheTransport->Cancel();
@@ -211,7 +216,7 @@ NS_IMETHODIMP
 nsJARChannel::Suspend()
 {
     nsresult rv;
-    nsAutoLock lock(mLock);
+    nsAutoMonitor monitor(mMonitor);
 
     if (mJarCacheTransport) {
         rv = mJarCacheTransport->Suspend();
@@ -229,7 +234,7 @@ NS_IMETHODIMP
 nsJARChannel::Resume()
 {
     nsresult rv;
-    nsAutoLock lock(mLock);
+    nsAutoMonitor monitor(mMonitor);
 
     if (mJarCacheTransport) {
         rv = mJarCacheTransport->Resume();
@@ -321,26 +326,28 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         
 		rv = jarCacheFile->IsFile(&filePresent);
         
-        if (NS_FAILED(rv))
-            return rv;
-                
-        if (filePresent)
+        if (NS_SUCCEEDED(rv) && filePresent)
         {
 	        // then we've already got the file in the local cache -- no need to download it
-            NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
+            nsCOMPtr<nsIFileChannel> fileChannel;
+            rv = nsComponentManager::CreateInstance(kFileChannelCID,
+                                                    nsnull,
+                                                    NS_GET_IID(nsIFileChannel),
+                                                    getter_AddRefs(fileChannel));
             if (NS_FAILED(rv)) return rv;
 
-            nsCOMPtr<nsIChannel> jarCacheChannel;
-            rv = fts->CreateTransport(jarCacheFile, 
-                                      PR_RDONLY,
-                                      mCommand,
-                                      mBufferSegmentSize,
-                                      mBufferMaxSize,
-                                      getter_AddRefs(jarCacheChannel));
+            rv = fileChannel->Init(jarCacheFile, 
+                                   PR_RDONLY,
+                                   nsnull,       // contentType
+                                   -1,           // contentLength
+                                   nsnull,       // loadGroup
+                                   nsnull,       // notificationCallbacks
+                                   nsIChannel::LOAD_NORMAL,
+                                   nsnull,       // originalURI
+                                   mBufferSegmentSize,
+                                   mBufferMaxSize);
             if (NS_FAILED(rv)) return rv;
-            
-            nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(jarCacheChannel);
-            if (fileChannel) return NS_ERROR_FAILURE;
+
 		    rv = ExtractJARElement(fileChannel);
 			return rv;
 		}
@@ -348,7 +355,7 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
 
-        nsAutoLock lock(mLock);
+        nsAutoMonitor monitor(mMonitor);
 
         // use a file transport to serve as a data pump for the download (done
         // on some other thread)
@@ -401,8 +408,9 @@ nsJARChannel::GetCacheFile(nsIFile* *cacheFile)
     char* jarFileName;
     rv = jarBaseURL->GetFileName(&jarFileName);
     if (NS_FAILED(rv)) return rv;
-    jarCacheFile->Append(jarFileName);
+    rv = jarCacheFile->Append(jarFileName);
     nsCRT::free(jarFileName);
+    if (NS_FAILED(rv)) return rv;
     
     *cacheFile = jarCacheFile;
     NS_ADDREF(*cacheFile);
@@ -414,7 +422,7 @@ nsJARChannel::ExtractJARElement(nsIFileChannel* jarBaseFile)
 {
     nsresult rv;
 
-    nsAutoLock lock(mLock);
+    nsAutoMonitor monitor(mMonitor);
 
     mJARBaseFile = jarBaseFile;
 
@@ -548,13 +556,12 @@ nsJARChannel::GetOwner(nsISupports* *aOwner)
 {
     if (!mOwner)
     {
-        nsIPrincipal* principal;
-        nsresult rv = mJAR->GetPrincipal(mJAREntry, &principal);
+        nsCOMPtr<nsIPrincipal> principal;
+        nsresult rv = mJAR->GetPrincipal(mJAREntry, getter_AddRefs(principal));
         if (NS_SUCCEEDED(rv) && principal)
             mOwner = do_QueryInterface(principal);
         else
             mOwner = null_nsCOMPtr();
-        NS_IF_RELEASE(principal);
     }
 
     *aOwner = mOwner.get();
