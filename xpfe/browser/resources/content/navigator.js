@@ -1950,6 +1950,21 @@ function PageProxyDragGesture(aEvent)
   return false;
 }
 
+function handlePageProxyClick(aEvent)
+{
+  switch (aEvent.button) {
+  case 0:
+    // bug 52784 - select location field contents
+    gURLBar.select();
+    break;
+  case 1:
+    // bug 111337 - load url/keyword from clipboard
+    return middleMousePaste(aEvent);
+    break;
+  }
+  return true;
+}
+
 function updateComponentBarBroadcaster()
 { 
   var compBarBroadcaster = document.getElementById('cmd_viewcomponentbar');
