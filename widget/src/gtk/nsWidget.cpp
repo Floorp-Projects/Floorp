@@ -239,6 +239,7 @@ void nsWidget::OnDestroy()
   mOnDestroyCalled = PR_TRUE;
   // release references to children, device context, toolkit + app shell
   nsBaseWidget::OnDestroy();
+
   // dispatch the event
   if (!mIsDestroying) {
     // dispatching of the event may cause the reference count to drop
