@@ -107,7 +107,9 @@
 // http://bugzilla.mozilla.org/show_bug.cgi?id=71482
 #include "nsIBrowserHistory.h"
 
+#ifdef DEBUG_DOCSHELL_FOCUS
 #include "nsIEventStateManager.h"
+#endif
 
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
@@ -1450,11 +1452,10 @@ nsDocShell::TabToTreeOwner(PRBool aForward, PRBool* aTookFocus)
     
     nsCOMPtr<nsIWebBrowserChromeFocus> chromeFocus = do_GetInterface(mTreeOwner);
     if (chromeFocus) {
-        *aTookFocus = PR_TRUE;
         if (aForward)
-            chromeFocus->FocusNextElement();
+            *aTookFocus = NS_SUCCEEDED(chromeFocus->FocusNextElement());
         else
-            chromeFocus->FocusPrevElement();
+            *aTookFocus = NS_SUCCEEDED(chromeFocus->FocusPrevElement());
     } else
         *aTookFocus = PR_FALSE;
     
