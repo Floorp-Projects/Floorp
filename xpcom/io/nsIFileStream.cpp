@@ -277,7 +277,7 @@ NS_IMETHODIMP FileImpl::Open(
     err = FSpOpenDF(&spec, perm, &refnum);
 
     if (err == noErr && (nsprMode & PR_TRUNCATE))
-        err = SetEOF(refnum, 0);
+        err = ::SetEOF(refnum, 0);
     if (err == noErr && (nsprMode & PR_APPEND))
         err = SetFPos(refnum, fsFromLEOF, 0);
     if (err != noErr)
