@@ -551,8 +551,11 @@ function ImportAddress( module, success, error) {
 	if (loc == false) {
 		loc = addInterface.GetData( "addressLocation");
 		if (loc != null) {
-			if (!loc.exists)
-				loc = null;
+			loc = loc.QueryInterface( Components.interfaces.nsIFileSpec);
+			if (loc != null) {
+				if (!loc.exists)
+					loc = null;
+			}
 		}
 	}
 	
