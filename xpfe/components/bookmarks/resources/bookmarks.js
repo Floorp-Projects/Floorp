@@ -20,6 +20,140 @@
   Script for the bookmarks properties window
 */
 
+
+
+function copySelectionToClipboard()
+{
+	var treeNode = document.getElementById("bookmarksTree");
+	if (!treeNode)    return(false);
+	var select_list = treeNode.selectedItems;
+	if (!select_list)	return(false);
+	if (select_list.length < 1)    return(false);
+	dump("# of Nodes selected: " + select_list.length + "\n\n");
+
+	// build a url that encodes all the select nodes as well as their parent nodes
+	var url="";
+
+	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+	{
+		var node = select_list[nodeIndex];
+		if (!node)    continue;
+		var ID = node.getAttribute("id");
+		if (!ID)    continue;
+		var parentID = node.parentNode.parentNode.getAttribute("id");
+		if (!parentID)	continue;
+
+		dump("Node " + nodeIndex + ": " + ID + "    parent: " + parentID + "\n");
+		url += "ID:{" + ID + "};";
+		url += "parentID:{" + parentID + "};";
+	}
+
+	// get some useful components
+	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+	if ( !trans )	return(false);
+	trans.addDataFlavor("text/unicode");
+
+	var clip = Components.classes["component://netscape/widget/clipboard"].createInstance();
+	if ( clip ) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
+	if (!clip)	return(false);
+	clip.emptyClipboard();
+
+	// save bookmark's ID
+	var data = Components.classes["component://netscape/supports-wstring"].createInstance();
+	if ( data )	data = data.QueryInterface(Components.interfaces.nsISupportsWString);
+	if (!data)	return(false);
+	data.data = url;
+	trans.setTransferData ( "text/unicode", data, url.length*2 );			// double byte data
+
+	clip.setData(trans, null);
+	return(true);
+}
+
+
+
+function doCut()
+{
+	if (copySelectionToClipboard() == true)
+	{
+		// XXX remove the selected nodes
+	}
+	return(true);
+}
+
+
+
+function doCopy()
+{
+	copySelectionToClipboard();
+	return(true);
+}
+
+
+
+function doPaste()
+{
+	var clip = Components.classes["component://netscape/widget/clipboard"].createInstance();
+	if ( clip ) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
+	if (!clip)	return(false);
+dump("Got clipboard.\n");
+
+	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+	if ( !trans )	return(false);
+	trans.addDataFlavor("text/unicode");
+
+dump("Got trans\n");
+	var data = clip.getData(trans);
+dump("Got data.\n");
+	if (!data)	dump("Data is null.\n");
+
+	return(true);
+}
+
+
+
+function doDelete()
+{
+/*
+	var treeNode = document.getElementById("bookmarksTree");
+	if (!treeNode)    return(false);
+	var select_list = treeNode.selectedItems;
+	if (!select_list)	return(false);
+	if (select_list.length < 1)    return(false);
+
+	dump("# of Nodes selected: " + select_list.length + "\n\n");
+
+	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+	{
+		var node = select_list[nodeIndex];
+		if (!node)    continue;
+		var id = node.getAttribute("id");
+		if (!id)    continue;
+		
+		dump("Node " + nodeIndex + ": " + id + "\n");
+		
+		// XXX delete the node
+	}
+*/
+	return(true);
+}
+
+
+
+function doSelectAll()
+{
+	// XXX once selectAll() is implemented, use that
+/*
+	var treeNode = document.getElementById("bookmarksTree");
+	if (!treeNode)    return(false);
+	treeNode.selectAll();
+*/
+	return(true);
+}
+
+
+
 function doUnload()
 {
     // Get the current window position/size.
@@ -40,22 +174,26 @@ function doUnload()
 
 function BookmarkProperties()
 {
-  var tree = document.getElementById('bookmarksTree');
-  var select_list = tree.getElementsByAttribute("selected", "true");
+	var treeNode = document.getElementById('bookmarksTree');
+//	var select_list = treeNode.getElementsByAttribute("selected", "true");
+	var select_list = treeNode.selectedItems;
 
-  if (select_list.length >= 1) {
-
-	// don't bother showing properties on bookmark separators
-	var type = select_list[0].getAttribute('type');
-        if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
-        {
-		var props = window.open("chrome://bookmarks/content/bm-props.xul",
-                                "BookmarkProperties", "chrome,menubar");
-		props.BookmarkURL = select_list[0].getAttribute("id");
+	if (select_list.length >= 1)
+	{
+		// don't bother showing properties on bookmark separators
+		var type = select_list[0].getAttribute('type');
+		if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+		{
+			var props = window.open("chrome://bookmarks/content/bm-props.xul",
+						"BookmarkProperties", "chrome, menubar");
+			props.BookmarkURL = select_list[0].getAttribute("id");
+		}
 	}
-  } else {
-    dump("nothing selected!\n"); 
-  }
+	else
+	{
+		dump("nothing selected!\n"); 
+	}
+	return(true);
 }
 
 
@@ -63,24 +201,19 @@ function BookmarkProperties()
 function OpenSearch(tabName)
 {
 	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName);
+	return(true);
 }
 
 
 
 function OpenURL(event, node, root)
 {
-    if (node.getAttribute('container') == "true")
-    {
-        return(false);
-    }
+	if (node.getAttribute('container') == "true")	return(false);
 
-    var url = node.getAttribute('id');
+	var url = node.getAttribute('id');
 
-    // Ignore "NC:" urls.
-    if (url.substring(0, 3) == "NC:")
-    {
-        return(false);
-    }
+	// Ignore "NC:" urls.
+	if (url.substring(0, 3) == "NC:")	return(false);
 
 	try
 	{
@@ -111,39 +244,45 @@ function OpenURL(event, node, root)
 	{
 	}
 
-    window.open(url,'bookmarks');
+	window.open(url,'bookmarks');
 
-    return(true);
+	return(true);
 }
 
 
 
 function doSort(sortColName)
 {
-  var node = document.getElementById(sortColName);
-  // determine column resource to sort on
-  var sortResource = node.getAttribute('resource');
-  if (!node) return(false);
+	var node = document.getElementById(sortColName);
+	// determine column resource to sort on
+	var sortResource = node.getAttribute('resource');
+	if (!node)	return(false);
 
-  var sortDirection="ascending";
-  var isSortActive = node.getAttribute('sortActive');
-  if (isSortActive == "true") {
-    var currentDirection = node.getAttribute('sortDirection');
-    if (currentDirection == "ascending")
-      sortDirection = "descending";
-    else if (currentDirection == "descending")
-      sortDirection = "natural";
-    else
-      sortDirection = "ascending";
-  }
+	var sortDirection="ascending";
+	var isSortActive = node.getAttribute('sortActive');
+	if (isSortActive == "true")
+	{
+		var currentDirection = node.getAttribute('sortDirection');
+		if (currentDirection == "ascending")
+			sortDirection = "descending";
+		else if (currentDirection == "descending")
+			sortDirection = "natural";
+		else	sortDirection = "ascending";
+	}
 
 	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
 	if (!isupports)    return(false);
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
 	if (!xulSortService)    return(false);
-	xulSortService.Sort(node, sortResource, sortDirection);
-
-  return(false);
+	try
+	{
+		xulSortService.Sort(node, sortResource, sortDirection);
+	}
+	catch(ex)
+	{
+		dump("Exception calling xulSortService.Sort()\n");
+	}
+	return(false);
 }
 
 
