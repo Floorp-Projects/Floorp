@@ -4817,8 +4817,12 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   // we need to add a pseudo frame so select gets sized as the best it can
   // so here we see if it is a select and then we get the number of options
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-  nsresult result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
+
+  nsresult result;
+  if (aContainer) {
+    result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
                                                (void**)getter_AddRefs(selectElement));
+  }
   if (NS_SUCCEEDED(result) && selectElement) {
     PRUint32 numOptions = 0;
     result = selectElement->GetLength(&numOptions);
