@@ -356,6 +356,7 @@ protected:
 };
 
 nsJSChannel::nsJSChannel() :
+    mLoadFlags(LOAD_NORMAL),
     mIsActive(PR_FALSE),
     mWasCanceled(PR_FALSE)
 {
