@@ -3559,9 +3559,6 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView,
   nsRect clipRect;
 
   aView->GetClippedRect(clipRect, clipped, empty);
-  if (empty) {
-    return PR_FALSE;
-  }
   clipRect.x += aAbsX;
   clipRect.y += aAbsY;
 
