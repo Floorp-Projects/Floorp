@@ -161,6 +161,7 @@ static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue)
     return cpu;
 }
 
+#if !defined(_PR_GLOBAL_THREADS_ONLY) && !defined(_PR_LOCAL_THREADS_ONLY)
 /*
 ** This code is used during a cpu's initial creation.
 */
@@ -192,6 +193,7 @@ static void _PR_RunCPU(void *unused)
         _PR_MD_SWITCH_CONTEXT(me);
     }
 }
+#endif
 
 static void PR_CALLBACK _PR_CPU_Idle(void *_cpu)
 {
