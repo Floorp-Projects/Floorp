@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Properties;
 import java.util.MissingResourceException;
 import java.util.Enumeration;
@@ -50,12 +51,21 @@ class PreferencesBase extends Properties implements Preferences {
 
     File infile = new File(gPrefsPath, gPrefsFile);
     InputStream in = null;
-    try {
-      in = new FileInputStream(infile);
-      load(in);
-      in.close();
-    } catch (IOException e) {
-      e.printStackTrace();
+    if (infile.exists() && infile.canRead() && infile.canWrite()) {
+        try {
+            in = new FileInputStream(infile);
+            load(in);
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    } else {
+        try {
+            RandomAccessFile newPrefsFile = new RandomAccessFile(infile, "rw");
+            newPrefsFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
   }
 
