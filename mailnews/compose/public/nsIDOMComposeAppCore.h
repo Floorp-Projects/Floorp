@@ -38,8 +38,17 @@ class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
   /* void NewMessage (in nsAutoString url); */
   NS_IMETHOD NewMessage(nsAutoString& url) = 0;
 
-  /* void SendMessage (in nsAutoString addrTo, in nsAutoString addrCc, in nsAutoString addrBcc, in nsAutoString subject, in nsAutoString msg); */
+  /* void ReplyMessage (in nsString url, in nsISupports originalMessage, in long type); */
+  NS_IMETHOD ReplyMessage(nsAutoString& url, nsISupports * originalMessage, const PRInt32 type) = 0;
+
+  /* void ForwardMessage (in nsString url, in nsISupports originalMessage, in long type); */
+  NS_IMETHOD ForwardMessage(nsAutoString& url, nsISupports * originalMessage, const PRInt32 type) = 0;
+
+ /* void SendMessage (in nsAutoString addrTo, in nsAutoString addrCc, in nsAutoString addrBcc, in nsAutoString subject, in nsAutoString msg); */
   NS_IMETHOD SendMessage(nsAutoString& addrTo, nsAutoString& addrCc, nsAutoString& addrBcc, nsAutoString& subject, nsAutoString& msg) = 0;
+
+  /* void SendMessage2 (); */
+  NS_IMETHOD SendMessage2(PRInt32 *_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

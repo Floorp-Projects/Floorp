@@ -89,8 +89,11 @@ public:
 	NS_IMETHOD CompleteCallback(nsAutoString& aScript);
 	NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
 	NS_IMETHOD NewMessage(nsAutoString& aUrl);
+	NS_IMETHOD ReplyMessage(nsAutoString& url, nsISupports * originalMessage, const PRInt32 type);
+	NS_IMETHOD ForwardMessage(nsAutoString& url, nsISupports * originalMessage, const PRInt32 type);
 	NS_IMETHOD SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
 		nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg);
+	NS_IMETHOD SendMessage2(PRInt32 * _retval);
 
 protected:
   
@@ -323,6 +326,20 @@ done:
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsComposeAppCore::ReplyMessage(nsAutoString& url, nsISupports * originalMessage,
+										   const PRInt32 type)
+{
+	NewMessage(url);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsComposeAppCore::ForwardMessage(nsAutoString& url, nsISupports * originalMessage,
+											   const PRInt32 type)
+{
+	NewMessage(url);
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
 									nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg)
 {
@@ -391,7 +408,14 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString&
 
 	return NS_OK;
 }
-                              
+
+NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
+{
+//	Need to retreive the fields here and then call the SendMessage()
+//	nsComposeAppCore::SendMessage(...)
+	return NS_OK;
+}
+  
 extern "C"
 nsresult
 NS_NewComposeAppCore(nsIDOMComposeAppCore **aResult)

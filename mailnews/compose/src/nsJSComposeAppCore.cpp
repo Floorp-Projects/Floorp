@@ -243,6 +243,97 @@ ComposeAppCoreNewMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   return JS_TRUE;
 }
 
+//
+// Native method ReplyMessage
+//
+PR_STATIC_CALLBACK(JSBool)
+ComposeAppCoreReplyMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsISupports * b1;
+  const nsString typeName;
+ long b2;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+
+   nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+   rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&b1, nsISupports::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[1]);
+
+	b2 = argv[2];
+
+   if (!rBool && NS_OK != nativeThis->ReplyMessage(b0, b1, b2)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function ReplyMessage requires 3 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ForwardMessage
+//
+PR_STATIC_CALLBACK(JSBool)
+ComposeAppCoreForwardMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+  nsISupports * b1;
+  const nsString typeName;
+ long b2;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+
+   nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+   rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&b1, nsISupports::GetIID(),
+                                  typeName,
+                                  cx,
+                                  argv[1]);
+
+	b2 = argv[2];
+
+   if (!rBool && NS_OK != nativeThis->ForwardMessage(b0, b1, b2)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function ForwardMessage requires 3 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 
 //
 // Native method SendMessage
@@ -280,7 +371,41 @@ ComposeAppCoreSendMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function SendMessage requires 6 parameters");
+    JS_ReportError(cx, "Function SendMessage requires 5 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method SendMessage2
+//
+PR_STATIC_CALLBACK(JSBool)
+ComposeAppCoreSendMessage2(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRInt32 b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->SendMessage2(&b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = (jsval) b0;
+  }
+  else {
+    JS_ReportError(cx, "Function SendMessage requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -320,10 +445,13 @@ static JSPropertySpec ComposeAppCoreProperties[] =
 //
 static JSFunctionSpec ComposeAppCoreMethods[] = 
 {
-  {"SetWindow",				ComposeAppCoreSetWindow,     1},
-  {"CompleteCallback",		ComposeAppCoreCompleteCallback,     1},
-  {"NewMessage",			ComposeAppCoreNewMessage,     1},
-  {"SendMessage",			ComposeAppCoreSendMessage,     5},
+  {"SetWindow",				ComposeAppCoreSetWindow,		1},
+  {"CompleteCallback",		ComposeAppCoreCompleteCallback,	1},
+  {"NewMessage",			ComposeAppCoreNewMessage,		1},
+  {"ReplyMessage",			ComposeAppCoreReplyMessage,		3},
+  {"ForwardMessage",		ComposeAppCoreForwardMessage,	3},
+  {"SendMessage",			ComposeAppCoreSendMessage,		5},
+  {"SendMessage2",			ComposeAppCoreSendMessage2,		0},
   {0}
 };
 
