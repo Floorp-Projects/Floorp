@@ -25,37 +25,43 @@
 [scriptable, uuid(785CA0F0-C39E-11d3-9ED6-0010A4053FD0)]
 interface nsISocketTransport : nsISupports 
 {
-	attribute boolean reuseConnection;
+    attribute boolean reuseConnection;
+
+    /**
+     * socket read/write timeout in seconds; 0 = no timeout
+     */
+    attribute unsigned long socketTimeout;
+
+    /**
+     * socket   connect  timeout in seconds; 0 = no timeout
+     */
+    attribute unsigned long socketConnectTimeout;
+
+    /**
+     * Is used to tell the channel to stop reading data after a certain point;
+     * needed by HTTP/1.1
+     */
+    attribute long bytesExpected;
+    attribute unsigned long reuseCount;
+
+    /**
+     * Checks if the socket is still alive
+     *
+     * @param seconds   amount of time after which the socket is always deemed to be
+     *                  dead (no further checking is done in this case); seconds = 0
+     *                  will cause it not to do the timeout checking at all
+     */
+    boolean isAlive (in unsigned long seconds);
+
+    /**
+     * maximum amount of time in seconds the transport is allowed to stay alive
+     * while connected (0 - default; no maximum idle timeout)
+     */
+    attribute unsigned long idleTimeout;
 
 	/**
-	 * socket read/write timeout in seconds; 0 = no timeout
+	 * the string representation of the underlying ip address. Caller 
+	 * is responsible for de-allocating the returned string.
 	 */
-	attribute unsigned long socketTimeout;
-
-	/**
-	 * socket   connect  timeout in seconds; 0 = no timeout
-	 */
-	attribute unsigned long socketConnectTimeout;
-
-	/**
-	 * Is used to tell the channel to stop reading data after a certain point;
-	 * needed by HTTP/1.1
-	 */
-	attribute long bytesExpected;
-	attribute unsigned long reuseCount;
-
-	/**
-	 * Checks if the socket is still alive
-	 *
-	 * @param seconds	amount of time after which the socket is always deemed to be
-	 *					dead (no further checking is done in this case); seconds = 0
-	 *					will cause it not to do the timeout checking at all
-	 */
-	boolean	isAlive (in unsigned long seconds);
-
-	/**
-	 * maximum amount of time in seconds the transport is allowed to stay alive
-	 * while connected (0 - default; no maximum idle timeout)
-	 */
-	attribute unsigned long idleTimeout;
+	[noscript] string GetIPStr(in unsigned long aStrLen);
 };
