@@ -1024,13 +1024,15 @@ nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
   }
 
   nsCOMPtr<nsIDOMNode> ancestor(parent);
+  nsCOMPtr<nsIDOMNode> temp;
   while (ancestor != NS_STATIC_CAST(nsIDOMNode*, this)) {
-    ancestor->GetParentNode(getter_AddRefs(ancestor));
-    if (!ancestor) {
+    ancestor->GetParentNode(getter_AddRefs(temp));
+    if (!temp) {
       // NOT_FOUND_ERR: Raised if before is not a descendant of the SELECT
       // element.
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
+    temp.swap(ancestor);
   }
 
   // If the before parameter is not null, we are equivalent to the
