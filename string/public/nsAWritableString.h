@@ -55,7 +55,7 @@ class basic_nsAWritableString
           CharT* mEnd;
 
           basic_nsAWritableString<CharT>* mOwningString;
-          void*                           mFragmentIdentifier;
+          PRUint32                        mFragmentIdentifier;
 
           explicit
           Fragment( basic_nsAWritableString<CharT>* aOwner = 0 )

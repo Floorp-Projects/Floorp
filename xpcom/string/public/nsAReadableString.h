@@ -93,7 +93,7 @@ class basic_nsAReadableString
           const CharT* mEnd;
 
           const basic_nsAReadableString<CharT>* mOwningString;
-          void*                                 mFragmentIdentifier;
+          PRUint32                              mFragmentIdentifier;
 
           explicit
           ConstFragment( const basic_nsAReadableString<CharT>* aOwner = 0 )
@@ -384,8 +384,29 @@ class nsPromiseConcatenation
       static const int kLeftString = 0;
       static const int kRightString = 1;
 
+      int
+      current_string( const ConstFragment& aFragment ) const
+        {
+          return (aFragment.mFragmentIdentifier & mFragmentIdentifierMask) ? kRightString : kLeftString;
+        }
+
+      int
+      use_left_string( ConstFragment& aFragment ) const
+        {
+          aFragment.mFragmentIdentifier &= ~mFragmentIdentifierMask;
+          return kLeftString;
+        }
+
+      int
+      use_right_string( ConstFragment& aFragment ) const
+        {
+          aFragment.mFragmentIdentifier |= mFragmentIdentifierMask;
+          return kRightString;
+        }
+
     public:
-      nsPromiseConcatenation( const basic_nsAReadableString<CharT>& aLeftString, const basic_nsAReadableString<CharT>& aRightString )
+      nsPromiseConcatenation( const basic_nsAReadableString<CharT>& aLeftString, const basic_nsAReadableString<CharT>& aRightString, PRUint32 aMask = 1 )
+          : mFragmentIdentifierMask(aMask)
         {
           mStrings[kLeftString] = &aLeftString;
           mStrings[kRightString] = &aRightString;
@@ -393,9 +414,16 @@ class nsPromiseConcatenation
 
       virtual PRUint32 Length() const;
 
+      nsPromiseConcatenation<CharT> operator+( const basic_nsAReadableString<CharT>& rhs ) const;
+
+    private:
+      void operator+( const nsPromiseConcatenation<CharT>& ); // NOT TO BE IMPLEMENTED
+        // making this |private| stops you from over parenthesizing concatenation expressions, e.g., |(A+B) + (C+D)|
+        //  which would break the algorithm for distributing bits in the fragment identifier
+
     private:
       const basic_nsAReadableString<CharT>* mStrings[2];
-      mutable ConstFragment mFragment;
+      PRUint32 mFragmentIdentifierMask;
   };
 
 NS_DEF_STRING_COMPARISONS(nsPromiseConcatenation<CharT>)
@@ -420,27 +448,26 @@ nsPromiseConcatenation<CharT>::GetFragment( ConstFragment& aFragment, FragmentRe
       {
         case kPrevFragment:
         case kNextFragment:
-          whichString = reinterpret_cast<PRInt32>(aFragment.mFragmentIdentifier);
+          whichString = current_string(aFragment);
           break;
 
         case kFirstFragment:
-          aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString = kLeftString);
+          whichString = use_left_string(aFragment);
           break;
 
         case kLastFragment:
-          aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString = kRightString);
+          whichString = use_right_string(aFragment);
           break;
 
         case kFragmentAt:
           PRUint32 leftLength = mStrings[kLeftString]->Length();
           if ( aPosition < leftLength )
-            whichString = kLeftString;
+            whichString = use_left_string(aFragment);
           else
             {
-              whichString = kRightString;
+              whichString = use_right_string(aFragment);
               aPosition -= leftLength;
             }
-          aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString);
           break;
             
       }
@@ -450,7 +477,7 @@ nsPromiseConcatenation<CharT>::GetFragment( ConstFragment& aFragment, FragmentRe
     do
       {
         done = true;
-        result = mStrings[whichString]->GetFragment(mFragment, aRequest, aPosition);
+        result = mStrings[whichString]->GetFragment(aFragment, aRequest, aPosition);
 
         if ( !result )
           {
@@ -458,22 +485,26 @@ nsPromiseConcatenation<CharT>::GetFragment( ConstFragment& aFragment, FragmentRe
             if ( aRequest == kNextFragment && whichString == kLeftString )
               {
                 aRequest = kFirstFragment;
-                aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString = kRightString);
+                whichString = use_right_string(aFragment);
               }
             else if ( aRequest == kPrevFragment && whichString == kRightString )
               {
                 aRequest = kLastFragment;
-                aFragment.mFragmentIdentifier = reinterpret_cast<void*>(whichString = kLeftString);
+                whichString = use_left_string(aFragment);
               }
             else
               done = true;
           }
       }
     while ( !done );
-
-    aFragment.mStart = mFragment.mStart;
-    aFragment.mEnd   = mFragment.mEnd;
     return result;
+  }
+
+template <class CharT>
+nsPromiseConcatenation<CharT>
+nsPromiseConcatenation<CharT>::operator+( const basic_nsAReadableString<CharT>& rhs ) const
+  {
+    return nsPromiseConcatenation<CharT>(*this, rhs, mFragmentIdentifierMask<<1);
   }
 
 
@@ -706,6 +737,9 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<
   {
     return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
+
+
+
 
 template <class CharT, class TraitsT>
 basic_ostream<CharT, class TraitsT>&
