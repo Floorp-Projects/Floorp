@@ -1430,16 +1430,14 @@ NS_IMPL_ISUPPORTS1(XMLElementFactoryImpl, nsIElementFactory)
 nsresult
 NS_NewXMLElementFactory(nsIElementFactory** aResult)
 {
-  NS_PRECONDITION(aResult != nsnull, "null ptr");
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aResult);
 
   XMLElementFactoryImpl* result = new XMLElementFactoryImpl();
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ADDREF(result);
   *aResult = result;
+  NS_ADDREF(*aResult);
+ 
   return NS_OK;
 }
 
@@ -1451,6 +1449,118 @@ XMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
 {
   return NS_NewXMLElement(aResult, aNodeInfo);
 }
+
+
+#ifdef MOZ_MATHML
+////////////////////////////////////////////////////////////////////////
+// MathML Element Factory - temporary location for bug 132844
+// Will be factored out post 1.0
+
+class MathMLElementFactoryImpl : public nsIElementFactory
+{
+protected:
+  MathMLElementFactoryImpl();
+  virtual ~MathMLElementFactoryImpl();
+
+public:
+  friend
+  nsresult
+  NS_NewMathMLElementFactory(nsIElementFactory** aResult);
+
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  // nsIElementFactory interface
+  NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo, nsIContent** aResult);
+
+};
+
+MathMLElementFactoryImpl::MathMLElementFactoryImpl()
+{
+  NS_INIT_REFCNT();
+}
+
+MathMLElementFactoryImpl::~MathMLElementFactoryImpl()
+{
+}
+
+NS_IMPL_ISUPPORTS1(MathMLElementFactoryImpl, nsIElementFactory)
+
+nsresult
+NS_NewMathMLElementFactory(nsIElementFactory** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  MathMLElementFactoryImpl* result = new MathMLElementFactoryImpl();
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
+
+  *aResult = result;
+  NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
+                                              nsIContent** aResult)
+{
+  static const char kMathMLStyleSheetURI[] = "resource:///res/mathml.css";
+
+  // this bit of code is to load mathml.css on demand
+  nsCOMPtr<nsIDocument> doc;
+  aNodeInfo->GetDocument(*getter_AddRefs(doc));
+  if (doc) {
+    PRBool alreadyLoaded = PR_FALSE;
+    PRInt32 i = 0, sheetCount = 0;
+    doc->GetNumberOfStyleSheets(&sheetCount);
+    for (; i < sheetCount; i++) {
+      nsCOMPtr<nsIStyleSheet> sheet;
+      doc->GetStyleSheetAt(i, getter_AddRefs(sheet));
+      NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
+      if (sheet) {
+        nsCOMPtr<nsIURI> uri;
+        sheet->GetURL(*getter_AddRefs(uri));
+        nsCAutoString uriStr;
+        uri->GetSpec(uriStr);
+        if (uriStr.Equals(kMathMLStyleSheetURI)) {
+          alreadyLoaded = PR_TRUE;
+          break;
+        }
+      }
+    }
+    if (!alreadyLoaded) {
+      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
+      if (htmlContainer) {
+        nsCOMPtr<nsICSSLoader> cssLoader;
+        htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
+        if (cssLoader) {
+          nsCOMPtr<nsIURI> uri;
+          NS_NewURI(getter_AddRefs(uri), kMathMLStyleSheetURI);
+          if (uri) {
+            PRBool complete;
+            nsCOMPtr<nsICSSStyleSheet> sheet;
+            cssLoader->LoadAgentSheet(uri, *getter_AddRefs(sheet), complete, nsnull);
+#ifdef NS_DEBUG
+            nsCAutoString uriStr;
+            uri->GetSpec(uriStr);
+            printf("MathML Factory: loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
+            NS_ASSERTION(uriStr.Equals(kMathMLStyleSheetURI), "resolved URI unexpected");
+#endif
+            if (sheet) {
+              doc->AddStyleSheet(sheet, NS_STYLESHEET_FROM_CATALOG);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return NS_NewXMLElement(aResult, aNodeInfo);
+}
+#endif // MOZ_MATHML
+
+
+////////////////////////////////////////////////////////////////////////
 
 void 
 nsXMLContentSink::GetElementFactory(PRInt32 aNameSpaceID,

@@ -557,7 +557,7 @@ GetMathMLAttributeStyleSheet(nsIPresContext* aPresContext,
     return;
   cssSheet->Init(uri);
   cssSheet->SetTitle(NS_ConvertASCIItoUCS2(kTitle));
-  cssSheet->SetDefaultNameSpaceID(nsMathMLAtoms::nameSpaceID);
+  cssSheet->SetDefaultNameSpaceID(kNameSpaceID_MathML);
   nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(cssSheet));
 
   // insert the stylesheet into the styleset without notifying observers

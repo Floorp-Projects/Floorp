@@ -281,6 +281,10 @@ extern nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 extern NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
+#ifdef MOZ_MATHML
+extern nsresult NS_NewMathMLElementFactory(nsIElementFactory** aResult);
+#endif
+
 #ifdef MOZ_SVG
 extern nsresult NS_NewSVGElementFactory(nsIElementFactory** aResult);
 #endif
@@ -354,6 +358,9 @@ MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXUL
 // NS_NewXULControllers
 // NS_NewXULPrototypeCache
 MAKE_CTOR(CreateXULElementFactory,        nsIElementFactory,           NS_NewXULElementFactory)
+#endif
+#ifdef MOZ_MATHML
+MAKE_CTOR(CreateMathMLElementFactory,     nsIElementFactory,           NS_NewMathMLElementFactory)
 #endif
 #ifdef MOZ_SVG
 MAKE_CTOR(CreateSVGElementFactory,        nsIElementFactory,           NS_NewSVGElementFactory)
@@ -788,6 +795,13 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_XULELEMENTFACTORY_CID,
     NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
     CreateXULElementFactory },
+#endif
+
+#ifdef MOZ_MATHML
+  { "MathML Element Factory",
+    NS_MATHMLELEMENTFACTORY_CID,
+    NS_MATHML_ELEMENT_FACTORY_CONTRACTID,
+    CreateMathMLElementFactory },
 #endif
 
 #ifdef MOZ_SVG

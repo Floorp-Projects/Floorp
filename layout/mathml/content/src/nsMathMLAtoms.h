@@ -40,9 +40,6 @@ public:
   static void AddRefAtoms();
   static void ReleaseAtoms();
 
-  // MathML namespace ID, good for the life of the nsMathMLAtoms object
-  static PRInt32  nameSpaceID;
-
   /* Declare all atoms
 
      The atom names and values are stored in nsMathMLAtomList.h and
