@@ -58,18 +58,19 @@
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY translateMenu.label "Translate">
-<!ENTITY translateFrentoEngCmd.label "French to English">
-<!ENTITY translateGermtoEngCmd.label "German to English">
-<!ENTITY tanslateSpantoEngCmd.label "Spanish to English">
+<!ENTITY translateButton.label "Translate">
 <!ENTITY translateEngtoFrenCmd.label "English to French">
-<!ENTITY translateGermtoFrenCmd.label "German to French">
-<!ENTITY translateSpantoFrenCmd.label "Spanish to French">
 <!ENTITY translateEngtoGermCmd.label "English to German">
-<!ENTITY translateFrentoGermCmd.label "French to German">
-<!ENTITY translateSpantoGermCmd.label "Spanish to German">
 <!ENTITY translateEngtoSpanCmd.label "English to Spanish">
+<!ENTITY translateFrentoEngCmd.label "French to English">
+<!ENTITY translateFrentoGermCmd.label "French to German">
 <!ENTITY translateFrentoSpanCmd.label "French to Spanish">
+<!ENTITY translateGermtoEngCmd.label "German to English">
+<!ENTITY translateGermtoFrenCmd.label "German to French">
 <!ENTITY translateGermtoSpanCmd.label "German to Spanish">
+<!ENTITY tanslateSpantoEngCmd.label "Spanish to English">
+<!ENTITY translateSpantoFrenCmd.label "Spanish to French">
+<!ENTITY translateSpantoGermCmd.label "Spanish to German">
 <!ENTITY dcharMenu.label "Default Character Set">
 <!ENTITY dcharIso1Cmd.label "ISO Latin 1 (ISO-8859-1)">
 <!ENTITY dcharIso2Cmd.label "ISO Latin 2 (ISO-8859-1)">
@@ -254,6 +255,26 @@
 
   <html:script language="javascript" src="navigator.js">
   </html:script>
+
+<popup id="translationlist">
+	<menu>
+		<menuitem name="English to French" onclick="Translate('en', 'fr');" />
+		<menuitem name="English to German" onclick="Translate('en', 'de');"/>
+		<menuitem name="English to Spanish" onclick="Translate('en', 'es');"/>
+		<separator />
+		<menuitem name="French to English" onclick="Translate('fr', 'en')"/>
+		<menuitem name="French to German" onclick="Translate('fr', 'de')"/>
+		<menuitem name="French to Spanish" onclick="Translate('fr', 'es')"/>
+		<separator />
+		<menuitem name="German to English" onclick="Translate('de', 'en')"/>
+		<menuitem name="German to French" onclick="Translate('de', 'fr')"/>
+		<menuitem name="German to Spanish" onclick="Translate('de', 'es')"/>
+		<separator />
+		<menuitem name="Spanish to English" onclick="Translate('es', 'en')"/>
+		<menuitem name="Spanish to French" onclick="Translate('es', 'fr')"/>
+		<menuitem name="Spanish to German" onclick="Translate('es', 'de')"/>
+	</menu>
+</popup>
 
   <broadcaster id="canGoBack" disabled="true"/>
   <broadcaster id="canGoForward" disabled="true"/>
@@ -578,6 +599,10 @@
 			  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
 			<spring flex="100%"/>
 	      </box>
+
+		<titledbutton id="translate-button" popup="translationlist" value="&translateButton.label;" align="bottom">
+		</titledbutton>
+
 	      <titledbutton id="print-button" align="bottom" value="&printButton.label;"  
 				onclick="BrowserPrint()">
 	        <observes element="canPrint" attribute="disabled"/>
