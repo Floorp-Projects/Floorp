@@ -519,7 +519,10 @@ function updateOKButton()
 
    var CheckRecurTime = checkRecurTime();
    
-   document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", !( CheckEndTime && CheckRecurTime ) );
+   if( ( CheckEndTime && CheckRecurTime ) === false )
+      document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", true );
+   else
+      document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).removeAttribute( "disabled" );
 }
 
 /**
