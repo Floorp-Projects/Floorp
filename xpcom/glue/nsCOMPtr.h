@@ -344,6 +344,7 @@ class nsCOMPtr_helper
 class NS_COM nsQueryInterface
   {
     public:
+      explicit
       nsQueryInterface( nsISupports* aRawPtr )
           : mRawPtr(aRawPtr)
         {
