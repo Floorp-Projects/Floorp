@@ -1050,7 +1050,7 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
       // and write the appropriate subset of the headers out. 
       m_inhead = PR_FALSE;
 
-			mOutFile = new nsOutputFileStream(*mTempFileSpec, PR_WRONLY | PR_CREATE_FILE);
+			mOutFile = new nsOutputFileStream(*mTempFileSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
       if ( (!mOutFile) || (!mOutFile->is_open()) )
         return NS_MSG_ERROR_WRITING_FILE;
 
