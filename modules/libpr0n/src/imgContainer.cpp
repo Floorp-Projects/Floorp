@@ -654,6 +654,14 @@ void imgContainer::FillWithColor(gfxIImageFrame *aFrame, gfx_color color)
 
           aFrame->GetImageData(&aData, &aDataLength);
           memset(aData, colorRed, aDataLength);
+          
+          nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aFrame));
+          if (ireq) {
+            nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
+            nsRect r(0, 0, width, height);
+            
+            img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+          }
         }
         else
         {
