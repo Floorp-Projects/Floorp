@@ -7957,7 +7957,7 @@ else
 #include "confdefs.h"
 #include <iostream.h>
 int main() {
-ostream *foo=new ostream();
+streambuf *xxx; ostream *foo=new ostream(xxx);
 ; return 0; }
 EOF
 if { (eval echo configure:7964: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
