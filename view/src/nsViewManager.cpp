@@ -2658,12 +2658,12 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegi
       && (!newClipRect || *newClipRect == *oldClipRect)) {
     return NS_OK;
   }
-
-  // Update the view properties
-  view->SetClipChildrenToRect(newClipRect);
   nsRect oldClipRectStorage =
     oldClipRect ? *oldClipRect : view->GetDimensions();
  
+  // Update the view properties
+  view->SetClipChildrenToRect(newClipRect);
+
   if (IsViewInserted(view)) {
     // Invalidate changed areas
     // Paint (new - old) in the current view
