@@ -30,6 +30,7 @@
 #include "nsIStreamObserver.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIObserver.h"
+#include "nsISessionHistory.h"
 
 class nsIBrowserWindow;
 class nsIWebShell;
@@ -50,7 +51,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
                          public nsINetSupport,
                          //     public nsIStreamObserver,
                          public nsIDocumentLoaderObserver,
-                         public nsIObserver
+                         public nsIObserver,
+						 public nsISessionHistory
 {
   public:
 
@@ -63,8 +65,6 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Init(const nsString& aId);
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
 
-    NS_IMETHOD    Back();
-    NS_IMETHOD    Forward();
     NS_IMETHOD    Stop();
 
     NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm);
@@ -93,7 +93,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     // nsIDocumentLoaderObserver
     NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand);
-    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus);
+    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus,
+								 nsIDocumentLoaderObserver * aObserver);
     NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
     NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRUint32 aProgress, 
@@ -126,6 +127,31 @@ class nsBrowserAppCore : public nsBaseAppCore,
     // nsIObserver
     NS_DECL_IOBSERVER
 
+
+	// nsISessionHistory methods 
+    NS_IMETHOD Forward();
+
+    NS_IMETHOD Back();
+
+    NS_IMETHOD canForward(PRBool &aResult);
+
+    NS_IMETHOD canBack(PRBool &aResult);
+
+    NS_IMETHOD add(nsIWebShell * aWebShell);
+
+    NS_IMETHOD Goto(PRInt32 aHistoryIndex);
+
+    NS_IMETHOD getHistoryLength(PRInt32 & aResult);
+
+    NS_IMETHOD getCurrentIndex(PRInt32 & aResult);
+
+  //  NS_IMETHOD cloneHistory(nsISessionHistory * aSessionHistory);
+
+    NS_IMETHOD SetLoadingFlag(PRBool aFlag);
+
+    NS_IMETHOD SetLoadingHistoryEntry(nsHistoryEntry * aHistoryEntry);
+
+
   protected:
     NS_IMETHOD DoDialog();
     NS_IMETHOD ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
@@ -144,7 +170,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     nsIWebShell *       mWebShell;
     nsIWebShell *       mContentAreaWebShell;
 
-    nsIGlobalHistory* mGHistory;
+    nsIGlobalHistory*   mGHistory;
+	nsISessionHistory * mSHistory;
 
     nsISupports *       mSearchContext;
 };

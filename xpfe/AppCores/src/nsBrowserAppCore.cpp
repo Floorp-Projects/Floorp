@@ -100,6 +100,7 @@ static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,         NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCGlobalHistoryCID,       NS_GLOBALHISTORY_CID);
+static NS_DEFINE_IID(kCSessionHistoryCID,       NS_SESSION_HISTORY_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kICmdLineServiceIID,   NS_ICOMMANDLINE_SERVICE_IID);
@@ -112,6 +113,8 @@ static NS_DEFINE_IID(kINetSupportIID,            NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
+static NS_DEFINE_IID(kISessionHistoryIID,       NS_ISESSION_HISTORY_IID);
+static NS_DEFINE_IID(kIWebShellIID,              NS_IWEB_SHELL_IID);
 
 #define APP_DEBUG 0
 
@@ -143,6 +146,7 @@ nsBrowserAppCore::nsBrowserAppCore()
   mContentAreaWebShell  = nsnull;
   mGHistory             = nsnull;
   mSearchContext        = nsnull;
+  mSHistory             = nsnull;
   IncInstanceCount();
   NS_INIT_REFCNT();
 
@@ -164,7 +168,9 @@ nsBrowserAppCore::~nsBrowserAppCore()
   if (nsnull != mGHistory) {
     nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
   }
-
+ if (nsnull != mSHistory) {
+    nsServiceManager::ReleaseService(kCSessionHistoryCID, mSHistory);
+  }
   DecInstanceCount();  
 }
 
@@ -276,6 +282,12 @@ nsBrowserAppCore::Init(const nsString& aId)
   nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
 					(nsISupports **)&mGHistory);
 
+  nsServiceManager::GetService(kCSessionHistoryCID, kISessionHistoryIID,
+                                       (nsISupports **)&mSHistory);
+
+  if (!mSHistory)
+     printf("********** Couldn't initialize Session History *********\n");
+
   BeginObserving();
 
   return rv;
@@ -301,19 +313,6 @@ nsBrowserAppCore::SetDocumentCharset(const nsString& aCharset)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsBrowserAppCore::Back()
-{
-  mContentAreaWebShell->Back();
-	return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsBrowserAppCore::Forward()
-{
-  mContentAreaWebShell->Forward();
-	return NS_OK;
-}
 
 NS_IMETHODIMP    
 nsBrowserAppCore::Stop()
@@ -853,6 +852,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     mContentAreaWebShell = webShell;
     NS_ADDREF(mContentAreaWebShell);
     webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+    webShell->SetSessionHistory((nsISessionHistory *)this);
 
     const PRUnichar * name;
     webShell->GetName( &name);
@@ -1013,7 +1013,8 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURL* aURL, 
 
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PRInt32 aStatus)
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PRInt32 aStatus,
+									nsIDocumentLoaderObserver * aObserver)
 {
   NS_PRECONDITION(aLoader != nsnull, "null ptr");
   if (! aLoader)
@@ -1023,7 +1024,14 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PR
   if (! aUrl)
     return NS_ERROR_NULL_POINTER;
 
+  const char* spec =nsnull;
+
+  aUrl->GetSpec(&spec);
+
+ 
   nsresult rv;
+
+  nsIWebShell * aWebShell= nsnull, * parent = nsnull;
 
   // Notify observers that a document load has started in the
   // content window.
@@ -1039,6 +1047,22 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PR
   nsAutoString kEndDocumentLoad("EndDocumentLoad");
   nsAutoString kFailDocumentLoad("FailDocumentLoad");
 
+  rv = aObserver->QueryInterface(kIWebShellIID, (void **)&aWebShell);
+
+  if (aStatus != NS_OK) {
+		  goto done;
+  }
+
+  /* If this is a frame, don't do any of the Global History
+   * & observer thingy 
+   */
+  if (aWebShell)
+      aWebShell->GetParent(parent);
+
+  if (parent) {
+      /* This is a frame */
+          goto end;
+  }
   rv = observer->Notify(mContentWindow,
                         NS_SUCCEEDED(aStatus) ? kEndDocumentLoad.GetUnicode() : kFailDocumentLoad.GetUnicode(),
                         urlStr.GetUnicode());
@@ -1064,34 +1088,37 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PR
     } while (0);
   }
 
+done:
   // Stop the throbber and set the urlbar string
 	if (aStatus == NS_OK)
-    setAttribute( mWebShell, "urlbar", "value", url);
+      setAttribute( mWebShell, "urlbar", "value", url);
 
-  setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+	    /* To satisfy a request from the QA group */
+	if (aStatus == NS_OK) {
+      fprintf(stdout, "Document %s loaded successfully\n", spec);
+      fflush(stdout);
+	}
+	else {
+      fprintf(stdout, "Error loading URL %s \n", spec);
+      fflush(stdout);
+	}
 
-  // Check with the content area webshell if back and forward
-  // buttons can be enabled
-  rv = mContentAreaWebShell->CanForward();
-  setAttribute(mWebShell, "canGoForward", "disabled", (rv == NS_OK) ? "" : "true");
+end:
 
-  rv = mContentAreaWebShell->CanBack();
-  setAttribute(mWebShell, "canGoBack", "disabled", (rv == NS_OK) ? "" : "true");
+    setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+    PRBool result=PR_TRUE;
+    // Check with sessionHistory if you can go forward
+    canForward(result);
+    setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
+
+    // Check with sessionHistory if you can go back
+    canBack(result);
+    setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
 
 	//Disable the Stop button
 	setAttribute( mWebShell, "canStop", "disabled", "true" );
 
-  /* To satisfy a request from the QA group */
-	if (aStatus == NS_OK) {
-    fprintf(stdout, "Document %s loaded successfully\n", url);
-    fflush(stdout);
-	}
-	else {
-    fprintf(stdout, "Error loading URL %s \n", url);
-    fflush(stdout);
-	}
-
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1164,6 +1191,121 @@ nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader,
 
    return NS_OK;
 }
+
+/////////////////////////////////////////////////////////
+//             nsISessionHistory methods              //
+////////////////////////////////////////////////////////
+
+NS_IMETHODIMP    
+nsBrowserAppCore::Back()
+{
+  if (mSHistory) {
+    mSHistory->Back();
+  }
+  //  mContentAreaWebShell->Back();
+	return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::Forward()
+{
+  if (mSHistory) {
+    mSHistory->Forward();
+  }
+  //  mContentAreaWebShell->Forward();
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::add(nsIWebShell * aWebShell)
+{
+   nsresult rv;
+      if (mSHistory) 
+   rv = mSHistory->add(aWebShell);
+   return rv;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::Goto(PRInt32 aGotoIndex)
+{
+   nsresult rv;
+      if (mSHistory) 
+   rv = mSHistory->Goto(aGotoIndex);
+   return rv;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::SetLoadingFlag(PRBool aFlag)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::SetLoadingHistoryEntry(nsHistoryEntry *  aHistoryEntry)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::canForward(PRBool & aResult)
+{
+   PRBool result;
+
+   if (mSHistory) {
+     mSHistory->canForward(result);
+   aResult = result;
+   }
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::canBack(PRBool & aResult)
+{
+   PRBool result;
+
+   if (mSHistory) {
+   mSHistory->canBack(result);
+   aResult = result;
+   }
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::getHistoryLength(PRInt32 & aResult)
+{
+   PRInt32 result;
+   if (mSHistory)
+   mSHistory->getHistoryLength(result);
+   
+   aResult = result;
+   return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowserAppCore::getCurrentIndex(PRInt32 & aResult)
+{
+   PRInt32 result;
+
+   if (mSHistory)
+   mSHistory->getCurrentIndex(result);
+   
+   aResult = result;
+   return NS_OK;
+
+}
+
+/*
+NS_IMETHODIMP
+cloneHistory(nsISessionHistory * aSessionHistory) {
+  return NS_OK;
+
+}
+*/
+
+////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP    
 nsBrowserAppCore::NewWindow()
