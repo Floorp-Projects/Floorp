@@ -85,8 +85,10 @@ function highlightCurrentProfile()
       return;
     var currentProfileItem = document.getElementById( ( "profileName_" + currentProfile ) );
     var profileList = document.getElementById( "profiles" );
-    if( currentProfileItem )
+    if( currentProfileItem ) {
       profileList.selectItem( currentProfileItem );
+      profileList.ensureElementIsVisible( currentProfileItem );
+    }
   }
   catch(e) {
     dump("*** failed to select current profile in list\n");
