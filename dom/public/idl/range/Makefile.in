@@ -30,8 +30,6 @@ MODULE		= layout
 
 IDLSRCS		= \
 		Range.idl \
-		Selection.idl \
-		SelectionListener.idl \
 		$(NULL)
 
 IDLSRCS		:= $(addprefix $(srcdir)/, $(IDLSRCS))
