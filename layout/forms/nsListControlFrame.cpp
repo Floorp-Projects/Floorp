@@ -1917,6 +1917,7 @@ nsListControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection,
 
       if (NS_CONTENT_ATTR_NOT_THERE == result) {
         result = option->GetText(aValue);
+        aValue.CompressWhitespace();
         if (aValue.Length() > 0) {
           status = PR_TRUE;
         }
@@ -2336,7 +2337,6 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     if (mSelectedIndex >= 0) {
       nsAutoString value;
       GetOptionValue(*options, mSelectedIndex, value);
-      value.CompressWhitespace();
       aNumValues = 1;
       aNames[0]  = name;
       aValues[0] = value;
