@@ -156,23 +156,26 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
             resolvedPath[charCount] = '\0';
         
         wasAliased = PR_TRUE;
-	/* if it's not an absolute path, 
-	   replace the leaf with what got resolved */
-	if (resolvedPath[0] != '/') {
-		SetLeafName(resolvedPath);
-	}
-	else {
-		mPath = (char*)&resolvedPath;
-	} 
+		/* if it's not an absolute path, 
+		   replace the leaf with what got resolved */
+		if (resolvedPath[0] != '/') {
+			SetLeafName(resolvedPath);
+		}
+		else {
+			mPath = (char*)&resolvedPath;
+		} 
 
-	char* canonicalPath = realpath((const char *)mPath, resolvedPath);
-        NS_ASSERTION(canonicalPath, "realpath failed");
-        if (canonicalPath) {
-		mPath = (char*)&resolvedPath; 
- 	}
-	else {
-		return NS_ERROR_FAILURE;
-	}
+		BEntry e((const char *)mPath, true);	// traverse symlink
+		BPath p;
+		status_t err;
+		err = e.GetPath(&p);
+		NS_ASSERTION(err == B_OK, "realpath failed");
+
+		const char* canonicalPath = p.Path();
+		if(err == B_OK)
+			mPath = (char*)&canonicalPath;
+		else
+			return NS_ERROR_FAILURE;
     }
     return NS_OK;
 } // nsFileSpec::ResolveSymlink
