@@ -43,7 +43,6 @@
 [scriptable, uuid(a6cf90c7-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNSHTMLImageElement : nsISupports
 {
-           attribute DOMString        lowsrc;
   readonly attribute boolean          complete;
 
   readonly attribute long             naturalHeight;

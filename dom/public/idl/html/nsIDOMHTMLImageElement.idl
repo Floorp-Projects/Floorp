@@ -43,7 +43,6 @@
 [scriptable, uuid(a6cf90ab-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLImageElement : nsIDOMHTMLElement
 {
-           attribute DOMString        lowSrc;
            attribute DOMString        name;
            attribute DOMString        align;
            attribute DOMString        alt;
