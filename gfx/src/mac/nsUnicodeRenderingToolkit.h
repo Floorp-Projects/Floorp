@@ -22,14 +22,14 @@
 #include <UnicodeConverter.h>
 class nsUnicodeFallbackCache;
 class nsIDeviceContext;
-class GraphicState;
+class nsGraphicState;
 
 class nsUnicodeRenderingToolkit 
 {
 	nsUnicodeRenderingToolkit() {};
 	~nsUnicodeRenderingToolkit() {};
 public:
-  NS_IMETHOD PrepareToDraw(float aP2T, nsIDeviceContext* aContext, GraphicState* aGS, GrafPtr aPort);
+  NS_IMETHOD PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort);
   NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
                       PRInt32 *aFontID);
   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
@@ -61,7 +61,7 @@ private:
 private:
 	float             		mP2T; 				// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
-	GraphicState *			mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
+	nsGraphicState *		mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
 
 	GrafPtr					mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
 	nsATSUIToolkit			mATSUIToolkit;

@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
  
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
@@ -33,12 +34,13 @@
 #include <FixMath.h>
 #include <Gestalt.h>
 
+#define STACK_TREASHOLD 1000
 
 #define DrawingSurface	nsDrawingSurfaceMac
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-//------------------------------------------------------------------------
+
 
 nsRenderingContextMac::nsRenderingContextMac()
 {
@@ -55,7 +57,7 @@ nsRenderingContextMac::nsRenderingContextMac()
 	mGS								= nsnull;
 
   mGSStack					= new nsVoidArray();
-
+  
   mChanges = kFontChanged | kColorChanged;
 }
 
@@ -718,9 +720,9 @@ NS_IMETHODIMP nsRenderingContextMac :: SetColor(nscolor aColor)
 	thecolor.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));
 	::RGBForeColor(&thecolor);
   mGS->mColor = aColor ;
- 
+	  
   mChanges |= kColorChanged;
-
+  	
 	EndDraw();
   return NS_OK;
 }
@@ -759,8 +761,8 @@ NS_IMETHODIMP nsRenderingContextMac :: SetFont(const nsFont& aFont)
 
 	if (mContext)
 		mContext->GetMetricsFor(aFont, mGS->mFontMetrics);
-  mChanges |= kFontChanged;
-
+		mChanges |= kFontChanged;
+		
   return NS_OK;
 }
 
@@ -771,7 +773,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SetFont(nsIFontMetrics *aFontMetrics)
 	NS_IF_RELEASE(mGS->mFontMetrics);
 	mGS->mFontMetrics = aFontMetrics;
 	NS_IF_ADDREF(mGS->mFontMetrics);
-  mChanges |= kFontChanged;
+	mChanges |= kFontChanged;
   return NS_OK;
 }
 
@@ -1112,7 +1114,6 @@ NS_IMETHODIMP nsRenderingContextMac :: FillArc(nscoord aX, nscoord aY, nscoord a
   return NS_OK;
 }
 
-
 #pragma mark -
 //------------------------------------------------------------------------
 
@@ -1183,51 +1184,28 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 
 NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
 {
-	// First, let's try to convert the Unicode string to MacRoman
-	// and measure it as a C-string by using QuickDraw
+	StartDraw();
+ 	nsresult res = NS_OK;
+ 	res = SetPortTextState();
+ 	if(NS_FAILED(res))
+ 		goto end_of_func;
 
-	nsresult res = NS_OK;
-	char buffer[500];
-	char* buf = (aLength <= 500 ? buffer : new char[aLength]);
-	if (!buf)
-		return NS_ERROR_OUT_OF_MEMORY;
+	NS_PRECONDITION(mGS->mFontMetrics != nsnull, "No font metrics in SetPortTextState");
+	
+	if (nsnull == mGS->mFontMetrics) {
+ 		res = NS_ERROR_NULL_POINTER;
+ 		goto end_of_func;		
+	}	
+	res = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
+	if(NS_SUCCEEDED(res))
+    	res = mUnicodeRenderingToolkit.GetWidth(aString, aLength, aWidth, aFontID);
+    
+end_of_func:  
+    EndDraw();
+	return res;
 
-	PRBool isMacRomanFont = PR_TRUE; // XXX we need to set up this value latter.
-	PRBool useQD = nsATSUIUtils::ConvertToMacRoman(aString, aLength, buf, ! isMacRomanFont);
-
-	if (useQD)
-		res = GetWidth(buf, aLength, aWidth);
-
-	if (buf != buffer)
-		delete[] buf;
-
-	if (useQD)
-		return res;
-
-
-	// If the string cannot be converted to MacRoman, let's draw it by using ATSUI.
-	// If ATSUI is not available, measure the C-string without conversion.
-
-	if (nsATSUIUtils::IsAvailable())
-	{
-		mATSUIToolkit.PrepareToDraw((mChanges & (kFontChanged | kColorChanged) != 0), mGS, mPort, mContext);
-		res = mATSUIToolkit.GetWidth(aString, aLength, aWidth, aFontID);	
-	}
-	else
-	{
-		// XXX Unicode Broken!!! We should use TEC here to convert Unicode to different script run
-		nsString nsStr;
-		nsStr.SetString(aString, aLength);
-		char* cStr = nsStr.ToNewCString();
-
-		res = GetWidth(cStr, aLength, aWidth);
-
-		delete[] cStr;
-		if (nsnull != aFontID)
-			*aFontID = 0;
-	}
-  return res;
 }
+
 
 
 #pragma mark -
@@ -1261,8 +1239,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		::DrawText(aString,0,aLength);
   else
   {
-		int buffer[500];
-		int* spacing = (aLength <= 500 ? buffer : new int[aLength]);
+		int buffer[STACK_TREASHOLD];
+		int* spacing = (aLength <= STACK_TREASHOLD ? buffer : new int[aLength]);
 		if (spacing)
 		{
 			mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
@@ -1286,54 +1264,33 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 
 
 
-//------------------------------------------------------------------------
 
+//------------------------------------------------------------------------
 NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
-	// First, let's try to convert the Unicode string to MacRoman
-	// and draw it as a C-string by using QuickDraw
-		
-	nsresult res = NS_OK;
-	char buffer[500];
-	char* buf = (aLength <= 500 ? buffer : new char[aLength]);
-	if (!buf)
-		return NS_ERROR_OUT_OF_MEMORY;
+	StartDraw();
 
-	PRBool isMacRomanFont = PR_TRUE; // XXX we need to set up this value latter.
-	PRBool useQD = nsATSUIUtils::ConvertToMacRoman(aString, aLength, buf, ! isMacRomanFont);
+ 	nsresult res = NS_OK;
+ 	res = SetPortTextState();
+ 	if(NS_FAILED(res))
+ 		goto end_of_func;
 
-	if (useQD)
-		res = DrawString(buf, aLength, aX, aY, aSpacing);
+	NS_PRECONDITION(mGS->mFontMetrics != nsnull, "No font metrics in SetPortTextState");
+	
+	if (nsnull == mGS->mFontMetrics) {
+		return NS_ERROR_NULL_POINTER;
+ 		goto end_of_func;
+	}	
+	res = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
+	if(NS_SUCCEEDED(res))
+		res = mUnicodeRenderingToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
 
-	if (buf != buffer)
-		delete[] buf;
+end_of_func:
 
-	if (useQD)
-		return res;
-
-
-	// If the string cannot be converted to MacRoman, let's draw it by using ATSUI.
-	// If ATSUI is not available, draw the C-string without conversion.
-
-	if (nsATSUIUtils::IsAvailable())
-	{
-		mATSUIToolkit.PrepareToDraw((mChanges & (kFontChanged | kColorChanged) != 0), mGS, mPort, mContext);
-		res = mATSUIToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);	
-	}
-	else
-	{
-		// XXX Unicode Broken!!! We should use TEC here to convert Unicode to different script run
-		nsString nsStr;
-		nsStr.SetString(aString, aLength);
-		char* cStr = nsStr.ToNewCString();
-
-		res = DrawString(cStr, aLength, aX, aY, aSpacing);
-
-		delete[] cStr;
-	}
-	return res;	
+    EndDraw();
+	return res;        
 }
 
 //------------------------------------------------------------------------

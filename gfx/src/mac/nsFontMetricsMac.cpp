@@ -20,6 +20,7 @@
 
 #include "nsFontMetricsMac.h"
 #include "nsDeviceContextMac.h"
+#include "nsUnicodeFontMappingMac.h"
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
@@ -31,6 +32,7 @@ nsFontMetricsMac :: nsFontMetricsMac()
   NS_INIT_REFCNT();
   mFont = nsnull;
   mFontNum = BAD_FONT_NUM;
+  mFontMapping = nsnull;
 }
   
 nsFontMetricsMac :: ~nsFontMetricsMac()
@@ -83,6 +85,18 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
   mSpaceWidth = NSToCoordRound(float(::CharWidth(' ')) * dev2app);
 
   return NS_OK;
+}
+
+nsUnicodeFontMappingMac* nsFontMetricsMac :: GetUnicodeFontMapping()
+{
+	// we should pass the documentCharset from the nsIDocument level and
+	// the lang attribute from the tag level to here.
+	// XXX hard code to some value till peterl pass them down.
+	nsAutoString lang("de, zh_TW, ja, fr");
+	nsAutoString documentCharset("ISO-8859-1");
+	if(! mFontMapping)
+		mFontMapping = nsUnicodeFontMappingMac::GetCachedInstance(mFont, mContext,documentCharset, lang);
+	return mFontMapping;
 }
 
 
