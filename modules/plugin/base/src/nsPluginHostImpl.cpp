@@ -115,7 +115,9 @@
 #include "nsIDOMMimeType.h"
 #include "nsMimeTypes.h"
 #include "prprf.h"
-
+#include "plevent.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 #include "nsIInputStreamTee.h"
 
 #if defined(XP_PC) && !defined(XP_OS2)
@@ -211,6 +213,8 @@ static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_s
 // for the dialog
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // Registry keys for caching plugin info
@@ -247,6 +251,7 @@ PRLogModuleInfo* nsPluginLogging::gPluginLog = nsnull;
 #define MAGIC_REQUEST_CONTEXT 0x01020304
 
 void DisplayNoDefaultPluginDialog(const char *mimeType);
+nsresult PostPluginUnloadEvent(PRLibrary * aLibrary);
 
 /**
  * Used in DisplayNoDefaultPlugindialog to prevent showing the dialog twice
@@ -776,7 +781,7 @@ nsUnusedLibrary::nsUnusedLibrary(PRLibrary * aLibrary)
 nsUnusedLibrary::~nsUnusedLibrary()
 {
   if(mLibrary)
-    PR_UnloadLibrary(mLibrary);
+    PostPluginUnloadEvent(mLibrary);
 }
 
 
@@ -998,6 +1003,61 @@ nsPluginTag::~nsPluginTag()
 
 }
 
+//----------------------------------------------------------------------
+// helper struct for asynchronous handeling of plugin unloading
+struct nsPluginUnloadEvent: public PLEvent {
+  nsPluginUnloadEvent (PRLibrary* aLibrary);
+ 
+  void HandleEvent() {
+    if (mLibrary)
+      NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(mLibrary), nsnull);  // put our unload call in a saftey wrapper
+    else 
+      NS_WARNING("missing library from nsPluginUnloadEvent");
+  }
+
+  PRLibrary* mLibrary;
+};
+nsPluginUnloadEvent::nsPluginUnloadEvent (PRLibrary* aLibrary)
+{
+  mLibrary = aLibrary;
+}
+//----------------------------------------------------------------------
+// helper static callback functions for plugin unloading PLEvents
+static void PR_CALLBACK HandlePluginUnloadPLEvent(nsPluginUnloadEvent* aEvent)
+{
+  aEvent->HandleEvent();
+}
+static void PR_CALLBACK DestroyPluginUnloadPLEvent(nsPluginUnloadEvent* aEvent)
+{
+  delete aEvent;
+}
+
+// unload plugin asynchronously if possible, otherwise just unload now
+nsresult PostPluginUnloadEvent (PRLibrary* aLibrary)
+{
+  nsCOMPtr<nsIEventQueueService> eventService(do_GetService(kEventQueueServiceCID));
+  if (eventService) {
+    nsCOMPtr<nsIEventQueue> eventQueue;  
+    eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(eventQueue));
+    if (eventQueue) {
+      nsPluginUnloadEvent * ev = new nsPluginUnloadEvent(aLibrary);
+      if (ev) {
+
+        PL_InitEvent(ev, nsnull, (PLHandleEventProc) ::HandlePluginUnloadPLEvent, (PLDestroyEventProc) ::DestroyPluginUnloadPLEvent);
+        if (NS_SUCCEEDED(eventQueue->PostEvent(ev)))
+          return NS_OK;        
+        else NS_WARNING("failed to post event onto queue");
+
+      } else NS_WARNING("not able to create plugin unload event");
+    } else NS_WARNING("couldn't get event queue");
+  } else NS_WARNING("couldn't get event queue service");
+
+  // failure case
+  NS_TRY_SAFE_CALL_VOID(PR_UnloadLibrary(aLibrary), nsnull);
+
+  return NS_ERROR_FAILURE;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
@@ -1018,7 +1078,7 @@ void nsPluginTag::TryUnloadPlugin(PRBool aForceShutdown)
   // before we unload check if we are allowed to, see bug #61388
   // also, never unload an XPCOM plugin library
   if (mLibrary && mCanUnloadLibrary && !isXPCOM)
-    PR_UnloadLibrary(mLibrary);
+    PostPluginUnloadEvent(mLibrary); // unload the plugin asynchronously by posting a PLEvent 
 
   // we should zero it anyway, it is going to be unloaded by 
   // CleanUnsedLibraries before we need to call the library 
