@@ -147,21 +147,6 @@ public:
    * different and urelated buffer of data.
    */
   NS_IMETHOD Reset() = 0;
-
-  // XXX deprecated
-  /*---------- BEGIN DEPRECATED */ 
-  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength, const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 * aSrcLength) = 0;
-
-  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, PRInt32 * aDestLength)
-      = 0;
-
-  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 aSrcLength, PRInt32 * aDestLength) = 0;
-
-  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior) = 0;
-  /*---------- END DEPRECATED */ 
 };
 
 #endif /* nsIUnicodeDecoder_h___ */
