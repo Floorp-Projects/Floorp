@@ -290,7 +290,7 @@ PRUint32  pixSColor,pixSSColor;
       s2 = s1;
       d2 = d1;
       for(x = 0; x < aNumbytes; x++){
-        temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+        FAST_DIVIDE_BY_255(temp1,((*d2)*val1)+((*s2)*val2));
         if(temp1>255){
           temp1 = 255;
         }
@@ -316,7 +316,7 @@ PRUint32  pixSColor,pixSSColor;
 
         if((pixSColor!=srccolor) || (pixSSColor!=secsrccolor)) {
           for(i=0;i<4;i++){
-            temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+            FAST_DIVIDE_BY_255(temp1,((*d2)*val1)+((*s2)*val2));
             if(temp1>255){
               temp1 = 255;
             }
@@ -377,7 +377,7 @@ PRUint32  pixSColor,pixSSColor;
       s2 = s1;
       d2 = d1;
       for(x = 0; x < aNumbytes; x++){
-        temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+        FAST_DIVIDE_BY_255(temp1,((*d2)*val1)+((*s2)*val2));
         if(temp1>255){
           temp1 = 255;
         }
@@ -403,7 +403,7 @@ PRUint32  pixSColor,pixSSColor;
 
         if((pixSColor!=srccolor) || (pixSSColor!=secsrccolor)) {
           for(i=0;i<3;i++){
-            temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+            FAST_DIVIDE_BY_255(temp1,((*d2)*val1)+((*s2)*val2));
             if(temp1>255){
               temp1 = 255;
             }
@@ -487,17 +487,17 @@ PRInt16     dspan,sspan,span;
         if ((stemp != srccolor) || (sstemp != secsrccolor)) {
           dtemp = *d2;
 
-          red = (RED16(dtemp) * val1 + RED16(stemp) * val2) >> 8;
+          FAST_DIVIDE_BY_255(red, RED16(dtemp) * val1 + RED16(stemp) * val2);
 
           if (red > 255)
             red = 255;
 
-          green = (GREEN16(dtemp) * val1 + GREEN16(stemp) * val2) >> 8;
+          FAST_DIVIDE_BY_255(green, GREEN16(dtemp) * val1 + GREEN16(stemp) * val2);
 
           if (green > 255)
             green = 255;
 
-          blue = (BLUE16(dtemp) * val1 + BLUE16(stemp) * val2) >> 8;
+          FAST_DIVIDE_BY_255(blue, BLUE16(dtemp) * val1 + BLUE16(stemp) * val2);
 
           if (blue > 255)
             blue = 255;
@@ -523,17 +523,17 @@ PRInt16     dspan,sspan,span;
         stemp = *s2;
         dtemp = *d2;
 
-        red = (RED16(dtemp) * val1 + RED16(stemp) * val2) >> 8;
+        FAST_DIVIDE_BY_255(red, RED16(dtemp) * val1 + RED16(stemp) * val2);
 
         if (red > 255)
           red = 255;
 
-        green = (GREEN16(dtemp) * val1 + GREEN16(stemp) * val2) >> 8;
+        FAST_DIVIDE_BY_255(green, GREEN16(dtemp) * val1 + GREEN16(stemp) * val2);
 
         if (green > 255)
           green = 255;
 
-        blue = (BLUE16(dtemp) * val1 + BLUE16(stemp) * val2) >> 8;
+        FAST_DIVIDE_BY_255(blue, BLUE16(dtemp) * val1 + BLUE16(stemp) * val2);
 
         if (blue > 255)
           blue = 255;

@@ -379,8 +379,6 @@ findIndex24(unsigned mask)
   }
 }
 
-// blending macro
-#define MOZ_BLEND(bg, fg, alpha) (((bg)*(255-(alpha)) + (fg)*(alpha))/255)
 
 // 32-bit (888) truecolor convert/composite function
 void
@@ -414,9 +412,9 @@ nsImageGTK::DrawComposited32(PRBool isLSB, PRBool flipBytes,
     for (unsigned i=0; i<width;
          i++, baseRow+=4, targetRow+=3, imageRow+=3, alphaRow++) {
       unsigned alpha = *alphaRow;
-      targetRow[0] = MOZ_BLEND(baseRow[redIndex],   imageRow[0], alpha);
-      targetRow[1] = MOZ_BLEND(baseRow[greenIndex], imageRow[1], alpha);
-      targetRow[2] = MOZ_BLEND(baseRow[blueIndex],  imageRow[2], alpha);
+      MOZ_BLEND(targetRow[0], baseRow[redIndex],   imageRow[0], alpha);
+      MOZ_BLEND(targetRow[1], baseRow[greenIndex], imageRow[1], alpha);
+      MOZ_BLEND(targetRow[2], baseRow[blueIndex],  imageRow[2], alpha);
     }
   }
 }
@@ -449,9 +447,9 @@ nsImageGTK::DrawComposited24(PRBool isLSB, PRBool flipBytes,
     for (unsigned i=0; i<width;
          i++, baseRow+=3, targetRow+=3, imageRow+=3, alphaRow++) {
       unsigned alpha = *alphaRow;
-      targetRow[0] = MOZ_BLEND(baseRow[redIndex],   imageRow[0], alpha);
-      targetRow[1] = MOZ_BLEND(baseRow[greenIndex], imageRow[1], alpha);
-      targetRow[2] = MOZ_BLEND(baseRow[blueIndex],  imageRow[2], alpha);
+      MOZ_BLEND(targetRow[0], baseRow[redIndex],   imageRow[0], alpha);
+      MOZ_BLEND(targetRow[1], baseRow[greenIndex], imageRow[1], alpha);
+      MOZ_BLEND(targetRow[2], baseRow[blueIndex],  imageRow[2], alpha);
     }
   }
 }
@@ -499,15 +497,15 @@ nsImageGTK::DrawComposited16(PRBool isLSB, PRBool flipBytes,
       } else
         pix = *((short *)baseRow);
       unsigned alpha = *alphaRow;
-      targetRow[0] = 
-        MOZ_BLEND(redScale[(pix&visual->red_mask)>>visual->red_shift], 
-                  imageRow[0], alpha);
-      targetRow[1] = 
-        MOZ_BLEND(greenScale[(pix&visual->green_mask)>>visual->green_shift], 
-                  imageRow[1], alpha);
-      targetRow[2] = 
-        MOZ_BLEND(blueScale[(pix&visual->blue_mask)>>visual->blue_shift], 
-                  imageRow[2], alpha);
+      MOZ_BLEND(targetRow[0],
+                redScale[(pix&visual->red_mask)>>visual->red_shift], 
+                imageRow[0], alpha);
+      MOZ_BLEND(targetRow[1],
+                greenScale[(pix&visual->green_mask)>>visual->green_shift], 
+                imageRow[1], alpha);
+      MOZ_BLEND(targetRow[2],
+                blueScale[(pix&visual->blue_mask)>>visual->blue_shift], 
+                imageRow[2], alpha);
     }
   }
 }
@@ -649,9 +647,9 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
     
     for (unsigned i=0; i<width; i++) {
       unsigned alpha = alphaRow[i];
-      targetRow[3*i]   = MOZ_BLEND(targetRow[3*i],   imageRow[3*i],   alpha);
-      targetRow[3*i+1] = MOZ_BLEND(targetRow[3*i+1], imageRow[3*i+1], alpha);
-      targetRow[3*i+2] = MOZ_BLEND(targetRow[3*i+2], imageRow[3*i+2], alpha);
+      MOZ_BLEND(targetRow[3*i],   targetRow[3*i],   imageRow[3*i],   alpha);
+      MOZ_BLEND(targetRow[3*i+1], targetRow[3*i+1], imageRow[3*i+1], alpha);
+      MOZ_BLEND(targetRow[3*i+2], targetRow[3*i+2], imageRow[3*i+2], alpha);
     }
   }
 }

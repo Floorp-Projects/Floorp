@@ -329,6 +329,7 @@ findIndex24(unsigned mask)
   }
 }
 
+
 // 32-bit (888) truecolor convert/composite function
 void nsImageXlib::DrawComposited32(PRBool isLSB, PRBool flipBytes,
                                    unsigned offsetX, unsigned offsetY,
@@ -358,12 +359,10 @@ void nsImageXlib::DrawComposited32(PRBool isLSB, PRBool flipBytes,
     for (unsigned i=0; i<width;
          i++, baseRow+=4, targetRow+=3, imageRow+=3, alphaRow++)
     {
-      targetRow[0] = (unsigned(baseRow[redIndex])   * (255-*alphaRow) +
-                      unsigned(imageRow[0]) * *alphaRow) >> 8;
-      targetRow[1] = (unsigned(baseRow[greenIndex]) * (255-*alphaRow) +
-                      unsigned(imageRow[1]) * *alphaRow) >> 8;
-      targetRow[2] = (unsigned(baseRow[blueIndex])  * (255-*alphaRow) +
-                      unsigned(imageRow[2]) * *alphaRow) >> 8;
+      unsigned alpha = *alphaRow;
+      MOZ_BLEND(targetRow[0], baseRow[redIndex],   imageRow[0], alpha);
+      MOZ_BLEND(targetRow[1], baseRow[greenIndex], imageRow[1], alpha);
+      MOZ_BLEND(targetRow[2], baseRow[blueIndex],  imageRow[2], alpha);
     }
   }
 }
@@ -395,15 +394,10 @@ nsImageXlib::DrawComposited24(PRBool isLSB, PRBool flipBytes,
 
     for (unsigned i=0; i<width;
          i++, baseRow+=3, targetRow+=3, imageRow+=3, alphaRow++) {
-      targetRow[0] =
-        (unsigned(baseRow[redIndex])   * (255-*alphaRow) +
-         unsigned(imageRow[0]) * *alphaRow) >> 8;
-      targetRow[1] =
-        (unsigned(baseRow[greenIndex]) * (255-*alphaRow) +
-         unsigned(imageRow[1]) * *alphaRow) >> 8;
-      targetRow[2] =
-        (unsigned(baseRow[blueIndex])  * (255-*alphaRow) +
-         unsigned(imageRow[2]) * *alphaRow) >> 8;
+      unsigned alpha = *alphaRow;
+      MOZ_BLEND(targetRow[0], baseRow[redIndex],   imageRow[0], alpha);
+      MOZ_BLEND(targetRow[1], baseRow[greenIndex], imageRow[1], alpha);
+      MOZ_BLEND(targetRow[2], baseRow[blueIndex],  imageRow[2], alpha);
     }
   }
 }
@@ -452,21 +446,20 @@ nsImageXlib::DrawComposited16(PRBool isLSB, PRBool flipBytes,
         pix = *((short *)tmp);
       } else
         pix = *((short *)baseRow);
-      targetRow[0] =
-        (redScale[(pix&visual->red_mask) >>
-                  xlib_get_shift_from_mask(visual->red_mask)] *
-         (255-*alphaRow) + unsigned(imageRow[0]) * *alphaRow) >> 8;
-      targetRow[1] =
-        (greenScale[(pix&visual->green_mask) >>
-                  xlib_get_shift_from_mask(visual->green_mask)] *
-         (255-*alphaRow) + unsigned(imageRow[1]) * *alphaRow) >> 8;
-      targetRow[2] =
-        (blueScale[(pix&visual->blue_mask) >>
-                  xlib_get_shift_from_mask(visual->blue_mask)] *
-         (255-*alphaRow) + unsigned(imageRow[2]) * *alphaRow) >> 8;
+      unsigned alpha = *alphaRow;
+      MOZ_BLEND(targetRow[0],
+                redScale[(pix&visual->red_mask)>>visual->red_shift], 
+                imageRow[0], alpha);
+      MOZ_BLEND(targetRow[1],
+                greenScale[(pix&visual->green_mask)>>visual->green_shift], 
+                imageRow[1], alpha);
+      MOZ_BLEND(targetRow[2],
+                blueScale[(pix&visual->blue_mask)>>visual->blue_shift], 
+                imageRow[2], alpha);
     }
   }
 }
+
 // Generic convert/composite function
 void
 nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
@@ -584,12 +577,10 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
     unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
     unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;  
     for (unsigned i=0; i<width; i++) {
-      targetRow[3*i] =   (unsigned(targetRow[3*i])*(255-alphaRow[i]) +
-                           unsigned(imageRow[3*i])*alphaRow[i])>>8;
-      targetRow[3*i+1] = (unsigned(targetRow[3*i+1])*(255-alphaRow[i]) +
-                           unsigned(imageRow[3*i+1])*alphaRow[i])>>8;
-      targetRow[3*i+2] = (unsigned(targetRow[3*i+2])*(255-alphaRow[i]) +
-                           unsigned(imageRow[3*i+2])*alphaRow[i])>>8;
+      unsigned alpha = alphaRow[i];
+      MOZ_BLEND(targetRow[3*i],   targetRow[3*i],   imageRow[3*i],   alpha);
+      MOZ_BLEND(targetRow[3*i+1], targetRow[3*i+1], imageRow[3*i+1], alpha);
+      MOZ_BLEND(targetRow[3*i+2], targetRow[3*i+2], imageRow[3*i+2], alpha);
     }
   }
 }
