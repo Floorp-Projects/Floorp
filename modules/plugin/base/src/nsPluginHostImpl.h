@@ -251,6 +251,9 @@ private:
   nsresult
   FindStoppedPluginForURL(nsIURI* aURL, nsIPluginInstanceOwner *aOwner);
 
+  nsresult
+  SetUpDefaultPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
+
   void
   AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURI* aURL);
 
