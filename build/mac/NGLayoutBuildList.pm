@@ -595,6 +595,9 @@ sub BuildClientDist()
    # directory
    _InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",			"$distdirectory:idl:");
    
+   # regviewer
+   _InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",			"$distdirectory:idl:");
+   
    # history
    _InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
    
@@ -848,6 +851,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
 	BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp",	"bookmarks");
 	BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.mcp",			"directory");
+	BuildIDLProject(":mozilla:xpfe:components:regviewer:RegViewerIDL.mcp",			"regviewer");
 	BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
 	BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 	BuildIDLProject(":mozilla:xpfe:components:search:macbuild:SearchIDL.mcp",	"search");
@@ -1318,6 +1322,12 @@ sub MakeResourceAliases()
 	  _InstallResources(":mozilla:xpfe:components:directory:locale:MANIFEST",				"$directory_dir:locale");
         }
         {
+          my($regviewer_dir) = "$chrome_dir"."RegViewer";
+	  _InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-content",				"$regviewer_dir:content:default");
+	  _InstallResources(":mozilla:xpfe:components:regviewer:MANIFEST-skin",					"$regviewer_dir:skin:default");
+	  _InstallResources(":mozilla:xpfe:components:regviewer:locale:MANIFEST",				"$regviewer_dir:locale");
+        }
+        {
           my($history_dir) = "$chrome_dir"."History";
 	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-content",			"$history_dir:content:default");
 	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",			"$history_dir:skin:default");
@@ -1519,6 +1529,7 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:components:bookmarks:macbuild:Bookmarks.mcp", "Bookmarks$D.shlb", "BookmarksComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:search:macbuild:Search.mcp", "Search$D.shlb", "SearchComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:directory:Directory.mcp", "Directory$D.shlb", "DirectoryComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.mcp", "RegViewer$D.shlb", "RegViewerComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindow.mcp", "prefwindow$D.shlb", "prefwindowComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
