@@ -243,7 +243,7 @@ res/loading-image.gif
 res/broken-image.gif
 res/builtin/*
 res/entityTables/html40Special.properties
-res/entityTables/htmlEntityVersion.properties
+res/entityTables/htmlEntityVersions.properties
 res/entityTables/html40Latin1.properties
 res/entityTables/html40Symbols.properties
 res/entityTables/transliterate.properties
