@@ -45,6 +45,7 @@ DIRS = \
   modules\libreg		\
   xpcom				\
   modules\zlib			\
+  modules\libjar        \
   modules\libutil		\
   sun-java			\
   js				\
@@ -69,6 +70,7 @@ DIRS = \
   layout			\
   rdf                           \
   silentdl                      \
+  xpinstall                     \
   webshell			\
   editor 			\
 !if defined(BUILD_CLIENT) || defined(CLOBBER_ALL)
