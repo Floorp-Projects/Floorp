@@ -428,10 +428,8 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return NS_ERROR_FAILURE;
 
   // Get reference to DOMDocument
-  nsCOMPtr<nsIDocument> document;
-  result = presShell->GetDocument(getter_AddRefs(document));
-
-  if (NS_FAILED(result) || !document)
+  nsIDocument *document = presShell->GetDocument();
+  if (!document)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
