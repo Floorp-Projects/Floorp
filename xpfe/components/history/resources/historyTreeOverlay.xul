@@ -39,33 +39,12 @@
   <script src="chrome://global/content/nsTreeUtils.js"/>
   <script src="chrome://global/content/treePopups.js"/>
 
-<tree id="historyTree" ref="NC:HistoryRoot" context="contextual"
+<tree id="historyTree" ref="NC:HistoryByDate" context="contextual"
       datasources="rdf:history rdf:localsearch"
       flex="1"
       multiple="true"
       onselect="historyOnSelect(event)"
       ondraggesture="nsDragAndDrop.startDrag(event, historyDNDObserver);">
-
-  <template>
-    <rule>
-      <treechildren>
-       <treeitem uri="rdf:*" persist="open"
-         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
-         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-         loading="rdf:http://home.netscape.com/NC-rdf#loading">
-         <treerow>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
-             class="treecell-indent treecell-bookmark"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Date" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Referrer" />
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#VisitCount" />
-         </treerow>
-       </treeitem>
-      </treechildren>
-     </rule>
-  </template>
 
   <treecolgroup id="theColumns">
     <treecol flex="4" id="Name"
@@ -92,6 +71,13 @@
       hidden="true"
       sortSeparators="true" persist="hidden width sortActive sortDirection"
       resource="http://home.netscape.com/NC-rdf#FirstVisitDate"
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
+
+    <splitter class="tree-splitter"/>
+
+    <treecol flex="1" id="Hostname"
+      sortSeparators="true" persist="hidden width sortActive sortDirection"
+      resource="http://home.netscape.com/NC-rdf#Hostname"
       resource2="http://home.netscape.com/NC-rdf#Name"/>
 
     <splitter class="tree-splitter"/>
@@ -133,6 +119,10 @@
         onclick="return TriStateColumnSort('FirstVisitDate');"
         observes="FirstVisitDate"/>
       <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.hostname.label;"
+        onclick="return TriStateColumnSort('Hostname');"
+        observes="Hostname"/>
+      <treecell class="treecell-header sortDirectionIndicator"
         value="&tree.header.referrer.label;"
         onclick="return TriStateColumnSort('Referrer');"
         observes="Referrer"/>
@@ -151,6 +141,30 @@
       </treecell>
     </treerow>
   </treehead>
+
+  <template>
+    <rule iscontainer="true">
+
+    </rule>
+    <rule>
+      <treechildren>
+       <treeitem uri="rdf:*" 
+         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+         <treerow>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
+             class="treecell-indent treecell-bookmark"/>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Date" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#FirstVisitDate" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Hostname" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Referrer" />
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#VisitCount" />
+         </treerow>
+       </treeitem>
+      </treechildren>
+     </rule>
+  </template>
+
   <treechildren flex="1" id="treechildren-bookmarks" 
     onclick="return OpenURL(event, event.target.parentNode.parentNode, 
                             'historyTree');"/>

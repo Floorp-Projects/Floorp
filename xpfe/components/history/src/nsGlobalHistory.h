@@ -34,9 +34,13 @@
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsISupportsArray.h"
+#include "nsIStringBundle.h"
 #include "nsWeakReference.h"
+#include "nsVoidArray.h"
+#include "nsHashtable.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsAWritableString.h"
+#include "nsITimer.h"
 
 //----------------------------------------------------------------------
 //
@@ -77,6 +81,9 @@ protected:
 typedef PRBool (*rowMatchCallback)(nsIMdbRow *aRow, void *closure);
 
 struct matchHost_t;
+struct searchQuery;
+class searchTerm;
+
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
@@ -118,38 +125,105 @@ public:
 
 protected:
 
-
+  //
+  // database junk
+  //
   enum eCommitType 
   {
     kLargeCommit = 0,
     kSessionCommit = 1,
     kCompressCommit = 2
   };
-
-  // Implementation Methods
+  
+  PRInt64   mFileSizeOnDisk;
   nsresult OpenDB();
   nsresult OpenExistingFile(nsIMdbFactory *factory, const char *filePath);
   nsresult OpenNewFile(nsIMdbFactory *factory, const char *filePath);
   nsresult CreateTokens();
   nsresult CloseDB();
+  nsresult CheckHostnameEntries();
   nsresult Commit(eCommitType commitType);
+
+  //
+  // expiration/removal stuff
+  //
+  PRInt32   mExpireDays;
   nsresult ExpireEntries(PRBool notify);
   nsresult RemoveMatchingRows(rowMatchCallback aMatchFunc,
                               void *aClosure, PRBool notify);
+
+  //
+  // search stuff - find URL stuff, etc
+  //
+  nsresult GetRootDayQueries(nsISimpleEnumerator **aResult);
+  nsresult GetFindUriName(const char *aURL, nsIRDFNode **aResult);
+  nsresult CreateFindEnumerator(nsIRDFResource *aSource,
+                                nsISimpleEnumerator **aResult);
+  static nsresult FindUrlToTokenList(const char *aURL, nsVoidArray& aResult);
+  static void FreeTokenList(nsVoidArray& tokens);
+  static PRBool IsFindResource(nsIRDFResource *aResource);
+  nsresult TokenListToSearchQuery(const nsVoidArray& tokens,
+                                  searchQuery& aResult);
+
+  // caching of PR_Now() so we don't call it every time we do
+  // a history query
+  PRInt64   mLastNow;           // cache the last PR_Now()
+  PRBool    mNowValid;          // is mLastNow valid?
+  nsCOMPtr<nsITimer> mExpireNowTimer;
+  
+  PRInt64 GetNow();
+  void ExpireNow();
+  
+  static void expireNowTimer(nsITimer *aTimer, void *aClosure)
+  {((nsGlobalHistory *)aClosure)->ExpireNow(); }
+  
+  //
+  // sync stuff to write the db to disk every so often
+  //
+  PRBool    mDirty;             // if we've changed history
+  nsCOMPtr<nsITimer> mSyncTimer;
+  
+  void Sync();
+  nsresult SetDirty();
+  
+  static void fireSyncTimer(nsITimer *aTimer, void *aClosure)
+  {((nsGlobalHistory *)aClosure)->Sync(); }
+  
+
+  //
+  // RDF stuff
+  //
+  nsCOMPtr<nsISupportsArray> mObservers;
   
   PRBool IsURLInHistory(nsIRDFResource* aResource);
-
-  // N.B., these are MDB interfaces, _not_ XPCOM interfaces.
-  nsIMdbEnv* mEnv;         // OWNER
-  nsIMdbStore* mStore;     // OWNER
-  nsIMdbTable* mTable;     // OWNER
-
-  nsresult SaveLastPageVisited(const char *);
-
+  
   nsresult NotifyAssert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
   nsresult NotifyUnassert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
   nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);
 
+  //
+  // row-oriented stuff
+  //
+  
+  // N.B., these are MDB interfaces, _not_ XPCOM interfaces.
+  nsIMdbEnv* mEnv;         // OWNER
+  nsIMdbStore* mStore;     // OWNER
+  nsIMdbTable* mTable;     // OWNER
+  
+  mdb_scope  kToken_HistoryRowScope;
+  mdb_kind   kToken_HistoryKind;
+
+  mdb_column kToken_URLColumn;
+  mdb_column kToken_ReferrerColumn;
+  mdb_column kToken_LastVisitDateColumn;
+  mdb_column kToken_FirstVisitDateColumn;
+  mdb_column kToken_VisitCountColumn;
+  mdb_column kToken_NameColumn;
+  mdb_column kToken_HostnameColumn;
+
+  //
+  // AddPage-oriented stuff
+  //
   nsresult AddPageToDatabase(const char *aURL,
                              const char *aReferrerURL,
                              PRInt64 aDate);
@@ -157,11 +231,12 @@ protected:
                                      PRInt64 aDate,
                                      PRInt64 *aOldDate,
                                      PRInt32 *aOldCount);
-  
   nsresult AddNewPageToDatabase(const char *aURL,
                                 const char *aReferrerURL,
                                 PRInt64 aDate);
-
+  //
+  // generic routines for setting/retrieving various datatypes
+  //
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt64& aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt32 aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const char *aValue);
@@ -169,23 +244,16 @@ protected:
 
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAWritableString& aResult);
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAWritableCString& aResult);
+  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64* aResult);
+  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32* aResult);
 
-  nsresult FindUrl(const char *aURL, nsIMdbRow **aResult);
-  
-  nsCOMPtr<nsISupportsArray> mObservers;
+  nsresult FindRow(mdb_column aCol, const char *aURL, nsIMdbRow **aResult);
 
-  mdb_scope  kToken_HistoryRowScope;
-  mdb_kind   kToken_HistoryKind;
-  
-  mdb_column kToken_URLColumn;
-  mdb_column kToken_ReferrerColumn;
-  mdb_column kToken_LastVisitDateColumn;
-  mdb_column kToken_FirstVisitDateColumn;
-  mdb_column kToken_VisitCountColumn;
-  mdb_column kToken_NameColumn;
-
-  PRInt32   mExpireDays;
-  PRInt64   mFileSizeOnDisk;
+  //
+  // misc unrelated stuff
+  //
+  nsCOMPtr<nsIStringBundle> mBundle;
+  nsresult SaveLastPageVisited(const char *);
 
   // pseudo-constants. although the global history really is a
   // singleton, we'll use this metaphor to be consistent.
@@ -195,14 +263,22 @@ protected:
   static nsIRDFResource* kNC_Date;
   static nsIRDFResource* kNC_FirstVisitDate;
   static nsIRDFResource* kNC_VisitCount;
+  static nsIRDFResource* kNC_AgeInDays;
   static nsIRDFResource* kNC_Name;
+  static nsIRDFResource* kNC_NameSort;
+  static nsIRDFResource* kNC_Hostname;
   static nsIRDFResource* kNC_Referrer;
   static nsIRDFResource* kNC_child;
   static nsIRDFResource* kNC_URL;  // XXX do we need?
   static nsIRDFResource* kNC_HistoryRoot;
-  static nsIRDFResource* kNC_HistoryBySite;
   static nsIRDFResource* kNC_HistoryByDate;
 
+  //
+  // custom enumerators
+  //
+
+  // URLEnumerator - for searching for a specific set of rows which
+  // match a particular column
   class URLEnumerator : public nsMdbTableEnumerator
   {
   protected:
@@ -229,7 +305,40 @@ protected:
     virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult);
   };
 
+  // SearchEnumerator - for matching a set of rows based on a search query
+  class SearchEnumerator : public nsMdbTableEnumerator
+  {
+  public:
+    SearchEnumerator(nsIMdbStore* aStore,
+                     searchQuery *aQuery,
+                     mdb_column aURLColumn) :
+      mQuery(aQuery),
+      mURLColumn(aURLColumn),
+      mStore(aStore)
+    {}
+
+    virtual ~SearchEnumerator();
+
+  protected:
+    searchQuery *mQuery;
+    nsHashtable mUniqueRows;
+    nsIMdbStore *mStore;
+    mdb_column mURLColumn;
+
+    
+    nsCString mFindUriPrefix;
+
+    void GetFindUriPrefix(nsAWritableCString& aPrefix);
+    
+    virtual PRBool IsResult(nsIMdbRow* aRow);
+    virtual nsresult ConvertToISupports(nsIMdbRow* aRow,
+                                        nsISupports** aResult);
+    
+    PRBool RowMatches(nsIMdbRow* aRow, searchQuery *aQuery);
+  };
+
   friend class URLEnumerator;
+  friend class SearchEnumerator;
 };
 
 #endif // nsglobalhistory__h____
