@@ -39,7 +39,7 @@ public:
 
 	// Methods to query the data model for property values for an entire widget.
 	NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& property) = 0;
-	NS_IMETHOD GetIntPropertyValue(int& value, const nsString& property) = 0;
+	NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& property) = 0;
 };
 
 #endif /* nsIDataModel_h___ */
