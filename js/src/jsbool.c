@@ -53,7 +53,8 @@ static JSClass boolean_class = {
     "Boolean",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #if JS_HAS_TOSOURCE
@@ -115,11 +116,11 @@ bool_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec boolean_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   bool_toSource,          0},
+    {js_toSource_str,   bool_toSource,          0,0,0},
 #endif
-    {js_toString_str,	bool_toString,		0},
-    {js_valueOf_str,	bool_valueOf,		0},
-    {0}
+    {js_toString_str,	bool_toString,		0,0,0},
+    {js_valueOf_str,	bool_valueOf,		0,0,0},
+    {0,0,0,0,0}
 };
 
 #ifdef XP_MAC

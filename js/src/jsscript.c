@@ -555,16 +555,16 @@ static char js_thaw_str[] = "thaw";
 
 static JSFunctionSpec script_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   script_toSource,        0},
+    {js_toSource_str,   script_toSource,        0,0,0},
 #endif
-    {js_toString_str,   script_toString,        0},
-    {"compile",         script_compile,         2},
-    {"exec",            script_exec,            1},
+    {js_toString_str,   script_toString,        0,0,0},
+    {"compile",         script_compile,         2,0,0},
+    {"exec",            script_exec,            1,0,0},
 #if JS_HAS_XDR
-    {"freeze",		script_freeze,		0},
-    {js_thaw_str,	script_thaw,		1},
+    {"freeze",		script_freeze,		0,0,0},
+    {js_thaw_str,	script_thaw,		1,0,0},
 #endif /* JS_HAS_XDR */
-    {0}
+    {0,0,0,0,0}
 };
 
 #endif /* JS_HAS_SCRIPT_OBJECT */
@@ -591,6 +591,7 @@ JSClass js_ScriptClass = {
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   script_finalize,
     NULL,             NULL,             script_call,      NULL,/*XXXbe xdr*/
+    0,0,{0,0}
 };
 
 #if JS_HAS_SCRIPT_OBJECT
@@ -623,8 +624,8 @@ script_static_thaw(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSFunctionSpec script_static_methods[] = {
-    {js_thaw_str,       script_static_thaw,     1},
-    {0}
+    {js_thaw_str,       script_static_thaw,     1,0,0},
+    {0,0,0,0,0}
 };
 
 #else  /* !JS_HAS_XDR */

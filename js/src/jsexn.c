@@ -66,7 +66,8 @@ JSClass js_ErrorClass = {
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize,
-    NULL,             NULL,             NULL,             Exception
+    NULL,             NULL,             NULL,             Exception,
+    0,0,{0,0}
 };
 
 /*
@@ -254,7 +255,7 @@ static struct JSExnSpec exceptions[] = {
     { JSEXN_ERR,           "SyntaxError"       },
     { JSEXN_ERR,           "TypeError"         },
     { JSEXN_ERR,           "URIError"          },
-    {0}
+    {0,0}
 };
 
 static JSBool
@@ -423,10 +424,10 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec exception_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   exn_toSource,           0},
+    {js_toSource_str,   exn_toSource,           0,0,0},
 #endif
-    {js_toString_str,   exn_toString,           0},
-    {0}
+    {js_toString_str,   exn_toString,           0,0,0},
+    {0,0,0,0,0}
 };
 
 JSObject *

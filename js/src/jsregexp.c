@@ -2106,12 +2106,12 @@ enum regexp_tinyid {
 };
 
 static JSPropertySpec regexp_props[] = {
-    {"source",      REGEXP_SOURCE,      JSPROP_ENUMERATE | JSPROP_READONLY},
-    {"global",      REGEXP_GLOBAL,      JSPROP_ENUMERATE | JSPROP_READONLY},
-    {"ignoreCase",  REGEXP_IGNORE_CASE, JSPROP_ENUMERATE | JSPROP_READONLY},
-    {"lastIndex",   REGEXP_LAST_INDEX,  JSPROP_ENUMERATE},
-    {"multiline",   REGEXP_MULTILINE,   JSPROP_ENUMERATE | JSPROP_READONLY},
-    {0}
+    {"source",     REGEXP_SOURCE,      JSPROP_ENUMERATE | JSPROP_READONLY,0,0},
+    {"global",     REGEXP_GLOBAL,      JSPROP_ENUMERATE | JSPROP_READONLY,0,0},
+    {"ignoreCase", REGEXP_IGNORE_CASE, JSPROP_ENUMERATE | JSPROP_READONLY,0,0},
+    {"lastIndex",  REGEXP_LAST_INDEX,  JSPROP_ENUMERATE,0,0},
+    {"multiline",  REGEXP_MULTILINE,   JSPROP_ENUMERATE | JSPROP_READONLY,0,0},
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -2314,7 +2314,7 @@ static JSPropertySpec regexp_static_props[] = {
     {"$9", 8, JSPROP_ENUMERATE|JSPROP_READONLY,
      regexp_static_getProperty,    regexp_static_getProperty},
 
-    {0}
+    {0,0,0,0,0}
 };
 
 static void
@@ -2389,6 +2389,7 @@ JSClass js_RegExpClass = {
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,     regexp_finalize,
     NULL,             NULL,             regexp_call,        NULL,
     regexp_xdrObject,
+    0,{0,0}
 };
 
 static JSBool
@@ -2562,13 +2563,13 @@ regexp_test(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   regexp_toString,        0},
+    {js_toSource_str,   regexp_toString,        0,0,0},
 #endif
-    {js_toString_str,   regexp_toString,        0},
-    {"compile",         regexp_compile,         1},
-    {"exec",            regexp_exec,            0},
-    {"test",            regexp_test,            0},
-    {0}
+    {js_toString_str,   regexp_toString,        0,0,0},
+    {"compile",         regexp_compile,         1,0,0},
+    {"exec",            regexp_exec,            0,0,0},
+    {"test",            regexp_test,            0,0,0},
+    {0,0,0,0,0}
 };
 
 static JSBool
