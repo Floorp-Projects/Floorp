@@ -47,8 +47,6 @@ FILES = CGI.pl			\
 	admin.cgi		\
 	adminfuncs.pl		\
 	adminmail.pl		\
-	branchspam.cgi		\
-	branchspammer.cgi	\
 	closemessage		\
 	contacthelp.html	\
 	countcheckins.cgi	\

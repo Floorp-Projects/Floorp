@@ -173,14 +173,6 @@ adminmail.tcl		TCL. Set of routines for opening and closing the
 
 bonsai.gif		a bonsai tree.
 
-branchspam.cgi		failed attempt to web-afy branch spam too DELETE
-			Called by: nobody
-			Calls: branchspammer.cgi
-
-branchspammer.cgi	more garbage
-			Called by: branchspam.cgi
-			Calls: nobody
-
 changebar.tcl		???
 
 closemessage	 	HTML, text that gets sent to all people on the hook
