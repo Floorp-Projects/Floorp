@@ -282,7 +282,7 @@
  
    <hbox id="calendar-content-box" flex="1">
 
-      <vbox id="left-hand-content" flex="1">
+      <vbox id="left-hand-content" flex="1" persist="width">
          <vbox id="left-hand-above-splitter" flex="1">
             <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
                ondragover="return( false );" contextmenu="calendarlist-context-menu">
@@ -295,10 +295,10 @@
             </listbox>
          </vbox>
          <splitter id="calendar-todo-splitter" collapse="after" persist="state"
-            class="chromeclass-extrachrome" orient="vertical" onmouseup="persist_height( 'left-hand-below-splitter' )">
+            class="chromeclass-extrachrome" orient="vertical">
             <grippy/>
          </splitter>
-         <vbox id="left-hand-below-splitter" flex="1">
+         <vbox id="left-hand-below-splitter" flex="1" persist="height">
             <box align="left">
                <label style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
             </box>
@@ -391,11 +391,11 @@
                       
             </deck>  <!-- End: Day/Month/Week Deck -->
             <splitter id="calendar-view-splitter" collapse="after" persist="state"
-            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="gCalendarWindow.doResize();persist_height( 'bottom-events-box' )">
+            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="gCalendarWindow.doResize();">
                <grippy class="sidebar-splitter-grippy"/>
             </splitter>
          
-            <vbox id="bottom-events-box">
+            <vbox id="bottom-events-box" persist="height">
                <box align="center">
                   <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
                   <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>

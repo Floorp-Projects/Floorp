@@ -840,18 +840,6 @@ function print()
 }
 
 
-/*HACK*/
-function persist_height( id )
-{
-   setTimeout("document.persist('"+id+"', 'height');",100);
-}
-
-function persist_width( )
-{
-   setTimeout("document.persist('left-hand-content', 'width');",100);
-}
-
-
 function publishCalendarData()
 {
    var calendarString = eventArrayToICalString( gCalendarWindow.EventSelection.selectedEvents );
