@@ -43,7 +43,6 @@ interface nsIFileSpec;
 
 [ptr] native nsFileSpec(nsFileSpec);
 [ref] native nsFileSpecRef(nsFileSpec);
-[ref] native nsStringRef(nsString);
 [scriptable, uuid(02b0625a-e7f3-11d2-9f5a-006008a6efe9)]
 interface nsIProfile : nsISupports {
     [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
@@ -55,7 +54,6 @@ interface nsIProfile : nsISupports {
     readonly attribute long profileCount;
     string getSingleProfile();
     readonly attribute string currentProfile;
-
     readonly attribute string firstProfile;
 
     // eventually we need to depricate getCurrentProfileDir
@@ -72,14 +70,13 @@ interface nsIProfile : nsISupports {
 
     void deleteProfile(in string name, in string canDeleteFiles);
 
-    [noscript] void getProfileList(in nsStringRef profileList);
+    string getProfileList();
 
     void startCommunicator(in string profileName);
-    [noscript] void getCurrProfile(in nsStringRef currProfile);
 
     void migrateProfile(in string profileName);
 
-    [noscript] void getCookie(in nsStringRef cookie);
+    string getCookie();
 
     void ProcessPRegCookie();
 

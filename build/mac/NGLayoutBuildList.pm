@@ -841,7 +841,6 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.mcp", 						"widget");
 	BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.mcp", 						"editor");
 	BuildIDLProject(":mozilla:editor:txmgr:macbuild:txmgrIDL.mcp", 						"txmgr");
-	BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.mcp",				"profileservices");
 	BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.mcp",	"prefm");
 		
 	BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",								"rdf");

@@ -45,7 +45,6 @@
 static NS_DEFINE_CID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 static NS_DEFINE_CID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
 static NS_DEFINE_CID(kDOMPropsCoreCID,     NS_DOMPROPSCORE_CID);
-static NS_DEFINE_CID(kProfileCoreCID,      NS_PROFILECORE_CID); 
 static NS_DEFINE_CID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_CID(kRDFCoreCID,          NS_RDFCORE_CID);
 static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
@@ -138,7 +137,6 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponentLib(kAppCoresManagerCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kToolkitCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kDOMPropsCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kProfileCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE); 
   nsComponentManager::RegisterComponentLib(kBrowserAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kRDFCoreCID,         NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
 

@@ -1,12 +1,14 @@
-var profileCore = "";
 var selected    = null;
 var currProfile = "";
+var profile = Components.classes["component://netscape/profile/manager"].createInstance();
+profile = profile.QueryInterface(Components.interfaces.nsIProfile);             
+dump("profile = " + profile + "\n"); 
 
 function openCreateProfile()
 {
 	// Need to call CreateNewProfile xuls
 	var win = window.openDialog('cpw.xul', 'CPW', 'chrome');
-    return win;
+	return win;
 }
 
 function CreateProfile()
@@ -33,7 +35,7 @@ function RenameProfile(w)
 	}
 
 	//dump("RenameProfile : " + oldName + " to " + newName + "\n");
-	profileCore.RenameProfile(oldName, newName);
+	profile.RenameProfile(oldName, newName);
 	//this.location.replace(this.location);
 	this.location.href = "resource:/res/profile/pm.xul";
 }
@@ -50,7 +52,7 @@ function DeleteProfile(deleteFilesFlag)
 
 	var name = selected.getAttribute("rowName");
 	//dump("Delete '" + name + "'\n");
-	profileCore.DeleteProfile(name, deleteFilesFlag);
+	profile.DeleteProfile(name, deleteFilesFlag);
 	//this.location.replace(this.location);
 	//this.location.href = this.location;
 	this.location.href = "resource:/res/profile/pm.xul";
@@ -70,11 +72,11 @@ function StartCommunicator()
 
 	if (migrate == "true")
 	{
-		profileCore.MigrateProfile(name);
+		profile.migrateProfile(name);
 	}
 
 	dump("************name: "+name+"\n");
-	profileCore.StartCommunicator(name);
+	profile.startCommunicator(name);
 	ExitApp();
 }
 
@@ -139,15 +141,18 @@ function loadElements()
 	dump("****************hacked onload handler adds elements to tree widget\n");
 	var profileList = "";
 
-	profileCore = Components.classes["component://netscape/profile/profile-services"].createInstance();
-	profileCore = profileCore.QueryInterface(Components.interfaces.nsIProfileServices);
-	dump("profile = " + profileCore + "\n");
-	
-	profileList = profileCore.GetProfileList();	
+	profileList = profile.getProfileList();	
 
-	//dump("Got profile list of '" + profileList + "'\n");
+	dump("Got profile list of '" + profileList + "'\n");
 	profileList = profileList.split(",");
-	currProfile = profileCore.GetCurrentProfile();
+	try {
+		currProfile = profile.currentProfile;
+	}
+	catch (ex) {
+		if (profileList != "") {
+			currProfile = profileList;
+		}
+	}
 
 	for (var i=0; i < profileList.length; i++)
 	{

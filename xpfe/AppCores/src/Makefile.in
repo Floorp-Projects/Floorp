@@ -29,16 +29,13 @@ REQUIRES	= txtsvc
 
 CPPSRCS		= \
 		nsBaseAppCore.cpp \
-		nsProfileCore.cpp \
 		nsAppCoresNameSet.cpp \
 		nsToolkitCore.cpp \
-		nsProfileCoreFactory.cpp \
 		nsToolkitCoreFactory.cpp \
 		nsAppCoresManager.cpp \
 		nsAppCoresManagerFactory.cpp \
 		nsJSBaseAppCore.cpp \
 		nsJSAppCoresManager.cpp \
-		nsJSProfileCore.cpp \
 		nsJSToolkitCore.cpp \
 		nsJSBrowserAppCore.cpp \
 		nsAppCores.cpp \
