@@ -392,6 +392,9 @@ public:
   NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet) = 0;
   NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)  = 0;
   
+  NS_IMETHOD GetForceCharacterSet (const PRUnichar** aForceCharacterSet) = 0;
+  NS_IMETHOD SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)  = 0;
+
   /* the following is the hacky access method */
   NS_IMETHOD GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource) = 0;
   
