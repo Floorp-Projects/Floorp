@@ -32,7 +32,7 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageProperties.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorImageProperties.dtd">
 
 
 <!-- dialog containing a control requiring initial setup -->

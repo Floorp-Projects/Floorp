@@ -24,7 +24,7 @@
    -   Aaron Kaluszka (ask@swva.net)
 -->
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
 <overlay id="editorOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

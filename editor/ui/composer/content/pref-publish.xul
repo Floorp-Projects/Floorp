@@ -24,7 +24,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/pref-publish.dtd" >
+<!DOCTYPE page SYSTEM "chrome://editor/locale/pref-publish.dtd" >
 <page xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       title="&window.title;"

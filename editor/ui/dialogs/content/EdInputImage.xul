@@ -41,7 +41,7 @@
 <?xul-overlay href="chrome://editor/content/EdImageOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInputProperties.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorInputProperties.dtd">
 <dialog title="&windowTitleImage.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup();"
