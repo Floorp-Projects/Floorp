@@ -111,14 +111,14 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
 #endif
   PRUnichar *ptrv = nsnull;
   nsString  lc_tmp(aLocale);
-  nsCString sAccept(".accept");
-  nsCString sTrue("true");
+  NS_NAMED_LITERAL_STRING(sAccept, ".accept");
+  NS_NAMED_LITERAL_STRING(sTrue, "true");
 
   lc_tmp.ToLowerCase();
-  lc_tmp.AppendWithConversion(sAccept);
+  lc_tmp.Append(sAccept);
   if (NS_OK == (res = bundle->GetStringFromName(lc_tmp.get(), &ptrv))) {
     nsString tmp(ptrv);
-    if (tmp.EqualsWithConversion(sTrue)) {
+    if (tmp.Equals(sTrue)) {
       // valid name already
       *_retval = copyUnicode(lc_name);
       return res;
@@ -148,11 +148,11 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
   
   // lang always in lower case; don't convert
   *_retval = copyUnicode(lang);
-  lang.AppendWithConversion(sAccept);
+  lang.Append(sAccept);
   if (NS_OK == (res = bundle->GetStringFromName(lang.get(), &ptrv))) {
 
     nsString tmp(ptrv);
-    if (tmp.EqualsWithConversion(sTrue)) {
+    if (tmp.Equals(sTrue)) {
       /* lang is accepted */
       return res;
     }
