@@ -136,7 +136,7 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   } else
       rv = NS_ERROR_FAILURE;
 
-  if (!NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
         const nsStyleColor* color =
     (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 

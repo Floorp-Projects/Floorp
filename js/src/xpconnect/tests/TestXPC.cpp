@@ -322,7 +322,7 @@ TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     rval = JSVAL_FALSE;
     JS_SetProperty(jscontext, glob, "failed", &rval);
     printf("Individual SecurityManager tests...\n");
-    if(!NS_SUCCEEDED(xpc->SetSecurityManagerForJSContext(jscontext, sm,
+    if(NS_FAILED(xpc->SetSecurityManagerForJSContext(jscontext, sm,
                                         nsIXPCSecurityManager::HOOK_ALL)))
     {
         success = JS_FALSE;

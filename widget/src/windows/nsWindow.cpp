@@ -3089,7 +3089,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           nsresult rv;
           nsCOMPtr<nsITimerQueue> queue = 
                    do_GetService(kTimerManagerCID, &rv);
-          if (!NS_FAILED(rv)) {
+          if (NS_SUCCEEDED(rv)) {
 
             if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
 

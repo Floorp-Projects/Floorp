@@ -117,7 +117,7 @@ hash_enumerator (nsHashKey *aKey, void *aObject, void *closure)
     rv = c->Converter (aKey, (void *)aObject, (void *)c->Data,
                        &c->Elements[c->Current]);
 
-    if (!NS_FAILED(rv))
+    if (NS_SUCCEEDED(rv))
         c->Current++;
     
     return PR_TRUE;

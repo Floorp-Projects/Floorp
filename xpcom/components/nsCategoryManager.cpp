@@ -468,7 +468,7 @@ nsCategoryManager::EnumerateCategory( const char *aCategoryName,
       }
 
       // If you couldn't find the category, or had trouble creating an enumerator...
-    if ( !NS_SUCCEEDED(status) )
+    if ( NS_FAILED(status) )
       {
         NS_IF_RELEASE(*_retval);
         status = NS_NewEmptyEnumerator(_retval);

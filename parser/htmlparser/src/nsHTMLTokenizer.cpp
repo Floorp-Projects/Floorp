@@ -793,7 +793,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
       //tag but ran out of data (not in the stream, but in this *part* of the stream.
       //For simplicity, we have to unwind our input. Therefore, we pop and discard
       //any new tokens we've cued this round. Later we can get smarter about this.
-      if(!NS_SUCCEEDED(result)) {
+      if(NS_FAILED(result)) {
         while(mTokenDeque.GetSize()>theDequeSize) {
           CToken* theToken=(CToken*)mTokenDeque.Pop();
           IF_FREE(theToken, mTokenAllocator);
@@ -942,7 +942,7 @@ nsresult nsHTMLTokenizer::ConsumeText(CToken*& aToken,nsScanner& aScanner){
   if(theToken) {
     PRUnichar ch=0;
     result=theToken->Consume(ch,aScanner,mFlags);
-    if(!NS_SUCCEEDED(result)) {
+    if(NS_FAILED(result)) {
       if(0==theToken->GetTextLength()){
         IF_FREE(aToken, mTokenAllocator);
         aToken = nsnull;

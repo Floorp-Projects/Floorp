@@ -756,7 +756,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                 nsString tmpCharset;
                 nsCOMPtr<nsICharsetConverterManager> ccm = 
                          do_GetService(kCharsetConverterManagerCID, &rv);
-                if (!NS_FAILED(rv)) {
+                if (NS_SUCCEEDED(rv)) {
                   tmpCharset.AssignWithConversion("GB2312");
                   rv = ccm->GetUnicodeDecoder(&tmpCharset, &mGB2312Decoder);
                 }
@@ -810,7 +810,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                 nsString tmpCharset;
                 nsCOMPtr<nsICharsetConverterManager> ccm = 
                          do_GetService(kCharsetConverterManagerCID, &rv);
-                if (!NS_FAILED(rv)) {
+                if (NS_SUCCEEDED(rv)) {
                   tmpCharset.AssignWithConversion("EUC-KR");
                   rv = ccm->GetUnicodeDecoder(&tmpCharset, &mEUCKRDecoder);
                 }
@@ -883,7 +883,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                   nsString tmpCharset;
                   nsCOMPtr<nsICharsetConverterManager> ccm = 
                            do_GetService(kCharsetConverterManagerCID, &rv);
-                  if (!NS_FAILED(rv)) {
+                  if (NS_SUCCEEDED(rv)) {
                     tmpCharset.AssignWithConversion("ISO-8859-7");
                     rv = ccm->GetUnicodeDecoder(&tmpCharset, &mISO88597Decoder);
                   }

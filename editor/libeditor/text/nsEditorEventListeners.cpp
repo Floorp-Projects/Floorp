@@ -414,10 +414,10 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
         if (!nsuiEvent)
           return NS_ERROR_NULL_POINTER;
         nsCOMPtr<nsIDOMNode> parent;
-        if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
+        if (NS_FAILED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
           return NS_ERROR_NULL_POINTER;
         PRInt32 offset = 0;
-        if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
+        if (NS_FAILED(nsuiEvent->GetRangeOffset(&offset)))
           return NS_ERROR_NULL_POINTER;
 
         nsCOMPtr<nsISelection> selection;

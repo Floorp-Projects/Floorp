@@ -746,7 +746,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                     rv = pProviderService->GetSocketProvider(mSocketTypes[type], 
                                                            getter_AddRefs(pProvider));
               
-                if (!NS_SUCCEEDED(rv)) break;
+                if (NS_FAILED(rv)) break;
               
                 nsCOMPtr<nsISupports> socketInfo;
               
@@ -772,7 +772,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                                                 getter_AddRefs(socketInfo));
                 }
               
-                if (!NS_SUCCEEDED(rv) || !mSocketFD) break;
+                if (NS_FAILED(rv) || !mSocketFD) break;
 
                 // if the service was ssl or tlsstepup, we want to hold onto the socket info
                 if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0 ||

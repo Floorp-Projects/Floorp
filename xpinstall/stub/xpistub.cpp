@@ -151,7 +151,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 
 #endif
 
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
         return rv;
 
 #if defined(XP_UNIX) || defined(XP_MAC)
@@ -161,7 +161,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 
                                           nsnull);
 #endif
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
         return rv;
 
 
@@ -176,7 +176,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
                                             nsnull,
                                             NS_GET_IID(nsISoftwareUpdate),
                                             (void**) &gXPI);
-    if (!NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv))
         return rv;
 
 

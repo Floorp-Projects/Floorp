@@ -554,7 +554,7 @@ SimplePluginInstance::Initialize(nsIPluginInstancePeer* peer)
 
    result = peer->QueryInterface(NS_GET_IID(nsIPluginTagInfo), (void **)&taginfo);
 
-    if (!NS_FAILED(result))
+    if (NS_SUCCEEDED(result))
     {
         taginfo->GetAttributes(count, names, values);
         NS_IF_RELEASE(taginfo);

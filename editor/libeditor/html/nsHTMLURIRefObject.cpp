@@ -314,7 +314,7 @@ nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
   nsHTMLURIRefObject* refObject = new nsHTMLURIRefObject();
   if (!refObject) return NS_ERROR_OUT_OF_MEMORY;
   nsresult rv = refObject->SetNode(aNode);
-  if (!NS_SUCCEEDED(rv)) {
+  if (NS_FAILED(rv)) {
     *aResult = 0;
     delete refObject;
     return rv;

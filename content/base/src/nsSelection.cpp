@@ -4233,17 +4233,17 @@ nsSelection::DeleteFromDocument()
   // Get an iterator
   nsSelectionIterator iter(mDomSelections[index]);
   res = iter.First();
-  if (!NS_SUCCEEDED(res))
+  if (NS_FAILED(res))
     return res;
 
   nsCOMPtr<nsIDOMRange> range;
   while (iter.IsDone())
   {
     res = iter.CurrentItem(NS_STATIC_CAST(nsIDOMRange**, getter_AddRefs(range)));
-    if (!NS_SUCCEEDED(res))
+    if (NS_FAILED(res))
       return res;
     res = range->DeleteContents();
-    if (!NS_SUCCEEDED(res))
+    if (NS_FAILED(res))
       return res;
     iter.Next();
   }
@@ -5670,7 +5670,7 @@ nsTypedSelection::GetEnumerator(nsIEnumerator **aIterator)
 {
   nsresult status = NS_ERROR_OUT_OF_MEMORY;
   nsSelectionIterator *iterator =  new nsSelectionIterator(this);
-  if ( iterator && !NS_SUCCEEDED(status = CallQueryInterface(iterator, aIterator)) )
+  if ( iterator && NS_FAILED(status = CallQueryInterface(iterator, aIterator)) )
   	delete iterator;
   return status;
 }

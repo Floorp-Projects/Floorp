@@ -255,7 +255,7 @@ int QMozillaContainer::init()
   
   NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot obtain unix toolkit service.");
 
-	if (!NS_SUCCEEDED(rv))
+	if (NS_FAILED(rv))
 		return 1;
 
   // Force the toolkit into "xlib" mode regardless of MOZ_TOOLKIT
@@ -288,21 +288,21 @@ int QMozillaContainer::init()
   
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not obtain the event queue service.");
 
-	if (!NS_SUCCEEDED(rv))
+	if (NS_FAILED(rv))
 		return 1;
 
   rv = eventQueueService->CreateThreadEventQueue();
   
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not create the event queue for the the thread.");
   
-	if (!NS_SUCCEEDED(rv))
+	if (NS_FAILED(rv))
 		return 1;
   
   rv = eventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQueue);
   
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get the newly created thread event queue.\n");
   
-	if (!NS_SUCCEEDED(rv))
+	if (NS_FAILED(rv))
 		return 1;
   
   NS_RELEASE(eventQueueService);
@@ -313,7 +313,7 @@ int QMozillaContainer::init()
 
   NS_ASSERTION(NS_SUCCEEDED(rv),"Couldn't obtain window service\n");
 
-  if (!NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
 		return 1;
 
   m_WindowService->SetWindowCreateCallback(WindowCreateCallback);
@@ -331,7 +331,7 @@ int QMozillaContainer::init()
 
   NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot create WebShell.\n");
 
-	if (!NS_SUCCEEDED(rv))
+	if (NS_FAILED(rv))
 		return 1;
 
 	printf("initializing webshell...\n");

@@ -1372,11 +1372,11 @@ nsInstallFileOpItem::NativeFileOpMacAliasPrepare()
   char          *aliasLeaf;  
    
   rv = sourceFile->GetResolvedFSSpec(&fsSource);
-  if (!NS_SUCCEEDED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
   rv = targetFile->GetFSSpec(&fsAliasParent); 
-  if (!NS_SUCCEEDED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
   rv = targetFile->GetAppendedPath(&aliasLeaf);
-  if (!NS_SUCCEEDED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
 
   // check if source file exists
   err = FSMakeFSSpec(fsSource.vRefNum, fsSource.parID, fsSource.name, &fsCheckSource);
@@ -1433,11 +1433,11 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
   
   // nsIFile sucks so we have to do special hackery here
   rv = localFileMacSrc->GetResolvedFSSpec(&fsSource);
-  if (!NS_SUCCEEDED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
   rv = localFileMacTarget->GetFSSpec(&fsAliasParent); 
-  if (!NS_SUCCEEDED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
   rv = localFileMacTarget->GetAppendedPath(&aliasLeaf);
-  if (!NS_SUCCEEDED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
   
   // check if source file exists
   err = FSMakeFSSpec(fsSource.vRefNum, fsSource.parID, fsSource.name, &fsCheckSource);

@@ -703,7 +703,7 @@ void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIIma
   PRUint32 compositingAlphaDataLength;
   aCompositingFrame->LockAlphaData();
   res = aCompositingFrame->GetAlphaData(&compositingAlphaData, &compositingAlphaDataLength);
-  if(!compositingAlphaData || !compositingAlphaDataLength || !NS_SUCCEEDED(res)) {
+  if(!compositingAlphaData || !compositingAlphaDataLength || NS_FAILED(res)) {
     aCompositingFrame->UnlockAlphaData();
     return;
   }
@@ -711,7 +711,7 @@ void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIIma
   // The current frame of the animation (overlay frame) is what
   // determines the transparent color.
   gfx_color color;
-  if(!NS_SUCCEEDED(aOverlayFrame->GetTransparentColor(&color))) {
+  if(NS_FAILED(aOverlayFrame->GetTransparentColor(&color))) {
     //XXX setting the entire mask on here is probably the wrong thing
     //we should probably just set the region of the overlay frame
     //to 255, but for the moment I can't find a case where this gives

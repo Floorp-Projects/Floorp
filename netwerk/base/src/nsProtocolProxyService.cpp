@@ -141,7 +141,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     {
         rv = mPrefs->CopyCharPref("network.proxy.http", 
                 getter_Copies(mHTTPProxyHost));
-        if (!NS_SUCCEEDED(rv))
+        if (NS_FAILED(rv))
             mHTTPProxyHost.Adopt(nsCRT::strdup(""));
     }
 
@@ -158,7 +158,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     {
         rv = mPrefs->CopyCharPref("network.proxy.ssl", 
                 getter_Copies(mHTTPSProxyHost));
-        if (!NS_SUCCEEDED(rv))
+        if (NS_FAILED(rv))
             mHTTPSProxyHost.Adopt(nsCRT::strdup(""));
     }
 
@@ -175,7 +175,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     {
         rv = mPrefs->CopyCharPref("network.proxy.ftp", 
                 getter_Copies(mFTPProxyHost));
-        if (!NS_SUCCEEDED(rv))
+        if (NS_FAILED(rv))
             mFTPProxyHost.Adopt(nsCRT::strdup(""));
     }
 
@@ -192,7 +192,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     {
         rv = mPrefs->CopyCharPref("network.proxy.gopher", 
                                       getter_Copies(mGopherProxyHost));
-        if (!NS_SUCCEEDED(rv) || !mGopherProxyHost)
+        if (NS_FAILED(rv) || !mGopherProxyHost)
             mGopherProxyHost.Adopt(nsCRT::strdup(""));
     }
 
@@ -209,7 +209,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     {
         rv = mPrefs->CopyCharPref("network.proxy.socks", 
                                   getter_Copies(mSOCKSProxyHost));
-        if (!NS_SUCCEEDED(rv))
+        if (NS_FAILED(rv))
             mSOCKSProxyHost.Adopt(nsCRT::strdup(""));
     }
     

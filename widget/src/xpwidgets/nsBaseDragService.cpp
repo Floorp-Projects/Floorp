@@ -68,7 +68,7 @@ nsBaseDragService::nsBaseDragService() :
 {
   NS_INIT_REFCNT();
   nsresult result = NS_NewISupportsArray(getter_AddRefs(mTransArray));
-  if ( !NS_SUCCEEDED(result) ) {
+  if ( NS_FAILED(result) ) {
     //what do we do? we can't throw!
     ;
   }

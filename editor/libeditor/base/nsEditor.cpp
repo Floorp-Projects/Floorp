@@ -3853,7 +3853,7 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
       nsCOMPtr<nsIDOMNode> node1;
       nsCOMPtr<nsIDOMNode> node2;
 
-      if (!NS_SUCCEEDED(aNode->GetFirstChild(getter_AddRefs(node1))))
+      if (NS_FAILED(aNode->GetFirstChild(getter_AddRefs(node1))))
       {
         NS_NOTREACHED("GetFirstTextNode Failed");
       }
@@ -4498,7 +4498,7 @@ nsEditor::DeleteSelectionAndCreateNode(const nsAReadableString& aTag,
   PRInt32 offsetOfNewNode;
   nsresult result = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode,
                                                           offsetOfNewNode);
-  if (!NS_SUCCEEDED(result))
+  if (NS_FAILED(result))
     return result;
 
   nsCOMPtr<nsIDOMNode> newNode;

@@ -136,7 +136,7 @@ nsresult
 nsCreateInstanceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
     {
         nsresult status = nsComponentManager::CreateInstance(mCID, mOuter, aIID, aInstancePtr);
-        if ( !NS_SUCCEEDED(status) )
+        if ( NS_FAILED(status) )
             *aInstancePtr = 0;
 
         if ( mErrorPtr )
@@ -150,7 +150,7 @@ nsCreateInstanceByContractID::operator()( const nsIID& aIID, void** aInstancePtr
         nsresult status;
         if ( mContractID )
             {
-              if ( !NS_SUCCEEDED(status = nsComponentManager::CreateInstance(mContractID, mOuter, aIID, aInstancePtr)) )
+              if ( NS_FAILED(status = nsComponentManager::CreateInstance(mContractID, mOuter, aIID, aInstancePtr)) )
                   *aInstancePtr = 0;
           }
         else
@@ -215,7 +215,7 @@ nsGetServiceByCID::operator()( const nsIID& aIID, void** aInstancePtr ) const
         if (mgr)
             status = mgr->GetService(mCID, aIID, (void**)aInstancePtr);
     }
-    if ( !NS_SUCCEEDED(status) )
+    if ( NS_FAILED(status) )
         *aInstancePtr = 0;
 
     if ( mErrorPtr )
@@ -236,7 +236,7 @@ nsGetServiceByContractID::operator()( const nsIID& aIID, void** aInstancePtr ) c
             status = mgr->GetServiceByContractID(mContractID, aIID, (void**)aInstancePtr);
     }
  
-    if ( !NS_SUCCEEDED(status) )
+    if ( NS_FAILED(status) )
         *aInstancePtr = 0;
 
     if ( mErrorPtr )

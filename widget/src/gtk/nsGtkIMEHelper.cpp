@@ -1197,7 +1197,7 @@ nsIMEGtkIC::GetInputStyle() {
 #endif
 
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
-  if (!NS_FAILED(rv) && (prefs)) {
+  if (NS_SUCCEEDED(rv) && (prefs)) {
     char *input_style;
     rv = prefs->CopyCharPref(PREF_XIM_INPUTSTYLE, &input_style);
     if (NS_SUCCEEDED(rv) && input_style[0]) {

@@ -228,7 +228,7 @@ nsresult nsCollation::UnicodeToChar(const nsAString& aSrc, char** dst, const nsA
                 }
               }
             }
-            if (!NS_SUCCEEDED(res)) {
+            if (NS_FAILED(res)) {
               PR_Free(*dst);
               *dst = nsnull;
             }

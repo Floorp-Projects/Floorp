@@ -5345,7 +5345,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
         result = nsComponentManager::CreateInstance(NS_SHENTRY_CONTRACTID, NULL,
                                                     NS_GET_IID(nsISHEntry),
                                                     (void **) &dest);
-        if (!NS_SUCCEEDED(result))
+        if (NS_FAILED(result))
             return result;
 
         srcHE->GetURI(getter_AddRefs(uri));
@@ -5389,15 +5389,15 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
             if (!srcChild)
                 return NS_ERROR_FAILURE;
             nsCOMPtr<nsISHEntry> destChild;
-            if (!NS_SUCCEEDED(result))
+            if (NS_FAILED(result))
                 return result;
             result =
                 CloneAndReplace(srcChild, aCloneID, replaceEntry,
                                 getter_AddRefs(destChild));
-            if (!NS_SUCCEEDED(result))
+            if (NS_FAILED(result))
                 return result;
             result = destContainer->AddChild(destChild, i);
-            if (!NS_SUCCEEDED(result))
+            if (NS_FAILED(result))
                 return result;
         }                       // for 
     }

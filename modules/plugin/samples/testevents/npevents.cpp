@@ -364,7 +364,7 @@ NS_METHOD EventsPluginInstance::Initialize(nsIPluginInstancePeer *peer) {
 	if (NS_FAILED(result)) return result;
 
 	taginfo = do_QueryInterface(peer, &result);
-	if (!NS_FAILED(result)) {
+	if (NS_SUCCEEDED(result)) {
 		taginfo->GetAttributes(count, names, values);
 	}
 
