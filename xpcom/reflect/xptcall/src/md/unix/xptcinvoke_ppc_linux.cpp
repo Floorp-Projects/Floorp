@@ -26,106 +26,190 @@
 
 typedef unsigned nsXPCVariant;
 
+#define FIRST_GP_REG  3
+#define MAX_GP_REG   10
+#define FIRST_FP_REG  1
+#define MAX_FP_REG    8
+
 extern "C" PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
 {
-    PRUint32 result = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
-    {
-        if(s->IsPtrData())
-        {
-            result++;
-            continue;
-        }
-        switch(s->type)
-        {
-            case nsXPTType::T_I8     :
-            case nsXPTType::T_I16    :
-            case nsXPTType::T_I32    :
-                result++;
-                break;
-            case nsXPTType::T_I64    :
-                result+=2;
-                break;
-            case nsXPTType::T_U8     :
-            case nsXPTType::T_U16    :
-            case nsXPTType::T_U32    :
-                result++;
-                break;
-            case nsXPTType::T_U64    :
-                result+=2;
-                break;
-            case nsXPTType::T_FLOAT  :
-                result++;
-                break;
-            case nsXPTType::T_DOUBLE :
-                result+=2;
-                break;
-            case nsXPTType::T_BOOL   :
-            case nsXPTType::T_CHAR   :
-            case nsXPTType::T_WCHAR  :
-                result++;
-                break;
-            default:
-                // all the others are plain pointer types
-                result++;
-                break;
-        }
-    }
-    // nuts, I know there's a cooler way of doing this, but it's late
-    // now and it'll probably come to me in the morning.
-    if (result & 0x3) 
-        result += 4 - (result & 0x3);     // ensure q-word alignment
-    return result;
+  return (PRUint32)(((paramCount * 2) + 3) & ~3);
 }
 
 extern "C" void
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s, 
+		     PRUint32* gpregs, double* fpregs)
 {
-/*
-    We need to copy the parameters for this function to locals and use them
-    from there since the parameters occupy the same stack space as the stack
-    we're trying to populate.
-*/
-    uint32 *l_d = d;
-    nsXPTCVariant *l_s = s;
-    uint32 l_paramCount = paramCount;
+  uint32 gpr = FIRST_GP_REG + 1; // skip one GP reg for 'this'
+  uint32 fpr = FIRST_FP_REG;
 
-    typedef struct {
-        uint32 hi;
-        uint32 lo;
-    } DU;               // have to move 64 bit entities as 32 bit halves since
-                        // stack slots are not guaranteed 16 byte aligned
-
-    for(uint32 i = 0; i < l_paramCount; i++, l_d++, l_s++)
+  for(uint32 i = 0; i < paramCount; i++, s++)
     {
-        if(l_s->IsPtrData())
+      if(s->IsPtrData())
         {
-            *((void**)l_d) = l_s->ptr;
-            continue;
+	  if (gpr > MAX_GP_REG)
+	    *((void**) d++)        = s->ptr;
+	  else
+	    {
+	      *((void**) gpregs++) = s->ptr;
+	      gpr++;
+	    }
+	  continue;
         }
-        switch(l_s->type)
+      switch(s->type)
         {
-        case nsXPTType::T_I8     : *((int32*)  l_d) = l_s->val.i8;          break;
-        case nsXPTType::T_I16    : *((int32*)  l_d) = l_s->val.i16;         break;
-        case nsXPTType::T_I32    : *((int32*)  l_d) = l_s->val.i32;         break;
-        case nsXPTType::T_I64    : 
-        case nsXPTType::T_U64    : 
-        case nsXPTType::T_DOUBLE : *((uint32*) l_d++) = ((DU *)l_s)->hi;
-                                   *((uint32*) l_d) = ((DU *)l_s)->lo;
-                                   break;
-        case nsXPTType::T_U8     : *((uint32*) l_d) = l_s->val.u8;          break;
-        case nsXPTType::T_U16    : *((uint32*) l_d) = l_s->val.u16;         break;
-        case nsXPTType::T_U32    : *((uint32*) l_d) = l_s->val.u32;         break;
-        case nsXPTType::T_FLOAT  : *((float*)  l_d) = l_s->val.f;           break;
-        case nsXPTType::T_BOOL   : *((PRBool*) l_d) = l_s->val.b;           break;
-        case nsXPTType::T_CHAR   : *((uint32*) l_d) = l_s->val.c;           break;
-        case nsXPTType::T_WCHAR  : *((int32*)  l_d) = l_s->val.wc;          break;
+	case nsXPTType::T_I8:
+	  if (gpr > MAX_GP_REG)
+	    *((PRInt32*) d++)        = s->val.i8;
+	  else
+	    {
+	      *((PRInt32*) gpregs++) = s->val.i8;
+	      gpr++;
+	    }
+          break;
+	case nsXPTType::T_I16:
+	  if (gpr > MAX_GP_REG)
+	    *((PRInt32*) d++)        = s->val.i16;
+	  else
+	    {
+	      *((PRInt32*) gpregs++) = s->val.i16;
+	      gpr++;
+	    }
+	  break;
+        case nsXPTType::T_I32:
+	  if (gpr > MAX_GP_REG)
+	    *((PRInt32*) d++)        = s->val.i32;
+	  else
+	    {
+	      *((PRInt32*) gpregs++) = s->val.i32;
+	      gpr++;
+	    }
+	  break;
+        case nsXPTType::T_I64:
+	  if ((gpr + 1) > MAX_GP_REG)
+	    {
+	      if (((PRUint32) d) & 4 != 0) d++;
+	      *(((PRInt64*) d)++)      = s->val.i64;
+	    }
+	  else
+	    {
+	      if ((gpr & 1) == 0)
+		{
+		  gpr++;
+		  gpregs++;
+		}
+	      *(((PRInt64*) gpregs)++) = s->val.i64;
+	      gpr += 2;
+	    }
+	  break;
+	case nsXPTType::T_U8:
+	  if (gpr > MAX_GP_REG)
+	    *d++        = s->val.u8;
+	  else
+	    {
+	      *gpregs++ = s->val.u8;
+	      gpr++;
+	    }
+          break;
+	case nsXPTType::T_U16:
+	  if (gpr > MAX_GP_REG)
+	    *d++        = s->val.u16;
+	  else
+	    {
+	      *gpregs++ = s->val.u16;
+	      gpr++;
+	    }
+	  break;
+        case nsXPTType::T_U32:
+	  if (gpr > MAX_GP_REG)
+	    *d++        = s->val.u32;
+	  else
+	    {
+	      *gpregs++ = s->val.u32;
+	      gpr++;
+	    }
+	  break;
+        case nsXPTType::T_U64:
+	  if ((gpr + 1) > MAX_GP_REG)
+	    {
+	      if (((PRUint32) d) & 4 != 0) d++;
+	      *(((PRUint64*) d)++)      = s->val.u64;
+	    }
+	  else
+	    {
+	      if ((gpr & 1) == 0)
+		{
+		  gpr++;
+		  gpregs++;
+		}
+	      *(((PRUint64*) gpregs)++) = s->val.u64;
+	      gpr    += 2;
+	    }
+	  break;
+        case nsXPTType::T_FLOAT:
+	  if (fpr > MAX_FP_REG)
+	      *((float*) d++) = s->val.f;
+	  else
+	    {
+	      *fpregs++       = s->val.f;
+	      fpr++;
+	    }
+	  break;
+        case nsXPTType::T_DOUBLE:
+	  if (fpr > MAX_FP_REG)
+	    {
+	      if (((PRUint32) d) & 4 != 0) d++;
+	      *(((double*) d)++) = s->val.d;
+	    }
+	  else
+	    {
+	      *fpregs++          = s->val.d;
+	      fpr++;
+	    }
+	  break;
+        case nsXPTType::T_BOOL:
+	  if (gpr > MAX_GP_REG)
+	    *((PRBool*) d++)        = s->val.b;
+	  else
+	    {
+	      *((PRBool*) gpregs++) = s->val.b;
+	      gpr++;
+	    }
+          break;
+        case nsXPTType::T_CHAR:
+	  if (gpr > MAX_GP_REG)
+	    *d++        = s->val.c;
+	  else
+	    {
+	      *gpregs++ = s->val.c;
+	      gpr++;
+	    }
+          break;
+        case nsXPTType::T_WCHAR:
+	  if (gpr > MAX_GP_REG)
+	    *((PRInt32*) d++)        = s->val.wc;
+	  else
+	    {
+	      *((PRInt32*) gpregs++) = s->val.wc;
+	      gpr++;
+	    }
+          break;
         default:
-            // all the others are plain pointer types
-            *((void**)l_d) = l_s->val.p;
-            break;
+	  // all the others are plain pointer types
+	  if (gpr > MAX_GP_REG)
+	    *((void**) d++)        = s->val.p;
+	  else
+	    {
+	      *((void**) gpregs++) = s->val.p;
+	      gpr++;
+	    }
+          break;
         }
     }
 }
 
+extern "C"
+XPTC_PUBLIC_API(nsresult)
+XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
+		   PRUint32 paramCount, nsXPTCVariant* params);
