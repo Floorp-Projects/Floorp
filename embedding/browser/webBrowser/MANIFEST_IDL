@@ -28,5 +28,7 @@ nsIWebBrowserSetup.idl
 nsIEmbeddingSiteWindow.idl
 nsIWebBrowserFocus.idl
 nsIWebBrowserPrint.idl
+nsIPrintingPrompt.idl
+nsIPrintingPromptService.idl
 nsITooltipListener.idl
 nsITooltipTextProvider.idl

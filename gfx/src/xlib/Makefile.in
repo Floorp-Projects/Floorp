@@ -38,10 +38,6 @@ REQUIRES	= xpcom \
 		  string \
 		  xlibrgb \
 		  widget \
-		  dom \
-		  layout \
-		  content \
-		  appshell \
 		  js \
 		  necko \
 		  pref \
@@ -53,7 +49,6 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  imglib2 \
 		  mozcomps \
-		  windowwatcher \
 		  intl \
 		  $(NULL)
 

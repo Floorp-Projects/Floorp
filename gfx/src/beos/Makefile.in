@@ -55,8 +55,6 @@ REQUIRES	= xpcom \
 		  view \
 		  intl \
 		  uconv \
-		  dom \
-		  windowwatcher \
 		  unicharutil \
 		  $(NULL)
 

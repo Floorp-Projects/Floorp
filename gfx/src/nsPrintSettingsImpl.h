@@ -37,9 +37,12 @@ public:
   NS_DECL_NSIPRINTSETTINGS
 
   nsPrintSettings();
+  nsPrintSettings(const nsPrintSettings* aPS);
   virtual ~nsPrintSettings();
 
 protected:
+  virtual nsresult CloneObj(nsIPrintSettings **_retval);
+
   typedef enum {
     eHeader,
     eFooter

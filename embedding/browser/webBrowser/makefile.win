@@ -57,7 +57,9 @@ XPIDLSRCS=                        \
     .\nsIEmbeddingSiteWindow.idl   \
     .\nsIEmbeddingSiteWindow2.idl  \
     .\nsIWebBrowserFocus.idl       \
-    .\nsIWebBrowserPrint.idl        \
+    .\nsIWebBrowserPrint.idl       \
+    .\nsIPrintingPrompt.idl        \
+    .\nsIPrintingPromptService.idl \
     $(NULL)
 
 LIBRARY_NAME=nsWebBrowser_s

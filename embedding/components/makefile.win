@@ -27,6 +27,7 @@ DIRS= \
 	commandhandler \
 	jsconsole \
 	ui \
+	printingui \
         webbrowserpersist \
 	build \
 	$(NULL)

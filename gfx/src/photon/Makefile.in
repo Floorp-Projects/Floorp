@@ -36,11 +36,9 @@ REQUIRES	= xpcom \
 		  widget \
 		  view \
 		  util \
-		  dom \
 		  pref \
 		  uconv \
 		  unicharutil \
-		  windowwatcher \
 		  locale \
 		  intl \
 		  $(NULL)

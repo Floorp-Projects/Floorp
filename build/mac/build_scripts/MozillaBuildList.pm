@@ -688,6 +688,7 @@ sub BuildRuntimeDist()
     InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",             "$distdirectory:mac:common:");
     InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",              "$distdirectory:mac:common:");
     InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",                     "$distdirectory:mac:common:morefiles:");
+    InstallFromManifest(":mozilla:lib:mac:NSStartup:MANIFEST",                     "$distdirectory:mac:common:");
 
     #GC_LEAK_DETECTOR
     InstallFromManifest(":mozilla:gc:boehm:MANIFEST",                              "$distdirectory:gc:");
@@ -2106,6 +2107,11 @@ sub BuildEmbeddingProjects()
     my($dist_dir) = GetBinDirectory();
 
     StartBuildModule("embedding");
+
+    # Since there are separate Carbon targets, but the name is the same.
+    unlink ":mozilla:embedding:components:printingui:macbuild:printingUI$D.o";
+    BuildProject(":mozilla:embedding:components:printingui:macbuild:printingUI.xml", "printingUI$C$D.o");
+    MakeAlias(":mozilla:embedding:components:printingui:macbuild:printingUI$D.o", ":mozilla:dist:embedding:components:");
 
     BuildOneProject(":mozilla:embedding:components:build:macbuild:EmbedComponents.xml",       "EmbedComponents$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:embedding:browser:macbuild:webBrowser.xml",       "webBrowser$D.$S", 1, $main::ALIAS_SYM_FILES, 1);

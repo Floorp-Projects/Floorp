@@ -42,22 +42,10 @@
 #include "plstr.h"
 #include "nsPhGfxLog.h"
 
-#include "nsGfxCIID.h"
-#include "nsIPrintOptions.h"
-#include "nsIDOMWindow.h"
-#include "nsIDialogParamBlock.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIWindowWatcher.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsVoidArray.h"
-#include "nsSupportsArray.h"
-
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
-
-static NS_DEFINE_CID( kPrintOptionsCID, NS_PRINTOPTIONS_CID );
 
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {

@@ -62,7 +62,7 @@ public:
 
   // nsIDOMContextMenuListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)        {	return NS_OK; }
-  NS_IMETHOD ContextMenu (nsIDOMEvent* aEvent)       { printf("preventing ContextMenu\n"); aEvent->PreventDefault(); return NS_OK; }
+  NS_IMETHOD ContextMenu (nsIDOMEvent* aEvent)       { aEvent->PreventDefault(); return NS_OK; }
 
   // nsIDOMKeyListener
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
