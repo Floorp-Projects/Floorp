@@ -151,6 +151,10 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
   if (NS_SUCCEEDED(rv)) {
     svc->RemoveObserver(this, NS_FORMSUBMIT_SUBJECT);
   }
+  if (mTransferringRequests.ops) {
+    PL_DHashTableFinish(&mTransferringRequests);
+    mTransferringRequests.ops = nsnull;
+  }
 }
 
 NS_IMPL_ISUPPORTS6(nsSecureBrowserUIImpl,
