@@ -146,13 +146,13 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {
     return mInner.List(out, aIndent);
   }
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {
+  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const {
     return mInner.BeginConvertToXIF(aConverter);
   }
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const {
+  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const {
     return mInner.ConvertContentToXIF(aConverter);
   }
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {
+  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter* aConverter) const {
     return mInner.FinishConvertToXIF(aConverter);
   }
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
