@@ -61,7 +61,7 @@ protected:
   PRBool  IsHeaderMultiple(nsIAtom* aHeader);
 
 protected:
-  nsCOMPtr<nsISupportsArray> m_pHTTPHeaders;
+  nsCOMPtr<nsISupportsArray> mHTTPHeaders;
 };
 
 

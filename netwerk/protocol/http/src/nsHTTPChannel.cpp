@@ -49,14 +49,14 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
                              nsIHTTPEventSink* i_HTTPEventSink,
                              nsHTTPHandler* i_Handler): 
-    m_URI(dont_QueryInterface(i_URL)),
-    m_bConnected(PR_FALSE),
-    m_State(HS_IDLE),
+    mURI(dont_QueryInterface(i_URL)),
+    mConnected(PR_FALSE),
+    mState(HS_IDLE),
     mRefCnt(0),
-    m_pHandler(dont_QueryInterface(i_Handler)),
-    m_pEventSink(dont_QueryInterface(i_HTTPEventSink)),
-    m_pResponse(nsnull),
-    m_pResponseDataListener(nsnull),
+    mHandler(dont_QueryInterface(i_Handler)),
+    mEventSink(dont_QueryInterface(i_HTTPEventSink)),
+    mResponse(nsnull),
+    mResponseDataListener(nsnull),
     mLoadAttributes(LOAD_NORMAL),
     mResponseContext(nsnull),
     mLoadGroup(nsnull),
@@ -75,11 +75,11 @@ nsHTTPChannel::~nsHTTPChannel()
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Deleting nsHTTPChannel [this=%x].\n", this));
 
-    //TODO if we keep our copy of m_URI, then delete it too.
-    NS_IF_RELEASE(m_pRequest);
-    NS_IF_RELEASE(m_pResponse);
+    //TODO if we keep our copy of mURI, then delete it too.
+    NS_IF_RELEASE(mRequest);
+    NS_IF_RELEASE(mResponse);
     NS_IF_RELEASE(mPostStream);
-    NS_IF_RELEASE(m_pResponseDataListener);
+    NS_IF_RELEASE(mResponseDataListener);
     NS_IF_RELEASE(mLoadGroup);
 }
 
@@ -112,8 +112,8 @@ nsHTTPChannel::IsPending(PRBool *result)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (m_pRequest) {
-    rv = m_pRequest->IsPending(result);
+  if (mRequest) {
+    rv = mRequest->IsPending(result);
   }
   return rv;
 }
@@ -123,8 +123,8 @@ nsHTTPChannel::Cancel(void)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (m_pRequest) {
-    rv = m_pRequest->Cancel();
+  if (mRequest) {
+    rv = mRequest->Cancel();
   }
   return rv;
 }
@@ -134,8 +134,8 @@ nsHTTPChannel::Suspend(void)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (m_pRequest) {
-    rv = m_pRequest->Suspend();
+  if (mRequest) {
+    rv = mRequest->Suspend();
   }
   return rv;
 }
@@ -145,8 +145,8 @@ nsHTTPChannel::Resume(void)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (m_pRequest) {
-    rv = m_pRequest->Resume();
+  if (mRequest) {
+    rv = mRequest->Resume();
   }
   return rv;
 }
@@ -158,7 +158,7 @@ NS_IMETHODIMP
 nsHTTPChannel::GetURI(nsIURI* *o_URL)
 {
     if (o_URL) {
-        *o_URL = m_URI;
+        *o_URL = mURI;
         NS_IF_ADDREF(*o_URL);
         return NS_OK;
     } else {
@@ -173,11 +173,11 @@ nsHTTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 #if 0
     nsresult rv;
 
-    if (!m_bConnected)
+    if (!mConnected)
         Open();
 
     nsIInputStream* inStr; // this guy gets passed out to the user
-    rv = NS_NewSyncStreamListener(&m_pResponseDataListener, &inStr);
+    rv = NS_NewSyncStreamListener(&mResponseDataListener, &inStr);
     if (NS_FAILED(rv)) return rv;
 
     *o_Stream = inStr;
@@ -185,8 +185,8 @@ nsHTTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
 #else
 
-    if (m_pResponse)
-        return m_pResponse->GetInputStream(o_Stream);
+    if (mResponse)
+        return mResponse->GetInputStream(o_Stream);
     NS_ERROR("No response!");
     return NS_OK; // change to error ? or block till response is set up?
 #endif // if 0
@@ -207,7 +207,7 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     nsresult rv = NS_OK;
 
     // Initial parameter checks...
-    if (m_pResponseDataListener) {
+    if (mResponseDataListener) {
         rv = NS_ERROR_IN_PROGRESS;
     } 
     else if (!listener) {
@@ -216,8 +216,8 @@ nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     // Initiate the loading of the URL...
     if (NS_SUCCEEDED(rv)) {
-        m_pResponseDataListener = listener;
-        NS_ADDREF(m_pResponseDataListener);
+        mResponseDataListener = listener;
+        NS_ADDREF(mResponseDataListener);
 
         mResponseContext = aContext;
 
@@ -281,7 +281,7 @@ nsHTTPChannel::GetContentType(char * *aContentType)
     //
     NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = MIMEService->GetTypeFromURI(m_URI, aContentType);
+        rv = MIMEService->GetTypeFromURI(mURI, aContentType);
         if (NS_SUCCEEDED(rv)) return rv;
         // XXX we should probably set the content-type for this http response at this stage too.
     }
@@ -321,15 +321,15 @@ nsHTTPChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 NS_IMETHODIMP
 nsHTTPChannel::GetRequestHeader(nsIAtom* i_Header, char* *o_Value)
 {
-    NS_ASSERTION(m_pRequest, "The request object vanished from underneath the connection!");
-    return m_pRequest->GetHeader(i_Header, o_Value);
+    NS_ASSERTION(mRequest, "The request object vanished from underneath the connection!");
+    return mRequest->GetHeader(i_Header, o_Value);
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::SetRequestHeader(nsIAtom* i_Header, const char* i_Value)
 {
-    NS_ASSERTION(m_pRequest, "The request object vanished from underneath the connection!");
-    return m_pRequest->SetHeader(i_Header, i_Value);
+    NS_ASSERTION(mRequest, "The request object vanished from underneath the connection!");
+    return mRequest->SetHeader(i_Header, i_Value);
 }
 
 NS_IMETHODIMP
@@ -337,8 +337,8 @@ nsHTTPChannel::GetRequestHeaderEnumerator(nsISimpleEnumerator** aResult)
 {
     nsresult rv;
 
-    if (m_pRequest) {
-        rv = m_pRequest->GetHeaderEnumerator(aResult);
+    if (mRequest) {
+        rv = mRequest->GetHeaderEnumerator(aResult);
     } else {
         rv = NS_ERROR_FAILURE;
     }
@@ -349,10 +349,10 @@ nsHTTPChannel::GetRequestHeaderEnumerator(nsISimpleEnumerator** aResult)
 NS_IMETHODIMP
 nsHTTPChannel::GetResponseHeader(nsIAtom* i_Header, char* *o_Value)
 {
-    if (!m_bConnected)
+    if (!mConnected)
         Open();
-    if (m_pResponse)
-        return m_pResponse->GetHeader(i_Header, o_Value);
+    if (mResponse)
+        return mResponse->GetHeader(i_Header, o_Value);
     else
         return NS_ERROR_FAILURE ; // NS_ERROR_NO_RESPONSE_YET ? 
 }
@@ -363,12 +363,12 @@ nsHTTPChannel::GetResponseHeaderEnumerator(nsISimpleEnumerator** aResult)
 {
     nsresult rv;
 
-    if (!m_bConnected) {
+    if (!mConnected) {
         Open();
     }
 
-    if (m_pResponse) {
-        rv = m_pResponse->GetHeaderEnumerator(aResult);
+    if (mResponse) {
+        rv = mResponse->GetHeaderEnumerator(aResult);
     } else {
         *aResult = nsnull;
         rv = NS_ERROR_FAILURE ; // NS_ERROR_NO_RESPONSE_YET ? 
@@ -379,20 +379,20 @@ nsHTTPChannel::GetResponseHeaderEnumerator(nsISimpleEnumerator** aResult)
 NS_IMETHODIMP
 nsHTTPChannel::GetResponseStatus(PRUint32  *o_Status)
 {
-    if (!m_bConnected) 
+    if (!mConnected) 
         Open();
-	if (m_pResponse)
-		return m_pResponse->GetStatus(o_Status);
+	if (mResponse)
+		return mResponse->GetStatus(o_Status);
     return NS_ERROR_FAILURE; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 
 NS_IMETHODIMP
 nsHTTPChannel::GetResponseString(char* *o_String) 
 {
-    if (!m_bConnected) 
+    if (!mConnected) 
         Open();
-	if (m_pResponse)
-		return m_pResponse->GetStatusString(o_String);
+	if (mResponse)
+		return mResponse->GetStatusString(o_String);
     return NS_ERROR_FAILURE; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 
@@ -402,7 +402,7 @@ nsHTTPChannel::GetEventSink(nsIHTTPEventSink* *o_EventSink)
     nsresult rv;
 
     if (o_EventSink) {
-        *o_EventSink = m_pEventSink;
+        *o_EventSink = mEventSink;
         NS_IF_ADDREF(*o_EventSink);
         rv = NS_OK;
     } else {
@@ -415,8 +415,8 @@ nsHTTPChannel::GetEventSink(nsIHTTPEventSink* *o_EventSink)
 NS_IMETHODIMP
 nsHTTPChannel::SetRequestMethod(PRUint32/*HTTPMethod*/ i_Method)
 {
-    NS_ASSERTION(m_pRequest, "No request set as yet!");
-    return m_pRequest ? m_pRequest->SetMethod((HTTPMethod)i_Method) : NS_ERROR_FAILURE;
+    NS_ASSERTION(mRequest, "No request set as yet!");
+    return mRequest ? mRequest->SetMethod((HTTPMethod)i_Method) : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -425,8 +425,8 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
     nsresult rv = NS_OK;
 
     if (aListener) {
-        *aListener = m_pResponseDataListener;
-        NS_IF_ADDREF(m_pResponseDataListener);
+        *aListener = mResponseDataListener;
+        NS_IF_ADDREF(mResponseDataListener);
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }
@@ -456,11 +456,11 @@ nsHTTPChannel::Init()
     */
     nsresult rv;
 
-    m_pRequest = new nsHTTPRequest(m_URI);
-    if (m_pRequest == nsnull)
+    mRequest = new nsHTTPRequest(mURI);
+    if (mRequest == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(m_pRequest);
-    m_pRequest->SetConnection(this);
+    NS_ADDREF(mRequest);
+    mRequest->SetConnection(this);
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     PRUnichar * ua = nsnull;
@@ -470,7 +470,7 @@ nsHTTPChannel::Init()
     nsCRT::free(ua);
     char * uaCString = uaString.ToNewCString();
     if (!uaCString) return NS_ERROR_OUT_OF_MEMORY;
-    m_pRequest->SetHeader(nsHTTPAtoms::User_Agent, uaCString);
+    mRequest->SetHeader(nsHTTPAtoms::User_Agent, uaCString);
     nsCRT::free(uaCString);
     return NS_OK;
 }
@@ -478,16 +478,16 @@ nsHTTPChannel::Init()
 nsresult
 nsHTTPChannel::Open(void)
 {
-    if (m_bConnected || (m_State > HS_WAITING_FOR_OPEN))
+    if (mConnected || (mState > HS_WAITING_FOR_OPEN))
         return NS_ERROR_ALREADY_CONNECTED;
 
     // Set up a new request observer and a response listener and pass to the transport
     nsresult rv = NS_OK;
     nsCOMPtr<nsIChannel> channel;
 
-    rv = m_pHandler->RequestTransport(m_URI, this, getter_AddRefs(channel));
+    rv = mHandler->RequestTransport(mURI, this, getter_AddRefs(channel));
     if (NS_ERROR_BUSY == rv) {
-        m_State = HS_WAITING_FOR_OPEN;
+        mState = HS_WAITING_FOR_OPEN;
         return NS_OK;
     }
 
@@ -575,20 +575,20 @@ nsHTTPChannel::Open(void)
     if (channel) {
         nsCOMPtr<nsIInputStream> stream;
 
-        m_pRequest->SetTransport(channel);
+        mRequest->SetTransport(channel);
 
         //Get the stream where it will read the request data from
-        rv = m_pRequest->GetInputStream(getter_AddRefs(stream));
+        rv = mRequest->GetInputStream(getter_AddRefs(stream));
         if (NS_SUCCEEDED(rv) && stream) {
             PRUint32 count;
 
             // Write the request to the server...
             rv = stream->GetLength(&count);
-            rv = channel->AsyncWrite(stream, 0, count, this , m_pRequest);
+            rv = channel->AsyncWrite(stream, 0, count, this , mRequest);
             if (NS_FAILED(rv)) return rv;
 
-            m_State = HS_WAITING_FOR_RESPONSE;
-            m_bConnected = PR_TRUE;
+            mState = HS_WAITING_FOR_RESPONSE;
+            mConnected = PR_TRUE;
         } else {
             NS_ERROR("Failed to get request Input stream.");
             return NS_ERROR_FAILURE;
@@ -604,16 +604,16 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport)
 {
   // Null out pointers that are no longer needed...
   mResponseContext = null_nsCOMPtr();
-  NS_IF_RELEASE(m_pResponseDataListener);
+  NS_IF_RELEASE(mResponseDataListener);
 
-  return m_pHandler->ReleaseTransport(aTransport);
+  return mHandler->ReleaseTransport(aTransport);
 }
 
 nsresult nsHTTPChannel::SetResponse(nsHTTPResponse* i_pResp)
 { 
-  NS_IF_RELEASE(m_pResponse);
-  m_pResponse = i_pResp;
-  NS_IF_ADDREF(m_pResponse);
+  NS_IF_RELEASE(mResponse);
+  mResponse = i_pResp;
+  NS_IF_ADDREF(mResponse);
 
   return NS_OK;
 }

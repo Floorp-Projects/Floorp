@@ -26,24 +26,24 @@
 #include "nsHTTPAtoms.h"
 
 nsHTTPResponse::nsHTTPResponse(nsIInputStream* i_InputStream):
-    m_pStatusString(nsnull)
+    mStatusString(nsnull)
 {
     NS_INIT_REFCNT();
 
-    m_Status = 0;
-    m_ServerVersion = HTTP_ONE_ZERO;
+    mStatus = 0;
+    mServerVersion = HTTP_ONE_ZERO;
 
-    m_pInputStream = i_InputStream;
-    NS_IF_ADDREF(m_pInputStream);
+    mInputStream = i_InputStream;
+    NS_IF_ADDREF(mInputStream);
 }
 
 nsHTTPResponse::~nsHTTPResponse()
 {
-    NS_IF_RELEASE(m_pInputStream);
+    NS_IF_RELEASE(mInputStream);
 
-    if (m_pStatusString) {
-        nsCRT::free(m_pStatusString);
-        m_pStatusString = nsnull;
+    if (mStatusString) {
+        nsCRT::free(mStatusString);
+        mStatusString = nsnull;
     }
 
 }
@@ -71,7 +71,7 @@ nsresult nsHTTPResponse::GetContentLength(PRInt32* o_Value)
 nsresult nsHTTPResponse::GetStatus(PRUint32* o_Value)
 {
     if (o_Value)
-        *o_Value = m_Status;
+        *o_Value = mStatus;
     else 
         return NS_ERROR_NULL_POINTER;
     return NS_OK;
@@ -80,7 +80,7 @@ nsresult nsHTTPResponse::GetStatus(PRUint32* o_Value)
 nsresult nsHTTPResponse::GetStatusString(char* *o_String)
 {
     if (o_String)
-        *o_String = m_pStatusString;
+        *o_String = mStatusString;
     return NS_OK;
 }
 
@@ -106,7 +106,7 @@ nsresult nsHTTPResponse::SetServerVersion(const char* i_Version)
 {
     // convert it to HTTP Version
     // TODO
-    m_ServerVersion = HTTP_ONE_ZERO;
+    mServerVersion = HTTP_ONE_ZERO;
     return NS_OK;
 
 }
@@ -115,9 +115,9 @@ nsresult nsHTTPResponse::SetStatusString(const char* i_Status)
 {
     nsresult rv = NS_OK;
 
-    NS_ASSERTION(!m_pStatusString, "Overwriting status string!");
-    m_pStatusString = nsCRT::strdup(i_Status);
-    if (!m_pStatusString) {
+    NS_ASSERTION(!mStatusString, "Overwriting status string!");
+    mStatusString = nsCRT::strdup(i_Status);
+    if (!mStatusString) {
       rv = NS_ERROR_FAILURE;
     }
 
@@ -126,7 +126,7 @@ nsresult nsHTTPResponse::SetStatusString(const char* i_Status)
 
 nsresult nsHTTPResponse::GetInputStream(nsIInputStream* *o_Stream)
 {
-    *o_Stream = m_pInputStream;
+    *o_Stream = mInputStream;
     return NS_OK;
 }
 

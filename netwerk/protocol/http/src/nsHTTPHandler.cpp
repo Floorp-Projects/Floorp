@@ -87,7 +87,7 @@ nsHTTPHandler::nsHTTPHandler()
     // Initialize the Atoms used by the HTTP protocol...
     nsHTTPAtoms::AddRefAtoms();
 
-    rv = NS_NewISupportsArray(getter_AddRefs(m_pConnections));
+    rv = NS_NewISupportsArray(getter_AddRefs(mConnections));
     if (NS_FAILED(rv)) {
         NS_ERROR("unable to create new ISupportsArray");
     }
@@ -150,10 +150,10 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         PRInt32 index;
 
         //Check to see if an instance already exists in the active list
-        m_pConnections->Count(&count);
+        mConnections->Count(&count);
         for (index=count-1; index >= 0; --index) {
             //switch to static_cast...
-            pChannel = (nsHTTPChannel*)((nsIHTTPChannel*) m_pConnections->ElementAt(index));
+            pChannel = (nsHTTPChannel*)((nsIHTTPChannel*) mConnections->ElementAt(index));
             //Do other checks here as well... TODO
             rv = pChannel->GetURI(getter_AddRefs(channelURI));
             if (NS_SUCCEEDED(rv) && (channelURI.get() == i_URL))
@@ -285,7 +285,7 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 NS_METHOD
 nsHTTPHandler::FollowRedirects(PRBool bFollow)
 {
-    //m_bFollowRedirects = bFollow;
+    //mFollowRedirects = bFollow;
     return NS_OK;
 }
 

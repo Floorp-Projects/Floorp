@@ -85,17 +85,17 @@ protected:
     nsresult ProcessRedirection(PRInt32 aStatusCode);
 
 protected:
-    PRBool              m_bHeadersDone;
-    PRBool              m_bFirstLineParsed;
-    nsHTTPResponse*     m_pResponse;
-    nsHTTPChannel*      m_pConnection;
-    nsIStreamListener*  m_pConsumer;
-    PRUint32            m_ReadLength; // Already read
+    PRBool              mHeadersDone;
+    PRBool              mFirstLineParsed;
+    nsHTTPResponse*     mResponse;
+    nsHTTPChannel*      mConnection;
+    nsIStreamListener*  mConsumer;
+    PRUint32            mReadLength; // Already read
 
-    nsString            m_HeaderBuffer;
+    nsString            mHeaderBuffer;
 
-    nsCOMPtr<nsISupports> m_ResponseContext;
-    nsCOMPtr<nsIChannel>  m_Channel;
+    nsCOMPtr<nsISupports> mResponseContext;
+    nsCOMPtr<nsIChannel>  mChannel;
 };
 
 #endif /* _nsHTTPResponseListener_h_ */

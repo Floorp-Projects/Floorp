@@ -63,13 +63,13 @@ public:
 
 protected:
 
-    NS_IMETHOD          SetStatus(PRInt32 i_Value) { m_Status = i_Value; return NS_OK;};
+    NS_IMETHOD          SetStatus(PRInt32 i_Value) { mStatus = i_Value; return NS_OK;};
     NS_IMETHOD          SetStatusString(const char* i_Value);
 
-    HTTPVersion                 m_ServerVersion;
-    char*                       m_pStatusString;
-    PRUint32                    m_Status;
-    nsIInputStream*             m_pInputStream;
+    HTTPVersion                 mServerVersion;
+    char*                       mStatusString;
+    PRUint32                    mStatus;
+    nsIInputStream*             mInputStream;
 
     nsHTTPHeaderArray           mHeaders;
 

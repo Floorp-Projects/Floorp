@@ -37,26 +37,26 @@ extern PRLogModuleInfo* gHTTPLog;
 
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, 
 	nsIChannel* i_pTransport):
-    m_Method(i_Method),
-    m_Version(HTTP_ONE_ZERO),
-    m_Request(nsnull)
+    mMethod(i_Method),
+    mVersion(HTTP_ONE_ZERO),
+    mRequest(nsnull)
 {
     NS_INIT_REFCNT();
 
-    m_pURI = do_QueryInterface(i_pURL);
+    mURI = do_QueryInterface(i_pURL);
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Creating nsHTTPRequest [this=%x].\n", this));
 
-    m_pTransport = i_pTransport;
-    NS_IF_ADDREF(m_pTransport);
+    mTransport = i_pTransport;
+    NS_IF_ADDREF(mTransport);
 
 	// Send Host header by default
-	if (HTTP_ZERO_NINE != m_Version)
+	if (HTTP_ZERO_NINE != mVersion)
 	{
 		nsXPIDLCString host;
-		NS_ASSERTION(m_pURI, "No URI for the request!!");
-		m_pURI->GetHost(getter_Copies(host));
+		NS_ASSERTION(mURI, "No URI for the request!!");
+		mURI->GetHost(getter_Copies(host));
         SetHeader(nsHTTPAtoms::Host, host);
 	}
 }
@@ -66,11 +66,11 @@ nsHTTPRequest::~nsHTTPRequest()
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("Deleting nsHTTPRequest [this=%x].\n", this));
 
-    NS_IF_RELEASE(m_Request);
-    NS_IF_RELEASE(m_pTransport);
+    NS_IF_RELEASE(mRequest);
+    NS_IF_RELEASE(mTransport);
 /*
-    if (m_pConnection)
-        NS_RELEASE(m_pConnection);
+    if (mConnection)
+        NS_RELEASE(mConnection);
 */
 }
 
@@ -109,8 +109,8 @@ nsHTTPRequest::IsPending(PRBool *result)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (m_pTransport) {
-    rv = m_pTransport->IsPending(result);
+  if (mTransport) {
+    rv = mTransport->IsPending(result);
   }
   return rv;
 }
@@ -120,8 +120,8 @@ nsHTTPRequest::Cancel(void)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (m_pTransport) {
-    rv = m_pTransport->Cancel();
+  if (mTransport) {
+    rv = mTransport->Cancel();
   }
   return rv;
 }
@@ -131,8 +131,8 @@ nsHTTPRequest::Suspend(void)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (m_pTransport) {
-    rv = m_pTransport->Suspend();
+  if (mTransport) {
+    rv = mTransport->Suspend();
   }
   return rv;
 }
@@ -142,8 +142,8 @@ nsHTTPRequest::Resume(void)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
-  if (m_pTransport) {
-    rv = m_pTransport->Resume();
+  if (mTransport) {
+    rv = mTransport->Resume();
   }
   return rv;
 }
@@ -156,12 +156,12 @@ nsHTTPRequest::Build()
 {
     nsresult rv;
 
-    if (m_Request) {
+    if (mRequest) {
         NS_ERROR("Request already built!");
         return NS_ERROR_FAILURE;
     }
 
-    if (!m_pURI) {
+    if (!mURI) {
         NS_ERROR("No URL to build request for!");
         return NS_ERROR_NULL_POINTER;
     }
@@ -172,7 +172,7 @@ nsHTTPRequest::Build()
                       NS_HTTP_REQUEST_BUFFER_SIZE, nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewBufferInputStream(&m_Request, buf);
+    rv = NS_NewBufferInputStream(&mRequest, buf);
     if (NS_FAILED(rv)) return rv;
 
     //
@@ -187,9 +187,9 @@ nsHTTPRequest::Build()
             this));
 
     // Write the request method and HTTP version.
-    lineBuffer.Append(MethodToString(m_Method));
+    lineBuffer.Append(MethodToString(mMethod));
 
-    rv = m_pURI->GetPath(getter_Copies(autoBuffer));
+    rv = mURI->GetPath(getter_Copies(autoBuffer));
     lineBuffer.Append(autoBuffer);
     
     //Trim off the # portion if any...
@@ -209,10 +209,10 @@ nsHTTPRequest::Build()
 #endif
     if (NS_FAILED(rv)) return rv;
     
-/*    switch (m_Method)
+/*    switch (mMethod)
     {
         case HM_GET:
-            PL_strncpy(lineBuffer, MethodToString(m_Method)
+            PL_strncpy(lineBuffer, MethodToString(mMethod)
             break;
         case HM_DELETE:
         case HM_HEAD:
@@ -271,8 +271,8 @@ nsHTTPRequest::Build()
     }
 
 	nsCOMPtr<nsIInputStream> stream;
-	NS_ASSERTION(m_pConnection, "Hee ha!");
-	if (NS_FAILED(m_pConnection->GetPostDataStream(getter_AddRefs(stream))))
+	NS_ASSERTION(mConnection, "Hee ha!");
+	if (NS_FAILED(mConnection->GetPostDataStream(getter_AddRefs(stream))))
 			return NS_ERROR_FAILURE;
 
     // Currently nsIPostStreamData contains the header info and the data.
@@ -282,7 +282,7 @@ nsHTTPRequest::Build()
 
     if (stream)
 	{
-		NS_ASSERTION(m_Method == HM_POST, "Post data without a POST method?");
+		NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
 
 		PRUint32 length;
 		stream->GetLength(&length);
@@ -336,14 +336,14 @@ nsHTTPRequest::Clone(const nsHTTPRequest* *o_Request) const
 NS_METHOD 
 nsHTTPRequest::SetMethod(HTTPMethod i_Method)
 {
-    m_Method = i_Method;
+    mMethod = i_Method;
 	return NS_OK;
 }
 
 HTTPMethod 
 nsHTTPRequest::GetMethod(void) const
 {
-    return m_Method;
+    return mMethod;
 }
                         
 NS_METHOD 
@@ -375,14 +375,14 @@ nsHTTPRequest::GetHeader(nsIAtom* i_Header, char* *o_Value)
 NS_METHOD
 nsHTTPRequest::SetHTTPVersion(HTTPVersion i_Version)
 {
-    m_Version = i_Version;
+    mVersion = i_Version;
     return NS_OK;
 }
 
 NS_METHOD
 nsHTTPRequest::GetHTTPVersion(HTTPVersion* o_Version) 
 {
-    *o_Version = m_Version;
+    *o_Version = mVersion;
     return NS_OK;
 }
 
@@ -391,11 +391,11 @@ nsHTTPRequest::GetInputStream(nsIInputStream* *o_Stream)
 {
     if (o_Stream)
     {
-        if (!m_Request)
+        if (!mRequest)
         {
             Build();
         }
-        m_Request->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)o_Stream);
+        mRequest->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)o_Stream);
         return NS_OK;
     }
     else
@@ -428,10 +428,10 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
         nsHTTPResponseListener* pListener;
         
         //Prepare to receive the response!
-        pListener = new nsHTTPResponseListener(m_pConnection);
+        pListener = new nsHTTPResponseListener(mConnection);
         if (pListener) {
             NS_ADDREF(pListener);
-            rv = m_pTransport->AsyncRead(0, -1,
+            rv = mTransport->AsyncRead(0, -1,
                                          i_pContext, 
                                          pListener);
             NS_RELEASE(pListener);
@@ -453,10 +453,10 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
                 "\tStatus: %x\n", 
                 this, iStatus));
 
-        (void) m_pConnection->GetResponseContext(getter_AddRefs(consumerContext));
-        rv = m_pConnection->GetResponseDataListener(getter_AddRefs(consumer));
+        (void) mConnection->GetResponseContext(getter_AddRefs(consumerContext));
+        rv = mConnection->GetResponseDataListener(getter_AddRefs(consumer));
         if (consumer) {
-            consumer->OnStopRequest(m_pConnection, consumerContext, iStatus, i_pMsg);
+            consumer->OnStopRequest(mConnection, consumerContext, iStatus, i_pMsg);
         }
 
         rv = iStatus;
@@ -468,16 +468,16 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
 NS_IMETHODIMP
 nsHTTPRequest::SetTransport(nsIChannel* i_pTransport)
 {
-    NS_ASSERTION(!m_pTransport, "Transport being overwritten!");
-    m_pTransport = i_pTransport;
-    NS_ADDREF(m_pTransport);
+    NS_ASSERTION(!mTransport, "Transport being overwritten!");
+    mTransport = i_pTransport;
+    NS_ADDREF(mTransport);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTTPRequest::SetConnection(nsHTTPChannel* i_pConnection)
 {
-    m_pConnection = i_pConnection;
+    mConnection = i_pConnection;
     return NS_OK;
 }
 
