@@ -37,8 +37,8 @@ BEGIN {
 }
 
 my $lockcounter = 0;
-my $locklimit = 60;
-my $locksleep = 1;
+my $locklimit = 100;
+my $locksleep = 0.1;
 my %lockhash;
 
 # File::Spec->rel2abs appears to be broken in ActiveState Perl 5.22
@@ -84,7 +84,7 @@ sub mozLock($) {
 	    last;
 	}
 	$lockcounter++;
-	sleep($locksleep);
+	select(undef,undef,undef, $locksleep);
     }
     if ($lockcounter >= $locklimit) {
 	undef $lockhandle;
