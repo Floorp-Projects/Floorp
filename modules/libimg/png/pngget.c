@@ -566,9 +566,9 @@ png_get_IHDR(png_structp png_ptr, png_infop info_ptr,
          channels++;
       pixel_depth = *bit_depth * channels;
       rowbytes_per_pixel = (pixel_depth + 7) >> 3;
-      if ((*width > PNG_MAX_UINT/rowbytes_per_pixel))
+      if (*width > PNG_MAX_UINT/rowbytes_per_pixel - 64)
       {
-         png_warning(png_ptr,
+         png_error(png_ptr,
             "Width too large for libpng to process image data.");
       }
       return (1);
