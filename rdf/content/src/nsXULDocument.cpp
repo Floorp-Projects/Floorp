@@ -2788,8 +2788,8 @@ nsXULDocument::CreateElementNS(const nsString& aNamespaceURI,
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
-      char* namespaceCStr = aNameSpace.ToNewCString();
-      char* tagCStr = aTagName.ToNewCString();
+      char* namespaceCStr = aNamespaceURI.ToNewCString();
+      char* tagCStr = aQualifiedName.ToNewCString();
 
       PR_LOG(gXULLog, PR_LOG_DEBUG,
              ("xul[CreateElementWithNameSpace] [%s]:%s", namespaceCStr, tagCStr));
@@ -2806,7 +2806,7 @@ nsXULDocument::CreateElementNS(const nsString& aNamespaceURI,
                         *getter_AddRefs(prefix));
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
-        char* tagNameStr = aTagName.ToNewCString();
+        char* tagNameStr = aQualifiedName.ToNewCString();
         PR_LOG(gXULLog, PR_LOG_ERROR,
                ("xul[CreateElement] unable to parse tag '%s'; no such namespace.", tagNameStr));
         nsCRT::free(tagNameStr);
