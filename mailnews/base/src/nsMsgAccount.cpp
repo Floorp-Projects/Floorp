@@ -236,6 +236,8 @@ nsMsgAccount::createIdentities()
   rv = m_prefs->CopyCharPref(identitiesKeyPref.get(), getter_Copies(identityKey));
 
   if (NS_FAILED(rv)) return rv;
+  if (identityKey.IsEmpty())    // not an error if no identities, but 
+    return NS_OK;               // nsCRT::strtok will be unhappy
   
 #ifdef DEBUG_alecf
   printf("%s's identities: %s\n",
@@ -247,15 +249,34 @@ nsMsgAccount::createIdentities()
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
            do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
-    
-    
-  // XXX todo: iterate through identities. for now, assume just one
+
+  // const-casting because nsCRT::strtok whacks the string,
+  // but safe because identityKey is a copy
+  char* newStr;
+  char* rest = NS_CONST_CAST(char*,identityKey.get());
+  char* token = nsCRT::strtok(rest, ",", &newStr);
+
+  // temporaries used inside the loop
   nsCOMPtr<nsIMsgIdentity> identity;
-  rv = accountManager->GetIdentity(identityKey, getter_AddRefs(identity));
-  if (NS_FAILED(rv)) return rv;
+  nsCAutoString key;
 
-  rv = AddIdentity(identity);
+  // iterate through id1,id2, etc
+  while (token) {
+    key = token;
+    key.StripWhitespace();
+    
+    // create the account
+    rv = accountManager->GetIdentity(key.get(), getter_AddRefs(identity));
+    if (NS_SUCCEEDED(rv)) {
+      // ignore error from addIdentityInternal() - if it fails, it fails.
+      rv = addIdentityInternal(identity);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create identity");
+    }
 
+    // advance to next key, if any
+    token = nsCRT::strtok(newStr, ",", &newStr);
+  }
+    
   return rv;
 }
 
@@ -298,6 +319,19 @@ nsMsgAccount::SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity)
   return NS_OK;
 }
 
+// add the identity to m_identities, but don't fiddle with the
+// prefs. The assumption here is that the pref for this identity is
+// already set.
+nsresult
+nsMsgAccount::addIdentityInternal(nsIMsgIdentity *identity)
+{
+  NS_ASSERTION(m_identities,"you never called Init()");
+  if (!m_identities) return NS_ERROR_FAILURE;  
+
+  return m_identities->AppendElement(identity);
+}
+
+
 /* void addIdentity (in nsIMsgIdentity identity); */
 NS_IMETHODIMP
 nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
@@ -311,21 +345,61 @@ nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
   rv = identity->GetKey(getter_Copies(key));
 
   if (NS_SUCCEEDED(rv)) {
+
     nsCAutoString identitiesKeyPref("mail.account.");
     identitiesKeyPref.Append(m_accountKey);
     identitiesKeyPref.Append(".identities");
-    
-    m_prefs->SetCharPref(identitiesKeyPref.get(), key);
-  }
-  
-  NS_ASSERTION(m_identities,"you never called Init()");
-  if (!m_identities) return NS_ERROR_FAILURE;  
+      
+    nsXPIDLCString identityList;
+    m_prefs->GetCharPref(identitiesKeyPref.get(),
+                         getter_Copies(identityList));
 
-  m_identities->AppendElement(identity);
+    nsCAutoString newIdentityList(identityList);
+    
+    nsCAutoString testKey;      // temporary to strip whitespace
+    PRBool foundIdentity = PR_FALSE; // if the input identity is found
+
+    // nsCRT::strtok will be unhappy with an empty string
+    if (!identityList.IsEmpty()) {
+      
+      // const-casting because nsCRT::strtok whacks the string,
+      // but safe because identityList is a copy
+      char *newStr;
+      char *rest = NS_CONST_CAST(char*,identityList.get());
+      char *token = nsCRT::strtok(rest, ",", &newStr);
+      
+      // look for the identity key that we're adding
+      while (token) {
+        testKey = token;
+        testKey.StripWhitespace();
+
+        if (testKey.Equals(token))
+          foundIdentity = PR_TRUE;
+
+        token = nsCRT::strtok(newStr, ",", &newStr);
+      }
+    }
+
+    // if it didn't already exist, append it
+    if (!foundIdentity) {
+      if (newIdentityList.IsEmpty())
+        newIdentityList = key;
+      else {
+        newIdentityList.Append(',');
+        newIdentityList.Append(key);
+      }
+    }
+    
+    m_prefs->SetCharPref(identitiesKeyPref.get(), newIdentityList.get());
+  }
+
+  // now add it to the in-memory list
+  rv = addIdentityInternal(identity);
+  
   if (!m_defaultIdentity)
     SetDefaultIdentity(identity);
   
-  return NS_OK;
+  return rv;
 }
 
 /* void removeIdentity (in nsIMsgIdentity identity); */

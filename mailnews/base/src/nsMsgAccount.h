@@ -61,6 +61,7 @@ private:
   nsresult getPrefService();
   nsresult createIncomingServer();
   nsresult createIdentities();
+  nsresult addIdentityInternal(nsIMsgIdentity* identity);
 
   static void clearPrefEnum(const char *aPref, void *aClosure);
 };
