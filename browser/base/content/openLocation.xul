@@ -31,6 +31,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="onLoad()"
+        buttonlabelaccept="&openBtn.label;"
         ondialogaccept="open()"
         style="width: 40em;"
         persist="screenX screenY"
