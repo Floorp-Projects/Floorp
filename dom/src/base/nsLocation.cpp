@@ -261,7 +261,7 @@ LocationImpl::GetHref(nsString& aHref)
   nsresult result = NS_OK;
 
   if (nsnull != mWebShell) {
-    PRUnichar *href;
+    const PRUnichar *href;
     mWebShell->GetHistoryIndex(index);
     result = mWebShell->GetURL(index, &href);
     aHref = href;
