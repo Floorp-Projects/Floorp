@@ -3154,7 +3154,9 @@ nsCSSBlockFrame::ContentDeleted(nsIPresShell*   aShell,
       // to destroy that too.
       nsIFrame* nextInFlow;
       deadFrame->GetNextInFlow(nextInFlow);
-      deadFrame->BreakFromNextFlow();
+      if (nsnull != nextInFlow) {
+        deadFrame->BreakFromNextFlow();
+      }
       deadFrame->DeleteFrame();
       deadFrame = nextInFlow;
 
