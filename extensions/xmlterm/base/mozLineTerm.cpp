@@ -1,0 +1,681 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "MPL"); you may not use this file
+ * except in compliance with the MPL. You may obtain a copy of
+ * the MPL at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the MPL is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the MPL for the specific language governing
+ * rights and limitations under the MPL.
+ * 
+ * The Original Code is XMLterm.
+ * 
+ * The Initial Developer of the Original Code is Ramalingam Saravanan.
+ * Portions created by Ramalingam Saravanan <svn@xmlterm.org> are
+ * Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+// mozLineTerm.cpp: class implementing mozILineTerm/mozILineTermAux interfaces,
+// providing an XPCOM/XPCONNECT wrapper for the LINETERM module
+
+#include "stdio.h"
+
+#include "nspr.h"
+#include "nscore.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#include "prlog.h"
+#include "nsIAllocator.h"
+
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
+#include "nsIPrincipal.h"
+
+#include "nsIDocument.h"
+#include "nsIDOMHTMLDocument.h"
+
+#include "mozXMLT.h"
+#include "mozXMLTermUtils.h"
+#include "mozLineTerm.h"
+#include "lineterm.h"
+
+#define MAXCOL 4096            // Maximum columns in line buffer
+
+static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kPrefServiceCID,     NS_PREF_CID);
+
+static NS_DEFINE_IID(kILineTermIID,     MOZILINETERM_IID);
+static NS_DEFINE_IID(kILineTermAuxIID,  MOZILINETERMAUX_IID);
+
+static NS_DEFINE_IID(kLineTermCID,      MOZLINETERM_CID);
+
+/////////////////////////////////////////////////////////////////////////
+// mozLineTerm, mozLineTermAux factories
+/////////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewLineTerm(mozILineTerm** aLineTerm)
+{
+    NS_PRECONDITION(aLineTerm != nsnull, "null ptr");
+    if (! aLineTerm)
+        return NS_ERROR_NULL_POINTER;
+
+    *aLineTerm = new mozLineTerm();
+    if (! *aLineTerm)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aLineTerm);
+    return NS_OK;
+}
+
+nsresult
+NS_NewLineTermAux(mozILineTermAux** aLineTermAux)
+{
+    NS_PRECONDITION(aLineTermAux != nsnull, "null ptr");
+    if (! aLineTermAux)
+        return NS_ERROR_NULL_POINTER;
+
+    *aLineTermAux = new mozLineTerm();
+    if (! *aLineTermAux)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aLineTermAux);
+    return NS_OK;
+}
+
+/////////////////////////////////////////////////////////////////////////
+// mozLineTerm implementaion
+/////////////////////////////////////////////////////////////////////////
+PRBool mozLineTerm::mLoggingEnabled = false;
+
+mozLineTerm::mozLineTerm() :
+  mCursorRow(0),
+  mCursorColumn(0),
+  mSuspended(false),
+  mEchoFlag(true),
+  mObserver(nsnull),
+  mCookie(""),
+  mLastTime(LL_ZERO)
+{
+  NS_INIT_REFCNT();
+  mLTerm = lterm_new();
+}
+
+
+mozLineTerm::~mozLineTerm()
+{
+  lterm_delete(mLTerm);
+  mObserver = nsnull;
+}
+
+
+// Implement AddRef and Release
+NS_IMPL_ADDREF(mozLineTerm)
+NS_IMPL_RELEASE(mozLineTerm)
+
+
+NS_IMETHODIMP 
+mozLineTerm::QueryInterface(REFNSIID aIID,void** aInstancePtr)
+{
+  if (aInstancePtr == NULL) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  // Always NULL result, in case of failure
+  *aInstancePtr = NULL;
+
+  //XMLT_LOG(mozLineTerm::QueryInterface,30,("0x%x\n",aIID));
+
+  if ( aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = NS_STATIC_CAST(nsISupports*,
+                                   NS_STATIC_CAST(mozILineTermAux*,this));
+
+  } else if ( aIID.Equals(mozILineTerm::GetIID()) ) {
+    *aInstancePtr = NS_STATIC_CAST(mozILineTerm*,
+                                   NS_STATIC_CAST(mozILineTermAux*,this));
+
+  } else if ( aIID.Equals(mozILineTermAux::GetIID()) ) {
+    *aInstancePtr = NS_STATIC_CAST(mozILineTermAux*,this);
+
+  } else {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  NS_ADDREF_THIS();
+
+  return NS_OK;
+}
+
+
+/** Checks if preference settings are secure for LineTerm creation and use
+ */
+NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
+{
+  nsresult result;
+
+  XMLT_LOG(mozLineTerm::ArePrefsSecure,30,("\n"));
+
+  if (!_retval)
+    return NS_ERROR_FAILURE;
+
+  *_retval = false;
+
+  nsIPref* prefService;
+  nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
+                               (nsISupports**) &prefService);
+  if (!prefService)
+    return NS_ERROR_FAILURE;
+
+  // Check if Components JS object is secure
+  PRBool checkXPC;
+  result = prefService->GetBoolPref("security.checkxpconnect", &checkXPC);
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  if (!checkXPC) {
+    XMLT_ERROR("mozLineTerm::ArePrefsSecure: Error - Please add the line\n"
+    "  pref(\"security.checkxpcconnect\",true);\n"
+    "to your preferences file (.mozilla/prefs.js)\n");
+    *_retval = false;
+#if 0  // Temporarily comented out
+    return NS_OK;
+#endif
+  }
+
+  nsCAutoString secString ("security.policy.");
+  /* Get global policy name. */
+  char *policyStr;
+
+  result = prefService->CopyCharPref("javascript.security_policy", &policyStr);
+  if (NS_SUCCEEDED(result) && policyStr) {
+    secString.Append(policyStr);
+    nsAllocator::Free(policyStr);
+  } else {
+    secString.Append("default");
+  }
+
+  secString.Append(".htmldocument.cookie");
+
+  char* prefStr = secString.ToNewCString();
+  XMLT_LOG(mozLineTerm::ArePrefsSecure,32, ("prefStr=%s\n", prefStr));
+
+  char *secLevelString;
+  result = prefService->CopyCharPref(prefStr, &secLevelString);
+  nsAllocator::Free(prefStr);
+
+  if (NS_FAILED(result) || !secLevelString)
+    return NS_ERROR_FAILURE;
+
+  XMLT_LOG(mozLineTerm::ArePrefsSecure,32,
+           ("secLevelString=%s\n", secLevelString));
+
+  *_retval = (PL_strcmp(secLevelString, "sameOrigin") == 0);
+  nsAllocator::Free(secLevelString);
+
+  if (!(*_retval)) {
+    XMLT_ERROR("mozLineTerm::ArePrefsSecure: Error - Please add the line\n"
+    "  pref(\"security.policy.default.htmldocument.cookie\",\"sameOrigin\");\n"
+    "to your preferences file (.mozilla/prefs.js)\n");
+  }
+
+  return NS_OK;
+}
+
+
+/** Checks document principal to ensure it has LineTerm creation privileges.
+ * Returns the principal string if the principal is secure,
+ * and a (zero length) null string if the principal is insecure.
+ */
+NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
+                                              char** aPrincipalStr)
+{
+  XMLT_LOG(mozLineTerm::GetSecurePrincipal,30,("\n"));
+
+  if (!aPrincipalStr)
+    return NS_ERROR_FAILURE;
+
+  *aPrincipalStr = nsnull;
+
+  // Get principal string
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPrincipal> principal=dont_AddRef(doc->GetDocumentPrincipal());
+
+#if 0  // Temporarily comented out, because ToString is not immplemented
+  result = principal->ToString(aPrincipalStr);
+  if (NS_FAILED(result) || !*aPrincipalStr)
+    return NS_ERROR_FAILURE;
+#else
+  const char temStr[] = "unknown";
+  PRInt32 temLen = strlen(temStr);
+  *aPrincipalStr = strncpy((char*) nsAllocator::Alloc(temLen+1),
+                           temStr, temLen+1);
+#endif
+
+  XMLT_LOG(mozLineTerm::GetSecurePrincipal,32,("aPrincipalStr=%s\n",
+                                               *aPrincipalStr));
+
+  // Check if principal is secure
+  PRBool insecure = false;
+  if (insecure) {
+    // Return null string
+    XMLT_ERROR("mozLineTerm::GetSecurePrincipal: Error - "
+               "Insecure document principal %s\n", *aPrincipalStr);
+    nsAllocator::Free(*aPrincipalStr);
+    *aPrincipalStr = (char*) nsAllocator::Alloc(1);
+    **aPrincipalStr = '\0';
+  }
+
+  return NS_OK;
+}
+
+
+/** Open LineTerm without callback
+ */
+NS_IMETHODIMP mozLineTerm::Open(const PRUnichar *command,
+                                const PRUnichar *promptRegexp,
+                                PRInt32 options, PRInt32 processType,
+                                nsIDOMDocument *domDoc)
+{
+  if (mSuspended) {
+    XMLT_ERROR("mozLineTerm::Open: Error - LineTerm %d is suspended\n",
+               mLTerm);
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString aCookie;
+  return OpenAux(command, promptRegexp, options, processType, domDoc,
+                 nsnull, aCookie);
+}
+
+
+/** Open LineTerm, with an Observer for callback to process new input/output
+ */
+NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
+                                   const PRUnichar *promptRegexp,
+                                   PRInt32 options, PRInt32 processType,
+                                   nsIDOMDocument *domDoc,
+                                   nsIObserver* anObserver,
+                                   nsString& aCookie)
+{
+  nsresult result;
+
+  XMLT_LOG(mozLineTerm::Open,20,("\n"));
+
+  // Ensure that preferences are secure for LineTerm creation and use
+  PRBool arePrefsSecure;
+  result = ArePrefsSecure(&arePrefsSecure);
+#if 0  // Temporarily comented out
+  if (NS_FAILED(result) || !arePrefsSecure)
+    return NS_ERROR_FAILURE;
+#endif
+
+  // Ensure that document principal is secure for LineTerm creation
+  char* securePrincipal;
+  result = GetSecurePrincipal(domDoc, &securePrincipal);
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  if (strlen(securePrincipal) == 0) {
+    nsAllocator::Free(securePrincipal);
+    XMLT_ERROR("mozLineTerm::OpenAux: Error - "
+               "Failed to create LineTerm for insecure document principal\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMHTMLDocument> domHTMLDoc = do_QueryInterface(domDoc);
+  if (!domHTMLDoc)
+      return NS_ERROR_FAILURE;
+
+  // Ensure that cookie attribute of document is defined
+  nsAutoString cookiePrefix ( "xmlterm=" );
+  nsAutoString cookieStr;
+  result = domHTMLDoc->GetCookie(cookieStr);
+
+  if (NS_SUCCEEDED(result) &&
+      (cookieStr.Length() > cookiePrefix.Length()) &&
+      (cookieStr.Find(cookiePrefix) == 0)) {
+    // Cookie value already defined for document; simply copy it
+    mCookie = cookieStr;
+
+  } else {
+    // Create random session cookie
+    nsAutoString cookieValue;
+    result = mozXMLTermUtils::RandomCookie(cookieValue);
+    if (NS_FAILED(result))
+      return result;
+
+    mCookie = cookiePrefix;
+    mCookie += cookieValue;
+
+    // Set new cookie value
+    result = domHTMLDoc->SetCookie(mCookie);
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  // Return copy of cookie to caller
+  aCookie = mCookie;
+
+  mObserver = anObserver;  // non-owning reference
+
+  // Convert cookie to CString
+  char* cookieCStr = mCookie.ToNewCString();
+  XMLT_LOG(mozLineTerm::Open,22, ("mCookie=%s\n", cookieCStr));
+
+  if (anObserver != nsnull) {
+    result = lterm_open(mLTerm, NULL, cookieCStr, L"#$%>?", options,
+                        processType, mozLineTerm::Callback, (void *) this);
+  } else {
+    result = lterm_open(mLTerm, NULL, cookieCStr, L"#$%>?", options,
+                        processType, NULL, NULL);
+  }
+
+  // Free cookie CString
+  nsAllocator::Free(cookieCStr);
+
+  if (mLoggingEnabled) {
+    // Log time stamp for LineTerm open operation
+    nsAutoString timeStamp;
+    result = mozXMLTermUtils::TimeStamp(0, mLastTime, timeStamp);
+    if (NS_SUCCEEDED(result)) {
+      char* temStr = timeStamp.ToNewCString();
+      fprintf(stderr, "<TS %s> LineTerm %d opened by principal %s\n",
+              temStr, mLTerm, securePrincipal);
+      nsAllocator::Free(temStr);
+    }
+  }
+
+  if (result == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+
+/** GTK-style callback funtion for mozLineTerm object
+ */
+void mozLineTerm::Callback(gpointer data,
+                           gint source,
+                           GdkInputCondition condition)
+{
+  mozLineTerm* lineTerm = (mozLineTerm*) data;
+
+  //XMLT_LOG(mozLineTerm::Callback,50,("\n"));
+
+  PR_ASSERT(lineTerm != nsnull);
+  PR_ASSERT(lineTerm->mObserver != nsnull);
+
+  lineTerm->mObserver->Observe((nsISupports*) lineTerm, nsnull, nsnull);
+  return;
+}
+
+/** Suspends (or restores) LineTerm activity depending upon aSuspend
+ */
+NS_IMETHODIMP mozLineTerm::SuspendAux(PRBool aSuspend)
+{
+  mSuspended = aSuspend;
+  return NS_OK;
+}
+
+
+/** Close LineTerm (a Finalize method)
+ */
+NS_IMETHODIMP mozLineTerm::Close(const PRUnichar* aCookie)
+{
+  if (!mCookie.Equals(aCookie)) {
+    XMLT_ERROR("mozLineTerm::Close: Error - Cookie mismatch\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mSuspended) {
+    XMLT_ERROR("mozLineTerm::Close: Error - LineTerm %d is suspended\n",
+               mLTerm);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (lterm_close(mLTerm) == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+  mObserver = nsnull;
+}
+
+
+/** Close LineTerm (a Finalize method)
+ */
+NS_IMETHODIMP mozLineTerm::CloseAux(void)
+{
+  if (lterm_close(mLTerm) == 0) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+  mObserver = nsnull;
+}
+
+
+/** Close all LineTerm instances
+ */
+NS_IMETHODIMP mozLineTerm::CloseAllAux(void)
+{
+  lterm_close_all();
+  return NS_OK;
+}
+
+
+/** Writes a string to LTERM
+ */
+NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
+                                 const PRUnichar* aCookie)
+{
+  if (!mCookie.Equals(aCookie)) {
+    XMLT_ERROR("mozLineTerm::Write: Error - Cookie mismatch\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mSuspended) {
+    XMLT_ERROR("mozLineTerm::Write: Error - LineTerm %d is suspended\n",
+               mLTerm);
+    return NS_ERROR_FAILURE;
+  }
+
+  XMLT_LOG(mozLineTerm::Write,30,("\n"));
+
+  nsresult result;
+  UNICHAR ubuf[MAXCOL];
+  int jLen, retCode;
+  PRBool newline = false;
+
+  jLen = 0;
+  while ((jLen < MAXCOL-1) && (buf[jLen] != 0)) {
+    if (buf[jLen] == U_LINEFEED)
+      newline = true;
+
+    ubuf[jLen++] = (UNICHAR) buf[jLen];
+  }
+
+  if (jLen >= MAXCOL-1) {
+    XMLT_ERROR("mozLineTerm::Write: Error - Buffer overflow\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mLoggingEnabled && (jLen > 0)) {
+    /* Log all input to STDERR */
+    ucsprint(stderr, ubuf, jLen);
+
+    nsAutoString timeStamp;
+    result = mozXMLTermUtils::TimeStamp(60, mLastTime, timeStamp);
+
+    if (NS_SUCCEEDED(result) && (timeStamp.Length() > 0)) {
+      char* temStr = timeStamp.ToNewCString();
+      fprintf(stderr, "<TS %s>\n", temStr);
+      nsAllocator::Free(temStr);
+
+    } else if (newline) {
+      fprintf(stderr, "\n");
+    }
+  }
+
+  retCode = lterm_write(mLTerm, ubuf, jLen, LTERM_WRITE_PLAIN_INPUT);
+  if (retCode < 0)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozLineTerm::Read(PRInt32 *opcodes,
+                                PRInt32 *buf_row, PRInt32 *buf_col,
+                                const PRUnichar* aCookie,
+                                PRUnichar **_retval)
+{
+  if (!mCookie.Equals(aCookie)) {
+    XMLT_ERROR("mozLineTerm::Read: Error - Cookie mismatch\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mSuspended) {
+    XMLT_ERROR("mozLineTerm::Read: Error - LineTerm %d is suspended\n",
+               mLTerm);
+    return NS_ERROR_FAILURE;
+  }
+
+  return ReadAux(opcodes, buf_row, buf_col, _retval, nsnull);
+}
+
+
+/** Reads a line from LTERM and returns it as a string (may be null string)
+ */
+NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes,
+                                   PRInt32 *buf_row, PRInt32 *buf_col,
+                                   PRUnichar **_retval, PRUnichar **retstyle)
+{
+  UNICHAR ubuf[MAXCOL];
+  UNISTYLE ustyle[MAXCOL];
+  int cursor_row, cursor_col;
+  int retCode, j;
+
+  XMLT_LOG(mozLineTerm::ReadAux,30,("\n"));
+
+  retCode = lterm_read(mLTerm, 0, ubuf, MAXCOL-1,
+                       ustyle, opcodes,
+                       buf_row, buf_col, &cursor_row, &cursor_col);
+  if (retCode < 0)
+    return NS_ERROR_FAILURE;
+
+  if (*opcodes == 0) {
+    // Return null pointer(s)
+    *_retval = nsnull;
+
+    if (retstyle != nsnull)
+      *retstyle = nsnull;
+
+  } else {
+    // Return output string
+    mCursorRow = cursor_row;
+    mCursorColumn = cursor_col;
+
+    XMLT_LOG(mozLineTerm::Read,72,("cursor_col=%d\n", cursor_col));
+
+    int allocBytes = sizeof(PRUnichar)*(retCode + 1);
+    *_retval = (PRUnichar*) nsAllocator::Alloc(allocBytes);
+
+    for (j=0; j<retCode; j++)
+      (*_retval)[j] = (PRUnichar) ubuf[j];
+
+    // Insert null string terminator
+    (*_retval)[retCode] = 0;
+
+    if (retstyle != nsnull) {
+      // Return style array as well
+      *retstyle = (PRUnichar*) nsAllocator::Alloc(allocBytes);
+
+      for (j=0; j<retCode; j++)
+        (*retstyle)[j] = (PRUnichar) ustyle[j];
+
+      // Insert null string terminator
+      (*retstyle)[retCode] = 0;
+    }
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozLineTerm::GetCursorRow(PRInt32 *aCursorRow)
+{
+  *aCursorRow = mCursorRow;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozLineTerm::SetCursorRow(PRInt32 aCursorRow)
+{
+  if (mSuspended) {
+    XMLT_ERROR("mozLineTerm::SetCursorRow: Error - LineTerm %d is suspended\n",
+               mLTerm);
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK; // Do nothing for the moment
+}
+
+
+NS_IMETHODIMP mozLineTerm::GetCursorColumn(PRInt32 *aCursorColumn)
+{
+  *aCursorColumn = mCursorColumn;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozLineTerm::SetCursorColumn(PRInt32 aCursorColumn)
+{
+  if (mSuspended) {
+    XMLT_ERROR("mozLineTerm::SetCursorColumn: Error - LineTerm %d is suspended\n",
+               mLTerm);
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK; // Do nothing for the moment
+}
+
+
+NS_IMETHODIMP mozLineTerm::GetEchoFlag(PRBool *aEchoFlag)
+{
+  *aEchoFlag = mEchoFlag;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozLineTerm::SetEchoFlag(PRBool aEchoFlag)
+{
+  int result;
+
+  if (mSuspended) {
+    XMLT_ERROR("mozLineTerm::SetEchoFlag: Error - LineTerm %d is suspended\n",
+               mLTerm);
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aEchoFlag) {
+    result = lterm_setecho(mLTerm, 1);
+  } else {
+    result = lterm_setecho(mLTerm, 0);
+  }
+
+  if (result != 0)
+    return NS_ERROR_FAILURE;
+
+  mEchoFlag = aEchoFlag;
+  return NS_OK;
+}

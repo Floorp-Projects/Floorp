@@ -1,0 +1,239 @@
+<!-- xmlterm.html: XMLterm startup page -->
+<HTML>
+  <HEAD>
+    <TITLE>XMLterm Test Page</TITLE>
+
+  <LINK TITLE="DefaultStyle" REL="stylesheet" TYPE="text/css"
+   HREF="chrome://xmlterm/skin/xmlterm.css">
+
+    <SCRIPT language="JavaScript">
+
+      // Control display of all output elements
+      function DisplayAllOutput(flag) {
+        var outputElements = document.getElementsByName("output");
+        for (i=0; i<outputElements.length; i++) {
+          var outputElement = outputElements[i];
+          outputElement.style.display = (flag) ? "block" : "none";
+        }
+
+        var promptElements = document.getElementsByName("prompt");
+        for (i=0; i<promptElements.length; i++) {
+          promptElement = promptElements[i];
+          promptElement.style.setProperty("text-decoration",
+                                           (flag) ? "none" : "underline", "")
+        }
+        return (false);
+      }
+
+      // Click handler
+      function clickXMLTerm(name, number, arg) {
+        dump("clickXMLTerm("+name+","+number+","+arg+")\n");
+        //dump("clickXMLTerm:document.cookie="+document.cookie+"\n");
+
+        if (name === "prompt") {
+          var outputElement = document.getElementById("output"+number);
+          var promptElement = document.getElementById("prompt"+number);
+          //dump(promptElement.style.getPropertyValue("text-decoration"));
+
+          if (outputElement.style.display == "none") {
+            outputElement.style.display = "block";
+            promptElement.style.setProperty("text-decoration","none","");
+          } else {
+            outputElement.style.display = "none";
+            promptElement.style.setProperty("text-decoration","underline","");
+          }
+
+        } else if (name === "command") {
+          var commandElement = document.getElementById(name+number);
+          var command = commandElement.firstChild.data;
+          dump("command = "+command+"\n\n");
+          window.xmltermshell.SendText("\025"+command+"\n", document.cookie);
+
+        } else {
+
+          if ((number >= 0) &&
+            (window.xmltermshell.currentEntryNumber != number)) {
+            dump("NOT CURRENT COMMAND\n");
+            return (false);
+          }
+
+
+          if (name == "directory") {
+            var command = "ls: "+arg;
+            dump("command = "+command+"\n\n");
+            window.xmltermshell.SendText("\025"+command+"\n", document.cookie);
+  
+          } else if (name == "executable") {
+            var command = arg;
+            dump("command = "+command+"\n\n");
+            window.xmltermshell.SendText("\025"+command+"\n", document.cookie);
+  
+          } else if (name == "send") {
+            dump("send = "+arg+"\n");
+            window.xmltermshell.SendText(arg, document.cookie);
+  
+          } else if (name == "sendln") {
+            dump("sendln = "+arg+"\n\n");
+            window.xmltermshell.SendText("\025"+arg+"\n", document.cookie);
+  
+          } else if (name == "createln") {
+            dump("createln = "+arg+"\n\n");
+            xmltermshell.NewXMLTermWindow(arg+"\n");
+          }
+        }
+
+        return (false);
+      }
+
+      // Double Click handler
+      function dblclickXMLTerm(name, number, arg) {
+        dump("dblclickXMLTerm("+name+","+number+","+arg+")\n");
+        return (false);
+      }
+
+      // Set history buffer size
+      function SetHistory() {
+        var field = document.getElementById('HistoryValue');
+        dump("SetHistory "+field.value+"\n");
+        xmltermshell.history = field.value;
+        field.value = xmltermshell.history;
+        return (false);
+      }
+
+      // Set prompt
+      function SetPrompt() {
+        var field = document.getElementById('PromptValue');
+        dump("SetPrompt "+field.value+"\n");
+        xmltermshell.prompt = field.value;
+        return (false);
+      }
+
+      // Create new XMLTerm window
+      function CreateXMLTermWindow(firstcommand) {
+        xmltermshell.NewXMLTermWindow(firstcommand);
+        return (false);
+      }
+
+      // onLoad event handler
+      function LoadHandler() {
+        dump("xmlterm: LoadHandler ... "+window.xmltermshell+"\n");
+
+        if (window.xmltermshell) {
+           // XMLTerm already initialized
+           return (false);
+        }
+
+        dump("Trying to make an XMLTerm Shell through the component manager...\n");
+
+        var xmltshell = Components.classes["component://mozilla/xmlterm/xmltermshell"].createInstance();
+
+        dump("Interface xmltshell1 = " + xmltshell + "\n");
+
+        xmltshell = xmltshell.QueryInterface(Components.interfaces.mozIXMLTermShell);
+        dump("Interface xmltshell2 = " + xmltshell + "\n");
+
+        if (!xmltshell) {
+          dump("Failed to create XMLTerm shell\n");
+          window.close();
+          return;
+        }
+  
+        // Store the XMLTerm shell in the window
+        window.xmltermshell = xmltshell;
+
+        // Content window same as current window
+        var contentWindow = window;
+
+        // Initialize XMLTerm shell in content window with argvals
+        window.xmltermshell.Init(contentWindow, "", "");
+
+        //dump("LoadHandler:"+document.cookie+"\n");
+
+        dump("contentWindow="+contentWindow+"\n");
+        dump("document="+document+"\n");
+        dump("documentElement="+document.documentElement+"\n");
+
+        // Set focus to appropriate frame
+        contentWindow.focus();
+
+        //contentWindow.xmltermshell = xmltermshell;
+
+        //dump(contentWindow.xmltermshell);
+
+        return (false);
+
+        dump("[Main] "+window+"\n");
+        dump(window.screenX+", "+window.screenY+"\n");
+        dump(window.scrollX+", "+window.scrollY+"\n");
+        dump(window.pageXOffset+", "+window.pageYOffset+"\n");
+
+        dump("IFRAME checks\n");
+        var iframe = document.getElementById('iframe1');
+
+        dump("iframe="+iframe+"\n");
+
+        frames=document.frames;
+        dump("frames="+frames+"\n");
+        dump("frames.length="+frames.length+"\n");
+
+        framewin = frames[0];
+
+        dump("framewin="+framewin+"\n");
+        dump("framewin.document="+framewin.document+"\n");
+
+        dump(framewin.screenX+", "+framewin.screenY+"\n");
+        dump(framewin.scrollX+", "+framewin.scrollY+"\n");
+        dump(framewin.pageXOffset+", "+framewin.pageYOffset+"\n");
+
+        var body = framewin.document.getElementsByTagName("BODY")[0];
+        dump("body="+body+"\n");
+
+        var height= body.scrollHeight;
+        dump("height="+height+"\n");
+
+//        iframe.height = 800;
+//        iframe.width = 700;
+
+//        framewin.sizeToContent();
+
+        framewin.xmltshell = xmltshell;
+        dump(framewin.xmltshell+"\n");
+
+        dump("xmlterm: LoadHandler completed\n");
+        return (false);
+      }
+
+    </SCRIPT>
+    
+  </HEAD>
+
+  <BODY onLoad="return LoadHandler();">
+
+    <TABLE FRAME=none BORDER=0>
+      <TBODY>
+      <TR><TD ALIGN=center>
+        <FORM NAME="XMLTERM form">
+          <INPUT TYPE="button" VALUE="Show all output"
+               onClick="return DisplayAllOutput(true);">
+          <INPUT TYPE="button" VALUE="Hide all output"
+               onClick="return DisplayAllOutput(false);">
+          <INPUT TYPE="button" VALUE="New XMLterm"
+               onClick="return CreateXMLTermWindow('');">
+          <BR>
+          History Buffer Size:
+          <INPUT TYPE="text" ID="HistoryValue" VALUE="">
+          <INPUT TYPE="button" VALUE="Set"  onClick="return SetHistory();">
+        </FORM>
+    </TABLE>
+
+<!--
+    <IFRAME NAME="iframe1" SRC="file:///home/svn/xmlterm/doc/web/tem2.html"
+            FRAMEBORDER=0 WIDTH="20" HEIGHT=60>
+    </IFRAME>
+-->
+
+    <DIV CLASS="session" ID="session">
+    </DIV>
+
+  </BODY>
+</HTML>

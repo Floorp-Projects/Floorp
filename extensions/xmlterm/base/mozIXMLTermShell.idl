@@ -1,0 +1,86 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "MPL"); you may not use this file
+ * except in compliance with the MPL. You may obtain a copy of
+ * the MPL at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the MPL is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the MPL for the specific language governing
+ * rights and limitations under the MPL.
+ * 
+ * The Original Code is XMLterm.
+ * 
+ * The Initial Developer of the Original Code is Ramalingam Saravanan.
+ * Portions created by Ramalingam Saravanan <svn@xmlterm.org> are
+ * Copyright (C) 1999 Ramalingam Saravanan. All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+/* mozIXMLTermShell.idl: Javascript-accessible wrapper for mozIXMLTerminal
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+#include "mozILineTerm.idl"
+
+%{C++
+class nsILineTerm;
+class nsIDOMWindow;
+%}
+
+[scriptable, uuid(0eb82b30-43a2-11d3-8e76-006008948af5)]
+
+interface mozIXMLTermShell : nsISupports
+{
+  readonly attribute long currentEntryNumber; /* current entry (command) no. */
+  attribute long     history;                /* command history buffer count */
+  attribute wstring  prompt;                 /* HTML prompt string */
+
+  /** Initializes XMLterm in specified window
+   * @param contentWin content window object
+   * @param URL URL of document to be loaded in the window
+   *            (set to null string if document is already loaded in window)
+   * @param args argument string to be passed to XMLterm
+   *             (at the moment this just contains any initial input data)
+   */
+  void Init(in nsIDOMWindow contentWin, in wstring URL, in wstring args);
+
+  /** Finalizes (closes) XMLterm
+   */
+  void Finalize();
+  
+  /** Polls for readable data from XMLterm
+   */
+  void Poll();
+
+  /** Writes string to terminal as if the user had typed it (command input)
+   * @param buf string to be transmitted to terminal
+   * @param aCookie document.cookie string for authentication
+   */
+  void SendText(in wstring buf, in wstring cookie);
+
+  /** Opens new XMLterm window with specified args (not yet implemented)
+   * @param args argument string to be passed to XMLterm
+   *             (at the moment this just contains any initial input data)
+   */
+  void NewXMLTermWindow(in wstring args);
+
+  /** Exit browser, closing all windows (not yet implemented)
+   */ 
+  void Exit();
+};
+
+
+%{C++
+
+#define MOZXMLTERMSHELL_CID                  \
+{ /* 0eb82b31-43a2-11d3-8e76-006008948af5 */ \
+   0x0eb82b31, 0x43a2, 0x11d3,               \
+{0x8e, 0x76, 0x00, 0x60, 0x08, 0x94, 0x8a, 0xf5} }
+
+extern nsresult
+NS_NewXMLTermShell(mozIXMLTermShell** aXMLTermShell);
+%}
+

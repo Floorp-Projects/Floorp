@@ -1,0 +1,9 @@
+Known bugs
+----------
+
+10 Nov 1999
+
+
+1. Command line completion output duplicates command line
+
+2. Early use of "xls -i" does not scroll properly
