@@ -110,6 +110,8 @@ interface nsIDocShell : nsISupports
    * @param aStopActiveDoc  - Flag indicating whether loading the current
    *                          document should be stopped.
    * @param aWindowTarget   - Window target for the load.
+   * @param aTypeHint       - A hint as to the content-type of the resulting
+   *                          data.  May be null or empty if no hint.
    * @param aPostDataStream - Post data stream (if POSTing)
    * @param aHeadersStream  - Stream containing "extra" request headers...
    * @param aLoadFlags      - Flags to modify load behaviour. Flags are defined
@@ -121,6 +123,7 @@ interface nsIDocShell : nsISupports
                               in nsISupports aOwner,
                               in boolean aInheritOwner,
                               in wstring aWindowTarget,
+                              in string aTypeHint,
                               in nsIInputStream aPostDataStream,
                               in nsIInputStream aHeadersStream,
                               in unsigned long aLoadFlags,

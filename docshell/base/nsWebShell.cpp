@@ -85,6 +85,7 @@
 #include "nsIDOMRange.h"
 #include "nsIURIContentListener.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -657,6 +658,13 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
 
   nsAutoString target(aTargetSpec);
 
+  // If this is an anchor element, grab its type property to use as a hint
+  nsAutoString typeHint;
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aContent));
+  if (anchor) {
+    anchor->GetType(typeHint);
+  }
+  
   // Initialize the DocShell / Request
   if (aDocShell) {
     *aDocShell = nsnull;
@@ -678,6 +686,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsnull,             // No onwer
                             PR_TRUE,            // Inherit owner from document
                             target.get(),       // Window target
+                            NS_LossyConvertUCS2toASCII(typeHint).get(),
                             aPostDataStream,    // Post data stream
                             aHeadersDataStream, // Headers stream
                             LOAD_LINK,          // Load type
@@ -1053,6 +1062,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                          nsnull,                            // Owner
                          PR_TRUE,                           // Inherit owner
                          nsnull,                            // No window target
+                         nsnull,                            // No type hint
                          inputStream,                       // Post data stream
                          nsnull,                            // No headers stream
                          LOAD_RELOAD_BYPASS_PROXY_AND_CACHE,// Load type
