@@ -185,8 +185,7 @@ nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType,
           nsCAutoString spec;
           rv = aURL->GetSpec(spec);
           if (NS_SUCCEEDED(rv)) {
-              static NS_DEFINE_CID(kSTDURLCID, NS_STANDARDURL_CID);    
-              proxyUri = do_CreateInstance(kSTDURLCID, &rv);
+              proxyUri = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
           }
           if (NS_SUCCEEDED(rv))
               rv = proxyUri->SetSpec(spec);
