@@ -955,9 +955,12 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
       nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
       nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(0));
       nsBorderEdge *topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(0));
-      leftBorder->mLength = rowRect.height + topBorder->mWidth;
-      topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(lastColIndex));
-      rightBorder->mLength = rowRect.height + topBorder->mWidth;
+      if (leftBorder)
+        leftBorder->mLength = rowRect.height + topBorder->mWidth;
+      if (topBorder)
+        topBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(lastColIndex));
+      if (rightBorder)
+        rightBorder->mLength = rowRect.height + topBorder->mWidth;
     }
   }
 
@@ -979,12 +982,20 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
       nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(lastRowIndex));
       nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(lastRowIndex));
       nsBorderEdge *bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(0));
-      leftBorder->mLength = rowRect.height + bottomBorder->mWidth;
-      bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(lastColIndex));
-      rightBorder->mLength = rowRect.height + bottomBorder->mWidth;
+      if (leftBorder)
+        leftBorder->mLength = rowRect.height + bottomBorder->mWidth;
+      if (bottomBorder)
+        bottomBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_BOTTOM].ElementAt(lastColIndex));
+      if (rightBorder)
+        rightBorder->mLength = rowRect.height + bottomBorder->mWidth;
     }
   }
-
+  //XXX this won't work if the constants are redefined, too bad
+  for (PRInt32 borderX = NS_SIDE_TOP; borderX <= NS_SIDE_LEFT; borderX++) {
+    if (!mBorderEdges.mEdges[borderX].ElementAt(0)) {
+      mBorderEdges.mEdges[borderX].AppendElement(new nsBorderEdge());
+    }
+  }
 }
 
 
@@ -1037,9 +1048,7 @@ void nsTableFrame::ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext
 
   // compute all the collapsing border values for the entire table
   // XXX: we have to make this more incremental!
-  const nsStyleTable *tableStyle=nsnull;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  if (NS_STYLE_BORDER_COLLAPSE!=tableStyle->mBorderCollapse)
+  if (NS_STYLE_BORDER_COLLAPSE != GetBorderCollapseStyle())
     return;
   
   PRInt32 colCount = mCellMap->GetColCount();
@@ -1081,6 +1090,8 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
   }
   // "border" is the border segment we are going to set
   nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
+  if (!border) 
+    return;
 
   // collect all the incident frames and compute the dominant border 
   nsVoidArray styles;
@@ -1299,6 +1310,8 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
   }
   // "border" is the border segment we are going to set
   nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
+  if (!border) 
+    return;
 
   // collect all the incident frames and compute the dominant border 
   nsVoidArray styles;
@@ -1358,12 +1371,14 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
   if (0==aColIndex)
   { // if we're the first column, factor in the thickness of the left table border
     nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
-    border->mLength += leftBorder->mWidth;
+    if (leftBorder) 
+      border->mLength += leftBorder->mWidth;
   }
   if ((mCellMap->GetColCount()-1)==aColIndex)
   { // if we're the last column, factor in the thickness of the right table border
     nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(0));
-    border->mLength += rightBorder->mWidth;
+    if (rightBorder) 
+      border->mLength += rightBorder->mWidth;
   }
   if (nsnull!=cellFrame)
   {
@@ -1501,12 +1516,14 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
     if (0==aColIndex)
     { // if we're the first column, factor in the thickness of the left table border
       nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(rowCount-1));
-      tableBorder->mLength += leftBorder->mWidth;
+      if (leftBorder) 
+        tableBorder->mLength += leftBorder->mWidth;
     }
     if (lastColIndex==aColIndex)
     { // if we're the last column, factor in the thickness of the right table border
       nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(rowCount-1));
-      tableBorder->mLength += rightBorder->mWidth;
+      if (rightBorder) 
+        tableBorder->mLength += rightBorder->mWidth;
     }
   }
   else
@@ -1988,8 +2005,6 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
         (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
       const nsStyleColor* color =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleTable* tableStyle =
-        (const nsStyleTable*)mStyleContext->GetStyleData(eStyleStruct_Table);
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
         
@@ -2006,7 +2021,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
         }
       }
       PRIntn skipSides = GetSkipSides();
-      if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
+      if (NS_STYLE_BORDER_SEPARATE == GetBorderCollapseStyle())
       {
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *spacing, mStyleContext, skipSides);
@@ -3855,9 +3870,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
   mColumnWidthsSet=PR_TRUE;
 
   // if collapsing borders, compute the top and bottom edges now that we have column widths
-  const nsStyleTable* tableStyle =
-    (const nsStyleTable*)mStyleContext->GetStyleData(eStyleStruct_Table);
-  if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse)
+  if (NS_STYLE_BORDER_COLLAPSE == GetBorderCollapseStyle())
   {
     ComputeHorizontalCollapsingBorders(aPresContext, 0, mCellMap->GetRowCount()-1);
   }
@@ -4023,14 +4036,16 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
       if (rowGroupFrame->RowsDesireExcessSpace()) {
         nsRect newRowRect(rowRect.x, y, rowRect.width, excessForRow+rowRect.height);
         rowFrame->SetRect(newRowRect);
-        if (NS_STYLE_BORDER_COLLAPSE==aTableStyle->mBorderCollapse)
+        if (NS_STYLE_BORDER_COLLAPSE == GetBorderCollapseStyle())
         {
           nsBorderEdge *border = (nsBorderEdge *)
             (mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
-          border->mLength=newRowRect.height;
+          if (border)
+            border->mLength=newRowRect.height;
           border = (nsBorderEdge *)
             (mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
-          border->mLength=newRowRect.height;
+          if (border) 
+            border->mLength=newRowRect.height;
         }
         // better if this were part of an overloaded row::SetRect
         y += excessForRow+rowRect.height;
@@ -4773,11 +4788,14 @@ void nsTableFrame::GetTableBorderAt(nsMargin &aBorder, PRInt32 aRowIndex, PRInt3
 		if (border) {
 			aBorder.left = border->mWidth;
 			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
-			aBorder.right = border->mWidth;
+      if (border)
+			  aBorder.right = border->mWidth;
 			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
-			aBorder.top = border->mWidth;
+      if (border)
+			  aBorder.top = border->mWidth;
 			border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_TOP].ElementAt(aColIndex));
-			aBorder.bottom = border->mWidth;
+      if (border)
+			  aBorder.bottom = border->mWidth;
 		}
   }
   else
@@ -4823,9 +4841,14 @@ void nsTableFrame::GetTableBorderForRowGroup(nsTableRowGroupFrame * aRowGroupFra
 
 PRUint8 nsTableFrame::GetBorderCollapseStyle()
 {
+// XXX change this once border-collapse is tested fully
+//#ifdef BORDER_COLLAPSE_IS_READY
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   return tableStyle->mBorderCollapse;
+//#else
+//  return NS_STYLE_BORDER_SEPARATE;
+//#endif
 }
 
 
@@ -5617,3 +5640,5 @@ PRBool nsTableFrame::ColHasSpanningCells(PRInt32 aColIndex)
   return result;
 }
 #endif
+
+
