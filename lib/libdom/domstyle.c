@@ -83,6 +83,7 @@ DOM_DestroyStyleDatabase(JSContext *cx, DOM_StyleDatabase *db)
 #include "structs.h"
 #include "layout.h"
 #include "laystyle.h"
+#include "proto.h"
 #define IMAGE_DEF_ANCHOR_BORDER         2
 #define IMAGE_DEF_VERTICAL_SPACE	0
 
@@ -137,7 +138,7 @@ DOM_StyleDatabaseFromContext(JSContext *cx)
     visitCol.red = STATE_VISITED_ANCHOR_RED(state);
     visitCol.green = STATE_VISITED_ANCHOR_GREEN(state);
     visitCol.blue = STATE_VISITED_ANCHOR_BLUE(state);
-    top_state->style_db = db;
+    top->style_db = db;
 
     sel = DOM_StyleFindSelectorFull(cx, db, NULL, SELECTOR_TAG,
                                     "A", NULL, "link");
@@ -205,7 +206,7 @@ DOM_StyleDatabaseFromContext(JSContext *cx)
  error:
     LO_UnlockLayout();
     if (db)
-        DOM_DestroyStyleDatabase(db);
+        DOM_DestroyStyleDatabase(cx, db);
     return NULL;
 }
 #endif /* MOZILLA_CLIENT */
