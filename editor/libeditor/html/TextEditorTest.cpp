@@ -78,7 +78,7 @@ nsresult TextEditorTest::InitDoc()
 {
   nsresult result = mTextEditor->SelectAll();
   TEST_RESULT(result);
-  result = mTextEditor->DeleteSelection(nsIEditor::eLTR);
+  result = mTextEditor->DeleteSelection(nsIEditor::eDeleteRight);
   TEST_RESULT(result);
   return result;
 }

@@ -67,7 +67,11 @@ class nsString;
 class nsIEditor  : public nsISupports{
 public:
 
-  typedef enum {eLTR=0, eRTL=1} Direction;
+  typedef enum {
+    eDoNothing,
+    eDeleteRight,
+    eDeleteLeft
+  } ECollapsedSelectionAction;
 
   static nsString& GetTextNodeTag();
 
@@ -207,10 +211,11 @@ public:
 
   /** 
    * DeleteSelection removes all nodes in the current selection.
-   * @param aDir  if eLTR, delete to the right (for example, the DEL key)
-   *              if eRTL, delete to the left (for example, the BACKSPACE key)
+   * @param aAction: direction to delete if selection is collapsed:
+   *    if eDeleteRight, delete to the right (for example, the DEL key)
+   *    if DeleteLeft, delete to the left (for example, the BACKSPACE key)
    */
-  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir)=0;
+  NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)=0;
 
   /** 
    * DeleteSelectionAndCreateNode combines DeleteSelection and CreateNode

@@ -37,8 +37,8 @@
 
 class nsIFrame;
 
-const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
-const static char* kMOZEditorBogusNodeValue="TRUE";
+//const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
+//const static char* kMOZEditorBogusNodeValue="TRUE";
 const unsigned char nbsp = 160;
 
 static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
@@ -212,7 +212,7 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kInsertBreak:
       return WillInsertBreak(aSelection, aCancel);
     case kDeleteSelection:
-      return WillDeleteSelection(aSelection, info->dir, aCancel);
+      return WillDeleteSelection(aSelection, info->collapsedAction, aCancel);
   }
   return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel);
 }
@@ -275,7 +275,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
   if (NS_FAILED(res)) return res;
   if (!bCollapsed)
   {
-    res = mEditor->DeleteSelection(nsIEditor::eLTR);
+    res = mEditor->DeleteSelection(nsIEditor::eDoNothing);
     if (NS_FAILED(res)) return res;
   }
   
@@ -331,7 +331,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
 
 
 nsresult
-nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Direction aDir, PRBool *aCancel)
+nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECollapsedSelectionAction aAction, PRBool *aCancel)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
@@ -361,7 +361,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
       if (NS_FAILED(res)) return res;
     
       // at beginning of text node and backspaced?
-      if (!offset && (aDir == nsIEditor::eRTL))
+      if (!offset && (aAction == nsIEditor::eDeleteLeft))
       {
         nsCOMPtr<nsIDOMNode> priorNode;
         res = GetPriorNode(node, getter_AddRefs(priorNode));
@@ -425,7 +425,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
       }
     
       // at end of text node and deleted?
-      if ((offset == strLength) && (aDir == nsIEditor::eLTR))
+      if ((offset == strLength) && (aAction == nsIEditor::eDeleteRight))
       {
         nsCOMPtr<nsIDOMNode> nextNode;
         res = GetNextNode(node, getter_AddRefs(nextNode));
@@ -528,7 +528,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
 	  {
 	    // first delete the selection
         *aCancel = PR_TRUE;
-        res = mEditor->nsEditor::DeleteSelection(aDir);
+        res = mEditor->nsEditor::DeleteSelection(aAction);
         if (NS_FAILED(res)) return res;
 	    // then join para's, insert break
         res = JoinNodeDeep(leftParent,rightParent,aSelection);
@@ -541,7 +541,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::Dir
 	  {
 	    // first delete the selection
         *aCancel = PR_TRUE;
-        res = mEditor->nsEditor::DeleteSelection(aDir);
+        res = mEditor->nsEditor::DeleteSelection(aAction);
         if (NS_FAILED(res)) return res;
 	    // join blocks
         res = JoinNodeDeep(leftParent,rightParent,aSelection);

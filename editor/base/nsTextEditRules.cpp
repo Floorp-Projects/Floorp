@@ -304,7 +304,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
     mEditor->GetDocument(getter_AddRefs(doc));  
     nsCOMPtr<nsIDOMNodeList>nodeList;
     nsAutoString bodyTag = "body";
-    nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
       PRUint32 count;
@@ -410,7 +410,7 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
   {
     nsCOMPtr<nsIDOMNode>anchor;
     PRInt32 offset;
-    nsresult result = aSelection->GetAnchorNode(getter_AddRefs(anchor));
+    result = aSelection->GetAnchorNode(getter_AddRefs(anchor));
     if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
     {
       nsCOMPtr<nsIDOMCharacterData>anchorAsText;
@@ -486,7 +486,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
     mEditor->GetDocument(getter_AddRefs(doc));  
     nsCOMPtr<nsIDOMNodeList>nodeList;
     nsAutoString bodyTag = "body";
-    nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
       PRUint32 count;
@@ -552,7 +552,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
     {
       nsCOMPtr<nsIDOMNode>anchor;
       PRInt32 offset;
-		  nsresult result = aSelection->GetAnchorNode(getter_AddRefs(anchor));
+		  result = aSelection->GetAnchorNode(getter_AddRefs(anchor));
 		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
       {
         nsCOMPtr<nsIDOMNodeList> anchorChildren;
@@ -639,7 +639,7 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
     {
       nsCOMPtr<nsIDOMNode>node;
       PRInt32 offset;
-		  nsresult result = aSelection->GetAnchorNode(getter_AddRefs(node));
+		  result = aSelection->GetAnchorNode(getter_AddRefs(node));
 		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && node)
       {
         nsCOMPtr<nsIDOMElement>element;
@@ -685,7 +685,7 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
     {
       nsCOMPtr<nsIDOMNode>node;
       PRInt32 offset;
-		  nsresult result = aSelection->GetAnchorNode(getter_AddRefs(node));
+		  result = aSelection->GetAnchorNode(getter_AddRefs(node));
 		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && node)
       {
         nsCOMPtr<nsIDOMElement>element;

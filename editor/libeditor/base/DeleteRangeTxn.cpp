@@ -126,7 +126,7 @@ NS_IMETHODIMP DeleteRangeTxn::Do(void)
   else
   { // the selection ends in a different node from where it started
     // delete the relevant content in the start node
-    result = CreateTxnsToDeleteContent(mStartParent, mStartOffset, nsIEditor::eLTR);
+    result = CreateTxnsToDeleteContent(mStartParent, mStartOffset, nsIEditor::eDeleteRight);
     if (NS_SUCCEEDED(result))
     {
       // delete the intervening nodes
@@ -134,7 +134,7 @@ NS_IMETHODIMP DeleteRangeTxn::Do(void)
       if (NS_SUCCEEDED(result))
       {
         // delete the relevant content in the end node
-        result = CreateTxnsToDeleteContent(mEndParent, mEndOffset, nsIEditor::eRTL);
+        result = CreateTxnsToDeleteContent(mEndParent, mEndOffset, nsIEditor::eDeleteLeft);
       }
     }
   }
@@ -284,7 +284,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent
 
 NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
                                                         PRUint32    aOffset, 
-                                                        nsIEditor::Direction aDir)
+                                                        nsIEditor::ECollapsedSelectionAction aAction)
 {
   nsresult result;
   // see what kind of node we have
@@ -293,7 +293,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
   if (textNode)
   { // if the node is a text node, then delete text content
     PRUint32 start, numToDelete;
-    if (nsIEditor::eLTR==aDir)
+    if (nsIEditor::eDeleteRight == aAction)
     {
       start=aOffset;
       textNode->GetLength(&numToDelete);

@@ -63,7 +63,7 @@ public:
                              const nsString *aValue,
                              PRBool &aFirst, PRBool &aAny, PRBool &aAll);
   NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute);
-  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
+  NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
   NS_IMETHOD InsertBreak();
   NS_IMETHOD CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode);

@@ -170,11 +170,11 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     {
       switch(keyCode) {
       case nsIDOMEvent::VK_BACK:
-        mEditor->DeleteSelection(nsIEditor::eRTL);
+        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
         break;
 
       case nsIDOMEvent::VK_DELETE:
-        mEditor->DeleteSelection(nsIEditor::eLTR);
+        mEditor->DeleteSelection(nsIEditor::eDeleteRight);
         break;
 
       case nsIDOMEvent::VK_RETURN:

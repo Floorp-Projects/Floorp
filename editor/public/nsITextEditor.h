@@ -103,7 +103,7 @@ public:
    * @param aDir  if eLTR, delete to the right (for example, the DEL key)
    *              if eRTL, delete to the left (for example, the BACKSPACE key)
    */
-  NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir)=0;
+  NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)=0;
 
   /**
    * InsertText() Inserts a string at the current location, given by the selection.
