@@ -61,6 +61,7 @@ protected:
   PRBool GetNoShade();
   PRInt32 GetThickness();
 
+  nsMargin mBorderPadding;
   nscoord mComputedWidth;
 };
 
@@ -102,16 +103,12 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   nscoord thickness = NSIntPixelsToTwips(GetThickness(), p2t);
 
   // Get style data
-  const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin borderPadding;
-  spacing->CalcBorderPaddingFor(this, borderPadding);
-  nscoord x0 = borderPadding.left;
-  nscoord y0 = borderPadding.top;
+  nscoord x0 = mBorderPadding.left;
+  nscoord y0 = mBorderPadding.top;
   nscoord width = mRect.width -
-    (borderPadding.left + borderPadding.right);
+    (mBorderPadding.left + mBorderPadding.right);
   nscoord height = mRect.height -
-    (borderPadding.top + borderPadding.bottom);
+    (mBorderPadding.top + mBorderPadding.bottom);
 
   nscoord newWidth = mComputedWidth;
   if (newWidth < width) {
@@ -231,7 +228,8 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
 
 
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
-  AddBordersAndPadding(&aPresContext, aDesiredSize);
+  AddBordersAndPadding(&aPresContext, aReflowState, aDesiredSize,
+                       mBorderPadding);
 
   // HR's do not impact the max-element-size, unless a width is specified
   // otherwise tables behave badly. This makes sense they are springy.
