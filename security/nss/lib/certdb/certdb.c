@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.5 2001/01/07 08:12:48 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.6 2001/01/19 07:53:44 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1999,6 +1999,31 @@ CERT_AddCertToListTail(CERTCertList *certs, CERTCertificate *cert)
     }
     
     PR_INSERT_BEFORE(&node->links, &certs->list);
+    /* certs->count++; */
+    node->cert = cert;
+    return(SECSuccess);
+    
+loser:
+    return(SECFailure);
+}
+
+SECStatus
+CERT_AddCertToListHead(CERTCertList *certs, CERTCertificate *cert)
+{
+    CERTCertListNode *node;
+    CERTCertListNode *head;
+    
+    head = CERT_LIST_HEAD(certs);
+
+    if (head == NULL) return CERT_AddCertToListTail(certs,cert);
+
+    node = (CERTCertListNode *)PORT_ArenaZAlloc(certs->arena,
+						sizeof(CERTCertListNode));
+    if ( node == NULL ) {
+	goto loser;
+    }
+    
+    PR_INSERT_BEFORE(&node->links, &head->links);
     /* certs->count++; */
     node->cert = cert;
     return(SECSuccess);

@@ -127,6 +127,7 @@ NSS_CMSSignerInfo_GetVersion;
 NSS_CMSSignerInfo_IncludeCerts;
 NSS_CMSUtil_VerificationStatusToString;
 NSS_SMIMEUtil_FindBulkAlgForRecipients;
+CERT_DecodeCertPackage;
 SEC_PKCS7AddRecipient;
 SEC_PKCS7AddSigningTime;
 SEC_PKCS7ContentType;
