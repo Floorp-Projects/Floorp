@@ -78,6 +78,7 @@ nsImageGTK::nsImageGTK()
   mNaturalHeight = 0;
   mIsSpacer = PR_TRUE;
   mPendingUpdate = PR_FALSE;
+  mOptimized = PR_FALSE;
 
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::nsImageGTK(this=%p)\n",
@@ -1740,6 +1741,33 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
 nsresult nsImageGTK::Optimize(nsIDeviceContext* aContext)
 {
+  if (!mOptimized)
+    UpdateCachedImage();
+
+  if ((gdk_rgb_get_visual()->depth > 8) && (mAlphaDepth != 8)) {
+    if(nsnull != mImageBits) {
+      delete[] mImageBits;
+      mImageBits = nsnull;
+    }
+
+    if (nsnull != mAlphaBits) {
+      delete[] mAlphaBits;
+      mAlphaBits = nsnull;
+    }
+  }
+    
+  if (mTrueAlphaBits) {
+    delete[] mTrueAlphaBits;
+    mTrueAlphaBits = nsnull;
+  }
+
+  if ((mAlphaDepth==0) && mAlphaPixmap) {
+    gdk_pixmap_unref(mAlphaPixmap);
+    mAlphaPixmap = nsnull;
+  }
+
+  mOptimized = PR_TRUE;
+
   return NS_OK;
 }
 
@@ -1748,6 +1776,48 @@ nsresult nsImageGTK::Optimize(nsIDeviceContext* aContext)
 NS_IMETHODIMP
 nsImageGTK::LockImagePixels(PRBool aMaskPixels)
 {
+  if (mOptimized && mImagePixmap) {
+    Display *display = GDK_WINDOW_XDISPLAY(mImagePixmap);
+    Colormap colormap = GDK_COLORMAP_XCOLORMAP(gdk_rgb_get_cmap());
+    XImage *ximage, *xmask=0;
+    XColor color;
+
+    ximage = XGetImage(GDK_WINDOW_XDISPLAY(mImagePixmap),
+                       GDK_WINDOW_XWINDOW(mImagePixmap),
+                       0, 0, mWidth, mHeight,
+                       AllPlanes, ZPixmap);
+
+    if ((mAlphaDepth==1) && mAlphaPixmap)
+      xmask = XGetImage(GDK_WINDOW_XDISPLAY(mAlphaPixmap),
+                        GDK_WINDOW_XWINDOW(mAlphaPixmap),
+                        0, 0, mWidth, mHeight,
+                        AllPlanes, XYPixmap);
+
+    mImageBits = (PRUint8*) new PRUint8[mSizeImage];
+
+    /* read back the image in the slowest (but simplest) way possible... */
+    for (PRInt32 y=0; y<mHeight; y++) {
+      PRUint8 *target = mImageBits + y*mRowBytes;
+      for (PRInt32 x=0; x<mWidth; x++) {
+        if (xmask && !XGetPixel(xmask, x, y)) {
+          *target++ = 0xFF;
+          *target++ = 0xFF;
+          *target++ = 0xFF;
+        } else {
+          color.pixel = XGetPixel(ximage, x, y);
+          XQueryColor(display, colormap, &color);
+          *target++ = color.red>>8;
+          *target++ = color.green>>8;
+          *target++ = color.blue>>8;
+        }
+      }
+    }
+    
+    XDestroyImage(ximage);
+    if (xmask)
+      XDestroyImage(xmask);
+  }
+
   return NS_OK;
 }
 
@@ -1756,6 +1826,9 @@ nsImageGTK::LockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsImageGTK::UnlockImagePixels(PRBool aMaskPixels)
 {
+  if (mOptimized)
+    Optimize(nsnull);
+
   return NS_OK;
 } 
 
