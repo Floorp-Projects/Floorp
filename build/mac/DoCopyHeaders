@@ -26,8 +26,6 @@
 # " the end" and hit the Enter key.
 # 
 # Known bugs:
-# 	Header files are always copied if the export.mac file contains
-#	non-local paths.
 #	Spurious output is produced even when verbose is off.
 #
 
