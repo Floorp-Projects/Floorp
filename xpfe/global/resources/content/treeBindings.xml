@@ -373,8 +373,6 @@
     </handlers>
   </binding>
  
-  
-              
   <binding id="listbox" extends="xul:tree">
     <content>
       <xul:cols>

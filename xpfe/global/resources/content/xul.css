@@ -259,6 +259,10 @@ tree {
  -moz-binding: url("chrome://global/content/treeBindings.xml#tree");
 }
 
+treecol {
+  min-width: 16px;
+}
+
 tree > treechildren {
  -moz-binding: url("chrome://global/content/treeBindings.xml#treerows");
  overflow: auto;
