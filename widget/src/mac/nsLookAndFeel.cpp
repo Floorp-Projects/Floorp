@@ -95,7 +95,42 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     		else
 	        aColor = NS_RGB(0xff,0xff,0xff);
         break;
+
+    case eColor_activeborder:
+    case eColor_activecaption:
+    case eColor_appworkspace:
+    case eColor_background:
+    case eColor_buttonface:
+    case eColor_buttonhighlight:
+    case eColor_buttonshadow:
+    case eColor_buttontext:
+    case eColor_captiontext:
+    case eColor_graytext:
+    case eColor_highlight:
+    case eColor_highlighttext:
+    case eColor_inactiveborder:
+    case eColor_inactivecaption:
+    case eColor_inactivecaptiontext:
+    case eColor_infobackground:
+    case eColor_infotext:
+    case eColor_menu:
+    case eColor_menutext:
+    case eColor_scrollbar:
+    case eColor_threeddarkshadow:
+    case eColor_threedface:
+    case eColor_threedhighlight:
+    case eColor_threedlightshadow:
+    case eColor_threedshadow:
+    case eColor_window:
+    case eColor_windowframe:
+    case eColor_windowtext:
+        NS_NOTYETIMPLEMENTED("Native system colors not yet implemented");
+        aColor = NS_RGB(0xff,0xff,0xff);
+        res = NS_ERROR_FAILURE;
+        break;
+
     default:
+        NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
         aColor = NS_RGB(0xff,0xff,0xff);
         res = NS_ERROR_FAILURE;
         break;
