@@ -100,16 +100,16 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)
 
 NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
 {
+  *aResult = nsnull;
   nsIFrame* frame = GetFrame();
   if (!frame)
     return NS_OK;
 
   nsIMenuFrame* menuFrame;
   CallQueryInterface(frame, &menuFrame);
-  if (!menuFrame)
-    return NS_OK;
-
-  return menuFrame->GetActiveChild(aResult);
+  if (menuFrame)
+    menuFrame->GetActiveChild(aResult);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
@@ -120,10 +120,11 @@ NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
 
   nsIMenuFrame* menuFrame;
   CallQueryInterface(frame, &menuFrame);
-  if (!menuFrame)
-    return NS_OK;
-
-  return menuFrame->SetActiveChild(aResult);
+  if (menuFrame) {
+    menuFrame->MarkAsGenerated();
+    menuFrame->SetActiveChild(aResult);
+  }
+  return NS_OK;
 }
 
 /* boolean handleKeyPress (in nsIDOMKeyEvent keyEvent); */
