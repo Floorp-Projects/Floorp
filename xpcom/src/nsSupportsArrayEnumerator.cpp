@@ -80,7 +80,6 @@ nsSupportsArrayEnumerator::CurrentItem(nsISupports **aItem)
   NS_ASSERTION(aItem, "null out parameter");
   if (mCursor >= 0 && mCursor < (PRInt32)mArray->Count()) {
     *aItem = (*mArray)[mCursor];
-    NS_IF_ADDREF(*aItem);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
