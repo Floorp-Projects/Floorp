@@ -184,7 +184,10 @@ public class NativeRegExp extends IdScriptable implements Function {
         }
 
         CompilerState state = new CompilerState(this.source, length, flags, cx, scope);
-        if (flat) {
+        if (flat && (length > 0)) {
+if (debug) {
+System.out.println("flat = \"" + str + "\"");
+}
             state.result = new RENode(REOP_FLAT);
             state.result.chr = state.cpbegin[0];
             state.result.length = length;
@@ -1192,7 +1195,7 @@ System.out.println();
 
     private int GET_OFFSET(int pc)
     {
-        return (program[pc] << 8) | (program[pc + 1] & 0xFF);
+        return ((program[pc] & 0xFF) << 8) | (program[pc + 1] & 0xFF);
     }
 
     private int GET_ARG(int pc)
@@ -1690,12 +1693,12 @@ System.out.println();
                     continue;
                 case 's':
                     for (i = (int)(charSet.length); i >= 0; i--)
-                        if (Character.isWhitespace((char)i))
+                        if (Character.isSpaceChar((char)i))
                             addCharacterToCharSet(charSet, (char)(i));
                     continue;
                 case 'S':
                     for (i = (int)(charSet.length); i >= 0; i--)
-                        if (!Character.isWhitespace((char)i))
+                        if (!Character.isSpaceChar((char)i))
                             addCharacterToCharSet(charSet, (char)(i));
                     continue;
                 case 'w':
@@ -1841,7 +1844,7 @@ System.out.println("Input = \"" + new String(gData.cpbegin) + "\", start at " + 
             break;
         case REOP_FLAT1:
         case REOP_FLAT1i:
-            anchorCh = (char)program[pc];
+            anchorCh = (char)(program[pc] & 0xFF);
             anchor = true;
             break;
         case REOP_FLAT:        
@@ -1957,7 +1960,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 break;
             case REOP_SPACE:
                 if (x.cp != gData.cpend 
-                            && Character.isWhitespace(gData.cpbegin[x.cp])) {
+                            && Character.isSpaceChar(gData.cpbegin[x.cp])) {
                     result = x;
                     result.cp++;
                 }
@@ -1966,7 +1969,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 break;
             case REOP_NONSPACE:
                 if (x.cp != gData.cpend 
-                            && !Character.isWhitespace(gData.cpbegin[x.cp])) {
+                            && !Character.isSpaceChar(gData.cpbegin[x.cp])) {
                     result = x;
                     result.cp++;
                 }
@@ -2004,11 +2007,11 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 result = flatNIMatcher(gData, x, offset, length);
                 break;
             case REOP_FLAT1:
-                matchCh = (char)program[pc++];
+                matchCh = (char)(program[pc++] & 0xFF);
                 result = flatMatcher(gData, x, matchCh);
                 break;
             case REOP_FLAT1i:
-                matchCh = (char)program[pc++];
+                matchCh = (char)(program[pc++] & 0xFF);
                 result = flatIMatcher(gData, x, matchCh);
                 break;
             case REOP_UCFLAT1:
@@ -2613,8 +2616,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     parstr = parsub.toString();
                     obj.put(num+1, obj, parstr);
                 }
-                else
-                    obj.put(num+1, obj, Undefined.instance);
+                else {
+                    if (matchType != TEST)
+                        obj.put(num+1, obj, Undefined.instance);
+                }
             }
             res.lastParen = parsub;
         }
