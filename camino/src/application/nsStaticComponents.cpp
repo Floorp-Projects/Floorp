@@ -77,6 +77,7 @@ DECL_NSGETMODULE(nsXMLExtrasModule)
 DECL_NSGETMODULE(nsUniversalCharDetModule)
 DECL_NSGETMODULE(nsTypeAheadFind)
 DECL_NSGETMODULE(TransformiixModule)
+DECL_NSGETMODULE(nsComposerModule)
 DECL_NSGETMODULE(BOOT)
 DECL_NSGETMODULE(NSS)
 #line 52 "nsStaticComponents.cpp.in"
@@ -116,6 +117,7 @@ MODULE(nsXMLExtrasModule),
 MODULE(nsUniversalCharDetModule),
 MODULE(nsTypeAheadFind),
 MODULE(TransformiixModule),
+MODULE(nsComposerModule),
 MODULE(BOOT),
 MODULE(NSS),
 #line 60 "nsStaticComponents.cpp.in"
