@@ -71,7 +71,7 @@ static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 extern "C" char * strsignal(int);
 #endif
 
-#ifdef NTO
+#ifdef MOZ_WIDGET_PHOTON
 #include <photon/PhProto.h>
 #include <sys/mman.h>			/* for munlockall() */
 #endif
@@ -83,7 +83,7 @@ static char _progname[1024] = "huh?";
 #define CRAWL_STACK_ON_SIGSEGV
 #endif
  
-#ifdef NTO
+#ifdef MOZ_WIDGET_PHOTON
 void abnormal_exit_handler(int signum)
 {
   /* Free any shared memory that has been allocated */
@@ -173,7 +173,7 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 
   PL_strncpy(_progname,ProgramName, (sizeof(_progname)-1) );
 
-#if defined(NTO)
+#if defined(MOZ_WIDGET_PHOTON)
  /* Neutrino need this to free shared memory in case of a crash */
   signal(SIGTERM, abnormal_exit_handler);
   signal(SIGQUIT, abnormal_exit_handler);
