@@ -726,6 +726,8 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (!js_GetLengthProperty(cx, obj, &len))
 	return JS_FALSE;
+    if (len == 0)
+        return JS_TRUE;
     vec = (jsval *) JS_malloc(cx, (size_t) len * sizeof(jsval));
     if (!vec)
 	return JS_FALSE;
