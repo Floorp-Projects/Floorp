@@ -146,7 +146,10 @@ ifeq (,$(filter-out Linux FreeBSD IRIX,$(OS_ARCH)))
 endif
 
 ifeq ($(OS_ARCH),Linux)
-    OS_RELEASE := $(basename $(OS_RELEASE))
+    OS_RELEASE := $(subst ., ,$(OS_RELEASE))
+    ifneq ($(words $(OS_RELEASE)),1)
+	OS_RELEASE := $(word 1,$(OS_RELEASE)).$(word 2,$(OS_RELEASE))
+    endif
 endif
 
 #
