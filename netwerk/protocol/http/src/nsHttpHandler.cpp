@@ -284,6 +284,22 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     return request->SetHeader(nsHttp::Connection, connectionType);
 }
 
+PRBool
+nsHttpHandler::IsAcceptableEncoding(const char *enc)
+{
+    if (!enc)
+        return PR_FALSE;
+
+    // HTTP 1.1 allows servers to send x-gzip and x-compress instead
+    // of gzip and compress, for example.  So, we'll always strip off
+    // an "x-" prefix before matching the encoding to one we claim
+    // to accept.
+    if (!PL_strncasecmp(enc, "x-", 2))
+        enc += 2;
+    
+    return PL_strcasestr(mAcceptEncodings, enc) != nsnull;
+}
+
 nsresult
 nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
                                nsICacheSession **result)
