@@ -255,7 +255,7 @@ if (Param("useqacontact")) {
     print "
   <TR>
     <TD ALIGN=\"RIGHT\"><B>QA Contact:</B>
-    <TD COLSPAN=6>
+    <TD COLSPAN=7>
       <INPUT NAME=qa_contact VALUE=\"" .
     value_quote($name) .
     "\" SIZE=60></TD>
@@ -266,11 +266,11 @@ if (Param("useqacontact")) {
 print "
   <TR>
     <TD ALIGN=\"RIGHT\">$URL
-    <TD COLSPAN=8>
+    <TD COLSPAN=7>
       <INPUT NAME=bug_file_loc VALUE=\"$bug{'bug_file_loc'}\" SIZE=60></TD>
   </TR><TR>
     <TD ALIGN=\"RIGHT\"><B>Summary:</B>
-    <TD COLSPAN=8>
+    <TD COLSPAN=7>
       <INPUT NAME=short_desc VALUE=\"" .
     value_quote($bug{'short_desc'}) .
     "\" SIZE=60></TD>
@@ -280,7 +280,7 @@ if (Param("usestatuswhiteboard")) {
     print "
   <TR>
     <TD ALIGN=\"RIGHT\"><B>Status Whiteboard:</B>
-    <TD COLSPAN=8>
+    <TD COLSPAN=7>
       <INPUT NAME=status_whiteboard VALUE=\"" .
     value_quote($bug{'status_whiteboard'}) .
     "\" SIZE=60></TD>
@@ -300,7 +300,7 @@ if (@::legal_keywords) {
     print qq{
 <TR>
 <TD ALIGN=right><B><A HREF="describekeywords.cgi">Keywords</A>:</B>
-<TD COLSPAN=8><INPUT NAME="keywords" VALUE="$value" SIZE=60></TD>
+<TD COLSPAN=7><INPUT NAME="keywords" VALUE="$value" SIZE=60></TD>
 </TR>
 };
 }
@@ -314,9 +314,9 @@ while (MoreSQLData()) {
     }
     my $link = "showattachment.cgi?attach_id=$attachid";
     $desc = value_quote($desc);
-    print qq{<td><a href="$link">$date</a></td><td colspan=4>$desc</td></tr><tr><td></td>};
+    print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc</td></tr><tr><td></td>};
 }
-print "<td colspan=8><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
+print "<td colspan=7><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 
 
 sub EmitDependList {

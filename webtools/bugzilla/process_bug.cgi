@@ -36,6 +36,7 @@ use RelationSet;
 use vars %::versions,
     %::components,
     %::COOKIE,
+    %::MFORM,
     %::keywordsbyname,
     %::legal_keywords,
     %::legal_opsys,
