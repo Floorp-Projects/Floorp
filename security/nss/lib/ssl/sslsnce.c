@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.15 2001/10/06 00:14:33 jpierre%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.16 2001/11/02 04:24:21 nelsonb%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -106,7 +106,9 @@
 */ 
 struct sidCacheEntryStr {
 /* 16 */    PRIPv6Addr  addr;	/* client's IP address */
-/*  4 */    PRUint32    time;	/* expiration time of this entry */
+/*  4 */    PRUint32    creationTime;
+/*  4 */    PRUint32    lastAccessTime;	
+/*  4 */    PRUint32    expirationTime;
 /*  2 */    PRUint16	version;
 /*  1 */    PRUint8	valid;
 /*  1 */    PRUint8     sessionIDLength;
@@ -115,7 +117,7 @@ struct sidCacheEntryStr {
 /*  2 */    PRUint16    authKeyBits;
 /*  2 */    PRUint16    keaType;
 /*  2 */    PRUint16    keaKeyBits;
-/* 64  - common header total */
+/* 72  - common header total */
 
     union {
 	struct {
@@ -385,7 +387,7 @@ CacheCert(cacheDesc * cache, CERTCertificate *cert, sidCacheEntry *sce)
 }
 
 /*
-** Convert memory based SID to file based one
+** Convert local SID to shared memory one
 */
 static void 
 ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
@@ -393,7 +395,9 @@ ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
     to->valid   = 1;
     to->version = from->version;
     to->addr    = from->addr;
-    to->time    = from->time;
+    to->creationTime    = from->creationTime;
+    to->lastAccessTime  = from->lastAccessTime;
+    to->expirationTime  = from->expirationTime;
     to->authAlgorithm	= from->authAlgorithm;
     to->authKeyBits	= from->authKeyBits;
     to->keaType		= from->keaType;
@@ -429,7 +433,7 @@ ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
 	SSL_TRC(8, ("%d: SSL: ConvertSID: masterKeyLen=%d cipherArgLen=%d "
 		    "time=%d addr=0x%08x%08x%08x%08x cipherType=%d", myPid,
 		    to->u.ssl2.masterKeyLen, to->u.ssl2.cipherArgLen,
-		    to->time, to->addr.pr_s6_addr32[0],
+		    to->creationTime, to->addr.pr_s6_addr32[0],
 		    to->addr.pr_s6_addr32[1], to->addr.pr_s6_addr32[2],
 		    to->addr.pr_s6_addr32[3], to->u.ssl2.cipherType));
     } else {
@@ -450,14 +454,14 @@ ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
 
 	SSL_TRC(8, ("%d: SSL3: ConvertSID: time=%d addr=0x%08x%08x%08x%08x "
 	            "cipherSuite=%d",
-		    myPid, to->time, to->addr.pr_s6_addr32[0],
+		    myPid, to->creationTime, to->addr.pr_s6_addr32[0],
 		    to->addr.pr_s6_addr32[1], to->addr.pr_s6_addr32[2],
 		    to->addr.pr_s6_addr32[3], to->u.ssl3.cipherSuite));
     }
 }
 
 /*
-** Convert file based cache-entry to memory based one
+** Convert shared memory cache-entry to local memory based one
 ** This is only called from ServerSessionIDLookup().
 ** Caller must hold cache lock when calling this.
 */
@@ -503,7 +507,7 @@ ConvertToSID(sidCacheEntry *from, certCacheEntry *pcce,
 	SSL_TRC(8, ("%d: SSL: ConvertToSID: masterKeyLen=%d cipherArgLen=%d "
 		    "time=%d addr=0x%08x%08x%08x%08x cipherType=%d",
 		    myPid, to->u.ssl2.masterKey.len,
-		    to->u.ssl2.cipherArg.len, to->time,
+		    to->u.ssl2.cipherArg.len, to->creationTime,
 		    to->addr.pr_s6_addr32[0], to->addr.pr_s6_addr32[1],
 		    to->addr.pr_s6_addr32[2], to->addr.pr_s6_addr32[3],
 		    to->u.ssl2.cipherType));
@@ -555,11 +559,13 @@ ConvertToSID(sidCacheEntry *from, certCacheEntry *pcce,
 	}
     }
 
-    to->version    = from->version;
-    to->time       = from->time;	/* XXX ??? is expiration time */
-    to->cached     = in_server_cache;
-    to->addr       = from->addr;
-    to->references = 1;
+    to->version         = from->version;
+    to->creationTime    = from->creationTime;
+    to->lastAccessTime  = from->lastAccessTime;
+    to->expirationTime  = from->expirationTime;
+    to->cached          = in_server_cache;
+    to->addr            = from->addr;
+    to->references      = 1;
     to->authAlgorithm	= from->authAlgorithm;
     to->authKeyBits	= from->authKeyBits;
     to->keaType		= from->keaType;
@@ -631,14 +637,14 @@ FindSID(cacheDesc *cache, PRUint32 setNum, PRUint32 now,
 	if (!sce->valid)
 	    continue;
 
-	if (now > sce->time) {
+	if (now > sce->expirationTime) {
 	    /* SessionID has timed out. Invalidate the entry. */
 	    SSL_TRC(7, ("%d: timed out sid entry addr=%08x%08x%08x%08x now=%x "
 			"time+=%x",
 			myPid, sce->addr.pr_s6_addr32[0],
 			sce->addr.pr_s6_addr32[1], sce->addr.pr_s6_addr32[2],
 			sce->addr.pr_s6_addr32[3], now,
-			sce->time + ssl_sid_timeout));
+			sce->expirationTime ));
 	    sce->valid = 0;
 	    continue;
 	}
@@ -719,13 +725,14 @@ ServerSessionIDLookup(const PRIPv6Addr *addr,
 	    }
 	}
 	if (psce) {
+	    psce->lastAccessTime = now;
 	    sce = *psce;	/* grab a copy while holding the lock */
     	}
     }
     UnlockSet(cache, set);
     if (psce) {
 	/* sce conains a copy of the cache entry.
-	** Convert file format to internal format 
+	** Convert shared memory format to local format 
 	*/
 	sid = ConvertToSID(&sce, pcce ? &cce : 0, dbHandle);
     }
@@ -751,13 +758,17 @@ ServerSessionIDCache(sslSessionID *sid)
     if (sid->cached == never_cached || sid->cached == invalid_cache) {
 	PRUint32 set;
 
+	PORT_Assert(sid->creationTime != 0 && sid->expirationTime != 0);
+	if (!sid->creationTime)
+	    sid->lastAccessTime = sid->creationTime = ssl_Time();
 	if (version < SSL_LIBRARY_VERSION_3_0) {
-	    sid->time = ssl_Time() + ssl_sid_timeout;
+	    if (!sid->expirationTime)
+		sid->expirationTime = sid->creationTime + ssl_sid_timeout;
 	    SSL_TRC(8, ("%d: SSL: CacheMT: cached=%d addr=0x%08x%08x%08x%08x time=%x "
 			"cipher=%d", myPid, sid->cached,
 			sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
 			sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
-			sid->time, sid->u.ssl2.cipherType));
+			sid->creationTime, sid->u.ssl2.cipherType));
 	    PRINT_BUF(8, (0, "sessionID:", sid->u.ssl2.sessionID,
 			  SSL2_SESSIONID_BYTES));
 	    PRINT_BUF(8, (0, "masterKey:", sid->u.ssl2.masterKey.data,
@@ -766,12 +777,13 @@ ServerSessionIDCache(sslSessionID *sid)
 			  sid->u.ssl2.cipherArg.len));
 
 	} else {
-	    sid->time = ssl_Time() + ssl3_sid_timeout;
+	    if (!sid->expirationTime)
+		sid->expirationTime = sid->creationTime + ssl3_sid_timeout;
 	    SSL_TRC(8, ("%d: SSL: CacheMT: cached=%d addr=0x%08x%08x%08x%08x time=%x "
 			"cipherSuite=%d", myPid, sid->cached,
 			sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
 			sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
-			sid->time, sid->u.ssl3.cipherSuite));
+			sid->creationTime, sid->u.ssl3.cipherSuite));
 	    PRINT_BUF(8, (0, "sessionID:", sid->u.ssl3.sessionID,
 			  sid->u.ssl3.sessionIDLength));
 	}
@@ -831,7 +843,7 @@ ServerSessionIDUncache(sslSessionID *sid)
 		    "cipher=%d", myPid, sid->cached,
 		    sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
 		    sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
-		    sid->time, sid->u.ssl2.cipherType));
+		    sid->creationTime, sid->u.ssl2.cipherType));
 	PRINT_BUF(8, (0, "sessionID:", sessionID, sessionIDLength));
 	PRINT_BUF(8, (0, "masterKey:", sid->u.ssl2.masterKey.data,
 		      sid->u.ssl2.masterKey.len));
@@ -844,7 +856,7 @@ ServerSessionIDUncache(sslSessionID *sid)
 		    "cipherSuite=%d", myPid, sid->cached,
 		    sid->addr.pr_s6_addr32[0], sid->addr.pr_s6_addr32[1],
 		    sid->addr.pr_s6_addr32[2], sid->addr.pr_s6_addr32[3],
-		    sid->time, sid->u.ssl3.cipherSuite));
+		    sid->creationTime, sid->u.ssl3.cipherSuite));
 	PRINT_BUF(8, (0, "sessionID:", sessionID, sessionIDLength));
     }
     set = SIDindex(cache, &sid->addr, sessionID, sessionIDLength);
@@ -1456,7 +1468,7 @@ ssl_GetWrappingKey( PRInt32                   symWrapMechIndex,
 }
 
 /* The caller passes in the new value it wants
- * to set.  This code tests the wrapped sym key entry in the file on disk.  
+ * to set.  This code tests the wrapped sym key entry in the shared memory.
  * If it is uninitialized, this function writes the caller's value into 
  * the disk entry, and returns false.  
  * Otherwise, it overwrites the caller's wswk with the value obtained from 
@@ -1548,7 +1560,7 @@ ssl_GetWrappingKey( PRInt32                   symWrapMechIndex,
 }
 
 /* This is a kind of test-and-set.  The caller passes in the new value it wants
- * to set.  This code tests the wrapped sym key entry in the file on disk.  
+ * to set.  This code tests the wrapped sym key entry in the shared memory.
  * If it is uninitialized, this function writes the caller's value into 
  * the disk entry, and returns false.  
  * Otherwise, it overwrites the caller's wswk with the value obtained from 

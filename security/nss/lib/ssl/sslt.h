@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslt.h,v 1.1 2001/09/18 01:59:21 nelsonb%netscape.com Exp $
+ * $Id: sslt.h,v 1.2 2001/11/02 04:24:21 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslt_h_
@@ -84,6 +84,13 @@ typedef enum {
 } SSLSignType;
 
 typedef enum {
+    ssl_auth_null   = 0, 
+    ssl_auth_rsa    = 1,
+    ssl_auth_dsa    = 2,
+    ssl_auth_kea    = 3
+} SSLAuthType;
+
+typedef enum {
     ssl_calg_null     = 0,
     ssl_calg_rc4      = 1,
     ssl_calg_rc2      = 2,
@@ -104,18 +111,37 @@ typedef enum {
 
 typedef struct SSLChannelInfoStr {
     PRUint32             length;
-    PRUint16             protocolVersion;     
-    PRUint16             cipherSuite; 
+    PRUint16             protocolVersion;
+    PRUint16             cipherSuite;
+
+    /* server authentication info */
+    PRUint32             authKeyBits;
+
+    /* key exchange algorithm info */
+    PRUint32             keaKeyBits;
+
+    /* session info */
+    PRUint32             creationTime;		/* seconds since Jan 1, 1970 */
+    PRUint32             lastAccessTime;	/* seconds since Jan 1, 1970 */
+    PRUint32             expirationTime;	/* seconds since Jan 1, 1970 */
+    PRUint32             sessionIDLength;	/* up to 32 */
+    PRUint8              sessionID    [32];
+} SSLChannelInfo;
+
+typedef struct SSLCipherSuiteInfoStr {
+    PRUint16             length;
+    PRUint16             cipherSuite;
+
+    /* Cipher Suite Name */
+    const char *         cipherSuiteName;
 
     /* server authentication info */
     const char *         authAlgorithmName;
-    SSLSignType          authAlgorithm;
-    PRUint32             authKeyBits;
+    SSLAuthType          authAlgorithm;
 
     /* key exchange algorithm info */
     const char *         keaTypeName;
     SSLKEAType           keaType;
-    PRUint32             keaKeyBits;
 
     /* symmetric encryption info */
     const char *         symCipherName;
@@ -132,8 +158,6 @@ typedef struct SSLChannelInfoStr {
     PRUintn              isFIPS       : 1;
     PRUintn              reservedBits :31;
 
-    PRUint8              reserved     [64];
-} SSLChannelInfo;
-
+} SSLCipherSuiteInfo;
 
 #endif /* __sslt_h_ */
