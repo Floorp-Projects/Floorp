@@ -649,6 +649,11 @@ nsHTMLContainerFrame::CheckInvalidateSizeChange(nsIPresContext* aPresContext,
     }
   }
 
+  if (mRect.IsEmpty()) {
+    // nothing else to do here
+    return;
+  }
+  
   // Invalidate the old frame if the frame has borders. Those borders
   // may be moving.
   const nsStyleBorder* border = GetStyleBorder();
