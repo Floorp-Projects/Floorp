@@ -1152,26 +1152,27 @@ nsSliderFrame::RemoveListener()
 
 NS_IMETHODIMP
 nsSliderFrame::HandlePress(nsIPresContext* aPresContext,
-                     nsGUIEvent*     aEvent,
-                     nsEventStatus*  aEventStatus)
+                           nsGUIEvent*     aEvent,
+                           nsEventStatus*  aEventStatus)
 {
-  PRBool isHorizontal = IsHorizontal();
-
   nsIFrame* thumbFrame = mFrames.FirstChild();
+  if (!thumbFrame) // display:none?
+    return NS_OK;
+  
   nsRect thumbRect;
   thumbFrame->GetRect(thumbRect);
+  
+  nscoord change = 1;
+  if (IsHorizontal() ? aEvent->point.x < thumbRect.x 
+                     : aEvent->point.y < thumbRect.y)
+    change = -1;
 
-    nscoord change = 1;
-
-    if ((isHorizontal && aEvent->point.x < thumbRect.x) || (!isHorizontal && aEvent->point.y < thumbRect.y))
-        change = -1;
-
-    mChange = change;
-    mClickPoint = aEvent->point;
-    PageUpDown(thumbFrame, change);
-
-    nsRepeatService::GetInstance()->Start(mMediator);
-
+  mChange = change;
+  mClickPoint = aEvent->point;
+  PageUpDown(thumbFrame, change);
+  
+  nsRepeatService::GetInstance()->Start(mMediator);
+  
   return NS_OK;
 }
 
