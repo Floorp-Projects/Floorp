@@ -17,7 +17,7 @@
 
   <box flex="1">
     <box autostretch="never" valign="top">
-      <image id="info.icon" class="spaced" src="chrome://global/skin/message-icon.gif" />
+      <image id="info.icon" class="spaced"/>
     </box>
     <separator orient="vertical" class="thin"/>
     <box orient="vertical" flex="1">

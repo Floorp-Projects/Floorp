@@ -32,9 +32,9 @@
 
 const char *kPromptURL="chrome://global/content/commonDialog.xul";
 const char *kSelectPromptURL="chrome://global/content/selectDialog.xul";
-const char *kQuestionIconURL ="chrome://global/skin/question-icon.gif";
-const char *kAlertIconURL ="chrome://global/skin/alert-icon.gif";
-const char *kWarningIconURL ="chrome://global/skin/message-icon.gif";
+const char *kQuestionIconClass ="question-icon";
+const char *kAlertIconClass ="alert-icon";
+const char *kWarningIconClass ="message-icon";
 
 /****************************************************************
  ************************* ParamBlock ***************************
@@ -100,8 +100,8 @@ nsPromptService::Alert(nsIDOMWindow *parent,
   block->SetString(eDialogTitle, dialogTitle);
 
   nsString url;
-  url.AssignWithConversion(kAlertIconURL);
-  block->SetString(eIconURL, url.GetUnicode());
+  NS_ConvertASCIItoUCS2 styleClass(kAlertIconClass);
+  block->SetString(eIconClass, styleClass.get());
 
   rv = DoDialog(parent, block, kPromptURL);
 
@@ -127,10 +127,8 @@ nsPromptService::AlertCheck(nsIDOMWindow *parent,
 
   block->SetString(eDialogTitle, dialogTitle);
 
-  nsString url;
-  url.AssignWithConversion(kAlertIconURL);
-
-  block->SetString(eIconURL, url.GetUnicode());
+  NS_ConvertASCIItoUCS2 styleClass(kAlertIconClass);
+  block->SetString(eIconClass, styleClass.get());
   block->SetString(eCheckboxMsg, checkMsg);
   block->SetInt(eCheckboxState, *checkValue);
 
@@ -158,9 +156,8 @@ nsPromptService::Confirm(nsIDOMWindow *parent,
   
   block->SetString(eDialogTitle, dialogTitle);
 
-  nsString url;
-  url.AssignWithConversion(kQuestionIconURL);
-  block->SetString(eIconURL, url.GetUnicode());
+  NS_ConvertASCIItoUCS2 styleClass(kQuestionIconClass);
+  block->SetString(eIconClass, styleClass.get());
   
   rv = DoDialog(parent, block, kPromptURL);
   
@@ -188,8 +185,8 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
 
   block->SetString(eDialogTitle, dialogTitle);
 
-  nsString url; url.AssignWithConversion( kQuestionIconURL );
-  block->SetString(eIconURL, url.GetUnicode());
+  NS_ConvertASCIItoUCS2 styleClass(kQuestionIconClass);
+  block->SetString(eIconClass, styleClass.get());
   block->SetString(eCheckboxMsg, checkMsg);
   block->SetInt(eCheckboxState, *checkValue);
 
@@ -212,7 +209,7 @@ nsPromptService::UniversalDialog(nsIDOMWindow *parent,
                    const PRUnichar *button2Text, const PRUnichar *button3Text,
                    const PRUnichar *editfield1Msg, const PRUnichar *editfield2Msg,
                    PRUnichar **editfield1Value, PRUnichar **editfield2Value,
-                   const PRUnichar *iconURL, PRBool *checkboxState,
+                   const PRUnichar *iconClass, PRBool *checkboxState,
                    PRInt32 numberButtons, PRInt32 numberEditfields,
                    PRInt32 editfield1Password, PRInt32 *buttonPressed)
 {
@@ -254,10 +251,10 @@ nsPromptService::UniversalDialog(nsIDOMWindow *parent,
     block->SetString(eEditfield1Value, *editfield1Value);
     block->SetInt(eEditField1Password, editfield1Password);
   }
-  if (iconURL)
-    block->SetString(eIconURL, iconURL);
+  if (iconClass)
+    block->SetString(eIconClass, iconClass);
   else
-    block->SetString(eIconURL, NS_ConvertASCIItoUCS2(kQuestionIconURL).GetUnicode());
+    block->SetString(eIconClass, NS_ConvertASCIItoUCS2(kQuestionIconClass).GetUnicode());
 
   if (checkboxMsg)
     block->SetInt(eCheckboxState, *checkboxState);
@@ -306,8 +303,8 @@ nsPromptService::Prompt(nsIDOMWindow *parent,
 
   block->SetString(eDialogTitle, dialogTitle);
 
-  nsString url; url.AssignWithConversion(kQuestionIconURL);
-  block->SetString(eIconURL, url.GetUnicode());
+  NS_ConvertASCIItoUCS2 styleClass(kQuestionIconClass);
+  block->SetString(eIconClass, styleClass.get());
   block->SetInt(eNumberEditfields, 1);
   if (*value)
     block->SetString(eEditfield1Value, *value);
@@ -360,9 +357,8 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
 
   block->SetString(eDialogTitle, dialogTitle);
 
-  nsString url;
-  url.AssignWithConversion(kQuestionIconURL);
-  block->SetString(eIconURL, url.GetUnicode());
+  NS_ConvertASCIItoUCS2 styleClass(kQuestionIconClass);
+  block->SetString(eIconClass, styleClass.get());
   block->SetInt( eNumberEditfields, 2 );
   if (*username)
     block->SetString(eEditfield1Value, *username);
@@ -422,8 +418,8 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
   block->SetString(eDialogTitle, dialogTitle);
 
   nsString url;
-  url.AssignWithConversion(kQuestionIconURL);
-  block->SetString(eIconURL, url.GetUnicode());
+  NS_ConvertASCIItoUCS2 styleClass(kQuestionIconClass);
+  block->SetString(eIconClass, styleClass.get());
   block->SetInt(eNumberEditfields, 1);
   block->SetInt(eEditField1Password, 1);
   if (*password)

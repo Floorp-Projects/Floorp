@@ -77,7 +77,6 @@ permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar
   PRUnichar * no_string = CKutil_Localize(NS_LITERAL_STRING("No").get());
   PRUnichar * confirm_string = CKutil_Localize(NS_LITERAL_STRING("Confirm").get());
 
-  nsAutoString tempStr; tempStr.AssignWithConversion("chrome://global/skin/question-icon.gif");
   res = dialog->UniversalDialog(
     NULL, /* title message */
     confirm_string, /* title text in top line of window */
@@ -91,7 +90,7 @@ permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar
     NULL, /* second edit field label */
     NULL, /* first edit field initial and final value */
     NULL, /* second edit field initial and final value */
-    tempStr.GetUnicode() ,
+    NS_LITERAL_STRING("question-icon").get(),
     checkValue, /* initial and final value of checkbox */
     2, /* number of buttons */
     0, /* number of edit fields */
