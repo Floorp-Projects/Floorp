@@ -80,6 +80,7 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 
 static PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance);
 static const char NETWORK_PREFS[] = "network.";
+static const char INTL_ACCEPT_LANGUAGES[] = "intl.accept_languages";
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
@@ -765,6 +766,8 @@ nsHTTPHandler::Init()
 
     mPrefs->RegisterCallback(NETWORK_PREFS, 
                 HTTPPrefsCallback, (void*)this);
+    mPrefs->RegisterCallback(INTL_ACCEPT_LANGUAGES, 
+                HTTPPrefsCallback, (void*)this);
     PrefsChanged();
 
     rv = InitUserAgentComponents();
@@ -823,9 +826,13 @@ nsHTTPHandler::~nsHTTPHandler()
     // Release the Atoms used by the HTTP protocol...
     nsHTTPAtoms::ReleaseAtoms();
 
-    if (mPrefs)
+    if (mPrefs) 
+    {
         mPrefs->UnregisterCallback(NETWORK_PREFS, 
                 HTTPPrefsCallback, (void*)this);
+        mPrefs->UnregisterCallback(INTL_ACCEPT_LANGUAGES, 
+                HTTPPrefsCallback, (void*)this);
+    }
 
     CRTFREEIF (mAcceptLanguages);
     CRTFREEIF (mAcceptEncodings);
@@ -1375,11 +1382,10 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     mPrefs->GetIntPref("network.http.keep-alive.max-connections-per-server",
                 &mMaxAllowedKeepAlivesPerServer);
 
-    // Things read only during initialization...
-    if (bChangedAll) // intl.accept_languages
+    if ( (bChangedAll)|| !PL_strcmp(pref, INTL_ACCEPT_LANGUAGES) ) // intl.accept_languages
     {
         nsXPIDLCString acceptLanguages;
-        rv = mPrefs->CopyCharPref("intl.accept_languages", 
+        rv = mPrefs->CopyCharPref(INTL_ACCEPT_LANGUAGES, 
                 getter_Copies(acceptLanguages));
         if (NS_SUCCEEDED(rv))
             SetAcceptLanguages(acceptLanguages);
