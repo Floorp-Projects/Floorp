@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.86 $ ';
+$::UtilsVersion = '$Revision: 1.87 $ ';
 
 package TinderUtils;
 
@@ -1568,7 +1568,7 @@ sub PrintSize($) {
     } elsif ($size > 1000) {
         $rv = PrintNum($size / 1000.0) . "K";
     } else {
-        $rv = PrintNum($size);
+        $rv = PrintNum($size) . "B";
     }
 }
 
