@@ -178,7 +178,6 @@
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kStyleSetCID, NS_STYLESET_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
-static NS_DEFINE_CID(kPrintPreviewContextCID,  NS_PRINT_PREVIEW_CONTEXT_CID);
 
 // supporting bugs 31816, 20760, 22963
 // define USE_OVERRIDE to put prefs in as an override stylesheet
@@ -7004,10 +7003,7 @@ PresShell::VerifyIncrementalReflow()
   PRBool isPaginated = PR_FALSE;
   mPresContext->IsPaginated(&isPaginated);
   if (isPaginated) {
-    nsCOMPtr<nsIPrintPreviewContext> ppx = do_CreateInstance(kPrintPreviewContextCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      ppx->QueryInterface(NS_GET_IID(nsIPresContext),(void**)&cx);
-    }
+    rv = NS_NewPrintPreviewContext(&cx);
   }
   else {
     rv = NS_NewGalleyContext(&cx);
