@@ -32,6 +32,7 @@ CHROME_DIR=locales/en-US
 CHROME_L10N_DIR=global/locale
 
 CHROME_L10N = \
+		about.html \
 		intl.css \
 		globalOverlay.dtd \
 		dialogOverlay.dtd \
