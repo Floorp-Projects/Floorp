@@ -138,7 +138,7 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     slot = JSVAL_TO_INT(id);
     while (obj2) {
 	if (obj2 == obj) {
-	    JS_ReportError(cx, "cyclic %s value", object_props[slot].name);
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_CYCLIC_VALUE, object_props[slot].name);
 	    return JS_FALSE;
 	}
 	obj2 = JSVAL_TO_OBJECT(OBJ_GET_SLOT(cx, obj2, slot));
@@ -1806,7 +1806,7 @@ _readonly:
 	    return JS_TRUE;
 	str = js_DecompileValueGenerator(cx, js_IdToValue(id), NULL);
 	if (str)
-	    JS_ReportError(cx, "%s is read-only", JS_GetStringBytes(str));
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_READ_ONLY, JS_GetStringBytes(str));
 	return JS_FALSE;
     }
 
@@ -1942,7 +1942,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 	}
 	str = js_DecompileValueGenerator(cx, js_IdToValue(id), NULL);
 	if (str)
-	    JS_ReportError(cx, "%s is permanent", JS_GetStringBytes(str));
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_PERMANENT, JS_GetStringBytes(str));
 	return JS_FALSE;
     }
 
@@ -2056,7 +2056,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 	*vp = OBJECT_TO_JSVAL(obj);
 	str = js_DecompileValueGenerator(cx, v, str);
 	if (str) {
-	    JS_ReportError(cx, "can't convert %s to %s",
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_CONVERT_TO,
 			   JS_GetStringBytes(str),
 			   (hint == JSTYPE_VOID)
 			   ? "primitive type"
@@ -2388,7 +2388,7 @@ js_ValueToNonNullObject(JSContext *cx, jsval v)
     if (!obj) {
 	str = js_DecompileValueGenerator(cx, v, NULL);
 	if (str) {
-	    JS_ReportError(cx, "%s has no properties",
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_PROPERTIES,
 			   JS_GetStringBytes(str));
 	}
     }
@@ -2474,7 +2474,9 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
 	} else {
 	    clasp = JS_FindClassById(xdr, classId);
 	    if (!clasp) {
-		JS_ReportError(cx, "can't find class id %ld", (long)classId);
+		char numBuf[12];
+		sprintf(numBuf, "%d", (long)classId);
+		JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_FIND_CLASS, numBuf);
 		ok = JS_FALSE;
 		goto out;
 	    }
@@ -2482,7 +2484,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
     }
 
     if (!clasp->xdrObject) {
-	JS_ReportError(cx, "can't XDR class %s", clasp->name);
+	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_XDR_CLASS, clasp->name);
 	ok = JS_FALSE;
     } else {
 	ok = clasp->xdrObject(xdr, objp);

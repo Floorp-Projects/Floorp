@@ -13,8 +13,11 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
+#
 # Config for all versions of Linux
+#
 
 CC = gcc -Wall -Wno-format
 CCC = g++ -Wall -Wno-format

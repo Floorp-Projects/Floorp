@@ -13,8 +13,10 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 #
 # Config stuff for IRIX6.3
 #
+
 include config/IRIX.mk

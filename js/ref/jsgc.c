@@ -583,8 +583,18 @@ gc_root_marker(PRHashEntry *he, intN i, void *arg)
 {
     void **rp = (void **)he->key;
 
-    if (*rp)
+    if (*rp) {
+#ifdef DEBUG
+	PRArena *a;
+	JSRuntime *rt = (JSRuntime *)arg;
+
+	for (a = rt->gcArenaPool.first.next; a; a = a->next) {
+	    PR_ASSERT(!rp || 
+		      (*rp >= (void *)a->base && *rp <= (void *)a->avail));
+	}
+#endif
 	GC_MARK(arg, *rp, he->value ? he->value : "root", NULL);
+    }
     return HT_ENUMERATE_NEXT;
 }
 

@@ -649,14 +649,14 @@ loop:
       case '{':
 	c = *++cp;
 	if (!JS7_ISDEC(c)) {
-	    JS_ReportError(state->context, "invalid quantifier %s", state->cp);
+	    JS_ReportErrorNumber(state->context, NULL, JSMSG_BAD_QUANTIFIER, state->cp);
 	    return NULL;
 	}
 	min = (uint32)JS7_UNDEC(c);
 	for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 	    min = 10 * min + (uint32)JS7_UNDEC(c);
 	    if (min >> 16) {
-		JS_ReportError(state->context, "overlarge minimum %s",
+		JS_ReportErrorNumber(state->context, NULL, JSMSG_MIN_TOO_BIG,
 			       state->cp);
 		return NULL;
 	    }
@@ -668,7 +668,7 @@ loop:
 		for (c = *++cp; JS7_ISDEC(c); c = *++cp) {
 		    max = 10 * max + (uint32)JS7_UNDEC(c);
 		    if (max >> 16) {
-			JS_ReportError(state->context, "overlarge maximum %s",
+			JS_ReportErrorNumber(state->context, NULL, JSMSG_MAX_TOO_BIG,
 				       up);
 			return NULL;
 		    }
@@ -676,8 +676,8 @@ loop:
 		if (max == 0)
 		    goto zero_quant;
 		if (min > max) {
-		    JS_ReportError(state->context,
-				   "maximum %s less than minimum", up);
+		    JS_ReportErrorNumber(state->context, NULL,
+				   JSMSG_OUT_OF_ORDER, up);
 		    return NULL;
 		}
 	    } else {
@@ -688,13 +688,14 @@ loop:
 	    /* Exactly n times. */
 	    if (min == 0) {
       zero_quant:
-		JS_ReportError(state->context, "zero quantifier %s", state->cp);
+		JS_ReportErrorNumber(state->context, NULL, JSMSG_ZERO_QUANTIFIER,
+								    state->cp);
 		return NULL;
 	    }
 	    max = min;
 	}
 	if (*cp != '}') {
-	    JS_ReportError(state->context, "unterminated quantifier %s",
+	    JS_ReportErrorNumber(state->context, NULL, JSMSG_UNTERM_QUANTIFIER,
 			   state->cp);
 	    return NULL;
 	}
@@ -712,8 +713,8 @@ loop:
 
       case '*':
 	if (!(ren->flags & RENODE_NONEMPTY)) {
-	    JS_ReportError(state->context,
-			   "regular expression before * could be empty");
+	    JS_ReportErrorNumber(state->context, NULL, 
+			    JSMSG_EMPTY_BEFORE_STAR);
 	    return NULL;
 	}
 	cp++;
@@ -722,8 +723,8 @@ loop:
 
       case '+':
 	if (!(ren->flags & RENODE_NONEMPTY)) {
-	    JS_ReportError(state->context,
-			   "regular expression before + could be empty");
+	    JS_ReportErrorNumber(state->context, NULL,
+			   JSMSG_EMPTY_BEFORE_PLUS);
 	    return NULL;
 	}
 	cp++;
@@ -805,7 +806,7 @@ ParseAtom(CompilerState *state)
 	    return NULL;
 	cp = state->cp;
 	if (*cp != ')') {
-	    JS_ReportError(state->context, "unterminated parenthetical %s",
+	    JS_ReportErrorNumber(state->context, NULL, JSMSG_MISSING_PAREN,
 			   ocp);
 	    return NULL;
 	}
@@ -846,8 +847,8 @@ ParseAtom(CompilerState *state)
 	while ((c = *++cp) != ']') {
 	    if (c == 0) {
       bad_cclass:
-		JS_ReportError(state->context,
-			       "unterminated character class %s", ocp);
+		JS_ReportErrorNumber(state->context, NULL,
+			       JSMSG_UNTERM_CLASS, ocp);
 		return NULL;
 	    }
 	    if (c == '\\' && cp[1] != 0)
@@ -863,7 +864,7 @@ ParseAtom(CompilerState *state)
 	c = *++cp;
 	switch (c) {
 	  case 0:
-	    JS_ReportError(state->context, "trailing \\ in regular expression");
+	    JS_ReportErrorNumber(state->context, NULL, JSMSG_TRAILING_SLASH);
 	    return NULL;
 
 	  case 'f':
@@ -1834,8 +1835,8 @@ EmitRegExp(CompilerState *state, RENode *ren, JSRegExp *re)
 
 		if (inrange) {
 		    if (lastc > c) {
-			JS_ReportError(state->context,
-				       "invalid range in character class");
+			JS_ReportErrorNumber(state->context, NULL,
+				       JSMSG_BAD_CLASS_RANGE);
 			return JS_FALSE;
 		    }
 		    inrange = JS_FALSE;
@@ -2032,10 +2033,12 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt)
 	      case 'i':
 		flags |= JSREG_FOLD;
 		break;
-	      default:
-		JS_ReportError(cx, "invalid regular expression flag %c",
-			       (char) *cp);
+	      default: {
+		char charBuf[2] = " ";
+		charBuf[0] = (char)*cp;
+		JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_FLAG, charBuf);
 		return NULL;
+		}
 	    }
 	}
     }
@@ -3184,7 +3187,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (argc == 0) {
 	str = cx->regExpStatics.input;
 	if (!str) {
-	    JS_ReportError(cx, "no input for /%s/%s%s",
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_INPUT,
 			   JS_GetStringBytes(re->source),
 			   (re->flags & JSREG_GLOB) ? "g" : "",
 			   (re->flags & JSREG_FOLD) ? "i" : "");

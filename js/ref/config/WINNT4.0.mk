@@ -14,7 +14,9 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+#
 # Config for Windows NT using MS Visual C++ (version?)
+#
 
 CC = cl
 

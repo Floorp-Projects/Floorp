@@ -109,7 +109,9 @@ str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             (mask = (jsint)d) != d ||
             mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
         {
-            JS_ReportError(cx, "invalid string escape mask %x", mask);
+	    char numBuf[12];
+	    sprintf(numBuf, "%x", mask);
+            JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_STRING_MASK, numBuf);
             return JS_FALSE;
         }
     } else {
@@ -744,8 +746,7 @@ str_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 str_nyi(JSContext *cx, const char *what)
 {
-    JS_ReportError(cx, "sorry, String.prototype.%s is not yet implemented",
-		   what);
+    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_STRING_PROTO, what);
     return JS_FALSE;
 }
 #endif

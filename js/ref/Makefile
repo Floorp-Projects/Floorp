@@ -26,7 +26,11 @@ OS_CPUARCH      := $(shell uname -m)
 ifeq ($(OS_CPUARCH),i86pc)
 OS_RELEASE      := $(shell uname -r)_$(OS_CPUARCH)
 else
+ifeq ($(OS_ARCH),AIX)
+OS_RELEASE      := $(shell uname -v).$(shell uname -r)
+else
 OS_RELEASE      := $(shell uname -r)
+endif
 endif
 
 # Virtually all Linux versions are identical.
@@ -39,6 +43,8 @@ endif
 
 ASFLAGS         =
 DEFINES         =
+
+#NS_USE_NATIVE = 1
 
 include config/$(OS_CONFIG).mk
 
@@ -83,6 +89,20 @@ CFLAGS          = $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
                   -DJSFILE $(XCFLAGS)
 LDFLAGS		= -lm $(XLDFLAGS)
 
+#
+# Ask perl what flags it was built with, so we can build js with similar flags
+# and link properly.  Viva gmake.
+#
+ifdef PERLCONNECT
+DEFINES += -DPERLCONNECT
+
+PERLCFLAGS := $(shell perl -MExtUtils::Embed -e ccopts)
+PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
+
+CFLAGS += $(PERLCFLAGS)
+LDFLAGS += $(PERLLDFLAGS)
+endif
+
 # For purify
 PURE_CFLAGS     = -DXP_UNIX $(OPTIMIZER) $(PURE_OS_CFLAGS) $(DEFINES) \
                   $(INCLUDES) $(XCFLAGS)
@@ -114,6 +134,7 @@ JS_HFILES =		\
 	jscntxt.h	\
 	jsdate.h	\
 	jsemit.h	\
+	jsexn.h		\
 	jsfun.h		\
 	jsgc.h		\
 	jsinterp.h	\
@@ -160,6 +181,7 @@ JS_CFILES =		\
 	jsdate.c	\
 	jsdbgapi.c	\
 	jsemit.c	\
+	jsexn.c		\
 	jsfun.c		\
 	jsgc.c		\
 	jsinterp.c	\
@@ -176,6 +198,10 @@ JS_CFILES =		\
 	jsstr.c		\
 	jsxdrapi.c	\
 	$(NULL)
+
+ifdef PERLCONNECT
+JS_CFILES += jsperl.c
+endif
 
 LIB_CFILES  = $(PR_CFILES) $(JS_CFILES)
 LIB_ASFILES := $(wildcard *_$(OS_ARCH).s)

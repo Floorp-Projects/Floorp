@@ -605,7 +605,9 @@ js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
 
     PR_ASSERT(map->vector && i < map->length);
     if (!map->vector || i >= map->length) {
-	JS_ReportError(cx, "internal error: no index for atom %ld", (long)i);
+	char numBuf[12];
+	sprintf(numBuf, "%s", (long)i);
+	JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_ATOMIC_NUMBER, numBuf);
 	return NULL;
     }
     atom = map->vector[i];
@@ -629,7 +631,7 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 
     count = al->count;
     if (count >= ATOM_INDEX_LIMIT) {
-	JS_ReportError(cx, "too many literals");
+	JS_ReportErrorNumber(cx, NULL, JSMSG_TOO_MANY_LITERALS);
 	return JS_FALSE;
     }
     vector = JS_malloc(cx, (size_t) count * sizeof *vector);

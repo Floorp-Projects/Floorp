@@ -194,9 +194,10 @@ OPDEF(JSOP_INSTANCEOF,112,js_instanceof_str,js_instanceof_str,1,2,1,6,JOF_BYTE)
 /* debugger op */
 OPDEF(JSOP_DEBUGGER,  113,"debugger",   NULL,         1,  0,  0,  0,  JOF_BYTE)
 
-/* jsr/return for finally handling */
-OPDEF(JSOP_JSR,       114,"jsr",	NULL,	      3,  0,  1,  0,  JOF_JUMP)
+/* gosub/retsub for finally handling */
+OPDEF(JSOP_GOSUB,     114,"gosub",	NULL,	      3,  0,  1,  0,  JOF_JUMP)
 OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  1,  0,  0,  JOF_BYTE)
 
 /* more exception handling ops */
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_SETSP,     117,"setsp",	NULL,	      3,  0,  0,  0,  JOF_UINT16)

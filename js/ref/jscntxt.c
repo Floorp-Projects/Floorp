@@ -32,6 +32,7 @@
 #include "jscntxt.h"
 #include "jsconfig.h"
 #include "jsdbgapi.h"
+#include "jsexn.h"
 #include "jsgc.h"
 #include "jslock.h"
 #include "jsobj.h"
@@ -168,7 +169,7 @@ js_ContextIterator(JSRuntime *rt, JSContext **iterp)
 }
 
 void
-js_ReportErrorVA(JSContext *cx, const char *format, va_list ap)
+js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {
     JSStackFrame *fp;
     JSErrorReport report, *reportp;
@@ -181,8 +182,10 @@ js_ReportErrorVA(JSContext *cx, const char *format, va_list ap)
 	/* XXX should fetch line somehow */
 	report.linebuf = NULL;
 	report.tokenptr = NULL;
+	report.flags = flags;
 	reportp = &report;
     } else {
+	/* XXXshaver still fill out report here for flags? */
 	reportp = NULL;
     }
     last = PR_vsmprintf(format, ap);
@@ -191,6 +194,161 @@ js_ReportErrorVA(JSContext *cx, const char *format, va_list ap)
 
     js_ReportErrorAgain(cx, last, reportp);
     free(last);
+}
+
+JSBool
+js_ExpandErrorArguments(JSContext *cx, JSErrorCallBack callback,
+				const uintN errorNumber, char **message,
+				JSErrorReport *reportp, va_list ap)
+/*
+    The arguments from va_list need to be packaged up into an array and stored
+    into the report struct.
+
+    Then...
+
+if JS_HAS_DFLT_MSG_STRINGS
+    The format string addressed by the error number may contain operands
+    identified by the format {N}, where N is a decimal digit. Each of these
+    is to be replaced by the Nth argument from the va_list. The complete
+    message is placed into reportp->ucmessage converted to a JSString.
+else
+    reportp->ucmessage is left NULL, to indicate that the installed error
+    reporter is to use the errorNumber & arguments as it wishes
+endif
+
+    returns true/false if the expansion succeeds
+
+*/
+{
+    /* make sure this is a legal error number */
+    if ((errorNumber > 0) && (errorNumber < JSErr_Limit)) {
+	const JSErrorFormatString *fmtData;
+	int i;
+	int argCount;
+
+	if (callback)
+	    fmtData = (*callback)(errorNumber);
+	else
+	    fmtData = &js_ErrorFormatString[errorNumber];
+	argCount = fmtData->argCount;
+	if (argCount > 0) {
+	    /*
+		gather the arguments into a char * array, the 
+                messageArgs field is supposed to be an array of
+                JSString's and we'll convert them later.
+	    */
+	    reportp->messageArgs = (JSString **)malloc(sizeof(char *) * argCount);
+	    if (!reportp->messageArgs) return JS_FALSE;
+	    for (i = 0; i < argCount; i++)
+		reportp->messageArgs[i] = (JSString *) va_arg(ap, char *);
+	}
+#if JS_HAS_DFLT_MSG_STRINGS
+	/* 
+	    parse the error format, substituting the argument X
+	    for {X} in the format
+	*/
+	if (argCount > 0) {
+	    const char *fmt;
+	    char *out;
+	    int expandedLength
+		= strlen(fmtData->format)
+		    - (3 * argCount);
+	    for (i = 0; i < argCount; i++) 
+		expandedLength += strlen((char *)(reportp->messageArgs[i]));
+	    *message = out = malloc(expandedLength + 1);
+	    if (!out) {
+		if (reportp->messageArgs) free(reportp->messageArgs);
+		return JS_FALSE;
+	    }
+	    fmt = fmtData->format;
+	    while (*fmt) {
+		if (*fmt == '{') {
+		    if (isdigit(fmt[1])) {
+			strcpy(out, (char *)(reportp->messageArgs[JS7_UNDEC(fmt[1])]));
+			out += strlen((char *)(reportp->messageArgs[JS7_UNDEC(fmt[1])]));
+			fmt += 3;
+		    }
+		    else
+			*out++ = *fmt++;
+		}
+		else
+		    *out++ = *fmt++;
+	    }
+	    *out = '\0';
+            /*
+                Now convert all the arguments to JSString's
+            */
+	    for (i = 0; i < argCount; i++) {
+		reportp->messageArgs[i]
+		    = JS_NewStringCopyZ(cx, (char *)(reportp->messageArgs[i]));
+	    }
+	}
+        else
+            *message = JS_strdup(cx, fmtData->format);
+        /*
+            And finally convert the message
+        */
+        reportp->ucmessage = JS_NewStringCopyZ(cx, *message);
+#else
+        /*
+            If we're not providing the error string we just pass
+            the arguments array but also need to pass some content
+            for 'message' though this should never be seen.
+        */
+        *message = JS_strdup(cx, "No Error Message Available");
+#endif
+    }
+    return JS_TRUE;
+}
+
+void
+js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallBack callback,
+					    const uintN errorNumber, va_list ap)
+{
+    JSStackFrame *fp;
+    JSErrorReport report, *reportp;
+    char *message;
+
+    report.messageArgs = NULL;
+    report.ucmessage = NULL;
+    message = NULL;
+
+    fp = cx->fp;
+    if (fp && fp->script && fp->pc) {
+	report.filename = fp->script->filename;
+	report.lineno = js_PCToLineNumber(fp->script, fp->pc);
+    }
+    else {
+        report.filename = NULL;
+        report.lineno = 0;
+    }
+    /* XXX should fetch line somehow */
+    report.linebuf = NULL;
+    report.tokenptr = NULL;
+    report.flags = flags;
+
+    report.errorNumber = errorNumber;
+
+    reportp = &report;
+
+    if (!js_ExpandErrorArguments(cx, callback, errorNumber, 
+					&message, reportp, ap))
+        return;
+
+#if JS_HAS_ERROR_EXCEPTIONS
+    /*
+     * Check the error report, and set a JavaScript-catchable exception
+     * if the error is defined to have an associated exception.  If an
+     * exception is thrown, then the JSREPORT_EXCEPTION flag will be set
+     * on the error report, and exception-aware hosts should ignore it.
+     */
+    js_ErrorToException(cx, reportp);
+#endif
+
+    js_ReportErrorAgain(cx, message, reportp);
+
+    if (message) free(message);
+    if (report.messageArgs) free(report.messageArgs);
 }
 
 JS_FRIEND_API(void)
@@ -213,7 +371,7 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
 void
 js_ReportIsNotDefined(JSContext *cx, const char *name)
 {
-    JS_ReportError(cx, "%s is not defined", name);
+    JS_ReportErrorNumber(cx, NULL, JSMSG_NOT_DEFINED, name);
 }
 
 #if defined DEBUG && defined XP_UNIX
@@ -221,3 +379,14 @@ js_ReportIsNotDefined(JSContext *cx, const char *name)
 void js_traceon(JSContext *cx)  { cx->tracefp = stderr; }
 void js_traceoff(JSContext *cx) { cx->tracefp = NULL; }
 #endif
+
+
+#if JS_HAS_DFLT_MSG_STRINGS
+JSErrorFormatString js_ErrorFormatString[JSErr_Limit] = {
+#define MSG_DEF(name, number, count, exception, format) \
+    { format, count } ,
+#include "jsmsg.def"
+#undef MSG_DEF
+};
+#endif
+

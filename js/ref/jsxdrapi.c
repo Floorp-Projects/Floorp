@@ -21,6 +21,7 @@
 #include "prtypes.h"
 #include "prassert.h"
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsobj.h"		/* js_XDRObject */
 #include "jsstr.h"
 #include "jsxdrapi.h"
@@ -43,13 +44,12 @@ typedef struct JSXDRMemState {
 #define MEM_COUNT(xdr)  (MEM_PRIV(xdr)->count)
 #define MEM_LIMIT(xdr)  (MEM_PRIV(xdr)->limit)
 
-static char unexpected_end_of_data_str[] = "unexpected end of data";
 
 #define MEM_LEFT(xdr, bytes)                                                  \
     PR_BEGIN_MACRO                                                            \
         if ((xdr)->mode == JSXDR_DECODE &&                                    \
 	    MEM_COUNT(xdr) + bytes > MEM_LIMIT(xdr)) {                        \
-	    JS_ReportError((xdr)->cx, unexpected_end_of_data_str);            \
+	    JS_ReportErrorNumber((xdr)->cx, NULL, JSMSG_END_OF_DATA);         \
 	    return 0;                                                         \
 	}                                                                     \
     PR_END_MACRO
@@ -70,7 +70,7 @@ static char unexpected_end_of_data_str[] = "unexpected end of data";
 	    }                                                                 \
 	} else {                                                              \
 	    if (MEM_LIMIT(xdr) < MEM_COUNT(xdr) + bytes) {                    \
-		JS_ReportError((xdr)->cx, unexpected_end_of_data_str);        \
+		JS_ReportErrorNumber((xdr)->cx, NULL, JSMSG_END_OF_DATA);     \
 		return 0;                                                     \
 	    }                                                                 \
 	}                                                                     \
@@ -135,7 +135,7 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
     switch (whence) {
       case JSXDR_SEEK_CUR:
 	if ((int32)MEM_COUNT(xdr) + offset < 0) {
-	    JS_ReportError(xdr->cx, "illegal seek beyond start");
+	    JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_SEEK_BEYOND_START);
 	    return JS_FALSE;
 	}
 	if (offset > 0)
@@ -144,7 +144,7 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
 	return JS_TRUE;
       case JSXDR_SEEK_SET:
 	if (offset < 0) {
-	    JS_ReportError(xdr->cx, "illegal seek beyond start");
+	    JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_SEEK_BEYOND_START);
 	    return JS_FALSE;
 	}
 	if (xdr->mode == JSXDR_ENCODE) {
@@ -153,7 +153,7 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
 	    MEM_COUNT(xdr) = offset;
 	} else {
 	    if ((uint32)offset > MEM_LIMIT(xdr)) {
-		JS_ReportError(xdr->cx, "illegal seek beyond end");
+		JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_SEEK_BEYOND_END);
 		return JS_FALSE;
 	    }
 	    MEM_COUNT(xdr) = offset;
@@ -163,13 +163,16 @@ mem_seek(JSXDRState *xdr, int32 offset, JSXDRWhence whence)
 	if (offset >= 0 ||
 	    xdr->mode == JSXDR_ENCODE ||
 	    (int32)MEM_LIMIT(xdr) + offset < 0) {
-	    JS_ReportError(xdr->cx, "illegal end-based seek");
+	    JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_END_SEEK);
 	    return JS_FALSE;
 	}
 	MEM_COUNT(xdr) = MEM_LIMIT(xdr) + offset;
 	return JS_TRUE;
-      default:
-	JS_ReportError(xdr->cx, "unknown seek whence: %d", whence);
+      default: {
+	char numBuf[12];
+	sprintf(numBuf, "%d", whence);
+	JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_WHITHER_WHENCE, numBuf);
+	}
 	return JS_FALSE;
     }
 }
@@ -468,7 +471,8 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 	if (!JS_XDRUint32(xdr, (uint32 *)vp))
 	    return JS_FALSE;
 	break;
-      default:
+      default: {
+	char numBuf[12];
 	if (type & JSVAL_INT) {
 	    uint32 i;
 	    if (xdr->mode == JSXDR_ENCODE)
@@ -479,7 +483,9 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 		*vp = INT_TO_JSVAL(i);
 	    break;
 	}
-	JS_ReportError(xdr->cx, "unknown jsval type %#lx for XDR", type);
+	sprintf(numBuf, "%#lx", type);
+	JS_ReportErrorNumber(xdr->cx, NULL, JSMSG_BAD_JVAL_TYPE, type);
+	}
 	return JS_FALSE;
     }
     return JS_TRUE;

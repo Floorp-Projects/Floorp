@@ -290,4 +290,12 @@ typedef void
 (* CRT_CALL JSErrorReporter)(JSContext *cx, const char *message,
 			     JSErrorReport *report);
 
+typedef struct JSErrorFormatString {
+    const char *format;
+    const uintN argCount;
+} JSErrorFormatString;
+
+typedef const JSErrorFormatString * 
+(* CRT_CALL JSErrorCallBack)(const uintN errorNumber);
+
 #endif /* jspubtd_h___ */

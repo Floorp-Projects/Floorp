@@ -891,7 +891,7 @@ fun_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 _readonly:
     if (JSVERSION_IS_ECMA(cx->version))
 	return fun_getProperty(cx, obj, id, vp);
-    JS_ReportError(cx, "%s is read-only", js_arguments_str);
+    JS_ReportErrorNumber(cx, NULL, JSMSG_READ_ONLY, js_arguments_str);
     return JS_FALSE;
 }
 
@@ -1130,21 +1130,36 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 
 #if JS_HAS_INSTANCEOF
 
+/*
+ * [[HasInstance]] internal method for Function objects - takes the .prototype
+ * property of its target, and walks the prototype chain of v (if v is an
+ * object,) returning true if .prototype is found.
+ */
 static JSBool
 fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     jsval pval;
+    JSString *str;
 
     if (!OBJ_GET_PROPERTY(cx, obj,
 			  (jsid)cx->runtime->atomState.classPrototypeAtom,
 			  &pval)) {
 	return JS_FALSE;
     }
-    if (JSVAL_IS_PRIMITIVE(pval)) {
-	*bp = JS_FALSE;
-	return JS_TRUE;
+    if (!JSVAL_IS_PRIMITIVE(pval))
+        return js_IsDelegate(cx, JSVAL_TO_OBJECT(pval), v, bp);        
+
+    /*
+     * Throw a runtime error if instanceof is called on a function
+     * that has a non-Object as its .prototype value.
+     */
+    str = js_DecompileValueGenerator(cx, OBJECT_TO_JSVAL(obj), NULL);
+    if (str) {
+        JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_PROTOTYPE,
+                             JS_GetStringBytes(str));
     }
-    return js_IsDelegate(cx, JSVAL_TO_OBJECT(pval), v, bp);
+    return JS_FALSE;
+
 }
 
 #else  /* !JS_HAS_INSTANCEOF */
@@ -1446,7 +1461,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                  * TOK_ERROR.
                  */
                 if (tt != TOK_NAME) {
-                    JS_ReportError(cx, "missing formal parameter");
+                    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_FORMAL);
                     goto badargs;
                 }
                 /* Get the atom corresponding to the name from the tokenstream;
@@ -1461,8 +1476,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef CHECK_ARGUMENT_HIDING
                     PR_ASSERT(sprop->getter == js_GetArgument);
                     OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-                    JS_ReportError(cx, "duplicate formal argument %s",
-                                   ATOM_BYTES(atom));
+                    JS_ReportErrorNumber(cx, NULL, JSMSG_SAME_FORMAL,
+				   ATOM_BYTES(atom));
                     goto badargs;
 #else
                 /* A duplicate parameter name. We create a dummy symbol
@@ -1714,7 +1729,7 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
     if (fp)
 	fp->sp = sp;
     if (str) {
-	JS_ReportError(cx, "%s is not a %s",
+	JS_ReportErrorNumber(cx, NULL, JSMSG_DENY,
 		       JS_GetStringBytes(str),
 		       constructing ? "constructor" : "function");
     }

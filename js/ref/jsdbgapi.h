@@ -130,8 +130,15 @@ JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation);
 extern JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp);
 
+/* this is deprecated, use JS_GetFrameScopeChain instead */
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameObject(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp);

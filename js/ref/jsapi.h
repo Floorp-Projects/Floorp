@@ -605,6 +605,29 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
 		    JSPropertyOp getter, JSPropertyOp setter,
 		    uintN attrs);
 
+/*
+ * Determine the attributes (JSPROP_* flags) of a property on a given object.
+ *
+ * If the object does not have a property by that name, *foundp will be
+ * JS_FALSE and the value of *attrsp is undefined.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj, 
+                           const jschar *name, size_t namelen,
+			   uintN *attrsp, JSBool *foundp);
+
+/*
+ * Set the attributes of a property on a given object.
+ *
+ * If the object does not have a property by that name, *foundp will be
+ * JS_FALSE and nothing will be altered.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
+                           const jschar *name, size_t namelen,
+			   uintN attrs, JSBool *foundp);
+
+
 extern JS_PUBLIC_API(JSBool)
 JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
 			      const jschar *name, size_t namelen,
@@ -905,6 +928,19 @@ extern JS_PUBLIC_API(void)
 JS_ReportError(JSContext *cx, const char *format, ...);
 
 /*
+ * As above, but use an errorNumber for the format string
+ */
+extern JS_PUBLIC_API(void)
+JS_ReportErrorNumber(JSContext *cx, JSErrorCallBack errCallBack, 
+					const uintN errorNumber, ...);
+
+/*
+ * As above, but report a warning instead (JSREPORT_IS_WARNING(report->flags)).
+ */
+extern PR_PUBLIC_API(void)
+JS_ReportWarning(JSContext *cx, const char *format, ...);
+
+/*
  * Complain when out of memory.
  */
 extern JS_PUBLIC_API(void)
@@ -917,7 +953,32 @@ struct JSErrorReport {
     const char      *tokenptr;  /* pointer to error token in linebuf */
     const jschar    *uclinebuf; /* unicode (original) line buffer */
     const jschar    *uctokenptr;/* unicode (original) token pointer */
+    uintN	    flags;      /* error/warning, etc. */
+    
+    uintN           errorNumber;    /* the error number, e.g. see jsmsg.def */
+    JSString        *ucmessage;     /* the (default) error message */
+    JSString        **messageArgs;  /* arguments for the error message */
 };
+
+/*
+ * JSErrorReport flag values.
+ */
+
+/* XXX need better classification system */
+#define JSREPORT_ERROR			0x0
+#define JSREPORT_WARNING		0x1 /* reported via JS_ReportWarning */
+
+/*
+ * If JSREPORT_EXCEPTION is set, then a JavaScript-catchable exception
+ * has been thrown for this runtime error, and the host should ignore it.
+ * Exception-aware hosts should also check for JS_IsPendingException if
+ * JS_ExecuteScript returns failure, and signal or propagate the exception, as
+ * appropriate.
+ */
+#define JSREPORT_EXCEPTION		0x2
+
+#define JSREPORT_IS_WARNING(flags)	(flags & JSREPORT_WARNING)
+#define JSREPORT_IS_EXCEPTION(flags)	(flags & JSREPORT_EXCEPTION)
 
 extern JS_PUBLIC_API(JSErrorReporter)
 JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);

@@ -36,6 +36,7 @@
 #include "jsconfig.h"
 #include "jsdate.h"
 #include "jsemit.h"
+#include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -113,10 +114,12 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 	    if (required) {
 		fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
 		if (fun) {
-		    JS_ReportError(cx,
-				   "%s requires more than %u argument%s",
-				   JS_GetFunctionName(fun),
-				   argc, (argc == 1) ? "" : "s");
+		    char numBuf[12];
+		    sprintf(numBuf, "%u", argc);
+		    JS_ReportErrorNumber(cx, NULL, JSMSG_MORE_ARGS_NEEDED,
+				JS_GetFunctionName(fun),
+				numBuf,
+				(argc == 1) ? "" : "s");
 		}
 		return JS_FALSE;
 	    }
@@ -184,9 +187,12 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 	    break;
     	  case '*':
 	    break;
-    	  default:
-	    JS_ReportError(cx, "invalid format character %c", *cp);
+	  default: {
+	    char charBuf[2] = " ";
+	    charBuf[0] = *cp;
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_CHAR, charBuf);
 	    return JS_FALSE;
+	    }
     	}
     	i++;
     }
@@ -239,9 +245,12 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 	if (ok)
 	    *vp = BOOLEAN_TO_JSVAL(b);
 	break;
-      default:
-	JS_ReportError(cx, "unknown type %d", (int)type);
+      default: {
+	char numBuf[12];
+	sprintf(numBuf, "%d", (int)type);
+	JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_TYPE, numBuf);
 	ok = JS_FALSE;
+	}
 	break;
     }
     return ok;
@@ -365,6 +374,22 @@ JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32 maxbytes)
 {
     JSRuntime *rt;
+
+#ifdef DEBUG
+    PR_BEGIN_MACRO
+    /*
+     * This code asserts that the numbers associated with the error names in
+     * jsmsg.def are monotonically increasing.  It uses values for the error
+     * names enumerated in jscntxt.c.  It's not a compiletime check, but it's
+     * better than nothing.
+     */
+    int errorNumber = 0;
+#define MSG_DEF(name, number, count, exception, format) \
+    PR_ASSERT(name == errorNumber++);
+#include "jsmsg.def"
+#undef MSG_DEF
+    PR_END_MACRO;
+#endif /* DEBUG */
 
     if (!js_InitStringGlobals())
 	return NULL;
@@ -664,6 +689,9 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #if JS_HAS_SCRIPT_OBJECT
 	   js_InitScriptClass(cx, obj) &&
 #endif
+#if JS_HAS_ERROR_EXCEPTIONS
+           js_InitExceptionClasses(cx, obj) &&
+#endif
 	   js_InitDateClass(cx, obj);
 }
 
@@ -679,7 +707,7 @@ JS_malloc(JSContext *cx, size_t nbytes)
 {
     void *p;
 
-#if defined(XP_OS2) || defined(XP_MAC)
+#if defined(XP_OS2) || defined(XP_MAC) || defined(AIX)
     if (nbytes == 0) /*DSR072897 - Windows allows this, OS/2 & Mac don't*/
 	nbytes = 1;
 #endif
@@ -797,7 +825,7 @@ JS_LockGCThing(JSContext *cx, void *thing)
     CHECK_REQUEST(cx);
     ok = js_LockGCThing(cx, thing);
     if (!ok)
-	JS_ReportError(cx, "can't lock memory");
+	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_LOCK);
     return ok;
 }
 
@@ -809,7 +837,7 @@ JS_UnlockGCThing(JSContext *cx, void *thing)
     CHECK_REQUEST(cx);
     ok = js_UnlockGCThing(cx, thing);
     if (!ok)
-	JS_ReportError(cx, "can't unlock memory");
+	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_UNLOCK);
     return ok;
 }
 
@@ -1015,7 +1043,7 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
     if (argv) {
 	fun = js_ValueToFunction(cx, &argv[-2], JS_FALSE);
 	if (fun) {
-	    JS_ReportError(cx, "%s.prototype.%s called on incompatible %s",
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_INCOMPATIBLE_PROTO,
 			   clasp->name, JS_GetFunctionName(fun),
 			   OBJ_GET_CLASS(cx, obj)->name);
 	}
@@ -1108,7 +1136,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
     if (!ok)
 	return NULL;
     if (!JSVAL_IS_FUNCTION(cx, cval)) {
-	JS_ReportError(cx, "%s has no constructor",
+	JS_ReportErrorNumber(cx, NULL, JSMSG_NO_CONSTRUCTOR,
 		       OBJ_GET_CLASS(cx, proto)->name);
 	return NULL;
     }
@@ -1323,7 +1351,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
     }
     if (obj2 != obj || !OBJ_IS_NATIVE(obj2)) {
 	OBJ_DROP_PROPERTY(cx, obj2, prop);
-	JS_ReportError(cx, "can't alias %s to %s in class %s",
+	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_ALIAS,
 		       alias, name, OBJ_GET_CLASS(cx, obj2)->name);
 	return JS_FALSE;
     }
@@ -1361,17 +1389,14 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop)
     return rval;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-			 uintN *attrsp, JSBool *foundp)
+static JSBool
+GetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
+		      uintN *attrsp, JSBool *foundp)
 {
-    JSAtom *atom;
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
 
-    CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
 	return JS_FALSE;
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop))
@@ -1389,17 +1414,14 @@ JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
     return ok;
 }
 
-JS_PUBLIC_API(JSBool)
-JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
-			 uintN attrs, JSBool *foundp)
+static JSBool
+SetPropertyAttributes(JSContext *cx, JSObject *obj, JSAtom *atom,
+                      uintN attrs, JSBool *foundp)
 {
-    JSAtom *atom;
     JSObject *obj2;
     JSProperty *prop;
     JSBool ok;
 
-    CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, name, strlen(name), 0);
     if (!atom)
 	return JS_FALSE;
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop))
@@ -1415,6 +1437,27 @@ JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
     ok = OBJ_SET_ATTRIBUTES(cx, obj, (jsid)atom, prop, &attrs);
     OBJ_DROP_PROPERTY(cx, obj, prop);
     return ok;
+}
+
+
+JS_PUBLIC_API(JSBool)
+JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
+			 uintN *attrsp, JSBool *foundp)
+{
+    CHECK_REQUEST(cx);
+    return GetPropertyAttributes(cx, obj, 
+                                 js_Atomize(cx, name, strlen(name), 0),
+                                 attrsp, foundp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
+			 uintN attrs, JSBool *foundp)
+{
+    CHECK_REQUEST(cx);
+    return SetPropertyAttributes(cx, obj, 
+                                 js_Atomize(cx, name, strlen(name), 0),
+                                 attrs, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1486,6 +1529,28 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
     CHECK_REQUEST(cx);
     return DefineUCProperty(cx, obj, name, namelen, value, getter, setter,
 			    attrs, NULL);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj, 
+                           const jschar *name, size_t namelen,
+			   uintN *attrsp, JSBool *foundp)
+{
+    CHECK_REQUEST(cx);
+    return GetPropertyAttributes(cx, obj, 
+                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0),
+                    attrsp, foundp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
+                           const jschar *name, size_t namelen,
+			   uintN attrs, JSBool *foundp)
+{
+    CHECK_REQUEST(cx);
+    return SetPropertyAttributes(cx, obj, 
+                    js_AtomizeChars(cx, name, AUTO_NAMELEN(name,namelen), 0),
+                    attrs, foundp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1633,9 +1698,11 @@ JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
 	return JS_FALSE;
     }
     if (obj2 != obj || !OBJ_IS_NATIVE(obj2)) {
+	char numBuf[12];
 	OBJ_DROP_PROPERTY(cx, obj2, prop);
-	JS_ReportError(cx, "can't alias %ld to %s in class %s",
-		       (long)alias, name, OBJ_GET_CLASS(cx, obj2)->name);
+	sprintf(numBuf, "%ld", (long)alias);
+	JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_ALIAS,
+		       numBuf, name, OBJ_GET_CLASS(cx, obj2)->name);
 	return JS_FALSE;
     }
     scope = (JSScope *) obj->map;
@@ -2423,7 +2490,30 @@ JS_ReportError(JSContext *cx, const char *format, ...)
 
     CHECK_REQUEST(cx);
     va_start(ap, format);
-    js_ReportErrorVA(cx, format, ap);
+    js_ReportErrorVA(cx, JSREPORT_ERROR, format, ap);
+    va_end(ap);
+}
+
+JS_PUBLIC_API(void)
+JS_ReportErrorNumber(JSContext *cx, JSErrorCallBack errCallBack,
+				const uintN errorNumber, ...)
+{
+    va_list ap;
+
+    CHECK_REQUEST(cx);
+    va_start(ap, errorNumber);
+    js_ReportErrorNumberVA(cx, JSREPORT_ERROR, 
+			errCallBack, errorNumber, ap);
+    va_end(ap);
+}
+
+PR_PUBLIC_API(void)
+JS_ReportWarning(JSContext *cx, const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    js_ReportErrorVA(cx, JSREPORT_WARNING, format, ap);
     va_end(ap);
 }
 
@@ -2464,7 +2554,7 @@ JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
     JS_free(cx, chars);
     return obj;
 #else
-    JS_ReportError(cx, "sorry, regular expression are not supported");
+    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_REG_EXPS);
     return NULL;
 #endif
 }
@@ -2476,7 +2566,7 @@ JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 #if JS_HAS_REGEXPS
     return js_NewRegExpObject(cx, chars, length, flags);
 #else
-    JS_ReportError(cx, "sorry, regular expression are not supported");
+    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_REG_EXPS);
     return NULL;
 #endif
 }
@@ -2528,7 +2618,7 @@ JS_IsExceptionPending(JSContext *cx)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    return (JSBool) cx->fp->throwing;
+    return (JSBool) cx->throwing;
 #else
     return JS_FALSE;
 #endif
@@ -2539,9 +2629,9 @@ JS_GetPendingException(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    if (!cx->fp->throwing)
+    if (!cx->throwing)
 	return JS_FALSE;
-    *vp = cx->fp->exception;
+    *vp = cx->exception;
     return JS_TRUE;
 #else
     return JS_FALSE;
@@ -2553,8 +2643,8 @@ JS_SetPendingException(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    cx->fp->throwing = JS_TRUE;
-    cx->fp->exception = v;
+    cx->throwing = JS_TRUE;
+    cx->exception = v;
 #endif
 }
 
@@ -2563,7 +2653,7 @@ JS_ClearPendingException(JSContext *cx)
 {
     CHECK_REQUEST(cx);
 #if JS_HAS_EXCEPTIONS
-    cx->fp->throwing = JS_FALSE;
+    cx->throwing = JS_FALSE;
 #endif
 }
 

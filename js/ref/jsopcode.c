@@ -111,7 +111,11 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 
     op = (JSOp)*pc;
     if (op >= JSOP_LIMIT) {
-	JS_ReportError(cx, "bytecode %d too large (limit %d)", op, JSOP_LIMIT);
+	char numBuf1[12];
+	char numBuf2[12];
+	sprintf(numBuf1, "%d", op);
+	sprintf(numBuf2, "%d", JSOP_LIMIT);
+	JS_ReportErrorNumber(cx, NULL, JSMSG_BYTECODE_TOO_BIG, numBuf1, numBuf2);
 	return 0;
     }
     cs = &js_CodeSpec[op];
@@ -221,9 +225,12 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 	fprintf(fp, " %u", GET_VARNO(pc));
 	break;
 
-      default:
-	JS_ReportError(cx, "unknown bytecode format %x", cs->format);
+      default: {
+	char numBuf[12];
+	sprintf(numBuf, "%x", cs->format);
+	JS_ReportErrorNumber(cx, NULL, JSMSG_UNKNOWN_FORMAT, numBuf); 
 	return 0;
+	}
     }
     fputs("\n", fp);
     return len;
@@ -836,7 +843,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    len = js_GetSrcNoteOffset(sn, 0);
 		    pc += 4;	/* initprop, enterwith */
 		    if (len) {
-			js_printf(jp, " if ");
+			js_printf(jp, " : ");
 			DECOMPILE_CODE(pc, len - 3); /* don't decompile ifeq */
 			js_printf(jp, "%s", POP_STR());
 			pc += len;
@@ -879,8 +886,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		todo = Sprint(&ss->sprinter, "");
 		break;
 
-	      case JSOP_JSR:
+	      case JSOP_GOSUB:
 	      case JSOP_RETSUB:
+	      case JSOP_SETSP:
 		todo = -2;
 		break;
 

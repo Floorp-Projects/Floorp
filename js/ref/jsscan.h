@@ -226,9 +226,12 @@ js_MapKeywords(void (*mapfun)(const char *));
  * associated with cx.
  */
 extern void
-js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
-		      ...);
+js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
+                      const char *format, ...);
 
+void
+js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
+                      const uintN errorNumber, ...);
 /*
  * Look ahead one token and return its type.
  */

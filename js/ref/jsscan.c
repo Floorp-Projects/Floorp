@@ -225,7 +225,7 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
     } else {
 	file = fopen(filename, "r");
 	if (!file) {
-	    JS_ReportError(cx, "can't open %s: %s", filename, strerror(errno));
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_CANT_OPEN, filename, strerror(errno));
 	    return NULL;
 	}
     }
@@ -483,8 +483,8 @@ MatchChar(JSTokenStream *ts, int32 nextChar)
 }
 
 void
-js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
-		      ...)
+js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
+                      const char *format, ...)
 {
     va_list ap;
     char *message;
@@ -519,11 +519,13 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
 			  : NULL;
 	report.uclinebuf = ts->linebuf.base;
 	report.uctokenptr = ts->token.ptr;
+        report.flags = flags;
 	(*onError)(cx, message, &report);
 #if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
     } else {
 	if (!(ts->flags & TSF_INTERACTIVE))
-	    fprintf(stderr, "JavaScript error: ");
+	    fprintf(stderr, "JavaScript %s: ",
+                    JSREPORT_IS_WARNING(flags) ? "warning" : "error");
 	if (ts->filename)
 	    fprintf(stderr, "%s, ", ts->filename);
 	if (ts->lineno)
@@ -536,6 +538,68 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
     if (lastc == '\n')
 	limit[-1] = lastc;
     free(message);
+}
+
+void
+js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
+                      const uintN errorNumber, ...)
+{
+    va_list ap;
+    jschar *limit, lastc;
+    JSErrorReporter onError;
+    JSErrorReport report;
+    JSString *linestr;
+    char *message;
+
+    report.errorNumber = errorNumber;
+    report.messageArgs = NULL;
+    report.ucmessage = NULL;
+    message = NULL;
+
+    va_start(ap, errorNumber);
+    if (!js_ExpandErrorArguments(cx, NULL, errorNumber, &message, &report, ap))
+        return;
+    va_end(ap);
+
+    PR_ASSERT(ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
+    limit = ts->linebuf.limit;
+    lastc = limit[-1];
+    if (lastc == '\n')
+	limit[-1] = 0;
+    onError = cx->errorReporter;
+    if (onError) {
+	report.filename = ts->filename;
+	report.lineno = ts->lineno;
+	linestr = js_NewStringCopyZ(cx, ts->linebuf.base, 0);
+	report.linebuf  = linestr
+			  ? JS_GetStringBytes(linestr)
+			  : NULL;
+	report.tokenptr = linestr
+			  ? report.linebuf + (ts->token.ptr - ts->linebuf.base)
+			  : NULL;
+	report.uclinebuf = ts->linebuf.base;
+	report.uctokenptr = ts->token.ptr;
+        report.flags = flags;
+	(*onError)(cx, message, &report);
+#if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
+    } else {
+	if (!(ts->flags & TSF_INTERACTIVE))
+	    fprintf(stderr, "JavaScript %s: ",
+                    JSREPORT_IS_WARNING(flags) ? "warning" : "error");
+	if (ts->filename)
+	    fprintf(stderr, "%s, ", ts->filename);
+	if (ts->lineno)
+	    fprintf(stderr, "line %u: ", ts->lineno);
+	fprintf(stderr, "%s:\n%s\n",message,
+                js_DeflateString(cx, ts->linebuf.base,
+                                 ts->linebuf.limit - ts->linebuf.base));
+        
+#endif
+    }
+    if (lastc == '\n')
+	limit[-1] = lastc;
+    if (message) free(message);
+    if (report.messageArgs) free(report.messageArgs);
 }
 
 JSTokenType
@@ -691,16 +755,20 @@ retry:
 		    RETURN(TOK_ERROR);
 		c = GetChar(ts);
 		radix = 16;
-	    } else if (JS7_ISDEC(c) && c < '8') {
-                /*
-                 * XXX Warning needed. Checking against c < '8' above is
-                 * non-ECMA, but is required to support legacy code; it's
-                 * likely that "08" and "09" are in use in code having to do
-                 * with dates.  So we need to support it, which makes our
-                 * behavior a superset of ECMA in this area.  We should be
-                 * raising a warning if '8' or '9' is encountered.
-                 */
-		radix = 8;
+	    } else if (JS7_ISDEC(c)) {
+		/*
+		 * We permit 08 and 09 as decimal numbers, which makes our 
+		 * behaviour superset of the ECMA numeric grammar.  We might
+		 * not always be so permissive, so we warn about it.
+		 */
+		if (c > '7' && JSVERSION_IS_ECMA(cx->version)) {
+		    js_ReportCompileError(cx, ts, JSREPORT_WARNING,
+				  "0%c is not an ECMA-legal numeric constant",
+					  c);
+		    radix = 10;
+		} else {
+		    radix = 8;
+		}
 	    }
 	}
 
@@ -730,7 +798,8 @@ retry:
 		    c = GetChar(ts);
 		}
 		if (!JS7_ISDEC(c)) {
-		    js_ReportCompileError(cx, ts, "missing exponent");
+		    js_ReportCompileError(cx, ts, JSREPORT_ERROR,
+                                          "missing exponent");
 		    RETURN(TOK_ERROR);
 		}
 		do {
@@ -746,12 +815,14 @@ retry:
 
 	if (radix == 10) {
 	    if (!js_strtod(cx, ts->tokenbuf.base, &endptr, &dval)) {
-		js_ReportCompileError(cx, ts, "out of memory");
+		js_ReportCompileError(cx, ts, JSREPORT_ERROR,
+                                      "out of memory");
 		RETURN(TOK_ERROR);
 	    }
 	} else {
 	    if (!js_strtointeger(cx, ts->tokenbuf.base, &endptr, radix, &dval)) {
-		js_ReportCompileError(cx, ts, "out of memory");
+		js_ReportCompileError(cx, ts, JSREPORT_ERROR,
+                                      "out of memory");
 		RETURN(TOK_ERROR);
 	    }
 	}
@@ -766,7 +837,8 @@ retry:
 	while ((c = GetChar(ts)) != qc) {
 	    if (c == '\n' || c == EOF) {
 		UngetChar(ts, c);
-		js_ReportCompileError(cx, ts, "unterminated string literal");
+		js_ReportCompileError(cx, ts, JSREPORT_ERROR,
+                                      "unterminated string literal");
 		RETURN(TOK_ERROR);
 	    }
 	    if (c == '\\') {
@@ -955,11 +1027,13 @@ skipline:
 		if (c == '/' && MatchChar(ts, '*')) {
 		    if (MatchChar(ts, '/'))
 			goto retry;
-		    js_ReportCompileError(cx, ts, "nested comment");
+		    js_ReportCompileError(cx, ts, JSREPORT_ERROR,
+                                          "nested comment");
 		}
 	    }
 	    if (c == EOF) {
-		js_ReportCompileError(cx, ts, "unterminated comment");
+		js_ReportCompileError(cx, ts, JSREPORT_ERROR,
+                                      "unterminated comment");
 		RETURN(TOK_ERROR);
 	    }
 	    goto retry;
@@ -974,7 +1048,7 @@ skipline:
 	    while ((c = GetChar(ts)) != '/') {
 		if (c == '\n' || c == EOF) {
 		    UngetChar(ts, c);
-		    js_ReportCompileError(cx, ts,
+		    js_ReportCompileError(cx, ts,JSREPORT_ERROR,
 			"unterminated regular expression literal");
 		    RETURN(TOK_ERROR);
 		}
@@ -998,7 +1072,7 @@ skipline:
 	    c = PeekChar(ts);
 	    if (JS7_ISLET(c)) {
 		ts->token.ptr = ts->linebuf.ptr - 1;
-		js_ReportCompileError(cx, ts,
+		js_ReportCompileError(cx, ts,JSREPORT_ERROR,
 				      "invalid flag after regular expression");
 		(void) GetChar(ts);
 		RETURN(TOK_ERROR);
@@ -1065,7 +1139,7 @@ skipline:
 		break;
 	    n = 10 * n + JS7_UNDEC(c);
 	    if (n >= ATOM_INDEX_LIMIT) {
-		js_ReportCompileError(cx, ts,
+		js_ReportCompileError(cx, ts,JSREPORT_ERROR,
 				      "overlarge sharp variable number");
 		RETURN(TOK_ERROR);
 	    }
@@ -1082,7 +1156,8 @@ skipline:
 #endif /* JS_HAS_SHARP_VARS */
 
       default:
-	js_ReportCompileError(cx, ts, "illegal character");
+	js_ReportCompileError(cx, ts, JSREPORT_ERROR,
+                              "illegal character");
 	RETURN(TOK_ERROR);
     }
 

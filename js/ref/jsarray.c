@@ -495,8 +495,7 @@ array_join(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 array_nyi(JSContext *cx, const char *what)
 {
-    JS_ReportError(cx, "sorry, Array.prototype.%s is not yet implemented",
-		   what);
+    JS_ReportErrorNumber(cx, NULL, JSMSG_NO_PROTO, what);
     return JS_FALSE;
 }
 #endif
@@ -699,7 +698,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     if (argc > 0) {
 	if (JSVAL_IS_PRIMITIVE(argv[0])) {
-	    JS_ReportError(cx, "invalid Array.prototype.sort argument");
+	    JS_ReportErrorNumber(cx, NULL, JSMSG_BAD_PROTO_SORT);
 	    return JS_FALSE;
 	}
 	fval = argv[0];

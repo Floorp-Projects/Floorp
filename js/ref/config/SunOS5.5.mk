@@ -13,10 +13,12 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 #
 # Config stuff for SunOS5.5
 #
+
 AS = as
 CC = gcc -Wall -Wno-format
 CCC = g++ -Wall -Wno-format

@@ -160,6 +160,8 @@ struct JSContext {
     jsrefcount          requestDepth;
 #endif
     JSStackFrame        *dormantFrameChain;   /* dormant frame chains */
+    JSPackedBool    throwing;       /* is there a pending exception? */
+    jsval	    exception;      /* most-recently-thrown exceptin */
 };
 
 typedef struct JSInterpreterHooks {
@@ -188,7 +190,14 @@ js_ContextIterator(JSRuntime *rt, JSContext **iterp);
  */
 #ifdef va_start
 extern void
-js_ReportErrorVA(JSContext *cx, const char *format, va_list ap);
+js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap);
+extern void
+js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallBack callback,
+                                        const uintN errorNumber, va_list ap);
+extern JS_PUBLIC_API(JSBool)
+js_ExpandErrorArguments(JSContext *cx, JSErrorCallBack callback,
+				const uintN errorNumber, char **message,
+				JSErrorReport *reportp, va_list ap);
 #endif
 
 /*
@@ -199,6 +208,17 @@ js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *report);
 
 extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);
+
+enum JSErrNum {
+#define MSG_DEF(name, number, count, exception, format) \
+    name = number,
+#include "jsmsg.def"
+#undef MSG_DEF
+    JSErr_Limit
+#undef MSGDEF
+};
+
+extern JSErrorFormatString js_ErrorFormatString[JSErr_Limit];
 
 PR_END_EXTERN_C
 
