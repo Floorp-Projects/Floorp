@@ -9,7 +9,7 @@ agreement accompanying it.
 
 This Read Me file contains information about system
 requirements and installation instructions for the Windows,
-Mac OS, and Linux builds of Mozilla. 
+Mac OS, and Linux builds of Mozilla.
 
 For more info on Mozilla, see www.mozilla.org. To submit bugs
 or other feedback, see the Navigator QA menu and check out
@@ -28,11 +28,11 @@ at irc.mozilla.org.
 You can download nightly builds of Mozilla from the
 Mozilla.org FTP site at
 
-  ftp://ftp.mozilla.org/pub/mozilla/nightly/
+  ftp://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/
 
 For the very latest builds, see
 
-  ftp://ftp.mozilla.org/pub/mozilla/nightly/latest
+  ftp://ftp.mozilla.org/pub/mozilla.org/mozilla/nightly/latest-trunk
 
 Keep in mind that nightly builds, which are used by
 Mozilla.org developers for testing, may be buggy. If you are
@@ -41,7 +41,7 @@ releases Milestone builds of Mozilla every six weeks or so
 that you can download from
 
   http://www.mozilla.org/releases
- 
+
 Be sure to read the Mozilla release notes for information
 on known problems and installation issues with Mozilla.
 The release notes can be found at the preceding URL along
@@ -67,7 +67,7 @@ information to our crash-data newsgroup.
 	displays to use	more than 256 colors, Mozilla.org
 	recommends using the "Classic" theme for Mozilla.
 
-	To select the Modern theme after you have installed 
+	To select the Modern theme after you have installed
 	Mozilla, from the Navigator browser, open the View
 	menu, and then open then open the Apply Theme submenu
 	and choose Modern.
@@ -82,22 +82,22 @@ information to our crash-data newsgroup.
 *Windows
 
 	-Windows 95, 98, Me, NT4, 2000 or XP
-	-Intel Pentium class processor (233 MHz or faster 
+	-Intel Pentium class processor (233 MHz or faster
 	 recommended)
 	-64 MB RAM
 	-26 MB free hard disk space
 
 *Linux
 
-	-The following library versions (or compatible) are 
+	-The following library versions (or compatible) are
 	 required: glibc 2.1, XFree86 3.3.x, GTK 1.2.x, Glib
-	 1.2.x, Libstdc++ 2.9.0. Red Hat Linux 6.0, 
-	 Debian 2.1, and SuSE 6.2 (or later) installations 
+	 1.2.x, Libstdc++ 2.9.0. Red Hat Linux 6.0,
+	 Debian 2.1, and SuSE 6.2 (or later) installations
 	 should work.
-	-Red Hat 6.x users who want to install the Mozilla 
+	-Red Hat 6.x users who want to install the Mozilla
 	 RPM must have at least version 4.0.2 of rpm
 	 installed.
-	-Intel Pentium class processor (233 MHz or faster 
+	-Intel Pentium class processor (233 MHz or faster
 	 recommended)
 	-64MB RAM
 	-26MB free hard disk space
@@ -138,15 +138,15 @@ with Administrator privileges.
 
     To install Mozilla by downloading the Mozilla installer,
     follow these steps:
-	
+
 	1. Click the the mozilla-win32-installer.exe link on
 	the site you're downloading Mozilla from to download
 	the installer file to your machine.
-	
+
 	2. Navigate to where you downloaded the file and
 	double-click the Mozilla program icon on your machine
 	to begin the Setup program.
-	
+
 	3. Follow the on-screen instructions in the setup
 	program. The program starts automatically the first
 	time.
@@ -179,33 +179,33 @@ with Administrator privileges.
 Mac OS X Installation Instructions
 ----------------------------------
 
-    To install Mozilla by downloading the Mozilla disk image, 
+    To install Mozilla by downloading the Mozilla disk image,
     follow these steps:
 
-	1. Click the mozilla-mac-MachO.dmg.gz link to download 
-	it to your machine. By default, the download file is 
+	1. Click the mozilla-mac-MachO.dmg.gz link to download
+	it to your machine. By default, the download file is
 	downloaded to your desktop.
 
-	2. Once you have downloaded the .dmg.gz file, drag it 
-	onto Stuffit Expander to decompress it. If the disk 
-	image doesn't mount automatically, double-click on the 
-	.dmg file to mount it. If that fails, and the file 
-	does not look like a disk image file, do a "Show Info" 
-	on the file, and, in the "Open with application" 
-	category, choose Disk Copy. In Mac OS 10.2, you can 
+	2. Once you have downloaded the .dmg.gz file, drag it
+	onto Stuffit Expander to decompress it. If the disk
+	image doesn't mount automatically, double-click on the
+	.dmg file to mount it. If that fails, and the file
+	does not look like a disk image file, do a "Show Info"
+	on the file, and, in the "Open with application"
+	category, choose Disk Copy. In Mac OS 10.2, you can
 	use "Open with" from the context menu.
 
-	3. Once the disk image mounts, open it, and drag the 
+	3. Once the disk image mounts, open it, and drag the
 	Mozilla icon onto your hard disk.
 
-	4. We recommend that you copy it to the Applications 
+	4. We recommend that you copy it to the Applications
 	folder.
 
 	5. Now Eject the disk image.
 
-	6. If you like, you can drag Mozilla to your dock to 
-	have it easily accessible at all times. You might also 
-	wish to select Mozilla as your default browser in the 
+	6. If you like, you can drag Mozilla to your dock to
+	have it easily accessible at all times. You might also
+	wish to select Mozilla as your default browser in the
 	Internet system preferences pane (under the Web tab).
 
 
@@ -225,7 +225,7 @@ for later use by other users.
 
 	1. Create a directory named mozilla (mkdir mozilla)
 	and change to that directory (cd mozilla).
-	
+
 	2. Click the link on the site you're downloading
 	Mozilla from to download the installer file
 	(called mozilla-1686-pc-linux-gnu-installer.tar.gz)
@@ -268,13 +268,13 @@ for later use by other users.
 	decompress the file with the following command:
 
 	  tar zxvf moz*.tar.gz
- 	
+
 	This creates a "mozilla" directory under your mozilla
-	directory. 
+	directory.
 
-	4. Change to the mozilla directory (cd mozilla). 
+	4. Change to the mozilla directory (cd mozilla).
 
-	5. Run Mozilla with the following run script: 
+	5. Run Mozilla with the following run script:
 
 	  ./mozilla
 
