@@ -47,7 +47,7 @@
 #include "nsDebug.h"
 
 #ifndef nsCharTraits_h___
-#include "nsCharTratis.h"
+#include "nsCharTraits.h"
 #endif
 
 #ifndef RICKG_TESTBED
