@@ -29,20 +29,30 @@ void main(int argc, char* argv[])
 
     // try loading a component and releasing it to see if it leaks
     if (argc > 1 && argv[1] != nsnull) {
+        char* cidStr = argv[1];
         nsISupports* obj = nsnull;
-        rv = nsComponentManager::CreateInstance(argv[1], nsnull,
-                                                nsCOMTypeInfo<nsISupports>::GetIID(),
-                                                (void**)&obj);
+        if (cidStr[0] == '{') {
+            nsCID cid;
+            cid.Parse(cidStr);
+            rv = nsComponentManager::CreateInstance(cid, nsnull,
+                                                    nsCOMTypeInfo<nsISupports>::GetIID(),
+                                                    (void**)&obj);
+        }
+        else {
+            // progID case:
+            rv = nsComponentManager::CreateInstance(cidStr, nsnull,
+                                                    nsCOMTypeInfo<nsISupports>::GetIID(),
+                                                    (void**)&obj);
+        }
         if (NS_SUCCEEDED(rv)) {
-            printf("Successfully created %s\n", argv[1]);
+            printf("Successfully created %s\n", cidStr);
             NS_RELEASE(obj);
         }
         else {
-            printf("Failed to create %s (%x)\n", argv[1], rv);
+            printf("Failed to create %s (%x)\n", cidStr, rv);
         }
     }
 
     rv = NS_ShutdownXPCOM(servMgr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-    NS_RELEASE(servMgr);
 }
