@@ -188,6 +188,7 @@ public:
   static nsIAtom* pagey;
   static nsIAtom* pointSize;
   static nsIAtom* pre;
+  static nsIAtom* profile;
   static nsIAtom* prompt;
 
   static nsIAtom* readonly;

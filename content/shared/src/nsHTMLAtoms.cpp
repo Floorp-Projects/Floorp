@@ -156,6 +156,7 @@ nsIAtom* nsHTMLAtoms::pagex;
 nsIAtom* nsHTMLAtoms::pagey;
 nsIAtom* nsHTMLAtoms::pointSize;
 nsIAtom* nsHTMLAtoms::pre;
+nsIAtom* nsHTMLAtoms::profile;
 nsIAtom* nsHTMLAtoms::prompt;
 nsIAtom* nsHTMLAtoms::readonly;
 nsIAtom* nsHTMLAtoms::rel;
@@ -348,6 +349,7 @@ void nsHTMLAtoms::AddrefAtoms()
     pagey = NS_NewAtom("PAGEY");
     pointSize = NS_NewAtom("POINT-SIZE");
     pre = NS_NewAtom("PRE");
+    profile = NS_NewAtom("PROFILE");
     prompt = NS_NewAtom("PROMPT");
     readonly = NS_NewAtom("READONLY");
     rel = NS_NewAtom("REL");
@@ -533,6 +535,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(pagey);
     NS_RELEASE(pointSize);
     NS_RELEASE(pre);
+    NS_RELEASE(profile);
     NS_RELEASE(prompt);
     NS_RELEASE(readonly);
     NS_RELEASE(rel);
