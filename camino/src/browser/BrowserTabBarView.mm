@@ -465,8 +465,14 @@ static const int kOverflowButtonMargin = 1;
 -(unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
 {
   TabButtonCell * button = [self buttonAtPoint:[self convertPoint:[sender draggingLocation] fromView:nil]];
-  if (!button)
-    return NSDragOperationGeneric;
+  if (!button) {
+    // if the mouse isn't over a button, it'd be nice to give the user some indication that something will happen
+    // if the user releases the mouse here. Try to indicate copy.
+    if ([sender draggingSourceOperationMask] & NSDragOperationCopy)
+      return NSDragOperationCopy;
+    else
+      return NSDragOperationGeneric;
+  }
   mDragDest = [[button tabViewItem] tabItemContentsView];
   mDragDestButton = button;
   unsigned int rv = [ mDragDest draggingEntered:sender];
@@ -487,7 +493,10 @@ static const int kOverflowButtonMargin = 1;
       [self setNeedsDisplay:YES];
       mDragDestButton = nil;
     }
-    return NSDragOperationGeneric;
+    if ([sender draggingSourceOperationMask] & NSDragOperationCopy)
+      return NSDragOperationCopy;
+    else
+      return NSDragOperationGeneric;
   }
   mDragDest = [[button tabViewItem] tabItemContentsView];
   if (mDragDestButton != button) {

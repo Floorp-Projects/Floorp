@@ -506,7 +506,14 @@ static const int kBMBarScanningStep = 5;
     return NSDragOperationNone;
   }
 
-  return NSDragOperationGeneric;
+  NSDragOperation dragOpMask = [sender draggingSourceOperationMask];
+  // see if the user forced copy by holding the appropriate modifier - the OS will AND the mask with the Copy flag
+  if (dragOpMask == NSDragOperationCopy)
+    return NSDragOperationCopy;
+  if (dragOpMask & NSDragOperationGeneric)
+    return NSDragOperationGeneric;
+  
+  return NSDragOperationNone;
 }
 
 - (void)draggingExited:(id <NSDraggingInfo>)sender
@@ -535,7 +542,14 @@ static const int kBMBarScanningStep = 5;
   if (mDragInsertionPosition)
     [self setNeedsDisplayInRect:[self insertionRectForButton:mDragInsertionButton position:mDragInsertionPosition]];
 
-  return NSDragOperationGeneric;
+  NSDragOperation dragOpMask = [sender draggingSourceOperationMask];
+  // see if the user forced copy by holding the appropriate modifier - the OS will AND the mask with the Copy flag
+  if (dragOpMask == NSDragOperationCopy)
+    return NSDragOperationCopy;
+  if (dragOpMask & NSDragOperationGeneric)
+    return NSDragOperationGeneric;
+  
+  return NSDragOperationNone;  
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender

@@ -120,6 +120,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (void)actionButtonWillDisplay:(NSNotification *)notification;
 
+- (NSDragOperation)preferredDragOperationForSourceMask:(NSDragOperation)srcMask;
+
 @end
 
 
@@ -926,6 +928,19 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   return NO;  
 }
 
+// Choose a single drag operation to return based on a provided mask and the operations that table view/outline view support.
+-(NSDragOperation) preferredDragOperationForSourceMask:(NSDragOperation)srcMask
+{
+  if (srcMask & NSDragOperationMove)
+    return NSDragOperationMove;
+  // only copy if the modifier key was held down - the OS will clear any other drag op flags
+  if (srcMask == NSDragOperationCopy)
+    return NSDragOperationCopy;
+  if (srcMask & NSDragOperationGeneric)
+    return NSDragOperationGeneric;
+  return NSDragOperationNone;
+}
+
 
 #pragma mark -
 //
@@ -1076,6 +1091,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   if (tv == mContainersTableView) {
     NSArray* types = [[info draggingPasteboard] types];
+    NSDragOperation dragOp = [self preferredDragOperationForSourceMask:[info draggingSourceOperationMask]];
     // figure out where we want to drop. |dropFolder| will either be a container or
     // the top-level bookmarks root if we're to create a new container.
     BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
@@ -1094,17 +1110,17 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
       {
         NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
         BOOL isOK = [manager isDropValid:draggedItems toFolder:dropFolder];
-        return (isOK) ? NSDragOperationGeneric: NSDragOperationNone;
+        return (isOK) ? dragOp : NSDragOperationNone;
       }
       else if ([types containsObject:@"MozURLType"] || [types containsObject:NSURLPboardType])
       {
-        return (dropFolder == mRootBookmarks) ? NSDragOperationNone: NSDragOperationGeneric;
+        return (dropFolder == mRootBookmarks) ? NSDragOperationNone : dragOp;
       }
       else if ([types containsObject:NSStringPboardType])
       {
         NSURL* testURL = [NSURL URLWithString:[[info draggingPasteboard] stringForType:NSStringPboardType]];
         if (testURL)
-          return (dropFolder == mRootBookmarks) ? NSDragOperationNone: NSDragOperationGeneric;        
+          return (dropFolder == mRootBookmarks) ? NSDragOperationNone : dragOp;        
       }
     }
   }
@@ -1263,6 +1279,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (NSDragOperation)outlineView:(NSOutlineView*)outlineView validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index
 {
   NSArray* types = [[info draggingPasteboard] types];
+  NSDragOperation dragOp = [self preferredDragOperationForSourceMask:[info draggingSourceOperationMask]];
 
   //  if the index is -1, deny the drop
   if (index == NSOutlineViewDropOnItemIndex)
@@ -1272,17 +1289,17 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
     BookmarkFolder* parent = (item) ? item : [self itemTreeRootContainer];
     BOOL isOK = [[BookmarkManager sharedBookmarkManager] isDropValid:draggedItems toFolder:parent];
-    return (isOK) ? NSDragOperationGeneric : NSDragOperationNone;
+    return (isOK) ? dragOp : NSDragOperationNone;
   }
 
   if ([types containsObject: NSURLPboardType] || [types containsObject: @"MozURLType"] )
-    return NSDragOperationGeneric;
+    return dragOp;
 
   // see if we can turn a string into a URL.  If so, accept it. If not, punt.
   if ([types containsObject: NSStringPboardType]) {
     NSURL* testURL = [NSURL URLWithString:[[info draggingPasteboard] stringForType:NSStringPboardType]];
     if (testURL)
-      return NSDragOperationGeneric;
+      return dragOp;
   }
   return NSDragOperationNone;
 }
