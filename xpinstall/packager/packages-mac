@@ -72,7 +72,6 @@ viewer:Components:editor.xpt
 viewer:Components:EditorCore.shlb 
 viewer:Components:EditorTxmgr.shlb 
 viewer:Components:file.shlb 
-viewer:Components:file.xpt 
 viewer:Components:FindComponent.shlb 
 viewer:Components:ftp.shlb 
 viewer:Components:ftp.xpt 
