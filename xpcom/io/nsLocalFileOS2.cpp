@@ -795,8 +795,7 @@ NS_IMETHODIMP
 nsLocalFile::AppendRelativePath(const char *node)
 {
     // Cannot start with a / or have .. or have / anywhere
-    if (!node || (*node == '/') || (strstr(node, "..") != nsnull) ||
-        (strchr(node, '/') != nsnull))
+    if (!node || strchr(node, '/'))
     {
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
