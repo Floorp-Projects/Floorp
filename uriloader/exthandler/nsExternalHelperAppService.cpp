@@ -193,7 +193,9 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { IMAGE_JPG, "jpg" },
   { TEXT_HTML, "html" },
   { TEXT_HTML, "htm" },
-  { APPLICATION_XPINSTALL, "xpi" }
+  { APPLICATION_XPINSTALL, "xpi" },
+  { "application/xhtml+xml", "xhtml" },
+  { "application/xhtml+xml", "xhtm" }
 };
 
 // this is a small private struct used to help us initialize some
