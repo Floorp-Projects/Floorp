@@ -568,6 +568,16 @@ NS_IMETHODIMP nsDeviceContextWin :: GetSystemFont(nsSystemFontID anID, nsFont *a
   return status;
 }
 
+NS_IMETHODIMP nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
+{
+  if (NULL == mSurface) {
+    aContext.CreateDrawingSurface(nsnull, 0, mSurface);
+  }
+
+  aSurface = mSurface;
+  return NS_OK;
+}
+
 int CALLBACK fontcallback(ENUMLOGFONT FAR *lpelf, NEWTEXTMETRIC FAR *lpntm,
                           int FontType, LPARAM lParam)  
 {
