@@ -34,16 +34,16 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"
+#include "nsIWalletService.h"
 
 #include "UMacUnicode.h"
 #include "ApplIDs.h"
 
 #include <LStaticText.h>
-#include <LIconControl.h>
 #include <LCheckBox.h>
 #include <LEditText.h>
-#include <URegistrar.h>
 #include <UModalDialogs.h>
+#include <LPushButton.h>
 
 // Interfaces needed to be included
 
@@ -52,6 +52,32 @@ const PRInt32     kGrowIconSize = 15;
 
 // Static Variables
 vector<CWebBrowserChrome*> CWebBrowserChrome::mgBrowserList;
+
+class CWebBrowserPrompter : public nsIPrompt
+{
+public:
+  CWebBrowserPrompter(CWebBrowserChrome* aChrome);
+  virtual ~CWebBrowserPrompter();
+    
+  NS_DECL_ISUPPORTS
+  NS_FORWARD_NSIPROMPT(mChrome->);
+  
+protected:
+  CWebBrowserChrome *mChrome; 
+};
+
+NS_IMPL_ISUPPORTS1(CWebBrowserPrompter, nsIPrompt);
+
+CWebBrowserPrompter::CWebBrowserPrompter(CWebBrowserChrome* aChrome) :
+  mChrome(aChrome)
+{
+  NS_INIT_REFCNT();
+}
+
+
+CWebBrowserPrompter::~CWebBrowserPrompter()
+{
+}
 
 
 //*****************************************************************************
@@ -87,6 +113,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
+   NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -95,7 +122,30 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP CWebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
-   return QueryInterface(aIID, aInstancePtr);
+   if (aIID.Equals(NS_GET_IID(nsIPrompt)))
+   {
+      if (!mPrompter)
+      {
+        nsresult rv;
+        
+        nsCOMPtr<nsIPrompt> prompt;
+        prompt = new CWebBrowserPrompter(this);
+        NS_ENSURE_TRUE(prompt, NS_ERROR_OUT_OF_MEMORY);
+        
+        nsCOMPtr<nsISingleSignOnPrompt> siPrompt = do_CreateInstance(NS_SINGLESIGNONPROMPT_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+          siPrompt->Init(prompt);
+          mPrompter = siPrompt;
+        }
+        else
+          mPrompter = prompt;
+      }
+      NS_ENSURE_TRUE(mPrompter, NS_ERROR_FAILURE);
+      return mPrompter->QueryInterface(aIID, aInstancePtr);
+   }
+   else
+      return QueryInterface(aIID, aInstancePtr);
 }
 
 //*****************************************************************************
@@ -149,16 +199,12 @@ NS_IMETHODIMP CWebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt3
 {
    NS_ENSURE_ARG_POINTER(aWebBrowser);
    *aWebBrowser = nsnull;
-
-   // Note: For now, until we can create a window with specific chrome flags, this will
-   // put up a plain window without navigation controls or location text. This is
-   // most likely being used to pop up an add.
    
    CBrowserWindow	*theWindow;
    try
    {
       // CreateWindow can throw an we're being called from mozilla, so we need to catch
-      theWindow = dynamic_cast<CBrowserWindow*>(LWindow::CreateWindow(wind_PlainBrowserWindow, LCommander::GetTopCommander()));
+      theWindow = CBrowserWindow::CreateWindow(chromeMask, aCX, aCY);
    }
    catch (...)
    {
@@ -209,7 +255,8 @@ NS_IMETHODIMP CWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
 
 NS_IMETHODIMP CWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-   mBrowserWindow->ResizeFrameTo(aCX, aCY + kGrowIconSize, true);
+   mBrowserWindow->ResizeWindowTo(aCX, aCY + kGrowIconSize);
+   mBrowserWindow->SetSizeToContent(false);
    return NS_OK;
 }
 
@@ -334,8 +381,8 @@ NS_IMETHODIMP CWebBrowserChrome::Create()
 
 NS_IMETHODIMP CWebBrowserChrome::Destroy()
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_UNEXPECTED;
+   delete mBrowserWindow;
+   return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::SetPosition(PRInt32 x, PRInt32 y)
@@ -348,13 +395,14 @@ NS_IMETHODIMP CWebBrowserChrome::SetPosition(PRInt32 x, PRInt32 y)
 
 NS_IMETHODIMP CWebBrowserChrome::GetPosition(PRInt32* x, PRInt32* y)
 {
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-   NS_ENSURE_ARG_POINTER(x && y);
+   NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
    Rect  bounds;
    mBrowserWindow->GetGlobalBounds(bounds);
-   *x = bounds.left;
-   *y = bounds.top;
+   if (x)
+      *x = bounds.left;
+   if (y)
+      *y = bounds.top;
    return NS_OK;
 }
 
@@ -362,19 +410,20 @@ NS_IMETHODIMP CWebBrowserChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint
 {
 	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
-   mBrowserWindow->ResizeFrameTo(cx, cy + kGrowIconSize, fRepaint);
+   mBrowserWindow->ResizeWindowTo(cx, cy + kGrowIconSize);
    return NS_OK;
 }
 
 NS_IMETHODIMP CWebBrowserChrome::GetSize(PRInt32* cx, PRInt32* cy)
 {
-   NS_ENSURE_ARG_POINTER(cx && cy);
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+   NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
    Rect  bounds;
    mBrowserWindow->GetGlobalBounds(bounds);
-   *cx = bounds.right - bounds.left;
-   *cy = bounds.bottom - bounds.top - kGrowIconSize;
+   if (cx)
+       *cx = bounds.right - bounds.left;
+   if (cy)
+       *cy = bounds.bottom - bounds.top - kGrowIconSize;
    return NS_OK;
 }
 
@@ -458,15 +507,9 @@ NS_IMETHODIMP CWebBrowserChrome::GetVisibility(PRBool* aVisibility)
 
 NS_IMETHODIMP CWebBrowserChrome::SetVisibility(PRBool aVisibility)
 {
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+   NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 
-   if (aVisibility)
-   {
-      mBrowserWindow->Show();
-      mBrowserWindow->Select();
-   }
-   else
-      mBrowserWindow->Hide();
+   mBrowserWindow->SetVisibility(aVisibility);
       
    return NS_OK;
 }
@@ -500,11 +543,11 @@ NS_IMETHODIMP CWebBrowserChrome::GetTitle(PRUnichar** aTitle)
    NS_ENSURE_ARG_POINTER(aTitle);
    NS_ENSURE_STATE(mBrowserWindow);
 
-   Str255         aStr;
+   Str255         pStr;
    nsAutoString   titleStr;
    
-   mBrowserWindow->GetDescriptor(aStr);
-   UMacUnicode::Str255ToString(aStr, titleStr);
+   mBrowserWindow->GetDescriptor(pStr);
+   CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, titleStr);
    *aTitle = titleStr.ToNewUnicode();
    
    return NS_OK;
@@ -512,15 +555,14 @@ NS_IMETHODIMP CWebBrowserChrome::GetTitle(PRUnichar** aTitle)
 
 NS_IMETHODIMP CWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 {
-   NS_ENSURE_STATE(mBrowserWindow);
+    NS_ENSURE_STATE(mBrowserWindow);
 
-	nsAutoString   titleStr(aTitle);
-	Str255         aStr;
+    Str255          pStr;
 	
-	UMacUnicode::StringToStr255(titleStr, aStr);
-   mBrowserWindow->SetDescriptor(aStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(aTitle), pStr);
+    mBrowserWindow->SetDescriptor(pStr);
    
-   return NS_OK;
+    return NS_OK;
 }
 
 //*****************************************************************************
@@ -528,17 +570,19 @@ NS_IMETHODIMP CWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 //*****************************************************************************   
 
 NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
-{
-    RegisterClass_(LIconControl);
-    
-    StDialogHandler	theHandler(dlog_Alert, mBrowserWindow);
+{    
+    StDialogHandler	 theHandler(dlog_Alert, mBrowserWindow);
     LWindow			 *theDialog = theHandler.GetDialog();
-    Str255            aStr;
+    nsCAutoString    cStr;
+    Str255           pStr;
 
-    UMacUnicode::StringToStr255(nsString(text), aStr);
-   			
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    theDialog->SetDescriptor(pStr);
+
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    msgText->SetDescriptor(aStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    cStr.ReplaceChar('\n', '\r');   			
+    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
 
     theDialog->Show();
     theDialog->Select();
@@ -559,6 +603,40 @@ NS_IMETHODIMP CWebBrowserChrome::AlertCheck(const PRUnichar *dialogTitle,
                                             const PRUnichar *checkMsg, 
                                             PRBool *checkValue)
 {
+    NS_ENSURE_ARG_POINTER(checkValue);
+
+    StDialogHandler	theHandler(dlog_ConfirmCheck, mBrowserWindow);
+    LWindow			 *theDialog = theHandler.GetDialog();
+    nsCAutoString    cStr;
+    Str255           pStr;
+
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    theDialog->SetDescriptor(pStr);
+
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    cStr.ReplaceChar('\n', '\r');   			
+    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    
+    LCheckBox *checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
+    checkBox->SetDescriptor(pStr);
+    checkBox->SetValue(*checkValue ? 1 : 0);
+
+    theDialog->Show();
+    theDialog->Select();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == msg_OK)
+		{
+		    *checkValue = checkBox->GetValue();    
+   		    break;
+   		}
+	}
+
     return NS_OK;
 }
 
@@ -568,12 +646,16 @@ NS_IMETHODIMP CWebBrowserChrome::Confirm(const PRUnichar *dialogTitle, const PRU
     
     StDialogHandler	theHandler(dlog_Confirm, mBrowserWindow);
     LWindow			 *theDialog = theHandler.GetDialog();
-    Str255            aStr;
-
-    UMacUnicode::StringToStr255(nsString(text), aStr);
+    nsCAutoString    cStr;
+    Str255           pStr;
+    
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    theDialog->SetDescriptor(pStr);
    			
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    msgText->SetDescriptor(aStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    cStr.ReplaceChar('\n', '\r');   			
+    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
 
     theDialog->Show();
     theDialog->Select();
@@ -604,14 +686,20 @@ NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, cons
 
     StDialogHandler	theHandler(dlog_ConfirmCheck, mBrowserWindow);
     LWindow			 *theDialog = theHandler.GetDialog();
-    Str255          msgStr, checkBoxStr;
+    nsCAutoString    cStr;
+    Str255           pStr;
 
-    UMacUnicode::StringToStr255(nsString(text), msgStr);	
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    theDialog->SetDescriptor(pStr);
+
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    msgText->SetDescriptor(msgStr);
-    UMacUnicode::StringToStr255(nsString(checkMsg), checkBoxStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    cStr.ReplaceChar('\n', '\r');   			
+    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    
     LCheckBox *checkBox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));
-    checkBox->SetDescriptor(checkBoxStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(checkMsg), pStr);
+    checkBox->SetDescriptor(pStr);
     checkBox->SetValue(*checkValue ? 1 : 0);
 
     theDialog->Show();
@@ -646,11 +734,17 @@ NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUn
 
     StDialogHandler	theHandler(dlog_Prompt, mBrowserWindow);
     LWindow			 *theDialog = theHandler.GetDialog();
-    Str255          aStr;
+    nsCAutoString   cStr;
+    Str255          pStr;
 
-    UMacUnicode::StringToStr255(nsString(text), aStr);	
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    theDialog->SetDescriptor(pStr);
+
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    msgText->SetDescriptor(aStr);
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    cStr.ReplaceChar('\n', '\r');
+    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    
     LEditText *responseText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Rslt'));
     theDialog->SetLatentSub(responseText);
     
@@ -663,12 +757,12 @@ NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUn
 		
 		if (hitMessage == msg_OK)
 		{
-		    nsAutoString    responseStr;
-		    
+		    nsAutoString ucStr;
+
 		    *_retval = PR_TRUE;
-		    responseText->GetDescriptor(aStr);
-		    UMacUnicode::Str255ToString(aStr, responseStr);
-		    *result = responseStr.ToNewUnicode();    
+		    responseText->GetDescriptor(pStr);
+		    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
+		    *result = ucStr.ToNewUnicode();    
    		    if (!result)
    		        resultErr = NS_ERROR_OUT_OF_MEMORY;
    		    break;
@@ -693,11 +787,17 @@ NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dial
 
     StDialogHandler	theHandler(dlog_PromptNameAndPass, mBrowserWindow);
     LWindow			 *theDialog = theHandler.GetDialog();
-    Str255          aStr;
+    nsCAutoString   cStr;
+    Str255          pStr;
 
-    UMacUnicode::StringToStr255(nsString(text), aStr);	
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    theDialog->SetDescriptor(pStr);
+
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    msgText->SetDescriptor(aStr);	
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    cStr.ReplaceChar('\n', '\r');
+    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    
     LEditText *userText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Name'));
     LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
  
@@ -711,17 +811,17 @@ NS_IMETHODIMP CWebBrowserChrome::PromptUsernameAndPassword(const PRUnichar *dial
 		
 		if (hitMessage == msg_OK)
 		{
-		    nsAutoString    responseStr;
+		    nsAutoString    ucStr;
 		    
-		    userText->GetDescriptor(aStr);
-		    UMacUnicode::Str255ToString(aStr, responseStr);
-		    *user = responseStr.ToNewUnicode();
+		    userText->GetDescriptor(pStr);
+		    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
+		    *user = ucStr.ToNewUnicode();
 		    if (*user == nsnull)
 		        resultErr = NS_ERROR_OUT_OF_MEMORY;
 		    
-		    pwdText->GetDescriptor(aStr);
-		    UMacUnicode::Str255ToString(aStr, responseStr);
-		    *pwd = responseStr.ToNewUnicode();
+		    pwdText->GetDescriptor(pStr);
+		    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
+		    *pwd = ucStr.ToNewUnicode();
 		    if (*pwd == nsnull)
 		        resultErr = NS_ERROR_OUT_OF_MEMORY;
 		    
@@ -745,13 +845,19 @@ NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, co
     
     nsresult resultErr = NS_OK;
 
-    StDialogHandler	theHandler(dlog_PromptPassword, mBrowserWindow);
+    StDialogHandler	 theHandler(dlog_PromptPassword, mBrowserWindow);
     LWindow			 *theDialog = theHandler.GetDialog();
-    Str255          aStr;
+    nsCAutoString    cStr;
+    Str255           pStr;
 
-    UMacUnicode::StringToStr255(nsString(text), aStr);	
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(dialogTitle), pStr);
+    theDialog->SetDescriptor(pStr);
+
     LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    msgText->SetDescriptor(aStr);	
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(text), cStr);
+    cStr.ReplaceChar('\n', '\r');
+    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+    
     LEditText *pwdText = dynamic_cast<LEditText*>(theDialog->FindPaneByID('Pass'));
  
     theDialog->SetLatentSub(pwdText);   
@@ -764,11 +870,11 @@ NS_IMETHODIMP CWebBrowserChrome::PromptPassword(const PRUnichar *dialogTitle, co
 		
 		if (hitMessage == msg_OK)
 		{
-		    nsAutoString    responseStr;
+		    nsAutoString    ucStr;
 		    		    
-		    pwdText->GetDescriptor(aStr);
-		    UMacUnicode::Str255ToString(aStr, responseStr);
-		    *pwd = responseStr.ToNewUnicode();
+		    pwdText->GetDescriptor(pStr);
+		    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
+		    *pwd = ucStr.ToNewUnicode();
 		    if (*pwd == nsnull)
 		        resultErr = NS_ERROR_OUT_OF_MEMORY;
 		    *_retval = PR_TRUE;        
@@ -791,11 +897,211 @@ NS_IMETHODIMP CWebBrowserChrome::Select(const PRUnichar *inDialogTitle, const PR
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::UniversalDialog(const PRUnichar *inTitleMessage, const PRUnichar *inDialogTitle, const PRUnichar *inMsg, const PRUnichar *inCheckboxMsg, const PRUnichar *inButton0Text, const PRUnichar *inButton1Text, const PRUnichar *inButton2Text, const PRUnichar *inButton3Text, const PRUnichar *inEditfield1Msg, const PRUnichar *inEditfield2Msg, PRUnichar **inoutEditfield1Value, PRUnichar **inoutEditfield2Value, const PRUnichar *inIConURL, PRBool *inoutCheckboxState, PRInt32 inNumberButtons, PRInt32 inNumberEditfields, PRInt32 inEditField1Password, PRInt32 *outButtonPressed)
+NS_IMETHODIMP CWebBrowserChrome::UniversalDialog(const PRUnichar *inTitleMessage,
+                                                 const PRUnichar *inDialogTitle,
+                                                 const PRUnichar *inMsg,
+                                                 const PRUnichar *inCheckboxMsg,
+                                                 const PRUnichar *inButton0Text,
+                                                 const PRUnichar *inButton1Text,
+                                                 const PRUnichar *inButton2Text,
+                                                 const PRUnichar *inButton3Text,
+                                                 const PRUnichar *inEditfield1Msg,
+                                                 const PRUnichar *inEditfield2Msg,
+                                                 PRUnichar **inoutEditfield1Value,
+                                                 PRUnichar **inoutEditfield2Value,
+                                                 const PRUnichar *inIConURL,
+                                                 PRBool *inoutCheckboxState,
+                                                 PRInt32 inNumberButtons,
+                                                 PRInt32 inNumberEditfields,
+                                                 PRInt32 inEditField1Password,
+                                                 PRInt32 *outButtonPressed)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+    NS_ENSURE_ARG_POINTER(outButtonPressed);
+
+    // NOTE: inEditField1Password is not used. PowerPlant's LEditText
+    // does not allow being switched from being a password field to
+    // being clear text. An override needs to be made which allows this
+      
+    nsresult resultErr = NS_OK;
+
+    StDialogHandler	theHandler(dlog_Universal, mBrowserWindow);
+    LWindow			    *theDialog = theHandler.GetDialog();
+    nsCAutoString   cStr;
+    Str255          pStr;
+    LCheckBox       *checkbox = nsnull;
+
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inDialogTitle), pStr);
+    theDialog->SetDescriptor(pStr);
+
+    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
+    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inMsg), cStr);
+    cStr.ReplaceChar('\n', '\r');
+    msgText->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+
+    checkbox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));    
+    if (inCheckboxMsg && inoutCheckboxState)
+    {
+      CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inCheckboxMsg), pStr);
+      checkbox->SetDescriptor(pStr);
+      checkbox->SetValue(*inoutCheckboxState);
+    }
+    else
+    {
+      checkbox->Hide();
+      checkbox->Disable();
+    }
+    
+    LEditText *edit1Value = nsnull;
+    LEditText *edit2Value = nsnull;
+       
+    if (inNumberEditfields > 0)
+    {  
+        LStaticText *edit1Msg = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('EdM1'));
+        if (inEditfield1Msg)
+        {
+          CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inEditfield1Msg), cStr);
+          edit1Msg->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+        }    
+        edit1Value = dynamic_cast<LEditText*>(theDialog->FindPaneByID('EdV1'));
+        if (inoutEditfield1Value)
+        {
+          CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*inoutEditfield1Value), cStr);
+          edit1Value->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+        }
+        
+        if (inNumberEditfields > 1)
+        {
+            LStaticText *edit2Msg = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('EdM2'));
+            if (inEditfield2Msg)
+            {
+              CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inEditfield2Msg), cStr);
+              edit2Msg->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+            }
+            edit2Value = dynamic_cast<LEditText*>(theDialog->FindPaneByID('EdV2'));
+            if (inoutEditfield2Value)
+            {
+              CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*inoutEditfield2Value), cStr);
+              edit2Value->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+            }
+        }
+        else
+        {
+            // One edit field. If inEditField1Password is TRUE, we need to turn the first field,
+            // which by default is not a password field, into a password field.
+        }
+    }
+    
+    // If 1 or more edit fields are not shown, shrink the view enclosing the edit fields
+    // which will hide them. Also, resize the dialog box. All the items below the edit fields
+    // are sticky to the bottom and will be shifted up when we resize the window.
+    
+    SInt32 vShrink = (2 - inNumberEditfields) * 32;
+    if (vShrink)
+    {
+        LView *editFieldsEncl = dynamic_cast<LView*>(theDialog->FindPaneByID('Encl'));
+        editFieldsEncl->ResizeFrameBy(0, vShrink, false);
+        theDialog->ResizeWindowBy(0, vShrink);
+    }
+    
+    const PRUnichar* buttonTitles[4] = { inButton0Text, inButton1Text, inButton2Text, inButton3Text };
+    
+    for (PaneIDT buttonID = 1; buttonID <= 4; buttonID++)
+    {
+      LPushButton *aButton = dynamic_cast<LPushButton*>(theDialog->FindPaneByID(buttonID));
+      if (buttonID <= inNumberButtons)
+      {
+        if (buttonTitles[buttonID - 1])
+        {
+          CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inEditfield1Msg), pStr);
+          aButton->SetDescriptor(pStr);
+        }
+      }
+      else
+      {
+        aButton->Hide();
+        aButton->Disable();
+      }
+    }
+ 
+    if (edit1Value)
+        theDialog->SetLatentSub(edit1Value);   
+    theDialog->Show();
+    theDialog->Select();
+	
+	while (true)  // This is our modal dialog event loop
+	{				
+		MessageT	hitMessage = theHandler.DoDialog();
+		
+		if (hitMessage == msg_OK)
+		{
+		    *outButtonPressed = 0;        
+   		    break;
+   		}
+   		else if (hitMessage == msg_Cancel)
+   		{
+   		    *outButtonPressed = 1;
+   		    break;
+   		}
+   		else if (hitMessage == 3)
+   		{
+   		    *outButtonPressed = 1003;
+   		    break;
+   		}
+   		else if (hitMessage == 4)
+   		{
+   		    *outButtonPressed = 1004;
+   		    break;
+   		}
+	}
+
+  nsAutoString    ucStr;
+
+  if (inoutEditfield1Value && edit1Value)
+  {
+    nsMemory::Free(*inoutEditfield1Value);
+    *inoutEditfield1Value = nsnull;
+    edit1Value->GetDescriptor(pStr);
+    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
+    *inoutEditfield1Value = ucStr.ToNewUnicode();
+    if (*inoutEditfield1Value == nsnull)
+      resultErr = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (inoutEditfield2Value && edit2Value)
+  {
+    nsMemory::Free(*inoutEditfield2Value);
+    *inoutEditfield2Value = nsnull;
+    edit2Value->GetDescriptor(pStr);
+    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
+    *inoutEditfield2Value = ucStr.ToNewUnicode();
+    if (*inoutEditfield2Value == nsnull)
+      resultErr = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (inoutCheckboxState)
+    *inoutCheckboxState = checkbox->GetValue();
+
+  return resultErr;
+}
+
+//*****************************************************************************
+// CWebBrowserChrome::nsIContextMenuListener
+//*****************************************************************************   
+
+NS_IMETHODIMP CWebBrowserChrome::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+{
+    nsresult rv;
+	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
+    
+    try
+    {
+        rv = mBrowserWindow->OnShowContextMenu(aContextFlags, aEvent, aNode);
+    }
+    catch (...)
+    {
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
 }
 
 
