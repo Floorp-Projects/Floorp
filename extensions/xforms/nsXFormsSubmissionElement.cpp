@@ -88,12 +88,15 @@
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsXFormsUtils.h"
+#include "nsIDOMNamedNodeMap.h"
 
 // namespace literals
 #define NAMESPACE_XML_SCHEMA \
         NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema")
 #define NAMESPACE_XML_SCHEMA_INSTANCE \
         NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema-instance")
+#define kXMLNSNameSpaceURI \
+        NS_LITERAL_STRING("http://www.w3.org/2000/xmlns/")
 
 // submission methods
 #define METHOD_GET                    0x01
@@ -674,6 +677,36 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(newDoc, NS_ERROR_UNEXPECTED);
 
+  // We now need to add namespaces to the submission document.
+  // We get them from 2 sources - the main document's documentElement and the
+  // xforms:instance that contains the submitted instance data node.
+
+  // first handle the main document
+  nsCOMPtr<nsIDOMDocument> mainDoc;
+  mElement->GetOwnerDocument(getter_AddRefs(mainDoc));
+  NS_ENSURE_TRUE(mainDoc, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDOMElement> docElm;
+  mainDoc->GetDocumentElement(getter_AddRefs(docElm));
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(docElm));
+  NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
+
+  // get the document element of the document we are going to submit
+  nsCOMPtr<nsIDOMElement> newDocElm;
+  newDoc->GetDocumentElement(getter_AddRefs(newDocElm));
+
+  // add namespaces from the main document to the submission document
+  rv = AddNameSpaces(newDocElm, node);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // now handle namespaces on the xforms:instance
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  rv = nsXFormsUtils::GetInstanceNodeForData(data, model, getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = AddNameSpaces(newDocElm, node);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = serializer->SerializeToStream(newDoc, sink,
                                      NS_LossyConvertUTF16toASCII(encoding));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -683,6 +716,41 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   sink->Close();
 
   return storage->NewInputStream(0, stream);
+}
+
+nsresult
+nsXFormsSubmissionElement::AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource)
+{
+  nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
+  nsCOMPtr<nsIDOMNode> attrNode;
+  nsAutoString nsURI, localName, value, attrName;
+
+  aSource->GetAttributes(getter_AddRefs(attrMap));
+  NS_ENSURE_TRUE(attrMap, NS_ERROR_UNEXPECTED);
+
+  PRUint32 length;
+  attrMap->GetLength(&length);
+
+  for (PRUint32 run = 0; run < length; ++run) {
+    attrMap->Item(run, getter_AddRefs(attrNode));
+    attrNode->GetNamespaceURI(nsURI);
+
+    if (nsURI.Equals(kXMLNSNameSpaceURI)) {
+      attrNode->GetLocalName(localName);
+      attrNode->GetNodeValue(value);
+
+      attrName.AssignLiteral("xmlns");
+      // xmlns:foo, not xmlns=
+      if (!localName.EqualsLiteral("xmlns")) {
+        attrName.AppendLiteral(":");
+        attrName.Append(localName);
+      }
+
+      aTarget->SetAttribute(attrName, value);
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult

@@ -330,6 +330,13 @@ public:
    */
   static NS_HIDDEN_(PRBool) FocusControl(nsIDOMElement *aElement);
 
+  /**
+   * Returns the <xf:instance> for a given instance data node.
+   */
+  static NS_HIDDEN_(nsresult) GetInstanceNodeForData(nsIDOMNode *aInstanceDataNode,
+                                                     nsIModelElementPrivate *aModel,
+                                                     nsIDOMNode  **aInstanceNode);
+
 };
 
 #endif

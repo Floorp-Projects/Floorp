@@ -109,6 +109,8 @@ private:
 
   // input end of pipe, which contains response data.
   nsCOMPtr<nsIInputStream> mPipeIn;
+
+  nsresult AddNameSpaces(nsIDOMElement* aTarget, nsIDOMNode* aSource);
 };
 
 NS_HIDDEN_(nsresult)

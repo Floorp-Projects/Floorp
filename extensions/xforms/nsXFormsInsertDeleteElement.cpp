@@ -212,38 +212,12 @@ nsXFormsInsertDeleteElement::HandleAction(nsIDOMEvent            *aEvent,
 
   // Dispatch xforms-insert/delete event to the instance node we have modified
   // data for
-  nsCOMPtr<nsIDOMDocument> instanceDoc;
-  resNode->GetOwnerDocument(getter_AddRefs(instanceDoc));
-  NS_ENSURE_STATE(instanceDoc);
-
   nsCOMPtr<nsIDOMElement> modelElem = do_QueryInterface(model);
   NS_ENSURE_STATE(modelElem);
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-  rv = modelElem->GetElementsByTagNameNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
-                                         NS_LITERAL_STRING("instance"),
-                                         getter_AddRefs(nodeList));
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 childCount = 0;
-  nodeList->GetLength(&childCount);
   nsCOMPtr<nsIDOMNode> instNode;
-  PRUint32 i;
-  for (i = 0; i < childCount; ++i) {
-    nodeList->Item(i, getter_AddRefs(instNode));
-    nsCOMPtr<nsIInstanceElementPrivate> instPriv = do_QueryInterface(instNode);
-    if (!instPriv)
-      continue;
-
-    nsCOMPtr<nsIDOMDocument> tmpDoc;
-    instPriv->GetDocument(getter_AddRefs(tmpDoc));
-    if (tmpDoc == instanceDoc)
-      break;
-  }  
-
-  if (!childCount || i == childCount)
-    // No instance nodes in model or instance node not found?
-    // Doesn't make sense!
-    return NS_ERROR_ABORT;
+  rv = nsXFormsUtils::GetInstanceNodeForData(resNode, model, getter_AddRefs(instNode));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsXFormsUtils::DispatchEvent(instNode,
                                     mIsInsert ? eEvent_Insert : eEvent_Delete);

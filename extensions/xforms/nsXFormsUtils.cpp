@@ -54,6 +54,7 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsModelElement.h"
 #include "nsIXFormsControl.h"
+#include "nsIInstanceElementPrivate.h"
 
 #include "nsIXFormsContextControl.h"
 #include "nsIDOMDocumentEvent.h"
@@ -958,4 +959,58 @@ nsXFormsUtils::FocusControl(nsIDOMElement *aElement)
   if (element && NS_SUCCEEDED(element->Focus()))
     ret = PR_TRUE;
   return ret;
+}
+
+/* static */ nsresult
+nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
+                                      nsIModelElementPrivate *aModel,
+                                      nsIDOMNode             **aInstanceNode)
+{
+  NS_ENSURE_ARG(aInstanceDataNode);
+  NS_ENSURE_ARG(aModel);
+  NS_ENSURE_ARG_POINTER(aInstanceNode);
+  *aInstanceNode = nsnull;
+
+  /* We want to get at the <xf:instance> that aInstanceDataNode belongs to.
+     We get all xf:instance nodes in the aModel, QI it to nsIInstanceElementPrivate
+     and compare its document to the document aInstanceDataNode lives in.
+   */
+
+  nsCOMPtr<nsIDOMDocument> instanceDoc;
+  aInstanceDataNode->GetOwnerDocument(getter_AddRefs(instanceDoc));
+  // owner doc is null when the data node is the document (e.g., ref="/")
+  if (!instanceDoc)
+    instanceDoc = do_QueryInterface(aInstanceDataNode);
+  NS_ENSURE_TRUE(instanceDoc, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDOMElement> modelElem = do_QueryInterface(aModel);
+  NS_ENSURE_STATE(modelElem);
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsresult rv = modelElem->GetElementsByTagNameNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
+                                                  NS_LITERAL_STRING("instance"),
+                                                  getter_AddRefs(nodeList));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 childCount = 0;
+  nodeList->GetLength(&childCount);
+  PRUint32 i;
+  for (i = 0; i < childCount; ++i) {
+    nodeList->Item(i, aInstanceNode);
+    nsCOMPtr<nsIInstanceElementPrivate> instPriv = do_QueryInterface(*aInstanceNode);
+    if (!instPriv)
+      continue;
+
+    nsCOMPtr<nsIDOMDocument> tmpDoc;
+    instPriv->GetDocument(getter_AddRefs(tmpDoc));
+
+    if (tmpDoc == instanceDoc)
+      break;
+  }
+
+  if (!childCount || i == childCount)
+    // No instance nodes in model or instance node not found?
+    // Doesn't make sense!
+    return NS_ERROR_ABORT;
+
+  return NS_OK;
 }
