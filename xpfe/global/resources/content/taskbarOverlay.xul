@@ -11,9 +11,9 @@
     <titledbutton value="&mozillaButton.label;" crop="right" class="bookmarkFolder toolbar-flat" align="right"/>
     <menupopup class="standard" popupalign="bottomleft" popupanchor="topleft">
       <menuitem class="standard" value="&bonsai.label;"
-                oncommand="OpenTaskURL('http://bonsai.mozilla.org/toplevel.cgi?treeid=SeaMonkey');"/>
+                oncommand="openTopWin('http://bonsai.mozilla.org/toplevel.cgi?treeid=SeaMonkey');"/>
       <menuitem class="standard" value="&bugzillaButton.label;"
-                oncommand="OpenTaskURL('http://bugzilla.mozilla.org');"/>
+                oncommand="openTopWin('http://bugzilla.mozilla.org');"/>
     </menupopup>
   </menu>
   <spring flex="1"/>
