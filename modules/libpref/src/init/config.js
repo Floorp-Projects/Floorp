@@ -23,7 +23,7 @@
 // Default configuration information for the client
 //
 
-config("startup.homepage_override_url.1","chrome://navigator-region/locale/region.properties");
+config("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
 config("autoadmin.append_emailaddr",false);
 config("autoadmin.failover_to_cached",true);
 
