@@ -158,27 +158,6 @@ nsIArena* nsDocument::GetArena()
   return mArena;
 }
 
-void nsDocument::StartDocumentLoad()
-{
-}
-
-void nsDocument::PauseDocumentLoad()
-{
-}
-
-void nsDocument::StopDocumentLoad()
-{
-}
-
-void nsDocument::WaitForDocumentLoad()
-{
-}
-
-PRBool nsDocument::IsDocumentLoaded()
-{
-  return PR_TRUE;
-}
-
 const nsString* nsDocument::GetDocumentTitle() const
 {
   return mDocumentTitle;
