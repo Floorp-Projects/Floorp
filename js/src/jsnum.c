@@ -403,6 +403,19 @@ static JSConstDoubleSpec number_constants[] = {
 
 static jsdouble NaN;
 
+#if !defined __MWERKS__ && defined (XP_PC) && defined (_M_IX86)
+
+/*
+ * On Alpha platform this is handled via Compiler option.
+ */
+#define FIX_FPU() _control87(MCW_EM, MCW_EM)
+
+#else
+
+#define FIX_FPU() ((void)0)
+
+#endif
+
 JSBool
 js_InitRuntimeNumberState(JSContext *cx)
 {
@@ -412,22 +425,7 @@ js_InitRuntimeNumberState(JSContext *cx)
     rt = cx->runtime;
     JS_ASSERT(!rt->jsNaN);
 
-#ifdef XP_OS2
-    /*DSR071597 - I have no idea what this really does other than mucking with the floating     */
-    /*point unit, but it does fix a "floating point underflow" exception I am getting, and there*/
-    /*is similar code in the Hursley java. Making sure we have the same code in Javascript      */
-    /*where Netscape was calling control87 on Windows...                                        */
-    _control87(MCW_EM+PC_53+RC_NEAR,MCW_EM+MCW_PC+MCW_RC);
-#endif /* XP_OS2 */
-
-#ifndef __MWERKS__
-#if defined (XP_PC) && !defined(XP_OS2)
-#if defined (_M_IX86)
-    /* On Alpha platform this is handled via Compiler option */
-    _control87(MCW_EM, MCW_EM);
-#endif
-#endif /* XP_PC && !XP_OS2 */
-#endif /* __MWERKS__ */
+    FIX_FPU();
 
     u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
     u.s.lo = 0xffffffff;
@@ -480,6 +478,9 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto, *ctor;
     JSRuntime *rt;
+
+    /* XXX must do at least once per new thread, so do it per JSContext... */
+    FIX_FPU();
 
     if (!JS_DefineFunctions(cx, obj, number_functions))
 	return NULL;
