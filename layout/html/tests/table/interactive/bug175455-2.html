@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<title>Bug 175455 testcase</title>
+	<style type="text/css">
+	/* All of these rules seem to be required to trigger this bug */
+	a.xxx {
+		display: block;
+		width: 100%;
+		padding-left: 16px;
+		background-color: silver;
+	}
+	a.xxx:hover	{
+		font-weight: bold;
+	}
+	</style>
+</head>
+<body>
+<h1>Bug 175455 testcase</h1>
+<table>
+	<tr>
+		<td style="background-color: lime">
+
+			<a href="" class='xxx'>Hover on me, then move your mouse off again...</a>
+		</td>
+		<td style="background-color: green">
+			...and watch this cell move!
+		</td>
+	</tr>
+</table>
+
+</body>
+</html>

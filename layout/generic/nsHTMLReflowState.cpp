@@ -121,7 +121,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   : mReflowDepth(0)
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");
-  mFlags.mSpecialHeightReflow = mFlags.mUnused = 0;
   parentReflowState = nsnull;
   frame = aFrame;
   reason = aReason;
@@ -131,7 +130,10 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   rendContext = aRenderingContext;
   mSpaceManager = nsnull;
   mLineLayout = nsnull;
+  mFlags.mSpecialHeightReflow = PR_FALSE;
+  mFlags.mTableDerivedComputedWidth = PR_FALSE;
   mFlags.mIsTopOfPage = PR_FALSE;
+  mFlags.mUnused = 0;
   mPercentHeightObserver = nsnull;
   mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
@@ -152,7 +154,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
 {
   NS_PRECONDITION(nsnull != aRenderingContext, "no rendering context");  
 
-  mFlags.mSpecialHeightReflow = mFlags.mUnused = 0;
   reason = eReflowReason_Incremental;
   path = aReflowPath;
   parentReflowState = nsnull;
@@ -162,7 +163,10 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
   rendContext = aRenderingContext;
   mSpaceManager = nsnull;
   mLineLayout = nsnull;
+  mFlags.mSpecialHeightReflow = PR_FALSE;
+  mFlags.mTableDerivedComputedWidth = PR_FALSE;
   mFlags.mIsTopOfPage = PR_FALSE;
+  mFlags.mUnused = 0;
   mPercentHeightObserver = nsnull;
   mPercentHeightReflowInitiator = nsnull;
   Init(aPresContext);
@@ -344,6 +348,9 @@ void nsHTMLReflowState::InitCBReflowState()
       parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
       if (IS_TABLE_CELL(fType.get())) {
         mCBReflowState = parentReflowState;
+        // Set mFlags.mTableDerivedComputedWidth to true for a cell block. Its default 
+        // value was set to what the parent reflow state has. 
+        mFlags.mTableDerivedComputedWidth = PR_TRUE;
         return;
       }
     }
@@ -1661,6 +1668,35 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
   return sNormalLineHeightControl;
 }
 
+// Reset mFlags.mTableDerivedComputedWidth if there is a non percent style width
+// or if there is a percent style width and the parent has a style width.
+// This function assumes that aWidthUnit is never Auto or Inherit and that aState's
+// mFlags.mTableDerivedComputedWidth is set.
+static void
+CheckResetTableDerivedComputedWidth(nsHTMLReflowState& aState,
+                                    nsStyleUnit        aWidthUnit)
+{
+  if (eStyleUnit_Percent == aWidthUnit) {
+    // If the parent isn't a table cell and has a style width reset the flag
+    if (aState.parentReflowState) {
+      nsCOMPtr<nsIAtom> parentType;
+      aState.parentReflowState->frame->GetFrameType(getter_AddRefs(parentType));
+      if (!IS_TABLE_CELL(parentType)) {
+        nsStyleUnit parentUnit = aState.parentReflowState->mStylePosition->mWidth.GetUnit();
+        if ((eStyleUnit_Inherit != parentUnit) &&
+            (eStyleUnit_Auto    != parentUnit)) {
+          aState.mFlags.mTableDerivedComputedWidth = PR_FALSE;
+        }
+      }
+    }
+  }
+  else {
+    // always reset the flag if there is a fixed width
+    aState.mFlags.mTableDerivedComputedWidth = PR_FALSE;
+  }
+}
+
+        
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
@@ -1835,9 +1871,10 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
         // A specified value of 'auto' uses the element's intrinsic width
         mComputedWidth = NS_INTRINSICSIZE;
       } else {
+        if (mFlags.mTableDerivedComputedWidth)
+          CheckResetTableDerivedComputedWidth(*this, widthUnit);
         ComputeHorizontalValue(aContainingBlockWidth, widthUnit,
-                               mStylePosition->mWidth,
-                               mComputedWidth);
+                               mStylePosition->mWidth, mComputedWidth);
       }
 
       AdjustComputedWidth();
@@ -1893,9 +1930,10 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
         }
 
       } else {
+        if (mFlags.mTableDerivedComputedWidth)
+          CheckResetTableDerivedComputedWidth(*this, widthUnit);
         ComputeHorizontalValue(aContainingBlockWidth, widthUnit,
-                               mStylePosition->mWidth,
-                               mComputedWidth);
+                               mStylePosition->mWidth, mComputedWidth);
       }
 
       // Take into account minimum and maximum sizes
@@ -1938,9 +1976,10 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
         }
       
       } else {
+        if (mFlags.mTableDerivedComputedWidth)
+          CheckResetTableDerivedComputedWidth(*this, widthUnit);
         ComputeHorizontalValue(aContainingBlockWidth, widthUnit,
-                               mStylePosition->mWidth,
-                               mComputedWidth);
+                               mStylePosition->mWidth, mComputedWidth);
       }
 
       // Calculate the computed height
@@ -2089,6 +2128,8 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
       }
     }
     else {
+        if (mFlags.mTableDerivedComputedWidth)
+          CheckResetTableDerivedComputedWidth(*this, aWidthUnit);
       ComputeHorizontalValue(aContainingBlockWidth, aWidthUnit,
                              mStylePosition->mWidth, mComputedWidth);
     }
@@ -2747,6 +2788,16 @@ void nsHTMLReflowState::AdjustComputedWidth(void)
     // NS_ASSERTION(mComputedWidth>=0, "Negative Width Result - very bad");
     // if it did go bozo, set to 0
     if(mComputedWidth<0) mComputedWidth = 0;
+
+    // Tables allow enough width for cells without considering percent based constraints 
+    // of content within the cells. Since such content could exceed the available width, 
+    // we don't allow that to happen.
+    if (mFlags.mTableDerivedComputedWidth) {
+      nscoord borderPadding = mComputedBorderPadding.left + mComputedBorderPadding.right;
+      if (borderPadding + mComputedWidth > availableWidth) {
+        mComputedWidth = PR_MAX(0, availableWidth - borderPadding);
+      }
+    }
   }
 }
 #ifdef IBMBIDI
