@@ -567,7 +567,7 @@ nsRegistryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, P
             propertyStr += (const char*) valueStr;
         
             nsCOMPtr<nsIRDFResource> property;
-            rv = gRDF->GetResource(propertyStr, getter_AddRefs(property));
+            rv = gRDF->GetResource(propertyStr.get(), getter_AddRefs(property));
             if (NS_FAILED(rv)) return rv;
 
             if (aArc == property.get()) {
@@ -643,7 +643,7 @@ nsRegistryDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator 
             propertyStr += (const char*) valueStr;
         
             nsCOMPtr<nsIRDFResource> property;
-            rv = gRDF->GetResource(propertyStr, getter_AddRefs(property));
+            rv = gRDF->GetResource(propertyStr.get(), getter_AddRefs(property));
             if (NS_FAILED(rv)) return rv;
 
             array->AppendElement(property);
@@ -775,7 +775,7 @@ nsRegistryDataSource::SubkeyEnumerator::ConvertRegistryNodeToResource(nsISupport
     if (newURI.Last() != '/') newURI += '/';
     newURI.Append(path);
 
-    rv = gRDF->GetResource(newURI, aResult);
+    rv = gRDF->GetResource(newURI.get(), aResult);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

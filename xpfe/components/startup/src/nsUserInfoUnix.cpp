@@ -97,7 +97,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
         if (username.Length() > 0 && nsCRT::IsLower(username.CharAt(0)))
             username.SetCharAt(nsCRT::ToUpper(username.CharAt(0)), 0);
             
-        fullname.ReplaceSubstring("&", (const char *) username);
+        fullname.ReplaceSubstring("&", username.get());
     }
 
     *aFullname = ToNewUnicode(fullname);
@@ -193,7 +193,7 @@ nsUserInfo::GetEmailAddress(char * *aEmailAddress)
         return NS_ERROR_FAILURE;
     }
 
-    *aEmailAddress = nsCRT::strdup((const char *)emailAddress);
+    *aEmailAddress = ToNewCString(emailAddress);
     
     return NS_OK;
 }

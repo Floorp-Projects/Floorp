@@ -128,7 +128,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
             }
         }
     }
-    return SelectFileAndTransferLocation( aChannel, parent, contentType, suggestedName );
+    return SelectFileAndTransferLocation( aChannel, parent, contentType.get(), suggestedName.get() );
 }
 
 NS_IMETHODIMP

@@ -70,6 +70,7 @@
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "rdf.h"
 #include "nsITextToSubURI.h"
 #include "nsIInterfaceRequestor.h"
@@ -225,7 +226,7 @@ nsHTTPIndex::GetEncoding(char **encoding)
   if (! encoding)
     return(NS_ERROR_NULL_POINTER);
   
-  *encoding = nsCRT::strdup(mEncoding);
+  *encoding = ToNewCString(mEncoding);
   if (!*encoding)
     return(NS_ERROR_OUT_OF_MEMORY);
   
@@ -240,7 +241,7 @@ nsHTTPIndex::OnStartRequest(nsIRequest *request, nsISupports* aContext)
   mParser = do_CreateInstance(NS_DIRINDEXPARSER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
-  rv = mParser->SetEncoding(mEncoding);
+  rv = mParser->SetEncoding(mEncoding.get());
   if (NS_FAILED(rv)) return rv;
 
   rv = mParser->SetListener(this);
@@ -438,7 +439,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
   }
   
   nsCOMPtr<nsIRDFResource> entry;
-  rv = mDirRDF->GetResource(entryuriC, getter_AddRefs(entry));
+  rv = mDirRDF->GetResource(entryuriC.get(), getter_AddRefs(entry));
 
   // At this point, we'll (hopefully) have found the filename and
   // constructed a resource for it, stored in entry. So now take a
@@ -452,10 +453,10 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
     // For gopher, the target is the filename. We still have to do all
     // the above string manipulation though, because we need the entryuric
     // as the key for the RDF data source
-    if (!strncmp(entryuriC, kGopherProtocol, sizeof(kGopherProtocol)-1))
+    if (!strncmp(entryuriC.get(), kGopherProtocol, sizeof(kGopherProtocol)-1))
       str.AssignWithConversion(filename);
     else {
-      str.AssignWithConversion(entryuriC);
+      str.AssignWithConversion(entryuriC.get());
     }
 
     rv = mDirRDF->GetLiteral(str.get(), getter_AddRefs(lit));

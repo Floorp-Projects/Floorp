@@ -642,7 +642,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		if (!engineContext)	return;
 
 		nsCOMPtr<nsIURI>	uri;
-		if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), updateURL)))	return;
+		if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), updateURL.get())))	return;
 
 		nsCOMPtr<nsIChannel>	channel;
 		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))	return;
@@ -1037,7 +1037,7 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 		nsCOMPtr<nsIRDFResource>	category;
 		nsCAutoString			caturiC;
 		caturiC.AssignWithConversion(catURI);
-		if (NS_FAILED(rv = gRDFService->GetResource(caturiC,
+		if (NS_FAILED(rv = gRDFService->GetResource(caturiC.get(),
 			getter_AddRefs(category))))
 			return(rv);
 
@@ -1154,7 +1154,7 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 		nsCOMPtr<nsIRDFResource>	category;
 		nsCAutoString			caturiC;
 		caturiC.AssignWithConversion(catURI);
-		if (NS_FAILED(rv = gRDFService->GetResource(caturiC,
+		if (NS_FAILED(rv = gRDFService->GetResource(caturiC.get(),
 			getter_AddRefs(category))))
 			return(rv);
 
@@ -2448,7 +2448,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 					char		*charsetData = nsnull;
 					nsCAutoString	queryencodingstrC;
 					queryencodingstrC.AssignWithConversion(queryEncodingStr);
-					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC, uni, &charsetData)) && (charsetData))
+					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC.get(), uni, &charsetData)) && (charsetData))
 					{
 						text.AssignWithConversion(charsetData);
 						Recycle(charsetData);
@@ -2641,7 +2641,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
  					nsCAutoString	aCharset;
  					aCharset.AssignWithConversion(mQueryEncodingStr);
  					PRUnichar	*uni = nsnull;
- 					if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert(aCharset, escapedSearchText, &uni)) && (uni))
+ 					if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert(aCharset.get(), escapedSearchText.get(), &uni)) && (uni))
  					{
  						char	*convertedSearchText = nsnull;
  						if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape("UTF-8", uni, &convertedSearchText)))
@@ -2652,7 +2652,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 							unescapedSearchText.ReplaceSubstring("%25", "+");
 							unescapedSearchText.ReplaceSubstring("%2B25", "%25");
 
- 							searchText.AssignWithConversion(unescapedSearchText);
+ 							searchText.AssignWithConversion(unescapedSearchText.get());
 
  							Recycle(convertedSearchText);
  						}
@@ -3557,7 +3557,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 					char		*charsetData = nsnull;
 					nsCAutoString	queryencodingstrC;
 					queryencodingstrC.AssignWithConversion(queryEncodingStr);
-					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC, uni, &charsetData))
+					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC.get(), uni, &charsetData))
 					        && (charsetData))
 					{
 						textTemp.AssignWithConversion(charsetData);
@@ -3624,7 +3624,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				    nsCAutoString			poststrC;
 				    poststrC.AssignWithConversion(postStr);
 				    if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postDataStream),
-									       PR_FALSE, poststrC, 0)))
+									       PR_FALSE, poststrC.get(), 0)))
 				    {
 					nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
 					NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
@@ -4631,7 +4631,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 			}
 
 			// download it!
-			AddSearchEngine(updateURL, updateIconURL, nsnull, nsnull);
+			AddSearchEngine(updateURL.get(), updateIconURL.get(), nsnull, nsnull);
 		}
 		else
 		{
@@ -5030,7 +5030,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			nsCAutoString	hrefstrC;
 			hrefstrC.AssignWithConversion(hrefStr);
 
-			if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(&absURIStr, hrefstrC, aURL))
+			if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(&absURIStr, hrefstrC.get(), aURL))
 			    && (absURIStr))
 			{
 				hrefStr.AssignWithConversion(absURIStr);

@@ -2868,7 +2868,7 @@ nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
     else if (token->tokenName.Equals("groupby")) {
       mdb_err err;
       err = mStore->QueryToken(mEnv,
-                               nsCAutoString(token->tokenValue),
+                               nsCAutoString(token->tokenValue).get(),
                                &aResult.groupBy);
       if (err != 0)
         aResult.groupBy = 0;
@@ -3112,8 +3112,8 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
   stringName.Append(PRUnichar('-'));
 
   // and now the method, such as "is" or "isgreater"
-  stringName.AppendWithConversion(nsCAutoString(term->method.get(),
-                                                term->method.Length()));
+  stringName.AppendWithConversion(term->method.get(),
+                                  term->method.Length());
 
   // try adding -<text> to see if there's a match
   // for example, to match
