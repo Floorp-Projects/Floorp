@@ -31,14 +31,11 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
 	nsJapaneseToUnicode.cpp		\
-	nsSJIS2Unicode.cpp		\
 	nsUnicodeToSJIS.cpp		\
 	nsCP932ToUnicode.cpp		\
 	nsUnicodeToCP932.cpp		\
 	nsUCvJaSupport.cpp		\
 	nsUCvJaModule.cpp			\
-        nsEUCJPToUnicode.cpp            \
-        nsISO2022JPToUnicode.cpp        \
         nsUnicodeToEUCJP.cpp            \
         nsUnicodeToJISx0201.cpp         \
         nsUnicodeToJISx0208.cpp         \
@@ -48,14 +45,11 @@ CPPSRCS =				\
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsJapaneseToUnicode.obj 			\
-	.\$(OBJDIR)\nsSJIS2Unicode.obj 			\
 	.\$(OBJDIR)\nsUnicodeToSJIS.obj			\
 	.\$(OBJDIR)\nsCP932ToUnicode.obj 			\
 	.\$(OBJDIR)\nsUnicodeToCP932.obj			\
 	.\$(OBJDIR)\nsUCvJaSupport.obj			\
 	.\$(OBJDIR)\nsUCvJaModule.obj 			\
-        .\$(OBJDIR)\nsEUCJPToUnicode.obj        \
-        .\$(OBJDIR)\nsISO2022JPToUnicode.obj    \
         .\$(OBJDIR)\nsUnicodeToEUCJP.obj        \
         .\$(OBJDIR)\nsUnicodeToJISx0201.obj     \
         .\$(OBJDIR)\nsUnicodeToJISx0208.obj     \
