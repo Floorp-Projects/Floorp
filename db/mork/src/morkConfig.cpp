@@ -67,14 +67,16 @@ FILE* mork_fileopen(const char* name, const char* mode)
 {
     int access = O_RDWR;
     int descriptor;
+    int pmode = 0;
 
     /* Only possible options are wb+ and rb+ */
     MORK_ASSERT((mode[0] == 'w' || mode[0] == 'r') && (mode[1] == 'b') && (mode[2] == '+'));
     if (mode[0] == 'w') {
         access |= (O_TRUNC | O_CREAT);
+        pmode = S_IREAD | S_IWRITE;
     }
 
-    descriptor = sopen(name, access, SH_DENYNO);
+    descriptor = sopen(name, access, SH_DENYNO, pmode);
     if (descriptor != -1) {
         return fdopen(descriptor, mode);
     }
