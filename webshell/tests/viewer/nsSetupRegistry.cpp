@@ -35,7 +35,7 @@
 #include "nsDOMCID.h"
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
-#ifdef XP_PC
+#if defined(XP_PC) && defined(XP_MAC)
 #include "nsICapsManager.h"
 #include "nsILiveconnect.h"
 #include "nsIJVMManager.h"
@@ -78,6 +78,9 @@
 #define VIEW_DLL		"VIEW_DLL"
 #define WEB_DLL			"WEB_DLL"
 #define PLUGIN_DLL	"PLUGIN_DLL"
+#define CAPS_DLL	"CAPS_DLL"
+#define LIVECONNECT_DLL "LIVECONNECT_DLL"
+#define OJI_DLL		"OJI_DLL"
 #define PREF_DLL		"PREF_DLL"
 #define PARSER_DLL	"PARSER_DLL"
 #define DOM_DLL    	"DOM_DLL"
@@ -189,7 +192,7 @@ static NS_DEFINE_CID(kRangeListCID,				NS_RANGELIST_CID);
 static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
 
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
-#ifdef XP_PC
+#if defined(XP_PC) && defined(XP_MAC)
 static NS_DEFINE_CID(kCapsManagerCID,             NS_CCAPSMANAGER_CID);
 static NS_DEFINE_CID(kLiveconnectCID,             NS_CLIVECONNECT_CID);
 static NS_DEFINE_CID(kJVMManagerCID,              NS_JVMMANAGER_CID);
@@ -280,7 +283,7 @@ NS_SetupRegistry()
   // nsRepository::RegisterFactory(kISO2022JPToUnicodeCID,   UCVJA2_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCPluginManagerCID, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
-#ifdef XP_PC
+#if defined(XP_PC) && defined(XP_MAC)
   nsRepository::RegisterFactory(kCapsManagerCID, CAPS_DLL,          PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kLiveconnectCID, LIVECONNECT_DLL,   PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kJVMManagerCID,  OJI_DLL,           PR_FALSE, PR_FALSE);
