@@ -21,6 +21,7 @@
  * Contributor(s): 
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
 
@@ -29,6 +30,7 @@
 
 #include "nsIXPINotifier.h"
 #include "nsFileStream.h"
+#include "nsIFile.h"
 
 
 class nsLoggingProgressListener : public nsIXPIListener
@@ -47,5 +49,8 @@ class nsLoggingProgressListener : public nsIXPIListener
         void GetTime(char** aString);
         nsOutputFileStream  *mLogStream;
 };
+
+nsresult Convert_nsIFile_To_nsFileSpec(nsIFile     *aInIFile, 
+                                       nsFileSpec **aOutFileSpec);
 
 #endif

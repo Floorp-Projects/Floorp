@@ -21,6 +21,7 @@
  * Contributor(s): 
  *     Douglas Turner <dougt@netscape.com>
  *     Pierre Phaneuf <pp@ludusdesign.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
 #include "nsLoggingProgressNotifier.h"
@@ -29,7 +30,7 @@
 
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryService.h"
 
 #include "nspr.h"
 
@@ -57,21 +58,56 @@ NS_IMPL_ISUPPORTS(nsLoggingProgressListener, NS_GET_IID(nsIXPIListener));
 NS_IMETHODIMP
 nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
-    nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    nsCOMPtr<nsIFile> iFile;
+    nsFileSpec *logFile = nsnull;
+    nsresult rv = NS_OK;
+
+    // Not in stub installer
+    if (!nsSoftwareUpdate::GetProgramDirectory()) 
+    {
+        NS_WITH_SERVICE(nsIProperties, dirSvc, 
+                        NS_DIRECTORY_SERVICE_PROGID, &rv);
+        if (!dirSvc) return NS_ERROR_FAILURE;
+        dirSvc->Get("system.OS_CurrentProcessDirectory", NS_GET_IID(nsIFile),
+                    getter_AddRefs(iFile));
+    }
+    // In stub installer
+    else
+    {
+        rv = nsSoftwareUpdate::GetProgramDirectory()->Clone(
+             getter_AddRefs(iFile));
+    }
+
+    if (NS_FAILED(rv)) return rv;
+
 #ifdef XP_MAC
-    logFile += "Install Log";
+    rv = iFile->Append("Install Log");
 #else
-    logFile += "install.log";
+    rv = iFile->Append("install.log");
 #endif
 
-    mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
+    // create log file if it doesn't exist (to work around a mac filespec bug)
+    PRBool bExists = PR_FALSE;
+    rv = iFile->Exists(&bExists);
+    if (NS_FAILED(rv)) return rv;
+    if (!bExists)
+    {
+        rv = iFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = Convert_nsIFile_To_nsFileSpec(iFile, &logFile);
+    if (NS_FAILED(rv)) return rv;
+    if (!logFile) return NS_ERROR_NULL_POINTER;
+
+    mLogStream = new nsOutputFileStream(*logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
     if (!mLogStream) 
         return NS_ERROR_NULL_POINTER;
 
     char* time;
     GetTime(&time);
 
-    mLogStream->seek(logFile.GetFileSize());
+    mLogStream->seek(logFile->GetFileSize());
 
     *mLogStream << "-------------------------------------------------------------------------------" << nsEndl;
     *mLogStream << nsAutoCString(URL) << "  --  " << time << nsEndl;
@@ -79,6 +115,9 @@ nsLoggingProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
     *mLogStream << nsEndl;
 
     PL_strfree(time);
+    if (logFile)
+        delete logFile;
+
     return NS_OK;
 }
 
@@ -195,3 +234,39 @@ nsLoggingProgressListener::LogComment(const PRUnichar* comment)
     return NS_OK;
 }
 
+nsresult
+Convert_nsIFile_To_nsFileSpec(nsIFile *aInIFile, nsFileSpec **aOutFileSpec)
+{
+    nsresult rv = NS_OK;
+
+    if (!aInIFile || !aOutFileSpec)
+        return NS_ERROR_FAILURE;
+
+    *aOutFileSpec = nsnull;
+    
+#ifdef XP_MAC
+    FSSpec fsSpec;
+    nsCOMPtr<nsILocalFileMac> iFileMac;
+
+    iFileMac = do_QueryInterface(aInIFile, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        iFileMac->GetResolvedFSSpec(&fsSpec);
+        *aOutFileSpec = new nsFileSpec(fsSpec, PR_FALSE);
+    }
+#else
+    char *path = nsnull;
+
+    rv = aInIFile->GetPath(&path);
+    if (NS_SUCCEEDED(rv))
+    {
+        *aOutFileSpec = new nsFileSpec(path, PR_FALSE);
+    }
+    // NOTE: don't release path since nsFileSpec's mPath points to it 
+#endif
+
+    if (!*aOutFileSpec)
+        rv = NS_ERROR_FAILURE;
+
+    return rv;
+}
