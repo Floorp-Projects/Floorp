@@ -29,7 +29,7 @@ class nsMIMEInfoImpl : public nsIMIMEInfo {
 
     // nsMIMEInfoImpl methods
     nsMIMEInfoImpl(const char *aMIMEType, const char *aFileExtensions, const char *aDescription);
-    ~nsMIMEInfoImpl();
+    virtual ~nsMIMEInfoImpl();
 
     PRBool InExtensions(nsIAtom* anIAtom);
 
