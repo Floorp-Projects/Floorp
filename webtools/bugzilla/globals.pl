@@ -52,6 +52,7 @@ sub globals_pl_sillyness {
     $zz = @main::legal_target_milestone;
     $zz = @main::legal_versions;
     $zz = @main::milestoneurl;
+    $zz = %main::param_type;
     $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
     $zz = $main::superusergroupset;
