@@ -114,6 +114,8 @@ CPP_OBJS +=                  \
 
 DEFINES = -DENABLE_JS_EDITOR_LOG $(DEFINES)
 
+!endif
+
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
