@@ -690,6 +690,7 @@ public:
     NS_IMETHOD PrepareStyleSheets(nsIURL* anURL);
     
     void SetDocumentURLAndGroup(nsIURL* anURL);
+    void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 
 protected:
 		nsresult PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
@@ -755,6 +756,7 @@ protected:
     nsIRDFResource*            mFragmentRoot;    // [OWNER] 
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
 	  nsIDOMElement*			       mPopup;			  // [OWNER] of this popup element in the doc
+    PRBool                     mIsPopup;    
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
@@ -791,7 +793,8 @@ XULDocumentImpl::XULDocumentImpl(void)
       mCommand(""),
       mFragmentRoot(nsnull),
       mListenerManager(nsnull),
-	  mPopup(nsnull)
+	    mPopup(nsnull),
+      mIsPopup(PR_FALSE)
 {
     NS_INIT_REFCNT();
 
@@ -843,8 +846,18 @@ XULDocumentImpl::~XULDocumentImpl()
     // Delete references to sub-documents
     PRInt32 index = mSubDocuments.Count();
     while (--index >= 0) {
-      nsIDocument* subdoc = (nsIDocument*) mSubDocuments.ElementAt(index);
-      NS_RELEASE(subdoc);
+        nsIDocument* subdoc = (nsIDocument*) mSubDocuments.ElementAt(index);
+        NS_RELEASE(subdoc);
+    }
+
+    // Delete references to style sheets but only if we aren't a popup document.
+    if (!mIsPopup) {
+        index = mStyleSheets.Count();
+        while (--index >= 0) {
+            nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
+            sheet->SetOwningDocument(nsnull);
+            NS_RELEASE(sheet);
+        }
     }
 
     // set all builder references to document to nsnull -- out of band notification
@@ -2913,13 +2926,30 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
       return rv;
     }
 
+    // Indicate that we are a popup document
+    popupDoc->SetIsPopup(PR_TRUE);
+
     // Our URL is exactly the same as the parent doc.
     popupDoc->SetDocumentURLAndGroup(mDocumentURL);
 
     // Set our character set.
     popupDoc->SetDocumentCharacterSet(mCharSetID);
 
-    // Stylesheets? What the heck do we do here?
+    // Try to share the style sheets (this is evil, but it might just work)
+    // First do a prepare to pick up a new inline and attr style sheet
+    if (NS_FAILED(rv = PrepareStyleSheets(mDocumentURL))) {
+      NS_ERROR("problem initializing style sheets.");
+      return rv;
+    }
+    // Now we need to copy all of the style sheets from the parent document
+    
+    
+    PRInt32 count = mStyleSheets.Count();
+    for (PRInt32 i = 0; i < count; i++) {
+      // Don't bother addrefing. We don't live as long as our parent document
+        nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(i);
+        popupDoc->mStyleSheets.AppendElement(sheet);  
+    }
 
     // We share the same data sources
 
