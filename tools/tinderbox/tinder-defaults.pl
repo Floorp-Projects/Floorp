@@ -17,6 +17,8 @@ $BuildEmbed        = 0;      # After building seamonkey, go build embed app.
 
 # Tests
 $CleanProfile             = 0;
+$ResetHomeDirForTests     = 1;
+
 $RegxpcomTest             = 1;
 $AliveTest                = 1;
 $JavaTest                 = 0;

@@ -22,8 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-
-$::UtilsVersion = '$Revision: 1.170 $ ';
+$::UtilsVersion = '$Revision: 1.171 $ ';
 
 package TinderUtils;
 
@@ -1406,7 +1405,7 @@ sub BinaryExists {
     }
 }
 
-sub min() {
+sub min {
     my $m = $_[0];
     my $i;
     foreach $i (@_) {
@@ -1577,8 +1576,12 @@ sub fork_and_log {
     my $pid = fork; # Fork off a child process.
 
     unless ($pid) { # child
-        $ENV{HOME} = $home if ($Settings::OS ne "BeOS");
 
+        # Chimera don't want to reset home dir.
+        unless ($Settings::ResetHomeDirForTests) {
+            $ENV{HOME} = $home if ($Settings::OS ne "BeOS");
+        }
+            
         # Explicitly set cwd to home dir.
         chdir $home or die "chdir($home): $!\n";
 
@@ -1629,6 +1632,7 @@ sub wait_for_pid {
             last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or $wait_pid == -1;
             sleep 1;
         }
+
         $exit_value = $? >> 8;
         $signal_num = $? >> 127;
         $dumped_core = $? & 128;
@@ -1637,6 +1641,7 @@ sub wait_for_pid {
         }
         return "done";
     };
+
     if ($@) {
         if ($@ =~ /timeout/) {
             kill_process($pid);
