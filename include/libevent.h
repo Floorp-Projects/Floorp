@@ -34,10 +34,13 @@
 #include "shist.h"
 #include "fe_proto.h"
 #include "lo_ele.h"
+#include "jscookie.h"
 
 NSPR_BEGIN_EXTERN_C
 
 extern PREventQueue * mozilla_event_queue;
+
+typedef struct WindowGroup LMWindowGroup;
 
 /* 
  * XXX - should we use the same event values as layer events?
@@ -514,7 +517,7 @@ ET_PostPrompt(MWContext* context, const char* szMessage,
 
 extern MWContext *
 ET_PostNewWindow(MWContext* context, URL_Struct * pUrl, 
-                 char * szName, Chrome * pChrome);
+                 char * szName, Chrome * pChrome, LMWindowGroup *grp);
 
 extern void
 ET_PostUpdateChrome(MWContext* context, Chrome * pChrome);
@@ -746,6 +749,10 @@ ET_RestoreLayerState(MWContext *context, int32 layer_id,
 
 extern int32
 ET_npl_RefreshPluginList(MWContext* context, XP_Bool refreshInstances);
+
+extern JSCFResult 
+ET_JSCFExecute(MWContext *context, const char *script_name,
+		JSCFCookieData *data, Bool *data_changed);
 
 extern JSBool
 ET_HandlePref(JSContext * cx, uint argc, jsval * argv, jsval * rval);
