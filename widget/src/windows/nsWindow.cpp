@@ -3164,6 +3164,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               mLastSize.height = newHeight;
               ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
 
+              // If we're being minimized, don't send the resize event to Gecko because
+              // it will cause the scrollbar in the content area to go away and we'll
+              // forget the scroll position of the page.
+              if ( !newWidth && !newHeight ) {
+                result = PR_FALSE;
+                break;
+              }
+
               // recalculate the width and height
               // this time based on the client area
               if (::GetClientRect(mWnd, &r)) {
