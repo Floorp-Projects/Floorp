@@ -513,7 +513,7 @@ public:
   /**
    * Unsuppress painting.
    */
-  NS_IMETHOD UnsuppressPainting(PRBool aCancelTimer) = 0;
+  NS_IMETHOD UnsuppressPainting() = 0;
 
   enum InterruptType {Timeout};
   /**

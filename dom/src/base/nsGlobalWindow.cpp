@@ -1568,7 +1568,7 @@ static void EnsureReflowFlushAndPaint(nsIDocShell* aDocShell)
   presShell->FlushPendingNotifications();
 
   // Unsuppress painting.
-  presShell->UnsuppressPainting(PR_TRUE);
+  presShell->UnsuppressPainting();
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Alert(JSContext* cx, jsval* argv, PRUint32 argc)
