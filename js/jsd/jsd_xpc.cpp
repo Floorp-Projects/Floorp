@@ -1385,6 +1385,47 @@ jsdContext::GetJSContext(JSContext **_rval)
 }
 
 NS_IMETHODIMP
+jsdContext::GetOptions(PRUint32 *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JS_GetOptions(mJSCx);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::SetOptions(PRUint32 options)
+{
+    ASSERT_VALID_EPHEMERAL;
+    PRUint32 lastOptions = JS_GetOptions(mJSCx);
+
+    /* don't let users change this option, they'd just be shooting themselves
+     * in the foot. */
+    if ((options ^ lastOptions) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    JS_SetOptions(mJSCx, options);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdContext::GetPrivateData(nsISupports **_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    PRUint32 options = JS_GetOptions(mJSCx);
+    if (options & JSOPTION_PRIVATE_IS_NSISUPPORTS)
+    {
+        *_rval = NS_STATIC_CAST(nsISupports*, JS_GetContextPrivate(mJSCx));
+        NS_IF_ADDREF(*_rval);
+    }
+    else
+    {
+        *_rval = nsnull;
+    }
+    
+    return NS_OK;
+}
+        
+NS_IMETHODIMP
 jsdContext::GetWrappedContext(nsISupports **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
