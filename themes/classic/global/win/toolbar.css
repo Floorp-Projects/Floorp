@@ -21,7 +21,7 @@ toolbar
 
 toolbargrippy
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;
     border-right          : 1px solid threedshadow;
@@ -46,7 +46,7 @@ toolbargrippy
 
 toolbargrippy[tbgrippy-collapsed="true"] 
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#toolbargrippy-collapsed");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy-collapsed");
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;
     border-right          : 1px solid threedshadow;
@@ -96,5 +96,5 @@ toolbarseparator
   
 .toolbar-focustarget
   {
-    user-focus            : none !important;
+    -moz-user-focus       : none !important;
   }   

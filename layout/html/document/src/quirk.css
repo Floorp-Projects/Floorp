@@ -73,7 +73,7 @@ li > ol:first-node {
 input[type="text"] {
   font-family:-moz-fixed;
   border-width: 2px !important;
-  border-width: inset  !important;
+  border-style: inset !important;
   border-color: rgb(204, 204, 204); 
   padding-top:    1px;
   padding-bottom: 0px;

@@ -282,7 +282,7 @@
   
 menubutton.button-toolbar-4
   {
-    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
   }
   
 .button-toolbar-4 > .button-internal-box,

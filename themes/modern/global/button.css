@@ -74,7 +74,7 @@
       /* strictly speaking not necessary because default for buttonright is 
        * to lay image out horizontally, but leaving here as a reminder to
        * implement this feature */
-      behavior            : url(chrome://global/content/xulBindings.xml#buttonright);
+      -moz-binding        : url(chrome://global/content/xulBindings.xml#buttonright);
       font-weight         : bold;
 	    list-style-image    : url("chrome://global/skin/return.gif");
     }
@@ -190,8 +190,8 @@ button.plain-extended {}
   .reorder-up > .button-internal-box > .button-icon,
   .reorder-down > .button-internal-box > .button-icon
     {
-      margin              : none;
-      padding             : none;
+      margin              : 0;
+      padding             : 0;
     }
     
     

@@ -3,13 +3,13 @@
 /********* XP Scrollbar *********/
 
 scrollbar {
-   behavior: url("chrome://global/content/xulBindings.xml#scrollbar");
+   -moz-binding: url("chrome://global/content/xulBindings.xml#scrollbar");
 }
 
 /********* XP Scrollbar *********/
 
 thumb {
-  behavior: url(chrome://global/content/xulBindings.xml#thumb);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#thumb);
   background-color: #CCCCCC;
   border: 1px outset #CCCCCC;
   list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")

@@ -3,7 +3,7 @@
  **/
 .box-smallheader 
   {
-    behavior              : url(chrome://global/content/dialogBindings.xml#smallheader);
+    -moz-binding          : url(chrome://global/content/dialogBindings.xml#smallheader);
     border-left           : 1px solid threedshadow;
     border-top            : 1px solid threedshadow;
     border-right          : 1px solid threedhighlight;
@@ -42,7 +42,7 @@
  **/
 .box-header 
   {
-    behavior              : url(chrome://global/skin/classicBindings.xml#largeheader);
+    -moz-binding          : url(chrome://global/skin/classicBindings.xml#largeheader);
     border-bottom         : 1px solid threedhighlight;
   }
 

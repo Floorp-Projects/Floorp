@@ -55,8 +55,9 @@
       background-color    : threedface;
       color               : windowtext;
       padding             : 0px;
-      font                : dialog, sans-serif;
-      user-focus          : ignore;
+      /* font-family         : sans-serif;
+      font                : dialog; */
+      -moz-user-focus     : ignore;
     }
   
   window[wait-cursor] 
@@ -151,7 +152,7 @@
     {
       border-top          : 1px solid threedhighlight;
   	  background-color    : threedface;
-  	  user-focus          : ignore;
+  	  -moz-user-focus     : ignore;
       overflow            : hidden
     }
 */
@@ -232,7 +233,7 @@
 /** XUL <scrollbar> element **/
   scrollbar 
     { 
-      user-focus          : ignore; 
+      -moz-user-focus     : ignore; 
     } 
 
 
@@ -261,7 +262,7 @@
 /*  
 text[disabled="true"]
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#textdisabled");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#textdisabled");
   }  
 */
   

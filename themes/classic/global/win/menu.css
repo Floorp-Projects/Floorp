@@ -208,7 +208,7 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
     background-color      : infobackground;
     border                : 1px solid windowframe;
     color                 : infotext;
-    font                  : smaller;
+    font-size             : smaller;
     padding               : 2px;
     max-width             : 40em;
   }

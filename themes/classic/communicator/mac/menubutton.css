@@ -57,7 +57,7 @@
 /* toolbar menubuttons */   
  menubutton.button-toolbar, menubutton.button-toolbar-4
   {
-    behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
+    -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
     border                  : 1px solid transparent;
   }
  

@@ -1,7 +1,7 @@
 
 #navigator-throbber
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#buttontop");
     border                : 1px solid threedface;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
     margin                : 0px;

@@ -39,4 +39,4 @@
 #bgDiv {position:absolute; top:0px; left:0px; width:1; background:url("chrome://editor/skin/images/Map_checker.gif"); background-color: white; cursor: inherit;}
 BODY {background-color:appworkspace;}
 HTML {height: 100%;}
-IMG {opacity: .99;}
+IMG {-moz-opacity: .99;}

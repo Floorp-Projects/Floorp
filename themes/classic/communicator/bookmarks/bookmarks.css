@@ -74,7 +74,7 @@
   /* need to override default border on button-toolbar buttons/menubuttons */    
   .button-toolbar.bookmarkitem
     {
-      behavior            : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
+      -moz-binding        : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
       border              : none;      
       vertical-align      : middle;
       margin              : 1px 2px 1px 2px;

@@ -9,7 +9,7 @@
   
   grippy, grippy[collapse="before"]
     {
-      behavior              : url("chrome://global/skin/classicBindings.xml#grippy");
+      -moz-binding          : url("chrome://global/skin/classicBindings.xml#grippy");
       border                : 1px solid threedshadow;
   	  list-style-image      : url("chrome://global/skin/grippy-horizontal-before.gif");
   	  cursor                : pointer;
@@ -56,7 +56,7 @@
   box[align="vertical"] > splitter
     {
       cursor              : n-resize;
-      behavior            : url("chrome://global/skin/classicBindings.xml#splitter-hack");
+      -moz-binding        : url("chrome://global/skin/classicBindings.xml#splitter-hack");
       border-top          : 1px solid threedhighlight;
     }
     

@@ -4,7 +4,7 @@
 /* outer frame */
   menulist 
     {
-      behavior            : url("chrome://global/skin/menulistBindings.xml#menulist");
+      -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulist");
       border-left         : 1px solid threedshadow;
       border-top          : 1px solid threedshadow;
       border-right        : 1px solid threedhighlight;
@@ -96,7 +96,7 @@
 /* rules for popups and separators associated with menulists */
   menulist > menupopup 
     {
-      behavior            : url("chrome://global/skin/menulistBindings.xml#menulistpopup");
+      -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulistpopup");
       background-color    : window;
       border              : 1px solid #000000;
       min-width           : 0px;

@@ -68,7 +68,7 @@
  */
   .box-texttab
     {
-      behavior            : url("chrome://communicator/skin/sidebar/sidebarSplitterBindings.xml#panelheader");
+      -moz-binding        : url("chrome://communicator/skin/sidebar/sidebarSplitterBindings.xml#panelheader");
       background-color    : #DDDDDD;
       border-left         : 1px solid #FFFFFF;
       border-top          : 1px solid #FFFFFF;

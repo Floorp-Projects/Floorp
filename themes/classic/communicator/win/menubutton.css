@@ -1,20 +1,20 @@
 
 .menubutton-dual.toolbar.top
   {
-    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex");
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex");
     border                : 1px solid transparent;
-    user-focus            : none !important;
+    -moz-user-focus       : none !important;
   }
 
 /* internal button */  
 .menubutton-dual-ex-button.top
   {
-    behavior              : url("chrome://global/skin/buttonBindings.xml#simplebutton");
+    -moz-binding          : url("chrome://global/skin/buttonBindings.xml#simplebutton");
     border                : 1px solid transparent; 
     min-width             : 47px;
     margin                : 0px;
     padding               : 2px 7px 2px 6px;
-    user-focus            : none !important;
+    -moz-user-focus       : none !important;
   }  
 
 /* dropmarker */
@@ -191,17 +191,17 @@
 /*
 .menubutton-dual.toolbar.top
   {
-    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-top");
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-top");
   }
 
 .menubutton-dual.toolbar.top > .menubutton-internal-box > .menubutton-dual-button
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#toolbarbutton-top");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbarbutton-top");
     background-color      : none;
     min-width             : 47px;
     margin                : 0px;
     border                : 1px solid transparent;
-    user-focus            : none;
+    -moz-user-focus       : none;
     padding               : 2px 3px 2px 3px;
     text-align            : center;
   }  
@@ -302,13 +302,13 @@
 /* toolbar menubuttons */   
 menubutton.button-toolbar-4
   {
-    behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
+    -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
     border                  : 1px solid transparent;
   }
   
 menubutton.button-toolbar  
   {
-    behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
+    -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
   }
   
 menubutton.button-toolbar[open="true"], 

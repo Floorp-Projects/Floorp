@@ -29,7 +29,7 @@
 } 
 
 dummy.usesMailWidgets {
- behavior: url(chrome://messenger/content/mailWidgets.xml#dummy);
+ -moz-binding: url(chrome://messenger/content/mailWidgets.xml#dummy);
 }
 
 spring.spacer {
@@ -246,7 +246,7 @@ iframe {
 
 #button-print 
   {
-    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
+    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
 	list-style-image      : url("chrome://global/skin/print.gif");
     margin                : 3px 3px 0px 3px;
     text-align			  : center;
@@ -458,17 +458,17 @@ box#messagepanebox
 }
 
 searchattribute {
-  behavior: url(chrome://messenger/content/mailWidgets.xml#searchattribute);
+  -moz-binding: url(chrome://messenger/content/mailWidgets.xml#searchattribute);
 }
 
 searchoperator {
-  behavior: url(chrome://messenger/content/mailWidgets.xml#searchoperator);
+  -moz-binding: url(chrome://messenger/content/mailWidgets.xml#searchoperator);
 }
 
 searchvalue {
- behavior: url(chrome://messenger/content/mailWidgets.xml#searchvalue);
+ -moz-binding: url(chrome://messenger/content/mailWidgets.xml#searchvalue);
 }
 
 searchterm {
- behavior: url(chrome://messenger/content/mailWidgets.xml#searchterm);
+ -moz-binding: url(chrome://messenger/content/mailWidgets.xml#searchterm);
 }

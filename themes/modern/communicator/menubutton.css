@@ -60,7 +60,7 @@
 
 .menubutton-dual.toolbar
   {
-    behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
+    -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
     border                  : 0px solid red;
     margin      	        : 3px 2px 9px 2px;
     padding					: 0px;

@@ -10,7 +10,7 @@
 
   checkbox > .internal-box
     {
-      user-focus: none;
+      -moz-user-focus: none;
     }   
 
 /* checkmark outer frame */

@@ -97,7 +97,7 @@ treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-ico
 
 .tree-cell-twisty {
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
- user-focus:ignore;
+ -moz-user-focus:ignore;
  padding-right: 2px;
 }
 

@@ -29,7 +29,7 @@ Rights Reserved.
 	overflow: auto;
 	background-color: #FFFFFF;
 	min-width: 150px;
-	user-focus: ignore;
+	-moz-user-focus: ignore;
 }
 
 #CardViewInnerBox {

@@ -5,12 +5,12 @@
   /* outer frame */
   .button-toolbar-1, .button-toolbar-2
     {
-      background-color    : none;
-      behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
+      background-color    : transparent;
+      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop");
       min-width           : 47px;
       margin              : 0px;
       border              : 1px solid transparent;
-      user-focus          : ignore;
+      -moz-user-focus     : ignore;
     }
 
   .button-toolbar-1:hover, .button-toolbar-2:hover
@@ -88,11 +88,11 @@
  **/
   .button-toolbar
     {
-      behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
+      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
       margin              : 0px 1px 0px 1px; 
       border              : 1px solid transparent;
-      user-focus          : ignore;
+      -moz-user-focus     : ignore;
       max-width           : 14em;
     }
 
@@ -173,12 +173,12 @@
  **/
   .button-toolbar-4    
     {
-      background-color    : none;
-      behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
+      background-color    : transparent;
+      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
       margin              : 0px;
       border              : 1px solid transparent;
-      user-focus          : ignore;
+      -moz-user-focus     : ignore;
     }
     
   .button-toolbar-4 > .button-internal-box
@@ -235,7 +235,7 @@
 
   menubutton.button-toolbar-4
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
     }
 
 /** Low profile rollover buttons, e.g. "search"
@@ -245,12 +245,12 @@
   .button-toolbar-3[disabled="true"]:hover,
   .button-toolbar-3[disabled="true"]:hover:active
     {
-      behavior              : url("chrome://global/content/xulBindings.xml#buttonleft");
+      -moz-binding          : url("chrome://global/content/xulBindings.xml#buttonleft");
       margin                : 1px 1px 2px 4px !important;
       border                : 0px;
       background-color      : threedface;
       min-width             : 0px;
-      user-focus            : ignore;
+      -moz-user-focus       : ignore;
     }  
     
   .button-toolbar-3:hover, .button-toolbar-3:hover:active
@@ -291,7 +291,7 @@
   .button-expander
     {
       border              : none;
-      padding             : none;
+      padding             : 0;
       margin              : 1px 5px 3px 1px;
       background-color    : inherit;
       list-style-image    : url("chrome://global/skin/closedtwisty.gif");
@@ -308,8 +308,8 @@
     {
       border              : none;
       background-color    : inherit;
-      padding             : none;
-      margin              : none;
+      padding             : 0;
+      margin              : 0;
     }
 
   .button-expander:hover 

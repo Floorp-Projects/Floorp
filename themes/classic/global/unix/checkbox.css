@@ -4,7 +4,7 @@
 /* outer frame */
   checkbox 
     {
-      behavior            : url("chrome://global/skin/classicBindings.xml#checkbox");
+      -moz-binding        : url("chrome://global/skin/classicBindings.xml#checkbox");
       margin              : 3px 5px 3px 5px;
     }
 

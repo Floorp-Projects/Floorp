@@ -28,7 +28,7 @@ Rights Reserved.
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for XUL elements */
 
 mail-emailaddress {
-  behavior: url(chrome://messenger/content/mailWidgets.xml#mail-emailaddress);
+  -moz-binding: url(chrome://messenger/content/mailWidgets.xml#mail-emailaddress);
   display: inline;
 }
 

@@ -224,7 +224,7 @@
 /** XUL <scrollbar> element **/
   scrollbar 
     { 
-      user-focus          : ignore; 
+      -moz-user-focus     : ignore; 
     } 
 
 

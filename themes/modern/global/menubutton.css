@@ -69,7 +69,7 @@
   menubutton.menubutton-dual[open="true"] > .menubutton-dropmarker
     {
       border              : 1px inset #CCCCCC;
-      padding             : 1px 1px -1px 3px;
+      padding             : 1px 1px 0 3px; /* negatives not allowed -LDB */
     }
 
   menubutton.menubutton-dual > menupopup

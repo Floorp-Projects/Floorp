@@ -160,7 +160,7 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 
 #printButton 
   {
-    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
+    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
 	  list-style-image      : url("chrome://editor/skin/images/print.gif");
     margin-top            : 0px;
     margin-left           : 0px !important;

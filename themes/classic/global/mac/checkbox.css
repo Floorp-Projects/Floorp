@@ -6,7 +6,7 @@
   checkbox 
     {
       margin: 3px 5px 3px 5px;
-      user-focus: ignore;
+      -moz-user-focus: ignore;
     }
 
 /* checkmark outer frame */

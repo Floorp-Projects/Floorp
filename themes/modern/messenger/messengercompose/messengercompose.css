@@ -28,7 +28,7 @@ tree[class="addressingWidget"] treeitem > treerow  > treecell > box > image {
 	padding:2px;
 	border:none;
 	list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
-	user-focus: ignore;
+	-moz-user-focus: ignore;
 }
 
 /*
@@ -110,24 +110,24 @@ toolbar#MsgHeadersToolbar {
 }
 
 box#addressingWidget {
-  user-focus: normal;
+  -moz-user-focus: normal;
 }
 
 tree#attachmentBucket {
-  user-focus: normal;
+  -moz-user-focus: normal;
 }
 
 #msgSubject {
-  user-focus: normal;
+  -moz-user-focus: normal;
 }
 
 #msgIdentity {
-  user-focus: normal;
+  -moz-user-focus: normal;
 }
 
 .identity-popup-item
 {
-  behavior: url(chrome://messenger/content/messengercompose/mailComposeBindings.xml#fromMenuitem);
+  -moz-binding: url(chrome://messenger/content/messengercompose/mailComposeBindings.xml#fromMenuitem);
 }
 
 .composemenu-text-2

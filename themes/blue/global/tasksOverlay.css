@@ -27,7 +27,7 @@
   {
     margin-top            : 2px;
     min-height            : 1em;
-    user-focus            : ignore;
+    -moz-user-focus       : ignore;
   }
 
 .taskbutton 

@@ -26,16 +26,16 @@
 }
 
 checkbox,radio,tree,menulist {
-  user-focus: normal;
+  -moz-user-focus: normal;
 }
 
   
 menupopup, popup, splitter {
-  user-focus: ignore;
+  -moz-user-focus: ignore;
 }
 
 treechildren, treehead, treerows {
-  user-focus: none;
+  -moz-user-focus: none;
 }
 
 /** 
@@ -88,21 +88,21 @@ browser, editor, iframe {
 }
 
 browser {
-  behavior: url(chrome://global/content/xulBindings.xml#browser);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#browser);
 }
 
 editor {
-  behavior: url(chrome://global/content/xulBindings.xml#editor);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#editor);
 }
 
 iframe {
-  behavior: url(chrome://global/content/xulBindings.xml#iframe);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#iframe);
 }
 
 /******** ScrollBox ********/
 
 scrollbox {
-  behavior: url(chrome://global/content/xulBindings.xml#scrollbox);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#scrollbox);
 }
 
 .scrollbox-innerbox {
@@ -114,7 +114,7 @@ scrollbox {
 /******** ArrowScrollBox ******/
 
 arrowscrollbox {
-  behavior: url(chrome://global/content/xulBindings.xml#arrowscrollbox);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#arrowscrollbox);
 }
 
 /******** Box *******/
@@ -130,40 +130,40 @@ box.titledbox-body {
 }
 
 titledbox {
-  behavior: url(chrome://global/content/xulBindings.xml#titledbox);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#titledbox);
 }
 
 titledbox[value] {
-  behavior: url(chrome://global/content/xulBindings.xml#titledboxvalue);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#titledboxvalue);
 }
 
 title {
-  behavior: url(chrome://global/content/xulBindings.xml#title);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#title);
 }
 
 /******* ToolBox & ToolBar *******/
 
 toolbox 
   { 
-    user-focus            : ignore;
-    behavior              : url(chrome://global/content/toolbarBindings.xml#toolbox);
+    -moz-user-focus       : ignore;
+    -moz-binding          : url(chrome://global/content/toolbarBindings.xml#toolbox);
   }
   
 menubar
   {
-    user-focus            : ignore;
-    behavior              : url(chrome://global/content/toolbarBindings.xml#menubar);
+    -moz-user-focus       : ignore;
+    -moz-binding          : url(chrome://global/content/toolbarBindings.xml#menubar);
   }
 
 toolbar
   {
-    user-focus            : ignore;
-    behavior              : url(chrome://global/content/toolbarBindings.xml#toolbar);
+    -moz-user-focus       : ignore;
+    -moz-binding          : url(chrome://global/content/toolbarBindings.xml#toolbar);
   }
 
 toolbargrippy 
   {
-    behavior              : url(chrome://global/content/toolbarBindings.xml#toolbargrippy);
+    -moz-binding          : url(chrome://global/content/toolbarBindings.xml#toolbargrippy);
   }
 
 .toolbar-holder[collapsed="true"] 
@@ -175,64 +175,64 @@ toolbargrippy
 
 menubar > menu 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#menu-menubar");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#menu-menubar");
   }
 
 menubar > menu.menu-iconic 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#menu-menubar-iconic");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#menu-menubar-iconic");
   }
 
 menu 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#menu");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#menu");
   }
   
 menu.menu-iconic 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#menu-iconic");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#menu-iconic");
   }
 
 menuitem 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#menuitem");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#menuitem");
   }
 
 menuitem.menuitem-iconic 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#menuitem-iconic");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#menuitem-iconic");
   }
 
 menuitem[type="checkbox"],
 menuitem[type="radio"] 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#menuitem-iconic");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#menuitem-iconic");
   }
 
 menulist > menupopup > menuitem 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#menuitem-iconic");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#menuitem-iconic");
   }
 
 menuitem.menuitem-non-iconic
   {
-    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-item");
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-item");
   }
 
   
 menupopup 
   {
-    behavior: url("chrome://global/content/xulBindings.xml#popups");
+    -moz-binding: url("chrome://global/content/xulBindings.xml#popups");
     display               : none;
   }
 
 popup {
-  behavior: url("chrome://global/content/xulBindings.xml#popups");
+  -moz-binding: url("chrome://global/content/xulBindings.xml#popups");
   display: none;
 }
 
 popup.tooltip {
-  behavior: url("chrome://global/content/xulBindings.xml#tooltips");
+  -moz-binding: url("chrome://global/content/xulBindings.xml#tooltips");
 }
 
 menupopup[menugenerated="true"] {
@@ -256,50 +256,50 @@ tree {
  height: 200px;
  min-width: 0px;
  min-height: 0px;
- behavior: url("chrome://global/content/treeBindings.xml#tree");
+ -moz-binding: url("chrome://global/content/treeBindings.xml#tree");
 }
 
 tree > treechildren {
- behavior: url("chrome://global/content/treeBindings.xml#treerows");
+ -moz-binding: url("chrome://global/content/treeBindings.xml#treerows");
  overflow: auto;
  min-height: 0px;
 }
 
 treeitem { 
- behavior: url("chrome://global/content/treeBindings.xml#treeitem");
+ -moz-binding: url("chrome://global/content/treeBindings.xml#treeitem");
 } 
 
 treecell { 
  vertical-align: middle;
- behavior: url("chrome://global/content/treeBindings.xml#treecell");
+ -moz-binding: url("chrome://global/content/treeBindings.xml#treecell");
 } 
 
 .treecell-text { 
- behavior: url("chrome://global/content/treeBindings.xml#treecell-text");
+ -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-text");
 } 
 
 .treecell-indent {
-  behavior: url("chrome://global/content/treeBindings.xml#treecell-indented-leaf");
+  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-indented-leaf");
 }
 
 treeitem[container="true"] > treerow > .treecell-indent {
-  behavior: url("chrome://global/content/treeBindings.xml#treecell-indented-folder");
+  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-indented-folder");
 }
 
 .treecell-iconic {
- behavior: url("chrome://global/content/treeBindings.xml#treecell-iconic");
+ -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-iconic");
 }
   
 .treecell-image {
- behavior: url("chrome://global/content/treeBindings.xml#treecell-image");
+ -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-image");
 }
 
 .treecell-header {
-  behavior: url("chrome://global/content/treeBindings.xml#treecell-header");
+  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-header");
 }
 
 .treecell-align-right {
-  behavior: url("chrome://global/content/treeBindings.xml#treecell-align-right");
+  -moz-binding: url("chrome://global/content/treeBindings.xml#treecell-align-right");
 }
 
 treeitem > treechildren {
@@ -323,19 +323,19 @@ treecell[hidden="true"] {
 /********** Tab widget *********/
 
 tab {
-  behavior: url(chrome://global/content/tabBindings.xml#tab);
+  -moz-binding: url(chrome://global/content/tabBindings.xml#tab);
 }
 
 tabpanel {
-  behavior: url(chrome://global/content/tabBindings.xml#tabpanel);
+  -moz-binding: url(chrome://global/content/tabBindings.xml#tabpanel);
 }
 
 tabcontrol {
-  behavior: url(chrome://global/content/tabBindings.xml#tabcontrol);
+  -moz-binding: url(chrome://global/content/tabBindings.xml#tabcontrol);
 }
 
 tabbox {
-  behavior: url(chrome://global/content/tabBindings.xml#tabbox);
+  -moz-binding: url(chrome://global/content/tabBindings.xml#tabbox);
 }
 
 :-moz-deck-hidden {
@@ -345,79 +345,79 @@ tabbox {
 /********** checkbox **********/
 
 checkbox {
-  behavior: url(chrome://global/content/xulBindings.xml#checkbox);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#checkbox);
 }
 
 radio 
   {
-    behavior              : url(chrome://global/content/radioBindings.xml#radio);
-    user-focus            : none;
+    -moz-binding          : url(chrome://global/content/radioBindings.xml#radio);
+    -moz-user-focus       : none;
   }
 
 radiogroup 
   {
-    behavior              : url(chrome://global/content/radioBindings.xml#radiogroup);
-    user-focus            : normal;
+    -moz-binding          : url(chrome://global/content/radioBindings.xml#radiogroup);
+    -moz-user-focus       : normal;
   }
 
 button, button.left {
-  /*user-focus: normal;*/
-  behavior: url(chrome://global/content/xulBindings.xml#buttonleft);
+  /*-moz-user-focus: normal;*/
+  -moz-binding: url(chrome://global/content/xulBindings.xml#buttonleft);
 }
 
 button.top {
-  behavior: url(chrome://global/content/xulBindings.xml#buttontop);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#buttontop);
 }
 
 button.right {
-  behavior: url(chrome://global/content/xulBindings.xml#buttonright);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#buttonright);
 }
 
 button.bottom {
-  behavior: url(chrome://global/content/xulBindings.xml#buttonbottom);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#buttonbottom);
 }
 
 toolbarseparator, menuseparator, separator {
-  behavior: url(chrome://global/content/xulBindings.xml#separator);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#separator);
 }
 
 
 /* appending to end so we don't make hyatt cry */
 progressmeter {
-  behavior: url(chrome://global/content/xulBindings.xml#progressmeter);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#progressmeter);
 }
 
 textfield {
-  behavior: url(chrome://global/content/xulBindings.xml#textfield);
-  user-select: text;
+  -moz-binding: url(chrome://global/content/xulBindings.xml#textfield);
+  -moz-user-select: text;
 }
 
 textfield[multiline="true"] {
-  behavior: url(chrome://global/content/xulBindings.xml#textarea);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#textarea);
 }
 
 text {
-  behavior: url(chrome://global/content/xulBindings.xml#text);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#text);
 }
 
 text[editable="true"] {
-  user-select: text;
+  -moz-user-select: text;
 }
 
 text[editable="true"], text[editable="true"][mode="display"] {
-  behavior: url(chrome://global/content/xulBindings.xml#text-editable-display);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#text-editable-display);
 }
 
 text[editable="true"][mode="edit"] {
-  behavior: url(chrome://global/content/xulBindings.xml#text-editable-edit);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#text-editable-edit);
 }
 
 textfield[autocomplete="true"] {
-  behavior: url(chrome://global/content/autocomplete.xml#autocomplete);
+  -moz-binding: url(chrome://global/content/autocomplete.xml#autocomplete);
 }
 
 colorpicker {
-  behavior: url(chrome://global/content/xulBindings.xml#colorpicker);
+  -moz-binding: url(chrome://global/content/xulBindings.xml#colorpicker);
 }
 
 /** Buttons with Menus:
@@ -428,48 +428,48 @@ colorpicker {
 
   menulist 
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menulist");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menulist");
     }
   
   menulist[editable="true"] 
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menulist-editable");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menulist-editable");
     }
   
   menubutton
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-left");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-left");
     }
 
   menubutton.right
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
     }
     
   menubutton.menubutton-dual,
   menubutton.menubutton-dual.left
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-left");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-left");
     }
       
   menubutton.menubutton-dual.top
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-top");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-top");
     }
       
   menubutton.menubutton-dual.right
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-right");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-right");
     }
       
   menubutton.menubutton-dual.bottom
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-bottom");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-bottom");
     }
       
   menubutton.menubutton-icon 
     {
-      behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-icon");
+      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-icon");
     } 
     
 /** 
@@ -478,106 +478,106 @@ colorpicker {
  
 slider 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbarbutton 
   {
     display               : inline;
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbar[value="hidden"] 
   {
     visibility            : hidden;
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 thumb 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 thumb[disabled="true"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbarbutton 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbarbutton:active 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbarbutton[type="decrement"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbarbutton[type="decrement"][disabled="true"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbarbutton[type="increment"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbarbutton[type="increment"][disabled="true"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 slider[align="vertical"] thumb:active 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 slider 
   {
-    user-focus            : ignore;
-    user-select           : none;
+    -moz-user-focus       : ignore;
+    -moz-user-select      : none;
   }
 
 /**
@@ -585,14 +585,14 @@ slider
  **/  
 statusbar 
   { 
-    user-focus            : ignore;
-    behavior              : url("chrome://global/content/xulBindings.xml#statusbar");
+    -moz-user-focus       : ignore;
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#statusbar");
   }
 
 statusbarpanel
   {
-    user-focus            : ignore;
-    behavior              : url("chrome://global/content/xulBindings.xml#statusbar-panel");
+    -moz-user-focus       : ignore;
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#statusbar-panel");
   }
 
 /**
@@ -600,17 +600,17 @@ statusbarpanel
  */
 autorepeater 
   {
-    user-focus            : ignore;
+    -moz-user-focus       : ignore;
   }
 
 autorepeatbutton.up 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#autorepeatbutton-up");  
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#autorepeatbutton-up");  
   }
 
 autorepeatbutton.down 
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#autorepeatbutton-down");  
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#autorepeatbutton-down");  
 }
 
 splitter.tree-splitter {
@@ -620,17 +620,17 @@ splitter.tree-splitter {
 
 /*
 addressingwidget {
-  behavior                : url("chrome://global/content/addressingBindings.xml#addressingWidget");
+  -moz-binding            : url("chrome://global/content/addressingBindings.xml#addressingWidget");
 }
 
 address {
-  behavior                : url("chrome://global/content/addressingBindings.xml#address");
+  -moz-binding            : url("chrome://global/content/addressingBindings.xml#address");
 }
 */
 
 stringbundle 
   {
-    behavior              : url("chrome://global/content/stringbundleBindings.xml#stringbundle");
+    -moz-binding          : url("chrome://global/content/stringbundleBindings.xml#stringbundle");
     visibility            : collapse;
   }
 

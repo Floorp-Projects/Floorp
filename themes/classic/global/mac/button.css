@@ -7,7 +7,7 @@
 
   button.plain
     {
-      behavior			  : url(chrome://global/content/xulBindings.xml#buttonleft);
+      -moz-binding			  : url(chrome://global/content/xulBindings.xml#buttonleft);
     }
 
   button.plain, button.plain:hover, button.plain:hover:active,
@@ -37,7 +37,7 @@
  
   button.plain-extended
     {
-      behavior            : url("chrome://global/skin/buttonBindings.xml#buttonleft");
+      -moz-binding        : url("chrome://global/skin/buttonBindings.xml#buttonleft");
       border-left         : 1px solid #DDDDDD;
       border-top          : 1px solid #DDDDDD;
       border-right        : 1px solid #000000;
@@ -103,9 +103,9 @@
 /** All .button-* styles also apply to dialog exit buttons (OK/Cancel) (as seen in XBL binding) **/
 
 button, .exit-dialog {
-	behavior			: url(chrome://global/skin/buttonBindings.xml#exit-button);
+	-moz-binding			: url(chrome://global/skin/buttonBindings.xml#exit-button);
 	border				: 0px;
-	user-focus			: ignore;
+	-moz-user-focus			: ignore;
 	min-width			: 60px;
 	color				: #000000;
 	background-color	: transparent !important;  /* Greatly increases responsiveness and 'feel' */

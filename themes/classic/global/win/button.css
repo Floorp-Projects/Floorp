@@ -7,16 +7,17 @@
 /* outer frame */
   button, button.left
     {
-      behavior            : url("chrome://global/skin/buttonBindings.xml#buttonleft");
+      -moz-binding        : url("chrome://global/skin/buttonBindings.xml#buttonleft");
       border-left         : 1px solid threedface;
       border-top          : 1px solid threedface;
       border-right        : 1px solid threeddarkshadow;
       border-bottom       : 1px solid threeddarkshadow;
       margin              : 1px 5px 2px 5px;
       min-width           : 6.3em;
-      font                : button,sans-serif;
+      /* font-family         : sans-serif;
+      font                : button; */
       color               : buttontext;
-      user-focus          : normal;
+      -moz-user-focus     : normal;
     }
   
   .button-box-1  
@@ -25,7 +26,7 @@
       border-top          : 1px solid threedhighlight;
       border-right        : 1px solid threedshadow;
       border-bottom       : 1px solid threedshadow;
-      user-focus          : none;
+      -moz-user-focus     : none;
     }
 
   .button-box-2
@@ -153,7 +154,7 @@
   .reorder-up > .button-internal-box > .button-icon,
   .reorder-down > .button-internal-box > .button-icon
     {
-      margin              : none;
-      padding             : none;
+      margin              : 0;
+      padding             : 0;
     }
     

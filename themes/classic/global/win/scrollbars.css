@@ -4,7 +4,7 @@
 
 scrollbar 
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#scrollbar");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#scrollbar");
   }
 
 slider 
@@ -23,7 +23,7 @@ scrollbar[value="hidden"]
 
 thumb 
   {
-    behavior              : url(chrome://global/skin/classicBindings.xml#thumb);
+    -moz-binding          : url(chrome://global/skin/classicBindings.xml#thumb);
     border-left           : 1px solid threedface;
     border-top            : 1px solid threedface;
     border-right          : 1px solid threeddarkshadow;
@@ -50,7 +50,7 @@ thumb
  **/  
 scrollbarbutton 
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#scrollbarbutton");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#scrollbarbutton");
     cursor                : default;
     border-left           : 1px solid threedface;
     border-top            : 1px solid threedface;

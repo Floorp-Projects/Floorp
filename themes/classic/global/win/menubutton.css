@@ -5,7 +5,7 @@
 .menubutton-dual[buttondown="true"][disabled="true"],
 .menubutton-dual[buttonover="true"][disabled="true"]
   {
-    behavior              : url("chrome://global/skin/menubuttonBindings.xml#menubutton-toolbar-top");
+    -moz-binding          : url("chrome://global/skin/menubuttonBindings.xml#menubutton-toolbar-top");
     border                : 1px solid transparent;
   }
 
@@ -49,7 +49,7 @@
 .menubutton-dual[buttonover="true"][disabled="true"] > .classic-simplebutton,
 .menubutton-dual[buttondown="true"][disabled="true"] > .classic-simplebutton
   {
-    behavior              : url("chrome://global/skin/menubuttonBindings.xml#buttontop");
+    -moz-binding          : url("chrome://global/skin/menubuttonBindings.xml#buttontop");
     margin                : 0px;
     border                : 1px solid transparent;
     min-width             : 0px;

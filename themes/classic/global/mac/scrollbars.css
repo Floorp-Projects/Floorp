@@ -3,7 +3,7 @@
 /********* XP Scrollbar *********/
 
 scrollbar {
-   behavior: url("chrome://global/skin/classicBindings.xml#scrollbar");
+   -moz-binding: url("chrome://global/skin/classicBindings.xml#scrollbar");
    border-top: 1px solid black;
 }
 
@@ -15,8 +15,8 @@ scrollbar[align="vertical"] {
 }
 
 slider {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    background-color: #AAAAAA;
    background-image: url("chrome://global/skin/slider-bg-horiz.gif");
 }
@@ -27,20 +27,20 @@ slider[align="vertical"] {
 
 scrollbarbutton {
   display: inline;
-  user-focus: ignore;
-  user-select: none;
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
 }
 
 scrollbar[value="hidden"] {
    visibility: hidden;
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
 }
 
 thumb {
-  behavior: url("chrome://global/skin/classicBindings.xml#thumb");
-  user-focus: ignore;
-  user-select: none;
+  -moz-binding: url("chrome://global/skin/classicBindings.xml#thumb");
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
   background-color: #9999FF;
   border-left: 1px solid #000000;
   border-right: 1px solid #000000;
@@ -67,8 +67,8 @@ thumb:active {
 }
 
 thumb[disabled="true"] {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: none;
 }
 
@@ -86,55 +86,55 @@ thumb[align="vertical"]:active {
 }
 
 scrollbarbutton {
-  user-focus: ignore;
-  user-select: none;
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
   vertical-align: bottom;
   cursor: default;
 }
 
 scrollbarbutton:hover:active {
-  user-focus: ignore;
-  user-select: none;
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
 }
 
 scrollbarbutton[type="decrement"] {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-left.gif");
    border-right: 1px solid black;
 }
 
 scrollbarbutton[type="decrement"]:hover:active {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-left-active.gif");
 }
 
 scrollbarbutton[type="decrement"][disabled="true"],
 scrollbarbutton[type="decrement"][disabled="true"]:hover:active {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-left-disabled.gif");
 }
 
 scrollbarbutton[type="increment"] {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right.gif");
    border-left: 1px solid black;
    border-right: 1px solid black;
 }
 
 scrollbarbutton[type="increment"]:hover:active {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right-active.gif");
 }
 
 scrollbarbutton[type="increment"][disabled="true"],
 scrollbarbutton[type="increment"][disabled="true"]:hover:active {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
 }
 
@@ -144,43 +144,43 @@ scrollbar[align="vertical"] > scrollbarbutton {
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="decrement"] {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up.gif");
    border-bottom: 1px solid black;
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up-active.gif");
 }
 
 
 scrollbar[align="vertical"] > scrollbarbutton[type="decrement"][disabled="true"],
 scrollbar[align="vertical"] > scrollbarbutton[type="decrement"][disabled="true"]:hover:active {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up-disabled.gif");
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="increment"] {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down.gif");
    border-top: 1px solid black;
    border-bottom: 1px solid black;
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="increment"]:hover:active {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down-active.gif");
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"],
 scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"]:hover:active {
-   user-focus: ignore;
-   user-select: none;
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down-disabled.gif");
 }

@@ -25,7 +25,7 @@
     padding: 0px;
     border: none;
     background-color: #003366;
-    behavior: 
+    -moz-binding: 
         url("chrome://communicator/skin/sidebar/sidebarSplitterBindings.xml#sidebar-splitter");
 }
 
@@ -130,7 +130,7 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
  */
   .box-texttab
     {
-      behavior            : url("chrome://communicator/content/sidebar/sidebarBindings.xml#texttab");
+      -moz-binding        : url("chrome://communicator/content/sidebar/sidebarBindings.xml#texttab");
       background-color    : #CCCCCC;
       padding-top         : 2px;
     }

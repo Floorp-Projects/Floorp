@@ -40,7 +40,7 @@ treecell
 .treecell-header,
 .treecell-inset-header 
   { 
-    behavior              : url("chrome://global/skin/treeBindings.xml#treecell-header");
+    -moz-binding          : url("chrome://global/skin/treeBindings.xml#treecell-header");
     border-left           : 1px solid threedface !important;
     border-top            : 1px solid threedface !important;
     border-right          : 1px solid threeddarkshadow !important;
@@ -102,7 +102,7 @@ treecell.propertylist
 
 .tree-cell-twisty {
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
- user-focus:ignore;
+ -moz-user-focus:ignore;
  padding-right: 2px;
 }
 

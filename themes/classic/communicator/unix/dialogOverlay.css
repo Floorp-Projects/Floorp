@@ -3,7 +3,7 @@
  **/
 .box-smallheader 
   {
-    behavior              : url(chrome://communicator/content/dialogBindings.xml#smallheader);
+    -moz-binding          : url(chrome://communicator/content/dialogBindings.xml#smallheader);
     border-left           : 1px solid threedshadow;
     border-top            : 1px solid threedshadow;
     border-right          : 1px solid threedhighlight;
@@ -42,7 +42,7 @@
  **/
 .box-header 
   {
-    behavior              : url(chrome://communicator/content/dialogBindings.xml#largeheader);
+    -moz-binding          : url(chrome://communicator/content/dialogBindings.xml#largeheader);
   }
 
 .box-header-header 
@@ -86,7 +86,7 @@
  **/
 .box-status 
   {
-    behavior              : url(chrome://communicator/content/dialogBindings.xml#status);
+    -moz-binding          : url(chrome://communicator/content/dialogBindings.xml#status);
   }
 
 .box-status-bg 

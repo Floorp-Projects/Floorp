@@ -8,7 +8,7 @@
 	      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         orient="vertical"
 	      onload="commonDialogOnLoad()"
-	      style="width: 40em; min-height: 8em; user-focus: ignore;"
+	      style="width: 40em; min-height: 8em; -moz-user-focus: ignore;"
 	      class="dialog"> 
     
   <script language="JavaScript" src="chrome://global/content/commonDialog.js"></script>

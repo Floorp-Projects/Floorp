@@ -31,7 +31,7 @@ Contributor(s):
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog" style="max-width: 27em; user-focus: ignore !important"
+        class="dialog" style="max-width: 27em; -moz-user-focus: ignore !important"
         orient="vertical"
         onload="OnLoad()">
 

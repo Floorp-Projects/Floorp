@@ -5,7 +5,7 @@
   /* outer frame */
   .button-toolbar-1, .button-toolbar-2
     {
-      behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
+      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop");
       min-width           : 0px;
       margin              : 0px 1px;
       border              : 1px solid transparent;
@@ -14,7 +14,7 @@
 
   .button-toolbar, .button-toolbar-4
     {
-      behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
+      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
       border              : 1px solid transparent;
       background-color	  : transparent;
@@ -172,9 +172,9 @@
     {
       margin                : 0px 0px 0px 3px;
       font-weight           : bold;
-      user-focus:			: ignore;
+      -moz-user-focus:			: ignore;
       background-color	 	: transparent;
-/*    behavior				: url(chrome://global/content/xulBindings.xml#buttonleft);
+/*    -moz-binding				: url(chrome://global/content/xulBindings.xml#buttonleft);
 	  background-color      : #99CCCC 
       border-left           : 1px solid #DDDDDD !important;
       border-top            : 1px solid #DDDDDD !important;
@@ -248,5 +248,5 @@
 
 menubutton.button-toolbar-4
   {
-    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
   }

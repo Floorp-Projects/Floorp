@@ -9,7 +9,7 @@ splitter
 
 grippy, grippy[collapse="before"]
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#grippy");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#grippy");
 	margin                : 0px;
     border-left           : 1px solid #FFFFFF;
     border-top            : 1px solid #FFFFFF;

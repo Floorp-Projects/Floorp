@@ -35,7 +35,7 @@ menupopup, popup
     border-top            : thin solid white;
     border-right          : 3px ridge black;
     border-bottom         : 3px ridge black;
-    user-focus			  : ignore;
+    -moz-user-focus			  : ignore;
   }
 
 menupopup > menu, popup > menu,

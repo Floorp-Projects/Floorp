@@ -128,7 +128,7 @@
     {
       border-top          : 1px solid #11151F;
       background-color    : #6D88AA;
-      user-focus          : ignore;
+      -moz-user-focus     : ignore;
       overflow            : hidden;
       margin			  : 0px;
       padding			  : 0px;
@@ -136,7 +136,7 @@
 
   statusbar
     {
-      /*behavior            : url("chrome://global/skin/globalBindings.xml#status-bar");*/
+      /*-moz-binding        : url("chrome://global/skin/globalBindings.xml#status-bar");*/
     }
 
   .statusbar-left
@@ -234,7 +234,7 @@
 /** XUL <scrollbar> element **/
   scrollbar 
     { 
-      user-focus          : ignore; 
+      -moz-user-focus     : ignore; 
     } 
 
 

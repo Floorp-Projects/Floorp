@@ -71,7 +71,7 @@ toolbar[collapsed="true"] > toolbargrippy
 
 .toolbar-primary 
   {
-    behavior			  : url("chrome://global/skin/globalBindings.xml#toolbar-primary");
+    -moz-binding		  : url("chrome://global/skin/globalBindings.xml#toolbar-primary");
     padding               : 0px;
     border-bottom         : 1px solid #354557;
     border-top			  : 0px;

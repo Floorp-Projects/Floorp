@@ -43,7 +43,7 @@ button.edit-mode:hover,
 button.edit-mode:hover:active,
 button.edit-mode 
   {
-    behavior              : url(chrome://global/content/xulBindings.xml#buttonleft);
+    -moz-binding          : url(chrome://global/content/xulBindings.xml#buttonleft);
     -moz-border-radius    : 0px 0px 8px 8px;
     padding               : 1px 5px 1px 4px;
     margin                : 0px 1px;
@@ -624,7 +624,7 @@ button.edit-mode[selected="1"]:hover:active
 #text-align-left[disabled="true"]:hover:active,
 #align-left-button[disabled="true"],
 #align-left-button[disabled="true"]:hover,
-#align-left-button[disabled="true"]:hover:active,
+#align-left-button[disabled="true"]:hover:active
   {
     list-style-image      : url("chrome://editor/skin/images/left-disabled.gif");
   } 

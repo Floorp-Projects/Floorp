@@ -216,13 +216,12 @@
   
 #addressingWidgetTree
   {
-    user-focus            : none;
+    -moz-user-focus       : none;
   }  
   
 #attachmentBucket, #attachmentBucketText
   {
     margin-left           : 0px;
-    user-focus            : none;
+    -moz-user-focus       : none;
   }  
-  
   

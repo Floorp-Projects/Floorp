@@ -9,7 +9,7 @@
 
   radio > .internal-box
     {
-      user-focus: none;
+      -moz-user-focus: none;
     }
 
 

@@ -37,8 +37,8 @@
   .button-toolbar > .button-internal-box > .button-text-container,
   .button-toolbar > .button-internal-box > .button-text-container > .button-text
     {
-      padding               : none;
-      margin                : none;
+      padding               : 0;
+      margin                : 0;
     }
 
   .button-toolbar:hover:active > .button-internal-box
@@ -55,8 +55,8 @@
     
   .button-toolbar[toggled="true"]
     {
-      border                : 0px solid 0x003366;
-      background-color      : #AAAAAA;
+      border                : 0px solid #036;
+      background-color      : #AAA;
       -moz-border-radius    : 4px;
     }    
 
@@ -191,7 +191,7 @@
  **/  
   button.button-toolbar-3 
     {
-	  behavior			    : url("chrome://global/skin/globalBindings.xml#three-slice-button");
+	  -moz-binding			    : url("chrome://global/skin/globalBindings.xml#three-slice-button");
       font-weight           : bold;
       background-color      : transparent;
       border				: 0px;
@@ -257,7 +257,7 @@
   button.expander
     {
       border              : none;
-      padding             : none;
+      padding             : 0;
       margin              : 1px 5px 3px 1px;
       background-color    : inherit;
       list-style-image    : url("chrome://global/skin/closedtwisty.gif");
@@ -273,8 +273,8 @@
     {
       border              : none;
       background-color    : inherit;
-      padding             : none;
-      margin              : none;
+      padding             : 0;
+      margin              : 0;
     }
 
 /* text frame */
@@ -315,7 +315,7 @@
   
 menubutton.button-toolbar-4
   {
-    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
   }
 
 .button-toolbar-4 > .menubutton-internal-box > .menubutton-single-icon

@@ -9,7 +9,7 @@
       background-color    : #DDDDDD;
       -moz-border-radius  : 4px;
       margin              : 1px 5px 2px 5px;
-      user-focus		  : ignore;
+      -moz-user-focus		  : ignore;
     }
 
   menulist[open="true"] 

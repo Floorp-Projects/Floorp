@@ -28,7 +28,7 @@ toolbar
 
 toolbargrippy
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
     background-color      : threedface;
     border-left           : 1px solid threedhighlight;
     border-top            : 1px solid threedhighlight;

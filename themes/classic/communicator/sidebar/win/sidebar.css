@@ -33,7 +33,7 @@
   
 #sidebar-panel-picker:hover
   {
-    color                 : activecaptiontext !important;
+    color                 : activecaption !important;
   }
 
 .sidebar-header-text  
@@ -67,7 +67,7 @@
  */
   .box-texttab
     {
-      behavior            : url("chrome://communicator/skin/sidebar/sidebarBindings.xml#panelheader");
+      -moz-binding        : url("chrome://communicator/skin/sidebar/sidebarBindings.xml#panelheader");
       background-color    : threedface;
       cursor              : pointer;
     }
@@ -136,7 +136,7 @@
   .panelheader-box-1[selected="true"]
     {
       background-color    : threedface;
-      background          : none;
+      background          : transparent;
       border-left         : 1px solid threedhighlight;
       border-top          : 1px solid threedhighlight;
       border-right        : 1px solid threedshadow;

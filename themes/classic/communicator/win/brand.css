@@ -1,13 +1,13 @@
 
 #navigator-throbber
   {
-    behavior              : url("chrome://global/content/xulBindings.xml#buttontop");
+    -moz-binding          : url("chrome://global/content/xulBindings.xml#buttontop");
     border                : 1px solid threeddarkshadow;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
     margin                : 1px 2px 1px 10px;
     min-width             : 0px;
     cursor                : pointer;
-    user-focus            : none;
+    -moz-user-focus       : none;
   }  
   
 #navigator-throbber > .button-internal-box
@@ -30,7 +30,7 @@
     border-top            : 1px solid threedshadow !important;
     border-right          : 1px solid threedhighlight !important;
     border-bottom         : 1px solid threedhighlight !important;
-    padding               : 2px 0xp 0xp 2px !important;
+    padding               : 2px 0px 0px 2px !important;
   }  
   
 #navigator-throbber[busy="true"]

@@ -141,8 +141,8 @@ mtable {
   margin-top: -1.0ex;
   margin-bottom: -1.0ex;
   /* margin: 0.5ex 0.4em 0.5ex 0.4em;  top right bottom left */
-  box-sizing: border-box;
-  /* box-sizing: content-box; */
+  -moz-box-sizing: border-box;
+  /* -moz-box-sizing: content-box; */
 }
 
 mtr {

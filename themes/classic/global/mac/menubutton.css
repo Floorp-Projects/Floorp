@@ -4,7 +4,7 @@
 .menubutton-dual[buttondown="true"][disabled="true"],
 .menubutton-dual[buttonover="true"][disabled="true"]
   {
-    behavior              : url("chrome://global/skin/menubuttonBindings.xml#menubutton-toolbar-top");
+    -moz-binding          : url("chrome://global/skin/menubuttonBindings.xml#menubutton-toolbar-top");
     border                : 1px solid transparent;
     margin				  : 0px 2px;
   }
@@ -66,7 +66,7 @@
 .menubutton-dual[disabled="true"]:hover:active > .classic-simplebutton,
 .menubutton-dual[buttonover="true"][disabled="true"] > .classic-simplebutton
   {
-    behavior              : url("chrome://global/skin/menubuttonBindings.xml#buttontop");
+    -moz-binding          : url("chrome://global/skin/menubuttonBindings.xml#buttontop");
     margin                : 0px;
     border                : 1px solid transparent !important;
     min-width             : 0px;
@@ -114,7 +114,7 @@
   
 .menubutton-icon 
   {
-    behavior              : url("chrome://global/skin/classicBindings.xml#menubutton-icon");
+    -moz-binding          : url("chrome://global/skin/classicBindings.xml#menubutton-icon");
     border                : 1px solid #000000;
     -moz-border-radius    : 2px;
     background-color      : #DDDDDD;

@@ -29,7 +29,7 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications-edit.dtd">
 
 <window id="newFileType"
-        class="dialog" style="width: 30em; user-focus: ignore;"
+        class="dialog" style="width: 30em; -moz-user-focus: ignore;"
         orient="vertical"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newTypeTitle.label;"

@@ -6,7 +6,7 @@
  *******************************/
  
 tab { 
-  behavior			: url(chrome://global/skin/classicBindings.xml#tab);
+  -moz-binding			: url(chrome://global/skin/classicBindings.xml#tab);
   color				: #000000; 
   padding			: 0px;
   max-height		: 24px;
@@ -90,7 +90,7 @@ tab:hover:active[selected="true"] > .tab-image-right {
 }
 
 tabbox {
-  behavior			: url(chrome://global/skin/classicBindings.xml#tabbox);
+  -moz-binding			: url(chrome://global/skin/classicBindings.xml#tabbox);
   padding			: 0px;
 }
 
