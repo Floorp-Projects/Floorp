@@ -35,6 +35,7 @@ EXPORTS		=				\
 		nsAlgorithm.h			\
 		nsAPromiseString.h		\
 		nsAReadableString.h		\
+		nsASingleFragmentString.h	\
 		nsAString.h			\
 		nsAStringGenerator.h		\
 		nsAWritableString.h		\
