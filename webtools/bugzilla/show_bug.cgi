@@ -22,10 +22,16 @@
 use diagnostics;
 use strict;
 
+require "CGI.pl";
+
+ConnectToDatabase();
+
+if ($::FORM{'GoAheadAndLogIn'}) {
+    confirm_login();
+}
+
 print "Content-type: text/html\n";
 print "\n";
-
-require "CGI.pl";
 
 if (!defined $::FORM{'id'}) {
     print "<H2>Search By Bug Number</H2>\n";
@@ -36,8 +42,6 @@ if (!defined $::FORM{'id'}) {
     print "</FORM>\n";
     exit;
 }
-
-ConnectToDatabase();
 
 GetVersionTable();
 

@@ -104,7 +104,7 @@ sub quoteUrls {
     return $text;
 }
 
-quietly_check_login();
+my $loginok = quietly_check_login();
 
 my $query = "
 select
@@ -149,13 +149,24 @@ if (@row = FetchSQLData()) {
 	$count++;
     }
 } else {
-    my $maintainer = Param("maintainer");
-    print "<TITLE>Bug Splat Error</TITLE>\n";
-    print "<H1>Query Error</H1>Somehow something went wrong.  Possibly if\n";
-    print "you mail this page to $maintainer, he will be able to fix\n";
-    print "things.<HR>\n";
-    print "Bug $::FORM{'id'} not found<H2>Query Text</H2><PRE>$query<PRE>\n";
-    exit 0
+    SendSQL("select groupset from bugs where bug_id = $::FORM{'id'}");
+    if (@row = FetchSQLData()) {
+        print "<H1>Permission denied.</H1>\n";
+        if ($loginok) {
+            print "Sorry; you do not have the permissions necessary to see\n";
+            print "bug $::FORM{'id'}.\n";
+        } else {
+            print "Sorry; bug $::FORM{'id'} can only be viewed when logged\n";
+            print "into an account with the appropriate permissions.  To\n";
+            print "see this bug, you must first\n";
+            print "<a href=\"show_bug.cgi?id=$::FORM{'id'}&GoAheadAndLogIn=1\">";
+            print "log in</a>.";
+        }
+    } else {
+        print "<H1>Bug not found</H1>\n";
+        print "There does not seem to be a bug numbered $::FORM{'id'}.\n";
+    }
+    exit;
 }
 
 $bug{'assigned_to'} = DBID_to_name($bug{'assigned_to'});
