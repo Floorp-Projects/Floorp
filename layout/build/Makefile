@@ -37,18 +37,20 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
+# These must be maintained in the proper order for Linux.
+
 EXTRA_DSO_LDOPTS = \
-	$(LD_ALL)						\
-	$(DIST)/lib/libraptorlayout_s.a			\
-	$(DIST)/lib/libraptorhtmlbase_s.a		\
-	$(DIST)/lib/libnglhtmlcon_s.a			\
-	$(DIST)/lib/libnglcsslay_s.a			\
+	$(LD_ALL)					\
 	$(DIST)/lib/libraptorhtmldoc_s.a		\
+	$(DIST)/lib/libnglhtmlcon_s.a			\
 	$(DIST)/lib/libraptorhtmlforms_s.a		\
-	$(DIST)/lib/libraptorhtmlstyle_s.a		\
 	$(DIST)/lib/libraptorhtmltable_s.a		\
+	$(DIST)/lib/libraptorhtmlbase_s.a		\
+	$(DIST)/lib/libnglcsslay_s.a			\
+	$(DIST)/lib/libraptorhtmlstyle_s.a		\
+	$(DIST)/lib/libraptorlayout_s.a		        \
 	$(DIST)/lib/libraptorevents_s.a			\
-	$(LD_NONE)						\
+	$(LD_NONE)					\
 	$(DIST)/bin/libraptorhtmlpars.so		\
 	$(DIST)/bin/libraptorgfx.so			\
 	$(DIST)/bin/libraptorbase.so			\
