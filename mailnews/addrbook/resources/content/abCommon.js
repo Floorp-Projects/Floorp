@@ -837,10 +837,16 @@ function GenerateAddressFromCard(card)
   var email;
 
   if (card.isMailList) 
-    email = card.displayName;
+  {
+    var directory = GetDirectoryFromURI(card.mailListURI);
+    if(directory.description)
+      email = directory.description;
+    else
+      email = card.displayName;
+  }
   else 
     email = card.primaryEmail;
-    
+
   return gHeaderParser.makeFullAddressWString(card.displayName, email);
 }
 
