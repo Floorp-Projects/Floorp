@@ -62,6 +62,7 @@
 
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 #define PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT "mail.accountmanager.defaultaccount"
+#define PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER "mail.accountmanager.localfoldersserver"
 #define PREF_MAIL_SERVER_PREFIX "mail.server."
 #define ACCOUNT_PREFIX "account"
 #define SERVER_PREFIX "server"
@@ -1621,8 +1622,50 @@ nsMsgAccountManager::removeListener(nsHashKey *aKey, void *element, void *aData)
   return PR_TRUE;
 }
 
+NS_IMETHODIMP nsMsgAccountManager::SetLocalFoldersServer(nsIMsgIncomingServer *aServer)
+{
+	nsresult rv;
+	if (!aServer) return NS_ERROR_NULL_POINTER;
+
+	nsXPIDLCString key;
+	rv = aServer->GetKey(getter_Copies(key));
+	if (NS_FAILED(rv)) return rv;
+	
+	rv = m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER, (const char *)key);
+	return rv;
+}
+
 NS_IMETHODIMP nsMsgAccountManager::GetLocalFoldersServer(nsIMsgIncomingServer **aServer)
 {
-	// right now, search for a server of type "none".  eventually, we'll do this differently.
-	return FindServer(nsnull,nsnull,"none",aServer);
+	nsXPIDLCString serverKey;
+	nsresult rv;
+
+	if (!aServer) return NS_ERROR_NULL_POINTER;
+
+	rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER,
+                               getter_Copies(serverKey));
+
+	if (NS_SUCCEEDED(rv) && ((const char *)serverKey)) {
+		rv = GetIncomingServer(serverKey, aServer);
+		if (!*aServer) return NS_ERROR_FAILURE;
+		return rv;
+	}
+
+	// try ("nobody","Local Folders","none"), and work down to any "none" server.
+	rv = FindServer("nobody","Local Folders","none",aServer);
+	if (NS_FAILED(rv) || !*aServer) {
+		rv = FindServer("nobody",nsnull,"none",aServer);
+		if (NS_FAILED(rv) || !*aServer) {
+			rv = FindServer(nsnull,"Local Folders","none",aServer);	
+			if (NS_FAILED(rv) || !*aServer) {
+				rv = FindServer(nsnull,nsnull,"none",aServer);
+			}
+		}
+	}
+
+	if (NS_FAILED(rv)) return rv;
+	if (!*aServer) return NS_ERROR_FAILURE;
+	
+	rv = SetLocalFoldersServer(*aServer);
+	return rv;
 }

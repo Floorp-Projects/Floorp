@@ -534,6 +534,10 @@ nsMessengerMigrator::CreateLocalMailAccount(PRBool migrating)
   // notice, no identity for local mail
   account->SetIncomingServer(server);
 
+  // remember this as the local folders server
+  rv = accountManager->SetLocalFoldersServer(server);
+  if (NS_FAILED(rv)) return rv;
+
   nsCOMPtr<nsINoIncomingServer> noServer;
   noServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -1089,6 +1093,10 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // notice, no identity for local mail
   rv = account->SetIncomingServer(server);
   if (NS_FAILED(rv)) return rv;
+
+  // remember this as the local folders server
+  rv = accountManager->SetLocalFoldersServer(server);
+  if (NS_FAILED(rv)) return rv;
   
   // now upgrade all the prefs
   // some of this ought to be moved out into the NONE implementation
@@ -1172,7 +1180,7 @@ nsMessengerMigrator::MigrateMovemailAccount(nsIMsgIdentity *identity)
   rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, getter_Copies(username));
   if (NS_FAILED(rv)) return rv;
 
-  // for right now, none.  eventually, we'll have "movemail"
+  // for right now, use "none".  eventually, we'll have "movemail"
   rv = accountManager->CreateIncomingServer(username, MOVEMAIL_FAKE_HOST_NAME,
                             "none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
