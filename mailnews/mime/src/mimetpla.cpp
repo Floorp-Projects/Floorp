@@ -447,8 +447,9 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
       // convert to unicode so it won't confuse ScanTXT.
       nsAutoString ustr;
       nsCAutoString cstr(line, length);
+      nsCAutoString mailCharsetStr(mailCharset);
 
-      rv = nsMsgI18NConvertToUnicode((nsCAutoString) mailCharset, cstr, ustr);
+      rv = nsMsgI18NConvertToUnicode(mailCharsetStr, cstr, ustr);
       if (NS_SUCCEEDED(rv))
       {
         PRUnichar *u;
@@ -457,7 +458,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
         {
           ustr.Assign(u);
           Recycle(u);
-          rv = nsMsgI18NConvertFromUnicode((nsCAutoString) mailCharset, ustr, cstr);
+          rv = nsMsgI18NConvertFromUnicode(mailCharsetStr, ustr, cstr);
           if (NS_SUCCEEDED(rv))
           {
             // create PRUnichar* which contains NON unicode 

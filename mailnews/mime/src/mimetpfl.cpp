@@ -363,11 +363,12 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
       nsAutoString ustr;
       nsCAutoString cstr;
+      nsCAutoString mailCharsetStr(mailCharset);
 
       cstr.Assign(newcstr);
       Recycle(newcstr);
 
-      rv = nsMsgI18NConvertToUnicode((nsCAutoString) mailCharset, cstr, ustr);
+      rv = nsMsgI18NConvertToUnicode(mailCharsetStr, cstr, ustr);
       if (NS_SUCCEEDED(rv))
       {
         PRUnichar *u;
@@ -376,7 +377,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
         {
           ustr.Assign(u);
           Recycle(u);
-          rv = nsMsgI18NConvertFromUnicode((nsCAutoString) mailCharset, ustr, cstr);
+          rv = nsMsgI18NConvertFromUnicode(mailCharsetStr, ustr, cstr);
           if (NS_SUCCEEDED(rv))
             lineResult.AssignWithConversion(cstr);   // create nsString which contains NON unicode 
                                                      // as the following code expecting it
