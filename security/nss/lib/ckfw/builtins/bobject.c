@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: bobject.c,v $ $Revision: 1.1 $ $Date: 2002/02/08 00:10:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: bobject.c,v $ $Revision: 1.2 $ $Date: 2002/03/29 07:34:22 $ $Name:  $";
 #endif /* DEBUG */
 
 #include "builtins.h"
@@ -163,7 +163,7 @@ builtins_mdObject_GetAttributeSize
   return 0;
 }
 
-static const NSSItem *
+static NSSCKFWItem
 builtins_mdObject_GetAttribute
 (
   NSSCKMDObject *mdObject,
@@ -178,17 +178,22 @@ builtins_mdObject_GetAttribute
   CK_RV *pError
 )
 {
+  NSSCKFWItem mdItem;
   builtinsInternalObject *io = (builtinsInternalObject *)mdObject->etc;
   CK_ULONG i;
 
+  mdItem.needsFreeing = PR_FALSE;
+  mdItem.item = (NSSItem*) NULL;
+
   for( i = 0; i < io->n; i++ ) {
     if( attribute == io->types[i] ) {
-      return &io->items[i];
+      mdItem.item = (NSSItem*) &io->items[i];
+      return mdItem;
     }
   }
 
   *pError = CKR_ATTRIBUTE_TYPE_INVALID;
-  return (NSSItem *)NULL;
+  return mdItem;
 }
 
 static CK_ULONG
@@ -226,6 +231,7 @@ builtins_prototype_mdObject = {
   builtins_mdObject_GetAttributeTypes,
   builtins_mdObject_GetAttributeSize,
   builtins_mdObject_GetAttribute,
+  NULL, /* FreeAttribute */
   NULL, /* SetAttribute */
   builtins_mdObject_GetObjectSize,
   (void *)NULL /* null terminator */
