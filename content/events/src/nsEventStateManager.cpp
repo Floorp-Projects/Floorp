@@ -75,7 +75,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
   mCurrentTarget = aTargetFrame;
 
   nsFrameState state;
-  mCurrentTarget->GetFrameState(state);
+  mCurrentTarget->GetFrameState(&state);
   state |= NS_FRAME_EXTERNAL_REFERENCE;
   mCurrentTarget->SetFrameState(state);
 
@@ -109,7 +109,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   nsresult ret = NS_OK;
 
   nsFrameState state;
-  mCurrentTarget->GetFrameState(state);
+  mCurrentTarget->GetFrameState(&state);
   state |= NS_FRAME_EXTERNAL_REFERENCE;
   mCurrentTarget->SetFrameState(state);
 

@@ -108,7 +108,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // the frame state.
   nsReflowReason reason = eReflowReason_Resize;
   nsFrameState state;
-  aFrame->GetFrameState(state);
+  aFrame->GetFrameState(&state);
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
   }
@@ -155,7 +155,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                           aFrameReflowStatus);
   mOuterReflowState.spaceManager->Translate(-tx, -ty);
 
-  aFrame->GetFrameState(state);
+  aFrame->GetFrameState(&state);
   if (0 == (NS_FRAME_OUTSIDE_CHILDREN & state)) {
     // Provide combined area for child that doesn't have any
     mMetrics.mCombinedArea.x = 0;

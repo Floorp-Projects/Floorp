@@ -1190,7 +1190,7 @@ nsFrameReflowState::SetupChildReflowState(nsHTMLReflowState& aChildRS)
   nsReflowReason reason = eReflowReason_Resize;
   nsIFrame* frame = aChildRS.frame;
   nsFrameState state;
-  frame->GetFrameState(state);
+  frame->GetFrameState(&state);
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
   }

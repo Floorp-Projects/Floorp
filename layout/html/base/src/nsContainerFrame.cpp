@@ -236,7 +236,7 @@ nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
     nsRect kidRect;
     aFrame->GetRect(kidRect);
     nsFrameState state;
-    aFrame->GetFrameState(state);
+    aFrame->GetFrameState(&state);
 
     // Compute the constrained damage area; set the overlap flag to
     // PR_TRUE if any portion of the child frame intersects the
@@ -318,7 +318,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   FirstChild(aList, &kid);
   while (nsnull != kid) {
     nsFrameState state;
-    kid->GetFrameState(state);
+    kid->GetFrameState(&state);
     if (NS_FRAME_OUTSIDE_CHILDREN & state) {
       kid->GetRect(kidRect);
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
