@@ -333,7 +333,7 @@ sub print_source_code {
     $line =~ s/&/&amp;/g;
     $line =~ s/</&lt;/g;
     $line =~ s/>/&gt;/g;
-    $line =~ s|$keyword|<b>$keyword</b>|g;
+    $line =~ s|\Q$keyword\E|<b>$keyword</b>|g;
     print "<font color='red'>" if $line_index == $linenum;
     print "$line_index $line<BR>";
     print "</font>" if $line_index == $linenum;
