@@ -366,6 +366,69 @@ NS_CreateServicesFromCategory(const char *category,
     return (nFailed ? NS_ERROR_FAILURE : NS_OK);
 }
 
+// Get a service with control to not create it
+// The right way to do this is to add this into the nsIServiceManager
+// api. Changing the api however will break a whole bunch of modules -
+// plugins and other embedding clients. So until we figure out how to 
+// make new apis and maintain backward compabitility etc, we are adding
+// this api.
+//
+// WARNING: USE AT YOUR OWN RISK. THIS FUNCTION WILL NOT BE SUPPORTED
+//          IN FUTURE RELEASES.
+NS_COM nsresult
+NS_GetService(const char *aContractID, const nsIID& aIID, PRBool aDontCreate, nsISupports** result)
+{
+    if (!aDontCreate) {
+        // This is the same as the old get service.
+        return nsServiceManager::GetService(aContractID, aIID, result, nsnull);
+    }
+    nsComponentManagerImpl* mgr;
+    nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager **)&mgr);
+    if (NS_FAILED(rv))
+        return rv;
+
+    return mgr->FetchService(aContractID, aIID, result);
+}
+
+nsresult
+nsComponentManagerImpl::FetchService(const char *aContractID, const nsIID& aIID, nsISupports** result)
+{
+    // Now we want to get the service if we already got it. If not, we dont want
+    // to create an instance of it. mmh!
+
+    // test this first, since there's no point in returning a service during
+    // shutdown -- whether it's available or not would depend on the order it
+    // occurs in the list
+    if (gShuttingDown) {
+        // When processing shutdown, dont process new GetService() requests
+        NS_WARNING("Creating new service on shutdown. Denied.");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    nsresult rv = NS_ERROR_SERVICE_NOT_FOUND;
+    nsCStringKey key(aContractID);
+    nsFactoryEntry *entry = (nsFactoryEntry *) mContractIDs->Get(&key);
+    nsServiceEntry* serviceEntry;
+    if (entry && entry != kNonExistentContractID && entry->mServiceEntry) {
+        serviceEntry = entry->mServiceEntry;
+
+        if (!serviceEntry->mObject)
+            return NS_ERROR_NULL_POINTER;
+        nsISupports* service; // keep as raw point (avoid extra addref/release)
+        rv = serviceEntry->mObject->QueryInterface(aIID, (void**)&service);
+        *result = service;
+        // If someone else requested the service to be shut down, 
+        // and we just asked to get it again before it could be 
+        // released, then cancel their shutdown request:
+        if (serviceEntry->mShuttingDown) {
+            serviceEntry->mShuttingDown = PR_FALSE;
+            NS_ADDREF(service);      // Released in UnregisterService
+        }
+    }
+    return rv;
+}
+
+
 /* prototypes for the Mac */
 PRBool PR_CALLBACK
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);

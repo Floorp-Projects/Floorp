@@ -431,4 +431,15 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
 extern NS_COM nsresult
 NS_CreateServicesFromCategory(const char* category, nsISupports *origin, const PRUnichar *observerTopic);
 
+// Get a service with control to not create it
+// The right way to do this is to add this into the nsIServiceManager
+// api. Changing the api however will break a whole bunch of modules -
+// plugins and other embedding clients. So until we figure out how to 
+// make new apis and maintain backward compabitility etc, we are adding
+// this api.
+//
+// WARNING: USE AT YOUR OWN RISK. THIS FUNCTION WILL NOT BE SUPPORTED
+//          IN FUTURE RELEASES.
+extern NS_COM nsresult
+NS_GetService(const char *aContractID, const nsIID& aIID, PRBool aDontCreate, nsISupports** result);
 #endif /* nsIServiceManager_h___ */

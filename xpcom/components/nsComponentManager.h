@@ -114,7 +114,10 @@ public:
 
     friend class nsFactoryEntry;
     friend class nsServiceManager;
+    friend nsresult
+    NS_GetService(const char *aContractID, const nsIID& aIID, PRBool aDontCreate, nsISupports** result);
 protected:
+    nsresult FetchService(const char *aContractID, const nsIID& aIID, nsISupports** result);
     nsresult RegistryNameForLib(const char *aLibName, char **aRegistryName);
     nsresult RegisterComponentCommon(const nsCID &aClass,
                                      const char *aClassName,
