@@ -130,33 +130,33 @@ NS_IMETHODIMP nsWalletlibService::PromptURL
   return ::SINGSIGN_Prompt(text, defaultText, resultText, urlname, dialog, returnValue);
 }
 
-NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *URLName, char *userName) {
+NS_IMETHODIMP nsWalletlibService::SI_RemoveUser(const char *URLName, PRUnichar *userName) {
   ::SINGSIGN_RemoveUser(URLName, userName);
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsWalletlibService::WALLET_GetNopreviewListForViewer(nsString& aNopreviewList){
+NS_IMETHODIMP nsWalletlibService::WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList){
   ::WLLT_GetNopreviewListForViewer(aNopreviewList);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_GetNocaptureListForViewer(nsString& aNocaptureList){
+NS_IMETHODIMP nsWalletlibService::WALLET_GetNocaptureListForViewer(nsAutoString& aNocaptureList){
   ::WLLT_GetNocaptureListForViewer(aNocaptureList);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_GetPrefillListForViewer(nsString& aPrefillList){
+NS_IMETHODIMP nsWalletlibService::WALLET_GetPrefillListForViewer(nsAutoString& aPrefillList){
   ::WLLT_GetPrefillListForViewer(aPrefillList);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::SI_GetSignonListForViewer(nsString& aSignonList){
+NS_IMETHODIMP nsWalletlibService::SI_GetSignonListForViewer(nsAutoString& aSignonList){
   ::SINGSIGN_GetSignonListForViewer(aSignonList);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::SI_GetRejectListForViewer(nsString& aRejectList){
+NS_IMETHODIMP nsWalletlibService::SI_GetRejectListForViewer(nsAutoString& aRejectList){
   ::SINGSIGN_GetRejectListForViewer(aRejectList);
   return NS_OK;
 }
@@ -301,9 +301,9 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                     nsAutoString field;
                     rv = inputElement->GetName(field);
                     if (NS_SUCCEEDED(rv)) {
-                      char* nameString = field.ToNewCString();
+                      PRUnichar* nameString = field.ToNewUnicode();
                       if (nameString) {
-                        char* valueString = NULL;
+                        PRUnichar* valueString = NULL;
                         SINGSIGN_RestoreSignonData(URLName, nameString, &valueString, elementNumber++);
                         if (valueString) {
                           nsAutoString value(valueString);                                    

@@ -488,42 +488,6 @@ wallet_DumpStopwatch() {
 #endif /* DEBUG */
 
 
-/*************************************/
-/* Concatenating and Copying Strings */
-/*************************************/
-
-#undef StrAllocCopy
-#define StrAllocCopy(dest, src) Local_SACopy (&(dest), src)
-PRIVATE char *
-Local_SACopy(char **destination, const char *source) {
-  if(*destination) {
-    PL_strfree(*destination);
-    *destination = 0;
-  }
-  *destination = PL_strdup(source);
-  return *destination;
-}
-
-#undef StrAllocCat
-#define StrAllocCat(dest, src) Local_SACat (&(dest), src)
-PRIVATE char *
-Local_SACat(char **destination, const char *source) {
-  if (source && *source) {
-    if (*destination) {
-      int length = PL_strlen (*destination);
-      *destination = (char *) PR_Realloc(*destination, length + PL_strlen(source) + 1);
-      if (*destination == NULL) {
-        return(NULL);
-      }
-      PL_strcpy (*destination + length, source);
-    } else {
-      *destination = PL_strdup(source);
-    }
-  }
-  return *destination;
-}
-  
-
 /********************************************************/
 /* The following data and procedures are for preference */
 /********************************************************/
@@ -687,7 +651,7 @@ Wallet_Localize(char* genericString) {
   nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
 
   /* localize the given string */
-  nsString   strtmp(genericString);
+  nsAutoString   strtmp(genericString);
   const PRUnichar *ptrtmp = strtmp.GetUnicode();
   PRUnichar *ptrv = nsnull;
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
@@ -716,7 +680,7 @@ Wallet_Confirm(PRUnichar * szMessage)
     return retval;
   }
 
-  const nsString message = szMessage;
+  const nsAutoString message = szMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
   res = dialog->Confirm(message.GetUnicode(), &retval);
   return retval;
@@ -822,7 +786,7 @@ Wallet_Alert(PRUnichar * szMessage)
     return;     // XXX should return the error
   }
 
-  const nsString message = szMessage;
+  const nsAutoString message = szMessage;
   res = dialog->Alert(message.GetUnicode());
   return;     // XXX should return the error
 }
@@ -873,13 +837,14 @@ Wallet_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool*
   return (buttonPressed == 0);
 }
 
-char * wallet_GetString(PRUnichar * szMessage, PRUnichar * szMessage1)
+nsresult
+wallet_GetString(nsAutoString& result, PRUnichar * szMessage, PRUnichar * szMessage1)
 {
-  nsString password;
+  nsAutoString password;
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
-    return NULL;     // XXX should return the error
+    return res;
   }
 
   PRUnichar* pwd = NULL;
@@ -909,25 +874,27 @@ char * wallet_GetString(PRUnichar * szMessage, PRUnichar * szMessage1)
   Recycle(prompt_string);
 
   if (NS_FAILED(res)) {
-    return NULL;
+    return res;
   }
   password = pwd;
   delete[] pwd;
 
   if (buttonPressed == 0) {
-    return password.ToNewCString();
+    result = password;
+    return NS_OK;
   } else {
-    return NULL; /* user pressed cancel */
+    return NS_ERROR_FAILURE; /* user pressed cancel */
   }
 }
 
-char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage1, PRUnichar * szMessage2, PRBool& matched)
+nsresult
+wallet_GetDoubleString(nsAutoString& result, PRUnichar * szMessage, PRUnichar * szMessage1, PRUnichar * szMessage2, PRBool& matched)
 {
-  nsString password, password2;
+  nsAutoString password, password2;
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
-    return NULL;     // XXX should return the error
+    return res;
   }
 
   PRUnichar* pwd = NULL;
@@ -958,7 +925,7 @@ char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage1, PRU
   Recycle(prompt_string);
 
   if (NS_FAILED(res)) {
-    return NULL;
+    return res;
   }
   password = pwd;
   password2 = pwd2;
@@ -967,9 +934,10 @@ char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage1, PRU
   matched = (password == password2);
 
   if (buttonPressed == 0) {
-    return password.ToNewCString();
+    result = password;
+    return NS_OK;
   } else {
-    return NULL; /* user pressed cancel */
+    return NS_ERROR_FAILURE; /* user pressed cancel */
   }
 }
 
@@ -1168,13 +1136,149 @@ wallet_ReadFromList(
   return wallet_ReadFromList(item1, item2, itemList, list, index);
 }
 
+
+/*************************************************************/
+/* The following routines are for reading/writing utf8 files */
+/*************************************************************/
+
+/*
+ * For purposed of internationalization, characters are represented in memory as 16-bit
+ * values (unicode, aka UCS-2) rather than 7 bit values (ascii).  For simplicity, the
+ * unicode representation of an ascii character has the upper 9 bits of zero and the
+ * lower 7 bits equal to the 7-bit ascii value.
+ *
+ * These 16-bit unicode values could be stored directly in files.  However such files would
+ * not be readable by ascii editors even if they contained all ascii values.  To solve
+ * this problem, the 16-bit unicode values are first encoded into a sequence of 8-bit
+ * characters before being written to the file -- the encoding is such that unicode
+ * characters which have the upper 9 bits of zero are encoded into a single 8-bit character
+ * of the same value whereas the remaining unicode characters are encoded into a sequence of
+ * more than one 8-bit character.
+ *
+ * There is a standard 8-bit-encoding of bit strings and it is called UTF-8.  The format of
+ * UTF-8 is as follows:
+ *
+ * Up to  7 bits: 0xxxxxxx
+ * Up to 11 bits: 110xxxxx 10xxxxxx
+ * Up to 16 bits: 1110xxxx 10xxxxxx 10xxxxxx
+ * Up to 21 bits: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+ * Up to 26 bits: 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+ * Up to 31 bits: 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+ *
+ * Since we are converting unicode (16-bit) values, we need only be concerned with the
+ * first three lines above.
+ *
+ * There are conversion routines provided in intl/uconv which convert between unicode and
+ * UTF-8.  However these routines are extremely cumbersome to use.  So I have a very simple
+ * pair of encoding/decoding routines for converting between unicode characters and UTF-8
+ * sequences.  Here are the encoding/decoding algorithms that I use:
+ *
+ *   encoding 16-bit unicode to 8-bit utf8 stream:
+ *      if (unicodeChar <= 0x7F) { // up to 7 bits
+ *        utf8Char1 = 0xxxxxxx + lower 7 bits of unicodeChar
+ *      } else if (unicodeChar <= 0x7FF) { // up to 11 bits
+ *        utf8Char1 = 110xxxxx + upper 5 bits of unicodeChar
+ *        utf8Char2 = 10xxxxxx + lower 6 bits of unicodeChar
+ *      } else { // up to 16 bits
+ *        utf8Char1 = 1110xxxx + upper 4 bits of unicodeChar
+ *        utf8Char2 = 10xxxxxx + next 6 bits of unicodeChar
+ *        utf8Char3 = 10xxxxxx + lower 6 bits of unicodeChar
+ *      }
+ *
+ *   decoding 8-bit utf8 stream to 16-bit unicode:
+ *      if (utf8Char1 starts with 0) {
+ *        unicodeChar = utf8Char1;
+ *      } else if (utf8Char1 starts with 110) {
+ *        unicodeChar = (lower 5 bits of utf8Char1)<<6 
+ *                    + (lower 6 bits of utf8Char2);
+ *      } else if (utf8Char1 starts with 1110) {
+ *        unicodeChar = (lower 4 bits of utf8Char1)<<12
+ *                    + (lower 6 bits of utf8Char2)<<6
+ *                    + (lower 6 bits of utf8Char3);
+ *      } else {
+ *        error;
+ *      }
+ *
+ */
+
+PUBLIC void
+Wallet_UTF8Put(nsOutputFileStream strm, PRUnichar c) {
+  if (c <= 0x7F) {
+    strm.put((char)c);
+  } else if (c <= 0x7FF) {
+    strm.put(((PRUnichar)0xC0) | ((c>>6) & 0x1F));
+    strm.put(((PRUnichar)0x80) | (c & 0x3F));
+  } else {
+    strm.put(((PRUnichar)0xE0) | ((c>>12) & 0xF));
+    strm.put(((PRUnichar)0x80) | ((c>>6) & 0x3F));
+    strm.put(((PRUnichar)0x80) | (c & 0x3F));
+  }
+}
+
+PUBLIC PRUnichar
+Wallet_UTF8Get(nsInputFileStream strm) {
+  PRUnichar c = (strm.get() & 0xFF);
+  if ((c & 0x80) == 0x00) {
+    return c;
+  } else if ((c & 0xE0) == 0xC0) {
+    return (((c & 0x1F)<<6) + (strm.get() & 0x3F));
+  } else if ((c & 0xF0) == 0xE0) {
+    return (((c & 0x0F)<<12) + ((strm.get() & 0x3F)<<6) + (strm.get() & 0x3F));
+  } else {
+    return 0; /* this is an error, input was not utf8 */
+  }
+}
+
+/*
+ * I have an even a simpler set of routines if you are not concerned about UTF-8.  The
+ * algorithms for those routines are as follows:
+ *
+ *   encoding 16-bit unicode to 8-bit simple stream:
+ *      if (unicodeChar < 0xFF) {
+ *        simpleChar1 = unicodeChar
+ *      } else {
+ *        simpleChar1 = 0xFF
+ *        simpleChar2 = upper 8 bits of unicodeChar
+ *        simpleChar3 = lower 8 bits of unicodeChar
+ *      }
+ *
+ *   decoding 8-bit simple stream to 16-bit unicode:
+ *      if (simpleChar1 < 0xFF) {
+ *        unicodeChar = simpleChar1;
+ *      } else {
+ *        unicodeChar = 256*simpleChar2 + simpleChar3;
+ *      }
+ *
+ */
+
+PUBLIC void
+Wallet_SimplePut(nsOutputFileStream strm, PRUnichar c) {
+  if (c < 0xFF) {
+    strm.put((char)c);
+  } else {
+    strm.put((PRUnichar)0xFF);
+    strm.put((c>>8) & 0xFF);
+    strm.put(c & 0xFF);
+  }
+}
+
+PUBLIC PRUnichar
+Wallet_SimpleGet(nsInputFileStream strm) {
+  PRUnichar c = (strm.get() & 0xFF);
+  if (c != 0xFF) {
+    return c;
+  } else {
+    return ((strm.get() & 0xFF)<<8) + (strm.get() & 0xFF);
+  }
+}
+
+
 /************************************************************/
 /* The following routines are for unlocking the stored data */
 /************************************************************/
 
-#define maxKeySize 100
-char key[maxKeySize+1];
-PRUint32 keyPosition = 0;
+nsAutoString key;
+PRInt32 keyPosition = 0;
 PRBool keyCancel = PR_FALSE;
 PRBool keySet = PR_FALSE;
 time_t keyExpiresTime;
@@ -1189,12 +1293,12 @@ Wallet_RestartKey() {
   keyPosition = 0;
 }
 
-PUBLIC char
+PUBLIC PRUnichar
 Wallet_GetKey() {
-  if (keyPosition >= PL_strlen(key)) {
+  if (keyPosition >= key.Length()) {
     keyPosition = 0;
   }
-  return key[keyPosition++];
+  return key.CharAt(keyPosition++);
 }
 
 PUBLIC PRBool
@@ -1294,7 +1398,7 @@ Wallet_KeySize() {
   if (!strm.is_open()) {
     return -1;
   } else {
-    strm.get();
+    Wallet_UTF8Get(strm);
     PRInt32 ret = (strm.eof() ? 0 : 1);
     strm.close();
     return ret;
@@ -1303,12 +1407,13 @@ Wallet_KeySize() {
 
 PUBLIC PRBool
 Wallet_SetKey(PRBool isNewkey) {
+  nsresult res;
   if (Wallet_KeySet() && !isNewkey) {
     return PR_TRUE;
   }
   Wallet_RestartKey();
 
-  char * newkey;
+  nsAutoString newkey;
   PRBool useDefaultKey = PR_FALSE;
 
   if (Wallet_KeySize() < 0) { /* no key has yet been established */
@@ -1318,12 +1423,12 @@ Wallet_SetKey(PRBool isNewkey) {
     PRUnichar * mismatch = Wallet_Localize("confirmFailed_TryAgain?");
     PRBool matched;
     for (;;) {
-      newkey = wallet_GetDoubleString(message, message1, message2, matched);
-      if ((newkey != NULL) && matched) {
+      res = wallet_GetDoubleString(newkey, message, message1, message2, matched);
+      if (NS_SUCCEEDED(res) && matched) {
         break; /* break out of loop if both passwords matched */
       }
       /* password confirmation failed, ask user if he wants to try again */
-      if ((newkey == NULL) || (!Wallet_Confirm(mismatch))) {
+      if (NS_FAILED(res) || (!Wallet_Confirm(mismatch))) {
         Recycle(mismatch);
         Recycle(message);
         Recycle(message1);
@@ -1349,16 +1454,16 @@ Wallet_SetKey(PRBool isNewkey) {
     }
     if ((Wallet_KeySize() == 0) && !isNewkey) { /* prev-established key is default key */
       useDefaultKey = PR_TRUE;
-      newkey = PL_strdup("~");
+      newkey = nsAutoString("~");
     } else { /* ask the user for his key */
       if (isNewkey) { /* user is changing his password */
         for (;;) {
-          newkey = wallet_GetDoubleString(message, message1, message2, matched);
-          if ((newkey != NULL) && matched) {
+          res = wallet_GetDoubleString(newkey, message, message1, message2, matched);
+          if (!NS_FAILED(res) && matched) {
             break; /* break out of loop if both passwords matched */
           }
           /* password confirmation failed, ask user if he wants to try again */
-          if ((newkey == NULL) || (!Wallet_Confirm(mismatch))) {
+          if (NS_FAILED(res) || (!Wallet_Confirm(mismatch))) {
             Recycle(mismatch);
             Recycle(message);
             Recycle(message1);
@@ -1368,9 +1473,9 @@ Wallet_SetKey(PRBool isNewkey) {
           }    
         }
       } else {
-        newkey = wallet_GetString(message, message1);
+        res = wallet_GetString(newkey, message, message1);
       }
-      if (newkey == NULL) {
+      if (NS_FAILED(res)) {
         Recycle(message);
         Recycle(message1);
         Recycle(message2);
@@ -1385,19 +1490,15 @@ Wallet_SetKey(PRBool isNewkey) {
     Recycle(mismatch);
   }
 
-  if (PL_strlen(newkey) == 0) { /* user entered a zero-length key */
+  if (newkey.Length() == 0) { /* user entered a zero-length key */
     if ((Wallet_KeySize() < 0) || isNewkey ){
       /* no key file existed before or using is changing the key */
       useDefaultKey = PR_TRUE;
-      PR_FREEIF(newkey);
-      newkey  = PL_strdup("~"); /* use zero-length key */
+      newkey = nsAutoString("~"); /* use zero-length key */
     }
   }
-  for (; (keyPosition < PL_strlen(newkey) && keyPosition < maxKeySize); keyPosition++) {
-    key[keyPosition] = newkey[keyPosition];
-  }
-  key[keyPosition] = '\0';
-  PR_FREEIF(newkey);
+  
+  key = newkey;
   Wallet_RestartKey();
 
   /* verify this with the saved key */
@@ -1416,7 +1517,7 @@ Wallet_SetKey(PRBool isNewkey) {
     }
     nsOutputFileStream strm2(dirSpec + keyFileName);
     if (!strm2.is_open()) {
-      *key = '\0';
+      key = nsAutoString("");
       keyCancel = PR_TRUE;
       return PR_FALSE;
     }
@@ -1426,12 +1527,11 @@ Wallet_SetKey(PRBool isNewkey) {
      * key[1..n],key[0] obscured by the actual key.
      */
 
-    if (!useDefaultKey && (PL_strlen(key) != 0)) {
-      char* p = key+1;
-      while (*p) {
-        strm2.put(*(p++)^Wallet_GetKey());
+    if (!useDefaultKey && (key.Length() != 0)) {
+      for (PRInt32 i = 1; i < key.Length(); i++) {
+        Wallet_UTF8Put(strm2, (key.CharAt(i))^Wallet_GetKey());
       }
-      strm2.put((*key)^Wallet_GetKey());
+      Wallet_UTF8Put(strm2, (key.CharAt(0))^Wallet_GetKey());
     }
     strm2.flush();
     strm2.close();
@@ -1464,22 +1564,22 @@ Wallet_SetKey(PRBool isNewkey) {
     }
     nsInputFileStream strm(dirSpec + keyFileName);
     Wallet_RestartKey();
-    char* p = key+1;
-    while (*p) {
-      if (strm.get() != (*(p++)^Wallet_GetKey()) || strm.eof()) {
+
+    for (PRInt32 j = 1; j < key.Length(); j++) {
+      if (Wallet_UTF8Get(strm) != ((key.CharAt(j))^Wallet_GetKey()) || strm.eof()) {
         strm.close();
-        *key = '\0';
+        key = nsAutoString("");
         keyCancel = PR_FALSE;
         return PR_FALSE;
       }
     }
-    if (strm.get() != ((*key)^Wallet_GetKey()) || strm.eof()) {
+    if (Wallet_UTF8Get(strm) != ((key.CharAt(0))^Wallet_GetKey()) || strm.eof()) {
       strm.close();
-      *key = '\0';
+      key = nsAutoString("");
       keyCancel = PR_FALSE;
       return PR_FALSE;
     }
-    strm.get(); /* to get past the end of the file so eof() will get set */
+    Wallet_UTF8Get(strm); /* to get past the end of the file so eof() will get set */
     PRBool rv = strm.eof();
     strm.close();
     if (rv) {
@@ -1488,7 +1588,7 @@ Wallet_SetKey(PRBool isNewkey) {
       keyExpiresTime = time(NULL) + keyDuration;
       return PR_TRUE;
     } else {
-      *key = '\0';
+      key = nsAutoString("");
       keyCancel = PR_TRUE;
       return PR_FALSE;
     }
@@ -1508,9 +1608,9 @@ PRInt32
 wallet_GetLine(nsInputFileStream strm, nsAutoString& line, PRBool obscure) {
 
   /* read the line */
-  char c;
+  PRUnichar c;
   for (;;) {
-    c = strm.get()^(obscure ? Wallet_GetKey() : (char)0);
+    c = Wallet_UTF8Get(strm)^(obscure ? Wallet_GetKey() : (PRUnichar)0);
     if (c == '\n') {
       break;
     }
@@ -1530,35 +1630,15 @@ wallet_GetLine(nsInputFileStream strm, nsAutoString& line, PRBool obscure) {
 
 /*
  * Write a line to a file
- * return -1 if an error occurs
  */
-PRInt32
-wallet_PutLine(nsOutputFileStream strm, const nsString& line, PRBool obscure)
+void
+//@@@@@ why do we need the const and & for "line" on the next line
+wallet_PutLine(nsOutputFileStream strm, const nsAutoString& line, PRBool obscure)
 {
-  /* allocate a buffer from the heap */
-
   for (int i=0; i<line.Length(); i++) {
-    strm.put(line.CharAt(i)^(obscure ? Wallet_GetKey() : (char)0));
+    Wallet_UTF8Put(strm, line.CharAt(i)^(obscure ? Wallet_GetKey() : (PRUnichar)0));
   }
-  strm.put('\n'^(obscure ? Wallet_GetKey() : (char)0));
-	
-#ifdef xxx
-  char * cp = line.ToNewCString();
-  if (! cp) {
-    return NS_ERROR_FAILURE;
-  }
-
-  /* output each character */
-  char* p = cp;
-  while (*p) {
-    strm.put(*(p++)^(obscure ? Wallet_GetKey() : (char)0));
-  }
-  strm.put('\n'^(obscure ? Wallet_GetKey() : (char)0));
-
-  nsCRT::free(cp);
-#endif
-
-  return 0;
+  Wallet_UTF8Put(strm, '\n'^(obscure ? Wallet_GetKey() : (PRUnichar)0));
 }
 
 /*
@@ -1594,26 +1674,18 @@ wallet_WriteToFile(char* filename, nsVoidArray* list, PRBool obscure) {
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=0; i<count; i++) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
-    if (NS_FAILED(wallet_PutLine(strm, (*ptr).item1, obscure))) {
-      break;
-    }
+    wallet_PutLine(strm, (*ptr).item1, obscure);
     if ((*ptr).item2 != "") {
-      if (NS_FAILED(wallet_PutLine(strm, (*ptr).item2, obscure))) {
-        break;
-      }
+      wallet_PutLine(strm, (*ptr).item2, obscure);
     } else {
       wallet_Sublist * ptr1;
       PRInt32 count2 = LIST_COUNT(ptr->itemList);
       for (PRInt32 j=0; j<count2; j++) {
         ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(j));
-        if (NS_FAILED(wallet_PutLine(strm, (*ptr).item1, obscure))) {
-          break;
-        }
+        wallet_PutLine(strm, (*ptr).item1, obscure);
       }
     }
-    if (NS_FAILED(wallet_PutLine(strm, "", obscure))) {
-      break;
-    }
+    wallet_PutLine(strm, "", obscure);
   }
 
   /* close the stream */
@@ -2051,24 +2123,21 @@ wallet_FetchFromNetCenter() {
   if (NS_FAILED(rv)) {
     return;
   }
-  StrAllocCopy(url, wallet_Server);
-  StrAllocCat(url, "URLFieldSchema.tbl");
+  url = (nsAutoString(wallet_Server) + "URLFieldSchema.tbl").ToNewCString();
   rv = NS_NewURItoFile(url, dirSpec, "URLFieldSchema.tbl");
-  PR_FREEIF(url);
+  Recycle(url);
   if (NS_FAILED(rv)) {
     return;
   }
-  StrAllocCopy(url, wallet_Server);
-  StrAllocCat(url, "SchemaConcat.tbl");
+  url = (nsAutoString(wallet_Server) + "SchemaConcat.tbl").ToNewCString();
   rv = NS_NewURItoFile(url, dirSpec, "SchemaConcat.tbl");
-  PR_FREEIF(url);
+  Recycle(url);
   if (NS_FAILED(rv)) {
     return;
   }
-  StrAllocCopy(url, wallet_Server);
-  StrAllocCat(url, "FieldSchema.tbl");
+  url = (nsAutoString(wallet_Server) + "FieldSchema.tbl").ToNewCString();
   rv = NS_NewURItoFile(url, dirSpec, "FieldSchema.tbl");
-  PR_FREEIF(url);
+  Recycle(url);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -2187,7 +2256,7 @@ wallet_InitializeURLList() {
   }
 }
 
-nsString
+nsAutoString
 wallet_GetHostFile(nsIURI * url) {
   nsAutoString urlName = nsAutoString("");
   char* host;
@@ -2252,19 +2321,15 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
 
 #define SEPARATOR "#*%$"
 
-nsAutoString *
-wallet_GetNextInString(char*& ptr) {
-  nsAutoString * result;
-  char * endptr;
-  endptr = PL_strstr(ptr, SEPARATOR);
-  if (!endptr) {
-    return NULL;
+PRInt32
+wallet_GetNextInString(nsAutoString str, nsAutoString& head, nsAutoString& tail) {
+  PRInt32 separator = str.Find(SEPARATOR);
+  if (separator == -1) {
+    return -1;
   }
-  *endptr = '\0';
-  result = new nsAutoString(ptr);
-  *endptr = SEPARATOR[0];
-  ptr = endptr + PL_strlen(SEPARATOR);
-  return result;
+  str.Left(head, separator);
+  str.Mid(tail, separator+PL_strlen(SEPARATOR), str.Length() - (separator+PL_strlen(SEPARATOR)));
+  return 0;
 }
 
 void
@@ -2291,43 +2356,45 @@ wallet_ReleasePrefillElementList(nsVoidArray * wallet_PrefillElement_list) {
 #define BREAK '\001'
 
 nsVoidArray * wallet_list;
-nsString wallet_url;
+nsAutoString wallet_url;
 
 PUBLIC void
-WLLT_GetPrefillListForViewer(nsString& aPrefillList)
+WLLT_GetPrefillListForViewer(nsAutoString& aPrefillList)
 {
-  char *buffer = (char*)PR_Malloc(BUFLEN3);
-  int g = 0;
   wallet_PrefillElement * ptr;
-  buffer[0] = '\0';
-  char * schema;
-  char * value;
+  nsAutoString buffer = "";
+  PRUnichar * schema;
+  PRUnichar * value;
   PRInt32 count = LIST_COUNT(wallet_list);
   for (PRInt32 i=0; i<count; i++) {
     ptr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_list->ElementAt(i));
-    schema = ptr->schema->ToNewCString();
-    value = ptr->value->ToNewCString();
-    g += PR_snprintf(buffer+g, BUFLEN3-g,
-      "%c%d%c%s%c%s",
-      BREAK, ptr->count,
-      BREAK, schema,
-      BREAK, value);
-    delete []schema;
-    delete []value;
+    schema = ptr->schema->ToNewUnicode();
+    value = ptr->value->ToNewUnicode();
+    buffer += BREAK;
+    buffer.Append(ptr->count,10);
+    buffer += BREAK;
+    buffer += schema;
+    buffer += BREAK;
+    buffer += value;
+    Recycle(schema);
+    Recycle(value);
   }
-  char * urlCString;
-  urlCString = wallet_url.ToNewCString();
-  g += PR_snprintf(buffer+g, BUFLEN3-g,"%c%p%c%s", BREAK, wallet_list, BREAK, urlCString);
-  delete []urlCString;
+
+  PRUnichar * urlUnichar = wallet_url.ToNewUnicode();
+  buffer += BREAK;
+  buffer += (PRInt32)wallet_list;
+  buffer += BREAK;
+  buffer += urlUnichar;
+  Recycle(urlUnichar);
+
   aPrefillList = buffer;
-  PR_FREEIF(buffer);
 }
 
 extern PRBool
-SI_InSequence(char* sequence, int number);
+SI_InSequence(nsAutoString sequence, int number);
 
-extern char*
-SI_FindValueInArgs(nsAutoString results, char* name);
+extern PRUnichar*
+SI_FindValueInArgs(nsAutoString results, nsAutoString name);
 
 PRIVATE void
 wallet_FreeURL(wallet_MapElement *url) {
@@ -2342,10 +2409,10 @@ wallet_FreeURL(wallet_MapElement *url) {
 PUBLIC void
 Wallet_SignonViewerReturn (nsAutoString results) {
     wallet_MapElement *url;
-    char * gone;
+    nsAutoString gone;
 
     /* step through all nopreviews and delete those that are in the sequence */
-    gone = SI_FindValueInArgs(results, "|goneP|");
+    gone = SI_FindValueInArgs(results, nsAutoString("|goneP|"));
     PRInt32 count = LIST_COUNT(wallet_URL_list);
     while (count>0) {
       count--;
@@ -2358,10 +2425,9 @@ Wallet_SignonViewerReturn (nsAutoString results) {
         }
       }
     }
-    delete[] gone;
 
     /* step through all nocaptures and delete those that are in the sequence */
-    gone = SI_FindValueInArgs(results, "|goneC|");
+    gone = SI_FindValueInArgs(results, nsAutoString("|goneC|"));
     PRInt32 count2 = LIST_COUNT(wallet_URL_list);
     while (count2>0) {
       count2--;
@@ -2374,7 +2440,6 @@ Wallet_SignonViewerReturn (nsAutoString results) {
         }
       }
     }
-    delete[] gone;
 }
 
 #ifdef AutoCapture
@@ -2418,7 +2483,7 @@ wallet_OKToCapture(char* urlName) {
  * capture the value of a form element
  */
 PRIVATE void
-wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsString vcard) {
+wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoString vcard) {
 
   /* do nothing if there is no value */
   if (!value.Length()) {
@@ -2519,63 +2584,51 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsStrin
 #define BREAK '\001'
 
 PUBLIC void
-WLLT_GetNopreviewListForViewer(nsString& aNopreviewList)
+WLLT_GetNopreviewListForViewer(nsAutoString& aNopreviewList)
 {
-  char *buffer = (char*)PR_Malloc(BUFLEN2);
-  int g = 0, nopreviewNum;
+  nsAutoString buffer = "";
+  int nopreviewNum = 0;
   wallet_MapElement *url;
-  char* urlCString;
 
   wallet_InitializeURLList();
-  buffer[0] = '\0';
-  nopreviewNum = 0;
   PRInt32 count = LIST_COUNT(wallet_URL_list);
   for (PRInt32 i=0; i<count; i++) {
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_PREVIEW) == 'y') {
-      urlCString = url->item1.ToNewCString();
-      g += PR_snprintf(buffer+g, BUFLEN2-g,
-"%c        <OPTION value=%d>%s</OPTION>\n",
-      BREAK,
-      nopreviewNum,
-      urlCString
-      );
-      delete[] urlCString;
+      buffer += BREAK;
+      buffer += "<OPTION value=";
+      buffer.Append(nopreviewNum, 10);
+      buffer += ">";
+      buffer += url->item1;
+      buffer += "</OPTION>\n";
       nopreviewNum++;
     }
   }
   aNopreviewList = buffer;
-  PR_FREEIF(buffer);
 }
 
 PUBLIC void
-WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
+WLLT_GetNocaptureListForViewer(nsAutoString& aNocaptureList)
 {
-  char *buffer = (char*)PR_Malloc(BUFLEN2);
-  int g = 0, nocaptureNum;
+  nsAutoString buffer = "";
+  int nocaptureNum = 0;
   wallet_MapElement *url;
-  char* urlCString;
 
   wallet_InitializeURLList();
-  buffer[0] = '\0';
-  nocaptureNum = 0;
   PRInt32 count = LIST_COUNT(wallet_URL_list);
   for (PRInt32 i=0; i<count; i++) {
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_CAPTURE) == 'y') {
-      urlCString = url->item1.ToNewCString();
-      g += PR_snprintf(buffer+g, BUFLEN2-g,
-"%c        <OPTION value=%d>%s</OPTION>\n",
-      BREAK,
-      nocaptureNum,
-      urlCString
-      );
-      delete[] urlCString;
+      buffer += BREAK;
+      buffer += "<OPTION value=";
+      buffer.Append(nocaptureNum, 10);
+      buffer += ">";
+      buffer += url->item1;
+      buffer += "</OPTION>\n";
       nocaptureNum++;
     }
   }
   aNocaptureList = buffer;
-  PR_FREEIF(buffer);
 }
 
 PUBLIC void
@@ -2584,63 +2637,55 @@ WLLT_PostEdit(nsAutoString walletList) {
     return;
   }
 
-  char* separator;
-
   nsFileSpec dirSpec;
   nsresult rv = Wallet_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
     return;
   }
 
-  /* convert walletList to a C string */
-  char *walletListAsCString = walletList.ToNewCString();
-  char *nextItem = walletListAsCString;
+  nsAutoString tail = walletList;
+  nsAutoString head, temp;
+  PRInt32 separator;
+
+  /* get first item in list */
+  separator = tail.FindChar(BREAK);
+  if (-1 == separator) {
+    return;
+  }
+  tail.Left(head, separator);
+  tail.Mid(temp, separator+1, tail.Length() - (separator+1));
+  tail = temp;
 
   /* return if OK button was not pressed */
-  separator = strchr(nextItem, BREAK);
-  if (!separator) {
-    delete[] walletListAsCString; 
+  if (head != "OK") {
     return;
   }
-  *separator = '\0';
-  if (PL_strcmp(nextItem, "OK")) {
-    *separator = BREAK;
-    delete []walletListAsCString;
-    return;
-  }
-  nextItem = separator+1;
-  *separator = BREAK;
 
   /* open SchemaValue file */
   nsOutputFileStream strm(dirSpec + schemaValueFileName);
   if (!strm.is_open()) {
     NS_ERROR("unable to open file");
-    delete []walletListAsCString;
     return;
   }
   Wallet_RestartKey();
 
   /* write the values in the walletList to the file */
-  for (int i=0; (*nextItem != '\0'); i++) {
-    separator = strchr(nextItem, BREAK);
-    if (!separator) {
-      strm.close();
-      delete[] walletListAsCString; 
+  for (;;) {
+    separator = tail.FindChar(BREAK);
+    if (-1 == separator) {
       return;
     }
-    *separator = '\0';
-    if (NS_FAILED(wallet_PutLine(strm, nextItem, PR_TRUE))) {
-      break;
-    }
-    nextItem = separator+1;
-    *separator = BREAK;
+    tail.Left(head, separator);
+    tail.Mid(temp, separator+1, tail.Length() - (separator+1));
+    tail = temp;
+
+    wallet_PutLine(strm, head, PR_TRUE);
   }
 
   /* close the file and read it back into the SchemaToValue list */
   strm.close();
   wallet_Clear(&wallet_SchemaToValue_list);
   wallet_ReadFromFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
-  delete []walletListAsCString;
 }
 
 PUBLIC void
@@ -2676,20 +2721,20 @@ WLLT_PreEdit(nsAutoString& walletList) {
  */
 PUBLIC void
 WLLT_PrefillReturn(nsAutoString results) {
-  char* listAsAscii;
-  char* fillins;
-  char* urlName;
-  char* skip;
-  nsAutoString * next;
+  PRUnichar* listAsAscii;
+  PRUnichar* fillins;
+  PRUnichar* urlName;
+  PRUnichar* skip;
+  nsAutoString next;
 
   /* get values that are in environment variables */
-  fillins = SI_FindValueInArgs(results, "|fillins|");
-  listAsAscii = SI_FindValueInArgs(results, "|list|");
-  skip = SI_FindValueInArgs(results, "|skip|");
-  urlName = SI_FindValueInArgs(results, "|url|");
+  fillins = SI_FindValueInArgs(results, nsAutoString("|fillins|"));
+  listAsAscii = SI_FindValueInArgs(results, nsAutoString("|list|"));
+  skip = SI_FindValueInArgs(results, nsAutoString("|skip|"));
+  urlName = SI_FindValueInArgs(results, nsAutoString("|url|"));
 
   /* add url to url list if user doesn't want to preview this page in the future */
-  if (!PL_strcmp(skip, "true")) {
+  if (nsAutoString(skip) == "true") {
     nsAutoString url = nsAutoString(urlName);
     nsVoidArray* dummy;
     nsAutoString value = nsAutoString("nn");
@@ -2701,7 +2746,8 @@ WLLT_PrefillReturn(nsAutoString results) {
 
   /* process the list, doing the fillins */
   nsVoidArray * list;
-  sscanf(listAsAscii, "%p", &list);
+  PRInt32 error;
+  list = (nsVoidArray *)nsAutoString(listAsAscii).ToInteger(&error);
   if (fillins[0] == '\0') { /* user pressed CANCEL */
     wallet_ReleasePrefillElementList(list);
     return;
@@ -2720,10 +2766,8 @@ WLLT_PrefillReturn(nsAutoString results) {
    */
 
   wallet_PrefillElement * ptr;
-  char * ptr2;
-  ptr2 = fillins;
+  nsAutoString ptr2 = nsAutoString(fillins);
   /* step through pre-fill list */
-  PRBool first = PR_TRUE;
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=0; i<count; i++) {
     ptr = NS_STATIC_CAST(wallet_PrefillElement*, list->ElementAt(i));
@@ -2731,22 +2775,18 @@ WLLT_PrefillReturn(nsAutoString results) {
     /* advance in fillins list each time a new schema name in pre-fill list is encountered */
     if (ptr->count != 0) {
       /* count != 0 indicates a new schema name */
-      if (!first) {
-        delete next;
-      } else {
-        first = PR_FALSE;
-      }
-      next = wallet_GetNextInString(ptr2);
-      if (nsnull == next) {
+      nsAutoString tail;
+      if (wallet_GetNextInString(ptr2, next, tail) == -1) {
         break;
       }
-      if (*next != *ptr->schema) {
+      ptr2 = tail;
+      if (next != *ptr->schema) {
         break; /* something's wrong so stop prefilling */
       }
-      delete next;
-      next = wallet_GetNextInString(ptr2);
+      wallet_GetNextInString(ptr2, next, tail);
+      ptr2 = tail;
     }
-    if (*next == *ptr->value) {
+    if (next == *ptr->value) {
       /*
        * Remove entry from wallet_SchemaToValue_list and then reinsert.  This will
        * keep multiple values in that list for the same field ordered with
@@ -2781,12 +2821,12 @@ WLLT_PrefillReturn(nsAutoString results) {
     }
 
     /* Change the value */
-     if ((*next == *ptr->value) || ((ptr->count>0) && (*next == ""))) {
-       if (((*next == *ptr->value) || (*next == "")) && ptr->inputElement) {
-         ptr->inputElement->SetValue(*next);
+     if ((next == *ptr->value) || ((ptr->count>0) && (next == ""))) {
+       if (((next == *ptr->value) || (next == "")) && ptr->inputElement) {
+         ptr->inputElement->SetValue(next);
        } else {
          nsresult result;
-         result = wallet_GetSelectIndex(ptr->selectElement, *next, ptr->selectIndex);
+         result = wallet_GetSelectIndex(ptr->selectElement, next, ptr->selectIndex);
          if (NS_SUCCEEDED(result)) {
            ptr->selectElement->SetSelectedIndex(ptr->selectIndex);
          } else {
@@ -2794,9 +2834,6 @@ WLLT_PrefillReturn(nsAutoString results) {
         }
       }
     }
-  }
-  if (next != nsnull ) {
-    delete next;
   }
 
   /* Release the prefill list that was generated when we walked thru the html content */
@@ -2980,7 +3017,7 @@ wallet_ClearStopwatch();
 
 extern void
 SINGSIGN_RememberSignonData
-  (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
+  (char* URLName, nsAutoString* name_array, nsAutoString* value_array, char** type_array, PRInt32 value_cnt);
 
 PUBLIC void
 WLLT_RequestToCapture(nsIPresShell* shell) {
@@ -3133,8 +3170,8 @@ WLLT_OnSubmit(nsIContent* formNode) {
     result = formElement->GetElements(&elements);
     if ((NS_SUCCEEDED(result)) && (nsnull != elements)) {
 
-      char* name_array[MAX_ARRAY_SIZE];
-      char* value_array[MAX_ARRAY_SIZE];
+      nsAutoString name_array[MAX_ARRAY_SIZE];
+      nsAutoString value_array[MAX_ARRAY_SIZE];
       uint8 type_array[MAX_ARRAY_SIZE];
       PRInt32 value_cnt = 0;
 
@@ -3172,8 +3209,8 @@ WLLT_OnSubmit(nsIContent* formNode) {
                     nsAutoString field;
                     result = inputElement->GetName(field);
                     if (NS_SUCCEEDED(result)) {
-                      value_array[value_cnt] = value.ToNewCString();
-                      name_array[value_cnt] = field.ToNewCString();
+                      value_array[value_cnt] = value;
+                      name_array[value_cnt] = field;
                       value_cnt++;
                     }
                   }
@@ -3188,7 +3225,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
 
       /* save login if appropriate */
       SINGSIGN_RememberSignonData
-        (URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
+        (URLName, name_array, value_array, (char**)type_array, value_cnt);
 
 #ifndef AutoCapture
       /* give notification if this is first significant form submitted */

@@ -35,16 +35,16 @@ class nsIPrompt;
 XP_BEGIN_PROTOS
 
 extern void
-SINGSIGN_GetSignonListForViewer (nsString& aSignonList);
+SINGSIGN_GetSignonListForViewer (nsAutoString& aSignonList);
 
 extern void
-SINGSIGN_GetRejectListForViewer (nsString& aRejectList);
+SINGSIGN_GetRejectListForViewer (nsAutoString& aRejectList);
 
 extern void
 SINGSIGN_SignonViewerReturn(nsAutoString results);
 
 extern void
-SINGSIGN_RestoreSignonData(char* URLName, char* name, char** value, PRUint32 elementNumber);
+SINGSIGN_RestoreSignonData(char* URLName, PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
 
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
@@ -61,7 +61,7 @@ SINGSIGN_Prompt
      const char *urlname,nsIPrompt* dialog, PRBool *returnValue);
 
 extern PRBool
-SINGSIGN_RemoveUser(const char *URLName, char *userName);
+SINGSIGN_RemoveUser(const char *URLName, PRUnichar *userName);
 
 XP_END_PROTOS
 

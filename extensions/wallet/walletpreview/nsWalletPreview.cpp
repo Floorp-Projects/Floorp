@@ -49,7 +49,7 @@ WalletPreviewImpl::~WalletPreviewImpl()
 NS_IMPL_ISUPPORTS1(WalletPreviewImpl, nsIWalletPreview)
 
 NS_IMETHODIMP
-WalletPreviewImpl::GetPrefillValue(char** aValue)
+WalletPreviewImpl::GetPrefillValue(PRUnichar** aValue)
 {
   NS_PRECONDITION(aValue != nsnull, "null ptr");
   if (!aValue) {
@@ -61,7 +61,7 @@ WalletPreviewImpl::GetPrefillValue(char** aValue)
   nsAutoString walletList;
   res = walletservice->WALLET_GetPrefillListForViewer(walletList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = walletList.ToNewCString();
+    *aValue = walletList.ToNewUnicode();
   }
   return res;
 }
@@ -86,7 +86,7 @@ static void DOMWindowToWebShellWindow(
 }
 
 NS_IMETHODIMP
-WalletPreviewImpl::SetValue(const char* aValue, nsIDOMWindow* win)
+WalletPreviewImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)
 {
   /* close the window */
   if (!win) {

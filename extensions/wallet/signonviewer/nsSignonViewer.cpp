@@ -50,7 +50,7 @@ SignonViewerImpl::~SignonViewerImpl()
 NS_IMPL_ISUPPORTS(SignonViewerImpl, NS_GET_IID(nsISignonViewer));
 
 NS_IMETHODIMP
-SignonViewerImpl::GetSignonValue(char** aValue)
+SignonViewerImpl::GetSignonValue(PRUnichar** aValue)
 {
   NS_PRECONDITION(aValue != nsnull, "null ptr");
   if (!aValue) {
@@ -62,13 +62,13 @@ SignonViewerImpl::GetSignonValue(char** aValue)
   nsAutoString signonList;
   res = walletservice->SI_GetSignonListForViewer(signonList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = signonList.ToNewCString();
+    *aValue = signonList.ToNewUnicode();
   }
   return res;
 }
 
 NS_IMETHODIMP
-SignonViewerImpl::GetRejectValue(char** aValue)
+SignonViewerImpl::GetRejectValue(PRUnichar** aValue)
 {
   NS_PRECONDITION(aValue != nsnull, "null ptr");
   if (!aValue) {
@@ -80,13 +80,13 @@ SignonViewerImpl::GetRejectValue(char** aValue)
   nsAutoString rejectList;
   res = walletservice->SI_GetRejectListForViewer(rejectList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = rejectList.ToNewCString();
+    *aValue = rejectList.ToNewUnicode();
   }
   return res;
 }
 
 NS_IMETHODIMP
-SignonViewerImpl::GetNopreviewValue(char** aValue)
+SignonViewerImpl::GetNopreviewValue(PRUnichar** aValue)
 {
   NS_PRECONDITION(aValue != nsnull, "null ptr");
   if (!aValue) {
@@ -98,13 +98,13 @@ SignonViewerImpl::GetNopreviewValue(char** aValue)
   nsAutoString nopreviewList;
   res = walletservice->WALLET_GetNopreviewListForViewer(nopreviewList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = nopreviewList.ToNewCString();
+    *aValue = nopreviewList.ToNewUnicode();
   }
   return res;
 }
 
 NS_IMETHODIMP
-SignonViewerImpl::GetNocaptureValue(char** aValue)
+SignonViewerImpl::GetNocaptureValue(PRUnichar** aValue)
 {
   NS_PRECONDITION(aValue != nsnull, "null ptr");
   if (!aValue) {
@@ -116,13 +116,13 @@ SignonViewerImpl::GetNocaptureValue(char** aValue)
   nsAutoString nocaptureList;
   res = walletservice->WALLET_GetNocaptureListForViewer(nocaptureList);
   if (NS_SUCCEEDED(res)) {
-    *aValue = nocaptureList.ToNewCString();
+    *aValue = nocaptureList.ToNewUnicode();
   }
   return res;
 }
 
 NS_IMETHODIMP
-SignonViewerImpl::SetValue(const char* aValue, nsIDOMWindow* win)
+SignonViewerImpl::SetValue(const PRUnichar* aValue, nsIDOMWindow* win)
 {
   /* process the value */
   NS_PRECONDITION(aValue != nsnull, "null ptr");

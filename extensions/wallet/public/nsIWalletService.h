@@ -66,13 +66,13 @@ struct nsIWalletService : public nsISupports
   NS_IMETHOD PromptURL
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
      const char *urlname, nsIPrompt* dialog, PRBool *_retval) = 0;
-  NS_IMETHOD SI_RemoveUser(const char *URLName, char *userName) = 0;
+  NS_IMETHOD SI_RemoveUser(const char *URLName, PRUnichar *userName) = 0;
 
-  NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList) = 0;
-  NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList) = 0;
-  NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList) = 0;
-  NS_IMETHOD SI_GetSignonListForViewer(nsString& aSignonList) = 0;
-  NS_IMETHOD SI_GetRejectListForViewer(nsString& aRejectList) = 0;
+  NS_IMETHOD WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList) = 0;
+  NS_IMETHOD WALLET_GetNocaptureListForViewer(nsAutoString& aNocaptureList) = 0;
+  NS_IMETHOD WALLET_GetPrefillListForViewer(nsAutoString& aPrefillList) = 0;
+  NS_IMETHOD SI_GetSignonListForViewer(nsAutoString& aSignonList) = 0;
+  NS_IMETHOD SI_GetRejectListForViewer(nsAutoString& aRejectList) = 0;
   NS_IMETHOD SI_SignonViewerReturn(nsAutoString results) = 0;
 };
 

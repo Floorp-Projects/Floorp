@@ -57,14 +57,14 @@ public:
     (const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result,
      const char *urlname, nsIPrompt* dialog, PRBool *_retval);
 
-  NS_IMETHOD SI_RemoveUser(const char *URLName, char *userName);
+  NS_IMETHOD SI_RemoveUser(const char *URLName, PRUnichar *userName);
 
 
-  NS_IMETHOD WALLET_GetNopreviewListForViewer(nsString& aNopreviewList);
-  NS_IMETHOD WALLET_GetNocaptureListForViewer(nsString& aNocaptureList);
-  NS_IMETHOD WALLET_GetPrefillListForViewer(nsString& aPrefillList);
-  NS_IMETHOD SI_GetSignonListForViewer(nsString& aSignonList);
-  NS_IMETHOD SI_GetRejectListForViewer(nsString& aRejectList);
+  NS_IMETHOD WALLET_GetNopreviewListForViewer(nsAutoString& aNopreviewList);
+  NS_IMETHOD WALLET_GetNocaptureListForViewer(nsAutoString& aNocaptureList);
+  NS_IMETHOD WALLET_GetPrefillListForViewer(nsAutoString& aPrefillList);
+  NS_IMETHOD SI_GetSignonListForViewer(nsAutoString& aSignonList);
+  NS_IMETHOD SI_GetRejectListForViewer(nsAutoString& aRejectList);
   NS_IMETHOD SI_SignonViewerReturn(nsAutoString results);
 
   // nsIObserver

@@ -55,13 +55,13 @@ extern nsresult
 WLLT_Prefill(nsIPresShell* shell, PRBool quick);
 
 extern void
-WLLT_GetNopreviewListForViewer (nsString& aNopreviewList);
+WLLT_GetNopreviewListForViewer (nsAutoString& aNopreviewList);
 
 extern void
-WLLT_GetNocaptureListForViewer (nsString& aNocaptureList);
+WLLT_GetNocaptureListForViewer (nsAutoString& aNocaptureList);
 
 extern void
-WLLT_GetPrefillListForViewer (nsString& aPrefillList);
+WLLT_GetPrefillListForViewer (nsAutoString& aPrefillList);
 
 extern void
 WLLT_OnSubmit (nsIContent* formNode);
