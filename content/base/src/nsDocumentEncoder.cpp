@@ -456,7 +456,8 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
       {
         nsIHTMLContentSink* sink = nsnull;
 
-        rv = NS_New_HTMLToTXT_SinkStream(&sink, &aOutputString, mPrettyPrint);
+        rv = NS_New_HTMLToTXT_SinkStream(&sink, &aOutputString,
+                                         mWrapColumn, mPrettyPrint);
   
       	if (sink && NS_SUCCEEDED(rv))
         {

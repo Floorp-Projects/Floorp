@@ -130,7 +130,6 @@ protected:
   PRInt32          mIndent;
   PRInt32          mColPos;
   PRBool           mDoOutput;
-  PRBool           mPreformatted;
   PRBool           mPrettyPrint;
   PRUint32         mWrapColumn;
 
