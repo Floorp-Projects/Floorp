@@ -173,6 +173,7 @@ XFE_RDFToolbar::update()
 void
 XFE_RDFToolbar::notify(HT_Resource n, HT_Event whatHappened)
 {
+  D(debugEvent(n, whatHappened,"Toolbar"););
   switch (whatHappened) {
   case HT_EVENT_NODE_ADDED:
       addItem(n);

@@ -47,6 +47,7 @@ XFE_RDFToolbox::~XFE_RDFToolbox()
 void
 XFE_RDFToolbox::notify(HT_Resource n, HT_Event whatHappened)
 {
+  D(debugEvent(n, whatHappened,"Toolbox"););
   switch (whatHappened) {
   case HT_EVENT_VIEW_ADDED:
       {
