@@ -455,20 +455,6 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth,
     XResizeWindow(mDisplay, mBaseWindow, aWidth, aHeight);
   }
 
-  // Check to see if our popup is under the mouse, if so, move it.
-  // Fixes tooltip problem
-  if (mWindowType == eWindowType_popup) {
-    Window r, c;
-    int rx, ry, cx, cy;
-    unsigned int m;
-
-    XQueryPointer(mDisplay, mBaseWindow, &r, &c, &rx, &ry, &cx, &cy, &m);
-
-    if ((0 <= cy) && (cy <= mBounds.height)) {
-      Move(mBounds.x, mBounds.y - (mBounds.height - cy));
-    }
-  }
-
   return NS_OK;
 }
 
