@@ -47,11 +47,16 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 
+#include "prprf.h"
+
 static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-inFlasher::inFlasher()
+inFlasher::inFlasher() :
+  mColor(NS_RGB(0,0,0)),
+  mThickness(0),
+  mInvert(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
   mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
@@ -66,7 +71,72 @@ NS_IMPL_ISUPPORTS1(inFlasher, inIFlasher);
 ///////////////////////////////////////////////////////////////////////////////
 // inIFlasher
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
+inFlasher::GetColor(nsAString& aColor)
+{
+  // Copied from nsGenericHTMLElement::ColorToString()
+  char buf[10];
+  PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
+              NS_GET_R(mColor), NS_GET_G(mColor), NS_GET_B(mColor));
+  aColor.Assign(NS_ConvertASCIItoUCS2(buf));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inFlasher::SetColor(const nsAString& aColor)
+{
+  NS_ENSURE_FALSE(aColor.IsEmpty(), NS_ERROR_ILLEGAL_VALUE);
+
+  nsAutoString colorStr;
+  colorStr.Assign(aColor);
+
+  if (colorStr.CharAt(0) != '#') {
+    if (NS_ColorNameToRGB(colorStr, &mColor)) {
+      return NS_OK;
+    }
+  }
+  else {
+    colorStr.Cut(0, 1);
+    if (NS_HexToRGB(colorStr, &mColor)) {
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_ILLEGAL_VALUE;
+}
+
+NS_IMETHODIMP
+inFlasher::GetThickness(PRUint16 *aThickness)
+{
+  NS_PRECONDITION(aThickness, "Null pointer");
+  *aThickness = mThickness;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inFlasher::SetThickness(PRUint16 aThickness)
+{
+  mThickness = aThickness;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inFlasher::GetInvert(PRBool *aInvert)
+{
+  NS_PRECONDITION(aInvert, "Null pointer");
+  *aInvert = mInvert;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inFlasher::SetInvert(PRBool aInvert)
+{
+  mInvert = aInvert;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inFlasher::RepaintElement(nsIDOMElement* aElement)
 {
   nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
@@ -100,7 +170,7 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
 }
 
 NS_IMETHODIMP 
-inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, PRInt32 aThickness, PRBool aInvert)
+inFlasher::DrawElementOutline(nsIDOMElement* aElement)
 {
   nsCOMPtr<nsIDOMWindowInternal> window = inLayoutUtils::GetWindowFor(aElement);
   if (!window) return NS_OK;
@@ -121,18 +191,14 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, 
   rect.y = origin.y;
   mCSSUtils->AdjustRectForMargins(frame, rect);
   
-  nsAutoString colorStr;
-  colorStr.Assign(aColor);
-  nscolor color;
-  NS_HexToRGB(colorStr, &color);
-
   float p2t;
   presContext->GetPixelsToTwips(&p2t);
 
-  if (aInvert)
+  if (mInvert) {
     rcontext->InvertRect(rect.x, rect.y, rect.width, rect.height);
+  }
 
-  DrawOutline(rect.x, rect.y, rect.width, rect.height, color, aThickness, p2t, rcontext);
+  DrawOutline(rect.x, rect.y, rect.width, rect.height, p2t, rcontext);
 
   return NS_OK;
 }
@@ -164,31 +230,27 @@ inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
 ///////////////////////////////////////////////////////////////////////////////
 // inFlasher
 
-nsresult
+void
 inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       nscolor aColor, PRUint32 aThickness, float aP2T,
-                       nsIRenderingContext* aRenderContext)
+                       float aP2T, nsIRenderingContext* aRenderContext)
 {
-  aRenderContext->SetColor(aColor);
-  DrawLine(aX, aY, aWidth, aThickness, DIR_HORIZONTAL, BOUND_OUTER, aP2T, aRenderContext);
-  DrawLine(aX, aY, aHeight, aThickness, DIR_VERTICAL, BOUND_OUTER, aP2T, aRenderContext);
-  DrawLine(aX, aY+aHeight, aWidth, aThickness, DIR_HORIZONTAL, BOUND_INNER, aP2T, aRenderContext);
-  DrawLine(aX+aWidth, aY, aHeight, aThickness, DIR_VERTICAL, BOUND_INNER, aP2T, aRenderContext);
+  aRenderContext->SetColor(mColor);
 
-  return NS_OK;
+  DrawLine(aX, aY, aWidth, DIR_HORIZONTAL, BOUND_OUTER, aP2T, aRenderContext);
+  DrawLine(aX, aY, aHeight, DIR_VERTICAL, BOUND_OUTER, aP2T, aRenderContext);
+  DrawLine(aX, aY+aHeight, aWidth, DIR_HORIZONTAL, BOUND_INNER, aP2T, aRenderContext);
+  DrawLine(aX+aWidth, aY, aHeight, DIR_VERTICAL, BOUND_INNER, aP2T, aRenderContext);
 }
 
-nsresult
+void
 inFlasher::DrawLine(nscoord aX, nscoord aY, nscoord aLength,
-                    PRUint32 aThickness, PRBool aDir, PRBool aBounds,
-                    float aP2T, nsIRenderingContext* aRenderContext)
+                    PRBool aDir, PRBool aBounds, float aP2T,
+                    nsIRenderingContext* aRenderContext)
 {
-  nscoord thickTwips = NSIntPixelsToTwips(aThickness, aP2T);
+  nscoord thickTwips = NSIntPixelsToTwips(mThickness, aP2T);
   if (aDir) { // horizontal
     aRenderContext->FillRect(aX, aY+(aBounds?0:-thickTwips), aLength, thickTwips);
   } else { // vertical
     aRenderContext->FillRect(aX+(aBounds?0:-thickTwips), aY, thickTwips, aLength);
   }
-
-  return NS_OK;
 }
