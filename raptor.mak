@@ -143,12 +143,12 @@ pull_lizard:
 	$(CVSCO_LIZARD) ns/nav-java
 	$(CVSCO_LIZARD) ns/js
 	$(CVSCO_LIZARD) ns/modules/security/freenav
-	$(CVSCO_LIZARD) ns/modules/libpref
 
 pull_xpcom:
 	@cd $(MOZ_SRC)\.
 	$(CVSCO_XPCOM) ns/modules/libreg 
 	$(CVSCO_XPCOM) ns/xpcom
+	$(CVSCO_XPCOM) ns/modules/libpref
 
 pull_imglib:
 	@cd $(MOZ_SRC)\.
