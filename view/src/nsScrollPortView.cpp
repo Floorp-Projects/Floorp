@@ -120,11 +120,6 @@ nsresult nsScrollPortView::QueryInterface(const nsIID& aIID, void** aInstancePtr
     return NS_OK;
   }
 
-  if (aIID.Equals(NS_GET_IID(nsIClipView))) {
-    *aInstancePtr = (void*)(nsIClipView*)this;
-    return NS_OK;
-  }
-
   return nsView::QueryInterface(aIID, aInstancePtr);
 }
 
