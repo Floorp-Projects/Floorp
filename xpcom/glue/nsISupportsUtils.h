@@ -231,6 +231,58 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)         \
  * for the class (e.g. NS_ISUPPORTS_IID)
  */
 
+#define NS_IMPL_QUERY_HEAD(_class)                                       \
+NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
+{                                                                        \
+  NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!"); \
+  if ( !aInstancePtr )                                                   \
+    return NS_ERROR_NULL_POINTER;
+
+#define NS_IMPL_QUERY_BODY(_interface)                                   \
+  if ( aIID.Equals(NS_GET_IID(_interface)) )                             \
+    *aInstancePtr = NS_STATIC_CAST(_interface*, this);                   \
+  else
+
+#define NS_IMPL_QUERY_TAIL                                               \
+  if ( aIID.Equals(NS_GET_IID(nsISupports)) )                            \
+    *aInstancePtr = NS_STATIC_CAST(nsISupports*, this);                  \
+  else                                                                   \
+    *aInstancePtr = 0;                                                   \
+  nsresult status;                                                       \
+  if ( !*aInstancePtr )                                                  \
+    status = NS_NOINTERFACE;                                             \
+  else                                                                   \
+    {                                                                    \
+      NS_ADDREF( NS_REINTERPRET_CAST(nsISupports*, *aInstancePtr) );     \
+      status = NS_OK;                                                    \
+    }                                                                    \
+  return status;                                                         \
+}
+
+
+#define NS_IMPL_QUERY_INTERFACE0(_class)                                 \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_TAIL
+
+#define NS_IMPL_QUERY_INTERFACE1(_class, _interface)                     \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_BODY(_interface)                                         \
+  NS_IMPL_QUERY_TAIL
+
+#define NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)                       \
+  NS_IMPL_QUERY_HEAD(_class)                                             \
+  NS_IMPL_QUERY_BODY(_i1)                                                \
+  NS_IMPL_QUERY_BODY(_i2)                                                \
+  NS_IMPL_QUERY_TAIL
+
+
+
+	/*
+		The following macro is deprecated.  We need to switch all instances
+		to |NS_IMPL_QUERY_INTERFACE1|, or |NS_IMPL_QUERY_INTERFACE0| depending
+		on how they were using it.
+	*/
+
 #define NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)                     \
 NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 {                                                                        \
@@ -294,10 +346,20 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_RELEASE(_class)                      \
   NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)
 
-#define NS_IMPL_ISUPPORTS2(_class, _c1, _c2) \
-  NS_IMPL_ADDREF(_class)                     \
-  NS_IMPL_RELEASE(_class)                    \
-  NS_IMPL_QUERY_INTERFACE2(_class, _c1, _c2)
+#define NS_IMPL_ISUPPORTS0(_class)             \
+  NS_IMPL_ADDREF(_class)                       \
+  NS_IMPL_RELEASE(_class)                      \
+  NS_IMPL_QUERY_INTERFACE0(_class)
+
+#define NS_IMPL_ISUPPORTS1(_class, _interface) \
+  NS_IMPL_ADDREF(_class)                       \
+  NS_IMPL_RELEASE(_class)                      \
+  NS_IMPL_QUERY_INTERFACE1(_class, _interface)
+
+#define NS_IMPL_ISUPPORTS2(_class, _i1, _i2)   \
+  NS_IMPL_ADDREF(_class)                       \
+  NS_IMPL_RELEASE(_class)                      \
+  NS_IMPL_QUERY_INTERFACE2(_class, _i1, _i2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
