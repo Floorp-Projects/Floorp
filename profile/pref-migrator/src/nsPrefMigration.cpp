@@ -165,7 +165,7 @@ typedef struct
  * 1970.  In 5.0 it was made cross platform so that all platforms use
  * expiration times starting from 1970.  That means that mac cookies 
  * generated in 4.x cannot be migrated to 5.0 as is -- instead the 
- * expiration time must first be reduced by
+ * expiration time must first be increased by
  * the number of seconds between 1-1-1900 and 1-1-1970
  * 
  *  70 years * 365 days/year * 86,400 secs/day      = 2,207,520,000 seconds
@@ -1357,24 +1357,28 @@ nsPrefMigration::DoTheCopy(nsIFileSpec * oldPath, nsIFileSpec * newPath, PRBool 
 
 
 #if defined(NEED_TO_FIX_4X_COOKIES)
-
+/* this code only works on the mac.  in 4.x, the line endings where '\r' on the mac.
+   this code will fix the expire times and the line endings, so the code is nsCookie.cpp
+   can read the migrate cookies. */
 static PRInt32
 GetCookieLine(nsInputFileStream strm, nsAutoString& aLine) 
 {
-
   /* read the line */
   aLine.Truncate();
   char c;
   for (;;) {
     c = strm.get();
-
+    
     /* note that eof is not set until we read past the end of the file */
     if (strm.eof()) {
       return -1;
     }
 
-    aLine.Append(c);
-    if ((c == CR) || (c == LF)) {
+    /* stop at the '\r' */
+    if (c != '\r') {
+      aLine.Append(c);
+    }
+    else {
       break;
     }
   }
@@ -1396,6 +1400,8 @@ PutCookieLine(nsOutputFileStream strm, const nsString& aLine)
     strm.put(*(p++));
   }
   nsCRT::free(cp);
+  // the lines in a 5.x cookie file call end with '\n', on all platforms
+  strm.put('\n');
   return NS_OK;
 }
 
@@ -1462,7 +1468,7 @@ Fix4xCookies(nsIFileSpec * profilePath) {
      * expires == 0.  don't adjust those cookies.
      */
     if (expires) {
-    	expires -= SECONDS_BETWEEN_1900_AND_1970;
+    	expires += SECONDS_BETWEEN_1900_AND_1970;
     }
     char dateString[36];
     PR_snprintf(dateString, sizeof(dateString), "%lu", expires);
