@@ -54,11 +54,7 @@ class nsIImapUrl;
 class nsIImapExtensionSink : public nsISupports
 {
 public:
-  static const nsIID& GetIID()
-  {
-	static nsIID iid = NS_IIMAPEXTENSIONSINK_IID;
-	return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAPEXTENSIONSINK_IID)
   
   NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
 							   nsIMAPACLRightsInfo* aclRights) = 0;

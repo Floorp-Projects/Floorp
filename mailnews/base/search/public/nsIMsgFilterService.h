@@ -53,7 +53,7 @@ class nsIMsgFilterService : public nsISupports
 {
 
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IMSGFILTERSERVICE_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGFILTERSERVICE_IID)
 
 /* clients call OpenFilterList to get a handle to a FilterList, of existing nsMsgFilter *.
 	These are manipulated by the front end as a result of user interaction

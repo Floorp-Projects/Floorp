@@ -59,7 +59,7 @@ class SetDocTitleTxn : public EditTxn
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = SET_DOC_TITLE_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = SET_DOC_TITLE_TXN_CID; return iid; }
 
   virtual ~SetDocTitleTxn();
 

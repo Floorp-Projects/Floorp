@@ -56,7 +56,7 @@ class CreateElementTxn : public EditTxn
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = CREATE_ELEMENT_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = CREATE_ELEMENT_TXN_CID; return iid; }
 
   enum { eAppend=-1 };
 

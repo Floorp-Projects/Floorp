@@ -53,7 +53,7 @@ class nsIXULPrototypeDocument;
 class nsIXULContentSink : public nsIXMLContentSink
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IXULCONTENTSINK_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULCONTENTSINK_IID)
 
     /**
      * Initialize the content sink, giving it an nsIDocument object

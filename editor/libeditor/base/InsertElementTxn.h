@@ -56,7 +56,7 @@ class InsertElementTxn : public EditTxn
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = INSERT_ELEMENT_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = INSERT_ELEMENT_TXN_CID; return iid; }
 
   /** initialize the transaction.
     * @param aNode   the node to insert

@@ -62,7 +62,7 @@ class JoinElementTxn : public EditTxn
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = JOIN_ELEMENT_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = JOIN_ELEMENT_TXN_CID; return iid; }
 
   /** initialize the transaction
     * @param aEditor    the provider of core editing operations

@@ -66,7 +66,7 @@ class nsIViewManager : public nsISupports
 {
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IVIEWMANAGER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEWMANAGER_IID)
   /**
    * Initialize the ViewManager
    * Note: this instance does not hold a reference to the viewobserver

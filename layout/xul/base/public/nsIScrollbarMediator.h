@@ -48,7 +48,7 @@ static NS_DEFINE_IID(kIScrollbarMediatorIID,     NS_ISCROLLBARMEDIATOR_IID);
 class nsIScrollbarMediator : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISCROLLBARMEDIATOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLBARMEDIATOR_IID)
   
   NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex) = 0;
   NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;

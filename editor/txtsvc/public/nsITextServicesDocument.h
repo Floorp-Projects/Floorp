@@ -64,7 +64,7 @@ TextServicesDocument interface to outside world
 class nsITextServicesDocument  : public nsISupports{
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_ITEXTSERVICESDOCUMENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTSERVICESDOCUMENT_IID)
 
   typedef enum { eDSNormal=0, eDSUndlerline } TSDDisplayStyle;
 

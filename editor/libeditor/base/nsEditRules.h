@@ -68,7 +68,7 @@ class nsRulesInfo
 class nsIEditRules : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IEDITRULES_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITRULES_IID)
   
 //Interfaces for addref and release and queryinterface
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsIEditRules

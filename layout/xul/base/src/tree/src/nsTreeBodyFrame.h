@@ -208,7 +208,7 @@ private:
 class nsITreeImageListener : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ITREEIMAGELISTENER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITREEIMAGELISTENER_IID)
 
 public:
   NS_IMETHOD AddRow(int aIndex)=0;

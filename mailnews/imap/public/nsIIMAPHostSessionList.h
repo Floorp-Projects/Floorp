@@ -54,7 +54,7 @@ class nsIImapIncomingServer;
 class nsIImapHostSessionList : public nsISupports
 {
 public:
-   static const nsIID& GetIID() { static nsIID iid = NS_IIMAPHOSTSESSIONLIST_IID; return iid; }
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAPHOSTSESSIONLIST_IID)
 
 	// Host List
 	 NS_IMETHOD	AddHostToList(const char *serverKey, nsIImapIncomingServer *server) = 0;

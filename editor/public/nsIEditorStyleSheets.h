@@ -54,7 +54,7 @@ class nsICSSStyleSheet;
 class nsIEditorStyleSheets : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IEDITORSTYLESHEETS_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITORSTYLESHEETS_IID)
 
   /** load and apply the style sheet, specified by aURL, to
     * the editor's document. This can involve asynchronous

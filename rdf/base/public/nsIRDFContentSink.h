@@ -60,7 +60,7 @@ class nsIURI;
 
 class nsIRDFContentSink : public nsIXMLContentSink {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IRDFCONTENTSINK_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFCONTENTSINK_IID)
 
     /**
      * Initialize the content sink.

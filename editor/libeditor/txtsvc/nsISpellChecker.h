@@ -58,7 +58,7 @@ class nsStringArray;
 class nsISpellChecker  : public nsISupports{
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_ISPELLCHECKER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISPELLCHECKER_IID)
 
   /**
    * Tells the spellchecker what document to check.

@@ -54,7 +54,7 @@ class nsISVGValue;
 class nsISVGAttribute : public nsIDOMAttr
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISVGATTRIBUTE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGATTRIBUTE_IID)
 
   NS_IMETHOD GetSVGValue(nsISVGValue** value) = 0;
 };

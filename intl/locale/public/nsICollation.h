@@ -55,7 +55,7 @@ class nsICollation;
 class nsICollationFactory : public nsISupports {
 
 public: 
-  static const nsIID& GetIID() { static nsIID iid = NS_ICOLLATIONFACTORY_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOLLATIONFACTORY_IID)
 
   NS_IMETHOD CreateCollation(nsILocale* locale, nsICollation** instancePtr) = 0;
 };
@@ -65,7 +65,7 @@ public:
 class nsICollation : public nsISupports {
 
 public: 
-  static const nsIID& GetIID() { static nsIID iid = NS_ICOLLATION_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOLLATION_IID)
 
   // compare two strings
   // result is same as strcmp

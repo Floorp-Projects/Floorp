@@ -48,7 +48,7 @@
 
 class nsIPrivateTextRange : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPRIVATETEXTRANGE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATETEXTRANGE_IID)
   enum {
     TEXTRANGE_CARETPOSITION = 1,
     TEXTRANGE_RAWINPUT = 2,
@@ -73,7 +73,7 @@ public:
 
 class nsIPrivateTextRangeList : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPRIVATETEXTRANGELIST_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATETEXTRANGELIST_IID)
 
   NS_IMETHOD    GetLength(PRUint16* aLength)=0;
   NS_IMETHOD    Item(PRUint16 aIndex, nsIPrivateTextRange** aReturn)=0;

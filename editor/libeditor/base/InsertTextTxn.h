@@ -58,7 +58,7 @@ class InsertTextTxn : public EditTxn
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = INSERT_TEXT_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = INSERT_TEXT_TXN_CID; return iid; }
 
   virtual ~InsertTextTxn();
 

@@ -55,7 +55,7 @@
 class nsIXBLBindingAttachedHandler : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXBLBINDINGATTACHEDHANDLER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLBINDINGATTACHEDHANDLER_IID)
 
   NS_IMETHOD OnBindingAttached()=0;
 };

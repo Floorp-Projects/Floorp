@@ -58,11 +58,7 @@ class nsIImapIncomingServer;
 class nsIImapMiscellaneousSink : public nsISupports
 {
 public:
-	static const nsIID& GetIID()
-	{
-		static nsIID iid = NS_IIMAPMISCELLANEOUSSINK_IID;
-		return iid;
-	}
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAPMISCELLANEOUSSINK_IID)
 	
 	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol) = 0;
 	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol) = 0;

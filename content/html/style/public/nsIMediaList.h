@@ -29,7 +29,7 @@
 
 class nsIMediaList : public nsISupportsArray {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IMEDIA_LIST_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMEDIA_LIST_IID)
 
   NS_IMETHOD GetText(nsAString& aMediaText) = 0;
   NS_IMETHOD SetText(const nsAString& aMediaText) = 0;

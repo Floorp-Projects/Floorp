@@ -82,7 +82,7 @@ typedef struct {
 
 class nsIMimeContentTypeHandler : public nsISupports {
 public: 
-  static const nsIID& GetIID() { static nsIID iid = NS_IMIME_CONTENT_TYPE_HANDLER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMIME_CONTENT_TYPE_HANDLER_IID)
 
   NS_IMETHOD    GetContentType(char **contentType) = 0;
 

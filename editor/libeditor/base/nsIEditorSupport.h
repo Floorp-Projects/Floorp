@@ -58,7 +58,7 @@ class nsIEditorSupport  : public nsISupports {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IEDITORSUPPORT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITORSUPPORT_IID)
 
   /** 
    * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes

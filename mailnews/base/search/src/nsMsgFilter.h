@@ -62,7 +62,7 @@ class nsMsgFilter : public nsIMsgFilter
 {
 public:
   NS_DECL_ISUPPORTS
-    static const nsIID& GetIID() { static nsIID iid = NS_IMSGFILTER_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGFILTER_IID)
 
 	nsMsgFilter();
 	virtual ~nsMsgFilter ();

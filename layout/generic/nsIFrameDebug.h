@@ -53,7 +53,7 @@ struct PRLogModuleInfo;
  */
 class nsIFrameDebug : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IFRAMEDEBUG_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMEDEBUG_IID)
   
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const = 0;
   /**

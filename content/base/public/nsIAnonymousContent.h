@@ -56,7 +56,7 @@ class nsINodeInfo;
  */
 class nsIAnonymousContent : public nsISupports {
 public:
-     static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUS_CONTENT_IID; return iid; }
+     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IANONYMOUS_CONTENT_IID)
 
      NS_IMETHOD Init(nsINodeInfo *aInfo) = 0;
 };

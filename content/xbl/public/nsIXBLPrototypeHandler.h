@@ -63,7 +63,7 @@ class nsIDOMEventReceiver;
 class nsIXBLPrototypeHandler : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXBLPROTOTYPEHANDLER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLPROTOTYPEHANDLER_IID)
 
   NS_IMETHOD MouseEventMatched(nsIAtom* aEventType, nsIDOMMouseEvent* aEvent, PRBool* aResult) = 0;
   NS_IMETHOD KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent, PRBool* aResult) = 0;

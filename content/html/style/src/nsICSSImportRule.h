@@ -50,7 +50,7 @@ class nsIURI;
 
 class nsICSSImportRule : public nsICSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_IMPORT_RULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_IMPORT_RULE_IID)
 
   NS_IMETHOD SetURLSpec(const nsString& aURLSpec) = 0;
   NS_IMETHOD GetURLSpec(nsString& aURLSpec) const = 0;

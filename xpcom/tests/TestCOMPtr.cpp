@@ -57,7 +57,7 @@
 class IFoo : public nsISupports
   {
 		public:
-			static const nsIID& GetIID() { static nsIID iid = NS_IFOO_IID; return iid; }
+			NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
 		public:
       IFoo();
@@ -236,7 +236,7 @@ return_a_IFoo()
 class IBar : public IFoo
   {
   	public:
-  		static const nsIID& GetIID() { static nsIID iid = NS_IBAR_IID; return iid; }
+  		NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBAR_IID)
 
     public:
       IBar();

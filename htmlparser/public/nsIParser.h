@@ -123,7 +123,7 @@ enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
  */
 class nsIDebugDumpContent : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDEBUG_DUMP_CONTENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEBUG_DUMP_CONTENT_IID)
   NS_IMETHOD DumpContentModel()=0;
 };
 
@@ -136,7 +136,7 @@ public:
 class nsIParser : public nsISupports {
   public:
 
-    static const nsIID& GetIID() { static nsIID iid = NS_IPARSER_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSER_IID)
 
     /**
      *  Call this method if you have a DTD that you want to share with the parser.

@@ -103,7 +103,7 @@
 class nsIAnonymousContentList : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IANONYMOUSCONTENTLIST_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IANONYMOUSCONTENTLIST_IID)
 
    // nsIAnonymousContentList
   NS_IMETHOD GetInsertionPointCount(PRUint32* aCount)=0;

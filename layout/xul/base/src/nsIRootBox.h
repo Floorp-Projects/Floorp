@@ -51,7 +51,7 @@ class nsIContent;
 class nsIRootBox : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IROOTBOX_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IROOTBOX_IID)
 
   NS_IMETHOD GetPopupSetFrame(nsIFrame** aResult)=0;
   NS_IMETHOD SetPopupSetFrame(nsIFrame* aPopupSet)=0;

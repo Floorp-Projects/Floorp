@@ -60,7 +60,7 @@ class nsString;
 class nsIXULContent : public nsIXMLContent
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IXULCONTENT_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULCONTENT_IID)
 
     /**
      * Peek at a XUL element's child count without forcing children to be

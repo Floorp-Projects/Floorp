@@ -64,7 +64,7 @@ class nsIURI;
 class nsIXBLService : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXBLSERVICE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLSERVICE_IID)
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.

@@ -63,7 +63,7 @@ typedef void (*nsCSSLoaderCallbackFunc)(nsICSSStyleSheet* aSheet, void *aData, P
 
 class nsICSSLoader : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_LOADER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_LOADER_IID)
 
   NS_IMETHOD Init(nsIDocument* aDocument) = 0;
   NS_IMETHOD DropDocumentReference(void) = 0; // notification that doc is going away

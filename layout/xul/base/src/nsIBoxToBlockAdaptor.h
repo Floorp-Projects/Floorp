@@ -50,7 +50,7 @@ class nsIBoxToBlockAdaptor : public nsISupports {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IBOX_TO_BLOCK_ADAPTOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBOX_TO_BLOCK_ADAPTOR_IID)
 
   NS_IMETHOD Recycle(nsIPresShell* aPresShell)=0;
   NS_IMETHOD SetIncludeOverflow(PRBool aInclude)=0;

@@ -56,7 +56,8 @@ class nsIOpenFile
 : public nsISupports
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IOPENFILE_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOPENFILE_IID)
+
 	NS_IMETHOD                         Open(
                                            const nsFileSpec& inFile,
                                            int nsprMode,
@@ -80,7 +81,7 @@ class nsIRandomAccessStore
 : public nsISeekableStream
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IRANDOMACCESS_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRANDOMACCESS_IID)
 
 /* "PROTECTED" */
     NS_IMETHOD                         GetAtEOF(PRBool* outAtEOF) = 0;
@@ -105,7 +106,7 @@ class nsIFileSpecInputStream
 : public nsIInputStream
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IFILESPECINPUTSTREAM_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILESPECINPUTSTREAM_IID)
 }; // class nsIFileSpecInputStream
 
 /* a6cf90e7-15b3-11d2-932e-00805f8add32 */
@@ -122,7 +123,7 @@ class nsIFileSpecOutputStream
 : public nsIOutputStream
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IFILESPECOUTPUTSTREAM_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILESPECOUTPUTSTREAM_IID)
 }; // class nsIFileSpecOutputStream
 
 #endif // NO_XPCOM_FILE_STREAMS

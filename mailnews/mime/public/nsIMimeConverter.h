@@ -54,7 +54,7 @@ typedef struct MimeEncoderData MimeEncoderData;
 
 class nsIMimeConverter : public nsISupports {
 public: 
-  static const nsIID& GetIID() { static nsIID iid = NS_IMIME_CONVERTER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMIME_CONVERTER_IID)
 
   // These methods are all implemented by libmime to be used by 
   // modules that need to encode/decode mail headers

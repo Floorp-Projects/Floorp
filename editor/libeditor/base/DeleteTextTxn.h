@@ -56,7 +56,7 @@ class DeleteTextTxn : public EditTxn
 {
 public:
 
-  static const nsIID& GetCID() { static nsIID iid = DELETE_TEXT_TXN_CID; return iid; }
+  static const nsIID& GetCID() { static const nsIID iid = DELETE_TEXT_TXN_CID; return iid; }
 
   /** initialize the transaction.
     * @param aEditor  the provider of basic editing operations

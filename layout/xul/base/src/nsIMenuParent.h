@@ -50,7 +50,7 @@ class nsIDOMKeyEvent;
 class nsIMenuParent : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IMENUPARENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUPARENT_IID)
 
   NS_IMETHOD GetCurrentMenuItem(nsIMenuFrame** aMenuItem) = 0;
   NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem) = 0;

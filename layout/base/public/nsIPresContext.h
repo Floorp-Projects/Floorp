@@ -116,7 +116,7 @@ const PRUint8 kPresContext_DefaultFixedFont_ID    = 0x01; // kGenericFont_moz_fi
 // objects that provide an outer context for a presentation shell.
 class nsIPresContext : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPRESCONTEXT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRESCONTEXT_IID)
 
   /**
    * Initialize the presentation context from a particular device.

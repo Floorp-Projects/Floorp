@@ -68,7 +68,7 @@ class nsICSSPseudoComparator;
 
 class nsIStyleSet : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISTYLE_SET_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_SET_IID)
 
   // Style sheets are ordered, most significant first
   // NOTE: this is the reverse of the way documents store the sheets

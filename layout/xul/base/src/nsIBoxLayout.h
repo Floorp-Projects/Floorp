@@ -55,7 +55,7 @@ class nsIBoxLayout : public nsISupports {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IBOX_LAYOUT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBOX_LAYOUT_IID)
 
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState)=0;
 

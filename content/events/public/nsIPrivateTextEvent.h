@@ -51,7 +51,7 @@
 class nsIPrivateTextEvent : public nsISupports {
 
 public:
-	static const nsIID& GetIID() { static nsIID iid = NS_IPRIVATETEXTEVENT_IID; return iid; }
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATETEXTEVENT_IID)
 
 	NS_IMETHOD GetText(nsString& aText) = 0;
 	NS_IMETHOD GetInputRange(nsIPrivateTextRangeList** aInputRange) = 0;

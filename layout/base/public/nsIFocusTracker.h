@@ -53,7 +53,7 @@ class nsIPresContext;
 class nsIFocusTracker : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IFOCUSTRACKER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOCUSTRACKER_IID)
 
   /** ScrollFrameIntoView
    *  limited version of nsPresShell::ScrollFrameIntoView

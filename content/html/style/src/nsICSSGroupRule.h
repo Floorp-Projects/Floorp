@@ -49,7 +49,7 @@ class nsIAtom;
 
 class nsICSSGroupRule : public nsICSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_GROUP_RULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_GROUP_RULE_IID)
 
   NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule) = 0;
 

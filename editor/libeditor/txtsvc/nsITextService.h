@@ -59,7 +59,7 @@ TextService interface to outside world
 class nsITextService  : public nsISupports{
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_ITEXTSERVICE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTSERVICE_IID)
 
   /**
    *

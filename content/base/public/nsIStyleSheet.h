@@ -60,7 +60,7 @@ class nsIStyleRuleProcessor;
 
 class nsIStyleSheet : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISTYLE_SHEET_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_SHEET_IID)
 
   // basic style sheet data
   NS_IMETHOD GetURL(nsIURI*& aURL) const = 0;

@@ -48,7 +48,7 @@
 class nsIRDFNodeList : public nsISupports
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IRDFNODELIST_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFNODELIST_IID)
 
     NS_IMETHOD AppendNode(nsIDOMNode* aNode) = 0;
     NS_IMETHOD RemoveNode(nsIDOMNode* aNode) = 0;

@@ -50,7 +50,7 @@ class nsIScrollbarMediator;
 class nsIScrollbarFrame : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISCROLLBARFRAME_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLBARFRAME_IID)
   
   NS_IMETHOD GetScrollbarMediator(nsIScrollbarMediator** aResult) = 0;
   NS_IMETHOD SetScrollbarMediator(nsIScrollbarMediator* aMediator) = 0;

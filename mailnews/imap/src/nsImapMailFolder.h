@@ -73,11 +73,7 @@ class nsHashKey;
 class nsImapMailCopyState: public nsISupports
 {
 public:
-    static const nsIID& GetIID()
-    {
-        static nsIID iid = NS_IMAPMAILCOPYSTATE_IID;
-        return iid;
-    }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMAPMAILCOPYSTATE_IID)
     
     NS_DECL_ISUPPORTS
 

@@ -49,7 +49,7 @@
 
 class nsIDOMXPConnectFactory : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMXPCONNECTFACTORY_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMXPCONNECTFACTORY_IID)
 
   NS_IMETHOD    CreateInstance(const nsString& aContractID, nsISupports** aReturn)=0;
 };

@@ -48,7 +48,7 @@ class nsString;
 
 class nsICSSCharsetRule : public nsICSSRule {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICSS_CHARSET_RULE_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_CHARSET_RULE_IID)
 
   NS_IMETHOD  GetEncoding(nsString& aEncoding) const = 0;
 };
