@@ -283,6 +283,10 @@
                           <hbox>
                             <spacer class="repeat-left-spacer" />
                             <radiogroup id="repeat-until-group" disable-controller="repeat">
+                              <hbox>
+                                <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
+                              </hbox>    
+                              
                               <hbox id="repeat-end-box">
                                   <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" selected="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
                                   <spacer id="until-spacer"/>
@@ -290,11 +294,7 @@
                                   <image class="four-state-image-button" id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
                               </hbox>
                               
-                              <hbox>
-                                <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
-                              </hbox>    
                               
-                            
                             </radiogroup>
                           </hbox>
                          
