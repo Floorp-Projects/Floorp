@@ -1,29 +1,77 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> 
 
-<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>  
+<!-- ***** BEGIN LICENSE BLOCK *****
+ Version: MPL 1.1/GPL 2.0/LGPL 2.1
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
+ The contents of this file are subject to the Mozilla Public License Version
+ 1.1 (the "License"); you may not use this file except in compliance with
+ the License. You may obtain a copy of the License at
+ http://www.mozilla.org/MPL/
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/MsgAttachPage.dtd">
+ Software distributed under the License is distributed on an "AS IS" basis,
+ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ for the specific language governing rights and limitations under the
+ License.
 
-<window title="&windowTitle.label;"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="Startup()"
-    class="dialog"> 
+ The Original Code is Mozilla Communicator client code, released
+ March 31, 1998.
 
-<script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgAttachPage.js"/> 
+ The Initial Developer of the Original Code is
+ Netscape Communications Corporation.
+ Portions created by the Initial Developer are Copyright (C) 1998-1999
+ the Initial Developer. All Rights Reserved.
 
-	<keyset id="dialogKeys"/>
+ Contributor(s):
+   Ben Goodger <ben@netscape.com>
+   Michael Lowe <michael.lowe@bigfoot.com>
+   Neil Rashbrook <neil@parkwaycc.co.uk>
 
-    <spacer style="height:0.5em" />
-	<hbox>
-        <spacer style="width:10px" />
-                <label value="&webpage.label;"/>
-		<textbox id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" class="uri-element"/>
-        <spacer style="width:10px" />
-	</hbox>
-	
-    <spacer style="height:1em"/>
-	<hbox id="okCancelButtons"/> 
-    <spacer style="height:0.5em" />
-</window>
+ Alternatively, the contents of this file may be used under the terms of
+ either of the GNU General Public License Version 2 or later (the "GPL"),
+ or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ in which case the provisions of the GPL or the LGPL are applicable instead
+ of those above. If you wish to allow use of your version of this file only
+ under the terms of either the GPL or the LGPL, and not to allow others to
+ use your version of this file under the terms of the MPL, indicate your
+ decision by deleting the provisions above and replace them with the notice
+ and other provisions required by the GPL or the LGPL. If you do not delete
+ the provisions above, a recipient may use your version of this file under
+ the terms of any one of the MPL, the GPL or the LGPL.
+
+ ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/messengercompose/MsgAttachPage.dtd">
+
+<dialog id="MsgAttachPage"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&caption.label;"
+        onload="onLoad();"
+        ondialogaccept="return attach();"
+        style="width: 40em;"
+        persist="screenX screenY"
+        screenX="24" screenY="24">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgAttachPage.js"/>
+  <script type="application/x-javascript" src="chrome://navigator/content/sessionHistoryUI.js"/>
+
+  <stringbundle id="attachWebPageBundle" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
+
+  <label value="&enter.label;" control="dialog.input" accesskey="&enter.accesskey;"/>
+  <separator class="thin"/>
+
+  <hbox align="center">
+    <textbox id="dialog.input" flex="1" type="autocomplete"
+              searchSessions="history" timeout="50" maxrows="6"
+              disablehistory="false" class="uri-element"
+              oninput="doEnabling();">
+      <menupopup id="ubhist-popup" class="autocomplete-history-popup"
+                 popupalign="topleft" popupanchor="bottomleft"
+                 onpopupshowing="createUBHistoryMenu(event.target);"
+                 oncommand="useUBHistoryItem(event.target);"/>
+    </textbox>
+    <button label="&chooseFile.label;" accesskey="&chooseFile.accesskey;" oncommand="onChooseFile();"/>
+  </hbox>
+
+</dialog>

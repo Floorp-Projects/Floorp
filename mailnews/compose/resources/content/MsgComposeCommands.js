@@ -2348,23 +2348,12 @@ function MessageHasSelectedAttachments()
 
 function AttachPage()
 {
-   if (gPromptService)
-   {
-      var result = {value:"http://"};
-      if (gPromptService.prompt(
-        window,
-        sComposeMsgsBundle.getString("attachPageDlogTitle"),
-        sComposeMsgsBundle.getString("attachPageDlogMessage"),
-          result,
-        null,
-        {value:0}))
-      {
-        var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
-        attachment.url = result.value;
-        AddAttachment(attachment);
-      }
-   }
+  var result = { attachment: null };
+  window.openDialog("chrome://messenger/content/messengercompose/MsgAttachPage.xul", "_blank", "chrome,close,titlebar,modal", result);
+  if (result.attachment)
+    AddAttachment(result.attachment);
 }
+
 function DuplicateFileCheck(FileUrl)
 {
   var bucket = document.getElementById('attachmentBucket');
