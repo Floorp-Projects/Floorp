@@ -42,10 +42,27 @@ static const PRBool gsNoisyRefs = PR_FALSE;
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 
+// hack, remove when hack in nsTableCol constructor is removed
+static PRInt32 HACKcounter=0;
+static nsIAtom *HACKattribute=nsnull;
+#include "prprf.h"  // remove when nsTableCol constructor hack is removed
+// end hack code
+
 // nsTableContent checks aTag
 nsTableRowGroup::nsTableRowGroup(nsIAtom* aTag)
   : nsTableContent(aTag)
 {
+  /* begin hack */
+  // temporary hack to get around style sheet optimization that folds all
+  // col style context into one, unless there is a unique HTML attribute set
+  char out[40];
+  PR_snprintf(out, 40, "%d", HACKcounter);
+  const nsString value(out);
+  if (nsnull==HACKattribute)
+    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
+  SetAttribute(HACKattribute, value);
+  HACKcounter++;
+  /* end hack */
 }
 
 // nsTableContent checks aTag
@@ -53,6 +70,17 @@ nsTableRowGroup::nsTableRowGroup(nsIAtom* aTag, PRBool aImplicit)
   : nsTableContent(aTag)
 {
   mImplicit = aImplicit;
+  /* begin hack */
+  // temporary hack to get around style sheet optimization that folds all
+  // col style context into one, unless there is a unique HTML attribute set
+  char out[40];
+  PR_snprintf(out, 40, "%d", HACKcounter);
+  const nsString value(out);
+  if (nsnull==HACKattribute)
+    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
+  SetAttribute(HACKattribute, value);
+  HACKcounter++;
+  /* end hack */
 }
 
 nsTableRowGroup::~nsTableRowGroup()
@@ -124,7 +152,7 @@ NS_IMETHODIMP
 nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad arg to AppendChild");
-  PRBool result = PR_TRUE;
+  nsresult result = NS_OK;
 
   // is aContent a TableRow?
   PRBool isRow = IsRow(aContent);
@@ -134,9 +162,16 @@ nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
   {
     if (gsDebug==PR_TRUE) printf ("nsTableRowGroup::AppendChild -- inserting a row into this row group.\n");
     // if it is, we'll add it here
-    nsTableContent::AppendChild (aContent, PR_FALSE);
-    ((nsTableRow *)aContent)->SetRowGroup (this);
-    ResetCellMap ();
+    result = nsTableContent::AppendChild (aContent, PR_FALSE);
+    if (NS_OK==result)
+    {
+      ((nsTableRow *)aContent)->SetRowGroup (this);
+      // after each row insertion, make sure we have corresponding column content objects
+      if (nsnull!=mTable)
+        mTable->EnsureColumns();
+      // also make sure the table cell map gets rebuilt
+      ResetCellMap ();
+    }
   }
   // otherwise, if it's a cell, create an implicit row for it
   else 
@@ -165,20 +200,20 @@ nsTableRowGroup::AppendChild (nsIContent *aContent, PRBool aNotify)
         nsIAtom * trDefaultTag = NS_NewAtom(nsTablePart::kRowTagString);   // trDefaultTag: REFCNT++
         row = new nsTableRow (trDefaultTag, PR_TRUE);
         NS_RELEASE(trDefaultTag);                               // trDefaultTag: REFCNT--
-        AppendChild (row, PR_FALSE);
+        result = AppendChild (row, PR_FALSE);
         // SEC: check result
       }
       // group is guaranteed to be allocated at this point
-      row->AppendChild(aContent, PR_FALSE);
+      result = row->AppendChild(aContent, PR_FALSE);
     }
     // otherwise, punt and let the table try to insert it.  Or maybe just return a failure?
     else
     {
       // you should go talk to my parent if you want to insert something other than a row
-        result = PR_FALSE;
+      result = NS_ERROR_FAILURE;
     }
   }
-  return NS_OK;
+  return result;
 }
 
 NS_IMETHODIMP
@@ -194,15 +229,18 @@ nsTableRowGroup::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
   if (PR_FALSE==isRow)
   {
     // you should go talk to my parent if you want to insert something other than a column
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   // if so, add the row to this group
-  nsTableContent::InsertChildAt (aContent, aIndex, PR_FALSE);
-  ((nsTableRow *)aContent)->SetRowGroup (this);
-  ResetCellMap ();
+  nsresult result = nsTableContent::InsertChildAt (aContent, aIndex, PR_FALSE);
+  if (NS_OK==result)
+  {
+    ((nsTableRow *)aContent)->SetRowGroup (this);
+    ResetCellMap ();
+  }
 
-  return NS_OK;
+  return result;
 }
 
 
@@ -213,19 +251,21 @@ nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
   NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
   if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   // is aContent a TableRow?
   PRBool isRow = IsRow(aContent);
 
   // if not, ignore the request to replace the child at aIndex
+  if (PR_FALSE==isRow)
   {
     // you should go talk to my parent if you want to insert something other than a column
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++
-  nsTableContent::ReplaceChildAt (aContent, aIndex, PR_FALSE);
+  nsresult result = nsTableContent::ReplaceChildAt (aContent, aIndex, PR_FALSE);
+  if (NS_OK==result)
   {
     ((nsTableRow *)aContent)->SetRowGroup (this);
     if (nsnull != lastChild)
@@ -233,7 +273,7 @@ nsTableRowGroup::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
     ResetCellMap ();
   }
   NS_IF_RELEASE(lastChild);                   // lastChild: REFCNT--
-  return NS_OK;
+  return result;
 }
 
 /**
@@ -245,17 +285,18 @@ nsTableRowGroup::RemoveChildAt (PRInt32 aIndex, PRBool aNotify)
 {
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to RemoveChildAt");
   if (!(0<=aIndex && aIndex<ChildCount()))
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
   nsIContent * lastChild = ChildAt (aIndex);  // lastChild: REFCNT++   
-  nsTableContent::RemoveChildAt (aIndex, PR_FALSE);
+  nsresult result = nsTableContent::RemoveChildAt (aIndex, PR_FALSE);
+  if (NS_OK==result)
   {
     if (nsnull != lastChild)
       ((nsTableRow *)lastChild)->SetRowGroup (nsnull);
     ResetCellMap ();
   }
   NS_IF_RELEASE(lastChild);                  // lastChild: REFCNT-- 
-  return NS_OK;
+  return result;
 }
 
 /** support method to determine if the param aContent is a TableRow object */

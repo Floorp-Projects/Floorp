@@ -26,6 +26,7 @@
 #include "nsTableCell.h"
 #include "nsTableCellFrame.h"
 #include "nsTableCol.h"
+#include "nsTableColFrame.h"
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsColLayoutData.h"
@@ -41,6 +42,7 @@
 #include "nsIPtr.h"
 #include "nsIView.h"
 #include "nsHTMLAtoms.h"
+#include "nsHTMLIIDs.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -135,6 +137,117 @@ struct InnerTableReflowState {
   }
 };
 
+/* ----------- ColumnInfoCache ---------- */
+
+static const PRInt32 NUM_COL_WIDTH_TYPES=4;
+
+class ColumnInfoCache
+{
+public:
+  ColumnInfoCache(PRInt32 aNumColumns);
+  ~ColumnInfoCache();
+
+  void AddColumnInfo(const nsStyleUnit aType, 
+                     PRInt32 aColumnIndex);
+
+  void GetColumnsByType(const nsStyleUnit aType, 
+                        PRInt32& aOutNumColumns,
+                        PRInt32 *& aOutColumnIndexes);
+  enum ColWidthType {
+    eColWidthType_Auto         = 0,      // width based on contents
+    eColWidthType_Percent      = 1,      // (float) 1.0 == 100%
+    eColWidthType_Coord        = 2,      // (nscoord) value is twips
+    eColWidthType_Proportional = 3,      // (int) value has proportional meaning
+  };
+
+private:
+  PRInt32  mColCounts [4];
+  PRInt32 *mColIndexes[4];
+  PRInt32  mNumColumns;
+};
+
+ColumnInfoCache::ColumnInfoCache(PRInt32 aNumColumns)
+{
+  mNumColumns = aNumColumns;
+  for (PRInt32 i=0; i<NUM_COL_WIDTH_TYPES; i++)
+  {
+    mColCounts[i] = 0;
+    mColIndexes[i] = nsnull;
+  }
+}
+
+ColumnInfoCache::~ColumnInfoCache()
+{
+  for (PRInt32 i=0; i<NUM_COL_WIDTH_TYPES; i++)
+  {
+    if (nsnull!=mColIndexes[i])
+    {
+      delete [] mColIndexes[i];
+    }
+  }
+}
+
+void ColumnInfoCache::AddColumnInfo(const nsStyleUnit aType, 
+                                    PRInt32 aColumnIndex)
+{
+  switch (aType)
+  {
+    case eStyleUnit_Auto:
+      if (nsnull==mColIndexes[eColWidthType_Auto])
+        mColIndexes[eColWidthType_Auto] = new PRInt32[mNumColumns];     // TODO : be much more efficient
+      mColIndexes[eColWidthType_Auto][mColCounts[eColWidthType_Auto]] = aColumnIndex;
+      mColCounts[eColWidthType_Auto]++;
+      break;
+
+    case eStyleUnit_Percent:
+      if (nsnull==mColIndexes[eColWidthType_Percent])
+        mColIndexes[eColWidthType_Percent] = new PRInt32[mNumColumns];     // TODO : be much more efficient
+      mColIndexes[eColWidthType_Percent][mColCounts[eColWidthType_Percent]] = aColumnIndex;
+      mColCounts[eColWidthType_Percent]++;
+      break;
+
+    case eStyleUnit_Coord:
+      if (nsnull==mColIndexes[eColWidthType_Coord])
+        mColIndexes[eColWidthType_Coord] = new PRInt32[mNumColumns];     // TODO : be much more efficient
+      mColIndexes[eColWidthType_Coord][mColCounts[eColWidthType_Coord]] = aColumnIndex;
+      mColCounts[eColWidthType_Coord]++;
+      break;
+
+    case eStyleUnit_Proportional:
+      if (nsnull==mColIndexes[eColWidthType_Proportional])
+        mColIndexes[eColWidthType_Proportional] = new PRInt32[mNumColumns];     // TODO : be much more efficient
+      mColIndexes[eColWidthType_Proportional][mColCounts[eColWidthType_Proportional]] = aColumnIndex;
+      mColCounts[eColWidthType_Proportional]++;
+      break;
+  }
+}
+
+
+void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType, 
+                                        PRInt32& aOutNumColumns,
+                                        PRInt32 *& aOutColumnIndexes)
+{
+  switch (aType)
+  {
+    case eStyleUnit_Auto:
+      aOutNumColumns = mColCounts[eColWidthType_Auto];
+      aOutColumnIndexes = mColIndexes[eColWidthType_Auto];
+      break;
+    case eStyleUnit_Percent:
+      aOutNumColumns = mColCounts[eColWidthType_Percent];
+      aOutColumnIndexes = mColIndexes[eColWidthType_Percent];
+      break;
+    case eStyleUnit_Coord:
+      aOutNumColumns = mColCounts[eColWidthType_Coord];
+      aOutColumnIndexes = mColIndexes[eColWidthType_Coord];
+      break;
+    case eStyleUnit_Proportional:
+      aOutNumColumns = mColCounts[eColWidthType_Proportional];
+      aOutColumnIndexes = mColIndexes[eColWidthType_Proportional];
+      break;
+  }
+}
+
 
 
 /* ----------- nsTableFrame ---------- */
@@ -143,6 +256,7 @@ struct InnerTableReflowState {
 nsTableFrame::nsTableFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsContainerFrame(aContent, aParentFrame),
     mColumnLayoutData(nsnull),
+    mColCache(nsnull),
     mColumnWidths(nsnull),
     mTableLayoutStrategy(nsnull),
     mFirstPassValid(PR_FALSE),
@@ -177,6 +291,8 @@ nsTableFrame::~nsTableFrame()
     delete [] mColumnWidths;
   if (nsnull!=mTableLayoutStrategy)
     delete mTableLayoutStrategy;
+  if (nsnull!=mColCache)
+    delete mColCache;
 }
 
 
@@ -1891,6 +2007,8 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
       rowGroupFrame->GetSize(rowGroupFrameSize);
       rowGroupFrame->SizeTo(rowGroupFrameSize.width, rowGroupHeight);
       tableHeight += rowGroupHeight;
+      if (nsnull!=rowHeights)
+        delete [] rowHeights;
     }
   }
   if (0!=tableHeight)
@@ -1904,10 +2022,59 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
 }
 
 void nsTableFrame::VerticallyAlignChildren(nsIPresContext* aPresContext,
-                                          nscoord* aAscents,
-                                          nscoord aMaxAscent,
-                                          nscoord aMaxHeight)
+                                           nscoord* aAscents,
+                                           nscoord aMaxAscent,
+                                           nscoord aMaxHeight)
 {
+}
+
+/* there's an easy way and a hard way.  The easy way is to look in our
+ * cache and pull the frame from there.
+ * If the cache isn't built yet, then we have to go hunting.
+ */
+NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aColFrame)
+{
+  aColFrame = nsnull; // initialize out parameter
+  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
+  if (nsnull!=firstInFlow->mColumnLayoutData)
+  { // hooray, we get to do this the easy way because the info is cached
+    nsColLayoutData * colData = (nsColLayoutData *)
+      (firstInFlow->mColumnLayoutData->ElementAt(aColIndex));
+    NS_ASSERTION(nsnull != colData, "bad column data");
+    aColFrame = colData->GetColFrame();
+    NS_ASSERTION(nsnull!=aColFrame, "bad col frame");
+  }
+  else
+  { // ah shucks, we have to go hunt for the column frame brute-force style
+    nsIFrame *childFrame;
+    FirstChild(childFrame);
+    for (;;)
+    {
+      if (nsnull==childFrame)
+      {
+        NS_ASSERTION (PR_FALSE, "scanned the frame hierarchy and no column frame could be found.");
+        break;
+      }
+      nsIContentPtr kid;
+      childFrame->GetContent(kid.AssignRef());
+      const PRInt32 contentType = ((nsTableContent *)(nsIContent*)kid)->GetType();
+      if (contentType==nsITableContent::kTableColGroupType)
+      {
+        nsTableColGroup *colGroup = (nsTableColGroup *)((nsIContent*)kid);
+        PRInt32 colGroupStartingIndex = colGroup->GetStartColumnIndex();
+        if (aColIndex >= colGroupStartingIndex)
+        { // the cell's col might be in this col group
+          if (aColIndex < colGroupStartingIndex + colGroup->ChildCount())
+          { // yep, we've found it
+            childFrame->ChildAt(aColIndex-colGroupStartingIndex, (nsIFrame *&)aColFrame);
+            break;
+          }
+        }
+      }
+      childFrame->GetNextSibling(childFrame);
+    }
+  }
+  return NS_OK;
 }
 
 nsVoidArray * nsTableFrame::GetColumnLayoutData()
@@ -1922,7 +2089,8 @@ nsVoidArray * nsTableFrame::GetColumnLayoutData()
   * @return PR_TRUE if the data was successfully associated with a Cell
   *         PR_FALSE if there was an error, such as aRow or aCol being invalid
   */
-PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aCell)
+PRBool nsTableFrame::SetCellLayoutData(nsIPresContext* aPresContext,
+                                       nsCellLayoutData * aData, nsTableCell *aCell)
 {
   NS_ASSERTION(nsnull != aData, "bad arg");
   NS_ASSERTION(nsnull != aCell, "bad arg");
@@ -1932,7 +2100,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   NS_ASSERTION(nsnull!=firstInFlow, "illegal state -- no first in flow");
   if (this!=firstInFlow)
-    result = firstInFlow->SetCellLayoutData(aData, aCell);
+    result = firstInFlow->SetCellLayoutData(aPresContext, aData, aCell);
   else
   {
     if (kPASS_FIRST==GetReflowPass())
@@ -1943,6 +2111,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
         NS_ASSERTION(nsnull != mColumnLayoutData, "bad alloc");
         nsTablePart * tablePart = (nsTablePart *)mContent;
         PRInt32 cols = tablePart->GetMaxColumns();
+        mColCache = new ColumnInfoCache(cols);
         PRInt32 tableKidCount = tablePart->ChildCount();
         nsIFrame * colGroupFrame = mFirstChild;
         for (PRInt32 i=0; i<tableKidCount; i++)
@@ -1955,6 +2124,9 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
             PRInt32 colsInGroup = tableKid->ChildCount();
             for (PRInt32 j=0; j<colsInGroup; j++)
             {
+              // TODO:  unify these 2 kinds of column data
+              // TODO:  cache more column data, like the mWidth.GetUnit and what its value
+
               nsTableColPtr col = (nsTableCol *)tableKid->ChildAt(j);
               NS_ASSERTION(col.IsNotNull(), "bad content");
               nsColLayoutData *colData = new nsColLayoutData(col);
@@ -1962,6 +2134,13 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
               colGroupFrame->ChildAt(j, (nsIFrame *&)colFrame);
               colData->SetColFrame(colFrame);
               mColumnLayoutData->AppendElement((void *)colData);
+              
+              // also add the column to the column cache
+              // assumes that the col style has been twiddled to account for first cell width attribute
+              nsIStyleContextPtr colSC;
+              colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
+              nsStylePosition* colPosition = (nsStylePosition*)colSC->GetData(eStyleStruct_Position);
+              mColCache->AddColumnInfo(colPosition->mWidth.GetUnit(), colFrame->GetColumnIndex());
             }
           }
           // can't have col groups after row groups, so stop if you find a row group
@@ -2349,6 +2528,14 @@ NS_METHOD nsTableFrame::GetCellMarginData(nsIFrame* aKidFrame, nsMargin& aMargin
   return result;
 }
 
+void nsTableFrame::GetColumnsByType(const nsStyleUnit aType, 
+                                    PRInt32& aOutNumColumns,
+                                    PRInt32 *& aOutColumnIndexes)
+{
+  mColCache->GetColumnsByType(aType, aOutNumColumns, aOutColumnIndexes);
+}
+
+
 /* ---------- static methods ---------- */
 
 nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
@@ -2365,6 +2552,115 @@ nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
   }
   *aInstancePtrResult = it;
   return NS_OK;
+}
+
+/* helper method for getting the width of the table's containing block */
+nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
+{
+#ifdef STEVES_WAY // from BasicTableLayoutStrategy::TableIsAutoWidth()
+  // get the parent's width (available only from parent frames that claim they can provide it)
+  // note that we start with our parent's parent (the outer table frame's parent)
+  nscoord parentWidth = 0;
+  NS_ASSERTION(nsnull!=aReflowState.parentReflowState, "bad outer table reflow state.");
+  NS_ASSERTION(nsnull!=aReflowState.parentReflowState->parentReflowState, "bad table parent reflow state.");
+  if ((nsnull!=aReflowState.parentReflowState) &&
+      (nsnull!=aReflowState.parentReflowState->parentReflowState))
+  {
+    const nsReflowState *parentReflowState = aReflowState.parentReflowState->parentReflowState;
+    nsIFrame *parentFrame=parentReflowState->frame;
+    NS_ASSERTION(nsnull!=parentFrame, "bad parent frame in reflow state struct.");
+    while(nsnull!=parentFrame)
+    {
+      PRBool isPercentageBase=PR_FALSE;
+      parentFrame->IsPercentageBase(isPercentageBase);
+      if (PR_TRUE==isPercentageBase)
+      { // found the ancestor who claims to be the container to base my percentage width on
+        parentWidth = parentReflowState->maxSize.width;
+        if (PR_TRUE==gsDebug) printf("  ** width for parent frame %p = %d\n", parentFrame, parentWidth);
+        break;
+      }
+      parentReflowState = parentReflowState->parentReflowState; // get next ancestor
+      if (nsnull!=parentReflowState)
+        parentFrame = parentReflowState->frame;
+      else
+        parentFrame = nsnull; // terminates loop.  
+      // TODO: do we need a backstop in case there are no IsPercentageBase==true frames?
+    }
+  }
+
+#else
+
+  nscoord parentWidth = aReflowState.maxSize.width;
+
+  // Walk up the reflow state chain until we find a block
+  // frame. Our width is computed relative to there.
+  const nsReflowState* rs = &aReflowState;
+  while (nsnull != rs) {
+    nsIFrame* block = nsnull;
+    rs->frame->QueryInterface(kBlockFrameCID, (void**) &block);
+    if (nsnull != block) {
+      // We found the nearest containing block which defines what
+      // a percentage size is relative to. Use the width that it
+      // will reflow to as the basis for computing our width.
+      parentWidth = rs->maxSize.width;
+      break;
+    }
+    rs = rs->parentReflowState;
+  }
+
+#endif
+  return parentWidth;
+}
+
+// aSpecifiedTableWidth is filled if the table witdth is not auto
+PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
+                                      nsIStyleContext *aTableStyle, 
+                                      const nsReflowState& aReflowState,
+                                      nscoord& aSpecifiedTableWidth)
+{
+  NS_ASSERTION(nsnull!=aTableStyle, "bad arg - aTableStyle");
+  PRBool result = PR_TRUE;  // the default
+  if (nsnull!=aTableStyle)
+  {
+    //nsStylePosition* tablePosition = (nsStylePosition*)aTableStyle->GetData(eStyleStruct_Position);
+    /* this is sick and wrong, but what the hell
+       we grab the style of our parent (nsTableOuterFrame) and ask it for width info, 
+       until the style resolution stuff does the cool stuff about splitting style between outer and inner
+     */
+    // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    nsIStyleContext* parentStyle = nsnull;
+    nsIFrame * parent = nsnull;
+    aTableFrame->GetGeometricParent(parent);
+    parent->GetStyleContext(nsnull, parentStyle);
+    nsStylePosition* tablePosition = (nsStylePosition*)parentStyle->GetData(eStyleStruct_Position);
+    // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    switch (tablePosition->mWidth.GetUnit()) {
+    case eStyleUnit_Auto:         // specified auto width
+    case eStyleUnit_Proportional: // illegal for table, so ignored
+      break;
+
+    case eStyleUnit_Inherit:
+      // get width of parent and see if it is a specified value or not
+      // XXX for now, just return true
+      break;
+
+    case eStyleUnit_Coord:
+      aSpecifiedTableWidth = tablePosition->mWidth.GetCoordValue();
+      result = PR_FALSE;
+      break;
+
+    case eStyleUnit_Percent:
+      // set aSpecifiedTableWidth to be the given percent of the parent.
+      nscoord parentWidth = nsTableFrame::GetTableContainerWidth(aReflowState);
+      float percent = tablePosition->mWidth.GetPercentValue();
+      aSpecifiedTableWidth = (PRInt32)(parentWidth*percent);
+      if (PR_TRUE==gsDebug) printf("  ** aSpecifiedTableWidth = %d\n", aSpecifiedTableWidth);
+      result = PR_FALSE;
+      break;
+    }
+  }
+
+  return result; 
 }
 
 /* valuable code not yet used anywhere

@@ -22,6 +22,7 @@
 #include "nsContainerFrame.h"
 
 class  nsTableFrame;
+class  nsTableCellFrame;
 struct RowReflowState;
 
 /**
@@ -160,6 +161,9 @@ protected:
                                          RowReflowState& aState,
                                          nsSize*         aMaxElementSize);
 
+  NS_METHOD SetColumnStyleFromCell(nsIPresContext  * aPresContext,
+                                   nsTableCellFrame* aCellFrame, 
+                                   nsIStyleContext * aCellSC);
 
 private:
   nscoord  mTallestCell;          // not my height, but the height of my tallest child

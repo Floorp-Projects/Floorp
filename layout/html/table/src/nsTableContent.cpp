@@ -135,15 +135,10 @@ PRBool nsTableContent::IsImplicit () const
   return mImplicit;
 }
 
-
-/* ----- overridable methods from nsHTMLContainer ----- */
-
 /**
-*
-* If the content is a nsTableContent then call SetTable on 
-* aContent, otherwise, do nothing.
-*
-*/
+  * If the content is a nsTableContent then call SetTable on 
+  * aContent, otherwise, do nothing.
+  */
 void nsTableContent::SetTableForTableContent(nsIContent* aContent, nsTablePart *aTable)
 {
   if (aContent != nsnull)
@@ -158,6 +153,8 @@ void nsTableContent::SetTableForTableContent(nsIContent* aContent, nsTablePart *
   }
 }
 
+
+/* ----- overridable methods from nsHTMLContainer ----- */
 
 void nsTableContent::List(FILE* out, PRInt32 aIndent) const
 {

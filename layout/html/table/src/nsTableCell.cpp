@@ -160,6 +160,11 @@ void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
+  if ((aAttribute == nsHTMLAtoms::valign) &&
+      ParseAlignParam(aValue, val)) {
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
   if (aAttribute == nsHTMLAtoms::background) {
     nsAutoString href(aValue);
     href.StripWhitespace();
@@ -191,6 +196,11 @@ void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
+  if (aAttribute == nsHTMLAtoms::nowrap) {
+    val.SetEmptyValue();
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
   // Use default attribute catching code
   nsTableContent::SetAttribute(aAttribute, aValue);
 }
@@ -212,6 +222,15 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
       nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
       text->mTextAlign = value.GetIntValue();
     }
+    
+    // valign: enum
+    GetAttribute(nsHTMLAtoms::valign, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
+      text->mTextAlign = value.GetIntValue();
+    }
+
     MapBackgroundAttributesInto(aContext, aPresContext);
 
     // width: pixel
@@ -222,6 +241,9 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     if (value.GetUnit() == eHTMLUnit_Pixel) {
       nscoord twips = nscoord(p2t * value.GetPixelValue());
       pos->mWidth.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      pos->mWidth.SetPercentValue(value.GetPercentValue());
     }
 
     // height: pixel

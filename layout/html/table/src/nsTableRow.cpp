@@ -167,8 +167,10 @@ nsTableRow::InsertChildAt (nsIContent *aContent, PRInt32 aIndex,
     nsTableContent *tableContent = (nsTableContent *)aContent;
     const int contentType = tableContent->GetType();
     if (contentType != nsITableContent::kTableCellType)
-    {
-      return NS_OK;
+    { // I only insert cells for now
+      // TODO: wrap whatever I'm given here in a cell and insert it
+      NS_ASSERTION(PR_FALSE, "unimplemented attempt to insert a non-cell into a row");
+      return NS_ERROR_FAILURE;
     }
     else
     {
@@ -193,17 +195,22 @@ nsTableRow::ReplaceChildAt (nsIContent *aContent, PRInt32 aIndex,
   NS_PRECONDITION(nsnull!=aContent, "bad aContent arg to ReplaceChildAt");
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
   if ((nsnull==aContent) || !(0<=aIndex && aIndex<ChildCount()))
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   else
   {
     nsTableContent *tableContent = (nsTableContent *)aContent;
     const int contentType = tableContent->GetType();
     if (contentType != nsITableContent::kTableCellType)
-    {
-      return NS_OK;
+    { // I only insert cells for now
+      // TODO: wrap whatever I'm given here in a cell and insert it
+      NS_ASSERTION(PR_FALSE, "unimplemented attempt to insert a non-cell into a row");
+      return NS_ERROR_FAILURE;
     }
     else
-      return NS_OK;
+    {
+      NS_ASSERTION(PR_FALSE, "unimplemented attempt to replace a cell in a row");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
 #if XXX
     nsIContent * oldChild = ChildAt (aIndex); // oldChild: REFCNT++
     result = nsTableContent::ReplaceChildAt (aContent, aIndex, aNotify);
@@ -229,7 +236,7 @@ nsTableRow::RemoveChildAt (int aIndex, PRBool aNotify)
 {
   NS_PRECONDITION(0<=aIndex && aIndex<ChildCount(), "bad aIndex arg to ReplaceChildAt");
   if (!(0<=aIndex && aIndex<ChildCount()))
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   
   nsresult rv = NS_OK;
   nsIContent * oldChild = ChildAt (aIndex);   // oldChild: REFCNT++

@@ -105,6 +105,9 @@ public:
 
   virtual void ResetColumns ();
 
+private:
+  void Init();
+
 
 };
 

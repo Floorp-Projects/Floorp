@@ -27,7 +27,11 @@
 #include "nsIContentDelegate.h"
 #include "nsCSSLayout.h"
 #include "nsHTMLAtoms.h"
+#include "nsHTMLIIDs.h"
+#include "nsIPtr.h"
 #include "nsIView.h"
+
+NS_DEF_PTR(nsIStyleContext);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -297,6 +301,42 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
     CreatePsuedoFrame(aPresContext);
   }
 
+  // Determine the width we have to work with
+  nscoord cellWidth = -1;
+  if (NS_UNCONSTRAINEDSIZE!=availSize.width)
+  {
+    /*
+    nsStylePosition* kidPosition = (nsStylePosition*)
+      mStyleContext->GetData(eStyleStruct_Position);
+    switch (kidPosition->mWidth.GetUnit()) {
+      case eStyleUnit_Coord:
+        cellWidth = kidPosition->mWidth.GetCoordValue();
+        break;
+
+      case eStyleUnit_Percent: 
+      {
+        nscoord tableWidth=0;
+        const nsReflowState *tableReflowState = aReflowState.parentReflowState->parentReflowState->parentReflowState;
+        nsTableFrame *tableFrame = (nsTableFrame *)(tableReflowState->frame);
+        nsIStyleContextPtr tableSC;
+        tableFrame->GetStyleContext(aPresContext, tableSC.AssignRef());
+        PRBool tableIsAutoWidth = nsTableFrame::TableIsAutoWidth(tableFrame, tableSC, *tableReflowState, tableWidth);
+        float percent = kidPosition->mWidth.GetPercentValue();
+        cellWidth = (PRInt32)(tableWidth*percent);
+        break;
+      }
+
+      case eStyleUnit_Inherit:
+        // XXX for now, do nothing
+      default:
+      case eStyleUnit_Auto:
+        break;
+    }
+    */
+    if (-1!=cellWidth)
+      availSize.width = cellWidth;
+  }
+
   // Try to reflow the child into the available space. It might not
   // fit or might need continuing.
   if (availSize.height < 0)
@@ -325,14 +365,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   SetFirstContentOffset(mFirstChild);
-  if (gsDebug) printf("CELL: set first content offset to %d\n", GetFirstContentOffset()); //@@@
+  //if (gsDebug) printf("CELL: set first content offset to %d\n", GetFirstContentOffset()); //@@@
   SetLastContentOffset(mFirstChild);
-  if (gsDebug) printf("CELL: set last content offset to %d\n", GetLastContentOffset()); //@@@
+  //if (gsDebug) printf("CELL: set last content offset to %d\n", GetLastContentOffset()); //@@@
 
-  // Place the child since some of it's content fit in us.
+  // Place the child
   mFirstChild->SetRect(nsRect(leftInset, topInset,
-                           kidSize.width, kidSize.height));
-  
+                           kidSize.width, kidSize.height));  
     
   if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     // If the child didn't finish layout then it means that it used
@@ -341,19 +380,22 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   // Return our size and our result
-  PRInt32 kidWidth = kidSize.width;
-  if (NS_UNCONSTRAINEDSIZE!=kidSize.width) //&& NS_UNCONSTRAINEDSIZE!=aMaxSize.width)
-    kidWidth += leftInset + rightInset;
-  PRInt32 kidHeight = kidSize.height;
 
-  // height can be set w/o being restricted by aMaxSize.height
-  if (NS_UNCONSTRAINEDSIZE!=kidSize.height)
-    kidHeight += topInset + bottomInset;
-  aDesiredSize.width = kidWidth;
-  aDesiredSize.height = kidHeight;
+  // first, compute the height
+  // the height can be set w/o being restricted by aMaxSize.height
+  nscoord cellHeight = kidSize.height;
+  if (NS_UNCONSTRAINEDSIZE!=cellHeight)
+    cellHeight += topInset + bottomInset;
+  // next determine the cell's width
+  cellWidth = kidSize.width;  // at this point, we've factored in the cell's style attributes
+  if (NS_UNCONSTRAINEDSIZE!=cellWidth)
+    cellWidth += leftInset + rightInset;
+
+  // set the cell's desired size and max element size
+  aDesiredSize.width = cellWidth;
+  aDesiredSize.height = cellHeight;
   aDesiredSize.ascent = topInset;
   aDesiredSize.descent = bottomInset;
-
   if (nsnull!=aDesiredSize.maxElementSize)
   {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
